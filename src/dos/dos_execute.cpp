@@ -185,9 +185,11 @@ bool DOS_ChildPSP(Bit16u segment, Bit16u size)
 	psp.MakeNew(size);
 	DOS_PSP psp_parent(psp.GetParent());
 	psp.CopyFileTable(&psp_parent,true);
+	psp.SetEnvironment(psp_parent.GetEnvironment());
 	psp.SetSize(size);
 	return true;
 };
+
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	
 	/* Fix the PSP for psp and environment MCB's */
