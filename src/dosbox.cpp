@@ -195,6 +195,11 @@ void DOSBOX_Init(void) {
 	secprop->Add_string("wavedir","waves");
 	
 	secprop=control->AddSection_prop("midi",&MIDI_Init);
+	secprop->AddInitFunction(&MPU401_Init);
+	secprop->Add_bool("mpu401",true);
+	secprop->Add_string("device","default");
+	secprop->Add_string("config","");
+
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
@@ -211,8 +216,6 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&CMS_Init);
 	secprop->Add_bool("cms",false);
 	secprop->Add_int("cmsrate",22050);
-	secprop->AddInitFunction(&MPU401_Init);
-	secprop->Add_bool("mpu401",true);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init);
 
