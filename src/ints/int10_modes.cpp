@@ -334,7 +334,7 @@ foundmode:
 	switch (CurMode->type) {
 	case M_TEXT16:
 		gfx_data[0x5]|=0x10;		//Odd-Even Mode
-		gfx_data[0x6]|=0x0e;		//alphanumeric mode at 0xb800=0xbffff
+		gfx_data[0x6]|=0x0e;		//alphanumeric mode at 0xb800=0xbfff
 		break;
 	case M_LIN8:
 	case M_VGA:
@@ -344,9 +344,11 @@ foundmode:
 	case M_EGA16:
 		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
 		break;
+	case M_CGA2:
 	case M_CGA4:
+	case M_TANDY16:
 		gfx_data[0x5]|=0x20;		//CGA mode
-		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
+		gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
 		break;
 	}
 	for (i=0;i<GFX_REGS;i++) {
