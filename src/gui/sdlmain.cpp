@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.73 2004-08-27 13:41:34 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.74 2004-08-27 14:01:44 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -723,10 +723,10 @@ static void SetPriority(PRIORITY_LEVELS level) {
 		setpriority (PRIO_PROCESS, 0,PRIO_MIN+(PRIO_TOTAL/2));
 		break;
 	case PRIORITY_LEVEL_HIGHER:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/5)));
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/5) );
 		break;
 	case PRIORITY_LEVEL_HIGHEST:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/4)));
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/4) );
 		break;
 #endif
 	default:
