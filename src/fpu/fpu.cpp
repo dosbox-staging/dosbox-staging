@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.22 2004-09-08 08:46:37 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.23 2004-10-12 16:19:45 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -353,6 +353,9 @@ void FPU_ESC1_Normal(Bitu rm) {
 			break;
 		case 0x03:   /* FPATAN */
 			FPU_FPATAN();
+			break;
+		case 0x04:  /* FXTRACT */
+			FPU_FXTRACT();
 			break;
 		default:
 		LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);

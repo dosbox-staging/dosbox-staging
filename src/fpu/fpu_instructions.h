@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.21 2004-09-09 18:36:50 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.22 2004-10-12 16:19:45 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -392,3 +392,14 @@ static void FPU_FSTOR(PhysPt addr){
 	}
 }
 
+static void FPU_FXTRACT(void) {
+	// function stores real bias in st and 
+	// pushes the significant number onto the stack
+	// if double ever uses a different base please correct this function
+
+	FPU_Reg test = fpu.regs[TOP];
+	Bit64s exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
+	Bit64s exp80final = (exp80>>52) - BIAS64;
+	Real64 mant = test.d / (pow(2.0,static_cast<Real64>(exp80final)));
+	FPU_PUSH(mant); 
+}
