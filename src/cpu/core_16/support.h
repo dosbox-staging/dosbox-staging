@@ -102,9 +102,8 @@ static INLINE Bit32u Pop_32() {
 #include "instructions.h"
 
 
-static Bits Repeat_Normal(bool testz,bool prefix_66,Bits count_remain) {
+static void Repeat_Normal(bool testz,bool prefix_66) {
 	
-	Bits count=count_remain;
 	PhysPt base_si,base_di;
 
 	Bit16s direct;
@@ -143,16 +142,17 @@ rep_again:
 		prefix_66=!prefix_66;
 		goto rep_again;
 	case 0x6c:			/* REP INSB */
-		for (;(reg_cx && count>0);reg_cx--,count--) {
+		for (;CPU_Cycles>0;CPU_Cycles--) {
+			if (!reg_cx) return; reg_cx--;
 			SaveMb(base_di+reg_di,IO_Read(reg_dx));
 			reg_di+=direct;
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0x6d:			/* REP INSW/D */
 		if (prefix_66) {
 			direct*=4;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMb(base_di+reg_di+0,IO_Read(reg_dx+0));
 				SaveMb(base_di+reg_di+1,IO_Read(reg_dx+1));
 				SaveMb(base_di+reg_di+2,IO_Read(reg_dx+2));
@@ -161,25 +161,26 @@ rep_again:
 			}
 		} else {
 			direct*=2;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMb(base_di+reg_di+0,IO_Read(reg_dx+0));
 				SaveMb(base_di+reg_di+1,IO_Read(reg_dx+1));
 				reg_di+=direct;
 			}
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0x6e:			/* REP OUTSB */
-		for (;(reg_cx && count>0);reg_cx--,count--) {
+		for (;CPU_Cycles>0;CPU_Cycles--) {
+			if (!reg_cx) return; reg_cx--;
 			IO_Write(reg_dx,LoadMb(base_si+reg_si));
 			reg_si+=direct;
 		}	
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0x6f:			/* REP OUTSW/D */
 		if (prefix_66) {
 			direct*=4;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				IO_Write(reg_dx+0,LoadMb(base_si+reg_si+0));
 				IO_Write(reg_dx+1,LoadMb(base_si+reg_si+1));
 				IO_Write(reg_dx+2,LoadMb(base_si+reg_si+2));
@@ -188,161 +189,152 @@ rep_again:
 			}
 		} else {
 			direct*=2;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				IO_Write(reg_dx+0,LoadMb(base_si+reg_si+0));
 				IO_Write(reg_dx+1,LoadMb(base_si+reg_si+1));
 				reg_si+=direct;
 			}
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xa4:			/* REP MOVSB */
-		for (;(reg_cx && count>0);reg_cx--,count--) {
+		for (;CPU_Cycles>0;CPU_Cycles--) {
+			if (!reg_cx) return; reg_cx--;
 			SaveMb(base_di+reg_di,LoadMb(base_si+reg_si));
 			reg_si+=direct;reg_di+=direct;
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xa5:			/* REP MOVSW/D */
 		if (prefix_66) {
 			direct*=4;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMd(base_di+reg_di,LoadMd(base_si+reg_si));
 				reg_si+=direct;reg_di+=direct;
 			} 
 		} else {
 			direct*=2;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMw(base_di+reg_di,LoadMw(base_si+reg_si));
 				reg_si+=direct;reg_di+=direct;
 			}
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xa6:			/* REP CMPSB */
 		{	
-			if (!reg_cx) goto stopit;Bit8u op1,op2;
-			for (;(reg_cx && count>0);) {
+			Bit8u op1,op2;
+			if (!reg_cx) { CPU_Cycles--;return; }
+			for (;CPU_Cycles>0;CPU_Cycles--) {
 				op1=LoadMb(base_si+reg_si);op2=LoadMb(base_di+reg_di);
-				reg_cx--,count--;reg_si+=direct;reg_di+=direct;
-				if ((op1==op2)!=testz) break;
+				reg_cx--;reg_si+=direct;reg_di+=direct;
+				if ((op1==op2)!=testz || !reg_cx) { CMPB(op1,op2,LoadRb,0);return; }
 			}
 			CMPB(op1,op2,LoadRb,0);
-			if ((op1==op2)!=testz) goto stopit;
-			if (reg_cx && count<=0) goto countzero;
 		}
 		break;
 	case 0xa7:			/* REP CMPSW */
 		{	
-			if (!reg_cx) goto stopit;
+			if (!reg_cx) { CPU_Cycles--;return; }
 			if (prefix_66) {
-				direct*=4;	
-				Bit32u op1,op2;
-				for (;(reg_cx && count>0);) {
+				direct*=4;Bit32u op1,op2;
+				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op1=LoadMd(base_si+reg_si);op2=LoadMd(base_di+reg_di);
-					reg_cx--,count--;reg_si+=direct;reg_di+=direct;
-					if ((op1==op2)!=testz) break;
+					reg_cx--;reg_si+=direct;reg_di+=direct;
+					if ((op1==op2)!=testz || !reg_cx) { CMPD(op1,op2,LoadRd,0);return; }
 				}
 				CMPD(op1,op2,LoadRd,0);
-				if ((op1==op2)!=testz) goto stopit;
 			} else {
-				direct*=2;
-				Bit16u op1,op2;
-				for (;(reg_cx && count>0);) {
+				direct*=2;Bit16u op1,op2;
+				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op1=LoadMw(base_si+reg_si);op2=LoadMw(base_di+reg_di);
-					reg_cx--,count--;reg_si+=direct;reg_di+=direct;
-					if ((op1==op2)!=testz) break;
+					reg_cx--,reg_si+=direct;reg_di+=direct;
+					if ((op1==op2)!=testz || !reg_cx) { CMPW(op1,op2,LoadRw,0);return; }
 				}
 				CMPW(op1,op2,LoadRw,0);
-				if ((op1==op2)!=testz) goto stopit;
 			}
-			if (reg_cx && count<=0) goto countzero;
 		}
 		break;
 	case 0xaa:			/* REP STOSB */
-		for (;(reg_cx && count>0);reg_cx--,count--) {
+		for (;CPU_Cycles>0;CPU_Cycles--) {
+			if (!reg_cx) return; reg_cx--;
 			SaveMb(base_di+reg_di,reg_al);
 			reg_di+=direct;
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xab:			/* REP STOSW */
 		if (prefix_66) {
 			direct*=4;	
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMd(base_di+reg_di,reg_eax);
 				reg_di+=direct;
 			}
 		} else {
 			direct*=2;	
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				SaveMw(base_di+reg_di,reg_ax);
 				reg_di+=direct;
 			}
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xac:			/* REP LODSB */
-		for (;(reg_cx && count>0);reg_cx--,count--) {
+		for (;CPU_Cycles>0;CPU_Cycles--) {
+			if (!reg_cx) return; reg_cx--;
 			reg_al=LoadMb(base_si+reg_si);
 			reg_si+=direct;
 		}	
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xad:			/* REP LODSW */
 		if (prefix_66) {
 			direct*=4;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				reg_eax=LoadMd(base_si+reg_si);
 				reg_si+=direct;
 			}	
 		} else {
 			direct*=2;
-			for (;(reg_cx && count>0);reg_cx--,count--) {
+			for (;CPU_Cycles>0;CPU_Cycles--) {
+				if (!reg_cx) return; reg_cx--;
 				reg_ax=LoadMw(base_si+reg_si);
 				reg_si+=direct;
 			}	
 		}
-		if (reg_cx && count<=0) goto countzero;
 		break;
 	case 0xae:			/* REP SCASB */
 		{	
-			if (!reg_cx) goto stopit;Bit8u op2;
-			for (;(reg_cx && count>0);) {
+			Bit8u op2;
+			if (!reg_cx) { CPU_Cycles--;return; }
+			for (;CPU_Cycles>0;CPU_Cycles--) {
 				op2=LoadMb(base_di+reg_di);
-				reg_cx--,count--;reg_di+=direct;
-				if ((reg_al==op2)!=testz) break;
+				reg_cx--;reg_di+=direct;
+				if ((reg_al==op2)!=testz || !reg_cx) { CMPB(reg_al,op2,LoadRb,0);return; }
 			}
 			CMPB(reg_al,op2,LoadRb,0);
-			if ((reg_al==op2)!=testz) goto stopit;
-			if (reg_cx && count<=0) goto countzero;
 		}
 		break;
 	case 0xaf:			/* REP SCASW */
 		{	
-			if (!reg_cx) goto stopit;
+			if (!reg_cx) { CPU_Cycles--;return; }
 			if (prefix_66) {
-				direct*=4;	
-				Bit32u op2;
-				for (;(reg_cx && count>0);) {
+				direct*=4;Bit32u op2;
+				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op2=LoadMd(base_di+reg_di);
-					reg_cx--,count--;reg_di+=direct;
-					if ((reg_eax==op2)!=testz) break;
+					reg_cx--;reg_di+=direct;
+					if ((reg_eax==op2)!=testz || !reg_cx) { CMPD(reg_eax,op2,LoadRd,0);return; }
 				}
 				CMPD(reg_eax,op2,LoadRd,0);
-				if ((reg_eax==op2)!=testz) goto stopit;
 			} else {
-				direct*=2;
-				Bit16u op2;
-				for (;(reg_cx && count>0);) {
+				direct*=2;Bit16u op2;
+				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op2=LoadMw(base_di+reg_di);
-					reg_cx--,count--;reg_di+=direct;
-					if ((reg_ax==op2)!=testz) break;
+					reg_cx--;reg_di+=direct;
+					if ((reg_ax==op2)!=testz || !reg_cx) { CMPW(reg_ax,op2,LoadRw,0);return; }
 				}
 				CMPW(reg_ax,op2,LoadRw,0);
-				if ((reg_ax==op2)!=testz) goto stopit;
 			}
-			if (reg_cx && count<=0) goto countzero;
 		}
 		break;
 	default:
@@ -350,13 +342,9 @@ rep_again:
 		LOG_DEBUG("Unhandled REP Prefix %X",Fetchb());
 
 	}
-stopit:
-	PrefixReset;
-	return count_remain-count;
-countzero:
+	/* If we end up here it's because the CPU_Cycles counter is 0, so restart instruction */
 	IPPoint-=(prefix.count+2);		/* Rep instruction and whatever string instruction */
 	PrefixReset;
-	return count_remain;
 }
 
 //flags.io and nt shouldn't be compiled for 386 
@@ -378,7 +366,7 @@ countzero:
 	}																\
 	if (flags.tf) {													\
 		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
-		count=0;													\
+		goto decode_end;											\
 	}																\
 }
 
@@ -399,7 +387,7 @@ countzero:
 	}																\
 	if (flags.tf) {													\
 		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
-		count=0;													\
+		goto decode_end;											\
 	}																\
 }
 
