@@ -88,7 +88,7 @@
 #define DPMI_CB_EXCEPTIONRETURN_OFFSET	260*8
 #define DPMI_CB_VENDORENTRY_OFFSET		261*8
 
-#define DPMI_HOOK_HARDWARE_INTS			1
+#define DPMI_HOOK_HARDWARE_INTS			0
 
 static Bitu rmIndexToInt[DPMI_REALVEC_MAX] = 
 { 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x1C };
@@ -1630,7 +1630,7 @@ Bitu DPMI::Int31Handler(void)
 					reg_cx = RealOff(entry);
 					reg_si = GDT_PROTCODE;
 					reg_edi= DPMI_CB_SAVESTATE_OFFSET;
-					reg_ax = 48; // 20 bytes buffer needed
+					reg_ax = 0; // 20 bytes buffer needed
 					DPMI_CALLBACK_SCF(false);
 					}; break;	
 		case 0x0306:{// Get raw mode switch address
@@ -1658,7 +1658,7 @@ Bitu DPMI::Int31Handler(void)
 					XMS_QueryFreeMemory(largest,total);				// in KB					
 					Bitu largeB	= (Bitu)largest*1024;// - 1024*1024;	// in bytes
 					Bitu totalB	= (Bitu)total*1024;// - 1024*1024;		// in bytes
-					Bitu sizeB	= (Bitu)XMS_GetSize()*1024*1024;//-1024*1024;	// in bytes
+					Bitu sizeB	= (Bitu)MEM_TotalPages()*DPMI_PAGE_SIZE;	//-1024*1024;	// in bytes
 					mem_writed(data+0x00,largeB);					// Size in bytes
 					mem_writed(data+0x04,largeB/DPMI_PAGE_SIZE);		// total number of pages
 					mem_writed(data+0x08,largeB/DPMI_PAGE_SIZE);	// largest block in pages
@@ -1752,7 +1752,10 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_CALLBACK_SCF(false);
 					break;
 		case 0x0509:{//Map Conventional Memory in Memory Block
-					Bit32u xmsAddress;	
+					DPMI_LOG_ERROR("DPMI: 0509: Mapping convmem not supported.");
+					reg_ax = DPMI_ERROR_UNSUPPORTED;
+					DPMI_CALLBACK_SCF(true);
+/*					Bit32u xmsAddress;	
 					Bitu handle		= reg_esi;
 					Bitu offset		= reg_ebx;
 					Bitu numPages	= reg_ecx;
@@ -1760,14 +1763,14 @@ Bitu DPMI::Int31Handler(void)
 					if (XMS_LockMemory(handle,xmsAddress)==0) {
 						LOG(LOG_MISC,LOG_ERROR)("DPMI: 0509: Mapping convmem %04X to %08X",linearAdr,xmsAddress+offset);
 						if ((numPages%4)!=0) E_Exit("DPMI: Cannot map conventional memory.");
-						MEM_SetupMapping(PAGE_COUNT((xmsAddress+offset)),PAGE_COUNT(numPages*DPMI_PAGE_SIZE),((Bit8u*)memory)+linearAdr);
+//						MEM_SetupMapping(PAGE_COUNT((xmsAddress+offset)),PAGE_COUNT(numPages*DPMI_PAGE_SIZE),((Bit8u*)memory)+linearAdr);
 						XMS_UnlockMemory(handle);
 						DPMI_CALLBACK_SCF(false);
 					} else {
 						LOG(LOG_MISC,LOG_ERROR)("DPMI: 0509: Mapping convmem failure.");
 						reg_ax = DPMI_ERROR_INVALID_HANDLE;
 						DPMI_CALLBACK_SCF(true);
-					}
+					}*/
 					}; break;
 		case 0x0600:{//Lock Linear Region
 					Bitu address = (reg_bx<<16)+reg_cx;
@@ -1873,7 +1876,10 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0E01:// Set Coprocessor Emulation
 					DPMI_CALLBACK_SCF(true);	// failure
 					break;
-		default	   :E_Exit("DPMI: Unsupported func %04X",reg_ax);
+		default	   :LOG(LOG_MISC,LOG_ERROR)("DPMI: Unsupported func %04X",reg_ax);
+					reg_ax = DPMI_ERROR_UNSUPPORTED;	
+					DPMI_CALLBACK_SCF(true);	// failure
+					break;
 	};
 	return 0;
 }
@@ -2224,6 +2230,9 @@ static bool DPMI_Multiplex(void) {
 
 void DPMI_Init(Section* sec) 
 {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if (!section->Get_bool("dpmi")) return;
+
 	memset(&callback,0,sizeof(callback));
 
 	/* setup Real mode Callbacks */
@@ -2454,7 +2463,7 @@ Bitu DPMI::API_Entry_MSDOS(void)
 
 Bitu DPMI::API_Int21_MSDOS(void)
 {
-//	LOG(LOG_MISC,LOG_ERROR)("DPMI:MSDOS:INT 21 %04X",reg_ax);
+	LOG(LOG_MISC,LOG_ERROR)("DPMI:MSDOS-API:INT 21 %04X",reg_ax);
 	Bitu protsel,protoff,seg,off;
 	Bitu sax = reg_ax;
 	switch (reg_ah) {
@@ -2525,10 +2534,10 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					char name1[256];
 					MEM_StrCopy(SegPhys(ds)+reg_edx,name1,255);
 					if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
-						LOG(LOG_MISC,LOG_ERROR)("DOS: Open success; %s",name1);
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Open success: %s",name1);
 						DPMI_CALLBACK_SCF(false);
 					} else {
-						LOG(LOG_MISC,LOG_ERROR)("DOS: Open failure; %s",name1);
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Open failure: %s",name1);
 						reg_ax=dos.errorcode;
 						DPMI_CALLBACK_SCF(true);
 					}
@@ -2653,7 +2662,6 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					Bitu segment = GetSegmentFromSelector(reg_dx);
 					DOS_ChildPSP(segment,reg_si);
 					dos.psp = segment;
-					DPMI_CALLBACK_SCF(false);
 					LOG(LOG_MISC,LOG_ERROR)("DPMI:MSDOS:0x55:Create new psp:%04X",segment);					
 					}; break;
 		case 0x5D : // Get Address of dos swappable area
@@ -2710,7 +2718,7 @@ Bitu DPMI::API_Int21_MSDOS(void)
 		case 0x0E: case 0x19: case 0x2A: case 0x2C: case 0x2D: case 0x30: case 0x36:
 		case 0x3E: case 0x4C: case 0x58: case 0x67:
 					{
-						// reflect top real mode	
+						// reflect to real mode	
 						DPMI_Int21Handler();
 					};
 					break;
