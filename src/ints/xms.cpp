@@ -327,7 +327,9 @@ foundnew:
 
 void XMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	Bitu size=section->Get_int("xmssize");
+	if (!size) return;
+	if (size>C_MEM_MAX_SIZE-1) size=C_MEM_MAX_SIZE-1;
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);
@@ -348,6 +350,6 @@ void XMS_Init(Section* sec) {
 	/* Setup the 1st handle */
 	xms_handles[1].active=true;
 	xms_handles[1].phys=1088*1024;		/* right behind the hma area */
-	xms_handles[1].size=C_MEM_XMS_SIZE*1024-64;
+	xms_handles[1].size=size*1024-64;
 }
 
