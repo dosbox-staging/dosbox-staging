@@ -19,118 +19,137 @@
 #if !defined __SERIALPORT_H
 #define __SERIALPORT_H
 
-#include <dosbox.h>
+#include <assert.h>
+
+#include  "dosbox.h"
 
 //If it's too high you overflow terminal clients buffers i think
-#define FIFO_SIZE  (1024)
+#define QUEUE_SIZE 1024
 
 // Serial port interface //
 
-#define M_CTS 0x01
-#define M_DSR 0x02
-#define M_RI  0x04
-#define M_DCD 0x08
+#define MS_CTS 0x01
+#define MS_DSR 0x02
+#define MS_RI  0x04
+#define MS_DCD 0x08
 
-enum INT_TYPES {
-	INT_MS,
-	INT_TX,
-	INT_RX,
-	INT_RX_FIFO,
-	INT_LS,
-	INT_NONE,
+#define MC_DTR 0x1
+#define MC_RTS 0x2
+
+
+class CFifo {
+public:
+	CFifo(Bitu _size) {
+		size=_size;
+		pos=used=0;
+		data=new Bit8u[size];
+	}
+	~CFifo() {
+		delete[] data;
+	}
+	INLINE Bitu left(void) {
+		return size-used;
+	}
+	INLINE Bitu inuse(void) {
+		return used;
+	}
+	void clear(void) {
+		used=pos=0;
+	}
+	bool isFull() {
+		return (used >= size);
+	}
+	void addb(Bit8u _val) {
+		assert(used<size);
+		Bitu where=pos+used;
+		if (where>=size) where-=size;
+		data[where]=_val;
+		used++;
+	}
+	void adds(Bit8u * _str,Bitu _len) {
+		assert((used+_len)<=size);
+		Bitu where=pos+used;
+		used+=_len;
+		while (_len--) {
+			if (where>=size) where-=size;
+			data[where++]=*_str++;
+		}
+	}
+	Bit8u getb(void) {
+		if (!used) return data[pos];
+		Bitu where=pos;
+		if (++pos>=size) pos-=size;
+		used--;
+		return data[where];
+	}
+	void gets(Bit8u * _str,Bitu _len) {
+		assert(used>=_len);
+		used-=_len;
+		while (_len--) {
+			*_str++=data[pos];
+			if (++pos>=size) pos-=size;
+		}
+	}
+private:
+	Bit8u * data;
+	Bitu size,pos,used;
 };
-
-typedef void MControl_Handler(Bitu mc);
 
 class CSerial {
 public:
 
+	CSerial() {
+
+	}
 	// Constructor takes base port (0x3f0, 0x2f0, 0x2e0, etc.), IRQ, and initial bps //
 	CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps);
 	virtual ~CSerial();
 
-	// External port functions for IOHandlers //
-	void write_port(Bitu port, Bitu val);
-	Bitu read_port(Bitu port);
+	void write_reg(Bitu reg, Bitu val);
+	Bitu read_reg(Bitu reg);
 
-	static void write_serial(Bitu port,Bitu val,Bitu iolen);
-	static Bitu read_serial(Bitu port,Bitu iolen);
-
-	void SetMCHandler(MControl_Handler * mcontrol);
-	
-	/* Allow the modem to change the modem status bits */
-	void setmodemstatus(Bit8u status);
-	Bit8u getmodemstatus(void);
-	Bit8u getlinestatus(void);
+	void SetModemStatus(Bit8u status);
+	virtual bool CanRecv(void)=0;
+	virtual bool CanSend(void)=0;
+	virtual void Send(Bit8u val)=0;
+	virtual Bit8u Recv(Bit8u val)=0;
+	virtual void Timer(void);
 
 	void checkint(void);
-	void raiseint(INT_TYPES type);
-	void lowerint(INT_TYPES type);
 
-	/* Access to the receive fifo */
-	Bitu  rx_free();
-	void  rx_addb(Bit8u byte);
-	void  rx_adds(Bit8u * data,Bitu size);
-	Bitu  rx_size();
-	Bit8u rx_readb(void);
+	Bitu base;
+	Bitu irq;
+	Bitu bps;
+	Bit8u mctrl;
 
-	/* Access to the transmit fifo */
-	Bitu  tx_free();
-	void  tx_addb(Bit8u byte);
-	Bitu  tx_size();
-	Bit8u tx_readb(void);
-
-
-	//  These variables maintain the status of the serial port
-	Bit16u base;
-	Bit16u irq;
-	Bit32u bps;
-
-	bool FIFOenabled;
-	Bit16u FIFOsize;
+	CFifo *rqueue;
+	CFifo *tqueue;
 
 private:
-
-	void setdivisor(Bit8u dmsb, Bit8u dlsb);
-	void checkforirq(void);
-	struct {
-		Bitu used;
-		Bitu pos;
-		Bit8u data[FIFO_SIZE];
-	} rx_fifo,tx_fifo;
-	struct {
-		Bitu requested;
-		Bitu enabled;
-		INT_TYPES active;
-	} ints;
-
-	Bitu rx_lastread;
-	Bit8u irq_pending;
+	void UpdateBaudrate(void);
+	bool FIFOenabled;
+	Bit8u FIFOsize;
+	bool dotxint;
 	
 	Bit8u scratch;
 	Bit8u dlab;
 	Bit8u divisor_lsb;
 	Bit8u divisor_msb;
-	Bit8u wordlen;
-	Bit8u dtr;
-	Bit8u rts;
-	Bit8u out1;
-	Bit8u out2;
 	Bit8u local_loopback;
-	Bit8u linectrl;
-	Bit8u intid;
-	Bit8u ierval;
+	Bit8u iir;
+	Bit8u ier;
 	Bit8u mstatus;
 
-	Bit8u txval;
-	Bit8u timeout;
-
-	MControl_Handler * mc_handler;
-	char remotestr[4096];
+	Bit8u linectrl;
+	Bit8u errors;
 };
 
-// This function returns the CSerial objects for ports 1-4 //
-CSerial *getComport(Bitu portnum);
+#include <list>
+
+typedef std::list<CSerial *> CSerialList;
+typedef std::list<CSerial *>::iterator CSerial_it;
+
+extern CSerialList seriallist;
 
 #endif
 
