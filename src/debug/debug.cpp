@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.51 2004-01-14 19:54:14 finsterr Exp $ */
+/* $Id: debug.cpp,v 1.52 2004-01-27 14:52:28 qbix79 Exp $ */
 
 #include "programs.h"
 
@@ -59,6 +59,7 @@ Bit32u GetHexValue(char* str, char*& hex);
 void LogGDT(void);
 void LogLDT(void);
 void LogIDT(void);
+void OutputVecTable(char* filename);
 
 class DEBUG;
 
@@ -1096,6 +1097,30 @@ bool ParseCommand(char* str)
 		LogIDT();
 	}
 
+	found = strstr(str,"INTVEC ");
+	if (found)
+	{
+		found += 7;
+		while (found[0]==' ') found++;
+		if (found[0] != 0)
+			OutputVecTable(found);
+	}
+
+	found = strstr(str,"INTHAND ");
+	if (found)
+	{
+		found += 8;
+		while (found[0]==' ') found++;
+		if (found[0] != 0)
+		{
+			Bit8u intNr = (Bit8u)GetHexValue(found,found);
+			DEBUG_ShowMsg("DEBUG: Set code overview to interrupt handler %X",intNr);
+			codeViewData.useCS	= mem_readw(intNr*4+2);
+			codeViewData.useEIP = mem_readw(intNr*4);
+			return true;
+		}
+	}
+
 	/*	found = strstr(str,"EXCEPTION ");
 	if (found) {
 		found += 9;
@@ -1152,6 +1177,10 @@ bool ParseCommand(char* str)
 
 		wprintw(dbg.win_out,"MEMDUMP [seg]:[off] [len] - Write memory to file memdump.txt\n");
 		wprintw(dbg.win_out,"SELINFO [segName]         - Show selector info\n");
+
+		wprintw(dbg.win_out,"INTVEC [filename]         - Writes interrupt vector table to file\n");
+		wprintw(dbg.win_out,"INTHAND [intNum]          - Set code view to interrupt handler\n");
+
 		wprintw(dbg.win_out,"H                         - Help\n");
 		
 		wrefresh(dbg.win_out);
@@ -1766,6 +1795,22 @@ void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 	fclose(f);
 	DEBUG_ShowMsg("DEBUG: Memory dump success.");
 };
+
+void OutputVecTable(char* filename)
+{
+	FILE* f = fopen(filename, "wt");
+	if (!f)
+	{
+		DEBUG_ShowMsg("DEBUG: Output of interrupt vector table failed.");
+		return;
+	}
+
+	for (int i=0; i<256; i++)
+		fprintf(f,"INT %02X:  %04X:%04X\n", i, mem_readw(i*4+2), mem_readw(i*4));
+
+	fclose(f);
+	DEBUG_ShowMsg("DEBUG: Interrupt vector table written to %s.", filename);
+}
 
 // HEAVY DEBUGGING STUFF
 
