@@ -192,6 +192,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("irq",7);
 	secprop->Add_int("dma",1);
 	secprop->Add_int("hdma",5);
+	secprop->Add_int("sbrate",22050);
 	secprop->Add_bool("enabled",true);
 
 	secprop->AddInitFunction(&ADLIB_Init);
