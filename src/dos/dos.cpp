@@ -262,6 +262,7 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x1f:		/* Get drive parameter block for default drive */
+		
 	case 0x32:		/* Get drive parameter block for specific drive */
 		E_Exit("DOS:Unhandled call %02X",reg_ah);
 		break;		/* TODO maybe but hardly think a game needs this */
@@ -273,7 +274,6 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x2a:		/* Get System Date */
 		{
-			CALLBACK_Idle(); /* sure ? */
 			int a = (14 - dos.date.month)/12;
 			int y = dos.date.year - a;
 			int m = dos.date.month + 12*a - 2;
@@ -295,7 +295,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x2c:		/* Get System Time */
 //TODO Get time through bios calls date is fixed
 		{
-			CALLBACK_Idle();
 			Bit32u ticks=mem_readd(BIOS_TIMER);
 			Bit32u seconds=(ticks*10)/182;
 			reg_ch=(Bit8u)(seconds/3600);
@@ -850,7 +849,7 @@ void DOS_Init(Section* sec) {
 	RealSetVec(0x20,CALLBACK_RealPointer(call_20));
 
 	call_21=CALLBACK_Allocate();
-	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET);
+	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET_STI);
 	RealSetVec(0x21,CALLBACK_RealPointer(call_21));
 
 	call_27=CALLBACK_Allocate();
