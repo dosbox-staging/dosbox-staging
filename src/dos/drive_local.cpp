@@ -265,10 +265,15 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 };
 
 bool localFile::Write(Bit8u * data,Bit16u * size) {
-	*size=fwrite(data,1,*size,fhandle);
+    if(*size==0){  
+        return (!ftruncate(fileno(fhandle),ftell(fhandle)));
+    }
+    else 
+    {
+    	*size=fwrite(data,1,*size,fhandle);
 	return true;
+    }
 }
-
 bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	int seektype;
 	switch (type) {
