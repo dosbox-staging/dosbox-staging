@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "shell_inc.h"
+#include "shell.h"
 
 
 BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {

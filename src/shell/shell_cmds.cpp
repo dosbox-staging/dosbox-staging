@@ -16,13 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.35 2003-11-11 18:47:25 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.36 2003-12-17 21:50:59 qbix79 Exp $ */
 
 #include <string.h>
 
-#include "shell_inc.h"
+#include "shell.h"
 #include "callback.h"
 #include "regs.h"
+#include "../dos/drives.h"
 
 static SHELL_Cmd cmd_list[]={
 {	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"SHELL_CMD_CHDIR_HELP"},
@@ -49,7 +50,10 @@ static SHELL_Cmd cmd_list[]={
 {	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
 {	"PAUSE",	0,			&DOS_Shell::CMD_PAUSE,		"SHELL_CMD_PAUSE_HELP"},
 {	"CALL",		0,			&DOS_Shell::CMD_CALL,		"SHELL_CMD_CALL_HELP"},
-{	0,0,0,0}
+{	"SUBST",	0,			&DOS_Shell::CMD_SUBST,		"SHELL_CMD_SUBST_HELP"},
+{	"LOADHIGH",	0,			&DOS_Shell::CMD_LOADHIGH, 	"SHELL_CMD_LOADHIGH_HELP"},
+{	"LH",		1,			&DOS_Shell::CMD_LOADHIGH,	"SHELL_CMD_LOADHIGH_HELP"},
+{0,0,0,0}
 };
 
 void DOS_Shell::DoCommand(char * line) {
@@ -586,3 +590,55 @@ void DOS_Shell::CMD_CALL(char * args){
 	this->call=false;
 }
 
+void DOS_Shell::CMD_SUBST (char * args) {
+/* If more that one type can be substed think of something else 
+ * E.g. make basedir member dos_drive instead of localdrive
+ */
+	localDrive* ldp=0;
+	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
+	char temp_str[2] = { 0,0 };
+	try {
+		strcpy(mountstring,"MOUNT ");
+		StripSpaces(args);
+		std::string arg;
+		CommandLine command(0,args);
+
+		if (command.GetCount() != 2) throw 0 ;
+		command.FindCommand(2,arg);
+		if((arg=="/D" ) || (arg=="/d")) throw 1; //No removal (one day)
+  
+		command.FindCommand(1,arg);
+		if(arg[1] !=':')  throw(0);
+		temp_str[0]=toupper(args[0]);
+		if(Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
+		strcat(mountstring,temp_str);
+		strcat(mountstring," ");
+
+		command.FindCommand(2,arg);
+   		Bit8u drive;char fulldir[DOS_PATHLENGTH];
+		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
+	
+		if( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
+		char newname[CROSS_LEN];   
+		strcpy(newname, ldp->basedir);
+		strcat(newname,fulldir);
+		CROSS_FILENAME(newname);
+		ldp->dirCache.ExpandName(newname);
+		strcat(mountstring, newname);
+		this->ParseLine(mountstring);
+	}
+	catch(int a){
+		if(a == 0) {
+			WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
+		} else {
+		       	WriteOut(MSG_Get("SHELL_CMD_SUBST_NO_REMOVE"));
+		}
+		return;
+	}
+
+	return;
+}
+
+void DOS_Shell::CMD_LOADHIGH(char *args){
+	this->ParseLine(args);
+}
