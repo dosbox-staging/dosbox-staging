@@ -67,7 +67,7 @@ void CALLBACK_Idle(void) {
 }
 
 static Bitu default_handler(void) {
-	LOG_WARN("Illegal Unhandled Interrupt Called %d",lastint);
+	LOG_WARN("Illegal Unhandled Interrupt Called %X",lastint);
 	return CBRET_NONE;
 };
 
