@@ -25,6 +25,12 @@
 #include "inout.h"
 #include "setup.h"
 
+/* Maximum memory address range in megabytes */
+#define MEM_SIZE 32
+#define MAX_PAGES PAGE_COUNT((2+MEM_SIZE)*1024*1024)
+
+
+
 HostPt memory;
 HostPt ReadHostTable[MAX_PAGES];
 HostPt WriteHostTable[MAX_PAGES];
@@ -34,8 +40,6 @@ MEMORY_WriteHandler WriteHandlerTable[MAX_PAGES];
 static Bitu total_size;
 
 /* Page handlers only work in lower memory */
-#define LOW_PAGE_LIMIT PAGE_COUNT(1024*1024)
-#define MAX_PAGE_LIMIT PAGE_COUNT(C_MEM_MAX_SIZE*1024*1024)
 
 void MEM_BlockRead(PhysPt off,void * data,Bitu size) {
 	Bit8u * idata=(Bit8u *)data;
@@ -110,7 +114,7 @@ static void Default_WriteHandler(PhysPt pt,Bit8u val) {
 
 
 void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEMORY_WriteHandler write) {
-	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGES) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=0;
 		WriteHostTable[i]=0;
@@ -121,7 +125,7 @@ void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEM
 
 
 void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
-	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGES) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=memory;
 		WriteHostTable[i]=memory;
@@ -131,7 +135,7 @@ void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
 }
 
 void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
-	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGES) E_Exit("Memory:Illegal page for handler");
 	HostPt base=(HostPt)(data)-startpage*PAGE_SIZE;
 	if (!base) LOG_MSG("MEMORY:Unlucky memory allocation");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
@@ -143,7 +147,7 @@ void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
 }
 
 void MEM_ClearMapping(Bitu startpage,Bitu pages) {
-	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGES) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=0;
 		WriteHostTable[i]=0;
@@ -270,13 +274,13 @@ void MEM_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	/* Clear paging tables */
-	MEM_SetupPageHandlers(0,MAX_PAGE_LIMIT,Illegal_ReadHandler,Illegal_WriteHandler);
+	MEM_SetupPageHandlers(0,MAX_PAGES,Illegal_ReadHandler,Illegal_WriteHandler);
 	/* Allocate memory and setup tables */
 	Bitu memsize=section->Get_int("memsize");
 	if (memsize<1) memsize=1;
-	if (memsize>(C_MEM_MAX_SIZE-1)) {
-		LOG_MSG("Maximum memory size is %d MB",C_MEM_MAX_SIZE-1);
-		memsize=C_MEM_MAX_SIZE-1;
+	if (memsize>MEM_SIZE) {
+		LOG_MSG("Maximum memory size is %d MB",MEM_SIZE);
+		memsize=MEM_SIZE;
 	}
 	total_size=memsize*1024;
 	memory=(Bit8u *)malloc(memsize*1024*1024+64*1024);	
