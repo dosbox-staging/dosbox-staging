@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-static Bit8u normal_cache[RENDER_MAXWIDTH*2];
+static Bit8u normal_cache[RENDER_MAXWIDTH*2*4];
 
 template <Bitu sbpp,Bitu dbpp,bool xdouble>
 static void Normal(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
