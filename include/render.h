@@ -19,8 +19,11 @@
 
 
 enum RENDER_Operation {
-	OP_None,OP_Shot,
-	OP_2xSai,OP_Scale2x,
+	OP_None,
+	OP_Shot,
+	OP_Normal2x,
+	OP_AdvMame2x,
+	OP_Blit,
 };
 
 enum {
