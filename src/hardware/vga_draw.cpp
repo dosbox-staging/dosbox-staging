@@ -293,10 +293,10 @@ void VGA_SetupDrawing(void) {
 		break;
 	case M_CGA4:
 	case M_CGA16:							//Let is use 320x200 res and double pixels myself
-		aspect_ratio/=2;					//Hack for half the vtotal in cga mode
 		scaleh=2;scalew=2;
 		vga.draw.blocks=width;
 		width<<=2;
+		height/=2;
 		pitch=width;
 		vga.draw.lines_scaled=1;
 		vga.draw.address_line_total=2;
@@ -304,8 +304,7 @@ void VGA_SetupDrawing(void) {
 		VGA_DrawLine=(vga.mode == M_CGA4) ? VGA_CGA4_Draw_Line : VGA_CGA16_Draw_Line;
 		break;
 	case M_CGA2:
-		aspect_ratio/=2;					//Hack for half the vtotal in cga mode
-		scaleh=2;
+		scaleh=2;height/=2;
 		vga.draw.address_line_total=2;
 		vga.draw.blocks=width;
 		width<<=3;
@@ -332,7 +331,7 @@ void VGA_SetupDrawing(void) {
 		vga.draw.address_add=160;
 		vga.draw.address_line_total=4;
 		vga.draw.lines_scaled=1;
-		width<<=2;
+		width<<=2;height/=2;
 		pitch=width;
 		VGA_DrawLine=VGA_TANDY16_Draw_Line;
 		break;

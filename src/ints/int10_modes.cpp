@@ -6,10 +6,8 @@
 #include "int10.h"
 #include "mouse.h"
 
-#define _HALF_CLOCK			0x0001
-#define _LINE_DOUBLE		0x0002
-#define _VGA_LINE_DOUBLE	0x0004
-#define _VGA_PIXEL_DOUBLE	0x0008
+#define _EGA_HALF_CLOCK		0x0001
+#define _EGA_LINE_DOUBLE	0x0002
 
 #define SEQ_REGS 0x05
 #define GFX_REGS 0x09
@@ -17,34 +15,34 @@
 
 VideoModeBlock ModeList[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde ,rate,special flags */
-{ 0x000  ,M_TEXT16 ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,70  ,_HALF_CLOCK	},
-{ 0x001  ,M_TEXT16 ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,70  ,_HALF_CLOCK	},
+{ 0x000  ,M_TEXT16 ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,70  ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT16 ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,70  ,_EGA_HALF_CLOCK	},
 { 0x002  ,M_TEXT16 ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,70  ,0	},
 { 0x003  ,M_TEXT16 ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,70  ,0	},
-{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,224 ,80 ,200 ,60  ,0 },
-{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,224 ,80 ,200 ,60  ,0},
-{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,224 ,80 ,200 ,60  ,0 },
+{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,449 ,80 ,400 ,60  ,0 },
+{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,449 ,80 ,400 ,60  ,0},
+{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,449 ,80 ,400 ,60  ,0 },
 { 0x007  ,M_TEXT2  ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,400 ,70  ,0	},
 /* 8,9,0xa are tandy modes */
-{ 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,50  ,224 ,80 ,200 ,60  ,0},
+{ 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,50 ,449  ,40 ,400 ,60  ,0},
  
-{ 0x00D  ,M_EGA16  ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,70  ,_HALF_CLOCK	|_LINE_DOUBLE	},
-{ 0x00E  ,M_EGA16  ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,70  ,_LINE_DOUBLE },
+{ 0x00D  ,M_EGA16  ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,70  ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
+{ 0x00E  ,M_EGA16  ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,70  ,_EGA_LINE_DOUBLE },
 { 0x00F  ,M_EGA2   ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,400 ,70  ,0	},
 { 0x010  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,70  ,0	},
 { 0x011  ,M_EGA2   ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,449 ,80 ,480 ,70  ,0	},
 { 0x012  ,M_EGA16  ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,70  ,0	},
-{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,70  ,_VGA_PIXEL_DOUBLE | _VGA_LINE_DOUBLE },
+{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,70  ,0 },
 
 { 0x100  ,M_LIN8   ,640 ,400 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,70  ,0   },
 { 0x101  ,M_LIN8   ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,70  ,0	},
 { 0x103  ,M_LIN8   ,800 ,600 ,100,37 ,8 ,16 ,1 ,0xA0000 ,0x10000,128 ,663 ,100,600 ,70  ,0	},
 
 
-{ 0x150  ,M_LIN8   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,70  , _VGA_PIXEL_DOUBLE | _VGA_LINE_DOUBLE  },
-{ 0x151  ,M_LIN8   ,320 ,240 ,40 ,30 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,70  , _VGA_PIXEL_DOUBLE | _VGA_LINE_DOUBLE  },
-{ 0x152  ,M_LIN8   ,320 ,400 ,40 ,50 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,70  , _VGA_PIXEL_DOUBLE },
-{ 0x153  ,M_LIN8   ,320 ,480 ,40 ,60 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,70  , _VGA_PIXEL_DOUBLE },
+{ 0x150  ,M_LIN8   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,70  , 0},
+{ 0x151  ,M_LIN8   ,320 ,240 ,40 ,30 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,70  , 0},
+{ 0x152  ,M_LIN8   ,320 ,400 ,40 ,50 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,70  , 0 },
+{ 0x153  ,M_LIN8   ,320 ,480 ,40 ,60 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,70  , 0 },
 
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0   ,0 	},
 
@@ -177,7 +175,7 @@ foundmode:
 	memset(seq_data,0,SEQ_REGS);
 	seq_data[1]|=1;		//8 dot fonts by default
 	seq_data[1]|=		//Check for half clock
-		(CurMode->special & _HALF_CLOCK) ? 0x08 : 0x00;
+		(CurMode->special & _EGA_HALF_CLOCK) ? 0x08 : 0x00;
 	seq_data[4]|=0x02;	//More than 64kb
 	switch (CurMode->type) {
 	case M_TEXT2:
@@ -219,7 +217,7 @@ foundmode:
 	hor_overflow|=((CurMode->hdispend) & 0x100) >> 6;
 	/* End horizontal Blanking */
 	Bitu blank_end;
-	if (CurMode->special & _HALF_CLOCK) {
+	if (CurMode->special & _EGA_HALF_CLOCK) {
 		blank_end = (CurMode->htotal-1) & 0x7f;
 	} else {
 		blank_end = (CurMode->htotal-2) & 0x7f;
@@ -229,7 +227,7 @@ foundmode:
 
 	/* Start Horizontal Retrace */
 	Bitu ret_start;
-	if (CurMode->special & _HALF_CLOCK) {
+	if (CurMode->special & _EGA_HALF_CLOCK) {
 		ret_start = (CurMode->hdispend+2);
 	} else {
 		ret_start = (CurMode->hdispend+4);
@@ -238,7 +236,7 @@ foundmode:
 	hor_overflow|=(ret_start & 0x100) >> 4;
 	/* End Horizontal Retrace */
 	Bitu ret_end;
-	if (CurMode->special & _HALF_CLOCK) {
+	if (CurMode->special & _EGA_HALF_CLOCK) {
 		ret_end = (CurMode->htotal-2) & 0x3f;
 	} else {
 		ret_end = (CurMode->htotal-4) & 0x3f;
@@ -286,7 +284,7 @@ foundmode:
 	ver_overflow|=(line_compare & 0x400) >> 4;
 	Bit8u underline=0;
 	/* Maximum scanline / Underline Location */
-	if (CurMode->special & _LINE_DOUBLE) max_scanline|=0x80;
+	if (CurMode->special & _EGA_LINE_DOUBLE) max_scanline|=0x80;
 	switch (CurMode->type) {
 	case M_TEXT2:
 	case M_TEXT16:
@@ -295,12 +293,11 @@ foundmode:
 		break;
 	case M_VGA:
 		underline=0x40;
-		if (CurMode->special & _VGA_LINE_DOUBLE) max_scanline|=1;
 		max_scanline|=1;		//Vga doesn't use double line but this
 		break;
 	case M_LIN8:
 		underline=0x60;			//Seems to enable the every 4th clock on my s3
-		if (CurMode->special & _VGA_LINE_DOUBLE) max_scanline|=1;
+//		if (CurMode->special & _VGA_LINE_DOUBLE) max_scanline|=1;
 		break;
 	}
 	IO_Write(crtc_base,0x09);IO_Write(crtc_base+1,max_scanline);
