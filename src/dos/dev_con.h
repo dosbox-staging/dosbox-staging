@@ -41,8 +41,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		switch(reg_al) {
 		case 13:
 			data[count++]=0x0D;
-//			if (*size>count) data[count++]=0x0A;
-//			else cache=0x0A;
+			if (*size>count) data[count++]=0x0A;
+			else cache=0x0A;
 			*size=count;
 			reg_ax=oldax;
 			return true;
