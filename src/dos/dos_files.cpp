@@ -78,6 +78,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
 		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
+		case '\'':
 			upname[w++]=c;
 			break;
 		default:
@@ -210,14 +211,14 @@ bool DOS_FindFirst(char * search,Bit16u attr) {
 	}		
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
 	if (Drives[drive]->FindFirst(dir,dta)) return true;
-	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
 }
 
 bool DOS_FindNext(void) {
 	DOS_DTA dta(dos.dta);
 	if (Drives[dta.GetSearchDrive()]->FindNext(dta)) return true;
-	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
 }
 
