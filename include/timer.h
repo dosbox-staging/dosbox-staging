@@ -22,6 +22,9 @@
 #include <SDL/SDL.h>
 
 extern Bit32u LastTicks;
+
+#define PIT_TICK_RATE 1193182
+
 #define GetTicks() SDL_GetTicks()
 
 extern bool TimerAgain;
@@ -49,7 +52,6 @@ void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro);
 void TIMER_CheckPIT(void);
 /* This will add ms ticks to support the timer handlers */
 void TIMER_AddTicks(Bit32u ticks);
-
 
 #endif
 
