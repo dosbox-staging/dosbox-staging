@@ -26,6 +26,7 @@
 #include "pic.h"
 #include "inout.h"
 #include "int10.h"
+#include "bios.h"
 
 static Bitu call_int33,call_int74;
 
@@ -93,7 +94,6 @@ static struct {
 	Bit16s	clipx,clipy;
 	Bit16s  hotx,hoty;
 	Bit16u  textAndMask, textXorMask;
-	Bit16u	resy;
 
 	float	mickeysPerPixel_x;
 	float	mickeysPerPixel_y;
@@ -324,11 +324,11 @@ void Mouse_CursorMoved(float x,float y) {
 	mouse.mickey_y += dy;
 
 	mouse.x += dx;
-	if (mouse.x>=mouse.max_x) mouse.x=mouse.max_x-1.0f;
-	if (mouse.x< mouse.min_x) mouse.x=mouse.min_x;
+	if (mouse.x>mouse.max_x) mouse.x=mouse.max_x;
+	if (mouse.x<mouse.min_x) mouse.x=mouse.min_x;
 	mouse.y += dy;
-	if (mouse.y>=mouse.max_y) mouse.y=mouse.max_y-1.0f;
-	if (mouse.y< mouse.min_y) mouse.y=mouse.min_y;
+	if (mouse.y>mouse.max_y) mouse.y=mouse.max_y;
+	if (mouse.y<mouse.min_y) mouse.y=mouse.min_y;
 	Mouse_AddEvent(MOUSE_MOVED);
 	DrawCursor();
 }
@@ -391,7 +391,6 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 
 void Mouse_SetResolution(Bit16u width, Bit16u height)
 {
-	mouse.resy	= height-1;
 	mouse.shown = -1;		// hide cursor
 };
 
@@ -400,13 +399,41 @@ static void  mouse_reset(void)
 	WriteMouseIntVector();
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 	mouse.shown=-1;
+	/* Get the correct resolution from the current video mode */
+	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
+	switch (mode) {
+	case 0x00:
+	case 0x01:
+	case 0x02:
+	case 0x03:
+	case 0x04:
+	case 0x05:
+	case 0x06:
+	case 0x07:
+	case 0x0d:
+	case 0x0e:
+	case 0x13:
+		mouse.max_y=199;
+		break;
+	case 0x0f:
+	case 0x10:
+		mouse.max_y=349;
+		break;
+	case 0x11:
+	case 0x12:
+		mouse.max_y=479;
+		break;
+	default:
+		mouse.max_y=199;
+		LOG(LOG_MOUSE|LOG_ERROR,"Unhandled videomode %X on reset",mode);
+		break;
+	} 
+	mouse.max_x=639;
 	mouse.min_x=0;
 	mouse.min_y=0;
-	mouse.max_x=639;
-	mouse.max_y=mouse.resy;
 	// Dont set max coordinates here. it is done by SetResolution!
 	mouse.x=0;				// civ wont work otherwise
-	mouse.y=100;
+	mouse.y=mouse.max_y/2;
 	mouse.events=0;
 	mouse.mickey_x=0;
 	mouse.mickey_y=0;
@@ -427,9 +454,10 @@ static void  mouse_reset(void)
 
 static Bitu INT33_Handler(void) {
 
-//	LOG_DEBUG("MOUSE: %04X",reg_ax);
+//	LOG(0,"MOUSE: %04X",reg_ax);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
+	case 0x21:	/* Software Reset */
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;		
 		mouse_reset();
@@ -437,6 +465,7 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x01:	/* Show Mouse */
 		mouse.shown++;
+		Mouse_AutoLock(true);
 		if (mouse.shown>0) mouse.shown=0;
 		DrawCursor();
 		break;
@@ -481,22 +510,26 @@ static Bitu INT33_Handler(void) {
 			break;
 		}
 	case 0x07:	/* Define horizontal cursor range */
-		if (reg_cx<reg_dx) {
-			mouse.min_x=reg_cx;
-			mouse.max_x=reg_dx;
-		} else {
-			mouse.min_x=reg_dx;
-			mouse.max_x=reg_cx;
-		};
+		{
+			Bits max,min;
+			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
+			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
+			if (!(max & 1)) max--;
+			mouse.min_x=min;
+			mouse.max_x=max;
+			LOG(LOG_MOUSE,"Define Hortizontal range min:%d max:%d",min,max);
+		}
 		break;
 	case 0x08:	/* Define vertical cursor range */
-		if (reg_cx<reg_dx) {
-			mouse.min_y=reg_cx;
-			mouse.max_y=reg_dx;
-		} else {
-			mouse.min_y=reg_dx;
-			mouse.max_y=reg_cx;
-		};
+		{
+			Bits max,min;
+			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
+			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
+			if (!(max & 1)) max--;
+			mouse.min_y=min;
+			mouse.max_y=max;
+			LOG(LOG_MOUSE,"Define Vertical range min:%d max:%d",min,max);
+		}
 		break;
 	case 0x09:	/* Define GFX Cursor */
 		{
@@ -555,15 +588,6 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
-		break;
-	case 0x21:	/* Software Reset */
-		//TODO reset internal mouse software variables likes mickeys
-		mouse.events	= 0;
-		mouse.sub_mask	= 0;
-		mouse.sub_seg	= 0;
-		mouse.sub_ofs	= 0;
-		reg_ax=0xffff;
-		reg_bx=2;
 		break;
 	case 0x24:	/* Get Software version and mouse type */
 		reg_bx=0x805;	//Version 8.05 woohoo 
@@ -647,7 +671,6 @@ void MOUSE_Init(Section* sec) {
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 
 	memset(&mouse,0,sizeof(mouse));
-	mouse.resy = 199;	// Init with startup value
 	mouse_reset();
 }
 
