@@ -510,6 +510,24 @@ static void scale2x_line_8_mmx(scale2x_uint8* dst0, scale2x_uint8* dst1, const s
 	scale2x_8_mmx_single(dst1, src2, src1, src0, count);
 }
 
+static void Scale2x_8_mmx(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
+	if (dy<3) return;
+	Bit8u * dest=(Bit8u *)render.op.pixels+2*y*render.op.pitch;
+	/* First line */
+	scale2x_line_8_mmx(dest,dest+render.op.pitch,src,src,src+render.src.pitch,dx);
+	dest+=render.op.pitch*2;
+	src+=render.src.pitch;
+	dy-=2;
+	/* Middle part */
+	for (;dy>0;dy--) {
+		scale2x_line_8_mmx((Bit8u *)dest,(Bit8u *)(dest+render.op.pitch),src-render.src.pitch,src,src+render.src.pitch,dx);
+		dest+=render.op.pitch*2;
+		src+=render.src.pitch;
+	}
+	/* Last Line */
+	scale2x_line_8_mmx((Bit8u *)dest,(Bit8u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
+}
+
 #endif
 
 static void Render_Scale2x_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,Bitu flags) {
@@ -519,7 +537,6 @@ static void Render_Scale2x_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,B
 	render.op.bpp=bpp;
 	render.op.pitch=pitch;
 	render.op.type=OP_Scale2x;
-	render.op.part_handler=Scale2x_8;
 #if defined(SCALE2X_NORMAL)
 	switch (bpp) {
 	case 8:	
