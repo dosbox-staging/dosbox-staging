@@ -111,7 +111,7 @@ INLINE void writed(HostPt off,Bit32u val) {
 /* The Folowing six functions are slower but they recognize the paged memory system */
 //TODO maybe make em inline to go a bit faster 
 
-#if (!C_EXTRAINLINE)
+
 Bit8u  mem_readb(PhysPt pt);
 Bit16u mem_readw(PhysPt pt);
 Bit32u mem_readd(PhysPt pt);
@@ -120,16 +120,14 @@ void mem_writeb(PhysPt pt,Bit8u val);
 void mem_writew(PhysPt pt,Bit16u val);
 void mem_writed(PhysPt pt,Bit32u val);
 
-#else
-
-INLINE void mem_writeb(PhysPt pt,Bit8u val) {
+INLINE void mem_writeb_inline(PhysPt pt,Bit8u val) {
 	if (WriteHostTable[pt >> PAGE_SHIFT]) writeb(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
 	else {
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt,val);
 	}
 }
 
-INLINE void mem_writew(PhysPt pt,Bit16u val) {
+INLINE void mem_writew_inline(PhysPt pt,Bit16u val) {
 	if (WriteHostTable[pt >> PAGE_SHIFT]) writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
 	else {
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
@@ -137,7 +135,7 @@ INLINE void mem_writew(PhysPt pt,Bit16u val) {
 	}
 }
 
-INLINE void mem_writed(PhysPt pt,Bit32u val) {
+INLINE void mem_writed_inline(PhysPt pt,Bit32u val) {
 	if (WriteHostTable[pt >> PAGE_SHIFT]) writed(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
 	else {
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
@@ -147,24 +145,23 @@ INLINE void mem_writed(PhysPt pt,Bit32u val) {
 	}
 }
 
-INLINE Bit8u mem_readb(PhysPt pt) {
+INLINE Bit8u mem_readb_inline(PhysPt pt) {
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readb(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
 		return ReadHandlerTable[pt >> PAGE_SHIFT](pt);
 	}
 }
 
-INLINE Bit16u mem_readw(PhysPt pt) {
+INLINE Bit16u mem_readw_inline(PhysPt pt) {
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readw(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
 		return 
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
 	}
-
 }
 
-INLINE Bit32u mem_readd(PhysPt pt){
+INLINE Bit32u mem_readd_inline(PhysPt pt){
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
 		return 
@@ -174,8 +171,6 @@ INLINE Bit32u mem_readd(PhysPt pt){
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
 	}
 }
-
-#endif 
 
 void MEM_BlockWrite(PhysPt pt,void * data,Bitu size);
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size);
