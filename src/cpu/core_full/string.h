@@ -39,6 +39,20 @@
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
+	case R_INSB:
+		for (;count>0;count--) {
+			reg_dx,SaveMb(di_base+di_index,IO_Read(reg_dx));
+			di_index=(di_index+add_index) & add_mask;
+		}
+		break;
+	case R_INSW:
+		add_index<<=1;
+		for (;count>0;count--) {
+			SaveMb(di_base+di_index,IO_Read(reg_dx));
+			SaveMb(di_base+di_index+1,IO_Read(reg_dx+1));
+			di_index=(di_index+add_index) & add_mask;
+		}
+		break;
 	case R_STOSB:
 		for (;count>0;count--) {
 			SaveMb(di_base+di_index,reg_al);
@@ -152,6 +166,20 @@
 				if ((val1==val2)!=inst.repz) break;
 			}
 			CMPW(val1,val2,LoadD,0);
+		}
+		break;
+	case R_CMPSD:
+		{
+			add_index<<=2;Bit32u val1,val2;
+			for (;count>0;) {
+				count--;
+				val1=LoadMd(si_base+si_index);
+				val2=LoadMd(di_base+di_index);
+				si_index=(si_index+add_index) & add_mask;
+				di_index=(di_index+add_index) & add_mask;
+				if ((val1==val2)!=inst.repz) break;
+			}
+			CMPD(val1,val2,LoadD,0);
 		}
 		break;
 	default:
