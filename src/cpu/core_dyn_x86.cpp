@@ -33,10 +33,11 @@
 #include "paging.h"
 #include "inout.h"
 
-#define CACHE_TOTAL		(1024*1024*2)
+#define CACHE_TOTAL		(512*1024)
 #define CACHE_MAXSIZE	(4096)
-#define CACHE_BLOCKS	(50*1024)
+#define CACHE_BLOCKS	(32*1024)
 #define CACHE_ALIGN		(16)
+#define CACHE_PAGES		(128)
 #define DYN_HASH_SHIFT	(4)
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
@@ -68,8 +69,8 @@ enum DualOps {
 	DOP_SUB,DOP_SBB,
 	DOP_CMP,DOP_XOR,
 	DOP_AND,DOP_OR,
-	DOP_MOV,
 	DOP_TEST,
+	DOP_MOV,
 	DOP_XCHG,
 };
 
@@ -87,19 +88,15 @@ enum BranchTypes {
 	BR_L,BR_NL,BR_LE,BR_NLE
 };
 
-enum BlockType {
-	BT_Free=0,
-	BT_Normal,
-	BT_SingleLink,
-	BT_DualLink,
-	BT_CheckFlags,
-};
 
 enum BlockReturn {
 	BR_Normal=0,
 	BR_Cycles,
 	BR_Link1,BR_Link2,
 	BR_Opcode,
+#if (C_DEBUG)
+	BR_OpcodeFull,
+#endif
 	BR_CallBack,
 };
 
@@ -165,9 +162,9 @@ static void dyn_load_flags(void) {
 	gen_releasereg(DREG(FLAGS));
 }
 
-static void dyn_save_flags(bool stored=false) {
+static void dyn_save_flags(void) {
 	/* Store the host flags back in emulated ones */
-	gen_save_flags(DREG(EXIT),stored);
+	gen_save_flags(DREG(EXIT));
 	gen_dop_word_imm(DOP_AND,true,DREG(EXIT),FMASK_TEST);
 	gen_dop_word_imm(DOP_AND,true,DREG(FLAGS),~FMASK_TEST);
 	gen_dop_word(DOP_OR,true,DREG(FLAGS),DREG(EXIT)); //flags are marked for save
@@ -201,79 +198,60 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
 	Bitu ip_page=ip_point>>12;
-	mem_readb(ip_point);		//Init whatever page we are in
-	PageHandler * handler=paging.tlb.handler[ip_page];
-	CodePageHandler * chandler=0;
 	#if C_HEAVY_DEBUG
-			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
+		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 	#endif
-	if (handler->flags & PFLAG_HASCODE) {
-		/* Find correct Dynamic Block to run */
-		chandler=(CodePageHandler *)handler;
-findblock:;
-		CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
-		if (!block) {
-			cache.block.running=0;
-			block=CreateCacheBlock(ip_point,cpu.code.big,128);
-//			DYN_LOG("Created block size %x type %d",block->cache.size,block->type);
-			chandler->AddCacheBlock(block);
-			if (block->page.end>=4096) {
-				DYN_LOG("block crosses page boundary");
-			}
-		}
-run_block:
-		BlockReturn ret=gen_runcode(block->cache.start);
-		switch (ret) {
-		case BR_Normal:
-			/* Maybe check if we staying in the same page? */
-#if C_HEAVY_DEBUG
-			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
-#endif
-			goto restart_core;
-		case BR_Cycles:
-#if C_HEAVY_DEBUG			
-			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
-#endif
-			return CBRET_NONE;
-		case BR_CallBack:
-			return core_dyn.callback;
-		case BR_Opcode:
-			CPU_CycleLeft+=CPU_Cycles;
-			CPU_Cycles=1;
-			return CPU_Core_Normal_Run();
-		case BR_Link1:
-		case BR_Link2:
-			{
-				Bitu temp_ip=SegPhys(cs)+reg_eip;
-				Bitu temp_page=temp_ip >> 12;
-				CodePageHandler * temp_handler=(CodePageHandler *)paging.tlb.handler[temp_page];
-				if (temp_handler->flags & PFLAG_HASCODE) {
-					block=temp_handler->FindCacheBlock(temp_ip & 4095);
-					if (!block) goto restart_core;
-					cache_linkblocks(cache.block.running,block,ret==BR_Link2);
-					goto run_block;
-				}
-			}
-			goto restart_core;
-		}
-	} else {
-		if (handler->flags & PFLAG_NOCODE) {
-			LOG_MSG("DYNX86:Can't run code in this page");
-			return CPU_Core_Normal_Run();
-		} 
-		Bitu phys_page=ip_page;
-		if (!PAGING_MakePhysPage(phys_page)) {
-			LOG_MSG("DYNX86:Can't find physpage");
-			return CPU_Core_Normal_Run();
-		}
-		chandler=new CodePageHandler(handler);
-		MEM_SetPageHandler(phys_page,1,chandler);		//Setup the handler
-		PAGING_UnlinkPages(ip_page,1);
-		goto findblock;
+	CodePageHandler * chandler=MakeCodePage(ip_page);
+	if (!chandler) return CPU_Core_Normal_Run();
+	/* Find correct Dynamic Block to run */
+	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
+	if (!block) {
+		block=CreateCacheBlock(chandler,ip_point,32);
 	}
-	return 0;
+run_block:
+	cache.block.running=0;
+	BlockReturn ret=gen_runcode(block->cache.start);
+	switch (ret) {
+	case BR_Normal:
+		/* Maybe check if we staying in the same page? */
+#if C_HEAVY_DEBUG
+		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
+#endif
+		goto restart_core;
+	case BR_Cycles:
+#if C_HEAVY_DEBUG			
+		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
+#endif
+		return CBRET_NONE;
+	case BR_CallBack:
+		return core_dyn.callback;
+	case BR_Opcode:
+		CPU_CycleLeft+=CPU_Cycles;
+		CPU_Cycles=1;
+		return CPU_Core_Normal_Run();
+#if (C_DEBUG)
+	case BR_OpcodeFull:
+		CPU_CycleLeft+=CPU_Cycles;
+		CPU_Cycles=1;
+		return CPU_Core_Full_Run();
+#endif
+	case BR_Link1:
+	case BR_Link2:
+		{
+			Bitu temp_ip=SegPhys(cs)+reg_eip;
+			Bitu temp_page=temp_ip >> 12;
+			CodePageHandler * temp_handler=(CodePageHandler *)paging.tlb.handler[temp_page];
+			if (temp_handler->flags & PFLAG_HASCODE) {
+				block=temp_handler->FindCacheBlock(temp_ip & 4095);
+				if (!block) goto restart_core;
+				cache.block.running->LinkTo(ret==BR_Link2,block);
+				goto run_block;
+			}
+		}
+		goto restart_core;
+	}
+return 0;
 }
-
 
 void CPU_Core_Dyn_X86_Init(void) {
 	Bits i;

@@ -30,7 +30,7 @@ static void dyn_string(STRING_OP op) {
 	DynReg * si_base=decode.segprefix ? decode.segprefix : DREG(DS);
 	DynReg * di_base=DREG(ES);
 	DynReg * tmp_reg;bool usesi;bool usedi;
-	gen_storeflags();
+	gen_protectflags();
 	if (decode.rep) {
 		gen_dop_word_imm(DOP_SUB,true,DREG(CYCLES),decode.cycles);
 		gen_releasereg(DREG(CYCLES));
@@ -151,7 +151,6 @@ static void dyn_string(STRING_OP op) {
 		Bit8u * cycle_branch=gen_create_branch(BR_NLE);
 		gen_lea(DREG(EIP),DREG(EIP),0,0,decode.op_start-decode.code_start);
 		dyn_releaseregs();
-		gen_restoreflags(true);
 		gen_return(BR_Cycles);
 		gen_fill_branch(cycle_branch);
 		dyn_loadstate(&cycle_state);
@@ -161,5 +160,4 @@ static void dyn_string(STRING_OP op) {
 		gen_fill_jump(rep_ecx_jmp);
 	}
 	gen_releasereg(DREG(TMPW));
-	gen_restoreflags();
 }

@@ -1,28 +1,34 @@
-struct CacheBlock {
+class CacheBlock {
 public:
+	void Clear(void);
+	void LinkTo(Bitu index,CacheBlock * toblock) {
+		assert(toblock);
+		link[index].to=toblock;
+		link[index].next=toblock->link[index].from;
+		toblock->link[index].from=this;
+	}
 	struct {
-		Bit16s start,end;				//Where the page is the original code
-		Bitu first,last;
+		Bit16u start,end;				//Where the page is the original code
+		CodePageHandler * handler;		//Page containing this code
 	} page;
 	struct {
 		Bit8u * start;					//Where in the cache are we
 		Bitu size;
+		CacheBlock * next;
 	} cache;
-	BlockType type;
-	CodePageHandler * code_page;		//Page containing this code
-	CacheBlock * page_link;				//For code crossing a page boundary
 	struct {
+		Bitu index;
 		CacheBlock * next;
 	} hash;
-	CacheBlock * list_next;
 	struct {
-		CacheBlock * to[2];	
-		CacheBlock * from[DYN_LINKS];
-		Bitu index;
-	} link;
-	CacheBlock * links[2];
+		CacheBlock * to;
+		CacheBlock * next;
+		CacheBlock * from;
+	} link[2];
+	CacheBlock * crossblock;
 };
 
+class CacheBlock;
 static struct {
 	struct {
 		CacheBlock * first;
@@ -31,96 +37,124 @@ static struct {
 		CacheBlock * running;
 	} block;
 	Bit8u * pos;
-	CacheBlock linkblocks[2];
+	CodePageHandler * free_pages;
+	CodePageHandler * used_pages;
+	CodePageHandler * last_page;
 } cache;
 
 static Bit8u cache_code_link_blocks[2][16];
 static Bit8u cache_code[CACHE_TOTAL+CACHE_MAXSIZE];
 static CacheBlock cache_blocks[CACHE_BLOCKS];
-
-static void cache_resetblock(CacheBlock * block);
-
+static CacheBlock link_blocks[2];
 class CodePageHandler :public PageHandler {
 public:
-	CodePageHandler(PageHandler * _old_pagehandler) {
+	CodePageHandler() {}
+	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
+		phys_page=_phys_page;
 		old_pagehandler=_old_pagehandler;
 		flags=old_pagehandler->flags|PFLAG_HASCODE;
 		flags&=~PFLAG_WRITEABLE;
+		active_blocks=0;
+		active_count=16;
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
 	}
-	void InvalidateRange(Bits start,Bits end) {
-		Bits maps=start>>DYN_HASH_SHIFT;
-		Bits map=maps;
-		Bits count=write_map[maps];
-		while (map>=0 && count>0) {
-			CacheBlock * block=hash_map[map];
-			CacheBlock * * where=&hash_map[map];
+	void InvalidateRange(Bitu start,Bitu end) {
+		Bits index=1+(start>>DYN_HASH_SHIFT);
+		while (index>=0) {
+			Bitu map=0;
+			for (Bitu count=start;count<=end;count++) map+=write_map[count];
+			if (!map) return;
+			CacheBlock * block=hash_map[index];
 			while (block) {
 				CacheBlock * nextblock=block->hash.next;
-				if (start<=block->page.end && end>=block->page.start) {
-					for (Bitu i=block->page.first;i<=block->page.last;i++) write_map[i]--;
-					block->code_page=0;			//Else resetblock will do double work
-					count--;
-					if (block==cache.block.running) LOG_MSG("Writing to current block");
-					cache_resetblock(block);
-					*where=nextblock;
-				} else {
-					where=&block->hash.next;
-				}
+				if (start<=block->page.end && end>=block->page.start) 
+					block->Clear();
 				block=nextblock;
 			}
-			map--;
+			index--;
 		}
 	}
 	void writeb(PhysPt addr,Bitu val){
-		if (val!=host_readb(hostmem+(addr&4095))) {
-			InvalidateRange(addr&4095,addr&4095);
-			host_writeb(hostmem+(addr&4095),val);
-		}
+		addr&=4095;
+		host_writeb(hostmem+addr,val);
+		if (!*(Bit8u*)&write_map[addr]) {
+			if (active_blocks) return;
+			active_count--;
+			if (!active_count) Release();
+		} else InvalidateRange(addr,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
-		if (val!=host_readw(hostmem+(addr&4095))) {
-			InvalidateRange(addr&4095,(addr&4095)+1);
-			host_writew(hostmem+(addr&4095),val);
-		}
+		addr&=4095;
+		host_writew(hostmem+addr,val);
+		if (!*(Bit16u*)&write_map[addr]) {
+			if (active_blocks) return;
+			active_count--;
+			if (!active_count) Release();
+		} else InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
-		if (val!=host_readd(hostmem+(addr&4095))) {
-			InvalidateRange(addr&4095,(addr&4095)+3);
-			host_writed(hostmem+(addr&4095),val);
-		}
+		addr&=4095;
+		host_writed(hostmem+addr,val);
+		if (!*(Bit32u*)&write_map[addr]) {
+			if (active_blocks) return;
+			active_count--;
+			if (!active_count) Release();
+		} else InvalidateRange(addr,addr+3);
 	}
     void AddCacheBlock(CacheBlock * block) {
-		Bit16u first,last;
-		if (block->page.start<0) first=0;
-		else first=block->page.start>>DYN_HASH_SHIFT;
-		block->hash.next=hash_map[first];
-		hash_map[first]=block;
-		if (block->page.end>=4096) last=DYN_PAGE_HASH-1;
-		else last=block->page.end>>DYN_HASH_SHIFT;
-		block->page.first=first;
-		block->page.last=last;
-		for (;first<=last;first++) {
-			write_map[first]++;
-		}
-		block->code_page=this;
+		Bitu index=1+(block->page.start>>DYN_HASH_SHIFT);
+		block->hash.next=hash_map[index];
+		block->hash.index=index;
+		hash_map[index]=block;
+		block->page.handler=this;
+		active_blocks++;
+	}
+    void AddCrossBlock(CacheBlock * block) {
+		block->hash.next=hash_map[0];
+		block->hash.index=0;
+		hash_map[0]=block;
+		block->page.handler=this;
+		active_blocks++;
 	}
 	void DelCacheBlock(CacheBlock * block) {
-		CacheBlock * * where=&hash_map[block->page.first];
-		while (*where) {
-			if (*where==block) {
-				*where=block->hash.next;
-				break;
-			}
+		active_blocks--;
+		active_count=16;
+		CacheBlock * * where=&hash_map[block->hash.index];
+		while (*where!=block) {
 			where=&((*where)->hash.next);
+			//Will crash if a block isn't found, which should never happen.
 		}
-		for (Bitu i=block->page.first;i<=block->page.last;i++) {
-			write_map[i]--;
+		*where=block->hash.next;
+		for (Bitu i=block->page.start;i<=block->page.end;i++) {
+			if (write_map[i]) write_map[i]--;
 		}
 	}
+	void Release(void) {
+		MEM_SetPageHandler(phys_page,1,old_pagehandler);
+		PAGING_ClearTLB();
+		if (prev) prev->next=next;
+		else cache.used_pages=next;
+		if (next) next->prev=prev;
+		else cache.last_page=prev;
+		next=cache.free_pages;
+		cache.free_pages=this;
+		prev=0;
+	}
+	void ClearRelease(void) {
+		for (Bitu index=0;index<(1+DYN_PAGE_HASH);index++) {
+			CacheBlock * block=hash_map[index];
+			while (block) {
+				CacheBlock * nextblock=block->hash.next;
+				block->page.handler=0;			//No need, full clear
+				block->Clear();
+				block=nextblock;
+			}
+		}
+		Release();
+	}
 	CacheBlock * FindCacheBlock(Bitu start) {
-		CacheBlock * block=hash_map[start>>DYN_HASH_SHIFT];
+		CacheBlock * block=hash_map[1+(start>>DYN_HASH_SHIFT)];
 		while (block) {
 			if (block->page.start==start) return block;
 			block=block->hash.next;
@@ -131,133 +165,153 @@ public:
 		hostmem=old_pagehandler->GetHostPt(phys_page);
 		return hostmem;
 	}
+public:
+	Bit8u write_map[4096];
+	CodePageHandler * next, * prev;
 private:
 	PageHandler * old_pagehandler;
-	CacheBlock * hash_map[DYN_PAGE_HASH];
-	Bit8u write_map[DYN_PAGE_HASH];
+	CacheBlock * hash_map[1+DYN_PAGE_HASH];
+	Bitu active_blocks;
+	Bitu active_count;
 	HostPt hostmem;	
+	Bitu phys_page;
 };
 
 
+static CodePageHandler * MakeCodePage(Bitu lin_page) {
+	mem_readb(lin_page << 12);		//Ensure page contains memory
+	PageHandler * handler=paging.tlb.handler[lin_page];
+	if (handler->flags & PFLAG_HASCODE) return ( CodePageHandler *)handler;
+	if (handler->flags & PFLAG_NOCODE) {
+		LOG_MSG("DYNX86:Can't run code in this page");
+		return 0;
+	} 
+	Bitu phys_page=lin_page;
+	if (!PAGING_MakePhysPage(phys_page)) {
+		LOG_MSG("DYNX86:Can't find physpage");
+		return 0;
+	}
+	/* Find a free CodePage */
+	if (!cache.free_pages) {
+		cache.used_pages->ClearRelease();
+	}
+	CodePageHandler * cpagehandler=cache.free_pages;
+	cache.free_pages=cache.free_pages->next;
+	cpagehandler->prev=cache.last_page;
+	cpagehandler->next=0;
+	if (cache.last_page) cache.last_page->next=cpagehandler;
+	cache.last_page=cpagehandler;
+	if (!cache.used_pages) cache.used_pages=cpagehandler;
+	cpagehandler->SetupAt(phys_page,handler);
+	MEM_SetPageHandler(phys_page,1,cpagehandler);
+	PAGING_UnlinkPages(lin_page,1);
+	return cpagehandler;
+}
+
 static INLINE void cache_addunsedblock(CacheBlock * block) {
-	block->list_next=cache.block.free;
+	block->cache.next=cache.block.free;
 	cache.block.free=block;
 }
 
 static CacheBlock * cache_getblock(void) {
 	CacheBlock * ret=cache.block.free;
 	if (!ret) E_Exit("Ran out of CacheBlocks" );
-	cache.block.free=ret->list_next;
+	cache.block.free=ret->cache.next;
+	ret->cache.next=0;
 	return ret;
 }
 
-static INLINE void cache_clearlinkfrom(CacheBlock * block,CacheBlock * from) {
-	for (Bitu i=0;i<DYN_LINKS;i++) {
-		if (block->link.from[i]==from) block->link.from[i]=0;
+void CacheBlock::Clear(void) {
+	Bitu ind;
+	/* Check if this is not a cross page block */
+	if (hash.index) for (ind=0;ind<2;ind++) {
+		CacheBlock * fromlink=link[ind].from;
+		link[ind].from=0;
+		while (fromlink) {
+			CacheBlock * nextlink=fromlink->link[ind].next;
+			fromlink->link[ind].next=0;
+			fromlink->link[ind].to=&link_blocks[ind];
+			fromlink=nextlink;
+		}
+		if (link[ind].to!=&link_blocks[ind]) {
+			CacheBlock * * wherelink=&link[ind].to->link[ind].from;
+			while (*wherelink!=this) {
+				wherelink=&(*wherelink)->link[ind].next;
+			}
+			*wherelink=(*wherelink)->link[ind].next;
+		}
+	} else 
+		cache_addunsedblock(this);
+	if (crossblock) {
+		crossblock->crossblock=0;
+		crossblock->Clear();
+		crossblock=0;
+	}
+	if (page.handler) {
+		page.handler->DelCacheBlock(this);
+		page.handler=0;
 	}
 }
 
-static INLINE void cache_clearlinkto(CacheBlock * block,CacheBlock * to) {
-	if (block->link.to[0]==to) block->link.to[0]=&cache.linkblocks[0];
-	if (block->link.to[1]==to) block->link.to[1]=&cache.linkblocks[1];
-}
-
-static void cache_linkblocks(CacheBlock * from,CacheBlock * to,Bitu link) {
-	from->link.to[link]=to;
-	CacheBlock * clear=to->link.from[to->link.index];
-	if (clear) {
-		DYN_LOG("backlink buffer full");
-		cache_clearlinkto(to->link.from[to->link.index],to);
-	}
-	to->link.from[to->link.index]=from;
-	to->link.index++;
-	if (to->link.index>=DYN_LINKS) to->link.index=0;
-}
-
-static void cache_resetblock(CacheBlock * block) {
-	Bits i;
-	DYN_LOG("Resetted block");
-	block->type=BT_Free;
-	/* Clear all links to this block from other blocks */
-	for (i=0;i<DYN_LINKS;i++) {
-		if (block->link.from[i]) cache_clearlinkto(block->link.from[i],block);
-		block->link.from[i]=0;
-	}
-	/* Clear all links from this block to other blocks */
-	if (block->link.to[0]!=&cache.linkblocks[0]) {
-		cache_clearlinkfrom(block->link.to[0],block);
-		block->link.to[0]=&cache.linkblocks[0];
-	}
-	if (block->link.to[1]!=&cache.linkblocks[1]) {
-		cache_clearlinkfrom(block->link.to[1],block);
-		block->link.to[1]=&cache.linkblocks[1];
-	}
-	block->link.index=0;
-	if (block->code_page) block->code_page->DelCacheBlock(block);
-}
 
 static CacheBlock * cache_openblock(void) {
 	CacheBlock * block=cache.block.active;
 	/* check for enough space in this block */
 	Bitu size=block->cache.size;
-	CacheBlock * nextblock=block->list_next;
+	CacheBlock * nextblock=block->cache.next;
+	if (block->page.handler) 
+		block->Clear();
 	while (size<CACHE_MAXSIZE) {
-		if (!nextblock) goto skipresize;
+		if (!nextblock) 
+			goto skipresize;
 		size+=nextblock->cache.size;
-		CacheBlock * tempblock=nextblock->list_next;
-		if (nextblock->type!=BT_Free) cache_resetblock(nextblock);
+		CacheBlock * tempblock=nextblock->cache.next;
+		if (nextblock->page.handler) 
+			nextblock->Clear();
 		cache_addunsedblock(nextblock);
 		nextblock=tempblock;
 	}
 skipresize:
 	block->cache.size=size;
-	block->list_next=nextblock;
+	block->cache.next=nextblock;
 	cache.pos=block->cache.start;
 	return block;
 }
 
-static void cache_closeblock(BlockType type) {
+static void cache_closeblock(void) {
 	CacheBlock * block=cache.block.active;
-	/* Setup some structures in the block determined by type */
-	block->type=type;
-	switch (type) {
-	case BT_Normal:
-		break;
-	case BT_SingleLink:
-		block->link.to[0]=&cache.linkblocks[0];
-		break;
-	case BT_DualLink:
-		block->link.to[0]=&cache.linkblocks[0];
-		block->link.to[1]=&cache.linkblocks[1];
-		break;
-	}
+	block->link[0].to=&link_blocks[0];
+	block->link[1].to=&link_blocks[1];
+	block->link[0].from=0;
+	block->link[1].from=0;
+	block->link[0].next=0;
+	block->link[1].next=0;
 	/* Close the block with correct alignments */
 	Bitu written=cache.pos-block->cache.start;
 	if (written>block->cache.size) {
-		if (!block->list_next) {
-			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun");	
-		} else E_Exit("CacheBlock overrun");	
+		if (!block->cache.next) {
+			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun 1 %d",written-block->cache.size);	
+		} else E_Exit("CacheBlock overrun 2 written %d size %d",written,block->cache.size);	
 	} else {
 		Bitu new_size;
 		Bitu left=block->cache.size-written;
 		/* Smaller than cache align then don't bother to resize */
 		if (left>CACHE_ALIGN) {
 			new_size=((written-1)|(CACHE_ALIGN-1))+1;
-		} else new_size=block->cache.size;
-		CacheBlock * newblock=cache_getblock();
-		newblock->cache.start=block->cache.start+new_size;
-		newblock->cache.size=block->cache.size-new_size;
-		newblock->list_next=block->list_next;
-		newblock->type=BT_Free;
-		block->cache.size=new_size;
-		block->list_next=newblock;
+			CacheBlock * newblock=cache_getblock();
+			newblock->cache.start=block->cache.start+new_size;
+			newblock->cache.size=block->cache.size-new_size;
+			newblock->cache.next=block->cache.next;
+			block->cache.next=newblock;
+			block->cache.size=new_size;
+		}
 	}
 	/* Advance the active block pointer */
-	if (!block->list_next) {
-		DYN_LOG("Cache full restarting");
+	if (!block->cache.next) {
+//		LOG_MSG("Cache full restarting");
 		cache.block.active=cache.block.first;
 	} else {
-		cache.block.active=block->list_next;
+		cache.block.active=block->cache.next;
 	}
 }
 
@@ -283,20 +337,29 @@ static void cache_init(void) {
 	memset(&cache_blocks,0,sizeof(cache_blocks));
 	cache.block.free=&cache_blocks[0];
 	for (i=0;i<CACHE_BLOCKS-1;i++) {
-		cache_blocks[i].list_next=&cache_blocks[i+1];
-		cache_blocks[i].link.to[0]=&cache.linkblocks[0];
-		cache_blocks[i].link.to[1]=&cache.linkblocks[1];
+		cache_blocks[i].link[0].to=(CacheBlock *)1;
+		cache_blocks[i].link[1].to=(CacheBlock *)1;
+		cache_blocks[i].cache.next=&cache_blocks[i+1];
 	}
 	CacheBlock * block=cache_getblock();
 	cache.block.first=block;
 	cache.block.active=block;
 	block->cache.start=&cache_code[0];
 	block->cache.size=CACHE_TOTAL;
-	block->list_next=0;					//Last block in the list
+	block->cache.next=0;								//Last block in the list
 	cache.pos=&cache_code_link_blocks[0][0];
-	cache.linkblocks[0].cache.start=cache.pos;
+	link_blocks[0].cache.start=cache.pos;
 	gen_return(BR_Link1);
 	cache.pos=&cache_code_link_blocks[1][0];
-	cache.linkblocks[1].cache.start=cache.pos;
+	link_blocks[1].cache.start=cache.pos;
 	gen_return(BR_Link2);
+	cache.free_pages=0;
+	cache.last_page=0;
+	cache.used_pages=0;
+	/* Setup the code pages */
+	for (i=0;i<CACHE_PAGES-1;i++) {
+		CodePageHandler * newpage=new CodePageHandler();
+		newpage->next=cache.free_pages;
+		cache.free_pages=newpage;
+	}
 }
