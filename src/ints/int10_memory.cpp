@@ -67,6 +67,7 @@ void INT10_SetupRomMemory(void) {
 	for (i=0;i<0x10;i++) {
 		real_writeb(0xC000,segoff++,static_functionality[i]);
 	}
+	MEM_BlockWrite(PhysMake(0xf000,0xfa6e),int10_font_08,128*8);
 
 };
 
