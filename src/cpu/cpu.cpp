@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.42 2003-12-11 21:32:55 finsterr Exp $ */
+/* $Id: cpu.cpp,v 1.43 2003-12-12 17:23:55 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -387,15 +387,13 @@ bool CPU_Interrupt(Bitu num,Bitu type) {
 						}
 						if (gate.Type() & 0x8) {	/* 32-bit Gate */
 							if (reg_flags & FLAG_VM) {
-								SegSet16(fs,0xffff);
-								CPU_Push32(SegValue(gs));
-								CPU_Push32(SegValue(fs));
-								CPU_Push32(SegValue(ds));
-								CPU_Push32(SegValue(es));
+								CPU_Push32(SegValue(gs));SegSet16(gs,0x0);
+								CPU_Push32(SegValue(fs));SegSet16(fs,0x0);
+								CPU_Push32(SegValue(ds));SegSet16(ds,0x0);
+								CPU_Push32(SegValue(es));SegSet16(es,0x0);
 							}
 							CPU_Push32(o_ss);
 							CPU_Push32(o_esp);
-
 						} else {					/* 16-bit Gate */
 							if (reg_flags & FLAG_VM) E_Exit("V86 to 16-bit gate");
 							CPU_Push16(o_ss);
@@ -1175,7 +1173,10 @@ static Bits HLT_Decode(void) {
 }
 
 bool CPU_HLT(void) {
-	if (cpu.cpl) return true;
+	if (cpu.cpl) {
+		CPU_SetupException(13,0);	
+		return true;
+	}
 	CPU_Cycles=0;
 	cpu.hlt.cs=SegValue(cs);
 	cpu.hlt.eip=reg_eip;
