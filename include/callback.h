@@ -16,12 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.11 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: callback.h,v 1.12 2005-03-24 20:59:04 qbix79 Exp $ */
 
-#ifndef __CALLBACK_H
-#define __CALLBACK_H
+#ifndef DOSBOX_CALLBACK_H
+#define DOSBOX_CALLBACK_H
 
-#include <mem.h>
+#ifndef DOSBOX_MEM_H
+#include "mem.h"
+#endif 
 
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
@@ -60,5 +62,23 @@ void CALLBACK_SZF(bool val);
 
 extern Bitu call_priv_io;
 
-#endif
 
+class CALLBACK_HandlerObject{
+private:
+	bool installed;
+	Bit16u m_callback;
+	enum {NONE,SETUP,SETUPAT} m_type;
+    struct {	
+		RealPt old_vector;
+		Bit8u interrupt;
+		bool installed;
+	} vectorhandler;
+public:
+	CALLBACK_HandlerObject():installed(false),m_type(NONE){vectorhandler.installed=false;}
+	~CALLBACK_HandlerObject();
+	void Install(CallBack_Handler handler,Bitu type,const char* description=0);
+	Bit16u Get_callback(){return m_callback;}
+	RealPt Get_RealPointer(){ return RealMake(CB_SEG,m_callback << 4);}
+	void Set_RealVec(Bit8u vec);
+};
+#endif
