@@ -704,7 +704,7 @@ static void ExecuteGlobRegister(void) {
 		}
 		break;
 	case 0xE:  // Set active channel register
-		myGUS.activechan = myGUS.gRegData & 63;
+		myGUS.activechan = (myGUS.gRegData & 31) + 1;
 		if(myGUS.activechan < 14) myGUS.activechan = 14;
 		if(myGUS.activechan > 32) myGUS.activechan = 32;
 		MIXER_Enable(gus_chan,true);
