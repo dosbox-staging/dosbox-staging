@@ -268,7 +268,7 @@ A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the cor-
    meaning.
 
 Q: The game/application runs much too slow!
-A: Look at the secion "To run resource-demanding games" for more information.
+A: Look at the section "To run resource-demanding games" for more information.
 
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 A: This is possible! Just create a config file: config -writeconf dosbox.conf .
@@ -293,7 +293,7 @@ The file is divided into several sections (the names have [] around it).
 Some sections have options which you can set.
 # and % indicate commentlines. 
 The generated configfile contains the current settings. You can alter them and
-start dosbox with the -conf switch to load the file and use these settings. 
+start DOSBox with the -conf switch to load the file and use these settings. 
 
 ==================
 The Language File:
