@@ -46,6 +46,8 @@ public:
 	virtual bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 
 	virtual bool	LoadUnloadMedia		(bool unload) = 0;
+	
+	virtual void	InitNewMedia		(void) {};
 };	
 
 class CDROM_Interface_SDL : public CDROM_Interface
@@ -54,18 +56,18 @@ public:
 	CDROM_Interface_SDL			(void);
 	virtual ~CDROM_Interface_SDL(void);
 
-	bool	SetDevice			(char* path, int forceCD);
-	bool	GetUPC				(unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
-	bool	GetAudioTracks		(int& stTrack, int& end, TMSF& leadOut);
-	bool	GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr);
-	bool	GetAudioSub			(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool	GetAudioStatus		(bool& playing, bool& pause);
-	bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector		(unsigned long start,unsigned long len);
-	bool	PauseAudio			(bool resume);
-	bool	StopAudio			(void);
-	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
-	bool	LoadUnloadMedia		(bool unload);
+	virtual bool	SetDevice			(char* path, int forceCD);
+	virtual bool	GetUPC				(unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
+	virtual bool	GetAudioTracks		(int& stTrack, int& end, TMSF& leadOut);
+	virtual bool	GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr);
+	virtual bool	GetAudioSub			(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
+	virtual bool	GetAudioStatus		(bool& playing, bool& pause);
+	virtual bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
+	virtual bool	PlayAudioSector		(unsigned long start,unsigned long len);
+	virtual bool	PauseAudio			(bool resume);
+	virtual bool	StopAudio			(void);
+	virtual bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
+	virtual bool	LoadUnloadMedia		(bool unload);
 
 private:
 	bool	Open				(void);
@@ -171,6 +173,7 @@ public:
 
 	bool	LoadUnloadMedia		(bool unload);
 
+	void	InitNewMedia		(void) { Close(); Open(); };
 private:
 
 	bool	Open				(void);
