@@ -312,6 +312,9 @@ switch(Fetchb()) {
 	case 0x9d:												/* POPFD */
 		SETFLAGSd(Pop_32())
 		CheckTF();
+#ifdef CPU_PIC_CHECK
+		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
+#endif
 		break;
 	case 0xa1:												/* MOV EAX,Ow */
 		reg_eax=LoadMd(GetEADirect[prefix.mark]());

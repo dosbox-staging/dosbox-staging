@@ -585,6 +585,9 @@ restart:
 		case 0x9d:												/* POPF */
 			SETFLAGSw(Pop_16());
 			CheckTF();
+#ifdef CPU_PIC_CHECK
+			if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
+#endif
 			break;
 		case 0x9e:												/* SAHF */
 			SETFLAGSb(reg_ah);
@@ -798,7 +801,7 @@ restart:
 #if C_DEBUG	
 			SAVEIP;
 			if (DEBUG_Breakpoint()) {
-				LOADIP;
+				LEAVECORE;
 				return 1;
 			}
 			LOADIP;
@@ -810,7 +813,10 @@ restart:
 				Bit8u num=Fetchb();
 #if C_DEBUG
 				SAVEIP;
-				if (DEBUG_IntBreakpoint(num)) return 1;
+				if (DEBUG_IntBreakpoint(num)) {
+					LEAVECORE;	
+					return 1;
+				}
 #endif
 				EXCEPTION(num);				
 			}
@@ -825,6 +831,9 @@ restart:
 				Bit16u pflags=Pop_16();
 				SETFLAGSw(pflags);
 				CheckTF();
+#ifdef CPU_PIC_CHECK
+				if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
+#endif
 				break;
 			}
 		case 0xd0:												/* GRP2 Eb,1 */
@@ -969,7 +978,7 @@ restart:
 			Repeat_Normal(true,false);
 			continue;
 		case 0xf4:												/* HLT */
-			SAVEIP;
+			LEAVECORE;
 			CPU_HLT();
 			return 0x0;
 		case 0xf5:												/* CMC */
@@ -1079,11 +1088,9 @@ restart:
 			break;
 		case 0xfb:												/* STI */
 			SETFLAGBIT(IF,true);
-			if (PIC_IRQCheck) {
-				SAVEIP;	
-				PIC_runIRQs();	
-				LOADIP;
-			};
+#ifdef CPU_PIC_CHECK
+			if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
+#endif
 			break;
 		case 0xfc:												/* CLD */
 			SETFLAGBIT(DF,false);
@@ -1105,7 +1112,7 @@ restart:
 					{
 						Bit32u ret;
 						Bit16u call=Fetchw();
-						SAVEIP;
+						LEAVECORE;
 						if (call<CB_MAX) { 
 							ret=CallBack_Handlers[call]();
 						} else {  

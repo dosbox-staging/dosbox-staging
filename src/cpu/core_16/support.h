@@ -24,6 +24,10 @@ EAPoint IPPoint;
 #define SAVEIP		reg_ip=GETIP
 #define LOADIP		IPPoint=SegBase(cs)+reg_ip
 
+#define LEAVECORE						\
+	SAVEIP;								\
+	FILLFLAGS;
+
 static INLINE void ADDIP(Bit16u add) {
 	IPPoint=SegBase(cs)+((Bit16u)(((Bit16u)(IPPoint-SegBase(cs)))+(Bit16u)add));
 }
@@ -42,14 +46,14 @@ static INLINE void ADDIPFAST(Bit16s blah) {
 #define EXCEPTION(blah)										\
 	{														\
 		Bit8u new_num=blah;									\
-		SAVEIP;												\
+		LEAVECORE;											\
 		if (Interrupt(new_num)) {							\
 			if (GETFLAG(TF)) {								\
 				cpudecoder=CPU_Real_16_Slow_Decode_Trap;	\
-				return 0;									\
+				return CBRET_NONE;						\
 			}												\
 			goto decode_start;								\
-		} else return 0;									\
+		} else return CBRET_NONE;							\
 	}
 
 static INLINE Bit8u Fetchb() {

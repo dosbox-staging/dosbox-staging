@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "cpu.h"
+#include "lazyflags.h"
 #include "inout.h"
 #include "callback.h"
 #include "pic.h"
@@ -57,10 +58,12 @@ extern Bitu cycle_count;
 #define CPU_386							//Enable 386 instructions
 #define CPU_PREFIX_67					//Enable the 0x67 prefix
 #define CPU_PREFIX_COUNT				//Enable counting of prefixes
+#define CPU_PIC_CHECK					//Check for IRQ's on critical moment
 
 #if C_FPU
 #define CPU_FPU							//Enable FPU escape instructions
 #endif
+
 
 
 
@@ -71,11 +74,12 @@ static Bitu CPU_Real_16_Slow_Decode_Trap(void);
 static Bitu CPU_Real_16_Slow_Decode(void) {
 decode_start:
 	LOADIP;
+	flags.type=t_UNKNOWN;
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;		
 #if C_HEAVY_DEBUG
-		SAVEIP;
+		LEAVECORE;
 		if (DEBUG_HeavyIsBreakpoint()) return 1;
 #endif
 #endif
@@ -88,7 +92,7 @@ decode_start:
 		CPU_Cycles--;
 	}
 decode_end:
-	SAVEIP;
+	LEAVECORE;
 	return CBRET_NONE;
 }
 
