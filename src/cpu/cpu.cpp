@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.50 2004-01-11 12:29:03 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.51 2004-01-11 12:52:57 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -53,18 +53,6 @@ static struct {
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
-
-#if (C_DYNAMIC_X86)
-
-#define startcpu_core	CPU_Core_Dyn_X86_Run
-
-#else 
-
-#define startcpu_core	CPU_Core_Normal_Run
-//#define startcpu_core	CPU_Core_Full_Run
-
-#endif
-
 
 void CPU_Push16(Bitu value) {
 	reg_esp=(reg_esp&~cpu.stack.mask)|(reg_esp-2)&cpu.stack.mask;
