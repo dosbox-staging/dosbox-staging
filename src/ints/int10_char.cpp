@@ -271,7 +271,8 @@ INLINE static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u at
 			switch (curmode->cheight) {
 			case 8:
 //				fontdata=&int10_font_08[chr*8];
-				fontdata=Real2Host(RealGetVec(0x43))+chr*8;
+				if (chr<128) fontdata=Real2Host(RealGetVec(0x43))+chr*8;
+				else fontdata=Real2Host(RealGetVec(0x1F))+(chr-128)*8;
 				break;
 			case 14:
 				fontdata=&int10_font_14[chr*14];
