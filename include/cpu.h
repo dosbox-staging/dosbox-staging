@@ -33,18 +33,9 @@ extern Bits CPU_CycleMax;
 typedef Bits (CPU_Decoder)(void);
 extern CPU_Decoder * cpudecoder;
 
-
 //CPU Stuff
-void SetCPU16bit( );
 
-enum CODE_TYPE {
-	CODE_REAL,
-	CODE_PMODE16,
-	CODE_PMODE32,
-	CODE_INIT,
-};
-
-extern bool parity_lookup[256];
+extern Bit16u parity_lookup[256];
 
 void CPU_LLDT(Bitu selector);
 void CPU_LTR(Bitu selector);
@@ -70,12 +61,27 @@ bool CPU_LMSW(Bitu word);
 void CPU_VERR(Bitu selector);
 void CPU_VERW(Bitu selector);
 
-bool CPU_JMP(bool use32,Bitu selector,Bitu offset);
-bool CPU_CALL(bool use32,Bitu selector,Bitu offset);
-bool CPU_RET(bool use32,Bitu bytes);
+void CPU_JMP(bool use32,Bitu selector,Bitu offset);
+void CPU_CALL(bool use32,Bitu selector,Bitu offset);
+void CPU_RET(bool use32,Bitu bytes);
 
-bool Interrupt(Bitu num);
-bool CPU_IRET(bool use32);
+#define CPU_INT_HARDWARE		0x1
+#define CPU_INT_HAS_ERROR		0x2
+
+void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type);
+INLINE void CPU_HW_Interrupt(Bitu num) {
+	CPU_Interrupt(num,0,CPU_INT_HARDWARE);
+}
+INLINE void CPU_SW_Interrupt(Bitu num) {
+	CPU_Interrupt(num,0,0);
+}
+void CPU_Exception(Bitu num,Bitu error_code=0);
+
+INLINE void Interrupt(Bitu num) {
+	CPU_SW_Interrupt(num);
+}
+
+void CPU_IRET(bool use32);
 void CPU_SetSegGeneral(SegNames seg,Bitu value);
 
 void CPU_CPUID(void);
@@ -169,9 +175,23 @@ struct TSS_386 {
     Bit16u ldt,  RESERVED10;     /* The local descriptor table */
     Bit16u trap;                 /* The trap flag (for debugging) */
     Bit16u io;                   /* The I/O Map base address */
-} GCC_ATTRIBUTE(packed);;
+} GCC_ATTRIBUTE(packed);
 
 struct S_Descriptor {
+#ifdef WORDS_BIGENDIAN
+	Bit32u base_0_15	:16;
+	Bit32u limit_0_15	:16;
+	Bit32u base_24_31	:8;
+	Bit32u g			:1;
+	Bit32u big			:1;
+	Bit32u r			:1;
+	Bit32u avl			:1;
+	Bit32u limit_16_19	:4;
+	Bit32u p			:1;
+	Bit32u dpl			:2;
+	Bit32u type			:5;
+	Bit32u base_16_23	:8;
+#else
 	Bit32u limit_0_15	:16;
 	Bit32u base_0_15	:16;
 	Bit32u base_16_23	:8;
@@ -184,9 +204,20 @@ struct S_Descriptor {
 	Bit32u big			:1;
 	Bit32u g			:1;
 	Bit32u base_24_31	:8;
+#endif
 }GCC_ATTRIBUTE(packed);
 
 struct G_Descriptor {
+#ifdef WORDS_BIGENDIAN
+	Bit32u selector:	16;
+	Bit32u offset_0_15	:16;
+	Bit32u offset_16_31	:16;
+	Bit32u p			:1;
+	Bit32u dpl			:2;
+	Bit32u type			:5;
+	Bit32u reserved		:3;
+	Bit32u paramcount	:5;
+#else
 	Bit32u offset_0_15	:16;
 	Bit32u selector		:16;
 	Bit32u paramcount	:5;
@@ -195,6 +226,7 @@ struct G_Descriptor {
 	Bit32u dpl			:2;
 	Bit32u p			:1;
 	Bit32u offset_16_31	:16;
+#endif
 } GCC_ATTRIBUTE(packed);
 
 #pragma pack()
@@ -363,9 +395,12 @@ struct CPUBlock {
 		bool big;
 	} stack;
 	struct {
-		CODE_TYPE type;					/* What kind of code are we running */
 		bool big;
 	} code;
+	struct {
+		Bitu cs,eip;
+		CPU_Decoder * old_decoder;
+	} hlt;
 };
 
 extern CPUBlock cpu;
