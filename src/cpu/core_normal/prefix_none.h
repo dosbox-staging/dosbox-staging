@@ -901,31 +901,17 @@
 			break;
 		}
 	CASE_B(0xe4)												/* IN AL,Ib */
-		{
-			Bit16u port=Fetchb();
-			reg_al=IO_Read(port);
-			break;
-		}
+		reg_al=IO_ReadB(Fetchb());
+		break;
 	CASE_W(0xe5)												/* IN AX,Ib */
-		{ 
-			Bit16u port=Fetchb();
-			reg_al=IO_Read(port);
-			reg_ah=IO_Read(port+1);
-			break;
-		}
+		reg_ax=IO_ReadW(Fetchb());
+		break;
 	CASE_B(0xe6)												/* OUT Ib,AL */
-		{ 
-			Bit16u port=Fetchb();
-			IO_Write(port,reg_al);
-			break;
-		}
+		IO_WriteB(Fetchb(),reg_al);
+		break;
 	CASE_W(0xe7)												/* OUT Ib,AX */
-		{	
-			Bit16u port=Fetchb();
-			IO_Write(port,reg_al);
-			IO_Write(port+1,reg_ah);
-			break;
-		}
+		IO_WriteW(Fetchb(),reg_ax);
+		break;
 	CASE_W(0xe8)												/* CALL Jw */
 		{ 
 			Bit16s newip=Fetchws();
@@ -956,9 +942,9 @@
 		reg_al=IO_Read(reg_dx);reg_ah=IO_Read(reg_dx+1);
 		break;
 	CASE_B(0xee)												/* OUT DX,AL */
-		IO_Write(reg_dx,reg_al);break; 
+		IO_WriteB(reg_dx,reg_al);break; 
 	CASE_W(0xef)												/* OUT DX,AX */
-		IO_Write(reg_dx,reg_al);IO_Write(reg_dx+1,reg_ah);break;
+		IO_WriteW(reg_dx,reg_ax);break;
 	CASE_B(0xf0)												/* LOCK */
 		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
 		break;

@@ -19,71 +19,128 @@
 #include "dosbox.h"
 #include "inout.h"
 
-IO_ReadBlock IO_ReadTable[IO_MAX];
-IO_WriteBlock IO_WriteTable[IO_MAX];
+#define IO_MAX 1024
 
-void IO_Write(Bitu num,Bit8u val) {
-	if (num<IO_MAX) IO_WriteTable[num].handler(num,val);
-	else LOG(LOG_IO,LOG_WARN)("IO:Out or range write %X2 to port %4X",val,num);
+static struct IO_Block {
+	IO_WriteBHandler * write_b[IO_MAX];
+	IO_WriteWHandler * write_w[IO_MAX];
+	IO_WriteDHandler * write_d[IO_MAX];
+
+	IO_ReadBHandler * read_b[IO_MAX];
+	IO_ReadWHandler * read_w[IO_MAX];
+	IO_ReadDHandler * read_d[IO_MAX];
+} io;
+
+void IO_WriteB(Bitu port,Bit8u val) {
+	if (port<IO_MAX) io.write_b[port](port,val);
+	else LOG(LOG_IO,LOG_WARN)("WriteB:Out or range write %X to port %4X",val,port);
+}
+void IO_WriteW(Bitu port,Bit16u val) {
+	if (port<(IO_MAX & ~1)) io.write_w[port](port,val);
+	else LOG(LOG_IO,LOG_WARN)("WriteW:Out or range write %X to port %4X",val,port);
+}
+void IO_WriteD(Bitu port,Bit32u val) {
+	if (port<(IO_MAX & ~3)) return io.write_d[port](port,val);
+	else LOG(LOG_IO,LOG_WARN)("WriteD:Out or range write %X to port %4X",val,port);
 }
 
-Bit8u IO_Read(Bitu num) {
-	if (num<IO_MAX) return IO_ReadTable[num].handler(num);
-	else LOG(LOG_IO,LOG_WARN)("IO:Out or range read from port %4X",num);
+Bit8u IO_ReadB(Bitu port) {
+	if (port<IO_MAX) return io.read_b[port](port);
+	else LOG(LOG_IO,LOG_WARN)("ReadB:Out or range read from port %4X",port);
 	return 0xff;
 }
+Bit16u IO_ReadW(Bitu port) {
+	if (port<(IO_MAX & ~1)) return io.read_w[port](port);
+	else LOG(LOG_IO,LOG_WARN)("ReadW:Out or range read from port %4X",port);
+	return 0xffff;
+}
+Bit32u IO_ReadD(Bitu port) {
+	if (port<(IO_MAX & ~3)) return io.read_d[port](port);
+	else LOG(LOG_IO,LOG_WARN)("ReadD:Out or range read from port %4X",port);
+	return 0xffffffff;
+}
 
-
-static Bit8u IO_ReadBlocked(Bit32u port) {
+static Bit8u IO_ReadBBlocked(Bit32u port) {
 	return 0xff;
 }
-
-static void IO_WriteBlocked(Bit32u port,Bit8u val) {
+static void IO_WriteBBlocked(Bit32u port,Bit8u val) {
 }
 
-static Bit8u  IO_ReadDefault(Bit32u port) {
+static Bit8u IO_ReadDefaultB(Bit32u port) {
 	LOG(LOG_IO,LOG_WARN)("Reading from undefined port %04X",port);
-	IO_RegisterReadHandler(port,&IO_ReadBlocked,"Blocked Read");
+	io.read_b[port]=IO_ReadBBlocked;
 	return 0xff;	
 }
+static Bit16u IO_ReadDefaultW(Bit32u port) {
+	return io.read_b[port](port) | (io.read_b[port+1](port+1) << 8);
+}
+static Bit32u IO_ReadDefaultD(Bit32u port) {
+	return io.read_b[port](port) | (io.read_b[port+1](port+1) << 8) |
+		(io.read_b[port+2](port+2) << 16) | (io.read_b[port+3](port+3) << 24);
+}
 
-void IO_WriteDefault(Bit32u port,Bit8u val) {
+void IO_WriteDefaultB(Bit32u port,Bit8u val) {
 	LOG(LOG_IO,LOG_WARN)("Writing %02X to undefined port %04X",static_cast<Bit32u>(val),port);		
-	IO_RegisterWriteHandler(port,&IO_WriteBlocked,"Blocked Write");
+	io.write_b[port]=IO_WriteBBlocked;
+}
+void IO_WriteDefaultW(Bit32u port,Bit16u val) {
+	io.write_b[port](port,(Bit8u)val);
+	io.write_b[port+1](port+1,(Bit8u)(val>>8));
+}
+void IO_WriteDefaultD(Bit32u port,Bit32u val) {
+	io.write_b[port](port,(Bit8u)val);
+	io.write_b[port+1](port+1,(Bit8u)(val>>8));
+	io.write_b[port+2](port+2,(Bit8u)(val>>16));
+	io.write_b[port+3](port+3,(Bit8u)(val>>24));
+}
+
+void IO_RegisterReadBHandler(Bitu port,IO_ReadBHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.read_b[port]=handler;
+}
+void IO_RegisterReadWHandler(Bitu port,IO_ReadWHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.read_w[port]=handler;
+}
+void IO_RegisterReadDHandler(Bitu port,IO_ReadDHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.read_d[port]=handler;
+}
+void IO_RegisterWriteBHandler(Bitu port,IO_WriteBHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.write_b[port]=handler;
+}
+void IO_RegisterWriteWHandler(Bitu port,IO_WriteWHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.write_w[port]=handler;
+}
+void IO_RegisterWriteDHandler(Bitu port,IO_WriteDHandler * handler) {
+	if (port>=IO_MAX) return;
+	io.write_d[port]=handler;
 }
 
 
-void IO_RegisterReadHandler(Bit32u port,IO_ReadHandler * handler,char * name) {
-	if (port<IO_MAX) {
-		IO_ReadTable[port].handler=handler;
-		IO_ReadTable[port].name=name;
-	}
+void IO_FreeReadHandler(Bitu port) {
+	if (port>=IO_MAX) return;
+	io.read_b[port]=IO_ReadDefaultB;
+	io.read_w[port]=IO_ReadDefaultW;
+	io.read_d[port]=IO_ReadDefaultD;
 }
-
-void IO_RegisterWriteHandler(Bit32u port,IO_WriteHandler * handler,char * name) {
-	if (port<IO_MAX) {
-		IO_WriteTable[port].handler=handler;
-		IO_WriteTable[port].name=name;
-	}
+void IO_FreeWriteHandler(Bitu port) {
+	if (port>=IO_MAX) return;
+	io.write_b[port]=IO_WriteDefaultB;
+	io.write_w[port]=IO_WriteDefaultW;
+	io.write_d[port]=IO_WriteDefaultD;
 }
-
-
-void IO_FreeReadHandler(Bit32u port) {
-	if (port<IO_MAX) {	
-		IO_RegisterReadHandler(port,&IO_ReadDefault,"Default Read");
-	}
-}
-void IO_FreeWriteHandler(Bit32u port) {
-	if (port<IO_MAX) {
-		IO_RegisterWriteHandler(port,&IO_WriteDefault,"Default Write");
-	}
-}
-
 
 void IO_Init(Section * sect) {
 	for (Bitu i=0;i<IO_MAX;i++) {
-		IO_RegisterReadHandler(i,&IO_ReadDefault,"Default Read");
-		IO_RegisterWriteHandler(i,&IO_WriteDefault,"Default Write");
+		io.read_b[i]=IO_ReadDefaultB;
+		io.read_w[i]=IO_ReadDefaultW;
+		io.read_d[i]=IO_ReadDefaultD;
+		io.write_b[i]=IO_WriteDefaultB;
+		io.write_w[i]=IO_WriteDefaultW;
+		io.write_d[i]=IO_WriteDefaultD;
 	}
 }
 

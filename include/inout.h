@@ -16,33 +16,43 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-typedef Bit8u (IO_ReadHandler)(Bit32u port);
-typedef void (IO_WriteHandler)(Bit32u port,Bit8u value);
+typedef Bit8u  (IO_ReadBHandler)(Bit32u port);
+typedef Bit16u (IO_ReadWHandler)(Bit32u port);
+typedef Bit32u (IO_ReadDHandler)(Bit32u port);
+typedef void (IO_WriteBHandler)(Bit32u port,Bit8u value);
+typedef void (IO_WriteWHandler)(Bit32u port,Bit16u value);
+typedef void (IO_WriteDHandler)(Bit32u port,Bit32u value);
 
-#define IO_MAX 1024
+void IO_RegisterReadBHandler(Bitu port,IO_ReadBHandler * handler);
+void IO_RegisterReadWHandler(Bitu port,IO_ReadWHandler * handler);
+void IO_RegisterReadDHandler(Bitu port,IO_ReadDHandler * handler);
 
-struct IO_ReadBlock{
-	IO_ReadHandler * handler;
-	char * name;
-};
+void IO_RegisterWriteBHandler(Bitu port,IO_WriteBHandler * handler);
+void IO_RegisterWriteWHandler(Bitu port,IO_WriteWHandler * handler);
+void IO_RegisterWriteDHandler(Bitu port,IO_WriteDHandler * handler);
 
-struct IO_WriteBlock{
-	IO_WriteHandler * handler;
-	char * name;
-};
+void IO_FreeReadHandler(Bitu port);
+void IO_FreeWriteHandler(Bitu port);
 
-extern IO_ReadBlock IO_ReadTable[IO_MAX];
-extern IO_WriteBlock IO_WriteTable[IO_MAX];
+void IO_WriteB(Bitu port,Bit8u val);
+Bit8u IO_ReadB(Bitu port);
+void IO_WriteW(Bitu port,Bit16u val);
+Bit16u IO_ReadW(Bitu port);
+void IO_WriteD(Bitu port,Bit32u val);
+Bit32u IO_ReadD(Bitu port);
 
+INLINE void IO_Write(Bitu port,Bit8u val) {
+	IO_WriteB(port,val);
+}
+INLINE Bit8u IO_Read(Bitu port){
+	return IO_ReadB(port);
+}
 
-
-void IO_Write(Bitu num,Bit8u val);
-Bit8u IO_Read(Bitu num);
-
-void IO_RegisterReadHandler(Bit32u port,IO_ReadHandler * handler,char * name);
-void IO_RegisterWriteHandler(Bit32u port,IO_WriteHandler * handler,char * name);
-
-void IO_FreeReadHandler(Bit32u port);
-void IO_FreeWriteHandler(Bit32u port);
+INLINE void IO_RegisterReadHandler(Bitu port,IO_ReadBHandler * handler,char * name) {
+	IO_RegisterReadBHandler(port,handler);
+}
+INLINE void IO_RegisterWriteHandler(Bitu port,IO_WriteBHandler * handler,char * name) {
+	IO_RegisterWriteBHandler(port,handler);
+}
 
 

@@ -50,39 +50,34 @@ static void DoString(STRING_OP type) {
 	if (count) switch (type) {
 	case R_OUTSB:
 		for (;count>0;count--) {
-			IO_Write(reg_dx,LoadMb(si_base+si_index));
+			IO_WriteB(reg_dx,LoadMb(si_base+si_index));
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
 	case R_OUTSW:
 		add_index<<=1;
 		for (;count>0;count--) {
-			IO_Write(reg_dx,LoadMb(si_base+si_index));
-			IO_Write(reg_dx+1,LoadMb(si_base+si_index+1));
+			IO_WriteW(reg_dx,LoadMw(si_base+si_index));
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
 	case R_OUTSD:
 		add_index<<=2;
 		for (;count>0;count--) {
-			IO_Write(reg_dx,LoadMb(si_base+si_index));
-			IO_Write(reg_dx+1,LoadMb(si_base+si_index+1));
-			IO_Write(reg_dx+2,LoadMb(si_base+si_index+2));
-			IO_Write(reg_dx+3,LoadMb(si_base+si_index+3));
+			IO_WriteD(reg_dx,LoadMd(si_base+si_index));
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
 	case R_INSB:
 		for (;count>0;count--) {
-			SaveMb(di_base+di_index,IO_Read(reg_dx));
+			SaveMb(di_base+di_index,IO_ReadB(reg_dx));
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;
 	case R_INSW:
 		add_index<<=1;
 		for (;count>0;count--) {
-			SaveMb(di_base+di_index,IO_Read(reg_dx));
-			SaveMb(di_base+di_index+1,IO_Read(reg_dx+1));
+			SaveMw(di_base+di_index,IO_ReadW(reg_dx));
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;

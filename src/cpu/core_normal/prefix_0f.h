@@ -138,6 +138,19 @@
 			}
 		}
 		break;
+	CASE_0F_B(0x21)												/* MOV Rd,DRx */
+		{
+			GetRM;
+			Bitu which=(rm >> 3) & 7;
+			LOG_MSG("MOV REG,DR%d",which);
+			if (rm >= 0xc0 ) {
+				GetEArd;
+			} else {
+				GetEAa;
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,DR% with non-register",which);
+			}
+		}
+		break;
 	CASE_0F_B(0x22)												/* MOV CRx,Rd */
 		{
 			GetRM;
@@ -155,6 +168,7 @@
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
+			LOG_MSG("MOV DR%d,REG",which);
 			if (rm >= 0xc0 ) {
 				GetEArd;
 			} else {
