@@ -42,7 +42,7 @@ void INT10_ScrollDownWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines
 
 	/* Get this from active video mode */
 	Bit16u textseg=0xb800;
-	PhysPt start=real_phys(textseg,ncols*nrows*2*page);
+	PhysPt start=PhysMake(textseg,ncols*nrows*2*page);
 
 	Bit32u dcol=clr-cul+1;
 	Bit32u drow=rlr-rul+1;
@@ -98,7 +98,7 @@ void INT10_ScrollUpWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,B
 		{
 			if (nlines==0) {
 				/* Clear Screen that we can */
-				PhysPt dest=real_phys(0xb800,0);
+				PhysPt dest=PhysMake(0xb800,0);
 				for (Bit32u tel=0;tel<0x4000;tel++) {
 					mem_writew(dest,0x0000);
 					dest+=2;
@@ -119,7 +119,7 @@ void INT10_ScrollUpWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,B
 
 	/* Get this from active video mode */
 	Bit16u textseg=0xb800;
-	PhysPt start=real_phys(textseg,ncols*nrows*2*page);
+	PhysPt start=PhysMake(textseg,ncols*nrows*2*page);
 
 	Bit32u dcol=clr-cul+1;
 	Bit32u drow=rlr-rul+1;
@@ -265,7 +265,6 @@ INLINE static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u at
 		break;
 	case GRAPH:
 		{
-			/* Split this up for certain graphics modes, since in PLANAR4 especially this is sooo slow */
 			/* Amount of lines */
 			Bit8u * fontdata;
 			Bit16u x,y;

@@ -348,18 +348,18 @@ void INT10_SetVideoMode(Bit8u mode) {
 	Bit32u tel;
 	if(clearmem) {
 		if(vga_modes[line].type==TEXT) {
-			PhysPt dest=real_phys(vga_modes[line].sstart,0);
+			PhysPt dest=PhysMake(vga_modes[line].sstart,0);
 			for (tel=0;tel<0x4000;tel++) {
 				mem_writew(dest,0x0720);
 				dest+=2;
 			}
 		} else {
-			PhysPt dest=real_phys(0xb800,0);
+			PhysPt dest=PhysMake(0xb800,0);
 			for (tel=0;tel<0x4000;tel++) {
 				mem_writew(dest,0x0000);
 				dest+=2;
 			}
-			dest=real_phys(0xa000,0);
+			dest=PhysMake(0xa000,0);
 			for (tel=0;tel<0x8000;tel++) {
 				mem_writew(dest,0x0000);
 				dest+=2;

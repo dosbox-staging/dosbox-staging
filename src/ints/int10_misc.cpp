@@ -80,9 +80,9 @@ __attribute__ ((packed));
 
 
 
-void INT10_GetFuncStateInformation(Bit16u seg,Bit16u off) {
+void INT10_GetFuncStateInformation(PhysPt save) {
 
-	PhysPt save=Real2Phys(RealMake(seg,off));
+	
 	/* set static state pointer */
 	mem_writed(save,int10_romarea.static_state);
 	/* Copy BIOS Segment areas */
