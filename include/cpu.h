@@ -96,5 +96,69 @@ bool get_PF(void);
 #define LoadOF flags.of=get_OF();
 
 
+// *********************************************************************
+// Descriptor
+// *********************************************************************
+
+class Descriptor
+{
+public:
+	void LoadValues	(Bit32u address) {
+		Bit32u* data = (Bit32u*)&desc;
+		*data	  = mem_readd(address);
+		*(data+1) = mem_readd(address+1);
+	}
+	void SaveValues	(Bit32u address) {
+		Bit32u* data = (Bit32u*)&desc;
+		mem_writed(address,*data);
+		mem_writed(address+1,*(data+1));
+	}
+	Bit32u	GetBase		(void) { return (desc.base_24_31<<24) | (desc.base_16_23<<16) | desc.base_0_15; };
+	Bit32u	GetLimit	(void) {
+		Bit32u limit = (desc.limit_16_19<<16) | desc.limit_0_15;
+		if (desc.g)	return (limit<<12) | 0xFFF;
+		return limit;
+	}
+
+public:
+#pragma pack(1)
+	typedef struct SDescriptor {
+		Bit32u limit_0_15	:16;
+		Bit32u base_0_15	:16;
+		Bit32u base_16_23	:8;
+		Bit32u type			:5;
+		Bit32u dpl			:2;
+		Bit32u p			:1;
+		Bit32u limit_16_19	:4;
+		Bit32u avl			:1;
+		Bit32u r			:1;
+		Bit32u d			:1;
+		Bit32u g			:1;
+		Bit32u base_24_31	:8;
+	} TDescriptor;
+#pragma pack()
+	
+	TDescriptor desc;
+};
+
+class DescriptorTable
+{
+	Bit32u	GetBase			(void)			{ return baseAddress;	};
+	Bit16u	GetLimit		(void)			{ return limit;			};
+	void	SetBase			(Bit32u base)	{ baseAddress = base;	};
+	void	SetLimit		(Bit16u size)	{ limit		  = size;	};
+
+	bool GetDescriptor	(Bit16u selector, Descriptor& desc) {
+			// selector = the plain index 
+		if (selector>=limit>>3) return false;
+		desc.LoadValues(baseAddress+(selector<<3));
+		return true;
+	};
+
+private:
+	Bit32u  baseAddress;
+	Bit16u	limit;
+};
+
 #endif
 
