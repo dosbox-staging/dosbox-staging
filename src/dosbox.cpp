@@ -210,10 +210,12 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
 	secprop->Add_string("snapdir","snaps");
+	secprop->Add_bool("aspect",true);
 	secprop->Add_string("scaler","normal2x");
 	MSG_Add("RENDER_CONFIGFILE_HELP",
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
 		"snapdir -- Directory where screenshots get saved.\n"
+		"aspect -- Do aspect correction.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
 		"          Supported are none,normal2x,advmame2x\n"
 	);
