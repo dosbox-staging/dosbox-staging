@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.54 2004-02-26 07:42:53 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.55 2004-03-31 17:24:30 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -89,6 +89,28 @@ PhysPt SelBase(Bitu sel) {
 void CPU_SetFlags(Bitu word,Bitu mask) {
 	reg_flags=(reg_flags & ~mask)|(word & mask)|2|FLAG_ID;
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
+}
+
+bool CPU_CLI(Bitu opLen) {
+	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
+		reg_eip-=opLen;
+		CPU_Exception(13,0);
+		return true;
+	} else {
+		SETFLAGBIT(IF,false);
+		return false;
+	}
+}
+
+bool CPU_STI(Bitu opLen) {
+	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
+		reg_eip-=opLen;
+		CPU_Exception(13,0);
+		return true;
+	} else {
+ 		SETFLAGBIT(IF,true);
+		return false;
+	}
 }
 
 class TaskStateSegment {
@@ -437,7 +459,7 @@ do_interrupt:
 	return ; // make compiler happy
 }
 
-void CPU_IRET(bool use32) {
+void CPU_IRET(bool use32,Bitu opLen) {
 	if (!cpu.pmode) {					/* RealMode IRET */
 realmode_iret:
 		if (use32) {
@@ -454,7 +476,7 @@ realmode_iret:
 	} else {	/* Protected mode IRET */
 		if (reg_flags & FLAG_VM) {
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
-				reg_eip--;
+				reg_eip-=opLen;
 				CPU_Exception(13,0);
 				return;
 			} else goto realmode_iret;
@@ -712,7 +734,7 @@ call_code:
 						if (call.Type()==DESC_386_CALL_GATE) {
 							CPU_Push32(o_ss);		//save old stack
 							CPU_Push32(o_esp);
-							if (call.saved.gate.paramcount&31>0)
+							if (call.saved.gate.paramcount&31)
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
 									CPU_Push32(mem_readd(o_stack+i*4));
 							CPU_Push32(SegValue(cs));
@@ -720,7 +742,7 @@ call_code:
 						} else {
 							CPU_Push16(o_ss);		//save old stack
 							CPU_Push16(o_esp);
-							if (call.saved.gate.paramcount&31>0)
+							if (call.saved.gate.paramcount&31)
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									CPU_Push16(mem_readw(o_stack+i*2));
 							CPU_Push16(SegValue(cs));
@@ -982,7 +1004,6 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 		return;
 	}
 	Descriptor desc;Bitu rpl=selector & 3;
-	ar=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -991,7 +1012,7 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 		break;
-	
+
 	case DESC_286_INT_GATE:		case DESC_286_TRAP_GATE:	{
 	case DESC_386_INT_GATE:		case DESC_386_TRAP_GATE:
 		SETFLAGBIT(ZF,false);
@@ -1034,7 +1055,6 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 		return;
 	}
 	Descriptor desc;Bitu rpl=selector & 3;
-	limit=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -1300,7 +1320,7 @@ void CPU_Init(Section* sec) {
 	else {
 		LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
 	}
-	CPU_JMP(false,0,0);					//Setup the first cpu core
+	CPU_JMP(false,0,0,0);					//Setup the first cpu core
 
 	if (!CPU_CycleMax) CPU_CycleMax = 2500;
 	if(!CPU_CycleUp)   CPU_CycleUp = 500;

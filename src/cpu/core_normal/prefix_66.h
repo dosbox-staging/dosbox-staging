@@ -380,7 +380,7 @@
 		{ 
 			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
 			LEAVECORE;
-			CPU_CALL(true,newcs,newip);
+			CPU_CALL(true,newcs,newip,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_D(0x9c)												/* PUSHFD */
@@ -530,7 +530,7 @@
 	CASE_D(0xcf)												/* IRET */
 		{
 			LEAVECORE;
-			CPU_IRET(true);
+			CPU_IRET(true,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
 				cpudecoder=CPU_Core_Normal_Trap_Run;
@@ -540,7 +540,6 @@
 #if CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
-//TODO TF check
 			goto decode_start;
 		}
 	CASE_D(0xd1)												/* GRP2 Ed,1 */
@@ -641,7 +640,7 @@
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
 					LEAVECORE;
-					CPU_CALL(true,newcs,newip);
+					CPU_CALL(true,newcs,newip,core.ip_lookup-core.op_start);
 					goto decode_start;
 				}
 				break;

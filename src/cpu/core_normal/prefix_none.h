@@ -237,7 +237,7 @@
 		break;
 	CASE_W(0x63)												/* ARPL Ew,Rw */
 		{
-			if (((cpu.pmode) && (reg_flags & FLAG_VM)) || (!cpu.pmode)) goto illegal_opcode;
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
@@ -792,7 +792,7 @@
 	CASE_W(0xcf)												/* IRET */
 		{
 			LEAVECORE;
-			CPU_IRET(false);
+			CPU_IRET(false,core.ip_lookup-core.op_start);
 #if CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
@@ -1059,20 +1059,14 @@
 		SETFLAGBIT(CF,true);
 		break;
 	CASE_B(0xfa)												/* CLI */
-		if (cpu.pmode && (GETFLAG_IOPL<cpu.cpl)) {
-			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
-			CPU_Exception(13,0);
+		LEAVECORE;
+		if (CPU_CLI(core.ip_lookup-core.op_start))
 			goto decode_start;
-		}
-		SETFLAGBIT(IF,false);
 		break;
 	CASE_B(0xfb)												/* STI */
-		if (cpu.pmode && !GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) {
-			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
-			CPU_Exception(13,0);
+		LEAVECORE;
+		if (CPU_STI(core.ip_lookup-core.op_start))
 			goto decode_start;
-		}
-		SETFLAGBIT(IF,true);
 #if CPU_PIC_CHECK
 		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif
