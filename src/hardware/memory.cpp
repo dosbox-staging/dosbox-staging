@@ -234,18 +234,21 @@ Bit32u mem_readd(PhysPt pt){
 
 #define GETBIGBLOCKNR(nr) nr/(1024*1024)
 
-static void*	mem_block[C_MEM_MAX_SIZE];
+static Bit8u*	mem_block[C_MEM_MAX_SIZE];
 
 static bool AllocateBigBlock(Bitu block)
 {
 	if ((block<1) || (block>C_MEM_MAX_SIZE)) return false;
 	if (!mem_block[block]) {
 		// Allocate it 
-		mem_block[block] = malloc(1024*1024);
+		Bitu start = (block==1)? (1024+64)*1024:1024*1024*block;
+		Bitu size  = (block==1)? (1024-64)*1024:1024*1024;
+		mem_block[block] = (Bit8u*)malloc(size);
 		if (!mem_block[block]) E_Exit("XMS: Failed to allocate XMS block.");
-		else LOG(LOG_ERROR,"XMS: Allocated big block %d.",block);
+//		else LOG(LOG_ERROR,"XMS: Allocated big block %d.",block);
 		// Map it with default handler
-		MEM_SetupMapping(PAGE_COUNT(1024*1024*block),PAGE_COUNT(1024*1024),mem_block[block]);
+		MEM_SetupMapping(PAGE_COUNT(start),PAGE_COUNT(size),mem_block[block]);
+		memset(mem_block[block],0,size);
 	}
 	return true;
 };
@@ -313,8 +316,8 @@ void MEM_Init(Section * sect) {
 		ReadHandlerTable[i]=&Default_ReadHandler;
 		WriteHandlerTable[i]=&Default_WriteHandler;
 	}
-	/* Allocate the first mb of memory */
-	memory=(Bit8u *)malloc(1024*1024);	
+	/* Allocate the first mb of memory + hma */
+	memory=(Bit8u *)malloc(1024*1024+64*1024);	
 	if (!memory) {
 		throw("Can't allocate memory for memory");
 	}
@@ -324,7 +327,7 @@ void MEM_Init(Section * sect) {
 	/* Setup tables for HMA Area */
 	MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
 	// Setup default handlers for unallocated xms
-	for (Bitu p=PAGE_COUNT(1024*1024);p<MAX_PAGES;p++) {
+	for (Bitu p=PAGE_COUNT((1024+64)*1024);p<MAX_PAGES;p++) {
 		ReadHostTable[p]=0;
 		WriteHostTable[p]=0;
 		ReadHandlerTable[p]=&AllocateMem_ReadHandler;
