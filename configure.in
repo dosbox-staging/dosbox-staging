@@ -48,6 +48,7 @@ AC_TRY_LINK([extern char ** environ;],[*environ;],
 dnl Checks for libraries.
 
 #Check if the compiler support attributes
+AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
 AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
     [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
@@ -59,7 +60,7 @@ AC_C_BIGENDIAN
 
 #Features to enable/disable
 AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires libcurses])
-AC_ARG_ENABLE(debug,[  --enable-debug          Enable debug mode],[
+AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
    AC_CHECK_HEADER(curses.h,have_curses_h=yes,)
    AC_CHECK_LIB(curses, initscr, have_curses_lib=yes, , )
 
@@ -72,7 +73,7 @@ AC_ARG_ENABLE(debug,[  --enable-debug          Enable debug mode],[
 ],)
 
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
-AC_ARG_ENABLE(shots,[  --enable-shots          Enable screenshot support],[
+AC_ARG_ENABLE(shots,AC_HELP_STRING([--enable-shots],[Enable screenshot support]),[
   AC_CHECK_HEADER(png.h,have_png_h=yes,)
   AC_CHECK_LIB(png, png_check_sig, have_png_lib=yes, ,-lz)
   if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
@@ -82,6 +83,13 @@ AC_ARG_ENABLE(shots,[  --enable-shots          Enable screenshot support],[
     AC_MSG_WARN([Can't enable screenshots without libpng])
   fi
 ],)
+
+
+AH_TEMPLATE(C_FPU,[Define to 1 to enable floating point emulation])
+  AC_ARG_ENABLE(fpu,AC_HELP_STRING([--disable-fpu],[Disable FPU support]),
+  AC_MSG_RESULT([FPU support has been disabled]),
+  AC_DEFINE(C_FPU,1)
+)
 
 dnl Some host detection and actions for them
 case "$target" in

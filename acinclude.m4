@@ -326,8 +326,6 @@ AH_TOP([
  */
 ])
 
-AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
-
 AH_BOTTOM([#define INLINE inline])
 
 AH_BOTTOM([#if C_HAS_ATTRIBUTE
@@ -343,11 +341,6 @@ AH_BOTTOM([
 /* Enable some big compile-time increasing inlines */
 #define C_EXTRAINLINE 0
 
-/* Enable the FPU module, still only for beta testing */
-#define C_FPU 0
-
-/* Maximum memory address range in megabytes */
-#define C_MEM_MAX_SIZE 12
 ])
 
 
