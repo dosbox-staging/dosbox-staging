@@ -303,9 +303,6 @@ AC_SUBST(ALSA_CFLAGS)
 AC_SUBST(ALSA_LIBS)
 ])
 
-
-
-
 AH_TOP([
 /*
  *  Copyright (C) 2002-2003  The DOSBox Team
@@ -333,14 +330,5 @@ AH_BOTTOM([#if C_HAS_ATTRIBUTE
 #else
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #endif])
-
-AH_BOTTOM([
-/* Enable some heavy debugging options */
-#define C_HEAVY_DEBUG 0
-
-/* Enable some big compile-time increasing inlines */
-#define C_EXTRAINLINE 0
-
-])
 
 
