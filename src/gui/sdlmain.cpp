@@ -20,10 +20,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#ifdef MACOSX
-extern char** environ;
-#endif
-
 #include "SDL.h"
 #include "SDL_thread.h"
 
@@ -39,6 +35,10 @@ extern char** environ;
 
 //#define DISABLE_JOYSTICK
 #define C_GFXTHREADED 1						//Enabled by default
+
+#if defined(MACOSX)
+extern char** environ;
+#endif
 
 struct SDL_Block {
 	volatile bool active;							//If this isn't set don't draw
