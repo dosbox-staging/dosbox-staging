@@ -30,7 +30,7 @@ public:
 	bool Open(const char * conf) {
 		char devname[512];
 		if (conf && conf[0]) strncpy(devname,conf,512);
-		else strcpy(devname,"/dev/midi");
+		else strcpy(devname,"/dev/sequencer");
 		char * devfind=(strrchr(devname,','));
 		if (devfind) {
 			*devfind++=0;
