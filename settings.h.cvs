@@ -17,7 +17,7 @@
  */
 
 #ifndef _SETTINGS_H_
-#define _SETTINSG_H_
+#define _SETTINGS_H_
 
 /* Enable the debugger, under linux/freebsd dosbox must be started in an xterm under X */
 #define C_DEBUG 0
@@ -25,9 +25,6 @@
 
 /* Enable the logging of extra information for debugging to the console */
 #define C_LOGGING 0
-
-/* Use multi threading to speed up things on multi cpu's, also gives a nice frame-skipping effect :) */
-#define C_THREADED 1
 
 /* Enable some big compile-time increasing inlines, great for speed though */
 #define C_EXTRAINLINE 0
@@ -37,12 +34,6 @@
 
 /* Maximum memory range in megabytes */
 #define C_MEM_MAX_SIZE 12
-
-/* Maximum memory available for xms, should be lower than maxsize-1 */
-#define C_MEM_XMS_SIZE 8
-
-/* Maximum memory available for ems, should be lower than 32 */
-#define C_MEM_EMS_SIZE 4
 
 /* Enable debug messages for several modules, requires C_LOGGING */
 #define DEBUG_SBLASTER 0	/* SoundBlaster Debugging*/
