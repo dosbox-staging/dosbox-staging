@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: int10_char.cpp,v 1.18 2003-09-09 19:25:04 qbix79 Exp $ */
+
 /* Character displaying moving functions */
 
 #include "dosbox.h"
@@ -25,10 +27,11 @@
 #include "int10.h"
 
 static INLINE void CGA_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
-	PhysPt dest=base+((CurMode->twidth*rnew)*(CurMode->cheight/2)+cleft)*2;
-	PhysPt src=base+((CurMode->twidth*rold)*(CurMode->cheight/2)+cleft)*2;	
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/2)+cleft)*2;
+	PhysPt src=base+((CurMode->twidth*rold)*(cheight/2)+cleft)*2;	
 	Bitu copy=(cright-cleft)*2;Bitu nextline=CurMode->twidth*2;
-	for (Bitu i=0;i<CurMode->cheight/2;i++) {
+	for (Bitu i=0;i<cheight/2;i++) {
 		MEM_BlockCopy(dest,src,copy);
 		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
 		dest+=nextline;src+=nextline;
@@ -37,15 +40,16 @@ static INLINE void CGA_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,Ph
 
 static INLINE void EGA16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	PhysPt src,dest;Bitu copy;
-	dest=base+(CurMode->twidth*rnew)*CurMode->cheight+cleft;	
-	src=base+(CurMode->twidth*rold)*CurMode->cheight+cleft;	
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	dest=base+(CurMode->twidth*rnew)*cheight+cleft;	
+	src=base+(CurMode->twidth*rold)*cheight+cleft;	
 	Bitu nextline=CurMode->twidth;
 	/* Setup registers correctly */
 	IO_Write(0x3ce,5);IO_Write(0x3cf,1);		/* Memory transfer mode */
 	IO_Write(0x3c4,2);IO_Write(0x3c5,0xf);		/* Enable all Write planes */
 	/* Do some copying */
 	Bitu rowsize=(cright-cleft);
-	copy=CurMode->cheight;
+	copy=cheight;
 	for (;copy>0;copy--) {
 		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,mem_readb(src+x));
 		dest+=nextline;src+=nextline;
@@ -63,9 +67,10 @@ static INLINE void TEXT_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,P
 }
 
 static INLINE void CGA_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
-	PhysPt dest=base+((CurMode->twidth*row)*(CurMode->cheight/2)+cleft)*2;
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*row)*(cheight/2)+cleft)*2;
 	Bitu copy=(cright-cleft)*2;Bitu nextline=CurMode->twidth*2;
-	for (Bitu i=0;i<CurMode->cheight/2;i++) {
+	for (Bitu i=0;i<cheight/2;i++) {
 		for (Bitu x=0;x<copy;x++) {
 			mem_writeb(dest+x,attr);
 			mem_writeb(dest+8*1024+x,attr);
@@ -81,9 +86,10 @@ static INLINE void EGA16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,
 	IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
 	/* Write some bytes */
 	PhysPt dest;
-	dest=base+(CurMode->twidth*row)*CurMode->cheight+cleft;	
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	dest=base+(CurMode->twidth*row)*cheight+cleft;	
 	Bitu nextline=CurMode->twidth;
-	Bitu copy=CurMode->cheight;	Bitu rowsize=(cright-cleft);
+	Bitu copy = cheight;	Bitu rowsize=(cright-cleft);
 	for (;copy>0;copy--) {
 		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,0xff);
 		dest+=nextline;
@@ -282,6 +288,7 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	PhysPt fontdata;
 	Bitu x,y;
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
 	case M_TEXT16:
 		{	
@@ -298,20 +305,20 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		return;
 	case M_CGA4:
 	case M_CGA2:
-		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*8;
+		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight; //was plain 8
 		else {
 			chr-=128;
-			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*8;
+			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*cheight; //was plain 8
 		}
 		break;
 	default:
-		fontdata=Real2Phys(RealGetVec(0x43))+chr*real_readw(0x40,BIOSMEM_CHAR_HEIGHT);
+		fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight;
 		break;
 	}
 	x=8*col;
-	y=CurMode->cheight*row;
+	y=cheight*row;
 	//TODO Check for out of bounds
-	for (Bit8u h=0;h<CurMode->cheight;h++) {
+	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
 		Bit8u bitline=mem_readb(fontdata++); //added ++ for at least the CGA modes.
 		Bit16u tx=x;
