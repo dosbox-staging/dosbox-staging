@@ -38,6 +38,7 @@ CDROM_Interface_Ioctl::CDROM_Interface_Ioctl()
 CDROM_Interface_Ioctl::~CDROM_Interface_Ioctl()
 {
 	StopAudio();
+	Close();
 };
 
 bool CDROM_Interface_Ioctl::GetUPC(unsigned char& attr, char* upc)
@@ -48,12 +49,12 @@ bool CDROM_Interface_Ioctl::GetUPC(unsigned char& attr, char* upc)
 
 bool CDROM_Interface_Ioctl::GetAudioTracks(int& stTrack, int& endTrack, TMSF& leadOut) 
 {
-	Open();
+//	Open();
 	CDROM_TOC toc;
 	DWORD	byteCount;
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_TOC, NULL, 0, 
 									&toc, sizeof(toc), &byteCount,NULL);
-	Close();
+//	Close();
 	if (!bStat) return false;
 
 	stTrack		= toc.FirstTrack;
@@ -66,12 +67,12 @@ bool CDROM_Interface_Ioctl::GetAudioTracks(int& stTrack, int& endTrack, TMSF& le
 
 bool CDROM_Interface_Ioctl::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr)
 {
-	Open();
+//	Open();
 	CDROM_TOC toc;
 	DWORD	byteCount;
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_TOC, NULL, 0, 
 									&toc, sizeof(toc), &byteCount,NULL);
-	Close();
+//	Close();
 	if (!bStat) return false;
 	
 	attr		= (toc.TrackData[track-1].Adr << 4) | toc.TrackData[track].Control;
@@ -83,7 +84,7 @@ bool CDROM_Interface_Ioctl::GetAudioTrackInfo(int track, TMSF& start, unsigned c
 
 bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
 {
-	Open();
+//	Open();
 
 	CDROM_SUB_Q_DATA_FORMAT insub;
 	SUB_Q_CHANNEL_DATA sub;
@@ -93,7 +94,7 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_Q_CHANNEL, &insub, sizeof(insub), 
 									&sub, sizeof(sub), &byteCount,NULL);
-	Close();
+//	Close();
 	if (!bStat) return false;
 
 	attr		= (sub.CurrentPosition.ADR << 4) | sub.CurrentPosition.Control;
@@ -111,7 +112,7 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 
 bool CDROM_Interface_Ioctl::GetAudioStatus(bool& playing, bool& pause)
 {
-	Open();
+//	Open();
 
 	CDROM_SUB_Q_DATA_FORMAT insub;
 	SUB_Q_CHANNEL_DATA sub;
@@ -121,7 +122,7 @@ bool CDROM_Interface_Ioctl::GetAudioStatus(bool& playing, bool& pause)
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_Q_CHANNEL, &insub, sizeof(insub), 
 									&sub, sizeof(sub), &byteCount,NULL);
-	Close();
+//	Close();
 	if (!bStat) return false;
 
 	playing = (sub.CurrentPosition.Header.AudioStatus == AUDIO_STATUS_IN_PROGRESS);
@@ -149,7 +150,7 @@ bool CDROM_Interface_Ioctl::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 
 bool CDROM_Interface_Ioctl::PlayAudioSector	(unsigned long start,unsigned long len)
 {
-	Open();
+//	Open();
 	CDROM_PLAY_AUDIO_MSF audio;
 	DWORD	byteCount;
 	// Start
@@ -165,44 +166,44 @@ bool CDROM_Interface_Ioctl::PlayAudioSector	(unsigned long start,unsigned long l
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_PLAY_AUDIO_MSF, &audio, sizeof(audio), 
 									NULL, 0, &byteCount,NULL);
-	Close();
+//	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::PauseAudio(bool resume)
 {
-	Open();
+//	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	if (resume) bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RESUME_AUDIO, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
 	else		bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_PAUSE_AUDIO, NULL, 0, 
 										NULL, 0, &byteCount,NULL);
-	Close();
+//	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::StopAudio(void)
 {
-	Open();
+//	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_STOP_AUDIO, NULL, 0, 
 							NULL, 0, &byteCount,NULL);	
-	Close();
+//	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 {
-	Open();
+//	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	if (unload) bStat = DeviceIoControl(hIOCTL,IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
 	else		bStat = DeviceIoControl(hIOCTL,IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
-	Close();
+//	Close();
 	return bStat>0;
 };
 
@@ -211,7 +212,7 @@ bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long se
 	BOOL  bStat;
 	DWORD byteCount = 0;
 
-	Open();
+//	Open();
 	if (!raw) {
 		// Cooked
 		int	  success = 0;
@@ -228,7 +229,7 @@ bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long se
 		bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RAW_READ, &in, sizeof(in), 
 								buffer, num*RAW_SECTOR_SIZE, &byteCount,NULL);
 	}
-	Close();
+//	Close();
 	return (byteCount!=num*RAW_SECTOR_SIZE) && (bStat>0);
 }
 
@@ -240,7 +241,7 @@ bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD)
 		strcpy(pathname,"\\\\.\\");
 		strcat(pathname,letter);
 		if (Open()) {
-			Close();
+//			Close();
 			return true;
 		};
 	}
