@@ -167,9 +167,9 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
-	FILE * hand=fopen(newname,"rb");
-	if (hand) {
-		fclose(hand);
+
+	struct stat status;
+	if (stat(newname,&status)==0) {
 		*attr=DOS_ATTR_ARCHIVE;
 		return true;
 	}
