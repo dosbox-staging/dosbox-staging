@@ -91,6 +91,7 @@ static struct {
 	Bit16s mixbuf[2][128];
 	struct {
 		FILE * handle;
+		bool capturing;
 		Bit32u start;
 		Bit32u last;
 		Bit8u index;
@@ -154,7 +155,7 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 	if (port&1) {
 		Bitu index=port>>1;
 		opl.raw.regs[index][opl.raw.cmd[index]]=val;
-		if (opl.raw.handle) OPL_RawAdd(index,val);
+		if (opl.raw.capturing) OPL_RawAdd(index,val);
 	} else opl.raw.cmd[port>>1]=val;
 	if (!port) adlib_commandreg=val;
 	switch (opl.mode) {
@@ -194,21 +195,32 @@ static void OPL_RawEmptyBuffer(void) {
 #define ADDBUF(_VAL_) opl.raw.buffer[opl.raw.used++]=_VAL_;
 static void OPL_RawAdd(Bitu index,Bitu val) {
 	/* Check if we have yet to start */
-	if (!opl.raw.start) {
+	Bit8u cmd=opl.raw.cmd[index];
+	if (cmd<=3) return;
+	if (!opl.raw.handle) {
+		if (cmd<0xb0 || cmd>0xb8) return;
+		if (!(val&0x20))  return;
 		Bitu i;
 		opl.raw.last=PIC_Ticks;	
 		opl.raw.start=PIC_Ticks;
+		opl.raw.handle=OpenCaptureFile("Raw Opl",".dro");
+		if (!opl.raw.handle) {
+			opl.raw.capturing=false;		
+			return;
+		}
+		memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
+		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 		/* Check the registers to add */
 		for (i=4;i<256;i++) {
 			if (!opl.raw.regs[0][i]) continue;
-			if ((i &0xe0)==0xb0) continue;
+			if (i>=0xb0 && i<=0xb8) continue;
 			ADDBUF((Bit8u)i);
 			ADDBUF(opl.raw.regs[0][i]);
 		}
 		bool donesecond=false;
 		for (i=4;i<256;i++) {
 			if (!opl.raw.regs[0][i]) continue;
-			if ((i&0xe0)==0xb0) continue;
+			if (i>=0xb0 && i<=0xb8) continue;
 			if (!donesecond) {
 				donesecond=true;
 				ADDBUF(0x3);
@@ -246,7 +258,7 @@ static void OPL_RawAdd(Bitu index,Bitu val) {
 		opl.raw.index=index;
 		ADDBUF(opl.raw.index ? 0x3 : 0x2);
 	}
-	ADDBUF(opl.raw.cmd[opl.raw.index]);
+	ADDBUF(cmd);
 	ADDBUF(val);
 	if (opl.raw.used>=RAW_SIZE) OPL_RawEmptyBuffer();
 }
@@ -254,7 +266,6 @@ static void OPL_RawAdd(Bitu index,Bitu val) {
 static void OPL_SaveRawEvent(void) {
 	/* Check for previously opened wave file */
 	if (opl.raw.handle) {
-		LOG_MSG("Stopping Raw OPL capturing.");
 		OPL_RawEmptyBuffer();
 		/* Fill in the header with useful information */
 		host_writed(&dro_header[0x08],opl.raw.last-opl.raw.start);
@@ -268,16 +279,18 @@ static void OPL_SaveRawEvent(void) {
 		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 		fclose(opl.raw.handle);
 		opl.raw.handle=0;
+	}
+	if (opl.raw.capturing) {
+		opl.raw.capturing=false;
+		LOG_MSG("Stopping Raw OPL capturing.");
 	} else {
-		opl.raw.handle=OpenCaptureFile("Raw Opl",".dro");
-		if (!opl.raw.handle) return;
+		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
+		opl.raw.capturing=true;
 		opl.raw.index=0;
 		opl.raw.used=0;
 		opl.raw.done=0;
 		opl.raw.start=0;
 		opl.raw.last=0;
-		memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
-		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 	}
 }
 
@@ -309,7 +322,7 @@ void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 	opl.active=false;
 	opl.last_used=0;
 	opl.mode=oplmode;
-	memset(opl.raw.regs,0,sizeof(opl.raw.regs));
+	memset(&opl.raw,0,sizeof(opl.raw));
 	opl.chan=MIXER_AddChannel(OPL_CallBack,rate,"FM");
 	MIXER_SetMode(opl.chan,(opl.mode>OPL_opl2) ? MIXER_16STEREO : MIXER_16MONO);
 	MIXER_Enable(opl.chan,false);
