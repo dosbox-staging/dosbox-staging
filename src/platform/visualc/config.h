@@ -8,6 +8,9 @@
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
 
+/* Define to 1 to use opengl display output support */
+#define C_OPENGL 1
+
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
 
