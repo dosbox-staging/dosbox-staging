@@ -90,6 +90,29 @@ void JOYSTICK_Move_Y(Bitu which,float y) {
 	}
 }
 
+bool JOYSTICK_IsEnabled(Bitu which)
+{
+	if (which<2) return stick[which].enabled;
+	return false;
+};
+
+bool JOYSTICK_GetButton(Bitu which, Bitu num)
+{
+	if ((which<2) && (num<2)) return stick[which].button[num];
+	return false;
+}
+
+float JOYSTICK_GetMove_X(Bitu which) 
+{
+	if (which<2) return stick[which].xpos;
+	return 0.0f;
+}
+
+float JOYSTICK_GetMove_Y(Bitu which)
+{	
+	if (which<2) return stick[which].ypos;
+	return 0.0f;
+};
 
 void JOYSTICK_Init(Section* sec) {
 	IO_RegisterReadHandler(0x201,read_p201,"JOYSTICK");
