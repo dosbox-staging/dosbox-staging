@@ -122,7 +122,7 @@ static void SwitchFullScreen(void) {
 }
 
 static void GFX_Redraw() {
-#ifdef C_THREADED
+#if C_THREADED
 	if (SDL_mutexP(sdl.mutex)) {
 		E_Exit("Can't Lock Mutex");
 	};
@@ -134,7 +134,7 @@ static void GFX_Redraw() {
 		 if (sdl.full_screen) SDL_Flip(sdl.surface);
 		 else SDL_UpdateRect(sdl.surface,0,0,0,0);
 	};
-#ifdef C_THREADED	
+#if C_THREADED	
 	if (SDL_mutexV(sdl.mutex)) {
 		E_Exit("Can't Release Mutex");
 	}
@@ -151,7 +151,7 @@ static int SDLGFX_Thread(void * data) {
 
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 /* I should probably not change the GFX_PalEntry :) */
-#ifdef C_THREADED
+#if C_THREADED
 	if (SDL_mutexP(sdl.mutex)) {
 		E_Exit("SDL:Can't Lock Mutex");
 	};
@@ -166,7 +166,7 @@ void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 		}
 	}
 	/* Copy palette entries into some internal back up table */
-#ifdef C_THREADED
+#if C_THREADED
 	if (SDL_mutexV(sdl.mutex)) {
 		E_Exit("SDL:Can't Release Mutex");
 	}
@@ -179,11 +179,11 @@ void GFX_SetDrawHandler(GFX_DrawHandler * handler) {
 }
 
 void GFX_Stop() {
-#ifdef C_THREADED
+#if C_THREADED
 	SDL_mutexP(sdl.mutex);
 #endif
 	sdl.active=false;
-#ifdef C_THREADED
+#if C_THREADED
 	SDL_mutexV(sdl.mutex);
 #endif
 }
@@ -198,7 +198,7 @@ void GFX_StartUp() {
 	sdl.active=false;
 	sdl.full_screen=false;
 	sdl.draw=0;
-#ifdef C_THREADED
+#if C_THREADED
 	sdl.mutex=SDL_CreateMutex();
 	sdl.thread = SDL_CreateThread(&SDLGFX_Thread,0);
 #else 

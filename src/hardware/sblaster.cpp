@@ -49,7 +49,7 @@ enum {
 	MODE_ADPCM_4S
 };
 
-#ifdef DEBUG_SBLASTER
+#if DEBUG_SBLASTER
 #define SB_DEBUG LOG_DEBUG
 #else
 #define SB_DEBUG
