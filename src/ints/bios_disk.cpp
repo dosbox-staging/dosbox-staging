@@ -21,7 +21,7 @@
 #include "bios.h"
 #include "regs.h"
 #include "mem.h"
-
+#include "dos_inc.h" /* for Drives[] */
 
 static Bitu call_int13;
 static BIOS_Disk * Floppys[2];
@@ -36,6 +36,18 @@ static Bitu INT13_SmallHandler(void) {
 		reg_ah=0xff;
 		CALLBACK_SCF(true);
 		break;
+    case 0x04:
+        if(Drives[reg_dl]!=NULL) {
+            reg_ah=0;
+            CALLBACK_SCF(false);
+        }                     
+        else{
+            reg_ah=0x80;
+            CALLBACK_SCF(true);
+        }
+        LOG_WARN("INT 13:04 Verify sector used on %d, with result %d",reg_dl,reg_ah);
+        break;
+          
 	case 0x08:	/* Get Drive Parameters */
 		LOG_DEBUG("INT13:08:Get Drive parameters not supported failing");
 		reg_ah=0xff;
