@@ -53,8 +53,6 @@ char* AnalyzeInstruction(char* inst, bool saveSelector);
 void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num);
 class DEBUG;
 
-extern void DEBUG_ShowMsg(Bit32u entry, char* format, ...);
-
 DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
 bool	logHeavy	= false;
@@ -517,7 +515,7 @@ static bool StepOver()
 //	PhysPt start=SegPhys(cs)+reg_eip;
 	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
-	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32>0));
+	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32)>0);
 
 	if (strstr(dline,"call") || strstr(dline,"int") || strstr(dline,"loop") || strstr(dline,"rep")) {
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip+size, true);
