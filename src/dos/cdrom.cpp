@@ -21,6 +21,7 @@
 #ifdef WIN32
 
 #include <string.h>
+#include <ctype.h>
 #include "cdrom.h"
 #include "scsidefs.h"			// Aspi stuff
 
