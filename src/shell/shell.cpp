@@ -93,13 +93,35 @@ void DOS_Shell::ParseLine(char * line) {
 
 
 
+void DOS_Shell::RunInternal(void)
+{
+	char input_line[CMD_MAXLINE];
+	std::string line;
+	while(bf && bf->ReadLine(input_line)) 
+	{
+		if (echo) {
+				if (input_line[0]!='@') {
+					ShowPrompt();
+					WriteOut(input_line);
+					WriteOut("\n");
+				};
+			};
+		ParseLine(input_line);
+	}
+	return;
+}
+
+
 void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE];
 	std::string line;
 
 	if (cmd->FindStringRemain("/C",line)) {
 		strcpy(input_line,line.c_str());
-		ParseLine(input_line);
+		DOS_Shell temp;
+		temp.echo = echo;
+		temp.ParseLine(input_line);		//for *.exe *.com  |*.bat creates the bf needed by runinternal;
+		temp.RunInternal();				// exits when no bf is found.
 		return;
 	}
 	/* Start a normal shell and check for a first command init */

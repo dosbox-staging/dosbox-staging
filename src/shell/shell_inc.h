@@ -52,6 +52,7 @@ class DOS_Shell : public Program {
 public:
 	DOS_Shell();
 	void Run(void);
+	void RunInternal(void); //for command /C
 /* A load of subfunctions */
 	void ParseLine(char * line);
 	Bit32u GetRedirection(char *s, char **ifn, char **ofn);
@@ -90,7 +91,7 @@ public:
 		Bitu index;
 		Bitu size;
 	} old;
-
+	
 };
 
 struct SHELL_Cmd {
