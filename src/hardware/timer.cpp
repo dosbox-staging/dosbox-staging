@@ -56,7 +56,7 @@ static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
 	
-	Bit64u micro=PIC_MicroCount();
+	Bit64s micro=PIC_MicroCount();
 	micro-=p->start;
 	micro%=p->micro;
 	Bit16u ticks=(Bit16u)(((float)micro/(float)p->micro)*(float)p->cntr);
