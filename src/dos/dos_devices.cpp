@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.9 2005-02-10 10:20:51 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.10 2005-03-25 08:48:41 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -33,7 +33,6 @@
 
 
 DOS_Device * Devices[DOS_DEVICES];
-static Bitu device_count;
 
 class device_NUL : public DOS_Device {
 public:
@@ -111,37 +110,48 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 
 Bit8u DOS_FindDevice(char * name) {
 	/* should only check for the names before the dot and spacepadded */
-	char temp[CROSS_LEN];//TODOD
+	char temp[CROSS_LEN];//TODO
 	if(!name || !(*name)) return DOS_DEVICES;
 	strcpy(temp,name);
 	char* dot= strrchr(temp,'.');
-	if(dot && *dot) dot=0; //no ext checking
+	if(dot && *dot) *dot=0; //no ext checking
 
 	/* loop through devices */
-	Bit8u index=0;
-	while (index<device_count) {
+	for(Bit8u index = 0;index < DOS_DEVICES;index++) {
 		if (Devices[index]) {
 			if (WildFileCmp(temp,Devices[index]->name)) return index;
 		}
-		index++;
 	}
 	return DOS_DEVICES;
 }
 
 
 void DOS_AddDevice(DOS_Device * adddev) {
+//Caller creates the device. We store a pointer to it
 //TODO Give the Device a real handler in low memory that responds to calls
-	if (device_count<DOS_DEVICES) {
-		Devices[device_count]=adddev;
-		Devices[device_count]->SetDeviceNumber(device_count);
-		device_count++;
-	} else {
-		E_Exit("DOS:Too many devices added");
+	for(Bitu i = 0; i < DOS_DEVICES;i++) {
+		if(!Devices[i]){
+			Devices[i] = adddev;
+			Devices[i]->SetDeviceNumber(i);
+			return;
+		}
+	}
+	E_Exit("DOS:Too many devices added");
+}
+
+void DOS_DelDevice(DOS_Device * dev) {
+// We will destroy the device if we find it in our list.
+// TODO:The file table is not checked to see the device is opened somewhere!
+	for (Bitu i = 0; i <DOS_DEVICES;i++) {
+		if(Devices[i] && !strcasecmp(Devices[i]->name,dev->name)){
+			delete Devices[i];
+			Devices[i] = 0;
+			return;
+		}
 	}
 }
 
 void DOS_SetupDevices(void) {
-	device_count=0;
 	DOS_Device * newdev;
 	newdev=new device_CON();
 	DOS_AddDevice(newdev);
@@ -149,4 +159,3 @@ void DOS_SetupDevices(void) {
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
 }
-
