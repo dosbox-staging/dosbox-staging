@@ -23,15 +23,11 @@
 #include "keyboard.h"
 #include "setup.h"
 
-struct CPUBlock {
-	
-};
-
 Flag_Info flags;
 
 CPU_Regs cpu_regs;
 
-Segment Segs[6];
+Segments Segs;
 
 Bits CPU_Cycles=0;
 Bits CPU_CycleLeft=0;
