@@ -99,7 +99,7 @@ static void VGA_TANDY16_Draw(Bit8u * bitdata,Bitu pitch) {
 
 
 void VGA_TEXT_Draw(Bit8u * bitdata,Bitu start,Bitu panning,Bitu rows) {
-	Bit8u * reader=&vga.mem.linear[0];
+	Bit8u * reader=&vga.mem.linear[start*2];
 	Bit8u * draw_start=bitdata;
 /* Todo Blinking and high intensity colors */
 	Bitu next_charline=vga.draw.font_height*vga.draw.width;
@@ -344,6 +344,13 @@ void VGA_SetupDrawing(void) {
 		break;
 	case M_LIN8:
 		width<<=3;
+		if (vga.draw.double_width) width>>=1;
+		if (!vga.draw.double_height) {
+			if (vga.config.vline_height&1) {
+				vga.draw.double_height=true;
+				vga.draw.font_height/=2;
+			}
+		}
 		pitch=vga.config.scan_len*8;
 		break;
 	case M_EGA16:
@@ -390,7 +397,7 @@ void VGA_SetupDrawing(void) {
 		vga.draw.height=height;
 		vga.draw.pitch=pitch;
 
-		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d",width,height);
+		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, Pitch %d",width,height,pitch);
 		LOG(LOG_VGA,LOG_NORMAL)("Flags %X, fps %f",flags,fps);
 		RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),flags,&VGA_DrawHandler);
 		vga.draw.blank=(Bitu)(1000000/fps);
