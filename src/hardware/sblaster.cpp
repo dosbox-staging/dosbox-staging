@@ -46,21 +46,23 @@
 
 #define DSP_NO_COMMAND 0
 
-#define DMA_BUFSIZE 4096
+#define DMA_BUFSIZE 1024
 #define DSP_BUFSIZE 64
-#define DSP_DACSIZE 4096
+#define DSP_DACSIZE 512
 
 //Should be enough for sound generated in millisecond blocks
 #define SB_BUF_SIZE 8096
+#define SB_SH	14
+#define SB_SH_MASK	((1 << SB_SH)-1)
 
 enum {DSP_S_RESET,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6};
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
 
 enum DSP_MODES {
-	MODE_NONE,MODE_DAC,
-	MODE_SILENCE,
-	MODE_DMA,MODE_DMA_PAUSE,MODE_DMA_WAIT,
+	MODE_NONE,
+	MODE_DAC,
+	MODE_DMA,MODE_DMA_PAUSE
 };
 
 enum DMA_MODES {
@@ -74,15 +76,12 @@ enum {
 };
 
 struct SB_INFO {
-	Bit16u freq;
+	Bitu freq;
 	struct {
-		bool stereo,filtered,sign,autoinit;
-		bool stereoremain;
+		bool stereo,sign,autoinit;
 		DMA_MODES mode;
-		Bitu previous;
-		Bitu total,left;
-		Bitu rate,rate_mul;
-		Bitu index,add_index;
+		Bitu rate,mul;
+		Bitu total,left,min;
 		Bit64u start;
 		union {
 			Bit8u  b8[DMA_BUFSIZE];
@@ -90,10 +89,7 @@ struct SB_INFO {
 		} buf;
 		Bitu bits;
 		DmaChannel * chan;
-		struct {
-			Bit16s stereo;
-		} remain;
-		
+		Bitu remain_size;
 	} dma;
 	bool speaker;
 	Bit8u time_constant;
@@ -118,7 +114,7 @@ struct SB_INFO {
 		Bitu write_busy;
 	} dsp;
 	struct {
-		Bit16s data[DSP_DACSIZE];
+		Bit16s data[DSP_DACSIZE+1];
 		Bitu used;
 		Bit16s last;
 	} dac;
@@ -126,7 +122,9 @@ struct SB_INFO {
 		Bit8u index;
 		Bit8u dac[2],fm[2],cda[2],master[2],lin[2];
 		Bit8u mic;
+		bool stereo;
 		bool enabled;
+		bool filtered;
 	} mixer;
 	struct {
 		Bit8u reference;
@@ -137,26 +135,12 @@ struct SB_INFO {
 		Bitu base;
 		Bit8u irq;
 		Bit8u dma8,dma16;
-		Bitu rate;
-		Bitu rate_conv;
 	} hw;
-	struct {
-		Bit16s buf[SB_BUF_SIZE][2];
-		Bitu pos;
-	} out;
-	struct {
-		union {
-			Bit16s m[DMA_BUFSIZE];
-			Bit16s s[DMA_BUFSIZE][2];
-		} buf;
-		
-		Bitu index,add_index;
-	} tmp;
 	struct {
 		Bits value;
 		Bitu count;
 	} e2;
-	MIXER_Channel * chan;
+	MixerChannel * chan;
 };
 
 
@@ -202,12 +186,20 @@ static int E2_incr_table[4][9] = {
 #endif
 
 static void DSP_ChangeMode(DSP_MODES mode);
-static void CheckDMAEnd(void);
-static void END_DMA_Event(void);
+static void CheckDMAEnd();
+static void END_DMA_Event(Bitu);
+static void DMA_Silent_Event(Bitu val);
 
 static void DSP_SetSpeaker(bool how) {
-	MIXER_Enable(sb.chan,how);
+	if (sb.speaker==how) return;
 	sb.speaker=how;
+	sb.chan->Enable(how);
+	if (sb.speaker) {
+		PIC_RemoveEvents(DMA_Silent_Event);
+		CheckDMAEnd();
+	} else {
+		
+	}
 }
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
@@ -223,35 +215,26 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	}
 }
 
-
 static INLINE void DSP_FlushData(void) {
 	sb.dsp.out.used=0;
 	sb.dsp.out.pos=0;
-}
-
-static void DSP_StopDMA(void) {
-	DSP_ChangeMode(MODE_NONE);
-	sb.dma.left=0;
 }
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
-			DSP_ChangeMode(MODE_DMA_WAIT);
+			DSP_ChangeMode(MODE_NONE);
 			LOG(LOG_SB,LOG_NORMAL)("DMA deactivated,stopping output");
 		}
 	} else if (event==DMA_UNMASKED) {
-		if (sb.mode==MODE_DMA_WAIT) {
+		if (sb.mode!=MODE_DMA && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
 			CheckDMAEnd();
-			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output, block %X",chan->basecnt);
-		} else if (event==DMA_TRANSFEREND) {
-			if (sb.mode==MODE_DMA) sb.mode=MODE_DMA_WAIT;
+			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output, auto %d block %X",chan->autoinit,chan->basecnt);
 		}
 	}
 }
-
 
 #define MIN_ADAPTIVE_STEP_SIZE 511
 #define MAX_ADAPTIVE_STEP_SIZE 32767
@@ -263,7 +246,7 @@ static INLINE Bits Clip(Bits sample) {
 	return sample;
 }
 
-static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+static INLINE Bit8u decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x08) {
@@ -272,10 +255,10 @@ static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& 
 		reference = min(0xff, reference + ((sample & 0x07) << scale));
 	}
 	scale = max(2, min(6, scaleMap[sample & 0x07]));
-	return (((Bit8s)reference)^0x80)<<8;
+	return reference;
 }
 
-static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+static INLINE Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x02) {
@@ -284,10 +267,10 @@ static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& 
 		reference = min(0xff, reference + ((sample & 0x01) << (scale+2)));
 	}
 	scale = max(2, min(6, scaleMap[sample & 0x07]));
-	return (((Bit8s)reference)^0x80)<<8;
+	return reference;
 }
 
-INLINE Bit16s decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
+INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x04) {
@@ -296,183 +279,148 @@ INLINE Bit16s decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) 
 		reference = min(0xff, reference + ((sample & 0x03) << (scale+1)));
 	}
 	scale = max(2, min(6, scaleMap[sample & 0x07]));
-	return (((Bit8s)reference)^0x80)<<8;
+	return reference;
 }
 
 static void GenerateDMASound(Bitu size) {
-	/* Check some variables */
-	if (!size) return;
-	if (!sb.dma.rate) return;
-	/* First check if this transfer is gonna end in the next 2 milliseconds */
-	Bitu index=(Bitu)(((float)sb.dma.left*(float)1000000)/(float)sb.dma.rate);
-#if (SB_PIC_EVENTS)
-	if (index-PIC_Index()<1000) PIC_AddEvent(END_DMA_Event,index);
-#else 
-	if (index<2000) size=sb.dma.left;
-#endif
-	Bitu read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-	sb.dma.left-=read;
-	Bitu skip=0;Bitu i;Bitu rem;Bitu done=0;
-	if (!read) {
-		sb.mode=MODE_DMA_WAIT;
-		return;
-	}
-	if (sb.dma.stereoremain) {
-		sb.dma.stereoremain=false;
-		sb.tmp.buf.m[done++]=sb.dma.remain.stereo; 
+	Bitu read;Bitu done=0;Bitu i=0;
+	if (sb.dma.left<=sb.dma.min) {
+		size=sb.dma.left;
 	}
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
-		if (sb.adpcm.haveref) {
+		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+		if (read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			skip++;read--;
+			i++;
 		}
-		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 6) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 4) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 2) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 0) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+		for (;i<read;i++) {
+			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 6) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 4) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 2) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
+		sb.chan->AddSamples_m8(done,MixTemp);
 		break;
 	case DSP_DMA_3:
-		if (sb.adpcm.haveref) {
+		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+		if (read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			skip++;read--;
+			i++;
 		}
-		rem=read%3;read/=3;
-		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3]     )&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3]  >>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+i*3]  >>6)&3)&((sb.dma.buf.b8[i*3+1]&1)<<2),sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+1]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+1]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+i*3+1]>>7)&1)&((sb.dma.buf.b8[i*3+2]&3)<<1),sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+2]>>2)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+2]>>5)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+		for (;i<read;i++) {
+			MixTemp[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
-		if (rem) {
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3])&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3]>>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			if (rem==2) {
-				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+read*3+1]>>6)&3)&(sb.dma.buf.b8[read*3/8]&1),     sb.adpcm.reference,sb.adpcm.stepsize);
-				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3+1]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3+1]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			}
-		}
+		sb.chan->AddSamples_m8(done,MixTemp);
 		break;
 	case DSP_DMA_4:
-		if (sb.adpcm.haveref) {
+		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+		if (read && sb.adpcm.haveref) {
 			sb.adpcm.haveref=false;
 			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-			skip++;read--;
+			i++;
 		}
-		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i] >> 4,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i]& 0xf,sb.adpcm.reference,sb.adpcm.stepsize);
+		for (;i<read;i++) {
+			MixTemp[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[i]& 0xf,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
-		read*=2;
+		sb.chan->AddSamples_m8(done,MixTemp);
 		break;
 	case DSP_DMA_8:
-		for (i=0;i<read;i++) sb.tmp.buf.m[done++]=((Bit8s)(sb.dma.buf.b8[i]^0x80))<<8;
+		if (sb.dma.stereo) {
+			read=sb.dma.chan->Read(size,&sb.dma.buf.b8[sb.dma.remain_size]);
+			read+=sb.dma.remain_size;
+			sb.chan->AddSamples_s8(read>>1,sb.dma.buf.b8);
+			if (read&1) {
+				sb.dma.remain_size=1;
+				sb.dma.buf.b8[0]=sb.dma.buf.b8[read-1];
+			} else sb.dma.remain_size=0;
+		} else {
+			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+			sb.chan->AddSamples_m8(read,sb.dma.buf.b8);
+		}
 		break;
 	case DSP_DMA_16:
-		for (i=0;i<read;i++) sb.tmp.buf.m[done++]=sb.dma.buf.b16[i];
+		if (sb.dma.stereo) {
+			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size]);
+			read+=sb.dma.remain_size;
+			sb.chan->AddSamples_s16(read>>1,sb.dma.buf.b16);
+			if (read&1) {
+				sb.dma.remain_size=1;
+				sb.dma.buf.b16[0]=sb.dma.buf.b16[read-1];
+			} else sb.dma.remain_size=0;
+		} else {
+			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+			sb.chan->AddSamples_m16(read,sb.dma.buf.b16);
+		}
 		break;
 	case DSP_DMA_16_ALIASED:
-		for (i=0;i<read/2;i++) sb.tmp.buf.m[done++]=sb.dma.buf.b16[i];
+		if (sb.dma.stereo) {
+			sb.chan->AddSamples_s16(read>>2,sb.dma.buf.b16);
+		} else {
+			sb.chan->AddSamples_m16(read>>1,sb.dma.buf.b16);
+		}
 		break;
 	default:
 		LOG_MSG("Unhandled dma mode %d",sb.dma.mode);
 		sb.mode=MODE_NONE;
 		return;
 	}
+	sb.dma.left-=read;
 	if (!sb.dma.left) {
-		if (!sb.dma.autoinit) sb.mode=MODE_NONE;
+		PIC_RemoveEvents(END_DMA_Event);
+		if (!sb.dma.autoinit) {
+			sb.mode=MODE_NONE;
+			sb.dma.mode=DSP_DMA_NONE;
+		}
 		else sb.dma.left=sb.dma.total;
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
 		else SB_RaiseIRQ(SB_IRQ_8);
 	}
-	Bit16s * stream=&sb.out.buf[sb.out.pos][0];
-	if (!sb.dma.stereo) {
-		Bitu pos;
-		while (done>(pos=sb.tmp.index>>16)) {
-			(*stream++)=sb.tmp.buf.m[pos];
-			(*stream++)=sb.tmp.buf.m[pos];
-			sb.tmp.index+=sb.tmp.add_index;
-			sb.out.pos++;
-		}
-		sb.tmp.index&=0xffff;
-	} else {
-		if (done&1){
-			sb.dma.remain.stereo=sb.tmp.buf.m[done-1];
-			sb.dma.stereoremain=true;
-		}
-		Bitu pos;done>>=1;Bitu index_add=sb.tmp.add_index >> 1;
-		while (done>(pos=sb.tmp.index>>16)) {
-			(*stream++)=sb.tmp.buf.s[pos][0];
-			(*stream++)=sb.tmp.buf.s[pos][1];
-			sb.tmp.index+=index_add;
-			sb.out.pos++;
-		}
-		sb.tmp.index&=0xffff;
-	}
 }
 
-static void GenerateSound(Bitu size) {
-	while (sb.out.pos<size) {	
-		Bitu samples=size-sb.out.pos;
-		switch (sb.mode) {
-		case MODE_DMA_WAIT:
-		case MODE_DMA_PAUSE:
-		case MODE_NONE:
-			memset(&sb.out.buf[sb.out.pos],0,samples*4);
-			sb.out.pos+=samples;
-			break;
-		case MODE_DAC:
-			/* Stretch the inputted dac data over len samples */
-			{
+static void GenerateDACSound(Bitu len) {
+	if (!sb.dac.used) {
+		sb.mode=MODE_NONE;
+		return;
+	}
+	Bitu dac_add=(sb.dac.used<<16)/len;
+	Bitu dac_pos=0;
+	Bit16s * out=(Bit16s *)MixTemp;
+	for (Bitu i=len;i;i--) {
+		*out++=sb.dac.data[0+(dac_pos>>16)];
+		dac_pos+=dac_add;
+	}
+	sb.dac.used=0;
+	sb.chan->AddSamples_m16(len,(Bit16s *)MixTemp);
+}
 
-				Bit16s * stream=&sb.out.buf[sb.out.pos][0];
-				if (sb.dac.used) {
-					Bitu dac_add=(sb.dac.used<<16)/samples;
-					Bitu dac_pos=0;
-					Bitu len=samples;
-					while (len-->0) {
-						*(stream++)=sb.dac.data[dac_pos>>16];
-						*(stream++)=sb.dac.data[dac_pos>>16];
-						dac_pos+=dac_add;
-					}
-					dac_pos-=dac_add;
-					sb.dac.last=sb.dac.data[dac_pos>>16];
-					sb.dac.used=0;
-				} else {
-					memset(stream,sb.dac.last,samples);
-					sb.mode=MODE_NONE;
-				}
-				sb.out.pos+=samples;
-				break;
-			}
-		case MODE_DMA:
-			{
-				Bitu len=samples*sb.dma.rate_mul;
-				if (len & 0xffff) len=1+(len>>16);
-				else len>>=16;
-				if (sb.dma.stereo && (len & 1)) len++;
-				GenerateDMASound(len);
-				break;	
-			}
-			
+static void DMA_Silent_Event(Bitu val) {
+	if (sb.dma.left<val) val=sb.dma.left;
+	Bitu read=sb.dma.chan->Read(val,sb.dma.buf.b8);
+	sb.dma.left-=read;
+	if (!sb.dma.left) {
+		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
+		else SB_RaiseIRQ(SB_IRQ_8);
+		if (sb.dma.autoinit) sb.dma.left=sb.dma.total;
+		else {
+			sb.mode=MODE_NONE;
+			sb.dma.mode=DSP_DMA_NONE;
 		}
 	}
-	if (sb.out.pos>SB_BUF_SIZE) {
-		LOG(LOG_SB,LOG_ERROR)("Generation Buffer Full!!!!");
-		sb.out.pos=0;
+	if (sb.dma.left) {
+		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
+		Bitu index=(bigger*1000000)/sb.dma.rate;
+		PIC_AddEvent(DMA_Silent_Event,index,bigger);
 	}
+
 }
 
 static void END_DMA_Event(Bitu val) {
@@ -480,24 +428,22 @@ static void END_DMA_Event(Bitu val) {
 }
 
 static void CheckDMAEnd(void) {
-	if (!sb.dma.rate) return;
-	Bitu index=(Bitu)(((float)sb.dma.left*(float)1000000)/(float)sb.dma.rate);
-	if (index<(1000-PIC_Index())) {
-#if 1
+	if (!sb.dma.left) return;
+	if (!sb.speaker) {
+		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
+		Bitu index=(bigger*1000000)/sb.dma.rate;
+		PIC_AddEvent(DMA_Silent_Event,index,bigger);
+		LOG(LOG_SB,LOG_NORMAL)("Silent DMA Transfer scheduling IRQ in %d microseconds",index);
+	} else if (sb.dma.left<sb.dma.min) {
+		Bitu index=(sb.dma.left*1000000)/sb.dma.rate;
 		LOG(LOG_SB,LOG_NORMAL)("Sub millisecond transfer scheduling IRQ in %d microseconds",index);	
 		PIC_AddEvent(END_DMA_Event,index);
-#else
-		GenerateDMASound(sb.dma.left);		
-#endif
 	}
 }
 
 static void DSP_ChangeMode(DSP_MODES mode) {
-	if (!sb.speaker) DSP_SetSpeaker(true);
-	if (mode==sb.mode) return;
-	/* Generate sound until now */
-	Bitu index=PIC_Index();
-	GenerateSound((sb.hw.rate_conv*index)>>16);
+	if (sb.mode==mode) return;
+	else sb.chan->FillUp();
 	sb.mode=mode;
 }
 
@@ -505,36 +451,56 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-static void DSP_DoDMATranfser(DMA_MODES mode) {
+static void DSP_DoDMATranfser(DMA_MODES mode,Bitu freq,bool stereo) {
 	char * type;
-	DSP_ChangeMode(MODE_NONE);
+	sb.chan->FillUp();
 	sb.dma.left=sb.dma.total;
 	sb.dma.mode=mode;
-	sb.tmp.index=0;
-	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
-	sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
+	sb.dma.stereo=stereo;
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
 	switch (mode) {
-	case DSP_DMA_2:type="2-bits ADPCM";break;
-	case DSP_DMA_3:type="3-bits ADPCM";break;
-	case DSP_DMA_4:type="4-bits ADPCM";break;
-	case DSP_DMA_8:type="8-bits PCM";break;
-	case DSP_DMA_16_ALIASED:type="16-bits(aliased) PCM";break;
-	case DSP_DMA_16:type="16-bits PCM";break;
+	case DSP_DMA_2:
+		type="2-bits ADPCM";
+		sb.dma.mul=(1 << SB_SH)/4;
+		break;
+	case DSP_DMA_3:
+		type="3-bits ADPCM";
+		sb.dma.mul=(1 << SB_SH)/3;
+		break;
+	case DSP_DMA_4:
+		type="4-bits ADPCM";
+		sb.dma.mul=(1 << SB_SH)/2;
+		break;
+	case DSP_DMA_8:
+		type="8-bits PCM";
+		sb.dma.mul=(1 << SB_SH);
+		break;
+	case DSP_DMA_16_ALIASED:
+		type="16-bits(aliased) PCM";
+		sb.dma.mul=(1 << SB_SH)*2;
+		break;
+	case DSP_DMA_16:
+		type="16-bits PCM";
+		sb.dma.mul=(1 << SB_SH);
+		break;
 	default:
 		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d",mode);
 		return;
 	}
-	DSP_ChangeMode(MODE_DMA_WAIT);
+	if (sb.dma.stereo) sb.dma.mul*=2;
+	sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
+	sb.dma.min=(sb.dma.rate*3)/1000;
+	sb.chan->SetFreq(freq);
 	sb.dma.mode=mode;
+	PIC_RemoveEvents(END_DMA_Event);
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 #if (C_DEBUG)
-	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s %s %s dma-rate %d size %d",
+	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
 		type,
 		sb.dma.stereo ? "Stereo" : "Mono",
 		sb.dma.autoinit ? "Auto-Init" : "Single-Cycle",
-		sb.dma.rate,sb.dma.total
+		freq,sb.dma.rate,sb.dma.total
 	);
 #endif
 }
@@ -542,24 +508,23 @@ static void DSP_DoDMATranfser(DMA_MODES mode) {
 static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
 	sb.dma.autoinit=autoinit;
 	if (!autoinit) sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-	sb.dma.rate=sb.freq;
 	sb.dma.chan=DmaChannels[sb.hw.dma8];
-	DSP_DoDMATranfser(mode);
+	DSP_DoDMATranfser(mode,sb.freq / (sb.mixer.stereo ? 2 : 1),sb.mixer.stereo);
 }
 
-static void DSP_PrepareDMA_New(DMA_MODES mode,bool autoinit,Bitu length) {
+static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool stereo) {
+	Bitu freq=sb.freq;
 	sb.dma.total=length;
-	sb.dma.rate=sb.freq * (sb.dma.stereo ? 2 : 1);
-	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
 	sb.dma.autoinit=autoinit;
 	if (mode==DSP_DMA_16) {
 		if (sb.hw.dma16!=0xff) sb.dma.chan=DmaChannels[sb.hw.dma16];
 		else {
 			sb.dma.chan=DmaChannels[sb.hw.dma8];
 			mode=DSP_DMA_16_ALIASED;
+			freq/=2;
 		}
 	} else sb.dma.chan=DmaChannels[sb.hw.dma8];
-	DSP_DoDMATranfser(mode);
+	DSP_DoDMATranfser(mode,freq,stereo);
 }
 
 
@@ -586,6 +551,8 @@ static void DSP_Reset(void) {
 	sb.dma.total=0;
 	sb.dma.stereo=false;
 	sb.dma.autoinit=false;
+	sb.dma.mode=DSP_DMA_NONE;
+	sb.dma.remain_size=0;
 	sb.freq=22050;
 	sb.time_constant=45;
 	sb.dac.used=0;
@@ -594,7 +561,9 @@ static void DSP_Reset(void) {
 	sb.e2.count=0;
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
+	sb.chan->SetFreq(22050);
 	DSP_SetSpeaker(false);
+	PIC_RemoveEvents(END_DMA_Event);
 }
 
 
@@ -640,6 +609,7 @@ static void DSP_DoCommand(void) {
 	case 0x10:	/* Direct DAC */
 		DSP_ChangeMode(MODE_DAC);
 		if (sb.dac.used<DSP_DACSIZE) {
+			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
 			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
 		}
 		break;
@@ -689,21 +659,19 @@ static void DSP_DoCommand(void) {
 	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
     case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:
 		/* Generic 8/16 bit DMA */
-		sb.dma.stereo=(sb.dsp.in.data[0] & 0x20) > 0;
 		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
 		DSP_PrepareDMA_New((sb.dsp.cmd & 0x10) ? DSP_DMA_16 : DSP_DMA_8,
+			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8),
 			(sb.dsp.cmd & 0x4)>0,
-			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8)
+			(sb.dsp.in.data[0] & 0x20) > 0
 		);
 		break;
 	case 0xd0:	/* Halt 8-bit DMA */
 	case 0xd5:	/* Halt 16-bit DMA */
-		if (sb.dma.left) {
-			DSP_ChangeMode(MODE_DMA_PAUSE);
-#if SB_PIC_EVENTS
-			PIC_RemoveEvents(END_DMA_Event);
-#endif
-		} else DSP_ChangeMode(MODE_NONE);
+//		DSP_ChangeMode(MODE_NONE);
+//		Games sometimes already program a new dma before stopping, gives noise
+		sb.mode=MODE_DMA;
+		PIC_RemoveEvents(END_DMA_Event);
 		break;
 	case 0xd1:	/* Enable Speaker */
 		DSP_SetSpeaker(true);
@@ -712,7 +680,6 @@ static void DSP_DoCommand(void) {
 		DSP_SetSpeaker(false);
 		break;
 	case 0xd4:	/* Continue DMA */
-		DSP_ChangeMode(MODE_DMA_WAIT);
 		sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 		break;
 	case 0xda:	/* Exit Autoinitialize 8-bit */
@@ -805,8 +772,11 @@ static Bit8u DSP_ReadData(void) {
 #define CALCVOL(_VAL) (float)pow(10.0f,((float)(31-_VAL)*-1.3f)/20)
 static void CTMIXER_UpdateVolumes(void) {
 	if (!sb.mixer.enabled) return;
-	MIXER_SetVolume(MIXER_FindChannel("SB"),CALCVOL(sb.mixer.dac[0]),CALCVOL(sb.mixer.dac[1]));
-	MIXER_SetVolume(MIXER_FindChannel("FM"),CALCVOL(sb.mixer.fm[0]),CALCVOL(sb.mixer.fm[1]));
+	MixerChannel * chan;
+	chan=MIXER_FindChannel("SB");
+	if (chan) chan->SetVolume(CALCVOL(sb.mixer.dac[0]),CALCVOL(sb.mixer.dac[1]));
+	chan=MIXER_FindChannel("FM");
+	if (chan) chan->SetVolume(CALCVOL(sb.mixer.fm[0]),CALCVOL(sb.mixer.fm[1]));
 }
 
 static void CTMIXER_Reset(void) {
@@ -822,7 +792,6 @@ static void CTMIXER_Reset(void) {
 	_WHICH_[1]= 0x1 | ((_VAL_ & 0x0f) << 1);
 
 static void CTMIXER_Write(Bit8u val) {
-	LOG_MSG("Write mixer %x %x",sb.mixer.index,val);
 	switch (sb.mixer.index) {
 	case 0x02:		/* Master Voulme (SBPRO) Obsolete? */
 	case 0x22:		/* Master Volume (SBPRO) */
@@ -842,8 +811,8 @@ static void CTMIXER_Write(Bit8u val) {
 		sb.mixer.mic=(val & 0xf) << 1;
 		break;
 	case 0x0e:		/* Output/Stereo Select */
-		sb.dma.stereo=(val & 0x2) > 0;
-		sb.dma.filtered=(val & 0x20) > 0;
+		sb.mixer.stereo=(val & 0x2) > 0;
+		sb.mixer.filtered=(val & 0x20) > 0;
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;
 	case 0x26:		/* FM Volume (SBPRO) */
@@ -884,7 +853,7 @@ static void CTMIXER_Write(Bit8u val) {
 	
 static Bit8u CTMIXER_Read(void) {
 	Bit8u ret;
-	if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
+//	if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 	switch (sb.mixer.index) {
 	case 0x00:		/* RESET */
 		return 0x00;
@@ -897,7 +866,7 @@ static Bit8u CTMIXER_Read(void) {
 	case 0x0a:		/* Mic Level (SBPRO) */
 		return (sb.mixer.mic >> 1);
 	case 0x0e:		/* Output/Stereo Select */
-		return 0x11|(sb.dma.stereo ? 0x02 : 0x00)|(sb.dma.filtered ? 0x20 : 0x00);
+		return 0x11|(sb.mixer.stereo ? 0x02 : 0x00)|(sb.mixer.filtered ? 0x20 : 0x00);
 	case 0x26:		/* FM Volume (SBPRO) */
 		return MAKEPROVOL(sb.mixer.fm);
 	case 0x28:		/* CD Audio Volume (SBPRO) */
@@ -994,19 +963,31 @@ static void adlib_gusforward(Bitu port,Bitu val,Bitu iolen) {
 	adlib_commandreg=val;
 }
 
-static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
-	if (!len) return;
-	GenerateSound(len);
-	memcpy(stream,sb.out.buf,len*4);
-	if (sb.out.pos>=len) {
-		memcpy(sb.out.buf,&sb.out.buf[len],(sb.out.pos-len)*4);	
-		sb.out.pos-=len;
+static void SBLASTER_CallBack(Bitu len) {
+	switch (sb.mode) {
+	case MODE_NONE:
+	case MODE_DMA_PAUSE:
+		sb.chan->AddSilence();
+		break;
+	case MODE_DAC:
+//		GenerateDACSound(len);
+//		break;
+		if (!sb.dac.used) {
+			sb.mode=MODE_NONE;
+			return;
+		}
+		sb.chan->AddStretched(sb.dac.used,sb.dac.data);
+		sb.dac.used=0;
+		break;
+	case MODE_DMA:
+		len*=sb.dma.mul;
+		if (len&SB_SH_MASK) len+=1 << SB_SH;
+		len>>=SB_SH;
+		if (len>sb.dma.left) len=sb.dma.left;
+		GenerateDMASound(len);
+		break;
 	}
-	else sb.out.pos=0;
-	if (sb.mode==MODE_NONE) DSP_SetSpeaker(false);
-	return;
 }
-
 
 void SBLASTER_Init(Section* sec) {
 	Bitu i;
@@ -1017,8 +998,7 @@ void SBLASTER_Init(Section* sec) {
 	sb.hw.dma8=section->Get_int("dma");
 	sb.hw.dma16=section->Get_int("hdma");
 	sb.mixer.enabled=section->Get_bool("mixer");
-	sb.hw.rate=section->Get_int("sbrate");
-	sb.hw.rate_conv=(sb.hw.rate<<16)/1000000;
+	sb.mixer.stereo=false;
 	if (!strcasecmp(sbtype,"sb1")) sb.type=SBT_1;
 	else if (!strcasecmp(sbtype,"sb2")) sb.type=SBT_2;
 	else if (!strcasecmp(sbtype,"sbpro1")) sb.type=SBT_PRO1;
@@ -1067,10 +1047,7 @@ void SBLASTER_Init(Section* sec) {
 	}
 	if (sb.type==SBT_NONE) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SB");
-	MIXER_Enable(sb.chan,false);
 	sb.dsp.state=DSP_S_NORMAL;
-	MIXER_SetFreq(sb.chan,sb.hw.rate);
-	MIXER_SetMode(sb.chan,MIXER_16STEREO);
 
 	for (i=4;i<=0xf;i++) {
 		if (i==8 || i==9) continue;
