@@ -423,6 +423,8 @@ att_text16:
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x7);
 		goto skipatt;
 	case M_CGA4:
+		//Set Bit 2 in black/white mode 0x5
+		IO_Write(0x3d8,0xa+(CurMode->mode==0x5) ? 0x4 : 0);
 		IO_Write(0x3d9,0x30);		//Setup using CGA color select register
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 		goto skipatt;
