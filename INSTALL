@@ -1,6 +1,3 @@
-First of all if you are running a non-x86 machine this will not work,
-code only works for big-endian machines for now :)
-
 Things needed for compilation.
 
 SDL 
@@ -12,7 +9,7 @@ Curses
 	For win32 get pdcurses at http://pdcurses.sourceforge.net
 
 Libpng
-    Needed for the screenshots. 
+    Needed for the screenshots. (--enable-shots when configuring dosbox)
     For win32 get libpng from http://www.sourceforge.net/projects/gnuwin32
 
 Zlib
@@ -27,8 +24,12 @@ For building on unix systems.
 If you are building from the cvs run ./autogen.sh first before doing the following.
 
 1. ./configure
-2. Check settings.h for some setup options.
-3. make
+2. make
+
+In step 1 you could add the following switches --enable-shots this will
+enable the screenshot facility, also --enable-debug is a valid switch. This
+will enable the internal debugger. (It can be started by pressing - on the
+numeric keyboard)
 
 Check the src subdir for the binary.
 
