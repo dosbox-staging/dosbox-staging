@@ -191,7 +191,7 @@ void CMOS_Init(Section* sec) {
 	cmos.reg=0xb;
 	cmos_writereg(0x71,0);
 	/* Fill in extended memory size */
-	Bitu exsize=MEM_TotalSize()-1024;
+	Bitu exsize=(MEM_TotalPages()*4)-1024;
 	cmos.regs[0x17]=(Bit8u)exsize;
 	cmos.regs[0x18]=(Bit8u)(exsize >> 8);
 	cmos.regs[0x30]=(Bit8u)exsize;
