@@ -26,37 +26,55 @@ static GetEATable * lookupEATable;
 #define PREFIX_ADDR		0x2
 #define PREFIX_SEG_ADDR	0x3
 
-
-static Bitu prefixes;
-static EAPoint segprefix_base;
+static struct {
+	Bitu mark;
+	Bitu count;
+	EAPoint segbase;
+} prefix;
 
 /* Gets initialized at the bottem, can't seem to declare forward references */
 static GetEATable * EAPrefixTable[4];
 
-
 #define SegPrefix(blah)										\
-	segprefix_base=SegBase(blah);							\
-	prefixes|=PREFIX_SEG;									\
-  	lookupEATable=EAPrefixTable[prefixes];					\
-	goto restart;											\
+	prefix.segbase=SegBase(blah);							\
+	prefix.mark|=PREFIX_SEG;								\
+	prefix.count++;											\
+  	lookupEATable=EAPrefixTable[prefix.mark];				\
+	goto restart;
 
 #define SegPrefix_66(blah)									\
-	segprefix_base=SegBase(blah);							\
-	prefixes|=PREFIX_SEG;									\
-  	lookupEATable=EAPrefixTable[prefixes];					\
-	goto restart_66;										\
+	prefix.segbase=SegBase(blah);							\
+	prefix.mark|=PREFIX_SEG;								\
+	prefix.count++;											\
+  	lookupEATable=EAPrefixTable[prefix.mark];				\
+	goto restart_66;
 
 
-#define PrefixReset														\
-	prefixes=PREFIX_NONE;lookupEATable=EAPrefixTable[PREFIX_NONE];
+#define PrefixReset											\
+	prefix.mark=PREFIX_NONE;								\
+	prefix.count=0;											\
+	lookupEATable=EAPrefixTable[PREFIX_NONE];
+
+#if 1
 
 #define GetEADirect														\
-EAPoint eaa;switch (prefixes) {											\
+EAPoint eaa;switch (prefix.mark) {											\
 case PREFIX_NONE:eaa=SegBase(ds)+Fetchw();break;						\
-case PREFIX_SEG:eaa=segprefix_base+Fetchw();PrefixReset;break;			\
+case PREFIX_SEG:eaa=prefix.segbase+Fetchw();PrefixReset;break;			\
 case PREFIX_ADDR:eaa=SegBase(ds)+Fetchd();PrefixReset;break;			\
-case PREFIX_SEG_ADDR:eaa=segprefix_base+Fetchd();PrefixReset;break;		\
+case PREFIX_SEG_ADDR:eaa=prefix.segbase+Fetchd();PrefixReset;break;		\
 }
+
+#else
+
+#define GetEADirect																\
+EAPoint eaa;																	\
+if (!prefix.mark) { eaa=SegBase(ds)+Fetchw();}										\
+else if (prefix.mark == PREFIX_SEG) { eaa=prefix.segbase+Fetchw();PrefixReset;}		\
+else if (prefix.mark == PREFIX_ADDR) { eaa=SegBase(ds)+Fetchd();PrefixReset;}			\
+else if (prefix.mark == PREFIX_SEG_ADDR) { eaa=prefix.segbase+Fetchd();PrefixReset;}
+
+#endif 
 
 
 
@@ -125,7 +143,7 @@ static GetEATable GetEA_16_n={
 };
 
 
-#define segprefixed(val) EAPoint ret=segprefix_base+val;PrefixReset;return ret;
+#define segprefixed(val) EAPoint ret=prefix.segbase+val;PrefixReset;return ret;
 
 static EAPoint EA_16_00_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si)) }
 static EAPoint EA_16_01_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di)) }
@@ -189,6 +207,8 @@ static GetEATable GetEA_16_s={
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
 
+static Bit32u SIBZero=0;
+static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 
 INLINE EAPoint Sib(Bitu mode) {
 	Bit8u sib=Fetchb();
@@ -203,7 +223,7 @@ INLINE EAPoint Sib(Bitu mode) {
 	case 3:	/* EBX Base */
 		base=SegBase(ds)+reg_ebx;break;
 	case 4:	/* ESP Base */
-		base=SegBase(ds)+reg_esp;break;
+		base=SegBase(ss)+reg_esp;break;
 	case 5:	/* #1 Base */
 		if (!mode) {
 			base=SegBase(ds)+Fetchd();break;
@@ -215,25 +235,7 @@ INLINE EAPoint Sib(Bitu mode) {
 	case 7:	/* EDI Base */
 		base=SegBase(ds)+reg_edi;break;
 	}
-	Bitu shift=sib >> 6;
-	switch ((sib >>3) &7) {
-	case 0:	/* EAX Index */
-		base+=(Bit32s)reg_eax<<shift;break;
-	case 1:	/* ECX Index */
-		base+=(Bit32s)reg_ecx<<shift;break;
-	case 2:	/* EDX Index */
-		base+=(Bit32s)reg_edx<<shift;break;
-	case 3:	/* EBX Index */
-		base+=(Bit32s)reg_ebx<<shift;break;
-	case 4:	/* None */
-		break;
-	case 5:	/* EBP Index */
-		base+=(Bit32s)reg_ebp<<shift;break;
-	case 6:	/* ESI Index */
-		base+=(Bit32s)reg_esi<<shift;break;
-	case 7:	/* EDI Index */
-		base+=(Bit32s)reg_edi<<shift;break;
-	};
+	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);
 	return base;
 };
 
@@ -305,50 +307,31 @@ INLINE EAPoint Sib_s(Bitu mode) {
 	EAPoint base;
 	switch (sib&7) {
 	case 0:	/* EAX Base */
-		base=segprefix_base+reg_eax;break;
+		base=prefix.segbase+reg_eax;break;
 	case 1:	/* ECX Base */
-		base=segprefix_base+reg_ecx;break;
+		base=prefix.segbase+reg_ecx;break;
 	case 2:	/* EDX Base */
-		base=segprefix_base+reg_edx;break;
+		base=prefix.segbase+reg_edx;break;
 	case 3:	/* EBX Base */
-		base=segprefix_base+reg_ebx;break;
+		base=prefix.segbase+reg_ebx;break;
 	case 4:	/* ESP Base */
-		base=segprefix_base+reg_esp;break;
+		base=prefix.segbase+reg_esp;break;
 	case 5:	/* #1 Base */
 		if (!mode) {
-			base=segprefix_base+Fetchd();break;
+			base=prefix.segbase+Fetchd();break;
 		} else {
-			base=segprefix_base+reg_ebp;break;
+			base=prefix.segbase+reg_ebp;break;
 		}
 	case 6:	/* ESI Base */
-		base=segprefix_base+reg_esi;break;
+		base=prefix.segbase+reg_esi;break;
 	case 7:	/* EDI Base */
-		base=segprefix_base+reg_edi;break;
+		base=prefix.segbase+reg_edi;break;
 	}
-	Bitu shift=sib >> 6;
-	switch ((sib >>3) &7) {
-	case 0:	/* EAX Index */
-		base+=(Bit32s)reg_eax<<shift;break;
-	case 1:	/* ECX Index */
-		base+=(Bit32s)reg_ecx<<shift;break;
-	case 2:	/* EDX Index */
-		base+=(Bit32s)reg_edx<<shift;break;
-	case 3:	/* EBX Index */
-		base+=(Bit32s)reg_ebx<<shift;break;
-	case 4:	/* None */
-		break;
-	case 5:	/* EBP Index */
-		base+=(Bit32s)reg_ebp<<shift;break;
-	case 6:	/* ESI Index */
-		base+=(Bit32s)reg_esi<<shift;break;
-	case 7:	/* EDI Index */
-		base+=(Bit32s)reg_edi<<shift;break;
-	};
-	PrefixReset;
+	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);	PrefixReset;
 	return base;
 };
 
-#define segprefixed_32(val) EAPoint ret=segprefix_base+(Bit32u)(val);PrefixReset;return ret;
+#define segprefixed_32(val) EAPoint ret=prefix.segbase+(Bit32u)(val);PrefixReset;return ret;
 
 static EAPoint EA_32_00_s(void) { segprefixed_32(reg_eax); }
 static EAPoint EA_32_01_s(void) { segprefixed_32(reg_ecx); }
