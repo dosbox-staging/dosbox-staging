@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.43 2003-12-12 17:23:55 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.44 2003-12-12 19:51:20 finsterr Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1108,6 +1108,7 @@ void CPU_VERW(Bitu selector) {
 
 
 bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
+	value &= 0xffff;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Segs.val[seg]=value;
 		Segs.phys[seg]=value << 4;
