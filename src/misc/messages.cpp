@@ -112,7 +112,7 @@ const char * MSG_Get(char const * msg) {
 	     return  (*tel).val.c_str();
 	  }
      }
-   return "Message not Found!";
+   return "Message not Found!\n";
 }
 
 void MSG_Init(Section_prop * section) {
