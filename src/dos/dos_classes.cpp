@@ -215,7 +215,8 @@ bool DOS_PSP::SetNumFiles(Bit16u fileNum)
 	sSave(sPSP,file_table,data);
 	sSave(sPSP,max_files,fileNum);
 	if (fileNum>20) {
-		for (Bit16u i=0; i<20; i++) SetFileHandle(i,sGet(sPSP,files[i]));
+		Bit16u i;
+		for (i=0; i<20; i++) SetFileHandle(i,sGet(sPSP,files[i]));
 		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
 	};
 	return true;
