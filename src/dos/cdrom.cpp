@@ -121,7 +121,7 @@ bool CDROM_Interface_SDL::PlayAudioSector (unsigned long start,unsigned long len
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
-	bool success = (SDL_CDPlay(cd,start,len)==0);
+	bool success = (SDL_CDPlay(cd,start+150,len)==0);
 	return success;
 };
 

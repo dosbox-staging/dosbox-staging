@@ -343,10 +343,6 @@ bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 	Bit8u sec		= (start>> 8) & 0xFF;
 	Bit8u fr		= (start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
-//	min				= (length>>16) & 0xFF;
-//	sec				= (length>> 8) & 0xFF;
-//	fr				= (length>> 0) & 0xFF;	
-//	Bit32u seclen	= min*60*75+sec*75+fr - 150;
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
 };
 
@@ -581,8 +577,7 @@ bool CMscdex::LoadUnloadMedia(Bit8u subUnit, bool unload)
 bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 {
 	Bit8u subUnit = GetSubUnit(drive);
-	if (subUnit>=numDrives) return false;
-		
+	if (subUnit>=numDrives) return false;	
 	// Get SubUnit
 	mem_writeb(data+1,subUnit);
 	// Call Strategy / Interrupt
@@ -633,14 +628,14 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
 
-	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Driver Function %02X",funcNr);
+//	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Driver Function %02X",funcNr);
 
 	switch (funcNr) {
 	
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-						if (subFuncNr!=0x0B) LOG(LOG_MISC,LOG_ERROR)("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
+//						LOG(LOG_MISC,LOG_ERROR)("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 : /* Get Device Header address */
 										mem_writed(buffer+1,RealMake(mscdex->rootDriverHeaderSeg,0));
@@ -666,7 +661,8 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 										break;
 							case 0x09 : /* Media change ? */
 										Bit8u status;
-										mscdex->GetMediaStatus(subUnit,status);
+										//TEMP mscdex->GetMediaStatus(subUnit,status);
+										status = 1;
 										mem_writeb(buffer+1,status);
 										break;
 							case 0x0A : /* Get Audio Disk info */	
@@ -799,7 +795,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: INT 2F %04X",reg_ax);
+//	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: INT 2F %04X",reg_ax);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
@@ -868,7 +864,7 @@ static bool MSCDEX_Handler(void)
 						mscdex->GetDrives(data);
 						return true;
 		case 0x1510:	/* Device driver request */
-						mscdex->SendDriverRequest(reg_cx,data);
+						mscdex->SendDriverRequest(reg_cx & 0xFF,data);
 						return true;
 		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 						return true;
