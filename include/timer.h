@@ -21,15 +21,12 @@
 /* underlying clock rate in HZ */
 #include <SDL.h>
 
-extern Bit32u LastTicks;
-
 #define PIT_TICK_RATE 1193182
 
 #define GetTicks() SDL_GetTicks()
 
 typedef void (*TIMER_TickHandler)(Bitu ticks);
 typedef void (*TIMER_MicroHandler)(void);
-typedef void (*TIMER_DelayHandler)(void);
 
 typedef void TIMER_Block;
 
@@ -38,18 +35,12 @@ typedef void TIMER_Block;
 TIMER_Block * TIMER_RegisterTickHandler(TIMER_TickHandler handler);
 /* Register a function to be called every x microseconds */
 TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro);
-/* Register a function to be called once after x microseconds */
-TIMER_Block * TIMER_RegisterDelayHandler(TIMER_DelayHandler handler,Bitu delay);
 
 /* Set the microseconds value to a new value */
 void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro);
 
-
-/* This function should be called very often to support very high res timers 
- Although with the new timer code it doesn't matter that much */
-void TIMER_CheckPIT(void);
-/* This will add ms ticks to support the timer handlers */
-void TIMER_AddTicks(Bit32u ticks);
+/* This will add 1 milliscond to all timers */
+void TIMER_AddTick(void);
 
 #endif
 
