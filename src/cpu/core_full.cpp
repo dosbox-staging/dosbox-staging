@@ -71,7 +71,6 @@ typedef PhysPt EAPoint;
 Bits CPU_Core_Full_Run(void) {
 	FullData inst;	
 restart_core:
-	if (CPU_Cycles<=0) return CBRET_NONE;
 	if (!cpu.code.big) {
 		inst.start_prefix=0x0;;
 		inst.start_entry=0x0;
