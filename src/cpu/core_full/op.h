@@ -321,20 +321,32 @@ switch (inst.code.op) {
 		break;
 	case O_CALLFw:
 		SaveIP();
-		CPU_CALL(false,inst.op2.d,inst.op1.d);
+		if (!CPU_CALL(false,inst.op2.d,inst.op1.d)) {
+			FillFlags();
+			return CBRET_NONE;
+		} 
 		LoadIP();
 		goto nextopcode;
 	case O_CALLFd:
 		SaveIP();
-		CPU_CALL(true,inst.op2.d,inst.op1.d);
+		if (!CPU_CALL(true,inst.op2.d,inst.op1.d)) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case O_JMPFw:
-		CPU_JMP(false,inst.op2.d,inst.op1.d);
+		if (!CPU_JMP(false,inst.op2.d,inst.op1.d)){
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case O_JMPFd:
-		CPU_JMP(true,inst.op2.d,inst.op1.d);
+		if (!CPU_JMP(true,inst.op2.d,inst.op1.d)) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 
@@ -344,7 +356,7 @@ switch (inst.code.op) {
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return debugCallback;
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) return debugCallback;
 #endif
-		Interrupt(inst.op1.b);
+		if (!Interrupt(inst.op1.b)) return CBRET_NONE;
 		LoadIP();
 		break;
 	case O_INb:
@@ -379,14 +391,14 @@ switch (inst.code.op) {
 			{
 				Bitu selector;
 				CPU_SLDT(selector);
-				inst.op1.d=selector;
+				inst.op1.d=(Bit32u)selector;
 			}
 			break;
 		case 0x01:	/* STR */
 			{
 				Bitu selector;
 				CPU_STR(selector);
-				inst.op1.d=selector;
+				inst.op1.d=(Bit32u)selector;
 			}
 			break;
 		case 0x02:	/* LLDT */
@@ -403,8 +415,6 @@ switch (inst.code.op) {
 			FillFlags();
 			CPU_VERW(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
-
-
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 6 Illegal subfunction %X",inst.rm_index);
 		}
@@ -458,14 +468,14 @@ switch (inst.code.op) {
 		{
 			FillFlags();
 			Bitu ar;CPU_LAR(inst.op1.d,ar);
-			inst.op1.d=ar;
+			inst.op1.d=(Bit32u)ar;
 		}
 		break;
 	case O_LSL:
 		{
 			FillFlags();
 			Bitu limit;CPU_LSL(inst.op1.d,limit);
-			inst.op1.d=limit;
+			inst.op1.d=(Bit32u)limit;
 		}
 		break;
 	case O_ARPL:
@@ -473,7 +483,7 @@ switch (inst.code.op) {
 			FillFlags();
 			Bitu new_sel=inst.op1.d;
 			CPU_ARPL(new_sel,inst.op2.d);
-			inst.op1.d=new_sel;
+			inst.op1.d=(Bit32u)new_sel;
 		}
 		break;
 	case O_BSFw:
@@ -549,7 +559,7 @@ switch (inst.code.op) {
 			Bitu mask=1 << (inst.op1.d & 15);
 			FillFlags();
 			if (inst.rm<0xc0) {
-				read=inst.rm_eaa+2*(inst.op1.d / 16);
+				read=inst.rm_eaa;//+2*(inst.op1.d / 16);
 				val=mem_readw(read);
 			} else {
 				val=reg_16(inst.rm_eai);
@@ -575,7 +585,7 @@ switch (inst.code.op) {
 			Bitu mask=1 << (inst.op1.d & 31);
 			FillFlags();
 			if (inst.rm<0xc0) {
-				read=inst.rm_eaa+4*(inst.op1.d / 32);
+				read=inst.rm_eaa;//+4*(inst.op1.d / 32);
 				val=mem_readd(read);
 			} else {
 				val=reg_32(inst.rm_eai);

@@ -1,7 +1,15 @@
 switch (inst.code.load) {
 /* General loading */
 	case L_MODRM:
-		DecodeModRM();
+		inst.rm=Fetchb();
+		inst.rm_index=(inst.rm >> 3) & 7;
+		inst.rm_eai=inst.rm&07;
+		inst.rm_mod=inst.rm>>6;
+		/* Decode address of mod/rm if needed */
+		if (inst.rm<0xc0) {
+			if (!(inst.prefix & PREFIX_ADDR))
+			#include "ea_lookup.h"
+		}
 l_MODRMswitch:
 		switch (inst.code.extra) {	
 /* Byte */
@@ -266,32 +274,46 @@ l_M_Ed:
 		break;
 	case D_IRETw:
 		flags.type=t_UNKNOWN;
-		CPU_IRET(false);
-		LoadIP();
+		if (!CPU_IRET(false)) return CBRET_NONE;
 		if (GETFLAG(IF) && PIC_IRQCheck) {
-			SaveIP();	
 			return CBRET_NONE;
 		}
+		LoadIP();
 		goto nextopcode;
 	case D_IRETd:
 		flags.type=t_UNKNOWN;
-		CPU_IRET(true);
+		if (!CPU_IRET(true)) return CBRET_NONE;
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case D_RETFwIw:
-		CPU_RET(false,Fetchw());
+		if (!CPU_RET(false,Fetchw())) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case D_RETFw:
-		CPU_RET(false,0);
+		if (!CPU_RET(false,0)) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case D_RETFdIw:
-		CPU_RET(true,Fetchw());
+		if (!CPU_RET(true,Fetchw())) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 	case D_RETFd:
-		CPU_RET(true,0);
+		if (!CPU_RET(true,0)) {
+			FillFlags();
+			return CBRET_NONE;
+		}
 		LoadIP();
 		goto nextopcode;
 /* Direct operations */

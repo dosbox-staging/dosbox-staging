@@ -1,4 +1,4 @@
-static EAPoint RMAddress_16(void) {
+{
 	EAPoint seg_base;
 	Bit16u off;
 	switch ((inst.rm_mod<<3)|inst.rm_eai) {
@@ -103,15 +103,12 @@ static EAPoint RMAddress_16(void) {
 	}
 	inst.rm_off=off;
 	if (inst.prefix & PREFIX_SEG) {
-		return inst.seg.base+off;
+		inst.rm_eaa=inst.seg.base+off;
 	} else {
-		return seg_base+off;
+		inst.rm_eaa=seg_base+off;
 	}
-}
+} else  {
 
-
-static Bit32u SIBZero=0;
-static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 
 #define SIB(MODE)	{												\
 	Bitu sib=Fetchb();												\
@@ -128,9 +125,8 @@ static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg
 	}																\
 	off+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);					\
 };																	
-
-
-static EAPoint RMAddress_32(void) {
+	static Bit32u SIBZero=0;
+	static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 	EAPoint seg_base;
 	Bit32u off;
 	switch ((inst.rm_mod<<3)|inst.rm_eai) {
@@ -231,13 +227,11 @@ static EAPoint RMAddress_32(void) {
 		off=reg_edi+Fetchds();
 		seg_base=SegBase(ds);
 		break;
-
-
 	}
 	inst.rm_off=off;
 	if (inst.prefix & PREFIX_SEG) {
-		return inst.seg.base+off;
+		inst.rm_eaa=inst.seg.base+off;
 	} else {
-		return seg_base+off;
+		inst.rm_eaa=seg_base+off;
 	}
 }

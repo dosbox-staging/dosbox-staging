@@ -47,22 +47,10 @@ typedef PhysPt EAPoint;
 #define LoadD(reg) reg
 #define SaveD(reg,val)	reg=val
 
-static EAPoint IPPoint;
-
 #include "core_full/loadwrite.h"
 #include "core_full/support.h"
 #include "core_full/optable.h"
-#include "core_full/ea_lookup.h"
 #include "instructions.h"
-
-static INLINE void DecodeModRM(void) {
-	inst.rm=Fetchb();
-	inst.rm_index=(inst.rm >> 3) & 7;
-	inst.rm_eai=inst.rm&07;
-	inst.rm_mod=inst.rm>>6;
-	/* Decode address of mod/rm if needed */
-	if (inst.rm<0xc0) inst.rm_eaa=(inst.prefix & PREFIX_ADDR) ? RMAddress_32() : RMAddress_16();
-}
 
 #define LEAVECORE											\
 		SaveIP();											\
@@ -79,7 +67,15 @@ static INLINE void DecodeModRM(void) {
 	}
 
 Bits Full_DeCode(void) {
-
+	FullData inst;	
+	if (!cpu.code.big) {
+		inst.start_prefix=0x0;;
+		inst.start_entry=0x0;
+	} else {
+		inst.start_prefix=PREFIX_ADDR;
+		inst.start_entry=0x200;
+	}
+	EAPoint IPPoint;
 	LoadIP();
 	flags.type=t_UNKNOWN;
 	while (CPU_Cycles>0) {
@@ -98,7 +94,6 @@ Bits Full_DeCode(void) {
 		inst.prefix=inst.start_prefix;
 restartopcode:
 		inst.entry=(inst.entry & 0xffffff00) | Fetchb();
-
 		inst.code=OpCodeTable[inst.entry];
 		#include "core_full/load.h"
 		#include "core_full/op.h"
@@ -112,12 +107,5 @@ nextopcode:;
 
 
 void CPU_Core_Full_Start(bool big) {
-	if (!big) {
-		inst.start_prefix=0x0;;
-		inst.start_entry=0x0;
-	} else {
-		inst.start_prefix=PREFIX_ADDR;
-		inst.start_entry=0x200;
-	}
 	cpudecoder=&Full_DeCode;
 }

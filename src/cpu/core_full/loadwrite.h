@@ -1,40 +1,32 @@
-static INLINE void SaveIP(void) {
-	Bitu left=IPPoint-SegBase(cs);
-	reg_eip=left;
-}
-
-static INLINE void LoadIP(void) {
-	IPPoint=SegBase(cs)+reg_eip;
-}
+#define SaveIP() reg_eip=(Bit32u)(IPPoint-SegBase(cs));
+#define LoadIP() IPPoint=SegBase(cs)+reg_eip;
 
 
-static INLINE Bit8u Fetchb() {
-	Bit8u temp=LoadMb(IPPoint);
-	IPPoint+=1;
+static INLINE Bit8u the_Fetchb(EAPoint & loc) {
+	Bit8u temp=LoadMb(loc);
+	loc+=1;
 	return temp;
 }
 	
-static INLINE Bit16u Fetchw() {
-	Bit16u temp=LoadMw(IPPoint);
-	IPPoint+=2;
+static INLINE Bit16u the_Fetchw(EAPoint & loc) {
+	Bit16u temp=LoadMw(loc);
+	loc+=2;
 	return temp;
 }
-static INLINE Bit32u Fetchd() {
-	Bit32u temp=LoadMd(IPPoint);
-	IPPoint+=4;
+static INLINE Bit32u the_Fetchd(EAPoint & loc) {
+	Bit32u temp=LoadMd(loc);
+	loc+=4;
 	return temp;
 }
 
-static INLINE Bit8s Fetchbs() {
-	return Fetchb();
-}
-static INLINE Bit16s Fetchws() {
-	return Fetchw();
-}
+#define Fetchb() the_Fetchb(IPPoint)
+#define Fetchw() the_Fetchw(IPPoint)
+#define Fetchd() the_Fetchd(IPPoint)
 
-static INLINE Bit32s Fetchds() {
-	return Fetchd();
-}
+#define Fetchbs() (Bit8s)the_Fetchb(IPPoint)
+#define Fetchws() (Bit16s)the_Fetchw(IPPoint)
+#define Fetchds() (Bit32s)the_Fetchd(IPPoint)
+
 
 static INLINE void Push_16(Bit16u blah)	{
 	reg_esp-=2;

@@ -154,7 +154,7 @@ struct OpCode {
 	Bit8u load,op,save,extra;
 };
 
-static struct {
+struct FullData {
 	Bitu entry;
 	EAPoint start;
 	Bitu rm;
@@ -178,7 +178,7 @@ static struct {
 	Bitu prefix;
 	Bitu start_prefix;
 	Bitu start_entry;
-} inst;
+};
 
 
 #define PREFIX_NONE		0x0
