@@ -88,13 +88,12 @@ void CPU_Push32(Bitu value);
 
 void CPU_SetFlags(Bitu word);
 
-
 INLINE void CPU_SetFlagsd(Bit32u word) {
 	CPU_SetFlags(word);
 };
 
 INLINE void CPU_SetFlagsw(Bit16u word) {
-	CPU_SetFlags((flags.word&0xffff0000)|word);
+	CPU_SetFlags((cpu_regs.flags&0xffff0000)|word);
 };
 
 
