@@ -22,7 +22,7 @@
 #include <time.h>
 #include <errno.h>
 #include "dosbox.h"
-#include "dos_system.h"
+#include "dos_inc.h"
 #include "drives.h"
 #include "support.h"
 #include "cross.h"
@@ -38,13 +38,14 @@ public:
 	Bit16u GetInformation(void);
 private:
 	FILE * fhandle;
+	enum { NONE,READ,WRITE } last_action;
 	Bit16u info;
 };
 
 
 bool localDrive:: FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 //TODO Maybe care for attributes but not likely
-	char newname[512];
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
@@ -67,7 +68,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 //		return false;
 
 	};
-	char newname[512];
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
@@ -79,7 +80,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 };
 
 bool localDrive::FileUnlink(char * name) {
-	char newname[512];
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
@@ -88,80 +89,65 @@ bool localDrive::FileUnlink(char * name) {
 };
 
 
-bool localDrive::FindFirst(char * search,DTA_FindBlock * dta) {
-	//TODO Find some way for lowcase and highcase drives oneday 
-	char name[512];
-	strcpy(name,basedir);
-	strcat(name,search);
-	CROSS_FILENAME(name);
-	char * last=strrchr(name, CROSS_FILESPLIT);
-	*last=0;
-	last++;
-	/* Check the wildcard string for an extension */
-	strcpy(wild_name,last);
-	wild_ext=strrchr(wild_name,'.');
-	if (wild_ext) {
-		*wild_ext++=0;
-	}
-	strcpy(directory,name);
-/* make sure / is last sign */
-	if (pdir) closedir(pdir);
-	char argh=CROSS_FILESPLIT;
-        if(directory[(strlen(directory)-1)]!=CROSS_FILESPLIT) strcat(directory, &argh);  
-	if((pdir=opendir(directory))==NULL) return false;
+bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
+	if (srch_opendir) closedir(srch_opendir);
+	strcpy(srch_dir,basedir);
+	strcat(srch_dir,_dir);
+	CROSS_FILENAME(srch_dir);
+
+	char end[2]={CROSS_FILESPLIT,0};
+	if (srch_dir[strlen(srch_dir)]!=CROSS_FILESPLIT) strcat(srch_dir,end);
+	if((srch_opendir=opendir(srch_dir))==NULL) return false;
 	return FindNext(dta);
 }
 
-bool localDrive::FindNext(DTA_FindBlock * dta) {
-	Bit8u tempattr=0;
-	struct dirent *tempdata;
+bool localDrive::FindNext(DOS_DTA & dta) {
+	struct dirent * dir_ent;
 	struct stat stat_block;
-	char werkbuffer[512];
+	char full_name[CROSS_LEN];
+	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH];
+	Bit8u find_attr;
+
+	if(!srch_opendir) return false;
 	
-	if(pdir==NULL){
-		return false;
-	};
-	start:
-	if((tempdata=readdir(pdir))==NULL) {
-		closedir(pdir);
-		pdir=NULL;
+	dta.GetSearchParams(srch_attr,srch_pattern);
+	again:
+	if((dir_ent=readdir(srch_opendir))==NULL) {
+		closedir(srch_opendir);
+		srch_opendir=NULL;
 		return false;
 	}
-	strcpy(werkbuffer,tempdata->d_name);
-	if (wild_ext) {
-		char * ext=strrchr(werkbuffer,'.');
-		if (!ext) ext="*";
-		else *ext++=0;
-		if(!wildcmp(wild_ext,ext)) goto start;
+	if(!WildFileCmp(dir_ent->d_name,srch_pattern)) goto again;
+	strcpy(full_name,srch_dir);
+	strcat(full_name,dir_ent->d_name);
+	if(stat(full_name,&stat_block)!=0){
+		exit(1);
 	}
-	if(!wildcmp(wild_name,werkbuffer)) goto start;
-	werkbuffer[0]='\0';
-	strcpy(werkbuffer,directory);
-	strcat(werkbuffer,tempdata->d_name);
-	if(stat(werkbuffer,&stat_block)!=0){
-		/*nu is er iets fout!*/ exit(1);
-	}
-	if(S_ISDIR(stat_block.st_mode)) tempattr=DOS_ATTR_DIRECTORY;
-	else tempattr=DOS_ATTR_ARCHIVE;
-	if(!(dta->sattr & tempattr)) goto start;
-	/*file is oke so filldtablok */
-	if(strlen(tempdata->d_name)<=DOS_NAMELENGTH) strcpy(dta->name,upcase(tempdata->d_name));
-	dta->attr=tempattr;
-	dta->size=(Bit32u) stat_block.st_size;
+	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
+	else find_attr=DOS_ATTR_ARCHIVE;
+	if(!(srch_attr & find_attr)) goto again;
+	
+	/*file is okay, setup everything to be copied in DTA Block */
+	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
+	if(strlen(dir_ent->d_name)<DOS_NAMELENGTH_ASCII){
+		strcpy(find_name,dir_ent->d_name);
+		upcase(find_name);
+	} else strcpy(find_name,"LONGNAME.ERR");
+	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
     if((time=localtime(&stat_block.st_mtime))!=0){
-    
-	    dta->time=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-	    dta->date=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
+		find_date=DOS_PackDate(time->tm_year+1900,time->tm_mon+1,time->tm_mday);
+		find_time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
     }else {
-        dta->time=6; 
-        dta->date=4;
+        find_time=6; 
+        find_date=4;
     }
+	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
 	return true;
 }
 
 bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
-	char newname[512];
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
@@ -176,7 +162,7 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 };
 
 bool localDrive::MakeDir(char * dir) {
-	char newdir[512];
+	char newdir[CROSS_LEN];
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
@@ -190,7 +176,7 @@ bool localDrive::MakeDir(char * dir) {
 }
 
 bool localDrive::RemoveDir(char * dir) {
-	char newdir[512];
+	char newdir[CROSS_LEN];
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
@@ -199,7 +185,7 @@ bool localDrive::RemoveDir(char * dir) {
 }
 
 bool localDrive::TestDir(char * dir) {
-	char newdir[512];
+	char newdir[CROSS_LEN];
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
@@ -208,11 +194,11 @@ bool localDrive::TestDir(char * dir) {
 }
 
 bool localDrive::Rename(char * oldname,char * newname) {
-	char newold[512];
+	char newold[CROSS_LEN];
 	strcpy(newold,basedir);
 	strcat(newold,oldname);
 	CROSS_FILENAME(newold);
-	char newnew[512];
+	char newnew[CROSS_LEN];
 	strcpy(newnew,basedir);
 	strcat(newnew,newname);
 	CROSS_FILENAME(newnew);
@@ -221,18 +207,18 @@ bool localDrive::Rename(char * oldname,char * newname) {
 
 };
 
-bool localDrive::FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free) {
+bool localDrive::AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
 	/* Always report 100 mb free should be enough */
 	/* Total size is always 1 gb */
-	*bytes=512;
-	*sectors=127;
-	*clusters=16513;
-	*free=1700;
+	*_bytes_sector=allocation.bytes_sector;
+	*_sectors_cluster=allocation.sectors_cluster;
+	*_total_clusters=allocation.total_clusters;
+	*_free_clusters=allocation.free_clusters;
 	return true;
 };
 
-bool localDrive::FileExists(const char* name) const {
-	char newname[512];
+bool localDrive::FileExists(const char* name) {
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
@@ -242,38 +228,60 @@ bool localDrive::FileExists(const char* name) const {
 	return true;
 }
 
-bool localDrive::FileStat(const char* name, struct stat* const stat_block) const {
-	char newname[512];
+bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
+	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
-	if(stat(newname,stat_block)!=0) return false;
-	return true;
+	struct stat temp_stat;
+	if(stat(newname,&temp_stat)!=0) return false;
+	/* Convert the stat to a FileStat */
+	struct tm *time;
+	if((time=localtime(&temp_stat.st_mtime))!=0) {
+		stat_block->time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
+		stat_block->date=DOS_PackDate(time->tm_year,time->tm_mon,time->tm_mday);
+	} else {
 
+	}
+	stat_block->size=(Bit32u)temp_stat.st_size;
+	return true;
 }
 
 
+Bit8u localDrive::GetMediaByte(void) {
+	return allocation.mediaid;
+}
 
-localDrive::localDrive(char * startdir) {
+localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit16u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid) {
 	strcpy(basedir,startdir);
 	sprintf(info,"local directory %s",startdir);
-	pdir=NULL;
+	srch_opendir=NULL;
+	allocation.bytes_sector=_bytes_sector;
+	allocation.sectors_cluster=_sectors_cluster;
+	allocation.total_clusters=_total_clusters;
+	allocation.free_clusters=_free_clusters;
+	allocation.mediaid=_mediaid;
 }
 
 
+//TODO Maybe use fflush, but that seemed to fuck up in visual c
 bool localFile::Read(Bit8u * data,Bit16u * size) {
+	if (last_action==WRITE) fseek(fhandle,ftell(fhandle),SEEK_SET);
+	last_action=READ;
 	*size=fread(data,1,*size,fhandle);
 	return true;
 };
 
 bool localFile::Write(Bit8u * data,Bit16u * size) {
-    if(*size==0){  
+	if (last_action==READ) fseek(fhandle,ftell(fhandle),SEEK_SET);
+	last_action=WRITE;
+	if(*size==0){  
         return (!ftruncate(fileno(fhandle),ftell(fhandle)));
     }
     else 
     {
-    	*size=fwrite(data,1,*size,fhandle);
-	return true;
+		*size=fwrite(data,1,*size,fhandle);
+		return true;
     }
 }
 bool localFile::Seek(Bit32u * pos,Bit32u type) {
@@ -292,7 +300,7 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 //TODO Hope we don't encouter files with 64 bits size
 	Bit32u * fake_pos=(Bit32u*)&temppos;
 	*pos=*fake_pos;
-
+	last_action=NONE;
 	return true;
 }
 
@@ -305,9 +313,22 @@ Bit16u localFile::GetInformation(void) {
 	return info;
 }
 
+
 localFile::localFile(FILE * handle,Bit16u devinfo) {
 	fhandle=handle;
 	info=devinfo;
+	struct stat temp_stat;
+	fstat(fileno(handle),&temp_stat);
+	struct tm * ltime;
+	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
+		time=DOS_PackTime(ltime->tm_hour,ltime->tm_min,ltime->tm_sec);
+		date=DOS_PackDate(ltime->tm_year,ltime->tm_mon,ltime->tm_mday);
+	} else {
+		time=0;date=0;
+	}
+	size=(Bit32u)temp_stat.st_size;
+	attr=DOS_ATTR_ARCHIVE;
+	last_action=NONE;
 }
 
 
