@@ -24,6 +24,9 @@ void E_Exit(char * message,...);
 
 void S_Warn(char * message,...);
 
+void AddMessage(const char*,const char*); //add messages to the internal langaugefile
+const char* MSG_Get(char const *);         //get messages from the internal langaugafile
+
 /* The internal types */
 typedef  unsigned char     Bit8u;
 typedef    signed char     Bit8s;
@@ -64,7 +67,6 @@ extern Bitu errorlevel;
 
 inline void LOG_MSG(char* message)
 {
-   
       if(errorlevel>=0) S_Warn(message);
 }
 

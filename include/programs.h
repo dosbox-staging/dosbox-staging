@@ -23,7 +23,6 @@
 #include "setup.h"
 
 
-char * MSG_Get(char * msg);
 class Program;
 
 typedef void (PROGRAMS_Main)(Program * * make);
@@ -41,7 +40,7 @@ public:
 	char * GetEnvNum(Bit32u num);
 	Bit32u GetEnvCount(void);
 	bool SetEnv(char * env_entry,char * new_string);
-	void WriteOut(char * format,...);					/* Write to standard output */
+	void WriteOut(const char * format,...);					/* Write to standard output */
 
 };
 
