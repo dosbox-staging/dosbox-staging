@@ -262,7 +262,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	//TODO Free Space
 	Bitu free_space=1024*1024*100;
 	if (Drives[drive]) {
-		Bit16u bytes_sector;Bit16u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
+		Bit16u bytes_sector;Bit8u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
 		Drives[drive]->AllocationInfo(&bytes_sector,&sectors_cluster,&total_clusters,&free_clusters);
 		free_space=bytes_sector*sectors_cluster*free_clusters;
 	}
