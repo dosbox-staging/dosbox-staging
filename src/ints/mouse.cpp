@@ -449,12 +449,22 @@ static Bitu INT33_Handler(void) {
 			break;
 		}
 	case 0x07:	/* Define horizontal cursor range */
-		mouse.min_x=reg_cx;
-		mouse.max_x=reg_dx;
+		if (reg_cx<reg_dx) {
+			mouse.min_x=reg_cx;
+			mouse.max_x=reg_dx;
+		} else {
+			mouse.min_x=reg_dx;
+			mouse.max_x=reg_cx;
+		};
 		break;
 	case 0x08:	/* Define vertical cursor range */
-		mouse.min_y=reg_cx;
-		mouse.max_y=reg_dx;
+		if (reg_cx<reg_dx) {
+			mouse.min_y=reg_cx;
+			mouse.max_y=reg_dx;
+		} else {
+			mouse.min_y=reg_dx;
+			mouse.max_y=reg_cx;
+		};
 		break;
 	case 0x09:	/* Define GFX Cursor */
 		{
