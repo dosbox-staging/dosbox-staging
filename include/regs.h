@@ -64,7 +64,6 @@ struct Segment {
 enum SegNames { es=0,cs,ss,ds,fs,gs};
 
 struct Segments {
-	Bitu big[8];
 	Bitu val[8];
 	PhysPt phys[8];
 };
