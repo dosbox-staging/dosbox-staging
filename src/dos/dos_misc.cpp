@@ -54,6 +54,16 @@ static Bitu INT2A_Handler(void) {
 	return CBRET_NONE;
 };
 
+static bool DOS_MultiplexFunctions(void) {
+	switch (reg_ax) {
+	case 0x1680:	/*  RELEASE CURRENT VIRTUAL MACHINE TIME-SLICE */
+		//TODO Maybe do some idling but could screw up other systems :)
+		reg_al=0;	
+		return true;
+	}
+	return false;
+}
+
 
 void DOS_SetupMisc(void) {
 	/* Setup the dos multiplex interrupt */
@@ -61,6 +71,7 @@ void DOS_SetupMisc(void) {
 	call_int2f=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int2f,&INT2F_Handler,CB_IRET);
 	RealSetVec(0x2f,CALLBACK_RealPointer(call_int2f));
+	DOS_AddMultiplexHandler(DOS_MultiplexFunctions);
 	/* Setup the dos network interrupt */
 	call_int2a=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET);
