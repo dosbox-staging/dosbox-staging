@@ -160,7 +160,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 
 static Bit8u read_p64(Bit32u port) {
 	return 0x1c | (keyb.read_active ? 0x1 : 0x0);
-};
+}
 
 
 void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
@@ -174,9 +174,7 @@ void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) 
 	newevent->type=keytype;
 	newevent->state=state;
 	newevent->handler=handler;
-	
-	
-};
+}
 
 void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	bool extend=false;
@@ -287,9 +285,13 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	//The Extended keys
 
 	case KBD_kpenter:extend=true;ret=28;break;
-	case KBD_rightctrl:extend=true;ret=29;break;
+	case KBD_rightctrl:extend=true;ret=29;
+		shift_state=(shift_state&~CTRL_PRESSED)|(pressed ? CTRL_PRESSED:0);
+		break;
 	case KBD_kpslash:extend=true;ret=53;break;
-	case KBD_rightalt:extend=true;ret=56;break;
+	case KBD_rightalt:extend=true;ret=56;
+		shift_state=(shift_state&~ALT_PRESSED)|(pressed ? ALT_PRESSED:0);
+		break;
 	case KBD_home:extend=true;ret=71;break;
 	case KBD_up:extend=true;ret=72;break;
 	case KBD_pageup:extend=true;ret=73;break;
@@ -303,7 +305,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	default:
 		E_Exit("Unsopperted key press");
 		break;
-	};
+	}
 	/* check for active key events */
 	KeyEvent * checkevent=event_handlers[keytype];
 	while (checkevent) {
@@ -319,7 +321,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	if (extend) KEYBOARD_AddCode(224);
 	if (!pressed) ret+=128;
 	KEYBOARD_AddCode(ret);
-};
+}
 
 void KEYBOARD_Init(Section* sec) {
 	IO_RegisterWriteHandler(0x60,write_p60,"Keyboard");
@@ -336,4 +338,4 @@ void KEYBOARD_Init(Section* sec) {
 	keyb.command=CMD_NONE;
 	KEYBOARD_ClrBuffer();
 	PIC_RegisterIRQ(1,KEYBOARD_IRQHandler,"KEYBOARD");
-};
+}
