@@ -109,7 +109,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGw		,O_XCHG_AX	,S_REGw	,REGI_SI},{L_REGw	,O_XCHG_AX	,S_REGw	,REGI_DI},
 /* 0x98 - 0x9f */
 {D_CBW		,0			,0		,0		},{D_CWD	,0			,0		,0		},
-{L_Ifw		,O_CALLFw	,0		,0		},{L_ERROR	,0			,0		,0		},
+{L_Ifw		,O_CALLFw	,0		,0		},{D_WAIT	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHw,0		},{L_POPw	,0			,S_FLGw	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
@@ -311,7 +311,7 @@ static OpCode OpCodeTable[1024]={
 /* 0x1b8 - 0x1bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_MODRM	,0xe		,0		,M_GRP	},{L_MODRM	,O_BTCw		,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_BSFw		,S_Gw	,M_Ew	},{L_MODRM	,O_BSRw		,S_Gw	,M_Ew	},
 {L_MODRM	,0			,S_Gw	,M_Ebx	},{L_MODRM	,0			,S_Gw	,M_Ewx	},
 
 /* 0x1c0 - 0x1cc */
@@ -466,8 +466,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SI},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_DI},
 /* 0x298 - 0x29f */
 {D_CWDE		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
-//TODO Wait shoudn't be  nop
-{L_Ifd		,O_CALLFd	,0		,0		},{D_NOP	,0			,0		,0		},
+{L_Ifd		,O_CALLFd	,0		,0		},{D_WAIT	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHd,0		},{L_POPd	,0			,S_FLGd	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 

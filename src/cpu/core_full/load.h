@@ -371,6 +371,7 @@ l_M_Ed:
 	case D_STD:
 		SETFLAGBIT(DF,true);
 		goto nextopcode;
+	case D_WAIT:
 	case D_NOP:
 		goto nextopcode;
 	case D_ENTERw:

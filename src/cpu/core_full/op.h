@@ -483,6 +483,32 @@ switch (inst.code.op) {
 			inst.op1.d=new_sel;
 		}
 		break;
+	case O_BSFw:
+		{
+			FILLFLAGS;
+			if (!inst.op1.w) SETFLAGBIT(ZF,true);
+			Bitu count=0;
+			while (count<16) {
+				if ((inst.op1.w>>count) & 1) break;
+				count++;
+			}
+			inst.op1.d=count;
+			SETFLAGBIT(ZF,false);
+		}
+		break;
+	case O_BSRw:
+		{
+			FILLFLAGS;
+			if (!inst.op1.w) SETFLAGBIT(ZF,true);
+			Bits count=15;
+			while (count>0) {
+				if ((inst.op1.w>>count) & 1) break;
+				count--;
+			}
+			inst.op1.d=count;
+			SETFLAGBIT(ZF,false);
+		}
+		break;
 	case O_BTw:
 	case O_BTSw:
 	case O_BTCw:
