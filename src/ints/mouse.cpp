@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.43 2004-12-07 21:49:13 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.44 2004-12-28 15:57:31 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -125,6 +125,7 @@ void Mouse_SetPS2State(bool use) {
 	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;
 	else useps2callback = false;
 	Mouse_AutoLock(useps2callback);
+	PIC_SetIRQMask(MOUSE_IRQ,!useps2callback);
 }
 
 void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
@@ -166,7 +167,7 @@ void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
 }
 
 Bitu PS2_Handler(void) {
-	reg_sp += 8;	// remove the 4 words
+	CPU_Pop16();CPU_Pop16();CPU_Pop16();CPU_Pop16();// remove the 4 words
 	return CBRET_NONE;
 }
 
