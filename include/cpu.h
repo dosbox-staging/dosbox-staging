@@ -30,12 +30,19 @@ extern Bits CPU_CycleMax;
 
 /* Some common Defines */
 /* A CPU Handler */
-typedef Bitu (CPU_Decoder)(void);
+typedef Bits (CPU_Decoder)(void);
 extern CPU_Decoder * cpudecoder;
 
 
 //CPU Stuff
 void SetCPU16bit( );
+
+enum CODE_TYPE {
+	CODE_REAL,
+	CODE_PMODE16,
+	CODE_PMODE32,
+	CODE_INIT,
+};
 
 extern bool parity_lookup[256];
 
@@ -69,7 +76,7 @@ bool CPU_RET(bool use32,Bitu bytes);
 
 bool Interrupt(Bitu num);
 bool CPU_IRET(bool use32);
-bool CPU_SetSegGeneral(SegNames seg,Bitu value);
+void CPU_SetSegGeneral(SegNames seg,Bitu value);
 
 void CPU_CPUID(void);
 void CPU_HLT(void);
@@ -193,6 +200,33 @@ struct G_Descriptor {
 
 #pragma pack()
 
+
+struct TaskSegment_32 {	
+    Bit32u esp0;		         /* The CK stack pointer */
+    Bit32u esp1;                 /* The parent KL stack pointer */
+    Bit32u esp2;                 /* Unused */
+    Bit32u cr3;                  /* The page directory pointer */
+    Bit32u eip;                  /* The instruction pointer */
+    Bit32u eflags;               /* The flags */
+    Bit32u eax, ecx, edx, ebx;   /* The general purpose registers */
+    Bit32u esp, ebp, esi, edi;   /* The special purpose registers */
+    Bit16u back;				 /* Backlink */
+    Bit16u ss0;					 /* The CK stack selector */
+    Bit16u ss1;                  /* The parent KL stack selector */
+    Bit16u ss2;                  /* Unused */
+    Bit16u es;                   /* The extra selector */
+    Bit16u cs;                   /* The code selector */
+    Bit16u ss;                   /* The application stack selector */
+    Bit16u ds;                   /* The data selector */
+    Bit16u fs;                   /* And another extra selector */
+    Bit16u gs;                   /* ... and another one */
+    Bit16u ldt;                  /* The local descriptor table */
+    Bit16u trap;                 /* The trap flag (for debugging) */
+    Bit16u io;                   /* The I/O Map base address */
+};
+
+void CPU_ReadTaskSeg32(PhysPt base,TaskSegment_32 * seg);
+
 class TaskStateSegment 
 {
 public:
@@ -212,8 +246,7 @@ private:
 	Bitu seg_limit;
 	Bitu seg_value;
 };
-
-
+   
 class Descriptor
 {
 public:
@@ -314,22 +347,26 @@ private:
 	Bitu ldt_value;
 };
 
-#define STATE_PROTECTED			0x0001
-#define STATE_USE32				0x0002
-#define STATE_STACK32			0x0004
-
 struct CPUBlock {
 	Bitu cpl;							/* Current Privilege */
-	Bitu state;
 	Bitu cr0;
+	bool v86;							/* Are we in a v86 task */
+	bool pmode;							/* Is Protected mode enabled */
 	GDTDescriptorTable gdt;
 	DescriptorTable idt;
 	struct {
-		Bitu prefix,entry;
-	} full;
+		Bit16u val;
+		PhysPt base;
+		Bitu type;
+	} tr;
 	struct {
-		Bitu eip,cs;
-	} hlt;
+		Bitu mask;
+		bool big;
+	} stack;
+	struct {
+		CODE_TYPE type;					/* What kind of code are we running */
+		bool big;
+	} code;
 };
 
 extern CPUBlock cpu;
