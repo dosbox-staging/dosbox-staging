@@ -387,8 +387,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,theight-1);
 	real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,cheight);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem << 7)));
-	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0xF9);
-	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
 	// FIXME We nearly have the good tables. to be reworked
