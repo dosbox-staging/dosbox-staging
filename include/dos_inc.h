@@ -140,6 +140,8 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks);
 bool DOS_FreeMemory(Bit16u segment);
 void DOS_FreeProcessMemory(Bit16u pspseg);
 Bit16u DOS_GetMemory(Bit16u pages);
+void DOS_SetMemAllocStrategy(Bit16u strat);
+Bit16u DOS_GetMemAllocStrategy(void);
 
 /* FCB stuff */
 bool DOS_FCBOpen(Bit16u seg,Bit16u offset);

@@ -679,9 +679,10 @@ static Bitu DOS_21Handler(void) {
 	case 0x58:					/* Get/Set Memory allocation strategy */
 		switch (reg_al) {
 		case 0:		/* Get Strategy */
-			reg_ax=0;			//Low memory first fit
+			reg_ax=DOS_GetMemAllocStrategy();
 			break;
 		case 1:		/* Set Strategy */
+			DOS_SetMemAllocStrategy(reg_bx);
 			break;
 		default:
 			LOG_DEBUG("DOS:58:Not Supported Set//Get memory allocation call %X",reg_al);

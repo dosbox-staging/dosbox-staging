@@ -24,6 +24,7 @@
 #define MEM_START 0x60					//First Segment that DOS can use
 //#define MEM_START 4000					//First Segment that DOS can use
 
+static Bit16u memAllocStrategy = 0x00;
 
 static void DOS_CompressMemory(void) {
 	MCB * pmcb;MCB * pmcbnext;
@@ -57,6 +58,15 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 	DOS_CompressMemory();
 };
 
+Bit16u DOS_GetMemAllocStrategy()
+{
+	return memAllocStrategy;
+};
+
+void DOS_SetMemAllocStrategy(Bit16u strat)
+{
+	memAllocStrategy = strat;
+};
 
 bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	MCB * pmcb;MCB * pmcbnext;
@@ -77,17 +87,33 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 				*segment=mcb_segment+1;
 				return true;
 			} else {
+				// TODO: Strategy "1": Best matching block
 				/* If so allocate it */
-				pmcbnext=(MCB *)HostMake(mcb_segment+*blocks+1,0);
-				pmcbnext->psp_segment=MCB_FREE;
-				pmcbnext->type=pmcb->type;
-				pmcbnext->size=pmcb->size-*blocks-1;
-				pmcb->size=*blocks;
-				pmcb->type=0x4D;
-				pmcb->psp_segment=dos.psp;
-				//TODO Filename
-				*segment=mcb_segment+1;
-				return true;
+				if ((memAllocStrategy & 0x03)==0) {				
+					pmcbnext=(MCB *)HostMake(mcb_segment+*blocks+1,0);
+					pmcbnext->psp_segment=MCB_FREE;
+					pmcbnext->type=pmcb->type;
+					pmcbnext->size=pmcb->size-*blocks-1;
+					pmcb->size=*blocks;
+					pmcb->type=0x4D;
+					pmcb->psp_segment=dos.psp;
+					//TODO Filename
+					*segment=mcb_segment+1;
+					return true;
+				} else {
+					// * Last Block *
+					// New created block
+					*segment = mcb_segment+1+pmcb->size-*blocks;
+					pmcbnext=(MCB *)HostMake(*segment-1,0);
+					pmcbnext->size			= *blocks;
+					pmcbnext->type			= pmcb->type;
+					pmcbnext->psp_segment	= dos.psp;
+					// Old Block
+					pmcb->size				= pmcb->size-*blocks-1;
+					pmcb->psp_segment		= MCB_FREE;
+					pmcb->type				= 0x4D;
+					return true;
+				};
 			}
 		}
 		/* Onward to the next MCB if there is one */
