@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.59 2003-10-26 18:57:46 harekiet Exp $ */
+/* $Id: dos.cpp,v 1.60 2003-11-01 16:03:42 harekiet Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -599,6 +599,7 @@ static Bitu DOS_21Handler(void) {
 		{
 			Bit16u size=reg_bx;
 			if (DOS_ResizeMemory(SegValue(es),&size)) {
+				reg_ax=SegValue(es);
 				CALLBACK_SCF(false);
 			} else {            
 				reg_ax=dos.errorcode;
