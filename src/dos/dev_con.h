@@ -18,6 +18,7 @@
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
+#include <string.h>
 
 #define NUMBER_ANSI_DATA 10
 
@@ -45,8 +46,6 @@ private:
     } ansi;
     
 };
-void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
-void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
 
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
@@ -54,7 +53,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	if ((cache) && (*size)) {
 		data[count++]=cache;
         if(dos.echo) {
-            INT10_TeletypeOutput(cache,7,false,0);
+            INT10_TeletypeOutput(cache,7,false);
         }
         cache=0;
 
@@ -69,8 +68,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
   			*size=count;
 			reg_ax=oldax;
             if(dos.echo) { 
-                 INT10_TeletypeOutput(13,7,false,0); //maybe don't do this ( no need for it actually ) (but it's compatible)
-                 INT10_TeletypeOutput(10,7,false,0);
+                 INT10_TeletypeOutput(13,7,false); //maybe don't do this ( no need for it actually ) (but it's compatible)
+                 INT10_TeletypeOutput(10,7,false);
             }
 			return true;
             break;
@@ -78,8 +77,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
             if(*size==1) data[count++]=reg_al;  //one char at the time so give back that BS
             else if(count) {                    //Remove data if it exists (extended keys don't go right)
                 data[count--]=0;
-                INT10_TeletypeOutput(8,7,false,0);
-                INT10_TeletypeOutput(' ',7,false,0);
+                INT10_TeletypeOutput(8,7,false);
+                INT10_TeletypeOutput(' ',7,false);
             } else {
                 continue;                       //no data read yet so restart whileloop.
             }
@@ -96,7 +95,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
             
             }
         if(dos.echo) { //what to do if *size==1 and character is BS ?????
-            INT10_TeletypeOutput(reg_al,7,false,0);
+            INT10_TeletypeOutput(reg_al,7,false);
         }
 	}
 	*size=count;
@@ -110,7 +109,6 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
     Bitu i;
     Bit8s col,row;
     static bool ansi_enabled=false;
-
     while (*size>count) {
         if (!ansi.esc){
             if(data[count]=='\033') {
@@ -127,7 +125,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 
             } else { 
 				// pass attribute only if ansi is enabled
-				INT10_TeletypeOutput(data[count],ansi.attr,ansi_enabled,0);
+				INT10_TeletypeOutput(data[count],ansi.attr,ansi_enabled);
 				count++;
 				continue;
             };
@@ -288,7 +286,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                 LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: esc[%dJ called : not supported",ansi.data[0]);
                 break;
             }
-            for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutput(' ',ansi.attr,true,0);
+            for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutput(' ',ansi.attr,true);
             ClearAnsi();
             INT10_SetCursorPos(0,0,0);
             break;
