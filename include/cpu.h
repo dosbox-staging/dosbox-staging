@@ -37,37 +37,6 @@ extern CPU_Decoder * cpudecoder;
 //CPU Stuff
 void SetCPU16bit( );
 
-//Types of Flag changing instructions
-enum {
-	t_UNKNOWN=0,
-	t_ADDb,t_ADDw,t_ADDd, 
-	t_ORb,t_ORw,t_ORd, 
-	t_ADCb,t_ADCw,t_ADCd,
-	t_SBBb,t_SBBw,t_SBBd,
-	t_ANDb,t_ANDw,t_ANDd,
-	t_SUBb,t_SUBw,t_SUBd,
-	t_XORb,t_XORw,t_XORd,
-	t_CMPb,t_CMPw,t_CMPd,
-	t_INCb,t_INCw,t_INCd,
-	t_DECb,t_DECw,t_DECd,
-	t_TESTb,t_TESTw,t_TESTd,
-	t_SHLb,t_SHLw,t_SHLd,
-	t_SHRb,t_SHRw,t_SHRd,
-	t_SARb,t_SARw,t_SARd,
-	t_ROLb,t_ROLw,t_ROLd,
-	t_RORb,t_RORw,t_RORd,
-	t_RCLb,t_RCLw,t_RCLd,
-	t_RCRb,t_RCRw,t_RCRd,
-	t_NEGb,t_NEGw,t_NEGd,
-	t_CF,t_ZF,
-
-	t_DSHLw,t_DSHLd,
-	t_DSHRw,t_DSHRd,
-	t_MUL,t_DIV,
-	t_NOTDONE,
-	t_LASTFLAG
-};
-
 extern bool parity_lookup[256];
 
 void CPU_LLDT(Bitu selector);
@@ -110,51 +79,18 @@ Bitu CPU_Pop32(void);
 void CPU_Push16(Bitu value);
 void CPU_Push32(Bitu value);
 
-//Flag Handling
-Bitu get_CF(void);
-Bitu get_AF(void);
-Bitu get_ZF(void);
-Bitu get_SF(void);
-Bitu get_OF(void);
-Bitu get_PF(void);
+void CPU_SetFlags(Bitu word);
 
 
-#define SETFLAGSb(FLAGB)													\
-{																			\
-	SETFLAGBIT(OF,get_OF());												\
-	flags.type=t_UNKNOWN;													\
-	flags.word&=0xffffff00;flags.word|=(FLAGB&0xff);						\
-}
+INLINE void CPU_SetFlagsd(Bit32u word) {
+	CPU_SetFlags(word);
+};
 
-#define SETFLAGSw(FLAGW)													\
-{																			\
-	flags.type=t_UNKNOWN;													\
-	flags.word&=0xffff0000;flags.word|=(FLAGW&0xffff);						\
-}
+INLINE void CPU_SetFlagsw(Bit16u word) {
+	CPU_SetFlags((flags.word&0xffff0000)|word);
+};
 
-#define SETFLAGSd(FLAGD)													\
-{																			\
-	flags.type=t_UNKNOWN;													\
-	flags.word=FLAGD;														\
-}
 
-#define FILLFLAGS															\
-{																			\
-	flags.word=(flags.word & ~FLAG_MASK) |									\
-	(get_CF() ? FLAG_CF : 0 ) |												\
-	(get_PF() ? FLAG_PF : 0 ) |												\
-	(get_AF() ? FLAG_AF : 0 ) |												\
-	(get_ZF() ? FLAG_ZF : 0 ) |												\
-	(get_SF() ? FLAG_SF : 0 ) |												\
-	(get_OF() ? FLAG_OF : 0 );												\
-	 flags.type=t_UNKNOWN;													\
-}		
-
-#define LoadCF SETFLAGBIT(CF,get_CF());
-#define LoadZF SETFLAGBIT(ZF,get_ZF());
-#define LoadSF SETFLAGBIT(SF,get_SF());
-#define LoadOF SETFLAGBIT(OF,get_OF());
-#define LoadAF SETFLAGBIT(AF,get_AF());
 
 // *********************************************************************
 // Descriptor

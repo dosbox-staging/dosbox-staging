@@ -54,6 +54,7 @@ struct Flag_Info {
 #define SETFLAGBIT(TYPE,TEST) if (TEST) flags.word|=FLAG_ ## TYPE; else flags.word&=~FLAG_ ## TYPE
 
 #define GETFLAG(TYPE) (flags.word & FLAG_ ## TYPE)
+#define GETFLAGBOOL(TYPE) ((flags.word & FLAG_ ## TYPE) ? true : false )
 
 struct Segment {
 	Bit16u val;
