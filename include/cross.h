@@ -34,7 +34,7 @@
 #define CROSS_LEN 512						/* Maximum filename size */
 
 
-#if defined (_MSC_VER)						/* MS Visual C++ */
+#if defined (WIN32)							/* Win 32 */
 #define CROSS_FILENAME(blah)
 #define CROSS_FILESPLIT '\\'
 #define F_OK 0
@@ -46,7 +46,7 @@
 #define CROSS_NONE	0
 #define CROSS_FILE	1
 #define CROSS_DIR	2
-#if defined (_MSC_VER)
+#if defined (WIN32)
 #define ftruncate(blah,blah2) chsize(blah,blah2)
 #endif
 
