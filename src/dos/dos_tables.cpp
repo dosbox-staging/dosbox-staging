@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_tables.cpp,v 1.9 2004-03-23 18:51:21 qbix79 Exp $ */
+
 #include "dosbox.h"
 #include "mem.h"
 #include "dos_inc.h"
@@ -56,9 +58,7 @@ void DOS_SetupTables(void) {
 	dos.tables.indosflag = RealMake(0x5f,0xf);	
 	mem_writeb(Real2Phys(dos.tables.indosflag),0);
 	/* Create the DOS Info Block */
-	dos_infoblock.SetLocation(DOS_GetMemory(1+(sizeof(DOS_InfoBlock::sDIB)/16)));
-//	dos_infoblock.SetLocation(0x4e); //c2woody
-/* The above lines might be switched around when working on certain programs */
+	dos_infoblock.SetLocation(0x4e); //c2woody
    
 	/* Create a fake SFT, so programs think there are 100 file handles */
 	seg=DOS_GetMemory(1);
@@ -67,4 +67,17 @@ void DOS_SetupTables(void) {
 	dos_infoblock.SetfirstFileTable(RealMake(seg,0));
 	/* Set buffers to a nice value */
 	dos_infoblock.SetBuffers(50,50);
+   
+	/* Some weird files >20 detection routine */
+	/* Possibly obselete when SFT is properly handled */
+	// CON string
+	real_writew(0x54,0x00+0x00, (Bit16u) 0x4f43);
+	real_writew(0x54,0x00+0x02, (Bit16u) 0x204e);
+	// CON string
+	real_writew(0x54,0x10+0x00, (Bit16u) 0x4f43);
+	real_writew(0x54,0x10+0x02, (Bit16u) 0x204e);
+	//CON string
+	real_writew(0x54,0x20+0x00, (Bit16u) 0x4f43);
+	real_writew(0x54,0x20+0x02, (Bit16u) 0x204e);
+ 
 }
