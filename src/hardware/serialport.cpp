@@ -231,7 +231,7 @@ skipreset:
 		break;
 	case 0xE:  // modem status register 
 		lowerint(INT_MS);
-		LOG_UART("Read from %X %X",port,outval);		
+//		LOG_UART("Read from %X %X",port,outval);		
 		outval=mstatus;
 		mstatus&=0xf0;
 		return outval;
@@ -279,7 +279,7 @@ Bitu CSerial::rx_size() {
 }
 
 void CSerial::rx_addb(Bit8u data) {
-	LOG_UART("RX add %c",data);
+//	LOG_UART("RX add %c",data);
 	if (rx_fifo.used<FIFO_SIZE) {
 		Bitu where=rx_fifo.pos+rx_fifo.used;
 		if (where>=FIFO_SIZE) where-=FIFO_SIZE;
@@ -306,7 +306,7 @@ void CSerial::rx_adds(Bit8u * data,Bitu size) {
 }
 
 void CSerial::tx_addb(Bit8u data) {
-	LOG_UART("TX add %c",data);
+//	LOG_UART("TX add %c",data);
 	if (tx_fifo.used<FIFO_SIZE) {
 		Bitu where=tx_fifo.pos+tx_fifo.used;
 		if (where>=FIFO_SIZE) where-=FIFO_SIZE;

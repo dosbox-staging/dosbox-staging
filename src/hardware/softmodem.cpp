@@ -60,11 +60,11 @@ struct ModemHd {
 	bool incomingcall;
 	bool autoanswer;
 	bool echo;
+	bool telnetmode;
 	Bitu cmdpause;
 	Bits ringcounter;
 	Bit16u plusinc;
 	Bit16u cmdpos;
-
 
 	TCPsocket socket; 
 	TCPsocket listensocket;
@@ -85,8 +85,25 @@ struct ModemHd {
 	MIXER_Channel * chan;
 };
 
+#define TEL_CLIENT 0
+#define TEL_SERVER 1
+
+struct telnetClient {
+	bool binary[2];
+	bool echo[2];
+	bool supressGA[2];
+	bool timingMark[2];
+
+	bool inIAC;
+	bool recCommand;
+
+	Bit8u command;
+
+};
+
 static CSerial * mdm;
 static ModemHd mhd;
+static telnetClient telClient;
 
 static void sendStr(const char *usestr) {
 	if (!mhd.echo) return;
@@ -110,6 +127,10 @@ static void sendError() {
 	sendStr("\nERROR\n");
 }
 
+void InitTelnet() {
+	memset(&telClient, 0, sizeof(telClient));
+}
+
 static void toUpcase(char *buffer) {
 	Bitu i=0;
 	while (buffer[i] != 0) {
@@ -130,6 +151,7 @@ static void openConnection() {
 		sendStr("\nCONNECT 57600\n");
 		mhd.commandmode = false;
 		mdm->setmodemstatus(CONNECTED);
+		InitTelnet();
 	} else {
 		sendStr("\nNO DIALTONE\n");
 	}
@@ -197,7 +219,7 @@ static void DoCommand() {
 	result = 0;
 	
 
-	/* Just for kicks */
+	/* AT command set interpretation */
 	if ((mhd.cmdbuf[0] == 'A') && (mhd.cmdbuf[1] == 'T')) foundat = true;
 	if (foundat) {
 		if (strstr(mhd.cmdbuf,"I3")) {
@@ -222,6 +244,14 @@ static void DoCommand() {
 		if (strstr(mhd.cmdbuf,"E1")) {
 			mhd.echo = true;
 		}
+
+		if (strstr(mhd.cmdbuf,"NET0")) {
+			mhd.telnetmode = false;
+		}
+		if (strstr(mhd.cmdbuf,"NET1")) {
+			mhd.telnetmode = true;
+		}
+
 
 		if (strstr(mhd.cmdbuf,"ATH")) {
 			/* Check if we're actually connected */
@@ -251,6 +281,36 @@ static void DoCommand() {
 			if (!foundstr[0]) {
 				result=2;
 			} else {
+				if (strlen(foundstr) >= 12)
+				{
+					// Check if supplied parameter only consists of digits
+					bool isNum = true;
+					for (int i=0; i<strlen(foundstr); i++)
+						if (foundstr[i] < '0' || foundstr[i] > '9')
+							isNum = false;
+					
+					if (isNum)
+					{
+						// Parameter is a number with at least 12 digits => this cannot be a valid IP/name
+						// Transform by adding dots
+						char buffer[128];
+						int j = 0;
+						for (int i=0; i<strlen(foundstr); i++)
+						{
+							buffer[j++] = foundstr[i];
+
+							// Add a dot after the third, sixth and ninth number
+							if (i == 2 || i == 5 || i == 8)
+								buffer[j++] = '.';
+
+							// If the string is longer than 12 digits, interpret the rest as port
+							if (i == 11 && strlen(foundstr)>12)
+								buffer[j++] = ':';
+						}
+						buffer[j] = 0;
+						foundstr = buffer;
+					}
+				}
 				connResult = Dial(foundstr);
 				result=3;
 			}
@@ -312,6 +372,97 @@ static void MC_Changed(Bitu new_mc) {
 		(mhd.socket ? M_DCD : 0)
 
 		);	
+}
+
+static void TelnetEmulation(Bit8u * data, Bitu size) {
+	int i;
+	Bit8u c;
+	for(i=0;i<size;i++) {
+		c = data[i];
+		if(telClient.inIAC) {
+			if(telClient.recCommand) {
+				if((c != 0) && (c != 1) && (c != 3)) {
+					LOG_MSG("MODEM: Unrecognized option %d", c);
+					if(telClient.command>250) {
+						/* Reject anything we don't recognize */
+						mdm->tx_addb(0xff); mdm->tx_addb(252); mdm->tx_addb(c); /* We won't do crap! */
+					}
+				}
+
+				switch(telClient.command) {
+					case 251: /* Will */
+						if(c == 0) telClient.binary[TEL_SERVER] = true;
+						if(c == 1) telClient.echo[TEL_SERVER] = true;
+						if(c == 3) telClient.supressGA[TEL_SERVER] = true;
+						break;
+					case 252: /* Won't */
+						if(c == 0) telClient.binary[TEL_SERVER] = false;
+						if(c == 1) telClient.echo[TEL_SERVER] = false;
+						if(c == 3) telClient.supressGA[TEL_SERVER] = false;
+						break;
+					case 253: /* Do */
+						if(c == 0) {
+							telClient.binary[TEL_CLIENT] = true;
+							mdm->tx_addb(0xff); mdm->tx_addb(251); mdm->tx_addb(0); /* Will do binary transfer */
+						}
+						if(c == 1) {
+							telClient.echo[TEL_CLIENT] = false;
+							mdm->tx_addb(0xff); mdm->tx_addb(252); mdm->tx_addb(1); /* Won't echo (too lazy) */
+						}
+						if(c == 3) {
+							telClient.supressGA[TEL_CLIENT] = true;
+							mdm->tx_addb(0xff); mdm->tx_addb(251); mdm->tx_addb(3); /* Will Suppress GA */
+						}
+						break;
+					case 254: /* Don't */
+						if(c == 0) {
+							telClient.binary[TEL_CLIENT] = false;
+							mdm->tx_addb(0xff); mdm->tx_addb(252); mdm->tx_addb(0); /* Won't do binary transfer */
+						}
+						if(c == 1) {
+							telClient.echo[TEL_CLIENT] = false;
+							mdm->tx_addb(0xff); mdm->tx_addb(252); mdm->tx_addb(1); /* Won't echo (fine by me) */
+						}
+						if(c == 3) {
+							telClient.supressGA[TEL_CLIENT] = true;
+							mdm->tx_addb(0xff); mdm->tx_addb(251); mdm->tx_addb(3); /* Will Suppress GA (too lazy) */
+						}
+						break;
+					default:
+						LOG_MSG("MODEM: Telnet client sent IAC %d", telClient.command);
+						break;
+				}
+
+				telClient.inIAC = false;
+				telClient.recCommand = false;
+				continue;
+
+			} else {
+				if(c==249) {
+					/* Go Ahead received */
+					telClient.inIAC = false;
+					continue;
+				}
+				telClient.command = c;
+				telClient.recCommand = true;
+				
+				if((telClient.binary[TEL_SERVER]) && (c == 0xff)) {
+					/* Binary data with value of 255 */
+					telClient.inIAC = false;
+					telClient.recCommand = false;
+					mdm->rx_addb(0xff);
+					continue;
+				}
+
+			}
+		} else {
+			if(c == 0xff) {
+				telClient.inIAC = true;
+				continue;
+			}
+			mdm->rx_addb(c);
+		}
+	}
 }
 
 static void MODEM_Hardware(void) {
@@ -380,11 +531,18 @@ static void MODEM_Hardware(void) {
 
 	SDLNet_CheckSockets(mhd.socketset,0);
 	/* Handle outgoing to the serial port */
+	if(mdm->rx_size() == 0) {
 	if(!mhd.commandmode && mhd.socket && mdm->rx_free() && SDLNet_SocketReady(mhd.socket)) {
 		usesize = mdm->rx_free();
 		result = SDLNet_TCP_Recv(mhd.socket, tmpbuf, usesize);
 		if (result>0) {
-			mdm->rx_adds(tmpbuf,result);
+			if(mhd.telnetmode) {
+				/* Filter telnet commands */
+				TelnetEmulation(tmpbuf, result);
+
+			} else {
+				mdm->rx_adds(tmpbuf,result);
+			}
 			mhd.cmdpause = 0;
 		} else {
 			/* Error close the socket and disconnect */
@@ -395,6 +553,7 @@ static void MODEM_Hardware(void) {
 			SDLNet_TCP_Close(mhd.socket);
 			mhd.socket=0;
 		}
+	}
 	}
 
 	/* Check for incoming calls */
@@ -500,6 +659,7 @@ static void MODEM_CallBack(Bit8u * stream,Bit32u len) {
 			MIXER_Enable(mhd.chan,false);
 			mhd.dialing = false;
 			openConnection();
+
 			return;
 		} else {
 
@@ -584,6 +744,14 @@ void MODEM_Init(Section* sec) {
 		return;
 	}
 
+	if(!SDLNetInited) {
+		if(SDLNet_Init()==-1) {
+			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+			return;
+		}
+		SDLNetInited = true;
+	}
+
 	mhd.cmdpos = 0;
 	mhd.commandmode = true;
 	mhd.plusinc = 0;
@@ -592,6 +760,9 @@ void MODEM_Init(Section* sec) {
 	mhd.autoanswer = false;
 	mhd.cmdpause = 0;
 	mhd.echo = true;
+
+	/* Default to direct null modem connection.  Telnet mode interprets IAC codes */
+	mhd.telnetmode = false;
 
 	/* Bind the modem to the correct serial port */
 	mhd.comport=section->Get_int("comport");
