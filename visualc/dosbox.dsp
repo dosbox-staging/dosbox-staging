@@ -20,7 +20,6 @@ CFG=dosbox - Win32 Debug
 !MESSAGE "dosbox - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "dosbox - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE 
-
 # Begin Project
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
@@ -223,6 +222,18 @@ SOURCE=..\src\dos\drives.h
 # End Group
 # Begin Source File
 
+SOURCE=..\src\dos\cdrom.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\dos\cdrom.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\dos\cdrom_ioctl.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\dos\dos.cpp
 # End Source File
 # Begin Source File
@@ -255,11 +266,23 @@ SOURCE=..\src\dos\dos_misc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\dos\dos_mscdex.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\dos\dos_programs.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\dos\dos_tables.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\dos\scsidefs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\dos\wnaspi32.h
 # End Source File
 # End Group
 # Begin Group "gui"
