@@ -114,6 +114,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 		case 0x13:	/* Horizontal PEL Panning Register */
 			attr(horizontal_pel_panning)=val & 0xF;
 			switch (vga.mode) {
+			case M_TEXT2:
 			case M_TEXT16:
 				if (val==0x7) vga.config.pel_panning=7;
 				if (val>0x7) vga.config.pel_panning=0;
