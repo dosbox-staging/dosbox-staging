@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.18 2004-03-29 18:03:02 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.19 2004-04-01 08:57:33 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -61,6 +61,20 @@ INLINE void FPU_SetCW(Bitu word) {
 	fpu.ex_mask = word & 0x3f;
 }
 	
+static Bit16u FPU_GetTag(void){
+	Bit16u tag=0;
+	for(Bitu i=0;i<8;i++)
+		tag |= ( (fpu.tags[i]&3) <<(2*i));
+	return tag;
+}
+
+static void FPU_SetTag(Bit16u tag)
+{
+	for(Bitu i=0;i<8;i++)
+		fpu.tags[i]= static_cast<FPU_Tag>((tag >>(2*i))&3);
+}
+
+
 
 
 INLINE Bitu FPU_GET_TOP(void){
@@ -234,11 +248,17 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 		}
 		FPU_FPOP();
 		break;
-	case 0x05: /*FLDCW */
+	case 0x04: /* FLDENV */
+		FPU_FLDENV(addr);
+		break;
+	case 0x05: /* FLDCW */
 		{
 			Bit16u temp =mem_readw(addr);
 			FPU_SetCW(temp);
 		}
+		break;
+	case 0x06: /* FSTENV */
+		FPU_FSTENV(addr);
 		break;
 	case 0x07:  /* FNSTCW*/
 		mem_writew(addr,fpu.cw);
@@ -432,10 +452,13 @@ void FPU_ESC3_EA(Bitu rm,PhysPt addr) {
 		FPU_FPOP();
 		break;
 	case 0x05:	/* FLD 80 Bits Real */
-		FPU_FLD80(addr);
+		{
+			Real64 val = FPU_FLD80(addr);
+			FPU_PUSH(val);
+		}
 		break;
 	case 0x07:	/* FSTP 80 Bits Real */
-		FPU_ST80(addr);
+		FPU_ST80(addr,TOP);
 		FPU_FPOP();
 		break;
 	default:
@@ -461,7 +484,7 @@ void FPU_ESC3_Normal(Bitu rm) {
 			break;
 		case 0x04:				//FNSETPM
 		case 0x05:				//FRSTPM
-			LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
+//			LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 			FPU_FNOP();
 			break;
 		default:
@@ -542,6 +565,12 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 		mem_writed(addr,fpu.regs[TOP].l.lower);
 		mem_writed(addr+4,fpu.regs[TOP].l.upper);
 		FPU_FPOP();
+		break;
+	case 0x04:	/* FSTOR */
+		FPU_FSTOR(addr);
+		break;
+	case 0x06:	/* FSAVE */
+		FPU_FSAVE(addr);
 		break;
 	case 0x07:   /*FNSTSW    NG DISAGREES ON THIS*/
 		FPU_SET_TOP(TOP);
