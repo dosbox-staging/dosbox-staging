@@ -339,10 +339,9 @@ bool INT10_SetVideoMode(Bitu mode) {
 	modeset_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 
 	/* Setup the VGA to the correct mode */
-//	VGA_SetMode(CurMode->type);
-	
+
 	Bit16u crtc_base;
-	bool mono_mode=(CurMode->type == M_TEXT && machine==MCH_HERC);
+	bool mono_mode=(mode == 7);
 	if (mono_mode) crtc_base=0x3b4;
 	else crtc_base=0x3d4;
 	/* Setup MISC Output Register */
@@ -548,12 +547,12 @@ bool INT10_SetVideoMode(Bitu mode) {
 	/* Program Attribute Controller */
 	switch (CurMode->type) {
 	case M_EGA16:
+		att_data[0x10]=0x01;		//Color Graphics
 		if (CurMode->mode>0xe) goto att_text16;
 			for (i=0;i<8;i++) {
 			att_data[i]=i;
 			att_data[i+8]=i+0x10;
 		}
-		att_data[0x10]=0x01;		//Color Graphics
 		break;
 	case M_TANDY16:
 		att_data[0x10]=0x01;		//Color Graphics
