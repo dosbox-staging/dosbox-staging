@@ -24,7 +24,6 @@ static HMIDIOUT m_out;
 static MIDIHDR m_hdr;
 static HANDLE m_event;
 
-static Bit8u m_msg[300];
 
 static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {
 
@@ -33,9 +32,8 @@ static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {
 		return;
 	}		
 	midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));
-	memcpy (&m_msg, sysex, len);
 
-	m_hdr.lpData = (char *) m_msg;
+	m_hdr.lpData = (char *) sysex;
 	m_hdr.dwBufferLength = len ;
 	m_hdr.dwBytesRecorded = len ;
 	m_hdr.dwUser = 0;

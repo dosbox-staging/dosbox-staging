@@ -23,7 +23,7 @@ static int m_device;
 #define SEQ_MIDIPUTC    5
 
 static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {
-	Bit8u buf[1024];Bitu pos=0;
+	Bit8u buf[SYSEX_SIZE*4];Bitu pos=0;
 	for (;len>0;len--) {
 		buf[pos++] = SEQ_MIDIPUTC;
 		buf[pos++] = *sysex++;

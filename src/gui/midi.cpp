@@ -42,8 +42,9 @@ Bit8u MIDI_evt_len[256] = {
 
   0,2,3,2, 0,0,1,1, 1,0,1,1, 1,0,1,1   // 0xf0
 };
- 
 
+#define SYSEX_SIZE 1024
+ 
 #if defined (WIN32)
 
 #include "midi_win32.h"
@@ -69,7 +70,7 @@ static struct {
 	Bit32u cmd_msg;
 	Bit8u data[4];
 	struct {
-		Bit8u buf[256];
+		Bit8u buf[SYSEX_SIZE];
 		Bitu used;
 		bool active;
 	} sysex;
@@ -80,7 +81,7 @@ static struct {
 void MIDI_RawOutByte(Bit8u data) {
 	/* Test for a new status byte */
 	if (midi.sysex.active && !(data&0x80)) {
-		if (midi.sysex.used<256) midi.sysex.buf[midi.sysex.used++]=data;
+		if (midi.sysex.used<(SYSEX_SIZE-1)) midi.sysex.buf[midi.sysex.used++]=data;
 		return;
 	} else if (data&0x80) {
 		if (midi.sysex.active) {
