@@ -65,12 +65,10 @@ static void write_p3d8(Bit32u port,Bit8u val) {
 		case M_CGA2:
 		case M_CGA4:
 		case M_CGA16:
-		case M_TANDY16:
 			goto m_cga;		
 		}
 		break;
 	case MCH_CGA:
-	case MCH_TANDY:
 		VGA_SetBlinking((val & 0x20));
 m_cga:
 		if (val & 0x2) {
