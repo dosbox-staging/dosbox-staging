@@ -306,6 +306,9 @@
 					RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
 				</File>
 				<File
+					RelativePath="..\src\dos\cdrom_image.cpp">
+				</File>
+				<File
 					RelativePath="..\src\dos\dev_con.h">
 				</File>
 				<File
@@ -352,6 +355,9 @@
 				</File>
 				<File
 					RelativePath="..\src\dos\drive_virtual.cpp">
+				</File>
+				<File
+					RelativePath="..\src\dos\drive_iso.cpp">
 				</File>
 				<File
 					RelativePath="..\src\dos\drives.cpp">
