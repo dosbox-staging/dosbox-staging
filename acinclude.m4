@@ -179,11 +179,16 @@ AH_TOP([
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 ])
+
+AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures])
+
 AH_BOTTOM([#define INLINE inline])
-AH_BOTTOM([
-#if C_HAS_ATTRIBUTE
+
+AH_BOTTOM([#if C_HAS_ATTRIBUTE
 #define GCC_ATTRIBUTE __attribute__
 #else
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
-#endif
-})
+#endif])
+
+
+
