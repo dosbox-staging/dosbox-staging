@@ -268,8 +268,13 @@ bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 
 void CBreakpoint::DeleteAll() 
 {
-	// Search matching breakpoint
-	CBreakpoint::ActivateBreakpoints(0,false);
+	std::list<CBreakpoint*>::iterator i;
+	CBreakpoint* bp;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		bp = static_cast<CBreakpoint*>(*i);
+		bp->Activate(false);
+		delete bp;
+	};
 	(BPoints.clear)();
 };
 
@@ -959,6 +964,11 @@ void DEBUG_SetupConsole(void)
 	DBGUI_StartUp();
 };
 
+static void DEBUG_ShutDown(Section * sec) 
+{
+	CBreakpoint::DeleteAll();
+};
+
 void DEBUG_Init(Section* sec) {
 
 	DEBUG_DrawScreen();
@@ -969,12 +979,9 @@ void DEBUG_Init(Section* sec) {
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */
 	PROGRAMS_MakeFile("DEBUG.COM",DEBUG_ProgramStart);
+	/* shutdown function */
+	sec->AddDestroyFunction(&DEBUG_ShutDown);
 }
-
-void DEBUG_ShutDown()
-{
-	CBreakpoint::DeleteAll();
-};
 
 // HEAVY DEBUGGING STUFF
 
