@@ -720,13 +720,19 @@ Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
 }
 
 Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+/* if restore is true :random read else random blok read. 
+ * random read updates old block and old record to reflect the random data
+ * before the read!!!!!!!!! and the random data is not updated! (user must do this)
+ * Random block read updates these fields to reflect the state after the read!
+ */
 
 	DOS_FCB fcb(seg,offset);
 	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
+
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
-	if (restore) fcb.GetRecord(old_block,old_rec);
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
+    if (restore) fcb.GetRecord(old_block,old_rec);//store this for after the read.
 	// Read records
 	for (int i=0; i<numRec; i++) {
 		error = DOS_FCBRead(seg,offset,i);
@@ -735,19 +741,20 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	Bit16u new_block;Bit8u new_rec;
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
-	/* Update the random record pointer with new position */
-    fcb.SetRandom(new_block*128+new_rec - (restore ? 1 : 0) ); //seems to be this way.. why ???
-	return error;
+	/* Update the random record pointer with new position only when restore is false*/
+    if(!restore) fcb.SetRandom(new_block*128+new_rec); 
+    return error;
 }
 
 Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+/* see FCB_RandomRead */
 	DOS_FCB fcb(seg,offset);
 	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
-	if (restore) fcb.GetRecord(old_block,old_rec);
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
+    if (restore) fcb.GetRecord(old_block,old_rec);
 	/* Write records */
 	for (int i=0; i<numRec; i++) {
 		error = DOS_FCBWrite(seg,offset,i);// dos_fcbwrite return 0 false when true...
@@ -756,8 +763,8 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	Bit16u new_block;Bit8u new_rec;
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
-	/* Update the random record pointer with new position */
-    fcb.SetRandom(new_block*128+new_rec - (restore ? 1 : 0) ); //seems to be this way.. need more games to test it.
+	/* Update the random record pointer with new position only when restore is false */
+    if(!restore) fcb.SetRandom(new_block*128+new_rec); 
 	return error;
 }
 
