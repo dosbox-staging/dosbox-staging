@@ -21,13 +21,13 @@
 #include <string.h>
 #include <time.h>
 #include "dosbox.h"
-#include "dos_system.h"
+#include "dos_inc.h"
 #include "drives.h"
 #include "support.h"
 #include "cross.h"
 
 struct VFILE_Block {
-	char * name;
+	const char * name;
 	Bit8u * data;
 	Bit32u size;
 	VFILE_Block * next;
@@ -36,7 +36,7 @@ struct VFILE_Block {
 
 static VFILE_Block * first_file;	
 
-void VFILE_Register(char * name,Bit8u * data,Bit32u size) {
+void VFILE_Register(const char * name,Bit8u * data,Bit32u size) {
 	VFILE_Block * new_file=new VFILE_Block;
 	new_file->name=name;
 	new_file->data=data;
@@ -153,16 +153,14 @@ bool Virtual_Drive::TestDir(char * dir) {
 	return false;
 }
 
-bool Virtual_Drive::FileStat(const char* name, struct stat* const stat_block) const {
-    	VFILE_Block * cur_file=first_file;
+bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block){
+    VFILE_Block * cur_file=first_file;
 	while (cur_file) {
 		if (strcasecmp(name,cur_file->name)==0) {
-			stat_block->st_size=cur_file->size;
-			struct tm tijd;
-			tijd.tm_hour=0;tijd.tm_min=0;tijd.tm_sec=0;
-			tijd.tm_year=80;tijd.tm_mday=6;tijd.tm_mon=0;
-			stat_block->st_mtime=mktime(&tijd);
-			/* more not needed at the moment (fcbopen.....)*/
+			stat_block->attr=DOS_ATTR_ARCHIVE;
+			stat_block->size=cur_file->size;
+			stat_block->date=DOS_PackDate(2002,0,0);
+			stat_block->time=DOS_PackTime(12,12,12);
 			return true;
 		}
 		cur_file=cur_file->next;
@@ -170,7 +168,7 @@ bool Virtual_Drive::FileStat(const char* name, struct stat* const stat_block) co
 	return false;
 }
 
-bool Virtual_Drive::FileExists(const char* name) const {
+bool Virtual_Drive::FileExists(const char* name){
 	VFILE_Block * cur_file=first_file;
 	while (cur_file) {
 		if (strcasecmp(name,cur_file->name)==0) return true;
@@ -179,32 +177,17 @@ bool Virtual_Drive::FileExists(const char* name) const {
 	return false;
 }
 
-static void FillDTABlock(DTA_FindBlock * dta,VFILE_Block * fill_file) {
-	strcpy(dta->name,fill_file->name);
-	dta->size=fill_file->size;
-	dta->attr=DOS_ATTR_ARCHIVE;
-	dta->time=2;
-	dta->date=6;
-}
-
-bool Virtual_Drive::FindFirst(char * search,DTA_FindBlock * dta) {
+bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta) {
 	search_file=first_file;
-	strcpy(search_string,search);
-	while (search_file) {
-		if (wildcmp(search_string,search_file->name)) {
-			FillDTABlock(dta,search_file);
-			search_file=search_file->next;
-			return true;
-		}
-		search_file=search_file->next;
-	}
-	return false;
+	return FindNext(dta);
 }
 
-bool Virtual_Drive::FindNext(DTA_FindBlock * dta) {
+bool Virtual_Drive::FindNext(DOS_DTA & dta) {
+	Bit8u attr;char pattern[DOS_NAMELENGTH];
+	dta.GetSearchParams(attr,pattern);
 	while (search_file) {
-		if (wildcmp(search_string,search_file->name)) {
-			FillDTABlock(dta,search_file);
+		if (WildFileCmp(search_file->name,pattern)) {
+			dta.SetResult(search_file->name,search_file->size,6,2,DOS_ATTR_ARCHIVE);
 			search_file=search_file->next;
 			return true;
 		}
@@ -221,13 +204,17 @@ bool Virtual_Drive::Rename(char * oldname,char * newname) {
 	return false;
 }
 
-bool Virtual_Drive::FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free) {
+bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
 	/* Always report 100 mb free should be enough */
 	/* Total size is always 1 gb */
-	*bytes=512;
-	*sectors=127;
-	*clusters=16513;
-	*free=00;
+	*_bytes_sector=512;
+	*_sectors_cluster=127;
+	*_total_clusters=16513;
+	*_free_clusters=00;
 	return true;
+}
+
+Bit8u Virtual_Drive::GetMediaByte(void) {
+	return 0xF8;
 }
 
