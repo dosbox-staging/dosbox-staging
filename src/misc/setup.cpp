@@ -196,7 +196,6 @@ Section_line* Config::AddSection_line(const char* _name,void (*_initfunction)(Se
 
 void Config::Init(){
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){ 
-		LOG_DEBUG("Init %s",(*tel)->sectionname.c_str());
 		(*tel)->ExecuteInit();
 	}
 }
