@@ -24,7 +24,7 @@ switch(Fetchb()) {
 		RMGdEd(ADDD);break;
 	case 0x05:												/* ADD EAX,Id */
 		EAXId(ADDD);break;
-	case 0x09:												/* OR Ew,Gw */
+	case 0x09:												/* OR Ed,Gd */
 		RMEdGd(ORD);break;
 	case 0x0b:												/* OR Gd,Ed */
 		RMGdEd(ORD);break;
@@ -199,7 +199,7 @@ switch(Fetchb()) {
 				case 0x38:CMPD(*eard,id,LoadRd,SaveRd);break;
 				}
 			} else {
-				GetEAa;Bit32u id=Fetchb();
+				GetEAa;Bit32u id=Fetchd();
 				switch (rm & 0x38) {
 				case 0x00:ADDD(eaa,id,LoadMd,SaveMd);break;
 				case 0x08: ORD(eaa,id,LoadMd,SaveMd);break;
@@ -245,14 +245,13 @@ switch(Fetchb()) {
 		break;
 	case 0x85:												/* TEST Ed,Gd */
 		RMEdGd(TESTD);break;
-	case 0x8f:												/* POP Ed */
-		{
-			GetRM;
-			if (rm >= 0xc0 ) {GetEArd;*eard=Pop_32();}
-			else {GetEAa;SaveMd(eaa,Pop_32());}
+	case 0x87:												/* XCHG Ev,Gv */
+		{	
+			GetRMrd;Bit32u oldrmrd=*rmrd;
+			if (rm >= 0xc0 ) {GetEArd;*rmrd=*eard;*eard=oldrmrd;}
+			else {GetEAa;*rmrd=LoadMd(eaa);SaveMd(eaa,oldrmrd);}
 			break;
 		}
-
 	case 0x89:												/* MOV Ed,Gd */
 		{	
 			GetRMrd;
@@ -260,10 +259,6 @@ switch(Fetchb()) {
 			else {GetEAa;SaveMd(eaa,*rmrd);}
 			break;
 		}
-	case 0x99:												/* CDQ */
-		if (reg_eax & 0x80000000) reg_edx=0xffffffff;
-		else reg_edx=0;
-		break;
 	case 0x8b:												/* MOV Gd,Ed */
 		{	
 			GetRMrd;
@@ -273,6 +268,42 @@ switch(Fetchb()) {
 		}
 	case 0x8c:												
 		LOG_WARN("CPU:66:8c looped back");
+		break;
+	case 0x8f:												/* POP Ed */
+		{
+			GetRM;
+			if (rm >= 0xc0 ) {GetEArd;*eard=Pop_32();}
+			else {GetEAa;SaveMd(eaa,Pop_32());}
+			break;
+		}
+	case 0x90:												/* NOP */
+		break;
+	case 0x91:												/* XCHG CX,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_ecx;reg_ecx=temp; }
+		break;
+	case 0x92:												/* XCHG DX,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_edx;reg_edx=temp; }
+		break;
+	case 0x93:												/* XCHG BX,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_ebx;reg_ebx=temp; }
+		break;
+	case 0x94:												/* XCHG SP,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_esp;reg_esp=temp; }
+		break;
+	case 0x95:												/* XCHG BP,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_ebp;reg_ebp=temp; }
+		break;
+	case 0x96:												/* XCHG SI,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_esi;reg_esi=temp; }
+		break;
+	case 0x97:												/* XCHG DI,AX */
+		{ Bit32u temp=reg_eax;reg_eax=reg_edi;reg_edi=temp; }
+		break;
+	case 0x98:												/* CWD */
+		reg_eax=(Bit16s)reg_ax;break;
+	case 0x99:												/* CDQ */
+		if (reg_eax & 0x80000000) reg_edx=0xffffffff;
+		else reg_edx=0;
 		break;
 	case 0x9c:												/* PUSHFD */
 		{
@@ -308,6 +339,9 @@ switch(Fetchb()) {
 			if (flags.df) { reg_si-=4;reg_di-=4; }
 			else { reg_si+=4;reg_di+=4;}
 		}
+		break;
+	case 0xa9:												/* TEST EAX,Id */
+		EAXId(TESTD);
 		break;
 	case 0xab:												/* STOSD */
 		{
@@ -362,6 +396,7 @@ switch(Fetchb()) {
 		GRP2D(1);break;
 	case 0xd3:												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
+
 	case 0xf7:												/* GRP3 Ed(,Id) */
 		{ 
 			union {	Bit64u u;Bit64s s;} temp;
@@ -454,12 +489,12 @@ switch(Fetchb()) {
 		{
 			GetRM;
 			switch (rm & 0x38) {
-			case 0x00:										/* INC Ew */
+			case 0x00:										/* INC Ed */
 				flags.cf=get_CF();flags.type=t_INCd;
 				if (rm >= 0xc0 ) {GetEArd;flags.result.d=*eard+=1;}
 				else {GetEAa;flags.result.d=LoadMd(eaa)+1;SaveMd(eaa,flags.result.d);}
 				break;		
-			case 0x08:										/* DEC Ew */
+			case 0x08:										/* DEC Ed */
 				flags.cf=get_CF();flags.type=t_DECd;
 				if (rm >= 0xc0 ) {GetEArd;flags.result.d=*eard-=1;}
 				else {GetEAa;flags.result.d=LoadMd(eaa)-1;SaveMd(eaa,flags.result.d);}
