@@ -35,6 +35,7 @@ public:
 	void Run(void)
 	{
 		DOS_Drive * newdrive;char drive;
+		std::string label;
 		
 		// Show list of cdroms
 		if (cmd->FindExist("-cd",false)) {
@@ -141,6 +142,8 @@ public:
 		/* Set the correct media byte in the table */
 		mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',newdrive->GetMediaByte());
 		WriteOut("Drive %c mounted as %s\n",drive,newdrive->GetInfo());
+		/* check if volume label is given */
+		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
 		return;
 showusage:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"));

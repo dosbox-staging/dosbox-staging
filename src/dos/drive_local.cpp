@@ -111,6 +111,14 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	if (!dirCache.OpenDir(tempDir,id)) return false;
 	strcpy(srchInfo[id].srch_dir,tempDir);
 	dta.SetDirID(id);
+	
+	Bit8u sAttr;
+	dta.GetSearchParams(sAttr,tempDir);
+	if (sAttr & DOS_ATTR_VOLUME) {
+		// Get Volume Label
+		dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+		return true;
+	}
 	return FindNext(dta);
 }
 
@@ -391,6 +399,8 @@ localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
 bool MSCDEX_HasMediaChanged(Bit8u subUnit);
+bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
+
 
 cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error)
 		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid)
@@ -398,11 +408,16 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 	// Init mscdex
 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
 	strcpy(info,"CDRom.");
+	// Get Volume Label
+	char name[32];
+	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
 };
 
 bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
 {
-	if ((flags==OPEN_READWRITE) || (flags==OPEN_WRITE)) {
+	if (flags==OPEN_READWRITE) {
+		flags = OPEN_READ;
+	} else if (flags==OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -449,13 +464,23 @@ bool cdromDrive::GetFileAttr(char * name,Bit16u * attr)
 bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta)
 {
 	// If media has changed, reInit drivecache.
-	if (MSCDEX_HasMediaChanged(subUnit)) dirCache.EmptyCache();
+	if (MSCDEX_HasMediaChanged(subUnit)) {
+		dirCache.EmptyCache();
+		// Get Volume Label
+		char name[32];
+		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
+	}
 	return localDrive::FindFirst(_dir,dta);
 };
 
 void cdromDrive::SetDir(const char* path)
 {
 	// If media has changed, reInit drivecache.
-	if (MSCDEX_HasMediaChanged(subUnit)) dirCache.EmptyCache();
+	if (MSCDEX_HasMediaChanged(subUnit)) {
+		dirCache.EmptyCache();
+		// Get Volume Label
+		char name[32];
+		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
+	}
 	localDrive::SetDir(path);
 };

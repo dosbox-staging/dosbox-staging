@@ -57,9 +57,9 @@ DOS_Drive_Cache::DOS_Drive_Cache(void)
 	dirBase		= new CFileInfo;
 	save_dir	= 0;
 	srchNr		= 0;
+	label[0]	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; };
 	SetDirSort(DIRALPHABETICAL);
-	
 };
 
 DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
@@ -67,6 +67,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 	dirBase		= new CFileInfo;
 	save_dir	= 0;
 	srchNr		= 0;
+	label[0]	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; };
 	SetDirSort(DIRALPHABETICAL);
 	SetBaseDir(path);
@@ -94,6 +95,27 @@ void DOS_Drive_Cache::EmptyCache(void)
 	SetBaseDir(basePath);
 };
 
+void DOS_Drive_Cache::SetLabel(const char* vname)
+{
+	Bitu togo		= 8;
+	Bitu vnamePos	= 0;
+	Bitu labelPos	= 0;
+	bool point		= false;
+	while (togo>0) {
+		if (vname[vnamePos]==0) break;
+		if (!point && (vname[vnamePos]=='.')) { togo=4; point=true; }
+		label[labelPos] = vname[vnamePos];
+		labelPos++; vnamePos++;
+		togo--;
+		if ((togo==0) && !point) { 
+			if (vname[vnamePos]=='.') vnamePos++;
+			label[labelPos]='.'; labelPos++; point=true; togo=3; 
+		}
+	};
+	label[labelPos]=0;
+//	LOG(LOG_ERROR,"CACHE: Set volume label to %s",label);
+};
+
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
 {
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
@@ -109,6 +131,13 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 		char * result;
 		ReadDir(id,result);
 	};
+	// Get Volume Label
+#if defined (WIN32)
+	char label[256];
+	char drive[4] = "C:\\";
+	drive[0] = basePath[0];
+	if (GetVolumeInformation(drive,label,256,NULL,NULL,NULL,NULL,0)) SetLabel(label);
+#endif
 };
 
 void DOS_Drive_Cache::ExpandName(char* path)
@@ -619,7 +648,6 @@ bool DOS_No_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 
 bool DOS_No_Drive_Cache::ReadDir(Bit16u id, char* &result)
 {
-	
 	static char res[CROSS_LEN];
 	dirent * ent;		
 

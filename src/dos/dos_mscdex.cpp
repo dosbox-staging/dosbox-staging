@@ -23,6 +23,7 @@
 #include "dos_system.h"
 #include "dos_inc.h"
 #include "setup.h"
+#include "support.h"
 
 #include "cdrom.h"
 
@@ -101,6 +102,7 @@ public:
 	int			AddDrive			(Bit16u _drive, char* physicalPath, Bit8u& subUnit);
 	void		GetDrives			(PhysPt data);
 	void		GetDriverInfo		(PhysPt data);
+	bool		GetVolumeName		(Bit8u subUnit, char* name);
 	bool		GetCopyrightName	(Bit16u drive, PhysPt data);
 	bool		GetAbstractName		(Bit16u drive, PhysPt data);
 	bool		GetDocumentationName(Bit16u drive, PhysPt data);
@@ -233,18 +235,15 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 								osi.dwOSVersionInfoSize = sizeof(osi);
 								GetVersionEx(&osi);
 								if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
-									// WIN NT/200/XP
-									if (useCdromInterface==CDROM_USE_ASPI) {
-										cdrom[numDrives] = new CDROM_Interface_Aspi();
-										LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
-										break;
-									} else if (useCdromInterface==CDROM_USE_IOCTL) {
+									// only WIN NT/200/XP
+									if (useCdromInterface==CDROM_USE_IOCTL) {
 										cdrom[numDrives] = new CDROM_Interface_Ioctl();
 										LOG(LOG_MISC,"MSCDEX: IOCTL Interface.");
 										break;
 									}
-								} else {
-									// Win 95/98/ME - always use ASPI
+								}
+								if (useCdromInterface==CDROM_USE_ASPI) {
+									// all Wins - ASPI
 									cdrom[numDrives] = new CDROM_Interface_Aspi();
 									LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
 									break;
@@ -430,6 +429,26 @@ bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)
 { 
 	ReadSectors(GetSubUnit(drive),false,/*150+*/16,1,data) ? error=0:error=MSCDEX_ERROR_DRIVE_NOT_READY;
 	return (error==0);
+};
+
+bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) 
+{	
+	if (subUnit>=numDrives) return false;
+	Bit16u drive = dinfo[subUnit].drive;
+
+	Bit16u error,seg,size = 128;
+	bool success = false;
+	if (DOS_AllocateMemory(&seg,&size)) {
+		PhysPt ptoc = PhysMake(seg,0);
+		success = ReadVTOC(drive,0x00,ptoc,error);
+		if (success) {
+			MEM_StrCopy(ptoc+40,data,31);
+			data[31] = 0;
+			rtrim(data);
+		};
+		DOS_FreeMemory(seg);
+	}
+	return success; 
 };
 
 bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) 
@@ -877,6 +896,11 @@ int MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit)
 {
 	int result = mscdex->AddDrive(driveLetter-'A',(char*)physicalPath,subUnit);
 	return result;
+};
+
+bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)
+{
+	return mscdex->GetVolumeName(subUnit,name);
 };
 
 bool MSCDEX_HasMediaChanged(Bit8u subUnit)

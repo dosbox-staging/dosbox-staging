@@ -104,6 +104,8 @@ public:
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	void		EmptyCache			(void);
+	void		SetLabel			(const char* name);
+	char*		GetLabel			(void) { return label; };
 
 	class CFileInfo {
 	public:	
@@ -140,7 +142,6 @@ private:
 	Bit16u		GetFreeID			(CFileInfo* dir);
 	void		Clear				(void);
 
-
 	CFileInfo*	dirBase;
 	char		dirPath				[CROSS_LEN];
 	char		basePath			[CROSS_LEN];
@@ -155,6 +156,7 @@ private:
 	char		dirSearchName		[MAX_OPENDIRS];
 	bool		free				[MAX_OPENDIRS];
 
+	char		label				[CROSS_LEN];
 };
 
 class DOS_No_Drive_Cache {
@@ -182,6 +184,9 @@ public:
 	Bit16u		GetCurrentEntry		(void) { return 0; };
 
 	void		EmptyCache			(void) {};
+	
+	void		SetLabel			(const char* name)	{};
+	char*		GetLabel			(void)				{};
 
 public:
 	char		basePath			[CROSS_LEN];

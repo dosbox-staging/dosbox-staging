@@ -61,7 +61,7 @@ public:
 	bool	PlayAudioSector		(unsigned long start,unsigned long len);
 	bool	PauseAudio			(bool resume);
 	bool	StopAudio			(void);
-	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num) { return true; };
+	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
 	bool	LoadUnloadMedia		(bool unload);
 
 private:
