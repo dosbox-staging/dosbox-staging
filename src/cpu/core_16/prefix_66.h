@@ -438,7 +438,7 @@ switch(Fetchb()) {
 					flags.type=t_MUL;
 					if (rm >= 0xc0 ) {GetEArd;temp.u=(Bit64s)reg_eax * (Bit64u)(*eard);}
 					else {GetEAa;temp.u=(Bit64u)reg_eax * (Bit64u)LoadMd(eaa);}
-					reg_eax=(Bit32u)(temp.u & 0xffffffff);reg_eax=(Bit32u)(temp.u >> 32);
+					reg_eax=(Bit32u)(temp.u & 0xffffffff);reg_edx=(Bit32u)(temp.u >> 32);
 					flags.cf=flags.of=(reg_edx !=0);
 					break;
 				}
