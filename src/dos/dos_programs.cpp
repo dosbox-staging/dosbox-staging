@@ -252,6 +252,29 @@ static void LOADFIX_ProgramStart(Program * * make) {
 	*make=new LOADFIX;
 }
 
+// RESCAN
+
+class RESCAN : public Program {
+public:
+	void Run(void);
+};
+
+void RESCAN::Run(void) 
+{
+	// Get current drive
+	Bit8u drive = DOS_GetDefaultDrive();
+	if (Drives[drive]) {
+		Drives[drive]->EmptyCache();
+		WriteOut(MSG_Get("RESCAN_SUCCESS"));
+	}
+};
+
+static void RESCAN_ProgramStart(Program * * make) {
+	*make=new RESCAN;
+}
+
+
+
 void DOS_SetupPrograms(void) {
     /*Add Messages */
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
@@ -278,9 +301,11 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
 
+	MSG_Add("RESCAN_SUCCESS","Drive cache cleared.\n");
+
     /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
-
+	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
 }
