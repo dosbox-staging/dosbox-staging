@@ -126,7 +126,7 @@ skip_cursor:
 	return RENDER_TempLine;
 }
 
-static void VGA_VerticalDisplayEnd(void) {
+static void VGA_VerticalDisplayEnd(Bitu val) {
 	vga.config.retrace=true;
 	vga.config.real_start=vga.config.display_start;
 }
@@ -172,7 +172,7 @@ void VGA_SetBlinking(Bitu enabled) {
 	for (Bitu i=0;i<8;i++) TXT_BG_Table[i+8]=(b+i) | ((b+i) << 8)| ((b+i) <<16) | ((b+i) << 24);
 }
 
-static void VGA_VerticalTimer(void) {
+static void VGA_VerticalTimer(Bitu val) {
 	vga.config.retrace=false;
 	PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.micro.vend);
@@ -199,7 +199,7 @@ static void VGA_VerticalTimer(void) {
 	}
 }
 
-void VGA_SetupDrawing(void) {
+void VGA_SetupDrawing(Bitu val) {
 	/* Calculate the FPS for this screen */
 	double fps;
 	Bitu vtotal=2 + vga.crtc.vertical_total | 
@@ -249,7 +249,7 @@ void VGA_SetupDrawing(void) {
 	double aspect_ratio=((double)htotal/((double)vtotal)/correct_ratio);
 	
 	vga.draw.resizing=false;
-	Bitu width,height,pitch;
+	Bitu width,height;
 	Bitu scalew=1;
 	Bitu scaleh=1;
 
@@ -265,7 +265,6 @@ void VGA_SetupDrawing(void) {
 		vga.draw.lines_scaled=scaleh;
 		height/=scaleh;
 		width<<=2;
-		pitch=vga.config.scan_len*8;
 		vga.draw.address_add=vga.config.scan_len*2;
 		vga.draw.address_line_total=1;
 		VGA_DrawLine=VGA_VGA_Draw_Line;
@@ -273,7 +272,6 @@ void VGA_SetupDrawing(void) {
 	case M_LIN8:
 		width<<=3;
 		scaleh*=vga.draw.font_height;
-		pitch=vga.config.scan_len*4;
 		vga.draw.address_add=vga.config.scan_len*2;
 		vga.draw.lines_scaled=scaleh;
 		vga.draw.address_line_total=1;
@@ -281,7 +279,6 @@ void VGA_SetupDrawing(void) {
 		break;
 	case M_EGA16:
 		width<<=3;
-		pitch=vga.config.scan_len*16;
 		scaleh*=vga.draw.font_height;
 		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
 		vga.draw.lines_scaled=scaleh;
@@ -297,7 +294,6 @@ void VGA_SetupDrawing(void) {
 		vga.draw.blocks=width;
 		width<<=2;
 		height/=2;
-		pitch=width;
 		vga.draw.lines_scaled=1;
 		vga.draw.address_line_total=2;
 		vga.draw.address_add=80;			//CGA doesn't have an offset reg
@@ -308,7 +304,6 @@ void VGA_SetupDrawing(void) {
 		vga.draw.address_line_total=2;
 		vga.draw.blocks=width;
 		width<<=3;
-		pitch=width;
 		vga.draw.address_line_total=2;
 		vga.draw.address_add=80;			//CGA doesn't have an offset reg
 		vga.draw.lines_scaled=1;
@@ -321,7 +316,6 @@ void VGA_SetupDrawing(void) {
 		vga.draw.address_add=width/8;
 		vga.draw.lines_scaled=1;
 		height=348;
-		pitch=width;
 		aspect_ratio=1.5;
 		VGA_DrawLine=VGA_HERC_Draw_Line;
 		break;
@@ -332,7 +326,6 @@ void VGA_SetupDrawing(void) {
 		vga.draw.address_line_total=4;
 		vga.draw.lines_scaled=1;
 		width<<=2;height/=2;
-		pitch=width;
 		VGA_DrawLine=VGA_TANDY16_Draw_Line;
 		break;
 	case M_TEXT2:
@@ -351,24 +344,22 @@ void VGA_SetupDrawing(void) {
 		width<<=3;				/* 8 bit wide text font */
 		if (width>640) width=640;
 		if (height>480) height=480;
-		pitch=width;
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	default:
 		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA type %d while checking for resolution");
 	};
 	vga.draw.lines_total=height;
-	if (( width != vga.draw.width) || (height != vga.draw.height) || (pitch != vga.draw.pitch)) {
+	if (( width != vga.draw.width) || (height != vga.draw.height)) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
 		vga.draw.width=width;
 		vga.draw.height=height;
-		vga.draw.pitch=pitch;
 		vga.draw.scaleh=scaleh;
 
 		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, fps %f",width,height,fps);
 		LOG(LOG_VGA,LOG_NORMAL)("Scalew %d, Scaleh %d aspect %f",scalew,scaleh,aspect_ratio);
-		RENDER_SetSize(width,height,8,pitch,aspect_ratio,scalew,scaleh);
+		RENDER_SetSize(width,height,8,aspect_ratio,scalew,scaleh);
 		PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	}
 };
