@@ -20,121 +20,9 @@
 #define _DRIVES_H__
 
 #include <sys/types.h>
-#include <dirent.h>
-#include <vector>
 #include "dos_system.h"
-#include "cross.h"
-
-#define MAX_OPENDIRS 16 
 
 bool WildFileCmp(const char * file, const char * wild);
-
-class DOS_Drive_Cache {
-public:
-	DOS_Drive_Cache					(void);
-	DOS_Drive_Cache					(const char* path);
-	~DOS_Drive_Cache				(void);
-
-	typedef enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
-
-	void		SetBaseDir			(const char* path);
-	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
-	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, char* &result);
-
-	void		ExpandName			(char* path);
-	char*		GetExpandName		(const char* path);
-	bool		GetShortName		(const char* fullname, char* shortname);
-	
-	void		CacheOut			(const char* path, bool ignoreLastDir = false);
-	void		AddEntry			(const char* path, bool checkExist = false);
-	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
-
-	void		EmptyCache			(void);
-
-	class CFileInfo {
-	public:	
-		~CFileInfo(void) {
-			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
-			fileList.clear();
-			longNameList.clear();
-			outputList.clear();
-		};
-		char		orgname		[CROSS_LEN];
-		char		shortname	[DOS_NAMELENGTH_ASCII];
-		bool		isDir;
-		Bitu		nextEntry;
-		Bitu		shortNr;
-		Bitu		compareCount;
-		// contents
-		std::vector<CFileInfo*>	fileList;
-		std::vector<CFileInfo*>	longNameList;
-		std::vector<CFileInfo*>	outputList;
-	};
-
-private:
-
-	bool		RemoveTrailingDot	(char* shortname);
-	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
-	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
-	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
-	bool		SetResult			(CFileInfo* dir, char * &result, Bit16u entryNr);
-	bool		IsCachedIn			(CFileInfo* dir);
-	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
-	bool		RemoveSpaces		(char* str);
-	bool		OpenDir				(CFileInfo* dir, char* path, Bit16u& id);
-	void		CreateEntry			(CFileInfo* dir, const char* name);
-	Bit16u		GetFreeID			(CFileInfo* dir);
-	void		Clear				(void);
-
-
-	CFileInfo*	dirBase;
-	char		dirPath				[CROSS_LEN];
-	char		basePath			[CROSS_LEN];
-	bool		dirFirstTime;
-	TDirSort	sortDirType;
-	CFileInfo*	save_dir;
-	char		save_path			[CROSS_LEN];
-	char		save_expanded		[CROSS_LEN];
-
-	Bit16u		srchNr;
-	CFileInfo*	dirSearch			[MAX_OPENDIRS];
-	char		dirSearchName		[MAX_OPENDIRS];
-	bool		free				[MAX_OPENDIRS];
-
-};
-
-class DOS_No_Drive_Cache {
-public:
-	DOS_No_Drive_Cache				(void) {};
-	DOS_No_Drive_Cache				(const char* path);
-	~DOS_No_Drive_Cache				(void) {};
-
-	typedef enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
-
-	void		SetBaseDir			(const char* path);
-	void		SetDirSort			(TDirSort sort) {};
-	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, char * &result);
-
-	void		ExpandName			(char* path) {};
-	char*		GetExpandName		(const char* path) { return (char*)path; };
-	bool		GetShortName		(const char* fullname, char* shortname) { return false; };
-	
-	void		CacheOut			(const char* path, bool ignoreLastDir = false) {};
-	void		AddEntry			(const char* path, bool checkExists = false) {};
-	void		DeleteEntry			(const char* path, bool ignoreLastDir = false) {};
-
-	void		SetCurrentEntry		(Bit16u entry) {};
-	Bit16u		GetCurrentEntry		(void) { return 0; };
-
-	void		EmptyCache			(void) {};
-
-public:
-	char		basePath			[CROSS_LEN];
-	char		dirPath				[CROSS_LEN];
-	DIR*		srch_opendir;
-};
 
 class localDrive : public DOS_Drive {
 public:
@@ -153,8 +41,6 @@ public:
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual Bit8u GetMediaByte(void);
-
-	DOS_Drive_Cache dirCache;
 
 private:
 	char basedir[CROSS_LEN];
