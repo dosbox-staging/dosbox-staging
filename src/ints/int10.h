@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "../hardware/vga.h"
+#include "vga.h"
 
 #define S3_LFB_BASE		0xC0000000
 
@@ -144,7 +144,8 @@ void INT10_GetFuncStateInformation(PhysPt save);
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last);
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
-void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr);
+void INT10_TeletypeOutput(Bit8u chr,Bit8u attr);
+void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr);
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page);
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr);
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page);

@@ -59,8 +59,9 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 	/* Reload tables and registers with new values based on this height */
 	if (reload) {
 		//Max scanline 
-		IO_Write(0x3d4,0x9);
-		IO_Write(0x3d5,(IO_Read(0x3d5) & 0xe0)|(height-1));
+		Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+		IO_Write(base,0x9);
+		IO_Write(base+1,(IO_Read(base+1) & 0xe0)|(height-1));
 		//Vertical display end bios says, but should stay the same?
 		//Rows setting in bios segment
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);

@@ -155,18 +155,17 @@ void INT10_GetPelMask(Bit8u & mask) {
 	mask=IO_Read(VGAREG_PEL_MASK);
 }	
 
-	
 void INT10_SetBackgroundBorder(Bit8u val) {
-//TODO Detect if we're CGA?
-	Bit8u old=IO_Read(0x3d9) & 0xf0;
-	old|=val & 0xf;
-	IO_Write(0x3d9,old);
+	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
+	temp=(temp & 0xe0) | (val & 0x1f);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
+	IO_Write(0x3d9,temp);
 }
 
 void INT10_SetColorSelect(Bit8u val) {
-//TODO Detect if we're CGA?
-	Bit8u old=IO_Read(0x3d9) & ~0x20;
-	old|=(val & 1) << 5;
-	IO_Write(0x3d9,old);
+	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
+	temp=(temp & 0xdf) | ((val & 1) ? 0x20 : 0x0);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
+	IO_Write(0x3d9,temp);
 }
 

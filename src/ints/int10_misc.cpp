@@ -93,6 +93,8 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	switch (CurMode->type) {
 	case M_TEXT16:
 		col_count=16;break;
+	case M_TEXT2:
+		col_count=2;break;	//		??
 	case M_CGA2:
 		col_count=2;break;
 	case M_CGA4:

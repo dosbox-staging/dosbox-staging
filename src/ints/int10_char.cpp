@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.19 2003-09-24 19:33:26 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.20 2003-10-22 14:50:28 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -26,14 +26,28 @@
 #include "inout.h"
 #include "int10.h"
 
-static INLINE void CGA_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+static INLINE void CGA4_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/2)+cleft)*2;
 	PhysPt src=base+((CurMode->twidth*rold)*(cheight/2)+cleft)*2;	
 	Bitu copy=(cright-cleft)*2;Bitu nextline=CurMode->twidth*2;
-	for (Bitu i=0;i<cheight/2;i++) {
+	for (Bitu i=0;i<cheight/2U;i++) {
 		MEM_BlockCopy(dest,src,copy);
 		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
+		dest+=nextline;src+=nextline;
+	}
+}
+
+static INLINE void TANDY16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/4)+cleft)*4;
+	PhysPt src=base+((CurMode->twidth*rold)*(cheight/4)+cleft)*4;	
+	Bitu copy=(cright-cleft)*4;Bitu nextline=CurMode->twidth*4;
+	for (Bitu i=0;i<cheight/2U;i++) {
+		MEM_BlockCopy(dest,src,copy);
+		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
+		MEM_BlockCopy(dest+16*1024,src+16*1024,copy);
+		MEM_BlockCopy(dest+24*1024,src+24*1024,copy);
 		dest+=nextline;src+=nextline;
 	}
 }
@@ -66,11 +80,12 @@ static INLINE void TEXT_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,P
 	MEM_BlockCopy(dest,src,(cright-cleft)*2);
 }
 
-static INLINE void CGA_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+static INLINE void CGA4_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	PhysPt dest=base+((CurMode->twidth*row)*(cheight/2)+cleft)*2;
 	Bitu copy=(cright-cleft)*2;Bitu nextline=CurMode->twidth*2;
-	for (Bitu i=0;i<cheight/2;i++) {
+	attr=(attr & 0x3) | ((attr & 0x3) << 2) | ((attr & 0x3) << 4) | ((attr & 0x3) << 6);
+	for (Bitu i=0;i<cheight/2U;i++) {
 		for (Bitu x=0;x<copy;x++) {
 			mem_writeb(dest+x,attr);
 			mem_writeb(dest+8*1024+x,attr);
@@ -78,6 +93,24 @@ static INLINE void CGA_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bi
 		dest+=nextline;
 	}
 }
+
+static INLINE void TANDY16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*row)*cheight+cleft)*4;
+	Bitu copy=(cright-cleft)*4;Bitu nextline=CurMode->twidth*4;
+	attr=(attr & 0xf) | (attr & 0xf) << 4;
+	for (Bitu i=0;i<cheight/4U;i++) {
+		for (Bitu x=0;x<copy;x++) {
+			mem_writeb(dest+x,attr);
+			mem_writeb(dest+8*1024+x,attr);
+			mem_writeb(dest+16*1024+x,attr);
+			mem_writeb(dest+24*1024+x,attr);
+		}
+		dest+=nextline;
+	}
+}
+
+
 
 static INLINE void EGA16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	/* Set Bitmask / Color / Full Set Reset */
@@ -112,7 +145,7 @@ static INLINE void TEXT_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,B
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page) {
 /* Do some range checking */
-	if (CurMode->type!=M_TEXT16) page=0xff;
+	if (CurMode->type>M_TEXT16) page=0xff;
 	BIOS_NCOLS;BIOS_NROWS;
 	if(rul>rlr) return;
 	if(cul>clr) return;
@@ -142,11 +175,14 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 	while (start!=end) {
 		start+=next;
 		switch (CurMode->type) {
+		case M_TEXT2:
 		case M_TEXT16:
 			TEXT_CopyRow(cul,clr,start,start+nlines,base);break;
-		case M_CGA2:
+//		case M_CGA2:
 		case M_CGA4:
-			CGA_CopyRow(cul,clr,start,start+nlines,base);break;
+			CGA4_CopyRow(cul,clr,start,start+nlines,base);break;
+		case M_TANDY16:
+			TANDY16_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_EGA16:		
 			EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
 		default:
@@ -163,11 +199,14 @@ filling:
 	}
 	for (;nlines>0;nlines--) {
 		switch (CurMode->type) {
+		case M_TEXT2:
 		case M_TEXT16:
 			TEXT_FillRow(cul,clr,start,base,attr);break;
-		case M_CGA2:
+//		case M_CGA2:
 		case M_CGA4:
-			CGA_FillRow(cul,clr,start,base,attr);break;
+			CGA4_FillRow(cul,clr,start,base,attr);break;
+		case M_TANDY16:		
+			TANDY16_FillRow(cul,clr,start,base,attr);break;
 		case M_EGA16:		
 			EGA16_FillRow(cul,clr,start,base,attr);break;
 		default:
@@ -187,10 +226,11 @@ void INT10_SetActivePage(Bit8u page) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
 	if (CurMode->mode<0x8) mem_address>>=1;
 	/* Write the new start address in vgahardware */
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0c);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)(mem_address>>8));
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0d);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)mem_address);
+	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+	IO_Write(base,0x0c);
+	IO_Write(base+1,(Bit8u)(mem_address>>8));
+	IO_Write(base,0x0d);
+	IO_Write(base+1,(Bit8u)mem_address);
 
 	// And change the BIOS page
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE,page);
@@ -243,8 +283,9 @@ void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 		}
 	}
 dowrite:
-	IO_Write(0x3d4,0xa);IO_Write(0x3d5,first);
-	IO_Write(0x3d4,0xb);IO_Write(0x3d5,last);
+	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+	IO_Write(base,0xa);IO_Write(base+1,first);
+	IO_Write(base,0xb);IO_Write(base+1,last);
 }
 
 
@@ -263,10 +304,11 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 		// Calculate the address knowing nbcols nbrows and page num
 		address=(ncols*row)+col+real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START);
 		// CRTC regs 0x0e and 0x0f
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0e);
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)(address>>8));
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0f);
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)address);
+		Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+		IO_Write(base,0x0e);
+		IO_Write(base+1,(Bit8u)(address>>8));
+		IO_Write(base,0x0f);
+		IO_Write(base+1,(Bit8u)address);
 	}
 }
 
@@ -290,6 +332,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	Bitu x,y;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
+	case M_TEXT2:
 	case M_TEXT16:
 		{	
 			// Compute the address  
@@ -305,6 +348,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		return;
 	case M_CGA4:
 	case M_CGA2:
+	case M_TANDY16:
 		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight; //was plain 8
 		else {
 			chr-=128;
@@ -335,7 +379,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
 	//TODO Check if this page thing is correct
-	if (CurMode->type!=M_TEXT16) page=0xff;
+	if (CurMode->type>M_TEXT16) page=0xff;
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
@@ -351,8 +395,7 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 	}
 }
 
-
-void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr) {
+void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 	//TODO Check if this page thing is correct
 	Bit8u page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	BIOS_NCOLS;BIOS_NROWS;
@@ -375,14 +418,14 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr) {
 		break;
 	case '\t':
 		do {
-			INT10_TeletypeOutput(' ',attr,showattr);
+			INT10_TeletypeOutputAttr(' ',attr,useattr);
 			cur_row=CURSOR_POS_ROW(page);
 			cur_col=CURSOR_POS_COL(page);
 		} while(cur_col%8);
 		break;
 	default:
 		/* Draw the actual Character */
-		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
+		WriteChar(cur_col,cur_row,page,chr,attr,useattr);
 		cur_col++;
 	}
 	if(cur_col==ncols) {
@@ -398,9 +441,14 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr) {
 	INT10_SetCursorPos(cur_row,cur_col,page);
 }
 
+
+void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
+	INT10_TeletypeOutputAttr(chr,attr,CurMode->type>M_TEXT16);
+}
+
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page) {
 	//TODO Check if this page thing is correct
-	if (CurMode->type!=M_TEXT16) page=0xff;
+	if (CurMode->type>M_TEXT16) page=0xff;
 
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	BIOS_NCOLS;BIOS_NROWS;
@@ -420,8 +468,8 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 		if (flag&2) {
 			attr=mem_readb(string);
 			string++;
-		}
-		INT10_TeletypeOutput(chr,attr,true);
+		} else attr=7;
+		INT10_TeletypeOutputAttr(chr,attr,flag & 2);
 		count--;
 	}
 	if (flag & 1) {

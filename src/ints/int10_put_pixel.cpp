@@ -54,6 +54,25 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 				real_writeb(0xb800,off,old);
 		}
 		break;
+	case M_TANDY16:
+		{
+			Bit16u off=(y>>2)*160+(x>>1);
+			off+=(8*1024) * (y & 3);
+			Bit8u old=real_readb(0xb800,off);
+			Bit8u p[2];
+			p[1] = (old >> 4) & 0xf;
+			p[0] = old & 0xf;
+			Bitu ind = 1-(x & 0x1);
+
+			if (color & 0x80) {
+	 			p[ind]^=color;
+			} else {
+				p[ind]=color;
+			}
+			old = (p[1] << 4) | p[0];
+			real_writeb(0xb800,off,old);
+		}
+		break;
 	case M_EGA16:
 		{
 			/* Set the correct bitmask for the pixel position */
@@ -77,8 +96,9 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0); }
 			break;
 		}
+
 	case M_VGA:
-		mem_writeb(Real2Phys(RealMake(0xa000,y*320+x)),color);
+		mem_writeb(PhysMake(0xa000,y*320+x),color);
 		break;
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
