@@ -234,6 +234,7 @@ static void DSP_StopDMA(void) {
 }
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+	if (event==DMA_REACHED_TC) return;
 	if (event==DMA_MASKED) sb.dma.active=false;
 	if (event==DMA_UNMASKED) sb.dma.active=true;
 	if (sb.mode==MODE_DMA_WAIT && sb.dma.active) {
