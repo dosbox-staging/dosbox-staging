@@ -816,6 +816,10 @@ static void CTMIXER_Reset(void) {
 
 static void CTMIXER_Write(Bit8u val) {
 	switch (sb.mixer.index) {
+	case 0x00:		/* Reset */
+		CTMIXER_Reset();
+		LOG(LOG_SB,LOG_WARN)("Mixer reset value %x",val);
+		break;
 	case 0x02:		/* Master Voulme (SBPRO) Obsolete? */
 	case 0x22:		/* Master Volume (SBPRO) */
 		SETPROVOL(sb.mixer.master,val);
@@ -825,9 +829,11 @@ static void CTMIXER_Write(Bit8u val) {
 		CTMIXER_UpdateVolumes();
 		break;
 	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro */
-		SETPROVOL(sb.mixer.fm,val);
-		sb.mixer.fm[1]=sb.mixer.fm[0];
+		//SETPROVOL(sb.mixer.fm,val);
+		//volume controls both channels
+		sb.mixer.fm[0]=sb.mixer.fm[1] = 0x1| ((val&0x0f)<<1);
 		CTMIXER_UpdateVolumes();
+		if(val&0x60) LOG(LOG_SB,LOG_WARN)("Turned FM one channel off. not implemented %X",val);
 		//TODO Change FM Mode if only 1 fm channel is selected
 		break;
 	case 0x0a:		/* Mic Level */
