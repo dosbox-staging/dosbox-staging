@@ -457,7 +457,7 @@ static char *addr_to_hex(UINT32 addr, int splitup) {
 }
 
 static PhysPt getbyte_mac;
-
+static PhysPt startPtr;
 
 static UINT8 getbyte(void) {
 	return mem_readb(getbyte_mac++);
@@ -822,6 +822,8 @@ static void floating_point(int e1)
 /*------------------------------------------------------------------------*/
 /* Main table driver                                                      */
 
+#define INSTRUCTION_SIZE (int)getbyte_mac - (int)startPtr
+
 static void percent(char type, char subtype)
 {
   INT32 vofs = 0;
@@ -864,13 +866,13 @@ static void percent(char type, char subtype)
        switch (bytes(subtype)) {              /* sizeof offset value */
        case 1:
             vofs = (INT8)getbyte();
-			name = addr_to_hex(vofs+instruction_offset,0);
+			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,0);
             break;
        case 2:
             vofs = getbyte();
             vofs += getbyte()<<8;
             vofs = (INT16)vofs;
-			name = addr_to_hex(vofs+instruction_offset,0);
+			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,0);
             break;
 #if 0
 			/* i386 */
@@ -879,7 +881,7 @@ static void percent(char type, char subtype)
             vofs |= (UINT32)getbyte() << 8;
             vofs |= (UINT32)getbyte() << 16;
             vofs |= (UINT32)getbyte() << 24;
-			name = addr_to_hex(vofs+instruction_offset,1);
+			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,1);
             break;
 #endif
        }
@@ -1077,6 +1079,7 @@ Bitu DasmI386(char* buffer, PhysPt pc, Bitu cur_ip, bool bit32)
 
 	instruction_offset = cur_ip;
 	/* input buffer */
+	startPtr	= pc;
 	getbyte_mac = pc;
 
 	/* output buffer */

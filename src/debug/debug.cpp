@@ -591,6 +591,46 @@ Bit32u GetHexValue(char* str, char*& hex)
 	return value;
 };
 
+bool ChangeRegister(char* str)
+{
+	Bit32u	value = 0;
+
+	char* hex = str;
+	while (*hex==' ') hex++;
+	if (strstr(hex,"AX")==hex) { hex+=2; reg_ax = GetHexValue(hex,hex); } else
+	if (strstr(hex,"BX")==hex) { hex+=2; reg_bx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"CX")==hex) { hex+=2; reg_cx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"DX")==hex) { hex+=2; reg_dx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"SI")==hex) { hex+=2; reg_si = GetHexValue(hex,hex); } else
+	if (strstr(hex,"DI")==hex) { hex+=2; reg_di = GetHexValue(hex,hex); } else
+	if (strstr(hex,"BP")==hex) { hex+=2; reg_bp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"SP")==hex) { hex+=2; reg_sp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"IP")==hex) { hex+=2; reg_ip = GetHexValue(hex,hex); } else
+	if (strstr(hex,"CS")==hex) { hex+=2; SegSet16(cs,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"DS")==hex) { hex+=2; SegSet16(ds,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"ES")==hex) { hex+=2; SegSet16(es,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"FS")==hex) { hex+=2; SegSet16(fs,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"GS")==hex) { hex+=2; SegSet16(gs,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"SS")==hex) { hex+=2; SegSet16(ss,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"EAX")==hex) { hex+=3; reg_eax = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EBX")==hex) { hex+=3; reg_ebx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ECX")==hex) { hex+=3; reg_ecx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EDX")==hex) { hex+=3; reg_edx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ESI")==hex) { hex+=3; reg_esi = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EDI")==hex) { hex+=3; reg_edi = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EBP")==hex) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ESP")==hex) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EIP")==hex) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
+	if (strstr(hex,"AF")==hex) { hex+=2; flags.af = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"CF")==hex) { hex+=2; flags.cf = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"DF")==hex) { hex+=2; flags.df = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"IF")==hex) { hex+=2; flags.intf = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"OF")==hex) { hex+=3; flags.of = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"PF")==hex) { hex+=3; flags.pf = (GetHexValue(hex,hex)!=0); } else
+								{ return false; };
+	return true;
+};
+
 bool ParseCommand(char* str)
 {
 	char* found = str;
@@ -666,6 +706,30 @@ bool ParseCommand(char* str)
 		LOG_DEBUG("DEBUG: Logfile LOGCPU.TXT created.");
 		return true;
 	}
+	found = strstr(str,"SR ");
+	if (found) { // Set register value
+		found+=2;
+		if (ChangeRegister(found))	LOG_DEBUG("DEBUG: Set Register success.");
+		else						LOG_DEBUG("DEBUG: Set Register failure.");
+		return true;
+	}	
+	found = strstr(str,"SM ");
+	if (found) { // Set memory with following values
+		found+=3;
+		Bit16u seg = GetHexValue(found,found); found++;
+		Bit32u ofs = GetHexValue(found,found); found++;
+		Bit16u count = 0;
+		while (*found) {
+			while (*found==' ') found++;
+			if (*found) {
+				Bit8u value = GetHexValue(found,found); found++;
+				mem_writeb(PhysMake(seg,ofs+count),value);
+				count++;
+			}
+		};
+		LOG_DEBUG("DEBUG: Memory changed.");
+		return true;
+	}
 	found = strstr(str,"INTT ");
 	if (found) { // Create Cpu log file
 		found+=4;
@@ -708,6 +772,8 @@ bool ParseCommand(char* str)
 		wprintw(dbg.win_out,"C / D  [segment]:[offset] - Set code / data view address\n");
 		wprintw(dbg.win_out,"INT [nr] / INTT [nr]      - Execute / Trace into Iinterrupt\n");
 		wprintw(dbg.win_out,"LOG [num]                 - Write cpu log file\n");
+		wprintw(dbg.win_out,"SR [reg] [value]          - Set register value\n");
+		wprintw(dbg.win_out,"SM [seg]:[off] [val] [.]..- Set memory with following values\n");	
 		wprintw(dbg.win_out,"H                         - Help\n");
 		wrefresh(dbg.win_out);
 		return TRUE;
