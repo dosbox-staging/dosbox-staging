@@ -75,6 +75,12 @@ l_M_Ewx:
 			goto l_M_EwGw;
 		case M_EwGwIb:
 			inst.imm.d=Fetchb();
+			goto l_M_EwGw;
+		case M_EwGwt:
+			inst.op2.d=reg_16(inst.rm_index);
+			inst.rm_eaa=((Bit32s)inst.op1.d >> 4) * 2;
+			inst.op2.d&=15;
+			goto l_M_Ew;
 l_M_EwGw:			
 		case M_EwGw:
 			inst.op2.d=reg_16(inst.rm_index);
@@ -111,8 +117,14 @@ l_M_Ew:
 		case M_EdGdCL:
 			inst.imm.d=reg_cl;
 			goto l_M_EdGd;
+		case M_EdGdt:
+			inst.op2.d=reg_32(inst.rm_index);
+			inst.rm_eaa=((Bit32s)inst.op1.d >> 5) * 4;
+			inst.op2.d&=31;
+			goto l_M_Ed;
 		case M_EdGdIb:
 			inst.imm.d=Fetchb();
+			goto l_M_EdGd;
 l_M_EdGd:
 		case M_EdGd:
 			inst.op2.d=reg_32(inst.rm_index);

@@ -563,12 +563,12 @@ switch (inst.code.op) {
 	case O_BTCw:
 		FillFlags();
 		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
-		inst.op1.d&=~(1 << (inst.op2.d & 15));
+		inst.op1.d^=(1 << (inst.op2.d & 15));
 		break;
 	case O_BTRw:
 		FillFlags();
 		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
-		inst.op1.d^=(1 << (inst.op2.d & 15));
+		inst.op1.d&=~(1 << (inst.op2.d & 15));
 		break;
 	case O_BTd:
 		FillFlags();
@@ -582,12 +582,12 @@ switch (inst.code.op) {
 	case O_BTCd:
 		FillFlags();
 		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
-		inst.op1.d&=~(1 << (inst.op2.d & 31));
+		inst.op1.d^=(1 << (inst.op2.d & 31));
 		break;
 	case O_BTRd:
 		FillFlags();
 		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
-		inst.op1.d^=(1 << (inst.op2.d & 31));
+		inst.op1.d&=~(1 << (inst.op2.d & 31));
 	case O_BSWAP:
 		BSWAP(inst.op1.d);
 		break;

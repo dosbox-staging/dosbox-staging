@@ -130,8 +130,8 @@ enum {
 enum {
 	M_None=0,
 	M_Ebx,M_Eb,M_Gb,M_EbGb,M_GbEb,
-	M_Ewx,M_Ew,M_Gw,M_EwGw,M_GwEw,M_EwxGwx,
-	M_Edx,M_Ed,M_Gd,M_EdGd,M_GdEd,M_EdxGdx,
+	M_Ewx,M_Ew,M_Gw,M_EwGw,M_GwEw,M_EwxGwx,M_EwGwt,
+	M_Edx,M_Ed,M_Gd,M_EdGd,M_GdEd,M_EdxGdx,M_EdGdt,
 	
 	M_EbIb,M_EwIb,M_EdIb,
 	M_EwIw,M_EwIbx,M_EwxIbx,M_EwxIwx,M_EwGwIb,M_EwGwCL,

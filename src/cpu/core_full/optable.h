@@ -294,23 +294,23 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x1a0 - 0x1a7 */
 {L_SEG		,0		,S_PUSHw	,fs		},{L_POPw	,0			,S_SEGI	,fs		},
-{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTw		,S_Ew	,M_EwGw	},
+{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_DSHLw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHLw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1a8 - 0x1af */
 {L_SEG		,0		,S_PUSHw	,gs		},{L_POPw	,0			,S_SEGI	,gs		},
-{0			,0			,0		,0		},{L_MODRM	,O_BTSw		,S_Ew	,M_EwGw	},
+{0			,0			,0		,0		},{L_MODRM	,O_BTSw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_DSHRw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHRw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRw	,S_Gw	,M_EwxGwx	},
 
 /* 0x1b0 - 0x1b7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{L_MODRM	,O_SEGSS	,S_SEGGw,M_Efw	},{L_MODRM	,O_BTRw		,S_Ew	,M_EwGw	},
+{L_MODRM	,O_SEGSS	,S_SEGGw,M_Efw	},{L_MODRM	,O_BTRw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_SEGFS	,S_SEGGw,M_Efw	},{L_MODRM	,O_SEGGS	,S_SEGGw,M_Efw	},
 {L_MODRM	,0			,S_Gw	,M_Eb	},{L_MODRM	,0			,S_Gw	,M_Ew	},
 /* 0x1b8 - 0x1bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{L_MODRM	,0xe		,0		,M_GRP	},{L_MODRM	,O_BTCw		,S_Ew	,M_EwGw	},
+{L_MODRM	,0xe		,0		,M_GRP	},{L_MODRM	,O_BTCw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_BSFw		,S_Gw	,M_Ew	},{L_MODRM	,O_BSRw		,S_Gw	,M_Ew	},
 {L_MODRM	,0			,S_Gw	,M_Ebx	},{L_MODRM	,0			,S_Gw	,M_Ewx	},
 
@@ -650,23 +650,23 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x3a0 - 0x3a7 */
 {L_SEG		,0		,S_PUSHd	,fs		},{L_POPd	,0			,S_SEGI	,fs		},
-{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTd		,S_Ed	,M_EdGd	},
+{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_DSHLd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHLd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x3a8 - 0x3af */
 {L_SEG		,0		,S_PUSHd	,gs		},{L_POPd	,0			,S_SEGI	,gs		},
-{0			,0			,0		,0		},{L_MODRM	,O_BTSd		,S_Ed	,M_EdGd	},
+{0			,0			,0		,0		},{L_MODRM	,O_BTSd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_DSHRd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHRd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdxGdx	},
 
 /* 0x3b0 - 0x3b7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{L_MODRM	,O_SEGSS	,S_SEGGd,M_Efd	},{L_MODRM	,O_BTRd		,S_Ed	,M_EdGd	},
+{L_MODRM	,O_SEGSS	,S_SEGGd,M_Efd	},{L_MODRM	,O_BTRd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_SEGFS	,S_SEGGd,M_Efd	},{L_MODRM	,O_SEGGS	,S_SEGGd,M_Efd	},
 {L_MODRM	,0			,S_Gd	,M_Eb	},{L_MODRM	,0			,S_Gd	,M_Ew	},
 /* 0x3b8 - 0x3bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{L_MODRM	,0xf		,0		,M_GRP	},{L_MODRM	,O_BTCd		,S_Ed	,M_EdGd	},
+{L_MODRM	,0xf		,0		,M_GRP	},{L_MODRM	,O_BTCd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_BSFd		,S_Gd	,M_Ed	},{L_MODRM	,O_BSRd		,S_Gd	,M_Ed	},
 {L_MODRM	,0			,S_Gd	,M_Ebx	},{L_MODRM	,0			,S_Gd	,M_Ewx	},
 
@@ -801,8 +801,8 @@ static OpCode Groups[16][8]={
 },{	/* 0x0f Group 8 Ed */
 {0		,0			,0		,0			},{0	,0			,0		,0			},
 {0		,0			,0		,0			},{0	,0			,0		,0			},
-{0		,O_BTd		,S_Ed	,M_Ib		},{0	,O_BTSd		,S_Ed	,M_EdIb		},
-{0		,O_BTRd		,S_Ed	,M_Ib		},{0	,O_BTCd		,S_Ed	,M_EdIb		},
+{0		,O_BTd		,S_Ed	,M_EdIb		},{0	,O_BTSd		,S_Ed	,M_EdIb		},
+{0		,O_BTRd		,S_Ed	,M_EdIb		},{0	,O_BTCd		,S_Ed	,M_EdIb		},
 
 
 
