@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.36 2005-03-25 09:02:46 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.37 2005-04-01 10:15:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +25,7 @@
 #include "shell.h"
 #include "regs.h"
 #include "callback.h"
+#include "support.h"
 
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
