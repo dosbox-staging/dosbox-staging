@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.43 2003-09-29 21:04:31 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.44 2003-09-29 21:22:01 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -87,7 +87,7 @@ void GFX_SetTitle(Bits cycles,Bits frameskip){
 	static internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
-	sprintf(title,"Cpu Cycles: %8d, Frameskip %2d",internal_cycles,internal_frameskip);
+	sprintf(title,"DOSBox %s, Cpu Cycles: %8d, Frameskip %2d",VERSION,internal_cycles,internal_frameskip);
 	SDL_WM_SetCaption(title,VERSION);
 }
 
