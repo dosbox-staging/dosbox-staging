@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.40 2004-06-17 17:40:02 harekiet Exp $ */
+/* $Id: dos_execute.cpp,v 1.41 2004-07-05 11:54:44 harekiet Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -27,7 +27,7 @@
 #include "callback.h"
 #include "debug.h"
 
-const char * RunningProgram="DOSBOX";
+char * RunningProgram="DOSBOX";
 
 #ifdef _MSC_VER
 #pragma pack(1)

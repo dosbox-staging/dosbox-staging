@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.67 2004-06-13 12:10:08 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.68 2004-07-05 11:54:53 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -165,7 +165,7 @@ struct SDL_Block {
 static SDL_Block sdl;
 static void CaptureMouse(void);
 
-extern const char * RunningProgram;
+extern char * RunningProgram;
 void GFX_SetTitle(Bits cycles,Bits frameskip){
 	char title[200]={0};
 	static Bits internal_cycles=0;
