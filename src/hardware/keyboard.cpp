@@ -197,6 +197,7 @@ static void write_p60(Bit32u port,Bit8u val) {
 
 static Bit8u read_p61(Bit32u port) {
 	port_61_data^=0x20;
+	port_61_data^=0x10;
 	return port_61_data;
 }
 
