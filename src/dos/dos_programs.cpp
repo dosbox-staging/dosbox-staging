@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: dos_programs.cpp,v 1.20 2003-09-08 18:10:08 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -321,25 +323,26 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"Welcome to DOSBox, an x86 emulator with sound and graphics.\n"
+		"[2J[32;1mWelcome to DOSBox[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
 		"\n"	    
 		"Here are some commands to get you started:\n"
 		"Before you can use the files located on your own filesystem,\n"
 		"You have to mount the directory containing the files.\n"
 		"For Windows:\n"
-		"mount c c:\\dosprog will create a C drive in dosbox with c:\\dosprog as contents.\n"
+		"\033[33mmount c c:\\dosprog\033[0m will create a C drive in dosbox with c:\\dosprog as contents.\n"
 		"\n"
-		"For other platfroms:\n"
-		"mount c /home/user/dosprog will do the same.\n"
+		"For other platforms:\n"
+		"\033[33mmount c /home/user/dosprog\033[0m will do the same.\n"
 		"\n"
-		"When the mount has succesfully completed you can type c: to go to your freshly\n"
-		"mounted C-drive. Typing dir there will show its contents. cd will allow you to\n"
+		"When the mount has succesfully completed you can type \033[33mc:\033[0m to go to your freshly\n"
+		"mounted C-drive. Typing \033[33mdir\033[0m there will show its contents."
+		" \033[33mcd\033[0m will allow you to\n"
 		"enter a directory (recognised by the [] in a directory listing).\n"
-		"You can run programs/files which end with .exe .bat and .com .\n"
+		"You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.\n"
 
 		"\n"
-		"DOSBox will stop/exit without a warning if an error occured!\n"
+		"[43;30mDOSBox will stop/exit without a warning if an error occured![0m\n"
 		);
 
     /*regular setup*/
