@@ -45,6 +45,7 @@ struct SDL_Block {
 	bool full_screen;
 	bool nowait;
 	SDL_Surface * surface;
+	SDL_Surface * shadow_surface;
 	SDL_Joystick * joy;
 	SDL_cond *cond;
 #if C_GFXTHREADED
@@ -70,7 +71,12 @@ static void CaptureMouse(void);
 static void ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.full_screen) { 
-		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN);
+		if (sdl.flags & GFX_SHADOW) {
+			/* TODO Maybe allocate a shadow surface and blit yourself and do real double buffering too */
+			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_SWSURFACE|SDL_FULLSCREEN);
+		} else {
+			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
+		}
 	} else {
 		if (sdl.flags & GFX_FIXED_BPP) sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE);
 		else sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
@@ -119,7 +125,6 @@ static void SwitchFullScreen(void) {
 	} else {
 		if (sdl.mouse.locked) CaptureMouse();
 	}
-
 	ResetScreen();
 }
 
@@ -129,7 +134,6 @@ void GFX_SwitchFullScreen(void) {
 
 static void SDL_DrawScreen(void) {
 		sdl.drawing=true;
-		
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (SDL_LockSurface(sdl.surface)) {
 				sdl.drawing=false;
@@ -137,21 +141,19 @@ static void SDL_DrawScreen(void) {
 			}
 		}
 		sdl.draw_callback(sdl.surface->pixels);
-
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			SDL_UnlockSurface(sdl.surface);
 		}
-		SDL_UpdateRect(sdl.surface,0,0,0,0);
-//		SDL_Flip(sdl.surface);
+		SDL_Flip(sdl.surface);
 		sdl.drawing=false;	
 }
-
 
 #if C_GFXTHREADED
 int SDL_DisplayThread(void * data) {
 	while (!SDL_SemWait(sdl.sem)) {
 		if (sdl.kill_thread) return 0;
 		if (!sdl.active) continue;
+		if (sdl.drawing) continue;
 		SDL_mutexP(sdl.mutex);
 		SDL_DrawScreen();
 		SDL_mutexV(sdl.mutex);
@@ -519,8 +521,6 @@ void GFX_ShowMsg(char * msg) {
 
 int main(int argc, char* argv[]) {
 
-
-	
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
