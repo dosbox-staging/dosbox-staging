@@ -72,6 +72,7 @@ A: You have to make your directories available as drives in DOSBox by using
    In Linux, "mount c /home/username" would give you a C in DOSBox
    which points at /home/username in Linux.
 
+
 Q: My CD-ROM doesn't work.
 A: To mount your cdrom in DOSBox you have to specify some additional options 
    when mounting the cdrom. 
@@ -102,6 +103,7 @@ A: You're using too much cpu power to keep DOSBox running at the current speed.
    You can either lower the cycles or skip frames or get a faster machine.
    You can also increase the prebuffer in the configfile
 
+
 Q: I can't type \ or : in DOSBox.
 A: This is a known problem. It only occurs if your keyboard layout isn't US.
    Some possible fixes:
@@ -109,8 +111,10 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      2. Use / instead.
      3. Add the commands you want to execute to dosbox.conf
      4. Start the keymapper (CTRL-F1 or add -startmapper switch to dosbox)
-     5. for \ try the keys around enter. For : try shift and the keys between
-        enter and "l" (US keyboard layout).
+     5. for \ try the keys around "enter". For ":" try shift and the keys between
+        "enter" and "l" (US keyboard layout).
+     6. Use keyb.com for FreeDOS (http://projects.freedos.net/keyb/).
+
 
 Q: The game/application can't find its CD-ROM.
 A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the
