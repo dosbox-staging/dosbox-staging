@@ -25,6 +25,7 @@
 #include "dos_system.h"
 #include "setup.h"
 #include "inout.h"
+#include "xms.h"
 
 #define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
 #define XMS_VERSION    						0x0300	/* version 3.00 */
@@ -83,7 +84,7 @@ struct XMS_MemMove{
 } GCC_ATTRIBUTE(packed);
 #pragma pack (pop)
 
-static Bit8u XMS_EnableA20(bool enable)
+static Bitu XMS_EnableA20(bool enable)
 {
 	Bit8u val = IO_Read	(0x92);
 	if (enable) IO_Write(0x92,val | 2);
@@ -91,96 +92,17 @@ static Bit8u XMS_EnableA20(bool enable)
 	return 0;
 };
 
-static Bit8u XMS_GetEnabledA20(void)
+static Bitu XMS_GetEnabledA20(void)
 {
 	return (IO_Read(0x92)&2)>0;
 };
-
-static Bitu		xms_size;
-static void*	xms_block[C_MEM_MAX_SIZE];
 
 static Bit16u call_xms;
 static RealPt xms_callback;
 
 static XMS_Block xms_handles[XMS_HANDLES];
 
-#define GETBIGBLOCKNR(nr) nr/(1024*1024)
-
-static bool AllocateBigBlock(Bitu block1, Bitu block2)
-{
-	Bitu size,phys;
-	
-	if ((block1<1) || (block1>xms_size)) return false;
-	if ((block2<1) || (block2>xms_size)) return false;
-	if (block2<block1)					 return false;
-
-	for (Bitu blockNr=block1; blockNr<=block2; blockNr++) {
-		if (!xms_block[blockNr]) {
-			if (blockNr==1) {
-				phys = 1088*1024;
-				size = (1024-64)*1024;
-			} else {
-				phys = 1024*1024*blockNr;
-				size = 1024*1024;
-			}
-			// Allocate it 
-			xms_block[blockNr] = malloc(size);
-			if (!xms_block[blockNr]) E_Exit("XMS: Failed to allocate XMS block.");
-//			else LOG(LOG_ERROR,"XMS: Allocated big block %d.",blockNr);
-			// Map it with default handler
-			MEM_SetupMapping(PAGE_COUNT(phys),PAGE_COUNT(size),xms_block[blockNr]);
-		}
-	};
-	return true;
-};
-
-static bool CheckAllocationArea(Bitu phys, Bitu size)
-// Check, if the range is in an area that is already allocated (or can be allocated)
-// size = in bytes
-{
-	Bitu block1 = GETBIGBLOCKNR(phys);
-	Bitu block2 = GETBIGBLOCKNR((phys+size-1));
-	if (!AllocateBigBlock(block1,block2)) {
-		LOG(LOG_ERROR,"XMS: Check: AllocateBigBlock error.");
-		return false;
-	} 
-	return true;
-};
-
-static Bit8u Default_XMSReadHandler(PhysPt pt) 
-{
-	// Allocate mem, set deafult handler
-	Bitu block = GETBIGBLOCKNR(pt);
-	if (AllocateBigBlock(block,block)) {
-		// Pass request to new handler
-		return mem_readb(pt);
-	}
-	return 0;
-}
-
-static void Default_XMSWriteHandler(PhysPt pt,Bit8u val) 
-{
-	// Allocate mem, set deafult handler
-	Bit8u block = GETBIGBLOCKNR(pt);
-	if (AllocateBigBlock(block,block)) {
-		// Pass request to new handler
-		mem_writeb(pt,val);
-	}
-}
-
-static Bit8u XMSReadHandler_OutOfRange(PhysPt pt) 
-{
-	LOG(LOG_ERROR,"XMS: Accessed mem out of range.");
-	return 0;
-}
-
-static void XMSWriteHandler_OutOfRange(PhysPt pt,Bit8u val) 
-{
-	LOG(LOG_ERROR,"XMS: Accessed mem out of range.");
-	return;
-}
-
-static Bit8u XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
+static Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
 	Bit16u index=1;
 	largestFree=totalFree=0;
@@ -196,7 +118,7 @@ static Bit8u XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	return 0;
 };
 
-static Bit8u XMS_AllocateMemory(Bitu size, Bit16u& handle)
+static Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 // size = kb
 {
 	Bit16u index=1;
@@ -229,7 +151,8 @@ static Bit8u XMS_AllocateMemory(Bitu size, Bit16u& handle)
 			}
 			/* Use the data from handle index to allocate the actual memory */
 			handle = index;
-			xms_handles[index].allocated = CheckAllocationArea(xms_handles[index].phys,xms_handles[index].size*1024);
+			xms_handles[index].allocated = 1;
+			//CheckAllocationArea(xms_handles[index].phys,xms_handles[index].size*1024);
 			return 0;
 		}	
 		/* Not a free block or too small advance to next one if possible */
@@ -240,7 +163,7 @@ static Bit8u XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	return XMS_OUT_OF_SPACE;
 };
 
-static Bit8u XMS_FreeMemory(Bitu handle)
+static Bitu XMS_FreeMemory(Bitu handle)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -269,7 +192,7 @@ static Bit8u XMS_FreeMemory(Bitu handle)
 	return 0;
 };
 
-static Bit8u XMS_MoveMemory(PhysPt bpt)
+static Bitu XMS_MoveMemory(PhysPt bpt)
 {
 	XMS_MemMove block;
 	/* Fill the block with mem_read's and shit */
@@ -311,7 +234,7 @@ static Bit8u XMS_MoveMemory(PhysPt bpt)
 	return 0;
 }
 
-static Bit8u XMS_LockMemory(Bitu handle, Bit32u& address)
+static Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -322,7 +245,7 @@ static Bit8u XMS_LockMemory(Bitu handle, Bit32u& address)
 	return 0;
 };
 
-static Bit8u XMS_UnlockMemory(Bitu handle)
+static Bitu XMS_UnlockMemory(Bitu handle)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -335,7 +258,7 @@ static Bit8u XMS_UnlockMemory(Bitu handle)
 	return XMS_BLOCK_NOT_LOCKED;
 };
 
-static Bit8u XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
+static Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -348,7 +271,7 @@ static Bit8u XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numF
 	return 0;
 };
 
-static Bit8u XMS_ResizeMemory(Bitu handle, Bitu newSize)
+static Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -389,7 +312,8 @@ static Bit8u XMS_ResizeMemory(Bitu handle, Bitu newSize)
 		}
 		// Resize and allocate new mem 
 		xms_handles[handle].size	  = newSize;
-		xms_handles[handle].allocated = CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
+		xms_handles[handle].allocated = 1;
+		//CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
 		
 	} else if (newSize>xms_handles[handle].size) {
 		// Lets see if successor has enough free space to do that 
@@ -412,7 +336,8 @@ static Bit8u XMS_ResizeMemory(Bitu handle, Bitu newSize)
 			};
 			// Resize and allocate new mem 
 			xms_handles[handle].size		= newSize;
-			xms_handles[handle].allocated	= CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
+			xms_handles[handle].allocated	= 1;
+			//CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
 		} else {
 			// No more free mem ?
 			LOG(LOG_ERROR,"XMS: Resize failure: out of mem 2");
@@ -510,16 +435,9 @@ Bitu XMS_Handler(void) {
 	return CBRET_NONE;
 }
 
-static void XMS_ShutDown(Section * sec) {
-	for (Bitu i=0; i<C_MEM_MAX_SIZE; i++) {
-		delete xms_block[i];
-		xms_block[i] = 0;
-	};
-};
-
 void XMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	Bitu size=xms_size=section->Get_int("xmssize");
+	Bitu size=section->Get_int("xmssize");
 	if (!size) return;
 	if (size>C_MEM_MAX_SIZE-1) size=C_MEM_MAX_SIZE-1;
 	DOS_AddMultiplexHandler(multiplex_xms);
@@ -543,28 +461,5 @@ void XMS_Init(Section* sec) {
 	xms_handles[1].active=true;
 	xms_handles[1].phys=1088*1024;		/* right behind the hma area */
 	xms_handles[1].size=size*1024-64;
-
-	// Setup default handlers for unallocated xms
-	Bitu start	= xms_handles[1].phys;
-	Bitu end	= start + xms_handles[1].size*1024;
-	for (Bitu p=PAGE_COUNT(start);p<PAGE_COUNT(end);p++) {
-		ReadHostTable[p]=0;
-		WriteHostTable[p]=0;
-		ReadHandlerTable[p]=&Default_XMSReadHandler;
-		WriteHandlerTable[p]=&Default_XMSWriteHandler;
-	}
-	start = end;
-	end  += 1024*1024;
-	// Setup out of range handler
-	for (p=PAGE_COUNT(start);p<PAGE_COUNT(end);p++) {
-		ReadHostTable[p]=0;
-		WriteHostTable[p]=0;
-		ReadHandlerTable[p]=&XMSReadHandler_OutOfRange;
-		WriteHandlerTable[p]=&XMSWriteHandler_OutOfRange;
-	}
-	// clear unallocated memory blocks
-	for (i=0; i<C_MEM_MAX_SIZE; i++) xms_block[i] = 0;
-	/* shutdown function */
-	sec->AddDestroyFunction(&XMS_ShutDown);
 }
 

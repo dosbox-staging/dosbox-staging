@@ -556,6 +556,10 @@ SOURCE=..\src\ints\mouse.cpp
 
 SOURCE=..\src\ints\xms.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\src\ints\xms.h
+# End Source File
 # End Group
 # Begin Group "misc"
 
