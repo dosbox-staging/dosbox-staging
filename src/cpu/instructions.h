@@ -18,41 +18,6 @@
 
 /* Jumps */
 
-/* 
-	Could perhaps do some things with 8 and 16 bit operations like shifts, doing them in 32 bit regs
-*/ 
-
-#define JumpSIb(blah) 										\
-	if (blah) {												\
-		ADDIPFAST(Fetchbs());									\
-	} else {												\
-		ADDIPFAST(1);											\
-	}					
-
-#define JumpSIw(blah) 										\
-	if (blah) {												\
-		ADDIPFAST(Fetchws());									\
-	} else {												\
-		ADDIPFAST(2);											\
-	}						
-
-#define SETcc(cc)															\
-	{																		\
-		GetRM;																\
-		if (rm >= 0xc0 ) {GetEArb;*earb=(cc) ? 1 : 0;}						\
-		else {GetEAa;SaveMb(eaa,(cc) ? 1 : 0);}								\
-	}
-
-#define INTERRUPT(blah)										\
-	{														\
-		Bit8u new_num=blah;									\
-		SAVEIP;												\
-		Interrupt(new_num);									\
-		LOADIP;												\
-	}
-
-
-
 /* All Byte genereal instructions */
 #define ADDB(op1,op2,load,save)								\
 	flags.var1.b=load(op1);flags.var2.b=op2;					\
@@ -254,178 +219,164 @@
 	save(op1,flags.result.d);								\
 	flags.type=t_DECd;
 
-#define NOTDONE												\
-	SUBIP(1);E_Exit("CPU:Opcode %2X Unhandled",Fetchb()); 
-
-#define NOTDONE66											\
-	SUBIP(1);E_Exit("CPU:Opcode 66:%2X Unhandled",Fetchb()); 
-
-
-//TODO Maybe make this into a bigger split up because of the rm >=0xc0 this seems make it a bit slower
-//TODO set Zero and Sign flag in one run 	
 #define ROLB(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2&0x07;flags.var1.b=load(op1);			\
-	if (!flags.var2.b)	{									\
-		flags.result.b=flags.var1.b;						\
-	} else {												\
+	if (op2&0x07)	{										\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.b=load(op1);								\
+		flags.var2.b=op2&0x07;								\
 		flags.result.b=(flags.var1.b << flags.var2.b) |		\
 				(flags.var1.b >> (8-flags.var2.b));			\
-	}														\
-	save(op1,flags.result.b);								\
-	flags.type=t_ROLb;
+		save(op1,flags.result.b);							\
+		flags.type=t_ROLb;									\
+	}
 
 #define ROLW(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2&0x0F;flags.var1.w=load(op1);			\
-	if (!flags.var2.b)	{									\
-		flags.result.w=flags.var1.w;						\
-	} else {												\
+	if (op2&0x0F) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.w=load(op1);								\
+		flags.var2.b=op2&0x0F;								\
 		flags.result.w=(flags.var1.w << flags.var2.b) |		\
 				(flags.var1.w >> (16-flags.var2.b));		\
-	}														\
-	save(op1,flags.result.w);								\
-	flags.type=t_ROLw;
+		save(op1,flags.result.w);							\
+		flags.type=t_ROLw;									\
+	}
 
 #define ROLD(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2;flags.var1.d=load(op1);			\
-	flags.result.d=(flags.var1.d << flags.var2.b) |			\
+	if (op2) {												\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.d=load(op1);								\
+		flags.var2.b=op2;									\
+		flags.result.d=(flags.var1.d << flags.var2.b) |		\
 				(flags.var1.d >> (32-flags.var2.b));		\
-	save(op1,flags.result.d);								\
-	flags.type=t_ROLd;
-
+		save(op1,flags.result.d);							\
+		flags.type=t_ROLd;									\
+	}
 
 #define RORB(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2&0x07;flags.var1.b=load(op1);			\
-	if (!flags.var2.b)	{									\
-		flags.result.b=flags.var1.b;						\
-	} else {												\
+	if (op2&0x07)	{										\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.b=load(op1);								\
+		flags.var2.b=op2&0x07;								\
 		flags.result.b=(flags.var1.b >> flags.var2.b) |		\
 				(flags.var1.b << (8-flags.var2.b));			\
+		save(op1,flags.result.b);							\
+		flags.type=t_RORb;									\
 	}														\
-	save(op1,flags.result.b);								\
-	flags.type=t_RORb;
 
 #define RORW(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2&0x0F;flags.var1.w=load(op1);			\
-	if (!flags.var2.b)	{									\
-		flags.result.w=flags.var1.w;						\
-	} else {												\
+	if (op2&0x0F) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.w=load(op1);								\
+		flags.var2.b=op2&0x0F;								\
 		flags.result.w=(flags.var1.w >> flags.var2.b) |		\
 				(flags.var1.w << (16-flags.var2.b));		\
-	}														\
-	save(op1,flags.result.w);								\
-	flags.type=t_RORw;
+		save(op1,flags.result.w);							\
+		flags.type=t_RORw;									\
+	}
 
 #define RORD(op1,op2,load,save)								\
-	if (!op2) break;									\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var2.b=op2;flags.var1.d=load(op1);			\
-	flags.result.d=(flags.var1.d >> flags.var2.b) |			\
+	if (op2) {												\
+		LoadZF;LoadSF;LoadAF;								\
+		flags.var1.d=load(op1);								\
+		flags.var2.b=op2;									\
+		flags.result.d=(flags.var1.d >> flags.var2.b) |		\
 				(flags.var1.d << (32-flags.var2.b));		\
-	save(op1,flags.result.d);								\
-	flags.type=t_RORd;
+		save(op1,flags.result.d);							\
+		flags.type=t_RORd;									\
+	}
 
-
-/*	flags.oldcf=get_CF();*/									\
 
 #define RCLB(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCLb;					\
-	flags.var2.b=op2%9;flags.var1.b=load(op1);		\
-	if (!flags.var2.b)	{									\
-		flags.result.b=flags.var1.b;						\
-	} else {												\
+	if (op2%9) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit8u cf=get_CF();									\
+		flags.var1.b=load(op1);								\
+		flags.var2.b=op2%9;									\
+		flags.type=t_RCLb;									\
 		flags.result.b=(flags.var1.b << flags.var2.b) |		\
-				(flags.cf << (flags.var2.b-1)) |			\
+				(cf << (flags.var2.b-1)) |					\
 				(flags.var1.b >> (9-flags.var2.b));			\
-		flags.cf=((flags.var1.b >> (8-flags.var2.b)) & 1);	\
-	}														\
-	flags.of=((flags.result.b & 0x80) ^ (flags.cf ? 0x80 : 0)) != 0;	\
- 	save(op1,flags.result.b);
+		SETFLAGBIT(CF,((flags.var1.b >> (8-flags.var2.b)) & 1));			\
+		SETFLAGBIT(OF,((flags.result.b & 0x80) ^ (cf ? 0x80 : 0)) != 0);	\
+ 		save(op1,flags.result.b);							\
+	}
 
 #define RCLW(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCLw;					\
-	flags.var2.b=op2%17;flags.var1.w=load(op1);	\
-	if (!flags.var2.b)	{									\
-		flags.result.w=flags.var1.w;						\
-	} else {												\
+	if (op2%17) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit16u cf=get_CF();									\
+		flags.var1.w=load(op1);								\
+		flags.var2.b=op2%17;								\
+		flags.type=t_RCLw;									\
 		flags.result.w=(flags.var1.w << flags.var2.b) |		\
-				(flags.cf << (flags.var2.b-1)) |			\
+				(cf << (flags.var2.b-1)) |					\
 				(flags.var1.w >> (17-flags.var2.b));		\
-		flags.cf=((flags.var1.w >> (16-flags.var2.b)) & 1);	\
-	}														\
-	flags.of=((flags.result.w & 0x8000) ^ (flags.cf ? 0x8000 : 0)) != 0;	\
-	save(op1,flags.result.w);
+		SETFLAGBIT(CF,((flags.var1.w >> (16-flags.var2.b)) & 1));				\
+		SETFLAGBIT(OF,((flags.result.w & 0x8000) ^ (cf ? 0x8000 : 0)) != 0);	\
+		save(op1,flags.result.w);							\
+	}
 
 #define RCLD(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCLd;					\
-	flags.var2.b=op2;flags.var1.d=load(op1);			\
-	if (flags.var2.b==1)	{								\
-	flags.result.d=(flags.var1.d << 1) | flags.cf;			\
-	} else 	{												\
-		flags.result.d=(flags.var1.d << flags.var2.b) |		\
-				(flags.cf  << (flags.var2.b-1)) |			\
-				(flags.var1.d >> (33-flags.var2.b));		\
-	}														\
-	flags.cf=((flags.var1.d >> (32-flags.var2.b)) & 1);	\
-	flags.of=((flags.result.d & 0x80000000) ^ (flags.cf ? 0x80000000 : 0)) != 0;	\
-	save(op1,flags.result.d);
+	if (op2) {												\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit32u cf=get_CF();									\
+		flags.var1.d=load(op1);								\
+		flags.var2.b=op2;									\
+		flags.type=t_RCLd;									\
+		if (flags.var2.b==1)	{							\
+			flags.result.d=(flags.var1.d << 1) | cf;		\
+		} else 	{											\
+			flags.result.d=(flags.var1.d << flags.var2.b) |	\
+			(cf << (flags.var2.b-1)) |						\
+			(flags.var1.d >> (33-flags.var2.b));			\
+		}													\
+		SETFLAGBIT(CF,((flags.var1.d >> (32-flags.var2.b)) & 1));							\
+		SETFLAGBIT(OF,((flags.result.d & 0x80000000) ^ (cf ? 0x80000000 : 0)) != 0);	\
+		save(op1,flags.result.d);							\
+	}
 
 #define RCRB(op1,op2,load,save)								\
-	if (!op2) break; 								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCRb;					\
-	flags.var2.b=op2%9;flags.var1.b=load(op1);		\
-	if (!flags.var2.b)	{									\
-		flags.result.b=flags.var1.b;						\
-	} else {												\
+	if (op2%9) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit8u cf=get_CF();									\
+		flags.var1.b=load(op1);								\
+		flags.var2.b=op2%9;									\
+		flags.type=t_RCRb;									\
 	 	flags.result.b=(flags.var1.b >> flags.var2.b) |		\
-				(flags.cf << (8-flags.var2.b)) |			\
+				(cf << (8-flags.var2.b)) |					\
 				(flags.var1.b << (9-flags.var2.b));			\
-	}														\
-	save(op1,flags.result.b);
+		save(op1,flags.result.b);							\
+	}
 
 #define RCRW(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCRw;					\
-	flags.var2.b=op2%17;flags.var1.w=load(op1);	\
-	if (!flags.var2.b)	{									\
-		flags.result.w=flags.var1.w;						\
-	} else {												\
+	if (op2%17) {											\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit16u cf=get_CF();									\
+		flags.var1.w=load(op1);								\
+		flags.var2.b=op2%17;								\
+		flags.type=t_RCRw;									\
 	 	flags.result.w=(flags.var1.w >> flags.var2.b) |		\
-				(flags.cf << (16-flags.var2.b)) |			\
+				(cf << (16-flags.var2.b)) |					\
 				(flags.var1.w << (17-flags.var2.b));		\
-	}														\
-	save(op1,flags.result.w);
+		save(op1,flags.result.w);							\
+	}
 
 #define RCRD(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.cf=get_CF();flags.type=t_RCRd;					\
-	flags.var2.b=op2;flags.var1.d=load(op1);			\
-	if (flags.var2.b==1) {									\
-		flags.result.d=flags.var1.d >> 1 | flags.cf << 31;	\
-	} else {												\
- 		flags.result.d=(flags.var1.d >> flags.var2.b) |		\
-				(flags.cf << (32-flags.var2.b)) |			\
+	if (op2) {												\
+		LoadZF;LoadSF;LoadAF;								\
+		Bit32u cf=get_CF();									\
+		flags.var1.d=load(op1);								\
+		flags.var2.b=op2;									\
+		flags.type=t_RCRd;									\
+		if (flags.var2.b==1) {								\
+			flags.result.d=flags.var1.d >> 1 | cf << 31;	\
+		} else {											\
+ 			flags.result.d=(flags.var1.d >> flags.var2.b) |	\
+				(cf << (32-flags.var2.b)) |					\
 				(flags.var1.d << (33-flags.var2.b));		\
-	}														\
-	save(op1,flags.result.d);
+		}													\
+		save(op1,flags.result.d);							\
+	}
 
 
 #define SHLB(op1,op2,load,save)								\
@@ -511,6 +462,266 @@
 	flags.type=t_SARd;
 
 
+
+#define DAA()												\
+	if (((reg_al & 0x0F)>0x09) || get_AF()) {				\
+		reg_al+=0x06;										\
+		SETFLAGBIT(AF,true);								\
+	} else {												\
+		SETFLAGBIT(AF,false);								\
+	}														\
+	if ((reg_al > 0x9F) || get_CF()) {						\
+		reg_al+=0x60;										\
+		SETFLAGBIT(CF,true);								\
+	} else {												\
+		SETFLAGBIT(CF,false);								\
+	}														\
+	SETFLAGBIT(SF,(reg_al&0x80));							\
+	SETFLAGBIT(ZF,(reg_al==0));								\
+	flags.type=t_UNKNOWN;
+
+
+#define DAS()												\
+	if (((reg_al & 0x0f) > 9) || get_AF()) {				\
+		reg_al-=6;											\
+		SETFLAGBIT(AF,true);								\
+	} else {												\
+		SETFLAGBIT(AF,false);								\
+	}														\
+	if ((reg_al>0x9f) || get_CF()) {						\
+		reg_al-=0x60;										\
+		SETFLAGBIT(CF,true);								\
+	} else {												\
+		SETFLAGBIT(CF,false);								\
+	}														\
+	flags.type=t_UNKNOWN;
+
+
+#define AAA()												\
+	if (get_AF() || ((reg_al & 0xf) > 9))					\
+	{														\
+		reg_al += 6;										\
+		reg_ah += 1;										\
+		SETFLAGBIT(AF,true);								\
+		SETFLAGBIT(CF,true);								\
+	} else {												\
+		SETFLAGBIT(AF,false);								\
+		SETFLAGBIT(CF,false);								\
+	}														\
+	reg_al &= 0x0F;											\
+	flags.type=t_UNKNOWN;
+
+#define AAS()												\
+	if (((reg_al & 0x0f)>9) || get_AF()) {					\
+		reg_ah--;											\
+		if (reg_al < 6) reg_ah--;							\
+		reg_al=(reg_al-6) & 0xF;							\
+		SETFLAGBIT(AF,true);								\
+		SETFLAGBIT(CF,true);								\
+	} else {												\
+		SETFLAGBIT(AF,false);								\
+		SETFLAGBIT(CF,false);								\
+	}														\
+	reg_al &= 0x0F;											\
+	flags.type=t_UNKNOWN;
+
+#define AAM(op1)											\
+	{														\
+		Bit8u BLAH=op1;										\
+		reg_ah=reg_al / BLAH;								\
+		reg_al=reg_al % BLAH;								\
+		flags.type=t_UNKNOWN;								\
+		SETFLAGBIT(SF,(reg_ah & 0x80));						\
+		SETFLAGBIT(ZF,(reg_ax == 0));						\
+		SETFLAGBIT(PF,false);								\
+	}
+
+
+#define AAD(op1)											\
+	{														\
+		Bit8u BLAH=op1;										\
+		reg_al=reg_ah*BLAH+reg_al;							\
+		reg_ah=0;											\
+		SETFLAGBIT(CF,(reg_al>=0x80));						\
+		SETFLAGBIT(ZF,(reg_al==0));							\
+		SETFLAGBIT(PF,false);								\
+		flags.type=t_UNKNOWN;								\
+	}
+
+
+
+#define MULB(op1,load,save)									\
+	flags.type=t_MUL;										\
+	reg_ax=reg_al*load(op1);								\
+	if (reg_ax & 0xff00) {									\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	} else {												\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	}
+
+#define MULW(op1,load,save)									\
+{															\
+	Bitu tempu=(Bitu)reg_ax*(Bitu)(load(op1));				\
+	reg_ax=(Bit16u)(tempu);									\
+	reg_dx=(Bit16u)(tempu >> 16);							\
+	flags.type=t_MUL;										\
+	if (reg_dx) {											\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	} else {												\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	}														\
+}
+
+#define MULD(op1,load,save)									\
+{															\
+	Bit64u tempu=(Bit64u)reg_eax*(Bit64u)(load(op1));		\
+	reg_eax=(Bit32u)(tempu);								\
+	reg_edx=(Bit32u)(tempu >> 32);							\
+	flags.type=t_MUL;										\
+	if (reg_edx) {											\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	} else {												\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	}														\
+}
+
+#define DIVB(op1,load,save)									\
+{															\
+	Bitu val=load(op1);										\
+	if (val==0)	EXCEPTION(0);								\
+	Bitu quo=reg_ax / val;									\
+	reg_ah=(Bit8u)(reg_ax % val);							\
+	reg_al=(Bit8u)quo;										\
+	if (quo>0xff) EXCEPTION(0);								\
+}
+
+
+#define DIVW(op1,load,save)									\
+{															\
+	Bitu val=load(op1);										\
+	if (val==0)	EXCEPTION(0);								\
+	Bitu num=(reg_dx<<16)|reg_ax;							\
+	Bitu quo=num/val;										\
+	reg_dx=(Bit16u)(num % val);								\
+	reg_ax=(Bit16u)quo;										\
+	if (quo>0xffff) EXCEPTION(0);							\
+}
+
+#define DIVD(op1,load,save)									\
+{															\
+	Bitu val=load(op1);										\
+	if (!val) EXCEPTION(0);									\
+	Bit64u num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
+	Bit64u quo=num/val;										\
+	reg_edx=(Bit32u)(num % val);							\
+	reg_eax=(Bit32u)quo;									\
+	if (quo!=(Bit64u)reg_eax) EXCEPTION(0);					\
+}
+
+
+#define IDIVB(op1,load,save)								\
+{															\
+	Bits val=(Bit8s)(load(op1));							\
+	if (val==0)	EXCEPTION(0);								\
+	Bits quo=((Bit16s)reg_ax) / val;						\
+	reg_ah=(Bit8s)(((Bit16s)reg_ax) % val);					\
+	reg_al=(Bit8s)quo;										\
+	if (quo!=(Bit8s)reg_al) EXCEPTION(0);					\
+}
+
+
+#define IDIVW(op1,load,save)								\
+{															\
+	Bits val=(Bit16s)(load(op1));							\
+	if (!val) EXCEPTION(0);									\
+	Bits num=(Bit32s)((reg_dx<<16)|reg_ax);					\
+	Bits quo=num/val;										\
+	reg_dx=(Bit16u)(num % val);								\
+	reg_ax=(Bit16s)quo;										\
+	if (quo!=(Bit16s)reg_ax) EXCEPTION(0);					\
+}
+
+#define IDIVD(op1,load,save)								\
+{															\
+	Bits val=(Bit32s)(load(op1));							\
+	if (!val) EXCEPTION(0);									\
+	Bit64s num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
+	Bit64s quo=num/val;										\
+	reg_edx=(Bit32s)(num % val);							\
+	reg_eax=(Bit32s)(quo);									\
+	if (quo!=(Bit64s)((Bit32s)reg_eax)) EXCEPTION(0);		\
+}
+
+#define IMULB(op1,load,save)								\
+{															\
+	flags.type=t_MUL;										\
+	reg_ax=((Bit8s)reg_al) * ((Bit8s)(load(op1)));			\
+	if ((reg_ax & 0xff80)==0xff80 ||						\
+		(reg_ax & 0xff80)==0x0000) {						\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else {												\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	}														\
+}
+	
+
+#define IMULW(op1,load,save)								\
+{															\
+	Bits temps=((Bit16s)reg_ax)*((Bit16s)(load(op1)));		\
+	reg_ax=(Bit16s)(temps);									\
+	reg_dx=(Bit16s)(temps >> 16);							\
+	flags.type=t_MUL;										\
+	if (((temps & 0xffff8000)==0xffff8000 ||				\
+		(temps & 0xffff8000)==0x0000)) {					\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else {												\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	}														\
+}
+
+#define IMULD(op1,load,save)								\
+{															\
+	Bit64s temps=((Bit64s)((Bit32s)reg_eax))*				\
+				 ((Bit64s)((Bit32s)(load(op1))));			\
+	reg_eax=(Bit32u)(temps);								\
+	reg_edx=(Bit32u)(temps >> 32);							\
+	flags.type=t_MUL;										\
+	if ((reg_edx==0xffffffff) &&							\
+		(reg_eax & 0x80000000) ) {							\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else if ( (reg_edx==0x00000000) &&					\
+				(reg_eax< 0x80000000) ) {					\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else {												\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	}														\
+}
+
+#define DIMULW(op1,op2,op3,load,save)						\
+{															\
+	Bits res;												\
+	res=((Bit16s)op2) * ((Bit16s)op3);						\
+	save(op1,res & 0xffff);									\
+	flags.type=t_MUL;										\
+	if ((res> -32768)  && (res<32767)) {					\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else {												\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	}														\
+}
+
+#define DIMULD(op1,op2,op3,load,save)						\
+{															\
+	Bit64s res=((Bit64s)((Bit32s)op2))*((Bit64s)((Bit32s)op3));	\
+	save(op1,(Bit32s)res);									\
+	flags.type=t_MUL;										\
+	if ((res>-((Bit64s)(2147483647)+1)) &&					\
+		(res<(Bit64s)2147483647)) {							\
+		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
+	} else {												\
+		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
+	}														\
+}
 
 #define GRP2B(blah)											\
 {															\
