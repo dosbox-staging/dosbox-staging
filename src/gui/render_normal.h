@@ -79,7 +79,6 @@ static void Normal_ ## FUNC ## _ ##BPP(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy
 	Bitu next_src=render.src.pitch-dx;							\
 	Bitu next_dest=(LINES_ ## FUNC*render.op.pitch) - (dx*PIXELS_ ## FUNC * SIZE_ ## BPP);	\
 	dx/=LOOPSIZE;	\
-	dy--;											\
 	for (;dy>0;dy--) {											\
 		for (Bitu tempx=dx;tempx>0;tempx--) {					\
 			NORMAL_LOOP(LOOPSIZE,FUNC,BPP);							\
