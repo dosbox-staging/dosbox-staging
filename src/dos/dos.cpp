@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.81 2005-02-10 10:20:50 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.82 2005-02-24 11:35:32 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -563,7 +563,8 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x46:					/* DUP2,FORCEDUP Force duplicate file handle */
-		if (DOS_ForceDuplicateEntry(reg_bx,reg_ax)) {
+		if (DOS_ForceDuplicateEntry(reg_bx,reg_cx)) {
+			reg_ax=reg_cx; //Not all sources agree on it.
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
