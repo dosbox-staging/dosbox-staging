@@ -188,7 +188,6 @@ static void VGA_DrawPart(Bitu lines) {
 		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,
 			 (vga.draw.parts_left!=1) ? vga.draw.parts_lines  : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
-		vga.draw.drawing=false;
 		RENDER_EndUpdate();
 	}
 }
@@ -212,12 +211,15 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.config.retrace=false;
 	PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.micro.vend);
-	vga.draw.parts_left=vga.draw.parts_total;
-	vga.draw.lines_done=0;
-	vga.draw.address=vga.config.real_start;
-	vga.draw.address_line=vga.config.hlines_skip;
-	vga.draw.split_line=(vga.config.line_compare/vga.draw.lines_scaled);
-	vga.draw.panning=vga.config.pel_panning;
+	if (RENDER_StartUpdate()) {
+		vga.draw.parts_left=vga.draw.parts_total;
+		vga.draw.lines_done=0;
+		vga.draw.address=vga.config.real_start;
+		vga.draw.address_line=vga.config.hlines_skip;
+		vga.draw.split_line=(vga.config.line_compare/vga.draw.lines_scaled);
+		vga.draw.panning=vga.config.pel_panning;
+		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
+	}
 	switch (vga.mode) {
 	case M_TEXT:
 		vga.draw.address=(vga.draw.address*2);
@@ -233,10 +235,6 @@ static void VGA_VerticalTimer(Bitu val) {
 		break;
 	}
 	if (machine==MCH_TANDY) vga.draw.address+=vga.tandy.disp_bank << 14;
-	if (!vga.draw.drawing && RENDER_StartUpdate()) {
-		vga.draw.drawing=true;
-		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
-	}
 }
 
 void VGA_CheckScanLength(void) {
@@ -457,7 +455,6 @@ void VGA_SetupDrawing(Bitu val) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
 		PIC_RemoveEvents(VGA_DrawPart);
-		vga.draw.drawing=false;
 		vga.draw.width=width;
 		vga.draw.height=height;
 		vga.draw.doublewidth=doublewidth;
