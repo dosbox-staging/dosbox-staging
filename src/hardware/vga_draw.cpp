@@ -184,6 +184,7 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address=(vga.draw.address*2);
 		break;
 	case M_CGA4:case M_CGA2:case M_CGA16:
+	case M_TANDY2:case M_TANDY4:case M_TANDY16:
 		vga.draw.address=(vga.draw.address*2)&0x1fff;
 		break;
 	}
@@ -324,9 +325,10 @@ void VGA_SetupDrawing(Bitu val) {
 		break;
 	case M_LIN8:
 		scaleh*=vga.draw.font_height;
+		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
 		vga.draw.lines_scaled=scaleh;
 		vga.draw.address_line_total=1;
-		width<<=3;
+		height/=scaleh;width<<=3;
 		VGA_DrawLine=VGA_Draw_VGA_Line;
 		break;
 	case M_EGA16:

@@ -49,8 +49,13 @@ void VGA_SetMode(VGAModes mode) {
 }
 
 void VGA_DetermineMode(void) {
+	/* Test for VGA output active or direct color modes */
+	if (vga.s3.misc_control_2 & 0xf0) {
+		switch (vga.s3.misc_control_2 >> 4) {
+		case 1:VGA_SetMode(M_LIN8);break;
+		}
 	/* Test for graphics or alphanumeric mode */
-	if (vga.attr.mode_control & 1) {
+	} else if (vga.attr.mode_control & 1) {
 		if (!(vga.crtc.mode_control & 0x1)) {
 			if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
 			else VGA_SetMode(M_CGA2);

@@ -144,6 +144,7 @@ typedef struct {
 	Bit8u ex_hor_overflow;
 	Bit8u ex_ver_overflow;
 	Bit16u la_window;
+	Bit8u misc_control_2;
 	struct {
 		Bit8u r;
 		Bit8u n;
