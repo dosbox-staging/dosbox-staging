@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.37 2003-11-05 19:41:10 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.38 2003-11-18 22:29:31 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -26,6 +26,8 @@
 #include "keyboard.h"
 #include "setup.h"
 #include "paging.h"
+
+Bitu DEBUG_EnableDebugger(void);
 
 #if 1
 #undef LOG
@@ -39,7 +41,6 @@ Segments Segs;
 Bits CPU_Cycles=0;
 Bits CPU_CycleLeft=0;
 Bits CPU_CycleMax=1500;
-
 CPU_Decoder * cpudecoder;
 
 void CPU_Real_16_Slow_Start(bool big);
@@ -49,15 +50,14 @@ void CPU_Core_Normal_Start(bool big);
 static Bits CPU_Core_Normal_Decode(void);
 static Bits CPU_Core_Full_Decode(void);
 
+
 #if 1
 
 #define realcore_start CPU_Core_Normal_Start
-#define pmodecore_start CPU_Core_Normal_Start
 
 #else 
 
 #define realcore_start CPU_Core_Full_Start
-#define pmodecore_start CPU_Core_Full_Start
 
 #endif
 
@@ -93,15 +93,188 @@ PhysPt SelBase(Bitu sel) {
 	}
 }
 
-void CPU_SetFlags(Bitu word) {
-	reg_flags=(word|2)&~0x28;
+void CPU_SetFlags(Bitu word,Bitu mask) {
+	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
+}
+
+class TaskStateSegment {
+public:
+	TaskStateSegment() {
+		valid=false;
+	}
+	bool IsValid(void) {
+		return valid;
+	}
+	Bitu Get_back(void) {
+		return mem_readw(base);
+	}
+	void SaveSelector(void) {
+		cpu.gdt.SetDescriptor(selector,desc);
+	}
+	void Get_SSx_ESPx(Bitu level,Bitu & _ss,Bitu & _esp) {
+		if (is386) {
+			PhysPt where=base+offsetof(TSS_32,esp0)+level*8;
+			_esp=mem_readd(where);
+			_ss=mem_readw(where+4);
+		} else {
+			PhysPt where=base+offsetof(TSS_16,sp0)+level*4;
+			_esp=mem_readw(where);
+			_ss=mem_readw(where+2);
+		}
+	}
+	bool SetSelector(Bitu new_sel) {
+		valid=false;
+		selector=new_sel;
+		if (!cpu.gdt.GetDescriptor(selector,desc)) return false;
+		switch (desc.Type()) {
+			case DESC_286_TSS_A:		case DESC_286_TSS_B:
+			case DESC_386_TSS_A:		case DESC_386_TSS_B:
+				break;
+			default:
+				valid=false;
+				return false;
+		}
+		valid=true;
+		base=desc.GetBase();
+		limit=desc.GetLimit();
+		is386=desc.Is386();
+		return true;
+	}
+	TSS_Descriptor desc;
+	Bitu selector;
+	PhysPt base;
+	Bitu limit;
+	Bitu is386;
+	bool valid;
+};
+
+TaskStateSegment cpu_tss;
+
+enum TSwitchType {
+	TSwitch_JMP,TSwitch_CALL_INT,TSwitch_IRET
+};
+
+bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype) {
+	TaskStateSegment new_tss;
+	if (!new_tss.SetSelector(new_tss_selector)) 
+		E_Exit("Illegal TSS for switch");
+	/* Save current context in current TSS */
+	/* Check if we need to clear busy bit of old TASK */
+	if (tstype==TSwitch_JMP || tstype==TSwitch_IRET) {
+		cpu_tss.desc.SetBusy(false);
+		cpu_tss.SaveSelector();
+	}
+	Bitu new_cr3=0;
+	Bitu new_es,new_cs,new_ss,new_ds,new_fs,new_gs;
+	Bitu new_ldt;
+	if (cpu_tss.is386) {
+		mem_writed(cpu_tss.base+offsetof(TSS_32,eflags),reg_flags);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,eip),reg_eip);
+
+		mem_writed(cpu_tss.base+offsetof(TSS_32,eax),reg_eax);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,ecx),reg_ecx);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,edx),reg_edx);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,ebx),reg_ebx);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,esp),reg_esp);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,ebp),reg_ebp);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,esi),reg_esi);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,edi),reg_edi);
+
+		mem_writed(cpu_tss.base+offsetof(TSS_32,es),SegValue(es));
+		mem_writed(cpu_tss.base+offsetof(TSS_32,cs),SegValue(cs));
+		mem_writed(cpu_tss.base+offsetof(TSS_32,ss),SegValue(ss));
+		mem_writed(cpu_tss.base+offsetof(TSS_32,ds),SegValue(ds));
+		mem_writed(cpu_tss.base+offsetof(TSS_32,fs),SegValue(fs));
+		mem_writed(cpu_tss.base+offsetof(TSS_32,gs),SegValue(gs));
+	} else {
+		E_Exit("286 task switch");
+	}
+	/* Load new context from new TSS */
+	if (new_tss.is386) {
+		new_cr3=mem_readd(new_tss.base+offsetof(TSS_32,cr3));
+		reg_eip=mem_readd(new_tss.base+offsetof(TSS_32,eip));
+		CPU_SetFlags(mem_readd(new_tss.base+offsetof(TSS_32,eflags)),FMASK_ALL | FLAG_VM);
+		reg_eax=mem_readd(new_tss.base+offsetof(TSS_32,eax));
+		reg_ecx=mem_readd(new_tss.base+offsetof(TSS_32,ecx));
+		reg_edx=mem_readd(new_tss.base+offsetof(TSS_32,edx));
+		reg_ebx=mem_readd(new_tss.base+offsetof(TSS_32,ebx));
+		reg_esp=mem_readd(new_tss.base+offsetof(TSS_32,esp));
+		reg_ebp=mem_readd(new_tss.base+offsetof(TSS_32,ebp));
+		reg_edi=mem_readd(new_tss.base+offsetof(TSS_32,edi));
+		reg_esi=mem_readd(new_tss.base+offsetof(TSS_32,esi));
+
+		new_es=mem_readw(new_tss.base+offsetof(TSS_32,es));
+		new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
+		new_ss=mem_readw(new_tss.base+offsetof(TSS_32,ss));
+		new_ds=mem_readw(new_tss.base+offsetof(TSS_32,ds));
+		new_fs=mem_readw(new_tss.base+offsetof(TSS_32,fs));
+		new_gs=mem_readw(new_tss.base+offsetof(TSS_32,gs));
+		new_ldt=mem_readw(new_tss.base+offsetof(TSS_32,ldt));
+	} else {
+		E_Exit("286 task switch");
+	}
+	/* Setup a back link to the old TSS in new TSS */
+	if (tstype==TSwitch_CALL_INT) {
+		if (new_tss.is386) {
+			mem_writed(new_tss.base+offsetof(TSS_32,back),cpu_tss.selector);
+		} else {
+			mem_writew(new_tss.base+offsetof(TSS_16,back),cpu_tss.selector);
+		}
+		/* And make the new task's eflag have the nested task bit */
+		reg_flags|=FLAG_NT;
+	}
+	/* Set the busy bit in the new task */
+	if (tstype==TSwitch_JMP || tstype==TSwitch_IRET) {
+		new_tss.desc.SetBusy(true);
+		new_tss.SaveSelector();
+	}
+	/* Setup the new cr3 */
+	PAGING_SetDirBase(new_cr3);
+	/* Load the new selectors */
+	if (reg_flags & FLAG_VM) {
+//		LOG_MSG("Entering v86 task");
+		SegSet16(cs,new_cs);
+		cpu.code.big=false;
+		cpu.cpl=3;			//We don't have segment caches so this will do
+	} else {
+		//DEBUG_EnableDebugger();
+		/* Protected mode task */
+		CPU_LLDT(new_ldt);
+		/* Load the new CS*/
+		Descriptor cs_desc;
+		cpu.cpl=new_cs & 3;
+		cpu.gdt.GetDescriptor(new_cs,cs_desc);
+		switch (cs_desc.Type()) {
+		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+			if (cpu.cpl != cs_desc.DPL()) E_Exit("Task CS RPL != DPL");
+			goto doconforming;
+		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
+		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
+doconforming:
+			Segs.phys[cs]=cs_desc.GetBase();
+			cpu.code.big=cs_desc.Big()>0;
+			Segs.val[cs]=new_cs;
+			break;
+		default:
+			E_Exit("Task switch CS Type %d",cs_desc.Type());
+		}
+	}
+	CPU_SetSegGeneral(es,new_es);
+	CPU_SetSegGeneral(ss,new_ss);
+	CPU_SetSegGeneral(ds,new_ds);
+	CPU_SetSegGeneral(fs,new_fs);
+	CPU_SetSegGeneral(gs,new_gs);
+	CPU_LTR(new_tss_selector);
+//	LOG_MSG("Task CPL %X CS:%X IP:%X SS:%X SP:%X eflags %x",cpu.cpl,SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);
+	return true;
 }
 
 Bit8u lastint;
 void CPU_Exception(Bitu num,Bitu error_code) {
-	CPU_Interrupt(num,0,0);
+//	LOG_MSG("Exception %d CS:%X IP:%X FLAGS:%X",num,SegValue(cs),reg_eip,reg_flags);
+	CPU_Interrupt(num,error_code,((num>=8) ? CPU_INT_HAS_ERROR : 0));
 }
-
 void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 	lastint=num;
 #if C_DEBUG
@@ -127,64 +300,128 @@ void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 		SETFLAGBIT(IF,false);
 		SETFLAGBIT(TF,false);
 		/* Get the new CS:IP from vector table */
-		reg_eip=mem_readw(num << 2);
-		Segs.val[cs]=mem_readw((num << 2)+2);
+		PhysPt base=cpu.idt.GetBase();
+		reg_eip=mem_readw(base+(num << 2));
+		Segs.val[cs]=mem_readw(base+(num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
 		cpu.code.big=false;
 		return;
 	} else {
 		/* Protected Mode Interrupt */
+//		if (type&CPU_INT_SOFTWARE && cpu.v86) goto realmode_interrupt;
+//		DEBUG_EnableDebugger();
+//		LOG_MSG("interrupt start CPL %d v86 %d",cpu.cpl,cpu.v86);
+		if ((reg_flags & FLAG_VM) && (type&CPU_INT_SOFTWARE)) {
+			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
+			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
+				reg_eip-=error_code;
+				CPU_Exception(13,0);
+				return;
+			}
+		} 
 		Descriptor gate;
 //TODO Check for software interrupt and check gate's dpl<cpl
 		cpu.idt.GetDescriptor(num<<3,gate);
-		if (gate.DPL()<cpu.cpl) E_Exit("INT:Gate DPL<CPL");
+		if (type&CPU_INT_SOFTWARE && gate.DPL()<cpu.cpl) {
+			reg_eip-=error_code;
+			CPU_Exception(13,num*8+2);
+			return;
+		}
 		switch (gate.Type()) {
-		case DESC_286_INT_GATE:
-		case DESC_386_INT_GATE:
-		case DESC_286_TRAP_GATE:
-		case DESC_386_TRAP_GATE:
+		case DESC_286_INT_GATE:		case DESC_386_INT_GATE:
+		case DESC_286_TRAP_GATE:	case DESC_386_TRAP_GATE:
 			{
-				Descriptor desc;
-				Bitu selector=gate.GetSelector();
-				Bitu offset=gate.GetOffset();
-				cpu.gdt.GetDescriptor(selector,desc);
-				Bitu dpl=desc.DPL();
-				if (dpl>cpu.cpl) E_Exit("Interrupt to higher privilege");
-				switch (desc.Type()) {
+				Descriptor cs_desc;
+				Bitu gate_sel=gate.GetSelector();
+				Bitu gate_off=gate.GetOffset();
+				cpu.gdt.GetDescriptor(gate_sel,cs_desc);
+				Bitu cs_dpl=cs_desc.DPL();
+				if (cs_dpl>cpu.cpl) E_Exit("Interrupt to higher privilege");
+				switch (cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-					if (dpl<cpu.cpl) {
-						/* Prepare for gate to lower privilege */
-						E_Exit("Interrupt to lower privilege");
-						break;
+					if (cs_dpl<cpu.cpl) {
+						/* Prepare for gate to inner level */
+						Bitu n_ss,n_esp;
+						Bitu o_ss,o_esp;
+						o_ss=SegValue(ss);
+						o_esp=reg_esp;
+						cpu_tss.Get_SSx_ESPx(cs_dpl,n_ss,n_esp);
+						Descriptor n_ss_desc;
+						cpu.gdt.GetDescriptor(n_ss,n_ss_desc);
+						Segs.phys[ss]=n_ss_desc.GetBase();
+						Segs.val[ss]=n_ss;
+						if (n_ss_desc.Big()) {
+							cpu.stack.big=true;
+							cpu.stack.mask=0xffffffff;
+							reg_esp=n_esp;
+						} else {
+							cpu.stack.big=false;
+							cpu.stack.mask=0xffff;
+							reg_sp=n_esp;
+						}
+						if (gate.Type() & 0x8) {	/* 32-bit Gate */
+							if (reg_flags & FLAG_VM) {
+								SegSet16(fs,0xffff);
+								CPU_Push32(SegValue(gs));
+								CPU_Push32(SegValue(fs));
+								CPU_Push32(SegValue(ds));
+								CPU_Push32(SegValue(es));
+							}
+							CPU_Push32(o_ss);
+							CPU_Push32(o_esp);
+
+						} else {					/* 16-bit Gate */
+							if (reg_flags & FLAG_VM) E_Exit("V86 to 16-bit gate");
+							CPU_Push16(o_ss);
+							CPU_Push16(o_esp);
+						}
+//						LOG_MSG("INT:Gate to inner level SS:%X SP:%X",n_ss,n_esp);
+						cpu.cpl=cs_dpl;
+						goto do_interrupt;
 					} 
 				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 				/* Prepare stack for gate to same priviledge */
+					if (reg_flags & FLAG_VM) 
+						E_Exit("V86 interrupt doesn't change to pl0");
+
+do_interrupt:
 					if (gate.Type() & 0x8) {	/* 32-bit Gate */
 						CPU_Push32(reg_flags);
 						CPU_Push32(SegValue(cs));
 						CPU_Push32(reg_eip);
+						if (type & CPU_INT_HAS_ERROR) CPU_Push32(error_code);
 					} else {					/* 16-bit gate */
 						CPU_Push16(reg_flags & 0xffff);
 						CPU_Push16(SegValue(cs));
 						CPU_Push16(reg_ip);
+						if (type & CPU_INT_HAS_ERROR) CPU_Push16(error_code);
 					}
-			
 					break;		
 				default:
-					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",desc.Type());
+					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",cs_desc.Type());
 				}
-				if (!(gate.Type()&1)) SETFLAGBIT(IF,false);			
+				if (!(gate.Type()&1))
+					SETFLAGBIT(IF,false);			
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
-				Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
-				Segs.phys[cs]=desc.GetBase();
-				cpu.code.big=desc.Big()>0;
-				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
-				reg_eip=offset;
+				SETFLAGBIT(VM,false);
+				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
+				Segs.phys[cs]=cs_desc.GetBase();
+				cpu.code.big=cs_desc.Big()>0;
+				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",gate_sel,gate_off,cs_desc.Big(),gate.Type() & 0x8 ? "386" : "286");
+				reg_eip=gate_off;
 				return;
 			}
+		case DESC_TASK_GATE:
+			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT);
+			if (type & CPU_INT_HAS_ERROR) {
+				//TODO Be sure about this, seems somewhat unclear
+				if (cpu_tss.is386) CPU_Push32(error_code);
+				else CPU_Push16(error_code);
+			}
+			return;
 		default:
 			E_Exit("Illegal descriptor type %X for int %X",gate.Type(),num);
 		}
@@ -193,11 +430,12 @@ void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 }
 
 void CPU_IRET(bool use32) {
-	if (!cpu.pmode || cpu.v86) {		/* RealMode IRET */
+	if (!cpu.pmode) {					/* RealMode IRET */
+realmode_iret:
 		if (use32) {
 			reg_eip=CPU_Pop32();
 			SegSet16(cs,CPU_Pop32());
-			CPU_SetFlags(CPU_Pop32());
+			CPU_SetFlagsd(CPU_Pop32());
 		} else {
 			reg_eip=CPU_Pop16();
 			SegSet16(cs,CPU_Pop16());
@@ -206,87 +444,125 @@ void CPU_IRET(bool use32) {
 		cpu.code.big=false;
 		return;
 	} else {	/* Protected mode IRET */
-		/* Check if this is task IRET */
+		if (reg_flags & FLAG_VM) {
+			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
+				reg_eip--;
+				CPU_Exception(13,0);
+				return;
+			} else goto realmode_iret;
+		}
+//		DEBUG_EnableDebugger();
+//		LOG_MSG("IRET start CPL %d v86 %d",cpu.cpl,cpu.v86);
+		/* Check if this is task IRET */	
 		if (GETFLAG(NT)) {
 			if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
-			E_Exit("Task IRET");
-
-
+			if (!cpu_tss.IsValid()) E_Exit("TASK Iret without valid TSS");
+			Bitu back_link=cpu_tss.Get_back();
+			CPU_SwitchTask(back_link,TSwitch_IRET);
+			return;
 		}
-		Bitu selector,offset,old_flags;
+		Bitu n_cs_sel,n_eip,n_flags;
 		if (use32) {
-			offset=CPU_Pop32();
-			selector=CPU_Pop32() & 0xffff;
-			old_flags=CPU_Pop32();
-			if (old_flags & FLAG_VM) E_Exit("No vm86 support");
+			n_eip=CPU_Pop32();
+			n_cs_sel=CPU_Pop32() & 0xffff;
+			n_flags=CPU_Pop32();
+			if (n_flags & FLAG_VM) {
+				cpu.cpl=3;
+				CPU_SetFlags(n_flags,FMASK_ALL | FLAG_VM);
+				Bitu n_ss,n_esp,n_es,n_ds,n_fs,n_gs;
+				n_esp=CPU_Pop32();
+				n_ss=CPU_Pop32() & 0xffff;
+
+				n_es=CPU_Pop32() & 0xffff;
+				n_ds=CPU_Pop32() & 0xffff;
+				n_fs=CPU_Pop32() & 0xffff;
+				n_gs=CPU_Pop32() & 0xffff;
+				CPU_SetSegGeneral(ss,n_ss);
+				CPU_SetSegGeneral(es,n_es);
+				CPU_SetSegGeneral(ds,n_ds);
+				CPU_SetSegGeneral(fs,n_fs);
+				CPU_SetSegGeneral(gs,n_gs);
+				reg_eip=n_eip & 0xffff;
+				reg_esp=n_esp;
+				cpu.code.big=false;
+				SegSet16(cs,n_cs_sel);
+				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);	
+				return;
+			}
 		} else {
-			offset=CPU_Pop16();
-			selector=CPU_Pop16();
-			old_flags=(reg_flags & 0xffff0000) | CPU_Pop16();
+			n_eip=CPU_Pop16();
+			n_cs_sel=CPU_Pop16();
+			n_flags=(reg_flags & 0xffff0000) | CPU_Pop16();
+			if (n_flags & FLAG_VM) E_Exit("VM Flag in 16-bit iret");
 		}
-		Bitu rpl=selector & 3;
-		Descriptor desc;
-		cpu.gdt.GetDescriptor(selector,desc);
-		if (rpl<cpu.cpl)
+		Bitu n_cs_rpl=n_cs_sel & 3;
+		Descriptor n_cs_desc;
+		cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc);
+		if (n_cs_rpl<cpu.cpl)
 			E_Exit("IRET to lower privilege");
-		if (cpu.cpl==rpl) {	
+		if (n_cs_rpl==cpu.cpl) {	
 			/* Return to same level */
-			switch (desc.Type()) {
+			switch (n_cs_desc.Type()) {
 			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (!(cpu.cpl==desc.DPL())) E_Exit("IRET:Same Level:NC:DPL!=CPL");
+				if (!(cpu.cpl==n_cs_desc.DPL())) E_Exit("IRET:Same Level:NC:DPL!=CPL");
 				break;
 			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				if (!(desc.DPL()>=cpu.cpl)) E_Exit("IRET:Same level:C:DPL<CPL");
+				if (!(n_cs_desc.DPL()>=cpu.cpl)) E_Exit("IRET:Same level:C:DPL<CPL");
 				break;
 			default:
-				E_Exit("IRET from illegal descriptor type %X",desc.Type());
+				E_Exit("IRET:Same level:Illegal descriptor type %X",n_cs_desc.Type());
 			}
-			Segs.phys[cs]=desc.GetBase();
-			cpu.code.big=desc.Big()>0;
-			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
-			reg_eip=offset;
-			CPU_SetFlags(old_flags);
-			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level return to %X:%X big %d",selector,offset,cpu.code.big);
+			Segs.phys[cs]=n_cs_desc.GetBase();
+			cpu.code.big=n_cs_desc.Big()>0;
+			Segs.val[cs]=n_cs_sel;
+			reg_eip=n_eip;
+			CPU_SetFlagsd(n_flags);
+			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		} else {
-			/* Return to higher privilege */
-			switch (desc.Type()) {
+			/* Return to outer level */
+			switch (n_cs_desc.Type()) {
 			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (!(cpu.cpl==rpl)) E_Exit("IRET:Outer level:NC:RPL != DPL");
+				if (n_cs_desc.DPL()!=n_cs_rpl) E_Exit("IRET:Outer level:NC:CS RPL != CS DPL");
 				break;
 			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				if (!(desc.DPL()>cpu.cpl)) E_Exit("IRET:Outer level:C:DPL <= CPL");
+				if (n_cs_desc.DPL()<=cpu.cpl) E_Exit("IRET:Outer level:C:DPL <= CPL");
 				break;
 			default:
-				E_Exit("IRET from illegal descriptor type %X",desc.Type());
+				E_Exit("IRET:Outer level:Illegal descriptor type %X",n_cs_desc.Type());
 			}
-			Segs.phys[cs]=desc.GetBase();
-			cpu.code.big=desc.Big()>0;
-			Segs.val[cs]=selector;
-			cpu.cpl=rpl;
-			reg_eip=offset;
-			Bitu new_ss,new_esp;
+			Segs.phys[cs]=n_cs_desc.GetBase();
+			cpu.code.big=n_cs_desc.Big()>0;
+			Segs.val[cs]=n_cs_sel;
+			cpu.cpl=n_cs_rpl;
+			reg_eip=n_eip;
+			CPU_SetFlagsd(n_flags);
+			Bitu n_ss,n_esp;
 			if (use32) {
-				new_esp=CPU_Pop32();
-				new_ss=CPU_Pop32() & 0xffff;
+				n_esp=CPU_Pop32();
+				n_ss=CPU_Pop32() & 0xffff;
 			} else {
-				new_esp=CPU_Pop16();
-				new_ss=CPU_Pop16();
+				n_esp=CPU_Pop16();
+				n_ss=CPU_Pop16();
 			}
-			reg_esp=new_esp;
-			CPU_SetSegGeneral(ss,new_ss);
+			CPU_SetSegGeneral(ss,n_ss);
+			if (cpu.stack.big) {
+				reg_esp=n_esp;
+			} else {
+				reg_sp=n_esp;
+			}
 			//TODO Maybe validate other segments, but why would anyone use them?
-			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level return to %X:X big %d",selector,offset,cpu.code.big);
+			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
 		return;
 	}
 }
 
 void CPU_JMP(bool use32,Bitu selector,Bitu offset) {
-	if (!cpu.pmode || cpu.v86) {
+	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		if (!use32) {
 			reg_eip=offset&0xffff;
 		} else {
@@ -317,6 +593,12 @@ CODE_jmp:
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
 			return;
+		case DESC_386_TSS_A:
+			if (desc.DPL()<cpu.cpl) E_Exit("JMP:TSS:dpl<cpl");
+			if (desc.DPL()<rpl) E_Exit("JMP:TSS:dpl<rpl");
+			LOG(LOG_CPU,LOG_NORMAL)("JMP:TSS to %X",selector);
+			CPU_SwitchTask(selector,TSwitch_JMP);
+			break;
 		default:
 			E_Exit("JMP Illegal descriptor type %X",desc.Type());
 		}
@@ -327,7 +609,7 @@ CODE_jmp:
 
 
 void CPU_CALL(bool use32,Bitu selector,Bitu offset) {
-	if (!cpu.pmode || cpu.v86) {
+	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		if (!use32) {
 			CPU_Push16(SegValue(cs));
 			CPU_Push16(reg_ip);
@@ -360,7 +642,7 @@ call_code:
 			if (!use32) {
 				CPU_Push16(SegValue(cs));
 				CPU_Push16(reg_ip);
-				reg_eip=offset&0xffff;
+				reg_eip=offset & 0xffff;
 			} else {
 				CPU_Push32(SegValue(cs));
 				CPU_Push32(reg_eip);
@@ -369,73 +651,76 @@ call_code:
 			Segs.phys[cs]=call.GetBase();
 			cpu.code.big=call.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
-			reg_eip=offset;
 			return;
-		case DESC_286_CALL_GATE: { 
-			if (call.DPL()<cpu.cpl) E_Exit("286 Call Gate: Gate DPL<CPL");
-			if (call.DPL()<rpl)		E_Exit("286 Call Gate: Gate DPL<RPL");			
-			Descriptor code;
-			if (!cpu.gdt.GetDescriptor(call.GetSelector(),code)) E_Exit("286 Call Gate: Invalid code segment.");
-			Bitu seldpl = code.DPL();
-			if (seldpl<cpu.cpl) {
-				// higher privilidge level
-				// Get new SS selector for new privilege level from TSS
-				// We dont have a TSS now, so we ´simply use our existing stack...
-				// 1. Load new SS:eSP value from TSS
-				// 2. Load new CS:EIP value from gate
-				Bitu newcs	= call.GetSelector();
-				Bitu neweip	= call.GetOffset();
-				Bitu newcpl = seldpl;
-				Bitu oldcs	= SegValue(cs);
-				Bitu oldip	= reg_ip;
-				// 3. Load CS descriptor (Set RPL of CS to CPL)
-				Segs.phys[cs]	= code.GetBase();
-				cpu.code.big	= code.Big()>0;
-				reg_eip			= neweip;
-				// Set CPL to stack segment DPL
-			    // Set RPL of CS to CPL
-				cpu.cpl			= newcpl;
-				Segs.val[cs]	= (newcs & 0xfffc) | newcpl;
-				// 4. Load SS descriptor
-				// 5. Push long pointer of old stack onto new stack
-				Bitu oldsp = reg_sp;
-				CPU_Push16(SegValue(ss));
-				CPU_Push16(oldsp);
-				// 6. Get word count from call gate, mask to 5 bits
-				Bitu wordCount = call.saved.gate.paramcount;
-				if (wordCount>0) LOG(LOG_CPU,LOG_NORMAL)("CPU: Callgate 286 wordcount : %d)",wordCount);
-				// 7. Copy parameters from old stack onto new stack
-				while (wordCount>0) {
-					CPU_Push16(mem_readw(SegPhys(ss)+oldsp)); 
-					oldsp += 2; wordCount--;
+		case DESC_386_CALL_GATE: 
+		case DESC_286_CALL_GATE:
+			{
+				if (call.DPL()<cpu.cpl) E_Exit("Call:Gate:Gate DPL<CPL");
+				if (call.DPL()<rpl)		E_Exit("Call:Gate:Gate DPL<RPL");			
+				Descriptor n_cs_desc;
+				Bitu n_cs_sel=call.GetSelector();
+				if (!cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc)) E_Exit("Call:Gate:Invalid CS selector.");
+				Bitu n_cs_dpl	= n_cs_desc.DPL();
+				Bitu n_cs_rpl	= n_cs_sel & 3;
+				Bitu n_eip		= call.GetOffset();
+				switch (n_cs_desc.Type()) {
+				case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
+				case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
+					/* Check if we goto innter priviledge */
+					if (n_cs_dpl < cpu.cpl) {
+						/* Get new SS:ESP out of TSS */
+						Bitu n_ss_sel,n_esp;
+						Descriptor n_ss_desc;
+						cpu_tss.Get_SSx_ESPx(n_cs_dpl,n_ss_sel,n_esp);
+						if (!cpu.gdt.GetDescriptor(n_ss_sel,n_ss_desc)) E_Exit("Call:Gate:Invalid SS selector.");
+						/* New CPL is new SS DPL */
+						cpu.cpl			= n_ss_desc.DPL();
+						/* Load the new SS:ESP and save data on it */
+						Bitu o_esp		= reg_esp;
+						Bitu o_ss		= SegValue(ss);
+						PhysPt o_stack  = SegPhys(ss)+(reg_esp & cpu.stack.mask);
+					
+						CPU_SetSegGeneral(ss,n_ss_sel);
+						if (cpu.stack.big) 	reg_esp=n_esp;
+						else reg_sp=n_esp;
+						if (call.Type()==DESC_386_CALL_GATE) {
+							CPU_Push32(o_ss);		//save old stack
+							CPU_Push32(o_esp);
+							for (Bitu i=0;i<(call.saved.gate.paramcount&31);i++) 
+								CPU_Push32(mem_readd(o_stack+i*4));
+							CPU_Push32(SegValue(cs));
+							CPU_Push32(reg_eip);
+						} else {
+							CPU_Push16(o_ss);		//save old stack
+							CPU_Push16(o_esp);
+							for (Bitu i=0;i<(call.saved.gate.paramcount&31);i++) 
+								CPU_Push16(mem_readw(o_stack+i*2));
+							CPU_Push16(SegValue(cs));
+							CPU_Push16(reg_eip);
+						}
+
+						/* Switch to new CS:EIP */
+						Segs.phys[cs]	= n_cs_desc.GetBase();
+						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
+						cpu.code.big	= n_cs_desc.Big()>0;
+						reg_eip			= n_eip;
+						if (!use32)	reg_eip&=0xffff;
+						break;		
+					}
+				case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
+				case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
+call_gate_same_privilege:
+					E_Exit("Call gate to same priviledge");
+					break;
 				}
-				// Push return address onto new stack
-				CPU_Push16(oldcs);
-				CPU_Push16(oldip);
-//				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Higher) %04X:%04X",newcs,neweip);
-				return;
-			} else {
-				// same privilidge level
-				Bitu oldcs	= SegValue(cs);
-				Bitu oldip	= reg_ip;
-				Bitu newcs	= call.GetSelector() | 3;
-				Bitu neweip	= call.GetOffset();
-				// 3. Load CS descriptor (Set RPL of CS to CPL)
-				Descriptor code2;
-				if (!cpu.gdt.GetDescriptor(newcs,code2)) E_Exit("286 Call Gate: Invalid code segment.");
-				Segs.phys[cs]	= code.GetBase();
-				cpu.code.big	= code.Big()>0;
-			    // Set RPL of CS to CPL
-				cpu.cpl			= seldpl;
-				Segs.val[cs]	= (newcs & 0xfffc) | seldpl;
-				reg_eip			= neweip;
-				// Push return address onto new stack
-				CPU_Push16(oldcs);
-				CPU_Push16(oldip);
-//				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Same) %04X:%04X",newcs,neweip);
-				return;
-			}; break;
-			};
+			}			/* Call Gates */
+			break;
+		case DESC_386_TSS_A:
+			if (call.DPL()<cpu.cpl) E_Exit("CALL:TSS:dpl<cpl");
+			if (call.DPL()<rpl) E_Exit("CALL:TSS:dpl<rpl");
+			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
+			CPU_SwitchTask(selector,TSwitch_CALL_INT);
+			break;
 		default:
 			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
 
@@ -446,7 +731,7 @@ call_code:
 
 
 void CPU_RET(bool use32,Bitu bytes) {
-	if (!cpu.pmode || cpu.v86) {
+	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Bitu new_ip,new_cs;
 		if (!use32) {
 			new_ip=CPU_Pop16();
@@ -502,11 +787,16 @@ RET_same_level:
 			return;
 		} else {
 			/* Return to higher level */
-			Bitu newsp = CPU_Pop16();
-			Bitu newss = CPU_Pop16();
+			if (bytes) E_Exit("RETF with immediate value");
+			Bitu n_esp = CPU_Pop16();
+			Bitu n_ss = CPU_Pop16();
 			cpu.cpl = rpl;
-			CPU_SetSegGeneral(ss,newss);
-			reg_esp = newsp;
+			CPU_SetSegGeneral(ss,n_ss);
+			if (cpu.stack.big) {
+                reg_esp = n_esp;
+			} else {
+				reg_sp = n_esp;
+			}
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
@@ -525,26 +815,26 @@ void CPU_SLDT(Bitu & selector) {
 	selector=cpu.gdt.SLDT();
 }
 
-Bitu tr=0;
 void CPU_LLDT(Bitu selector) {
 	cpu.gdt.LLDT(selector);
 	LOG(LOG_CPU,LOG_NORMAL)("LDT Set to %X",selector);
 }
 
 void CPU_STR(Bitu & selector) {
-	selector=tr;
+	selector=cpu_tss.selector;
 }
 
 void CPU_LTR(Bitu selector) {
-	tr=selector;
-	LOG(LOG_CPU,LOG_NORMAL)("TR Set to %X",selector);
+	cpu_tss.SetSelector(selector);
 }
-
+static gdt_count=0;
 
 void CPU_LGDT(Bitu limit,Bitu base) {
-	LOG(LOG_CPU,LOG_NORMAL)("GDT Set to base:%X limit:%X",base,limit);
+	LOG(LOG_CPU,LOG_NORMAL)("GDT Set to base:%X limit:%X count %d",base,limit,gdt_count++);
 	cpu.gdt.SetLimit(limit);
 	cpu.gdt.SetBase(base);
+//	if (gdt_count>20) DEBUG_EnableDebugger();
+//	DEBUG_EnableDebugger();
 }
 
 void CPU_LIDT(Bitu limit,Bitu base) {
@@ -583,6 +873,9 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 			}
 			return false;		//Only changes with next CS change
 		}
+	case 2:
+		paging.cr2=value;
+		break;
 	case 3:
 		PAGING_SetDirBase(value);
 		break;
@@ -597,6 +890,8 @@ Bitu CPU_GET_CRX(Bitu cr) {
 	switch (cr) {
 	case 0:
 		return cpu.cr0;
+	case 2:
+		return paging.cr2;
 	case 3:
 		return PAGING_GetDirBase();
 	default:
@@ -612,8 +907,9 @@ void CPU_SMSW(Bitu & word) {
 }
 
 bool CPU_LMSW(Bitu word) {
-	word&=0xffff;
-	word|=(cpu.cr0&0xffff0000);
+	word&=0xf;
+	if (cpu.cr0 & 1) word|=1; 
+	word|=(cpu.cr0&0xfffffff0);
 	return CPU_SET_CRX(0,word);
 }
 
@@ -778,9 +1074,8 @@ void CPU_VERW(Bitu selector) {
 
 void CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	Segs.val[seg]=value;
-	if (!cpu.pmode || cpu.v86) {
+	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Segs.phys[seg]=value << 4;
-//TODO maybe just always do this when they enable/real/v86 mode
 		if (seg==ss) {
 			cpu.stack.big=false;
 			cpu.stack.mask=0xffff;
@@ -821,41 +1116,6 @@ void CPU_CPUID(void) {
 	}
 }
 
-void CPU_ReadTaskSeg32(PhysPt base,TaskSegment_32 * seg) {
-	seg->back   =mem_readw(base+offsetof(TSS_386,back   ));
-	seg->esp0   =mem_readd(base+offsetof(TSS_386,esp0   ));
-	seg->ss0    =mem_readw(base+offsetof(TSS_386,ss0    ));
-	seg->esp1   =mem_readd(base+offsetof(TSS_386,esp1   ));
-	seg->ss1    =mem_readw(base+offsetof(TSS_386,ss1    ));
-	seg->esp2   =mem_readd(base+offsetof(TSS_386,esp2   ));
-	seg->ss2    =mem_readw(base+offsetof(TSS_386,ss2    ));
-	
-	seg->cr3    =mem_readd(base+offsetof(TSS_386,cr3    ));
-	seg->eflags =mem_readd(base+offsetof(TSS_386,eflags ));
-	seg->eip    =mem_readd(base+offsetof(TSS_386,eip    ));
-	
-	seg->eax    =mem_readd(base+offsetof(TSS_386,eax    ));
-	seg->ecx    =mem_readd(base+offsetof(TSS_386,ecx    ));
-	seg->edx    =mem_readd(base+offsetof(TSS_386,edx    ));
-	seg->ebx    =mem_readd(base+offsetof(TSS_386,ebx    ));
-	seg->esp    =mem_readd(base+offsetof(TSS_386,esp    ));
-	seg->ebp    =mem_readd(base+offsetof(TSS_386,ebp    ));
-	seg->esi    =mem_readd(base+offsetof(TSS_386,esi    ));
-	seg->edi    =mem_readd(base+offsetof(TSS_386,edi    ));
-
-	seg->es     =mem_readw(base+offsetof(TSS_386,es     ));
-	seg->cs     =mem_readw(base+offsetof(TSS_386,cs     ));
-	seg->ss     =mem_readw(base+offsetof(TSS_386,ss     ));
-	seg->ds     =mem_readw(base+offsetof(TSS_386,ds     ));
-	seg->fs     =mem_readw(base+offsetof(TSS_386,fs     ));
-	seg->gs     =mem_readw(base+offsetof(TSS_386,gs     ));
-
-	seg->ldt    =mem_readw(base+offsetof(TSS_386,ldt    ));
-	seg->trap   =mem_readw(base+offsetof(TSS_386,trap   ));
-	seg->io     =mem_readw(base+offsetof(TSS_386,io     ));
-
-}
-
 static Bits HLT_Decode(void) {
 	/* Once an interrupt occurs, it should change cpu core */
 	if (reg_eip!=cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
@@ -866,7 +1126,12 @@ static Bits HLT_Decode(void) {
 	return 0;
 }
 
-void CPU_HLT(void) {
+void CPU_HLT(Bitu oplen) {
+	if (cpu.cpl) {
+		reg_eip-=oplen;
+		CPU_Exception(13,0);
+		return;
+	}
 	CPU_Cycles=0;
 	cpu.hlt.cs=SegValue(cs);
 	cpu.hlt.eip=reg_eip;
@@ -912,14 +1177,15 @@ void CPU_Init(Section* sec) {
 	SegSet16(gs,0);
 	SegSet16(ss,0);
 
-	reg_eip=0;
-	CPU_SetFlags(FLAG_IF);				//Enable interrupts
+	reg_flags=0x2;
+	CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
 	cpu.cr0=0xffffffff;
-	CPU_SET_CRX(0,0);					//Initialize
-	cpu.v86=false;
+	CPU_SET_CRX(0,0);						//Initialize
 	cpu.code.big=false;
 	cpu.stack.mask=0xffff;
 	cpu.stack.big=false;
+	cpu.idt.SetBase(0);
+	cpu.idt.SetLimit(1023);
 	realcore_start(false);
 
 	CPU_JMP(false,0,0);					//Setup the first cpu core
