@@ -25,6 +25,7 @@
 #include "regs.h"
 #include "support.h"
 #include "cross.h"
+#include "setup.h"
 
 Bitu call_program;
 
@@ -55,30 +56,19 @@ void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main) {
 }
 
 
+
 static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
-	/* First get the current psp */
-	PROGRAM_Info * info=new PROGRAM_Info;
-	info->psp_seg=dos.psp;
-	MEM_BlockRead(PhysMake(dos.psp,0),&info->psp_copy,sizeof(sPSP));
-	/* Get the file name cmd_line 0 */
-	PhysPt envblock=PhysMake(info->psp_copy.environment,0);
-	do {} while (mem_readw(envblock++));
-	envblock+=3;
-	MEM_StrCopy(envblock,info->full_name,32);
-	info->psp_copy.cmdtail.buffer[info->psp_copy.cmdtail.count]=0;
-	info->cmd_line=info->psp_copy.cmdtail.buffer;
-	/* Find the program handler somewhere reference in the file */
-	Bit16u handle;
-	DOS_OpenFile(info->full_name,0,&handle);
-	Bit32u pos=sizeof(PROGRAMS_Main *);
-	DOS_SeekFile(handle,&pos,DOS_SEEK_END);
-	PROGRAMS_Main * handler;
-	Bit16u size=sizeof(PROGRAMS_Main *);
-	DOS_ReadFile(handle,(Bit8u *)&handler,&size);
-	DOS_CloseFile(handle);
-	(*handler)(info);
-	free(info);
+	PROGRAMS_Main * handler=0;			//It will get sneakily itinialized
+	Bitu size=sizeof(PROGRAMS_Main *);
+	/* Read the handler from program code in memory */
+	PhysPt reader=PhysMake(dos.psp,256+sizeof(exe_block));
+	HostPt writer=(HostPt)&handler;
+	for (;size>0;size--) *writer++=mem_readb(reader++);
+	Program * new_program;
+	(*handler)(&new_program);
+	new_program->Run();
+	delete new_program;
 	return CBRET_NONE;
 };
 
@@ -86,8 +76,20 @@ static Bitu PROGRAMS_Handler(void) {
 /* Main functions used in all program */
 
 
-Program::Program(PROGRAM_Info * program_info) {
-	prog_info=program_info;
+Program::Program() {
+	/* Find the command line and setup the PSP */
+
+	
+	psp = new DOS_PSP(dos.psp);
+	/* Scan environment for filename */
+	char * envscan=(char *)HostMake(psp->GetEnvironment(),0);
+	while (*envscan) envscan+=strlen(envscan)+1;	
+	envscan+=3;
+	CommandTail tail;
+	MEM_BlockRead(PhysMake(dos.psp,128),&tail,128);
+	if (tail.count<127) tail.buffer[tail.count]=0;
+	else tail.buffer[126]=0;
+	cmd = new CommandLine(envscan,tail.buffer);
 }
 
 void Program::WriteOut(char * format,...) {
@@ -107,7 +109,7 @@ char * Program::GetEnvStr(char * env_str) {
 	/* Walk through the internal environment and see for a match */
 /* Taking some short cuts here to not fuck around with memory structure */
 
-	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(psp->GetEnvironment(),0);
 	size_t len=strlen(env_str);
 	while (*envstart) {
 		if (strncasecmp(env_str,envstart,len)==0 && envstart[len]=='=') {
@@ -119,7 +121,7 @@ char * Program::GetEnvStr(char * env_str) {
 };
 
 char * Program::GetEnvNum(Bit32u num) {
-	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(psp->GetEnvironment(),0);
 	while (*envstart) {
 		if (!num) return envstart;
 		envstart+=strlen(envstart)+1;	
@@ -129,7 +131,7 @@ char * Program::GetEnvNum(Bit32u num) {
 }
 
 Bit32u Program::GetEnvCount(void) {
-	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(psp->GetEnvironment(),0);
 	Bit32u num=0;
 	while (*envstart) {
 		envstart+=strlen(envstart)+1;	
@@ -139,13 +141,13 @@ Bit32u Program::GetEnvCount(void) {
 }
 
 bool Program::SetEnv(char * env_entry,char * new_string) {
-	MCB * env_mcb=(MCB *)HostMake(prog_info->psp_copy.environment-1,0);
+	MCB * env_mcb=(MCB *)HostMake(psp->GetEnvironment()-1,0);
 	upcase(env_entry);
 	Bit32u env_size=env_mcb->size*16;
 	if (!env_size) E_Exit("SHELL:Illegal environment size");
 	/* First try to find the old entry */
 	size_t len=strlen(env_entry);
-	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(psp->GetEnvironment(),0);
 	while (*envstart) {
 		if (strncasecmp(env_entry,envstart,len)==0 && envstart[len]=='=') {
 			/* Now remove this entry */
