@@ -17,44 +17,60 @@
  */
 
 #include <fcntl.h>
-
-static int m_device;
-
 #define SEQ_MIDIPUTC    5
 
-static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {
-	Bit8u buf[SYSEX_SIZE*4];Bitu pos=0;
-	for (;len>0;len--) {
-		buf[pos++] = SEQ_MIDIPUTC;
-		buf[pos++] = *sysex++;
-		buf[pos++] = 0;					//Device 0?
-		buf[pos++] = 0;
+class MidiHandler_oss: public MidiHandler {
+private:
+	int  device;
+	Bit8u device_num;
+	bool isOpen;
+public:
+	MidiHandler_oss() : isOpen(false),MidiHandler() {};
+	char * GetName(void) { return "oss";};
+	bool Open(const char * conf) {
+		char devname[512];
+		if (conf && conf[0]) strncpy(devname,conf,512);
+		else strcpy(devname,"/dev/midi");
+		char * devfind=(strrchr(devname,','));
+		if (devfind) {
+			*devfind++=0;
+			device_num=atoi(devfind);
+		} else device_num=0;
+		if (isOpen) return false;
+		device=open(devname, O_WRONLY, 0);
+		if (device<0) return false;
+		return true;
+	};
+	void Close(void) {
+		if (!isOpen) return;
+		if (device>0) close(device);
+	};
+	void PlayMsg(Bit32u msg) {
+		Bit8u buf[128];Bitu pos=0;
+		Bitu len=MIDI_evt_len[msg & 0xff];
+		for (;len>0;len--) {
+			buf[pos++] = SEQ_MIDIPUTC;
+			buf[pos++] = msg & 0xff;
+			buf[pos++] = device_num;
+			buf[pos++] = 0;
+			msg >>=8;
+		}
+		write(device,buf,pos);
+	};
+	void PlaySysex(Bit8u * sysex,Bitu len) {
+		Bit8u buf[SYSEX_SIZE*4];Bitu pos=0;
+		for (;len>0;len--) {
+			buf[pos++] = SEQ_MIDIPUTC;
+			buf[pos++] = *sysex++;
+			buf[pos++] = device_num;
+			buf[pos++] = 0;
+		}
+		write(device,buf,pos);	
 	}
-	write(m_device,buf,pos);	
-}
+};
 
-static void MIDI_PlayMsg(Bit32u msg) {
-	Bit8u buf[128];Bitu pos=0;
+MidiHandler_oss Midi_oss;
 
-	Bitu len=MIDI_evt_len[msg & 0xff];
-	for (;len>0;len--) {
-		buf[pos++] = SEQ_MIDIPUTC;
-		buf[pos++] = msg & 0xff;
-		buf[pos++] = 0;					//Device 0?
-		buf[pos++] = 0;
-		msg >>=8;
-	}
-	write(m_device,buf,pos);
-}
 
-static void MIDI_ShutDown(void) {
-	if (m_device>0) close(m_device);
-}
-
-static bool MIDI_StartUp(void) {
-	m_device=open("/dev/midi", O_WRONLY, 0);
-	if (m_device<0) return false;
-	return true;
-}
 
 

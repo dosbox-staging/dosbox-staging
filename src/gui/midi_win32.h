@@ -19,46 +19,55 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-static HMIDIOUT m_out;
-static MIDIHDR m_hdr;
-static HANDLE m_event;
+class MidiHandler_win32: public MidiHandler {
+private:
+	HMIDIOUT m_out;
+	MIDIHDR m_hdr;
+	HANDLE m_event;
+	bool isOpen;
+public:
+	MidiHandler_win32() : isOpen(false),MidiHandler() {};
+	char * GetName(void) { return "win32";};
+	bool Open(const char * conf) {
+		if (isOpen) return false;
+		m_event = CreateEvent (NULL, true, true, NULL);
+		MMRESULT res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD)m_event, 0, CALLBACK_EVENT);
+		if (res != MMSYSERR_NOERROR) return false;
+		isOpen=true;
+		return true;
+	};
+	void Close(void) {
+		if (!isOpen) return;
+		isOpen=false;
+		midiOutClose(m_out);
+		CloseHandle (m_event);
+	};
+	void PlayMsg(Bit32u msg) {
+		midiOutShortMsg(m_out, msg);
+	};
+	void PlaySysex(Bit8u * sysex,Bitu len) {
+		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
+			LOG(LOG_MISC|LOG_ERROR,"Can't send midi message");
+			return;
+		}		
+		midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));
+	
+		m_hdr.lpData = (char *) sysex;
+		m_hdr.dwBufferLength = len ;
+		m_hdr.dwBytesRecorded = len ;
+		m_hdr.dwUser = 0;
 
-
-static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {
-
-	if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
-		LOG(LOG_MISC|LOG_ERROR,"Can't send midi message");
-		return;
-	}		
-	midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));
-
-	m_hdr.lpData = (char *) sysex;
-	m_hdr.dwBufferLength = len ;
-	m_hdr.dwBytesRecorded = len ;
-	m_hdr.dwUser = 0;
-
-	MMRESULT result = midiOutPrepareHeader (m_out, &m_hdr, sizeof (m_hdr));
-	if (result != MMSYSERR_NOERROR) return;
-	ResetEvent (m_event);
-	result = midiOutLongMsg (m_out,&m_hdr,sizeof(m_hdr));
-	if (result != MMSYSERR_NOERROR) {
-		SetEvent (m_event);
-		return;
+		MMRESULT result = midiOutPrepareHeader (m_out, &m_hdr, sizeof (m_hdr));
+		if (result != MMSYSERR_NOERROR) return;
+		ResetEvent (m_event);
+		result = midiOutLongMsg (m_out,&m_hdr,sizeof(m_hdr));
+		if (result != MMSYSERR_NOERROR) {
+			SetEvent (m_event);
+			return;
+		}
 	}
-}
+};
 
-static void MIDI_PlayMsg(Bit32u msg) {
-	MMRESULT ret=midiOutShortMsg(m_out, msg);	
-}
-
-
-
-static bool MIDI_StartUp(void) {
-	m_event = CreateEvent (NULL, true, true, NULL);
-	MMRESULT res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD)m_event, 0, CALLBACK_EVENT);
-	if (res != MMSYSERR_NOERROR) return false;
-	return true;
-}
-
+MidiHandler_win32 Midi_win32; 
 
 

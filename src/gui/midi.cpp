@@ -16,9 +16,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "dosbox.h"
+#include "cross.h"
+#include "support.h"
 #include "setup.h"
+
+#define SYSEX_SIZE 1024
 
 Bit8u MIDI_evt_len[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
@@ -43,24 +50,41 @@ Bit8u MIDI_evt_len[256] = {
   0,2,3,2, 0,0,1,1, 1,0,1,1, 1,0,1,1   // 0xf0
 };
 
-#define SYSEX_SIZE 1024
- 
-#if defined (WIN32)
+class MidiHandler;
+
+MidiHandler * handler_list=0;
+
+class MidiHandler {
+public:
+	MidiHandler() {
+		next=handler_list;
+		handler_list=this;
+	};
+	virtual bool Open(const char * conf) { return true; };
+	virtual void Close(void) {};
+	virtual void PlayMsg(Bit32u msg) {};
+	virtual void PlaySysex(Bit8u * sysex,Bitu len) {};
+	virtual char * GetName(void) { return "none"; };
+	MidiHandler * next;
+};
+
+MidiHandler Midi_none;
+
+/* Include different midi drivers, lowest ones get checked first for default */
+
+#if defined(MACOSX)
+
+#include "midi_coreaudio.h"
+
+#elif defined (WIN32)
 
 #include "midi_win32.h"
 
-#elif defined (UNIX) && !defined(__BEOS__)
+#elif
 
 #include "midi_oss.h"
 
-#else	/* Fall back to no device playing */
-
-static void MIDI_PlayMsg(Bit32u msg) {}
-static void MIDI_PlaySysex(Bit8u * sysex,Bitu len) {};
-static bool MIDI_StartUp(void) { return false;}
-
 #endif
-
 
 static struct {
 	Bitu status;
@@ -75,8 +99,8 @@ static struct {
 		bool active;
 	} sysex;
 	bool available;
+	MidiHandler * handler;
 } midi;
-
 
 void MIDI_RawOutByte(Bit8u data) {
 	/* Test for a new status byte */
@@ -87,7 +111,7 @@ void MIDI_RawOutByte(Bit8u data) {
 		if (midi.sysex.active) {
 			/* Play a sysex message */
 			midi.sysex.buf[midi.sysex.used++]=0xf7;
-			MIDI_PlaySysex(midi.sysex.buf,midi.sysex.used);
+			midi.handler->PlaySysex(midi.sysex.buf,midi.sysex.used);
 			LOG(0,"Sysex message size %d",midi.sysex.used);
 			midi.sysex.active=false;
 			if (data==0xf7) return;
@@ -106,7 +130,7 @@ void MIDI_RawOutByte(Bit8u data) {
 	midi.cmd_msg|=data << (8 * midi.cmd_pos);
 	midi.cmd_pos++;
 	if (midi.cmd_pos >= midi.cmd_len) {
-		MIDI_PlayMsg(midi.cmd_msg);
+		midi.handler->PlayMsg(midi.cmd_msg);
 		midi.cmd_msg=midi.status;
 		midi.cmd_pos=1;
 	}
@@ -116,9 +140,41 @@ bool MIDI_Available(void)  {
 	return midi.available;
 }
 
-
-void MIDI_Init(Section * sect) {
-	MSG_Add("MIDI_CONFIGFILE_HELP","Nothing to setup yet!\n");
-	midi.available=MIDI_StartUp();
+void MIDI_Init(Section * sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	MSG_Add("MIDI_CONFIGFILE_HELP","Set midi output device,alsa,oss,win32,coreaudio,none\n");
+	const char * dev=section->Get_string("device");
+	const char * conf=section->Get_string("config");
+	/* If device = "default" go for first handler that works */
+	MidiHandler * handler;
+	if (!strcasecmp(dev,"default")) goto getdefault;
+	handler=handler_list;
+	while (handler) {
+		if (!strcasecmp(dev,handler->GetName())) {
+			if (!handler->Open(conf)) {
+				LOG_MSG("MIDI:Can't open device:%s with config:%s.",dev,conf);	
+				goto getdefault;
+			}
+			midi.handler=handler;
+			midi.available=true;	
+			LOG_MSG("MIDI:Opened device:%s",handler->GetName());
+			return;
+		}
+		handler=handler->next;
+	}
+	LOG_MSG("MIDI:Can't find device:%s, finding default handler.",dev);	
+getdefault:	
+	handler=handler_list;
+	while (handler) {
+		if (handler->Open(conf)) {
+			midi.available=true;	
+			midi.handler=handler;
+			LOG_MSG("MIDI:Opened device:%s",handler->GetName());
+			return;
+		}
+		handler=handler->next;
+	}
+	/* This shouldn't be possible */
+	midi.available=false;
 }
 
