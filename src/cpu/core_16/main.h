@@ -235,9 +235,9 @@ restart:
 			Push_16(reg_dx);break;
 		case 0x53:												/* PUSH BX */
 			Push_16(reg_bx);break;
-		case 0x54:												/* PUSH SP */
+	case 0x54:													/* PUSH SP */
 //TODO Check if this is correct i think it's SP+2 or something
-			Push_16(reg_sp);break;
+		Push_16(reg_sp);break;
 		case 0x55:												/* PUSH BP */
 			Push_16(reg_bp);break;
 		case 0x56:												/* PUSH SI */
@@ -252,8 +252,8 @@ restart:
 			reg_dx=Pop_16();break;
 		case 0x5b:												/* POP BX */
 			reg_bx=Pop_16();break;
-		case 0x5c:												/* POP SP */
-			reg_sp=Pop_16();break;
+	case 0x5c:													/* POP SP */
+		reg_sp=Pop_16();break;
 		case 0x5d:												/* POP BP */
 			reg_bp=Pop_16();break;
 		case 0x5e:												/* POP SI */
@@ -933,8 +933,8 @@ restart:
 			//TODO PF
 			flags.type=t_UNKNOWN;
 			break;
-		case 0xd6:												/* Not in intel specs */
-			NOTDONE;
+		case 0xd6:												/* SALC */
+			reg_al = get_CF() ? 0xFF : 0;
 			break;
 		case 0xd7:												/* XLAT */
 			if (segprefix_on) {
