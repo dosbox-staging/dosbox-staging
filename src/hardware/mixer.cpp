@@ -220,6 +220,7 @@ static void MIXER_MixData(Bitu samples) {
 		}
 		if (mixer.wave.used>(MIXER_WAVESIZE-1024)){
 			fwrite(mixer.wave.buf,1,mixer.wave.used*MIXER_SSIZE,mixer.wave.handle);
+			mixer.wave.length+=mixer.wave.used*MIXER_SSIZE;
 			mixer.wave.used=0;
 		}
 	}
@@ -267,11 +268,12 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 static void MIXER_WaveEvent(void) {
 	/* Check for previously opened wave file */
 	if (mixer.wave.handle) {
-		LOG_MSG("Stopped recording");
+		LOG_MSG("Stopped capturing wave output.");
 		/* Write last piece of audio in buffer */
 		fwrite(mixer.wave.buf,1,mixer.wave.used*MIXER_SSIZE,mixer.wave.handle);
+		mixer.wave.length+=mixer.wave.used*MIXER_SSIZE;
 		/* Fill in the header with useful information */
-		host_writed(&wavheader[4],mixer.wave.length+sizeof(wavheader)-8);
+		host_writed(&wavheader[0x04],mixer.wave.length+sizeof(wavheader)-8);
 		host_writed(&wavheader[0x18],mixer.freq);
 		host_writed(&wavheader[0x1C],mixer.freq*4);
 		host_writed(&wavheader[0x28],mixer.wave.length);
@@ -280,13 +282,13 @@ static void MIXER_WaveEvent(void) {
 		fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
 		fclose(mixer.wave.handle);
 		mixer.wave.handle=0;
-		return;
+	} else {
+		mixer.wave.handle=OpenCaptureFile("Wave Output",".wav");
+		if (!mixer.wave.handle) return;
+		mixer.wave.length=0;
+		mixer.wave.used=0;
+		fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
 	}
-	mixer.wave.handle=OpenCaptureFile("Wave Outut",".wav");
-	if (!mixer.wave.handle) return;
-	mixer.wave.length=0;
-	mixer.wave.used=0;
-	fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
 }
 
 static void MIXER_Stop(Section* sec) {
