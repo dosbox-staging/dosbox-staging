@@ -129,6 +129,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 }
 
 Bit8u read_p3c1(Bit32u port) {
+	vga.internal.attrindex=false;
 	switch (attr(index)) {
 			/* Palette */
 	case 0x00:		case 0x01:		case 0x02:		case 0x03:
