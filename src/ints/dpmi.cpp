@@ -204,12 +204,14 @@ public:
 	Bitu		CreateAlias				(Bitu selector, Bit16u& alias);
 	void		ReloadSegments			(Bitu selector);
 	bool		SetAccessRights			(Bitu selector, SetDescriptor& desc, Bitu rights);
+	bool		SetProtInterrupt		(Bitu num, Bitu selector, Bitu offset);
 	
 	// Special Interrupt handlers
 	Bitu		Int2fHandler			(void);
 	Bitu		Int31Handler			(void);
 
 	// Exceptions
+	Bitu		CreateException			(void);
 	void		CreateException			(Bitu num, Bitu errorCode);
 	Bitu		ExceptionReturn			(void);
 
@@ -294,7 +296,7 @@ private:
 			bool bit32;
 			Bitu psp;
 		} client;
-		Bit16u mem_handle;		/* Handle for GDT/IDT */
+		Bit32s mem_handle;		/* Handle for GDT/IDT */
 		struct {
 			PhysPt base;
 			Bitu limit;
@@ -697,23 +699,42 @@ void DPMI::ReloadSegments(Bitu selector)
 	if (SegValue(ss)==selector) CPU_SetSegGeneral(ss,selector);
 };
 
+Bitu DPMI::CreateException(void)
+{
+	// Division by Zero
+	CreateException(0,0);
+	return CBRET_NONE;
+};
+
 void DPMI::CreateException(Bitu num, Bitu errorCode)
 {
+	// Assuming Stack looks like a int has occured
+	Bitu stack_eip,stack_cs,stack_flags;
 	if (dpmi.client.bit32) {
+		// Clean up stack
+		stack_eip	= CPU_Pop32();
+		stack_cs	= CPU_Pop32();
+		stack_flags = CPU_Pop32();
+		// Push values for exception handler
 		CPU_Push32(SegValue(ss));
 		CPU_Push32(reg_esp);
-		CPU_Push32(reg_flags);
-		CPU_Push32(SegValue(cs));
-		CPU_Push32(reg_eip-2);						// FIXME: Fake !
+		CPU_Push32(stack_flags);
+		CPU_Push32(stack_cs);
+		CPU_Push32(stack_eip);						
 		CPU_Push32(errorCode);
 		CPU_Push32(GDT_PROTCODE);					// return cs
 		CPU_Push32(DPMI_CB_EXCEPTIONRETURN_OFFSET);	// return eip
 	} else {
+		// Clean up stack
+		stack_eip	= CPU_Pop16();
+		stack_cs	= CPU_Pop16();
+		stack_flags = CPU_Pop16();
+		// Push values for exception handler
 		CPU_Push16(SegValue(ss));
 		CPU_Push16(reg_sp);
-		CPU_Push16(reg_flags);
-		CPU_Push16(SegValue(cs));
-		CPU_Push16(reg_ip-2);						// FIXME: Fake !
+		CPU_Push16(stack_flags);
+		CPU_Push16(stack_cs);
+		CPU_Push16(stack_eip);						
 		CPU_Push16(errorCode);
 		CPU_Push16(GDT_PROTCODE);					// return cs
 		CPU_Push16(DPMI_CB_EXCEPTIONRETURN_OFFSET);	// return eip
@@ -1720,8 +1741,6 @@ Bitu DPMI::Int31Handler(void)
 						DPMI_CALLBACK_SCF(true);
 					};
 					break;
-					DPMI_CALLBACK_SCF(false);
-					break;
 		case 0x0204:{// Get Protected Mode Interrupt Vector
 					SetDescriptor gate;
 					if (dpmi.pharlap) {
@@ -1739,20 +1758,9 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_LOG("DPMI: 0204: Get Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
-		case 0x0205:{// Set Protected Mode Interrupt Vector
-					SetDescriptor gate;
-					gate.Clear();
-					gate.saved.seg.p=1;
-					gate.SetSelector(reg_cx);
-					gate.SetOffset(Mask(reg_edx));
-					gate.SetType(dpmi.client.bit32?DESC_386_INT_GATE:DESC_286_INT_GATE);
-					gate.saved.seg.dpl = DPMI_DPL;
-					gate.Save(dpmi.idt.base+reg_bl*8);
-					if (dpmi.pharlap) {
-						gate.Save(cpu.idt.GetBase()+reg_bl*8);						
-						DPMI_LOG("DPMI: 0205: Pharlap: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
-					} else 
-						DPMI_LOG("DPMI: 0205: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
+		case 0x0205:{// Set Protected Mode Interrupt Vector			
+					DPMI_LOG("DPMI: 0205: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
+					SetProtInterrupt(reg_bl,reg_cx,reg_edx);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
 		case 0x0300:// Simulate Real Mode Interrupt
@@ -2133,6 +2141,7 @@ Bitu DPMI::Int2fHandler(void)
 // Callbacks and Callback-Returns
 // *********************************************************************
 
+static Bitu DPMI_Exception(void)				{ if (activeDPMI) return activeDPMI->CreateException();			return 0;};
 static Bitu DPMI_ExceptionReturn(void)			{ if (activeDPMI) return activeDPMI->ExceptionReturn();			return 0;};
 static Bitu DPMI_RealModeCallback(void)			{ if (activeDPMI) return activeDPMI->RealModeCallback();		return 0;};
 static Bitu DPMI_RealModeCallbackReturn(void)	{ if (activeDPMI) return activeDPMI->RealModeCallbackReturn();	return 0;};
@@ -2159,6 +2168,27 @@ static Bitu DPMI_API_Entry_MSDOS(void)			{ if (activeDPMI) return activeDPMI->AP
 // Setup stuff
 // ****************************************************************
 
+bool DPMI::SetProtInterrupt(Bitu num, Bitu selector, Bitu offset)
+{
+	// Nobody messes with the div0 vector
+	if (num==0) return true;
+
+	SetDescriptor gate;
+	gate.Clear();
+	gate.saved.seg.p=1;
+	gate.SetSelector(selector);
+	gate.SetOffset	(Mask(offset));
+	gate.SetType	(dpmi.client.bit32?DESC_386_INT_GATE:DESC_286_INT_GATE);
+	gate.saved.seg.dpl = DPMI_DPL;
+	gate.Save(dpmi.idt.base+num*8);
+	// Special Pharlap stuff
+	if (dpmi.pharlap) {
+		gate.Save(cpu.idt.GetBase()+num*8);						
+		DPMI_LOG("DPMI: 0205: Pharlap: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
+	}
+	return true;
+};
+
 RealPt DPMI::HookInterrupt(Bitu num, Bitu intHandler)
 {
 	// Setup realmode hook	
@@ -2172,11 +2202,7 @@ RealPt DPMI::HookInterrupt(Bitu num, Bitu intHandler)
 	} else E_Exit("DPMI: Couldnt allocate Realmode-Callback for INT %04X",num);
 	// Setup protmode hook
 	func = CALLBACK_RealPointer(intHandler);
-	SetDescriptor gate;
-	gate.Load		(dpmi.idt.base+num*8);
-	gate.SetSelector(GDT_CODE);
-	gate.SetOffset	(RealOff(func));
-	gate.Save		(dpmi.idt.base+num*8);
+	SetProtInterrupt(num,GDT_CODE,RealOff(func));
 	return oldVec;
 }
 
@@ -2498,29 +2524,29 @@ void DPMI_Init(Section* sec)
 
 	/* setup Real mode Callbacks */
 	callback.entry=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.entry,DPMI_EntryPoint,CB_RETF);
+	CALLBACK_Setup(callback.entry,DPMI_EntryPoint,CB_RETF,"Entrypoint");
 	callback.enterpmode=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.enterpmode,DPMI_EnterProtMode,CB_RETF);
+	CALLBACK_Setup(callback.enterpmode,DPMI_EnterProtMode,CB_RETF,"Enter PMode");
 	callback.realsavestate=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.realsavestate,DPMI_RealSaveState,CB_RETF);
+	CALLBACK_Setup(callback.realsavestate,DPMI_RealSaveState,CB_RETF,"Save RealState");
 	callback.simint=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.simint,DPMI_SimulateInt,CB_IRET);
+	CALLBACK_Setup(callback.simint,DPMI_SimulateInt,CB_IRET,"Sim INT");
 	callback.simintReturn=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.simintReturn,DPMI_SimulateIntReturn,CB_IRET);
+	CALLBACK_Setup(callback.simintReturn,DPMI_SimulateIntReturn,CB_IRET,"Sim INT RET");
 	callback.rmIntFrame=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.rmIntFrame,DPMI_CallRealIRETFrame,CB_IRET);
+	CALLBACK_Setup(callback.rmIntFrame,DPMI_CallRealIRETFrame,CB_IRET,"Call REAL IRET");
 	callback.rmIntFrameReturn=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.rmIntFrameReturn,DPMI_CallRealIRETFrameReturn,CB_IRET);
+	CALLBACK_Setup(callback.rmIntFrameReturn,DPMI_CallRealIRETFrameReturn,CB_IRET,"Call REAL IRET RET");
 	callback.ptorint=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.ptorint,DPMI_ptorHandler,CB_IRET);
+	CALLBACK_Setup(callback.ptorint,DPMI_ptorHandler,CB_IRET,"INT Handler");
 	callback.ptorintReturn=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.ptorintReturn,DPMI_ptorHandlerReturn,CB_IRET);
+	CALLBACK_Setup(callback.ptorintReturn,DPMI_ptorHandlerReturn,CB_IRET,"INT Handler RET");
 	callback.int21Return=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.int21Return,DPMI_Int21HandlerReturn,CB_IRET);
+	CALLBACK_Setup(callback.int21Return,DPMI_Int21HandlerReturn,CB_IRET,"INT 21 RET");
 	callback.rmCallbackReturn=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.rmCallbackReturn,DPMI_RealModeCallbackReturn,CB_IRET);
+	CALLBACK_Setup(callback.rmCallbackReturn,DPMI_RealModeCallbackReturn,CB_IRET,"RMCB RET");
 	callback.int21msdos=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.int21msdos,DPMI_API_Int21_MSDOS,CB_IRET);
+	CALLBACK_Setup(callback.int21msdos,DPMI_API_Int21_MSDOS,CB_IRET,"MSDOS INT 21 API");
 	
 	/* Setup multiplex */
 	DOS_AddMultiplexHandler(DPMI_Multiplex);
@@ -2639,46 +2665,52 @@ void DPMI::Setup()
 		// Setup Hardware Interrupt handler
 		for (i=0; i<DPMI_REALVEC_MAX; i++) {
 			dpmi.defaultHWIntFromProtMode[i]=CALLBACK_Allocate();
-			CALLBACK_Setup(dpmi.defaultHWIntFromProtMode[i],DPMI_HWIntDefaultHandler,CB_IRET);
+			CALLBACK_Setup(dpmi.defaultHWIntFromProtMode[i],DPMI_HWIntDefaultHandler,CB_IRET,"HWINT Hook");
 		};
 	}
 
 	// Init Realmode Callbacks
 	for (i=0; i<DPMI_REALMODE_CALLBACK_MAX; i++) {
 		dpmi.rmCallback[i].id = CALLBACK_Allocate();
-		CALLBACK_Setup(dpmi.rmCallback[i].id,DPMI_RealModeCallback,CB_IRET);	
+		CALLBACK_Setup(dpmi.rmCallback[i].id,DPMI_RealModeCallback,CB_IRET,"Std RMCB");	
 		dpmi.rmCallback[i].inUse = false;
 	};
 
 	/* Setup some callbacks used only in pmode */
 	callback.apimsdosentry=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.apimsdosentry,DPMI_API_Entry_MSDOS,CB_RETF,dpmi.ptorint_base+DPMI_CB_APIMSDOSENTRY_OFFSET);
+	CALLBACK_SetupAt(callback.apimsdosentry,DPMI_API_Entry_MSDOS,CB_RETF,dpmi.ptorint_base+DPMI_CB_APIMSDOSENTRY_OFFSET,"MSDOS API Entry");
 	callback.enterrmode=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.enterrmode,DPMI_EnterRealMode,CB_RETF,dpmi.ptorint_base+DPMI_CB_ENTERREALMODE_OFFSET);
+	CALLBACK_SetupAt(callback.enterrmode,DPMI_EnterRealMode,CB_RETF,dpmi.ptorint_base+DPMI_CB_ENTERREALMODE_OFFSET,"Enter RMODE");
 	callback.protsavestate=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.protsavestate,DPMI_ProtSaveState,CB_RETF,dpmi.ptorint_base+DPMI_CB_SAVESTATE_OFFSET);
-//	callback.exception=CALLBACK_Allocate();
-//	CALLBACK_SetupAt(callback.exception,DPMI_Exception,CB_RETF,dpmi.ptorint_base+DPMI_CB_EXCEPTION_OFFSET);
+	CALLBACK_SetupAt(callback.protsavestate,DPMI_ProtSaveState,CB_RETF,dpmi.ptorint_base+DPMI_CB_SAVESTATE_OFFSET,"Save Prot State");
+	callback.exception=CALLBACK_Allocate();
+	CALLBACK_SetupAt(callback.exception,DPMI_Exception,CB_RETF,dpmi.ptorint_base+DPMI_CB_EXCEPTION_OFFSET,"Exception");
 	callback.exceptionret=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.exceptionret,DPMI_ExceptionReturn,CB_RETF,dpmi.ptorint_base+DPMI_CB_EXCEPTIONRETURN_OFFSET);
+	CALLBACK_SetupAt(callback.exceptionret,DPMI_ExceptionReturn,CB_RETF,dpmi.ptorint_base+DPMI_CB_EXCEPTIONRETURN_OFFSET,"Exception RET");
 
-	/* Setup table to reflect pmode ints to realmode */
+	/* Setup special table for ints/exception handling */
 	w=dpmi.ptorint_base;
-	for (i=0;i<256;i++) {
+	for (i=0;i<256;i++) {	
 		mem_writeb(w,0xFE);						//GRP 4
 		mem_writeb(w+1,0x38);					//Extra Callback instruction
 		mem_writew(w+2,callback.ptorint);		//The immediate word
 		mem_writeb(w+4,0xcf);					//IRET
 		w+=8;
 	}
+	// Setup int 0 (div0 exception)
+	mem_writeb(dpmi.ptorint_base,0xFE);						//GRP 4
+	mem_writeb(dpmi.ptorint_base+1,0x38);					//Extra Callback instruction
+	mem_writew(dpmi.ptorint_base+2,callback.exception);		//The immediate word
+	mem_writeb(dpmi.ptorint_base+4,0xcf);					//IRET
 
 	// Set Special 0x31 and 0x21 Handler
 	callback.int31=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.int31,DPMI_Int31Handler,CB_IRET,dpmi.ptorint_base+0x31*8);
+	CALLBACK_SetupAt(callback.int31,DPMI_Int31Handler,CB_IRET,dpmi.ptorint_base+0x31*8,"DPMI INT 31");
 	callback.int21=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.int21,DPMI_Int21Handler,CB_IRET,dpmi.ptorint_base+0x21*8);
+	CALLBACK_SetupAt(callback.int21,DPMI_Int21Handler,CB_IRET,dpmi.ptorint_base+0x21*8,"DPMI INT 21");
 	callback.int2f=CALLBACK_Allocate();
-	CALLBACK_SetupAt(callback.int2f,DPMI_Int2fHandler,CB_IRET,dpmi.ptorint_base+0x2f*8);
+	CALLBACK_SetupAt(callback.int2f,DPMI_Int2fHandler,CB_IRET,dpmi.ptorint_base+0x2f*8,"DPMI INT 2F");
+
 }
 
 // *********************************************************************
@@ -3177,5 +3209,3 @@ Bitu DPMI::API_Int21_MSDOS(void)
 	};
 	return 0;
 };
-
-
