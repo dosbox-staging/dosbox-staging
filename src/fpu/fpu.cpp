@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.21 2004-08-04 09:12:54 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.22 2004-09-08 08:46:37 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -709,7 +709,11 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 		FPU_FPOP();
 		break;
 	case 0x04:   /* FBLD packed BCD */
-		//Don't think anybody will ever use this.
+		{
+			Real64 in = FPU_FBLD(addr);
+			FPU_PUSH(in);
+		}
+		break;
 	default:
 		LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
 		break;
