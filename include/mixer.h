@@ -16,6 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef DOSBOX_MIXER_H
+#define DOSBOX_MIXER_H
+
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
+
 typedef void (*MIXER_MixHandler)(Bit8u * sampdate,Bit32u len);
 typedef void (*MIXER_Handler)(Bitu len);
 
@@ -65,9 +72,24 @@ public:
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,char * name);
 MixerChannel * MIXER_FindChannel(const char * name);
+/* Find the device you want to delete with findchannel "delchan gets deleted" */
+void MIXER_DelChannel(MixerChannel* delchan); 
+
+/* Object to maintain a mixerchannel; As all objects it registers itself with create
+ * and removes itself when destroyed. */
+class MixerObject{
+private:
+	bool installed;
+	char m_name[32];
+public:
+	MixerObject():installed(false){};
+	MixerChannel* Install(MIXER_Handler handler,Bitu freq,char * name);
+	~MixerObject();
+};
+
 
 /* PC Speakers functions, tightly related to the timer functions */
-
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
 void PCSPEAKER_SetType(Bitu mode);
 
+#endif

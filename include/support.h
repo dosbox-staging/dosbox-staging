@@ -16,13 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined __SUPPORT_H
-#define __SUPPORT_H
+#ifndef DOSBOX_SUPPORT_H
+#define DOSBOX_SUPPORT_H
 
 #include <string.h>
 #include <ctype.h>
-
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
+#endif
 
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #define	strcasecmp(a,b) stricmp(a,b)
@@ -62,4 +63,3 @@ INLINE char * lowcase(char * str) {
 
 
 #endif
-

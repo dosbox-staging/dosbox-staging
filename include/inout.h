@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: inout.h,v 1.7 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: inout.h,v 1.8 2005-03-24 21:11:05 qbix79 Exp $ */
 
-#ifndef __INOUT_H
-#define __INOUT_H
+#ifndef DOSBOX_INOUT_H
+#define DOSBOX_INOUT_H
 
 #define IO_MAX (64*1024+3)
 
@@ -37,8 +37,8 @@ extern IO_ReadHandler * io_readhandlers[3][IO_MAX];
 void IO_RegisterReadHandler(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
 void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
 
-void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=0);
-void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=0);
+void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=1);
+void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=1);
 
 void IO_WriteB(Bitu port,Bitu val);
 void IO_WriteW(Bitu port,Bitu val);
@@ -48,6 +48,26 @@ Bitu IO_ReadB(Bitu port);
 Bitu IO_ReadW(Bitu port);
 Bitu IO_ReadD(Bitu port);
 
+/* Classes to manage the IO objects created by the various devices.
+ * The io objects will remove itself on destruction.*/
+class IO_Base{
+protected:
+	bool installed;
+	Bitu m_port, m_mask,m_range;
+public:
+	IO_Base():installed(false){};
+};
+class IO_ReadHandleObject: private IO_Base{
+public:
+	void Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
+	~IO_ReadHandleObject();
+};
+class IO_WriteHandleObject: private IO_Base{
+public:
+	void Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
+	~IO_WriteHandleObject();
+};
+
 INLINE void IO_Write(Bitu port,Bit8u val) {
 	IO_WriteB(port,val);
 }
@@ -56,4 +76,3 @@ INLINE Bit8u IO_Read(Bitu port){
 }
 
 #endif
-
