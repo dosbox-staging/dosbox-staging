@@ -197,6 +197,20 @@ void DOS_PSP::SetFCB2(RealPt src)
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
 };
 
+bool DOS_PSP::SetNumFiles(Bit16u fileNum)
+{
+	// Allocate needed paragraphs
+	Bit16u para = (fileNum/16)+((fileNum%16)>0);
+	RealPt data	= RealMake(DOS_GetMemory(para),0);
+	sSave(sPSP,file_table,data);
+	sSave(sPSP,max_files,fileNum);
+	if (fileNum>20) {
+		for (Bit16u i=0; i<20; i++) SetFileHandle(i,sGet(sPSP,files[i]));
+		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
+	};
+	return true;
+};
+
 
 void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	sSave(sDTA,sdrive,_sdrive);

@@ -784,11 +784,14 @@ static Bitu DOS_21Handler(void) {
 		}
 		LOG_ERROR("DOS:Setting code page table is not supported");
 		break;
-	case 0x67:					/* Set handle countr */
+	case 0x67:					/* Set handle count */
 		/* Weird call to increase amount of file handles needs to allocate memory if >20 */
-		LOG_DEBUG("DOS:67:Set Handle Count not working");
-		CALLBACK_SCF(false);
-		break;
+		{
+			DOS_PSP psp(dos.psp);
+			psp.SetNumFiles(reg_bx);
+			CALLBACK_SCF(false);
+			break;
+		};
 	case 0x69:					/* Get/Set disk serial number */
 		{
 			switch(reg_al)		{

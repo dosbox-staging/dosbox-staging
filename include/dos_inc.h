@@ -259,7 +259,8 @@ public:
 	void	SetFCB1				(RealPt src);
 	void	SetFCB2				(RealPt src);
 	void	SetCommandTail		(RealPt src);	
-
+	bool	SetNumFiles			(Bit16u fileNum);
+	
 private:
 	#pragma pack(1)
 	struct sPSP {
