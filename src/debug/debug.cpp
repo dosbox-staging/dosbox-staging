@@ -16,10 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.60 2004-10-23 15:15:06 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.61 2004-12-28 15:10:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
+#include <ctype.h>
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -610,8 +611,8 @@ static void DrawData(void) {
 				ch = mem_readb(address);
 			} else ch = 0;
 			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
-			if (ch<32) ch='.';
-			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);			
+			if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
+			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);
 			add++;
 		};
 	}	
@@ -1758,7 +1759,8 @@ static void DEBUG_ShutDown(Section * sec)
 	#ifndef WIN32
 	curs_set(old_cursor_state);
 	tcsetattr(0, TCSANOW,&consolesettings);
-	printf("\e[0m\e[2J");
+//	printf("\e[0m\e[2J"); //Seems to destroy scrolling
+	printf("\ec");
 	fflush(NULL);
 	#endif
 };
