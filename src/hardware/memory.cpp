@@ -245,6 +245,7 @@ void MEM_Init(Section * sect) {
 	if (!memory) {
 		throw("Can't allocate memory for memory");
 	}
+	memset(memory,0xcd,1024*1024);
 	/* Setup tables for first mb */
 	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);
 	/* Setup tables for HMA Area */
