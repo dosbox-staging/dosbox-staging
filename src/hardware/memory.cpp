@@ -279,13 +279,8 @@ static void write_p92(Bit32u port,Bit8u val) {
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
 	if ((val&2) & !(controlport_data&2)) {
-		// ensable HMA 
-		for (Bitu p=PAGE_COUNT(1024*1024);p<PAGE_COUNT(1088*1024);p++) {
-			ReadHostTable[p]=0;
-			WriteHostTable[p]=0;
-			ReadHandlerTable[p]=&AllocateMem_ReadHandler;
-			WriteHandlerTable[p]=&AllocateMem_WriteHandler;
-		}
+		// ensable HMA
+		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),((Bit8u*)memory)+1024*1024);
 	};	
 	if (!(val&2) && (controlport_data&2)) {
 		// disable HMA
@@ -300,10 +295,10 @@ static Bit8u read_p92(Bit32u port) {
 
 static void MEM_ShutDown(Section * sec) {
 	for (Bitu i=0; i<C_MEM_MAX_SIZE; i++) {
-		delete mem_block[i];
+		free(mem_block[i]);
 		mem_block[i] = 0;
 	};
-	delete memory;
+	free(memory); memory=0;
 };
 
 void MEM_Init(Section * sect) {
