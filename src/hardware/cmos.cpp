@@ -33,34 +33,28 @@ static struct {
 	struct {
 		bool enabled;
 		Bit8u div;
-		Bitu micro;
+		float delay;
 	} timer;
 	struct {
-		Bit64u timer;
-		Bit64u ended;
-		Bit64u alarm;
+		double timer;
+		double ended;
+		double alarm;
 	} last;
-	bool ack;
 	bool update_ended;
 } cmos;
 
 static void cmos_timerevent(Bitu val) {
 	PIC_ActivateIRQ(8); 
-	if(cmos.timer.enabled) PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
-	if (cmos.ack) {
-		PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
-		cmos.regs[0x0c]|=0x0a0;
-		cmos.ack=false;
-	}
+	if (cmos.timer.enabled) PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 }
 
 static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);	
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
-	cmos.timer.micro=(Bitu) (1000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
+	cmos.timer.delay=(1000.0f/(32768.0f / (1 << (cmos.timer.div - 1))));
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
-	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %f hz",1000000.0/cmos.timer.micro);
-	PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
+	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
+	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 }
 
 void cmos_selreg(Bitu port,Bitu val,Bitu iolen) {
@@ -146,7 +140,7 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 	case 0x05:		/* Hours Alarm */
 		return cmos.regs[cmos.reg];
 	case 0x0a:		/* Status register C */
-		if (PIC_Index()<0x2) {
+		if (PIC_TickIndex()<0.002) {
 			return (cmos.regs[0x0a]&0x7f) | 0x80;
 		} else {
 			return (cmos.regs[0x0a]&0x7f);
@@ -160,12 +154,12 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 		} else {
 			/* Give correct values at certain times */
 			Bit8u val=0;
-			Bit64u index=PIC_MicroCount();
-			if (index>=(cmos.last.timer+cmos.timer.micro)) {
+			double index=PIC_FullIndex();
+			if (index>=(cmos.last.timer+cmos.timer.delay)) {
 				cmos.last.timer=index;
 				val|=0x40;
 			} 
-			if (index>=(cmos.last.ended+1000000)) {
+			if (index>=(cmos.last.ended+1000)) {
 				cmos.last.ended=index;
 				val|=0x10;
 			} 

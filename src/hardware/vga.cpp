@@ -71,7 +71,7 @@ void VGA_StartResize(void) {
 	if (!vga.draw.resizing) {
 		vga.draw.resizing=true;
 		/* Start a resize after 50 ms */
-		PIC_AddEvent(VGA_SetupDrawing,50000);
+		PIC_AddEvent(VGA_SetupDrawing,50);
 	}
 }
 

@@ -419,7 +419,7 @@ static void VGA_DoUpdateLFB(Bitu val) {
 void VGA_StartUpdateLFB(void) {
 	if (!lfb_update) {
 		lfb_update=true;
-		PIC_AddEvent(VGA_DoUpdateLFB,100);	//100 microseconds later
+		PIC_AddEvent(VGA_DoUpdateLFB,0.100f);	//100 microseconds later
 	}
 }
 

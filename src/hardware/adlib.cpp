@@ -62,7 +62,7 @@ namespace OPL2 {
 	}
 	void TimerHandler(int channel,double interval_Sec) {
 		if (interval_Sec==0.0) return;
-		PIC_AddEvent(TimerOver,(Bitu)(1000000.0*interval_Sec),channel);		
+		PIC_AddEvent(TimerOver,1000.0f*interval_Sec,channel);		
 	}
 }
 #undef OSD_CPU_H
@@ -75,7 +75,7 @@ namespace THEOPL3 {
 	}
 	void TimerHandler(int channel,double interval_Sec) {
 		if (interval_Sec==0.0) return;
-		PIC_AddEvent(TimerOver,(Bitu)(1000000.0*interval_Sec),channel);		
+		PIC_AddEvent(TimerOver,1000.0f*interval_Sec,channel);		
 	}
 }
 
@@ -125,7 +125,7 @@ static void OPL_CallBack(Bitu len) {
 		opl.chan->AddSamples_s16(len,(Bit16s*)MixTemp);
 		break;
 	}
-	if ((PIC_Ticks-opl.last_used)>5000) {
+	if ((PIC_Ticks-opl.last_used)>30000) {
 		opl.chan->Enable(false);
 		opl.active=false;
 	}

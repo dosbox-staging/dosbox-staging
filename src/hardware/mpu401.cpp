@@ -15,7 +15,7 @@ static void MPU401_Reset(void);
 static void MPU401_EOIHandler(void);
 
 #define MPU_QUEUE 32
-#define TIMECONSTANT 60000000
+#define TIMECONSTANT (60000000/1000.0f)
 
 enum MpuMode { M_UART,M_INTELLIGENT } ;
 enum MpuDataType {OVERFLOW,MARK,MIDI_SYS,MIDI_NORM,COMMAND};

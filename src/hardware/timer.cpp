@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.28 2004-09-07 11:28:27 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.29 2004-09-10 22:15:20 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -26,6 +26,7 @@
 #include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
+#include "math.h"
 
 static INLINE void BIN2BCD(Bit16u& val) {
 	Bit16u temp=val%10 + (((val/10)%10)<<4)+ (((val/100)%10)<<8) + (((val/1000)%10)<<12);
@@ -38,17 +39,18 @@ static INLINE void BCD2BIN(Bit16u& val) {
 }
 
 struct PIT_Block {
-	Bit8u mode;								/* Current Counter Mode */
-	
 	Bitu cntr;
-	Bits micro;
-	Bit64u start;
-	
+	float delay;
+	double start;
+
+	Bit16u read_latch;
+	Bit16u write_latch;
+
+	Bit8u mode;
 	Bit8u latch_mode;
 	Bit8u read_state;
-	Bit16u read_latch;
 	Bit8u write_state;
-	Bit16u write_latch;
+
 	bool bcd;
 	bool go_read_latch;
 	bool new_mode;
@@ -58,26 +60,26 @@ static PIT_Block pit[3];
 
 static void PIT0_Event(Bitu val) {
 	PIC_ActivateIRQ(0);
-	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].micro);
+	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].delay);
 }
 
 static bool counter_output(Bitu counter) {
 	PIT_Block * p=&pit[counter];
-	Bit64s micro=PIC_MicroCount()-p->start;
+	double index=PIC_FullIndex()-p->start;
 	switch (p->mode) {
 	case 0:
 		if (p->new_mode) return false;
-		if (micro>p->micro) return true;
+		if (index>p->delay) return true;
 		else return false;
 		break;
 	case 2:
 		if (p->new_mode) return true;
-		micro%=p->micro;
-		return micro>0;
+		index=fmod(index,(double)p->delay);
+		return index>0;
 	case 3:
 		if (p->new_mode) return true;
-		micro%=p->micro;
-		return micro*2<p->micro;
+		index=fmod(index,(double)p->delay);
+		return index*2<p->delay;
 	default:
 		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading output",p->mode);
 		return true;
@@ -88,37 +90,32 @@ static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
 	p->go_read_latch=false;
-
-	Bit64s micro=PIC_MicroCount()-p->start;
+	double index=PIC_FullIndex()-p->start;
 	switch (p->mode) {
+	case 4:		/* Software Triggered Strobe */
 	case 0:		/* Interrupt on Terminal Count */
 		/* Counter keeps on counting after passing terminal count */
-		if (micro>p->micro) {
-			micro-=p->micro;
-			micro%=(Bit64u)(1000000/((float)PIT_TICK_RATE/(float)0x10000));
-			p->read_latch=(Bit16u)(0x10000-(((double)micro/(double)p->micro)*(double)0x10000));
+		if (index>p->delay) {
+			index-=p->delay;
+			index=fmod(index,(1000.0/PIT_TICK_RATE)*0x1000);
+			p->read_latch=(Bit16u)(0xffff-index*0xffff);
 		} else {
-			p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
+			p->read_latch=(Bit16u)(p->cntr-index*(PIT_TICK_RATE/1000.0));
 		}
 		break;
 	case 2:		/* Rate Generator */
-		micro%=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
+		index=fmod(index,(double)p->delay);
+		p->read_latch=(Bit16u)(p->cntr - (index/p->delay)*p->cntr);
 		break;
 	case 3:		/* Square Wave Rate Generator */
-		micro%=p->micro;
-		micro*=2;
-		if (micro>p->micro) micro-=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
-		break;
-	case 4:		/* Software Triggered Strobe */
-		if (micro>p->micro) p->read_latch=p->write_latch;
-		else p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
+		index=fmod(index,(double)p->delay);
+		index*=2;
+		if (index>p->delay) index-=p->delay;
+		p->read_latch=(Bit16u)(p->cntr - (index/p->delay)*p->cntr);
 		break;
 	default:
 		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading counter %d",p->mode,counter);
-		micro%=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
+		p->read_latch=0xffff;
 		break;
 	}
 }
@@ -151,16 +148,15 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 			if (p->bcd == false) p->cntr = 0x10000;
 			else p->cntr=9999;
 		} else p->cntr = p->write_latch;
-		p->start=PIC_MicroCount();
-		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
-		if (!p->micro) 	p->micro=1;
+		p->start=PIC_FullIndex();
+		p->delay=(1000.0f/((float)PIT_TICK_RATE/(float)p->cntr));
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			if (p->new_mode) {
 				p->new_mode=false;			
-				PIC_AddEvent(PIT0_Event,p->micro);
+				PIC_AddEvent(PIT0_Event,p->delay);
 			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
-			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,(Bit32u)p->mode);
+			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.2f Hz mode %d",1000.0/p->delay,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
 //			LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
@@ -283,10 +279,10 @@ void TIMER_Init(Section* sect) {
 	pit[2].cntr=1320;
 	pit[2].go_read_latch=true;
 
-	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
-	pit[1].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[1].cntr));
-	pit[2].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[2].cntr));
+	pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
+	pit[1].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[1].cntr));
+	pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
 
-	PIC_AddEvent(PIT0_Event,pit[0].micro);
+	PIC_AddEvent(PIT0_Event,pit[0].delay);
 }
 

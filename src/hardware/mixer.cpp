@@ -250,12 +250,8 @@ void MixerChannel::FillUp(void) {
 		SDL_UnlockAudio();
 		return;
 	}
-	Bitu filled=(done-mixer.done)*1000/(mixer.needed-mixer.done);
-	Bitu index=PIC_Index();
-	if (filled<index) {
-		Bitu temp=mixer.done+((index*(mixer.needed-mixer.done))/1000);
-		Mix(temp);
-	} 
+	float index=PIC_TickIndex();
+	Mix((Bitu)(index*mixer.needed));
 	SDL_UnlockAudio();
 }
 

@@ -32,21 +32,20 @@ typedef void (* PIC_EventHandler)(Bitu val);
 #define PIC_MAXIRQ 15
 #define PIC_NOIRQ 0xFF
 
-
 extern Bitu PIC_IRQCheck;
 extern Bitu PIC_IRQActive;
 extern Bitu PIC_Ticks;
 
-INLINE Bitu PIC_Index(void) {
-	return ((CPU_CycleMax-CPU_CycleLeft-CPU_Cycles)*1000)/CPU_CycleMax;
+INLINE float PIC_TickIndex(void) {
+	return (CPU_CycleMax-CPU_CycleLeft-CPU_Cycles)/(float)CPU_CycleMax;
 }
 
-INLINE Bits PIC_MakeCycles(Bitu amount) {
-	return (CPU_CycleMax*amount)/1000;
+INLINE Bits PIC_MakeCycles(double amount) {
+	return (Bits)(CPU_CycleMax*amount);
 }
 
-INLINE Bit64u PIC_MicroCount(void) {
-	return PIC_Ticks*1000+PIC_Index();
+INLINE double PIC_FullIndex(void) {
+	return PIC_Ticks+PIC_TickIndex();
 }
 
 void PIC_ActivateIRQ(Bitu irq);
@@ -55,7 +54,8 @@ void PIC_DeActivateIRQ(Bitu irq);
 void PIC_runIRQs(void);
 bool PIC_RunQueue(void);
 
-void PIC_AddEvent(PIC_EventHandler handler,Bitu delay,Bitu val=0);
+//Delay in milliseconds
+void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val=0);
 void PIC_RemoveEvents(PIC_EventHandler handler);
 
 void PIC_SetIRQMask(Bitu irq, bool masked);

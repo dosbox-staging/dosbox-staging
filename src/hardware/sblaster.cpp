@@ -425,27 +425,27 @@ static void DMA_Silent_Event(Bitu val) {
 	}
 	if (sb.dma.left) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		Bitu index=(bigger*1000000)/sb.dma.rate;
-		PIC_AddEvent(DMA_Silent_Event,index,bigger);
+		float delay=(bigger*1000.0f)/sb.dma.rate;
+		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
 	}
 
 }
 
 static void END_DMA_Event(Bitu val) {
-	GenerateDMASound(sb.dma.left);
+	GenerateDMASound(val);
 }
 
 static void CheckDMAEnd(void) {
 	if (!sb.dma.left) return;
 	if (!sb.speaker) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
-		Bitu index=(bigger*1000000)/sb.dma.rate;
-		PIC_AddEvent(DMA_Silent_Event,index,bigger);
-		LOG(LOG_SB,LOG_NORMAL)("Silent DMA Transfer scheduling IRQ in %d microseconds",index);
+		float delay=(bigger*1000.0f)/sb.dma.rate;
+		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
+		LOG(LOG_SB,LOG_NORMAL)("Silent DMA Transfer scheduling IRQ in %.3f milliseconds",delay);
 	} else if (sb.dma.left<sb.dma.min) {
-		Bitu index=(sb.dma.left*1000000)/sb.dma.rate;
-		LOG(LOG_SB,LOG_NORMAL)("Sub millisecond transfer scheduling IRQ in %d microseconds",index);	
-		PIC_AddEvent(END_DMA_Event,index);
+		float delay=(sb.dma.left*1000.0f)/sb.dma.rate;
+		LOG(LOG_SB,LOG_NORMAL)("Short transfer scheduling IRQ in %.3f milliseconds",delay);	
+		PIC_AddEvent(END_DMA_Event,delay,sb.dma.left);
 	}
 }
 
@@ -663,7 +663,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x80:	/* Silence DAC */
 		PIC_AddEvent(&DSP_RaiseIRQEvent,
-			(1000000*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
+			(1000.0f*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
 		break;
 	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
     case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:

@@ -79,7 +79,7 @@ struct GFGus {
 		bool raiseirq;
 		bool masked;
 		bool running;
-		Bit32u delay;
+		float delay;
 	} timers[2];
 	Bit32u rate;
 	Bit16u portbase;
@@ -366,8 +366,8 @@ static void GUSReset(void) {
 
 		myGUS.timers[0].value = 0xff;
 		myGUS.timers[1].value = 0xff;
-		myGUS.timers[0].delay = 80;
-		myGUS.timers[1].delay = 320;
+		myGUS.timers[0].delay = 0.080f;
+		myGUS.timers[1].delay = 0.320f;
 		myGUS.ChangeIRQDMA = false;
 		// Stop all channels
 		int i;
@@ -471,7 +471,8 @@ static void GUS_TimerEvent(Bitu val) {
 		myGUS.IRQStatus|=0x4 << val;
 		GUS_CheckIRQ();
 	}
-	if (myGUS.timers[val].running) PIC_AddEvent(GUS_TimerEvent,myGUS.timers[val].delay,val);
+	if (myGUS.timers[val].running) 
+		PIC_AddEvent(GUS_TimerEvent,myGUS.timers[val].delay,val);
 };
 
  
@@ -588,11 +589,11 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x46:  // Timer 1 control
 		myGUS.timers[0].value = (Bit8u)(myGUS.gRegData>>8);
-		myGUS.timers[0].delay = (0x100 - myGUS.timers[0].value) * 80;
+		myGUS.timers[0].delay = (0x100 - myGUS.timers[0].value) * 0.080f;
 		break;
 	case 0x47:  // Timer 2 control
 		myGUS.timers[1].value = (Bit8u)(myGUS.gRegData>>8);
-		myGUS.timers[1].delay = (0x100 - myGUS.timers[1].value) * 320;
+		myGUS.timers[1].delay = (0x100 - myGUS.timers[1].value) * 0.320f;
 		break;
 	case 0x49:  // DMA sampling control register
 		myGUS.SampControl = (Bit8u)(myGUS.gRegData>>8);

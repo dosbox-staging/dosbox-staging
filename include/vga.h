@@ -89,7 +89,6 @@ typedef struct {
 
 typedef struct {
 	bool resizing;
-	bool drawing;
 	Bitu width;
 	Bitu height;
 	Bitu blocks;
@@ -106,20 +105,21 @@ typedef struct {
 	Bitu parts_lines;
 	Bitu parts_left;
 	struct {
-		Bitu vtotal;
-		Bitu vstart;
-		Bitu vend;
-		Bitu htotal;
-		Bitu hstart;
-		Bitu hend;
-		Bitu parts;
-	} micro;
+		float vtotal;
+		float vstart;
+		float vend;
+		float htotal;
+		float hstart;
+		float hend;
+		float parts;
+	} delay;
 	bool double_scan;
 	bool doublewidth,doubleheight;
 	Bit8u font[64*1024];
 	Bit8u * font_tables[2];
 	Bitu blinking;
 	struct {
+		Bitu address;
 		Bit8u sline,eline;
 		Bit8u count,delay;
 		Bit8u enabled;

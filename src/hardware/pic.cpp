@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.23 2004-08-04 09:12:55 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.24 2004-09-10 22:15:20 harekiet Exp $ */
 
 #include <list>
 
@@ -57,7 +57,8 @@ static IRQ_Block irqs[16];
 static PIC_Controller pics[2];
 
 struct PICEntry {
-	Bitu index;Bitu value;
+	float index;
+	Bitu value;
 	PIC_EventHandler event;
 	PICEntry * next;
 };
@@ -294,21 +295,20 @@ static void AddEntry(PICEntry * entry) {
 			break;
 		}
 	}
-	Bits cycles=PIC_MakeCycles(pic.next_entry->index-PIC_Index());
+	Bits cycles=PIC_MakeCycles(pic.next_entry->index-PIC_TickIndex());
 	if (cycles<CPU_Cycles) {
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=0;
 	}
 }
 
-void PIC_AddEvent(PIC_EventHandler handler,Bitu delay,Bitu val) {
+void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
 	if (!pic.free_entry) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
 	PICEntry * entry=pic.free_entry;
-	Bitu index=delay+PIC_Index();
-	entry->index=index;
+	entry->index=delay+PIC_TickIndex();;
 	entry->event=handler;
 	entry->value=val;
 	pic.free_entry=pic.free_entry->next;
@@ -350,7 +350,7 @@ bool PIC_RunQueue(void) {
 		return false;
 	}
 	/* Check the queue for an entry */
-	Bitu index=PIC_Index();
+	double index=PIC_TickIndex();
 	while (pic.next_entry && pic.next_entry->index<=index) {
 		PICEntry * entry=pic.next_entry;
 		pic.next_entry=entry->next;
@@ -412,7 +412,7 @@ void TIMER_AddTick(void) {
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic.next_entry;
 	while (entry) {
-		if (entry->index>1000) entry->index-=1000;
+		if (entry->index>=1) entry->index-=1;
 		else entry->index=0;
 		entry=entry->next;
 	}

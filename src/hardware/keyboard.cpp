@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.27 2004-08-04 09:12:55 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.28 2004-09-10 22:15:20 harekiet Exp $ */
 
 #include <string.h>
 #include <assert.h>
@@ -30,7 +30,7 @@
 #include "mixer.h"
 
 #define KEYBUFSIZE 32
-#define KEYDELAY 300			//Considering 20-30 khz serial clock and 11 bits/char
+#define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
 
 enum KeyCommands {
 	CMD_NONE,
