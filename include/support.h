@@ -38,9 +38,9 @@
 #endif
 
 void strreplace(char * str,char o,char n);
-char *ltrim(const char *str);
-char *rtrim(const char *str);
-char *trim(const char *str);
+char *ltrim(char *str);
+char *rtrim(char *str);
+char *trim(char * str);
 
 bool ScanCMDBool(char * cmd,char * check);
 char * ScanCMDRemain(char * cmd);

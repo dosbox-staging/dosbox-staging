@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.23 2004-05-11 19:00:32 harekiet Exp $ */
+/* $Id: support.cpp,v 1.24 2004-07-05 12:00:22 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -47,20 +47,20 @@ void strreplace(char * str,char o,char n) {
 		str++;
 	}
 }
-char *ltrim(const char *str) { 
+char *ltrim(char *str) { 
 	while (*str && (*str==' ' || *str=='\t')) str++;
-	return (char*)str;
+	return str;
 }
 
-char *rtrim(const char *str) {
+char *rtrim(char *str) {
 	char *p;
 	p = strchr(str, '\0');
 	while (--p >= str && isspace(*p));
 	p[1] = '\0';
-	return (char*)str;
+	return str;
 }
 
-char *trim(const char *str) {
+char *trim(char *str) {
 	return ltrim(rtrim(str));
 }
 
