@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.27 2004-05-11 18:55:33 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.28 2004-06-20 16:58:09 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -344,7 +344,6 @@ dowrite:
 	IO_Write(base,0xb);IO_Write(base+1,last);
 }
 
-
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	Bit16u address;
 
@@ -381,7 +380,6 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 	PhysPt where = CurMode->pstart+address;
 	*result=mem_readw(where);
 }
-
 
 static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	PhysPt fontdata;
@@ -429,7 +427,6 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		}
 		y++;
 	}
-
 }
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
@@ -456,7 +453,6 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
-
 	switch (chr) {
 	case 7:
 	//TODO BEEP
@@ -496,7 +492,6 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 	INT10_SetCursorPos(cur_row,cur_col,page);
 }
 
-
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
 	INT10_TeletypeOutputAttr(chr,attr,CurMode->type!=M_TEXT);
 }
@@ -515,7 +510,6 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 		row=cur_row;
 		col=cur_col;
 	}
-
 	INT10_SetCursorPos(row,col,page);
 	while (count>0) {
 		Bit8u chr=mem_readb(string);
@@ -523,11 +517,11 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 		if (flag&2) {
 			attr=mem_readb(string);
 			string++;
-		} else attr=7;
-		INT10_TeletypeOutputAttr(chr,attr,(flag & 2)>0);
+		};
+		INT10_TeletypeOutputAttr(chr,attr,true);
 		count--;
 	}
-	if (flag & 1) {
+	if (!(flag&1)) {
 		INT10_SetCursorPos(cur_row,cur_col,page);
 	}
 }
