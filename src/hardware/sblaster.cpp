@@ -24,6 +24,7 @@
 #include "pic.h"
 #include "hardware.h"
 #include "setup.h"
+#include "programs.h"
 
 #define SB_BASE 0x220
 #define SB_IRQ 5
@@ -45,7 +46,7 @@
 
 enum {DSP_S_RESET,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 enum {
-	MODE_NONE,MODE_DAC,
+	MODE_NONE,MODE_DAC,MODE_SILENCE,
 	MODE_PCM_8S,MODE_PCM_8A,
 	MODE_ADPCM_4S
 };
@@ -91,7 +92,6 @@ struct SB_INFO {
 	Bit8u irq;
 	Bit8u dma;
 	bool enabled;
-	HWBlock hwblock;
 	MIXER_Channel * chan;
 };
 
@@ -144,7 +144,7 @@ static void DSP_SetSpeaker(bool how) {
 }
 
 static void DSP_HaltDMA(void) {
-
+	
 }
 
 static INLINE void DSP_FlushData(void) {
@@ -152,15 +152,8 @@ static INLINE void DSP_FlushData(void) {
 	sb.data_out_pos=0;
 }
 
-static void DSP_SetSampleRate(Bit32u rate) {
-/* This directly changes the mixer */
-
-	
-}
 static void DSP_StopDMA(void) {
 	sb.mode=MODE_NONE;
-//	MIXER_SetMode(sb.chan,MIXER_8MONO);
-//	MIXER_SetFreq(sb.chan,22050);
 }
 
 static void DSP_StartDMATranfser(Bit8u mode) {
@@ -169,6 +162,10 @@ static void DSP_StartDMATranfser(Bit8u mode) {
 		sb.freq=(1000000 / (256 - sb.time_constant));
 	};
 	switch (mode) {
+	case MODE_SILENCE:
+		MIXER_SetFreq(sb.chan,sb.freq);	
+		SB_DEBUG("DSP:PCM 8 bit single cycle rate %d size %d",sb.freq,sb.samples_total);
+		break;
 	case MODE_PCM_8S:
 		MIXER_SetFreq(sb.chan,sb.freq);
 		SB_DEBUG("DSP:PCM 8 bit single cycle rate %d size %d",sb.freq,sb.samples_total);
@@ -176,13 +173,11 @@ static void DSP_StartDMATranfser(Bit8u mode) {
 	case MODE_PCM_8A:
 		MIXER_SetFreq(sb.chan,sb.freq);
 		SB_DEBUG("DSP:PCM 8 bit auto init rate %d size %d",sb.freq,sb.samples_total);
-
 		break;
 	case MODE_ADPCM_4S:
 		MIXER_SetFreq(sb.chan,sb.freq);
 		SB_DEBUG("DSP:ADPCM 4 bit single cycle rate %d size %X",sb.freq,sb.samples_total);
 		break;
-
 	default:
 		LOG_ERROR("DSP:Illegal transfer mode %d",mode);
 		return;
@@ -207,6 +202,9 @@ static void DSP_Reset(void) {
 	sb.mode=MODE_NONE;
 	sb.cmd_len=0;
 	sb.cmd_in_pos=0;
+	sb.samples_left=0;
+	sb.samples_total=0;
+	sb.freq=22050;
 	sb.use_time_constant=false;
 	sb.dac.used=0;
 	sb.dac.last=0x80;
@@ -261,6 +259,10 @@ static void DSP_DoCommand(void) {
 		sb.samples_total=1+sb.cmd_in[0]+(sb.cmd_in[1] << 8);
 		DSP_StartDMATranfser(MODE_ADPCM_4S);
 		break;
+	case 0x80:	/* Silence DAC */
+		sb.samples_total=1+sb.cmd_in[0]+(sb.cmd_in[1] << 8);
+		DSP_StartDMATranfser(MODE_SILENCE);
+		break;
 	case 0xd0:	/* Halt 8-bit DMA */
 		DSP_HaltDMA();
 		break;
@@ -290,7 +292,6 @@ static void DSP_DoCommand(void) {
 */
 //TODO Ofcourse :)
 		}
-
 		break;
 	case 0xe3:	/* DSP Copyright */
 		{
@@ -445,6 +446,16 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 			}
 		}
 		break;
+	case MODE_SILENCE:
+		memset(stream,0x80,len);
+		if (sb.samples_left>len) {
+			sb.samples_left-=len;
+		} else {
+			sb.samples_left=0;
+			sb.mode=MODE_NONE;
+			PIC_ActivateIRQ(sb.irq);
+		}
+		break;
 	case MODE_PCM_8A:
 		{
 			Bit16u read=DMA_8_Read(sb.dma,stream,(Bit16u)len);
@@ -525,8 +536,6 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 
 
 
-static bool SB_enabled;
-
 static void SB_Enable(bool enable) {
 	Bitu i;
 	if (enable) {
@@ -543,92 +552,21 @@ static void SB_Enable(bool enable) {
 		for (i=sb.base+4;i<sb.base+0xf;i++){
 			IO_FreeReadHandler(i);
 			IO_FreeWriteHandler(i);
-		};
+		}
 	}
 }
-
-
-static void SB_InputHandler(char * line) {
-	bool s_off,s_on,s_base,s_irq,s_dma;
-	Bits n_base,n_irq,n_dma;
-	s_off=ScanCMDBool(line,"OFF");
-	s_on=ScanCMDBool(line,"ON");
-	s_base=ScanCMDHex(line,"BASE",&n_base);
-	s_irq=ScanCMDHex(line,"IRQ",&n_irq);
-	s_dma=ScanCMDHex(line,"DMA",&n_dma);
-	char * rem=ScanCMDRemain(line);
-	if (rem) {
-		sprintf(line,"Illegal Switch");
-		return;
-	}
-	if (s_on && s_off) {
-		sprintf(line,"Can't use /ON and /OFF at the same time");
-		return;
-	}
-	bool was_enabled=sb.enabled;
-	if (sb.enabled) SB_Enable(false);
-	if (s_base) {
-		sb.base=n_base;
-	}
-	if (s_irq) {
-		sb.irq=n_irq;
-	}
-	if (s_dma) {
-		sb.dma=n_dma;
-	}
-	if (s_on) {
-		SB_Enable(true);
-	} 
-	if (s_off) {
-		SB_Enable(false);
-		sprintf(line,"Sound Blaster has been disabled");
-		return;
-	} 
-	if (was_enabled) SB_Enable(true);
-	sprintf(line,"Sound Blaster enabled with IO %X IRQ %X DMA %X",sb.base,sb.irq,sb.dma);
-	return;
-}
-
-static void SB_OutputHandler (char * towrite) {
-	if(sb.enabled) {
-		sprintf(towrite,"IO %X IRQ %X DMA %X",sb.base,sb.irq,sb.dma);
-	} else {
-		sprintf(towrite,"Disabled");
-	}
-};
-
-
-
-
-
-
-
 
 void SBLASTER_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	if(!section->Get_bool("enabled")) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");
 	MIXER_Enable(sb.chan,false);
-	sb.state=DSP_S_NORMAL;
-/* Setup the hardware handler part */
-	sb.base=section->Get_hex("BASE");
-	sb.irq=section->Get_int("IRQ");
-	sb.dma=section->Get_int("DMA");
-	SB_Enable(true);
 
-	sb.hwblock.dev_name="SB";
-	sb.hwblock.full_name="Sound Blaster 1.5";
-	sb.hwblock.next=0;
-	sb.hwblock.help=
-		"/ON        Enables SB\n"
-		"/OFF       Disables SB\n"
-		"/BASE XXX  Set Base Addres 200-260\n"
-		"/IRQ  X    Set IRQ 1-9\n"
-		"/DMA  X    Set 8-Bit DMA Channel 0-3\n";
-	sb.hwblock.get_input=SB_InputHandler;
-	sb.hwblock.show_status=SB_OutputHandler;
-	HW_Register(&sb.hwblock);
+	sb.state=DSP_S_NORMAL;
 	
-	
+	sb.base=section->Get_hex("base");
+	sb.irq=section->Get_int("irq");
+	sb.dma=section->Get_int("dma");
+	SB_Enable(true);
 	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d T3",sb.base,sb.irq,sb.dma);
 }
