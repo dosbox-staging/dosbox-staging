@@ -35,7 +35,7 @@
 #define EMM_MAX_PAGES	(C_MEM_EMS_SIZE * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
 
-#define EMM_VERSION		0x32
+#define EMM_VERSION		0x40
 
 #define NULL_HANDLE	0xffff
 #define	NULL_PAGE	0xffff
@@ -310,6 +310,51 @@ static Bitu INT67_Handler(void) {
 			reg_ah=EMM_FUNC_NOSUP;
 			break;
 		}
+		break;
+	case 0x50: // Map/Unmap multiple handle pages
+		reg_ah = EMM_NO_ERROR;
+		switch (reg_al) {
+			case 0x00: // use physical page numbers
+				{	PhysPt data = SegPhys(ds)+reg_si;
+					for (int i=0; i<reg_cx; i++) {
+						Bit16u logPage	= mem_readw(data); data+=2;
+						Bit16u physPage = mem_readw(data); data+=2;
+						reg_ah = EMM_MapPage(physPage,reg_dx,logPage);
+						if (reg_ah!=EMM_NO_ERROR) break;
+					};
+				} break;
+			case 0x01: // use segment address 
+				{	PhysPt data = SegPhys(ds)+reg_si;
+					for (int i=0; i<reg_cx; i++) {
+						Bit16u logPage	= mem_readw(data); data+=2;
+						Bit16u physPage = (mem_readw(data)-EMM_PAGEFRAME)/(0x1000/EMM_MAX_PHYS); data+=2;
+						reg_ah = EMM_MapPage(physPage,reg_dx,logPage);
+						if (reg_ah!=EMM_NO_ERROR) break;
+					};
+				}
+				break;
+		}
+		break;
+	case 0x53: // Set/Get Handlename
+		if (reg_al==0x00) { // Get Name not supported
+			LOG_ERROR("EMS:Get handle name not supported",reg_ah);
+			reg_ah=EMM_FUNC_NOSUP;					
+		} else { // Set name, not supported but faked
+			reg_ah=EMM_NO_ERROR;	
+		}
+		break;
+	case 0x58: // Get mappable physical array address array
+		if (reg_al==0x00) {
+			PhysPt data = SegPhys(es)+reg_di;
+			Bit16u step = 0x1000 / EMM_MAX_PHYS;
+			for (Bit16u i=0; i<EMM_MAX_PHYS; i++) {
+				mem_writew(data,EMM_PAGEFRAME+step*i);	data+=2;
+				mem_writew(data,i);						data+=2;
+			};
+		};
+		// Set number of pages
+		reg_cx = EMM_MAX_PHYS;
+		reg_ah = EMM_NO_ERROR;
 		break;
 	case 0xDE:		/* VCPI Functions */
 		LOG_ERROR("VCPI Functions not supported");
