@@ -266,6 +266,22 @@ static void MIXER_MixData(Bitu needed) {
 		chan->Mix(needed);
 		chan=chan->next;
 	}
+	if (mixer.wave.handle) {
+		Bitu added=needed-mixer.done;
+		Bitu readpos=(mixer.pos+mixer.done-added)&MIXER_BUFMASK;
+		while (added--) {
+			Bits sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
+			mixer.wave.buf[mixer.wave.used][0]=MIXER_CLIP(sample);
+			sample=mixer.work[readpos][1] >> MIXER_VOLSHIFT;
+			mixer.wave.buf[mixer.wave.used][1]=MIXER_CLIP(sample);
+			readpos=(readpos+1)&MIXER_BUFMASK;
+			if (++mixer.wave.used==MIXER_WAVESIZE) {
+				mixer.wave.length+=MIXER_WAVESIZE*MIXER_SSIZE;
+				mixer.wave.used=0;
+				fwrite(mixer.wave.buf,MIXER_WAVESIZE*MIXER_SSIZE,1,mixer.wave.handle);
+			}
+		}
+	}
 	mixer.done=needed;
 }
 
@@ -279,11 +295,23 @@ static void MIXER_Mix(void) {
 }
 
 static void MIXER_Mix_NoSound(void) {
-	mixer.done=0;
+	MIXER_MixData(mixer.needed);
+	/* Clear piece we've just generated */
+	for (Bitu i=0;i<mixer.needed;i++) {
+		mixer.work[mixer.pos][0]=0;
+		mixer.work[mixer.pos][1]=0;
+		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
+	}
+	/* Reduce count in channels */
+	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
+		if (chan->done>mixer.needed) chan->done-=mixer.needed;
+		else chan->done=0;
+	}
+	/* Set values for next tick */
 	mixer.tick_remain+=mixer.tick_add;
-	Bitu count=mixer.tick_remain>>MIXER_SHIFT;
+	mixer.needed=mixer.tick_remain>>MIXER_SHIFT;
 	mixer.tick_remain&=MIXER_REMAIN;
-	MIXER_MixData(count);		
+	mixer.done=0;
 }
 
 
@@ -309,11 +337,11 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	}
 	Bit16s * output=(Bit16s *)stream;
 	while (need--) {
-		mixer.work[mixer.pos][0]>>=MIXER_VOLSHIFT;
-		*output++=MIXER_CLIP(mixer.work[mixer.pos][0]);
+		Bits sample=mixer.work[mixer.pos][0]>>MIXER_VOLSHIFT;
+		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][0]=0;
-		mixer.work[mixer.pos][1]>>=MIXER_VOLSHIFT;
-		*output++=MIXER_CLIP(mixer.work[mixer.pos][1]);
+		sample=mixer.work[mixer.pos][1]>>MIXER_VOLSHIFT;
+		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][1]=0;
 		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
 	}
@@ -454,7 +482,7 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed=section->Get_int("prebuffer");
 	if (mixer.min_needed>100) mixer.min_needed=100;
 	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
-	
+	mixer.needed=mixer.min_needed+1;
 	MAPPER_AddHandler(MIXER_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
