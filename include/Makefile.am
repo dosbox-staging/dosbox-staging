@@ -13,6 +13,7 @@ hardware.h \
 inout.h \
 joystick.h \
 keyboard.h \
+logging.h \
 mem.h \
 mixer.h \
 modules.h \

@@ -20,6 +20,7 @@ CFG=dosbox - Win32 Debug
 !MESSAGE "dosbox - Win32 Release" (based on "Win32 (x86) Console Application")
 !MESSAGE "dosbox - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE 
+
 # Begin Project
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
@@ -708,6 +709,10 @@ SOURCE=..\include\joystick.h
 # Begin Source File
 
 SOURCE=..\include\keyboard.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\logging.h
 # End Source File
 # Begin Source File
 

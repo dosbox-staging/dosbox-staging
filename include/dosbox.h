@@ -63,25 +63,12 @@ class Config;
 extern Config * control;
 extern Bitu errorlevel;
 
+
+#ifndef __LOGGING_H_
+#include "logging.h"
+#endif // the logging system.
+
 #define LOG_MSG S_Warn
-
-enum LOG_TYPES {
-	LOG_ALL,
-	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
-	LOG_SB,LOG_DMA,
-	LOG_FPU,LOG_CPU,
-	LOG_FCB,LOG_FILES,LOG_IOCTL,LOG_EXEC,LOG_DOSMISC,
-	LOG_PIT,LOG_KEYBOARD,LOG_PIC,
-	LOG_MOUSE,LOG_BIOS,LOG_GUI,LOG_MISC,
-	LOG_MAX,LOG_ERROR=0x80
-};
-
-#if C_DEBUG
-extern void DEBUG_ShowMsg(Bit32u msgmask, char * msg,...);
-#define LOG DEBUG_ShowMsg
-#else
-#define LOG
-#endif /* C_DEBUG */
 
 #endif /* __DOSBOX_H */
 
