@@ -1,5 +1,5 @@
-#ifndef __LOGGING_H_
-#define __LOGGING_H_
+#ifndef DOSBOX_LOGGING_H
+#define DOSBOX_LOGGING_H
 enum LOG_TYPES {
 	LOG_ALL,
 	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
@@ -63,5 +63,4 @@ void GFX_ShowMsg(char * format,...);
 #endif //C_DEBUG
 
 
-#endif //__LOGGING_H_
-
+#endif //DOSBOX_LOGGING_H

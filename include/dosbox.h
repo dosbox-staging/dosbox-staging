@@ -16,16 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined __DOSBOX_H
-#define __DOSBOX_H
+#ifndef DOSBOX_DOSBOX_H
+#define DOSBOX_DOSBOX_H
+
+#include "config.h"
 
 void E_Exit(char * message,...);
 
 void MSG_Add(const char*,const char*); //add messages to the internal langaugefile
-const char* MSG_Get(char const *);         //get messages from the internal langaugafile
-
-#include <stddef.h>
-#include "config.h"
+const char* MSG_Get(char const *);     //get messages from the internal langaugafile
 
 class Section;
 
@@ -50,9 +49,8 @@ enum MachineType {
 extern MachineType machine;
 extern bool SDLNetInited;
 
-#ifndef __LOGGING_H_
+#ifndef DOSBOX_LOGGING_H
 #include "logging.h"
 #endif // the logging system.
 
-#endif /* __DOSBOX_H */
-
+#endif /* DOSBOX_DOSBOX_H */
