@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.22 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.23 2004-10-25 21:16:30 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -291,7 +291,7 @@ bool Config::ParseConfigFile(const char* configfilename){
 			break;
 		default:
 			try{
-				currentsection->HandleInputline(s);
+				if(currentsection) currentsection->HandleInputline(s);
 			}catch(const char* message){
 				message=0;
 				//EXIT with message
