@@ -332,10 +332,14 @@ void MIXER_Init(Section* sec) {
 	spec.samples=mixer.blocksize;
 
 	mixer.tick_remain=0;
-	if (mixer.nosound || (SDL_OpenAudio(&spec, &obtained) < 0 )) {
+	if (mixer.nosound) {
+		LOG_MSG("MIXER:No Sound Mode Selected.");
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_RegisterTickHandler(MIXER_Mix_NoSound);
-		LOG_MSG("MIXER:Running in nosound mode.");
+	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
+		LOG_MSG("MIXER:Can't open audio: %s , running in nosound mode.",SDL_GetError());
+		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
+		TIMER_RegisterTickHandler(MIXER_Mix_NoSound);
 	} else {
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
