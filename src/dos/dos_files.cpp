@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.48 2003-10-17 16:56:06 finsterr Exp $ */
+/* $Id: dos_files.cpp,v 1.49 2003-11-08 13:41:04 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -359,7 +359,15 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
-	
+
+	Bit16u attr;
+	if(DOS_GetFileAttr(name,&attr)){ //DON'T ALLOW directories to be openened
+		if((attr & DOS_ATTR_DIRECTORY) || (attr & DOS_ATTR_VOLUME)){
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
+	}
+      
 	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
 	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
