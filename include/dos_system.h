@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.14 2003-08-13 14:46:15 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.15 2003-09-22 12:22:25 finsterr Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -104,6 +104,9 @@ public:
 	char*		GetExpandName		(const char* path);
 	bool		GetShortName		(const char* fullname, char* shortname);
 	
+	bool		FindFirst			(char* path, Bit16u& id);
+	bool		FindNext			(Bit16u& id, char* &result);
+
 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
 	void		AddEntry			(const char* path, bool checkExist = false);
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
@@ -118,7 +121,6 @@ public:
 			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
 			fileList.clear();
 			longNameList.clear();
-			outputList.clear();
 		};
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
@@ -129,13 +131,12 @@ public:
 		// contents
 		std::vector<CFileInfo*>	fileList;
 		std::vector<CFileInfo*>	longNameList;
-		std::vector<CFileInfo*>	outputList;
 	};
 
 private:
 
 	bool		RemoveTrailingDot	(char* shortname);
-	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
+	Bits		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
 	bool		SetResult			(CFileInfo* dir, char * &result, Bit16u entryNr);
@@ -160,6 +161,7 @@ private:
 	CFileInfo*	dirSearch			[MAX_OPENDIRS];
 	char		dirSearchName		[MAX_OPENDIRS];
 	bool		free				[MAX_OPENDIRS];
+	CFileInfo*	dirFindFirst;
 
 	char		label				[CROSS_LEN];
 };
