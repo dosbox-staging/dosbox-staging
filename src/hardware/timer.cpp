@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.27 2004-08-31 15:56:10 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.28 2004-09-07 11:28:27 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -37,7 +37,6 @@ static INLINE void BCD2BIN(Bit16u& val) {
 	val=temp;
 }
 
-static bool pit0_scheduled;
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
 	
@@ -52,15 +51,37 @@ struct PIT_Block {
 	Bit16u write_latch;
 	bool bcd;
 	bool go_read_latch;
+	bool new_mode;
 };
 
 static PIT_Block pit[3];
 
 static void PIT0_Event(Bitu val) {
 	PIC_ActivateIRQ(0);
-	if (pit[0].mode!=0) {
-		PIC_AddEvent(PIT0_Event,pit[0].micro);
-	} else pit0_scheduled=false;
+	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].micro);
+}
+
+static bool counter_output(Bitu counter) {
+	PIT_Block * p=&pit[counter];
+	Bit64s micro=PIC_MicroCount()-p->start;
+	switch (p->mode) {
+	case 0:
+		if (p->new_mode) return false;
+		if (micro>p->micro) return true;
+		else return false;
+		break;
+	case 2:
+		if (p->new_mode) return true;
+		micro%=p->micro;
+		return micro>0;
+	case 3:
+		if (p->new_mode) return true;
+		micro%=p->micro;
+		return micro*2<p->micro;
+	default:
+		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading output",p->mode);
+		return true;
+	}
 }
 
 static void counter_latch(Bitu counter) {
@@ -69,7 +90,6 @@ static void counter_latch(Bitu counter) {
 	p->go_read_latch=false;
 
 	Bit64s micro=PIC_MicroCount()-p->start;
-	
 	switch (p->mode) {
 	case 0:		/* Interrupt on Terminal Count */
 		/* Counter keeps on counting after passing terminal count */
@@ -136,11 +156,10 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 		if (!p->micro) 	p->micro=1;
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
-			if (!p->mode || !pit0_scheduled) {
-				pit0_scheduled=true;
-				PIC_RemoveEvents(PIT0_Event);
+			if (p->new_mode) {
+				p->new_mode=false;			
 				PIC_AddEvent(PIT0_Event,p->micro);
-			}
+			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
 			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,(Bit32u)p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
@@ -207,6 +226,14 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 			pit[latch].read_state  = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
 			pit[latch].mode        = (val >> 1) & 0x07;
+			if (pit[latch].mode>5)
+				pit[latch].mode-=4; //6,7 become 2 and 3
+			if (latch==0) {
+				PIC_RemoveEvents(PIT0_Event);
+				if (!counter_output(0) && pit[latch].mode)
+					PIC_ActivateIRQ(0);
+			}
+			pit[latch].new_mode	   = true;
 		}
 		break;
     case 3:
@@ -260,7 +287,6 @@ void TIMER_Init(Section* sect) {
 	pit[1].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[1].cntr));
 	pit[2].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[2].cntr));
 
-	pit0_scheduled=true;
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
 
