@@ -99,7 +99,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 		mcb_segment+=pmcb->size+1;
 	}
 	return false;
-};
+}
 
 
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
@@ -135,7 +135,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	*blocks=total;
 	DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 	return false;
-};
+}
 
 
 bool DOS_FreeMemory(Bit16u segment) {
@@ -151,16 +151,11 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 
 void DOS_SetupMemory(void) {
-//TODO Maybe allocate some memory for dos transfer buffers
-//Although i could use bios regions for that for max free low memory
 	MCB * mcb=(MCB *) HostMake(MEM_START,0);
 	mcb->psp_segment=MCB_FREE;						//Free
 	mcb->size=0x9FFE - MEM_START;
 	mcb->type=0x5a;									//Last Block
 	dos.firstMCB=MEM_START;
-
-	// Create Dos Info Block : maximum size 95 Bytes....
-	dosInfoBlock.SetLocation(DOS_GetMemory(6));
-	dosInfoBlock.SetFirstMCB(RealMake(dos.firstMCB,0));
+	dos_infoblock.SetFirstMCB(RealMake(MEM_START,0));
 }
 
