@@ -24,6 +24,17 @@
 #include "inout.h"
 #include "int10.h"
 
+static INLINE void CGA_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	PhysPt dest=base+((curmode->twidth*rnew)*(curmode->cheight/2)+cleft)*2;
+	PhysPt src=base+((curmode->twidth*rold)*(curmode->cheight/2)+cleft)*2;	
+	Bitu copy=(cright-cleft)*2;Bitu nextline=curmode->twidth*2;
+	for (Bits i=0;i<curmode->cheight/2;i++) {
+		MEM_BlockCopy(dest,src,copy);
+		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
+		dest+=nextline;src+=nextline;
+	}
+}
+
 static INLINE void PLANAR4_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	PhysPt src,dest;Bitu copy;
 	dest=base+(curmode->twidth*rnew)*curmode->cheight+cleft;	
@@ -38,7 +49,6 @@ static INLINE void PLANAR4_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,B
 	for (;copy>0;copy--) {
 		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,mem_readb(src+x));
 		dest+=nextline;src+=nextline;
-
 	}
 	/* Restore registers */
 	IO_Write(0x3ce,5);IO_Write(0x3cf,0);		/* Normal transfer mode */
@@ -51,6 +61,19 @@ static INLINE void TEXT_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8
 	dest=base+(rnew*curmode->twidth+cleft)*2;
 	MEM_BlockCopy(dest,src,(cright-cleft)*2);
 }
+
+static INLINE void CGA_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	PhysPt dest=base+((curmode->twidth*row)*(curmode->cheight/2)+cleft)*2;
+	Bitu copy=(cright-cleft)*2;Bitu nextline=curmode->twidth*2;
+	for (Bits i=0;i<curmode->cheight/2;i++) {
+		for (Bitu x=0;x<copy;x++) {
+			mem_writeb(dest+x,attr);
+			mem_writeb(dest+8*1024+x,attr);
+		}
+		dest+=nextline;
+	}
+}
+
 
 static INLINE void PLANAR4_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	/* Set Bitmask / Color / Full Set Reset */
@@ -77,12 +100,10 @@ static INLINE void TEXT_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8
 		mem_writew(dest,fill);
 		dest+=2;
 	}
-	
 }
 
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page) {
-	
 	/* Do some range checking */
 	BIOS_NCOLS;BIOS_NROWS;
 	if(rul>rlr) return;
@@ -116,9 +137,10 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 		case MTEXT:
 		case CTEXT:		
 			TEXT_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
+		case CGA:
+			CGA_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
 		case PLANAR4:		
 			PLANAR4_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
-
 		}	
 	} while (start!=end);
 	/* Fill some lines */
@@ -134,6 +156,8 @@ filling:
 		case MTEXT:
 		case CTEXT:		
 			TEXT_FillRow(curmode,cul,clr,start,base,attr);break;
+		case CGA:		
+			CGA_FillRow(curmode,cul,clr,start,base,attr);break;
 		case PLANAR4:		
 			PLANAR4_FillRow(curmode,cul,clr,start,base,attr);break;
 		}	
@@ -259,9 +283,6 @@ INLINE static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u at
 		break;
 	}
 }
-
-
-
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
