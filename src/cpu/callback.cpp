@@ -16,10 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.16 2003-09-29 21:06:49 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.17 2003-11-09 16:44:07 finsterr Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "dosbox.h"
 #include "callback.h"
@@ -34,6 +35,8 @@
 
 
 CallBack_Handler CallBack_Handlers[CB_MAX];
+char* CallBack_Description[CB_MAX];
+
 static Bitu call_stop,call_idle,call_default;
 
 static Bitu illegal_handler(void) {
@@ -117,9 +120,22 @@ void CALLBACK_SCF(bool val) {
 	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newCF));
 };
 
+void CALLBACK_SetDescription(Bitu nr, const char* descr)
+{
+	if (descr) {
+		CallBack_Description[nr] = new char[strlen(descr)+1];
+		strcpy(CallBack_Description[nr],descr);
+	} else
+		CallBack_Description[nr] = 0;
+};
 
+const char* CALLBACK_GetDescription(Bitu nr)
+{
+	if (nr>=CB_MAX) return 0;
+	return CallBack_Description[nr];
+};
 
-bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
+bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr) {
 	if (callback>=CB_MAX) return false;
 	switch (type) {
 	case CB_RETF:
@@ -147,10 +163,11 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
 
 	}
 	CallBack_Handlers[callback]=handler;
+	CALLBACK_SetDescription(callback,descr);
 	return true;
 }
 
-bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress) {
+bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress,const char* descr) {
 	if (callback>=CB_MAX) return false;
 	switch (type) {
 	case CB_RETF:
@@ -176,6 +193,7 @@ bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu line
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}
 	CallBack_Handlers[callback]=handler;
+	CALLBACK_SetDescription(callback,descr);
 	return true;
 }
 
