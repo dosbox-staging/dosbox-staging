@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.75 2004-09-01 06:46:49 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.76 2004-09-08 14:14:46 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -778,8 +778,25 @@ static void GUI_StartUp(Section * sec) {
 	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
 	sdl.desktop.fixed=section->Get_bool("fullfixed");
-	sdl.desktop.width=section->Get_int("fullwidth");
-	sdl.desktop.height=section->Get_int("fullheight");
+	const char* fullresolution=section->Get_string("fullresolution");
+	if(fullresolution && *fullresolution) {
+		char res[100]= { 0 };
+		strcpy(res,fullresolution);
+		fullresolution = lowcase (res);//so x and X are allowed
+
+		char* height = strchr(fullresolution,'x');
+		if(height && * height) {
+			*height = 0;
+			sdl.desktop.height = atoi(height+1);
+			sdl.desktop.width  = atoi(res);
+		} else {
+			sdl.desktop.width  = 0;
+			sdl.desktop.height = 0;
+		}
+	} else {
+		sdl.desktop.width  = 0;
+		sdl.desktop.height = 0;
+	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
 	sdl.desktop.hwscale=section->Get_float("hwscale");
 	if (sdl.desktop.hwscale<0.1f) {
@@ -1010,8 +1027,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("fulldouble",false);
 		sdl_sec->Add_bool("fullfixed",false);
-		sdl_sec->Add_int("fullwidth",0);
-		sdl_sec->Add_int("fullheight",0);
+		sdl_sec->Add_string("fullresolution","1024x768");
 		sdl_sec->Add_string("output","surface");
 		sdl_sec->Add_float("hwscale",1.0);
 		sdl_sec->Add_bool("autolock",true);
@@ -1024,7 +1040,7 @@ int main(int argc, char* argv[]) {
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
 			"fulldouble -- Use double buffering in fullscreen.\n"
 			"fullfixed -- Don't resize the screen when in fullscreen.\n"
-			"fullwidth/height -- What resolution to use for fullscreen, use together with fullfixed.\n"
+			"fullresolution -- What resolution to use for fullscreen, use together with fullfixed.\n"
 			"output -- What to use for output: surface,overlay"
 #if C_OPENGL
 			",opengl,openglnb"
