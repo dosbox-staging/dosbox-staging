@@ -19,9 +19,30 @@
 #ifndef _SETUP_H_
 #define _SETUP_H_
 
+#pragma warning ( disable : 4786 )
+
 #include <cross.h>
 #include <string>
 #include <list>
+
+class CommandLine {
+public:
+	CommandLine(int argc,char * argv[]);
+	CommandLine(char * name,char * cmdline);
+	const char * GetFileName(){ return file_name.c_str();}	
+
+	bool FindExist(char * name,bool remove=false);
+	bool FindHex(char * name,int & value,bool remove=false);
+	bool FindInt(char * name,int & value,bool remove=false);
+	bool FindString(char * name,std::string & value,bool remove=false);
+
+	bool FindFirst(std::string & value);
+private:
+	typedef std::list<std::string>::iterator cmd_it;
+	std::list<std::string> cmds;
+	std::string file_name;
+	bool FindEntry(char * name,cmd_it & it,bool neednext=false);
+};
 
 union Value{
 	int _hex;
@@ -121,7 +142,9 @@ public:
 
 class Config{
 public:
-	Config(){};
+	Config(CommandLine * cmd){ cmdline=cmd;}
+
+	CommandLine * cmdline;
 
 	Section * AddSection(const char * _name,void (*_initfunction)(Section*));
 	Section_line * AddSection_line(const char * _name,void (*_initfunction)(Section*));
@@ -129,37 +152,17 @@ public:
 	
 	Section* GetSection(const char* _sectionname);
 
+	void SetStartUp(void (*_function)(void));
 	void Init();
-	void ParseConfigFile(const char* configfilename);
+	void ShutDown();
+	void StartUp();
 
+	void ParseConfigFile(const char* configfilename);
+	
 	std::list<Section*> sectionlist;
 	typedef std::list<Section*>::iterator it;
-};
-
-
-
-
-
-
-enum { S_STRING,S_HEX,S_INT,S_BOOL};
-
-typedef char *(String_Handler)(char * input);
-typedef char *(Hex_Handler)(Bitu * input);
-typedef char *(Int_Handler)(Bits * input);
-typedef char *(Bool_Handler)(bool input);
-	
-class Setup {
-
-	
 private:
-	int argc;
-	char * * argv;
-
+	void (* _start_function)(void);
 };
-
-
-
-extern char dosbox_basedir[CROSS_LEN];
-	
 
 #endif
