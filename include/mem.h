@@ -20,8 +20,6 @@
 #define __MEM_H
 #include <dosbox.h>
 
-#define bmemcpy(mem1,mem2,size) memcpy((void *)mem1,(void *)mem2,size)
-
 typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
 typedef Bit32u RealPt;
@@ -29,6 +27,8 @@ typedef Bit32u RealPt;
 typedef Bit32s MemHandle;
 
 #define MEM_PAGESIZE 4096
+
+extern HostPt MemBase;
 
 bool MEM_A20_Enabled(void);
 void MEM_A20_Enable(bool enable);
@@ -123,9 +123,25 @@ void mem_writeb(PhysPt pt,Bit8u val);
 void mem_writew(PhysPt pt,Bit16u val);
 void mem_writed(PhysPt pt,Bit32u val);
 
-void phys_writeb(PhysPt addr,Bit8u val);
-void phys_writew(PhysPt addr,Bit16u val);
-void phys_writed(PhysPt addr,Bit32u val);
+INLINE void phys_writeb(PhysPt addr,Bit8u val) {
+	host_writeb(MemBase+addr,val);
+}
+INLINE void phys_writew(PhysPt addr,Bit16u val){
+	host_writew(MemBase+addr,val);
+}
+INLINE void phys_writed(PhysPt addr,Bit32u val){
+	host_writed(MemBase+addr,val);
+}
+
+INLINE Bit8u phys_readb(PhysPt addr) {
+	return host_readb(MemBase+addr);
+}
+INLINE Bit16u phys_readw(PhysPt addr){
+	return host_readw(MemBase+addr);
+}
+INLINE Bit32u phys_readd(PhysPt addr){
+	return host_readd(MemBase+addr);
+}
 
 /* These don't check for alignment, better be sure it's correct */
 

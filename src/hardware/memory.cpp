@@ -34,11 +34,6 @@
 #define LFB_PAGES	512
 #define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
 
-struct AllocBlock {
-	Bit8u				data[PAGES_IN_BLOCK*4096];
-	AllocBlock			* next;
-};
-
 struct LinkBlock {
 	Bitu used;
 	Bit32u pages[MAX_LINKS];
@@ -47,14 +42,8 @@ struct LinkBlock {
 static struct MemoryBlock {
 	Bitu pages;
 	PageHandler * * phandlers;
-	HostPt * hostpts;
 	MemHandle * mhandles;
 	LinkBlock links;
-	struct {
-		Bitu			pages;
-		HostPt			cur_page;
-		AllocBlock		*cur_block;
-	} block;
 	struct	{
 		Bitu		start_page;
 		Bitu		end_page;
@@ -66,6 +55,8 @@ static struct MemoryBlock {
 		Bit8u controlport;
 	} a20;
 } memory;
+
+HostPt MemBase;
 
 class IllegalPageHandler : public PageHandler {
 public:
@@ -90,10 +81,7 @@ public:
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
 	HostPt GetHostPt(Bitu phys_page) {
-		if (!memory.hostpts[phys_page]) {
-			memory.hostpts[phys_page]=MEM_GetBlockPage();
-		}
-		return memory.hostpts[phys_page];
+		return MemBase+phys_page*MEM_PAGESIZE;
 	}
 };
 
@@ -467,51 +455,6 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
-void phys_writeb(PhysPt addr,Bit8u val) {
-	HostPt block=memory.hostpts[addr >> 12];
-	if (!block) {
-		block=memory.hostpts[addr >> 12]=MEM_GetBlockPage();
-	}
-	host_writeb(block+(addr & 4095),val);
-}
-
-void phys_writew(PhysPt addr,Bit16u val) {
-	phys_writeb(addr,(Bit8u)val);
-	phys_writeb(addr+1,(Bit8u)(val >> 8));	
-}
-
-void phys_writed(PhysPt addr,Bit32u val) {
-	phys_writeb(addr,(Bit8u)val);
-	phys_writeb(addr+1,(Bit8u)(val >> 8));
-	phys_writeb(addr+2,(Bit8u)(val >> 16));
-	phys_writeb(addr+3,(Bit8u)(val >> 24));
-}
-
-Bit32u MEM_PhysReadD(Bitu addr) {
-	Bitu page=addr >> 12;
-	Bitu index=(addr & 4095);
-	if (page>memory.pages) 
-		E_Exit("Reading from illegal page");
-	HostPt block=memory.hostpts[page];
-	if (!block) {
-		E_Exit("Reading from empty page");
-	}
-	return host_readd(block+index);
-}
-
-void MEM_PhysWriteD(Bitu addr,Bit32u val) {
-	Bitu page=addr >> 12;
-	Bitu index=(addr & 4095);
-	if (page>memory.pages) 
-		E_Exit("Writing  from illegal page");
-	HostPt block=memory.hostpts[page];
-	if (!block) {
-		E_Exit("Writing to empty page");
-	}
-	host_writed(block+index,val);
-}
-
-
 static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
@@ -524,41 +467,13 @@ static Bitu read_p92(Bitu port,Bitu iolen) {
 }
 
 
-HostPt MEM_GetBlockPage(void) {
-	HostPt ret;
-	if (memory.block.pages) {
-		ret=memory.block.cur_page;
-		memory.block.pages--;
-		memory.block.cur_page+=4096;
-	} else {
-		AllocBlock * newblock=new AllocBlock;
-		memset(newblock,0,sizeof(AllocBlock));	//zero new allocated memory
-		newblock->next=memory.block.cur_block;
-		memory.block.cur_block=newblock;
-		
-		memory.block.pages=PAGES_IN_BLOCK-1;
-		ret=&newblock->data[0];
-		memory.block.cur_page=&newblock->data[4096];
-	}
-	return ret;
-}
-
 static void MEM_ShutDown(Section * sec) {
-	AllocBlock * theblock=memory.block.cur_block;
-	while (theblock) {
-		AllocBlock * next=theblock->next;
-		delete theblock;
-		theblock=next;
-	}
+	free(MemBase);
 }
 
 void MEM_Init(Section * sec) {
 	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(sec);
-
-	/* Setup Memory Block */
-	memory.block.pages=0;
-	memory.block.cur_block=0;	
 
 	/* Setup the Physical Page Links */
 	Bitu memsize=section->Get_int("memsize");
@@ -568,13 +483,13 @@ void MEM_Init(Section * sec) {
 		LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY);
 		memsize=MAX_MEMORY;
 	}
+	MemBase=(HostPt)malloc(memsize*1024*1024);
+	if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
 	memory.pages=(memsize*1024*1024)/4096;
 	/* Allocate the data for the different page information blocks */
-	memory.hostpts=new HostPt[memory.pages];
 	memory.phandlers=new  PageHandler * [memory.pages];
 	memory.mhandles=new MemHandle [memory.pages];
 	for (i=0;i<memory.pages;i++) {
-		memory.hostpts[i]=0;				//0 handler is allocate memory
 		memory.phandlers[i]=&ram_page_handler;
 		memory.mhandles[i]=0;				//Set to 0 for memory allocation
 	}

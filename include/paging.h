@@ -70,11 +70,6 @@ bool PAGING_MakePhysPage(Bitu & page);
 void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
 
-Bit32u MEM_PhysReadD(Bitu addr);
-
-
-
-
 #pragma pack(1)
 typedef struct {
 	Bit32u		p:1;
