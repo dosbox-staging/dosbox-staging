@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.77 2004-11-16 14:24:52 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.78 2004-11-29 21:00:55 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,11 +30,14 @@
 #include "regs.h"
 #include "dos_inc.h"
 #include "setup.h"
+#include "support.h"
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
-Bit8u dos_copybuf[0x10000];
+#define DOS_COPYBUFSIZE 0x10000
+Bit8u dos_copybuf[DOS_COPYBUFSIZE];
+
 static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
 
 void DOS_SetError(Bit16u code) {
@@ -89,8 +92,9 @@ static Bitu DOS_21Handler(void) {
 			}
 		default:
 			{
-				Bit8u c=reg_dl;Bit16u n=1;
+				Bit8u c = reg_dl;Bit16u n = 1;
 				DOS_WriteFile(STDOUT,&c,&n);
+				reg_al = reg_dl;
 			}
 			break;
 		};
@@ -800,14 +804,15 @@ static Bitu DOS_21Handler(void) {
 	case 0x65:					/* Get extented country information and a lot of other useless shit*/
 		{ /* Todo maybe fully support this for now we set it standard for USA */ 
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:65:Extended country information call %X",reg_ax);
-			if(reg_cx < 0x05 ) {
+			if((reg_al <=  0x07) && (reg_cx < 0x05)) {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				CALLBACK_SCF(true);
 				break;
 			}
+			Bitu len = 0; /* For 0x21 and 0x22 */
 			PhysPt data=SegPhys(es)+reg_di;
 			switch (reg_al) {
-			case 1:
+			case 0x01:
 				mem_writeb(data + 0x00,reg_al);
 				mem_writew(data + 0x01,0x26);
 				mem_writew(data + 0x03,1);
@@ -819,15 +824,40 @@ static Bitu DOS_21Handler(void) {
 				}
 				CALLBACK_SCF(false);
 				break;
-			case 2:	// Get pointer to uppercase table
-			case 3: // Get pointer to lowercase table
-			case 4: // Get pointer to filename uppercase table
-			case 5: // Get pointer to filename terminator table
-			case 6: // Get pointer to collating sequence table
-			case 7: // Get pointer to double byte char set table
-				mem_writeb(data,reg_al);
-				mem_writed(data+1,dos.tables.dcbs); //used to be 0
-				reg_cx=5;
+			case 0x02: // Get pointer to uppercase table
+			case 0x03: // Get pointer to lowercase table
+			case 0x04: // Get pointer to filename uppercase table
+			case 0x05: // Get pointer to filename terminator table
+			case 0x06: // Get pointer to collating sequence table
+			case 0x07: // Get pointer to double byte char set table
+				mem_writeb(data + 0x00, reg_al);
+				mem_writed(data + 0x01, dos.tables.dcbs); //used to be 0
+				reg_cx = 5;
+				CALLBACK_SCF(false);
+				break;
+			case 0x20: /* Capitalize Character */
+				{
+					int in  = reg_dl;
+					int out = toupper(in);
+					reg_dl  = out;
+				}
+				CALLBACK_SCF(false);
+				break;
+			case 0x21: /* Capitalize String (cx=length) */
+			case 0x22: /* Capatilize ASCIZ string */
+				data = SegPhys(ds) + reg_dx;
+				if(reg_al == 0x21) len = reg_cx; 
+				else len = mem_strlen(data); /* Is limited to 1024 */
+
+				if(len > DOS_COPYBUFSIZE - 1) E_Exit("DOS:0x65 Buffer overflow");
+				if(len) {
+					MEM_BlockRead(data,dos_copybuf,len);
+					dos_copybuf[len] = 0;
+					//No upcase as String(0x21) might be multiple asciz strings
+					for(Bitu count = 0; count < len;count++)
+						dos_copybuf[count] = toupper(*reinterpret_cast<unsigned char*>(dos_copybuf+count));
+					MEM_BlockWrite(data,dos_copybuf,len);
+				}
 				CALLBACK_SCF(false);
 				break;
 			default:
