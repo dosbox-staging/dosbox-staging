@@ -41,7 +41,7 @@
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
 
-#if 1
+#if 0
 #define DYN_LOG	LOG_MSG
 #else 
 #define DYN_LOG
@@ -216,7 +216,7 @@ findblock:;
 		if (!block) {
 			cache.block.running=0;
 			block=CreateCacheBlock(ip_point,cpu.code.big,128);
-			DYN_LOG("Created block size %x type %d",block->cache.size,block->type);
+//			DYN_LOG("Created block size %x type %d",block->cache.size,block->type);
 			chandler->AddCacheBlock(block);
 			if (block->page.end>=4096) {
 				DYN_LOG("block crosses page boundary");
@@ -259,12 +259,12 @@ run_block:
 		}
 	} else {
 		if (handler->flags & PFLAG_NOCODE) {
-			LOG_MSG("can't run code in this page");
+			LOG_MSG("DYNX86:Can't run code in this page");
 			return CPU_Core_Normal_Run();
 		} 
 		Bitu phys_page=ip_page;
 		if (!PAGING_MakePhysPage(phys_page)) {
-			LOG_MSG("Can't find physpage");
+			LOG_MSG("DYNX86:Can't find physpage");
 			return CPU_Core_Normal_Run();
 		}
 		chandler=new CodePageHandler(handler);
