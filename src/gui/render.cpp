@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.27 2004-06-10 07:18:19 harekiet Exp $ */
+/* $Id: render.cpp,v 1.28 2004-07-04 21:18:05 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -29,6 +29,7 @@
 #include "setup.h"
 #include "mapper.h"
 #include "cross.h"
+#include "hardware.h"
 #include "support.h"
 
 #include "render_scalers.h"
@@ -69,7 +70,6 @@ static struct {
 #if (C_SSHOT)
 	struct {
 		Bitu bpp,width,height,rowlen;
-		const char * dir;
 		Bit8u * buffer,* draw;
 		bool take,taking;
 	} shot;
@@ -92,8 +92,6 @@ static void RENDER_ShotDraw(const Bit8u * src) {
 
 /* Take a screenshot of the data that should be rendered */
 static void TakeScreenShot(Bit8u * bitmap) {
-	Bitu last=0;char file_name[CROSS_LEN];
-	DIR * dir;struct dirent * dir_ent;
 	png_structp png_ptr;
 	png_infop info_ptr;
 	png_bytep * row_pointers;
@@ -101,30 +99,9 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	Bitu i;
 
 /* Find a filename to open */
-	dir=opendir(render.shot.dir);
-	if (!dir) {
-		LOG_MSG("Can't open snapshot directory %s",render.shot.dir);
-		return;
-	}
-	while (dir_ent=readdir(dir)) {
-		char tempname[CROSS_LEN];
-		strcpy(tempname,dir_ent->d_name);
-		char * test=strstr(tempname,".png");
-		if (!test) continue;
-		*test=0;
-		if (strlen(tempname)<5) continue;
-		if (strncmp(tempname,"snap",4)!=0) continue;
-		Bitu num=atoi(&tempname[4]);
-		if (num>=last) last=num+1;
-	}
-	closedir(dir);
-	sprintf(file_name,"%s%csnap%04d.png",render.shot.dir,CROSS_FILESPLIT,last);
 	/* Open the actual file */
-	FILE * fp=fopen(file_name,"wb");
-	if (!fp) {
-		LOG_MSG("Can't open file %s for snapshot",file_name);
-		return;
-	}
+	FILE * fp=OpenCaptureFile("Screenshot",".png");
+	if (!fp) return;
 	/* First try to alloacte the png structures */
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
 	if (!png_ptr) return;
@@ -179,7 +156,6 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	
 	/*clean up dynamically allocated RAM.*/
 	free(row_pointers);
-	LOG_MSG("Took snapshot in file %s",file_name);
 }
 
 static void EnableScreenShot(void) {
@@ -407,7 +383,6 @@ void RENDER_Init(Section * sec) {
 	render.frameskip.count=0;
 	render.updating=true;
 #if (C_SSHOT)
-	render.shot.dir=section->Get_string("snapdir");
 	MAPPER_AddHandler(EnableScreenShot,MK_f5,MMOD1,"scrshot","Screenshot");
 #endif
 	const char * scaler;std::string cline;
