@@ -1,3 +1,29 @@
+0.63
+  - Fixed crash with keymapper (ctrl-f1) and output=surface.
+  - Added unmounting.
+  - Fixed multiple issues with drive labels.
+  - Fixed most if not all FILES=XX problems.
+  - Added redirection in the shell.
+  - Fixed crashes with subst.
+  - Fixed multiple crashes with the drive images support.
+  - Added a missing fpu instruction.
+  - Fixed some cpu and fpu instructions.
+  - Fixed a small bug related to font loading.
+  - Rewrote the devices support.
+  - Added capslock/numlock checks on startup.
+  - Fixed wave writing.
+  - A few internal DOS fixes.
+  - Timer fixes for the hybrid loader.
+  - Some small soundblaster fixes.
+  - The drive cache can now be cleared by a keycombo.
+  - A few keyboard fixes.
+  - Compilation fixes on various platforms.
+  - Quite some debugger improvements.
+  - Fixed dir only showing files after the first run on cdrom drives.
+  - Added some cdrom detection checks.
+  - Enabled insert in the shell. (Easier editing of commands)
+  - Changed order in which executables appear with tab-completion.
+  
 0.62
   - Added blinking support in the shell and some color fixes.
   - Fixed commandline parsing when .bat files involved (fixes -exit)
