@@ -146,7 +146,7 @@ INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
 	Bitu index=(address>>12);
 
 	if (paging.tlb.write[index]) host_writeb(paging.tlb.write[index]+address,val);
-	else return paging.tlb.handler[index]->writeb(address,val);
+	else paging.tlb.handler[index]->writeb(address,val);
 }
 
 INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
@@ -155,7 +155,7 @@ INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
 	Bitu index=(address>>12);
 
 	if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
-	else return paging.tlb.handler[index]->writew(address,val);
+	else paging.tlb.handler[index]->writew(address,val);
 }
 
 INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
@@ -163,7 +163,7 @@ INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
 
 	Bitu index=(address>>12);
 	if (paging.tlb.write[index]) host_writed(paging.tlb.write[index]+address,val);
-	else return paging.tlb.handler[index]->writed(address,val);
+	else paging.tlb.handler[index]->writed(address,val);
 
 }
 
