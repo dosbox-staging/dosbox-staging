@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.51 2004-10-23 15:15:07 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.52 2004-11-13 12:04:47 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -113,14 +113,13 @@ void DOS_Shell::ParseLine(char * line) {
  	if (line[0]=='@') line[0]=' ';
 	line=trim(line);
 
-#if 1
 	/* Do redirection and pipe checks */
 	
 	char * in=0;
 	char * out=0;
 
 	Bit16u old_in,old_out;
-
+	Bit16u dummy,dummy2;
 	Bitu num=0;		/* Number of commands in this line */
 	bool append;
 
@@ -129,17 +128,33 @@ void DOS_Shell::ParseLine(char * line) {
 //	if (in || num>1) DOS_DuplicateEntry(0,&old_in);
 
 	if (in) {
-		LOG_MSG("SHELL:Redirect input from %s",in);
+		if(DOS_OpenFile(in,2,&dummy)) { //Test if file exists
+			DOS_CloseFile(dummy);
+			LOG_MSG("SHELL:Redirect input from %s",in);
+			DOS_CloseFile(0); //Close stdin
+			DOS_OpenFile(in,2,&dummy);//Open new stdin
+		}
+	}
+	if (out){
+		LOG_MSG("SHELL:Redirect output to %s",out);
+		DOS_CloseFile(1);
+		/* Create if not exist. Open if exist. Both in read/write mode */
+		if(!DOS_OpenFileExtended(out,2,2,0x11,&dummy,&dummy2))
+			DOS_OpenFile("con",2,&dummy); //Read only file, open con again
+	}
+	/* Run the actual command */
+	DoCommand(line);
+	/* Restore handles */
+	if(in) {
 		DOS_CloseFile(0);
+		DOS_OpenFile("con",2,&dummy);
 		free(in);
 	}
-	if (out) {
-		LOG_MSG("SHELL:Redirect output to %s",out);
+	if(out) {   
+		DOS_CloseFile(1);
+		DOS_OpenFile("con",2,&dummy);
 		free(out);
 	}
-#endif
-	DoCommand(line);
-	
 }
 
 
@@ -343,7 +358,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Run a program. For batch file compatibility only.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
-   
+	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
+
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
