@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: support.cpp,v 1.17 2003-08-17 13:08:05 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "dosbox.h"
+#include "debug.h"
 #include "support.h"
 #include "video.h"
 
@@ -157,6 +159,9 @@ char * StripWord(char * cmd) {
 
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
+#if C_HEAVY_DEBUG
+ 	DEBUG_HeavyWriteLogInstruction();
+#endif
 	if(errorlevel>=1) {
 		va_list msg;
 		va_start(msg,format);
