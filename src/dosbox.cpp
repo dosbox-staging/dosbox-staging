@@ -204,11 +204,10 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("adlib",true);
 	secprop->AddInitFunction(&CMS_Init);
     secprop->Add_bool("cms",false);
+	secprop->AddInitFunction(&MPU401_Init);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init);
 
-	secprop=control->AddSection_prop("gus",&MPU401_Init);
-	
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
 	secprop->Add_bool("enabled",true);
 
