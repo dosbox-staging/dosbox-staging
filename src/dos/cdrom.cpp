@@ -33,6 +33,7 @@ CDROM_Interface_Aspi::CDROM_Interface_Aspi(void)
 	hEvent					= NULL;
 	pGetASPI32SupportInfo	= NULL;
 	pSendASPI32Command		= NULL;
+	memset(&oldLeadOut,0,sizeof(oldLeadOut));
 };
 
 CDROM_Interface_Aspi::~CDROM_Interface_Aspi(void)
@@ -421,31 +422,7 @@ bool CDROM_Interface_Aspi::PlayAudioSector(unsigned long start,unsigned long len
 
 bool CDROM_Interface_Aspi::StopAudio(void)
 {
-	SRB_ExecSCSICmd s;DWORD dwStatus;
-
-	hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
-
-	memset(&s,0,sizeof(s));
-
-	s.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-	s.SRB_HaId       = haId;
-	s.SRB_Target     = target;
-	s.SRB_Lun        = lun;
-	s.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-	s.SRB_BufLen     = 0x00;
-	s.SRB_SenseLen   = 0x0E;
-	s.SRB_CDBLen     = 0x0A;
-	s.SRB_PostProc   = (LPVOID)hEvent;
-	s.CDBByte[0]     = 0x4E;
-
-	ResetEvent(hEvent);
-	dwStatus=pSendASPI32Command((LPSRB)&s);
-
-	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,30000);
-
-	if (s.SRB_Status!=SS_COMP) return false;
-
-	return true;
+	return PauseAudio(false);
 };
 
 bool CDROM_Interface_Aspi::PauseAudio(bool resume)
@@ -658,44 +635,18 @@ bool CDROM_Interface_Aspi::LoadUnloadMedia(bool unload)
 
 bool CDROM_Interface_Aspi::GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged, bool& trayOpen)
 {
-	mediaPresent = mediaChanged = trayOpen = false;
-
-	SRB_ExecSCSICmd s;DWORD dwStatus;
-	BYTE buffer[12];
-
-	hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
-
-	memset(&s,0,sizeof(s));
-	memset(&buffer,0,sizeof(buffer));
-	
-	s.SRB_Cmd        = SC_EXEC_SCSI_CMD;
-	s.SRB_HaId       = haId;
-	s.SRB_Target     = target;
-	s.SRB_Lun        = lun;
-	s.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
-	s.SRB_SenseLen   = SENSE_LEN;
-
-	s.SRB_BufLen     = 12;
-	s.SRB_BufPointer = (BYTE FAR*)buffer;
-	s.SRB_CDBLen     = 12;
-	s.SRB_PostProc   = (LPVOID)hEvent;
-
-	s.CDBByte[0]     = 0x4A;
-	s.CDBByte[1]     = 1;					// lun & immediate
-	s.CDBByte[4]     = 0x10;				// media
-	*(Bit16u*)&s.CDBByte[7] = 12;
-
-	ResetEvent(hEvent);
-	dwStatus = pSendASPI32Command((LPSRB)&s);
-
-	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent, 0x5000);
-
-	if (s.SRB_Status!=SS_COMP) return false;
-
-	mediaChanged = (buffer[0x04]== 0x04);
-	mediaPresent = (buffer[0x05] & 0x02)>0;
-	trayOpen	 = (buffer[0x05] & 0x01)>0;
-	
+	// Seems not possible to get this values using ioctl...
+	int		track1,track2;
+	TMSF	leadOut;
+	// If we can read, there's a media
+	mediaPresent = GetAudioTracks(track1, track2, leadOut),
+	trayOpen	 = !mediaPresent;
+	mediaChanged = (oldLeadOut.min!=leadOut.min) || (oldLeadOut.sec!=leadOut.sec) || (oldLeadOut.fr!=leadOut.fr);
+	// Save old values
+	oldLeadOut.min = leadOut.min;
+	oldLeadOut.sec = leadOut.sec;
+	oldLeadOut.fr  = leadOut.fr;
+	// always success
 	return true;
 };
 
