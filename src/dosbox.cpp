@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "dosbox.h"
 #include "debug.h"
 #include "cpu.h"
@@ -243,10 +244,11 @@ static void InitSystems(void) {
 
 void DOSBOX_Init(int argc, char* argv[]) {
 /* Find the base directory */
-	strcpy(dosbox_basedir,argv[0]);
-	char * last=strrchr(dosbox_basedir,CROSS_FILESPLIT); //if windowsversion fails: 
-	if (!last) E_Exit("Can't find basedir %s", argv[0]);
-	*++last=0;
+    getcwd(dosbox_basedir,CROSS_LEN);
+    char a[2];
+    a[0]=CROSS_FILESPLIT;
+    a[1]='\0';
+    strcat(dosbox_basedir,a);
 	/* Parse the command line with a setup function */
 	int argl=1;
 	if (argc>1) {
