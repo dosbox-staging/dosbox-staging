@@ -35,6 +35,23 @@ struct Flag_Info {
 	bool oldcf;
 };
 
+struct FPU_Flag_Info { 
+	struct {
+		Real64 r;
+		Bit8u tag;
+	} var1,var2, result;
+	struct {
+		bool bf,c3,c2,c1,c0,ir,sf,pf,uf,of,zf,df,in;
+		Bit8s tos;
+	} sw;
+	struct {
+		bool ic,ie,sf,pf,uf,of,zf,df,in;
+		Bit8u rc,pc;
+	} cw;
+	Bitu type;
+	Bitu prev_type;
+};
+
 
 
 struct Segment {
@@ -51,6 +68,7 @@ enum { cs=0,ds,es,fs,gs,ss};
 
 extern Segment Segs[6];
 extern Flag_Info flags;
+extern FPU_Flag_Info fpu_flags;
 //extern Regs regs;
 
 void SetSegment_16(Bit32u seg,Bit16u val);
@@ -64,6 +82,13 @@ struct CPU_Regs {
 			Bit8u l,h;
 		}b;
 	} ax,bx,cx,dx,si,di,sp,bp,ip;
+};
+
+struct FPU_Regs {
+	struct {
+		Real64 r;
+		Bit8u tag;
+	} st[8];
 };
 
 extern CPU_Regs cpu_regs;

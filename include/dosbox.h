@@ -25,6 +25,7 @@ typedef unsigned short Bit16u;
 typedef signed short Bit16s;
 typedef unsigned long Bit32u;
 typedef signed long Bit32s;
+typedef double Real64;
 #if defined(_MSC_VER)
 typedef unsigned __int64 Bit64u;
 typedef signed __int64 Bit64s;

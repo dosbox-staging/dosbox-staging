@@ -223,10 +223,6 @@ SOURCE=..\src\dos\dos.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\dos\dos_classes.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\dos\dos_devices.cpp
 # End Source File
 # Begin Source File
@@ -467,10 +463,6 @@ SOURCE=..\src\misc\programs.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\misc\setup.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\misc\support.cpp
 # End Source File
 # End Group
@@ -501,13 +493,25 @@ SOURCE=..\src\shell\shell_misc.cpp
 # Begin Group "fpu"
 
 # PROP Default_Filter ""
+# Begin Group "fpu_core_16"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\fpu\fpu_core_16\instructions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\fpu\fpu_core_16\support.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\src\fpu\fpu.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\fpu\fpu_load.h
+SOURCE=..\src\fpu\fpu_flags.cpp
 # End Source File
 # End Group
 # Begin Group "visualc"
@@ -573,6 +577,10 @@ SOURCE=..\include\dos_system.h
 # Begin Source File
 
 SOURCE=..\include\dosbox.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\fpu.h
 # End Source File
 # Begin Source File
 

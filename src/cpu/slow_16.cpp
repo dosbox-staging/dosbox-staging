@@ -73,6 +73,8 @@ typedef HostOff EAPoint;
 extern Bitu cycle_count;
 
 #define CPU_386
+#define USE_FPU
+#define FPU_386
 //TODO Change name
 #define FULLFLAGS
 
