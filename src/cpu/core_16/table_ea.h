@@ -246,7 +246,7 @@ static EAPoint EA_32_02_n(void) { return SegBase(ds)+reg_edx; }
 static EAPoint EA_32_03_n(void) { return SegBase(ds)+reg_ebx; }
 static EAPoint EA_32_04_n(void) { return Sib(0);}
 static EAPoint EA_32_05_n(void) { return SegBase(ds)+Fetchd(); }
-static EAPoint EA_32_06_n(void) { return SegBase(ss)+reg_esi; }
+static EAPoint EA_32_06_n(void) { return SegBase(ds)+reg_esi; }
 static EAPoint EA_32_07_n(void) { return SegBase(ds)+reg_edi; }
 
 static EAPoint EA_32_40_n(void) { return SegBase(ds)+reg_eax+Fetchbs(); }
@@ -346,7 +346,7 @@ static EAPoint EA_32_40_s(void) { segprefixed_32(reg_eax+Fetchbs()); }
 static EAPoint EA_32_41_s(void) { segprefixed_32(reg_ecx+Fetchbs()); }
 static EAPoint EA_32_42_s(void) { segprefixed_32(reg_edx+Fetchbs()); }
 static EAPoint EA_32_43_s(void) { segprefixed_32(reg_ebx+Fetchbs()); }
-static EAPoint EA_32_44_s(void) { return Sib(1)+Fetchbs();}
+static EAPoint EA_32_44_s(void) { return Sib_s(1)+Fetchbs();}
 static EAPoint EA_32_45_s(void) { segprefixed_32(reg_ebp+Fetchbs()); }
 static EAPoint EA_32_46_s(void) { segprefixed_32(reg_esi+Fetchbs()); }
 static EAPoint EA_32_47_s(void) { segprefixed_32(reg_edi+Fetchbs()); }
@@ -355,7 +355,7 @@ static EAPoint EA_32_80_s(void) { segprefixed_32(reg_eax+Fetchds()); }
 static EAPoint EA_32_81_s(void) { segprefixed_32(reg_ecx+Fetchds()); }
 static EAPoint EA_32_82_s(void) { segprefixed_32(reg_edx+Fetchds()); }
 static EAPoint EA_32_83_s(void) { segprefixed_32(reg_ebx+Fetchds()); }
-static EAPoint EA_32_84_s(void) { return Sib(2)+Fetchds();}
+static EAPoint EA_32_84_s(void) { return Sib_s(2)+Fetchds();}
 static EAPoint EA_32_85_s(void) { segprefixed_32(reg_ebp+Fetchds()); }
 static EAPoint EA_32_86_s(void) { segprefixed_32(reg_esi+Fetchds()); }
 static EAPoint EA_32_87_s(void) { segprefixed_32(reg_edi+Fetchds()); }
