@@ -269,7 +269,7 @@ bool CommandLine::FindHex(char * name,int & value,bool remove) {
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
 	sscanf((*it_next).c_str(),"%X",&value);
-	if (remove) cmds.erase(it,it_next);
+	if (remove) cmds.erase(it,++it_next);
 	return true;
 }
 
@@ -278,7 +278,7 @@ bool CommandLine::FindInt(char * name,int & value,bool remove) {
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
 	value=atoi((*it_next).c_str());
-	if (remove) cmds.erase(it,it_next);
+	if (remove) cmds.erase(it,++it_next);
 	return true;
 }
 
@@ -287,7 +287,7 @@ bool CommandLine::FindString(char * name,std::string & value,bool remove) {
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
 	value=*it_next;
-	if (remove) cmds.erase(it,it_next);
+	if (remove) cmds.erase(it,++it_next);
 	return true;
 }
 
