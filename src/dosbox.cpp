@@ -38,6 +38,7 @@
 #include "support.h"
 
 Config * control;
+MachineType machine;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
@@ -127,7 +128,7 @@ increaseticks:
 	if (NewTicks>LastTicks) {
 		RemainTicks=NewTicks-LastTicks;
 		if (RemainTicks>20) {
-//			LOG_DEBUG("Ticks to handle overflow %d",RemainTicks);
+//			LOG_MSG("Ticks to handle overflow %d",RemainTicks);
 			RemainTicks=20;
 		}
 		LastTicks=NewTicks;
@@ -162,6 +163,15 @@ static void DOSBOX_RealInit(Section * sec) {
 	RemainTicks=0;LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
+
+	machine=MCH_AUTO;
+	const char * mtype=section->Get_string("machine");
+	if (strcasecmp(mtype,"cga")==0) machine=MCH_CGA;
+	else if (strcasecmp(mtype,"tandy")==0) machine=MCH_TANDY;
+	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
+	else if (strcasecmp(mtype,"vga")==0) machine=MCH_VGA;
+	else if (strcasecmp(mtype,"auto")==0) machine=MCH_AUTO;
+	else LOG_MSG("DOSBOX:Unkown machine type %s",mtype);
 }
 
 
@@ -173,9 +183,12 @@ void DOSBOX_Init(void) {
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
     secprop->Add_string("language","");
+	secprop->Add_string("machine","auto");
+
 #if C_DEBUG	
 	LOG_StartUp();
 #endif
+	
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
@@ -223,7 +236,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("rate",22050);
 	secprop->Add_int("blocksize",2048);
 	secprop->Add_string("wavedir","waves");
-	
+
 	MSG_Add("MIXER_CONFIGFILE_HELP",
 		"nosound -- Enable silent mode, sound is still emulated though.\n"
 		"rate -- Mixer sample rate, setting any devices higher than this will\n"
@@ -239,7 +252,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("mpu401",true);
 	secprop->Add_string("device","default");
 	secprop->Add_string("config","");
-
+	
 	MSG_Add("MIDI_CONFIGFILE_HELP",
 		"mpu401 -- Enable MPU-401 Emulation.\n"
 		"device -- Device that will receive the MIDI data from MPU-401.\n"
@@ -260,6 +273,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&ADLIB_Init);
 	secprop->Add_bool("adlib",true);
 	secprop->Add_int("adlibrate",22050);
+	secprop->Add_string("adlibmode","adlib");
 	secprop->AddInitFunction(&CMS_Init);
 	secprop->Add_bool("cms",false);
 	secprop->Add_int("cmsrate",22050);
