@@ -466,7 +466,7 @@ static OpCode OpCodeTable[1024]={
 /* 0x298 - 0x29f */
 {D_CWDE		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
 {L_Ifd		,O_CALLFd	,0		,0		},{D_WAIT	,0			,0		,0		},
-{L_FLG		,0			,S_PUSHd,0		},{L_PFLGw	,0			,0		,0		},
+{L_FLG		,0			,S_PUSHd,0		},{L_PFLGd	,0			,0		,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
 /* 0x2a0 - 0x2a7 */
