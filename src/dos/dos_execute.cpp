@@ -173,10 +173,10 @@ bool DOS_NewPSP(Bit16u segment, Bit16u size)
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	
 	/* Fix the PSP for psp and environment MCB's */
-	MCB * pspmcb=(MCB *)HostMake(pspseg-1,0);
-	pspmcb->psp_segment=pspseg;
-	MCB * envmcb=(MCB *)HostMake(envseg-1,0);
-	envmcb->psp_segment=pspseg;
+	DOS_MCB mcb((Bit16u)(pspseg-1));
+	mcb.SetPSPSeg(pspseg);
+	mcb.SetPt((Bit16u)(envseg-1));
+	mcb.SetPSPSeg(pspseg);
 
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
