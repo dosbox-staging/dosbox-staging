@@ -123,7 +123,7 @@ bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit16u * sectors,Bit16u * c
 bool DOS_GetFileAttr(char * name,Bit16u * attr);
 
 /* IOCTL Stuff */
-bool DOS_IOCTL(Bit8u call,Bit16u entry);
+bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
 Bit8u DOS_FindDevice(char * name);
 void DOS_SetupDevices(void);
