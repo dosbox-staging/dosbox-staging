@@ -21,6 +21,7 @@
 
 #include <math.h>
 #include <float.h>
+#include "cross.h"
 #include "mem.h"
 #include "fpu.h"
 #include "cpu.h"

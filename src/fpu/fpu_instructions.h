@@ -208,7 +208,7 @@ static void FPU_FXAM(void){
 		FPU_SET_C3(1);FPU_SET_C0(1);
 		return;
 	}
-	if(fpu.regs[TOP].ll & 0x8000000000000000)	//sign
+	if(fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000))	//sign
 	{ 
 		FPU_SET_C1(1);
 	}
@@ -271,7 +271,7 @@ static void FPU_FLD80(PhysPt addr)
 	Bit64s blah= ((exp64 >0)?exp64:-exp64)&0x3ff;
 	Bit64s exp64final= ((exp64 >0)?blah:-blah) +BIAS64;
 
-	Bit64s mant64= (test.eind.ll >> 11) & 0xfffffffffffff;
+	Bit64s mant64= (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
 	Bit64s sign = (test.begin &0x8000)?1:0;
 	FPU_Reg result;
 	result.ll= (sign <<63)|(exp64final << 52)| mant64;
@@ -285,11 +285,11 @@ static void FPU_ST80(PhysPt addr)
 		Bit16s begin;
 		FPU_Reg eind;
 	} test;
-	Bit64s sign80= (fpu.regs[TOP].ll&0x8000000000000000)?1:0;
-	Bit64s exp80 =  fpu.regs[TOP].ll&0x7ff0000000000000;
+	Bit64s sign80= (fpu.regs[TOP].ll&LONGTYPE(0x8000000000000000))?1:0;
+	Bit64s exp80 =  fpu.regs[TOP].ll&LONGTYPE(0x7ff0000000000000);
 	Bit64s exp80final= (exp80>>52) - BIAS64 + BIAS80;
-	Bit64s mant80 = fpu.regs[TOP].ll&0x000fffffffffffff;
-	Bit64s mant80final= (mant80 << 11) | 0x8000000000000000;
+	Bit64s mant80 = fpu.regs[TOP].ll&LONGTYPE(0x000fffffffffffff);
+	Bit64s mant80final= (mant80 << 11) | LONGTYPE(0x8000000000000000);
 	test.begin= (static_cast<Bit16s>(sign80)<<15)| static_cast<Bit16s>(exp80final);
 	test.eind.ll=mant80final;
 	mem_writed(addr,test.eind.l.lower);
