@@ -108,7 +108,7 @@ static Bit8u * VGA_Draw_VGA_Line(Bitu vidstart,Bitu panning,Bitu line) {
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = vidstart / ((160 * vga.draw.height) / 640);
+		Bitu lineat = vidstart / ((220 * vga.draw.height) / 640);
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63))) {
 			return VGA_Draw_VGA_Line(vidstart, panning, line);
 		} else {
