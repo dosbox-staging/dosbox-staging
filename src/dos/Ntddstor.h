@@ -193,10 +193,11 @@ typedef struct _STORAGE_BUS_RESET_REQUEST {
 // TRUE means prevent media from being removed.
 // FALSE means allow media removal.
 //
-
+#if defined (_MSC_VER)						/* MS Visual C++ */
 typedef struct _PREVENT_MEDIA_REMOVAL {
     BOOLEAN PreventMediaRemoval;
 } PREVENT_MEDIA_REMOVAL, *PPREVENT_MEDIA_REMOVAL;
+#endif
 
 // begin_ntminitape
 
