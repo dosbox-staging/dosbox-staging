@@ -690,7 +690,10 @@ static void DSP_DoCommand(void) {
 		DSP_SetSpeaker(false);
 		break;
 	case 0xd4:	/* Continue DMA */
-		sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+		if (sb.mode==MODE_DMA_PAUSE) {
+			sb.mode=MODE_DMA_MASKED;
+			sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+		}
 		break;
 	case 0xda:	/* Exit Autoinitialize 8-bit */
 		/* Set mode to single transfer so it ends with current block */
