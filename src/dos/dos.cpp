@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.78 2004-11-29 21:00:55 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.79 2004-12-04 08:02:09 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -350,6 +350,11 @@ static Bitu DOS_21Handler(void) {
 			case 0:reg_dl=dos.breakcheck;break;			/* Get the breakcheck flag */
 			case 1:dos.breakcheck=(reg_dl>0);break;		/* Set the breakcheck flag */
 			case 2:{bool old=dos.breakcheck;dos.breakcheck=(reg_dl>0);reg_dl=old;}break;
+			case 3: /* Get cpsw */
+				/* Fallthrough */
+			case 4: /* Set cpsw */
+				LOG(LOG_DOSMISC,LOG_ERROR)("Someone playing with cpsw %x",reg_ax);
+				break;
 			case 5:reg_dl=3;break;//TODO should be z						/* Always boot from c: :) */
 			case 6:											/* Get true version number */
 				reg_bl=dos.version.major;
