@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.19 2004-09-08 08:46:37 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.20 2004-09-08 10:33:16 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -269,15 +269,15 @@ static Real64 FPU_FBLD(PhysPt addr)
 	Bit64u base = 1;
 	for(Bitu i = 0;i < 9;i++){
 		in = mem_readb(addr + i);
-		val += ( (in&9) * base);
+		val += ( (in&0xf) * base); //in&0xf shouldn't be higher then 9
 		base *= 10;
-		val += ((( in>>4)&9) * base);
+		val += ((( in>>4)&0xf) * base);
 		base *= 10;
 	}
 
 	//last number
 	in = mem_readb(addr + 9);
-	val += ( (in&9) * base );
+	val += ( (in&0xf) * base );
 	if(in&0x80) val *= -1.0;
 	return val;
 }
