@@ -36,8 +36,6 @@
 #define PI 3.14159265358979323846
 #endif
 
-
-
 struct CMS {
 	struct {
 		Bit32u freq_pos;
@@ -157,7 +155,6 @@ static void CMS_CallBack(Bit8u * stream,Bit32u len) {
 
 }
 
-static HWBlock hw_cms;
 static bool cms_enabled;
 
 static void CMS_Enable(bool enable) {
@@ -178,60 +175,14 @@ static void CMS_Enable(bool enable) {
 	}
 }
 
-
-static void CMS_InputHandler(char * line) {
-	bool s_off=ScanCMDBool(line,"OFF");
-	bool s_on=ScanCMDBool(line,"ON");
-	char * rem=ScanCMDRemain(line);
-	if (rem) {
-		sprintf(line,"Illegal Switch");
-		return;
-	}
-	if (s_on && s_off) {
-		sprintf(line,"Can't use /ON and /OFF at the same time");
-		return;
-	}
-	if (s_on) {
-		CMS_Enable(true);
-		sprintf(line,"Creative Music System has been enabled");
-		return;
-	} 
-	if (s_off) {
-		CMS_Enable(false);
-		sprintf(line,"Creative Music System has been disabled");
-		return;
-	} 
-	return;
-}
-
-static void CMS_OutputHandler (char * towrite) {
-	if(cms_enabled) {
-		sprintf(towrite,"IO %X",0x220);
-	} else {
-		sprintf(towrite,"Disabled");
-	}
-};
-
-
-
-
 void CMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	if(!section->Get_bool("cms")) return;
 	Bits i;
 /* Register the Mixer CallBack */
 	cms_chan=MIXER_AddChannel(CMS_CallBack,CMS_RATE,"CMS");
 	MIXER_SetMode(cms_chan,MIXER_16STEREO);
 	MIXER_Enable(cms_chan,false);
-/* Register with the hardware setup tool */
-	hw_cms.dev_name="CMS";
-	hw_cms.full_name="Creative Music System";
-	hw_cms.next=0;
-	hw_cms.help="/ON  Enables CMS\n/OFF Disables CMS\n";	
-	hw_cms.get_input=CMS_InputHandler;
-	hw_cms.show_status=CMS_OutputHandler;
-	HW_Register(&hw_cms);
-	CMS_Enable(false);
 /* Make the frequency/octave table */ 
 	double log_start=log10(27.34375);
 	double log_add=(log10(54.609375)-log10(27.34375))/256;
@@ -254,7 +205,6 @@ void CMS_Init(Section* sec) {
 			out /= 1.1;
 		}
 	}
-
-
+	CMS_Enable(true);
 }
 

@@ -126,7 +126,6 @@ static void write_p389(Bit32u port,Bit8u val) {
 
 }
 
-static HWBlock hw_adlib;
 static bool adlib_enabled;
 
 static void ADLIB_Enable(bool enable) {
@@ -153,48 +152,10 @@ static void ADLIB_Enable(bool enable) {
 }
 
 
-static void ADLIB_InputHandler(char * line) {
-	bool s_off=ScanCMDBool(line,"OFF");
-	bool s_on=ScanCMDBool(line,"ON");
-	char * rem=ScanCMDRemain(line);
-	if (rem) {
-		sprintf(line,"Illegal Switch");
-		return;
-	}
-	if (s_on && s_off) {
-		sprintf(line,"Can't use /ON and /OFF at the same time");
-		return;
-	}
-	if (s_on) {
-		ADLIB_Enable(true);
-		sprintf(line,"Adlib has been enabled");
-		return;
-	} 
-	if (s_off) {
-		ADLIB_Enable(false);
-		sprintf(line,"Adlib has been disabled");
-		return;
-	} 
-	return;
-}
-
-static void ADLIB_OutputHandler (char * towrite) {
-	if(adlib_enabled) {
-		sprintf(towrite,"IO %X",0x388);
-	} else {
-		sprintf(towrite,"Disabled");
-	}
-};
-
-
-
-
-
-
-
 void ADLIB_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	if(!section->Get_bool("adlib")) return;
+
 	timer1.isMasked=true;
 	timer1.base=0;
 	timer1.count=0;
@@ -212,14 +173,6 @@ void ADLIB_Init(Section* sec) {
 
 	adlib_chan=MIXER_AddChannel(ADLIB_CallBack,ADLIB_FREQ,"ADLIB");
 	MIXER_SetMode(adlib_chan,MIXER_16MONO);
-
-	hw_adlib.dev_name="ADLIB";
-	hw_adlib.full_name="Adlib FM Synthesizer";
-	hw_adlib.next=0;
-	hw_adlib.help="/ON  Enables Adlib\n/OFF Disables Adlib\n";	
-	hw_adlib.get_input=ADLIB_InputHandler;
-	hw_adlib.show_status=ADLIB_OutputHandler;
-	HW_Register(&hw_adlib);
 	ADLIB_Enable(true);	
 };
 
