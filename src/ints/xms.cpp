@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.31 2004-01-14 20:54:41 finsterr Exp $ */
+/* $Id: xms.cpp,v 1.32 2004-03-09 20:13:44 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -128,7 +128,7 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	}
 	Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
 	MemHandle mem=MEM_AllocatePages(pages,true);
-	if (!mem) return XMS_OUT_OF_SPACE;
+	if ((!mem) && (size != 0)) return XMS_OUT_OF_SPACE;
 	xms_handles[index].free=false;
 	xms_handles[index].mem=mem;
 	xms_handles[index].locked=0;
@@ -305,11 +305,11 @@ Bitu XMS_Handler(void) {
 	case XMS_LOCK_EXTENDED_MEMORY_BLOCK: {						/* 0c */
 		Bit32u address;
 		reg_bl = XMS_LockMemory(reg_dx, address);
+		reg_ax = (reg_bl==0);
 		if (reg_bl==0) { // success
 			reg_bx=(Bit16u)(address & 0xFFFF);
 			reg_dx=(Bit16u)(address >> 16);
 		};
-		reg_ax = (reg_bl==0);
 		}; break;
 	case XMS_UNLOCK_EXTENDED_MEMORY_BLOCK:						/* 0d */
 		reg_bl = XMS_UnlockMemory(reg_dx);
@@ -350,8 +350,20 @@ void XMS_Init(Section* sec) {
 	BIOS_ZeroExtendedSize();
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
-	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);
+	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF, "XMS Handler");
 	xms_callback=CALLBACK_RealPointer(call_xms);
+   
+	/* Overide the callback with one that can be hooked */
+	phys_writeb(CB_BASE+(call_xms<<4)+0,(Bit8u)0xeb);       //jump near
+	phys_writeb(CB_BASE+(call_xms<<4)+1,(Bit8u)0x03);       //offset
+	phys_writeb(CB_BASE+(call_xms<<4)+2,(Bit8u)0x90);       //NOP
+	phys_writeb(CB_BASE+(call_xms<<4)+3,(Bit8u)0x90);       //NOP
+	phys_writeb(CB_BASE+(call_xms<<4)+4,(Bit8u)0x90);       //NOP
+	phys_writeb(CB_BASE+(call_xms<<4)+5,(Bit8u)0xFE);       //GRP 4
+	phys_writeb(CB_BASE+(call_xms<<4)+6,(Bit8u)0x38);       //Extra Callback instruction
+	phys_writew(CB_BASE+(call_xms<<4)+7,call_xms);		//The immediate word          
+	phys_writeb(CB_BASE+(call_xms<<4)+9,(Bit8u)0xCB);       //A RETF Instruction
+   
 	for (i=0;i<XMS_HANDLES;i++) {
 		xms_handles[i].free=true;
 		xms_handles[i].mem=-1;
