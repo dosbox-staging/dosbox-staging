@@ -26,21 +26,26 @@
 #define FLAG_AF		0x00000010
 #define FLAG_ZF		0x00000040
 #define FLAG_SF		0x00000080
+#define FLAG_OF		0x00000800
+
 #define FLAG_TF		0x00000100
 #define FLAG_IF		0x00000200
 #define FLAG_DF		0x00000400
-#define FLAG_OF		0x00000800
-
-#define FLAG_MASK	(FLAG_CF | FLAG_PF | FLAG_AF | FLAG_ZF | FLAG_SF | FLAG_OF)
 
 #define FLAG_IOPL	0x00003000
 #define FLAG_NT		0x00004000
 #define FLAG_VM		0x00020000
 
+#define FMASK_TEST		(FLAG_CF | FLAG_PF | FLAG_AF | FLAG_ZF | FLAG_SF | FLAG_OF)
+#define FMASK_NORMAL	(FMASK_TEST | FLAG_DF | FLAG_TF | FLAG_IF)	
+#define FMASK_ALL		(FMASK_NORMAL | FLAG_IOPL | FLAG_NT)
+
 #define SETFLAGBIT(TYPE,TEST) if (TEST) reg_flags|=FLAG_ ## TYPE; else reg_flags&=~FLAG_ ## TYPE
 
 #define GETFLAG(TYPE) (reg_flags & FLAG_ ## TYPE)
 #define GETFLAGBOOL(TYPE) ((reg_flags & FLAG_ ## TYPE) ? true : false )
+
+#define GETFLAG_IOPL ((reg_flags & FLAG_IOPL) >> 12)
 
 struct Segment {
 	Bit16u val;
