@@ -38,8 +38,8 @@ static SHELL_Cmd cmd_list[]={
 	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP",
 	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP",
 	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP",
-    "RENAME",   0,          &DOS_Shell::CMD_RENAME,     "SHELL_CMD_RENAME_HELP",
-	
+	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
+	"REN",		0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
 	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"Make Directory",
@@ -396,4 +396,5 @@ nextfile:
 
 void DOS_Shell::CMD_REM(char * args) {
 }
+
 

@@ -79,7 +79,7 @@ void DOS_Shell::ParseLine(char * line) {
 	char * fname1=0;
 
 	/* Check for a leading @ */
-	if (line[0]=='@') line[0]=' ';
+ 	if (line[0]=='@') line[0]=' ';
 	line=trim(line);
 	Bit32u num=0;		/* Number of commands in this line */
 
@@ -97,14 +97,11 @@ void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE];
 	std::string line;
 
-	if (cmd->FindString("/C",line,false)) {
-          char command[256];
-          cmd->GetFullLine(command);
-          char * blah=strstr(command, "/C");
-          blah+=2; //add the size of "/C"
-          ParseLine(blah);
-          return;
-        }
+	if (cmd->FindStringRemain("/C",line)) {
+		strcpy(input_line,line.c_str());
+		ParseLine(input_line);
+		return;
+	}
 	/* Start a normal shell and check for a first command init */
 	WriteOut(MSG_Get("SHELL_STARTUP"));
 	if (cmd->FindString("/INIT",line,true)) {
@@ -220,10 +217,14 @@ void SHELL_Init() {
     MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
     MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
     MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
-     MSG_Add("SHELL_CMD_RENAME_WILD","This is a simple Rename, no wildcards allowed!\n");
-     MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
+	MSG_Add("SHELL_CMD_RENAME_WILD","This is a simple Rename, no wildcards allowed!\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
     /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
+	/* Setup the startup CS:IP to kill the last running machine when exitted */
+	RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
+	SegSet16(cs,RealSeg(newcsip));
+	reg_ip=RealOff(newcsip);
 
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET);
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);

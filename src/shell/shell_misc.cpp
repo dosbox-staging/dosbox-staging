@@ -168,6 +168,8 @@ void DOS_Shell::Execute(char * name,char * args) {
 		block.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
 		block.SaveData();
 		/* Save CS:IP to some point where i can return them from */
+		Bit32u oldeip=reg_eip;
+		Bit16u oldcs=SegValue(cs);
 		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
 		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
@@ -181,7 +183,10 @@ void DOS_Shell::Execute(char * name,char * args) {
 		reg_bx=reg_sp;
 		flags.intf=false;
 		CALLBACK_RunRealInt(0x21);
+		/* Restore CS:IP and the stack */
 		reg_sp+=0x200;
+		reg_eip=oldeip;
+		SegSet16(cs,oldcs);
 	}
 }
 
