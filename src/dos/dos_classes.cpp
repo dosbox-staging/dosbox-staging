@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: dos_classes.cpp,v 1.30 2003-08-19 20:05:47 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -171,7 +173,8 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 		{	//copy obeying not inherit flag.(but dont duplicate them)
 			bool allowCopy = (handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
 			if((handle<DOS_FILES) && Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
-			{    
+			{   
+				Files[handle]->AddRef();
 				SetFileHandle(i,handle);
 			}
 			else
