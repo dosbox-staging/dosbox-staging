@@ -657,9 +657,9 @@
 					RelativePath="..\src\fpu\fpu_instructions.h">
 				</File>
 				<File
-				<File
 					RelativePath="..\src\fpu\fpu_instructions_x86.h">
 				</File>
+				<File
 					RelativePath="..\src\fpu\fpu_types.h">
 				</File>
 			</Filter>
