@@ -27,5 +27,6 @@ bool DEBUG_ExitLoop(void);
 extern Bitu cycle_count;
 
 #ifdef C_HEAVY_DEBUG
-bool DEBUG_HeavyIsBreakpoint();
+bool DEBUG_HeavyIsBreakpoint(void);
+void DEBUG_HeavyWriteLogInstruction(void);
 #endif

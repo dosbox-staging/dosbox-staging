@@ -48,6 +48,7 @@ class DEBUG;
 
 DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
+bool	logHeavy	= false;
 
 static struct  {
 	Bit32u eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
@@ -91,7 +92,7 @@ static Bit16u dataSeg,dataOfs;
 
 bool skipFirstInstruction = false;
 
-enum EBreakpoint { BKPNT_UNKNOWN, BKPNT_PHYSICAL, BKPNT_INTERRUPT };
+enum EBreakpoint { BKPNT_UNKNOWN, BKPNT_PHYSICAL, BKPNT_INTERRUPT, BKPNT_MEMORY };
 
 #define BPINT_ALL 0x100
 
@@ -104,21 +105,24 @@ public:
 	void					SetAddress		(PhysPt adr)				{ location = adr;				type = BKPNT_PHYSICAL; };
 	void					SetInt			(Bit8u _intNr, Bit16u ah)	{ intNr = _intNr, ahValue = ah; type = BKPNT_INTERRUPT; };
 	void					SetOnce			(bool _once)				{ once = _once; };
-	
+	void					SetType			(EBreakpoint _type)			{ type = _type; };
+	void					SetValue		(Bit8u value)				{ ahValue = value; };
+
 	bool					IsActive		(void)						{ return active; };
 	void					Activate		(bool _active);
 
 	EBreakpoint				GetType			(void)						{ return type; };
 	bool					GetOnce			(void)						{ return once; };
-	PhysPt					GetLocation		(void)						{ if (GetType()==BKPNT_PHYSICAL)  return location;	else return 0; };
+	PhysPt					GetLocation		(void)						{ if (GetType()!=BKPNT_INTERRUPT)	return location;	else return 0; };
 	Bit16u					GetSegment		(void)						{ return segment; };
 	Bit32u					GetOffset		(void)						{ return offset; };
-	Bit8u					GetIntNr		(void)						{ if (GetType()==BKPNT_INTERRUPT) return intNr;		else return 0; };
-	Bit16u					GetValue		(void)						{ if (GetType()==BKPNT_INTERRUPT) return ahValue;	else return 0; };
+	Bit8u					GetIntNr		(void)						{ if (GetType()==BKPNT_INTERRUPT)	return intNr;		else return 0; };
+	Bit16u					GetValue		(void)						{ if (GetType()!=BKPNT_PHYSICAL)	return ahValue;		else return 0; };
 
 	// statics
 	static CBreakpoint*		AddBreakpoint		(Bit16u seg, Bit32u off, bool once);
 	static CBreakpoint*		AddIntBreakpoint	(Bit8u intNum, Bit16u ah, bool once);
+	static CBreakpoint*		AddMemBreakpoint	(Bit16u seg, Bit32u off);
 	static void				ActivateBreakpoints	(PhysPt adr, bool activate);
 	static bool				CheckBreakpoint		(PhysPt adr);
 	static bool				CheckIntBreakpoint	(PhysPt adr, Bit8u intNr, Bit16u ahValue);
@@ -193,6 +197,16 @@ CBreakpoint* CBreakpoint::AddIntBreakpoint(Bit8u intNum, Bit16u ah, bool once)
 	return bp;
 };
 
+CBreakpoint* CBreakpoint::AddMemBreakpoint(Bit16u seg, Bit32u off)
+{
+	CBreakpoint* bp = new CBreakpoint();
+	bp->SetAddress		(seg,off);
+	bp->SetOnce			(false);
+	bp->SetType			(BKPNT_MEMORY);
+	BPoints.push_front	(bp);
+	return bp;
+};
+
 void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 {
 	// activate all breakpoints
@@ -234,7 +248,23 @@ bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 				ignoreOnce = bp;
 			};
 			return true;
+		} 
+#if C_HEAVY_DEBUG
+		// Memory breakpoint support
+		else if ((bp->GetType()==BKPNT_MEMORY) && bp->IsActive()) {
+			
+			Bit8u value = mem_readb(bp->GetLocation());
+			if (bp->GetValue() != value) {
+				// Yup, memory value changed
+				char buffer[200];
+				sprintf(buffer,"DEBUG: Memory breakpoint: %04X:%04X - %02X -> %02X",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
+				LOG_DEBUG(buffer);
+				bp->SetValue(value);
+				return true;
+			};
+		
 		};
+#endif
 	};
 	return false;
 };
@@ -298,6 +328,7 @@ bool CBreakpoint::DeleteByIndex(Bit16u index)
 			delete bp;
 			return true;
 		}
+		nr++;
 	};
 	return false;
 };
@@ -359,13 +390,14 @@ void CBreakpoint::ShowList(void)
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
 		CBreakpoint* bp = static_cast<CBreakpoint*>(*i);
 		if (bp->GetType()==BKPNT_PHYSICAL) {
-			PhysPt adr = bp->GetLocation();
-
 			wprintw(dbg.win_out,"%02X. BP %04X:%04X\n",nr,bp->GetSegment(),bp->GetOffset());
 			nr++;
 		} else if (bp->GetType()==BKPNT_INTERRUPT) {
 			if (bp->GetValue()==BPINT_ALL)	wprintw(dbg.win_out,"%02X. BPINT %02X\n",nr,bp->GetIntNr());					
 			else							wprintw(dbg.win_out,"%02X. BPINT %02X AH=%02X\n",nr,bp->GetIntNr(),bp->GetValue());
+			nr++;
+		} else if (bp->GetType()==BKPNT_MEMORY) {
+			wprintw(dbg.win_out,"%02X. BPMEM %04X:%04X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
 			nr++;
 		};
 	}
@@ -632,8 +664,8 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"DF")==hex) { hex+=2; flags.df = (GetHexValue(hex,hex)!=0); } else
 	if (strstr(hex,"IF")==hex) { hex+=2; flags.intf = (GetHexValue(hex,hex)!=0); } else
 	if (strstr(hex,"OF")==hex) { hex+=3; flags.of = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"PF")==hex) { hex+=3; flags.pf = (GetHexValue(hex,hex)!=0); } else
 	if (strstr(hex,"ZF")==hex) { hex+=3; flags.zf = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"PF")==hex) { hex+=3; flags.pf = (GetHexValue(hex,hex)!=0); } else
 								{ return false; };
 	return true;
 };
@@ -651,6 +683,17 @@ bool ParseCommand(char* str)
 		LOG_DEBUG("DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
 		return true;
 	}
+#if C_HEAVY_DEBUG
+	found = strstr(str,"BPM ");
+	if (found) { // Add new breakpoint
+		found+=3;
+		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
+		Bit32u ofs = GetHexValue(found,found);
+		CBreakpoint::AddMemBreakpoint(seg,ofs);
+		LOG_DEBUG("DEBUG: Set memory breakpoint at %04X:%04X",seg,ofs);
+		return true;
+	}
+#endif
 	found = strstr(str,"BPINT");
 	if (found) { // Add Interrupt Breakpoint
 		found+=5;
@@ -759,6 +802,15 @@ bool ParseCommand(char* str)
 		Interrupt(intNr);
 		return true;
 	}
+#if C_HEAVY_DEBUG
+	found = strstr(str,"HEAVYLOG");
+	if (found) { // Create Cpu log file
+		logHeavy = !logHeavy;
+		if (logHeavy)	LOG_DEBUG("DEBUG: Heavy cpu logging on.");
+		else			LOG_DEBUG("DEBUG: Heavy cpu logging off.");
+		return true;
+	}
+#endif
 	if ((*str=='H') || (*str=='?')) {
 		wprintw(dbg.win_out,"Debugger keys:\n");
 		wprintw(dbg.win_out,"--------------------------------------------------------------------------\n");
@@ -774,11 +826,17 @@ bool ParseCommand(char* str)
 		wprintw(dbg.win_out,"BP     [segment]:[offset] - Set breakpoint\n");
 		wprintw(dbg.win_out,"BPINT  [intNr] *          - Set interrupt breakpoint\n");
 		wprintw(dbg.win_out,"BPINT  [intNr] [ah]       - Set interrupt breakpoint with ah\n");
+#if C_HEAVY_DEBUG
+		wprintw(dbg.win_out,"BPM    [segment]:[offset] - Set memory breakpoint (memory change)\n");
+#endif
 		wprintw(dbg.win_out,"BPLIST                    - List breakpoints\n");		
 		wprintw(dbg.win_out,"BPDEL  [bpNr] / *         - Delete breakpoint nr / all\n");
 		wprintw(dbg.win_out,"C / D  [segment]:[offset] - Set code / data view address\n");
 		wprintw(dbg.win_out,"INT [nr] / INTT [nr]      - Execute / Trace into Iinterrupt\n");
 		wprintw(dbg.win_out,"LOG [num]                 - Write cpu log file\n");
+#if C_HEAVY_DEBUG
+		wprintw(dbg.win_out,"HEAVYLOG                  - Enable/Disable automatic cpu log for INT CD\n");
+#endif
 		wprintw(dbg.win_out,"SR [reg] [value]          - Set register value\n");
 		wprintw(dbg.win_out,"SM [seg]:[off] [val] [.]..- Set memory with following values\n");	
 		wprintw(dbg.win_out,"H                         - Help\n");
@@ -943,6 +1001,17 @@ static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
 }
 
+static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer) 
+{
+	PhysPt start = PhysMake(segValue,eipValue);
+	char dline[200];Bitu size;
+	size = DasmI386(dline, start, reg_eip, false);
+	Bitu len = strlen(dline);
+	if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");	
+	// Get register values
+	sprintf(buffer,"%04X:%08X   %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X\n",segValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),get_CF(),get_ZF(),get_SF(),get_OF(),get_AF(),get_PF());
+};
+
 static bool DEBUG_Log_Loop(int count) {
 
 	char buffer[512];	
@@ -958,19 +1027,13 @@ static bool DEBUG_Log_Loop(int count) {
 			// Get disasm
 			Bit16u csValue	= SegValue(cs);
 			Bit32u eipValue = reg_eip;
-			PhysPt start=Segs[cs].phys+reg_eip;
-			char dline[200];Bitu size;
-			size = DasmI386(dline, start, reg_eip, false);
-			Bitu len = strlen(dline);
-			if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");
 			
+			LogInstruction(csValue,eipValue,buffer);
+			fprintf(f,"%s",buffer);
+						
 			PIC_IRQAgain=false;
 			ret=(*cpudecoder)(1);
 		
-			// Get register values
-			char buffer[512];
-			sprintf(buffer,"%04X:%08X   %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X\n",csValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),get_CF(),get_ZF(),get_SF(),get_OF(),get_AF(),get_PF());
-			fprintf(f,"%s",buffer);
 			count--;
 			if (count==0) break;
 
@@ -1091,7 +1154,7 @@ void DEBUG_Init(Section* sec) {
 
 #if C_HEAVY_DEBUG
 
-#define LOGCPUMAX 200
+const Bit16u LOGCPUMAX = 200;
 
 static Bit16u logCpuCS [LOGCPUMAX];
 static Bit32u logCpuEIP[LOGCPUMAX];
@@ -1111,6 +1174,8 @@ void DEBUG_HeavyLogInstruction(void)
 
 void DEBUG_HeavyWriteLogInstruction(void)
 {
+	if (!logHeavy) return;
+	
 	LOG_DEBUG("DEBUG: Creating cpu log LOGCPU_INT_CD.TXT");
 
 	FILE* f = fopen("LOGCPU_INT_CD.TXT","wt");
@@ -1123,7 +1188,7 @@ void DEBUG_HeavyWriteLogInstruction(void)
 	do {
 		// Write Intructions
 		fprintf(f,"%s",logInst[startLog++].buffer);
-		if (startLog>=LOGCPUMAX) logCount = 0;
+		if (startLog>=LOGCPUMAX) startLog = 0;
 	} while (startLog!=logCount);
 	
 	fclose(f);
@@ -1133,6 +1198,9 @@ void DEBUG_HeavyWriteLogInstruction(void)
 
 bool DEBUG_HeavyIsBreakpoint(void)
 {
+	// LogInstruction
+	if (logHeavy) DEBUG_HeavyLogInstruction();
+
 	if (skipFirstInstruction) {
 		skipFirstInstruction = false;
 		return false;
