@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.35 2004-03-23 20:25:41 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.36 2004-03-24 19:26:49 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -411,8 +411,8 @@ void DrawCursor() {
 void Mouse_CursorMoved(float x,float y) {
 	float dx = x * mouse.pixelPerMickey_x;
 	float dy = y * mouse.pixelPerMickey_y;
-	if((fabs(x) > 1.0) || (mouse.senv_y < 1.0)) dx=mouse.senv_x*x;
-	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy=mouse.senv_y*y;
+	if((fabs(x) > 1.0) || (mouse.senv_y < 1.0)) dx *= mouse.senv_x;
+	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
