@@ -355,7 +355,7 @@ void CBreakpoint::ShowList(void)
 		if (bp->GetType()==BKPNT_PHYSICAL) {
 			PhysPt adr = bp->GetLocation();
 
-			wprintw(dbg.win_out,"%02X. BP %04X:%04X\n",nr,bp->GetSegment(),bp->GetOffset);
+			wprintw(dbg.win_out,"%02X. BP %04X:%04X\n",nr,bp->GetSegment(),bp->GetOffset());
 			nr++;
 		} else if (bp->GetType()==BKPNT_INTERRUPT) {
 			if (bp->GetValue()==BPINT_ALL)	wprintw(dbg.win_out,"%02X. BPINT %02X\n",nr,bp->GetIntNr());					
@@ -993,8 +993,28 @@ public:
 		strncpy(args,temp_line.c_str(),128);
 		// Start new shell and execute prog		
 		active = true;
-		DOS_Shell shell;
-		shell.Execute(filename,args);		
+		// Save cpu state....
+		Bit16u oldcs	= SegValue(cs);
+		Bit32u oldeip	= reg_eip;	
+		Bit16u oldss	= SegValue(ss);
+		Bit32u oldesp	= reg_esp;
+
+		// Workaround : Allocate Stack Space
+		Bit16u segment;
+		Bit16u size = 0x200 / 0x10;
+		if (DOS_AllocateMemory(&segment,&size)) {
+			SegSet16(ss,segment);
+			reg_sp = 0x200;
+			// Start shell
+			DOS_Shell shell;
+			shell.Execute(filename,args);
+			DOS_FreeMemory(segment);
+		}
+		// set old reg values
+		SegSet16(ss,oldss);
+		reg_esp = oldesp;
+		SegSet16(cs,oldcs);
+		reg_eip = oldeip;
 	};
 
 private:
