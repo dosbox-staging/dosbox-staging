@@ -29,12 +29,8 @@ typedef Bitu (CPU_Decoder)(Bitu count);
 extern CPU_Decoder * cpudecoder;
 extern Bit32u cpu_cycles;
 
-
-extern Bit32u hoever;
-
 //CPU Stuff
 void SetCPU16bit();
-void SetSegment_16(Bit32u seg,Bit16u val);
 
 
 //Types of Flag changing instructions
@@ -80,20 +76,11 @@ bool get_SF(void);
 bool get_OF(void);
 bool get_PF(void);
 
-Bit8u get_Flags8(void);
-
-
-
-
 #define LoadCF flags.cf=get_CF();
 #define LoadZF flags.zf=get_ZF();
 #define LoadSF flags.sf=get_SF();
 #define LoadOF flags.of=get_OF();
-//The opcode handlers
 
-
-void FPU_ESC0_Normal(Bitu rm);
-void FPU_ESC0_EA(Bitu func,PhysPt ea);
 
 #endif
 
