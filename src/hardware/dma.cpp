@@ -83,11 +83,12 @@ static Bit8u read_dma(Bit32u port) {
 			ret=(chan->current_address>>8)&0xff;
 		}
 		cont->flipflop=!cont->flipflop;
+		break;
 	case 0x01:case 0x03:case 0x05:case 0x07:
 		if (cont->flipflop) {
-			ret=(chan->current_count-1) & 0xff;
+			ret=(Bit8u)((chan->current_count-1) & 0xff);
 		} else {
-			ret=((chan->current_count-1)>>8)&0xff;
+			ret=(Bit8u)(((chan->current_count-1)>>8)&0xff);
 		}
 		cont->flipflop=!cont->flipflop;
 		break;
@@ -110,18 +111,18 @@ static void write_dma(Bit32u port,Bit8u val) {
 	switch (port) {
 	case 0x00:case 0x02:case 0x04:case 0x06:
 		if (cont->flipflop) {
-			chan->base_address=val;
+			chan->base_address=(chan->base_address & 0xff00) | val;
 		} else {
-			chan->base_address|=(val<<8);
+			chan->base_address=(chan->base_address & 0x00ff) | (val<<8);
 		}
 		cont->flipflop=!cont->flipflop;
 		chan->addr_changed=true;
 		break;
 	case 0x01:case 0x03:case 0x05:case 0x07:
 		if (cont->flipflop) {
-			chan->base_count=val;
+			chan->base_count=(chan->base_count & 0xff00) | val;
 		} else {
-			chan->base_count|=(val<<8);
+			chan->base_count=(chan->base_count & 0x00ff) | (val<<8);
 		}
 		cont->flipflop=!cont->flipflop;
 		chan->addr_changed=true;
@@ -160,19 +161,20 @@ static void write_dma(Bit32u port,Bit8u val) {
 };
 
 
-static Bit8u channelindex[7] = {2, 3, 1, 0, 0, 0, 0};
 void write_dma_page(Bit32u port,Bit8u val) {
-
+	Bitu channel;
 	switch (port) {
     case 0x81: /* dma0 page register, channel 2 */
+		channel=2;break;
     case 0x82: /* dma0 page register, channel 3 */
+		channel=3;break;
     case 0x83: /* dma0 page register, channel 1 */
+		channel=1;break;
     case 0x87: /* dma0 page register, channel 0 */
-		Bitu channel = channelindex[port - 0x81];
-		dma[0].chan[channel].page=val;
-		dma[0].chan[channel].addr_changed=true;
-		break;
+		channel=0;break;
 	}
+	dma[0].chan[channel].page=val;
+	dma[0].chan[channel].addr_changed=true;
 }
 
 Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
@@ -197,22 +199,29 @@ Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 		chan->current_count-=count;
 		return count;
 	} else {
-		/* Set the end of counter bit */
-		dma[0].status_reg|=(1 << dmachan);
 		/* Copy remaining piece of first buffer */
 		MEM_BlockRead(chan->address,buffer,chan->current_count);
-		buffer+=chan->current_count;
-		count-=(Bit16u)chan->current_count;
-		/* Autoinit reset the dma channel */
-		chan->address=(chan->page << 16)+chan->base_address;
-		chan->current_count=chan->base_count+1;
-		chan->current_address=chan->base_address;
-		/* Copy the rest of the buffer */
-		MEM_BlockRead(chan->address,buffer,count);
-		chan->address+=count;
-		chan->current_address+=count;
-		chan->current_count-=count;
-		return count;
+		if (!chan->mode.autoinit_enable) {
+			/* Set the end of counter bit */
+			dma[0].status_reg|=(1 << dmachan);
+			count=(Bit16u)chan->current_count;
+			chan->current_address+=count;;
+			chan->current_count=0;
+			return count;
+		} else {
+			buffer+=chan->current_count;
+			Bit16u left=count-(Bit16u)chan->current_count;
+			/* Autoinit reset the dma channel */
+			chan->address=(chan->page << 16)+chan->base_address;
+			chan->current_count=chan->base_count+1;
+			chan->current_address=chan->base_address;
+			/* Copy the rest of the buffer */
+			MEM_BlockRead(chan->address,buffer,left);
+			chan->address+=left;
+			chan->current_address+=left;
+			chan->current_count-=left;
+			return count;
+		} 
 	}
 };
 
