@@ -129,45 +129,48 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 
 	/* If segment to copy environment is 0 copy the caller's environment */
 	DOS_PSP psp(dos.psp);
-	Bit8u * envread,*envwrite;
+	PhysPt envread,envwrite;
 	Bit16u envsize=1;
 	bool parentenv=true;
 
 	if (*segment==0) {
 		if (!psp.GetEnvironment()) parentenv=false;				//environment seg=0
-		envread=HostMake(psp.GetEnvironment(),0);
+		envread=PhysMake(psp.GetEnvironment(),0);
 	} else {
 		if (!*segment) parentenv=false;						//environment seg=0
-		envread=HostMake(*segment,0);
+		envread=PhysMake(*segment,0);
 	}
 
 	if (parentenv) {
 		// hack to allow creation from envblock in unused mem (0xCD)
-		if (readw(envread)==0xCDCD) writew(envread,0x0000); 
+		if (mem_readb(envread)==0xCDCD) mem_writew(envread,0x0000); 
 
 		for (envsize=0; ;envsize++) {
 			if (envsize>=MAXENV - ENV_KEEPFREE) {
 				DOS_SetError(DOSERR_ENVIRONMENT_INVALID);
 				return false;
 			}
-			if (readw(envread+envsize)==0) break;
+			if (mem_readw(envread+envsize)==0) break;
 		}
 		envsize += 2;									/* account for trailing \0\0 */
 	}
 	Bit16u size=long2para(envsize+ENV_KEEPFREE);
 	if (!DOS_AllocateMemory(segment,&size)) return false;
-	envwrite=HostMake(*segment,0);
+	envwrite=PhysMake(*segment,0);
 	if (parentenv) {
-		bmemcpy(envwrite,envread,envsize);
+		mem_memcpy(envwrite,envread,envsize);
 		envwrite+=envsize;
 	} else {
-		*envwrite++=0;
+		mem_writeb(envwrite++,0);
 	}
-	*((Bit16u *) envwrite)=1;
+	mem_writew(envwrite,1);
 	envwrite+=2;
-
-	return DOS_Canonicalize(name,(char *)envwrite);
-};
+	char namebuf[DOS_PATHLENGTH];
+	if (DOS_Canonicalize(name,namebuf)) {
+		MEM_BlockWrite(envwrite,namebuf,strlen(namebuf)+1);
+		return true;
+	} else return false;
+}
 
 bool DOS_NewPSP(Bit16u segment, Bit16u size)
 {
@@ -231,9 +234,10 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	EXE_Header head;Bitu i;
 	Bit16u fhandle;Bit16u len;Bit32u pos;
 	Bit16u pspseg,envseg,loadseg,memsize,readsize;
-	HostPt loadaddress;RealPt relocpt;
+	PhysPt loadaddress;RealPt relocpt;
 	Bitu headersize,imagesize;
 	DOS_ParamBlock block(block_pt);
+
 	block.LoadData();
 	if (flags!=LOADNGO && flags!=OVERLAY && flags!=LOAD) {
 		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name); 	
@@ -295,20 +299,24 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		SetupCMDLine(pspseg,block);
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
-	loadaddress=HostMake(loadseg,0);
+	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
+	loadaddress=PhysMake(loadseg,0);
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
 		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		readsize=0xffff-256;
-		DOS_ReadFile(fhandle,loadaddress,&readsize);
+		DOS_ReadFile(fhandle,loadbuf,&readsize);
+		MEM_BlockWrite(loadaddress,loadbuf,readsize);
 	} else {		/* EXE Load in 32kb blocks and then relocate */
 		pos=headersize;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		while (imagesize>0x7FFF) {
-			readsize=0x8000;DOS_ReadFile(fhandle,loadaddress,&readsize);
+			readsize=0x8000;DOS_ReadFile(fhandle,loadbuf,&readsize);
+			MEM_BlockWrite(loadaddress,loadbuf,readsize);
 			if (readsize!=0x8000) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
 			loadaddress+=0x8000;imagesize-=0x8000;
 		}
 		if (imagesize>0) {
-			readsize=(Bit16u)imagesize;DOS_ReadFile(fhandle,loadaddress,&readsize);
+			readsize=(Bit16u)imagesize;DOS_ReadFile(fhandle,loadbuf,&readsize);
+			MEM_BlockWrite(loadaddress,loadbuf,readsize);
 			if (readsize!=imagesize) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
 		}
 		/* Relocate the exe image */
@@ -323,6 +331,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			mem_writew(address,mem_readw(address)+relocate);
 		}
 	}
+	delete[] loadbuf;
 	DOS_CloseFile(fhandle);
 	CALLBACK_SCF(false);		/* Carry flag cleared for caller if successfull */
 	if (flags==OVERLAY) return true;			/* Everything done for overlays */
