@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.36 2004-03-12 14:21:33 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.37 2004-04-26 07:54:37 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -25,6 +25,8 @@
 #include "regs.h"
 #include "callback.h"
 #include "debug.h"
+
+const char * RunningProgram="DOSBOX";
 
 #ifdef _MSC_VER
 #pragma pack(1)
@@ -90,6 +92,15 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
+extern void GFX_SetTitle(Bits cycles,Bits frameskip);
+void DOS_UpdatePSPName(void) {
+	DOS_MCB mcb(dos.psp-1);
+	static char name[9];
+	mcb.GetFileName(name);
+	if (!strlen(name)) strcpy(name,"DOSBOX");
+	RunningProgram=name;
+	GFX_SetTitle(-1,-1);
+}
 
 bool DOS_Terminate(bool tsr) {
 
@@ -123,13 +134,11 @@ bool DOS_Terminate(bool tsr) {
 	mem_writew(SegPhys(ss)+reg_sp+4,0x200); //stack isn't preserved
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(mempsp);
+	DOS_UpdatePSPName();
 	return true;
 }
 
-
-
 static bool MakeEnv(char * name,Bit16u * segment) {
-
 	/* If segment to copy environment is 0 copy the caller's environment */
 	DOS_PSP psp(dos.psp);
 	PhysPt envread,envwrite;
@@ -173,8 +182,7 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	} else return false;
 }
 
-bool DOS_NewPSP(Bit16u segment, Bit16u size)
-{
+bool DOS_NewPSP(Bit16u segment, Bit16u size) {
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
 	DOS_PSP psp_parent(psp.GetParent());
@@ -182,8 +190,7 @@ bool DOS_NewPSP(Bit16u segment, Bit16u size)
 	return true;
 };
 
-bool DOS_ChildPSP(Bit16u segment, Bit16u size)
-{
+bool DOS_ChildPSP(Bit16u segment, Bit16u size) {
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
 	DOS_PSP psp_parent(psp.GetParent());
@@ -194,7 +201,6 @@ bool DOS_ChildPSP(Bit16u segment, Bit16u size)
 };
 
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
-	
 	/* Fix the PSP for psp and environment MCB's */
 	DOS_MCB mcb((Bit16u)(pspseg-1));
 	mcb.SetPSPSeg(pspseg);
@@ -227,8 +233,7 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	dos.dta=RealMake(pspseg,0x80);
 }
 
-static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block) 
-{
+static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block) {
 	DOS_PSP psp(pspseg);
 	// if cmdtail==0 it will inited as empty in SetCommandTail
 	psp.SetCommandTail(block.exec.cmdtail);
@@ -356,7 +361,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
 	}
-	
+
 	if (flags==LOAD) {
 		DOS_PSP callpsp(dos.psp);
 		/* Save the SS:SP on the PSP of calling program */
@@ -402,6 +407,24 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Started from debug.com, then set breakpoint at start */
 		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
 #endif
+		/* Add the filename to PSP and environment MCB's */
+		char stripname[8];Bitu index=0;
+		while (char chr=*name++) {
+			switch (chr) {
+			case ':':case '\\':case '/':index=0;break;
+			default:if (index<8) stripname[index++]=toupper(chr);
+			}
+		}
+		index=0;
+		while (index<8) {
+			if (stripname[index]=='.') break;
+			if (!stripname[index]) break;	
+			index++;
+		}
+		memset(&stripname[index],0,8-index);
+		DOS_MCB pspmcb(dos.psp-1);
+		pspmcb.SetFileName(stripname);
+		DOS_UpdatePSPName();
 		return true;
 	}
 	return false;
