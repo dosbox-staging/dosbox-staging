@@ -138,7 +138,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 	/* Check for a full name */
 	fullname=Which(name);
 	if (!fullname) {
-		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"));
+		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),name);
 		return;
 	}
 	if (strcasecmp(strrchr(fullname, '.'), ".bat") == 0) {

@@ -71,5 +71,5 @@ The DOSBox Team
 Drive %c does not exist!
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Illegal command
+Illegal command: %s
 .
