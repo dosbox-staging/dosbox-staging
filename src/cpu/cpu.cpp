@@ -80,6 +80,10 @@ void Interrupt(Bit8u num) {
 	case 0x74:
 		break;
 	case 0xcd:
+#if C_HEAVY_DEBUG
+ 		LOG_DEBUG("Call to interrupt 0xCD this is BAD");
+		DEBUG_HeavyWriteLogInstruction();
+#endif
  		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
 #if C_DEBUG 
