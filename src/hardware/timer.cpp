@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.17 2003-10-13 19:44:47 finsterr Exp $ */
+/* $Id: timer.cpp,v 1.18 2003-10-13 21:57:35 finsterr Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -116,7 +116,7 @@ static void write_latch(Bit32u port,Bit8u val) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			PIC_RemoveEvents(PIT0_Event);
 			PIC_AddEvent(PIT0_Event,p->micro);
-//			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,(Bit32u)p->mode);
+			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,(Bit32u)p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
 //			LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);

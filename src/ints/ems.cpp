@@ -438,7 +438,6 @@ static Bit8u MemoryRegion(void) {
 
 static Bitu INT67_Handler(void) {
 	Bitu i;
-	LOG(LOG_MISC,LOG_ERROR)("EMS: Call %04X %04X %04X %04X",reg_ax,reg_bx,reg_cx,reg_dx);
 	switch (reg_ah) {
 	case 0x40:		/* Get Status */
 		reg_ah=EMM_NO_ERROR;	

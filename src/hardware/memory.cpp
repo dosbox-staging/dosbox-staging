@@ -242,20 +242,14 @@ void mem_memcpy(PhysPt dest,PhysPt src,Bitu size) {
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
 	Bit8u * write=(Bit8u *) data;
 	while (size--) {
-//		*write++=mem_readb_inline(pt++);
-		*write = mem_readb(pt);
-		write++;
-		pt++;
+		*write++=mem_readb_inline(pt++);
 	}
 }
 
 void MEM_BlockWrite(PhysPt pt,void * data,Bitu size) {
 	Bit8u * read=(Bit8u *) data;
 	while (size--) {
-//		mem_writeb_inline(pt++,*read++);
-		mem_writeb(pt,*read);
-		pt++;
-		read++;
+		mem_writeb_inline(pt++,*read++);
 	}
 }
 
@@ -816,7 +810,7 @@ HostPt MEM_GetBlockPage(void) {
 		memory.block.cur_page+=4096;
 	} else {
 		AllocBlock * newblock=new AllocBlock;
-		memset(newblock,0xcd,sizeof(AllocBlock));	//zero new allocated memory
+		memset(newblock,0,sizeof(AllocBlock));	//zero new allocated memory
 		newblock->next=memory.block.cur_block;
 		memory.block.cur_block=newblock;
 		
@@ -835,11 +829,6 @@ static void MEM_ShutDown(Section * sec) {
 		theblock=next;
 	}
 }
-
-void MEM_SetRemainingMem(Bitu remaining)
-{
-
-};
 
 void MEM_Init(Section * sec) {
 	Bitu i;

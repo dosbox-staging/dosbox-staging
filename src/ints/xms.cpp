@@ -107,7 +107,6 @@ static INLINE bool InvalidHandle(Bitu handle) {
 
 Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
-	
 	totalFree=(Bit16u)(MEM_FreeTotal()*4);
 	largestFree=(Bit16u)(MEM_FreeLargest()*4);
 	if (!totalFree) return XMS_OUT_OF_SPACE;
@@ -246,7 +245,7 @@ static bool multiplex_xms(void) {
 };
 
 Bitu XMS_Handler(void) {
-	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
+//	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */

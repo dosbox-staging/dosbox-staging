@@ -186,7 +186,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
-	secprop->Add_int("memsize",16);		//We Default to 8 mb seems okay for now
+	secprop->Add_int("memsize",8);		//We Default to 8 mb seems okay for now
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
@@ -198,10 +198,10 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("keepsmall",false);
 	secprop->Add_string("snapshots","snaps");
-	secprop->Add_string("scaler","scale2x");
+	secprop->Add_string("scaler","none");
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
-	secprop->Add_int("cycles",8000);
+	secprop->Add_int("cycles",1800);
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
 #endif
@@ -270,7 +270,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_hex("comport",2); 
 	secprop->Add_int("listenport",23);
 #endif
-		
+	
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 
