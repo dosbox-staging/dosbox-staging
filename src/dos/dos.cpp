@@ -296,12 +296,14 @@ static Bitu DOS_21Handler(void) {
 	case 0x2c:		/* Get System Time */
 //TODO Get time through bios calls date is fixed
 		{
-			Bit32u ticks=mem_readd(BIOS_TIMER);
-			Bit32u seconds=(ticks*10)/182;
+/*	Calculate how many miliseconds have passed */
+			Bitu ticks=5*mem_readd(BIOS_TIMER);
+			ticks = ((ticks / 59659u) << 16) + ((ticks % 59659u) << 16) / 59659u;
+			Bitu seconds=(ticks/100);
 			reg_ch=(Bit8u)(seconds/3600);
 			reg_cl=(Bit8u)((seconds % 3600)/60);
 			reg_dh=(Bit8u)(seconds % 60);
-			reg_dl=(Bit8u)(((ticks * 10) % 182)*100)/182;
+			reg_dl=(Bit8u)(ticks % 100);
 		}
 		break;
 	case 0x2d:		/* Set System Time */
