@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.48 2003-10-14 08:38:36 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.49 2003-10-14 15:27:22 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -96,14 +96,24 @@ static void ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.full_screen) { 
 		if (sdl.flags & GFX_SHADOW) {
+			withshadow:
 			/* TODO Maybe allocate a shadow surface and blit yourself and do real double buffering too */
 			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_SWSURFACE|SDL_FULLSCREEN);
 		} else {
+			Bitu test_bpp=SDL_VideoModeOK(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
+			if (test_bpp != sdl.bpp) 
+				goto withshadow;
 			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
 		}
 	} else {
-		if (sdl.flags & GFX_FIXED_BPP) sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE);
-		else sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
+		if (sdl.flags & GFX_FIXED_BPP) {
+			withfixed:
+			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE);
+		} else {
+			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
+			if (sdl.surface->format->BitsPerPixel==24) 
+				goto withfixed;
+		}
 	}
 	if (sdl.surface==0) {
 		E_Exit("SDL:Can't get a surface error:%s.",SDL_GetError());
@@ -298,6 +308,10 @@ static void GUI_StartUp(Section * sec) {
 	sdl.thread=SDL_CreateThread(&SDL_DisplayThread,0);
 #endif
 	/* Initialize screen for first time */
+	sdl.surface=SDL_SetVideoMode(640,400,0,0);
+	if (sdl.surface->format->BitsPerPixel==32) {
+		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
+	}
 	GFX_SetSize(640,400,8,0,0,0);
 	SDL_EnableKeyRepeat(250,30);
 	SDL_EnableUNICODE(1);
