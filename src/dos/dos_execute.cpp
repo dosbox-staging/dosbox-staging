@@ -297,7 +297,7 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 }
 
 
-static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
+static bool EXE_Load(char * name,ParamBlock* _block,Bit8u flag) {
 
 	EXE_Header header;
 	Bit16u fhandle;Bit32u i;
@@ -305,12 +305,17 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 	Bit16u envseg,pspseg,exeseg;
 	Bit32u imagesize,headersize;
 
+	// During loading process, th param-block-mem might be overwritten (HostPt!) and 
+	// therefore change the relocation address, so save these values.
+	ParamBlock block;
+	memcpy(&block,_block,sizeof(ParamBlock));
+
 	PSP * callpsp=(PSP *)HostMake(dos.psp,0);
 
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
 	if (flag!=OVERLAY) {
 		/* Allocate a new Environment */
-		envseg=block->exec.envseg;
+		envseg=block.exec.envseg;
 		if (!MakeEnv(name,&envseg)) return false;
 	};
 
@@ -345,11 +350,11 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 			return false;
 		}
 		SetupPSP(pspseg,size,envseg);
-		SetupCMDLine(pspseg,block);
+		SetupCMDLine(pspseg,&block);
 		exeseg=pspseg+16;
 	} else {
 		/* For OVERLAY */
-		exeseg=block->overlay.loadseg;
+		exeseg=block.overlay.loadseg;
 	}
 	/* Load the image in 32k blocks */
 	DOS_SeekFile(fhandle,&headersize,0);
@@ -384,7 +389,7 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 		PhysPt address=Real2Phys(RealMake(RealSeg(reloc)+exeseg,RealOff(reloc)));
 		Bit16u change=mem_readw(address);
 		if (flag==OVERLAY) {
-			change+=block->overlay.relocation;
+			change+=block.overlay.relocation;
 		} else {
 			change+=exeseg;
 		};
