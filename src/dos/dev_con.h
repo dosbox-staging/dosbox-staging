@@ -42,7 +42,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		case 13:
 			data[count++]=0x0D;
 			if (*size>count) data[count++]=0x0A;
-			else cache=0x0A;
+			//else cache=0x0A;  // it's only expanded if there is room for it.
 			*size=count;
 			reg_ax=oldax;
 			return true;

@@ -68,6 +68,7 @@ static Bitu DOS_21Handler(void) {
 			{	
 //TODO Make this better according to standards
 				if (!DOS_GetSTDINStatus()) {
+					reg_al=0;
 					CALLBACK_SZF(true);
 					break;
 				}
