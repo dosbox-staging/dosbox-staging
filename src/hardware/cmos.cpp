@@ -34,7 +34,11 @@ static struct {
 		Bit8u div;
 		Bitu micro;
 	} timer;
-	Bit8u status_c;
+	struct {
+		Bit64u timer;
+		Bit64u ended;
+		Bit64u alarm;
+	} last;
 	bool ack;
 	bool update_ended;
 } cmos;
@@ -43,16 +47,16 @@ static void cmos_timerevent(void) {
 	PIC_ActivateIRQ(8); 
 	if (cmos.ack) {
 		PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
-		cmos.status_c=0x20;
+		cmos.regs[0x0c]|=0x0a0;
 		cmos.ack=false;
 	}
 }
 
 static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);	
-	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
-	cmos.timer.micro=(Bitu) (10000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
+	cmos.timer.micro=(Bitu) (1000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
+	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %f hz",1000000.0/cmos.timer.micro);
 	PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 }
@@ -138,12 +142,33 @@ static Bit8u cmos_readreg(Bit32u port) {
 	case 0x03:		/* Minutes Alarm */
 	case 0x05:		/* Hours Alarm */
 		return cmos.regs[cmos.reg];
-	case 0x0c:
-		if (cmos.ack) return 0;
-		else {
-			cmos.ack=true;
-			return 0x80|cmos.status_c;
+	case 0x0a:		/* Status register C */
+		if (PIC_Index()<0x2) {
+			return (cmos.regs[0x0a]&0x7f) | 0x80;
+		} else {
+			return (cmos.regs[0x0a]&0x7f);
 		}
+	case 0x0c:		/* Status register C */
+		if (cmos.timer.enabled) {
+			/* In periodic interrupt mode only care for those flags */
+			Bit8u val=cmos.regs[0xc];
+			cmos.regs[0xc]=0;
+			return val;
+		} else {
+			/* Give correct values at certain times */
+			Bit8u val=0;
+			Bit64u index=PIC_MicroCount();
+			if (index>=(cmos.last.timer+cmos.timer.micro)) {
+				cmos.last.timer=index;
+				val|=0x40;
+			} 
+			if (index>=(cmos.last.ended+1000000)) {
+				cmos.last.ended=index;
+				val|=0x10;
+			} 
+			return val;
+		}
+	case 0x0b:		/* Status register B */
 	case 0x0f:		/* Shutdown status byte */
 	case 0x17:		/* Extended memory in KB Low Byte */
 	case 0x18:		/* Extended memory in KB High Byte */
