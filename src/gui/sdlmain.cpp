@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.76 2004-09-08 14:14:46 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.77 2004-09-09 10:36:45 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -113,9 +113,6 @@ struct private_hwdata {
 #include <sys/resource.h>
 #define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
 #endif
-
-void MAPPER_Init(void);
-void MAPPER_StartUp(Section * sec);
 
 enum SCREEN_TYPES	{ 
 	SCREEN_SURFACE,
@@ -1086,7 +1083,11 @@ int main(int argc, char* argv[]) {
 				SwitchFullScreen();
 			}
 		}
+
+		/* Init the keyMapper */
 		MAPPER_Init();
+		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run();
+
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */

@@ -50,6 +50,7 @@ Type INTRO in dosbox. That's it.
 Some Frequently Asked Questions:
 
 Q: I've got a Z instead of a C at the prompt.
+Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
 Q: The sound stutters.
 Q: I can't type \ in DOSBox.
@@ -70,15 +71,35 @@ A: You have to make your directories available as drives in DOSBox by using
    In Linux, "mount c /home/username" would give you a C in DOSBox
    which points at /home/username in Linux.
 
+Q: My CD-ROM doesn't work.
+A: To mount your cdrom in DOSBox you have to specify some additional options 
+   when mounting the cdrom. 
+   To enable the most basic cdrom support:
+     - mount d f:\ -t cdrom
+   To enable low-level SDL-support:
+     - mount d f:\ -t cdrom -usecd 0
+   To enable low-level ioctl-support(win2k/xp/linux):
+     - mount d f:\ -t cdrom -usecd 0 -ioctl
+   To enable low-level aspi-support (win98 with aspi-layer installed):
+     - mount d f:\ -t cdrom -usecd 0 -apsi
+   
+   In the commands: - d    driveletter you in DOSBox
+                    - f:\ location of cdrom on your PC.
+                    - 0   The number of the cdrom drive, reported by mount -cd
+   See also the question: The game/application can't find its CD-ROM.
+
+
 Q: The mouse doesn't work.
 A: Normally DOSBox detects the mouse being used by a game. If you click on 
    the screen then it should get locked and work.
    Sometimes the DOSBox mouse detection doesn't work with certain games. You
    might have to force to lock the mouse then with ctrl-F10.
 
+
 Q: The sound stutters.
 A: You're using too much cpu power to keep DOSBox running at the current speed.
    You can either lower the cycles or skip frames or get a faster machine.
+   You can also increase the prebuffer in the configfile
 
 Q: I can't type \ in DOSBox.
 A: This is a known problem. It only occurs if your keyboard layout isn't US.
@@ -86,6 +107,8 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      1. Switch your keyboard layout.
      2. Use / instead.
      3. Add the commands you want to execute to dosbox.conf
+     4. Start the keymapper (CTRL-F1 or add -startmapper switch to dosbox)
+
 
 Q: The game/application can't find its CD-ROM.
 A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the
@@ -95,13 +118,16 @@ A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the
    or -aspi. Look at the description elsewhere in this document for their 
    meaning.
 
+
 Q: The game/application runs much too slow!
 A: Look at the section "To run resource-demanding games" for more information.
+
 
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 A: This is possible! Just create a config file: config -writeconf dosbox.conf .
    Start your favourite editor and look at all the settings present. To
    start DOSBox with your new settings: dosbox -conf dosbox.conf
+
 
 Q: What sound hardware does DOSBox presently emulate?
 A: DOSBox emulates several legacy sound devices:
@@ -138,6 +164,7 @@ A: While unlikely, this seems to happen. A look at "The Newbie's
    pictorial guide to DOSBox" located at 
    http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
 
+
 For more questions read the remainder of this README and/or check 
 the site/forum:
 http://dosbox.sourceforge.net
@@ -153,6 +180,7 @@ An overview of the commandline options you can give to DOSBox:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
+       [-startmapper]
        
 dosbox -version
 
@@ -184,6 +212,10 @@ dosbox -version
   -machine machinetype
         Setup dosbox to emulate a specific type of machine. Valid choices are:
         hercules, cga, tandy, vga (default).
+
+  -startmapper
+        Enter the keymapper directly on startup. Useful for people with 
+        keyboard problems.
 
   -version
         output version information and exit. Useful for frontends.
@@ -366,14 +398,20 @@ For more information use the /? command line switch with the programs.
 ================
 
 ALT-ENTER       Go full screen and back.
-CTRL-F5	        Save a screenshot.
-CTRL-F6	        Start/Stop recording sound output to a wave file.
-CTRL-F7	        Decrease frameskip.
-CTRL-F8	        Increase frameskip.
+CTRL-F1         Start the keymapper.
+CTRL-F4         Swap mounted disk-image (Only used with imgmount).
+CTRL-F5         Save a screenshot.
+CTRL-F6         Start/Stop recording sound output to a wave file.
+CTRL-ALT-F7     Start/Stop recording of OPL commands.
+CTRL-ALT-F8     Start/Stop the recording of raw MIDI commands.
+CTRL-F7         Decrease frameskip.
+CTRL-F8         Increase frameskip.
 CTRL-F9         Kill dosbox.
 CTRL-F10        Capture/Release the mouse.
 CTRL-F11        Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12        Speed up emulation (Increase DOSox Cycles).
+
+These are the default keybindings. They can be changed in the keymapper.
 
 NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
