@@ -133,7 +133,7 @@ check)
 Since VGA emulation is the most demanding part of DOSBox in terms of actual
 CPU usage, we'll start here. Increase the number of frames skipped (in
 increments of one) by pressing CRTL+F8. Your CPU usage should decrease.
-Go back to step 2 and repeat this until the game runs fast enough for you.
+Go back one step and repeat this until the game runs fast enough for you.
 Please note that this is a trade off: you lose in fluidity of video what you
 gain in speed 
 
