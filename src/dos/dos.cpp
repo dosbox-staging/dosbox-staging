@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.58 2003-10-17 16:56:38 finsterr Exp $ */
+/* $Id: dos.cpp,v 1.59 2003-10-26 18:57:46 harekiet Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -896,7 +896,6 @@ static Bitu DOS_27Handler(void)
 	return CBRET_NONE;
 }
 static Bitu DOS_25Handler(void) {
-	flags.type=0;
 	if(Drives[reg_al]==0){
 		reg_ax=0x8002;
 		SETFLAGBIT(CF,true);
@@ -910,7 +909,6 @@ static Bitu DOS_25Handler(void) {
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC,LOG_NORMAL)("int 26 called: hope for the best!");
-	flags.type=0;
 	if(Drives[reg_al]==0){
 		reg_ax=0x8002;
 		SETFLAGBIT(CF,true);
