@@ -230,7 +230,11 @@ SOURCE=..\src\dos\cdrom.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\dos\cdrom_ioctl.cpp
+SOURCE=..\src\dos\cdrom_aspi_win32.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\dos\cdrom_ioctl_win32.cpp
 # End Source File
 # Begin Source File
 
