@@ -27,33 +27,32 @@
 static Bit16u memAllocStrategy = 0x00;
 
 static void DOS_CompressMemory(void) {
-	MCB * pmcb;MCB * pmcbnext;
-	Bit16u mcb_segment;
-	mcb_segment=dos.firstMCB;
-	pmcb=(MCB *)HostMake(mcb_segment,0);
-	while (pmcb->type!=0x5a) {
-		pmcbnext=pmcbnext=(MCB *)HostMake(mcb_segment+pmcb->size+1,0);
-		if ((pmcb->psp_segment==0) && (pmcbnext->psp_segment==0)) {
-			pmcb->size+=pmcbnext->size+1;
-			pmcb->type=pmcbnext->type;
+	Bit16u mcb_segment=dos.firstMCB;
+	DOS_MCB mcb(mcb_segment);
+	DOS_MCB mcb_next(0);
+
+	while (mcb.GetType()!=0x5a) {
+		mcb_next.SetPt((Bit16u)(mcb_segment+mcb.GetSize()+1));
+		if ((mcb.GetPSPSeg()==0) && (mcb_next.GetPSPSeg()==0)) {
+			mcb.SetSize(mcb.GetSize()+mcb_next.GetSize()+1);
+			mcb.SetType(mcb_next.GetType());
 		} else {
-			mcb_segment+=pmcb->size+1;
-			pmcb=(MCB *)HostMake(mcb_segment,0);
+			mcb_segment+=mcb.GetSize()+1;
+			mcb.SetPt(mcb_segment);
 		}
 	}
 }
 
 void DOS_FreeProcessMemory(Bit16u pspseg) {
-	MCB * pmcb;
 	Bit16u mcb_segment=dos.firstMCB;
-	pmcb=(MCB *)HostMake(mcb_segment,0);
+	DOS_MCB mcb(mcb_segment);
 	while (true) {
-		if (pmcb->psp_segment==pspseg) {
-			pmcb->psp_segment=MCB_FREE;
+		if (mcb.GetPSPSeg()==pspseg) {
+			mcb.SetPSPSeg(MCB_FREE);
 		}
-		mcb_segment+=pmcb->size+1;
-		if (pmcb->type==0x5a) break;
-		pmcb=(MCB *)HostMake(mcb_segment,0);
+		if (mcb.GetType()==0x5a) break;
+		mcb_segment+=mcb.GetSize()+1;
+		mcb.SetPt(mcb_segment);
 	}
 	DOS_CompressMemory();
 };
@@ -69,60 +68,61 @@ void DOS_SetMemAllocStrategy(Bit16u strat)
 };
 
 bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
-	MCB * pmcb;MCB * pmcbnext;
-	Bit16u bigsize=0;Bit16u mcb_segment;
-	bool stop=false;mcb_segment=dos.firstMCB;
 	DOS_CompressMemory();
+	Bit16u bigsize=0;Bit16u mcb_segment=dos.firstMCB;
+	DOS_MCB mcb(0);
+	DOS_MCB mcb_next(0);
+	bool stop=false;
 	while(!stop) {
-		pmcb=(MCB *)HostMake(mcb_segment,0);
-		if (pmcb->psp_segment==0) {
+		mcb.SetPt(mcb_segment);
+		if (mcb.GetPSPSeg()==0) {
 			/* Check for enough free memory in current block */
-			if (pmcb->size<(*blocks)) {
-				if (bigsize<pmcb->size) {
-					bigsize=pmcb->size;
+			Bit16u block_size=mcb.GetSize();			
+			if (block_size<(*blocks)) {
+				if (bigsize<block_size) {
+					bigsize=block_size;
 				}
-				
-			} else if (pmcb->size==*blocks) {
-				pmcb->psp_segment=dos.psp;
+			} else if (block_size==*blocks) {
+				mcb.SetPSPSeg(dos.psp);
 				*segment=mcb_segment+1;
 				return true;
 			} else {
 				// TODO: Strategy "1": Best matching block
 				/* If so allocate it */
-				if ((memAllocStrategy & 0x03)==0) {				
-					pmcbnext=(MCB *)HostMake(mcb_segment+*blocks+1,0);
-					pmcbnext->psp_segment=MCB_FREE;
-					pmcbnext->type=pmcb->type;
-					pmcbnext->size=pmcb->size-*blocks-1;
-					pmcb->size=*blocks;
-					pmcb->type=0x4D;
-					pmcb->psp_segment=dos.psp;
+				if ((memAllocStrategy & 0x03)==0) {	
+					mcb_next.SetPt((Bit16u)(mcb_segment+*blocks+1));
+					mcb_next.SetPSPSeg(MCB_FREE);
+					mcb_next.SetType(mcb.GetType());
+					mcb_next.SetSize(block_size-*blocks-1);
+					mcb.SetSize(*blocks);
+					mcb.SetType(0x4d);		
+					mcb.SetPSPSeg(dos.psp);
 					//TODO Filename
 					*segment=mcb_segment+1;
 					return true;
 				} else {
 					// * Last Block *
 					// New created block
-					*segment = mcb_segment+1+pmcb->size-*blocks;
-					pmcbnext=(MCB *)HostMake(*segment-1,0);
-					pmcbnext->size			= *blocks;
-					pmcbnext->type			= pmcb->type;
-					pmcbnext->psp_segment	= dos.psp;
+					*segment = mcb_segment+1+block_size - *blocks;
+					mcb_next.SetPt((Bit16u)(*segment-1));
+					mcb_next.SetSize(*blocks);
+					mcb_next.SetType(mcb.GetType());
+					mcb_next.SetPSPSeg(dos.psp);
 					// Old Block
-					pmcb->size				= pmcb->size-*blocks-1;
-					pmcb->psp_segment		= MCB_FREE;
-					pmcb->type				= 0x4D;
+					mcb.SetSize(block_size-*blocks-1);
+					mcb.SetPSPSeg(MCB_FREE);
+					mcb.SetType(0x4D);
 					return true;
 				};
 			}
 		}
 		/* Onward to the next MCB if there is one */
-		if (pmcb->type==0x5a) {
+		if (mcb.GetType()==0x5a) {
 			*blocks=bigsize;
 			DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 			return false;
 		}
-		mcb_segment+=pmcb->size+1;
+		mcb_segment+=mcb.GetSize()+1;
 	}
 	return false;
 }
@@ -130,32 +130,31 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	DOS_CompressMemory();
-	MCB * pmcb,* pmcbnext,* pmcbnew;
-	pmcb=(MCB *)HostMake(segment-1,0);
-	pmcbnext=(MCB *)HostMake(segment+pmcb->size,0);
-	Bit16u total=pmcb->size;
-	if (pmcb->type!=0x5a) {
-		if (pmcbnext->psp_segment==MCB_FREE) {
-			total+=pmcbnext->size+1;
+	DOS_MCB mcb(segment-1);
+	Bit16u total=mcb.GetSize();
+	DOS_MCB	mcb_next(segment+total);
+	if (mcb.GetType()!=0x5a) {
+		if (mcb_next.GetPSPSeg()==MCB_FREE) {
+			total+=mcb_next.GetSize()+1;
 		}
-	};
+	}
 	if (*blocks<total) {
-		if (pmcb->type!=0x5a) {
-			pmcb->type=pmcbnext->type;
+		if (mcb.GetType()!=0x5a) {
+			mcb.SetType(mcb_next.GetType());
 		}
-		pmcb->size=*blocks;
-		pmcbnew=(MCB *)HostMake(segment+*blocks,0);
-		pmcbnew->size=total-*blocks-1;
-		pmcbnew->type=pmcb->type;
-		pmcbnew->psp_segment=MCB_FREE;
-		pmcb->type=0x4D;
+		mcb.SetSize(*blocks);
+		mcb_next.SetPt((Bit16u)(segment+*blocks));
+		mcb_next.SetSize(total-*blocks-1);
+		mcb_next.SetType(mcb.GetType());
+		mcb_next.SetPSPSeg(MCB_FREE);
+		mcb.SetType(0x4d);
 		return true;
 	}
 	if (*blocks==total) {
-		if (pmcb->type!=0x5a) {
-			pmcb->type=pmcbnext->type;
+		if (mcb.GetType()!=0x5a) {
+			mcb.SetType(mcb_next.GetType());
 		}
-		pmcb->size=*blocks;
+		mcb.SetSize(*blocks);
 		return true;
 	}
 	*blocks=total;
@@ -166,9 +165,8 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 
 bool DOS_FreeMemory(Bit16u segment) {
 //TODO Check if allowed to free this segment
-	MCB * pmcb;
-	pmcb=(MCB *)HostMake(segment-1,0);
-	pmcb->psp_segment=MCB_FREE;
+	DOS_MCB mcb(segment-1);
+	mcb.SetPSPSeg(MCB_FREE);
 	DOS_CompressMemory();
 	return true;
 }
@@ -177,10 +175,10 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 
 void DOS_SetupMemory(void) {
-	MCB * mcb=(MCB *) HostMake(MEM_START,0);
-	mcb->psp_segment=MCB_FREE;						//Free
-	mcb->size=0x9FFE - MEM_START;
-	mcb->type=0x5a;									//Last Block
+	DOS_MCB mcb((Bit16u)MEM_START);
+	mcb.SetPSPSeg(MCB_FREE);						//Free
+	mcb.SetSize(0x9FFE - MEM_START);
+	mcb.SetType(0x5a);								//Last Block
 	dos.firstMCB=MEM_START;
 	dos_infoblock.SetFirstMCB(MEM_START);
 }
