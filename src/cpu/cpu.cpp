@@ -40,12 +40,14 @@ CPU_Decoder * cpudecoder;
 static void CPU_CycleIncrease(void) {
 	Bitu old_cycles=CPU_CycleMax;
 	CPU_CycleMax=(Bitu)(CPU_CycleMax*1.2);
+	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
 }
 
 static void CPU_CycleDecrease(void) {
 	CPU_CycleMax=(Bitu)(CPU_CycleMax/1.2);
+	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (!CPU_CycleMax) CPU_CycleMax=1;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
 }
