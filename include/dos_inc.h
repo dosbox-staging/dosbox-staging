@@ -97,6 +97,7 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry);
+bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
 bool DOS_CreateFile(char * name,Bit16u attribute,Bit16u * entry);
 bool DOS_UnlinkFile(char * name);
 bool DOS_FindFirst(char *search,Bit16u attr);

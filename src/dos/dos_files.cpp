@@ -370,6 +370,32 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	}
 }
 
+bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status)
+// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error
+{
+	Bit16u result = 0;
+	if (DOS_OpenFile(name, flags, entry)) {
+		// File already exists
+		switch (action & 0x0f) {
+			case 0x00 : return false;			// failed
+			case 0x01 :	result = 1; break;		// file open (already done)
+			case 0x02 : DOS_CloseFile(*entry);	// replace
+						if (!DOS_CreateFile(name, flags, entry)) return false;
+						result = 3;
+						break;
+			default	  : E_Exit("DOS: OpenFileExtended: Unknown action.");
+		};
+	} else {
+		// File doesnt exist
+		if ((action & 0xf0)==0) return false;
+		// Create File
+		if (!DOS_CreateFile(name, flags, entry)) return false;
+		result = 2;
+	};
+	*status = result;
+	return true;
+};
+
 bool DOS_UnlinkFile(char * name) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;

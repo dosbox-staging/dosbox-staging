@@ -833,7 +833,13 @@ static Bitu DOS_21Handler(void) {
 			break;
 		} 
 	case 0x6c:					/* Extended Open/Create */
-		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
+		if (DOS_OpenFileExtended(name1,reg_bx,reg_cx,reg_dx,&reg_ax,&reg_cx)) {
+			CALLBACK_SCF(false);
+		} else {
+			reg_ax=dos.errorcode;
+			CALLBACK_SCF(true);
+		}
 		break;
 	case 0x71:					/* Unknown probably 4dos detection */
 		reg_ax=0x7100;
