@@ -86,6 +86,13 @@ Forces to use SDL cdrom support for drive number.
 .B \-cd
 .RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
 .RE
+.PP 
+.B "Example:" 
+.TP
+.RB "To mount your /home/dos/dosgames directory as C drive in " dosbox :
+.RS
+mount c /home/dos/dosgames
+.RE
 .TP
 .B MEM
 .LP
@@ -136,9 +143,14 @@ Kill dosbox.
 .IP CTRL\-F10
 Capture/Release the mouse.
 .IP CTRL\-F11
-Slow down emulation.
+Slow down emulation (Increase DOSBox Cycles).
 .IP CTRL\-F12
-Speed up emulation.
+Speed up emulation (Decrease DOSBox Cycles).
+.PP
+.B "Note: "
+Once you increase your DOSBox cycles beyond your computer's maximum
+capacity, it will produce the same effect as slowing down the emulation.
+This maximum will vary from computer to computer, there is no standard.
 .SH "SYSTEM REQUIREMENTS"
 Fast machine. My guess would be pentium\-2 400+ to get decent emulation
 of games written for an 286 machine.
@@ -147,7 +159,7 @@ them to run fast though!! Be sure to read the next section on how to speed
 it up somewhat.
 .SS "To run resource\-demanding games"
 .BR dosbox " emulates the CPU, the sound and graphic cards, and some other"
-.RB " stuff, all at the same time. You can overclock " dosbox " by using CTRL+F12, but"
+.RB " stuff, all at the same time. You can overclock " dosbox " by using CTRL\-F12, but"
 you'll be limited by the power of your actual CPU. You can see how much free
 time your true CPU has by various utils (top).  Once 100% of your real CPU time is
 .RB "used there is no further way to speed up " dosbox " unless you reduce the load"
@@ -157,17 +169,17 @@ So:
 .PP
 .RB "Close every program but " dosbox .
 .PP
-.RB "Overclock  " dosbox " until 100% of your CPU is used.(CTRL+F12)" 
+.RB "Overclock  " dosbox " until 100% of your CPU is used.(CTR\-+F12)" 
 .PP
 .RB "Since VGA emulation is the most demanding part of " dosbox " in terms of actual"
 CPU usage, we'll start here. Increase the number of frames skipped (in
-increments of one) by pressing CRTL+F8. Your CPU usage should decrease.
+increments of one) by pressing CRTL\-F8. Your CPU usage should decrease.
 Go back one step and repeat this until the game runs fast enough for you.
 Please note that this is a trade off: you lose in fluidity of video what you
 gain in speed.
 .SH NOTES
 .RB "While we hope that, one day, " dosbox " will run virtually all programs ever made for the PC..."
-.RB "we are not there yet. At present, " dosbox " run on a 1 Gigahertz PC is roughly the equivalent of a 16MHz 386 PC."
+.RB "we are not there yet. At present, " dosbox " run on a 1.7 Gigahertz PC is roughly the equivalent of a 25MHz 386 PC."
 While the 0.60 release has added support for "protected mode" allowing for more complex and recent programs, 
 but note that this support is early in development and nowhere near as complete as the support for 386 real\-mode 
 games (or earlier). Also note that "protected mode" games need substantially more resources and may 

@@ -5,8 +5,8 @@ NOTE:
 =====
 
 While we hope that, one day, DosBox will run virtually all programs
-ever made for the PC...we are not there yet. At present, DosBox run on a 1
-Gigahertz PC is roughly the equivalent of a 16MHz 386 PC. While the 0.60
+ever made for the PC...we are not there yet. At present, DosBox run on a 1.7
+Gigahertz PC is roughly the equivalent of a 25MHz 386 PC. While the 0.60
 release has added support for "protected mode" allowing for more complex and
 recent programs, but note that this support is early in development and
 nowhere near as complete as the support for 386 real-mode games (or
@@ -62,17 +62,20 @@ Internal Programs:
 dosbox supports most of the DOS commands found in command.com. 
 In addition, the following commands are available: 
 
-MOUNT Driveletter sourcedirectory [-t type] [-aspi] [-ioctl] 
-      [-usecd number] [-size drivesize] [-label drivelabel]
+MOUNT "Emulated Drive letter" "Real Drive or Directory" 
+      [-t type] [-aspi] [-ioctl] [-usecd number] [-size drivesize] 
+      [-label drivelabel]
 MOUNT -cd
     
   Program to mount local directories as drives inside DOSBox.
 
-  Driveletter
+  "Emulated Drive letter"
         The driveletter inside dosbox (eg. C).
 
-  sourcedirectory
+  "Real Drive letter or Directory"
         The local directory you want to have inside dosbox.
+        (Under Win32 usually the same as "Emulated Drive letter".
+	For Example: mount c c:\ )
 
   -t type
         Type of the mounted directory. Supported are: dir (standard),
@@ -104,7 +107,19 @@ MOUNT -cd
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
 
-  Examples:
+  Basically, MOUNT allows you to connect real hardware to DosBox's "emulated"
+  PC. So MOUNT C C:\ tells DosBox to use your real C: drive as drive C: in
+  DosBox. It also allows you to change the drive's letter identification for
+  programs that demand specific drive letters.
+  
+  For example: Touche: Adventures of The Fifth Musketeer must be run on your C:
+  drive. Using DosBox and it's mount command, you can trick into thinking it
+  is on C drive while placing it where you want it. For example, if the game
+  were in D:\TOUCHE, you can use the command MOUNT C D:\ would allow you to
+  run Touche from the D drive.
+    
+
+  General MOUNT Examples:
   1. To mount c:\floppy as a floppy : 
        mount a c:\floppy -t floppy
   2. To mount system cdrom drive E as cdrom drive D in dosbox:
@@ -114,7 +129,9 @@ MOUNT -cd
        mount d /media/cdrom -t cdrom -usecd 0
   4. To mount a drive with 870 mb free diskspace (rarely needed! experts only):
        mount c d:\ -size 4025,127,16513,1700
-       
+  5. to mount /home/dos/dosgames as drive C in dosbox:
+       mount c /home/dos/dosgames
+
 MEM
   Program to display the amount of free memory.
 
@@ -157,8 +174,12 @@ CTRL-F7	        Decrease frameskip.
 CTRL-F8	        Increase frameskip.
 CTRL-F9         Kill dosbox.
 CTRL-F10        Capture/Release the mouse.
-CTRL-F11        Slow down emulation.
-CTRL-F12        Speed up emulation.
+CTRL-F11        Slow down emulation (Decrease DOSBox Cycles).
+CTRL-F12        Speed up emulation (Increase DOSox Cycles).
+
+NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
+capacity, it will produce the same effect as slowing down the emulation.
+This maximum will vary from computer to computer, there is no standard.
 
 ====================
 System requirements:
