@@ -46,7 +46,6 @@ INLINE Bit16u PAGES(Bit32u bytes) {
 	return (Bit16u)(1+(bytes>>12));
 }
 
-
 void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEMORY_WriteHandler write);
 void MEM_ClearPageHandlers(Bitu startpage,Bitu pages);
 
@@ -55,6 +54,8 @@ void MEM_ClearMapping(Bitu startpage,Bitu pages);
 
 bool MEM_A20_Enabled(void);
 void MEM_A20_Enable(bool enable);
+
+Bitu MEM_TotalSize(void);			//Memory size in KB 
 
 extern HostPt memory;
 
