@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.32 2003-10-14 08:38:36 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.33 2003-10-14 23:34:23 harekiet Exp $ */
 
 #include <string.h>
 
@@ -41,7 +41,7 @@ static SHELL_Cmd cmd_list[]={
 {	"RMDIR",	0,			&DOS_Shell::CMD_RMDIR,		"SHELL_CMD_RMDIR_HELP"},
 {	"RD",		1,			&DOS_Shell::CMD_RMDIR,		"SHELL_CMD_RMDIR_HELP"},
 {	"SET",		0,			&DOS_Shell::CMD_SET,		"SHELL_CMD_SET_HELP"},
-{	"IF",		0,			&DOS_Shell::CMD_IF,		"SHELL_CMD_IF_HELP"},
+{	"IF",		0,			&DOS_Shell::CMD_IF,			"SHELL_CMD_IF_HELP"},
 {	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP"},
 {	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP"},
 {	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP"},
@@ -498,9 +498,7 @@ void DOS_Shell::CMD_IF(char * args) {
 			return;
 		}
 		/* Read the error code from DOS */
-		reg_ah=0x4d;
-		CALLBACK_RunRealInt(0x21);
-		if ((reg_al>=n) ==(!has_not)) DoCommand(args);
+		if ((dos.return_code>=n) ==(!has_not)) DoCommand(args);
 		return;
 	}
 	/* Normal if string compare */
