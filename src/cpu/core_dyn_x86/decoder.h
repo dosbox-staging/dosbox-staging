@@ -16,18 +16,16 @@ static struct DynDecode {
 	DynReg * segprefix;
 } decode;
 
-#define FASTCALL __fastcall
-
 #include "helpers.h"
 
-static Bit8u FASTCALL decode_fetchb(void) {
+static Bit8u INLINE decode_fetchb(void) {
 	return mem_readb(decode.code++);
 }
-static Bit16u FASTCALL decode_fetchw(void) {
+static Bit16u INLINE decode_fetchw(void) {
 	decode.code+=2;
 	return mem_readw(decode.code-2);
 }
-static Bit32u FASTCALL decode_fetchd(void) {
+static Bit32u INLINE decode_fetchd(void) {
 	decode.code+=4;
 	return mem_readd(decode.code-4);
 }
@@ -98,14 +96,14 @@ static void dyn_pop(DynReg * dynreg) {
 	gen_restoreflags();
 }
 
-static void FASTCALL dyn_get_modrm(void) {
+static void INLINE dyn_get_modrm(void) {
 	decode.modrm.val=decode_fetchb();
 	decode.modrm.mod=(decode.modrm.val >> 6) & 3;
 	decode.modrm.reg=(decode.modrm.val >> 3) & 7;
 	decode.modrm.rm=(decode.modrm.val & 7);
 }
 
-static void FASTCALL dyn_fill_ea(bool addseg=true) {
+static void dyn_fill_ea(bool addseg=true) {
 	DynReg * segbase;
 	if (!decode.big_addr) {
 		Bits imm;
