@@ -570,8 +570,8 @@ static void dyn_load_seg(SegNames seg,DynReg * src,bool withpop) {
 	if (cpu.pmode) {
 		Bit8u * branch;DynState state;
 		gen_storeflags();	
-		gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPW),seg,src);
-		gen_dop_word(DOP_OR,true,DREG(TMPW),DREG(TMPW));
+		gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPB),seg,src);
+		gen_dop_byte(DOP_OR,DREG(TMPB),0,DREG(TMPB),0);
 		branch=gen_create_branch(BR_Z);
 		dyn_savestate(&state);
 		dyn_reduce_cycles();	
@@ -893,6 +893,12 @@ restart_prefix:
 				dyn_branched_exit((BranchTypes)(dual_code&0xf),
 					decode.big_op ? (Bit32s)decode_fetchd() : (Bit16s)decode_fetchw());	
 				return decode.block;
+			/* SHLD Imm/cl*/
+			case 0xa4:dyn_dshift_ev_gv(true,true);break;
+			case 0xa5:dyn_dshift_ev_gv(true,false);break;
+			/* SHRD Imm/cl*/
+			case 0xac:dyn_dshift_ev_gv(false,true);break;
+			case 0xad:dyn_dshift_ev_gv(false,false);break;				
 			default:
 				DYN_LOG("Unhandled dual opcode 0F%02X",dual_code);
 				goto illegalopcode;
