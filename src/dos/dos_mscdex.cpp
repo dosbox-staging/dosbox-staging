@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_mscdex.cpp,v 1.21 2004-06-09 09:11:55 qbix79 Exp $ */
+
 #include <string.h>
 #include <ctype.h>
 #include "regs.h"
@@ -306,9 +308,8 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 PhysPt CMscdex::GetDefaultBuffer(void)
 {
 	if (defaultBuffer==0) {
-		Bit16u seg,size = 128;
-		if (!DOS_AllocateMemory(&seg,&size)) E_Exit("MSCDEX: cannot allocate default buffer.");		
-		defaultBuffer = PhysMake(seg,0);
+		Bit16u size = 128; //Size in block is size in pages ?
+		defaultBuffer = DOS_GetMemory(size);
 	};
 	return defaultBuffer;
 };
