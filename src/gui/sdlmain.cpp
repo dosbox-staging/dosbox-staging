@@ -250,13 +250,11 @@ static void GUI_StartUp(Section * sec) {
 	/* Initialize screen for first time */
 	GFX_SetSize(640,400,8,0,0,0);
 	SDL_EnableKeyRepeat(250,30);
-	
+	SDL_EnableUNICODE(1);
 /* Get some Keybinds */
-	KEYBOARD_AddEvent(KBD_f10,CTRL_PRESSED,CaptureMouse);
-	KEYBOARD_AddEvent(KBD_enter,ALT_PRESSED,SwitchFullScreen);
+	KEYBOARD_AddEvent(KBD_f10,KBD_MOD_CTRL,CaptureMouse);
+	KEYBOARD_AddEvent(KBD_enter,KBD_MOD_ALT,SwitchFullScreen);
 }
-
-
 
 void Mouse_AutoLock(bool enable) {
 	sdl.mouse.autolock=enable;
@@ -265,7 +263,7 @@ void Mouse_AutoLock(bool enable) {
 }
 
 static void HandleKey(SDL_KeyboardEvent * key) {
-	Bit32u code;
+	KBD_KEYS code;
 	switch (key->keysym.sym) {
 	case SDLK_1:code=KBD_1;break;
 	case SDLK_2:code=KBD_2;break;
@@ -386,7 +384,13 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 //TODO maybe give warning for keypress unknown		
 		return;
 	}
-	KEYBOARD_AddKey(code,(key->state==SDL_PRESSED));
+	/* Check the modifiers */
+	Bitu mod=
+		((key->keysym.mod & KMOD_CTRL) ? KBD_MOD_CTRL : 0) |
+		((key->keysym.mod & KMOD_ALT) ? KBD_MOD_ALT : 0) |
+		((key->keysym.mod & KMOD_SHIFT) ? KBD_MOD_SHIFT : 0);
+	Bitu ascii=key->keysym.unicode<128 ? key->keysym.unicode : 0;
+	KEYBOARD_AddKey(code,ascii,mod,(key->state==SDL_PRESSED));
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
