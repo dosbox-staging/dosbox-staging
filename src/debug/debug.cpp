@@ -16,9 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.58 2004-08-28 12:51:35 qbix79 Exp $ */
-
-#include "programs.h"
+/* $Id: debug.cpp,v 1.59 2004-08-31 23:11:35 harekiet Exp $ */
 
 #include <string.h>
 #include <list>
@@ -35,11 +33,12 @@
 #include "callback.h"
 #include "inout.h"
 #include "mixer.h"
-#include "debug_inc.h"
 #include "timer.h"
 #include "paging.h"
-#include "../ints/xms.h"
+#include "support.h"
 #include "shell.h"
+#include "programs.h"
+#include "debug_inc.h"
 
 #ifdef WIN32
 void WIN32_Console();
@@ -1438,6 +1437,7 @@ Bitu DEBUG_Loop(void) {
 	Bit16u oldCS	= SegValue(cs);
 	Bit32u oldEIP	= reg_eip;
 	PIC_runIRQs();
+	SDL_Delay(1);
 	if ((oldCS!=SegValue(cs)) || (oldEIP!=reg_eip)) {
 		CBreakpoint::AddBreakpoint(oldCS,oldEIP,true);
 		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);
