@@ -349,15 +349,3 @@ void DOS_FCB::GetName(char * fillname) {
 	fillname[14]=0;
 }
 
-class DOS_MCB : public MemStruct{
-public:
-	DOS_MCB(Bit16u seg) { SetPt(seg); }
-private:
-	struct sMCB {
-		Bit8u type;
-		Bit16u psp_segment;
-		Bit16u size;	
-		Bit8u unused[3];
-		Bit8u filename[8];
-	} GCC_ATTRIBUTE(packed);
-};
