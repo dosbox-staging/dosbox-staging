@@ -42,6 +42,10 @@ void DOS_SetError(Bit16u code) {
 
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
+
+	DOS_PSP psp(dos.psp);
+	psp.SetStack(RealMake(SegValue(ss),reg_sp));
+
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
 	switch (reg_ah) {
