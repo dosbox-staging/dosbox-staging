@@ -145,7 +145,6 @@ static void IllegalOption(void) {
 
 static struct {
 	Bitu callback;
-	CacheBlock * lastblock;
 } core_dyn;
 
 
@@ -215,6 +214,7 @@ restart_core:
 findblock:;
 		CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
 		if (!block) {
+			cache.block.running=0;
 			block=CreateCacheBlock(ip_point,cpu.code.big,128);
 			DYN_LOG("Created block size %x type %d",block->cache.size,block->type);
 			chandler->AddCacheBlock(block);
@@ -251,7 +251,7 @@ run_block:
 				if (temp_handler->flags & PFLAG_HASCODE) {
 					block=temp_handler->FindCacheBlock(temp_ip & 4095);
 					if (!block) goto restart_core;
-					cache_linkblocks(core_dyn.lastblock,block,ret==BR_Link2);
+					cache_linkblocks(cache.block.running,block,ret==BR_Link2);
 					goto run_block;
 				}
 			}

@@ -28,6 +28,7 @@ static struct {
 		CacheBlock * first;
 		CacheBlock * active;
 		CacheBlock * free;
+		CacheBlock * running;
 	} block;
 	Bit8u * pos;
 	CacheBlock linkblocks[2];
@@ -61,6 +62,7 @@ public:
 					for (Bitu i=block->page.first;i<=block->page.last;i++) write_map[i]--;
 					block->code_page=0;			//Else resetblock will do double work
 					count--;
+					if (block==cache.block.running) LOG_MSG("Writing to current block");
 					cache_resetblock(block);
 					*where=nextblock;
 				} else {
