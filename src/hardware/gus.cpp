@@ -31,6 +31,7 @@
 
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
+#define LOG_GUS
 
 static MIXER_Channel * gus_chan;
 
@@ -126,7 +127,7 @@ static void pushIRQ(Bit8u channum, bool WaveIRQ, bool RampIRQ) {
 
 
 	} else {
-		LOG_MSG("GUS IRQ Fifo full!");
+		LOG_GUS("GUS IRQ Fifo full!");
 	}
 }
 
@@ -333,7 +334,7 @@ public:
 
 	// Debug routine to show current channel position
 	void ShowAddr(void) {
-		LOG_MSG("Chan %d Start %d End %d Current %d", channum, StartAddr>>9, EndAddr>>9, CurAddr>>9);
+		LOG_GUS("Chan %d Start %d End %d Current %d", channum, StartAddr>>9, EndAddr>>9, CurAddr>>9);
 	}
 
 
@@ -613,7 +614,7 @@ static Bit16u ExecuteReadRegister(void) {
 
 		return (Bit16u)(temp << 8);
 	default:
-		LOG_MSG("Read Register num 0x%x", myGUS.gRegSelect);
+		LOG_GUS("Read Register num 0x%x", myGUS.gRegSelect);
 		return myGUS.gRegData;
 	}
 }
@@ -714,7 +715,7 @@ static void ExecuteGlobRegister(void) {
 		simple = (1.0 / (float)GUS_RATE) / 0.000001;
 		myGUS.mupersamp = (Bit32s)simple*1024;
 		myGUS.muperchan = (Bit32s)((float)1.6 * (float)myGUS.activechan * 1024);
-		LOG_MSG("GUS set to %d channels", myGUS.activechan);
+		LOG_GUS("GUS set to %d channels", myGUS.activechan);
 
 		for(i=0;i<myGUS.activechan;i++) {	if(guschan[i] != NULL) guschan[i]->UpdateFreqCtrl(); }
 	
@@ -767,7 +768,7 @@ static void ExecuteGlobRegister(void) {
 		GUSReset();
 		break;
 	default:
-		LOG_MSG("Unimplemented global register %x -- %x", myGUS.gRegSelect, myGUS.gRegData);
+		LOG_GUS("Unimplemented global register %x -- %x", myGUS.gRegSelect, myGUS.gRegData);
 	}
 	return;
 }
@@ -825,7 +826,7 @@ static Bit8u read_gus(Bit32u port) {
 			return 0;
 		}
 	default:
-		LOG_MSG("Read GUS at port 0x%x", port);
+		LOG_GUS("Read GUS at port 0x%x", port);
 		break;
 	}
 
@@ -853,14 +854,14 @@ static void write_gus(Bit32u port,Bit8u val) {
 			Bit8u temp = val & 0x7; // Select GF1 irq
 			if(myGUS.irq1 == irqtable[temp]) {
 			} else {
-				LOG_MSG("Attempt to assign GUS to wrong IRQ - at %x set to %x", myGUS.irq1, irqtable[temp]);
+				LOG_GUS("Attempt to assign GUS to wrong IRQ - at %x set to %x", myGUS.irq1, irqtable[temp]);
 			}
 		} else {
 			// DMA configuration
 			Bit8u temp = val & 0x7; // Select playback IRQ
 			if(myGUS.dma1 == dmatable[temp]) {
 			} else {
-				LOG_MSG("Attempt to assign GUS to wrong DMA - at %x, assigned %x", myGUS.dma1, dmatable[temp]);
+				LOG_GUS("Attempt to assign GUS to wrong DMA - at %x, assigned %x", myGUS.dma1, dmatable[temp]);
 			}
 		}
 
@@ -887,7 +888,7 @@ static void write_gus(Bit32u port,Bit8u val) {
 		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = val;
 		break;
 	default:
-		LOG_MSG("Write GUS at port 0x%x with %x", port, val);
+		LOG_GUS("Write GUS at port 0x%x with %x", port, val);
 		break;
 	}
 	
