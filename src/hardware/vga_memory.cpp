@@ -242,17 +242,28 @@ public:
 	void writeb(PhysPt addr,Bitu val) {
 		Bitu port = addr & 0xffff;
 		if(port >= 0x82E8) IO_WriteB(port, val);
-		LOG_MSG("MMIO: Write byte to %x with %x", addr, val);
+		if(port <= 0x0020) {
+			if(port == 0x0000) {
+				IO_WriteB(0xe2e0, val);
+			} else {
+				IO_WriteB(0xe2e8, val);
+			}
+		}
+		//LOG_MSG("MMIO: Write byte to %x with %x", addr, val);
 	}
 	void writew(PhysPt addr,Bitu val) {
 		Bitu port = addr & 0xffff;
 		if(port >= 0x82E8) IO_WriteW(port, val);
 		if(port == 0x8118) IO_WriteW(0x9ae8, val);
 		if(port <= 0x0020) {
+			if(port == 0x0000) {
+                IO_WriteW(0xe2e0, val);
+			} else {
 			IO_WriteW(0xe2e8, val);
 		}
+		}
 
-		LOG_MSG("MMIO: Write word to %x with %x", addr, val);	
+		//LOG_MSG("MMIO: Write word to %x with %x", addr, val);	
 	}
 	void writed(PhysPt addr,Bitu val) {
 		Bitu port = addr & 0xffff;
@@ -266,26 +277,31 @@ public:
 			IO_WriteW(0xbee8, (val & 0xffff));
 		}
 		if(port <= 0x0020) {
+			if(port == 0x0000) {
+				IO_WriteW(0xe2e0, (val & 0xffff));
+				IO_WriteW(0xe2e8, (val >> 16));
+			} else {
 			IO_WriteW(0xe2e8, (val & 0xffff));
 			IO_WriteW(0xe2e8, (val >> 16));
 		}
+		}
 
-		LOG_MSG("MMIO: Write dword to %x with %x", addr, val);
+		//LOG_MSG("MMIO: Write dword to %x with %x", addr, val);
 	}
 
 	Bitu readb(PhysPt addr) {
-		LOG_MSG("MMIO: Read byte from %x", addr);
+		//LOG_MSG("MMIO: Read byte from %x", addr);
 
 		return 0x00;
 	}
 	Bitu readw(PhysPt addr) {
 		Bitu port = addr & 0xffff;
 		if(port >= 0x82E8) return IO_ReadW(port);
-		LOG_MSG("MMIO: Read word from %x", addr);
+		//LOG_MSG("MMIO: Read word from %x", addr);
 		return 0x00;
 	}
 	Bitu readd(PhysPt addr) {
-		LOG_MSG("MMIO: Read dword from %x", addr);
+		//LOG_MSG("MMIO: Read dword from %x", addr);
 		return 0x00;
 	}
 

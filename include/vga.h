@@ -343,6 +343,10 @@ void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(Bitu enabled);
 void VGA_SetCGA2Table(Bit8u val0,Bit8u val1);
 void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
+void VGA_ActivateHardwareCursor(void);
+
+/* XGA Functionality */
+void XGA_UpdateHWC(void);
 
 extern VGA_Type vga;
 
