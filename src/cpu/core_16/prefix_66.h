@@ -146,7 +146,7 @@ switch(Fetchb()) {
 		Push_32(reg_esp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
 		break;
 	case 0x61:												/* POPAD */
-		reg_edi=Pop_32();reg_edi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
+		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		break;
 	case 0x64:												/* SEG FS: */
