@@ -20,9 +20,14 @@
 #define __PIC_H
 
 typedef void (PIC_EOIHandler) (void);
-typedef void (PIC_Function)(void);
 
-extern Bit32u PIC_IRQCheck;
+#define PIC_MAXIRQ 15
+#define PIC_NOIRQ 0xFF
+
+
+extern Bitu PIC_IRQCheck;
+extern Bitu PIC_IRQActive;
+extern bool PIC_IRQAgain;
 
 void PIC_ActivateIRQ(Bit32u irq);
 
@@ -32,11 +37,6 @@ void PIC_runIRQs(void);
 
 void PIC_RegisterIRQ(Bit32u irq,PIC_EOIHandler handler,char * name);
 void PIC_FreeIRQ(Bit32u irq);
-
-bool PIC_IRQActive(Bit32u irq);
-
-/* A Queued function should never queue itself again this will go horribly wrong */
-void PIC_QueueFunction(PIC_Function * function);
 
 
 
