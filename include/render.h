@@ -33,6 +33,8 @@ bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(void);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
 extern RENDER_Line_Handler RENDER_DrawLine;
+extern Bit8u * RENDER_TempLine;
+ 
 
 #endif
 

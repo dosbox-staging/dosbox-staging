@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.24 2004-01-30 13:40:49 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.25 2004-01-31 22:38:27 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -81,12 +81,7 @@ static struct {
 	PalData pal;
 	struct {
 		Bit8u hlines[RENDER_MAXHEIGHT];
-		Bit16u hindex[RENDER_MAXHEIGHT];
 	} normal;
-	struct {
-		Bit16u hindex[RENDER_MAXHEIGHT];
-		Bitu line_starts[RENDER_MAXHEIGHT][3];
-	} advmame2x;
 #if (C_SSHOT)
 	struct {
 		RENDER_Operation type;
@@ -101,7 +96,9 @@ static struct {
 	bool updating;
 } render;
 
+Bit8u render_line_cache[4][RENDER_MAXWIDTH*4];		//Bit32u pixels
 RENDER_Line_Handler RENDER_DrawLine;
+Bit8u * RENDER_TempLine;
 
 /* Forward declerations */
 static void RENDER_ResetPal(void);
@@ -279,10 +276,12 @@ bool RENDER_StartUpdate(void) {
 	render.frameskip.count=0;
 	if (render.src.bpp==8) Check_Palette();
 	render.op.line=0;
+	RENDER_TempLine=render_line_cache[0];
 	switch (render.op.type) {
 	case OP_None:
 	case OP_Normal2x:
 	case OP_AdvMame2x:
+		am2x.cmd_index=am2x.cmd_data;
 		if (!GFX_StartUpdate(render.op.pixels,render.op.pitch)) return false;
 		RENDER_DrawLine=render.op.line_handler;;
 		break;
@@ -338,16 +337,6 @@ void RENDER_EndUpdate(void) {
 	render.updating=false;
 }
 
-static void SetAdvMameTable(Bitu index,Bits src0,Bits src1,Bits src2) {
-	if (src0<0) src0=0;
-	if ((Bitu)src0>=render.src.height) src0=render.src.height-1;
-	if ((Bitu)src1>=render.src.height) src1=render.src.height-1;
-	if ((Bitu)src2>=render.src.height) src2=render.src.height-1;
-	render.advmame2x.line_starts[index][0]=src0*render.src.pitch;
-	render.advmame2x.line_starts[index][1]=src1*render.src.pitch;
-	render.advmame2x.line_starts[index][2]=src2*render.src.pitch;
-}
-
 void RENDER_ReInit(void) {
 	if (render.updating) RENDER_EndUpdate();
 	Bitu width=render.src.width;
@@ -382,7 +371,6 @@ normalop:
 			gfx_scaleh*=scaleh;
 			render.op.line_handler=Normal_8[index];
 			for (Bitu i=0;i<render.src.height;i++) {
-				render.normal.hindex[i]=i;
 				render.normal.hlines[i]=0;
 			}
 		} else {
@@ -397,13 +385,12 @@ normalop:
 			} else render.op.line_handler=Normal_8[index];
 			width*=scalew;
 			double lines=0.0;
-			gfx_scaleh=(gfx_scaleh*render.src.height-(double)render.src.height)/(double)render.src.height;
 			height=0;
 			for (Bitu i=0;i<render.src.height;i++) {
-				render.normal.hindex[i]=height++;
+				lines+=gfx_scaleh;
 				Bitu temp_lines=(Bitu)(lines);
-				lines=lines+gfx_scaleh-temp_lines;
-				render.normal.hlines[i]=temp_lines;
+				lines-=temp_lines;
+				render.normal.hlines[i]=(temp_lines>0) ? temp_lines-1 : 0;
 				height+=temp_lines;
 			}
 		}
@@ -424,29 +411,31 @@ normalop:
 			double src_add=(double)height/(double)render.src.height;		
 			double src_index=0;
 			double src_lines=0;
+			Bitu src_done=0;
 			Bitu height=0;
+			am2x.cmd_index=am2x.cmd_data;
+			am2x.buf_pos=0;am2x.buf_used=0;
 			for (i=0;i<=(Bits)render.src.height;i++) {
-				render.advmame2x.hindex[i]=(Bitu)src_index;
+				src_lines+=src_add;
 				Bitu lines=(Bitu)src_lines;
 				src_lines-=lines;
-				src_index+=src_add;
-				src_lines+=src_add;
 				switch (lines) {
 				case 0:
 					break;
 				case 1:
-					SetAdvMameTable(height++,i,i,i);
+					AdvMame2x_AddLine(i,i,i);
 					break;
 				case 2:
-					SetAdvMameTable(height++,i-1,i,i+1);
-					SetAdvMameTable(height++,i+1,i,i-1);
+					AdvMame2x_AddLine(i-1,i,i+1);
+					AdvMame2x_AddLine(i+1,i,i-1);
 					break;
 				default:
-					SetAdvMameTable(height++,i-1,i,i+1);
-					for (lines-=2;lines>0;lines--) SetAdvMameTable(height++,i,i,i);
-					SetAdvMameTable(height++,i+1,i,i-1);
+					AdvMame2x_AddLine(i-1,i,i+1);
+					for (lines-=2;lines>0;lines--) AdvMame2x_AddLine(i,i,i);
+					AdvMame2x_AddLine(i+1,i,i-1);
 					break;
 				}
+				AdvMame2x_CheckLines(i);
 			}
 			render.op.line_handler=AdvMame2x_8_Table[index];
 		}
