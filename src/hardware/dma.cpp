@@ -22,9 +22,30 @@
 #include "inout.h"
 #include "dma.h"
 #include "pic.h"
+#include "paging.h"
 
 DmaChannel *DmaChannels[8];
 DmaController *DmaControllers[2];
+
+static void DMA_BlockRead(PhysPt pt,void * data,Bitu size) {
+	Bit8u * write=(Bit8u *) data;
+	for ( ; size ; size--, pt++) {
+		Bitu page = pt >> 12;
+		if (page < LINK_START)
+			page = paging.firstmb[page];
+		*write++=phys_readb(page*4096 + (pt & 4095));
+	}
+}
+
+static void DMA_BlockWrite(PhysPt pt,void * data,Bitu size) {
+	Bit8u * read=(Bit8u *) data;
+	for ( ; size ; size--, pt++) {
+		Bitu page = pt >> 12;
+		if (page < LINK_START)
+			page = paging.firstmb[page];
+		phys_writeb(page*4096 + (pt & 4095), *read++);
+	}
+}
 
 static void DMA_WriteControllerReg(DmaController * cont,Bitu reg,Bitu val,Bitu len) {
 	DmaChannel * chan;Bitu i;
@@ -121,7 +142,8 @@ static Bitu DMA_ReadControllerReg(DmaController * cont,Bitu reg,Bitu len) {
 		}
 		return ret;
 	default:
-		LOG_MSG("Trying to read undefined DMA Red %x",reg);
+		LOG_MSG("Trying to read undefined DMA port %x",reg);
+		break;
 	}
 	return 0xffffffff;
 }
@@ -180,12 +202,12 @@ Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		MEM_BlockRead(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		DMA_BlockRead(pagebase+(curraddr << DMA16),buffer,want << DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		MEM_BlockRead(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		DMA_BlockRead(pagebase+(curraddr << DMA16),buffer,left << DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
@@ -208,12 +230,12 @@ Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		MEM_BlockWrite(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		DMA_BlockWrite(pagebase+(curraddr << DMA16),buffer,want << DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		MEM_BlockWrite(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		DMA_BlockWrite(pagebase+(curraddr << DMA16),buffer,left << DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.12 2004-10-12 10:45:10 harekiet Exp $ */
+/* $Id: paging.h,v 1.13 2004-12-22 19:49:24 harekiet Exp $ */
 
 #ifndef _PAGING_H_
 #define _PAGING_H_
@@ -117,7 +117,8 @@ struct PagingBlock {
 		Bitu used;
 		Bit32u entries[PAGING_LINKS];
 	} links;
-	bool			enabled;
+	Bit32u		firstmb[LINK_START];
+	bool		enabled;
 };
 
 extern PagingBlock paging; 

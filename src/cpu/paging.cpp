@@ -31,7 +31,8 @@
 #define LINK_TOTAL		(64*1024)
 
 PagingBlock paging;
-static Bit32u mapfirstmb[LINK_START];
+
+
 
 Bitu PageHandler::readb(PhysPt addr) {
 	E_Exit("No byte handler for read from %d",addr);	
@@ -191,7 +192,7 @@ public:
 			phys_writed(entry_addr,entry.load);
 			phys_page=entry.block.base;
 		} else {
-			if (lin_page<LINK_START) phys_page=mapfirstmb[lin_page];
+			if (lin_page<LINK_START) phys_page=paging.firstmb[lin_page];
 			else phys_page=lin_page;
 		}
 		PAGING_LinkPage(lin_page,phys_page);
@@ -210,7 +211,7 @@ bool PAGING_MakePhysPage(Bitu & page) {
 		if (!entry.block.p) return false;
 		page=entry.block.base;
 		} else {
-			if (page<LINK_START) page=mapfirstmb[page];
+			if (page<LINK_START) page=paging.firstmb[page];
 			//Else keep it the same
 		}
 		return true;
@@ -275,7 +276,7 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page) {
 	if (lin_page<LINK_START) {
-		mapfirstmb[lin_page]=phys_page;
+		paging.firstmb[lin_page]=phys_page;
 		paging.tlb.read[lin_page]=0;
 		paging.tlb.write[lin_page]=0;
 		paging.tlb.handler[lin_page]=&init_page_handler;
@@ -324,7 +325,7 @@ void PAGING_Init(Section * sec) {
 	PAGING_InitTLB();
 	Bitu i;
 	for (i=0;i<LINK_START;i++) {
-		mapfirstmb[i]=i;
+		paging.firstmb[i]=i;
 	}
 	pf_queue.used=0;
 }
