@@ -38,10 +38,12 @@
 #define	REQUEST_STATUS_DONE		0x0100
 #define	REQUEST_STATUS_ERROR	0x8000
 
+// Use cdrom Interface
+int useCdromInterface	= CDROM_USE_SDL;
+int forceCD				= -1;
+
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
-
-bool gUseASPI = false;
 
 class DOS_DeviceHeader:public MemStruct
 {
@@ -218,8 +220,9 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		// Set return type to ok
 		int result = 0;
 		// Get Mounttype and init needed cdrom interface
-		switch (CDROM_GetMountType(physicalPath)) {
-			case 0x00	: {	// physical drive
+		switch (CDROM_GetMountType(physicalPath,forceCD)) {
+			case 0x00	: {	
+							LOG(LOG_MISC,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
 							#if defined (WIN32)
 								// Check OS
 								OSVERSIONINFO osi;
@@ -227,25 +230,24 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 								GetVersionEx(&osi);
 								if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
 									// WIN NT/200/XP
-									if (gUseASPI) {
+									if (useCdromInterface==CDROM_USE_ASPI) {
 										cdrom[numDrives] = new CDROM_Interface_Aspi();
 										LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
-									} else	{
+										break;
+									} else if (useCdromInterface==CDROM_USE_IOCTL) {
 										cdrom[numDrives] = new CDROM_Interface_Ioctl();
 										LOG(LOG_MISC,"MSCDEX: IOCTL Interface.");
+										break;
 									}
 								} else {
 									// Win 95/98/ME - always use ASPI
 									cdrom[numDrives] = new CDROM_Interface_Aspi();
 									LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
+									break;
 								}
-							#elif __linux__
-								cdrom[numDrives] = new CDROM_Interface_Linux();
-							#else // No support on this machine...
-								cdrom[numDrives] = new CDROM_Interface_Fake();
-								LOG(LOG_MISC|LOG_ERROR,"MSCDEX: No MSCDEX support on this machine.");
 							#endif
-							LOG(LOG_MISC,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
+							cdrom[numDrives] = new CDROM_Interface_SDL();
+							LOG(LOG_MISC,"MSCDEX: SDL Interface.");
 						  } break;
 			case 0x01	:	// iso cdrom interface
 							// FIXME: Not yet supported	
@@ -262,7 +264,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 			default		:	// weird result
 							return 6;
 		};
-		if (!cdrom[numDrives]->SetDevice(physicalPath)) return 3;
+		if (!cdrom[numDrives]->SetDevice(physicalPath,forceCD)) return 3;
 		subUnit = numDrives;
 		// Set drive
 		DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
@@ -816,14 +818,10 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 	return true;
 };
 
-void MSCDEX_SetUseASPI(bool use)
+void MSCDEX_SetCDInterface(int intNr, int numCD)
 {
-	gUseASPI = use;
-};
-
-bool MSCDEX_GetUseASPI(void)
-{
-	return gUseASPI;
+	useCdromInterface = intNr;
+	forceCD	= numCD;
 };
 
 void MSCDEX_ShutDown(Section* sec)
