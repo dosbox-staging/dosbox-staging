@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>
-#include "sdl_net.h"
+#if C_MODEM
 
+#include <string.h>
+#include "SDL_net.h"
 
 #include "dosbox.h"
 #include "inout.h"
@@ -631,5 +632,5 @@ void MODEM_Init(Section* sec) {
 	MIXER_SetMode(mhd.chan,MIXER_16MONO);
 }
 
-
+#endif
 
