@@ -725,32 +725,32 @@
 
 #define GRP2B(blah)											\
 {															\
-	GetRM;													\
+	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArb;											\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm&0x38)	{								\
+		switch (which)	{									\
 		case 0x00:ROLB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x08:RORB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x10:RCLB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x18:RCRB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x28:SHRB(*earb,val,LoadRb,SaveRb);break;		\
-		case 0x38:SARB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x01:RORB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x02:RCLB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x03:RCRB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x05:SHRB(*earb,val,LoadRb,SaveRb);break;		\
+		case 0x07:SARB(*earb,val,LoadRb,SaveRb);break;		\
 		}													\
 	} else {												\
 		GetEAa;												\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm & 0x38) {								\
+		switch (which) {									\
 		case 0x00:ROLB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x08:RORB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x10:RCLB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x18:RCRB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x28:SHRB(eaa,val,LoadMb,SaveMb);break;		\
-		case 0x38:SARB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x01:RORB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x02:RCLB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x03:RCRB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x05:SHRB(eaa,val,LoadMb,SaveMb);break;		\
+		case 0x07:SARB(eaa,val,LoadMb,SaveMb);break;		\
 		}													\
 	}														\
 }
@@ -759,32 +759,32 @@
 
 #define GRP2W(blah)											\
 {															\
-	GetRM;													\
+	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArw;											\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm&0x38)	{								\
+		switch (which)	{									\
 		case 0x00:ROLW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x08:RORW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x10:RCLW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x18:RCRW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x28:SHRW(*earw,val,LoadRw,SaveRw);break;		\
-		case 0x38:SARW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x01:RORW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x02:RCLW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x03:RCRW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x05:SHRW(*earw,val,LoadRw,SaveRw);break;		\
+		case 0x07:SARW(*earw,val,LoadRw,SaveRw);break;		\
 		}													\
 	} else {												\
 		GetEAa;												\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm & 0x38) {								\
+		switch (which) {									\
 		case 0x00:ROLW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x08:RORW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x10:RCLW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x18:RCRW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x28:SHRW(eaa,val,LoadMw,SaveMw);break;		\
-		case 0x38:SARW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x01:RORW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x02:RCLW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x03:RCRW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x05:SHRW(eaa,val,LoadMw,SaveMw);break;		\
+		case 0x07:SARW(eaa,val,LoadMw,SaveMw);break;		\
 		}													\
 	}														\
 }
@@ -792,32 +792,32 @@
 
 #define GRP2D(blah)											\
 {															\
-	GetRM;													\
+	GetRM;Bitu which=(rm>>3)&7;								\
 	if (rm >= 0xc0) {										\
 		GetEArd;											\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm&0x38)	{								\
+		switch (which)	{									\
 		case 0x00:ROLD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x08:RORD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x10:RCLD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x18:RCRD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x28:SHRD(*eard,val,LoadRd,SaveRd);break;		\
-		case 0x38:SARD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x01:RORD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x02:RCLD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x03:RCRD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x05:SHRD(*eard,val,LoadRd,SaveRd);break;		\
+		case 0x07:SARD(*eard,val,LoadRd,SaveRd);break;		\
 		}													\
 	} else {												\
 		GetEAa;												\
 		Bit8u val=blah & 0x1f;								\
-		switch (rm & 0x38) {								\
+		switch (which) {									\
 		case 0x00:ROLD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x08:RORD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x10:RCLD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x18:RCRD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x20:/* SHL and SAL are the same */			\
-		case 0x30:SHLD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x28:SHRD(eaa,val,LoadMd,SaveMd);break;		\
-		case 0x38:SARD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x01:RORD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x02:RCLD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x03:RCRD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x04:/* SHL and SAL are the same */			\
+		case 0x06:SHLD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x05:SHRD(eaa,val,LoadMd,SaveMd);break;		\
+		case 0x07:SARD(eaa,val,LoadMd,SaveMd);break;		\
 		}													\
 	}														\
 }
