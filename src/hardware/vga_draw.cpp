@@ -101,7 +101,8 @@ void VGA_DrawGFX256U_Fast(Bit8u * bitdata,Bitu next_line) {
 }
 
 void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=HostMake(0xB800,0);
+	
+	Bit8u * reader=HostMake((vga.gfx.miscellaneous & 0x4 ?0xB800:0xB000),0);
 	Bit8u * draw_start=bitdata;
 /* Todo Blinking and high intensity colors */
 	for (Bitu cy=0;cy<(vga.draw.height/16);cy++) {

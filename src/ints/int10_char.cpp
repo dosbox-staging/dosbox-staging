@@ -242,9 +242,10 @@ INLINE static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u at
 			// Compute the address  
 			Bit16u address=SCREEN_MEM_START(curmode->twidth,curmode->theight,page)+(col+row*curmode->twidth)*2;
 			// Write the char 
-			real_writeb(0xb800,address,chr);
+			Bit16u segment = curmode->sstart;
+			real_writeb(segment,address,chr);
 			if (useattr) {
-				real_writeb(0xb800,address+1,attr);
+				real_writeb(segment,address+1,attr);
 			}
 		}
 		break;
