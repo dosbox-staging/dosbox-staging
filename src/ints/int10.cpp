@@ -32,6 +32,8 @@
 static Bitu call_10;
 static bool warned_ff=false;
 static bool warned_int10_0b=false;
+Int10Data int10;
+
 
 static Bitu INT10_Handler(void) {
 	switch (reg_ah) {
@@ -53,6 +55,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x04:								/* read light pen pos YEAH RIGHT */
 		LOG_WARN("INT10:04:Ligthpen not supported");
+		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
 		if (reg_al & 0x80) LOG_DEBUG("Func %x",reg_al);
@@ -62,7 +65,8 @@ static Bitu INT10_Handler(void) {
 //TODO Graphics mode scroll
 		INT10_ScrollWindow(reg_ch,reg_cl,reg_dh,reg_dl,-reg_al,reg_bh,0xFF);
 		break;
-	case 0x07:								/* Scroll Down */
+	case 0x07:
+						/* Scroll Down */
 		INT10_ScrollWindow(reg_ch,reg_cl,reg_dh,reg_dl,reg_al,reg_bh,0xFF);
 		break;
 	case 0x08:								/* Read character & attribute at cursor */

@@ -22,24 +22,37 @@
 #include "int10.h"
 
 static Bit8u cga_masks[4]={~192,~48,~12,~3};
-
+static Bit8u cga_masks2[8]={~128,~64,~32,~16,~8,~4,~2,~1};
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 
 	VGAMODES * curmode=GetCurrentMode();	
-
 	switch (curmode->memmodel) {
 	case CGA:
 		{
-			Bit16u off=(y>>1)*80+(x>>2);
-			if (y&1) off+=8*1024;
-			Bit8u old=real_readb(0xb800,off);
-			if (color & 0x80) {
-				color&=3;
-				old^=color << (2*(3-(x&3)));
-			} else {
-				old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
-			}
-			real_writeb(0xb800,off,old);
+				Bit16u off=(y>>1)*80+(x>>2);
+				if (y&1) off+=8*1024;
+				Bit8u old=real_readb(0xb800,off);
+				if (color & 0x80) {
+					color&=3;
+					old^=color << (2*(3-(x&3)));
+				} else {
+					old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+				}
+				real_writeb(0xb800,off,old);
+		}
+		break;
+	case CGA2:
+		{
+				Bit16u off=(y>>1)*80+(x>>3);
+				if (y&1) off+=8*1024;
+				Bit8u old=real_readb(0xb800,off);
+				if (color & 0x80) {
+					color&=1;
+					old^=color << ((7-(x&7)));
+				} else {
+					old=old&cga_masks2[x&7]|((color&1) << ((7-(x&7))));
+				}
+				real_writeb(0xb800,off,old);
 		}
 		break;
 	case PLANAR4:
@@ -60,6 +73,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			mem_writeb(off,0xff);
 			/* Restore bitmask */	
 			IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
+			IO_Write(0x3ce,0x1);IO_Write(0x3cf,0);
 			/* Restore write operating if changed */
 			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0); }
 			break;
@@ -72,7 +86,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	case CTEXT:
 	case MTEXT:
 	default:
-		LOG_WARN("INT10:PutPixel Unhanled memory model");
+		LOG_WARN("INT10:PutPixel Unhandled memory model %d",curmode->memmodel);
 		break;
 	}	
 }
@@ -85,7 +99,15 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			Bit16u off=(y>>1)*80+(x>>2);
 			if (y&1) off+=8*1024;
 			Bit8u val=real_readb(0xb800,off);
-			*color=val<<((x&3)*2);
+			*color=(val>>(((3-x&3))*2)) & 3 ;
+		}
+		break;
+	case CGA2:
+		{
+			Bit16u off=(y>>1)*80+(x>>3);
+			if (y&1) off+=8*1024;
+			Bit8u val=real_readb(0xb800,off);
+			*color=(val>>(((7-x&7)))) & 1 ;
 		}
 		break;
 	case PLANAR4:
