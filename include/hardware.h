@@ -19,24 +19,7 @@
 #ifndef _HARDWARE_H_
 #define _HARDWARE_H_
 
-#include <programs.h>
-#include <support.h>
-#include <stdio.h>
 
-typedef void (* HW_OutputHandler)(char * towrite);
-typedef void (* HW_InputHandler)(char * line);
-
-struct HWBlock {
-	char * dev_name;				/* 8 characters max dev name */
-	char * full_name;				/* 60 characters full name */
-	char * help;
-	HW_InputHandler get_input;
-	HW_OutputHandler show_status;	/* Supplied with a string to display 50 chars of status info in */
-	HWBlock * next;
-};
-
-
-void HW_Register(HWBlock * block);
 
 
 #endif
