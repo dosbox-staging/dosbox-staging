@@ -738,6 +738,5 @@ void MPU401_Init(Section* sec) {
 
 	if (!(mpu.intelligent=section->Get_bool("intelligent"))) return;
 	mpu.irq=2;
-	PIC_RegisterIRQ(mpu.irq,0,"MPU401");
 	MPU401_Reset();
 }
