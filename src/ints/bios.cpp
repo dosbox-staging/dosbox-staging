@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.22 2003-09-30 13:49:34 finsterr Exp $ */
+/* $Id: bios.cpp,v 1.23 2003-11-14 00:04:25 harekiet Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -30,6 +30,7 @@
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
 static Bitu call_int1,call_int70;
+static Bit16u size_extended;
 
 static Bitu INT70_Handler(void) {
 	/* Acknowledge irq with cmos */
@@ -243,10 +244,7 @@ static Bitu INT15_Handler(void) {
 			break;
 		}	
 	case 0x88:	/* SYSTEM - GET EXTENDED MEMORY SIZE (286+) */
-		IO_Write(0x70,0x30);
-		reg_al=IO_Read(0x71);
-		IO_Write(0x70,0x31);
-		reg_ah=IO_Read(0x71);
+		reg_ax=size_extended;
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function 0x88 Remaining %04X kb",reg_ax);
 		CALLBACK_SCF(false);
 		break;
@@ -282,6 +280,10 @@ static Bitu INT1_Single_Step(void) {
 		LOG(LOG_CPU,LOG_NORMAL)("INT 1:Single Step called");
 	}
 	return CBRET_NONE;
+}
+
+void BIOS_ZeroExtendedSize(void) {
+	size_extended=0;
 }
 
 void BIOS_SetupKeyboard(void);
@@ -353,6 +355,12 @@ void BIOS_Init(Section* sec) {
 #else 
 	mem_writew(BIOS_CONFIGURATION,0xc821);		//1 Floppy,FPU,2 serial, 1 parallel
 #endif
+	/* Setup extended memory size */
+	IO_Write(0x70,0x30);
+	size_extended=IO_Read(0x71);
+	IO_Write(0x70,0x31);
+	size_extended|=(IO_Read(0x71) << 8);
+
 }
 
 

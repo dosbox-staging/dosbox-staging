@@ -26,6 +26,7 @@
 #include "setup.h"
 #include "inout.h"
 #include "xms.h"
+#include "bios.h"
 
 #define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
 #define XMS_VERSION    						0x0300	/* version 3.00 */
@@ -334,7 +335,7 @@ void XMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (!section->Get_bool("xms")) return;
 	Bitu i;
-
+	BIOS_ZeroExtendedSize();
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);

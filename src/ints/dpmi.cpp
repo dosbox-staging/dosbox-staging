@@ -37,6 +37,7 @@
 #include "setup.h"
 #include "inout.h"
 #include "cpu.h"
+#include "bios.h"
 #include "paging.h"
 
 #include "debug.h"
@@ -2520,6 +2521,7 @@ void DPMI_Init(Section* sec)
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (!section->Get_bool("dpmi")) return;
 
+	BIOS_ZeroExtendedSize();
 	memset(&callback,0,sizeof(callback));
 
 	/* setup Real mode Callbacks */
