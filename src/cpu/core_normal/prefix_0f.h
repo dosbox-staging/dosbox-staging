@@ -178,69 +178,69 @@
 		}
 		break;
 	CASE_0F_W(0x80)												/* JO */
-		JumpSIw(get_OF());break;
+		JumpSIw(TFLG_O);break;
 	CASE_0F_W(0x81)												/* JNO */
-		JumpSIw(!get_OF());break;
+		JumpSIw(TFLG_NO);break;
 	CASE_0F_W(0x82)												/* JB */
-		JumpSIw(get_CF());break;
+		JumpSIw(TFLG_B);break;
 	CASE_0F_W(0x83)												/* JNB */
-		JumpSIw(!get_CF());break;
+		JumpSIw(TFLG_NB);break;
 	CASE_0F_W(0x84)												/* JZ */
-		JumpSIw(get_ZF());break;
+		JumpSIw(TFLG_Z);break;
 	CASE_0F_W(0x85)												/* JNZ */
-		JumpSIw(!get_ZF());break;
+		JumpSIw(TFLG_NZ);break;
 	CASE_0F_W(0x86)												/* JBE */
-		JumpSIw(get_CF() || get_ZF());break;
+		JumpSIw(TFLG_BE);break;
 	CASE_0F_W(0x87)												/* JNBE */
-		JumpSIw(!get_CF() && !get_ZF());break;
+		JumpSIw(TFLG_NBE);break;
 	CASE_0F_W(0x88)												/* JS */
-		JumpSIw(get_SF());break;
+		JumpSIw(TFLG_S);break;
 	CASE_0F_W(0x89)												/* JNS */
-		JumpSIw(!get_SF());break;
+		JumpSIw(TFLG_NS);break;
 	CASE_0F_W(0x8a)												/* JP */
-		JumpSIw(get_PF());break;
+		JumpSIw(TFLG_P);break;
 	CASE_0F_W(0x8b)												/* JNP */
-		JumpSIw(!get_PF());break;
+		JumpSIw(TFLG_NP);break;
 	CASE_0F_W(0x8c)												/* JL */
-		JumpSIw(get_SF() != get_OF());break;
+		JumpSIw(TFLG_L);break;
 	CASE_0F_W(0x8d)												/* JNL */
-		JumpSIw(get_SF() == get_OF());break;
+		JumpSIw(TFLG_NL);break;
 	CASE_0F_W(0x8e)												/* JLE */
-		JumpSIw(get_ZF() || (get_SF() != get_OF()));break;
+		JumpSIw(TFLG_LE);break;
 	CASE_0F_W(0x8f)												/* JNLE */
-		JumpSIw((get_SF() == get_OF()) && !get_ZF());break;
+		JumpSIw(TFLG_NLE);break;
 	CASE_0F_B(0x90)												/* SETO */
-		SETcc(get_OF());break;
+		SETcc(TFLG_O);break;
 	CASE_0F_B(0x91)												/* SETNO */
-		SETcc(!get_OF());break;
+		SETcc(TFLG_NO);break;
 	CASE_0F_B(0x92)												/* SETB */
-		SETcc(get_CF());break;
+		SETcc(TFLG_B);break;
 	CASE_0F_B(0x93)												/* SETNB */
-		SETcc(!get_CF());break;
+		SETcc(TFLG_NB);break;
 	CASE_0F_B(0x94)												/* SETZ */
-		SETcc(get_ZF());break;
+		SETcc(TFLG_Z);break;
 	CASE_0F_B(0x95)												/* SETNZ */
-		SETcc(!get_ZF());	break;
+		SETcc(TFLG_NZ);	break;
 	CASE_0F_B(0x96)												/* SETBE */
-		SETcc(get_CF() || get_ZF());break;
+		SETcc(TFLG_BE);break;
 	CASE_0F_B(0x97)												/* SETNBE */
-		SETcc(!get_CF() && !get_ZF());break;
+		SETcc(TFLG_NBE);break;
 	CASE_0F_B(0x98)												/* SETS */
-		SETcc(get_SF());break;
+		SETcc(TFLG_S);break;
 	CASE_0F_B(0x99)												/* SETNS */
-		SETcc(!get_SF());break;
+		SETcc(TFLG_NS);break;
 	CASE_0F_B(0x9a)												/* SETP */
-		SETcc(get_PF());break;
+		SETcc(TFLG_P);break;
 	CASE_0F_B(0x9b)												/* SETNP */
-		SETcc(!get_PF());break;
+		SETcc(TFLG_NP);break;
 	CASE_0F_B(0x9c)												/* SETL */
-		SETcc(get_SF() != get_OF());break;
+		SETcc(TFLG_L);break;
 	CASE_0F_B(0x9d)												/* SETNL */
-		SETcc(get_SF() == get_OF());break;
+		SETcc(TFLG_NL);break;
 	CASE_0F_B(0x9e)												/* SETLE */
-		SETcc(get_ZF() || (get_SF() != get_OF()));break;
+		SETcc(TFLG_LE);break;
 	CASE_0F_B(0x9f)												/* SETNLE */
-		SETcc((get_SF() == get_OF()) && !get_ZF());break;
+		SETcc(TFLG_NLE);break;
 
 	CASE_0F_W(0xa0)												/* PUSH FS */		
 		Push_16(SegValue(fs));break;
@@ -250,7 +250,7 @@
 		CPU_CPUID();break;
 	CASE_0F_W(0xa3)												/* BT Ew,Gw */
 		{
-			GetRMrw;
+			FillFlags();GetRMrw;
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
@@ -259,7 +259,6 @@
 				GetEAa;Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xa4)												/* SHLD Ew,Gw,Ib */
@@ -274,7 +273,7 @@
 		CPU_SetSegGeneral(gs,Pop_16());break;
 	CASE_0F_W(0xab)												/* BTS Ew,Gw */
 		{
-			GetRMrw;
+			FillFlags();GetRMrw;
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
@@ -285,7 +284,6 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old | mask);
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xac)												/* SHRD Ew,Gw,Ib */
@@ -305,7 +303,7 @@
 		}
 	CASE_0F_W(0xb3)												/* BTR Ew,Gw */
 		{
-			GetRMrw;
+			FillFlags();GetRMrw;
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
@@ -316,7 +314,6 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old & ~mask);
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xb4)												/* LFS Ew */
@@ -348,7 +345,7 @@
 		}
 	CASE_0F_W(0xba)												/* GRP8 Ew,Ib */
 		{
-			GetRM;
+			FillFlags();GetRM;
 			if (rm >= 0xc0 ) {
 				GetEArw;
 				Bit16u mask=1 << (Fetchb() & 15);
@@ -388,12 +385,11 @@
 					E_Exit("CPU:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xbb)												/* BTC Ew,Gw */
 		{
-			GetRMrw;
+			FillFlags();GetRMrw;
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
@@ -404,7 +400,6 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old ^ mask);
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xbc)												/* BSF Gw,Ew */

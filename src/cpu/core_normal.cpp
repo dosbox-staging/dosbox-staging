@@ -156,6 +156,13 @@ static Bits CPU_Core_Normal_Decode_Trap(void);
 
 static Bits CPU_Core_Normal_Decode(void) {
 decode_start:
+	if (cpu.code.big) {
+		core.index_default=0x200;
+		core.prefix_default=PREFIX_ADDR;
+	} else {
+		core.index_default=0;
+		core.prefix_default=0;
+	}
 	LOADIP;
 	lflags.type=t_UNKNOWN;
 	while (CPU_Cycles>0) {
@@ -214,16 +221,7 @@ static Bits CPU_Core_Normal_Decode_Trap(void) {
 
 
 void CPU_Core_Normal_Start(bool big) {
-	
 	if (GETFLAG(TF)) cpudecoder=CPU_Core_Normal_Decode_Trap;
 	else cpudecoder=CPU_Core_Normal_Decode;
-
-	if (big) {
-		core.index_default=0x200;
-		core.prefix_default=PREFIX_ADDR;
-	} else {
-		core.index_default=0;
-		core.prefix_default=0;
-	}
 }
 

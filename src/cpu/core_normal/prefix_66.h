@@ -341,13 +341,9 @@
 	CASE_D(0x9a)												/* CALL FAR Ad */
 		{ 
 			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
-			SAVEIP;
-			if (CPU_CALL(true,newcs,newip)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+			LEAVECORE;
+			CPU_CALL(true,newcs,newip);
+			goto decode_start;
 		}
 	CASE_D(0x9c)												/* PUSHFD */
 		FillFlags();
@@ -475,38 +471,32 @@
 		break;
 	CASE_D(0xca)												/* RETF Iw */
 		{ 
-			if (CPU_RET(true,Fetchw())) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
-			}
+			Bitu words=Fetchw();
+			LEAVECORE;
+			CPU_RET(true,words);
+			goto decode_start;
+		}
 	CASE_D(0xcb)												/* RETF */			
 		{ 
-			if (CPU_RET(true,0)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+			LEAVECORE;
+            CPU_RET(true,0);
+			goto decode_start;
 		}
 	CASE_D(0xcf)												/* IRET */
 		{
-			if (CPU_IRET(true)) {
+			LEAVECORE;
+			CPU_IRET(true);
 #if CPU_TRAP_CHECK
-				if (GETFLAG(TF)) {	
-					cpudecoder=CPU_Core_Normal_Decode_Trap;
-					return CBRET_NONE;
-				}
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Decode_Trap;
+				return CBRET_NONE;
+			}
 #endif
 #ifdef CPU_PIC_CHECK
-				if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
+			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
 //TODO TF check
-				goto decode_start;
-			} else return CBRET_NONE;
-			break;
+			goto decode_start;
 		}
 	CASE_D(0xd1)												/* GRP2 Ed,1 */
 		GRP2D(1);break;
@@ -532,13 +522,9 @@
 		{ 
 			Bit32u newip=Fetchd();
 			Bit16u newcs=Fetchw();
-			SAVEIP;
-			if (CPU_JMP(true,newcs,newip)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+			LEAVECORE;
+			CPU_JMP(true,newcs,newip);
+			goto decode_start;
 		}
 	CASE_D(0xed)												/* IN EAX,DX */
 		reg_eax=IO_ReadD(reg_dx);
@@ -609,12 +595,9 @@
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
-					SAVEIP;
-					if (CPU_CALL(true,newcs,newip)) {
-						LOADIP;
-					} else {
-						FillFlags();return CBRET_NONE;
-					}
+					LEAVECORE;
+					CPU_CALL(true,newcs,newip);
+					goto decode_start;
 				}
 				break;
 			case 0x04:											/* JMP NEAR Ed */	
@@ -626,12 +609,9 @@
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
-					SAVEIP;
-					if (CPU_JMP(true,newcs,newip)) {
-						LOADIP;
-					} else {
-						FillFlags();return CBRET_NONE;
-					}
+					LEAVECORE;
+					CPU_JMP(true,newcs,newip);
+					goto decode_start;
 				}
 				break;
 			case 0x06:											/* Push Ed */

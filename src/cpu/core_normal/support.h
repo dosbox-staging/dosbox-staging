@@ -47,9 +47,8 @@ static INLINE void ADDIPFAST(Bits blah) {
 		Bit8u new_num=blah;									\
 		core.ip_lookup=core.op_start;						\
 		LEAVECORE;											\
-		if (Interrupt(new_num)) {							\
-			goto decode_start;								\
-		} else return CBRET_NONE;							\
+		CPU_Exception(new_num);								\
+		goto decode_start;									\
 	}
 
 static INLINE Bit8u Fetchb() {

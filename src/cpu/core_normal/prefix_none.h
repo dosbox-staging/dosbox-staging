@@ -277,37 +277,37 @@
 	CASE_W(0x6f)												/* OUTSW */
 		DoString(R_OUTSW);break;
 	CASE_B(0x70)												/* JO */
-		JumpSIb(get_OF());break;
+		JumpSIb(TFLG_O);break;
 	CASE_B(0x71)												/* JNO */
-		JumpSIb(!get_OF());break;
+		JumpSIb(TFLG_NO);break;
 	CASE_B(0x72)												/* JB */
-		JumpSIb(get_CF());break;
+		JumpSIb(TFLG_B);break;
 	CASE_B(0x73)												/* JNB */
-		JumpSIb(!get_CF());break;
+		JumpSIb(TFLG_NB);break;
 	CASE_B(0x74)												/* JZ */
-  		JumpSIb(get_ZF());break;
+  		JumpSIb(TFLG_Z);break;
 	CASE_B(0x75)												/* JNZ */
-		JumpSIb(!get_ZF());break;
+		JumpSIb(TFLG_NZ);break;
 	CASE_B(0x76)												/* JBE */
-		JumpSIb(get_CF() || get_ZF());break;
+		JumpSIb(TFLG_BE);break;
 	CASE_B(0x77)												/* JNBE */
-		JumpSIb(!get_CF() && !get_ZF());break;
+		JumpSIb(TFLG_NBE);break;
 	CASE_B(0x78)												/* JS */
-		JumpSIb(get_SF());break;
+		JumpSIb(TFLG_S);break;
 	CASE_B(0x79)												/* JNS */
-		JumpSIb(!get_SF());break;
+		JumpSIb(TFLG_NS);break;
 	CASE_B(0x7a)												/* JP */
-		JumpSIb(get_PF());break;
+		JumpSIb(TFLG_P);break;
 	CASE_B(0x7b)												/* JNP */
-		JumpSIb(!get_PF());break;
+		JumpSIb(TFLG_NP);break;
 	CASE_B(0x7c)												/* JL */
-		JumpSIb(get_SF() != get_OF());break;
+		JumpSIb(TFLG_L);break;
 	CASE_B(0x7d)												/* JNL */
-		JumpSIb(get_SF() == get_OF());break;
+		JumpSIb(TFLG_NL);break;
 	CASE_B(0x7e)												/* JLE */
-		JumpSIb(get_ZF() || (get_SF() != get_OF()));break;
+		JumpSIb(TFLG_LE);break;
 	CASE_B(0x7f)												/* JNLE */
-		JumpSIb((get_SF() == get_OF()) && !get_ZF());break;
+		JumpSIb(TFLG_NLE);break;
 	CASE_B(0x80)												/* Grpl Eb,Ib */
 	CASE_B(0x82)												/* Grpl Eb,Ib Mirror instruction*/
 		{
@@ -547,13 +547,9 @@
 	CASE_W(0x9a)												/* CALL Ap */
 		{ 
 			Bit16u newip=Fetchw();Bit16u newcs=Fetchw();
-			SAVEIP;
-			if (CPU_CALL(false,newcs,newip)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+			LEAVECORE;
+			CPU_CALL(false,newcs,newip);
+			goto decode_start;
 		}
 	CASE_B(0x9b)												/* WAIT */
 		break; /* No waiting here */
@@ -737,32 +733,27 @@
 		reg_bp=Pop_16();
 		break;
 	CASE_W(0xca)												/* RETF Iw */
-		{ 
-			if (CPU_RET(false,Fetchw())) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+		{
+			Bitu words=Fetchw();		
+			LEAVECORE;
+			CPU_RET(false,words);
+			goto decode_start;
 		}
 	CASE_W(0xcb)												/* RETF */			
-		{ 
-			if (CPU_RET(false,0)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
-		}
+		LEAVECORE;
+		CPU_RET(false,0);
+		goto decode_start;
 	CASE_B(0xcc)												/* INT3 */
 		LEAVECORE;
 #if C_DEBUG	
 		if (DEBUG_Breakpoint()) {
 			return debugCallback;
 		}
-#endif		
+#endif			
+		CPU_SW_Interrupt(3);
+#if CPU_TRAP_CHECK
 		core.trap.skip=true;
-		if (!Interrupt(3)) return CBRET_NONE;
+#endif
 		goto decode_start;
 	CASE_B(0xcd)												/* INT Ib */	
 		{
@@ -773,37 +764,39 @@
 				return debugCallback;
 			}
 #endif
+			CPU_SW_Interrupt(num);
+#if CPU_TRAP_CHECK
 			core.trap.skip=true;
-			if (!Interrupt(num)) return CBRET_NONE;
-			goto decode_start;			//Restore IP with a LOADIP
+#endif
+			goto decode_start;
 		}
 		break;
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			LEAVECORE;
+			CPU_SW_Interrupt(4);
+#if CPU_TRAP_CHECK
 			core.trap.skip=true;
-			if (!Interrupt(4)) return CBRET_NONE;
-			goto decode_start;			//Restore IP with a LOADIP
+#endif
+			goto decode_start;
+
 		}
 		break;
 	CASE_W(0xcf)												/* IRET */
 		{
-			if (CPU_IRET(false)) {
+			LEAVECORE;
+			CPU_IRET(false);
 #ifdef CPU_PIC_CHECK
-				if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
+			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
 #if CPU_TRAP_CHECK
-				if (GETFLAG(TF)) {	
-					cpudecoder=CPU_Core_Normal_Decode_Trap;
-					return CBRET_NONE;
-				}
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Decode_Trap;
+				return CBRET_NONE;
+			}
 #endif
 			goto decode_start;
-		} else {
-			return CBRET_NONE;
 		}
-		break;
-	}
 	CASE_B(0xd0)												/* GRP2 Eb,1 */
 		GRP2B(1);break;
 	CASE_W(0xd1)												/* GRP2 Ew,1 */
@@ -930,13 +923,9 @@
 		{ 
 			Bit16u newip=Fetchw();
 			Bit16u newcs=Fetchw();
-			SAVEIP;
-			if (CPU_JMP(false,newcs,newip)) {
-				LOADIP;
-			} else {
-				FillFlags();return CBRET_NONE;
-			}
-			break;
+			LEAVECORE;
+			CPU_JMP(false,newcs,newip);
+			goto decode_start;
 		}
 	CASE_B(0xeb)												/* JMP Jb */
 		ADDIPFAST(Fetchbs());break;
@@ -963,8 +952,8 @@
 		CPU_HLT();
 		return CBRET_NONE;
 	CASE_B(0xf5)												/* CMC */
-		SETFLAGBIT(CF,!get_CF());
-		SetTypeCF()	;
+		FillFlags();
+		SETFLAGBIT(CF,!(reg_flags & FLAG_CF));
 		break;
 	CASE_B(0xf6)												/* GRP3 Eb(,Ib) */
 		{	
@@ -1055,12 +1044,12 @@
 			break;
 		}
 	CASE_B(0xf8)												/* CLC */
+		FillFlags();
 		SETFLAGBIT(CF,false);
-		SetTypeCF();
 		break;
 	CASE_B(0xf9)												/* STC */
+		FillFlags();
 		SETFLAGBIT(CF,true);
-		SetTypeCF();
 		break;
 	CASE_B(0xfa)												/* CLI */
 		SETFLAGBIT(IF,false);
@@ -1118,12 +1107,9 @@
 					GetEAa;
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
-					SAVEIP;
-					if (CPU_CALL(false,newcs,newip)) {
-						LOADIP;
-					} else {
-						FillFlags();return CBRET_NONE;
-					}
+					LEAVECORE;
+					CPU_CALL(false,newcs,newip);
+					goto decode_start;
 				}
 				break;
 			case 0x04:										/* JMP Ev */	
@@ -1135,12 +1121,10 @@
 					GetEAa;
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
-					SAVEIP;
-					if (CPU_JMP(false,newcs,newip)) {
-						LOADIP;
-					} else {
-						FillFlags();return CBRET_NONE;
-					}					}
+					LEAVECORE;
+					CPU_JMP(false,newcs,newip);
+					goto decode_start;
+				}
 				break;
 			case 0x06:										/* PUSH Ev */
 				if (rm >= 0xc0 ) {GetEArw;Push_16(*earw);}

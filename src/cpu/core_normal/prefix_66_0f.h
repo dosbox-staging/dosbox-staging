@@ -124,37 +124,37 @@
 		}
 		break;
 	CASE_0F_D(0x80)												/* JO */
-		JumpSId(get_OF());break;
+		JumpSId(TFLG_O);break;
 	CASE_0F_D(0x81)												/* JNO */
-		JumpSId(!get_OF());break;
+		JumpSId(TFLG_NO);break;
 	CASE_0F_D(0x82)												/* JB */
-		JumpSId(get_CF());break;
+		JumpSId(TFLG_B);break;
 	CASE_0F_D(0x83)												/* JNB */
-		JumpSId(!get_CF());break;
+		JumpSId(TFLG_NB);break;
 	CASE_0F_D(0x84)												/* JZ */
-		JumpSId(get_ZF());break;
+		JumpSId(TFLG_Z);break;
 	CASE_0F_D(0x85)												/* JNZ */
-		JumpSId(!get_ZF());break;
+		JumpSId(TFLG_NZ);break;
 	CASE_0F_D(0x86)												/* JBE */
-		JumpSId(get_CF() || get_ZF());break;
+		JumpSId(TFLG_BE);break;
 	CASE_0F_D(0x87)												/* JNBE */
-		JumpSId(!get_CF() && !get_ZF());break;
+		JumpSId(TFLG_NBE);break;
 	CASE_0F_D(0x88)												/* JS */
-		JumpSId(get_SF());break;
+		JumpSId(TFLG_S);break;
 	CASE_0F_D(0x89)												/* JNS */
-		JumpSId(!get_SF());break;
+		JumpSId(TFLG_NS);break;
 	CASE_0F_D(0x8a)												/* JP */
-		JumpSId(get_PF());break;
+		JumpSId(TFLG_P);break;
 	CASE_0F_D(0x8b)												/* JNP */
-		JumpSId(!get_PF());break;
+		JumpSId(TFLG_NP);break;
 	CASE_0F_D(0x8c)												/* JL */
-		JumpSId(get_SF() != get_OF());break;
+		JumpSId(TFLG_L);break;
 	CASE_0F_D(0x8d)												/* JNL */
-		JumpSId(get_SF() == get_OF());break;
+		JumpSId(TFLG_NL);break;
 	CASE_0F_D(0x8e)												/* JLE */
-		JumpSId(get_ZF() || (get_SF() != get_OF()));break;
+		JumpSId(TFLG_LE);break;
 	CASE_0F_D(0x8f)												/* JNLE */
-		JumpSId((get_SF() == get_OF()) && !get_ZF());break;
+		JumpSId(TFLG_NLE);break;
 	
 	CASE_0F_D(0xa0)												/* PUSH FS */		
 		Push_32(SegValue(fs));break;
@@ -163,7 +163,7 @@
 
 	CASE_0F_D(0xa3)												/* BT Ed,Gd */
 		{
-			GetRMrd;
+			FillFlags();GetRMrd;
 			Bit32u mask=1 << (*rmrd & 31);
 			if (rm >= 0xc0 ) {
 				GetEArd;
@@ -172,7 +172,6 @@
 				GetEAa;Bit32u old=LoadMd(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_D(0xa4)												/* SHLD Ed,Gd,Ib */
@@ -187,7 +186,7 @@
 		CPU_SetSegGeneral(gs,(Bit16u)Pop_32());break;
 	CASE_0F_D(0xab)												/* BTS Ed,Gd */
 		{
-			GetRMrd;
+			FillFlags();GetRMrd;
 			Bit32u mask=1 << (*rmrd & 31);
 			if (rm >= 0xc0 ) {
 				GetEArd;
@@ -198,7 +197,6 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old | mask);
 			}
-			SetTypeCF();
 			break;
 		}
 	
@@ -247,7 +245,7 @@
 		}
 	CASE_0F_D(0xba)												/* GRP8 Ed,Ib */
 		{
-			GetRM;
+			FillFlags();GetRM;
 			if (rm >= 0xc0 ) {
 				GetEArd;
 				Bit32u mask=1 << (Fetchb() & 31);
@@ -290,12 +288,11 @@
 					E_Exit("CPU:66:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_D(0xbb)												/* BTC Ed,Gd */
 		{
-			GetRMrd;
+			FillFlags();GetRMrd;
 			Bit32u mask=1 << (*rmrd & 31);
 			if (rm >= 0xc0 ) {
 				GetEArd;
@@ -306,7 +303,6 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old ^ mask);
 			}
-			SetTypeCF();
 			break;
 		}
 	CASE_0F_D(0xbc)												/* BSF Gd,Ed */
