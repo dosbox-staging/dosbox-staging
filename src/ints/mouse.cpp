@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.38 2004-04-24 17:57:38 harekiet Exp $ */
+/* $Id: mouse.cpp,v 1.39 2004-07-06 19:12:28 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -705,6 +705,7 @@ static Bitu INT33_Handler(void) {
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
+	        mouse.max_x=CurMode->swidth;//Larry 6
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
 		SetMickeyPixelRate(reg_cx,reg_dx);
