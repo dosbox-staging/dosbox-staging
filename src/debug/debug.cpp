@@ -145,6 +145,7 @@ private:
 	bool		once;
 
 	static std::list<CBreakpoint*>	BPoints;
+public:
 	static CBreakpoint*				ignoreOnce;
 };
 
@@ -194,7 +195,6 @@ CBreakpoint* CBreakpoint::AddIntBreakpoint(Bit8u intNum, Bit16u ah, bool once)
 
 void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 {
-	ignoreOnce = 0;
 	// activate all breakpoints
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
@@ -202,7 +202,7 @@ void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 		bp = static_cast<CBreakpoint*>(*i);
 		// Do not activate, when bp is an actual adress
 		if (activate && (bp->GetType()==BKPNT_PHYSICAL) && (bp->GetLocation()==adr)) {
-			ignoreOnce = bp;
+			// Do not activate :)
 			continue;
 		}
 		bp->Activate(activate);	
@@ -212,24 +212,27 @@ void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 // Checks if breakpoint is valid an should stop execution
 {
-	// if breakpoint is same address as started, it's not valid...
-	if (ignoreOnce) {
-		ignoreOnce->Activate(true);
-		ignoreOnce = 0;
-	}
 	// Search matching breakpoint
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
 		bp = static_cast<CBreakpoint*>(*i);
 		if ((bp->GetType()==BKPNT_PHYSICAL) && bp->IsActive() && (bp->GetLocation()==adr)) {
+			// Ignore Once ?
+			if (ignoreOnce==bp) {
+				ignoreOnce=0;
+				bp->Activate(true);
+				return false;
+			};
 			// Found, 
 			if (bp->GetOnce()) {
 				// delete it, if it should only be used once
 				(BPoints.erase)(i);
 				bp->Activate(false);
 				delete bp;
-			}
+			} else {
+				ignoreOnce = bp;
+			};
 			return true;
 		};
 	};
@@ -239,11 +242,6 @@ bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 // Checks if interrupt breakpoint is valid an should stop execution
 {
-	// if breakpoint is same address as started, it's not valid...
-	if (ignoreOnce) {
-		ignoreOnce->Activate(true);
-		ignoreOnce = 0;
-	}
 	// Search matching breakpoint
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
@@ -251,13 +249,21 @@ bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 		bp = static_cast<CBreakpoint*>(*i);
 		if ((bp->GetType()==BKPNT_INTERRUPT) && bp->IsActive() && (bp->GetIntNr()==intNr)) {
 			if ((bp->GetValue()==BPINT_ALL) || (bp->GetValue()==ahValue)) {
+				// Ignoie it once ?
+				if (ignoreOnce==bp) {
+					ignoreOnce=0;
+					bp->Activate(true);
+					return false;
+				};
 				// Found
 				if (bp->GetOnce()) {
 					// delete it, if it should only be used once
 					(BPoints.erase)(i);
 					bp->Activate(false);
 					delete bp;
-				}				
+				} else {
+					ignoreOnce = bp;
+				}
 				return true;
 			}
 		};
@@ -881,12 +887,14 @@ Bit32u DEBUG_CheckKeys(void) {
 							skipFirstInstruction = true; // for heavy debugger
 							Bitu ret=(*cpudecoder)(1);
 							SetCodeWinStart();
+							CBreakpoint::ignoreOnce = 0;
 						}
 						break;
 		case KEY_F(11):	// trace into
 						skipFirstInstruction = true; // for heavy debugger
 						ret = (*cpudecoder)(1);
 						SetCodeWinStart();
+						CBreakpoint::ignoreOnce = 0;
 						break;
 
 //		default:
