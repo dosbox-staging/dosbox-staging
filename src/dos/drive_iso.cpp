@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.5 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.6 2005-03-16 20:44:56 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -280,10 +280,11 @@ bool isoDrive::FindNext(DOS_DTA &dta)
 	
 	while (dirIter != searchCache.end()) {
 		isoDirEntry &de = *dirIter;
-		Bit8u findAttr;
-		if (IS_DIR(de.fileFlags)) findAttr = DOS_ATTR_DIRECTORY;
-		else findAttr = DOS_ATTR_ARCHIVE;
-		
+		Bit8u findAttr = 0;
+		if (IS_DIR(de.fileFlags)) findAttr |= DOS_ATTR_DIRECTORY;
+		else findAttr |= DOS_ATTR_ARCHIVE;
+		if (IS_HIDDEN(de.fileFlags)) findAttr |= DOS_ATTR_HIDDEN;
+
 		if (WildFileCmp((char*)de.ident, pattern)
 			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
 			

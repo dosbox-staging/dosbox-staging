@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.26 2005-02-10 10:20:52 qbix79 Exp $ */
+/* $Id: drives.h,v 1.27 2005-03-16 20:44:55 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -274,9 +274,11 @@ struct isoDirEntry {
 
 #define ISO_FRAMESIZE		2048
 #define ISO_DIRECTORY		2
+#define ISO_HIDDEN		1
 #define ISO_MAXPATHNAME		256
 #define ISO_FIRST_VD		16
 #define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
+#define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
 
 class isoDrive : public DOS_Drive {
 public:
