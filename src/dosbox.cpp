@@ -99,24 +99,31 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-Bitu RemainTicks;;
-Bitu LastTicks;
+Bits RemainTicks;;
+Bits LastTicks;
 
 static Bitu Normal_Loop(void) {
-	Bitu ret,NewTicks;
-	while (RemainTicks) {
-		ret=PIC_RunQueue();
-	#if C_DEBUG
-		if (DEBUG_ExitLoop()) return 0;	
-	#endif
-		if (ret) return ret;
-		RemainTicks--;
-		TIMER_AddTick();
-		GFX_Events();
+	Bits ret,NewTicks;
+	while (1) {
+		if (PIC_RunQueue()) {
+			ret=(*cpudecoder)();
+			if (ret<0) return 1;
+			if (ret>0) {
+				Bitu blah=(*CallBack_Handlers[ret])();
+				if (blah) return blah;
+			}
+		} else {
+			if (RemainTicks>0) {
+				TIMER_AddTick();
+				RemainTicks--;
+				GFX_Events();
+			} else goto increaseticks;
+		}
 	}
+increaseticks:
 	NewTicks=GetTicks();
 	if (NewTicks>LastTicks) {
-		RemainTicks+=NewTicks-LastTicks;
+		RemainTicks=NewTicks-LastTicks;
 		if (RemainTicks>20) {
 //			LOG_DEBUG("Ticks to handle overflow %d",RemainTicks);
 			RemainTicks=20;
@@ -124,7 +131,7 @@ static Bitu Normal_Loop(void) {
 		LastTicks=NewTicks;
 	}
 	//TODO Make this selectable in the config file, since it gives some lag */
-	if (!RemainTicks) {
+	if (RemainTicks<=0) {
 		SDL_Delay(1);
 		return 0;
 	}
