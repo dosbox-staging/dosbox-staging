@@ -566,6 +566,33 @@ static void dyn_mov_ev_seg(void) {
 	gen_releasereg(DREG(TMPW));
 }
 
+static void dyn_load_seg(SegNames seg,DynReg * src,bool withpop) {
+	if (cpu.pmode) {
+		Bit8u * branch;DynState state;
+		gen_storeflags();	
+		gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPW),seg,src);
+		gen_dop_word(DOP_OR,true,DREG(TMPW),DREG(TMPW));
+		branch=gen_create_branch(BR_Z);
+		dyn_savestate(&state);
+		dyn_reduce_cycles();	
+		if (withpop) gen_dop_word_imm(DOP_SUB,true,DREG(ESP),decode.big_op ? 4 : 2);
+		gen_dop_word_imm(DOP_ADD,true,DREG(EIP),decode.op_start-decode.code_start);
+		dyn_save_flags(true);
+		dyn_releaseregs();
+		gen_call_function((void *)&CPU_StartException,"");
+		dyn_load_flags();
+		gen_return(BR_Normal);
+		dyn_loadstate(&state);
+		gen_fill_branch(branch);
+		gen_restoreflags();
+	} else {
+		//TODO Maybe just calculate the base directly if in realmode
+		gen_call_function((void *)&CPU_SetSegGeneral,"%Id%Drw",seg,src);
+	}
+	gen_releasereg(&DynRegs[G_ES+seg]);
+	if (seg==ss) gen_releasereg(DREG(SMASK));
+}
+
 static void dyn_mov_seg_ev(void) {
 	dyn_get_modrm();
 	SegNames seg=(SegNames)decode.modrm.reg;
@@ -573,14 +600,12 @@ static void dyn_mov_seg_ev(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		dyn_read_word(DREG(EA),DREG(EA),false);
-		gen_call_function((void *)&CPU_SetSegGeneral,"%Id%Drw",seg,DREG(EA));
+		dyn_load_seg(seg,DREG(EA),false);
+		gen_releasereg(DREG(EA));
 	} else {
-		gen_call_function((void *)&CPU_SetSegGeneral,"%Id%Dw",seg,&DynRegs[decode.modrm.rm]);
+		dyn_load_seg(seg,&DynRegs[decode.modrm.rm],false);
 	}
-	gen_releasereg(&DynRegs[G_ES+seg]);
-	if (seg==ss) gen_releasereg(DREG(SMASK));
 }
-
 
 static void dyn_push_seg(SegNames seg) {
 	gen_load_host(&Segs.val[seg],DREG(TMPW),2);
@@ -591,9 +616,8 @@ static void dyn_push_seg(SegNames seg) {
 static void dyn_pop_seg(SegNames seg) {
 	gen_storeflags();
 	dyn_pop(DREG(TMPW));
-	gen_call_function((void*)&CPU_SetSegGeneral,"%Id%Drw",seg,DREG(TMPW));
-	gen_releasereg(&DynRegs[G_ES+seg]);
-	if (seg==ss) gen_releasereg(DREG(SMASK));
+	dyn_load_seg(seg,DREG(TMPW),true);
+	gen_releasereg(DREG(TMPW));
 	gen_restoreflags();
 }
 
@@ -1088,8 +1112,9 @@ restart_prefix:
 		//GRP2 Eb/Ev,CL
 		case 0xd2:dyn_grp2_eb(grp2_cl);break;
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
-		//IN AL/AX,imm
+		//Loop's 
 		case 0xe2:dyn_loop(LOOP_NONE);return decode.block;
+		//IN AL/AX,imm
 		case 0xe4:gen_call_function((void*)&IO_ReadB,"%Id%Rl",decode_fetchb(),DREG(EAX));break;
 		case 0xe5:
 			if (decode.big_op) {
