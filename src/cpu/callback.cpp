@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.19 2004-01-07 20:23:48 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.20 2004-07-08 07:09:30 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -67,8 +67,7 @@ void CALLBACK_Idle(void) {
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
 	SETFLAGBIT(IF,oldIF);
-	if (CPU_CycleLeft<300) CPU_CycleLeft=1;
-	else CPU_CycleLeft-=300;
+	if (CPU_Cycles>0) CPU_Cycles=0;
 }
 
 static Bitu default_handler(void) {
