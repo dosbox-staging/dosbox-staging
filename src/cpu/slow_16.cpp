@@ -70,7 +70,7 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 #endif
 #if C_HEAVY_DEBUG
 		SAVEIP;
-		if (DEBUG_HeavyIsBreakpoint()) return CBRET_NONE;
+		if (DEBUG_HeavyIsBreakpoint()) return 1;
 #endif
 		#include "core_16/main.h"
 //		if (prefix.count) LOG_DEBUG("Prefix for non prefixed instruction");
@@ -82,15 +82,18 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 
 static Bitu CPU_Real_16_Slow_Decode_Trap(void) {
 
+	Bits oldCycles = CPU_Cycles;
+	CPU_Cycles = 1;
 	CPU_Real_16_Slow_Decode();
-
-	LOG_DEBUG("TRAP: Trap Flag executed");
+	
+//	LOG_DEBUG("TRAP: Trap Flag executed");
 	INTERRUPT(1);
-	cpudecoder=&CPU_Real_16_Slow_Decode;
+	
+	CPU_Cycles = oldCycles-1;
+	cpudecoder = &CPU_Real_16_Slow_Decode;
 
 	return CBRET_NONE;
 }
-
 
 void CPU_Real_16_Slow_Start(void) {
 	cpudecoder=&CPU_Real_16_Slow_Decode;
