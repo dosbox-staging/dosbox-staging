@@ -35,8 +35,8 @@
 #define C_GFXTHREADED 1						//Enabled by default
 
 struct SDL_Block {
-	bool active;							//If this isn't set don't draw
-	bool drawing;
+	volatile bool active;							//If this isn't set don't draw
+	volatile bool drawing;
 	Bitu width;
 	Bitu height;
 	Bitu bpp;
@@ -46,9 +46,11 @@ struct SDL_Block {
 	SDL_Surface * surface;
 	SDL_Joystick * joy;
 	SDL_cond *cond;
+#if C_GFXTHREADED
 	SDL_mutex *mutex;
 	SDL_Thread *thread;
 	SDL_sem *sem;
+#endif
 	GFX_DrawCallBack draw_callback;
 	struct {
 		bool autolock;
@@ -127,18 +129,23 @@ static void SDL_DrawScreen(void) {
 		sdl.drawing=true;
 		
 		if (SDL_MUSTLOCK(sdl.surface)) {
-			if (SDL_LockSurface(sdl.surface)) E_Exit("SDL:Can't lock surface");
+			if (SDL_LockSurface(sdl.surface)) {
+				sdl.drawing=false;
+				return;
+			}
 		}
 		sdl.draw_callback(sdl.surface->pixels);
 
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			SDL_UnlockSurface(sdl.surface);
 		}
-		SDL_Flip(sdl.surface);
+		SDL_UpdateRect(sdl.surface,0,0,0,0);
+//		SDL_Flip(sdl.surface);
 		sdl.drawing=false;	
 }
 
 
+#if C_GFXTHREADED
 int SDL_DisplayThread(void * data) {
 	while (!SDL_SemWait(sdl.sem)) {
 		if (!sdl.active) continue;
@@ -148,11 +155,12 @@ int SDL_DisplayThread(void * data) {
 	}
 	return 0;
 }
-
+#endif
 
 void GFX_DoUpdate(void) {
-	if (!sdl.active) return;
-	if (sdl.drawing) return;
+	if (!sdl.active) 
+		return;
+	if (sdl.drawing)return;
 #if C_GFXTHREADED
 	SDL_SemPost(sdl.sem);
 #else 
@@ -309,8 +317,6 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 	case SDLK_F10:code=KBD_f10;break;
 	case SDLK_F11:code=KBD_f11;break;
 	case SDLK_F12:code=KBD_f12;break;
-
-//	KBD_esc,KBD_tab,KBD_backspace,KBD_enter,KBD_space,
 
 	case SDLK_ESCAPE:code=KBD_esc;break;
 	case SDLK_TAB:code=KBD_tab;break;
@@ -553,6 +559,5 @@ int main(int argc, char* argv[]) {
 		LOG_MSG("Exit to error: %sPress enter to continue.",error);
 		fgetc(stdin);
 	}
-    GFX_ShutDown();
-	return 0;
+    return 0;
 };
