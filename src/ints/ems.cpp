@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.31 2004-02-02 20:23:54 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.32 2004-03-31 22:01:22 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -570,6 +570,14 @@ static Bitu INT67_Handler(void) {
 		// Set number of pages
 		reg_cx = EMM_MAX_PHYS;
 		reg_ah = EMM_NO_ERROR;
+		break;
+	case 0x5A:              /* Allocate standard/raw Pages */
+		if (reg_al==0x00) {
+			reg_ah=EMM_AllocateMemory(reg_bx,reg_dx);
+		} else {
+			LOG(LOG_MISC,LOG_ERROR)("EMS:Call 5A subfct %2X not supported",reg_al);
+			reg_ah=EMM_FUNC_NOSUP;
+		};
 		break;
 	case 0xDE:		/* VCPI Functions */
 		LOG(LOG_MISC,LOG_ERROR)("EMS:VCPI Call %2X not supported",reg_al);
