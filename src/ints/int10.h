@@ -173,6 +173,7 @@ void INT10_GetSingleDacRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * bl
 void INT10_SetDACBlock(Bit16u index,Bit16u count,PhysPt data);
 void INT10_GetDACBlock(Bit16u index,Bit16u count,PhysPt data);
 void INT10_SelectDACPage(Bit8u function,Bit8u mode);
+void INT10_GetDACPage(Bit8u* mode,Bit8u* page);
 void INT10_SetPelMask(Bit8u mask);
 void INT10_GetPelMask(Bit8u & mask);
 
@@ -194,5 +195,3 @@ Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count);
 /* Sup Groups */
 void INT10_SetupRomMemory(void);
 void INT10_SetupVESA(void);
-
-

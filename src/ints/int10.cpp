@@ -177,6 +177,9 @@ static Bitu INT10_Handler(void) {
 		case 0x19:							/* undocumented - GET PEL MASK */
 			INT10_GetPelMask(reg_bl);
 			break;
+		case 0x1A:							/* GET VIDEO DAC COLOR PAGE */
+			INT10_GetDACPage(&reg_bl,&reg_bh);
+			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
 		}
@@ -475,5 +478,3 @@ void INT10_Init(Section* sec) {
 	INT10_SetupVESA();
 	INT10_SetVideoMode(machine==MCH_HERC ? 0x7 : 0x3);
 };
-
-

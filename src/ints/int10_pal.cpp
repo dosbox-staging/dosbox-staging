@@ -147,6 +147,21 @@ void INT10_SelectDACPage(Bit8u function,Bit8u mode) {
 	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
+void INT10_GetDACPage(Bit8u* mode,Bit8u* page) {
+	IO_Read(VGAREG_ACTL_RESET);
+	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+	Bit8u reg10=IO_Read(VGAREG_ACTL_READ_DATA);
+	*mode=(reg10&0x80)?0x01:0x00;
+	IO_Write(VGAREG_ACTL_ADDRESS,0x14);
+	*page=IO_Read(VGAREG_ACTL_READ_DATA);
+	if(*mode) {
+		*page&=0xf;
+	} else {
+		*page&=0xc;
+		*page>>=2;
+	}
+}
+
 void INT10_SetPelMask(Bit8u mask) {
 	IO_Write(VGAREG_PEL_MASK,mask);
 }	
@@ -168,4 +183,3 @@ void INT10_SetColorSelect(Bit8u val) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
 	IO_Write(0x3d9,temp);
 }
-
