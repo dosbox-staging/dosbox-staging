@@ -105,6 +105,11 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 void CPU_CPUID(void);
 void CPU_HLT(void);
 
+Bitu CPU_Pop16(void);
+Bitu CPU_Pop32(void);
+void CPU_Push16(Bitu value);
+void CPU_Push32(Bitu value);
+
 //Flag Handling
 Bitu get_CF(void);
 Bitu get_AF(void);
