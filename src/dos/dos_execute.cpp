@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.39 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.40 2004-06-17 17:40:02 harekiet Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -252,14 +252,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	if (len<sizeof(EXE_Header)) iscom=true;	
 	if ((head.signature!=MAGIC1) && (head.signature!=MAGIC2)) iscom=true;
 	else {
-		headersize=head.headersize*16;
-		if (head.extrabytes) {
-			imagesize  = (head.pages-1)*512-headersize; 
-			imagesize += head.extrabytes % 512;
-		} else
-			imagesize  = head.pages*512-headersize; 
-
-		// always load st least 512 Bytes (dos cache/dos bug?)
+		headersize = head.headersize*16;
+		imagesize = head.pages*512-headersize; 
 		if (imagesize+headersize<512) imagesize = 512-headersize;
 	}
 	if (flags!=OVERLAY) {
