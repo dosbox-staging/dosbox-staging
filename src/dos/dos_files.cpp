@@ -19,6 +19,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
+
 #include "dosbox.h"
 #include "mem.h"
 #include "cpu.h"
@@ -39,7 +41,7 @@ Bit8u DOS_GetDefaultDrive(void) {
 }
 
 void DOS_SetDefaultDrive(Bit8u drive) {
-	CurrentDrive=drive;
+	if (drive<=DOS_DRIVES) CurrentDrive=drive;
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
