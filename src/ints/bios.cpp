@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.33 2004-06-20 16:56:55 harekiet Exp $ */
+/* $Id: bios.cpp,v 1.34 2004-07-06 17:12:28 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -139,7 +139,6 @@ static Bitu INT8_Handler(void) {
 	Bit16u oldax = reg_ax;
 	// run int 1c	
 	CALLBACK_RunRealInt(0x1c);
-	IO_Write(0x20,0x20);
 	// restore old values
 	SegSet16(ds,oldds);
 	reg_dx = olddx;
@@ -420,6 +419,17 @@ void BIOS_Init(Section* sec) {
 	//a new system
 	call_int8=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int8,&INT8_Handler,CB_IRET);
+	phys_writeb(CB_BASE+(call_int8<<4)+0,(Bit8u)0xFE);		//GRP 4
+	phys_writeb(CB_BASE+(call_int8<<4)+1,(Bit8u)0x38);		//Extra Callback instruction
+	phys_writew(CB_BASE+(call_int8<<4)+2,call_int8);		//The immediate word          
+	phys_writeb(CB_BASE+(call_int8<<4)+4,(Bit8u)0x50);		// push ax
+	phys_writeb(CB_BASE+(call_int8<<4)+5,(Bit8u)0xb0);		// mov al, 0x20
+	phys_writeb(CB_BASE+(call_int8<<4)+6,(Bit8u)0x20);
+	phys_writeb(CB_BASE+(call_int8<<4)+7,(Bit8u)0xe6);		// out 0x20, al
+	phys_writeb(CB_BASE+(call_int8<<4)+8,(Bit8u)0x20);
+	phys_writeb(CB_BASE+(call_int8<<4)+9,(Bit8u)0x58);		// pop ax
+	phys_writeb(CB_BASE+(call_int8<<4)+10,(Bit8u)0xcf);		// iret
+
 	mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 	RealSetVec(0x8,CALLBACK_RealPointer(call_int8));
 	/* INT 11 Get equipment list */
