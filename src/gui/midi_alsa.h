@@ -16,8 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.6 2004-01-21 07:43:10 harekiet Exp $ */
+/* $Id: midi_alsa.h,v 1.7 2004-01-26 15:10:16 qbix79 Exp $ */
 
+#define ALSA_PCM_OLD_HW_PARAMS_API
+#define ALSA_PCM_OLD_SW_PARAMS_API
 #include <alsa/asoundlib.h>
 #include <ctype.h>
 
