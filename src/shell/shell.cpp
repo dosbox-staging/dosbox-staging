@@ -249,9 +249,10 @@ void SHELL_Init() {
 	SegSet16(ss,stack_seg);
 	reg_sp=2046;
 	/* Setup MCB and the environment */
-	MCB * env_mcb=(MCB *)HostMake(env_seg-1,0);
-	env_mcb->psp_segment=psp_seg;
-	env_mcb->size=4096/16;
+	DOS_MCB envmcb((Bit16u)(env_seg-1));
+	envmcb.SetPSPSeg(psp_seg);
+	envmcb.SetSize(4096/16);
+	
 	PhysPt env_write=PhysMake(env_seg,0);
 	MEM_BlockWrite(env_write,path_string,strlen(path_string)+1);
 	env_write+=strlen(path_string)+1;
