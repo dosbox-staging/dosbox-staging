@@ -301,7 +301,7 @@ static Bitu DOS_21Handler(void) {
 			reg_ch=(Bit8u)(seconds/3600);
 			reg_cl=(Bit8u)((seconds % 3600)/60);
 			reg_dh=(Bit8u)(seconds % 60);
-			reg_dl=(Bit8u)((ticks % 20)*5);    /* 0-19 ->0-95 */
+			reg_dl=(Bit8u)(((ticks * 10) % 182)*100)/182;
 		}
 		break;
 	case 0x2d:		/* Set System Time */
