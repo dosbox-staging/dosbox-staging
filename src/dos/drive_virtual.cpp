@@ -183,7 +183,7 @@ bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta) {
 }
 
 bool Virtual_Drive::FindNext(DOS_DTA & dta) {
-	Bit8u attr;char pattern[DOS_NAMELENGTH];
+	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
 	while (search_file) {
 		if (WildFileCmp(search_file->name,pattern)) {
