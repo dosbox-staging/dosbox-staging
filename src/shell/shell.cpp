@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.43 2004-08-04 09:12:57 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.44 2004-08-04 13:15:56 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -286,7 +286,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [31mmount[0m it first. Type [33mintro[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
