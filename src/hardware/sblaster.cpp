@@ -553,7 +553,7 @@ static void DMA_E2_Enable(bool enable) {
 }
 
 static void DSP_DoCommand(void) {
-	//LOG_MSG("DSP Command %X",sb.dsp.cmd);
+//	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
 	case 0x04:	/* DSP Statues SB 2.0/pro version */
 		DSP_FlushData();
@@ -647,8 +647,6 @@ static void DSP_DoCommand(void) {
 		DSP_AddData(sb.dsp.test_register);;
 		break;
 	case 0xf2:	/* Trigger 8bit IRQ */
-		DSP_FlushData();
-		DSP_AddData(0xaa);
 		SB_RaiseIRQ(SB_IRQ_8);
 		break;
 	default:
@@ -740,8 +738,8 @@ static Bit8u MIXER_Read(void) {
 		return	((sb.mixer.dac.left  & 0x1e) >> 1) |
 				((sb.mixer.dac.right & 0x1e) << 3);
 //	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro */
-	case 0x0a:		/* Mic Level */
-		return sb.mixer.mic;
+	case 0x0a:		/* Mic Level (SBPRO) */
+		return (sb.mixer.mic >> 1);
 	case 0x0e:		/* Output/Stereo Select */
 		return 0x11|(sb.dma.stereo ? 0x02 : 0x00)|(sb.dma.filtered ? 0x20 : 0x00);
 	case 0x26:		/* FM Volume (SBPRO) */
