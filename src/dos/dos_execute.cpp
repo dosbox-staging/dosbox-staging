@@ -357,8 +357,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(csip));
 		mem_writew(SegPhys(ss)+reg_sp+4,0x200);
 		/* Setup the rest of the registers */
-		reg_ax=0;
-		reg_cx=reg_dx=reg_bx=reg_si=reg_di=reg_bp=0;
+		reg_ax=0;reg_si=0x100;
+		reg_cx=reg_dx=reg_bx=reg_di=reg_bp=0;
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
 #if C_DEBUG		
 		/* Started from debug.com, then set breakpoint at start */
