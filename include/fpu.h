@@ -38,13 +38,4 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
-#define FPU_ESC(code) { \
-	Bit8u rm=Fetchb(); \
-	if (rm>=0xc0) { \
-		FPU_ESC ## code ## _Normal(rm); \
-	} else { \
-		GetEAa;FPU_ESC ## code ## _EA(rm,eaa);	\
-	} \
-}
-
 #endif
