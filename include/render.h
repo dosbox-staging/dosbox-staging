@@ -17,9 +17,24 @@
  */
 
 
-typedef void RENDER_Handler(Bit8u * * data);
 
+enum RENDER_Operation {
+	OP_None,OP_2xSai,OP_Scale2x
+};
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags, RENDER_Handler * handler);
+enum {
+	DoubleNone=		0x00,
+	DoubleWidth=	0x01,
+	DoubleHeight=	0x02,
+	DoubleBoth=		0x03
+};
+
+bool RENDER_StartUpdate(void);
+
+void RENDER_EndUpdate(void);
+
+void RENDER_Part(Bit8u * data,Bitu x,Bitu y,Bitu dx,Bitu dy);
+
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags);
 
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);

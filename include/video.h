@@ -20,9 +20,7 @@
 #define __VIDEO_H
 
 
-typedef void (GFX_DrawHandler)(Bit8u * vidstart);
-/* Used to reply to the renderer what size to set */
-typedef void (GFX_ResizeHandler)(Bitu * width,Bitu * height);
+typedef void (* GFX_ModeCallBack)(Bitu width,Bitu height,Bitu bpp,Bitu pitch,Bitu flags);
 
 struct GFX_PalEntry {
 	Bit8u r;
@@ -31,20 +29,25 @@ struct GFX_PalEntry {
 	Bit8u unused;
 };
 
-struct GFX_Info {
-	Bitu width,height,bpp,pitch;
-};
+#define GFX_FIXED_BPP	0x01
+#define GFX_RESIZEABLE	0x02
 
-extern GFX_Info gfx_info;
+#define MODE_SET 0x01
+#define MODE_FULLSCREEN 0x02
+#define MODE_RESIZE 0x04
 
 void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
-void GFX_SetDrawHandler(GFX_DrawHandler * handler);
-void GFX_Resize(Bitu width,Bitu height,Bitu bpp,GFX_ResizeHandler * resize);
+
+Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
+void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack callback);
 
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
+
+void * GFX_StartUpdate(void);
+void GFX_EndUpdate(void);
 
 #endif
 
