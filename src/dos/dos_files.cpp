@@ -488,12 +488,19 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
   constant=0x80;
   fcb.Set_record_size(constant);
     struct tm *time;
-	time=localtime(&stat_block.st_mtime);
+    if((time=localtime(&stat_block.st_mtime))!=0){
 
-	constant=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-	fcb.Set_time(constant);
-    constant=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
-    fcb.Set_date(constant);
+	    constant=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
+	    fcb.Set_time(constant);
+        constant=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
+        fcb.Set_date(constant);
+    }
+    else{
+        constant=6;
+	    fcb.Set_time(constant);
+        constant=4;
+        fcb.Set_date(constant);
+    }
   fcb.Set_drive(drive +1);
   return true;
   }

@@ -148,10 +148,14 @@ bool localDrive::FindNext(DTA_FindBlock * dta) {
 	dta->attr=tempattr;
 	dta->size=(Bit32u) stat_block.st_size;
 	struct tm *time;
-	time=localtime(&stat_block.st_mtime);
-
-	dta->time=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-	dta->date=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
+    if((time=localtime(&stat_block.st_mtime))!=0){
+    
+	    dta->time=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
+	    dta->date=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
+    }else {
+        dta->time=6; 
+        dta->date=4;
+    }
 	return true;
 }
 
