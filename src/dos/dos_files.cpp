@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.53 2004-03-04 19:49:14 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.54 2004-04-18 10:36:28 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -329,6 +329,11 @@ bool DOS_CloseFile(Bit16u entry) {
 }
 
 bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
+	// Creation of a device is the same as opening it
+	// Tc201 installer
+	if (DOS_FindDevice(name) != 255)
+		return DOS_OpenFile(name, 0, entry);
+
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	DOS_PSP psp(dos.psp);
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
@@ -711,7 +716,7 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;Bit8u drive;
 	char file_name[9];char ext[4];
 	find_dta.GetResult(name,size,date,time,attr);
-	drive=find_fcb.GetDrive();
+	drive=find_fcb.GetDrive()+1;
 	/* Create a correct file and extention */
 	DTAExtendName(name,file_name,ext);	
 	DOS_FCB fcb(RealSeg(dos.dta),RealOff(dos.dta));
