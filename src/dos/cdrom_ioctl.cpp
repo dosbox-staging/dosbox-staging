@@ -246,7 +246,7 @@ int CDROM_GetMountType(char* path)
 	return 2;
 };
 
-#else #if defined (WIN32)
+#elif defined (WIN32)
 
 
 // *****************************************************************
