@@ -17,8 +17,55 @@
  */
 
 switch (Fetchb()) {
+	case 0x01:		/* Group 7 Ed */
+		{
+			GetRM;Bitu which=(rm>>3)&7;
+			if (rm < 0xc0)	{ //First ones all use EA
+				GetEAa;Bitu limit,base;
+				switch (which) {
+				case 0x00:								/* SGDT */
+					CPU_SGDT(limit,base);
+					SaveMw(eaa,limit);
+					SaveMd(eaa+2,base);
+					break;
+				case 0x01:								/* SIDT */
+					CPU_SIDT(limit,base);
+					SaveMw(eaa,limit);
+					SaveMd(eaa+2,base);
+					break;
+				case 0x02:								/* LGDT */
+					CPU_LGDT(LoadMw(eaa),LoadMd(eaa+2));
+					break;
+				case 0x03:								/* LIDT */
+					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2));
+					break;
+				case 0x04:								/* SMSW */
+					CPU_SMSW(limit);
+					SaveMw(eaa,limit);
+					break;
+				case 0x06:								/* LMSW */
+					limit=LoadMw(eaa);
+					if (!CPU_LMSW(limit)) goto decode_end;
+					break;
+				}
+			} else {
+				GetEArw;Bitu limit;
+				switch (which) {
+				case 0x04:								/* SMSW */
+					CPU_SMSW(limit);
+					*earw=limit;
+					break;
+				case 0x06:								/* LMSW */
+					if (!CPU_LMSW(*earw)) goto decode_end;
+					break;
+				default:
+					LOG(LOG_CPU,LOG_ERROR)("Illegal group 7 RM subfunction %d",which);
+					break;
+				}
 
-
+			}
+		}
+		break;
 	case 0xa4:												/* SHLD Ed,Gd,Ib */
 		{
 			GetRMrd;

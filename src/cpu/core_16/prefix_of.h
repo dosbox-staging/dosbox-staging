@@ -19,95 +19,96 @@
 switch(Fetchb()) {
 	case 0x00:												/* GRP 6 */
 		{
-			EXCEPTION(6);
-			break;
-			GetRM;
-			switch (rm & 0x38) {
-			case 0x00:
-			default:
-				E_Exit("CPU:GRP6:Illegal call %2X",(rm>>3) &3);
-			}
-		}
-		break;
-
-	case 0x01:												/* GRP 7 */
-		{
-			GetRM;
-			switch (rm & 0x38) {
-			case 0x20:										/* SMSW */
-			/* Let's seriously fake this call */
-				if (rm>0xc0) {GetEArw;*earw=0;}
-				else {GetEAa;SaveMw(eaa,0);}
+			GetRM;Bitu which=(rm>>3)&7;
+			switch (which) {
+			case 0x00:	/* SLDT */
+			case 0x01:	/* STR */
+				{
+					Bitu saveval;
+					if (!which) CPU_SLDT(saveval);
+					else CPU_STR(saveval);
+					if (rm>0xc0) {GetEArw;*earw=saveval;}
+					else {GetEAa;SaveMw(eaa,saveval);}
+				}
 				break;
+			case 0x02:case 0x03:case 0x04:case 0x05:
+				{
+					Bitu loadval;
+					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
+					else {GetEAa;loadval=LoadMw(eaa);}
+					break;
+					switch (which) {
+					case 0x02:CPU_LLDT(loadval);break;
+					case 0x03:CPU_LTR(loadval);break;
+					case 0x04:CPU_VERR(loadval);break;
+					case 0x05:CPU_VERW(loadval);break;
+					}
+				}
 			default:
-				GetEAa;
-				LOG(LOG_CPU,LOG_ERROR)("GRP7:Illegal call %2X",(rm>>3) &3);
+				LOG(LOG_CPU,LOG_ERROR)("GRP6:Illegal call %2X",which);
 			}
 		}
 		break;
-	/* 0x02 LAR Gw,Ew (286) */
-	/* 0x03 LSL Gw,Ew (286) */
-	/* 0x05 LOADALL (286 only?) */
-	/* 0x06 CLTS (286) */
-	/* 0x07 LOADALL (386 only?) */
-	/* 0x08 INVD (486) */
-	/* 0x02 WBINVD (486) */
-	/* 0x10 UMOV Eb,Gb (386) */
-	/* 0x11 UMOV Ew,Gw (386) */
-	/* 0x12 UMOV Gb,Eb (386) */
-	/* 0x13 UMOV Gw,Ew (386) */
-	/* 0x20 MOV Rd,CRx (386) */
-	/* 0x21 MOV Rd,DRx (386) */
-	/* 0x22 MOV CRx,Rd (386) */
-	/* 0x23 MOV DRx,Rd (386) */
+	case 0x01:											/* Group 7 Ew */
+		{
+			GetRM;Bitu which=(rm>>3)&7;
+			if (rm < 0xc0)	{ //First ones all use EA
+				GetEAa;Bitu limit,base;
+				switch (which) {
+				case 0x00:								/* SGDT */
+					CPU_SGDT(limit,base);
+					SaveMw(eaa,limit);
+					SaveMd(eaa+2,base);
+					break;
+				case 0x01:								/* SIDT */
+					CPU_SIDT(limit,base);
+					SaveMw(eaa,limit);
+					SaveMd(eaa+2,base);
+					break;
+				case 0x02:								/* LGDT */
+					CPU_LGDT(LoadMw(eaa),LoadMd(eaa+2) & 0xFFFFFF);
+					break;
+				case 0x03:								/* LIDT */
+					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2) & 0xFFFFFF);
+					break;
+				case 0x04:								/* SMSW */
+					CPU_SMSW(limit);
+					SaveMw(eaa,limit);
+					break;
+				case 0x06:								/* LMSW */
+					limit=LoadMw(eaa);
+					if (!CPU_LMSW(limit)) goto decode_end;
+					break;
+				}
+			} else {
+				GetEArw;Bitu limit;
+				switch (which) {
+				case 0x04:								/* SMSW */
+					CPU_SMSW(limit);
+					*earw=limit;
+					break;
+				case 0x06:								/* LMSW */
+					if (!CPU_LMSW(*earw)) goto decode_end;
+					break;
+				default:
+					LOG(LOG_CPU,LOG_ERROR)("Illegal group 7 RM subfunction %d",which);
+					break;
+				}
+			}
+		}
+		break;
 	case 0x23:												/* MOV DRx,Rd */
 		{
 			GetRM;
-			LOG(LOG_CPU,LOG_NORMAL)("CPU:0F:23 does nothing");
+			Bitu which=(rm >> 3) & 7;
+			if (rm >= 0xc0 ) {
+				GetEArw;
+			} else {
+				GetEAa;
+				LOG(LOG_CPU,LOG_ERROR)("MOV DR%,XXX with non-register",which);
+			}
 		}
 		break;
-	/* 0x24 MOV Rd,TRx (386) */
-	/* 0x26 MOV TRx,Rd (386) */
-	/* 0x30 WRMSR (P5) */
-	/* 0x31 RDTSC (P5) */
-	/* 0x32 RDMSR (P5) */
-	/* 0x33 RDPMC (P6) */
-	/* 0x40-4F CMOVcc Gw,Ew (P6) */
-	/* 0x50 PAVEB Rq,Eq (CYRIX MMX) */
-	/* 0x51 PADDSIW Rq,Eq (CYRIX MMX) */
-	/* 0x52 PMAGW Rq,Eq (CYRIX MMX) */
-	/* 0x54 PDISTIB Rq,Eq (CYRIX MMX) */
-	/* 0x55 PSUBSIW Rq,Eq (CYRIX MMX) */
-	/* 0x58 PMVZB Rq,Eq (CYRIX MMX) */
-	/* 0x59 PMULHRW Rq,Eq (CYRIX MMX) */
-	/* 0x5A PMVNZB Rq,Eq (CYRIX MMX) */
-	/* 0x5B PMVLZB Rq,Eq (CYRIX MMX) */
-	/* 0x5C PMVGEZB Rq,Eq (CYRIX MMX) */
-	/* 0x5D PMULHRIW Rq,Eq (CYRIX MMX) */
-	/* 0x5E PMACHRIW Rq,Eq (CYRIX MMX) */
-	/* 0x60 PUNPCKLBW Rq,Eq (MMX) */
-	/* 0x61 PUNPCKLWD Rq,Eq (MMX) */
-	/* 0x62 PUNPCKLDQ Rq,Eq (MMX) */
-	/* 0x63 PACKSSWB Rq,Eq (MMX) */
-	/* 0x64 PCMPGTB Rq,Eq (MMX) */
-	/* 0x65 PCMPGTW Rq,Eq (MMX) */
-	/* 0x66 PCMPGTD Rq,Eq (MMX) */
-	/* 0x67 PACKUSWB Rq,Eq (MMX) */
-	/* 0x68 PUNPCKHBW Rq,Eq (MMX) */
-	/* 0x69 PUNPCKHWD Rq,Eq (MMX) */
-	/* 0x6A PUNPCKHDQ Rq,Eq (MMX) */
-	/* 0x6B PACKSSDW Rq,Eq (MMX) */
-	/* 0x6E MOVD Rq,Ed (MMX) */
-	/* 0x6F MOVQ Rq,Eq (MMX) */
-	/* 0x71 PSLLW/PSRAW/PSRLW Rq,Ib (MMX) */
-	/* 0x72 PSLLD/PSRAD/PSRLD Rq,Ib (MMX) */
-	/* 0x73 PSLLQ/PSRLQ Rq,Ib (MMX) */
-	/* 0x74 PCMPEQB Rq,Eq (MMX) */
-	/* 0x75 PCMPEQW Rq,Eq (MMX) */
-	/* 0x76 PCMPEQD Rq,Eq (MMX) */
-	/* 0x77 EMMS (MMX) */
-	/* 0x7E MOVD Ed,Rq (MMX) */
-	/* 0x7F MOVQ Ed,Rq (MMX) */
 	case 0x80:												/* JO */
 		JumpSIw(get_OF());break;
 	case 0x81:												/* JNO */
@@ -178,7 +179,9 @@ switch(Fetchb()) {
 		Push_16(SegValue(fs));break;
 	case 0xa1:												/* POP FS */		
 		SegSet16(fs,Pop_16());break;
-	/* 0xa2 CPUID */
+	case 0xa2:
+		CPU_CPUID();
+		break;
 	case 0xa3:												/* BT Ew,Gw */
 		{
 			GetRMrw;
@@ -199,13 +202,10 @@ switch(Fetchb()) {
 	case 0xa5:												/* SHLD Ew,Gw,CL */
 		RMEwGwOp3(DSHLW,reg_cl);
 		break;
-	/* 0xa6 XBTS (early 386 only) CMPXCHG (early 486 only) */
-	/* 0xa7 IBTS (early 386 only) CMPXCHG (early 486 only) */
 	case 0xa8:												/* PUSH GS */		
 		Push_16(SegValue(gs));break;
 	case 0xa9:												/* POP GS */		
 		SegSet16(gs,Pop_16());break;
-	/* 0xaa RSM */
 	case 0xab:												/* BTS Ew,Gw */
 		{
 			GetRMrw;
@@ -231,9 +231,7 @@ switch(Fetchb()) {
 	case 0xaf:												/* IMUL Gw,Ew */
 		RMGwEwOp3(DIMULW,*rmrw);
 		break;
-		
-	/* 0xb0 CMPXCHG Eb,Gb */
-	/* 0xb1 CMPXCHG Ew,Gw */
+	
 	case 0xb2:												/* LSS */
 		{	
 			GetRMrw;GetEAa;
@@ -385,10 +383,6 @@ switch(Fetchb()) {
 			else {GetEAa;*rmrw=LoadMbs(eaa);}
 			break;
 		}
-	/* 0xc0 XADD Eb,Gb (486) */
-	/* 0xc1 XADD Ew,Gw (486) */
-	/* 0xc7 CMPXCHG8B Mq (P5) */
-	/* 0xc8-cf BSWAP Rw (odd behavior,486) */
 	case 0xc8:	BSWAP(reg_eax);		break;
 	case 0xc9:	BSWAP(reg_ecx);		break;
 	case 0xca:	BSWAP(reg_edx);		break;
@@ -398,35 +392,6 @@ switch(Fetchb()) {
 	case 0xce:	BSWAP(reg_esi);		break;
 	case 0xcf:	BSWAP(reg_edi);		break;
 		
-	/* 0xd1 PSRLW Rq,Eq (MMX) */
-	/* 0xd2 PSRLD Rq,Eq (MMX) */
-	/* 0xd3 PSRLQ Rq,Eq (MMX) */
-	/* 0xd5 PMULLW Rq,Eq (MMX) */
-	/* 0xd8 PSUBUSB Rq,Eq (MMX) */
-	/* 0xd9 PSUBUSW Rq,Eq (MMX) */
-	/* 0xdb PAND Rq,Eq (MMX) */
-	/* 0xdc PADDUSB Rq,Eq (MMX) */
-	/* 0xdd PADDUSW Rq,Eq (MMX) */
-	/* 0xdf PANDN Rq,Eq (MMX) */
-	/* 0xe1 PSRAW Rq,Eq (MMX) */
-	/* 0xe2 PSRAD Rq,Eq (MMX) */
-	/* 0xe5 PMULHW Rq,Eq (MMX) */
-	/* 0xe8 PSUBSB Rq,Eq (MMX) */
-	/* 0xe9 PSUBSW Rq,Eq (MMX) */
-	/* 0xeb POR Rq,Eq (MMX) */
-	/* 0xec PADDSB Rq,Eq (MMX) */
-	/* 0xed PADDSW Rq,Eq (MMX) */
-	/* 0xef PXOR Rq,Eq (MMX) */
-	/* 0xf1 PSLLW Rq,Eq (MMX) */
-	/* 0xf2 PSLLD Rq,Eq (MMX) */
-	/* 0xf3 PSLLQ Rq,Eq (MMX) */
-	/* 0xf5 PMADDWD Rq,Eq (MMX) */
-	/* 0xf8 PSUBB Rq,Eq (MMX) */
-	/* 0xf9 PSUBW Rq,Eq (MMX) */
-	/* 0xfa PSUBD Rq,Eq (MMX) */
-	/* 0xfc PADDB Rq,Eq (MMX) */
-	/* 0xfd PADDW Rq,Eq (MMX) */
-	/* 0xfe PADDD Rq,Eq (MMX) */
 	default:
 		 SUBIP(1);
 		 E_Exit("CPU:Opcode 0F:%2X Unhandled",Fetchb());
