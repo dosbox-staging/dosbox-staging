@@ -78,8 +78,8 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 {
 	strcpy(dirBase->fullname,baseDir);
 	if (OpenDir(baseDir)) {
-		struct dirent result;
-		ReadDir(&result);
+		struct dirent* result;
+		ReadDir(result);
 	};
 };
 
@@ -112,10 +112,6 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 
 void DOS_Drive_Cache::AddEntry(const char* path)
 {
-	
-	CacheOut(path);
-	return;
-
 	// FIXME: Code doesnt seem to work with arena ??? Why is that ?
 	// Get Last part...
 	char file	[CROSS_LEN];
@@ -124,6 +120,11 @@ void DOS_Drive_Cache::AddEntry(const char* path)
 	CFileInfo* dir = FindDirInfo(path,expand);
 	char* pos = strrchr(path,CROSS_FILESPLIT);
 
+	char* name = pos+1;
+	if (GetLongName(dir,name)<0) {
+		int brk = 0;
+	};
+
 	if (pos) {
 		strcpy(file,pos+1);	
 		
@@ -131,12 +132,13 @@ void DOS_Drive_Cache::AddEntry(const char* path)
 		// Sort Lists - filelist has to be alphabetically sorted
 		std::sort(dir->fileList.begin(), dir->fileList.end(), SortByName);
 		// Output list - user defined
-		switch (sortDirType) {
+/*		switch (sortDirType) {
 			case ALPHABETICAL		: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByName);		break;
 			case DIRALPHABETICAL	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirName);		break;
 			case ALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByNameRev);		break;
 			case DIRALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirNameRev);	break;
-		};
+		};*/
+//		nextEntry++;
 //		LOG_DEBUG("DIR: Added Entry %s",path);
 	} else {
 //		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
@@ -170,7 +172,7 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 	dir->outputList.clear();
 	dir->shortNr = 0;
 	save_dir = 0;
-	nextEntry = 0;
+//	nextEntry = 0;
 };
 
 bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir)
@@ -357,8 +359,8 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (pos) work[(Bit32u)pos-(Bit32u)path] = 0;
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,work)) {
-					struct dirent result;
-					ReadDir(&result);
+					struct dirent* result;
+					ReadDir(result);
 				};
 			}
 		};
@@ -425,7 +427,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name)
 	dir->outputList.push_back(info);
 };
 
-bool DOS_Drive_Cache::ReadDir(struct dirent* result)
+bool DOS_Drive_Cache::ReadDir(struct dirent* &result)
 {
 	if (dirFirstTime) {		
 		if (!IsCachedIn(dirSearch)) {
@@ -466,8 +468,11 @@ bool DOS_Drive_Cache::ReadDir(struct dirent* result)
 	return SetResult(dirSearch, result, nextEntry);
 };
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* result, Bit16u entryNr)
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* &result, Bit16u entryNr)
 {
+	static struct dirent res;
+
+	result = &res;
 	if (entryNr>=dir->outputList.size()) return false;
 	CFileInfo* info = dir->outputList[entryNr];
 	// copy filename, short version
@@ -477,3 +482,33 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* result, Bit16u en
 	return true;
 };
 
+// ****************************************************************************
+// No Dir Cache, 
+// ****************************************************************************
+
+DOS_No_Drive_Cache::DOS_No_Drive_Cache(const char* path)
+{
+	SetBaseDir(path);
+};
+
+void DOS_No_Drive_Cache::SetBaseDir(const char* path)
+{
+	strcpy(basePath,path);
+}
+
+bool DOS_No_Drive_Cache::OpenDir(const char* path)
+{
+	strcpy(dirPath,path);
+	if((srch_opendir=opendir(dirPath))==NULL) return false;
+	return true;
+};
+
+bool DOS_No_Drive_Cache::ReadDir(struct dirent* &result)
+{
+	if((result=readdir(srch_opendir))==NULL) {
+		closedir(srch_opendir);
+		srch_opendir=NULL;
+		return false;
+	}
+	return true;
+};

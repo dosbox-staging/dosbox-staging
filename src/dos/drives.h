@@ -39,7 +39,7 @@ public:
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
 	bool		OpenDir				(const char* path);
-	bool		ReadDir				(struct dirent* result);
+	bool		ReadDir				(struct dirent* &result);
 
 	void		ExpandName			(char* path);
 	char*		GetExpandName		(const char* path);
@@ -72,7 +72,7 @@ private:
 	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
-	bool		SetResult			(CFileInfo* dir, struct dirent* result, Bit16u entryNr);
+	bool		SetResult			(CFileInfo* dir, struct dirent* &result, Bit16u entryNr);
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
@@ -89,6 +89,30 @@ private:
 	char		save_path			[CROSS_LEN];
 	char		save_expanded		[CROSS_LEN];
 
+};
+
+class DOS_No_Drive_Cache {
+public:
+	DOS_No_Drive_Cache				(void) {};
+	DOS_No_Drive_Cache				(const char* path);
+	~DOS_No_Drive_Cache				(void) {};
+
+	typedef enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
+
+	void		SetBaseDir			(const char* path);
+	void		SetDirSort			(TDirSort sort) {};
+	bool		OpenDir				(const char* path);
+	bool		ReadDir				(struct dirent* &result);
+
+	void		ExpandName			(char* path) {};
+	char*		GetExpandName		(const char* path) { return (char*)path; };
+	
+	void		CacheOut			(const char* path, bool ignoreLastDir = false) {};
+	void		AddEntry			(const char* path) {};
+public:
+	char		basePath			[CROSS_LEN];
+	char		dirPath				[CROSS_LEN];
+	DIR*		srch_opendir;
 };
 
 class localDrive : public DOS_Drive {
