@@ -754,8 +754,8 @@
 			break;
 		}
 	CASE_B(0xcc)												/* INT3 */
-#if C_DEBUG	
 		LEAVECORE;
+#if C_DEBUG	
 		if (DEBUG_Breakpoint()) {
 			return debugCallback;
 		}
