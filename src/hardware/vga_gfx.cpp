@@ -56,6 +56,8 @@ void write_p3cf(Bit32u port,Bit8u val) {
 		vga.config.full_not_enable_set_reset=~vga.config.full_enable_set_reset;
 		vga.config.full_enable_and_set_reset=vga.config.full_set_reset &
 			vga.config.full_enable_set_reset;
+//		if (gfx(enable_set_reset)) vga.config.mh_mask|=MH_SETRESET else vga.config.mh_mask&=~MH_SETRESET;
+		break;
 	case 2: /* Color Compare Register */
 		gfx(color_compare)=val & 0x0f;
 		/*
@@ -70,7 +72,7 @@ void write_p3cf(Bit32u port,Bit8u val) {
 	case 3: /* Data Rotate */
 		gfx(data_rotate)=val;
 		vga.config.data_rotate=val & 7;
-		if (vga.config.data_rotate) LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:Data Rotate used %d",val &7);
+//		if (val) vga.config.mh_mask|=MH_ROTATEOP else vga.config.mh_mask&=~MH_ROTATEOP;
 		vga.config.raster_op=(val>>3) & 3;
 		/* 
 			0-2	Number of positions to rotate data right before it is written to
@@ -83,7 +85,6 @@ void write_p3cf(Bit32u port,Bit8u val) {
 				2: CPU data is ORed  with the latch data.
 				3: CPU data is XORed with the latched data.
 		*/
-//		if (vga.config.data_rotate || vga.config.raster_op ) LOG_DEBUG("Data Rotate = %2X Raster op %2X",val & 7,(val>>3) & 3 );
 		break;
 	case 4: /* Read Map Select Register */
 		/*	0-1	number of the plane Read Mode 0 will read from */
@@ -138,6 +139,19 @@ void write_p3cf(Bit32u port,Bit8u val) {
 		break;
 	case 6: /* Miscellaneous Register */
 		gfx(miscellaneous)=val;
+		switch ((val >> 2) & 3) {
+		case 0:
+		case 1:
+			vga.config.mem_base=0xa0000;
+			break;
+		case 2:
+			vga.config.mem_base=0xb0000;
+			break;
+		case 3:
+			vga.config.mem_base=0xb8000;
+			break;
+		}
+		if (vga.mode==M_TEXT16) VGA_SetupHandlers();
 		/*
 			0	Indicates Graphics Mode if set, Alphanumeric mode else.
 			1	Enables Odd/Even mode if set.
@@ -182,7 +196,7 @@ void write_p3cf(Bit32u port,Bit8u val) {
 }
 
 Bit8u read_p3cf(Bit32u port) {
-switch (gfx(index)) {
+	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		return gfx(set_reset);
 	case 1: /* Enable Set/Reset Register */

@@ -31,6 +31,8 @@ void write_p3c4(Bit32u port,Bit8u val) {
 };
 
 void write_p3c5(Bit32u port,Bit8u val) {
+	if (seq(index)>0x8 && vga.s3.pll.lock!=0x6) return;
+//	LOG_MSG("SEQ WRITE reg %X val %X",seq(index),val);
 	switch(seq(index)) {
 	case 0:		/* Reset */
 		seq(reset)=val;
@@ -88,8 +90,31 @@ void write_p3c5(Bit32u port,Bit8u val) {
 		/* Changing this means changing the VGA Memory Read/Write Handler */
 		if (val&0x08) vga.config.chained=true;
 		else vga.config.chained=false;
-		VGA_FindSettings();
+		VGA_SetupHandlers();
 		break;
+/* S3 specific group */
+	case 0x08:
+		vga.s3.pll.lock=val;
+		break;
+	case 0x10:		/* Memory PLL Data Low */
+		vga.s3.mclk.n=val & 0x1f;
+		vga.s3.mclk.r=val >> 5;
+		break;
+	case 0x11:		/* Memory PLL Data High */
+		vga.s3.mclk.m=val & 0x7f;
+		break;
+	case 0x12:		/* Video PLL Data Low */
+		vga.s3.clk[3].n=val & 0x1f;
+		vga.s3.clk[3].r=val >> 5;
+		break;
+	case 0x13:		/* Video PLL Data High */
+		vga.s3.clk[3].m=val & 0x7f;
+		break;
+	case 0x15:
+		vga.s3.pll.cmd=val;
+		VGA_StartResize();
+		break;
+
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Write to illegal index %2X",seq(index));
 	};
@@ -97,21 +122,37 @@ void write_p3c5(Bit32u port,Bit8u val) {
 
 
 Bit8u read_p3c5(Bit32u port) {
+//	LOG_MSG("VGA:SEQ:Read from index %2X",seq(index));
+	if (seq(index)>0x8 && vga.s3.pll.lock!=0x6) return seq(index);
 	switch(seq(index)) {
-	case 0:		/* Reset */
+	case 0:			/* Reset */
 		return seq(reset);
 		break;
-	case 1:		/* Clocking Mode */
+	case 1:			/* Clocking Mode */
 		return seq(clocking_mode);
 		break;
-	case 2:		/* Map Mask */
+	case 2:			/* Map Mask */
 		return seq(map_mask);
 		break;
-	case 3:		/* Character Map Select */
+	case 3:			/* Character Map Select */
 		return seq(character_map_select);
 		break;
-	case 4:	/* Memory Mode */
+	case 4:			/* Memory Mode */
 		return seq(memory_mode);
+	/* S3 specific group */
+	case 0x08:		/* PLL Unlock */
+		return vga.s3.pll.lock;
+	case 0x10:		/* Memory PLL Data Low */
+		return vga.s3.mclk.n || (vga.s3.mclk.r << 5);
+	case 0x11:		/* Memory PLL Data High */
+		return vga.s3.mclk.m;
+	case 0x12:		/* Video PLL Data Low */
+		return vga.s3.clk[3].n || (vga.s3.clk[3].r << 5);
+	case 0x13:		/* Video Data High */
+		return vga.s3.clk[3].m;
+	case 0x15:
+		return vga.s3.pll.cmd;
+
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Read from illegal index %2X",seq(index));
 	};

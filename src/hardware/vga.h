@@ -22,38 +22,52 @@
 #include <mem.h>
 #include "dosbox.h"
 
-#undef TEXT
-#undef GRAPH
-/* conflicts with int10.h */
-enum { TEXT, GRAPH };
-enum { GFX_256C,GFX_256U,GFX_16,GFX_4,GFX_2, TEXT_16 };
+enum VGAModes {
+	M_TEXT16,
+	M_CGA2,M_CGA4,
+	M_TANDY16,
+	M_EGA2,M_EGA4,M_EGA16,
+	M_VGA,
+	M_LIN8,
+	M_ERROR,
+};
+
+#define CLK_25 25175
+#define CLK_28 28322
+
+#define MIN_VCO	180000
+#define MAX_VCO 360000
+
+#define S3_CLOCK_REF	14318	/* KHz */
+#define S3_CLOCK(_M,_N,_R)	((S3_CLOCK_REF * ((_M) + 2)) / (((_N) + 2) * (1 << (_R))))
+#define S3_MAX_CLOCK	150000	/* KHz */
+
+/* Different functions that should be handle by memory handler */
+
+#define MH_ROTATEOP		0x0001;
+#define MH_SETRESET		0x0002;
+#define MH_BITMASK		0x0004;
 
 typedef struct {
-
 	bool attrindex;
-    Bit16u cursor;
 } VGA_Internal;
 
 typedef struct {
+/* Memory handlers */
+	Bitu mh_mask;
 
 /* Video drawing */
-	Bit16u display_start;
-	Bit16u real_start;
-	bool retrace;					/* A retrace has started */
+	Bitu display_start;
+	Bitu real_start;
+	bool retrace;					/* A retrace is active */
 	Bitu scan_len;
+	Bitu cursor_start;
 
 /* Some other screen related variables */
 	Bitu line_compare;
 
-	Bitu clock;
-	bool clock_half;
-
 	bool chained;					/* Enable or Disabled Chain 4 Mode */
-	bool gfxmode;					/* Yes or No Easy no */
 	bool blinking;					/* Attribute bit 7 is blinking */
-
-	bool vga_enabled;
-	bool cga_enabled;
 
 	bool vline_double;
 	Bit8u vline_height;
@@ -64,6 +78,7 @@ typedef struct {
 	Bit8u bytes_skip;
 
 /* Specific stuff memory write/read handling */
+	PhysPt mem_base;
 	Bit8u read_mode;
 	Bit8u write_mode;
 	Bit8u read_map_select;
@@ -91,13 +106,48 @@ typedef struct {
 	bool double_width;
 	bool double_height;
 	Bitu lines;
-	Bit8u * font;
 	Bit8u font_height;
+	Bit8u font[64*1024];
+	Bitu rows,cols;
 	struct {
-		Bitu row,col,sline,eline,count;
+		Bit8u sline,eline;
+		Bit8u count,delay;
+		Bit8u enabled;
 	} cursor;
 } VGA_Draw;
 
+typedef struct {
+	Bit8u bank;
+	Bit8u reg_lock1;
+	Bit8u reg_lock2;
+	Bit8u reg_31;
+	Bit8u reg_35;
+	Bit8u reg_43;
+	Bit8u reg_58;
+	Bit8u reg_51;
+	Bit8u reg_55;
+	Bit8u ex_hor_overflow;
+	Bit8u ex_ver_overflow;
+	struct {
+		Bit8u r;
+		Bit8u n;
+		Bit8u m;
+	} clk[4],mclk;
+	struct {
+		Bit8u lock;
+		Bit8u cmd;
+	} pll;
+} VGA_S3;
+
+typedef struct {
+	Bit8u color_select;
+} VGA_CGA;
+
+typedef struct {
+	Bit8u mem_bank;
+	Bit8u disp_bank;
+	Bit8u reg_index;
+} VGA_TANDY;
 
 typedef struct {
 	Bit8u index;
@@ -109,7 +159,6 @@ typedef struct {
 	Bit8u memory_mode;
 } VGA_Seq;
 
-
 typedef struct {
 	Bit8u palette[16];
 	Bit8u mode_control;
@@ -118,8 +167,8 @@ typedef struct {
 	Bit8u color_plane_enable;
 	Bit8u color_select;
 	Bit8u index;
+	Bit8u enabled;
 } VGA_Attr;
-
 
 typedef struct {
 	Bit8u horizontal_total;
@@ -143,12 +192,13 @@ typedef struct {
 	Bit8u vertical_display_end;
 	Bit8u offset;
 	Bit8u underline_location;
-	Bit8u start_vertical_blank;
-	Bit8u end_vertical_blank;
+	Bit8u start_vertical_blanking;
+	Bit8u end_vertical_blanking;
 	Bit8u mode_control;
 	Bit8u line_compare;
 
 	Bit8u index;
+	bool read_only;
 } VGA_Crtc;
 
 typedef struct {
@@ -188,15 +238,14 @@ union VGA_Latch {
 };
 
 union VGA_Memory {
-	Bit8u linear[64*1024*4];
-	Bit8u paged[64*1024][4];
-	VGA_Latch latched[64*1024];
+	Bit8u linear[512*1024*4];
+	Bit8u paged[512*1024][4];
+	VGA_Latch latched[512*1024];
 };	
 
-
-
 typedef struct {
-	Bitu mode;								/* The mode the vga system is in */
+	VGAModes mode;								/* The mode the vga system is in */
+	Bit8u misc_output;
 	VGA_Draw draw;
 	VGA_Config config;
 	VGA_Internal internal;
@@ -207,40 +256,21 @@ typedef struct {
 	VGA_Gfx gfx;
 	VGA_Dac dac;
 	VGA_Latch latch;
+	VGA_S3 s3;
+	VGA_CGA cga;
+	VGA_TANDY tandy;
 	VGA_Memory mem;
-/* Extra buffer following main video ram with double data for overflowing of addresses */
-	Bit8u buffer[1024*1024];	/* 256 kb vid ram with 16 colors and double addresses */
 } VGA_Type;
 
-
-
-
-
 /* Functions for different resolutions */
-//void VGA_FindSize(void);
-void VGA_FindSettings(void);
+void VGA_SetMode(VGAModes mode);
+void VGA_SetupHandlers(void);
 void VGA_StartResize(void);
-
-/* The Different Drawing functions */
-void VGA_DrawTEXT(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX256U_Full(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX16_Fast(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX4_Fast(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX2_Fast(Bit8u * bitdata,Bitu next_line);
-/* The Different Memory Read/Write Handlers */
-Bit8u VGA_NormalReadHandler(Bit32u start);
-
-void VGA_GFX_256U_WriteHandler(Bit32u start,Bit8u val);
-void VGA_GFX_16_WriteHandler(Bit32u start,Bit8u val);
-void VGA_GFX_4_WriteHandler(Bit32u start,Bit8u val);
-
-Bit8u VGA_GFX_4_ReadHandler(Bit32u start);
-
-
+void VGA_SetupDrawing(void);
 
 /* Some support functions */
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
-
+void VGA_ATTR_SetPalette(Bit8u index,Bit8u val);
 
 /* The VGA Subfunction startups */
 void VGA_SetupAttr(void);
@@ -252,17 +282,15 @@ void VGA_SetupGFX(void);
 void VGA_SetupSEQ(void);
 
 /* Some Support Functions */
+void VGA_SetClock(Bitu which,Bitu target);
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 
 extern VGA_Type vga;
-extern Bit8u vga_rom_08[256 * 8];
-extern Bit8u vga_rom_14[256 * 14];
-extern Bit8u vga_rom_16[256 * 16];
 
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];
-extern Bit32u CGAWriteTable[256];
+extern Bit32u CGA_4_Table[256];
 extern Bit32u Expand16Table[4][16];
 extern Bit32u Expand16BigTable[0x10000];
 

@@ -22,14 +22,23 @@
 
 #define attr(blah) vga.attr.blah
 
+
+void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
+	vga.attr.palette[index]=val;
+	if (vga.attr.mode_control & 0x80) val=(val&0xf) | (vga.attr.color_select << 4);
+	else val|=(vga.attr.color_select & 0xc) << 4;
+	VGA_DAC_CombineColor(index,val);
+}
+
 void write_p3c0(Bit32u port,Bit8u val) {
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
+		attr(enabled)=val & 0x20;
 		/* 
-			0-4  Address of data register to write to port 3C0h or read from port 3C1h
-			If set screen output is enabled and the palette can not be modified,
-			if clear screen output is disabled and the palette can be modified.
+			0-4	Address of data register to write to port 3C0h or read from port 3C1h
+			5	If set screen output is enabled and the palette can not be modified,
+				if clear screen output is disabled and the palette can be modified.
 		*/
 		return;
 	} else {
@@ -40,20 +49,29 @@ void write_p3c0(Bit32u port,Bit8u val) {
 		case 0x04:		case 0x05:		case 0x06:		case 0x07:
 		case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
 		case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-			val&=0x3f;
-			attr(palette[attr(index)])=val;
-			VGA_DAC_CombineColor(attr(index),val);
+			if (!attr(enabled)) VGA_ATTR_SetPalette(attr(index),val);
 			/*
 				0-5	Index into the 256 color DAC table. May be modified by 3C0h index
 				10h and 14h.
 			*/
 			break;
 		case 0x10: /* Mode Control Register */
-			if (val != attr(mode_control)) {
+			if ((attr(mode_control) ^ val) & 0x80) {
 				attr(mode_control)=val;
-				vga.config.gfxmode=val&1;
-				vga.config.vga_enabled=(val & 0x40)>0;
-				VGA_FindSettings();
+				for (Bitu i=0;i<0x10;i++) {
+					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				}
+			}
+			attr(mode_control)=val;
+			/*
+				Special hacks for games programming registers themselves,
+				Doesn't work if they program EGA16 themselves, 
+				but haven't encountered that yet
+			*/
+			if (val&0x40) {
+				if (vga.mode<M_VGA) VGA_SetMode(M_VGA);
+			} else {
+				if (vga.mode==M_VGA) VGA_SetMode(M_EGA16);
 			}
 			//TODO Monochrome mode
 			//TODO 9 bit characters
@@ -75,9 +93,6 @@ void write_p3c0(Bit32u port,Bit8u val) {
 					3C0h index 14h bit 0-1, else the bits in the palette register are
 					used.
 			*/
-			if (val&128) {
-				E_Exit("VGA:Special 16 colour DAC Shift");
-			}
 			break;
 		case 0x11:	/* Overscan Color Register */
 			attr(overscan_color)=val;
@@ -98,7 +113,19 @@ void write_p3c0(Bit32u port,Bit8u val) {
 			break;
 		case 0x13:	/* Horizontal PEL Panning Register */
 			attr(horizontal_pel_panning)=val & 0xF;
-			vga.config.pel_panning=val & 0xF;
+			switch (vga.mode) {
+			case M_TEXT16:
+				if (val==0x7) vga.config.pel_panning=7;
+				if (val>0x7) vga.config.pel_panning=0;
+				else vga.config.pel_panning=val+1;
+				break;
+			case M_VGA:
+			case M_LIN8:
+				vga.config.pel_panning=(val & 0x7)/2;
+				break;
+			default:
+				vga.config.pel_panning=(val & 0x7);
+			}
 			/*
 				0-3	Indicates number of pixels to shift the display left
 					Value  9bit textmode   256color mode   Other modes
@@ -114,7 +141,12 @@ void write_p3c0(Bit32u port,Bit8u val) {
 			*/
 			break;
 		case 0x14:	/* Color Select Register */
-			attr(color_select)=val;
+			if (attr(color_select) ^ val) {
+				attr(color_select)=val;
+				for (Bitu i=0;i<0x10;i++) {
+					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+				}
+			}
 			/*
 				0-1	If 3C0h index 10h bit 7 is set these 2 bits are used as bits 4-5 of
 					the index into the DAC table.
@@ -122,7 +154,6 @@ void write_p3c0(Bit32u port,Bit8u val) {
 					except in 256 color mode.
 					Note: this register does not affect 256 color modes.
 			*/
-			if (val) LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:ATTR:DAC index set to %d",val);
 			break;
 		default:
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Write to unkown Index %2X",attr(index));
