@@ -22,8 +22,6 @@
 
 void E_Exit(char * message,...);
 
-void S_Warn(char * message,...);
-
 void MSG_Add(const char*,const char*); //add messages to the internal langaugefile
 const char* MSG_Get(char const *);         //get messages from the internal langaugafile
 
@@ -67,8 +65,6 @@ extern Bitu errorlevel;
 #ifndef __LOGGING_H_
 #include "logging.h"
 #endif // the logging system.
-
-#define LOG_MSG S_Warn
 
 #endif /* __DOSBOX_H */
 
