@@ -92,7 +92,7 @@ static Bitu DOS_21Handler(void) {
 				reg_al=c;
 				break;
 		};
-	case 0x08:		/* Direct Character Input, without echo */
+	case 0x08:		/* Direct Character Input, without echo (checks for breaks officially :)*/
 		{
 				Bit8u c;Bit16u n=1;
 				DOS_ReadFile (STDIN,&c,&n);
@@ -251,14 +251,6 @@ static Bitu DOS_21Handler(void) {
         }
 		LOG_DEBUG("DOS:29:FCB Parse Filename, result:al=%d",reg_al);
         break;
-	case 0x18:		/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x1d:		/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x1e:		/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x20:		/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x6b:		/* NULL Function */
-	case 0x61:		/* UNUSED */
-		reg_al=0;
-		break;		
 	case 0x19:		/* Get current default drive */
 		reg_al=DOS_GetDefaultDrive();
 		break;
@@ -281,7 +273,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x2a:		/* Get System Date */
 		{
-			CALLBACK_Idle();
+			CALLBACK_Idle(); /* sure ? */
 			int a = (14 - dos.date.month)/12;
 			int y = dos.date.year - a;
 			int m = dos.date.month + 12*a - 2;
@@ -309,7 +301,7 @@ static Bitu DOS_21Handler(void) {
 			reg_ch=(Bit8u)(seconds/3600);
 			reg_cl=(Bit8u)((seconds % 3600)/60);
 			reg_dh=(Bit8u)(seconds % 60);
-			reg_dl=(Bit8u)((ticks % 19)*5);
+			reg_dl=(Bit8u)((ticks % 20)*5);    /* 0-19 ->0-95 */
 		}
 		break;
 	case 0x2d:		/* Set System Time */
@@ -603,7 +595,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 //TODO Check for use of execution state AL=5
 	case 0x00:
-           reg_ax=0x4c00;        /* Terminate Program */
+           reg_ax=0x4c00;       /* Terminate Program */
 	case 0x4c:					/* EXIT Terminate with return code */
 		
         {
@@ -735,9 +727,7 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
-	case 0x5d:					/* Network Functions */
-		LOG_WARN("DOS:5D:Unhandled call %X",reg_al);
-		break;
+
 	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
 	case 0x5f:					/* And Even More Network Functions */
@@ -755,10 +745,6 @@ static Bitu DOS_21Handler(void) {
 			break;
 	case 0x62:					/* Get Current PSP Address */
 		reg_bx=dos.psp;
-		break;
-	case 0x63:					/* Weirdo double byte stuff */
-		reg_al=0xff;
-		LOG_WARN("DOS:0x63:Doubly byte characters not supported");
 		break;
 	case 0x64:					/* Set device driver lookahead flag */
 		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
@@ -822,10 +808,18 @@ static Bitu DOS_21Handler(void) {
 		LOG_WARN("DOS:Windows long file name support call %2X",reg_al);
 		break;
 	case 0xE0:
-    case 0xEF:
+	case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x1e:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x20:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x6b:		            /* NULL Function */
+	case 0x61:		            /* UNUSED */
+	case 0x63:					/* Weirdo double byte stuff (fails but say it succeeded) */
+    case 0xEF:                  /* Used in Ancient Art Of War CGA */
+	case 0x5d:					/* Network Functions */
 	default:
+        LOG_DEBUG("DOS:Unhandled call %02X al=%02X. Set al to default of 0 no carry",reg_ah,reg_al);
         reg_al=0x00; /* default value */
-		LOG_DEBUG("DOS:Unhandled call %02X. Set al to default of 0 no carry",reg_ah);
 		break;
 	};
 	return CBRET_NONE;
