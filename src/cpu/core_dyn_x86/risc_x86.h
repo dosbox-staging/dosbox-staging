@@ -498,19 +498,19 @@ static void gen_dshift_imm(bool dword,bool left,DynReg * dr1,DynReg * dr2,Bitu i
 	if (!dword) cache_addb(0x66);
 	if (left) cache_addw(0xa40f);		//SHLD IMM
 	else  cache_addw(0xac0f);			//SHRD IMM
-	cache_addb(0xc0+gr1->index+(gr2->index<<8));
+	cache_addb(0xc0+gr1->index+(gr2->index<<3));
 	cache_addb(imm);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
 static void gen_dshift_cl(bool dword,bool left,DynReg * dr1,DynReg * dr2,DynReg * drecx) {
+	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	GenReg * gr1=FindDynReg(dr1);
 	GenReg * gr2=FindDynReg(dr2);
-	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	if (!dword) cache_addb(0x66);
 	if (left) cache_addw(0xa50f);		//SHLD CL
 	else  cache_addw(0xad0f);			//SHRD CL
-	cache_addb(0xc0+gr1->index+(gr2->index<<8));
+	cache_addb(0xc0+gr1->index+(gr2->index<<3));
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
