@@ -16,6 +16,8 @@
   - joystick support fixes
   - mouse improvements
   - support for writing wavefiles
+  - added directory cache and longfilename support (longfilenames will be mangled)
+  - mouse fixes
   
   
 0.57
