@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-bool repcheck;
 restart:
 	switch(Fetchb()) {
 	case 0x00:												/* ADD Eb,Gb */
@@ -109,9 +108,12 @@ restart:
 		if ((reg_al > 0x9F) || flags.cf) {
 			reg_al+=0x60;
 			flags.cf=true;
+		} else {
+			flags.cf=false;
 		}
 		flags.sf=(reg_al>>7)>0;
 		flags.zf=(reg_al==0);
+		//TODO Maybe parity
 		flags.type=t_UNKNOWN;
 		break;
 	case 0x28:												/* SUB Eb,Gb */
@@ -545,35 +547,11 @@ restart:
 			}
 		case 0x8d:												/* LEA */
 			{
-				GetRMrw;		
-				switch (rm & 0xC7) {
-				case 0x00:*rmrw=reg_bx+reg_si;break;
-				case 0x01:*rmrw=reg_bx+reg_di;break;	
-				case 0x02:*rmrw=reg_bp+reg_si;break;
-				case 0x03:*rmrw=reg_bp+reg_di;break;
-				case 0x04:*rmrw=reg_si;break;
-				case 0x05:*rmrw=reg_di;break;
-				case 0x06:*rmrw=Fetchw();break;
-				case 0x07:*rmrw=reg_bx;break;
-				case 0x40:*rmrw=reg_bx+reg_si+Fetchbs();break;
-				case 0x41:*rmrw=reg_bx+reg_di+Fetchbs();break;
-				case 0x42:*rmrw=reg_bp+reg_si+Fetchbs();break;
-				case 0x43:*rmrw=reg_bp+reg_di+Fetchbs();break;
-				case 0x44:*rmrw=reg_si+Fetchbs();break;
-				case 0x45:*rmrw=reg_di+Fetchbs();break;
-				case 0x46:*rmrw=reg_bp+Fetchbs();break;
-				case 0x47:*rmrw=reg_bx+Fetchbs();break;
-				case 0x80:*rmrw=reg_bx+reg_si+Fetchw();break;
-				case 0x81:*rmrw=reg_bx+reg_di+Fetchw();break;
-				case 0x82:*rmrw=reg_bp+reg_si+Fetchw();break;
-				case 0x83:*rmrw=reg_bp+reg_di+Fetchw();break;
-				case 0x84:*rmrw=reg_si+Fetchw();break;
-				case 0x85:*rmrw=reg_di+Fetchw();break;
-				case 0x86:*rmrw=reg_bp+Fetchw();break;
-				case 0x87:*rmrw=reg_bx+Fetchw();break;	
-				default:
-					E_Exit("CPU:8d:Illegal LEA RM Byte");
-				}
+				prefix.segbase=0;
+				prefix.mark|=PREFIX_SEG;
+				lookupEATable=EAPrefixTable[prefix.mark];
+				GetRMrw;GetEAa;
+				*rmrw=(Bit16u)eaa;
 				break;
 			}
 		case 0x8e:												/* MOV Sw,Ew */
@@ -936,8 +914,8 @@ restart:
 			reg_al = get_CF() ? 0xFF : 0;
 			break;
 		case 0xd7:												/* XLAT */
-			if (prefixes & PREFIX_SEG) {
-				reg_al=LoadMb(segprefix_base+(Bit16u)(reg_bx+reg_al));
+			if (prefix.mark & PREFIX_SEG) {
+				reg_al=LoadMb(prefix.segbase+(Bit16u)(reg_bx+reg_al));
 				PrefixReset;
 			} else {
 				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
@@ -1042,176 +1020,15 @@ restart:
 			LOG_ERROR("CPU:LOCK");
 			break;
 		case 0xf1:												/* Weird call undocumented */
+//			INTERRUPT(1);
 			E_Exit("CPU:F1:Not Handled");
 			break;
 		case 0xf2:												/* REPNZ */
-			repcheck=false;
-			goto repstart;
+			count-=Repeat_Normal(false,false,count);
+			break;
 		case 0xf3:												/* REPZ */
-			repcheck=true;
-			repstart:
-			{	
-				EAPoint to=SegBase(es);
-				EAPoint from;
-				if (prefixes & PREFIX_SEG) {
-					from=(segprefix_base);
-					PrefixReset;
-				} else {
-					from=SegBase(ds);
-				}
-				Bit16s direct;
-				if (flags.df) direct=-1;
-				else direct=1;
-				reploop:
-				Bit8u repcode=Fetchb();
-				switch (repcode)	{
-				case 0x26:			/* ES Prefix */
-					from=SegBase(es);
-					goto reploop;
-				case 0x2e:			/* CS Prefix */
-					from=SegBase(cs);
-					goto reploop;
-				case 0x36:			/* SS Prefix */
-					from=SegBase(ss);
-					goto reploop;
-				case 0x3e:			/* DS Prefix */
-					from=SegBase(ds);
-					goto reploop;
-#ifdef CPU_386
-				case 0x66:
-					Rep_66(direct,from,to);
-					break;
-#endif												
-					
-				case 0x6c:			/* REP INSB */
-					{
-						for (Bit32u temp=reg_cx;temp>0;temp--) {
-								SaveMb(to,IO_Read(reg_dx));
-								to+=direct;
-						};
-						reg_di+=Bit16s(reg_cx*direct);reg_cx=0;
-						break;
-					}
-				case 0x6d:			/* REP INSW */
-					{	
-						for (Bit32u temp=reg_cx;temp>0;temp--) {
-							SaveMb(to,IO_Read(reg_dx));
-							SaveMb((to+1),IO_Read(reg_dx+1));
-							to+=direct*2;
-						}	
-						reg_di+=Bit16s(reg_cx*direct*2);reg_cx=0;
-						break;
-					}
-				case 0x6e:			/* REP OUTSB */
-					for (;reg_cx>0;reg_cx--) {
-						IO_Write(reg_dx,LoadMb(from+reg_si));
-						reg_si+=direct;
-					}	
-					break;
-				case 0x6f:			/* REP OUTSW */
-					for (;reg_cx>0;reg_cx--) {
-						IO_Write(reg_dx,LoadMb(from+reg_si));
-						IO_Write(reg_dx+1,LoadMb(from+reg_si+1));
-						reg_si+=direct*2;
-					}	
-					break;
-				case 0xa4:			/* REP MOVSB */
-					for (;reg_cx>0;reg_cx--) {
-						SaveMb(to+reg_di,LoadMb(from+reg_si));
-						reg_di+=direct;
-						reg_si+=direct;
-					}	
-					break;
-				case 0xa5:			/* REP MOVSW */
-					for (;reg_cx>0;reg_cx--) {
-						SaveMw(to+reg_di,LoadMw(from+reg_si));
-						reg_di+=direct*2;
-						reg_si+=direct*2;
-					}	
-					break;
-				case 0xa6:			/* REP CMPSB */
-					if (!reg_cx) break;
-					for (;reg_cx>0;) {
-						reg_cx--;
-						if ((LoadMb(from+reg_si)==LoadMb(to+reg_di))!=repcheck) {
-							reg_di+=direct;
-							reg_si+=direct;
-							break;
-						}
-						reg_di+=direct;
-						reg_si+=direct;
-					}	
-					CMPB(from+(reg_si-direct),LoadMb(to+(reg_di-direct)),LoadMb,0);
-					break;
-				case 0xa7:			/* REP CMPSW */
-					if (!reg_cx) break;
-					for (;reg_cx>0;) {
-						reg_cx--;
-						if ((LoadMw(from+reg_si)==LoadMw(to+reg_di))!=repcheck) {
-							reg_di+=direct*2;
-							reg_si+=direct*2;
-							break;
-						}
-						reg_di+=direct*2;
-						reg_si+=direct*2;
-					}	
-					CMPW(from+(reg_si-direct*2),LoadMw(to+(reg_di-direct*2)),LoadMw,0);
-					break;
-				case 0xaa:			/* REP STOSB */
-					for (;reg_cx>0;reg_cx--) {
-						SaveMb(to+reg_di,reg_al);
-						reg_di+=direct;
-					}	
-					break;
-				case 0xab:			/* REP STOSW */
-					for (;reg_cx>0;reg_cx--) {
-						SaveMw(to+reg_di,reg_ax);
-						reg_di+=direct*2;
-					}	
-					break;
-				case 0xac:			/* REP LODSB */
-					for (;reg_cx>0;reg_cx--) {
-						reg_al=LoadMb(from+reg_si);
-						reg_si+=direct;
-					}
-					break;
-				case 0xad:			/* REP LODSW */
-					for (;reg_cx>0;reg_cx--) {
-						reg_ax=LoadMw(from+reg_si);
-						reg_si+=direct*2;
-					}
-					break;
-				case 0xae:			/* REP SCASB */
-					if (!reg_cx) break;
-					for (;reg_cx>0;) {
-						reg_cx--;
-						if ((reg_al==LoadMb(to+reg_di))!=repcheck) {
-							reg_di+=direct;
-							break;
-						}
-						reg_di+=direct;
-					}	
-					CMPB(reg_al,LoadMb(to+(reg_di-direct)),LoadRb,0);
-					break;
-				case 0xaf:			/* REP SCASW */
-					if (!reg_cx) break;
-					for (;reg_cx>0;) {
-						reg_cx--;
-						if ((reg_ax==LoadMw(to+reg_di))!=repcheck) {
-							reg_di+=direct*2;
-								break;
-						}
-						reg_di+=direct*2;
-					}	
-					CMPW(reg_ax,LoadMw(to+(reg_di-direct*2)),LoadRw,0);
-					break;
-				case 0x90: /* NOP - yes it is really used this way... eternam */ 
-					break; 
-				default:
-					E_Exit("Illegal REP prefix %2X",repcode);
-				}
-				break;
-			}	
+			count-=Repeat_Normal(true,false,count);
+			break;
 		case 0xf4:												/* HLT */
 			break;
 		case 0xf5:												/* CMC */
@@ -1498,5 +1315,9 @@ restart:
 				}
 				break;
 		}
+		default:	
+			NOTDONE;
+			break;
+
 	}
 
