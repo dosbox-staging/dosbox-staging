@@ -293,7 +293,7 @@ static Bitu INT16_Handler(void) {
 //TODO find a more elegant way to do this
 			do {
 				temp=get_key();
-				if (temp==0) { flags.intf=true;CALLBACK_Idle();};
+				if (temp==0) { CALLBACK_Idle();};
 			} while (temp==0);
 			reg_ax=temp;
 			break;
@@ -302,7 +302,6 @@ static Bitu INT16_Handler(void) {
 	case 0x11:
 		temp=check_key();
 		if (temp==0) {
-			flags.intf=true;CALLBACK_Idle();
 			CALLBACK_SZF(true);
 		} else {
 			CALLBACK_SZF(false);
@@ -355,7 +354,7 @@ void BIOS_SetupKeyboard(void) {
 	/* Allocate a callback for int 0x16 and for standard IRQ 1 handler */
 	call_int16=CALLBACK_Allocate();	
 	call_irq1=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int16,&INT16_Handler,CB_IRET);
+	CALLBACK_Setup(call_int16,&INT16_Handler,CB_IRET_STI);
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
 	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRET);
 	RealSetVec(0x9,CALLBACK_RealPointer(call_irq1));
