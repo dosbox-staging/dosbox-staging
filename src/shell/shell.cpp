@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.44 2004-08-04 13:15:56 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.45 2004-08-26 19:49:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -286,7 +286,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [31mmount[0m it first. Type [33mintro[0m for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [31mmount[0m it first. Type [1;33mintro[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
@@ -297,26 +297,26 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "This version runs some protected mode games!\n"
-	   "For supported shell commands type: [33mHELP[0m\n"
-	   "For a short introduction type: [33mINTRO[0m\n\n"
+	   "For supported shell commands type: [1;33mHELP[0m\n"
+	   "For a short introduction type: [1;33mINTRO[0m\n\n"
 	   "If you want more speed, try [31mctrl-F8[0m and [31mctrl-F12[0m.\n"	
 	   "For more information read the [31mREADME[0m file in DOSBox directory.\n"
 	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
 	);
 
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
-    MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
-    MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
-    MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
-    MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
-    MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
-    MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
-    MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
-    MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
-    MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
-    MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
-    MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
-    MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
+	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
+	MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
+	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
+	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
+	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
+	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
+	MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
+	MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
+	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
+	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
+	MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
+	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
@@ -325,7 +325,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Run a program. For batch file compatibility only.\n");
    
-   /* Regular startup */
+	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
 	RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
