@@ -344,6 +344,9 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 	return 0;
 };
 
+// Return size of xms mem in mb
+static Bitu xms_size = 0;
+Bitu XMS_GetSize(void) { return xms_size; };
 
 static bool multiplex_xms(void) {
 	switch (reg_ax) {
@@ -449,10 +452,11 @@ void XMS_Init(Section* sec) {
 	Bitu size=section->Get_int("xmssize");
 	if (!size) return;
 	if (size>C_MEM_MAX_SIZE-1) size=C_MEM_MAX_SIZE-1;
-	DOS_AddMultiplexHandler(multiplex_xms);
+	xms_size = size;
+/*	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);
-	xms_callback=CALLBACK_RealPointer(call_xms);
+	xms_callback=CALLBACK_RealPointer(call_xms);*/
 	/* Setup the handler table */
 	Bitu i;
 	for (i=0;i<XMS_HANDLES;i++) {
