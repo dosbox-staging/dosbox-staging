@@ -275,6 +275,33 @@ A: This is possible! Just create a config file: config -writeconf dosbox.conf .
    Startup your favourite editor and look at all the settings present. To
    start DOSBox with your new settings: dosbox -conf dosbox.conf
 
+Q: What sound hardware does DosBox presently emulate?
+A: DosBox emulates several legacy sound devices:
+   - Internal PC speaker
+     This emulation includes both the tone generator and several forms of digital
+     sound output through the internal speaker.
+   - Creative CMS/Gameblaster
+     The is the first card released by Creative Labs(R).  The default configuration places
+     it on port 0x220.  It should be noted that enabling this with the Adlib emulation may
+     result in conflicts.
+   - Tandy 3 voice
+     The emulation of this sound hardware is complete with the exception of the noise channel,
+     which is not very well documented and as such is only a best guess as to the sound's accuracy.
+   - Adlib
+     Borrowed from MAME, this emulation is almost perfect and includes the Adlib's ability to almost
+     play digitized sound.
+   - SoundBlaster Pro
+     Coupled with the Adlib, DosBox provides Soundblaster Pro level 8-bit stereo sound.
+   - Disney Soundsource
+     Using the printer port, this sound device outputs digital sound only.
+   - Gravis Ultrasound
+     The emulation of this hardware is nearly complete, though the MIDI capabilities have been left
+     out since an MPU-401 has been emulated in other code.
+   - MPU-401
+     A MIDI passthrough interface is also emulated.  This method of sound output will only work when
+     used with a General Midi or MT-32 device.
+
+
 Q: Great README, but I still don't get it.
 A: While unlikely this seems to happen. Maybe a look at "The Newbie's 
    pictorial guide to dosbox" located at 
