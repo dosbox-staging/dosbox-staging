@@ -93,6 +93,7 @@ INLINE void CPU_SW_Interrupt(Bitu num,Bitu oldeip) {
 	CPU_Interrupt(num,CPU_INT_SOFTWARE,oldeip);
 }
 
+bool CPU_PrepareException(Bitu which,Bitu error);
 void CPU_Exception(Bitu which,Bitu error=0);
 
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.56 2004-04-22 22:40:45 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.57 2004-04-24 09:16:42 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -87,7 +87,7 @@ void CPU_SetFlags(Bitu word,Bitu mask) {
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
 
-static bool CPU_PrepareException(Bitu which,Bitu error) {
+bool CPU_PrepareException(Bitu which,Bitu error) {
 	cpu.exception.which=which;
 	cpu.exception.error=error;
 	return true;
