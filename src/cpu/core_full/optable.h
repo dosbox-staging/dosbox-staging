@@ -295,12 +295,12 @@ static OpCode OpCodeTable[1024]={
 /* 0x1a0 - 0x1a7 */
 {L_SEG		,0		,S_PUSHw	,fs		},{L_POPw	,0			,S_SEGI	,fs		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_DSHLw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHLw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1a8 - 0x1af */
 {L_SEG		,0		,S_PUSHw	,gs		},{L_POPw	,0			,S_SEGI	,gs		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_DSHRw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHRw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRw	,S_Gw	,M_EwxGwx	},
 
 /* 0x1b0 - 0x1b7 */
@@ -312,7 +312,7 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,0			,S_Gw	,M_Ebx	},{L_MODRM	,0			,S_Gw	,M_Ewx	},
 
 /* 0x1c0 - 0x1cc */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
@@ -363,23 +363,23 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,t_ADDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADDd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ADDb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADDd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_ADDb	,S_REGb	,REGI_AL	},{L_REGdId	,t_ADDd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,es			},{L_POPw	,0		,S_SEGI	,es			},
+{L_SEG		,0		,S_PUSHd,es			},{L_POPd	,0		,S_SEGI	,es			},
 /* 0x208 - 0x20f */
 {L_MODRM	,t_ORb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ORd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ORb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ORd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_ORb	,S_REGb	,REGI_AL	},{L_REGdId	,t_ORd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,cs			},{L_DOUBLE	,0		,0		,0			},
+{L_SEG		,0		,S_PUSHd,cs			},{L_DOUBLE	,0		,0		,0			},
 
 /* 0x210 - 0x217 */
 {L_MODRM	,t_ADCb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADCd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ADCb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADCd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_ADCb	,S_REGb	,REGI_AL	},{L_REGdId	,t_ADCd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,ss			},{L_POPw	,0		,S_SEGI	,ss			},
+{L_SEG		,0		,S_PUSHd,ss			},{L_POPd	,0		,S_SEGI	,ss			},
 /* 0x218 - 0x21f */
 {L_MODRM	,t_SBBb	,S_Eb	,M_EbGb		},{L_MODRM	,t_SBBd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_SBBb	,S_Gb	,M_GbEb		},{L_MODRM	,t_SBBd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_SBBb	,S_REGb	,REGI_AL	},{L_REGdId	,t_SBBd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,ds			},{L_POPw	,0		,S_SEGI	,ds			},
+{L_SEG		,0		,S_PUSHd,ds			},{L_POPd	,0		,S_SEGI	,ds			},
 
 /* 0x220 - 0x227 */
 {L_MODRM	,t_ANDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ANDd	,S_Ed	,M_EdGd		},
@@ -461,7 +461,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM		,0		,S_SEGm	,M_Ew	},{L_MODRM	,0			,S_Ed	,M_POPd	},
 
 /* 0x290 - 0x297 */
-{D_NOP		,0			,0		,0		},{L_REGw	,O_XCHG_EAX	,S_REGw	,REGI_CX},
+{D_NOP		,0			,0		,0		},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_CX},
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_DX},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_BX},
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SP},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_BP},
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SI},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_DI},
@@ -538,14 +538,183 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0xb		,0		,M_GRP	},{L_MODRM	,0xd		,0		,M_GRP	},
 
 
-
+/* 0x200 - 0x207 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x208 - 0x20f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x100 - 0x107 */
+/* 0x210 - 0x217 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x218 - 0x21f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x220 - 0x227 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x228 - 0x22f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x230 - 0x237 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x238 - 0x23f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x240 - 0x247 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x248 - 0x24f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x250 - 0x257 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x258 - 0x25f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x260 - 0x267 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x268 - 0x26f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
 
 
-/* 0x108 - 0x10f */
+/* 0x270 - 0x277 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x278 - 0x27f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x280 - 0x287 */
+{L_Idx		,O_C_O		,S_C_ADDIP,0	},{L_Idx	,O_C_NO		,S_C_ADDIP,0	},
+{L_Idx		,O_C_B		,S_C_ADDIP,0	},{L_Idx	,O_C_NB		,S_C_ADDIP,0	},
+{L_Idx		,O_C_Z		,S_C_ADDIP,0	},{L_Idx	,O_C_NZ		,S_C_ADDIP,0	},
+{L_Idx		,O_C_BE		,S_C_ADDIP,0	},{L_Idx	,O_C_NBE	,S_C_ADDIP,0	},
+/* 0x288 - 0x28f */
+{L_Idx		,O_C_S		,S_C_ADDIP,0	},{L_Idx	,O_C_NS		,S_C_ADDIP,0	},
+{L_Idx		,O_C_P		,S_C_ADDIP,0	},{L_Idx	,O_C_NP		,S_C_ADDIP,0	},
+{L_Idx		,O_C_L		,S_C_ADDIP,0	},{L_Idx	,O_C_NL		,S_C_ADDIP,0	},
+{L_Idx		,O_C_LE		,S_C_ADDIP,0	},{L_Idx	,O_C_NLE	,S_C_ADDIP,0	},
+
+/* 0x290 - 0x297 */
+{L_MODRM	,O_C_O		,S_C_Eb,0		},{L_MODRM	,O_C_NO		,S_C_Eb,0		},
+{L_MODRM	,O_C_B		,S_C_Eb,0		},{L_MODRM	,O_C_NB		,S_C_Eb,0		},
+{L_MODRM	,O_C_Z		,S_C_Eb,0		},{L_MODRM	,O_C_NZ		,S_C_Eb,0		},
+{L_MODRM	,O_C_BE		,S_C_Eb,0		},{L_MODRM	,O_C_NBE	,S_C_Eb,0		},
+/* 0x298 - 0x29f */
+{L_MODRM	,O_C_S		,S_C_Eb,0		},{L_MODRM	,O_C_NS		,S_C_Eb,0		},
+{L_MODRM	,O_C_P		,S_C_Eb,0		},{L_MODRM	,O_C_NP		,S_C_Eb,0		},
+{L_MODRM	,O_C_L		,S_C_Eb,0		},{L_MODRM	,O_C_NL		,S_C_Eb,0		},
+{L_MODRM	,O_C_LE		,S_C_Eb,0		},{L_MODRM	,O_C_NLE	,S_C_Eb,0		},
+
+/* 0x2a0 - 0x2a7 */
+{L_SEG		,0		,S_PUSHd	,fs		},{L_POPd	,0			,S_SEGI	,fs		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_DSHLd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHLd	,S_Ed	,M_EdGdCL	},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x2a8 - 0x2af */
+{L_SEG		,0		,S_PUSHd	,gs		},{L_POPd	,0			,S_SEGI	,gs		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_DSHRd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHRd	,S_Ed	,M_EdGdCL	},
+{0			,0			,0		,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdxGdx	},
+
+/* 0x2b0 - 0x2b7 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_SEGFS	,S_SEGGd,M_Efd	},{L_MODRM	,O_SEGGS	,S_SEGGd,M_Efd	},
+{L_MODRM	,0			,S_Gd	,M_Eb	},{L_MODRM	,0			,S_Gd	,M_Ew	},
+/* 0x2b8 - 0x2bf */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,0			,S_Gd	,M_Ebx	},{L_MODRM	,0			,S_Gd	,M_Ewx	},
+
+/* 0x2c0 - 0x2cc */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x2c8 - 0x2cf */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x2d0 - 0x2d7 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x2d8 - 0x2df */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x2e0 - 0x2ee */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x2e8 - 0x2ef */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x2f0 - 0x2fc */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x2f8 - 0x2ff */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
 
 };
 

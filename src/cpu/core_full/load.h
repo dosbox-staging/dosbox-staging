@@ -8,6 +8,10 @@ l_MODRMswitch:
 		case M_Ib:
 			inst.op1.d=Fetchb();
 			break;
+		case M_Ebx:
+			if (inst.rm<0xc0) inst.op1.ds=(Bit8s)LoadMb(inst.rm_eaa);
+			else inst.op1.ds=(Bit8s)reg_8(inst.rm_eai);
+			break;
 		case M_EbIb:
 			inst.op2.d=Fetchb();
 		case M_Eb:
@@ -38,6 +42,7 @@ l_MODRMswitch:
 		case M_EwxIwx:
 			inst.op2.ds=Fetchws();
 l_M_Ewx:		
+		case M_Ewx:
 			if (inst.rm<0xc0) inst.op1.ds=(Bit16s)LoadMw(inst.rm_eaa);
 			else inst.op1.ds=(Bit16s)reg_16(inst.rm_eai);
 			break;
@@ -46,10 +51,16 @@ l_M_Ewx:
 			goto l_M_Ew;			
 		case M_EwIw:
 			inst.op2.d=Fetchw();
-			goto l_M_Ew;			
+			goto l_M_Ew;
+		case M_EwGwCL:
+			inst.imm.d=reg_cl;
+			goto l_M_EwGw;
+		case M_EwGwIb:
+			inst.imm.d=Fetchb();
+l_M_EwGw:			
 		case M_EwGw:
 			inst.op2.d=reg_16(inst.rm_index);
-l_M_Ew:		
+l_M_Ew:
 		case M_Ew:
 			if (inst.rm<0xc0) inst.op1.d=LoadMw(inst.rm_eaa);
 			else inst.op1.d=reg_16(inst.rm_eai);
@@ -64,15 +75,27 @@ l_M_Ew:
 		case M_Id:
 			inst.op1.d=Fetchd();
 			break;
+		case M_EdxGdx:
+			inst.op2.ds=(Bit32s)reg_32(inst.rm_index);
+		case M_Edx:
+			if (inst.rm<0xc0) inst.op1.d=(Bit32s)LoadMd(inst.rm_eaa);
+			else inst.op1.d=(Bit32s)reg_32(inst.rm_eai);
+			break;
 		case M_EdIbx:
 			inst.op2.ds=Fetchbs();
 			goto l_M_Ed;
 		case M_EdId:
 			inst.op2.d=Fetchd();
 			goto l_M_Ed;			
+		case M_EdGdCL:
+			inst.imm.d=reg_cl;
+			goto l_M_EdGd;
+		case M_EdGdIb:
+			inst.imm.d=Fetchb();
+l_M_EdGd:
 		case M_EdGd:
 			inst.op2.d=reg_32(inst.rm_index);
-l_M_Ed:		
+l_M_Ed:
 		case M_Ed:
 			if (inst.rm<0xc0) inst.op1.d=LoadMd(inst.rm_eaa);
 			else inst.op1.d=reg_32(inst.rm_eai);

@@ -65,6 +65,9 @@ enum {
 	O_IDIVb,O_IDIVw,O_IDIVd,
 	O_CBACK,
 
+
+	O_DSHLw,O_DSHLd,
+	O_DSHRw,O_DSHRd,
 	O_C_O	,O_C_NO	,O_C_B	,O_C_NB	,O_C_Z	,O_C_NZ	,O_C_BE	,O_C_NBE,
 	O_C_S	,O_C_NS	,O_C_P	,O_C_NP	,O_C_L	,O_C_NL	,O_C_LE	,O_C_NLE,
 };
@@ -104,12 +107,13 @@ enum {
 
 enum {
 	M_None=0,
-	M_Eb,M_Gb,M_EbGb,M_GbEb,
-	M_Ew,M_Gw,M_EwGw,M_GwEw,M_EwxGwx,
-	M_Ed,M_Gd,M_EdGd,M_GdEd,
+	M_Ebx,M_Eb,M_Gb,M_EbGb,M_GbEb,
+	M_Ewx,M_Ew,M_Gw,M_EwGw,M_GwEw,M_EwxGwx,
+	M_Edx,M_Ed,M_Gd,M_EdGd,M_GdEd,M_EdxGdx,
+	
 	M_EbIb,
-	M_EwIw,M_EwIbx,M_EwxIbx,M_EwxIwx,
-	M_EdId,M_EdIbx,
+	M_EwIw,M_EwIbx,M_EwxIbx,M_EwxIwx,M_EwGwIb,M_EwGwCL,
+	M_EdId,M_EdIbx,M_EdGdIb,M_EdGdCL,
 	
 	M_Efw,M_Efd,
 	
@@ -141,7 +145,7 @@ static struct {
 		Bit8u b;Bit8s bs;
 		Bit16u w;Bit16s ws;
 		Bit32u d;Bit32s ds;
-	} op1,op2;
+	} op1,op2,imm;
 	Bitu new_flags;
 	struct {
 		EAPoint base;

@@ -127,6 +127,27 @@ switch (inst.code.op) {
 		SARD(inst.op1.d,inst.op2.b,LoadD,SaveD);
 		break;
 
+	case O_DSHLw:
+		{
+			DSHLW(inst.op1.w,inst.op2.w,inst.imm.b,,LoadD,SaveD);
+			break;
+		}
+	case O_DSHRw:
+		{
+			DSHRW(inst.op1.w,inst.op2.w,inst.imm.b,,LoadD,SaveD);
+			break;
+		}
+	case O_DSHLd:
+		{
+			DSHLD(inst.op1.d,inst.op2.d,inst.imm.b,,LoadD,SaveD);
+			break;
+		}
+	case O_DSHRd:
+		{
+			DSHRD(inst.op1.d,inst.op2.d,inst.imm.b,,LoadD,SaveD);
+			break;
+		}
+
 	case t_NEGb:
 		flags.var1.b=inst.op1.b;
 		inst.op1.b=flags.result.b=0-inst.op1.b;
@@ -157,6 +178,18 @@ switch (inst.code.op) {
 			flags.cf=true;flags.of=true;
 		}
 		break;
+	case O_IMULRd:
+		{
+			Bit64s res=(Bit64s)inst.op1.ds*(Bit64s)inst.op2.ds;		
+			inst.op1.ds=(Bit32s)res;
+			flags.type=t_MUL;
+			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {
+				flags.cf=false;flags.of=false;
+			} else {
+				flags.cf=true;flags.of=true;
+			}
+			break;
+		}
 	case O_MULb:
 		flags.type=t_MUL;
 		reg_ax=reg_al*inst.op1.b;
@@ -227,6 +260,16 @@ switch (inst.code.op) {
 			if (quo!=reg_ax) { inst.op1.b=0;goto doint;}
 			goto nextopcode;
 		}
+	case O_DIVd:
+		{
+			if (!inst.op1.d) goto doint;
+			Bit64u val=(((Bit64u)reg_edx)<<32)|reg_eax;
+			Bit64u quo=val/inst.op1.d;
+			reg_edx=(Bit32u)(val % inst.op1.d);
+			reg_eax=(Bit32u)quo;
+			if (quo!=reg_eax) { inst.op1.b=0;goto doint;}
+			goto nextopcode;
+		}
 	case O_IDIVb:
 		{
 			if (!inst.op1.b) goto doint;
@@ -243,6 +286,16 @@ switch (inst.code.op) {
 			reg_dx=(Bit16u)(val % inst.op1.ws);
 			reg_ax=(Bit16s)quo;
 			if (quo!=(Bit16s)reg_ax) { inst.op1.b=0;goto doint;}
+			goto nextopcode;
+		}			
+	case O_IDIVd:
+		{
+			if (!inst.op1.d) goto doint;
+			Bit64s val=(((Bit64u)reg_edx)<<32)|reg_eax;
+			Bit64s quo=val/inst.op1.ds;
+			reg_edx=(Bit32s)(val % inst.op1.ds);
+			reg_eax=(Bit32s)(quo);
+			if (quo!=(Bit32s)reg_eax) { inst.op1.b=0;goto doint;}
 			goto nextopcode;
 		}			
 	case O_AAM:
