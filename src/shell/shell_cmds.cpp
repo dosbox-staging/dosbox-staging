@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.42 2004-05-11 18:59:32 harekiet Exp $ */
+/* $Id: shell_cmds.cpp,v 1.43 2004-05-20 13:17:27 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -59,7 +59,7 @@ static SHELL_Cmd cmd_list[]={
 void DOS_Shell::DoCommand(char * line) {
 /* First split the line into command and arguments */
 	line=trim(line);
-	char cmd[255];
+	char cmd[CMD_MAXLINE];
 	char * cmd_write=cmd;
 	while (*line) {
 		if (*line==32) break;
@@ -406,7 +406,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		}
 	};
 
-	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+	bool ret=DOS_FindFirst(source,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.29 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.30 2004-05-20 13:17:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +42,7 @@ static void outs(char * str) {
 }
 
 void DOS_Shell::InputCommand(char * line) {
-	Bitu size=CMD_MAXLINE-1;
+	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
 	Bit8u c;Bit16u n=1;
 	Bitu str_len=0;Bitu str_index=0;
 	Bit16u len;
@@ -52,7 +52,7 @@ void DOS_Shell::InputCommand(char * line) {
 	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
 
 	while (size) {
-        dos.echo=false;
+		dos.echo=false;
 		DOS_ReadFile(input_handle,&c,&n);
 		if (!n) {
 			size=0;			//Kill the while loop
@@ -74,7 +74,7 @@ void DOS_Shell::InputCommand(char * line) {
 							DOS_WriteFile(STDOUT,&c,&n);
 						}
 						str_len = str_index = it_history->length();
-						size = CMD_MAXLINE - str_index - 1;
+						size = CMD_MAXLINE - str_index - 2;
 					}
 					break;
 
@@ -101,7 +101,7 @@ void DOS_Shell::InputCommand(char * line) {
 					strcpy(line, it_history->c_str());
 					len = it_history->length();
 					str_len = str_index = len;
-					size = CMD_MAXLINE - str_index - 1;
+					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
 					it_history ++;
 
@@ -125,7 +125,7 @@ void DOS_Shell::InputCommand(char * line) {
 					strcpy(line, it_history->c_str());
 					len = it_history->length();
 					str_len = str_index = len;
-					size = CMD_MAXLINE - str_index - 1;
+					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
 					it_history ++;
 
@@ -140,6 +140,7 @@ void DOS_Shell::InputCommand(char * line) {
 			if (str_index) {
 				outc(8);
 				Bit32u str_remain=str_len - str_index;
+				size++;
 				if (str_remain) {
 					memmove(&line[str_index-1],&line[str_index],str_remain);
 					line[--str_len]=0;
@@ -228,7 +229,7 @@ void DOS_Shell::InputCommand(char * line) {
 					strcpy(&line[completion_index], it_completion->c_str());
 					len = it_completion->length();
 					str_len = str_index = completion_index + len;
-					size = CMD_MAXLINE - str_index - 1;
+					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
 				}
 			}
@@ -247,9 +248,12 @@ void DOS_Shell::InputCommand(char * line) {
 			if (l_completion.size()) l_completion.clear();
 			line[str_index]=c;
 			str_index ++;
-			if (str_index > str_len) line[str_index] = '\0';
-			str_len++;//This should depend on insert being active
-			size--;
+			if (str_index > str_len){ 
+				line[str_index] = '\0';
+				str_len++;//This should depend on insert being active
+				size--;
+			}
+		   
 			DOS_WriteFile(STDOUT,&c,&n);
 			break;
 		}
@@ -265,7 +269,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 void DOS_Shell::Execute(char * name,char * args) {
 	char * fullname;
-	char line[255];
+	char line[CMD_MAXLINE];
 	if(strlen(args)!= 0){
 		if(*args != ' '){ //put a space in front
 			line[0]=' ';line[1]=0;
@@ -409,11 +413,14 @@ void DOS_Shell::Execute(char * name,char * args) {
 static char * bat_ext=".BAT";
 static char * com_ext=".COM";
 static char * exe_ext=".EXE";
-static char which_ret[DOS_PATHLENGTH];
+static char which_ret[DOS_PATHLENGTH+4];
 
 char * DOS_Shell::Which(char * name) {
+	if(strlen(name) >= DOS_PATHLENGTH) return 0;
+
 	/* Parse through the Path to find the correct entry */
 	/* Check if name is already ok but just misses an extension */
+
 	if (DOS_FileExists(name)) return name;
 	/* try to find .com .exe .bat */
 	strcpy(which_ret,name);
@@ -453,6 +460,9 @@ char * DOS_Shell::Which(char * name) {
 		if(Bitu len=strlen(path)){
 			if(path[strlen(path)-1]!='\\')	strcat(path,"\\");
 			strcat(path,name);
+			//If name too long =>next
+			if(strlen(path) >= DOS_PATHLENGTH) continue;
+
 			strcpy(which_ret,path);
 			if (DOS_FileExists(which_ret)) return which_ret;
 			strcpy(which_ret,path);

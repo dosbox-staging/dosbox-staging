@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.41 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.42 2004-05-20 13:17:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -108,7 +108,6 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 }	
 
 void DOS_Shell::ParseLine(char * line) {
-
 	/* Check for a leading @ */
  	if (line[0]=='@') line[0]=' ';
 	line=trim(line);
@@ -138,7 +137,6 @@ void DOS_Shell::ParseLine(char * line) {
 		free(out);
 	}
 #endif
-
 	DoCommand(line);
 	
 }
@@ -167,7 +165,6 @@ void DOS_Shell::RunInternal(void)
 void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE];
 	std::string line;
-
 	if (cmd->FindStringRemain("/C",line)) {
 		strcpy(input_line,line.c_str());
 		DOS_Shell temp;
@@ -188,7 +185,7 @@ void DOS_Shell::Run(void) {
 			if(bf->ReadLine(input_line)) {
 				if (echo) {
 					if (input_line[0]!='@') {
-                        ShowPrompt();
+						ShowPrompt();
 						WriteOut(input_line);
 						WriteOut("\n");
 					};
