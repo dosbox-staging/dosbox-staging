@@ -38,8 +38,11 @@
 
 #ifdef WIN32
 void WIN32_Console();
+#else
+#include <termios.h>
+#include <unistd.h>
+static struct termios consolesettings;
 #endif
-
 // Forwards
 static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
@@ -855,6 +858,7 @@ Bit32u DEBUG_CheckKeys(void) {
 				case 0x0A:	codeViewData.inputMode = FALSE;
 							ParseCommand(codeViewData.inputStr);
 							break;
+				case 0x107:     //backspace (linux)
 				case 0x08:	// delete
 							if (strlen(codeViewData.inputStr)>0) codeViewData.inputStr[strlen(codeViewData.inputStr)-1] = 0;
 							break;
@@ -1126,9 +1130,10 @@ void DEBUG_SetupConsole(void)
 {
 	#ifdef WIN32
 	WIN32_Console();
-    #else
-    printf("\e[8;50;80t"); //resize terminal
-    fflush(NULL);
+	#else
+	tcgetattr(0,&consolesettings);
+	printf("\e[8;50;80t"); //resize terminal
+	fflush(NULL);
 	#endif	
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;
@@ -1141,6 +1146,9 @@ void DEBUG_SetupConsole(void)
 static void DEBUG_ShutDown(Section * sec) 
 {
 	CBreakpoint::DeleteAll();
+	#ifndef WIN32        
+	tcsetattr(0, TCSANOW,&consolesettings);
+	#endif
 };
 
 void DEBUG_Init(Section* sec) {

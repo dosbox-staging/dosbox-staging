@@ -118,14 +118,15 @@ static void MakePairs(void) {
 void DBGUI_StartUp(void) {
 	/* Start the main window */
 	dbg.win_main=initscr();
-    cbreak();       /* take input chars one at a time, no wait for \n */
-    noecho();       /* don't echo input */
+	cbreak();       /* take input chars one at a time, no wait for \n */
+	noecho();       /* don't echo input */
 	nodelay(dbg.win_main,true);
 	keypad(dbg.win_main,true);
-    #ifndef WIN32
-    resizeterm(50,80);
-    touchwin(dbg.win_main);
-    #endif
+	#ifndef WIN32
+	resizeterm(50,80);
+	touchwin(dbg.win_main);
+	#endif
+	start_color();
 	cycle_count=0;
 	MakePairs();
 	MakeSubWindows();
