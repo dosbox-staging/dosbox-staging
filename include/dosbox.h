@@ -19,7 +19,6 @@
 #if !defined __DOSBOX_H
 #define __DOSBOX_H
 
-
 void E_Exit(char * message,...);
 
 void MSG_Add(const char*,const char*); //add messages to the internal langaugefile
@@ -59,6 +58,16 @@ void DOSBOX_Init(void);
 
 class Config;
 extern Config * control;
+
+enum MachineType {
+	MCH_HERC,
+	MCH_CGA,
+	MCH_TANDY,
+	MCH_VGA,
+	MCH_AUTO
+};
+
+extern MachineType machine;
 
 #ifndef __LOGGING_H_
 #include "logging.h"
