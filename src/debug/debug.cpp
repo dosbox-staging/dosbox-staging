@@ -533,6 +533,7 @@ bool DEBUG_IntBreakpoint(Bit8u intNum)
 
 static bool StepOver()
 {
+	exitLoop = false;
 //	PhysPt start=SegPhys(cs)+reg_eip;
 	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
@@ -1269,6 +1270,7 @@ Bit32u DEBUG_CheckKeys(void) {
 		case KEY_F(10):	// Step over inst
 						if (StepOver()) return 0;
 						else {
+							exitLoop = false;
 							skipFirstInstruction = true; // for heavy debugger
 							CPU_Cycles = 1;
 							Bitu ret=(*cpudecoder)();
@@ -1278,6 +1280,7 @@ Bit32u DEBUG_CheckKeys(void) {
 						}
 						break;
 		case KEY_F(11):	// trace into
+						exitLoop = false;
 						skipFirstInstruction = true; // for heavy debugger
 						CPU_Cycles = 1;
 						ret = (*cpudecoder)();
@@ -1331,7 +1334,7 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 
 	PhysPt start = GetAddress(segValue,eipValue);
 	char dline[200];Bitu size;
-	size = DasmI386(dline, start, reg_eip, false);
+	size = DasmI386(dline, start, reg_eip, cpu.code.big);
 	Bitu len = strlen(dline);
 	char* res = empty;
 	if (showExtend) {
@@ -1666,27 +1669,6 @@ bool DEBUG_HeavyIsBreakpoint(void)
 		skipFirstInstruction = false;
 		return false;
 	}
-
-/*	static bool once = false;
-	Descriptor desc;
-	if (!once && cpu.gdt.GetDescriptor(0x44,desc)) {
-		if (desc.GetBase()==0x40000000) {
-			LOG(LOG_ERROR,"Selector 44 base 0x40000000: %04X,%08X",SegValue(cs),reg_eip);
-			once = true;
-			exitLoop = true;
-			DEBUG_Enable();
-			return true;
-		};
-	}
-*/
-/*	if (cpu.state & STATE_PROTECTED) {
-		if ((reg_ebx==0x000F)) {
-			exitLoop = true;
-			DEBUG_Enable();
-			return true;
-		}
-	}
-*/
 	PhysPt where = SegPhys(cs)+reg_eip;
 	
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
