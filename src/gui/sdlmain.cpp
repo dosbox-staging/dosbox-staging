@@ -568,8 +568,10 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
+        if (sdl.full_screen) SwitchFullScreen();
 		LOG_MSG("Exit to error: %sPress enter to continue.",error);
 		fgetc(stdin);
 	}
+    GFX_ShutDown();
 	return 0;
 };
