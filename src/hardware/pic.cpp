@@ -16,15 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.28 2005-02-10 10:21:09 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.29 2005-03-25 11:54:52 qbix79 Exp $ */
 
 #include <list>
 
 #include "dosbox.h"
 #include "inout.h"
 #include "cpu.h"
+#include "callback.h"
 #include "pic.h"
 #include "timer.h"
+#include "setup.h"
 
 #define PIC_QUEUESIZE 128
 
@@ -56,7 +58,7 @@ Bitu PIC_IRQActive;
 
 static IRQ_Block irqs[16];
 static PIC_Controller pics[2];
-
+static bool PIC_Special_Mode = false; //Saves one compare in the pic_run_irqloop
 struct PICEntry {
 	float index;
 	Bitu value;
@@ -92,6 +94,9 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		if (val&0x40) {		// special mask select
 			if (val&0x20) pic->special=true;
 			else pic->special=false;
+			if(pic[0].special || pics[1].special) 
+				PIC_Special_Mode = true; else 
+				PIC_Special_Mode = false;
 			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
 		}
 	} else {	// OCW2 issued
@@ -229,16 +234,15 @@ static Bitu read_data(Bitu port,Bitu iolen) {
 
 
 void PIC_ActivateIRQ(Bitu irq) {
-	if (irq<16) {
-		irqs[irq].active=true;
-		if( irq < 8 ) {
-			if (!irqs[irq].masked) {
-				PIC_IRQCheck|=(1 << irq);
-			}
-		} else {
-			if (!irqs[irq].masked && !irqs[2].masked) {
-				PIC_IRQCheck|=(1 << irq);
-			}
+	if( irq < 8 ) {
+		irqs[irq].active = true;
+		if (!irqs[irq].masked) {
+			PIC_IRQCheck|=(1 << irq);
+		}
+	} else 	if (irq < 16) {
+		irqs[irq].active = true;
+		if (!irqs[irq].masked && !irqs[2].masked) {
+			PIC_IRQCheck|=(1 << irq);
 		}
 	}
 }
@@ -255,10 +259,11 @@ static inline bool PIC_startIRQ(Bitu i) {
 	irqs[i].active = false;
 	PIC_IRQCheck&= ~(1 << i);
 	CPU_HW_Interrupt(irqs[i].vector);
-	if (!pics[ (i<8)?0:1 ].auto_eoi) {
+	Bitu pic=(i&8)>>3;
+	if (!pics[pic].auto_eoi) { //irq 0-7 => pic 0 else pic 1 
 		PIC_IRQActive = i;
 		irqs[i].inservice = true;
-	} else if (pics[ (i<8)?0:1 ].rotate_on_auto_eoi) {
+	} else if (pics[pic].rotate_on_auto_eoi) {
 		E_Exit("rotate on auto EOI not handled");
 	}
 	return true;
@@ -273,7 +278,7 @@ void PIC_runIRQs(void) {
 	static Bit16u IRQ_priority_lookup[17] =
 		{ 0,1,2,11,12,13,14,15,3,4,5,6,7,8,9,10,16 };
 	Bit16u activeIRQ = PIC_IRQActive;
-	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
+	if (activeIRQ == PIC_NOIRQ) activeIRQ = 16;
 	/* Get the priority of the active irq */
 	Bit16u Priority_Active_IRQ = IRQ_priority_lookup[activeIRQ];
 
@@ -282,23 +287,23 @@ void PIC_runIRQs(void) {
 	 * i is the irq at the current priority */
 
 	/* If one of the pics is in special mode use a check that cares for that. */
-	if(pics[0].special || pics[1].special) {
+	if(!PIC_Special_Mode) {
+		for (j = 0; j < Priority_Active_IRQ; j++) {
+			i = IRQ_priority_order[j];
+			if (!irqs[i].masked && irqs[i].active) {
+				if(PIC_startIRQ(i)) return;
+			}
+		}
+	} else {	/* Special mode variant */
 		for (j = 0; j<= 15; j++) {
 			i = IRQ_priority_order[j];
-			if ( (j < Priority_Active_IRQ) || (pics[ (i<8)?0:1 ].special) ) {
+			if ( (j < Priority_Active_IRQ) || (pics[ ((i&8)>>3) ].special) ) {
 				if (!irqs[i].masked && irqs[i].active) {
 					/* the irq line is active. it's not masked and
 					 * the irq is allowed priority wise. So let's start it */
 					/* If started succesfully return, else go for the next */
 					if(PIC_startIRQ(i)) return;
 				}
-			}
-		}
-	} else {
-		for (j = 0; j < Priority_Active_IRQ; j++) {
-			i = IRQ_priority_order[j];
-			if (!irqs[i].masked && irqs[i].active) {
-				if(PIC_startIRQ(i)) return;
 			}
 		}
 	}
@@ -436,6 +441,14 @@ bool PIC_RunQueue(void) {
 	return true;
 }
 
+//Irq 9-2 calling code
+static Bitu INT71_Handler() {
+	CALLBACK_RunRealInt(0xa);
+	IO_Write(0xa0,0x61);
+	IO_Write(0x20,0x62);
+	return CBRET_NONE;
+}
+
 /* The TIMER Part */
 struct TickerBlock {
 	TIMER_TickHandler handler;
@@ -488,54 +501,74 @@ void TIMER_AddTick(void) {
 }
 
 
+class PIC:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[4];
+	IO_WriteHandleObject WriteHandler[4];
+	CALLBACK_HandlerObject callback;
+public:
+	PIC(Section* configuration):Module_base(configuration){
+		/* Setup pic0 and pic1 with initial values like DOS has normally */
+		PIC_IRQCheck=0;
+		PIC_IRQActive=PIC_NOIRQ;
+		PIC_Ticks=0;
+		Bitu i;
+		for (i=0;i<2;i++) {
+			pics[i].masked=0xff;
+			pics[i].active=0;
+			pics[i].inservice=0;
+			pics[i].auto_eoi=false;
+			pics[i].rotate_on_auto_eoi=false;
+			pics[i].request_issr=false;
+			pics[i].special=false;
+			pics[i].icw_index=0;
+			pics[i].icw_words=0;
+		}
+		for (i=0;i<=7;i++) {
+			irqs[i].active=false;
+			irqs[i].masked=true;
+			irqs[i].inservice=false;
+			irqs[i+8].active=false;
+			irqs[i+8].masked=true;
+			irqs[i+8].inservice=false;
+			irqs[i].vector=0x8+i;
+			irqs[i+8].vector=0x70+i;	
+		}
+		irqs[0].masked=false;					/* Enable system timer */
+		irqs[1].masked=false;					/* Enable Keyboard IRQ */
+		irqs[2].masked=false;					/* Enable second pic */
+		irqs[8].masked=false;					/* Enable RTC IRQ */
+		ReadHandler[0].Install(0x20,read_command,IO_MB);
+		ReadHandler[1].Install(0x21,read_data,IO_MB);
+		WriteHandler[0].Install(0x20,write_command,IO_MB);
+		WriteHandler[1].Install(0x21,write_data,IO_MB);
+		ReadHandler[2].Install(0xa0,read_command,IO_MB);
+		ReadHandler[3].Install(0xa1,read_data,IO_MB);
+		WriteHandler[2].Install(0xa0,write_command,IO_MB);
+		WriteHandler[3].Install(0xa1,write_data,IO_MB);
+		/* Initialize the pic queue */
+		for (i=0;i<PIC_QUEUESIZE-1;i++) {
+			pic.entries[i].next=&pic.entries[i+1];
+		}
+		pic.entries[PIC_QUEUESIZE-1].next=0;
+		pic.free_entry=&pic.entries[0];
+		pic.next_entry=0;
+		/* Irq 9 and 2 thingie 
+		 * Should be done by bios but then it overwrites the mpu handler */
+		callback.Install(&INT71_Handler,CB_IRET,"irq 9 bios");
+		callback.Set_RealVec(0x71);
+	}
+	~PIC(){
+	}
+};
+
+static PIC* test;
+
+void PIC_Destroy(Section* sec){
+	delete test;
+}
 
 void PIC_Init(Section* sec) {
-	/* Setup pic0 and pic1 with initial values like DOS has normally */
-	PIC_IRQCheck=0;
-	PIC_IRQActive=PIC_NOIRQ;
-	PIC_Ticks=0;
-	Bitu i;
-	for (i=0;i<2;i++) {
-		pics[i].masked=0xff;
-		pics[i].active=0;
-		pics[i].inservice=0;
-		pics[i].auto_eoi=false;
-		pics[i].rotate_on_auto_eoi=false;
-		pics[i].request_issr=false;
-		pics[i].special=false;
-		pics[i].icw_index=0;
-		pics[i].icw_words=0;
-	}
-	for (i=0;i<=7;i++) {
-		irqs[i].active=false;
-		irqs[i].masked=true;
-		irqs[i].inservice=false;
-		irqs[i+8].active=false;
-		irqs[i+8].masked=true;
-		irqs[i+8].inservice=false;
-		irqs[i].vector=0x8+i;
-		irqs[i+8].vector=0x70+i;	
-	}
-	irqs[0].masked=false;					/* Enable system timer */
-	irqs[1].masked=false;					/* Enable Keyboard IRQ */
-	irqs[2].masked=false;					/* Enable second pic */
-	irqs[8].masked=false;					/* Enable RTC IRQ */
-	IO_RegisterReadHandler(0x20,read_command,IO_MB);
-	IO_RegisterReadHandler(0x21,read_data,IO_MB);
-	IO_RegisterWriteHandler(0x20,write_command,IO_MB);
-	IO_RegisterWriteHandler(0x21,write_data,IO_MB);
-	IO_RegisterReadHandler(0xa0,read_command,IO_MB);
-	IO_RegisterReadHandler(0xa1,read_data,IO_MB);
-	IO_RegisterWriteHandler(0xa0,write_command,IO_MB);
-	IO_RegisterWriteHandler(0xa1,write_data,IO_MB);
-	/* Initialize the pic queue */
-	for (i=0;i<PIC_QUEUESIZE-1;i++) {
-		pic.entries[i].next=&pic.entries[i+1];
-	}
-	pic.entries[PIC_QUEUESIZE-1].next=0;
-	pic.free_entry=&pic.entries[0];
-	pic.next_entry=0;
-
+	test = new PIC(sec);
+	sec->AddDestroyFunction(&PIC_Destroy);
 }
-		
-
