@@ -27,6 +27,7 @@
 #include "lazyflags.h"
 #include "cpu.h"
 #include "debug.h"
+#include "setup.h"
 
 #define LINK_TOTAL		(64*1024)
 
@@ -326,14 +327,22 @@ bool PAGING_Enabled(void) {
 	return paging.enabled;
 }
 
-void PAGING_Init(Section * sec) {
-	/* Setup default Page Directory, force it to update */
-	paging.enabled=false;
-	PAGING_InitTLB();
-	Bitu i;
-	for (i=0;i<LINK_START;i++) {
-		paging.firstmb[i]=i;
+class PAGING:public Module_base{
+public:
+	PAGING(Section* configuration):Module_base(configuration){
+		/* Setup default Page Directory, force it to update */
+		paging.enabled=false;
+		PAGING_InitTLB();
+		Bitu i;
+		for (i=0;i<LINK_START;i++) {
+			paging.firstmb[i]=i;
+		}
+		pf_queue.used=0;
 	}
-	pf_queue.used=0;
-}
+	~PAGING(){}
+};
 
+static PAGING* test;
+void PAGING_Init(Section * sec) {
+	test = new PAGING(sec);
+}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.67 2005-02-21 15:36:14 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.68 2005-03-25 11:45:37 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1804,69 +1804,97 @@ static void CPU_CycleDecrease(void) {
 	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
-void CPU_Init(Section* sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	reg_eax=0;
-	reg_ebx=0;
-	reg_ecx=0;
-	reg_edx=0;
-	reg_edi=0;
-	reg_esi=0;
-	reg_ebp=0;
-	reg_esp=0;
-
-	SegSet16(cs,0);
-	SegSet16(ds,0);
-	SegSet16(es,0);
-	SegSet16(fs,0);
-	SegSet16(gs,0);
-	SegSet16(ss,0);
-
-	CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
-	cpu.cr0=0xffffffff;
-	CPU_SET_CRX(0,0);						//Initialize
-	cpu.code.big=false;
-	cpu.stack.mask=0xffff;
-	cpu.stack.big=false;
-	cpu.idt.SetBase(0);
-	cpu.idt.SetLimit(1023);
+class CPU: public Module_base {
+private:
+	static bool inited;
+public:
+	CPU(Section* configuration):Module_base(configuration) {
+		if(inited) {
+			Change_Config(configuration);
+			return;
+		}
+		inited=true;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		reg_eax=0;
+		reg_ebx=0;
+		reg_ecx=0;
+		reg_edx=0;
+		reg_edi=0;
+		reg_esi=0;
+		reg_ebp=0;
+		reg_esp=0;
 	
-	/* Init the cpu cores */
-	CPU_Core_Normal_Init();
-	CPU_Core_Simple_Init();
-	CPU_Core_Full_Init();
+		SegSet16(cs,0);
+		SegSet16(ds,0);
+		SegSet16(es,0);
+		SegSet16(fs,0);
+		SegSet16(gs,0);
+		SegSet16(ss,0);
+	
+		CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
+		cpu.cr0=0xffffffff;
+		CPU_SET_CRX(0,0);						//Initialize
+		cpu.code.big=false;
+		cpu.stack.mask=0xffff;
+		cpu.stack.big=false;
+		cpu.idt.SetBase(0);
+		cpu.idt.SetLimit(1023);
+		
+		/* Init the cpu cores */
+		CPU_Core_Normal_Init();
+		CPU_Core_Simple_Init();
+		CPU_Core_Full_Init();
 #if (C_DYNAMIC_X86)
-	CPU_Core_Dyn_X86_Init();
+		CPU_Core_Dyn_X86_Init();
 #endif
-	MAPPER_AddHandler(CPU_CycleDecrease,MK_f11,MMOD1,"cycledown","Dec Cycles");
-	MAPPER_AddHandler(CPU_CycleIncrease,MK_f12,MMOD1,"cycleup"  ,"Inc Cycles");
-	CPU_Cycles=0;
-	CPU_CycleMax=section->Get_int("cycles");;
-	CPU_CycleUp=section->Get_int("cycleup");
-	CPU_CycleDown=section->Get_int("cycledown");
-	const char * core=section->Get_string("core");
-	cpudecoder=&CPU_Core_Normal_Run;
-	if (!strcasecmp(core,"normal")) {
-		cpudecoder=&CPU_Core_Normal_Run;
-	} else if (!strcasecmp(core,"simple")) {
-		cpudecoder=&CPU_Core_Simple_Run;
-	} else if (!strcasecmp(core,"full")) {
-		cpudecoder=&CPU_Core_Full_Run;
-	} 
-#if (C_DYNAMIC_X86)
-	else if (!strcasecmp(core,"dynamic")) {
-		cpudecoder=&CPU_Core_Dyn_X86_Run;
-	} 
-#endif
-	else {
-		LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
+		MAPPER_AddHandler(CPU_CycleDecrease,MK_f11,MMOD1,"cycledown","Dec Cycles");
+		MAPPER_AddHandler(CPU_CycleIncrease,MK_f12,MMOD1,"cycleup"  ,"Inc Cycles");
+		Change_Config(configuration);	
+		CPU_JMP(false,0,0,0);					//Setup the first cpu core
 	}
-	CPU_JMP(false,0,0,0);					//Setup the first cpu core
+	bool Change_Config(Section* newconfig){
+		Section_prop * section=static_cast<Section_prop *>(newconfig);
+		CPU_CycleLeft=0;//needed ?
+		CPU_Cycles=0;
+		CPU_CycleMax=section->Get_int("cycles");;
+		CPU_CycleUp=section->Get_int("cycleup");
+		CPU_CycleDown=section->Get_int("cycledown");
+		const char * core=section->Get_string("core");
+		cpudecoder=&CPU_Core_Normal_Run;
+		if (!strcasecmp(core,"normal")) {
+			cpudecoder=&CPU_Core_Normal_Run;
+		} else if (!strcasecmp(core,"simple")) {
+			cpudecoder=&CPU_Core_Simple_Run;
+		} else if (!strcasecmp(core,"full")) {
+			cpudecoder=&CPU_Core_Full_Run;
+		} 
+#if (C_DYNAMIC_X86)
+		else if (!strcasecmp(core,"dynamic")) {
+			cpudecoder=&CPU_Core_Dyn_X86_Run;
+		} 
+#endif
+		else {
+			LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
+		}
+	
+		if (!CPU_CycleMax) CPU_CycleMax = 2500;
+		if(!CPU_CycleUp)   CPU_CycleUp = 500;
+		if(!CPU_CycleDown) CPU_CycleDown = 20;
+		GFX_SetTitle(CPU_CycleMax,-1,false);
+		return true;
+	}
+	~CPU(){ /* empty */};
+};
+	
+static CPU * test;
 
-	if (!CPU_CycleMax) CPU_CycleMax = 2500;
-	if(!CPU_CycleUp)   CPU_CycleUp = 500;
-	if(!CPU_CycleDown) CPU_CycleDown = 20;
-	CPU_CycleLeft=0;
-	GFX_SetTitle(CPU_CycleMax,-1,false);
+void CPU_ShutDown(Section* sec) {
+	delete test;
 }
 
+void CPU_Init(Section* sec) {
+	test = new CPU(sec);
+	sec->AddDestroyFunction(&CPU_ShutDown,true);
+}
+//initialize static members
+bool CPU::inited=false;
