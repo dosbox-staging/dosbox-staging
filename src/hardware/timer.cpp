@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.24 2004-06-17 07:27:55 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.25 2004-06-20 17:01:58 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -36,8 +36,6 @@ static INLINE void BCD2BIN(Bit16u& val) {
 	Bit16u temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
 	val=temp;
 }
-
-
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
 	
@@ -131,6 +129,7 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 		} else p->cntr = p->write_latch;
 		p->start=PIC_MicroCount();
 		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
+		if (!p->micro) 	p->micro=1;
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			PIC_RemoveEvents(PIT0_Event);
@@ -180,8 +179,7 @@ static Bitu read_latch(Bitu port,Bitu iolen) {
 	   break;
 	}
 	if( pit[counter].bcd == true) BCD2BIN(pit[counter].read_latch);
-   
-  return ret;
+	return ret;
 }
 
 static void write_p43(Bitu port,Bitu val,Bitu iolen) {
@@ -254,7 +252,6 @@ void TIMER_Init(Section* sect) {
 	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 	pit[1].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[1].cntr));
 	pit[2].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[2].cntr));
-
 
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
