@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.28 2003-10-27 14:16:59 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.29 2003-10-29 19:43:22 finsterr Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -156,7 +156,7 @@ void DOS_Drive_Cache::ExpandName(char* path)
 
 char* DOS_Drive_Cache::GetExpandName(const char* path)
 {
-	static char work [CROSS_LEN];
+	static char work [CROSS_LEN] = { 0 };
 	char dir [CROSS_LEN]; 
 
 	work[0] = 0;
@@ -250,7 +250,6 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 	// clear lists
 	dir->fileList.clear();
 	dir->longNameList.clear();
-	dir->shortNr = 0;
 	save_dir = 0;
 };
 
@@ -283,6 +282,25 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname)
 	return false;
 };
 
+int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* shortName)
+{
+	char* cpos = strchr(shortName,'~');
+	if (cpos) {
+		Bits compareCount1	= (int)cpos - (int)shortName;
+		char* endPos		= strchr(cpos,'.');
+		Bitu numberSize		= endPos ? int(endPos)-int(cpos) : strlen(cpos);
+		
+		char* lpos			= strchr(compareName,'.');
+		Bits compareCount2	= lpos ? int(lpos)-int(compareName) : strlen(compareName);
+		if (compareCount2>8) compareCount2 = 8;
+
+		compareCount2 -= numberSize;
+		if (compareCount2>compareCount1) compareCount1 = compareCount2;
+		return strncmp(compareName,shortName,compareCount1);
+	}
+	return strcmp(compareName,shortName);
+};
+
 Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 {
 	Bits foundNr	= 0;	
@@ -292,7 +310,8 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 
 	while (low<=high) {
 		mid = (low+high)/2;
-		res = strncmp(name,curDir->longNameList[mid]->shortname,curDir->longNameList[mid]->compareCount);
+		res = CompareShortname(name,curDir->longNameList[mid]->shortname);
+		
 		if (res>0)	low  = mid+1; else
 		if (res<0)	high = mid-1; 
 		else {
@@ -300,7 +319,7 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 			do {	
 				foundNr = curDir->longNameList[mid]->shortNr;
 				mid++;
-			} while(mid<curDir->longNameList.size() && (strncmp(name,curDir->longNameList[mid]->shortname,curDir->longNameList[mid]->compareCount)==0));
+			} while(mid<curDir->longNameList.size() && (CompareShortname(name,curDir->longNameList[mid]->shortname)==0));
 			break;
 		};
 	}
@@ -409,7 +428,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		strcat(info->shortname,"~");
 		strcat(info->shortname,buffer);
 		// Create compare Count
-		info->compareCount = tocopy;
+//		info->compareCount = tocopy;
 		// Add (and cut) Extension, if available
 		if (pos) {
 			// Step to last extension...
@@ -599,7 +618,7 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
 
 bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 {
-	static char res[CROSS_LEN];
+	static char res[CROSS_LEN] = { 0 };
 
 	result = res;
 	if (entryNr>=dir->fileList.size()) return false;
@@ -616,7 +635,7 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu dtaAddress, Bitu& id)
 {
 	Bit16u	dirID;
 	Bitu	dirFindFirstID = 0xffff;
-	
+
 	// Cache directory in 
 	if (!OpenDir(path,dirID)) return false;
 	// Seacrh if dta was already used before
@@ -641,7 +660,6 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu dtaAddress, Bitu& id)
 	dirFindFirst[dirFindFirstID] = new CFileInfo();
 	dirFindFirst[dirFindFirstID]-> nextEntry	= 0;
 	dirFindFirst[dirFindFirstID]-> compareCount	= dtaAddress;	
-//	strcpy(dirFindFirst[dirFindFirstID]->orgname,path);
 
 	// Copy entries to use with FindNext
 	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {
@@ -704,7 +722,7 @@ bool DOS_No_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 
 bool DOS_No_Drive_Cache::ReadDir(Bit16u id, char* &result)
 {
-	static char res[CROSS_LEN];
+	static char res[CROSS_LEN] = { 0 };
 	dirent * ent;		
 
 	if (!srch_opendir) return false;
