@@ -36,6 +36,9 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
+dnl Checks for libraries.
+AC_CHECK_LIB(png, png_check_sig, , AC_MSG_ERROR([*** libpng not found!]), -lz)
+
 #Check if the compiler support attributes
 AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
