@@ -436,7 +436,7 @@ switch(Fetchb()) {
 			case 0x20:					/* MUL EAX,Ed */
 				{
 					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArd;temp.u=(Bit64s)reg_eax * (Bit64u)(*eard);}
+					if (rm >= 0xc0 ) {GetEArd;temp.u=(Bit64u)reg_eax * (Bit64u)(*eard);}
 					else {GetEAa;temp.u=(Bit64u)reg_eax * (Bit64u)LoadMd(eaa);}
 					reg_eax=(Bit32u)(temp.u & 0xffffffff);reg_edx=(Bit32u)(temp.u >> 32);
 					flags.cf=flags.of=(reg_edx !=0);
@@ -445,9 +445,9 @@ switch(Fetchb()) {
 			case 0x28:					/* IMUL EAX,Ed */
 				{
 					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArd;temp.s=(Bit64s)reg_eax * (Bit64s)(*eards);}
-					else {GetEAa;temp.s=(Bit64s)reg_eax * (Bit64s)LoadMds(eaa);}
-					reg_eax=Bit32u(temp.u & 0xffffffff);reg_edx=(Bit32u)(temp.u >> 32);
+					if (rm >= 0xc0 ) {GetEArd;temp.s=((Bit64s)((Bit32s)reg_eax) * (Bit64s)(*eards));}
+					else {GetEAa;temp.s=((Bit64s)((Bit32s)reg_eax) * (Bit64s)(LoadMds(eaa)));}
+					reg_eax=Bit32u(temp.s & 0xffffffff);reg_edx=(Bit32u)(temp.s >> 32);
 					if ( (reg_edx==0xffffffff) && (reg_eax & 0x80000000) ) {
 						flags.cf=flags.of=false;
 					} else if ( (reg_edx==0x00000000) && (reg_eax<0x80000000) ) {
