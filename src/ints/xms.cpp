@@ -118,7 +118,8 @@ Bitu XMS_Handler(void) {
 	case XMS_LOCAL_ENABLE_A20:									/* 05 */
 	case XMS_LOCAL_DISABLE_A20:									/* 06 */
 	case XMS_QUERY_A20:											/* 07 */
-		LOG_WARN("XMS:Unhandled call %2X",reg_ah);break;	
+		LOG_WARN("XMS:Unhandled call %2X",reg_ah);
+		break;	
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
 		/* Scan the tree for free memory and find largest free block */
 		{ 
@@ -177,7 +178,7 @@ foundnew:
 					return CBRET_NONE;
 				}	
 				/* Not a free block or too small advance to next one if possible */
-				if (xms_handles[index].next) index=xms_handles[index].next;
+				if (xms_handles[index].next < XMS_HANDLES ) index=xms_handles[index].next;
 				else break;
 			}
 			/* Found no good blocks give some errors */
@@ -311,7 +312,7 @@ foundnew:
 		}
 		reg_bh=xms_handles[reg_dx].locked;
 		/* Find available blocks */
-		reg_bx=0;{ for (Bitu i=0;i<XMS_HANDLES;i++) if (!xms_handles[i].data) reg_bx++;}
+		reg_bx=0;{ for (Bitu i=1;i<XMS_HANDLES;i++) if (!xms_handles[i].data) reg_bx++;}
 		reg_dx=xms_handles[reg_dx].size;
 		break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
