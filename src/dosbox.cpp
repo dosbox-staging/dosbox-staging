@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.79 2004-09-10 08:02:50 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.80 2004-09-21 19:32:15 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -376,7 +376,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("MODEM_CONFIGFILE_HELP",
 		"modem -- Enable virtual modem emulation.\n"
 		"comport -- COM Port modem is connected to.\n"
-		"listenport -- TCP Port the momdem listens on for incoming connections.\n"
+		"listenport -- TCP Port the modem listens on for incoming connections.\n"
 	);
 #endif
 #if C_DIRECTSERIAL
