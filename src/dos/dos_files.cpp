@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.58 2004-10-17 14:45:00 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.59 2004-11-16 14:28:15 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -181,7 +181,6 @@ bool DOS_GetCurrentDir(Bit8u drive,char * buffer) {
 }
 
 bool DOS_ChangeDir(char * dir) {
-	
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 	
@@ -201,9 +200,31 @@ bool DOS_MakeDir(char * dir) {
 }
 
 bool DOS_RemoveDir(char * dir) {
+/* We need to do the test before the removal as can not rely on
+ * the host to forbid removal of the current directory.
+ * We never change directory. Everything happens in the drives.
+ */
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	return Drives[drive]->RemoveDir(fulldir);
+	/* Check if exists */
+	if(!Drives[drive]->TestDir(fulldir)) {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
+	/* See if it's current directory */
+	char currdir[DOS_PATHLENGTH]= { 0 };
+	DOS_GetCurrentDir(drive + 1 ,currdir);
+	if(strcmp(currdir,fulldir) == 0) {
+		DOS_SetError(DOSERR_REMOVE_CURRENT_DIRECTORY);
+		return false;
+	}
+
+	if(Drives[drive]->RemoveDir(fulldir)) return true;
+
+	/* Failed. We know it exists and it's not the current dir */
+	/* Assume non empty */
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
 }
 
 bool DOS_Rename(char * oldname,char * newname) {
@@ -336,6 +357,7 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	if (DOS_FindDevice(name) != DOS_DEVICES)
 		return DOS_OpenFile(name, 0, entry);
 
+	LOG(LOG_FILES,LOG_NORMAL)("file create attributes %X file %s",attributes,name);
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	DOS_PSP psp(dos.psp());
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
@@ -916,10 +938,25 @@ bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec) {
 }
 
 bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset){
-	DOS_FCB fcb(seg,offset);
-	char shortname[DOS_FCBNAME];
-	fcb.GetName(shortname);
-	return DOS_UnlinkFile(shortname);
+/* FCB DELETE honours wildcards. it will return true if one or more
+ * files get deleted. 
+ * To get this: the dta is set to temporary dta in which found files are
+ * stored. This can not be the tempdta as that one is used by fcbfindfirst
+ */
+	RealPt old_dta=dos.dta();dos.dta(dos.tables.tempdta_fcbdelete);
+	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));
+	bool nextfile = false;
+	bool return_value = false;
+	nextfile = DOS_FCBFindFirst(seg,offset);
+	while(nextfile) {
+		char shortname[DOS_FCBNAME] = { 0 };
+		fcb.GetName(shortname);
+		bool res=DOS_UnlinkFile(shortname);
+		if(!return_value && res) return_value = true; //at least one file deleted
+		nextfile = DOS_FCBFindNext(seg,offset);
+	}
+	dos.dta(old_dta);  /*Restore dta */
+	return  return_value;
 }
 
 bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset){

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.16 2004-11-03 20:13:40 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.17 2004-11-16 14:28:16 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -78,6 +78,7 @@ void DOS_SetupTables(void) {
 	Bit16u seg,seg2;Bitu i;
 	dos.tables.mediaid=RealMake(DOS_GetMemory(2),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
+	dos.tables.tempdta_fcbdelete=RealMake(DOS_GetMemory(4),0);
 	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
 	/* Create the DOS Info Block */
 	dos_infoblock.SetLocation(0x50); //c2woody
