@@ -39,8 +39,6 @@ char *ltrim(char *str);
 void rtrim(char * const str);
 char *trim(char *str);
 
-bool wildcmp(char *wild, char *string);
-
 bool ScanCMDBool(char * cmd,char * check);
 char * ScanCMDRemain(char * cmd);
 bool ScanCMDHex(char * cmd,char * check,Bits * result);
