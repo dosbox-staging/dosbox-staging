@@ -121,7 +121,7 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	while (!xms_handles[index].free) {
 		if (++index>XMS_HANDLES) return XMS_OUT_OF_HANDLES;
 	}
-	Bitu pages=(size/4) + (size & 3) ? 1 : 0;
+	Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
 	MemHandle mem=MEM_AllocatePages(pages,true);
 	if (!mem) return XMS_OUT_OF_SPACE;
 	xms_handles[index].free=false;
@@ -224,7 +224,7 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;	
 	// Block has to be unlocked
 	if (xms_handles[handle].locked>0) return XMS_BLOCK_LOCKED;
-	Bitu pages=newSize/4 + (newSize & 3) ? 1 : 0;
+	Bitu pages=newSize/4 + ((newSize & 3) ? 1 : 0);
 	if (MEM_ReAllocatePages(xms_handles[handle].mem,pages,true)) {
 		return 0;
 	} else return XMS_OUT_OF_SPACE;
