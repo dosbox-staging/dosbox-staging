@@ -196,7 +196,6 @@ void DOSBOX_Init(void) {
 		
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
-	secprop->Add_bool("keepsmall",false);
 	secprop->Add_string("snapshots","snaps");
 	secprop->Add_string("scaler","normal2x");
 
