@@ -20,25 +20,18 @@
 #include "mem.h"
 #include "dos_inc.h"
 
-#if defined (_MSC_VER)
 #pragma pack(1)
-#endif
 struct DOS_TableCase {	
 	Bit16u size;
 	Bit8u chars[256];
 }
-#if defined (_MSC_VER)
-;
-#pragma pack()
-#else
-__attribute__ ((packed));
-#endif
-
+GCC_ATTRIBUTE (packed);
+#pragma pack ()
 
 RealPt DOS_TableUpCase;
 RealPt DOS_TableLowCase;
 
-static Bit16u dos_memseg=0xd000;
+static Bit16u dos_memseg;
 Bit16u DOS_GetMemory(Bit16u pages) {
 	if (pages+dos_memseg>=0xe000) {
 		E_Exit("DOS:Not enough memory for internal tables");
@@ -50,9 +43,21 @@ Bit16u DOS_GetMemory(Bit16u pages) {
 
 
 void DOS_SetupTables(void) {
+	dos_memseg=0xd000;
+	Bit16u seg;Bitu i;
 	dos.tables.indosflag=RealMake(DOS_GetMemory(1),0);
+	dos.tables.mediaid=RealMake(DOS_GetMemory(2),0);
+	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
+	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
 	mem_writeb(Real2Phys(dos.tables.indosflag),0);
-};
+	/* Create the DOS Info Block */
+	dos_infoblock.SetLocation(DOS_GetMemory(6));
+	/* Create a fake SFT, so programs think there are 100 file handles */
+	seg=DOS_GetMemory(1);
+	real_writed(seg,0,0xffffffff);		//Last File Table
+	real_writew(seg,4,100);				//File Table supports 100 files
+	dos_infoblock.SetfirstFileTable(RealMake(seg,0));
+}
 
 
 	
