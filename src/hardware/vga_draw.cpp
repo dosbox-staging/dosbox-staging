@@ -176,8 +176,8 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 	vga.config.retrace=true;
 
 	/* Draw a cursor */
-	if ((vga.draw.cursor_col*8)>=vga.draw.width) return;
-	if ((vga.draw.cursor_row*16)>=vga.draw.height) return;
+	if (((Bitu)vga.draw.cursor_col*8)>=vga.draw.width) return;
+	if (((Bitu)vga.draw.cursor_row*16)>=vga.draw.height) return;
 	Bit8u * cursor_draw=bitdata+(vga.draw.cursor_row*16+15)*pitch+vga.draw.cursor_col*8;
 	if (vga.draw.cursor_count>8) {
 		for (Bit8u loop=0;loop<8;loop++) *cursor_draw++=15;
