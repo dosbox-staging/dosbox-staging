@@ -73,6 +73,7 @@ void PIC_Init(Section*);
 void TIMER_Init(Section*);
 void BIOS_Init(Section*);
 void DEBUG_Init(Section*);
+void CMOS_Init(Section*);
 
 /* Dos Internal mostly */
 void EMS_Init(Section*);
@@ -163,6 +164,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);
+	secprop->AddInitFunction(&CMOS_Init);
 	secprop->AddInitFunction(&RENDER_Init);
 	secprop->Add_string("snapshots","snapshots");
 	

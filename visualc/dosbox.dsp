@@ -335,6 +335,10 @@ SOURCE=..\src\hardware\adlib.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\hardware\cmos.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\hardware\dma.cpp
 # End Source File
 # Begin Source File
