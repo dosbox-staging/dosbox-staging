@@ -587,13 +587,11 @@ bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 
 Bit16u CMscdex::GetStatusWord(Bit8u subUnit)
 {
-	if (subUnit>=numDrives) return false;
+	if (subUnit>=numDrives) return 0x02; // error : Drive not ready
 
 	Bit16u status ;
 	if (dinfo[subUnit].lastResult)	status = REQUEST_STATUS_DONE;				// ok
-	else {
-		status = REQUEST_STATUS_ERROR | 0x02; // error : Drive not ready
-	}
+	else							status = REQUEST_STATUS_ERROR; 
 
 	if (dinfo[subUnit].audioPlay) {
 		// Check if audio is still playing....
@@ -731,7 +729,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 		case 0x0C	: {	/* IOCTL OUTPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-						// if (subFuncNr!=0x0B) LOG("MSCDEX: IOCTL OUTPUT Subfunction %02X",subFuncNr);
+//						LOG(LOG_MISC,LOG_ERROR)("MSCDEX: IOCTL OUTPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 :	// Unload /eject) media
 										mscdex->LoadUnloadMedia(subUnit,true);
