@@ -45,15 +45,13 @@ bool ScanCMDHex(char * cmd,char * check,Bits * result);
 char * StripWord(char * cmd);
 
 INLINE char * upcase(char * str) {
-	char * oldstr=str;
-	while (*str) *str++=toupper(*str);
-	return oldstr;
+    for (char* idx = str; *idx ; idx++) *idx = toupper(*idx);
+    return str;
 }
 
 INLINE char * lowcase(char * str) {
-	char * oldstr=str;
-	while (*str) *str++=tolower(*str);
-	return oldstr;
+	for(char* idx = str; *idx ; idx++)  *idx = tolower(*idx);
+	return str;
 }
 
 
