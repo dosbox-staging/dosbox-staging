@@ -34,6 +34,8 @@ struct GFX_PalEntry {
 #define GFX_FIXED_BPP	0x01
 #define GFX_RESIZEABLE	0x02
 #define GFX_SHADOW		0x04
+#define GFX_BLITTING	0x08
+
 
 
 #define MODE_SET 0x01
@@ -49,6 +51,8 @@ void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack mod
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
+
+void GFX_Render_Blit(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy);
 
 void GFX_DoUpdate(void);
 
