@@ -22,7 +22,7 @@
 #include "callback.h"
 #include "inout.h"
 #include "mem.h"
-#include "timer.h"
+#include "pic.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
 
@@ -30,7 +30,6 @@ static Bitu INT1A_Handler(void) {
 	switch (reg_ah) {
 	case 0x00:	/* Get System time */
 		{
-			CALLBACK_Idle();
 			Bit32u ticks=mem_readd(BIOS_TIMER);
 			reg_al=0;		/* Midnight never passes :) */
 			reg_cx=(Bit16u)(ticks >> 16);
@@ -170,7 +169,7 @@ static Bitu INT15_Handler(void) {
 		mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(SegValue(es),reg_bx));
 		mem_writed(BIOS_WAIT_FLAG_COUNT,reg_cx<<16|reg_dx);
 		mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
-		TIMER_RegisterDelayHandler(&WaitFlagEvent,reg_cx<<16|reg_dx);
+		PIC_AddEvent(&WaitFlagEvent,reg_cx<<16|reg_dx);
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
 		//Does anyone even use this?
@@ -188,7 +187,11 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
-		CALLBACK_SCF(true);
+		CALLBACK_SCF(false);
+		reg_ah=0;
+		break;
+	case 0x91:	/* OS HOOK - DEVICE POST */
+		CALLBACK_SCF(false);
 		reg_ah=0;
 		break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
@@ -255,7 +258,7 @@ void BIOS_Init(Section* sec) {
 	RealSetVec(0x17,CALLBACK_RealPointer(call_int17));
 	/* INT 1A TIME and some other functions */
 	call_int1a=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET);
+	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET_STI);
 	RealSetVec(0x1A,CALLBACK_RealPointer(call_int1a));
 	/* INT 1C System Timer tick called from INT 8 */
 	call_int1c=CALLBACK_Allocate();	
