@@ -25,4 +25,5 @@ void Mouse_CursorSet(float x,float y);
 void Mouse_ButtonPressed(Bit8u button);
 void Mouse_ButtonReleased(Bit8u button);
 
+void Mouse_AutoLock(bool enable);
 

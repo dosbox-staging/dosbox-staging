@@ -41,7 +41,6 @@ struct SDL_Block {
 	Bitu bpp;
 	GFX_DrawHandler * draw;
 	GFX_ResizeHandler * resize;
-	bool mouse_grabbed;
 	bool full_screen;
 	SDL_Thread * thread;
 	SDL_mutex * mutex;
@@ -49,9 +48,16 @@ struct SDL_Block {
 	SDL_Joystick * joy;
 	SDL_Color pal[256];
 	struct {
+		bool autolock;
+		bool autoenable;
+		bool requestlock;
+		bool locked;
+		Bitu sensitivity;
+	} mouse;
+	struct {
 		Bitu skip;
 		Bitu count;
-	}frames ;
+	} frames ;
 };
 
 static SDL_Block sdl;
@@ -104,8 +110,8 @@ void GFX_Resize(Bitu width,Bitu height,Bitu bpp,GFX_ResizeHandler * resize) {
 }
 
 static void CaptureMouse() {
-	sdl.mouse_grabbed=!sdl.mouse_grabbed;
-	if (sdl.mouse_grabbed) {
+	sdl.mouse.locked=!sdl.mouse.locked;
+	if (sdl.mouse.locked) {
 		SDL_WM_GrabInput(SDL_GRAB_ON);
 		SDL_ShowCursor(SDL_DISABLE);
 	} else {
@@ -118,7 +124,6 @@ static void DecreaseSkip() {
 	if (sdl.frames.skip>0) sdl.frames.skip--;
 	LOG_MSG("Frame Skip %d",sdl.frames.skip);
 }
-
 
 static void IncreaseSkip() {
 	if (sdl.frames.skip<10) sdl.frames.skip++;
@@ -233,6 +238,12 @@ static void GUI_StartUp(Section * sec) {
 	sdl.frames.skip=0;
 	sdl.frames.count=0;
 	sdl.draw=0;
+
+	sdl.mouse.locked=false;
+	sdl.mouse.requestlock=false;
+	sdl.mouse.autoenable=section->Get_bool("autolock");
+	sdl.mouse.autolock=false;
+	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	GFX_Resize(640,400,8,0);
 #if C_THREADED
 	sdl.mutex=SDL_CreateMutex();
@@ -251,10 +262,15 @@ static void GUI_StartUp(Section * sec) {
 
 void GFX_ShutDown() {
 	if (sdl.full_screen) SwitchFullScreen();
-	if (sdl.mouse_grabbed) CaptureMouse();
+	if (sdl.mouse.locked) CaptureMouse();
 	GFX_Stop();
 }
 
+void Mouse_AutoLock(bool enable) {
+	sdl.mouse.autolock=enable;
+	if (enable && sdl.mouse.autoenable) sdl.mouse.requestlock=true;
+	else sdl.mouse.requestlock=false;
+}
 
 static void HandleKey(SDL_KeyboardEvent * key) {
 	Bit32u code;
@@ -384,16 +400,17 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (!sdl.mouse_grabbed) {
-		Mouse_CursorSet((float)motion->x/(float)sdl.width,(float)motion->y/(float)sdl.height);
+	if (sdl.mouse.locked) {
+		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100,(float)motion->yrel*sdl.mouse.sensitivity/100);
 	} else {
-		Mouse_CursorMoved((float)motion->xrel/(float)sdl.width,(float)motion->yrel/(float)sdl.height);
+//		Mouse_CursorSet((float)motion->x/(float)sdl.width,(float)motion->y/(float)sdl.height);
 	}
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	switch (button->state) {
 	case SDL_PRESSED:
+		if (sdl.mouse.requestlock && !sdl.mouse.locked) CaptureMouse();
 		switch (button->button) {
 		case SDL_BUTTON_LEFT:
 			Mouse_ButtonPressed(0);
@@ -460,6 +477,13 @@ void GFX_Events() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 	    switch (event.type) {
+		case SDL_ACTIVEEVENT:
+			if (event.active.state & SDL_APPINPUTFOCUS) {
+				if (!event.active.gain && sdl.mouse.locked) {
+					CaptureMouse();	
+				}
+			}
+			break;
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			HandleKey(&event.key);
@@ -507,8 +531,11 @@ int main(int argc, char* argv[]) {
 	
 #endif
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
-		Section_prop * sdl_sec=control->AddSection_prop("SDL",&GUI_StartUp);
+		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);
+		sdl_sec->Add_bool("autolock",true);
+		sdl_sec->Add_int("sensitivity",100);
+
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
