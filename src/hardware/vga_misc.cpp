@@ -207,13 +207,15 @@ static Bit8u read_p3cc(Bit32u port) {
 
 
 static void write_hercules(Bit32u port,Bit8u val) {
+	Bit8u mask;
 	switch (port) {
 	case 0x3b8:
+		mask=0xff-0x80-0x2;;
 		if (vga.herc.enable_bits & 1) {
+			mask|=0x2;
 			if (vga.mode != M_HERC || vga.mode != M_TEXT2) {
-				VGA_ATTR_SetPalette(1,0x0f);
-				/* Hack around like it looks we are in 0xb000 segment */
-				vga.gfx.miscellaneous=(vga.gfx.miscellaneous & ~0x0c)|0x0a;
+				VGA_ATTR_SetPalette(1,0x07);
+				/* Force 0x3b4/5 registers */
 				if (vga.misc_output & 1) write_p3c2(0,vga.misc_output & ~1);
 			}
 			if (val & 0x2) {
@@ -223,9 +225,10 @@ static void write_hercules(Bit32u port,Bit8u val) {
 			}
 		}
 		if (vga.herc.enable_bits & 0x2) {
-			LOG_MSG("Herc page %d",val >> 7);
+			mask|=0x80;
+			VGA_SetupHandlers();
 		}
-		vga.herc.mode_control=val;
+		vga.herc.mode_control=(vga.herc.mode_control & ~mask) | (val&mask);
 		break;
 	case 0x3bf:
 		vga.herc.enable_bits=val;
@@ -248,8 +251,6 @@ static Bit8u read_hercules(Bit32u port) {
 
 
 void VGA_SetupMisc(void) {
-//	if (machine==MCH_HERC) EnableHercules();
-
 	vga.herc.enable_bits=0;
 	IO_RegisterWriteHandler(0x3d8,write_p3d8,"VGA Feature Control Register");
 	IO_RegisterWriteHandler(0x3d9,write_p3d9,"CGA Color Select Register");
@@ -259,6 +260,7 @@ void VGA_SetupMisc(void) {
 	IO_RegisterReadHandler(0x3cc,read_p3cc,"VGA Misc Output");
 
 	if (machine==MCH_HERC || machine==MCH_AUTO) {
+		vga.herc.mode_control=0x8;
 		IO_RegisterWriteHandler(0x3b8,write_hercules,"Hercules");
 		IO_RegisterWriteHandler(0x3bf,write_hercules,"Hercules");
 	}

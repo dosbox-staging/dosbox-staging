@@ -28,7 +28,7 @@
 #define FIXED_CGA_SIZED	1
 
 static void VGA_HERC_Draw(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=&vga.mem.linear[(vga.herc.mode_control & 0x80) ? 8*1024 : 0];
+	Bit8u * reader=&vga.mem.linear[0];
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread=reader+((y & 3) * 8 * 1024);
 		Bit8u * draw=bitdata;
@@ -250,7 +250,6 @@ static void VGA_BlankTimer() {
 	vga.config.retrace=true;
 }
 
-
 void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 	Bit8u * buf,* bufsplit;
 	/* Draw the current frame */
@@ -421,9 +420,9 @@ void VGA_SetupDrawing(void) {
 	case M_HERC:
 		vga.draw.double_height=false;		//Hack if there's a runtime switch
 		width*=9;
-		height=384;
+		height=348;
 		pitch=width;
-		aspect_ratio=1.0;
+		aspect_ratio=1.5;
 		break;
 	case M_TANDY16:
 		width<<=3;

@@ -297,9 +297,12 @@ void VGA_SetupHandlers(void) {
 	case M_CGA16:
 	case M_CGA4:
 	case M_CGA2:
-	case M_HERC:
 		range_handler=&vgaph.hmap;
 		break;
+	case M_HERC:
+		range_handler=&vgaph.hmap;
+		if (vga.herc.mode_control&0x80) goto range_b800;
+		else goto range_b000;
 	default:
 		LOG_MSG("Unhandled vga mode %X",vga.mode);
 	}
@@ -311,12 +314,14 @@ void VGA_SetupHandlers(void) {
 		MEM_SetPageHandler(VGA_PAGE_B0,16,&vgaph.hram);
 		break;
 	case 2:
+range_b000:
 		vgapages.map_base=VGA_PAGE_B0;
 		MEM_SetPageHandler(VGA_PAGE_B0,8,range_handler);
 		MEM_SetPageHandler(VGA_PAGE_A0,16,&vgaph.hram);
 		MEM_SetPageHandler(VGA_PAGE_B8,8,&vgaph.hram);
 		break;
 	case 3:
+range_b800:
 		vgapages.map_base=VGA_PAGE_B8;
 		MEM_SetPageHandler(VGA_PAGE_B8,8,range_handler);
 		MEM_SetPageHandler(VGA_PAGE_A0,16,&vgaph.hram);
