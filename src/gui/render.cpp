@@ -26,9 +26,10 @@
 #include "keyboard.h"
 #include "cross.h"
 
+
 #define MAX_RES 2048
 
-
+typedef void (* RENDER_Part_Handler)(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy);
 
 struct PalData {
 	struct { 
@@ -39,6 +40,10 @@ struct PalData {
 	} rgb[256];
 	Bitu first;
 	Bitu last;
+	union {
+		Bit32u bpp32[256];
+		Bit16u bpp16[256];
+	} lookup;
 };
 
 
@@ -48,17 +53,39 @@ static struct {
 		Bitu height;
 		Bitu bpp;
 		Bitu pitch;
+		Bitu flags;
 		float ratio;
+		RENDER_Part_Handler part_handler;
 	} src;
+	struct {
+		Bitu width;
+		Bitu height;
+		Bitu pitch;
+		Bitu next_line;
+		Bitu next_pixel;
+		Bitu bpp;		/* The type of BPP the operation requires for input */
+		RENDER_Operation want_type;
+		RENDER_Operation type;
+		void * dest;
+		void * buffer;
+		void * pixels;
+	} op;
+	struct {
+		Bitu count;
+		Bitu max;
+	} frameskip;
 	Bitu flags;
-	RENDER_Handler * handler;	
-	Bitu stretch_x[MAX_RES];
-	Bitu stretch_y[MAX_RES];
 	PalData pal;
-	bool remake;
-	bool enlarge;
+	bool keep_small;
 	bool screenshot;
+	bool active;
 } render;
+
+/* Forward declerations */
+static void RENDER_ResetPal(void);
+
+/* Include the different rendering routines */
+#include "render_support.h"
 
 static const char * snapshots_dir;
 
@@ -150,7 +177,6 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	
 	/*clean up dynamically allocated RAM.*/
 	free(row_pointers);
-
 }
 
 
@@ -158,55 +184,37 @@ static void TakeScreenShot(Bit8u * bitmap) {
 /* This could go kinda bad with multiple threads */
 static void Check_Palette(void) {
 	if (render.pal.first>render.pal.last) return;
-	
-	GFX_SetPalette(render.pal.first,render.pal.last-render.pal.first+1,(GFX_PalEntry *)&render.pal.rgb[render.pal.first]);
+	switch (render.op.bpp) {
+	case 8:
+		GFX_SetPalette(render.pal.first,render.pal.last-render.pal.first+1,(GFX_PalEntry *)&render.pal.rgb[render.pal.first]);
+		break;
+	case 16:
+		for (;render.pal.first<=render.pal.last;render.pal.first++) {
+			render.pal.lookup.bpp16[render.pal.first]=GFX_GetRGB(
+				render.pal.rgb[render.pal.first].red,
+				render.pal.rgb[render.pal.first].green,
+				render.pal.rgb[render.pal.first].blue);
+		}
+		break;
+	case 32:
+		for (;render.pal.first<=render.pal.last;render.pal.first++) {
+			render.pal.lookup.bpp32[render.pal.first]=
+			GFX_GetRGB(
+				render.pal.rgb[render.pal.first].red,
+				render.pal.rgb[render.pal.first].green,
+				render.pal.rgb[render.pal.first].blue);
+		}
+		break;
+	};
+	/* Setup pal index to startup values */
 	render.pal.first=256;
 	render.pal.last=0;
 }
 
-static void MakeTables(void) {
-	//The stretching tables 
-	Bitu i;Bit32u c,a;
-	c=0;a=(render.src.width<<16)/gfx_info.width;
-	for (i=0;i<gfx_info.width;i++) {
-		c=(c&0xffff)+a;
-		render.stretch_x[i]=c>> 16;
-	}
-	c=0;a=(render.src.height<<16)/gfx_info.height;
-	for (i=0;i<gfx_info.height;i++) {
-		c=(c&0xffff)+a;
-		render.stretch_y[i]=(c>>16)*render.src.pitch;
-	}
+static void RENDER_ResetPal(void) {
+	render.pal.first=0;
+	render.pal.last=255;
 }
-
-static void Draw_8_Normal(Bit8u * src_data,Bit8u * dst_data) {
-	for (Bitu y=0;y<gfx_info.height;y++) {
-		Bit8u * line_src=src_data;
-		Bit8u * line_dest=dst_data;
-		for (Bitu x=0;x<gfx_info.width;x++) {
-			*line_dest++=*line_src;
-			line_src+=render.stretch_x[x];
-		}
-		src_data+=render.stretch_y[y];
-		dst_data+=gfx_info.pitch;
-	}
-}
-
-void RENDER_Draw(Bit8u * bitdata) {
-	Bit8u * src_data;
-	Check_Palette();
-	if (render.remake) {
-		MakeTables();
-		render.remake=false;
-	}
-	render.handler(&src_data);
-	if (render.screenshot) {
-		TakeScreenShot(src_data);
-		render.screenshot=false;
-	}
-	Draw_8_Normal(src_data,bitdata);
-}
-
 
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	render.pal.rgb[entry].red=red;
@@ -214,6 +222,38 @@ void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	render.pal.rgb[entry].blue=blue;
 	if (render.pal.first>entry) render.pal.first=entry;
 	if (render.pal.last<entry) render.pal.last=entry;
+}
+
+bool RENDER_StartUpdate(void) {
+	if (render.frameskip.count<render.frameskip.max) {
+		render.frameskip.count++;
+		return false;
+	}
+	render.frameskip.count=0;
+	if (render.src.bpp==8) Check_Palette();
+	switch (render.op.type) {
+	case OP_None:
+		render.op.dest=render.op.pixels=GFX_StartUpdate();
+		break;
+	}
+	if (render.op.dest) return true;
+	else return false;
+}
+
+void RENDER_EndUpdate(void) {
+	switch (render.op.type) {
+	case OP_None:
+		/* Nothing to be done */
+		render.op.pixels=0;
+		break;
+	}
+	GFX_EndUpdate();
+}
+
+/* Update the data ready to be sent out for blitting onto the screen */
+void RENDER_Part(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
+	(render.src.part_handler)(src,x,y,dx,dy);
+	return;
 }
 
 static void RENDER_Resize(Bitu * width,Bitu * height) {
@@ -226,45 +266,72 @@ static void RENDER_Resize(Bitu * width,Bitu * height) {
 		if ((*width/render.src.ratio)<*height) *height=(Bitu)(*width/render.src.ratio);
 		else *width=(Bitu)(*height*render.src.ratio);
 	}
-	render.remake=true;
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags, RENDER_Handler * handler) {
-
-	if (!width) return;
-	if (!height) return;
-	GFX_Stop();
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags) {
+	if ((!width) || (!height) || (!pitch)) { 
+		render.active=false;return;	
+	}
 	render.src.width=width;
 	render.src.height=height;
 	render.src.bpp=bpp;
-	render.src.ratio=ratio;
 	render.src.pitch=pitch;
-	render.handler=handler;
+	render.src.ratio=ratio;
+	render.src.flags=flags;
 
-	switch (bpp) {
-	case 8:
-		GFX_Resize(width,height,bpp,&RENDER_Resize);
-		GFX_SetDrawHandler(RENDER_Draw);
-		break;	
+	GFX_ModeCallBack callback;
+	switch (render.op.want_type) {
+
+	case OP_None:
+normalop:
+		switch (render.src.flags) {
+		case DoubleNone:break;
+		case DoubleWidth:width*=2;break;
+		case DoubleHeight:height*=2;break;
+		case DoubleBoth:
+			if (render.keep_small) {
+				render.src.flags=0;
+			} else {
+				width*=2;height*=2;
+			}
+			break;
+		}
+		flags=0;
+		callback=Render_Normal_CallBack;
+		break;
 	default:
-		E_Exit("RENDER:Illegal bpp %d",bpp);
-	};
-	/* Setup the internal render structures to correctly render this screen */
-	MakeTables();
-
-	GFX_Start();
-
+		goto normalop;
+	
+	}
+	GFX_SetSize(width,height,bpp,flags,callback);
 }
 
 static void EnableScreenShot(void) {
 	render.screenshot=true;
 }
+
+static void IncreaseFrameSkip(void) {
+	if (render.frameskip.max<10) render.frameskip.max++;
+	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+}
+
+static void DecreaseFrameSkip(void) {
+	if (render.frameskip.max>0) render.frameskip.max--;
+	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+}
+
+
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	snapshots_dir=section->Get_string("snapshots");
+
 	render.pal.first=256;
 	render.pal.last=0;
-	render.enlarge=false;
+	render.keep_small=section->Get_bool("keepsmall");
+	render.frameskip.max=section->Get_int("frameskip");
+	render.frameskip.count=0;
 	KEYBOARD_AddEvent(KBD_f5,CTRL_PRESSED,EnableScreenShot);
+	KEYBOARD_AddEvent(KBD_f7,CTRL_PRESSED,DecreaseFrameSkip);
+	KEYBOARD_AddEvent(KBD_f8,CTRL_PRESSED,IncreaseFrameSkip);
 }
 
