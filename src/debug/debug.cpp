@@ -123,11 +123,14 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss); 
 	// FIXME: Call Gate Descriptors
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
-		sprintf(out1,"%s: b:%08X type:%01X sparg",selname,desc.GetBase(),desc.saved.seg.type);
-		sprintf(out2,"    l:%08X dpl :%01X %1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.g);
+		sprintf(out1,"%s: b:%08X type:%02X parbg",selname,desc.GetBase(),desc.saved.seg.type);
+		sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		return true;
+	} else {
+		strcpy(out1,"                                     ");
+		strcpy(out2,"                                     ");
 	}
-	out1[0] = out2[0] = 0;
+	//out1[0] = out2[0] = 0;
 	return false;
 };
 
@@ -480,11 +483,12 @@ void CBreakpoint::ShowList(void)
 bool DEBUG_Breakpoint(void)
 {
 	/* First get the phyiscal address and check for a set Breakpoint */
-	PhysPt where=SegPhys(cs)+reg_eip-1;
+//	PhysPt where=SegPhys(cs)+reg_eip-1;
+	PhysPt where=GetAddress(SegValue(cs),reg_eip-1);
 	if (!CBreakpoint::CheckBreakpoint(where)) return false;
 	// Found. Breakpoint is valid
 	reg_eip -= 1;
-	CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,false);	// Deactivate all breakpoints
+	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
 	exitLoop = true;
 	DEBUG_Enable();
 	return true;
@@ -493,11 +497,12 @@ bool DEBUG_Breakpoint(void)
 bool DEBUG_IntBreakpoint(Bit8u intNum)
 {
 	/* First get the phyiscal address and check for a set Breakpoint */
-	PhysPt where=SegPhys(cs)+reg_eip-2;
+//	PhysPt where=SegPhys(cs)+reg_eip-2;
+	PhysPt where=GetAddress(SegValue(cs),reg_eip-2);
 	if (!CBreakpoint::CheckIntBreakpoint(where,intNum,reg_ah)) return false;
 	// Found. Breakpoint is valid
 	reg_eip -= 2;
-	CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,false);	// Deactivate all breakpoints
+	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
 	exitLoop = true;
 	DEBUG_Enable();
 	return true;
@@ -505,13 +510,14 @@ bool DEBUG_IntBreakpoint(Bit8u intNum)
 
 static bool StepOver()
 {
-	PhysPt start=SegPhys(cs)+reg_eip;
+//	PhysPt start=SegPhys(cs)+reg_eip;
+	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
 	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32>0));
 
 	if (strstr(dline,"call") || strstr(dline,"int") || strstr(dline,"loop") || strstr(dline,"rep")) {
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip+size, true);
-		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip, true);
+		CBreakpoint::ActivateBreakpoints(start, true);
 		debugging=false;
 		DrawCode();
 		DOSBOX_SetNormalLoop();
