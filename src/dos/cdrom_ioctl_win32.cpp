@@ -140,6 +140,10 @@ bool CDROM_Interface_Ioctl::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	mediaPresent = GetAudioTracks(track1, track2, leadOut),
 	trayOpen	 = !mediaPresent;
 	mediaChanged = (oldLeadOut.min!=leadOut.min) || (oldLeadOut.sec!=leadOut.sec) || (oldLeadOut.fr!=leadOut.fr);
+	if (mediaChanged) {
+		// Open new media
+		Close(); Open();
+	};
 	// Save old values
 	oldLeadOut.min = leadOut.min;
 	oldLeadOut.sec = leadOut.sec;
@@ -207,17 +211,21 @@ bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 	return bStat>0;
 };
 
-bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long sector, unsigned long num)
+bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer, bool raw, unsigned long sector, unsigned long num)
 {
 	BOOL  bStat;
 	DWORD byteCount = 0;
 
 //	Open();
+
+	Bitu	buflen	= raw ? num*RAW_SECTOR_SIZE : num*COOKED_SECTOR_SIZE;
+	Bit8u*	bufdata = new Bit8u[buflen];
+
 	if (!raw) {
 		// Cooked
 		int	  success = 0;
 		DWORD newPos  = SetFilePointer(hIOCTL, sector*COOKED_SECTOR_SIZE, 0, FILE_BEGIN);
-		if (newPos != 0xFFFFFFFF) success = ReadFile(hIOCTL, buffer, num*COOKED_SECTOR_SIZE, &byteCount, NULL);
+		if (newPos != 0xFFFFFFFF) success = ReadFile(hIOCTL, bufdata, buflen, &byteCount, NULL);
 		bStat = (success!=0);
 	} else {
 		// Raw
@@ -227,9 +235,13 @@ bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long se
 		in.SectorCount			= num;
 		in.TrackMode			= CDDA;		
 		bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RAW_READ, &in, sizeof(in), 
-								buffer, num*RAW_SECTOR_SIZE, &byteCount,NULL);
+								bufdata, buflen, &byteCount,NULL);
 	}
 //	Close();
+
+	MEM_BlockWrite(buffer,bufdata,buflen);
+	delete[] bufdata;
+
 	return (byteCount!=num*RAW_SECTOR_SIZE) && (bStat>0);
 }
 

@@ -5,6 +5,7 @@
 #define MAX_ASPI_CDROM	5
 
 #include <string.h>
+#include "mem.h"
 #include "SDL.h"
 
 #define RAW_SECTOR_SIZE		2352
@@ -40,7 +41,7 @@ public:
 	virtual bool	PauseAudio			(bool resume) = 0;
 	virtual bool	StopAudio			(void) = 0;
 	
-	virtual bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num) = 0;
+	virtual bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 
 	virtual bool	LoadUnloadMedia		(bool unload) = 0;
 };	
@@ -61,7 +62,7 @@ public:
 	bool	PlayAudioSector		(unsigned long start,unsigned long len);
 	bool	PauseAudio			(bool resume);
 	bool	StopAudio			(void);
-	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
+	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
 	bool	LoadUnloadMedia		(bool unload);
 
 private:
@@ -86,7 +87,7 @@ public:
 	bool	PlayAudioSector		(unsigned long start,unsigned long len) { return true; };
 	bool	PauseAudio			(bool resume) { return true; };
 	bool	StopAudio			(void) { return true; };
-	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num) { return true; };
+	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return true; };
 	bool	LoadUnloadMedia		(bool unload) { return true; };
 };	
 
@@ -117,7 +118,7 @@ public:
 	bool	PauseAudio			(bool resume);
 	bool	StopAudio			(void);
 	
-	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
 
 	bool	LoadUnloadMedia		(bool unload);
 	
@@ -164,7 +165,7 @@ public:
 	bool	PauseAudio			(bool resume);
 	bool	StopAudio			(void);
 	
-	bool	ReadSectors			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
 
 	bool	LoadUnloadMedia		(bool unload);
 

@@ -667,13 +667,16 @@ bool CDROM_Interface_Aspi::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCha
 	return true;
 };
 
-bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sector, unsigned long num)
+bool CDROM_Interface_Aspi::ReadSectors(PhysPt buffer, bool raw, unsigned long sector, unsigned long num)
 {
 	SRB_ExecSCSICmd s;DWORD dwStatus;
 
 	hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
 
 	memset(&s,0,sizeof(s));
+
+	Bitu   buflen	= raw?2352*num:2048*num;
+	Bit8u* bufdata	= new Bit8u[buflen];
 
 	s.SRB_Cmd        = SC_EXEC_SCSI_CMD;
 	s.SRB_HaId       = haId;
@@ -682,8 +685,8 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 	s.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
 	s.SRB_SenseLen   = SENSE_LEN;
 
-	s.SRB_BufLen     = raw?2352*num:2048*num;
-	s.SRB_BufPointer = (BYTE FAR*)buffer;
+	s.SRB_BufLen     = buflen;
+	s.SRB_BufPointer = (BYTE FAR*)bufdata;
 	s.SRB_CDBLen     = 12;
 	s.SRB_PostProc   = (LPVOID)hEvent;
 
@@ -704,6 +707,11 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
 
 	CloseHandle(hEvent);
+
+	// Copy to PhysPt
+	MEM_BlockWrite(buffer,bufdata,buflen);
+
+	delete[] bufdata;
 
 	return (s.SRB_Status==SS_COMP);
 };

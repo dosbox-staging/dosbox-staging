@@ -504,8 +504,7 @@ bool CMscdex::GetUPC(Bit8u subUnit, Bit8u& attr, char* upc)
 bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data)
 {
 	if (subUnit>=numDrives) return false;
-	void* buffer = (void*)Phys2Host(data);
-	dinfo[subUnit].lastResult = cdrom[subUnit]->ReadSectors(buffer,raw,sector,num);
+	dinfo[subUnit].lastResult = cdrom[subUnit]->ReadSectors(data,raw,sector,num);
 	return dinfo[subUnit].lastResult;
 };
 
