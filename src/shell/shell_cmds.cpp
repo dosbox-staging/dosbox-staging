@@ -242,7 +242,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
 	DOS_DTA dta(dos.dta);
-	bool ret=DOS_FindFirst(args,0xffff);
+	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;
