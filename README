@@ -46,6 +46,7 @@ Special Keys:
 =============
 
 ALT-ENTER       Go full screen and back.
+CTRL-F9         Go full screen and back.
 CTRL-F10        Capture/Release the mouse.
 CTRL-F11        Slowdown emulation.
 CTRL-F12        Speedup emulation.
