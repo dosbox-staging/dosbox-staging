@@ -31,6 +31,63 @@ switch(Fetchb()) {
 			}
 		}
 		break;
+	/* 0x02 LAR Gw,Ew (286) */
+	/* 0x03 LSL Gw,Ew (286) */
+	/* 0x05 LOADALL (286 only?) */
+	/* 0x06 CLTS (286) */
+	/* 0x07 LOADALL (386 only?) */
+	/* 0x08 INVD (486) */
+	/* 0x02 WBINVD (486) */
+	/* 0x10 UMOV Eb,Gb (386) */
+	/* 0x11 UMOV Ew,Gw (386) */
+	/* 0x12 UMOV Gb,Eb (386) */
+	/* 0x13 UMOV Gw,Ew (386) */
+	/* 0x20 MOV Rd,CRx (386) */
+	/* 0x21 MOV Rd,DRx (386) */
+	/* 0x22 MOV CRx,Rd (386) */
+	/* 0x23 MOV DRx,Rd (386) */
+	/* 0x24 MOV Rd,TRx (386) */
+	/* 0x26 MOV TRx,Rd (386) */
+	/* 0x30 WRMSR (P5) */
+	/* 0x31 RDTSC (P5) */
+	/* 0x32 RDMSR (P5) */
+	/* 0x33 RDPMC (P6) */
+	/* 0x40-4F CMOVcc Gw,Ew (P6) */
+	/* 0x50 PAVEB Rq,Eq (CYRIX MMX) */
+	/* 0x51 PADDSIW Rq,Eq (CYRIX MMX) */
+	/* 0x52 PMAGW Rq,Eq (CYRIX MMX) */
+	/* 0x54 PDISTIB Rq,Eq (CYRIX MMX) */
+	/* 0x55 PSUBSIW Rq,Eq (CYRIX MMX) */
+	/* 0x58 PMVZB Rq,Eq (CYRIX MMX) */
+	/* 0x59 PMULHRW Rq,Eq (CYRIX MMX) */
+	/* 0x5A PMVNZB Rq,Eq (CYRIX MMX) */
+	/* 0x5B PMVLZB Rq,Eq (CYRIX MMX) */
+	/* 0x5C PMVGEZB Rq,Eq (CYRIX MMX) */
+	/* 0x5D PMULHRIW Rq,Eq (CYRIX MMX) */
+	/* 0x5E PMACHRIW Rq,Eq (CYRIX MMX) */
+	/* 0x60 PUNPCKLBW Rq,Eq (MMX) */
+	/* 0x61 PUNPCKLWD Rq,Eq (MMX) */
+	/* 0x62 PUNPCKLDQ Rq,Eq (MMX) */
+	/* 0x63 PACKSSWB Rq,Eq (MMX) */
+	/* 0x64 PCMPGTB Rq,Eq (MMX) */
+	/* 0x65 PCMPGTW Rq,Eq (MMX) */
+	/* 0x66 PCMPGTD Rq,Eq (MMX) */
+	/* 0x67 PACKUSWB Rq,Eq (MMX) */
+	/* 0x68 PUNPCKHBW Rq,Eq (MMX) */
+	/* 0x69 PUNPCKHWD Rq,Eq (MMX) */
+	/* 0x6A PUNPCKHDQ Rq,Eq (MMX) */
+	/* 0x6B PACKSSDW Rq,Eq (MMX) */
+	/* 0x6E MOVD Rq,Ed (MMX) */
+	/* 0x6F MOVQ Rq,Eq (MMX) */
+	/* 0x71 PSLLW/PSRAW/PSRLW Rq,Ib (MMX) */
+	/* 0x72 PSLLD/PSRAD/PSRLD Rq,Ib (MMX) */
+	/* 0x73 PSLLQ/PSRLQ Rq,Ib (MMX) */
+	/* 0x74 PCMPEQB Rq,Eq (MMX) */
+	/* 0x75 PCMPEQW Rq,Eq (MMX) */
+	/* 0x76 PCMPEQD Rq,Eq (MMX) */
+	/* 0x77 EMMS (MMX) */
+	/* 0x7E MOVD Ed,Rq (MMX) */
+	/* 0x7F MOVQ Ed,Rq (MMX) */
 	case 0x80:												/* JO */
 		JumpSIw(get_OF());break;
 	case 0x81:												/* JNO */
@@ -63,10 +120,59 @@ switch(Fetchb()) {
 		JumpSIw(get_ZF() || (get_SF() != get_OF()));break;
 	case 0x8f:												/* JNLE */
 		JumpSIw((get_SF() == get_OF()) && !get_ZF());break;
+
+	case 0x90:												/* SETO */
+		SETcc(get_OF());break;
+	case 0x91:												/* SETNO */
+		SETcc(!get_OF());break;
+	case 0x92:												/* SETB */
+		SETcc(get_CF());break;
+	case 0x93:												/* SETNB */
+		SETcc(!get_CF());break;
+	case 0x94:												/* SETZ */
+		SETcc(get_ZF());break;
+	case 0x95:												/* SETNZ */
+		SETcc(!get_ZF());	break;
+	case 0x96:												/* SETBE */
+		SETcc(get_CF() || get_ZF());break;
+	case 0x97:												/* SETNBE */
+		SETcc(!get_CF() && !get_ZF());break;
+	case 0x98:												/* SETS */
+		SETcc(get_SF());break;
+	case 0x99:												/* SETNS */
+		SETcc(!get_SF());break;
+	case 0x9a:												/* SETP */
+		SETcc(get_PF());break;
+	case 0x9b:												/* SETNP */
+		SETcc(!get_PF());break;
+	case 0x9c:												/* SETL */
+		SETcc(get_SF() != get_OF());break;
+	case 0x9d:												/* SETNL */
+		SETcc(get_SF() == get_OF());break;
+	case 0x9e:												/* SETLE */
+		SETcc(get_ZF() || (get_SF() != get_OF()));break;
+	case 0x9f:												/* SETNLE */
+		SETcc((get_SF() == get_OF()) && !get_ZF());break;
+
 	case 0xa0:												/* PUSH FS */		
 		Push_16(Segs[fs].value);break;
 	case 0xa1:												/* POP FS */		
 		SetSegment_16(fs,Pop_16());break;
+	/* 0xa2 CPUID */
+	case 0xa3:												/* BT Ew,Gw */
+		{
+			GetRMrw;
+			Bit16u mask=1 << (*rmrw & 15);
+			if (rm >= 0xc0 ) {
+				GetEArw;
+				flags.cf=(*earw & mask)>0;
+			} else {
+				GetEAa;Bit16u old=LoadMw(eaa);
+				flags.cf=(old & mask)>0;
+			}
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			break;
+		}
 	case 0xa4:												/* SHLD Ew,Gw,Ib */
 		{
 			GetRMrw;
@@ -81,10 +187,29 @@ switch(Fetchb()) {
 			else {GetEAa;DSHLW(eaa,*rmrw,reg_cl,LoadMw,SaveMw);}
 			break;
 		}
+	/* 0xa6 XBTS (early 386 only) CMPXCHG (early 486 only) */
+	/* 0xa7 IBTS (early 386 only) CMPXCHG (early 486 only) */
 	case 0xa8:												/* PUSH GS */		
 		Push_16(Segs[gs].value);break;
 	case 0xa9:												/* POP GS */		
 		SetSegment_16(gs,Pop_16());break;
+	/* 0xaa RSM */
+	case 0xab:												/* BTS Ew,Gw */
+		{
+			GetRMrw;
+			Bit16u mask=1 << (*rmrw & 15);
+			if (rm >= 0xc0 ) {
+				GetEArw;
+				flags.cf=(*earw & mask)>0;
+				*earw|=mask;
+			} else {
+				GetEAa;Bit16u old=LoadMw(eaa);
+				flags.cf=(old & mask)>0;
+				SaveMw(eaa,old | mask);
+			}
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			break;
+		}
 	case 0xac:												/* SHRD Ew,Gw,Ib */
 		{
 			GetRMrw;
@@ -111,6 +236,25 @@ switch(Fetchb()) {
 			else {flags.cf=true;flags.of=true;}
 			break;
 		}
+	/* 0xb0 CMPXCHG Eb,Gb */
+	/* 0xb1 CMPXCHG Ew,Gw */
+	/* 0xb2 LSS */
+	case 0xb3:												/* BTR Ew,Gw */
+		{
+			GetRMrw;
+			Bit16u mask=1 << (*rmrw & 15);
+			if (rm >= 0xc0 ) {
+				GetEArw;
+				flags.cf=(*earw & mask)>0;
+				*earw&= ~mask;
+			} else {
+				GetEAa;Bit16u old=LoadMw(eaa);
+				flags.cf=(old & mask)>0;
+				SaveMw(eaa,old & ~mask);
+			}
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			break;
+		}
 	case 0xb4:												/* LFS */
 		{	
 			GetRMrw;GetEAa;
@@ -130,12 +274,20 @@ switch(Fetchb()) {
 			else {GetEAa;*rmrw=LoadMb(eaa);}
 			break;
 		}
+	case 0xb7:												/* MOVZX Gw,Ew */
+	case 0xbf:												/* MOVSX Gw,Ew */
+		{
+			GetRMrw;															
+			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;}
+			else {GetEAa;*rmrw=LoadMw(eaa);}
+			break;
+		}
 	case 0xba:												/* GRP8 Ew,Ib */
 		{
 			GetRM;
+			Bit16u mask=1 << (Fetchb() & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
-				Bit16u mask=1 << (Fetchb() & 15);
 				flags.cf=(*earw & mask)>0;
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
@@ -144,16 +296,14 @@ switch(Fetchb()) {
 					*earw|=mask;
 					break;
 				case 0x30:									/* BTR */
-					*earw&=~mask;
+					*earw&= ~mask;
 					break;
 				case 0x38:									/* BTC */
-					if (flags.cf) *earw&=~mask;
-					else *earw|=mask;
+					*earw^=mask;
 					break;
 				}
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
-				Bit16u mask=1 << (Fetchb() & 15);
 				flags.cf=(old & mask)>0;
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
@@ -165,16 +315,31 @@ switch(Fetchb()) {
 					SaveMw(eaa,old & ~mask);
 					break;
 				case 0x38:									/* BTC */
-					if (flags.cf) old&=~mask;
-					else old|=mask;
-					SaveMw(eaa,old);
+					SaveMw(eaa,old ^ mask);
 					break;
 				}
 			}
-			if (flags.type!=t_CF) flags.prev_type=flags.type;
-			flags.type=t_CF;
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
 			break;
 		}
+	case 0xbb:												/* BTC Ew,Gw */
+		{
+			GetRMrw;
+			Bit16u mask=1 << (*rmrw & 15);
+			if (rm >= 0xc0 ) {
+				GetEArw;
+				flags.cf=(*earw & mask)>0;
+				*earw^=mask;
+			} else {
+				GetEAa;Bit16u old=LoadMw(eaa);
+				flags.cf=(old & mask)>0;
+				SaveMw(eaa,old ^ mask);
+			}
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			break;
+		}
+	/* 0xbc BSF Gw,Ew */
+	/* 0xbd BSR Gw,Ew */
 	case 0xbe:												/* MOVSX Gw,Eb */
 		{
 			GetRMrw;															
@@ -182,6 +347,39 @@ switch(Fetchb()) {
 			else {GetEAa;*rmrw=LoadMbs(eaa);}
 			break;
 		}
+	/* 0xc0 XADD Eb,Gb (486) */
+	/* 0xc1 XADD Ew,Gw (486) */
+	/* 0xc7 CMPXCHG8B Mq (P5) */
+	/* 0xc8-cf BSWAP Rw (odd behavior,486) */
+	/* 0xd1 PSRLW Rq,Eq (MMX) */
+	/* 0xd2 PSRLD Rq,Eq (MMX) */
+	/* 0xd3 PSRLQ Rq,Eq (MMX) */
+	/* 0xd5 PMULLW Rq,Eq (MMX) */
+	/* 0xd8 PSUBUSB Rq,Eq (MMX) */
+	/* 0xd9 PSUBUSW Rq,Eq (MMX) */
+	/* 0xdb PAND Rq,Eq (MMX) */
+	/* 0xdc PADDUSB Rq,Eq (MMX) */
+	/* 0xdd PADDUSW Rq,Eq (MMX) */
+	/* 0xdf PANDN Rq,Eq (MMX) */
+	/* 0xe1 PSRAW Rq,Eq (MMX) */
+	/* 0xe2 PSRAD Rq,Eq (MMX) */
+	/* 0xe5 PMULHW Rq,Eq (MMX) */
+	/* 0xe8 PSUBSB Rq,Eq (MMX) */
+	/* 0xe9 PSUBSW Rq,Eq (MMX) */
+	/* 0xeb POR Rq,Eq (MMX) */
+	/* 0xec PADDSB Rq,Eq (MMX) */
+	/* 0xed PADDSW Rq,Eq (MMX) */
+	/* 0xef PXOR Rq,Eq (MMX) */
+	/* 0xf1 PSLLW Rq,Eq (MMX) */
+	/* 0xf2 PSLLD Rq,Eq (MMX) */
+	/* 0xf3 PSLLQ Rq,Eq (MMX) */
+	/* 0xf5 PMADDWD Rq,Eq (MMX) */
+	/* 0xf8 PSUBB Rq,Eq (MMX) */
+	/* 0xf9 PSUBW Rq,Eq (MMX) */
+	/* 0xfa PSUBD Rq,Eq (MMX) */
+	/* 0xfc PADDB Rq,Eq (MMX) */
+	/* 0xfd PADDW Rq,Eq (MMX) */
+	/* 0xfe PADDD Rq,Eq (MMX) */
 	default:
 		 SUBIP(1);
 		 E_Exit("CPU:Opcode 0F:%2X Unhandled",Fetchb());
