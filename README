@@ -48,15 +48,20 @@ The option -t <type> specifies the media: Where <type> can be.
    floppy = floppy drive
    cdrom  = cdrom drive
 
+The option -cd lists all found cdrom drives and their id.
+The option -usecd [x] forces to use the cdrom number x (id as shown in list -cd)
+
 The option -aspi forces to use aspi driver
+  (only valid if mounting a cdrom and on Windows systems with ASPI-Layer).
+The option -ioctl forces to use ioctl functions
   (only valid if mounting a cdrom and on Win2000/XP/NT systems).
 
 For example to mount c:\floppy as a floppy : mount a c:\floppy -t floppy
 For example to mount system cdrom drive e as cdrom drive d in dosbox 
   mount d e:\ -t cdrom
-- In Win 95/98/ME you need latest ASPI driver to get cdrom audio support.
-- In Win 2000/XP/NT you have the option to use an ASPI driver (add -aspi) 
-  at the end of the mount command. 
+For example to mount system cdrom drive at mountpoint /media/cdrom as cdrom 
+drive d in dosbox
+  mount d /media/cdrom -t cdrom -usecd 0
 
 It is also possible to mount a directory as cdrom, but it's limited.
 
