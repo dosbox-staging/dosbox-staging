@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.36 2003-10-26 19:00:38 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.37 2003-11-05 19:41:10 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -45,6 +45,9 @@ CPU_Decoder * cpudecoder;
 void CPU_Real_16_Slow_Start(bool big);
 void CPU_Core_Full_Start(bool big);
 void CPU_Core_Normal_Start(bool big);
+
+static Bits CPU_Core_Normal_Decode(void);
+static Bits CPU_Core_Full_Decode(void);
 
 #if 1
 
@@ -94,26 +97,12 @@ void CPU_SetFlags(Bitu word) {
 	reg_flags=(word|2)&~0x28;
 }
 
-bool CPU_CheckCodeType(CODE_TYPE type) {
-	if (cpu.code.type==type) return true;
-	cpu.code.type=type;
-	switch (cpu.code.type) {
-	case CODE_REAL:
-		realcore_start(false);
-		cpu.code.big = false;
-		break;
-	case CODE_PMODE16:
-		pmodecore_start(false);
-		break;
-	case CODE_PMODE32:
-		pmodecore_start(true);
-		break;
-	}
-	return false;
+Bit8u lastint;
+void CPU_Exception(Bitu num,Bitu error_code) {
+	CPU_Interrupt(num,0,0);
 }
 
-Bit8u lastint;
-bool Interrupt(Bitu num) {
+void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 	lastint=num;
 #if C_DEBUG
 	switch (num) {
@@ -124,10 +113,12 @@ bool Interrupt(Bitu num) {
 #endif
  		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
-		if (DEBUG_Breakpoint()) return true;
+		if (DEBUG_Breakpoint()) {
+			CPU_Cycles=0;
+			return;
+		}
 	};
 #endif
-
 	if (!cpu.pmode) {
 		/* Save everything on a 16-bit stack */
 		CPU_Push16(reg_flags & 0xffff);
@@ -140,7 +131,7 @@ bool Interrupt(Bitu num) {
 		Segs.val[cs]=mem_readw((num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
 		cpu.code.big=false;
-		return CPU_CheckCodeType(CODE_REAL);
+		return;
 	} else {
 		/* Protected Mode Interrupt */
 		Descriptor gate;
@@ -192,40 +183,16 @@ bool Interrupt(Bitu num) {
 				cpu.code.big=desc.Big()>0;
 				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=offset;
-				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+				return;
 			}
 		default:
 			E_Exit("Illegal descriptor type %X for int %X",gate.Type(),num);
 		}
 	}
 	assert(1);
-	return false;
 }
 
-
-bool CPU_Exception(Bitu exception,Bit32u error_code) {
-	if (!cpu.pmode) { /* RealMode Interrupt */	
-		/* Save everything on a 16-bit stack */
-		CPU_Push16(reg_flags & 0xffff);
-		CPU_Push16(SegValue(cs));
-		CPU_Push16(reg_ip);
-		SETFLAGBIT(IF,false);
-		SETFLAGBIT(TF,false);
-		/* Get the new CS:IP from vector table */
-		reg_eip=mem_readw(exception << 2);
-		Segs.val[cs]=mem_readw((exception << 2)+2);
-		Segs.phys[cs]=Segs.val[cs]<<4;
-		cpu.code.big=false;
-		return CPU_CheckCodeType(CODE_REAL);
-	} else { /* Protected Mode Exception */
-	
-
-
-	}
-	return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
-}
-
-bool CPU_IRET(bool use32) {
+void CPU_IRET(bool use32) {
 	if (!cpu.pmode || cpu.v86) {		/* RealMode IRET */
 		if (use32) {
 			reg_eip=CPU_Pop32();
@@ -237,11 +204,11 @@ bool CPU_IRET(bool use32) {
 			CPU_SetFlagsw(CPU_Pop16());
 		}
 		cpu.code.big=false;
-		return CPU_CheckCodeType(CODE_REAL);
+		return;
 	} else {	/* Protected mode IRET */
 		/* Check if this is task IRET */
 		if (GETFLAG(NT)) {
-		if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
+			if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
 			E_Exit("Task IRET");
 
 
@@ -314,12 +281,11 @@ bool CPU_IRET(bool use32) {
 			//TODO Maybe validate other segments, but why would anyone use them?
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level return to %X:X big %d",selector,offset,cpu.code.big);
 		}
-		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+		return;
 	}
-	return false;
 }
 
-bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
+void CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 	if (!cpu.pmode || cpu.v86) {
 		if (!use32) {
 			reg_eip=offset&0xffff;
@@ -328,7 +294,7 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 		}
 		SegSet16(cs,selector);
 		cpu.code.big=false;
-		return CPU_CheckCodeType(CODE_REAL);
+		return;
 	} else {
 		Bitu rpl=selector & 3;
 		Descriptor desc;
@@ -350,18 +316,17 @@ CODE_jmp:
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
-			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			return;
 		default:
 			E_Exit("JMP Illegal descriptor type %X",desc.Type());
 		}
 	}
 	assert(1);
-	return false;
 }
 
 
 
-bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
+void CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 	if (!cpu.pmode || cpu.v86) {
 		if (!use32) {
 			CPU_Push16(SegValue(cs));
@@ -374,7 +339,7 @@ bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 		}
 		cpu.code.big=false;
 		SegSet16(cs,selector);
-		return CPU_CheckCodeType(CODE_REAL);
+		return;
 	} else {
 		Descriptor call;
 		Bitu rpl=selector & 3;
@@ -405,7 +370,7 @@ call_code:
 			cpu.code.big=call.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
-			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			return;
 		case DESC_286_CALL_GATE: { 
 			if (call.DPL()<cpu.cpl) E_Exit("286 Call Gate: Gate DPL<CPL");
 			if (call.DPL()<rpl)		E_Exit("286 Call Gate: Gate DPL<RPL");			
@@ -448,7 +413,7 @@ call_code:
 				CPU_Push16(oldcs);
 				CPU_Push16(oldip);
 //				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Higher) %04X:%04X",newcs,neweip);
-				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+				return;
 			} else {
 				// same privilidge level
 				Bitu oldcs	= SegValue(cs);
@@ -468,7 +433,7 @@ call_code:
 				CPU_Push16(oldcs);
 				CPU_Push16(oldip);
 //				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Same) %04X:%04X",newcs,neweip);
-				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+				return;
 			}; break;
 			};
 		default:
@@ -480,7 +445,7 @@ call_code:
 }
 
 
-bool CPU_RET(bool use32,Bitu bytes) {
+void CPU_RET(bool use32,Bitu bytes) {
 	if (!cpu.pmode || cpu.v86) {
 		Bitu new_ip,new_cs;
 		if (!use32) {
@@ -494,7 +459,7 @@ bool CPU_RET(bool use32,Bitu bytes) {
 		SegSet16(cs,new_cs);
 		reg_eip=new_ip;
 		cpu.code.big=false;
-		return CPU_CheckCodeType(CODE_REAL);
+		return;
 	} else {
 		Bitu offset,selector;
 		if (!use32) {
@@ -534,7 +499,7 @@ RET_same_level:
 			Segs.val[cs]=selector;
 			reg_eip=offset;
 			LOG(LOG_CPU,LOG_NORMAL)("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
-			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			return;
 		} else {
 			/* Return to higher level */
 			Bitu newsp = CPU_Pop16();
@@ -547,12 +512,12 @@ RET_same_level:
 			Segs.val[cs]=selector;
 			reg_eip=offset;
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
-			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			return;
 		}
 		LOG(LOG_CPU,LOG_NORMAL)("Prot ret %X:%X",selector,offset);
-		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+		return;
 	}
-	return false;
+	assert(1);
 }
 
 
@@ -893,13 +858,19 @@ void CPU_ReadTaskSeg32(PhysPt base,TaskSegment_32 * seg) {
 
 static Bits HLT_Decode(void) {
 	/* Once an interrupt occurs, it should change cpu core */
-	CPU_Cycles=0;
+	if (reg_eip!=cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
+		cpudecoder=cpu.hlt.old_decoder;
+	} else {
+		CPU_Cycles=0;
+	}
 	return 0;
 }
 
 void CPU_HLT(void) {
 	CPU_Cycles=0;
-	cpu.code.type=CODE_INIT;
+	cpu.hlt.cs=SegValue(cs);
+	cpu.hlt.eip=reg_eip;
+	cpu.hlt.old_decoder=cpudecoder;
 	cpudecoder=&HLT_Decode;
 }
 
@@ -947,9 +918,9 @@ void CPU_Init(Section* sec) {
 	CPU_SET_CRX(0,0);					//Initialize
 	cpu.v86=false;
 	cpu.code.big=false;
-	cpu.code.type=CODE_INIT;			//So a new cpu core will be started
 	cpu.stack.mask=0xffff;
 	cpu.stack.big=false;
+	realcore_start(false);
 
 	CPU_JMP(false,0,0);					//Setup the first cpu core
 
