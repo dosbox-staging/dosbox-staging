@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.67 2004-03-31 14:43:50 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.68 2004-04-03 19:01:45 canadacow Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -251,7 +251,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	secprop->Add_bool("nosound",false);
-	secprop->Add_int("rate",32000);
+	secprop->Add_int("rate",22050);
 	secprop->Add_int("blocksize",2048);
 	secprop->Add_string("wavedir","waves");
 
