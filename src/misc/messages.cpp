@@ -40,7 +40,15 @@ struct MessageBlock {
 
 static list<MessageBlock> Lang;
 typedef list<MessageBlock>::iterator itmb;
+
 void MSG_Add(const char * _name, const char* _val) {
+	/* Find the message */
+	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
+		if((*tel).name==_name) { 
+			return;
+		}
+	}
+	/* Even if the message doesn't exist add it */
 	Lang.push_back(MessageBlock(_name,_val));
 }
 
@@ -55,8 +63,9 @@ void MSG_Replace(const char * _name, const char* _val) {
 		}
 	}
 	/* Even if the message doesn't exist add it */
-	MSG_Add(_name,_val);
+	Lang.push_back(MessageBlock(_name,_val));
 }
+
 static void LoadMessageFile(const char * fname) {
 	if (!fname) return;
 	if(*fname=='\0') return;//empty string=no languagefile
