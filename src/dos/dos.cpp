@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.79 2004-12-04 08:02:09 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.80 2004-12-16 19:19:39 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -405,7 +405,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x38:					/* Set Country Code */	
 		if (reg_al==0) {		/* Get country specidic information */
 			PhysPt dest = SegPhys(ds)+reg_dx;
-			MEM_BlockWrite(dest,dos.tables.country,0x22);
+			MEM_BlockWrite(dest,dos.tables.country,0x18);
 			reg_bx = 0x01;
 			CALLBACK_SCF(false);
 			break;
