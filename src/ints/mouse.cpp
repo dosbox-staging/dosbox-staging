@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.28 2004-01-02 18:47:13 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.29 2004-01-09 16:51:22 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -127,7 +127,7 @@ INLINE void Mouse_AddEvent(Bit16u type) {
  * handled backwards (prevents doubleclicks while moving)
  */
 		for(Bitu i = mouse.events ; i ; i--)
-			mouse.event_queue[i-1] = mouse.event_queue[i];
+			mouse.event_queue[i] = mouse.event_queue[i-1];
 		mouse.event_queue[0].type=type;
 		mouse.event_queue[0].buttons=mouse.buttons;
 		mouse.events++;
