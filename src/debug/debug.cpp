@@ -605,8 +605,6 @@ static void DrawRegisters(void) {
 
 	/*Individual flags*/
 
-	FILLFLAGS;
-
 	SetColor((flags.word ^ oldflags)&FLAG_CF);
 	mvwprintw (dbg.win_reg,1,53,"%01X",GETFLAG(CF) ? 1:0);
 	SetColor((flags.word ^ oldflags)&FLAG_ZF);
@@ -1122,26 +1120,25 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-		if (address<(XMS_GetSize()+1)*1024*1024) {
-			static char outmask[] = "%s:[%04X]=%02X";
-			
-			if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
-
+//		if (address<(XMS_GetSize()+1)*1024*1024) {
+		static char outmask[] = "%s:[%04X]=%02X";
+		
+		if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
 			switch (DasmLastOperandSize()) {
-				case 8 : {	Bit8u val = mem_readb(address);
-							outmask[12] = '2';
-							sprintf(result,outmask,prefix,adr,val);
-						 }	break;
-				case 16: {	Bit16u val = mem_readw(address);
-							outmask[12] = '4';
-							sprintf(result,outmask,prefix,adr,val);
-						 }	break;
-				case 32: {	Bit32u val = mem_readd(address);
-							outmask[12] = '8';
-							sprintf(result,outmask,prefix,adr,val);
-						 }	break;
-			}
+			case 8 : {	Bit8u val = mem_readb(address);
+						outmask[12] = '2';
+						sprintf(result,outmask,prefix,adr,val);
+					 }	break;
+			case 16: {	Bit16u val = mem_readw(address);
+						outmask[12] = '4';
+						sprintf(result,outmask,prefix,adr,val);
+					 }	break;
+			case 32: {	Bit32u val = mem_readd(address);
+						outmask[12] = '8';
+						sprintf(result,outmask,prefix,adr,val);
+					 }	break;
 		}
+//		}
 		// Variable found ?
 		CDebugVar* var = CDebugVar::FindVar(address);
 		if (var) {
@@ -1348,7 +1345,9 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 	
 	if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");	
 	// Get register values
-	sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),get_CF(),get_ZF(),get_SF(),get_OF(),get_AF(),get_PF());
+	
+	sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+		GETFLAGBOOL(CF),GETFLAGBOOL(ZF),GETFLAGBOOL(SF),GETFLAGBOOL(OF),GETFLAGBOOL(AF),GETFLAGBOOL(PF));
 };
 
 static bool DEBUG_Log_Loop(int count) {
