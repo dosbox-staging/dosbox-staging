@@ -1,1 +1,1 @@
-EXTRA_DIST = dirent.c dirent.h unistd.h config.h
+EXTRA_DIST = dirent.c dirent.h unistd.h config.h ntddscsi.h ntddstor.h ntddcdrm.h
