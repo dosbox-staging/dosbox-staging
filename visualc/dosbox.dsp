@@ -546,6 +546,10 @@ SOURCE=..\src\ints\bios_keyboard.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\ints\dpmi.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\ints\ems.cpp
 # End Source File
 # Begin Source File
