@@ -377,7 +377,7 @@ void MEM_AllocLinkMemory(PageEntry * theentry) {
 
 void MEM_SetLFB(Bitu page,Bitu pages,HostPt pt) {
 	if (pages>LFB_PAGES) E_Exit("MEM:LFB to large");
-	LOG_MSG("LFB Base at %X",page*4096);
+	LOG_MSG("LFB Base at address %X,page %X",page*4096,page);
 	memory.lfb.pages=pages;
 	memory.lfb.start_page=page;
 	memory.lfb.end_page=page+pages;
@@ -550,8 +550,8 @@ MemHandle MEM_AllocatePages(Bitu pages,bool sequence) {
 				next=&memory.entries[index].next_handle;
 				index++;pages--;
 			}
+			*next=-1;		//Invalidate it in case we need another match
 		}
-		*next=-1;
 	}
 	return ret;
 }
