@@ -213,11 +213,11 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
-		addr&=0x7fff;
+		addr&=0xffff;
 		return vga.draw.font[addr];
 	}
 	void writeb(PhysPt addr,Bitu val){
-		addr&=0x7fff;
+		addr&=0xffff;
 		if (vga.seq.map_mask & 0x4) {
 			vga.draw.font[addr]=(Bit8u)val;
 		}
