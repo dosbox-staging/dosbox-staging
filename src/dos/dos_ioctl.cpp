@@ -23,10 +23,6 @@
 #include "regs.h"
 #include "dos_inc.h"
 
-#define MAX_DEVICE 20
-static DOS_File * dos_devices[MAX_DEVICE];
-
-
 bool DOS_IOCTL(void) {
 	Bitu handle;Bit8u drive;
 	if (reg_al<8) {				/* call 0-7 use a file handle */

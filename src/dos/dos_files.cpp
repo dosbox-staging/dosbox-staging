@@ -127,7 +127,6 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 			char * ext=strchr(tempdir,'.');
 			if (ext) {
 				ext[4]=0;
-				Bitu blah=strlen(tempdir);
 				if (strlen(tempdir)>12) memmove(tempdir+8,ext,5);
 			} else tempdir[8]=0;
 			strcat(fullname,tempdir);
@@ -475,27 +474,12 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 	return true;
 }
 
-
-
-static bool FCB_MakeName2 (DOS_FCB & fcb, char* outname, Bit8u* outdrive){
-	char short_name[DOS_FCBNAME];
-	fcb.GetName(short_name);
-	return DOS_MakeName(short_name,outname, outdrive);
-}
-
 #define FCB_SEP ":.;,=+"
 #define ILLEGAL ":.;,=+ \t/\"[]<>|"
 
 static bool isvalid(const char in){
 	const char ill[]=ILLEGAL;    
 	return (Bit8u(in)>0x1F) && (!strchr(ill,in));
-}
-
-static void vullen (char* veld,char* pveld){
-    for(Bitu i=(pveld-veld);i<strlen(veld);i++){
-        *(veld+i)='?';
-    }
-    return;
 }
 
 #define PARSE_SEP_STOP          0x01

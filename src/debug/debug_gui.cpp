@@ -37,7 +37,7 @@ struct _LogGroup {
 	bool enabled;
 };
 
-static _LogGroup loggrp[LOG_MAX]={"",true,0};
+static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
 static FILE* debuglog;
 
 extern int old_cursor_state;

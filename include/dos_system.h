@@ -186,7 +186,7 @@ public:
 	void		EmptyCache			(void) {};
 	
 	void		SetLabel			(const char* name)	{};
-	char*		GetLabel			(void)				{};
+	char*		GetLabel			(void)				{return "";};
 
 public:
 	char		basePath			[CROSS_LEN];

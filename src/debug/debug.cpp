@@ -69,7 +69,6 @@ static char curSelectorName[3] = { 0,0,0 };
 static Segment oldsegs[6];
 static Bitu oldflags;
 DBGBlock dbg;
-static char input_line[256];
 static Bitu input_count;
 Bitu cycle_count;
 static bool debugging;
@@ -434,7 +433,6 @@ bool CBreakpoint::DeleteByIndex(Bit16u index)
 bool CBreakpoint::DeleteBreakpoint(PhysPt where) 
 {
 	// Search matching breakpoint
-	int nr = 0;
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
@@ -655,7 +653,7 @@ static void DrawCode(void)
 	PhysPt start  = GetAddress(codeViewData.useCS,codeViewData.useEIP);
 	char dline[200];Bitu size;Bitu c;
 	
-	for (Bit32u i=0;i<10;i++) {
+	for (int i=0;i<10;i++) {
 		saveSel = false;
 		if (has_colors()) {
 			if ((codeViewData.useCS==SegValue(cs)) && (disEIP == reg_eip)) {
@@ -780,8 +778,6 @@ Bit32u GetHexValue(char* str, char*& hex)
 
 bool ChangeRegister(char* str)
 {
-	Bit32u	value = 0;
-
 	char* hex = str;
 	while (*hex==' ') hex++;
 	if (strstr(hex,"EAX")==hex) { hex+=3; reg_eax = GetHexValue(hex,hex); } else
@@ -920,7 +916,6 @@ bool ParseCommand(char* str)
 	if (found) {
 		wprintw(dbg.win_out,"Breakpoint list:\n");
 		wprintw(dbg.win_out,"-------------------------------------------------------------------------\n");
-		Bit32u nr = 0;
 		CBreakpoint::ShowList();
 		return true;
 	};

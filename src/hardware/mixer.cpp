@@ -274,7 +274,7 @@ static void MIXER_WaveEvent(void) {
 		LOG_MSG("Can't open waveout dir %s",mixer.wave.dir);
 		return;
 	}
-	while (dir_ent=readdir(dir)) {
+	while ((dir_ent=readdir(dir))) {
 		char tempname[CROSS_LEN];
 		strcpy(tempname,dir_ent->d_name);
 		char * test=strstr(tempname,".wav");

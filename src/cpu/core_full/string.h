@@ -4,7 +4,6 @@
 	Bitu	add_mask;
 	Bitu	count,count_left;
 	Bits	add_index;
-	bool	restart=false;
 	
 	if (inst.prefix & PREFIX_SEG) si_base=inst.seg.base;
 	else si_base=SegBase(ds);
@@ -63,7 +62,7 @@
 		break;
 	case R_INSB:
 		for (;count>0;count--) {
-			reg_dx,SaveMb(di_base+di_index,IO_Read(reg_dx));
+			SaveMb(di_base+di_index,IO_Read(reg_dx));
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;

@@ -115,7 +115,7 @@ static void write_latch(Bit32u port,Bit8u val) {
 		if (p->write_latch == 0) p->cntr = 0x10000;
 		else p->cntr = p->write_latch;
 		p->start=PIC_MicroCount();
-		p->micro=1000000/((float)PIT_TICK_RATE/(float)p->cntr);
+		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			PIC_RemoveEvents(PIT0_Event);
@@ -287,7 +287,7 @@ void TIMER_Init(Section* sect) {
 	pit[0].write_latch=0;
 	pit[0].mode=3;
 
-	pit[0].micro=1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr);
+	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 	pit[2].micro=100;
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }

@@ -22,9 +22,6 @@
 #include "vga.h"
 
 static Bit8u flip=0;
-static Bit32u keep_vretrace;
-static bool keeping=false;
-static Bit8u p3c2data=0;
 
 void write_p3d4(Bit32u port,Bit8u val);
 Bit8u read_p3d4(Bit32u port);
