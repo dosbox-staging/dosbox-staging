@@ -98,10 +98,6 @@ SOURCE=..\src\cpu\core_16\helpers.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\cpu\core_16\instructions.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\cpu\core_16\main.h
 # End Source File
 # Begin Source File
@@ -144,6 +140,10 @@ SOURCE=..\src\cpu\cpu.cpp
 # Begin Source File
 
 SOURCE=..\src\cpu\flags.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\instructions.h
 # End Source File
 # Begin Source File
 
