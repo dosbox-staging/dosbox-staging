@@ -32,7 +32,7 @@ DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
-static Bitu call_20,call_21;
+static Bitu call_20,call_21,call_27;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -840,6 +840,13 @@ static Bitu DOS_20Handler(void) {
 	return CBRET_NONE;
 }
 
+static Bitu DOS_27Handler(void) 
+{
+	// Terminate & stay resident
+	Bit16u para = (reg_dx/16)+((reg_dx % 16)>0);
+	if (DOS_ResizeMemory(dos.psp,&para)) DOS_Terminate(true);
+	return CBRET_NONE;
+}
 
 void DOS_Init(Section* sec) {
     MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
@@ -850,6 +857,10 @@ void DOS_Init(Section* sec) {
 	call_21=CALLBACK_Allocate();
 	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET);
 	RealSetVec(0x21,CALLBACK_RealPointer(call_21));
+
+	call_27=CALLBACK_Allocate();
+	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET);
+	RealSetVec(0x27,CALLBACK_RealPointer(call_27));
 
 	DOS_SetupFiles();								/* Setup system File tables */
 	DOS_SetupDevices();							/* Setup dos devices */
