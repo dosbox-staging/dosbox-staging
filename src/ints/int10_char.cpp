@@ -180,7 +180,6 @@ void INT10_SetActivePage(Bit8u page) {
 	mem_address=page*CurMode->plength;
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
-	if (CurMode->mode<8) mem_address>>=1;
 
 	/* Write the new start address in vgahardware */
 	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0c);
@@ -278,7 +277,7 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 
 
 static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
-	Bit8u * fontdata;
+	PhysPt fontdata;
 	Bitu x,y;
 	switch (CurMode->type) {
 	case M_TEXT16:
@@ -295,14 +294,14 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		return;
 	case M_CGA4:
 	case M_CGA2:
-		if (chr<128) fontdata=Real2Host(RealGetVec(0x43))+chr*8;
+		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*8;
 		else {
 			chr-=128;
-			fontdata=Real2Host(RealGetVec(0x1F))+(chr)*8;
+			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*8;
 		}
 		break;
 	default:
-		fontdata=Real2Host(RealGetVec(0x43))+chr*real_readw(0x40,BIOSMEM_CHAR_HEIGHT);
+		fontdata=Real2Phys(RealGetVec(0x43))+chr*real_readw(0x40,BIOSMEM_CHAR_HEIGHT);
 		break;
 	}
 	x=8*col;
@@ -310,7 +309,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	//TODO Check for out of bounds
 	for (Bit8u h=0;h<CurMode->cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline=*fontdata++;
+		Bit8u bitline=mem_readb(fontdata);
 		Bit16u tx=x;
 		while (bitsel) {
 			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);

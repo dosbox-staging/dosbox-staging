@@ -281,17 +281,18 @@ void INT10_SetupVESA(void) {
 //TODO Maybe add normal vga modes too, but only seems to complicate things
 	while (ModeList[i].mode!=0xffff) {
 		if (ModeList[i].mode>=0x100){
-			real_writew(0xc000,int10.rom.used,ModeList[i].mode);
+			phys_writew(PhysMake(0xc000,int10.rom.used),ModeList[i].mode);
 			int10.rom.used+=2;
 		}
 		i++;
 	}
-	real_writew(0xc000,int10.rom.used,0xffff);
+	phys_writew(PhysMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
 	Bitu len=strlen(oemstring)+1;
-	MEM_BlockWrite(PhysMake(0xc000,int10.rom.used),oemstring,len);
-	int10.rom.used+=len;
+	for (i=0;i<len;i++) {
+		phys_writeb(0xc0000+i+int10.rom.used++,oemstring[i]);
+	}
 	callback.setwindow=CALLBACK_Allocate();
 	CALLBACK_Setup(callback.setwindow,SetWindowPositionHandler,CB_RETF);
 }

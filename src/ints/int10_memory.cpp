@@ -72,33 +72,35 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 
 
 
-
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
+	PhysPt rom_base=PhysMake(0xc000,0);
 	Bitu i;
 	int10.rom.used=2;
-	real_writew(0xc000,0,0xaa55);
+	phys_writew(rom_base+0,0xaa55);
 	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
-		real_writeb(0xC000,int10.rom.used++,int10_font_08[i]);
+		phys_writeb(rom_base+int10.rom.used++,int10_font_08[i]);
 	}
 	int10.rom.font_8_second=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
-		real_writeb(0xC000,int10.rom.used++,int10_font_08[i+128*8]);
+		phys_writeb(rom_base+int10.rom.used++,int10_font_08[i+128*8]);
 	}
 	int10.rom.font_14=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<256*14;i++) {
-		real_writeb(0xC000,int10.rom.used++,int10_font_14[i]);
+		phys_writeb(rom_base+int10.rom.used++,int10_font_14[i]);
 	}
 	int10.rom.font_16=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<256*16;i++) {
-		real_writeb(0xC000,int10.rom.used++,int10_font_16[i]);
+		phys_writeb(rom_base+int10.rom.used++,int10_font_16[i]);
 	}
 	int10.rom.static_state=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<0x10;i++) {
-		real_writeb(0xC000,int10.rom.used++,static_functionality[i]);
+		phys_writeb(rom_base+int10.rom.used++,static_functionality[i]);
 	}
-	MEM_BlockWrite(PhysMake(0xf000,0xfa6e),int10_font_08,128*8);
+	for (i=0;i<128*8;i++) {
+		phys_writeb(PhysMake(0xf000,0xfa6e)+i,int10_font_08[i]);
+	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
 };
 
