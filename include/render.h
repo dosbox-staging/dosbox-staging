@@ -29,12 +29,13 @@ enum {
 	DoubleBoth=		0x03
 };
 
-bool RENDER_StartUpdate(void);
 
-void RENDER_EndUpdate(void);
 
-void RENDER_Part(Bit8u * data,Bitu x,Bitu y,Bitu dx,Bitu dy);
+typedef void (* RENDER_Part_Handler)(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy);
+typedef void (* RENDER_Draw_Handler)(RENDER_Part_Handler part_handler);
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags);
+void RENDER_DoUpdate(void);
+
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags,RENDER_Draw_Handler draw_handler);
 
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);

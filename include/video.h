@@ -22,6 +22,8 @@
 
 typedef void (* GFX_ModeCallBack)(Bitu width,Bitu height,Bitu bpp,Bitu pitch,Bitu flags);
 
+typedef void (* GFX_DrawCallBack)(void * data);
+
 struct GFX_PalEntry {
 	Bit8u r;
 	Bit8u g;
@@ -40,14 +42,13 @@ void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
 
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack callback);
+void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack mode_callback, GFX_DrawCallBack draw_callback);
 
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
 
-void * GFX_StartUpdate(void);
-void GFX_EndUpdate(void);
+void GFX_DoUpdate(void);
 
 #endif
 
