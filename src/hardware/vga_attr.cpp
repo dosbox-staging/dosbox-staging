@@ -24,7 +24,7 @@
 
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	if (vga.attr.mode_control & 0x80) val=(val&0xf) | (vga.attr.color_select << 4);
-	else val|=(vga.attr.color_select & 0xc) << 4;
+	else val=(val & 63) | (vga.attr.color_select & 0xc) << 4;
 	VGA_DAC_CombineColor(index,val);
 }
 
