@@ -253,7 +253,7 @@
 	CASE_B(0x65)												/* SEG GS: */
 		DO_PREFIX_SEG(gs);break;
 	CASE_B(0x66)												/* Operand Size Prefix */
-		core.opcode_index^=OPCODE_SIZE;
+		core.opcode_index=core.index_default^OPCODE_SIZE;
 		goto restart_opcode;
 	CASE_B(0x67)												/* Address Size Prefix */
 		DO_PREFIX_ADDR();
@@ -751,7 +751,7 @@
 			return debugCallback;
 		}
 #endif			
-		CPU_SW_Interrupt(3);
+		CPU_SW_Interrupt(3,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 		core.trap.skip=true;
 #endif
@@ -765,7 +765,7 @@
 				return debugCallback;
 			}
 #endif
-			CPU_SW_Interrupt(num);
+			CPU_SW_Interrupt(num,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -775,7 +775,7 @@
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			LEAVECORE;
-			CPU_SW_Interrupt(4);
+			CPU_SW_Interrupt(4,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -950,7 +950,7 @@
 		break;		
 	CASE_B(0xf4)												/* HLT */
 		LEAVECORE;
-		CPU_HLT();
+		CPU_HLT(core.ip_lookup-core.op_start);
 		return CBRET_NONE;
 	CASE_B(0xf5)												/* CMC */
 		FillFlags();

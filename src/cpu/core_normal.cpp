@@ -210,7 +210,7 @@ static Bits CPU_Core_Normal_Decode_Trap(void) {
 	core.trap.skip=false;
 
 	Bits ret=CPU_Core_Normal_Decode();
-	if (!core.trap.skip) Interrupt(1);
+	if (!core.trap.skip) CPU_SW_Interrupt(1,0);
 	
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Normal_Decode;
