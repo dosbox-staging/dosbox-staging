@@ -1,34 +1,35 @@
-DOSBox v0.58
+DOSBox v0.60
 
+======
 Usage:
 ======
 
-With the new internal shell,we've changed the command line a bit,
-so let's just give some examples of what you can do now.
+dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
+       [-lang languagefile]
 
-dosbox 
-  With nothing on the command line you'll end up on the internal drive and 
-  from there you can mount directories as drives.
-dosbox [filename/directory]
-  If dosbox detects a directory it'll mount that as the C: drive 
-    and then start the shell from c:\.
-  If dosbox doesn't detect a directory it'll assume you mean an executable.
-    This can be .bat .com .exe. Doesn't need to have extension included. 
-    It will mount the directory the file is in as the C: drive.
-    Then start up the shell which will start the file.
+  name   
+        If "name" is a directory it'll mount that as the C: drive.
+        If "name" is a executable it'll mount the directory of "name" 
+        as the C: drive and execute "name".
+    
+  -exit  
+        dosbox will exit after the "name" has been executed.
 
-There also are a couple of command line switches.
+  -c command
+        Runs the specified command before running "name". Multiple commands
+        can be specified. Each command should start with -c though.
 
-dosbox -fullscreen
-    starts dosbox in fullscreen mode.
-dosbox -conf file
-    loads file as a configfile.
-dosbox -lang file
-    loads file as a languagefile.
+  -fullscreen
+        Starts dosbox in fullscreenmode.
 
-You can also add commands to be executed before the main program starts.
-Or you can use them to start the program. 
-To add commands use the -c command line switch.
+  -conf configfile
+        Start dosbox with the options specified in "configfile".
+
+  -lang languagefile
+        Start dosbox using the language string specified in "languagefile".
+
+Note: If a name/command/configfile/languagefile contains a space in it put
+      the whole name/command/configfile/languagefile between quotes("example").
 
 For example:
 
@@ -37,61 +38,82 @@ dosbox c:\atlantis\atlantis.exe -c "MOUNT D C:\SAVES"
   Before it does that it would first mount C:\SAVES as the D drive.
 
 In Windows you can also drag directories/files on the dosbox executable.
+ 
 
+
+==================
 Internal Programs:
 ==================
 
-MOUNT 
-Program to mount local directories as drives inside DOSBox. 
-The option -t <type> specifies the media: Where <type> can be.
-   dir    = harddisk
-   floppy = floppy drive
-   cdrom  = cdrom drive
+dosbox supports most of the DOS commands found in command.com. 
+In addition, the following commands are available: 
 
-The option -cd lists all found cdrom drives and their id.
-The option -usecd [x] forces to use the cdrom number x (id as shown in list -cd)
+MOUNT Driveletter sourcedirectory [-t type] [-aspi] [-ioctl] 
+      [-usecd number] [-size drivesize] [-label drivelabel]
+MOUNT -cd
+    
+  Program to mount local directories as drives inside DOSBox.
 
-The option -aspi forces to use aspi driver
-  (only valid if mounting a cdrom and on Windows systems with ASPI-Layer).
-The option -ioctl forces to use ioctl functions
-  (only valid if mounting a cdrom and on Win2000/XP/NT systems).
+  Driveletter
+        The driveletter inside dosbox (eg. C)
 
-For example to mount c:\floppy as a floppy : mount a c:\floppy -t floppy
-For example to mount system cdrom drive e as cdrom drive d in dosbox 
-  mount d e:\ -t cdrom
-For example to mount system cdrom drive at mountpoint /media/cdrom as cdrom 
-drive d in dosbox
-  mount d /media/cdrom -t cdrom -usecd 0
+  sourcedirectory
+        The local directory you want to have inside dosbox.
 
-It is also possible to mount a directory as cdrom, but it's limited.
+  -t type
+        Type of the mounted directory. Supported are: dir (standard),
+        floppy, cdrom.
+
+  -size drivesize
+        Sets the size of the drive. 
+
+  -label drivelabel
+        Sets the name of the drive to "drivelabel". Usefull when a 
+        program can't find it's cdrom.
+
+  -aspi
+        Forces to use the aspi layer. Only valid if mounting a cdrom under 
+        Windows systems with an ASPI-Layer
+
+  -ioctl   
+        Forces to use ioctl commands. Only valid if mounting a cdrom under 
+        windows which support them (Win2000/XP/NT).
+
+  -usecd number
+        Forces to use SDL cdrom support for drive number.
+        Number can be found by -cd. Valid on all systems
+
+  -cd
+        Displays all detected cdrom drives and their numbers. Use with -usecd
+
+  Note: It's possible to mount a local directory as cdrom drive. 
+        Hardware support is then missing.
+
+  Examples:
+  1. To mount c:\floppy as a floppy : 
+       mount a c:\floppy -t floppy
+  2. To mount system cdrom drive E as cdrom drive D in dosbox:
+       mount d e:\ -t cdrom
+  3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
+     in dosbox:
+       mount d /media/cdrom -t cdrom -usecd 0
 
 MEM
-Program to display the amount of free memory
+  Program to display the amount of free memory
 
-CONFIG
-Utility for generating a config file and language file.
-The option -writeconf filename is used to write the current config settings. 
-The option -writelang filename is used to write the current language strings.
+CONFIG [-writeconf] [-writelang] localfile
+  Write the current configuration or language settings to file.
+  "localfile" is located on the local drive !!! 
+
+LOADFIX
+  Program to "eat up" memory. Usefull for old programs which don't expect much
+  memory to be free.
 
 For more information use the the /? command line switch with the programs.
 
-The Config File:
-===============
-A config file can be generated by CONFIG.COM, edit it to customize DOSBox.
-The file is divided in several sections (the names got [] around it). 
-Some sections have options which you can set.
-# and % indicate commentlines. 
-The generated configfile contains the current settings. You can alter them and
-start dosbox with the -conf switch to load the file and use these settings. 
 
-The Language File:
-=================
-A language file can be generated by CONFIG.COM. 
-Read it and you will hopefuly understand how to change it. 
-Start Dosbox with -lang switch to use your new language file
-Or you can setup the filename in the config file in the [dosbox] section.
-There's a language= entry that can be changed with the filename.
 
+=============
 Special Keys:
 =============
 
@@ -105,38 +127,20 @@ CTRL-F10        Capture/Release the mouse.
 CTRL-F11        Slowdown emulation.
 CTRL-F12        Speedup emulation.
 
+====================
 System requirements:
 ====================
 
 Fast machine my guess would be pentium-2 400+ to get decent emulation
 of games written for an 286 machine.
-
-FAQ:
-====
-
-Q: I've got a Z instead of a C at the prompt.
-A: In DOSBox you can mount directories as drives
-   in win32: mount c D:\ would give you an C in DOSBox which points
-   at D:\ in win32
-   in linux: mount c /home/username would give you and C in DOSBox
-   which points at /home/username in Linux
-
-Q: The mouse doesn't work.
-A: Normally dosbox detects the mouse being used by a game, if you click on 
-   the screen then it should get locked and work.
-   Sometimes the dosbox mouse detection doesn't work with certain games, you
-   might have to force to lock the mouse then with ctrl-f10.
-
-Q: The sound stutters.
-A: Your using too much cpu power to keep dosbox running at the current speed.
-   You can either lower the cycles or skip frames or get a faster machine.
+For protected mode games a 1 Ghz machine is recommended and don't expect
+them to run fast though!! Be sure to read the next section on how to speed
+it somewhat up.
 
 
-For more questions check the site/forum.
-
-
+================================
 To run resource-demanding games: 
-===============================
+================================
 
 DOSBox emulates the CPU, the sound and graphic cards, and some other
 stuff, all at the same time. You can overclock DOSBox by using CTRL+F12, but
@@ -164,12 +168,62 @@ You can also try to disable the sound through the setup utility of the game
 to further reduce load on your CPU. 
 
 
+====
+FAQ:
+====
+
+Q: I've got a Z instead of a C at the prompt.
+A: In DOSBox you can mount directories as drives
+   in win32: mount c D:\ would give you a C in DOSBox which points
+   at D:\ in win32
+   in linux: mount c /home/username would give you a C in DOSBox
+   which points at /home/username in Linux
+
+Q: The mouse doesn't work.
+A: Normally dosbox detects the mouse being used by a game, if you click on 
+   the screen then it should get locked and work.
+   Sometimes the dosbox mouse detection doesn't work with certain games, you
+   might have to force to lock the mouse then with ctrl-F10.
+
+Q: The sound stutters.
+A: Your using too much cpu power to keep dosbox running at the current speed.
+   You can either lower the cycles or skip frames or get a faster machine.
+
+
+For more questions check the site/forum:
+http://dosbox.sourceforge.net
+
+
+================
+The Config File:
+================
+
+A config file can be generated by CONFIG.COM, edit it to customize DOSBox.
+The file is divided in several sections (the names got [] around it). 
+Some sections have options which you can set.
+# and % indicate commentlines. 
+The generated configfile contains the current settings. You can alter them and
+start dosbox with the -conf switch to load the file and use these settings. 
+
+==================
+The Language File:
+==================
+
+A language file can be generated by CONFIG.COM. 
+Read it and you will hopefuly understand how to change it. 
+Start Dosbox with -lang switch to use your new language file
+Or you can setup the filename in the config file in the [dosbox] section.
+There's a language= entry that can be changed with the filename.
+
+
+=================================
 Building your own Version DOSBox:
 =================================
 
 Dowload the source.
 Check the INSTALL in the source distribution.
 
+===============
 Special Thanks:
 ===============
 
@@ -179,8 +233,9 @@ The Bochs and DOSemu projects which I used for information.
 Freedos for ideas in making my shell.
 The Beta Testers.
 
+========
 Contact:
 ========
 
 Harekiet harekiet@zophar.net
-http://dosbox.zophar.net
+http://dosbox.sourceforge.net
