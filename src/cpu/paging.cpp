@@ -99,8 +99,9 @@ static Bits PageFaultCore(void) {
 		return -1;
 	return 0;
 }
-
+#if C_DEBUG
 Bitu DEBUG_EnableDebugger(void);
+#endif
 
 void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	/* Save the state of the cpu cores */
@@ -117,7 +118,9 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	entry->page_addr=page_addr;
 	//Caused by a write by default?
 	CPU_Exception(14,0x2 | ((cpu.cpl>0) ? 0x1 : 0));
+#if C_DEBUG
 	DEBUG_EnableDebugger();
+#endif
 	DOSBOX_RunMachine();
 	pf_queue.used--;
 	memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
