@@ -1,5 +1,19 @@
 DOSBox v0.60
 
+=====
+NOTE: 
+=====
+
+While we hope that, one day, DosBox will run virtually all programs
+ever made for the PC...we are not there yet. At present, DosBox run on a 1
+Gigahertz PC is roughly the equivalent of a 16MHz 386 PC. While the 0.60
+release has added support for "protected mode" allowing for more complex and
+recent programs, but note that this support is early in development and
+nowhere near as complete as the support for 386 real-mode games (or
+earlier). Also note that "protected mode" games need substantially more
+resources and may require a much faster processor for you to run it properly
+in DosBox.
+
 ======
 Usage:
 ======
@@ -68,7 +82,8 @@ MOUNT -cd
         Sets the size of the drive. 
 
   -label drivelabel
-        Sets the name of the drive to "drivelabel". Useful when a 
+        Sets the name of the drive to "drivelabel". Needed on some 
+        systems if the cd label isnt read correctly. Useful when a 
         program can't find its cdrom.
 
   -aspi
@@ -86,9 +101,6 @@ MOUNT -cd
   -cd
         Displays all detected cdrom drives and their numbers. Use with -usecd.
 
-  -label name
-        Set the cd label to the given name. Needed on some systems if the cd label isnt read correctly.
-
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
 
@@ -100,7 +112,9 @@ MOUNT -cd
   3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
      in dosbox:
        mount d /media/cdrom -t cdrom -usecd 0
-
+  4. To mount a drive with 870 mb free diskspace (rarely needed! experts only):
+       mount c d:\ -size 4025,127,16513,1700
+       
 MEM
   Program to display the amount of free memory.
 
@@ -108,15 +122,19 @@ CONFIG [-writeconf] [-writelang] localfile
   Write the current configuration or language settings to file.
   "localfile" is located on the local drive !!! 
 
-LOADFIX [-option] [programname] [parameters]
+LOADFIX [-size] [program] [program-parameters]
+LOADFIX -f
   Program to "eat up" memory. Useful for old programs which don't expect much
   memory to be free.
 
-  -[size]	number of kb to "eat up", default = 64kb
+  -size	        
+        number of kb to "eat up", default = 64kb
   
-  -f		frees all previously allocated memory
+  -f
+        frees all previously allocated memory
   
-  Examples:
+
+Examples:
   1. To start mm2.exe and allocate 64kb memory :
      loadfix mm2
   2. To start mm2.exe and allocate 32kb memory :
