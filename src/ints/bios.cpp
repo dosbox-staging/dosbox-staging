@@ -23,6 +23,7 @@
 #include "inout.h"
 #include "mem.h"
 #include "pic.h"
+#include "joystick.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
 static Bitu call_int1;
@@ -174,9 +175,31 @@ static Bitu INT15_Handler(void) {
 		PIC_AddEvent(&WaitFlagEvent,reg_cx<<16|reg_dx);
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
-		//Does anyone even use this?
-		LOG_WARN("INT15:84:Bios Joystick functionality not done");
-		reg_ax=reg_bx=reg_cx=reg_dx=0;
+		if (reg_dx==0x0000) {
+			// Get Joystick button status
+			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
+				reg_al  = (JOYSTICK_GetButton(0,0)<<7)|(JOYSTICK_GetButton(0,1)<<6);
+				reg_al |= (JOYSTICK_GetButton(1,0)<<5)|(JOYSTICK_GetButton(1,1)<<4);
+				CALLBACK_SCF(false);
+			} else {
+				// dos values
+				reg_ax = 0x00f0; reg_dx = 0x0201;
+				CALLBACK_SCF(true);
+			}
+		} else if (reg_dx==0x0001) {
+			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
+				reg_ax = (Bit16u)JOYSTICK_GetMove_X(0);
+				reg_bx = (Bit16u)JOYSTICK_GetMove_Y(0);
+				reg_cx = (Bit16u)JOYSTICK_GetMove_X(1);
+				reg_dx = (Bit16u)JOYSTICK_GetMove_Y(1);
+				CALLBACK_SCF(false);
+			} else {			
+				reg_ax=reg_bx=reg_cx=reg_dx=0;
+				CALLBACK_SCF(true);
+			}
+		} else {
+			LOG_WARN("INT15:84: Unknown Bios Joystick functionality.");
+		}
 		break;
 	case 0x86:	/* BIOS - WAIT (AT,PS) */
 		{
