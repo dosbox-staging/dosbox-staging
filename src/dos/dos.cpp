@@ -204,7 +204,7 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:0x14 FCB-Read used, result:al=%d",reg_al);
 		break;
 	case 0x15:		/* Sequential write to FCB */
-		if (DOS_FCBWrite(SegValue(ds),reg_dx,0)) reg_al = 0x00;
+		if (DOS_FCBWrite(SegValue(ds),reg_dx,0)==true) reg_al = 0x00;
 		else reg_al = 0x01;
 		LOG_DEBUG("DOS:0x15 FCB-Write used, result:al=%d",reg_al);
 		break;
