@@ -19,22 +19,14 @@
 #ifndef __RENDER_H
 #define __RENDER_H
 
-enum RENDER_Operation {
-	OP_None,
-	OP_Shot,
-	OP_Normal2x,
-	OP_AdvMame2x,
-};
+typedef void (* RENDER_Line_Handler)(const Bit8u * src);
 
-typedef void (* RENDER_Line_Handler)(Bit8u * src);
-
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,double ratio,Bitu scalew,Bitu scaleh);
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,double ratio,bool dblw,bool dblh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(void);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
 extern RENDER_Line_Handler RENDER_DrawLine;
-extern Bit8u * RENDER_TempLine;
- 
+
 
 #endif
 

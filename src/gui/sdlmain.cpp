@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.65 2004-06-05 11:17:23 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.66 2004-06-10 07:18:19 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -32,14 +32,13 @@
 
 #include "dosbox.h"
 #include "video.h"
-#include "keyboard.h"
 #include "mouse.h"
-#include "joystick.h"
 #include "pic.h"
 #include "timer.h"
 #include "setup.h"
 #include "support.h"
 #include "debug.h"
+#include "mapper.h"
 
 //#define DISABLE_JOYSTICK
 
@@ -104,6 +103,9 @@ extern char** environ;
 #define DEFAULT_CONFIG_FILE "/.dosboxrc"
 #endif
 
+void MAPPER_Init(void);
+void MAPPER_StartUp(Section * sec);
+
 enum SCREEN_TYPES	{ 
 	SCREEN_SURFACE,
 	SCREEN_OVERLAY,
@@ -117,7 +119,8 @@ struct SDL_Block {
 	struct {
 		Bit32u width;
 		Bit32u height;
-		Bitu bpp;
+		Bitu flags;
+		GFX_Modes mode;
 		double scalex,scaley;
 		GFX_ResetCallBack reset;
 	} draw;
@@ -149,7 +152,6 @@ struct SDL_Block {
 	SDL_Rect clip;
 	SDL_Surface * surface;
 	SDL_Overlay * overlay;
-	SDL_Joystick * joy;
 	SDL_cond *cond;
 	struct {
 		bool autolock;
@@ -163,45 +165,63 @@ struct SDL_Block {
 static SDL_Block sdl;
 static void CaptureMouse(void);
 
+extern const char * RunningProgram;
 void GFX_SetTitle(Bits cycles,Bits frameskip){
 	char title[200]={0};
 	static Bits internal_cycles=0;
 	static Bits internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
-	sprintf(title,"DOSBox %s, Cpu Cycles: %8d, Frameskip %2d",VERSION,internal_cycles,internal_frameskip);
+	sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	SDL_WM_SetCaption(title,VERSION);
 }
 
 /* Reset the screen with current values in the sdl structure */
-Bitu GFX_GetBestMode(Bitu bpp,Bitu & gfx_flags) {
-	gfx_flags=0;
+Bitu GFX_GetBestMode(Bitu flags) {
+	Bitu testbpp,gotbpp,setflags;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
-		if (sdl.desktop.fullscreen) {
-			bpp=SDL_VideoModeOK(640,480,bpp,SDL_FULLSCREEN|SDL_HWSURFACE |
-				(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0) | ((bpp==8) ? SDL_HWPALETTE : 0)  );
-		} else {
-			bpp=sdl.desktop.bpp;
+check_surface:
+		/* Check if we can satisfy the depth it loves */
+		if (flags & LOVE_8) testbpp=8;
+		else if (flags & LOVE_16) testbpp=16;
+		else if (flags & LOVE_32) testbpp=32;
+		if (sdl.desktop.fullscreen) gotbpp=SDL_VideoModeOK(640,480,testbpp,SDL_FULLSCREEN|SDL_HWSURFACE|SDL_HWPALETTE);
+		else gotbpp=sdl.desktop.bpp;
+		/* If we can't get our favorite mode check for another working one */
+		switch (gotbpp) {
+		case 8:
+			if (flags & CAN_8) flags&=~(CAN_16|CAN_32);
+			break;
+		case 15:
+		case 16:
+			if (flags & CAN_16) flags&=~(CAN_8|CAN_32);
+			break;
+		case 24:
+		case 32:
+			if (flags & CAN_32) flags&=~(CAN_8|CAN_16);
+			break;
 		}
-		gfx_flags|=GFX_HASCONVERT;
+		/* Not a valid display depth found? Let's just hope sdl provides conversions */
 		break;
 	case SCREEN_OVERLAY:
-		bpp=32;
-		gfx_flags|=GFX_HASSCALING;
+		if (flags & NEED_RGB || !(flags&CAN_32)) goto check_surface;
+		flags|=HAVE_SCALING;
+		flags&=~(CAN_8,CAN_16);
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		bpp=32;
-		gfx_flags|=GFX_HASSCALING;
+		if (flags & NEED_RGB || !(flags&CAN_32)) goto check_surface;
+		flags|=HAVE_SCALING;
+		flags&=~(CAN_8,CAN_16);
 		break;
 #endif
 	}
-	return bpp;
+	return flags;
 }
 
 
-static void ResetScreen(void) {
+void GFX_ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.draw.reset) (sdl.draw.reset)();
 	GFX_Start();
@@ -214,18 +234,23 @@ static int int_log2 (int val) {
     return log;
 }
 
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,double scalex,double scaley,GFX_ResetCallBack reset) {
+GFX_Modes GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_ResetCallBack reset) {
 	if (sdl.updating) GFX_EndUpdate();
 	sdl.draw.width=width;
 	sdl.draw.height=height;
-	sdl.draw.bpp=bpp;
+	sdl.draw.flags=flags;
+	sdl.draw.mode=GFX_NONE;
 	sdl.draw.reset=reset;
 	sdl.draw.scalex=scalex;
 	sdl.draw.scaley=scaley;
 
+	Bitu bpp;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 dosurface:
+		if (flags & CAN_8) bpp=8;
+		if (flags & CAN_16) bpp=16;
+		if (flags & CAN_32) bpp=32;
 		sdl.desktop.type=SCREEN_SURFACE;
 		sdl.clip.w=width;
 		sdl.clip.h=height;
@@ -234,21 +259,29 @@ dosurface:
 				sdl.clip.x=(Sint16)((sdl.desktop.width-width)/2);
 				sdl.clip.y=(Sint16)((sdl.desktop.height-height)/2);
 				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,
-					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0)|SDL_HWPALETTE);
+					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
 			} else {
 				sdl.clip.x=0;sdl.clip.y=0;
 				sdl.surface=SDL_SetVideoMode(width,height,bpp,
-					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0)|SDL_HWPALETTE);
+					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
 			sdl.surface=SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
 		}
+		if (sdl.surface) switch (sdl.surface->format->BitsPerPixel) {
+			case 8:sdl.draw.mode=GFX_8;break;
+			case 15:sdl.draw.mode=GFX_15;break;
+			case 16:sdl.draw.mode=GFX_16;break;
+			case 32:sdl.draw.mode=GFX_32;break;
+			default:
+				break;
+		}
 		break;
 	case SCREEN_OVERLAY:
 		if (sdl.overlay) SDL_FreeYUVOverlay(sdl.overlay);
 		sdl.overlay=0;
-		if (bpp!=32) goto dosurface;
+		if (!(flags&CAN_32) || (flags & NEED_RGB)) goto dosurface;
 		if (sdl.desktop.fullscreen) {
 			if (sdl.desktop.fixed) {
 				double ratio_w=(double)sdl.desktop.width/(width*scalex);
@@ -283,6 +316,7 @@ dosurface:
 			goto dosurface;
 		}
 		sdl.desktop.type=SCREEN_OVERLAY;
+		sdl.draw.mode=GFX_32;
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
@@ -295,7 +329,7 @@ dosurface:
 			free(sdl.opengl.framebuf);
 		}
 		sdl.opengl.framebuf=0;
-		if (bpp!=32) goto dosurface;
+		if (!(flags&CAN_32) || (flags & NEED_RGB)) goto dosurface;
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
 			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
@@ -368,6 +402,8 @@ dosurface:
 
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
+		SDL_GL_SwapBuffers();
+		glClear(GL_COLOR_BUFFER_BIT);
 		glShadeModel (GL_FLAT); 
 		glDisable (GL_DEPTH_TEST);
 		glDisable (GL_LIGHTING);
@@ -395,11 +431,13 @@ dosurface:
 		glEnd();
 		glEndList();
 		sdl.desktop.type=SCREEN_OPENGL;
+		sdl.draw.mode=GFX_32;
 		break;
 		}//OPENGL
 #endif	//C_OPENGL
 	}//CASE
-	GFX_Start();
+	if (sdl.draw.mode!=GFX_NONE) GFX_Start();
+	return sdl.draw.mode;
 }
 
 
@@ -421,7 +459,7 @@ static void SwitchFullScreen(void) {
 	} else {
 		if (sdl.mouse.locked) CaptureMouse();
 	}
-	ResetScreen();
+	GFX_ResetScreen();
 }
 
 void GFX_SwitchFullScreen(void) {
@@ -630,157 +668,17 @@ static void GUI_StartUp(Section * sec) {
 	if (sdl.desktop.bpp==24) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
-	GFX_SetSize(640,400,8,1.0,1.0,0);
-	SDL_EnableKeyRepeat(250,40);
-	SDL_EnableUNICODE(1);
-/* Get some Keybinds */
-	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
-	KEYBOARD_AddEvent(KBD_f10,KBD_MOD_CTRL,CaptureMouse);
-	KEYBOARD_AddEvent(KBD_enter,KBD_MOD_ALT,SwitchFullScreen);
-
+	GFX_Stop();
+/* Get some Event handlers */
+	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
+	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
+	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 }
 
 void Mouse_AutoLock(bool enable) {
 	sdl.mouse.autolock=enable;
 	if (enable && sdl.mouse.autoenable) sdl.mouse.requestlock=true;
 	else sdl.mouse.requestlock=false;
-}
-
-static void HandleKey(SDL_KeyboardEvent * key) {
-	KBD_KEYS code;
-	switch (key->keysym.sym) {
-	case SDLK_1:code=KBD_1;break;
-	case SDLK_2:code=KBD_2;break;
-	case SDLK_3:code=KBD_3;break;
-	case SDLK_4:code=KBD_4;break;
-	case SDLK_5:code=KBD_5;break;
-	case SDLK_6:code=KBD_6;break;
-	case SDLK_7:code=KBD_7;break;
-	case SDLK_8:code=KBD_8;break;
-	case SDLK_9:code=KBD_9;break;
-	case SDLK_0:code=KBD_0;break;
-
-	case SDLK_q:code=KBD_q;break;
-	case SDLK_w:code=KBD_w;break;
-	case SDLK_e:code=KBD_e;break;
-	case SDLK_r:code=KBD_r;break;
-	case SDLK_t:code=KBD_t;break;
-	case SDLK_y:code=KBD_y;break;
-	case SDLK_u:code=KBD_u;break;
-	case SDLK_i:code=KBD_i;break;
-	case SDLK_o:code=KBD_o;break;
-	case SDLK_p:code=KBD_p;break;
-
-	case SDLK_a:code=KBD_a;break;
-	case SDLK_s:code=KBD_s;break;
-	case SDLK_d:code=KBD_d;break;
-	case SDLK_f:code=KBD_f;break;
-	case SDLK_g:code=KBD_g;break;
-	case SDLK_h:code=KBD_h;break;
-	case SDLK_j:code=KBD_j;break;
-	case SDLK_k:code=KBD_k;break;
-	case SDLK_l:code=KBD_l;break;
-
-	case SDLK_z:code=KBD_z;break;
-	case SDLK_x:code=KBD_x;break;
-	case SDLK_c:code=KBD_c;break;
-	case SDLK_v:code=KBD_v;break;
-	case SDLK_b:code=KBD_b;break;
-	case SDLK_n:code=KBD_n;break;
-	case SDLK_m:code=KBD_m;break;
-
-
-	case SDLK_F1:code=KBD_f1;break;
-	case SDLK_F2:code=KBD_f2;break;
-	case SDLK_F3:code=KBD_f3;break;
-	case SDLK_F4:code=KBD_f4;break;
-	case SDLK_F5:code=KBD_f5;break;
-	case SDLK_F6:code=KBD_f6;break;
-	case SDLK_F7:code=KBD_f7;break;
-	case SDLK_F8:code=KBD_f8;break;
-	case SDLK_F9:code=KBD_f9;break;
-	case SDLK_F10:code=KBD_f10;break;
-	case SDLK_F11:code=KBD_f11;break;
-	case SDLK_F12:code=KBD_f12;break;
-
-	case SDLK_ESCAPE:code=KBD_esc;break;
-	case SDLK_TAB:code=KBD_tab;break;
-	case SDLK_BACKSPACE:code=KBD_backspace;break;
-	case SDLK_RETURN:code=KBD_enter;break;
-	case SDLK_SPACE:code=KBD_space;break;
-
-	case SDLK_LALT:code=KBD_leftalt;break;
-	case SDLK_RALT:code=KBD_rightalt;break;
-	case SDLK_LCTRL:code=KBD_leftctrl;break;
-	case SDLK_RCTRL:code=KBD_rightctrl;break;
-	case SDLK_LSHIFT:code=KBD_leftshift;break;
-	case SDLK_RSHIFT:code=KBD_rightshift;break;
-
-	case SDLK_CAPSLOCK:code=KBD_capslock;break;
-	case SDLK_SCROLLOCK:code=KBD_scrolllock;break;
-	case SDLK_NUMLOCK:code=KBD_numlock;break;
-	
-	case SDLK_BACKQUOTE:code=KBD_grave;break;
-	case SDLK_MINUS:code=KBD_minus;break;
-	case SDLK_EQUALS:code=KBD_equals;break;
-	case SDLK_BACKSLASH:code=KBD_backslash;break;
-	case SDLK_LEFTBRACKET:code=KBD_leftbracket;break;
-	case SDLK_RIGHTBRACKET:code=KBD_rightbracket;break;
-
-	case SDLK_SEMICOLON:code=KBD_semicolon;break;
-	case SDLK_QUOTE:code=KBD_quote;break;
-	case SDLK_PERIOD:code=KBD_period;break;
-	case SDLK_COMMA:code=KBD_comma;break;
-	case SDLK_SLASH:code=KBD_slash;break;
-
-	case SDLK_INSERT:code=KBD_insert;break;
-	case SDLK_HOME:code=KBD_home;break;
-	case SDLK_PAGEUP:code=KBD_pageup;break;
-	case SDLK_DELETE:code=KBD_delete;break;
-	case SDLK_END:code=KBD_end;break;
-	case SDLK_PAGEDOWN:code=KBD_pagedown;break;
-	case SDLK_LEFT:code=KBD_left;break;
-	case SDLK_UP:code=KBD_up;break;
-	case SDLK_DOWN:code=KBD_down;break;
-	case SDLK_RIGHT:code=KBD_right;break;
-
-	case SDLK_KP1:code=KBD_kp1;break;
-	case SDLK_KP2:code=KBD_kp2;break;
-	case SDLK_KP3:code=KBD_kp3;break;
-	case SDLK_KP4:code=KBD_kp4;break;
-	case SDLK_KP5:code=KBD_kp5;break;
-	case SDLK_KP6:code=KBD_kp6;break;
-	case SDLK_KP7:code=KBD_kp7;break;
-	case SDLK_KP8:code=KBD_kp8;break;
-	case SDLK_KP9:code=KBD_kp9;break;
-	case SDLK_KP0:code=KBD_kp0;break;
-
-	case SDLK_KP_DIVIDE:code=KBD_kpslash;break;
-	case SDLK_KP_MULTIPLY:code=KBD_kpmultiply;break;
-	case SDLK_KP_MINUS:code=KBD_kpminus;break;
-	case SDLK_KP_PLUS:code=KBD_kpplus;break;
-	case SDLK_KP_ENTER:code=KBD_kpenter;break;
-	case SDLK_KP_PERIOD:code=KBD_kpperiod;break;
-
-	/* Special Keys */
-	default:
-		code=KBD_1;
-		LOG(LOG_KEYBOARD,LOG_ERROR)("Unhandled SDL keysym %d",key->keysym.sym);
-		break;
-	}
-	/* Check the modifiers */
-	Bitu mod=
-		((key->keysym.mod & KMOD_CTRL) ? KBD_MOD_CTRL : 0) |
-		((key->keysym.mod & KMOD_ALT) ? KBD_MOD_ALT : 0) |
-		((key->keysym.mod & KMOD_SHIFT) ? KBD_MOD_SHIFT : 0);
-	Bitu ascii=key->keysym.unicode<128 ? key->keysym.unicode : 0;
-#ifdef MACOSX
-	// HACK: Fix backspace on Mac OS X 
-	// REMOVE ME oneday
-	if (code==KBD_backspace)
-		ascii=8;
-#endif
-	KEYBOARD_AddKey(code,ascii,mod,(key->state==SDL_PRESSED));
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
@@ -824,30 +722,7 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	}
 }
 
-static void HandleJoystickAxis(SDL_JoyAxisEvent * jaxis) {
-	switch (jaxis->axis) {
-	case 0:
-		JOYSTICK_Move_X(0,(float)(jaxis->value/32768.0));
-		break;
-	case 1:
-		JOYSTICK_Move_Y(0,(float)(jaxis->value/32768.0));
-		break;
-	}
-}
-
-static void HandleJoystickButton(SDL_JoyButtonEvent * jbutton) {
-	bool state;
-	state=jbutton->type==SDL_JOYBUTTONDOWN;
-	if (jbutton->button<2) {
-		JOYSTICK_Button(0,jbutton->button,state);
-	}
-}
-
-
-static Bit8u laltstate = SDL_KEYUP;
-
 void GFX_Events() {
-	
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 	    switch (event.type) {
@@ -858,13 +733,6 @@ void GFX_Events() {
 				}
 			}
 			break;
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			// ignore event lalt+tab
-			if (event.key.keysym.sym==SDLK_LALT) laltstate = event.key.type;
-			if ((event.key.keysym.sym==SDLK_TAB) && (laltstate==SDL_KEYDOWN)) break;
-			HandleKey(&event.key);
-			break;
 		case SDL_MOUSEMOTION:
 			HandleMouseMotion(&event.motion);
 			break;
@@ -872,19 +740,15 @@ void GFX_Events() {
 		case SDL_MOUSEBUTTONUP:
 			HandleMouseButton(&event.button);
 			break;
-		case SDL_JOYAXISMOTION:
-			HandleJoystickAxis(&event.jaxis);
-			break;
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			HandleJoystickButton(&event.jbutton);
-			break;
 		case SDL_VIDEORESIZE:
 //			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
 			throw(0);
 			break;
+		default:
+			void MAPPER_CheckEvent(SDL_Event * event);
+			MAPPER_CheckEvent(&event);
 		}
     }
 }
@@ -931,11 +795,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
-
 #if C_DEBUG
 		DEBUG_SetupConsole();
 #endif
-
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 #ifndef DISABLE_JOYSTICK
 		|SDL_INIT_JOYSTICK
@@ -943,6 +805,7 @@ int main(int argc, char* argv[]) {
 #endif
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
 		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
+		sdl_sec->AddInitFunction(&MAPPER_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("fulldouble",false);
 		sdl_sec->Add_bool("fullfixed",false);
@@ -953,6 +816,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);
+		sdl_sec->Add_string("mapperfile","mapper.txt");
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
@@ -996,19 +860,12 @@ int main(int argc, char* argv[]) {
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
-#ifndef DISABLE_JOYSTICK
-		if (SDL_NumJoysticks()>0) {
-			SDL_JoystickEventState(SDL_ENABLE);
-			sdl.joy=SDL_JoystickOpen(0);
-			LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(0),SDL_JoystickNumAxes(sdl.joy),SDL_JoystickNumButtons(sdl.joy));
-			JOYSTICK_Enable(0,true);
-		}
-#endif	
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not allready in fullscreen
 				SwitchFullScreen();
 			}
 		}
+		MAPPER_Init();
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */

@@ -28,15 +28,32 @@ struct GFX_PalEntry {
 	Bit8u unused;
 };
 
-#define GFX_HASSCALING	0x0001
-#define GFX_HASCONVERT	0x0002
+#define CAN_8		0x0001
+#define CAN_16		0x0002
+#define CAN_32		0x0004
+
+#define CAN_ALL		(CAN_8|CAN_16|CAN_32)
+
+#define LOVE_8			0x0010
+#define LOVE_16			0x0020
+#define LOVE_32			0x0040
+
+#define NEED_RGB		0x0100
+#define DONT_ASPECT		0x0200
+
+#define HAVE_SCALING	0x1000
+
+
+enum GFX_Modes {
+	GFX_8,GFX_15,GFX_16,GFX_32,GFX_NONE,
+};
 
 void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
-Bitu GFX_GetBestMode(Bitu bpp,Bitu & gfx_flags);
+Bitu GFX_GetBestMode(Bitu flags);
 
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,double scalex,double scaley,GFX_ResetCallBack cb_reset);
+GFX_Modes GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_ResetCallBack cb_reset);
 
 void GFX_ResetScreen(void);
 void GFX_Start(void);
