@@ -36,9 +36,6 @@
 #include "timer.h"
 #include "../shell/shell_inc.h"
 
-// TEMP 
-CPUBlock cpu;
-
 #ifdef WIN32
 void WIN32_Console();
 #else
@@ -66,13 +63,13 @@ static struct  {
 static char curSelectorName[3] = { 0,0,0 };
 
 static Segment oldsegs[6];
-static Flag_Info oldflags;
+static Bitu oldflags;
 DBGBlock dbg;
 static char input_line[256];
 static Bitu input_count;
 Bitu cycle_count;
 static bool debugging;
-static void SetColor(bool test) {
+static void SetColor(Bitu test) {
 	if (test) {
 		if (has_colors()) { wattrset(dbg.win_reg,COLOR_PAIR(PAIR_BYELLOW_BLACK));}
 	} else {
@@ -109,7 +106,7 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
-	if (cpu.protmode) return PhysMakeProt(seg,offset);
+	if (cpu.state & STATE_PROTECTED) return PhysMakeProt(seg,offset);
 	return PhysMake(seg,offset);
 };
 
@@ -127,7 +124,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	// FIXME: Call Gate Descriptors
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		sprintf(out1,"%s: b:%08X type:%01X sparg",selname,desc.GetBase(),desc.saved.seg.type);
-		sprintf(out2,"    l:%08X dpl :%01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.s,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.g);
+		sprintf(out2,"    l:%08X dpl :%01X %1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.g);
 		return true;
 	}
 	out1[0] = out2[0] = 0;
@@ -510,7 +507,7 @@ static bool StepOver()
 {
 	PhysPt start=SegPhys(cs)+reg_eip;
 	char dline[200];Bitu size;
-	size=DasmI386(dline, start, reg_eip, false);
+	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32>0));
 
 	if (strstr(dline,"call") || strstr(dline,"int") || strstr(dline,"loop") || strstr(dline,"rep")) {
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip+size, true);
@@ -577,19 +574,34 @@ static void DrawRegisters(void) {
 	SetColor(SegValue(cs)!=oldsegs[cs].val);oldsegs[cs].val=SegValue(cs);mvwprintw (dbg.win_reg,1,31,"%04X",SegValue(cs));
 
 	/*Individual flags*/
-	flags.cf=get_CF();SetColor(flags.cf!=oldflags.cf);oldflags.cf=flags.cf;mvwprintw (dbg.win_reg,1,53,"%01X",flags.cf);
-	flags.zf=get_ZF();SetColor(flags.zf!=oldflags.zf);oldflags.zf=flags.zf;mvwprintw (dbg.win_reg,1,56,"%01X",flags.zf);
-	flags.sf=get_SF();SetColor(flags.sf!=oldflags.sf);oldflags.sf=flags.sf;mvwprintw (dbg.win_reg,1,59,"%01X",flags.sf);
-	flags.of=get_OF();SetColor(flags.of!=oldflags.of);oldflags.of=flags.of;mvwprintw (dbg.win_reg,1,62,"%01X",flags.of);
-	flags.af=get_AF();SetColor(flags.af!=oldflags.af);oldflags.af=flags.af;mvwprintw (dbg.win_reg,1,65,"%01X",flags.af);
-	flags.pf=get_PF();SetColor(flags.pf!=oldflags.pf);oldflags.pf=flags.pf;mvwprintw (dbg.win_reg,1,68,"%01X",flags.pf);
 
-	SetColor(flags.df!=oldflags.df);oldflags.df=flags.df;mvwprintw (dbg.win_reg,1,71,"%01X",flags.df);
-	SetColor(flags.intf!=oldflags.intf);oldflags.intf=flags.intf;mvwprintw (dbg.win_reg,1,74,"%01X",flags.intf);
-	SetColor(flags.tf!=oldflags.tf);oldflags.tf=flags.tf;mvwprintw (dbg.win_reg,1,77,"%01X",flags.tf);
+	FILLFLAGS;
+
+	SetColor((flags.word ^ oldflags)&FLAG_CF);
+	mvwprintw (dbg.win_reg,1,53,"%01X",GETFLAG(CF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_ZF);
+	mvwprintw (dbg.win_reg,1,56,"%01X",GETFLAG(ZF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_SF);
+	mvwprintw (dbg.win_reg,1,59,"%01X",GETFLAG(SF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_OF);
+	mvwprintw (dbg.win_reg,1,62,"%01X",GETFLAG(OF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_AF);
+	mvwprintw (dbg.win_reg,1,65,"%01X",GETFLAG(AF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_PF);
+	mvwprintw (dbg.win_reg,1,68,"%01X",GETFLAG(PF) ? 1:0);
+
+
+	SetColor((flags.word ^ oldflags)&FLAG_DF);
+	mvwprintw (dbg.win_reg,1,71,"%01X",GETFLAG(DF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_IF);
+	mvwprintw (dbg.win_reg,1,74,"%01X",GETFLAG(IF) ? 1:0);
+	SetColor((flags.word ^ oldflags)&FLAG_TF);
+	mvwprintw (dbg.win_reg,1,77,"%01X",GETFLAG(TF) ? 1:0);
+
+	oldflags=flags.word;
 
 	// Selector info, if available
-	if (cpu.protmode && curSelectorName[0]) {		
+	if ((cpu.state & STATE_PROTECTED) && curSelectorName[0]) {		
 		char out1[200], out2[200];
 		GetDescriptorInfo(curSelectorName,out1,out2);
 		mvwprintw(dbg.win_reg,2,28,out1);
@@ -631,8 +643,9 @@ static void DrawCode(void)
 			}
 		}
 
+
+		Bitu drawsize=size=DasmI386(dline, start, disEIP, (cpu.state & STATE_USE32)>0);
 		bool toolarge = false;
-		Bitu drawsize = size = DasmI386(dline, start, disEIP, false);
 		mvwprintw(dbg.win_code,i,0,"%04X:%04X  ",codeViewData.useCS,disEIP);
 		
 		if (drawsize>10) { toolarge = true; drawsize = 9; };
@@ -760,13 +773,13 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"EBP")==hex) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
 	if (strstr(hex,"ESP")==hex) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
 	if (strstr(hex,"EIP")==hex) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
-	if (strstr(hex,"AF")==hex) { hex+=2; flags.af = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"CF")==hex) { hex+=2; flags.cf = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"DF")==hex) { hex+=2; flags.df = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"IF")==hex) { hex+=2; flags.intf = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"OF")==hex) { hex+=3; flags.of = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"ZF")==hex) { hex+=3; flags.zf = (GetHexValue(hex,hex)!=0); } else
-	if (strstr(hex,"PF")==hex) { hex+=3; flags.pf = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"AF")==hex) { hex+=2; SETFLAGBIT(AF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"CF")==hex) { hex+=2; SETFLAGBIT(CF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"DF")==hex) { hex+=2; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"IF")==hex) { hex+=2; SETFLAGBIT(IF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"OF")==hex) { hex+=3; SETFLAGBIT(OF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"ZF")==hex) { hex+=3; SETFLAGBIT(ZF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"PF")==hex) { hex+=3; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
 								{ return false; };
 	return true;
 };
@@ -1073,7 +1086,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 		
 		static char outmask[] = "%s:[%04X]=%02X";
 		
-		if (cpu.protmode) outmask[6] = '8';
+		if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
 
 		switch (DasmLastOperandSize()) {
 			case 8 : {	Bit8u val = mem_readb(address);
@@ -1104,7 +1117,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 			};
 		};
 		// show descriptor info, if available
-		if (cpu.protmode && saveSelector) {
+		if ((cpu.state & STATE_PROTECTED) && saveSelector) {
 			strcpy(curSelectorName,prefix);
 		};
 	};
@@ -1441,9 +1454,6 @@ void DEBUG_Init(Section* sec) {
 	PROGRAMS_MakeFile("DEBUG.COM",DEBUG_ProgramStart);
 	/* shutdown function */
 	sec->AddDestroyFunction(&DEBUG_ShutDown);
-
-	// TEMP
-	cpu.protmode = 0;
 }
 
 // DEBUGGING VAR STUFF
