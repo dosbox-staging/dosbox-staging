@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.28 2004-01-26 14:08:16 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.29 2004-02-29 21:55:49 harekiet Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -396,11 +396,22 @@ void BIOS_Init(Section* sec) {
 	if (IO_Read(0x3f8)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
 	if (IO_Read(0x2f8)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
 	/* Setup equipment list */
+	Bitu config=0x4400;						//1 Floppy, 2 serial and 1 parrallel
 #if (C_FPU)
-	mem_writew(BIOS_CONFIGURATION,0xc823);		//1 Floppy,FPU,2 serial, 1 parallel
-#else 
-	mem_writew(BIOS_CONFIGURATION,0xc821);		//1 Floppy,FPU,2 serial, 1 parallel
+	config|=0x2;
 #endif
+	switch (machine) {
+	case MCH_HERC:
+		config|=0x30;						//Startup monochrome
+		break;
+	case MCH_CGA:	case MCH_TANDY:
+		config|=0x20;						//STartup 80x25 color
+		break;
+	default:
+		config|=0;							//EGA VGA
+		break;
+	}
+	mem_writew(BIOS_CONFIGURATION,config);
 	/* Setup extended memory size */
 	IO_Write(0x70,0x30);
 	size_extended=IO_Read(0x71);
