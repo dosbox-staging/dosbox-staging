@@ -303,7 +303,7 @@ switch(Fetchb()) {
 		else reg_edx=0;
 		break;
 	case 0x9c:												/* PUSHFD */
-		FILLFLAGS;
+		FillFlags();
 		Push_32(flags.word);
 		break;
 	case 0x9d:												/* POPFD */

@@ -577,7 +577,7 @@ restart:
 		case 0x9b:												/* WAIT */
 			break; /* No waiting here */
 		case 0x9c:												/* PUSHF */
-			FILLFLAGS;
+			FillFlags();
 			Push_16(flags.word);
 			break;
 		case 0x9d:												/* POPF */
@@ -592,7 +592,7 @@ restart:
 			break;
 		case 0x9f:												/* LAHF */
 			{
-				FILLFLAGS;
+				FillFlags();
 				reg_ah=(Bit8u)flags.word;
 				break;
 			}

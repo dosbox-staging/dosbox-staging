@@ -25,7 +25,7 @@
 
 #define LEAVECORE						\
 	SAVEIP;								\
-	FILLFLAGS;
+	FillFlags();
 
 static INLINE void ADDIP(Bit16u add) {
 	core_16.ip_lookup=SegBase(cs)+((Bit16u)(((Bit16u)(core_16.ip_lookup-SegBase(cs)))+(Bit16u)add));
