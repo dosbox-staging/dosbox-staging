@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.82 2005-02-10 10:21:07 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.83 2005-03-08 09:34:27 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1000,6 +1000,10 @@ void GFX_Events() {
     }
 }
 
+/* static variable to show wether there is not a valid stdout.
+ * Fixes some bugs when -noconsole is used in a read only directory */
+static bool no_stdout = false;
+
 void GFX_ShowMsg(char * format,...) {
 	char buf[512];
 	va_list msg;
@@ -1007,7 +1011,7 @@ void GFX_ShowMsg(char * format,...) {
 	vsprintf(buf,format,msg);
         strcat(buf,"\n");
 	va_end(msg);
-	printf(buf);       
+	if(!no_stdout) printf(buf);       
 };
 
 int main(int argc, char* argv[]) {
@@ -1027,7 +1031,8 @@ int main(int argc, char* argv[]) {
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
-			freopen(STDOUT_FILE, "w", stdout);
+			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
+				no_stdout = true; // No stdout so don't write messages
 			freopen(STDERR_FILE, "w", stderr);
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
 			setbuf(stderr, NULL);					/* No buffering */
