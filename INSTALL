@@ -1,21 +1,28 @@
 Things needed for compilation.
 
 SDL 
-	The Simple DirectMedia Library available at http://www.libsdl.org
+    The Simple DirectMedia Library available at http://www.libsdl.org
 
 Curses 
-	If you want to enable the debugger you need a curses library.
-	ncurses should be installed on just about every unix distro.
-	For win32 get pdcurses at http://pdcurses.sourceforge.net
+    (optional)
+    If you want to enable the debugger you need a curses library.
+    ncurses should be installed on just about every unix distro.
+    For win32 get pdcurses at http://pdcurses.sourceforge.net
 
 Libpng
-    Needed for the screenshots. (--enable-shots when configuring dosbox)
+    Needed for the screenshots. (optional)
     For win32 get libpng from http://www.sourceforge.net/projects/gnuwin32
 
 Zlib
-    Needed by libpng. 
+    Needed by libpng. (optional)
     For win32 get libz (rename to zlib) from http://www.sourceforge.net/projects/gnuwin32
 
+SDL_Net 
+    For modem support(optional). Get it from http://www.libsdl.org
+
+ALSA_Headers
+    (optional)
+    ???????? for Alsa support under linux
 
 If you want compile from the CVS under a unix system, you'll also need 
 automake (>=1.6), autoconf(>=2.50). Should be available at http://www.gnu.org
@@ -26,12 +33,23 @@ If you are building from the cvs run ./autogen.sh first before doing the followi
 1. ./configure
 2. make
 
-In step 1 you could add the following switches --enable-shots this will
-enable the screenshot facility, also --enable-debug is a valid switch. This
-will enable the internal debugger. (It can be started by pressing - on the
-numeric keyboard)
+In step 1 you could add the following switches:
+--enable-debug 
+        enables the internal debugger. --enable-debug=heavy enables even more 
+        debug options. Dosbox should then be run from a xterm and when the sdl-
+        window is active press - on numeric keyboard to enter the debugger.
+
+--disable-fpu
+        Will disable the emulated fpu. Although the fpu emulation hasn't finished and isn't
+        entirely accurate it's advised to leave it on. 
+
+--enable-core-inline
+        enables some memory increasing inlines. This greatly increases compiletime for maybe a increase 
+        in speed.
 
 Check the src subdir for the binary.
+
+
 
 Compiling on FreeBSD might be a problem since SDL has no joystick support there.
 To get around this edit sdlmain.cpp to enable some #define.
@@ -39,6 +57,4 @@ Let's hope someday the sdl people will just report 0 joysticks in freebsd or get
 
 
 Build instructions for VC++6 
-
-Open the workspace in the visualc subdir and build from there. 
-
+Don't use VC++ 6:it creates faulty code in core_normal.cpp
