@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.45 2004-08-26 19:49:26 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.46 2004-09-09 18:36:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -108,6 +108,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 }	
 
 void DOS_Shell::ParseLine(char * line) {
+	LOG(LOG_EXEC,LOG_ERROR)("Parsing command line: %s",line);
 	/* Check for a leading @ */
  	if (line[0]=='@') line[0]=' ';
 	line=trim(line);
@@ -324,6 +325,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Run a program. For batch file compatibility only.\n");
+	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
+	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
    
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();

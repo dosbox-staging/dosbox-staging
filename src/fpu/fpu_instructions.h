@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.20 2004-09-08 10:33:16 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.21 2004-09-09 18:36:50 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -264,7 +264,7 @@ static void FPU_FBST(PhysPt addr)
 
 static Real64 FPU_FBLD(PhysPt addr)
 {
-	Real64 val = 0;
+	Bit64u val = 0;
 	Bitu in = 0;
 	Bit64u base = 1;
 	for(Bitu i = 0;i < 9;i++){
@@ -275,11 +275,13 @@ static Real64 FPU_FBLD(PhysPt addr)
 		base *= 10;
 	}
 
-	//last number
+	//last number, only now convert to float in order to get
+	//the best signification
+	Real64 temp = static_cast<Real64>(val);
 	in = mem_readb(addr + 9);
-	val += ( (in&0xf) * base );
-	if(in&0x80) val *= -1.0;
-	return val;
+	temp += ( (in&0xf) * base );
+	if(in&0x80) temp *= -1.0;
+	return temp;
 }
 
 

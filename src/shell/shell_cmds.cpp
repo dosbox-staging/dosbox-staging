@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.45 2004-08-04 09:12:57 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.46 2004-09-09 18:36:50 qbix79 Exp $ */
 
 #include <string.h>
+#include <ctype.h>
 
 #include "shell.h"
 #include "callback.h"
@@ -36,7 +37,7 @@ static SHELL_Cmd cmd_list[]={
 {	"ERASE",	1,			&DOS_Shell::CMD_DELETE,		"SHELL_CMD_DELETE_HELP"},
 {	"ECHO",		0,			&DOS_Shell::CMD_ECHO,		"SHELL_CMD_ECHO_HELP"},
 {	"EXIT",		0,			&DOS_Shell::CMD_EXIT,		"SHELL_CMD_EXIT_HELP"},	
-{	"HELP",		0,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP"},
+{	"HELP",		1,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP"},
 {	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"SHELL_CMD_MKDIR_HELP"},
 {	"MD",		1,			&DOS_Shell::CMD_MKDIR,		"SHELL_CMD_MKDIR_HELP"},
 {	"RMDIR",	0,			&DOS_Shell::CMD_RMDIR,		"SHELL_CMD_RMDIR_HELP"},
@@ -53,6 +54,8 @@ static SHELL_Cmd cmd_list[]={
 {	"SUBST",	0,			&DOS_Shell::CMD_SUBST,		"SHELL_CMD_SUBST_HELP"},
 {	"LOADHIGH",	0,			&DOS_Shell::CMD_LOADHIGH, 	"SHELL_CMD_LOADHIGH_HELP"},
 {	"LH",		1,			&DOS_Shell::CMD_LOADHIGH,	"SHELL_CMD_LOADHIGH_HELP"},
+{	"CHOICE",	0,			&DOS_Shell::CMD_CHOICE,		"SHELL_CMD_CHOICE_HELP"},
+{	"ATTRIB",	0,			&DOS_Shell::CMD_ATTRIB,		"SHELL_CMD_ATTRIB_HELP"},
 {0,0,0,0}
 };
 
@@ -361,10 +364,15 @@ void DOS_Shell::CMD_DIR(char * args) {
 }
 
 void DOS_Shell::CMD_COPY(char * args) {
+	static char defaulttarget[] = ".";
 	StripSpaces(args);
 	DOS_DTA dta(dos.dta());
 	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	char name[DOS_NAMELENGTH_ASCII];
+
+	// ignore /b and /t switches: always copy binary
+	ScanCMDBool(args,"B");
+	ScanCMDBool(args,"T");
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -373,7 +381,9 @@ void DOS_Shell::CMD_COPY(char * args) {
 	}
 	// source/target
 	char* source = StripWord(args);
-	char* target = StripWord(args);
+	char* target = NULL;
+	if (args && *args) target = StripWord(args);
+	if (!target || !*target) target = defaulttarget;
 	
 	// Target and Source have to be there
 	if (!source || !strlen(source)) {
@@ -577,7 +587,6 @@ void DOS_Shell::CMD_PAUSE(char * args){
 	DOS_ReadFile (STDIN,&c,&n);
 }
 
-
 void DOS_Shell::CMD_CALL(char * args){
 	this->call=true; /* else the old batchfile will be closed first */
 	this->ParseLine(args);
@@ -642,3 +651,45 @@ void DOS_Shell::CMD_SUBST (char * args) {
 void DOS_Shell::CMD_LOADHIGH(char *args){
 	this->ParseLine(args);
 }
+
+void DOS_Shell::CMD_CHOICE(char * args){
+	static char defargs[] = "[YN]";
+	static char defchoice[] = "yn";
+	char *rem = NULL, *ptr;
+	bool optN = false;
+	if (args) {
+		char *last = strchr(args,0);
+		StripSpaces(args);
+		optN=ScanCMDBool(args,"N");
+		rem=ScanCMDRemain(args);
+		if (rem && *rem && (tolower(rem[1]) != 'c' || rem[2] != ':')) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
+			return;
+		}
+		if (args == rem) args = strchr(rem,0)+1;
+		if (rem) rem += 3;
+		if (args > last) args = NULL;
+	}
+	if (!args || !*args) args = defargs;
+	if (!rem || !*rem) rem = defchoice;
+	ptr = rem;
+	Bit8u c;
+	while ((c = *ptr)) *ptr++ = tolower(c);
+
+	WriteOut(args);
+	if (!optN) WriteOut("\r\n");
+	Bit16u n=1;
+	do {
+		DOS_ReadFile (STDIN,&c,&n);
+	} while (!c || !(ptr = strchr(rem,tolower(c))));
+	if (optN) {
+		DOS_WriteFile (STDOUT,&c, &n);
+		WriteOut("\r\n");
+	}
+	dos.return_code = ptr-rem+1;
+}
+
+void DOS_Shell::CMD_ATTRIB(char *args){
+	// No-Op for now.
+}
+
