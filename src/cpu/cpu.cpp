@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.66 2005-02-10 10:20:48 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.67 2005-02-21 15:36:14 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -325,25 +325,36 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	}
 
 //	cpu.cr0|=CR0_TASKSWITCHED;
-	/* Setup the new cr3 */
-	PAGING_SetDirBase(new_cr3);
-
-	/* Load new context */
-	if (new_tss.is386) {
-		reg_eip=new_eip;
-		CPU_SetFlags(new_eflags,FMASK_ALL | FLAG_VM);
-		reg_eax=new_eax;
-		reg_ecx=new_ecx;
-		reg_edx=new_edx;
-		reg_ebx=new_ebx;
-		reg_esp=new_esp;
-		reg_ebp=new_ebp;
-		reg_edi=new_edi;
-		reg_esi=new_esi;
-
-		new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
+	if (new_tss_selector == cpu_tss.selector) {
+		reg_eip = old_eip;
+		new_cs = SegValue(cs);
+		new_ss = SegValue(ss);
+		new_ds = SegValue(ds);
+		new_es = SegValue(es);
+		new_fs = SegValue(fs);
+		new_gs = SegValue(gs);
 	} else {
-		E_Exit("286 task switch");
+	
+		/* Setup the new cr3 */
+		PAGING_SetDirBase(new_cr3);
+
+		/* Load new context */
+		if (new_tss.is386) {
+			reg_eip=new_eip;
+			CPU_SetFlags(new_eflags,FMASK_ALL | FLAG_VM);
+			reg_eax=new_eax;
+			reg_ecx=new_ecx;
+			reg_edx=new_edx;
+			reg_ebx=new_ebx;
+			reg_esp=new_esp;
+			reg_ebp=new_ebp;
+			reg_edi=new_edi;
+			reg_esi=new_esi;
+
+//			new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
+		} else {
+			E_Exit("286 task switch");
+		}
 	}
 	/* Load the new selectors */
 	if (reg_flags & FLAG_VM) {
