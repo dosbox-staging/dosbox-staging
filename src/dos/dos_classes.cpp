@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.30 2003-08-19 20:05:47 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.31 2003-09-30 13:51:15 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -236,6 +236,7 @@ bool DOS_PSP::SetNumFiles(Bit16u fileNum)
 {
 	if (fileNum>20) {
 		// Allocate needed paragraphs
+		fileNum+=2;	// Add a few more files for safety
 		Bit16u para = (fileNum/16)+((fileNum%16)>0);
 		RealPt data	= RealMake(DOS_GetMemory(para),0);
 		sSave(sPSP,file_table,data);
