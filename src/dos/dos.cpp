@@ -40,7 +40,6 @@ void DOS_SetError(Bit16u code) {
 
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
-//TODO KEYBOARD	Check for break
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
 	switch (reg_ah) {
@@ -460,7 +459,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3f:		/* READ Read from file or device */
 		{ 
 			Bit16u toread=reg_cx;
-			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:READ:Buffer overflow");
+			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:READ:Buffer overflow %d",reg_cx+reg_dx);
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
@@ -474,7 +473,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x40:					/* WRITE Write to file or device */
 		{
 			Bit16u towrite=reg_cx;
-			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:WRITE:Buffer overflow");
+			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:WRITE:Buffer overflow %d",reg_cx+reg_dx);
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
 			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
 				reg_ax=towrite;
@@ -528,7 +527,7 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x44:					/* IOCTL Functions */
-		if (DOS_IOCTL(reg_al,reg_bx)) {
+		if (DOS_IOCTL()) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -622,7 +621,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_FindFirst(name1,reg_cx)) {
-			CALLBACK_SCF(false);			
+			CALLBACK_SCF(false);	
+			reg_ax=0;			/* Undocumented */
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
@@ -630,7 +630,8 @@ static Bitu DOS_21Handler(void) {
 		break;		 
 	case 0x4f:					/* FINDNEXT Find next matching file */
 		if (DOS_FindNext()) {
-			CALLBACK_SCF(false);			
+			CALLBACK_SCF(false);
+			reg_ax=0xffff;			/* Undocumented */
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
