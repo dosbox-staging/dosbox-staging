@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.41 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.42 2004-05-11 18:59:32 harekiet Exp $ */
 
 #include <string.h>
 
@@ -147,8 +147,8 @@ void DOS_Shell::CMD_RENAME(char * args){
 	StripSpaces(args);
 	if(!*args) {SyntaxError();return;}
 	if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
-	char * arg2 =StripWord(args);
-	DOS_Rename(args,arg2);
+	char * arg1=StripWord(args);
+	DOS_Rename(arg1,args);
 }
 
 void DOS_Shell::CMD_ECHO(char * args){
@@ -369,8 +369,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 		return;
 	}
 	// source/target
-	char* source = args;
-	char* target = StripWord(source);
+	char* source = StripWord(args);
+	char* target = StripWord(args);
 	
 	// Target and Source have to be there
 	if (!source || !strlen(source)) {
@@ -487,16 +487,13 @@ void DOS_Shell::CMD_IF(char * args) {
 		*comp++=' ';
 		*comp++=' ';
 	};
-	char * word;
-	word=args;
-	args=StripWord(word);
+	char * word=StripWord(args);
 	if (strcasecmp(word,"NOT")==0) {
-		word=args;
+		word=StripWord(args);
 		has_not=true;
-		args=StripWord(word);
 	}
 	if (strcasecmp(word,"EXIST")==0) {
-		word=args;args=StripWord(word);
+		word=StripWord(args);
 		if (!*word) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_EXIST_MISSING_FILENAME"));
 			return;
@@ -506,7 +503,7 @@ void DOS_Shell::CMD_IF(char * args) {
 		return;
 	}
 	if (strcasecmp(word,"ERRORLEVEL")==0) {
-		word=args;args=StripWord(word);
+		word=StripWord(args);
 		if(!isdigit(*word)) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"));
 			return;
@@ -525,8 +522,7 @@ void DOS_Shell::CMD_IF(char * args) {
 	}
 	/* Normal if string compare */
 	if (!*args) { SyntaxError();return;};
-	char * word2=args;
-	args=StripWord(word2);
+	char * word2=StripWord(args);
 	if ((strcmp(word,word2)==0)==(!has_not)) DoCommand(args);
 }
 
@@ -554,8 +550,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 	Bit16u handle;
 	char * word;
 nextfile:
-	word=args;
-	args=StripWord(word);
+	word=StripWord(args);
 	if (!DOS_OpenFile(word,0,&handle)) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),word);
 		return;
