@@ -50,14 +50,13 @@ void SHELL_AddAutoexec(char * line,...) {
 	sprintf((autoexec_data+auto_len),"%s\r\n",buf);
 }
 
-
 DOS_Shell::DOS_Shell():Program(){
 	input_handle=STDIN;
 	echo=true;
 	exit=false;
 	bf=0;
-	memset(&old.buffer,0,CMD_OLDSIZE);
-	old.size=0;
+
+	completion_start = NULL;
 }
 
 
@@ -65,11 +64,14 @@ DOS_Shell::DOS_Shell():Program(){
 
 Bit32u DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn) {
 
+	char *output = strrchr(s, '>');
+	if (output) {
+	   *output = 0;
+	//	while (!isalnum(*output)) output++;
+	}
 
 	return 1;
-}	
-	
-
+}
 
 void DOS_Shell::ParseLine(char * line) {
 
@@ -81,7 +83,7 @@ void DOS_Shell::ParseLine(char * line) {
 	line=trim(line);
 	Bit32u num=0;		/* Number of commands in this line */
 
-	num = GetRedirection(line,&in, &out);
+	num = GetRedirection(line, &in, &out);
 
 /* TODO in and out redirection */
         

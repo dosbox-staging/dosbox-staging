@@ -26,6 +26,9 @@
 #include "callback.h"
 #include "setup.h"
 
+#include <string>
+#include <list>
+
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20
 #define CMD_OLDSIZE 4096
@@ -46,11 +49,19 @@ public:
 	CommandLine * cmd;
 };
 
-
-
 class DOS_Shell : public Program {
+
+private:
+
+	std::list<std::string> l_history, l_completion;
+
+	char *completion_start;
+	Bit16u completion_index;
+
 public:
+
 	DOS_Shell();
+
 	void Run(void);
 	void RunInternal(void); //for command /C
 /* A load of subfunctions */
@@ -87,12 +98,6 @@ public:
 	BatchFile * bf;
 	bool echo;
 	bool exit;
-	struct {
-		char buffer[CMD_OLDSIZE];
-		Bitu index;
-		Bitu size;
-	} old;
-	
 };
 
 struct SHELL_Cmd {

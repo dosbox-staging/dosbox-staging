@@ -40,11 +40,14 @@ static void outs(char * str) {
 }
 
 void DOS_Shell::InputCommand(char * line) {
-	char * prev=old.buffer;
-	char * reader;
 	Bitu size=CMD_MAXLINE-1;
 	Bit8u c;Bit16u n=1;
 	Bitu str_len=0;Bitu str_index=0;
+	Bit16u len;
+
+	line[0] = '\0';
+
+	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
 
 	while (size) {
         dos.echo=false;
@@ -58,41 +61,75 @@ void DOS_Shell::InputCommand(char * line) {
 			{
 				DOS_ReadFile(input_handle,&c,&n);
 				switch (c) {
+
 				case 0x3d:		/* F3 */
-					if (strlen(old.buffer)>str_len) {
-						reader=&old.buffer[str_len];
-						while ((c=*reader++)) {
-							line[str_index]=c;
-							str_len++;
-							str_index++;
-							size--;
+					if (!l_history.size()) break;
+					it_history = l_history.begin();
+					if (it_history != l_history.end() && it_history->length() > str_len) {
+						const char *reader = &(it_history->c_str())[str_len];
+						while ((c = *reader++)) {
+							line[str_index ++] = c;
 							DOS_WriteFile(STDOUT,&c,&n);
 						}
+						str_len = str_index = it_history->length();
+						size = CMD_MAXLINE - str_index - 1;
 					}
 					break;
-				default:
+
+				case 0x4B:	/* LEFT */
+					if (str_index) {
+						outc(8);
+						str_index --;
+					}
 					break;
 
+				case 0x4D:	/* RIGHT */
+					if (str_index < str_len) {
+						outc(line[str_index++]);
+					}
+					break;
 
+				case 0x48:	/* UP */
+					if (it_history == l_history.end()) break;
+
+					for (;str_index>0; str_index--) {
+						// removes all characters
+						outc(8); outc(' '); outc(8);
+					}
+					strcpy(line, it_history->c_str());
+					len = it_history->length();
+					str_len = str_index = len;
+					size = CMD_MAXLINE - str_index - 1;
+					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
+
+					it_history ++;
+					if (it_history == l_history.end()) it_history = l_history.begin();
+
+					break;
+
+				default:
+					break;
 				}
 			};
 			break;
 		case 0x08:				/* BackSpace */
-			if (str_index>0) {
-				Bit32u str_remain=str_len-str_index;
+			if (str_index) {
+				outc(8);
+				Bit32u str_remain=str_len - str_index;
 				if (str_remain) {
-					memcpy(&line[str_index-1],&line[str_index],str_remain);
-					line[str_len]=0;
+					memmove(&line[str_index-1],&line[str_index],str_remain);
+					line[--str_len]=0;
+					str_index --;
 					/* Go back to redraw */
-					for (;str_remain>0;str_remain--) {
-						outc(8);
-					}
+					for (Bit16u i=str_index; i < str_len; i++)
+						outc(line[i]);
+				} else {
+					line[--str_index] = '\0';
+					str_len--;
 				}
-				str_index--;str_len--;
-				outc(8);
-				outc(' ');				
-				outc(8);
-				
+				outc(' ');	outc(8);
+				// moves the cursor left
+				while (str_remain--) outc(8);
 			}
 			break;
 		case 0x0a:				/* New Line not handled */
@@ -103,35 +140,85 @@ void DOS_Shell::InputCommand(char * line) {
 			size=0;			//Kill the while loop
 			break;
 		case'\t':
-			{	
-				Bit8u c=' ';Bit16u n=1;
-				for(Bitu i=0; i !=4 ;i++)
-				{
-					line[str_index]=c;
-					str_len++;//This should depend on insert being active
-					str_index++;
-					size--;
-					DOS_WriteFile(STDOUT,&c,&n);
+			{
+				if (l_completion.size()) {
+					it_completion ++;
+					if (it_completion == l_completion.end()) it_completion = l_completion.begin();
+				} else {
+					// build new completion list
+
+					// get completion mask
+					char *completion_start = strrchr(line, ' ');
+
+					if (completion_start) {
+						completion_start ++;
+						completion_index = str_index - strlen(completion_start);
+					} else {
+						completion_start = line;
+						completion_index = 0;
+					}
+
+					// build the completion list
+					char mask[DOS_PATHLENGTH];
+					if (completion_start) {
+						strcpy(mask, completion_start);
+						// not perfect when line already contains wildcards, but works
+						strcat(mask, "*.*");
+					} else {
+						strcpy(mask, "*.*");
+					}
+
+					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
+					if (!res) break;	// TODO: beep
+
+					DOS_DTA dta(dos.dta);
+					char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+
+					while (res) {
+						dta.GetResult(name,size,date,time,attr);
+						// add result to completion list
+
+						if (strcmp(name, ".") && strcmp(name, ".."))
+							l_completion.push_back(name);
+
+						res=DOS_FindNext();
+					}
+
+					it_completion = l_completion.begin();
+				}
+
+				if (it_completion->length()) {
+					for (;str_index > completion_index; str_index--) {
+						// removes all characters
+						outc(8); outc(' '); outc(8);
+					}
+
+					strcpy(&line[completion_index], it_completion->c_str());
+					len = it_completion->length();
+					str_len = str_index = completion_index + len;
+					size = CMD_MAXLINE - str_index - 1;
+					DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
 				}
 			}
 			break;
 		default:
+			if (l_completion.size()) l_completion.clear();
 			line[str_index]=c;
+			str_index ++;
+			if (str_index > str_len) line[str_index] = '\0';
 			str_len++;//This should depend on insert being active
-			str_index++;
 			size--;
 			DOS_WriteFile(STDOUT,&c,&n);
 			break;
 		}
 	}
-/* String is inputted now save it in the buffer */
-	line[str_len]=0;
+
 	if (!str_len) return;
 	str_len++;
-	//Not quite perfect last entries can get screwed :)
-	size_t first_len=strlen(old.buffer)+1;
-	memmove(&old.buffer[first_len],&old.buffer[0],CMD_OLDSIZE-first_len);
-	strcpy(old.buffer,line);		
+
+	// add command line to history
+	l_history.push_front(line); it_history = l_history.begin();
+	if (l_completion.size()) l_completion.clear();
 }
 
 void DOS_Shell::Execute(char * name,char * args) {
