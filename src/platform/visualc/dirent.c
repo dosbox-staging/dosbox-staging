@@ -23,7 +23,7 @@ DIR * opendir(const char *dirname) {
 
     /* Stash the directory name */
     strcpy(dir.pathName,dirname);
-	strcat(dir.pathName,"*.*");
+	strcat(dir.pathName,"\\*.*");
 
     /* set the handle to invalid and set the firstTime flag */
     dir.handle    = INVALID_HANDLE_VALUE;
