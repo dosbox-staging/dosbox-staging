@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.23 2004-02-29 22:18:24 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.24 2004-03-06 23:18:50 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -68,8 +68,8 @@ static INLINE void TANDY16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rne
 static INLINE void EGA16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	PhysPt src,dest;Bitu copy;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
-	dest=base+(CurMode->twidth*rnew)*cheight+cleft;	
-	src=base+(CurMode->twidth*rold)*cheight+cleft;	
+	dest=base+(CurMode->twidth*rnew)*cheight+cleft;
+	src=base+(CurMode->twidth*rold)*cheight+cleft;
 	Bitu nextline=CurMode->twidth;
 	/* Setup registers correctly */
 	IO_Write(0x3ce,5);IO_Write(0x3cf,1);		/* Memory transfer mode */
@@ -85,6 +85,19 @@ static INLINE void EGA16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,
 	IO_Write(0x3ce,5);IO_Write(0x3cf,0);		/* Normal transfer mode */
 }
 
+static INLINE void VGA_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	PhysPt src,dest;Bitu copy;
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	dest=base+8*((CurMode->twidth*rnew)*cheight+cleft);
+	src=base+8*((CurMode->twidth*rold)*cheight+cleft);
+	Bitu nextline=8*CurMode->twidth;
+	Bitu rowsize=8*(cright-cleft);
+	copy=cheight;
+	for (;copy>0;copy--) {
+		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,mem_readb(src+x));
+		dest+=nextline;src+=nextline;
+	}
+}
 
 static INLINE void TEXT_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	PhysPt src,dest;
@@ -139,21 +152,31 @@ static INLINE void TANDY16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt bas
 	}
 }
 
-
-
 static INLINE void EGA16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	/* Set Bitmask / Color / Full Set Reset */
 	IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
 	IO_Write(0x3ce,0x0);IO_Write(0x3cf,attr);
 	IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
 	/* Write some bytes */
-	PhysPt dest;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
-	dest=base+(CurMode->twidth*row)*cheight+cleft;	
+	PhysPt dest=base+(CurMode->twidth*row)*cheight+cleft;	
 	Bitu nextline=CurMode->twidth;
-	Bitu copy = cheight;	Bitu rowsize=(cright-cleft);
+	Bitu copy = cheight;Bitu rowsize=(cright-cleft);
 	for (;copy>0;copy--) {
 		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,0xff);
+		dest+=nextline;
+	}
+	IO_Write(0x3cf,0);
+}
+
+static INLINE void VGA_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	/* Write some bytes */
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+8*((CurMode->twidth*row)*cheight+cleft);
+	Bitu nextline=8*CurMode->twidth;
+	Bitu copy = cheight;Bitu rowsize=8*(cright-cleft);
+	for (;copy>0;copy--) {
+		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,attr);
 		dest+=nextline;
 	}
 	IO_Write(0x3cf,0);
@@ -214,6 +237,8 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 			TANDY16_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_EGA16:		
 			EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
+		case M_VGA:		
+			VGA_CopyRow(cul,clr,start,start+nlines,base);break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
@@ -238,6 +263,8 @@ filling:
 			TANDY16_FillRow(cul,clr,start,base,attr);break;
 		case M_EGA16:		
 			EGA16_FillRow(cul,clr,start,base,attr);break;
+		case M_VGA:		
+			VGA_FillRow(cul,clr,start,base,attr);break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
