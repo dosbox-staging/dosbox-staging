@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.29 2004-09-10 22:15:20 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.30 2004-11-13 11:59:46 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -152,7 +152,7 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 		p->delay=(1000.0f/((float)PIT_TICK_RATE/(float)p->cntr));
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
-			if (p->new_mode) {
+			if (p->new_mode || p->mode == 0 ) {
 				p->new_mode=false;			
 				PIC_AddEvent(PIT0_Event,p->delay);
 			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
