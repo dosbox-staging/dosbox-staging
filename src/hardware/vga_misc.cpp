@@ -26,14 +26,10 @@ static Bit32u keep_vretrace;
 static bool keeping=false;
 static Bit8u p3c2data=0;
 
-
-
-
 void write_p3d4(Bit32u port,Bit8u val);
 Bit8u read_p3d4(Bit32u port);
 void write_p3d5(Bit32u port,Bit8u val);
 Bit8u read_p3d5(Bit32u port);
-
 
 static Bit8u read_p3da(Bit32u port) {
 	vga.internal.attrindex=false;
@@ -71,7 +67,6 @@ static void write_p3d8(Bit32u port,Bit8u val) {
 static void write_p3c2(Bit32u port,Bit8u val) {
 	p3c2data=val;
 	if (val & 1) {
-		S_Warn("Color Mode %X",val);
 		IO_RegisterWriteHandler(0x3d4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3d4,read_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterWriteHandler(0x3d5,write_p3d5,"VGA:CRTC Data Register");
@@ -82,7 +77,6 @@ static void write_p3c2(Bit32u port,Bit8u val) {
 		IO_FreeReadHandler(0x3b5);
 
 	} else {
-		S_Warn("Mono Mode %X",val);
 		IO_RegisterWriteHandler(0x3b4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3b4,read_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterWriteHandler(0x3b5,write_p3d5,"VGA:CRTC Data Register");
