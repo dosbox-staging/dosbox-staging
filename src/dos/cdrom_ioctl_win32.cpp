@@ -242,7 +242,7 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	MEM_BlockWrite(buffer,bufdata,buflen);
 	delete[] bufdata;
 
-	return (byteCount!=num*RAW_SECTOR_SIZE) && (bStat>0);
+	return (byteCount==buflen) && (bStat>0);
 }
 
 bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD)
