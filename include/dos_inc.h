@@ -29,32 +29,31 @@ struct CommandTail{
   char buffer[127];			 /* the buffer itself */
 } GCC_ATTRIBUTE(packed);
 
-struct PSP {
-	Bit8u exit[2];				/* CP/M-like exit poimt */
-	Bit16u mem_size;			/* memory size in paragraphs */
-	Bit8u  fill_1;				/* single char fill */
+struct sPSP {
+	Bit8u	exit[2];			/* CP/M-like exit poimt */
+	Bit16u	next_seg;			/* Segment of first byte beyond memory allocated or program */
+	Bit8u	fill_1;				/* single char fill */
+	Bit8u	far_call;			/* far call opcode */
+	RealPt	cpm_entry;			/* CPM Service Request address*/
+	RealPt	int_22;				/* Terminate Address */
+	RealPt	int_23;				/* Break Address */
+	RealPt	int_24;				/* Critical Error Address */
+	Bit16u	psp_parent;			/* Parent PSP Segment */
+	Bit8u	files[20];			/* File Table - 0xff is unused */
+	Bit16u	environment;		/* Segment of evironment table */
+	RealPt	stack;				/* SS:SP Save point for int 0x21 calls */
+	Bit16u	max_files;			/* Maximum open files */
+	RealPt	file_table;			/* Pointer to File Table PSP:0x18 */
+	RealPt	prev_psp;			/* Pointer to previous PSP */
+	RealPt	dta;				/* Pointer to current Process DTA */
+	Bit8u	fill_2[16];			/* Lot's of unused stuff i can't care aboue */
+	Bit8u	service[3];			/* INT 0x21 Service call int 0x21;retf; */
+	Bit8u	fill_3[9];			/* This has some blocks with FCB info */
+	Bit8u	fcb1[16];			/* first FCB */
+	Bit8u	fcb2[16];			/* second FCB */
+	Bit8u	fill_4[4];			/* unused */
+	CommandTail cmdtail;		
 
-/* CPM Stuff dunno what this is*/
-//TODO Add some checks for people using this i think
-	Bit8u  far_call;			/* far call opcode */
-	RealPt cpm_entry;			/* CPM Service Request address*/
-	RealPt int_22;				/* Terminate Address */
-	RealPt int_23;				/* Break Address */
-	RealPt int_24;				/* Critical Error Address */
-	Bit16u psp_parent;			/* Parent PSP Segment */
-	Bit8u  files[20];			/* File Table - 0xff is unused */
-	Bit16u environment;			/* Segment of evironment table */
-	RealPt stack;				/* SS:SP Save point for int 0x21 calls */
-	Bit16u max_files;			/* Maximum open files */
-	RealPt file_table;			/* Pointer to File Table PSP:0x18 */
-	RealPt prev_psp;			/* Pointer to previous PSP */
-	RealPt dta;					/* Pointer to current Process DTA */
-	Bit8u fill_2[16];			/* Lot's of unused stuff i can't care aboue */
-	Bit8u service[3];			/* INT 0x21 Service call int 0x21;retf; */
-	Bit8u fill_3[45];			/* This has some blocks with FCB info */
-	
-	CommandTail cmdtail;
-	
 } GCC_ATTRIBUTE(packed);
 
 struct ParamBlock {
@@ -114,6 +113,76 @@ struct DOS_Block {
 	} tables;
 };
 
+class MemStruct {
+public:
+	Bit8u GetIt(Bit8u,PhysPt addr) {
+		return mem_readb(pt+addr);
+	};
+	Bit16u GetIt(Bit16u,PhysPt addr) {
+		return mem_readw(pt+addr);
+	};
+	Bit32u GetIt(Bit32u,PhysPt addr) {
+		return mem_readd(pt+addr);
+	};
+	void SaveIt(Bit8u,PhysPt addr,Bit8u val) {
+		mem_writeb(pt+addr,val);
+	};
+	void SaveIt(Bit16u,PhysPt addr,Bit16u val) {
+		mem_writew(pt+addr,val);
+	};
+	void SaveIt(Bit32u,PhysPt addr,Bit32u val) {
+		mem_writed(pt+addr,val);
+	};
+	
+
+protected:
+PhysPt pt;
+
+};
+
+#define sGet(s,m) GetIt(((s *)Phys2Host(pt))->m,(PhysPt)&(((s *)0)->m))
+#define sSave(s,m,val) SaveIt(((s *)Phys2Host(pt))->m,(PhysPt)&(((s *)0)->m),val)
+
+class DOS_PSP :public MemStruct {
+public:
+	DOS_PSP						()						{ seg=0; pt=0;		};
+	DOS_PSP						(Bit16u segment)		{ NewPt(segment);	};
+	void	NewPt				(Bit16u segment);
+	void	MakeNew				(Bit16u memSize);
+	
+	void	CopyFileTable		(DOS_PSP* srcpsp);
+	Bit16u	FindFreeFileEntry	(void);
+	void	CloseFiles			(void);
+
+	void	SaveVectors			(void);
+	void	RestoreVectors		(void);
+	void	SetSize				(Bit16u size)			{ sSave(sPSP,next_seg,size);		};
+	Bit16u	GetSize				()						{ return sGet(sPSP,next_seg);		};
+	void	SetDTA				(RealPt ptdta)			{ sSave(sPSP,dta,ptdta);			};
+	RealPt	GetDTA				(void)					{ return sGet(sPSP,dta);			};
+	void	SetEnvironment		(Bit16u envseg)			{ sSave(sPSP,environment,envseg);	};
+	Bit16u	GetEnvironment		(void)					{ return sGet(sPSP,environment);	};
+	Bit16u	GetSegment			(void)					{ return seg;						};
+	void	SetFileHandle		(Bit16u index, Bit8u handle);
+	Bit8u	GetFileHandle		(Bit16u index);
+	void	SetParent			(Bit16u parent)			{ sSave(sPSP,psp_parent,parent);	};
+	Bit16u	GetParent			(void)					{ return sGet(sPSP,psp_parent);		};
+	void	SetStack			(RealPt stackpt)		{ sSave(sPSP,stack,stackpt);		};
+	RealPt	GetStack			(void)					{ return sGet(sPSP,stack);			};
+	void	SetInt22			(RealPt int22pt)		{ sSave(sPSP,int_22,int22pt);		};
+	RealPt	GetInt22			(void)					{ return sGet(sPSP,int_22);			};
+	void	SetFCB1				(RealPt src);
+	void	SetFCB2				(RealPt src);
+	void	SetCommandTail		(RealPt src);	
+
+private:
+	Bit16u	seg;
+	sPSP*	psp;
+
+public:
+	static	Bit16u rootpsp;
+};
+
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
 enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
@@ -170,7 +239,7 @@ bool DOS_GetSTDINStatus();
 Bit8u DOS_FindDevice(char * name);
 void DOS_SetupDevices(void);
 /* Execute and new process creation */
-bool DOS_NewPSP(Bit16u pspseg);
+bool DOS_NewPSP(Bit16u pspseg,Bit16u size);
 bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags);
 bool DOS_Terminate(bool tsr);
 
@@ -213,9 +282,9 @@ INLINE Bit16u long2para(Bit32u size) {
 };
 
 INLINE Bit8u RealHandle(Bit16u handle) {
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	if (handle>=psp->max_files) return 0xff;
-	return mem_readb(Real2Phys(psp->file_table)+handle);
+	
+	DOS_PSP psp(dos.psp);	
+	return psp.GetFileHandle((Bit8u)handle);
 };
 
 /* Dos Error Codes */
@@ -273,8 +342,6 @@ public:
 private:
 	PhysPt off;
 };
-
-
 
 class DOS_ParamBlock {
 public:

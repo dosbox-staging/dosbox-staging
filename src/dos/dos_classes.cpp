@@ -31,32 +31,6 @@
 
 #pragma pack (1)
 
-struct sPSP {
-	Bit8u exit[2];				/* CP/M-like exit poimt */
-	Bit16u next_seg;			/* Segment of first byte beyond memory allocated or program */
-	Bit8u  fill_1;				/* single char fill */
-
-/* CPM Stuff dunno what this is*/
-//TODO Add some checks for people using this i think
-	Bit8u  far_call;			/* far call opcode */
-	RealPt cpm_entry;			/* CPM Service Request address*/
-	RealPt int_22;				/* Terminate Address */
-	RealPt int_23;				/* Break Address */
-	RealPt int_24;				/* Critical Error Address */
-	Bit16u psp_parent;			/* Parent PSP Segment */
-	Bit8u  files[20];			/* File Table - 0xff is unused */
-	Bit16u environment;			/* Segment of evironment table */
-	RealPt stack;				/* SS:SP Save point for int 0x21 calls */
-	Bit16u max_files;			/* Maximum open files */
-	RealPt file_table;			/* Pointer to File Table PSP:0x18 */
-	RealPt prev_psp;			/* Pointer to previous PSP */
-	RealPt dta;				/* Pointer to current Process DTA */
-	Bit8u fill_2[16];			/* Lot's of unused stuff i can't care aboue */
-	Bit8u service[3];			/* INT 0x21 Service call int 0x21;retf; */
-	Bit8u fill_3[45];			/* This has some blocks with FCB info */
-	CommandTail cmdtail;
-} GCC_ATTRIBUTE(packed);
-
 union sParamBlock {
 	struct {
 		Bit16u loadseg;
@@ -87,100 +61,6 @@ struct sFCB {
 } GCC_ATTRIBUTE(packed);
 
 #pragma pack ()
-
-#define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)&(((s *)0)->m))
-#define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)&(((s *)0)->m),val)
-
-
-class MemStruct {
-public:
-	Bit8u GetIt(Bit8u,PhysPt addr) {
-		return mem_readb(pt+addr);
-	};
-	Bit16u GetIt(Bit16u,PhysPt addr) {
-		return mem_readw(pt+addr);
-	};
-	Bit32u GetIt(Bit32u,PhysPt addr) {
-		return mem_readd(pt+addr);
-	};
-	void SaveIt(Bit8u,PhysPt addr,Bit8u val) {
-		mem_writeb(pt+addr,val);
-	};
-	void SaveIt(Bit16u,PhysPt addr,Bit16u val) {
-		mem_writew(pt+addr,val);
-	};
-	void SaveIt(Bit32u,PhysPt addr,Bit32u val) {
-		mem_writed(pt+addr,val);
-	};
-	
-
-private:
-PhysPt pt;
-
-};
-
-
-class DOS_PSP :public MemStruct {
-public:
-	DOS_PSP(Bit16u segment){NewPt(segment);};
-	void NewPt(Bit16u segment);
-	void MakeNew(Bit16u mem_size);
-	Bit8u GetFileHandle(Bitu index);
-
-private:
-	Bit16u seg;
-	PhysPt pt;
-};
-
-void DOS_PSP::NewPt(Bit16u segment) {
-	seg=segment;
-	pt=PhysMake(segment,0);
-};
-
-
-
-void DOS_PSP::MakeNew(Bit16u mem_size) {
-	Bitu i;
-	/* Clear it first */	
-	for (i=0;i<256;i++) mem_writeb(pt+i,0);
-	/* Standard blocks,int 20  and int21 retf */
-	sGet(sPSP,max_files);
-	sSave(sPSP,exit[0],0xcd);
-	sSave(sPSP,exit[1],0x20);
-	sSave(sPSP,service[0],0xcd);
-	sSave(sPSP,service[1],0x21);
-	sSave(sPSP,service[2],0xcb);
-	/* psp and psp-parent */
-	sSave(sPSP,psp_parent,dos.psp);
-	sSave(sPSP,prev_psp,RealMake(dos.psp,0));
-	/* terminate 22,break 23,crititcal error 24 address stored */
-	sSave(sPSP,int_22,RealGetVec(0x22));
-	sSave(sPSP,int_23,RealGetVec(0x23));
-	sSave(sPSP,int_24,RealGetVec(0x24));
-	/* Memory size */
-	sSave(sPSP,next_seg,seg+mem_size);
-	/* Process DTA */
-	sSave(sPSP,dta,RealMake(seg,128));
-	/* User Stack pointer */
-	//Copy from previous psp
-	//	mem_writed(pt+offsetof(sPSP,stack),
-
-	/* Init file pointer and max_files */
-	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files[0])));
-	sSave(sPSP,max_files,20);
-	/* Copy file table from calling process */
-	for (i=0;i<20;i++) {
-		Bit8u handle=0;
-		//		Bitu handle=dos.psp.GetFileHandle(i);
-		sSave(sPSP,files[i],handle);
-	}
-}
-
-Bit8u DOS_PSP::GetFileHandle(Bitu index) {
-	if (index>=sGet(sPSP,max_files)) return 0xff;
-	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	return mem_readb(files+index);
-};
 
 #define FCB_EXTENDED (mem_readb(off)==0xFF ? 7:0)
 
@@ -297,4 +177,133 @@ void DOS_InfoBlock::GetDIBPointer(Bit16u& segment, Bit16u& offset)
 {
 	segment = seg;
 	offset	= offsetof(SDosInfoBlock,firstDPB);
+};
+
+
+/* program Segment prefix */
+
+Bit16u DOS_PSP::rootpsp = 0;
+
+void DOS_PSP::NewPt(Bit16u segment) 
+{
+	seg	= segment;
+	pt	= PhysMake(segment,0);
+	// debug
+	psp = (sPSP*)Phys2Host(pt);
+};
+
+void DOS_PSP::MakeNew(Bit16u mem_size) 
+{
+		/* get previous */
+	DOS_PSP prevpsp(dos.psp);
+	/* Clear it first */	
+	for (Bitu i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
+	// Set size
+//	SaveIt(((sPSP*)Phys2Host(pt))->next_seg,0,mem_size);
+	sSave(sPSP,next_seg,mem_size);
+	/* far call opcode */
+	sSave(sPSP,far_call,0xea);
+//	sSave(sPSP,cmp_entry
+	/* Standard blocks,int 20  and int21 retf */
+	sSave(sPSP,exit[0],0xcd);
+	sSave(sPSP,exit[1],0x20);
+	sSave(sPSP,service[0],0xcd);
+	sSave(sPSP,service[1],0x21);
+	sSave(sPSP,service[2],0xcb);
+	/* psp and psp-parent */
+	sSave(sPSP,psp_parent,dos.psp);
+	sSave(sPSP,prev_psp,RealMake(dos.psp,0));
+	/* terminate 22,break 23,crititcal error 24 address stored */
+	SaveVectors();
+	/* Memory size */
+	sSave(sPSP,next_seg,seg+mem_size);
+	/* Process DTA */
+	sSave(sPSP,dta,RealMake(seg,128));
+	/* FCBs are filled with 0 */
+	// ....
+	/* Init file pointer and max_files */
+	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files[0])));
+	sSave(sPSP,max_files,20);
+	for (i=0;i<20;i++) SetFileHandle(i,0xff);
+
+	/* User Stack pointer */
+	if (prevpsp.GetSegment()!=0) sSave(sPSP,stack,prevpsp.GetStack());
+
+	if (rootpsp==0) rootpsp = seg;
+}
+
+Bit8u DOS_PSP::GetFileHandle(Bit16u index) 
+{
+	if (index>=sGet(sPSP,max_files)) return 0xff;
+	PhysPt files=Real2Phys(sGet(sPSP,file_table));
+	return mem_readb(files+index);
+};
+
+void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) 
+{
+	if (index<sGet(sPSP,max_files)) {
+		PhysPt files=Real2Phys(sGet(sPSP,file_table));
+		mem_writeb(files+index,handle);
+	}
+};
+
+Bit16u DOS_PSP::FindFreeFileEntry(void)
+{
+	PhysPt files=Real2Phys(sGet(sPSP,file_table));
+	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
+		if (mem_readb(files+i)==0xff) return i;
+	}	
+	return 0xff;
+};
+
+void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp)
+{
+	/* Copy file table from calling process */
+	for (Bit16u i=0;i<20;i++) {
+		Bit8u handle = srcpsp->GetFileHandle(i);
+		SetFileHandle(i,handle);
+	}
+};
+
+void DOS_PSP::CloseFiles(void)
+{
+	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
+		DOS_CloseFile(i);
+	}
+}
+
+void DOS_PSP::SaveVectors(void)
+{
+	/* Save interrupt 22,23,24 */
+	sSave(sPSP,int_22,RealGetVec(0x22));
+	sSave(sPSP,int_23,RealGetVec(0x23));
+	sSave(sPSP,int_24,RealGetVec(0x24));
+};
+
+void DOS_PSP::RestoreVectors(void)
+{
+	/* Restore interrupt 22,23,24 */
+	RealSetVec(0x22,sGet(sPSP,int_22));
+	RealSetVec(0x23,sGet(sPSP,int_23));
+	RealSetVec(0x24,sGet(sPSP,int_24));
+};
+
+void DOS_PSP::SetCommandTail(RealPt src)
+{
+	if (src) {	// valid source
+		memcpy((void*)(Phys2Host(pt)+offsetof(sPSP,cmdtail)),(void*)Real2Host(src),128);
+	} else {	// empty
+		sSave(sPSP,cmdtail.count,0x00);
+		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer[0]),0x0d);
+	};
+};
+
+void DOS_PSP::SetFCB1(RealPt src)
+{
+	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb1)),Real2Phys(src),16);
+};
+
+void DOS_PSP::SetFCB2(RealPt src)
+{
+	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
 };

@@ -149,29 +149,24 @@ void SHELL_Init() {
 	env_mcb->size=4096/16;
 	real_writed(env_seg+1,0,0);
 
-	PSP * psp=(PSP *)HostMake(psp_seg,0);
-	Bit32u i;
-	for (i=0;i<20;i++) psp->files[i]=0xff;
-	psp->files[STDIN]=DOS_FindDevice("CON");
-	psp->files[STDOUT]=DOS_FindDevice("CON");
-	psp->files[STDERR]=DOS_FindDevice("CON");
-	psp->files[STDAUX]=DOS_FindDevice("CON");
-	psp->files[STDNUL]=DOS_FindDevice("CON");
-	psp->files[STDPRN]=DOS_FindDevice("CON");
-	psp->max_files=20;
-	psp->file_table=RealMake(psp_seg,offsetof(PSP,files));
-	/* Save old DTA in psp */
-	psp->dta=dos.dta;
+	DOS_PSP psp(psp_seg); psp.MakeNew(env_mcb->size);
+	psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
+	psp.SetParent(psp_seg);
 	/* Set the environment and clear it */
-	psp->environment=env_seg+1;
-	mem_writew(Real2Phys(RealMake(env_seg+1,0)),0);
+	psp.SetEnvironment(env_seg+1);
+	mem_writew(Real2Phys(RealMake(env_seg+1,0)),0);	
 	/* Setup internal DOS Variables */
-	dos.dta=RealMake(psp_seg,0x80);
+	dos.dta=psp.GetDTA();
 	dos.psp=psp_seg;
 	PROGRAM_Info info;
 	strcpy(info.full_name,"Z:\\COMMAND.COM");
 	info.psp_seg=psp_seg;
-	MEM_BlockRead(PhysMake(dos.psp,0),&info.psp_copy,sizeof(PSP));
+	MEM_BlockRead(PhysMake(dos.psp,0),&info.psp_copy,sizeof(sPSP));
 	char line[256];
 	strcpy(line,"/INIT Z:\\AUTOEXEC.BAT");
 	info.cmd_line=line;

@@ -64,31 +64,30 @@ __attribute__ ((packed));
 
 
 bool DOS_Terminate(bool tsr) {
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	if (!tsr) {
-		/* Free Files owned by process */
-		for (Bit16u i=0;i<psp->max_files;i++) {
-			DOS_CloseFile(i);
-		}
-		DOS_FreeProcessMemory(dos.psp);
-	};
-	dos.psp=psp->psp_parent;
-	PSP * oldpsp=(PSP *)HostMake(dos.psp,0);
-	/* Restore the DTA */
-	dos.dta=psp->dta;
-	/* Restore the old CS:IP from int 22h */
-	RealPt old22;
-	old22=RealGetVec(0x22);
-	SegSet16(cs,RealSeg(old22));
-	reg_ip=RealOff(old22);
-	/* Restore the SS:SP to the previous one */
-	SegSet16(ss,RealSeg(oldpsp->stack));
-	reg_sp=RealOff(oldpsp->stack);
-	/* Restore interrupt 22,23,24 */
-	RealSetVec(0x22,psp->int_22);
-	RealSetVec(0x23,psp->int_23);
-	RealSetVec(0x24,psp->int_24);
 
+	Bit16u mempsp = dos.psp;
+	DOS_PSP curpsp(dos.psp);
+	if (dos.psp==curpsp.GetParent()) return true;
+
+	/* Free Files owned by process */
+	if (!tsr) curpsp.CloseFiles();	
+	// restore vectors
+	curpsp.RestoreVectors();
+	// Set parent psp
+	dos.psp = curpsp.GetParent();
+	DOS_PSP parentpsp(curpsp.GetParent());
+	/* Restore the DTA */
+	parentpsp.SetDTA(curpsp.GetDTA());
+	/* Restore the SS:SP to the previous one */
+	SegSet16(ss,RealSeg(parentpsp.GetStack()));
+	reg_sp = RealOff(parentpsp.GetStack());	
+	/* Restore the old CS:IP from int 22h */
+	RealPt old22 = curpsp.GetInt22();
+	reg_ip		 = RealOff(old22);
+	SegSet16   (cs,RealSeg(old22));
+	// Free memory owned by process
+	if (!tsr) DOS_FreeProcessMemory(mempsp);
+	
 	return true;
 }
 
@@ -97,14 +96,14 @@ bool DOS_Terminate(bool tsr) {
 static bool MakeEnv(char * name,Bit16u * segment) {
 
 	/* If segment to copy environment is 0 copy the caller's environment */
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
+	DOS_PSP psp(dos.psp);
 	Bit8u * envread,*envwrite;
 	Bit16u envsize=1;
 	bool parentenv=true;
 
 	if (*segment==0) {
-		if (!psp->environment) parentenv=false;				//environment seg=0
-		envread=HostMake(psp->environment,0);
+		if (!psp.GetEnvironment()) parentenv=false;				//environment seg=0
+		envread=HostMake(psp.GetEnvironment(),0);
 	} else {
 		if (!*segment) parentenv=false;						//environment seg=0
 		envread=HostMake(*segment,0);
@@ -136,95 +135,43 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	return DOS_Canonicalize(name,(char *)envwrite);
 };
 
-bool DOS_NewPSP(Bit16u pspseg) {
-	PSP * newpsp=(PSP *)HostMake(pspseg,0);
-	PSP * prevpsp=(PSP *)HostMake(dos.psp,0);
-
-	memset((void *)newpsp,0,sizeof(PSP));
-	newpsp->exit[0]=0xcd;newpsp->exit[1]=0x20;
-	newpsp->service[0]=0xcd;newpsp->service[0]=0x21;newpsp->service[0]=0xcb;
-
-	newpsp->mem_size=prevpsp->mem_size;
-	newpsp->environment=0;
-
-	newpsp->int_22=RealGetVec(0x22);
-	newpsp->int_23=RealGetVec(0x23);
-	newpsp->int_24=RealGetVec(0x24);
-	
-	newpsp->psp_parent=dos.psp;
-	newpsp->prev_psp=0xFFFFFFFF;
-
-	Bit32u i;
-	Bit8u * prevfile=Real2Host(prevpsp->file_table);
-	for (i=0;i<20;i++) newpsp->files[i]=prevfile[i];
-
-	newpsp->max_files=20;
-	newpsp->file_table=RealMake(pspseg,offsetof(PSP,files));
-	/* Save the old DTA in this psp */
-	newpsp->dta=dos.dta;
-	/* Setup the DTA */
-	dos.dta=RealMake(pspseg,0x80);
+bool DOS_NewPSP(Bit16u segment, Bit16u size)
+{
+	DOS_PSP psp(segment);
+	psp.MakeNew(size);
+	psp.CopyFileTable(&DOS_PSP(psp.GetParent()));
 	return true;
 };
 
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	
-	PSP * psp=(PSP *)HostMake(pspseg,0);
 	/* Fix the PSP index of this MCB */
 	MCB * pspmcb=(MCB *)HostMake(pspseg-1,0);
 	pspmcb->psp_segment=pspseg;
 	MCB * envmcb=(MCB *)HostMake(envseg-1,0);
 	envmcb->psp_segment=pspseg;
 
-	memset((void *)psp,0,sizeof(PSP));
-	Bit32u i;
-
-	psp->exit[0]=0xcd;psp->exit[1]=0x20;
-	psp->mem_size=memsize+pspseg;
-	psp->environment=envseg;
-
-	psp->int_22=RealGetVec(0x22);
-	psp->int_23=RealGetVec(0x23);
-	psp->int_24=RealGetVec(0x24);
-	
-	psp->service[0]=0xcd;psp->service[0]=0x21;psp->service[0]=0xcb;
-	
-	psp->psp_parent=dos.psp;
-	psp->prev_psp=RealMake(dos.psp,0);
-
-	for (i=0;i<20;i++) psp->files[i]=0xff;
-	psp->files[STDIN]=DOS_FindDevice("CON");
-	psp->files[STDOUT]=DOS_FindDevice("CON");
-	psp->files[STDERR]=DOS_FindDevice("CON");
-	psp->files[STDAUX]=DOS_FindDevice("CON");
-	psp->files[STDNUL]=DOS_FindDevice("CON");
-	psp->files[STDPRN]=DOS_FindDevice("CON");
-
-	psp->max_files=20;
-	psp->file_table=RealMake(pspseg,offsetof(PSP,files));
+	DOS_PSP psp(pspseg);
+	psp.MakeNew(memsize+pspseg);
+	psp.SetEnvironment(envseg);
+	psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
+	psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
 	/* Save old DTA in psp */
-	psp->dta=dos.dta;
-
+	psp.SetDTA(dos.dta);
 	/* Setup the DTA */
 	dos.dta=RealMake(pspseg,0x80);
 }
 
-static void SetupCMDLine(Bit16u pspseg,ParamBlock * block) {
-	PSP * psp=(PSP *)HostMake(pspseg,0);
-
-	if (block->exec.cmdtail) {
-		memcpy((void *)&psp->cmdtail,(void *)Real2Host(block->exec.cmdtail),128);
-	} else {
-		char temp[]="";
-		psp->cmdtail.count=strlen(temp);
-		strcpy((char *)&psp->cmdtail.buffer,temp);
-		psp->cmdtail.buffer[0]=0x0d;
-
-	}
+static void SetupCMDLine(Bit16u pspseg,ParamBlock * block) 
+{
+	DOS_PSP psp(pspseg);
+	// if cmdtail==0 it will inited as empty in SetCommandTail
+	psp.SetCommandTail(block->exec.cmdtail);
 }
-
-
-
 
 static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	Bit16u fhandle;
@@ -232,7 +179,7 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	Bit16u envseg,comseg;
 	Bit32u pos;
 
-	PSP * callpsp=(PSP *)HostMake(dos.psp,0);
+	DOS_PSP callpsp(dos.psp);
 
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
 	if (flag!=OVERLAY) {
@@ -269,14 +216,20 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	SetupCMDLine(comseg,block);
 	/* Setup termination Address */
 	RealSetVec(0x22,RealMakeSeg(cs,reg_ip));
+	DOS_PSP compsp(comseg);
+	compsp.SetInt22(RealMakeSeg(cs,reg_ip));
 	/* Everything setup somewhat setup CS:IP and SS:SP */
 	/* First save the SS:SP of program that called execute */
-	callpsp->stack=RealMakeSeg(ss,reg_sp);
+	callpsp.SetStack(RealMakeSeg(ss,reg_sp));
 	/* Clear out first Stack entry to point to int 20h at psp:0 */
 	real_writew(comseg,0xfffe,0);
 	dos.psp=comseg;
 	switch (flag) {
 	case LOADNGO:
+		/* copy fcbs */
+		compsp.SetFCB1(block->exec.fcb1);
+		compsp.SetFCB2(block->exec.fcb2);
+		/* setup reg */
 		SegSet16(cs,comseg);
 		SegSet16(ss,comseg);
 		SegSet16(ds,comseg);
@@ -310,7 +263,7 @@ static bool EXE_Load(char * name,ParamBlock* _block,Bit8u flag) {
 	ParamBlock block;
 	memcpy(&block,_block,sizeof(ParamBlock));
 
-	PSP * callpsp=(PSP *)HostMake(dos.psp,0);
+	DOS_PSP callpsp(dos.psp);
 
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
 	if (flag!=OVERLAY) {
@@ -401,9 +354,11 @@ static bool EXE_Load(char * name,ParamBlock* _block,Bit8u flag) {
 
 	/* Setup termination Address */
 	RealSetVec(0x22,RealMakeSeg(cs,reg_ip));
+	DOS_PSP exepsp(pspseg);
+	exepsp.SetInt22(RealMakeSeg(cs,reg_ip));
 	/* Start up the actual EXE if we need to */
 	//TODO check for load and return
-	callpsp->stack=RealMakeSeg(ss,reg_sp);
+	callpsp.SetStack(RealMakeSeg(ss,reg_sp));
 	dos.psp=pspseg;
 	SegSet16(cs,exeseg+header.initCS);
 	SegSet16(ss,exeseg+header.initSS);

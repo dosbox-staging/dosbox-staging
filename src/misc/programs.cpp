@@ -60,7 +60,7 @@ static Bitu PROGRAMS_Handler(void) {
 	/* First get the current psp */
 	PROGRAM_Info * info=new PROGRAM_Info;
 	info->psp_seg=dos.psp;
-	MEM_BlockRead(PhysMake(dos.psp,0),&info->psp_copy,sizeof(PSP));
+	MEM_BlockRead(PhysMake(dos.psp,0),&info->psp_copy,sizeof(sPSP));
 	/* Get the file name cmd_line 0 */
 	PhysPt envblock=PhysMake(info->psp_copy.environment,0);
 	do {} while (mem_readw(envblock++));

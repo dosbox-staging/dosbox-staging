@@ -26,7 +26,7 @@ char * MSG_Get(char * msg);
 
 struct PROGRAM_Info {
 	Bit16u psp_seg;
-	PSP psp_copy;
+	sPSP psp_copy;
 	char full_name[32];						//Enough space for programs only on the z:\ drive
 	char * cmd_line;
 };

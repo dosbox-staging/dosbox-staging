@@ -313,7 +313,7 @@ static Bitu DOS_21Handler(void) {
 		RealSetVec(reg_al,RealMakeSeg(ds,reg_dx));
 		break;
 	case 0x26:		/* Create new PSP */
-		DOS_NewPSP(reg_dx);
+		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp).GetSize());
 		break;
 	case 0x2a:		/* Get System Date */
 		reg_al=0;	/* It's always sunday TODO find that correct formula */
@@ -685,8 +685,11 @@ static Bitu DOS_21Handler(void) {
 	case 0x53:					/* Translate BIOS parameter block to drive parameter block */
 //YEAH RIGHT
 	case 0x54:					/* Get verify flag */
-	case 0x55:					/* Create Child PSP*/
 		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+		break;
+	case 0x55:					/* Create Child PSP*/
+		DOS_NewPSP(reg_dx,reg_si);
+		dos.psp = reg_dx;
 		break;
 	case 0x56:					/* RENAME Rename file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);

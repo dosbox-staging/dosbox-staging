@@ -269,9 +269,9 @@ bool DOS_CloseFile(Bit16u entry) {
 	};
 //TODO Figure this out with devices :)	
 
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	Bit8u * table=Real2Host(psp->file_table);
-	table[entry]=0xFF;
+	DOS_PSP psp(dos.psp);
+	psp.SetFileHandle(entry,0xff);
+
 	/* Devices won't allow themselves to be closed or killed */
 	if (Files[handle]->Close()) {
 		delete Files[handle];
@@ -282,7 +282,7 @@ bool DOS_CloseFile(Bit16u entry) {
 
 bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
+	DOS_PSP psp(dos.psp);
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
 	/* Check for a free file handle */
 	Bit8u handle=DOS_FILES;Bit8u i;
@@ -297,21 +297,14 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 		return false;
 	}
 	/* We have a position in the main table now find one in the psp table */
-	Bit8u * table=Real2Host(psp->file_table);
-	*entry=0xff;
-	for (i=0;i<psp->max_files;i++) {
-		if (table[i]==0xFF) {
-			*entry=i;
-			break;
-		}
-	}
+	*entry = psp.FindFreeFileEntry();
 	if (*entry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
 	bool foundit=Drives[drive]->FileCreate(&Files[handle],fullname,attributes);
 	if (foundit) { 
-		table[*entry]=handle;
+		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
 		return false;
@@ -320,7 +313,7 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
+	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
 	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
 	if (handle!=255) {
@@ -341,14 +334,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		}
 	}
 	/* We have a position in the main table now find one in the psp table */
-	Bit8u * table=Real2Host(psp->file_table);
-	*entry=0xff;
-	for (i=0;i<psp->max_files;i++) {
-		if (table[i]==0xFF) {
-			*entry=i;
-			break;
-		}
-	}
+	*entry = psp.FindFreeFileEntry();
 	if (*entry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
@@ -356,7 +342,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	bool exists=false;
 	if (!device) exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
 	if (exists || device ) { 
-		table[*entry]=handle;
+		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
@@ -413,20 +399,13 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	Bit8u * table=Real2Host(psp->file_table);
-	*newentry=0xff;
-	for (Bit16u i=0;i<psp->max_files;i++) {
-		if (table[i]==0xFF) {
-			*newentry=i;
-			break;
-		}
-	}
+	DOS_PSP psp(dos.psp);
+	*newentry = psp.FindFreeFileEntry();
 	if (*newentry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
-	table[*newentry]=handle;
+	psp.SetFileHandle(*newentry,handle);
 	return true;
 };
 
@@ -449,9 +428,8 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 		DOS_CloseFile(newentry);
 		return false;
 	};
-	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	Bit8u * table=Real2Host(psp->file_table);
-	table[newentry]=(Bit8u)entry;
+	DOS_PSP psp(dos.psp);
+	psp.SetFileHandle(newentry,(Bit8u)entry);
 	return true;
 };
 
@@ -522,7 +500,7 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
     Bit8u retwaarde=0;    
     char naam[9]="        ";
     char ext[4]="   ";
-    if(parser & 1) {       //ignore leading seperator
+    if((parser & 1) && *string)  {       //ignore leading seperator
         char sep[] = FCB_SEP;  
         char a[2];
          a[0]= *string;a[1]='\0';
