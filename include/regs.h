@@ -29,11 +29,31 @@ struct Flag_Info {
 	} var1,var2,result;
 	Bitu type;
 	Bitu prev_type;
-	bool cf,sf,pf,af,zf,of,df,tf,intf;
-	bool nt;
-	Bit8u io;
-	bool oldcf;
+	Bitu oldcf;
+	Bitu word;
 };
+
+
+#define FLAG_CF		0x00000001
+#define FLAG_PF		0x00000004
+#define FLAG_AF		0x00000010
+#define FLAG_ZF		0x00000040
+#define FLAG_SF		0x00000080
+#define FLAG_TF		0x00000100
+#define FLAG_IF		0x00000200
+#define FLAG_DF		0x00000400
+#define FLAG_OF		0x00000800
+
+#define FLAG_MASK	(FLAG_CF | FLAG_PF | FLAG_AF | FLAG_ZF | FLAG_SF | FLAG_OF)
+
+#define FLAG_IOPL	0x00003000
+#define FLAG_NT		0x00004000
+#define FLAG_VM		0x00040000
+
+
+#define SETFLAGBIT(TYPE,TEST) if (TEST) flags.word|=FLAG_ ## TYPE; else flags.word&=~FLAG_ ## TYPE
+
+#define GETFLAG(TYPE) (flags.word & FLAG_ ## TYPE)
 
 struct Segment {
 	Bit16u val;
@@ -43,6 +63,7 @@ struct Segment {
 enum SegNames { es=0,cs,ss,ds,fs,gs};
 
 struct Segments {
+	Bitu big[8];
 	Bitu val[8];
 	PhysPt phys[8];
 };
