@@ -27,6 +27,7 @@
 #include "callback.h"
 #include "regs.h"
 #include "dos_inc.h"
+#include "setup.h"
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
@@ -857,6 +858,11 @@ static Bitu DOS_29Handler(void) {
     return CBRET_NONE;
 }
 
+void DOS_ShutDown(Section* sec)
+{	
+	for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
+};
+
 void DOS_Init(Section* sec) {
     MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
 	call_20=CALLBACK_Allocate();
@@ -898,4 +904,8 @@ void DOS_Init(Section* sec) {
 	dos.date.year=(Bit16u)loctime->tm_year+1900;
 	Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*18.2);
 	mem_writed(BIOS_TIMER,ticks);
+
+	/* shutdown function */
+	sec->AddDestroyFunction(&DOS_ShutDown);	
 }
+
