@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.41 2003-12-10 17:02:22 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.42 2003-12-11 21:32:55 finsterr Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -250,6 +250,10 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype) {
 		Descriptor cs_desc;
 		cpu.cpl=new_cs & 3;
 		cpu.gdt.GetDescriptor(new_cs,cs_desc);
+		if (!cs_desc.saved.seg.p) {
+			E_Exit("Task switch with non present code-segment");
+			return false;
+		}
 		switch (cs_desc.Type()) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
@@ -277,8 +281,10 @@ doconforming:
 }
 
 void CPU_StartException(void) {
+//	if (cpu.exception.which==0x0B) LOG_MSG("**** Exception %d CS:%X IP:%X FLAGS:%X Error:%X",cpu.exception.which,SegValue(cs),reg_eip,reg_flags,cpu.exception.error);
 	CPU_Interrupt(cpu.exception.which,CPU_INT_EXCEPTION | ((cpu.exception.which>=8) ? CPU_INT_HAS_ERROR : 0));
 }
+
 void CPU_SetupException(Bitu which,Bitu error) {
 	cpu.exception.which=which;
 	cpu.exception.error=error;
@@ -293,8 +299,13 @@ void CPU_Exception(Bitu which,Bitu error ) {
 Bit8u lastint;
 bool CPU_Interrupt(Bitu num,Bitu type) {
 	lastint=num;
+//	if ((num!=0x08) && (num!=0x1C)) LOG_MSG("Interrupt %02X %04X %04X",num,reg_ax,reg_bx);
 #if C_DEBUG
 	switch (num) {
+	case 0x00:	{
+					int brk = 0;
+					break;
+				}
 	case 0xcd:
 #if C_HEAVY_DEBUG
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
@@ -441,6 +452,7 @@ do_interrupt:
 		}
 	}
 	assert(1);
+	return false; // make compiler happy
 }
 
 void CPU_IRET(bool use32) {
@@ -575,7 +587,7 @@ realmode_iret:
 	}
 }
 
-void CPU_JMP(bool use32,Bitu selector,Bitu offset) {
+void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen) {
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		if (!use32) {
 			reg_eip=offset&0xffff;
@@ -589,6 +601,11 @@ void CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 		Bitu rpl=selector & 3;
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(selector,desc);
+		if (!desc.saved.seg.p) {
+			reg_eip -= opLen;
+			CPU_Exception(0x0B,selector & 0xfffc);
+			return;
+		}
 		switch (desc.Type()) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
@@ -622,7 +639,7 @@ CODE_jmp:
 
 
 
-void CPU_CALL(bool use32,Bitu selector,Bitu offset) {
+void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu opLen) {
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		if (!use32) {
 			CPU_Push16(SegValue(cs));
@@ -640,6 +657,11 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 		Descriptor call;
 		Bitu rpl=selector & 3;
 		cpu.gdt.GetDescriptor(selector,call);
+		if (!call.saved.seg.p) {
+			reg_eip -= opLen;
+			CPU_Exception(0x0B,selector & 0xfffc);
+			return;
+		}
 		/* Check for type of far call */
 		switch (call.Type()) {
 		case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
@@ -674,6 +696,11 @@ call_code:
 				Descriptor n_cs_desc;
 				Bitu n_cs_sel=call.GetSelector();
 				if (!cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc)) E_Exit("Call:Gate:Invalid CS selector.");
+				if (!n_cs_desc.saved.seg.p) {
+					reg_eip -= opLen;
+					CPU_Exception(0x0B,selector & 0xfffc);
+					return;
+				}
 				Bitu n_cs_dpl	= n_cs_desc.DPL();
 				Bitu n_cs_rpl	= n_cs_sel & 3;
 				Bitu n_eip		= call.GetOffset();
@@ -744,7 +771,7 @@ call_gate_same_privilege:
 }
 
 
-void CPU_RET(bool use32,Bitu bytes) {
+void CPU_RET(bool use32,Bitu bytes,Bitu opLen) {
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Bitu new_ip,new_cs;
 		if (!use32) {
@@ -761,6 +788,20 @@ void CPU_RET(bool use32,Bitu bytes) {
 		return;
 	} else {
 		Bitu offset,selector;
+		if (!use32) selector	= mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask) + 2);
+		else 		selector	= mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask) + 4) & 0xffff;
+
+		Descriptor desc;
+		Bitu rpl=selector & 3;
+		if (rpl<cpu.cpl) E_Exit("RET to lower privilege");
+		cpu.gdt.GetDescriptor(selector,desc);
+
+		if (!desc.saved.seg.p) {
+			reg_eip -= opLen;
+			CPU_Exception(0x0B,selector & 0xfffc);
+			return;
+		};
+
 		if (!use32) {
 			offset=CPU_Pop16();
 			selector=CPU_Pop16();
@@ -773,10 +814,6 @@ void CPU_RET(bool use32,Bitu bytes) {
 		} else {
 			reg_sp+=bytes;
 		}
-		Descriptor desc;
-		Bitu rpl=selector & 3;
-		if (rpl<cpu.cpl) E_Exit("RET to lower privilege");
-		cpu.gdt.GetDescriptor(selector,desc);
 
 		if (cpu.cpl==rpl) {	
 			/* Return to same level */
@@ -792,7 +829,8 @@ void CPU_RET(bool use32,Bitu bytes) {
 			default:
 				E_Exit("RET from illegal descriptor type %X",desc.Type());
 			}
-RET_same_level:	
+RET_same_level:
+
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
@@ -945,10 +983,6 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 		SETFLAGBIT(ZF,false);
 		return;
 	}
-	if (!desc.saved.seg.p) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
 	switch (desc.Type()){
 	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
@@ -993,10 +1027,6 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 		SETFLAGBIT(ZF,false);
 		return;
 	}
-	if (!desc.saved.seg.p) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
 	switch (desc.Type()){
 	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
@@ -1035,10 +1065,6 @@ void CPU_VERR(Bitu selector) {
 		SETFLAGBIT(ZF,false);
 		return;
 	}
-	if (!desc.saved.seg.p) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
 	switch (desc.Type()){
 	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:	
 		//Conforming readable code segments can be always read 
@@ -1067,10 +1093,6 @@ void CPU_VERW(Bitu selector) {
 		SETFLAGBIT(ZF,false);
 		return;
 	}
-	if (!desc.saved.seg.p) {
-		SETFLAGBIT(ZF,false);
-		return;
-	}
 	switch (desc.Type()){
 	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
 	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
@@ -1088,8 +1110,8 @@ void CPU_VERW(Bitu selector) {
 
 
 bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
-	Segs.val[seg]=value;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
+		Segs.val[seg]=value;
 		Segs.phys[seg]=value << 4;
 		if (seg==ss) {
 			cpu.stack.big=false;
@@ -1099,6 +1121,15 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	} else {
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(value,desc);
+		if ((value!=0) && (!desc.saved.seg.p)) {
+			if (seg==ss) {
+				E_Exit("CPU_SetSegGeneral: Stack segment not present.");
+			}
+			// Throw Exception 0x0B - Segment not present
+			CPU_SetupException(0x0B,value & 0xfffc);
+			return true;
+		}
+		Segs.val[seg]=value;
 		Segs.phys[seg]=desc.GetBase();
 		if (seg==ss) {
 			if (desc.Big()) {
