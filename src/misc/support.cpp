@@ -85,7 +85,7 @@ char *trim(char *str) {
 
 bool ScanCMDBool(char * cmd,char * check) {
 	char * scan=cmd;size_t c_len=strlen(check);
-	while (scan=strchr(scan,'/')) {
+	while ((scan=strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
 		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]==0)) {
@@ -101,7 +101,7 @@ bool ScanCMDBool(char * cmd,char * check) {
 
 bool ScanCMDHex(char * cmd,char * check,Bits * result) {
 	char * scan=cmd;size_t c_len=strlen(check);
-	while (scan=strchr(scan,'/')) {
+	while ((scan=strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
 		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]==0)) {
@@ -125,7 +125,7 @@ bool ScanCMDHex(char * cmd,char * check,Bits * result) {
 /* This scans the command line for a remaining switch and reports it else returns 0*/
 char * ScanCMDRemain(char * cmd) {
 	char * scan,*found;;
-	if (scan=found=strchr(cmd,'/')) {
+	if ((scan=found=strchr(cmd,'/'))) {
 		while (*scan!=' ' && *scan!=0) scan++;
 		*scan=0;
 		return found;
