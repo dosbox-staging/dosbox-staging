@@ -121,11 +121,9 @@ static Bitu DOS_21Handler(void) {
 			while (read<free) {
 				DOS_ReadFile(STDIN,&c,&n);
 				DOS_WriteFile(STDOUT,&c,&n);
-				if (c==13) {
-					DOS_ReadFile(STDIN,&c,&n);
-					break; 
-				}
 				mem_writeb(data+read+2,c);
+				if (c==13) 
+					break;
 				read++;
 			};
 			mem_writeb(data+1,read);
