@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.29 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.30 2004-09-10 22:08:45 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -298,6 +298,8 @@ void INT10_SetActivePage(Bit8u page) {
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURSOR_TYPE,last|(first<<8));
+	if (machine==MCH_CGA) goto dowrite;
+	if (machine==MCH_TANDY) goto dowrite;
 	/* Skip CGA cursor emulation if EGA/VGA system is active */
 	if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x8)) {
 		/* Check for CGA type 01, invisible */
@@ -308,7 +310,7 @@ void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 		}
 		/* Check if we need to convert CGA Bios cursor values */
 		if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x1)) {
-			if (CurMode->mode>0x3) goto dowrite;	//Only mode 0-3 are text modes on cga
+//			if (CurMode->mode>0x3) goto dowrite;	//Only mode 0-3 are text modes on cga
 			if ((first & 0xe0) || (last & 0xe0)) goto dowrite;
 			Bit8u cheight=real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT)-1;
 			/* Creative routine i based of the original ibmvga bios */
