@@ -68,34 +68,79 @@ enum {
 	t_LASTFLAG
 };
 
-void Interrupt(Bit8u num);
+
+void CPU_LLDT(Bitu selector);
+void CPU_LIDT(Bitu limit,Bitu base);
+void CPU_LGDT(Bitu limit,Bitu base);
+
+void CPU_SLDT(Bitu & selector);
+void CPU_SIDT(Bitu & limit,Bitu & base);
+void CPU_SGDT(Bitu & limit,Bitu & base);
+
+void CPU_SLDT(Bitu & limit,Bitu & base);
+
+
+void CPU_LAR(Bitu selector,Bitu & ar);
+
+bool CPU_SET_CRX(Bitu cr,Bitu value);
+Bitu CPU_GET_CRX(Bitu cr);
+
+void CPU_SMSW(Bitu & word);
+bool CPU_LMSW(Bitu word);
+
+bool CPU_JMP(bool use32,Bitu selector,Bitu offset);
+bool CPU_CALL(bool use32,Bitu selector,Bitu offset);
+bool CPU_RET(bool use32,Bitu bytes);
+
+bool Interrupt(Bitu num);
+bool CPU_IRET(bool use32);
+bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 
 //Flag Handling
-bool get_CF(void);
-bool get_AF(void);
-bool get_ZF(void);
-bool get_SF(void);
-bool get_OF(void);
-bool get_PF(void);
+Bitu get_CF(void);
+Bitu get_AF(void);
+Bitu get_ZF(void);
+Bitu get_SF(void);
+Bitu get_OF(void);
+Bitu get_PF(void);
 
 
-#define FLAG_CF 0x0001
-#define FLAG_PF 0x0004
-#define FLAG_AF 0x0010
-#define FLAG_ZF 0x0040
-#define FLAG_SF 0x0080
-#define FLAG_TF 0x0100
-#define FLAG_IF 0x0200
-#define FLAG_DF 0x0400
-#define FLAG_OF 0x0800
+#define SETFLAGSb(FLAGB)													\
+{																			\
+	SETFLAGBIT(OF,get_OF());												\
+	flags.type=t_UNKNOWN;													\
+	flags.word&=0xffffff00;flags.word|=(FLAGB&0xff);						\
+}
 
+#define SETFLAGSw(FLAGW)													\
+{																			\
+	flags.type=t_UNKNOWN;													\
+	flags.word&=0xffff0000;flags.word|=(FLAGW&0xffff);						\
+}
 
+#define SETFLAGSd(FLAGD)													\
+{																			\
+	flags.type=t_UNKNOWN;													\
+	flags.word=FLAGD;														\
+}
 
-#define LoadCF flags.cf=get_CF();
-#define LoadZF flags.zf=get_ZF();
-#define LoadSF flags.sf=get_SF();
-#define LoadOF flags.of=get_OF();
+#define FILLFLAGS															\
+{																			\
+	flags.word=(flags.word & ~FLAG_MASK) |									\
+	(get_CF() ? FLAG_CF : 0 ) |												\
+	(get_PF() ? FLAG_PF : 0 ) |												\
+	(get_AF() ? FLAG_AF : 0 ) |												\
+	(get_ZF() ? FLAG_ZF : 0 ) |												\
+	(get_SF() ? FLAG_SF : 0 ) |												\
+	(get_OF() ? FLAG_OF : 0 );												\
+	 flags.type=t_UNKNOWN;													\
+}		
 
+#define LoadCF SETFLAGBIT(CF,get_CF());
+#define LoadZF SETFLAGBIT(ZF,get_ZF());
+#define LoadSF SETFLAGBIT(SF,get_SF());
+#define LoadOF SETFLAGBIT(OF,get_OF());
+#define LoadAF SETFLAGBIT(AF,get_AF());
 
 // *********************************************************************
 // Descriptor
@@ -109,20 +154,114 @@ bool get_PF(void);
 #define CR0_PAGING			0x80000000
 
 
-#define DESC_INVALID				0x0
-#define DESC_286_TSS_A				0x1
-#define DESC_LDT					0x2
-#define DESC_286_TSS_B				0x3
-#define DESC_286_CALL_GATE			0x4
-#define DESC_TASK_GATE				0x5
-#define DESC_286_INT_GATE			0x6
-#define DESC_286_TRAP_GATE			0x7
+#define DESC_INVALID				0x00
+#define DESC_286_TSS_A				0x01
+#define DESC_LDT					0x02
+#define DESC_286_TSS_B				0x03
+#define DESC_286_CALL_GATE			0x04
+#define DESC_TASK_GATE				0x05
+#define DESC_286_INT_GATE			0x06
+#define DESC_286_TRAP_GATE			0x07
 
-#define DESC_386_TSS_A				0x9
-#define DESC_386_TSS_B				0xb
-#define DESC_386_CALL_GATE			0xc
-#define DESC_386_INT_GATE			0xe
-#define DESC_386_TRAP_GATE			0xf
+#define DESC_386_TSS_A				0x09
+#define DESC_386_TSS_B				0x0b
+#define DESC_386_CALL_GATE			0x0c
+#define DESC_386_INT_GATE			0x0e
+#define DESC_386_TRAP_GATE			0x0f
+
+/* EU/ED Expand UP/DOWN RO/RW Read Only/Read Write NA/A Accessed */
+#define DESC_DATA_EU_RO_NA			0x10
+#define DESC_DATA_EU_RO_A			0x11
+#define DESC_DATA_EU_RW_NA			0x12
+#define DESC_DATA_EU_RW_A			0x13
+#define DESC_DATA_ED_RO_NA			0x14
+#define DESC_DATA_ED_RO_A			0x15
+#define DESC_DATA_ED_RW_NA			0x16
+#define DESC_DATA_ED_RW_A			0x17
+
+/* N/R Readable  NC/C Confirming A/NA Accessed */
+#define DESC_CODE_N_NC_A			0x18
+#define DESC_CODE_N_NC_NA			0x19
+#define DESC_CODE_R_NC_A			0x1a
+#define DESC_CODE_R_NC_NA			0x1b
+#define DESC_CODE_N_C_A				0x1c
+#define DESC_CODE_N_C_NA			0x1d
+#define DESC_CODE_R_C_A				0x1e
+#define DESC_CODE_R_C_NA			0x1f
+
+#pragma pack(1)
+/* TSS Struct from Bochs - http://bochs.sf.net */
+struct TSS_386 {
+    Bit16u back, RESERVED0;      /* Backlink */
+    Bit32u esp0;                 /* The CK stack pointer */
+    Bit16u ss0,  RESERVED1;      /* The CK stack selector */
+    Bit32u esp1;                 /* The parent KL stack pointer */
+    Bit16u ss1,  RESERVED2;      /* The parent KL stack selector */
+    Bit32u esp2;                 /* Unused */
+    Bit16u ss2,  RESERVED3;      /* Unused */
+    Bit32u cr3;                  /* The page directory pointer */
+    Bit32u eip;                  /* The instruction pointer */
+    Bit32u eflags;               /* The flags */
+    Bit32u eax, ecx, edx, ebx;   /* The general purpose registers */
+    Bit32u esp, ebp, esi, edi;   /* The special purpose registers */
+    Bit16u es,   RESERVED4;      /* The extra selector */
+    Bit16u cs,   RESERVED5;      /* The code selector */
+    Bit16u ss,   RESERVED6;      /* The application stack selector */
+    Bit16u ds,   RESERVED7;      /* The data selector */
+    Bit16u fs,   RESERVED8;      /* And another extra selector */
+    Bit16u gs,   RESERVED9;      /* ... and another one */
+    Bit16u ldt,  RESERVED10;     /* The local descriptor table */
+    Bit16u trap;                 /* The trap flag (for debugging) */
+    Bit16u io;                   /* The I/O Map base address */
+} GCC_ATTRIBUTE(packed);;
+
+struct S_Descriptor {
+	Bit32u limit_0_15	:16;
+	Bit32u base_0_15	:16;
+	Bit32u base_16_23	:8;
+	Bit32u type			:5;
+	Bit32u dpl			:2;
+	Bit32u p			:1;
+	Bit32u limit_16_19	:4;
+	Bit32u avl			:1;
+	Bit32u r			:1;
+	Bit32u big			:1;
+	Bit32u g			:1;
+	Bit32u base_24_31	:8;
+}GCC_ATTRIBUTE(packed);
+
+struct G_Descriptor {
+	Bit32u offset_0_15	:16;
+	Bit32u selector		:16;
+	Bit32u paramcount	:5;
+	Bit32u reserved		:3;
+	Bit32u type			:5;
+	Bit32u dpl			:2;
+	Bit32u p			:1;
+	Bit32u offset_16_31	:16;
+} GCC_ATTRIBUTE(packed);
+
+#pragma pack()
+
+class TaskStateSegment 
+{
+public:
+	bool Get_ss_esp(Bitu which,Bitu & _ss,Bitu & _esp) {
+		PhysPt reader=seg_base+offsetof(TSS_386,esp0)+which*8;
+		_esp=mem_readd(reader);
+		_ss=mem_readw(reader+4);
+		return true;
+	}
+	bool Get_cr3(Bitu which,Bitu & _cr3) {
+		_cr3=mem_readd(seg_base+offsetof(TSS_386,cr3));;
+		return true;
+	}
+	
+private:
+	PhysPt seg_base;
+	Bitu seg_limit;
+	Bitu seg_value;
+};
 
 
 class Descriptor
@@ -148,48 +287,25 @@ public:
 		if (saved.seg.g)	return (limit<<12) | 0xFFF;
 		return limit;
 	}
-	Bitu GetType(void) {
-		return saved.seg.type;
-	}
 	Bitu GetOffset(void) {
 		return (saved.gate.offset_16_31 << 16) | saved.gate.offset_0_15;
+	}
+	Bitu GetSelector(void) {
+		return saved.gate.selector;
+	}
+	Bitu Type(void) {
+		return saved.seg.type;
 	}
 	Bitu Conforming(void) {
 		return saved.seg.type & 8;
 	}
-	Bitu GetDPL(void) {
+	Bitu DPL(void) {
 		return saved.seg.dpl;
 	}
+	Bitu Big(void) {
+		return saved.seg.big;
+	}
 public:
-#pragma pack(1)
-	struct S_Descriptor {
-		Bit32u limit_0_15	:16;
-		Bit32u base_0_15	:16;
-		Bit32u base_16_23	:8;
-		Bit32u type			:4;
-		Bit32u s			:1;
-		Bit32u dpl			:2;
-		Bit32u p			:1;
-		Bit32u limit_16_19	:4;
-		Bit32u avl			:1;
-		Bit32u r			:1;
-		Bit32u big			:1;
-		Bit32u g			:1;
-		Bit32u base_24_31	:8;
-	};
-	struct G_Descriptor {
-		Bit32u offset_0_15	:16;
-		Bit32u selector		:16;
-		Bit32u paramcount	:5;
-		Bit32u reserved		:3;
-		Bit32u type			:4;
-		Bit32u s			:1;
-		Bit32u dpl			:2;
-		Bit32u p			:1;
-		Bit32u offset_16_31	:16;
-	};
-#pragma pack()
-
 	union {
 		S_Descriptor seg;
 		G_Descriptor gate;
@@ -248,11 +364,12 @@ private:
 	Bitu ldt_value;
 };
 
+#define STATE_PROTECTED			0x0001
+#define STATE_USE32				0x0002
+#define STATE_STACK32			0x0004
+
 struct CPUBlock {
-	Bitu protmode;						/* Are we in protected mode */
 	Bitu cpl;							/* Current Privilege */
-	Bitu conforming;					/* Current descriptor is conforming */
-	Bitu big;							/* Current descriptor is USE32 */
 	Bitu state;
 	Bitu cr0;
 	GDTDescriptorTable gdt;
