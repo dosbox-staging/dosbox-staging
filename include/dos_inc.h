@@ -22,7 +22,7 @@
 #include <dos_system.h>
 #include <mem.h>
 
-#pragma pack (push,1)
+#pragma pack (1)
 
 struct CommandTail{
   Bit8u count;				/* number of bytes returned */
@@ -83,9 +83,7 @@ struct MCB {
 	Bit8u filename[8];
 } GCC_ATTRIBUTE(packed);
 
-#pragma pack (pop)
-
-
+#pragma pack ()
 
 struct DOS_Date {
 	Bit16u year;
@@ -208,7 +206,7 @@ INLINE Bit16u long2para(Bit32u size) {
 
 INLINE Bit8u RealHandle(Bit16u handle) {
 	PSP * psp=(PSP *)HostMake(dos.psp,0);
-	if (handle>=psp->max_files) return DOS_FILES;
+	if (handle>=psp->max_files) return 0xff;
 	return mem_readb(Real2Phys(psp->file_table)+handle);
 };
 
