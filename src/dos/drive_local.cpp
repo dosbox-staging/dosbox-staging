@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.51 2004-08-13 19:43:02 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.52 2004-10-12 09:42:25 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -181,6 +181,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	char * dir_ent;
 	struct stat stat_block;
 	char full_name[CROSS_LEN];
+	char dir_entcopy[CROSS_LEN];
 
 	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
 	Bit8u find_attr;
@@ -199,8 +200,13 @@ again:
 
 	strcpy(full_name,srchInfo[id].srch_dir);
 	strcat(full_name,dir_ent);
-	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
-		goto again;
+	
+	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
+	//and due to its design dir_ent might be lost.)
+	//Copying dir_ent first
+	strcpy(dir_entcopy,dir_ent);
+	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) { 
+		goto again;//No symlinks and such
 	}	
 
 	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
@@ -214,20 +220,20 @@ again:
 	/*file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
 
-	if(strlen(dir_ent)<DOS_NAMELENGTH_ASCII){
-		strcpy(find_name,dir_ent);
+	if(strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
+		strcpy(find_name,dir_entcopy);
 		upcase(find_name);
 	} 
 
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
-    if((time=localtime(&stat_block.st_mtime))!=0){
+	if((time=localtime(&stat_block.st_mtime))!=0){
 		find_date=DOS_PackDate(time->tm_year+1900,time->tm_mon+1,time->tm_mday);
 		find_time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
-    }else {
-        find_time=6; 
-        find_date=4;
-    }
+	} else {
+		find_time=6; 
+		find_date=4;
+	}
 	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
 	return true;
 }
