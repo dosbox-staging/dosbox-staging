@@ -43,33 +43,63 @@ public:
 			}
 			return;
 		}
+		std::string type="dir";
+		cmd->FindString("-t",type,true);
+		if (type=="floppy" || type=="dir") {
+			Bit16u sizes[4];
+			Bit8u mediaid;
+			std::string str_size;
+			if (type=="floppy") {
+				str_size="512,1,2847,2847";/* All space free */
+				mediaid=0xF0;		/* Floppy 1.44 media */
+			}
+			if (type=="dir") {
+				str_size="512,127,16513,1700";
+				mediaid=0xF8;		/* Hard Disk */
+			}
+			cmd->FindString("-size",str_size,true);
+			char number[20];const char * scan=str_size.c_str();
+			Bitu index=0;Bitu count=0;
+			/* Parse the str_size string */
+			while (*scan) {
+				if (*scan==',') {
+					number[index]=0;sizes[count++]=atoi(number);
+					index=0;
+				} else number[index++]=*scan;
+				scan++;
+			}
+			number[index]=0;sizes[count++]=atoi(number);
+
+
+			if (!cmd->FindCommand(2,temp_line)) goto showusage;
+			if (!temp_line.size()) goto showusage;
+			struct stat test;
+			if (stat(temp_line.c_str(),&test)) {
+				WriteOut("Directory %s Doesn't exist",temp_line.c_str());
+				return;
+			}
+			/* Not a switch so a normal directory/file */
+			if (!(test.st_mode & S_IFDIR)) {
+				WriteOut("%s isn't a directory",temp_line.c_str());
+				return;
+			}
+			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
+			newdrive=new localDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],mediaid);
+		}
 		cmd->FindCommand(1,temp_line);
 		if (temp_line.size()>1) goto showusage;
 		drive=toupper(temp_line[0]);
 		if (!isalpha(drive)) goto showusage;
-		if (!cmd->FindCommand(2,temp_line)) goto showusage;
-		if (!temp_line.size()) goto showusage;
-		struct stat test;
-		if (stat(temp_line.c_str(),&test)) {
-			WriteOut("Directory %s Doesn't exist",temp_line.c_str());
-			return;
-		}
-		/* Not a switch so a normal directory/file */
-		if (!(test.st_mode & S_IFDIR)) {
-			WriteOut("%s isn't a directory",temp_line.c_str());
-			return;
-		}
 		if (Drives[drive-'A']) {
 			WriteOut("Drive %c already mounted with %s\n",drive,Drives[drive-'A']->GetInfo());
+			if (newdrive) delete newdrive;
 			return;
 		}
-		if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
-		newdrive=new localDrive((char *)temp_line.c_str());
 		if (!newdrive) E_Exit("DOS:Can't create drive");
 		Drives[drive-'A']=newdrive;
 		/* Set the correct media byte in the table */
 		mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',newdrive->GetMediaByte());
-		WriteOut("Mounting drive %c as %s\n",drive,temp_line.c_str());
+		WriteOut("Drive %c mounted as %s\n",drive,newdrive->GetInfo());
 		return;
 showusage:
 		WriteOut("Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
