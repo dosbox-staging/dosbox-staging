@@ -80,10 +80,9 @@ static INLINE Bit32u Pop_32(void) {
 	}
 }
 
-
 #if 0
 	if (flags.intf && PIC_IRQCheck) {								\
-		SaveIP();													\
+		LEAVECORE;													\
 		PIC_runIRQs();												\
 		LoadIP();													\
 	}																\

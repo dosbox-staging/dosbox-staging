@@ -23,6 +23,7 @@
 
 #include "dosbox.h"
 #include "cpu.h"
+#include "lazyflags.h"
 #include "pic.h"
 
 

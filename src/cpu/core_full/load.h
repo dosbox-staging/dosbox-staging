@@ -265,10 +265,12 @@ l_M_Ed:
 		inst.op1.d=4;
 		break;
 	case D_IRETw:
+		flags.type=t_UNKNOWN;
 		CPU_IRET(false);
 		LoadIP();
 		goto nextopcode;
 	case D_IRETd:
+		flags.type=t_UNKNOWN;
 		CPU_IRET(true);
 		LoadIP();
 		goto nextopcode;
@@ -470,7 +472,7 @@ l_M_Ed:
 		CPU_CPUID();
 		goto nextopcode;
 	case D_HLT:
-		SaveIP();
+		LEAVECORE;
 		CPU_HLT();
 		return 0x0;
 	default:

@@ -99,10 +99,10 @@ switch (inst.code.save) {
 		LoadIP();
 		break;
 	case S_FLGb:
-		SETFLAGSb(inst.op1.d);
+		SETFLAGSb(inst.op1.b);
 		break;
 	case S_FLGw:
-		SETFLAGSw(inst.op1.d);
+		SETFLAGSw(inst.op1.w);
 		break;
 	case S_FLGd:
 		SETFLAGSd(inst.op1.d);

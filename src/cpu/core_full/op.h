@@ -339,7 +339,7 @@ switch (inst.code.op) {
 		goto nextopcode;
 
 	case O_INT:
-		SaveIP();
+		LEAVECORE;
 #if C_DEBUG
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return 1;
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) return 1;
@@ -371,7 +371,7 @@ switch (inst.code.op) {
 		goto nextopcode;
 	case O_CBACK:
 		if (inst.op1.d<CB_MAX) { 
-			SaveIP();
+			LEAVECORE;
 			Bitu ret=CallBack_Handlers[inst.op1.d]();
 			switch (ret) {
 			case CBRET_NONE:
@@ -409,9 +409,11 @@ switch (inst.code.op) {
 			CPU_LTR(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x04:	/* VERR */
+			FILLFLAGS;
 			CPU_VERR(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x05:	/* VERW */
+			FILLFLAGS;
 			CPU_VERW(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 
@@ -452,6 +454,7 @@ switch (inst.code.op) {
 				break;
 			}
 		case 6:		/* LMSW */
+			FILLFLAGS;
 			CPU_LMSW(inst.op1.w);
 			goto nextopcode;
 		default:
@@ -466,18 +469,21 @@ switch (inst.code.op) {
 		break;
 	case O_LAR:
 		{
+			FILLFLAGS;
 			Bitu ar;CPU_LAR(inst.op1.d,ar);
 			inst.op1.d=ar;
 		}
 		break;
 	case O_LSL:
 		{
+			FILLFLAGS;
 			Bitu limit;CPU_LSL(inst.op1.d,limit);
 			inst.op1.d=limit;
 		}
 		break;
 	case O_ARPL:
 		{
+			FILLFLAGS;
 			Bitu new_sel=inst.op1.d;
 			CPU_ARPL(new_sel,inst.op2.d);
 			inst.op1.d=new_sel;

@@ -112,6 +112,10 @@ PhysPt SelBase(Bitu sel) {
 	}
 }
 
+void CPU_SetFlags(Bitu word) {
+	flags.word=word;
+}
+
 bool CPU_CheckState(void) {
 	Bitu old_state=cpu.state;
 	cpu.state=0;	
@@ -184,8 +188,7 @@ bool Interrupt(Bitu num) {
 		break;
 	};
 #endif
-	FILLFLAGS;
-	
+
 	if (!(cpu.state & STATE_PROTECTED)) { /* RealMode Interrupt */	
 		/* Save everything on a 16-bit stack */
 		CPU_Push16(flags.word & 0xffff);
@@ -262,11 +265,11 @@ bool CPU_IRET(bool use32) {
 		if (use32) {
 			reg_eip=CPU_Pop32();
 			SegSet16(cs,CPU_Pop32());
-			SETFLAGSw(CPU_Pop32());
+			CPU_SetFlags(CPU_Pop32());
 		} else {
 			reg_eip=CPU_Pop16();
 			SegSet16(cs,CPU_Pop16());
-			SETFLAGSw(CPU_Pop16());
+			CPU_SetFlagsw(CPU_Pop16());
 		}
 		return true;
 	} else {	/* Protected mode IRET */
@@ -280,7 +283,7 @@ bool CPU_IRET(bool use32) {
 		} else {
 			offset=CPU_Pop16();
 			selector=CPU_Pop16();
-			old_flags=CPU_Pop16();
+			old_flags=(flags.word & 0xffff0000) | CPU_Pop16();
 		}
 		Bitu rpl=selector & 3;
 		Descriptor desc;
@@ -304,7 +307,7 @@ bool CPU_IRET(bool use32) {
 			Segs.big[cs]=desc.Big();
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
 			reg_eip=offset;
-			SETFLAGSw(old_flags);
+			CPU_SetFlags(old_flags);
 			LOG_MSG("IRET:Same level return to %X:%X",selector,offset);
 		} else {
 			/* Return to higher privilege */
@@ -591,7 +594,6 @@ bool CPU_LMSW(Bitu word) {
 }
 
 void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
-	flags.type=t_UNKNOWN;	
 	if ((dest_sel & 3) < (src_sel & 3)) {
 		dest_sel=(dest_sel & 0xfffc) + (src_sel & 3);
 //		dest_sel|=0xff3f0000;
@@ -603,7 +605,6 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 	
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	Descriptor desc;Bitu rpl=selector & 3;
-	flags.type=t_UNKNOWN;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -651,7 +652,6 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 
 void CPU_LSL(Bitu selector,Bitu & limit) {
 	Descriptor desc;Bitu rpl=selector & 3;
-	flags.type=t_UNKNOWN;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -694,7 +694,6 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 
 void CPU_VERR(Bitu selector) {
 	Descriptor desc;Bitu rpl=selector & 3;
-	flags.type=t_UNKNOWN;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -727,7 +726,6 @@ void CPU_VERR(Bitu selector) {
 
 void CPU_VERW(Bitu selector) {
 	Descriptor desc;Bitu rpl=selector & 3;
-	flags.type=t_UNKNOWN;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -846,7 +844,6 @@ void CPU_Init(Section* sec) {
 
 	reg_eip=0;
 	flags.word=FLAG_IF;
-	flags.type=t_UNKNOWN;
 
 	cpu.full.entry=cpu.full.prefix=0;
 	cpu.state=0xff;			//To initialize it the first time
