@@ -21,6 +21,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <dirent.h>
 #include "dosbox.h"
 #include "dos_inc.h"
 #include "drives.h"

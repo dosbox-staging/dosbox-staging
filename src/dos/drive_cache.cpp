@@ -597,6 +597,8 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 // No Dir Cache, 
 // ****************************************************************************
 
+static DIR*	srch_opendir = 0;
+
 DOS_No_Drive_Cache::DOS_No_Drive_Cache(const char* path)
 {
 	SetBaseDir(path);
