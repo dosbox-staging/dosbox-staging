@@ -193,32 +193,25 @@ static char which_ret[DOS_PATHLENGTH];
 
 char * DOS_Shell::Which(char * name) {
 	/* Parse through the Path to find the correct entry */
-
-//	if (which_result) free(which_result);
-	/* Check for extension */
-
-	
-	
 	/* Check if name is already ok but just misses an extension */
 	char * ext=strrchr(name,'.');
 	if (ext) if (strlen(ext)>4) ext=0;
 	if (ext) {
 		if (DOS_FileExists(name)) return name;
 	} else {
-		/* try to find .exe .com .bat */
-		strcpy(which_ret,name);
-		strcat(which_ret,bat_ext);
-		if (DOS_FileExists(which_ret)) return which_ret;
+		/* try to find .com .exe .bat */
 		strcpy(which_ret,name);
 		strcat(which_ret,com_ext);
 		if (DOS_FileExists(which_ret)) return which_ret;
 		strcpy(which_ret,name);
 		strcat(which_ret,exe_ext);
 		if (DOS_FileExists(which_ret)) return which_ret;
+		strcpy(which_ret,name);
+		strcat(which_ret,bat_ext);
+		if (DOS_FileExists(which_ret)) return which_ret;
 	}
 
 	/* No Path in filename look through %path% */
-
 	static char path[DOS_PATHLENGTH];
 	char * pathenv=GetEnvStr("PATH");
 	if (!pathenv) return 0;
@@ -239,16 +232,15 @@ char * DOS_Shell::Which(char * name) {
 				if (DOS_FileExists(which_ret)) return which_ret;
 			} else {
 				strcpy(which_ret,path);
-				strcat(which_ret,bat_ext);
-				if (DOS_FileExists(which_ret)) return which_ret;
-				strcpy(which_ret,path);
 				strcat(which_ret,com_ext);
 				if (DOS_FileExists(which_ret)) return which_ret;
 				strcpy(which_ret,path);
 				strcat(which_ret,exe_ext);
 				if (DOS_FileExists(which_ret)) return which_ret;
+				strcpy(which_ret,path);
+				strcat(which_ret,bat_ext);
+				if (DOS_FileExists(which_ret)) return which_ret;
 			}
-
 			path_write=path;
 			if (*pathenv) pathenv++;
 		}
