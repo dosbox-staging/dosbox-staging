@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.52 2003-10-30 09:08:58 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.53 2003-11-08 10:09:52 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -42,7 +42,7 @@
 #include "debug.h"
 
 //#define DISABLE_JOYSTICK
-#define C_GFXTHREADED 0						//Enabled by default
+#define C_GFXTHREADED 1						//Enabled by default
 
 #if !(ENVIRON_INCLUDED)
 extern char** environ;
@@ -58,18 +58,37 @@ extern char** environ;
 #define STDERR_FILE	TEXT("stderr.txt")
 #endif
 
+enum SCREEN_TYPES	{ 
+	SCREEN_SURFACE,
+	SCREEN_OVERLAY,
+	SCREEN_OPENGL
+};
+
+
 struct SDL_Block {
 	volatile bool active;							//If this isn't set don't draw
 	volatile bool drawing;
-	Bitu width;
-	Bitu height;
-	Bitu bpp;
-	Bitu flags;
-	GFX_ModeCallBack mode_callback;
-	bool full_screen;
+	struct {
+		Bit32u width;
+		Bit32u height;
+		GFX_MODES gfx_mode;
+		double scalex,scaley;
+		struct {
+			GFX_ResetCallBack reset;
+			GFX_RenderCallBack render;
+		} cb;
+	} draw;
 	bool wait_on_error;
+	struct {
+		Bit32u width,height,bpp;
+		bool fixed;
+		bool fullscreen;
+		bool doublebuf;
+		SCREEN_TYPES type;
+	} desktop;
+	SDL_Rect clip;
 	SDL_Surface * surface;
-	SDL_Surface * blit_surface;
+	SDL_Overlay * overlay;
 	SDL_Joystick * joy;
 	SDL_cond *cond;
 #if C_GFXTHREADED
@@ -78,7 +97,7 @@ struct SDL_Block {
 	SDL_sem *sem;
 	volatile bool kill_thread;
 #endif
-	GFX_DrawCallBack draw_callback;
+
 	struct {
 		bool autolock;
 		bool autoenable;
@@ -102,54 +121,114 @@ void GFX_SetTitle(Bits cycles,Bits frameskip){
 }
 
 /* Reset the screen with current values in the sdl structure */
-static void ResetScreen(void) {
-	GFX_Stop();
-	Bit32u mode_flags=0;
-	if (sdl.full_screen) {
-		mode_flags|=SDL_FULLSCREEN;
-		if (sdl.bpp==8) mode_flags|=SDL_HWPALETTE;
-		if (sdl.flags & GFX_SHADOW)	{
-			mode_flags|=SDL_SWSURFACE;
+GFX_MODES GFX_GetBestMode(Bitu bpp,Bitu & gfx_flags) {
+	GFX_MODES gfx_mode;gfx_flags=0;
+	switch (sdl.desktop.type) {
+	case SCREEN_SURFACE:
+		Bitu what_bpp;
+		if (sdl.desktop.fullscreen) {
+			what_bpp=SDL_VideoModeOK(640,480,bpp,SDL_FULLSCREEN|SDL_HWSURFACE |
+				(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0) | ((bpp==8) ? SDL_HWPALETTE : 0)  );
 		} else {
-			mode_flags|=SDL_HWSURFACE|SDL_DOUBLEBUF;
+			what_bpp=sdl.desktop.bpp;
 		}
-	} else mode_flags|=SDL_SWSURFACE;
-	if (sdl.flags & GFX_FIXED_BPP) {
-	dofixed:
-		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,mode_flags);
-	} else {
-		Bitu test_bpp=SDL_VideoModeOK(sdl.width,sdl.height,sdl.bpp,mode_flags);
-		if (test_bpp==sdl.bpp) goto dofixed;
-		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,mode_flags);
-		if (sdl.surface->format->BitsPerPixel==24) goto dofixed;
-	
+		gfx_flags|=GFX_HASCONVERT;
+		switch (what_bpp) {
+		case 8:		gfx_mode=GFX_8BPP;break;
+		case 15:	gfx_mode=GFX_15BPP;break;	
+		case 16:	gfx_mode=GFX_16BPP;break;
+		case 24:	gfx_mode=GFX_24BPP;break;
+		case 32:	gfx_mode=GFX_32BPP;break;
+		}
+		break;
+	case SCREEN_OVERLAY:
+		gfx_mode=GFX_YUV;
+		gfx_flags|=GFX_HASSCALING;
 	}
-	if (sdl.surface==0) {
-		E_Exit("SDL:Can't get a surface error:%s.",SDL_GetError());
-	}
-	/* Create special surface for direct blitting if needed */
-	if (sdl.blit_surface) SDL_FreeSurface(sdl.blit_surface);
-	sdl.blit_surface=SDL_CreateRGBSurfaceFrom(0,0,0,sdl.surface->format->BytesPerPixel,0,
-		sdl.surface->format->Rmask,sdl.surface->format->Gmask,sdl.surface->format->Bmask,sdl.surface->format->Amask
-	);
-			
-	GFX_SetTitle(-1,-1);
-	Bitu flags=MODE_SET;
-	if (sdl.full_screen) flags|=MODE_FULLSCREEN;
-	if (sdl.mode_callback) sdl.mode_callback(sdl.surface->w,sdl.surface->h,sdl.surface->format->BitsPerPixel,sdl.surface->pitch,flags);
-	GFX_Start();
+	return gfx_mode;
 }
 
 
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack mode_callback, GFX_DrawCallBack draw_callback){
+static void ResetScreen(void) {
 	GFX_Stop();
-	sdl.width=width;
-	sdl.height=height;
-	sdl.bpp=bpp;
-	sdl.flags=flags;
-	sdl.mode_callback=mode_callback;
-	sdl.draw_callback=draw_callback;
-	ResetScreen();
+	if (sdl.draw.cb.reset) (sdl.draw.cb.reset)();
+	GFX_Start();
+}
+
+void GFX_SetSize(Bitu width,Bitu height,GFX_MODES gfx_mode,double scalex,double scaley,GFX_ResetCallBack cb_reset, GFX_RenderCallBack cb_render) {
+	GFX_Stop();
+	sdl.draw.width=width;
+	sdl.draw.height=height;
+	sdl.draw.gfx_mode=gfx_mode;
+	sdl.draw.cb.render=cb_render;
+	sdl.draw.cb.reset=cb_reset;
+	sdl.draw.scalex=scalex;
+	sdl.draw.scaley=scaley;
+
+	Bitu bpp;
+	switch (gfx_mode) {
+	case GFX_8BPP:bpp=8;break;
+	case GFX_15BPP:bpp=15;break;
+	case GFX_16BPP:bpp=16;break;
+	case GFX_24BPP:bpp=24;break;	
+	case GFX_32BPP:bpp=32;break;
+	case GFX_YUV:bpp=0;break;
+	}
+	switch (sdl.desktop.type) {
+	case SCREEN_SURFACE:
+dosurface:
+		sdl.clip.w=width;
+		sdl.clip.h=height;
+		if (sdl.desktop.fullscreen) {
+			if (sdl.desktop.fixed) {
+				sdl.clip.x=(Sint16)((sdl.desktop.width-width)/2);
+				sdl.clip.y=(Sint16)((sdl.desktop.height-height)/2);
+				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,
+					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0)|SDL_HWPALETTE);
+			} else {
+				sdl.clip.x=0;sdl.clip.y=0;
+				sdl.surface=SDL_SetVideoMode(width,height,bpp,
+					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF  : 0)|SDL_HWPALETTE);
+			}
+		} else {
+			sdl.clip.x=0;sdl.clip.y=0;
+			sdl.surface=SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+		}
+		break;
+	case SCREEN_OVERLAY:
+		if (sdl.overlay) SDL_FreeYUVOverlay(sdl.overlay);
+		sdl.overlay=0;
+		if (gfx_mode!=GFX_YUV) goto dosurface;
+		if (sdl.desktop.fullscreen) {
+			if (sdl.desktop.fixed) {
+				double ratio_w=(double)sdl.desktop.width/(width*scalex);
+				double ratio_h=(double)sdl.desktop.height/(height*scaley);
+				if ( ratio_w < ratio_h) {
+					sdl.clip.w=(Bit16u)sdl.desktop.width;
+					sdl.clip.h=(Bit16u)(height*scaley*ratio_w);
+				} else {
+					sdl.clip.w=(Bit16u)(width*scalex*ratio_h);
+					sdl.clip.h=(Bit16u)sdl.desktop.height;
+				}
+				sdl.clip.x=(Sint16)((sdl.desktop.width-sdl.clip.w)/2);
+				sdl.clip.y=(Sint16)((sdl.desktop.height-sdl.clip.h)/2);
+				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,SDL_FULLSCREEN|SDL_HWSURFACE);
+			} else {
+				sdl.clip.x=0;sdl.clip.y=0;
+				sdl.clip.w=(Bit16u)(width*scalex);
+				sdl.clip.h=(Bit16u)(height*scaley);
+				sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,SDL_FULLSCREEN|SDL_HWSURFACE);
+			}
+		} else {
+			sdl.clip.x=0;sdl.clip.y=0;
+			sdl.clip.w=(Bit16u)(width*scalex);
+			sdl.clip.h=(Bit16u)(height*scaley);
+			sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,SDL_HWSURFACE);
+		}
+		sdl.overlay=SDL_CreateYUVOverlay(width*2,height,SDL_UYVY_OVERLAY,sdl.surface);
+		break;
+	}
+	GFX_Start();
 }
 
 
@@ -165,8 +244,8 @@ static void CaptureMouse(void) {
 }
 
 static void SwitchFullScreen(void) {
-	sdl.full_screen=!sdl.full_screen;
-	if (sdl.full_screen) {
+	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
+	if (sdl.desktop.fullscreen) {
 //TODO Give an resize event
 		if (!sdl.mouse.locked) CaptureMouse();
 	} else {
@@ -179,33 +258,38 @@ void GFX_SwitchFullScreen(void) {
     SwitchFullScreen();
 }
 
-/* Special render part handler that blits directly to the output screen */
-void GFX_Render_Blit(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
-	sdl.blit_surface->w=dx;
-	sdl.blit_surface->h=dy;
-	sdl.blit_surface->pitch=dx;
-	sdl.blit_surface->pixels=src;
-	SDL_UnlockSurface(sdl.surface);
-	SDL_Rect dest;
-	dest.x=x;
-	dest.y=y;
-	SDL_BlitSurface(sdl.blit_surface,0,sdl.surface,&dest);
-}
 
 static void SDL_DrawScreen(void) {
-		sdl.drawing=true;
+	Bit8u * pixels;Bitu pitch;
+	sdl.drawing=true;
+	switch (sdl.desktop.type) {
+	case SCREEN_SURFACE:
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (SDL_LockSurface(sdl.surface)) {
+				LOG_MSG("SDL Lock failed");
 				sdl.drawing=false;
 				return;
 			}
 		}
-		sdl.draw_callback(sdl.surface->pixels);
+		pixels=(Bit8u *)sdl.surface->pixels;
+		pixels+=sdl.clip.y*sdl.surface->pitch;
+		pixels+=sdl.clip.x*sdl.surface->format->BytesPerPixel;
+		sdl.draw.cb.render(pixels,sdl.surface->pitch);
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			SDL_UnlockSurface(sdl.surface);
 		}
 		SDL_Flip(sdl.surface);
-		sdl.drawing=false;	
+		break;
+	case SCREEN_OVERLAY:
+		SDL_LockYUVOverlay(sdl.overlay);
+		pixels=(Bit8u *)*(sdl.overlay->pixels);
+		pitch=*(sdl.overlay->pitches);
+		sdl.draw.cb.render(pixels,pitch);
+		SDL_UnlockYUVOverlay(sdl.overlay);
+		SDL_DisplayYUVOverlay(sdl.overlay,&sdl.clip);
+
+	}
+	sdl.drawing=false;	
 }
 
 #if C_GFXTHREADED
@@ -242,7 +326,7 @@ void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 	};
 #endif
 	/* I should probably not change the GFX_PalEntry :) */
-	if (sdl.full_screen) {
+	if (sdl.surface->flags & SDL_HWPALETTE) {
 		if (!SDL_SetPalette(sdl.surface,SDL_PHYSPAL,(SDL_Color *)entries,start,count)) {
 			E_Exit("SDL:Can't set palette");
 		}
@@ -280,7 +364,7 @@ void GFX_Start() {
 static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
 	if (sdl.mouse.locked) CaptureMouse();
-	if (sdl.full_screen) SwitchFullScreen();
+	if (sdl.desktop.fullscreen) SwitchFullScreen();
 #if C_GFXTHREADED
 	sdl.kill_thread=true;
 	SDL_SemPost(sdl.sem);
@@ -299,14 +383,37 @@ static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
-	sdl.full_screen=false;
+	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 	sdl.mouse.locked=false;
 	sdl.mouse.requestlock=false;
-	sdl.mouse.autoenable=section->Get_bool("autolock");
+	sdl.desktop.fixed=section->Get_bool("fullfixed");
+	sdl.desktop.width=section->Get_int("fullwidth");
+	sdl.desktop.height=section->Get_int("fullheight");
+	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
+	if (!sdl.desktop.width) {
+#ifdef WIN32
+		sdl.desktop.width=GetSystemMetrics(SM_CXSCREEN);
+#else	
+		sdl.desktop.width=1024;
+#endif
+	}
+	if (!sdl.desktop.height) {
+#ifdef WIN32
+		sdl.desktop.height=GetSystemMetrics(SM_CYSCREEN);
+#else	
+		sdl.desktop.height=768;
+#endif
+	}
+    sdl.mouse.autoenable=section->Get_bool("autolock");
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
-	sdl.blit_surface=0;
+	if (section->Get_bool("overlay")) {
+		sdl.desktop.type=SCREEN_OVERLAY;
+	} else {
+		sdl.desktop.type=SCREEN_SURFACE;
+	}
+	sdl.overlay=0;
 #if C_GFXTHREADED
 	sdl.kill_thread=false;
 	sdl.mutex=SDL_CreateMutex();
@@ -315,10 +422,11 @@ static void GUI_StartUp(Section * sec) {
 #endif
 	/* Initialize screen for first time */
 	sdl.surface=SDL_SetVideoMode(640,400,0,0);
-	if (sdl.surface->format->BitsPerPixel==24) {
+	sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
+	if (sdl.desktop.bpp==24) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
-	GFX_SetSize(640,400,8,0,0,0);
+	GFX_SetSize(640,400,GFX_8BPP,1.0,1.0,0,0);
 	SDL_EnableKeyRepeat(250,30);
 	SDL_EnableUNICODE(1);
 /* Get some Keybinds */
@@ -472,11 +580,8 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (sdl.mouse.locked) {
+	if (sdl.mouse.locked) 
 		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100,(float)motion->yrel*sdl.mouse.sensitivity/100);
-	} else {
-//		Mouse_CursorSet((float)motion->x/(float)sdl.width,(float)motion->y/(float)sdl.height);
-	}
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -535,14 +640,6 @@ static void HandleJoystickButton(SDL_JoyButtonEvent * jbutton) {
 }
 
 
-static void HandleVideoResize(SDL_ResizeEvent * resize) {
-
-
-
-
-
-}
-
 static Bit8u laltstate = SDL_KEYUP;
 
 void GFX_Events() {
@@ -579,7 +676,7 @@ void GFX_Events() {
 			HandleJoystickButton(&event.jbutton);
 			break;
 		case SDL_VIDEORESIZE:
-			HandleVideoResize(&event.resize);
+//			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
 			throw(0);
@@ -637,11 +734,16 @@ int main(int argc, char* argv[]) {
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
 		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);
+		sdl_sec->Add_bool("fulldouble",false);
+		sdl_sec->Add_bool("fullfixed",false);
+		sdl_sec->Add_int("fullwidth",0);
+		sdl_sec->Add_int("fullheight",0);
+		sdl_sec->Add_bool("overlay",false);
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);
 		/* Init all the dosbox subsystems */
-		
+
 		MSG_Add("SDL_CONFIGFILE_HELP",
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
@@ -680,7 +782,7 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-        if (sdl.full_screen) SwitchFullScreen();
+        if (sdl.desktop.fullscreen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
 		LOG_MSG("Exit to error: %s",error);
 		if(sdl.wait_on_error) {
@@ -695,7 +797,7 @@ int main(int argc, char* argv[]) {
 
 	}
 	catch (int){ 
-        if (sdl.full_screen) SwitchFullScreen();
+		if (sdl.desktop.fullscreen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
 	}
 	return 0;

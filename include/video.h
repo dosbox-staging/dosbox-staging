@@ -20,9 +20,19 @@
 #define __VIDEO_H
 
 
-typedef void (* GFX_ModeCallBack)(Bitu width,Bitu height,Bitu bpp,Bitu pitch,Bitu flags);
+enum GFX_MODES {
+	GFX_8BPP=0,
+	GFX_15BPP=1,
+	GFX_16BPP=2,
+	GFX_24BPP=3,
+	GFX_32BPP=4,
+	GFX_YUV=5,
+	GFX_MODE_SIZE=6
+};
 
-typedef void (* GFX_DrawCallBack)(void * data);
+typedef void (* GFX_ResetCallBack)(void);
+
+typedef void (* GFX_RenderCallBack)(Bit8u * data,Bitu pitch);
 
 struct GFX_PalEntry {
 	Bit8u r;
@@ -31,22 +41,15 @@ struct GFX_PalEntry {
 	Bit8u unused;
 };
 
-#define GFX_FIXED_BPP	0x01
-#define GFX_RESIZEABLE	0x02
-#define GFX_SHADOW		0x04
-#define GFX_BLITTING	0x08
-
-
-
-#define MODE_SET 0x01
-#define MODE_FULLSCREEN 0x02
-#define MODE_RESIZE 0x04
+#define GFX_HASSCALING	0x0001
+#define GFX_HASCONVERT	0x0002
 
 void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
+GFX_MODES GFX_GetBestMode(Bitu bpp,Bitu & gfx_flags);
 
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack mode_callback, GFX_DrawCallBack draw_callback);
+void GFX_SetSize(Bitu width,Bitu height,GFX_MODES gfx_mode,double scalex,double scaley,GFX_ResetCallBack cb_reset, GFX_RenderCallBack cb_render);
 
 void GFX_Start(void);
 void GFX_Stop(void);
