@@ -306,7 +306,11 @@ SOURCE=..\include\render.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\gui\render_support.h
+SOURCE=..\src\gui\render_normal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\gui\render_scale2x.h
 # End Source File
 # Begin Source File
 
@@ -672,10 +676,6 @@ SOURCE=..\include\programs.h
 # Begin Source File
 
 SOURCE=..\include\regs.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\settings.h
 # End Source File
 # Begin Source File
 
