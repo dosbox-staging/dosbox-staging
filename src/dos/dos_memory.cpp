@@ -72,6 +72,9 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	Bit16u bigsize=0;Bit16u mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(0);
 	DOS_MCB mcb_next(0);
+	DOS_MCB psp_mcb(dos.psp-1);
+	char psp_name[9];
+	psp_mcb.GetFileName(psp_name);
 	bool stop=false;
 	while(!stop) {
 		mcb.SetPt(mcb_segment);
@@ -97,6 +100,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 					mcb.SetSize(*blocks);
 					mcb.SetType(0x4d);		
 					mcb.SetPSPSeg(dos.psp);
+					mcb.SetFileName(psp_name);
 					//TODO Filename
 					*segment=mcb_segment+1;
 					return true;
@@ -108,6 +112,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 					mcb_next.SetSize(*blocks);
 					mcb_next.SetType(mcb.GetType());
 					mcb_next.SetPSPSeg(dos.psp);
+					mcb_next.SetFileName(psp_name);
 					// Old Block
 					mcb.SetSize(block_size-*blocks-1);
 					mcb.SetPSPSeg(MCB_FREE);
@@ -188,7 +193,9 @@ void DOS_SetupMemory(void) {
 	
 	DOS_MCB mcb((Bit16u)MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
-	mcb.SetSize(0x9FFE - MEM_START - 2);
+	if (machine!=MCH_TANDY) {
+		mcb.SetSize(0x9FFE - MEM_START - 2);
+	} else mcb.SetSize(0x7FFE - MEM_START - 2);
 	mcb.SetType(0x5a);								//Last Block
 
 	dos.firstMCB=MEM_START;
