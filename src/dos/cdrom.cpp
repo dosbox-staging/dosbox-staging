@@ -21,7 +21,7 @@
 // SDL CDROM 
 // ******************************************************
 
-#include "sdl.h"
+#include "SDL.h"
 #include "support.h"
 #include "cdrom.h"
 

@@ -5,7 +5,7 @@
 #define MAX_ASPI_CDROM	5
 
 #include <string.h>
-#include "sdl.h"
+#include "SDL.h"
 
 #define RAW_SECTOR_SIZE		2352
 #define COOKED_SECTOR_SIZE	2048
