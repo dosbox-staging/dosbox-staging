@@ -20,7 +20,7 @@
 DIR * opendir(const char *dirname) {
     
     static DIR dir;
-	int len;
+	size_t len;
 
     /* Stash the directory name */
     strcpy(dir.pathName,dirname);
@@ -81,7 +81,7 @@ struct dirent *	readdir(DIR *dirp) {
     memset(&d,'\0', sizeof(struct dirent));
 
     strcpy(d.d_name,dirp->findFileData.cFileName);
-    d.d_namlen = strlen(d.d_name);  
+    d.d_namlen = (char)strlen(d.d_name);  
 
     return &d;
 }
