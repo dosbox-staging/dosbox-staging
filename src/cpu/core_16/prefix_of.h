@@ -251,7 +251,12 @@ switch(Fetchb()) {
 		}
 	/* 0xb0 CMPXCHG Eb,Gb */
 	/* 0xb1 CMPXCHG Ew,Gw */
-	/* 0xb2 LSS */
+	case 0xb2:												/* LSS */
+		{	
+			GetRMrw;GetEAa;
+			*rmrw=LoadMw(eaa);SegSet16(ss,LoadMw(eaa+2));
+			break;
+		}
 	case 0xb3:												/* BTR Ew,Gw */
 		{
 			GetRMrw;
