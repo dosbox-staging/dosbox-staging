@@ -769,17 +769,7 @@ static void ExecuteGlobRegister(void) {
 }
 
 
-static Bit16u read_gus16(Bit32u port) {
-	return ExecuteReadRegister();
-}
-
-static void write_gus16(Bit32u port,Bit16u val) {
-	myGUS.gRegData = val;
-	ExecuteGlobRegister();
-}
-
-
-static Bit8u read_gus(Bit32u port) {
+static Bitu read_gus(Bitu port,Bitu iolen) {
 
 	switch(port - GUS_BASE) {
 	case 0x206:
@@ -828,7 +818,7 @@ static Bit8u read_gus(Bit32u port) {
 }
 
 
-static void write_gus(Bit32u port,Bit8u val) {
+static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 	switch(port - GUS_BASE) {
 	case 0x200:
 		myGUS.mixControl = val;
@@ -1048,36 +1038,33 @@ void GUS_Init(Section* sec) {
 
 	// GF1 Synthesizer 
 	
-	IO_RegisterWriteHandler(0x302 + GUS_BASE,write_gus,"GF1 Page Register");
-	IO_RegisterReadHandler(0x302 + GUS_BASE,read_gus,"GF1 Page Register");
+	IO_RegisterWriteHandler(0x302 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x302 + GUS_BASE,read_gus,IO_MB);
 
-	IO_RegisterWriteHandler(0x303 + GUS_BASE,write_gus,"GF1 Global Register Select");
-	IO_RegisterReadHandler(0x303 + GUS_BASE,read_gus,"GF1 Global Register Select");
+	IO_RegisterWriteHandler(0x303 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x303 + GUS_BASE,read_gus,IO_MB);
 
-	IO_RegisterWriteHandler(0x304 + GUS_BASE,write_gus,"GF1 Global Data Low Byte");
-	IO_RegisterReadHandler(0x304 + GUS_BASE,read_gus,"GF1 Global Data Low Byte");
+	IO_RegisterWriteHandler(0x304 + GUS_BASE,write_gus,IO_MB|IO_MW);
+	IO_RegisterReadHandler(0x304 + GUS_BASE,read_gus,IO_MB|IO_MW);
 
-	IO_RegisterWriteWHandler(0x304 + GUS_BASE,write_gus16);
-	IO_RegisterReadWHandler(0x304 + GUS_BASE,read_gus16);
+	IO_RegisterWriteHandler(0x305 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x305 + GUS_BASE,read_gus,IO_MB);
 
-	IO_RegisterWriteHandler(0x305 + GUS_BASE,write_gus,"GF1 Global Data High Byte");
-	IO_RegisterReadHandler(0x305 + GUS_BASE,read_gus,"GF1 Global Data High Byte");
+	IO_RegisterReadHandler(0x206 + GUS_BASE,read_gus,IO_MB);
 
-	IO_RegisterReadHandler(0x206 + GUS_BASE,read_gus,"GF1 IRQ Status Register");
+	IO_RegisterWriteHandler(0x208 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x208 + GUS_BASE,read_gus,IO_MB);
 
-	IO_RegisterWriteHandler(0x208 + GUS_BASE,write_gus,"Timer Control Reg");
-	IO_RegisterReadHandler(0x208 + GUS_BASE,read_gus,"Timer Control Reg");
+	IO_RegisterWriteHandler(0x209 + GUS_BASE,write_gus,IO_MB);
 
-	IO_RegisterWriteHandler(0x209 + GUS_BASE,write_gus,"Timer Data IO");
-
-	IO_RegisterWriteHandler(0x307 + GUS_BASE,write_gus,"DRAM IO");
-	IO_RegisterReadHandler(0x307 + GUS_BASE,read_gus,"DRAM IO");
+	IO_RegisterWriteHandler(0x307 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x307 + GUS_BASE,read_gus,IO_MB);
 
 	// Board Only 
 
-	IO_RegisterWriteHandler(0x200 + GUS_BASE,write_gus,"Mix Control Register");
-	IO_RegisterReadHandler(0x20A + GUS_BASE,read_gus,"GUS Undocumented");
-	IO_RegisterWriteHandler(0x20B + GUS_BASE,write_gus,"IRQ/DMA Control Register");
+	IO_RegisterWriteHandler(0x200 + GUS_BASE,write_gus,IO_MB);
+	IO_RegisterReadHandler(0x20A + GUS_BASE,read_gus,IO_MB);
+	IO_RegisterWriteHandler(0x20B + GUS_BASE,write_gus,IO_MB);
 
 	PIC_RegisterIRQ(myGUS.irq1,0,"GUS");
 	PIC_RegisterIRQ(myGUS.irq2,0,"GUS");

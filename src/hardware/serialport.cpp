@@ -70,7 +70,7 @@ void CSerial::lowerint(INT_TYPES type){
 }
 
 
-void CSerial::write_port(Bit32u port, Bit8u val) {
+void CSerial::write_port(Bitu port, Bitu val) {
 
 	port-=base;
 //	LOG_UART("Serial write %X val %x %c",port,val,val);
@@ -152,7 +152,7 @@ void CSerial::write_port(Bit32u port, Bit8u val) {
 	}
 }
 
-void CSerial::write_serial(Bit32u port, Bit8u val) {
+void CSerial::write_serial(Bitu port, Bitu val,Bitu iolen) {
 	int i;
 
 	for(i=0;i<SERIALPORT_COUNT;i++){
@@ -162,7 +162,7 @@ void CSerial::write_serial(Bit32u port, Bit8u val) {
 	}
 }
 
-Bit8u CSerial::read_port(Bit32u port) {
+Bitu CSerial::read_port(Bitu port) {
 	Bit8u outval = 0;
 
 	port-=base;
@@ -248,7 +248,7 @@ skipreset:
 
 }
 
-Bit8u CSerial::read_serial(Bit32u port)
+Bitu CSerial::read_serial(Bitu port,Bitu iolen)
 {
 	int i;
 	for(i=0;i<SERIALPORT_COUNT;i++){
@@ -407,9 +407,8 @@ CSerial::CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps) {
 	setdivisor(initdiv >> 8, initdiv & 0x0f);
 
 	for (i=8;i<=0xf;i++) {
-		
-		IO_RegisterWriteHandler(initbase+i,write_serial,"Serial Port");
-		IO_RegisterReadHandler(initbase+i,read_serial,"Serial Port");
+		IO_RegisterWriteHandler(initbase+i,write_serial,IO_MB);
+		IO_RegisterReadHandler(initbase+i,read_serial,IO_MB);
 	}
 	
 	PIC_RegisterIRQ(irq,0,"SERIAL");
