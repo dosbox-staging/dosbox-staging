@@ -434,8 +434,11 @@ dac_text16:
 		IO_Write(0x3df,0x80);		//Enter 32k mode and banks on 0
 		break;
 	}
+	/* Setup the CPU Window */
+	IO_Write(0x3d4,0x6a);
+	IO_Write(0x3d5,0);
+	
 	/* Setup some remaining S3 registers */
-
 	IO_Write(0x3d4,0x31);IO_Write(0x3d5,0x9);	//Enable banked memory and 256k+ access
 	IO_Write(0x3d4,0x58);IO_Write(0x3d5,0x3);	//Enable 8 mb of linear addressing
 	IO_Write(0x3d4,0x38);IO_Write(0x3d5,0x48);	//Register lock 1
