@@ -150,8 +150,16 @@ bool DOS_GetCurrentDir(Bit8u drive,char * buffer) {
 }
 
 bool DOS_ChangeDir(char * dir) {
+
+	// Be sure its not a file (Eye of the beholder 3)
+	char* str;
+	if (str=strchr(dir,'.')) {
+		if (isalpha(str[1]) || isdigit(str[1])) return false;
+	};
+
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
+	
 	if (Drives[drive]->TestDir(fulldir)) {
 		strcpy(Drives[drive]->curdir,fulldir);
 		return true;
