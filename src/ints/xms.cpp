@@ -363,7 +363,7 @@ static bool multiplex_xms(void) {
 };
 
 Bitu XMS_Handler(void) {
-	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
+//	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */
@@ -443,7 +443,7 @@ Bitu XMS_Handler(void) {
 		break;
 
 	}
-	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
+//	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
 }
 
@@ -451,7 +451,9 @@ void XMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	Bitu size=section->Get_int("xmssize");
 	if (!size) return;
-	if (size>C_MEM_MAX_SIZE-1) size=C_MEM_MAX_SIZE-1;
+	Bitu memavail=(MEM_TotalSize()-1088)/1024;
+
+	if (size>memavail) size=memavail;
 	xms_size = size;
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
