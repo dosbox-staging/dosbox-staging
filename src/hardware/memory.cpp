@@ -148,7 +148,6 @@ void MEM_ClearMapping(Bitu startpage,Bitu pages) {
 	}
 }
 
-#if (!C_EXTRAINLINE)
 static void HandlerWritew(Bitu page,PhysPt pt,Bit16u val) {
 		WriteHandlerTable[page](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[page](pt+1,(Bit8u)((val >>  8) & 0xff)  );
@@ -170,7 +169,6 @@ void mem_writeb(PhysPt pt,Bit8u val) {
 
 void mem_writew(PhysPt pt,Bit16u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
-//		HandlerWritew(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 	} else writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
@@ -178,7 +176,6 @@ void mem_writew(PhysPt pt,Bit16u val) {
 
 void mem_writed(PhysPt pt,Bit32u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
-//		HandlerWrited(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+2,(Bit8u)((val >> 16) & 0xff)  );
@@ -208,7 +205,6 @@ Bit8u mem_readb(PhysPt pt) {
 
 Bit16u mem_readw(PhysPt pt) {
 	if (!ReadHostTable[pt >> PAGE_SHIFT]) {
-//		return HandlerReadw(pt >> PAGE_SHIFT,pt);
 		return	
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
@@ -218,7 +214,6 @@ Bit16u mem_readw(PhysPt pt) {
 Bit32u mem_readd(PhysPt pt){
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
-//		return HandlerReadd(pt >> PAGE_SHIFT,pt);
 		return 
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0))       |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8  |
@@ -226,9 +221,6 @@ Bit32u mem_readd(PhysPt pt){
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
 	}
 }
-#endif
-
-
 
 void MEM_Init(Section * sect) {
 	/* Init all tables */
