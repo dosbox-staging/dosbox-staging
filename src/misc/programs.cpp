@@ -16,8 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.16 2004-10-23 15:15:07 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.17 2004-10-23 17:54:36 qbix79 Exp $ */
 
+#include <vector>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -47,14 +48,20 @@ static Bit8u exe_block[]={
 
 #define CB_POS 12
 
+static std::vector<PROGRAMS_Main*> internal_progs;
+
 void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main) {
 	Bit8u * comdata=(Bit8u *)malloc(128);
 	memcpy(comdata,&exe_block,sizeof(exe_block));
 	comdata[CB_POS]=call_program&0xff;
 	comdata[CB_POS+1]=(call_program>>8)&0xff;
-/* Copy the pointer this should preserve endianes */
-	memcpy(&comdata[sizeof(exe_block)],&main,sizeof(main));
-	Bit32u size=sizeof(exe_block)+sizeof(main);	
+
+	/* Copy save the pointer in the vector and save it's index */
+	Bit8u index = internal_progs.size();
+	internal_progs.push_back(main);
+
+	memcpy(&comdata[sizeof(exe_block)],&index,sizeof(index));
+	Bit32u size=sizeof(exe_block)+sizeof(index);	
 	VFILE_Register(name,comdata,size);	
 }
 
@@ -62,13 +69,15 @@ void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main) {
 
 static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
-	PROGRAMS_Main * handler=0;			//It will get sneakily itinialized
-	Bitu size=sizeof(PROGRAMS_Main *);
-	/* Read the handler from program code in memory */
+	Bitu size=sizeof(Bit8u);
+	Bit8u index;
+	/* Read the index from program code in memory */
 	PhysPt reader=PhysMake(dos.psp(),256+sizeof(exe_block));
-	HostPt writer=(HostPt)&handler;
+	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
+	if(index > internal_progs.size()) E_Exit("something is messing with the memory");
+	PROGRAMS_Main * handler = internal_progs[index];
 	(*handler)(&new_program);
 	new_program->Run();
 	delete new_program;
