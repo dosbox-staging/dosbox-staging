@@ -7,6 +7,7 @@
  */
 
 #include "dirent.h"
+#include "io.h"
 
 #ifdef WIN32
 
@@ -22,17 +23,14 @@ DIR * opendir(const char *dirname) {
 
     /* Stash the directory name */
     strcpy(dir.pathName,dirname);
+	strcat(dir.pathName,"*.*");
 
     /* set the handle to invalid and set the firstTime flag */
     dir.handle    = INVALID_HANDLE_VALUE;
     dir.firstTime = TRUE;
 
-    if (strcmp(dirname, ".") == 0) {
-        return &dir;
-    }
-
     /* Change the current directory to the one requested */
-    return (SetCurrentDirectory(dir.pathName) != 0) ? &dir : NULL;
+    return (access(dirname,0) ? NULL : &dir);
 }
 
 /** Close the current directory - return 0 if success */
@@ -60,7 +58,7 @@ struct dirent *	readdir(DIR *dirp) {
     if (TRUE == dirp->firstTime)
     {
         /** Get the first entry in the directory */
-        dirp->handle = FindFirstFile("*.*", &dirp->findFileData);
+        dirp->handle = FindFirstFile(dirp->pathName, &dirp->findFileData);
         dirp->firstTime = FALSE;
         if (INVALID_HANDLE_VALUE == dirp->handle)
         {
