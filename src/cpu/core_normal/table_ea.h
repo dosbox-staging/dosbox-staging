@@ -49,7 +49,7 @@ static PhysPt EA_16_87_n(void) { return BaseDS+(Bit16u)(reg_bx+Fetchws()); }
 static Bit32u SIBZero=0;
 static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 
-INLINE PhysPt Sib(Bitu mode) {
+static INLINE PhysPt Sib(Bitu mode) {
 	Bit8u sib=Fetchb();
 	PhysPt base;
 	switch (sib&7) {
