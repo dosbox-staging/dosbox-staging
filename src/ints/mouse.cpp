@@ -165,7 +165,7 @@ static Bitu INT33_Handler(void) {
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		reg_ax=0xffff;
-		reg_bx=0;
+		reg_bx=MOUSE_BUTTONS;		
 		mouse_reset();
 		Mouse_AutoLock(true);
 		break;
