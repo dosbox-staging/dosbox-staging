@@ -50,7 +50,5 @@
 #define ftruncate(blah,blah2) chsize(blah,blah2)
 #endif
 
-extern const char * dosbox_datadir;
-
 #endif
 
