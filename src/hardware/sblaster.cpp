@@ -244,7 +244,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 		if (sb.mode==MODE_DMA_WAIT) {
 			DSP_ChangeMode(MODE_DMA);
 			CheckDMAEnd();
-			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output");
+			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output, block %X",chan->basecnt);
 		} else if (event==DMA_TRANSFEREND) {
 			if (sb.mode==MODE_DMA) sb.mode=MODE_DMA_WAIT;
 		}
@@ -458,7 +458,7 @@ static void GenerateSound(Bitu size) {
 			}
 		case MODE_DMA:
 			{
-				Bitu len=size*sb.dma.rate_mul;
+				Bitu len=samples*sb.dma.rate_mul;
 				if (len & 0xffff) len=1+(len>>16);
 				else len>>=16;
 				if (sb.dma.stereo && (len & 1)) len++;
@@ -1020,6 +1020,8 @@ void SBLASTER_Init(Section* sec) {
 	else if (!strcasecmp(sbtype,"sb16")) sb.type=SBT_16;
 	else if (!strcasecmp(sbtype,"none")) sb.type=SBT_NONE;
 	else sb.type=SBT_16;
+	
+	if (machine!=MCH_VGA && sb.type==SBT_16) sb.type=SBT_PRO2;
 
 	/* OPL/CMS Init */
 	const char * omode=section->Get_string("oplmode");
@@ -1066,10 +1068,11 @@ void SBLASTER_Init(Section* sec) {
 
 	for (i=4;i<0xf;i++) {
 		if (i==8 || i==9) continue;
+		//Disable mixer ports for lower soundblaster
+		if (sb.type<SBT_PRO1 && (i==4 || i==5)) continue; 
 		IO_RegisterReadHandler(sb.hw.base+i,read_sb,IO_MB);
 		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,IO_MB);
 	}
-	PIC_RegisterIRQ(sb.hw.irq,0,"SB");
 	DSP_Reset();
 	CTMIXER_Reset();
 	char hdma[8]="";
