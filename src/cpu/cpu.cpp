@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.44 2003-12-12 19:51:20 finsterr Exp $ */
+/* $Id: cpu.cpp,v 1.45 2003-12-17 23:10:00 finsterr Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -281,7 +281,6 @@ doconforming:
 }
 
 void CPU_StartException(void) {
-//	if (cpu.exception.which==0x0B) LOG_MSG("**** Exception %d CS:%X IP:%X FLAGS:%X Error:%X",cpu.exception.which,SegValue(cs),reg_eip,reg_flags,cpu.exception.error);
 	CPU_Interrupt(cpu.exception.which,CPU_INT_EXCEPTION | ((cpu.exception.which>=8) ? CPU_INT_HAS_ERROR : 0));
 }
 
@@ -299,13 +298,8 @@ void CPU_Exception(Bitu which,Bitu error ) {
 Bit8u lastint;
 bool CPU_Interrupt(Bitu num,Bitu type) {
 	lastint=num;
-//	if ((num!=0x08) && (num!=0x1C)) LOG_MSG("Interrupt %02X %04X %04X",num,reg_ax,reg_bx);
 #if C_DEBUG
 	switch (num) {
-	case 0x00:	{
-					int brk = 0;
-					break;
-				}
 	case 0xcd:
 #if C_HEAVY_DEBUG
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
@@ -339,7 +333,7 @@ bool CPU_Interrupt(Bitu num,Bitu type) {
 //		DEBUG_EnableDebugger();
 //		LOG_MSG("interrupt start CPL %d v86 %d",cpu.cpl,cpu.v86);
 		if ((reg_flags & FLAG_VM) && (type&CPU_INT_SOFTWARE)) {
-			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
+//			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
 				CPU_SetupException(13,0);
 				return true;
@@ -838,8 +832,14 @@ RET_same_level:
 		} else {
 			/* Return to higher level */
 			if (bytes) E_Exit("RETF with immediate value");
-			Bitu n_esp = CPU_Pop16();
-			Bitu n_ss = CPU_Pop16();
+			Bitu n_esp,n_ss;
+			if (use32) {
+				n_esp = CPU_Pop32();
+				n_ss = CPU_Pop32() & 0xffff;
+			} else {
+				n_esp = CPU_Pop16();
+				n_ss = CPU_Pop16();
+			}
 			cpu.cpl = rpl;
 			CPU_SetSegGeneral(ss,n_ss);
 			if (cpu.stack.big) {
@@ -1106,7 +1106,6 @@ void CPU_VERW(Bitu selector) {
 	SETFLAGBIT(ZF,true);
 }
 
-
 bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	value &= 0xffff;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
@@ -1120,13 +1119,20 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	} else {
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(value,desc);
-		if ((value!=0) && (!desc.saved.seg.p)) {
-			if (seg==ss) {
-				E_Exit("CPU_SetSegGeneral: Stack segment not present.");
+
+		if (value!=0) {
+			if (!desc.saved.seg.p) {
+				if (seg==ss) E_Exit("CPU_SetSegGeneral: Stack segment not present.");
+				// Throw Exception 0x0B - Segment not present
+				CPU_SetupException(0x0B,value & 0xfffc);
+				return true;
+			} else if (seg==ss) {
+				// Stack segment loaded with illegal segment ?
+				if ((desc.saved.seg.type<DESC_DATA_EU_RO_NA) || (desc.saved.seg.type>DESC_DATA_ED_RW_A)) {
+					CPU_SetupException(0x0D,value & 0xfffc);
+					return true;
+				}
 			}
-			// Throw Exception 0x0B - Segment not present
-			CPU_SetupException(0x0B,value & 0xfffc);
-			return true;
 		}
 		Segs.val[seg]=value;
 		Segs.phys[seg]=desc.GetBase();
