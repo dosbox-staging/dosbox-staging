@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.43 2004-01-11 14:00:13 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.44 2004-01-11 16:48:32 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -143,7 +143,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	if ((sAttr & DOS_ATTR_VOLUME) && (*_dir==0)) {
 	// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir
 		if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
-			LOG(LOG_DOS,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
 			dta.SetResult("NOLABEL",0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		}
