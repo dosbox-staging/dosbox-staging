@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.36 2004-03-24 19:26:49 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.37 2004-04-24 12:43:54 harekiet Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -32,68 +32,10 @@
 #include "cpu.h"
 
 static Bitu call_int33,call_int74;
-
-static Bit16u ps2cbseg, ps2cbofs;
-static bool useps2callback;
-static Bit16u call_ps2;
-static RealPt ps2_callback;
-static Bit16s oldmouseX, oldmouseY;
-
-void Mouse_SetPS2State(bool use) {
-	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;
-	else useps2callback = false;
-	Mouse_AutoLock(useps2callback);
-}
-
-void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
-	if ((pseg==0) && (pofs==0)) useps2callback = false;
-	else useps2callback = true;
-	ps2cbseg = pseg;
-	ps2cbofs = pofs;
-	Mouse_AutoLock(useps2callback);
-}
-
-void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
-	if (useps2callback) {
-		Bit16u mdat = (data & 0x03) | 0x08;
-		Bit16s xdiff = mouseX-oldmouseX;
-		Bit16s ydiff = oldmouseY-mouseY;
-		oldmouseX = mouseX;
-		oldmouseY = mouseY;
-
-		if ((xdiff>0xff) || (xdiff<-0xff)) mdat |= 0x40;		// x overflow
-		if ((ydiff>0xff) || (ydiff<-0xff)) mdat |= 0x80;		// y overflow
-
-		xdiff %= 256;
-		ydiff %= 256;
-
-		if (xdiff<0) {
-			xdiff = (0x100+xdiff);
-			mdat |= 0x10;
-		}
-		if (ydiff<0) {
-			ydiff = (0x100+ydiff);
-			mdat |= 0x20;
-		}
-
-		CPU_Push16((Bit16u)mdat); 
-		CPU_Push16((Bit16u)(xdiff % 256)); 
-		CPU_Push16((Bit16u)(ydiff % 256)); 
-		CPU_Push16((Bit16u)0); 
-
-		CPU_Push16(RealSeg(ps2_callback));
-		CPU_Push16(RealOff(ps2_callback));
-		SegSet16(cs, ps2cbseg);
-		reg_ip = ps2cbofs;
-	}
-}
-
-Bitu PS2_Handler(void) {
-	reg_sp += 8;	// remove the 4 words
-	return CBRET_NONE;
-}
-
-
+static Bit16u ps2cbseg, ps2cbofs;static bool useps2callback;static Bit16u call_ps2;static RealPt ps2_callback;static Bit16s oldmouseX, oldmouseY;
+void Mouse_SetPS2State(bool use) {	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;	else useps2callback = false;	Mouse_AutoLock(useps2callback);}
+void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {	if ((pseg==0) && (pofs==0)) useps2callback = false;	else useps2callback = true;	ps2cbseg = pseg;	ps2cbofs = pofs;	Mouse_AutoLock(useps2callback);}
+void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {	if (useps2callback) {		Bit16u mdat = (data & 0x03) | 0x08;		Bit16s xdiff = mouseX-oldmouseX;		Bit16s ydiff = oldmouseY-mouseY;		oldmouseX = mouseX;		oldmouseY = mouseY;		if ((xdiff>0xff) || (xdiff<-0xff)) mdat |= 0x40;		// x overflow		if ((ydiff>0xff) || (ydiff<-0xff)) mdat |= 0x80;		// y overflow		xdiff %= 256;		ydiff %= 256;		if (xdiff<0) {			xdiff = (0x100+xdiff);			mdat |= 0x10;		}		if (ydiff<0) {			ydiff = (0x100+ydiff);			mdat |= 0x20;		}		CPU_Push16((Bit16u)mdat); 		CPU_Push16((Bit16u)(xdiff % 256)); 		CPU_Push16((Bit16u)(ydiff % 256)); 		CPU_Push16((Bit16u)0); 		CPU_Push16(RealSeg(ps2_callback));		CPU_Push16(RealOff(ps2_callback));		SegSet16(cs, ps2cbseg);		reg_ip = ps2cbofs;	}}Bitu PS2_Handler(void) {	reg_sp += 8;	// remove the 4 words	return CBRET_NONE;}
 // forward
 void WriteMouseIntVector(void);
 
@@ -884,7 +826,6 @@ void MOUSE_Init(Section* sec) {
 	
 	// Callback 0x33
 	CreateMouseCallback();
-
 	call_int74=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET);
 	if(MOUSE_IRQ > 7) {
@@ -892,14 +833,7 @@ void MOUSE_Init(Section* sec) {
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-
-	useps2callback = false;
-
- 	call_ps2=CALLBACK_Allocate();
-	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
-	ps2_callback=CALLBACK_RealPointer(call_ps2);
-
-	memset(&mouse,0,sizeof(mouse));
+	useps2callback = false; 	call_ps2=CALLBACK_Allocate();	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");	ps2_callback=CALLBACK_RealPointer(call_ps2);	memset(&mouse,0,sizeof(mouse));
 	mouse_reset_hardware();
 	mouse_reset();
 }
