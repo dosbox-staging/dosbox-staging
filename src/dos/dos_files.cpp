@@ -45,29 +45,27 @@ void DOS_SetDefaultDrive(Bit8u drive) {
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
-//TODO Hope this is ok :)
+	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
-	Bit32u r=0;Bit32u w=0;Bit32u namestart=0;
-	bool hasdrive=false;
+	Bitu r,w;
 	*drive=CurrentDrive;
-	char tempdir[128];
-//TODO Maybe check for illegal characters
+	/* First get the drive */
+	if (name[1]==':') {
+		*drive=(name[0] | 0x20)-'a';
+		if (*drive<DOS_DRIVES && Drives[*drive]) {
+			name+=2;
+		} else { 
+			DOS_SetError(DOSERR_PATH_NOT_FOUND);
+			return false; 
+		}
+	}
+	r=0;w=0;
 	while (name[r]!=0 && (r<DOS_PATHLENGTH)) {
 		Bit8u c=name[r++];
 		if ((c>='a') && (c<='z')) {upname[w++]=c-32;continue;}
 		if ((c>='A') && (c<='Z')) {upname[w++]=c;continue;}
 		if ((c>='0') && (c<='9')) {upname[w++]=c;continue;}
 		switch (c) {
-		case ':':
-			if (hasdrive) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
-			else hasdrive=true;
-			if ((upname[0]>='A') && (upname[0]<='Z')) {
-				*drive=upname[0]-'A';
-				w=0;
-			} else {
-				DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
-			}
-			break;
 		case '/':
 			upname[w++]='\\';
 			break;
@@ -83,15 +81,9 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 			break;
 		}
 	}
+	if (r>=DOS_PATHLENGTH) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
 	upname[w]=0;
-	/* This should get us an upcase filename and no incorrect chars */
 	/* Now parse the new file name to make the final filename */
-	if ((*drive>=26)) {
-		DOS_SetError(DOSERR_INVALID_DRIVE);return false;	
-	};
-	if (!Drives[*drive]) {
-		DOS_SetError(DOSERR_INVALID_DRIVE);return false;	
-	};
 	if (upname[0]!='\\') strcpy(fullname,Drives[*drive]->curdir);
 	else fullname[0]=0;
 	Bit32u lastdir=0;Bit32u t=0;
@@ -126,8 +118,13 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 			lastdir=strlen(fullname);
 			//TODO Maybe another check for correct type because of .... stuff
 			if (lastdir!=0) strcat(fullname,"\\");
+			char * ext=strchr(tempdir,'.');
+			if (ext) {
+				ext[4]=0;
+				Bitu blah=strlen(tempdir);
+				if (strlen(tempdir)>12) memmove(tempdir+8,ext,5);
+			} else tempdir[8]=0;
 			strcat(fullname,tempdir);
-
 			tempdir[0]=0;
 			w=0;r++;
 			continue;
@@ -313,6 +310,8 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
+	if (flags>2) LOG_DEBUG("Special file open command %X file %s",flags,name);
+	flags&=3;
 	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
 	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
