@@ -51,7 +51,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File():flags(0)		{ name=0; };
+	DOS_File():flags(0)		{ name=0; refCtr = 0; };
 	virtual	~DOS_File(){};
 	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
@@ -62,12 +62,15 @@ public:
 	virtual char*	GetName(void)				{ return name; };
 	virtual bool	IsOpen()					{ return open; };
 	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcmp(name,_name)==0; };
+	virtual void	AddRef()					{ refCtr++; };
+	virtual Bits	RemoveRef()					{ return --refCtr; };
 	Bit8u type;
 	Bit32u flags;
 	Bit16u time;
 	Bit16u date;
 	Bit16u attr;
 	Bit32u size;
+	Bits refCtr;
 	bool open;
 	char* name;
 /* Some Device Specific Stuff */

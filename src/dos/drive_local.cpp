@@ -372,8 +372,12 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 
 bool localFile::Close() {
 	
-	open=false;
-	fclose(fhandle);
+	// only close if one reference left
+	if (refCtr==1) {
+		fclose(fhandle);
+		fhandle = 0;
+		open = false;
+	};
 	return true;
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.42 2003-08-01 16:48:55 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.43 2003-08-11 11:49:58 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -315,8 +315,10 @@ bool DOS_CloseFile(Bit16u entry) {
 	{   //if close succesfull => delete file/update psp
 		DOS_PSP psp(dos.psp);
 		psp.SetFileHandle(entry,0xff);
-		delete Files[handle];
-		Files[handle]=0;
+		if (Files[handle]->RemoveRef()<=0) {
+			delete Files[handle];
+			Files[handle]=0;
+		}
 	}
 	return true;
 }
@@ -345,6 +347,7 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	}
 	bool foundit=Drives[drive]->FileCreate(&Files[handle],fullname,attributes);
 	if (foundit) { 
+		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
@@ -387,6 +390,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	bool exists=false;
 	if (!device) exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
 	if (exists || device ) { 
+		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
@@ -476,6 +480,7 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
+	Files[handle]->AddRef();	
 	psp.SetFileHandle(*newentry,handle);
 	return true;
 };
@@ -500,6 +505,7 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 		return false;
 	};
 	DOS_PSP psp(dos.psp);
+	Files[orig]->AddRef();
 	psp.SetFileHandle(newentry,(Bit8u)entry);
 	return true;
 };
