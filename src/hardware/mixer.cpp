@@ -166,10 +166,10 @@ INLINE void MixerChannel::AddSamples(Bitu len,void * data) {
 	Bit16s * data16=(Bit16s*)data;
 	Bitu mixpos=mixer.pos+done;
 	freq_index&=MIXER_REMAIN;
-	Bitu pos=0;
+	Bitu pos=0;Bitu new_pos;
 	goto thestart;
 	while (1) {
-		Bitu new_pos=freq_index >> MIXER_SHIFT;
+		new_pos=freq_index >> MIXER_SHIFT;
 		if (pos<new_pos) {
 			last[0]+=diff[0];
 			if (stereo) last[1]+=diff[1];
