@@ -61,6 +61,9 @@ void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC0_Normal(Bitu rm) {
+	Bitu group=(rm >> 3) & 7;
+	Bitu sub=(rm & 7);
+	LOG(LOG_FPU,LOG_WARN)("ESC 0:Unhandled group %d subfunction %d",group,sub);
 }
 
 
@@ -69,6 +72,9 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC1_Normal(Bitu rm) {
+	Bitu group=(rm >> 3) & 7;
+	Bitu sub=(rm & 7);
+	LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %d subfunction %d",group,sub);
 }
 
 
@@ -76,6 +82,9 @@ void FPU_ESC2_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC2_Normal(Bitu rm) {
+	Bitu group=(rm >> 3) & 7;
+	Bitu sub=(rm & 7);
+	LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub);
 }
 
 
@@ -94,8 +103,12 @@ void FPU_ESC3_Normal(Bitu rm) {
 		default:
 			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",group,sub);
 		}
-		LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d",group);
+		break;
+	default:
+		LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",group,sub);
+		break;
 	}
+	return;
 }
 
 
@@ -103,6 +116,9 @@ void FPU_ESC4_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC4_Normal(Bitu rm) {
+	Bitu group=(rm >> 3) & 7;
+	Bitu sub=(rm & 7);
+	LOG(LOG_FPU,LOG_WARN)("ESC 4:Unhandled group %d subfunction %d",group,sub);
 }
 
 
@@ -110,6 +126,9 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC5_Normal(Bitu rm) {
+	Bitu group=(rm >> 3) & 7;
+	Bitu sub=(rm & 7);
+	LOG(LOG_FPU,LOG_WARN)("ESC 5:Unhandled group %d subfunction %d",group,sub);
 }
 
 
