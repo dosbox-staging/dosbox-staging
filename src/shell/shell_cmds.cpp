@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.25 2003-08-19 18:01:57 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.26 2003-08-20 12:21:42 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -100,6 +100,8 @@ void DOS_Shell::CMD_DELETE(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
+	/* If delete accept switches mind the space infront of them. See the dir /p code */ 
+
 	char full[DOS_PATHLENGTH];
 	char buffer[CROSS_LEN];
 	args = ExpandDot(args,buffer);
@@ -247,7 +249,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 	byte_count=file_count=dir_count=0;
 
 	char buffer[CROSS_LEN];
-	if (strlen(args)==0) args="*.*";
+	if (strlen(args)==0) args="*.*"; //no arguments.
+	if ((strlen(args)==1) && (args[0]==' ')) args="*.*"; //stuff like dir /p
 	args = ExpandDot(args,buffer);
 	StripSpaces(args);
 
