@@ -48,7 +48,7 @@ struct Flag_Info {
 
 #define FLAG_IOPL	0x00003000
 #define FLAG_NT		0x00004000
-#define FLAG_VM		0x00040000
+#define FLAG_VM		0x00020000
 
 
 #define SETFLAGBIT(TYPE,TEST) if (TEST) flags.word|=FLAG_ ## TYPE; else flags.word&=~FLAG_ ## TYPE
