@@ -18,6 +18,7 @@ mem.h \
 mixer.h \
 modules.h \
 mouse.h \
+paging.h \
 pic.h \
 programs.h \
 render.h \
