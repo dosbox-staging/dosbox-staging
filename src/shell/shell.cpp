@@ -157,14 +157,14 @@ void AUTOEXEC_Init(Section * sec) {
 			if (stat(buffer,&test)) goto nomount;
 		}
 		if (test.st_mode & S_IFDIR) { 
-			SHELL_AddAutoexec("MOUNT C %s",buffer);
+			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
 			SHELL_AddAutoexec("C:");
 		} else {
 			char * name=strrchr(buffer,CROSS_FILESPLIT);
 			if (!name) goto nomount;
 			*name++=0;
 			if (access(buffer,F_OK)) goto nomount;
-			SHELL_AddAutoexec("MOUNT C %s",buffer);
+			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
 			SHELL_AddAutoexec("C:");
 			SHELL_AddAutoexec(name);
 		}
