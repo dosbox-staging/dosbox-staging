@@ -394,6 +394,9 @@
 					RelativePath="..\src\hardware\cmos.cpp">
 				</File>
 				<File
+					RelativePath="..\src\hardware\directserial_win32.cpp">
+				</File>
+				<File
 					RelativePath="..\src\hardware\dma.cpp">
 				</File>
 				<File
@@ -404,6 +407,12 @@
 				</File>
 				<File
 					RelativePath="..\src\hardware\iohandler.cpp">
+				</File>
+				<File
+					RelativePath="..\src\hardware\ipx.cpp">
+				</File>
+				<File
+					RelativePath="..\src\hardware\ipxserver.cpp">
 				</File>
 				<File
 					RelativePath="..\src\hardware\joystick.cpp">
@@ -428,12 +437,6 @@
 				</File>
 				<File
 					RelativePath="..\src\hardware\timer.cpp">
-				</File>
-				<File
-					RelativePath="..\src\hardware\ipx.cpp">
-				</File>
-				<File
-					RelativePath="..\src\hardware\ipxserver.cpp">
 				</File>
 				<Filter
 					Name="vga"
@@ -463,7 +466,13 @@
 						RelativePath="..\src\hardware\vga_misc.cpp">
 					</File>
 					<File
+						RelativePath="..\src\hardware\vga_other.cpp">
+					</File>
+					<File
 						RelativePath="..\src\hardware\vga_seq.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\vga_xga.cpp">
 					</File>
 				</Filter>
 				<Filter
@@ -508,21 +517,20 @@
 					RelativePath="..\src\gui\render.cpp">
 				</File>
 				<File
+					RelativePath="..\src\gui\render_scalers.cpp">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_scalers.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\render_templates.h">
+				</File>
+				<File
+					RelativePath="..\src\gui\sdl_mapper.cpp">
+				</File>
+				<File
 					RelativePath="..\src\gui\sdlmain.cpp">
 				</File>
-				<Filter
-					Name="scalers"
-					Filter="">
-					<File
-						RelativePath="..\src\gui\render_normal.h">
-					</File>
-					<File
-						RelativePath="..\src\gui\render_scale2x.h">
-					</File>
-					<File
-						RelativePath="..\src\gui\render_templates.h">
-					</File>
-				</Filter>
 			</Filter>
 			<Filter
 				Name="ints"
