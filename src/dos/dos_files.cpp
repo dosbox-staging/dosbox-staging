@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_files.cpp,v 1.42 2003-08-01 16:48:55 qbix79 Exp $ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -110,7 +112,28 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 				w=0;r++;
 				continue;
 			}
-			if (strcmp(tempdir,"..")==0) {
+
+			Bit32u iDown, cDots;
+			bool dots = true;
+			Bit32u templen =strlen(tempdir);
+			for(iDown=0;(iDown < templen) && dots;iDown++)
+				if(tempdir[iDown] != '.')
+					dots = false;
+
+			// only dots?
+			cDots = templen - 1;
+			if(dots && (cDots > 0))
+			{
+				for(iDown=strlen(fullname)-1;iDown>=0;iDown--)
+				{
+					if(fullname[iDown]=='\\' || iDown==0)
+					{
+						lastdir = iDown;
+						cDots--;
+						if(cDots==0)
+							break;
+					}
+				}
 				fullname[lastdir]=0;
 				Bit32u t=0;lastdir=0;
 				while (fullname[t]!=0) {
@@ -121,8 +144,10 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 				w=0;r++;
 				continue;
 			}
+			
+
 			lastdir=strlen(fullname);
-			//TODO Maybe another check for correct type because of .... stuff
+
 			if (lastdir!=0) strcat(fullname,"\\");
 			char * ext=strchr(tempdir,'.');
 			if (ext) {

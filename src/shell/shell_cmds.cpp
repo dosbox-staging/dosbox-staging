@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: shell_cmds.cpp,v 1.24 2003-08-01 16:48:25 qbix79 Exp $ */
+
 #include <string.h>
 
 #include "shell_inc.h"
@@ -59,8 +62,6 @@ void DOS_Shell::DoCommand(char * line) {
 	while (*line) {
 		if (*line==32) break;
 		if (*line=='/') break;
-		if ((*line=='.') && (*(line+1)=='.')) break;
-//        if ((*line=='.') && (*(line+1)==0))   break;
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;

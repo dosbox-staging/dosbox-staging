@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: shell_misc.cpp,v 1.21 2003-08-01 16:48:25 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -352,22 +354,18 @@ static char which_ret[DOS_PATHLENGTH];
 char * DOS_Shell::Which(char * name) {
 	/* Parse through the Path to find the correct entry */
 	/* Check if name is already ok but just misses an extension */
-	char * ext=strrchr(name,'.');
-	if (ext) if (strlen(ext)>4) ext=0;
-	if (ext) {
-		if (DOS_FileExists(name)) return name;
-	} else {
-		/* try to find .com .exe .bat */
-		strcpy(which_ret,name);
-		strcat(which_ret,com_ext);
-		if (DOS_FileExists(which_ret)) return which_ret;
-		strcpy(which_ret,name);
-		strcat(which_ret,exe_ext);
-		if (DOS_FileExists(which_ret)) return which_ret;
-		strcpy(which_ret,name);
-		strcat(which_ret,bat_ext);
-		if (DOS_FileExists(which_ret)) return which_ret;
-	}
+	if (DOS_FileExists(name)) return name;
+	/* try to find .com .exe .bat */
+	strcpy(which_ret,name);
+	strcat(which_ret,com_ext);
+	if (DOS_FileExists(which_ret)) return which_ret;
+	strcpy(which_ret,name);
+	strcat(which_ret,exe_ext);
+	if (DOS_FileExists(which_ret)) return which_ret;
+	strcpy(which_ret,name);
+	strcat(which_ret,bat_ext);
+	if (DOS_FileExists(which_ret)) return which_ret;
+
 
 	/* No Path in filename look through path environment string */
 	static char path[DOS_PATHLENGTH];std::string temp;
@@ -387,19 +385,17 @@ char * DOS_Shell::Which(char * name) {
 			*path_write++=0;
 			strcat(path,name);
 			strcpy(which_ret,path);
-			if (ext) {
-				if (DOS_FileExists(which_ret)) return which_ret;
-			} else {
-				strcpy(which_ret,path);
-				strcat(which_ret,com_ext);
-				if (DOS_FileExists(which_ret)) return which_ret;
-				strcpy(which_ret,path);
-				strcat(which_ret,exe_ext);
-				if (DOS_FileExists(which_ret)) return which_ret;
-				strcpy(which_ret,path);
-				strcat(which_ret,bat_ext);
-				if (DOS_FileExists(which_ret)) return which_ret;
-			}
+			if (DOS_FileExists(which_ret)) return which_ret;
+			strcpy(which_ret,path);
+			strcat(which_ret,com_ext);
+			if (DOS_FileExists(which_ret)) return which_ret;
+			strcpy(which_ret,path);
+			strcat(which_ret,exe_ext);
+			if (DOS_FileExists(which_ret)) return which_ret;
+			strcpy(which_ret,path);
+			strcat(which_ret,bat_ext);
+			if (DOS_FileExists(which_ret)) return which_ret;
+		
 			path_write=path;
 			if (*pathenv) pathenv++;
 		}
