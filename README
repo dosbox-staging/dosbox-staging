@@ -1,0 +1,93 @@
+DOSBox v0.50
+
+Usage:
+======
+
+With the new internal shell I've changed the command line a bit, so let's just give some 
+examples of what you can do now.
+dosbox 
+  With nothing on the command line you'll end up on the internal drive and from there you
+  can mount directories as drives.
+dosbox [filename/directory]
+  If dosbox detects a directory it'll mount that as c:\ and then start the shell.
+  If dosbox doesn't detect a directory it'll assume you mean an executable this can be 
+  .bat .com .exe. Doesn't need to have extension included. Then it'll strip the directory
+  from the filename and mount that as c:\ and then run the file.
+
+You can also add commands to be executed before the main program starts. Or you can use them
+to start the program. 
+To add commands use the -c command line switch.
+For example
+dosbox c:\atlantis\atlantis.exe -c "MOUNT D C:\SAVES" "SET TEST=blah"
+  This would mount c:\atlanis as c:\ and run atlantis.exe from that directory but before it 
+  does that it would first mount C:\SAVES as the D drive and set the environment variable test to blah.
+
+Dragging files or directories onto the DOSBox executable should also work.
+
+
+Internal Programs:
+==================
+
+MOUNT 
+Program to mount local directories as drives inside DOSBox.
+
+HWSET
+Utility to setup the emulated hardware running inside DOSBox, only working for emulated sound cards.
+
+UPCASE <Linux Version only>
+Utility to convert all files subdirectories of a local directory into upcase so DOSBox can use that directory
+for mounting. This tool can be quite dangerous if used unproperly. You have been warned.
+
+
+To get more information about how to use one these programs use the the /? command line switch.
+
+
+Special Keys:
+=============
+
+ALT-ENTER       Go full screen and back.
+CTRL-F10        Capture/Release the mouse.
+CTRL-F11        Slowdown emulation.
+CTRL-F12        Speedup emulation.
+
+System requirements:
+====================
+
+Fast machine my guess would be pentium-2 400+ to get decent emulation
+of games written for an 286 machine.
+
+FAQ:
+====
+
+1.Q: I've got a Z instead of a C at the prompt.
+  A: In DOSBox you can mount directories as drives
+     in win32: mount c D:\ would give you an C in DOSBox which points
+     at D:\ in win32
+     in linux: mount c /home/username would give you and C in DOSBox
+     which points at /home/username in Linux
+
+2.Q: The window is too small.
+  A: When you mouse touches the edges of the DOSBox screen you can click and drag it to 
+     the size you prefer.
+
+3. Check the site/forum.
+
+Building your own Version DOSBox:
+=================================
+
+Dowload the source.
+Check the INSTALL in the source distribution.
+
+Special Thanks:
+===============
+
+Vlad R. of the vdmsound project for excellent sound blaster info.
+Tatsuyuki Satoh of the Mame Team for making an excellent FM emulator.
+The Bochs and DOSemu projects which I used for information.
+Freedos for ideas in making my shell.
+
+Contact:
+========
+
+Harekiet harekiet@zophar.net
+http://dosbox.zophar.net

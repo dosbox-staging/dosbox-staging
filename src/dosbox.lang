@@ -1,0 +1,75 @@
+:SHELL_CMD_HELP
+supported commands are:
+.
+:SHELL_ILLEGAL_SWITCH
+Illegal switch: %s
+.
+:SHELL_CMD_ECHO_ON
+ECHO is on
+.
+:SHELL_CMD_ECHO_OFF
+ECHO is off
+.
+:SHELL_CMD_CHDIR_ERROR
+Unable to change to: %s
+.
+:SHELL_CMD_MKDIR_ERROR
+Unable to make: %s
+.
+:SHELL_CMD_RMDIR_ERROR
+Unable to remove: %s
+.
+:SHELL_SYNTAXERROR
+The syntax of the command is incorrect
+.
+:SHELL_CMD_SET_NOT_SET
+Environment variable %s not defined
+.
+:SHELL_CMD_SET_OUT_OF_SPACE
+Not enough environment space left
+.
+:SHELL_CMD_IF_EXIST_MISSING_FILENAME
+IF EXIST: Missing filename
+.
+:SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER
+IF ERRORLEVEL: Missing number
+.
+:SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER
+IF ERRORLEVEL: Invalid number
+.
+:SHELL_CMD_GOTO_MISSING_LABEL
+No label supplied to GOTO command
+.
+:SHELL_CMD_GOTO_LABEL_NOT_FOUND
+Label %s not found
+.
+:SHELL_CMD_FILE_NOT_FOUND
+File %s not found
+.
+:SHELL_CMD_DIR_INTRO
+Directory of %s
+.
+:SHELL_CMD_DIR_PATH_ERROR
+Illegal Path
+.
+:SHELL_CMD_DIR_BYTES_USED
+%16d File(s) %16s Bytes
+.
+:SHELL_CMD_DIR_BYTES_FREE
+%16d Dir(s)  %16s Bytes free
+.
+:SHELL_STARTUP
+DOSBox Shell v0.35
+For Help and supported commands type: HELP
+For information about the hardware setup manager type: HWSET /?
+
+HAVE FUN!
+The DOSBox Team
+
+.
+:SHELL_EXECUTE_DRIVE_NOT_FOUND
+Drive %c does not exist!
+.
+:SHELL_EXECUTE_ILLEGAL_COMMAND
+Illegal command
+.

@@ -1,0 +1,1 @@
+EXTRA_DIST = dosbox.dsw dosbox.dsp

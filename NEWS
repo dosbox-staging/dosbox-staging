@@ -1,0 +1,23 @@
+0.50: 
+      -added F3 to repeat the last typed command.
+      -made it possible to change the shellmessages(dosshell). so 
+      you can costumize it.(dosbox.lang)
+      -changed cpu core.
+      -Fixed a lot of errors with the keyboard: shift-f1 and 
+      alt-f1 now works.
+      -Fixed some division errors.
+      -made a plugin system.
+      -added a lot of real 386 mode instructions.
+      -made it possible to resize the screen.
+      -Mayor source cleanup/reorganisation.
+      -Complete rewrite of the graphics routines. Should make it
+      possible to implement more fancy things like 2xsai,interpolation.
+      -changed the sound playback.
+      -Changed the vga drawing to only draw on memory changes, instead
+      of drawing an entire frame. 
+      -fixes to the soundblaster/dma code should be able to play 4-bit
+      adpcm compressed sounds.
+      -added the correct time to dir.
+      -bugfixes to batch-file handling.
+      -Lot's of small bugfixes.(Dune1&2,wolf3d, many more).
+      -Released the source.

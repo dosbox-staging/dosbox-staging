@@ -1,0 +1,61 @@
+dnl Init.
+AC_INIT(dosbox,0.50)
+AC_CONFIG_SRCDIR(README)
+
+dnl Detect the canonical host and target build environment
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+dnl Setup for automake
+AM_INIT_AUTOMAKE
+AM_CONFIG_HEADER(config.h)
+
+
+dnl Checks for programs.
+AC_PROG_MAKE_SET
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_RANLIB
+
+dnl Check for SDL
+SDL_VERSION=1.2.0
+AM_PATH_SDL($SDL_VERSION,
+            :,
+	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
+LIBS="$LIBS $SDL_LIBS"
+CXXFLAGS="$CXXFLAGS $SDL_CFLAGS"
+
+dnl Checks for header files.
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+
+dnl Checks for library functions.
+
+
+#Always include the standard include dir in all makefiless
+
+AC_OUTPUT([ 
+Makefile
+src/Makefile
+src/cpu/Makefile
+src/cpu/core_16/Makefile
+src/debug/Makefile
+src/dos/Makefile
+src/fpu/Makefile
+src/gui/Makefile
+src/hardware/Makefile
+src/ints/Makefile
+src/misc/Makefile
+src/shell/Makefile
+src/platform/Makefile
+src/platform/visualc/Makefile
+visualc/Makefile
+include/Makefile
+])
