@@ -18,25 +18,13 @@
 
 EAPoint IPPoint;
 
-
 #define SUBIP(a)	IPPoint-=a
 #define SETIP(a)	IPPoint=SegBase(cs)+a
 #define GETIP		(Bit16u)(IPPoint-SegBase(cs)) 
 #define SAVEIP		reg_ip=GETIP
 #define LOADIP		IPPoint=SegBase(cs)+reg_ip
-/*
-#define ADDIP(a)	{							\
-	Bit16u add_ip=(Bit16u)(IPPoint-SegBase(cs));	\
-	add_ip+=a;									\
-	IPPoint=SegBase(cs)+add_ip;					\
-	}
-*/
 
 static INLINE void ADDIP(Bit16u add) {
-	
-//	Bit16u oldip=(IPPoint-SegBase(cs));
-//	oldip+=add;
-//	IPPoint=SegBase(cs)+oldip;
 	IPPoint=SegBase(cs)+((Bit16u)(((Bit16u)(IPPoint-SegBase(cs)))+(Bit16u)add));
 }
 
