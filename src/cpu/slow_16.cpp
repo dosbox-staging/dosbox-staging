@@ -60,12 +60,11 @@ extern Bitu cycle_count;
 #endif
 
 #include "core_16/support.h"
-static Bitu CPU_Real_16_Slow_Decode_Special(Bits count);
-static Bitu CPU_Real_16_Slow_Decode_Trap(Bits count);
+static Bitu CPU_Real_16_Slow_Decode_Trap(void);
 
-static Bitu CPU_Real_16_Slow_Decode(Bits count) {
+static Bitu CPU_Real_16_Slow_Decode(void) {
 #include "core_16/start.h"		
-	do {
+	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;		
 #endif
@@ -73,43 +72,27 @@ static Bitu CPU_Real_16_Slow_Decode(Bits count) {
 		SAVEIP;
 		if (DEBUG_HeavyIsBreakpoint()) return CBRET_NONE;
 #endif
-		#include "core_16/main.h"	
-	} while (--count>0);
+		#include "core_16/main.h"
+//		if (prefix.count) LOG_DEBUG("Prefix for non prefixed instruction");
+		CPU_Cycles--;
+	}
 	#include "core_16/stop.h"		
 	return CBRET_NONE;
 }
 
-static Bitu CPU_Real_16_Slow_Decode_Trap(Bits count) 
-{
-	CPU_Real_16_Slow_Decode(1);
+static Bitu CPU_Real_16_Slow_Decode_Trap(void) {
+
+	CPU_Real_16_Slow_Decode();
 
 	LOG_DEBUG("TRAP: Trap Flag executed");
 	INTERRUPT(1);
 	cpudecoder=&CPU_Real_16_Slow_Decode;
 
 	return CBRET_NONE;
-};
-
-static Bitu CPU_Real_16_Slow_Decode_Special(Bits count) {
-	while (count>0) {
-		if (flags.tf) {
-			Interrupt(3);
-			cpudecoder=&CPU_Real_16_Slow_Decode;
-			return CBRET_NONE;
-		}
-		CPU_Real_16_Slow_Decode(1);
-		if (!flags.tf) {
-			cpudecoder=&CPU_Real_16_Slow_Decode;
-			return CBRET_NONE;
-		};
-		count--;
-	}
-
-	return CBRET_NONE;
 }
 
-void CPU_Real_16_Slow_Start(void) {
 
+void CPU_Real_16_Slow_Start(void) {
 	cpudecoder=&CPU_Real_16_Slow_Decode;
 	EAPrefixTable[0]=&GetEA_16_n;
 	EAPrefixTable[1]=&GetEA_16_s;
