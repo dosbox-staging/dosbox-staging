@@ -150,7 +150,7 @@ static void  mouse_reset(void) {
 	mouse.max_y=199;
 	mouse.range_x=639;
 	mouse.range_y=199;
-	mouse.x=320;
+	mouse.x=0;				// civ wont work otherwise
 	mouse.y=100;
 	mouse.events=0;
 	mouse.mickey_x=0;
@@ -196,6 +196,18 @@ static Bitu INT33_Handler(void) {
 			mouse.times_pressed[but]=0;
 			break;
 		}
+	case 0x06:	/* Return Button Release Data */
+		{
+			Bit16u but=reg_bx;
+			reg_ax=mouse.buttons;
+			reg_cx=mouse.last_released_x[but];
+			mouse.last_released_x[but]=0;
+			reg_dx=mouse.last_released_y[but];
+			mouse.last_released_y[but]=0;
+			reg_bx=mouse.times_released[but];
+			mouse.times_released[but]=0;
+			break;
+		}
 	case 0x07:	/* Define horizontal cursor range */
 		mouse.min_x=reg_cx;
 		mouse.max_x=reg_dx;
@@ -227,6 +239,19 @@ static Bitu INT33_Handler(void) {
 		mouse.mickey_x=0;
 		mouse.mickey_y=0;
 		break;
+	case 0x14: /* Exchange event-handler */ 
+		{	Bit16u oldSeg = mouse.sub_seg;
+			Bit16u oldOfs = mouse.sub_ofs;
+			Bit16u oldMask= mouse.sub_mask;
+			// Set new values
+			mouse.sub_mask= reg_cx;
+			mouse.sub_seg = Segs[es].value;
+			mouse.sub_ofs = reg_dx;
+			// Return old values
+			reg_cx = oldMask;
+			reg_dx = oldOfs;
+			SetSegment_16(es,oldSeg);
+		}; break;		
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
 		break;
@@ -253,7 +278,10 @@ static Bitu INT74_Handler(void) {
 		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
 			/* Save lot's of registers */
 			Bit16u oldax,oldbx,oldcx,olddx,oldsi,olddi;
+			Bit16u oldds,oldes,oldss,oldbp,oldsp;
 			oldax=reg_ax;oldbx=reg_bx;oldcx=reg_cx;olddx=reg_dx;oldsi=reg_si;olddi=reg_di;
+			oldbp=reg_bp;oldsp=reg_sp;
+			oldds=Segs[ds].value; oldes=Segs[es].value;	oldss=Segs[ss].value; // Save segments
 			reg_ax=mouse.event_queue[mouse.events].type;
 			reg_bx=mouse.event_queue[mouse.events].buttons;
 			reg_cx=POS_X;
@@ -266,6 +294,8 @@ static Bitu INT74_Handler(void) {
 			}
 			CALLBACK_RunRealFar(mouse.sub_seg,mouse.sub_ofs);
 			reg_ax=oldax;reg_bx=oldbx;reg_cx=oldcx;reg_dx=olddx;reg_si=oldsi;reg_di=olddi;
+			SetSegment_16(ds,oldds); SetSegment_16(es,oldes); SetSegment_16(ss,oldss); // Save segments
+			reg_bp=oldbp; reg_sp=oldsp; 
 		}
 	}
 	IO_Write(0xa0,0x20);
