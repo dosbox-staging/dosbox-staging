@@ -42,8 +42,6 @@ INDEX:
 Type INTRO in DOSBox. That's it. 
 
 
-
-
 =======
 2. FAQ:
 =======
@@ -59,7 +57,8 @@ Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 Q: What sound hardware does DOSBox presently emulate?
-
+Q: DOSBox crashes on startup and I'm running arts
+Q: Great README, but I still don't get it.
 
 
 
@@ -93,9 +92,9 @@ A: To mount your cdrom in DOSBox you have to specify some additional options
 
 Q: The mouse doesn't work.
 A: Normally DOSBox detects the mouse being used by a game. If you click on 
-   the screen then it should get locked and work.
-   Sometimes the DOSBox mouse detection doesn't work with certain games. You
-   might have to force to lock the mouse then with ctrl-F10.
+   the screen then it should get locked (confined to the DOSBox window)
+   and work. Sometimes the DOSBox mouse detection doesn't work with certain
+   games. You might have to force to lock the mouse then with ctrl-F10.
 
 
 Q: The sound stutters.
@@ -109,11 +108,11 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
    Some possible fixes:
      1. Switch your keyboard layout.
      2. Use / instead.
-     3. Add the commands you want to execute to dosbox.conf
+     3. Add the commands you want to execute to the "configfile".
      4. Start the keymapper (CTRL-F1 or add -startmapper switch to dosbox)
      5. for \ try the keys around "enter". For ":" try shift and the keys between
         "enter" and "l" (US keyboard layout).
-     6. Use keyb.com for FreeDOS (http://projects.freedos.net/keyb/).
+     6. Use keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
 
 
 Q: The game/application can't find its CD-ROM.
@@ -130,9 +129,9 @@ A: Look at the section "To run resource-demanding games" for more information.
 
 
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
-A: This is possible! Just create a config file: config -writeconf dosbox.conf .
+A: This is possible! Just create a config file: config -writeconf configfile .
    Start your favourite editor and look at all the settings present. To
-   start DOSBox with your new settings: dosbox -conf dosbox.conf
+   start DOSBox with your new settings: dosbox -conf configfile
 
 
 Q: What sound hardware does DOSBox presently emulate?
@@ -165,11 +164,16 @@ A: DOSBox emulates several legacy sound devices:
      A MIDI passthrough interface is also emulated.  This method of sound 
      output will only work when used with a General Midi or MT-32 device.
 
+Q: DOSBox crashes on startup and I'm running arts
+A: This isn't really a DOSBox problem, but the solution is to set the 
+   environment variable SDL_AUDIODRIVER to alsa or oss.
 
 Q: Great README, but I still don't get it.
 A: While unlikely, this seems to happen. A look at "The Newbie's 
    pictorial guide to DOSBox" located at 
    http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
+   You could also try the wiki of dosbox:
+   http://dosbox.sourceforge.net/wiki/
 
 
 For more questions read the remainder of this README and/or check 
@@ -183,7 +187,11 @@ http://dosbox.sourceforge.net
 3. Usage:
 =========
 
-An overview of the commandline options you can give to DOSBox:
+An overview of the commandline options you can give to DOSBox.
+Windows Users must open cmd.exe or command.com or edit the shortcut to 
+dosbox.exe for this.
+The options are valid for all operating systems unless noted in the option
+description:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
@@ -197,20 +205,23 @@ dosbox -version
         as the C: drive and execute "name".
     
   -exit  
-        dosbox will exit after the "name" has been executed.
+        dosbox will close itself when the DOS application "name" ends.
 
   -c command
         Runs the specified command before running "name". Multiple commands
         can be specified. Each command should start with -c though.
+        A command can be: an Internal Program, a DOS command or an executable 
+        on a mounted drive.
 
   -fullscreen
         Starts dosbox in fullscreen mode.
 
   -conf configfile
         Start dosbox with the options specified in "configfile".
+        See Chapter 9 for more details.
 
   -lang languagefile
-        Start dosbox using the language string specified in "languagefile".
+        Start dosbox using the language specified in "languagefile".
 
   -noconsole (Windows Only)
         Start dosbox without showing the console window. Output will
@@ -218,7 +229,8 @@ dosbox -version
 	
   -machine machinetype
         Setup dosbox to emulate a specific type of machine. Valid choices are:
-        hercules, cga, tandy, vga (default).
+        hercules, cga, tandy, vga (default). The machinetype has influence on
+        both the videocard and the available soundcards.
 
   -startmapper
         Enter the keymapper directly on startup. Useful for people with 
@@ -228,7 +240,8 @@ dosbox -version
         output version information and exit. Useful for frontends.
 
 Note: If a name/command/configfile/languagefile contains a space in it, put
-      the whole name/command/configfile/languagefile between quotes("example").
+      the whole name/command/configfile/languagefile between quotes
+      ("command or file name").
 
 For example:
 
@@ -249,7 +262,7 @@ In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory" 
       [-t type] [-aspi] [-ioctl] [-usecd number] [-size drivesize] 
-      [-label drivelabel] [-freesize sizemb]
+      [-label drivelabel] [-freesize size_in_mb]
 MOUNT -cd
 MOUNT -u "Emulated Drive letter"
 
@@ -270,7 +283,7 @@ MOUNT -u "Emulated Drive letter"
   -size drivesize
         Sets the size of the drive.
 
-  -freesize sizemb
+  -freesize size_in_mb
         Sets the amount of free space available on a drive in MB's. This
         is a more simple version of -size.	
 
@@ -319,8 +332,8 @@ MOUNT -u "Emulated Drive letter"
     
 
   General MOUNT Examples:
-  1. To mount c:\floppy as a floppy : 
-       mount a c:\floppy -t floppy
+  1. To mount c:\DirX as a floppy : 
+       mount a c:\DirX -t floppy
   2. To mount system cdrom drive E as cdrom drive D in DOSBox:
        mount d e:\ -t cdrom
   3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
@@ -330,8 +343,8 @@ MOUNT -u "Emulated Drive letter"
        mount c d:\ -freesize 870
   5. To mount a drive with 870 mb free diskspace (experts only, full control):
        mount c d:\ -size 4025,127,16513,1700
-  6. To mount /home/dos/dosgames as drive C in DOSBox:
-       mount c /home/dos/dosgames
+  6. To mount /home/user/dirY as drive C in DOSBox:
+       mount c /home/user/dirY
 
 MEM
   Program to display the amount of free memory.
@@ -343,6 +356,7 @@ CONFIG [-writeconf] [-writelang] localfile
   The configuration file controls various settings of DOSBox: The amount
   of emulated memory, the emulated soundcards and many more things. It
   allows acces to AUTOEXEC.BAT as well.
+  See section 9 (The Config File) for more information.
 
   The language file controls all visible ouput of the internal commands
   and the internal dos.
@@ -354,8 +368,8 @@ CONFIG [-writeconf] [-writelang] localfile
     
 LOADFIX [-size] [program] [program-parameters]
 LOADFIX -f
-  Program to "eat up" memory. Useful for old programs which don't expect much
-  memory to be free.
+  Program to reduce the amount of memory available. Useful for old programs 
+  which don't expect much memory to be free. 
 
   -size	        
         number of kb to "eat up", default = 64kb
@@ -365,7 +379,8 @@ LOADFIX -f
   
 
 Examples:
-  1. To start mm2.exe and allocate 64kb memory :
+  1. To start mm2.exe and allocate 64kb memory 
+     (mm2 will have 64 kb less available) :
      loadfix mm2
   2. To start mm2.exe and allocate 32kb memory :
      loadfix -32 mm2
@@ -403,9 +418,9 @@ IMGMOUNT
             -size [sectorsbytesize, sectorsperhead, heads, cylinders]
 
   imagefile
-      location of the image files to mount in DOSBox.  Path is relative to 
-      a mount point already inside DOSBox. CD-ROM images can be mounted
-      directly as well (path on the host).
+      location of the image files to mount in DOSBox.  The location is on a 
+      mounted drive inside DOSBox. CD-ROM images can be mounted
+      directly as well. They don't need to be a mounted drive.
    
   -t 
       The following are valid image types:
@@ -554,7 +569,7 @@ For more information use the /? command line switch with the programs.
 ALT-ENTER     Go full screen and back.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Swap mounted disk-image. Update directory cache for all drives!
-CTRL-F5       Save a screenshot.
+CTRL-F5       Save a screenshot.(png)
 CTRL-F6       Start/Stop recording sound output to a wave file.
 CTRL-ALT-F7   Start/Stop recording of OPL commands.
 CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
@@ -563,9 +578,15 @@ CTRL-F8       Increase frameskip.
 CTRL-F9       Kill dosbox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
-CTRL-F12      Speed up emulation (Increase DOSox Cycles).
+CTRL-F12      Speed up emulation (Increase DOSBox Cycles).
 
 These are the default keybindings. They can be changed in the keymapper.
+
+Saved/recorded files can be found in current_directory/capture 
+(can be changed in the configfile). 
+The directory has to exist prior to starting DOSBox else nothing 
+gets saved/recorded !
+
 
 NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
@@ -578,7 +599,8 @@ This maximum will vary from computer to computer, there is no standard.
 =============
 
 When you start the keymapper (either with CTRL-F1 or -startmapper as a
-commandline argument) you are presented with a virtual keyboard.
+commandline argument to the DOSBox executable) you are presented with 
+a virtual keyboard.
 
 This virtual keyboard corresponds with the keys DOSBox will report to its
 applications. If you click on a key with your mouse, you can see in the

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Nov 12, 2004"
+.TH DOSBOX 1 "Nov 18, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -39,7 +39,8 @@ A summary of options is included below.
 .RI "Runs the specified " command " before running " 
 .BR file . 
 .RI "Multiple commands can be specified. Each " command " should start with "
-.BR \-c " though."
+.BR \-c " though. A command can be:"
+an Internal Program, a DOS command or an executable on a mounted drive.
 .TP
 .BI \-conf " configfile
 .RB "Start " dosbox " with the options specified in "
@@ -51,11 +52,13 @@ wish to execute on startup.
 .IR langfile .
 .TP
 .B \-exit
-.BR dosbox " will exit after running the program specified by " file .
+.BR dosbox " will close itself when the DOS program specified by " file "ends."
 .TP
 .BI \-machine " machinetype
 .RB "Setup " dosbox " to emulate a specific type of machine." 
 .RI "Valid choices are: " "hercules, cga, tandy, vga(default)".
+The machinetype has influence on both the videocard and the available
+soundcards.
 .TP
 .B \-version
 Output version information and exit. Useful for frontends.
@@ -88,7 +91,7 @@ Type of the mounted directory. Supported are: dir (standard), floppy, cdrom.
 .BI \-size " drivesize"
 Sets the size of the drive. See the examples in the README for details.
 .TP
-.BI \-freesize " freesize"
+.BI \-freesize " size_in_mb"
 Sets the amount of free space available on a drive in MB's. This is a more 
 .RB "simple version of " \-size .
 .TP
@@ -151,12 +154,13 @@ the emulated soundcards and many
 .LP
 The language file controls all visible ouput of the internal commands and
 the internal dos. 
+.RB "See the secion " FILES " for more information."
 .TP 
 .B LOADFIX [\-size] [programname] [parameters]
 .LP
 .B LOADFIX \-f
 .LP
-Program to eat up memory, Useful for old programs which don't expect much memory to be free.
+Program to reduce the amount of  memory available. Useful for old programs which don't expect much memory to be free.
 .RS
 .TP
 .B [programname]
@@ -175,31 +179,32 @@ Frees all memory eaten up by loadfix.
 .B RESCAN
 .LP
 .RB "Make " dosbox " reread the directory structure. Useful if you changed
-.RB "something on a mounted drive outside " dosbox ".(CTRL \- F4 does"
+.RB "something on a mounted drive outside " dosbox ".(CTRL\-F4 does"
 this as well!)
 .TP
 .B IMGMOUNT
 .LP
-.RB "A utility to mount disk images and CD-ROM images in " DOSBox .
+.RB "A utility to mount disk images and CD-ROM images in " dosbox .
 .TP
-.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
 .TP
 .B BOOT
 .LP
-.RB "Boot will start floppy images or hard disk images independent of the operating system emulation offered by " DOSBox ".  This will allow you to play booter floppies or boot to other operating systems inside "DOSBox .
+Boot will start floppy images or hard disk images independent of the
+.RB "operating system emulation offered by " dosbox ".  This will allow you to play booter floppies or boot to other operating systems inside " dosbox .
 .TP
-.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
 .TP
 .B IPX
 .LP
-.RB "You need to enable IPX networking in the configuration file of "DOSBox .
-.RB "All of the IPX networking is managed through the internal " DOSBox " program
-.BR IPXNET ". For help on the IPX networking from inside " DOSBox ", type"
+.RB "You need to enable IPX networking in the configuration file of " dosbox .
+.RB "All of the IPX networking is managed through the internal " dosbox " program
+.BR IPXNET ". For help on the IPX networking from inside " dosbox ", type"
 .BR "IPXNET HELP" " and the program will list out the commands and relevant documentation."
 .TP
-.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
 .SH FILES
 Configuration and language files use a format similar to Windows .ini files. If a file named
@@ -215,7 +220,7 @@ Start the keymapper.
 Swap mounted disk-image (Only used with imgmount). Update directory cache
 for all drives!
 .IP CTRL\-F5
-Save a screenshot.
+Save a screenshot.(png)
 .IP CTRL\-F6
 Start/Stop recording sound output to a wave file.
 .IP CTRL\-ALT\-F7
@@ -231,13 +236,18 @@ Kill dosbox.
 .IP CTRL\-F10
 Capture/Release the mouse.
 .IP CTRL\-F11
-Slow down emulation (Increase DOSBox Cycles).
+Slow down emulation (Increase dosbox Cycles).
 .IP CTRL\-F12
-Speed up emulation (Decrease DOSBox Cycles).
+Speed up emulation (Decrease dosbox Cycles).
 .PP
 These are the default keybindings. They can be changed in the keymapper.
 .PP
-.BR "Note: " "Once you increase your " DOSBox " cycles beyond your computer's maximum
+Saved/recorded files can be found in current_directory/capture
+(can be changed in the configfile).
+.RB "The directory has to exist prior to starting " dosbox " else nothing"
+gets saved/recorded !
+.PP
+.BR "Note: " "Once you increase your " dosbox " cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
 This maximum will vary from computer to computer, there is no standard.
 .SH "SYSTEM REQUIREMENTS"
