@@ -2,7 +2,7 @@
 	EAPoint si_base,di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
-	Bits	count,count_left;
+	Bitu	count,count_left;
 	Bits	add_index;
 	bool	restart=false;
 	
@@ -24,7 +24,7 @@
 		count=1;
 	} else {
 		/* Calculate amount of ops to do before cycles run out */
-		if ((count>CPU_Cycles) && (inst.code.op<R_SCASB)) {
+		if ((count>(Bitu)CPU_Cycles) && (inst.code.op<R_SCASB)) {
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;
 			CPU_Cycles=0;
