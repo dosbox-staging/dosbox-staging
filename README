@@ -70,7 +70,10 @@ FAQ:
   A: When you mouse touches the edges of the DOSBox screen you can click and drag it to 
      the size you prefer.
 
-3. Check the site/forum.
+3.Q: The mouse(cursor) acts weird. (eg only updated when you press the mousebutton)
+  A: Lock the mouse with ctrl-F10. It should then behave the way you expect it to do.
+
+4. Check the site/forum.
 
 Building your own Version DOSBox:
 =================================
