@@ -52,13 +52,13 @@ Bitu CALLBACK_Allocate(void) {
 
 void CALLBACK_Idle(void) {
 /* this makes the cpu execute instructions to handle irq's and then come back */
-	Bit16u oldcs=Segs[cs].value;
+	Bit16u oldcs=SegValue(cs);
 	Bit32u oldeip=reg_eip;
-	SetSegment_16(cs,CB_SEG);
+	SegSet16(cs,CB_SEG);
 	reg_eip=call_idle<<4;
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
-	SetSegment_16(cs,oldcs);
+	SegSet16(cs,oldcs);
 }
 
 static Bitu default_handler(void) {
@@ -74,40 +74,40 @@ static Bitu stop_handler(void) {
 
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off) {
 	reg_sp-=4;
-	real_writew(Segs[es].value,reg_sp,call_stop<<4);
-	real_writew(Segs[es].value,reg_sp+2,CB_SEG);
+	mem_writew(SegPhys(ss)+reg_sp,call_stop<<4);
+	mem_writew(SegPhys(ss)+reg_sp+2,CB_SEG);
 	Bit32u oldeip=reg_eip;
-	Bit16u oldcs=Segs[cs].value;
+	Bit16u oldcs=SegValue(cs);
 	reg_eip=off;
-	SetSegment_16(cs,seg);
+	SegSet16(cs,seg);
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
-	SetSegment_16(cs,oldcs);
+	SegSet16(cs,oldcs);
 }
 
 void CALLBACK_RunRealInt(Bit8u intnum) {
 	Bit32u oldeip=reg_eip;
-	Bit16u oldcs=Segs[cs].value;
+	Bit16u oldcs=SegValue(cs);
 	reg_eip=call_stop<<4;
-	SetSegment_16(cs,CB_SEG);
+	SegSet16(cs,CB_SEG);
 	Interrupt(intnum);
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
-	SetSegment_16(cs,oldcs);
+	SegSet16(cs,oldcs);
 }
 
 
 
 void CALLBACK_SZF(bool val) {
-	Bit16u tempf=real_readw(Segs[ss].value,reg_sp+4) & 0xFFBF;
+	Bit16u tempf=mem_readw(SegPhys(ss)+reg_sp+4) & 0xFFBF;
 	Bit16u newZF=(val==true) << 6;
-	real_writew(Segs[ss].value,reg_sp+4,(tempf | newZF));
+	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newZF));
 };
 
 void CALLBACK_SCF(bool val) {
-	Bit16u tempf=real_readw(Segs[ss].value,reg_sp+4) & 0xFFFE;
+	Bit16u tempf=mem_readw(SegPhys(ss)+reg_sp+4) & 0xFFFE;
 	Bit16u newCF=(val==true);
-	real_writew(Segs[ss].value,reg_sp+4,(tempf | newCF));
+	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newCF));
 };
 
 
@@ -153,12 +153,15 @@ void CALLBACK_Init(void) {
 	real_writeb((Bit16u)CB_SEG,(call_idle<<4)+12,0xFE);
 	real_writeb((Bit16u)CB_SEG,(call_idle<<4)+13,0x38);
 	real_writew((Bit16u)CB_SEG,(call_idle<<4)+14,call_idle);
+
+#if C_DEBUG	
 	/* Setup all Interrupt to point to the default handler */
 	call_default=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET);
 	for (i=0;i<256;i++) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
 	}
+#endif
 }
 
 
