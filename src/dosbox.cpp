@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.66 2004-03-10 13:49:30 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.67 2004-03-31 14:43:50 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -91,7 +91,6 @@ void MSCDEX_Init(Section*);
 /* Dos Internal mostly */
 void EMS_Init(Section*);
 void XMS_Init(Section*);
-void DPMI_Init(Section*);
 
 void AUTOEXEC_Init(Section*);
 void SHELL_Init(void);
@@ -350,18 +349,9 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init);
 	secprop->Add_bool("ems",true);
-#if (C_DEBUG)
-	secprop->AddInitFunction(&DPMI_Init);
-	secprop->Add_bool("dpmi",false);
-#endif
     MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
 		"ems -- Enable EMS support.\n"
-#if (C_DEBUG)
-		"dpmi -- Enable builtin DPMI host support.\n"
-		"        This might help in getting some games to work, but might crash others.\n"
-		"        So be sure to try both settings.\n"
-#endif
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
