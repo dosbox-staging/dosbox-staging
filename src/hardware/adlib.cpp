@@ -60,7 +60,7 @@ namespace OPL2 {
 }
 #undef OSD_CPU_H
 #undef TL_TAB_LEN
-namespace OPL3 {
+namespace THEOPL3 {
 	#define HAS_YMF262 1
 	#include "ymf262.c"
 	void TimerOver(Bitu val){
@@ -93,7 +93,7 @@ static void OPL_CallBack(Bit8u *stream, Bit32u len) {
 		OPL2::YM3812UpdateOne(0,(OPL2::INT16 *)stream,len);
 		break;
 	case OPL_opl3:
-		OPL3::YMF262UpdateOne(0,(OPL2::INT16 *)stream,len);
+		THEOPL3::YMF262UpdateOne(0,(OPL2::INT16 *)stream,len);
 		break;
 	case OPL_dualopl2:
 		OPL2::YM3812UpdateOne(0,(OPL2::INT16 *)opl.mixbuf[0],len);
@@ -119,7 +119,7 @@ Bit8u OPL_Read(Bit32u port) {
 	case OPL_dualopl2:
 		return OPL2::YM3812Read(addr>>1,addr);
 	case OPL_opl3:
-		return OPL3::YMF262Read(0,addr);
+		return THEOPL3::YMF262Read(0,addr);
 	}
 	return 0xff;
 }
@@ -136,7 +136,7 @@ void OPL_Write(Bit32u port,Bit8u val) {
 		OPL2::YM3812Write(0,addr,val);
 		break;
 	case OPL_opl3:
-		OPL3::YMF262Write(0,addr,val);
+		THEOPL3::YMF262Write(0,addr,val);
 		break;
 	case OPL_dualopl2:
 		OPL2::YM3812Write(addr>>1,addr,val);
@@ -152,10 +152,10 @@ void OPL_Init(Section* sec,OPL_Mode oplmode,Bitu rate) {
 	};
 	OPL2::YM3812SetTimerHandler(0,OPL2::TimerHandler,0);
 	OPL2::YM3812SetTimerHandler(1,OPL2::TimerHandler,256);
-	if (OPL3::YMF262Init(1,OPL3_INTERNAL_FREQ,rate)) {
+	if (THEOPL3::YMF262Init(1,OPL3_INTERNAL_FREQ,rate)) {
 		E_Exit("Can't create OPL3 Emulator");	
 	};
-	OPL3::YMF262SetTimerHandler(0,OPL3::TimerHandler,0);
+	THEOPL3::YMF262SetTimerHandler(0,THEOPL3::TimerHandler,0);
 	for (i=0;i<4;i++) {
         IO_RegisterWriteHandler(0x388+i,OPL_Write,"OPL Write");
 		IO_RegisterReadHandler(0x388+i,OPL_Read,"OPL read");
