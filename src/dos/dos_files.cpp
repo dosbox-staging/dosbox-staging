@@ -289,7 +289,7 @@ bool DOS_CloseFile(Bit16u entry) {
 //TODO Figure this out with devices :)	
 
 	DOS_PSP psp(dos.psp);
-	psp.SetFileHandle(entry,0xff);
+	if (entry>STDPRN) psp.SetFileHandle(entry,0xff);
 
 	/* Devices won't allow themselves to be closed or killed */
 	if (Files[handle]->Close()) {
