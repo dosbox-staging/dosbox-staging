@@ -24,6 +24,7 @@
 #include "setup.h"
 #include "keyboard.h"
 #include "cross.h"
+#include "support.h"
 
 #define MAX_RES 2048
 
@@ -365,8 +366,8 @@ void RENDER_Init(Section * sec) {
 	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
 #endif
 	const char *  scaler=section->Get_string("scaler");
-	if (!stricmp(scaler,"none"))	render.op.want_type=OP_None;
-	else if (!stricmp(scaler,"scale2x")) render.op.want_type=OP_Scale2x;
+	if (!strcasecmp(scaler,"none")) render.op.want_type=OP_None;
+	else if (!strcasecmp(scaler,"scale2x")) render.op.want_type=OP_Scale2x;
 	else {
 		render.op.want_type=OP_None;
 		LOG_MSG("Illegal scaler type %s,falling back to none.",scaler);
