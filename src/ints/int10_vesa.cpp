@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.11 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.12 2004-09-10 22:09:54 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -299,7 +299,7 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y) {
 
 static Bitu SetWindowPositionHandler(void) {
 	if (reg_bh) reg_ah=VESA_GetCPUWindow(reg_bl,reg_dx);
-	else reg_ah=VESA_SetCPUWindow(reg_bl,reg_dx);
+	else reg_ah=VESA_SetCPUWindow(reg_bl,(Bit8u)reg_dx);
 	reg_al=0x4f;
 	return 0;
 }
