@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.50 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.51 2004-01-14 19:54:14 finsterr Exp $ */
 
 #include "programs.h"
 
@@ -56,12 +56,22 @@ static void DEBUG_RaiseTimerIrq(void);
 char* AnalyzeInstruction(char* inst, bool saveSelector);
 void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
 Bit32u GetHexValue(char* str, char*& hex);
+void LogGDT(void);
+void LogLDT(void);
+void LogIDT(void);
 
 class DEBUG;
 
 DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
 bool	logHeavy	= false;
+
+// Heavy Debugging Vars for logging
+#if C_HEAVY_DEBUG
+static FILE*	cpuLogFile		= 0;
+static bool		cpuLog			= false;
+static int		cpuLogCounter	= 0;
+#endif
 
 static struct  {
 	Bit32u eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
@@ -592,7 +602,9 @@ static void DrawData(void) {
 		mvwprintw (dbg.win_data,1+y,0,"%04X:%04X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
-			if (address<8*1024*1024) ch = mem_readb(address); else ch = 0;
+			if (!(paging.tlb.handler[address >> 12]->flags & PFLAG_INIT)) {
+				ch = mem_readb(address);
+			} else ch = 0;
 			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
 			if (ch<32) ch='.';
 			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);			
@@ -991,14 +1003,27 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("DEBUG: Set data overview to %04X:%04X",dataSeg,dataOfs);
 		return true;
 	}
+#if C_HEAVY_DEBUG
 	found = strstr(str,"LOG ");
 	if (found) { // Create Cpu log file
 		found+=4;
 		DEBUG_ShowMsg("DEBUG: Starting log");
-		DEBUG_Log_Loop(GetHexValue(found,found));
-		DEBUG_ShowMsg("DEBUG: Logfile LOGCPU.TXT created.");
+//		DEBUG_Log_Loop(GetHexValue(found,found));
+		cpuLogFile = fopen("LOGCPU.TXT","wt");
+		if (!cpuLogFile) {
+			DEBUG_ShowMsg("DEBUG: Logfile couldnt be created.");
+			return false;
+		}
+		cpuLog = true;
+		cpuLogCounter = GetHexValue(found,found);
+
+		debugging=false;
+		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);						
+		ignoreAddressOnce = SegPhys(cs)+reg_eip;
+		DOSBOX_SetNormalLoop();	
 		return true;
 	}
+#endif
 	found = strstr(str,"SR ");
 	if (found) { // Set register value
 		found+=2;
@@ -1056,7 +1081,22 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("%s",out2);
 	};
 
-/*	found = strstr(str,"EXCEPTION ");
+	found = strstr(str,"GDT");
+	if (found) {
+		LogGDT();
+	}
+
+	found = strstr(str,"LDT");
+	if (found) {
+		LogLDT();
+	}
+
+	found = strstr(str,"IDT");
+	if (found) {
+		LogIDT();
+	}
+
+	/*	found = strstr(str,"EXCEPTION ");
 	if (found) {
 		found += 9;
 		Bit8u num = GetHexValue(found,found);		
@@ -1387,9 +1427,63 @@ void DEBUG_DrawScreen(void) {
 	DrawCode();
 	DrawRegisters();
 }
+
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
 }
+
+void LogGDT(void)
+{
+	char out1[512];
+	Descriptor desc;
+	Bitu length = cpu.gdt.GetLimit();
+	PhysPt address = cpu.gdt.GetBase();
+	PhysPt max	   = address + length;
+	Bitu i = 0;
+	LOG(LOG_MISC,LOG_ERROR)("GDT Base:%08X Limit:%08X",address,length);
+	while (address<max) {
+		desc.Load(address);
+		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3),desc.GetBase(),desc.saved.seg.type);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+		address+=8; i++;
+	};
+};
+
+void LogLDT(void)
+{
+	char out1[512];
+	Descriptor desc;
+	Bitu ldtSelector = cpu.gdt.SLDT();
+	cpu.gdt.GetDescriptor(ldtSelector,desc);
+	Bitu length = desc.GetLimit();
+	PhysPt address = desc.GetBase();
+	PhysPt max	   = address + length;
+	Bitu i = 0;
+	LOG(LOG_MISC,LOG_ERROR)("LDT Base:%08X Limit:%08X",address,length);
+	while (address<max) {
+		desc.Load(address);
+		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3)|4,desc.GetBase(),desc.saved.seg.type);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+		address+=8; i++;
+	};
+};
+
+void LogIDT(void)
+{
+	char out1[512];
+	Descriptor desc;
+	Bitu address = 0;
+	while (address<256*8) {
+		cpu.idt.GetDescriptor(address,desc);
+		sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+		address+=8;
+	};
+};
 
 static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer) 
 {
@@ -1407,9 +1501,8 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 	
 	if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");	
 	// Get register values
-	
-	sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
-		GETFLAGBOOL(CF),GETFLAGBOOL(ZF),GETFLAGBOOL(SF),GETFLAGBOOL(OF),GETFLAGBOOL(AF),GETFLAGBOOL(PF));
+	sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+		GETFLAGBOOL(CF),GETFLAGBOOL(ZF),GETFLAGBOOL(SF),GETFLAGBOOL(OF),GETFLAGBOOL(AF),GETFLAGBOOL(PF),GETFLAGBOOL(IF));
 };
 
 static bool DEBUG_Log_Loop(int count) {
@@ -1726,6 +1819,21 @@ void DEBUG_HeavyWriteLogInstruction(void)
 
 bool DEBUG_HeavyIsBreakpoint(void)
 {
+	if (cpuLog) {
+		if (cpuLogCounter>0) {
+			static char buffer[4096];
+			LogInstruction(SegValue(cs),reg_eip,buffer);
+			fprintf(cpuLogFile,"%s",buffer);
+			cpuLogCounter--;
+		}
+		if (cpuLogCounter<=0) {
+			fclose(cpuLogFile);
+			DEBUG_ShowMsg("DEBUG: cpu log LOGCPU.TXT created");
+			cpuLog = false;
+			DEBUG_EnableDebugger();
+			return true;
+		}
+	}
 	// LogInstruction
 	if (logHeavy) DEBUG_HeavyLogInstruction();
 
@@ -1734,7 +1842,6 @@ bool DEBUG_HeavyIsBreakpoint(void)
 		return false;
 	}
 	PhysPt where = SegPhys(cs)+reg_eip;
-	
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
 		return true;	
 	}
