@@ -21,8 +21,9 @@
 #include "mem.h"
 #include "dos_inc.h"
 #include "cpu.h"
+#if defined (_MSC_VER)
 #pragma pack(1)
-
+#endif
 
 struct EXE_Header {
 	
@@ -40,8 +41,13 @@ struct EXE_Header {
 	Bit16u initCS;
 	Bit16u reloctable;
 	Bit16u overlay;
-};
+}
+#if defined (_MSC_VER)
+;
 #pragma pack()
+#else
+__attribute__ ((packed));
+#endif
 
 #define MAGIC1 0x5a4d
 #define MAGIC2 0x4d5a

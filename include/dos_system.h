@@ -35,7 +35,9 @@ enum {
 	DOS_ATTR_ARCHIVE=	0x20
 };
 
-#pragma pack (1)
+#if defined (_MSC_VER)
+#pragma pack(1)
+#endif
 struct DTA_FindBlock {
 	Bit8u sdrive;								/* The Drive the search is taking place */
 	Bit16u sattr;								/* The attributes that need to be found */
@@ -45,8 +47,13 @@ struct DTA_FindBlock {
 	Bit16u date;
 	Bit32u size;
 	char name[DOS_NAMELENGTH];
-};
-#pragma pack ()
+}
+#if defined (_MSC_VER)
+;
+#pragma pack()
+#else
+__attribute__ ((packed));
+#endif
 
 class DOS_File {
 public:

@@ -20,13 +20,19 @@
 #include "mem.h"
 #include "dos_inc.h"
 
+#if defined (_MSC_VER)
 #pragma pack(1)
-
+#endif
 struct DOS_TableCase {	
 	Bit16u size;
 	Bit8u chars[256];
-};
+}
+#if defined (_MSC_VER)
+;
 #pragma pack()
+#else
+__attribute__ ((packed));
+#endif
 
 
 RealPt DOS_TableUpCase;

@@ -24,7 +24,7 @@
 
 #if defined (_MSC_VER)
 #pragma pack(1)
-#endif#
+#endif
 struct CommandTail{
   Bit8u count;				/* number of bytes returned */
   char buffer[127];			 /* the buffer itself */
