@@ -5,8 +5,8 @@ NOTE:
 =====
 
 While we hope that, one day, DOSBox will run virtually all programs
-ever made for the PC...we are not there yet. At present, DOSBox run on a 1.7
-Gigahertz PC is roughly the equivalent of a 25MHz 386 PC. While the 0.60
+ever made for the PC...we are not there yet. At present, DOSBox run on a high-
+end machine will roughly be the equivalent of a lowend 486 PC. While the 0.60
 release has added support for "protected mode" allowing for more complex and
 recent programs, but note that this support is early in development and
 nowhere near as complete as the support for 386 real-mode games (or
@@ -19,7 +19,7 @@ Usage:
 ======
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
-       [-lang languagefile]
+       [-lang languagefile] [-machine machinetype] [-noconsole]
 
   name   
         If "name" is a directory it'll mount that as the C: drive.
@@ -45,6 +45,11 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
   -noconsole (Windows Only)
         Start dosbox without showing the console window, output will
 	be redirected to stdout.txt and stderr.txt
+	
+  -machine machinetype
+        Setup dosbox to emulate a specific type of machine. Valid choices are:
+        auto,hercules,cga,tandy,vga.
+
 
 Note: If a name/command/configfile/languagefile contains a space in it, put
       the whole name/command/configfile/languagefile between quotes("example").
@@ -323,7 +328,13 @@ The file is divided into several sections (the names have [] around it).
 Some sections have options which you can set.
 # and % indicate comment-lines. 
 The generated configfile contains the current settings. You can alter them and
-start DOSBox with the -conf switch to load the file and use these settings. 
+start DOSBox with the -conf switch to load the file and use these settings.
+
+DOSBox will if no configfile is specified with the -conf switch look in the
+current directory for dosbox.conf. Then it will look for ~/.dosboxrc (linux),
+~\dosbox.conf (win32) or "~/Library/Preferences/DOSBox Preferences" (MACOSX).
+
+
 
 ==================
 The Language File:
@@ -351,6 +362,8 @@ Vlad R. of the vdmsound project for excellent sound blaster info.
 Tatsuyuki Satoh of the Mame Team for making an excellent FM emulator.
 The Bochs and DOSemu projects which I used for information.
 Freedos for ideas in making my shell.
+Pierre-Yves Gérardy for hosting the old Beta Board.
+Colin Snover for hosting our forum.
 The Beta Testers.
 
 ========
