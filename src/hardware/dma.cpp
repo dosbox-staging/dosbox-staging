@@ -21,10 +21,8 @@
 */
 
 /*
-	Still need to implement reads from dma ports :)
-	Perhaps sometime also implement dma writes.
-	DMA transfer that get setup with a size 0 are also done wrong should be 0x10000 probably.
-	
+	TODO
+	Implement 16-bit dma
 */
 
 #include <string.h>
@@ -32,6 +30,7 @@
 #include "mem.h"
 #include "inout.h"
 #include "dma.h"
+#include "pic.h"
 
 #if DEBUG_DMA
 #define DMA_DEBUG LOG_DEBUG
@@ -47,8 +46,8 @@
 struct DMA_CHANNEL {
 	struct {
 		Bit8u mode_type;
-		Bit8u address_decrement;
-		Bit8u autoinit_enable;
+		bool address_decrement;
+		bool autoinit_enable;
 		Bit8u transfer_type;
 	} mode;
 	Bit16u base_address;
@@ -59,6 +58,7 @@ struct DMA_CHANNEL {
 	bool masked;
 	PhysPt address;
 	bool addr_changed;
+	DMA_EnableCallBack enable_callback;
 };
 
 
@@ -107,9 +107,10 @@ static Bit8u read_dma(Bit32u port) {
 static void write_dma(Bit32u port,Bit8u val) {
 	/* only use first dma for now */
 	DMA_CONTROLLER * cont=&dma[0];
-	DMA_CHANNEL * chan=&cont->chan[port>>1];
+	DMA_CHANNEL * chan;
 	switch (port) {
 	case 0x00:case 0x02:case 0x04:case 0x06:
+		chan=&cont->chan[port>>1];
 		if (cont->flipflop) {
 			chan->base_address=(chan->base_address & 0xff00) | val;
 		} else {
@@ -119,6 +120,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		chan->addr_changed=true;
 		break;
 	case 0x01:case 0x03:case 0x05:case 0x07:
+		chan=&cont->chan[port>>1];
 		if (cont->flipflop) {
 			chan->base_count=(chan->base_count & 0xff00) | val;
 		} else {
@@ -142,12 +144,15 @@ static void write_dma(Bit32u port,Bit8u val) {
 		}
 		break;
 	case 0x0a:	/* single mask bit register */
+		chan=&cont->chan[val & 0x3];
 		chan->masked=(val & 4)>0;
+		if (chan->enable_callback) chan->enable_callback(!chan->masked);
 		break;
 	case 0x0b:	/* mode register */
+		chan=&cont->chan[val & 0x3];
 		chan->mode.mode_type = (val >> 6) & 0x03;
-		chan->mode.address_decrement = (val >> 5) & 0x01;
- 		chan->mode.autoinit_enable = (val >> 4) & 0x01;
+		chan->mode.address_decrement = (val & 0x20) > 0;
+ 		chan->mode.autoinit_enable = (val & 0x10) > 0;
 		chan->mode.transfer_type = (val >> 2) & 0x03;
 		if (chan->mode.address_decrement) {
 			LOG_WARN("DMA:Address Decrease not supported yet");
@@ -177,21 +182,20 @@ void write_dma_page(Bit32u port,Bit8u val) {
 	dma[0].chan[channel].addr_changed=true;
 }
 
-Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+
+INLINE void ResetDMA8(DMA_CHANNEL * chan) {
+	chan->addr_changed=false;
+	chan->address=(chan->page << 16)+chan->base_address;
+	chan->current_count=chan->base_count+1;
+	chan->current_address=chan->base_address;
+}
+
+
+
+Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 	DMA_CHANNEL * chan=&dma[0].chan[dmachan];
-
-	if (chan->masked) return 0;
-	if (!count) return 0;	
-/* DMA always does autoinit should work under normal situations */
-	if (chan->addr_changed) {
-		/* Calculate the new starting position for dma read*/
-		chan->addr_changed=false;
-		chan->address=(chan->page << 16)+chan->base_address;
-
-		chan->current_count=chan->base_count+1;
-		chan->current_address=chan->base_address;
-		DMA_DEBUG("DMA:Transfer from %d size %d",(chan->page << 16)+chan->base_address,chan->current_count);
-	}
+	if (chan->masked || !count) return 0;
+	if (chan->addr_changed) ResetDMA8(chan);
 	if (chan->current_count>count) {
 		MEM_BlockRead(chan->address,buffer,count);
 		chan->address+=count;
@@ -204,17 +208,15 @@ Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 		if (!chan->mode.autoinit_enable) {
 			/* Set the end of counter bit */
 			dma[0].status_reg|=(1 << dmachan);
-			count=(Bit16u)chan->current_count;
+			count=chan->current_count;
 			chan->current_address+=count;;
 			chan->current_count=0;
 			return count;
 		} else {
 			buffer+=chan->current_count;
-			Bit16u left=count-(Bit16u)chan->current_count;
+			Bitu left=count-(Bit16u)chan->current_count;
 			/* Autoinit reset the dma channel */
-			chan->address=(chan->page << 16)+chan->base_address;
-			chan->current_count=chan->base_count+1;
-			chan->current_address=chan->base_address;
+			ResetDMA8(chan);
 			/* Copy the rest of the buffer */
 			MEM_BlockRead(chan->address,buffer,left);
 			chan->address+=left;
@@ -223,22 +225,52 @@ Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 			return count;
 		} 
 	}
-};
+}
 
-Bit16u  DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bitu DMA_8_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
+	DMA_CHANNEL * chan=&dma[0].chan[dmachan];
+	if (chan->masked || !count) return 0;
+	if (chan->addr_changed) ResetDMA8(chan);
+	if (chan->current_count>count) {
+		MEM_BlockWrite(chan->address,buffer,count);
+		chan->address+=count;
+		chan->current_address+=count;
+		chan->current_count-=count;
+		return count;
+	} else {
+		/* Copy remaining piece of first buffer */
+		MEM_BlockWrite(chan->address,buffer,chan->current_count);
+		if (!chan->mode.autoinit_enable) {
+			/* Set the end of counter bit */
+			dma[0].status_reg|=(1 << dmachan);
+			count=chan->current_count;
+			chan->current_address+=count;;
+			chan->current_count=0;
+			return count;
+		} else {
+			buffer+=chan->current_count;
+			Bitu left=count-(Bit16u)chan->current_count;
+			/* Autoinit reset the dma channel */
+			ResetDMA8(chan);
+			/* Copy the rest of the buffer */
+			MEM_BlockWrite(chan->address,buffer,left);
+			chan->address+=left;
+			chan->current_address+=left;
+			chan->current_count-=left;
+			return count;
+		} 
+	}
+}
 
-	return 0;
-};
 
 
 
-
-Bit16u DMA_16_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bitu DMA_16_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 
 	return 0;
 }
 
-Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bitu DMA_16_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
 
 
 	return 0;
@@ -246,6 +278,18 @@ Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 
 
 
+
+void DMA_SetEnableCallBack(Bitu channel,DMA_EnableCallBack callback) {
+	if (channel<4) {
+		dma[0].chan[channel].enable_callback=callback;
+		if (callback) callback(!dma[0].chan[channel].masked);
+		return;
+	}
+	if (channel<8) {
+		dma[1].chan[channel-4].enable_callback=callback;
+		if (callback) callback(!dma[1].chan[channel-4].masked);
+	}
+}
 
 void DMA_Init(Section* sec) {
 	for (Bit32u i=0;i<0x10;i++) {
