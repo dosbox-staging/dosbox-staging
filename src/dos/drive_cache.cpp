@@ -146,7 +146,17 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists)
 			case ALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByNameRev);		break;
 			case DIRALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirNameRev);	break;
 		};
-//		LOG_DEBUG("DIR: Added Entry %s",path);
+
+		Bit16s index = GetLongName(dir,file);
+		if (index>=0) {
+			Bit32u i;
+			// Check if there are any open search dir that are affected by this...
+			if (dir) for (i=0; i<MAX_OPENDIRS; i++) {
+				if ((dirSearch[i]==dir) && (index<=dirSearch[i]->nextEntry)) 
+					dirSearch[i]->nextEntry++;
+			}	
+		};
+		//		LOG_DEBUG("DIR: Added Entry %s",path);
 	} else {
 //		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
 	};
@@ -156,6 +166,17 @@ void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir)
 {
 	CacheOut(path,ignoreLastDir);
 	if (dirSearch[srchNr]->nextEntry>0) dirSearch[srchNr]->nextEntry--;
+
+	if (!ignoreLastDir) {
+		// Check if there are any open search dir that are affected by this...
+		Bit32u i;
+		char expand	[CROSS_LEN];
+		CFileInfo* dir = FindDirInfo(path,expand);
+		if (dir) for (i=0; i<MAX_OPENDIRS; i++) {
+			if ((dirSearch[i]==dir) && (dirSearch[i]->nextEntry>0)) 
+				dirSearch[i]->nextEntry--;
+		}	
+	}
 };
 
 void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
