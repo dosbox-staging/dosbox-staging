@@ -4,6 +4,7 @@
 #include "regs.h"
 #include "cpu.h"
 #include "lazyflags.h"
+#include "paging.h"
 #include "fpu.h"
 #include "debug.h"
 #include "inout.h"
@@ -21,17 +22,17 @@ void PAGE_Writed(PhysPt address,Bit32u val);
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
 #if 1
-#define LoadMb(off) mem_readb(off)
-#define LoadMw(off) mem_readw(off)
-#define LoadMd(off) mem_readd(off)
+#define LoadMb(off) mem_readb_inline(off)
+#define LoadMw(off) mem_readw_inline(off)
+#define LoadMd(off) mem_readd_inline(off)
 
 #define LoadMbs(off) (Bit8s)(LoadMb(off))
 #define LoadMws(off) (Bit16s)(LoadMw(off))
 #define LoadMds(off) (Bit32s)(LoadMd(off))
 
-#define SaveMb(off,val)	mem_writeb(off,val)
-#define SaveMw(off,val)	mem_writew(off,val)
-#define SaveMd(off,val)	mem_writed(off,val)
+#define SaveMb(off,val)	mem_writeb_inline(off,val)
+#define SaveMw(off,val)	mem_writew_inline(off,val)
+#define SaveMd(off,val)	mem_writed_inline(off,val)
 
 #else
 
@@ -110,7 +111,7 @@ restartopcode:
 		#include "core_full/save.h"
 nextopcode:;
 		CPU_Cycles--;
-	}	
+	}
 	LEAVECORE;
 	return CBRET_NONE;
 }
