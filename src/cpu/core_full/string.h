@@ -23,6 +23,7 @@
 		count=1;
 	} else {
 		/* Calculate amount of ops to do before cycles run out */
+		CPU_Cycles++;
 		if ((count>(Bitu)CPU_Cycles) && (inst.code.op<R_SCASB)) {
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;

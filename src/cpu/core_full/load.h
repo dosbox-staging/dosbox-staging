@@ -1,5 +1,12 @@
 switch (inst.code.load) {
 /* General loading */
+	case L_POPwRM:
+		inst.op1.w = Pop_16();
+		goto case_L_MODRM;
+	case L_POPdRM:
+		inst.op1.d = Pop_32();
+		goto case_L_MODRM;
+case_L_MODRM:
 	case L_MODRM:
 		inst.rm=Fetchb();
 		inst.rm_index=(inst.rm >> 3) & 7;
@@ -245,7 +252,7 @@ l_M_Ed:
 		break;
 	/* Special cases */
 	case L_DOUBLE:
-		inst.entry|=0x100;
+		inst.entry=inst.start_prefix^0x100;
 		goto restartopcode;
 	case L_PRESEG:
 		inst.prefix|=PREFIX_SEG;
@@ -479,7 +486,7 @@ l_M_Ed:
 		goto nextopcode;
 	case D_HLT:
 		LEAVECORE;
-		CPU_HLT();
+		CPU_HLT(IPPoint-inst.start);
 		return CBRET_NONE;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);

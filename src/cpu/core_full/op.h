@@ -340,10 +340,12 @@ switch (inst.code.op) {
 	case O_INT:
 		LEAVECORE;
 #if C_DEBUG
-		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return debugCallback;
-		else if (DEBUG_IntBreakpoint(inst.op1.b)) return debugCallback;
+		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) 
+			return debugCallback;
+		else if (DEBUG_IntBreakpoint(inst.op1.b)) 
+			return debugCallback;
 #endif
-		Interrupt(inst.op1.b);
+		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.start);
 		goto restart_core;
 	case O_INb:
 		reg_al=IO_Read(inst.op1.d);
@@ -444,11 +446,18 @@ switch (inst.code.op) {
 			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
 		}
 		break;
-	case O_M_Cd_Rd:
+	case O_M_CRx_Rd:
 		CPU_SET_CRX(inst.rm_index,inst.op1.d);
 		break;
-	case O_M_Rd_Cd:
+	case O_M_Rd_CRx:
 		inst.op1.d=CPU_GET_CRX(inst.rm_index);
+		break;
+	case O_M_DRx_Rd:
+		LOG(LOG_CPU,LOG_NORMAL)("MOV DR%d,%X",inst.rm_index,inst.op1.d);
+		break;
+	case O_M_Rd_DRx:
+		inst.op1.d=0;
+		LOG(LOG_CPU,LOG_NORMAL)("MOV %X,DR%d",inst.op1.d,inst.rm_index);
 		break;
 	case O_LAR:
 		{

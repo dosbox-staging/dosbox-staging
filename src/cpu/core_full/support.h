@@ -2,7 +2,7 @@ enum {
 	L_N=0,
 	L_SKIP,
 	/* Grouped ones using MOD/RM */
-	L_MODRM,
+	L_MODRM,L_POPwRM,L_POPdRM,
 	
 	L_Ib,L_Iw,L_Id,
 	L_Ibx,L_Iwx,L_Idx,				//Sign extend
@@ -14,8 +14,6 @@ enum {
 	L_POPw,L_POPd,
 	L_POPfw,L_POPfd,
 	L_SEG,
-
-
 
 	L_FLG,L_INTO,
 
@@ -82,7 +80,8 @@ enum {
 
 	O_GRP6w,O_GRP6d,
 	O_GRP7w,O_GRP7d,
-	O_M_Cd_Rd,O_M_Rd_Cd,
+	O_M_CRx_Rd,O_M_Rd_CRx,
+	O_M_DRx_Rd,O_M_Rd_DRx,
 	O_LAR,O_LSL,
 	O_ARPL,
 	

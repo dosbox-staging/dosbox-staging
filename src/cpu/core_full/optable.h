@@ -100,7 +100,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM		,0		,S_Eb	,M_Gb	},{L_MODRM	,0			,S_Ew	,M_Gw	},
 {L_MODRM		,0		,S_Gb	,M_Eb	},{L_MODRM	,0			,S_Gw	,M_Ew	},
 {L_MODRM		,0		,S_Ew	,M_SEG	},{L_MODRM	,0			,S_Gw	,M_EA	},
-{L_MODRM		,0		,S_SEGm	,M_Ew	},{L_MODRM	,0			,S_Ew	,M_POPw	},
+{L_MODRM		,0		,S_SEGm	,M_Ew	},{L_POPwRM	,0			,S_Ew	,M_None	},
 
 /* 0x90 - 0x97 */
 {D_NOP		,0			,0		,0		},{L_REGw	,O_XCHG_AX	,S_REGw	,REGI_CX},
@@ -203,8 +203,8 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
 /* 0x120 - 0x127 */
-{L_MODRM	,O_M_Rd_Cd	,S_Ed	,0		},{0		,0			,0		,0		},
-{L_MODRM	,O_M_Cd_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Rd_CRx	,S_Ed	,0		},{L_MODRM	,O_M_Rd_DRx	,S_Ed	,0		},
+{L_MODRM	,O_M_CRx_Rd	,0		,M_Ed	},{L_MODRM	,O_M_DRx_Rd	,0		,M_Ed	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
@@ -456,7 +456,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM		,0		,S_Eb	,M_Gb	},{L_MODRM	,0			,S_Ed	,M_Gd	},
 {L_MODRM		,0		,S_Gb	,M_Eb	},{L_MODRM	,0			,S_Gd	,M_Ed	},
 {L_MODRM		,0		,S_EdMw	,M_SEG	},{L_MODRM	,0			,S_Gd	,M_EA	},
-{L_MODRM		,0		,S_SEGm	,M_Ew	},{L_MODRM	,0			,S_Ed	,M_POPd	},
+{L_MODRM		,0		,S_SEGm	,M_Ew	},{L_POPdRM	,0			,S_Ed	,M_None	},
 
 /* 0x290 - 0x297 */
 {D_NOP		,0			,0		,0		},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_CX},
@@ -559,8 +559,8 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
 /* 0x320 - 0x327 */
-{L_MODRM	,O_M_Rd_Cd	,S_Ed	,0		},{0		,0			,0		,0		},
-{L_MODRM	,O_M_Cd_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Rd_CRx	,S_Ed	,0		},{L_MODRM	,O_M_Rd_DRx	,S_Ed	,0		},
+{L_MODRM	,O_M_CRx_Rd	,0		,M_Ed	},{L_MODRM	,O_M_DRx_Rd	,0		,M_Ed	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
