@@ -20,7 +20,7 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "dos_inc.h"
-#include "cpu.h"
+#include "regs.h"
 #include "callback.h"
 #include "debug.h"
 

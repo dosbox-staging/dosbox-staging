@@ -19,7 +19,7 @@
 #include <string.h>
 #include "dosbox.h"
 #include "callback.h"
-#include "cpu.h"
+#include "regs.h"
 #include "mem.h"
 #include "bios.h"
 #include "dos_inc.h"

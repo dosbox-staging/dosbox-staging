@@ -20,7 +20,7 @@
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
-#include "cpu.h"
+#include "regs.h"
 #include "dos_inc.h"
 
 #define MAX_DEVICE 20
