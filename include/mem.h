@@ -52,7 +52,7 @@ MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 	Working on big or little endian machines 
 */
 
-#ifdef WORDS_BIGENDIAN
+#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 
 INLINE Bit8u host_readb(HostPt off) {
 	return off[0];
@@ -77,10 +77,6 @@ INLINE void host_writed(HostPt off,Bit32u val) {
 	off[3]=(Bit8u)(val >> 24);
 };
 
-#define MLEB(_MLE_VAL_) (_MLE_VAL_)
-#define MLEW(_MLE_VAL_) ((_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
-#define MLED(_MLE_VAL_) ((_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
-
 #else
 
 INLINE Bit8u host_readb(HostPt off) {
@@ -102,16 +98,20 @@ INLINE void host_writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
 };
 
-#define MLEB(_MLE_VAL_) (_MLE_VAL_)
-#define MLEW(_MLE_VAL_) (_MLE_VAL_)
-#define MLED(_MLE_VAL_) (_MLE_VAL_)
-
 #endif
 
-#define WLE(VAR_,VAL_)						\
-	if (sizeof(VAR_)==1) VAR_=MLEB(VAL_);	\
-	if (sizeof(VAR_)==2) VAR_=MLEW(VAL_);	\
-	if (sizeof(VAR_)==4) VAR_=MLED(VAL_);
+
+INLINE void var_write(Bit8u & var, Bit8u val) {
+	host_writeb((HostPt)&var, val);
+}
+
+INLINE void var_write(Bit16u & var, Bit16u val) {
+	host_writew((HostPt)&var, val);
+}
+
+INLINE void var_write(Bit32u & var, Bit32u val) {
+	host_writed((HostPt)&var, val);
+}
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
 
