@@ -19,33 +19,6 @@
 #ifndef __FPU_H
 #define __FPU_H
 
-#include <dosbox.h>
-#include <regs.h>
-#include <mem.h>
-
-enum { FPUREG_VALID=0, FPUREG_ZERO, FPUREG_PNAN, FPUREG_NNAN, FPUREG_EMPTY };
-
-enum {
-	t_FLD=0, t_FLDST, t_FDIV,
-	t_FDIVP, t_FCHS, t_FCOMP,
-
-	t_FUNKNOWN,
-	t_FNOTDONE,
-};
-
-bool FPU_get_C3();
-bool FPU_get_C2();
-bool FPU_get_C1();
-bool FPU_get_C0();
-bool FPU_get_IR();
-bool FPU_get_SF();
-bool FPU_get_PF();
-bool FPU_get_UF();
-bool FPU_get_OF();
-bool FPU_get_ZF();
-bool FPU_get_DF();
-bool FPU_get_IN();
-
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
 void FPU_ESC1_Normal(Bitu rm);
@@ -63,5 +36,13 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
+#define FPU_ESC(a) { \
+	Bit8u rm=Fetchb(); \
+	if (rm>=0xc0) { \
+		FPU_ESC0_Normal(rm); \
+	} else { \
+		GetEAa;FPU_ESC0_EA(rm,eaa);	\
+	} \
+}
 
 #endif
