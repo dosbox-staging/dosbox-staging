@@ -44,7 +44,7 @@ static Bitu INT2F_Handler(void) {
 		if ((*loop_multiplex->handler)()) return CBRET_NONE;
 		loop_multiplex=loop_multiplex->next;
 	}
-	LOG(LOG_ERROR,"DOS:Multiplex Unhandled call %4X",reg_ax);	
+	LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Multiplex Unhandled call %4X",reg_ax);	
 	return CBRET_NONE;
 };
 

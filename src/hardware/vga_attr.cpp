@@ -122,10 +122,10 @@ void write_p3c0(Bit32u port,Bit8u val) {
 					except in 256 color mode.
 					Note: this register does not affect 256 color modes.
 			*/
-			if (val) LOG(LOG_VGAGFX,"VGA:ATTR:DAC index set to %d",val);
+			if (val) LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:ATTR:DAC index set to %d",val);
 			break;
 		default:
-			LOG(LOG_VGAMISC,"VGA:ATTR:Write to unkown Index %2X",attr(index));
+			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Write to unkown Index %2X",attr(index));
 			break;
 		}
 	}
@@ -151,7 +151,7 @@ Bit8u read_p3c1(Bit32u port) {
 	case 0x14:	/* Color Select Register */
 		return attr(color_select);
 	default:
-		LOG(LOG_VGAMISC,"VGA:ATTR:Read from unkown Index %2X",attr(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Read from unkown Index %2X",attr(index));
 	}
 	return 0;
 };

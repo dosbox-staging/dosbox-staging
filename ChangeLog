@@ -1,3 +1,10 @@
+0.60
+  - added support for the not inheritance flags.
+  - created functions for creating child psp.
+  - updated errorcodes of findfirst (thanks Mirek!)
+  - added basic support for vidmode 0x7
+  - rewrote loggingsystem to generate less warnings
+
 0.58
   - fixed date and time issues with fcbs
   - added more commands to the internal Shell

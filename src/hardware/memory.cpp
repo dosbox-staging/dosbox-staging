@@ -93,11 +93,11 @@ void MEM_StrCopy(PhysPt off,char * data,Bitu size) {
 }
 
 static Bit8u Illegal_ReadHandler(PhysPt pt) {
-	LOG(LOG_ERROR,"MEM:Illegal read from address %4X",pt);
+	LOG(LOG_ALL,LOG_ERROR)("MEM:Illegal read from address %4X",pt);
 	return 0xff;
 }
 static void Illegal_WriteHandler(PhysPt pt,Bit8u val) {
-	LOG(LOG_ERROR,"Illegal write val %2X to address %4X",val,pt);
+	LOG(LOG_ALL,LOG_ERROR)("Illegal write val %2X to address %4X",static_cast<Bit32u>(val),pt);
 }
 
 /* Could only be called when the pt host entry is 0 ah well :) */
@@ -243,7 +243,7 @@ void MEM_A20_Enable(bool enable) {
 	} else {
 		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
 	}
-	LOG(LOG_MISC,"A20 Line is %s",enable ? "Enabled" : "Disabled");
+	LOG(LOG_MISC,LOG_NORMAL)("A20 Line is %s",enable ? "Enabled" : "Disabled");
 }
 
 Bitu MEM_TotalSize(void) {

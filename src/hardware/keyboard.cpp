@@ -47,7 +47,7 @@ struct KeyCode {
 };
 
 struct KeyEvent {
-	Bitu type;
+	Bits type;
 	Bitu state;
 	KEYBOARD_EventHandler * handler;
 	KeyEvent * next;
@@ -180,7 +180,7 @@ static void write_p60(Bit32u port,Bit8u val) {
 			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
 		default:
-			LOG(LOG_ERROR|LOG_KEYBOARD,"60:Unhandled command %X",val);
+			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %X",val);
 		}
 		return;
 	case CMD_SETOUTPORT:
@@ -218,13 +218,13 @@ static void write_p64(Bit32u port,Bit8u val) {
 			keyb.scheduled=true;
 			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 		}
-		LOG(LOG_KEYBOARD,"Activated");
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
 		break;
 	case 0xae:		/* Deactivate keyboard */
 		keyb.active=false;
 		PIC_DeActivateIRQ(1);
 		PIC_RemoveEvents(KEYBOARD_GetCode);
-		LOG(LOG_KEYBOARD,"De-Activated");
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("De-Activated");
 		break;
 	case 0xd0:		/* Outport on buffer */
 		KEYBOARD_AddCode(MEM_A20_Enabled() ? 0x02 : 0,0,0,STATE_NORMAL);
@@ -233,7 +233,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 		keyb.command=CMD_SETOUTPORT;
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_KEYBOARD,"Port 64 write with val %d",val);
+		LOG(LOG_KEYBOARD,LOG_ERROR)("Port 64 write with val %d",val);
 		break;
 	}
 }
@@ -246,7 +246,7 @@ void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) 
 	KeyEvent * newevent=new KeyEvent;
 /* Add the event in the correct key structure */
 	if (keytype>=KBD_LAST) {
-		LOG(LOG_ERROR|LOG_KEYBOARD,"Illegal key %d for handler",keytype);
+		LOG(LOG_KEYBOARD,LOG_ERROR)("Illegal key %d for handler",keytype);
 	}
 	newevent->next=event_handlers[keytype];
 	event_handlers[keytype]=newevent;
@@ -372,7 +372,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
 	default:
-		E_Exit("Unsopperted key press");
+		E_Exit("Unsupported key press");
 		break;
 	}
 	/* check for active key events */

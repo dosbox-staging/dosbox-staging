@@ -425,7 +425,7 @@ static void  mouse_reset(void)
 		break;
 	default:
 		mouse.max_y=199;
-		LOG(LOG_MOUSE|LOG_ERROR,"Unhandled videomode %X on reset",mode);
+		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
 		break;
 	} 
 	mouse.max_x=639;
@@ -433,7 +433,7 @@ static void  mouse_reset(void)
 	mouse.min_y=0;
 	// Dont set max coordinates here. it is done by SetResolution!
 	mouse.x=0;				// civ wont work otherwise
-	mouse.y=mouse.max_y/2;
+	mouse.y=static_cast<float>(mouse.max_y/2);
 	mouse.events=0;
 	mouse.mickey_x=0;
 	mouse.mickey_y=0;
@@ -517,7 +517,7 @@ static Bitu INT33_Handler(void) {
 			if (!(max & 1)) max--;
 			mouse.min_x=min;
 			mouse.max_x=max;
-			LOG(LOG_MOUSE,"Define Hortizontal range min:%d max:%d",min,max);
+			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
 		}
 		break;
 	case 0x08:	/* Define vertical cursor range */
@@ -528,7 +528,7 @@ static Bitu INT33_Handler(void) {
 			if (!(max & 1)) max--;
 			mouse.min_y=min;
 			mouse.max_y=max;
-			LOG(LOG_MOUSE,"Define Vertical range min:%d max:%d",min,max);
+			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
 		}
 		break;
 	case 0x09:	/* Define GFX Cursor */
@@ -595,7 +595,7 @@ static Bitu INT33_Handler(void) {
 		reg_cl=0;		/* Hmm ps2 irq dunno */
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_MOUSE,"Mouse Function %2X",reg_ax);
+		LOG(LOG_MOUSE,LOG_ERROR)("Mouse Function %2X",reg_ax);
 	}
 	return CBRET_NONE;
 }

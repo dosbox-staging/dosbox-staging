@@ -74,13 +74,13 @@ static Bitu INT1A_Handler(void) {
 	case 0x04:	/* GET REAL-TIME ClOCK DATA  (AT,XT286,PS) */
 		reg_dx=reg_cx=0;
 		CALLBACK_SCF(false);
-		LOG(LOG_ERROR|LOG_BIOS,"INT1A:04:Faked RTC get date call");
+		LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
 		break;
 	case 0x80:	/* Pcjr Setup Sound Multiplexer */
-		LOG(LOG_ERROR|LOG_BIOS,"INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
+		LOG(LOG_BIOS,LOG_ERROR)("INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
 		break;
 	case 0x81:	/* Tandy sound system checks */
-		LOG(LOG_ERROR|LOG_BIOS,"INT1A:81:Tandy DAC Check failing");
+		LOG(LOG_BIOS,LOG_ERROR)("INT1A:81:Tandy DAC Check failing");
 		break;
 /*
 	INT 1A - Tandy 2500, Tandy 1000L series - DIGITAL SOUND - INSTALLATION CHECK
@@ -93,7 +93,7 @@ static Bitu INT1A_Handler(void) {
 			clear on return, then call AH=84h"Tandy"
 */
 	default:
-		LOG(LOG_ERROR|LOG_BIOS,"INT1A:Undefined call %2X",reg_ah);
+		LOG(LOG_BIOS,LOG_ERROR)("INT1A:Undefined call %2X",reg_ah);
 	}
 	return CBRET_NONE;
 }	
@@ -122,7 +122,7 @@ static Bitu INT11_Handler(void) {
     14-15 number of parallel ports installed
 	*/
 	reg_ax=0x104D;
-	LOG(LOG_BIOS,"INT11:Equipment list returned %X",reg_ax);
+	LOG(LOG_BIOS,LOG_NORMAL)("INT11:Equipment list returned %X",reg_ax);
 	return CBRET_NONE;
 }
 
@@ -158,7 +158,7 @@ static Bitu INT12_Handler(void) {
 };
 
 static Bitu INT17_Handler(void) {
-	LOG(LOG_BIOS,"INT17:Function %X",reg_ah);
+	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
 	switch(reg_ah) {
 	case 0x00:		/* PRINTER: Write Character */
 		reg_ah=1;	/* Report a timeout */
@@ -178,10 +178,10 @@ static Bitu INT17_Handler(void) {
 static Bitu INT15_Handler(void) {
 	switch (reg_ah) {
 	case 0x06:
-		LOG(LOG_BIOS,"INT15 Unkown Function 6");
+		LOG(LOG_BIOS,LOG_NORMAL)("INT15 Unkown Function 6");
 		break;
 	case 0xC0:	/* Get Configuration*/
-		LOG(LOG_ERROR|LOG_BIOS,"Request BIOS Configuration INT 15 C0");
+		LOG(LOG_BIOS,LOG_ERROR)("Request BIOS Configuration INT 15 C0");
 		CALLBACK_SCF(true);
 		break;
 	case 0x4f:	/* BIOS - Keyboard intercept */
@@ -229,7 +229,7 @@ static Bitu INT15_Handler(void) {
 				CALLBACK_SCF(true);
 			}
 		} else {
-			LOG(LOG_ERROR|LOG_BIOS,"INT15:84:Unknown Bios Joystick functionality.");
+			LOG(LOG_BIOS,LOG_ERROR)("INT15:84:Unknown Bios Joystick functionality.");
 		}
 		break;
 	case 0x86:	/* BIOS - WAIT (AT,PS) */
@@ -259,11 +259,11 @@ static Bitu INT15_Handler(void) {
 			Damn programs should use the mouse drivers 
 			So let's fail these calls 
 		*/
-		LOG(LOG_BIOS,"INT15:Function %X called,bios mouse not supported",reg_ah);
+		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called,bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_BIOS,"INT15:Unknown call %2X",reg_ah);
+		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %2X",reg_ah);
 		reg_ah=0x86;
 		CALLBACK_SCF(false);
 	}
@@ -274,7 +274,7 @@ static Bitu INT1_Single_Step(void) {
 	static bool warned=false;
 	if (!warned) {
 		warned=true;
-		LOG(LOG_CPU,"INT 1:Single Step called");
+		LOG(LOG_CPU,LOG_NORMAL)("INT 1:Single Step called");
 	}
 	return CBRET_NONE;
 }

@@ -158,7 +158,7 @@ static void QueueByte(Bit8u data) {
 		if (pos>=MPU_QUEUE) pos-=MPU_QUEUE;
 		mpu.queue_used++;
 		mpu.queue[pos]=data;
-	} else LOG(LOG_MISC,"MPU401:Data queue full");
+	} else LOG(LOG_MISC,LOG_NORMAL)("MPU401:Data queue full");
 }
 
 static void ClrQueue(void) {
@@ -184,7 +184,7 @@ static void MPU401_WriteCommand(Bit32u port,Bit8u val) {
 		break;
 
 	default:
-		LOG(LOG_MISC,"MPU401:Unhandled command %X",val);
+		LOG(LOG_MISC,LOG_NORMAL)("MPU401:Unhandled command %X",val);
 		QueueByte(MSG_CMD_ACK);
 		break;
 	}

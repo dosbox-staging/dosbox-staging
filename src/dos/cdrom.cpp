@@ -166,7 +166,7 @@ int CDROM_GetMountType(char* path, int forceCD)
 	int num = SDL_CDNumDrives();
 	// If cd drive is forced then check if its in range and return 0
 	if ((forceCD>=0) && (forceCD<num)) {
-		LOG(LOG_ERROR,"CDROM: Using drive %d",forceCD);
+		LOG(LOG_ALL,LOG_ERROR)("CDROM: Using drive %d",forceCD);
 		return 0;
 	}
 

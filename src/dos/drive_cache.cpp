@@ -113,13 +113,13 @@ void DOS_Drive_Cache::SetLabel(const char* vname)
 		}
 	};
 	label[labelPos]=0;
-//	LOG(LOG_ERROR,"CACHE: Set volume label to %s",label);
+//	LOG(LOG_ALL,LOG_ERROR)("CACHE: Set volume label to %s",label);
 };
 
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
 {
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
-	LOG(LOG_FILES,"DIRCACHE: Too many open directories!");
+	LOG(LOG_FILES,LOG_NORMAL)("DIRCACHE: Too many open directories!");
 	return 0;
 };
 

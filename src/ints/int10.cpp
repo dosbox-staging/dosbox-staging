@@ -42,7 +42,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x01:								/* Set TextMode Cursor Shape */
         vga.internal.cursor=reg_cx;         // maybe write some memory somewhere
-		LOG(LOG_INT10,"INT10:01:Set textmode cursor shape partially supported: %X",reg_cx);
+		LOG(LOG_INT10,LOG_NORMAL)("INT10:01:Set textmode cursor shape partially supported: %X",reg_cx);
 		break;
 	case 0x02:								/* Set Cursor Pos */
 		//TODO Check some shit but not really usefull
@@ -58,7 +58,7 @@ static Bitu INT10_Handler(void) {
 		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80) LOG(LOG_INT10,"Func %x",reg_al);
+		if (reg_al & 0x80) LOG(LOG_INT10,LOG_NORMAL)("Func %x",reg_al);
 		else INT10_SetActivePage(reg_al);
 		break;	
 	case 0x06:								/* Scroll Up */
@@ -81,7 +81,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x0B:								/* Set Background/Border Colour & Set Palette*/
         if(!warned_int10_0b) {
-            LOG(LOG_ERROR|LOG_INT10,"Function 0B Unsupported: Set Background/border colour & Set Pallete");
+            LOG(LOG_INT10,LOG_ERROR)("Function 0B Unsupported: Set Background/border colour & Set Pallete");
             warned_int10_0b=true;
         }
 		break;
@@ -135,7 +135,7 @@ static Bitu INT10_Handler(void) {
 			INT10_GetDACBlock(reg_bx,reg_cx,SegPhys(es)+reg_dx);
 			break;
 		default:
-			LOG(LOG_ERROR|LOG_INT10,"Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
+			LOG(LOG_INT10,LOG_ERROR)("Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
 		}
 		break;
 	case 0x11:								/* Character generator functions */
@@ -180,12 +180,12 @@ static Bitu INT10_Handler(void) {
 				break;
 			default:
 				reg_cx=16;
-				LOG(LOG_ERROR|LOG_INT10,"Fucntion 11:30 Request for font %2X",reg_bh);	
+				LOG(LOG_INT10,LOG_ERROR)("Fucntion 11:30 Request for font %2X",reg_bh);	
 			}
 			reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 			break;
 		default:
-			LOG(LOG_ERROR|LOG_INT10,"Function 11:Unsupported character generator call %2X",reg_al);
+			LOG(LOG_INT10,LOG_ERROR)("Function 11:Unsupported character generator call %2X",reg_al);
 		}
 		break;
 	case 0x12:								/* alternate function select */
@@ -198,7 +198,7 @@ static Bitu INT10_Handler(void) {
 				break;
 			}
 		default:
-			LOG(LOG_ERROR|LOG_INT10,"Function 12:Call %2X not handled",reg_bl);
+			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 		}
 		break;
 	case 0x13:								/* Write String */
@@ -223,15 +223,15 @@ static Bitu INT10_Handler(void) {
 			reg_al=0x1B;
 			break;
 		default:
-			LOG(LOG_ERROR|LOG_INT10,"Function 1B:Unhandled call BX %2X",reg_bx);
+			LOG(LOG_INT10,LOG_ERROR)("Function 1B:Unhandled call BX %2X",reg_bx);
 		}
 		break;
 	case 0xff:
-		if (!warned_ff) LOG(LOG_INT10,"INT10:FF:Weird NC call");
+		if (!warned_ff) LOG(LOG_INT10,LOG_NORMAL)("INT10:FF:Weird NC call");
 		warned_ff=true;
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_INT10,"Function %2X not supported",reg_ah);
+		LOG(LOG_INT10,LOG_ERROR)("Function %2X not supported",reg_ah);
 	};
 	return CBRET_NONE;
 }

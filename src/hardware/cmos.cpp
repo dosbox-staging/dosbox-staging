@@ -53,7 +53,7 @@ static void cmos_checktimer(void) {
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
 	cmos.timer.micro=(Bitu) (10000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
-	LOG(LOG_PIT,"RTC Timer at %f hz",1000000.0/cmos.timer.micro);
+	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %f hz",1000000.0/cmos.timer.micro);
 	PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 }
 
@@ -76,13 +76,13 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 	case 0x01:		/* Seconds Alarm */
 	case 0x03:		/* Minutes Alarm */
 	case 0x05:		/* Hours Alarm */
-		LOG(LOG_BIOS,"CMOS:Trying to set alarm");
+		LOG(LOG_BIOS,LOG_NORMAL)("CMOS:Trying to set alarm");
 		cmos.regs[cmos.reg]=val;
 		break;
 
 	case 0x0a:		/* Status reg A */
 		cmos.regs[cmos.reg]=val & 0x7f;
-		if (val & 0x70!=0x20) LOG(LOG_ERROR|LOG_BIOS,"CMOS Illegal 22 stage divider value");
+		if (val & 0x70!=0x20) LOG(LOG_BIOS,LOG_ERROR)("CMOS Illegal 22 stage divider value");
 		cmos.timer.div=(val & 0xf);
 		cmos_checktimer();
 		break;
@@ -90,7 +90,7 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 		cmos.bcd=!(val & 0x4);
 		cmos.regs[cmos.reg]=val & 0x7f;
 		cmos.timer.enabled=(val & 0x40)>0;
-		if (val&0x10) LOG(LOG_ERROR|LOG_BIOS,"CMOS:Updated ended interrupt not supported yet");
+		if (val&0x10) LOG(LOG_BIOS,LOG_ERROR)("CMOS:Updated ended interrupt not supported yet");
 		cmos_checktimer();
 		break;
 	case 0x0f:		/* Shutdown status byte */
@@ -98,7 +98,7 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 		break;
 	default:
 		cmos.regs[cmos.reg]=val & 0x7f;
-		LOG(LOG_ERROR|LOG_BIOS,"CMOS:WRite to unhandled register %x",cmos.reg);
+		LOG(LOG_BIOS,LOG_ERROR)("CMOS:WRite to unhandled register %x",cmos.reg);
 	}
 }
 
@@ -107,7 +107,7 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 
 static Bit8u cmos_readreg(Bit32u port) {
 	if (cmos.reg>0x3f) {
-		LOG(LOG_ERROR|LOG_BIOS,"CMOS:Read from illegal register %x",cmos.reg);
+		LOG(LOG_BIOS,LOG_ERROR)("CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
 	}
 	time_t curtime;
@@ -151,7 +151,7 @@ static Bit8u cmos_readreg(Bit32u port) {
 	case 0x31:		/* Extended memory in KB High Byte */
 		return cmos.regs[cmos.reg];
 	default:
-		LOG(LOG_BIOS,"CMOS:Read from reg %F",cmos.reg);
+		LOG(LOG_BIOS,LOG_NORMAL)("CMOS:Read from reg %F",cmos.reg);
 		return cmos.regs[cmos.reg];
 	}
 }

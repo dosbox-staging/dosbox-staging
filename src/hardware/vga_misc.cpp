@@ -48,7 +48,7 @@ static Bit8u read_p3da(Bit32u port) {
 
 
 static void write_p3d8(Bit32u port,Bit8u val) {
-	LOG(LOG_VGAMISC,"Write %2X to 3da",val);
+	LOG(LOG_VGAMISC,LOG_NORMAL)("Write %2X to 3da",val);
 	/*
 		3	Vertical Sync Select. If set Vertical Sync to the monitor is the
 			logical OR of the vertical sync and the vertical display enable.

@@ -70,7 +70,7 @@ void write_p3cf(Bit32u port,Bit8u val) {
 	case 3: /* Data Rotate */
 		gfx(data_rotate)=val;
 		vga.config.data_rotate=val & 7;
-		if (vga.config.data_rotate) LOG(LOG_VGAGFX,"VGA:Data Rotate used %d",val &7);
+		if (vga.config.data_rotate) LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:Data Rotate used %d",val &7);
 		vga.config.raster_op=(val>>3) & 3;
 		/* 
 			0-2	Number of positions to rotate data right before it is written to
@@ -171,12 +171,12 @@ void write_p3cf(Bit32u port,Bit8u val) {
 	case 9:	/* Unknown */
 		/* Crystal Dreams seems to like to write tothis register very weird */
 		if (!index9warned) {
-			LOG(LOG_VGAMISC,"VGA:3CF:Write %2X to illegal index 9",val);
+			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:3CF:Write %2X to illegal index 9",val);
 			index9warned=true;
 		}
 		break;
 	default:
-		LOG(LOG_VGAMISC,"VGA:3CF:Write %2X to illegal index %2X",val,gfx(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:3CF:Write %2X to illegal index %2X",val,gfx(index));
 		break;
 	}
 }
@@ -202,7 +202,7 @@ switch (gfx(index)) {
 	case 8: /* Bit Mask Register */
 		return gfx(bit_mask);
 	default:
-		LOG(LOG_VGAMISC,"Reading from illegal index %2X in port %4X",gfx(index),port);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("Reading from illegal index %2X in port %4X",static_cast<Bit32u>(gfx(index)),port);
 	}
 	return 0;	/* Compiler happy */
 }

@@ -267,7 +267,7 @@ INLINE static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u at
 				fontdata=&int10_font_16[chr*16];
 				break;
 			default:
-				LOG(LOG_ERROR|LOG_INT10,"Teletype Illegal Font Height");
+				LOG(LOG_INT10,LOG_ERROR)("Teletype Illegal Font Height");
 				return;
 			}
 			x=8*col;

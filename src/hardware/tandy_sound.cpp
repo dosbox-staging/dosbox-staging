@@ -99,7 +99,7 @@ static void write_pc0(Bit32u port,Bit8u val) {
 //			tandy.chan[tandy.reg>>1].freq_pos=0;
 			break;		
 		default:
-			LOG(0,"TANDY:Illegal dual byte reg %d",tandy.reg);
+			LOG(LOG_ALL,LOG_ERROR)("TANDY:Illegal dual byte reg %d",tandy.reg);
 		};
 	}
 

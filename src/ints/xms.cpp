@@ -328,7 +328,7 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 				xms_handles[next].active	= false;
 			} else {
 				// Not enough mem available
-				LOG(LOG_ERROR,"XMS: Resize failure: out of mem 1");
+				LOG(LOG_MISC,LOG_ERROR)("XMS: Resize failure: out of mem 1");
 				return XMS_OUT_OF_SPACE;
 			};
 			// Resize and allocate new mem 
@@ -337,7 +337,7 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 			//CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
 		} else {
 			// No more free mem ?
-			LOG(LOG_ERROR,"XMS: Resize failure: out of mem 2");
+			LOG(LOG_MISC,LOG_ERROR)("XMS: Resize failure: out of mem 2");
 			return XMS_OUT_OF_SPACE;
 		};
 	};	
@@ -363,7 +363,7 @@ static bool multiplex_xms(void) {
 };
 
 Bitu XMS_Handler(void) {
-	LOG(LOG_ERROR,"XMS: CALL %02X",reg_ah);
+	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */
@@ -439,11 +439,11 @@ Bitu XMS_Handler(void) {
 		reg_dx=0;
 		break;
 	case XMS_DEALLOCATE_UMB:									/* 11 */
-		LOG(LOG_ERROR|LOG_MISC,"XMS:Unhandled call %2X",reg_ah);
+		LOG(LOG_MISC,LOG_ERROR)("XMS:Unhandled call %2X",reg_ah);
 		break;
 
 	}
-	LOG(LOG_ERROR,"XMS: CALL Result: %02X",reg_bl);
+	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
 }
 

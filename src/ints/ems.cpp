@@ -67,7 +67,7 @@ public:
 	device_EMM(){name="EMMXXXX0";}
 	bool Read(Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size){ 
-		LOG(LOG_IOCTL,"EMS:Write to device");	
+		LOG(LOG_IOCTL,LOG_NORMAL)("EMS:Write to device");	
 		return false;
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}
@@ -367,7 +367,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 		reg_al=2+reg_bx*(2+sizeof(EMM_Mapping));
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
@@ -404,7 +404,7 @@ static Bit8u HandleNameSearch(void) {
 	  reg_bx=EMM_MAX_HANDLES;
 	  break;
 	default:
-		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
@@ -422,7 +422,7 @@ static Bit8u GetSetHandleName(void) {
 		MEM_BlockRead(SegPhys(es)+reg_di,emm_handles[handle].name,8);
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
@@ -449,7 +449,7 @@ static Bit8u MemoryRegion(void) {
 	Bit8u buf_src[EMM_PAGE_SIZE];
 	Bit8u buf_dest[EMM_PAGE_SIZE];
 	if (reg_al>1) {
-		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	LoadMoveRegion(SegPhys(ds)+reg_si,region);
@@ -610,7 +610,7 @@ static Bitu INT67_Handler(void) {
 			reg_ah=EMM_NO_ERROR;
 			break;
 		default:
-			LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+			LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 			reg_ah=EMM_FUNC_NOSUP;
 			break;
 		}
@@ -653,7 +653,7 @@ static Bitu INT67_Handler(void) {
 		break;
 	case 0x57:	/* Memory region */
 		reg_ah=MemoryRegion();
-		if (reg_ah) LOG(LOG_ERROR,"EMS:Function 57 move failed");
+		if (reg_ah) LOG(LOG_MISC,LOG_ERROR)("EMS:Function 57 move failed");
 		break;
 	case 0x58: // Get mappable physical array address array
 		if (reg_al==0x00) {
@@ -669,11 +669,11 @@ static Bitu INT67_Handler(void) {
 		reg_ah = EMM_NO_ERROR;
 		break;
 	case 0xDE:		/* VCPI Functions */
-		LOG(LOG_ERROR|LOG_MISC,"EMS:VCPI Call %2X not supported",reg_al);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:VCPI Call %2X not supported",reg_al);
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X not supported",reg_ah);
+		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X not supported",reg_ah);
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	}

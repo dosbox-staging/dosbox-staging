@@ -34,10 +34,10 @@ static Bitu INT13_SmallHandler(void) {
     case 0x0:
         reg_ah=0x00;
         CALLBACK_SCF(false);
-        LOG(LOG_BIOS,"reset disk return succesfull");
+        LOG(LOG_BIOS,LOG_NORMAL)("reset disk return succesfull");
         break;
 	case 0x02:	/* Read Disk Sectors */
-		LOG(LOG_BIOS,"INT13:02:Read Disk Sectors not supported failing");
+		LOG(LOG_BIOS,LOG_NORMAL)("INT13:02:Read Disk Sectors not supported failing");
 		reg_ah=0x80;
 		CALLBACK_SCF(true);
 		break;
@@ -50,17 +50,17 @@ static Bitu INT13_SmallHandler(void) {
             reg_ah=0x80;
             CALLBACK_SCF(true);
         }
-        LOG(LOG_BIOS,"INT 13:04 Verify sector used on %d, with result %d",reg_dl,reg_ah);
+        LOG(LOG_BIOS,LOG_NORMAL)("INT 13:04 Verify sector used on %d, with result %d",reg_dl,reg_ah);
         break;
           
 	case 0x08:	/* Get Drive Parameters */
-		LOG(LOG_BIOS,"INT13:08:Get Drive parameters not supported failing");
+		LOG(LOG_BIOS,LOG_NORMAL)("INT13:08:Get Drive parameters not supported failing");
 		reg_ah=0xff;
 		CALLBACK_SCF(true);
 		break;
 	case 0xff:
 	default:
-		LOG(LOG_ERROR|LOG_BIOS,"Illegal int 13h call %2X Fail it",reg_ah);
+		LOG(LOG_BIOS,LOG_ERROR)("Illegal int 13h call %2X Fail it",reg_ah);
 		reg_ah=0xff;
 		CALLBACK_SCF(true);
 	}

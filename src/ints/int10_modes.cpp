@@ -224,7 +224,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	mode&=mode & 127;
 	line=FindVideoMode(mode);
 	if (line==0xff) {
-		LOG(LOG_ERROR|LOG_INT10,"INT10:Trying to set non supported video mode %X",mode);
+		LOG(LOG_INT10,LOG_ERROR)("INT10:Trying to set non supported video mode %X",mode);
 		return;	
 	}
 	
@@ -279,7 +279,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	IO_Read(VGAREG_ACTL_RESET);
 
 	//Set the palette
-	if ((modeset_ctl&0x08)==0x8) LOG(LOG_INT10,"Mode set without palette");
+	if ((modeset_ctl&0x08)==0x8) LOG(LOG_INT10,LOG_NORMAL)("Mode set without palette");
 	if((modeset_ctl&0x08)==0) {
 		// Set the PEL mask
 		IO_Write(VGAREG_PEL_MASK,vga_modes[line].pelmask);

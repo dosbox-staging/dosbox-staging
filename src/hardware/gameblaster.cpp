@@ -358,7 +358,7 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 		break;
 	default:	/* Error! */
 //		logerror("%04x: (SAA1099 #%d) Unknown operation (reg:%02x, data:%02x)\n",activecpu_get_pc(), chip, reg, data);
-		LOG(0|LOG_ERROR,"CMS Unkown write to reg %x with %x",reg, data);
+		LOG(LOG_MISC,LOG_ERROR)("CMS Unkown write to reg %x with %x",reg, data);
 	}
 }
 

@@ -228,7 +228,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		// Get Mounttype and init needed cdrom interface
 		switch (CDROM_GetMountType(physicalPath,forceCD)) {
 			case 0x00	: {	
-							LOG(LOG_MISC,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
+							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
 							#if defined (WIN32)
 								// Check OS
 								OSVERSIONINFO osi;
@@ -238,30 +238,30 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 									// only WIN NT/200/XP
 									if (useCdromInterface==CDROM_USE_IOCTL) {
 										cdrom[numDrives] = new CDROM_Interface_Ioctl();
-										LOG(LOG_MISC,"MSCDEX: IOCTL Interface.");
+										LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
 										break;
 									}
 								}
 								if (useCdromInterface==CDROM_USE_ASPI) {
 									// all Wins - ASPI
 									cdrom[numDrives] = new CDROM_Interface_Aspi();
-									LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
+									LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
 									break;
 								}
 							#endif
 							cdrom[numDrives] = new CDROM_Interface_SDL();
-							LOG(LOG_MISC,"MSCDEX: SDL Interface.");
+							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
 						  } break;
 			case 0x01	:	// iso cdrom interface
 							// FIXME: Not yet supported	
-							LOG(LOG_MISC|LOG_ERROR,"MSCDEX: Mounting iso file as cdrom: %s"	,physicalPath);
+							LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Mounting iso file as cdrom: %s"	,physicalPath);
 							cdrom[numDrives] = new CDROM_Interface_Fake;
 							return 2;
 							break;
 			case 0x02	:	// fake cdrom interface (directories)
 							cdrom[numDrives] = new CDROM_Interface_Fake;
-							LOG(LOG_MISC,"MSCDEX: Mounting directory as cdrom: %s",physicalPath);	
-							LOG(LOG_MISC,"MSCDEX: You wont have full MSCDEX support !");	
+							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting directory as cdrom: %s",physicalPath);	
+							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: You wont have full MSCDEX support !");	
 							result = 5;
 							break;
 			default		:	// weird result
@@ -728,7 +728,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 										mem_writeb(buffer+10,0x00);
 										break;
 									   };
-							default :	LOG(LOG_ERROR|LOG_MISC,"MSCDEX: Unsupported IOCTL INPUT Subfunction %02X",subFuncNr);
+							default :	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported IOCTL INPUT Subfunction %02X",subFuncNr);
 										break;
 						}
 						break;
@@ -747,7 +747,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 							case 0x05 :	// load media
 										mscdex->LoadUnloadMedia(subUnit,false);
 										break;
-							default	:	LOG(LOG_ERROR|LOG_MISC,"MSCDEX: Unsupported IOCTL OUTPUT Subfunction %02X",subFuncNr);
+							default	:	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported IOCTL OUTPUT Subfunction %02X",subFuncNr);
 										break;
 						};
 						break;
@@ -784,7 +784,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 		case 0x88	:	/* Resume Audio */
 						mscdex->ResumeAudio(subUnit);
 						break;
-		default		:	LOG(LOG_ERROR|LOG_MISC,"MSCDEX: Unsupported Driver Request %02X",funcNr);
+		default		:	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported Driver Request %02X",funcNr);
 						break;
 	
 	};
@@ -870,7 +870,7 @@ static bool MSCDEX_Handler(void)
 		case 0x1510:	/* Device driver request */
 						mscdex->SendDriverRequest(reg_cx,data);
 						return true;
-		default	:		LOG(LOG_ERROR|LOG_MISC,"MSCDEX: Unknwon call : %04X",reg_ax);
+		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 						return true;
 
 	};
@@ -882,7 +882,7 @@ public:
 	device_MSCDEX() { name="MSCD001"; }
 	bool Read (Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size) { 
-		LOG(0,"Write to mscdex device");	
+		LOG(LOG_ALL,LOG_NORMAL)("Write to mscdex device");	
 		return false;
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}

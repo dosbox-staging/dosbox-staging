@@ -86,7 +86,7 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 		full=RasterOp(vga.config.full_set_reset,ExpandTable[val] & vga.config.full_bit_mask);
 		break;
 	default:
-		LOG(LOG_VGAMISC,"VGA:Unsupported write mode %d",vga.config.write_mode);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:Unsupported write mode %d",vga.config.write_mode);
 	}
 	return full;
 }

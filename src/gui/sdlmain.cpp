@@ -397,7 +397,7 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 	/* Special Keys */
 	default:
 		code=KBD_1;
-		LOG(LOG_ERROR|LOG_KEYBOARD,"Unhandled SDL keysym %d",key->keysym.sym);
+		LOG(LOG_KEYBOARD,LOG_ERROR)("Unhandled SDL keysym %d",key->keysym.sym);
 		break;
 	}
 	/* Check the modifiers */

@@ -274,7 +274,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		
 		break;
 	default:
-		LOG(LOG_VGAMISC,"VGA:CRTC:Write to unknown index %2X",val,crtc(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:CRTC:Write to unknown index %2X",val,crtc(index));
 	}
 }
 
@@ -331,7 +331,7 @@ Bit8u read_p3d5(Bit32u port) {
 	case 0x18:	/* Line Compare Register */
 		return crtc(line_compare);
 	default:
-		LOG(LOG_VGAMISC,"VGA:CRTC:Read from unknown index %X",crtc(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:CRTC:Read from unknown index %X",crtc(index));
 	}
 	return 0;
 }

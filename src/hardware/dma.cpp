@@ -105,7 +105,7 @@ static Bit8u read_dma(Bit32u port) {
 		ret=0x0;
 		break;
 	default:
-		LOG(LOG_ERROR,"DMA:Unhandled read from %X",port);
+		LOG(LOG_DMA,LOG_ERROR)("DMA:Unhandled read from %X",port);
 	}
 	return ret;
 }
@@ -140,7 +140,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		DMA_TestChannel(chan);
 		break;
 	case 0x08:	/* Command Register */
-		if (val != 4) LOG(LOG_ERROR,"DMA1:Illegal command %2X",val);
+		if (val != 4) LOG(LOG_DMA,LOG_ERROR)("DMA1:Illegal command %2X",val);
 		cont->command_reg=val;
 		break;
 	case 0x09:	/* Request Register */
@@ -165,7 +165,7 @@ static void write_dma(Bit32u port,Bit8u val) {
  		chan->mode.autoinit_enable = (val & 0x10) > 0;
 		chan->mode.transfer_type = (val >> 2) & 0x03;
 		if (chan->mode.address_decrement) {
-			LOG(LOG_ERROR,"DMA:Address Decrease not supported yet");
+			LOG(LOG_DMA,LOG_ERROR)("DMA:Address Decrease not supported yet");
 		}
 		DMA_TestChannel(chan);
 		break;
@@ -173,7 +173,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		cont->flipflop=true;
 		break;
 	default:
-		LOG(LOG_ERROR,"DMA:Unhandled write %X to %X",val,port);
+		LOG(LOG_DMA,LOG_ERROR)("DMA:Unhandled write %X to %X",static_cast<Bit32u>(val),port);
 	};	
 };
 

@@ -91,7 +91,7 @@ void write_p3c5(Bit32u port,Bit8u val) {
 		VGA_FindSettings();
 		break;
 	default:
-		LOG(LOG_VGAMISC,"VGA:SEQ:Write to illegal index %2X",seq(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Write to illegal index %2X",seq(index));
 	};
 };
 
@@ -113,7 +113,7 @@ Bit8u read_p3c5(Bit32u port) {
 	case 4:	/* Memory Mode */
 		return seq(memory_mode);
 	default:
-		LOG(LOG_VGAMISC,"VGA:SEQ:Read from illegal index %2X",seq(index));
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Read from illegal index %2X",seq(index));
 	};
 	return 0;
 };

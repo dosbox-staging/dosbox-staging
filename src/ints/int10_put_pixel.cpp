@@ -86,7 +86,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	case CTEXT:
 	case MTEXT:
 	default:
-		LOG(LOG_ERROR|LOG_INT10,"PutPixel Unhandled memory model %d",curmode->memmodel);
+		LOG(LOG_INT10,LOG_ERROR)("PutPixel Unhandled memory model %d",curmode->memmodel);
 		break;
 	}	
 }
@@ -135,7 +135,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 	case CTEXT:
 	case MTEXT:
 	default:
-		LOG(LOG_ERROR|LOG_INT10,"GetPixel Unhandled memory model %d",curmode->memmodel);
+		LOG(LOG_INT10,LOG_ERROR)("GetPixel Unhandled memory model %d",curmode->memmodel);
 		break;
 	}	
 }

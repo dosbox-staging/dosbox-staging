@@ -47,7 +47,7 @@ public:
 	};
 	void PlaySysex(Bit8u * sysex,Bitu len) {
 		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
-			LOG(LOG_MISC|LOG_ERROR,"Can't send midi message");
+			LOG(LOG_MISC,LOG_ERROR)("Can't send midi message");
 			return;
 		}		
 		midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));

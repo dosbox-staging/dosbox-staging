@@ -126,14 +126,14 @@ static void write_data(Bit32u port,Bit8u val) {
 		};
 		break;
 	case 1:                        /* icw2          */
-		LOG(LOG_PIC,"%d:Base vector %X",port==0x21 ? 0 : 1,val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
 		for (i=0;i<=7;i++) {
 			irqs[i+irq_base].vector=(val&0xf8)+i;
 		};
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	case 2:							/* icw 3 */
-		LOG(LOG_PIC,"%d:ICW 3 %X",port==0x21 ? 0 : 1,val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	case 3:							/* icw 4 */
@@ -147,11 +147,11 @@ static void write_data(Bit32u port,Bit8u val) {
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
 		
-		LOG(LOG_PIC,"%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	default:                       /* icw 3, and 4*/
-		LOG(LOG_PIC,"ICW HUH? %X",val);
+		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %X",val);
 	}
 }
 
@@ -269,7 +269,7 @@ static void AddEntry(PICEntry * entry) {
 
 void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
 	if (!pic.free_entry) {
-		LOG(LOG_ERROR|LOG_PIC,"Event queue full");
+		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
 	PICEntry * entry=pic.free_entry;
@@ -284,7 +284,7 @@ void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
 void PIC_AddIRQ(Bitu irq,Bitu delay) {
 	if (irq>15) E_Exit("PIC:Illegal IRQ");
 	if (!pic.free_entry) {
-		LOG(LOG_ERROR|LOG_PIC,"Event queue full");
+		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
 	PICEntry * entry=pic.free_entry;

@@ -47,7 +47,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 		disney.data=val;
 		break;
 	case 1:		/* Status Port */		
-		LOG(LOG_MISC,"DISNEY:Status write %x",val);
+		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %x",val);
 		break;
 	case 2:		/* Control Port */
 //		LOG_WARN("DISNEY:Control write %x",val);
@@ -56,7 +56,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 				disney.buffer[disney.used++]=disney.data;
 			}
 		}
-		if (val&0x10) LOG(LOG_ERROR,"DISNEY:Parallel IRQ Enabled");
+		if (val&0x10) LOG(LOG_MISC,LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
 		disney.control=val;
 		break;
 	}
@@ -66,7 +66,7 @@ static Bit8u disney_read(Bit32u port) {
 
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
-//		LOG(LOG_MISC,"DISNEY:Read from data port");
+//		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
 		break;
 	case 1:		/* Status Port */	
@@ -75,7 +75,7 @@ static Bit8u disney_read(Bit32u port) {
 		else return 0x0;
 		break;
 	case 2:		/* Control Port */
-		LOG(LOG_MISC,"DISNEY:Read from control port");
+		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from control port");
 		return disney.control;
 		break;
 	}

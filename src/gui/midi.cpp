@@ -118,7 +118,7 @@ void MIDI_RawOutByte(Bit8u data) {
 			/* Play a sysex message */
 			midi.sysex.buf[midi.sysex.used++]=0xf7;
 			midi.handler->PlaySysex(midi.sysex.buf,midi.sysex.used);
-			LOG(0,"Sysex message size %d",midi.sysex.used);
+			LOG(LOG_ALL,LOG_NORMAL)("Sysex message size %d",midi.sysex.used);
 			midi.sysex.active=false;
 			if (data==0xf7) return;
 		}

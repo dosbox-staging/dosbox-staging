@@ -330,8 +330,8 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
-	if (flags>2) LOG(LOG_FILES|LOG_ERROR,"Special file open command %X file %s",flags,name);
-	else LOG(LOG_FILES,"file open command %X file %s",flags,name);
+	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
+	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 	
 	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
@@ -658,7 +658,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 			handle = psp.FindEntryByHandle(i);
 			if (handle==0xFF) {
 				// This shouldnt happen
-				LOG(LOG_FILES|LOG_ERROR,"DOS: File %s is opened but has no psp entry.",shortname);
+				LOG(LOG_FILES,LOG_ERROR)("DOS: File %s is opened but has no psp entry.",shortname);
 				return false;
 			}
 			fcb.FileOpen((Bit8u)handle);

@@ -92,13 +92,13 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(char* hardwareID)
 				if (sd.SRB_Status == SS_COMP) {
 					if (sd.SRB_DeviceType == DTYPE_CDROM) {						
 						if ((target==j) && (lun==k)) {
-							LOG(LOG_MISC,"SCSI: Getting Hardware vendor.");								
+							LOG(LOG_MISC,LOG_NORMAL)("SCSI: Getting Hardware vendor.");								
 							// "Hardware ID = vendor" match ?
 							char vendor[64];
 							if (GetVendor(i,target,lun,vendor)) {
-								LOG(LOG_MISC,"SCSI: Vendor : %s",vendor);	
+								LOG(LOG_MISC,LOG_NORMAL)("SCSI: Vendor : %s",vendor);	
 								if (strstr(strupr(hardwareID),strupr(vendor))) {
-									LOG(LOG_MISC,"SCSI: Host Adapter found: %d",i);								
+									LOG(LOG_MISC,LOG_NORMAL)("SCSI: Host Adapter found: %d",i);								
 									return i;								
 								}
 							};
@@ -108,7 +108,7 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(char* hardwareID)
 			}
 		}
 	}
-	LOG(LOG_ERROR,"SCSI: Host Adapter not found: %d",i);									
+	LOG(LOG_MISC,LOG_ERROR)("SCSI: Host Adapter not found: %d",i);									
 	return 0;
 };
 
@@ -131,16 +131,16 @@ bool CDROM_Interface_Aspi::ScanRegistryFindKey(HKEY& hKeyBase)
 			newKeyResult = RegOpenKeyEx (hKeyBase,subKey,0,KEY_READ,&hNewKey);
 			if (newKeyResult==ERROR_SUCCESS) {
 				if (GetRegistryValue(hNewKey,"CurrentDriveLetterAssignment",buffer,256)) {
-					LOG(LOG_MISC,"SCSI: Drive Letter found: %s",buffer);					
+					LOG(LOG_MISC,LOG_NORMAL)("SCSI: Drive Letter found: %s",buffer);					
 					// aha, something suspicious...
 					if (buffer[0]==letter) {
 						char hardwareID[256];
 						// found it... lets see if we can get the scsi values				
 						bool v1 = GetRegistryValue(hNewKey,"SCSILUN",buffer,256);
-						LOG(LOG_MISC,"SCSI: SCSILUN found: %s",buffer);					
+						LOG(LOG_MISC,LOG_NORMAL)("SCSI: SCSILUN found: %s",buffer);					
 						lun		= buffer[0]-'0';
 						bool v2 = GetRegistryValue(hNewKey,"SCSITargetID",buffer,256);
-						LOG(LOG_MISC,"SCSI: SCSITargetID found: %s",buffer);					
+						LOG(LOG_MISC,LOG_NORMAL)("SCSI: SCSITargetID found: %s",buffer);					
 						target  = buffer[0]-'0';
 						bool v3 = GetRegistryValue(hNewKey,"HardwareID",hardwareID,256);
 						RegCloseKey(hNewKey);

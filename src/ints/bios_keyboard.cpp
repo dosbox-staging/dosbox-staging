@@ -322,7 +322,7 @@ static Bitu INT16_Handler(void) {
 		reg_al=mem_readb(BIOS_KEYBOARD_FLAGS1);
 		break;
 	case 0x03:	/* SET TYPEMATIC RATE AND DELAY */
-		LOG(LOG_ERROR|LOG_BIOS,"INT16:Unhandled Typematic Rate Call %2X",reg_al);
+		LOG(LOG_BIOS,LOG_ERROR)("INT16:Unhandled Typematic Rate Call %2X",reg_al);
 		break;
 	case 0x05:	/* STORE KEYSTROKE IN KEYBOARD BUFFER */
 //TODO make add_key bool :)
@@ -335,10 +335,10 @@ static Bitu INT16_Handler(void) {
 		break;
 	case 0x55:
 		/* Weird call used by some dos apps */
-		LOG(LOG_BIOS,"INT16:55:Word TSR compatible call");
+		LOG(LOG_BIOS,LOG_NORMAL)("INT16:55:Word TSR compatible call");
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_BIOS,"INT16:Unhandled call %02X",reg_ah);
+		LOG(LOG_BIOS,LOG_ERROR)("INT16:Unhandled call %02X",reg_ah);
 		break;
 
 	};
