@@ -16,26 +16,30 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.37 2004-04-24 12:43:54 harekiet Exp $ */
+/* $Id: mouse.cpp,v 1.38 2004-04-24 17:57:38 harekiet Exp $ */
 
 #include <string.h>
 #include <math.h>
+
+
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
 #include "regs.h"
+#include "cpu.h"
 #include "mouse.h"
 #include "pic.h"
 #include "inout.h"
 #include "int10.h"
 #include "bios.h"
-#include "cpu.h"
+
 
 static Bitu call_int33,call_int74;
-static Bit16u ps2cbseg, ps2cbofs;static bool useps2callback;static Bit16u call_ps2;static RealPt ps2_callback;static Bit16s oldmouseX, oldmouseY;
-void Mouse_SetPS2State(bool use) {	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;	else useps2callback = false;	Mouse_AutoLock(useps2callback);}
-void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {	if ((pseg==0) && (pofs==0)) useps2callback = false;	else useps2callback = true;	ps2cbseg = pseg;	ps2cbofs = pofs;	Mouse_AutoLock(useps2callback);}
-void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {	if (useps2callback) {		Bit16u mdat = (data & 0x03) | 0x08;		Bit16s xdiff = mouseX-oldmouseX;		Bit16s ydiff = oldmouseY-mouseY;		oldmouseX = mouseX;		oldmouseY = mouseY;		if ((xdiff>0xff) || (xdiff<-0xff)) mdat |= 0x40;		// x overflow		if ((ydiff>0xff) || (ydiff<-0xff)) mdat |= 0x80;		// y overflow		xdiff %= 256;		ydiff %= 256;		if (xdiff<0) {			xdiff = (0x100+xdiff);			mdat |= 0x10;		}		if (ydiff<0) {			ydiff = (0x100+ydiff);			mdat |= 0x20;		}		CPU_Push16((Bit16u)mdat); 		CPU_Push16((Bit16u)(xdiff % 256)); 		CPU_Push16((Bit16u)(ydiff % 256)); 		CPU_Push16((Bit16u)0); 		CPU_Push16(RealSeg(ps2_callback));		CPU_Push16(RealOff(ps2_callback));		SegSet16(cs, ps2cbseg);		reg_ip = ps2cbofs;	}}Bitu PS2_Handler(void) {	reg_sp += 8;	// remove the 4 words	return CBRET_NONE;}
+static Bit16u ps2cbseg,ps2cbofs;
+static bool useps2callback;
+static Bit16u call_ps2;
+static RealPt ps2_callback;
+static Bit16s oldmouseX, oldmouseY;
 // forward
 void WriteMouseIntVector(void);
 
@@ -116,6 +120,56 @@ static struct {
 	bool enabled;
 	Bit16s oldshown;
 } mouse;
+
+void Mouse_SetPS2State(bool use) {
+	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;
+	else useps2callback = false;
+	Mouse_AutoLock(useps2callback);
+}
+
+void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
+	if ((pseg==0) && (pofs==0)) useps2callback = false;
+	else useps2callback = true;
+	ps2cbseg = pseg;
+	ps2cbofs = pofs;
+	Mouse_AutoLock(useps2callback);
+}
+
+void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
+	if (useps2callback) {
+		Bit16u mdat = (data & 0x03) | 0x08;
+		Bit16s xdiff = mouseX-oldmouseX;
+		Bit16s ydiff = oldmouseY-mouseY;
+		oldmouseX = mouseX;
+		oldmouseY = mouseY;
+		if ((xdiff>0xff) || (xdiff<-0xff)) mdat |= 0x40;		// x overflow
+		if ((ydiff>0xff) || (ydiff<-0xff)) mdat |= 0x80;		// y overflow
+		xdiff %= 256;
+		ydiff %= 256;
+		if (xdiff<0) {
+			xdiff = (0x100+xdiff);
+			mdat |= 0x10;
+		}
+		if (ydiff<0) {
+			ydiff = (0x100+ydiff);
+			mdat |= 0x20;
+		}
+		CPU_Push16((Bit16u)mdat); 
+		CPU_Push16((Bit16u)(xdiff % 256)); 
+		CPU_Push16((Bit16u)(ydiff % 256)); 
+		CPU_Push16((Bit16u)0); 
+		CPU_Push16(RealSeg(ps2_callback));
+		CPU_Push16(RealOff(ps2_callback));
+		SegSet16(cs, ps2cbseg);
+		reg_ip = ps2cbofs;
+	}
+}
+
+Bitu PS2_Handler(void) {
+	reg_sp += 8;	// remove the 4 words
+	return CBRET_NONE;
+}
+
 
 #define X_MICKEY 8
 #define Y_MICKEY 8
@@ -354,20 +408,22 @@ void Mouse_CursorMoved(float x,float y) {
 	float dx = x * mouse.pixelPerMickey_x;
 	float dy = y * mouse.pixelPerMickey_y;
 	if((fabs(x) > 1.0) || (mouse.senv_y < 1.0)) dx *= mouse.senv_x;
+
 	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
+
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
 	mouse.x += dx;
 	mouse.y += dy;
 	/* ignore constraints if using PS2 mouse callback in the bios */
+
 	if (!useps2callback) {		
 		if (mouse.x > mouse.max_x) mouse.x = mouse.max_x;
 		if (mouse.x < mouse.min_x) mouse.x = mouse.min_x;
 		if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
 		if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
 	}
-
 	Mouse_AddEvent(MOUSE_MOVED);
 	DrawCursor();
 }
@@ -419,6 +475,7 @@ void Mouse_ButtonReleased(Bit8u button) {
 }
 
 static void SetMickeyPixelRate(Bit16s px, Bit16s py){
+
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
 		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
@@ -427,13 +484,21 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py){
 	}
 };
 static void SetSensitivity(Bit16s px, Bit16s py){
+
 	if ((px!=0) && (py!=0)) {
+
 		px--;  //Inspired by cutemouse 
+
 		py--;  //Although their cursor update routine is far more complex then ours
+
 		mouse.senv_x=(static_cast<float>(px)*px)/3600.0 +1.0/3.0;
+
 		mouse.senv_y=(static_cast<float>(py)*py)/3600.0 +1.0/3.0;
+
      }
+
 };
+
 
 static void mouse_reset_hardware(void){
 	PIC_SetIRQMask(MOUSE_IRQ,false);
@@ -513,8 +578,11 @@ void Mouse_NewVideoMode(void)
 
 	SetMickeyPixelRate(8,16);
 	oldmouseX = static_cast<Bit16s>(mouse.x);
+
 	oldmouseY = static_cast<Bit16s>(mouse.y);
+
    
+
 }
 
 
@@ -527,7 +595,9 @@ static void mouse_reset(void) {
 	mouse.sub_seg=0;
 	mouse.sub_ofs=0;
 	mouse.senv_x=1.0;
+
 	mouse.senv_y=1.0;
+
 
 	//Added this for cd-v19
 }
@@ -692,13 +762,18 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x1a:	/* Set mouse sensitivity */
 		SetSensitivity(reg_bx,reg_cx);
+
 		LOG(LOG_MOUSE,LOG_WARN)("Set sensitivity used with %d %d",reg_bx,reg_cx);
+
 		// ToDo : double mouse speed value
 		break;
 	case 0x1b:	/* Get mouse sensitivity */
 		reg_bx = Bit16s((60.0* sqrt(mouse.senv_x- (1.0/3.0)) ) +1.0);
+
 		reg_cx = Bit16s((60.0* sqrt(mouse.senv_y- (1.0/3.0)) ) +1.0);
+
 		LOG(LOG_MOUSE,LOG_WARN)("Get sensitivity %d %d",reg_bx,reg_cx);
+
 		// ToDo : double mouse speed value
 		reg_dx = 64;
 		break;
@@ -788,6 +863,7 @@ static Bitu INT74_Handler(void) {
 
 		}
 		DoPS2Callback(mouse.event_queue[mouse.events].buttons, POS_X, POS_Y);
+
 	}
 	IO_Write(0xa0,0x20);
 	IO_Write(0x20,0x20);
@@ -810,6 +886,7 @@ void CreateMouseCallback(void)
 	// Create callback
 	call_int33=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
+
 	// Create a mouse vector with weird address 
 	// for strange mouse detection routines in Sim City & Wasteland
 	Bit16u ofs = call_int33<<4;
@@ -833,7 +910,11 @@ void MOUSE_Init(Section* sec) {
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-	useps2callback = false; 	call_ps2=CALLBACK_Allocate();	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");	ps2_callback=CALLBACK_RealPointer(call_ps2);	memset(&mouse,0,sizeof(mouse));
+	useps2callback = false;
+ 	call_ps2=CALLBACK_Allocate();
+	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
+	ps2_callback=CALLBACK_RealPointer(call_ps2);
+	memset(&mouse,0,sizeof(mouse));
 	mouse_reset_hardware();
 	mouse_reset();
 }
