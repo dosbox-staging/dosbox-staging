@@ -38,12 +38,17 @@ enum SPKR_MODE {
 	MODE_NONE,MODE_WAVE,MODE_DELAY,MODE_ONOFF,MODE_REAL,
 };
 
+/* TODO 
+  Maybe interpolate at the moment we switch between on/off 
+  Keep track of postion of speaker conus in ONOFF mode 
+*/
 
 static struct {
 	Bit16s volume;
 	MIXER_Channel * chan;
 	Bit16u buffer[SPKR_BUF];
-	SPKR_MODE mode,old_mode;
+	SPKR_MODE mode;
+	SPKR_MODE pit_mode;
 	struct {
 		Bit16s buf[SPKR_BUF];
 		Bitu used;
@@ -68,11 +73,10 @@ static struct {
 		Bitu rate_conv;
 		Bitu tick_add;
 	} hw;
-	bool onoff;
+	bool onoff,enabled;
 	Bitu buf_pos;
 } spkr;
 
-/* TODO Maybe interpolate at the moment we switch between on/off */
 static void GenerateSound(Bitu size) {
 	while (spkr.out.pos<size) {
 		Bitu samples=size-spkr.out.pos;
@@ -142,14 +146,15 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 	if (spkr.mode==MODE_NONE) MIXER_Enable(spkr.chan,true);
 	switch (mode) {
 	case 0:		/* Mode 0 one shot, used with realsound */
+		if (!spkr.enabled) return;
 		if (cntr>72) cntr=72;
 		if (spkr.mode!=MODE_REAL) GenerateSound(len);
-		spkr.mode=MODE_REAL;
+		spkr.pit_mode=MODE_REAL;
 		if (spkr.real.used<SPKR_BUF) spkr.real.buf[spkr.real.used++]=(cntr-36)*600;
 		break;
 	case 3:		/* Square wave generator */
 		GenerateSound(len);
-		spkr.mode=MODE_WAVE;
+		spkr.pit_mode=MODE_WAVE;
 		spkr.wave.new_count.max=cntr << SPKR_SHIFT;
 		spkr.wave.new_count.half=(cntr/2) << SPKR_SHIFT;
 		break;
@@ -157,8 +162,10 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		GenerateSound(len);
 		spkr.delay.max=cntr << SPKR_SHIFT;
 		spkr.delay.index=0;
-		spkr.mode=MODE_DELAY;
+		spkr.pit_mode=MODE_DELAY;
+		break;
 	}
+	if (spkr.enabled) spkr.mode=spkr.pit_mode;
 }
 
 void PCSPEAKER_SetType(Bitu mode) {
@@ -170,19 +177,22 @@ void PCSPEAKER_SetType(Bitu mode) {
 	case 0:
 		if (spkr.mode==MODE_ONOFF && spkr.onoff) spkr.onoff=false;
 		else spkr.mode=MODE_NONE;
+		spkr.enabled=false;
 		break;
 	case 1:
-		if (spkr.mode!=MODE_ONOFF) spkr.old_mode=spkr.mode;
 		spkr.mode=MODE_ONOFF;
+		spkr.enabled=false;
 		spkr.onoff=false;
 		break;
 	case 2:
+		spkr.enabled=false;
 		spkr.onoff=true;
-		if (spkr.mode!=MODE_ONOFF) spkr.old_mode=spkr.mode;
 		spkr.mode=MODE_ONOFF;
 		break;
 	case 3:
-		if (spkr.mode==MODE_ONOFF) spkr.mode=spkr.old_mode;		
+		spkr.onoff=true;
+		spkr.enabled=true;
+		spkr.mode=spkr.pit_mode;		
 		break;
 	};
 }
@@ -200,9 +210,11 @@ void PCSPEAKER_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("enabled")) return;
 	spkr.volume=SPKR_VOLUME;
-	spkr.old_mode=spkr.mode=MODE_NONE;
+	spkr.mode=MODE_NONE;
+	spkr.pit_mode=MODE_WAVE;
 	spkr.real.used=0;
 	spkr.out.pos=0;
+	spkr.onoff=false;
 //	spkr.hw.vol=section->Get_int("volume");
 	spkr.hw.rate=section->Get_int("pcrate");
 	spkr.hw.rate_conv=(spkr.hw.rate<<16)/1000000;
