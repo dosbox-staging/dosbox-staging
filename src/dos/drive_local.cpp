@@ -125,8 +125,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	}
 	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
 	else find_attr=DOS_ATTR_ARCHIVE;
-	if(!(srch_attr & find_attr)) goto again;
-	
+ 	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 	/*file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
 	if(strlen(dir_ent->d_name)<DOS_NAMELENGTH_ASCII){
