@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,0.55)
+AC_INIT(dosbox,0.56)
 AC_CONFIG_SRCDIR(README)
 
 dnl Detect the canonical host and target build environment
@@ -9,7 +9,6 @@ AC_CANONICAL_TARGET
 dnl Setup for automake
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
-
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
