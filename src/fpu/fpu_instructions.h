@@ -156,16 +156,16 @@ static void FPU_FST(Bitu st, Bitu other){
 
 static void FPU_FCOM(Bitu st, Bitu other){
 	if((fpu.tags[st] != TAG_Valid) || (fpu.tags[other] != TAG_Valid)){
-		FPU_SET_C3(1);FPU_SET_C1(1);FPU_SET_C0(1);return;
+		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C1(1);FPU_SET_C0(1);return;
 	}
 	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C1(0);FPU_SET_C0(0);return;
+		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
 	}
 	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(1);return;
+		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(1);return;
 	}
 	// st > other
-	FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
+	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
@@ -297,4 +297,18 @@ static void FPU_ST80(PhysPt addr)
 	mem_writew(addr+8,test.begin);
 }
 
+static void FPU_F2XM1(void){
+	fpu.regs[TOP].d=pow(2.0,fpu.regs[TOP].d) -1;
+	return;
+}
+
+static void	FPU_FYL2X(void){
+	fpu.regs[ST(1)].d*=log(fpu.regs[TOP].d)/log(2);
+	FPU_FPOP();
+	return;
+}
+static void FPU_FSCALE(void){
+	fpu.regs[TOP].d *=pow(2.0,static_cast<Real64>(static_cast<Bit64s>(FROUND(fpu.regs[ST(1)].d))));
+	return; //2^x where x is chopped.
+}
 
