@@ -33,6 +33,10 @@ switch (inst.code.save) {
 		if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst.op1.d);
 		else reg_32(inst.rm_eai)=inst.op1.d;
 		break;	
+	case S_EdMw:		/* Special one 16 to memory, 32 zero extend to reg */
+		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst.op1.w);
+		else reg_32(inst.rm_eai)=inst.op1.d;
+		break;
 	case S_Gd:
 		reg_32(inst.rm_index)=inst.op1.d;
 		break;	

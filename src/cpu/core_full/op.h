@@ -616,6 +616,16 @@ switch (inst.code.op) {
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled FPU ESCAPE %d",inst.code.save);
 		goto nextopcode;
 #endif
+	case O_BOUNDw:
+		{
+			Bit16s bound_min, bound_max;
+			bound_min=LoadMw(inst.rm_eaa);
+			bound_max=LoadMw(inst.rm_eaa+2);
+			if ( (((Bit16s)inst.op1.w) < bound_min) || (((Bit16s)inst.op1.w) > bound_max) ) {
+				EXCEPTION(5);
+			}
+		}
+		break;
 	case 0:
 		break;
 	default:

@@ -100,7 +100,7 @@ enum {
 	S_C_Eb,
 	S_Eb,S_Gb,S_EbGb,
 	S_Ew,S_Gw,S_EwGw,
-	S_Ed,S_Gd,S_EdGd,
+	S_Ed,S_Gd,S_EdGd,S_EdMw,
 
 	
 	S_REGb,S_REGw,S_REGd,

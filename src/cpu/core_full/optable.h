@@ -69,7 +69,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x60 - 0x67 */
 {D_PUSHAw	,0			,0		,0		},{D_POPAw	,0			,0		,0		},
-{L_MODRM	,O_BOUNDw	,0		,0		},{L_MODRM	,O_ARPL		,S_Ew	,M_EwGw	},
+{L_MODRM	,O_BOUNDw	,0		,M_Gw	},{L_MODRM	,O_ARPL		,S_Ew	,M_EwGw	},
 {L_PRESEG	,0			,0		,fs		},{L_PRESEG	,0			,0		,gs		},
 {L_PREOP	,0			,0		,0		},{L_PREADD	,0			,0		,0		},
 /* 0x68 - 0x6f */
@@ -455,8 +455,7 @@ static OpCode OpCodeTable[1024]={
 /* 0x288 - 0x28f */
 {L_MODRM		,0		,S_Eb	,M_Gb	},{L_MODRM	,0			,S_Ed	,M_Gd	},
 {L_MODRM		,0		,S_Gb	,M_Eb	},{L_MODRM	,0			,S_Gd	,M_Ed	},
-//TODO Check if the saving a segment in 32bit reg does zero extension?
-{L_MODRM		,0		,S_Ed	,M_SEG	},{L_MODRM	,0			,S_Gd	,M_EA	},
+{L_MODRM		,0		,S_EdMw	,M_SEG	},{L_MODRM	,0			,S_Gd	,M_EA	},
 {L_MODRM		,0		,S_SEGm	,M_Ew	},{L_MODRM	,0			,S_Ed	,M_POPd	},
 
 /* 0x290 - 0x297 */
