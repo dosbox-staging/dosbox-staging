@@ -442,7 +442,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah = EMM_NO_ERROR;
 		break;
 	case 0xDE:		/* VCPI Functions */
-		LOG_ERROR("VCPI Functions not supported");
+		LOG_ERROR("VCPI Functions %X not supported",reg_al);
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	default:
@@ -457,7 +457,8 @@ static Bitu INT67_Handler(void) {
 
 void EMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	Bitu size=section->Get_int("emssize");
+	if (!size) return;
 	call_int67=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET);
 /* Register the ems device */
