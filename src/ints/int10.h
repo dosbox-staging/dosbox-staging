@@ -102,11 +102,15 @@
 #define PLANAR4    0x05
 #define LINEAR8    0x06
 
-// for SVGA
-#define LINEAR15   0x07
-#define LINEAR16   0x08
-#define LINEAR24   0x09
-#define LINEAR32   0x0
+// for Tandy
+
+#define TANDY16    0x0A
+	
+
+#define LINEAR15   0x10
+#define LINEAR16   0x11
+#define LINEAR24   0x12
+#define LINEAR32   0x13
 
 
 #define SCREEN_SIZE(x,y) (((x*y*2)|0x00ff)+1)
@@ -167,13 +171,10 @@ inline Bit8u CURSOR_POS_ROW(Bit8u page) {
 
 void INT10_SetVideoMode(Bit8u mode);
 
-void INT10_ScrollUpWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,Bit8u attr,Bit8u page);
-void INT10_ScrollDownWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,Bit8u attr,Bit8u page);
-
+void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page);
 
 void INT10_SetActivePage(Bit8u page);
 void INT10_GetFuncStateInformation(PhysPt save);
-
 
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);

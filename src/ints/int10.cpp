@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include <string.h>
 #include "dosbox.h"
 #include "bios.h"
@@ -54,14 +53,15 @@ static Bitu INT10_Handler(void) {
 		LOG_WARN("INT10:04:Ligthpen not supported");
 		break;
 	case 0x05:								/* Set Active Page */
-		INT10_SetActivePage(reg_al);
+		if (reg_al & 0x80) LOG_DEBUG("Func %x",reg_al);
+		else INT10_SetActivePage(reg_al);
 		break;	
 	case 0x06:								/* Scroll Up */
 //TODO Graphics mode scroll
-		INT10_ScrollUpWindow(reg_ch,reg_cl,reg_dh,reg_dl,reg_al,reg_bh,0xFF);
+		INT10_ScrollWindow(reg_ch,reg_cl,reg_dh,reg_dl,-reg_al,reg_bh,0xFF);
 		break;
 	case 0x07:								/* Scroll Down */
-		INT10_ScrollDownWindow(reg_ch,reg_cl,reg_dh,reg_dl,reg_al,reg_bh,0xFF);
+		INT10_ScrollWindow(reg_ch,reg_cl,reg_dh,reg_dl,reg_al,reg_bh,0xFF);
 		break;
 	case 0x08:								/* Read character & attribute at cursor */
 //TODO Check for GRAPH and then just return 
@@ -260,7 +260,6 @@ static void INT10_InitVGA(void) {
 };
 
 void INT10_StartUp(void) {
-
 	INT10_InitVGA();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
