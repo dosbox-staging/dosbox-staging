@@ -30,6 +30,7 @@ static Bitu INT1A_Handler(void) {
 	switch (reg_ah) {
 	case 0x00:	/* Get System time */
 		{
+			CALLBACK_Idle();
 			Bit32u ticks=mem_readd(BIOS_TIMER);
 			reg_al=0;		/* Midnight never passes :) */
 			reg_cx=(Bit16u)(ticks >> 16);
