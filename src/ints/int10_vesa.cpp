@@ -88,7 +88,7 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 		for (i=0;i<0x100;i++) mem_writeb(buffer+i,0);
 	}
 	/* Fill common data */
-	MEM_BlockWrite(buffer,"VESA",4);				//Identification
+	MEM_BlockWrite(buffer,(void *)"VESA",4);		//Identification
 	mem_writew(buffer+0x04,0x102);					//Vesa version
 	mem_writed(buffer+0x06,int10.rom.oemstring);	//Oemstring
 	mem_writed(buffer+0x0a,0x0);					//Capabilities and flags
@@ -294,5 +294,5 @@ void INT10_SetupVESA(void) {
 	int10.rom.used+=len;
 	callback.setwindow=CALLBACK_Allocate();
 	CALLBACK_Setup(callback.setwindow,SetWindowPositionHandler,CB_RETF);
-
 }
+
