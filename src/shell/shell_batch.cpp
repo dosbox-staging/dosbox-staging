@@ -24,19 +24,10 @@
 
 
 BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
-	/* Go through the command line */
-	char * cmd_write=cmd_buffer;
 	prev=host->bf;
 	echo=host->echo;
 	shell=host;
-	cmd_count=0;
-	while (*cmd_line || (cmd_count<CMD_MAXCMDS)) {
-		cmd_words[cmd_count]=cmd_write;	
-		for (;(*cmd_line!=' ' && *cmd_line!=0);*cmd_write++=*cmd_line++);
-		*cmd_write++=0;
-		cmd_line=trim(cmd_line);
-		cmd_count++;
-	}
+	cmd=new CommandLine(0,cmd_line);
 	if (!DOS_OpenFile(name,0,&file_handle)) {
 		//TODO Come up with something better
 		E_Exit("SHELL:Can't open BatchFile");
@@ -45,6 +36,7 @@ BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
 };
 
 BatchFile::~BatchFile() {
+	delete cmd;
 	DOS_CloseFile(file_handle);
 	shell->bf=prev;
 	shell->echo=echo;
@@ -77,21 +69,43 @@ emptyline:
 	while (*cmd_read) {
 		env_write=env_name;
 		if (*cmd_read=='%') {
-		cmd_read++;
-			/* Find the fullstring of this */
-
-
-		continue;
-
+			cmd_read++;
+			if (cmd_read[0]=='%') {
+				cmd_read++;
+				*cmd_write++='%';
+			}
+			size_t len=strspn(cmd_read,"0123456789");
+			if (len) {
+				memcpy(env_name,cmd_read,len);
+				env_name[len]=0;cmd_read+=len;
+				len=atoi(env_name);
+				if (cmd->GetCount()<len) continue;
+				std::string word;
+				if (!cmd->FindCommand(len,word)) continue;
+				strcpy(cmd_write,word.c_str());
+				cmd_write+=strlen(word.c_str());
+				continue;
+			} else {
+				/* Not a command line number has to be an environment */
+				char * first=strchr(cmd_read,'%');
+				if (!first) continue; *first++=0;
+				std::string temp;
+				if (shell->GetEnvStr(cmd_read,temp)) {
+					char * equals=strchr(temp.c_str(),'=');
+					if (!equals) continue;
+					equals++;
+					strcpy(cmd_write,equals);
+					cmd_write+=strlen(equals);
+				}
+				cmd_read=first;
+			}
 		} else {
 			*cmd_write++=*cmd_read++;
 		}
-	*cmd_write=0;
 	}
-	return true;
-	
+	*cmd_write=0;
+	return true;	
 }
-
 
 bool BatchFile::Goto(char * where) {
 	Bit32u pos=0;
@@ -99,7 +113,7 @@ bool BatchFile::Goto(char * where) {
 	char * cmd_write;
 	DOS_SeekFile(file_handle,&pos,DOS_SEEK_SET);
 
-	/* Scan till we have a match or return false*/
+	/* Scan till we have a match or return false */
 	Bit8u c;Bit16u n;
 again:
 	cmd_write=cmd;
