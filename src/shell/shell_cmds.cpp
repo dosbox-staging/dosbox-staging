@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.47 2004-09-18 10:20:54 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.48 2004-10-02 11:13:02 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -619,7 +619,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		if((arg=="/D" ) || (arg=="/d")) throw 1; //No removal (one day)
   
 		command.FindCommand(1,arg);
-		if(arg[1] !=':')  throw(0);
+		if( (arg.size()>1) && arg[1] !=':')  throw(0);
 		temp_str[0]=toupper(args[0]);
 		if(Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
 		strcat(mountstring,temp_str);
