@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.24 2004-06-10 07:19:46 harekiet Exp $ */
+/* $Id: keyboard.cpp,v 1.25 2004-06-20 22:03:34 harekiet Exp $ */
 
 #include <string.h>
 #include <assert.h>
@@ -109,7 +109,6 @@ static Bitu read_p60(Bitu port,Bitu iolen) {
 }	
 
 static void write_p60(Bitu port,Bitu val,Bitu iolen) {
-	LOG_MSG("write port 60 %x",val);
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
 		/* No active command this would normally get sent to the keyboard then */
