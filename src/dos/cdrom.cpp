@@ -66,46 +66,43 @@ bool CDROM_Interface_SDL::SetDevice (char* path, int forceCD)
 
 bool CDROM_Interface_SDL::GetAudioTracks	(int& stTrack, int& end, TMSF& leadOut)
 {
-	SDL_CDStatus(cd);
-	if (CD_INDRIVE(cd->status)) {
+
+	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		stTrack		= 1;
 		end			= cd->numtracks;
 		FRAMES_TO_MSF(cd->track[cd->numtracks].offset,&leadOut.min,&leadOut.sec,&leadOut.fr);
 	}
-	return CD_INDRIVE(cd->status);
+	return CD_INDRIVE(SDL_CDStatus(cd));
 };
 
 bool CDROM_Interface_SDL::GetAudioTrackInfo (int track, TMSF& start, unsigned char& attr)
 {
-	SDL_CDStatus(cd);
-	if (CD_INDRIVE(cd->status)) {
+	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		FRAMES_TO_MSF(cd->track[track-1].offset+150,&start.min,&start.sec,&start.fr);
 		attr	= cd->track[track-1].type;
 	}
-	return CD_INDRIVE(cd->status);	
+	return CD_INDRIVE(SDL_CDStatus(cd));	
 };
 
 bool CDROM_Interface_SDL::GetAudioSub (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
 {
-	SDL_CDStatus(cd);
-	if (CD_INDRIVE(cd->status)) {
+	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		track	= cd->cur_track;
 		index	= cd->cur_track;
 		attr	= cd->track[track].type;
 		FRAMES_TO_MSF(cd->cur_frame,&relPos.min,&relPos.sec,&relPos.fr);
 		FRAMES_TO_MSF(cd->cur_frame+cd->track[track].offset,&absPos.min,&absPos.sec,&absPos.fr);
 	}
-	return CD_INDRIVE(cd->status);		
+	return CD_INDRIVE(SDL_CDStatus(cd));		
 };
 
 bool CDROM_Interface_SDL::GetAudioStatus (bool& playing, bool& pause)
 {
-	SDL_CDStatus(cd);
-	if (CD_INDRIVE(cd->status)) {
+	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		playing = (cd->status==CD_PLAYING);
 		pause	= (cd->status==CD_PAUSED);
 	}
-	return CD_INDRIVE(cd->status);
+	return CD_INDRIVE(SDL_CDStatus(cd));
 };
 	
 bool CDROM_Interface_SDL::GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen)
