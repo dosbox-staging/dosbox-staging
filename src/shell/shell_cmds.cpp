@@ -43,7 +43,6 @@ static SHELL_Cmd cmd_list[]={
 	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
 	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
 	"PAUSE",	0,			&DOS_Shell::CMD_PAUSE,		"SHELL_CMD_PAUSE_HELP",
-     "INTRO",	0,			&DOS_Shell::CMD_INTRO,			 "SHELL_CMD_INTRO_HELP",       
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
 	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"Make Directory",
@@ -521,9 +520,3 @@ void DOS_Shell::CMD_PAUSE(char * args){
 	DOS_ReadFile (STDIN,&c,&n);
 }
 
-void DOS_Shell::CMD_INTRO(char* args)
-{
-   WriteOut(MSG_Get("SHELL_CMD_INTRO"));
-//   Bit8u c;Bit16u n=1;
-//   DOS_ReadFile (STDIN,&c,&n);
-}
