@@ -74,8 +74,11 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(char* hardwareID)
 		sh.SRB_HaId = i;
 		pSendASPI32Command((LPSRB)&sh);
 		if (sh.SRB_Status!=SS_COMP) continue;
-
+		
+		// Indicates the maximum number of targets the adapter supports
+		// If the value is not 8 or 16, then it should be assumed max target is 8
 		max = (int)sh.HA_Unique[3];
+		if ((max!=8) && (max!=16)) max = 8;
 		
 		for(j=0; j<max; j++) {
 			for(k=0; k<8; k++) {
@@ -88,13 +91,13 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(char* hardwareID)
 				if (sd.SRB_Status == SS_COMP) {
 					if (sd.SRB_DeviceType == DTYPE_CDROM) {						
 						if ((target==j) && (lun==k)) {
-							LOG(LOG_MISC|LOG_ERROR,"SCSI: Getting Hardware vendor.");								
+							LOG(LOG_MISC,"SCSI: Getting Hardware vendor.");								
 							// "Hardware ID = vendor" match ?
 							char vendor[64];
 							if (GetVendor(i,target,lun,vendor)) {
-								LOG(LOG_MISC|LOG_ERROR,"SCSI: Vendor : %s",vendor);	
-								if (strstr(hardwareID,vendor)) {
-									LOG(LOG_MISC|LOG_ERROR,"SCSI: Host Adapter found: %d",i);								
+								LOG(LOG_MISC,"SCSI: Vendor : %s",vendor);	
+								if (strstr(strupr(hardwareID),strupr(vendor))) {
+									LOG(LOG_MISC,"SCSI: Host Adapter found: %d",i);								
 									return i;								
 								}
 							};
@@ -127,16 +130,16 @@ bool CDROM_Interface_Aspi::ScanRegistryFindKey(HKEY& hKeyBase)
 			newKeyResult = RegOpenKeyEx (hKeyBase,subKey,0,KEY_READ,&hNewKey);
 			if (newKeyResult==ERROR_SUCCESS) {
 				if (GetRegistryValue(hNewKey,"CurrentDriveLetterAssignment",buffer,256)) {
-					LOG(LOG_MISC|LOG_ERROR,"SCSI: Drive Letter found: %s",buffer);					
+					LOG(LOG_MISC,"SCSI: Drive Letter found: %s",buffer);					
 					// aha, something suspicious...
 					if (buffer[0]==letter) {
 						char hardwareID[256];
 						// found it... lets see if we can get the scsi values				
 						bool v1 = GetRegistryValue(hNewKey,"SCSILUN",buffer,256);
-						LOG(LOG_MISC|LOG_ERROR,"SCSI: SCSILUN found: %s",buffer);					
+						LOG(LOG_MISC,"SCSI: SCSILUN found: %s",buffer);					
 						lun		= buffer[0]-'0';
 						bool v2 = GetRegistryValue(hNewKey,"SCSITargetID",buffer,256);
-						LOG(LOG_MISC|LOG_ERROR,"SCSI: SCSITargetID found: %s",buffer);					
+						LOG(LOG_MISC,"SCSI: SCSITargetID found: %s",buffer);					
 						target  = buffer[0]-'0';
 						bool v3 = GetRegistryValue(hNewKey,"HardwareID",hardwareID,256);
 						RegCloseKey(hNewKey);
@@ -176,10 +179,10 @@ bool CDROM_Interface_Aspi::GetVendor(BYTE HA_num, BYTE SCSI_Id, BYTE SCSI_Lun, c
 
 	ResetEvent(hEvent);
 	int dwStatus = pSendASPI32Command ((LPSRB)&srbExec);
-	LOG(LOG_MISC|LOG_ERROR,"SCSI: Get vendor command send");					
+//	LOG(LOG_MISC|LOG_ERROR,"SCSI: Get vendor command send");					
 	
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,30000);
-	LOG(LOG_MISC|LOG_ERROR,"SCSI: Pending done.");					
+//	LOG(LOG_MISC|LOG_ERROR,"SCSI: Pending done.");					
 
 	if (srbExec.SRB_Status != SS_COMP) {
 		strcpy (szBuffer, "error" );
