@@ -86,6 +86,12 @@ MidiHandler Midi_none;
 
 #endif
 
+#if defined (HAVE_ALSA)
+
+#include "midi_alsa.h"
+
+#endif
+
 static struct {
 	Bitu status;
 	Bitu cmd_len;
