@@ -27,6 +27,9 @@
 #include "callback.h"
 #include "../shell/shell_inc.h"
 
+void MSCDEX_SetUseASPI(bool use);
+bool MSCDEX_GetUseASPI(void);
+
 class MOUNT : public Program {
 public:
 	void Run(void)
@@ -45,8 +48,15 @@ public:
 			return;
 		}
 		std::string type="dir";
+		
+		// get the drive letter
+		cmd->FindCommand(1,temp_line);
+		if (temp_line.size()>1) goto showusage;
+		drive=toupper(temp_line[0]);
+		if (!isalpha(drive)) goto showusage;
+
 		cmd->FindString("-t",type,true);
-		if (type=="floppy" || type=="dir") {
+		if (type=="floppy" || type=="dir" || type=="cdrom") {
 			Bit16u sizes[4];
 			Bit8u mediaid;
 			std::string str_size;
@@ -56,6 +66,10 @@ public:
 			}
 			if (type=="dir") {
 				str_size="512,127,16513,1700";
+				mediaid=0xF8;		/* Hard Disk */
+			}
+			if (type=="cdrom") {
+				str_size="650,127,16513,1700";
 				mediaid=0xF8;		/* Hard Disk */
 			}
 			cmd->FindString("-size",str_size,true);
@@ -86,14 +100,29 @@ public:
 			}
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
             Bit8u bit8size=(Bit8u) sizes[1];
-			newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+			if (type=="cdrom") {
+				bool oldaspi = MSCDEX_GetUseASPI();;
+				int error;
+				if (cmd->FindExist("-aspi",false)) MSCDEX_SetUseASPI(true);
+				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,error);
+				// Check Mscdex, if it worked out...
+				switch (error) {
+					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
+					case 1  :	WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));	break;
+					case 2  :	WriteOut(MSG_Get("MSCDEX_ERROR_NOT_SUPPORTED"));	break;
+					case 3  :	WriteOut(MSG_Get("MSCDEX_ERROR_PATH"));				break;
+					case 4  :	WriteOut(MSG_Get("MSCDEX_TOO_MANY_DRIVES"));		break;
+					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
+					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
+				};
+				MSCDEX_SetUseASPI(oldaspi);
+
+			} else {
+				newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+			}
 		}
-		cmd->FindCommand(1,temp_line);
-		if (temp_line.size()>1) goto showusage;
-		drive=toupper(temp_line[0]);
-		if (!isalpha(drive)) goto showusage;
 		if (Drives[drive-'A']) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ALLREADY_MOUNDTED"),drive,Drives[drive-'A']->GetInfo());
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ALLREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
 			if (newdrive) delete newdrive;
 			return;
 		}
@@ -231,6 +260,13 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
+	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
+	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CDRom-drives have to be continuous.\n");
+	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED","MSCDEX: Failure: Not yet supported.\n");
+	MSG_Add("MSCDEX_ERROR_PATH","MSCDEX: Failure: Path not valid (WIN32: Check if ASPI Driver is installed).\n");
+	MSG_Add("MSCDEX_TOO_MANY_DRIVES","MSCDEX: Failure: Too many CDRom-drives (max: 5). MSCDEX Installation failed.\n");
+	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
+	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
 
     /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
