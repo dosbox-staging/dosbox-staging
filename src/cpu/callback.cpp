@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.18 2003-11-18 20:46:01 harekiet Exp $ */
+/* $Id: callback.cpp,v 1.19 2004-01-07 20:23:48 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -234,6 +234,7 @@ void CALLBACK_Init(Section* sec) {
 
 	}
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
+	real_writed(0,0x5c*4,CALLBACK_RealPointer(call_default)); //Network stuff
 	//real_writed(0,0xf*4,0); some games don't like it
 }
 
