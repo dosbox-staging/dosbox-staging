@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.60 2004-01-30 21:11:34 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.61 2004-02-10 16:35:02 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -587,6 +587,7 @@ static void GUI_StartUp(Section * sec) {
 
 	sdl.overlay=0;
 #if C_OPENGL
+   if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
 	sdl.surface=SDL_SetVideoMode(640,400,0,SDL_OPENGL);
 	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
@@ -598,12 +599,18 @@ static void GUI_StartUp(Section * sec) {
 	db_glFreeMemoryNV = (PFNWGLFREEMEMORYNVPROC) wglGetProcAddress("wglFreeMemoryNV");
 #endif
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-	sdl.opengl.packed_pixel=strstr(gl_ext,"EXT_packed_pixels") > 0;
-	sdl.opengl.paletted_texture=strstr(gl_ext,"EXT_paletted_texture") > 0;
+	if(gl_ext && *gl_ext){
+		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
+		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
 #if defined(NVIDIA_PixelDataRange)
-	sdl.opengl.pixel_data_range=strstr(gl_ext,"GL_NV_pixel_data_range") >0 &&
-		glPixelDataRangeNV && db_glAllocateMemoryNV && db_glFreeMemoryNV;
+		sdl.opengl.pixel_data_range=(strstr(gl_ext,"GL_NV_pixel_data_range") >0 )&&
+			glPixelDataRangeNV && db_glAllocateMemoryNV && db_glFreeMemoryNV;
 #endif
+    	} else {
+		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
+	}
+	} /* OPENGL is requested end */
+   
 #endif	//OPENGL
 	/* Initialize screen for first time */
 	sdl.surface=SDL_SetVideoMode(640,400,0,0);
