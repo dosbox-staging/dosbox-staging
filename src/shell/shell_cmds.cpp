@@ -257,23 +257,22 @@ void DOS_Shell::CMD_COPY(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-
 }
 
 void DOS_Shell::CMD_SET(char * args) {
+	std::string line;
 	if (!*args) {
 		/* No command line show all environment lines */	
-		Bit32u count=GetEnvCount();
-		for (Bit32u a=0;a<count;a++) {
-			WriteOut("%s\n",GetEnvNum(a));			
+		Bitu count=GetEnvCount();
+		for (Bitu a=0;a<count;a++) {
+			if (GetEnvNum(a,line)) WriteOut("%s\n",line.c_str());			
 		}
 		return;
 	}
 	char * p=strpbrk(args, "=");
 	if (!p) {
-		p=GetEnvStr(args);
-		if (p) WriteOut("%s\n",p);
-		else WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"),args);
+		if (!GetEnvStr(args,line)) WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"),args);
+		WriteOut("%s\n",line.c_str());
 	} else {
 		*p++=0;
 		if (!SetEnv(args,p)) {
