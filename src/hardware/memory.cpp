@@ -631,15 +631,21 @@ void MEM_UnmapPages(Bitu phys_page,Bitu pages) {
 	}
 }
 
-void MEM_MapPages(Bitu phys_page,MemHandle mem,Bitu mem_page,Bitu pages) {
+void MEM_MapPagesHandle(Bitu lin_page,MemHandle mem,Bitu mem_page,Bitu pages) {
 	for (;mem_page;mem_page--) {
 		if (mem<=0) E_Exit("MEM:MapPages:Fault in memory tables");
 		mem=memory.entries[mem].next_handle;
 	}
 	for (;pages;pages--) {
 		if (mem<=0) E_Exit("MEM:MapPages:Fault in memory tables");
-		memory.dir.LinkPage(phys_page++,mem);
+		memory.dir.LinkPage(lin_page++,mem);
 		mem=memory.entries[mem].next_handle;
+	}
+}
+
+void MEM_MapPagesDirect(Bitu lin_page,Bitu phys_page,Bitu pages) {
+	for (;pages;pages--) {
+		memory.dir.LinkPage(lin_page++,phys_page++);
 	}
 }
 

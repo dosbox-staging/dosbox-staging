@@ -42,7 +42,8 @@ MemHandle MEM_AllocatePages(Bitu pages,bool sequence);
 PhysPt MEM_AllocatePage(void);
 void MEM_ReleasePages(MemHandle handle);
 bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence);
-void MEM_MapPages(Bitu phys_page,MemHandle mem,Bitu mem_page,Bitu pages);
+void MEM_MapPagesHandle(Bitu lin_page,MemHandle mem,Bitu mem_page,Bitu pages);
+void MEM_MapPagesDirect(Bitu lin_page,Bitu phys_page,Bitu pages);
 void MEM_UnmapPages(Bitu phys_page,Bitu pages);
 
 
