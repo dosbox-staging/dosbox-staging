@@ -16,6 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
+
 typedef void(KEYBOARD_EventHandler)(void);
 void KEYBOARD_AddCode(Bit8u code);
 void KEYBOARD_AddKey(Bitu keytype,bool pressed);
@@ -51,4 +54,4 @@ enum {
 	KBD_LAST
 };
 
-
+#endif
