@@ -90,6 +90,7 @@ enum {
 	O_BSFw,O_BSRw,
 
 	O_BSWAP,
+	O_FPU,
 
 
 };

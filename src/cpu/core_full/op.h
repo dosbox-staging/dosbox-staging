@@ -538,6 +538,9 @@ switch (inst.code.op) {
 	case O_BSWAP:
 		BSWAP(inst.op1.d);
 		break;
+	case O_FPU:
+		LOG_MSG("FPU opcode %X unhandled",inst.entry);
+		break;
 	case 0:
 		break;
 	default:
