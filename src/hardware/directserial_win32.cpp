@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.cpp,v 1.3 2004-08-04 09:12:55 qbix79 Exp $ */
+/* $Id: directserial_win32.cpp,v 1.4 2004-08-04 13:21:20 qbix79 Exp $ */
 
 #include "dosbox.h"
 
 #if C_DIRECTSERIAL
 
 /* Windows version */
-#ifdef __WIN32__
+#if defined (WIN32)
 
 #include <stdarg.h>
 #include <string.h>
