@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.24 2004-08-04 09:12:50 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.25 2004-10-17 14:44:59 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -54,6 +54,8 @@ class DOS_DTA;
 class DOS_File {
 public:
 	DOS_File():flags(0)		{ name=0; refCtr = 0; };
+	DOS_File(const DOS_File& orig);
+	DOS_File & operator= (const DOS_File & orig);
 	virtual	~DOS_File(){if(name) delete [] name;};
 	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
@@ -81,9 +83,20 @@ public:
 
 class DOS_Device : public DOS_File {
 public:
-/* Some Device Specific Stuff */
-	char * name;
-	Bit8u fhandle;	
+	DOS_Device(const DOS_Device& orig):DOS_File(orig) {devnum=orig.devnum; }
+	DOS_Device & operator= (const DOS_Device & orig) {
+		DOS_File::operator=(orig);
+		devnum=orig.devnum;
+	}
+	DOS_Device():DOS_File(),devnum(0){};   
+	virtual bool	Read(Bit8u * data,Bit16u * size);
+	virtual bool	Write(Bit8u * data,Bit16u * size);
+	virtual bool	Seek(Bit32u * pos,Bit32u type);
+	virtual bool	Close();
+	virtual Bit16u	GetInformation(void);   
+	void SetDeviceNumber(Bitu num) { devnum=num;}
+private:
+	Bitu devnum;
 };
 
 #define MAX_OPENDIRS 2048

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.25 2004-10-05 19:45:27 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.26 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -1005,7 +1005,7 @@ static bool MSCDEX_Handler(void)
 
 class device_MSCDEX : public DOS_Device {
 public:
-	device_MSCDEX() { name="MSCD001"; }
+	device_MSCDEX() { SetName("MSCD001"); }
 	bool Read (Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size) { 
 		LOG(LOG_ALL,LOG_NORMAL)("Write to mscdex device");	

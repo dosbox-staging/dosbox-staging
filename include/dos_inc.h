@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.48 2004-08-04 09:12:50 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.49 2004-10-17 14:44:59 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -68,13 +68,16 @@ union bootSector {
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
 enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
-#define DOS_FILES 50
+#define DOS_FILES 127
 #define DOS_DRIVES 26
+#define DOS_DEVICES 10
 
 /* internal Dos Tables */
 
 extern DOS_File * Files[DOS_FILES];
 extern DOS_Drive * Drives[DOS_DRIVES];
+extern DOS_Device * Devices[DOS_DEVICES];
+
 extern Bit8u dos_copybuf[0x10000];
 
 
@@ -82,7 +85,7 @@ void DOS_SetError(Bit16u code);
 
 /* File Handling Routines */
 
-enum { STDIN=0,STDOUT=1,STDERR=2,STDAUX=3,STDNUL=4,STDPRN=5};
+enum { STDIN=0,STDOUT=1,STDERR=2,STDAUX=3,STDPRN=4};
 enum { HAND_NONE=0,HAND_FILE,HAND_DEVICE};
 
 /* Routines for File Class */
@@ -285,10 +288,10 @@ private:
 		Bit16u	max_files;			/* Maximum open files */
 		RealPt	file_table;			/* Pointer to File Table PSP:0x18 */
 		RealPt	prev_psp;			/* Pointer to previous PSP */
-	   Bit8u interim_flag;
-	   Bit8u truename_flag;
-	   Bit16u nn_flags;
-	   Bit16u dos_version;
+		Bit8u interim_flag;
+		Bit8u truename_flag;
+		Bit16u nn_flags;
+		Bit16u dos_version;
 		Bit8u	fill_2[14];			/* Lot's of unused stuff i can't care aboue */
 		Bit8u	service[3];			/* INT 0x21 Service call int 0x21;retf; */
 		Bit8u	fill_3[9];			/* This has some blocks with FCB info */

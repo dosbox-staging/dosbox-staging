@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.49 2004-09-28 15:31:21 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.50 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -373,12 +373,13 @@ void SHELL_Init() {
 
 	DOS_PSP psp(psp_seg);
 	psp.MakeNew(0);
-	psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
+	dos.psp(psp_seg);
+	Bit16u dummy=0;
+	DOS_OpenFile("CON",2,&dummy);/* STDIN  */
+	DOS_OpenFile("CON",2,&dummy);/* STDOUT */
+	DOS_OpenFile("CON",2,&dummy);/* STDERR */
+	DOS_OpenFile("CON",2,&dummy);/* STDAUX */
+	DOS_OpenFile("CON",2,&dummy);/* STDPRN */
 	psp.SetParent(psp_seg);
 	/* Set the environment */
 	psp.SetEnvironment(env_seg);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.41 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.42 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -225,7 +225,7 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 		Bit8u handle = srcpsp->GetFileHandle(i);
 		if(createchildpsp)
 		{	//copy obeying not inherit flag.(but dont duplicate them)
-			bool allowCopy = (handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
+			bool allowCopy = true;//(handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
 			if((handle<DOS_FILES) && Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
 			{   
 				Files[handle]->AddRef();

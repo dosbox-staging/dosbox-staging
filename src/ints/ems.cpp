@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.34 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.35 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -65,7 +65,7 @@
 
 class device_EMM : public DOS_Device {
 public:
-	device_EMM(){name="EMMXXXX0";}
+	device_EMM(){SetName("EMMXXXX0");}
 	bool Read(Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size){ 
 		LOG(LOG_IOCTL,LOG_NORMAL)("EMS:Write to device");	

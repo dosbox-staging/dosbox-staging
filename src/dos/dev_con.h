@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.18 2004-08-26 19:41:20 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.19 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -345,7 +345,7 @@ bool device_CON::Seek(Bit32u * pos,Bit32u type) {
 }
 
 bool device_CON::Close() {
-	return false;
+	return true;
 }
 
 Bit16u device_CON::GetInformation(void) {
@@ -357,7 +357,7 @@ Bit16u device_CON::GetInformation(void) {
 };
 
 device_CON::device_CON() {
-	name="CON";
+	SetName("CON");
 	cache=0;
 	ansi.enabled=false;
 	ansi.attr=0x7;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.57 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.58 2004-10-17 14:45:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
-   
+
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
 	Bitu r,w;
@@ -232,7 +232,12 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 		*find_last=0;
 		strcpy(pattern,find_last+1);
 		strcpy(dir,fullsearch);
-	}		
+	}
+//check for devices. first part of filename before the dot 
+//can be the name of a device. like con.1
+//if(findDevice(pattern) blah blah
+// but leading subdirs must exist....
+//
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
 	if (Drives[drive]->FindFirst(dir,dta,fcb_findfirst)) return true;
 	
@@ -315,15 +320,12 @@ bool DOS_CloseFile(Bit16u entry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	/* Devices won't allow themselves to be closed or killed */
-	if (Files[handle]->Close()) 
-	{   //if close succesfull => delete file/update psp
-		DOS_PSP psp(dos.psp());
-		psp.SetFileHandle(entry,0xff);
-		if (Files[handle]->RemoveRef()<=0) {
-			delete Files[handle];
-			Files[handle]=0;
-		}
+	Files[handle]->Close();
+	DOS_PSP psp(dos.psp());
+	psp.SetFileHandle(entry,0xff);
+	if (Files[handle]->RemoveRef()<=0) {
+		delete Files[handle];
+		Files[handle]=0;
 	}
 	return true;
 }
@@ -331,7 +333,7 @@ bool DOS_CloseFile(Bit16u entry) {
 bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	// Creation of a device is the same as opening it
 	// Tc201 installer
-	if (DOS_FindDevice(name) != 255)
+	if (DOS_FindDevice(name) != DOS_DEVICES)
 		return DOS_OpenFile(name, 0, entry);
 
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
@@ -370,7 +372,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 
-	Bit16u attr;
+	Bit16u attr = 0;
 	if(DOS_GetFileAttr(name,&attr)){ //DON'T ALLOW directories to be openened
 		if((attr & DOS_ATTR_DIRECTORY) || (attr & DOS_ATTR_VOLUME)){
 			DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -379,40 +381,39 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	}
       
 	DOS_PSP psp(dos.psp());
-	Bit8u handle=DOS_FindDevice((char *)name);
-	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
-	if (handle!=255) {
-		device=true;
-	} else {
+	Bit8u devnum=DOS_DEVICES;
+	devnum=DOS_FindDevice((char *)name);
+	bool device=(devnum!=DOS_DEVICES);
+	char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
+	
 		/* First check if the name is correct */
-		if (!DOS_MakeName(name,fullname,&drive)) return false;
-		
-		/* Check for a free file handle */
-			for (i=0;i<DOS_FILES;i++) {
-			if (!Files[i]) {
-				handle=i;
-				break;
-			}
+	if (!DOS_MakeName(name,fullname,&drive)) return false;
+	Bit8u handle=255;		
+	/* Check for a free file handle */
+	for (i=0;i<DOS_FILES;i++) {
+		if (!Files[i]) {
+			handle=i;
+			break;
 		}
-		if (handle==255) {
-			DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
-			return false;
-		}
+	}
+	if (handle==255) {
+		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
+		return false;
 	}
 	/* We have a position in the main table now find one in the psp table */
 	*entry = psp.FindFreeFileEntry();
+
 	if (*entry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
 	bool exists=false;
-	if (!device) exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
+	if (device) {
+		Files[handle]=new DOS_Device(*Devices[devnum]);
+	} else {
+		exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
+	}
 	if (exists || device ) { 
-		// devices can only be opened once
-		if (device && (psp.FindEntryByHandle(handle)!=0xff)) {
-			*entry=psp.FindEntryByHandle(handle);
-			return true;
-		}
 		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
@@ -451,7 +452,12 @@ bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u ac
 bool DOS_UnlinkFile(char * name) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
-	return Drives[drive]->FileUnlink(fullname);
+	if(Drives[drive]->FileUnlink(fullname)){
+		return true;
+	} else {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
 }
 
 bool DOS_GetFileAttr(char * name,Bit16u * attr) {
@@ -503,13 +509,12 @@ bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * cl
 }
 
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
-
 	// Dont duplicate console handles
-	if (entry<=STDPRN) {
+/*	if (entry<=STDPRN) {
 		*newentry = entry;
 		return true;
 	};
-	
+*/	
 	Bit8u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -531,13 +536,12 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 };
 
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
-	
 	// Dont duplicate console handles
-	if (entry<=STDPRN) {
+/*	if (entry<=STDPRN) {
 		newentry = entry;
 		return true;
 	};
-
+*/
 	Bit8u orig=RealHandle(entry);
 	if (orig>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);

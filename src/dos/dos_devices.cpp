@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_devices.cpp,v 1.6 2004-10-17 14:45:00 qbix79 Exp $ */ 
+
 #include <string.h>
 #include "dosbox.h"
 #include "callback.h"
@@ -24,19 +26,18 @@
 #include "bios.h"
 #include "dos_inc.h"
 #include "support.h"
-
-#define MAX_DEVICES 10
+#include "drives.h" //Wildcmp
 /* Include all the devices */
 
 #include "dev_con.h"
 
 
-static DOS_Device * devices[MAX_DEVICES];
-static Bit32u device_count;
+DOS_Device * Devices[DOS_DEVICES];
+static Bitu device_count;
 
 class device_NUL : public DOS_Device {
 public:
-	device_NUL() { name="NUL"; };
+	device_NUL() { SetName("NUL"); };
 	bool Read(Bit8u * data,Bit16u * size) {
 		for(Bitu i = 0; i < *size;i++) 
 			data[i]=0; 
@@ -52,38 +53,87 @@ public:
 		return true;
 	}
 	bool Close() { return true; }
-	Bit16u GetInformation(void) { return 0x8004; }
+	Bit16u GetInformation(void) { return 0x8084; }
 };
 
+bool DOS_Device::Read(Bit8u * data,Bit16u * size) {
+	return Devices[devnum]->Read(data,size);
+}
+
+bool DOS_Device::Write(Bit8u * data,Bit16u * size) {
+	return Devices[devnum]->Write(data,size);
+}
+
+bool DOS_Device::Seek(Bit32u * pos,Bit32u type) {
+	return Devices[devnum]->Seek(pos,type);
+}
+
+bool DOS_Device::Close() {
+	return Devices[devnum]->Close();
+}
+
+Bit16u DOS_Device::GetInformation(void) { 
+	return Devices[devnum]->GetInformation();
+}
+
+DOS_File::DOS_File(const DOS_File& orig) {
+	type=orig.type;
+	flags=orig.flags;
+	time=orig.time;
+	date=orig.date;
+	attr=orig.attr;
+	size=orig.size;
+	refCtr=orig.refCtr;
+	open=orig.open;
+	name=0;
+	if(orig.name) {
+		name=new char [strlen(orig.name)];strcpy(name,orig.name);
+	}
+}
+
+DOS_File & DOS_File::operator= (const DOS_File & orig) {
+	type=orig.type;
+	flags=orig.flags;
+	time=orig.time;
+	date=orig.date;
+	attr=orig.attr;
+	size=orig.size;
+	refCtr=orig.refCtr;
+	open=orig.open;
+	if(name) {
+		delete [] name; name=0;
+	}
+	if(orig.name) {
+		name=new char [strlen(orig.name)];strcpy(name,orig.name);
+	}
+}
+
 Bit8u DOS_FindDevice(char * name) {
+	/* should only check for the names before the dot and spacepadded */
+	char temp[CROSS_LEN];//TODOD
+	if(!(*name)) return DOS_DEVICES;
+	strcpy(temp,name);
+	char* dot= strrchr(temp,'.');
+	if(dot && *dot) dot=0; //no ext checking
+
 	/* loop through devices */
 	Bit8u index=0;
 	while (index<device_count) {
-		if (devices[index]) {
-			if (strcasecmp(name,devices[index]->name)==0) return index;
+		if (Devices[index]) {
+			if (WildFileCmp(temp,Devices[index]->name)) return index;
 		}
 		index++;
 	}
-	return 255;
+	return DOS_DEVICES;
 }
 
 
 void DOS_AddDevice(DOS_Device * adddev) {
 //TODO Give the Device a real handler in low memory that responds to calls
-	if (device_count<MAX_DEVICES) {
-		devices[device_count]=adddev;
+	if (device_count<DOS_DEVICES) {
+		Devices[device_count]=adddev;
+		Devices[device_count]->SetDeviceNumber(device_count);
 		device_count++;
-		/* Add the device in the main file Table */
-		Bit8u handle=DOS_FILES;Bit8u i;
-		for (i=0;i<DOS_FILES;i++) {
-			if (!Files[i]) {
-				handle=i;
-				Files[i]=adddev;
-				break;
-			}
-		}
-		if (handle==DOS_FILES) E_Exit("DOS:Not enough file handles for device");
-		adddev->fhandle=handle;
 	} else {
 		E_Exit("DOS:Too many devices added");
 	}
@@ -94,7 +144,7 @@ void DOS_SetupDevices(void) {
 	DOS_Device * newdev;
 	newdev=new device_CON();
 	DOS_AddDevice(newdev);
-   	DOS_Device * newdev2;
+	DOS_Device * newdev2;
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
 }
