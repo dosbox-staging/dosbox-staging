@@ -91,8 +91,10 @@ Bitu Full_DeCode(void) {
 #if C_DEBUG
 		cycle_count++;
 #if C_HEAVY_DEBUG
-		LEAVECORE;
-		if (DEBUG_HeavyIsBreakpoint()) return 1;
+		if (DEBUG_HeavyIsBreakpoint()) {
+			LEAVECORE;
+			return 1;
+		};
 #endif
 #endif
 		inst.start=IPPoint;
