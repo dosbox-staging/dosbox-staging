@@ -53,12 +53,12 @@ static void Normal(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
 }
 
 
-RENDER_Part_Handler Normal_SINGLE_8[4]={
+static RENDER_Part_Handler Normal_SINGLE_8[4]={
 	Normal<8,8 ,false>,Normal<8,16,false>,
 	Normal<8,24,false>,Normal<8,32,false>,
 };
 
-RENDER_Part_Handler Normal_DOUBLE_8[4]={
+static RENDER_Part_Handler Normal_DOUBLE_8[4]={
 	Normal<8,8 ,true>,Normal<8,16,true>,
 	Normal<8,24,true>,Normal<8,32,true>,
 };

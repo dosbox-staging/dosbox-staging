@@ -69,7 +69,7 @@ static void AdvMame2x(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
 }
 
 
-RENDER_Part_Handler AdvMame2x_8_Table[4]={
+static RENDER_Part_Handler AdvMame2x_8_Table[4]={
 	AdvMame2x<8,8>,AdvMame2x<8,16>,AdvMame2x<8,24>,AdvMame2x<8,32>
 };
 

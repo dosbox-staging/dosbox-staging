@@ -1,5 +1,11 @@
-template <Bitu dbpp>
-static INLINE void AddDst(Bit8u * & dst,Bitu val) {
+#ifdef __GNUC__
+template <Bitu dbpp> static INLINE void AddDst(Bit8u * & dst,Bitu val) __attribute__ ((always_inline));
+template <Bitu bpp>  static INLINE Bitu LineSize(Bitu pixels) __attribute__ ((always_inline));
+template <Bitu sbpp> static INLINE Bitu LoadSrc(Bit8u * & src) __attribute__ ((always_inline));
+template <Bitu sbpp,Bitu dbpp> static INLINE Bitu ConvBPP(Bitu val) __attribute__ ((always_inline));
+#endif
+
+template <Bitu dbpp> static INLINE void AddDst(Bit8u * & dst,Bitu val) {
 	switch (dbpp) {
 	case 8: *(Bit8u*)dst=val;dst+=1;break;
 	case 16:*(Bit16u*)dst=val;dst+=2;break;
