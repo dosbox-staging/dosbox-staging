@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.68 2004-04-03 19:01:45 canadacow Exp $ */
+/* $Id: dosbox.cpp,v 1.69 2004-05-11 18:42:37 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -101,7 +101,7 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
-Bits RemainTicks;;
+Bits RemainTicks;
 Bits LastTicks;
 
 static Bitu Normal_Loop(void) {
@@ -289,6 +289,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("irq",7);
 	secprop->Add_int("dma",1);
 	secprop->Add_int("hdma",5);
+	secprop->Add_bool("mixer",true);
 	secprop->Add_int("sbrate",22050);
 	secprop->Add_string("oplmode","auto");
 	secprop->Add_int("oplrate",22050);
@@ -296,6 +297,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("SBLASTER_CONFIGFILE_HELP",
 		"type -- Type of sblaster to emulate:none,sb1,sb2,sbpro1,sbpro2,sb16.\n"
 		"base,irq,dma,hdma -- The IO/IRQ/DMA/High DMA address of the soundblaster.\n"
+		"mixer -- Allow the soundblaster mixer to modify the dosbox mixer.\n"
 		"sbrate -- Sample rate of soundblaster emulation.\n"
 		"oplmode -- Type of OPL emulation: auto,cms,opl2,dualopl2,opl3.\n"
 		"           On auto the mode is determined by sblaster type.\n"
