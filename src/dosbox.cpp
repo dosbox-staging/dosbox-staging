@@ -172,8 +172,7 @@ void DOSBOX_Init(void) {
 	
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&MEM_Init);
-	/* Keep 1 mb free for video memory some day */
-	secprop->Add_int("memsize",C_MEM_MAX_SIZE-1);
+	secprop->Add_int("memsize",8);					//Default to 8 mb total memory
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
