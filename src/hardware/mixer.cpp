@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <math.h>
 
 #include "SDL.h"
 #include "mem.h"
@@ -34,6 +35,7 @@
 #include "cross.h"
 #include "support.h"
 #include "keyboard.h"
+#include "programs.h"
 
 #define MIXER_MAXCHAN 8
 #define MIXER_BUFSIZE (16*1024)
@@ -41,6 +43,7 @@
 #define MIXER_SHIFT 16
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_WAVESIZE MIXER_BUFSIZE
+#define MIXER_VOLSHIFT 14
 
 #define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
 
@@ -50,23 +53,21 @@
 #define MAKE_s16(CHAN) mixer.temp.s16[pos][CHAN]
 
 #define MIX_NORMAL(TYPE, LCHAN,RCHAN) {													\
-	(chan->handler)(((Bit8u*)&mixer.temp)+sizeof(mixer.temp.TYPE[0]),sample_toread);		\
+	(chan->handler)(((Bit8u*)&mixer.temp)+sizeof(mixer.temp.TYPE[0]),sample_toread);	\
 	Bitu sample_index=(1 << MIXER_SHIFT) - chan->sample_left;							\
-	Bit32s newsample;																	\
 	for (Bitu mix=0;mix<samples;mix++) {												\
 		Bitu pos=sample_index >> MIXER_SHIFT;sample_index+=chan->sample_add;			\
-		newsample=mixer.work[mix][0]+MAKE_##TYPE( LCHAN );								\
-		mixer.work[mix][0]=MIXER_CLIP(newsample);										\
-		newsample=mixer.work[mix][1]+MAKE_##TYPE( RCHAN );								\
-		mixer.work[mix][1]=MIXER_CLIP(newsample);										\
+		mixer.work[mix][0]+=chan->vol_mul[LCHAN]*MAKE_##TYPE( LCHAN );					\
+		mixer.work[mix][1]+=chan->vol_mul[RCHAN]*MAKE_##TYPE( RCHAN );					\
 	}																					\
-	chan->remain=*(Bitu *)&mixer.temp.TYPE[sample_index>>MIXER_SHIFT];						\
+	chan->remain=*(Bitu *)&mixer.temp.TYPE[sample_index>>MIXER_SHIFT];					\
 	chan->sample_left=sample_total-sample_index;										\
 	break;																				\
 }
  
 struct MIXER_Channel {
-	Bit8u volume;
+	double vol_main[2];
+	Bits vol_mul[2];
 	Bit8u mode;
 	Bitu freq;
 	char * name;
@@ -92,7 +93,7 @@ static struct {
 		Bit16s data[MIXER_BUFSIZE][2];
 		Bitu read,write;
 	} out;
-	Bit16s work[MIXER_BUFSIZE][2];
+	Bit32s work[MIXER_BUFSIZE][2];
 	union {
 		Bit16s	m16[MIXER_BUFSIZE][1];
 		Bit16s	s16[MIXER_BUFSIZE][2];
@@ -107,18 +108,17 @@ static struct {
 	struct {
 		FILE * handle;
 		const char * dir;
-		Bit8u buf[MIXER_WAVESIZE];
+		Bit16s buf[MIXER_WAVESIZE][2];
 		Bitu used;
 		Bit32u length;
 	} wave; 
 } mixer;
 
-MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * name) {
+MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bitu freq,char * name) {
 //TODO Find a free channel
 	MIXER_Channel * chan=new MIXER_Channel;
 	if (!chan) return 0;
 	chan->playing=false;
-	chan->volume=255;
 	chan->mode=MIXER_16STEREO;
 	chan->handler=handler;
 	chan->name=name;
@@ -126,38 +126,53 @@ MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * nam
 	chan->sample_left=0;
 	chan->next=mixer.channels;
 	mixer.channels=chan;
+	MIXER_SetVolume(chan,1,1);
 	return chan;
-};
+}
 
-void MIXER_SetFreq(MIXER_Channel * chan,Bit32u freq) {
-	if (chan) {
-		chan->freq=freq;
-		/* Calculate the new addition value */
-		chan->sample_add=(freq<<MIXER_SHIFT)/mixer.freq;
-	}	
+MIXER_Channel * MIXER_FindChannel(const char * name) {
+	MIXER_Channel * chan=mixer.channels;
+	while (chan) {
+		if (!strcasecmp(chan->name,name)) break;
+		chan=chan->next;
+	}
+	return chan;
+}
+
+void MIXER_SetFreq(MIXER_Channel * chan,Bitu freq) {
+	if (!chan) return;
+	chan->freq=freq;
+	chan->sample_add=(freq<<MIXER_SHIFT)/mixer.freq;
 }	
 
 void MIXER_SetMode(MIXER_Channel * chan,Bit8u mode) {
 	if (chan) chan->mode=mode;
-};
+}
 
-void MIXER_SetVolume(MIXER_Channel * chan,Bit8u vol) {
-	if (chan) chan->volume=vol;
+void MIXER_SetVolume(MIXER_Channel * chan,float left,float right) {
+	if (!chan) return;
+	if (left>=0) {
+		chan->vol_main[0]=left;
+		chan->vol_mul[0]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[0]);
+	}
+	if (right>=0) {
+		chan->vol_main[1]=right;
+		chan->vol_mul[1]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[1]);
+	}
+	LOG_MSG("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f",chan->name,
+			chan->vol_main[0]*100,chan->vol_main[1]*100,
+			20*log(chan->vol_main[0])/log(10.0f),20*log(chan->vol_main[1])/log(10.0f)
+		);
 }
 
 void MIXER_Enable(MIXER_Channel * chan,bool enable) {
 	if (chan) chan->playing=enable;
 }
 
-
-
 /* Mix a certain amount of new samples */
-static void MIXER_MixData(Bit32u samples) {
-/* This Should mix the channels */
+static void MIXER_MixData(Bitu samples) {
 	if (!samples) return;
 	if (samples>MIXER_BUFSIZE) samples=MIXER_BUFSIZE;
-	/* Clear work buffer */
-	memset(mixer.work,0,samples*MIXER_SSIZE);
 	MIXER_Channel * chan=mixer.channels;
 	while (chan) {
 		if (chan->playing) {
@@ -187,22 +202,27 @@ static void MIXER_MixData(Bit32u samples) {
 		}
 		chan=chan->next;
 	}
-	Bitu buf_remain=MIXER_BUFSIZE-mixer.out.write;
-	/* Fill the samples size buffer with 0's */
-	if (buf_remain>samples) {
-		memcpy(&mixer.out.data[mixer.out.write][0],&mixer.work[0][0],samples*MIXER_SSIZE);
-		mixer.out.write+=samples;
-	} else {
-		memcpy(&mixer.out.data[mixer.out.write][0],&mixer.work[0][0],buf_remain*MIXER_SSIZE);
-		memcpy(&mixer.out.data[0][0],&mixer.work[buf_remain][0],(samples-buf_remain)*MIXER_SSIZE);
-		mixer.out.write=(mixer.out.write+samples)-MIXER_BUFSIZE;
+	Bitu index=mixer.out.write;
+	for (Bitu read=0;read<samples;read++) {
+		Bits temp=mixer.work[read][0] >> MIXER_VOLSHIFT;
+		mixer.out.data[index][0]=MIXER_CLIP(temp);
+		mixer.work[read][0]=0;
+		temp=mixer.work[read][1] >> MIXER_VOLSHIFT;
+		mixer.out.data[index][1]=MIXER_CLIP(temp);
+		mixer.work[read][1]=0;
+		index=(index+1)&(MIXER_BUFSIZE-1);
 	}
+	mixer.out.write=index;
 	if (mixer.wave.handle) {
-		memcpy(&mixer.wave.buf[mixer.wave.used],&mixer.work[0][0],samples*MIXER_SSIZE);
-		mixer.wave.length+=samples*MIXER_SSIZE;
-		mixer.wave.used+=samples*MIXER_SSIZE;
+		index=(MIXER_BUFSIZE+mixer.out.write-samples);
+		while (samples--) {
+			index=index&(MIXER_BUFSIZE-1);
+			mixer.wave.buf[mixer.wave.used][0]=mixer.out.data[index][0];
+			mixer.wave.buf[mixer.wave.used][1]=mixer.out.data[index][1];
+			index++;mixer.wave.used++;
+		}
 		if (mixer.wave.used>(MIXER_WAVESIZE-1024)){
-			fwrite(mixer.wave.buf,1,mixer.wave.used,mixer.wave.handle);
+			fwrite(mixer.wave.buf,1,mixer.wave.used*MIXER_SSIZE,mixer.wave.handle);
 			mixer.wave.used=0;
 		}
 	}
@@ -255,7 +275,7 @@ static void MIXER_WaveEvent(void) {
 	if (mixer.wave.handle) {
 		LOG_MSG("Stopped recording");
 		/* Write last piece of audio in buffer */
-		fwrite(mixer.wave.buf,1,mixer.wave.used,mixer.wave.handle);
+		fwrite(mixer.wave.buf,1,mixer.wave.used*MIXER_SSIZE,mixer.wave.handle);
 		/* Fill in the header with useful information */
 		host_writed(&wavheader[4],mixer.wave.length+sizeof(wavheader)-8);
 		host_writed(&wavheader[0x18],mixer.freq);
@@ -294,12 +314,66 @@ static void MIXER_WaveEvent(void) {
 		return;
 	}
 	mixer.wave.length=0;
+	mixer.wave.used=0;
 	LOG_MSG("Started recording to file %s",file_name);
 	fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
 }
 
 static void MIXER_Stop(Section* sec) {
 	if (mixer.wave.handle) MIXER_WaveEvent();
+}
+
+class MIXER : public Program {
+public:
+	void Run(void) {
+		MIXER_Channel * chan=mixer.channels;
+		while (chan) {
+			if (cmd->FindString(chan->name,temp_line,false)) {
+				char * scan=(char *)temp_line.c_str();
+				Bitu w=0;
+				while (char c=*scan) {
+					bool db=(toupper(c)=='D');
+					if (db) {
+						c=*++scan;
+					}
+					if (c==':') {
+						c=*++scan;w=1;
+					}
+					char * before=scan;
+					double val=strtod(scan,&scan);
+					if (before==scan) {
+						++scan;continue;
+					}
+					if (!db) val/=100;
+					else val=powf(10.0f,(float)val/20.0f);
+					if (val<0) val=1.0f;
+					if (!w) {
+						chan->vol_main[0]=float(val);
+					} else {
+						chan->vol_main[1]=float(val);
+					}
+				}
+				if (!w) chan->vol_main[1]=chan->vol_main[0];
+				chan->vol_mul[0]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[0]);
+				chan->vol_mul[1]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[1]);
+			}
+			chan=chan->next;
+		}
+		if (cmd->FindExist("/NOSHOW")) return;
+		chan=mixer.channels;
+		WriteOut("Channel  Main    Main(dB)\n");
+		while (chan) {
+			WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",chan->name,
+				chan->vol_main[0]*100,chan->vol_main[1]*100,
+				20*log(chan->vol_main[0])/log(10.0f),20*log(chan->vol_main[1])/log(10.0f)
+				);
+			chan=chan->next;
+		}
+	}
+};
+
+static void MIXER_ProgramStart(Program * * make) {
+	*make=new MIXER;
 }
 
 void MIXER_Init(Section* sec) {
@@ -347,4 +421,5 @@ void MIXER_Init(Section* sec) {
 		SDL_PauseAudio(0);
 	}
 	KEYBOARD_AddEvent(KBD_f6,KBD_MOD_CTRL,MIXER_WaveEvent);
+	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
