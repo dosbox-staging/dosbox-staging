@@ -262,12 +262,12 @@ static void Scale2x_8(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	dy-=2;
 	/* Middle part */
 	for (;dy>0;dy--) {
-		scale2x_line_8(dest,dest+render.op.pitch,src,src+render.src.pitch,src+2*render.src.pitch,dx);
+		scale2x_line_8((Bit8u *)dest,(Bit8u *)(dest+render.op.pitch),src-render.src.pitch,src,src+render.src.pitch,dx);
 		dest+=render.op.pitch*2;
 		src+=render.src.pitch;
 	}
 	/* Last Line */
-	scale2x_line_8(dest,dest+render.op.pitch,src,src+render.src.pitch,src+render.src.pitch,dx);
+	scale2x_line_8((Bit8u *)dest,(Bit8u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
 }
 
 static void Scale2x_16(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
@@ -280,12 +280,12 @@ static void Scale2x_16(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	dy-=2;
 	/* Middle part */
 	for (;dy>0;dy--) {
-		scale2x_line_16((Bit16u *)dest,(Bit16u *)(dest+render.op.pitch),src,src+render.src.pitch,src+2*render.src.pitch,dx);
+		scale2x_line_16((Bit16u *)dest,(Bit16u *)(dest+render.op.pitch),src-render.src.pitch,src,src+render.src.pitch,dx);
 		dest+=render.op.pitch*2;
 		src+=render.src.pitch;
 	}
 	/* Last Line */
-	scale2x_line_16((Bit16u *)dest,(Bit16u *)(dest+render.op.pitch),src,src+render.src.pitch,src+render.src.pitch,dx);
+	scale2x_line_16((Bit16u *)dest,(Bit16u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
 }
 
 static void Scale2x_32(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
@@ -298,12 +298,12 @@ static void Scale2x_32(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	dy-=2;
 	/* Middle part */
 	for (;dy>0;dy--) {
-		scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src,src+render.src.pitch,src+2*render.src.pitch,dx);
+		scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src-render.src.pitch,src,src+render.src.pitch,dx);
 		dest+=render.op.pitch*2;
 		src+=render.src.pitch;
 	}
 	/* Last Line */
-	scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src,src+render.src.pitch,src+render.src.pitch,dx);
+	scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
 }
 
 #else
