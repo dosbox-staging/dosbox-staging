@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.19 2004-01-29 09:26:52 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.20 2004-05-25 19:37:18 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -385,6 +385,7 @@ bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove)
 	for (it=cmds.begin();it!=cmds.end();it++) {
 		if (strncmp(begin,(*it).c_str(),strlen(begin))==0) {
 			value=((*it).c_str()+strlen(begin));
+			if (remove) cmds.erase(it);
 			return true;
 		}
 	}
