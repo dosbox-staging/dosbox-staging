@@ -206,14 +206,13 @@ bool DOS_FindFirst(char * search,Bit16u attr) {
 	}		
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
 	if (Drives[drive]->FindFirst(dir,dta)) return true;
-	DOS_SetError(DOSERR_NO_MORE_FILES);
+	
 	return false;
 }
 
 bool DOS_FindNext(void) {
 	DOS_DTA dta(dos.dta);
 	if (Drives[dta.GetSearchDrive()]->FindNext(dta)) return true;
-	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
 }
 

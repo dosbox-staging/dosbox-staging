@@ -110,7 +110,11 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	if (tempDir[strlen(tempDir)-1]!=CROSS_FILESPLIT) strcat(tempDir,end);
 	
 	Bit16u id;
-	if (!dirCache.OpenDir(tempDir,id)) return false;
+	if (!dirCache.OpenDir(tempDir,id))
+	{
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
 	strcpy(srchInfo[id].srch_dir,tempDir);
 	dta.SetDirID(id);
 	
@@ -139,6 +143,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 
 again:
 	if (!dirCache.ReadDir(id,dir_ent)) {
+		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
 

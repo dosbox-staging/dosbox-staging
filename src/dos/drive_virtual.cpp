@@ -200,6 +200,7 @@ bool Virtual_Drive::FindNext(DOS_DTA & dta) {
 		}
 		search_file=search_file->next;
 	}
+	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
 }
 
