@@ -668,7 +668,7 @@ static OpCode OpCodeTable[1024]={
 /* 0x3b8 - 0x3bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_MODRM	,0xf		,0		,M_GRP	},{L_MODRM	,O_BTCd		,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_BSFd		,S_Gd	,M_Ed	},{L_MODRM	,O_BSRd		,S_Gd	,M_Ed	},
 {L_MODRM	,0			,S_Gd	,M_Ebx	},{L_MODRM	,0			,S_Gd	,M_Ewx	},
 
 /* 0x3c0 - 0x3cc */

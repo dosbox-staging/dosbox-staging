@@ -87,7 +87,7 @@ enum {
 	
 	O_BTw,O_BTSw,O_BTRw,O_BTCw,
 	O_BTd,O_BTSd,O_BTRd,O_BTCd,
-	O_BSFw,O_BSRw,
+	O_BSFw,O_BSRw,O_BSFd,O_BSRd,
 
 	O_BSWAP,
 	O_FPU,
