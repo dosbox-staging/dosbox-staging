@@ -74,7 +74,6 @@ public:
 private:
 	Bit8u cache;
 };
-device_EMM::device_EMM();
 
 struct EMM_Mapping {
 	Bit16u handle;
