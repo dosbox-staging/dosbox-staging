@@ -16,11 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <list>
 
 #include "dosbox.h"
 #include "inout.h"
 #include "cpu.h"
 #include "pic.h"
+#include "timer.h"
 
 #define PIC_QUEUESIZE 128
 
@@ -326,53 +328,101 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 	}
 }
 
-Bitu PIC_RunQueue(void) {
-	Bitu ret;
+bool PIC_RunQueue(void) {
 	/* Check to see if a new milisecond needs to be started */
-	if (CPU_Cycles>0) {
-		CPU_CycleLeft+=CPU_Cycles;
-		CPU_Cycles=0;
+	CPU_CycleLeft+=CPU_Cycles;
+	CPU_Cycles=0;
+	if (CPU_CycleLeft<=0) {
+		return false;
 	}
-	while (CPU_CycleLeft>0) {
-		/* Check the queue for an entry */
-		Bitu index=PIC_Index();
-		while (pic.next_entry && pic.next_entry->index<=index) {
-			PICEntry * entry=pic.next_entry;
-			pic.next_entry=entry->next;
-			switch (entry->type) {
-			case EVENT:
-				(entry->event)();
-				break;
-			case IRQ:
-				PIC_ActivateIRQ(entry->irq);
-				break;
-			}
-			/* Put the entry in the free list */
-			entry->next=pic.free_entry;
-			pic.free_entry=entry;
+	/* Check the queue for an entry */
+	Bitu index=PIC_Index();
+	while (pic.next_entry && pic.next_entry->index<=index) {
+		PICEntry * entry=pic.next_entry;
+		pic.next_entry=entry->next;
+		switch (entry->type) {
+		case EVENT:
+			(entry->event)();
+			break;
+		case IRQ:
+			PIC_ActivateIRQ(entry->irq);
+			break;
 		}
-		/* Check when to set the new cycle end */
-		if (pic.next_entry) {
-			Bits cycles=PIC_MakeCycles(pic.next_entry->index-index);
-			if (!cycles) cycles=1;
-			if (cycles<CPU_CycleLeft) {
-				CPU_Cycles=cycles;
-			} else {
-				CPU_Cycles=CPU_CycleLeft;
-			}
-		} else CPU_Cycles=CPU_CycleLeft;
-		if 	(PIC_IRQCheck)	PIC_runIRQs();
-		/* Run the actual cpu core */
-		CPU_CycleLeft-=CPU_Cycles;
-		ret=(*cpudecoder)();
-		if (CPU_Cycles>0) {
-			CPU_CycleLeft+=CPU_Cycles;
-			CPU_Cycles=0;
-		}
-		if (ret) return ret;	
+		/* Put the entry in the free list */
+		entry->next=pic.free_entry;
+		pic.free_entry=entry;
 	}
-	/* Prepare everything for next round */
+	/* Check when to set the new cycle end */
+	if (pic.next_entry) {
+		Bits cycles=PIC_MakeCycles(pic.next_entry->index-index);
+		if (!cycles) cycles=1;
+		if (cycles<CPU_CycleLeft) {
+			CPU_Cycles=cycles;
+		} else {
+			CPU_Cycles=CPU_CycleLeft;
+		}
+	} else CPU_Cycles=CPU_CycleLeft;
+	CPU_CycleLeft-=CPU_Cycles;
+	if 	(PIC_IRQCheck)	PIC_runIRQs();
+	return true;
+}
+
+/* The TIMER Part */
+
+enum { T_TICK,T_MICRO,T_DELAY};
+
+struct Timer {
+	Bitu type;
+	union {
+		struct {
+			TIMER_TickHandler handler;
+		} tick;
+		struct{
+			Bits left;
+			Bits total;
+			TIMER_MicroHandler handler;
+		} micro;
+	};
+};
+
+static Timer * first_timer=0;
+static std::list<Timer *> Timers;
+
+TIMER_Block * TIMER_RegisterTickHandler(TIMER_TickHandler handler) {
+	Timer *	new_timer=new(Timer);
+	new_timer->type=T_TICK;
+	new_timer->tick.handler=handler;
+	Timers.push_front(new_timer);
+	return (TIMER_Block *)new_timer;
+}
+
+TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro) {
+	Timer *	new_timer=new(Timer);
+	new_timer->type=T_MICRO;
+	new_timer->micro.handler=handler;
+	Timers.push_front(new_timer);
+	TIMER_SetNewMicro(new_timer,micro);
+	return (TIMER_Block *)new_timer;
+}
+
+void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro) {	
+	Timer *	timer=(Timer *)block;	
+	if (timer->type!=T_MICRO) E_Exit("TIMER:Illegal handler type");
+	timer->micro.total=micro;
+	Bitu index=PIC_Index();
+	while ((1000-index)>micro) {
+		PIC_AddEvent(timer->micro.handler,micro);
+		micro+=micro;
+		index+=micro;
+	}
+	timer->micro.left=timer->micro.total-(1000-index);
+}
+
+void TIMER_AddTick(void) {
+	/* Setup new amount of cycles for PIC */
+	
 	CPU_CycleLeft=CPU_CycleMax;
+	CPU_Cycles=0;
 	PIC_Ticks++;
 	/* Go through the list of scheduled irq's and lower their index with 1000 */
 	PICEntry * entry=pic.next_entry;
@@ -381,8 +431,31 @@ Bitu PIC_RunQueue(void) {
 		else entry->index=0;
 		entry=entry->next;
 	}
-	return 0;
+	Bits index;
+	/* Check if there are timer handlers that need to be called */
+	std::list<Timer *>::iterator i;
+	for(i=Timers.begin(); i != Timers.end(); ++i) {
+		Timer * timers=(*i);
+		switch (timers->type) {
+		case T_TICK:
+			timers->tick.handler(1);
+			break;
+		case T_MICRO:
+			index=1000;
+			while (index>=timers->micro.left) {
+				PIC_AddEvent(timers->micro.handler,timers->micro.left);
+				index-=timers->micro.left;
+				timers->micro.left=timers->micro.total;
+			}
+			timers->micro.left-=index;
+			break;
+		default:
+			E_Exit("TIMER:Illegal handler type");
+		}
+	}
 }
+
+
 
 void PIC_Init(Section* sec) {
 	/* Setup pic0 and pic1 with initial values like DOS has normally */

@@ -17,9 +17,6 @@
  */
 
 
-
-
-#include <list>
 #include "dosbox.h"
 #include "inout.h"
 #include "pic.h"
@@ -28,8 +25,6 @@
 #include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
-
-
 
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
@@ -165,10 +160,6 @@ static Bit8u read_latch(Bit32u port) {
   return ret;
 }
 
-
-
-
-
 static void write_p43(Bit32u port,Bit8u val) {
 	Bitu latch=(val >> 6) & 0x03;
 	switch (latch) {
@@ -197,82 +188,6 @@ static void write_p43(Bit32u port,Bit8u val) {
 	}
 }
 
-/* The TIMER Part */
-
-enum { T_TICK,T_MICRO,T_DELAY};
-
-struct Timer {
-	Bitu type;
-	union {
-		struct {
-			TIMER_TickHandler handler;
-		} tick;
-		struct{
-			Bits left;
-			Bits total;
-			TIMER_MicroHandler handler;
-		} micro;
-	};
-};
-
-static Timer * first_timer=0;
-static std::list<Timer *> Timers;
-
-TIMER_Block * TIMER_RegisterTickHandler(TIMER_TickHandler handler) {
-	Timer *	new_timer=new(Timer);
-	new_timer->type=T_TICK;
-	new_timer->tick.handler=handler;
-	Timers.push_front(new_timer);
-	return (TIMER_Block *)new_timer;
-}
-
-TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro) {
-	Timer *	new_timer=new(Timer);
-	new_timer->type=T_MICRO;
-	new_timer->micro.handler=handler;
-	Timers.push_front(new_timer);
-	TIMER_SetNewMicro(new_timer,micro);
-	return (TIMER_Block *)new_timer;
-}
-
-void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro) {	
-	Timer *	timer=(Timer *)block;	
-	if (timer->type!=T_MICRO) E_Exit("TIMER:Illegal handler type");
-	timer->micro.total=micro;
-	Bitu index=PIC_Index();
-	while ((1000-index)>micro) {
-		PIC_AddEvent(timer->micro.handler,micro);
-		micro+=micro;
-		index+=micro;
-	}
-	timer->micro.left=timer->micro.total-(1000-index);
-}
-
-void TIMER_AddTick(void) {
-	Bits index;
-	/* Check if there are timer handlers that need to be called */
-	std::list<Timer *>::iterator i;
-	for(i=Timers.begin(); i != Timers.end(); ++i) {
-		Timer * timers=(*i);
-		switch (timers->type) {
-		case T_TICK:
-			timers->tick.handler(1);
-			break;
-		case T_MICRO:
-			index=1000;
-			while (index>=timers->micro.left) {
-				PIC_AddEvent(timers->micro.handler,timers->micro.left);
-				index-=timers->micro.left;
-				timers->micro.left=timers->micro.total;
-			}
-			timers->micro.left-=index;
-			break;
-		default:
-			E_Exit("TIMER:Illegal handler type");
-		}
-	
-	}
-}
 
 void TIMER_Init(Section* sect) {
 	IO_RegisterWriteHandler(0x40,write_latch,"PIT Timer 0");
