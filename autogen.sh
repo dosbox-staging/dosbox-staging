@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-echo "Generating build information using aclocal, auotheader, automake and autoconf"
+echo "Generating build information using aclocal, automake and autoconf"
 echo "This may take a while ..."
 
 # Touch the timestamps on all the files since CVS messes them up
@@ -10,7 +10,6 @@ touch $directory/configure.in
 # Regenerate configuration files
 
 aclocal
-autoheader
 automake --gnits --include-deps --add-missing --copy 
 autoconf
 
