@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.24 2004-10-05 19:55:03 qbix79 Exp $ */
+/* $Id: drives.h,v 1.25 2004-11-03 23:13:55 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -49,6 +49,7 @@ public:
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual Bit8u GetMediaByte(void);
 	virtual bool isRemote(void);
+	virtual bool isRemovable(void);
 private:
 	char basedir[CROSS_LEN];
 	friend void DOS_Shell::CMD_SUBST(char* args); 	
@@ -140,6 +141,7 @@ public:
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual Bit8u GetMediaByte(void);
 	virtual bool isRemote(void);
+	virtual bool isRemovable(void);
 public:
 	Bit32u getAbsoluteSectFromBytePos(Bit32u startClustNum, Bit32u bytePos);
 	Bit32u getSectorSize(void);
@@ -200,6 +202,7 @@ public:
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual void SetDir(const char* path);
 	virtual bool isRemote(void);
+	virtual bool isRemovable(void);
 private:
 	Bit8u subUnit;
 };
@@ -295,6 +298,7 @@ public:
 	virtual Bit8u GetMediaByte(void);
 	virtual void EmptyCache(void){}
 	virtual bool isRemote(void);
+	virtual bool isRemovable(void);
 	bool readSector(Bit8u *buffer, Bit32u sector);
 private:
 	int  readDirEntry(isoDirEntry *de, Bit8u *data);
@@ -326,11 +330,12 @@ public:
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
 	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
-    bool FileExists(const char* name);
-    bool FileStat(const char* name, FileStat_Block* const stat_block);
+	bool FileExists(const char* name);
+	bool FileStat(const char* name, FileStat_Block* const stat_block);
 	Bit8u GetMediaByte(void);
 	void EmptyCache(void){}
 	bool isRemote(void);
+	virtual bool isRemovable(void);
 private:
 	VFILE_Block * search_file;
 };

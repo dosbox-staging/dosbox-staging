@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.20 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.21 2004-11-03 23:13:54 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -41,8 +41,9 @@ bool DOS_IOCTL(void) {
 	switch(reg_al) {
 	case 0x00:		/* Get Device Information */
 		reg_dx=Files[handle]->GetInformation();
+		reg_ax=reg_dx; //Destroyed officially
 		return true;
-    case 0x06:      /* Get Input Status */
+	case 0x06:      /* Get Input Status */
 		if (Files[handle]->GetInformation() & 0x8000) {		//Check for device
 			reg_al=(Files[handle]->GetInformation() & 0x40) ? 0x0 : 0xff;
 		} else { // FILE
@@ -67,8 +68,11 @@ bool DOS_IOCTL(void) {
 	case 0x08:		/* Check if block device removable */
 		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
 		if (Drives[drive]) {
-			if (drive<2) reg_ax=0;	/* Drive a,b are removable if mounted */
-			else reg_ax=1;
+			/* Drive a,b are removable if mounted *
+			 * So are cdrom drives                */
+			if (drive < 2  || Drives[drive]->isRemovable())
+				reg_ax=0;	
+			else 	reg_ax=1;
 			return true;
 		} else {
 			DOS_SetError(DOSERR_INVALID_DRIVE);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.3 2004-10-05 21:18:48 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.4 2004-11-03 23:13:55 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -363,6 +363,11 @@ Bit8u isoDrive::GetMediaByte(void)
 }
 
 bool isoDrive::isRemote(void)
+{
+	return true;
+}
+
+bool isoDrive::isRemovable(void)
 {
 	return true;
 }

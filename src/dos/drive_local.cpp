@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.52 2004-10-12 09:42:25 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.53 2004-11-03 23:13:55 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -366,6 +366,10 @@ bool localDrive::isRemote(void) {
 	return false;
 }
 
+bool localDrive::isRemovable(void) {
+	return false;
+}
+
 localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid) {
 	strcpy(basedir,startdir);
 	sprintf(info,"local directory %s",startdir);
@@ -570,5 +574,9 @@ void cdromDrive::SetDir(const char* path)
 };
 
 bool cdromDrive::isRemote(void) {
+	return true;
+}
+
+bool cdromDrive::isRemovable(void) {
 	return true;
 }

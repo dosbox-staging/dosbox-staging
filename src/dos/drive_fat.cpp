@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.5 2004-09-05 14:23:04 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.6 2004-11-03 23:13:54 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -698,7 +698,8 @@ Bit32u fatDrive::getFirstFreeClust(void) {
 	
 }
 
-bool fatDrive::isRemote(void) {	return false; }
+bool fatDrive::isRemote(void) { return false; }
+bool fatDrive::isRemovable(void) { return false; }
 
 Bit8u fatDrive::GetMediaByte(void) { return loadedDisk->GetBiosType(); }
 

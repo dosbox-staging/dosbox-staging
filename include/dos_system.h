@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.26 2004-10-20 12:27:18 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.27 2004-11-03 23:13:53 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -242,6 +242,7 @@ public:
 	virtual void SetDir(const char* path) { strcpy(curdir,path); };
 	virtual void EmptyCache(void) { dirCache.EmptyCache(); };
 	virtual bool isRemote(void)=0;
+	virtual bool isRemovable(void)=0;
 	char * GetInfo(void);
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
