@@ -34,7 +34,6 @@
 void DEBUG_ShowMsg(char * msg) {
 	char buf[1024];
 	strcpy(buf,msg);
-	strcat(buf,"\n");
 
 	waddstr(dbg.win_out,buf);
 	wprintw(dbg.win_out," %d\n",cycle_count);
