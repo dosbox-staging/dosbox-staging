@@ -190,7 +190,9 @@ static void write_p43(Bit32u port,Bit8u val) {
 			if (val & 0x02) counter_latch(0);
 			if (val & 0x04) counter_latch(1);
 			if (val & 0x08) counter_latch(2);
-		} else E_Exit("PIT:Latch Timer Status %X",val);
+		} else if ((val & 0x10)==0) {	/* Latch status words */
+			LOG(LOG_PIT,LOG_ERROR)("Unsupported Latch status word call");
+		} else LOG(LOG_PIT,LOG_ERROR)("Unhandled command:%X",val);
 		break;
 	}
 }
