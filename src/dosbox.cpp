@@ -58,6 +58,7 @@ void CPU_Init(Section*);
 //void FPU_Init();
 void DMA_Init(Section*);
 void MIXER_Init(Section*);
+void MIDI_Init(Section*);
 void HARDWARE_Init(Section*);
 
 
@@ -66,6 +67,7 @@ void JOYSTICK_Init(Section*);
 void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void GUS_Init(Section*);
+void MPU401_Init(Section*);
 void ADLIB_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
@@ -186,6 +188,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&JOYSTICK_Init);
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
+	secprop=control->AddSection_prop("midi",&MIDI_Init);
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
@@ -202,7 +205,9 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&CMS_Init);
     secprop->Add_bool("cms",false);
 
-//	secprop=control->AddSection_prop("gus",&GUS_Init);
+	secprop=control->AddSection_prop("gus",&GUS_Init);
+
+	secprop=control->AddSection_prop("gus",&MPU401_Init);
 	
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
 	secprop->Add_bool("enabled",true);
