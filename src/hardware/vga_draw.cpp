@@ -349,7 +349,12 @@ void VGA_SetupDrawing(Bitu val) {
 		if (vbstart<vdispend) vdispend=vbstart;
 
 		clock=(vga.misc_output >> 2) & 3;
-		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
+		if (clock == 0)
+			clock = 25175000;
+		else if (clock == 1)
+			clock = 28322000;
+		else 
+			clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
 		/* Check for 8 for 9 character clock mode */
 		if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
 		/* Check for pixel doubling, master clock/2 */
