@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.31 2004-10-17 16:00:57 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.32 2004-10-26 18:18:22 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -736,24 +736,24 @@ void DOS_SetupPrograms(void) {
 		"The \033[33mbasic\033[0m level works on all CD-ROM drives and normal directories.\n"
 		"It installs MSCDEX and marks the files read-only.\n"
 		"Usually this is enough for most games:\n"
-		"\033[34;1mmount d D:\\ -t cdrom\033[0m   or   \033[34;1mmount d C:\\example -t cdrom\033[0m\n"
+		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom\033[0m   or   \033[34;1mmount d C:\\example -t cdrom\033[0m\n"
 		"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
 		"\033[34;1mmount d C:\\example -t cdrom -label CDLABEL\033[0m\n"
 		"\n"
 		"The \033[33mnext\033[0m level adds some low-level support.\n"
 		"Therefore only works on CD-ROM drives:\n"
-		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0\033[0m\n"
+		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0\033[0m\n"
 		"\n"
 		"The \033[33mlast\033[0m level of support depends on your Operating System:\n"
 		"For \033[1mWindows 2000\033[0m, \033[1mWindows XP\033[0m and \033[1mLinux\033[0m:\n"
-		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
+		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
 		"For \033[1mWindows 9x\033[0m with a ASPI layer installed:\n"
-		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0 \033[34m-aspi\033[0m\n"
+		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0 \033[34m-aspi\033[0m\n"
 		"\n"
+		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
 		"\033[34;1mmount -cd\033[0m"
 		);
-
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DosBox from either a floppy or hard disk image.\n\n"
