@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.26 2004-03-07 10:30:15 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.27 2004-05-11 18:55:33 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -524,7 +524,7 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 			attr=mem_readb(string);
 			string++;
 		} else attr=7;
-		INT10_TeletypeOutputAttr(chr,attr,flag & 2);
+		INT10_TeletypeOutputAttr(chr,attr,(flag & 2)>0);
 		count--;
 	}
 	if (flag & 1) {
