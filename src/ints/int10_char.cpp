@@ -57,7 +57,6 @@ static INLINE void PLANAR4_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,B
 	IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
 	IO_Write(0x3ce,0x0);IO_Write(0x3cf,attr);
 	IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
-	IO_Write(0x3ce,5);IO_Write(0x3cf,0);		/* Normal transfer mode */
 	/* Write some bytes */
 	PhysPt dest;
 	dest=base+(curmode->twidth*row)*curmode->cheight+cleft;	
@@ -104,8 +103,8 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 		end=cul;
 		next=-1;
 	} else if (nlines<0) {
-		start=cul-nlines-1;
-		end=clr;
+		start=rul-nlines-1;
+		end=rlr;
 		next=1;
 	} else {
 		nlines=rlr-rul+1;
@@ -127,8 +126,8 @@ filling:
 	if (nlines>0) {
 		start=rul;
 	} else {
-		nlines-=nlines;
-		start=rlr-nlines;
+		nlines=-nlines;
+		start=rlr-nlines+1;
 	}
 	for (;nlines>0;nlines--) {
 		switch (curmode->memmodel) {
