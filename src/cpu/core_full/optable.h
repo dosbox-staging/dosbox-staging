@@ -150,7 +150,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,6			,0	,M_GRP_1	},
 {L_MODRM	,5			,0	,M_GRP_CL	},{L_MODRM	,6			,0	,M_GRP_CL	},
 {L_Ib		,O_AAM		,0		,0		},{L_Ib		,O_AAD		,0		,0		},
-{D_SETALC	,0			,0		,0		},{D_XLATw	,0			,0		,0		},
+{D_SETALC	,0			,0		,0		},{D_XLAT	,0			,0		,0		},
 //TODO FPU
 /* 0xd8 - 0xdf */
 {L_MODRM	,O_FPU		,0		,0		},{L_MODRM	,O_FPU		,1		,0		},
@@ -506,7 +506,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,7			,0	,M_GRP_1	},
 {L_MODRM	,5			,0	,M_GRP_CL	},{L_MODRM	,7			,0	,M_GRP_CL	},
 {L_Ib		,O_AAM		,0		,0		},{L_Ib		,O_AAD		,0		,0		},
-{D_SETALC	,0			,0		,0		},{D_XLATd	,0			,0		,0		},
+{D_SETALC	,0			,0		,0		},{D_XLAT	,0			,0		,0		},
 /* 0x2d8 - 0x2df */
 {L_MODRM	,O_FPU		,0		,0		},{L_MODRM	,O_FPU		,1		,0		},
 {L_MODRM	,O_FPU		,2		,0		},{L_MODRM	,O_FPU		,3		,0		},

@@ -483,6 +483,7 @@ switch (inst.code.op) {
 		break;
 	case O_BSFw:
 		{
+			FillFlags();
 			if (!inst.op1.w) {
 				SETFLAGBIT(ZF,true);
 				goto nextopcode;
