@@ -154,7 +154,7 @@ static void GFX_Redraw() {
 	};
 #endif	
 
-	if (++sdl.frames.count<sdl.frames.skip) return;
+	if (++sdl.frames.count<sdl.frames.skip) goto skipframe;
 	sdl.frames.count=0;
 	if (sdl.active) {
 		SDL_LockSurface(sdl.surface );
@@ -163,6 +163,7 @@ static void GFX_Redraw() {
 		 if (sdl.full_screen) SDL_Flip(sdl.surface);
 		 else SDL_UpdateRect(sdl.surface,0,0,0,0);
 	};
+skipframe:
 #if C_THREADED	
 	if (SDL_mutexV(sdl.mutex)) {
 		E_Exit("Can't Release Mutex");
@@ -567,7 +568,7 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-		LOG_ERROR("Exit to error: %s",error);
+		LOG_MSG("Exit to error: %sPress enter to continue.",error);
 		fgetc(stdin);
 	}
 	return 0;
