@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.9 2004-10-02 11:23:07 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.10 2004-10-28 14:46:15 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -335,7 +335,8 @@ public:
 	CStickBindGroup(Bitu _stick) : CBindGroup (){
 		stick=_stick;
 		sprintf(configname,"stick_%d",stick);
-		assert(sdl_joystick=SDL_JoystickOpen(stick));
+		sdl_joystick=SDL_JoystickOpen(stick);
+		assert(sdl_joystick);
 		axes=SDL_JoystickNumAxes(sdl_joystick);
 		buttons=SDL_JoystickNumButtons(sdl_joystick);
 		hats=SDL_JoystickNumHats(sdl_joystick);
