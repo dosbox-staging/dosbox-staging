@@ -356,6 +356,20 @@ l_M_Ed:
 		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		goto nextopcode;
+	case D_POPSEGw:
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_16())) {
+			LEAVECORE;
+			reg_eip-=(IPPoint-inst.start);reg_esp-=2;
+			CPU_StartException();goto restart_core;
+		}
+		goto nextopcode;
+	case D_POPSEGd:
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_32())) {
+			LEAVECORE;
+			reg_eip-=(IPPoint-inst.start);reg_esp-=4;
+			CPU_StartException();goto restart_core;
+		}
+		goto nextopcode;
 	case D_SETALC:
 		reg_al = get_CF() ? 0xFF : 0;
 		goto nextopcode;

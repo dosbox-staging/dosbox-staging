@@ -4,7 +4,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,t_ADDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADDw	,S_Ew	,M_EwGw		},
 {L_MODRM	,t_ADDb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADDw	,S_Gw	,M_GwEw		},
 {L_REGbIb	,t_ADDb	,S_REGb	,REGI_AL	},{L_REGwIw	,t_ADDw	,S_REGw	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,es			},{L_POPw	,0		,S_SEGI	,es			},
+{L_SEG		,0		,S_PUSHw,es			},{D_POPSEGw,0		,0		,es			},
 /* 0x08 - 0x0f */
 {L_MODRM	,t_ORb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ORw	,S_Ew	,M_EwGw		},
 {L_MODRM	,t_ORb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ORw	,S_Gw	,M_GwEw		},
@@ -15,12 +15,12 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,t_ADCb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADCw	,S_Ew	,M_EwGw		},
 {L_MODRM	,t_ADCb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADCw	,S_Gw	,M_GwEw		},
 {L_REGbIb	,t_ADCb	,S_REGb	,REGI_AL	},{L_REGwIw	,t_ADCw	,S_REGw	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,ss			},{L_POPw	,0		,S_SEGI	,ss			},
+{L_SEG		,0		,S_PUSHw,ss			},{D_POPSEGw,0		,0		,ss			},
 /* 0x18 - 0x1f */
 {L_MODRM	,t_SBBb	,S_Eb	,M_EbGb		},{L_MODRM	,t_SBBw	,S_Ew	,M_EwGw		},
 {L_MODRM	,t_SBBb	,S_Gb	,M_GbEb		},{L_MODRM	,t_SBBw	,S_Gw	,M_GwEw		},
 {L_REGbIb	,t_SBBb	,S_REGb	,REGI_AL	},{L_REGwIw	,t_SBBw	,S_REGw	,REGI_AX	},
-{L_SEG		,0		,S_PUSHw,ds			},{L_POPw	,0		,S_SEGI	,ds			},
+{L_SEG		,0		,S_PUSHw,ds			},{D_POPSEGw,0		,0		,ds			},
 
 /* 0x20 - 0x27 */
 {L_MODRM	,t_ANDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ANDw	,S_Ew	,M_EwGw		},
@@ -293,12 +293,12 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,O_C_LE		,S_C_Eb,0		},{L_MODRM	,O_C_NLE	,S_C_Eb,0		},
 
 /* 0x1a0 - 0x1a7 */
-{L_SEG		,0		,S_PUSHw	,fs		},{L_POPw	,0			,S_SEGI	,fs		},
+{L_SEG		,0		,S_PUSHw	,fs		},{D_POPSEGw,0		,0		,fs			},
 {D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_DSHLw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHLw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1a8 - 0x1af */
-{L_SEG		,0		,S_PUSHw	,gs		},{L_POPw	,0			,S_SEGI	,gs		},
+{L_SEG		,0		,S_PUSHw	,gs		},{D_POPSEGw,0		,0		,gs			},
 {0			,0			,0		,0		},{L_MODRM	,O_BTSw		,S_Ew	,M_EwGwt	},
 {L_MODRM	,O_DSHRw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHRw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRw	,S_Gw	,M_EwxGwx	},
@@ -363,7 +363,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,t_ADDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADDd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ADDb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADDd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_ADDb	,S_REGb	,REGI_AL	},{L_REGdId	,t_ADDd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHd,es			},{L_POPd	,0		,S_SEGI	,es			},
+{L_SEG		,0		,S_PUSHd,es			},{D_POPSEGd,0		,0		,es			},
 /* 0x208 - 0x20f */
 {L_MODRM	,t_ORb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ORd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ORb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ORd	,S_Gd	,M_GdEd		},
@@ -374,12 +374,12 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,t_ADCb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ADCd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_ADCb	,S_Gb	,M_GbEb		},{L_MODRM	,t_ADCd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_ADCb	,S_REGb	,REGI_AL	},{L_REGdId	,t_ADCd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHd,ss			},{L_POPd	,0		,S_SEGI	,ss			},
+{L_SEG		,0		,S_PUSHd,ss			},{D_POPSEGd,0		,0		,ss			},
 /* 0x218 - 0x21f */
 {L_MODRM	,t_SBBb	,S_Eb	,M_EbGb		},{L_MODRM	,t_SBBd	,S_Ed	,M_EdGd		},
 {L_MODRM	,t_SBBb	,S_Gb	,M_GbEb		},{L_MODRM	,t_SBBd	,S_Gd	,M_GdEd		},
 {L_REGbIb	,t_SBBb	,S_REGb	,REGI_AL	},{L_REGdId	,t_SBBd	,S_REGd	,REGI_AX	},
-{L_SEG		,0		,S_PUSHd,ds			},{L_POPd	,0		,S_SEGI	,ds			},
+{L_SEG		,0		,S_PUSHd,ds			},{D_POPSEGd,0		,0		,ds			},
 
 /* 0x220 - 0x227 */
 {L_MODRM	,t_ANDb	,S_Eb	,M_EbGb		},{L_MODRM	,t_ANDd	,S_Ed	,M_EdGd		},
@@ -649,12 +649,12 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,O_C_LE		,S_C_Eb,0		},{L_MODRM	,O_C_NLE	,S_C_Eb,0		},
 
 /* 0x3a0 - 0x3a7 */
-{L_SEG		,0		,S_PUSHd	,fs		},{L_POPd	,0			,S_SEGI	,fs		},
+{L_SEG		,0		,S_PUSHd	,fs		},{D_POPSEGd,0			,0		,fs			},
 {D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_DSHLd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHLd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x3a8 - 0x3af */
-{L_SEG		,0		,S_PUSHd	,gs		},{L_POPd	,0			,S_SEGI	,gs		},
+{L_SEG		,0		,S_PUSHd	,gs		},{D_POPSEGd,0			,0		,gs			},
 {0			,0			,0		,0		},{L_MODRM	,O_BTSd		,S_Ed	,M_EdGdt	},
 {L_MODRM	,O_DSHRd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHRd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdxGdx	},

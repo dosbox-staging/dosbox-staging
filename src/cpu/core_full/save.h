@@ -55,19 +55,31 @@ switch (inst.code.save) {
 	case S_REGd:
 		reg_32(inst.code.extra)=inst.op1.d;
 		break;	
-	case S_SEGI:
-		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op1.w);
-		break;
 	case S_SEGm:
-		CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w);
+		if (CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w)) {
+			LEAVECORE;
+			reg_eip-=(IPPoint-inst.start);
+			CPU_StartException();
+			goto restart_core;
+		}
 		break;
 	case S_SEGGw:
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
+			LEAVECORE;
+			reg_eip-=(IPPoint-inst.start);
+			CPU_StartException();
+			goto restart_core;
+		}
 		reg_16(inst.rm_index)=inst.op1.w;
-		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w);
 		break;
 	case S_SEGGd:
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
+			LEAVECORE;
+			reg_eip-=(IPPoint-inst.start);
+			CPU_StartException();
+			goto restart_core;
+		}
 		reg_32(inst.rm_index)=inst.op1.d;
-		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w);
 		break;
 	case S_PUSHw:
 		Push_16(inst.op1.w);

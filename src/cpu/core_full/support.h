@@ -27,6 +27,7 @@ enum {
 	D_IRETw,D_IRETd,
 	D_PUSHAw,D_PUSHAd,
 	D_POPAw,D_POPAd,
+	D_POPSEGw,D_POPSEGd,
 	D_DAA,D_DAS,
 	D_AAA,D_AAS,
 	D_CBW,D_CWDE,
@@ -105,7 +106,6 @@ enum {
 	
 	S_REGb,S_REGw,S_REGd,
 	S_PUSHw,S_PUSHd,
-	S_SEGI,
 	S_SEGm,
 	S_SEGGw,S_SEGGd,
 
