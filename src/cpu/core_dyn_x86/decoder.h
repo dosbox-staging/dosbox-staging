@@ -726,7 +726,7 @@ static void dyn_check_bool_exception(DynReg * check) {
 	dyn_reduce_cycles();
 	dyn_set_eip_last();
 	dyn_save_critical_regs();
-	gen_call_function(&DynRunException,"");
+	gen_call_function((void *)&DynRunException,"");
 	gen_return(BR_Normal);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
@@ -808,7 +808,7 @@ static void dyn_enter(void) {
 	gen_releasereg(DREG(EBP));
 	Bitu bytes=decode_fetchw();
 	Bitu level=decode_fetchb();
-	gen_call_function(&CPU_ENTER,"%Id%Id%Id",decode.big_op,bytes,level);
+	gen_call_function((void *)&CPU_ENTER,"%Id%Id%Id",decode.big_op,bytes,level);
 }
 
 static void dyn_leave(void) {
@@ -1009,8 +1009,6 @@ static void dyn_interrupt(Bitu num) {
 	gen_return(BR_Normal);
 	dyn_closeblock();
 }
-
-static counter=0;
 
 static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bitu max_opcodes) {
 	Bits i;
@@ -1265,13 +1263,13 @@ restart_prefix:
 			gen_protectflags();
 			gen_releasereg(DREG(ESP));
 			dyn_flags_gen_to_host();
-			gen_call_function(&CPU_PUSHF,"%Rd%Id",DREG(TMPB),decode.big_op);
+			gen_call_function((void *)&CPU_PUSHF,"%Rd%Id",DREG(TMPB),decode.big_op);
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
 			break;
 		case 0x9d:		//POPF
 			gen_releasereg(DREG(ESP));
-			gen_call_function(&CPU_POPF,"%Rd%Id",DREG(TMPB),decode.big_op);
+			gen_call_function((void *)&CPU_POPF,"%Rd%Id",DREG(TMPB),decode.big_op);
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			dyn_flags_host_to_gen();
 			gen_releasereg(DREG(TMPB));
@@ -1423,11 +1421,11 @@ restart_prefix:
 		case 0xf7:dyn_grp3_ev();break;
 		/* Change interrupt flag */
 		case 0xfa:		//CLI
-			gen_call_function(&CPU_CLI,"%Rd",DREG(TMPB));
+			gen_call_function((void *)&CPU_CLI,"%Rd",DREG(TMPB));
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			break;
 		case 0xfb:		//STI
-			gen_call_function(&CPU_STI,"%Rd",DREG(TMPB));
+			gen_call_function((void *)&CPU_STI,"%Rd",DREG(TMPB));
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			if (max_opcodes<=0) max_opcodes=1;		//Allow 1 extra opcode
 			break;
