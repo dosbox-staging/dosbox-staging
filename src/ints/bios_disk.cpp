@@ -59,7 +59,7 @@ void updateDPT(void) {
 		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0)),tmpcyl);
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+2,tmpheads);
 		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x3,0);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x5,-1);
+		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x5,(Bit16u)-1);
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x7,0);
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x8,(0xc0 | (((imageDiskList[2]->heads) > 8) << 3)));
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x9,0);
@@ -110,7 +110,7 @@ void swapInDisks(void) {
 	}
 }
 
-static void swapInNextDisk(void) {
+void swapInNextDisk(void) {
 	swapPosition++;
 	if(diskSwap[swapPosition] == NULL) swapPosition = 0;
 	swapInDisks();
