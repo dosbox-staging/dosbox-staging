@@ -182,54 +182,55 @@ Bit8u DOS_PSP::GetFileHandle(Bitu index) {
 	return mem_readb(files+index);
 };
 
+#define FCB_EXTENDED (mem_readb(off)==0xFF ? 7:0)
 
 void DOS_FCB::Set_drive(Bit8u a){
-	mem_writeb(off+offsetof(sFCB,drive),a);
+	mem_writeb(off+offsetof(sFCB,drive)+FCB_EXTENDED,a);
 }
 void DOS_FCB::Set_filename(char * a){
-	MEM_BlockWrite(off+offsetof(sFCB,filename),a,8);
+	MEM_BlockWrite(off+offsetof(sFCB,filename)+FCB_EXTENDED,a,8);
 }
 void DOS_FCB::Set_ext(char * a) {
-	MEM_BlockWrite(off+offsetof(sFCB,ext),a,3);
+	MEM_BlockWrite(off+offsetof(sFCB,ext)+FCB_EXTENDED,a,3);
 }
 void DOS_FCB::Set_current_block(Bit16u a){
-	mem_writew(off+offsetof(sFCB,current_block),a);
+	mem_writew(off+offsetof(sFCB,current_block)+FCB_EXTENDED,a);
 }
 void DOS_FCB::Set_record_size(Bit16u a){
-	mem_writew(off+offsetof(sFCB,record_size),a);
+	mem_writew(off+offsetof(sFCB,record_size)+FCB_EXTENDED,a);
 }
 void DOS_FCB::Set_filesize(Bit32u a){
-	mem_writed(off+offsetof(sFCB,filesize),a);
+	mem_writed(off+offsetof(sFCB,filesize)+FCB_EXTENDED,a);
 }
 void DOS_FCB::Set_date(Bit16u a){
-	mem_writew(off+offsetof(sFCB,date),a);
+	mem_writew(off+offsetof(sFCB,date)+FCB_EXTENDED,a);
 }
 void DOS_FCB::Set_time(Bit16u a){
-	mem_writew(off+offsetof(sFCB,time),a);
+	mem_writew(off+offsetof(sFCB,time)+FCB_EXTENDED,a);
 }
 Bit8u DOS_FCB::Get_drive(void){
-	return mem_readb(off+offsetof(sFCB,drive));
+	return mem_readb(off+offsetof(sFCB,drive)+FCB_EXTENDED);
 }
 void DOS_FCB::Get_filename(char * a){
 	MEM_BlockRead(off+offsetof(sFCB,filename),a,8);
 }
 void DOS_FCB::Get_ext(char * a){
-	MEM_BlockRead(off+offsetof(sFCB,ext),a,3);
+	MEM_BlockRead(off+offsetof(sFCB,ext)+FCB_EXTENDED,a,3);
 }
 Bit16u DOS_FCB::Get_current_block(void){
-	return mem_readw(off+offsetof(sFCB,current_block));
+	return mem_readw(off+offsetof(sFCB,current_block)+FCB_EXTENDED);
 }
 Bit16u DOS_FCB::Get_record_size(void){
-	return mem_readw(off+offsetof(sFCB,record_size));
+	return mem_readw(off+offsetof(sFCB,record_size)+FCB_EXTENDED);
 }
 Bit32u DOS_FCB::Get_filesize(void){
-	return mem_readd(off+offsetof(sFCB,filesize));
+	return mem_readd(off+offsetof(sFCB,filesize)+FCB_EXTENDED);
 }
 Bit16u DOS_FCB::Get_date(void){
-	return mem_readw(off+offsetof(sFCB,date));
+	return mem_readw(off+offsetof(sFCB,date)+FCB_EXTENDED);
 }
 Bit16u DOS_FCB::Get_time(void){
-	return mem_readw(off+offsetof(sFCB,time));
+	return mem_readw(off+offsetof(sFCB,time)+FCB_EXTENDED);
 }
 
 
