@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.46 2003-10-09 13:47:44 finsterr Exp $ */
+/* $Id: dos_files.cpp,v 1.47 2003-10-10 13:50:34 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -391,7 +391,10 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	if (!device) exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
 	if (exists || device ) { 
 		// devices can only be opened once
-		if (device && ((*entry=psp.FindEntryByHandle(handle))!=0xff)) return true;
+		if (device && (psp.FindEntryByHandle(handle)!=0xff)) {
+			*entry=psp.FindEntryByHandle(handle);
+			return true;
+		}
 		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
