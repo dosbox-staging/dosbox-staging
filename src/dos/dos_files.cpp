@@ -504,7 +504,7 @@ static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
 static bool isvalid(const char* in){
     
 	const char ill[]=ILLEGAL;    
-	return (*in>0x1F) && (strchr(ill,*in)==0);
+	return (Bit8u(*in)>0x1F) && (strchr(ill,*in)==0);
 }
 
 static void vullen (char* veld,char* pveld){
