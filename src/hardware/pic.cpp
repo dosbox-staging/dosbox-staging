@@ -244,28 +244,29 @@ static void AddEntry(PICEntry * entry) {
 	if (!find_entry) {
 		entry->next=0;
 		pic.next_entry=entry;
-		return;
-	}
-	if (find_entry->index>entry->index) {
+	} else if (find_entry->index>entry->index) {
 		pic.next_entry=entry;
 		entry->next=find_entry;
-		return;
-	}
-	while (find_entry) {
+	} else while (find_entry) {
 		if (find_entry->next) {
 			/* See if the next index comes later than this one */
-			if (find_entry->next->index>entry->index) {
+			if (find_entry->next->index > entry->index) {
 				entry->next=find_entry->next;
 				find_entry->next=entry;
-				return;
+				break;
 			} else {
 				find_entry=find_entry->next;
 			}
 		} else {
 			entry->next=find_entry->next;
 			find_entry->next=entry;
-			return;
+			break;
 		}
+	}
+	Bits cycles=PIC_MakeCycles(pic.next_entry->index-PIC_Index());
+	if (cycles<CPU_Cycles) {
+		CPU_CycleLeft+=CPU_Cycles;
+		CPU_Cycles=0;
 	}
 }
 
