@@ -179,8 +179,21 @@ static void write_p60(Bit32u port,Bit8u val) {
 			keyb.command=CMD_SETTYPERATE;
 			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
+		case 0xf4:	/* Enable keyboard,clear buffer, start scanning */
+			keyb.active=true;
+			KEYBOARD_ClrBuffer();
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			break;
+		case 0xf5:	 /* Reset keyboard and disable scanning */
+		case 0xf6:	/* Reset keyboard and enable scanning */
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset");
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			break;
 		default:
+			/* Just always acknowledge strange commands */
 			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %X",val);
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 		}
 		return;
 	case CMD_SETOUTPORT:
