@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 /* Character displaying moving functions */
 
 #include "dosbox.h"
@@ -25,185 +24,143 @@
 #include "inout.h"
 #include "int10.h"
 
+static INLINE void PLANAR4_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	PhysPt src,dest;Bitu copy;
+	dest=base+(curmode->twidth*rnew)*curmode->cheight+cleft;	
+	src=base+(curmode->twidth*rold)*curmode->cheight+cleft;	
+	Bitu nextline=curmode->twidth;
+	/* Setup registers correctly */
+	IO_Write(0x3ce,5);IO_Write(0x3cf,1);		/* Memory transfer mode */
+	IO_Write(0x3c4,2);IO_Write(0x3c5,0xf);		/* Enable all Write planes */
+	/* Do some copying */
+	Bitu rowsize=(cright-cleft);
+	copy=curmode->cheight;
+	for (;copy>0;copy--) {
+		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,mem_readb(src+x));
+		dest+=nextline;src+=nextline;
 
-void INT10_ScrollDownWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,Bit8u attr,Bit8u page) {
+	}
+	/* Restore registers */
+	IO_Write(0x3ce,5);IO_Write(0x3cf,0);		/* Normal transfer mode */
+}
 
-//	Bit8u mode;
-	Bit16u fill=( (attr << 8) | ' ');
+
+static INLINE void TEXT_CopyRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	PhysPt src,dest;
+	src=base+(rold*curmode->twidth+cleft)*2;
+	dest=base+(rnew*curmode->twidth+cleft)*2;
+	MEM_BlockCopy(dest,src,(cright-cleft)*2);
+}
+
+static INLINE void PLANAR4_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	/* Set Bitmask / Color / Full Set Reset */
+	IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
+	IO_Write(0x3ce,0x0);IO_Write(0x3cf,attr);
+	IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
+	IO_Write(0x3ce,5);IO_Write(0x3cf,0);		/* Normal transfer mode */
+	/* Write some bytes */
+	PhysPt dest;
+	dest=base+(curmode->twidth*row)*curmode->cheight+cleft;	
+	Bitu nextline=curmode->twidth;
+	Bitu copy=curmode->cheight;	Bitu rowsize=(cright-cleft);
+	for (;copy>0;copy--) {
+		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,0xff);
+		dest+=nextline;
+	}
+}
+
+static INLINE void TEXT_FillRow(VGAMODES * curmode,Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	/* Do some filing */
+	PhysPt dest;
+	dest=base+(row*curmode->twidth+cleft)*2;
+	Bit16u fill=(attr<<8)+' ';
+	for (Bit8u x=0;x<(cright-cleft);x++) {
+		mem_writew(dest,fill);
+		dest+=2;
+	}
+	
+}
+
+
+void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page) {
+	
+	/* Do some range checking */
 	BIOS_NCOLS;BIOS_NROWS;
-
 	if(rul>rlr) return;
 	if(cul>clr) return;
 	if(rlr>=nrows) rlr=(Bit8u)nrows-1;
 	if(clr>=ncols) clr=(Bit8u)ncols-1;
-
-	// Get the current page
+	clr++;
+	/* Get the correct page */
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+	VGAMODES * curmode=GetCurrentMode();	
+	PhysPt base=PhysMake(curmode->sstart,curmode->slength*page);
 
-	/* Get this from active video mode */
-	Bit16u textseg=0xb800;
-	PhysPt start=PhysMake(textseg,ncols*nrows*2*page);
+	/* See how much lines need to be copies */
+	Bit8u start,end;Bits next;
+	/* Copy some lines */
+	if (nlines>0) {
+		start=rlr-nlines+1;
+		end=cul;
+		next=-1;
+	} else if (nlines<0) {
+		start=cul-nlines-1;
+		end=clr;
+		next=1;
+	} else {
+		nlines=rlr-rul+1;
+		goto filling;
+	}
+	do {
+		start+=next;
+		switch (curmode->memmodel) {
+		case MTEXT:
+		case CTEXT:		
+			TEXT_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
+		case PLANAR4:		
+			PLANAR4_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
 
-	Bit32u dcol=clr-cul+1;
-	Bit32u drow=rlr-rul+1;
-	
-	Bit32u tocopy;
-	PhysPt dest=start+((rlr*ncols)+cul)*2;
-	PhysPt src = 0;/* for gcc */
-	if (nlines==0) {
-		nlines=(Bit8u)nrows;
+		}	
+	} while (start!=end);
+	/* Fill some lines */
+filling:
+	if (nlines>0) {
+		start=rul;
+	} else {
+		nlines-=nlines;
+		start=rlr-nlines;
 	}
-	if (nlines>=drow) { 
-		tocopy=0;
-	} else { 
-		tocopy=drow-nlines;
-		src=start+(((rul+tocopy-1)*ncols)+cul)*2;
-	}
-
-	for (Bit32u y=0;y<drow;y++) {
-		if (tocopy) {
-			for(Bit32u x=0;x<dcol;x++) {
-				mem_writew(dest,mem_readw(src));
-				src+=2;
-				dest+=2;
-			}
-			src-=(ncols+dcol)*2;
-			dest-=(ncols+dcol)*2;
-			tocopy--;
-		} else {
-			for(Bit32u x=0;x<dcol;x++) {
-				mem_writew(dest,fill);
-				dest+=2;
-			}
-			dest-=(ncols+dcol)*2;
-		}
-	}
+	for (;nlines>0;nlines--) {
+		switch (curmode->memmodel) {
+		case MTEXT:
+		case CTEXT:		
+			TEXT_FillRow(curmode,cul,clr,start,base,attr);break;
+		case PLANAR4:		
+			PLANAR4_FillRow(curmode,cul,clr,start,base,attr);break;
+		}	
+		start++;
+	} 
 }
-
-void INT10_ScrollUpWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines,Bit8u attr,Bit8u page) {
-
-//	Bit8u mode;
-	Bit16u fill=( (attr << 8) | ' ');
-	BIOS_NCOLS;BIOS_NROWS;
-
-	if(rlr>nrows) rlr=(Bit8u)nrows;
-	if(clr>ncols) clr=(Bit8u)ncols;
-
-	if(rul>rlr) return;
-	if(cul>clr) return;
-	
-	VGAMODES * curmode=GetCurrentMode();
-	switch (curmode->memmodel) {
-	case CGA:
-		{
-			if (nlines==0) {
-				/* Clear Screen that we can */
-				PhysPt dest=PhysMake(0xb800,0);
-				for (Bit32u tel=0;tel<0x4000;tel++) {
-					mem_writew(dest,0x0000);
-					dest+=2;
-				}
-				return;
-			}
-			LOG_WARN("INT10:Scroll in CGA Mode");
-		}
-	case MTEXT:
-	case CTEXT:
-		break;
-	default:
-		LOG_ERROR("INT10:Scroll on non supported graphics mode");
-	}
-
-	// Get the current page
-	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-
-	/* Get this from active video mode */
-	Bit16u textseg=0xb800;
-	PhysPt start=PhysMake(textseg,ncols*nrows*2*page);
-
-	Bit32u dcol=clr-cul+1;
-	Bit32u drow=rlr-rul+1;
-	
-	Bit32u tocopy;
-	PhysPt dest=start+((rul*ncols)+cul)*2;
-	PhysPt src;
-	if (nlines==0) {
-		nlines=(Bit8u)nrows;
-	}
-
-	if (nlines>=drow) { 
-		tocopy=0;
-	} else { 
-		tocopy=drow-nlines;
-		src=start+(((rul+nlines)*ncols)+cul)*2;
-	}
-	for (Bit32u y=0;y<drow;y++) {
-		if (tocopy) {
-			for (Bit32u x=0;x<dcol;x++) {
-				mem_writew(dest,mem_readw(src));
-				src+=2;
-				dest+=2;
-			}
-			src+=(ncols-dcol)*2;
-			dest+=(ncols-dcol)*2;
-			tocopy--;
-		} else {
-			for(Bit32u x=0;x<dcol;x++) {
-				mem_writew(dest,fill);
-				dest+=2;
-			}
-			dest+=(ncols-dcol)*2;
-		}
-	}
-}
-
-
-
-
 
 void INT10_SetActivePage(Bit8u page) {
 
 	Bit16u mem_address;
-	Bit16u vid_address;
 	Bit8u cur_col=0 ,cur_row=0 ;
 	
 	VGAMODES * curmode=GetCurrentMode();
 	if (curmode==0) return;
 	if (page>7) return;
-	switch (curmode->memmodel) {
-	case MTEXT:
-	case CTEXT:{
-					BIOS_NCOLS;BIOS_NROWS;
-					cur_col=CURSOR_POS_COL(page);
-					cur_row=CURSOR_POS_ROW(page);
-					vid_address=SCREEN_IO_START(ncols,nrows,page);
-					mem_address=SCREEN_MEM_START(ncols,nrows,page);
-					break;	
-			   }
-	case CGA:{
-				vid_address=0;
-				mem_address=0;
-				break;
-			 }
-	case PLANAR4:{
-				mem_address=0;
-				vid_address=((((curmode->sheight*curmode->swidth)>>3)|0xff)+1)*page;	
-
-				break;
-			 }
-	default:
-		vid_address=0;
-		mem_address=0;
-		break;
-	}
-	// Calculate the address knowing nbcols nbrows and page num
+	mem_address=page*curmode->slength;
+	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
+	if (curmode->svgamode<8) mem_address>>=1;
 
-	// CRTC regs 0x0c and 0x0d
+
+	/* Write the new start address in vgahardware */
 	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0c);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(vid_address&0xff00)>>8);
+	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(mem_address&0xff00)>>8);
 	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0d);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,vid_address&0x00ff);
+	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,mem_address&0x00ff);
 
 	// And change the BIOS page
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE,page);
@@ -362,7 +319,7 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page) {
 	}
 	// Do we need to scroll ?
 	if(cur_row==nrows) {
-		INT10_ScrollUpWindow(0,0,nrows-1,ncols-1,1,0x07,page);
+		INT10_ScrollWindow(0,0,nrows-1,ncols-1,-1,0x07,page);
 		cur_row--;
 	}
  	// Set the cursor for the page
