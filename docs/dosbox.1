@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Sept 23, 2004"
+.TH DOSBOX 1 "Nov 9, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -18,8 +18,14 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .SH DESCRIPTION
 This manual page briefly documents
 .BR "dosbox" ", an x86/DOS emulator."
-.TP
-.RB "The optional " file " argument should be a DOS executable or a directory. If it is a dos executable (.com .exe .bat) the program will run automatically. If it is a directory, a DOS session will run with the directory mounted as C:."
+.LP
+.RB "The optional " file " argument should be a DOS executable or a"
+directory. If it is a dos executable (.com .exe .bat) the program will 
+run automatically. If it is a directory, a DOS session will run with 
+the directory mounted as C:\\.
+.LP
+.RI "For an introduction type " INTRO 
+.RB "inside " dosbox .
 .SH OPTIONS
 A summary of options is included below.
 .TP
@@ -37,7 +43,8 @@ A summary of options is included below.
 .TP
 .BI \-conf " configfile
 .RB "Start " dosbox " with the options specified in "
-.IR configfile .
+.IR configfile ". This file has a section in which you can put commands you "
+wish to execute on startup.
 .TP
 .BI \-lang " langfile
 .RB "Start " dosbox " with the language specified in "
@@ -63,6 +70,8 @@ following extra commands are available:
 .BI "[\-usecd " number "] [\-label " drivelabel "] [\-freesize " freesize ] 
 .LP
 .B MOUNT \-cd
+.LP
+.B MOUNT \-u driveletter
 .LP
 .RB "Program to mount local directories as drives inside " dosbox .
 .RS
@@ -103,6 +112,9 @@ Forces to use SDL cdrom support for drive number.
 .TP
 .B \-cd
 .RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
+.TP
+.B \-u
+Unmounts a mounted drive. Doesn't work on virtual Drives (like Z:\\)
 .RE
 .PP 
 .B "Example:" 
@@ -121,6 +133,14 @@ Display the amount of free memory
 .RB "Write the current configuration or language settings to " file ,
 which is located on the local filesystem. Not a mounted drive in 
 .BR dosbox .
+.LP 
+The configuration file controls various settings of 
+.BR dosbox ": The amount of emulated memory,"
+the emulated soundcards and many
+.RI "more things. It futher allows acces to " AUTOEXEC.BAT .
+.LP
+The language file controls all visible ouput of the internal commands and
+the internal dos. 
 .TP 
 .B LOADFIX [\-size] [programname] [parameters]
 .LP
@@ -167,7 +187,8 @@ Frees all memory eaten up by loadfix.
 .RE
 .SH FILES
 Configuration and language files use a format similar to Windows .ini files. If a file named
-.BR dosbox.conf " is found in the current directory, it will be automatically loaded."
+.BR dosbox.conf " is found in the current directory, it will be"
+automatically loaded, else ~/.dosboxrc (if present)  will be loaded.
 .SH "SPECIAL KEYS"
 .TP 12m
 .IP ALT\-ENTER
