@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.64 2004-03-03 15:44:20 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.65 2004-03-08 13:27:13 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -189,7 +189,7 @@ void DOSBOX_Init(void) {
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
     secprop->Add_string("language","");
-	secprop->Add_string("machine","auto");
+	secprop->Add_string("machine","vga");
 
 #if C_DEBUG	
 	LOG_StartUp();
