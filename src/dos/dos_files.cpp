@@ -52,12 +52,11 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 	/* First get the drive */
 	if (name[1]==':') {
 		*drive=(name[0] | 0x20)-'a';
-		if (*drive<DOS_DRIVES && Drives[*drive]) {
-			name+=2;
-		} else { 
-			DOS_SetError(DOSERR_PATH_NOT_FOUND);
-			return false; 
-		}
+		name+=2;
+	}
+	if (*drive>=DOS_DRIVES || !Drives[*drive]) { 
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false; 
 	}
 	r=0;w=0;
 	while (name[r]!=0 && (r<DOS_PATHLENGTH)) {
@@ -178,7 +177,7 @@ bool DOS_Rename(char * oldname,char * newname) {
 	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
-};
+}
 
 bool DOS_FindFirst(char * search,Bit16u attr) {
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
@@ -186,13 +185,17 @@ bool DOS_FindFirst(char * search,Bit16u attr) {
 	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
 	dtablock->sattr=attr | DOS_ATTR_ARCHIVE;
 	dtablock->sdrive=drive;
-	return Drives[drive]->FindFirst(fullsearch,dtablock);
-};
+	if (Drives[drive]->FindFirst(fullsearch,dtablock)) return true;
+	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	return false;
+}
 
 bool DOS_FindNext(void) {
 	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-	return Drives[dtablock->sdrive]->FindNext(dtablock);
-};
+	if (Drives[dtablock->sdrive]->FindNext(dtablock)) return true;
+	DOS_SetError(DOSERR_FILE_NOT_FOUND);
+	return false;
+}
 
 
 bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
@@ -376,7 +379,7 @@ bool DOS_Canonicalize(char * name,char * big) {
 	big[2]='\\';
 	strcpy(&big[3],fullname);
 	return true;
-};	
+}
 
 bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free) {
 	if (drive==0) drive=DOS_GetDefaultDrive();
