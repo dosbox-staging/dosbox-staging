@@ -42,7 +42,7 @@ static void LoadMessageFile(char * fname) {
 	FILE * mfile=fopen(fname,"rb");
 /* This should never happen and since other modules depend on this use a normal printf */
 	if (!mfile) {
-		E_Exit("MSG:Can't load messages",fname);
+		E_Exit("MSG:Can't load messages: %s",fname);
 	}
 	char linein[LINE_IN_MAXLEN];
 	char name[LINE_IN_MAXLEN];
