@@ -15,7 +15,7 @@ DirText "This will install DOSBox v${VER_MAYOR}.${VER_MINOR} on your computer. C
 SetCompressor bzip2
 
 LicenseData COPYING
-LicenseText "DOSBox v${VER_MAYOR}.${VER_MINOR} License"
+LicenseText "DOSBox v${VER_MAYOR}.${VER_MINOR} License" "Next->"
 
 ; The stuff to install
 Section "ThisNameIsIgnoredSoWhyBother?"
@@ -35,8 +35,7 @@ Section "ThisNameIsIgnoredSoWhyBother?"
   File SDL_net.dll
   File libpng12.dll
 
-  CreateDirectory "$INSTDIR\snaps"
-  CreateDirectory "$INSTDIR\waves"
+  CreateDirectory "$INSTDIR\capture"
   CreateDirectory "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk" "$INSTDIR\DOSBox.exe" "-conf $\"$INSTDIR\dosbox.conf$\""
@@ -74,8 +73,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.conf.lnk"  
 
 ; remove directories used.
-  RMDir "$INSTDIR\snaps"
-  RMDir "$INSTDIR\waves"
+  RMDir "$INSTDIR\capture"
   RMDir "$INSTDIR"
   RMDir "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}"
 SectionEnd
