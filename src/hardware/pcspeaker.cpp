@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
- /* $Id: pcspeaker.cpp,v 1.19 2005-02-10 10:21:09 qbix79 Exp $ */
+ /* $Id: pcspeaker.cpp,v 1.20 2005-03-25 11:52:32 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -304,20 +304,39 @@ static void PCSPEAKER_CallBack(Bitu len) {
 		if(spkr.chan) spkr.chan->Enable(false);
 	}
 }
+class PCSPEAKER:public Module_base {
+private:
+	MixerObject MixerChan;
+public:
+	PCSPEAKER(Section* configuration):Module_base(configuration){
+		spkr.chan=0;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if(!section->Get_bool("pcspeaker")) return;
+		spkr.mode=SPKR_OFF;
+		spkr.last_ticks=0;
+		spkr.last_index=0;
+		spkr.rate=section->Get_int("pcrate");
+		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*65535;
+		spkr.pit_half=spkr.pit_max/2;
+		spkr.pit_new_max=spkr.pit_max;
+		spkr.pit_new_half=spkr.pit_half;
+		spkr.pit_index=0;
+		spkr.used=0;
+		/* Register the sound channel */
+		spkr.chan=MixerChan.Install(&PCSPEAKER_CallBack,spkr.rate,"SPKR");
+	}
+	~PCSPEAKER(){
+		Section_prop * section=static_cast<Section_prop *>(m_configuration);
+		if(!section->Get_bool("pcspeaker")) return;
+	}
+};
+static PCSPEAKER* test;
+
+void PCSPEAKER_ShutDown(Section* sec){
+	delete test;
+}
 
 void PCSPEAKER_Init(Section* sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("pcspeaker")) return;
-	spkr.mode=SPKR_OFF;
-	spkr.last_ticks=0;
-	spkr.last_index=0;
-	spkr.rate=section->Get_int("pcrate");
-	spkr.pit_max=(1000.0f/PIT_TICK_RATE)*65535;
-	spkr.pit_half=spkr.pit_max/2;
-	spkr.pit_new_max=spkr.pit_max;
-	spkr.pit_new_half=spkr.pit_half;
-	spkr.pit_index=0;
-	spkr.used=0;
-	/* Register the sound channel */
-	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,spkr.rate,"SPKR");
+	test = new PCSPEAKER(sec);
+	sec->AddDestroyFunction(&PCSPEAKER_ShutDown,true);
 }

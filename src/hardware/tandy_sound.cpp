@@ -306,40 +306,57 @@ static void SN76496_set_gain(int gain)
 }
 
 
-
-
-void TANDYSOUND_Init(Section* sec) {
-	if (machine!=MCH_TANDY) return;
-	Section_prop * section=static_cast<Section_prop *>(sec);
-
-	IO_RegisterWriteHandler(0xc0,SN76496Write,IO_MB,2);
-	IO_RegisterWriteHandler(0xc4,TandyDACWrite,IO_MB,4);
-
-
-	Bit32u sample_rate = section->Get_int("tandyrate");
-	tandy.chan=MIXER_AddChannel(&SN76496Update,sample_rate,"TANDY");
-
-	tandy.enabled=false;
-
-	Bitu i;
-	struct SN76496 *R = &sn;
-	R->SampleRate = sample_rate;
-	SN76496_set_clock(2386360);
-	for (i = 0;i < 4;i++) R->Volume[i] = 0;
-	R->LastRegister = 0;
-	for (i = 0;i < 8;i+=2)
-	{
-		R->Register[i] = 0;
-		R->Register[i + 1] = 0x0f;	/* volume = 0 */
+class TANDYSOUND: public Module_base {
+private:
+	IO_WriteHandleObject WriteHandler[2];
+	MixerObject MixerChan;
+public:
+	TANDYSOUND(Section* configuration):Module_base(configuration){
+		if (machine!=MCH_TANDY) return;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+	
+		WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
+		WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
+	
+	
+		Bit32u sample_rate = section->Get_int("tandyrate");
+		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
+	
+		tandy.enabled=false;
+	
+		Bitu i;
+		struct SN76496 *R = &sn;
+		R->SampleRate = sample_rate;
+		SN76496_set_clock(2386360);
+		for (i = 0;i < 4;i++) R->Volume[i] = 0;
+		R->LastRegister = 0;
+		for (i = 0;i < 8;i+=2)
+		{
+			R->Register[i] = 0;
+			R->Register[i + 1] = 0x0f;	/* volume = 0 */
+		}
+	
+		for (i = 0;i < 4;i++)
+		{
+			R->Output[i] = 0;
+			R->Period[i] = R->Count[i] = R->UpdateStep;
+		}
+		R->RNG = NG_PRESET;
+		R->Output[3] = R->RNG & 1;
+		SN76496_set_gain(0x1);
 	}
+	~TANDYSOUND(){ }
+};
 
-	for (i = 0;i < 4;i++)
-	{
-		R->Output[i] = 0;
-		R->Period[i] = R->Count[i] = R->UpdateStep;
-	}
-	R->RNG = NG_PRESET;
-	R->Output[3] = R->RNG & 1;
-	SN76496_set_gain(0x1);
+
+
+static TANDYSOUND* test;
+
+void TANDYSOUND_ShutDown(Section* sec) {
+	delete test;	
 }
 
+void TANDYSOUND_Init(Section* sec) {
+	test = new TANDYSOUND(sec);
+	sec->AddDestroyFunction(&TANDYSOUND_ShutDown,true);
+}

@@ -17,7 +17,6 @@
  */
 
 #include <string.h>
-#include <assert.h>
 #include <list>
 
 #include "dosbox.h"
@@ -235,9 +234,9 @@ CSerial::CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps) {
 	initdiv = SERIALBASERATE / bps;
 	UpdateBaudrate();
 
-	for (i=base;i<=(base+8);i++) {
-		IO_RegisterWriteHandler(i+8,WriteSerial,IO_MB);
-		IO_RegisterReadHandler(i+8,ReadSerial,IO_MB);
+	for (i=0;i<=8;i++) {
+		WriteHandler[i].Install(base+i+8,WriteSerial,IO_MB);
+		ReadHandler[i].Install(base+i+8,ReadSerial,IO_MB);
 	}
 	
 	rqueue=new CFifo(QUEUE_SIZE);
@@ -246,16 +245,32 @@ CSerial::CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps) {
 
 CSerial::~CSerial(void)
 {
-
+	//Remove pointer in list if present
+	for (CSerial_it it=seriallist.begin();it!=seriallist.end();)
+		if(this==*it) it=seriallist.erase(it); else it++;
+	
+	delete rqueue;
+	delete tqueue;
+	
 };
 
+class SERIALPORTS:public Module_base{
+public:
+	SERIALPORTS(Section* configuration):Module_base(configuration){
+		TIMER_AddTickHandler(&SERIAL_Update);
+	}
+	~SERIALPORTS(){
+		TIMER_DelTickHandler(&SERIAL_Update);
+	}
+};
 
-void SERIAL_Init(Section* sec) {
-	unsigned long args = 1;
-	Section_prop * section=static_cast<Section_prop *>(sec);
+static SERIALPORTS* test;
 
-//	if(!section->Get_bool("enabled")) return;
-
-	TIMER_AddTickHandler(&SERIAL_Update);
+void SERIAL_Destroy(Section* sec){
+	delete test;
 }
 
+void SERIAL_Init(Section* sec) {
+	test = new SERIALPORTS(sec);
+	sec->AddDestroyFunction(&SERIAL_Destroy,false);	
+}

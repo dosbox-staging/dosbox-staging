@@ -23,6 +23,7 @@
 #include "dma.h"
 #include "pic.h"
 #include "paging.h"
+#include "setup.h"
 
 DmaChannel *DmaChannels[8];
 DmaController *DmaControllers[2];
@@ -254,32 +255,51 @@ again:
 	return done;
 }
 
-
-
-void DMA_Init(Section* sec) {
-	Bitu i;
-	DmaControllers[0] = new DmaController(0);
-	DmaControllers[1] = new DmaController(1);
-
-	for(i=0;i<8;i++) {
-		DmaChannels[i] = new DmaChannel(i,i>=4);
-	}
+class DMA:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[0x22];
+	IO_WriteHandleObject WriteHandler[0x22];
+public:
+	DMA(Section* configuration):Module_base(configuration){
+		Bitu i;
+		DmaControllers[0] = new DmaController(0);
+		DmaControllers[1] = new DmaController(1);
 	
-	for (i=0;i<0x10;i++) {
-		Bitu mask=IO_MB;
-		if (i<8) mask|=IO_MW;
-		IO_RegisterWriteHandler(i,DMA_Write_Port,mask);
-		IO_RegisterReadHandler(i,DMA_Read_Port,mask);
-		if (machine==MCH_VGA) {
-			IO_RegisterWriteHandler(0xc0+i*2,DMA_Write_Port,mask);
-			IO_RegisterReadHandler(0xc0+i*2,DMA_Read_Port,mask);
+		for(i=0;i<8;i++) {
+			DmaChannels[i] = new DmaChannel(i,i>=4);
+		}
+		
+		for (i=0;i<0x10;i++) {
+			Bitu mask=IO_MB;
+			if (i<8) mask|=IO_MW;
+			WriteHandler[i].Install(i,DMA_Write_Port,mask);
+			ReadHandler[i].Install(i,DMA_Read_Port,mask);
+			if (machine==MCH_VGA) {
+				WriteHandler[0x10+i].Install(0xc0+i*2,DMA_Write_Port,mask);
+				ReadHandler[0x10+i].Install(0xc0+i*2,DMA_Read_Port,mask);
+			}
+		}
+		WriteHandler[0x20].Install(0x81,DMA_Write_Port,IO_MB,3);
+		WriteHandler[0x21].Install(0x89,DMA_Write_Port,IO_MB,3);
+	
+		ReadHandler[0x20].Install(0x81,DMA_Read_Port,IO_MB,3);
+		ReadHandler[0x21].Install(0x89,DMA_Read_Port,IO_MB,3);
+	}
+	~DMA(){
+		delete DmaControllers[0];
+		delete DmaControllers[1];
+		for(Bitu i=0;i<8;i++) {
+			delete DmaChannels[i];
 		}
 	}
-	IO_RegisterWriteHandler(0x81,DMA_Write_Port,IO_MB,3);
-	IO_RegisterWriteHandler(0x89,DMA_Write_Port,IO_MB,3);
+};
 
-	IO_RegisterReadHandler(0x81,DMA_Read_Port,IO_MB,3);
-	IO_RegisterReadHandler(0x89,DMA_Read_Port,IO_MB,3);
+static DMA* test;
+
+void DMA_Destroy(Section* sec){
+	delete test;
 }
-
-
+void DMA_Init(Section* sec) {
+	test = new DMA(sec);
+	sec->AddDestroyFunction(&DMA_Destroy);
+}

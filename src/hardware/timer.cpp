@@ -16,17 +16,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.31 2005-02-10 10:21:10 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.32 2005-03-25 11:52:32 qbix79 Exp $ */
 
+#include <math.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "pic.h"
-#include "bios.h"
 #include "mem.h"
-#include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
-#include "math.h"
+#include "setup.h"
 
 static INLINE void BIN2BCD(Bit16u& val) {
 	Bit16u temp=val%10 + (((val/10)%10)<<4)+ (((val/100)%10)<<8) + (((val/1000)%10)<<12);
@@ -245,44 +244,61 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-void TIMER_Init(Section* sect) {
-	IO_RegisterWriteHandler(0x40,write_latch,IO_MB);
-//	IO_RegisterWriteHandler(0x41,write_latch,IO_MB);
-	IO_RegisterWriteHandler(0x42,write_latch,IO_MB);
-	IO_RegisterWriteHandler(0x43,write_p43,IO_MB);
-	IO_RegisterReadHandler(0x40,read_latch,IO_MB);
-	IO_RegisterReadHandler(0x41,read_latch,IO_MB);
-	IO_RegisterReadHandler(0x42,read_latch,IO_MB);
-	/* Setup Timer 0 */
-	pit[0].cntr=0x10000;
-	pit[0].write_state = 3;
-	pit[0].read_state = 3;
-	pit[0].read_latch=0;
-	pit[0].write_latch=0;
-	pit[0].mode=3;
-	pit[0].bcd = false;
-	pit[0].go_read_latch = true;
+class TIMER:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[4];
+	IO_WriteHandleObject WriteHandler[4];
+public:
+	TIMER(Section* configuration):Module_base(configuration){
+		WriteHandler[0].Install(0x40,write_latch,IO_MB);
+	//	WriteHandler[1].Install(0x41,write_latch,IO_MB);
+		WriteHandler[2].Install(0x42,write_latch,IO_MB);
+		WriteHandler[3].Install(0x43,write_p43,IO_MB);
+		ReadHandler[0].Install(0x40,read_latch,IO_MB);
+		ReadHandler[1].Install(0x41,read_latch,IO_MB);
+		ReadHandler[2].Install(0x42,read_latch,IO_MB);
+		/* Setup Timer 0 */
+		pit[0].cntr=0x10000;
+		pit[0].write_state = 3;
+		pit[0].read_state = 3;
+		pit[0].read_latch=0;
+		pit[0].write_latch=0;
+		pit[0].mode=3;
+		pit[0].bcd = false;
+		pit[0].go_read_latch = true;
+	
+		pit[1].bcd = false;
+		pit[1].write_state = 1;
+		pit[1].read_state = 1;
+		pit[1].go_read_latch = true;
+		pit[1].cntr = 18;
+		pit[1].mode = 2;
+		pit[1].write_state = 3;   
+	
+		pit[2].read_latch=0;	/* MadTv1 */
+		pit[2].write_state = 3; /* Chuck Yeager */
+		pit[2].read_state = 3;
+		pit[2].mode=3;
+		pit[2].bcd=false;   
+		pit[2].cntr=1320;
+		pit[2].go_read_latch=true;
+	
+		pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
+		pit[1].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[1].cntr));
+		pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
+	
+		PIC_AddEvent(PIT0_Event,pit[0].delay);
+	}
+	~TIMER(){
+		PIC_RemoveEvents(PIT0_Event);
+	}
+};
+static TIMER* test;
 
-	pit[1].bcd = false;
-	pit[1].write_state = 1;
-	pit[1].read_state = 1;
-	pit[1].go_read_latch = true;
-	pit[1].cntr = 18;
-	pit[1].mode = 2;
-	pit[1].write_state = 3;   
-
-	pit[2].read_latch=0;	/* MadTv1 */
-	pit[2].write_state = 3; /* Chuck Yeager */
-	pit[2].read_state = 3;
-	pit[2].mode=3;
-	pit[2].bcd=false;   
-	pit[2].cntr=1320;
-	pit[2].go_read_latch=true;
-
-	pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
-	pit[1].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[1].cntr));
-	pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
-
-	PIC_AddEvent(PIT0_Event,pit[0].delay);
+void TIMER_Destroy(Section* sec){
+	delete test;
 }
-
+void TIMER_Init(Section* sec) {
+	test = new TIMER(sec);
+	sec->AddDestroyFunction(&TIMER_Destroy);
+}

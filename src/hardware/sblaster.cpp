@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <assert.h>
 #include <string.h>
 #include <math.h> 
 #include "dosbox.h"
@@ -27,7 +26,7 @@
 #include "hardware.h"
 #include "setup.h"
 #include "support.h"
-#include "programs.h"
+#include "shell.h"
 
 #define SB_PIC_EVENTS 0
 
@@ -98,7 +97,6 @@ struct SB_INFO {
 	Bit8u time_constant;
 	DSP_MODES mode;
 	SB_TYPES type;
-	OPL_Mode oplmode;
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
@@ -1018,80 +1016,133 @@ static void SBLASTER_CallBack(Bitu len) {
 		break;
 	}
 }
+class SBLASTER: public Module_base {
+private:
+	/* Data */
+	IO_ReadHandleObject ReadHandler[0x10];
+	IO_WriteHandleObject WriteHandler[0x10];
+	AutoexecObject autoexecline;
+	MixerObject MixerChan;
 
-void SBLASTER_Init(Section* sec) {
-	Bitu i;
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	const char * sbtype=section->Get_string("type");
-	sb.hw.base=section->Get_hex("base");
-	sb.hw.irq=section->Get_int("irq");
-	sb.hw.dma8=section->Get_int("dma");
-	sb.hw.dma16=section->Get_int("hdma");
-	sb.mixer.enabled=section->Get_bool("mixer");
-	sb.mixer.stereo=false;
-	if (!strcasecmp(sbtype,"sb1")) sb.type=SBT_1;
-	else if (!strcasecmp(sbtype,"sb2")) sb.type=SBT_2;
-	else if (!strcasecmp(sbtype,"sbpro1")) sb.type=SBT_PRO1;
-	else if (!strcasecmp(sbtype,"sbpro2")) sb.type=SBT_PRO2;
-	else if (!strcasecmp(sbtype,"sb16")) sb.type=SBT_16;
-	else if (!strcasecmp(sbtype,"none")) sb.type=SBT_NONE;
-	else sb.type=SBT_16;
+	/* Support Functions */
+	void Find_Type_And_Opl(Section_prop* config,SB_TYPES& type, OPL_Mode& opl_mode){
+		const char * sbtype=config->Get_string("type");
+		if (!strcasecmp(sbtype,"sb1")) type=SBT_1;
+		else if (!strcasecmp(sbtype,"sb2")) type=SBT_2;
+		else if (!strcasecmp(sbtype,"sbpro1")) type=SBT_PRO1;
+		else if (!strcasecmp(sbtype,"sbpro2")) type=SBT_PRO2;
+		else if (!strcasecmp(sbtype,"sb16")) type=SBT_16;
+		else if (!strcasecmp(sbtype,"none")) type=SBT_NONE;
+		else type=SBT_16;
+		
+		if (machine!=MCH_VGA && type==SBT_16) type=SBT_PRO2;
 	
-	if (machine!=MCH_VGA && sb.type==SBT_16) sb.type=SBT_PRO2;
-
-	/* OPL/CMS Init */
-	const char * omode=section->Get_string("oplmode");
-	Bitu oplrate=section->Get_int("oplrate");
-	OPL_Mode opl_mode;
-	if (!strcasecmp(omode,"none")) opl_mode=OPL_none;	
-	else if (!strcasecmp(omode,"cms")) opl_mode=OPL_cms;
-	else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
-	else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
-	else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
-	/* Else assume auto */
-	else {
-		switch (sb.type) {
-		case SBT_NONE:opl_mode=OPL_none;break;
-		case SBT_1:opl_mode=OPL_opl2;break;
-		case SBT_2:opl_mode=OPL_opl2;break;
-		case SBT_PRO1:opl_mode=OPL_dualopl2;break;
-		case SBT_PRO2:
-		case SBT_16:
-			opl_mode=OPL_opl3;break;
+		/* OPL/CMS Init */
+		const char * omode=config->Get_string("oplmode");
+			if (!strcasecmp(omode,"none")) opl_mode=OPL_none;	
+		else if (!strcasecmp(omode,"cms")) opl_mode=OPL_cms;
+		else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
+		else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
+		else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
+		/* Else assume auto */
+		else {
+			switch (type) {
+			case SBT_NONE:opl_mode=OPL_none;break;
+			case SBT_1:opl_mode=OPL_opl2;break;
+			case SBT_2:opl_mode=OPL_opl2;break;
+			case SBT_PRO1:opl_mode=OPL_dualopl2;break;
+			case SBT_PRO2:
+			case SBT_16:
+				opl_mode=OPL_opl3;break;
+			}
+		}	
+	}
+public:
+	SBLASTER(Section* configuration):Module_base(configuration) {
+		Bitu i;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		sb.hw.base=section->Get_hex("base");
+		sb.hw.irq=section->Get_int("irq");
+		sb.hw.dma8=section->Get_int("dma");
+		sb.hw.dma16=section->Get_int("hdma");
+		sb.mixer.enabled=section->Get_bool("mixer");
+		Bitu oplrate=section->Get_int("oplrate");
+		sb.mixer.stereo=false;
+		OPL_Mode opl_mode;
+		Find_Type_And_Opl(section,sb.type,opl_mode);
+	
+		switch (opl_mode) {
+		case OPL_none:
+			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
+			break;
+		case OPL_cms:
+			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
+			CMS_Init(section,sb.hw.base,oplrate);
+			break;
+		case OPL_opl2:
+			CMS_Init(section,sb.hw.base,oplrate);
+		case OPL_dualopl2:
+		case OPL_opl3:
+			OPL_Init(section,sb.hw.base,opl_mode,oplrate);
+			break;
 		}
-	}
-	switch (opl_mode) {
-	case OPL_none:
-		IO_RegisterWriteHandler(0x388,adlib_gusforward,IO_MB);
-		break;
-	case OPL_cms:
-		IO_RegisterWriteHandler(0x388,adlib_gusforward,IO_MB);
-		CMS_Init(section,sb.hw.base,oplrate);
-		break;
-	case OPL_opl2:
-		CMS_Init(section,sb.hw.base,oplrate);
-	case OPL_dualopl2:
-	case OPL_opl3:
-		OPL_Init(section,sb.hw.base,opl_mode,oplrate);
-		break;
-	}
-	if (sb.type==SBT_NONE) return;
-	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SB");
-	sb.dsp.state=DSP_S_NORMAL;
+		if (sb.type==SBT_NONE) return;
 
-	for (i=4;i<=0xf;i++) {
-		if (i==8 || i==9) continue;
-		//Disable mixer ports for lower soundblaster
-		if ((sb.type==SBT_1 || sb.type==SBT_2) && (i==4 || i==5)) continue; 
-		IO_RegisterReadHandler(sb.hw.base+i,read_sb,IO_MB);
-		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,IO_MB);
-	}
-	DSP_Reset();
-	CTMIXER_Reset();
-	char hdma[8]="";
-	if (sb.type==SBT_16) {
-		sprintf(hdma,"H%d ",sb.hw.dma16);
-	}
-	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d %sT%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,hdma,sb.type);
+		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
+		sb.dsp.state=DSP_S_NORMAL;
+
+		for (i=4;i<=0xf;i++) {
+			if (i==8 || i==9) continue;
+			//Disable mixer ports for lower soundblaster
+			if ((sb.type==SBT_1 || sb.type==SBT_2) && (i==4 || i==5)) continue; 
+			ReadHandler[i].Install(sb.hw.base+i,read_sb,IO_MB);
+			WriteHandler[i].Install(sb.hw.base+i,write_sb,IO_MB);
+		}
+		DSP_Reset();
+		CTMIXER_Reset();
+		char hdma[8]="";
+		if (sb.type==SBT_16) {
+			sprintf(hdma,"H%d ",sb.hw.dma16);
+		}
+		autoexecline.Install("SET BLASTER=A%3X I%d D%d %sT%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,hdma,sb.type);
+	}	
+	
+	~SBLASTER() {
+	Bitu i;
+	Section_prop * section=static_cast<Section_prop *>(m_configuration);
+		OPL_Mode opl_mode;
+		Find_Type_And_Opl(section,sb.type,opl_mode);
+	
+		switch (opl_mode) {
+		case OPL_none:
+
+			break;
+		case OPL_cms:
+
+//TODO		CMS_Init(section,sb.hw.base,oplrate);
+			break;
+		case OPL_opl2:
+//TODO		CMS_Init(section,sb.hw.base,oplrate);
+		case OPL_dualopl2:
+		case OPL_opl3:
+//TODO		OPL_Init(section,sb.hw.base,opl_mode,oplrate);
+			break;
+		}
+
+		if (sb.type==SBT_NONE) return;
+		DSP_Reset();//Stop everything	
+	}	
+}; //End of SBLASTER class
+
+
+
+
+static SBLASTER* test;
+void SBLASTER_ShutDown(Section* sec) {
+	delete test;	
 }
 
+void SBLASTER_Init(Section* sec) {
+	test = new SBLASTER(sec);
+	sec->AddDestroyFunction(&SBLASTER_ShutDown,true);
+}

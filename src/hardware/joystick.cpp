@@ -18,6 +18,7 @@
 
 #include "dosbox.h"
 #include "inout.h"
+#include "setup.h"
 
 #define RANGE 64
 
@@ -114,11 +115,25 @@ float JOYSTICK_GetMove_Y(Bitu which)
 	return 0.0f;
 };
 
-void JOYSTICK_Init(Section* sec) {
-	IO_RegisterReadHandler(0x201,read_p201,IO_MB);
-	IO_RegisterWriteHandler(0x201,write_p201,IO_MB);
-	stick[0].enabled=false;
-	stick[1].enabled=false;
+class JOYSTICK:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+public:
+	JOYSTICK(Section* configuration):Module_base(configuration){
+		ReadHandler.Install(0x201,read_p201,IO_MB);
+		WriteHandler.Install(0x201,write_p201,IO_MB);
+		stick[0].enabled=false;
+		stick[1].enabled=false;	
+	}
+};
+static JOYSTICK* test;
+
+void JOYSTICK_Destroy(Section* sec) {
+	delete test;
 }
 
-
+void JOYSTICK_Init(Section* sec) {
+	test = new JOYSTICK(sec);
+	sec->AddDestroyFunction(&JOYSTICK_Destroy,true); 
+}

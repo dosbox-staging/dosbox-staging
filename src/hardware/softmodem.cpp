@@ -99,7 +99,6 @@ struct telnetClient {
 };
 
 
-static Bitu call_int14;
 
 #if 1
 
@@ -161,8 +160,15 @@ public:
 		//MIXER_SetMode(mhd.chan,MIXER_16MONO);
 
 	}
-
-
+	
+	~CSerialModem(){
+		if (mhd.socket) {
+			SDLNet_TCP_DelSocket(mhd.socketset,mhd.socket);
+			SDLNet_TCP_Close(mhd.socket);
+		}
+		if(mhd.listensocket) SDLNet_TCP_Close(mhd.listensocket);
+		if(mhd.socketset) SDLNet_FreeSocketSet(mhd.socketset);
+	}
 
 	void SendLine(const char *line) {
 		rqueue->addb(0xd);
@@ -739,58 +745,76 @@ static Bitu INT14_FOSSIL(void) {
 }
 
 
-void MODEM_Init(Section* sec) {
-
-	unsigned long args = 1;
-	Section_prop * section=static_cast<Section_prop *>(sec);
-
-	if(!section->Get_bool("modem")) return;
-
-	if(SDLNet_Init()==-1) {
-		LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-		return;
-	}
-
-	if(!SDLNetInited) {
+class VIRTUAL_MODEM:public Module_base {
+private:
+	CALLBACK_HandlerObject callback;
+public:
+	VIRTUAL_MODEM(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		csm = NULL;
+		
+		if(!section->Get_bool("modem")) return;
+	
 		if(SDLNet_Init()==-1) {
 			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
 			return;
 		}
-		SDLNetInited = true;
+	
+		if(!SDLNetInited) {
+			if(SDLNet_Init()==-1) {
+				LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+				return;
+			}
+			SDLNetInited = true;
+		}
+	
+		Bit16u comport = section->Get_int("comport");
+	
+		
+	
+		switch (comport) {
+			case 1:
+				csm = new CSerialModem(0x3f0, 4, 57600, section->Get_string("remote"), section->Get_int("listenport"));
+				break;
+			case 2:
+				csm = new CSerialModem(0x2f0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
+				break;
+			case 3:
+				csm = new CSerialModem(0x3e0, 4, 57600, section->Get_string("remote"), section->Get_int("listenport"));
+				break;
+			case 4:
+				csm = new CSerialModem(0x2e0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
+				break;
+			default:
+				// Default to COM2
+				csm = new CSerialModem(0x2f0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
+				break;
+	
+		}
+	
+		if(csm != NULL) seriallist.push_back(csm);
+	
+		//Enable FOSSIL support (GTERM, etc)
+		callback.Install(&INT14_FOSSIL,CB_IRET,"int14 fossil");
+		callback.Set_RealVec(0x14);
 	}
-
-	Bit16u comport = section->Get_int("comport");
-
-	csm = NULL;
-
-	switch (comport) {
-		case 1:
-			csm = new CSerialModem(0x3f0, 4, 57600, section->Get_string("remote"), section->Get_int("listenport"));
-			break;
-		case 2:
-			csm = new CSerialModem(0x2f0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
-			break;
-		case 3:
-			csm = new CSerialModem(0x3e0, 4, 57600, section->Get_string("remote"), section->Get_int("listenport"));
-			break;
-		case 4:
-			csm = new CSerialModem(0x2e0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
-			break;
-		default:
-			// Default to COM2
-			csm = new CSerialModem(0x2f0, 3, 57600, section->Get_string("remote"), section->Get_int("listenport"));
-			break;
-
+	~VIRTUAL_MODEM(){
+		if(!csm) return;
+		delete csm;
 	}
+};
 
-	if(csm != NULL) seriallist.push_back(csm);
+static VIRTUAL_MODEM* test;
 
-	//Enable FOSSIL support (GTERM, etc)
-	call_int14=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int14,&INT14_FOSSIL,CB_IRET);
-	RealSetVec(0x14,CALLBACK_RealPointer(call_int14));
+void MODEM_Destroy(Section* sec){
+	delete test;
+}
+
+
+void MODEM_Init(Section* sec) {
+	test = new VIRTUAL_MODEM(sec);
+	sec->AddDestroyFunction(&MODEM_Destroy,true);
 }
 
 
 #endif
-

@@ -98,20 +98,36 @@ static void DISNEY_CallBack(Bitu len) {
 	}
 }
 
+class DISNEY: public Module_base {
+private:
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+	MixerObject MixerChan;
+public:
+	DISNEY(Section* configuration):Module_base(configuration) {
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if(!section->Get_bool("disney")) return;
+	
+		WriteHandler.Install(DISNEY_BASE,disney_write,IO_MB,3);
+		ReadHandler.Install(DISNEY_BASE,disney_read,IO_MB,3);
+	
+		disney.chan=MixerChan.Install(&DISNEY_CallBack,7000,"DISNEY");
+	
+		disney.status=0x84;
+		disney.control=0;
+		disney.used=0;
+		disney.last_used=0;
+	}
+	~DISNEY(){ }
+};
 
-void DISNEY_Init(Section* sec) {
-	MSG_Add("DISNEY_CONFIGFILE_HELP","Nothing to setup yet!\n");
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("disney")) return;
+static DISNEY* test;
 
-	IO_RegisterWriteHandler(DISNEY_BASE,disney_write,IO_MB,3);
-	IO_RegisterReadHandler(DISNEY_BASE,disney_read,IO_MB,3);
-
-	disney.chan=MIXER_AddChannel(&DISNEY_CallBack,7000,"DISNEY");
-
-	disney.status=0x84;
-	disney.control=0;
-	disney.used=0;
-	disney.last_used=0;
+static void DISNEY_ShutDown(Section* sec){
+	delete test;
 }
 
+void DISNEY_Init(Section* sec) {
+	test = new DISNEY(sec);
+	sec->AddDestroyFunction(&DISNEY_ShutDown,true);
+}

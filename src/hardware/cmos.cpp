@@ -24,6 +24,7 @@
 #include "inout.h"
 #include "mem.h"
 #include "bios.h"
+#include "setup.h"
 
 static struct {
 	Bit8u regs[0x40];
@@ -266,20 +267,37 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val)
 	cmos.regs[regNr] = val;
 };
 
-void CMOS_Init(Section* sec) {
-	IO_RegisterWriteHandler(0x70,cmos_selreg,IO_MB);
-	IO_RegisterWriteHandler(0x71,cmos_writereg,IO_MB);
-	IO_RegisterReadHandler(0x71,cmos_readreg,IO_MB);
-	cmos.timer.enabled=false;
-	cmos.reg=0xa;
-	cmos_writereg(0x71,0x26,1);
-	cmos.reg=0xb;
-	cmos_writereg(0x71,0,1);
-	/* Fill in extended memory size */
-	Bitu exsize=(MEM_TotalPages()*4)-1024;
-	cmos.regs[0x17]=(Bit8u)exsize;
-	cmos.regs[0x18]=(Bit8u)(exsize >> 8);
-	cmos.regs[0x30]=(Bit8u)exsize;
-	cmos.regs[0x31]=(Bit8u)(exsize >> 8);
+
+class CMOS:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[2];
+	IO_WriteHandleObject WriteHandler[2];	
+public:
+	CMOS(Section* configuration):Module_base(configuration){
+		WriteHandler[0].Install(0x70,cmos_selreg,IO_MB);
+		WriteHandler[1].Install(0x71,cmos_writereg,IO_MB);
+		ReadHandler[0].Install(0x71,cmos_readreg,IO_MB);
+		cmos.timer.enabled=false;
+		cmos.reg=0xa;
+		cmos_writereg(0x71,0x26,1);
+		cmos.reg=0xb;
+		cmos_writereg(0x71,0,1);
+		/* Fill in extended memory size */
+		Bitu exsize=(MEM_TotalPages()*4)-1024;
+		cmos.regs[0x17]=(Bit8u)exsize;
+		cmos.regs[0x18]=(Bit8u)(exsize >> 8);
+		cmos.regs[0x30]=(Bit8u)exsize;
+		cmos.regs[0x31]=(Bit8u)(exsize >> 8);
+	}
+};
+
+static CMOS* test;
+
+void CMOS_Destroy(Section* sec){
+	delete test;
 }
 
+void CMOS_Init(Section* sec) {
+	test = new CMOS(sec);
+	sec->AddDestroyFunction(&CMOS_Destroy,true);
+}

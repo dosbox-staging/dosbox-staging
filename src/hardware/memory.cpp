@@ -16,17 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+/* $Id: memory.cpp,v 1.37 2005-03-25 11:52:32 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
 #include "inout.h"
 #include "setup.h"
 #include "paging.h"
-#include "vga.h"
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define MAX_MEMORY	64
@@ -91,13 +87,13 @@ public:
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
 	void writeb(PhysPt addr,Bitu val){
-		LOG_MSG("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
-		LOG_MSG("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
 	}
 	void writed(PhysPt addr,Bitu val){
-		LOG_MSG("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
 	}
 };
 
@@ -473,50 +469,65 @@ static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
 
+class MEMORY:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+public:	
+	MEMORY(Section* configuration):Module_base(configuration){
+		Bitu i;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+	
+		/* Setup the Physical Page Links */
+		Bitu memsize=section->Get_int("memsize");
+	
+		if (memsize < 1) memsize = 1;
+		/* max 63 to solve problems with certain xms handlers */
+		if (memsize > MAX_MEMORY-1) {
+			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
+			memsize = MAX_MEMORY-1;
+		}
+		MemBase = new Bit8u[memsize*1024*1024];
+		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
+		memory.pages = (memsize*1024*1024)/4096;
+		/* Allocate the data for the different page information blocks */
+		memory.phandlers=new  PageHandler * [memory.pages];
+		memory.mhandles=new MemHandle [memory.pages];
+		for (i = 0;i < memory.pages;i++) {
+			memory.phandlers[i] = &ram_page_handler;
+			memory.mhandles[i] = 0;				//Set to 0 for memory allocation
+		}
+		/* Setup rom at 0xc0000-0xc8000 */
+		for (i=0xc0;i<0xc8;i++) {
+			memory.phandlers[i] = &rom_page_handler;
+		}
+		/* Setup rom at 0xf0000-0x0x100000 */
+		for (i=0xf0;i<0x100;i++) {
+			memory.phandlers[i] = &rom_page_handler;
+		}
+		/* Reset some links */
+		memory.links.used = 0;
+		// A20 Line - PS/2 system control port A
+		WriteHandler.Install(0x92,write_p92,IO_MB);
+		ReadHandler.Install(0x92,read_p92,IO_MB);
+		MEM_A20_Enable(false);
+	}
+	~MEMORY(){
+		delete [] MemBase;
+		delete [] memory.phandlers;
+		delete [] memory.mhandles;
+	}
+};	
 
+	
+static MEMORY* test;	
+	
 static void MEM_ShutDown(Section * sec) {
-	free(MemBase);
+	delete test;
 }
 
 void MEM_Init(Section * sec) {
-	Bitu i;
-	Section_prop * section=static_cast<Section_prop *>(sec);
-
-	/* Setup the Physical Page Links */
-	Bitu memsize=section->Get_int("memsize");
-
-	if (memsize<1) memsize=1;
-	/* max 63 to solve problems with certain xms handlers */
-	if (memsize>MAX_MEMORY - 1) {
-		LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
-		memsize=MAX_MEMORY - 1;
-	}
-	MemBase=(HostPt)malloc(memsize*1024*1024);
-	if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
-	memory.pages=(memsize*1024*1024)/4096;
-	/* Allocate the data for the different page information blocks */
-	memory.phandlers=new  PageHandler * [memory.pages];
-	memory.mhandles=new MemHandle [memory.pages];
-	for (i=0;i<memory.pages;i++) {
-		memory.phandlers[i]=&ram_page_handler;
-		memory.mhandles[i]=0;				//Set to 0 for memory allocation
-	}
-	/* Setup rom at 0xc0000-0xc8000 */
-	for (i=0xc0;i<0xc8;i++) {
-		memory.phandlers[i]=&rom_page_handler;
-	}
-	/* Setup rom at 0xf0000-0x0x100000 */
-	for (i=0xf0;i<0x100;i++) {
-		memory.phandlers[i]=&rom_page_handler;
-	}
-	/* Reset some links */
-	memory.links.used=0;
-	// A20 Line - PS/2 system control port A
-	IO_RegisterWriteHandler(0x92,write_p92,IO_MB);
-	IO_RegisterReadHandler(0x92,read_p92,IO_MB);
-	MEM_A20_Enable(false);
 	/* shutdown function */
+	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);
 }
-
-

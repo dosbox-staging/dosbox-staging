@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.14 2005-02-10 10:21:09 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.15 2005-03-25 11:52:32 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -30,7 +30,6 @@
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
 
-static Bitu call_irq9;
 static void MPU401_Event(Bitu);
 static void MPU401_Reset(void);
 static void MPU401_EOIHandler(void);
@@ -543,7 +542,7 @@ static void MPU401_EOIHandler(void) {
 	} while ((i++)<16);
 }
 
-static Bitu INT71_Handler() {
+static Bitu MPU401_INT71_Handler() {
 	bool signr=0;
 	if  (mpu.state.reset) if (!mpu.queue_used) { // hack for "It came to desert"
 		signr=1;
@@ -557,7 +556,7 @@ static Bitu INT71_Handler() {
 	IO_Write(0x20,0x62);
 
 	if (signr) if (mpu.queue_used==1) ClrQueue();
-return CBRET_NONE;
+	return CBRET_NONE;
 }
 
 static void MPU401_Reset(void) {
@@ -590,28 +589,55 @@ static void MPU401_Reset(void) {
 	for (Bitu i=0;i<8;i++) {mpu.playbuf[i].type=OVERFLOW;mpu.playbuf[i].counter=0;}
 }
 
+class MPU401:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[2];
+	IO_WriteHandleObject WriteHandler[2];
+	CALLBACK_HandlerObject callbackhandler;
+	bool installed; /*as it can fail to install by 2 ways (config and no midi)*/
+public:
+	MPU401(Section* configuration):Module_base(configuration){
+		installed = false;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if(!section->Get_bool("mpu401")) return;
+		if (!MIDI_Available()) return;
+		/*Enabled and there is a Midi */
+		installed = true;
+		
+		/* Install a new irq 9 handler that is more suited for the mpu401 */
+		callbackhandler.Install(&MPU401_INT71_Handler,CB_IRET,"irq 9 mpu");
+		callbackhandler.Set_RealVec(0x71);
+
+		WriteHandler[0].Install(0x330,&MPU401_WriteData,IO_MB);
+		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
+		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
+		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
+	
+		mpu.queue_used=0;
+		mpu.queue_pos=0;
+		mpu.mode=M_UART;
+	
+		if (!(mpu.intelligent=section->Get_bool("intelligent"))) return;
+		/*Set IRQ and unmask it(for timequest/princess maker 2) */
+		mpu.irq=9;
+		PIC_SetIRQMask(mpu.irq,false);
+		MPU401_Reset();
+	}
+	~MPU401(){
+		if(!installed) return;
+		Section_prop * section=static_cast<Section_prop *>(m_configuration);
+		if(!section->Get_bool("intelligent")) return;
+		PIC_SetIRQMask(mpu.irq,true);
+		}
+};
+
+static MPU401* test;
+
+void MPU401_Destroy(Section* sec){
+	delete test;
+}
+
 void MPU401_Init(Section* sec) {
-	call_irq9=CALLBACK_Allocate(); /* Allocate handler for IRQ 9 */
-	CALLBACK_Setup(call_irq9,&INT71_Handler,CB_IRET,"irq 9 mpu");
-	RealSetVec(0x71,CALLBACK_RealPointer(call_irq9));
-
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("mpu401")) return;
-
-	if (!MIDI_Available()) return;
-
-	IO_RegisterWriteHandler(0x330,&MPU401_WriteData,IO_MB);
-	IO_RegisterWriteHandler(0x331,&MPU401_WriteCommand,IO_MB);
-	IO_RegisterReadHandler(0x330,&MPU401_ReadData,IO_MB);
-	IO_RegisterReadHandler(0x331,&MPU401_ReadStatus,IO_MB);
-
-	mpu.queue_used=0;
-	mpu.queue_pos=0;
-	mpu.mode=M_UART;
-
-	if (!(mpu.intelligent=section->Get_bool("intelligent"))) return;
-	/*Set IRQ and unmask it(for timequest/princess maker 2) */
-	mpu.irq=9;
-	PIC_SetIRQMask(mpu.irq,false);
-	MPU401_Reset();
+	test = new MPU401(sec);
+	sec->AddDestroyFunction(&MPU401_Destroy,true);
 }

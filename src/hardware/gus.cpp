@@ -23,7 +23,7 @@
 #include "dma.h"
 #include "pic.h"
 #include "setup.h"
-#include "programs.h"
+#include "shell.h"
 #include "math.h"
 #include "regs.h"
 
@@ -791,72 +791,106 @@ static void MakeTables(void) {
 	}
 }
 
-void GUS_Init(Section* sec) {
-	if(machine!=MCH_VGA) return;
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("gus")) return;
-
-	memset(&myGUS,0,sizeof(myGUS));
-	memset(GUSRam,0,1024*1024);
-
-	myGUS.rate=section->Get_int("rate");
-
-	myGUS.portbase = section->Get_hex("base") - 0x200;
-	myGUS.dma1 = section->Get_int("dma1");
-	myGUS.dma2 = section->Get_int("dma2");
-	myGUS.irq1 = section->Get_int("irq1");
-	myGUS.irq2 = section->Get_int("irq2");
-	strcpy(&myGUS.ultradir[0], section->Get_string("ultradir"));
-
-	// We'll leave the MIDI interface to the MPU-401 
-	// Ditto for the Joystick 
-	// GF1 Synthesizer 
-
-	IO_RegisterWriteHandler(0x302 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x302 + GUS_BASE,read_gus,IO_MB);
-
-	IO_RegisterWriteHandler(0x303 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x303 + GUS_BASE,read_gus,IO_MB);
-
-	IO_RegisterWriteHandler(0x304 + GUS_BASE,write_gus,IO_MB|IO_MW);
-	IO_RegisterReadHandler(0x304 + GUS_BASE,read_gus,IO_MB|IO_MW);
-
-	IO_RegisterWriteHandler(0x305 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x305 + GUS_BASE,read_gus,IO_MB);
-
-	IO_RegisterReadHandler(0x206 + GUS_BASE,read_gus,IO_MB);
-
-	IO_RegisterWriteHandler(0x208 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x208 + GUS_BASE,read_gus,IO_MB);
-
-	IO_RegisterWriteHandler(0x209 + GUS_BASE,write_gus,IO_MB);
-
-	IO_RegisterWriteHandler(0x307 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x307 + GUS_BASE,read_gus,IO_MB);
-
-	// Board Only 
-
-	IO_RegisterWriteHandler(0x200 + GUS_BASE,write_gus,IO_MB);
-	IO_RegisterReadHandler(0x20A + GUS_BASE,read_gus,IO_MB);
-	IO_RegisterWriteHandler(0x20B + GUS_BASE,write_gus,IO_MB);
-
-//	DmaChannels[myGUS.dma1]->Register_TC_Callback(GUS_DMA_TC_Callback);
-
-	MakeTables();
-
-	int i;
-	for(i=0;i<32;i++) {
-		guschan[i] = new GUSChannels(i);
+class GUS:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[8];
+	IO_WriteHandleObject WriteHandler[9];
+	AutoexecObject autoexecline[2];
+	MixerObject MixerChan;
+public:
+	GUS(Section* configuration):Module_base(configuration){
+		if(machine!=MCH_VGA) return;
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if(!section->Get_bool("gus")) return;
+	
+		memset(&myGUS,0,sizeof(myGUS));
+		memset(GUSRam,0,1024*1024);
+	
+		myGUS.rate=section->Get_int("rate");
+	
+		myGUS.portbase = section->Get_hex("base") - 0x200;
+		myGUS.dma1 = section->Get_int("dma1");
+		myGUS.dma2 = section->Get_int("dma2");
+		myGUS.irq1 = section->Get_int("irq1");
+		myGUS.irq2 = section->Get_int("irq2");
+		strcpy(&myGUS.ultradir[0], section->Get_string("ultradir"));
+	
+		// We'll leave the MIDI interface to the MPU-401 
+		// Ditto for the Joystick 
+		// GF1 Synthesizer 
+		ReadHandler[0].Install(0x302 + GUS_BASE,read_gus,IO_MB);
+		WriteHandler[0].Install(0x302 + GUS_BASE,write_gus,IO_MB);
+	
+		WriteHandler[1].Install(0x303 + GUS_BASE,write_gus,IO_MB);
+		ReadHandler[1].Install(0x303 + GUS_BASE,read_gus,IO_MB);
+	
+		WriteHandler[2].Install(0x304 + GUS_BASE,write_gus,IO_MB|IO_MW);
+		ReadHandler[2].Install(0x304 + GUS_BASE,read_gus,IO_MB|IO_MW);
+	
+		WriteHandler[3].Install(0x305 + GUS_BASE,write_gus,IO_MB);
+		ReadHandler[3].Install(0x305 + GUS_BASE,read_gus,IO_MB);
+	
+		ReadHandler[4].Install(0x206 + GUS_BASE,read_gus,IO_MB);
+	
+		WriteHandler[4].Install(0x208 + GUS_BASE,write_gus,IO_MB);
+		ReadHandler[5].Install(0x208 + GUS_BASE,read_gus,IO_MB);
+	
+		WriteHandler[5].Install(0x209 + GUS_BASE,write_gus,IO_MB);
+	
+		WriteHandler[6].Install(0x307 + GUS_BASE,write_gus,IO_MB);
+		ReadHandler[6].Install(0x307 + GUS_BASE,read_gus,IO_MB);
+	
+		// Board Only 
+	
+		WriteHandler[7].Install(0x200 + GUS_BASE,write_gus,IO_MB);
+		ReadHandler[7].Install(0x20A + GUS_BASE,read_gus,IO_MB);
+		WriteHandler[8].Install(0x20B + GUS_BASE,write_gus,IO_MB);
+	
+	//	DmaChannels[myGUS.dma1]->Register_TC_Callback(GUS_DMA_TC_Callback);
+	
+		MakeTables();
+	
+		int i;
+		for(i=0;i<32;i++) {
+			guschan[i] = new GUSChannels(i);
+		}
+		// Register the Mixer CallBack 
+		gus_chan=MixerChan.Install(GUS_CallBack,GUS_RATE,"GUS");
+		myGUS.gRegData=0x1;
+		GUSReset();
+		myGUS.gRegData=0x0;
+		int portat = 0x200+GUS_BASE;
+		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
+		autoexecline[0].Install("SET ULTRASND=%3X,%d,%d,%d,%d",portat,myGUS.dma1,myGUS.dma2,myGUS.irq1,myGUS.irq2);
+		autoexecline[1].Install("SET ULTRADIR=%s", myGUS.ultradir);
 	}
-	// Register the Mixer CallBack 
-	gus_chan=MIXER_AddChannel(GUS_CallBack,GUS_RATE,"GUS");
-	myGUS.gRegData=0x1;
-	GUSReset();
-	myGUS.gRegData=0x0;
-	int portat = 0x200+GUS_BASE;
-	// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
-	SHELL_AddAutoexec("SET ULTRASND=%3X,%d,%d,%d,%d",portat,myGUS.dma1,myGUS.dma2,myGUS.irq1,myGUS.irq2);
-	SHELL_AddAutoexec("SET ULTRADIR=%s", myGUS.ultradir);
+		
+
+	~GUS() {
+		if(machine!=MCH_VGA) return;
+		Section_prop * section=static_cast<Section_prop *>(m_configuration);
+		if(!section->Get_bool("gus")) return;
+	
+		myGUS.gRegData=0x1;
+		GUSReset();
+		myGUS.gRegData=0x0;
+	
+		for(Bitu i=0;i<32;i++) {
+			delete guschan[i];
+		}
+
+		memset(&myGUS,0,sizeof(myGUS));
+		memset(GUSRam,0,1024*1024);
+		}
+};
+
+static GUS* test;
+
+void GUS_ShutDown(Section* sec) {
+	delete test;	
 }
 
-
+void GUS_Init(Section* sec) {
+	test = new GUS(sec);
+	sec->AddDestroyFunction(&GUS_ShutDown,true);
+}

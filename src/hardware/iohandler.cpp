@@ -16,12 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.16 2005-02-10 10:21:08 qbix79 Exp $ */
-
-#include "dosbox.h"
-#include "inout.h"
+/* $Id: iohandler.cpp,v 1.17 2005-03-25 11:52:32 qbix79 Exp $ */
 
 #include <string.h>
+#include "dosbox.h"
+#include "inout.h"
+#include "setup.h"
 #include "cpu.h"
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
@@ -105,6 +105,36 @@ void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range) {
 	}
 }
 
+void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range) {
+	if(!installed) {
+		installed=true;
+		m_port=port;
+		m_mask=mask;
+		m_range=range;
+		IO_RegisterReadHandler(port,handler,mask,range);
+	} else E_Exit("IO_readHandler allready installed port %x",port);
+}
+
+IO_ReadHandleObject::~IO_ReadHandleObject(){
+	if(!installed) return;
+	IO_FreeReadHandler(m_port,m_mask,m_range);
+}
+
+void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
+	if(!installed) {
+		installed=true;
+		m_port=port;
+		m_mask=mask;
+		m_range=range;
+		IO_RegisterWriteHandler(port,handler,mask,range);
+	} else E_Exit("IO_writeHandler allready installed port %x",port);
+}
+
+IO_WriteHandleObject::~IO_WriteHandleObject(){
+	if(!installed) return;
+	IO_FreeWriteHandler(m_port,m_mask,m_range);
+	//LOG_MSG("FreeWritehandler called with port %X",m_port);
+}
 
 struct IOF_Entry {
 	Bitu cs;
@@ -332,10 +362,26 @@ Bitu IO_ReadD(Bitu port) {
 	else return io_readhandlers[2][port](port,4);
 };
 
-
-void IO_Init(Section * sect) {
+class IO :public Module_base {
+public:
+	IO(Section* configuration):Module_base(configuration){
 	iof_queue.used=0;
 	IO_FreeReadHandler(0,IO_MA,IO_MAX);
 	IO_FreeWriteHandler(0,IO_MA,IO_MAX);
+	}
+	~IO()
+	{
+		//Same as the constructor ?
+	}
+};
+
+static IO* test;
+
+void IO_Destroy(Section* sec) {
+	delete test;
 }
 
+void IO_Init(Section * sect) {
+	test = new IO(sect);
+	sect->AddDestroyFunction(&IO_Destroy);
+}
