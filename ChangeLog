@@ -4,6 +4,13 @@
   - updated errorcodes of findfirst (thanks Mirek!)
   - added basic support for vidmode 0x7
   - rewrote loggingsystem to generate less warnings
+  - Added dos protected mode interface (dpmi)
+  - added cdrom label support
+  - improved cdrom audio playing
+  - fixed and improved directory cache
+  - debugger shows selector- and cpu mode info
+  - added SELINFO (selector information) command to debugger
+  - added reference counting for dos files
 
 0.58
   - fixed date and time issues with fcbs
