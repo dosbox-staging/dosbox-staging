@@ -1,21 +1,62 @@
 0.62
+  - Added blinking support in the shell and some color fixes.
   - Fixed commandline parsing when .bat files involved (fixes -exit)
-  - Fixed issues with tabs in commandline not being processed correctly
-  - Returned filename in ds:dx in create-random-file (c2woody)
+  - Fixed issues with tabs in commandline not being processed correctly.
   - Cleaned/improved shutdown sequence.
-  - Fixed a bug with date and time used on open files.
-  - Added ps2 mouse-emulation in bios interrupts. (c2woody)
+  - Added some more bios functions (wait and delay functions).
   - Made our XMS driver conform the specs better. (c2woody)
+  - Added support for some more ems functions.
   - Added intelligent mpu401 emulation. (Srecko)
+  - Added soundblaster 16 emulation.
+  - Rewrote GUS emulation to sound more authentic.
+  - Improved pc speaker emulation.
+  - Added an internal (programmable) mixer.
+  - Added support a few soundblaster/adlib detection routines.
+  - Fixed lot's of bugs related to DMA transfers.
+  - Added interpolating prebuffering mixer routines.
+  - Added recording of OPL commands and raw midi.
+  - Fixed some bugs with the wave recording.
   - Changed sensitivity settings of the mouse.
+  - Added ps2 mouse-emulation in bios interrupts (c2woody).
+  - Fixed some bugs with mouse emulation limits.
   - Fixed a bug with an unterminated string in the drivelabel.
   - Changed file search routines a bit to be more compatible.
   - Added support for attribute-searching with fcb's.
-  - Changed OpenGL so that it is initialized only when used.
   - Added basic SDA.
+  - Added TPA and DIB.
+  - Added Lot's of missing dos tables (c2woody).
   - Changed psp and dta functions to use dta.
-  - Added some more PIC commands. (c2woody)
+  - Returned filename in ds:dx in create-random-file (c2woody).
+  - Fixed a bug with date and time used on open files.
+  - Some mscdex fixes.
   - Added the -version switch, which makes dosbox report its version.
+  - Added a keymapper.
+  - Added basic IPX emulation.
+  - Added cdrom iso support and floppy images support.
+  - Added the possibity to boot another dos version.
+  - Added Serial passthrough support (win32 only).
+  - Added the possibility to pause dosbox.
+  - Changed OpenGL so that it is initialized only when used.
+  - Make dosbox run at higher priority when active and lower when inactive.
+  - Added direct draw output support (win32 only).
+  - Added current running program to title bar.
+  - Rewrote video emulation to support new scalers.
+  - Added new graphics scalers like advmame3x,tv2x.
+  - Added a support for a few anti-debugger tricks.
+  - Improved the handling of the tab-key.
+  - Improved support for the numeric keyboard.
+  - Fixed a few cpu opcodes.
+  - Added cpu core simple (for lowerend machines)
+  - Fixed some nasty bugs in the dynamic cpu core.
+  - Added a few (rarely used) fpu opcodes.
+  - Fixed various issues with GCC 3.4.
+  - Many internal timer improvements (PIT and PIC).
+  - Added some more PIC commands (c2woody).
+  - Added BCD counting to the timers.
+  - Fix some vesa functions.
+  - Improved Tandy emulation a lot.
+  - Lowered cpu usage when dosbox is idle.
+  - Allow virtualisation of some basic IO-ports (c2woody).
 
 0.61
   - Added a beta dynamic cpu for x86 hosts (very unstable)
