@@ -18,7 +18,10 @@ Zlib
     For win32 get libz (rename to zlib) from http://www.sourceforge.net/projects/gnuwin32
 
 SDL_Net 
-    For modem support(optional). Get it from http://www.libsdl.org
+    For modem/ipx support(optional). Get it from http://www.libsdl.org
+
+SDL_Sound 
+    For compressed audio on diskimages. (optional)
 
 ALSA_Headers
     (optional)
@@ -37,23 +40,18 @@ In step 1 you could add the following switches:
 --enable-debug 
         enables the internal debugger. --enable-debug=heavy enables even more 
         debug options. Dosbox should then be run from a xterm and when the sdl-
-        window is active press - on numeric keyboard to enter the debugger.
+        window is active press pause to enter the debugger.
 
 --disable-fpu
-        Will disable the emulated fpu. Although the fpu emulation hasn't finished and isn't
-        entirely accurate it's advised to leave it on. 
+        Will disable the emulated fpu. Although the fpu emulation code isn't 
+        finished and isn't entirely accurate it's advised to leave it on. 
 
 --enable-core-inline
-        enables some memory increasing inlines. This greatly increases compiletime for maybe a increase 
-        in speed.
+        enables some memory increasing inlines. This greatly increases 
+        compiletime for maybe a increase in speed.
 
 Check the src subdir for the binary.
 
-
-
-Compiling on FreeBSD might be a problem since SDL has no joystick support there.
-To get around this edit sdlmain.cpp to enable some #define.
-Let's hope someday the sdl people will just report 0 joysticks in freebsd or get it working some other way :)
 
 
 Build instructions for VC++6 
