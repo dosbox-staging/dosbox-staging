@@ -17,6 +17,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: drive_cache.cpp,v 1.22 2003-08-06 14:46:58 qbix79 Exp $ */
+
 #include "drives.h"
 #include "dos_inc.h"
 #include "dirent.h"
@@ -435,7 +437,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 	
 	char		dir  [CROSS_LEN]; 
 	char		work [CROSS_LEN];
-	char*		start = (char*)path;
+	const char*	start = path;
 	char*		pos;
 	CFileInfo*	curDir = dirBase;
 	Bit16u		id;
@@ -483,11 +485,8 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		if ((nextDir>=0) && curDir->fileList[nextDir]->isDir) {
 			curDir = curDir->fileList[nextDir];
 			strcpy (curDir->orgname,dir);
-			strcpy (work,path); 
-			// Cut Directory, if its only part of whole path
-			if (pos) work[(Bit32u)pos-(Bit32u)path] = 0;
 			if (!IsCachedIn(curDir)) {
-				if (OpenDir(curDir,work,id)) {
+				if (OpenDir(curDir,expandedPath,id)) {
 					char buffer[CROSS_LEN];
 					char * result;
 					strcpy(buffer,dirPath);
