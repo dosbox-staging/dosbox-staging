@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.61 2005-02-24 11:29:26 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.62 2005-03-01 19:39:55 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -53,7 +53,10 @@ void DOS_SetDefaultDrive(Bit8u drive) {
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
-	if(strlen(name) == 0) {
+
+	if(!name || *name == 0 || *name == ' ') {
+		/* Both \0 and space are seperators and
+		 * empty filenames report file not found */
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
@@ -81,7 +84,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		case '/':
 			upname[w++]='\\';
 			break;
-		case ' ':
+		case ' ': /* should be seperator */
 			break;
 		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
