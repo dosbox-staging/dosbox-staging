@@ -35,6 +35,7 @@
 #define MSCDEX_MAX_DRIVES	5
 
 // Error Codes
+#define MSCDEX_ERROR_BAD_FORMAT			11
 #define MSCDEX_ERROR_UNKNOWN_DRIVE		15
 #define MSCDEX_ERROR_DRIVE_NOT_READY	21
 
@@ -95,6 +96,7 @@ public:
 	Bit8u		GetSubUnit			(Bit16u _drive);
 	bool		GetUPC				(Bit8u subUnit, Bit8u& attr, char* upc);
 
+	void		InitNewMedia		(Bit8u subUnit);
 	bool		PlayAudioSector		(Bit8u subUnit, Bit32u start, Bit32u length);
 	bool		PlayAudioMSF		(Bit8u subUnit, Bit32u start, Bit32u length);
 	bool		StopAudio			(Bit8u subUnit);
@@ -324,6 +326,8 @@ bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut)
 {
 	if (subUnit>=numDrives) return false;
 	int tr1i,tr2i;
+	// Assume Media change
+	cdrom[subUnit]->InitNewMedia();
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioTracks(tr1i,tr2i,leadOut);
 	if (!dinfo[subUnit].lastResult) {
 		tr1 = tr2 = 0;
@@ -452,8 +456,19 @@ Bit32u CMscdex::GetVolumeSize(Bit8u subUnit)
 
 bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)	
 { 
-	ReadSectors(GetSubUnit(drive),false,/*150+*/16,1,data) ? error=0:error=MSCDEX_ERROR_DRIVE_NOT_READY;
-	return (error==0);
+     if (!ReadSectors(GetSubUnit(drive),false,16+volume,1,data)) {
+          error=MSCDEX_ERROR_DRIVE_NOT_READY;
+          return false;
+     }
+     char id[5];
+     MEM_BlockRead(data + 1, id, 5);
+     if (strncmp("CD001",id, 5)!=0) {
+          error = MSCDEX_ERROR_BAD_FORMAT;
+          return false;
+     }
+     Bit8u type = mem_readb(data);
+     error = (type == 1) ? 1 : (type == 0xFF) ? 0xFF : 0;
+     return true;
 };
 
 bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) 
@@ -706,6 +721,14 @@ Bit16u CMscdex::GetStatusWord(Bit8u subUnit)
 	} 
 	dinfo[subUnit].lastResult	= true;
 	return status;
+};
+
+void CMscdex::InitNewMedia(Bit8u subUnit)
+{
+	if (subUnit<numDrives) {
+		// Reopen new media
+		cdrom[subUnit]->InitNewMedia();
+	}
 };
 
 static CMscdex* mscdex = 0;
@@ -1011,9 +1034,12 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 	Bit8u tr1,tr2;
 	if (mscdex->GetCDInfo(subUnit,tr1,tr2,leadnew)) {
 		bool changed = (leadOut[subUnit].min!=leadnew.min) || (leadOut[subUnit].sec!=leadnew.sec) || (leadOut[subUnit].fr!=leadnew.fr);
-		leadOut[subUnit].min = leadnew.min;
-		leadOut[subUnit].sec = leadnew.sec;
-		leadOut[subUnit].fr	 = leadnew.fr;
+		if (changed) {
+			leadOut[subUnit].min = leadnew.min;
+			leadOut[subUnit].sec = leadnew.sec;
+			leadOut[subUnit].fr	 = leadnew.fr;
+			mscdex->InitNewMedia(subUnit);
+		}
 		return changed;
 	};
 	if (subUnit<MSCDEX_MAX_DRIVES) {
