@@ -112,6 +112,11 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 
 void DOS_Drive_Cache::AddEntry(const char* path)
 {
+	
+	CacheOut(path);
+	return;
+
+	// FIXME: Code doesnt seem to work with arena ??? Why is that ?
 	// Get Last part...
 	char file	[CROSS_LEN];
 	char expand	[CROSS_LEN];
