@@ -830,12 +830,12 @@ static void percent(char type, char subtype)
        break;
 
   case 'C':                          /* reg(r/m) picks control reg */
-       uprintf("C%d", REG(modrm()));
+       uprintf("CR%d", REG(modrm()));
        must_do_size = 0;
        break;
 
   case 'D':                          /* reg(r/m) picks debug reg */
-       uprintf("D%d", REG(modrm()));
+       uprintf("DR%d", REG(modrm()));
        must_do_size = 0;
        break;
 
@@ -911,7 +911,7 @@ static void percent(char type, char subtype)
        break;
 
   case 'R':                            /* mod(r/m) picks register */
-       reg_name(REG(modrm()), subtype);      /* rh */
+       reg_name(RM(modrm()), subtype);      /* rh */
        must_do_size = 0;
        break;
 
