@@ -343,11 +343,11 @@ static void GenerateDMASound(Bitu size) {
 	case DSP_DMA_8:
 		if (sb.dma.stereo) {
 			read=sb.dma.chan->Read(size,&sb.dma.buf.b8[sb.dma.remain_size]);
-			read+=sb.dma.remain_size;
-			sb.chan->AddSamples_s8(read>>1,sb.dma.buf.b8);
-			if (read&1) {
+			Bitu total=read+sb.dma.remain_size;
+			sb.chan->AddSamples_s8(total>>1,sb.dma.buf.b8);
+			if (total&1) {
 				sb.dma.remain_size=1;
-				sb.dma.buf.b8[0]=sb.dma.buf.b8[read-1];
+				sb.dma.buf.b8[0]=sb.dma.buf.b8[total-1];
 			} else sb.dma.remain_size=0;
 		} else {
 			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
@@ -357,11 +357,11 @@ static void GenerateDMASound(Bitu size) {
 	case DSP_DMA_16:
 		if (sb.dma.stereo) {
 			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size]);
-			read+=sb.dma.remain_size;
-			sb.chan->AddSamples_s16(read>>1,sb.dma.buf.b16);
-			if (read&1) {
+			Bitu total=read+sb.dma.remain_size;
+			sb.chan->AddSamples_s16(total>>1,sb.dma.buf.b16);
+			if (total&1) {
 				sb.dma.remain_size=1;
-				sb.dma.buf.b16[0]=sb.dma.buf.b16[read-1];
+				sb.dma.buf.b16[0]=sb.dma.buf.b16[total-1];
 			} else sb.dma.remain_size=0;
 		} else {
 			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
@@ -387,8 +387,13 @@ static void GenerateDMASound(Bitu size) {
 			LOG(LOG_SB,LOG_NORMAL)("Single cycle transfer ended");
 			sb.mode=MODE_NONE;
 			sb.dma.mode=DSP_DMA_NONE;
+		} else {
+			sb.dma.left=sb.dma.total;
+			if (!sb.dma.left) {
+				LOG(LOG_SB,LOG_NORMAL)("Auto-init transfer with 0 size");
+				sb.mode=MODE_NONE;
+			}
 		}
-		else sb.dma.left=sb.dma.total;
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
 		else SB_RaiseIRQ(SB_IRQ_8);
 	}
@@ -689,7 +694,8 @@ static void DSP_DoCommand(void) {
 	case 0xd3:	/* Disable Speaker */
 		DSP_SetSpeaker(false);
 		break;
-	case 0xd4:	/* Continue DMA */
+	case 0xd4:	/* Continue DMA 8-bit*/
+	case 0xd6:	/* Continue DMA 16-bit */
 		if (sb.mode==MODE_DMA_PAUSE) {
 			sb.mode=MODE_DMA_MASKED;
 			sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
