@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Nov 9, 2004"
+.TH DOSBOX 1 "Nov 12, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -95,7 +95,17 @@ Sets the amount of free space available on a drive in MB's. This is a more
 .BI \-label " drivelabel"
 .RI "Sets the name of the drive to " drivelabel ". Needed on some" 
 systems if the cd label isn't read correctly. Useful when a 
-program can't find its cdrom.
+program can't find its cdrom. If you don't specify a label and no
+.RB "lowlevel support is selected (" "\-usecd #" " and/or " "\-ioctl/aspi" "):"
+.RS
+.LP
+For win32: label is extracted from "Real Drive".
+.TP
+For Linux: label is set to NO_LABEL.
+.TP
+If you do specify a label this label will be kept as long as the drive
+is mounted. It will not be updated !!
+.RE
 .TP
 .B \-aspi
 Forces to use the aspi layer. Only valid if mounting a cdrom under 
@@ -162,6 +172,12 @@ The amount of memory to eat up (in kb). Example -32, -64 or -128
 Frees all memory eaten up by loadfix.
 .RE
 .TP
+.B RESCAN
+.LP
+.RB "Make " dosbox " reread the directory structure. Useful if you changed
+.RB "something on a mounted drive outside " dosbox ".(CTRL \- F4 does"
+this as well!)
+.TP
 .B IMGMOUNT
 .LP
 .RB "A utility to mount disk images and CD-ROM images in " DOSBox .
@@ -196,7 +212,8 @@ Go full screen and back.
 .IP CTRL\-F1
 Start the keymapper.
 .IP CTRL\-F4
-Swap mounted disk-image (Only used with imgmount).
+Swap mounted disk-image (Only used with imgmount). Update directory cache
+for all drives!
 .IP CTRL\-F5
 Save a screenshot.
 .IP CTRL\-F6

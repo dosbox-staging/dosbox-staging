@@ -151,9 +151,10 @@ A: DOSBox emulates several legacy sound devices:
    - Adlib
      Borrowed from MAME, this emulation is almost perfect and includes the 
      Adlib's ability to almost play digitized sound.
-   - SoundBlaster 16
-     Coupled with the Adlib, DOSBox provides Soundblaster 16 level 16-bit 
-     stereo sound.
+   - SoundBlaster 16/ SoundBlaster Pro I & II /Sound Blaster I & II
+     Coupled with the Adlib, by default DOSBox provides Soundblaster 16 
+     level 16-bit stereo sound. You can select a different SoundBlaster
+     version in the configfile of DOSBox (See Internal Commands: CONFIG).
    - Disney Soundsource
      Using the printer port, this sound device outputs digital sound only.
    - Gravis Ultrasound
@@ -276,7 +277,13 @@ MOUNT -u "Emulated Drive letter"
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some 
         systems if the cd label isn't read correctly. Useful when a 
-        program can't find its cdrom.
+        program can't find its cdrom. If you don't specify a label and no
+        lowlevel support is selected (-usecd # and/or -ioctl/aspi): 
+          For win32: label is extracted from "Real Drive".
+          For Linux: label is set to NO_LABEL.
+
+        If you do specify a label this label will be kept as long as the drive
+        is mounted. It will not be updated !!
 
   -aspi
         Forces to use the aspi layer. Only valid if mounting a cdrom under 
@@ -331,7 +338,14 @@ MEM
 
 CONFIG [-writeconf] [-writelang] localfile
   Write the current configuration or language settings to file.
-  "localfile" is located on the local drive !!! 
+  "localfile" is located on the local drive. Not a mounted drive in DOSBox.
+
+  The configuration file controls various settings of DOSBox: The amount
+  of emulated memory, the emulated soundcards and many more things. It
+  allows acces to AUTOEXEC.BAT as well.
+
+  The language file controls all visible ouput of the internal commands
+  and the internal dos.
 
   Example:
   To create a configfile in your current directory:
@@ -361,7 +375,7 @@ Examples:
 
 RESCAN
   Make DOSBox reread the directory structure. Useful if you changed something
-  on a mounted drive outside of DOSBox.
+  on a mounted drive outside of DOSBox. (CTRL - F4 does this as well!)
   
 
 MIXER
@@ -537,19 +551,19 @@ For more information use the /? command line switch with the programs.
 5. Special Keys:
 ================
 
-ALT-ENTER       Go full screen and back.
-CTRL-F1         Start the keymapper.
-CTRL-F4         Swap mounted disk-image (Only used with imgmount).
-CTRL-F5         Save a screenshot.
-CTRL-F6         Start/Stop recording sound output to a wave file.
-CTRL-ALT-F7     Start/Stop recording of OPL commands.
-CTRL-ALT-F8     Start/Stop the recording of raw MIDI commands.
-CTRL-F7         Decrease frameskip.
-CTRL-F8         Increase frameskip.
-CTRL-F9         Kill dosbox.
-CTRL-F10        Capture/Release the mouse.
-CTRL-F11        Slow down emulation (Decrease DOSBox Cycles).
-CTRL-F12        Speed up emulation (Increase DOSox Cycles).
+ALT-ENTER     Go full screen and back.
+CTRL-F1       Start the keymapper.
+CTRL-F4       Swap mounted disk-image. Update directory cache for all drives!
+CTRL-F5       Save a screenshot.
+CTRL-F6       Start/Stop recording sound output to a wave file.
+CTRL-ALT-F7   Start/Stop recording of OPL commands.
+CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
+CTRL-F7       Decrease frameskip.
+CTRL-F8       Increase frameskip.
+CTRL-F9       Kill dosbox.
+CTRL-F10      Capture/Release the mouse.
+CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
+CTRL-F12      Speed up emulation (Increase DOSox Cycles).
 
 These are the default keybindings. They can be changed in the keymapper.
 
@@ -628,7 +642,7 @@ present in the configfile.
 Fast machine. My guess would be pentium-2 400+ to get decent emulation
 of games written for an 286 machine.
 For protected mode games a 1 Ghz machine is recommended and don't expect
-them to run fast though!! Be sure to read the next section on how to speed
+them to run fast though! Be sure to read the next section on how to speed
 it up somewhat.
 
 
