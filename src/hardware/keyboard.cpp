@@ -64,7 +64,6 @@ struct KeyBlock {
 	bool enabled;
 	bool active;
 	bool scheduled;
-	bool read_active;
 };
 
 static KeyBlock keyb;
@@ -76,7 +75,6 @@ static KeyEvent * event_handlers[KBD_LAST];
 void KEYBOARD_ClrBuffer(void) {
 	keyb.buf.used=0;
 	keyb.buf.pos=0;
-	keyb.read_active=false;
 	keyb.scheduled=false;
 	PIC_DeActivateIRQ(1);
 }
@@ -225,7 +223,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 }
 
 static Bit8u read_p64(Bit32u port) {
-	return 0x1c | (keyb.read_active ? 0x1 : 0x0);
+	return 0x1c | (keyb.buf.used ? 0x1 : 0x0);
 }
 
 void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
