@@ -197,13 +197,13 @@ bool  lfb_update;
 
 static void VGA_DoUpdateLFB(void) {
 	lfb_update=false;
-	MEM_SetLFB(vga.s3.la_window << 4,sizeof(vga.mem.linear)/4096,&vga.mem.linear[0]);
+	MEM_SetLFB(vga.s3.la_window << 4 ,sizeof(vga.mem.linear)/4096,&vga.mem.linear[0]);
 }
 
 void VGA_StartUpdateLFB(void) {
 	if (!lfb_update) {
 		lfb_update=true;
-		PIC_AddEvent(VGA_DoUpdateLFB,2000);	//2 milliseconds later
+		PIC_AddEvent(VGA_DoUpdateLFB,100);	//100 microseconds later
 	}
 }
 
