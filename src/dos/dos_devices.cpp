@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.6 2004-10-17 14:45:00 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.7 2004-10-20 12:27:19 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -106,6 +106,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	if(orig.name) {
 		name=new char [strlen(orig.name)];strcpy(name,orig.name);
 	}
+	return *this;
 }
 
 Bit8u DOS_FindDevice(char * name) {

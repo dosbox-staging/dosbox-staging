@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.25 2004-10-17 14:44:59 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.26 2004-10-20 12:27:18 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -87,6 +87,7 @@ public:
 	DOS_Device & operator= (const DOS_Device & orig) {
 		DOS_File::operator=(orig);
 		devnum=orig.devnum;
+		return *this;
 	}
 	DOS_Device():DOS_File(),devnum(0){};   
 	virtual bool	Read(Bit8u * data,Bit16u * size);
