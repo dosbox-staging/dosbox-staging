@@ -326,6 +326,13 @@ switch(Fetchb()) {
 			else { reg_si+=4;reg_di+=4;}
 		}
 		break;
+	case 0xa7:												/* CMPSD */
+		{	
+			stringSI;stringDI; CMPD(to,LoadMd(from),LoadMd,0);
+			if (GETFLAG(DF)) { reg_si-=4;reg_di-=4; }
+			else { reg_si+=4;reg_di+=4;}
+		}
+		break;
 	case 0xa9:												/* TEST EAX,Id */
 		EAXId(TESTD);
 		break;
