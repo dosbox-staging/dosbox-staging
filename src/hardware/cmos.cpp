@@ -45,6 +45,7 @@ static struct {
 
 static void cmos_timerevent(void) {
 	PIC_ActivateIRQ(8); 
+	if(cmos.timer.enabled) PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 	if (cmos.ack) {
 		PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 		cmos.regs[0x0c]|=0x0a0;
