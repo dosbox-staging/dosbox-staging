@@ -18,8 +18,8 @@
 
 #ifndef __VIDEO_H
 #define __VIDEO_H
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
+
+
 typedef void (GFX_DrawHandler)(Bit8u * vidstart);
 /* Used to reply to the renderer what size to set */
 typedef void (GFX_ResizeHandler)(Bitu * width,Bitu * height);
@@ -35,26 +35,7 @@ struct GFX_Info {
 	Bitu width,height,bpp,pitch;
 };
 
-
 extern GFX_Info gfx_info;
-
-struct SDL_Block {
-	bool active;							//If this isn't set don't draw
-	Bitu width;
-	Bitu height;
-	Bitu bpp;
-	GFX_DrawHandler * draw;
-	GFX_ResizeHandler * resize;
-	bool mouse_grabbed;
-	bool full_screen;
-	SDL_Thread * thread;
-	SDL_mutex * mutex;
-	SDL_Surface * surface;
-	SDL_Joystick * joy;
-	SDL_Color pal[256];
-};
-
-extern SDL_Block sdl;
 
 void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
@@ -64,7 +45,6 @@ void GFX_Resize(Bitu width,Bitu height,Bitu bpp,GFX_ResizeHandler * resize);
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
-
 
 #endif
 
