@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -202,6 +202,7 @@ void DOSBOX_Init(void) {
 //	secprop=control->AddSection_prop("gus",&GUS_Init);
 	
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
+	secprop->Add_bool("enabled",true);
 
 	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
 	secprop->Add_bool("enabled",true);
