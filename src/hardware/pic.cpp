@@ -22,6 +22,8 @@
 #include "cpu.h"
 #include "pic.h"
 
+#define PIC_QUEUESIZE 128
+
 struct IRQ_Block {
 	bool masked;
 	bool active;
@@ -31,9 +33,10 @@ struct IRQ_Block {
 	PIC_EOIHandler * handler;
 };
 
+Bitu PIC_Ticks=0;
+
 Bitu PIC_IRQCheck;
 Bitu PIC_IRQActive;
-bool PIC_IRQAgain;
 
 static IRQ_Block irqs[16];
 static Bit8u pic0_icws=0;
@@ -42,10 +45,29 @@ static Bit8u pic0_icw_state=0;
 static Bit8u pic1_icw_state=0;
 static bool pic0_request_iisr=0;
 static bool pic1_request_iisr=0;
-//TODO Special mask mode in ocw3
-//TODO maybe check for illegal modes that don't work on pc too and exit the emu
 
-//Pic 0 command port
+enum QUEUE_TYPE { 
+	IRQ,EVENT
+};
+
+
+
+
+struct PICEntry {
+	QUEUE_TYPE type;
+	Bitu irq;
+	Bitu index;
+	PIC_EventHandler event;
+	PICEntry * next;
+};
+
+
+static struct {
+	PICEntry entries[PIC_QUEUESIZE];
+	PICEntry * free_entry;
+	PICEntry * next_entry;
+} pic;
+
 static void write_p20(Bit32u port,Bit8u val) {
 	switch (val) {
 	case 0x0A: /* select read interrupt request register */
@@ -63,7 +85,14 @@ static void write_p20(Bit32u port,Bit8u val) {
 		pic0_icw_state=1;
 		break;
 	case 0x20: /* end of interrupt command */
-          /* clear highest current in service bit */
+	case 0x21: /* end of interrupt command */
+	case 0x22: /* end of interrupt command */
+	case 0x23: /* end of interrupt command */
+	case 0x24: /* end of interrupt command */
+	case 0x25: /* end of interrupt command */
+	case 0x26: /* end of interrupt command */
+	case 0x27: /* end of interrupt command */
+		/* clear highest current in service bit */
 		if (PIC_IRQActive<8) {
 			irqs[PIC_IRQActive].inservice=false;
 			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
@@ -111,14 +140,14 @@ static void write_p21(Bit32u port,Bit8u val) {
 			else PIC_IRQCheck&=~(1 << i);
 		};
 		break;
-     case 1:                        /* icw2          */
+	case 1:                        /* icw2          */
+		LOG_DEBUG("PIC0:Base vector %X",val);
 		for (i=0;i<=7;i++) {
 			irqs[i].vector=(val&0xf8)+i;
 		};
 	default:                       /* icw2, 3, and 4*/
 		if(pic0_icw_state++ >= pic0_icws) pic0_icw_state=0; 	
 	}
-	
 }
 
 static Bit8u read_p20(Bit32u port) {
@@ -174,6 +203,13 @@ static void write_pa0(Bit32u port,Bit8u val) {
 		pic1_icw_state=1;
 		break;
 	case 0x20: /* end of interrupt command */
+	case 0x21: /* end of interrupt command */
+	case 0x22: /* end of interrupt command */
+	case 0x23: /* end of interrupt command */
+	case 0x24: /* end of interrupt command */
+	case 0x25: /* end of interrupt command */
+	case 0x26: /* end of interrupt command */
+	case 0x27: /* end of interrupt command */
           /* clear highest current in service bit */
 		if (PIC_IRQActive>7 && PIC_IRQActive <16) {
 			irqs[PIC_IRQActive].inservice=false;
@@ -218,7 +254,6 @@ static void write_pa1(Bit32u port,Bit8u val) {
 	case 0:                        /* mask register */
 		for (i=0;i<=7;i++) {
 			irqs[i+8].masked=(val&1 <<i)>0;
-			if (!irqs[8].masked) LOG_DEBUG("Someone unmasked RTC irq");
 		};
 		break;
      case 1:                        /* icw2          */
@@ -292,7 +327,7 @@ void PIC_DeActivateIRQ(Bit32u irq) {
 }
 
 void PIC_runIRQs(void) {
-	Bit32u i;
+	Bitu i;
 	if (!flags.intf) return;
 	if (PIC_IRQActive!=PIC_NOIRQ) return;
 	if (!PIC_IRQCheck) return;
@@ -304,19 +339,166 @@ void PIC_runIRQs(void) {
 				PIC_IRQCheck&=~(1 << i);
 				Interrupt(irqs[i].vector);
 				PIC_IRQActive=i;
-				PIC_IRQAgain=true;
 				return;
 			}
 		}
 	}
 }
 
+static void AddEntry(PICEntry * entry) {
+	PICEntry * find_entry=pic.next_entry;
+	if (!find_entry) {
+		entry->next=0;
+		pic.next_entry=entry;
+		return;
+	}
+	if (find_entry->index>entry->index) {
+		pic.next_entry=entry;
+		entry->next=find_entry;
+		return;
+	}
+	while (find_entry) {
+		if (find_entry->next) {
+			/* See if the next index comes later than this one */
+			if (find_entry->next->index>entry->index) {
+				entry->next=find_entry->next;
+				find_entry->next=entry;
+				return;
+			} else {
+				find_entry=find_entry->next;
+			}
+		} else {
+			entry->next=find_entry->next;
+			find_entry->next=entry;
+			return;
+		}
+	}
+}
+
+void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
+	if (!pic.free_entry) {
+		LOG_WARN("PIC:No free queue entries");
+		return;
+	}
+	PICEntry * entry=pic.free_entry;
+	Bitu index=delay+PIC_Index();
+	entry->index=index;
+	entry->event=handler;
+	entry->type=EVENT;
+	pic.free_entry=pic.free_entry->next;
+	AddEntry(entry);
+}
+
+void PIC_AddIRQ(Bitu irq,Bitu delay) {
+	if (irq>15) E_Exit("PIC:Illegal IRQ");
+	if (!pic.free_entry) {
+		LOG_WARN("PIC:No free queue entries");
+		return;
+	}
+	PICEntry * entry=pic.free_entry;
+	Bitu index=delay+PIC_Index();
+	entry->index=index;
+	entry->irq=irq;
+	entry->type=IRQ;
+	pic.free_entry=pic.free_entry->next;
+	AddEntry(entry);
+}
+
+
+void PIC_RemoveEvents(PIC_EventHandler handler) {
+	PICEntry * entry=pic.next_entry;
+	PICEntry * prev_entry;
+	prev_entry=0;
+	while (entry) {
+		switch (entry->type) {
+		case EVENT:
+			if (entry->event==handler) {
+				if (prev_entry) {
+					prev_entry->next=entry->next;
+					entry->next=pic.free_entry;
+					pic.free_entry=entry;
+					entry=prev_entry->next;
+					continue;
+				} else {
+					pic.next_entry=entry->next;
+					entry->next=pic.free_entry;
+					pic.free_entry=entry;
+					entry=pic.next_entry;
+					continue;
+				}
+			}
+			break;
+		}
+		prev_entry=entry;
+		entry=entry->next;
+	}
+}
+
+Bitu PIC_RunQueue(void) {
+	Bitu ret;
+	/* Check to see if a new milisecond needs to be started */
+	if (CPU_Cycles>0) {
+		CPU_CycleLeft+=CPU_Cycles;
+		CPU_Cycles=0;
+	}
+	if (CPU_CycleLeft<=0) {
+		CPU_CycleLeft=CPU_CycleMax;
+	}
+	while (CPU_CycleLeft>0) {
+		/* Check the queue for an entry */
+		Bitu index=PIC_Index();
+		while (pic.next_entry && pic.next_entry->index<=index) {
+			PICEntry * entry=pic.next_entry;
+			pic.next_entry=entry->next;
+			switch (entry->type) {
+			case EVENT:
+				(entry->event)();
+				break;
+			case IRQ:
+				PIC_ActivateIRQ(entry->irq);
+				break;
+			}
+			/* Put the entry in the free list */
+			entry->next=pic.free_entry;
+			pic.free_entry=entry;
+		}
+		/* Check when to set the new cycle end */
+		if (pic.next_entry) {
+			Bits cycles=PIC_MakeCycles(pic.next_entry->index-index);
+			if (!cycles) cycles=1;
+			if (cycles<CPU_CycleLeft) {
+				CPU_Cycles=cycles;
+			} else {
+				CPU_Cycles=CPU_CycleLeft;
+			}
+		} else CPU_Cycles=CPU_CycleLeft;
+		if 	(PIC_IRQCheck)	PIC_runIRQs();
+		/* Run the actual cpu core */
+		CPU_CycleLeft-=CPU_Cycles;
+		ret=(*cpudecoder)();
+		if (CPU_Cycles>0) {
+			CPU_CycleLeft+=CPU_Cycles;
+			CPU_Cycles=0;
+		}
+		if (ret) return ret;	
+	}
+	/* Go through the list of scheduled irq's and lower their index with 1000 */
+	PIC_Ticks++;
+	PICEntry * entry=pic.next_entry;
+	while (entry) {
+		if (entry->index>1000) entry->index-=1000;
+		else entry->index=0;
+		entry=entry->next;
+	}
+	return 0;
+}
 
 void PIC_Init(Section* sec) {
 	/* Setup pic0 and pic1 with initial values like DOS has normally */
 	PIC_IRQCheck=0;
 	PIC_IRQActive=PIC_NOIRQ;
-	Bit8u i;
+	PIC_Ticks=0;
+	Bitu i;
 	for (i=0;i<=7;i++) {
 		irqs[i].active=false;
 		irqs[i].masked=true;
@@ -338,6 +520,14 @@ void PIC_Init(Section* sec) {
 	IO_RegisterReadHandler(0xa1,read_pa1,"Slave PIC Data");
 	IO_RegisterWriteHandler(0xa0,write_pa0,"Slave PIC Command");
 	IO_RegisterWriteHandler(0xa1,write_pa1,"Slave PIC Data");
+	/* Initialize the pic queue */
+	for (i=0;i<PIC_QUEUESIZE-1;i++) {
+		pic.entries[i].next=&pic.entries[i+1];
+	}
+	pic.entries[PIC_QUEUESIZE-1].next=0;
+	pic.free_entry=&pic.entries[0];
+	pic.next_entry=0;
+
 }
 		
 
