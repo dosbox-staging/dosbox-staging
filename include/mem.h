@@ -60,6 +60,33 @@ extern HostPt memory;
 	Working on big or little endian machines 
 */
 
+#ifdef WORDS_BIGENDIAN
+
+INLINE Bit8u readb(HostPt off) {
+	return off[0];
+};
+INLINE Bit16u readw(HostPt off) {
+	return off[0] | (off[1] << 8);
+};
+INLINE Bit32u readd(HostPt off) {
+	return off[0] | (off[1] << 8) | (off[2] << 16) | (off[3] << 24);
+};
+INLINE void writeb(HostPt off,Bit8u val) {
+	off[0]=val;
+};
+INLINE void writew(HostPt off,Bit16u val) {
+	off[0]=(Bit8u)((val & 0x00ff));
+	off[1]=(Bit8u)((val & 0xff00) >> 8);
+};
+INLINE void writed(HostPt off,Bit32u val) {
+	off[0]=(Bit8u)((val & 0x000000ff));
+	off[1]=(Bit8u)((val & 0x0000ff00) >> 8);
+	off[2]=(Bit8u)((val & 0x00ff0000) >> 16);
+	off[3]=(Bit8u)((val & 0xff000000) >> 24);
+};
+
+#else
+
 INLINE Bit8u readb(HostPt off) {
 	return *(Bit8u *)off;
 };
@@ -79,6 +106,7 @@ INLINE void writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
 };
 
+#endif
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
 //TODO maybe make em inline to go a bit faster 
