@@ -42,6 +42,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 		return 0;
 	}
 	strcpy(file_start,RunningProgram);
+	lowcase(file_start);
 	strcat(file_start,"_");
 	while ((dir_ent=readdir(dir))) {
 		char tempname[CROSS_LEN];
@@ -55,7 +56,6 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	}
 	closedir(dir);
 	sprintf(file_name,"%s%c%s%03d%s",capturedir,CROSS_FILESPLIT,file_start,last,ext);
-	lowcase(file_name);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
 	if (handle) {
@@ -66,9 +66,22 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	return handle;
 }
 
+class HARDWARE:public Module_base{
+public:
+	HARDWARE(Section* configuration):Module_base(configuration){
+		Section_prop * section = static_cast<Section_prop *>(configuration);
+		capturedir = (char *)section->Get_string("captures");
+	}
+	~HARDWARE(){ }
+};
 
-void HARDWARE_Init(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	capturedir=(char *)section->Get_string("captures");
+static HARDWARE* test;
+
+void HARDWARE_Destroy(Section * sec) {
+	delete test;
 }
 
+void HARDWARE_Init(Section * sec) {
+	test = new HARDWARE(sec);
+	sec->AddDestroyFunction(&HARDWARE_Destroy,true);
+}
