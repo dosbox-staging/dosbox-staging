@@ -88,9 +88,9 @@ INLINE void writed(HostPt off,Bit32u val) {
 	off[3]=(Bit8u)(val >> 24);
 };
 
-#define MLEB(_MLE_VAL_) (_MLE_VAL_)
-#define MLEW(_MLE_VAL_) (_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
-#define MLED(_MLE_VAL_) (_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
+#define MLEB(_MLE_VAL_)   (_MLE_VAL_)
+#define MLEW(_MLE_VAL_) ( (_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
+#define MLED(_MLE_VAL_) ( (_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
 
 #else
 
