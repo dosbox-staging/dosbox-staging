@@ -68,6 +68,7 @@ enum {
 	t_LASTFLAG
 };
 
+extern bool parity_lookup[256];
 
 void CPU_LLDT(Bitu selector);
 void CPU_LTR(Bitu selector);
