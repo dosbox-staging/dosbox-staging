@@ -206,6 +206,32 @@
 	CASE_0F_D(0xad)												/* SHRD Ed,Gd,CL */
 		RMEdGdOp3(DSHRD,reg_cl);
 		break;
+	CASE_0F_D(0xaf)												/* IMUL Gd,Ed */
+		{
+			RMGdEdOp3(DIMULD,*rmrd);
+			break;
+		}
+	CASE_0F_D(0xb2)												/* LSS Ed */
+		{	
+			GetRMrd;GetEAa;
+			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(ss,LoadMw(eaa+4));
+			break;
+		}
+	CASE_0F_D(0xb3)												/* BTR Ed,Gd */
+		{
+			FillFlags();GetRMrd;
+			Bit32u mask=1 << (*rmrd & 31);
+			if (rm >= 0xc0 ) {
+				GetEArd;
+				SETFLAGBIT(CF,(*eard & mask));
+				*eard&= ~mask;
+			} else {
+				GetEAa;Bit32u old=LoadMd(eaa);
+				SETFLAGBIT(CF,(old & mask));
+				SaveMd(eaa,old & ~mask);
+			}
+			break;
+		}
 	CASE_0F_D(0xb4)												/* LFS Ed */
 		{	
 			GetRMrd;GetEAa;
@@ -223,17 +249,6 @@
 			GetRMrd;															
 			if (rm >= 0xc0 ) {GetEArb;*rmrd=*earb;}
 			else {GetEAa;*rmrd=LoadMb(eaa);}
-			break;
-		}
-	CASE_0F_D(0xaf)												/* IMUL Gd,Ed */
-		{
-			RMGdEdOp3(DIMULD,*rmrd);
-			break;
-		}
-	CASE_0F_D(0xb2)												/* LSS Ed */
-		{	
-			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(ss,LoadMw(eaa+4));
 			break;
 		}
 	CASE_0F_D(0xb7)												/* MOVXZ Gd,Ew */
