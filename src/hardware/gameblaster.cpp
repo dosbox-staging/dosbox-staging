@@ -420,10 +420,10 @@ static void write_cms(Bit32u port,Bit8u val) {
 }
 
 
-void CMS_Init(Section* sec) {
+ void CMS_Init(Section* sec,Bitu rate) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("cms")) return;
-	sample_rate=section->Get_int("cmsrate");
+	sample_rate=rate;
 
 	IO_RegisterWriteHandler(0x220,write_cms,"CMS");
 	IO_RegisterWriteHandler(0x221,write_cms,"CMS");
@@ -432,7 +432,7 @@ void CMS_Init(Section* sec) {
 	
 /* Register the Mixer CallBack */
 
-	cms_chan=MIXER_AddChannel(CMS_CallBack,CMS_RATE,"CMS");
+	cms_chan=MIXER_AddChannel(CMS_CallBack,rate,"CMS");
 	MIXER_SetMode(cms_chan,MIXER_16STEREO);
 	MIXER_Enable(cms_chan,true);
 	last_command=PIC_Ticks;

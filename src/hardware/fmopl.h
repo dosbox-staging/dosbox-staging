@@ -91,7 +91,7 @@ void YM3526SetUpdateHandler(int which, OPL_UPDATEHANDLER UpdateHandler, int para
 /* Y8950 port handlers */
 void Y8950SetPortHandler(int which, OPL_PORTHANDLER_W PortHandler_w, OPL_PORTHANDLER_R PortHandler_r, int param);
 void Y8950SetKeyboardHandler(int which, OPL_PORTHANDLER_W KeyboardHandler_w, OPL_PORTHANDLER_R KeyboardHandler_r, int param);
-void Y8950SetDeltaTMemory(int which, void * deltat_rom, int deltat_rom_size );
+void Y8950SetDeltaTMemory(int which, void * deltat_mem_ptr, int deltat_mem_size );
 
 int  Y8950Init (int num, int clock, int rate);
 void Y8950Shutdown (void);

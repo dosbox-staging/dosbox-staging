@@ -25,6 +25,7 @@
 #include "pic.h"
 #include "hardware.h"
 #include "setup.h"
+#include "support.h"
 #include "programs.h"
 
 #define SB_PIC_EVENTS 0
@@ -53,8 +54,8 @@
 #define SB_BUF_SIZE 8096
 
 enum {DSP_S_RESET,DSP_S_NORMAL,DSP_S_HIGHSPEED};
+enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6};
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
-
 
 enum DSP_MODES {
 	MODE_NONE,MODE_DAC,
@@ -94,6 +95,8 @@ struct SB_INFO {
 	Bit8u time_constant;
 	bool use_time_constant;
 	DSP_MODES mode;
+	SB_TYPES type;
+	OPL_Mode oplmode;
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
@@ -907,9 +910,6 @@ static Bit8u read_sb(Bit32u port) {
 			return 0xff;
 		}
 		return 0xff;
-/* For now loop FM Stuff to 0x388 */
-	case 0x00:	case 0x02:	case 0x08:
-		return IO_Read(0x388);
 	case DSP_RESET:
 		return 0xff;
 	default:
@@ -933,14 +933,6 @@ static void write_sb(Bit32u port,Bit8u val) {
 	case MIXER_DATA:
 		MIXER_Write(val);
 		break;
-/* For now loop FM Stuff to 0x388 */
-	case 0x00:	case 0x02:	case 0x08:
-		IO_Write(0x388,val);
-		break;
-	case 0x01:	case 0x03:	case 0x09:
-		IO_Write(0x389,val);
-		break;
-
 	default:
 		LOG(LOG_SB,LOG_NORMAL)("Unhandled write to SB Port %4X",port);
 		break;
@@ -964,7 +956,48 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 void SBLASTER_Init(Section* sec) {
 	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("sblaster")) return;
+	const char * sbtype=section->Get_string("type");
+	if (!strcasecmp(sbtype,"sb1")) sb.type=SBT_1;
+	else if (!strcasecmp(sbtype,"sb2")) sb.type=SBT_2;
+	else if (!strcasecmp(sbtype,"sbpro1")) sb.type=SBT_PRO1;
+	else if (!strcasecmp(sbtype,"sbpro2")) sb.type=SBT_PRO2;
+	else if (!strcasecmp(sbtype,"sb16")) sb.type=SBT_16;
+	else if (!strcasecmp(sbtype,"none")) sb.type=SBT_NONE;
+	else sb.type=SBT_16;
+
+	/* OPL/CMS Init */
+	const char * omode=section->Get_string("oplmode");
+	Bitu oplrate=section->Get_int("oplrate");
+	OPL_Mode opl_mode;
+	if (!strcasecmp(omode,"none")) opl_mode=OPL_none;	
+	else if (!strcasecmp(omode,"cms")) opl_mode=OPL_cms;
+	else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
+	else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
+	else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
+	/* Else assume auto */
+	else {
+		switch (sb.type) {
+		case SBT_NONE:opl_mode=OPL_none;break;
+		case SBT_1:opl_mode=OPL_cms;break;
+		case SBT_2:opl_mode=OPL_opl2;break;
+		case SBT_PRO1:opl_mode=OPL_dualopl2;break;
+		case SBT_PRO2:
+		case SBT_16:
+			opl_mode=OPL_opl3;break;
+		}
+	}
+	switch (opl_mode) {
+	case OPL_none:
+		break;
+	case OPL_cms:
+		CMS_Init(section,oplrate);
+		break;
+	case OPL_opl2:
+	case OPL_dualopl2:
+	case OPL_opl3:
+		OPL_Init(section,opl_mode,oplrate);
+		break;
+	}
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");
 	MIXER_Enable(sb.chan,false);
 	sb.dsp.state=DSP_S_NORMAL;
@@ -982,6 +1015,6 @@ void SBLASTER_Init(Section* sec) {
 	}
 	PIC_RegisterIRQ(sb.hw.irq,0,"SB");
 	DSP_Reset();
-	
-	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d T4",sb.hw.base,sb.hw.irq,sb.hw.dma8);
+	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d T%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,sb.type);
 }
+
