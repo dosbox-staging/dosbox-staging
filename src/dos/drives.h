@@ -29,7 +29,7 @@ bool WildFileCmp(const char * file, const char * wild);
 
 class localDrive : public DOS_Drive {
 public:
-	localDrive(const char * startdir,Bit16u _bytes_sector,Bit16u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
+	localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
 	bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
 	bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	bool FileUnlink(char * name);
@@ -40,7 +40,7 @@ public:
 	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
-	bool AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block * const stat_block);
 	Bit8u GetMediaByte(void);
@@ -50,7 +50,7 @@ private:
 	DIR * srch_opendir;
 	struct {
 		Bit16u bytes_sector;
-		Bit16u sectors_cluster;
+		Bit8u sectors_cluster;
 		Bit16u total_clusters;
 		Bit16u free_clusters;
 		Bit8u mediaid;
@@ -73,7 +73,7 @@ public:
 	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
-	bool AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
     bool FileExists(const char* name);
     bool FileStat(const char* name, FileStat_Block* const stat_block);
 	Bit8u GetMediaByte(void);

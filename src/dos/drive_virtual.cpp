@@ -204,7 +204,7 @@ bool Virtual_Drive::Rename(char * oldname,char * newname) {
 	return false;
 }
 
-bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
+bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
 	/* Always report 100 mb free should be enough */
 	/* Total size is always 1 gb */
 	*_bytes_sector=512;

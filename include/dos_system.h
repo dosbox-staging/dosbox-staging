@@ -84,7 +84,7 @@ public:
 	virtual bool FindNext(DOS_DTA & dta)=0;
 	virtual bool GetFileAttr(char * name,Bit16u * attr)=0;
 	virtual bool Rename(char * oldname,char * newname)=0;
-	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters)=0;
+	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters)=0;
 	virtual bool FileExists(const char* name)=0;
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
 	virtual Bit8u GetMediaByte(void)=0;

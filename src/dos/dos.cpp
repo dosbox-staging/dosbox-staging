@@ -32,7 +32,7 @@ DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
-static Bitu call_20,call_21,call_27;
+static Bitu call_20,call_21,call_27,call_28;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -215,10 +215,10 @@ static Bitu DOS_21Handler(void) {
 		else reg_al = 0xFF;
 		break;
 	case 0x1b:		/* Get allocation info for default drive */	
-		if (!DOS_GetAllocationInfo(0,&reg_cx,&reg_ax,&reg_dx)) reg_al=0xff;
+		if (!DOS_GetAllocationInfo(0,&reg_cx,&reg_al,&reg_dx)) reg_al=0xff;
 		break;
 	case 0x1c:		/* Get allocation info for specific drive */
-		if (!DOS_GetAllocationInfo(reg_dl,&reg_cx,&reg_ax,&reg_dx)) reg_al=0xff;
+		if (!DOS_GetAllocationInfo(reg_dl,&reg_cx,&reg_al,&reg_dx)) reg_al=0xff;
 		break;
 	case 0x21:		/* Read random record from FCB */
 		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,1,true);
@@ -359,7 +359,8 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x36:		/* Get Free Disk Space */
 		{
-			Bit16u bytes,sectors,clusters,free;
+			Bit16u bytes,clusters,free;
+            Bit8u sectors;
 			if	(DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
 				reg_ax=sectors;
 				reg_bx=free;
@@ -783,9 +784,6 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:67:Set Handle Count not working");
 		CALLBACK_SCF(false);
 		break;
-	case 0x68:					/* FFLUSH Commit file */
-		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
-		break;
 	case 0x69:					/* Get/Set disk serial number */
 		{
 			switch(reg_al)		{
@@ -808,6 +806,7 @@ static Bitu DOS_21Handler(void) {
 		CALLBACK_SCF(true);
 		LOG_WARN("DOS:Windows long file name support call %2X",reg_al);
 		break;
+	case 0x68:					/* FFLUSH Commit file */
 	case 0xE0:
 	case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
 	case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
@@ -844,6 +843,10 @@ static Bitu DOS_27Handler(void)
 	return CBRET_NONE;
 }
 
+static Bitu DOS_28Handler(void) {
+    return CBRET_NONE;
+}
+
 void DOS_Init(Section* sec) {
     MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
 	call_20=CALLBACK_Allocate();
@@ -857,6 +860,10 @@ void DOS_Init(Section* sec) {
 	call_27=CALLBACK_Allocate();
 	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET);
 	RealSetVec(0x27,CALLBACK_RealPointer(call_27));
+
+    call_28=CALLBACK_Allocate();
+    CALLBACK_Setup(call_28,DOS_28Handler,CB_IRET);
+    RealSetVec(0x28,CALLBACK_RealPointer(call_28));
 
 	DOS_SetupFiles();								/* Setup system File tables */
 	DOS_SetupDevices();							/* Setup dos devices */

@@ -119,7 +119,7 @@ bool DOS_ChangeDir(char * dir);
 bool DOS_MakeDir(char * dir);
 bool DOS_RemoveDir(char * dir);
 bool DOS_Rename(char * oldname,char * newname);
-bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free);
+bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * clusters,Bit16u * free);
 bool DOS_GetFileAttr(char * name,Bit16u * attr);
 
 /* IOCTL Stuff */
@@ -158,7 +158,7 @@ bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset);
 bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset);
 void DOS_FCBSetRandomRecord(Bit16u seg, Bit16u offset);
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change);
-bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters);
+bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters);
 
 /* Extra DOS Interrupts */
 void DOS_SetupMisc(void);

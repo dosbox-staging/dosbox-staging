@@ -400,7 +400,7 @@ bool DOS_Canonicalize(char * name,char * big) {
 	return true;
 }
 
-bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free) {
+bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * clusters,Bit16u * free) {
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
 	if ((drive>DOS_DRIVES) || (!Drives[drive])) {
@@ -807,7 +807,7 @@ bool DOS_FileExists(char * name) {
 	return Drives[drive]->FileExists(fullname);
 }
 
-bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters) {
+bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters) {
 	if (!drive) drive=dos.current_drive;
 	else drive--;
 	if (!Drives[drive]) return false;

@@ -85,7 +85,8 @@ public:
 				return;
 			}
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
-			newdrive=new localDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],mediaid);
+            Bit8u bit8size=(Bit8u) sizes[1];
+			newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 		}
 		cmd->FindCommand(1,temp_line);
 		if (temp_line.size()>1) goto showusage;
