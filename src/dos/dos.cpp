@@ -169,7 +169,7 @@ static Bitu DOS_21Handler(void) {
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x0f FCB-fileopen used");
+		LOG_DEBUG("DOS:0x0f FCB-fileopen used, result:al=%d",reg_al);
 		break;
 
 	case 0x10:		/* Close File using FCB */
@@ -178,7 +178,7 @@ static Bitu DOS_21Handler(void) {
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x10 FCB-fileclose used");
+		LOG_DEBUG("DOS:0x10 FCB-fileclose used, result:al=%d",reg_al);
 		break;
 
 	case 0x11:		/* Find First Matching File using FCB */
@@ -187,7 +187,7 @@ static Bitu DOS_21Handler(void) {
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x11 FCB-FindFirst used");
+		LOG_DEBUG("DOS:0x11 FCB-FindFirst used, result:al=%d",reg_al);
 		break;
 
 	case 0x12:		/* Find Next Matching File using FCB */
@@ -196,7 +196,7 @@ static Bitu DOS_21Handler(void) {
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x12 FCB-FindNext used");
+		LOG_DEBUG("DOS:0x12 FCB-FindNext used, result:al=%d",reg_al);
 		break;
 
 	case 0x13:		/* Delete File using FCB */
@@ -222,7 +222,7 @@ static Bitu DOS_21Handler(void) {
             reg_al=FCB_Parsename(Segs[es].value,reg_di,reg_al ,string, &difference);
             reg_di+=difference;
         }
-		LOG_DEBUG("DOS:29:FCB Parse Filename result:%d",reg_al);
+		LOG_DEBUG("DOS:29:FCB Parse Filename, result:al=%d",reg_al);
         break;
 
 	case 0x18:		/* NULL Function for CP/M compatibility or Extended rename FCB */
@@ -237,9 +237,9 @@ static Bitu DOS_21Handler(void) {
 		reg_al=DOS_GetDefaultDrive();
 		break;
 	case 0x1a:		/* Set Disk Transfer Area Address */
-//TODO find out what a DTA does
 		dos.dta=RealMake(Segs[ds].value,reg_dx);
 		break;
+
 	case 0x1c:		/* Get allocation info for specific drive */
 		LOG_DEBUG("DOS: Allocation Info call not supported correctly");
 		SetSegment_16(ds,0xf000);

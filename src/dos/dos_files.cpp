@@ -513,7 +513,7 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
     while((*string==' ')||(*string=='\t')) string++;
     if( *(string+1)==':') {
         Bit8u drive=toupper(*string);
-        if( (drive>'Z') | (drive<'A') ) {
+        if( (drive>'Z') | (drive<'A') | (Drives[drive-'A']==NULL)) {
             *change=string-backup;
             return 0xFF;
         }
