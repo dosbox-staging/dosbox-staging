@@ -404,9 +404,11 @@ l_M_Ed:
 		goto nextopcode;
 	case D_CLD:
 		SETFLAGBIT(DF,false);
+		cpu.direction=1;
 		goto nextopcode;
 	case D_STD:
 		SETFLAGBIT(DF,true);
+		cpu.direction=-1;
 		goto nextopcode;
 	case D_WAIT:
 	case D_NOP:

@@ -1064,9 +1064,11 @@
 		break;
 	CASE_B(0xfc)												/* CLD */
 		SETFLAGBIT(DF,false);
+		cpu.direction=1;
 		break;
 	CASE_B(0xfd)												/* STD */
 		SETFLAGBIT(DF,true);
+		cpu.direction=-1;
 		break;
 	CASE_B(0xfe)												/* GRP4 Eb */
 		{

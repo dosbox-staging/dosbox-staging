@@ -34,7 +34,7 @@
 			count_left=0;
 		}
 	}
-	add_index=GETFLAG(DF) ? -1 : 1;
+	add_index=cpu.direction;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
 		for (;count>0;count--) {
