@@ -12,6 +12,14 @@
 	 changed interrupt handler.
 	- speeded up the graphics.
 	- speeded up the cpu-core
+	- added new features to the debugger: breakpoint support / data view / command line	
+ 	- partial support of list of lists (dos info block)
+	- partial emm 4.0 support
+	- fixes to graphics core fonts (text in sierra games is now correct)
+	- changed dma 
+	- improved dma streams from emm memory
+	- added some cga videomodes
+  	- added more funtions to the keyboard handler
 
 0.50: 
       -added F3 to repeat the last typed command.
