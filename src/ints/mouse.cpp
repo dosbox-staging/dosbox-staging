@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.33 2004-03-14 13:39:45 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.34 2004-03-18 19:53:08 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -561,6 +561,9 @@ void Mouse_NewVideoMode(void)
 	mouse.oldshown=-1;
 
 	SetMickeyPixelRate(8,16);
+	oldmouseX = static_cast<Bit16s>(mouse.x);
+	oldmouseY = static_cast<Bit16s>(mouse.y);
+   
 }
 
 
