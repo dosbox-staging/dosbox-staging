@@ -308,6 +308,9 @@ void VGA_SetupHandlers(void) {
 	}
 	switch ((vga.gfx.miscellaneous >> 2) & 3) {
 	case 0:
+		vgapages.map_base=VGA_PAGE_A0;
+		MEM_SetPageHandler(VGA_PAGE_A0,32,range_handler);
+		break;
 	case 1:
 		vgapages.map_base=VGA_PAGE_A0;
 		MEM_SetPageHandler(VGA_PAGE_A0,16,range_handler);

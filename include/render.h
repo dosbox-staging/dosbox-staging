@@ -16,7 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#ifndef __RENDER_H
+#define __RENDER_H
 
 enum RENDER_Operation {
 	OP_None,
@@ -25,11 +26,13 @@ enum RENDER_Operation {
 	OP_AdvMame2x,
 };
 
-typedef void (* RENDER_Part_Handler)(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy);
-typedef void (* RENDER_Draw_Handler)(RENDER_Part_Handler part_handler);
+typedef void (* RENDER_Line_Handler)(Bit8u * src);
 
-void RENDER_DoUpdate(void);
-
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh,RENDER_Draw_Handler draw_handler);
-
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh);
+bool RENDER_StartUpdate(void);
+void RENDER_EndUpdate(void);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
+extern RENDER_Line_Handler RENDER_DrawLine;
+
+#endif
+

@@ -64,9 +64,6 @@ typedef struct {
 	bool chained;					/* Enable or Disabled Chain 4 Mode */
 	bool blinking;					/* Attribute bit 7 is blinking */
 
-	bool vline_double;
-	Bit8u vline_height;
-
 	/* Pixel Scrolling */
 	Bit8u pel_panning;				/* Amount of pixels to skip when starting horizontal line */
 	Bit8u hlines_skip;
@@ -94,19 +91,39 @@ typedef struct {
 
 typedef struct {
 	bool resizing;
+	bool drawing;
 	Bitu width;
 	Bitu height;
 	Bitu pitch;
-	Bitu blank;
+	Bitu blocks;
+	Bitu panning;
+	Bitu address;
+	Bitu address_add;
+	Bitu address_line_total;
+	Bitu address_line;
+	Bitu lines_total;
+	Bitu lines_left;
+	Bitu lines_scaled;
+	Bitu split_line;
+	Bitu parts_total;
+	Bitu parts_lines;
+	Bitu parts_left;
+	struct {
+		Bitu vtotal;
+		Bitu vstart;
+		Bitu vend;
+		Bitu htotal;
+		Bitu hstart;
+		Bitu hend;
+		Bitu parts;
+	} micro;
 	Bitu scaleh;
-	bool double_width;
-	bool double_height;
-	Bitu lines;
+	bool double_scan;
+	bool double_scan_active;
 	Bit8u font_height;
 	Bit8u font[64*1024];
 	Bitu font1_start;
 	Bitu font2_start;
-	Bitu rows,cols;
 	struct {
 		Bit8u sline,eline;
 		Bit8u count,delay;
@@ -302,6 +319,9 @@ extern Bit32u FillTable[16];
 extern Bit32u CGA_2_Table[16];
 extern Bit32u CGA_4_Table[256];
 extern Bit32u CGA_16_Table[256];
+extern Bit32u TXT_Font_Table[16];
+extern Bit32u TXT_FG_Table[16];
+extern Bit32u TXT_BG_Table[16];
 extern Bit32u Expand16Table[4][16];
 extern Bit32u Expand16BigTable[0x10000];
 

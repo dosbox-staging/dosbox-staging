@@ -53,23 +53,24 @@ static void AdvMame2x_line(Bit8u * dst, const Bit8u * src0, const Bit8u * src1, 
 }
 
 template <Bitu sbpp,Bitu dbpp>
-static void AdvMame2x(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
+static void AdvMame2x(Bit8u * src) {
+#if 0
 	_dy=render.advmame2x.hindex[y+_dy];
 	y=render.advmame2x.hindex[y];
 	Bit8u * dest=render.op.pixels+render.op.pitch*y;
 	src-=render.advmame2x.line_starts[y][0];
-	src+=x;
 	for (;y<_dy;y++) {
 		Bit8u * src0=src+render.advmame2x.line_starts[y][0];
 		Bit8u * src1=src+render.advmame2x.line_starts[y][1];
 		Bit8u * src2=src+render.advmame2x.line_starts[y][2];
-		AdvMame2x_line<sbpp,dbpp>(dest,src0,src1,src2,_dx);
+		AdvMame2x_line<sbpp,dbpp>(dest,src0,src1,src2,render.src.width);
 		dest+=render.op.pitch;
 	}
+#endif
 }
 
 
-static RENDER_Part_Handler AdvMame2x_8_Table[4]={
+static RENDER_Line_Handler AdvMame2x_8_Table[4]={
 	AdvMame2x<8,8>,AdvMame2x<8,16>,AdvMame2x<8,24>,AdvMame2x<8,32>
 };
 

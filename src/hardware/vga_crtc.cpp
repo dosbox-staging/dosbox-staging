@@ -127,8 +127,6 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x09: /* Maximum Scan Line Register */
-		vga.config.vline_double=(val & 128)>1;
-		vga.config.vline_height=(val & 0xf);
 		vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
 		if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
 			crtc(maximum_scan_line)=val;

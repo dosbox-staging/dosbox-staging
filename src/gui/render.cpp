@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.22 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.23 2004-01-28 14:39:05 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -60,17 +60,17 @@ static struct {
 		Bitu scalew;
 		Bitu scaleh;
 		double ratio;
-		RENDER_Draw_Handler draw_handler;
 	} src;
 	struct {
 		Bitu width;
 		Bitu height;
 		Bitu pitch;
-		GFX_MODES gfx_mode;
+		Bitu line;
+		Bitu bpp;
 		RENDER_Operation type;
 		RENDER_Operation want_type;
-		RENDER_Part_Handler part_handler;
-		Bit8u * dest;
+		RENDER_Line_Handler line_handler;
+		Bit8u * draw;
 		Bit8u * buffer;
 		Bit8u * pixels;
 	} op;
@@ -90,15 +90,18 @@ static struct {
 #if (C_SSHOT)
 	struct {
 		RENDER_Operation type;
-		Bitu pitch;
+		Bitu bpp,width,height,line;
 		const char * dir;
-		Bit8u * buffer;
+		Bit8u * buffer,* draw;
+		bool usesrc;
 	} shot;
 #endif
-	bool screenshot;
 	bool active;
 	bool aspect;
+	bool updating;
 } render;
+
+RENDER_Line_Handler RENDER_DrawLine;
 
 /* Forward declerations */
 static void RENDER_ResetPal(void);
@@ -112,13 +115,11 @@ static void RENDER_ResetPal(void);
 #if (C_SSHOT)
 #include <png.h>
 
-static void RENDER_ShotDraw(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
-	Bit8u * dst=render.shot.buffer+render.src.width*y;
-	for (;_dy>0;_dy--) {
-		memcpy(dst,src,_dx);
-		dst+=render.src.width;
-		src+=render.src.pitch;
-	}
+static void RENDER_ShotDraw(Bit8u * src) {
+	if (render.shot.usesrc) {
+		memcpy(render.shot.draw,src,render.shot.line);
+		render.shot.draw+=render.shot.line;
+	} else render.op.line_handler(src);
 }
 
 /* Take a screenshot of the data that should be rendered */
@@ -177,8 +178,8 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	png_set_compression_method(png_ptr, 8);
 	png_set_compression_buffer_size(png_ptr, 8192);
 
-	if (render.src.bpp==8) {
-		png_set_IHDR(png_ptr, info_ptr, render.src.width, render.src.height,
+	if (render.shot.bpp==8) {
+		png_set_IHDR(png_ptr, info_ptr, render.shot.width, render.shot.height,
 			8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		for (i=0;i<256;i++) {
@@ -188,14 +189,14 @@ static void TakeScreenShot(Bit8u * bitmap) {
 		}
 		png_set_PLTE(png_ptr, info_ptr, palette,256);
 	} else {
-		png_set_IHDR(png_ptr, info_ptr, render.src.width, render.src.height,
-			8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+		png_set_IHDR(png_ptr, info_ptr, render.shot.width, render.shot.height,
+			render.shot.bpp, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 	}
 	/*Allocate an array of scanline pointers*/
-	row_pointers=(png_bytep*)malloc(render.src.height*sizeof(png_bytep));
-	for (i=0;i<render.src.height;i++) {
-		row_pointers[i]=(bitmap+i*render.src.width);
+	row_pointers=(png_bytep*)malloc(render.shot.height*sizeof(png_bytep));
+	for (i=0;i<render.shot.height;i++) {
+		row_pointers[i]=(bitmap+i*render.shot.line);
 	}
 	/*tell the png library what to encode.*/
 	png_set_rows(png_ptr, info_ptr, row_pointers);
@@ -222,16 +223,14 @@ static void EnableScreenShot(void) {
 #endif
 
 
-/* This could go kinda bad with multiple threads */
 static void Check_Palette(void) {
 	if (render.pal.first>render.pal.last) return;
 	Bitu i;
-	switch (render.op.gfx_mode) {
-	case GFX_8BPP:
+	switch (render.op.bpp) {
+	case 8:
 		GFX_SetPalette(render.pal.first,render.pal.last-render.pal.first+1,(GFX_PalEntry *)&render.pal.rgb[render.pal.first]);
 		break;
-	case GFX_15BPP:
-	case GFX_16BPP:
+	case 16:
 		for (i=render.pal.first;i<=render.pal.last;i++) {
 			Bit8u r=render.pal.rgb[i].red;
 			Bit8u g=render.pal.rgb[i].green;
@@ -239,8 +238,8 @@ static void Check_Palette(void) {
 			render.pal.lookup.bpp16[i]=GFX_GetRGB(r,g,b);
 		}
 		break;
-	case GFX_24BPP:
-	case GFX_32BPP:
+	case 24:
+	case 32:
 		for (i=render.pal.first;i<=render.pal.last;i++) {
 			Bit8u r=render.pal.rgb[i].red;
 			Bit8u g=render.pal.rgb[i].green;
@@ -248,17 +247,6 @@ static void Check_Palette(void) {
 			render.pal.lookup.bpp32[i]=GFX_GetRGB(r,g,b);
 		}
 		break;
-	case GFX_YUV:
-		for (i=render.pal.first;i<=render.pal.last;i++) {
-			Bit8u r=render.pal.rgb[i].red;
-			Bit8u g=render.pal.rgb[i].green;
-			Bit8u b=render.pal.rgb[i].blue;
-			Bit8u y =  ( 9797*(r) + 19237*(g) +  3734*(b) ) >> 15;
-			Bit8u u =  (18492*((b)-(y)) >> 15) + 128;
-			Bit8u v =  (23372*((r)-(y)) >> 15) + 128;
-			render.pal.lookup.yuv[i]=(u << 0) | (y << 8) | (v << 16) | (y << 24);
-		}
-		break;		 
 	}
 	/* Setup pal index to startup values */
 	render.pal.first=256;
@@ -278,38 +266,74 @@ void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	if (render.pal.last<entry) render.pal.last=entry;
 }
 
-void RENDER_DoUpdate(void) {
+static void RENDER_EmptyLineHandler(Bit8u * src) {
+
+}
+
+bool RENDER_StartUpdate(void) {
+	if (render.updating) return false;
 	if (render.frameskip.count<render.frameskip.max) {
 		render.frameskip.count++;
-		return;
+		return false;
 	}
 	render.frameskip.count=0;
 	if (render.src.bpp==8) Check_Palette();
-	GFX_DoUpdate();
-}
-
-static void RENDER_DrawScreen(Bit8u * data,Bitu pitch) {
-	render.op.pitch=pitch;
-#if (C_SSHOT)
-doagain:
-#endif
+	render.op.line=0;
 	switch (render.op.type) {
 	case OP_None:
 	case OP_Normal2x:
 	case OP_AdvMame2x:
-		render.op.dest=render.op.pixels=data;
-		render.src.draw_handler(render.op.part_handler);
+		if (!GFX_StartUpdate(render.op.pixels,render.op.pitch)) return false;
+		RENDER_DrawLine=render.op.line_handler;;
 		break;
 #if (C_SSHOT)
 	case OP_Shot:
-		render.shot.buffer=(Bit8u*)malloc(render.src.width*render.src.height);
-		render.src.draw_handler(&RENDER_ShotDraw);
-		TakeScreenShot(render.shot.buffer);
-		free(render.shot.buffer);
-		render.op.type=render.shot.type;
-		goto doagain;
+		if (render.shot.buffer) free(render.shot.buffer);
+		if (render.shot.usesrc) {
+			render.shot.width=render.src.width;
+			render.shot.height=render.src.height;
+			render.shot.bpp=render.src.bpp;
+		} else {
+			render.shot.width=render.op.width;
+			render.shot.height=render.op.height;
+			render.shot.bpp=render.op.bpp;
+		}
+		switch (render.shot.bpp) {
+		case 8:render.shot.line=render.shot.width;break;
+		case 15:
+		case 16:render.shot.line=render.shot.width*2;break;
+		case 24:render.shot.line=render.shot.width*3;break;
+		case 32:render.shot.line=render.shot.width*4;break;
+		}
+		render.shot.buffer=(Bit8u*)malloc(render.shot.line*render.shot.height);
+		render.op.pixels=render.shot.buffer;
+		render.op.pitch=render.shot.line;
+		render.shot.draw=render.shot.buffer;
+		RENDER_DrawLine=RENDER_ShotDraw;
+		break;
 #endif
 	}
+	render.updating=true;
+	return true;
+}
+
+void RENDER_EndUpdate(void) {
+	if (!render.updating) return;
+	switch (render.op.type) {
+	case OP_None:
+	case OP_Normal2x:
+	case OP_AdvMame2x:
+		break;
+	case OP_Shot:
+		TakeScreenShot(render.shot.buffer);
+		free(render.shot.buffer);
+		render.shot.buffer=0;
+		render.op.type=render.shot.type;
+		break;
+	}
+	GFX_EndUpdate();
+	RENDER_DrawLine=RENDER_EmptyLineHandler;
+	render.updating=false;
 }
 
 static void SetAdvMameTable(Bitu index,Bits src0,Bits src1,Bits src2) {
@@ -320,14 +344,12 @@ static void SetAdvMameTable(Bitu index,Bits src0,Bits src1,Bits src2) {
 	render.advmame2x.line_starts[index][0]=src0*render.src.pitch;
 	render.advmame2x.line_starts[index][1]=src1*render.src.pitch;
 	render.advmame2x.line_starts[index][2]=src2*render.src.pitch;
-
 }
 
-
 void RENDER_ReInit(void) {
+	if (render.updating) RENDER_EndUpdate();
 	Bitu width=render.src.width;
 	Bitu height=render.src.height;
-	Bitu bpp=render.src.bpp;
 
 	Bitu scalew=render.src.scalew;
 	Bitu scaleh=render.src.scaleh;
@@ -338,16 +360,14 @@ void RENDER_ReInit(void) {
 	if (render.src.ratio>1.0) gfx_scaleh*=render.src.ratio;
 	else gfx_scalew*=(1/render.src.ratio);
 
-	GFX_MODES gfx_mode;Bitu gfx_flags;
-	gfx_mode=GFX_GetBestMode(render.src.bpp,gfx_flags);
+	Bitu gfx_flags;
+	Bitu bpp=GFX_GetBestMode(render.src.bpp,gfx_flags);
 	Bitu index;
-	switch (gfx_mode) {
-	case GFX_8BPP:	index=0;break;
-	case GFX_15BPP:	index=1;break;
-	case GFX_16BPP:	index=1;break;
-	case GFX_24BPP:	index=2;break;
-	case GFX_32BPP:	index=3;break;
-	case GFX_YUV:	index=3;break;
+	switch (bpp) {
+	case 8:	index=0;break;
+	case 16:index=1;break;
+	case 24:index=2;break;
+	case 32:index=3;break;
 	}
 	/* Initial scaler testing */
 	switch (render.op.want_type) {
@@ -358,7 +378,7 @@ normalop:
 		if (gfx_flags & GFX_HASSCALING) {
 			gfx_scalew*=scalew;
 			gfx_scaleh*=scaleh;
-			render.op.part_handler=Normal_SINGLE_8[index];
+			render.op.line_handler=Normal_8[index];
 			for (Bitu i=0;i<render.src.height;i++) {
 				render.normal.hindex[i]=i;
 				render.normal.hlines[i]=0;
@@ -367,12 +387,12 @@ normalop:
 			gfx_scaleh*=scaleh;
 			if (scalew==2) {
 				if (scaleh>1 && (render.op.type==OP_None)) {
-					render.op.part_handler=Normal_SINGLE_8[index];
+					render.op.line_handler=Normal_8[index];
 					scalew>>=1;gfx_scaleh/=2;
 				} else {
-                    render.op.part_handler=Normal_DOUBLE_8[index];
+                    render.op.line_handler=Normal_2x_8[index];
 				}
-			} else render.op.part_handler=Normal_SINGLE_8[index];
+			} else render.op.line_handler=Normal_8[index];
 			width*=scalew;
 			double lines=0.0;
 			gfx_scaleh=(gfx_scaleh*render.src.height-(double)render.src.height)/(double)render.src.height;
@@ -426,24 +446,24 @@ normalop:
 					break;
 				}
 			}
-			render.op.part_handler=AdvMame2x_8_Table[index];
+			render.op.line_handler=AdvMame2x_8_Table[index];
 		}
 		break;
 	}
-	render.op.gfx_mode=gfx_mode;
+	render.op.bpp=bpp;
 	render.op.width=width;
 	render.op.height=height;
-	GFX_SetSize(width,height,gfx_mode,gfx_scalew,gfx_scaleh,&RENDER_ReInit,RENDER_DrawScreen);
+	GFX_SetSize(width,height,bpp,gfx_scalew,gfx_scaleh,&RENDER_ReInit);
 	RENDER_ResetPal();
-	GFX_Start();
+	render.active=true;
 }
 
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh,RENDER_Draw_Handler draw_handler) {
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh) {
 	if ((!width) || (!height) || (!pitch)) { 
-		render.active=false;return;	
+		render.active=false;
+		return;	
 	}
-	GFX_Stop();
 	render.src.width=width;
 	render.src.height=height;
 	render.src.bpp=bpp;
@@ -451,9 +471,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu
 	render.src.ratio=render.aspect ? ratio : 1.0;
 	render.src.scalew=scalew;
 	render.src.scaleh=scaleh;
-	render.src.draw_handler=draw_handler;
 	RENDER_ReInit();
-
 }
 
 extern void GFX_SetTitle(Bits cycles, Bits frameskip);
@@ -477,8 +495,10 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
+	render.updating=true;
 #if (C_SSHOT)
 	render.shot.dir=section->Get_string("snapdir");
+	render.shot.usesrc=true;
 	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
 #endif
 	const char * scaler;std::string cline;

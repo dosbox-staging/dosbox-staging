@@ -19,46 +19,41 @@
 static Bit8u normal_cache[RENDER_MAXWIDTH*2*4];
 
 template <Bitu sbpp,Bitu dbpp,bool xdouble>
-static void Normal(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
-	Bit8u * dst=render.op.pixels+(render.normal.hindex[y]*render.op.pitch);
-	Bitu line_size=LineSize<dbpp>(_dx) * (xdouble ? 2 : 1);
-	src+=x;
+static void Normal(Bit8u * src) {
+	Bitu line_size=LineSize<dbpp>(render.src.width) * (xdouble ? 2 : 1);
 	Bit8u * line;
-	for (;_dy;_dy--) {
-		if (sbpp == dbpp && !xdouble) {
-			line=src;
-			BituMove(dst,line,line_size);
-		} else {
-			Bit8u * line_dst=&normal_cache[0];
-			Bit8u * real_dst=dst;
-			line=line_dst;
-			Bit8u * temp_src=src;
-			for (Bitu tempx=_dx;tempx;tempx--) {
-				Bitu val=ConvBPP<sbpp,dbpp>(LoadSrc<sbpp>(temp_src));
+	if (sbpp == dbpp && !xdouble) {
+		line=src;
+		BituMove(render.op.pixels,line,line_size);
+	} else {
+		Bit8u * line_dst=&normal_cache[0];
+		Bit8u * real_dst=render.op.pixels;
+		line=line_dst;
+		Bit8u * temp_src=src;
+		for (Bitu tempx=render.src.width;tempx;tempx--) {
+			Bitu val=ConvBPP<sbpp,dbpp>(LoadSrc<sbpp>(temp_src));
+			AddDst<dbpp>(line_dst,val);
+			AddDst<dbpp>(real_dst,val);
+			if (xdouble) {
 				AddDst<dbpp>(line_dst,val);
 				AddDst<dbpp>(real_dst,val);
-				if (xdouble) {
-					AddDst<dbpp>(line_dst,val);
-					AddDst<dbpp>(real_dst,val);
-				}
 			}
 		}
-		dst+=render.op.pitch;
-		for (Bitu lines=render.normal.hlines[y++];lines;lines--) {
-			BituMove(dst,line,line_size);
-			dst+=render.op.pitch;
-		}
-		src+=render.src.pitch;
+	}
+	render.op.pixels+=render.op.pitch;
+	for (Bitu lines=render.normal.hlines[render.op.line++];lines;lines--) {
+		BituMove(render.op.pixels,line,line_size);
+		render.op.pixels+=render.op.pitch;
 	}
 }
 
 
-static RENDER_Part_Handler Normal_SINGLE_8[4]={
+static RENDER_Line_Handler Normal_8[4]={
 	Normal<8,8 ,false>,Normal<8,16,false>,
 	Normal<8,24,false>,Normal<8,32,false>,
 };
 
-static RENDER_Part_Handler Normal_DOUBLE_8[4]={
+static RENDER_Line_Handler Normal_2x_8[4]={
 	Normal<8,8 ,true>,Normal<8,16,true>,
 	Normal<8,24,true>,Normal<8,32,true>,
 };
