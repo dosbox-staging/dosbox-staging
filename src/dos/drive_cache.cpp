@@ -327,6 +327,18 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 
 //	LOG_DEBUG("DIR: Find %s",path);
 
+	// hehe, baseDir should be cached in... 
+	if (!IsCachedIn(curDir)) {
+		strcpy(work,basePath);
+		if (OpenDir(curDir,work)) {
+			char buffer[CROSS_LEN];
+			struct dirent* result;
+			strcpy(buffer,dirPath);
+			ReadDir(result);
+			strcpy(dirPath,buffer);
+		};
+	};
+
 	// Remove base dir path
 	start += strlen(basePath);
 	strcpy(expandedPath,basePath);
