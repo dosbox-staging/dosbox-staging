@@ -42,9 +42,10 @@ public:
 			return;
 		}
 
-		char drive;	drive=toupper(*prog_info->cmd_line);
+         char* line=trim(prog_info->cmd_line);
+		char drive;	drive=toupper(*line);
 
-		char * dir=strchr(prog_info->cmd_line,' ');	if (dir) {
+		char * dir=strchr(line,' ');	if (dir) {
 			if (!*dir) dir=0;
 			else dir=trim(dir);
 		}
@@ -179,20 +180,21 @@ void UPCASE::Run(void) {
 		WriteOut("Otherwise you might horribly screw up your filesystem.\n");
 		return;
 	}
-	if (stat(prog_info->cmd_line,&info)) {
-		WriteOut("%s doesn't exist\n",prog_info->cmd_line);
+    char* line=trim(prog_info->cmd_line);
+	if (stat(line,&info)) {
+		WriteOut("%s doesn't exist\n",line);
 		return;
 	}
 	if(!S_ISDIR(info.st_mode)) {
-		WriteOut("%s isn't a directory\n",prog_info->cmd_line);
+		WriteOut("%s isn't a directory\n",line);
 		return;
 	}
 	WriteOut("Converting the wrong directories can be very harmfull, please be carefull.\n");
-	WriteOut("Are you really really sure you want to convert %s to upcase?Y/N\n",prog_info->cmd_line);
+	WriteOut("Are you really really sure you want to convert %s to upcase?Y/N\n",line);
 	Bit8u key;Bit16u n=1;
 	DOS_ReadFile(STDIN,&key,&n);
 	if (toupper(key)=='Y') {
-		upcasedir(prog_info->cmd_line);	
+		upcasedir(line);	
 	} else {
 		WriteOut("Okay better not do it.\n");
 	}

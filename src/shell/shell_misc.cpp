@@ -126,7 +126,13 @@ void DOS_Shell::InputCommand(char * line) {
 
 void DOS_Shell::Execute(char * name,char * args) {
 	char * fullname;
-
+    char line[255];
+    if(strlen(args)!=0){
+        line[0]=' ';line[1]=0;
+        strcat(line,args);
+    }else{
+        line[0]=0;
+    };
 	/* check for a drive change */
 	if ((strcmp(name + 1, ":") == 0) && isalpha(*name))
 	{
@@ -143,7 +149,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 	}
 	if (strcasecmp(strrchr(fullname, '.'), ".bat") == 0) {
 	/* Run the .bat file */
-		bf=new BatchFile(this,fullname,args);
+		bf=new BatchFile(this,fullname,line);
 	} else {
 		/* Run the .exe or .com file from the shell */
 		/* Allocate some stack space for tables in physical memory */
@@ -155,10 +161,10 @@ void DOS_Shell::Execute(char * name,char * args) {
 		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
 		/* Fill the command line */
 		CommandTail cmd;
-		if (strlen(args)>126) args[126]=0;
-		cmd.count=strlen(args);
-		memcpy(cmd.buffer,args,strlen(args));
-		cmd.buffer[strlen(args)]=0xd;
+		if (strlen(line)>126) line[126]=0;
+		cmd.count=strlen(line);
+		memcpy(cmd.buffer,line,strlen(line));
+		cmd.buffer[strlen(line)]=0xd;
 		MEM_BlockWrite(PhysMake(prog_info->psp_seg,128),&cmd,128);
 
 		block.InitExec(RealMake(prog_info->psp_seg,128));
