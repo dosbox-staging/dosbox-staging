@@ -23,6 +23,7 @@
 #include <string>
 #include <list>
 #include <stdlib.h>
+#include <stdio.h>
 #include "support.h"
 
 using namespace std;
@@ -132,63 +133,62 @@ void Section_prop::HandleInputline(char *gegevens){
 		}
 	}
 }
-#define HELPLENGTH 300
-void Section_prop::Print(FILE* outfile){
-        char* val=new char[HELPLENGTH];
-        fprintf(outfile,"[%s]\n",sectionname.c_str());
-        snprintf(val,HELPLENGTH,"%s_CONFIGFILE_HELP",sectionname.c_str());
-        
-        fprintf(outfile,"%% %s",MSG_Get(val));//entries in langfile end with \n
-        for(it tel=properties.begin();tel!=properties.end();tel++){
-	    (*tel)->GetValuestring(val);
-	   fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),val);
+
+
+void Section_prop::PrintData(FILE* outfile){
+	char temp[1000];		/* Should be enough for the properties */
+	/* Now print out the individual section entries */
+	for(it tel=properties.begin();tel!=properties.end();tel++){
+		(*tel)->GetValuestring(temp);
+		fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),temp);
 	}
-        fprintf(outfile,"\n");
-        delete val;
 }
 
    
-void Section_line::HandleInputline(char* gegevens){ 
-	data+=gegevens;
+void Section_line::HandleInputline(char* line){ 
+	data+=line;
 	data+="\n";
 }
 
-void Section_line::Print(FILE* outfile)
-{
-        fprintf(outfile,"[%s]\n",sectionname.c_str());
-        char* val=new char[HELPLENGTH];
-        snprintf(val,HELPLENGTH,"%s_CONFIGFILE_HELP",sectionname.c_str());
-        fprintf(outfile,"%% %s",MSG_Get(val));//entries in langfile end with \n
-        fprintf(outfile,"%s",data.c_str());
-        fprintf(outfile,"\n");
-        delete val;
+void Section_line::PrintData(FILE* outfile) {
+	fprintf(outfile,"%s",data.c_str());
 }
 
 void Config::PrintConfig(const char* configfilename){
-       FILE* outfile=fopen(configfilename,"w+b");
-       if(outfile==NULL) return;
-       for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
-	    (*tel)->Print(outfile);
-       }
-       fclose(outfile);
+	char temp[50];
+	FILE* outfile=fopen(configfilename,"w+b");
+	if(outfile==NULL) return;
+	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+		/* Print out the Section header */
+		strcpy(temp,(*tel)->sectionname.c_str());
+		lowcase(temp);
+		fprintf(outfile,"[%s]\n",temp);
+		upcase(temp);
+		strcat(temp,"_CONFIGFILE_HELP");
+		fprintf(outfile,"# %s",MSG_Get(temp));
+		(*tel)->PrintData(outfile);
+		fprintf(outfile,"\n");	/* Always an empty line between sections */
+	}
+	fclose(outfile);
 }
-
-   
    
 Section* Config::AddSection(const char* _name,void (*_initfunction)(Section*)){
-	Section* blah = new Section(_name,_initfunction);
+	Section* blah = new Section(_name);
+	blah->AddInitFunction(_initfunction);
 	sectionlist.push_back(blah);
 	return blah;
 }
 
 Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Section*)){
-	Section_prop* blah = new Section_prop(_name,_initfunction);
+	Section_prop* blah = new Section_prop(_name);
+	blah->AddInitFunction(_initfunction);
 	sectionlist.push_back(blah);
 	return blah;
 }
 
 Section_line* Config::AddSection_line(const char* _name,void (*_initfunction)(Section*)){
-	Section_line* blah = new Section_line(_name,_initfunction);
+	Section_line* blah = new Section_line(_name);
+	blah->AddInitFunction(_initfunction);
 	sectionlist.push_back(blah);
 	return blah;
 }
@@ -314,9 +314,6 @@ bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove)
 		}
 	}
 	return false;
-
-
-
 }
 
 int CommandLine::GetCount(void) {
