@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.24 2004-03-06 23:18:50 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.25 2004-03-07 08:16:20 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -404,10 +404,10 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	case M_CGA4:
 	case M_CGA2:
 	case M_TANDY16:
-		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight; //was plain 8
+		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight;
 		else {
 			chr-=128;
-			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*cheight; //was plain 8
+			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*cheight;
 		}
 		break;
 	default:
@@ -415,7 +415,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		break;
 	}
 	x=8*col;
-	y=cheight*row;
+	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
 	//TODO Check for out of bounds
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
@@ -423,7 +423,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 		Bit16u tx=x;
 		while (bitsel) {
 			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);
-			else INT10_PutPixel(tx,y,page,attr & 0x80);
+			else INT10_PutPixel(tx,y,page,attr & xor_mask);
 			tx++;
 			bitsel>>=1;
 		}
