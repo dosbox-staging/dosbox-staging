@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.57 2005-03-25 12:03:50 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.58 2005-04-03 17:37:09 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -124,6 +124,8 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			if (*ofn) free(*ofn);
 			*ofn=lr;
 			while (*lr && *lr!=' ') lr++;
+			//if it ends on a : => remove it.
+			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
 			if(*lr && *(lr+1)) 
 				*lr++=0; 
 			else 
@@ -135,6 +137,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			lr=ltrim(lr);
 			*ifn=lr;
 			while (*lr && *lr!=' ') lr++;
+			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
 			if(*lr && *(lr+1)) 
 				*lr++=0; 
 			else 
