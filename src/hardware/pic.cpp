@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.24 2004-09-10 22:15:20 harekiet Exp $ */
+/* $Id: pic.cpp,v 1.25 2004-11-15 14:56:55 qbix79 Exp $ */
 
 #include <list>
 
@@ -131,7 +131,11 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0xC0:case 0xC1:case 0xC2:case 0xC3:case 0xC4:case 0xC5:case 0xC6:case 0xC7:
 		/* Priority order, no need for it */
-	break;
+		break;
+	case 0x00:case 0x80: /* Rotate stuff in eoi mode */
+		/* We can live without it for now. (7 cities of gold) */
+		LOG(LOG_PIC,LOG_NORMAL)("port %X : ignoring rotate stuff.",port);
+		break;
 	default:
 		E_Exit("PIC:Unhandled command %02X",val);
 	}
