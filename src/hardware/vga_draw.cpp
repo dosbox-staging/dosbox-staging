@@ -115,8 +115,8 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		*draw++=fg&mask1 | bg&~mask1;
 		*draw++=fg&mask2 | bg&~mask2;
 	}
-	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	Bits font_addr=(vga.config.cursor_start*2-vidstart)/2;
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	if (font_addr>=0 && font_addr<vga.draw.blocks) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
@@ -161,9 +161,9 @@ static void VGA_DrawPart(void) {
 
 void VGA_SetBlinking(Bitu enabled) {
 	Bitu b;
-	LOG_MSG("Blinking %d",enabled);
+	LOG(LOG_VGA,LOG_NORMAL)("Blinking %d",enabled);
 	if (enabled) {
-		b=0;vga.draw.blinking=-1;
+		b=0;vga.draw.blinking=1; //used to -1 but blinking is unsigned
 		vga.attr.mode_control|=0x08;
 		vga.cga.mode_control&=~0x20;
 	} else {
