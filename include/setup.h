@@ -107,17 +107,25 @@ public:
 class Section {
 public:
 	Section(const char* _sectionname) { sectionname=_sectionname; }
-	virtual ~Section(){ }
+	virtual ~Section(){ ExecuteDestroy();}
 
-	typedef void (*InitFunction)(Section*);
-	void AddInitFunction(InitFunction func) {initfunctions.push_back(func);}
+	typedef void (*SectionFunction)(Section*);
+	void AddInitFunction(SectionFunction func) {initfunctions.push_back(func);}
+	void AddDestroyFunction(SectionFunction func) {destroyfunctions.push_front(func);}
 	void ExecuteInit() { 
-		typedef std::list<InitFunction>::iterator func_it;
+		typedef std::list<SectionFunction>::iterator func_it;
 		for (func_it tel=initfunctions.begin(); tel!=initfunctions.end(); tel++){ 
 			(*tel)(this);
 		}
 	}
-	std::list<InitFunction> initfunctions;
+	void ExecuteDestroy() { 
+		typedef std::list<SectionFunction>::iterator func_it;
+		for (func_it tel=destroyfunctions.begin(); tel!=destroyfunctions.end(); tel++){ 
+			(*tel)(this);
+		}
+	}
+	std::list<SectionFunction> initfunctions;
+	std::list<SectionFunction> destroyfunctions;
 	virtual void HandleInputline(char * _line){}
 	virtual void PrintData(FILE* outfile) {}
 	std::string sectionname;   
@@ -155,7 +163,7 @@ public:
 class Config{
 public:
 	Config(CommandLine * cmd){ cmdline=cmd;}
-
+	~Config();
 	CommandLine * cmdline;
 
 	Section * AddSection(const char * _name,void (*_initfunction)(Section*));
@@ -173,6 +181,7 @@ public:
 	
 	std::list<Section*> sectionlist;
 	typedef std::list<Section*>::iterator it;
+	typedef std::list<Section*>::reverse_iterator reverse_it;
 private:
 	void (* _start_function)(void);
 };
