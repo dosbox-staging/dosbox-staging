@@ -24,6 +24,7 @@
 	GetRM;													\
 	GetEAa;											
 
+
 #define RMEbGb(inst)														\
 	{																		\
 		GetRMrb;															\
@@ -38,11 +39,24 @@
 		else {GetEAa;inst(*rmrb,LoadMb(eaa),LoadRb,SaveRb);}				\
 	}
 
+#define RMEb(inst)															\
+	{																		\
+		if (rm >= 0xc0 ) {GetEArb;inst(*earb,LoadRb,SaveRb);}				\
+		else {GetEAa;inst(eaa,LoadMb,SaveMb);}								\
+	}
+
 #define RMEwGw(inst)														\
 	{																		\
 		GetRMrw;															\
 		if (rm >= 0xc0 ) {GetEArw;inst(*earw,*rmrw,LoadRw,SaveRw);}			\
 		else {GetEAa;inst(eaa,*rmrw,LoadMw,SaveMw);}						\
+	}
+
+#define RMEwGwOp3(inst,op3)													\
+	{																		\
+		GetRMrw;															\
+		if (rm >= 0xc0 ) {GetEArw;inst(*earw,*rmrw,op3,LoadRw,SaveRw);}		\
+		else {GetEAa;inst(eaa,*rmrw,op3,LoadMw,SaveMw);}					\
 	}
 
 #define RMGwEw(inst)														\
@@ -52,6 +66,19 @@
 		else {GetEAa;inst(*rmrw,LoadMw(eaa),LoadRw,SaveRw);}				\
 	}																
 
+#define RMGwEwOp3(inst,op3)													\
+	{																		\
+		GetRMrw;															\
+		if (rm >= 0xc0 ) {GetEArw;inst(*rmrw,*earw,op3,LoadRw,SaveRw);}		\
+		else {GetEAa;inst(*rmrw,LoadMw(eaa),op3,LoadRw,SaveRw);}			\
+	}																
+
+#define RMEw(inst)															\
+	{																		\
+		if (rm >= 0xc0 ) {GetEArw;inst(*earw,LoadRw,SaveRw);}				\
+		else {GetEAa;inst(eaa,LoadMw,SaveMw);}								\
+	}
+
 #define RMEdGd(inst)														\
 	{																		\
 		GetRMrd;															\
@@ -59,12 +86,42 @@
 		else {GetEAa;inst(eaa,*rmrd,LoadMd,SaveMd);}						\
 	}
 
+#define RMEdGdOp3(inst,op3)													\
+	{																		\
+		GetRMrd;															\
+		if (rm >= 0xc0 ) {GetEArd;inst(*eard,*rmrd,op3,LoadRd,SaveRd);}		\
+		else {GetEAa;inst(eaa,*rmrd,op3,LoadMd,SaveMd);}					\
+	}
+
+
 #define RMGdEd(inst)														\
 	{																		\
 		GetRMrd;															\
 		if (rm >= 0xc0 ) {GetEArd;inst(*rmrd,*eard,LoadRd,SaveRd);}			\
 		else {GetEAa;inst(*rmrd,LoadMd(eaa),LoadRd,SaveRd);}				\
 	}																
+
+#define RMGdEdOp3(inst,op3)													\
+	{																		\
+		GetRMrd;															\
+		if (rm >= 0xc0 ) {GetEArd;inst(*rmrd,*eard,op3,LoadRd,SaveRd);}		\
+		else {GetEAa;inst(*rmrd,LoadMd(eaa),op3,LoadRd,SaveRd);}			\
+	}																
+
+
+
+
+#define RMEw(inst)															\
+	{																		\
+		if (rm >= 0xc0 ) {GetEArw;inst(*earw,LoadRw,SaveRw);}				\
+		else {GetEAa;inst(eaa,LoadMw,SaveMw);}								\
+	}
+
+#define RMEd(inst)															\
+	{																		\
+		if (rm >= 0xc0 ) {GetEArd;inst(*eard,LoadRd,SaveRd);}				\
+		else {GetEAa;inst(eaa,LoadMd,SaveMd);}								\
+	}
 
 #define ALIb(inst)															\
 	{ inst(reg_al,Fetchb(),LoadRb,SaveRb)}

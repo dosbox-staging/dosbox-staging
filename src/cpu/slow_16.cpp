@@ -63,12 +63,14 @@ extern Bitu cycle_count;
 #endif
 
 
+
 #include "instructions.h"
 #include "core_16/support.h"
 static Bitu CPU_Real_16_Slow_Decode_Trap(void);
 
 static Bitu CPU_Real_16_Slow_Decode(void) {
-#include "core_16/start.h"		
+decode_start:
+	LOADIP;
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;		
@@ -85,7 +87,8 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 		}
 		CPU_Cycles--;
 	}
-	#include "core_16/stop.h"		
+decode_end:
+	SAVEIP;
 	return CBRET_NONE;
 }
 
@@ -96,7 +99,7 @@ static Bitu CPU_Real_16_Slow_Decode_Trap(void) {
 	CPU_Real_16_Slow_Decode();
 	
 //	LOG_DEBUG("TRAP: Trap Flag executed");
-	INTERRUPT(1);
+	Interrupt(1);
 	
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Real_16_Slow_Decode;
@@ -107,9 +110,9 @@ static Bitu CPU_Real_16_Slow_Decode_Trap(void) {
 
 void CPU_Real_16_Slow_Start(void) {
 	cpudecoder=&CPU_Real_16_Slow_Decode;
-	EAPrefixTable[0]=&GetEA_16_n;
-	EAPrefixTable[1]=&GetEA_16_s;
 	EAPrefixTable[2]=&GetEA_32_n;
 	EAPrefixTable[3]=&GetEA_32_s;
+	EAPrefixTable[0]=&GetEA_16_n;
+	EAPrefixTable[1]=&GetEA_16_s;
 	PrefixReset;
 };

@@ -99,23 +99,7 @@ restart:
 	case 0x26:												/* SEG ES: */
 		SegPrefix(es);break;
 	case 0x27:												/* DAA */
-		if (((reg_al & 0x0F)>0x09) || get_AF()) {
-			reg_al+=0x06;
-			flags.af=true;
-		} else {
-			flags.af=false;
-		}
-		flags.cf=get_CF();
-		if ((reg_al > 0x9F) || flags.cf) {
-			reg_al+=0x60;
-			flags.cf=true;
-		} else {
-			flags.cf=false;
-		}
-		flags.sf=(reg_al>>7)>0;
-		flags.zf=(reg_al==0);
-		//TODO Maybe parity
-		flags.type=t_UNKNOWN;
+		DAA();
 		break;
 	case 0x28:												/* SUB Eb,Gb */
 		RMEbGb(SUBB);break;
@@ -132,19 +116,7 @@ restart:
 	case 0x2e:												/* SEG CS: */
 		SegPrefix(cs);break;
 	case 0x2f:												/* DAS */
-		if (((reg_al & 0x0f) > 9) || get_AF()) {
-			reg_al-=6;
-			flags.af=true;
-		} else {
-			flags.af=false;
-		}
-		if ((reg_al>0x9f) || get_CF()) {
-			reg_al-=0x60;
-			flags.cf=true;
-		} else {
-			flags.cf=false;
-		}
-		flags.type=t_UNKNOWN;
+		DAS();
 		break;  
 	case 0x30:												/* XOR Eb,Gb */
 		RMEbGb(XORB);break;
@@ -161,18 +133,7 @@ restart:
 	case 0x36:												/* SEG SS: */
 		SegPrefix(ss);break;
 	case 0x37:												/* AAA */
-		if (get_AF() || ((reg_al & 0xf) > 9))
-		{
-			reg_al += 6;
-			reg_ah += 1;
-			flags.af=true;
-			flags.cf=true;
-		} else {
-			flags.af=false;
-			flags.cf=false;
-		}
-		reg_al &= 0x0F;
-		flags.type=t_UNKNOWN;
+		AAA();
 		break;  
 	case 0x38:												/* CMP Eb,Gb */
 		RMEbGb(CMPB);break;
@@ -189,14 +150,7 @@ restart:
 	case 0x3e:												/* SEG DS: */
 		SegPrefix(ds);break;
 	case 0x3f:												/* AAS */
-		if (((reg_al & 0x0f)>9) || get_AF()) {
-			reg_al=(reg_al-6) & 0xF;
-			reg_ah--;
-			flags.af=flags.cf=true;
-		} else {
-			flags.af=flags.cf=false;
-		}
-		flags.type=t_UNKNOWN;
+		AAS();
 		break;
 	case 0x40:												/* INC AX */
 		INCW(reg_ax,LoadRw,SaveRw);break;
@@ -240,7 +194,7 @@ restart:
 			Push_16(reg_bx);break;
 	case 0x54:													/* PUSH SP */
 //TODO Check if this is correct i think it's SP+2 or something
-		Push_16(reg_sp);break;
+			Push_16(reg_sp);break;
 		case 0x55:												/* PUSH BP */
 			Push_16(reg_bp);break;
 		case 0x56:												/* PUSH SI */
@@ -255,8 +209,8 @@ restart:
 			reg_dx=Pop_16();break;
 		case 0x5b:												/* POP BX */
 			reg_bx=Pop_16();break;
-	case 0x5c:													/* POP SP */
-		reg_sp=Pop_16();break;
+		case 0x5c:												/* POP SP */
+			reg_sp=Pop_16();break;
 		case 0x5d:												/* POP BP */
 			reg_bp=Pop_16();break;
 		case 0x5e:												/* POP SI */
@@ -264,8 +218,11 @@ restart:
 		case 0x5f:												/* POP DI */
 			reg_di=Pop_16();break;
 		case 0x60:												/* PUSHA */
-			Push_16(reg_ax);Push_16(reg_cx);Push_16(reg_dx);Push_16(reg_bx);
-			Push_16(reg_sp);Push_16(reg_bp);Push_16(reg_si);Push_16(reg_di);
+			{
+				Bit16u old_sp=reg_sp;
+				Push_16(reg_ax);Push_16(reg_cx);Push_16(reg_dx);Push_16(reg_bx);
+				Push_16(old_sp);Push_16(reg_bp);Push_16(reg_si);Push_16(reg_di);
+			}
 			break;
 		case 0x61:												/* POPA */
 			reg_di=Pop_16();reg_si=Pop_16();reg_bp=Pop_16();Pop_16();//Don't save SP
@@ -278,7 +235,7 @@ restart:
 				bound_min=LoadMw(eaa);
 				bound_max=LoadMw(eaa+2);
 				if ( (((Bit16s)*rmrw) < bound_min) || (((Bit16s)*rmrw) > bound_max) ) {
-					INTERRUPT(5);
+					EXCEPTION(5);
 				}
 			}
 			break;
@@ -308,35 +265,19 @@ restart:
 		case 0x68:												/* PUSH Iw */
 			Push_16(Fetchw());break;
 		case 0x69:												/* IMUL Gw,Ew,Iw */
-			{
-				GetRMrw;
-				Bit32s res;
-				if (rm >= 0xc0 ) {GetEArw;res=(Bit32s)(*earws) * (Bit32s)Fetchws();}
-				else {GetEAa;res=(Bit32s)LoadMws(eaa) * (Bit32s)Fetchws();}
-				*rmrw=res & 0xFFFF;
-				flags.type=t_MUL;
-				if ((res> -32768)  && (res<32767)) {flags.cf=false;flags.of=false;}
-				else {flags.cf=true;flags.of=true;}
-				break;
-			};	  
+			RMGwEwOp3(DIMULW,Fetchws());
+			break;
 		case 0x6a:												/* PUSH Ib */
-			Push_16(Fetchbs());break;
+			Push_16(Fetchbs());
+			break;
 		case 0x6b:												/* IMUL Gw,Ew,Ib */
-			{
-				GetRMrw;Bit32s res;
-				if (rm >= 0xc0 ) {GetEArw;res=(Bit32s)(*earws) * (Bit32s)Fetchbs();}
-				else {GetEAa;res=(Bit32s)LoadMws(eaa) * (Bit32s)Fetchbs();}
-				*rmrw=res & 0xFFFF;
-				flags.type=t_MUL;
-				if ((res> -32768)  && (res<32767)) {flags.cf=false;flags.of=false;}
-				else {flags.cf=true;flags.of=true;}
-				break;
-			}	  
+			RMGwEwOp3(DIMULW,Fetchbs());
+			break;
 		case 0x6c:												/* INSB */
 			{
 				stringDI;
 				SaveMb(to,IO_Read(reg_dx));
-				if (flags.df) reg_di--; else reg_di++;
+				if (GETFLAG(DF)) reg_di--; else reg_di++;
 				break;
 			}
 		case 0x6d:												/* INSW */
@@ -344,14 +285,14 @@ restart:
 				stringDI;
 				SaveMb(to,IO_Read(reg_dx));
 				SaveMb((to+1),IO_Read(reg_dx+1));
-				if (flags.df) reg_di-=2; else reg_di+=2;
+				if (GETFLAG(DF)) reg_di-=2; else reg_di+=2;
 				break;
 			}
 		case 0x6e:												/* OUTSB */
 			{
 				stringSI;
 				IO_Write(reg_dx,LoadMb(from));
-				if (flags.df) reg_si--; else reg_si++;
+				if (GETFLAG(DF)) reg_si--; else reg_si++;
 				break;
 			}
 		case 0x6f:												/* OUTSW */
@@ -359,7 +300,7 @@ restart:
 				stringSI;
 				IO_Write(reg_dx,LoadMb(from));
 				IO_Write(reg_dx+1,LoadMb(from+1));
-				if (flags.df) reg_si-=2; else reg_si+=2;
+				if (GETFLAG(DF)) reg_si-=2; else reg_si+=2;
 				break;
 			}
 		case 0x70:												/* JO */
@@ -486,9 +427,11 @@ restart:
 				break;
 			}
 		case 0x84:												/* TEST Eb,Gb */
-			RMEbGb(TESTB);break;
+			RMEbGb(TESTB);
+			break;
 		case 0x85:												/* TEST Ew,Gw */
-			RMEwGw(TESTW);break;
+			RMEwGw(TESTW);
+			break;
 		case 0x86:												/* XCHG Eb,Gb */
 			{	
 				GetRMrb;Bit8u oldrmrb=*rmrb;
@@ -636,27 +579,15 @@ restart:
 		case 0x9b:												/* WAIT */
 			break; /* No waiting here */
 		case 0x9c:												/* PUSHF */
-			{
-				Bit16u pflags=
-					(get_CF() << 0)   | (get_PF() << 2) | (get_AF() << 4) | 
-					(get_ZF() << 6)   | (get_SF() << 7) | (flags.tf << 8) |
-					(flags.intf << 9) |(flags.df << 10) | (get_OF() << 11) | 
-					(flags.io << 12) | (flags.nt <<14);
-				Push_16(pflags);
-				break;
-			}
+			FILLFLAGS;
+			Push_16(flags.word);
+			break;
 		case 0x9d:												/* POPF */
-			{
-				Bit16u bits=Pop_16();
-				Save_Flagsw(bits);
-				break;
-			}
+			SETFLAGSw(Pop_16());
+			CheckTF();
+			break;
 		case 0x9e:												/* SAHF */
-			flags.of	=get_OF();
-			flags.type=t_UNKNOWN;
-			flags.cf	=(reg_ah & 0x001)!=0;flags.pf	=(reg_ah & 0x004)!=0;
-			flags.af	=(reg_ah & 0x010)!=0;flags.zf	=(reg_ah & 0x040)!=0;
-			flags.sf	=(reg_ah & 0x080)!=0;
+			SETFLAGSb(reg_ah);
 			break;
 		case 0x9f:												/* LAHF */
 			{
@@ -688,7 +619,7 @@ restart:
 			{	
 				stringSI;stringDI;
 				SaveMb(to,LoadMb(from));;
-				if (flags.df) { reg_si--;reg_di--; }
+				if (GETFLAG(DF)) { reg_si--;reg_di--; }
 				else {reg_si++;reg_di++;}
 				break;
 			}
@@ -696,7 +627,7 @@ restart:
 			{	
 				stringSI;stringDI;
 				SaveMw(to,LoadMw(from));
-				if (flags.df) { reg_si-=2;reg_di-=2; }
+				if (GETFLAG(DF)) { reg_si-=2;reg_di-=2; }
 				else {reg_si+=2;reg_di+=2;}
 				break;
 			}
@@ -704,7 +635,7 @@ restart:
 			{	
 				stringSI;stringDI;
 				CMPB(from,LoadMb(to),LoadMb,0);
-				if (flags.df) { reg_si--;reg_di--; }
+				if (GETFLAG(DF)) { reg_si--;reg_di--; }
 				else {reg_si++;reg_di++;}
 				break;
 			}
@@ -712,7 +643,7 @@ restart:
 			{	
 				stringSI;stringDI;
 				CMPW(from,LoadMw(to),LoadMw,0);
-				if (flags.df) { reg_si-=2;reg_di-=2; }
+				if (GETFLAG(DF)) { reg_si-=2;reg_di-=2; }
 				else {reg_si+=2;reg_di+=2;}
 				break;
 			}
@@ -724,7 +655,7 @@ restart:
 			{
 				stringDI;
 				SaveMb(to,reg_al);
-				if (flags.df) { reg_di--; }
+				if (GETFLAG(DF)) { reg_di--; }
 				else {reg_di++;}
 				break;
 			}
@@ -732,7 +663,7 @@ restart:
 			{
 				stringDI;
 				SaveMw(to,reg_ax);
-				if (flags.df) { reg_di-=2; }
+				if (GETFLAG(DF)) { reg_di-=2; }
 				else {reg_di+=2;}
 				break;
 			}
@@ -740,7 +671,7 @@ restart:
 			{
 				stringSI;
 				reg_al=LoadMb(from);
-				if (flags.df) { reg_si--; }
+				if (GETFLAG(DF)) { reg_si--; }
 				else {reg_si++;}
 				break;
 			}
@@ -748,7 +679,7 @@ restart:
 			{
 				stringSI;
 				reg_ax=LoadMw(from);
-				if (flags.df) { reg_si-=2;}
+				if (GETFLAG(DF)) { reg_si-=2;}
 				else {reg_si+=2;}
 				break;
 			}
@@ -756,7 +687,7 @@ restart:
 			{
 				stringDI;
 				CMPB(reg_al,LoadMb(to),LoadRb,0);
-				if (flags.df) { reg_di--; }
+				if (GETFLAG(DF)) { reg_di--; }
 				else {reg_di++;}
 				break;
 			}
@@ -764,7 +695,7 @@ restart:
 			{
 				stringDI;
 				CMPW(reg_ax,LoadMw(to),LoadRw,0);
-				if (flags.df) { reg_di-=2; }
+				if (GETFLAG(DF)) { reg_di-=2; }
 				else {reg_di+=2;}
 				break;
 			}
@@ -872,7 +803,7 @@ restart:
 			}
 			LOADIP;
 #endif			
-			INTERRUPT(3);
+			EXCEPTION(3);
 			break;
 		case 0xcd:												/* INT Ib */	
 			{
@@ -881,17 +812,19 @@ restart:
 				SAVEIP;
 				if (DEBUG_IntBreakpoint(num)) return 1;
 #endif
-				INTERRUPT(num);				
+				EXCEPTION(num);				
 			}
 			break;
 		case 0xce:												/* INTO */
-			if (get_OF()) INTERRUPT(4);
+			if (get_OF()) EXCEPTION(4);
 			break;
 		case 0xcf:												/* IRET */
 			{
 				Bit16u newip=Pop_16();Bit16u newcs=Pop_16();
 				SegSet16(cs,newcs);SETIP(newip);
-				Bit16u pflags=Pop_16();Save_Flagsw(pflags);
+				Bit16u pflags=Pop_16();
+				SETFLAGSw(pflags);
+				CheckTF();
 				break;
 			}
 		case 0xd0:												/* GRP2 Eb,1 */
@@ -903,26 +836,12 @@ restart:
 		case 0xd3:												/* GRP2 Ew,CL */
 			GRP2W(reg_cl);break;
 		case 0xd4:												/* AAM Ib */
-			{
-				Bit8u ib=Fetchb();
-
-				reg_ah=reg_al / ib;
-				reg_al=reg_al % ib;
-				flags.type=t_UNKNOWN;
-				flags.sf=(reg_ah & 0x80) > 0;
-				flags.zf=(reg_ax == 0);
-				//TODO PF
-				flags.pf=0;
-			}
+			AAM(Fetchb());
 			break;
 		case 0xd5:												/* AAD Ib */
-			reg_al=reg_ah*Fetchb()+reg_al;
-			reg_ah=0;
-			flags.cf=(reg_al>=0x80);
-			flags.zf=(reg_al==0);
-			//TODO PF
-			flags.type=t_UNKNOWN;
+			AAD(Fetchb());
 			break;
+			
 		case 0xd6:												/* SALC */
 			reg_al = get_CF() ? 0xFF : 0;
 			break;
@@ -1052,28 +971,28 @@ restart:
 		case 0xf4:												/* HLT */
 			break;
 		case 0xf5:												/* CMC */
-			flags.cf=!get_CF();
+			SETFLAGBIT(CF,!get_CF());
 			if (flags.type!=t_CF) flags.prev_type=flags.type;
 			flags.type=t_CF;
 			break;
 		case 0xf6:												/* GRP3 Eb(,Ib) */
-			{	
+		{	
 			GetRM;
-			switch (rm & 0x38) {
+			switch ((rm & 0x38)>>3) {
 			case 0x00:					/* TEST Eb,Ib */
-			case 0x08:					/* TEST Eb,Ib Undocumented*/
+			case 0x01:					/* TEST Eb,Ib Undocumented*/
 				{
 					if (rm >= 0xc0 ) {GetEArb;TESTB(*earb,Fetchb(),LoadRb,0)}
 					else {GetEAa;TESTB(eaa,Fetchb(),LoadMb,0);}
 					break;
 				}
-			case 0x10:					/* NOT Eb */
+			case 0x02:					/* NOT Eb */
 				{
 					if (rm >= 0xc0 ) {GetEArb;*earb=~*earb;}
 					else {GetEAa;SaveMb(eaa,~LoadMb(eaa));}
 					break;
 				}
-			case 0x18:					/* NEG Eb */
+			case 0x03:					/* NEG Eb */
 				{
 					flags.type=t_NEGb;
 					if (rm >= 0xc0 ) {
@@ -1085,69 +1004,38 @@ restart:
 					}
 					break;
 				}
-			case 0x20:					/* MUL AL,Eb */
-				{
-					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArb;reg_ax=reg_al * (*earb);}
-					else {GetEAa;reg_ax=reg_al * LoadMb(eaa);}
-					flags.cf=flags.of=((reg_ax & 0xff00) !=0);
-					break;
-				}
-			case 0x28:					/* IMUL AL,Eb */
-				{
-					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArb;reg_ax=(Bit8s)reg_al * (*earbs);}
-					else {GetEAa;reg_ax=((Bit8s)reg_al) * LoadMbs(eaa);}
-					flags.cf=flags.of=!((reg_ax & 0xff80)==0xff80 || (reg_ax & 0xff80)==0x0000);
-					break;
-				}
-			case 0x30:					/* DIV Eb */
-				{
-//					flags.type=t_DIV;
-					Bit8u val;
-					if (rm >= 0xc0 ) {GetEArb;val=*earb;}
-					else {GetEAa;val=LoadMb(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					Bit16u quotientu=reg_ax / val;
-					reg_ah=(Bit8u)(reg_ax % val);
-					reg_al=quotientu & 0xff;
-					if (quotientu!=reg_al) 
-						INTERRUPT(0);
-					break;
-				}
-			case 0x38:					/* IDIV Eb */
-				{
-//					flags.type=t_DIV;
-					Bit8s val;
-					if (rm >= 0xc0 ) {GetEArb;val=*earbs;}
-					else {GetEAa;val=LoadMbs(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					Bit16s quotients=((Bit16s)reg_ax) / val;
-					reg_ah=(Bit8s)(((Bit16s)reg_ax) % val);
-					reg_al=quotients & 0xff;
-					if (quotients!=(Bit8s)reg_al) 
-						INTERRUPT(0);
-					break;
-				}
+			case 0x04:					/* MUL AL,Eb */
+				RMEb(MULB);
+				break;
+			case 0x05:					/* IMUL AL,Eb */
+				RMEb(IMULB);
+				break;
+			case 0x06:					/* DIV Eb */
+				RMEb(DIVB);
+				break;
+			case 0x07:					/* IDIV Eb */
+				RMEb(IDIVB);
+				break;
 			}
-			break;}
+			break;
+		}
 		case 0xf7:												/* GRP3 Ew(,Iw) */
 			{ GetRM;
-			switch (rm & 0x38) {
+			switch ((rm & 0x38)>>3) {
 			case 0x00:					/* TEST Ew,Iw */
-			case 0x08:					/* TEST Ew,Iw Undocumented*/
+			case 0x01:					/* TEST Ew,Iw Undocumented*/
 				{
 					if (rm >= 0xc0 ) {GetEArw;TESTW(*earw,Fetchw(),LoadRw,SaveRw);}
 					else {GetEAa;TESTW(eaa,Fetchw(),LoadMw,SaveMw);}
 					break;
 				}
-			case 0x10:					/* NOT Ew */
+			case 0x02:					/* NOT Ew */
 				{
 					if (rm >= 0xc0 ) {GetEArw;*earw=~*earw;}
 					else {GetEAa;SaveMw(eaa,~LoadMw(eaa));}
 					break;
 				}
-			case 0x18:					/* NEG Ew */
+			case 0x03:					/* NEG Ew */
 				{
 					flags.type=t_NEGw;
 					if (rm >= 0xc0 ) {
@@ -1159,104 +1047,57 @@ restart:
 					}
 					break;
 				}
-			case 0x20:					/* MUL AX,Ew */
-				{
-					flags.type=t_MUL;Bit32u tempu;
-					if (rm >= 0xc0 ) {GetEArw;tempu=reg_ax * (*earw);}
-					else {GetEAa;tempu=reg_ax * LoadMw(eaa);}
-					reg_ax=(Bit16u)(tempu & 0xffff);reg_dx=(Bit16u)(tempu >> 16);
-					flags.cf=flags.of=(reg_dx !=0);
-					break;
-				}
-			case 0x28:					/* IMUL AX,Ew */
-				{
-					flags.type=t_MUL;Bit32s temps;
-					if (rm >= 0xc0 ) {GetEArw;temps=((Bit16s)reg_ax) * (*earws);}
-					else {GetEAa;temps=((Bit16s)reg_ax) * LoadMws(eaa);}
-					reg_ax=Bit16u(temps & 0xffff);reg_dx=(Bit16u)(temps >> 16);
-					if ( (reg_dx==0xffff) && (reg_ax & 0x8000) ) {
-						flags.cf=flags.of=false;
-					} else if ( (reg_dx==0x0000) && (reg_ax<0x8000) ) {
-						flags.cf=flags.of=false;
-					} else {
-						flags.cf=flags.of=true;
-					}
-					break;
-				}
-			case 0x30:					/* DIV Ew */
-				{
-//					flags.type=t_DIV;
-					Bit16u val;
-					if (rm >= 0xc0 ) {GetEArw;val=*earw;}
-					else {GetEAa;val=LoadMw(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					Bit32u tempu=(reg_dx<<16)|reg_ax;
-					Bit32u quotientu=tempu/val;
-					reg_dx=(Bit16u)(tempu % val);
-					reg_ax=(Bit16u)(quotientu & 0xffff);
-					if (quotientu>0xffff) 
-						INTERRUPT(0);
-					break;
-				}
-			case 0x38:					/* IDIV Ew */
-				{
-//					flags.type=t_DIV;
-					Bit16s val;
-					if (rm >= 0xc0 ) {GetEArw;val=*earws;}
-					else {GetEAa;val=LoadMws(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					Bit32s temps=(reg_dx<<16)|reg_ax;
-					Bit32s quotients=temps/val;
-					reg_dx=(Bit16s)(temps % val);
-					reg_ax=(Bit16s)quotients;
-					if (quotients!=(Bit16s)reg_ax) 
-						INTERRUPT(0);
-					break;
-				}
-
+			case 0x04:					/* MUL AX,Ew */
+				RMEw(MULW);
+				break;
+			case 0x05:					/* IMUL AX,Ew */
+				RMEw(IMULW)
+				break;
+			case 0x06:					/* DIV Ew */
+				RMEw(DIVW)
+				break;
+			case 0x07:					/* IDIV Ew */
+				RMEw(IDIVW)
+				break;
 			}
 			break;
 			}
 		case 0xf8:												/* CLC */
-			flags.cf=false;
+			SETFLAGBIT(CF,false);
 			if (flags.type!=t_CF) flags.prev_type=flags.type;
 			flags.type=t_CF;
 			break;
 		case 0xf9:												/* STC */
-			flags.cf=true;
+			SETFLAGBIT(CF,true);
 			if (flags.type!=t_CF) flags.prev_type=flags.type;
 			flags.type=t_CF;
 			break;
 		case 0xfa:												/* CLI */
-			flags.intf=false;
+			SETFLAGBIT(IF,false);
 			break;
 		case 0xfb:												/* STI */
-			flags.intf=true;
-			if (flags.intf && PIC_IRQCheck) {
+			SETFLAGBIT(IF,true);
+			if (PIC_IRQCheck) {
 				SAVEIP;	
 				PIC_runIRQs();	
 				LOADIP;
 			};
 			break;
 		case 0xfc:												/* CLD */
-			flags.df=false;
+			SETFLAGBIT(DF,false);
 			break;
 		case 0xfd:												/* STD */
-			flags.df=true;
+			SETFLAGBIT(DF,true);
 			break;
 		case 0xfe:												/* GRP4 Eb */
 			{
 				GetRM;
 				switch (rm & 0x38) {
 				case 0x00:					/* INC Eb */
-					flags.cf=get_CF();flags.type=t_INCb;
-					if (rm >= 0xc0 ) {GetEArb;flags.result.b=*earb+=1;}
-					else {GetEAa;flags.result.b=LoadMb(eaa)+1;SaveMb(eaa,flags.result.b);}
+					RMEb(INCB);
 					break;		
 				case 0x08:					/* DEC Eb */
-					flags.cf=get_CF();flags.type=t_DECb;
-					if (rm >= 0xc0 ) {GetEArb;flags.result.b=*earb-=1;}
-					else {GetEAa;flags.result.b=LoadMb(eaa)-1;SaveMb(eaa,flags.result.b);}
+					RMEb(DECB);
 					break;
 				case 0x38:					/* CallBack */
 					{
@@ -1289,15 +1130,11 @@ restart:
 				GetRM;
 				switch (rm & 0x38) {
 				case 0x00:					/* INC Ew */
-					flags.cf=get_CF();flags.type=t_INCw;
-					if (rm >= 0xc0 ) {GetEArw;flags.result.w=*earw+=1;}
-					else {GetEAa;flags.result.w=LoadMw(eaa)+1;SaveMw(eaa,flags.result.w);}
+					RMEw(INCW);
 					break;		
 				case 0x08:					/* DEC Ew */
-					flags.cf=get_CF();flags.type=t_DECw;
-					if (rm >= 0xc0 ) {GetEArw;flags.result.w=*earw-=1;}
-					else {GetEAa;flags.result.w=LoadMw(eaa)-1;SaveMw(eaa,flags.result.w);}
-					break;
+					RMEw(DECW);
+					break;		
 				case 0x10:					/* CALL Ev */
 					if (rm >= 0xc0 ) {GetEArw;Push_16(GETIP);SETIP(*earw);}
 					else {GetEAa;Push_16(GETIP);SETIP(LoadMw(eaa));}

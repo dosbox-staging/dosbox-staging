@@ -167,31 +167,13 @@ switch(Fetchb()) {
 	case 0x68:												/* PUSH Id */
 		Push_32(Fetchd());break;
 	case 0x69:												/* IMUL Gd,Ed,Id */
-		{
-			GetRMrd;
-			Bit64s res;
-			if (rm >= 0xc0 ) {GetEArd;res=(Bit64s)(*eards) * (Bit64s)Fetchds();}
-			else {GetEAa;res=(Bit64s)LoadMds(eaa) * (Bit64s)Fetchds();}
-			*rmrd=(Bit32s)(res);
-			flags.type=t_MUL;
-			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
-			else {flags.cf=true;flags.of=true;}
-			break;
-		}
+		RMGdEdOp3(DIMULD,Fetchds());
+		break;
 	case 0x6a:												/* PUSH Ib */
 		Push_32(Fetchbs());break;
 	case 0x6b:												/* IMUL Gd,Ed,Ib */
-		{
-			GetRMrd;
-			Bit64s res;
-			if (rm >= 0xc0 ) {GetEArd;res=(Bit64s)(*eards) * (Bit64s)Fetchbs();}
-			else {GetEAa;res=(Bit64s)LoadMds(eaa) * (Bit64s)Fetchbs();}
-			*rmrd=(Bit32s)(res);
-			flags.type=t_MUL;
-			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
-			else {flags.cf=true;flags.of=true;}
-			break;
-		}
+		RMGdEdOp3(DIMULD,Fetchbs());
+		break;
 	case 0x81:												/* Grpl Ed,Id */
 		{
 			GetRM;
@@ -324,35 +306,23 @@ switch(Fetchb()) {
 		else reg_edx=0;
 		break;
 	case 0x9c:												/* PUSHFD */
-		{
-			Bit32u pflags=
-				(get_CF() << 0)   | (get_PF() << 2) | (get_AF() << 4) | 
-				(get_ZF() << 6)   | (get_SF() << 7) | (flags.tf << 8) |
-				(flags.intf << 9) |(flags.df << 10) | (get_OF() << 11) | 
-				(flags.io << 12) | (flags.nt <<14);
-			Push_32(pflags);
-			break;
-		}
+		FILLFLAGS;
+		Push_32(flags.word);
+		break;
 	case 0x9d:												/* POPFD */
-		{
-			Bit16u val=(Bit16u)(Pop_32()&0xffff);
-			Save_Flagsw(val);
-			break;
-		}
+		SETFLAGSd(Pop_32())
+		CheckTF();
+		break;
 	case 0xa1:												/* MOV EAX,Ow */
-		{
-			reg_eax=LoadMd(GetEADirect[prefix.mark]());
-		}
+		reg_eax=LoadMd(GetEADirect[prefix.mark]());
 		break;
 	case 0xa3:												/* MOV Ow,EAX */
-		{
-			SaveMd(GetEADirect[prefix.mark](),reg_eax);
-		}
+		SaveMd(GetEADirect[prefix.mark](),reg_eax);
 		break;
 	case 0xa5:												/* MOVSD */
 		{
 			stringSI;stringDI;SaveMd(to,LoadMd(from));
-			if (flags.df) { reg_si-=4;reg_di-=4; }
+			if (GETFLAG(DF)) { reg_si-=4;reg_di-=4; }
 			else { reg_si+=4;reg_di+=4;}
 		}
 		break;
@@ -363,7 +333,7 @@ switch(Fetchb()) {
 		{
 			stringDI;
 			SaveMd(to,reg_eax);
-			if (flags.df) { reg_di-=4; }
+			if (GETFLAG(DF)) { reg_di-=4; }
 			else {reg_di+=4;}
 			break;
 		}
@@ -371,7 +341,7 @@ switch(Fetchb()) {
 		{
 			stringSI;
 			reg_eax=LoadMd(from);
-			if (flags.df) { reg_si-=4;}
+			if (GETFLAG(DF)) { reg_si-=4;}
 			else {reg_si+=4;}
 			break;
 		}
@@ -379,7 +349,7 @@ switch(Fetchb()) {
 		{
 			stringDI;
 			CMPD(reg_eax,LoadMd(to),LoadRd,0);
-			if (flags.df) { reg_di-=4; }
+			if (GETFLAG(DF)) { reg_di-=4; }
 			else {reg_di+=4;}
 			break;
 		}
@@ -424,6 +394,13 @@ switch(Fetchb()) {
 		GRP2D(1);break;
 	case 0xd3:												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
+	case 0xef:												/* OUT DX,EAX */
+		IO_Write(reg_dx,(Bit8u)(reg_eax>>0));
+		IO_Write(reg_dx+1,(Bit8u)(reg_eax>>8));
+		IO_Write(reg_dx+2,(Bit8u)(reg_eax>>16));
+		IO_Write(reg_dx+3,(Bit8u)(reg_eax>>24));
+		break;
+
 	case 0xf2:												/* REPNZ */
 		prefix.count++;
 		Repeat_Normal(false,true);
@@ -434,24 +411,22 @@ switch(Fetchb()) {
 		continue;
 	case 0xf7:												/* GRP3 Ed(,Id) */
 		{ 
-			union {	Bit64u u;Bit64s s;} temp;
-			union  {Bit64u u;Bit64s s;} quotient;
 			GetRM;
-			switch (rm & 0x38) {
+			switch ((rm & 0x38)>>3) {
 			case 0x00:					/* TEST Ed,Id */
-			case 0x08:					/* TEST Ed,Id Undocumented*/
+			case 0x01:					/* TEST Ed,Id Undocumented*/
 				{
 					if (rm >= 0xc0 ) {GetEArd;TESTD(*eard,Fetchd(),LoadRd,SaveRd);}
 					else {GetEAa;TESTD(eaa,Fetchd(),LoadMd,SaveMd);}
 					break;
 				}
-			case 0x10:					/* NOT Ed */
+			case 0x02:					/* NOT Ed */
 				{
 					if (rm >= 0xc0 ) {GetEArd;*eard=~*eard;}
 					else {GetEAa;SaveMd(eaa,~LoadMd(eaa));}
 					break;
 				}
-			case 0x18:					/* NEG Ed */
+			case 0x03:					/* NEG Ed */
 				{
 					flags.type=t_NEGd;
 					if (rm >= 0xc0 ) {
@@ -463,60 +438,18 @@ switch(Fetchb()) {
 					}
 					break;
 				}
-			case 0x20:					/* MUL EAX,Ed */
-				{
-					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArd;temp.u=(Bit64u)reg_eax * (Bit64u)(*eard);}
-					else {GetEAa;temp.u=(Bit64u)reg_eax * (Bit64u)LoadMd(eaa);}
-					reg_eax=(Bit32u)(temp.u & 0xffffffff);reg_edx=(Bit32u)(temp.u >> 32);
-					flags.cf=flags.of=(reg_edx !=0);
-					break;
-				}
-			case 0x28:					/* IMUL EAX,Ed */
-				{
-					flags.type=t_MUL;
-					if (rm >= 0xc0 ) {GetEArd;temp.s=((Bit64s)((Bit32s)reg_eax) * (Bit64s)(*eards));}
-					else {GetEAa;temp.s=((Bit64s)((Bit32s)reg_eax) * (Bit64s)(LoadMds(eaa)));}
-					reg_eax=Bit32u(temp.s & 0xffffffff);reg_edx=(Bit32u)(temp.s >> 32);
-					if ( (reg_edx==0xffffffff) && (reg_eax & 0x80000000) ) {
-						flags.cf=flags.of=false;
-					} else if ( (reg_edx==0x00000000) && (reg_eax<0x80000000) ) {
-						flags.cf=flags.of=false;
-					} else {
-						flags.cf=flags.of=true;
-					}
-					break;
-				}
-			case 0x30:					/* DIV Ed */
-				{
-//					flags.type=t_DIV;
-					Bit32u val;
-					if (rm >= 0xc0 ) {GetEArd;val=*eard;}
-					else {GetEAa;val=LoadMd(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					temp.u=(((Bit64u)reg_edx)<<32)|reg_eax;
-					quotient.u=temp.u/val;
-					reg_edx=(Bit32u)(temp.u % val);
-					reg_eax=(Bit32u)(quotient.u & 0xffffffff);
-					if (quotient.u>0xffffffff) 
-						INTERRUPT(0);
-					break;
-				}
-			case 0x38:					/* IDIV Ed */
-				{
-//					flags.type=t_DIV;
-					Bit32s val;
-					if (rm >= 0xc0 ) {GetEArd;val=*eards;}
-					else {GetEAa;val=LoadMds(eaa);}
-					if (val==0)	{INTERRUPT(0);break;}
-					temp.s=(((Bit64u)reg_edx)<<32)|reg_eax;
-					quotient.s=(temp.s/val);
-					reg_edx=(Bit32s)(temp.s % val);
-					reg_eax=(Bit32s)(quotient.s);
-					if (quotient.s!=(Bit32s)reg_eax) 
-						INTERRUPT(0);
-					break;
-				}
+			case 0x04:					/* MUL EAX,Ed */
+				RMEd(MULD);
+				break;
+			case 0x05:					/* IMUL EAX,Ed */
+				RMEd(IMULD);
+				break;
+			case 0x06:					/* DIV Ed */
+				RMEd(DIVD);
+				break;
+			case 0x07:					/* IDIV Ed */
+				RMEd(IDIVD);
+				break;
 			}
 			break;
 		}
@@ -525,14 +458,10 @@ switch(Fetchb()) {
 			GetRM;
 			switch (rm & 0x38) {
 			case 0x00:										/* INC Ed */
-				flags.cf=get_CF();flags.type=t_INCd;
-				if (rm >= 0xc0 ) {GetEArd;flags.result.d=*eard+=1;}
-				else {GetEAa;flags.result.d=LoadMd(eaa)+1;SaveMd(eaa,flags.result.d);}
+				RMEd(INCD);
 				break;		
 			case 0x08:										/* DEC Ed */
-				flags.cf=get_CF();flags.type=t_DECd;
-				if (rm >= 0xc0 ) {GetEArd;flags.result.d=*eard-=1;}
-				else {GetEAa;flags.result.d=LoadMd(eaa)-1;SaveMd(eaa,flags.result.d);}
+				RMEd(DECD);
 				break;
 			case 0x30:										/* Push Ed */
 				if (rm >= 0xc0 ) {GetEArd;Push_32(*eard);}

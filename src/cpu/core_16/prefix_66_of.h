@@ -41,26 +41,19 @@ switch (Fetchb()) {
 			break;
 		}
 
-	case 0xb6:											/* MOVZX Gd,Eb */
+	case 0xb6:												/* MOVZX Gd,Eb */
 		{
 			GetRMrd;															
 			if (rm >= 0xc0 ) {GetEArb;*rmrd=*earb;}
 			else {GetEAa;*rmrd=LoadMb(eaa);}
 			break;
 		}
-	case 0xaf:											/* IMUL Gd,Ed */
+	case 0xaf:												/* IMUL Gd,Ed */
 		{
-			GetRMrd;
-			Bit64s res;
-			if (rm >= 0xc0 ) {GetEArd;res=((Bit64s)((Bit32s)*rmrd) * (Bit64s)((Bit32s)*eards));}
-			else {GetEAa;res=((Bit64s)((Bit32s)*rmrd) * (Bit64s)LoadMds(eaa));}
-			*rmrd=(Bit32s)(res);
-			flags.type=t_MUL;
-			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
-			else {flags.cf=true;flags.of=true;}
+			RMGdEdOp3(DIMULD,*rmrd);
 			break;
 		};
-	case 0xb7:											/* MOVXZ Gd,Ew */
+	case 0xb7:												/* MOVXZ Gd,Ew */
 		{
 			GetRMrd;
 			if (rm >= 0xc0 ) {GetEArw;*rmrd=*earw;}
@@ -73,7 +66,7 @@ switch (Fetchb()) {
 			if (rm >= 0xc0 ) {
 				GetEArd;
 				Bit32u mask=1 << (Fetchb() & 31);
-				flags.cf=(*eard & mask)>0;
+				SETFLAGBIT(CF,(*eard & mask));
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
 					break;
@@ -84,7 +77,7 @@ switch (Fetchb()) {
 					*eard&=~mask;
 					break;
 				case 0x38:									/* BTC */
-					if (flags.cf) *eard&=~mask;
+					if (GETFLAG(CF)) *eard&=~mask;
 					else *eard|=mask;
 					break;
 				default:
@@ -93,7 +86,7 @@ switch (Fetchb()) {
 			} else {
 				GetEAa;Bit32u old=LoadMd(eaa);
 				Bit32u mask=1 << (Fetchb() & 31);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
 					break;
@@ -104,7 +97,7 @@ switch (Fetchb()) {
 					SaveMd(eaa,old & ~mask);
 					break;
 				case 0x38:									/* BTC */
-					if (flags.cf) old&=~mask;
+					if (GETFLAG(CF)) old&=~mask;
 					else old|=mask;
 					SaveMd(eaa,old);
 					break;
@@ -122,11 +115,11 @@ switch (Fetchb()) {
 			Bit32u mask=1 << (*rmrd & 31);
 			if (rm >= 0xc0 ) {
 				GetEArd;
-				flags.cf=(*eard & mask)>0;
+				SETFLAGBIT(CF,(*eard & mask));
 				*eard^=mask;
 			} else {
 				GetEAa;Bit32u old=LoadMd(eaa);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				SaveMd(eaa,old ^ mask);
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
@@ -139,11 +132,11 @@ switch (Fetchb()) {
 			if (rm >= 0xc0) { GetEArd; value=*eard; } 
 			else			{ GetEAa; value=LoadMd(eaa); }
 			if (value==0) {
-				flags.zf = true;
+				SETFLAGBIT(ZF,true);
 			} else {
 				result = 0;
 				while ((value & 0x01)==0) { result++; value>>=1; }
-				flags.zf = false;
+				SETFLAGBIT(ZF,false);
 				*rmrd = result;
 			}
 			flags.type=t_UNKNOWN;
@@ -156,11 +149,11 @@ switch (Fetchb()) {
 			if (rm >= 0xc0) { GetEArd; value=*eard; } 
 			else			{ GetEAa; value=LoadMd(eaa); }
 			if (value==0) {
-				flags.zf = true;
+				SETFLAGBIT(ZF,true);
 			} else {
 				result = 35;	// Operandsize-1
 				while ((value & 0x80000000)==0) { result--; value<<=1; }
-				flags.zf = false;
+				SETFLAGBIT(ZF,false);
 				*rmrd = result;
 			}
 			flags.type=t_UNKNOWN;

@@ -32,6 +32,26 @@ static INLINE void ADDIPFAST(Bit16s blah) {
 	IPPoint+=blah;
 }
 
+#define CheckTF()											\
+	if (GETFLAG(TF)) {										\
+		cpudecoder=CPU_Real_16_Slow_Decode_Trap;			\
+		goto decode_end;									\
+	}
+
+
+#define EXCEPTION(blah)										\
+	{														\
+		Bit8u new_num=blah;									\
+		SAVEIP;												\
+		if (Interrupt(new_num)) {							\
+			if (GETFLAG(TF)) {								\
+				cpudecoder=CPU_Real_16_Slow_Decode_Trap;	\
+				return 0;									\
+			}												\
+			goto decode_start;								\
+		} else return 0;									\
+	}
+
 static INLINE Bit8u Fetchb() {
 	Bit8u temp=LoadMb(IPPoint);
 	IPPoint+=1;
@@ -82,6 +102,34 @@ static INLINE Bit32u Pop_32() {
 	return temp;
 };
 
+#define JumpSIb(blah) 										\
+	if (blah) {												\
+		ADDIPFAST(Fetchbs());								\
+	} else {												\
+		ADDIPFAST(1);										\
+	}					
+
+#define JumpSIw(blah) 										\
+	if (blah) {												\
+		ADDIPFAST(Fetchws());								\
+	} else {												\
+		ADDIPFAST(2);										\
+	}						
+
+#define SETcc(cc)											\
+	{														\
+		GetRM;												\
+		if (rm >= 0xc0 ) {GetEArb;*earb=(cc) ? 1 : 0;}		\
+		else {GetEAa;SaveMb(eaa,(cc) ? 1 : 0);}				\
+	}
+
+#define NOTDONE												\
+	SUBIP(1);E_Exit("CPU:Opcode %2X Unhandled",Fetchb()); 
+
+#define NOTDONE66											\
+	SUBIP(1);E_Exit("CPU:Opcode 66:%2X Unhandled",Fetchb()); 
+
+
 #define stringDI											\
 	EAPoint to;												\
 	to=SegBase(es)+reg_di							
@@ -99,18 +147,12 @@ static INLINE Bit32u Pop_32() {
 #include "table_ea.h"
 #include "../modrm.h"
 
-
-static Bit8s table_df_8[2]={1,-1};
-static Bit16s table_df_16[2]={2,-2};
-static Bit32s table_df_32[2]={4,-4};
-
-
 static void Repeat_Normal(bool testz,bool prefix_66) {
 	
 	PhysPt base_si,base_di;
 
 	Bit16s direct;
-	if (flags.df) direct=-1;
+	if (GETFLAG(DF)) direct=-1;
 	else direct=1;
 	base_di=SegBase(es);
 	if (prefix.mark & PREFIX_ADDR) E_Exit("Unhandled 0x67 prefixed string op");
@@ -362,48 +404,3 @@ normalexit:
 	PrefixReset;
 }
 
-//flags.io and nt shouldn't be compiled for 386 
-#ifdef CPU_386
-#define Save_Flagsw(FLAGW)											\
-{																	\
-	flags.type=t_UNKNOWN;											\
-	flags.cf	=(FLAGW & 0x001)>0;flags.pf	=(FLAGW & 0x004)>0;		\
-	flags.af	=(FLAGW & 0x010)>0;flags.zf	=(FLAGW & 0x040)>0;		\
-	flags.sf	=(FLAGW & 0x080)>0;flags.tf	=(FLAGW & 0x100)>0;		\
-	flags.intf	=(FLAGW & 0x200)>0;									\
-	flags.df	=(FLAGW & 0x400)>0;flags.of	=(FLAGW & 0x800)>0;		\
-	flags.io	=(FLAGW >> 12) & 0x03;								\
-	flags.nt	=(FLAGW & 0x4000)>0;								\
-	if (flags.intf && PIC_IRQCheck) {								\
-		SAVEIP;														\
-		PIC_runIRQs();												\
-		LOADIP;														\
-	}																\
-	if (flags.tf) {													\
-		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
-		goto decode_end;											\
-	}																\
-}
-
-#else 
-
-#define Save_Flagsw(FLAGW)											\
-{																	\
-	flags.type=t_UNKNOWN;											\
-	flags.cf	=(FLAGW & 0x001)>0;flags.pf	=(FLAGW & 0x004)>0;		\
-	flags.af	=(FLAGW & 0x010)>0;flags.zf	=(FLAGW & 0x040)>0;		\
-	flags.sf	=(FLAGW & 0x080)>0;flags.tf	=(FLAGW & 0x100)>0;		\
-	flags.intf	=(FLAGW & 0x200)>0;									\
-	flags.df	=(FLAGW & 0x400)>0;flags.of	=(FLAGW & 0x800)>0;		\
-	if (flags.intf && PIC_IRQCheck) {								\
-		SAVEIP;														\
-		PIC_runIRQs();												\
-		LOADIP;														\
-	}																\
-	if (flags.tf) {													\
-		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
-		goto decode_end;											\
-	}																\
-}
-
-#endif

@@ -19,7 +19,7 @@
 switch(Fetchb()) {
 	case 0x00:												/* GRP 6 */
 		{
-			INTERRUPT(6);
+			EXCEPTION(6);
 			break;
 			GetRM;
 			switch (rm & 0x38) {
@@ -40,7 +40,8 @@ switch(Fetchb()) {
 				else {GetEAa;SaveMw(eaa,0);}
 				break;
 			default:
-				E_Exit("CPU:GRP7:Illegal call %2X",(rm>>3) &3);
+				GetEAa;
+				LOG(LOG_CPU|LOG_ERROR,"GRP7:Illegal call %2X",(rm>>3) &3);
 			}
 		}
 		break;
@@ -184,28 +185,20 @@ switch(Fetchb()) {
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
-				flags.cf=(*earw & mask)>0;
+				SETFLAGBIT(CF,(*earw & mask));
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
 			break;
 		}
 	case 0xa4:												/* SHLD Ew,Gw,Ib */
-		{
-			GetRMrw;
-			if (rm >= 0xc0 ) {GetEArw;DSHLW(*earw,*rmrw,Fetchb(),LoadRw,SaveRw);}
-			else {GetEAa;DSHLW(eaa,*rmrw,Fetchb(),LoadMw,SaveMw);}
-			break;
-		}
+		RMEwGwOp3(DSHLW,Fetchb());
+		break;
 	case 0xa5:												/* SHLD Ew,Gw,CL */
-		{
-			GetRMrw;
-			if (rm >= 0xc0 ) {GetEArw;DSHLW(*earw,*rmrw,reg_cl,LoadRw,SaveRw);}
-			else {GetEAa;DSHLW(eaa,*rmrw,reg_cl,LoadMw,SaveMw);}
-			break;
-		}
+		RMEwGwOp3(DSHLW,reg_cl);
+		break;
 	/* 0xa6 XBTS (early 386 only) CMPXCHG (early 486 only) */
 	/* 0xa7 IBTS (early 386 only) CMPXCHG (early 486 only) */
 	case 0xa8:												/* PUSH GS */		
@@ -219,42 +212,26 @@ switch(Fetchb()) {
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
-				flags.cf=(*earw & mask)>0;
+				SETFLAGBIT(CF,(*earw & mask));
 				*earw|=mask;
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old | mask);
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
 			break;
 		}
 	case 0xac:												/* SHRD Ew,Gw,Ib */
-		{
-			GetRMrw;
-			if (rm >= 0xc0 ) {GetEArw;DSHRW(*earw,*rmrw,Fetchb(),LoadRw,SaveRw);}
-			else {GetEAa;DSHRW(eaa,*rmrw,Fetchb(),LoadMw,SaveMw);}
-			break;
-		}
+		RMEwGwOp3(DSHRW,Fetchb());
+		break;
 	case 0xad:												/* SHRD Ew,Gw,CL */
-		{
-			GetRMrw;
-			if (rm >= 0xc0 ) {GetEArw;DSHRW(*earw,*rmrw,reg_cl,LoadRw,SaveRw);}
-			else {GetEAa;DSHRW(eaa,*rmrw,reg_cl,LoadMw,SaveMw);}
-			break;
-		}
+		RMEwGwOp3(DSHRW,reg_cl);
+		break;
 	case 0xaf:												/* IMUL Gw,Ew */
-		{
-			GetRMrw;
-			Bit32s res;
-			if (rm >= 0xc0 ) {GetEArw;res=(Bit32s)(*rmrw) * (Bit32s)(*earws);}
-			else {GetEAa;res=(Bit32s)(*rmrw) *(Bit32s)LoadMws(eaa);}
-			*rmrw=res & 0xFFFF;
-			flags.type=t_MUL;
-			if ((res> -32768)  && (res<32767)) {flags.cf=false;flags.of=false;}
-			else {flags.cf=true;flags.of=true;}
-			break;
-		}
+		RMGwEwOp3(DIMULW,*rmrw);
+		break;
+		
 	/* 0xb0 CMPXCHG Eb,Gb */
 	/* 0xb1 CMPXCHG Ew,Gw */
 	case 0xb2:												/* LSS */
@@ -269,11 +246,11 @@ switch(Fetchb()) {
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
-				flags.cf=(*earw & mask)>0;
+				SETFLAGBIT(CF,(*earw & mask));
 				*earw&= ~mask;
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old & ~mask);
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
@@ -312,7 +289,7 @@ switch(Fetchb()) {
 			if (rm >= 0xc0 ) {
 				GetEArw;
 				Bit16u mask=1 << (Fetchb() & 15);
-				flags.cf=(*earw & mask)>0;
+				SETFLAGBIT(CF,(*earw & mask));
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
 					break;
@@ -331,7 +308,7 @@ switch(Fetchb()) {
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
 				Bit16u mask=1 << (Fetchb() & 15);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
 					break;
@@ -357,11 +334,11 @@ switch(Fetchb()) {
 			Bit16u mask=1 << (*rmrw & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
-				flags.cf=(*earw & mask)>0;
+				SETFLAGBIT(CF,(*earw & mask));
 				*earw^=mask;
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
-				flags.cf=(old & mask)>0;
+				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old ^ mask);
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
@@ -374,11 +351,11 @@ switch(Fetchb()) {
 			if (rm >= 0xc0) { GetEArw; value=*earw; } 
 			else			{ GetEAa; value=LoadMw(eaa); }
 			if (value==0) {
-				flags.zf = true;
+				SETFLAGBIT(ZF,true);
 			} else {
 				result = 0;
 				while ((value & 0x01)==0) { result++; value>>=1; }
-				flags.zf = false;
+				SETFLAGBIT(ZF,false);
 				*rmrw = result;
 			}
 			flags.type=t_UNKNOWN;
@@ -391,11 +368,11 @@ switch(Fetchb()) {
 			if (rm >= 0xc0) { GetEArw; value=*earw; } 
 			else			{ GetEAa; value=LoadMw(eaa); }
 			if (value==0) {
-				flags.zf = true;
+				SETFLAGBIT(ZF,true);
 			} else {
 				result = 15;	// Operandsize-1
 				while ((value & 0x8000)==0) { result--; value<<=1; }
-				flags.zf = false;
+				SETFLAGBIT(ZF,false);
 				*rmrw = result;
 			}
 			flags.type=t_UNKNOWN;
