@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-void DMA_8_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
-void DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
 
-void DMA_16_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
-void DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
+Bit16u DMA_8_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
+Bit16u DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
+
+Bit16u DMA_16_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
+Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
 
