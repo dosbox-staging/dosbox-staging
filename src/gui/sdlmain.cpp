@@ -19,7 +19,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <SDL.h>
-#include <SDL_thread.h>
 
 #include "dosbox.h"
 #include "video.h"
@@ -33,7 +32,6 @@
 
 //#define DISABLE_JOYSTICK
 
-
 struct SDL_Block {
 	bool active;							//If this isn't set don't draw
 	Bitu width;
@@ -42,8 +40,6 @@ struct SDL_Block {
 	GFX_DrawHandler * draw;
 	GFX_ResizeHandler * resize;
 	bool full_screen;
-	SDL_Thread * thread;
-	SDL_mutex * mutex;
 	SDL_Surface * surface;
 	SDL_Joystick * joy;
 	SDL_Color pal[256];
@@ -82,7 +78,7 @@ static void RestorePalette(void) {
 static void ResetScreen(void) {
 	if (sdl.full_screen) { 
 	/* First get the original resolution */
-		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
+		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_SWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN);
 	} else {
 		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_SWSURFACE|SDL_RESIZABLE);
 	}
@@ -148,12 +144,6 @@ void GFX_SwitchFullScreen(void) {
 }
 
 static void GFX_Redraw() {
-#if C_THREADED
-	if (SDL_mutexP(sdl.mutex)) {
-		E_Exit("Can't Lock Mutex");
-	};
-#endif	
-
 	if (++sdl.frames.count<sdl.frames.skip) goto skipframe;
 	sdl.frames.count=0;
 	if (sdl.active) {
@@ -163,29 +153,11 @@ static void GFX_Redraw() {
 		 if (sdl.full_screen) SDL_Flip(sdl.surface);
 		 else SDL_UpdateRect(sdl.surface,0,0,0,0);
 	};
-skipframe:
-#if C_THREADED	
-	if (SDL_mutexV(sdl.mutex)) {
-		E_Exit("Can't Release Mutex");
-	}
-#endif
-}
-
-static int SDLGFX_Thread(void * data) {
-	do {
-		GFX_Redraw();
-		SDL_Delay(1000/70);
-	} while (true); 
-	return 1;
+skipframe:;
 }
 
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 /* I should probably not change the GFX_PalEntry :) */
-#if C_THREADED
-	if (SDL_mutexP(sdl.mutex)) {
-		E_Exit("SDL:Can't Lock Mutex");
-	};
-#endif
 	if (sdl.full_screen) {
 		if (!SDL_SetPalette(sdl.surface,SDL_PHYSPAL,(SDL_Color *)entries,start,count)) {
 			E_Exit("SDL:Can't set palette");
@@ -196,11 +168,6 @@ void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 		}
 	}
 	/* Copy palette entries into some internal back up table */
-#if C_THREADED
-	if (SDL_mutexV(sdl.mutex)) {
-		E_Exit("SDL:Can't Release Mutex");
-	}
-#endif
 	memcpy(&sdl.pal[start],entries,count*sizeof(SDL_Color));
 }
 
@@ -209,13 +176,7 @@ void GFX_SetDrawHandler(GFX_DrawHandler * handler) {
 }
 
 void GFX_Stop() {
-#if C_THREADED
-	SDL_mutexP(sdl.mutex);
-#endif
 	sdl.active=false;
-#if C_THREADED
-	SDL_mutexV(sdl.mutex);
-#endif
 }
 
 
@@ -244,12 +205,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	GFX_Resize(640,400,8,0);
-#if C_THREADED
-	sdl.mutex=SDL_CreateMutex();
-	sdl.thread = SDL_CreateThread(&SDLGFX_Thread,0);
-#else 
 	TIMER_RegisterMicroHandler(GFX_Redraw,1000000/70);
-#endif
 	SDL_EnableKeyRepeat(250,30);
 	
 /* Get some Keybinds */
