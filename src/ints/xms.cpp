@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: xms.cpp,v 1.29 2003-12-09 21:10:31 qbix79 Exp $ */
+
 #include <stdlib.h>
 #include <string.h>
 #include "dosbox.h"
@@ -120,7 +122,7 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	/* Find free handle */
 	Bit16u index=1;
 	while (!xms_handles[index].free) {
-		if (++index>XMS_HANDLES) return XMS_OUT_OF_HANDLES;
+		if (++index>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
 	}
 	Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
 	MemHandle mem=MEM_AllocatePages(pages,true);
