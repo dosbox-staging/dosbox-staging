@@ -17,7 +17,7 @@
  */
 
 #include "dosbox.h"
-#ifdef C_FPU
+#if C_FPU
 
 #include <math.h>
 #include <float.h>
