@@ -224,7 +224,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
 	secprop->Add_bool("enabled",true);
-	secprop->Add_bool("sinewave",false);
+	secprop->Add_int("pcrate",22050);
 	secprop->AddInitFunction(&TANDYSOUND_Init);
 	secprop->Add_bool("tandy",false);
 
