@@ -208,10 +208,6 @@ void SHELL_Init() {
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "DOSBox does not run protected mode games!\n"
 	   "For supported shell commands type: HELP\n"
-#if! defined (WIN32)
-		"DOSBox only works with upcase filenames as dos is case-insensitive.\n"
-		"You can use the UPCASE command for this, but please be careful.\n" 
-#endif
 	   "For more information read the README file in DOSBox directory.\n"
 	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
 	);

@@ -149,78 +149,6 @@ static void MEM_ProgramStart(Program * * make) {
 }
 
 
-#if !defined (WIN32)						/* Unix */
-
-class UPCASE : public Program {
-public:
-	void Run(void);
-	void upcasedir(const char * directory);
-};
-
-void UPCASE::upcasedir(const char * directory) {
-	DIR * sdir;
-	char fullname[512];
-	char newname[512];
-	struct dirent *tempdata;
-	struct stat finfo;
-
-	if(!(sdir=opendir(directory)))	{
-		WriteOut(MSG_Get("PROGRAM_UPCASE_ERROR_DIR"),directory);
-		return;
-	}
-	WriteOut(MSG_Get("PROGRAM_UPCASE_SCANNING_DIR"),fullname);
-	while (tempdata=readdir(sdir)) {
-		if (strcmp(tempdata->d_name,".")==0) continue;
-		if (strcmp(tempdata->d_name,"..")==0) continue;
-		strcpy(fullname,directory);
-		strcat(fullname,"/");
-		strcat(fullname,tempdata->d_name);
-		strcpy(newname,directory);
-		strcat(newname,"/");
-		upcase(tempdata->d_name);
-		strcat(newname,tempdata->d_name);
-		WriteOut(MSG_Get("PROGRAM_UPCASE_RENAME"),fullname,newname);
-		rename(fullname,newname);
-		stat(fullname,&finfo);
-		if(S_ISDIR(finfo.st_mode)) {
-			upcasedir(fullname);
-		}
-	}
-	closedir(sdir);
-}
-
-
-void UPCASE::Run(void) {
-	/* First check if the directory exists */
-	struct stat info;
-	WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_1"));
-	if (!cmd->GetCount()) {
-		WriteOut(MSG_Get("PROGRAM_UPCASE_USAGE"));
-		return;
-	}
-	cmd->FindCommand(1,temp_line);
-	if (stat(temp_line.c_str(),&info)) {
-		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_ERROR_1"),temp_line.c_str());
-		return;
-	}
-	if(!S_ISDIR(info.st_mode)) {
-		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_ERROR_2"),temp_line.c_str());
-		return;
-	}
-	WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_CHOICE"),temp_line.c_str());
-	Bit8u key;Bit16u n=1;
-	DOS_ReadFile(STDIN,&key,&n);
-	if (toupper(key)=='Y') {
-		upcasedir(temp_line.c_str());	
-	} else {
-		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_NO"));
-	}
-}
-
-static void UPCASE_ProgramStart(Program * * make) {
-	*make=new UPCASE;
-}
-#endif
 
 // LOADFIX
 
@@ -303,22 +231,10 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
-#if !defined (WIN32)                        /* Unix */
-    MSG_Add("PROGRAM_UPCASE_ERROR_DIR","Failed to open directory %s\n");
-    MSG_Add("PROGRAM_UPCASE_SCANNING_DIR","Scanning directory %s\n");
-    MSG_Add("PROGRAM_UPCASE_RENAME","Renaming %s to %s\n");
-    MSG_Add("PROGRAM_UPCASE_RUN_1","UPCASE 0.1 Directory case convertor.\n");
-    MSG_Add("PROGRAM_UPCASE_USAGE","Usage UPCASE [local directory]\nThis tool will convert all files and subdirectories in a directory.\nBe VERY sure this directory contains only dos related material.\nOtherwise you might horribly screw up your filesystem.\n");
-    MSG_Add("PROGRAM_UPCASE_RUN_ERROR_1","%s doesn't exist\n");
-    MSG_Add("PROGRAM_UPCASE_RUN_ERROR_2","%s isn't a directory\n");
-    MSG_Add("PROGRAM_UPCASE_RUN_CHOICE","Converting the wrong directories can be very harmfull, please be carefull.\nAre you really really sure you want to convert %s to upcase?Y/N\n");
-    MSG_Add("PROGRAM_UPCASE_RUN_NO","Okay better not do it.\n");
-#endif
+
     /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
-#if !defined (WIN32)						/* Unix */
-	PROGRAMS_MakeFile("UPCASE.COM",UPCASE_ProgramStart);
-#endif
+
 }

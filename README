@@ -3,7 +3,7 @@ DOSBox v0.57
 Usage:
 ======
 
-With the new internal shell I've changed the command line a bit, so let's just give some 
+With the new internal shell We've changed the command line a bit, so let's just give some 
 examples of what you can do now.
 
 dosbox 
@@ -49,10 +49,6 @@ CONFIG
 Utility for generating a configfile with the current settings and for generating the languagefile.
 The option -writeconf filename is used to write the current config settings. 
 The option -writelang filename is used to write the current language strings.
-
-UPCASE <Linux Version only>
-Utility to convert all files subdirectories of a local directory into upcase so DOSBox can use that directory
-for mounting. This tool can be quite dangerous if used unproperly. You have been warned.
 
 To get more information about how to use one these programs use the the /? command line switch.
 
