@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.13 2003-10-07 10:42:01 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.14 2003-10-19 19:21:12 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -199,10 +199,11 @@ static double FROUND(double in){
 static void FPU_FPREM(void){
 	Real64 valtop = fpu.regs[TOP].d;
 	Real64 valdiv = fpu.regs[ST(1)].d;
-	Real64 res = floor(valtop/valdiv);
-	Bit64s ressaved = static_cast<Bit64s>(res);
-	res=valtop - res*valdiv;
-	fpu.regs[TOP].d = res;
+	Bit64s ressaved = static_cast<Bit64s>( (valtop/valdiv) );
+// Some backups
+//	Real64 res=valtop - ressaved*valdiv; 
+//      res= fmod(valtop,valdiv);
+	fpu.regs[TOP].d = valtop - ressaved*valdiv;
 	FPU_SET_C0(static_cast<Bitu>(ressaved&4));
 	FPU_SET_C3(static_cast<Bitu>(ressaved&2));
 	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
@@ -309,13 +310,13 @@ static void FPU_F2XM1(void){
 	return;
 }
 
-static void	FPU_FYL2X(void){
+static void FPU_FYL2X(void){
 	fpu.regs[ST(1)].d*=log(fpu.regs[TOP].d)/log(static_cast<Real64>(2.0));
 	FPU_FPOP();
 	return;
 }
 static void FPU_FSCALE(void){
-	fpu.regs[TOP].d *=pow(2.0,static_cast<Real64>(static_cast<Bit64s>(FROUND(fpu.regs[ST(1)].d))));
+	fpu.regs[TOP].d *= pow(2.0,static_cast<Real64>(static_cast<Bit64s>(fpu.regs[ST(1)].d)));
 	return; //2^x where x is chopped.
 }
 

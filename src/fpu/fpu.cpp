@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: fpu.cpp,v 1.14 2003-10-19 19:21:12 qbix79 Exp $ */
+
 #include "dosbox.h"
 #if C_FPU
 
@@ -375,7 +377,7 @@ void FPU_ESC1_Normal(Bitu rm) {
 void FPU_ESC2_EA(Bitu rm,PhysPt addr) {
 	/* 32 bits integer operants */
 	Bit32s blah = mem_readd(addr);
-	fpu.regs[8].d = static_cast<double>(blah);
+	fpu.regs[8].d = static_cast<Real64>(blah);
 	EATREE(rm);
 }
 
@@ -453,8 +455,7 @@ void FPU_ESC3_Normal(Bitu rm) {
 
 
 void FPU_ESC4_EA(Bitu rm,PhysPt addr) {
-	/* REGULAR TREE WITH 64 BITS REALS ? double ? */
-//	E_Exit("how to load a double in esc 4 ea");
+	/* REGULAR TREE WITH 64 BITS REALS: double  */
 	fpu.regs[8].l.lower=mem_readd(addr);
 	fpu.regs[8].l.upper=mem_readd(addr+4);
 	EATREE(rm);
@@ -478,16 +479,16 @@ void FPU_ESC4_Normal(Bitu rm) {
 		FPU_FCOM(TOP,ST(sub));
 		FPU_FPOP();
 		break;
-	case 0x04:  /* FSUBRP STi,ST*/
+	case 0x04:  /* FSUBR STi,ST*/
 		FPU_FSUBR(ST(sub),TOP);
 		break;
-	case 0x05:  /* FSUBP  STi,ST*/
+	case 0x05:  /* FSUB  STi,ST*/
 		FPU_FSUB(ST(sub),TOP);
 		break;
-	case 0x06:	/* FDIVRP STi,ST*/
+	case 0x06:  /* FDIVR STi,ST*/
 		FPU_FDIVR(ST(sub),TOP);
 		break;
-	case 0x07:  /* FDIVP STi,ST*/
+	case 0x07:  /* FDIV STi,ST*/
 		FPU_FDIV(ST(sub),TOP);
 		break;
 	default:
