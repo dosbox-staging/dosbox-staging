@@ -110,7 +110,7 @@ public:
 			}
 			break;
 		default:
-			LOG(LOG_MISC,"ALSA:Unknown Command: %08x", (int)msg);
+			LOG(LOG_MISC,LOG_WARN)("ALSA:Unknown Command: %08x", (int)msg);
 			send_event(1);
 			break;
 		}
