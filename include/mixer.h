@@ -17,23 +17,54 @@
  */
 
 typedef void (*MIXER_MixHandler)(Bit8u * sampdate,Bit32u len);
+typedef void (*MIXER_Handler)(Bitu len);
 
-#define MIXER_8MONO		0
-#define MIXER_8STEREO	1
-#define MIXER_16MONO	2
-#define MIXER_16STEREO	3
+enum BlahModes {
+	MIXER_8MONO,MIXER_8STEREO,
+	MIXER_16MONO,MIXER_16STEREO
+};
+
+enum MixerModes {
+	M_8M,M_8S,
+	M_16M,M_16S,
+};
+
+#define MIXER_BUFSIZE (16*1024)
+#define MIXER_BUFMASK (MIXER_BUFSIZE-1)
+extern Bit8u MixTemp[MIXER_BUFSIZE];
 
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
 
-struct MIXER_Channel;
+class MixerChannel {
+public:
+	void SetVolume(float _left,float _right);
+	void UpdateVolume(void);
+	void SetFreq(Bitu _freq);
+	void Mix(Bitu _needed);
+	void AddSilence(void);			//Fill up until needed
+	template<bool _8bit,bool stereo>
+	void AddSamples(Bitu len,void * data);
+	void AddSamples_m8(Bitu len,Bit8u * data);
+	void AddSamples_s8(Bitu len,Bit8u * data);
+	void AddSamples_m16(Bitu len,Bit16s * data);
+	void AddSamples_s16(Bitu len,Bit16s * data);
+	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
+	void FillUp(void);
+	void Enable(bool _yesno);
+	MIXER_Handler handler;
+	float volmain[2];
+	Bit32s volmul[2];
+	Bitu freq_add,freq_index;
+	Bitu done,needed;
+	Bits last[2];
+	char * name;
+	bool enabled;
+	MixerChannel * next;
+};
 
-MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bitu freq,char * name);
-MIXER_Channel * MIXER_FindChannel(const char * name);
-void MIXER_SetVolume(MIXER_Channel * chan,float left,float right);
-void MIXER_SetFreq(MIXER_Channel * chan,Bitu freq);
-void MIXER_SetMode(MIXER_Channel * chan,Bit8u mode);
-void MIXER_Enable(MIXER_Channel * chan,bool enable);
+MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,char * name);
+MixerChannel * MIXER_FindChannel(const char * name);
 
 /* PC Speakers functions, tightly related to the timer functions */
 
