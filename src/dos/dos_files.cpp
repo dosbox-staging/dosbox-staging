@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.45 2003-10-04 12:40:28 finsterr Exp $ */
+/* $Id: dos_files.cpp,v 1.46 2003-10-09 13:47:44 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -467,6 +467,13 @@ bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * cl
 }
 
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
+
+	// Dont duplicate console handles
+	if (entry<=STDPRN) {
+		*newentry = entry;
+		return true;
+	};
+	
 	Bit8u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -488,6 +495,13 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 };
 
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
+	
+	// Dont duplicate console handles
+	if (entry<=STDPRN) {
+		newentry = entry;
+		return true;
+	};
+
 	Bit8u orig=RealHandle(entry);
 	if (orig>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
