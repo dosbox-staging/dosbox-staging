@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.39 2003-11-18 22:35:56 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.40 2003-12-10 13:20:26 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -38,9 +38,11 @@ CPU_Regs cpu_regs;
 CPUBlock cpu;
 Segments Segs;
 
-Bits CPU_Cycles=0;
-Bits CPU_CycleLeft=0;
-Bits CPU_CycleMax=1500;
+Bits CPU_Cycles = 0;
+Bits CPU_CycleLeft = 0;
+Bits CPU_CycleMax = 1800;
+Bits CPU_CycleUp = 0;
+Bits CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
 
 void CPU_Real_16_Slow_Start(bool big);
@@ -1144,7 +1146,12 @@ void CPU_HLT(Bitu oplen) {
 extern void GFX_SetTitle(Bits cycles ,Bits frameskip);
 static void CPU_CycleIncrease(void) {
 	Bits old_cycles=CPU_CycleMax;
-	CPU_CycleMax=(Bits)(CPU_CycleMax*1.2);
+	if(CPU_CycleUp < 100){
+		CPU_CycleMax = (Bits)(CPU_CycleMax * (1 + (float)CPU_CycleUp / 100.0));
+	} else {
+		CPU_CycleMax = (Bits)(CPU_CycleMax + CPU_CycleUp);
+	}
+    
 	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
@@ -1152,9 +1159,13 @@ static void CPU_CycleIncrease(void) {
 }
 
 static void CPU_CycleDecrease(void) {
-	CPU_CycleMax=(Bits)(CPU_CycleMax/1.2);
+	if(CPU_CycleDown < 100){
+		CPU_CycleMax = (Bits)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
+	} else {
+		CPU_CycleMax = (Bits)(CPU_CycleMax - CPU_CycleDown);
+	}
 	CPU_CycleLeft=0;CPU_Cycles=0;
-	if (!CPU_CycleMax) CPU_CycleMax=1;
+	if (CPU_CycleMax <= 0) CPU_CycleMax=1;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
 	GFX_SetTitle(CPU_CycleMax,-1);
 }
@@ -1196,7 +1207,11 @@ void CPU_Init(Section* sec) {
 
 	CPU_Cycles=0;
 	CPU_CycleMax=section->Get_int("cycles");;
-	if (!CPU_CycleMax) CPU_CycleMax=1500;
+	CPU_CycleUp=section->Get_int("cycleup");
+	CPU_CycleDown=section->Get_int("cycledown");
+	if (!CPU_CycleMax) CPU_CycleMax = 1800;
+	if(!CPU_CycleUp)   CPU_CycleUp = 500;
+	if(!CPU_CycleDown) CPU_CycleDown = 20;
 	CPU_CycleLeft=0;
 	GFX_SetTitle(CPU_CycleMax,-1);
 }
