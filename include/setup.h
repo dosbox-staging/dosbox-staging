@@ -56,7 +56,8 @@ class Property {
 public:
 	Property(const char* _propname):propname(_propname) { }
 	virtual void SetValue(char* input)=0;
-	Value GetValue() { return __value; }
+	virtual void GetValuestring(char* str)=0;
+	Value GetValue() { return __value;}
 	std::string propname;
 	Value __value;
 	virtual ~Property(){ }
@@ -68,6 +69,7 @@ public:
 		__value._int=_value;
 	}
 	void SetValue(char* input);
+        void GetValuestring(char* str);
 	~Prop_int(){ }
 };
 
@@ -77,6 +79,7 @@ public:
 		__value._bool=_value;
 	}
 	void SetValue(char* input);
+        void GetValuestring(char* str);
 	~Prop_bool(){ }
 };
 
@@ -89,6 +92,7 @@ public:
 		delete __value._string;
 	}
 	void SetValue(char* input);
+        void GetValuestring(char* str);
 };
 class Prop_hex:public Property {
 public:
@@ -97,6 +101,7 @@ public:
 	}
 	void SetValue(char* input);
 	~Prop_hex(){ }
+        void GetValuestring(char* str);
 };
 
 class Section {
@@ -108,6 +113,7 @@ public:
 	void ExecuteInit() { initfunction(this);}
 	
 	virtual void HandleInputline(char *gegevens){}
+	virtual void Print(FILE* outfile) { /*At this moment empty */ }
 	
 	std::string sectionname;   
 };
@@ -128,7 +134,8 @@ class Section_prop:public Section {
 	bool Get_bool(const char* _propname);
     int Get_hex(const char* _propname);
 	void HandleInputline(char *gegevens);
-
+        void Print(FILE* outfile);
+   
 	std::list<Property*> properties;
 	typedef std::list<Property*>::iterator it;
 };
@@ -137,7 +144,7 @@ class Section_line: public Section{
 public:
 	Section_line(const char* _sectionname,void (*_initfunction)(Section*)):Section(_sectionname,_initfunction){}
 	void HandleInputline(char* gegevens);
-
+        void Print(FILE* outfile);
 	std::string data;
 };
 
@@ -157,7 +164,7 @@ public:
 	void Init();
 	void ShutDown();
 	void StartUp();
-
+        void PrintConfig(const char* configfilename);
 	void ParseConfigFile(const char* configfilename);
 	
 	std::list<Section*> sectionlist;

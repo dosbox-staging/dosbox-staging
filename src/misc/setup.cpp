@@ -51,6 +51,22 @@ void Prop_hex::SetValue(char* input){
 	if(!sscanf(input,"%X",&(__value._hex))) __value._hex=0;
 }
 
+void Prop_int::GetValuestring(char* str){
+        sprintf(str,"%d",__value._int);
+}
+
+void Prop_string::GetValuestring(char* str){
+        sprintf(str,"%s",__value._string->c_str());
+}
+
+void Prop_bool::GetValuestring(char* str){
+        sprintf(str,"%s",__value._bool?"true":"false");
+}
+
+void Prop_hex::GetValuestring(char* str){
+        sprintf(str,"%X",__value._hex);
+}
+
 void Section_prop::Add_int(const char* _propname, int _value) {
 	Property* test=new Prop_int(_propname,_value);
 	properties.push_back(test);
@@ -116,13 +132,49 @@ void Section_prop::HandleInputline(char *gegevens){
 		}
 	}
 }
+#define HELPLENGTH 300
+void Section_prop::Print(FILE* outfile){
+        char* val=new char[HELPLENGTH];
+        fprintf(outfile,"[%s]\n",sectionname.c_str());
+        snprintf(val,HELPLENGTH,"%s_CONFIGFILE_HELP",sectionname.c_str());
+        
+        fprintf(outfile,"%% %s",MSG_Get(val));//entries in langfile end with \n
+        for(it tel=properties.begin();tel!=properties.end();tel++){
+	    (*tel)->GetValuestring(val);
+	   fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),val);
+	}
+        fprintf(outfile,"\n");
+        delete val;
+}
 
-
+   
 void Section_line::HandleInputline(char* gegevens){ 
 	data+=gegevens;
 	data+="\n";
 }
 
+void Section_line::Print(FILE* outfile)
+{
+        fprintf(outfile,"[%s]\n",sectionname.c_str());
+        char* val=new char[HELPLENGTH];
+        snprintf(val,HELPLENGTH,"%s_CONFIGFILE_HELP",sectionname.c_str());
+        fprintf(outfile,"%% %s",MSG_Get(val));//entries in langfile end with \n
+        fprintf(outfile,"%s",data.c_str());
+        fprintf(outfile,"\n");
+        delete val;
+}
+
+void Config::PrintConfig(const char* configfilename){
+       FILE* outfile=fopen(configfilename,"w+b");
+       if(outfile==NULL) return;
+       for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+	    (*tel)->Print(outfile);
+       }
+       fclose(outfile);
+}
+
+   
+   
 Section* Config::AddSection(const char* _name,void (*_initfunction)(Section*)){
 	Section* blah = new Section(_name,_initfunction);
 	sectionlist.push_back(blah);
