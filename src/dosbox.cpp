@@ -177,7 +177,8 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("keepsmall",false);
 	secprop->Add_string("snapshots","snapshots");
-	
+	secprop->Add_string("scaler","none");
+
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_int("cycles",1800);
 
@@ -232,7 +233,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&MSCDEX_Init);
 
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
-    
+
 	control->SetStartUp(&SHELL_Init);	
 
 #if C_FPU
