@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.9 2004-08-23 09:34:21 harekiet Exp $ */
+/* $Id: cross.h,v 1.10 2004-09-14 18:56:11 qbix79 Exp $ */
 
 #ifndef _CROSS_H
 #define _CROSS_H
@@ -40,7 +40,7 @@
 
 
 #if defined (WIN32)							/* Win 32 */
-#define CROSS_FILENAME(blah) {if(blah && *blah && (blah[strlen(blah)-1] == '\\')) strcat(blah,".");}
+#define CROSS_FILENAME(blah) 
 #define CROSS_FILESPLIT '\\'
 #define F_OK 0
 #else
