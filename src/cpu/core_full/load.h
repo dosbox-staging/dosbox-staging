@@ -321,6 +321,9 @@ l_M_Ed:
 	case D_CBW:
 		reg_ax=(Bit8s)reg_al;
 		goto nextopcode;
+	case D_CWDE:
+		reg_eax=(Bit16s)reg_ax;
+		goto nextopcode;
 	case D_CWD:
 		if (reg_ax & 0x8000) reg_dx=0xffff;
 		else reg_dx=0;

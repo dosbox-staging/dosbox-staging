@@ -465,7 +465,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SP},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_BP},
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SI},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_DI},
 /* 0x298 - 0x29f */
-{D_CBW		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
+{D_CWDE		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
 {L_Ifd		,O_CALLFd	,0		,0		},{L_ERROR	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHd,0		},{L_POPd	,0			,S_FLGd	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
