@@ -330,7 +330,7 @@ graphics_chars:
 			break;
 		case 0x05:							
 			if (reg_bh==0) {				/* Set CPU Window */
-				reg_ah=VESA_SetCPUWindow(reg_bl,reg_dx);
+				reg_ah=VESA_SetCPUWindow(reg_bl,reg_dl);
 				reg_al=0x4f;
 			} else if (reg_bh == 1) {		/* Get CPU Window */
 				reg_ah=VESA_GetCPUWindow(reg_bl,reg_dx);
@@ -339,6 +339,10 @@ graphics_chars:
 				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bh);
 				reg_ah=0x01;
 			}
+			break;
+		case 0x06:
+			reg_al=0x4f;
+			reg_ah=VESA_ScanLineLength(reg_al,reg_bx,reg_cx,reg_dx);
 			break;
 		case 0x07:
 			switch (reg_bl) {

@@ -182,7 +182,7 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off);
 Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off);
 Bit8u VESA_SetSVGAMode(Bit16u mode);
 Bit8u VESA_GetSVGAMode(Bit16u & mode);
-Bit8u VESA_SetCPUWindow(Bit8u window,Bit16u address);
+Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address);
 Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address);
 Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u & bytes,Bit16u & pixels,Bit16u & lines);
 Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y);

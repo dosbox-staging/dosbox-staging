@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.6 2004-01-07 20:26:38 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.7 2004-01-11 09:27:52 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -170,7 +170,7 @@ Bit8u VESA_GetSVGAMode(Bit16u & mode) {
 	return 0x00;
 }
 
-Bit8u VESA_SetCPUWindow(Bit8u window,Bit16u address) {
+Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address) {
 	if (window) return 0x1;
 	if ((address<32)) {
 		IO_Write(0x3d4,0x6a);
@@ -295,11 +295,7 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y) {
 		return 0x1;
 	}
 	return 0x00;
-
-
 }
-
-
 
 static Bitu SetWindowPositionHandler(void) {
 	if (reg_bh) reg_ah=VESA_GetCPUWindow(reg_bl,reg_dx);
@@ -307,7 +303,6 @@ static Bitu SetWindowPositionHandler(void) {
 	reg_al=0x4f;
 	return 0;
 }
-
 
 void INT10_SetupVESA(void) {
 	/* Put the mode list somewhere in memory */
