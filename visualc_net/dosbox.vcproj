@@ -38,7 +38,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sdl_net.lib winmm.lib zlib.lib libpng.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="opengl32.lib sdl_net.lib winmm.lib zlib.lib libpng.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Debug/dosbox.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -111,7 +111,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="winmm.lib zlib.lib libpng.lib sdl_net.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="opengl32.lib winmm.lib zlib.lib libpng.lib sdl_net.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Release/dosbox.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
