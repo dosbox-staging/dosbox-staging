@@ -91,6 +91,8 @@
 #define BIOS_WAIT_FLAG_POINTER          0x498
 #define BIOS_WAIT_FLAG_COUNT	        0x49c		
 #define BIOS_WAIT_FLAG_ACTIVE			0x4a0
+#define BIOS_WAIT_FLAG_TEMP				0x4a1
+
 
 #define BIOS_PRINT_SCREEN_FLAG          0x500
 
