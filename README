@@ -9,7 +9,7 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
 
   name   
         If "name" is a directory it'll mount that as the C: drive.
-        If "name" is a executable it'll mount the directory of "name" 
+        If "name" is an executable it'll mount the directory of "name" 
         as the C: drive and execute "name".
     
   -exit  
@@ -20,7 +20,7 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
         can be specified. Each command should start with -c though.
 
   -fullscreen
-        Starts dosbox in fullscreenmode.
+        Starts dosbox in fullscreen mode.
 
   -conf configfile
         Start dosbox with the options specified in "configfile".
@@ -28,16 +28,16 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
   -lang languagefile
         Start dosbox using the language string specified in "languagefile".
 
-Note: If a name/command/configfile/languagefile contains a space in it put
+Note: If a name/command/configfile/languagefile contains a space in it, put
       the whole name/command/configfile/languagefile between quotes("example").
 
 For example:
 
 dosbox c:\atlantis\atlantis.exe -c "MOUNT D C:\SAVES"
-  This would mount c:\atlanis as c:\ and run atlantis.exe.
+  This would mount c:\atlantis as c:\ and run atlantis.exe.
   Before it does that it would first mount C:\SAVES as the D drive.
 
-In Windows you can also drag directories/files on the dosbox executable.
+In Windows you can also drag directories/files onto the dosbox executable.
  
 
 
@@ -55,7 +55,7 @@ MOUNT -cd
   Program to mount local directories as drives inside DOSBox.
 
   Driveletter
-        The driveletter inside dosbox (eg. C)
+        The driveletter inside dosbox (eg. C).
 
   sourcedirectory
         The local directory you want to have inside dosbox.
@@ -68,12 +68,12 @@ MOUNT -cd
         Sets the size of the drive. 
 
   -label drivelabel
-        Sets the name of the drive to "drivelabel". Usefull when a 
-        program can't find it's cdrom.
+        Sets the name of the drive to "drivelabel". Useful when a 
+        program can't find its cdrom.
 
   -aspi
         Forces to use the aspi layer. Only valid if mounting a cdrom under 
-        Windows systems with an ASPI-Layer
+        Windows systems with an ASPI-Layer.
 
   -ioctl   
         Forces to use ioctl commands. Only valid if mounting a cdrom under 
@@ -81,10 +81,10 @@ MOUNT -cd
 
   -usecd number
         Forces to use SDL cdrom support for drive number.
-        Number can be found by -cd. Valid on all systems
+        Number can be found by -cd. Valid on all systems.
 
   -cd
-        Displays all detected cdrom drives and their numbers. Use with -usecd
+        Displays all detected cdrom drives and their numbers. Use with -usecd.
 
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
@@ -99,17 +99,17 @@ MOUNT -cd
        mount d /media/cdrom -t cdrom -usecd 0
 
 MEM
-  Program to display the amount of free memory
+  Program to display the amount of free memory.
 
 CONFIG [-writeconf] [-writelang] localfile
   Write the current configuration or language settings to file.
   "localfile" is located on the local drive !!! 
 
 LOADFIX
-  Program to "eat up" memory. Usefull for old programs which don't expect much
+  Program to "eat up" memory. Useful for old programs which don't expect much
   memory to be free.
 
-For more information use the the /? command line switch with the programs.
+For more information use the /? command line switch with the programs.
 
 
 
@@ -124,18 +124,18 @@ CTRL-F7	        Decrease frameskip.
 CTRL-F8	        Increase frameskip.
 CTRL-F9         Kill dosbox.
 CTRL-F10        Capture/Release the mouse.
-CTRL-F11        Slowdown emulation.
-CTRL-F12        Speedup emulation.
+CTRL-F11        Slow down emulation.
+CTRL-F12        Speed up emulation.
 
 ====================
 System requirements:
 ====================
 
-Fast machine my guess would be pentium-2 400+ to get decent emulation
+Fast machine. My guess would be pentium-2 400+ to get decent emulation
 of games written for an 286 machine.
 For protected mode games a 1 Ghz machine is recommended and don't expect
 them to run fast though!! Be sure to read the next section on how to speed
-it somewhat up.
+it up somewhat.
 
 
 ================================
@@ -173,20 +173,20 @@ FAQ:
 ====
 
 Q: I've got a Z instead of a C at the prompt.
-A: In DOSBox you can mount directories as drives
-   in win32: mount c D:\ would give you a C in DOSBox which points
-   at D:\ in win32
-   in linux: mount c /home/username would give you a C in DOSBox
-   which points at /home/username in Linux
+A: In DOSBox you can mount directories as drives.
+   In win32: mount c D:\ would give you a C in DOSBox which points
+   at D:\ in win32.
+   In linux: mount c /home/username would give you a C in DOSBox
+   which points at /home/username in Linux.
 
 Q: The mouse doesn't work.
-A: Normally dosbox detects the mouse being used by a game, if you click on 
+A: Normally dosbox detects the mouse being used by a game. If you click on 
    the screen then it should get locked and work.
-   Sometimes the dosbox mouse detection doesn't work with certain games, you
+   Sometimes the dosbox mouse detection doesn't work with certain games. You
    might have to force to lock the mouse then with ctrl-F10.
 
 Q: The sound stutters.
-A: Your using too much cpu power to keep dosbox running at the current speed.
+A: You're using too much cpu power to keep dosbox running at the current speed.
    You can either lower the cycles or skip frames or get a faster machine.
 
 
@@ -198,8 +198,8 @@ http://dosbox.sourceforge.net
 The Config File:
 ================
 
-A config file can be generated by CONFIG.COM, edit it to customize DOSBox.
-The file is divided in several sections (the names got [] around it). 
+A config file can be generated by CONFIG.COM. Edit it to customize DOSBox.
+The file is divided into several sections (the names have [] around it). 
 Some sections have options which you can set.
 # and % indicate commentlines. 
 The generated configfile contains the current settings. You can alter them and
@@ -210,17 +210,17 @@ The Language File:
 ==================
 
 A language file can be generated by CONFIG.COM. 
-Read it and you will hopefuly understand how to change it. 
-Start Dosbox with -lang switch to use your new language file
-Or you can setup the filename in the config file in the [dosbox] section.
+Read it and you will hopefully understand how to change it. 
+Start Dosbox with the -lang switch to use your new language file
+or you can setup the filename in the config file in the [dosbox] section.
 There's a language= entry that can be changed with the filename.
 
 
-=================================
-Building your own Version DOSBox:
-=================================
+====================================
+Building your own version of DOSBox:
+====================================
 
-Dowload the source.
+Download the source.
 Check the INSTALL in the source distribution.
 
 ===============
