@@ -162,6 +162,18 @@
 			CMPW(reg_ax,val2,LoadD,0);
 		}
 		break;
+	case R_SCASD:
+		{
+			add_index<<=2;Bit32u val2;
+			for (;count>0;) {
+				count--;
+				val2=LoadMd(di_base+di_index);
+				di_index=(di_index+add_index) & add_mask;
+				if ((reg_eax==val2)!=inst.repz) break;
+			}
+			CMPD(reg_eax,val2,LoadD,0);
+		}
+		break;
 	case R_CMPSB:
 		{
 			Bit8u val1,val2;
