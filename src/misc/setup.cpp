@@ -111,7 +111,7 @@ const char* Section_prop::Get_string(const char* _propname){
 			return ((*tel)->GetValue())._string->c_str();
 		}
 	}
-	return NULL;
+	return "";
 }
 int Section_prop::Get_hex(const char* _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
@@ -251,6 +251,22 @@ void Config::ParseConfigFile(const char* configfilename){
 			}
 			break;
 		}
+	}
+}
+
+void Config::ParseEnv(char ** envp) {
+	for(char** env=envp; *env;env++) {
+		char copy[1024];
+		strncpy(copy,*env,1024);
+		if(strncasecmp(copy,"DOSBOX_",7))
+			continue;
+		char* sec_name = &copy[7];
+		char* prop_name = strrchr(sec_name,'_');
+		*prop_name++=0;
+		Section* sect = GetSection(sec_name);
+		if(!sect) 
+			continue;
+		sect->HandleInputline(prop_name);
 	}
 }
 
