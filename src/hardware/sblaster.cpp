@@ -75,7 +75,7 @@ enum {
 struct SB_INFO {
 	Bit16u freq;
 	struct {
-		bool active,stereo,filtered,sign,autoinit;
+		bool stereo,filtered,sign,autoinit;
 		bool stereoremain;
 		DMA_MODES mode;
 		Bitu previous;
@@ -235,19 +235,19 @@ static void DSP_StopDMA(void) {
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_REACHED_TC) return;
-	if (event==DMA_MASKED) sb.dma.active=false;
-	if (event==DMA_UNMASKED) sb.dma.active=true;
-	if (sb.mode==MODE_DMA_WAIT && sb.dma.active) {
-		LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output");
-//		LOG_MSG("DMA Size %x base %x Addr %x",chan->currcnt,chan->pagebase,chan->curraddr);
-		DSP_ChangeMode(MODE_DMA);
-		CheckDMAEnd();
-		return;
-	}
-	if (sb.mode==MODE_DMA && !sb.dma.active) {
-		DSP_ChangeMode(MODE_DMA_WAIT);
-		LOG(LOG_SB,LOG_NORMAL)("DMA deactivated,stopping output");
-		return;
+	else if (event==DMA_MASKED) {
+		if (sb.mode==MODE_DMA) {
+			DSP_ChangeMode(MODE_DMA_WAIT);
+			LOG(LOG_SB,LOG_NORMAL)("DMA deactivated,stopping output");
+		}
+	} else if (event==DMA_UNMASKED) {
+		if (sb.mode==MODE_DMA_WAIT) {
+			DSP_ChangeMode(MODE_DMA);
+			CheckDMAEnd();
+			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output");
+		} else if (event==DMA_TRANSFEREND) {
+			if (sb.mode==MODE_DMA) sb.mode=MODE_DMA_WAIT;
+		}
 	}
 }
 
