@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.21 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.22 2004-01-28 18:04:18 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -25,6 +25,19 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
+
+static INLINE void CGA2_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) { 
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT); 
+	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/2)+cleft); 
+	PhysPt src=base+((CurMode->twidth*rold)*(cheight/2)+cleft); 
+	Bitu copy=(cright-cleft); 
+	Bitu nextline=CurMode->twidth; 
+	for (Bitu i=0;i<cheight;i++) { 
+		MEM_BlockCopy(dest,src,copy); 
+		MEM_BlockCopy(dest+8*1024,src+8*1024,copy); 
+		dest+=nextline;src+=nextline; 
+	} 
+} 
 
 static INLINE void CGA4_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
@@ -79,6 +92,22 @@ static INLINE void TEXT_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,P
 	dest=base+(rnew*CurMode->twidth+cleft)*2;
 	MEM_BlockCopy(dest,src,(cright-cleft)*2);
 }
+
+static INLINE void CGA2_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) { 
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT); 
+	PhysPt dest=base+((CurMode->twidth*row)*(cheight/2)+cleft); 
+	Bitu copy=(cright-cleft); 
+	Bitu nextline=CurMode->twidth; 
+	attr=(attr & 0x3) | ((attr & 0x3) << 2) | ((attr & 0x3) << 4) | ((attr & 0x3) << 6); 
+	for (Bitu i=0;i<cheight;i++) { 
+		for (Bitu x=0;x<copy;x++) { 
+			mem_writeb(dest+x,attr); 
+			mem_writeb(dest+8*1024+x,attr); 
+		} 
+		dest+=nextline; 
+	} 
+}
+
 
 static INLINE void CGA4_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
@@ -178,7 +207,8 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 		case M_TEXT2:
 		case M_TEXT16:
 			TEXT_CopyRow(cul,clr,start,start+nlines,base);break;
-//		case M_CGA2:
+		case M_CGA2:
+			CGA2_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_CGA4:
 			CGA4_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_TANDY16:
@@ -202,7 +232,8 @@ filling:
 		case M_TEXT2:
 		case M_TEXT16:
 			TEXT_FillRow(cul,clr,start,base,attr);break;
-//		case M_CGA2:
+		case M_CGA2:
+			CGA2_FillRow(cul,clr,start,base,attr);break;
 		case M_CGA4:
 			CGA4_FillRow(cul,clr,start,base,attr);break;
 		case M_TANDY16:		
