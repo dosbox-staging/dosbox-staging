@@ -30,21 +30,24 @@ Flag_Info flags;
 CPU_Regs cpu_regs;
 
 Segment Segs[6];
-Bitu cpu_cycles;
+
+Bits CPU_Cycles=0;
+Bits CPU_CycleLeft=0;
+Bits CPU_CycleMax=1500;
 
 CPU_Decoder * cpudecoder;
 
 static void CPU_CycleIncrease(void) {
-	Bitu old_cycles=cpu_cycles;
-	cpu_cycles=(Bitu)(cpu_cycles*1.2);
-	if (cpu_cycles==old_cycles) cpu_cycles++;
-	LOG_MSG("CPU:%d cycles",cpu_cycles);
+	Bitu old_cycles=CPU_CycleMax;
+	CPU_CycleMax=(Bitu)(CPU_CycleMax*1.2);
+	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
+	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
 }
 
 static void CPU_CycleDecrease(void) {
-	cpu_cycles=(Bitu)(cpu_cycles/1.2);
-	if (!cpu_cycles) cpu_cycles=1;
-	LOG_MSG("CPU:%d cycles",cpu_cycles);
+	CPU_CycleMax=(Bitu)(CPU_CycleMax/1.2);
+	if (!CPU_CycleMax) CPU_CycleMax=1;
+	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
 }
 
 Bit8u lastint;
@@ -67,10 +70,10 @@ void Interrupt(Bit8u num) {
 	case 0x11:
 	case 0x12:
 	case 0x13:
-	case 0x16:
 	case 0x15:
-	case 0x1A:
+	case 0x16:
 	case 0x17:
+	case 0x1A:
 	case 0x1C:
 	case 0x21:
 	case 0x2a:
@@ -167,13 +170,15 @@ void CPU_Init(Section* sec) {
 	flags.io=0;
 
 	SetCPU16bit();
-	cpu_cycles=section->Get_int("cycles");
-	if (!cpu_cycles) cpu_cycles=300;
+	
 	KEYBOARD_AddEvent(KBD_f11,CTRL_PRESSED,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,CTRL_PRESSED,CPU_CycleIncrease);
 
-	reg_al=0;
-	reg_ah=0;
-    MSG_Add("CPU_CONFIGFILE_HELP","The amount of cycles to execute each loop. Lowering this setting will slowdown dosbox\n");
+	CPU_Cycles=0;
+	CPU_CycleMax=section->Get_int("cycles");;
+	if (!CPU_CycleMax) CPU_CycleMax=1500;
+	CPU_CycleLeft=0;
+
+	MSG_Add("CPU_CONFIGFILE_HELP","The amount of cycles to execute each loop. Lowering this setting will slowdown dosbox\n");
 }
 
