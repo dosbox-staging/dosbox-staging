@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: keyboard.cpp,v 1.18 2004-01-07 12:18:58 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -66,6 +68,7 @@ struct KeyBlock {
 	bool enabled;
 	bool active;
 	bool scheduled;
+	bool key_on_60;
 };
 
 static KeyBlock keyb;
@@ -79,6 +82,7 @@ void KEYBOARD_ClrBuffer(void) {
 	keyb.buf.pos=0;
 	keyb.scheduled=false;
 	PIC_DeActivateIRQ(1);
+	keyb.key_on_60=false;
 }
 
 /* Read an entry from the keycode buffer */
@@ -97,6 +101,7 @@ void KEYBOARD_GetCode(void) {
 		keyb.buf.state=STATE_NORMAL;
 		break;
 	}
+	keyb.key_on_60=true;
 	if (keyb.enabled) PIC_ActivateIRQ(1);
 }
 
@@ -253,7 +258,9 @@ static void write_p64(Bit32u port,Bit8u val) {
 }
 
 static Bit8u read_p64(Bit32u port) {
-	return 0x1c | (keyb.buf.used ? 0x1 : 0x0);
+	Bit8u status= 0x1c | ((keyb.buf.used ||keyb.key_on_60)? 0x1 : 0x0);
+	keyb.key_on_60=false;
+	return status;
 }
 
 void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
@@ -421,5 +428,6 @@ void KEYBOARD_Init(Section* sec) {
 	keyb.enabled=true;
 	keyb.command=CMD_NONE;
 	keyb.last_index=0;
+	keyb.key_on_60=false;
 	KEYBOARD_ClrBuffer();
 }
