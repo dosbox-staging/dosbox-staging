@@ -366,7 +366,6 @@ void VGA_SetupDrawing(void) {
 	if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
 	/* Check for pixel doubling, master clock/2 */
 	if (vga.seq.clocking_mode & 0x8) {
-		clock/=2;
 		htotal*=2;
 	}
 	/* Check for dual transfer whatever thing,master clock/2 */
@@ -424,6 +423,7 @@ void VGA_SetupDrawing(void) {
 		width*=9;
 		height=384;
 		pitch=width;
+		aspect_ratio=1.0;
 		break;
 	case M_TANDY16:
 		width<<=3;
