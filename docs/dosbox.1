@@ -25,7 +25,8 @@ A summary of options is included below.
 .BI \-c  " command" 
 .RI "Runs the specified " command " before running " 
 .BR file . 
-.RI "Multiple commands can be specified. Each " command " should start with \-c though."
+.RI "Multiple commands can be specified. Each " command " should start with "
+.BR \-c " though."
 .TP
 .BI \-conf " configfile
 .RB "Start " dosbox " with the options specified in "
@@ -42,7 +43,7 @@ A summary of options is included below.
 supports most of the DOS commands found in command.com. In addition, the
 following extra commands are available:
 .HP
-.BI "MOUNT [\-t " type "] [-size " size ]
+.BI "MOUNT [\-t " type "] [\-size " size ]
 .I driveletter sourcedirectory 
 .B [\-aspi] [\-ioctl]
 .BI "[\-usecd " number "] [\-label " drivelabel ]
@@ -92,7 +93,9 @@ Display the amount of free memory
 .TP
 .B CONFIG [\-writeconf] [\-writelang] file
 .LP
-.RB "Write the current configuration or language settings to " file .
+.RB "Write the current configuration or language settings to " file ,
+which is located on the local filesystem. Not a mounted drive in 
+.BR dosbox .
 .TP 
 .B LOADFIX [\-size] [programname] [parameters]
 .LP
