@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.39 2004-03-10 14:08:18 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.40 2004-04-01 13:00:05 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -502,7 +502,7 @@ void DOS_Shell::CMD_IF(char * args) {
 			return;
 		};
 			
-		if (DOS_FindFirst(word,0xFFFF)==(!has_not)) DoCommand(args);
+		if (DOS_FindFirst(word,0xffff & ~DOS_ATTR_VOLUME)==(!has_not)) DoCommand(args);
 		return;
 	}
 	if (strcasecmp(word,"ERRORLEVEL")==0) {
