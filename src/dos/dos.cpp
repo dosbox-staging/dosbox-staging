@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.63 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.64 2004-01-19 17:51:04 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -763,7 +763,7 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x60:					/* Canonicalize filename or path */
-		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
+		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
 				MEM_BlockWrite(SegPhys(es)+reg_di,name2,strlen(name2)+1);	
 				CALLBACK_SCF(false);
