@@ -1,8 +1,18 @@
-0.60
+0.56
   - added support for a configclass/configfile
   - added support for writing out the configclass into a configfile
   - removed the language file and made it internal
   - added support for writing the language file (will override the internal one)
+  - improved mousesupport
+  - updated readme
+  - support for screenshots
+  - some cpu-bug fixes
+  - dma changes
+  - Real Sound support
+  - EMM fixes
+  - VGA fixes
+  - new wildcompare
+  - support for size and disktype at mount.
   
 0.55
   - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becomming unsigned).
