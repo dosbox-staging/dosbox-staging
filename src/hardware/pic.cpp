@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.21 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.22 2004-07-05 12:02:40 harekiet Exp $ */
 
 #include <list>
 
@@ -33,8 +33,6 @@ struct IRQ_Block {
 	bool active;
 	bool inservice;
 	Bitu vector;
-	char * name;
-	PIC_EOIHandler * handler;
 };
 
 struct PIC_Controller {
@@ -94,7 +92,6 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	case 0x20:case 0x21:case 0x22:case 0x23:case 0x24:case 0x25:case 0x26:case 0x27:
 		if (PIC_IRQActive<(irq_base+8)) {
 			irqs[PIC_IRQActive].inservice=false;
-			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
 			PIC_IRQActive=PIC_NOIRQ;
 			for (i=0; i<=15; i++){
 				if(irqs[IRQ_priority_table[i]].inservice) {
@@ -113,7 +110,6 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		/* Spefific EOI 0-7 */
 		if (PIC_IRQActive==(irq_base+val-0x60U)) {
 			irqs[PIC_IRQActive].inservice=false;
-			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
 			PIC_IRQActive=PIC_NOIRQ;
 			for (i=0; i<=15; i++) {
 				if (irqs[IRQ_priority_table[i]].inservice) {
@@ -219,20 +215,6 @@ static Bitu read_data(Bitu port,Bitu iolen) {
 	return ret;
 }
 
-void PIC_RegisterIRQ(Bitu irq,PIC_EOIHandler handler,char * name) {
-	if (irq>15) E_Exit("PIC:Illegal IRQ");
-	irqs[irq].name=name;
-	irqs[irq].handler=handler;
-}
-
-void PIC_FreeIRQ(Bitu irq) {
-	if (irq>15) E_Exit("PIC:Illegal IRQ");
-	irqs[irq].name=0;
-	irqs[irq].handler=0;
-	irqs[irq].active=0;
-	irqs[irq].inservice=0;
-	PIC_IRQCheck&=~(1 << irq);
-}
 
 void PIC_ActivateIRQ(Bitu irq) {
 	if (irq<16) {

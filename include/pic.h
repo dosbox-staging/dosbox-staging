@@ -50,17 +50,12 @@ INLINE Bit64u PIC_MicroCount(void) {
 }
 
 void PIC_ActivateIRQ(Bitu irq);
-
 void PIC_DeActivateIRQ(Bitu irq);
 
 void PIC_runIRQs(void);
-
-void PIC_RegisterIRQ(Bitu irq,PIC_EOIHandler handler,char * name);
-void PIC_FreeIRQ(Bitu irq);
 bool PIC_RunQueue(void);
 
 void PIC_AddEvent(PIC_EventHandler handler,Bitu delay,Bitu val=0);
-
 void PIC_RemoveEvents(PIC_EventHandler handler);
 
 void PIC_SetIRQMask(Bitu irq, bool masked);

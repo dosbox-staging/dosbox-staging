@@ -240,13 +240,8 @@ CSerial::CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps) {
 		IO_RegisterReadHandler(i+8,ReadSerial,IO_MB);
 	}
 	
-	PIC_RegisterIRQ(irq,0,"SERIAL");
-
 	rqueue=new CFifo(QUEUE_SIZE);
 	tqueue=new CFifo(QUEUE_SIZE);
-
-
-
 };
 
 CSerial::~CSerial(void)
