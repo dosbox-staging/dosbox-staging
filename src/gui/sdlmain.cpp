@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "SDL.h"
-#include "SDL_Thread.h"
+#include "SDL_thread.h"
 
 #include "dosbox.h"
 #include "video.h"
