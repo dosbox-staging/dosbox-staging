@@ -59,7 +59,7 @@ extern LazyFlags lflags;
 {																			\
 	SETFLAGBIT(OF,get_OF());												\
 	lflags.type=t_UNKNOWN;													\
-	CPU_SetFlags(reg_flags,FMASK_NORMAL & 0xff);								\
+	CPU_SetFlags(FLAGB,FMASK_NORMAL & 0xff);								\
 }
 
 #define SETFLAGSw(FLAGW)													\
