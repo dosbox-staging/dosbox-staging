@@ -188,6 +188,14 @@ bool localDrive::TestDir(char * dir) {
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
+	// Skip directory test, if "\"
+	Bit16u len = strlen(newdir);
+	if ((len>0) && (newdir[len-1]!='\\')) {
+		// It has to be a directory !
+		struct stat test;
+		if (stat(newdir,&test)==-1)			return false;
+		if ((test.st_mode & S_IFDIR)==0)	return false;
+	};
 	int temp=access(newdir,F_OK);
 	return (temp==0);
 }
