@@ -66,7 +66,7 @@ public:
 	void RunInternal(void); //for command /C
 /* A load of subfunctions */
 	void ParseLine(char * line);
-	Bit32u GetRedirection(char *s, char **ifn, char **ofn);
+	Bitu GetRedirection(char *s, char **ifn, char **ofn,bool * append);
 	void InputCommand(char * line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);

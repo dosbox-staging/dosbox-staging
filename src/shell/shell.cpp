@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "setup.h"
 #include "shell_inc.h"
 
@@ -62,31 +63,75 @@ DOS_Shell::DOS_Shell():Program(){
 
 
 
-Bit32u DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn) {
+Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 
-	char *output = strrchr(s, '>');
-	if (output) {
-	   *output = 0;
-	//	while (!isalnum(*output)) output++;
+	char * lr=s;
+	char * lw=s;
+	char ch;
+	Bitu num=0;
+
+	while (ch=*lr++) {
+		switch (ch) {
+		case '>':
+			*append=(*lr)=='>';
+			if (append) lr++;
+			lr=ltrim(lr);
+			if (*ofn) free(*ofn);
+			*ofn=lr;
+			while (*lr && *lr!=' ') lr++;
+			*lr=0;
+			*ofn=strdup(*ofn);
+			continue;
+		case '<':
+			if (*ifn) free(*ifn);
+			lr=ltrim(lr);
+			*ifn=lr;
+			while (*lr && *lr!=' ') lr++;
+			*lr=0;
+			*ifn=strdup(*ifn);
+			continue;
+		case '|':
+			ch=0;
+			num++;
+		}
+		*lw++=ch;
 	}
-
-	return 1;
-}
+	*lw=0;
+	return num;
+}	
 
 void DOS_Shell::ParseLine(char * line) {
-
-	char * in=0;
-	char * out=0;
 
 	/* Check for a leading @ */
  	if (line[0]=='@') line[0]=' ';
 	line=trim(line);
-	Bit32u num=0;		/* Number of commands in this line */
 
-	num = GetRedirection(line, &in, &out);
+#if 1
+	/* Do redirection and pipe checks */
+	
+	char * in=0;
+	char * out=0;
 
-/* TODO in and out redirection */
-        
+	Bit16u old_in,old_out;
+
+	Bitu num=0;		/* Number of commands in this line */
+	bool append;
+
+	num = GetRedirection(line,&in, &out,&append);
+	if (num>1) LOG_MSG("SHELL:Multiple command on 1 line not supported");
+//	if (in || num>1) DOS_DuplicateEntry(0,&old_in);
+
+	if (in) {
+		LOG_MSG("SHELL:Redirect input from %s",in);
+		DOS_CloseFile(0);
+		free(in);
+	}
+	if (out) {
+		LOG_MSG("SHELL:Redirect output to %s",out);
+		free(out);
+	}
+#endif
+
 	DoCommand(line);
 	
 }
@@ -159,15 +204,10 @@ void DOS_Shell::SyntaxError(void) {
 void AUTOEXEC_Init(Section * sec) {
     MSG_Add("AUTOEXEC_CONFIGFILE_HELP","Add here the lines you want to execute on startup.\n");
 	/* Register a virtual AUOEXEC.BAT file */
-
+	std::string line;
 	Section_line * section=static_cast<Section_line *>(sec);
 	char * extra=(char *)section->data.c_str();
 	if (extra) SHELL_AddAutoexec(extra);
-	/* Check to see for extra command line options to be added */
-	std::string line;
-	while (control->cmdline->FindString("-c",line,true)) {
-		SHELL_AddAutoexec((char *)line.c_str());	
-	}
 	/* Check for first command being a directory or file */
 	char buffer[CROSS_LEN];
 	if (control->cmdline->FindCommand(1,line)) {
@@ -190,6 +230,10 @@ void AUTOEXEC_Init(Section * sec) {
 			SHELL_AddAutoexec("C:");
 			SHELL_AddAutoexec(name);
 		}
+	}
+	/* Check to see for extra command line options to be added */
+	while (control->cmdline->FindString("-c",line,true)) {
+		SHELL_AddAutoexec((char *)line.c_str());	
 	}
 nomount:
 	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
