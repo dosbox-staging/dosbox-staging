@@ -40,7 +40,7 @@ struct AllocBlock {
 };
 
 struct LinkBlock {
-	Bit8u used;
+	Bitu used;
 	Bit32u pages[MAX_LINKS];
 };
 
@@ -156,6 +156,7 @@ void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler) {
 
 void MEM_UnlinkPages(void) {
 	PAGING_ClearTLBEntries(memory.links.used,memory.links.pages);
+	memory.links.used=0;
 }
 
 Bitu mem_strlen(PhysPt pt) {
@@ -495,11 +496,25 @@ void phys_writed(PhysPt addr,Bit32u val) {
 Bit32u MEM_PhysReadD(Bitu addr) {
 	Bitu page=addr >> 12;
 	Bitu index=(addr & 4095);
+	if (page>memory.pages) 
+		E_Exit("Reading from illegal page");
 	HostPt block=memory.hostpts[page];
 	if (!block) {
 		E_Exit("Reading from empty page");
 	}
 	return host_readd(block+index);
+}
+
+void MEM_PhysWriteD(Bitu addr,Bit32u val) {
+	Bitu page=addr >> 12;
+	Bitu index=(addr & 4095);
+	if (page>memory.pages) 
+		E_Exit("Writing  from illegal page");
+	HostPt block=memory.hostpts[page];
+	if (!block) {
+		E_Exit("Writing to empty page");
+	}
+	host_writed(block+index,val);
 }
 
 
