@@ -44,10 +44,9 @@ static Bit8u * VGA_HERC_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_CGA2_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[vidstart+(line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
-		Bitu val=*reader++;
+		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
 		*draw++=CGA_2_Table[val >> 4];
 		*draw++=CGA_2_Table[val & 0xf];
 	}
@@ -55,10 +54,10 @@ static Bit8u * VGA_CGA2_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_CGA4_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[vidstart+(line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		*draw++=CGA_4_Table[*reader++];
+		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
+		*draw++=CGA_4_Table[val];
 	}
 	return VGA_DrawBuffer;
 }
@@ -70,10 +69,9 @@ static Bit8u convert16[16]={
 };
 
 static Bit8u * VGA_CGA16_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[vidstart+(line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val=*reader++;
+		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
 		Bit32u full=convert16[val >> 4] | convert16[val & 0xf] << 16;
 		*draw++=full|=full<<8;
 	}
@@ -216,6 +214,9 @@ static void VGA_VerticalTimer(void) {
 		/* check for blinking and blinking change delay */
 		FontMask[1]=(vga.attr.mode_control & (vga.draw.cursor.count >> 1) & 0x8) ?
 			0 : 0xffffffff;
+		break;
+	case M_CGA4:case M_CGA2:case M_CGA16:
+		vga.draw.address=(vga.draw.address*2)&0x1fff;
 		break;
 	}
 	if (RENDER_StartUpdate()) {
