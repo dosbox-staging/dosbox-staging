@@ -94,8 +94,8 @@ extern Bitu cycle_count;
 	core.seg_prefix_base=SegBase(_SEG);		\
 	goto restart_prefix;
 
-#define DO_PREFIX_ADDR()					\
-	core.prefixes^=PREFIX_ADDR;				\
+#define DO_PREFIX_ADDR()									\
+	core.prefixes|=(core.prefix_default ^ PREFIX_ADDR) & PREFIX_ADDR;		\
 	goto restart_prefix;
 
 #define DO_PREFIX_REP(_ZERO)				\
@@ -194,9 +194,15 @@ restart_opcode:
 #endif
 		}
 	}
-	decode_end:
+decode_end:
 	LEAVECORE;
 	return CBRET_NONE;
+
+illegal_opcode:
+	LEAVECORE;
+	reg_eip-=core.ip_lookup-core.op_start;
+	CPU_Exception(6,0);
+	goto decode_start;
 }
 
 Bits CPU_Core_Normal_Trap_Run(void) {

@@ -167,6 +167,7 @@
 		break;
 	CASE_D(0x63)												/* ARPL Ed,Rd */
 		{
+			if (((cpu.pmode) && (reg_flags & FLAG_VM)) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {

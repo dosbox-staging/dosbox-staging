@@ -237,6 +237,7 @@
 		break;
 	CASE_W(0x63)												/* ARPL Ew,Rw */
 		{
+			if (((cpu.pmode) && (reg_flags & FLAG_VM)) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
