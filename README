@@ -83,7 +83,7 @@ MOUNT -cd
 
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some 
-        systems if the cd label isnt read correctly. Useful when a 
+        systems if the cd label isn't read correctly. Useful when a 
         program can't find its cdrom.
 
   -aspi
