@@ -101,7 +101,7 @@ typedef struct {
 	Bitu address_line_total;
 	Bitu address_line;
 	Bitu lines_total;
-	Bitu lines_left;
+	Bitu lines_done;
 	Bitu lines_scaled;
 	Bitu split_line;
 	Bitu parts_total;
@@ -132,12 +132,25 @@ typedef struct {
 } VGA_Draw;
 
 typedef struct {
+	Bit8u curmode;
+	Bit16u originx, originy;
+	Bit8u fstackpos, bstackpos;
+	Bit8u forestack[3];
+	Bit8u backstack[3];
+	Bit16u startaddr;
+	Bit8u posx, posy;
+	Bit8u mc[64][64];
+} VGA_HWCURSOR;
+
+typedef struct {
 	Bit8u bank;
 	Bit8u reg_lock1;
 	Bit8u reg_lock2;
 	Bit8u reg_31;
 	Bit8u reg_35;
+	Bit8u reg_40; // 8415/A functionality register
 	Bit8u reg_43;
+	Bit8u reg_45; // Hardware graphics cursor
 	Bit8u reg_58;
 	Bit8u reg_51;
 	Bit8u reg_55;
@@ -145,6 +158,7 @@ typedef struct {
 	Bit8u ex_ver_overflow;
 	Bit16u la_window;
 	Bit8u misc_control_2;
+	Bit8u ext_mem_ctrl;
 	struct {
 		Bit8u r;
 		Bit8u n;
@@ -154,6 +168,7 @@ typedef struct {
 		Bit8u lock;
 		Bit8u cmd;
 	} pll;
+	VGA_HWCURSOR hgc;
 } VGA_S3;
 
 typedef struct {
@@ -323,6 +338,7 @@ void VGA_SetupMisc(void);
 void VGA_SetupGFX(void);
 void VGA_SetupSEQ(void);
 void VGA_SetupOther(void);
+void VGA_SetupXGA(void);
 
 /* Some Support Functions */
 void VGA_SetClock(Bitu which,Bitu target);
