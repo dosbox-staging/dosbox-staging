@@ -616,7 +616,7 @@ Bitu DEBUG_EnableDebugger(void);
 static void DSP_DoCommand(void) {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
-	case 0x04:	/* DSP Statues SB 2.0/pro version */
+	case 0x04:	/* DSP Status SB 2.0/pro version */
 		DSP_FlushData();
 		DSP_AddData(0xff);			//Everthing enabled
 		break;
@@ -642,6 +642,10 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x40:	/* Set Timeconstant */
 		sb.freq=(1000000 / (256 - sb.dsp.in.data[0]));
+		/* Nasty kind of hack to allow runtime changing of frequency */
+		if (sb.dma.mode != DSP_DMA_NONE && sb.dma.autoinit) {
+			DSP_PrepareDMA_Old(sb.dma.mode,sb.dma.autoinit);
+		}
 		break;
 	case 0x41:	/* Set Output Samplerate */
 	case 0x42:	/* Set Input Samplerate */
