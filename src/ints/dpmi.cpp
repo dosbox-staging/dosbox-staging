@@ -298,6 +298,7 @@ private:
 			Bitu psp;
 		} client;
 		Bit32s mem_handle;		/* Handle for GDT/IDT */
+		Bitu   idtBase,idtLimit;
 		struct {
 			PhysPt base;
 			Bitu limit;
@@ -375,6 +376,14 @@ struct {
 // ************************************************
 // DPMI static functions
 // ************************************************
+
+#define SWITCH_TO_REALMODE 	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION); \
+							CPU_SIDT(dpmi.idtLimit,dpmi.idtBase); \
+							CPU_LIDT(256*4,0);
+
+#define SWITCH_TO_PROTMODE	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION); \
+							CPU_LIDT(dpmi.idtLimit,dpmi.idtBase);
+
 
 static DPMI*	activeDPMI	= 0;
 static Bit32u	originalIntTable[256];
@@ -835,7 +844,7 @@ Bitu DPMI::RealModeCallback(void)
 		desc.Save	 (dpmi.ldt.base+(dpmi.realStackSelector[dpmi.protStackCurrent] & ~7));
 	} else E_Exit("DPMI: RealmodeCB: Could not provide real mode stack descriptor.");
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
+	SWITCH_TO_PROTMODE
 	// Setup dataSelector	
 	Descriptor data;
 	Bitu dataSelector;
@@ -881,7 +890,7 @@ Bitu DPMI::RealModeCallbackReturn(void)
 	PhysPt data = PhysPt(SegPhys(es)+reg_edi);
 	DPMI_LOG("DPMI: CB: Reading RegData at = %04X:%04X",SegValue(es),reg_edi);
 	/* Swtich to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
+	SWITCH_TO_REALMODE
 	dpmi.protStackCurrent--;
 	// Restore Registers		
 	LoadRegistersFromBuffer(data);		
@@ -911,7 +920,7 @@ Bitu DPMI::CallRealIRETFrame(bool callAsInt)
 	LoadRegistersFromBuffer(data);
 	PushStack(data);
 	/* Switch to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
+	SWITCH_TO_REALMODE
 	// Provide Stack
 	ProvideRealModeStack(prStack,toCopy);
 	// Push flags
@@ -935,7 +944,7 @@ Bitu DPMI::CallRealIRETFrameReturn(void)
 	// returning from realmode func
 	DPMI_LOG("DPMI: LEAVE REAL PROC IRETF %d",count);
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
+	SWITCH_TO_PROTMODE
 	// Save registers into real mode structure
 	CopyRegistersToBuffer(PopStack());
 	// Restore changed Resgisters
@@ -963,7 +972,7 @@ Bitu DPMI::SimulateInt(void)
 	LoadRegistersFromBuffer(data);
 	PushStack(data);
 	/* Switch to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
+	SWITCH_TO_REALMODE
 	// Provide Stack
 	ProvideRealModeStack(prStack,toCopy);
 	// prepare for return
@@ -985,7 +994,7 @@ Bitu DPMI::SimulateIntReturn(void)
 
 	UpdateRealModeStack();
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
+	SWITCH_TO_PROTMODE
 	// Save registers into real mode structure
 	CopyRegistersToBuffer(PopStack());
 	// Restore changed Resgisters
@@ -1009,7 +1018,7 @@ void DPMI::PrepareReflectToReal(Bitu num)
 	PushStack(reg_eip);
 	PushStack(SegValue(cs));
 	/* Swtich to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
+	SWITCH_TO_REALMODE
 	// Setup cs:ip to return to intreturn
 	Bitu retcs = RealSeg(CALLBACK_RealPointer(callback.ptorintReturn));
 	Bitu retip = RealOff(CALLBACK_RealPointer(callback.ptorintReturn));
@@ -1043,7 +1052,7 @@ Bitu DPMI::ptorHandlerReturn(void)
 {
 	UpdateRealModeStack();
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
+	SWITCH_TO_PROTMODE
 	// Restore Registers
 	Bitu newcs	= PopStack();
 	reg_eip		= PopStack();
@@ -1060,11 +1069,11 @@ Bitu DPMI::ptorHandlerReturn(void)
 	}
 	// Change flags on stack to reflect possible results from ints
 	if (dpmi.client.bit32) {
-		Bit32u oldFlags  = mem_readd(SegPhys(ss)+reg_esp+8) & ~FMASK_NORMAL;	// leave only flags that cannot be changed by int 
+		Bit32u oldFlags  = mem_readd(SegPhys(ss)+reg_esp+8) & ~FMASK_TEST;	// leave only flags that cannot be changed by int 
 		Bit32u userFlags = reg_flags & FMASK_NORMAL;							// Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writed(SegPhys(ss)+reg_esp+8,oldFlags|userFlags);
 	} else {
-		Bit16u oldFlags  = mem_readw(SegPhys(ss)+reg_sp+4) & ~FMASK_NORMAL;		// leave only flags that cannot be changed by int 
+		Bit16u oldFlags  = mem_readw(SegPhys(ss)+reg_sp+4) & ~FMASK_TEST;		// leave only flags that cannot be changed by int 
 		Bit16u userFlags = reg_flags & FMASK_NORMAL;							// Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writew(SegPhys(ss)+reg_sp+4,oldFlags|userFlags);
 	};
@@ -1088,7 +1097,7 @@ Bitu DPMI::Int21Handler(void)
 	PushStack(SegValue(cs));
 
 	/* Swtich to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);		
+	SWITCH_TO_REALMODE
 	// Setup cs:ip to return to intreturn
 	SegSet16(cs,RealSeg(CALLBACK_RealPointer(callback.int21Return)));
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.int21Return));
@@ -1110,7 +1119,7 @@ Bitu DPMI::Int21HandlerReturn(void)
 {
 	UpdateRealModeStack();
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
+	SWITCH_TO_PROTMODE
 	// Restore Registers
 	Bitu newcs = PopStack();
 	CPU_SetSegGeneral(es,PopStack());
@@ -1249,7 +1258,7 @@ Bitu DPMI::EnterProtMode(void) {
 	SaveRegisterState(0);
 
 	/* Switch to protected mode */
-	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);	
+	SWITCH_TO_PROTMODE
 
 	CPU_SetSegGeneral(ds,reg_ax);
 	CPU_SetSegGeneral(es,reg_cx);
@@ -1277,7 +1286,7 @@ Bitu DPMI::EnterRealMode(void) {
 	SaveRegisterState(1);
 
 	/* Swtich to real mode */
-	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
+	SWITCH_TO_REALMODE
 	// (E)BP will be preserved across the mode switch call so it can be used as a pointer.
 	// TODO: If interrupts are disabled when the mode switch procedure is invoked, 
 	// they will not be re-enabled by the DPMI host (even temporarily).
@@ -1539,7 +1548,7 @@ Bitu DPMI::Int31Handler(void)
 					if ((!dpmi.client.bit32) && (reg_cx!=0)) {
 						// 16-bit DPMI implementations can not set segment limits greater 
 						// than 0FFFFh (64K) so CX must be zero when calling						
-						DPMI_LOG_ERROR("DPMI: 0008: Set Segment Limit invalid: %04X ",reg_bx);
+						DPMI_LOG_ERROR("DPMI: 0008: Set Segment Limit invalid: %04X (%04X%04X)",reg_bx,reg_cx,reg_dx);
 						reg_ax = DPMI_ERROR_INVALID_VALUE;
 						DPMI_CALLBACK_SCF(true);
 					} else if (cpu.gdt.GetDescriptor(reg_bx,desc)) {
@@ -1607,6 +1616,17 @@ Bitu DPMI::Int31Handler(void)
 							DPMI_CALLBACK_SCF(true);
 							break;
 						};
+						// TEMP : Test
+/*						if (!dpmi.client.bit32) {
+							if (desc.GetLimit()>0xFFFF) {
+								DPMI_LOG_ERROR("DPMI: 000C: Set Limit %04X : failure (%08X)",reg_bx,desc.GetLimit());
+								desc.SetLimit(0xFFFF);
+							}
+							if (desc.GetBase ()>0xFFFFFF) {
+								DPMI_LOG_ERROR("DPMI: 000C: Set Base %04X : failure (%08X)",reg_bx,desc.GetBase());
+								desc.SetBase(desc.GetBase() % 0xFFFFFF);
+							}
+						}*/
 						desc.Save(dpmi.ldt.base+(reg_bx & ~7));
 						ReloadSegments(reg_bx);
 						DPMI_LOG("DPMI: 000B: Set Descriptor %04X : B:%08X L:%08X : P %01X",reg_bx,desc.GetBase(),desc.GetLimit(),desc.saved.seg.p);
