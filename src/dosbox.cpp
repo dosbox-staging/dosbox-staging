@@ -169,7 +169,9 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);
 	secprop->AddInitFunction(&CMOS_Init);
-	secprop->AddInitFunction(&RENDER_Init);
+	secprop=control->AddSection_prop("render",&RENDER_Init);
+	secprop->Add_int("frameskip",0);
+	secprop->Add_bool("keepsmall",false);
 	secprop->Add_string("snapshots","snapshots");
 	
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
