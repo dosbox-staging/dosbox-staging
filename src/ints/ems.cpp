@@ -142,7 +142,7 @@ static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
 	/* Check for enough pages */
 	if ((emm_handles[handle].pages+EMM_GetFreePages())<pages) return EMM_OUT_OF_LOG;
 	Bit16u page=emm_handles[handle].first_page;
-	Bit16u last=NULL_PAGE;
+	Bit16u last=page;
 	Bit16u page_count=emm_handles[handle].pages;
 	while (pages>0 && page_count>0) {
 		if (emm_pages[page].handle!=handle) E_Exit("EMM:Error illegal handle reference");
