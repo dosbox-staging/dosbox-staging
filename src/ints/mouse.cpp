@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.24 2003-09-24 19:35:01 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.25 2003-11-27 18:54:22 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -585,6 +585,23 @@ static Bitu INT33_Handler(void) {
 			SegSet16(es,oldSeg);
 		}
 		break;		
+	case 0x15: /* Get Driver storage space requirements */
+		reg_bx = sizeof(mouse);
+		break;
+	case 0x16: /* Save driver state */
+		{
+			LOG(LOG_MOUSE,LOG_WARN)("Saving driver state...");
+			PhysPt dest = SegPhys(es)+reg_dx;
+			MEM_BlockWrite(dest, &mouse, sizeof(mouse));
+		}
+		break;
+	case 0x17: /* load driver state */
+		{
+			LOG(LOG_MOUSE,LOG_WARN)("Loading driver state...");
+			PhysPt src = SegPhys(es)+reg_dx;
+			MEM_BlockRead(src, &mouse, sizeof(mouse));
+		}
+		break;
 	case 0x1a:	/* Set mouse sensitivity */
 		SetMickeyPixelRate(reg_bx,reg_cx);
 		// ToDo : double mouse speed value
@@ -600,11 +617,16 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x24:	/* Get Software version and mouse type */
 		reg_bx=0x805;	//Version 8.05 woohoo 
-		reg_ch=0xff;	/* Unkown type */
+		reg_ch=0x04;	/* PS/2 type */
 		reg_cl=0;		/* Hmm ps2 irq dunno */
 		break;
+	case 0x26: /* Get Maximum virtual coordinates */
+		reg_bx=(mouse.shown < 0 ? 0xffff : 0x0000);
+		reg_cx=mouse.max_x;
+		reg_dx=mouse.max_y;
+		break;
 	default:
-		LOG(LOG_MOUSE,LOG_ERROR)("Mouse Function %2X",reg_ax);
+		LOG(LOG_MOUSE,LOG_ERROR)("Mouse Function %04X not implemented!",reg_ax);
 	}
 	return CBRET_NONE;
 }
