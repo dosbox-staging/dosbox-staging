@@ -202,7 +202,7 @@ static void DSP_SetSpeaker(bool how) {
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	LOG(LOG_SB,LOG_NORMAL)("Raising IRQ");
-	PIC_AddIRQ(sb.hw.irq,0);
+	PIC_ActivateIRQ(sb.hw.irq);
 	switch (type) {
 	case SB_IRQ_8:
 		sb.irq.pending_8bit=true;
@@ -457,6 +457,10 @@ static void DSP_ChangeMode(DSP_MODES mode) {
 	sb.mode=mode;
 }
 
+static void DSP_RaiseIRQEvent(void) {
+	SB_RaiseIRQ(SB_IRQ_8);
+}
+
 static void DSP_StartDMATranfser(DMA_MODES mode) {
 	char * type;
 	/* First fill with current whatever is playing */
@@ -470,7 +474,7 @@ static void DSP_StartDMATranfser(DMA_MODES mode) {
 	sb.tmp.index=0;
 	switch (mode) {
 	case DMA_8_SILENCE:
-		PIC_AddIRQ(sb.hw.irq,((1000000*sb.dma.left)/sb.dma.rate));
+		PIC_AddEvent(&DSP_RaiseIRQEvent,((1000000*sb.dma.left)/sb.dma.rate));
 		sb.dma.mode=DMA_NONE;
 		return;
 	case DMA_8_SINGLE:
@@ -510,6 +514,8 @@ static void DSP_AddData(Bit8u val) {
 
 
 static void DSP_Reset(void) {
+	LOG(LOG_SB,LOG_ERROR)("DSP:Reset");
+	PIC_DeActivateIRQ(sb.hw.irq);
 	DSP_ChangeMode(MODE_NONE);
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
