@@ -7,7 +7,7 @@ NOTE:
 
 While we hope that, one day, DOSBox will run virtually all programs
 ever made for the PC...we are not there yet. At present, DOSBox run on a high-
-end machine will roughly be the equivalent of a low-end 486 PC. The 0.60
+end machine will roughly be the equivalent of a 486 PC. The 0.60
 release has added support for "protected mode" allowing for more complex and
 recent programs, but note that this support is early in development and
 nowhere near as complete as the support for 386 real-mode games (or
@@ -415,10 +415,10 @@ IMGMOUNT
      Required to mount hard drive images.
      
   An example of CD-ROM images:
-  1a. mount c /tmp
-  1b. mount d c:\myiso.iso -t iso
-  or (which also works)
-  2. mount d /tmp/myiso.iso -t iso
+    1a. mount c /tmp
+    1b. imgmount d c:\myiso.iso -t iso
+  or (which also works):
+    2. imgmount d /tmp/myiso.iso -t iso
 
 
 BOOT
