@@ -43,9 +43,6 @@ static Bitu DOS_21Handler(void) {
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
 	switch (reg_ah) {
-	case 0x00:		/* Terminate Program */
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
-		break;
 	case 0x01:		/* Read character from STDIN, with echo */
 		{	
 			Bit8u c;Bit16u n=1;
@@ -161,7 +158,7 @@ static Bitu DOS_21Handler(void) {
 		break;	
 	case 0x0e:		/* Select Default Drive */
 		DOS_SetDefaultDrive(reg_dl);
-		reg_al=26;
+		reg_al=DOS_DRIVES;
 		break;
 	case 0x0f:		/* Open File using FCB */
 		if(DOS_FCBOpen(SegValue(ds),reg_dx)){
@@ -605,8 +602,11 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 //TODO Check for use of execution state AL=5
+	case 0x00:
+           reg_ax=0x4c00;        /* Terminate Program */
 	case 0x4c:					/* EXIT Terminate with return code */
-		{
+		
+        {
 			if (DOS_Terminate(false)) {
 				/* This can't ever return false normally */
 			} else {            
@@ -653,9 +653,10 @@ static Bitu DOS_21Handler(void) {
 //TODO Think hard how shit this is gonna be
 //And will any game ever use this :)
 	case 0x53:					/* Translate BIOS parameter block to drive parameter block */
-//YEAH RIGHT
+        E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+        break;
 	case 0x54:					/* Get verify flag */
-		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+        reg_al=dos.verify?1:0;
 		break;
 	case 0x55:					/* Create Child PSP*/
 		DOS_NewPSP(reg_dx,reg_si);
@@ -821,10 +822,10 @@ static Bitu DOS_21Handler(void) {
 		LOG_WARN("DOS:Windows long file name support call %2X",reg_al);
 		break;
 	case 0xE0:
-		LOG_DEBUG("DOS:E0:Unhandled, what should this call do?");
-		break;
+    case 0xEF:
 	default:
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
+        reg_al=0x00; /* default value */
+		LOG_DEBUG("DOS:Unhandled call %02X. Set al to default of 0 no carry",reg_ah);
 		break;
 	};
 	return CBRET_NONE;
