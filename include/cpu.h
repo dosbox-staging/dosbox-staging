@@ -66,14 +66,17 @@ bool CPU_LMSW(Bitu word);
 void CPU_VERR(Bitu selector);
 void CPU_VERW(Bitu selector);
 
-void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen=0);
-void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu opLen=0);
-void CPU_RET(bool use32,Bitu bytes,Bitu opLen=0);
+void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen);
+void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu opLen);
+void CPU_RET(bool use32,Bitu bytes,Bitu opLen);
+void CPU_IRET(bool use32,Bitu opLen);
+
+bool CPU_CLI(Bitu opLen);
+bool CPU_STI(Bitu opLen);
 
 #define CPU_INT_SOFTWARE		0x1
 #define CPU_INT_EXCEPTION		0x2
 #define CPU_INT_HAS_ERROR		0x4
-
 
 void CPU_Interrupt(Bitu num,Bitu type,Bitu opLen=0);
 INLINE void CPU_HW_Interrupt(Bitu num) {
@@ -87,7 +90,6 @@ void CPU_Exception(Bitu which,Bitu error=0);
 void CPU_StartException(void);
 void CPU_SetupException(Bitu which,Bitu error=0);
 
-void CPU_IRET(bool use32);
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 void CPU_HLT(Bitu opLen);
 
