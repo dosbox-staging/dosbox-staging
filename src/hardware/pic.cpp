@@ -114,6 +114,7 @@ static void write_data(Bit32u port,Bit8u val) {
 	Bitu i;
 	switch(pic->icw_index) {
 	case 0:                        /* mask register */
+		LOG(LOG_PIC,LOG_NORMAL)("%d mask %X",port==0x21 ? 0 : 1,val);
 		for (i=0;i<=7;i++) {
 			irqs[i+irq_base].masked=(val&(1<<i))>0;
 			if (irqs[i+irq_base].active && !irqs[i+irq_base].masked) PIC_IRQCheck|=(1 << (i+irq_base));
@@ -127,14 +128,14 @@ static void write_data(Bit32u port,Bit8u val) {
 #endif
 		break;
 	case 1:                        /* icw2          */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
+		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",port==0x21 ? 0 : 1,val);
 		for (i=0;i<=7;i++) {
 			irqs[i+irq_base].vector=(val&0xf8)+i;
 		};
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	case 2:							/* icw 3 */
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",port==0x21 ? 0 : 1,val);
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	case 3:							/* icw 4 */
@@ -148,7 +149,7 @@ static void write_data(Bit32u port,Bit8u val) {
 		*/
 		pic->auto_eoi=(val & 0x2)>0;
 		
-		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
+		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
 	default:                       /* icw 3, and 4*/
@@ -227,7 +228,7 @@ void PIC_runIRQs(void) {
 			if (!irqs[i].masked && irqs[i].active) {
 				irqs[i].active=false;
 				PIC_IRQCheck&=~(1 << i);
-				Interrupt(irqs[i].vector);
+				CPU_HW_Interrupt(irqs[i].vector);
 				if (!pics[0].auto_eoi) {
 					PIC_IRQActive=i;
 					irqs[i].inservice=true;
