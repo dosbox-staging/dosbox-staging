@@ -29,6 +29,8 @@
 #include "dos_inc.h"
 
 DOS_Block dos;
+DOS_InfoBlock dosInfoBlock;
+
 static Bit8u dos_copybuf[0x10000];
 static Bitu call_20,call_21,call_theend;
 
@@ -532,7 +534,6 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(true);
 		}
 		break;
-		break;
 	case 0x47:					/* CWD Get current directory */
 		//TODO Memory
 		if (DOS_GetCurrentDir(reg_dl,name1)) {
@@ -628,11 +629,12 @@ static Bitu DOS_21Handler(void) {
 	case 0x51:					/* Get current PSP */
 		reg_bx=dos.psp;
 		break;
-	case 0x52:					/* Get list of lists */
-		SegSet16(es,0);
-		reg_bx=0;
-		LOG_ERROR("Call is made for list of lists not supported let's hope for the best");
-		break;
+	case 0x52: {				/* Get list of lists */
+		Bit16u seg;
+		dosInfoBlock.GetDIBPointer(seg,reg_bx);
+		SegSet16(es,seg);
+		LOG_DEBUG("Call is made for list of lists - let's hope for the best");
+		break; }
 //TODO Think hard how shit this is gonna be
 //And will any game ever use this :)
 	case 0x53:					/* Translate BIOS parameter block to drive parameter block */

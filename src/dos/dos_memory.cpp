@@ -158,5 +158,9 @@ void DOS_SetupMemory(void) {
 	mcb->size=0x9FFE - MEM_START;
 	mcb->type=0x5a;									//Last Block
 	dos.firstMCB=MEM_START;
+
+	// Create Dos Info Block : maximum size 95 Bytes....
+	dosInfoBlock.SetLocation(DOS_GetMemory(6));
+	dosInfoBlock.SetFirstMCB(RealMake(dos.firstMCB,0));
 }
 

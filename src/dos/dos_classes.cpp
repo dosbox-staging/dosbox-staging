@@ -266,3 +266,23 @@ RealPt DOS_ParamBlock::cmdtail(void){
 	return mem_readd(off+offsetof(sParamBlock,exec.cmdtail));
 }
 
+// * Dos Info Block (list of lists) *
+
+void DOS_InfoBlock::SetLocation(Bit16u segment)
+{
+	seg = segment;
+	dib = (SDosInfoBlock*)HostMake(segment,0);
+	Bit16u size = sizeof(SDosInfoBlock);
+	memset(dib,0,sizeof(SDosInfoBlock));
+};
+
+void DOS_InfoBlock::SetFirstMCB(RealPt pt)
+{
+	dib->firstMCB = pt;
+};
+
+void DOS_InfoBlock::GetDIBPointer(Bit16u& segment, Bit16u& offset)
+{
+	segment = seg;
+	offset	= offsetof(SDosInfoBlock,firstDPB);
+};
