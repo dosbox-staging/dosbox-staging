@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.61 2004-08-23 12:17:29 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.62 2004-12-28 16:11:54 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -320,7 +320,7 @@ bool CPU_IO_Exception(Bitu port,Bitu size) {
 	}
 	return false;
 doexception:
-	LOG_MSG("Exception");
+	LOG(LOG_CPU,LOG_NORMAL)("IO Exception port %X",port);
 	return CPU_PrepareException(13,0);
 }
 

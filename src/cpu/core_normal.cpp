@@ -171,7 +171,7 @@ restart_opcode:
 					sprintf(writecode,"%X",mem_readb(core.cseip++));
 					writecode+=2;
 				}
-				LOG(LOG_CPU,LOG_ERROR)("Illegal/Unhandled opcode %s",tempcode);
+				LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
 			}
 #endif
 			CPU_Exception(6,0);
