@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.18 2003-11-08 17:59:30 harekiet Exp $ */
+/* $Id: dos_system.h,v 1.19 2004-01-10 14:03:33 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_

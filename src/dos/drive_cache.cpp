@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.30 2003-12-26 20:39:27 finsterr Exp $ */
+/* $Id: drive_cache.cpp,v 1.31 2004-01-10 14:03:34 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"

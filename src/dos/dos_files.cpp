@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.50 2003-12-18 09:30:48 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.51 2004-01-10 14:03:34 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
