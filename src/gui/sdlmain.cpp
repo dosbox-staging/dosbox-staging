@@ -485,7 +485,7 @@ int main(int argc, char* argv[]) {
 	
 #endif
 		) < 0 ) {
-       E_Exit("Can't init SDL");
+       E_Exit("Can't init SDL %s",SDL_GetError());
 	}
 	GFX_StartUp();
 /* Init all the dosbox subsystems */
@@ -497,9 +497,9 @@ int main(int argc, char* argv[]) {
 		sdl.joy=SDL_JoystickOpen(0);
 		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(0),SDL_JoystickNumAxes(sdl.joy),SDL_JoystickNumButtons(sdl.joy));
 		JOYSTICK_Enable(0,true);
-		}
+	}
 #endif
-/* Start dosbox up */
+	/* Start dosbox up */
 	DOSBOX_StartUp();	
 	}
 	catch (Bitu e) {
