@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.12 2004-12-14 21:02:57 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.13 2004-12-28 15:56:23 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -554,6 +554,7 @@ static Bitu INT71_Handler() {
 	}
 	CALLBACK_RunRealInt(0xa);
 	IO_Write(0xa0,0x61);
+	IO_Write(0x20,0x62);
 
 	if (signr) if (mpu.queue_used==1) ClrQueue();
 return CBRET_NONE;
