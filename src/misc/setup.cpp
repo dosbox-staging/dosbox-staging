@@ -196,7 +196,16 @@ Section_line* Config::AddSection_line(const char* _name,void (*_initfunction)(Se
 
 void Config::Init(){
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){ 
+		LOG_DEBUG("Init %s",(*tel)->sectionname.c_str());
 		(*tel)->ExecuteInit();
+	}
+}
+
+Config::~Config() {
+	reverse_it cnt=sectionlist.rbegin();
+	while (cnt!=sectionlist.rend()) {
+		delete (*cnt);
+		cnt++;
 	}
 }
 
@@ -247,9 +256,6 @@ void Config::SetStartUp(void (*_function)(void)) {
 void Config::StartUp(void) {
 	(*_start_function)();
 }
-
-
-
 
 bool CommandLine::FindExist(char * name,bool remove) {
 	cmd_it it;
