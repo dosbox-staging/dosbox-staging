@@ -286,6 +286,24 @@ static void dyn_dop_evgv(DualOps op) {
 	}
 }
 
+static void dyn_imul_gvev(Bitu immsize) {
+	dyn_get_modrm();DynReg * src;
+	DynReg * rm_reg=&DynRegs[decode.modrm.reg];
+	if (decode.modrm.mod<3) {
+		dyn_fill_ea();dyn_read_word(DREG(EA),DREG(TMPW),decode.big_op);
+		src=DREG(TMPW);gen_releasereg(DREG(EA));
+	} else {
+		src=&DynRegs[decode.modrm.rm];
+	}
+	switch (immsize) {
+	case 0:gen_imul_word(decode.big_op,rm_reg,src);break;
+	case 1:gen_imul_word_imm(decode.big_op,rm_reg,src,(Bit8s)decode_fetchb());break;
+	case 2:gen_imul_word_imm(decode.big_op,rm_reg,src,(Bit16s)decode_fetchw());break;
+	case 4:gen_imul_word_imm(decode.big_op,rm_reg,src,(Bit32s)decode_fetchd());break;
+	}
+	gen_releasereg(DREG(TMPW));
+}
+
 static void dyn_dop_gvev(DualOps op) {
 	dyn_get_modrm();
 	DynReg * rm_reg=&DynRegs[decode.modrm.reg];
@@ -331,6 +349,34 @@ static void dyn_mov_eviv(void) {
 		gen_releasereg(DREG(EA));gen_releasereg(DREG(TMPW));
 	} else {
 		gen_dop_word_imm(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],decode.big_op ? decode_fetchd() : decode_fetchw());
+	}
+}
+
+static void dyn_mov_ev_gb(bool sign) {
+	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg];
+	if (decode.modrm.mod<3) {
+		dyn_fill_ea();
+		dyn_read_byte(DREG(EA),DREG(TMPB),false);
+		gen_releasereg(DREG(EA));
+		gen_extend_byte(sign,decode.big_op,rm_reg,DREG(TMPB),0);
+	} else {
+		gen_extend_byte(sign,decode.big_op,rm_reg,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
+	}
+}
+
+static void dyn_mov_ev_gw(bool sign) {
+	if (!decode.big_op) {
+		dyn_mov_evgv();
+		return;
+	}
+	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg];
+	if (decode.modrm.mod<3) {
+		dyn_fill_ea();
+		dyn_read_word(DREG(EA),DREG(TMPW),false);
+		gen_releasereg(DREG(EA));
+		gen_extend_word(sign,rm_reg,DREG(TMPW));
+	} else {
+		gen_extend_word(sign,rm_reg,&DynRegs[decode.modrm.rm]);
 	}
 }
 
@@ -552,7 +598,6 @@ skipsave:
 	gen_releasereg(DREG(TMPW));gen_releasereg(DREG(EA));
 }
 
-
 static void dyn_mov_ev_seg(void) {
 	dyn_get_modrm();
 	gen_load_host(&Segs.val[decode.modrm.reg],DREG(TMPW),2);
@@ -591,6 +636,20 @@ static void dyn_load_seg(SegNames seg,DynReg * src,bool withpop) {
 	}
 	gen_releasereg(&DynRegs[G_ES+seg]);
 	if (seg==ss) gen_releasereg(DREG(SMASK));
+}
+
+static void dyn_load_seg_off_ea(SegNames seg) {
+	dyn_get_modrm();
+	if (decode.modrm.mod<3) {
+		dyn_fill_ea();
+		gen_lea(DREG(TMPW),DREG(EA),0,0,decode.big_op ? 4:2);
+		dyn_read_word(DREG(TMPW),DREG(TMPW),false);
+		dyn_load_seg(seg,DREG(TMPW),false);
+		dyn_read_word(DREG(EA),&DynRegs[decode.modrm.reg],decode.big_op);
+		gen_releasereg(DREG(EA));
+	} else {
+		IllegalOption();
+	}
 }
 
 static void dyn_mov_seg_ev(void) {
@@ -893,12 +952,30 @@ restart_prefix:
 				dyn_branched_exit((BranchTypes)(dual_code&0xf),
 					decode.big_op ? (Bit32s)decode_fetchd() : (Bit16s)decode_fetchw());	
 				return decode.block;
+			/* PUSH/POP FS */
+			case 0xa0:dyn_push_seg(fs);break;
+			case 0xa1:dyn_pop_seg(fs);break;
 			/* SHLD Imm/cl*/
 			case 0xa4:dyn_dshift_ev_gv(true,true);break;
 			case 0xa5:dyn_dshift_ev_gv(true,false);break;
+			/* PUSH/POP GS */
+			case 0xa8:dyn_push_seg(gs);break;
+			case 0xa9:dyn_pop_seg(gs);break;
 			/* SHRD Imm/cl*/
 			case 0xac:dyn_dshift_ev_gv(false,true);break;
-			case 0xad:dyn_dshift_ev_gv(false,false);break;				
+			case 0xad:dyn_dshift_ev_gv(false,false);break;		
+			/* Imul Ev,Gv */
+			case 0xaf:dyn_imul_gvev(0);break;
+			/* LFS,LGS */
+			case 0xb4:dyn_load_seg_off_ea(fs);break;
+			case 0xb5:dyn_load_seg_off_ea(gs);break;
+			/* MOVZX Gv,Eb/Ew */
+			case 0xb6:dyn_mov_ev_gb(false);break;
+			case 0xb7:dyn_mov_ev_gw(false);break;
+			/* MOVSX Gv,Eb/Ew */
+			case 0xbe:dyn_mov_ev_gb(true);break;
+			case 0xbf:dyn_mov_ev_gw(true);break;
+
 			default:
 				DYN_LOG("Unhandled dual opcode 0F%02X",dual_code);
 				goto illegalopcode;
@@ -1002,11 +1079,15 @@ restart_prefix:
 			dyn_push(DREG(TMPW));
 			gen_releasereg(DREG(TMPW));
 			break;
+		/* Imul Ivx */
+		case 0x69:dyn_imul_gvev(decode.big_op ? 4 : 2);break;
 		case 0x6a:		/* PUSH Ibx */
 			gen_dop_word_imm(DOP_MOV,true,DREG(TMPW),(Bit8s)decode_fetchb());
 			dyn_push(DREG(TMPW));
 			gen_releasereg(DREG(TMPW));
 			break;
+		/* Imul Ibx */
+		case 0x6b:dyn_imul_gvev(1);break;
 		/* Short conditional jumps */
 		case 0x70:case 0x71:case 0x72:case 0x73:case 0x74:case 0x75:case 0x76:case 0x77:	
 		case 0x78:case 0x79:case 0x7a:case 0x7b:case 0x7c:case 0x7d:case 0x7e:case 0x7f:	
@@ -1049,8 +1130,15 @@ restart_prefix:
 			break;
 		/* CBW/CWDE */
 		case 0x98:
+			/*
 			if (decode.big_op) gen_extend_word(true,DREG(EAX),DREG(EAX));
 			else gen_extend_byte(true,false,DREG(EAX),DREG(EAX),0);
+			*/
+			gen_cbw(decode.big_op,DREG(EAX));
+			break;
+		/* CWD/CDQ */
+		case 0x99:
+			gen_cwd(decode.big_op,DREG(EAX),DREG(EDX));
 			break;
 		/* CALL FAR Ip */
 		case 0x9a:dyn_call_far_imm();return decode.block;
@@ -1100,6 +1188,9 @@ restart_prefix:
 		//RET near Iw / Ret
 		case 0xc2:dyn_ret_near(decode_fetchw());return decode.block;			
 		case 0xc3:dyn_ret_near(0);return decode.block;
+		//LES/LDS
+		case 0xc4:dyn_load_seg_off_ea(es);break;
+		case 0xc5:dyn_load_seg_off_ea(ds);break;
 		// MOV Eb/Ev,Ib/Iv
 		case 0xc6:dyn_mov_ebib();break;
 		case 0xc7:dyn_mov_eviv();break;

@@ -423,6 +423,32 @@ static void gen_dop_word_imm(DualOps op,bool dword,DynReg * dr1,Bits imm) {
 	if (dword) cache_addd(imm);
 	else cache_addw(imm);
 }
+
+static void gen_imul_word(bool dword,DynReg * dr1,DynReg * dr2) {
+	GenReg * gr1=FindDynReg(dr1);GenReg * gr2=FindDynReg(dr2);
+	if (!dword) cache_addb(0x66);
+	cache_addw(0xaf0f);
+	cache_addb(0xc0+(gr1->index<<3)+gr2->index);
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+static void gen_imul_word_imm(bool dword,DynReg * dr1,DynReg * dr2,Bits imm) {
+	GenReg * gr1=FindDynReg(dr1);GenReg * gr2=FindDynReg(dr2);
+	if (!dword) cache_addb(0x66);
+	 if ((imm>=-128 && imm<=127)) {
+		cache_addb(0x6b);
+		cache_addb(0xc0+(gr1->index<<3)+gr2->index);
+		cache_addb(imm);
+	} else {
+		cache_addb(0x69);
+		cache_addb(0xc0+(gr1->index<<3)+gr2->index);
+		if (dword) cache_addd(imm);
+		else cache_addw(imm);
+	}
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+
 static void gen_sop_word(SingleOps op,bool dword,DynReg * dr1) {
 	GenReg * gr1=FindDynReg(dr1);
 	if (!dword) cache_addb(0x66);
@@ -472,6 +498,21 @@ static void gen_shift_word(ShiftOps op,DynReg * drecx,bool dword,DynReg * dr1) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
+static void gen_cbw(bool dword,DynReg * dyn_ax) {
+	ForceDynReg(x86gen.regs[X86_REG_EAX],dyn_ax);
+	if (!dword) cache_addb(0x66);
+	cache_addb(0x98);
+	dyn_ax->flags|=DYNFLG_CHANGED;
+}
+
+static void gen_cwd(bool dword,DynReg * dyn_ax,DynReg * dyn_dx) {
+	ForceDynReg(x86gen.regs[X86_REG_EAX],dyn_ax);
+	ForceDynReg(x86gen.regs[X86_REG_EDX],dyn_dx);
+	if (!dword) cache_addb(0x66);
+	cache_addb(0x99);
+	dyn_ax->flags|=DYNFLG_CHANGED;
+	dyn_dx->flags|=DYNFLG_CHANGED;
+}
 
 static void gen_mul_byte(bool imul,DynReg * dyn_ax,DynReg * dr1,Bit8u di1) {
 	ForceDynReg(x86gen.regs[X86_REG_EAX],dyn_ax);
