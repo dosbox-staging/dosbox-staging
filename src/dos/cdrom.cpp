@@ -84,11 +84,11 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(void)
 		ResetEvent(hEvent);
 		dwStatus = pSendASPI32Command((LPSRB)&s);
 		if ((dwStatus==0) && (s.SRB_Status!=SS_INVALID_CMD)) {
-			DEBUG_ShowMsg(0,"SCSI: Host Adapter found: %d",i);								
+			LOG(LOG_MISC,"SCSI: Host Adapter found: %d",i);								
 			return i;
 		};
 	};
-	DEBUG_ShowMsg(0,"SCSI: Host Adapter not found.");								
+	LOG(LOG_MISC|LOG_ERROR,"SCSI: Host Adapter not found.");								
 	return 0;
 };
 
@@ -111,15 +111,15 @@ bool CDROM_Interface_Aspi::ScanRegistryFindKey(HKEY& hKeyBase)
 			newKeyResult = RegOpenKeyEx (hKeyBase,subKey,0,KEY_READ,&hNewKey);
 			if (newKeyResult==ERROR_SUCCESS) {
 				if (GetRegistryValue(hNewKey,"CurrentDriveLetterAssignment",buffer,256)) {
-					DEBUG_ShowMsg(0,"SCSI: Drive Letter found: %s",buffer);					
+					LOG(LOG_MISC,"SCSI: Drive Letter found: %s",buffer);					
 					// aha, something suspicious...
 					if (buffer[0]==letter) {
 						// found it... lets see if we can get the scsi values				
 						bool v1 = GetRegistryValue(hNewKey,"SCSILUN",buffer,256);
-						DEBUG_ShowMsg(0,"SCSI: SCSILUN found: %s",buffer);					
+						LOG(LOG_MISC,"SCSI: SCSILUN found: %s",buffer);					
 						lun		= buffer[0]-'0';
 						bool v2 = GetRegistryValue(hNewKey,"SCSITargetID",buffer,256);
-						DEBUG_ShowMsg(0,"SCSI: SCSITargetID found: %s",buffer);					
+						LOG(LOG_MISC,"SCSI: SCSITargetID found: %s",buffer);					
 						target  = buffer[0]-'0';
 						RegCloseKey(hNewKey);
 						if (v1 && v2) {

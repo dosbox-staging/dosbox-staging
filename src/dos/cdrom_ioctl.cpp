@@ -246,7 +246,8 @@ int CDROM_GetMountType(char* path)
 	return 2;
 };
 
-#else 
+#else #if defined (WIN32)
+
 
 // *****************************************************************
 // Windows IOCTL functions (not suitable for 95/98/Me)

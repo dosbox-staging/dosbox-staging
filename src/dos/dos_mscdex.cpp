@@ -17,6 +17,7 @@
  */
 
 #include <string.h>
+#include <ctype.h>
 #include "cpu.h"
 #include "callback.h"
 #include "dos_system.h"
@@ -228,31 +229,31 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 									// WIN NT/200/XP
 									if (gUseASPI) {
 										cdrom[numDrives] = new CDROM_Interface_Aspi();
-										DEBUG_ShowMsg(0,"MSCDEX: ASPI Interface.");
+										LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
 									} else	{
 										cdrom[numDrives] = new CDROM_Interface_Ioctl();
-										DEBUG_ShowMsg(0,"MSCDEX: IOCTL Interface.");
+										LOG(LOG_MISC,"MSCDEX: IOCTL Interface.");
 									}
 								} else {
 									// Win 95/98/ME - always use ASPI
 									cdrom[numDrives] = new CDROM_Interface_Aspi();
-									DEBUG_ShowMsg(0,"MSCDEX: ASPI Interface.");
+									LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
 								}
 							#else
 								cdrom[numDrives] = new CDROM_Interface_Linux();
 							#endif
-							DEBUG_ShowMsg(0,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
+							LOG(LOG_MISC,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
 						  } break;
 			case 0x01	:	// iso cdrom interface
 							// FIXME: Not yet supported	
-							DEBUG_ShowMsg(0,"MSCDEX: Mounting iso file as cdrom: %s"	,physicalPath);
+							LOG(LOG_MISC|LOG_ERROR,"MSCDEX: Mounting iso file as cdrom: %s"	,physicalPath);
 							cdrom[numDrives] = new CDROM_Interface_Fake;
 							return 2;
 							break;
 			case 0x02	:	// fake cdrom interface (directories)
 							cdrom[numDrives] = new CDROM_Interface_Fake;
-							DEBUG_ShowMsg(0,"MSCDEX: Mounting directory as cdrom: %s",physicalPath);	
-							DEBUG_ShowMsg(0,"MSCDEX: You wont have full MSCDEX support !");	
+							LOG(LOG_MISC,"MSCDEX: Mounting directory as cdrom: %s",physicalPath);	
+							LOG(LOG_MISC,"MSCDEX: You wont have full MSCDEX support !");	
 							result = 5;
 							break;
 			default		:	// weird result
@@ -513,27 +514,27 @@ static CMscdex* mscdex = 0;
 
 static Bitu MSCDEX_Strategy_Handler(void) 
 {
-//	DEBUG_ShowMsg("MSCDEX: Device Strategy Routine called.");
+//	LOG("MSCDEX: Device Strategy Routine called.");
 	return CBRET_NONE;
 }
 
 static Bitu MSCDEX_Interrupt_Handler(void) 
 {
-//	DEBUG_ShowMsg("MSCDEX: Device Interrupt Routine called.");
+//	LOG("MSCDEX: Device Interrupt Routine called.");
 	
 	Bit8u	subFuncNr	= 0xFF;
 	PhysPt	data		= PhysMake(SegValue(es),reg_bx);
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
 
-//	if (funcNr!=0x03) DEBUG_ShowMsg("MSCDEX: Driver Function %02X",funcNr);
+//	if (funcNr!=0x03) LOG("MSCDEX: Driver Function %02X",funcNr);
 
 	switch (funcNr) {
 	
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-						//if (subFuncNr!=0x0B) DEBUG_ShowMsg("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
+						//if (subFuncNr!=0x0B) LOG("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 : /* Get Device Header address */
 										mem_writed(buffer+1,RealMake(mscdex->rootDriverHeaderSeg,0));
@@ -629,7 +630,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 		case 0x0C	: {	/* IOCTL OUTPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-						// if (subFuncNr!=0x0B) DEBUG_ShowMsg("MSCDEX: IOCTL OUTPUT Subfunction %02X",subFuncNr);
+						// if (subFuncNr!=0x0B) LOG("MSCDEX: IOCTL OUTPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 :	// Unload /eject) media
 										mscdex->LoadUnloadMedia(subUnit,true);
@@ -692,7 +693,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-//	if (reg_ax!=0x1510) DEBUG_ShowMsg("MSCEEX: INT 2F %04X",reg_ax);
+//	if (reg_ax!=0x1510) LOG("MSCEEX: INT 2F %04X",reg_ax);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
@@ -775,7 +776,7 @@ public:
 	device_MSCDEX() { name="MSCD001"; }
 	bool Read (Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size) { 
-		DEBUG_ShowMsg(0,"Write to mscdex device");	
+		LOG(0,"Write to mscdex device");	
 		return false;
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}
