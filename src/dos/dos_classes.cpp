@@ -91,7 +91,7 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 	Bitu i;
 	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
 	// Set size
-	sSave(sPSP,next_seg,mem_size);
+	sSave(sPSP,next_seg,seg+mem_size);
 	/* far call opcode */
 	sSave(sPSP,far_call,0xea);
 //	sSave(sPSP,cmp_entry
