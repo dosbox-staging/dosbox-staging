@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.71 2004-08-04 09:12:54 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.72 2004-08-19 10:18:11 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -677,6 +677,14 @@ static void GUI_StartUp(Section * sec) {
 	sdl.updating=false;
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
+	if (section->Get_bool("highpriority")) {
+#ifdef WIN32
+		LOG_MSG("SEtting priority %d",
+		SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS)
+		);
+//TODO add more platforms, with configure checks for get/setpriority
+#endif
+	}
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
@@ -914,6 +922,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);
+		sdl_sec->Add_bool("highpriority",true);
 		sdl_sec->Add_string("mapperfile","mapper.txt");
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
@@ -930,6 +939,7 @@ int main(int argc, char* argv[]) {
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
+			"highpriority -- Run dosbox in high prioty, helps sound output alot.\n"
 		);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
