@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.17 2004-01-19 18:54:15 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.18 2004-03-29 18:03:02 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -109,7 +109,7 @@ INLINE Bitu FPU_GET_C3(void){
 
 /* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
 			STATUS WORD =>	FPU_SET_TOP(TOP) BEFORE a read
-							TOP=FPU_GET_TOP() after a write;
+			TOP=FPU_GET_TOP() after a write;
 			*/
 static void EATREE(Bitu _rm){
 	Bitu group=(_rm >> 3) & 7;
@@ -152,7 +152,7 @@ void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
 		float f;
 		Bit32u l;
 	}	blah;
-    blah.l = mem_readd(addr);
+	blah.l = mem_readd(addr);
 	fpu.regs[8].d = static_cast<double>(blah.f);
 	EATREE(rm);
 }
@@ -391,7 +391,22 @@ void FPU_ESC2_EA(Bitu rm,PhysPt addr) {
 void FPU_ESC2_Normal(Bitu rm) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
-	LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub);
+	switch(group){
+	case 0x05:
+		switch(sub){
+		case 0x01:		/* FUCOMPP Almost the same as FCOMPP */
+			FPU_FCOM(TOP,ST(1));
+			FPU_FPOP();
+			FPU_FPOP();
+			break;
+		default:
+			LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub); 
+			break;
+		}
+	default:
+	   	LOG(LOG_FPU,LOG_WARN)("ESC 2:Unhandled group %d subfunction %d",group,sub);
+		break;
+	}
 }
 
 
