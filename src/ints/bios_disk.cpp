@@ -31,9 +31,14 @@ static Bit8u last_status;
 
 static Bitu INT13_SmallHandler(void) {
 	switch (reg_ah) {
+    case 0x0:
+        reg_ah=0x00;
+        CALLBACK_SCF(false);
+        LOG_DEBUG("reset disk return succesfull");
+        break;
 	case 0x02:	/* Read Disk Sectors */
 		LOG_DEBUG("INT13:02:Read Disk Sectors not supported failing");
-		reg_ah=0xff;
+		reg_ah=0x80;
 		CALLBACK_SCF(true);
 		break;
     case 0x04:
