@@ -16,29 +16,39 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.56 2005-02-24 11:48:01 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.57 2005-03-25 12:03:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include "dosbox.h"
+#include "regs.h"
 #include "setup.h"
 #include "shell.h"
+#include "callback.h"
+#include "support.h"
 
 Bitu call_shellstop;
+//Larger scope so shell_del autoexec can use it to
+//remove things from the environment
+Program * new_program = 0; 
 
 static Bitu shellstop_handler(void) {
 	return CBRET_STOP;
 }
 
 static void SHELL_ProgramStart(Program * * make) {
-	*make=new DOS_Shell;
+	*make = new DOS_Shell;
 }
 
 #define AUTOEXEC_SIZE 4096
-static char autoexec_data[AUTOEXEC_SIZE]={0};
+static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
+static std::vector<std::string> autoexec_strings;
+typedef std::vector<std::string>::iterator auto_it;
 
-void SHELL_AddAutoexec(char * line,...) {
-	char buf[2048];
+void AutoexecObject::Install(char* line,...) {
+	if(installed) E_Exit("autoexec: allready created %s",buf);
+	installed = true;
 	va_list msg;
 	
 	va_start(msg,line);
@@ -50,6 +60,40 @@ void SHELL_AddAutoexec(char * line,...) {
 		E_Exit("SYSTEM:Autoexec.bat file overflow");
 	}
 	sprintf((autoexec_data+auto_len),"%s\r\n",buf);
+	autoexec_strings.push_back(std::string(buf));
+}
+
+void VFILE_Remove(const char *name);
+
+AutoexecObject::~AutoexecObject(){
+	if(!installed) return;
+	VFILE_Remove("AUTOEXEC.BAT");
+	// Remove the line from the autoexecbuffer
+	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
+		if((*it) == buf) {
+			it = autoexec_strings.erase(it);
+			// If it's a environment variable remove it from there as well
+			if((strncasecmp(buf,"set ",4) == 0) && (strlen(buf) > 4)){
+				char* after_set = buf + 4;//move to variable that is being set
+				char* test = strpbrk(after_set,"=");
+				if(!test) continue;
+				*test = 0;
+				//If the shell is running/exists update the environment
+				if(new_program) new_program->SetEnv(after_set,"");
+			}
+		} else it++;
+	}
+	//Create a new autoexec.bat
+	autoexec_data[0] = 0;
+	size_t auto_len;
+	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
+		auto_len = strlen(autoexec_data);
+		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
+			E_Exit("SYSTEM:Autoexec.bat file overflow");
+		}
+		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
+	}
+	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
 }
 
 DOS_Shell::DOS_Shell():Program(){
@@ -120,39 +164,57 @@ void DOS_Shell::ParseLine(char * line) {
 
 	Bit16u old_in,old_out;
 	Bit16u dummy,dummy2;
-	Bitu num=0;		/* Number of commands in this line */
+	Bit32u bigdummy = 0;
+	Bitu num = 0;		/* Number of commands in this line */
 	bool append;
-
+	bool normalstdin=false;		/* wether stdin/out are open on start. */
+	bool normalstdout=false;	/* Bug: Assumed is they are "con"      */
+	
 	num = GetRedirection(line,&in, &out,&append);
 	if (num>1) LOG_MSG("SHELL:Multiple command on 1 line not supported");
 //	if (in || num>1) DOS_DuplicateEntry(0,&old_in);
-
+	
+	if (in || out) {
+			normalstdin  = (psp->GetFileHandle(0)!=0xff); 
+			normalstdout = (psp->GetFileHandle(1)!=0xff); 
+	}
 	if (in) {
 		if(DOS_OpenFile(in,0,&dummy)) { //Test if file exists
 			DOS_CloseFile(dummy);
 			LOG_MSG("SHELL:Redirect input from %s",in);
-			DOS_CloseFile(0); //Close stdin
+			if(normalstdin) DOS_CloseFile(0); //Close stdin
 			DOS_OpenFile(in,0,&dummy);//Open new stdin
 		}
 	}
 	if (out){
 		LOG_MSG("SHELL:Redirect output to %s",out);
-		DOS_CloseFile(1);
+		if(normalstdout) DOS_CloseFile(1);
+		if(!normalstdin && !in) DOS_OpenFile("con",2,&dummy);
+		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
-		if(!DOS_OpenFileExtended(out,2,2,0x11,&dummy,&dummy2))
-			DOS_OpenFile("con",2,&dummy); //Read only file, open con again
+		if(append){
+			if( (status=DOS_OpenFile(out,2,&dummy)) )
+				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
+		}
+		else 
+			status=DOS_OpenFileExtended(out,2,2,0x12,&dummy,&dummy2);
+		
+		if(!status && normalstdout)	DOS_OpenFile("con",2,&dummy); //Read only file, open con again
+		if(!normalstdin && !in) DOS_CloseFile(0);
 	}
 	/* Run the actual command */
 	DoCommand(line);
 	/* Restore handles */
 	if(in) {
 		DOS_CloseFile(0);
-		DOS_OpenFile("con",2,&dummy);
+		if(normalstdin) DOS_OpenFile("con",2,&dummy);
 		free(in);
 	}
-	if(out) {   
+	if(out) {
 		DOS_CloseFile(1);
-		DOS_OpenFile("con",2,&dummy);
+		if(!normalstdin) DOS_OpenFile("con",2,&dummy);
+		if(normalstdout) DOS_OpenFile("con",2,&dummy);
+		if(!normalstdin) DOS_CloseFile(0);
 		free(out);
 	}
 }
@@ -222,17 +284,19 @@ void DOS_Shell::SyntaxError(void) {
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
 
-
+namespace{
+	AutoexecObject autoexec[6];
+}
 
 void AUTOEXEC_Init(Section * sec) {
 	/* Register a virtual AUOEXEC.BAT file */
 	std::string line;
 	Section_line * section=static_cast<Section_line *>(sec);
 	char * extra=(char *)section->data.c_str();
-	if (extra) SHELL_AddAutoexec("%s",extra);
+	if (extra) autoexec[0].Install("%s",extra);
 	/* Check to see for extra command line options to be added (before the command specified on commandline) */
 	while (control->cmdline->FindString("-c",line,true))
-		SHELL_AddAutoexec((char *)line.c_str());
+		autoexec[1].Install((char *)line.c_str());
 	
 	/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
 	bool addexit = control->cmdline->FindExist("-exit",true);
@@ -248,25 +312,25 @@ void AUTOEXEC_Init(Section * sec) {
 			if (stat(buffer,&test)) goto nomount;
 		}
 		if (test.st_mode & S_IFDIR) { 
-			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
-			SHELL_AddAutoexec("C:");
+			autoexec[2].Install("MOUNT C \"%s\"",buffer);
+			autoexec[3].Install("C:");
 		} else {
 			char * name=strrchr(buffer,CROSS_FILESPLIT);
 			if (!name) goto nomount;
 			*name++=0;
 			if (access(buffer,F_OK)) goto nomount;
-			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
-			SHELL_AddAutoexec("C:");
+			autoexec[2].Install("MOUNT C \"%s\"",buffer);
+			autoexec[3].Install("C:");
 			upcase(name);
 			if(strstr(name,".BAT")==0) {
-				SHELL_AddAutoexec(name);
+				autoexec[4].Install(name);
 			} else {
 				char call[CROSS_LEN] = { 0 };
 				strcpy(call,"CALL ");
 				strcat(call,name);
-				SHELL_AddAutoexec(call);
+				autoexec[4].Install(call);
 			}
-			if(addexit) SHELL_AddAutoexec("exit");
+			if(addexit) autoexec[5].Install("exit");
 		}
 	}
 nomount:
@@ -400,7 +464,7 @@ void SHELL_Init() {
 	DOS_PSP psp(psp_seg);
 	psp.MakeNew(0);
 	dos.psp(psp_seg);
-
+   
 	/* The start of the filetable in the psp must look like this:
 	 * 01 01 01 00 02
 	 * In order to achieve this: First open 2 files. Close the first and
@@ -428,8 +492,9 @@ void SHELL_Init() {
 	dos.dta(RealMake(psp_seg,0x80));
 	dos.psp(psp_seg);
 
-	Program * new_program;
+	
 	SHELL_ProgramStart(&new_program);
 	new_program->Run();
 	delete new_program;
+	new_program=0;//Make clear that it shouldn't be used anymore
 }
