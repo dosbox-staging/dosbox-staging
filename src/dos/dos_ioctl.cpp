@@ -58,6 +58,17 @@ bool DOS_IOCTL(void) {
 			DOS_SetError(DOSERR_INVALID_DRIVE);
 			return false;
 		}
+	case 0x09:		/* Check if block device remote */
+		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+		if (Drives[drive]) {
+			reg_dx=0;
+			//TODO Cdrom drives are remote
+			//TODO Set bit 9 on drives that don't support direct I/O
+			return true;
+		} else {
+			DOS_SetError(DOSERR_INVALID_DRIVE);
+			return false;
+		}
 	case 0x0D:		/* Generic block device request */
 		{
 			PhysPt ptr	= SegPhys(ds)+reg_dx;
