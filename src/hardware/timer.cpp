@@ -58,19 +58,24 @@ static void counter_latch(Bitu counter) {
 	
 	Bit64s micro=PIC_MicroCount()-p->start;
 	switch (p->mode) {
-	case 0:
-		if (micro>p->micro) p->read_latch=p->write_latch;
-		else p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
-		break;
-	case 2:
+	case 0:		/* Interrupt on Terminal Count */
+		/* Counter keeps on counting after passing terminal count */
 		micro%=p->micro;
 		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
-	case 3:
+	case 2:		/* Rate Generator */
+		micro%=p->micro;
+		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		break;
+	case 3:		/* Square Wave Rate Generator */
 		micro%=p->micro;
 		micro*=2;
 		if (micro>p->micro) micro-=p->micro;
 		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		break;
+	case 4:		/* Software Triggered Strobe */
+		if (micro>p->micro) p->read_latch=p->write_latch;
+		else p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
 	default:
 		LOG(LOG_ERROR|LOG_PIT,"Illegal Mode %d for reading counter %d",p->mode,counter);
@@ -112,7 +117,7 @@ static void write_latch(Bit32u port,Bit8u val) {
 			LOG(LOG_PIT,"PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
-//			LOG_DEBUG("PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
+//			LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			PCSPEAKER_SetCounter(p->cntr,p->mode);
 			break;
 		default:
@@ -159,14 +164,12 @@ static Bit8u read_latch(Bit32u port) {
 
 
 static void write_p43(Bit32u port,Bit8u val) {
-	if (val & 1) {
-		E_Exit("PIT:BCD Counter not supported");
-	}
 	Bitu latch=(val >> 6) & 0x03;
 	switch (latch) {
 	case 0:
 	case 1:
 	case 2:
+		if (val & 1) E_Exit("PIT:Timer %d set to unsupported bcd mode",latch);
 		if ((val & 0x30) == 0) {
 			/* Counter latch command */
 			counter_latch(latch);
@@ -177,9 +180,13 @@ static void write_p43(Bit32u port,Bit8u val) {
 		}
 		break;
     case 3:
-		E_Exit("Special PIT Latch Read out thing");
+		if ((val & 0x20)==0) {	/* Latch multiple pit counters */
+			if (val & 0x02) counter_latch(0);
+			if (val & 0x04) counter_latch(1);
+			if (val & 0x08) counter_latch(2);
+		} else E_Exit("PIT:Latch Timer Status %X",val);
+		break;
 	}
-
 }
 
 /* The TIMER Part */
