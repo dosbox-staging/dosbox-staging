@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.19 2003-10-14 08:38:36 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.20 2004-01-10 11:43:41 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -209,6 +209,8 @@ void TIMER_Init(Section* sect) {
 	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 	pit[2].micro=100;
 	pit[2].read_latch=-1;	/* MadTv1 */
+	pit[2].write_state = 3; /* Chuck Yeager */
+	pit[2].mode=3;
 
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
