@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.29 2005-03-25 11:54:52 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.30 2005-03-29 07:05:44 qbix79 Exp $ */
 
 #include <list>
 
@@ -97,6 +97,10 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 			if(pic[0].special || pics[1].special) 
 				PIC_Special_Mode = true; else 
 				PIC_Special_Mode = false;
+			if (PIC_IRQCheck) { //Recheck irqs
+				CPU_CycleLeft += CPU_Cycles;
+				CPU_Cycles = 0;
+			}
 			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
 		}
 	} else {	// OCW2 issued
