@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+ 
+ /* $Id: pcspeaker.cpp,v 1.18 2005-02-03 10:34:37 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -158,7 +160,7 @@ static void ForwardPIT(float newindex) {
 
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 	if (!spkr.last_ticks) {
-		spkr.chan->Enable(true);
+		if(spkr.chan) spkr.chan->Enable(true);
 		spkr.last_index=0;
 	}
 	spkr.last_ticks=PIC_Ticks;
@@ -213,7 +215,7 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 
 void PCSPEAKER_SetType(Bitu mode) {
 	if (!spkr.last_ticks) {
-		spkr.chan->Enable(true);
+		if(spkr.chan) spkr.chan->Enable(true);
 		spkr.last_index=0;
 	}
 	spkr.last_ticks=PIC_Ticks;
@@ -296,10 +298,10 @@ static void PCSPEAKER_CallBack(Bitu len) {
 		}
 		*stream++=(Bit16s)(value/sample_add);
 	}
-	spkr.chan->AddSamples_m16(len,(Bit16s*)MixTemp);
+	if(spkr.chan) spkr.chan->AddSamples_m16(len,(Bit16s*)MixTemp);
 	if ((spkr.last_ticks+10000)<PIC_Ticks) {
 		spkr.last_ticks=0;
-		spkr.chan->Enable(false);
+		if(spkr.chan) spkr.chan->Enable(false);
 	}
 }
 
