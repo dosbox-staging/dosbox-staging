@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.8 2004-10-02 11:15:59 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.9 2004-10-02 11:23:07 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -1226,7 +1226,7 @@ void MAPPER_Run(void) {
 	}
 
 	/* Be sure that there is no update in progress */
-	if (sdl.updating) GFX_EndUpdate();
+	GFX_EndUpdate();
 	mapper.surface=SDL_SetVideoMode(640,480,8,0);
 
 	/* Set some palette entries */
