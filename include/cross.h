@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.10 2004-09-14 18:56:11 qbix79 Exp $ */
+/* $Id: cross.h,v 1.11 2004-09-16 21:46:03 qbix79 Exp $ */
 
 #ifndef _CROSS_H
 #define _CROSS_H
@@ -30,6 +30,7 @@
 #include <io.h>
 #define LONGTYPE(a) a##i64
 #define snprintf _snprintf
+#define vsnprintf _vsnprintf
 #else										/* LINUX / GCC */
 #include <dirent.h>
 #include <unistd.h>
