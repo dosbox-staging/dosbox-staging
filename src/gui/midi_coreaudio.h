@@ -76,12 +76,8 @@ public:
 		}
 	}
 	
-	void PlayMsg(Bit32u msg) {
-		MusicDeviceMIDIEvent(m_musicDevice,
-				(msg & 0x000000FF),
-				(msg & 0x0000FF00) >> 8,
-				(msg & 0x00FF0000) >> 16,
-				0);
+	void PlayMsg(Bit8u * msg) {
+		MusicDeviceMIDIEvent(m_musicDevice,msg[0],msg[1],msg[2],0);
 	}
 	
 	void PlaySysex(Bit8u * sysex, Bitu len) {

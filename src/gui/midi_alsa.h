@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.7 2004-01-26 15:10:16 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.8 2004-07-04 21:08:08 harekiet Exp $ */
 
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
@@ -75,45 +75,38 @@ public:
 		send_event(1);
 	}
 
-	void PlayMsg(Bit32u msg) {
+	void PlayMsg(Bit8u * msg) {
 		unsigned int midiCmd[4];
 		ev.type = SND_SEQ_EVENT_OSS;
 
-		if (msg == 247) // to accomadate lure of the temptress
-			return;
+		ev.data.raw32.d[0] = msg[0];
+		ev.data.raw32.d[1] = msg[1];
+		ev.data.raw32.d[2] = msg[2];
 
-		midiCmd[3] = (msg & 0xFF000000) >> 24;
-		midiCmd[2] = (msg & 0x00FF0000) >> 16;
-		midiCmd[1] = (msg & 0x0000FF00) >> 8;
-		midiCmd[0] = (msg & 0x000000FF);
-		ev.data.raw32.d[0] = midiCmd[0];
-		ev.data.raw32.d[1] = midiCmd[1];
-		ev.data.raw32.d[2] = midiCmd[2];
-
-		unsigned char chanID = midiCmd[0] & 0x0F;
-		switch (midiCmd[0] & 0xF0) {
+		unsigned char chanID = msg[0] & 0x0F;
+		switch (msg[0] & 0xF0) {
 		case 0x80:
-			snd_seq_ev_set_noteoff(&ev, chanID, midiCmd[1], midiCmd[2]);
+			snd_seq_ev_set_noteoff(&ev, chanID, msg[1], msg[2]);
 			send_event(1);
 			break;
 		case 0x90:
-			snd_seq_ev_set_noteon(&ev, chanID, midiCmd[1], midiCmd[2]);
+			snd_seq_ev_set_noteon(&ev, chanID, msg[1], msg[2]);
 			send_event(1);
 			break;
 		case 0xB0:
-			snd_seq_ev_set_controller(&ev, chanID, midiCmd[1], midiCmd[2]);
+			snd_seq_ev_set_controller(&ev, chanID, msg[1], msg[2]);
 			send_event(1);
 			break;
 		case 0xC0:
-			snd_seq_ev_set_pgmchange(&ev, chanID, midiCmd[1]);
+			snd_seq_ev_set_pgmchange(&ev, chanID, msg[1]);
 			send_event(0);
 			break;
 		case 0xD0:
-			snd_seq_ev_set_chanpress(&ev, chanID, midiCmd[1]);
+			snd_seq_ev_set_chanpress(&ev, chanID, msg[1]);
 			send_event(0);
 			break;
 		case 0xE0:{
-				long theBend = ((long)midiCmd[1] + (long)(midiCmd[2] << 7)) - 0x2000;
+				long theBend = ((long)msg[1] + (long)(msg[2] << 7)) - 0x2000;
 				snd_seq_ev_set_pitchbend(&ev, chanID, theBend);
 				send_event(1);
 			}

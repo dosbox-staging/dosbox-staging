@@ -42,8 +42,8 @@ public:
 		midiOutClose(m_out);
 		CloseHandle (m_event);
 	};
-	void PlayMsg(Bit32u msg) {
-		midiOutShortMsg(m_out, msg);
+	void PlayMsg(Bit8u * msg) {
+		midiOutShortMsg(m_out, *(Bit32u*)msg);
 	};
 	void PlaySysex(Bit8u * sysex,Bitu len) {
 		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {

@@ -45,15 +45,15 @@ public:
 		if (!isOpen) return;
 		if (device>0) close(device);
 	};
-	void PlayMsg(Bit32u msg) {
+	void PlayMsg(Bit8u * msg) {
 		Bit8u buf[128];Bitu pos=0;
 		Bitu len=MIDI_evt_len[msg & 0xff];
 		for (;len>0;len--) {
 			buf[pos++] = SEQ_MIDIPUTC;
-			buf[pos++] = msg & 0xff;
+			buf[pos++] = *msg;
 			buf[pos++] = device_num;
 			buf[pos++] = 0;
-			msg >>=8;
+			msg++;
 		}
 		write(device,buf,pos);
 	};
