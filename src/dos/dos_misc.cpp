@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.9 2004-03-14 16:21:10 qbix79 Exp $ */
+/* $Id: dos_misc.cpp,v 1.10 2004-03-14 19:41:04 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -88,7 +88,7 @@ void DOS_SetupMisc(void) {
 	DOS_AddMultiplexHandler(DOS_MultiplexFunctions);
 	/* Setup the dos network interrupt */
 	call_int2a=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET);
-	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a,"DOS Int 2a"));
+	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET,"DOS Int 2a");
+	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a));
 };
 
