@@ -107,7 +107,7 @@ static void OPL_CallBack(Bit8u *stream, Bit32u len) {
 		break;
 
 	}
-	if ((PIC_Ticks-opl.last_used)>1000) {
+	if ((PIC_Ticks-opl.last_used)>5000) {
 		MIXER_Enable(opl.chan,false);
 		opl.active=false;
 	}
