@@ -242,7 +242,7 @@ public:
 	void writeb(PhysPt addr,Bitu val) {
 		Bitu port = addr & 0xffff;
 		if(port >= 0x82E8) IO_WriteB(port, val);
-		if(port <= 0x0020) {
+		if(port <= 0x4000) {
 			if(port == 0x0000) {
 				IO_WriteB(0xe2e0, val);
 			} else {
@@ -255,14 +255,13 @@ public:
 		Bitu port = addr & 0xffff;
 		if(port >= 0x82E8) IO_WriteW(port, val);
 		if(port == 0x8118) IO_WriteW(0x9ae8, val);
-		if(port <= 0x0020) {
+		if(port <= 0x4000) {
 			if(port == 0x0000) {
                 IO_WriteW(0xe2e0, val);
 			} else {
 			IO_WriteW(0xe2e8, val);
 		}
 		}
-
 		//LOG_MSG("MMIO: Write word to %x with %x", addr, val);	
 	}
 	void writed(PhysPt addr,Bitu val) {
@@ -276,7 +275,7 @@ public:
 			IO_WriteW(0x96e8, (val >> 16));
 			IO_WriteW(0xbee8, (val & 0xffff));
 		}
-		if(port <= 0x0020) {
+		if(port <= 0x4000) {
 			if(port == 0x0000) {
 				IO_WriteW(0xe2e0, (val & 0xffff));
 				IO_WriteW(0xe2e8, (val >> 16));

@@ -353,51 +353,40 @@ void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 		vga.s3.hgc.curmode = val;
 		// Activate hardware cursor code if needed
 		VGA_ActivateHardwareCursor();
-		XGA_UpdateHWC();
 		break;
 	case 0x46:
 		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0x00ff) | (val << 8);
-		XGA_UpdateHWC();
 		break;
 	case 0x47:  /*  HGC orgX */
 		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0xff00) | val;
-		XGA_UpdateHWC();
 		break;
 	case 0x48:
 		vga.s3.hgc.originy = (vga.s3.hgc.originy & 0x00ff) | (val << 8);
-		XGA_UpdateHWC();
 		break;
 	case 0x49:  /*  HGC orgY */
 		vga.s3.hgc.originy = (vga.s3.hgc.originy & 0xff00) | val;
-		XGA_UpdateHWC();
 		break;
 	case 0x4A:  /* HGC foreground stack */
 		if (vga.s3.hgc.fstackpos > 2) vga.s3.hgc.fstackpos = 0;
 		vga.s3.hgc.forestack[vga.s3.hgc.fstackpos] = val;
 		vga.s3.hgc.fstackpos++;
-		XGA_UpdateHWC();
 		break;
 	case 0x4B:  /* HGC background stack */
 		if (vga.s3.hgc.bstackpos > 2) vga.s3.hgc.bstackpos = 0;
 		vga.s3.hgc.backstack[vga.s3.hgc.bstackpos] = val;
 		vga.s3.hgc.bstackpos++;
-		XGA_UpdateHWC();
 		break;
 	case 0x4c:  /* HGC start address high byte*/
 		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | ((val & 0xff) << 8);
-		XGA_UpdateHWC();
 		break;
 	case 0x4d:  /* HGC start address low byte*/
 		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | (val & 0xff);
-		XGA_UpdateHWC();
 		break;
 	case 0x4e:  /* HGC pattern start X */
 		vga.s3.hgc.posx = val;
-		XGA_UpdateHWC();
 		break;
 	case 0x4f:  /* HGC pattern start X */
 		vga.s3.hgc.posy = val;
-		XGA_UpdateHWC();
 		break;
 	case 0x51:	/* Extended System Control 2 */
 		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7

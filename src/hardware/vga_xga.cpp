@@ -25,6 +25,8 @@
 
 #define XGA_SCREEN_WIDTH vga.draw.width
 
+#define XGA_SHOW_COMMAND_TRACE 0
+
 struct XGAStatus {
 	struct scissorreg {
 		Bit16u x1, y1, x2, y2;
@@ -56,7 +58,7 @@ struct XGAStatus {
 		bool wait;
 		Bit16u cmd;
 		Bit16u curx, cury;
-		Bit16u x1, y1, x2, y2;
+		Bit16u x1, y1, x2, y2, sizex, sizey;
 	} waitcmd;
 
 } xga;
@@ -94,6 +96,7 @@ void XGA_Write_Multifunc(Bitu val, Bitu len) {
 
 void XGA_DrawPoint8(Bitu x, Bitu y, Bit8u c) {
 
+	if(!(xga.curcommand & 0x1)) return;
 	if(!(xga.curcommand & 0x10)) return;
 
 	if(x < xga.scissors.x1) return;
@@ -388,28 +391,25 @@ void XGA_DrawLineBresenham(Bitu val) {
 	
 }
 
-void XGA_DrawRectangle(Bitu x1, Bitu y1, Bitu x2, Bitu y2) {
+void XGA_DrawRectangle(Bitu val) {
 	Bit32u xat, yat;
-	Bit32u xmass, xmod, xdist, ydist;
-	Bit32u *memptr;
-	Bit8u *smallptr;
-	Bit32u c;
-	Bit8u smallc;
 	Bit8u srcval;
 	Bit8u destval;
 	Bit8u dstdata;
 
-	xdist = (x2 -x1);
-	ydist = (y2 -y1);
-	xmass = (xdist) & 0xfffffffb;
-	xmod = (xdist) & 0x3;
+	Bits srcx, srcy, dx, dy;
 
-	smallc = (xga.forecolor & 0xff);
+	dx = -1;
+	dy = -1;
 
-	c = (smallc) | ((smallc) << 8) | ((smallc) << 16) | ((smallc) << 24);
+	if(((val >> 5) & 0x01) != 0) dx = 1;
+	if(((val >> 7) & 0x01) != 0) dy = 1;
 
-	for(yat=y1;yat<=y2;yat++) {
-		for(xat=x1;xat<=x2;xat++) {
+	srcy = xga.cury;
+
+	for(yat=0;yat<=xga.MIPcount;yat++) {
+		srcx = xga.curx;
+		for(xat=0;xat<=xga.MAPcount;xat++) {
 			Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
 			switch (mixmode) {
 				case 0x00: /* FOREMIX always used */
@@ -433,26 +433,29 @@ void XGA_DrawRectangle(Bitu x1, Bitu y1, Bitu x2, Bitu y2) {
 							LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
 							break;
 					}
-					dstdata = XGA_GetPoint8(xat,yat);
+					dstdata = XGA_GetPoint8(srcx,srcy);
 
 					destval = XGA_GetMixResult(mixmode, srcval, dstdata);
 
-                    XGA_DrawPoint8(xat,yat, destval);
+                    XGA_DrawPoint8(srcx,srcy, destval);
 					break;
 				default: 
 					LOG_MSG("XGA: DrawRect: Needs mixmode %x", mixmode);
 					break;
 	}
+			srcx += dx;
 		}
+		srcy += dy;
 	}
-	xga.curx = xat;
-	xga.cury = yat;
+	xga.curx = srcx;
+	xga.cury = srcy;
 
 	//LOG_MSG("XGA: Draw rect (%d, %d)-(%d, %d), %d", x1, y1, x2, y2, xga.forecolor);
 }
 
 bool XGA_CheckX(void) {
 	bool newline = false;
+	if(!xga.waitcmd.newline) {
 	if(xga.waitcmd.curx > xga.waitcmd.x2) {
 		xga.waitcmd.curx = xga.waitcmd.x1;
 		xga.waitcmd.cury++;
@@ -460,12 +463,18 @@ bool XGA_CheckX(void) {
 		xga.waitcmd.newline = true;
 		if(xga.waitcmd.cury > xga.waitcmd.y2) xga.waitcmd.wait = false;
 	}
+	} else {
+        xga.waitcmd.newline = false;
+	}
 	return newline;
 }
 
 
 void XGA_DrawWait(Bitu val, Bitu len) {
 	if(!xga.waitcmd.wait) return;
+
+	//if(!(xga.curcommand & 0x2)) return;
+
 	Bitu mixmode = (xga.pix_cntl >> 6) & 0x3;
 	Bit8u srcval;
 	Bit8u destval;
@@ -511,7 +520,8 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 						
 						XGA_DrawPoint8(xga.waitcmd.curx++, xga.waitcmd.cury, destval);
 
-						//XGA_CheckX();
+						XGA_CheckX();
+						if(xga.waitcmd.newline) break;
 			}
 					break;
 				case 0x02: /* Data from PIX_TRANS selects the mix */
@@ -585,6 +595,7 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 
 					xga.waitcmd.curx++;
 						XGA_CheckX();
+						if(xga.waitcmd.newline) break;
 				}
 					//xga.waitcmd.cury++;
 				
@@ -606,87 +617,133 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 void XGA_BlitRect(Bitu val) {
 	Bit32u xat, yat;
 	Bit32u xmass, xmod, xdist, memrec;
-	Bit8u *srcptr;
-	Bit8u *destptr;
-	Bit8u *destline;
-	Bit8u *srcline;
-
-	Bit32u c;
-	Bit8u smallc;
-	Bit8u tmpclr;
-	bool incx = false;
-	bool incy = false; 
-
-	if(((val >> 5) & 0x01) != 0) incx = true;
-	if(((val >> 7) & 0x01) != 0) incy = true;
-
-	xdist = xga.MAPcount;
-
-	smallc = (xga.forecolor & 0xff);
-	memrec = 0;
-	Bit32u srcaddr = (xga.cury * (Bit32u)XGA_SCREEN_WIDTH) + xga.curx;
-	Bit32u destaddr = (xga.desty * (Bit32u)XGA_SCREEN_WIDTH) + xga.destx;
-
-	srcptr = &vga.mem.linear[srcaddr];
-	destptr = &vga.mem.linear[destaddr];
-
-	/* Copy source to video ram */
-	for(yat=0;yat<=xga.MIPcount ;yat++) {
-		srcline = srcptr;
-		destline = destptr;
-		for(xat=0;xat<=xga.MAPcount;xat++) {
-			*destline = *srcline;
-			//LOG_MSG("Copy (%d, %d) to (%d, %d)", sx, sy, tx, ty);
-			if(incx) {
-				destline++;
-				srcline++;
-			} else {
-				--destline;
-				--srcline;
-			}
-		}
-		if(incy) {
-			srcptr+=XGA_SCREEN_WIDTH;
-			destptr+=XGA_SCREEN_WIDTH;
-		} else {
-			srcptr-=XGA_SCREEN_WIDTH;
-			destptr-=XGA_SCREEN_WIDTH;
-		}
-	}
-
-	//LOG_MSG("XGA: Blit (%d, %d)-(%d, %d) to (%d, %d)-(%d, %d), incx %d, incy %d", xga.curx, xga.cury, xga.curx + xdist, xga.cury + xga.MIPcount, xga.destx, xga.desty, xga.destx + xdist, xga.desty + xga.MIPcount, incx, incy);
-
-}
-
-void XGA_DrawPattern(void) {
-	Bit32u xat, yat, y1, y2, sx, sy, addx, addy;
-	Bit32u xmass, xmod, xdist;
-	Bit32u *memptr;
-	Bit8u *smallptr;
-	Bit8u smallc;
+	//Bit8u *srcptr;
+	//Bit8u *destptr;
+	//Bit8u *destline;
+	//Bit8u *srcline;
 	Bit8u srcdata;
 	Bit8u dstdata;
 
 	Bit8u srcval;
 	Bit8u destval;
 
-	y1 = xga.desty;
-	y2 = xga.desty + xga.MIPcount;
-	xdist = xga.MAPcount;
-	sx = xga.curx;
-	sy = xga.cury;
-	addx = 0;
-	addy = 0;
+	Bits srcx, srcy, tarx, tary, dx, dy;
+	//bool incx = false;
+	//bool incy = false; 
+
+	dx = -1;
+	dy = -1;
+
+	//if(((val >> 5) & 0x01) != 0) incx = true;
+	//if(((val >> 7) & 0x01) != 0) incy = true;
+
+	if(((val >> 5) & 0x01) != 0) dx = 1;
+	if(((val >> 7) & 0x01) != 0) dy = 1;
+
+	//Bit32u srcaddr = (xga.cury * (Bit32u)XGA_SCREEN_WIDTH) + xga.curx;
+	//Bit32u destaddr = (xga.desty * (Bit32u)XGA_SCREEN_WIDTH) + xga.destx;
+	srcx = xga.curx;
+	srcy = xga.cury;
+	tarx = xga.destx;
+	tary = xga.desty;
+
+	//srcptr = &vga.mem.linear[srcaddr];
+	//destptr = &vga.mem.linear[destaddr];
+
+	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
+	Bitu mixmode = 0x67; /* Source is bitmap data, mix mode is src */
+	switch(mixselect) {
+		case 0x00: /* Foreground mix is always used */
+			mixmode = xga.foremix;
+			break;
+		case 0x02: /* CPU Data determines mix used */
+			LOG_MSG("XGA: DrawPattern: Mixselect data from PIX_TRANS register");
+			break;
+		case 0x03: /* Video memory determines mix */
+			//LOG_MSG("XGA: Srcdata: %x, Forecolor %x, Backcolor %x, Foremix: %x Backmix: %x", srcdata, xga.forecolor, xga.backcolor, xga.foremix, xga.backmix);
+			break;
+		default:
+			LOG_MSG("XGA: DrawPattern: Unknown mix select register");
+			break;
+	}
 
 
-	for(yat=y1;yat<=y2;yat++) {
-		for(xat=0;xat<=xdist;xat++) {
+	/* Copy source to video ram */
+	for(yat=0;yat<=xga.MIPcount ;yat++) {
+		srcx = xga.curx;
+		tarx = xga.destx;
 
-			Bitu usex = xga.destx + xat;
-			Bitu usey = yat;
+		for(xat=0;xat<=xga.MAPcount;xat++) {
+			srcdata = XGA_GetPoint8(srcx, srcy);
+			dstdata = XGA_GetPoint8(tarx, tary);
 
-			srcdata = XGA_GetPoint8(sx + (usex & 0x7), sy + (usey & 0x7));
-			dstdata = XGA_GetPoint8(usex, usey);
+			if(mixselect == 0x3) {
+					if(srcdata == xga.forecolor) {
+						mixmode = xga.foremix;
+					} else {
+						if(srcdata == xga.backcolor) {
+							mixmode = xga.backmix;
+			} else {
+							/* Best guess otherwise */
+							mixmode = 0x67; /* Source is bitmap data, mix mode is src */
+			}
+		}
+		}
+
+			switch((mixmode >> 5) & 0x03) {
+				case 0x00: /* Src is background color */
+					srcval = xga.backcolor;
+					break;
+				case 0x01: /* Src is foreground color */
+					srcval = xga.forecolor;
+					break;
+				case 0x02: /* Src is pixel data from PIX_TRANS register */
+					LOG_MSG("XGA: DrawPattern: Wants data from PIX_TRANS register");
+					break;
+				case 0x03: /* Src is bitmap data */
+					srcval = srcdata;
+					break;
+				default:
+					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					break;
+	}
+
+			destval = XGA_GetMixResult(mixmode, srcval, dstdata);
+
+			//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
+
+			//*smallptr++ = destval;
+			XGA_DrawPoint8(tarx, tary, destval);
+
+			srcx += dx;
+			tarx += dx;
+		}
+		srcy += dy;
+		tary += dy;
+	}
+
+}
+
+void XGA_DrawPattern(Bitu val) {
+	Bit8u srcdata;
+	Bit8u dstdata;
+
+	Bit8u srcval;
+	Bit8u destval;
+
+	Bits xat, yat, srcx, srcy, tarx, tary, dx, dy;
+
+	dx = -1;
+	dy = -1;
+
+	if(((val >> 5) & 0x01) != 0) dx = 1;
+	if(((val >> 7) & 0x01) != 0) dy = 1;
+
+	srcx = xga.curx;
+	srcy = xga.cury;
+
+	tary = xga.desty;
+
 			Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
 			Bitu mixmode = 0x67; /* Source is bitmap data, mix mode is src */
 			switch(mixselect) {
@@ -697,6 +754,22 @@ void XGA_DrawPattern(void) {
 					LOG_MSG("XGA: DrawPattern: Mixselect data from PIX_TRANS register");
 					break;
 				case 0x03: /* Video memory determines mix */
+			//LOG_MSG("XGA: Srcdata: %x, Forecolor %x, Backcolor %x, Foremix: %x Backmix: %x", srcdata, xga.forecolor, xga.backcolor, xga.foremix, xga.backmix);
+			break;
+		default:
+			LOG_MSG("XGA: DrawPattern: Unknown mix select register");
+			break;
+	}
+
+	for(yat=0;yat<=xga.MIPcount;yat++) {
+		tarx = xga.destx;
+		for(xat=0;xat<=xga.MAPcount;xat++) {
+
+			srcdata = XGA_GetPoint8(srcx + (tarx & 0x7), srcy + (tary & 0x7));
+			dstdata = XGA_GetPoint8(tarx, tary);
+			
+
+			if(mixselect == 0x3) {
 					if(srcdata == xga.forecolor) {
 						mixmode = xga.foremix;
 					} else {
@@ -707,12 +780,8 @@ void XGA_DrawPattern(void) {
 							mixmode = 0x67; /* Source is bitmap data, mix mode is src */
 						}
 					}
-					//LOG_MSG("XGA: Srcdata: %x, Forecolor %x, Backcolor %x, Foremix: %x Backmix: %x", srcdata, xga.forecolor, xga.backcolor, xga.foremix, xga.backmix);
-					break;
-				default:
-					LOG_MSG("XGA: DrawPattern: Unknown mix select register");
-					break;
 			}
+
 			switch((mixmode >> 5) & 0x03) {
 				case 0x00: /* Src is background color */
 					srcval = xga.backcolor;
@@ -733,13 +802,11 @@ void XGA_DrawPattern(void) {
 
 			destval = XGA_GetMixResult(mixmode, srcval, dstdata);
 
-			//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
-
-			//*smallptr++ = destval;
-			XGA_DrawPoint8(usex, usey, destval);
-
+			XGA_DrawPoint8(tarx, tary, destval);
 			
+			tarx += dx;
 		}
+		tary += dy;
 
 	}
 
@@ -748,16 +815,22 @@ void XGA_DrawPattern(void) {
 void XGA_DrawCmd(Bitu val, Bitu len) {
 	Bit16u cmd;
 	cmd = val >> 13;
-	//LOG_MSG("XGA: Draw command %x", cmd);
+#if XGA_SHOW_COMMAND_TRACE == 1
+	LOG_MSG("XGA: Draw command %x", cmd);
+#endif
 	xga.curcommand = val;
 	switch(cmd) {
 		case 1: /* Draw line */
 			if((val & 0x100) == 0) {
 				if((val & 0x8) == 0) {
-					//LOG_MSG("XGA: Drawing Bresenham line");
+#if XGA_SHOW_COMMAND_TRACE == 1
+					LOG_MSG("XGA: Drawing Bresenham line");
+#endif
                     XGA_DrawLineBresenham(val);
 				} else {
-					//LOG_MSG("XGA: Drawing vector line");
+#if XGA_SHOW_COMMAND_TRACE == 1
+					LOG_MSG("XGA: Drawing vector line");
+#endif
 					XGA_DrawLineVector(val);
 				}
 			} else {
@@ -767,8 +840,12 @@ void XGA_DrawCmd(Bitu val, Bitu len) {
 		case 2: /* Rectangle fill */
 			if((val & 0x100) == 0) {
 				xga.waitcmd.wait = false;
-				XGA_DrawRectangle(xga.curx, xga.cury, xga.curx + xga.MAPcount, xga.cury + xga.MIPcount);
+				XGA_DrawRectangle(val);
+#if XGA_SHOW_COMMAND_TRACE == 1
+				LOG_MSG("XGA: Draw immediate rect");
+#endif
 			} else {
+				
 				xga.waitcmd.newline = true;
 				xga.waitcmd.wait = true;
 				xga.waitcmd.curx = xga.curx;
@@ -777,16 +854,26 @@ void XGA_DrawCmd(Bitu val, Bitu len) {
 				xga.waitcmd.y1 = xga.cury;
 				xga.waitcmd.x2 = xga.curx + xga.MAPcount;
 				xga.waitcmd.y2 = xga.cury + xga.MIPcount + 1;
+				xga.waitcmd.sizex = xga.MAPcount;
+				xga.waitcmd.sizey = xga.MIPcount + 1;
 				xga.waitcmd.cmd = 2;
-				//LOG_MSG("XGA: Draw wait rect (%d, %d)-(%d, %d)", xga.waitcmd.x1, xga.waitcmd.y1, xga.waitcmd.x2, xga.waitcmd.y2);
+
+#if XGA_SHOW_COMMAND_TRACE == 1
+				LOG_MSG("XGA: Draw wait rect, width %d, heigth %d", xga.MAPcount, xga.MIPcount+1);
+#endif
 			}
 			break;
 		case 6: /* BitBLT */
 			XGA_BlitRect(val);
+#if XGA_SHOW_COMMAND_TRACE == 1
+			LOG_MSG("XGA: Blit Rect");
+#endif
 			break;
 		case 7: /* Pattern fill */
-			XGA_DrawPattern();
-			//LOG_MSG("XGA: Pattern fill (%d, %d)-(%d, %d) to (%d, %d)-(%d, %d)", xga.curx, xga.cury, xga.curx + 8, xga.cury + 8, xga.destx, xga.desty, xga.destx + xga.MAPcount, xga.desty + xga.MIPcount);
+			XGA_DrawPattern(val);
+#if XGA_SHOW_COMMAND_TRACE == 1
+			LOG_MSG("XGA: Pattern fill");
+#endif
 			break;
 		default:
 			LOG_MSG("XGA: Unhandled draw command %x", cmd);
@@ -845,6 +932,7 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 				xga.waitcmd.cury++;
 				xga.waitcmd.newline = true;
 			}
+
 			XGA_DrawWait(val, len);
 			if(xga.waitcmd.cury > xga.waitcmd.y2) xga.waitcmd.wait = false;
 			break;
@@ -860,7 +948,7 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 }
 
 Bitu XGA_Read(Bitu port, Bitu len) {
-	LOG_MSG("XGA: Read from port %x, len %x", port, len);
+	//LOG_MSG("XGA: Read from port %x, len %x", port, len);
 	switch(port) {
 		case 0x9ae8:
 			return 0x0;
@@ -876,64 +964,6 @@ Bitu XGA_Read(Bitu port, Bitu len) {
 			LOG_MSG("XGA: Read from port %x, len %x", port, len);
 			return 0x0;
 	}
-}
-
-void XGA_UpdateHWC(void) {
-	Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
-	Bits x, y, t, m, xat, r, z;
-	x = vga.s3.hgc.originx;
-	y = vga.s3.hgc.originy;
-	Bit16u bitsA, bitsB;
-	Bit16u ab, bb;
-	
-	/* Read mouse cursor */
-	for(t=0;t<64;t++) {
-		xat = 0;
-		for(m=0;m<4;m++) {
-            bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
-			mouseaddr+=2;
-			bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
-			mouseaddr+=2;
-			z = 7;
-			for(r=15;r>=0;--r) {
-				vga.s3.hgc.mc[t][xat] = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
-				xat++;
-				--z;
-				if(z<0) z=15;
-			}
-		}
-	}
-
-	// Dump the cursor to the log
-	/*
-	LOG_MSG("--- New cursor ---");
-	for(t=0;t<64;t++) {
-		char outstr[66];
-		memset(outstr,0,66);
-		for(r=0;r<64;r++) {
-			switch(vga.s3.hgc.mc[t][r]) {
-				case 0x00:
-					outstr[r] = 'o';
-					break;
-				case 0x01:
-					outstr[r] = 'O';
-					break;
-				case 0x02:
-					outstr[r] = '.';
-					break;
-				case 0x03:
-					outstr[r] = '¦';
-					break;
-				default:
-					outstr[r] = ' ';
-					break;
-
-			}
-		}
-		LOG_MSG("%s", outstr);
-	}
-	*/
-
 }
 
 void VGA_SetupXGA(void) {

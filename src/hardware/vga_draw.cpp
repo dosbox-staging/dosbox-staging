@@ -108,7 +108,7 @@ static Bit8u * VGA_Draw_VGA_Line(Bitu vidstart,Bitu panning,Bitu line) {
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = vidstart / ((220 * vga.draw.height) / 640);
+		Bitu lineat = vidstart / ((160 * vga.draw.height) / 480);
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63))) {
 			return VGA_Draw_VGA_Line(vidstart, panning, line);
 		} else {
@@ -119,11 +119,25 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 			if(moff>63) return VGA_Draw_VGA_Line(vidstart, panning, line);
 			if(moff<0) moff+=64;
 			Bitu xat = vga.s3.hgc.originx;
-			Bitu m, mat;
-			mat = vga.s3.hgc.posx;
+			Bitu m, mat, mapat;
+			Bits r, z;
+			mapat = 0;
 
-			for(m=0;m<64;m++) {
-				switch(vga.s3.hgc.mc[moff][mat]) {
+			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
+			mouseaddr+=(moff * 16);
+
+			Bit16u bitsA, bitsB;
+			Bit8u mappoint;
+			for(m=0;m<4;m++) {
+				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				z = 7;
+				for(r=15;r>=0;--r) {
+					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
+					if(mapat >= vga.s3.hgc.posx) {
+						switch(mappoint) {
 					case 0:
 						TempLine[xat] = vga.s3.hgc.backstack[0];
 						break;
@@ -139,8 +153,11 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 						break;
 				}
 				xat++;
-				mat++;
-				if(mat>63) break;
+					}
+					mapat++;
+					--z;
+					if(z<0) z=15;
+				}
 			}
 			return TempLine;
 		}
