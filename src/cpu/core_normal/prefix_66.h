@@ -512,6 +512,24 @@
 		GRP2D(1);break;
 	CASE_D(0xd3)												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
+	CASE_D(0xe5)												/* IN EAX,Ib */
+		{ 
+			Bit16u port=Fetchb();
+			reg_eax=IO_Read(port)        | 
+				(IO_Read(port+1) << 8 )  |
+				(IO_Read(port+2) << 16 ) |
+				(IO_Read(port+3) << 24 );
+			break;
+		}
+	CASE_D(0xe7)												/* OUT Ib,EAX */
+		{	
+			Bit16u port=Fetchb();
+			IO_Write(port+0,(Bit8u)(reg_eax >> 0));
+			IO_Write(port+1,(Bit8u)(reg_eax >> 8));
+			IO_Write(port+2,(Bit8u)(reg_eax >> 16));
+			IO_Write(port+3,(Bit8u)(reg_eax >> 24));
+			break;
+		}
 	CASE_D(0xe8)												/* CALL Jd */
 		{ 
 			Bit32s newip=Fetchds();
