@@ -31,7 +31,9 @@ struct IRQ_Block {
 	PIC_EOIHandler * handler;
 };
 
-Bit32u PIC_IRQCheck;
+Bitu PIC_IRQCheck;
+Bitu PIC_IRQActive;
+bool PIC_IRQAgain;
 
 static IRQ_Block irqs[16];
 static Bit8u pic0_icws=0;
@@ -45,7 +47,6 @@ static bool pic1_request_iisr=0;
 
 //Pic 0 command port
 static void write_p20(Bit32u port,Bit8u val) {
-	Bit32u i;
 	switch (val) {
 	case 0x0A: /* select read interrupt request register */
 		pic0_request_iisr=false;
@@ -56,7 +57,6 @@ static void write_p20(Bit32u port,Bit8u val) {
 	case 0x10:				/* ICW1 */
 		pic0_icws=2;
 		pic0_icw_state=1;
-
 		break;
 	case 0x11:				/* ICW1 + need for ICW4 */
 		pic0_icws=3;
@@ -64,13 +64,11 @@ static void write_p20(Bit32u port,Bit8u val) {
 		break;
 	case 0x20: /* end of interrupt command */
           /* clear highest current in service bit */
-		for (i=0;i<=7;i++) {
-			if (irqs[i].inservice) {
-				irqs[i].inservice=false;
-				if (irqs[i].handler!=0) irqs[i].handler();
-				break;
-			};
-		};
+		if (PIC_IRQActive<8) {
+			irqs[PIC_IRQActive].inservice=false;
+			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
+			PIC_IRQActive=PIC_NOIRQ;
+		}
 		break;
 	case 0x60: /* specific EOI 0 */
 	case 0x61: /* specific EOI 1 */
@@ -80,10 +78,11 @@ static void write_p20(Bit32u port,Bit8u val) {
 	case 0x65: /* specific EOI 5 */
 	case 0x66: /* specific EOI 6 */
 	case 0x67: /* specific EOI 7 */
-		if (irqs[val-0x60].inservice) {
-			irqs[val-0x60].inservice=false;
-			if (irqs[val-0x60].handler!=0) irqs[val-0x60].handler();
-		};
+		if (PIC_IRQActive==(val-0x60U)) {
+			irqs[PIC_IRQActive].inservice=false;
+			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
+			PIC_IRQActive=PIC_NOIRQ;
+		}
 		break;
 	// IRQ lowest priority commands
 	case 0xC0: // 0 7 6 5 4 3 2 1
@@ -176,13 +175,11 @@ static void write_pa0(Bit32u port,Bit8u val) {
 		break;
 	case 0x20: /* end of interrupt command */
           /* clear highest current in service bit */
-		for (i=8;i<=15;i++) {
-			if (irqs[i].inservice) {
-				irqs[i].inservice=false;
-				if (irqs[i].handler!=0) irqs[i].handler();
-				break;
-			};
-		};
+		if (PIC_IRQActive>7 && PIC_IRQActive <16) {
+			irqs[PIC_IRQActive].inservice=false;
+			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
+			PIC_IRQActive=PIC_NOIRQ;
+		}
 		break;
 	case 0x60: /* specific EOI 0 */
 	case 0x61: /* specific EOI 1 */
@@ -192,9 +189,10 @@ static void write_pa0(Bit32u port,Bit8u val) {
 	case 0x65: /* specific EOI 5 */
 	case 0x66: /* specific EOI 6 */
 	case 0x67: /* specific EOI 7 */
-		if (irqs[val-0x60+8].inservice) {
-			irqs[val-0x60+8].inservice=false;
-			if (irqs[val-0x60+8].handler!=0) irqs[val-0x60+8].handler();
+		if (PIC_IRQActive==(8+val-0x60U)) {
+			irqs[PIC_IRQActive].inservice=false;
+			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
+			PIC_IRQActive=PIC_NOIRQ;
 		};
 		break;
 	// IRQ lowest priority commands
@@ -220,6 +218,7 @@ static void write_pa1(Bit32u port,Bit8u val) {
 	case 0:                        /* mask register */
 		for (i=0;i<=7;i++) {
 			irqs[i+8].masked=(val&1 <<i)>0;
+			if (!irqs[8].masked) LOG_DEBUG("Someone unmasked RTC irq");
 		};
 		break;
      case 1:                        /* icw2          */
@@ -245,7 +244,7 @@ static Bit8u read_pa0(Bit32u port) {
 			if (irqs[i+8].active) ret|=b;
 			b <<= 1;
 		}
-	};
+	}
 	return ret;
 }
 
@@ -292,55 +291,31 @@ void PIC_DeActivateIRQ(Bit32u irq) {
 	}
 }
 
-bool PIC_IRQActive(Bit32u irq) {
-	if (irq<16) {
-		return irqs[irq].active;
-	}
-	return true;
-}
-
-
-#define PIC_MAXQUEUE 16
-static PIC_Function * pic_queue[PIC_MAXQUEUE];
-static Bit32u pic_queuesize;
-
-void PIC_QueueFunction(PIC_Function * function) {
-	if (pic_queuesize<PIC_MAXQUEUE) {
-		pic_queue[pic_queuesize]=function;
-		pic_queuesize++;
-	} else {
-		E_Exit("PIC Queue OverFlow");
-	}
-}
-
-
-//TODO check for IRQ 2 being masked before checking 8-15 but then again do i need so many irqs
 void PIC_runIRQs(void) {
 	Bit32u i;
-	if (!flags.intf) goto noirqs;
-	if (!PIC_IRQCheck) goto noirqs;
+	if (!flags.intf) return;
+	if (PIC_IRQActive!=PIC_NOIRQ) return;
+	if (!PIC_IRQCheck) return;
 	for (i=0;i<=15;i++) {
 		if (i!=2) {
-			if (!irqs[i].masked && irqs[i].active /* && !irqs[i].inservice */) {
+			if (!irqs[i].masked && irqs[i].active) {
 				irqs[i].inservice=true;
 				irqs[i].active=false;
 				PIC_IRQCheck&=~(1 << i);
 				Interrupt(irqs[i].vector);
-				break;
-			};
-		};
-	};
-noirqs:
-	/* This also runs special hardware functions that can queue themselves here */
-	for (;pic_queuesize>0;) {
-		(*pic_queue[--pic_queuesize])();
+				PIC_IRQActive=i;
+				PIC_IRQAgain=true;
+				return;
+			}
+		}
 	}
-};
+}
 
 
 void PIC_Init(void) {
 	/* Setup pic0 and pic1 with initial values like DOS has normally */
 	PIC_IRQCheck=0;
+	PIC_IRQActive=PIC_NOIRQ;
 	Bit8u i;
 	for (i=0;i<=7;i++) {
 		irqs[i].active=false;
@@ -351,11 +326,10 @@ void PIC_Init(void) {
 		irqs[i+8].inservice=false;
 		irqs[i].vector=0x8+i;
 		irqs[i+8].vector=0x70+i;	
-	};
+	}
 	irqs[0].masked=false;					/* Enable system timer */
 	irqs[1].masked=false;					/* Enable Keyboard IRQ */
-	irqs[2].masked=false;					/* Enable 2nd PIC Although i can't care if this is masked */
-	irqs[12].masked=false;
+	irqs[12].masked=false;					/* Enable Mouse IRQ */
 	IO_RegisterReadHandler(0x20,read_p20,"Master PIC Command");
 	IO_RegisterReadHandler(0x21,read_p21,"Master PIC Data");
 	IO_RegisterWriteHandler(0x20,write_p20,"Master PIC Command");
@@ -364,6 +338,6 @@ void PIC_Init(void) {
 	IO_RegisterReadHandler(0xa1,read_pa1,"Slave PIC Data");
 	IO_RegisterWriteHandler(0xa0,write_pa0,"Slave PIC Command");
 	IO_RegisterWriteHandler(0xa1,write_pa1,"Slave PIC Data");
-};
+}
 		
 
