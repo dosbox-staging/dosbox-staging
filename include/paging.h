@@ -16,9 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: paging.h,v 1.10 2004-09-05 18:54:59 qbix79 Exp $ */
+
 #ifndef _PAGING_H_
 #define _PAGING_H_
 
+#include "dosbox.h"
 #include "mem.h"
 
 class PageDirectory;
@@ -70,7 +73,9 @@ bool PAGING_MakePhysPage(Bitu & page);
 void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
 
-#pragma pack(1)
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
 typedef struct {
 	Bit32u		p:1;
 	Bit32u		wr:1;
@@ -84,7 +89,10 @@ typedef struct {
 	Bit32u		avl:3;
 	Bit32u		base:20;
 } X86_PageEntryBlock GCC_ATTRIBUTE(packed);
-#pragma pack()
+#ifdef _MSC_VER
+#pragma pack ()
+#endif
+
 
 union X86PageEntry {
 	Bit32u load;
