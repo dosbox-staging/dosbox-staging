@@ -60,7 +60,7 @@ private:
 
 	char *completion_start;
 	Bit16u completion_index;
-
+	
 public:
 
 	DOS_Shell();
@@ -93,6 +93,7 @@ public:
 	void CMD_TYPE(char * args);
 	void CMD_REM(char * args);
 	void CMD_RENAME(char * args);
+	void CMD_CALL(char * args);
 	void SyntaxError(void);
 	void CMD_PAUSE(char * args);
 	/* The shell's variables */
@@ -100,6 +101,7 @@ public:
 	BatchFile * bf;
 	bool echo;
 	bool exit;
+	bool call;
 };
 
 struct SHELL_Cmd {
