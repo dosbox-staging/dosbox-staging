@@ -23,6 +23,7 @@
 #include "setup.h"
 
 
+
 class Program;
 
 typedef void (PROGRAMS_Main)(Program * * make);
@@ -36,10 +37,10 @@ public:
 	CommandLine * cmd;
 	DOS_PSP * psp;
 	virtual void Run(void)=0;
-	char * GetEnvStr(char * env_entry);
-	char * GetEnvNum(Bit32u num);
-	Bit32u GetEnvCount(void);
-	bool SetEnv(char * env_entry,char * new_string);
+	bool Program::GetEnvStr(const char * entry,std::string & result);
+	bool GetEnvNum(Bitu num,std::string & result);
+	Bitu GetEnvCount(void);
+	bool SetEnv(const char * entry,const char * new_string);
 	void WriteOut(const char * format,...);					/* Write to standard output */
 
 };
