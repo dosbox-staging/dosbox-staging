@@ -184,12 +184,20 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
 	psp.SetEnvironment(envseg);
-	psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
-	psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
+	/* Copy file handles */
+	if (DOS_PSP::rootpsp!=dos.psp) {
+		// TODO: Improve this 
+		// If prog wasnt started from commandline copy file table (California Games 2)
+		DOS_PSP oldpsp(dos.psp);
+		psp.CopyFileTable(&oldpsp);
+	} else {
+		psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
+		psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
+		psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
+		psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
+		psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
+		psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
+	}
 	/* Save old DTA in psp */
 	psp.SetDTA(dos.dta);
 	/* Setup the DTA */
