@@ -422,7 +422,6 @@ static void write_cms(Bit32u port,Bit8u val) {
 
  void CMS_Init(Section* sec,Bitu rate) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("cms")) return;
 	sample_rate=rate;
 
 	IO_RegisterWriteHandler(0x220,write_cms,"CMS");
