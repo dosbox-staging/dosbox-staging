@@ -2,7 +2,7 @@
 	EAPoint si_base,di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
-	Bitu	count,count_left;
+	Bits	count,count_left;
 	Bits	add_index;
 	bool	restart=false;
 	
@@ -195,7 +195,7 @@
 		}
 		break;
 	default:
-		LOG(LOG_CPU|LOG_ERROR,"Unhandled string %d entry %X",inst.code.op,inst.entry);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled string %d entry %X",inst.code.op,inst.entry);
 	}
 	/* Clean up after certain amount of instructions */
 	reg_esi&=(~add_mask);

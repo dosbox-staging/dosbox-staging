@@ -134,7 +134,7 @@ Bitu get_CF(void) {
 	case t_DIV:
 		return false;	/* Unkown */
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"get_CF Unknown %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_CF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -229,7 +229,7 @@ again:
 	case t_MUL:
 		return false;			          /* Unkown */
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"get_AF Unknown %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_AF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -314,7 +314,7 @@ again:
 	case t_MUL:
 		return false;		/* Unkown */
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"get_ZF Unknown %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_ZF Unknown %d",flags.type);
 	}
 	return false;
 }
@@ -398,7 +398,7 @@ again:
 	case t_MUL:
 		return false;	/* Unkown */
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"get_SF Unkown %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_SF Unkown %d",flags.type);
 	}
 	return false;
 
@@ -539,7 +539,7 @@ again:
 	case t_DIV:
 		return false;		/* Unkown */
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"get_OF Unkown %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("get_OF Unkown %d",flags.type);
 	}
 	return false;
 }
@@ -800,7 +800,7 @@ Bitu get_Flags(void) {
 		SET_FLAG(FLAG_CF,false);	/* Unkown */
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"Unhandled flag type %d",flags.type);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %d",flags.type);
 		return 0;
 	}
 	flags.word=new_flags;

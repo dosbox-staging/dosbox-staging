@@ -44,6 +44,9 @@ namespace {
 };
 
 extern int old_cursor_state;
+
+
+
 void DEBUG_ShowMsg(Bit32u entry, char * format,...) {
 	
 	if (!(entry & LOG_ERROR) && entry && !loggrp[entry].enabled) return;
@@ -58,7 +61,14 @@ void DEBUG_ShowMsg(Bit32u entry, char * format,...) {
 	wrefresh(dbg.win_out);
     if(debuglog) fprintf(debuglog,"%10d: %s\n",cycle_count,buf);
 }
-
+void LOG::operator() (char* format, ...){
+	char buf[1024];
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(buf,format,msg);
+	va_end(msg);
+	DEBUG_ShowMsg(this->d_type|this->d_severity,buf);
+}
 
 
 static void Draw_RegisterLayout(void) {

@@ -83,7 +83,7 @@ decode_start:
 		if (prefix.count) {
 			PrefixReset;
 			//DEBUG_HeavyWriteLogInstruction();
-			LOG(LOG_CPU,"Prefix for non prefixed instruction");
+			LOG(LOG_CPU,LOG_NORMAL)("Prefix for non prefixed instruction");
 		}
 		CPU_Cycles--;
 	}

@@ -114,7 +114,7 @@ l_M_Ed:
 			break;
 		case M_Efw:
 			if (inst.rm>=0xC0) {
-				LOG(LOG_CPU|LOG_ERROR,"MODRM:Illegal M_Efw ");
+				LOG(LOG_CPU,LOG_ERROR)("MODRM:Illegal M_Efw ");
 				goto nextopcode;
 			}
 			inst.op1.d=LoadMw(inst.rm_eaa);
@@ -122,7 +122,7 @@ l_M_Ed:
 			break;
 		case M_Efd:
 			if (inst.rm>=0xc0) {
-				LOG(LOG_CPU|LOG_ERROR,"MODRM:Illegal M_Efw ");
+				LOG(LOG_CPU,LOG_ERROR)("MODRM:Illegal M_Efw ");
 				goto nextopcode;
 			}
 			inst.op1.d=LoadMd(inst.rm_eaa);
@@ -157,7 +157,7 @@ l_M_Ed:
 		case 0:
 			break;
 		default:
-			LOG(LOG_CPU|LOG_ERROR,"MODRM:Unhandled load %d entry %x",inst.code.extra,inst.entry);
+			LOG(LOG_CPU,LOG_ERROR)("MODRM:Unhandled load %d entry %x",inst.code.extra,inst.entry);
 			break;
 		}
 		break;
@@ -469,7 +469,7 @@ l_M_Ed:
 		CPU_CPUID();
 		goto nextopcode;
 	default:
-		LOG(LOG_CPU|LOG_ERROR,"LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
+		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		break;
 }
 

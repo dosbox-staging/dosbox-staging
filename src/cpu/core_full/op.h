@@ -417,7 +417,7 @@ switch (inst.code.op) {
 
 
 		default:
-			LOG(LOG_ERROR|LOG_CPU,"Group 6 Illegal subfunction %X",inst.rm_index);
+			LOG(LOG_CPU,LOG_ERROR)("Group 6 Illegal subfunction %X",inst.rm_index);
 		}
 		break;
 	case O_GRP7w:
@@ -455,7 +455,7 @@ switch (inst.code.op) {
 			CPU_LMSW(inst.op1.w);
 			goto nextopcode;
 		default:
-			LOG(LOG_ERROR|LOG_CPU,"Group 7 Illegal subfunction %X",inst.rm_index);
+			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
 		}
 		break;
 	case O_M_Cd_Rd:
@@ -541,6 +541,6 @@ switch (inst.code.op) {
 	case 0:
 		break;
 	default:
-		LOG(LOG_ERROR|LOG_CPU,"OP:Unhandled code %d entry %X",inst.code.op,inst.entry);
+		LOG(LOG_CPU,LOG_ERROR)("OP:Unhandled code %d entry %X",inst.code.op,inst.entry);
 		
 }

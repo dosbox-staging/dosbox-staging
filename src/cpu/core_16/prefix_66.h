@@ -258,7 +258,7 @@ switch(Fetchb()) {
 			break;
 		}
 	case 0x8c:												
-		LOG(LOG_CPU,"CPU:66:8c looped back");
+		LOG(LOG_CPU,LOG_NORMAL)("CPU:66:8c looped back");
 		break;
 	case 0x8d:												/* LEA */
 		{

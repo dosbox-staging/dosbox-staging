@@ -880,7 +880,7 @@ restart:
 		case 0xde:												/* FPU ESC 6 */
 		case 0xdf:												/* FPU ESC 7 */
 			{
-				LOG(LOG_CPU,"FPU used");
+				LOG(LOG_CPU,LOG_NORMAL)("FPU used");
 				Bit8u rm=Fetchb();
 				if (rm<0xc0) GetEAa;
 			}
@@ -956,7 +956,7 @@ restart:
 			IO_Write(reg_dx+1,reg_ah);
 			break;
 		case 0xf0:												/* LOCK */
-			LOG(LOG_CPU,"CPU:LOCK");
+			LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
 			break;
 		case 0xf1:												/* Weird call undocumented */
 //			INTERRUPT(1);

@@ -121,12 +121,12 @@ bool Interrupt(Bitu num) {
 #if C_DEBUG
 	switch (num) {
 	case 0x00:
- 		LOG(LOG_CPU,"Divide Error");
+ 		LOG(LOG_CPU,LOG_NORMAL)("Divide Error");
 		break;
 	case 0x06:
 		break;
 	case 0x07:
-		LOG(LOG_FPU,"Co Processor Exception");
+		LOG(LOG_FPU,LOG_NORMAL)("Co Processor Exception");
 		break;
 	case 0x08:
 	case 0x09:
@@ -148,7 +148,7 @@ bool Interrupt(Bitu num) {
 		break;
 	case 0xcd:
 #if C_HEAVY_DEBUG
- 		LOG(LOG_CPU|LOG_ERROR,"Call to interrupt 0xCD this is BAD");
+ 		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
 		DEBUG_HeavyWriteLogInstruction();
 #endif
  		E_Exit("Call to interrupt 0xCD this is BAD");
@@ -156,7 +156,7 @@ bool Interrupt(Bitu num) {
 		if (DEBUG_Breakpoint()) return true;
 		break;
 	case 0x05:
-		LOG(LOG_CPU,"CPU:Out Of Bounds interrupt");
+		LOG(LOG_CPU,LOG_NORMAL)("CPU:Out Of Bounds interrupt");
 		break;
 	default:
 //		LOG_WARN("Call to unsupported INT %02X call %02X",num,reg_ah);
@@ -539,7 +539,7 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 			return CPU_CheckState();
 		}
 	default:
-		LOG(LOG_CPU|LOG_ERROR,"Unhandled MOV CR%d,%X",cr,value);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
 		break;
 	}
 	return false;
@@ -550,7 +550,7 @@ Bitu CPU_GET_CRX(Bitu cr) {
 	case 0:
 		return cpu.cr0;
 	default:
-		LOG(LOG_CPU|LOG_ERROR,"Unhandled MOV XXX, CR%d",cr);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV XXX, CR%d",cr);
 		break;
 	}
 	return 0;
@@ -762,7 +762,7 @@ void CPU_CPUID(void) {
 		reg_edx=0;			/* Nothing either */
 		break;
 	default:
-		LOG(LOG_CPU|LOG_ERROR,"Unhandled CPUID Function %x",reg_eax);
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled CPUID Function %x",reg_eax);
 		break;
 	}
 	

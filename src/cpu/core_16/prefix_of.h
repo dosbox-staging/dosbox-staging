@@ -41,7 +41,7 @@ switch(Fetchb()) {
 				break;
 			default:
 				GetEAa;
-				LOG(LOG_CPU|LOG_ERROR,"GRP7:Illegal call %2X",(rm>>3) &3);
+				LOG(LOG_CPU,LOG_ERROR)("GRP7:Illegal call %2X",(rm>>3) &3);
 			}
 		}
 		break;
@@ -63,7 +63,7 @@ switch(Fetchb()) {
 	case 0x23:												/* MOV DRx,Rd */
 		{
 			GetRM;
-			LOG(LOG_CPU,"CPU:0F:23 does nothing");
+			LOG(LOG_CPU,LOG_NORMAL)("CPU:0F:23 does nothing");
 		}
 		break;
 	/* 0x24 MOV Rd,TRx (386) */

@@ -53,6 +53,8 @@ char* AnalyzeInstruction(char* inst, bool saveSelector);
 void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num);
 class DEBUG;
 
+extern void DEBUG_ShowMsg(Bit32u entry, char* format, ...);
+
 DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
 bool	logHeavy	= false;

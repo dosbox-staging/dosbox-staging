@@ -395,7 +395,7 @@ rep_again:
 		break;
 	default:
 		IPPoint--;
-		LOG(LOG_CPU|LOG_ERROR,"Unhandled REP Prefix %X",Fetchb());
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled REP Prefix %X",Fetchb());
 		goto normalexit;
 	}
 	/* If we end up here it's because the CPU_Cycles counter is 0, so restart instruction */
