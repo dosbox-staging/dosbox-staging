@@ -396,7 +396,7 @@ Bitu XMS_Handler(void) {
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
 		break;
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
-		reg_bl = XMS_AllocateMemory(reg_ax,reg_dx);
+		reg_bl = XMS_AllocateMemory(reg_dx,reg_dx);
 		reg_ax = (reg_bl==0);		// set ax to success/failure
 		break;
 	case XMS_FREE_EXTENDED_MEMORY:								/* 0a */
