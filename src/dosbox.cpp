@@ -74,13 +74,13 @@ void TANDYSOUND_Init(Section*);
 void CMS_Init(Section*);
 void DISNEY_Init(Section*);
 
-
-
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
 void BIOS_Init(Section*);
 void DEBUG_Init(Section*);
 void CMOS_Init(Section*);
+
+void MSCDEX_Init(Section*);
 
 /* Dos Internal mostly */
 void EMS_Init(Section*);
@@ -227,6 +227,9 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("emssize",4);
 	secprop->AddInitFunction(&XMS_Init);
 	secprop->Add_int("xmssize",8);
+
+	// Mscdex
+	secprop->AddInitFunction(&MSCDEX_Init);
 
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
     
