@@ -419,7 +419,7 @@ static Bit8u MemoryRegion(void) {
 			MEM_BlockWrite(dest_mem,buf_src,toread);
 		} else {
 			if (toread<dest_remain) {
-				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_dest,toread);
+				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,toread);
 			} else {
 				MEM_BlockWrite((dest_handle*MEM_PAGE_SIZE)+dest_off,buf_src,dest_remain);
 				MEM_BlockWrite((MEM_NextHandle(dest_handle)*MEM_PAGE_SIZE),&buf_src[dest_remain],toread-dest_remain);
