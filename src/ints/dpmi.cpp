@@ -972,7 +972,7 @@ Bitu DPMI::SimulateInt(void)
 	// Push flags from structure on stack
 	DPMI_LOG("DPMI: SimInt1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	reg_flags = mem_readw(data+0x20);
-	Interrupt(num);
+	CPU_SW_Interrupt(num,0);
 	DPMI_LOG("DPMI: SimInt2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	return 0;
 };
@@ -1034,7 +1034,7 @@ Bitu DPMI::ptorHandler(void)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
 	// Prepare flags for real int
 	// CPU_SetFlagsw(reg_flags & 0x3ED5); // 0011111011010101b
-	Interrupt(num);
+	CPU_SW_Interrupt(num,0);
 	return 0;
 } 
 
@@ -1060,12 +1060,12 @@ Bitu DPMI::ptorHandlerReturn(void)
 	}
 	// Change flags on stack to reflect possible results from ints
 	if (dpmi.client.bit32) {
-		Bit32u oldFlags  = mem_readd(SegPhys(ss)+reg_esp+8) & ~FLAG_MASK;// leave only flags that cannot be changed by int 
-		Bit32u userFlags = reg_flags & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
+		Bit32u oldFlags  = mem_readd(SegPhys(ss)+reg_esp+8) & ~FMASK_NORMAL;	// leave only flags that cannot be changed by int 
+		Bit32u userFlags = reg_flags & FMASK_NORMAL;							// Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writed(SegPhys(ss)+reg_esp+8,oldFlags|userFlags);
 	} else {
-		Bit16u oldFlags  = mem_readw(SegPhys(ss)+reg_sp+4) & ~FLAG_MASK; // leave only flags that cannot be changed by int 
-		Bit16u userFlags = reg_flags & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
+		Bit16u oldFlags  = mem_readw(SegPhys(ss)+reg_sp+4) & ~FMASK_NORMAL;		// leave only flags that cannot be changed by int 
+		Bit16u userFlags = reg_flags & FMASK_NORMAL;							// Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writew(SegPhys(ss)+reg_sp+4,oldFlags|userFlags);
 	};
 	SetVirtualIntFlag(true);
@@ -1097,7 +1097,7 @@ Bitu DPMI::Int21Handler(void)
 	reg_esp = rm_sp;
 	// Call realmode interrupt
 	DPMI_LOG("DPMI: INT 21 %04X called.",reg_ax);
-	Interrupt(0x21);
+	CPU_SW_Interrupt(0x21,0);
 	if (reg_ah==0x4C) {
 		// Shut doen dpmi and restore previous one
 		delete this;
