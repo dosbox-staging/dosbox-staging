@@ -20,8 +20,6 @@ static struct {
 	Bit8u control;
 	Bit8u buffer[DISNEY_SIZE];
 	Bitu used;
-	bool enabled;
-	Bit8u delay;
 	MIXER_Channel * chan;
 } disney;
 
@@ -40,7 +38,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 				disney.buffer[disney.used++]=disney.data;
 			}
 		}
-		if (val&0x10) LOG_DEBUG("IRQ Enabled");
+		if (val&0x10) LOG_DEBUG("DISNEY:Parallel IRQ Enabled");
 		disney.control=val;
 		break;
 	}
@@ -83,6 +81,10 @@ static void DISNEY_CallBack(Bit8u * stream,Bit32u len) {
 
 
 void DISNEY_Init(Section* sec) {
+
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("enabled")) return;
+
 	IO_RegisterWriteHandler(DISNEY_BASE,disney_write,"DISNEY");
 	IO_RegisterWriteHandler(DISNEY_BASE+1,disney_write,"DISNEY");
 	IO_RegisterWriteHandler(DISNEY_BASE+2,disney_write,"DISNEY");
