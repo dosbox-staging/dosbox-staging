@@ -327,16 +327,12 @@ static Bitu DOS_21Handler(void) {
 		reg_ah=dos.version.minor;
 		break;
 	case 0x31:		/* Terminate and stay resident */
-//TODO First get normal files executing
+		//TODO First get normal files executing
+		// Important: This service does not set the carry flag!
 		DOS_ResizeMemory(dos.psp,&reg_dx);
-		if (DOS_Terminate(true)) {
-			dos.return_code=reg_al;
-			dos.return_mode=RETURN_TSR;
-			CALLBACK_SCF(false);
-		} else {            
-			reg_ax=dos.errorcode;
-			CALLBACK_SCF(true);
-		}
+		DOS_Terminate(true);
+		dos.return_code=reg_al;
+		dos.return_mode=RETURN_TSR;
 		break;
 	case 0x33:		/* Extended Break Checking */
 		switch (reg_al) {
