@@ -175,12 +175,18 @@ static Bit8u cmos_readreg(Bit32u port) {
 	case 0x18:		/* Extended memory in KB High Byte */
 	case 0x30:		/* Extended memory in KB Low Byte */
 	case 0x31:		/* Extended memory in KB High Byte */
+//		LOG(LOG_BIOS,LOG_NORMAL)("CMOS:Read from reg %F : %04X",cmos.reg,cmos.regs[cmos.reg]);
 		return cmos.regs[cmos.reg];
 	default:
 		LOG(LOG_BIOS,LOG_NORMAL)("CMOS:Read from reg %F",cmos.reg);
 		return cmos.regs[cmos.reg];
 	}
 }
+
+void CMOS_SetRegister(Bitu regNr, Bit8u val)
+{
+	cmos.regs[regNr] = val;
+};
 
 void CMOS_Init(Section* sec) {
 	IO_RegisterWriteHandler(0x70,cmos_selreg,"CMOS");
