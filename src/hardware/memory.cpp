@@ -565,11 +565,17 @@ void MEM_ReleasePages(MemHandle handle) {
 }
 
 bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence) {
-	MemHandle index=handle;
-	if (index<0 || !pages) {
-		E_Exit("MEM:Resized to size 0");
-		return 0;
+	if (handle<0) {
+		if (!pages) return true;
+		handle=MEM_AllocatePages(pages,sequence);
+		return (handle>0);
 	}
+	if (!pages) {
+		MEM_ReleasePages(handle);
+		handle=-1;
+		return true;
+	}
+	MemHandle index=handle;
 	MemHandle last;Bitu old_pages=0;
 	while (index>0) {
 		old_pages++;
