@@ -254,16 +254,21 @@ void PAGING_UnlinkPages(Bitu lin_page,Bitu pages) {
 void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 	PageHandler * handler=MEM_GetPageHandler(phys_page);
 	Bitu lin_base=lin_page << 12;
-
 	if (lin_page>=TLB_SIZE || phys_page>=TLB_SIZE) 
 		E_Exit("Illegal page");
+
+	if (paging.links.used>=PAGING_LINKS) {
+		LOG(LOG_PAGING,LOG_NORMAL)("Not enough paging links, resetting cache");
+		PAGING_ClearTLB();
+	}
+
 	HostPt host_mem=handler->GetHostPt(phys_page);
 	paging.tlb.phys_page[lin_page]=phys_page;
 	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=host_mem-lin_base;
 	else paging.tlb.read[lin_page]=0;
 	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=host_mem-lin_base;
 	else paging.tlb.write[lin_page]=0;
-	if (paging.links.used>=PAGING_LINKS) E_Exit("Not enough paging links");
+
 	paging.links.entries[paging.links.used++]=lin_page;
 	paging.tlb.handler[lin_page]=handler;
 }
