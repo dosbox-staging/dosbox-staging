@@ -1024,7 +1024,7 @@ static struct {
 	Bitu key;
 } DefaultKeys[]={
 	{"f1",SDLK_F1},		{"f2",SDLK_F2},		{"f3",SDLK_F3},		{"f4",SDLK_F4},
-	{"f5",SDLK_F1},		{"f6",SDLK_F6},		{"f7",SDLK_F7},		{"f8",SDLK_F8},
+	{"f5",SDLK_F5},		{"f6",SDLK_F6},		{"f7",SDLK_F7},		{"f8",SDLK_F8},
 	{"f9",SDLK_F9},		{"f10",SDLK_F10},	{"f11",SDLK_F11},	{"f12",SDLK_F12},
 
 	{"1",SDLK_1},		{"2",SDLK_2},		{"3",SDLK_3},		{"4",SDLK_4},
