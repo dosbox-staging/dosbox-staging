@@ -18,7 +18,9 @@
 
 #include "../hardware/vga.h"
 
-#define BIOSMEM_SEG 0x40
+#define S3_LFB_BASE		0xC0000000
+
+#define BIOSMEM_SEG		0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
 #define BIOSMEM_CURRENT_MODE  0x49
@@ -85,10 +87,6 @@
 #define VGAMEM_CTEXT 0xB800
 #define VGAMEM_MTEXT 0xB000
 
-#define SCREEN_SIZE(x,y) (((x*y*2)|0x00ff)+1)
-#define SCREEN_MEM_START(x,y,p) ((((x*y*2)|0x00ff)+1)*p)
-#define SCREEN_IO_START(x,y,p) ((((x*y)|0x00ff)+1)*p)
-
 #define BIOS_NCOLS Bit16u ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 #define BIOS_NROWS Bit16u nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1;
 
@@ -121,6 +119,8 @@ typedef struct {
 		RealPt static_state;
 		RealPt oemstring;
 		RealPt vesa_modes;
+		RealPt pmode_interface;
+		Bit16u pmode_interface_size;
 		Bitu used;
 	} rom;
 } Int10Data;
@@ -144,7 +144,7 @@ void INT10_GetFuncStateInformation(PhysPt save);
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last);
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
-void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
+void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr);
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page);
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr);
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page);
