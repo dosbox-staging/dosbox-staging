@@ -467,7 +467,7 @@ void INT10_Init(Section* sec) {
 	if (machine==MCH_TANDY) SetupTandyBios();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET);
+	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET,"Int 10 video");
 	RealSetVec(0x10,CALLBACK_RealPointer(call_10));
 	//Init the 0x40 segment and init the datastructures in the the video rom area
 	INT10_SetupRomMemory();

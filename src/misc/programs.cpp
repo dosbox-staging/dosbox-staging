@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.15 2004-09-16 21:47:39 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.16 2004-10-23 15:15:07 qbix79 Exp $ */
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -220,7 +220,7 @@ static void CONFIG_ProgramStart(Program * * make) {
 void PROGRAMS_Init(Section* sec) {
 	/* Setup a special callback to start virtual programs */
 	call_program=CALLBACK_Allocate();
-	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF);
+	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF,"internal program");
 	PROGRAMS_MakeFile("CONFIG.COM",CONFIG_ProgramStart);
 
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","Can't open file %s\n");

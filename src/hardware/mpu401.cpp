@@ -719,7 +719,7 @@ static void MPU401_Reset(void) {
 
 void MPU401_Init(Section* sec) {
 	call_irq9=CALLBACK_Allocate(); //allocate handler for irq 9
-	CALLBACK_Setup(call_irq9,&INT71_Handler,CB_IRET);
+	CALLBACK_Setup(call_irq9,&INT71_Handler,CB_IRET,"irq 9 mpu");
 	RealSetVec(0x71,CALLBACK_RealPointer(call_irq9));
 
 	Section_prop * section=static_cast<Section_prop *>(sec);

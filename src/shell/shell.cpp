@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.50 2004-10-17 14:45:00 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.51 2004-10-23 15:15:07 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -302,13 +302,17 @@ void SHELL_Init() {
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
 		"\xBA \033[32mDOSBox Shell v" VERSION "\033[37m                                                 \xBA\n"
 		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
-		"\xBA For supported shell commands type: \033[1;33mHELP\033[37m                            \xBA\n"
+		"\xBA For supported shell commands type: \033[33mHELP\033[37m                            \xBA\n"
 		"\xBA For a short introduction type: \033[33mINTRO\033[37m                               \xBA\n"
 		"\xBA                                                                    \xBA\n"
 		"\xBA If you want more speed, try \033[31mctrl-F8\033[37m and \033[31mctrl-F12\033[37m.                  \xBA\n"
 		"\xBA To activate the keymapper \033[31mctrl-F1\033[37m.                                 \xBA\n"
 		"\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
+#if C_DEBUG
+		"\xBA Press \033[31mPause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m.     \xBA\n"
+		"\xBA                                                                    \xBA\n"
+#endif
 		"\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
 		"\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
 		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
@@ -347,7 +351,7 @@ void SHELL_Init() {
 	SegSet16(cs,RealSeg(newcsip));
 	reg_ip=RealOff(newcsip);
 
-	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET);
+	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET,"shell stop");
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
 
 	/* Now call up the shell for the first time */

@@ -39,6 +39,8 @@ struct _LogGroup {
 
 static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
 static FILE* debuglog;
+static std::list<char*> logBuff;
+static std::list<char*>::iterator logBuffPos = logBuff.end();
 
 extern int old_cursor_state;
 
@@ -51,9 +53,45 @@ void DEBUG_ShowMsg(char * format,...) {
 	va_start(msg,format);
 	vsprintf(buf,format,msg);
 	va_end(msg);
-	wprintw(dbg.win_out,"%10d: %s\n",cycle_count,buf);
+
+	/* Add newline if not present */
+	Bitu len=strlen(buf);
+	if(buf[len-1]!='\n') strcat(buf,"\n");
+
+	if(debuglog) fprintf(debuglog,"%s",buf);
+
+	char* newLine = new char[strlen(buf) + 1];
+	strcpy(newLine, buf);
+	if (logBuffPos!=logBuff.end()) {
+		logBuffPos=logBuff.end();
+		DEBUG_RefreshPage(0);
+		mvwprintw(dbg.win_out,dbg.win_out->_maxy, 0, "");
+	}
+	logBuff.push_back(newLine);
+	if (logBuff.size()>500) {
+		char * firstline = logBuff.front();
+		delete firstline;
+		logBuff.pop_front();
+	}
+	logBuffPos = logBuff.end();
+	wprintw(dbg.win_out,"%s",buf);
 	wrefresh(dbg.win_out);
-	if(debuglog) fprintf(debuglog,"%10d: %s\n",cycle_count,buf);
+}
+
+void DEBUG_RefreshPage(char scroll) {
+	if (scroll==-1 && logBuffPos!=logBuff.begin()) logBuffPos--;
+	else if (scroll==1 && logBuffPos!=logBuff.end()) logBuffPos++;
+
+	std::list<char*>::iterator i = logBuffPos;
+	int rem_lines = dbg.win_out->_maxy;
+
+	wclear(dbg.win_out);
+
+	while (rem_lines > 0 && i!=logBuff.begin()) {
+		rem_lines -= (int) (strlen(*--i) / dbg.win_out->_maxx) + 1; 
+		mvwprintw(dbg.win_out,rem_lines-1, 0, *i);
+	}
+	wrefresh(dbg.win_out);
 }
 
 void LOG::operator() (char* format, ...){
@@ -65,7 +103,7 @@ void LOG::operator() (char* format, ...){
 
 	if (d_type>=LOG_MAX) return;
 	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
-	DEBUG_ShowMsg("%s:%s",loggrp[d_type].front,buf);
+	DEBUG_ShowMsg("%10d: %s:%s\n",cycle_count,loggrp[d_type].front,buf);
 }
 
 
@@ -99,15 +137,15 @@ static void DrawBars(void) {
 		attrset(COLOR_PAIR(PAIR_BLACK_BLUE));
 	}
 	/* Show the Register bar */
-	mvaddstr(dbg.win_reg->_begy-1,0,"---(Register Overview)---");
+	mvaddstr(dbg.win_reg->_begy-1,0, "---(Register Overview                   )---");
 	/* Show the Data Overview bar perhaps with more special stuff in the end */
-	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview)---");
+	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview      Scroll: r/f      )---");
 	/* Show the Code Overview perhaps with special stuff in bar too */
-	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview)---");
+	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview      Scroll: up/down  )---");
 	/* Show the Variable Overview bar */
-	mvaddstr(dbg.win_var->_begy-1,0,"---(Variable Overview)---");
+	mvaddstr(dbg.win_var->_begy-1,0, "---(Variable Overview                   )---");
 	/* Show the Output OverView */
-	mvaddstr(dbg.win_out->_begy-1,0,"---(OutPut/Input)---");
+	mvaddstr(dbg.win_out->_begy-1,0, "---(OutPut/Input       Scroll: home/end )---");
 	attrset(0);
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.35 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.36 2004-10-23 15:15:06 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -410,7 +410,7 @@ void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
 void BIOS_Init(Section* sec) {
-    MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
+	MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	/* Clear the Bios Data Area */
 	for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
 	/* Setup all the interrupt handlers the bios controls */
@@ -418,7 +418,7 @@ void BIOS_Init(Section* sec) {
 	//TODO Maybe give this a special callback that will also call int 8 instead of starting 
 	//a new system
 	call_int8=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int8,&INT8_Handler,CB_IRET);
+	CALLBACK_Setup(call_int8,&INT8_Handler,CB_IRET,"Int 8 Clock");
 	phys_writeb(CB_BASE+(call_int8<<4)+0,(Bit8u)0xFE);		//GRP 4
 	phys_writeb(CB_BASE+(call_int8<<4)+1,(Bit8u)0x38);		//Extra Callback instruction
 	phys_writew(CB_BASE+(call_int8<<4)+2,call_int8);		//The immediate word          
@@ -434,44 +434,44 @@ void BIOS_Init(Section* sec) {
 	RealSetVec(0x8,CALLBACK_RealPointer(call_int8));
 	/* INT 11 Get equipment list */
 	call_int11=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int11,&INT11_Handler,CB_IRET);
+	CALLBACK_Setup(call_int11,&INT11_Handler,CB_IRET,"Int 11 Equipment");
 	RealSetVec(0x11,CALLBACK_RealPointer(call_int11));
 	/* INT 12 Memory Size default at 640 kb */
 	call_int12=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int12,&INT12_Handler,CB_IRET);
+	CALLBACK_Setup(call_int12,&INT12_Handler,CB_IRET,"Int 12 Memory");
 	RealSetVec(0x12,CALLBACK_RealPointer(call_int12));
 	mem_writew(BIOS_MEMORY_SIZE,640);
 	/* INT 13 Bios Disk Support */
 	BIOS_SetupDisks();
 	call_int14=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int14,&INT14_Handler,CB_IRET);
+	CALLBACK_Setup(call_int14,&INT14_Handler,CB_IRET,"Int 14 COM-port");
 	RealSetVec(0x14,CALLBACK_RealPointer(call_int14));
 	/* INT 15 Misc Calls */
 	call_int15=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int15,&INT15_Handler,CB_IRET);
+	CALLBACK_Setup(call_int15,&INT15_Handler,CB_IRET,"Int 15 Bios");
 	RealSetVec(0x15,CALLBACK_RealPointer(call_int15));
 	/* INT 16 Keyboard handled in another file */
 	BIOS_SetupKeyboard();
 	/* INT 16 Printer Routines */
 	call_int17=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int17,&INT17_Handler,CB_IRET);
+	CALLBACK_Setup(call_int17,&INT17_Handler,CB_IRET,"Int 17 Printer");
 	RealSetVec(0x17,CALLBACK_RealPointer(call_int17));
 	/* INT 1A TIME and some other functions */
 	call_int1a=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET_STI);
+	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET_STI,"Int 1a Time");
 	RealSetVec(0x1A,CALLBACK_RealPointer(call_int1a));
 	/* INT 1C System Timer tick called from INT 8 */
 	call_int1c=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int1c,&INT1C_Handler,CB_IRET);
+	CALLBACK_Setup(call_int1c,&INT1C_Handler,CB_IRET,"Int 1c Timer tick");
 	RealSetVec(0x1C,CALLBACK_RealPointer(call_int1c));
 	/* IRQ 8 RTC Handler */
 	call_int70=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int70,&INT70_Handler,CB_IRET);
+	CALLBACK_Setup(call_int70,&INT70_Handler,CB_IRET,"Int 70 RTC");
 	RealSetVec(0x70,CALLBACK_RealPointer(call_int70));
 
 	/* Some defeault CPU error interrupt handlers */
 	call_int1=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET);
+	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET,"Int 1 Single step");
 	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
 
 	/* Setup some stuff in 0x40 bios segment */

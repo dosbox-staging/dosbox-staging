@@ -23,6 +23,7 @@ bool DEBUG_IntBreakpoint(Bit8u intNum);
 void DEBUG_Enable(void);
 void DEBUG_CheckExecuteBreakpoint(Bit16u seg, Bit32u off);
 bool DEBUG_ExitLoop(void);
+void DEBUG_RefreshPage(char scroll);
 
 extern Bitu cycle_count;
 extern Bitu debugCallback;

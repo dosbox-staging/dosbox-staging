@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.35 2004-10-17 14:45:00 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.36 2004-10-23 15:15:06 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -610,14 +610,14 @@ static Bitu INT4B_Handler() {
 void EMS_Init(Section* sec) {
 	/* Virtual DMA interrupt callback */
 	call_vdma=CALLBACK_Allocate();
-	CALLBACK_Setup(call_vdma,&INT4B_Handler,CB_IRET);
+	CALLBACK_Setup(call_vdma,&INT4B_Handler,CB_IRET,"Int 4b vdma");
 	RealSetVec(0x4b,CALLBACK_RealPointer(call_vdma));
 
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (!section->Get_bool("ems")) return;
 	BIOS_ZeroExtendedSize();
 	call_int67=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET);
+	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,"Int 67 ems");
 /* Register the ems device */
 	DOS_Device * newdev = new device_EMM();
 	DOS_AddDevice(newdev);
