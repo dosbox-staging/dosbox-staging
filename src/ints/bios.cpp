@@ -29,6 +29,9 @@ static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,cal
 static Bitu call_int1,call_int70;
 
 static Bitu INT70_Handler(void) {
+	/* Acknowledge irq with cmos */
+	IO_Write(0x70,0xc);
+	IO_Read(0x71);
 	if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
 		Bits count=mem_readd(BIOS_WAIT_FLAG_COUNT);
 		if (count>997) {
@@ -91,7 +94,11 @@ static Bitu INT1A_Handler(void) {
 	    CF clear  if sound chip is free
 	Note:	the value of CF is not definitive; call this function until CF is
 			clear on return, then call AH=84h"Tandy"
-*/
+		*/
+	case 0xb1:		/* PCI Bios Calls */
+		LOG(LOG_BIOS,LOG_ERROR)("INT1A:PCI bios call %2X",reg_al);
+		CALLBACK_SCF(true);
+		break;
 	default:
 		LOG(LOG_BIOS,LOG_ERROR)("INT1A:Undefined call %2X",reg_ah);
 	}
@@ -335,8 +342,12 @@ void BIOS_Init(Section* sec) {
 	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET);
 	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
 
-	/* Test for some hardware */
-	if (IO_Read(0x378)!=0xff) real_writed(0x40,0x08,0x378);
+	/* Test for parallel port */
+	if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
+	/* Test for serial port */
+	Bitu index=0;
+	if (IO_Read(0x3f8)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
+	if (IO_Read(0x2f8)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
 }
 
 
