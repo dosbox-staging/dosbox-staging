@@ -46,6 +46,7 @@ public:
 	
 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
 	void		AddEntry			(const char* path);
+	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	class CFileInfo {
 	public:	
@@ -83,6 +84,7 @@ private:
 	CFileInfo*	dirBase;
 	CFileInfo*  dirSearch;
 	char		dirPath				[CROSS_LEN];
+	char		basePath			[CROSS_LEN];
 	bool		dirFirstTime;
 	TDirSort	sortDirType;
 	CFileInfo*	save_dir;
@@ -109,6 +111,8 @@ public:
 	
 	void		CacheOut			(const char* path, bool ignoreLastDir = false) {};
 	void		AddEntry			(const char* path) {};
+	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
+
 public:
 	char		basePath			[CROSS_LEN];
 	char		dirPath				[CROSS_LEN];

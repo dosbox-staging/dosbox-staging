@@ -89,7 +89,7 @@ bool localDrive::FileUnlink(char * name) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	if (!unlink(dirCache.GetExpandName(newname))) {
-		dirCache.CacheOut(newname);
+		dirCache.DeleteEntry(newname);
 		return true;
 	};
 	return false;
@@ -198,7 +198,7 @@ bool localDrive::RemoveDir(char * dir) {
 	strcat(newdir,dir);
 	CROSS_FILENAME(newdir);
 	int temp=rmdir(dirCache.GetExpandName(newdir));
-	if (temp==0) dirCache.CacheOut(newdir,true);
+	if (temp==0) dirCache.DeleteEntry(newdir,true);
 	return (temp==0);
 }
 
