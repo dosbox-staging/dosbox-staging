@@ -137,6 +137,9 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	}
 
 	if (parentenv) {
+		// hack to allow creation from envblock in unused mem (0xCD)
+		if (readw(envread)==0xCDCD) writew(envread,0x0000); 
+
 		for (envsize=0; ;envsize++) {
 			if (envsize>=MAXENV - ENV_KEEPFREE) {
 				DOS_SetError(DOSERR_ENVIRONMENT_INVALID);
@@ -230,7 +233,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	else {
 		headersize=head.headersize*16;
 		imagesize=(head.pages)*512-headersize; 
-		if (head.extrabytes) imagesize-=(512-head.extrabytes);
+		if (head.extrabytes) imagesize += head.extrabytes % 512;
 	}
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
