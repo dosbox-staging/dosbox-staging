@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.31 2004-03-31 14:42:08 harekiet Exp $ */
+/* $Id: bios.cpp,v 1.32 2004-05-19 19:46:28 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -299,10 +299,10 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 		reg_ah=0;
 		break;
-    case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
-        reg_ah=0x86;
-        CALLBACK_SCF(true);
-        break;
+	case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
+		reg_ah=0x86;
+		CALLBACK_SCF(true);
+		break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
 		case 0x00:		// enable/disable
@@ -322,19 +322,23 @@ static Bitu INT15_Handler(void) {
 			break;
 		case 0x02:		// set sampling rate
 			CALLBACK_SCF(false);
+			reg_ah=0;
 			break;
 		case 0x03:		// set resolution
 			CALLBACK_SCF(false);
+			reg_ah=0;
 			break;
 		case 0x04:		// get type
 			reg_bh=0;	// ID
 			CALLBACK_SCF(false);
+			reg_ah=0;
 			break;
 		case 0x05:		// initialize
 			CALLBACK_SCF(false);
+			reg_ah=0;
 			break;
 		case 0x06:		// extended commands
-			if ((reg_bh==0x01) || (reg_bh==0x02)) CALLBACK_SCF(false);
+			if ((reg_bh==0x01) || (reg_bh==0x02)) { CALLBACK_SCF(false); reg_ah=0;}
 			else CALLBACK_SCF(true);
 			break;
 		case 0x07:		// set callback
