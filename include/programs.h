@@ -16,11 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __PROGRAM_H
-#define __PROGRAM_H
+#ifndef DOSBOX_PROGRAMS_H
+#define DOSBOX_PROGRAMS_H
+
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
+#endif
+#ifndef DOSBOX_DOS_INC_H
 #include "dos_inc.h"
+#endif
+#ifndef DOSBOX_SETUP_H
 #include "setup.h"
+#endif
 
 
 
@@ -48,12 +55,4 @@ public:
 
 };
 
-void SHELL_AddAutoexec(char * line,...);
-
-
-
-
-
-
 #endif
-

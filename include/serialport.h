@@ -16,12 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined __SERIALPORT_H
-#define __SERIALPORT_H
+#ifndef DOSBOX_SERIALPORT_H
+#define DOSBOX_SERIALPORT_H
 
 #include <assert.h>
 
+#ifndef DOSBOX_DOSBOX_H
 #include  "dosbox.h"
+#endif
+#ifndef DOSBOX_INOUT_H
+#include  "inout.h"
+#endif
 
 //If it's too high you overflow terminal clients buffers i think
 #define QUEUE_SIZE 1024
@@ -142,6 +147,8 @@ private:
 
 	Bit8u linectrl;
 	Bit8u errors;
+	IO_ReadHandleObject ReadHandler[9];
+	IO_WriteHandleObject WriteHandler[9];
 };
 
 #include <list>
@@ -152,4 +159,3 @@ typedef std::list<CSerial *>::iterator CSerial_it;
 extern CSerialList seriallist;
 
 #endif
-

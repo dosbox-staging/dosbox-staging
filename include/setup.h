@@ -16,16 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.17 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: setup.h,v 1.18 2005-03-25 11:43:36 qbix79 Exp $ */
 
-#ifndef _SETUP_H_
-#define _SETUP_H_
+#ifndef DOSBOX_SETUP_H
+#define DOSBOX_SETUP_H
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
 #endif
 
+#ifndef DOSBOX_CROSS_H
 #include "cross.h"
+#endif
 #include <string>
 #include <list>
 
@@ -42,6 +44,7 @@ public:
 	bool FindCommand(unsigned int which,std::string & value);
 	bool FindStringBegin(char * begin,std::string & value, bool remove=false);
 	bool FindStringRemain(char * name,std::string & value);
+	bool GetStringRemain(std::string & value);
 	unsigned int GetCount(void);
 private:
 	typedef std::list<std::string>::iterator cmd_it;
@@ -116,31 +119,58 @@ public:
 	}
 	void SetValue(char* input);
 	~Prop_hex(){ }
-        void GetValuestring(char* str);
+	void GetValuestring(char* str);
 };
+
+class Section;
+class Module_base {
+	/* Base for all hardware and software "devices" */
+protected:
+	Section* m_configuration;
+public:
+	Module_base(Section* configuration){m_configuration=configuration;};
+//	Module_base(Section* configuration, SaveState* state) {};
+	~Module_base(){/*LOG_MSG("executed")*/;};//Destructors are required
+	/* Returns true if succesful.*/
+	virtual bool Change_Config(Section* newconfig) {return false;} ;
+};
+
 
 class Section {
 public:
 	Section(const char* _sectionname) { sectionname=_sectionname; }
-	virtual ~Section(){ ExecuteDestroy();}
+	virtual ~Section(){ExecuteDestroy(true); }
 
 	typedef void (*SectionFunction)(Section*);
-	void AddInitFunction(SectionFunction func) {initfunctions.push_back(func);}
-	void AddDestroyFunction(SectionFunction func) {destroyfunctions.push_front(func);}
-	void ExecuteInit() { 
-		typedef std::list<SectionFunction>::iterator func_it;
+	/* Wrapper class around startup and shutdown functions. the variable
+	 * canchange indicates it can be called on configuration changes */
+	struct Function_wrapper {
+		SectionFunction function;
+		bool canchange;
+		Function_wrapper(SectionFunction _fun,bool _ch){
+			function=_fun;
+			canchange=_ch;
+		}
+	};
+	void AddInitFunction(SectionFunction func,bool canchange=false) {initfunctions.push_back(Function_wrapper(func,canchange));}
+	void AddDestroyFunction(SectionFunction func,bool canchange=false) {destroyfunctions.push_front(Function_wrapper(func,canchange));}
+	void ExecuteInit(bool initall=true) { 
+		typedef std::list<Function_wrapper>::iterator func_it;
 		for (func_it tel=initfunctions.begin(); tel!=initfunctions.end(); tel++){ 
-			(*tel)(this);
+			if(initall || (*tel).canchange) (*tel).function(this);
 		}
 	}
-	void ExecuteDestroy() { 
-		typedef std::list<SectionFunction>::iterator func_it;
-		for (func_it tel=destroyfunctions.begin(); tel!=destroyfunctions.end(); tel++){ 
-			(*tel)(this);
+	void ExecuteDestroy(bool destroyall=true) { 
+		typedef std::list<Function_wrapper>::iterator func_it;
+		for (func_it tel=destroyfunctions.begin(); tel!=destroyfunctions.end(); ){ 
+			if(destroyall || (*tel).canchange) {
+				(*tel).function(this);
+				tel=destroyfunctions.erase(tel); //Remove destroyfunction once used
+			} else tel++;
 		}
 	}
-	std::list<SectionFunction> initfunctions;
-	std::list<SectionFunction> destroyfunctions;
+	std::list<Function_wrapper> initfunctions;
+	std::list<Function_wrapper> destroyfunctions;
 	virtual void HandleInputline(char * _line){}
 	virtual void PrintData(FILE* outfile) {}
 	std::string sectionname;   
@@ -150,7 +180,8 @@ public:
 class Section_prop:public Section {
  public:
 	Section_prop(const char* _sectionname):Section(_sectionname){}
-
+	//ExecuteDestroy should be here else the destroy functions use destroyed properties
+	~Section_prop(){ExecuteDestroy(true);}
 	void Add_int(const char* _propname, int _value=0);
 	void Add_string(const char* _propname, char* _value=NULL);
 	void Add_bool(const char* _propname, bool _value=false);
@@ -172,6 +203,7 @@ class Section_prop:public Section {
 class Section_line: public Section{
 public:
 	Section_line(const char* _sectionname):Section(_sectionname){}
+	~Section_line(){ExecuteDestroy(true);}
 	void HandleInputline(char* gegevens);
 	void PrintData(FILE* outfile);
 	std::string data;
@@ -185,7 +217,7 @@ public:
 
 	Section * AddSection(const char * _name,void (*_initfunction)(Section*));
 	Section_line * AddSection_line(const char * _name,void (*_initfunction)(Section*));
-	Section_prop * AddSection_prop(const char * _name,void (*_initfunction)(Section*));
+	Section_prop * AddSection_prop(const char * _name,void (*_initfunction)(Section*),bool canchange=false);
 	
 	Section* GetSection(const char* _sectionname);
 
