@@ -406,6 +406,12 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 		((key->keysym.mod & KMOD_ALT) ? KBD_MOD_ALT : 0) |
 		((key->keysym.mod & KMOD_SHIFT) ? KBD_MOD_SHIFT : 0);
 	Bitu ascii=key->keysym.unicode<128 ? key->keysym.unicode : 0;
+#ifdef MACOSX
+	// HACK: Fix backspace on Mac OS X 
+	// REMOVE ME oneday
+	if (code==KBD_backspace)
+		ascii=8;
+#endif
 	KEYBOARD_AddKey(code,ascii,mod,(key->state==SDL_PRESSED));
 }
 
