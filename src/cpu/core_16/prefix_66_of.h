@@ -79,6 +79,8 @@ switch (Fetchb()) {
 					if (flags.cf) *eard&=~mask;
 					else *eard|=mask;
 					break;
+				default:
+					E_Exit("CPU:66:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			} else {
 				GetEAa;Bit32u old=LoadMd(eaa);
@@ -98,6 +100,8 @@ switch (Fetchb()) {
 					else old|=mask;
 					SaveMd(eaa,old);
 					break;
+				default:
+					E_Exit("CPU:66:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			}
 			if (flags.type!=t_CF) flags.prev_type=flags.type;

@@ -314,6 +314,8 @@ switch(Fetchb()) {
 				case 0x38:									/* BTC */
 					*earw^=mask;
 					break;
+				default:
+					E_Exit("CPU:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
@@ -330,6 +332,8 @@ switch(Fetchb()) {
 				case 0x38:									/* BTC */
 					SaveMw(eaa,old ^ mask);
 					break;
+				default:
+					E_Exit("CPU:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			}
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
