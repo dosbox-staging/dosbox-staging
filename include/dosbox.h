@@ -63,8 +63,7 @@ enum MachineType {
 	MCH_HERC,
 	MCH_CGA,
 	MCH_TANDY,
-	MCH_VGA,
-	MCH_AUTO
+	MCH_VGA
 };
 
 extern MachineType machine;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.62 2004-02-08 08:35:59 canadacow Exp $ */
+/* $Id: dosbox.cpp,v 1.63 2004-02-29 22:29:31 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -169,7 +169,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 
-	machine=MCH_AUTO;std::string cmd_machine;
+	machine=MCH_VGA;std::string cmd_machine;
 	const char * mtype;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)) mtype=cmd_machine.c_str();
 	else mtype=section->Get_string("machine");
@@ -177,7 +177,6 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (strcasecmp(mtype,"tandy")==0) machine=MCH_TANDY;
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
 	else if (strcasecmp(mtype,"vga")==0) machine=MCH_VGA;
-	else if (strcasecmp(mtype,"auto")==0) machine=MCH_AUTO;
 	else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
 }
 
@@ -310,7 +309,7 @@ void DOSBOX_Init(void) {
 		"cms -- Enable the Creative Music System/Gameblaster emulation.\n"
 		"       Enabling both the adlib and cms might give conflicts!\n"
 		"cmsrate -- Sample rate of cms emulation.\n"
-	);
+		);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init); 
 	secprop->Add_bool("gus",true); 	
