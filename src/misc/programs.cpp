@@ -171,11 +171,44 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	return true;
 }
 
-//TODO Hash table :)
+class CONFIG : public Program {
+public:
+	void Run(void);
+};
+
+void MSG_Write(const char *);
+
+void CONFIG::Run(void) {
+	FILE * f;
+	if (cmd->FindString("-writeconf",temp_line,true)) {
+		f=fopen(temp_line.c_str(),"wb+");
+		if (!f) WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+		fclose(f);
+		control->PrintConfig(temp_line.c_str());
+		return;
+	}
+	if (cmd->FindString("-writelang",temp_line,true)) {
+		f=fopen(temp_line.c_str(),"wb+");
+		if (!f) WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+		fclose(f);
+		MSG_Write(temp_line.c_str());
+		return;
+	}
+	WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+}
+
+
+static void CONFIG_ProgramStart(Program * * make) {
+	*make=new CONFIG;
+}
 
 
 void PROGRAMS_Init(Section* sec) {
 	/* Setup a special callback to start virtual programs */
 	call_program=CALLBACK_Allocate();
 	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF);
+	PROGRAMS_MakeFile("CONFIG.COM",CONFIG_ProgramStart);
+
+	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","Can't open file %s\n");
+	MSG_Add("PROGRAM_CONFIG_USAGE","Config tool:\nUse -writeconf filename to write the current config.\nUse -writelang filename to write the current language strings.\n");
 }
