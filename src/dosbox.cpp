@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.63 2004-02-29 22:29:31 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.64 2004-03-03 15:44:20 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -73,10 +73,8 @@ void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void GUS_Init(Section*);
 void MPU401_Init(Section*);
-void ADLIB_Init(Section*);
 void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
-void CMS_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
 void MODEM_Init(Section*); 
@@ -286,29 +284,22 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init);
-	secprop->Add_bool("sblaster",true);
+	secprop->Add_string("type","sb16");
     secprop->Add_hex("base",0x220);
 	secprop->Add_int("irq",7);
 	secprop->Add_int("dma",1);
-//	secprop->Add_int("hdma",5);
+	secprop->Add_int("hdma",5);
 	secprop->Add_int("sbrate",22050);
-	secprop->AddInitFunction(&ADLIB_Init);
-	secprop->Add_bool("adlib",true);
-	secprop->Add_int("adlibrate",22050);
-	secprop->Add_string("adlibmode","adlib");
-	secprop->AddInitFunction(&CMS_Init);
-	secprop->Add_bool("cms",false);
-	secprop->Add_int("cmsrate",22050);
+	secprop->Add_string("oplmode","auto");
+	secprop->Add_int("oplrate",22050);
 
 	MSG_Add("SBLASTER_CONFIGFILE_HELP",
-		"sblaster -- Enable the soundblaster emulation.\n"
-		"base,irq,dma -- The IO/IRQ/DMA address of the soundblaster.\n"
+		"type -- Type of sblaster to emulate:none,sb1,sb2,sbpro1,sbpro2,sb16.\n"
+		"base,irq,dma,hdma -- The IO/IRQ/DMA/High DMA address of the soundblaster.\n"
 		"sbrate -- Sample rate of soundblaster emulation.\n"
-		"adlib -- Enable the adlib emulation.\n"
-		"adlibrate -- Sample rate of adlib emulation.\n"
-		"cms -- Enable the Creative Music System/Gameblaster emulation.\n"
-		"       Enabling both the adlib and cms might give conflicts!\n"
-		"cmsrate -- Sample rate of cms emulation.\n"
+		"oplmode -- Type of OPL emulation: auto,cms,opl2,dualopl2,opl3.\n"
+		"           On auto the mode is determined by sblaster type.\n"
+		"oplrate -- Sample rate of OPL music emulation.\n"
 		);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init); 
