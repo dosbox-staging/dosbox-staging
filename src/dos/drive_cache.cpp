@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.40 2004-11-13 12:08:43 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.41 2004-12-16 10:30:15 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -317,7 +317,8 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 {
 	char* cpos = strchr(shortName,'~');
 	if (cpos) {
-		Bits compareCount1	= (int)cpos - (int)shortName;
+/* the following code is replaced as it's not safe when char* is 64 bits */
+/*		Bits compareCount1	= (int)cpos - (int)shortName;
 		char* endPos		= strchr(cpos,'.');
 		Bitu numberSize		= endPos ? int(endPos)-int(cpos) : strlen(cpos);
 		
@@ -327,6 +328,18 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 
 		compareCount2 -= numberSize;
 		if (compareCount2>compareCount1) compareCount1 = compareCount2;
+*/
+		size_t compareCount1 = strcspn(shortName,"~");
+		size_t numberSize    = strcspn(cpos,".");
+		size_t compareCount2 = strcspn(compareName,".");
+		if(compareCount2 > 8) compareCount2 = 8;
+		/* We want 
+		 * compareCount2 -= numberSize;
+		 * if (compareCount2>compareCount1) compareCount1 = compareCount2;
+		 * but to prevent negative numbers: 
+		 */
+		if(compareCount2 > compareCount1 + numberSize)
+			compareCount1 = compareCount2 - numberSize;
 		return strncmp(compareName,shortName,compareCount1);
 	}
 	return strcmp(compareName,shortName);
