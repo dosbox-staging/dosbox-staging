@@ -21,6 +21,7 @@
 #include "keyboard.h"
 #include "inout.h"
 #include "pic.h"
+#include "mem.h"
 #include "mixer.h"
 
 #define KEYBUFSIZE 32
@@ -29,7 +30,8 @@
 enum KeyCommands {
 	CMD_NONE,
 	CMD_SETLEDS,
-	CMD_SETTYPERATE
+	CMD_SETTYPERATE,
+	CMD_SETOUTPORT
 };
 
 enum KeyStates {
@@ -95,7 +97,7 @@ void KEYBOARD_GetCode(void) {
 		keyb.buf.state=STATE_NORMAL;
 		break;
 	}
-	PIC_ActivateIRQ(1);
+	if (keyb.enabled) PIC_ActivateIRQ(1);
 }
 
 void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
@@ -181,6 +183,10 @@ static void write_p60(Bit32u port,Bit8u val) {
 			LOG(LOG_ERROR|LOG_KEYBOARD,"60:Unhandled command %X",val);
 		}
 		return;
+	case CMD_SETOUTPORT:
+		MEM_A20_Enable((val & 2)>0);
+		break;
+
 	case CMD_SETTYPERATE:
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
@@ -208,9 +214,23 @@ static void write_p64(Bit32u port,Bit8u val) {
 	switch (val) {
 	case 0xad:		/* Activate keyboard */
 		keyb.active=true;
+		if (keyb.buf.used && !keyb.scheduled) {
+			keyb.scheduled=true;
+			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		}
+		LOG(LOG_KEYBOARD,"Activated");
 		break;
 	case 0xae:		/* Deactivate keyboard */
 		keyb.active=false;
+		PIC_DeActivateIRQ(1);
+		PIC_RemoveEvents(KEYBOARD_GetCode);
+		LOG(LOG_KEYBOARD,"De-Activated");
+		break;
+	case 0xd0:		/* Outport on buffer */
+		KEYBOARD_AddCode(MEM_A20_Enabled() ? 0x02 : 0,0,0,STATE_NORMAL);
+		break;
+	case 0xd1:		/* Write to outport */
+		keyb.command=CMD_SETOUTPORT;
 		break;
 	default:
 		LOG(LOG_ERROR|LOG_KEYBOARD,"Port 64 write with val %d",val);
@@ -383,6 +403,7 @@ void KEYBOARD_Init(Section* sec) {
 	port_61_data=0;				/* Direct Speaker control and output disabled */
 //	memset(&event_handlers,0,sizeof(event_handlers));
 	/* Clear the keyb struct */
+	keyb.active=true;
 	keyb.enabled=true;
 	keyb.command=CMD_NONE;
 	keyb.last_index=0;
