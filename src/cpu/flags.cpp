@@ -576,13 +576,14 @@ Bitu get_PF(void) {
 
 
 void FillFlags(void) {
-	flags.word=(flags.word & ~FLAG_MASK);
-	if (get_CF()) flags.word|=FLAG_CF;
-	if (get_PF()) flags.word|=FLAG_PF;
-	if (get_AF()) flags.word|=FLAG_AF;
-	if (get_ZF()) flags.word|=FLAG_ZF;
-	if (get_SF()) flags.word|=FLAG_SF;
-	if (get_OF()) flags.word|=FLAG_OF;
+	Bitu new_word=(flags.word & ~FLAG_MASK);
+	if (get_CF()) new_word|=FLAG_CF;
+	if (get_PF()) new_word|=FLAG_PF;
+	if (get_AF()) new_word|=FLAG_AF;
+	if (get_ZF()) new_word|=FLAG_ZF;
+	if (get_SF()) new_word|=FLAG_SF;
+	if (get_OF()) new_word|=FLAG_OF;
+	flags.word=new_word;
 	flags.type=t_UNKNOWN;
 }
 
