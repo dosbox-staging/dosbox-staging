@@ -15,36 +15,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "dosbox.h"
 #include "mem.h"
 
-#define MEM_MAXSIZE 16				/* The Size of memory used to get size of page table */
-#define memsize 8					/* 8 mb of memory */
-#define EMM_HANDLECOUNT 250
+HostPt memory;
+HostPt ReadHostTable[MAX_PAGES];
+HostPt WriteHostTable[MAX_PAGES];
+MEMORY_ReadHandler ReadHandlerTable[MAX_PAGES];
+MEMORY_WriteHandler WriteHandlerTable[MAX_PAGES];
 
-EMM_Handle EMM_Handles[EMM_HANDLECOUNT];
-PageEntry * PageEntries[MEM_MAXSIZE*1024*16]; /* Number of pages */
-Bit8u * memory=0;
-
-bool MEMORY_TestSpecial(PhysPt off) {
-	return (PageEntries[off >> 12]>0);
-}
-
-void MEMORY_SetupHandler(Bit32u page,Bit32u pages,PageEntry * entry) {
-	for (Bit32u i=page;i<page+pages;i++) {
-		PageEntries[i]=entry;
-	}
-}
-
-
-void MEMORY_ResetHandler(Bit32u page,Bit32u pages) {
-	for (Bit32u i=page;i<page+pages;i++) {
-		PageEntries[i]=0;
-	}
-};
+/* Page handlers only work in lower memory */
+#define LOW_PAGE_LIMIT PAGE_COUNT(1024*1024)
+#define MAX_PAGE_LIMIT PAGE_COUNT(C_MEM_MAX_SIZE*1024*1024)
 
 void MEM_BlockRead(PhysPt off,void * data,Bitu size) {
 	Bitu c;
@@ -82,8 +69,6 @@ void MEM_BlockCopy(PhysPt dest,PhysPt src,Bitu size) {
 		mem_writeb(dest,mem_readb(src));
 		dest+=1;src+=1;
 	}
-
-
 };
 
 void MEM_StrCopy(PhysPt off,char * data,Bitu size) {
@@ -95,205 +80,167 @@ void MEM_StrCopy(PhysPt off,char * data,Bitu size) {
 	*data='\0';
 }
 
-
-
-
-/* TODO Maybe check for page boundaries but that would be wasting lot's of time */
-void mem_writeb(PhysPt off,Bit8u val) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { writeb(memory+off,val);return; }
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		writeb(entry->relocate+(off-entry->base),val);
-		break;
-	case MEMORY_HANDLER:
-		entry->handler.write(off-entry->base,val);
-		break;
-	default:
-		E_Exit("Write to Illegal Memory Address %4x",off);
-	}
-}
-
-void mem_writew(PhysPt off,Bit16u val) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { writew(memory+off,val);return; }
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		writew(entry->relocate+(off-entry->base),val);
-		break;
-	case MEMORY_HANDLER:
-		entry->handler.write(off-entry->base,(val & 0xFF));
-		entry->handler.write(off-entry->base+1,(val >> 8));
-		break;
-	default:
-		E_Exit("Write to Illegal Memory Address %4x",off);
-	}
-}
-
-void mem_writed(PhysPt off,Bit32u val) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { writed(memory+off,val);return; }
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		writed(entry->relocate+(off-entry->base),val);
-		break;
-	case MEMORY_HANDLER:
-		entry->handler.write(off-entry->base,	(Bit8u)(val & 0xFF));
-		entry->handler.write(off-entry->base+1,(Bit8u)(val >> 8) & 0xFF);
-		entry->handler.write(off-entry->base+2,(Bit8u)(val >> 16) & 0xFF);
-		entry->handler.write(off-entry->base+3,(Bit8u)(val >> 24) & 0xFF);
-		break;
-	default:
-		E_Exit("Write to Illegal Memory Address %4x",off);
-	}
-}
-
-Bit8u mem_readb(PhysPt off) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { return readb(memory+off);}
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		return readb(entry->relocate+(off-entry->base));
-	case MEMORY_HANDLER:
-		return entry->handler.read(off-entry->base);
-		break;
-	default:
-		E_Exit("Read from Illegal Memory Address %4x",off);
-	}
-	return 0;			/* Keep compiler happy */
-}
-
-Bit16u mem_readw(PhysPt off) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { return readw(memory+off);}
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		return readw(entry->relocate+(off-entry->base));
-	case MEMORY_HANDLER:
-		return 	entry->handler.read(off-entry->base) |
-			(entry->handler.read(off-entry->base+1) << 8);
-		break;
-	default:
-		E_Exit("Read from Illegal Memory Address %4x",off);
-	}
-	return 0;			/* Keep compiler happy */
-}
-
-Bit32u mem_readd(PhysPt off) {
-	PageEntry * entry=PageEntries[off >> 12];
-	if (!entry) { return readd(memory+off);}
-	switch (entry->type) {
-	case MEMORY_RELOCATE:
-		return readd(entry->relocate+(off-entry->base));
-	case MEMORY_HANDLER:
-		return	entry->handler.read(off-entry->base) |
-			(entry->handler.read(off-entry->base+1) << 8) |
-			(entry->handler.read(off-entry->base+2) << 16)|
-			(entry->handler.read(off-entry->base+3) << 24);
-		break;
-	default:
-		E_Exit("Read from Illegal Memory Address %4x",off);
-	}
-	return 0;			/* Keep compiler happy */
-}
-
-/* The EMM Allocation Part */
-
-/* If this returns 0 we got and error since 0 is always taken */
-static Bit16u EMM_GetFreeHandle(void) {
-	Bit16u i=0;
-	while (i<EMM_HANDLECOUNT) {
-		if (!EMM_Handles[i].active) return i;
-		i++;
-	}
-	E_Exit("MEMORY:Out of EMM Memory handles");
+static Bit8u Illegal_ReadHandler(PhysPt pt) {
+	LOG_ERROR("Illegal read from address %4X",pt);
 	return 0;
 }
+static void Illegal_WriteHandler(PhysPt pt,Bit8u val) {
+	LOG_ERROR("Illegal write val %2X to address %4X",val,pt);
+}
 
-void EMM_GetFree(Bit16u * maxblock,Bit16u * total) {
-	Bit32u index=0;
-	*maxblock=0;*total=0;
-	while (EMM_Handles[index].active) {
-		if (EMM_Handles[index].free) {
-			if(EMM_Handles[index].size>*maxblock) *maxblock=EMM_Handles[index].size;
-			*total+=EMM_Handles[index].size;
-		}
-		if (EMM_Handles[index].next) index=EMM_Handles[index].next;
-		else break;
+/* Could only be called when the pt host entry is 0 ah well :) */
+static Bit8u Default_ReadHandler(PhysPt pt) {
+	return readb(WriteHostTable[pt >> PAGE_SHIFT]+pt);
+}
+static void Default_WriteHandler(PhysPt pt,Bit8u val) {
+	writeb(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
+}
+
+
+void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEMORY_WriteHandler write) {
+	if (startpage+pages>=LOW_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	for (Bitu i=startpage;i<startpage+pages;i++) {
+		ReadHostTable[i]=0;
+		WriteHostTable[i]=0;
+		ReadHandlerTable[i]=read;
+		WriteHandlerTable[i]=write;
 	}
 }
 
-void EMM_Allocate(Bit16u size,Bit16u * handle) {
-	Bit16u index=0;*handle=0;
-	while (EMM_Handles[index].active) {
-		if (EMM_Handles[index].free) {
-			/* Use entire block */
-			if(EMM_Handles[index].size==size) {
-				EMM_Handles[index].free=false;
-				*handle=index;
-				break;
-			}
-			/* Split up block */
-			if(EMM_Handles[index].size>size) {
-				Bit16u newindex=EMM_GetFreeHandle();
-				EMM_Handles[newindex].active=true;
-				EMM_Handles[newindex].phys_base=EMM_Handles[newindex].phys_base+size*4096;
-				EMM_Handles[newindex].size=EMM_Handles[index].size-size;
-				EMM_Handles[newindex].free=true;
-				EMM_Handles[newindex].next=EMM_Handles[index].next;
-				EMM_Handles[index].next=newindex;
-				EMM_Handles[index].free=false;
-				EMM_Handles[index].size=size;
-				*handle=index;
-				break;
-			}
-		}
-		if (EMM_Handles[index].next) index=EMM_Handles[index].next;
-		else break;
+
+void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
+	if (startpage+pages>=LOW_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	for (Bitu i=startpage;i<startpage+pages;i++) {
+		ReadHostTable[i]=memory;
+		WriteHostTable[i]=memory;
+		ReadHandlerTable[i]=&Illegal_ReadHandler;;
+		WriteHandlerTable[i]=&Illegal_WriteHandler;
 	}
 }
 
-void EMM_Free(Bit16u handle) {
-	if (!EMM_Handles[handle].active) E_Exit("EMM:Tried to free illegal handle");
-	EMM_Handles[handle].free=true;
-	//TODO join memory blocks
+void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
+	if (startpage+pages>=MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	HostPt base=(HostPt)(data)-startpage*PAGE_SIZE;
+	if (!base) LOG_DEBUG("MEMORY:Unlucky memory allocation");
+	for (Bitu i=startpage;i<startpage+pages;i++) {
+		ReadHostTable[i]=base;
+		WriteHostTable[i]=base;
+		ReadHandlerTable[i]=&Default_ReadHandler;;
+		WriteHandlerTable[i]=&Default_WriteHandler;
+	}
+}
+
+void MEM_ClearMapping(Bitu startpage,Bitu pages) {
+	if (startpage+pages>=MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	for (Bitu i=startpage;i<startpage+pages;i++) {
+		ReadHostTable[i]=0;
+		WriteHostTable[i]=0;
+		ReadHandlerTable[i]=&Illegal_ReadHandler;;
+		WriteHandlerTable[i]=&Illegal_WriteHandler;
+	}
+}
+
+#if (!C_EXTRAINLINE)
+static void HandlerWritew(Bitu page,PhysPt pt,Bit16u val) {
+		WriteHandlerTable[page](pt+0,(Bit8u)(val & 0xff));
+		WriteHandlerTable[page](pt+1,(Bit8u)((val >>  8) & 0xff)  );
+}
+
+static void HandlerWrited(Bitu page,PhysPt pt,Bit32u val) {
+		WriteHandlerTable[page](pt+0,(Bit8u)(val & 0xff));
+		WriteHandlerTable[page](pt+1,(Bit8u)((val >>  8) & 0xff)  );
+		WriteHandlerTable[page](pt+2,(Bit8u)((val >> 16) & 0xff)  );
+		WriteHandlerTable[page](pt+3,(Bit8u)((val >> 24) & 0xff)  );
+}
+
+void mem_writeb(PhysPt pt,Bit8u val) {
+	if (WriteHostTable[pt >> PAGE_SHIFT]) writeb(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
+	else {
+		WriteHandlerTable[pt >> PAGE_SHIFT](pt,val);
+	}
+}
+
+void mem_writew(PhysPt pt,Bit16u val) {
+	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
+//		HandlerWritew(pt >> PAGE_SHIFT,pt,val);
+		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
+		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
+	} else writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
+}
+
+void mem_writed(PhysPt pt,Bit32u val) {
+	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
+//		HandlerWrited(pt >> PAGE_SHIFT,pt,val);
+		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
+		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
+		WriteHandlerTable[pt >> PAGE_SHIFT](pt+2,(Bit8u)((val >> 16) & 0xff)  );
+		WriteHandlerTable[pt >> PAGE_SHIFT](pt+3,(Bit8u)((val >> 24) & 0xff)  );
+	} else writed(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
 }
 
 
-PageEntry HMA_PageEntry;
+static Bit16u HandlerReadw(Bitu page,PhysPt pt) {
+	return	(ReadHandlerTable[page](pt+0))       |
+			(ReadHandlerTable[page](pt+1)) << 8;
+}
+
+static Bit32u HandlerReadd(Bitu page,PhysPt pt) {
+	return	(ReadHandlerTable[page](pt+0))       |
+			(ReadHandlerTable[page](pt+1)) << 8  |
+			(ReadHandlerTable[page](pt+2)) << 16 |
+			(ReadHandlerTable[page](pt+3)) << 24;
+}
+
+Bit8u mem_readb(PhysPt pt) {
+	if (ReadHostTable[pt >> PAGE_SHIFT]) return readb(ReadHostTable[pt >> PAGE_SHIFT]+pt);
+	else {
+		return ReadHandlerTable[pt >> PAGE_SHIFT](pt);
+	}
+}
+
+Bit16u mem_readw(PhysPt pt) {
+	if (!ReadHostTable[pt >> PAGE_SHIFT]) {
+//		return HandlerReadw(pt >> PAGE_SHIFT,pt);
+		return	
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
+	} else return readw(ReadHostTable[pt >> PAGE_SHIFT]+pt);
+}
+
+Bit32u mem_readd(PhysPt pt){
+	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
+	else {
+//		return HandlerReadd(pt >> PAGE_SHIFT,pt);
+		return 
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0))       |
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8  |
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+2)) << 16 |
+			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
+	}
+}
+#endif
+
+
 
 void MEM_Init(void) {
-	memset((void *)&PageEntries,0,sizeof(PageEntries));
-	memory=(Bit8u *)malloc(memsize*1024*1024);	
+	/* Init all tables */
+	Bitu i;
+	i=MAX_PAGES;
+	for (i=0;i<MAX_PAGES;i++) {
+		ReadHostTable[i]=0;
+		WriteHostTable[i]=0;
+		ReadHandlerTable[i]=&Default_ReadHandler;
+		WriteHandlerTable[i]=&Default_WriteHandler;
+	}
+	/* Allocate the first mb of memory */
+	memory=(Bit8u *)malloc(1024*1024);	
 	if (!memory) {
 		E_Exit("Can't allocate memory for memory");
 	}
-	/* Setup the HMA to wrap */
-	HMA_PageEntry.type=MEMORY_RELOCATE;;
-	HMA_PageEntry.base=1024*1024;
-	HMA_PageEntry.relocate=memory;
-	Bitu i;
-	for (i=0;i<16;i++) {
-		PageEntries[i+256]=&HMA_PageEntry;
-	}
-	/* Setup the EMM Structures */
-	for (i=0;i<EMM_HANDLECOUNT;i++) {
-		EMM_Handles[i].active=false;
-		EMM_Handles[i].size=0;
-	}
-	/* Setup the first handle with free and max memory */
-	EMM_Handles[0].active=true;
-	EMM_Handles[0].free=false;
-	EMM_Handles[0].phys_base=0x110000;
-	EMM_Handles[0].next=1;
-	if (memsize>1) {
-		EMM_Handles[1].size=(memsize-1)*256-16;
-	} else {
-		EMM_Handles[0].size=0;;
-	}
-	EMM_Handles[1].active=true;
-	EMM_Handles[1].free=true;
-	EMM_Handles[1].phys_base=0x110000;
-};
+	/* Setup tables for first mb */
+	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);
+	/* Setup tables for HMA Area */
+	MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
+}
 
 
