@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.29 2004-09-15 20:49:07 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.30 2004-09-16 22:05:24 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -442,6 +442,10 @@ static void RESCAN_ProgramStart(Program * * make) {
 class INTRO : public Program {
 public:
 	void Run(void) {
+		if(cmd->FindExist("cdrom",false)) {
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));		
+			return;
+		}
 		WriteOut(MSG_Get("PROGRAM_INTRO"));
 	}
 };
@@ -652,7 +656,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
-	MSG_Add("PROGRAM_MOUNT_USAGE","Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
+	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
 
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
@@ -674,7 +678,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"[2J[33;1mWelcome to DOSBox[0m, an x86 emulator with sound and graphics.\n"
+		"\033[2J\033[33;1mWelcome to DOSBox\033[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
 		"\n"	    
 		"Here are some commands to get you started:\n"
@@ -690,10 +694,35 @@ void DOS_SetupPrograms(void) {
 		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
 		" \033[34;1mcd\033[0m will allow you to\n"
 		"enter a directory (recognised by the \033[1m[]\033[0m in a directory listing).\n"
-		"You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.\n"
-
+		"You can run programs/files which end with \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
 		"\n"
-		"[32;1mDOSBox will stop/exit without a warning if an error occured![0m\n"
+		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
+		"\n"
+		"\033[32;1mDOSBox will stop/exit without a warning if an error occured!\033[0m\n"
+		);
+	MSG_Add("PROGRAM_INTRO_CDROM",
+		"\033[2J\033[32;1mHow to mount a Real/Virtual CD-ROM Drive in DOSBox:\033[0m\n"
+		"DOSBox provides CD-ROM emulation on several levels.\n"
+		"\n"
+		"The \033[33mbasic\033[0m level works on all CD-ROM drives and normal directories.\n"
+		"It installs MSCDEX and marks the files read-only.\n"
+		"Usually this is enough for most games:\n"
+		"\033[34;1mmount d D:\\ -t cdrom\033[0m   or   \033[34;1mmount d C:\\example -t cdrom\033[0m\n"
+		"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
+		"\033[34;1mmount d C:\\example -t cdrom -label CDLABEL\033[0m\n"
+		"\n"
+		"The \033[33mnext\033[0m level adds some low-level support.\n"
+		"Therefore only works on CD-ROM drives:\n"
+		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0\033[0m\n"
+		"\n"
+		"The \033[33mlast\033[0m level of support depends on your Operating System:\n"
+		"For \033[1mWindows 2000\033[0m, \033[1mWindows XP\033[0m and \033[1mLinux\033[0m:\n"
+		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0 \033[34m-ioctl\033[0m\n"
+		"For \033[1mWindows 9x\033[0m with a ASPI layer installed:\n"
+		"\033[34;1mmount d D:\\ -t cdrom -usecd \033[33m0 \033[34m-aspi\033[0m\n"
+		"\n"
+		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
+		"\033[34;1mmount -cd\033[0m"
 		);
 
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
@@ -704,9 +733,9 @@ void DOS_SetupPrograms(void) {
 		"no drive letter is specified, this defaults to booting from the A drive.\n"
 		"The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 		"drive (C or D), the image should have already been mounted using the\n"
-		"IMGMOUNT command.\n\n"
+		"\033[34;1mIMGMOUNT\033[0m command.\n\n"
 		"The syntax of this command is:\n\n"
-		"BOOT [diskimg1.img diskimg2.img] [-l driveletter]\n"
+		"\033[34;1mBOOT [diskimg1.img diskimg2.img] [-l driveletter]\033[0m\n"
 		);
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
@@ -715,12 +744,15 @@ void DOS_SetupPrograms(void) {
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
-	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY","Must specify drive geometry for hard drives:\n"
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
+		"For \033[33mCD-ROM\033[0m images:   \033[34;1mimgmount Drive-Letter location-of-image -t iso\033[0m\n"
+		"\n"
+		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
 		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
 	MSG_Add("PROGRAM_IMGMOUNG_FILE_NOT_FOUND","Image file not found.\n");
-	MSG_Add("PROGRAM_IMGMOUNG_MOUNT","To mount directories, use the MOUNT command, not the IMGMOUNT command.\n");
+	MSG_Add("PROGRAM_IMGMOUNG_MOUNT","To mount directories, use the \033[34;1mMOUNT\033[0m command, not the \033[34;1mIMGMOUNT\033[0m command.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED","Drive already mounted at that letter.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
