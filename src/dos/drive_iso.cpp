@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.2 2004-10-05 19:55:03 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.3 2004-10-05 21:18:48 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -250,8 +250,8 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst)
 		Bit8u block[ISO_FRAMESIZE];
 		readSector(block, sector);
 		
-		Bit32u pos = 0;		
-		while (block[pos] != 0 && (pos + block[pos]) < ISO_FRAMESIZE) {
+		Bit32u pos = 0;
+		while (pos < ISO_FRAMESIZE && block[pos] != 0 && (pos + block[pos]) <= ISO_FRAMESIZE) {
 			isoDirEntry tmp;
 			int length = readDirEntry(&tmp, &block[pos]);
 			if (length < 0) return false;
@@ -399,7 +399,6 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 		strreplace((char*)de->ident, ';', 0);	
 		// if file has no extension remove the trailing dot
 		int tmp = strlen((char*)de->ident);
-//if (tmp > 38) return -1; //de->ident can hold 100
 		if (tmp > 0 && de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
 	}
 	return de->length;
@@ -423,7 +422,7 @@ bool isoDrive :: lookupSingle(isoDirEntry *de, const char *name, Bit32u start, B
 		if (!readSector(sector, i)) return false;
 		
 		int pos = 0;
-		while (sector[pos] != 0 && (pos + sector[pos]) < ISO_FRAMESIZE) {
+		while (pos < ISO_FRAMESIZE && sector[pos] != 0 && (pos + sector[pos]) <= ISO_FRAMESIZE) {
 			int deLength = readDirEntry(de, &sector[pos]);
 			if (deLength < 1) return false;
 			pos += deLength;
