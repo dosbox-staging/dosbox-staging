@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.21 2003-09-17 19:17:35 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.22 2003-09-30 13:49:34 finsterr Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -228,11 +228,26 @@ static Bitu INT15_Handler(void) {
 			Bit32u micro=(reg_cx<<16)|reg_dx;
 			CALLBACK_SCF(false);
 		}
+	case 0x87:	/* Copy extended memory */
+		{
+			bool enabled = MEM_A20_Enabled();
+			MEM_A20_Enable(true);
+			Bitu   bytes	= reg_cx * 2;
+			PhysPt data		= SegPhys(es)+reg_si;
+			PhysPt source	= mem_readd(data+0x12) & 0x00FFFFFF + (mem_readb(data+0x16)<<24);
+			PhysPt dest		= mem_readd(data+0x1A) & 0x00FFFFFF + (mem_readb(data+0x1E)<<24);
+			MEM_BlockCopy(dest,source,bytes);
+			reg_ax = 0x00;
+			MEM_A20_Enable(enabled);
+			CALLBACK_SCF(false);
+			break;
+		}	
 	case 0x88:	/* SYSTEM - GET EXTENDED MEMORY SIZE (286+) */
 		IO_Write(0x70,0x30);
 		reg_al=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		reg_ah=IO_Read(0x71);
+		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function 0x88 Remaining %04X kb",reg_ax);
 		CALLBACK_SCF(false);
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
@@ -253,7 +268,7 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(true);
 		break;
 	default:
-		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %2X",reg_ah);
+		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
 		CALLBACK_SCF(false);
 	}
