@@ -31,7 +31,7 @@
 
 static Bitu call_10;
 static bool warned_ff=false;
-
+static bool warned_int10_0b=false;
 
 static Bitu INT10_Handler(void) {
 	switch (reg_ah) {
@@ -76,6 +76,10 @@ static Bitu INT10_Handler(void) {
 		INT10_WriteChar(reg_al,reg_bl,reg_bh,reg_cx,false);
 		break;
 	case 0x0B:								/* Set Background/Border Colour & Set Palette*/
+        if(!warned_int10_0b) {
+            LOG_WARN("INT 10:0B Unsupported: Set Background/border colour & Set Pallete");
+            warned_int10_0b=true;
+        }
 		break;
 		E_Exit("Unsupported int 10 call %02X" ,reg_ah);
 		break;
