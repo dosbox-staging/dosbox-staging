@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.32 2004-05-19 19:46:28 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.33 2004-06-20 16:56:55 harekiet Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -32,7 +32,7 @@
 #include "mouse.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
-static Bitu call_int1,call_int70;
+static Bitu call_int1,call_int70,call_int14;
 static Bit16u size_extended;
 
 static Bitu INT70_Handler(void) {
@@ -48,6 +48,7 @@ static Bitu INT70_Handler(void) {
 			PhysPt where=Real2Phys(mem_readd(BIOS_WAIT_FLAG_POINTER));
 			mem_writeb(where,mem_readb(where)|0x80);
 			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
+			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(0,BIOS_WAIT_FLAG_TEMP));
 			IO_Write(0x70,0xb);
 			IO_Write(0x71,IO_Read(0x71)&~0x40);
 		}
@@ -95,7 +96,9 @@ static Bitu INT1A_Handler(void) {
 		LOG(LOG_BIOS,LOG_ERROR)("INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
 		break;
 	case 0x81:	/* Tandy sound system checks */
-		LOG(LOG_BIOS,LOG_ERROR)("INT1A:81:Tandy DAC Check failing");
+		if (machine!=MCH_TANDY) break;
+		reg_ax=0xc4;
+		CALLBACK_SCF(false);
 		break;
 /*
 	INT 1A - Tandy 2500, Tandy 1000L series - DIGITAL SOUND - INSTALLATION CHECK
@@ -168,15 +171,29 @@ static Bitu INT17_Handler(void) {
 		break;
 	default:
 		E_Exit("Unhandled INT 17 call %2X",reg_ah);
-		
 	};
 	return CBRET_NONE;
 }
 
+static Bitu INT14_Handler(void) {
+	switch (reg_ah) {
+	case 0x00:	/* Init port */
+		{
+			Bitu port=real_readw(0x40,reg_dx*2);
+			reg_ah=IO_ReadB(port+5);
+			reg_al=IO_ReadB(port+6);
+			LOG_MSG("AX %X DX %X",reg_ax,reg_dx);
+		}
+		break;
+	default:
+		LOG_MSG("Unhandled INT 14 call %2X",reg_ah);
+		
+	}
+	return CBRET_NONE;
+}
 
 static Bitu INT15_Handler(void) {
 	static Bitu biosConfigSeg=0;
-	
 	switch (reg_ah) {
 	case 0x06:
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15 Unkown Function 6");
@@ -252,6 +269,21 @@ static Bitu INT15_Handler(void) {
 		{
 			//TODO Perhaps really wait :)
 			Bit32u micro=(reg_cx<<16)|reg_dx;
+			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
+				reg_ah=0x83;
+				CALLBACK_SCF(true);
+				break;
+			}
+			Bit32u count=(reg_cx<<16)|reg_dx;
+			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(0,BIOS_WAIT_FLAG_TEMP));
+			mem_writed(BIOS_WAIT_FLAG_COUNT,count);
+			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
+			/* Reprogram RTC to start */
+			IO_Write(0x70,0xb);
+			IO_Write(0x71,IO_Read(0x71)|0x40);
+			while (mem_readd(BIOS_WAIT_FLAG_COUNT)) {
+				CALLBACK_Idle();
+			}
 			CALLBACK_SCF(false);
 		}
 	case 0x87:	/* Copy extended memory */
@@ -390,8 +422,6 @@ void BIOS_Init(Section* sec) {
 	CALLBACK_Setup(call_int8,&INT8_Handler,CB_IRET);
 	mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 	RealSetVec(0x8,CALLBACK_RealPointer(call_int8));
-	/* INT10 Video Bios */
-	
 	/* INT 11 Get equipment list */
 	call_int11=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int11,&INT11_Handler,CB_IRET);
@@ -403,6 +433,9 @@ void BIOS_Init(Section* sec) {
 	mem_writew(BIOS_MEMORY_SIZE,640);
 	/* INT 13 Bios Disk Support */
 	BIOS_SetupDisks();
+	call_int14=CALLBACK_Allocate();	
+	CALLBACK_Setup(call_int14,&INT14_Handler,CB_IRET);
+	RealSetVec(0x14,CALLBACK_RealPointer(call_int14));
 	/* INT 15 Misc Calls */
 	call_int15=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int15,&INT15_Handler,CB_IRET);
@@ -436,8 +469,8 @@ void BIOS_Init(Section* sec) {
 	if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
 	/* Test for serial port */
 	Bitu index=0;
-	if (IO_Read(0x3f8)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
-	if (IO_Read(0x2f8)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
+	if (IO_Read(0x3fa)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
+	if (IO_Read(0x2fa)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
 	/* Setup equipment list */
 	Bitu config=0x4400;						//1 Floppy, 2 serial and 1 parrallel
 #if (C_FPU)
@@ -461,9 +494,6 @@ void BIOS_Init(Section* sec) {
 	size_extended=IO_Read(0x71);
 	IO_Write(0x70,0x31);
 	size_extended|=(IO_Read(0x71) << 8);
-
 }
-
-
 
 
