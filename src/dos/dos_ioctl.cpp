@@ -96,7 +96,8 @@ bool DOS_IOCTL(void) {
 
 bool DOS_GetSTDINStatus(void) {
 	Bit32u handle=RealHandle(STDIN);
-	if (Files[handle]->GetInformation() & 64) return false;
+	if (handle==0xFF) return false;
+	if (Files[handle] && (Files[handle]->GetInformation() & 64)) return false;
 	return true;
 };
 
