@@ -2767,7 +2767,7 @@ Bitu DPMI::API_Int21_MSDOS(void)
 		case 0x40:	{/* WRITE Write to file or device */
 					Bit16u towrite = Mask(reg_ecx);
 					MEM_BlockRead(SegPhys(ds)+Mask(reg_edx),dos_copybuf,towrite);
-					if (reg_bx>=5) LOG(LOG_MISC,LOG_ERROR)("INT 21 40: %s",dos_copybuf);
+					if (reg_bx>=5) LOG(LOG_MISC,LOG_ERROR)("INT 21 40: %s",(char *)dos_copybuf);
 					if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
 						reg_eax=towrite;
 	   					DPMI_CALLBACK_SCF(false);
