@@ -16,12 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: cdrom_aspi_win32.cpp,v 1.7 2004-01-02 14:38:30 qbix79 Exp $ */
+
 #if defined (WIN32)
 
 #include <ctype.h>
 
 #include "cdrom.h"
-#include "scsidefs.h"			// Aspi stuff
+//Are actually system includes but leave for now
+#include "ntddcdrm.h"
+#include "ntddscsi.h"
+//#include "scsi.h"			// Aspi stuff
+#include "scsidefs.h"
 #include "dosbox.h"
 
 // *****************************************************************
