@@ -240,8 +240,12 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	if ((head.signature!=MAGIC1) && (head.signature!=MAGIC2)) iscom=true;
 	else {
 		headersize=head.headersize*16;
-		imagesize=(head.pages-1)*512-headersize; 
-		if (head.extrabytes) imagesize += head.extrabytes % 512;
+		if (head.extrabytes) {
+			imagesize  = (head.pages-1)*512-headersize; 
+			imagesize += head.extrabytes % 512;
+		} else
+			imagesize  = head.pages*512-headersize; 
+
 		// always load st least 512 Bytes (dos cache/dos bug?)
 		if (imagesize+headersize<512) imagesize = 512-headersize;
 	}
