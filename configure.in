@@ -95,6 +95,7 @@ Makefile
 src/Makefile
 src/cpu/Makefile
 src/cpu/core_16/Makefile
+src/cpu/core_full/Makefile
 src/debug/Makefile
 src/dos/Makefile
 src/fpu/Makefile
