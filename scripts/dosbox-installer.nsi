@@ -1,5 +1,5 @@
 !define VER_MAYOR 0
-!define VER_MINOR 62
+!define VER_MINOR 63
 
 ; The name of the installer
 Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
@@ -33,7 +33,10 @@ Section "ThisNameIsIgnoredSoWhyBother?"
   File dosbox.conf
   File SDL.dll
   File SDL_net.dll
-  File libpng12.dll
+;  File libpng12.dll
+  File libogg-0.dll
+  File libvorbis-0.dll
+  File libvorbisfile-3.dll
 
   CreateDirectory "$INSTDIR\capture"
   CreateDirectory "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}"
@@ -61,7 +64,11 @@ Section "Uninstall"
   Delete $INSTDIR\dosbox.conf
   Delete $INSTDIR\SDL.dll
   Delete $INSTDIR\SDL_net.dll
-  Delete $INSTDIR\libpng12.dll
+; Delete $INSTDIR\libpng12.dll
+  Delete $INSTDIR\libogg-0.dll
+  Delete $INSTDIR\libvorbis-0.dll
+  Delete $INSTDIR\libvorbisfile-3.dll
+
   ;Files left by sdl taking over the console
   Delete $INSTDIR\stdout.txt
   Delete $INSTDIR\stderr.txt
