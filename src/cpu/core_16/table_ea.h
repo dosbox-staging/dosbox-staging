@@ -273,25 +273,25 @@ INLINE PhysPt Sib_s(Bitu mode) {
 	PhysPt base;
 	switch (sib&7) {
 	case 0:	/* EAX Base */
-		base=core_16.segbase+reg_eax;break;
+		base=reg_eax;break;
 	case 1:	/* ECX Base */
-		base=core_16.segbase+reg_ecx;break;
+		base=reg_ecx;break;
 	case 2:	/* EDX Base */
-		base=core_16.segbase+reg_edx;break;
+		base=reg_edx;break;
 	case 3:	/* EBX Base */
-		base=core_16.segbase+reg_ebx;break;
+		base=reg_ebx;break;
 	case 4:	/* ESP Base */
-		base=core_16.segbase+reg_esp;break;
+		base=reg_esp;break;
 	case 5:	/* #1 Base */
 		if (!mode) {
-			base=core_16.segbase+Fetchd();break;
+			base=Fetchd();break;
 		} else {
-			base=core_16.segbase+reg_ebp;break;
+			base=reg_ebp;break;
 		}
 	case 6:	/* ESI Base */
-		base=core_16.segbase+reg_esi;break;
+		base=reg_esi;break;
 	case 7:	/* EDI Base */
-		base=core_16.segbase+reg_edi;break;
+		base=reg_edi;break;
 	}
 	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);
 	return base;
