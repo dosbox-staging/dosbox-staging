@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.64 2004-03-10 22:50:51 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.65 2004-06-05 11:17:23 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -904,6 +904,12 @@ int main(int argc, char* argv[]) {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
+		if (control->cmdline->FindExist("-version") || 
+		    control->cmdline->FindExist("--version") ) {
+			printf(VERSION "\n");
+			return 0;
+		}
+	   
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
@@ -930,7 +936,7 @@ int main(int argc, char* argv[]) {
 		DEBUG_SetupConsole();
 #endif
 
-		if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
+	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 #ifndef DISABLE_JOYSTICK
 		|SDL_INIT_JOYSTICK
 	
@@ -1011,7 +1017,7 @@ int main(int argc, char* argv[]) {
 		if(sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
-			LOG_MSG("Press enter to continue",error);
+			LOG_MSG("Press enter to continue");
 			fgetc(stdin);
 #elif defined(WIN32)
 			Sleep(5000);
@@ -1025,6 +1031,5 @@ int main(int argc, char* argv[]) {
 	catch(...){   
 		throw;//dunno what happened. rethrow for sdl to catch
 	}
-   
 	return 0;
 };

@@ -20,6 +20,8 @@ Usage:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
+       
+dosbox -version
 
   name   
         If "name" is a directory it'll mount that as the C: drive.
@@ -48,8 +50,10 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
 	
   -machine machinetype
         Setup dosbox to emulate a specific type of machine. Valid choices are:
-        auto,hercules,cga,tandy,vga.
+        hercules, cga, tandy, vga (default).
 
+  -version
+        output version information and exit. Useful for frontends.
 
 Note: If a name/command/configfile/languagefile contains a space in it, put
       the whole name/command/configfile/languagefile between quotes("example").

@@ -10,11 +10,12 @@
   - Changed sensitivity settings of the mouse.
   - Fixed a bug with an unterminated string in the drivelabel.
   - Changed file search routines a bit to be more compatible.
-  - Added support for attribute-searching with fcb's
+  - Added support for attribute-searching with fcb's.
   - Changed OpenGL so that it is initialized only when used.
   - Added basic SDA.
   - Changed psp and dta functions to use dta.
   - Added some more PIC commands. (c2woody)
+  - Added the -version switch, which makes dosbox report its version.
 
 0.61
   - Added a beta dynamic cpu for x86 hosts (very unstable)

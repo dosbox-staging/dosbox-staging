@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "October 5, 2003"
+.TH DOSBOX 1 "June 5, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -11,6 +11,9 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B [file]
 .BI "[\-c " command ]
 .B [\-exit]
+.BI "[\-machine " machinetype ]
+.LP
+.B dosbox -version
 .SH DESCRIPTION
 This manual page briefly documents
 .BR "dosbox" ", an x86/DOS emulator."
@@ -38,6 +41,13 @@ A summary of options is included below.
 .TP
 .B \-exit
 .BR dosbox " will exit after running the program specified by " file .
+.TP
+.BI \-machine " machinetype
+.RB "Setup " dosbox " to emulate a specific type of machine." 
+.RI "Valid choices are: " "hercules, cga, tandy, vga(default)".
+.TP
+.B \-version
+Output version information and exit. Useful for frontends.
 .SH "INTERNAL COMMANDS"
 .B dosbox
 supports most of the DOS commands found in command.com. In addition, the
@@ -46,7 +56,7 @@ following extra commands are available:
 .BI "MOUNT [\-t " type "] [\-size " size ]
 .I driveletter sourcedirectory 
 .B [\-aspi] [\-ioctl]
-.BI "[\-usecd " number "] [\-label " drivelabel ]
+.BI "[\-usecd " number "] [\-label " drivelabel "] [\-freesize " freesize ] 
 .LP
 .B MOUNT \-cd
 .LP
@@ -63,7 +73,11 @@ The local directory you want to have inside dosbox.
 Type of the mounted directory. Supported are: dir (standard), floppy, cdrom.
 .TP 
 .BI \-size " drivesize"
-Sets the size of the drive.
+Sets the size of the drive. See the examples in the README for details.
+.TP
+.BI \-freesize " freesize"
+Sets the amount of free space available on a drive in MB's. This is a more 
+.RB "simple version of " \-size .
 .TP
 .BI \-label " drivelabel"
 .RI "Sets the name of the drive to " drivelabel ". Needed on some" 
