@@ -157,6 +157,7 @@ bool Virtual_Drive::MakeDir(char * dir) {
 }
 
 bool Virtual_Drive::TestDir(char * dir) {
+	if (!dir[0]) return true;		//only valid dir is the empty dir
 	return false;
 }
 
