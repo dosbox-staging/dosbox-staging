@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.25 2005-03-25 08:40:42 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.26 2005-03-25 10:12:04 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -220,18 +220,20 @@ CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
 }
 
 void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const char* description){
-	if(installed) E_Exit("Allready installed");
-	m_type=SETUP;
-	m_callback=CALLBACK_Allocate();
-	CALLBACK_Setup(m_callback,handler,type,description);
-	installed=true;
+	if(!installed) {
+		installed=true;
+		m_type=SETUP;
+		m_callback=CALLBACK_Allocate();
+		CALLBACK_Setup(m_callback,handler,type,description);
+	} else E_Exit("Allready installed");
 }
 
 void CALLBACK_HandlerObject::Set_RealVec(Bit8u vec){
-	if(vectorhandler.installed) E_Exit ("double usage of vector handler");
-	vectorhandler.installed=true;
-	vectorhandler.interrupt=vec;
-	RealSetVec(vec,Get_RealPointer(),vectorhandler.old_vector);
+	if(!vectorhandler.installed) {
+		vectorhandler.installed=true;
+		vectorhandler.interrupt=vec;
+		RealSetVec(vec,Get_RealPointer(),vectorhandler.old_vector);
+	} else E_Exit ("double usage of vector handler");
 }
 
 void CALLBACK_Init(Section* sec) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.30 2005-03-25 09:38:42 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.31 2005-03-25 10:12:05 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -487,11 +487,14 @@ static void MIXER_ProgramStart(Program * * make) {
 }
 
 MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,char * name){
-	if(strlen(name)>31) E_Exit("Too long mixer channel name");
-	strncpy(m_name,name,31);
-	installed=true;
-	return MIXER_AddChannel(handler,freq,name);
+	if(!installed) {
+		if(strlen(name)>31) E_Exit("Too long mixer channel name");
+		strncpy(m_name,name,31);
+		installed=true;
+		return MIXER_AddChannel(handler,freq,name);
+	} else E_Exit("allready added mixer channel.");
 }
+
 MixerObject::~MixerObject(){
 	if(!installed) return;
 	MIXER_DelChannel(MIXER_FindChannel(m_name));
