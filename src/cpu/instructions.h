@@ -269,7 +269,7 @@
 	lf_resb=(lf_var1b >> lf_var2b) |				\
 			(lf_var1b << (8-lf_var2b));				\
 	save(op1,lf_resb);								\
-	SETFLAGBIT(CF,lf_resb & 1);						\
+	SETFLAGBIT(CF,lf_resb & 0x80);					\
 	if (lf_var2b == 1) SETFLAGBIT(OF,(lf_resb ^ lf_var1b) & 0x80);
 
 #define RORW(op1,op2,load,save)					\
@@ -280,7 +280,7 @@
 	lf_resw=(lf_var1w >> lf_var2b) |			\
 			(lf_var1w << (16-lf_var2b));		\
 	save(op1,lf_resw);							\
-	SETFLAGBIT(CF,lf_resw & 1);					\
+	SETFLAGBIT(CF,lf_resw & 0x8000);			\
 	if (lf_var2b == 1) SETFLAGBIT(OF,(lf_resw ^ lf_var1w) & 0x8000);
 
 #define RORD(op1,op2,load,save)					\
@@ -291,7 +291,7 @@
 	lf_resd=(lf_var1d >> lf_var2b) |			\
 			(lf_var1d << (32-lf_var2b));		\
 	save(op1,lf_resd);							\
-	SETFLAGBIT(CF,lf_resd & 1);					\
+	SETFLAGBIT(CF,lf_resd & 0x80000000);		\
 	if (lf_var2b == 1) SETFLAGBIT(OF,(lf_resd ^ lf_var1d) & 0x80000000);
 
 
