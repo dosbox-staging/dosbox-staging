@@ -94,7 +94,9 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 	sSave(sPSP,next_seg,seg+mem_size);
 	/* far call opcode */
 	sSave(sPSP,far_call,0xea);
-//	sSave(sPSP,cmp_entry
+	// far call to interrupt 0x21 - faked for bill & ted 
+	// lets hope nobody really uses this address
+	sSave(sPSP,cpm_entry,RealMake(0xDEAD,0xFFFF));
 	/* Standard blocks,int 20  and int21 retf */
 	sSave(sPSP,exit[0],0xcd);
 	sSave(sPSP,exit[1],0x20);
