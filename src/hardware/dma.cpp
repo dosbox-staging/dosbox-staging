@@ -189,7 +189,7 @@ again:
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
-		ReachedTC();
+//		ReachedTC();			//No module uses it so disable
 		if (autoinit) {
 			currcnt=basecnt;
 			curraddr=baseaddr;
@@ -197,7 +197,8 @@ again:
 		} else {
 			curraddr+=left;
 			currcnt=0xffff;
-			SetMask(true);
+			masked=true;
+			DoCallBack(DMA_TRANSFEREND);
 		}
 	}
 	return done;
@@ -224,7 +225,8 @@ again:
 		} else {
 			curraddr+=left;
 			currcnt=0xffff;
-			SetMask(true);
+			masked=true;
+			DoCallBack(DMA_TRANSFEREND);
 		}
 	}
 	return done;

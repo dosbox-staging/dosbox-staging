@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dma.h,v 1.10 2004-03-15 14:53:32 harekiet Exp $ */
+/* $Id: dma.h,v 1.11 2004-06-10 20:20:28 harekiet Exp $ */
 
 #ifndef __DMA_H
 #define __DMA_H
@@ -25,6 +25,7 @@ enum DMAEvent {
 	DMA_REACHED_TC,
 	DMA_MASKED,
 	DMA_UNMASKED,
+	DMA_TRANSFEREND
 };
 
 class DmaChannel;
