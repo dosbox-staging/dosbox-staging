@@ -48,7 +48,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 	Bit32u r=0;Bit32u w=0;Bit32u namestart=0;
 	bool hasdrive=false;
 	*drive=CurrentDrive;
-	char tempdir[DOS_NAMELENGTH];
+	char tempdir[128];
 //TODO Maybe check for illegal characters
 	while (name[r]!=0 && (r<DOS_PATHLENGTH)) {
 		Bit8u c=name[r++];
