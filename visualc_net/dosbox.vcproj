@@ -345,6 +345,9 @@
 					RelativePath="..\src\dos\drive_cache.cpp">
 				</File>
 				<File
+					RelativePath="..\src\dos\drive_fat.cpp">
+				</File>
+				<File
 					RelativePath="..\src\dos\drive_local.cpp">
 				</File>
 				<File
@@ -532,9 +535,6 @@
 				</File>
 				<File
 					RelativePath="..\src\ints\bios_keyboard.cpp">
-				</File>
-				<File
-					RelativePath="..\src\ints\dpmi.cpp">
 				</File>
 				<File
 					RelativePath="..\src\ints\ems.cpp">
