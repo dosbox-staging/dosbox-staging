@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.17 2003-08-17 13:08:05 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.18 2003-08-19 17:59:25 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -90,7 +90,7 @@ bool ScanCMDBool(char * cmd,char * check) {
 	while ((scan=strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
-		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]==0)) {
+		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='/' || scan[c_len]==0)) {
 		/* Found a math now remove it from the string */
 			memmove(scan-1,scan+c_len,strlen(scan+c_len)+1);
 			trim(scan-1);
