@@ -93,7 +93,7 @@ static Bit8u read_dma(Bit32u port) {
 		break;
 	case 0x08:	/* Read Status */
 		ret=cont->status_reg;
-		cont->status_reg&=0xf;	/* Clear lower 4 bits on read */
+		cont->status_reg&=~0xf;	/* Clear lower 4 bits on read */
 		break;
 	case 0x0a:	
 	case 0x0e:
