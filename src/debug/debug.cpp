@@ -110,7 +110,7 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
-	if (cpu.state & STATE_PROTECTED) return PhysMakeProt(seg,offset);
+	if (cpu.pmode) return PhysMakeProt(seg,offset);
 	return (seg<<4)+offset;
 };
 
@@ -536,7 +536,7 @@ static bool StepOver()
 //	PhysPt start=SegPhys(cs)+reg_eip;
 	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
-	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32>0));
+	size=DasmI386(dline, start, reg_eip, cpu.code.big);
 
 	if (strstr(dline,"call") || strstr(dline,"int") || strstr(dline,"loop") || strstr(dline,"rep")) {
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip+size, true);
@@ -628,11 +628,11 @@ static void DrawRegisters(void) {
 
 	oldflags=flags.word;
 
-	if (cpu.state & STATE_PROTECTED) mvwprintw(dbg.win_reg,0,76,"Prot");
+	if (cpu.pmode) mvwprintw(dbg.win_reg,0,76,"Prot");
 	else							 mvwprintw(dbg.win_reg,0,76,"Real");
 
 	// Selector info, if available
-	if ((cpu.state & STATE_PROTECTED) && curSelectorName[0]) {		
+	if ((cpu.pmode) && curSelectorName[0]) {		
 		char out1[200], out2[200];
 		GetDescriptorInfo(curSelectorName,out1,out2);
 		mvwprintw(dbg.win_reg,2,28,out1);
@@ -675,7 +675,7 @@ static void DrawCode(void)
 		}
 
 
-		Bitu drawsize=size=DasmI386(dline, start, disEIP, (cpu.state & STATE_USE32)>0);
+		Bitu drawsize=size=DasmI386(dline, start, disEIP, cpu.code.big);
 		bool toolarge = false;
 		mvwprintw(dbg.win_code,i,0,"%04X:%04X  ",codeViewData.useCS,disEIP);
 		
@@ -1123,7 +1123,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 //		if (address<(XMS_GetSize()+1)*1024*1024) {
 		static char outmask[] = "%s:[%04X]=%02X";
 		
-		if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
+		if (cpu.pmode) outmask[6] = '8';
 			switch (DasmLastOperandSize()) {
 			case 8 : {	Bit8u val = mem_readb(address);
 						outmask[12] = '2';
@@ -1154,7 +1154,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 			};
 		};
 		// show descriptor info, if available
-		if ((cpu.state & STATE_PROTECTED) && saveSelector) {
+		if ((cpu.pmode) && saveSelector) {
 			strcpy(curSelectorName,prefix);
 		};
 	};
