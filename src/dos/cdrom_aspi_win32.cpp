@@ -18,6 +18,8 @@
 
 #if defined (WIN32)
 
+#include <ctype.h>
+
 #include "cdrom.h"
 #include "scsidefs.h"			// Aspi stuff
 #include "dosbox.h"
