@@ -135,14 +135,14 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 	return true;	
 }
 
-bool DOS_GetCurrentDir(Bit8u drive,Bit8u * buffer) {
+bool DOS_GetCurrentDir(Bit8u drive,char * buffer) {
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
 	if ((drive>DOS_DRIVES) || (!Drives[drive])) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
-	strcpy((char *) buffer,Drives[drive]->curdir);
+	strcpy(buffer,Drives[drive]->curdir);
 	return true;
 }
 
@@ -267,7 +267,7 @@ bool DOS_CloseFile(Bit16u entry) {
 	};
 //TODO Figure this out with devices :)	
 
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	Bit8u * table=Real2Host(psp->file_table);
 	table[entry]=0xFF;
 	/* Devices won't allow themselves to be closed or killed */
@@ -280,7 +280,7 @@ bool DOS_CloseFile(Bit16u entry) {
 
 bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
 	/* Check for a free file handle */
 	Bit8u handle=DOS_FILES;Bit8u i;
@@ -318,7 +318,7 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	Bit8u handle=DOS_FindDevice((char *)name);
 	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
 	if (handle!=255) {
@@ -379,7 +379,7 @@ bool DOS_GetFileAttr(char * name,Bit16u * attr) {
 	}
 }
 
-bool DOS_Canonicalize(char * name,Bit8u * big) {
+bool DOS_Canonicalize(char * name,char * big) {
 //TODO Add Better support for devices and shit but will it be needed i doubt it :) 
 	Bit8u drive;
 	char fullname[DOS_PATHLENGTH];
@@ -387,7 +387,7 @@ bool DOS_Canonicalize(char * name,Bit8u * big) {
 	big[0]=drive+'A';
 	big[1]=':';
 	big[2]='\\';
-	strcpy((char *)&big[3],fullname);
+	strcpy(&big[3],fullname);
 	return true;
 };	
 
@@ -411,7 +411,7 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	Bit8u * table=Real2Host(psp->file_table);
 	*newentry=0xff;
 	for (Bit16u i=0;i<psp->max_files;i++) {
@@ -427,6 +427,32 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 	table[*newentry]=handle;
 	return true;
 };
+
+bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
+	Bit8u orig=RealHandle(entry);
+	if (orig>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[orig]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	Bit8u newone=RealHandle(newentry);
+	if (newone>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (Files[newone]) {
+		DOS_CloseFile(newentry);
+		return false;
+	};
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
+	Bit8u * table=Real2Host(psp->file_table);
+	table[newentry]=(Bit8u)entry;
+	return true;
+};
+
 
 
 bool DOS_CreateTempFile(char * name,Bit16u * entry) {
@@ -448,6 +474,7 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 	} while (!DOS_CreateFile(name,0,entry));
 	return true;
 }
+
 #if 1
 static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
 	char naam[15];
