@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.49 2003-11-08 13:41:04 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.50 2003-12-18 09:30:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -81,7 +81,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
 		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-		case '\'':	case '+':
+		case '\'':	case '+':	case '^':
 			upname[w++]=c;
 			break;
 		default:
