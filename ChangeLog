@@ -18,7 +18,10 @@
   - support for writing wavefiles
   - added directory cache and longfilename support (longfilenames will be mangled)
   - mouse fixes
-  
+  - date and time updates at z:\
+  - added (partial) direct disk support. (works probably only if directory is mounted under a:\)
+  - added support for env variables. (must be set before starting dosbox: DOSBOX_SECTION_PROPERTY=value
+    like DOSBOX_SBLASTER_IRQ=1)
 0.57
   - added support for command /C
   - fixed all fcb-write functions
