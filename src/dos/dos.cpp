@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.56 2003-10-14 08:38:35 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.57 2003-10-14 23:33:33 harekiet Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -936,7 +936,6 @@ void DOS_ShutDown(Section* sec)
 
 
 void DOS_Init(Section* sec) {
-    MSG_Add("DOS_CONFIGFILE_HELP","Disabling or enabling DPMI makes a huge difference for protected mode games. Try both!\n");
 	call_20=CALLBACK_Allocate();
 	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET);
 	RealSetVec(0x20,CALLBACK_RealPointer(call_20));

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.35 2003-09-30 19:12:44 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.36 2003-10-14 23:34:28 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -212,7 +212,6 @@ void DOS_Shell::SyntaxError(void) {
 
 
 void AUTOEXEC_Init(Section * sec) {
-    MSG_Add("AUTOEXEC_CONFIGFILE_HELP","Add here the lines you want to execute on startup.\n");
 	/* Register a virtual AUOEXEC.BAT file */
 	std::string line;
 	Section_line * section=static_cast<Section_line *>(sec);

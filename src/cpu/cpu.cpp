@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.34 2003-09-30 13:48:20 finsterr Exp $ */
+/* $Id: cpu.cpp,v 1.35 2003-10-14 23:31:51 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -962,7 +962,5 @@ void CPU_Init(Section* sec) {
 	if (!CPU_CycleMax) CPU_CycleMax=1500;
 	CPU_CycleLeft=0;
 	GFX_SetTitle(CPU_CycleMax,-1);
-	MSG_Add("CPU_CONFIGFILE_HELP","The amount of cycles to execute each loop. Lowering this setting will slowdown dosbox\n");
-
 }
 
