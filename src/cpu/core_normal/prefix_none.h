@@ -557,6 +557,11 @@
 		Push_16(reg_flags);
 		break;
 	CASE_W(0x9d)												/* POPF */
+		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
+			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
+			CPU_Exception(13,0);
+			goto decode_start;
+		}
 		SETFLAGSw(Pop_16());
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
@@ -564,7 +569,7 @@
 			goto decode_end;
 		}
 #endif
-#ifdef CPU_PIC_CHECK
+#if	CPU_PIC_CHECK
 		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif
 		break;
@@ -787,7 +792,7 @@
 		{
 			LEAVECORE;
 			CPU_IRET(false);
-#ifdef CPU_PIC_CHECK
+#if CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
 #if CPU_TRAP_CHECK
@@ -1053,11 +1058,21 @@
 		SETFLAGBIT(CF,true);
 		break;
 	CASE_B(0xfa)												/* CLI */
+		if (cpu.pmode && (GETFLAG_IOPL<cpu.cpl)) {
+			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
+			CPU_Exception(13,0);
+			goto decode_start;
+		}
 		SETFLAGBIT(IF,false);
 		break;
 	CASE_B(0xfb)												/* STI */
+		if (cpu.pmode && !GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) {
+			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
+			CPU_Exception(13,0);
+			goto decode_start;
+		}
 		SETFLAGBIT(IF,true);
-#ifdef CPU_PIC_CHECK
+#if CPU_PIC_CHECK
 		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif
 		break;

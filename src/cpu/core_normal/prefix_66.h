@@ -355,6 +355,11 @@
 		Push_32(reg_flags);
 		break;
 	CASE_D(0x9d)												/* POPFD */
+		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
+			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
+			CPU_Exception(13,0);
+			goto decode_start;
+		}
 		SETFLAGSd(Pop_32())
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
@@ -362,7 +367,7 @@
 			goto decode_end;
 		}
 #endif
-#ifdef CPU_PIC_CHECK
+#if CPU_PIC_CHECK
 		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif
 
@@ -499,7 +504,7 @@
 				return CBRET_NONE;
 			}
 #endif
-#ifdef CPU_PIC_CHECK
+#if CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
 //TODO TF check
