@@ -66,7 +66,8 @@ restart:
 	case 0x16:												/* PUSH SS */		
 		Push_16(SegValue(ss));break;
 	case 0x17:												/* POP SS */		
-		SegSet16(ss,Pop_16());break;
+		SegSet16(ss,Pop_16());
+		goto restart;
 	case 0x18:												/* SBB Eb,Gb */
 		RMEbGb(SBBB);break;
 	case 0x19:												/* SBB Ew,Gw */
@@ -538,7 +539,7 @@ restart:
 				case 0x28:					/* MOV Ew,GS */
 					val=SegValue(gs);break;
 				default:
-				        val=0;
+					val=0;
 					E_Exit("CPU:8c:Illegal RM Byte");
 				}
 				if (rm >= 0xc0 ) {GetEArw;*earw=val;}
@@ -566,7 +567,9 @@ restart:
 					E_Exit("CPU:Illegal MOV CS Call");
 					break;
 				case 0x10:					/* MOV SS,Ew */
-					SegSet16(ss,val);break;
+					SegSet16(ss,val);
+					goto restart;
+					break;
 				case 0x18:					/* MOV DS,Ew */
 					SegSet16(ds,val);break;
 				case 0x20:					/* MOV FS,Ew */
@@ -1029,11 +1032,11 @@ restart:
 			E_Exit("CPU:F1:Not Handled");
 			break;
 		case 0xf2:												/* REPNZ */
-			count-=Repeat_Normal(false,false,count);
-			break;
+			Repeat_Normal(false,false);
+			continue;
 		case 0xf3:												/* REPZ */
-			count-=Repeat_Normal(true,false,count);
-			break;
+			Repeat_Normal(true,false);
+			continue;
 		case 0xf4:												/* HLT */
 			break;
 		case 0xf5:												/* CMC */
@@ -1323,6 +1326,5 @@ restart:
 		default:	
 			NOTDONE;
 			break;
-
 	}
-
+	
