@@ -237,6 +237,10 @@ static void GUI_ShutDown(Section * sec) {
 
 }
 
+static void KillSwitch(void){
+	throw 1;
+}
+
 static void GUI_StartUp(Section * sec) {
     MSG_Add("SDL_CONFIGFILE_HELP","SDL related options.\n");
 	sec->AddDestroyFunction(&GUI_ShutDown);
@@ -260,6 +264,7 @@ static void GUI_StartUp(Section * sec) {
 	SDL_EnableKeyRepeat(250,30);
 	SDL_EnableUNICODE(1);
 /* Get some Keybinds */
+	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
 	KEYBOARD_AddEvent(KBD_f10,KBD_MOD_CTRL,CaptureMouse);
 	KEYBOARD_AddEvent(KBD_enter,KBD_MOD_ALT,SwitchFullScreen);
 }
