@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.30 2004-03-14 13:39:45 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.31 2004-03-31 14:42:08 harekiet Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -288,7 +288,7 @@ static Bitu INT15_Handler(void) {
 			reg_sp+=6;			//Clear stack of interrupt frame
 			CPU_SetFlags(0,FMASK_ALL);
 			reg_ax=0;
-			CPU_JMP(false,0x30,reg_cx);
+			CPU_JMP(false,0x30,reg_cx,0);
 		}
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
