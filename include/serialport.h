@@ -133,3 +133,4 @@ private:
 CSerial *getComport(Bitu portnum);
 
 #endif
+
