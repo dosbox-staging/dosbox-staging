@@ -1,5 +1,6 @@
 #define INLINE __forceinline
 
-#define VERSION "0.50"
+#define VERSION "0.55"
 
-/* Euhm */
+#define GCC_ATTRIBUTE(x) /* attribute not supported */
+
