@@ -84,6 +84,11 @@
 
 #define BIOS_KEYBOARD_FLAGS3            0x496
 #define BIOS_KEYBOARD_LEDS              0x497
+
+#define BIOS_WAIT_FLAG_POINTER          0x498
+#define BIOS_WAIT_FLAG_COUNT	        0x49c		
+#define BIOS_WAIT_FLAG_ACTIVE			0x4a0
+
 #define BIOS_PRINT_SCREEN_FLAG          0x500
 
 #define BIOS_VIDEO_SAVEPTR              0x4a8
