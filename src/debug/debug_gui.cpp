@@ -122,6 +122,10 @@ void DBGUI_StartUp(void) {
     noecho();       /* don't echo input */
 	nodelay(dbg.win_main,true);
 	keypad(dbg.win_main,true);
+    #ifndef WIN32
+    resizeterm(50,80);
+    touchwin(dbg.win_main);
+    #endif
 	cycle_count=0;
 	MakePairs();
 	MakeSubWindows();

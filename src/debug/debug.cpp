@@ -34,7 +34,7 @@
 #include "mixer.h"
 #include "debug_inc.h"
 #include "timer.h"
-#include "..\shell\shell_inc.h"
+#include "../shell/shell_inc.h"
 
 #ifdef WIN32
 void WIN32_Console();
@@ -1048,6 +1048,9 @@ void DEBUG_SetupConsole(void)
 {
 	#ifdef WIN32
 	WIN32_Console();
+    #else
+    printf("\e[8;50;80t"); //resize terminal
+    fflush(NULL);
 	#endif	
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;

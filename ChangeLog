@@ -1,3 +1,9 @@
+  - added support for command /C
+  - fixed all fcb-write functions
+  - fixed fcb-parseline
+  - added debugger under linux/freebsd 
+
+
 0.56
   - added support for a configclass/configfile
   - added support for writing out the configclass into a configfile
