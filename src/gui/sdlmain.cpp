@@ -559,8 +559,9 @@ void GFX_ShowMsg(char * format,...) {
 	va_list msg;
 	va_start(msg,format);
 	vsprintf(buf,format,msg);
+        strcat(buf,"\n");
 	va_end(msg);
-	printf(buf);
+	printf(buf);       
 };
 
 int main(int argc, char* argv[]) {
