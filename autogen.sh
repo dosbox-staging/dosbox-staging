@@ -10,4 +10,5 @@ autoheader
 automake --gnits --include-deps --add-missing --copy 
 autoconf
 
-echo "Now you are ready to run ./configure, afterwards check config.h for extra build settings"
+echo "Now you are ready to run ./configure."
+echo "You can also run  ./configure --help for extra features to enable/disable."
