@@ -63,9 +63,9 @@ public:
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
 		bool		isDir;
-		Bit16u		nextEntry;
-		Bit16u		shortNr;
-		Bit16u		compareCount;
+		Bitu		nextEntry;
+		Bitu		shortNr;
+		Bitu		compareCount;
 		// contents
 		std::vector<CFileInfo*>	fileList;
 		std::vector<CFileInfo*>	longNameList;
@@ -74,6 +74,7 @@ public:
 
 private:
 
+	bool		RemoveTrailingDot	(char* shortname);
 	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);

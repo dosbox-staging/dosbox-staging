@@ -279,8 +279,23 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 	return foundNr+1;
 };
 
+bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname)
+// remove trailing '.' if no extension is available (Linux compatibility)
+{
+	Bitu len = strlen(shortname);
+	if (len && (shortname[len-1]=='.')) {
+		if (len==1) return false;
+		if ((len==2) && (shortname[0]=='.')) return false;
+		shortname[len-1] = 0;	
+		return true;
+	}	
+	return false;
+};
+
 Bit16s DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 {
+	// Remove dot, if no extension...
+	RemoveTrailingDot(shortName);
 	// Search long name and return array number of element
 	Bit16s low	= 0;
 	Bit16s high = curDir->fileList.size()-1;
@@ -381,6 +396,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 	} else {
 		strcpy(info->shortname,tmpName);
 	}
+	RemoveTrailingDot(info->shortname);
 };
 
 DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char* expandedPath)
