@@ -398,5 +398,4 @@ void INT10_SetVideoMode(Bit8u mode) {
 	INT10_SetActivePage(0);
 	/* Set some interrupt vectors */
 	RealSetVec(0x43,int10_romarea.font_8_first);
-	RealSetVec(0x1F,int10_romarea.font_8_second);
 };
