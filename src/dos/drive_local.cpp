@@ -120,10 +120,13 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	
 	Bit8u sAttr;
 	dta.GetSearchParams(sAttr,tempDir);
-	if (sAttr & DOS_ATTR_VOLUME) {
-		// Get Volume Label
-		dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
-		return true;
+	if ((sAttr & DOS_ATTR_VOLUME) && (*_dir==0)) {
+		// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir
+		if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
+			// Get Volume Label
+			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			return true;
+		}
 	}
 	return FindNext(dta);
 }
