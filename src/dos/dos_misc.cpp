@@ -64,6 +64,6 @@ void DOS_SetupMisc(void) {
 	/* Setup the dos network interrupt */
 	call_int2a=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET);
-	RealSetVec(0x2A<<2,CALLBACK_RealPointer(call_int2a));
+	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a));
 };
 
