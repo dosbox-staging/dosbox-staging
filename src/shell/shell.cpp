@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.53 2004-11-13 12:19:43 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.54 2005-01-14 19:38:19 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -371,11 +371,17 @@ void SHELL_Init() {
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
 
 	/* Now call up the shell for the first time */
-	Bit16u psp_seg=DOS_GetMemory(16+1)+1;
+	Bit16u psp_seg=DOS_GetMemory(16+3)+1;
 	Bit16u env_seg=DOS_GetMemory(1+(4096/16))+1;
 	Bit16u stack_seg=DOS_GetMemory(2048/16);
 	SegSet16(ss,stack_seg);
 	reg_sp=2046;
+
+	/* Set up int 24 and psp (Telarium games) */
+	real_writeb(psp_seg+16+1,0,0xea);		/* far jmp */
+	real_writed(psp_seg+16+1,1,real_readd(0,0x24*4));
+	real_writed(0,0x24*4,((Bit32u)psp_seg<<16) | ((16+1)<<4));
+
 	/* Setup MCB and the environment */
 	DOS_MCB envmcb((Bit16u)(env_seg-1));
 	envmcb.SetPSPSeg(psp_seg);
