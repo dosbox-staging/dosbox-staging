@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.38 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.39 2004-02-03 08:35:29 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -294,6 +294,7 @@ void SHELL_Init() {
 	   "This version runs some protected mode games!\n"
 	   "For supported shell commands type: [33mHELP[0m\n"
 	   "For a short introduction type: [33mINTRO[0m\n\n"
+	   "If you want more speed, try [31mctrl-F8[0m and [31mctrl-F12[0m.\n"	
 	   "For more information read the [31mREADME[0m file in DOSBox directory.\n"
 	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
 	);
