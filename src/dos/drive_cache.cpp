@@ -412,7 +412,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name)
 	// Read and copy file stats
 	char buffer[CROSS_LEN];
 	strcpy(buffer,dirPath);
-	strcat(buffer,info->fullname);
+	strcat(buffer,info->orgname);
 	stat  (buffer,&status);
 	info->isDir	= (S_ISDIR(status.st_mode)>0);
 	// Check for long filenames...

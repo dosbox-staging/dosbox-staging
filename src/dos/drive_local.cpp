@@ -225,11 +225,13 @@ bool localDrive::Rename(char * oldname,char * newname) {
 	strcpy(newold,basedir);
 	strcat(newold,oldname);
 	CROSS_FILENAME(newold);
+	dirCache.ExpandName(newold);
+	
 	char newnew[CROSS_LEN];
 	strcpy(newnew,basedir);
 	strcat(newnew,newname);
 	CROSS_FILENAME(newnew);
-	int temp=rename(dirCache.GetExpandName(newold),dirCache.GetExpandName(newnew));
+	int temp=rename(newold,dirCache.GetExpandName(newnew));
 	if (temp==0) dirCache.CacheOut(newnew);
 	return (temp==0);
 
