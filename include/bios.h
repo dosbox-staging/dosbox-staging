@@ -114,6 +114,7 @@ private:
 };
 
 
+void BIOS_ZeroExtendedSize(void);
 void char_out(Bit8u chr,Bit32u att,Bit8u page);
 void INT10_StartUp(void);
 void INT16_StartUp(void);
