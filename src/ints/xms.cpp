@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.30 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.31 2004-01-14 20:54:41 finsterr Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +52,8 @@
 #define	XMS_RESIZE_EXTENDED_MEMORY_BLOCK	0x0f
 #define	XMS_ALLOCATE_UMB					0x10
 #define	XMS_DEALLOCATE_UMB					0x11
+#define XMS_QUERY_ANY_FREE_MEMORY			0x88
+#define XMS_ALLOCATE_ANY_MEMORY				0x89
 
 #define	HIGH_MEMORY_NOT_EXIST				0x90
 #define	HIGH_MEMORY_IN_USE					0x91
@@ -282,6 +284,9 @@ Bitu XMS_Handler(void) {
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
 		break;
+	case XMS_ALLOCATE_ANY_MEMORY:								/* 89 */
+		reg_edx &= 0xffff;
+		// fall through
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
 		Bit16u handle = 0;
@@ -326,7 +331,12 @@ Bitu XMS_Handler(void) {
 	case XMS_DEALLOCATE_UMB:									/* 11 */
 		LOG(LOG_MISC,LOG_ERROR)("XMS:Unhandled call %2X",reg_ah);
 		break;
-
+	case XMS_QUERY_ANY_FREE_MEMORY:								/* 88 */
+		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
+        reg_eax &= 0xffff;
+        reg_edx &= 0xffff;
+        reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
+		break;
 	}
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
