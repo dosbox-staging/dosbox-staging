@@ -252,7 +252,7 @@ l_M_Ed:
 		break;
 	/* Special cases */
 	case L_DOUBLE:
-		inst.entry=inst.start_prefix^0x100;
+		inst.entry|=0x100;
 		goto restartopcode;
 	case L_PRESEG:
 		inst.prefix|=PREFIX_SEG;
@@ -267,7 +267,7 @@ l_M_Ed:
 		inst.repz=true;
 		goto restartopcode;
 	case L_PREOP:
-		inst.entry^=0x200;
+		inst.entry=inst.start_entry ^ 0x200;
 		goto restartopcode;
 	case L_PREADD:
 		inst.prefix^=PREFIX_ADDR;
