@@ -37,6 +37,8 @@ static SHELL_Cmd cmd_list[]={
 	"IF",		0,			&DOS_Shell::CMD_IF,			"Performs conditional processing in batch programs.",
 	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"Jump to a labeled line in a batch script.",
 	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"Display the contents of a text-file.",
+	"REM",		0,			&DOS_Shell::CMD_REM,		"Add comments in a batch file.",
+	
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
 	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"Make Directory",
@@ -377,5 +379,5 @@ nextfile:
 	if (*args) goto nextfile;
 }
 
-
-       
+void DOS_Shell::CMD_REM(char * args) {
+}
