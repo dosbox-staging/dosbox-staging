@@ -244,6 +244,8 @@ static void InitSystems(void) {
 
 void DOSBOX_Init(int argc, char* argv[]) {
 /* Find the base directory */
+	SHELL_AddAutoexec("SET PATH=Z:\\");
+	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
     strcpy(dosbox_basedir,argv[0]);
 	char * last=strrchr(dosbox_basedir,CROSS_FILESPLIT); //if windowsversion fails: 
     if (!last){     
@@ -255,7 +257,6 @@ void DOSBOX_Init(int argc, char* argv[]) {
     } else {
 	*++last=0;
     }
-
 	/* Parse the command line with a setup function */
 	int argl=1;
 	if (argc>1) {
@@ -302,7 +303,5 @@ void DOSBOX_Init(int argc, char* argv[]) {
 
 
 void DOSBOX_StartUp(void) {
-	SHELL_AddAutoexec("SET PATH=Z:\\");
-	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
 	SHELL_Init();
 };
