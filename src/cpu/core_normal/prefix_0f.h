@@ -154,7 +154,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm >= 0xc0 ) {
 				GetEArd;
-				if (!CPU_SET_CRX(which,*eard)) goto decode_end;
+				CPU_SET_CRX(which,*eard);
 			} else {
 				GetEAa;
 				LOG(LOG_CPU,LOG_ERROR)("MOV CR%,XXX with non-register",which);
@@ -174,37 +174,37 @@
 		}
 		break;
 	CASE_0F_W(0x80)												/* JO */
-		JumpSIw(TFLG_O);break;
+		JumpCond16_w(TFLG_O);break;
 	CASE_0F_W(0x81)												/* JNO */
-		JumpSIw(TFLG_NO);break;
+		JumpCond16_w(TFLG_NO);break;
 	CASE_0F_W(0x82)												/* JB */
-		JumpSIw(TFLG_B);break;
+		JumpCond16_w(TFLG_B);break;
 	CASE_0F_W(0x83)												/* JNB */
-		JumpSIw(TFLG_NB);break;
+		JumpCond16_w(TFLG_NB);break;
 	CASE_0F_W(0x84)												/* JZ */
-		JumpSIw(TFLG_Z);break;
+		JumpCond16_w(TFLG_Z);break;
 	CASE_0F_W(0x85)												/* JNZ */
-		JumpSIw(TFLG_NZ);break;
+		JumpCond16_w(TFLG_NZ);break;
 	CASE_0F_W(0x86)												/* JBE */
-		JumpSIw(TFLG_BE);break;
+		JumpCond16_w(TFLG_BE);break;
 	CASE_0F_W(0x87)												/* JNBE */
-		JumpSIw(TFLG_NBE);break;
+		JumpCond16_w(TFLG_NBE);break;
 	CASE_0F_W(0x88)												/* JS */
-		JumpSIw(TFLG_S);break;
+		JumpCond16_w(TFLG_S);break;
 	CASE_0F_W(0x89)												/* JNS */
-		JumpSIw(TFLG_NS);break;
+		JumpCond16_w(TFLG_NS);break;
 	CASE_0F_W(0x8a)												/* JP */
-		JumpSIw(TFLG_P);break;
+		JumpCond16_w(TFLG_P);break;
 	CASE_0F_W(0x8b)												/* JNP */
-		JumpSIw(TFLG_NP);break;
+		JumpCond16_w(TFLG_NP);break;
 	CASE_0F_W(0x8c)												/* JL */
-		JumpSIw(TFLG_L);break;
+		JumpCond16_w(TFLG_L);break;
 	CASE_0F_W(0x8d)												/* JNL */
-		JumpSIw(TFLG_NL);break;
+		JumpCond16_w(TFLG_NL);break;
 	CASE_0F_W(0x8e)												/* JLE */
-		JumpSIw(TFLG_LE);break;
+		JumpCond16_w(TFLG_LE);break;
 	CASE_0F_W(0x8f)												/* JNLE */
-		JumpSIw(TFLG_NLE);break;
+		JumpCond16_w(TFLG_NLE);break;
 	CASE_0F_B(0x90)												/* SETO */
 		SETcc(TFLG_O);break;
 	CASE_0F_B(0x91)												/* SETNO */

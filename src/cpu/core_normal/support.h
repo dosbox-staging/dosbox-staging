@@ -37,9 +37,11 @@ static INLINE void ADDIPd(Bits add) {
 	LOADIP;
 }
 
-
 static INLINE void ADDIPFAST(Bits blah) {
 	core.ip_lookup+=blah;
+//	SAVEIP;
+//	reg_eip=(reg_eip+blah);
+//	LOADIP;
 }
 
 #define EXCEPTION(blah)										\
@@ -112,14 +114,22 @@ static INLINE Bit32u Pop_32() {
 
 #endif
 
-#define JumpSIb(blah) 										\
+//TODO Could probably make all byte operands fast?
+#define JumpCond16_b(blah) 										\
 	if (blah) {												\
-		ADDIPFAST(Fetchbs());								\
+		ADDIPw(Fetchbs());								\
 	} else {												\
 		ADDIPFAST(1);										\
 	}					
 
-#define JumpSIw(blah) 										\
+#define JumpCond32_b(blah) 										\
+	if (blah) {												\
+		ADDIPd(Fetchbs());								\
+	} else {												\
+		ADDIPFAST(1);										\
+	}					
+
+#define JumpCond16_w(blah) 										\
 	if (blah) {												\
 		ADDIPw(Fetchws());									\
 	} else {												\
@@ -127,7 +137,7 @@ static INLINE Bit32u Pop_32() {
 	}						
 
 
-#define JumpSId(blah) 										\
+#define JumpCond32_d(blah) 										\
 	if (blah) {												\
 		ADDIPd(Fetchds());									\
 	} else {												\

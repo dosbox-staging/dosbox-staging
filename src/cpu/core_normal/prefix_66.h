@@ -190,6 +190,38 @@
 	CASE_D(0x6b)												/* IMUL Gd,Ed,Ib */
 		RMGdEdOp3(DIMULD,Fetchbs());
 		break;
+	CASE_D(0x70)												/* JO */
+		JumpCond32_b(TFLG_O);break;
+	CASE_D(0x71)												/* JNO */
+		JumpCond32_b(TFLG_NO);break;
+	CASE_D(0x72)												/* JB */
+		JumpCond32_b(TFLG_B);break;
+	CASE_D(0x73)												/* JNB */
+		JumpCond32_b(TFLG_NB);break;
+	CASE_D(0x74)												/* JZ */
+  		JumpCond32_b(TFLG_Z);break;
+	CASE_D(0x75)												/* JNZ */
+		JumpCond32_b(TFLG_NZ);break;
+	CASE_D(0x76)												/* JBE */
+		JumpCond32_b(TFLG_BE);break;
+	CASE_D(0x77)												/* JNBE */
+		JumpCond32_b(TFLG_NBE);break;
+	CASE_D(0x78)												/* JS */
+		JumpCond32_b(TFLG_S);break;
+	CASE_D(0x79)												/* JNS */
+		JumpCond32_b(TFLG_NS);break;
+	CASE_D(0x7a)												/* JP */
+		JumpCond32_b(TFLG_P);break;
+	CASE_D(0x7b)												/* JNP */
+		JumpCond32_b(TFLG_NP);break;
+	CASE_D(0x7c)												/* JL */
+		JumpCond32_b(TFLG_L);break;
+	CASE_D(0x7d)												/* JNL */
+		JumpCond32_b(TFLG_NL);break;
+	CASE_D(0x7e)												/* JLE */
+		JumpCond32_b(TFLG_LE);break;
+	CASE_D(0x7f)												/* JNLE */
+		JumpCond32_b(TFLG_NLE);break;
 	CASE_D(0x81)												/* Grpl Ed,Id */
 		{
 			GetRM;Bitu which=(rm>>3)&7;

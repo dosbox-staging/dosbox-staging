@@ -278,38 +278,38 @@
 		DoString(R_OUTSB);break;
 	CASE_W(0x6f)												/* OUTSW */
 		DoString(R_OUTSW);break;
-	CASE_B(0x70)												/* JO */
-		JumpSIb(TFLG_O);break;
-	CASE_B(0x71)												/* JNO */
-		JumpSIb(TFLG_NO);break;
-	CASE_B(0x72)												/* JB */
-		JumpSIb(TFLG_B);break;
-	CASE_B(0x73)												/* JNB */
-		JumpSIb(TFLG_NB);break;
-	CASE_B(0x74)												/* JZ */
-  		JumpSIb(TFLG_Z);break;
-	CASE_B(0x75)												/* JNZ */
-		JumpSIb(TFLG_NZ);break;
-	CASE_B(0x76)												/* JBE */
-		JumpSIb(TFLG_BE);break;
-	CASE_B(0x77)												/* JNBE */
-		JumpSIb(TFLG_NBE);break;
-	CASE_B(0x78)												/* JS */
-		JumpSIb(TFLG_S);break;
-	CASE_B(0x79)												/* JNS */
-		JumpSIb(TFLG_NS);break;
-	CASE_B(0x7a)												/* JP */
-		JumpSIb(TFLG_P);break;
-	CASE_B(0x7b)												/* JNP */
-		JumpSIb(TFLG_NP);break;
-	CASE_B(0x7c)												/* JL */
-		JumpSIb(TFLG_L);break;
-	CASE_B(0x7d)												/* JNL */
-		JumpSIb(TFLG_NL);break;
-	CASE_B(0x7e)												/* JLE */
-		JumpSIb(TFLG_LE);break;
-	CASE_B(0x7f)												/* JNLE */
-		JumpSIb(TFLG_NLE);break;
+	CASE_W(0x70)												/* JO */
+		JumpCond16_b(TFLG_O);break;
+	CASE_W(0x71)												/* JNO */
+		JumpCond16_b(TFLG_NO);break;
+	CASE_W(0x72)												/* JB */
+		JumpCond16_b(TFLG_B);break;
+	CASE_W(0x73)												/* JNB */
+		JumpCond16_b(TFLG_NB);break;
+	CASE_W(0x74)												/* JZ */
+  		JumpCond16_b(TFLG_Z);break;
+	CASE_W(0x75)												/* JNZ */
+		JumpCond16_b(TFLG_NZ);break;
+	CASE_W(0x76)												/* JBE */
+		JumpCond16_b(TFLG_BE);break;
+	CASE_W(0x77)												/* JNBE */
+		JumpCond16_b(TFLG_NBE);break;
+	CASE_W(0x78)												/* JS */
+		JumpCond16_b(TFLG_S);break;
+	CASE_W(0x79)												/* JNS */
+		JumpCond16_b(TFLG_NS);break;
+	CASE_W(0x7a)												/* JP */
+		JumpCond16_b(TFLG_P);break;
+	CASE_W(0x7b)												/* JNP */
+		JumpCond16_b(TFLG_NP);break;
+	CASE_W(0x7c)												/* JL */
+		JumpCond16_b(TFLG_L);break;
+	CASE_W(0x7d)												/* JNL */
+		JumpCond16_b(TFLG_NL);break;
+	CASE_W(0x7e)												/* JLE */
+		JumpCond16_b(TFLG_LE);break;
+	CASE_W(0x7f)												/* JNLE */
+		JumpCond16_b(TFLG_NLE);break;
 	CASE_B(0x80)												/* Grpl Eb,Ib */
 	CASE_B(0x82)												/* Grpl Eb,Ib Mirror instruction*/
 		{

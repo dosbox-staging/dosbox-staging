@@ -124,37 +124,37 @@
 		}
 		break;
 	CASE_0F_D(0x80)												/* JO */
-		JumpSId(TFLG_O);break;
+		JumpCond32_d(TFLG_O);break;
 	CASE_0F_D(0x81)												/* JNO */
-		JumpSId(TFLG_NO);break;
+		JumpCond32_d(TFLG_NO);break;
 	CASE_0F_D(0x82)												/* JB */
-		JumpSId(TFLG_B);break;
+		JumpCond32_d(TFLG_B);break;
 	CASE_0F_D(0x83)												/* JNB */
-		JumpSId(TFLG_NB);break;
+		JumpCond32_d(TFLG_NB);break;
 	CASE_0F_D(0x84)												/* JZ */
-		JumpSId(TFLG_Z);break;
+		JumpCond32_d(TFLG_Z);break;
 	CASE_0F_D(0x85)												/* JNZ */
-		JumpSId(TFLG_NZ);break;
+		JumpCond32_d(TFLG_NZ);break;
 	CASE_0F_D(0x86)												/* JBE */
-		JumpSId(TFLG_BE);break;
+		JumpCond32_d(TFLG_BE);break;
 	CASE_0F_D(0x87)												/* JNBE */
-		JumpSId(TFLG_NBE);break;
+		JumpCond32_d(TFLG_NBE);break;
 	CASE_0F_D(0x88)												/* JS */
-		JumpSId(TFLG_S);break;
+		JumpCond32_d(TFLG_S);break;
 	CASE_0F_D(0x89)												/* JNS */
-		JumpSId(TFLG_NS);break;
+		JumpCond32_d(TFLG_NS);break;
 	CASE_0F_D(0x8a)												/* JP */
-		JumpSId(TFLG_P);break;
+		JumpCond32_d(TFLG_P);break;
 	CASE_0F_D(0x8b)												/* JNP */
-		JumpSId(TFLG_NP);break;
+		JumpCond32_d(TFLG_NP);break;
 	CASE_0F_D(0x8c)												/* JL */
-		JumpSId(TFLG_L);break;
+		JumpCond32_d(TFLG_L);break;
 	CASE_0F_D(0x8d)												/* JNL */
-		JumpSId(TFLG_NL);break;
+		JumpCond32_d(TFLG_NL);break;
 	CASE_0F_D(0x8e)												/* JLE */
-		JumpSId(TFLG_LE);break;
+		JumpCond32_d(TFLG_LE);break;
 	CASE_0F_D(0x8f)												/* JNLE */
-		JumpSId(TFLG_NLE);break;
+		JumpCond32_d(TFLG_NLE);break;
 	
 	CASE_0F_D(0xa0)												/* PUSH FS */		
 		Push_32(SegValue(fs));break;
