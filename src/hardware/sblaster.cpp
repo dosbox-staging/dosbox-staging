@@ -64,13 +64,9 @@ enum DSP_MODES {
 };
 
 enum DMA_MODES {
-	DMA_NONE,
-	DMA_8_SILENCE,
-	DMA_2_SINGLE,
-	DMA_3_SINGLE,
-	DMA_4_SINGLE,
-	DMA_8_SINGLE,DMA_8_AUTO,
-	DMA_16_SINGLE,DMA_16_AUTO,
+	DSP_DMA_NONE,
+	DSP_DMA_2,DSP_DMA_3,DSP_DMA_4,DSP_DMA_8,
+	DSP_DMA_16,DSP_DMA_16_ALIASED,
 };
 
 enum {
@@ -80,8 +76,10 @@ enum {
 struct SB_INFO {
 	Bit16u freq;
 	struct {
-		bool active,stereo,filtered;
+		bool active,stereo,filtered,sign,autoinit;
+		bool stereoremain;
 		DMA_MODES mode;
+		Bitu previous;
 		Bitu total,left;
 		Bitu rate,rate_mul;
 		Bitu index,add_index;
@@ -90,10 +88,15 @@ struct SB_INFO {
 			Bit8u  b8[DMA_BUFSIZE];
 			Bit16s b16[DMA_BUFSIZE];
 		} buf;
+		Bitu bits;
+		DmaChannel * chan;
+		struct {
+			Bit16s stereo;
+		} remain;
+		
 	} dma;
 	bool speaker;
 	Bit8u time_constant;
-	bool use_time_constant;
 	DSP_MODES mode;
 	SB_TYPES type;
 	OPL_Mode oplmode;
@@ -132,7 +135,7 @@ struct SB_INFO {
 	struct {
 		Bitu base;
 		Bit8u irq;
-		Bit8u dma8;
+		Bit8u dma8,dma16;
 		Bitu rate;
 		Bitu rate_conv;
 	} hw;
@@ -145,6 +148,7 @@ struct SB_INFO {
 			Bit16s m[DMA_BUFSIZE];
 			Bit16s s[DMA_BUFSIZE][2];
 		} buf;
+		
 		Bitu index,add_index;
 	} tmp;
 	struct {
@@ -218,6 +222,7 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	}
 }
 
+
 static INLINE void DSP_FlushData(void) {
 	sb.dsp.out.used=0;
 	sb.dsp.out.pos=0;
@@ -228,17 +233,18 @@ static void DSP_StopDMA(void) {
 	sb.dma.left=0;
 }
 
-static void DMA_Enable(bool enable) {
-	sb.dma.active=enable;
-	if (sb.mode==MODE_DMA_WAIT && enable) {
-		LOG(LOG_SB,LOG_NORMAL)("DMA enabled,starting output");
+static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+	if (event==DMA_MASKED) sb.dma.active=false;
+	if (event==DMA_UNMASKED) sb.dma.active=true;
+	if (sb.mode==MODE_DMA_WAIT && sb.dma.active) {
+		LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output");
 		DSP_ChangeMode(MODE_DMA);
 		CheckDMAEnd();
 		return;
 	}
-	if (sb.mode==MODE_DMA && !enable) {
+	if (sb.mode==MODE_DMA && !sb.dma.active) {
 		DSP_ChangeMode(MODE_DMA_WAIT);
-		LOG(LOG_SB,LOG_NORMAL)("DMA disabled,stopping output");
+		LOG(LOG_SB,LOG_NORMAL)("DMA deactivated,stopping output");
 		return;
 	}
 }
@@ -248,14 +254,14 @@ static void DMA_Enable(bool enable) {
 #define MAX_ADAPTIVE_STEP_SIZE 32767
 #define DC_OFFSET_FADE 254
 
-INLINE Bits Clip(Bits sample) {
+static INLINE Bits Clip(Bits sample) {
 	if (sample>MAX_AUDIO) return MAX_AUDIO;
 	if (sample<MIN_AUDIO) return MIN_AUDIO;
 	return sample;
 }
 
 #if SB_NEW_ADCM
-INLINE Bit16s decode_ADPCM_4_sample(Bit8u adpcm,Bits& reference,Bits& stepsize) {
+static INLINE Bit16s decode_ADPCM_4_sample(Bit8u adpcm,Bits& reference,Bits& stepsize) {
 	static Bits quantize[] = { 230, 230, 230, 230, 307, 409, 512, 614 };
 
 	Bits scale=0;
@@ -276,7 +282,7 @@ INLINE Bit16s decode_ADPCM_4_sample(Bit8u adpcm,Bits& reference,Bits& stepsize) 
 }
 
 #else 
-INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bits& reference,Bits& scale) {
+static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bits& reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x08) {
@@ -290,7 +296,7 @@ INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bits& reference,Bits& scale) {
 
 #endif
 
-INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bits& reference,Bits& scale) {
+static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bits& reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x02) {
@@ -314,10 +320,6 @@ INLINE Bit16s decode_ADPCM_3_sample(Bit8u sample,Bits& reference,Bits& scale) {
 	return (((Bit8s)reference)^0x80)<<8;
 }
 
-
-
-
-
 static void GenerateDMASound(Bitu size) {
 	/* Check some variables */
 	if (!size) return;
@@ -329,131 +331,97 @@ static void GenerateDMASound(Bitu size) {
 #else 
 	if (index<2000) size=sb.dma.left;
 #endif
-	Bitu read,i,ad;	
+	Bitu read=sb.dma.chan->Read(size,sb.dma.buf.b8);
+	sb.dma.left-=read;
+	Bitu skip=0;Bitu i;Bitu rem;Bitu done=0;
+	if (!read) {
+		sb.mode=MODE_DMA_WAIT;
+		return;
+	}
+	if (sb.dma.stereoremain) {
+		sb.dma.stereoremain=false;
+		sb.tmp.buf.m[done++]=sb.dma.remain.stereo; 
+	}
 	switch (sb.dma.mode) {
-	case DMA_2_SINGLE:
-				if (sb.adpcm.reference==0x1000000 && sb.dma.left) {
-			Bit8u ref;
-			read=DMA_8_Read(sb.hw.dma8,&ref,1);
-			if (!read) { sb.mode=MODE_NONE;return; }
-			sb.dma.left--;
+	case DSP_DMA_2:
+		if (sb.adpcm.reference==0x1000000) {
 			sb.adpcm.reference=0;
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
-		}
-		if (sb.dma.left<size) size=sb.dma.left;
-		read=DMA_8_Read(sb.hw.dma8,sb.dma.buf.b8,size);
-		sb.dma.left-=read;
-		if (sb.dma.left==0 || !read) {
-			sb.mode=MODE_NONE;
-			SB_RaiseIRQ(SB_IRQ_8);
+			skip++;read--;
 		}
 		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[i*4+0]=decode_ADPCM_2_sample(sb.dma.buf.b8[i] >> 6,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*4+1]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >>4) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*4+2]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >>2)& 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*4+3]=decode_ADPCM_2_sample(sb.dma.buf.b8[i] & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 6) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 4) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 2) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[skip+i] >> 0) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
-		read*=4;
 		break;
-	case DMA_3_SINGLE:
-		if (sb.adpcm.reference==0x1000000 && sb.dma.left) {
-			Bit8u ref;
-			read=DMA_8_Read(sb.hw.dma8,&ref,1);
-			if (!read) { sb.mode=MODE_NONE;return;}
-			sb.dma.left--;
+	case DSP_DMA_3:
+		if (sb.adpcm.reference==0x1000000) {
 			sb.adpcm.reference=0;
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
+			skip++;read--;
 		}
-		if (sb.dma.left<size) size=sb.dma.left;
-		read=DMA_8_Read(sb.hw.dma8,sb.dma.buf.b8,size);
-		sb.dma.left-=read;
-		if (sb.dma.left==0 || !read) {
-			sb.mode=MODE_NONE;
-			SB_RaiseIRQ(SB_IRQ_8);
-		}
-		ad=read%3;read/=3;
+		rem=read%3;read/=3;
 		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[i*8+0]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3])&7,     sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+1]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3]>>3)&7,  sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+2]=decode_ADPCM_3_sample(((sb.dma.buf.b8[i*3]  >>6)&3)&((sb.dma.buf.b8[i*3+1]&1)<<2),sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+3]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3+1]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+4]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3+1]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+5]=decode_ADPCM_3_sample(((sb.dma.buf.b8[i*3+1]>>7)&1)&((sb.dma.buf.b8[i*3+2]&3)<<1),sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+6]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3+2]>>2)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*8+7]=decode_ADPCM_3_sample((sb.dma.buf.b8[i*3+2]>>5)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3]     )&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3]  >>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+i*3]  >>6)&3)&((sb.dma.buf.b8[i*3+1]&1)<<2),sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+1]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+1]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+i*3+1]>>7)&1)&((sb.dma.buf.b8[i*3+2]&3)<<1),sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+2]>>2)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample( (sb.dma.buf.b8[skip+i*3+2]>>5)&7,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
-		read*=8;
-		if (ad) {
-			sb.tmp.buf.m[read]=decode_ADPCM_3_sample((sb.dma.buf.b8[read*3/8])&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[read+1]=decode_ADPCM_3_sample((sb.dma.buf.b8[read*3/8]>>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-			read+=2;
-			if (ad==2) {
-				sb.tmp.buf.m[read]=decode_ADPCM_3_sample(((sb.dma.buf.b8[(read-2)*3/8-1]>>6)&3)&(sb.dma.buf.b8[(read-2)*3/8]&1),     sb.adpcm.reference,sb.adpcm.stepsize);
-				sb.tmp.buf.m[read+1]=decode_ADPCM_3_sample((sb.dma.buf.b8[(read-2)*3/8]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-				sb.tmp.buf.m[read+2]=decode_ADPCM_3_sample((sb.dma.buf.b8[(read-2)*3/8]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
-				read+=3;
+		if (rem) {
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3])&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3]>>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+			if (rem==2) {
+				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample(((sb.dma.buf.b8[skip+read*3+1]>>6)&3)&(sb.dma.buf.b8[read*3/8]&1),     sb.adpcm.reference,sb.adpcm.stepsize);
+				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3+1]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
+				sb.tmp.buf.m[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[skip+read*3+1]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
 			}
 		}
 		break;
-	case DMA_4_SINGLE:
-		if (sb.adpcm.reference==0x1000000 && sb.dma.left) {
-//TODO Check this
-			Bit8u ref;
-			read=DMA_8_Read(sb.hw.dma8,&ref,1);
-			if (!read) { sb.mode=MODE_NONE;return; }		//TODO warnings?
-			sb.dma.left--;
+	case DSP_DMA_4:
+		if (sb.adpcm.reference==0x1000000) {
 			sb.adpcm.reference=0;
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
+			skip++;read--;
 		}
 		if (sb.dma.left<size) size=sb.dma.left;
-		read=DMA_8_Read(sb.hw.dma8,sb.dma.buf.b8,size);
+		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
 		sb.dma.left-=read;
-		if (sb.dma.left==0 || !read) {
-			sb.mode=MODE_NONE;
-			SB_RaiseIRQ(SB_IRQ_8);
-		}
 		for (i=0;i<read;i++) {
-			sb.tmp.buf.m[i*2+0]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] >> 4,sb.adpcm.reference,sb.adpcm.stepsize);
-			sb.tmp.buf.m[i*2+1]=decode_ADPCM_4_sample(sb.dma.buf.b8[i] & 0xf,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i] >> 4,sb.adpcm.reference,sb.adpcm.stepsize);
+			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i]& 0xf,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
 		read*=2;
 		break;
-	case DMA_8_SINGLE:
-		if (sb.dma.left<size) size=sb.dma.left;
-		read=DMA_8_Read(sb.hw.dma8,sb.dma.buf.b8,size);
-		if (read<size)
-			sb.mode=MODE_DMA_WAIT;
-		sb.dma.left-=read;
-		if (sb.dma.left==0) {
-			sb.mode=MODE_NONE;
-			SB_RaiseIRQ(SB_IRQ_8);
-		}
-		for (i=0;i<read;i++) sb.tmp.buf.m[i]=((Bit8s)(sb.dma.buf.b8[i]^0x80))<<8;
+	case DSP_DMA_8:
+		for (i=0;i<read;i++) sb.tmp.buf.m[done++]=((Bit8s)(sb.dma.buf.b8[i]^0x80))<<8;
 		break;
-	case DMA_8_AUTO:
-		read=DMA_8_Read(sb.hw.dma8,sb.dma.buf.b8,size);
-		if (read<size) {
-			sb.mode=MODE_DMA_WAIT;
-		}
-		if (sb.dma.left>read) {
-			sb.dma.left-=read;
-		} else {
-			sb.dma.left=(sb.dma.total+sb.dma.left)-read;			
-			SB_RaiseIRQ(SB_IRQ_8);
-//			LOG_MSG("SB DMA AUTO IRQ Raised");
-		}
-		for (i=0;i<read;i++) sb.tmp.buf.m[i]=((Bit8s)(sb.dma.buf.b8[i]^0x80))<<8;
+	case DSP_DMA_16:
+		for (i=0;i<read;i++) sb.tmp.buf.m[done++]=sb.dma.buf.b16[i];
+		break;
+	case DSP_DMA_16_ALIASED:
+		for (i=0;i<read/2;i++) sb.tmp.buf.m[done++]=sb.dma.buf.b16[i];
 		break;
 	default:
 		LOG_MSG("Unhandled dma mode %d",sb.dma.mode);
 		sb.mode=MODE_NONE;
 		return;
 	}
-	if (!read) return;
+	if (!sb.dma.left) {
+		if (!sb.dma.autoinit) sb.mode=MODE_NONE;
+		else sb.dma.left=sb.dma.total;
+		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
+		else SB_RaiseIRQ(SB_IRQ_8);
+	}
 	Bit16s * stream=&sb.out.buf[sb.out.pos][0];
 	if (!sb.dma.stereo) {
 		Bitu pos;
-		while (read>(pos=sb.tmp.index>>16)) {
+		while (done>(pos=sb.tmp.index>>16)) {
 			(*stream++)=sb.tmp.buf.m[pos];
 			(*stream++)=sb.tmp.buf.m[pos];
 			sb.tmp.index+=sb.tmp.add_index;
@@ -461,18 +429,18 @@ static void GenerateDMASound(Bitu size) {
 		}
 		sb.tmp.index&=0xffff;
 	} else {
-		if (read&1){
-			LOG_MSG("DMA Unaligned");
-		} else {
-			Bitu pos;read>>=1;Bitu index_add=sb.tmp.add_index >> 1;
-			while (read>(pos=sb.tmp.index>>16)) {
-				(*stream++)=sb.tmp.buf.s[pos][1];		//SB default seems to be swapped
-				(*stream++)=sb.tmp.buf.s[pos][0];
-				sb.tmp.index+=index_add;
-				sb.out.pos++;
-			}
-			sb.tmp.index&=0xffff;
+		if (done&1){
+			sb.dma.remain.stereo=sb.tmp.buf.m[done-1];
+			sb.dma.stereoremain=true;
 		}
+		Bitu pos;done>>=1;Bitu index_add=sb.tmp.add_index >> 1;
+		while (done>(pos=sb.tmp.index>>16)) {
+			(*stream++)=sb.tmp.buf.s[pos][0];
+			(*stream++)=sb.tmp.buf.s[pos][1];
+			sb.tmp.index+=index_add;
+			sb.out.pos++;
+		}
+		sb.tmp.index&=0xffff;
 	}
 }
 
@@ -558,53 +526,60 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-static void DSP_StartDMATranfser(DMA_MODES mode) {
-	char * type;
-	/* First fill with current whatever is playing */
+static void DSP_DoDMATranfser(DMA_MODES mode) {
+	Bitu  bits;
 	DSP_ChangeMode(MODE_NONE);
 	sb.dma.left=sb.dma.total;
-	if (sb.use_time_constant) {
-		sb.dma.rate=(1000000 / (256 - sb.time_constant));
-	};
-	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
 	sb.dma.mode=mode;
 	sb.tmp.index=0;
+	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
+	sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
 	switch (mode) {
-	case DMA_8_SILENCE:
-		PIC_AddEvent(&DSP_RaiseIRQEvent,((1000000*sb.dma.left)/sb.dma.rate));
-		sb.dma.mode=DMA_NONE;
-		return;
-	case DMA_8_SINGLE:
-		type="8-Bit Single Cycle";
-		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
-		break;
-	case DMA_8_AUTO:
-		type="8-Bit Auto Init";
-		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
-		break;
-	case DMA_4_SINGLE:
-		type="4-Bit ADPCM Single Cycle";
-		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
-		break;
-	case DMA_3_SINGLE:
-		type="3-Bit ADPCM Single Cycle";
-		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
-		break;
-	case DMA_2_SINGLE:
-		type="2-Bit ADPCM Single Cycle";
-		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
-		break;
+	case DSP_DMA_2:bits=2;break;
+	case DSP_DMA_3:bits=3;break;
+	case DSP_DMA_4:bits=4;break;
+	case DSP_DMA_8:bits=8;break;
+	case DSP_DMA_16_ALIASED:
+	case DSP_DMA_16:
+		bits=16;break;
 	default:
 		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d",mode);
 		return;
 	}
-	//TODO Use the 16-bit dma for 16-bit transfers
 	DSP_ChangeMode(MODE_DMA_WAIT);
 	sb.dma.mode=mode;
-	DMA_SetEnableCallBack(sb.hw.dma8,DMA_Enable);
-	//TODO with stereo divide add_index
-	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s rate %d size %d",type,sb.dma.rate,sb.dma.total);
+	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%d-bits %s %s dma-rate %d size %d",
+		bits,
+		sb.dma.stereo ? "Stereo" : "Mono",
+		sb.dma.autoinit ? "Auto-Init" : "Single-Cycle",
+		sb.dma.rate,sb.dma.total
+	);
 }
+
+static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
+	sb.dma.autoinit=autoinit;
+	if (!autoinit) sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
+	sb.dma.rate=sb.freq;
+	sb.dma.chan=DmaChannels[sb.hw.dma8];
+	DSP_DoDMATranfser(mode);
+}
+
+static void DSP_PrepareDMA_New(DMA_MODES mode,bool autoinit,Bitu length) {
+	sb.dma.total=length;
+	sb.dma.rate=sb.freq * (sb.dma.stereo ? 2 : 1);
+	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
+	sb.dma.autoinit=autoinit;
+	if (mode==DSP_DMA_16) {
+		if (sb.hw.dma16!=0xff) sb.dma.chan=DmaChannels[sb.hw.dma16];
+		else {
+			sb.dma.chan=DmaChannels[sb.hw.dma8];
+			mode=DSP_DMA_16_ALIASED;
+		}
+	} else sb.dma.chan=DmaChannels[sb.hw.dma8];
+	DSP_DoDMATranfser(mode);
+}
+
 
 static void DSP_AddData(Bit8u val) {
 	if (sb.dsp.out.used<DSP_BUFSIZE) {
@@ -628,8 +603,8 @@ static void DSP_Reset(void) {
 	sb.dma.left=0;
 	sb.dma.total=0;
 	sb.dma.stereo=false;
+	sb.dma.autoinit=false;
 	sb.freq=22050;
-	sb.use_time_constant=true;
 	sb.time_constant=45;
 	sb.dac.used=0;
 	sb.dac.last=0;
@@ -653,12 +628,11 @@ static void DSP_DoReset(Bit8u val) {
 	}
 }
 
-
-static void DMA_E2_Enable(bool enable) {
-	if (enable) {
+static void DSP_E2_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+	if (event==DMA_UNMASKED) {
 		Bit8u val=sb.e2.value;
-		DMA_8_Write(sb.hw.dma8,&val,1);
-		DMA_SetEnableCallBack(sb.hw.dma8,0);
+		DmaChannels[sb.hw.dma8]->Register_Callback(0);
+		DmaChannels[sb.hw.dma8]->Write(1,&val);
 	}
 }
 
@@ -678,16 +652,17 @@ static void DSP_DoCommand(void) {
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
-		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-		DSP_StartDMATranfser(DMA_8_SINGLE);
+		DSP_PrepareDMA_Old(DSP_DMA_8,false);
 		break;
 	case 0x90:	/* Auto Init 8-bit DMA High Speed */
 	case 0x1c:	/* Auto Init 8-bit DMA */
-		DSP_StartDMATranfser(DMA_8_AUTO);
+		DSP_PrepareDMA_Old(DSP_DMA_8,true);
 		break;
 	case 0x40:	/* Set Timeconstant */
-		sb.use_time_constant=true;
-		sb.time_constant=sb.dsp.in.data[0];
+		sb.freq=(1000000 / (256 - sb.dsp.in.data[0]));
+		break;
+	case 0x41:	/* Set Output Samplerate */
+		sb.freq=(sb.dsp.in.data[0] << 8)  | sb.dsp.in.data[1];
 		break;
 	case 0x48:	/* Set DMA Block Size */
 		//TODO Maybe check limit for new irq?
@@ -695,27 +670,35 @@ static void DSP_DoCommand(void) {
 		break;
     	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.reference=0x1000000;
-    	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */	
-		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-		DSP_StartDMATranfser(DMA_4_SINGLE);
+    case 0x74:  /* 074h : Single Cycle 4-bit ADPCM */	
+		DSP_PrepareDMA_Old(DSP_DMA_4,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
 		sb.adpcm.reference=0x1000000;
-	case 0x76:	/* 076h : Single Cycle 3-bit(2.6bit) ADPCM */
-		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-		DSP_StartDMATranfser(DMA_3_SINGLE);
+	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
+		DSP_PrepareDMA_Old(DSP_DMA_3,false);
 		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.reference=0x1000000;
-	case 0x16:	/* 016h : Single Cycle 2-bit ADPCM */
-		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-		DSP_StartDMATranfser(DMA_2_SINGLE);
+	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
+		DSP_PrepareDMA_Old(DSP_DMA_2,false);
 		break;
 	case 0x80:	/* Silence DAC */
-		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-		DSP_StartDMATranfser(DMA_8_SILENCE);
+		PIC_AddEvent(&DSP_RaiseIRQEvent,
+			(1000000*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
+		break;
+	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
+    case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:
+		/* Generic 8/16 bit DMA */
+		sb.dma.stereo=(sb.dsp.in.data[0] & 0x20) > 0;
+		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
+		DSP_PrepareDMA_New((sb.dsp.cmd & 0x10) ? DSP_DMA_16 : DSP_DMA_8,
+			(sb.dsp.cmd & 0x4)>0,
+			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8)
+		);
 		break;
 	case 0xd0:	/* Halt 8-bit DMA */
+	case 0xd5:	/* Halt 16-bit DMA */
 		if (sb.dma.left) {
 			DSP_ChangeMode(MODE_DMA_PAUSE);
 #if SB_PIC_EVENTS
@@ -731,11 +714,11 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xd4:	/* Continue DMA */
 		DSP_ChangeMode(MODE_DMA_WAIT);
-		DMA_SetEnableCallBack(sb.hw.dma8,DMA_Enable);
+		sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 		break;
 	case 0xda:	/* Exit Autoinitialize 8-bit */
 		/* Set mode to single transfer so it ends with current block */
-		if (sb.dma.mode==DMA_8_AUTO) sb.dma.mode=DMA_8_SINGLE;
+		sb.dma.autoinit=false;		//Should stop itself
 		break;
 	case 0xe0:	/* DSP Identification - SB2.0+ */
 		DSP_FlushData();
@@ -743,8 +726,18 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xe1:	/* Get DSP Version */
 		DSP_FlushData();
-		DSP_AddData(DSP_MAJOR);
-		DSP_AddData(DSP_MINOR);
+		switch (sb.type) {
+		case SBT_1:
+			DSP_AddData(0x1);DSP_AddData(0x1);break;
+		case SBT_2:
+			DSP_AddData(0x2);DSP_AddData(0x1);break;
+		case SBT_PRO1:
+			DSP_AddData(0x3);DSP_AddData(0x0);break;
+		case SBT_PRO2:
+			DSP_AddData(0x3);DSP_AddData(0x2);break;
+		case SBT_16:
+			DSP_AddData(0x4);DSP_AddData(0x5);break;
+		}
 		break;
 	case 0xe2:	/* Weird DMA identification write routine */
 		{
@@ -753,7 +746,7 @@ static void DSP_DoCommand(void) {
 				if ((sb.dsp.in.data[0] >> i) & 0x01) sb.e2.value += E2_incr_table[sb.e2.count % 4][i];
 			 sb.e2.value += E2_incr_table[sb.e2.count % 4][8];
 			 sb.e2.count++;
-			 DMA_SetEnableCallBack(sb.hw.dma8,DMA_E2_Enable);
+			 DmaChannels[sb.hw.dma8]->Register_Callback(DSP_E2_DMA_CallBack);
 		}
 		break;
 	case 0xe3:	/* DSP Copyright */
@@ -845,6 +838,23 @@ static void MIXER_Write(Bit8u val) {
 		sb.mixer.lin.left= (val & 0xf) << 1;
 		sb.mixer.lin.right=(val >> 4)  << 1;
 		break;
+	case 0x80:		/* IRQ Select */
+		sb.hw.irq=0xff;
+		if (val & 0x1) sb.hw.irq=2;
+		else if (val & 0x2) sb.hw.irq=5;
+		else if (val & 0x4) sb.hw.irq=7;
+		else if (val & 0x8) sb.hw.irq=10;
+		break;
+	case 0x81:		/* DMA Select */
+		sb.hw.dma8=0xff;
+		sb.hw.dma16=0xff;
+		if (val & 0x1) sb.hw.dma8=0;
+		else if (val & 0x2) sb.hw.dma8=1;
+		else if (val & 0x8) sb.hw.dma8=3;
+		if (val & 0x20) sb.hw.dma16=5;
+		else if (val & 0x40) sb.hw.dma16=6;
+		else if (val & 0x80) sb.hw.dma16=7;
+		break;
 	default:
 		LOG(LOG_SB,LOG_WARN)("MIXER:Write %X to unhandled index %X",val,sb.mixer.index);
 	}
@@ -876,6 +886,26 @@ static Bit8u MIXER_Read(void) {
 	case 0x2e:		/* Line-IN Volume (SBPRO) */
 		return	((sb.mixer.lin.left  & 0x1e) >> 1) |
 				((sb.mixer.lin.right & 0x1e) << 3);
+	case 0x80:		/* IRQ Select */
+		switch (sb.hw.irq) {
+		case 2:  return 0x1;
+		case 5:  return 0x2;
+		case 7:  return 0x4;
+		case 10: return 0x8;
+		}
+	case 0x81:		/* DMA Select */
+		ret=0;
+		switch (sb.hw.dma8) {
+		case 0:ret|=0x1;break;
+		case 1:ret|=0x2;break;
+		case 3:ret|=0x8;break;
+		}
+		switch (sb.hw.dma16) {
+		case 5:ret|=0x20;break;
+		case 6:ret|=0x40;break;
+		case 7:ret|=0x80;break;
+		}
+		return ret;
 	case 0x82:
 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
 				(sb.irq.pending_16bit ? 0x2 : 0);
@@ -957,6 +987,12 @@ void SBLASTER_Init(Section* sec) {
 	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	const char * sbtype=section->Get_string("type");
+	sb.hw.base=section->Get_hex("base");
+	sb.hw.irq=section->Get_int("irq");
+	sb.hw.dma8=section->Get_int("dma");
+	sb.hw.dma16=section->Get_int("hdma");
+	sb.hw.rate=section->Get_int("sbrate");
+	sb.hw.rate_conv=(sb.hw.rate<<16)/1000000;
 	if (!strcasecmp(sbtype,"sb1")) sb.type=SBT_1;
 	else if (!strcasecmp(sbtype,"sb2")) sb.type=SBT_2;
 	else if (!strcasecmp(sbtype,"sbpro1")) sb.type=SBT_PRO1;
@@ -990,28 +1026,25 @@ void SBLASTER_Init(Section* sec) {
 	case OPL_none:
 		break;
 	case OPL_cms:
-		CMS_Init(section,oplrate);
+		CMS_Init(section,sb.hw.base,oplrate);
 		break;
 	case OPL_opl2:
 	case OPL_dualopl2:
 	case OPL_opl3:
-		OPL_Init(section,opl_mode,oplrate);
+		OPL_Init(section,sb.hw.base,opl_mode,oplrate);
 		break;
 	}
+	if (sb.type==SBT_NONE) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");
 	MIXER_Enable(sb.chan,false);
 	sb.dsp.state=DSP_S_NORMAL;
-	sb.hw.base=section->Get_hex("base");
-	sb.hw.irq=section->Get_int("irq");
-	sb.hw.dma8=section->Get_int("dma");
-	sb.hw.rate=section->Get_int("sbrate");
-	sb.hw.rate_conv=(sb.hw.rate<<16)/1000000;
 	MIXER_SetFreq(sb.chan,sb.hw.rate);
 	MIXER_SetMode(sb.chan,MIXER_16STEREO);
 
-	for (i=sb.hw.base+4;i<sb.hw.base+0xf;i++) {
-		IO_RegisterReadHandler(i,read_sb,"SB");
-		IO_RegisterWriteHandler(i,write_sb,"SB");
+	for (i=4;i<0xf;i++) {
+		if (i==8 || i==9) continue;
+		IO_RegisterReadHandler(sb.hw.base+i,read_sb,"SB");
+		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,"SB");
 	}
 	PIC_RegisterIRQ(sb.hw.irq,0,"SB");
 	DSP_Reset();
