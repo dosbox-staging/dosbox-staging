@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.50 2003-10-14 20:44:15 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.51 2003-10-14 23:32:32 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -299,7 +299,6 @@ static void KillSwitch(void){
 }
 
 static void GUI_StartUp(Section * sec) {
-    MSG_Add("SDL_CONFIGFILE_HELP","SDL related options.\n");
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
@@ -645,6 +644,14 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);
 		/* Init all the dosbox subsystems */
+		
+		MSG_Add("SDL_CONFIGFILE_HELP",
+			"fullscreen -- Start dosbox directly in fullscreen.\n"
+			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
+			"sensitiviy -- Mouse sensitivity.\n"
+			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
+		);
+
 
 		DOSBOX_Init();
 		std::string config_file;

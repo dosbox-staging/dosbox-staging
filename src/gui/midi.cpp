@@ -148,7 +148,6 @@ bool MIDI_Available(void)  {
 
 void MIDI_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	MSG_Add("MIDI_CONFIGFILE_HELP","Set midi output device,alsa,oss,win32,coreaudio,none\n");
 	const char * dev=section->Get_string("device");
 	const char * conf=section->Get_string("config");
 	/* If device = "default" go for first handler that works */

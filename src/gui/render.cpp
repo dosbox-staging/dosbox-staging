@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.17 2003-10-14 15:27:39 harekiet Exp $ */
+/* $Id: render.cpp,v 1.18 2003-10-14 23:32:32 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -392,7 +392,6 @@ static void DecreaseFrameSkip(void) {
 }
 
 void RENDER_Init(Section * sec) {
-	MSG_Add("RENDER_CONFIGFILE_HELP","Available scalers: none, normal2x, advmame2x\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	render.pal.first=256;
@@ -400,7 +399,7 @@ void RENDER_Init(Section * sec) {
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
 #if (C_SSHOT)
-	render.shot.dir=section->Get_string("snapshots");
+	render.shot.dir=section->Get_string("snapdir");
 	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
 #endif
 	const char * scaler;std::string cline;
