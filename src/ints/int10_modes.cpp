@@ -6,8 +6,10 @@
 #include "int10.h"
 #include "mouse.h"
 
-#define _HALF_CLOCK		0x0001
-#define _LINE_DOUBLE	0x0002
+#define _HALF_CLOCK			0x0001
+#define _LINE_DOUBLE		0x0002
+#define _VGA_LINE_DOUBLE	0x0004
+#define _VGA_PIXEL_DOUBLE	0x0008
 
 #define SEQ_REGS 0x05
 #define GFX_REGS 0x09
@@ -22,11 +24,9 @@ VideoModeBlock ModeList[]={
 { 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_HALF_CLOCK	|_LINE_DOUBLE	},
 { 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_HALF_CLOCK	|_LINE_DOUBLE	},
 { 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,100 ,449 ,80 ,400 ,_LINE_DOUBLE	},
-{ 0x007  ,M_TEXT16 ,720 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
+{ 0x007  ,M_TEXT16 ,720 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
 /* 8,9,0xa are tandy modes */
 { 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,_HALF_CLOCK	|_LINE_DOUBLE	},
-
-
  
 { 0x00D  ,M_EGA16  ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,_HALF_CLOCK	|_LINE_DOUBLE	},
 { 0x00E  ,M_EGA16  ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,_LINE_DOUBLE },
@@ -34,11 +34,10 @@ VideoModeBlock ModeList[]={
 { 0x010  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
 { 0x011  ,M_EGA2   ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,449 ,80 ,480 ,0	},
 { 0x012  ,M_EGA16  ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,0	},
-{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,0	},
+{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,_VGA_LINE_DOUBLE },
 
-{ 0x100  ,M_LIN8   ,640 ,400 ,80 ,20 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,0  },
-{ 0x101  ,M_LIN8   ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,0	},
-	
+{ 0x100  ,M_LIN8   ,640 ,400 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,0   },
+{ 0x101  ,M_LIN8   ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,0	},
 
 {0xFFFF  ,M_ERROR ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 
@@ -268,10 +267,12 @@ foundmode:
 		break;
 	case M_VGA:
 		underline=0x40;
+		if (CurMode->special & _VGA_LINE_DOUBLE) max_scanline|=1;
 		max_scanline|=1;		//Vga doesn't use double line but this
 		break;
 	case M_LIN8:
 		underline=0x60;			//Seems to enable the every 4th clock on my s3
+		if (CurMode->special & _VGA_LINE_DOUBLE) max_scanline|=1;
 		break;
 	}
 	IO_Write(0x3d4,0x09);IO_Write(0x3d5,max_scanline);
@@ -437,7 +438,12 @@ dac_text16:
 	/* Setup the CPU Window */
 	IO_Write(0x3d4,0x6a);
 	IO_Write(0x3d5,0);
-	
+	/* Setup the linear frame buffer */
+	IO_Write(0x3d4,0x59);
+	IO_Write(0x3d5,(Bit8u)(S3_LFB_BASE >> 24));
+	IO_Write(0x3d4,0x5a);
+	IO_Write(0x3d5,(Bit8u)(S3_LFB_BASE >> 16));
+
 	/* Setup some remaining S3 registers */
 	IO_Write(0x3d4,0x31);IO_Write(0x3d5,0x9);	//Enable banked memory and 256k+ access
 	IO_Write(0x3d4,0x58);IO_Write(0x3d5,0x3);	//Enable 8 mb of linear addressing
@@ -462,12 +468,13 @@ dac_text16:
 				real_writew(0xb800,i*2,0x0700);
 			}
 			break;
-		case M_EGA16:
+		case M_EGA16:	
 		case M_VGA:
-			for (i=0;i<64*1024;i++) {
-				real_writeb(0xa000,i,0x00);
+		case M_LIN8:
+			/* Just clear the whole 2 mb of memory */
+			for (i=0;i<2*1024*1024/4;i++) {
+				mem_writed(S3_LFB_BASE+i*4,0);
 			}
-			break;
 		}
 	}
 	/* Setup the CRTC Address */
