@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.26 2004-10-17 14:54:41 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.27 2004-10-24 10:03:29 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -84,7 +84,7 @@ bool ScanCMDBool(char * cmd,char * check) {
 char * ScanCMDRemain(char * cmd) {
 	char * scan,*found;;
 	if ((scan=found=strchr(cmd,'/'))) {
-		while (*scan && isspace(*reinterpret_cast<unsigned char*>(scan))!=0) scan++;
+		while ( *scan && !isspace(*reinterpret_cast<unsigned char*>(scan)) ) scan++;
 		*scan=0;
 		return found;
 	} else return 0; 
