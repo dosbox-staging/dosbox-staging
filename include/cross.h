@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,9 +26,11 @@
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #include <direct.h>
 #include <io.h>
-#else										/* LINUX */
+#define LONGTYPE(a) a##i64
+#else										/* LINUX / GCC */
 #include <dirent.h>
 #include <unistd.h>
+#define LONGTYPE(a) a##LL
 #endif
 
 #define CROSS_LEN 512						/* Maximum filename size */
