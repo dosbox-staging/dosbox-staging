@@ -399,7 +399,7 @@ switch (inst.code.op) {
 				CPU_SGDT(limit,base);
 				SaveMw(inst.rm_eaa,limit);
 				SaveMd(inst.rm_eaa+2,base);
-				break;
+				goto nextopcode;
 			}
 		case 1:		/* SIDT */
 			{
@@ -407,26 +407,23 @@ switch (inst.code.op) {
 				CPU_SIDT(limit,base);
 				SaveMw(inst.rm_eaa,limit);
 				SaveMd(inst.rm_eaa+2,base);
-				break;
+				goto nextopcode;
 			}
 		case 2:		/* LGDT */
 			CPU_LGDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
-			break;
+			goto nextopcode;
 		case 3:		/* LIDT */
 			CPU_LIDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
-			break;
+			goto nextopcode;
 		case 4:		/* SMSW */
 			{
 				Bitu word;CPU_SMSW(word);
-				SaveMw(inst.rm_eaa,word);
+				inst.op1.d=word;
 				break;
 			}
 		case 6:		/* LMSW */
-			{
-				Bitu word=LoadMw(inst.rm_eaa);
-				CPU_LMSW(word);
-				break;
-			}
+			CPU_LMSW(inst.op1.w);
+			goto nextopcode;
 		default:
 			LOG(LOG_ERROR|LOG_CPU,"Group 7 Illegal subfunction %X",inst.rm_index);
 		}
