@@ -540,7 +540,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
-		sdl_sec->Add_bool("nowait",false);
+		sdl_sec->Add_bool("nowait",true);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
