@@ -34,7 +34,7 @@
 #define EMM_PAGEFRAME	0xE000
 #define	EMM_MAX_HANDLES	50				/* 255 Max */
 #define EMM_PAGE_SIZE	(16*1024)
-#define EMM_MAX_PAGES	(C_MEM_EMS_SIZE * 1024 / 16 )
+#define EMM_MAX_PAGES	(32 * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
 
 #define EMM_VERSION		0x40
@@ -83,7 +83,7 @@ struct EMM_Mapping {
 };
 
 struct EMM_Page {
-	void * memory;
+	HostPt * memory;
 	Bit16u handle;
 	Bit16u next;
 };
@@ -91,7 +91,7 @@ struct EMM_Page {
 struct EMM_Handle {
 	Bit16u first_page;
 	Bit16u pages;
-	char name[9];
+	char name[8];
 	bool saved_page_map;
 	EMM_Mapping page_map[EMM_MAX_PHYS];
 };
@@ -100,7 +100,20 @@ static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Page emm_pages[EMM_MAX_PAGES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
 static HostPt emm_pagebase[EMM_MAX_PHYS];
+static Bitu emm_page_count;
 Bitu call_int67;
+
+struct MoveRegion {
+	Bit32u bytes;
+	Bit8u src_type;
+	Bit16u src_handle;
+	Bit16u src_offset;
+	Bit16u src_page_seg;
+	Bit8u dest_type;
+	Bit16u dest_handle;
+	Bit16u dest_offset;
+	Bit16u dest_page_seg;
+};
 
 #if EMM_USEHANDLER
 Bit8u EMM_ReadHandler(PhysPt start) {
@@ -118,10 +131,16 @@ void EMM_WriteHandler(PhysPt start,Bit8u val) {
 
 static Bit16u EMM_GetFreePages(void) {
 	Bit16u count=0;
-	for (Bitu index=0;index<EMM_MAX_PAGES;index++) {
+	for (Bitu index=0;index<emm_page_count;index++) {
 		if (emm_pages[index].handle==NULL_HANDLE) count++;
 	}
 	return count;
+}
+
+static bool INLINE ValidHandle(Bit16u handle) {
+	if (handle>=EMM_MAX_HANDLES) return false;
+	if (emm_handles[handle].pages==NULL_HANDLE) return false;
+	return true;
 }
 
 static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & handle) {
@@ -140,14 +159,14 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & handle) {
 	while (pages) {
 		if (emm_pages[page].handle==NULL_HANDLE) {
 			emm_pages[page].handle=handle;
-			emm_pages[page].memory=malloc(EMM_PAGE_SIZE);
+			emm_pages[page].memory=(HostPt *)malloc(EMM_PAGE_SIZE);
 			if (!emm_pages[page].memory) E_Exit("EMM:Cannont allocate memory");
 			if (last!=NULL_PAGE) emm_pages[last].next=page;
 			else emm_handles[handle].first_page=page;
 			last=page;
 			pages--;
 		} else {
-			if (++page>=EMM_MAX_PAGES) E_Exit("EMM:Ran out of pages");
+			if (++page>=emm_page_count) E_Exit("EMM:Ran out of pages");
 		}
 	}
 	return EMM_NO_ERROR;
@@ -190,14 +209,14 @@ static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
 		while (pages) {
 			if (emm_pages[page].handle==NULL_HANDLE) {
 				emm_pages[page].handle=handle;
-				emm_pages[page].memory=malloc(EMM_PAGE_SIZE);
+				emm_pages[page].memory=(HostPt *)malloc(EMM_PAGE_SIZE);
 				if (!emm_pages[page].memory) E_Exit("EMM:Cannont allocate memory");
 				if (last!=NULL_PAGE) emm_pages[last].next=page;
 				else emm_handles[handle].first_page=page;
 				last=page;
 				pages--;
 			} else {
-				if (++page>=EMM_MAX_PAGES) E_Exit("EMM:Ran out of pages");
+				if (++page>=emm_page_count) E_Exit("EMM:Ran out of pages");
 			}
 		}
 		pages=emm_handles[handle].pages;
@@ -264,7 +283,7 @@ static Bit8u EMM_ReleaseMemory(Bit16u handle) {
 	emm_handles[handle].first_page=NULL_PAGE;
 	emm_handles[handle].pages=NULL_HANDLE;
 	emm_handles[handle].saved_page_map=false;
-	memset(&emm_handles[handle].name,0,9);
+	memset(&emm_handles[handle].name,0,8);
 	return EMM_NO_ERROR;
 }
 
@@ -351,9 +370,143 @@ static Bit8u EMM_PartialPageMapping(void) {
 		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
-	return 0;
+	return EMM_NO_ERROR;
 }
 
+static Bit8u HandleNameSearch(void) {
+	Bit16u handle=0;PhysPt data;
+	switch (reg_al) {
+	case 0x00:	/* Get all handle names */
+		reg_al=0;data=SegPhys(es)+reg_di;
+		for (handle=0;handle<EMM_MAX_HANDLES;handle++) {
+			if (emm_handles[handle].pages!=NULL_HANDLE) {
+				reg_al++;
+				mem_writew(data,handle);
+				MEM_BlockWrite(data+2,emm_handles[handle].name,8);
+				data+=10;
+			}
+		}
+		break;
+	default:
+		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		return EMM_FUNC_NOSUP;
+	}
+	return EMM_NO_ERROR;
+}
+
+
+static void LoadMoveRegion(PhysPt data,MoveRegion & region) {
+	region.bytes=mem_readd(data+0x0);
+
+	region.src_type=mem_readb(data+0x4);
+	region.src_handle=mem_readw(data+0x5);
+	region.src_offset=mem_readw(data+0x7);
+	region.src_page_seg=mem_readw(data+0x9);
+
+	region.dest_type=mem_readb(data+0xb);
+	region.dest_handle=mem_readw(data+0xc);
+	region.dest_offset=mem_readw(data+0xe);
+	region.dest_page_seg=mem_readw(data+0x10);
+}
+
+static Bit8u MemoryRegion(void) {
+	MoveRegion region;
+	Bit8u buf_src[EMM_PAGE_SIZE];
+	Bit8u buf_dest[EMM_PAGE_SIZE];
+	if (reg_al>1) {
+		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		return EMM_FUNC_NOSUP;
+	}
+	LoadMoveRegion(SegPhys(ds)+reg_si,region);
+/* Parse the region for information */
+	PhysPt src_mem,dest_mem;
+	Bit16u src_page,dest_page;Bitu src_off,dest_off;Bitu src_remain,dest_remain;
+	if (!region.src_type) {
+		src_mem=region.src_page_seg*16+region.src_offset;
+	} else {
+		if (!ValidHandle(region.src_handle)) return EMM_INVALID_HANDLE;
+		if (emm_handles[region.src_handle].pages*EMM_PAGE_SIZE < (region.src_page_seg*EMM_PAGE_SIZE)+region.src_offset+region.bytes) return EMM_LOG_OUT_RANGE;
+		src_page=emm_handles[region.src_handle].first_page;
+		while (region.src_page_seg>0) {
+			src_page=emm_pages[src_page].next;
+			region.src_page_seg--;
+		}
+		src_off=region.src_offset;
+		src_remain=EMM_PAGE_SIZE-src_off;
+	}
+	if (!region.dest_type) {
+		dest_mem=region.dest_page_seg*16+region.dest_offset;
+	} else {
+		if (!ValidHandle(region.dest_handle)) return EMM_INVALID_HANDLE;
+		if (emm_handles[region.dest_handle].pages*EMM_PAGE_SIZE < (region.dest_page_seg*EMM_PAGE_SIZE)+region.dest_offset+region.bytes) return EMM_LOG_OUT_RANGE;
+		dest_page=emm_handles[region.dest_handle].first_page;
+		while (region.dest_page_seg>0) {
+			dest_page=emm_pages[dest_page].next;
+			region.dest_page_seg--;
+		}
+		dest_off=region.dest_offset;
+		dest_remain=EMM_PAGE_SIZE-dest_off;
+	}
+	Bitu toread;
+	while (region.bytes>0) {
+		if (region.bytes>EMM_PAGE_SIZE) toread=EMM_PAGE_SIZE;
+		else toread=region.bytes;
+		/* Read from the source */
+		if (!region.src_type) {
+			MEM_BlockRead(src_mem,buf_src,toread);
+		} else {
+			if (toread<src_remain) {
+				memcpy(buf_src,emm_pages[src_page].memory+src_off,toread);
+			} else {
+				memcpy(buf_src,emm_pages[src_page].memory+src_off,src_remain);
+				memcpy(buf_src+src_remain,emm_pages[emm_pages[src_page].next].memory,toread-src_remain);
+			}
+		}
+		/* Check for a move */
+		if (reg_al==1) {
+			/* Read from the destination */
+			if (!region.dest_type) {
+				MEM_BlockRead(dest_mem,buf_dest,toread);
+			} else {
+				if (toread<dest_remain) {
+					memcpy(buf_dest,emm_pages[dest_page].memory+dest_off,toread);
+				} else {
+					memcpy(buf_dest,emm_pages[dest_page].memory+dest_off,dest_remain);
+					memcpy(buf_dest+dest_remain,emm_pages[emm_pages[dest_page].next].memory,toread-dest_remain);
+				}
+			}
+			/* Write to the source */
+			if (!region.src_type) {
+				MEM_BlockWrite(src_mem,buf_dest,toread);
+			} else {
+				if (toread<(EMM_PAGE_SIZE-src_off)) {
+					memcpy(emm_pages[src_page].memory+src_off,buf_dest,toread);
+				} else {
+					memcpy(emm_pages[src_page].memory+src_off,buf_dest,EMM_PAGE_SIZE-src_off);
+					memcpy(emm_pages[emm_pages[src_page].next].memory,buf_dest+EMM_PAGE_SIZE-src_off,toread-(EMM_PAGE_SIZE-src_off));
+				}
+			}
+		}
+		/* Write to the destination */
+		if (!region.dest_type) {
+			MEM_BlockWrite(dest_mem,buf_src,toread);
+		} else {
+			if (toread<dest_remain) {
+				memcpy(emm_pages[dest_page].memory+dest_off,buf_src,toread);
+			} else {
+				memcpy(emm_pages[dest_page].memory+dest_off,buf_src,dest_remain);
+				memcpy(emm_pages[emm_pages[dest_page].next].memory,buf_src+dest_remain,toread-dest_remain);
+			}
+		}
+		/* Advance the pointers */
+		if (!region.src_type) src_mem+=toread;
+		else src_page=emm_pages[src_page].next;
+		if (!region.dest_type) dest_mem+=toread;
+		else dest_page=emm_pages[dest_page].next;
+		region.bytes-=toread;
+	}
+	return EMM_NO_ERROR;
+}
 
 static Bitu INT67_Handler(void) {
 	Bitu i;
@@ -366,7 +519,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah=EMM_NO_ERROR;
 		break;
 	case 0x42:		/* Get number of pages */
-		reg_dx=EMM_MAX_PAGES;
+		reg_dx=emm_page_count;
 		reg_bx=EMM_GetFreePages();
 		reg_ah=EMM_NO_ERROR;
 		break;
@@ -395,8 +548,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah=EMM_NO_ERROR;
 		break;
 	case 0x4c:		/* Get Pages for one Handle */
-		/* Check for valid handle */
-		if (reg_bx>=EMM_MAX_HANDLES || emm_handles[reg_bx].pages==NULL_HANDLE) {reg_ah=EMM_INVALID_HANDLE;break;}
+		if (!ValidHandle(reg_bx)) {reg_ah=EMM_INVALID_HANDLE;break;}
 		reg_bx=emm_handles[reg_dx].pages;
 		reg_ah=EMM_NO_ERROR;
 		break;
@@ -431,7 +583,6 @@ static Bitu INT67_Handler(void) {
 	case 0x4f:	/* Save/Restore Partial Page Map */
 		reg_ah=EMM_PartialPageMapping();
 		break;
-
 	case 0x50:	/* Map/Unmap multiple handle pages */
 		reg_ah = EMM_NO_ERROR;
 		switch (reg_al) {
@@ -467,6 +618,13 @@ static Bitu INT67_Handler(void) {
 			reg_ah=EMM_NO_ERROR;	
 		}
 		break;
+	case 0x54:	/* Handle Functions */
+		reg_ah=HandleNameSearch();
+		break;
+	case 0x57:	/* Memory region */
+		reg_ah=MemoryRegion();
+		if (reg_ah) LOG_WARN("ems 57 move failed");
+		break;
 	case 0x58: // Get mappable physical array address array
 		if (reg_al==0x00) {
 			PhysPt data = SegPhys(es)+reg_di;
@@ -498,6 +656,12 @@ void EMS_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	Bitu size=section->Get_int("emssize");
 	if (!size) return;
+	if ((size*(1024/16))>EMM_MAX_PAGES) {
+		LOG_DEBUG("EMS Max size is %d",EMM_MAX_PAGES/(1024/16));
+		emm_page_count=EMM_MAX_PAGES;
+	} else {
+		emm_page_count=size*(1024/16);
+	}
 	call_int67=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET);
 /* Register the ems device */
@@ -515,7 +679,7 @@ void EMS_Init(Section* sec) {
 	RealSetVec(0x67,RealMake(seg,0));
 /* Clear handle and page tables */
 	Bitu i;
-	for (i=0;i<EMM_MAX_PAGES;i++) {
+	for (i=0;i<emm_page_count;i++) {
 		emm_pages[i].memory=0;
 		emm_pages[i].handle=NULL_HANDLE;
 		emm_pages[i].next=NULL_PAGE;
@@ -523,7 +687,7 @@ void EMS_Init(Section* sec) {
 	for (i=0;i<EMM_MAX_HANDLES;i++) {
 		emm_handles[i].first_page=NULL_PAGE;
 		emm_handles[i].pages=NULL_HANDLE;
-		memset(&emm_handles[i].name,0,9);
+		memset(&emm_handles[i].name,0,8);
 	}
 	for (i=0;i<EMM_MAX_PHYS;i++) {
 		emm_mappings[i].page=NULL_PAGE;
