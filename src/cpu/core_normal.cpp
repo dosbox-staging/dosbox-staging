@@ -181,7 +181,11 @@ restart_opcode:
 		#include "core_normal/prefix_66_0f.h"
 		default:
 			ADDIPFAST(-1);
+#if C_DEBUG
 			LOG_MSG("Unhandled code %X",core.opcode_index+Fetchb());
+#else
+			E_Exit("Unhandled CPU opcode");
+#endif
 		}
 	}
 	decode_end:
