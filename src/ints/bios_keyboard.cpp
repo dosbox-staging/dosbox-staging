@@ -302,6 +302,7 @@ static Bitu INT16_Handler(void) {
 	case 0x11:
 		temp=check_key();
 		if (temp==0) {
+			flags.intf=true;CALLBACK_Idle();
 			CALLBACK_SZF(true);
 		} else {
 			CALLBACK_SZF(false);
