@@ -66,22 +66,29 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset);
 void CPU_RET(bool use32,Bitu bytes);
 
 #define CPU_INT_SOFTWARE		0x1
-#define CPU_INT_HAS_ERROR		0x2
+#define CPU_INT_EXCEPTION		0x2
+#define CPU_INT_HAS_ERROR		0x4
 
-void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type);
+
+bool CPU_Interrupt(Bitu num,Bitu type);
 INLINE void CPU_HW_Interrupt(Bitu num) {
-	CPU_Interrupt(num,0,0);
+	CPU_Interrupt(num,0);
 }
-INLINE void CPU_SW_Interrupt(Bitu num,Bitu oplen) {
-	CPU_Interrupt(num,oplen,CPU_INT_SOFTWARE);
+INLINE bool CPU_SW_Interrupt(Bitu num) {
+	return CPU_Interrupt(num,CPU_INT_SOFTWARE);
 }
-void CPU_Exception(Bitu num,Bitu error_code=0);
+
+void CPU_Exception(Bitu which,Bitu error=0);
+void CPU_StartException(void);
+void CPU_SetupException(Bitu which,Bitu error=0);
+
+
 
 void CPU_IRET(bool use32);
-void CPU_SetSegGeneral(SegNames seg,Bitu value);
+bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 
 void CPU_CPUID(void);
-void CPU_HLT(Bitu oplen);
+bool CPU_HLT(void);
 
 Bitu CPU_Pop16(void);
 Bitu CPU_Pop32(void);
@@ -375,6 +382,9 @@ struct CPUBlock {
 		Bitu cs,eip;
 		CPU_Decoder * old_decoder;
 	} hlt;
+	struct {
+		Bitu which,error;
+	} exception;
 };
 
 extern CPUBlock cpu;
