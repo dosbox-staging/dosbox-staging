@@ -216,7 +216,6 @@
 		{	
 			GetRMrd;GetEAa;
 			LOADSEG(ss,LoadMw(eaa+4));
-			CPU_Cycles++;
 			*rmrd=LoadMd(eaa);
 			break;
 		}

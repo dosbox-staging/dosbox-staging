@@ -190,7 +190,6 @@
 	CASE_W(0x53)												/* PUSH BX */
 		Push_16(reg_bx);break;
 	CASE_W(0x54)												/* PUSH SP */
-//TODO Check if this is correct i think it's SP+2 or something
 		Push_16(reg_sp);break;
 	CASE_W(0x55)												/* PUSH BP */
 		Push_16(reg_bp);break;

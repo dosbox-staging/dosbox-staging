@@ -121,10 +121,8 @@
 			*rmrw=(Bit16u)limit;
 		}
 		break;
-#if !(C_DEBUG)
 	CASE_0F_B(0x06)												/* CLTS */
 		break;
-#endif
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
 		{
 			GetRM;
@@ -298,7 +296,6 @@
 		break;
 	CASE_0F_W(0xb2)												/* LSS Ew */
 		{	
-			CPU_Cycles++;
 			GetRMrw;GetEAa;
 			LOADSEG(ss,LoadMw(eaa+2));
 			*rmrw=LoadMw(eaa);
