@@ -2,7 +2,7 @@
 	EAPoint si_base,di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
-	Bitu	count,count_max;
+	Bitu	count,count_left;
 	Bits	add_index;
 	bool	restart=false;
 	
@@ -22,8 +22,19 @@
 	}
 	if (!(inst.prefix & PREFIX_REP)) {
 		count=1;
+	} else {
+		/* Calculate amount of ops to do before cycles run out */
+		if ((count>CPU_Cycles) && (inst.code.op<R_SCASB)) {
+			count_left=count-CPU_Cycles;
+			count=CPU_Cycles;
+			CPU_Cycles=0;
+			IPPoint=inst.start;		//Reset IP to start of instruction
+		} else {
+			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
+			count_left=0;
+			CPU_Cycles-=count;
+		}
 	}
-	
 	add_index=GETFLAG(DF) ? -1 : 1;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
@@ -192,6 +203,7 @@
 	reg_edi&=(~add_mask);
 	reg_edi|=(di_index & add_mask);
 	if (inst.prefix & PREFIX_REP) {
+		count+=count_left;
 		reg_ecx&=(~add_mask);
 		reg_ecx|=(count & add_mask);
 	}
