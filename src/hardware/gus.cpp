@@ -364,9 +364,9 @@ public:
 			
 
 			if(dir) {
-				// Increment backwards
-				if (moving) CurAddr -= RealDelta;
-
+				// Increment backwards but don't let it get below zero.
+				if (moving) { if(CurAddr > RealDelta) CurAddr -= RealDelta; else CurAddr = 0; }
+			   
 				//Thought 16-bit needed this
 				//if ((!eightbit) && (moving)) CurAddr -= RealDelta;
 				
