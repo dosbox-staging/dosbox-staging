@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.19 2004-01-29 16:58:24 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.20 2004-01-29 20:13:29 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -262,7 +262,9 @@ static void write_p64(Bit32u port,Bit8u val) {
 }
 
 static Bit8u read_p64(Bit32u port) {
-	Bit8u status= 0x1c | ((keyb.buf.used ||keyb.key_on_60)? 0x1 : 0x0);
+//	Bit8u status= 0x1c | ((keyb.buf.used ||keyb.key_on_60)? 0x1 : 0x0);
+//	Old one. Digitracker 2 doesn't like this. key_on_60 is much more advanged.
+	Bit8u status= 0x1c | (keyb.key_on_60? 0x1 : 0x0);
 	keyb.key_on_60=false;
 	return status;
 }
