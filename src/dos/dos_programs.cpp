@@ -253,8 +253,8 @@ void LOADFIX::Run(void)
 	Bit16u segment;
 	Bit16u blocks = kb*1024/16;
 	if (DOS_AllocateMemory(&segment,&blocks)) {
-		MCB* pmcb = (MCB*)HostMake(segment-1,0);
-		pmcb->psp_segment = 0x40;	// use fake segment
+		DOS_MCB mcb((Bit16u)(segment-1));
+		mcb.SetPSPSeg(0x40);			// use fake segment
 		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"),kb);
 		// Prepare commandline...
 		if (cmd->FindCommand(commandNr++,temp_line)) {
