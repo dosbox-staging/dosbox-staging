@@ -19,10 +19,10 @@
 #if !defined __SUPPORT_H
 #define __SUPPORT_H
 
-
-#include <dosbox.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "dosbox.h"
 
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #define	strcasecmp(a,b) stricmp(a,b)
@@ -38,14 +38,17 @@
 #endif
 
 void strreplace(char * str,char o,char n);
-char *ltrim(char *str);
-void rtrim(char * const str);
-char *trim(char *str);
+char *ltrim(const char *str);
+char *rtrim(const char *str);
+char *trim(const char *str);
 
 bool ScanCMDBool(char * cmd,char * check);
 char * ScanCMDRemain(char * cmd);
-bool ScanCMDHex(char * cmd,char * check,Bits * result);
-char * StripWord(char * cmd);
+char * StripWord(char *&cmd);
+bool IsDecWord(char * word);
+bool IsHexWord(char * word);
+Bits ConvDecWord(char * word);
+Bits ConvHexWord(char * word);
 
 INLINE char * upcase(char * str) {
     for (char* idx = str; *idx ; idx++) *idx = toupper(*idx);
