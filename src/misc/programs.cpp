@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: programs.cpp,v 1.12 2004-01-09 12:34:53 qbix79 Exp $ */
+
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -164,7 +167,10 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 /* TODO Maybe save the program name sometime. not really needed though */
 	/* Save the new entry */
 	if (new_string[0]) {
-		sprintf(env_string,"%s=%s",entry,new_string);
+		std::string bigentry(entry);
+		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
+		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
+//		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
 		MEM_BlockWrite(env_write,env_string,strlen(env_string)+1);
 		env_write+=strlen(env_string)+1;
 	}
