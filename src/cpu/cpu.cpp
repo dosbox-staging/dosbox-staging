@@ -170,5 +170,6 @@ void CPU_Init(Section* sec) {
 
 	reg_al=0;
 	reg_ah=0;
+    MSG_Add("CPU_CONFIGFILE_HELP","The amount of cycles to execute each loop. Lowering this setting will slowdown dosbox\n");
 }
 

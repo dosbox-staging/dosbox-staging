@@ -218,6 +218,7 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 
 
 void MIXER_Init(Section* sec) {
+    MSG_Add("MIXER_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	/* Initialize the internal stuff */
 	first_channel=0;
 	mix_ticks=GetTicks();

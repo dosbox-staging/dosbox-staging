@@ -706,6 +706,7 @@ void DEBUG_Init(Section* sec) {
 	#ifdef WIN32
 	WIN32_Console();
 	#endif
+    MSG_Add("DEBUG_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;
 	dbg.active_win=3;

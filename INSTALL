@@ -11,8 +11,17 @@ Curses
 	ncurses should be installed on just about every unix distro.
 	For win32 get pdcurses at http://pdcurses.sourceforge.net
 
+Libpng
+    Needed for the screenshots. 
+    For win32 get libpng from http://www.sourceforge.net/projects/gnuwin32
+
+Zlib
+    Needed by libpng. 
+    For win32 get libz (rename to zlib) from http://www.sourceforge.net/projects/gnuwin32
+
+
 If you want compile from the CVS under a unix system, you'll also need 
-automake, autoconf. Should be available at http://www.gnu.org
+automake (>=1.6), autoconf(>=2.50). Should be available at http://www.gnu.org
 
 For building on unix systems.
 If you are building from the cvs run ./autogen.sh first before doing the following.
@@ -21,8 +30,7 @@ If you are building from the cvs run ./autogen.sh first before doing the followi
 2. Check settings.h for some setup options.
 3. make
 
-Check the src subdir for the binary and dosbox.lang file.
-These 2 files should be in the same dir if you want to run dosbox.
+Check the src subdir for the binary.
 
 Compiling on FreeBSD might be a problem since SDL has no joystick support there.
 To get around this edit sdlmain.cpp to enable some #define.
@@ -32,5 +40,4 @@ Let's hope someday the sdl people will just report 0 joysticks in freebsd or get
 Build instructions for VC++6 
 
 Open the workspace in the visualc subdir and build from there. 
-Copy the src/dosbox.lang file to the same dir as your executable.
 

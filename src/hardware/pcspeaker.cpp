@@ -96,6 +96,7 @@ static void PCSPEAKER_CallBack(Bit8u * stream,Bit32u len) {
 }
 
 void PCSPEAKER_Init(Section* sec) {
+    MSG_Add("SPEAKER_CONFIGFILE_HELP","pcspeaker related options.\n");
 	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,SPKR_RATE,"PC-SPEAKER");
 	MIXER_Enable(spkr.chan,false);
 	MIXER_SetMode(spkr.chan,MIXER_16MONO);

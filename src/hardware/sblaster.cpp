@@ -557,6 +557,7 @@ static void SB_Enable(bool enable) {
 }
 
 void SBLASTER_Init(Section* sec) {
+    MSG_Add("SBLASTER_CONFIGFILE_HELP","Sound Blaster related options.\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("enabled")) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");

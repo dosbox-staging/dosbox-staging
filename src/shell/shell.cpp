@@ -134,6 +134,7 @@ void DOS_Shell::SyntaxError(void) {
 
 
 void AUTOEXEC_Init(Section * sec) {
+    MSG_Add("AUTOEXEC_CONFIGFILE_HELP","Add here the lines you want to execute on startup.\n");
 	/* Register a virtual AUOEXEC.BAT file */
 
 	Section_line * section=static_cast<Section_line *>(sec);

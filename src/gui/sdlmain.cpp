@@ -225,6 +225,7 @@ static void GUI_ShutDown(Section * sec) {
 }
 
 static void GUI_StartUp(Section * sec) {
+    MSG_Add("SDL_CONFIGFILE_HELP","SDL related options.\n");
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
@@ -507,7 +508,7 @@ int main(int argc, char* argv[]) {
 #endif
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
 		Section_prop * sdl_sec=control->AddSection_prop("SDL",&GUI_StartUp);
-		sdl_sec->Add_bool("FULLSCREEN",false);
+		sdl_sec->Add_bool("fullscreen",false);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
@@ -529,7 +530,7 @@ int main(int argc, char* argv[]) {
 			JOYSTICK_Enable(0,true);
 		}
 #endif	
-		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("FULLSCREEN")) {
+		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
 			SwitchFullScreen();
 		}
 		/* Start up main machine */

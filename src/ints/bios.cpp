@@ -208,6 +208,7 @@ void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
 void BIOS_Init(Section* sec) {
+    MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	/* Clear the Bios Data Area */
 	for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
 	/* Setup all the interrupt handlers the bios controls */

@@ -1,10 +1,11 @@
-DOSBox v0.55
+DOSBox v0.56
 
 Usage:
 ======
 
 With the new internal shell I've changed the command line a bit, so let's just give some 
 examples of what you can do now.
+
 dosbox 
   With nothing on the command line you'll end up on the internal drive and from there you
   can mount directories as drives.
@@ -13,6 +14,11 @@ dosbox [filename/directory]
   If dosbox doesn't detect a directory it'll assume you mean an executable this can be 
   .bat .com .exe. Doesn't need to have extension included. Then it'll strip the directory
   from the filename and mount that as c:\ and then run the file.
+
+dosbox -fullscreen
+    starts dosbox in fullscreen mode.
+dosbox -conf file
+    loads file as a configfile.
 
 You can also add commands to be executed before the main program starts. Or you can use them
 to start the program. 

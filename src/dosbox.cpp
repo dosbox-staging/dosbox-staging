@@ -123,7 +123,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
 	errorlevel=section->Get_int("warnings");
-	LastTicks=GetTicks();
+	MSG_Add("DOSBOX_CONFIGFILE_HELP","General Dosbox settings\n");
+    LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 }
@@ -137,7 +138,7 @@ void DOSBOX_Init(void) {
 	/* Setup all the different modules making up DOSBox */
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
-	secprop->Add_string("language","");
+    secprop->Add_string("language","");
 	secprop->Add_int("warnings",4);
 	
 	secprop->AddInitFunction(&MEM_Init);
@@ -191,7 +192,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("xmssize",8);
 
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
-
+    
 	control->SetStartUp(&SHELL_Init);	
 
 #if C_FPU

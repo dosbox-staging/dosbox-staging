@@ -830,6 +830,7 @@ static Bitu DOS_20Handler(void) {
 
 
 void DOS_Init(Section* sec) {
+    MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
 	call_20=CALLBACK_Allocate();
 	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET);
 	RealSetVec(0x20,CALLBACK_RealPointer(call_20));

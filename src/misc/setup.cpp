@@ -41,7 +41,7 @@ void Prop_string::SetValue(char* input){
 	
 void Prop_bool::SetValue(char* input){
 	input=trim(input);
-	if((input[0]=='0') ||(input[0]=='D')||( (input[0]=='O') && (input[0]=='F'))){
+	if((input[0]=='0') ||(input[0]=='D')||( (input[0]=='O') && (input[0]=='F'))||(input[0]=='f')){
 		__value._bool=false;
 	}else{
 		__value._bool=true;
@@ -231,6 +231,7 @@ void Config::ParseConfigFile(const char* configfilename){
 		case '%':
 		case '\0':
 		case '\n':
+        case '#':
 		case ' ':
 			continue;
 			break;
