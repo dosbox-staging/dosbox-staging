@@ -58,6 +58,7 @@ void MSG_Replace(const char * _name, const char* _val) {
 	MSG_Add(_name,_val);
 }
 static void LoadMessageFile(const char * fname) {
+	if (!fname) return;
 	if(*fname=='\0') return;//empty string=no languagefile
 	FILE * mfile=fopen(fname,"rb");
 	/* This should never happen and since other modules depend on this use a normal printf */
@@ -119,9 +120,8 @@ void MSG_Write(const char * location) {
 }
 
 void MSG_Init(Section_prop * section) {
-	/* Load the messages from "dosbox.lang file" */
 	std::string file_name;
 	if (control->cmdline->FindString("-lang",file_name)) {
 		LoadMessageFile(file_name.c_str());
-	} else LoadMessageFile(section->Get_string("LANGUAGE"));
+	} else LoadMessageFile(section->Get_string("language"));
 }
