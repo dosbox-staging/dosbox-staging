@@ -344,7 +344,7 @@ static char *groups[][8] = {   /* group 0 is group 3 for %Ev set */
   { "rol",            "ror",             "rcl",            "rcr",
     "shl",            "shr",             "shl",            "sar"           },
 /* 2 */  /* v   v*/
-  { "test %Eq,%Iq",   "test %Eq,%Iq",    "not %Ec",        "neg %Ev",
+  { "test %Eq,%Iq",   "test %Eq,%Iq",    "not %Ec",        "neg %Ec",
     "mul %Ec",        "imul %Ec",        "div %Ec",        "idiv %Ec"      },
 /* 3 */
   { "inc %Eb",        "dec %Eb",         0,                0,
