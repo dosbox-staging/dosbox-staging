@@ -38,9 +38,15 @@ Internal Programs:
 
 MOUNT 
 Program to mount local directories as drives inside DOSBox. 
-The option -t specifies the media: dir = harddisk, floppy = floppy drive.
+The option -t specifies the media: dir = harddisk, floppy = floppy drive, cdrom = cdrom drive.
 The option -size specifies the size.
-For example to mount c:\floppy as a floppy : mount -t floppy a c:\floppy
+The option -aspi forces to use aspi driver (only valid if mounting a cdrom and on Win2000/XP/NT systems).
+For example to mount c:\floppy as a floppy : mount a c:\floppy -t floppy
+For example to mount system cdrom drive e as cdrom drive d in dosbox : mount d e:\ -t cdrom
+- In Win 95/98/ME you need latest ASPI driver to get cdrom audio support.
+- In Win 2000/XP/NT you have the option to use an ASPI driver (add -aspi) at the end of the mount command. 
+It is even possible to mount a directory as cdrom, but you have some limited support for it then.
+
 
 MEM
 Program to display the amount of free memory
