@@ -412,6 +412,7 @@ void PIC_Init(Section* sec) {
 	}
 	irqs[0].masked=false;					/* Enable system timer */
 	irqs[1].masked=false;					/* Enable Keyboard IRQ */
+	irqs[8].masked=false;					/* Enable RTC IRQ */
 	irqs[12].masked=false;					/* Enable Mouse IRQ */
 	IO_RegisterReadHandler(0x20,read_command,"Master PIC Command");
 	IO_RegisterReadHandler(0x21,read_data,"Master PIC Data");
