@@ -24,6 +24,7 @@
 
 #include <windows.h>
 #include <winioctl.h>			// Ioctl stuff
+#include <io.h>
 #include "ntddcdrm.h"			// Ioctl stuff
 #include "cdrom.h"
 
@@ -207,35 +208,27 @@ bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 
 bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long sector, unsigned long num)
 {
-	// TODO : How to copy cooked without current overhead ?
-	BOOL bStat;
-	DWORD byteCount;
-	RAW_READ_INFO in;
-	char* inPtr;
+	BOOL  bStat;
+	DWORD byteCount = 0;
 
-	in.DiskOffset.LowPart	= sector;
-	in.DiskOffset.HighPart	= 0;
-	in.SectorCount			= num;
-	in.TrackMode			= CDDA;
-	
-	if (!raw)	inPtr = new char[num*RAW_SECTOR_SIZE];
-	else		inPtr = (char*)buffer;
-
-	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RAW_READ, &in, sizeof(in), 
-							inPtr, num*RAW_SECTOR_SIZE, &byteCount,NULL);
-
+	Open();
 	if (!raw) {
-		char* source = inPtr;
-		source+=16; // jump 16 bytes
-		char* outPtr = (char*)buffer;
-		for (unsigned long i=0; i<num; i++) {
-			memcpy(outPtr,source,COOKED_SECTOR_SIZE);
-			outPtr+=COOKED_SECTOR_SIZE;
-			source+=RAW_SECTOR_SIZE;
-		};
-		delete[] inPtr;
-	};
-	
+		// Cooked
+		int	  success = 0;
+		DWORD newPos  = SetFilePointer(hIOCTL, sector*COOKED_SECTOR_SIZE, 0, FILE_BEGIN);
+		if (newPos != 0xFFFFFFFF) success = ReadFile(hIOCTL, buffer, num*COOKED_SECTOR_SIZE, &byteCount, NULL);
+		bStat = (success!=0);
+	} else {
+		// Raw
+		RAW_READ_INFO in;
+		in.DiskOffset.LowPart	= sector;
+		in.DiskOffset.HighPart	= 0;
+		in.SectorCount			= num;
+		in.TrackMode			= CDDA;		
+		bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RAW_READ, &in, sizeof(in), 
+								buffer, num*RAW_SECTOR_SIZE, &byteCount,NULL);
+	}
+	Close();
 	return (byteCount!=num*RAW_SECTOR_SIZE) && (bStat>0);
 }
 

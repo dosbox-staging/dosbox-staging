@@ -675,13 +675,6 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 
 	memset(&s,0,sizeof(s));
 
-	// FIXME : Is there a method to get cooked sectors with aspi ???
-	//         all combination i tried were failing.
-	//         so we have to allocate extra mem and copy data to buffer if in cooked mode
-	char*		inPtr = (char*)buffer;
-	if (!raw)	inPtr = new char[num*2352];
-	if (!inPtr) return false;
-
 	s.SRB_Cmd        = SC_EXEC_SCSI_CMD;
 	s.SRB_HaId       = haId;
 	s.SRB_Target     = target;
@@ -689,8 +682,8 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 	s.SRB_Flags      = SRB_DIR_IN | SRB_EVENT_NOTIFY;
 	s.SRB_SenseLen   = SENSE_LEN;
 
-	s.SRB_BufLen     = 2352*num; //num*(raw?2352:2048);
-	s.SRB_BufPointer = (BYTE FAR*)inPtr;
+	s.SRB_BufLen     = raw?2352*num:2048*num;
+	s.SRB_BufPointer = (BYTE FAR*)buffer;
 	s.SRB_CDBLen     = 12;
 	s.SRB_PostProc   = (LPVOID)hEvent;
 
@@ -712,24 +705,7 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 
 	CloseHandle(hEvent);
 
-	if (s.SRB_Status!=SS_COMP) {
-		if (!raw) delete[] inPtr;
-		return false;
-	}
-
-	if (!raw) {
-		// copy user data to buffer
-		char* source = inPtr;
-		source+=16; // jump 16 bytes
-		char* outPtr = (char*)buffer;
-		for (unsigned long i=0; i<num; i++) {
-			memcpy(outPtr,source,2048);
-			outPtr+=COOKED_SECTOR_SIZE;
-			source+=RAW_SECTOR_SIZE;
-		};
-		delete[] inPtr;
-	};	
-	return true;
+	return (s.SRB_Status==SS_COMP);
 };
 
 #endif
