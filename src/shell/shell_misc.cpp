@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.23 2003-09-01 18:19:55 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.24 2003-09-08 18:22:57 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -305,6 +305,8 @@ void DOS_Shell::Execute(char * name,char * args) {
 	}
 	if (strcasecmp(extension, ".bat") == 0) 
 	{	/* Run the .bat file */
+		/* delete old batch file if call is not active*/
+		if(bf && !call) delete bf;
 		bf=new BatchFile(this,fullname,line);
 	} 
 	else 
