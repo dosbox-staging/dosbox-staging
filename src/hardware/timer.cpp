@@ -49,38 +49,44 @@ static PIT_Block pit[3];
 
 static void PIT0_Event(void) {
 	PIC_ActivateIRQ(0);
-	PIC_AddEvent(PIT0_Event,pit[0].micro);
+	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
 
 static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
-	
+
 	Bit64s micro=PIC_MicroCount()-p->start;
+	
 	switch (p->mode) {
 	case 0:		/* Interrupt on Terminal Count */
 		/* Counter keeps on counting after passing terminal count */
-		micro%=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		if (micro>p->micro) {
+			micro-=p->micro;
+			micro%=(Bit64u)(1000000/((float)PIT_TICK_RATE/(float)0x10000));
+			p->read_latch=(Bit16u)(0x10000-(((double)micro/(double)p->micro)*(double)0x10000));
+		} else {
+			p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
+		}
 		break;
 	case 2:		/* Rate Generator */
 		micro%=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
 		break;
 	case 3:		/* Square Wave Rate Generator */
 		micro%=p->micro;
 		micro*=2;
 		if (micro>p->micro) micro-=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
 		break;
 	case 4:		/* Software Triggered Strobe */
 		if (micro>p->micro) p->read_latch=p->write_latch;
-		else p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		else p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
 		break;
 	default:
 		LOG(LOG_ERROR|LOG_PIT,"Illegal Mode %d for reading counter %d",p->mode,counter);
 		micro%=p->micro;
-		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		p->read_latch=(Bit16u)(p->cntr-(((double)micro/(double)p->micro)*(double)p->cntr));
 		break;
 	}
 }
