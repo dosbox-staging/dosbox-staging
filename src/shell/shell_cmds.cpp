@@ -26,7 +26,7 @@
 static SHELL_Cmd cmd_list[]={
 	"CD",		0,			&DOS_Shell::CMD_CHDIR,		"SHELL_CMD_CHDIR_HELP",
 	"CLS",		0,			&DOS_Shell::CMD_CLS,		"SHELL_CMD_CLS_HELP",
-//	"COPY",		0,			&DOS_Shell::CMD_COPY,		"Copy Files.",
+	"COPY",		0,			&DOS_Shell::CMD_COPY,		"SHELL_CMD_COPY_HELP",
 	"DIR",		0,			&DOS_Shell::CMD_DIR,		"SHELL_CMD_DIR_HELP",
     "DEL",		1,			&DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
     "DELETE",   0,          &DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
@@ -302,11 +302,97 @@ void DOS_Shell::CMD_DIR(char * args) {
 }
 
 void DOS_Shell::CMD_COPY(char * args) {
+
+	DOS_DTA dta(dos.dta);
+	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+	char name[DOS_NAMELENGTH_ASCII];
+
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
+	// source/target
+	char* source = args;
+	char* target = StripWord(source);
+	
+	// Target and Source have to be there
+	if (!source || !strlen(source)) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		return;	
+	};
+
+	/* Make a full path in the args */
+	char pathSource[DOS_PATHLENGTH];
+	char pathTarget[DOS_PATHLENGTH];
+
+	if (!DOS_Canonicalize(source,pathSource)) {
+		WriteOut(MSG_Get("SHELL_CMD_ILLEGAL_PATH"));
+		return;
+	}
+	// cut search pattern
+	char* pos = strrchr(pathSource,'\\');
+	if (pos) *(pos+1) = 0;
+
+	if (!DOS_Canonicalize(target,pathTarget)) {
+		WriteOut(MSG_Get("SHELL_CMD_ILLEGAL_PATH"));
+		return;
+	}
+	// add '\\' if target is a directoy
+	if (pathTarget[strlen(pathTarget)-1]!='\\') {
+		if (DOS_FindFirst(pathTarget,0xffff)) {
+			dta.GetResult(name,size,date,time,attr);
+			if (attr & DOS_ATTR_DIRECTORY)	
+				strcat(pathTarget,"\\");
+		}
+	};
+
+	bool ret=DOS_FindFirst(args,0xffff);
+	if (!ret) {
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		return;
+	}
+
+	Bit32u count = 0;
+
+	Bit16u sourceHandle,targetHandle;
+	char nameTarget[DOS_PATHLENGTH];
+	char nameSource[DOS_PATHLENGTH];
+
+	while (ret) {
+		dta.GetResult(name,size,date,time,attr);
+
+		if ((attr & DOS_ATTR_DIRECTORY)==0) {
+			strcpy(nameSource,pathSource);
+			strcat(nameSource,name);
+			// Open Source
+			if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
+				// Create Target
+				strcpy(nameTarget,pathTarget);
+				if (nameTarget[strlen(nameTarget)-1]=='\\') strcat(nameTarget,name);
+				
+				if (DOS_CreateFile(nameTarget,0,&targetHandle)) {
+					// Copy 
+					Bit8u	buffer[0x8000];
+					bool	failed = false;
+					Bit16u	toread = 0x8000;
+					do {
+						failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
+						failed |= DOS_WriteFile(targetHandle,buffer,&toread);
+					} while (toread==0x8000);
+					failed |= DOS_CloseFile(sourceHandle);
+					failed |= DOS_CloseFile(targetHandle);
+					WriteOut(" %s\n",name);
+					count++;
+				} else {
+					DOS_CloseFile(sourceHandle);
+					WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),target);
+				}
+			} else WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),source);
+		};
+		ret=DOS_FindNext();
+	};
+	WriteOut(MSG_Get("SHELL_CMD_COPY_SUCCESS"),count);
 }
 
 void DOS_Shell::CMD_SET(char * args) {

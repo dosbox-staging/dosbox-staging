@@ -206,6 +206,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
     MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
+	MSG_Add("SHELL_CMD_COPY_FAILURE","Copy failure : %s.\n");
+	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
 
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "DOSBox does not run protected mode games!\n"
@@ -230,6 +232,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
     MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
+	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
+
     /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
