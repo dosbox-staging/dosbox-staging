@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.20 2004-05-25 19:37:18 harekiet Exp $ */
+/* $Id: setup.cpp,v 1.21 2004-06-22 14:05:08 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -46,8 +46,9 @@ void Prop_string::SetValue(char* input){
 }
 	
 void Prop_bool::SetValue(char* input){
-	input=trim(input);
-	if((input[0]=='0') ||(input[0]=='D')||( (input[0]=='O') && (input[0]=='F'))||(input[0]=='f')){
+	input=lowcase(trim(input));
+	/* valid false entries: 0 ,d*, of* ,f*  everything else gets true */
+	if((input[0]=='0') || (input[0]=='d') || ( (input[0]=='o') && (input[1]=='f')) || (input[0]=='f')){
 		__value._bool=false;
 	}else{
 		__value._bool=true;
