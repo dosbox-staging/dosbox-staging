@@ -214,7 +214,7 @@ void S_Warn(char * format,...) {
 	GFX_ShowMsg(buf);
 #endif
 }
-char buf[1024];           //global as else it doesn't always gets thrown right (linux/gcc2.95)
+static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
     
 //	char buf[1024];    //see above

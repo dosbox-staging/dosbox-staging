@@ -148,7 +148,7 @@ void DOSBOX_Init(void) {
 	
 	secprop=control->AddSection_prop("DOSBOX",&DOSBOX_RealInit);
 	
-	secprop->Add_string("LANGUAGE","dosbox.lang");
+	secprop->Add_string("LANGUAGE","");
 	secprop->Add_int("WARNINGS",0);
 	
 	control->AddSection		("MEMORY",&MEM_Init);

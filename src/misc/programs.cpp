@@ -92,7 +92,7 @@ Program::Program() {
 	cmd = new CommandLine(envscan,tail.buffer);
 }
 
-void Program::WriteOut(char * format,...) {
+void Program::WriteOut(const char * format,...) {
 	char buf[1024];
 	va_list msg;
 	
