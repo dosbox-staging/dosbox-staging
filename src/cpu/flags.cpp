@@ -42,9 +42,6 @@ Bitu get_CF(void) {
 	case t_DECw:
 	case t_DECd:
 	case t_MUL:
-	case t_RCLb:
-	case t_RCLw:
-	case t_RCLd:
 		return GETFLAG(CF);
 		break;
 	case t_ADDb:	
@@ -107,18 +104,6 @@ Bitu get_CF(void) {
 		return lf_var1w;
 	case t_NEGd:
 		return lf_var1d;
-	case t_ROLb:
-		return lf_resb & 1;
-	case t_ROLw:
-		return lf_resw & 1;
-	case t_ROLd:
-		return lf_resd & 1;
-	case t_RORb:
-		return (lf_resb & 0x80);
-	case t_RORw:
-		return (lf_resw & 0x8000);
-	case t_RORd:
-		return (lf_resd & 0x80000000);
 	case t_ORb:
 	case t_ORw:
 	case t_ORd:
@@ -148,18 +133,6 @@ Bitu get_AF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
-	case t_ROLb:
-	case t_RORb:
-	case t_RCLb:
-	case t_RCRb:
-	case t_ROLw:
-	case t_RORw:
-	case t_RCLw:
-	case t_RCRw:
-	case t_ROLd:
-	case t_RORd:
-	case t_RCLd:
-	case t_RCRd:
 		return GETFLAG(AF);
 	case t_ADDb:	
 	case t_ADCb:
@@ -238,18 +211,6 @@ Bitu get_ZF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
-	case t_ROLb:
-	case t_RORb:
-	case t_RCLb:
-	case t_RCRb:
-	case t_ROLw:
-	case t_RORw:
-	case t_RCLw:
-	case t_RCRw:
-	case t_ROLd:
-	case t_RORd:
-	case t_RCLd:
-	case t_RCRd:
 		return GETFLAG(ZF);
 	case t_ADDb:	
 	case t_ORb:
@@ -318,18 +279,6 @@ Bitu get_SF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
-	case t_ROLb:
-	case t_RORb:
-	case t_RCLb:
-	case t_RCRb:
-	case t_ROLw:
-	case t_RORw:
-	case t_RCLw:
-	case t_RCRw:
-	case t_ROLd:
-	case t_RORd:
-	case t_RCLd:
-	case t_RCRd:
 		return GETFLAG(SF);
 	case t_ADDb:
 	case t_ORb:
@@ -437,26 +386,14 @@ Bitu get_OF(void) {
 		return (lf_var1w == 0x8000);
 	case t_NEGd:
 		return (lf_var1d == 0x80000000);
-	case t_ROLb:
-	case t_RORb:
-	case t_RCLb:
-	case t_RCRb:
 	case t_SHLb:
 	case t_SHRb:
 		return (lf_resb ^ lf_var1b) & 0x80;
-	case t_ROLw:
-	case t_RORw:
-	case t_RCLw:
-	case t_RCRw:
 	case t_SHLw:
 	case t_SHRw:
 	case t_DSHRw:
 	case t_DSHLw:
 		return (lf_resw ^ lf_var1w) & 0x8000;
-	case t_ROLd:
-	case t_RORd:
-	case t_RCLd:
-	case t_RCRd:
 	case t_SHLd:
 	case t_SHRd:
 	case t_DSHRd:
@@ -507,7 +444,7 @@ Bit16u parity_lookup[256] = {
 
 Bitu get_PF(void) {
 	switch (lflags.type) {
-		case t_UNKNOWN:
+	case t_UNKNOWN:
 		return GETFLAG(PF);
 	default:
 		return	(parity_lookup[lf_resb]);;
@@ -830,57 +767,6 @@ Bitu FillFlags(void) {
 		DOFLAG_SFd;
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
-		break;
-
-
-	case t_ROLb:
-		SET_FLAG(CF,lf_resb & 1);
-		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);
-		break;
-	case t_ROLw:
-		SET_FLAG(CF,lf_resw & 1);
-		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
-		break;
-	case t_ROLd:
-		SET_FLAG(CF,lf_resd & 1);
-		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
-		break;
-
-
-	case t_RORb:
-		SET_FLAG(CF,(lf_resb & 0x80));
-		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);
-		break;
-	case t_RORw:
-		SET_FLAG(CF,(lf_resw & 0x8000));
-		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
-		break;
-	case t_RORd:
-		SET_FLAG(CF,(lf_resd & 0x80000000));
-		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
-		break;
-
-	case t_RCLb:
-		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);
-		break;
-	case t_RCLw:
-		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
-		break;
-	case t_RCLd:
-		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
-		break;
-	
-	case t_RCRb:
-		SET_FLAG(CF,(lf_var1b >> (lf_var2b - 1)) & 1);
-		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);	
-		break;
-	case t_RCRw:
-		SET_FLAG(CF,(lf_var1w >> (lf_var2b - 1)) & 1);
-		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
-		break;
-	case t_RCRd:
-		SET_FLAG(CF,(lf_var1d >> (lf_var2b - 1)) & 1);
-		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
 		break;
 
 	case t_INCb:
