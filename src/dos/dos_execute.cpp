@@ -292,9 +292,6 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		else memsize=maxsize;
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
 		loadseg=pspseg+16;
-		/* Setup a psp */
-		SetupPSP(pspseg,memsize,envseg);
-		SetupCMDLine(pspseg,block);
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
@@ -331,6 +328,14 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 	delete[] loadbuf;
 	DOS_CloseFile(fhandle);
+
+	/* Setup a psp */
+	if (flags!=OVERLAY) {
+		// Create psp after closing exe, to avoid dead file handle of exe in copied psp
+		SetupPSP(pspseg,memsize,envseg);
+		SetupCMDLine(pspseg,block);
+	};
+
 	CALLBACK_SCF(false);		/* Carry flag cleared for caller if successfull */
 	if (flags==OVERLAY) return true;			/* Everything done for overlays */
 	RealPt csip,sssp;
