@@ -453,10 +453,10 @@ void XMS_Init(Section* sec) {
 	if (!size) return;
 	if (size>C_MEM_MAX_SIZE-1) size=C_MEM_MAX_SIZE-1;
 	xms_size = size;
-/*	DOS_AddMultiplexHandler(multiplex_xms);
+	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);
-	xms_callback=CALLBACK_RealPointer(call_xms);*/
+	xms_callback=CALLBACK_RealPointer(call_xms);
 	/* Setup the handler table */
 	Bitu i;
 	for (i=0;i<XMS_HANDLES;i++) {
