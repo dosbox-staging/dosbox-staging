@@ -28,6 +28,7 @@
 #include "inout.h"
 #include "dos_inc.h"
 
+#define EMM_USEHANDLER 1
 
 #define EMM_PAGEFRAME	0xE000
 #define	EMM_MAX_HANDLES	50				/* 255 Max */
@@ -97,7 +98,22 @@ struct EMM_Handle {
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Page emm_pages[EMM_MAX_PAGES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
+static HostPt emm_pagebase[EMM_MAX_PHYS];
 Bitu call_int67;
+
+#if EMM_USEHANDLER
+Bit8u EMM_ReadHandler(PhysPt start) {
+	start-=EMM_PAGEFRAME * 16;
+	Bitu page=start>>14;
+	return readb(emm_pagebase[page]+(start&0x3fff));
+}
+
+void EMM_WriteHandler(PhysPt start,Bit8u val) {
+	start-=EMM_PAGEFRAME * 16;
+	Bitu page=start>>14;
+	writeb(emm_pagebase[page]+(start&0x3fff),val);
+}
+#endif
 
 static Bit16u EMM_GetFreePages(void) {
 	Bit16u count=0;
@@ -206,13 +222,21 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 			log_page--;
 		}
 		/* Do the actual mapping */
+#if EMM_USEHANDLER
+		emm_pagebase[phys_page]=(HostPt) emm_pages[index].memory;
+#else
 		MEM_SetupMapping(PAGE_COUNT(PhysMake(EMM_PAGEFRAME,phys_page*EMM_PAGE_SIZE)),PAGE_COUNT(PAGE_SIZE),emm_pages[index].memory);
+#endif
 		return EMM_NO_ERROR;
 	} else if (log_page==NULL_PAGE) {
 		/* Unmapping it is */
 		emm_mappings[phys_page].handle=NULL_HANDLE;
 		emm_mappings[phys_page].page=NULL_PAGE;
+#if EMM_USEHANDLER
+		emm_pagebase[phys_page]=memory+EMM_PAGEFRAME*16+phys_page*16*1024;
+#else
 		MEM_ClearMapping(PAGE_COUNT(PhysMake(EMM_PAGEFRAME,phys_page*EMM_PAGE_SIZE)),PAGE_COUNT(PAGE_SIZE));
+#endif
 		return EMM_NO_ERROR;
 	} else {
 		/* Illegal logical page it is */
@@ -364,7 +388,11 @@ static Bitu INT67_Handler(void) {
 			break;
 		}
 		break;
-	case 0x50: // Map/Unmap multiple handle pages
+	case 0x4f:	/* Save Partial Page Map */
+		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		reg_ah=EMM_FUNC_NOSUP;
+		break;
+	case 0x50:	/* Map/Unmap multiple handle pages */
 		reg_ah = EMM_NO_ERROR;
 		switch (reg_al) {
 			case 0x00: // use physical page numbers
@@ -433,7 +461,6 @@ void EMS_Init(void) {
 	DOS_Device * newdev = new device_EMM();
 	DOS_AddDevice(newdev);
 
-
 /* Add a little hack so it appears that there is an actual ems device installed */
 	char * emsname="EMMXXXX0";
 	Bit16u seg=DOS_GetMemory(2);	//We have 32 bytes
@@ -458,6 +485,13 @@ void EMS_Init(void) {
 		emm_mappings[i].page=NULL_PAGE;
 		emm_mappings[i].handle=NULL_HANDLE;
 	}
-
+#if EMM_USEHANDLER
+	/* Setup page handler */
+	MEM_SetupPageHandlers(PAGE_COUNT(EMM_PAGEFRAME*16),PAGE_COUNT(64*1024),EMM_ReadHandler,EMM_WriteHandler);
+	emm_pagebase[0]=memory+EMM_PAGEFRAME*16;
+	emm_pagebase[1]=memory+EMM_PAGEFRAME*16+16*1024;
+	emm_pagebase[2]=memory+EMM_PAGEFRAME*16+32*1024;
+	emm_pagebase[3]=memory+EMM_PAGEFRAME*16+48*1024;
+#endif
 }
 
