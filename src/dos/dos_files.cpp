@@ -476,7 +476,6 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 }
 
 
-#if 1
 
 static bool FCB_MakeName2 (DOS_FCB & fcb, char* outname, Bit8u* outdrive){
 	char short_name[DOS_FCBNAME];
@@ -737,7 +736,7 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position */
-	fcb.SetRandom(new_block*128+new_rec);
+    fcb.SetRandom(new_block*128+new_rec - (restore ? 1 : 0) ); //seems to be this way.. why ???
 	return error;
 }
 
@@ -758,7 +757,7 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position */
-	fcb.SetRandom(new_block*128+new_rec);
+    fcb.SetRandom(new_block*128+new_rec - (restore ? 1 : 0) ); //seems to be this way.. need more games to test it.
 	return error;
 }
 
@@ -799,7 +798,6 @@ void DOS_FCBSetRandomRecord(Bit16u seg, Bit16u offset) {
 	fcb.SetRandom(block*128+rec);
 }
 
-#endif
 
 bool DOS_FileExists(char * name) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
