@@ -396,11 +396,11 @@ switch (inst.code.op) {
 			CPU_LTR(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x04:	/* VERR */
-			FILLFLAGS;
+			FillFlags();
 			CPU_VERR(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x05:	/* VERW */
-			FILLFLAGS;
+			FillFlags();
 			CPU_VERW(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
 
@@ -441,7 +441,7 @@ switch (inst.code.op) {
 				break;
 			}
 		case 6:		/* LMSW */
-			FILLFLAGS;
+			FillFlags();
 			CPU_LMSW(inst.op1.w);
 			goto nextopcode;
 		default:
@@ -456,21 +456,21 @@ switch (inst.code.op) {
 		break;
 	case O_LAR:
 		{
-			FILLFLAGS;
+			FillFlags();
 			Bitu ar;CPU_LAR(inst.op1.d,ar);
 			inst.op1.d=ar;
 		}
 		break;
 	case O_LSL:
 		{
-			FILLFLAGS;
+			FillFlags();
 			Bitu limit;CPU_LSL(inst.op1.d,limit);
 			inst.op1.d=limit;
 		}
 		break;
 	case O_ARPL:
 		{
-			FILLFLAGS;
+			FillFlags();
 			Bitu new_sel=inst.op1.d;
 			CPU_ARPL(new_sel,inst.op2.d);
 			inst.op1.d=new_sel;
@@ -478,7 +478,7 @@ switch (inst.code.op) {
 		break;
 	case O_BSFw:
 		{
-			FILLFLAGS;
+			FillFlags();
 			if (!inst.op1.w) {
 				SETFLAGBIT(ZF,true);
 			} else {
@@ -494,7 +494,7 @@ switch (inst.code.op) {
 		break;
 	case O_BSFd:
 		{
-			FILLFLAGS;
+			FillFlags();
 			if (!inst.op1.d) {
 				SETFLAGBIT(ZF,true);
 			} else {
@@ -510,7 +510,7 @@ switch (inst.code.op) {
 		break;
 	case O_BSRw:
 		{
-			FILLFLAGS;
+			FillFlags();
 			if (!inst.op1.w) {
 				SETFLAGBIT(ZF,true);
 			} else {
@@ -526,7 +526,7 @@ switch (inst.code.op) {
 		break;
 	case O_BSRd:
 		{
-			FILLFLAGS;
+			FillFlags();
 			if (!inst.op1.d) {
 				SETFLAGBIT(ZF,true);
 			} else {
@@ -547,7 +547,7 @@ switch (inst.code.op) {
 		{
 			Bitu val;PhysPt read;
 			Bitu mask=1 << (inst.op1.d & 15);
-			FILLFLAGS;
+			FillFlags();
 			if (inst.rm<0xc0) {
 				read=inst.rm_eaa+2*(inst.op1.d / 16);
 				val=mem_readw(read);
@@ -573,7 +573,7 @@ switch (inst.code.op) {
 		{
 			Bitu val;PhysPt read;
 			Bitu mask=1 << (inst.op1.d & 31);
-			FILLFLAGS;
+			FillFlags();
 			if (inst.rm<0xc0) {
 				read=inst.rm_eaa+4*(inst.op1.d / 32);
 				val=mem_readd(read);

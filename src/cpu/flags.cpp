@@ -575,9 +575,18 @@ Bitu get_PF(void) {
 }
 
 
-#define SET_FLAG(TYPE,TEST)	if ( TEST ) new_flags|=TYPE
+void FillFlags(void) {
+	flags.word=(flags.word & ~FLAG_MASK);
+	if (get_CF()) flags.word|=FLAG_CF;
+	if (get_PF()) flags.word|=FLAG_PF;
+	if (get_AF()) flags.word|=FLAG_AF;
+	if (get_ZF()) flags.word|=FLAG_ZF;
+	if (get_SF()) flags.word|=FLAG_SF;
+	if (get_OF()) flags.word|=FLAG_OF;
+	flags.type=t_UNKNOWN;
+}
+
 #if 0
-#endif
 
 Bitu get_Flags(void) {
 	Bitu new_flags=0;
@@ -808,4 +817,4 @@ Bitu get_Flags(void) {
 	return 0;
 }
 
-Bit8u * blah=(Bit8u *)&get_Flags;
+#endif

@@ -66,7 +66,7 @@ static INLINE void DecodeModRM(void) {
 
 #define LEAVECORE											\
 		SaveIP();											\
-		FILLFLAGS;
+		FillFlags();
 
 #define EXCEPTION(blah)										\
 	{														\

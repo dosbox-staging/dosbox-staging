@@ -24,6 +24,8 @@ Bitu get_SF(void);
 Bitu get_OF(void);
 Bitu get_PF(void);
 
+void FillFlags(void);
+
 #define SETFLAGSb(FLAGB)													\
 {																			\
 	SETFLAGBIT(OF,get_OF());												\
@@ -42,18 +44,6 @@ Bitu get_PF(void);
 	flags.type=t_UNKNOWN;													\
 	CPU_SetFlags(FLAGD);													\
 }
-
-#define FILLFLAGS															\
-{																			\
-	flags.word=(flags.word & ~FLAG_MASK) |									\
-	(get_CF() ? FLAG_CF : 0 ) |												\
-	(get_PF() ? FLAG_PF : 0 ) |												\
-	(get_AF() ? FLAG_AF : 0 ) |												\
-	(get_ZF() ? FLAG_ZF : 0 ) |												\
-	(get_SF() ? FLAG_SF : 0 ) |												\
-	(get_OF() ? FLAG_OF : 0 );												\
-	 flags.type=t_UNKNOWN;													\
-}		
 
 #define LoadCF SETFLAGBIT(CF,get_CF());
 #define LoadZF SETFLAGBIT(ZF,get_ZF());

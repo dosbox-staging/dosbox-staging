@@ -216,7 +216,7 @@ l_M_Ed:
 		inst.op1.d=reg_32(inst.code.extra);
 		break;
 	case L_FLG:
-		FILLFLAGS;
+		FillFlags();
 		inst.op1.d = flags.word;
 		break;
 	case L_SEG:
