@@ -186,7 +186,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s\n");
-	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %\n");
+	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s\n");
+    MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s\n");
 	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
 	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
@@ -217,8 +218,9 @@ void SHELL_Init() {
     MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
     MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
     MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
-	MSG_Add("SHELL_CMD_RENAME_WILD","This is a simple Rename, no wildcards allowed!\n");
+	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
+    MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
     /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */

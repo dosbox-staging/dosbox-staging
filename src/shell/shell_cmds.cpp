@@ -28,6 +28,8 @@ static SHELL_Cmd cmd_list[]={
 	"CLS",		0,			&DOS_Shell::CMD_CLS,		"SHELL_CMD_CLS_HELP",
 //	"COPY",		0,			&DOS_Shell::CMD_COPY,		"Copy Files.",
 	"DIR",		0,			&DOS_Shell::CMD_DIR,		"SHELL_CMD_DIR_HELP",
+    "DEL",		1,			&DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
+    "DELETE",   0,          &DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
 	"ECHO",		0,			&DOS_Shell::CMD_ECHO,		"SHELL_CMD_ECHO_HELP",
 	"EXIT",		0,			&DOS_Shell::CMD_EXIT,		"SHELL_CMD_EXIT_HELP",	
 	"HELP",		0,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP",
@@ -39,7 +41,7 @@ static SHELL_Cmd cmd_list[]={
 	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP",
 	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP",
 	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
-	"REN",		0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
+	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
 	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"Make Directory",
@@ -57,6 +59,7 @@ void DOS_Shell::DoCommand(char * line) {
 		if (*line==32) break;
 		if (*line=='/') break;
 		if ((*line=='.') && (*(line+1)=='.')) break;
+//        if ((*line=='.') && (*(line+1)==0))   break;
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;
@@ -81,6 +84,20 @@ void DOS_Shell::CMD_CLS(char * args) {
 	CALLBACK_RunRealInt(0x10);
 };
 
+void DOS_Shell::CMD_DELETE(char * args) {
+	char * rem=ScanCMDRemain(args);
+	if (rem) {
+		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
+		return;
+	}
+    if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
+
+	if (!DOS_UnlinkFile(args)) {
+	        WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);
+	}
+
+};
+
 void DOS_Shell::CMD_HELP(char * args){
 	/* Print the help */
 	WriteOut(MSG_Get("SHELL_CMD_HELP"));
@@ -94,7 +111,7 @@ void DOS_Shell::CMD_HELP(char * args){
 
 void DOS_Shell::CMD_RENAME(char * args){
     if(!*args) {SyntaxError();return;}
-    if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_RENAME_WILD"));}
+    if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
     char * arg2 =StripWord(args);
     DOS_Rename(args,arg2);
 }
