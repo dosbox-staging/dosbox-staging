@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.25 2004-11-15 14:56:55 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.26 2004-12-07 21:29:14 qbix79 Exp $ */
 
 #include <list>
 
@@ -44,6 +44,7 @@ struct PIC_Controller {
 
 	bool special;
 	bool auto_eoi;
+	bool rotate_on_auto_eoi;
 	bool request_issr;
 	Bit8u vector_base;
 };
@@ -75,70 +76,61 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	Bitu i;
 	Bit16u IRQ_priority_table[16] = 
 	{ 0,1,2,9,10,11,12,13,14,15,3,4,5,6,7,8 };
-	switch (val) {
-	case 0x0A: /* select read interrupt request register */
-		pic->request_issr=false;
-		break;
-	case 0x0B: /* select read interrupt in-service register */
-		pic->request_issr=true;
-		break;
-	case 0x10:				/* ICW1 */
-		pic->icw_index=1;
-		pic->icw_words=2;
-		break;
-	case 0x11:				/* ICW1 + need for ICW4 */
-		pic->icw_index=1;
-		pic->icw_words=3;
-		break;
-	case 0x20:case 0x21:case 0x22:case 0x23:case 0x24:case 0x25:case 0x26:case 0x27:
-		if (PIC_IRQActive<(irq_base+8)) {
-			irqs[PIC_IRQActive].inservice=false;
-			PIC_IRQActive=PIC_NOIRQ;
-			for (i=0; i<=15; i++){
-				if(irqs[IRQ_priority_table[i]].inservice) {
-					PIC_IRQActive=IRQ_priority_table[i];
-					break;
+	if (val&0x10) {		// ICW1 issued
+		if (val&0x02) E_Exit("PIC: single mode not handled");	// (would have to skip ICW3)
+		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
+		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
+		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
+		pic->icw_index=1;			// next is ICW3
+		pic->icw_words=2+val&0x01;	// =3 if ICW4 needed
+	} else if (val&0x08) {	// OCW3 issued
+		if (val&0x04) E_Exit("PIC: poll command not handled");
+		if (val&0x02) {		// function select
+			if (val&0x01) pic->request_issr=true;	/* select read interrupt in-service register */
+			else pic->request_issr=false;			/* select read interrupt request register */
+		}
+		if (val&0x40) {		// special mask select
+			if (val&0x20) pic->special=true;
+			else pic->special=false;
+			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
+		}
+	} else {	// OCW2 issued
+		if (val&0x20) {		// EOI commands
+			if (val&0x80) E_Exit("rotate mode not supported");
+			if (val&0x40) {		// specific EOI
+				if (PIC_IRQActive==(irq_base+val-0x60U)) {
+					irqs[PIC_IRQActive].inservice=false;
+					PIC_IRQActive=PIC_NOIRQ;
+					for (i=0; i<=15; i++) {
+						if (irqs[IRQ_priority_table[i]].inservice) {
+							PIC_IRQActive=IRQ_priority_table[i];
+							break;
+						}
+					}
 				}
-			}
-		} //TODO Warnings?
-		break;
-	case 0x4a:	/* OCW3 select read interrupt request register */
-		LOG(LOG_PIC,LOG_NORMAL)("port %X : special OFF",port);
-		pic->special = false;
-		pic->request_issr = false;
-		break;
-	case 0x60:case 0x61:case 0x62:case 0x63:case 0x64:case 0x65:case 0x66:case 0x67:
-		/* Spefific EOI 0-7 */
-		if (PIC_IRQActive==(irq_base+val-0x60U)) {
-			irqs[PIC_IRQActive].inservice=false;
-			PIC_IRQActive=PIC_NOIRQ;
-			for (i=0; i<=15; i++) {
-				if (irqs[IRQ_priority_table[i]].inservice) {
-					PIC_IRQActive=IRQ_priority_table[i];
-					break;
+				if (val&0x80);	// perform rotation
+			} else {		// nonspecific EOI
+				if (PIC_IRQActive<(irq_base+8)) {
+					irqs[PIC_IRQActive].inservice=false;
+					PIC_IRQActive=PIC_NOIRQ;
+					for (i=0; i<=15; i++){
+						if(irqs[IRQ_priority_table[i]].inservice) {
+							PIC_IRQActive=IRQ_priority_table[i];
+							break;
+						}
+					}
 				}
+				if (val&0x80);	// perform rotation
 			}
-		}//TODO Warnings?
-		break;
-	case 0x68:/* OCW3 select */
-		pic->special=true;
-		LOG(LOG_PIC,LOG_NORMAL)("port %X : special ON",port);
-		break;
-	case 0x6b:	/* OCW3 select read interrupt in-service register */
-		LOG(LOG_PIC,LOG_NORMAL)("port %X : special ON",port);
-		pic->special = true;
-		pic->request_issr = true;
-		break;
-	case 0xC0:case 0xC1:case 0xC2:case 0xC3:case 0xC4:case 0xC5:case 0xC6:case 0xC7:
-		/* Priority order, no need for it */
-		break;
-	case 0x00:case 0x80: /* Rotate stuff in eoi mode */
-		/* We can live without it for now. (7 cities of gold) */
-		LOG(LOG_PIC,LOG_NORMAL)("port %X : ignoring rotate stuff.",port);
-		break;
-	default:
-		E_Exit("PIC:Unhandled command %02X",val);
-	}
+		} else {
+			if ((val&0x40)==0) {		// rotate in auto EOI mode
+				if (val&0x80) pic->rotate_on_auto_eoi=true;
+				else pic->rotate_on_auto_eoi=false;
+			} else if (val&0x80) {
+				E_Exit("set priority command not handled");
+			}	// else NOP command
+		}
+	}	// end OCW2
 }
 
 static void write_data(Bitu port,Bitu val,Bitu iolen) {
@@ -174,7 +166,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 	case 3:							/* icw 4 */
 		/*
 			0	    1 8086/8080  0 mcs-8085 mode
-			1	    1 Auto EOI   1 Normal EOI
+			1	    1 Auto EOI   0 Normal EOI
 			2-3	   0x Non buffer Mode 
 				   10 Buffer Mode Slave 
 				   11 Buffer mode Master	
@@ -183,9 +175,13 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		pic->auto_eoi=(val & 0x2)>0;
 		
 		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
+
+		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
+		if ((val&0x10)==0) E_Exit("PIC:ICW4: %x, special fully-nested mode not handled",val);
+
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
-	default:                       /* icw 3, and 4*/
+	default:
 		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %X",val);
 	}
 }
@@ -246,15 +242,16 @@ void PIC_runIRQs(void) {
 	Bit16u activeIRQ = PIC_IRQActive;
 	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
 	for (i=0;i<=15;i++) {
-	   if ((IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]) || (pics[ (i<8)?0:1].special) ){
-		  	if (!irqs[i].masked && irqs[i].active) {
+		if ((IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]) || (pics[ (i<8)?0:1].special) ){
+			if (!irqs[i].masked && irqs[i].active) if (i != 2) {
 				irqs[i].active=false;
 				PIC_IRQCheck&=~(1 << i);
-				if (i==2) i=9;
 				CPU_HW_Interrupt(irqs[i].vector);
 				if (!pics[0].auto_eoi) {
 					PIC_IRQActive=i;
 					irqs[i].inservice=true;
+				} else if (pics[0].rotate_on_auto_eoi) {
+					E_Exit("rotate on auto EOI not handled");
 				}
 				return;
 			}
@@ -442,7 +439,7 @@ void PIC_Init(Section* sec) {
 		pics[i].active=0;
 		pics[i].inservice=0;
 		pics[i].auto_eoi=false;
-		pics[i].auto_eoi=false;
+		pics[i].rotate_on_auto_eoi=false;
 		pics[i].request_issr=false;
 		pics[i].special=false;
 		pics[i].icw_index=0;
