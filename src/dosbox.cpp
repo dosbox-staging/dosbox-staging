@@ -209,7 +209,8 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&ADLIB_Init);
 	secprop->Add_bool("adlib",true);
 	secprop->AddInitFunction(&CMS_Init);
-    secprop->Add_bool("cms",false);
+	secprop->Add_bool("cms",false);
+	secprop->Add_int("cmsrate",22050);
 	secprop->AddInitFunction(&MPU401_Init);
 	secprop->Add_bool("mpu401",true);
 
