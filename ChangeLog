@@ -9,6 +9,13 @@
              loadfix -32 mm2  (Allocates 32kb and starts executable mm2)
              loadfix -128     (Allocates 128kb)
              loadfix -f       (frees all previous allocated memory)
+  - added echoing of characters for input function
+  - added support for backspace for input function
+  - added partial support for int10:01 set cursortype
+  - fixed most of the problems/bugs with character input.
+  - fixed allocationinfo call.(darksun series)
+  - improved dos support for non-existant functions
+
 
 0.56
   - added support for a configclass/configfile
