@@ -377,7 +377,7 @@ void MEM_AllocLinkMemory(PageEntry * theentry) {
 
 void MEM_SetLFB(Bitu page,Bitu pages,HostPt pt) {
 	if (pages>LFB_PAGES) E_Exit("MEM:LFB to large");
-	LOG_MSG("LFB Base at address %X,page %X",page*4096,page);
+	LOG(LOG_PAGING,LOG_NORMAL)("LFB Base at address %X,page %X",page*4096,page);
 	memory.lfb.pages=pages;
 	memory.lfb.start_page=page;
 	memory.lfb.end_page=page+pages;
