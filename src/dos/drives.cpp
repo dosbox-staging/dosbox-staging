@@ -63,6 +63,7 @@ bool WildFileCmp(const char * file, const char * wild)
 		r++;
 	}
 checkext:
+    r=0;
 	while (r<3) {
 		if (wild_ext[r]=='*') return true;
 		if (wild_ext[r]!='?' && wild_ext[r]!=file_ext[r]) return false;

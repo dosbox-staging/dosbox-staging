@@ -635,7 +635,16 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	fcb.SetSizeDateTime(size,date,time);
 }
 
-bool DOS_FCBOpenCreate(Bit16u seg,Bit16u offset) { 
+bool DOS_FCBCreate(Bit16u seg,Bit16u offset) { 
+	DOS_FCB fcb(seg,offset);
+	char shortname[DOS_FCBNAME];Bit16u handle;
+	fcb.GetName(shortname);
+	if (!DOS_CreateFile(shortname,2,&handle)) return false;
+	fcb.FileOpen((Bit8u)handle);
+	return true;
+}
+
+bool DOS_FCBOpen(Bit16u seg,Bit16u offset) { 
 	DOS_FCB fcb(seg,offset);
 	char shortname[DOS_FCBNAME];Bit16u handle;
 	fcb.GetName(shortname);

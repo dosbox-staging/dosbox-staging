@@ -164,7 +164,7 @@ static Bitu DOS_21Handler(void) {
 		reg_al=26;
 		break;
 	case 0x0f:		/* Open File using FCB */
-		if(DOS_FCBOpenCreate(SegValue(ds),reg_dx)){
+		if(DOS_FCBOpen(SegValue(ds),reg_dx)){
 			reg_al=0;
 		}else{
 			reg_al=0xff;
@@ -208,8 +208,8 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:0x15 FCB-Write used, result:al=%d",reg_al);
 		break;
 	case 0x16:		/* Create or truncate file using FCB */
-		if (DOS_FCBOpenCreate(SegValue(ds),reg_dx)) reg_al = 0x00;
-		else reg_al = 0x01;
+		if (DOS_FCBCreate(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0xFF;
 		LOG_DEBUG("DOS:0x16 FCB-Create used, result:al=%d",reg_al);
 		break;
 	case 0x17:		/* Rename file using FCB */		

@@ -318,7 +318,7 @@ void DOS_FCB::SetRandom(Bit32u _random) {
 }
 
 void DOS_FCB::FileOpen(Bit8u _fhandle) {
-	sSave(sFCB,drive,GetDrive());
+	sSave(sFCB,drive,GetDrive()+1);
 	sSave(sFCB,file_handle,_fhandle);
 	sSave(sFCB,cur_block,0);
 	sSave(sFCB,rec_size,128);

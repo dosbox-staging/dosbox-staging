@@ -43,7 +43,7 @@ private:
 };
 
 
-bool localDrive:: FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
+bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 //TODO Maybe care for attributes but not likely
 	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
