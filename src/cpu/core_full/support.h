@@ -38,12 +38,12 @@ enum {
 	D_NOP,D_WAIT,
 	D_ENTERw,D_ENTERd,
 	D_LEAVEw,D_LEAVEd,
-	L_ERROR,
-
+	
 	D_RETFw,D_RETFd,
 	D_RETFwIw,D_RETFdIw,
 	D_CPUID,
-	D_HLT,
+	D_HLT,D_CLTS,
+	L_ERROR,
 };
 
 

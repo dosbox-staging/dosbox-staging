@@ -526,6 +526,9 @@ l_M_Ed:
 		LEAVECORE;
 		CPU_HLT(IPPoint-inst.opcode_start);
 		return CBRET_NONE;
+	case D_CLTS:
+		//TODO Really clear it sometime
+		goto nextopcode;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		break;
