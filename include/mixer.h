@@ -39,7 +39,6 @@ void MIXER_Enable(MIXER_Channel * chan,bool enable);
 
 /* PC Speakers functions, tightly related to the timer functions */
 
-void PCSPEAKER_Enable(bool enable);
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-
+void PCSPEAKER_SetType(Bitu mode);
 

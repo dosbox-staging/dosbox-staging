@@ -195,17 +195,13 @@ static Bit8u read_p61(Bit32u port) {
 }
 
 static void write_p61(Bit32u port,Bit8u val) {
-	port_61_data=val;
 /*
 	if (val & 128) if (!keyb.read_active) KEYBOARD_ReadBuffer();
 	Keys should get acknowledged just by reading 0x60.
 	Perhaps disable controller when bit 7=1
 */
-	if ((val & 3)==3) {
-		PCSPEAKER_Enable(true);
-	} else {
-		PCSPEAKER_Enable(false);
-	}
+	if ((port_61_data ^val) & 3) PCSPEAKER_SetType(val & 3);
+	port_61_data=val;
 }
 
 static void write_p64(Bit32u port,Bit8u val) {
