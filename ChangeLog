@@ -21,6 +21,7 @@
   - rewrote timingscheme so 1000 hz timers don't cause problems anymore
   - update adlib emulation
   - fixed some isues with the mouse (double clicks and visible when it shouldn't be)
+  - improved mouse behaviour (mickey/pixel rate) and detection routines.
   - basic ansi.sys support
   - Disney sound system emulation 
   - rewrote upcase/lowcase functions so they work fine with gcc3.2
