@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.24 2003-11-26 09:25:51 harekiet Exp $ */
+/* $Id: bios.cpp,v 1.25 2003-12-11 22:12:41 finsterr Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -80,10 +80,15 @@ static Bitu INT1A_Handler(void) {
 		CALLBACK_SCF(false);
 		break;
 	case 0x04:	/* GET REAL-TIME ClOCK DATA  (AT,XT286,PS) */
-		reg_dx=reg_cx=0;
-		CALLBACK_SCF(false);
-		LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
-		break;
+        reg_dx=0;
+        reg_cx=0x2003;
+        CALLBACK_SCF(false);
+        LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
+        break;
+//		reg_dx=reg_cx=0;
+//		CALLBACK_SCF(false);
+//		LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
+//		break;
 	case 0x80:	/* Pcjr Setup Sound Multiplexer */
 		LOG(LOG_BIOS,LOG_ERROR)("INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
 		break;
@@ -275,6 +280,10 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 		reg_ah=0;
 		break;
+    case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
+        reg_ah=0x86;
+        CALLBACK_SCF(true);
+        break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 	case 0xc4:	/* BIOS POS Programma option Select */
 		/* 
