@@ -1703,20 +1703,21 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0501:{// Allocate Memory	
 					Bitu handle,linear;
 					Bitu length = (reg_bx<<16)+reg_cx;
-					// TEMP
-					Bitu total;					
 					//DPMI_LOG("DPMI: 0501: Allocate memory (%d KB)",length/1024);
 					if (AllocateMem(length,handle,linear)) {
-						reg_si = 0; reg_di = handle;
-						reg_bx = (linear>>16);
-						reg_cx = (linear&0xFFFF);
-						total  = MEM_FreeLargest();				// in KB					
+						reg_si = handle>>16; 
+						reg_di = handle&0xFFFF;
+						reg_bx = linear>>16;
+						reg_cx = linear&0xFFFF;
 						DPMI_CALLBACK_SCF(false);
+						// TEMP
+						Bitu total  = MEM_FreeLargest();				// in KB					
 						DPMI_LOG("DPMI: 0501: Allocation success: H:%04X%04X (%d KB) (R:%d KB)",reg_si,reg_di,length/1024 + ((length%1024)>0),total*4);
 					} else {
 						reg_ax = DPMI_ERROR_PHYSICAL_MEMORY_UNAVAILABLE;
 						DPMI_CALLBACK_SCF(true);
-						total  = MEM_FreeLargest();				// in KB					
+						// TEMP
+						Bitu total = MEM_FreeLargest();				// in KB					
 						DPMI_LOG("DPMI: 0501: Allocation failure (%d KB) (R:%d KB)",length/1024 + ((length%1024)>0),total*4);
 					};
 					}; break;
@@ -1727,37 +1728,38 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_CALLBACK_SCF(false);
 					break;
 		case 0x0503:{//Resize Memory Block
+					Bitu linear,newHandle;
 					Bitu newByte		= (reg_bx<<16)+reg_cx;
 					Bitu newSize		= (newByte/DPMI_PAGE_SIZE)+((newByte & (DPMI_PAGE_SIZE-1))>0);
 					MemHandle handle	= (reg_si<<16)+reg_di;
-					DPMI_LOG_ERROR("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize*4);
+					DPMI_LOG("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize*4);
 					if (MEM_ReAllocatePages(handle,newSize,true)) {
-						reg_bx = (newSize>>16);
-						reg_cx = (newSize&0xFFFF);
+						linear = handle * DPMI_PAGE_SIZE;
+						reg_si = handle>>16;
+						reg_di = handle&0xFFFF;
+						reg_bx = linear>>16;
+						reg_cx = linear&0xFFFF;
 						DPMI_CALLBACK_SCF(false);					
-						break;
-					} else {
-						Bitu newHandle,linear;
+					} else if (AllocateMem(newByte,newHandle,linear)) {							
 						// Not possible, try to allocate
-						if (AllocateMem((reg_bx<<16)+reg_cx,newHandle,linear)) {							
-							DPMI_LOG_ERROR("DPMI: 0503: Reallocated Memory: %d KB",newSize*4);
-							reg_si = 0; reg_di = newHandle;
-							reg_bx = (linear>>16);
-							reg_cx = (linear&0xFFFF);							
-							DPMI_CALLBACK_SCF(false);
-							// FIXME: What to do with the old mem block ? delete ?
-							// FIXME: Copy contents ?!
-							MEM_ReleasePages(handle);
-							FreeXMSHandle(handle);
-							break;
-						} else {
-							AllocateMem((reg_bx<<16)+reg_cx,newHandle,linear);
-							DPMI_LOG_ERROR("DPMI: 0503: Reallocated Memory failure: %d KB",newSize*4);
-						}
+						DPMI_LOG("DPMI: 0503: Reallocated Memory: %d KB",newSize*4);
+						reg_si = newHandle>>16;
+						reg_di = newHandle&0xFFFF;
+						reg_bx = linear>>16;
+						reg_cx = linear&0xFFFF;
+						// copy contents
+						Bitu size = MEM_AllocatedPages(handle);
+						if (newSize<size) size = newSize;
+						MEM_BlockCopy(linear,handle*DPMI_PAGE_SIZE,size*DPMI_PAGE_SIZE);
+						// Release old handle
+						MEM_ReleasePages(handle);
+						FreeXMSHandle(handle);
+						DPMI_CALLBACK_SCF(false);
+					} else {
+						DPMI_LOG_ERROR("DPMI: 0503: Memory unavailable . %08X",newSize);
+						reg_ax = DPMI_ERROR_PHYSICAL_MEMORY_UNAVAILABLE;
+						DPMI_CALLBACK_SCF(true);
 					};
-					DPMI_LOG_ERROR("DPMI: 0503: Memory unavailable . %08X",newSize);
-					reg_ax = DPMI_ERROR_PHYSICAL_MEMORY_UNAVAILABLE;
-					DPMI_CALLBACK_SCF(true);
 					}; break;
 		case 0x0506:// Get Page Attributes
 					DPMI_LOG("DPMI: 0506: Get Page Attributes");
