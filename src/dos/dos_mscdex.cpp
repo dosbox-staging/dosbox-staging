@@ -239,8 +239,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 									cdrom[numDrives] = new CDROM_Interface_Aspi();
 									LOG(LOG_MISC,"MSCDEX: ASPI Interface.");
 								}
-							#else
+							#elif __linux__
 								cdrom[numDrives] = new CDROM_Interface_Linux();
+							#else // No support on this machine...
+								cdrom[numDrives] = new CDROM_Interface_Fake();
+								LOG(LOG_MISC|LOG_ERROR,"MSCDEX: No MSCDEX support on this machine.");
 							#endif
 							LOG(LOG_MISC,"MSCDEX: Mounting physical cdrom: %s"	,physicalPath);
 						  } break;
