@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.37 2004-04-26 07:54:37 harekiet Exp $ */
+/* $Id: dos_execute.cpp,v 1.38 2004-04-29 06:10:28 harekiet Exp $ */
 
 #include <string.h>
+#include <ctype.h>
 #include "dosbox.h"
 #include "mem.h"
 #include "dos_inc.h"
