@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,8 @@
 
 
 enum RENDER_Operation {
-	OP_None,OP_2xSai,OP_Scale2x
+	OP_None,OP_Shot,
+	OP_2xSai,OP_Scale2x,
 };
 
 enum {
