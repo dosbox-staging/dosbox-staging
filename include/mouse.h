@@ -16,9 +16,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: mouse.h,v 1.6 2004-03-14 13:39:45 qbix79 Exp $ */
+
+#ifndef _MOUSE_H_
+#define _MOUSE_H_
+
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);
 
+void Mouse_SetPS2State(bool use);
+void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs);
 
 void Mouse_CursorMoved(float x,float y);
 void Mouse_CursorSet(float x,float y);
@@ -27,4 +34,6 @@ void Mouse_ButtonReleased(Bit8u button);
 
 void Mouse_AutoLock(bool enable);
 void Mouse_NewVideoMode(void);
+
+#endif
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.29 2004-02-29 21:55:49 harekiet Exp $ */
+/* $Id: bios.cpp,v 1.30 2004-03-14 13:39:45 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -29,6 +29,7 @@
 #include "pic.h"
 #include "joystick.h"
 #include "dos_inc.h"
+#include "mouse.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
 static Bitu call_int1,call_int70;
@@ -303,12 +304,50 @@ static Bitu INT15_Handler(void) {
         CALLBACK_SCF(true);
         break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
-	case 0xc4:	/* BIOS POS Programma option Select */
-		/* 
-			Damn programs should use the mouse drivers 
-			So let's fail these calls 
-		*/
-		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called,bios mouse not supported",reg_ah);
+		switch (reg_al) {
+		case 0x00:		// enable/disable
+			if (reg_bh==0) {	// disable
+				Mouse_SetPS2State(false);
+				reg_ah=0;
+				CALLBACK_SCF(false);
+			} else if (reg_bh==0x01) {	//enable
+				Mouse_SetPS2State(true);
+				reg_ah=0;
+				CALLBACK_SCF(false);
+			} else CALLBACK_SCF(true);
+			break;
+		case 0x01:		// reset
+			reg_bx=0x00aa;	// mouse
+			CALLBACK_SCF(false);
+			break;
+		case 0x02:		// set sampling rate
+			CALLBACK_SCF(false);
+			break;
+		case 0x03:		// set resolution
+			CALLBACK_SCF(false);
+			break;
+		case 0x04:		// get type
+			reg_bh=0;	// ID
+			CALLBACK_SCF(false);
+			break;
+		case 0x05:		// initialize
+			CALLBACK_SCF(false);
+			break;
+		case 0x06:		// extended commands
+			if ((reg_bh==0x01) || (reg_bh==0x02)) CALLBACK_SCF(false);
+			else CALLBACK_SCF(true);
+			break;
+		case 0x07:		// set callback
+			Mouse_ChangePS2Callback(SegValue(es),reg_bx);
+			CALLBACK_SCF(false);
+			break;
+		default:
+			CALLBACK_SCF(true);
+			break;
+		}
+		break;
+	case 0xc4:	/* BIOS POS Programm option Select */
+		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
 		break;
 	default:
@@ -398,19 +437,20 @@ void BIOS_Init(Section* sec) {
 	/* Setup equipment list */
 	Bitu config=0x4400;						//1 Floppy, 2 serial and 1 parrallel
 #if (C_FPU)
-	config|=0x2;
+	config|=0x2;					//FPU
 #endif
 	switch (machine) {
 	case MCH_HERC:
 		config|=0x30;						//Startup monochrome
 		break;
 	case MCH_CGA:	case MCH_TANDY:
-		config|=0x20;						//STartup 80x25 color
+		config|=0x20;				//Startup 80x25 color
 		break;
 	default:
 		config|=0;							//EGA VGA
 		break;
 	}
+	config |= 0x04;					// PS2 mouse
 	mem_writew(BIOS_CONFIGURATION,config);
 	/* Setup extended memory size */
 	IO_Write(0x70,0x30);
