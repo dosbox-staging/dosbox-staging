@@ -105,6 +105,7 @@ public:
 	Bit32s currcnt;
 	DmaController *myController;
 	bool DMA16;
+	bool addr_changed;
 public:
 	Bit8u dmamode;
 	bool dir;
