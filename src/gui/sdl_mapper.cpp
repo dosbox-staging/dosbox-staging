@@ -141,7 +141,7 @@ public:
 		while (*(word=StripWord(buf))) {
 			if (!strcasecmp(word,"mod1")) mods|=BMOD_Mod1;
 			if (!strcasecmp(word,"mod2")) mods|=BMOD_Mod2;
-			if (!strcasecmp(word,"mod3")) mods|=BMOD_Mod2;
+			if (!strcasecmp(word,"mod3")) mods|=BMOD_Mod3;
 			if (!strcasecmp(word,"hold")) flags|=BFLG_Hold;
 		}
 	}
@@ -1062,6 +1062,7 @@ static void CreateDefaultBinds(void) {
 	}
 	sprintf(buffer,"mod_1 \"key %d\"",SDLK_RCTRL);CreateStringBind(buffer);
 	sprintf(buffer,"mod_1 \"key %d\"",SDLK_LCTRL);CreateStringBind(buffer);
+	sprintf(buffer,"mod_2 \"key %d\"",SDLK_RALT);CreateStringBind(buffer);
 	sprintf(buffer,"mod_2 \"key %d\"",SDLK_LALT);CreateStringBind(buffer);
 	for (CHandlerEventVector_it hit=handlergroup.begin();hit!=handlergroup.end();hit++) {
 		(*hit)->MakeDefaultBind(buffer);
