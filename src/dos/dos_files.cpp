@@ -24,7 +24,7 @@
 #include "dosbox.h"
 #include "bios.h"
 #include "mem.h"
-#include "cpu.h"
+#include "regs.h"
 #include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
