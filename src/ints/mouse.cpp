@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.25 2003-11-27 18:54:22 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.26 2003-12-10 14:59:53 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -120,7 +120,7 @@ INLINE void Mouse_AddEvent(Bit16u type) {
 		mouse.event_queue[mouse.events].buttons=mouse.buttons;
 		mouse.events++;
 	}
-	PIC_ActivateIRQ(12);
+	PIC_ActivateIRQ(MOUSE_IRQ);
 }
 
 // ***************************************************************************
@@ -395,12 +395,20 @@ static void mouse_reset_hardware(void){
 	mouse.sub_mask=0;
 	mouse.sub_seg=0;
 	mouse.sub_ofs=0;
+	PIC_SetIRQMask(MOUSE_IRQ,false);
 };
 
 static void  mouse_reset(void) 
 {
 	WriteMouseIntVector();
-	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
+   
+//	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
+	if(MOUSE_IRQ > 7) {
+		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
+	} else {
+		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
+	}
+
 	mouse.shown=-1;
 	/* Get the correct resolution from the current video mode */
 	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
@@ -618,7 +626,7 @@ static Bitu INT33_Handler(void) {
 	case 0x24:	/* Get Software version and mouse type */
 		reg_bx=0x805;	//Version 8.05 woohoo 
 		reg_ch=0x04;	/* PS/2 type */
-		reg_cl=0;		/* Hmm ps2 irq dunno */
+		reg_cl=MOUSE_IRQ;		/* Hmm ps2 irq dunno */
 		break;
 	case 0x26: /* Get Maximum virtual coordinates */
 		reg_bx=(mouse.shown < 0 ? 0xffff : 0x0000);
@@ -664,7 +672,7 @@ static Bitu INT74_Handler(void) {
 	IO_Write(0x20,0x20);
 	/* Check for more Events if so reactivate IRQ */
 	if (mouse.events) {
-		PIC_ActivateIRQ(12);
+		PIC_ActivateIRQ(MOUSE_IRQ);
 	}
 	return CBRET_NONE;
 }
@@ -700,7 +708,11 @@ void MOUSE_Init(Section* sec) {
 
 	call_int74=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET);
-	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
+	if(MOUSE_IRQ > 7) {
+		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
+	} else {
+		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
+	}
 
 	memset(&mouse,0,sizeof(mouse));
 	mouse_reset_hardware();
