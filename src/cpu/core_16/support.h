@@ -143,7 +143,7 @@ rep_again:
 		goto rep_again;
 	case 0x6c:			/* REP INSB */
 		for (;CPU_Cycles>0;CPU_Cycles--) {
-			if (!reg_cx) return; reg_cx--;
+			if (!reg_cx) goto normalexit; reg_cx--;
 			SaveMb(base_di+reg_di,IO_Read(reg_dx));
 			reg_di+=direct;
 		}
@@ -152,7 +152,7 @@ rep_again:
 		if (prefix_66) {
 			direct*=4;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMb(base_di+reg_di+0,IO_Read(reg_dx+0));
 				SaveMb(base_di+reg_di+1,IO_Read(reg_dx+1));
 				SaveMb(base_di+reg_di+2,IO_Read(reg_dx+2));
@@ -162,7 +162,7 @@ rep_again:
 		} else {
 			direct*=2;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMb(base_di+reg_di+0,IO_Read(reg_dx+0));
 				SaveMb(base_di+reg_di+1,IO_Read(reg_dx+1));
 				reg_di+=direct;
@@ -171,7 +171,7 @@ rep_again:
 		break;
 	case 0x6e:			/* REP OUTSB */
 		for (;CPU_Cycles>0;CPU_Cycles--) {
-			if (!reg_cx) return; reg_cx--;
+			if (!reg_cx) goto normalexit; reg_cx--;
 			IO_Write(reg_dx,LoadMb(base_si+reg_si));
 			reg_si+=direct;
 		}	
@@ -180,7 +180,7 @@ rep_again:
 		if (prefix_66) {
 			direct*=4;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				IO_Write(reg_dx+0,LoadMb(base_si+reg_si+0));
 				IO_Write(reg_dx+1,LoadMb(base_si+reg_si+1));
 				IO_Write(reg_dx+2,LoadMb(base_si+reg_si+2));
@@ -190,7 +190,7 @@ rep_again:
 		} else {
 			direct*=2;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				IO_Write(reg_dx+0,LoadMb(base_si+reg_si+0));
 				IO_Write(reg_dx+1,LoadMb(base_si+reg_si+1));
 				reg_si+=direct;
@@ -199,7 +199,7 @@ rep_again:
 		break;
 	case 0xa4:			/* REP MOVSB */
 		for (;CPU_Cycles>0;CPU_Cycles--) {
-			if (!reg_cx) return; reg_cx--;
+			if (!reg_cx) goto normalexit; reg_cx--;
 			SaveMb(base_di+reg_di,LoadMb(base_si+reg_si));
 			reg_si+=direct;reg_di+=direct;
 		}
@@ -208,14 +208,14 @@ rep_again:
 		if (prefix_66) {
 			direct*=4;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMd(base_di+reg_di,LoadMd(base_si+reg_si));
 				reg_si+=direct;reg_di+=direct;
 			} 
 		} else {
 			direct*=2;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMw(base_di+reg_di,LoadMw(base_si+reg_si));
 				reg_si+=direct;reg_di+=direct;
 			}
@@ -224,24 +224,24 @@ rep_again:
 	case 0xa6:			/* REP CMPSB */
 		{	
 			Bit8u op1,op2;
-			if (!reg_cx) { CPU_Cycles--;return; }
+			if (!reg_cx) { CPU_Cycles--;goto normalexit; }
 			for (;CPU_Cycles>0;CPU_Cycles--) {
 				op1=LoadMb(base_si+reg_si);op2=LoadMb(base_di+reg_di);
 				reg_cx--;reg_si+=direct;reg_di+=direct;
-				if ((op1==op2)!=testz || !reg_cx) { CMPB(op1,op2,LoadRb,0);return; }
+				if ((op1==op2)!=testz || !reg_cx) { CMPB(op1,op2,LoadRb,0);goto normalexit; }
 			}
 			CMPB(op1,op2,LoadRb,0);
 		}
 		break;
 	case 0xa7:			/* REP CMPSW */
 		{	
-			if (!reg_cx) { CPU_Cycles--;return; }
+			if (!reg_cx) { CPU_Cycles--;goto normalexit; }
 			if (prefix_66) {
 				direct*=4;Bit32u op1,op2;
 				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op1=LoadMd(base_si+reg_si);op2=LoadMd(base_di+reg_di);
 					reg_cx--;reg_si+=direct;reg_di+=direct;
-					if ((op1==op2)!=testz || !reg_cx) { CMPD(op1,op2,LoadRd,0);return; }
+					if ((op1==op2)!=testz || !reg_cx) { CMPD(op1,op2,LoadRd,0);goto normalexit; }
 				}
 				CMPD(op1,op2,LoadRd,0);
 			} else {
@@ -249,7 +249,7 @@ rep_again:
 				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op1=LoadMw(base_si+reg_si);op2=LoadMw(base_di+reg_di);
 					reg_cx--,reg_si+=direct;reg_di+=direct;
-					if ((op1==op2)!=testz || !reg_cx) { CMPW(op1,op2,LoadRw,0);return; }
+					if ((op1==op2)!=testz || !reg_cx) { CMPW(op1,op2,LoadRw,0);goto normalexit; }
 				}
 				CMPW(op1,op2,LoadRw,0);
 			}
@@ -257,7 +257,7 @@ rep_again:
 		break;
 	case 0xaa:			/* REP STOSB */
 		for (;CPU_Cycles>0;CPU_Cycles--) {
-			if (!reg_cx) return; reg_cx--;
+			if (!reg_cx) goto normalexit; reg_cx--;
 			SaveMb(base_di+reg_di,reg_al);
 			reg_di+=direct;
 		}
@@ -266,14 +266,14 @@ rep_again:
 		if (prefix_66) {
 			direct*=4;	
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMd(base_di+reg_di,reg_eax);
 				reg_di+=direct;
 			}
 		} else {
 			direct*=2;	
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				SaveMw(base_di+reg_di,reg_ax);
 				reg_di+=direct;
 			}
@@ -281,7 +281,7 @@ rep_again:
 		break;
 	case 0xac:			/* REP LODSB */
 		for (;CPU_Cycles>0;CPU_Cycles--) {
-			if (!reg_cx) return; reg_cx--;
+			if (!reg_cx) goto normalexit; reg_cx--;
 			reg_al=LoadMb(base_si+reg_si);
 			reg_si+=direct;
 		}	
@@ -290,14 +290,14 @@ rep_again:
 		if (prefix_66) {
 			direct*=4;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				reg_eax=LoadMd(base_si+reg_si);
 				reg_si+=direct;
 			}	
 		} else {
 			direct*=2;
 			for (;CPU_Cycles>0;CPU_Cycles--) {
-				if (!reg_cx) return; reg_cx--;
+				if (!reg_cx) goto normalexit; reg_cx--;
 				reg_ax=LoadMw(base_si+reg_si);
 				reg_si+=direct;
 			}	
@@ -306,24 +306,24 @@ rep_again:
 	case 0xae:			/* REP SCASB */
 		{	
 			Bit8u op2;
-			if (!reg_cx) { CPU_Cycles--;return; }
+			if (!reg_cx) { CPU_Cycles--;goto normalexit; }
 			for (;CPU_Cycles>0;CPU_Cycles--) {
 				op2=LoadMb(base_di+reg_di);
 				reg_cx--;reg_di+=direct;
-				if ((reg_al==op2)!=testz || !reg_cx) { CMPB(reg_al,op2,LoadRb,0);return; }
+				if ((reg_al==op2)!=testz || !reg_cx) { CMPB(reg_al,op2,LoadRb,0);goto normalexit; }
 			}
 			CMPB(reg_al,op2,LoadRb,0);
 		}
 		break;
 	case 0xaf:			/* REP SCASW */
 		{	
-			if (!reg_cx) { CPU_Cycles--;return; }
+			if (!reg_cx) { CPU_Cycles--;goto normalexit; }
 			if (prefix_66) {
 				direct*=4;Bit32u op2;
 				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op2=LoadMd(base_di+reg_di);
 					reg_cx--;reg_di+=direct;
-					if ((reg_eax==op2)!=testz || !reg_cx) { CMPD(reg_eax,op2,LoadRd,0);return; }
+					if ((reg_eax==op2)!=testz || !reg_cx) { CMPD(reg_eax,op2,LoadRd,0);goto normalexit; }
 				}
 				CMPD(reg_eax,op2,LoadRd,0);
 			} else {
@@ -331,7 +331,7 @@ rep_again:
 				for (;CPU_Cycles>0;CPU_Cycles--) {
 					op2=LoadMw(base_di+reg_di);
 					reg_cx--;reg_di+=direct;
-					if ((reg_ax==op2)!=testz || !reg_cx) { CMPW(reg_ax,op2,LoadRw,0);return; }
+					if ((reg_ax==op2)!=testz || !reg_cx) { CMPW(reg_ax,op2,LoadRw,0);goto normalexit; }
 				}
 				CMPW(reg_ax,op2,LoadRw,0);
 			}
@@ -344,6 +344,7 @@ rep_again:
 	}
 	/* If we end up here it's because the CPU_Cycles counter is 0, so restart instruction */
 	IPPoint-=(prefix.count+2);		/* Rep instruction and whatever string instruction */
+normalexit:
 	PrefixReset;
 }
 
