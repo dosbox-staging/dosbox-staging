@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.22 2004-02-18 15:31:13 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.23 2004-05-11 19:00:32 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -47,41 +47,21 @@ void strreplace(char * str,char o,char n) {
 		str++;
 	}
 }
-/*
- * Name: ltrim() - left trims a string by removing leading spaces
- * Input: str - a pointer to a string
- * Output: returns a trimmed copy of str
- */
-char *ltrim(char *str) { 
-	char c;
-	assert(str);
-
-	while ((c = *str++) != '\0' && isspace(c));
-	return str - 1;
+char *ltrim(const char *str) { 
+	while (*str && (*str==' ' || *str=='\t')) str++;
+	return (char*)str;
 }
 
-/*
- * Name: rtrim() - right trims a string by removing trailing spaces
- * Input: str - a pointer to a string
- * Output: str will have all spaces removed from the right.
- */
-void rtrim(char * const str) {
+char *rtrim(const char *str) {
 	char *p;
-
-	assert(str);
-
 	p = strchr(str, '\0');
 	while (--p >= str && isspace(*p));
 	p[1] = '\0';
+	return (char*)str;
 }
 
-/*
- *  Combines ltrim() & rtrim()
- */
-char *trim(char *str) {
-	assert(str);
-	rtrim(str);
-	return ltrim(str);
+char *trim(const char *str) {
+	return ltrim(rtrim(str));
 }
 
 
@@ -100,30 +80,6 @@ bool ScanCMDBool(char * cmd,char * check) {
 	return false;
 }
 
-
-bool ScanCMDHex(char * cmd,char * check,Bits * result) {
-	char * scan=cmd;size_t c_len=strlen(check);
-	while ((scan=strchr(scan,'/'))) {
-		/* found a / now see behind it */
-		scan++;
-		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='\t' || scan[c_len]==0)) {
-			/* Found a match now find the number and remove it from the string */
-			char * begin=scan-1;
-			scan=ltrim(scan+c_len);
-			bool res=true;
-			*result=-1;
-			if (!sscanf(scan,"%X",result)) res=false;
-			scan=strrchr(scan,'/');
-			if (scan) memmove(begin,scan,strlen(scan)+1);
-			else *begin=0;
-			trim(begin);
-			return res;
-		}
-	}
-	return false;
-
-}
-
 /* This scans the command line for a remaining switch and reports it else returns 0*/
 char * ScanCMDRemain(char * cmd) {
 	char * scan,*found;;
@@ -134,33 +90,59 @@ char * ScanCMDRemain(char * cmd) {
 	} else return 0; 
 }
 
-char * StripWord(char * cmd) {
+char * StripWord(char *&line) {
 	bool quoted=false;
-	char * begin=cmd;
-	if (*cmd=='"') {
-		quoted=true;
-		cmd++;
+	char * scan=line;
+	scan=ltrim(scan);
+	if (*scan=='"') {
+		char * end_quote=strchr(scan+1,'"');
+		if (end_quote) {
+			*end_quote=0;
+			line=ltrim(++end_quote);
+			return (scan+1);
+		}
 	}
-	char * end = 0;
-	if (quoted) {
-		end=strchr(cmd,'"');	
-	} else {
-		for(char* in=cmd;*in;in++){ 
-			if(*in==' '||*in=='\t'){
-				end=in;
-				break;
-			}
-		     }
+	char * begin=scan;
+	for (;char c=*scan;scan++) {
+		if (c==' ' || c=='\t') {
+			*scan++=0;
+			break;
+		}
 	}
-	if (!end) {
-		return cmd+strlen(cmd);
-	}
-	*end=0;
-	if (quoted) {
-		memmove(begin,cmd,end-begin+1);
-	}
-	return trim(cmd+strlen(begin)+1);
+	line=scan;
+	return begin;
 }
+
+Bits ConvDecWord(char * word) {
+	bool negative=false;Bitu ret=0;
+	if (*word=='-') {
+		negative=true;
+		word++;
+	}
+	while (char c=*word) {
+		ret*=10;
+		ret+=c-'0';
+		word++;
+	}
+	if (negative) return 0-ret;
+	else return ret;
+}
+
+Bits ConvHexWord(char * word) {
+	Bitu ret=0;
+	while (char c=toupper(*word)) {
+		ret*=16;
+		if (c>='0' && c<='9') ret+=c-'0';
+		else if (c>='A' && c<='F') ret+=10+(c-'A');
+		word++;
+	}
+	return ret;
+}
+
+double ConvDblWord(char * word) {
+	return 0.0f;
+}
+
 
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
