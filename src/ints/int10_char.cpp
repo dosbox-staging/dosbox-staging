@@ -309,7 +309,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	//TODO Check for out of bounds
 	for (Bit8u h=0;h<CurMode->cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline=mem_readb(fontdata);
+		Bit8u bitline=mem_readb(fontdata++); //added ++ for at least the CGA modes.
 		Bit16u tx=x;
 		while (bitsel) {
 			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);
