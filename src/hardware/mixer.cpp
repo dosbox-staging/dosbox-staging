@@ -100,6 +100,7 @@ static struct {
 		Bit8u	m8[MIXER_BUFSIZE][1];
 		Bit8u	s8[MIXER_BUFSIZE][2];
 	} temp;
+	double mastervol[2];
 	MIXER_Channel * channels;
 	bool nosound;
 	Bitu freq;
@@ -149,20 +150,16 @@ void MIXER_SetMode(MIXER_Channel * chan,Bit8u mode) {
 	if (chan) chan->mode=mode;
 }
 
+void MIXER_UpdateVolume(MIXER_Channel * chan) {
+	chan->vol_mul[0]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[0]*mixer.mastervol[0]);
+	chan->vol_mul[1]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[1]*mixer.mastervol[1]);
+}
+
 void MIXER_SetVolume(MIXER_Channel * chan,float left,float right) {
 	if (!chan) return;
-	if (left>=0) {
-		chan->vol_main[0]=left;
-		chan->vol_mul[0]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[0]);
-	}
-	if (right>=0) {
-		chan->vol_main[1]=right;
-		chan->vol_mul[1]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[1]);
-	}
-	LOG_MSG("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f",chan->name,
-			chan->vol_main[0]*100,chan->vol_main[1]*100,
-			20*log(chan->vol_main[0])/log(10.0f),20*log(chan->vol_main[1])/log(10.0f)
-		);
+	if (left>=0) chan->vol_main[0]=left;
+	if (right>=0) chan->vol_main[1]=right;
+	MIXER_UpdateVolume(chan);
 }
 
 void MIXER_Enable(MIXER_Channel * chan,bool enable) {
@@ -325,50 +322,54 @@ static void MIXER_Stop(Section* sec) {
 
 class MIXER : public Program {
 public:
+	void MakeVolume(char * scan,double & vol0,double & vol1) {
+		Bitu w=0;
+		bool db=(toupper(*scan)=='D');
+		if (db) scan++;
+		while (*scan) {
+			if (*scan==':') {
+				++scan;w=1;
+			}
+			char * before=scan;
+			double val=strtod(scan,&scan);
+			if (before==scan) {
+				++scan;continue;
+			}
+			if (!db) val/=100;
+			else val=powf(10.0f,(float)val/20.0f);
+			if (val<0) val=1.0f;
+			if (!w) {
+				vol0=val;
+			} else {
+				vol1=val;
+			}
+		}
+		if (!w) vol1=vol0;
+	}
+	void ShowVolume(char * name,double vol0,double vol1) {
+		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
+			vol0*100,vol1*100,
+			20*log(vol0)/log(10.0f),20*log(vol1)/log(10.0f)
+		);
+	}
 	void Run(void) {
+		if (cmd->FindString("MASTER",temp_line,false)) {
+				MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
+		}
 		MIXER_Channel * chan=mixer.channels;
 		while (chan) {
 			if (cmd->FindString(chan->name,temp_line,false)) {
-				char * scan=(char *)temp_line.c_str();
-				Bitu w=0;
-				while (char c=*scan) {
-					bool db=(toupper(c)=='D');
-					if (db) {
-						c=*++scan;
-					}
-					if (c==':') {
-						c=*++scan;w=1;
-					}
-					char * before=scan;
-					double val=strtod(scan,&scan);
-					if (before==scan) {
-						++scan;continue;
-					}
-					if (!db) val/=100;
-					else val=powf(10.0f,(float)val/20.0f);
-					if (val<0) val=1.0f;
-					if (!w) {
-						chan->vol_main[0]=float(val);
-					} else {
-						chan->vol_main[1]=float(val);
-					}
-				}
-				if (!w) chan->vol_main[1]=chan->vol_main[0];
-				chan->vol_mul[0]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[0]);
-				chan->vol_mul[1]=(Bits)((1 << MIXER_VOLSHIFT)*chan->vol_main[1]);
+				MakeVolume((char *)temp_line.c_str(),chan->vol_main[0],chan->vol_main[1]);
 			}
+			MIXER_UpdateVolume(chan);
 			chan=chan->next;
 		}
 		if (cmd->FindExist("/NOSHOW")) return;
 		chan=mixer.channels;
 		WriteOut("Channel  Main    Main(dB)\n");
-		while (chan) {
-			WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",chan->name,
-				chan->vol_main[0]*100,chan->vol_main[1]*100,
-				20*log(chan->vol_main[0])/log(10.0f),20*log(chan->vol_main[1])/log(10.0f)
-				);
-			chan=chan->next;
-		}
+		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
+		for (chan=mixer.channels;chan;chan=chan->next) 
+			ShowVolume(chan->name,chan->vol_main[0],chan->vol_main[1]);
 	}
 };
 
@@ -392,6 +393,8 @@ void MIXER_Init(Section* sec) {
 	memset(mixer.out.data,0,sizeof(mixer.out.data));
 	mixer.wave.handle=0;
 	mixer.wave.used=0;
+	mixer.mastervol[0]=1.0f;
+	mixer.mastervol[1]=1.0f;
 
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;
