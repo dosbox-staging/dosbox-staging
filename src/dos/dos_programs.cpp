@@ -25,7 +25,7 @@
 #include "cross.h"
 #include "regs.h"
 #include "callback.h"
-#include "..\shell\shell_inc.h"
+#include "../shell/shell_inc.h"
 
 class MOUNT : public Program {
 public:
