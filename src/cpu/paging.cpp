@@ -84,7 +84,7 @@ void PageDirectory::SetBase(PhysPt page) {
 	ClearDirectory();
 	/* Setup handler for PageDirectory changes */
 	link_dir=MEM_LinkPage(base_page,0);
-	if (!link_dir) E_Exit("PageDirectory setup on illegal address");
+	if (!link_dir) E_Exit("PAGING:Directory setup on illegal address");
 	link_dir->data.dir=this;
 	link_dir->change=dir_change;
 	MEM_CheckLinks(link_dir->entry);
@@ -169,7 +169,7 @@ Bitu PAGING_GetDirBase(void) {
 void PAGING_SetDirBase(Bitu cr3) {
 	paging.cr3=cr3;
 	Bitu base_page=cr3 >> 12;
-	LOG_MSG("CR3:%X Base %X",cr3,base_page);
+	LOG(LOG_PAGING,LOG_NORMAL)("CR3:%X Base %X",cr3,base_page);
 	if (paging.enabled) {
 		/* Check if we already have this one cached */
 		PageDirectory * dir=paging.cache;
@@ -194,10 +194,13 @@ void PAGING_Enable(bool enabled) {
 	if (paging.enabled==enabled) return;
 	paging.enabled=enabled;
 	if (!enabled) {
-		LOG_MSG("Paging disabled");
+		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
 		paging.dir=MEM_DefaultDirectory();
 	} else {
-		LOG_MSG("Paging enabled");
+		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");
+#if !(C_DEBUG)
+		E_Exit("CPU Paging features aren't supported");
+#endif
 		PAGING_SetDirBase(paging.cr3);
 	}
 }
