@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.26 2003-08-20 12:21:42 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.27 2003-09-08 18:21:19 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -48,6 +48,7 @@ static SHELL_Cmd cmd_list[]={
 {	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
 {	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
 {	"PAUSE",	0,			&DOS_Shell::CMD_PAUSE,		"SHELL_CMD_PAUSE_HELP"},
+{	"CALL",		0,			&DOS_Shell::CMD_CALL,		"SHELL_CMD_CALL_HELP"},
 {	0,0,0,0}
 };
 
@@ -557,3 +558,9 @@ void DOS_Shell::CMD_PAUSE(char * args){
 	DOS_ReadFile (STDIN,&c,&n);
 }
 
+
+void DOS_Shell::CMD_CALL(char * args){
+	this->call=true; /* else the old batchfile will be closed first */
+	this->ParseLine(args);
+	this->call=false;
+}
