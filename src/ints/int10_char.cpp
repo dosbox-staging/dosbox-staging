@@ -125,7 +125,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 	/* Copy some lines */
 	if (nlines>0) {
 		start=rlr-nlines+1;
-		end=cul;
+		end=rul;
 		next=-1;
 	} else if (nlines<0) {
 		start=rul-nlines-1;
