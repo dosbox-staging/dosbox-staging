@@ -155,9 +155,9 @@ switch(Fetchb()) {
 		SETcc((get_SF() == get_OF()) && !get_ZF());break;
 
 	case 0xa0:												/* PUSH FS */		
-		Push_16(Segs[fs].value);break;
+		Push_16(SegValue(fs));break;
 	case 0xa1:												/* POP FS */		
-		SetSegment_16(fs,Pop_16());break;
+		SegSet16(fs,Pop_16());break;
 	/* 0xa2 CPUID */
 	case 0xa3:												/* BT Ew,Gw */
 		{
@@ -190,9 +190,9 @@ switch(Fetchb()) {
 	/* 0xa6 XBTS (early 386 only) CMPXCHG (early 486 only) */
 	/* 0xa7 IBTS (early 386 only) CMPXCHG (early 486 only) */
 	case 0xa8:												/* PUSH GS */		
-		Push_16(Segs[gs].value);break;
+		Push_16(SegValue(gs));break;
 	case 0xa9:												/* POP GS */		
-		SetSegment_16(gs,Pop_16());break;
+		SegSet16(gs,Pop_16());break;
 	/* 0xaa RSM */
 	case 0xab:												/* BTS Ew,Gw */
 		{
@@ -258,13 +258,13 @@ switch(Fetchb()) {
 	case 0xb4:												/* LFS */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);SetSegment_16(fs,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);SegSet16(fs,LoadMw(eaa+2));
 			break;
 		}
 	case 0xb5:												/* LGS */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);SetSegment_16(gs,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);SegSet16(gs,LoadMw(eaa+2));
 			break;
 		}
 	case 0xb6:												/* MOVZX Gw,Eb */

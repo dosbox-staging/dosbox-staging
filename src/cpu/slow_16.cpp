@@ -25,9 +25,7 @@
 #include "fpu.h"
 
 typedef PhysPt EAPoint;
-
-#define SegBase(seg) Segs[seg].phys
-
+#define SegBase(c)	SegPhys(c)
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
@@ -52,7 +50,7 @@ extern Bitu cycle_count;
 
 /* Enable parts of the cpu emulation */
 #define CPU_386							//Enable 386 instructions
-#ifdef C_FPU
+#if C_FPU
 #define CPU_FPU							//Enable FPU escape instructions
 #endif
 
@@ -61,7 +59,7 @@ static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count);
 static Bitu CPU_Real_16_Slow_Decode(Bitu count) {
 #include "core_16/start.h"		
 	while (count) {
-#ifdef C_DEBUG
+#if C_DEBUG
 		cycle_count++;		
 #endif
 		count--;

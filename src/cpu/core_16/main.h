@@ -32,9 +32,9 @@ restart:
 	case 0x05:												/* ADD AX,Iw */
 		AXIw(ADDW);break;
 	case 0x06:												/* PUSH ES */		
-		Push_16(Segs[es].value);break;
+		Push_16(SegValue(es));break;
 	case 0x07:												/* POP ES */		
-		SetSegment_16(es,Pop_16());break;
+		SegSet16(es,Pop_16());break;
 	case 0x08:												/* OR Eb,Gb */
 		RMEbGb(ORB);break;
 	case 0x09:												/* OR Ew,Gw */
@@ -48,7 +48,7 @@ restart:
 	case 0x0d:												/* OR AX,Iw */
 		AXIw(ORW);break;
 	case 0x0e:												/* PUSH CS */		
-		Push_16(Segs[cs].value);break;
+		Push_16(SegValue(cs));break;
 	case 0x0f:												/* 2 byte opcodes*/		
 		#include "prefix_of.h"
 		break;
@@ -65,9 +65,9 @@ restart:
 	case 0x15:												/* ADC AX,Iw */
 		AXIw(ADCW);break;
 	case 0x16:												/* PUSH SS */		
-		Push_16(Segs[ss].value);break;
+		Push_16(SegValue(ss));break;
 	case 0x17:												/* POP SS */		
-		SetSegment_16(ss,Pop_16());break;
+		SegSet16(ss,Pop_16());break;
 	case 0x18:												/* SBB Eb,Gb */
 		RMEbGb(SBBB);break;
 	case 0x19:												/* SBB Ew,Gw */
@@ -81,9 +81,9 @@ restart:
 	case 0x1d:												/* SBB AX,Iw */
 		AXIw(SBBW);break;
 	case 0x1e:												/* PUSH DS */		
-		Push_16(Segs[ds].value);break;
+		Push_16(SegValue(ds));break;
 	case 0x1f:												/* POP DS */		
-		SetSegment_16(ds,Pop_16());break;
+		SegSet16(ds,Pop_16());break;
 	case 0x20:												/* AND Eb,Gb */
 		RMEbGb(ANDB);break;
 	case 0x21:												/* AND Ew,Gw */
@@ -524,17 +524,17 @@ restart:
 				GetRM;Bit16u val;
 				switch (rm & 0x38) {
 				case 0x00:					/* MOV Ew,ES */
-					val=Segs[es].value;break;
+					val=SegValue(es);break;
 				case 0x08:					/* MOV Ew,CS */
-					val=Segs[cs].value;break;
+					val=SegValue(cs);break;
 				case 0x10:					/* MOV Ew,SS */
-					val=Segs[ss].value;break;
+					val=SegValue(ss);break;
 				case 0x18:					/* MOV Ew,DS */
-					val=Segs[ds].value;break;
+					val=SegValue(ds);break;
 				case 0x20:					/* MOV Ew,FS */
-					val=Segs[fs].value;break;
+					val=SegValue(fs);break;
 				case 0x28:					/* MOV Ew,GS */
-					val=Segs[gs].value;break;
+					val=SegValue(gs);break;
 				default:
 				        val=0;
 					E_Exit("CPU:8c:Illegal RM Byte");
@@ -583,18 +583,18 @@ restart:
 				else {GetEAa;val=LoadMw(eaa);}
 				switch (rm & 0x38) {
 				case 0x00:					/* MOV ES,Ew */
-					SetSegment_16(es,val);break;
+					SegSet16(es,val);break;
 				case 0x08:					/* MOV CS,Ew Illegal*/
 					E_Exit("CPU:Illegal MOV CS Call");
 					break;
 				case 0x10:					/* MOV SS,Ew */
-					SetSegment_16(ss,val);break;
+					SegSet16(ss,val);break;
 				case 0x18:					/* MOV DS,Ew */
-					SetSegment_16(ds,val);break;
+					SegSet16(ds,val);break;
 				case 0x20:					/* MOV FS,Ew */
-					SetSegment_16(fs,val);break;
+					SegSet16(fs,val);break;
 				case 0x28:					/* MOV GS,Ew */
-					SetSegment_16(gs,val);break;
+					SegSet16(gs,val);break;
 				default:
 					E_Exit("CPU:8e:Illegal RM Byte");
 				}
@@ -639,8 +639,8 @@ restart:
 		case 0x9a:												/* CALL Ap */
 			{ 
 				Bit16u newip=Fetchw();Bit16u newcs=Fetchw();
-				Push_16(Segs[cs].value);Push_16(GETIP);
-				SetSegment_16(cs,newcs);SETIP(newip);
+				Push_16(SegValue(cs));Push_16(GETIP);
+				SegSet16(cs,newcs);SETIP(newip);
 				break;
 			}
 		case 0x9b:												/* WAIT */
@@ -838,13 +838,13 @@ restart:
 		case 0xc4:												/* LES */
 			{	
 				GetRMrw;GetEAa;
-				*rmrw=LoadMw(eaa);SetSegment_16(es,LoadMw(eaa+2));
+				*rmrw=LoadMw(eaa);SegSet16(es,LoadMw(eaa+2));
 				break;
 			}
 		case 0xc5:												/* LDS */
 			{	
 				GetRMrw;GetEAa;
-				*rmrw=LoadMw(eaa);SetSegment_16(ds,LoadMw(eaa+2));
+				*rmrw=LoadMw(eaa);SegSet16(ds,LoadMw(eaa+2));
 				break;
 			}
 		case 0xc6:												/* MOV Eb,Ib */
@@ -876,13 +876,13 @@ restart:
 			{ 
 				Bit16u addsp=Fetchw();
 				Bit16u newip=Pop_16();Bit16u newcs=Pop_16();
-				reg_sp+=addsp;SetSegment_16(cs,newcs);SETIP(newip);
+				reg_sp+=addsp;SegSet16(cs,newcs);SETIP(newip);
 				break;
 			}
 		case 0xcb:												/* RETF */			
 			{
 				Bit16u newip=Pop_16();Bit16u newcs=Pop_16();
-				SetSegment_16(cs,newcs);SETIP(newip);
+				SegSet16(cs,newcs);SETIP(newip);
 			}
 			break;
 		case 0xcc:												/* INT3 */
@@ -900,7 +900,7 @@ restart:
 		case 0xcf:												/* IRET */
 			{
 				Bit16u newip=Pop_16();Bit16u newcs=Pop_16();
-				SetSegment_16(cs,newcs);SETIP(newip);
+				SegSet16(cs,newcs);SETIP(newip);
 				Bit16u pflags=Pop_16();Save_Flagsw(pflags);
 				break;
 			}
@@ -1018,7 +1018,7 @@ restart:
 			{ 
 				Bit16u newip=Fetchw();
 				Bit16u newcs=Fetchw();
-				SetSegment_16(cs,newcs);
+				SegSet16(cs,newcs);
 				SETIP(newip);
 				break;
 			}
@@ -1466,11 +1466,11 @@ restart:
 					break;
 				case 0x18:					/* CALL Ep */
 					{
-						Push_16(Segs[cs].value);
+						Push_16(SegValue(cs));
 						GetEAa;Push_16(GETIP);
 						Bit16u newip=LoadMw(eaa);
 						Bit16u newcs=LoadMw(eaa+2);
-						SetSegment_16(cs,newcs);
+						SegSet16(cs,newcs);
 						SETIP(newip);
 					}
 					break;
@@ -1483,7 +1483,7 @@ restart:
 						GetEAa;
 						Bit16u newip=LoadMw(eaa);
 						Bit16u newcs=LoadMw(eaa+2);
-						SetSegment_16(cs,newcs);
+						SegSet16(cs,newcs);
 						SETIP(newip);
 					}
 					break;
