@@ -56,20 +56,26 @@ static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
 	
-	Bit64s micro=PIC_MicroCount();
-	micro-=p->start;
-	micro%=p->micro;
-	Bit16u ticks=(Bit16u)(((float)micro/(float)p->micro)*(float)p->cntr);
-
+	Bit64s micro=PIC_MicroCount()-p->start;
 	switch (p->mode) {
+	case 0:
+		if (micro>p->micro) p->read_latch=p->write_latch;
+		else p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		break;
 	case 2:
+		micro%=p->micro;
+		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
+		break;
 	case 3:
-	case 4:
-		p->read_latch=(Bit16u)ticks;
+		micro%=p->micro;
+		micro*=2;
+		if (micro>p->micro) micro-=p->micro;
+		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
 	default:
 		LOG_ERROR("PIT:Illegal Mode %d for reading counter %d",p->mode,counter);
-		p->read_latch=(Bit16u)ticks;
+		micro%=p->micro;
+		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
 	}
 }
@@ -106,6 +112,7 @@ static void write_latch(Bit32u port,Bit8u val) {
 			LOG_DEBUG("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
+//			LOG_DEBUG("PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			PCSPEAKER_SetCounter(p->cntr,p->mode);
 			break;
 		default:
