@@ -31,7 +31,6 @@
 		} else {
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
 			count_left=0;
-			CPU_Cycles-=count;
 		}
 	}
 	add_index=GETFLAG(DF) ? -1 : 1;
@@ -141,7 +140,7 @@
 		{
 			Bit8u val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val2=LoadMb(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
 				if ((reg_al==val2)!=inst.repz) break;
@@ -153,7 +152,7 @@
 		{
 			add_index<<=1;Bit16u val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val2=LoadMw(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
 				if ((reg_ax==val2)!=inst.repz) break;
@@ -165,7 +164,7 @@
 		{
 			add_index<<=2;Bit32u val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val2=LoadMd(di_base+di_index);
 				di_index=(di_index+add_index) & add_mask;
 				if ((reg_eax==val2)!=inst.repz) break;
@@ -177,7 +176,7 @@
 		{
 			Bit8u val1,val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val1=LoadMb(si_base+si_index);
 				val2=LoadMb(di_base+di_index);
 				si_index=(si_index+add_index) & add_mask;
@@ -191,7 +190,7 @@
 		{
 			add_index<<=1;Bit16u val1,val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val1=LoadMw(si_base+si_index);
 				val2=LoadMw(di_base+di_index);
 				si_index=(si_index+add_index) & add_mask;
@@ -205,7 +204,7 @@
 		{
 			add_index<<=2;Bit32u val1,val2;
 			for (;count>0;) {
-				count--;
+				count--;CPU_Cycles--;
 				val1=LoadMd(si_base+si_index);
 				val2=LoadMd(di_base+di_index);
 				si_index=(si_index+add_index) & add_mask;
