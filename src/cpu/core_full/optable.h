@@ -110,8 +110,9 @@ static OpCode OpCodeTable[1024]={
 /* 0x98 - 0x9f */
 {D_CBW		,0			,0		,0		},{D_CWD	,0			,0		,0		},
 {L_Ifw		,O_CALLFw	,0		,0		},{D_WAIT	,0			,0		,0		},
-{L_FLG		,0			,S_PUSHw,0		},{L_PFLGw	,0			,0		,0		},
-{L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
+{D_PUSHF	,0			,0		,0		},{D_POPF	,0			,0		,0		},
+{D_SAHF		,0			,0		,0		},{D_LAHF	,0			,0		,0		},
+
 
 /* 0xa0 - 0xa7 */
 {L_OP		,O_ALOP		,0		,0		},{L_OP		,O_AXOP		,0		,0		},
@@ -466,8 +467,8 @@ static OpCode OpCodeTable[1024]={
 /* 0x298 - 0x29f */
 {D_CWDE		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
 {L_Ifd		,O_CALLFd	,0		,0		},{D_WAIT	,0			,0		,0		},
-{L_FLG		,0			,S_PUSHd,0		},{L_PFLGd	,0			,0		,0		},
-{L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
+{D_PUSHF	,0			,0		,true	},{D_POPF	,0			,0		,true	},
+{D_SAHF		,0			,0		,0		},{D_LAHF	,0			,0		,0		},
 
 /* 0x2a0 - 0x2a7 */
 {L_OP		,O_ALOP		,0		,0		},{L_OP		,O_EAXOP	,0		,0		},

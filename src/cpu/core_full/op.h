@@ -322,51 +322,57 @@ switch (inst.code.op) {
 		Push_32(reg_eip);
 		break;
 	case O_CALLFw:
-		LEAVECORE;
-		CPU_CALL(false,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_CALL(false,inst.op2.d,inst.op1.d,GetIP());
+		continue;
 	case O_CALLFd:
-		LEAVECORE;
-		CPU_CALL(true,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_CALL(true,inst.op2.d,inst.op1.d,GetIP());
+		continue;
 	case O_JMPFw:
-		LEAVECORE;
-		CPU_JMP(false,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_JMP(false,inst.op2.d,inst.op1.d,GetIP());
+		continue;
 	case O_JMPFd:
-		LEAVECORE;
-		CPU_JMP(true,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_JMP(true,inst.op2.d,inst.op1.d,GetIP());
+		continue;
 	case O_INT:
-		LEAVECORE;
+		FillFlags();
 #if C_DEBUG
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) 
 			return debugCallback;
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) 
 			return debugCallback;
 #endif
-		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.opcode_start);
-		goto restart_core;
+		CPU_SW_Interrupt(inst.op1.b,GetIP());
+		continue;
 	case O_INb:
+		if (CPU_IO_Exception(inst.op1.d,1)) RunException();
 		reg_al=IO_ReadB(inst.op1.d);
 		goto nextopcode;
 	case O_INw:
+		if (CPU_IO_Exception(inst.op1.d,2)) RunException();
 		reg_ax=IO_ReadW(inst.op1.d);
 		goto nextopcode;
 	case O_INd:
+		if (CPU_IO_Exception(inst.op1.d,4)) RunException();
 		reg_eax=IO_ReadD(inst.op1.d);
 		goto nextopcode;
 	case O_OUTb:
+		if (CPU_IO_Exception(inst.op1.d,1)) RunException();
 		IO_WriteB(inst.op1.d,reg_al);
 		goto nextopcode;
 	case O_OUTw:
+		if (CPU_IO_Exception(inst.op1.d,2)) RunException();
 		IO_WriteW(inst.op1.d,reg_ax);
 		goto nextopcode;
 	case O_OUTd:
+		if (CPU_IO_Exception(inst.op1.d,4)) RunException();
 		IO_WriteD(inst.op1.d,reg_eax);
 		goto nextopcode;
 	case O_CBACK:
-		LEAVECORE;
+		FillFlags();SaveIP();
 		return inst.op1.d;
 	case O_GRP6w:
 	case O_GRP6d:

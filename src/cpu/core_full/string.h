@@ -28,7 +28,7 @@
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;
 			CPU_Cycles=0;
-			IPPoint=inst.opcode_start;		//Reset IP to start of instruction
+			LoadIP();
 		} else {
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
 			count_left=0;

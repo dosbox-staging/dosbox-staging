@@ -159,7 +159,8 @@
 	CASE_0F_D(0xa0)												/* PUSH FS */		
 		Push_32(SegValue(fs));break;
 	CASE_0F_D(0xa1)												/* POP FS */		
-		POPSEG(fs,Pop_32(),4);break;
+		if (CPU_PopSeg(fs,true)) RUNEXCEPTION();
+		break;
 	CASE_0F_D(0xa3)												/* BT Ed,Gd */
 		{
 			FillFlags();GetRMrd;
@@ -183,7 +184,8 @@
 	CASE_0F_D(0xa8)												/* PUSH GS */		
 		Push_32(SegValue(gs));break;
 	CASE_0F_D(0xa9)												/* POP GS */		
-		POPSEG(gs,Pop_32(),4);break;
+		if (CPU_PopSeg(gs,true)) RUNEXCEPTION();
+		break;
 	CASE_0F_D(0xab)												/* BTS Ed,Gd */
 		{
 			FillFlags();GetRMrd;
@@ -215,7 +217,7 @@
 	CASE_0F_D(0xb2)												/* LSS Ed */
 		{	
 			GetRMrd;GetEAa;
-			LOADSEG(ss,LoadMw(eaa+4));
+			if (CPU_SetSegGeneral(ss,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}
@@ -238,14 +240,14 @@
 	CASE_0F_D(0xb4)												/* LFS Ed */
 		{	
 			GetRMrd;GetEAa;
-			LOADSEG(fs,LoadMw(eaa+4));
+			if (CPU_SetSegGeneral(fs,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_0F_D(0xb5)												/* LGS Ed */
 		{	
 			GetRMrd;GetEAa;
-			LOADSEG(gs,LoadMw(eaa+4));
+			if (CPU_SetSegGeneral(gs,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}

@@ -1,6 +1,12 @@
-#define SaveIP() reg_eip=(Bit32u)(IPPoint-SegBase(cs));
-#define LoadIP() IPPoint=SegBase(cs)+reg_eip;
+#define SaveIP() reg_eip=(Bit32u)(inst.cseip-SegBase(cs));
+#define LoadIP() inst.cseip=SegBase(cs)+reg_eip;
+#define GetIP()	(inst.cseip-SegBase(cs))
 
+#define RunException() {										\
+	FillFlags();												\
+	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
+	continue;													\
+}
 
 static INLINE Bit8u the_Fetchb(EAPoint & loc) {
 	Bit8u temp=LoadMb(loc);
@@ -19,42 +25,16 @@ static INLINE Bit32u the_Fetchd(EAPoint & loc) {
 	return temp;
 }
 
-#define Fetchb() the_Fetchb(IPPoint)
-#define Fetchw() the_Fetchw(IPPoint)
-#define Fetchd() the_Fetchd(IPPoint)
+#define Fetchb() the_Fetchb(inst.cseip)
+#define Fetchw() the_Fetchw(inst.cseip)
+#define Fetchd() the_Fetchd(inst.cseip)
 
-#define Fetchbs() (Bit8s)the_Fetchb(IPPoint)
-#define Fetchws() (Bit16s)the_Fetchw(IPPoint)
-#define Fetchds() (Bit32s)the_Fetchd(IPPoint)
-
-#if 0
-static INLINE void Push_16(Bit16u blah)	{
-	reg_esp-=2;
-	SaveMw(SegBase(ss)+(reg_esp & cpu.stack.mask),blah);
-}
-
-static INLINE void Push_32(Bit32u blah)	{
-	reg_esp-=4;
-	SaveMd(SegBase(ss)+(reg_esp & cpu.stack.mask),blah);
-}
-
-static INLINE Bit16u Pop_16(void) {
-	Bit16u temp=LoadMw(SegBase(ss)+(reg_esp & cpu.stack.mask));
-	reg_esp+=2;
-	return temp;
-}
-
-static INLINE Bit32u Pop_32(void) {
-	Bit32u temp=LoadMd(SegBase(ss)+(reg_esp & cpu.stack.mask));
-	reg_esp+=4;
-	return temp;
-}
-
-#else
+#define Fetchbs() (Bit8s)the_Fetchb(inst.cseip)
+#define Fetchws() (Bit16s)the_Fetchw(inst.cseip)
+#define Fetchds() (Bit32s)the_Fetchd(inst.cseip)
 
 #define Push_16 CPU_Push16
 #define Push_32 CPU_Push32
 #define Pop_16 CPU_Pop16
 #define Pop_32 CPU_Pop32
 
-#endif

@@ -52,7 +52,6 @@ void CPU_SLDT(Bitu & selector);
 void CPU_SIDT(Bitu & limit,Bitu & base);
 void CPU_SGDT(Bitu & limit,Bitu & base);
 
-
 void CPU_ARPL(Bitu & dest_sel,Bitu src_sel);
 void CPU_LAR(Bitu selector,Bitu & ar);
 void CPU_LSL(Bitu selector,Bitu & limit);
@@ -61,37 +60,43 @@ bool CPU_SET_CRX(Bitu cr,Bitu value);
 Bitu CPU_GET_CRX(Bitu cr);
 
 void CPU_SMSW(Bitu & word);
-bool CPU_LMSW(Bitu word);
+Bitu CPU_LMSW(Bitu word);
 
 void CPU_VERR(Bitu selector);
 void CPU_VERW(Bitu selector);
 
-void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen);
-void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu opLen);
-void CPU_RET(bool use32,Bitu bytes,Bitu opLen);
-void CPU_IRET(bool use32,Bitu opLen);
+void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu oldeip);
+void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip);
+void CPU_RET(bool use32,Bitu bytes,Bitu oldeip);
+void CPU_IRET(bool use32,Bitu oldeip);
+void CPU_HLT(Bitu oldeip);
 
-bool CPU_CLI(Bitu opLen);
-bool CPU_STI(Bitu opLen);
+bool CPU_POPF(Bitu use32);
+bool CPU_PUSHF(Bitu use32);
+bool CPU_CLI(void);
+bool CPU_STI(void);
+
+bool CPU_IO_Exception(Bitu port,Bitu size);
+void CPU_RunException(void);
+
+void CPU_ENTER(bool use32,Bitu bytes,Bitu level);
 
 #define CPU_INT_SOFTWARE		0x1
 #define CPU_INT_EXCEPTION		0x2
 #define CPU_INT_HAS_ERROR		0x4
 
-void CPU_Interrupt(Bitu num,Bitu type,Bitu opLen=0);
+void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip);
 INLINE void CPU_HW_Interrupt(Bitu num) {
-	CPU_Interrupt(num,0);
+	CPU_Interrupt(num,0,reg_eip);
 }
-INLINE void CPU_SW_Interrupt(Bitu num,Bitu OpLen) {
-	CPU_Interrupt(num,CPU_INT_SOFTWARE,OpLen);
+INLINE void CPU_SW_Interrupt(Bitu num,Bitu oldeip) {
+	CPU_Interrupt(num,CPU_INT_SOFTWARE,oldeip);
 }
 
 void CPU_Exception(Bitu which,Bitu error=0);
-void CPU_StartException(void);
-void CPU_SetupException(Bitu which,Bitu error=0);
 
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
-void CPU_HLT(Bitu opLen);
+bool CPU_PopSeg(SegNames seg,bool use32);
 
 void CPU_CPUID(void);
 Bitu CPU_Pop16(void);

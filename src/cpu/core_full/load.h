@@ -144,18 +144,12 @@ l_M_Ed:
 			inst.op1.d=SegValue((SegNames)inst.rm_index);
 			break;
 		case M_Efw:
-			if (inst.rm>=0xC0) {
-				LOG(LOG_CPU,LOG_ERROR)("MODRM:Illegal M_Efw ");
-				goto nextopcode;
-			}
+			if (inst.rm>=0xc0) goto illegalopcode;
 			inst.op1.d=LoadMw(inst.rm_eaa);
 			inst.op2.d=LoadMw(inst.rm_eaa+2);
 			break;
 		case M_Efd:
-			if (inst.rm>=0xc0) {
-				LOG(LOG_CPU,LOG_ERROR)("MODRM:Illegal M_Efw ");
-				goto nextopcode;
-			}
+			if (inst.rm>=0xc0) goto illegalopcode;
 			inst.op1.d=LoadMd(inst.rm_eaa);
 			inst.op2.d=LoadMw(inst.rm_eaa+4);
 			break;
@@ -183,8 +177,6 @@ l_M_Ed:
 			inst.op2.d=1;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
-			
-			/* Should continue with normal handler afterwards */
 		case 0:
 			break;
 		default:
@@ -205,30 +197,6 @@ l_M_Ed:
 	case L_POPfd:
 		inst.op1.d = Pop_32();
 		inst.op2.d = Pop_16();
-		break;
-	case L_PFLGw:
-		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
-			LEAVECORE;reg_eip-=IPPoint-inst.opcode_start;
-			CPU_Exception(13,0);
-			goto restart_core;
-		}
-		SETFLAGSw(Pop_16());
-		if (GETFLAG(IF) && PIC_IRQCheck) {
-			SaveIP();	
-			return CBRET_NONE;
-		}
-		break;
-	case L_PFLGd:
-		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
-			LEAVECORE;reg_eip-=IPPoint-inst.opcode_start;
-			CPU_Exception(13,0);
-			goto restart_core;
-		}
-		SETFLAGSd(Pop_32());
-		if (GETFLAG(IF) && PIC_IRQCheck) {
-			SaveIP();	
-			return CBRET_NONE;
-		}
 		break;
 	case L_Ib:
 		inst.op1.d=Fetchb();
@@ -270,9 +238,6 @@ l_M_Ed:
 	case L_REGd:
 		inst.op1.d=reg_32(inst.code.extra);
 		break;
-	case L_FLG:
-		inst.op1.d = FillFlags();
-		break;
 	case L_SEG:
 		inst.op1.d=SegValue((SegNames)inst.code.extra);
 		break;
@@ -306,10 +271,10 @@ l_M_Ed:
 		inst.repz=true;
 		goto restartopcode;
 	case L_PREOP:
-		inst.entry=inst.start_entry ^ 0x200;
+		inst.entry=(cpu.code.big ^1) * 0x200;
 		goto restartopcode;
 	case L_PREADD:
-		inst.prefix^=PREFIX_ADDR;
+		inst.prefix=(inst.prefix & ~1) | (cpu.code.big ^ 1);
 		goto restartopcode;
 	case L_VAL:
 		inst.op1.d=inst.code.extra;
@@ -319,41 +284,40 @@ l_M_Ed:
 		inst.op1.d=4;
 		break;
 	case D_IRETw:
-		LEAVECORE;
-		CPU_IRET(false,IPPoint-inst.opcode_start);
+		FillFlags();
+		CPU_IRET(false,GetIP());
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
-		goto restart_core;
+		continue;
 	case D_IRETd:
-		LEAVECORE;
-		CPU_IRET(true,IPPoint-inst.opcode_start);
-		if (GETFLAG(IF) && PIC_IRQCheck) {
+		FillFlags();
+		CPU_IRET(true,GetIP());
+		if (GETFLAG(IF) && PIC_IRQCheck) 
 			return CBRET_NONE;
-		}
-		goto restart_core;
+		continue;
 	case D_RETFwIw:
 		{
 			Bitu words=Fetchw();
-			LEAVECORE;		
-			CPU_RET(false,words,IPPoint-inst.opcode_start);
-			goto restart_core;
+			FillFlags();	
+			CPU_RET(false,words,GetIP());
+			continue;
 		}
 	case D_RETFw:
-		LEAVECORE;		
-		CPU_RET(false,0,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_RET(false,0,GetIP());
+		continue;
 	case D_RETFdIw:
 		{
 			Bitu words=Fetchw();
-			LEAVECORE;		
-			CPU_RET(true,words,IPPoint-inst.opcode_start);
-			goto restart_core;
+			FillFlags();	
+			CPU_RET(true,words,GetIP());
+			continue;
 		}
 	case D_RETFd:
-		LEAVECORE;		
-		CPU_RET(true,0,IPPoint-inst.opcode_start);
-		goto restart_core;
+		FillFlags();
+		CPU_RET(true,0,GetIP());
+		continue;
 /* Direct operations */
 	case L_STRING:
 		#include "string.h"
@@ -381,18 +345,10 @@ l_M_Ed:
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		goto nextopcode;
 	case D_POPSEGw:
-		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_16())) {
-			LEAVECORE;
-			reg_eip-=(IPPoint-inst.opcode_start);reg_esp-=2;
-			CPU_StartException();goto restart_core;
-		}
+		if (CPU_PopSeg((SegNames)inst.code.extra,false)) RunException();
 		goto nextopcode;
 	case D_POPSEGd:
-		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_32())) {
-			LEAVECORE;
-			reg_eip-=(IPPoint-inst.opcode_start);reg_esp-=4;
-			CPU_StartException();goto restart_core;
-		}
+		if (CPU_PopSeg((SegNames)inst.code.extra,true)) RunException();
 		goto nextopcode;
 	case D_SETALC:
 		reg_al = get_CF() ? 0xFF : 0;
@@ -427,14 +383,10 @@ l_M_Ed:
 		else reg_edx=0;
 		goto nextopcode;
 	case D_CLI:
-		LEAVECORE;
-		if (CPU_CLI(IPPoint-inst.opcode_start))
-			goto restart_core;
+		if (CPU_CLI()) RunException();
 		goto nextopcode;
 	case D_STI:
-		LEAVECORE;
-		if (CPU_STI(IPPoint-inst.opcode_start))
-			goto restart_core;
+		if (CPU_STI()) RunException();
 		goto nextopcode;
 	case D_STC:
 		FillFlags();SETFLAGBIT(CF,true);
@@ -454,71 +406,40 @@ l_M_Ed:
 		SETFLAGBIT(DF,true);
 		cpu.direction=-1;
 		goto nextopcode;
+	case D_PUSHF:
+		FillFlags();
+		if (CPU_PUSHF(inst.code.extra)) RunException();
+		goto nextopcode;
+	case D_POPF:
+		if (CPU_POPF(inst.code.extra)) RunException();
+		lflags.type=t_UNKNOWN;
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			SaveIP();
+			return CBRET_NONE;
+		}
+		goto nextopcode;
+	case D_SAHF:
+		SETFLAGSb(reg_ah);
+		goto nextopcode;
+	case D_LAHF:
+		FillFlags();
+		reg_ah=reg_flags&0xff;
+		goto nextopcode;
 	case D_WAIT:
 	case D_NOP:
 		goto nextopcode;
 	case D_ENTERw:
 		{
-			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
-			Bitu frame_ptr=reg_esp-2;
-			if (cpu.stack.big) {
-				reg_esp-=2;
-				mem_writew(SegBase(ss)+reg_esp,reg_bp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_ebp-=2;reg_esp-=2;
-					mem_writew(SegBase(ss)+reg_esp,mem_readw(SegBase(ss)+reg_ebp));
-				}
-				if (level) {
-					reg_esp-=2;
-					mem_writew(SegBase(ss)+reg_esp,(Bit16u)frame_ptr);
-				}
-				reg_esp-=bytes;
-			} else {
-				reg_sp-=2;
-				mem_writew(SegBase(ss)+reg_sp,reg_bp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_bp-=2;reg_sp-=2;
-					mem_writew(SegBase(ss)+reg_sp,mem_readw(SegBase(ss)+reg_bp));
-				}
-				if (level) {
-					reg_sp-=2;
-					mem_writew(SegBase(ss)+reg_sp,(Bit16u)frame_ptr);
-				}
-				reg_sp-=bytes;
-			}
-			reg_bp=frame_ptr;
+			Bitu bytes=Fetchw();
+			Bitu level=Fetchb();
+			CPU_ENTER(false,bytes,level);
 			goto nextopcode;
 		}
 	case D_ENTERd:
 		{
-			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
-			Bitu frame_ptr=reg_esp-4;
-			if (cpu.stack.big) {
-				reg_esp-=4;
-				mem_writed(SegBase(ss)+reg_esp,reg_ebp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_ebp-=4;reg_esp-=4;
-					mem_writed(SegBase(ss)+reg_esp,mem_readd(SegBase(ss)+reg_ebp));
-				}
-				if (level) {
-					reg_esp-=4;
-					mem_writed(SegBase(ss)+reg_esp,(Bit32u)frame_ptr);
-				}
-				reg_esp-=bytes;
-			} else {
-				reg_sp-=4;
-				mem_writed(SegBase(ss)+reg_sp,reg_ebp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_bp-=4;reg_sp-=4;
-					mem_writed(SegBase(ss)+reg_sp,mem_readd(SegBase(ss)+reg_bp));
-				}
-				if (level) {
-					reg_sp-=4;
-					mem_writed(SegBase(ss)+reg_sp,(Bit32u)frame_ptr);
-				}
-				reg_sp-=bytes;
-			}
-			reg_ebp=frame_ptr;
+			Bitu bytes=Fetchw();
+			Bitu level=Fetchb();
+			CPU_ENTER(true,bytes,level);
 			goto nextopcode;
 		}
 	case D_LEAVEw:
@@ -547,8 +468,8 @@ l_M_Ed:
 		CPU_CPUID();
 		goto nextopcode;
 	case D_HLT:
-		LEAVECORE;
-		CPU_HLT(IPPoint-inst.opcode_start);
+		FillFlags();
+		CPU_HLT(GetIP());
 		return CBRET_NONE;
 	case D_CLTS:
 		//TODO Really clear it sometime

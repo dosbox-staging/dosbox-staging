@@ -25,7 +25,8 @@
 	CASE_D(0x06)												/* PUSH ES */		
 		Push_32(SegValue(es));break;
 	CASE_D(0x07)												/* POP ES */
-		POPSEG(es,Pop_32(),4);break;
+		if (CPU_PopSeg(es,true)) RUNEXCEPTION();
+		break;
 	CASE_D(0x09)												/* OR Ed,Gd */
 		RMEdGd(ORD);break;
 	CASE_D(0x0b)												/* OR Gd,Ed */
@@ -43,7 +44,7 @@
 	CASE_D(0x16)												/* PUSH SS */
 		Push_32(SegValue(ss));break;
 	CASE_D(0x17)												/* POP SS */
-		POPSEG(ss,Pop_32(),4);
+		if (CPU_PopSeg(ss,true)) RUNEXCEPTION();
 		CPU_Cycles++;
 		break;
 	CASE_D(0x19)												/* SBB Ed,Gd */
@@ -55,7 +56,8 @@
 	CASE_D(0x1e)												/* PUSH DS */		
 		Push_32(SegValue(ds));break;
 	CASE_D(0x1f)												/* POP DS */
-		POPSEG(ds,Pop_32(),4);break;
+		if (CPU_PopSeg(ds,true)) RUNEXCEPTION();
+		break;
 	CASE_D(0x21)												/* AND Ed,Gd */
 		RMEdGd(ANDD);break;	
 	CASE_D(0x23)												/* AND Gd,Ed */
@@ -191,6 +193,12 @@
 	CASE_D(0x6b)												/* IMUL Gd,Ed,Ib */
 		RMGdEdOp3(DIMULD,Fetchbs());
 		break;
+	CASE_D(0x6d)												/* INSD */
+		if (CPU_IO_Exception(reg_dx,4)) RUNEXCEPTION();
+		DoString(R_INSD);break;
+	CASE_D(0x6f)												/* OUTSD */
+		if (CPU_IO_Exception(reg_dx,4)) RUNEXCEPTION();
+		DoString(R_OUTSD);break;
 	CASE_D(0x70)												/* JO */
 		JumpCond32_b(TFLG_O);break;
 	CASE_D(0x71)												/* JNO */
@@ -379,21 +387,17 @@
 	CASE_D(0x9a)												/* CALL FAR Ad */
 		{ 
 			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
-			LEAVECORE;
-			CPU_CALL(true,newcs,newip,core.ip_lookup-core.op_start);
-			goto decode_start;
+			FillFlags();
+			CPU_CALL(true,newcs,newip,GETIP);
+			continue;
 		}
 	CASE_D(0x9c)												/* PUSHFD */
 		FillFlags();
-		Push_32(reg_flags);
+		if (CPU_PUSHF(true)) RUNEXCEPTION();
 		break;
 	CASE_D(0x9d)												/* POPFD */
-		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
-			LEAVECORE;reg_eip-=core.ip_lookup-core.op_start;
-			CPU_Exception(13,0);
-			goto decode_start;
-		}
-		SETFLAGSd(Pop_32())
+		if (CPU_POPF(true)) RUNEXCEPTION();
+		lflags.type=t_UNKNOWN;
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
 			cpudecoder=CPU_Core_Normal_Trap_Run;
@@ -403,7 +407,6 @@
 #if CPU_PIC_CHECK
 		if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif
-
 		break;
 	CASE_D(0xa1)												/* MOV EAX,Od */
 		{
@@ -448,25 +451,23 @@
 	CASE_D(0xc1)												/* GRP2 Ed,Ib */
 		GRP2D(Fetchb());break;
 	CASE_D(0xc2)												/* RETN Iw */
-			{ 
-				Bit16u addsp=Fetchw();
-				SETIP(Pop_32());reg_esp+=addsp;
-				break;  
-			}
+		reg_eip=Pop_32();
+		reg_esp+=Fetchw();
+		continue;
 	CASE_D(0xc3)												/* RETN */
-			SETIP(Pop_32());
-			break;	
+		reg_eip=Pop_32();
+		continue;
 	CASE_D(0xc4)												/* LES */
 		{	
 			GetRMrd;GetEAa;
-			LOADSEG(es,LoadMw(eaa+4));
+			if (CPU_SetSegGeneral(es,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_D(0xc5)												/* LDS */
 		{	
 			GetRMrd;GetEAa;
-			LOADSEG(ds,LoadMw(eaa+4));
+			if (CPU_SetSegGeneral(ds,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}
@@ -479,36 +480,11 @@
 		}
 	CASE_D(0xc8)												/* ENTER Iw,Ib */
 		{
-			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
-			Bitu frame_ptr=reg_esp-4;
-			if (cpu.stack.big) {
-				reg_esp-=4;
-				mem_writed(SegBase(ss)+reg_esp,reg_ebp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_ebp-=4;reg_esp-=4;
-					mem_writed(SegBase(ss)+reg_esp,mem_readd(SegBase(ss)+reg_ebp));
-				}
-				if (level) {
-					reg_esp-=4;
-					mem_writed(SegBase(ss)+reg_esp,(Bit32u)frame_ptr);
-				}
-				reg_esp-=bytes;
-			} else {
-				reg_sp-=4;
-				mem_writed(SegBase(ss)+reg_sp,reg_ebp);
-				for (Bitu i=1;i<level;i++) {	
-					reg_bp-=4;reg_sp-=4;
-					mem_writed(SegBase(ss)+reg_sp,mem_readd(SegBase(ss)+reg_bp));
-				}
-				if (level) {
-					reg_sp-=4;
-					mem_writed(SegBase(ss)+reg_sp,(Bit32u)frame_ptr);
-				}
-				reg_sp-=bytes;
-			}
-			reg_ebp=frame_ptr;
-			break;
+			Bitu bytes=Fetchw();
+			Bitu level=Fetchb();
+			CPU_ENTER(true,bytes,level);
 		}
+		break;
 	CASE_D(0xc9)												/* LEAVE */
 		reg_esp&=~cpu.stack.mask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
@@ -517,20 +493,20 @@
 	CASE_D(0xca)												/* RETF Iw */
 		{ 
 			Bitu words=Fetchw();
-			LEAVECORE;
-			CPU_RET(true,words,core.ip_lookup-core.op_start);
-			goto decode_start;
+			FillFlags();
+			CPU_RET(true,words,GETIP);
+			continue;
 		}
 	CASE_D(0xcb)												/* RETF */			
 		{ 
-			LEAVECORE;
-            CPU_RET(true,0,core.ip_lookup-core.op_start);
-			goto decode_start;
+			FillFlags();
+            CPU_RET(true,0,GETIP);
+			continue;
 		}
 	CASE_D(0xcf)												/* IRET */
 		{
-			LEAVECORE;
-			CPU_IRET(true,core.ip_lookup-core.op_start);
+			FillFlags();
+			CPU_IRET(true,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
 				cpudecoder=CPU_Core_Normal_Trap_Run;
@@ -540,35 +516,79 @@
 #if CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
-			goto decode_start;
+			continue;
 		}
 	CASE_D(0xd1)												/* GRP2 Ed,1 */
 		GRP2D(1);break;
 	CASE_D(0xd3)												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
+	CASE_D(0xe0)												/* LOOPNZ */
+		if (TEST_PREFIX_ADDR) {
+			JumpCond32_b(--reg_ecx && !get_ZF());
+		} else {
+			JumpCond32_b(--reg_cx && !get_ZF());
+		}
+		break;
+	CASE_D(0xe1)												/* LOOPZ */
+		if (TEST_PREFIX_ADDR) {
+			JumpCond32_b(--reg_ecx && get_ZF());
+		} else {
+			JumpCond32_b(--reg_cx && get_ZF());
+		}
+		break;
+	CASE_D(0xe2)												/* LOOP */
+		if (TEST_PREFIX_ADDR) {	
+			JumpCond32_b(--reg_ecx);
+		} else {
+			JumpCond32_b(--reg_cx);
+		}
+		break;
+	CASE_D(0xe3)												/* JCXZ */
+		JumpCond32_b(!(reg_ecx & AddrMaskTable[core.prefixes& PREFIX_ADDR]));
+		break;
 	CASE_D(0xe5)												/* IN EAX,Ib */
-		reg_eax=IO_ReadD(Fetchb());
-		break;
-	CASE_D(0xe7)												/* OUT Ib,EAX */
-		IO_WriteD(Fetchb(),reg_eax);
-		break;
-	CASE_D(0xe8)												/* CALL Jd */
-		{ 
-			Bit32s newip=Fetchds();
-			Push_32((Bit32u)GETIP);
-			ADDIPd(newip);
+		{
+			Bitu port=Fetchb();
+			if (CPU_IO_Exception(port,4)) RUNEXCEPTION();
+			reg_eax=IO_ReadD(port);
 			break;
 		}
+	CASE_D(0xe7)												/* OUT Ib,EAX */
+		{
+			Bitu port=Fetchb();
+			if (CPU_IO_Exception(port,4)) RUNEXCEPTION();
+			IO_WriteD(port,reg_eax);
+			break;
+		}
+	CASE_D(0xe8)												/* CALL Jd */
+		{ 
+			Bit32s addip=Fetchds();
+			SAVEIP;
+			Push_32(reg_eip);
+			reg_eip+=addip;
+			continue;
+		}
 	CASE_D(0xe9)												/* JMP Jd */
-		ADDIPd(Fetchds());
-		break;
+		{ 
+			Bit32s addip=Fetchds();
+			SAVEIP;
+			reg_eip+=addip;
+			continue;
+		}
 	CASE_D(0xea)												/* JMP Ad */
 		{ 
 			Bit32u newip=Fetchd();
 			Bit16u newcs=Fetchw();
-			LEAVECORE;
-			CPU_JMP(true,newcs,newip,core.ip_lookup-core.op_start);
-			goto decode_start;
+			FillFlags();
+			CPU_JMP(true,newcs,newip,GETIP);
+			continue;
+		}
+	CASE_D(0xeb)												/* JMP Jb */
+		{ 
+			Bit32s addip=Fetchbs();
+			SAVEIP;
+			reg_eip+=addip;
+			continue;
 		}
 	CASE_D(0xed)												/* IN EAX,DX */
 		reg_eax=IO_ReadD(reg_dx);
@@ -631,31 +651,31 @@
 				RMEd(DECD);
 				break;
 			case 0x02:											/* CALL NEAR Ed */
-				if (rm >= 0xc0 ) {GetEArd;Push_32(GETIP);SETIP(*eard);}
-				else {GetEAa;Push_32(GETIP);SETIP(LoadMd(eaa));}
-				break;
+				if (rm >= 0xc0 ) {GetEArd;reg_eip=*eard;}
+				else {GetEAa;reg_eip=LoadMd(eaa);}
+				Push_32(GETIP);
+				continue;
 			case 0x03:											/* CALL FAR Ed */
 				{
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
-					LEAVECORE;
-					CPU_CALL(true,newcs,newip,core.ip_lookup-core.op_start);
-					goto decode_start;
+					FillFlags();
+					CPU_CALL(true,newcs,newip,GETIP);
+					continue;
 				}
-				break;
 			case 0x04:											/* JMP NEAR Ed */	
-				if (rm >= 0xc0 ) {GetEArd;SETIP(*eard);}
-				else {GetEAa;SETIP(LoadMd(eaa));}
-				break;
+				if (rm >= 0xc0 ) {GetEArd;reg_eip=*eard;}
+				else {GetEAa;reg_eip=LoadMd(eaa);}
+				continue;
 			case 0x05:											/* JMP FAR Ed */	
 				{
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
-					LEAVECORE;
-					CPU_JMP(true,newcs,newip,core.ip_lookup-core.op_start);
-					goto decode_start;
+					FillFlags();
+					CPU_JMP(true,newcs,newip,GETIP);
+					continue;
 				}
 				break;
 			case 0x06:											/* Push Ed */

@@ -20,18 +20,11 @@ static void DoString(STRING_OP type) {
 	if (TEST_PREFIX_SEG) si_base=core.seg_prefix_base;
 	else si_base=SegBase(ds);
 	di_base=SegBase(es);
-	if (TEST_PREFIX_ADDR) {
-		add_mask=0xFFFFFFFF;
-		si_index=reg_esi;
-		di_index=reg_edi;
-		count=reg_ecx;
-	} else {
-		add_mask=0xFFFF;
-		si_index=reg_si;
-		di_index=reg_di;
-		count=reg_cx;
-	}
-	if (!(TEST_PREFIX_REP)) {
+	add_mask=AddrMaskTable[core.prefixes& PREFIX_ADDR];
+	si_index=reg_esi & add_mask;
+	di_index=reg_edi & add_mask;
+	count=reg_ecx & add_mask;
+	if (!TEST_PREFIX_REP) {
 		count=1;
 	} else {
 		CPU_Cycles++;
@@ -40,7 +33,7 @@ static void DoString(STRING_OP type) {
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;
 			CPU_Cycles=0;
-			core.ip_lookup=core.op_start;		//Reset IP to start of instruction
+			LOADIP;		//RESET IP to the start
 		} else {
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
 			count_left=0;

@@ -56,29 +56,14 @@ switch (inst.code.save) {
 		reg_32(inst.code.extra)=inst.op1.d;
 		break;	
 	case S_SEGm:
-		if (CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w)) {
-			LEAVECORE;
-			reg_eip-=(IPPoint-inst.opcode_start);
-			CPU_StartException();
-			goto restart_core;
-		}
+		if (CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w)) RunException();
 		break;
 	case S_SEGGw:
-		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
-			LEAVECORE;
-			reg_eip-=(IPPoint-inst.opcode_start);
-			CPU_StartException();
-			goto restart_core;
-		}
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) RunException();
 		reg_16(inst.rm_index)=inst.op1.w;
 		break;
 	case S_SEGGd:
-		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
-			LEAVECORE;
-			reg_eip-=(IPPoint-inst.opcode_start);
-			CPU_StartException();
-			goto restart_core;
-		}
+		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) RunException();
 		reg_32(inst.rm_index)=inst.op1.d;
 		break;
 	case S_PUSHw:
@@ -94,25 +79,19 @@ switch (inst.code.save) {
 		SaveIP();
 		reg_eip+=inst.op1.d;
 		reg_eip&=0xffff;
-		LoadIP();
-		break;
+		continue;
 	case S_C_AIPd:
 		if (!inst.cond) goto nextopcode;
 	case S_AIPd:
 		SaveIP();
 		reg_eip+=inst.op1.d;
-		LoadIP();
-		break;
+		continue;
 	case S_IPIw:
 		reg_esp+=Fetchw();
 	case S_IP:
 		SaveIP();
 		reg_eip=inst.op1.d;
-		LoadIP();
-		break;
-	case S_FLGb:
-		SETFLAGSb(inst.op1.b);
-		break;
+		continue;
 	case 0:
 		break;
 	default:

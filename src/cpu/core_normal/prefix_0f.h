@@ -45,7 +45,7 @@
 				}
 				break;
 			default:
-				LOG(LOG_CPU,LOG_ERROR)("GRP6:Illegal call %2X",which);
+				goto illegal_opcode;
 			}
 		}
 		break;
@@ -77,7 +77,7 @@
 					break;
 				case 0x06:										/* LMSW */
 					limit=LoadMw(eaa);
-					if (!CPU_LMSW(limit)) goto decode_end;
+					if (CPU_LMSW(limit)) RUNEXCEPTION();
 					break;
 				}
 			} else {
@@ -88,11 +88,10 @@
 					*earw=limit;
 					break;
 				case 0x06:										/* LMSW */
-					if (!CPU_LMSW(*earw)) goto decode_end;
+					if (CPU_LMSW(*earw)) RUNEXCEPTION();
 					break;
 				default:
-					LOG(LOG_CPU,LOG_ERROR)("Illegal group 7 RM subfunction %d",which);
-					break;
+					goto illegal_opcode;
 				}
 			}
 		}
@@ -154,11 +153,8 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm >= 0xc0 ) {
 				GetEArd;
-				CPU_SET_CRX(which,*eard);
-			} else {
-				GetEAa;
-				LOG(LOG_CPU,LOG_ERROR)("MOV CR%,XXX with non-register",which);
-			}
+				if (CPU_SET_CRX(which,*eard)) RUNEXCEPTION();
+			} else 	goto illegal_opcode;
 		}
 		break;
 	CASE_0F_B(0x23)												/* MOV DRx,Rd */
@@ -241,7 +237,7 @@
 	CASE_0F_W(0xa0)												/* PUSH FS */		
 		Push_16(SegValue(fs));break;
 	CASE_0F_W(0xa1)												/* POP FS */	
-		POPSEG(fs,Pop_16(),2);
+		if (CPU_PopSeg(fs,false)) RUNEXCEPTION();
 		break;
 	CASE_0F_B(0xa2)												/* CPUID */
 		CPU_CPUID();break;
@@ -268,7 +264,8 @@
 	CASE_0F_W(0xa8)												/* PUSH GS */		
 		Push_16(SegValue(gs));break;
 	CASE_0F_W(0xa9)												/* POP GS */		
-		POPSEG(gs,Pop_16(),2);break;
+		if (CPU_PopSeg(gs,false)) RUNEXCEPTION();
+		break;
 	CASE_0F_W(0xab)												/* BTS Ew,Gw */
 		{
 			FillFlags();GetRMrw;
@@ -297,7 +294,7 @@
 	CASE_0F_W(0xb2)												/* LSS Ew */
 		{	
 			GetRMrw;GetEAa;
-			LOADSEG(ss,LoadMw(eaa+2));
+			if (CPU_SetSegGeneral(ss,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
 		}
@@ -320,14 +317,14 @@
 	CASE_0F_W(0xb4)												/* LFS Ew */
 		{	
 			GetRMrw;GetEAa;
-			LOADSEG(fs,LoadMw(eaa+2));
+			if (CPU_SetSegGeneral(fs,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_0F_W(0xb5)												/* LGS Ew */
 		{	
 			GetRMrw;GetEAa;
-			LOADSEG(gs,LoadMw(eaa+2));
+			if (CPU_SetSegGeneral(gs,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
 		}

@@ -13,11 +13,9 @@ enum {
 	L_REGbIb,L_REGwIw,L_REGdId,
 	L_POPw,L_POPd,
 	L_POPfw,L_POPfd,
-	L_PFLGw,L_PFLGd,
 	L_SEG,
 
-	L_FLG,L_INTO,
-
+	L_INTO,
 
 	L_VAL,
 	L_PRESEG,
@@ -43,6 +41,8 @@ enum {
 	
 	D_RETFw,D_RETFd,
 	D_RETFwIw,D_RETFdIw,
+	D_POPF,D_PUSHF,
+	D_SAHF,D_LAHF,
 	D_CPUID,
 	D_HLT,D_CLTS,
 	L_ERROR,
@@ -115,7 +115,6 @@ enum {
 	S_AIPw,S_C_AIPw,
 	S_AIPd,S_C_AIPd,
 
-	S_FLGb,
 	S_IP,S_IPIw,
 };
 
@@ -157,7 +156,6 @@ struct OpCode {
 
 struct FullData {
 	Bitu entry;
-	EAPoint opcode_start;
 	Bitu rm;
 	EAPoint rm_eaa;
 	Bitu rm_off;
@@ -165,6 +163,7 @@ struct FullData {
 	Bitu rm_index;
 	Bitu rm_mod;
 	OpCode code;
+	EAPoint cseip;
 	union {	
 		Bit8u b;Bit8s bs;
 		Bit16u w;Bit16s ws;
@@ -177,13 +176,11 @@ struct FullData {
 	Bitu cond;
 	bool repz;
 	Bitu prefix;
-	Bitu start_prefix;
-	Bitu start_entry;
 };
 
 
 #define PREFIX_NONE		0x0
-#define PREFIX_SEG		0x1
-#define PREFIX_ADDR		0x2
+#define PREFIX_ADDR		0x1
+#define PREFIX_SEG		0x2
 #define PREFIX_REP		0x4
 

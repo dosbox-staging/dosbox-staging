@@ -54,47 +54,28 @@ typedef PhysPt EAPoint;
 #include "core_full/optable.h"
 #include "instructions.h"
 
-#define LEAVECORE											\
-		SaveIP();											\
-		FillFlags();
-
 #define EXCEPTION(blah)										\
 	{														\
 		Bit8u new_num=blah;									\
-		IPPoint=inst.opcode_start;							\
-		LEAVECORE;											\
 		CPU_Exception(new_num,0);							\
-		LoadIP();											\
-		goto nextopcode;									\
+		continue;											\
 	}
 
 Bits CPU_Core_Full_Run(void) {
 	FullData inst;	
-restart_core:
-	if (!cpu.code.big) {
-		inst.start_prefix=0x0;;
-		inst.start_entry=0x0;
-	} else {
-		inst.start_prefix=PREFIX_ADDR;
-		inst.start_entry=0x200;
-	}
-	EAPoint IPPoint;
-	LoadIP();
-	lflags.type=t_UNKNOWN;
 	while (CPU_Cycles-->0) {
 #if C_DEBUG
 		cycle_count++;
 #if C_HEAVY_DEBUG
-		SaveIP();
 		if (DEBUG_HeavyIsBreakpoint()) {
 			LEAVECORE;
 			return debugCallback;
 		};
 #endif
 #endif
-		inst.opcode_start=IPPoint;
-		inst.entry=inst.start_entry;
-		inst.prefix=inst.start_prefix;
+		LoadIP();
+		inst.entry=cpu.code.big*0x200;
+		inst.prefix=cpu.code.big;
 restartopcode:
 		inst.entry=(inst.entry & 0xffffff00) | Fetchb();
 		inst.code=OpCodeTable[inst.entry];
@@ -102,14 +83,14 @@ restartopcode:
 		#include "core_full/op.h"
 		#include "core_full/save.h"
 nextopcode:;
-	}
-	LEAVECORE;
-	return CBRET_NONE;
+		SaveIP();
+		continue;
 illegalopcode:
-	LEAVECORE;
-	reg_eip-=(IPPoint-inst.opcode_start);
-	CPU_Exception(0x6,0);
-	goto restart_core;
+		LOG_MSG("Illegal opcode");
+		CPU_Exception(0x6,0);
+	}
+	FillFlags();
+	return CBRET_NONE;
 }
 
 
