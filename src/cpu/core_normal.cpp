@@ -115,6 +115,9 @@ static struct {
 	PhysPt seg_prefix_base;
 	bool rep_zero;
 	GetEATable * ea_table;
+	struct {
+		bool skip;
+	} trap;
 } core;
 
 #include "instructions.h"
@@ -197,9 +200,10 @@ static Bits CPU_Core_Normal_Decode_Trap(void) {
 
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
+	core.trap.skip=false;
+
 	Bits ret=CPU_Core_Normal_Decode();
-	
-	Interrupt(1);
+	if (!core.trap.skip) Interrupt(1);
 	
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Normal_Decode;

@@ -496,6 +496,7 @@
 				break;
 			case 0x02:					/* MOV SS,Ew */
 				CPU_SetSegGeneral(ss,val);
+				CPU_Cycles++; //Always do another instruction
 				break;
 			case 0x03:					/* MOV DS,Ew */
 				CPU_SetSegGeneral(ds,val);break;
@@ -759,7 +760,8 @@
 		if (DEBUG_Breakpoint()) {
 			return debugCallback;
 		}
-#endif			
+#endif		
+		core.trap.skip=true;
 		if (!Interrupt(3)) return CBRET_NONE;
 		goto decode_start;
 	CASE_B(0xcd)												/* INT Ib */	
@@ -771,6 +773,7 @@
 				return debugCallback;
 			}
 #endif
+			core.trap.skip=true;
 			if (!Interrupt(num)) return CBRET_NONE;
 			goto decode_start;			//Restore IP with a LOADIP
 		}
@@ -778,6 +781,7 @@
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			LEAVECORE;
+			core.trap.skip=true;
 			if (!Interrupt(4)) return CBRET_NONE;
 			goto decode_start;			//Restore IP with a LOADIP
 		}
