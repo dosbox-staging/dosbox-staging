@@ -31,6 +31,7 @@ HostPt WriteHostTable[MAX_PAGES];
 MEMORY_ReadHandler ReadHandlerTable[MAX_PAGES];
 MEMORY_WriteHandler WriteHandlerTable[MAX_PAGES];
 
+static Bitu total_size;
 
 /* Page handlers only work in lower memory */
 #define LOW_PAGE_LIMIT PAGE_COUNT(1024*1024)
@@ -245,6 +246,10 @@ void MEM_A20_Enable(bool enable) {
 	LOG(LOG_MISC,"A20 Line is %s",enable ? "Enabled" : "Disabled");
 }
 
+Bitu MEM_TotalSize(void) {
+	return total_size;
+}
+
 static void write_p92(Bit32u port,Bit8u val) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
@@ -273,6 +278,7 @@ void MEM_Init(Section * sec) {
 		LOG_MSG("Maximum memory size is %d MB",C_MEM_MAX_SIZE-1);
 		memsize=C_MEM_MAX_SIZE-1;
 	}
+	total_size=memsize*1024;
 	memory=(Bit8u *)malloc(memsize*1024*1024+64*1024);	
 	if (!memory) {
 		throw("Can't allocate memory for memory");
