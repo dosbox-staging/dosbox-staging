@@ -23,8 +23,13 @@
 #include "pic.h"
 #include "mixer.h"
 
-
 #define KEYBUFSIZE 32
+
+enum KeyCommands {
+	CMD_NONE,
+	CMD_SETLEDS,
+	CMD_SETTYPERATE
+};
 
 
 struct KeyEvent {
@@ -34,43 +39,109 @@ struct KeyEvent {
 	KeyEvent * next;
 };
 
+struct KeyBlock {
+	Bit8u buf[KEYBUFSIZE];
+	Bitu buf_pos;
+	Bitu buf_used;
+	Bitu write_state;
+
+	KeyCommands command;
+	bool read_active;
+	bool enabled;
+};
+
+static KeyBlock keyb;
 static Bitu shift_state=0;
 static Bit8u cur_scancode;
-static Bit8u kbuf[KEYBUFSIZE];
-static Bitu kbuf_pos;
-static Bitu kbuf_used;
 static Bit8u port_61_data;
 //TODO Are these initialized at 0 at startup? Hope so :)
 static KeyEvent * event_handlers[KBD_LAST];
 
 
+void KEYBOARD_ClrBuffer(void) {
+	keyb.buf_used=0;
+	keyb.buf_pos=0;
+	keyb.read_active=false;
+	PIC_DeActivateIRQ(1);
+}
+
+
+void KEYBOARD_ReadBuffer(void) {
+	if (keyb.read_active) return;
+	if (keyb.buf_used) {
+		keyb.buf_used--;
+		keyb.buf_pos++;
+		if (keyb.buf_pos>=KEYBUFSIZE) keyb.buf_pos=0;
+	}
+	if (keyb.buf_used) {
+		keyb.read_active=true;
+		PIC_ActivateIRQ(1);
+	}
+}
+
+void KEYBOARD_AddCode(Bit8u code) {
+	if (keyb.buf_used<KEYBUFSIZE) {
+		Bitu start=keyb.buf_pos+keyb.buf_used;
+		keyb.buf_used++;
+		if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
+		keyb.buf[start]=code;
+		keyb.read_active=true;
+	}
+	if (keyb.buf_used>0) PIC_ActivateIRQ(1);
+}
+
 static Bit8u read_p60(Bit32u port) {
-	if (kbuf_used>0) {
-		cur_scancode=kbuf[kbuf_pos];
-	};
-	return cur_scancode;
+	/* Reading this port signals that IRQ can be lowered */
+	Bit8u val=keyb.buf[keyb.buf_pos];
+	keyb.read_active=false;
+	return keyb.buf[keyb.buf_pos];
 }
 
 static void write_p60(Bit32u port,Bit8u val) {
-//TODO Work this out ;)
-	LOG_DEBUG("Port 60 write with val %d",val);
+	switch (keyb.command) {
+	case CMD_NONE:	/* None */
+		KEYBOARD_ClrBuffer();
+		switch (val) {
+		case 0xed:	/* Set Leds */
+			keyb.command=CMD_SETLEDS;
+			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			break;
+		case 0xee:	/* Echo */
+			KEYBOARD_AddCode(0xee);
+			break;
+		case 0xf2:	/* Identify keyboard */
+			/* AT's just send acknowledge */
+			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			break;
+		case 0xf3: /* Typematic rate programming */
+			keyb.command=CMD_SETTYPERATE;
+			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			break;
+		default:
+			LOG_DEBUG("KEYB:60:Unhandled command %X",val);
+		}
+		return;
+	case CMD_SETTYPERATE:
+	case CMD_SETLEDS:
+		keyb.command=CMD_NONE;
+		KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+		break;
+	}
 }
 
 static Bit8u read_p61(Bit32u port) {
+	port_61_data^=0x20;
 	return port_61_data;
+
 };
 
+static void KEYBOARD_IRQHandler(void) {
+	if (!keyb.read_active) KEYBOARD_ReadBuffer();
+}
+
 static void write_p61(Bit32u port,Bit8u val) {
-//TODO Enable spreaker through here :)	
-	if ((val&128)) {					/* Keyboard acknowledge */
-		if (kbuf_used) {
-			kbuf_used--;
-			kbuf_pos++;
-			if (kbuf_pos>=KEYBUFSIZE) kbuf_pos=0;
-			if (kbuf_used) PIC_ActivateIRQ(1);
-		}
-	}
 	port_61_data=val;
+	if (val & 128) if (!keyb.read_active) KEYBOARD_ReadBuffer();
 	if ((val & 3)==3) {
 		PCSPEAKER_Enable(true);
 	} else {
@@ -78,19 +149,18 @@ static void write_p61(Bit32u port,Bit8u val) {
 	}
 }
 
-
-
-void KEYBOARD_AddCode(Bit8u code) {
-	//Now Raise the keyboard IRQ 
-	//If the buffer is full just drop the scancode :)
-	if (kbuf_used<KEYBUFSIZE) {
-		Bit32u start=kbuf_used+kbuf_pos;
-		kbuf_used++;
-		if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
-		kbuf[start]=code;
+static void write_p64(Bit32u port,Bit8u val) {
+	switch (val) {
+	case 0:
+	default:
+		LOG_DEBUG("Port 64 write with val %d",val);
+		break;
 	}
-	PIC_ActivateIRQ(1);
 }
+
+static Bit8u read_p64(Bit32u port) {
+	return 0x1c | (keyb.read_active ? 0x1 : 0x0);
+};
 
 
 void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
@@ -252,11 +322,18 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 };
 
 void KEYBOARD_Init(void) {
-	kbuf_used=0;kbuf_pos=0;
 	IO_RegisterWriteHandler(0x60,write_p60,"Keyboard");
 	IO_RegisterReadHandler(0x60,read_p60,"Keyboard");
 	IO_RegisterWriteHandler(0x61,write_p61,"Keyboard");
 	IO_RegisterReadHandler(0x61,read_p61,"Keyboard");
+	IO_RegisterWriteHandler(0x64,write_p64,"Keyboard");
+	IO_RegisterReadHandler(0x64,read_p64,"Keyboard");
+
 	port_61_data=1;				/* Speaker control through PIT and speaker disabled */
 //	memset(&event_handlers,0,sizeof(event_handlers));
+	/* Clear the keyb struct */
+	keyb.enabled=true;
+	keyb.command=CMD_NONE;
+	KEYBOARD_ClrBuffer();
+	PIC_RegisterIRQ(1,KEYBOARD_IRQHandler,"KEYBOARD");
 };
