@@ -350,15 +350,18 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init);
 	secprop->Add_bool("ems",true);
+#if (C_DEBUG)
 	secprop->AddInitFunction(&DPMI_Init);
 	secprop->Add_bool("dpmi",false);
-
+#endif
     MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
 		"ems -- Enable EMS support.\n"
+#if (C_DEBUG)
 		"dpmi -- Enable builtin DPMI host support.\n"
 		"        This might help in getting some games to work, but might crash others.\n"
 		"        So be sure to try both settings.\n"
+#endif
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
