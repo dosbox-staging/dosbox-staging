@@ -80,6 +80,7 @@ typedef struct {
 	bool resizing;
 	Bitu width;
 	Bitu height;
+	Bit8u * font;
 	Bit8u font_height;
 	Bit8u cursor_enable;
 	Bit8u cursor_row;
@@ -157,7 +158,6 @@ struct RGBEntry {
 	Bit8u red;
 	Bit8u green;
 	Bit8u blue;
-	Bit8u attr_entry;
 };
 
 typedef struct {
@@ -168,6 +168,7 @@ typedef struct {
 	Bit8u index;
 	Bitu first_changed;
 	RGBEntry rgb[0x100];
+	Bit8u attr[16];
 } VGA_Dac;
 
 union VGA_Latch {
@@ -244,7 +245,7 @@ void VGA_SetupSEQ(void);
 void VGA_DACSetEntirePalette(void);
 
 extern VGA_Type vga;
-extern Bit8u vga_rom_8[256 * 8];
+extern Bit8u vga_rom_08[256 * 8];
 extern Bit8u vga_rom_14[256 * 14];
 extern Bit8u vga_rom_16[256 * 16];
 
@@ -259,7 +260,6 @@ extern Bit32u Expand16BigTable[0x10000];
 #else
 #define LOG_VGA
 #endif
-
 
 #endif
 
