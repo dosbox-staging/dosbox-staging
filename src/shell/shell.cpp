@@ -175,33 +175,35 @@ static char * path_string="PATH=Z:\\";
 static char * comspec_string="COMSPEC=Z:\\COMMAND.COM";
 static char * full_name="Z:\\COMMAND.COM";
 static char * init_line="/INIT AUTOEXEC.BAT";
+
 void SHELL_Init() {
-//add messages:
-        MSG_Add("SHELL_CMD_HELP","supported commands are:\n");
-        MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on\n");
-        MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off\n");
-        MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s\n");
-        MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s\n");
-        MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s\n");
-        MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %\n");
-        MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
-        MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined\n");
-        MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
-        MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME","IF EXIST: Missing filename.\n");
-        MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER","IF ERRORLEVEL: Missing number.\n");
-        MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER","IF ERRORLEVEL: Invalid number.\n");
-        MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL","No label supplied to GOTO command.\n");
-        MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
-        MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
-        MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
-        MSG_Add("SHELL_CMD_DIR_PATH_ERROR","Illegal Path\n");
-        MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
-        MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
-        MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
-        MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
-        MSG_Add("SHELL_STARTUP","DOSBox Shell v0.40\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
-//regular startup        
-        call_shellstop=CALLBACK_Allocate();
+	/* Add messages */
+	MSG_Add("SHELL_CMD_HELP","supported commands are:\n");
+	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on\n");
+	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s\n");
+	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s\n");
+	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s\n");
+	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %\n");
+	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
+	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined\n");
+	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
+	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME","IF EXIST: Missing filename.\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER","IF ERRORLEVEL: Missing number.\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER","IF ERRORLEVEL: Invalid number.\n");
+	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL","No label supplied to GOTO command.\n");
+	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
+	MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
+	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
+	MSG_Add("SHELL_CMD_DIR_PATH_ERROR","Illegal Path\n");
+	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
+	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
+	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
+	MSG_Add("SHELL_STARTUP","DOSBox Shell v0.40\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
+	/* Regular startup */
+	call_shellstop=CALLBACK_Allocate();
+
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET);
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
 
