@@ -98,6 +98,7 @@ typedef struct {
 	Bitu height;
 	Bitu pitch;
 	Bitu blank;
+	Bitu scaleh;
 	bool double_width;
 	bool double_height;
 	Bitu lines;
