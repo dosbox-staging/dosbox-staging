@@ -206,6 +206,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&CMS_Init);
     secprop->Add_bool("cms",false);
 	secprop->AddInitFunction(&MPU401_Init);
+	secprop->Add_bool("mpu401",true);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init);
 
