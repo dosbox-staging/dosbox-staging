@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.47 2005-03-01 11:13:29 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.48 2005-03-24 19:16:33 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -314,11 +314,9 @@ void RestoreCursorBackground()
 };
 
 void DrawCursor() {
-
 	if (mouse.shown<0) return;
 // Check video page
 	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
-
 // Check if cursor in update region
 /*	if ((POS_X >= mouse.updateRegion_x[0]) && (POS_X <= mouse.updateRegion_x[1]) &&
 	    (POS_Y >= mouse.updateRegion_y[0]) && (POS_Y <= mouse.updateRegion_y[1])) {
@@ -473,6 +471,8 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py){
 	}
 };
 static void SetSensitivity(Bit16s px, Bit16s py){
+	if(px>100) px=100;
+	if(py>100) py=100;
 	if ((px!=0) && (py!=0)) {
 		px--;  //Inspired by cutemouse 
 		py--;  //Although their cursor update routine is far more complex then ours
@@ -909,4 +909,3 @@ void MOUSE_Init(Section* sec) {
 	mouse_reset_hardware();
 	mouse_reset();
 }
-
