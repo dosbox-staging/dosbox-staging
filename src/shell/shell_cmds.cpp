@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.48 2004-10-02 11:13:02 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.49 2004-10-21 15:38:39 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -74,7 +74,7 @@ void DOS_Shell::DoCommand(char * line) {
 			while (cmd_list[cmd_index].name) {
 				if (strcasecmp(cmd_list[cmd_index].name,cmd)==0) {
 					(this->*(cmd_list[cmd_index].handler))(line);
-			 	 	return;
+			 		return;
 				}
 				cmd_index++;
 			}
@@ -103,7 +103,10 @@ void DOS_Shell::CMD_CLS(char * args) {
 };
 
 void DOS_Shell::CMD_DELETE(char * args) {
-		
+	/* Command uses dta so set it to our internal dta */
+	RealPt save_dta=dos.dta();
+	dos.dta(dos.tables.tempdta);
+
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
@@ -119,7 +122,9 @@ void DOS_Shell::CMD_DELETE(char * args) {
 //TODO Maybe support confirmation for *.* like dos does.	
 	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
-		WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);return;
+		WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);
+		dos.dta(save_dta);
+		return;
 	}
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
 	char * end=strrchr(full,'\\')+1;*end=0;
@@ -133,6 +138,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 		}
 		res=DOS_FindNext();
 	}
+	dos.dta(save_dta);
 }
 
 void DOS_Shell::CMD_HELP(char * args){
@@ -298,10 +304,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 	*(strrchr(path,'\\')+1)=0;
 	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
+	/* Command uses dta so set it to our internal dta */
+	RealPt save_dta=dos.dta();
+	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		dos.dta(save_dta);
 		return;
 	}
  
@@ -369,11 +379,15 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 	FormatNumber(free_space,numformat);
 	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
+	dos.dta(save_dta);
 }
 
 void DOS_Shell::CMD_COPY(char * args) {
 	static char defaulttarget[] = ".";
 	StripSpaces(args);
+	/* Command uses dta so set it to our internal dta */
+	RealPt save_dta=dos.dta();
+	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	char name[DOS_NAMELENGTH_ASCII];
@@ -385,6 +399,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
+		dos.dta(save_dta);
 		return;
 	}
 	// source/target
@@ -396,6 +411,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	// Target and Source have to be there
 	if (!source || !strlen(source)) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		dos.dta(save_dta);
 		return;	
 	};
 
@@ -405,6 +421,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 	if (!DOS_Canonicalize(source,pathSource)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+		dos.dta(save_dta);
 		return;
 	}
 	// cut search pattern
@@ -413,6 +430,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 	if (!DOS_Canonicalize(target,pathTarget)) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+		dos.dta(save_dta);
 		return;
 	}
 	char* temp = strstr(pathTarget,"*.*");
@@ -430,6 +448,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	bool ret=DOS_FindFirst(source,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		dos.dta(save_dta);
 		return;
 	}
 
@@ -473,6 +492,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		ret=DOS_FindNext();
 	};
 	WriteOut(MSG_Get("SHELL_CMD_COPY_SUCCESS"),count);
+	dos.dta(save_dta);
 }
 
 void DOS_Shell::CMD_SET(char * args) {
@@ -519,8 +539,14 @@ void DOS_Shell::CMD_IF(char * args) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_EXIST_MISSING_FILENAME"));
 			return;
 		};
-			
-		if (DOS_FindFirst(word,0xffff & ~DOS_ATTR_VOLUME)==(!has_not)) DoCommand(args);
+
+		{	/* DOS_FindFirst uses dta so set it to our internal dta */
+			RealPt save_dta=dos.dta();
+			dos.dta(dos.tables.tempdta);
+			bool ret=DOS_FindFirst(word,0xffff & ~DOS_ATTR_VOLUME);
+			dos.dta(save_dta);
+			if (ret==(!has_not)) DoCommand(args);
+		}
 		return;
 	}
 	if (strcasecmp(word,"ERRORLEVEL")==0) {
