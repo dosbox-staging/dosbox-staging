@@ -16,12 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+
+
+#include "dosbox.h"
+
 #if C_MODEM
 
 #include <string.h>
 #include "SDL_net.h"
 
-#include "dosbox.h"
 #include "inout.h"
 #include "mixer.h"
 #include "dma.h"
