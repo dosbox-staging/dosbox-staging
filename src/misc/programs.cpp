@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.14 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.15 2004-09-16 21:47:39 qbix79 Exp $ */
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -96,11 +96,11 @@ Program::Program() {
 }
 
 void Program::WriteOut(const char * format,...) {
-	char buf[1024];
+	char buf[2048];
 	va_list msg;
 	
 	va_start(msg,format);
-	vsprintf(buf,format,msg);
+	vsnprintf(buf,2047,format,msg);
 	va_end(msg);
 
 	Bit16u size=strlen(buf);
