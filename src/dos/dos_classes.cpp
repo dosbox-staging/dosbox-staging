@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.39 2004-07-08 20:08:52 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.40 2004-07-14 20:25:35 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -72,7 +72,7 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	sSave(sDIB,protFCBs,(Bit16u)0);
 	sSave(sDIB,specialCodeSeg,(Bit16u)0);
 	sSave(sDIB,joindedDrives,(Bit8u)0);
-	sSave(sDIB,lastdrive,(Bit8u)0x18);
+	sSave(sDIB,lastdrive,(Bit8u)0x01);//increase this if you add drives to cds-chain
 
 	sSave(sDIB,setverPtr,(Bit32u)0);
 
