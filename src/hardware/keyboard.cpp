@@ -24,6 +24,7 @@
 #include "mixer.h"
 
 #define KEYBUFSIZE 32
+#define KEYDELAY 250
 
 enum KeyCommands {
 	CMD_NONE,
@@ -31,6 +32,17 @@ enum KeyCommands {
 	CMD_SETTYPERATE
 };
 
+enum KeyStates {
+	STATE_NORMAL,
+	STATE_EXTEND,
+};
+
+struct KeyCode {
+	Bit8u scancode;
+	Bit8u ascii;
+	KeyStates state;
+	Bitu mod;
+};
 
 struct KeyEvent {
 	Bitu type;
@@ -40,63 +52,104 @@ struct KeyEvent {
 };
 
 struct KeyBlock {
-	Bit8u buf[KEYBUFSIZE];
-	Bitu buf_pos;
-	Bitu buf_used;
+	struct {
+		KeyCode code[KEYBUFSIZE];
+		Bitu used;
+		Bitu pos;
+		KeyStates state;
+	} buf;
 	Bitu write_state;
-
+	Bit64u last_index;
 	KeyCommands command;
-	bool read_active;
 	bool enabled;
 	bool active;
+	bool scheduled;
+	bool read_active;
 };
 
 static KeyBlock keyb;
-static Bitu shift_state=0;
 static Bit8u cur_scancode;
 static Bit8u port_61_data;
 //TODO Are these initialized at 0 at startup? Hope so :)
 static KeyEvent * event_handlers[KBD_LAST];
 
-
 void KEYBOARD_ClrBuffer(void) {
-	keyb.buf_used=0;
-	keyb.buf_pos=0;
+	keyb.buf.used=0;
+	keyb.buf.pos=0;
 	keyb.read_active=false;
 	PIC_DeActivateIRQ(1);
 }
 
-
-void KEYBOARD_ReadBuffer(void) {
-	if (keyb.read_active) return;
-	if (keyb.buf_used) {
-		keyb.buf_used--;
-		keyb.buf_pos++;
-		if (keyb.buf_pos>=KEYBUFSIZE) keyb.buf_pos=0;
+/* Read an entry from the keycode buffer */
+void KEYBOARD_GetCode(void) {
+	keyb.scheduled=false;
+	switch (keyb.buf.state) {
+	case STATE_NORMAL:
+		/* Check for a next key */
+		if (!keyb.buf.used) return;
+		keyb.buf.used--;
+		keyb.buf.pos++;
+		if (keyb.buf.pos>=KEYBUFSIZE) keyb.buf.pos-=KEYBUFSIZE;
+		keyb.buf.state=keyb.buf.code[keyb.buf.pos].state;
+		break;
+	case STATE_EXTEND:
+		keyb.buf.state=STATE_NORMAL;
+		break;
 	}
-	if (keyb.buf_used) {
-		keyb.read_active=true;
-		PIC_ActivateIRQ(1);
+	PIC_ActivateIRQ(1);
+}
+
+void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
+	if (keyb.buf.used<KEYBUFSIZE) {
+		keyb.buf.used++;
+		Bitu start=keyb.buf.pos+keyb.buf.used;
+		if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
+		keyb.buf.code[start].scancode=scancode;
+		keyb.buf.code[start].ascii=ascii;
+		keyb.buf.code[start].state=state;
+		keyb.buf.code[start].mod=mod;
+	}
+	/* Start up an event to start the first IRQ */
+	if (!keyb.scheduled) {
+		keyb.scheduled=true;
+		PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 	}
 }
 
-void KEYBOARD_AddCode(Bit8u code) {
-	if (keyb.buf_used<KEYBUFSIZE) {
-		Bitu start=keyb.buf_pos+keyb.buf_used;
-		keyb.buf_used++;
-		if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
-		keyb.buf[start]=code;
-		keyb.read_active=true;
+void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
+	switch (keyb.buf.state) {
+	case STATE_NORMAL:
+		scancode=keyb.buf.code[keyb.buf.pos].scancode;
+		ascii=keyb.buf.code[keyb.buf.pos].ascii;
+		mod=keyb.buf.code[keyb.buf.pos].mod;
+		if (keyb.buf.used && !keyb.scheduled) {
+			keyb.scheduled=true;
+			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		}
+		break;
+	case STATE_EXTEND:
+		KEYBOARD_GetCode();
+		scancode=224;
+		mod=0;
+		ascii=0;
+		break;
 	}
-	if (keyb.buf_used==1) PIC_AddIRQ(1,0);
 }
 
 static Bit8u read_p60(Bit32u port) {
-	/* Reading this port signals that IRQ can be lowered */
-	Bit8u val=keyb.buf[keyb.buf_pos];
-	keyb.read_active=false;
-	return keyb.buf[keyb.buf_pos];
-}
+	switch (keyb.buf.state) {
+	case STATE_NORMAL:
+		if (keyb.buf.used && !keyb.scheduled) {
+			keyb.scheduled=true;
+			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		}
+		return keyb.buf.code[keyb.buf.pos].scancode;	
+	case STATE_EXTEND:
+		KEYBOARD_GetCode();
+		return 224;
+	}
+	return 0;
+}	
 
 static void write_p60(Bit32u port,Bit8u val) {
 	switch (keyb.command) {
@@ -105,18 +158,18 @@ static void write_p60(Bit32u port,Bit8u val) {
 		switch (val) {
 		case 0xed:	/* Set Leds */
 			keyb.command=CMD_SETLEDS;
-			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
 		case 0xee:	/* Echo */
-			KEYBOARD_AddCode(0xee);
+			KEYBOARD_AddCode(0xee,0,0,STATE_NORMAL);
 			break;
 		case 0xf2:	/* Identify keyboard */
 			/* AT's just send acknowledge */
-			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
 		case 0xf3: /* Typematic rate programming */
 			keyb.command=CMD_SETTYPERATE;
-			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
 		default:
 			LOG(LOG_ERROR|LOG_KEYBOARD,"60:Unhandled command %X",val);
@@ -125,7 +178,7 @@ static void write_p60(Bit32u port,Bit8u val) {
 	case CMD_SETTYPERATE:
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
-		KEYBOARD_AddCode(0xfa);	/* Acknowledge */
+		KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 		break;
 	}
 }
@@ -133,16 +186,15 @@ static void write_p60(Bit32u port,Bit8u val) {
 static Bit8u read_p61(Bit32u port) {
 	port_61_data^=0x20;
 	return port_61_data;
-
-};
-
-static void KEYBOARD_IRQHandler(void) {
-	if (!keyb.read_active) KEYBOARD_ReadBuffer();
 }
 
 static void write_p61(Bit32u port,Bit8u val) {
 	port_61_data=val;
+/*
 	if (val & 128) if (!keyb.read_active) KEYBOARD_ReadBuffer();
+	Keys should get acknowledged just by reading 0x60.
+	Perhaps disable controller when bit 7=1
+*/
 	if ((val & 3)==3) {
 		PCSPEAKER_Enable(true);
 	} else {
@@ -168,7 +220,6 @@ static Bit8u read_p64(Bit32u port) {
 	return 0x1c | (keyb.read_active ? 0x1 : 0x0);
 }
 
-
 void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
 	KeyEvent * newevent=new KeyEvent;
 /* Add the event in the correct key structure */
@@ -182,9 +233,9 @@ void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) 
 	newevent->handler=handler;
 }
 
-void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
-	bool extend=false;
-	Bit8u ret=0;
+
+void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
+	Bit8u ret=0;bool extend=false;
 	switch (keytype) {
 	case KBD_esc:ret=1;break;
 	case KBD_1:ret=2;break;
@@ -217,9 +268,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	case KBD_leftbracket:ret=26;break;
 	case KBD_rightbracket:ret=27;break;
 	case KBD_enter:ret=28;break;
-	case KBD_leftctrl:ret=29;
-		shift_state=(shift_state&~CTRL_PRESSED)|(pressed ? CTRL_PRESSED:0);
-		break;
+	case KBD_leftctrl:ret=29;break;
 
 	case KBD_a:ret=30;break;
 	case KBD_s:ret=31;break;
@@ -234,9 +283,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	case KBD_semicolon:ret=39;break;
 	case KBD_quote:ret=40;break;
 	case KBD_grave:ret=41;break;
-	case KBD_leftshift:ret=42;
-		shift_state=(shift_state&~SHIFT_PRESSED)|(pressed ? SHIFT_PRESSED:0);
-		break;
+	case KBD_leftshift:ret=42;break;
 	case KBD_backslash:ret=43;break;
 	case KBD_z:ret=44;break;
 	case KBD_x:ret=45;break;
@@ -251,9 +298,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	case KBD_slash:ret=53;break;
 	case KBD_rightshift:ret=54;break;
 	case KBD_kpmultiply:ret=55;break;
-	case KBD_leftalt:ret=56;
-		shift_state=(shift_state&~ALT_PRESSED)|(pressed ? ALT_PRESSED:0);
-		break;
+	case KBD_leftalt:ret=56;break;
 	case KBD_space:ret=57;break;
 	case KBD_capslock:ret=58;break;
 
@@ -291,13 +336,9 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	//The Extended keys
 
 	case KBD_kpenter:extend=true;ret=28;break;
-	case KBD_rightctrl:extend=true;ret=29;
-		shift_state=(shift_state&~CTRL_PRESSED)|(pressed ? CTRL_PRESSED:0);
-		break;
+	case KBD_rightctrl:extend=true;ret=29;break;
 	case KBD_kpslash:extend=true;ret=53;break;
-	case KBD_rightalt:extend=true;ret=56;
-		shift_state=(shift_state&~ALT_PRESSED)|(pressed ? ALT_PRESSED:0);
-		break;
+	case KBD_rightalt:extend=true;ret=56;break;
 	case KBD_home:extend=true;ret=71;break;
 	case KBD_up:extend=true;ret=72;break;
 	case KBD_pageup:extend=true;ret=73;break;
@@ -315,7 +356,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	/* check for active key events */
 	KeyEvent * checkevent=event_handlers[keytype];
 	while (checkevent) {
-		if ((shift_state & checkevent->state)==checkevent->state) {
+		if ((mod & checkevent->state)==checkevent->state) {
 			if (checkevent->type==keytype && pressed) {
 				(*checkevent->handler)();
 				return;
@@ -324,9 +365,9 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 		}
 		checkevent=checkevent->next;
 	}
-	if (extend) KEYBOARD_AddCode(224);
+	/* Add the actual key in the keyboard queue */
 	if (!pressed) ret+=128;
-	KEYBOARD_AddCode(ret);
+	KEYBOARD_AddCode(ret,(Bit8u)unicode,mod,extend ? STATE_EXTEND : STATE_NORMAL);
 }
 
 void KEYBOARD_Init(Section* sec) {
@@ -337,11 +378,13 @@ void KEYBOARD_Init(Section* sec) {
 	IO_RegisterWriteHandler(0x64,write_p64,"Keyboard");
 	IO_RegisterReadHandler(0x64,read_p64,"Keyboard");
 
-	port_61_data=1;				/* Speaker control through PIT and speaker disabled */
+	port_61_data=0;				/* Direct Speaker control and output disabled */
 //	memset(&event_handlers,0,sizeof(event_handlers));
 	/* Clear the keyb struct */
 	keyb.enabled=true;
 	keyb.command=CMD_NONE;
+	keyb.last_index=0;
+	keyb.buf.pos=0;
+	keyb.buf.used=0;
 	KEYBOARD_ClrBuffer();
-	PIC_RegisterIRQ(1,KEYBOARD_IRQHandler,"KEYBOARD");
 }
