@@ -25,6 +25,7 @@
 #include "pic.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
+static Bitu call_int1;
 
 static Bitu INT1A_Handler(void) {
 	switch (reg_ah) {
@@ -212,12 +213,16 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 	}
 	return CBRET_NONE;
-};
+}
 
-static void INT15_StartUp(void) {
-/* TODO Start the time correctly */
-};
-
+static Bitu INT1_Single_Step(void) {
+	static bool warned=false;
+	if (!warned) {
+		warned=true;
+		LOG_WARN("INT 1:Single Step called");
+	}
+	return CBRET_NONE;
+}
 
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
@@ -262,9 +267,14 @@ void BIOS_Init(Section* sec) {
 	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET_STI);
 	RealSetVec(0x1A,CALLBACK_RealPointer(call_int1a));
 	/* INT 1C System Timer tick called from INT 8 */
-	call_int1c=CALLBACK_Allocate();	
+	call_int1c=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int1c,&INT1C_Handler,CB_IRET);
 	RealSetVec(0x1C,CALLBACK_RealPointer(call_int1c));
+
+	/* Some defeault CPU error interrupt handlers */
+	call_int1=CALLBACK_Allocate();
+	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET);
+	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
 
 }
 
