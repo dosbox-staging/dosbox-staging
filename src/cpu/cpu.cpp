@@ -791,8 +791,24 @@ void CPU_CPUID(void) {
 	
 }
 
-void CPU_Real_16_Slow_Start(void);
-void CPU_Core_Full_Start(void);
+static Bitu HLT_Decode(void) {
+	/* Stay here just as long until an external interrupt has changed CS:EIP */
+	if ((reg_eip!=cpu.hlt.eip) || (SegValue(cs)!=cpu.hlt.cs)) {
+		cpu.state=0xff;			//force a new state to set decoder
+		CPU_CheckState();
+		return 0x0;
+	}
+	CPU_Cycles=0;
+	return 0x0;
+}
+
+void CPU_HLT(void) {
+	cpu.hlt.cs=SegValue(cs);
+	cpu.hlt.eip=reg_eip;
+	CPU_Cycles=0;
+	cpudecoder=&HLT_Decode;
+}
+
 
 static void CPU_CycleIncrease(void) {
 	Bitu old_cycles=CPU_CycleMax;
