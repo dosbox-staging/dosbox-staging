@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.34 2003-10-21 18:18:01 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.35 2003-11-11 18:47:25 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -252,7 +252,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	char buffer[CROSS_LEN];
 	args = trim(args);
-	int argLen = strlen(args);
+	Bit32u argLen = strlen(args);
 	if (argLen == 0) {
 		strcpy(args,"*.*"); //no arguments.
 	} else {
@@ -262,15 +262,21 @@ void DOS_Shell::CMD_DIR(char * args) {
 		case ':' :	// handle C:, etc.
 			strcat(args,"*.*");
 			break;
-		case '*':	// handle *, \*, C:\*, etc.
-					// (not ideal - could end up *.*.*, but that'll net the same result)
-			strcat(args,".*");
-			break;
 		default:
 			break;
 		}
 	}
 	args = ExpandDot(args,buffer);
+
+	if (!strrchr(args,'*') && !strrchr(args,'?')) {
+		Bit16u attribute=0;
+		if(DOS_GetFileAttr(args,&attribute) && (attribute&DOS_ATTR_DIRECTORY) ) {
+			strcat(args,"\\*.*");	// if no wildcard and a directory, get its files
+		}
+	}
+	if (!strrchr(args,'.')) {
+		strcat(args,".*");	// if no extension, get them all
+	}
 
 	/* Make a full path in the args */
 	if (!DOS_Canonicalize(args,path)) {
