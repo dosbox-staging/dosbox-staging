@@ -302,38 +302,37 @@ public:
 	DOS_ParamBlock(PhysPt addr) {pt=addr;}
 	void Clear(void);
 	void LoadData(void);
-	void SaveData(void);
+	void SaveData(void);		/* Save it as an exec block */
 	#pragma pack (1)
-	union sPBlock {
-		struct {
-			Bit16u loadseg;
-			Bit16u relocation;
-		} overlay GCC_ATTRIBUTE(packed);
-		struct {
-			Bit16u envseg;
-			RealPt cmdtail;
-			RealPt fcb1;
-			RealPt fcb2;
-			RealPt initsssp;
-			RealPt initcsip;
-		} exec GCC_ATTRIBUTE(packed);
-	};
+	struct sOverlay {
+		Bit16u loadseg;
+		Bit16u relocation;
+	} GCC_ATTRIBUTE(packed);
+	struct sExec {
+		Bit16u envseg;
+		RealPt cmdtail;
+		RealPt fcb1;
+		RealPt fcb2;
+		RealPt initsssp;
+		RealPt initcsip;
+	}GCC_ATTRIBUTE(packed);
 	#pragma pack()
-	sPBlock data;
+	sExec exec;
+	sOverlay overlay;
 };
 
 class DOS_InfoBlock:public MemStruct {
 public:
 	DOS_InfoBlock			() {};
 	void SetLocation(Bit16u  seg);
-	void SetFirstMCB(RealPt _first_mcb);
+	void SetFirstMCB(Bit16u _first_mcb);
 	void SetfirstFileTable(RealPt _first_table);
 	RealPt GetPointer (void);
 private:
 	#pragma pack(1)
 	struct sDIB {		
 		Bit8u	stuff1[22];			// some stuff, hopefully never used....
-		RealPt	firstMCB;			// first memory control block
+		Bit16u	firstMCB;			// first memory control block
 		RealPt	firstDPB;			// first drive parameter block
 		RealPt	firstFileTable;		// first system file table
 		RealPt	activeClock;		// active clock device header
