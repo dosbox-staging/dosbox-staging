@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.29 2005-02-10 10:21:08 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.30 2005-03-25 09:38:42 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -56,7 +56,12 @@
 #define MIXER_WAVESIZE MIXER_BUFSIZE
 #define MIXER_VOLSHIFT 13
 
-#define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
+// #define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
+
+Bit16s bound[]={0,MAX_AUDIO,MIN_AUDIO};
+
+#define INIT_CLIP(SAMP) bound[0]=SAMP
+#define MIXER_CLIP(SAMP) bound[(SAMP>MAX_AUDIO)|(SAMP<MIN_AUDIO)<<1]
 
 struct MIXER_Channel {
 	double vol_main[2];
@@ -120,6 +125,20 @@ MixerChannel * MIXER_FindChannel(const char * name) {
 		chan=chan->next;
 	}
 	return chan;
+}
+
+void MIXER_DelChannel(MixerChannel* delchan) {
+	MixerChannel * chan=mixer.channels;
+	MixerChannel * * where=&mixer.channels;
+	while (chan) {
+		if (chan==delchan) {
+			*where=chan->next;
+			delete delchan;
+			return;
+		}
+		where=&chan->next;
+		chan=chan->next;
+	}
 }
 
 void MixerChannel::UpdateVolume(void) {
@@ -268,6 +287,7 @@ void MixerChannel::FillUp(void) {
 
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
+
 	MixerChannel * chan=mixer.channels;
 	while (chan) {
 		chan->Mix(needed);
@@ -276,10 +296,14 @@ static void MIXER_MixData(Bitu needed) {
 	if (mixer.wave.handle) {
 		Bitu added=needed-mixer.done;
 		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
+
+		Bits sample;
 		while (added--) {
-			Bits sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
+			sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
+			INIT_CLIP(sample);
 			mixer.wave.buf[mixer.wave.used][0]=MIXER_CLIP(sample);
 			sample=mixer.work[readpos][1] >> MIXER_VOLSHIFT;
+			INIT_CLIP(sample);
 			mixer.wave.buf[mixer.wave.used][1]=MIXER_CLIP(sample);
 			readpos=(readpos+1)&MIXER_BUFMASK;
 			if (++mixer.wave.used==MIXER_WAVESIZE) {
@@ -321,7 +345,6 @@ static void MIXER_Mix_NoSound(void) {
 	mixer.done=0;
 }
 
-
 static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	if (need>mixer.done) {
@@ -343,11 +366,14 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 		mixer.tick_add=((mixer.freq+diff*3) << MIXER_SHIFT)/1000;
 	}
 	Bit16s * output=(Bit16s *)stream;
+	Bits sample;
 	while (need--) {
-		Bits sample=mixer.work[mixer.pos][0]>>MIXER_VOLSHIFT;
+		sample=mixer.work[mixer.pos][0]>>MIXER_VOLSHIFT;
+		INIT_CLIP(sample);
 		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][0]=0;
 		sample=mixer.work[mixer.pos][1]>>MIXER_VOLSHIFT;
+		INIT_CLIP(sample);
 		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][1]=0;
 		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
@@ -460,6 +486,18 @@ static void MIXER_ProgramStart(Program * * make) {
 	*make=new MIXER;
 }
 
+MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,char * name){
+	if(strlen(name)>31) E_Exit("Too long mixer channel name");
+	strncpy(m_name,name,31);
+	installed=true;
+	return MIXER_AddChannel(handler,freq,name);
+}
+MixerObject::~MixerObject(){
+	if(!installed) return;
+	MIXER_DelChannel(MIXER_FindChannel(m_name));
+}
+
+
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -512,4 +550,3 @@ void MIXER_Init(Section* sec) {
 	MAPPER_AddHandler(MIXER_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
-
