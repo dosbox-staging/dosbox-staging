@@ -86,7 +86,7 @@ nextopcode:;
 		SaveIP();
 		continue;
 illegalopcode:
-		LOG_MSG("Illegal opcode");
+		LOG(LOG_CPU,LOG_NORMAL)("Illegal opcode");
 		CPU_Exception(0x6,0);
 	}
 	FillFlags();
