@@ -34,6 +34,7 @@
 #include "mixer.h"
 #include "debug_inc.h"
 #include "timer.h"
+#include "paging.h"
 #include "../ints/xms.h"
 #include "../shell/shell_inc.h"
 
@@ -51,7 +52,7 @@ static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
 char* AnalyzeInstruction(char* inst, bool saveSelector);
-void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num);
+void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
 Bit32u GetHexValue(char* str, char*& hex);
 
 class DEBUG;
@@ -116,7 +117,7 @@ Bit32u GetAddress(Bit16u seg, Bit32u offset)
 
 bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 {
-	Bit16u sel;
+	Bitu sel;
 	Descriptor desc;
 
 	if (strstr(selname,"cs") || strstr(selname,"CS")) sel = SegValue(cs); else
@@ -801,21 +802,21 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"EBP")==hex) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
 	if (strstr(hex,"ESP")==hex) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
 	if (strstr(hex,"EIP")==hex) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
-	if (strstr(hex,"AX")==hex) { hex+=2; reg_ax = GetHexValue(hex,hex); } else
-	if (strstr(hex,"BX")==hex) { hex+=2; reg_bx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"CX")==hex) { hex+=2; reg_cx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"DX")==hex) { hex+=2; reg_dx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"SI")==hex) { hex+=2; reg_si = GetHexValue(hex,hex); } else
-	if (strstr(hex,"DI")==hex) { hex+=2; reg_di = GetHexValue(hex,hex); } else
-	if (strstr(hex,"BP")==hex) { hex+=2; reg_bp = GetHexValue(hex,hex); } else
-	if (strstr(hex,"SP")==hex) { hex+=2; reg_sp = GetHexValue(hex,hex); } else
-	if (strstr(hex,"IP")==hex) { hex+=2; reg_ip = GetHexValue(hex,hex); } else
-	if (strstr(hex,"CS")==hex) { hex+=2; SegSet16(cs,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"DS")==hex) { hex+=2; SegSet16(ds,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"ES")==hex) { hex+=2; SegSet16(es,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"FS")==hex) { hex+=2; SegSet16(fs,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"GS")==hex) { hex+=2; SegSet16(gs,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"SS")==hex) { hex+=2; SegSet16(ss,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"AX")==hex) { hex+=2; reg_ax = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"BX")==hex) { hex+=2; reg_bx = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"CX")==hex) { hex+=2; reg_cx = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"DX")==hex) { hex+=2; reg_dx = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"SI")==hex) { hex+=2; reg_si = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"DI")==hex) { hex+=2; reg_di = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"BP")==hex) { hex+=2; reg_bp = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"SP")==hex) { hex+=2; reg_sp = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"IP")==hex) { hex+=2; reg_ip = (Bit16u)GetHexValue(hex,hex); } else
+	if (strstr(hex,"CS")==hex) { hex+=2; SegSet16(cs,(Bit16u)GetHexValue(hex,hex)); } else
+	if (strstr(hex,"DS")==hex) { hex+=2; SegSet16(ds,(Bit16u)GetHexValue(hex,hex)); } else
+	if (strstr(hex,"ES")==hex) { hex+=2; SegSet16(es,(Bit16u)GetHexValue(hex,hex)); } else
+	if (strstr(hex,"FS")==hex) { hex+=2; SegSet16(fs,(Bit16u)GetHexValue(hex,hex)); } else
+	if (strstr(hex,"GS")==hex) { hex+=2; SegSet16(gs,(Bit16u)GetHexValue(hex,hex)); } else
+	if (strstr(hex,"SS")==hex) { hex+=2; SegSet16(ss,(Bit16u)GetHexValue(hex,hex)); } else
 	if (strstr(hex,"AF")==hex) { hex+=2; SETFLAGBIT(AF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"CF")==hex) { hex+=2; SETFLAGBIT(CF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"DF")==hex) { hex+=2; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
@@ -838,7 +839,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"MEMDUMP ");
 	if (found) { // Insert variable
 		found+=8;
-		Bit16u seg = GetHexValue(found,found); found++;
+		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
 		Bit32u ofs = GetHexValue(found,found); found++;
 		Bit32u num = GetHexValue(found,found); found++;
 		SaveMemory(seg,ofs,num);
@@ -848,8 +849,8 @@ bool ParseCommand(char* str)
 	found = strstr(str,"IV ");
 	if (found) { // Insert variable
 		found+=3;
-		Bit16u seg = GetHexValue(found,found); found++;
-		Bit32u ofs = GetHexValue(found,found); found++;
+		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
+		Bit32u ofs = (Bit16u)GetHexValue(found,found); found++;
 		char name[16];
 		for (int i=0; i<16; i++) {
 			if ((found[i]!=' ') && (found[i]!=0)) name[i] = found[i]; 
@@ -893,7 +894,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BP ");
 	if (found) { // Add new breakpoint
 		found+=3;
-		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
+		Bit16u seg = (Bit16u)GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint::AddBreakpoint(seg,ofs,false);
 		DEBUG_ShowMsg("DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
@@ -903,7 +904,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BPM ");
 	if (found) { // Add new breakpoint
 		found+=3;
-		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
+		Bit16u seg = (Bit16u)GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint::AddMemBreakpoint(seg,ofs);
 		DEBUG_ShowMsg("DEBUG: Set memory breakpoint at %04X:%04X",seg,ofs);
@@ -912,7 +913,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BPPM ");
 	if (found) { // Add new breakpoint
 		found+=4;
-		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
+		Bit16u seg = (Bit16u)GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg,ofs);
 		if (bp) bp->SetType(BKPNT_MEMORY_PROT);
@@ -932,8 +933,8 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BPINT");
 	if (found) { // Add Interrupt Breakpoint
 		found+=5;
-		Bit8u intNr	= GetHexValue(found,found); found++;
-		Bit8u valAH	= GetHexValue(found,found);
+		Bit8u intNr	= (Bit8u)GetHexValue(found,found); found++;
+		Bit8u valAH	= (Bit8u)GetHexValue(found,found);
 		if ((valAH==0x00) && (*found=='*')) {
 			CBreakpoint::AddIntBreakpoint(intNr,BPINT_ALL,false);
 			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X",intNr);
@@ -954,7 +955,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BPDEL");
 	if (found) { // Delete Breakpoints
 		found+=5;
-		Bit8u bpNr	= GetHexValue(found,found); 
+		Bit8u bpNr	= (Bit8u)GetHexValue(found,found); 
 		if ((bpNr==0x00) && (*found=='*')) { // Delete all
 			CBreakpoint::DeleteAll();		
 			DEBUG_ShowMsg("DEBUG: Breakpoints deleted.");
@@ -967,7 +968,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"C ");
 	if (found==(char*)str) { // Set code overview
 		found++;
-		Bit16u codeSeg = GetHexValue(found,found); found++;
+		Bit16u codeSeg = (Bit16u)GetHexValue(found,found); found++;
 		Bit32u codeOfs = GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Set code overview to %04X:%04X",codeSeg,codeOfs);
 		codeViewData.useCS	= codeSeg;
@@ -977,7 +978,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"D ");
 	if (found==(char*)str) { // Set data overview
 		found++;
-		dataSeg = GetHexValue(found,found); found++;
+		dataSeg = (Bit16u)GetHexValue(found,found); found++;
 		dataOfs = GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Set data overview to %04X:%04X",dataSeg,dataOfs);
 		return true;
@@ -1000,13 +1001,13 @@ bool ParseCommand(char* str)
 	found = strstr(str,"SM ");
 	if (found) { // Set memory with following values
 		found+=3;
-		Bit16u seg = GetHexValue(found,found); found++;
+		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
 		Bit32u ofs = GetHexValue(found,found); found++;
 		Bit16u count = 0;
 		while (*found) {
 			while (*found==' ') found++;
 			if (*found) {
-				Bit8u value = GetHexValue(found,found); found++;
+				Bit8u value = (Bit8u)GetHexValue(found,found); found++;
 				mem_writeb(GetAddress(seg,ofs+count),value);
 				count++;
 			}
@@ -1017,7 +1018,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"INTT ");
 	if (found) { // Create Cpu log file
 		found+=4;
-		Bit8u intNr = GetHexValue(found,found);
+		Bit8u intNr = (Bit8u)GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Tracing INT %02X",intNr);
 		Interrupt(intNr);
 		SetCodeWinStart();
@@ -1026,7 +1027,7 @@ bool ParseCommand(char* str)
 	found = strstr(str,"INT ");
 	if (found) { // Create Cpu log file
 		found+=4;
-		Bit8u intNr = GetHexValue(found,found);
+		Bit8u intNr = (Bit8u)GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Starting INT %02X",intNr);
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip, true);
 		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip-1,true);
@@ -1131,7 +1132,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 			prefix[0] = tolower(*segpos);
 			prefix[1] = tolower(*(segpos+1));
 			prefix[2] = 0;
-			seg = GetHexValue(segpos,segpos);
+			seg = (Bit16u)GetHexValue(segpos,segpos);
 		} else {
 			if (strstr(pos,"SP") || strstr(pos,"BP")) {
 				seg = SegValue(ss);
@@ -1155,25 +1156,27 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-//		if (address<(XMS_GetSize()+1)*1024*1024) {
-		static char outmask[] = "%s:[%04X]=%02X";
-		
-		if (cpu.pmode) outmask[6] = '8';
-			switch (DasmLastOperandSize()) {
-			case 8 : {	Bit8u val = mem_readb(address);
-						outmask[12] = '2';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
-			case 16: {	Bit16u val = mem_readw(address);
-						outmask[12] = '4';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
-			case 32: {	Bit32u val = mem_readd(address);
-						outmask[12] = '8';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
+		if (address<MEM_TotalPages()*MEM_PAGE_SIZE) {
+			static char outmask[] = "%s:[%04X]=%02X";
+			
+			if (cpu.pmode) outmask[6] = '8';
+				switch (DasmLastOperandSize()) {
+				case 8 : {	Bit8u val = mem_readb(address);
+							outmask[12] = '2';
+							sprintf(result,outmask,prefix,adr,val);
+						}	break;
+				case 16: {	Bit16u val = mem_readw(address);
+							outmask[12] = '4';
+							sprintf(result,outmask,prefix,adr,val);
+						}	break;
+				case 32: {	Bit32u val = mem_readd(address);
+							outmask[12] = '8';
+							sprintf(result,outmask,prefix,adr,val);
+						}	break;
+			}
+		} else {
+			sprintf(result,"[illegal]");
 		}
-//		}
 		// Variable found ?
 		CDebugVar* var = CDebugVar::FindVar(address);
 		if (var) {
@@ -1617,7 +1620,7 @@ bool CDebugVar::LoadVars(char* name)
 	return true;
 };
 
-void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
+void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
