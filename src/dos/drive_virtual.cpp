@@ -49,6 +49,19 @@ void VFILE_Register(const char * name,Bit8u * data,Bit32u size) {
 	first_file=new_file;
 }
 
+void VFILE_Remove(const char *name) {
+	VFILE_Block * chan=first_file;
+	VFILE_Block * * where=&first_file;
+	while (chan) {
+		if (strcmp(name,chan->name)==0) {
+			*where=chan->next;
+			delete chan;
+			return;
+		}
+		where=&chan->next;
+		chan=chan->next;
+	}
+}
 
 class Virtual_File : public DOS_File {
 public:
