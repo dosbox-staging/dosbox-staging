@@ -15,6 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: sdlmain.cpp,v 1.43 2003-09-29 21:04:31 qbix79 Exp $ */
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -78,6 +81,16 @@ struct SDL_Block {
 static SDL_Block sdl;
 static void CaptureMouse(void);
 
+void GFX_SetTitle(Bits cycles,Bits frameskip){
+	char title[200]={0};
+	static internal_cycles=0;
+	static internal_frameskip=0;
+	if(cycles != -1) internal_cycles = cycles;
+	if(frameskip != -1) internal_frameskip = frameskip;
+	sprintf(title,"Cpu Cycles: %8d, Frameskip %2d",internal_cycles,internal_frameskip);
+	SDL_WM_SetCaption(title,VERSION);
+}
+
 /* Reset the screen with current values in the sdl structure */
 static void ResetScreen(void) {
 	GFX_Stop();
@@ -102,7 +115,7 @@ static void ResetScreen(void) {
 	);
 			
 
-	SDL_WM_SetCaption(VERSION,VERSION);
+	GFX_SetTitle(-1,-1);
 
 	Bitu flags=MODE_SET;
 	if (sdl.full_screen) flags|=MODE_FULLSCREEN;

@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: cpu.cpp,v 1.33 2003-09-29 21:05:59 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -828,12 +829,14 @@ void CPU_HLT(void) {
 }
 
 
+extern void GFX_SetTitle(Bits cycles ,Bits frameskip);
 static void CPU_CycleIncrease(void) {
 	Bits old_cycles=CPU_CycleMax;
 	CPU_CycleMax=(Bits)(CPU_CycleMax*1.2);
 	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+	GFX_SetTitle(CPU_CycleMax,-1);
 }
 
 static void CPU_CycleDecrease(void) {
@@ -841,6 +844,7 @@ static void CPU_CycleDecrease(void) {
 	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (!CPU_CycleMax) CPU_CycleMax=1;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+	GFX_SetTitle(CPU_CycleMax,-1);
 }
 
 
@@ -881,7 +885,7 @@ void CPU_Init(Section* sec) {
 	CPU_CycleMax=section->Get_int("cycles");;
 	if (!CPU_CycleMax) CPU_CycleMax=1500;
 	CPU_CycleLeft=0;
-
+	GFX_SetTitle(CPU_CycleMax,-1);
 	MSG_Add("CPU_CONFIGFILE_HELP","The amount of cycles to execute each loop. Lowering this setting will slowdown dosbox\n");
 
 }

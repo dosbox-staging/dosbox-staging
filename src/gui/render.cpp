@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: render.cpp,v 1.16 2003-09-29 21:05:05 qbix79 Exp $ */
+
 #include <sys/types.h>
 #include <dirent.h>
 
@@ -357,14 +359,17 @@ normalop:
 	GFX_Start();
 }
 
+extern void GFX_SetTitle(Bits cycles, Bits frameskip);
 static void IncreaseFrameSkip(void) {
 	if (render.frameskip.max<10) render.frameskip.max++;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+	GFX_SetTitle(-1,render.frameskip.max);
 }
 
 static void DecreaseFrameSkip(void) {
 	if (render.frameskip.max>0) render.frameskip.max--;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
+	GFX_SetTitle(-1,render.frameskip.max);
 }
 
 void RENDER_Init(Section * sec) {
@@ -394,5 +399,6 @@ void RENDER_Init(Section * sec) {
 	}
 	KEYBOARD_AddEvent(KBD_f7,KBD_MOD_CTRL,DecreaseFrameSkip);
 	KEYBOARD_AddEvent(KBD_f8,KBD_MOD_CTRL,IncreaseFrameSkip);
+	GFX_SetTitle(-1,render.frameskip.max);
 }
 
