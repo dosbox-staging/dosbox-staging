@@ -38,10 +38,10 @@ static INLINE void ADDIPd(Bits add) {
 }
 
 static INLINE void ADDIPFAST(Bits blah) {
-	core.ip_lookup+=blah;
-//	SAVEIP;
-//	reg_eip=(reg_eip+blah);
-//	LOADIP;
+//	core.ip_lookup+=blah;
+	SAVEIP;
+	reg_eip=(reg_eip+blah);
+	LOADIP;
 }
 
 #define EXCEPTION(blah)										\
