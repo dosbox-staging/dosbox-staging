@@ -296,6 +296,7 @@ void VGA_SetMode(VGAModes mode);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(void);
 void VGA_SetupDrawing(Bitu val);
+void VGA_CheckScanLength(void);
 
 /* Some DAC/Attribute functions */
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
