@@ -150,7 +150,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,6			,0	,M_GRP_1	},
 {L_MODRM	,5			,0	,M_GRP_CL	},{L_MODRM	,6			,0	,M_GRP_CL	},
 {L_Ib		,O_AAM		,0		,0		},{L_Ib		,O_AAD		,0		,0		},
-{D_SETALC	,0			,0		,0		},{D_XLAT	,0			,0		,0		},
+{D_SETALC	,0			,0		,0		},{D_XLATw	,0			,0		,0		},
 //TODO FPU
 /* 0xd8 - 0xdf */
 {L_MODRM	,0			,0		,0		},{L_MODRM	,0			,0		,0		},
@@ -466,7 +466,8 @@ static OpCode OpCodeTable[1024]={
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SI},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_DI},
 /* 0x298 - 0x29f */
 {D_CWDE		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
-{L_Ifd		,O_CALLFd	,0		,0		},{L_ERROR	,0			,0		,0		},
+//TODO Wait shoudn't be  nop
+{L_Ifd		,O_CALLFd	,0		,0		},{D_NOP	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHd,0		},{L_POPd	,0			,S_FLGd	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
@@ -507,7 +508,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,7			,0	,M_GRP_1	},
 {L_MODRM	,5			,0	,M_GRP_CL	},{L_MODRM	,7			,0	,M_GRP_CL	},
 {L_Ib		,O_AAM		,0		,0		},{L_Ib		,O_AAD		,0		,0		},
-{D_SETALC	,0			,0		,0		},{0		,0			,0		,0		},
+{D_SETALC	,0			,0		,0		},{D_XLATd	,0			,0		,0		},
 /* 0x2d8 - 0x2df */
 {L_MODRM	,0			,0		,0		},{L_MODRM	,0			,0		,0		},
 {L_MODRM	,0			,0		,0		},{L_MODRM	,0			,0		,0		},

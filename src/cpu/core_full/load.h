@@ -317,9 +317,13 @@ l_M_Ed:
 	case D_SETALC:
 		reg_al = get_CF() ? 0xFF : 0;
 		goto nextopcode;
-	case D_XLAT:
+	case D_XLATw:
 		if (inst.prefix & PREFIX_SEG) reg_al=LoadMb(inst.seg.base+reg_bx+reg_al);
 		else reg_al=LoadMb(SegBase(ds)+reg_bx+reg_al);
+		goto nextopcode;
+	case D_XLATd:
+		if (inst.prefix & PREFIX_SEG) reg_al=LoadMb(inst.seg.base+reg_ebx+reg_al);
+		else reg_al=LoadMb(SegBase(ds)+reg_ebx+reg_al);
 		goto nextopcode;
 	case D_CBW:
 		reg_ax=(Bit8s)reg_al;
@@ -371,11 +375,66 @@ l_M_Ed:
 		goto nextopcode;
 	case D_ENTERw:
 		{
-			Bit16u bytes=Fetchw();Bit8u level=Fetchb();
-			Push_16(reg_bp);reg_bp=reg_sp;reg_sp-=bytes;
-			EAPoint reader=SegBase(ss)+reg_bp;
-			for (Bit8u i=1;i<level;i++) {Push_16(LoadMw(reader));reader-=2;}
-			if (level) Push_16(reg_bp);
+			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
+			Bitu frame_ptr=reg_esp-2;
+			if (cpu.state & STATE_STACK32) {
+				reg_esp-=2;
+				mem_writew(SegBase(ss)+reg_esp,reg_bp);
+				for (Bitu i=1;i<level;i++) {	
+					reg_ebp-=2;reg_esp-=2;
+					mem_writew(SegBase(ss)+reg_esp,mem_readw(SegBase(ss)+reg_ebp));
+				}
+				if (level) {
+					reg_esp-=2;
+					mem_writew(SegBase(ss)+reg_esp,(Bit16u)frame_ptr);
+				}
+				reg_esp-=bytes;
+			} else {
+				reg_sp-=2;
+				mem_writew(SegBase(ss)+reg_sp,reg_bp);
+				for (Bitu i=1;i<level;i++) {	
+					reg_bp-=2;reg_sp-=2;
+					mem_writew(SegBase(ss)+reg_sp,mem_readw(SegBase(ss)+reg_bp));
+				}
+				if (level) {
+					reg_sp-=2;
+					mem_writew(SegBase(ss)+reg_sp,(Bit16u)frame_ptr);
+				}
+				reg_sp-=bytes;
+			}
+			reg_bp=frame_ptr;
+			goto nextopcode;
+		}
+	case D_ENTERd:
+		{
+			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
+			Bitu frame_ptr=reg_esp-4;
+			if (cpu.state & STATE_STACK32) {
+				reg_esp-=4;
+				mem_writed(SegBase(ss)+reg_esp,reg_ebp);
+				for (Bitu i=1;i<level;i++) {	
+					reg_ebp-=4;reg_esp-=4;
+					mem_writed(SegBase(ss)+reg_esp,mem_readd(SegBase(ss)+reg_ebp));
+				}
+				if (level) {
+					reg_esp-=4;
+					mem_writed(SegBase(ss)+reg_esp,(Bit32u)frame_ptr);
+				}
+				reg_esp-=bytes;
+			} else {
+				reg_sp-=4;
+				mem_writed(SegBase(ss)+reg_sp,reg_ebp);
+				for (Bitu i=1;i<level;i++) {	
+					reg_bp-=4;reg_sp-=4;
+					mem_writed(SegBase(ss)+reg_sp,mem_readd(SegBase(ss)+reg_bp));
+				}
+				if (level) {
+					reg_sp-=4;
+					mem_writed(SegBase(ss)+reg_sp,(Bit32u)frame_ptr);
+				}
+				reg_sp-=bytes;
+			}
+			reg_ebp=frame_ptr;
 			goto nextopcode;
 		}
 	case D_LEAVEw:
