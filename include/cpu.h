@@ -38,7 +38,8 @@ void SetCPU16bit();
 
 //Types of Flag changing instructions
 enum {
-	t_ADDb=0,t_ADDw,t_ADDd, 
+	t_UNKNOWN=0,
+	t_ADDb,t_ADDw,t_ADDd, 
 	t_ORb,t_ORw,t_ORd, 
 	t_ADCb,t_ADCw,t_ADCd,
 	t_SBBb,t_SBBw,t_SBBd,
@@ -62,8 +63,8 @@ enum {
 	t_DSHLw,t_DSHLd,
 	t_DSHRw,t_DSHRd,
 	t_MUL,t_DIV,
-	t_UNKNOWN,
 	t_NOTDONE,
+	t_LASTFLAG
 };
 
 void Interrupt(Bit8u num);
@@ -75,6 +76,19 @@ bool get_ZF(void);
 bool get_SF(void);
 bool get_OF(void);
 bool get_PF(void);
+
+
+#define FLAG_CF 0x0001
+#define FLAG_PF 0x0004
+#define FLAG_AF 0x0010
+#define FLAG_ZF 0x0040
+#define FLAG_SF 0x0080
+#define FLAG_TF 0x0100
+#define FLAG_IF 0x0200
+#define FLAG_DF 0x0400
+#define FLAG_OF 0x0800
+
+
 
 #define LoadCF flags.cf=get_CF();
 #define LoadZF flags.zf=get_ZF();
