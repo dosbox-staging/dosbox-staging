@@ -181,8 +181,6 @@ AH_TOP([
 ])
 
 AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
-AH_TEMPLATE([C_DEBUG],[Enable the internal debugger.])
-AH_TEMPLATE([C_SSHOT],[Enable the screenshot support.])
 
 AH_BOTTOM([#define INLINE inline])
 

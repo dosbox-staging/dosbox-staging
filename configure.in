@@ -1,6 +1,7 @@
 dnl Init.
 AC_INIT(dosbox,0.57)
 AC_CONFIG_SRCDIR(README)
+AC_RREREQ(2.50)
 
 dnl Detect the canonical host and target build environment
 AC_CANONICAL_HOST
