@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
 
 #include "dosbox.h"
 #include "mem.h"
@@ -187,23 +188,29 @@ restart_opcode:
 		#include "core_normal/prefix_66.h"
 		#include "core_normal/prefix_66_0f.h"
 		default:
-			ADDIPFAST(-1);
-#if C_DEBUG
-			LOG_MSG("Unhandled code %X",core.opcode_index+Fetchb());
-#else
-			E_Exit("Unhandled CPU opcode");
+		illegal_opcode:
+			LEAVECORE;
+			reg_eip-=core.ip_lookup-core.op_start;
+#if C_DEBUG	
+			{
+				Bitu len=core.ip_lookup-core.op_start;
+				if (len>16) len=16;
+				char tempcode[16*2+1];char * writecode=tempcode;
+				for (;len>0;len--) {
+					sprintf(writecode,"%X",mem_readb(core.op_start++));
+					writecode+=2;
+				}
+				LOG(LOG_CPU,LOG_ERROR)("Illegal/Unhandled opcode %s",tempcode);
+			}
 #endif
+			CPU_Exception(6,0);
+			goto decode_start;
+
 		}
 	}
 decode_end:
 	LEAVECORE;
 	return CBRET_NONE;
-
-illegal_opcode:
-	LEAVECORE;
-	reg_eip-=core.ip_lookup-core.op_start;
-	CPU_Exception(6,0);
-	goto decode_start;
 }
 
 Bits CPU_Core_Normal_Trap_Run(void) {
