@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.30 2004-09-16 22:05:24 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.31 2004-10-17 16:00:57 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -41,7 +41,32 @@ public:
 	{
 		DOS_Drive * newdrive;char drive;
 		std::string label;
-		
+		std::string umount;
+		/* Check for unmounting */
+		if (cmd->FindString("-u",umount,false)) {
+			umount[0] = toupper(umount[0]);
+			int drive = umount[0]-'A';
+				if(drive < DOS_DRIVES && Drives[drive]) {
+					if(drive == DOS_GetDefaultDrive()) {
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_CURRENT"));
+						return;
+					}
+					try { /* Check if virtualdrive */
+						if( dynamic_cast<localDrive*>(Drives[drive]) == 0 ) throw 0;
+					}
+					catch(...) {
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
+						return;
+					}
+					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+					delete Drives[drive];
+					Drives[drive] = 0;
+				} else {
+					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
+				}
+			return;
+		}
+	   
 		// Show list of cdroms
 		if (cmd->FindExist("-cd",false)) {
 			int num = SDL_CDNumDrives();
@@ -657,7 +682,11 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
-
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_CURRENT","You can not unMOUNT the active drive.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCES","Drive %c has succesfully been removed.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
+   
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
