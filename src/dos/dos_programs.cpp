@@ -265,7 +265,7 @@ void RESCAN::Run(void)
 	Bit8u drive = DOS_GetDefaultDrive();
 	if (Drives[drive]) {
 		Drives[drive]->EmptyCache();
-		WriteOut(MSG_Get("RESCAN_SUCCESS"));
+		WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
 	}
 };
 
@@ -273,7 +273,16 @@ static void RESCAN_ProgramStart(Program * * make) {
 	*make=new RESCAN;
 }
 
+class INTRO : public Program {
+public:
+	void Run(void) {
+		WriteOut(MSG_Get("PROGRAM_INTRO"));
+	}
+};
 
+static void INTRO_ProgramStart(Program * * make) {
+	*make=new INTRO;
+}
 
 void DOS_SetupPrograms(void) {
     /*Add Messages */
@@ -301,11 +310,34 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
 
-	MSG_Add("RESCAN_SUCCESS","Drive cache cleared.\n");
+	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
+
+	MSG_Add("PROGRAM_INTRO",
+		"Welcome to DOSBox, an x86 emulator with sound and graphics.\n"
+		"DOSBox creates a shell for you which looks like old plain DOS.\n"
+		"\n"	    
+		"Here are some commands to get you started:\n"
+		"Before you can use the files located on your own filesystem,\n"
+		"You have to mount the directory containing the files.\n"
+		"For Windows:\n"
+		"mount c c:\\dosprog will create a C drive in dosbox with c:\\dosprog as contents.\n"
+		"\n"
+		"For other platfroms:\n"
+		"mount c /home/user/dosprog will do the same.\n"
+		"\n"
+		"When the mount has succesfully completed you can type c: to go to your freshly\n"
+		"mounted C-drive. Typing dir there will show its contents. cd will allow you to\n"
+		"enter a directory (recognised by the [] in a directory listing).\n"
+		"You can run programs/files which end with .exe .bat and .com .\n"
+
+		"\n"
+		"DOSBox will stop/exit without a warning if an error occured!\n"
+		);
 
     /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
+	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
 }
