@@ -26,34 +26,36 @@
 void VGA_Render_GFX_2(Bit8u * * data) {
 	*data=vga.buffer;
 	VGA_DrawGFX2_Full(vga.buffer,vga.draw.width);
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 }
 
 void VGA_Render_GFX_4(Bit8u * * data) {
 	*data=vga.buffer;
 	VGA_DrawGFX4_Full(vga.buffer,vga.draw.width);
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 }
 
 void VGA_Render_GFX_16(Bit8u * * data) {
-	*data=&vga.buffer[vga.config.display_start*8+vga.config.pel_panning];
-	vga.config.retrace=true;
+//	*data=&vga.buffer[vga.config.display_start*8+vga.config.pel_panning];
+	*data=&vga.buffer[vga.config.real_start*8+vga.config.pel_panning];
+	VGA_StartRetrace();
 }
 
 void VGA_Render_GFX_256U(Bit8u * * data) {
-	*data=&vga.mem.linear[vga.config.display_start*4+vga.config.pel_panning];
-	vga.config.retrace=true;
+//	*data=&vga.mem.linear[vga.config.display_start*4+vga.config.pel_panning];
+	*data=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning];
+	VGA_StartRetrace();
 }
 
 void VGA_Render_GFX_256C(Bit8u * * data) {
 	*data=memory+0xa0000;
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 }
 
 void VGA_Render_TEXT_16(Bit8u * * data) {
 	*data=vga.buffer;
-	if (!vga.draw.resizing) VGA_DrawTEXT(vga.buffer,vga.draw.width);
-	vga.config.retrace=true;
+	if (data && !vga.draw.resizing) VGA_DrawTEXT(vga.buffer,vga.draw.width);
+	VGA_StartRetrace();
 }
 
 void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
@@ -82,7 +84,7 @@ void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
 		}
 		bitdata+=pitch;
 	};
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 }
 
 
@@ -105,7 +107,7 @@ void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu pitch) {
 		}
 		bitdata+=pitch;
 	};
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 }
 
 /* Draw the screen using the lookup buffer */
@@ -117,7 +119,7 @@ void VGA_DrawGFX16_Fast(Bit8u * bitdata,Bitu next_line) {
 		bitdata+=vga.draw.width+next_line;
 		reader+=vga.config.scan_len*16;
 	}
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 };
 
 
@@ -136,7 +138,7 @@ void VGA_DrawGFX256_Full(Bit8u * bitdata,Bitu next_line) {
 		yreader+=vga.config.scan_len*2;
 		bitdata+=next_line;
 	};
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 };
 
 void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu pitch) {
@@ -147,13 +149,13 @@ void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu pitch) {
 		bitdata+=pitch;
 		reader+=vga.draw.width;
 	}
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 };
 
 
 void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 	Bit8u * reader=HostMake(0xB800,0);
-	Bit8u * draw_start=bitdata;;
+	Bit8u * draw_start=bitdata;
 /* Todo Blinking and high intensity colors */
 	for (Bitu cy=0;cy<(vga.draw.height/16);cy++) {
 		Bit8u * draw_char=draw_start;	
@@ -173,7 +175,7 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 		};
 		draw_start+=16*pitch;
 	};
-	vga.config.retrace=true;
+	VGA_StartRetrace();
 
 	/* Draw a cursor */
 	if (((Bitu)vga.draw.cursor_col*8)>=vga.draw.width) return;
