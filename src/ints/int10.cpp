@@ -400,11 +400,36 @@ graphics_chars:
 				reg_ah=0x01;
 			}
 			break;
-		case 0x0a:							/* Get Pmode Inteface */
-			reg_edi=RealOff(int10.rom.pmode_interface);
-			SegSet16(es,RealSeg(int10.rom.pmode_interface));
-			reg_cx=int10.rom.pmode_interface_size;
-			reg_ax=0x004f;
+		case 0x0a:							/* Get Pmode Interface */
+			switch (reg_bl) {
+			case 0x00:
+				reg_edi=RealOff(int10.rom.pmode_interface);
+				SegSet16(es,RealSeg(int10.rom.pmode_interface));
+				reg_cx=int10.rom.pmode_interface_size;
+				reg_ax=0x004f;
+				break;
+			case 0x01:						/* Get code for "set bank" */
+				reg_edi=RealOff(int10.rom.pmode_interface)+0x08;
+				SegSet16(es,RealSeg(int10.rom.pmode_interface));
+				reg_cx=0x0b;
+				reg_ax=0x004f;
+				break;
+			case 0x02:						/* Get code for "set display start" */
+				reg_edi=RealOff(int10.rom.pmode_interface)+0x19;
+				SegSet16(es,RealSeg(int10.rom.pmode_interface));
+				reg_cx=0x3e;
+				reg_ax=0x004f;
+				break;
+			case 0x03:						/* Get code for "set pallete" */
+				reg_edi=RealOff(int10.rom.pmode_interface)+0x57;
+				SegSet16(es,RealSeg(int10.rom.pmode_interface));
+				reg_cx=0x37;
+				reg_ax=0x004f;
+				break;
+			default:
+				reg_ax=0x014f;
+				break;
+			}
 			break;
 
 		default:
