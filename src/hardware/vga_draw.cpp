@@ -464,10 +464,11 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.doubleheight=doubleheight;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
-
+#if C_DEBUG
 		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, fps %f",width,height,fps);
 		LOG(LOG_VGA,LOG_NORMAL)("%s width, %s height aspect %f",
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
+#endif
 		RENDER_SetSize(width,height,8,aspect_ratio,doublewidth,doubleheight);
 		PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	}
