@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.26 2003-09-22 12:21:53 finsterr Exp $ */
+/* $Id: drive_cache.cpp,v 1.27 2003-10-09 13:49:48 finsterr Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -65,8 +65,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(void)
 	save_dir	= 0;
 	srchNr		= 0;
 	label[0]	= 0;
-	dirFindFirst= 0;
-	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; };
+	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 };
 
@@ -76,8 +75,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 	save_dir	= 0;
 	srchNr		= 0;
 	label[0]	= 0;
-	dirFindFirst= 0;
-	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; };
+	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 	SetBaseDir(path);
 };
@@ -85,7 +83,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 DOS_Drive_Cache::~DOS_Drive_Cache(void)
 {
 	Clear();
-	delete dirFindFirst; dirFindFirst = 0;
+	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { delete dirFindFirst[i]; dirFindFirst[i]=0; };
 };
 
 void DOS_Drive_Cache::Clear(void)
@@ -614,34 +612,70 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 };
 
 // FindFirst / FindNext
-bool DOS_Drive_Cache::FindFirst(char* path, Bit16u& id)
+bool DOS_Drive_Cache::FindFirst(char* path, Bitu dtaAddress, Bitu& id)
 {
+	Bit16u	dirID;
+	Bitu	dirFindFirstID = 0xffff;
+	
 	// Cache directory in 
-	if (!OpenDir(path,id)) return false;
-	// Find Free ID for directory copy	
-	if (dirFindFirst) delete dirFindFirst;
-	dirFindFirst = new CFileInfo();	
-	dirFindFirst->nextEntry = 0;
+	if (!OpenDir(path,dirID)) return false;
+	// Seacrh if dta was already used before
+	for (Bitu n=0; n<MAX_OPENDIRS; n++) {
+		if (dirFindFirst[n]) {
+			if (dirFindFirst[n]->compareCount == dtaAddress) {
+				// Reuse old dta
+				dirFindFirstID = n; break;
+			}		
+		} else if (dirFindFirstID==0xffff) {
+			dirFindFirstID = n;
+		}	
+	} 
+	if (dirFindFirstID==0xffff) {
+		// no free slot found...
+		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : All slots full.");
+		// always use first then
+		dirFindFirstID = 0;
+	}		
+	// Clear and reuse slot
+	delete dirFindFirst[dirFindFirstID];
+	dirFindFirst[dirFindFirstID] = new CFileInfo();
+	dirFindFirst[dirFindFirstID]-> nextEntry	= 0;
+	dirFindFirst[dirFindFirstID]-> compareCount	= dtaAddress;	
+//	strcpy(dirFindFirst[dirFindFirstID]->orgname,path);
+
 	// Copy entries to use with FindNext
-	for (Bitu i=0; i<dirSearch[id]->fileList.size(); i++) {
-		CreateEntry(dirFindFirst,dirSearch[id]->fileList[i]->orgname);
+	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {
+		CreateEntry(dirFindFirst[dirFindFirstID],dirSearch[dirID]->fileList[i]->orgname);
 		// Sort Lists - filelist has to be alphabetically sorted, even in between (for finding double file names) 
-		std::sort(dirFindFirst->fileList.begin(), dirFindFirst->fileList.end(), SortByName);
+		std::sort(dirFindFirst[dirFindFirstID]->fileList.begin(), dirFindFirst[dirFindFirstID]->fileList.end(), SortByName);
 	};
 	// Now re-sort the fileList accordingly to output
 	switch (sortDirType) {
-		case ALPHABETICAL		: std::sort(dirFindFirst->fileList.begin(), dirFindFirst->fileList.end(), SortByName);		break;
-		case DIRALPHABETICAL	: std::sort(dirFindFirst->fileList.begin(), dirFindFirst->fileList.end(), SortByDirName);		break;
-		case ALPHABETICALREV	: std::sort(dirFindFirst->fileList.begin(), dirFindFirst->fileList.end(), SortByNameRev);		break;
-		case DIRALPHABETICALREV	: std::sort(dirFindFirst->fileList.begin(), dirFindFirst->fileList.end(), SortByDirNameRev);	break;
+		case ALPHABETICAL		: std::sort(dirFindFirst[dirFindFirstID]->fileList.begin(), dirFindFirst[dirFindFirstID]->fileList.end(), SortByName);		break;
+		case DIRALPHABETICAL	: std::sort(dirFindFirst[dirFindFirstID]->fileList.begin(), dirFindFirst[dirFindFirstID]->fileList.end(), SortByDirName);		break;
+		case ALPHABETICALREV	: std::sort(dirFindFirst[dirFindFirstID]->fileList.begin(), dirFindFirst[dirFindFirstID]->fileList.end(), SortByNameRev);		break;
+		case DIRALPHABETICALREV	: std::sort(dirFindFirst[dirFindFirstID]->fileList.begin(), dirFindFirst[dirFindFirstID]->fileList.end(), SortByDirNameRev);	break;
 		case NOSORT				: break;
 	};	
+
+//	LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst : %s (ID:%02X)",path,dirFindFirstID);
+	id = dirFindFirstID;
 	return true;
 };
 
-bool DOS_Drive_Cache::FindNext(Bit16u& id, char* &result)
+bool DOS_Drive_Cache::FindNext(Bitu id, char* &result)
 {
-	return SetResult(dirFindFirst, result, dirFindFirst->nextEntry);
+	// out of range ?
+	if ((id>=MAX_OPENDIRS) || !dirFindFirst[id]) {
+		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : ID out of range: %04X",id);
+		return false;
+	}
+	if (!SetResult(dirFindFirst[id], result, dirFindFirst[id]->nextEntry)) {
+		// free slot
+		delete dirFindFirst[id]; dirFindFirst[id] = 0;
+		return false;
+	}
+	return true;
 };
 
 // ****************************************************************************
