@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.57 2004-01-28 15:12:38 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.58 2004-01-29 09:26:45 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -539,7 +539,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.width=section->Get_int("fullwidth");
 	sdl.desktop.height=section->Get_int("fullheight");
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
-	sdl.desktop.hwscale=1.2;
+	sdl.desktop.hwscale=section->Get_float("hwscale");
 	if (!sdl.desktop.width) {
 #ifdef WIN32
 		sdl.desktop.width=GetSystemMetrics(SM_CXSCREEN);
@@ -910,7 +910,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_int("fullwidth",0);
 		sdl_sec->Add_int("fullheight",0);
 		sdl_sec->Add_string("output","surface");
-		sdl_sec->Add_string("hwscale","1.0");
+		sdl_sec->Add_float("hwscale",1.0);
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);

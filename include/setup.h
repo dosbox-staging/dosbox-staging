@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.14 2004-01-08 11:45:24 qbix79 Exp $ */
+/* $Id: setup.h,v 1.15 2004-01-29 09:26:43 qbix79 Exp $ */
 
 #ifndef _SETUP_H_
 #define _SETUP_H_
@@ -55,6 +55,7 @@ union Value{
 	bool _bool;
 	int _int;
 	std::string* _string;
+	float _float;   
 };
 
 class Property {
@@ -76,6 +77,15 @@ public:
 	void SetValue(char* input);
         void GetValuestring(char* str);
 	~Prop_int(){ }
+};
+class Prop_float:public Property {
+public:
+	Prop_float(const char* _propname, float _value):Property(_propname){
+		__value._float=_value;
+	}
+	void SetValue(char* input);
+	void GetValuestring(char* str);
+	~Prop_float(){ }
 };
 
 class Prop_bool:public Property {
@@ -145,11 +155,13 @@ class Section_prop:public Section {
 	void Add_string(const char* _propname, char* _value=NULL);
 	void Add_bool(const char* _propname, bool _value=false);
 	void Add_hex(const char* _propname, int _value=0);
+	void Add_float(const char* _propname, float _value=0.0);   
 
 	int Get_int(const char* _propname);
 	const char* Get_string(const char* _propname);
 	bool Get_bool(const char* _propname);
-    int Get_hex(const char* _propname);
+	int Get_hex(const char* _propname);
+	float Get_float(const char* _propname);
 	void HandleInputline(char *gegevens);
 	void PrintData(FILE* outfile);
    

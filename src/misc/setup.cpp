@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.18 2004-01-08 11:46:40 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.19 2004-01-29 09:26:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -30,6 +30,10 @@
 
 using namespace std;
 
+void Prop_float::SetValue(char* input){
+	input=trim(input);
+	__value._float= atof(input);
+}
 
 void Prop_int::SetValue(char* input){
 	input=trim(input);
@@ -66,9 +70,19 @@ void Prop_bool::GetValuestring(char* str){
         sprintf(str,"%s",__value._bool?"true":"false");
 }
 
+void Prop_float::GetValuestring(char* str){
+	sprintf(str,"%1.2f",__value._float);
+}
+
 void Prop_hex::GetValuestring(char* str){
         sprintf(str,"%X",__value._hex);
 }
+
+void Section_prop::Add_float(const char* _propname, float _value) {
+	Property* test=new Prop_float(_propname,_value);
+	properties.push_back(test);
+}
+
 
 void Section_prop::Add_int(const char* _propname, int _value) {
 	Property* test=new Prop_int(_propname,_value);
@@ -105,7 +119,14 @@ bool Section_prop::Get_bool(const char* _propname){
 	}
 	return false;
 }
-
+float Section_prop::Get_float(const char* _propname){
+	for(it tel=properties.begin();tel!=properties.end();tel++){
+		if((*tel)->propname==_propname){
+			return ((*tel)->GetValue())._float;
+		}
+	}
+	return false;
+}
 
 const char* Section_prop::Get_string(const char* _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
