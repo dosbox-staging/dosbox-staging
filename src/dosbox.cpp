@@ -44,6 +44,7 @@ Bitu errorlevel=1;
 void MSG_Init(Section_prop *);
 void LOG_StartUp(void);
 void MEM_Init(Section *);
+void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
@@ -75,6 +76,8 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void CMS_Init(Section*);
 void DISNEY_Init(Section*);
+void SERIAL_Init(Section*); 
+void MODEM_Init(Section*); 
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
@@ -171,13 +174,16 @@ void DOSBOX_Init(void) {
 #endif
 	
 	secprop->AddInitFunction(&IO_Init);
+	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
-	secprop->Add_int("memsize",8);					//Default to 8 mb total memory
+	secprop->Add_int("memsize",8);		//We Default to 8 mb seems okay for now
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);
 	secprop->AddInitFunction(&CMOS_Init);
+	secprop->AddInitFunction(&SERIAL_Init); 
+		
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("keepsmall",false);
@@ -242,19 +248,23 @@ void DOSBOX_Init(void) {
 	//TODO Maybe combine most of the dos stuff in one section like ems,xms
 	secprop=control->AddSection_prop("dos",&DOS_Init);
 	secprop->AddInitFunction(&XMS_Init);
-	secprop->Add_int("xmssize",8);
+	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init);
-	secprop->Add_int("emssize",4);
+	secprop->Add_bool("ems",true);
 	secprop->AddInitFunction(&DPMI_Init);
+	secprop->Add_bool("dpmi",true);
+#if C_MODEM
+	secprop=control->AddSection_prop("modem",&MODEM_Init); 
+	secprop->Add_bool("enabled",true); 	
+	secprop->Add_hex("comport",2); 
+	secprop->Add_int("listenport",23);
+#endif
 	
-
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 
-	control->SetStartUp(&SHELL_Init);	
-
+	control->SetStartUp(&SHELL_Init);
 }
-
 
