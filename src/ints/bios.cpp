@@ -106,30 +106,7 @@ static Bitu INT1A_Handler(void) {
 }	
 
 static Bitu INT11_Handler(void) {
-	/*
-	AX = BIOS equipment list word
-    bits
-    0     floppy disk(s) installed (see bits 6-7)
-    1     80x87 coprocessor installed
-    2,3   number of 16K banks of RAM on motherboard (PC only)
-          number of 64K banks of RAM on motherboard (XT only)
-    2     pointing device installed (PS)
-    3     unused (PS)
-    4-5   initial video mode
-          00 EGA, VGA, or PGA
-          01 40x25 color
-          10 80x25 color
-          11 80x25 monochrome
-    6-7   number of floppies installed less 1 (if bit 0 set)
-    8     DMA support installed (PCjr, some Tandy 1000s, 1400LT)
-    9-11  number of serial ports installed
-    12    game port installed
-    13    serial printer attached (PCjr)
-          internal modem installed (PC/Convertible)
-    14-15 number of parallel ports installed
-	*/
-	reg_ax=0x104D;
-	LOG(LOG_BIOS,LOG_NORMAL)("INT11:Equipment list returned %X",reg_ax);
+	reg_ax=mem_readw(BIOS_CONFIGURATION);
 	return CBRET_NONE;
 }
 
@@ -342,12 +319,16 @@ void BIOS_Init(Section* sec) {
 	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET);
 	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
 
+	/* Setup some stuff in 0x40 bios segment */
 	/* Test for parallel port */
 	if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
 	/* Test for serial port */
 	Bitu index=0;
 	if (IO_Read(0x3f8)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
 	if (IO_Read(0x2f8)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
+	/* Setup equipment list */
+	mem_writew(BIOS_CONFIGURATION,0xc823);		//1 Floppy,FPU,2 serial, 1 parallel
+
 }
 
 
