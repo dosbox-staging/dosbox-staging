@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,11 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: drives.h,v 1.18 2003-12-17 21:54:31 qbix79 Exp $ */
+
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
 
 #include <sys/types.h>
 #include "dos_system.h"
+#include "shell.h" /* for DOS_Shell */
 
 bool WildFileCmp(const char * file, const char * wild);
 
@@ -44,7 +47,7 @@ public:
 	virtual bool isRemote(void);
 private:
 	char basedir[CROSS_LEN];
-	
+	friend void DOS_Shell::CMD_SUBST(char* args); 	
 	struct {
 		char srch_dir[CROSS_LEN];
 	} srchInfo[MAX_OPENDIRS];

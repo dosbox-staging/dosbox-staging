@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: debug.cpp,v 1.48 2003-12-17 21:52:23 qbix79 Exp $ */
+
 #include "programs.h"
 
 #include <string.h>
@@ -36,7 +38,7 @@
 #include "timer.h"
 #include "paging.h"
 #include "../ints/xms.h"
-#include "../shell/shell_inc.h"
+#include "shell.h"
 
 #ifdef WIN32
 void WIN32_Console();

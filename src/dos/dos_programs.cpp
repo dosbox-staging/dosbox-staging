@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.20 2003-09-08 18:10:08 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.21 2003-12-17 21:55:42 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +28,7 @@
 #include "regs.h"
 #include "callback.h"
 #include "cdrom.h"
-#include "../shell/shell_inc.h"
+
 
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
