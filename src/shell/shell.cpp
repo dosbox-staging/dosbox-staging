@@ -195,13 +195,14 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL","No label supplied to GOTO command.\n");
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
+	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
 	MSG_Add("SHELL_CMD_DIR_PATH_ERROR","Illegal Path\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
-	MSG_Add("SHELL_STARTUP","DOSBox Shell v0.40\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
+	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
     MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
     MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
