@@ -327,8 +327,11 @@ void BIOS_Init(Section* sec) {
 	if (IO_Read(0x3f8)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
 	if (IO_Read(0x2f8)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
 	/* Setup equipment list */
+#if (C_FPU)
 	mem_writew(BIOS_CONFIGURATION,0xc823);		//1 Floppy,FPU,2 serial, 1 parallel
-
+#else 
+	mem_writew(BIOS_CONFIGURATION,0xc821);		//1 Floppy,FPU,2 serial, 1 parallel
+#endif
 }
 
 
