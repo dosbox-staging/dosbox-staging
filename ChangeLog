@@ -1,3 +1,10 @@
+0.61
+  - improved exception handling
+  - debugger: fixes; logging of gdt,lgt,idt
+  - fixed some mscdex issues (drive letter header error, added get directory entry)
+  - added/fixed some bios funcs
+  - added some rarely used xms functions (thanks c2woody!)
+  
 0.60
   - rewrote memory system for future paging support
   - fixed several EMS and XMS bugs and rewrite for new memory system
