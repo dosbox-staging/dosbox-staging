@@ -279,7 +279,7 @@ foundmode:
 	/* Vertical Retrace End */
 	IO_Write(crtc_base,0x16);IO_Write(crtc_base+1,(CurMode->vtotal-8));
 	/* Line Compare */
-	Bitu line_compare=CurMode->vtotal+1;		//Out of range
+	Bitu line_compare=(mode>=256) ? 2047 : 1023;
 	IO_Write(crtc_base,0x18);IO_Write(crtc_base+1,line_compare&0xff);
 	overflow|=(line_compare & 0x100) >> 4;
 	max_scanline|=(line_compare & 0x200) >> 3;
