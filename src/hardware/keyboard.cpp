@@ -87,7 +87,7 @@ void KEYBOARD_AddCode(Bit8u code) {
 		keyb.buf[start]=code;
 		keyb.read_active=true;
 	}
-	if (keyb.buf_used>0) PIC_ActivateIRQ(1);
+	if (keyb.buf_used==1) PIC_AddIRQ(1,0);
 }
 
 static Bit8u read_p60(Bit32u port) {
