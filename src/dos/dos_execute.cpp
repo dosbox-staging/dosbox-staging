@@ -185,6 +185,7 @@ bool DOS_ChildPSP(Bit16u segment, Bit16u size)
 	psp.MakeNew(size);
 	DOS_PSP psp_parent(psp.GetParent());
 	psp.CopyFileTable(&psp_parent,true);
+	psp.SetSize(size);
 	return true;
 };
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
