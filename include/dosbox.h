@@ -19,13 +19,13 @@
 #if !defined __DOSBOX_H
 #define __DOSBOX_H
 
-typedef unsigned char Bit8u;
-typedef signed char Bit8s;
-typedef unsigned short Bit16u;
-typedef signed short Bit16s;
-typedef unsigned long Bit32u;
-typedef signed long Bit32s;
-typedef double Real64;
+typedef	unsigned char Bit8u;
+typedef	signed char	Bit8s;
+typedef	unsigned short Bit16u;
+typedef	signed short Bit16s;
+typedef unsigned long	Bit32u;
+typedef signed long		Bit32s;
+typedef double			Real64;
 #if defined(_MSC_VER)
 typedef unsigned __int64 Bit64u;
 typedef signed __int64 Bit64s;
@@ -44,14 +44,7 @@ void E_Exit(char * message,...);
 void S_Warn(char * message,...);
 
 
-#include "../settings.h"								/* General extra setting */
-#if defined (_MSC_VER)
-#include "../src/platform/visualc/config.h"
-#else
 #include "../config.h"
-#define INLINE inline
-#endif
-
 
 typedef Bitu (LoopHandler)(void);
 
