@@ -156,7 +156,7 @@ void Section_line::PrintData(FILE* outfile) {
 
 void Config::PrintConfig(const char* configfilename){
 	char temp[50];
-	FILE* outfile=fopen(configfilename,"w+b");
+	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */

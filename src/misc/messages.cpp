@@ -69,7 +69,7 @@ void MSG_Replace(const char * _name, const char* _val) {
 static void LoadMessageFile(const char * fname) {
 	if (!fname) return;
 	if(*fname=='\0') return;//empty string=no languagefile
-	FILE * mfile=fopen(fname,"rb");
+	FILE * mfile=fopen(fname,"rt");
 	/* This should never happen and since other modules depend on this use a normal printf */
 	if (!mfile) {
 		E_Exit("MSG:Can't load messages: %s",fname);
@@ -120,7 +120,7 @@ const char * MSG_Get(char const * msg) {
 
 
 void MSG_Write(const char * location) {
-	FILE* out=fopen(location,"w+b");
+	FILE* out=fopen(location,"w+t");
 	if(out==NULL) return;//maybe an error?
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
 		fprintf(out,":%s\n%s.\n",(*tel).name.c_str(),(*tel).val.c_str());
