@@ -22,8 +22,6 @@
 #include "vga.h"
 
 /*
-//TODO PEL Mask Maybe
-//TODO Find some way to get palette lookups in groups 
 3C6h (R/W):  PEL Mask
 bit 0-7  This register is anded with the palette index sent for each dot.
          Should be set to FFh.

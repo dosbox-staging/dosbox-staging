@@ -25,29 +25,42 @@
 
 //TODO Make the full draw like the vga really does from video memory.
 
+#define FIXED_CGA_SIZED	1
+
+static void VGA_HERC_Draw(Bit8u * bitdata,Bitu pitch) {
+	Bit8u * reader=&vga.mem.linear[(vga.herc.mode_control & 0x80) ? 8*1024 : 0];
+	for (Bitu y=0;y<vga.draw.height;y++) {
+//		Bit8u * tempread=reader+((y & 3) * 8 * 1024);
+		Bit8u * tempread=reader+((y & 3) * 8 * 1024);
+//		Bit8u * tempread=reader;
+		Bit8u * draw=bitdata;
+		//TODO Look up table like in 4color mode
+		for (Bitu x=vga.draw.width>>3;x>0;x--) {
+			Bit8u val=*(tempread++);
+			*(Bit32u *)(draw+0)=CGA_2_Table[val >> 4];
+			*(Bit32u *)(draw+4)=CGA_2_Table[val & 0xf];
+			draw+=8;
+		}
+		if ((y & 3)==3) reader+=90;
+		bitdata+=pitch;
+	}
+}
+
 static void VGA_CGA2_Draw(Bit8u * bitdata,Bitu pitch) {
 	Bit8u * reader=&vga.mem.linear[0];
 	Bit8u * flip=&vga.mem.linear[8*1024];
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
-		Bit8u * tempread;
-		tempread=reader;
+		Bit8u * tempread=reader;
 		if (y&1) {
 			tempread+=8*1024;
 			reader+=80;
 		};
 		draw=bitdata;
-		//TODO Look up table like in 4color mode
 		for (Bitu x=vga.draw.width>>3;x>0;x--) {
 			Bit8u val=*(tempread++);
-			*(draw+0)=(val>>7)&1;
-			*(draw+1)=(val>>6)&1;
-			*(draw+2)=(val>>5)&1;
-			*(draw+3)=(val>>4)&1;
-			*(draw+4)=(val>>3)&1;
-			*(draw+5)=(val>>2)&1;
-			*(draw+6)=(val>>1)&1;
-			*(draw+7)=(val>>0)&1;
+			*(Bit32u *)(draw+0)=CGA_2_Table[val >> 4];
+			*(Bit32u *)(draw+4)=CGA_2_Table[val & 0xf];
 			draw+=8;
 		}
 		bitdata+=pitch;
@@ -70,6 +83,37 @@ static void VGA_CGA4_Draw(Bit8u * bitdata,Bitu pitch) {
 		for (Bitu x=0;x<vga.draw.width>>2;x++) {
 			Bit8u val=*(tempread++);
 			*(Bit32u *)draw=CGA_4_Table[val];
+			draw+=4;
+		}
+		bitdata+=pitch;
+	}
+}
+
+
+static Bit8u convert16[16]={
+	0x0,0x2,0x1,0x3,0x5,0x7,0x4,0x9,
+	0x6,0xa,0x8,0xb,0xd,0xe,0xc,0xf
+};
+
+static void VGA_CGA16_Draw(Bit8u * bitdata,Bitu pitch) {
+	Bit8u * reader=&vga.mem.linear[0];
+	Bit8u * flip=&vga.mem.linear[8*1024];
+	Bit8u * draw;
+	for (Bitu y=0;y<200;y++) {
+		Bit8u * tempread;
+		tempread=reader;
+		if (y&1) {
+			tempread+=8*1024;
+			reader+=80;
+			if (reader>=flip) reader-=8*1024;
+		}
+		draw=bitdata;
+		for (Bitu x=0;x<80;x++) {
+			Bit8u val=*(tempread++);
+
+			Bit32u full=convert16[(val & 0xf0) >> 4] | convert16[val & 0xf] << 16;
+			full|=full<<8;
+			*(Bit32u *)draw=full;
 			draw+=4;
 		}
 		bitdata+=pitch;
@@ -231,6 +275,7 @@ void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 				buf=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning];
 				bufsplit=vga.mem.linear;
 				break;
+			case M_TEXT2:
 			case M_TEXT16:
 				{
 					Bitu first_rows=stop/vga.draw.font_height;
@@ -253,12 +298,20 @@ void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 		} else {
 drawnormal:
 			switch (vga.mode) {
+			case M_HERC:
+				VGA_HERC_Draw(&vga.mem.linear[512*1024],vga.draw.width);
+				buf=&vga.mem.linear[512*1024];
+				break;
 			case M_CGA2:
 				VGA_CGA2_Draw(&vga.mem.linear[512*1024],vga.draw.width);
 				buf=&vga.mem.linear[512*1024];
 				break;
 			case M_CGA4:
 				VGA_CGA4_Draw(&vga.mem.linear[512*1024],vga.draw.width);
+				buf=&vga.mem.linear[512*1024];
+				break;
+			case M_CGA16:
+				VGA_CGA16_Draw(&vga.mem.linear[512*1024],vga.draw.width);
 				buf=&vga.mem.linear[512*1024];
 				break;
 			case M_TANDY16:
@@ -272,6 +325,7 @@ drawnormal:
 			case M_LIN8:
 				buf=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning];
 				break;
+			case M_TEXT2:
 			case M_TEXT16:
 				{
 					Bitu rows=vga.draw.rows;
@@ -358,20 +412,33 @@ void VGA_SetupDrawing(void) {
 		pitch=vga.config.scan_len*16;
 		break;
 	case M_CGA4:
-		width<<=3;
+	case M_CGA16:							//Let is use 320x200 res and double pixels myself
+		vga.draw.double_width=true;			//Hack if there's a runtime switch
+		vga.draw.double_height=true;		//Hack if there's a runtime switch
+		width<<=2;
 		pitch=width;
 		break;
 	case M_CGA2:
+		vga.draw.double_width=false;		//Hack if there's a runtime switch
 		width<<=3;
+		pitch=width;
+		break;
+	case M_HERC:
+		vga.draw.double_height=false;		//Hack if there's a runtime switch
+		width*=9;
+		height=384;
 		pitch=width;
 		break;
 	case M_TANDY16:
 		width<<=3;
 		pitch=width;
 		break;
+	case M_TEXT2:
 	case M_TEXT16:
-		/* probably a 16-color text mode, got to detect mono mode somehow */
 		vga.draw.font_height=vga.config.vline_height+1;
+		if (vga.draw.font_height<4 && (machine<MCH_VGA || machine==MCH_AUTO)) {
+			vga.draw.font_height=4;
+		};
 		vga.draw.cols=width;
 		vga.draw.rows=(height/vga.draw.font_height);
 		if (height % vga.draw.font_height) vga.draw.rows++;
