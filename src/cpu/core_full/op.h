@@ -539,8 +539,26 @@ switch (inst.code.op) {
 		BSWAP(inst.op1.d);
 		break;
 	case O_FPU:
-		LOG_MSG("FPU opcode %X unhandled",inst.entry);
-		break;
+		switch (((inst.rm>=0xc0) << 3) | inst.code.save) {
+		case 0x00:	FPU_ESC0_EA(inst.rm,inst.rm_eaa);break;
+		case 0x01:	FPU_ESC1_EA(inst.rm,inst.rm_eaa);break;
+		case 0x02:	FPU_ESC2_EA(inst.rm,inst.rm_eaa);break;
+		case 0x03:	FPU_ESC3_EA(inst.rm,inst.rm_eaa);break;
+		case 0x04:	FPU_ESC4_EA(inst.rm,inst.rm_eaa);break;
+		case 0x05:	FPU_ESC5_EA(inst.rm,inst.rm_eaa);break;
+		case 0x06:	FPU_ESC6_EA(inst.rm,inst.rm_eaa);break;
+		case 0x07:	FPU_ESC7_EA(inst.rm,inst.rm_eaa);break;
+
+		case 0x08:	FPU_ESC0_Normal(inst.rm);break;
+		case 0x09:	FPU_ESC1_Normal(inst.rm);break;
+		case 0x0a:	FPU_ESC2_Normal(inst.rm);break;
+		case 0x0b:	FPU_ESC3_Normal(inst.rm);break;
+		case 0x0c:	FPU_ESC4_Normal(inst.rm);break;
+		case 0x0d:	FPU_ESC5_Normal(inst.rm);break;
+		case 0x0e:	FPU_ESC6_Normal(inst.rm);break;
+		case 0x0f:	FPU_ESC7_Normal(inst.rm);break;
+		}
+		goto nextopcode;
 	case 0:
 		break;
 	default:
