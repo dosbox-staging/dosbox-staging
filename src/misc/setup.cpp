@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.24 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.25 2005-03-25 12:00:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -214,9 +214,9 @@ Section* Config::AddSection(const char* _name,void (*_initfunction)(Section*)){
 	return blah;
 }
 
-Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Section*)){
+Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Section*),bool canchange){
 	Section_prop* blah = new Section_prop(_name);
-	blah->AddInitFunction(_initfunction);
+	blah->AddInitFunction(_initfunction,canchange);
 	sectionlist.push_back(blah);
 	return blah;
 }
@@ -404,6 +404,17 @@ bool CommandLine::FindStringRemain(char * name,std::string & value) {
 	return true;
 }
 
+bool CommandLine::GetStringRemain(std::string & value) {
+	if(!cmds.size()) return false;
+		
+	cmd_it it=cmds.begin();value=(*it++);
+	for(;it != cmds.end();it++) {
+		value+=" ";
+		value+=(*it);
+	}
+	return true;
+}
+		
 
 unsigned int CommandLine::GetCount(void) {
 	return cmds.size();
@@ -449,4 +460,3 @@ CommandLine::CommandLine(char * name,char * cmdline) {
 	}
 	if (inword || inquote) cmds.push_back(str);
 }
-
