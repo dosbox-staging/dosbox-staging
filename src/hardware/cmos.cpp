@@ -49,7 +49,7 @@ static void cmos_timerevent(void) {
 
 static void cmos_checktimer(void) {
 	PIC_RemoveEvents(cmos_timerevent);	
-	if (!cmos.timer.div && !cmos.timer.enabled) return;
+	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
 	cmos.timer.micro=(Bitu) (10000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
 	LOG(LOG_PIT,"RTC Timer at %f hz",1000000.0/cmos.timer.micro);
@@ -89,7 +89,7 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 		break;
 	default:
 		cmos.regs[cmos.reg]=val & 0x7f;
-		LOG(LOG_ERROR|LOG_BIOS,"CMOS:Unhandled register %x",cmos.reg);
+//		LOG(LOG_ERROR|LOG_BIOS,"CMOS:WRite to unhandled register %x",cmos.reg);
 	}
 }
 
@@ -115,5 +115,8 @@ void CMOS_Init(Section* sec) {
 	IO_RegisterWriteHandler(0x71,cmos_writereg,"CMOS");
 	IO_RegisterReadHandler(0x71,cmos_readreg,"CMOS");
 	cmos.timer.enabled=false;
+	cmos.reg=0xa;
+	cmos_writereg(0x71,0x26);
+
 }
 
