@@ -227,7 +227,7 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x0c:	/* Define interrupt subroutine parameters */
 		mouse.sub_mask=reg_cx;
-		mouse.sub_seg=Segs[es].value;
+		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
@@ -245,12 +245,12 @@ static Bitu INT33_Handler(void) {
 			Bit16u oldMask= mouse.sub_mask;
 			// Set new values
 			mouse.sub_mask= reg_cx;
-			mouse.sub_seg = Segs[es].value;
+			mouse.sub_seg = SegValue(es);
 			mouse.sub_ofs = reg_dx;
 			// Return old values
 			reg_cx = oldMask;
 			reg_dx = oldOfs;
-			SetSegment_16(es,oldSeg);
+			SegSet16(es,oldSeg);
 		}; break;		
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
@@ -277,11 +277,11 @@ static Bitu INT74_Handler(void) {
 		/* Check for an active Interrupt Handler that will get called */
 		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
 			/* Save lot's of registers */
-			Bit16u oldax,oldbx,oldcx,olddx,oldsi,olddi;
-			Bit16u oldds,oldes,oldss,oldbp,oldsp;
-			oldax=reg_ax;oldbx=reg_bx;oldcx=reg_cx;olddx=reg_dx;oldsi=reg_si;olddi=reg_di;
-			oldbp=reg_bp;oldsp=reg_sp;
-			oldds=Segs[ds].value; oldes=Segs[es].value;	oldss=Segs[ss].value; // Save segments
+			Bit32u oldeax,oldebx,oldecx,oldedx,oldesi,oldedi,oldebp,oldesp;
+			Bit16u oldds,oldes,oldss;
+			oldeax=reg_eax;oldebx=reg_ebx;oldecx=reg_ecx;oldedx=reg_edx;
+			oldesi=reg_esi;oldedi=reg_edi;oldebp=reg_ebp;oldesp=reg_esp;
+			oldds=SegValue(ds); oldes=SegValue(es);	oldss=SegValue(ss); // Save segments
 			reg_ax=mouse.event_queue[mouse.events].type;
 			reg_bx=mouse.event_queue[mouse.events].buttons;
 			reg_cx=POS_X;
@@ -293,9 +293,10 @@ static Bitu INT74_Handler(void) {
 				mouse.mickey_y=0;
 			}
 			CALLBACK_RunRealFar(mouse.sub_seg,mouse.sub_ofs);
-			reg_ax=oldax;reg_bx=oldbx;reg_cx=oldcx;reg_dx=olddx;reg_si=oldsi;reg_di=olddi;
-			SetSegment_16(ds,oldds); SetSegment_16(es,oldes); SetSegment_16(ss,oldss); // Save segments
-			reg_bp=oldbp; reg_sp=oldsp; 
+			reg_eax=oldeax;reg_ebx=oldebx;reg_ecx=oldecx;reg_edx=oldedx;
+			reg_esi=oldesi;reg_edi=oldedi;reg_ebp=oldebp;reg_esp=oldesp;
+			SegSet16(ds,oldds); SegSet16(es,oldes); SegSet16(ss,oldss); // Save segments
+
 		}
 	}
 	IO_Write(0xa0,0x20);
