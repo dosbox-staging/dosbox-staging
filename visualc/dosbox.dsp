@@ -199,6 +199,10 @@ SOURCE=..\src\cpu\modrm.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\cpu\paging.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\cpu\slow_16.cpp
 # End Source File
 # End Group
@@ -733,6 +737,10 @@ SOURCE=..\include\mixer.h
 # Begin Source File
 
 SOURCE=..\include\mouse.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\paging.h
 # End Source File
 # Begin Source File
 
