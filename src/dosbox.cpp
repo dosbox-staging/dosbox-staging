@@ -101,6 +101,9 @@ static Bitu Normal_Loop(void) {
 		PIC_IRQAgain=false;
 		ret=(*cpudecoder)(cpu_cycles);
 	} while (!ret && PIC_IRQAgain);
+#if C_DEBUG
+	if (DEBUG_ExitLoop()) return 0;
+#endif
 	return ret;
 }
 

@@ -83,7 +83,7 @@ void Interrupt(Bit8u num) {
  		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
 #if C_DEBUG 
-	if (DEBUG_BreakPoint()) return;
+	if (DEBUG_Breakpoint()) return;
 #endif
 		break;
 	case 0x05:

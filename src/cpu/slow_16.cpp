@@ -68,6 +68,10 @@ static Bitu CPU_Real_16_Slow_Decode(Bits count) {
 #if C_DEBUG
 		cycle_count++;		
 #endif
+#if C_HEAVY_DEBUG
+		SAVEIP;
+		if (DEBUG_HeavyIsBreakpoint()) return CBRET_NONE;
+#endif
 		#include "core_16/main.h"	
 	} while (--count>0);
 	#include "core_16/stop.h"		

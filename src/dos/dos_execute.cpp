@@ -22,6 +22,7 @@
 #include "dos_inc.h"
 #include "cpu.h"
 #include "callback.h"
+#include "debug.h"
 
 #pragma pack(1)
 struct EXE_Header {
@@ -327,6 +328,10 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		reg_ax=0;
 		reg_cx=reg_dx=reg_bx=reg_si=reg_di=reg_bp=0;
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
+#if C_DEBUG		
+		/* Started from debug.com, then set breakpoint at start */
+		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
+#endif
 		return true;
 	}
 	return false;

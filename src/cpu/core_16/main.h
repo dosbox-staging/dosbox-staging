@@ -880,7 +880,7 @@ restart:
 		case 0xcc:												/* INT3 */
 			INTERRUPT(3);
 #if C_DEBUG 
-			return 0; 
+			return 1; 
 #endif
 			break;
 		case 0xcd:												/* INT Ib */	
@@ -888,7 +888,7 @@ restart:
 				Bit8u num=Fetchb();
 #if C_DEBUG
 				SAVEIP;
-				if (DEBUG_IntBreakpoint(num)) return 0;
+				if (DEBUG_IntBreakpoint(num)) return 1;
 #endif
 				INTERRUPT(num);				
 			}
@@ -1079,7 +1079,7 @@ restart:
 					goto reploop;
 #ifdef CPU_386
 				case 0x66:
-					Rep_66(direct,from,to);
+					Rep_66(direct,from,to,repcheck);
 					break;
 #endif												
 					
