@@ -373,9 +373,9 @@ MIXER
   
   
 IMGMOUNT
-  A utility to mount disk images and cdrom images in DOSBox.
+  A utility to mount disk images and CD-ROM images in DOSBox.
   
-  CDROM: either iso or cue/bin is supported:
+  CD-ROM: either iso or cue/bin is supported:
   IMGMOUNT DRIVE imagefile -t iso
   
   imagefile 
@@ -522,5 +522,6 @@ The Beta Testers.
 12. Contact:
 ============
 
-DOSBox Crew: dosbox.crew@gmail.com
+See the site: 
 http://dosbox.sourceforge.net
+for an emailaddress (The Crew-page).
