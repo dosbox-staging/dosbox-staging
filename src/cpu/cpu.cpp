@@ -40,6 +40,24 @@ Bits CPU_CycleMax=1500;
 
 CPU_Decoder * cpudecoder;
 
+void CPU_Real_16_Slow_Start(void);
+void CPU_Core_Full_Start(void);
+
+typedef void DecoderStart(void);
+
+//Determine correct core, to start from cpu state.
+DecoderStart * CPU_DecorderStarts[8]={
+	CPU_Real_16_Slow_Start,				//16-bit real,16-bit stack
+//	CPU_Core_Full_Start,				//16-bit prot,16-bit stack
+	CPU_Core_Full_Start,				//16-bit prot,16-bit stack
+	0,									//32-bit real,16-bit stack		ILLEGAL
+	CPU_Core_Full_Start,				//32-bit prot,16-bit stack
+	0,									//16-bit real,32-bit stack		ILLEGAL
+	CPU_Core_Full_Start,				//16-bit prot,32-bit stack
+	0,									//32-bit real,32-bit stack		ILLEGAL
+	CPU_Core_Full_Start,				//32-bit prot,32-bit stack
+};
+
 INLINE void CPU_Push16(Bitu value) {
 	if (cpu.state & STATE_STACK32) {
 		reg_esp-=2;
@@ -95,10 +113,10 @@ PhysPt SelBase(Bitu sel) {
 }
 
 bool CPU_CheckState(void) {
-	cpu.state=0;
+	Bitu old_state=cpu.state;
+	cpu.state=0;	
 	if (!(cpu.cr0 & CR0_PROTECTION)) {
 		cpu.full.entry=cpu.full.prefix=0;
-		return true;
 	} else {
 		cpu.state|=STATE_PROTECTED;
 		if (Segs.big[cs]) {
@@ -111,8 +129,11 @@ bool CPU_CheckState(void) {
 		if (Segs.big[ss]) cpu.state|=STATE_STACK32;
 		LOG_MSG("CPL Level %x at %X:%X",cpu.cpl,SegValue(cs),reg_eip);
 	}
-	return true;
+	if (old_state==cpu.state) return true;
+	(*CPU_DecorderStarts[cpu.state])();
+	return false;
 }
+
 Bit8u lastint;
 bool Interrupt(Bitu num) {
 	lastint=num;
@@ -771,14 +792,6 @@ void CPU_CPUID(void) {
 void CPU_Real_16_Slow_Start(void);
 void CPU_Core_Full_Start(void);
 
-void SetCPU16bit()
-{
-	cpu.state=0;
-	cpu.cr0=false;
-	CPU_Real_16_Slow_Start();
-//	CPU_Core_Full_Start();
-}
-
 static void CPU_CycleIncrease(void) {
 	Bitu old_cycles=CPU_CycleMax;
 	CPU_CycleMax=(Bitu)(CPU_CycleMax*1.2);
@@ -818,8 +831,11 @@ void CPU_Init(Section* sec) {
 	flags.type=t_UNKNOWN;
 
 	cpu.full.entry=cpu.full.prefix=0;
-	SetCPU16bit();
-	
+	cpu.state=0xff;			//To initialize it the first time
+	cpu.cr0=false;
+
+	CPU_CheckState();
+
 	KEYBOARD_AddEvent(KBD_f11,KBD_MOD_CTRL,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,KBD_MOD_CTRL,CPU_CycleIncrease);
 
