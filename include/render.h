@@ -28,7 +28,7 @@ enum RENDER_Operation {
 
 typedef void (* RENDER_Line_Handler)(Bit8u * src);
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh);
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,double ratio,Bitu scalew,Bitu scaleh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(void);
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);

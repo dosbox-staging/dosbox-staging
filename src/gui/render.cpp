@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.25 2004-01-31 22:38:27 harekiet Exp $ */
+/* $Id: render.cpp,v 1.26 2004-02-07 18:50:10 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -56,7 +56,6 @@ static struct {
 		Bitu width;
 		Bitu height;
 		Bitu bpp;
-		Bitu pitch;
 		Bitu scalew;
 		Bitu scaleh;
 		double ratio;
@@ -450,15 +449,14 @@ normalop:
 }
 
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,double ratio,Bitu scalew,Bitu scaleh) {
-	if ((!width) || (!height) || (!pitch)) { 
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,double ratio,Bitu scalew,Bitu scaleh) {
+	if (!width || !height) { 
 		render.active=false;
 		return;	
 	}
 	render.src.width=width;
 	render.src.height=height;
 	render.src.bpp=bpp;
-	render.src.pitch=pitch;
 	render.src.ratio=render.aspect ? ratio : 1.0;
 	render.src.scalew=scalew;
 	render.src.scaleh=scaleh;
