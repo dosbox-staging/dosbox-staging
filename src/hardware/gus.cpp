@@ -800,7 +800,8 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 	case 0x303:
 		return myGUS.gRegSelect;
 	case 0x304:
-		return ExecuteReadRegister() & 0xff;
+		if (iolen==2) return ExecuteReadRegister() & 0xffff;
+		else return ExecuteReadRegister() & 0xff;
 	case 0x305:
 		return ExecuteReadRegister() >> 8;
 	case 0x307:
@@ -858,7 +859,8 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		myGUS.gRegData = 0;
 		break;
 	case 0x304:
-		myGUS.gRegData = (0xff00 & myGUS.gRegData) | val;
+		if (iolen==2) myGUS.gRegData=val;
+		else myGUS.gRegData = (0xff00 & myGUS.gRegData) | val;
 		ExecuteGlobRegister();
 		break;
 	case 0x305:
