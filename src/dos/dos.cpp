@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.69 2004-03-14 16:54:21 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.70 2004-03-23 18:24:05 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -792,10 +792,23 @@ static Bitu DOS_21Handler(void) {
 			switch (reg_al) {
 			case 1:
 				mem_writeb(data,reg_al);
-				mem_writew(data+1,4);
-				mem_writew(data+3,1);				
-				mem_writew(data+5,37);
-				reg_cx=4;
+				mem_writew(data+0x01,0x1c);
+				mem_writew(data+0x03,1);
+				mem_writew(data+0x05,0x01b5);
+				mem_writew(data+0x07,0x0000);           // date format
+				mem_writeb(data+0x08,0x24);             // currency symbol
+				mem_writew(data+0x0a,0x0000);
+				mem_writew(data+0x0c,0x0000);
+				mem_writew(data+0x0e,0x002c);           // thousands separator
+				mem_writew(data+0x10,0x002e);           // decimal separator
+				mem_writew(data+0x12,0x002d);           // date separator
+				mem_writew(data+0x14,0x003a);           // time separator
+				mem_writeb(data+0x16,0x00);             // currency format
+				mem_writeb(data+0x17,0x02);             // digits after decimal in currency
+				mem_writeb(data+0x18,0x00);             // time format
+				mem_writed(data+0x19,CALLBACK_RealPointer(call_casemap));
+				mem_writew(data+0x1d,0x002c);           // list separator
+				reg_cx=0x1f;
 				CALLBACK_SCF(false);
 				break;
 			case 2:	// Get pointer to uppercase table
@@ -804,9 +817,10 @@ static Bitu DOS_21Handler(void) {
 			case 5: // Get pointer to filename terminator table
 			case 6: // Get pointer to collating sequence table
 			case 7: // Get pointer to double byte char set table
-				mem_writew(data  ,0x0000);	// We dont have this table...
-				mem_writew(data+2,0x0000);	// End of table
-				reg_cx=4;
+				mem_writeb(data,reg_al);
+				mem_writew(data+1,0x0000);	// We dont have this table...
+				mem_writew(data+3,0x0000);	// End of table
+				reg_cx=5;
 				CALLBACK_SCF(false);
 				break;
 			default:
