@@ -304,14 +304,20 @@ static Bitu IRQ1_Handler(void) {
 	case 0x53: /* del . Not entirely correct, but works fine */
 		if(flags3 &0x02) {	/*extend key. e.g key above arrows or arrows*/
 			if(scancode == 0x52) flags2 |=0x80; /* press insert */		   
-			add_key((scancode <<8)|0xe0);
+			if(flags1 &0x08) {
+				add_key(scan_to_scanascii[scancode].normal+0x5000);
+			} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) {
+				add_key((scan_to_scanascii[scancode].shift&0xff00)|0xe0);
+			} else if (flags1 &0x04) {
+				add_key((scan_to_scanascii[scancode].control&0xff00)|0xe0);
+			} else add_key((scan_to_scanascii[scancode].normal&0xff00)|0xe0);
 			break;
 		}
 		if(flags1 &0x08) {
 			Bit8u token = mem_readb(BIOS_KEYBOARD_TOKEN);
 			token= token*10 + scan_to_scanascii[scancode].alt;
 			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
-		} else if(      ((flags1 &0x3)!=0)    ^  ((flags1 &0x20) !=0)     ) {
+		} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) {
 			add_key(scan_to_scanascii[scancode].shift);
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
