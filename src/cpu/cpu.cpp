@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.63 2005-01-18 12:50:06 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.64 2005-01-22 22:43:30 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1147,9 +1147,11 @@ void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
 
 		Descriptor desc;
 		Bitu rpl=selector & 3;
-		CPU_CHECK_COND(rpl<cpu.cpl,
-			"RET:rpl<CPL",
-			EXCEPTION_GP,selector & 0xfffc)
+		if(rpl < cpu.cpl) {
+			// win setup
+			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
+			return;
+		}
 
 		CPU_CHECK_COND((selector & 0xfffc)==0,
 			"RET:CS selector zero",
