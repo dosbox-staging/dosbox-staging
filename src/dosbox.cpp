@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.73 2004-08-04 09:12:51 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.74 2004-08-13 19:43:02 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -369,7 +369,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&MSCDEX_Init);
 #if C_MODEM
 	secprop=control->AddSection_prop("modem",&MODEM_Init); 
-	secprop->Add_bool("modem",true); 	
+	secprop->Add_bool("modem",false); 	
 	secprop->Add_hex("comport",2); 
 	secprop->Add_int("listenport",23);
 	
@@ -400,7 +400,7 @@ void DOSBOX_Init(void) {
 #endif
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init);
-	secprop->Add_bool("ipx", true);
+	secprop->Add_bool("ipx", false);
 	MSG_Add("IPX_CONFIGFILE_HELP",
 		"ipx -- Enable ipx over UDP/IP emulation.\n"
 	);

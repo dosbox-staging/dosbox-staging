@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.50 2004-08-08 12:39:54 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.51 2004-08-13 19:43:02 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,6 +112,15 @@ FILE * localDrive::GetSystemFilePtr(char * name, char * type) {
 	dirCache.ExpandName(newname);
 
 	return fopen(newname,type);
+}
+
+bool localDrive::GetSystemFilename(char *sysName, char *dosName) {
+
+	strcpy(sysName, basedir);
+	strcat(sysName, dosName);
+	CROSS_FILENAME(sysName);
+	dirCache.ExpandName(sysName);
+	return true;
 }
 
 bool localDrive::FileUnlink(char * name) {

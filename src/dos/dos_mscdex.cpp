@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.23 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.24 2004-08-13 19:43:02 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -275,11 +275,9 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 							cdrom[numDrives] = new CDROM_Interface_SDL();
 							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
 						  } break;
-			case 0x01	:	// iso cdrom interface
-							// FIXME: Not yet supported	
-							LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Mounting iso file as cdrom: %s"	,physicalPath);
-							cdrom[numDrives] = new CDROM_Interface_Fake;
-							return 2;
+			case 0x01	:	// iso cdrom interface	
+							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
+							cdrom[numDrives] = new CDROM_Interface_Image((Bit8u)numDrives);
 							break;
 			case 0x02	:	// fake cdrom interface (directories)
 							cdrom[numDrives] = new CDROM_Interface_Fake;

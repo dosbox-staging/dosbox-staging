@@ -21,6 +21,7 @@
 // SDL CDROM 
 // ******************************************************
 
+#include <sys/stat.h>
 #include "SDL.h"
 #include "support.h"
 #include "cdrom.h"
@@ -175,8 +176,13 @@ int CDROM_GetMountType(char* path, int forceCD)
 		cdName = SDL_CDName(i);
 		if (strcmp(buffer,cdName)==0) return 0;
 	};
-	// TODO: Detect ISO
-	return 2;
+	
+	// Detect ISO
+	struct stat file_stat;
+	stat(path, &file_stat);
+	if (S_ISREG(file_stat.st_mode)) return 1;
+
+        return 2;
 };
 
 // ******************************************************

@@ -1147,9 +1147,10 @@ public:
 
 			if (type=="floppy") {
 				mediaid=0xF0;		
-			} else if (type=="cdrom") {
+			} else if (type=="cdrom" || type=="iso") {
 				str_size="650,127,16513,1700";
 				mediaid=0xF8;		
+				fstype = "iso";
 			} 
 			cmd->FindString("-size",str_size,true);
 			if ((type=="hdd") && (str_size.size()==0)) {
@@ -1170,7 +1171,7 @@ public:
 			}
 			number[index]=0;sizes[count++]=atoi(number);
 		
-			if(fstype=="fat") {
+			if(fstype=="fat" || fstype=="iso") {
 				// get the drive letter
 				cmd->FindCommand(1,temp_line);
 				if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
@@ -1208,8 +1209,25 @@ public:
 			}
 			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
-				WriteOut("Image file not found\n");
-				return;
+				// convert dosbox filename to system filename
+				char fullname[CROSS_LEN];
+				char tmp[CROSS_LEN];
+				strncpy(tmp, temp_line.c_str(), CROSS_LEN);
+				
+				Bit8u drive;
+				if (!DOS_MakeName(tmp, fullname, &drive)) {
+					WriteOut("Image file not found\n");
+					return;
+				}
+				
+				localDrive *ldp = (localDrive*)Drives[drive];
+				ldp->GetSystemFilename(tmp, fullname);
+				temp_line = tmp;
+				
+				if (stat(temp_line.c_str(),&test)) {
+					WriteOut("Image file not found\n");
+					return;
+				}
 			}
 			
 			if ((test.st_mode & S_IFDIR)) {
@@ -1219,6 +1237,22 @@ public:
 
 			if(fstype=="fat") {
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
+			} else if (fstype=="iso") {
+				int error;
+				newdrive = new isoDrive(drive, temp_line.c_str(), mediaid, error);
+				switch (error) {
+					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));			break;
+					case 1  :	WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));	break;
+					case 2  :	WriteOut(MSG_Get("MSCDEX_ERROR_NOT_SUPPORTED"));	break;
+					case 3  :	WriteOut(MSG_Get("MSCDEX_ERROR_PATH"));			break;
+					case 4  :	WriteOut(MSG_Get("MSCDEX_TOO_MANY_DRIVES"));		break;
+					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
+					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));		break;
+				};
+				if (error) {
+					delete newdrive;
+					return;
+				}
 			} else {
 				FILE *newDisk = fopen(temp_line.c_str(), "rb+");
 				fseek(newDisk,0L, SEEK_END);
@@ -1254,6 +1288,17 @@ public:
 			if(!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
 				imageDiskList[0] = ((fatDrive *)newdrive)->loadedDisk;
 			}
+		} else if (fstype=="iso") {
+			if (Drives[drive-'A']) {
+				WriteOut("Drive already mounted at that letter\n");
+				if (newdrive) delete newdrive;
+				return;
+			}
+			if (!newdrive) WriteOut("Can't create drive from file\n");
+			Drives[drive-'A']=newdrive;
+			// Set the correct media byte in the table 
+			mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',mediaid);
+			WriteOut("Drive %c mounted as %s\n",drive,temp_line.c_str());
 		} else if (fstype=="none") {
 			if(imageDiskList[drive] != NULL) delete imageDiskList[drive];
 			imageDiskList[drive] = newImage;

@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.22 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: drives.h,v 1.23 2004-08-13 19:43:02 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
 
+#include <vector>
 #include <sys/types.h>
 #include "dos_system.h"
 #include "shell.h" /* for DOS_Shell */
@@ -33,6 +34,7 @@ public:
 	localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
 	virtual FILE *GetSystemFilePtr(char * name, char * type);
+	virtual bool GetSystemFilename(char *sysName, char *dosName);
 	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	virtual bool FileUnlink(char * name);
 	virtual bool RemoveDir(char * dir);
@@ -200,6 +202,112 @@ public:
 	virtual bool isRemote(void);
 private:
 	Bit8u subUnit;
+};
+
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
+struct isoPVD {
+	Bit8u type;
+	Bit8u standardIdent[5];
+	Bit8u version;
+	Bit8u unused1;
+	Bit8u systemIdent[32];
+	Bit8u volumeIdent[32];
+	Bit8u unused2[8];
+	Bit32u volumeSpaceSizeL;
+	Bit32u volumeSpaceSizeM;
+	Bit8u unused3[32];
+	Bit16u volumeSetSizeL;
+	Bit16u volumeSetSizeM;
+	Bit16u volumeSeqNumberL;
+	Bit16u volumeSeqNumberM;
+	Bit16u logicBlockSizeL;
+	Bit16u logicBlockSizeM;
+	Bit32u pathTableSizeL;
+	Bit32u pathTableSizeM;
+	Bit32u locationPathTableL;
+	Bit32u locationOptPathTableL;
+	Bit32u locationPathTableM;
+	Bit32u locationOptPathTableM;
+	Bit8u rootEntry[34];
+	Bit32u unused4[1858];
+} GCC_ATTRIBUTE(packed);
+
+struct isoDirEntry {
+	Bit8u length;
+	Bit8u extAttrLength;
+	Bit32u extentLocationL;
+	Bit32u extentLocationM;
+	Bit32u dataLengthL;
+	Bit32u dataLengthM;
+	Bit8u dateYear;
+	Bit8u dateMonth;
+	Bit8u dateDay;
+	Bit8u timeHour;
+	Bit8u timeMin;
+	Bit8u timeSec;
+	Bit8u timeZone;
+	Bit8u fileFlags;
+	Bit8u fileUnitSize;
+	Bit8u interleaveGapSize;
+	Bit16u VolumeSeqNumberL;
+	Bit16u VolumeSeqNumberM;
+	Bit8u fileIdentLength;
+	Bit8u ident[38]; // can be smaller
+} GCC_ATTRIBUTE(packed);
+
+#ifdef _MSC_VER
+#pragma pack ()
+#endif
+
+#if defined (WORD_BIGENDIAN)
+#define EXTENT_LOCATION(de)	((de).extentLocationM)
+#define DATA_LENGTH(de)		((de).dataLengthM)
+#else
+#define EXTENT_LOCATION(de)	((de).extentLocationL)
+#define DATA_LENGTH(de)		((de).dataLengthL)
+#endif
+
+#define ISO_FRAMESIZE		2048
+#define ISO_DIRECTORY		2
+#define ISO_MAXPATHNAME		256
+#define ISO_FIRST_VD		16
+#define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
+
+class isoDrive : public DOS_Drive {
+public:
+	isoDrive(char driveLetter, const char* device_name, Bit8u mediaid, int &error);
+	~isoDrive();
+	virtual bool FileOpen(DOS_File **file, char *name, Bit32u flags);
+	virtual bool FileCreate(DOS_File **file, char *name, Bit16u attributes);
+	virtual bool FileUnlink(char *name);
+	virtual bool RemoveDir(char *dir);
+	virtual bool MakeDir(char *dir);
+	virtual bool TestDir(char *dir);
+	virtual bool FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst);
+	virtual bool FindNext(DOS_DTA &dta);
+	virtual bool GetFileAttr(char *name, Bit16u *attr);
+	virtual bool Rename(char * oldname,char * newname);
+	virtual bool AllocationInfo(Bit16u *bytes_sector, Bit8u *sectors_cluster, Bit16u *total_clusters, Bit16u *free_clusters);
+	virtual bool FileExists(const char *name);
+   	virtual bool FileStat(const char *name, FileStat_Block *const stat_block);
+	virtual Bit8u GetMediaByte(void);
+	virtual void EmptyCache(void){}
+	virtual bool isRemote(void);
+	bool readSector(Bit8u *buffer, Bit32u sector);
+private:
+	int  readDirEntry(isoDirEntry *de, Bit8u *data);
+	bool loadImage();
+	bool lookupSingle(isoDirEntry *de, const char *name, Bit32u sectorStart, Bit32u length);
+	bool lookup(isoDirEntry *de, const char *path);
+
+	std::vector<isoDirEntry> searchCache;
+	std::vector<isoDirEntry>::iterator dirIter;
+	isoDirEntry rootEntry;
+	Bit8u mediaid;
+	Bit8u subUnit;
+	char discLabel[32];
 };
 
 struct VFILE_Block;
