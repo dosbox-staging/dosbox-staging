@@ -207,12 +207,11 @@ static Bit8u read_p3cc(Bit32u port) {
 
 
 static void write_hercules(Bit32u port,Bit8u val) {
-	Bit8u mask;
 	switch (port) {
 	case 0x3b8:
-		mask=0xff-0x80-0x2;;
-		if (vga.herc.enable_bits & 1) {
-			mask|=0x2;
+		vga.herc.mode_control=(vga.herc.mode_control & ~0x7d) | (val&0x7d);
+		if ((vga.herc.enable_bits & 1) && ((vga.herc.mode_control ^ val)&0x2)) {
+			vga.herc.mode_control^=0x2;
 			if (vga.mode != M_HERC || vga.mode != M_TEXT2) {
 				VGA_ATTR_SetPalette(1,0x07);
 				/* Force 0x3b4/5 registers */
@@ -224,11 +223,10 @@ static void write_hercules(Bit32u port,Bit8u val) {
 				if (vga.mode != M_TEXT2) VGA_SetMode(M_TEXT2);
 			}
 		}
-		if (vga.herc.enable_bits & 0x2) {
-			mask|=0x80;
+		if ((vga.herc.enable_bits & 0x2) && ((vga.herc.mode_control ^ val)&0x80)) {
+			vga.herc.mode_control^=0x80;
 			VGA_SetupHandlers();
 		}
-		vga.herc.mode_control=(vga.herc.mode_control & ~mask) | (val&mask);
 		break;
 	case 0x3bf:
 		vga.herc.enable_bits=val;
