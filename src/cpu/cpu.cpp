@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.64 2005-01-22 22:43:30 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.65 2005-01-24 23:11:19 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1620,8 +1620,8 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
 				break;
 			default:
-				E_Exit("CPU_SetSegGeneral: Stack segment not writable");
-//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+				//Earth Siege 1
+				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
 			}
 
 			if (!desc.saved.seg.p) {
