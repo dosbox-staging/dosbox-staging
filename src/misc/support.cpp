@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.21 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.22 2004-02-18 15:31:13 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -90,7 +90,7 @@ bool ScanCMDBool(char * cmd,char * check) {
 	while ((scan=strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
-		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='/' || scan[c_len]==0)) {
+		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='\t' || scan[c_len]=='/' || scan[c_len]==0)) {
 		/* Found a math now remove it from the string */
 			memmove(scan-1,scan+c_len,strlen(scan+c_len)+1);
 			trim(scan-1);
@@ -106,7 +106,7 @@ bool ScanCMDHex(char * cmd,char * check,Bits * result) {
 	while ((scan=strchr(scan,'/'))) {
 		/* found a / now see behind it */
 		scan++;
-		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]==0)) {
+		if (strncasecmp(scan,check,c_len)==0 && (scan[c_len]==' ' || scan[c_len]=='\t' || scan[c_len]==0)) {
 			/* Found a match now find the number and remove it from the string */
 			char * begin=scan-1;
 			scan=ltrim(scan+c_len);
@@ -128,7 +128,7 @@ bool ScanCMDHex(char * cmd,char * check,Bits * result) {
 char * ScanCMDRemain(char * cmd) {
 	char * scan,*found;;
 	if ((scan=found=strchr(cmd,'/'))) {
-		while (*scan!=' ' && *scan!=0) scan++;
+		while (*scan!=' ' && *scan!='\t' && *scan!=0) scan++;
 		*scan=0;
 		return found;
 	} else return 0; 
@@ -141,11 +141,16 @@ char * StripWord(char * cmd) {
 		quoted=true;
 		cmd++;
 	}
-	char * end;
+	char * end = 0;
 	if (quoted) {
 		end=strchr(cmd,'"');	
 	} else {
-		end=strchr(cmd,' ');	
+		for(char* in=cmd;*in;in++){ 
+			if(*in==' '||*in=='\t'){
+				end=in;
+				break;
+			}
+		     }
 	}
 	if (!end) {
 		return cmd+strlen(cmd);
