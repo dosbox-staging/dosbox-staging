@@ -53,6 +53,9 @@ void MEM_ClearPageHandlers(Bitu startpage,Bitu pages);
 void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data);
 void MEM_ClearMapping(Bitu startpage,Bitu pages);
 
+bool MEM_A20_Enabled(void);
+void MEM_A20_Enable(bool enable);
+
 extern HostPt memory;
 
 /* 
