@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.37 2004-09-14 18:56:11 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.38 2004-09-15 14:00:13 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -176,10 +176,17 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 		GetLongName(dirInfo, dir);
 		strcat(work,dir);
 	}
-   
-	if(work && *work && ( work[strlen(work)-1] == CROSS_FILESPLIT ) ) 
-		work[strlen(work)-1] = 0; // Remove trailing slashes
-  
+
+	if(work && *work) {
+		size_t len = strlen(work);
+#if defined (WIN32) 
+		if((work[len-1] == CROSS_FILESPLIT ) && (len >= 2) && (work[len-2] != ':')) {
+#else
+		if((len > 1) && (work[len-1] == CROSS_FILESPLIT )) {
+#endif       
+			work[len-1] = 0; // Remove trailing slashes except when in root
+		}
+	}
 	return work;
 };
 
