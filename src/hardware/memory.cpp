@@ -34,28 +34,38 @@ MEMORY_WriteHandler WriteHandlerTable[MAX_PAGES];
 #define MAX_PAGE_LIMIT PAGE_COUNT(C_MEM_MAX_SIZE*1024*1024)
 
 void MEM_BlockRead(PhysPt off,void * data,Bitu size) {
-	Bitu c;
 	Bit8u * idata=(Bit8u *)data;
-	for (c=1;c<=(size>>2);c++) {
-		writed(idata,mem_readd(off));
-		idata+=4;off+=4;
-	}
-	for (c=1;c<=(size&3);c++) {
-		writeb(idata,mem_readb(off));
-		idata+=1;off+=1;
+	while (size>0) {
+		Bitu page=off >> PAGE_SHIFT;
+		Bitu start=off & (PAGE_SIZE-1);
+		Bitu tocopy=PAGE_SIZE-start;
+		if (tocopy>size) tocopy=size;
+		if (ReadHostTable[page]) {
+			memcpy(idata,ReadHostTable[page]+off,tocopy);
+			idata+=tocopy;
+			off+=tocopy;
+		} else {
+			for (;tocopy>0;tocopy--) *idata++=ReadHandlerTable[page](off++);
+		}
+		size-=tocopy;
 	}
 }
 
 void MEM_BlockWrite(PhysPt off,void * data,Bitu size) {
-	Bitu c;
 	Bit8u * idata=(Bit8u *)data;
-	for (c=1;c<=(size>>2);c++) {
-		mem_writed(off,readd(idata));
-		idata+=4;off+=4;
-	}
-	for (c=1;c<=(size&3);c++) {
-		mem_writeb(off,readb(idata));
-		idata+=1;off+=1;
+	while (size>0) {
+		Bitu page=off >> PAGE_SHIFT;
+		Bitu start=off & (PAGE_SIZE-1);
+		Bitu tocopy=PAGE_SIZE-start;
+		if (tocopy>size) tocopy=size;
+		if (WriteHostTable[page]) {
+			memcpy(WriteHostTable[page]+off,idata,tocopy);
+			idata+=tocopy;
+			off+=tocopy;
+		} else {
+			for (;tocopy>0;tocopy--) WriteHandlerTable[page](off++,*idata++);
+		}
+		size-=tocopy;
 	}
 }
 
