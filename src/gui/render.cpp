@@ -322,8 +322,8 @@ void RENDER_Init(Section * sec) {
 	render.keep_small=section->Get_bool("keepsmall");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
-	KEYBOARD_AddEvent(KBD_f5,CTRL_PRESSED,EnableScreenShot);
-	KEYBOARD_AddEvent(KBD_f7,CTRL_PRESSED,DecreaseFrameSkip);
-	KEYBOARD_AddEvent(KBD_f8,CTRL_PRESSED,IncreaseFrameSkip);
+	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
+	KEYBOARD_AddEvent(KBD_f7,KBD_MOD_CTRL,DecreaseFrameSkip);
+	KEYBOARD_AddEvent(KBD_f8,KBD_MOD_CTRL,IncreaseFrameSkip);
 }
 

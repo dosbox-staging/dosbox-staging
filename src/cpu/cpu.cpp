@@ -173,8 +173,8 @@ void CPU_Init(Section* sec) {
 
 	SetCPU16bit();
 	
-	KEYBOARD_AddEvent(KBD_f11,CTRL_PRESSED,CPU_CycleDecrease);
-	KEYBOARD_AddEvent(KBD_f12,CTRL_PRESSED,CPU_CycleIncrease);
+	KEYBOARD_AddEvent(KBD_f11,KBD_MOD_CTRL,CPU_CycleDecrease);
+	KEYBOARD_AddEvent(KBD_f12,KBD_MOD_CTRL,CPU_CycleIncrease);
 
 	CPU_Cycles=0;
 	CPU_CycleMax=section->Get_int("cycles");;
