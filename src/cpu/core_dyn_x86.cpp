@@ -141,7 +141,7 @@ static void IllegalOption(void) {
 	E_Exit("Illegal option");
 }
 
-#include "core_dyn_x86\cache.h" 
+#include "core_dyn_x86/cache.h" 
 
 static struct {
 	Bitu callback;
@@ -149,7 +149,7 @@ static struct {
 } core_dyn;
 
 
-#include "core_dyn_x86\risc_x86.h"
+#include "core_dyn_x86/risc_x86.h"
 
 struct DynState {
 	DynReg regs[G_MAX];
@@ -196,7 +196,7 @@ static void dyn_synchstate(DynState * state) {
 		gen_synchreg(&DynRegs[i],&state->regs[i]);
 	}
 }
-#include "core_dyn_x86\decoder.h"
+#include "core_dyn_x86/decoder.h"
 
 Bits CPU_Core_Dyn_X86_Run(void) {
 	/* Determine the linear address of CS:EIP */
