@@ -24,7 +24,8 @@
 #include <vector>
 #include "dos_system.h"
 #include "cross.h"
- 
+
+#define MAX_OPENDIRS 16 
 
 bool WildFileCmp(const char * file, const char * wild);
 
@@ -38,14 +39,15 @@ public:
 
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
-	bool		OpenDir				(const char* path);
-	bool		ReadDir				(struct dirent* &result);
+	bool		OpenDir				(const char* path, Bit16u& id);
+	bool		ReadDir				(Bit16u id, struct dirent* &result);
 
 	void		ExpandName			(char* path);
 	char*		GetExpandName		(const char* path);
+	bool		GetShortName		(const char* fullname, char* shortname);
 	
 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
-	void		AddEntry			(const char* path);
+	void		AddEntry			(const char* path, bool checkExist = false);
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	class CFileInfo {
@@ -56,10 +58,10 @@ public:
 			longNameList.clear();
 			outputList.clear();
 		};
-		char		fullname	[CROSS_LEN];
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
 		bool		isDir;
+		Bit16u		nextEntry;
 		Bit16u		shortNr;
 		Bit16u		compareCount;
 		// contents
@@ -77,12 +79,11 @@ private:
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
-	bool		OpenDir				(CFileInfo* dir, char* path);
+	bool		OpenDir				(CFileInfo* dir, char* path, Bit16u& id);
 	void		CreateEntry			(CFileInfo* dir, const char* name);
+	Bit16u		GetFreeID			(void);
 
-	Bit32u		nextEntry;	
 	CFileInfo*	dirBase;
-	CFileInfo*  dirSearch;
 	char		dirPath				[CROSS_LEN];
 	char		basePath			[CROSS_LEN];
 	bool		dirFirstTime;
@@ -90,6 +91,11 @@ private:
 	CFileInfo*	save_dir;
 	char		save_path			[CROSS_LEN];
 	char		save_expanded		[CROSS_LEN];
+
+	Bit16u		srchNr;
+	CFileInfo*	dirSearch			[MAX_OPENDIRS];
+	char		dirSearchName		[MAX_OPENDIRS];
+	bool		free				[MAX_OPENDIRS];
 
 };
 
@@ -103,15 +109,19 @@ public:
 
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) {};
-	bool		OpenDir				(const char* path);
-	bool		ReadDir				(struct dirent* &result);
+	bool		OpenDir				(const char* path, Bit16u& id);
+	bool		ReadDir				(Bit16u id, struct dirent* &result);
 
 	void		ExpandName			(char* path) {};
 	char*		GetExpandName		(const char* path) { return (char*)path; };
+	bool		GetShortName		(const char* fullname, char* shortname) { return false; };
 	
 	void		CacheOut			(const char* path, bool ignoreLastDir = false) {};
-	void		AddEntry			(const char* path) {};
-	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
+	void		AddEntry			(const char* path, bool checkExists = false) {};
+	void		DeleteEntry			(const char* path, bool ignoreLastDir = false) {};
+
+	void		SetCurrentEntry		(Bit16u entry) {};
+	Bit16u		GetCurrentEntry		(void) { return 0; };
 
 public:
 	char		basePath			[CROSS_LEN];
@@ -136,10 +146,14 @@ public:
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block * const stat_block);
 	Bit8u GetMediaByte(void);
+	bool GetShortName(const char* fullname, char* shortname) { return dirCache.GetShortName(fullname, shortname); };
 private:
 	char basedir[CROSS_LEN];
-	char srch_dir[CROSS_LEN];
-	DIR * srch_opendir;
+	
+	struct {
+		char srch_dir[CROSS_LEN];
+	} srchInfo[MAX_OPENDIRS];
+
 	struct {
 		Bit16u bytes_sector;
 		Bit8u sectors_cluster;
@@ -147,7 +161,7 @@ private:
 		Bit16u free_clusters;
 		Bit8u mediaid;
 	} allocation;
-	DOS_Drive_Cache	dirCache;
+	DOS_Drive_Cache dirCache;
 };
 
 struct VFILE_Block;

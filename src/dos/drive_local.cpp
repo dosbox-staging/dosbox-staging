@@ -51,7 +51,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	CROSS_FILENAME(newname);
 	FILE * hand=fopen(dirCache.GetExpandName(newname),"wb+");
 	if (!hand) return false;
-	dirCache.AddEntry(newname);
+	dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
 	*file=new localFile(hand,0x202);
 	return true;
@@ -98,17 +98,20 @@ bool localDrive::FileUnlink(char * name) {
 
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	
-	strcpy(srch_dir,basedir);
-	strcat(srch_dir,_dir);
-	CROSS_FILENAME(srch_dir);
+	char tempDir[CROSS_LEN];
+	strcpy(tempDir,basedir);
+	strcat(tempDir,_dir);
+	CROSS_FILENAME(tempDir);
 
 	char end[2]={CROSS_FILESPLIT,0};
-	if (srch_dir[strlen(srch_dir)-1]!=CROSS_FILESPLIT) strcat(srch_dir,end);
+	if (tempDir[strlen(tempDir)-1]!=CROSS_FILESPLIT) strcat(tempDir,end);
 	
-	if (!dirCache.OpenDir(srch_dir)) return false;
+	Bit16u id;
+	if (!dirCache.OpenDir(tempDir,id)) return false;
+	strcpy(srchInfo[id].srch_dir,tempDir);
+	dta.SetDirID(id);
 	return FindNext(dta);
 }
-
 
 bool localDrive::FindNext(DOS_DTA & dta) {
 	
@@ -121,12 +124,16 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
 	
+	Bit16u id = dta.GetDirID();
+
 again:
-	if (!dirCache.ReadDir(dir_ent)) return false;
+	if (!dirCache.ReadDir(id,dir_ent)) {
+		return false;
+	}
 
 	if(!WildFileCmp(dir_ent->d_name,srch_pattern)) goto again;
 
-	strcpy(full_name,srch_dir);
+	strcpy(full_name,srchInfo[id].srch_dir);
 	strcat(full_name,dir_ent->d_name);
 	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
 		goto again;
@@ -287,7 +294,6 @@ Bit8u localDrive::GetMediaByte(void) {
 localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid) {
 	strcpy(basedir,startdir);
 	sprintf(info,"local directory %s",startdir);
-	srch_opendir=NULL;
 	allocation.bytes_sector=_bytes_sector;
 	allocation.sectors_cluster=_sectors_cluster;
 	allocation.total_clusters=_total_clusters;
