@@ -56,7 +56,7 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 	case 0:
 		if (cntr>72) cntr=72;
 		spkr.realsound=true;
-		spkr.buffer[spkr.buf_pos++]=(cntr-36)*600;
+		if (spkr.buf_pos<SPKR_BUF) spkr.buffer[spkr.buf_pos++]=(cntr-36)*600;
 		break;
 	case 3:
 		spkr.freq_add=(Bit32u)(FREQ_MAX/((float)SPKR_RATE/(PIT_TICK_RATE/(float)cntr)));
