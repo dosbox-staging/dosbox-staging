@@ -304,7 +304,6 @@ static void MIXER_Stop(Section* sec) {
 
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
-	MSG_Add("MIXER_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Read out config section */
 	mixer.freq=section->Get_int("rate");
