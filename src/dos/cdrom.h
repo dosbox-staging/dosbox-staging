@@ -5,8 +5,11 @@
 #define MAX_ASPI_CDROM	5
 
 #include <string.h>
+#include <string>
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include "dosbox.h"
 #include "mem.h"
 #include "mixer.h"

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.1 2004-08-13 19:43:02 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.2 2004-10-05 19:55:03 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -152,7 +152,29 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 			searchCache.clear();
 			dirIter = searchCache.end();
 			this->mediaid = mediaid;
-			if (!MSCDEX_GetVolumeName(subUnit, discLabel)) strcpy(discLabel, "");
+			char buffer[32] = { 0 };
+			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
+
+			//Code Copied from drive_cache. (convert mscdex label to a dos 8.3 file)
+			Bitu togo	= 8;
+			Bitu bufPos	= 0;
+			Bitu labelPos	= 0;
+			bool point	= false;
+			while (togo>0) {
+				if (buffer[bufPos]==0) break;
+				if (!point && (buffer[bufPos]=='.')) { togo=4; point=true; }
+				discLabel[labelPos] = toupper(buffer[bufPos]);
+				labelPos++; bufPos++;
+				togo--;
+				if ((togo==0) && !point) {
+					if (buffer[bufPos]=='.') bufPos++;
+					discLabel[labelPos]='.'; labelPos++; point=true; togo=3;
+				}
+			};
+			discLabel[labelPos]=0;
+			//Remove trailing dot.
+			if((labelPos > 0) && (discLabel[labelPos - 1] == '.'))
+				discLabel[labelPos - 1] = 0;
 		} else error = 6;
 	}
 }
@@ -229,7 +251,7 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst)
 		readSector(block, sector);
 		
 		Bit32u pos = 0;		
-		while (pos < ISO_FRAMESIZE && block[pos] != 0) {
+		while (block[pos] != 0 && (pos + block[pos]) < ISO_FRAMESIZE) {
 			isoDirEntry tmp;
 			int length = readDirEntry(&tmp, &block[pos]);
 			if (length < 0) return false;
@@ -353,6 +375,7 @@ inline bool isoDrive :: readSector(Bit8u *buffer, Bit32u sector)
 int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 {	
 	// copy data into isoDirEntry struct, data[0] = length of DirEntry
+	if (data[0] > sizeof(isoDirEntry)) return -1;
 	memcpy(de, data, data[0]);
 	
 	// xa not supported
@@ -361,6 +384,7 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 	if (de->fileUnitSize != 0 || de->interleaveGapSize != 0) return -1;
 	
 	// modify file identifier for use with dosbox
+	if ((de->length < 33 + de->fileIdentLength)) return -1;
 	if (IS_DIR(de->fileFlags)) {
 		if (de->fileIdentLength == 1 && de->ident[0] == 0) strcpy((char*)de->ident, ".");
 		else if (de->fileIdentLength == 1 && de->ident[0] == 1) strcpy((char*)de->ident, "..");
@@ -375,6 +399,7 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 		strreplace((char*)de->ident, ';', 0);	
 		// if file has no extension remove the trailing dot
 		int tmp = strlen((char*)de->ident);
+//if (tmp > 38) return -1; //de->ident can hold 100
 		if (tmp > 0 && de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
 	}
 	return de->length;
@@ -398,7 +423,7 @@ bool isoDrive :: lookupSingle(isoDirEntry *de, const char *name, Bit32u start, B
 		if (!readSector(sector, i)) return false;
 		
 		int pos = 0;
-		while (sector[pos] != 0 && pos < ISO_FRAMESIZE) {
+		while (sector[pos] != 0 && (pos + sector[pos]) < ISO_FRAMESIZE) {
 			int deLength = readDirEntry(de, &sector[pos]);
 			if (deLength < 1) return false;
 			pos += deLength;
@@ -423,6 +448,8 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 	while (isoPath[pos] != 0) {
 		if (isoPath[pos] == '/') {
 			char name[38];
+			if (pos - beginPos >= 38) return false;
+			if (beginPos >= ISO_MAXPATHNAME) return false;
 			strncpy(name, &isoPath[beginPos], pos - beginPos);
 			name[pos - beginPos] = 0;
 			beginPos = pos + 1;

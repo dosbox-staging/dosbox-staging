@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.3 2004-08-23 09:35:15 harekiet Exp $ */
+/* $Id: cdrom_image.cpp,v 1.4 2004-10-05 19:55:03 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
-#include <limits>
+#include <limits.h>
 #include <sstream>
 #include <vector>
 #include <sys/stat.h>
@@ -572,7 +572,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	if (stat(filename.c_str(), &test) == 0) return true;
 	
 	// check if file with path relative to cue file exists
-#if not defined(WIN32)
+#ifndef WIN32
 	string tmpstr(pathname + "/" + filename);
 	if (stat(tmpstr.c_str(), &test) == 0) {
 		filename = tmpstr;
