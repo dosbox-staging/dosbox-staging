@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.56 2004-01-28 14:39:05 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.57 2004-01-28 15:12:38 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -52,6 +52,7 @@
 #endif
 
 #ifdef __WIN32__
+#define NVIDIA_PixelDataRange 1
 #ifndef WGL_NV_allocate_memory
 #define WGL_NV_allocate_memory 1
 typedef void * (APIENTRY * PFNWGLALLOCATEMEMORYNVPROC) (int size, float readfreq, float writefreq, float priority);
@@ -61,15 +62,16 @@ PFNWGLFREEMEMORYNVPROC db_glFreeMemoryNV = NULL;
 #endif
 #else 
 
-
 #endif
 
+#if defined(NVIDIA_PixelDataRange)
 #ifndef GL_NV_pixel_data_range
 #define GL_NV_pixel_data_range 1
 #define GL_WRITE_PIXEL_DATA_RANGE_NV      0x8878
 typedef void (APIENTRYP PFNGLPIXELDATARANGENVPROC) (GLenum target, GLsizei length, GLvoid *pointer);
 typedef void (APIENTRYP PFNGLFLUSHPIXELDATARANGENVPROC) (GLenum target);
 PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
+#endif
 #endif
 
 #endif //C_OPENGL
@@ -131,7 +133,7 @@ struct SDL_Block {
 		GLint max_texsize;
 		bool packed_pixel;
 		bool paletted_texture;
-#ifdef GL_NV_pixel_data_range
+#if defined(NVIDIA_PixelDataRange)
 		bool pixel_data_range;
 #endif
 	} opengl;
@@ -277,7 +279,13 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-		if (sdl.opengl.framebuf) db_glFreeMemoryNV(sdl.opengl.framebuf);
+		if (sdl.opengl.framebuf) {
+#if defined(NVIDIA_PixelDataRange)
+			if (sdl.opengl.pixel_data_range) db_glFreeMemoryNV(sdl.opengl.framebuf);
+			else
+#endif
+			free(sdl.opengl.framebuf);
+		}
 		sdl.opengl.framebuf=0;
 		if (bpp!=32) goto dosurface;
 		int texsize=2 << int_log2(width > height ? width : height);
@@ -320,7 +328,7 @@ dosurface:
 			goto dosurface;
 		}
 		/* Create the texture and display list */
-#ifdef GL_NV_pixel_data_range
+#if defined(NVIDIA_PixelDataRange)
 		if (sdl.opengl.pixel_data_range) {
 			sdl.opengl.framebuf=db_glAllocateMemoryNV(width*height*4,0.0,1.0,1.0);
 			glPixelDataRangeNV(GL_WRITE_PIXEL_DATA_RANGE_NV,width*height*4,sdl.opengl.framebuf);
@@ -570,7 +578,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.opengl.texture=0;
 	sdl.opengl.displaylist=0;
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-#if defined(__WIN32__)
+#if defined(__WIN32__) && defined(NVIDIA_PixelDataRange)
 	glPixelDataRangeNV = (PFNGLPIXELDATARANGENVPROC) wglGetProcAddress("glPixelDataRangeNV");
 	db_glAllocateMemoryNV = (PFNWGLALLOCATEMEMORYNVPROC) wglGetProcAddress("wglAllocateMemoryNV");
 	db_glFreeMemoryNV = (PFNWGLFREEMEMORYNVPROC) wglGetProcAddress("wglFreeMemoryNV");
@@ -578,11 +586,11 @@ static void GUI_StartUp(Section * sec) {
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 	sdl.opengl.packed_pixel=strstr(gl_ext,"EXT_packed_pixels") > 0;
 	sdl.opengl.paletted_texture=strstr(gl_ext,"EXT_paletted_texture") > 0;
-#ifdef GL_NV_pixel_data_range
+#if defined(NVIDIA_PixelDataRange)
 	sdl.opengl.pixel_data_range=strstr(gl_ext,"GL_NV_pixel_data_range") >0 &&
-		glPixelDataRangeNV;
+		glPixelDataRangeNV && db_glAllocateMemoryNV && db_glFreeMemoryNV;
 #endif
-#endif
+#endif	//OPENGL
 	/* Initialize screen for first time */
 	sdl.surface=SDL_SetVideoMode(640,400,0,0);
 	sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
@@ -590,7 +598,7 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_SetSize(640,400,8,1.0,1.0,0);
-	SDL_EnableKeyRepeat(250,30);
+//	SDL_EnableKeyRepeat(250,30);
 	SDL_EnableUNICODE(1);
 /* Get some Keybinds */
 	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
