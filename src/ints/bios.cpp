@@ -15,6 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: bios.cpp,v 1.21 2003-09-17 19:17:35 qbix79 Exp $ */
+
 #include <time.h>
 #include "dosbox.h"
 #include "bios.h"
@@ -152,8 +155,11 @@ static Bitu INT17_Handler(void) {
 	case 0x02:		/* PRINTER: Get Status */
 		reg_ah=0;	
 		break;
+	case 0x20:		/* Some sort of printerdriver install check*/
+		break;
 	default:
 		E_Exit("Unhandled INT 17 call %2X",reg_ah);
+		
 	};
 	return CBRET_NONE;
 }
