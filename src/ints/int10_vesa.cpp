@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.13 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.14 2005-03-24 09:19:18 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -116,8 +116,6 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	return 0x00;
 }
 
-
-
 Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
@@ -133,27 +131,27 @@ foundit:
 	VideoModeBlock * mblock=&ModeList_VGA[i];
 	switch (mblock->type) {
 	case M_LIN8:		//Linear 8-bit
-		WLE(minfo.ModeAttributes,0x9b);
-		WLE(minfo.WinAAttributes,0x7);	//Exists/readable/writable
-		WLE(minfo.WinGranularity,64);
-		WLE(minfo.WinSize,64);
-		WLE(minfo.WinASegment,0xa000);
-//		WLE(minfo.WinBSegment,0xa000);
-		WLE(minfo.WinFuncPtr,CALLBACK_RealPointer(callback.setwindow));
-		WLE(minfo.BytesPerScanLine,mblock->swidth);
-		WLE(minfo.NumberOfPlanes,0x1);
-		WLE(minfo.BitsPerPixel,0x08);
-		WLE(minfo.NumberOfBanks,0x1);
-		WLE(minfo.MemoryModel,0x04);	//packed pixel
-		WLE(minfo.NumberOfImagePages,0x05);
-		WLE(minfo.Reserved_page,0x1);
+		var_write(minfo.ModeAttributes,0x9b);
+		var_write(minfo.WinAAttributes,0x7);	//Exists/readable/writable
+		var_write(minfo.WinGranularity,64);
+		var_write(minfo.WinSize,64);
+		var_write(minfo.WinASegment,0xa000);
+//		var_write(minfo.WinBSegment,0xa000);
+		var_write(minfo.WinFuncPtr,CALLBACK_RealPointer(callback.setwindow));
+		var_write(minfo.BytesPerScanLine,mblock->swidth);
+		var_write(minfo.NumberOfPlanes,0x1);
+		var_write(minfo.BitsPerPixel,0x08);
+		var_write(minfo.NumberOfBanks,0x1);
+		var_write(minfo.MemoryModel,0x04);	//packed pixel
+		var_write(minfo.NumberOfImagePages,0x05);
+		var_write(minfo.Reserved_page,0x1);
 		break;
 	}
-	WLE(minfo.XResolution,mblock->swidth);
-	WLE(minfo.YResolution,mblock->sheight);
-	WLE(minfo.XCharSize,mblock->cwidth);
-	WLE(minfo.YCharSize,mblock->cheight);
-	WLE(minfo.PhysBasePtr,S3_LFB_BASE);
+	var_write(minfo.XResolution,mblock->swidth);
+	var_write(minfo.YResolution,mblock->sheight);
+	var_write(minfo.XCharSize,mblock->cwidth);
+	var_write(minfo.YCharSize,mblock->cheight);
+	var_write(minfo.PhysBasePtr,S3_LFB_BASE);
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return 0x00;
