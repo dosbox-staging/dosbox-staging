@@ -229,9 +229,9 @@ switch (inst.code.op) {
 		}	
 	case O_IMULd:
 		{
-			Bit64s temps=(Bit64s)reg_eax*(Bit64s)inst.op1.ds;
-			reg_eax=(Bit32s)(temps);
-			reg_edx=(Bit32s)(temps >> 32);
+			Bit64s temps=(Bit64s)((Bit32s)reg_eax)*(Bit64s)inst.op1.ds;
+			reg_eax=(Bit32u)(temps);
+			reg_edx=(Bit32u)(temps >> 32);
 			flags.type=t_MUL;
 			if ( (reg_edx==0xffffffff) && (reg_eax & 0x80000000) ) {
 				flags.cf=flags.of=false;
@@ -267,7 +267,7 @@ switch (inst.code.op) {
 			Bit64u quo=val/inst.op1.d;
 			reg_edx=(Bit32u)(val % inst.op1.d);
 			reg_eax=(Bit32u)quo;
-			if (quo!=reg_eax) { inst.op1.b=0;goto doint;}
+			if (quo!=(Bit64u)reg_eax) { inst.op1.b=0;goto doint;}
 			goto nextopcode;
 		}
 	case O_IDIVb:
@@ -295,7 +295,7 @@ switch (inst.code.op) {
 			Bit64s quo=val/inst.op1.ds;
 			reg_edx=(Bit32s)(val % inst.op1.ds);
 			reg_eax=(Bit32s)(quo);
-			if (quo!=(Bit32s)reg_eax) { inst.op1.b=0;goto doint;}
+			if (quo!=(Bit64s)((Bit32s)reg_eax)) { inst.op1.b=0;goto doint;}
 			goto nextopcode;
 		}			
 	case O_AAM:
