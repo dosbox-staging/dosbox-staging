@@ -296,6 +296,10 @@ graphics_chars:
 			LOG(LOG_INT10,LOG_ERROR)("1B:Unhandled call BX %2X",reg_bx);
 		}
 		break;
+	case 0x1C:	/* Video Save Area */
+		if (reg_al==0) reg_bx = 0;
+		reg_al = 0x1C;	
+		break;
 	case 0x4f:								/* VESA Calls */
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
