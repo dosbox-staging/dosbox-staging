@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.17 2003-11-09 16:44:07 finsterr Exp $ */
+/* $Id: callback.cpp,v 1.18 2003-11-18 20:46:01 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -98,9 +98,8 @@ void CALLBACK_RunRealFar(Bit16u seg,Bit16u off) {
 void CALLBACK_RunRealInt(Bit8u intnum) {
 	Bit32u oldeip=reg_eip;
 	Bit16u oldcs=SegValue(cs);
-	reg_eip=call_stop<<4;
+	reg_eip=(CB_MAX*16)+(intnum*6);
 	SegSet16(cs,CB_SEG);
-	Interrupt(intnum);
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
@@ -222,6 +221,17 @@ void CALLBACK_Init(Section* sec) {
 	/* Only setup default handler for first half of interrupt table */
 	for (i=0;i<0x40;i++) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
+	}
+	/* Setup block of 0xCD 0xxx instructions */
+	PhysPt rint_base=CB_BASE+CB_MAX*16;
+	for (i=0;i<=0xff;i++) {
+		phys_writeb(rint_base,0xCD);
+		phys_writeb(rint_base+1,i);
+		phys_writeb(rint_base+2,0xFE);
+		phys_writeb(rint_base+3,0x38);
+		phys_writew(rint_base+4,call_stop);
+		rint_base+=6;
+
 	}
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
 	//real_writed(0,0xf*4,0); some games don't like it
