@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.27 2003-10-09 13:49:48 finsterr Exp $ */
+/* $Id: drive_cache.cpp,v 1.28 2003-10-27 14:16:59 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -162,7 +162,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 	work[0] = 0;
 	strcpy (dir,path);
 
-	char* pos = strrchr(path,CROSS_FILESPLIT);
+	const char* pos = strrchr(path,CROSS_FILESPLIT);
 
 	if (pos) dir[pos-path+1] = 0;
 	CFileInfo* dirInfo = FindDirInfo(dir, work);
@@ -183,7 +183,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists)
 	char expand	[CROSS_LEN];
 
 	CFileInfo* dir = FindDirInfo(path,expand);
-	char* pos = strrchr(path,CROSS_FILESPLIT);
+	const char* pos = strrchr(path,CROSS_FILESPLIT);
 
 	if (pos) {
 		strcpy(file,pos+1);	
@@ -435,7 +435,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 	char		dir  [CROSS_LEN]; 
 	char		work [CROSS_LEN];
 	const char*	start = path;
-	char*		pos;
+	const char*		pos;
 	CFileInfo*	curDir = dirBase;
 	Bit16u		id;
 

@@ -27,7 +27,7 @@ bool WildFileCmp(const char * file, const char * wild)
 	char file_ext[4];
 	char wild_name[9];
 	char wild_ext[4];
-	char * find_ext;
+	const char * find_ext;
 	Bitu r;
 
 	strcpy(file_name,"        ");

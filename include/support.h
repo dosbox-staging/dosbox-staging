@@ -33,6 +33,9 @@
 //#define	nocasestrcmp(a,b) stricmp(a,b)
 #endif
 
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 void strreplace(char * str,char o,char n);
 char *ltrim(char *str);

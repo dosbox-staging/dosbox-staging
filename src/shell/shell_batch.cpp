@@ -89,7 +89,7 @@ emptyline:
 				if (!first) continue; *first++=0;
 				std::string temp;
 				if (shell->GetEnvStr(cmd_read,temp)) {
-					char * equals=strchr(temp.c_str(),'=');
+					const char * equals=strchr(temp.c_str(),'=');
 					if (!equals) continue;
 					equals++;
 					strcpy(cmd_write,equals);
