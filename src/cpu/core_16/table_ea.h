@@ -18,8 +18,8 @@
 
 /* Some variables for EA Loolkup */
 
-typedef EAPoint (*GetEATable[256])(void);
-typedef EAPoint (*EA_LookupHandler)(void);
+typedef PhysPt (*GetEATable[256])(void);
+typedef PhysPt (*EA_LookupHandler)(void);
 
 static GetEATable * lookupEATable;
 
@@ -28,64 +28,51 @@ static GetEATable * lookupEATable;
 #define PREFIX_ADDR		0x2
 #define PREFIX_SEG_ADDR	0x3
 
-static struct {
-	Bitu mark;
-	Bitu count;
-	EAPoint segbase;
-} prefix;
 
 /* Gets initialized at the bottem, can't seem to declare forward references */
 static GetEATable * EAPrefixTable[4];
 
 
 #define SegPrefix(blah)										\
-	prefix.segbase=SegBase(blah);							\
-	prefix.mark|=PREFIX_SEG;								\
-	prefix.count++;											\
-  	lookupEATable=EAPrefixTable[prefix.mark];				\
+	core_16.segbase=SegBase(blah);							\
+	core_16.prefixes|=PREFIX_SEG;							\
+  	lookupEATable=EAPrefixTable[core_16.prefixes];			\
 	goto restart;
 
 #define SegPrefix_66(blah)									\
-	prefix.segbase=SegBase(blah);							\
-	prefix.mark|=PREFIX_SEG;								\
-	prefix.count++;											\
-  	lookupEATable=EAPrefixTable[prefix.mark];				\
+	core_16.segbase=SegBase(blah);							\
+	core_16.prefixes|=PREFIX_SEG;							\
+  	lookupEATable=EAPrefixTable[core_16.prefixes];			\
 	goto restart_66;
 
 
-#define PrefixReset											\
-	prefix.mark=PREFIX_NONE;								\
-	prefix.count=0;											\
-	lookupEATable=EAPrefixTable[PREFIX_NONE];
-
-
 /* The MOD/RM Decoder for EA for this decoder's addressing modes */
-static EAPoint EA_16_00_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si); }
-static EAPoint EA_16_01_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di); }
-static EAPoint EA_16_02_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si); }
-static EAPoint EA_16_03_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di); }
-static EAPoint EA_16_04_n(void) { return SegBase(ds)+(Bit16u)(reg_si); }
-static EAPoint EA_16_05_n(void) { return SegBase(ds)+(Bit16u)(reg_di); }
-static EAPoint EA_16_06_n(void) { return SegBase(ds)+(Bit16u)(Fetchw());}
-static EAPoint EA_16_07_n(void) { return SegBase(ds)+(Bit16u)(reg_bx); }
+static PhysPt EA_16_00_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si); }
+static PhysPt EA_16_01_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di); }
+static PhysPt EA_16_02_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si); }
+static PhysPt EA_16_03_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di); }
+static PhysPt EA_16_04_n(void) { return SegBase(ds)+(Bit16u)(reg_si); }
+static PhysPt EA_16_05_n(void) { return SegBase(ds)+(Bit16u)(reg_di); }
+static PhysPt EA_16_06_n(void) { return SegBase(ds)+(Bit16u)(Fetchw());}
+static PhysPt EA_16_07_n(void) { return SegBase(ds)+(Bit16u)(reg_bx); }
 
-static EAPoint EA_16_40_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs()); }
-static EAPoint EA_16_41_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs()); }
-static EAPoint EA_16_42_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs()); }
-static EAPoint EA_16_43_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs()); }
-static EAPoint EA_16_44_n(void) { return SegBase(ds)+(Bit16u)(reg_si+Fetchbs()); }
-static EAPoint EA_16_45_n(void) { return SegBase(ds)+(Bit16u)(reg_di+Fetchbs()); }
-static EAPoint EA_16_46_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+Fetchbs()); }
-static EAPoint EA_16_47_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+Fetchbs()); }
+static PhysPt EA_16_40_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs()); }
+static PhysPt EA_16_41_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs()); }
+static PhysPt EA_16_42_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs()); }
+static PhysPt EA_16_43_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs()); }
+static PhysPt EA_16_44_n(void) { return SegBase(ds)+(Bit16u)(reg_si+Fetchbs()); }
+static PhysPt EA_16_45_n(void) { return SegBase(ds)+(Bit16u)(reg_di+Fetchbs()); }
+static PhysPt EA_16_46_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+Fetchbs()); }
+static PhysPt EA_16_47_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+Fetchbs()); }
 
-static EAPoint EA_16_80_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws()); }
-static EAPoint EA_16_81_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws()); }
-static EAPoint EA_16_82_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws()); }
-static EAPoint EA_16_83_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws()); }
-static EAPoint EA_16_84_n(void) { return SegBase(ds)+(Bit16u)(reg_si+Fetchws()); }
-static EAPoint EA_16_85_n(void) { return SegBase(ds)+(Bit16u)(reg_di+Fetchws()); }
-static EAPoint EA_16_86_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+Fetchws()); }
-static EAPoint EA_16_87_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+Fetchws()); }
+static PhysPt EA_16_80_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws()); }
+static PhysPt EA_16_81_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws()); }
+static PhysPt EA_16_82_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws()); }
+static PhysPt EA_16_83_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws()); }
+static PhysPt EA_16_84_n(void) { return SegBase(ds)+(Bit16u)(reg_si+Fetchws()); }
+static PhysPt EA_16_85_n(void) { return SegBase(ds)+(Bit16u)(reg_di+Fetchws()); }
+static PhysPt EA_16_86_n(void) { return SegBase(ss)+(Bit16u)(reg_bp+Fetchws()); }
+static PhysPt EA_16_87_n(void) { return SegBase(ds)+(Bit16u)(reg_bx+Fetchws()); }
 
 static GetEATable GetEA_16_n={
 /* 00 */
@@ -123,34 +110,33 @@ static GetEATable GetEA_16_n={
 };
 
 
-#define segprefixed(val) EAPoint ret=prefix.segbase+val;PrefixReset;return ret;
 
-static EAPoint EA_16_00_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si)) }
-static EAPoint EA_16_01_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di)) }
-static EAPoint EA_16_02_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si)) }
-static EAPoint EA_16_03_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di)) }
-static EAPoint EA_16_04_s(void) { segprefixed((Bit16u)(reg_si)) }
-static EAPoint EA_16_05_s(void) { segprefixed((Bit16u)(reg_di)) }
-static EAPoint EA_16_06_s(void) { segprefixed((Bit16u)(Fetchw()))  }
-static EAPoint EA_16_07_s(void) { segprefixed((Bit16u)(reg_bx)) }
+static PhysPt EA_16_00_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_si); }
+static PhysPt EA_16_01_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_di); }
+static PhysPt EA_16_02_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_si); }
+static PhysPt EA_16_03_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_di); }
+static PhysPt EA_16_04_s(void) { return core_16.segbase+(Bit16u)(reg_si); }
+static PhysPt EA_16_05_s(void) { return core_16.segbase+(Bit16u)(reg_di); }
+static PhysPt EA_16_06_s(void) { return core_16.segbase+(Bit16u)(Fetchw());  }
+static PhysPt EA_16_07_s(void) { return core_16.segbase+(Bit16u)(reg_bx); }
 
-static EAPoint EA_16_40_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs())) }
-static EAPoint EA_16_41_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs())) }
-static EAPoint EA_16_42_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs())) }
-static EAPoint EA_16_43_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs())) }
-static EAPoint EA_16_44_s(void) { segprefixed((Bit16u)(reg_si+Fetchbs())) }
-static EAPoint EA_16_45_s(void) { segprefixed((Bit16u)(reg_di+Fetchbs())) }
-static EAPoint EA_16_46_s(void) { segprefixed((Bit16u)(reg_bp+Fetchbs())) }
-static EAPoint EA_16_47_s(void) { segprefixed((Bit16u)(reg_bx+Fetchbs())) }
+static PhysPt EA_16_40_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs()); }
+static PhysPt EA_16_41_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs()); }
+static PhysPt EA_16_42_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs()); }
+static PhysPt EA_16_43_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs()); }
+static PhysPt EA_16_44_s(void) { return core_16.segbase+(Bit16u)(reg_si+Fetchbs()); }
+static PhysPt EA_16_45_s(void) { return core_16.segbase+(Bit16u)(reg_di+Fetchbs()); }
+static PhysPt EA_16_46_s(void) { return core_16.segbase+(Bit16u)(reg_bp+Fetchbs()); }
+static PhysPt EA_16_47_s(void) { return core_16.segbase+(Bit16u)(reg_bx+Fetchbs()); }
 
-static EAPoint EA_16_80_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws())) }
-static EAPoint EA_16_81_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws())) }
-static EAPoint EA_16_82_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws())) }
-static EAPoint EA_16_83_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws())) }
-static EAPoint EA_16_84_s(void) { segprefixed((Bit16u)(reg_si+Fetchws())) }
-static EAPoint EA_16_85_s(void) { segprefixed((Bit16u)(reg_di+Fetchws())) }
-static EAPoint EA_16_86_s(void) { segprefixed((Bit16u)(reg_bp+Fetchws())) }
-static EAPoint EA_16_87_s(void) { segprefixed((Bit16u)(reg_bx+Fetchws())) }
+static PhysPt EA_16_80_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws()); }
+static PhysPt EA_16_81_s(void) { return core_16.segbase+(Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws()); }
+static PhysPt EA_16_82_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws()); }
+static PhysPt EA_16_83_s(void) { return core_16.segbase+(Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws()); }
+static PhysPt EA_16_84_s(void) { return core_16.segbase+(Bit16u)(reg_si+Fetchws()); }
+static PhysPt EA_16_85_s(void) { return core_16.segbase+(Bit16u)(reg_di+Fetchws()); }
+static PhysPt EA_16_86_s(void) { return core_16.segbase+(Bit16u)(reg_bp+Fetchws()); }
+static PhysPt EA_16_87_s(void) { return core_16.segbase+(Bit16u)(reg_bx+Fetchws()); }
 
 static GetEATable GetEA_16_s={
 /* 00 */
@@ -190,9 +176,9 @@ static GetEATable GetEA_16_s={
 static Bit32u SIBZero=0;
 static Bit32u * SIBIndex[8]= { &reg_eax,&reg_ecx,&reg_edx,&reg_ebx,&SIBZero,&reg_ebp,&reg_esi,&reg_edi };
 
-INLINE EAPoint Sib(Bitu mode) {
+INLINE PhysPt Sib(Bitu mode) {
 	Bit8u sib=Fetchb();
-	EAPoint base;
+	PhysPt base;
 	switch (sib&7) {
 	case 0:	/* EAX Base */
 		base=SegBase(ds)+reg_eax;break;
@@ -220,32 +206,32 @@ INLINE EAPoint Sib(Bitu mode) {
 };
 
 
-static EAPoint EA_32_00_n(void) { PrefixReset;return SegBase(ds)+reg_eax; }
-static EAPoint EA_32_01_n(void) { PrefixReset;return SegBase(ds)+reg_ecx; }
-static EAPoint EA_32_02_n(void) { PrefixReset;return SegBase(ds)+reg_edx; }
-static EAPoint EA_32_03_n(void) { PrefixReset;return SegBase(ds)+reg_ebx; }
-static EAPoint EA_32_04_n(void) { PrefixReset;return Sib(0);}
-static EAPoint EA_32_05_n(void) { PrefixReset;return SegBase(ds)+Fetchd(); }
-static EAPoint EA_32_06_n(void) { PrefixReset;return SegBase(ds)+reg_esi; }
-static EAPoint EA_32_07_n(void) { PrefixReset;return SegBase(ds)+reg_edi; }
+static PhysPt EA_32_00_n(void) { return SegBase(ds)+reg_eax; }
+static PhysPt EA_32_01_n(void) { return SegBase(ds)+reg_ecx; }
+static PhysPt EA_32_02_n(void) { return SegBase(ds)+reg_edx; }
+static PhysPt EA_32_03_n(void) { return SegBase(ds)+reg_ebx; }
+static PhysPt EA_32_04_n(void) { return Sib(0);}
+static PhysPt EA_32_05_n(void) { return SegBase(ds)+Fetchd(); }
+static PhysPt EA_32_06_n(void) { return SegBase(ds)+reg_esi; }
+static PhysPt EA_32_07_n(void) { return SegBase(ds)+reg_edi; }
 
-static EAPoint EA_32_40_n(void) { PrefixReset;return SegBase(ds)+reg_eax+Fetchbs(); }
-static EAPoint EA_32_41_n(void) { PrefixReset;return SegBase(ds)+reg_ecx+Fetchbs(); }
-static EAPoint EA_32_42_n(void) { PrefixReset;return SegBase(ds)+reg_edx+Fetchbs(); }
-static EAPoint EA_32_43_n(void) { PrefixReset;return SegBase(ds)+reg_ebx+Fetchbs(); }
-static EAPoint EA_32_44_n(void) { PrefixReset;EAPoint temp=Sib(1);return temp+Fetchbs();}
-static EAPoint EA_32_45_n(void) { PrefixReset;return SegBase(ss)+reg_ebp+Fetchbs(); }
-static EAPoint EA_32_46_n(void) { PrefixReset;return SegBase(ds)+reg_esi+Fetchbs(); }
-static EAPoint EA_32_47_n(void) { PrefixReset;return SegBase(ds)+reg_edi+Fetchbs(); }
+static PhysPt EA_32_40_n(void) { return SegBase(ds)+reg_eax+Fetchbs(); }
+static PhysPt EA_32_41_n(void) { return SegBase(ds)+reg_ecx+Fetchbs(); }
+static PhysPt EA_32_42_n(void) { return SegBase(ds)+reg_edx+Fetchbs(); }
+static PhysPt EA_32_43_n(void) { return SegBase(ds)+reg_ebx+Fetchbs(); }
+static PhysPt EA_32_44_n(void) { PhysPt temp=Sib(1);return temp+Fetchbs();}
+static PhysPt EA_32_45_n(void) { return SegBase(ss)+reg_ebp+Fetchbs(); }
+static PhysPt EA_32_46_n(void) { return SegBase(ds)+reg_esi+Fetchbs(); }
+static PhysPt EA_32_47_n(void) { return SegBase(ds)+reg_edi+Fetchbs(); }
 
-static EAPoint EA_32_80_n(void) { PrefixReset;return SegBase(ds)+reg_eax+Fetchds(); }
-static EAPoint EA_32_81_n(void) { PrefixReset;return SegBase(ds)+reg_ecx+Fetchds(); }
-static EAPoint EA_32_82_n(void) { PrefixReset;return SegBase(ds)+reg_edx+Fetchds(); }
-static EAPoint EA_32_83_n(void) { PrefixReset;return SegBase(ds)+reg_ebx+Fetchds(); }
-static EAPoint EA_32_84_n(void) { PrefixReset;EAPoint temp=Sib(2);return temp+Fetchds();}
-static EAPoint EA_32_85_n(void) { PrefixReset;return SegBase(ss)+reg_ebp+Fetchds(); }
-static EAPoint EA_32_86_n(void) { PrefixReset;return SegBase(ds)+reg_esi+Fetchds(); }
-static EAPoint EA_32_87_n(void) { PrefixReset;return SegBase(ds)+reg_edi+Fetchds(); }
+static PhysPt EA_32_80_n(void) { return SegBase(ds)+reg_eax+Fetchds(); }
+static PhysPt EA_32_81_n(void) { return SegBase(ds)+reg_ecx+Fetchds(); }
+static PhysPt EA_32_82_n(void) { return SegBase(ds)+reg_edx+Fetchds(); }
+static PhysPt EA_32_83_n(void) { return SegBase(ds)+reg_ebx+Fetchds(); }
+static PhysPt EA_32_84_n(void) { PhysPt temp=Sib(2);return temp+Fetchds();}
+static PhysPt EA_32_85_n(void) { return SegBase(ss)+reg_ebp+Fetchds(); }
+static PhysPt EA_32_86_n(void) { return SegBase(ds)+reg_esi+Fetchds(); }
+static PhysPt EA_32_87_n(void) { return SegBase(ds)+reg_edi+Fetchds(); }
 
 static GetEATable GetEA_32_n={
 /* 00 */
@@ -282,64 +268,62 @@ static GetEATable GetEA_32_n={
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
 
-INLINE EAPoint Sib_s(Bitu mode) {
+INLINE PhysPt Sib_s(Bitu mode) {
 	Bit8u sib=Fetchb();
-	EAPoint base;
+	PhysPt base;
 	switch (sib&7) {
 	case 0:	/* EAX Base */
-		base=prefix.segbase+reg_eax;break;
+		base=core_16.segbase+reg_eax;break;
 	case 1:	/* ECX Base */
-		base=prefix.segbase+reg_ecx;break;
+		base=core_16.segbase+reg_ecx;break;
 	case 2:	/* EDX Base */
-		base=prefix.segbase+reg_edx;break;
+		base=core_16.segbase+reg_edx;break;
 	case 3:	/* EBX Base */
-		base=prefix.segbase+reg_ebx;break;
+		base=core_16.segbase+reg_ebx;break;
 	case 4:	/* ESP Base */
-		base=prefix.segbase+reg_esp;break;
+		base=core_16.segbase+reg_esp;break;
 	case 5:	/* #1 Base */
 		if (!mode) {
-			base=prefix.segbase+Fetchd();break;
+			base=core_16.segbase+Fetchd();break;
 		} else {
-			base=prefix.segbase+reg_ebp;break;
+			base=core_16.segbase+reg_ebp;break;
 		}
 	case 6:	/* ESI Base */
-		base=prefix.segbase+reg_esi;break;
+		base=core_16.segbase+reg_esi;break;
 	case 7:	/* EDI Base */
-		base=prefix.segbase+reg_edi;break;
+		base=core_16.segbase+reg_edi;break;
 	}
 	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);
-	PrefixReset;
 	return base;
 };
 
-#define segprefixed_32(val) EAPoint ret=prefix.segbase+(Bit32u)(val);PrefixReset;return ret;
 
-static EAPoint EA_32_00_s(void) { segprefixed_32(reg_eax); }
-static EAPoint EA_32_01_s(void) { segprefixed_32(reg_ecx); }
-static EAPoint EA_32_02_s(void) { segprefixed_32(reg_edx); }
-static EAPoint EA_32_03_s(void) { segprefixed_32(reg_ebx); }
-static EAPoint EA_32_04_s(void) { return Sib_s(0);}
-static EAPoint EA_32_05_s(void) { segprefixed_32(Fetchd()); }
-static EAPoint EA_32_06_s(void) { segprefixed_32(reg_esi); }
-static EAPoint EA_32_07_s(void) { segprefixed_32(reg_edi); }
+static PhysPt EA_32_00_s(void) { return core_16.segbase+(Bit32u)(reg_eax); }
+static PhysPt EA_32_01_s(void) { return core_16.segbase+(Bit32u)(reg_ecx); }
+static PhysPt EA_32_02_s(void) { return core_16.segbase+(Bit32u)(reg_edx); }
+static PhysPt EA_32_03_s(void) { return core_16.segbase+(Bit32u)(reg_ebx); }
+static PhysPt EA_32_04_s(void) { return core_16.segbase+(Bit32u)(Sib_s(0));}
+static PhysPt EA_32_05_s(void) { return core_16.segbase+(Bit32u)(Fetchd()); }
+static PhysPt EA_32_06_s(void) { return core_16.segbase+(Bit32u)(reg_esi); }
+static PhysPt EA_32_07_s(void) { return core_16.segbase+(Bit32u)(reg_edi); }
 
-static EAPoint EA_32_40_s(void) { segprefixed_32(reg_eax+Fetchbs()); }
-static EAPoint EA_32_41_s(void) { segprefixed_32(reg_ecx+Fetchbs()); }
-static EAPoint EA_32_42_s(void) { segprefixed_32(reg_edx+Fetchbs()); }
-static EAPoint EA_32_43_s(void) { segprefixed_32(reg_ebx+Fetchbs()); }
-static EAPoint EA_32_44_s(void) { return Sib_s(1)+Fetchbs();}
-static EAPoint EA_32_45_s(void) { segprefixed_32(reg_ebp+Fetchbs()); }
-static EAPoint EA_32_46_s(void) { segprefixed_32(reg_esi+Fetchbs()); }
-static EAPoint EA_32_47_s(void) { segprefixed_32(reg_edi+Fetchbs()); }
+static PhysPt EA_32_40_s(void) { return core_16.segbase+(Bit32u)(reg_eax+Fetchbs()); }
+static PhysPt EA_32_41_s(void) { return core_16.segbase+(Bit32u)(reg_ecx+Fetchbs()); }
+static PhysPt EA_32_42_s(void) { return core_16.segbase+(Bit32u)(reg_edx+Fetchbs()); }
+static PhysPt EA_32_43_s(void) { return core_16.segbase+(Bit32u)(reg_ebx+Fetchbs()); }
+static PhysPt EA_32_44_s(void) { return core_16.segbase+(Bit32u)(Sib_s(1)+Fetchbs());}
+static PhysPt EA_32_45_s(void) { return core_16.segbase+(Bit32u)(reg_ebp+Fetchbs()); }
+static PhysPt EA_32_46_s(void) { return core_16.segbase+(Bit32u)(reg_esi+Fetchbs()); }
+static PhysPt EA_32_47_s(void) { return core_16.segbase+(Bit32u)(reg_edi+Fetchbs()); }
 
-static EAPoint EA_32_80_s(void) { segprefixed_32(reg_eax+Fetchds()); }
-static EAPoint EA_32_81_s(void) { segprefixed_32(reg_ecx+Fetchds()); }
-static EAPoint EA_32_82_s(void) { segprefixed_32(reg_edx+Fetchds()); }
-static EAPoint EA_32_83_s(void) { segprefixed_32(reg_ebx+Fetchds()); }
-static EAPoint EA_32_84_s(void) { return Sib_s(2)+Fetchds();}
-static EAPoint EA_32_85_s(void) { segprefixed_32(reg_ebp+Fetchds()); }
-static EAPoint EA_32_86_s(void) { segprefixed_32(reg_esi+Fetchds()); }
-static EAPoint EA_32_87_s(void) { segprefixed_32(reg_edi+Fetchds()); }
+static PhysPt EA_32_80_s(void) { return core_16.segbase+(Bit32u)(reg_eax+Fetchds()); }
+static PhysPt EA_32_81_s(void) { return core_16.segbase+(Bit32u)(reg_ecx+Fetchds()); }
+static PhysPt EA_32_82_s(void) { return core_16.segbase+(Bit32u)(reg_edx+Fetchds()); }
+static PhysPt EA_32_83_s(void) { return core_16.segbase+(Bit32u)(reg_ebx+Fetchds()); }
+static PhysPt EA_32_84_s(void) { return core_16.segbase+(Bit32u)(Sib_s(2)+Fetchds());}
+static PhysPt EA_32_85_s(void) { return core_16.segbase+(Bit32u)(reg_ebp+Fetchds()); }
+static PhysPt EA_32_86_s(void) { return core_16.segbase+(Bit32u)(reg_esi+Fetchds()); }
+static PhysPt EA_32_87_s(void) { return core_16.segbase+(Bit32u)(reg_edi+Fetchds()); }
 
 
 static GetEATable GetEA_32_s={
@@ -377,20 +361,20 @@ static GetEATable GetEA_32_s={
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
 
-static EAPoint GetEADirect_NONE(void) {
-	EAPoint result=SegBase(ds)+Fetchw();
+static PhysPt GetEADirect_NONE(void) {
+	PhysPt result=SegBase(ds)+Fetchw();
 	return result;
 }
-static EAPoint GetEADirect_SEG(void) {
-	EAPoint result=prefix.segbase+Fetchw();PrefixReset;
+static PhysPt GetEADirect_SEG(void) {
+	PhysPt result=core_16.segbase+Fetchw();
 	return result;
 }
-static EAPoint GetEADirect_ADDR(void) {
-	EAPoint result=SegBase(ds)+Fetchd();PrefixReset;
+static PhysPt GetEADirect_ADDR(void) {
+	PhysPt result=SegBase(ds)+Fetchd();
 	return result;
 }
-static EAPoint GetEADirect_SEG_ADDR(void) {
-	EAPoint result=prefix.segbase+Fetchd();PrefixReset;
+static PhysPt GetEADirect_SEG_ADDR(void) {
+	PhysPt result=core_16.segbase+Fetchd();
 	return result;
 }
 

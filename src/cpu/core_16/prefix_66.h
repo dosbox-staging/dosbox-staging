@@ -155,11 +155,8 @@ switch(Fetchb()) {
 		SegPrefix_66(gs);break;
 	case 0x67:												/* Address Size Prefix */
 #ifdef CPU_PREFIX_67
-			prefix.mark|=PREFIX_ADDR;
-#ifdef CPU_PREFIX_COUNT
-			prefix.count++;
-#endif  			
-			lookupEATable=EAPrefixTable[prefix.mark];
+			core_16.prefixes|=PREFIX_ADDR;
+			lookupEATable=EAPrefixTable[core_16.prefixes];
 			goto restart_66;
 #else
 			NOTDONE;
@@ -262,9 +259,9 @@ switch(Fetchb()) {
 		break;
 	case 0x8d:												/* LEA */
 		{
-			prefix.segbase=0;
-			prefix.mark|=PREFIX_SEG;
-			lookupEATable=EAPrefixTable[prefix.mark];
+			core_16.segbase=0;
+			core_16.prefixes|=PREFIX_SEG;
+			lookupEATable=EAPrefixTable[core_16.prefixes];
 			GetRMrd;GetEAa;
 			*rmrd=(Bit32u)eaa;
 			break;
@@ -317,10 +314,10 @@ switch(Fetchb()) {
 #endif
 		break;
 	case 0xa1:												/* MOV EAX,Ow */
-		reg_eax=LoadMd(GetEADirect[prefix.mark]());
+		reg_eax=LoadMd(GetEADirect[core_16.prefixes]());
 		break;
 	case 0xa3:												/* MOV Ow,EAX */
-		SaveMd(GetEADirect[prefix.mark](),reg_eax);
+		SaveMd(GetEADirect[core_16.prefixes](),reg_eax);
 		break;
 	case 0xa5:												/* MOVSD */
 		{
@@ -417,11 +414,9 @@ switch(Fetchb()) {
 		IO_Write(reg_dx+3,(Bit8u)(reg_eax>>24));
 		break;
 	case 0xf2:												/* REPNZ */
-		prefix.count++;
 		Repeat_Normal(false,true);
 		continue;
 	case 0xf3:												/* REPZ */
-		prefix.count++;
 		Repeat_Normal(true,true);
 		continue;
 	case 0xf7:												/* GRP3 Ed(,Id) */

@@ -16,24 +16,23 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-EAPoint IPPoint;
 
-#define SUBIP(a)	IPPoint-=a
-#define SETIP(a)	IPPoint=SegBase(cs)+a
-#define GETIP		(Bit16u)(IPPoint-SegBase(cs)) 
+#define SUBIP(a)	core_16.ip_lookup-=a
+#define SETIP(a)	core_16.ip_lookup=SegBase(cs)+a
+#define GETIP		(Bit16u)(core_16.ip_lookup-SegBase(cs)) 
 #define SAVEIP		reg_ip=GETIP
-#define LOADIP		IPPoint=SegBase(cs)+reg_ip
+#define LOADIP		core_16.ip_lookup=SegBase(cs)+reg_ip
 
 #define LEAVECORE						\
 	SAVEIP;								\
 	FILLFLAGS;
 
 static INLINE void ADDIP(Bit16u add) {
-	IPPoint=SegBase(cs)+((Bit16u)(((Bit16u)(IPPoint-SegBase(cs)))+(Bit16u)add));
+	core_16.ip_lookup=SegBase(cs)+((Bit16u)(((Bit16u)(core_16.ip_lookup-SegBase(cs)))+(Bit16u)add));
 }
 
 static INLINE void ADDIPFAST(Bit16s blah) {
-	IPPoint+=blah;
+	core_16.ip_lookup+=blah;
 }
 
 #define CheckTF()											\
@@ -57,19 +56,19 @@ static INLINE void ADDIPFAST(Bit16s blah) {
 	}
 
 static INLINE Bit8u Fetchb() {
-	Bit8u temp=LoadMb(IPPoint);
-	IPPoint+=1;
+	Bit8u temp=LoadMb(core_16.ip_lookup);
+	core_16.ip_lookup+=1;
 	return temp;
 }
 
 static INLINE Bit16u Fetchw() {
-	Bit16u temp=LoadMw(IPPoint);
-	IPPoint+=2;
+	Bit16u temp=LoadMw(core_16.ip_lookup);
+	core_16.ip_lookup+=2;
 	return temp;
 }
 static INLINE Bit32u Fetchd() {
-	Bit32u temp=LoadMd(IPPoint);
-	IPPoint+=4;
+	Bit32u temp=LoadMd(core_16.ip_lookup);
+	core_16.ip_lookup+=4;
 	return temp;
 }
 
@@ -135,14 +134,13 @@ static INLINE Bit32u Pop_32() {
 
 
 #define stringDI											\
-	EAPoint to;												\
+	PhysPt to;												\
 	to=SegBase(es)+reg_di							
 
 #define stringSI											\
-	EAPoint from;											\
-	if (prefix.mark & PREFIX_SEG) {										\
-		from=(prefix.segbase+reg_si);						\
-		PrefixReset;										\
+	PhysPt from;											\
+	if (core_16.prefixes & PREFIX_SEG) {					\
+		from=(core_16.segbase+reg_si);						\
 	} else {												\
 		from=SegBase(ds)+reg_si;							\
 	}
@@ -159,46 +157,39 @@ static void Repeat_Normal(bool testz,bool prefix_66) {
 	if (GETFLAG(DF)) direct=-1;
 	else direct=1;
 	base_di=SegBase(es);
-	if (prefix.mark & PREFIX_ADDR) E_Exit("Unhandled 0x67 prefixed string op");
+	if (core_16.prefixes & PREFIX_ADDR) E_Exit("Unhandled 0x67 prefixed string op");
 rep_again:	
-	if (prefix.mark & PREFIX_SEG) {
-		base_si=(prefix.segbase);
+	if (core_16.prefixes & PREFIX_SEG) {
+		base_si=(core_16.segbase);
 	} else {
 		base_si=SegBase(ds);
 	}
 	switch (Fetchb()) {
 	case 0x26:			/* ES Prefix */
-		prefix.segbase=SegBase(es);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(es);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x2e:			/* CS Prefix */
-		prefix.segbase=SegBase(cs);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(cs);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x36:			/* SS Prefix */
-		prefix.segbase=SegBase(ss);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(ss);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x3e:			/* DS Prefix */
-		prefix.segbase=SegBase(ds);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(ds);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x64:			/* FS Prefix */
-		prefix.segbase=SegBase(fs);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(fs);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x65:			/* GS Prefix */
-		prefix.segbase=SegBase(gs);
-		prefix.mark|=PREFIX_SEG;
-		prefix.count++;
+		core_16.segbase=SegBase(gs);
+		core_16.prefixes|=PREFIX_SEG;
 		goto rep_again;
 	case 0x66:			/* Size Prefix */
-		prefix.count++;
 		prefix_66=!prefix_66;
 		goto rep_again;
 	case 0x6c:			/* REP INSB */
@@ -398,13 +389,12 @@ rep_again:
 		}
 		break;
 	default:
-		IPPoint--;
+		core_16.ip_lookup--;
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled REP Prefix %X",Fetchb());
 		goto normalexit;
 	}
 	/* If we end up here it's because the CPU_Cycles counter is 0, so restart instruction */
-	IPPoint-=(prefix.count+2);		/* Rep instruction and whatever string instruction */
-normalexit:
-	PrefixReset;
+	core_16.ip_lookup=core_16.ip_start;
+normalexit:;
 }
 

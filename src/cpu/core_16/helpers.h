@@ -18,7 +18,7 @@
 
 
 #define GetEAa												\
-	EAPoint eaa=(*lookupEATable)[rm]();					
+	PhysPt eaa=(*lookupEATable)[rm]();					
 
 #define GetRMEAa											\
 	GetRM;													\
@@ -140,3 +140,4 @@
 		GetEAa;FPU_ESC ## code ## _EA(rm,eaa);								\
 	}																		\
 }
+

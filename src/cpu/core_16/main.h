@@ -82,7 +82,7 @@ restart:
 		AXIw(SBBW);break;
 	case 0x1e:												/* PUSH DS */		
 		Push_16(SegValue(ds));break;
-	case 0x1f:												/* POP DS */		
+	case 0x1f:												/* POP DS */
 		SegSet16(ds,Pop_16());break;
 	case 0x20:												/* AND Eb,Gb */
 		RMEbGb(ANDB);break;
@@ -251,11 +251,8 @@ restart:
 			break;
 		case 0x67:												/* Address Size Prefix */
 #ifdef CPU_PREFIX_67
-			prefix.mark|=PREFIX_ADDR;
-#ifdef CPU_PREFIX_COUNT
-			prefix.count++;
-#endif  			
-			lookupEATable=EAPrefixTable[prefix.mark];
+			core_16.prefixes|=PREFIX_ADDR;
+			lookupEATable=EAPrefixTable[core_16.prefixes];
 			goto restart;
 #else
 			NOTDONE;
@@ -500,9 +497,9 @@ restart:
 			}
 		case 0x8d:												/* LEA */
 			{
-				prefix.segbase=0;
-				prefix.mark|=PREFIX_SEG;
-				lookupEATable=EAPrefixTable[prefix.mark];
+				core_16.segbase=0;
+				core_16.prefixes|=PREFIX_SEG;
+				lookupEATable=EAPrefixTable[core_16.prefixes];
 				GetRMrw;GetEAa;
 				*rmrw=(Bit16u)eaa;
 				break;
@@ -600,22 +597,22 @@ restart:
 			}
 		case 0xa0:												/* MOV AL,Ob */
 			{
-				reg_al=LoadMb(GetEADirect[prefix.mark]());
+				reg_al=LoadMb(GetEADirect[core_16.prefixes]());
 			}
 			break;
 		case 0xa1:												/* MOV AX,Ow */
 			{
-				reg_ax=LoadMw(GetEADirect[prefix.mark]());
+				reg_ax=LoadMw(GetEADirect[core_16.prefixes]());
 			}
 			break;
 		case 0xa2:												/* MOV Ob,AL */
 			{
-				SaveMb(GetEADirect[prefix.mark](),reg_al);
+				SaveMb(GetEADirect[core_16.prefixes](),reg_al);
 			}
 			break;
 		case 0xa3:												/* MOV Ow,AX */
 			{
-				SaveMw(GetEADirect[prefix.mark](),reg_ax);
+				SaveMw(GetEADirect[core_16.prefixes](),reg_ax);
 			}
 			break;
 		case 0xa4:												/* MOVSB */
@@ -777,7 +774,7 @@ restart:
 			{
 				Bit16u bytes=Fetchw();Bit8u level=Fetchb();
 				Push_16(reg_bp);reg_bp=reg_sp;reg_sp-=bytes;
-				EAPoint reader=SegBase(ss)+reg_bp;
+				PhysPt reader=SegBase(ss)+reg_bp;
 				for (Bit8u i=1;i<level;i++) {Push_16(LoadMw(reader));reader-=2;}
 				if (level) Push_16(reg_bp);
 				break;
@@ -802,7 +799,7 @@ restart:
 			SAVEIP;
 			if (DEBUG_Breakpoint()) {
 				LEAVECORE;
-				return 1;
+				return -1;
 			}
 			LOADIP;
 #endif			
@@ -815,7 +812,7 @@ restart:
 				SAVEIP;
 				if (DEBUG_IntBreakpoint(num)) {
 					LEAVECORE;	
-					return 1;
+					return -1;
 				}
 #endif
 				EXCEPTION(num);				
@@ -855,9 +852,8 @@ restart:
 			reg_al = get_CF() ? 0xFF : 0;
 			break;
 		case 0xd7:												/* XLAT */
-			if (prefix.mark & PREFIX_SEG) {
-				reg_al=LoadMb(prefix.segbase+(Bit16u)(reg_bx+reg_al));
-				PrefixReset;
+			if (core_16.prefixes & PREFIX_SEG) {
+				reg_al=LoadMb(core_16.segbase+(Bit16u)(reg_bx+reg_al));
 			} else {
 				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
 			}
@@ -910,8 +906,8 @@ restart:
 		case 0xe3:												/* JCXZ */
 			{ 
 				Bitu test;
-				if (prefix.mark & PREFIX_ADDR) {
-					test=reg_ecx;PrefixReset;
+				if (core_16.prefixes & PREFIX_ADDR) {
+					test=reg_ecx;
 				} else test=reg_cx;
 				if (!test) ADDIPFAST(Fetchbs());
 				else ADDIPFAST(1);
@@ -965,7 +961,7 @@ restart:
 			IO_Write(reg_dx+1,reg_ah);
 			break;
 		case 0xf0:												/* LOCK */
-			LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
+//			LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
 			break;
 		case 0xf1:												/* Weird call undocumented */
 //			INTERRUPT(1);
@@ -1110,26 +1106,11 @@ restart:
 					break;
 				case 0x38:					/* CallBack */
 					{
-						Bit32u ret;
-						Bit16u call=Fetchw();
+						Bitu cb=Fetchw();
 						LEAVECORE;
-						if (call<CB_MAX) { 
-							ret=CallBack_Handlers[call]();
-						} else {  
-							E_Exit("Too high CallBack Number %d called",call);				
-						}
-						switch (ret) {
-						case CBRET_NONE:
-							LOADIP;
-						break;
-						case CBRET_STOP:
-							//TODO Maybe save flags at some time
-							return ret;
-						default:
-							E_Exit("CPU:Callback %d returned illegal %d code",call,ret);
-						};
-						break;
+						return cb;
 					}
+
 				default:
 					E_Exit("Illegal GRP4 Call %d",(rm>>3) & 7);
 					break;
