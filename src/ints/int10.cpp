@@ -84,9 +84,7 @@ static Bitu INT10_Handler(void) {
 		INT10_GetPixel(reg_cx,reg_dx,reg_bh,&reg_al);
 		break;
 	case 0x0E:								/* Teletype OutPut */
-		//TODO FIX
-		INT10_TeletypeOutput(reg_al,reg_bl,false,0);
-//		INT10_TeletypeOutput(reg_al,reg_bl,false,reg_bh);
+		INT10_TeletypeOutput(reg_al,reg_bl,false,reg_bh);
 		break;
 	case 0x0F:								/* Get videomode */
 		reg_bh=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
@@ -102,7 +100,7 @@ static Bitu INT10_Handler(void) {
 			INT10_SetOverscanBorderColor(reg_bh);
 			break;
 		case 0x02:							/* SET ALL PALETTE REGISTERS */
-			INT10_SetAllPaletteRegisters(real_phys(Segs[es].value,reg_dx));
+			INT10_SetAllPaletteRegisters(Real2Phys(RealMake(Segs[es].value,reg_dx)));
 			break;
 		case 0x03:							/* TOGGLE INTENSITY/BLINKING BIT */
 			INT10_ToggleBlinkingBit(reg_bl);
@@ -114,19 +112,19 @@ static Bitu INT10_Handler(void) {
 			INT10_GetOverscanBorderColor(&reg_bh);
 			break;
 		case 0x09:							/* READ ALL PALETTE REGISTERS AND OVERSCAN REGISTER */
-			INT10_GetAllPaletteRegisters(real_phys(Segs[es].value,reg_dx));
+			INT10_GetAllPaletteRegisters(Real2Phys(RealMake(Segs[es].value,reg_dx)));
 			break;
 		case 0x10:							/* SET INDIVIDUAL DAC REGISTER */
 			INT10_SetSingleDacRegister(reg_bl,reg_dh,reg_ch,reg_cl);
 			break;
 		case 0x12:							/* SET BLOCK OF DAC REGISTERS */
-			INT10_SetDACBlock(reg_bx,reg_cx,real_phys(Segs[es].value,reg_dx));
+			INT10_SetDACBlock(reg_bx,reg_cx,Real2Phys(RealMake(Segs[es].value,reg_dx)));
 			break;
 		case 0x15:							/* GET INDIVIDUAL DAC REGISTER */
 			INT10_GetSingleDacRegister(reg_bl,&reg_dh,&reg_ch,&reg_cl);
 			break;
 		case 0x17:							/* GET BLOCK OF DAC REGISTER */
-			INT10_GetDACBlock(reg_bx,reg_cx,real_phys(Segs[es].value,reg_dx));
+			INT10_GetDACBlock(reg_bx,reg_cx,Real2Phys(RealMake(Segs[es].value,reg_dx)));
 			break;
 		default:
 			LOG_WARN("INT10:10:Unhandled EGA/VGA Palette Function %2X",reg_al);
