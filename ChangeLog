@@ -2,7 +2,13 @@
   - fixed all fcb-write functions
   - fixed fcb-parseline
   - added debugger under linux/freebsd 
-
+  - added debugger memory breakpoints and autolog function (heavy debug)
+  - added loadfix.com program that eats up memory (default 64kb)
+    Usage  : loadfix [-option] [programname] [parameters]...
+    Example: loadfix mm2      (Allocates 64kb and starts executable mm2)
+             loadfix -32 mm2  (Allocates 32kb and starts executable mm2)
+             loadfix -128     (Allocates 128kb)
+             loadfix -f       (frees all previous allocated memory)
 
 0.56
   - added support for a configclass/configfile
