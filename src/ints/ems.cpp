@@ -83,7 +83,7 @@ struct EMM_Mapping {
 };
 
 struct EMM_Page {
-	HostPt * memory;
+	HostPt memory;
 	Bit16u handle;
 	Bit16u next;
 };
@@ -159,7 +159,7 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & handle) {
 	while (pages) {
 		if (emm_pages[page].handle==NULL_HANDLE) {
 			emm_pages[page].handle=handle;
-			emm_pages[page].memory=(HostPt *)malloc(EMM_PAGE_SIZE);
+			emm_pages[page].memory=(HostPt)malloc(EMM_PAGE_SIZE);
 			if (!emm_pages[page].memory) E_Exit("EMM:Cannont allocate memory");
 			if (last!=NULL_PAGE) emm_pages[last].next=page;
 			else emm_handles[handle].first_page=page;
@@ -209,7 +209,7 @@ static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
 		while (pages) {
 			if (emm_pages[page].handle==NULL_HANDLE) {
 				emm_pages[page].handle=handle;
-				emm_pages[page].memory=(HostPt *)malloc(EMM_PAGE_SIZE);
+				emm_pages[page].memory=(HostPt)malloc(EMM_PAGE_SIZE);
 				if (!emm_pages[page].memory) E_Exit("EMM:Cannont allocate memory");
 				if (last!=NULL_PAGE) emm_pages[last].next=page;
 				else emm_handles[handle].first_page=page;
