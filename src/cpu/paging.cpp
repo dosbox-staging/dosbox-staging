@@ -24,6 +24,9 @@
 #include "mem.h"
 #include "paging.h"
 #include "regs.h"
+#include "lazyflags.h"
+#include "cpu.h"
+#include "debug.h"
 
 #define LINK_TOTAL		(64*1024)
 
@@ -67,9 +70,64 @@ HostPt PageHandler::GetHostPt(Bitu phys_page) {
 }
 
 
+Bits Full_DeCode(void);
+struct PF_Entry {
+	Bitu cs;
+	Bitu eip;
+	Bitu page_addr;
+};
+
+#define PF_QUEUESIZE 16
+struct {
+	Bitu used;
+	PF_Entry entries[PF_QUEUESIZE];
+} pf_queue;
+
+static Bits PageFaultCore(void) {
+	CPU_CycleLeft+=CPU_Cycles;
+	CPU_Cycles=1;
+	Bitu ret=Full_DeCode();
+	CPU_CycleLeft+=CPU_Cycles;
+	if (ret<0) E_Exit("Got a dosbox close machine in pagefault core?");
+	if (ret) 
+		return ret;
+	if (!pf_queue.used) E_Exit("PF Core without PF");
+	PF_Entry * entry=&pf_queue.entries[pf_queue.used-1];
+	X86PageEntry pentry;
+	pentry.load=MEM_PhysReadD(entry->page_addr);
+	if (pentry.block.p && entry->cs == SegValue(cs) && entry->eip==reg_eip)
+		return -1;
+	return 0;
+}
+
+Bitu DEBUG_EnableDebugger(void);
+
+void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
+	/* Save the state of the cpu cores */
+	LOG_MSG("PageFault at %X type %d queue %d",lin_addr,type,pf_queue.used);
+	LazyFlags old_lflags;
+	memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
+	CPU_Decoder * old_cpudecoder;
+	old_cpudecoder=cpudecoder;
+	cpudecoder=&PageFaultCore;
+	paging.cr2=lin_addr;
+	PF_Entry * entry=&pf_queue.entries[pf_queue.used++];
+	entry->cs=SegValue(cs);
+	entry->eip=reg_eip;
+	entry->page_addr=page_addr;
+	//Caused by a write by default?
+	CPU_Exception(14,0x2 | ((cpu.cpl>0) ? 0x1 : 0));
+	DEBUG_EnableDebugger();
+	DOSBOX_RunMachine();
+	pf_queue.used--;
+	memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
+	cpudecoder=old_cpudecoder;
+}
+ 
+
 class InitPageHandler : public PageHandler {
 public:
-	InitPageHandler() {flags=0;}
+	InitPageHandler() {flags=PFLAG_ILLEGAL;}
 	void AddPageLink(Bitu lin_page, Bitu phys_page) {
 		assert(0);
 	}
@@ -97,11 +155,34 @@ public:
 		InitPage(addr);
 		mem_writed(addr,val);
 	}
-	void InitPage(Bitu addr) {
-		Bitu lin_page=addr >> 12;
+	void InitPage(Bitu lin_addr) {
+		Bitu lin_page=lin_addr >> 12;
 		Bitu phys_page;
 		if (paging.enabled) {
-			E_Exit("No paging support");
+			Bitu d_index=lin_page >> 10;
+			Bitu t_index=lin_page & 0x3ff;
+			Bitu table_addr=(paging.base.page<<12)+d_index*4;
+			X86PageEntry table;
+			table.load=MEM_PhysReadD(table_addr);
+			if (!table.block.p) {
+				LOG(LOG_PAGING,LOG_ERROR)("NP Table");
+				PAGING_PageFault(lin_addr,table_addr,0);
+				table.load=MEM_PhysReadD(table_addr);
+				if (!table.block.p)
+					E_Exit("Pagefault didn't correct table");
+			}
+			X86PageEntry entry;
+			Bitu entry_addr=(table.block.base << 12)+t_index*4;
+			entry.load=MEM_PhysReadD(entry_addr);
+			if (!entry.block.p) {
+				LOG(LOG_PAGING,LOG_ERROR)("NP Page");
+				PAGING_PageFault(lin_addr,entry_addr,0);
+				entry.load=MEM_PhysReadD(entry_addr);
+				if (!entry.block.p)
+					E_Exit("Pagefault didn't correct page");
+			}
+			phys_page=entry.block.base;
+			LOG_MSG("Linked page lin page %X to phys page %X",lin_page,phys_page);
 		} else {
 			if (lin_page<LINK_START) phys_page=mapfirstmb[lin_page];
 			else phys_page=lin_page;
@@ -213,5 +294,6 @@ void PAGING_Init(Section * sec) {
 	for (i=0;i<LINK_START;i++) {
 		mapfirstmb[i]=i;
 	}
+	pf_queue.used=0;
 }
 
