@@ -662,7 +662,10 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:58:Not Supported Set//Get memory allocation");
 		break;
 	case 0x59:					/* Get Extended error information */
-		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+		reg_ax=dos.errorcode;
+		reg_bh=0;	//Unkown error class
+		reg_bl=1;	//Retry retry retry
+		reg_ch=0;	//Unkown error locus
 		break;
 	case 0x5a:					/* Create temporary file */
 		{
