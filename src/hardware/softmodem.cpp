@@ -99,6 +99,8 @@ struct telnetClient {
 };
 
 
+static Bitu call_int14;
+
 #if 1
 
 static void toUpcase(char *buffer) {
@@ -548,6 +550,7 @@ public:
 	Bitu usesize;
 	Bit8u txval;
 
+	
 	/* Check for eventual break command */
 	if (!mhd.commandmode) mhd.cmdpause++;
 	/* Handle incoming data from serial port, read as much as available */
@@ -605,6 +608,7 @@ public:
 				/* Filter telnet commands */
 				TelnetEmulation(tmpbuf, result);
 			} else {
+
 					rqueue->adds(tmpbuf,result);
 			}
 			mhd.cmdpause = 0;
@@ -646,7 +650,11 @@ public:
 		}
 
 	bool CanRecv(void) {
+		if(rqueue->inuse()) {
 		return true;
+		} else {
+			return false;
+		}
 	}
 
 
@@ -694,6 +702,43 @@ protected:
 CSerialModem *csm;
 
 
+static Bitu INT14_FOSSIL(void) {
+	switch (reg_ah) {
+		case 0x01:
+			// Serial - Write character to port
+			csm->tqueue->addb(reg_al);
+			reg_ah = csm->read_reg(0xd) & 0x7f; 
+			break;
+
+		case 0x02:
+			// FOSSIL - Receive character with wait
+			//LOG_MSG("FOSSIL: Calling get to receive character", reg_ah);
+			csm->mctrl |= MC_RTS;
+			while(!csm->rqueue->inuse()) {
+				// Wait for byte.  Yes, I realize that this locks up DosBox, but
+				// it would an oldskool system as well.
+				csm->Timer();
+			}
+			reg_al = csm->rqueue->getb();
+			reg_ah = 0;
+			break;
+		case 0x03:
+			//LOG_MSG("FOSSIL: Calling get port status", reg_ah);
+			// Serial - Get port status
+			csm->mctrl |= MC_RTS;
+			reg_ah = csm->read_reg(0xd) ; // Line status
+			if(csm->rqueue->inuse()) reg_ah |= 0x1;
+
+			reg_al = csm->read_reg(0xe); // Modem status
+			break;
+		default:
+			LOG_MSG("FOSSIL: Func 0x%x not handled", reg_ah);
+			break;
+	}
+	return CBRET_NONE;
+}
+
+
 void MODEM_Init(Section* sec) {
 
 	unsigned long args = 1;
@@ -739,6 +784,11 @@ void MODEM_Init(Section* sec) {
 	}
 
 	if(csm != NULL) seriallist.push_back(csm);
+
+	//Enable FOSSIL support (GTERM, etc)
+	call_int14=CALLBACK_Allocate();
+	CALLBACK_Setup(call_int14,&INT14_FOSSIL,CB_IRET);
+	RealSetVec(0x14,CALLBACK_RealPointer(call_int14));
 }
 
 
