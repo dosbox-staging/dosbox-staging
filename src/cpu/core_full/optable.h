@@ -71,7 +71,6 @@ static OpCode OpCodeTable[1024]={
 {D_PUSHAw	,0			,0		,0		},{D_POPAw	,0			,0		,0		},
 {L_MODRM	,O_BOUNDw	,0		,0		},{0		,0			,0		,0		},
 {L_PRESEG	,0			,0		,fs		},{L_PRESEG	,0			,0		,gs		},
-//{0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_PREOP	,0			,0		,0		},{L_PREADD	,0			,0		,0		},
 /* 0x68 - 0x6f */
 {L_Iw		,0			,S_PUSHw,0		},{L_MODRM	,O_IMULRw	,S_Gw	,M_EwxIwx},
@@ -307,8 +306,8 @@ static OpCode OpCodeTable[1024]={
 /* 0x1b0 - 0x1b7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{L_MODRM	,0			,S_Gw	,M_Eb	},{0		,0			,0		,0		},
+{L_MODRM	,O_SEGFS	,S_SEGGw,M_Efw	},{L_MODRM	,O_SEGGS	,S_SEGGw,M_Efw	},
+{L_MODRM	,0			,S_Gw	,M_Eb	},{L_MODRM	,0			,S_Gw	,M_Ew	},
 /* 0x1b8 - 0x1bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
