@@ -29,7 +29,7 @@ using namespace std;
 
 
 
-#define LINE_IN_MAXLEN 1024
+#define LINE_IN_MAXLEN 2048
 
 struct MessageBlock {
 	string name;
