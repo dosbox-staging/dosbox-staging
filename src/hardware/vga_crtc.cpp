@@ -24,6 +24,13 @@
 
 #define crtc(blah) vga.crtc.blah
 
+
+void VGA_MapMMIO(void);
+void VGA_UnmapMMIO(void);
+
+void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen);
+Bitu DEBUG_EnableDebugger(void);
+
 void write_p3d4_vga(Bitu port,Bitu val,Bitu iolen) {
 	crtc(index)=val;
 }
@@ -325,6 +332,9 @@ void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 	case 0x39:	/* CR39 Register Lock 2 */
 		vga.s3.reg_lock2=val;
 		break;
+	case 0x40:  /* CR40 System Config */
+		vga.s3.reg_40 = val;
+		break;
 	case 0x43:	/* CR43 Extended Mode */
 		vga.s3.reg_43=val & ~0x4;
 		if (((val & 0x4) ^ (vga.config.scan_len >> 6)) & 0x4) {
@@ -338,6 +348,43 @@ void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 			(3d4h index 13h). (801/5,928) Only active if 3d4h index 51h bits 4-5
 			are 0
 		*/
+	case 0x45:  /* Hardware cursor mode */
+		vga.s3.hgc.curmode = val;
+		break;
+	case 0x46:
+		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0x00ff) | (val << 8);
+		break;
+	case 0x47:  /*  HGC orgX */
+		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0xff00) | val;
+		break;
+	case 0x48:
+		vga.s3.hgc.originy = (vga.s3.hgc.originy & 0x00ff) | (val << 8);
+		break;
+	case 0x49:  /*  HGC orgY */
+		vga.s3.hgc.originy = (vga.s3.hgc.originy & 0xff00) | val;
+		break;
+	case 0x4A:  /* HGC foreground stack */
+		if (vga.s3.hgc.fstackpos > 2) vga.s3.hgc.fstackpos = 0;
+		vga.s3.hgc.forestack[vga.s3.hgc.fstackpos] = val;
+		vga.s3.hgc.fstackpos++;
+		break;
+	case 0x4B:  /* HGC background stack */
+		if (vga.s3.hgc.bstackpos > 2) vga.s3.hgc.bstackpos = 0;
+		vga.s3.hgc.backstack[vga.s3.hgc.bstackpos] = val;
+		vga.s3.hgc.bstackpos++;
+		break;
+	case 0x4c:  /* HGC start address high byte*/
+		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | ((val & 0xff) << 8);
+		break;
+	case 0x4d:  /* HGC start address low byte*/
+		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | (val & 0xff);
+		break;
+	case 0x4e:  /* HGC pattern start X */
+		vga.s3.hgc.posx = val;
+		break;
+	case 0x4f:  /* HGC pattern start X */
+		vga.s3.hgc.posy = val;
+		break;
 	case 0x51:	/* Extended System Control 2 */
 		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7
 		//TODO Display start
@@ -374,6 +421,18 @@ void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 			7	(not 864/964) Enable EPROM Write. If set enables flash memory write
 				control to the BIOS ROM address
 		*/
+	case 0x53:
+		if((val & 0x10) != (vga.s3.ext_mem_ctrl & 0x10)) {
+			/* Map or unmap MMIO */
+			if ((val & 0x10) != 0) {
+				LOG_MSG("VGA: Mapping Memory Mapped I/O to 0xA0000");
+				VGA_MapMMIO();
+			} else {
+				VGA_UnmapMMIO();
+			}
+		}
+		vga.s3.ext_mem_ctrl = val;
+		break;
 	case 0x55:	/* Extended Video DAC Control */
 		vga.s3.reg_55=val;
 		break;
@@ -572,7 +631,7 @@ Bitu read_p3d5_vga(Bitu port,Bitu iolen) {
 		return 0x11;		
 		//Trio 64 id
 	case 0x2f:	/* Revision */
-		return 0x80;
+		return 0x00;
 	case 0x30:	/* CR30 Chip ID/REV register */
 		return 0xe0;		//Trio+ dual byte
 		// Trio32/64 has 0xe0. extended
@@ -582,7 +641,8 @@ Bitu read_p3d5_vga(Bitu port,Bitu iolen) {
 	case 0x35:	/* CR35 CRT Register Lock */
 		return vga.s3.reg_35|(vga.s3.bank & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
-		return 0x8f;
+		//return 0x8f;
+		return 0x8e; /* PCI version */
 		//2 Mb PCI and some bios settings
 	case 0x37: /* Reset state read 2 */
 		return 0x2b;
@@ -590,17 +650,29 @@ Bitu read_p3d5_vga(Bitu port,Bitu iolen) {
 		return vga.s3.reg_lock1;
 	case 0x39: /* CR39 Register Lock 2 */
 		return vga.s3.reg_lock2;
+	case 0x40: /* CR40 system config */
+		return vga.s3.reg_40;
 	case 0x43:	/* CR43 Extended Mode */
 		return vga.s3.reg_43|((vga.config.scan_len>>6)&0x4);
+	case 0x45:  /* Hardware cursor mode */
+		vga.s3.hgc.bstackpos = 0;
+		vga.s3.hgc.fstackpos = 0;
+		return vga.s3.hgc.curmode;
 	case 0x51:	/* Extended System Control 2 */
 		return ((vga.config.display_start >> 16) & 3 ) |
 				((vga.s3.bank & 0x30) >> 2) |
 				((vga.config.scan_len & 0x300) >> 4) |
 				vga.s3.reg_51;
+	case 0x53:
+		return vga.s3.ext_mem_ctrl;
 	case 0x55:	/* Extended Video DAC Control */
 		return vga.s3.reg_55;
 	case 0x58:	/* Linear Address Window Control */
 		return	vga.s3.reg_58;
+	case 0x59:	/* Linear Address Window Position High */
+		return (vga.s3.la_window >> 8);
+	case 0x5a:	/* Linear Address Window Position Low */
+		return (vga.s3.la_window & 0xff);
 	case 0x5D:	/* Extended Horizontal Overflow */
 		return vga.s3.ex_hor_overflow;
 	case 0x5e:	/* Extended Vertical Overflow */

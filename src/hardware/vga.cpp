@@ -144,6 +144,7 @@ void VGA_Init(Section* sec) {
 	VGA_SetupSEQ();
 	VGA_SetupAttr();
 	VGA_SetupOther();
+	VGA_SetupXGA();
 	VGA_SetClock(0,CLK_25);
 	VGA_SetClock(1,CLK_28);
 /* Generate tables */

@@ -93,7 +93,7 @@ static void write_p3cf(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 5: /* Mode Register */
 		if ((gfx(mode) ^ val) & 0xf0) {
-			gfx(mode)=val;
+		gfx(mode)=val;
 			VGA_DetermineMode();
 		} else gfx(mode)=val;
 		vga.config.write_mode=val & 3;
