@@ -96,8 +96,8 @@ static void MakeSubWindows(void) {
 	dbg.win_data=subwin(dbg.win_main,10,dbg.win_main->_maxx,outy,0);
 	outy+=11;
 	/* The Code Window */
-	dbg.win_code=subwin(dbg.win_main,10,dbg.win_main->_maxx,outy,0);
-	outy+=11;
+	dbg.win_code=subwin(dbg.win_main,11,dbg.win_main->_maxx,outy,0);
+	outy+=12;
 	/* The output Window */	
 	dbg.win_out=subwin(dbg.win_main,dbg.win_main->_maxy-outy-1,dbg.win_main->_maxx,outy,0);
 	dbg.input_y=dbg.win_main->_maxy-1;
@@ -110,6 +110,9 @@ static void MakeSubWindows(void) {
 static void MakePairs(void) {
 	init_pair(PAIR_BLACK_BLUE, COLOR_BLACK, COLOR_CYAN);
 	init_pair(PAIR_BYELLOW_BLACK, COLOR_YELLOW /*| FOREGROUND_INTENSITY */, COLOR_BLACK);
+	init_pair(PAIR_GREEN_BLACK, COLOR_GREEN /*| FOREGROUND_INTENSITY */, COLOR_BLACK);
+	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
+	init_pair(PAIR_GREY_RED, COLOR_WHITE/*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
 
 

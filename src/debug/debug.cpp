@@ -33,7 +33,6 @@
 #include "mixer.h"
 #include "debug_inc.h"
 
-
 #ifdef WIN32
 void WIN32_Console();
 #endif
@@ -42,6 +41,7 @@ static struct  {
 	Bit32u eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
 } oldregs;
 
+static void DrawCode(void);
 
 static Segment oldsegs[6];
 static Flag_Info oldflags;
@@ -58,24 +58,206 @@ static void SetColor(bool test) {
 	}
 }
 
-enum { BKPNT_REALMODE,BKPNT_PHYSICAL };
+struct SCodeViewData {	
+	int		cursorPos;
+	Bit16u  firstInstSize;
+	Bit16u	useCS;
+	Bit32u	useEIPlast, useEIPmid;
+	Bit32u	useEIP, cursorAdr;
+	bool	inputMode;
+	char	inputStr[255];
 
-struct BreakPoint {
+} codeViewData;
+
+static Bit16u dataSeg,dataOfs;
+
+/********************/
+/* Breakpoint stuff */
+/********************/
+
+enum { BKPNT_REALMODE, BKPNT_PHYSICAL, BKPNT_INTERRUPT };
+
+typedef struct SBreakPoint {
 	PhysPt location;
 	Bit8u olddata;
 	Bit16u seg;
 	Bit16u off_16;
 	Bit32u off_32;
 	Bit8u type;
+	bool once;
 	bool enabled;
 	bool active;
+} TBreakpoint;
+
+static std::list<TBreakpoint> BPoints;
+
+static bool IsBreakpoint(PhysPt off)
+{
+	// iterate list and remove TBreakpoint
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		if ((*i).location==off) return true;
+	}
+	return false;
 };
 
-static std::list<struct BreakPoint> BPoints;
+/* This clears all breakpoints by replacing their 0xcc by the original byte */
+static void ClearBreakpoints(void) 
+{
+	// iterate list and place 0xCC 
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		if (((*i).type==BKPNT_PHYSICAL) && (*i).active) {
+			if (mem_readb((*i).location)==0xCC) mem_writeb((*i).location,(*i).olddata);
+			(*i).active = false;
+		};
+	}
+}
 
-static Bit16u dataSeg,dataOfs;
+static void DeleteBreakpoint(PhysPt off) 
+{
+	// iterate list and place 0xCC 
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		if (((*i).type==BKPNT_PHYSICAL) && (off==(*i).location)) {
+			if ((*i).active && (mem_readb((*i).location)==0xCC)) mem_writeb((*i).location,(*i).olddata);
+			(BPoints.erase)(i);
+			break;
+		};
+	}
+}
 
-static void DrawData() {
+static void SetBreakpoints(void) 
+{
+	// iterate list and place 0xCC 
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		if (((*i).type==BKPNT_PHYSICAL) && (*i).enabled) {
+			Bit8u data = mem_readb((*i).location);
+			if (data!=0xCC) {
+				(*i).olddata	= data;
+				(*i).active		= true;
+				mem_writeb((*i).location,0xCC);
+			}
+		};
+	}
+}
+
+static void AddBreakpoint(PhysPt off, bool once) 
+{
+	TBreakpoint bp;
+	bp.type		= BKPNT_PHYSICAL;
+	bp.enabled	= true;
+	bp.active	= false;
+	bp.location	= off;
+	bp.off_16	= RealOff(off);
+	bp.seg		= RealSeg(off);
+	bp.once		= once;
+	BPoints.push_front(bp);
+}
+
+static void AddIntBreakpoint(Bit8u intNum, Bit8u ah, bool once)
+{
+	TBreakpoint bp;
+	bp.type		= BKPNT_INTERRUPT;
+	bp.olddata	= intNum;
+	bp.location	= ah;
+	bp.enabled	= true;
+	bp.active	= true;
+	bp.once		= once;
+	BPoints.push_front(bp);
+};
+
+static bool RemoveBreakpoint(PhysPt off)
+{
+	// iterate list and remove TBreakpoint
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); i++) {
+		if (((*i).type==BKPNT_PHYSICAL) && ((*i).location==off)) {
+			TBreakpoint* bp = &(*i);
+			if ((*i).active && (mem_readb((*i).location)==0xCC)) mem_writeb((*i).location,(*i).olddata);
+			(*i).active = false;
+			if ((*i).once) (BPoints.erase)(i);
+			
+			return true;
+		};
+	}
+	return false;
+};
+
+static bool StepOver()
+{
+	PhysPt start=Segs[cs].phys+reg_eip;
+	char dline[200];Bitu size;
+	size=DasmI386(dline, start, reg_eip, false);
+
+	if (strstr(dline,"call") || strstr(dline,"int")) {
+		AddBreakpoint (Real2Phys(RealMake(SegValue(cs),reg_eip+size)), true);
+		SetBreakpoints();
+		debugging=false;
+		DrawCode();
+		DOSBOX_SetNormalLoop();
+		return true;
+	} 
+	return false;
+};
+
+bool DEBUG_BreakPoint(void) {
+	/* First get the phyiscal address and check for a set TBreakpoint */
+	PhysPt where=SegPhys(cs)+reg_eip-1;
+	bool found	  = false;
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
+		if ((*i).active && (*i).enabled) {
+			if ((*i).location==where) {
+				found=true;
+				break;
+			}
+		}
+	}
+	if (!found) return false;
+	RemoveBreakpoint(where);
+	reg_eip -= 1;
+	DEBUG_Enable();
+	return true;
+}
+
+bool DEBUG_IntBreakpoint(Bit8u intNum)
+{
+	PhysPt where=SegPhys(cs)+reg_eip-2;
+	bool found=false;
+	std::list<TBreakpoint>::iterator i;
+	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
+		if ( ((*i).type==BKPNT_INTERRUPT) && (*i).enabled) {
+			if (((*i).olddata==intNum) && ((*i).location==reg_ah)) {
+				if ((*i).active) {
+					found=true;
+					(*i).active=false;
+					//(BPoints.erase)(i);
+					//break;
+				} else {
+					// One step over is ok -> activate for next occurence
+					(*i).active=true;
+					//break;
+				}
+			}
+		}
+	}
+	if (!found) return false;
+
+	// Remove normal breakpoint here, cos otherwise 0xCC wont be removed here
+	RemoveBreakpoint(where);
+	RemoveBreakpoint(where+2);
+	reg_eip -= 2;
+	DEBUG_Enable();
+	return true;
+};
+
+/********************/
+/*   Draw windows   */
+/********************/
+
+static void DrawData(void) {
 	
 	Bit16u add = 0;
 	/* Data win */	
@@ -132,70 +314,155 @@ static void DrawRegisters(void) {
 	wrefresh(dbg.win_reg);
 };
 
-
-static void DrawCode(void) {
-	PhysPt start=SegPhys(cs)+reg_eip;
+static void DrawCode(void) 
+{
+	Bit32u disEIP = codeViewData.useEIP;
+	PhysPt start  = Segs[cs].phys + codeViewData.useEIP;
 	char dline[200];Bitu size;Bitu c;
 	for (Bit32u i=0;i<10;i++) {
-		size=DasmI386(dline, start, reg_eip, false);
-		mvwprintw(dbg.win_code,i,0,"%02X:%04X  ",SegValue(cs),(start-SegPhys(cs)));
+
+		if (has_colors()) {
+			if (disEIP == reg_eip) {
+				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREEN_BLACK));			
+				if (codeViewData.cursorPos==-1) {
+					codeViewData.cursorPos = i; // Set Cursor 
+					codeViewData.cursorAdr = start;
+				}
+			} else if (i == codeViewData.cursorPos) {
+				wattrset(dbg.win_code,COLOR_PAIR(PAIR_BLACK_GREY));			
+				codeViewData.cursorAdr = start;
+			} else if (IsBreakpoint(start)) {
+				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREY_RED));			
+			} else {
+				wattrset(dbg.win_code,0);			
+			}
+		}
+
+		size=DasmI386(dline, start, disEIP, false);
+		mvwprintw(dbg.win_code,i,0,"%02X:%04X  ",SegValue(cs),disEIP);
 		for (c=0;c<size;c++) wprintw(dbg.win_code,"%02X",mem_readb(start+c));
 		for (c=20;c>=size*2;c--) waddch(dbg.win_code,' ');
 		waddstr(dbg.win_code,dline);
 		for (c=30-strlen(dline);c>0;c--) waddch(dbg.win_code,' ');
 		start+=size;
+		disEIP+=size;
+
+		if (i==0) codeViewData.firstInstSize = size;
+		if (i==4) codeViewData.useEIPmid	 = disEIP;
 	}
+
+	codeViewData.useEIPlast = disEIP;
+	
+	if (!debugging) {
+		mvwprintw(dbg.win_code,10,0,"(Running)",codeViewData.inputStr);		
+	} else if (codeViewData.inputMode) {
+		mvwprintw(dbg.win_code,10,0,"-> %s_  ",codeViewData.inputStr);		
+	} else {
+		mvwprintw(dbg.win_code,10,0," ");
+		for (c=0;c<50;c++) waddch(dbg.win_code,' ');
+	};
+	
 	wrefresh(dbg.win_code);
 }
-/* This clears all breakpoints by replacing their 0xcc by the original byte */
-static void ClearBreakPoints(void) {
 
-//	for (Bit32u i=0;i<MAX_BREAKPOINT;i++) {
-//		if (bpoints[i].active && bpoints[i].enabled) {
-//			mem_writeb(bpoints[i].location,bpoints[i].olddata);
-//		}
-//	}
-}
-
-static void SetBreakPoints(void) {
-//	for (Bit32u i=0;i<MAX_BREAKPOINT;i++) {
-//		if (bpoints[i].active && bpoints[i].enabled) {
-//			bpoints[i].olddata=mem_readb(bpoints[i].location);
-//			mem_writeb(bpoints[i].location,0xcc);
-//		}
-//	}
-}
-
-
-
-static void AddBreakPoint(PhysPt off) {
-	
-}
-
-
-bool DEBUG_BreakPoint(void) {
-	/* First get the phyiscal address and check for a set breakpoint */
-	PhysPt where=SegPhys(cs)+reg_ip-1;
-	bool found=false;
-	std::list<BreakPoint>::iterator i;
-	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
-		if ((*i).active && (*i).enabled) {
-			if ((*i).location==where) {
-				found=true;
-				break;
-			}
-		}
+static void SetCodeWinStart()
+{
+	if ((SegValue(cs)==codeViewData.useCS) && (reg_eip>=codeViewData.useEIP) && (reg_eip<=codeViewData.useEIPlast)) {
+		// in valid window - scroll ?
+		if (reg_eip>=codeViewData.useEIPmid) codeViewData.useEIP += codeViewData.firstInstSize;
+		
+	} else {
+		// totally out of range.
+		codeViewData.useCS	= SegValue(cs);
+		codeViewData.useEIP	= reg_eip;
 	}
-	if (!found) return false;
-	ClearBreakPoints();
-	DEBUG_Enable();
+	codeViewData.cursorPos = -1;	// Recalc Cursor position
+};
 
-	SetBreakPoints();
+/********************/
+/*    User input    */
+/********************/
+
+Bit32u GetHexValue(char* str, char*& hex)
+{
+	Bit32u	value = 0;
+
+	hex = str;
+	while (*hex==' ') hex++;
+	while (*hex) {
+		if ((*hex>='0') && (*hex<='9')) value = (value<<4)+*hex-'0';	  else
+		if ((*hex>='A') && (*hex<='F')) value = (value<<4)+*hex-'A'+10; 
+		else break; // No valid char
+		hex++;
+	};
+	return value;
+};
+
+bool ParseCommand(char* str)
+{
+	char* found = str;
+	while (*found) *found++=toupper(*found);
+	found = strstr(str,"BP ");
+	if (found) { // Add new breakpoint
+		found+=3;
+		Bit16u seg = GetHexValue(found,found);
+		found++; // skip ":"
+		Bit32u ofs = GetHexValue(found,found);
+		AddBreakpoint((seg<<4)+ofs,false);
+		LOG_DEBUG("DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
+		return true;
+	}
+	found = strstr(str,"BPINT");
+	if (found) { // Add Interrupt Breakpoint
+		found+=5;
+		Bit8u intNr	= GetHexValue(found,found);
+		Bit8u valAH	= GetHexValue(found,found);
+		AddIntBreakpoint(intNr,valAH,false);
+		LOG_DEBUG("DEBUG: Set interrupt breakpoint at INT %02X AH=%02X",intNr,valAH);
+		return true;
+	}
+	found = strstr(str,"BPDEL");
+	if (found) { // Add Interrupt Breakpoint
+		(BPoints.clear)();		
+		LOG_DEBUG("DEBUG: Breakpoints deleted.");
+		return true;
+	}
+	found = strstr(str,"D ");
+	if (found) { // Add Interrupt Breakpoint
+		found++;
+		dataSeg = GetHexValue(found,found);
+		dataOfs = GetHexValue(found,found);
+		LOG_DEBUG("DEBUG: Set data overview to %04X:%04X",dataSeg,dataOfs);
+		return true;
+	}
+
 	return false;
-}
-
+};
 
 Bit32u DEBUG_CheckKeys(void) {
+
+	if (codeViewData.inputMode) {
+		int key = getch();
+		if (key>0) {
+			switch (key) {
+				case 0x0A:	codeViewData.inputMode = FALSE;
+							ParseCommand(codeViewData.inputStr);
+							break;
+				case 0x08:	// delete
+							if (strlen(codeViewData.inputStr)>0) codeViewData.inputStr[strlen(codeViewData.inputStr)-1] = 0;
+							break;
+				default	:	if ((key>=32) && (key<=128) && (strlen(codeViewData.inputStr)<253)) {
+								Bit32u len = strlen(codeViewData.inputStr);
+								codeViewData.inputStr[len]	= char(key);
+								codeViewData.inputStr[len+1] = 0;
+							}
+							break;
+			}
+			DEBUG_DrawScreen();
+		}
+		return 0;
+	};	
+	
 	int key=getch();
 	Bit32u ret=0;
 	if (key>0) {
@@ -218,7 +485,6 @@ Bit32u DEBUG_CheckKeys(void) {
 		case 'q':
 			ret=(*cpudecoder)(5);
 			break;
-
 		case 'd':	dataSeg = SegValue(ds);
 					dataOfs = reg_si;
 					break;
@@ -231,12 +497,50 @@ Bit32u DEBUG_CheckKeys(void) {
 		case 'b':	dataSeg = SegValue(es);
 					dataOfs = reg_bx;
 					break;
+		case 's':	dataSeg	= SegValue(ss);
+					dataOfs	= reg_sp;
+					break;
 
 		case 'r' :	dataOfs -= 16;	break;
 		case 'f' :	dataOfs += 16;	break;
 
-		default:
-			ret=(*cpudecoder)(1);
+		case 0x0A	:	// Return : input
+						codeViewData.inputMode = true;
+						codeViewData.inputStr[0] = 0;
+						break;
+		case KEY_DOWN:	// down 
+						if (codeViewData.cursorPos<9) codeViewData.cursorPos++;
+						else codeViewData.useEIP += codeViewData.firstInstSize;	
+						break;
+		case KEY_UP:	// up 
+						if (codeViewData.cursorPos>0) codeViewData.cursorPos--;
+						else codeViewData.useEIP -= 1;
+						break;
+		case KEY_F(5):	// Run Programm
+						debugging=false;
+						SetBreakpoints();
+						DOSBOX_SetNormalLoop();	
+						break;
+		case KEY_F(9):	// Set/Remove TBreakpoint
+						if (IsBreakpoint(codeViewData.cursorAdr)) DeleteBreakpoint(codeViewData.cursorAdr);
+						else AddBreakpoint(codeViewData.cursorAdr, false);
+						break;
+		case KEY_F(10):	// Step over inst
+						if (StepOver()) return 0;
+						else {
+							Bitu ret=(*cpudecoder)(1);
+							SetCodeWinStart();
+						}
+						break;
+		case KEY_F(11):	// trace into
+						ret = (*cpudecoder)(1);
+						SetCodeWinStart();
+						break;
+
+//		default:
+//			// FIXME : Is this correct ?
+//			if (key<0x200) ret=(*cpudecoder)(1);
+//			break;
 		};
 		DEBUG_DrawScreen();
 	}
@@ -246,21 +550,34 @@ Bit32u DEBUG_CheckKeys(void) {
 Bitu DEBUG_Loop(void) {
 //TODO Disable sound
 	GFX_Events();
+	// Interrupt started ? - then skip it
+	Bit16u oldCS	= SegValue(cs);
+	Bit32u oldEIP	= reg_eip;
 	PIC_runIRQs();
+	if ((oldCS!=SegValue(cs)) || (oldEIP!=reg_eip)) {
+		PhysPt intBpAdr = Real2Phys(RealMake(oldCS,oldEIP));
+		AddBreakpoint(intBpAdr,true);
+		SetBreakpoints();
+		debugging=false;
+		DOSBOX_SetNormalLoop();
+		return 0;
+	}
+
 	return DEBUG_CheckKeys();
 }
 
 void DEBUG_Enable(void) {
-	DEBUG_DrawScreen();
 	debugging=true;
+	SetCodeWinStart();
+	DEBUG_DrawScreen();
 	DOSBOX_SetLoop(&DEBUG_Loop);
 }
 
 
 void DEBUG_DrawScreen(void) {
 	DrawRegisters();
-	DrawCode();
 	DrawData();
+	DrawCode();
 }
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
@@ -280,9 +597,10 @@ void DEBUG_Init(void) {
 	/* Add some keyhandlers */
 	KEYBOARD_AddEvent(KBD_kpminus,0,DEBUG_Enable);
 	KEYBOARD_AddEvent(KBD_kpplus,0,DEBUG_RaiseTimerIrq);
-	/* Clear the breakpoint list */
-
+	/* Clear the TBreakpoint list */
+	memset((void*)&codeViewData,0,sizeof(codeViewData));
+	(BPoints.clear)();
 }
 
-
 #endif
+

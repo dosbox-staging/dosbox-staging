@@ -22,6 +22,9 @@
 
 #define PAIR_BLACK_BLUE 1
 #define PAIR_BYELLOW_BLACK 2
+#define PAIR_GREEN_BLACK 3
+#define PAIR_BLACK_GREY 4
+#define PAIR_GREY_RED 5
 
 
 void DBGUI_StartUp(void);
