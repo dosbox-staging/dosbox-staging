@@ -206,9 +206,8 @@ static void PCSPEAKER_CallBack(Bit8u * stream,Bit32u len) {
 }
 
 void PCSPEAKER_Init(Section* sec) {
-    MSG_Add("SPEAKER_CONFIGFILE_HELP","PC-Speaker and TandySound options.\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("enabled")) return;
+	if(!section->Get_bool("pcspeaker")) return;
 	spkr.volume=SPKR_VOLUME;
 	spkr.mode=MODE_NONE;
 	spkr.pit_mode=MODE_WAVE;
