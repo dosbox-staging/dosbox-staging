@@ -55,6 +55,12 @@ enum {DAC_READ,DAC_WRITE};
 
 static void write_p3c6(Bit32u port,Bit8u val) {
 	if (val!=0xff) LOG_ERROR("VGA:Pel Mask not 0xff");
+	vga.dac.pel_mask=val;
+}
+
+
+static Bit8u read_p3c6(Bit32u port) {
+	return vga.dac.pel_mask;
 }
 
 
@@ -151,6 +157,7 @@ void VGA_SetupDAC(void) {
 
 	/* Setup the DAC IO port Handlers */
 	IO_RegisterWriteHandler(0x3c6,write_p3c6,"PEL Mask");	
+	IO_RegisterReadHandler(0x3c6,read_p3c6,"PEL Mask");
 	IO_RegisterWriteHandler(0x3c7,write_p3c7,"PEL Read Mode");
 	IO_RegisterWriteHandler(0x3c8,write_p3c8,"PEL Write Mode");
 	IO_RegisterWriteHandler(0x3c9,write_p3c9,"PEL Data");	
