@@ -38,64 +38,6 @@
 
 char dosbox_basedir[CROSS_LEN];
 
-
-#if 0
-
-int main(int argc, char* argv[]) {
-
-	
-
-	/* Strip out the dosbox startup directory */
-	
-	
-	
-	/* Handle the command line for new stuff to add to autoexec.bat */
-	int argl=1;
-	if (argc>1) {
-		if (*argv[1]!='-') {
-			struct stat test;
-			if (stat(argv[1],&test)) {
-				E_Exit("%s Doesn't exist",argv[1]);
-			}
-			/* Not a switch so a normal directory/file */
-			if (test.st_mode & S_IFDIR) { 
-				SHELL_AddAutoexec("MOUNT C %s",argv[1]);
-				SHELL_AddAutoexec("C:");
-			} else {
-				char * name=strrchr(argv[1],CROSS_FILESPLIT);
-				if (!name) E_Exit("This is weird %s",argv[1]);
-				*name++=0;
-				if (access(argv[1],F_OK)) E_Exit("Illegal Directory %s",argv[1]);
-				SHELL_AddAutoexec("MOUNT C %s",argv[1]);
-				SHELL_AddAutoexec("C:");
-				SHELL_AddAutoexec(name);
-			}
-			argl++;
-		}
-	}
-	bool sw_c=false;
-	while (argl<argc) {
-		if (*argv[argl]=='-') {
-			sw_c=false;
-			if (strcmp(argv[argl],"-c")==0) sw_c=true;
-			else E_Exit("Illegal switch %s",argv[argl]);
-			argl++;
-			continue;
-		}
-			SHELL_AddAutoexec(argv[argl]);
-		if (sw_c) {
-		}
-		argl++;
-	}
-
-	SysShutDown();
-
-	SDL_Quit();
-	return 0;
-}
-
-#endif
-
 //The whole load of startups for all the subfunctions
 void MSG_Init(void);
 void MEM_Init(void);
@@ -147,7 +89,7 @@ void MEMORY_ShutDown(void);
 
 
 
-Bit32u LastTicks;
+
 static LoopHandler * loop;
 
 static Bitu Normal_Loop(void) {
@@ -159,31 +101,16 @@ static Bitu Normal_Loop(void) {
 		LastTicks=new_ticks;
 		TIMER_AddTicks(ticks);
 	}
-	TIMER_CheckPIT();
 	GFX_Events();
+	TIMER_CheckPIT();
 	PIC_runIRQs();
-	return (*cpudecoder)(cpu_cycles);
+	Bitu ret;
+	do {
+		ret=(*cpudecoder)(cpu_cycles);
+	} while (!ret && TimerAgain);
+	return ret;
 };
 
-
-static Bitu Speed_Loop(void) {
-	Bit32u new_ticks;
-	new_ticks=GetTicks();
-	Bitu ret=0;
-	Bitu cycles=1;
-	if (new_ticks>LastTicks) {
-		Bit32u ticks=new_ticks-LastTicks;
-		if (ticks>20) ticks=20;
-//		if (ticks>3) LOG_DEBUG("Ticks %d",ticks);
-		LastTicks=new_ticks;
-		TIMER_AddTicks(ticks);
-		cycles+=cpu_cycles*ticks;
-	}
-	TIMER_CheckPIT();
-	GFX_Events();
-	PIC_runIRQs();
-	return (*cpudecoder)(cycles);
-}
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
 	loop=handler;
@@ -218,6 +145,10 @@ static void InitSystems(void) {
 #if C_DEBUG
 	DEBUG_Init();
 #endif
+
+	LastTicks=GetTicks();
+	DOSBOX_SetLoop(&Normal_Loop);
+
 	//Start up individual hardware
 	DMA_Init();
 	PIC_Init();
@@ -226,22 +157,17 @@ static void InitSystems(void) {
 	MOUSE_Init();
 	JOYSTICK_Init();
 	SBLASTER_Init();
-	TANDY_Init();
-	PCSPEAKER_Init();
+//	TANDY_Init();
+//	PCSPEAKER_Init();
 	ADLIB_Init();
-	CMS_Init();
+//	CMS_Init();
 
 	PLUGIN_Init();
-/* Most of teh interrupt handlers */
+/* Most of the interrupt handlers */
 	BIOS_Init();
 	DOS_Init();
 	EMS_Init();		//Needs dos first
 	XMS_Init();		//Needs dos first
-
-/* Setup the normal system loop */
-	LastTicks=GetTicks();
-	DOSBOX_SetLoop(&Normal_Loop);
-//	DOSBOX_SetLoop(&Speed_Loop);
 }
 
 
