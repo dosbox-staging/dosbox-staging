@@ -388,6 +388,9 @@ l_M_Ed:
 	case D_AAS:
 		AAS();
 		goto nextopcode;
+	case D_CPUID:
+		CPU_CPUID();
+		goto nextopcode;
 	default:
 		LOG(LOG_CPU|LOG_ERROR,"LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		break;

@@ -96,6 +96,9 @@ bool Interrupt(Bitu num);
 bool CPU_IRET(bool use32);
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 
+void CPU_CPUID(void);
+
+
 //Flag Handling
 Bitu get_CF(void);
 Bitu get_AF(void);

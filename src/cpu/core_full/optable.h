@@ -294,7 +294,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x1a0 - 0x1a7 */
 {L_SEG		,0		,S_PUSHw	,fs		},{L_POPw	,0			,S_SEGI	,fs		},
-{0			,0			,0		,0		},{L_MODRM	,O_BTw		,0		,0		},
+{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTw		,0		,0		},
 {L_MODRM	,O_DSHLw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHLw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1a8 - 0x1af */
@@ -651,7 +651,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x3a0 - 0x3a7 */
 {L_SEG		,0		,S_PUSHd	,fs		},{L_POPd	,0			,S_SEGI	,fs		},
-{0			,0			,0		,0		},{L_MODRM	,O_BTd		,0		,0		},
+{D_CPUID	,0			,0		,0		},{L_MODRM	,O_BTd		,0		,0		},
 {L_MODRM	,O_DSHLd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHLd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x3a8 - 0x3af */

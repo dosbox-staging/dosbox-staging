@@ -569,10 +569,29 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	return false;
 }
 
+void CPU_CPUID(void) {
+	switch (reg_eax) {
+	case 0:	/* Vendor ID String and maximum level? */
+		reg_eax=0;
+		reg_ebx=('G'<< 24) || ('e' << 16) || ('n' << 8) || 'u';
+		reg_edx=('i'<< 24) || ('n' << 16) || ('e' << 8) || 'T';
+		reg_ecx=('n'<< 24) || ('t' << 16) || ('e' << 8) || 'l';
+		break;
+	case 1:	/* get processor type/family/model/stepping and feature flags */
+		reg_eax=0x402;		/* intel 486 sx? */
+		reg_ebx=0;			/* Not Supported */
+		reg_ecx=0;			/* No features */
+		reg_edx=0;			/* Nothing either */
+		break;
+	default:
+		LOG(LOG_CPU|LOG_ERROR,"Unhandled CPUID Function %x",reg_eax);
+		break;
+	}
+	
+}
+
 void CPU_Real_16_Slow_Start(void);
-
 void CPU_Core_Full_Start(void);
-
 
 void SetCPU16bit()
 {

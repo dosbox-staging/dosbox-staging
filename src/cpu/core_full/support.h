@@ -42,6 +42,7 @@ enum {
 
 	D_RETFw,D_RETFd,
 	D_RETFwIw,D_RETFdIw,
+	D_CPUID,
 };
 
 
