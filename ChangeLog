@@ -1,3 +1,26 @@
+0.64
+  - Fixed FAT writing.
+  - Added some more missing DOS functions.
+  - Improved PIC so that it actually honours irq 2/9.
+  - Improved intelligent MPU 401 mode so that more games work with it.
+  - Some mouse fixes.
+  - Changed DMA transfers a bit so they bypass the paging tables.
+  - Added S3 XGA functionality.
+  - Improved paging so that read and write faults are handled differently.
+  - Rewrote exception handling a bit (no exception 0x0B with dos4gw anymore).
+  - Added IO exceptions in all but the dynamic core.
+  - Some ems improvements.
+  - Added midi-device selection code for the windows hosts.
+  - Fix crashes/segfaults related to the disabling of the pcspeaker.
+  - Added some more FILES=XX detection tricks.
+  - Fixed some vga detection schemes.
+  - Lot's of small bug fixes.
+  - Fixed screenshot corruption when using -noconsole in a read-only directory.
+  - Addes some hidden file functions when using diskimages. (helps with cdrom 
+    detection schemes)
+  - Fixed a bug in the mixer code, that muted the music in certain games.
+  
+
 0.63
   - Fixed crash with keymapper (ctrl-f1) and output=surface.
   - Added unmounting.
