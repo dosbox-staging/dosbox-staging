@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _BIOS_H_
-#define _BIOS_H_
+#ifndef DOSBOX_BIOS_H
+#define DOSBOX_BIOS_H
 
 #define BIOS_BASE_ADDRESS_COM1          0x400
 #define BIOS_BASE_ADDRESS_COM2          0x402
@@ -112,8 +112,12 @@ struct diskGeo {
 extern diskGeo DiskGeometryList[];
 
 #include <stdio.h>
+#ifndef DOSBOX_MEM_H
 #include "mem.h"
+#endif
+#ifndef DOSBOX_DOS_INC_H
 #include "dos_inc.h"
+#endif
 
 class imageDisk  {
 public:
@@ -153,7 +157,7 @@ extern DOS_DTA *imgDTA;
 void swapInDisks(void);
 void swapInNextDisk(void);
 
-void BIOS_ZeroExtendedSize(void);
+void BIOS_ZeroExtendedSize(bool in);
 void char_out(Bit8u chr,Bit32u att,Bit8u page);
 void INT10_StartUp(void);
 void INT16_StartUp(void);
