@@ -95,7 +95,7 @@ static Bit8u * VGA_EGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	return &vga.mem.linear[512*1024+vidstart*8+panning];
 }
 static Bit8u * VGA_VGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	return &vga.mem.linear[vidstart*4+panning/2];
+	return &vga.mem.linear[vidstart*4+panning];
 }
 
 
@@ -191,6 +191,7 @@ static void VGA_DrawPart(void) {
 		}
 		if (vga.draw.split_line==vga.draw.lines_left) {
 			vga.draw.address=0;vga.draw.panning=0;
+			vga.draw.address_line=0;
 		}
 	}
 	RENDER_EndUpdate();
@@ -214,6 +215,7 @@ static void VGA_VerticalTimer(void) {
 		/* check for blinking and blinking change delay */
 		FontMask[1]=(vga.attr.mode_control & (vga.draw.cursor.count >> 1) & 0x8) ?
 			0 : 0xffffffff;
+		vga.draw.address=(vga.draw.address*2);
 		break;
 	case M_CGA4:case M_CGA2:case M_CGA16:
 		vga.draw.address=(vga.draw.address*2)&0x1fff;
