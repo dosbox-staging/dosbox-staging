@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.42 2004-05-04 18:34:07 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.43 2004-05-05 21:56:04 harekiet Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -208,10 +208,9 @@ INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 
 
 /* Remains some classes used to access certain things */
-
-#define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)&(((s *)0)->m))
-#define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)&(((s *)0)->m),val)
-
+#define sOffset(s,m) ((char*)&(((s*)NULL)->m)-(char*)NULL)
+#define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)sOffset(s,m))
+#define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)sOffset(s,m),val)
 
 class MemStruct {
 public:
