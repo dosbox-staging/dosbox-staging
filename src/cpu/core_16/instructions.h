@@ -36,6 +36,13 @@
 		ADDIPFAST(2);											\
 	}						
 
+#define SETcc(cc)															\
+	{																		\
+		GetRM;																\
+		if (rm >= 0xc0 ) {GetEArb;*earb=(cc) ? 1 : 0;}						\
+		else {GetEAa;SaveMb(eaa,(cc) ? 1 : 0);}								\
+	}
+
 #define INTERRUPT(blah)										\
 	{														\
 		Bit8u new_num=blah;									\
@@ -257,207 +264,248 @@
 //TODO Maybe make this into a bigger split up because of the rm >=0xc0 this seems make it a bit slower
 //TODO set Zero and Sign flag in one run 	
 #define ROLB(op1,op2,load,save)								\
-	if (!(op2&0x07)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.b=load(op1);flags.var2.b=op2&0x07;				\
-	flags.result.b=(flags.var1.b << flags.var2.b) |			\
+	flags.var2.b=op2&0x07;flags.var1.b=load(op1);			\
+	if (!flags.var2.b)	{									\
+		flags.result.b=flags.var1.b;						\
+	} else {												\
+		flags.result.b=(flags.var1.b << flags.var2.b) |		\
 				(flags.var1.b >> (8-flags.var2.b));			\
+	}														\
 	save(op1,flags.result.b);								\
 	flags.type=t_ROLb;
 
 #define ROLW(op1,op2,load,save)								\
-	if (!(op2&0x0F)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.w=load(op1);flags.var2.b=op2&0x0F;				\
-	flags.result.w=(flags.var1.w << flags.var2.b) |			\
-				(flags.var1.w >> (16-flags.var2.b));			\
+	flags.var2.b=op2&0x0F;flags.var1.w=load(op1);			\
+	if (!flags.var2.b)	{									\
+		flags.result.w=flags.var1.w;						\
+	} else {												\
+		flags.result.w=(flags.var1.w << flags.var2.b) |		\
+				(flags.var1.w >> (16-flags.var2.b));		\
+	}														\
 	save(op1,flags.result.w);								\
 	flags.type=t_ROLw;
 
-
 #define ROLD(op1,op2,load,save)								\
-	if (!(op2&0x0F)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.d=load(op1);flags.var2.b=op2&0x0F;				\
+	flags.var2.b=op2&0x1F;flags.var1.d=load(op1);			\
 	flags.result.d=(flags.var1.d << flags.var2.b) |			\
-				(flags.var1.d >> (32-flags.var2.b));			\
+				(flags.var1.d >> (32-flags.var2.b));		\
 	save(op1,flags.result.d);								\
 	flags.type=t_ROLd;
 
 
 #define RORB(op1,op2,load,save)								\
-	if (!(op2&0x07)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.b=load(op1);flags.var2.b=op2&0x07;				\
-	flags.result.b=(flags.var1.b >> flags.var2.b) |			\
+	flags.var2.b=op2&0x07;flags.var1.b=load(op1);			\
+	if (!flags.var2.b)	{									\
+		flags.result.b=flags.var1.b;						\
+	} else {												\
+		flags.result.b=(flags.var1.b >> flags.var2.b) |		\
 				(flags.var1.b << (8-flags.var2.b));			\
+	}														\
 	save(op1,flags.result.b);								\
 	flags.type=t_RORb;
 
-
 #define RORW(op1,op2,load,save)								\
-	if (!(op2&0x0F)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.w=load(op1);flags.var2.b=op2&0x0F;				\
-	flags.result.w=(flags.var1.w >> flags.var2.b) |			\
-				(flags.var1.w << (16-flags.var2.b));			\
+	flags.var2.b=op2&0x0F;flags.var1.w=load(op1);			\
+	if (!flags.var2.b)	{									\
+		flags.result.w=flags.var1.w;						\
+	} else {												\
+		flags.result.w=(flags.var1.w >> flags.var2.b) |		\
+				(flags.var1.w << (16-flags.var2.b));		\
+	}														\
 	save(op1,flags.result.w);								\
 	flags.type=t_RORw;
 
 #define RORD(op1,op2,load,save)								\
-	if (!(op2&0x0F)) break;									\
+	if (!(op2&0x1F)) break;									\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
-	flags.var1.d=load(op1);flags.var2.b=op2&0x0F;				\
+	flags.var2.b=op2&0x1F;flags.var1.d=load(op1);			\
 	flags.result.d=(flags.var1.d >> flags.var2.b) |			\
-				(flags.var1.d << (32-flags.var2.b));			\
+				(flags.var1.d << (32-flags.var2.b));		\
 	save(op1,flags.result.d);								\
 	flags.type=t_RORd;
 
+
+/*	flags.oldcf=get_CF();*/									\
+
 #define RCLB(op1,op2,load,save)								\
-	if (!(op2%9)) break;									\
+	if (!(op2 & 0x1F)) break;								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCLb;					\
-	flags.var1.b=load(op1);flags.var2.b=op2%9;				\
-	flags.result.b=(flags.var1.b << flags.var2.b) |			\
-				(flags.cf << (flags.var2.b-1)) |				\
+	flags.var2.b=(op2 & 0x1F)%9;flags.var1.b=load(op1);		\
+	if (!flags.var2.b)	{									\
+		flags.result.b=flags.var1.b;						\
+	} else {												\
+		flags.result.b=(flags.var1.b << flags.var2.b) |		\
+				(flags.cf << (flags.var2.b-1)) |			\
 				(flags.var1.b >> (9-flags.var2.b));			\
-	save(op1,flags.result.b);
+		flags.cf=((flags.var1.b >> (8-flags.var2.b)) & 1);	\
+	}														\
+	flags.of=((flags.result.b & 0x80) ^ (flags.cf ? 0x80 : 0)) != 0;	\
+ 	save(op1,flags.result.b);
 
 #define RCLW(op1,op2,load,save)								\
-	if (!(op2%17)) break;									\
+	if (!(op2 & 0x1F)) break;								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCLw;					\
-	flags.var1.w=load(op1);flags.var2.b=op2%17;				\
-	flags.result.w=(flags.var1.w << flags.var2.b) |			\
-				(flags.cf << (flags.var2.b-1)) |				\
-				(flags.var1.w >> (17-flags.var2.b));			\
+	flags.var2.b=(op2 & 0x1F)%17;flags.var1.w=load(op1);	\
+	if (!flags.var2.b)	{									\
+		flags.result.w=flags.var1.w;						\
+	} else {												\
+		flags.result.w=(flags.var1.w << flags.var2.b) |		\
+				(flags.cf << (flags.var2.b-1)) |			\
+				(flags.var1.w >> (17-flags.var2.b));		\
+		flags.cf=((flags.var1.w >> (16-flags.var2.b)) & 1);	\
+	}														\
+	flags.of=((flags.result.w & 0x8000) ^ (flags.cf ? 0x8000 : 0)) != 0;	\
 	save(op1,flags.result.w);
 
 #define RCLD(op1,op2,load,save)								\
-	if (!op2) break;										\
+	if (!(op2 & 0x1F)) break;								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCLd;					\
-	flags.var1.d=load(op1);flags.var2.b=op2;					\
-	if (flags.var2.b==1)	{									\
-		flags.result.d=flags.var1.d << 1 | flags.cf;			\
+	flags.var2.b=op2 & 0x1F;flags.var1.d=load(op1);			\
+	if (flags.var2.b==1)	{								\
+		flags.result.d=flags.var1.d << 1 | flags.cf;		\
 	} else 	{												\
 		flags.result.d=(flags.var1.d << flags.var2.b) |		\
-				(flags.cf << (flags.var2.b-1)) |				\
-				(flags.var1.d >> (33-flags.var2.b));			\
+				(flags.cf << (flags.var2.b-1)) |			\
+				(flags.var1.d >> (33-flags.var2.b));		\
 	}														\
+	flags.cf=((flags.var1.d >> (32-flags.var2.b)) & 1);	\
+	flags.of=((flags.result.d & 0x80000000) ^ (flags.cf ? 0x80000000 : 0)) != 0;	\
 	save(op1,flags.result.d);
 
 #define RCRB(op1,op2,load,save)								\
-	if (!(op2%9)) break; 									\
+	if (!(op2 & 0x1F)) break; 								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCRb;					\
-	flags.var1.b=load(op1);flags.var2.b=op2%9;				\
- 	flags.result.b=(flags.var1.b >> flags.var2.b) |			\
-				(flags.cf << (8-flags.var2.b)) |				\
+	flags.var2.b=(op2 & 0x1F)%9;flags.var1.b=load(op1);		\
+	if (!flags.var2.b)	{									\
+		flags.result.b=flags.var1.b;						\
+	} else {												\
+	 	flags.result.b=(flags.var1.b >> flags.var2.b) |		\
+				(flags.cf << (8-flags.var2.b)) |			\
 				(flags.var1.b << (9-flags.var2.b));			\
+	}														\
 	save(op1,flags.result.b);
 
 #define RCRW(op1,op2,load,save)								\
-	if (!(op2%17)) break;									\
+	if (!(op2 & 0x1F)) break;								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCRw;					\
-	flags.var1.w=load(op1);flags.var2.b=op2%17;				\
- 	flags.result.w=(flags.var1.w >> flags.var2.b) |			\
+	flags.var2.b=(op2 & 0x1F)%17;flags.var1.w=load(op1);	\
+	if (!flags.var2.b)	{									\
+		flags.result.w=flags.var1.w;						\
+	} else {												\
+	 	flags.result.w=(flags.var1.w >> flags.var2.b) |		\
 				(flags.cf << (16-flags.var2.b)) |			\
-				(flags.var1.w << (17-flags.var2.b));			\
+				(flags.var1.w << (17-flags.var2.b));		\
+	}														\
 	save(op1,flags.result.w);
 
-
 #define RCRD(op1,op2,load,save)								\
-	if (!op2) break;										\
+	if (!(op2 & 0x1F)) break;								\
 	flags.zf=get_ZF();flags.sf=get_SF();flags.af=get_AF();	\
 	flags.cf=get_CF();flags.type=t_RCRd;					\
-	flags.var1.d=load(op1);flags.var2.b=op2;					\
+	flags.var2.b=op2 & 0x1F;flags.var1.d=load(op1);			\
 	if (flags.var2.b==1) {									\
 		flags.result.d=flags.var1.d >> 1 | flags.cf << 31;	\
 	} else {												\
  		flags.result.d=(flags.var1.d >> flags.var2.b) |		\
 				(flags.cf << (32-flags.var2.b)) |			\
-				(flags.var1.d << (33-flags.var2.b));			\
+				(flags.var1.d << (33-flags.var2.b));		\
 	}														\
 	save(op1,flags.result.d);
 
+
 #define SHLB(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b << flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.b=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.b=flags.var1.b << flags.var2.b;			\
 	save(op1,flags.result.b);								\
 	flags.type=t_SHLb;
 
 #define SHLW(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.w=load(op1);flags.var2.b=op2;					\
-	flags.result.w=flags.var1.w << flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.w=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.w=flags.var1.w << flags.var2.b;			\
 	save(op1,flags.result.w);								\
 	flags.type=t_SHLw;
 
 #define SHLD(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.d=load(op1);flags.var2.b=op2;					\
-	flags.result.d=flags.var1.d << flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.d=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.d=flags.var1.d << flags.var2.b;			\
 	save(op1,flags.result.d);								\
 	flags.type=t_SHLd;
 
+
 #define SHRB(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b >> flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.b=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.b=flags.var1.b >> flags.var2.b;			\
 	save(op1,flags.result.b);								\
 	flags.type=t_SHRb;
 
 #define SHRW(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.w=load(op1);flags.var2.b=op2;					\
-	flags.result.w=flags.var1.w >> flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.w=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.w=flags.var1.w >> flags.var2.b;			\
 	save(op1,flags.result.w);								\
 	flags.type=t_SHRw;
 
 #define SHRD(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.d=load(op1);flags.var2.b=op2;					\
-	flags.result.d=flags.var1.d >> flags.var2.b;				\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.d=load(op1);flags.var2.b=op2 & 0x1F;			\
+	flags.result.d=flags.var1.d >> flags.var2.b;			\
 	save(op1,flags.result.d);								\
 	flags.type=t_SHRd;
 
+
 #define SARB(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.b=load(op1);flags.var2.b=op2 & 0x1F;			\
 	if (flags.var2.b>8) flags.var2.b=8;						\
     if (flags.var1.b & 0x80) {								\
-		flags.result.b=(flags.var1.b >> flags.var2.b)|			\
+		flags.result.b=(flags.var1.b >> flags.var2.b)|		\
 		(0xff << (8 - flags.var2.b));						\
 	} else {												\
-		flags.result.b=flags.var1.b >> flags.var2.b;			\
+		flags.result.b=flags.var1.b >> flags.var2.b;		\
     }														\
 	save(op1,flags.result.b);								\
 	flags.type=t_SARb;
 
 #define SARW(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.w=load(op1);flags.var2.b=op2;					\
-	if (flags.var2.b>16) flags.var2.b=16;						\
-	if (flags.var1.w & 0x8000) {								\
-		flags.result.w=(flags.var1.w >> flags.var2.b)|			\
-		(0xffff << (16 - flags.var2.b));						\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var1.w=load(op1);flags.var2.b=op2 & 0x1F;			\
+	if (flags.var2.b>16) flags.var2.b=16;					\
+	if (flags.var1.w & 0x8000) {							\
+		flags.result.w=(flags.var1.w >> flags.var2.b)|		\
+		(0xffff << (16 - flags.var2.b));					\
 	} else {												\
-		flags.result.w=flags.var1.w >> flags.var2.b;			\
+		flags.result.w=flags.var1.w >> flags.var2.b;		\
     }														\
 	save(op1,flags.result.w);								\
 	flags.type=t_SARw;
 
 #define SARD(op1,op2,load,save)								\
-	if (!op2) break;										\
-	flags.var1.d=load(op1);flags.var2.b=op2;					\
-	if (flags.var1.d & 0x80000000) {							\
-		flags.result.d=(flags.var1.d >> flags.var2.b)|			\
-		(0xffffffff << (32 - flags.var2.b));					\
+	if (!(op2 & 0x1F)) break;								\
+	flags.var2.b=op2 & 0x1F;flags.var1.d=load(op1);			\
+	if (flags.var1.d & 0x80000000) {						\
+		flags.result.d=(flags.var1.d >> flags.var2.b)|		\
+		(0xffffffff << (32 - flags.var2.b));				\
 	} else {												\
-		flags.result.d=flags.var1.d >> flags.var2.b;			\
+		flags.result.d=flags.var1.d >> flags.var2.b;		\
     }														\
 	save(op1,flags.result.d);								\
 	flags.type=t_SARd;
@@ -564,30 +612,40 @@
 }
 
 /* let's hope bochs has it correct with the higher than 16 shifts */
+/* double-precision shift left has low bits in second argument */
 #define DSHLW(op1,op2,op3,load,save)									\
-	flags.var1.d=(load(op1)<<16)|op2;flags.var2.b=op3;					\
+	Bit8u val=op3 & 0x1F;												\
+	if (!val) break;													\
+	flags.var2.b=val;flags.var1.d=(load(op1)<<16)|op2;					\
 	Bit32u tempd=flags.var1.d << flags.var2.b;							\
   	if (flags.var2.b>16) tempd |= (op2 << (flags.var2.b - 16));			\
 	flags.result.w=(Bit16u)(tempd >> 16);								\
 	save(op1,flags.result.w);											\
 	flags.type=t_DSHLw;
 
-#define DSHLD(op1,op2,op3,load,save)										\
-	flags.var1.d=load(op1);flags.var2.b=op3;									\
+#define DSHLD(op1,op2,op3,load,save)									\
+	Bit8u val=op3 & 0x1F;												\
+	if (!val) break;													\
+	flags.var2.b=val;flags.var1.d=load(op1);							\
 	flags.result.d=(flags.var1.d << flags.var2.b) | (op2 >> (32-flags.var2.b));	\
-	save(op1,flags.result.d);												\
+	save(op1,flags.result.d);											\
 	flags.type=t_DSHLd;
 
+/* double-precision shift right has high bits in second argument */
 #define DSHRW(op1,op2,op3,load,save)									\
-	flags.var1.d=(load(op1)<<16)|op2;flags.var2.b=op3;					\
+	Bit8u val=op3 & 0x1F;												\
+	if (!val) break;													\
+	flags.var2.b=val;flags.var1.d=(op2<<16)|load(op1);					\
 	Bit32u tempd=flags.var1.d >> flags.var2.b;							\
   	if (flags.var2.b>16) tempd |= (op2 << (32-flags.var2.b ));			\
 	flags.result.w=(Bit16u)(tempd);										\
 	save(op1,flags.result.w);											\
 	flags.type=t_DSHRw;
 
-#define DSHRD(op1,op2,op3,load,save)										\
-	flags.var1.d=load(op1);flags.var2.b=op3;									\
+#define DSHRD(op1,op2,op3,load,save)									\
+	Bit8u val=op3 & 0x1F;												\
+	if (!val) break;													\
+	flags.var2.b=val;flags.var1.d=load(op1);							\
 	flags.result.d=(flags.var1.d >> flags.var2.b) | (op2 << (32-flags.var2.b));	\
-	save(op1,flags.result.d);												\
+	save(op1,flags.result.d);											\
 	flags.type=t_DSHRd;
