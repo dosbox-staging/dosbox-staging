@@ -70,6 +70,32 @@ struct DMA_CONTROLLER {
 };
 
 static DMA_CONTROLLER dma[2];
+static Bit8u read_dma(Bit32u port) {
+	/* only use first dma for now */
+	DMA_CONTROLLER * cont=&dma[0];
+	DMA_CHANNEL * chan=&cont->chan[port>>1];
+	Bit8u ret;
+	switch (port) {
+	case 0x00:case 0x02:case 0x04:case 0x06:
+		if (cont->flipflop) {
+			ret=chan->current_address & 0xff;
+		} else {
+			ret=(chan->current_address>>8)&0xff;
+		}
+		cont->flipflop=!cont->flipflop;
+	case 0x01:case 0x03:case 0x05:case 0x07:
+		if (cont->flipflop) {
+			ret=(chan->current_count-1) & 0xff;
+		} else {
+			ret=((chan->current_count-1)>>8)&0xff;
+		}
+		cont->flipflop=!cont->flipflop;
+		break;
+	default:
+		LOG_WARN("DMA:Unhandled read from %d",port);
+	}
+	return ret;
+}
 
 
 static void write_dma(Bit32u port,Bit8u val) {
@@ -206,6 +232,7 @@ Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 void DMA_Init(Section* sec) {
 	for (Bit32u i=0;i<0x10;i++) {
 		IO_RegisterWriteHandler(i,write_dma,"DMA1");
+		IO_RegisterReadHandler(i,read_dma,"DMA1");
 	}
 	IO_RegisterWriteHandler(0x81,write_dma_page,"DMA Pages");
 	IO_RegisterWriteHandler(0x82,write_dma_page,"DMA Pages");
