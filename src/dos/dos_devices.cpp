@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.7 2004-10-20 12:27:19 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.8 2004-10-25 21:08:47 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -87,7 +87,7 @@ DOS_File::DOS_File(const DOS_File& orig) {
 	open=orig.open;
 	name=0;
 	if(orig.name) {
-		name=new char [strlen(orig.name)];strcpy(name,orig.name);
+		name=new char [strlen(orig.name) + 1];strcpy(name,orig.name);
 	}
 }
 
@@ -104,7 +104,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 		delete [] name; name=0;
 	}
 	if(orig.name) {
-		name=new char [strlen(orig.name)];strcpy(name,orig.name);
+		name=new char [strlen(orig.name) + 1];strcpy(name,orig.name);
 	}
 	return *this;
 }
@@ -112,7 +112,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 Bit8u DOS_FindDevice(char * name) {
 	/* should only check for the names before the dot and spacepadded */
 	char temp[CROSS_LEN];//TODOD
-	if(!(*name)) return DOS_DEVICES;
+	if(!name || !(*name)) return DOS_DEVICES;
 	strcpy(temp,name);
 	char* dot= strrchr(temp,'.');
 	if(dot && *dot) dot=0; //no ext checking
