@@ -175,6 +175,7 @@ void LOG_StartUp(void) {
 	
 	loggrp[LOG_FPU].front="FPU";
 	loggrp[LOG_CPU].front="CPU";
+	loggrp[LOG_PAGING].front="PAGING";
 
 	loggrp[LOG_FCB].front="FCB";
 	loggrp[LOG_FILES].front="FILES";
