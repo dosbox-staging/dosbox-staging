@@ -656,6 +656,27 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 	DOS_FCB fcb(seg,offset);
 	char shortname[DOS_FCBNAME];Bit16u handle;
 	fcb.GetName(shortname);
+
+	/* First check if the name is correct */
+	Bit8u drive;
+	char fullname[DOS_PATHLENGTH];
+	if (!DOS_MakeName(shortname,fullname,&drive)) return false;
+	
+	/* Check, if file is already opened */
+	for (Bit16u i=0;i<DOS_FILES;i++) {
+		DOS_PSP psp(dos.psp);
+		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
+			handle = psp.FindEntryByHandle(i);
+			if (handle==0xFF) {
+				// This shouldnt happen
+				LOG_ERROR("DOS: File %s is opened but has no psp entry.",shortname);
+				return false;
+			}
+			fcb.FileOpen((Bit8u)handle);
+			return true;
+		}
+	}
+	
 	if (!DOS_OpenFile(shortname,2,&handle)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
