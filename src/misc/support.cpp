@@ -82,39 +82,49 @@ char *trim(char *str) {
 	return ltrim(str);
 }
 
-bool wildcmp(char *wild, char *string) {
-	char *cp, *mp;
-	while ((*string) && (*wild != '*')) {
-		if ((toupper(*wild) != toupper(*string)) && (*wild != '?')) { 
-
-			return false;
-		}
-		wild++;
-		string++;
-	}
-		
-	while (*string) {
-		if (*wild == '*') {
-			if (!*++wild) {
-				return true;
+bool wildcmp(char *wild, char *string) 
+{
+	// special case - Everything goes through
+	if (strcmp(wild,"*")==0) return true; 
+	
+	while (*wild) {
+		if (*wild=='*') {
+			// Any other chars after that ?
+			if ((wild[1]!=0) && (wild[1]!='.')) {
+				// search string
+				while ((*string) && (*string!='.')) {
+					// thats the char ? then exit
+					if (toupper(*string)==toupper(wild[1])) break;
+					string++;	
+				};		
+				
+			} else {
+				// skip to extension or end
+				while (*string && (*string!='.')) string++;
 			}
-			mp = wild;
-			cp = string+1;
-		} else if ((toupper(*wild) == toupper(*string)) || (*wild == '?')) {
+			wild++;
+		
+		} else if (*string=='.') {
+			// only valid : '?' & '*'
+			while (*wild && (*wild!='.')) {
+				if ((*wild!='?') && (*wild!='*')) return false;
+				wild++;
+			}
+			if (*wild) wild++;
+			string++;
+
+		} else if ((*wild!='?') && (toupper(*string)!=toupper(*wild))) {
+			// no match
+			return false;
+		
+		} else {
 			wild++;
 			string++;
-		} else {
-			wild = mp;
-			string = cp++;
 		}
 	}
-		
-	while (*wild == '*') {
-		wild++;
-	}
-	return !*wild;
-}
 
+	return ((*string==0) && (*wild==0));
+};
 
 bool ScanCMDBool(char * cmd,char * check) {
 	char * scan=cmd;size_t c_len=strlen(check);
