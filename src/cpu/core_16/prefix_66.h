@@ -276,25 +276,25 @@ switch(Fetchb()) {
 		}
 	case 0x90:												/* NOP */
 		break;
-	case 0x91:												/* XCHG CX,AX */
+	case 0x91:												/* XCHG ECX,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_ecx;reg_ecx=temp; }
 		break;
-	case 0x92:												/* XCHG DX,AX */
+	case 0x92:												/* XCHG EDX,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_edx;reg_edx=temp; }
 		break;
-	case 0x93:												/* XCHG BX,AX */
+	case 0x93:												/* XCHG EBX,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_ebx;reg_ebx=temp; }
 		break;
-	case 0x94:												/* XCHG SP,AX */
+	case 0x94:												/* XCHG ESP,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_esp;reg_esp=temp; }
 		break;
-	case 0x95:												/* XCHG BP,AX */
+	case 0x95:												/* XCHG EBP,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_ebp;reg_ebp=temp; }
 		break;
-	case 0x96:												/* XCHG SI,AX */
+	case 0x96:												/* XCHG ESI,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_esi;reg_esi=temp; }
 		break;
-	case 0x97:												/* XCHG DI,AX */
+	case 0x97:												/* XCHG EDI,EAX */
 		{ Bit32u temp=reg_eax;reg_eax=reg_edi;reg_edi=temp; }
 		break;
 	case 0x98:												/* CWD */
@@ -396,12 +396,12 @@ switch(Fetchb()) {
 		GRP2D(reg_cl);break;
 	case 0xf2:												/* REPNZ */
 		prefix.count++;
-		count-=Repeat_Normal(false,true,count);
-		break;
+		Repeat_Normal(false,true);
+		continue;
 	case 0xf3:												/* REPZ */
 		prefix.count++;
-		count-=Repeat_Normal(true,true,count);
-		break;
+		Repeat_Normal(true,true);
+		continue;
 	case 0xf7:												/* GRP3 Ed(,Id) */
 		{ 
 			union {	Bit64u u;Bit64s s;} temp;
