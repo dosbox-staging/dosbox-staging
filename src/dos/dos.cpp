@@ -244,8 +244,7 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:0x27 FCB-Random read used, result:al=%d",reg_al);
 		break;
 	case 0x28:		/* Random Block write to FCB */
-		if (DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx,false)) reg_al = 0x00;
-		else reg_al = 0x01;
+		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx,false);
 		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
 		break;
 	case 0x29:		/* Parse filename into FCB */

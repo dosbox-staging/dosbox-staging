@@ -738,9 +738,9 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	return error;
 }
 
-bool DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;Bit16u old_block;Bit8u old_rec;bool noerror;
+	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
@@ -748,15 +748,15 @@ bool DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	/* Write records */
 	for (int i=0; i<numRec; i++) {
-		noerror = DOS_FCBWrite(seg,offset,i);
-		if (!noerror) break;
+		error = DOS_FCBWrite(seg,offset,i);// dos_fcbwrite return 0 false when true...
+		if (error!=0x00) break;
 	}
 	Bit16u new_block;Bit8u new_rec;
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position */
 	fcb.SetRandom(new_block*128+new_rec);
-	return noerror;
+	return error;
 }
 
 bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec) {
