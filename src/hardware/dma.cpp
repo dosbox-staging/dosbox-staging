@@ -57,7 +57,7 @@ struct DMA_CHANNEL {
 	Bit32u current_count;
 	Bit8u page;
 	bool masked;
-	HostPt host_address;
+	PhysPt address;
 	bool addr_changed;
 };
 
@@ -142,73 +142,62 @@ void write_dma_page(Bit32u port,Bit8u val) {
 	}
 }
 
-void DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 	DMA_CHANNEL * chan=&dma[0].chan[dmachan];
 
+	if (chan->masked) return 0;
+	if (!count) return 0;	
 /* DMA always does autoinit should work under normal situations */
 	if (chan->addr_changed) {
 		/* Calculate the new starting position for dma read*/
 		chan->addr_changed=false;
-		chan->host_address=memory+(chan->page << 16)+chan->base_address;
+		chan->address=(chan->page << 16)+chan->base_address;
 
 		chan->current_count=chan->base_count+1;
 		chan->current_address=chan->base_address;
 		DMA_DEBUG("DMA:Transfer from %d size %d",(chan->page << 16)+chan->base_address,chan->current_count);
 	}
-	if (!count) return;
 	if (chan->current_count>=count) {
-		memcpy(buffer,chan->host_address,count);
-		chan->host_address+=count;
+		MEM_BlockRead(chan->address,buffer,count);
+		chan->address+=count;
 		chan->current_address+=count;
 		chan->current_count-=count;
-		return;
+		return count;
 	} else {
 		/* Copy remaining piece of first buffer */
-		memcpy(buffer,chan->host_address,chan->current_count);
+		MEM_BlockRead(chan->address,buffer,chan->current_count);
 		buffer+=chan->current_count;
 		count-=(Bit16u)chan->current_count;
 		/* Autoinit reset the dma channel */
-		chan->host_address=memory+(chan->page << 16)+chan->base_address;
+		chan->address=(chan->page << 16)+chan->base_address;
 		chan->current_count=chan->base_count+1;
 		chan->current_address=chan->base_address;
 		/* Copy the rest of the buffer */
-		memcpy(buffer,chan->host_address,count);
-		chan->host_address+=count;
+		MEM_BlockRead(chan->address,buffer,count);
+		chan->address+=count;
 		chan->current_address+=count;
 		chan->current_count-=count;
-		return;
+		return count;
 	}
 };
 
-void DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
-	if (dma[0].chan[dmachan].addr_changed) {
-		/* Calculate the new starting position for dma read*/
-		dma[0].chan[dmachan].addr_changed=false;
-		dma[0].chan[dmachan].host_address=memory+(dma[0].chan[dmachan].page << 16)+dma[0].chan[dmachan].base_address;
-		dma[0].chan[dmachan].current_count=dma[0].chan[dmachan].base_count;
-		dma[0].chan[dmachan].current_count=dma[0].chan[dmachan].current_count;
-	}
-	if (dma[0].chan[dmachan].current_count>=count) {
-		memcpy(dma[0].chan[dmachan].host_address,buffer,count);
-		dma[0].chan[dmachan].host_address+=count;
-		dma[0].chan[dmachan].current_address+=count;
-		dma[0].chan[dmachan].current_count-=count;
-		return;
-	} else {
+Bit16u  DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 
-	}
-	return;
+	return 0;
 };
 
 
 
 
-void DMA_16_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bit16u DMA_16_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 
+	return 0;
 }
 
-void DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
+Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 
+
+	return 0;
 }
 
 
