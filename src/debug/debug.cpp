@@ -633,6 +633,7 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"IF")==hex) { hex+=2; flags.intf = (GetHexValue(hex,hex)!=0); } else
 	if (strstr(hex,"OF")==hex) { hex+=3; flags.of = (GetHexValue(hex,hex)!=0); } else
 	if (strstr(hex,"PF")==hex) { hex+=3; flags.pf = (GetHexValue(hex,hex)!=0); } else
+	if (strstr(hex,"ZF")==hex) { hex+=3; flags.zf = (GetHexValue(hex,hex)!=0); } else
 								{ return false; };
 	return true;
 };
@@ -945,7 +946,6 @@ static void DEBUG_RaiseTimerIrq(void) {
 static bool DEBUG_Log_Loop(int count) {
 
 	char buffer[512];	
-	getcwd(buffer,512);
 	
 	FILE* f = fopen("LOGCPU.TXT","wt");
 	if (!f) return false;
@@ -994,11 +994,18 @@ public:
 	void Run(void)
 	{
 		char filename[128];
-		char args[128];
+		char args[256];
 		cmd->FindCommand(1,temp_line);
 		strncpy(filename,temp_line.c_str(),128);
-		cmd->FindCommand(2,temp_line);
-		strncpy(args,temp_line.c_str(),128);
+		// Read commandline
+		Bit16u i	=2;
+		bool ok		= false; 
+		args[0]		= 0;
+		do {
+			ok = cmd->FindCommand(i++,temp_line);
+			strncat(args,temp_line.c_str(),256);
+			strncat(args," ",256);
+		} while (ok);
 		// Start new shell and execute prog		
 		active = true;
 		// Save cpu state....
@@ -1083,6 +1090,46 @@ void DEBUG_Init(Section* sec) {
 // HEAVY DEBUGGING STUFF
 
 #if C_HEAVY_DEBUG
+
+#define LOGCPUMAX 200
+
+static Bit16u logCpuCS [LOGCPUMAX];
+static Bit32u logCpuEIP[LOGCPUMAX];
+static Bit32u logCount = 0;
+
+typedef struct SLogInst {
+	char buffer[256];
+} TLogInst;
+
+TLogInst logInst[LOGCPUMAX];
+
+void DEBUG_HeavyLogInstruction(void)
+{
+	LogInstruction(SegValue(cs),reg_eip,logInst[logCount++].buffer);
+	if (logCount>=LOGCPUMAX) logCount = 0;
+};
+
+void DEBUG_HeavyWriteLogInstruction(void)
+{
+	LOG_DEBUG("DEBUG: Creating cpu log LOGCPU_INT_CD.TXT");
+
+	FILE* f = fopen("LOGCPU_INT_CD.TXT","wt");
+	if (!f) {
+		LOG_DEBUG("DEBUG: Failed.");	
+		return;
+	}
+
+	Bit16u startLog = logCount;
+	do {
+		// Write Intructions
+		fprintf(f,"%s",logInst[startLog++].buffer);
+		if (startLog>=LOGCPUMAX) logCount = 0;
+	} while (startLog!=logCount);
+	
+	fclose(f);
+
+	LOG_DEBUG("DEBUG: Done.");	
+};
 
 bool DEBUG_HeavyIsBreakpoint(void)
 {
