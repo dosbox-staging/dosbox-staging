@@ -80,6 +80,10 @@ static void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
 	vga.dac.state=DAC_WRITE;
 }
 
+static Bitu read_p3c8(Bitu port, Bitu iolen){
+	return vga.dac.write_index;
+}
+
 static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 	val&=0x3f;
 	switch (vga.dac.pel_index) {
@@ -187,10 +191,9 @@ void VGA_SetupDAC(void) {
 		IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
 		IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
 		IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
+		IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
 		IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
 		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
 		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
 	}
 };
-
-
