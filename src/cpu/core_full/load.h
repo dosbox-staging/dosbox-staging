@@ -155,7 +155,6 @@ l_M_Ed:
 			
 			/* Should continue with normal handler afterwards */
 		case 0:
-			LOG(LOG_CPU|LOG_ERROR,"MODRM:Unhandled load %d entry %x",inst.code.extra,inst.entry);
 			break;
 		default:
 			LOG(LOG_CPU|LOG_ERROR,"MODRM:Unhandled load %d entry %x",inst.code.extra,inst.entry);
@@ -252,7 +251,10 @@ l_M_Ed:
 		inst.repz=true;
 		goto restartopcode;
 	case L_PREOP:
-		inst.entry|=0x200;
+		inst.entry^=0x200;
+		goto restartopcode;
+	case L_PREADD:
+		inst.prefix^=PREFIX_ADDR;
 		goto restartopcode;
 	case L_VAL:
 		inst.op1.d=inst.code.extra;
