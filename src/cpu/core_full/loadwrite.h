@@ -69,6 +69,8 @@ static INLINE Bit32u Pop_32() {
 	flags.df	=(FLAGW & 0x400)>0;flags.of	=(FLAGW & 0x800)>0;		\
 	flags.io	=(FLAGW >> 12) & 0x03;								\
 	flags.nt	=(FLAGW & 0x4000)>0;								\
+}
+#if 0
 	if (flags.intf && PIC_IRQCheck) {								\
 		SaveIP();													\
 		PIC_runIRQs();												\
@@ -76,3 +78,4 @@ static INLINE Bit32u Pop_32() {
 	}																\
 }
 
+#endif
