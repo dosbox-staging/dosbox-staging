@@ -141,7 +141,6 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 src/cpu/Makefile
-src/cpu/core_16/Makefile
 src/cpu/core_full/Makefile
 src/cpu/core_normal/Makefile
 src/debug/Makefile
