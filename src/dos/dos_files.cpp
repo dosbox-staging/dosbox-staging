@@ -502,10 +502,10 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
          a[0]= *string;a[1]='\0';
         if (strcspn(a,sep)==0) string++;
     } 
-    if((!(parser &3)) ==true){ // fill name with spaces if no name
+    if((!(parser &4)) ==true){ // fill name with spaces if no name
         fcb.Set_filename(naam);
     }
-    if((!(parser &4)) ==true){ // fill ext with spaces if no ext
+    if((!(parser &8)) ==true){ // fill ext with spaces if no ext
         fcb.Set_ext(ext);
     }
     if((parser & 2)==false) fcb.Set_drive(0); //Set allready the defaultdrive (Will stay set when it's not specified)
