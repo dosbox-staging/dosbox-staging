@@ -202,29 +202,31 @@ INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 #define DOSERR_NOT_SAME_DEVICE 17
 #define DOSERR_NO_MORE_FILES 18
 
+
 /* Remains some classes used to access certain things */
 
-#define sGet(s,m) GetIt(((s *)Phys2Host(pt))->m,(PhysPt)&(((s *)0)->m))
-#define sSave(s,m,val) SaveIt(((s *)Phys2Host(pt))->m,(PhysPt)&(((s *)0)->m),val)
+#define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)&(((s *)0)->m))
+#define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)&(((s *)0)->m),val)
+
 
 class MemStruct {
 public:
-	INLINE Bit8u GetIt(Bit8u,PhysPt addr) {
+	INLINE Bit8u GetIt(Bit8u&,PhysPt addr) {
 		return mem_readb(pt+addr);
 	}
-	INLINE Bit16u GetIt(Bit16u,PhysPt addr) {
+	INLINE Bit16u GetIt(Bit16u&,PhysPt addr) {
 		return mem_readw(pt+addr);
 	}
-	INLINE Bit32u GetIt(Bit32u,PhysPt addr) {
+	INLINE Bit32u GetIt(Bit32u&,PhysPt addr) {
 		return mem_readd(pt+addr);
 	}
-	INLINE void SaveIt(Bit8u,PhysPt addr,Bit8u val) {
+	INLINE void SaveIt(Bit8u&,PhysPt addr,Bit8u val) {
 		mem_writeb(pt+addr,val);
 	}
-	INLINE void SaveIt(Bit16u,PhysPt addr,Bit16u val) {
+	INLINE void SaveIt(Bit16u&,PhysPt addr,Bit16u val) {
 		mem_writew(pt+addr,val);
 	}
-	INLINE void SaveIt(Bit32u,PhysPt addr,Bit32u val) {
+	INLINE void SaveIt(Bit32u&,PhysPt addr,Bit32u val) {
 		mem_writed(pt+addr,val);
 	}
 	INLINE void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
@@ -236,7 +238,7 @@ protected:
 
 class DOS_PSP :public MemStruct {
 public:
-	DOS_PSP						(Bit16u segment)		{ SetPt(segment);seg=segment;psp=(sPSP *)HostMake(segment,0);};
+	DOS_PSP						(Bit16u segment)		{ SetPt(segment);seg=segment;};
 	void	MakeNew				(Bit16u memSize);
 	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
 	Bit16u	FindFreeFileEntry	(void);
@@ -245,7 +247,7 @@ public:
 	void	SaveVectors			(void);
 	void	RestoreVectors		(void);
 	void	SetSize				(Bit16u size)			{ sSave(sPSP,next_seg,size);		};
-	Bit16u	GetSize				()						{ return sGet(sPSP,next_seg);		};
+	Bit16u	GetSize				(void)					{ return sGet(sPSP,next_seg);		};
 	void	SetDTA				(RealPt ptdta)			{ sSave(sPSP,dta,ptdta);			};
 	RealPt	GetDTA				(void)					{ return sGet(sPSP,dta);			};
 	void	SetEnvironment		(Bit16u envseg)			{ sSave(sPSP,environment,envseg);	};
@@ -298,7 +300,6 @@ private:
 	#pragma pack()
 	#endif
 	Bit16u	seg;
-	sPSP*	psp;
 public:
 	static	Bit16u rootpsp;
 };
