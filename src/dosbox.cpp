@@ -217,7 +217,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("cms",false);
 	secprop->Add_int("cmsrate",22050);
 
-	secprop=control->AddSection_prop("gus",&GUS_Init);
+//	secprop=control->AddSection_prop("gus",&GUS_Init);
 
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
 	secprop->Add_bool("enabled",true);
