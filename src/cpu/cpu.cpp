@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.62 2004-12-28 16:11:54 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.63 2005-01-18 12:50:06 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -51,14 +51,59 @@ void CPU_Core_Normal_Init(void);
 void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 
+
+#define EXCEPTION_TS			10
+#define EXCEPTION_NP			11
+#define EXCEPTION_SS			12
+#define EXCEPTION_GP			13
+
+
+/* In debug mode exceptions are tested and dosbox exits when 
+ * a unhandled exception state is detected. 
+ * USE CHECK_EXCEPT to raise an exception in that case to see if that exception
+ * solves the problem.
+ * 
+ * In non-debug mode dosbox doesn't do detection (and hence doesn't crash at
+ * that point). (game might crash later due to the unhandled exception) */
+
+#if C_DEBUG
+// #define CPU_CHECK_EXCEPT 1
+// #define CPU_CHECK_IGNORE 1
+ /* Use CHECK_EXCEPT when something doesn't work to see if a exception is 
+ * needed that isn't enabled by default.*/
+#else
+/* NORMAL NO CHECKING => More Speed */
+#define CPU_CHECK_IGNORE 1
+#endif /* C_DEBUG */
+
+#if defined(CPU_CHECK_IGNORE)
+#define CPU_CHECK_COND(cond,msg,exc,sel) {	\
+	cond;					\
+}
+#elif defined(CPU_CHECK_EXCEPT)
+#define CPU_CHECK_COND(cond,msg,exc,sel) {	\
+	if (cond) {
+		CPU_Exception(exc,sel);		\
+		return;				\
+	}					\
+}
+#else
+#define CPU_CHECK_COND(cond,msg,exc,sel) {	\
+	if (cond) E_Exit(msg);			\
+}
+#endif
+
+
 void CPU_Push16(Bitu value) {
-	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-2)&cpu.stack.mask);
-	mem_writew(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
+	Bit32u new_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-2)&cpu.stack.mask);
+	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
+	reg_esp=new_esp;
 }
 
 void CPU_Push32(Bitu value) {
-	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-4)&cpu.stack.mask);
-	mem_writed(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
+	Bit32u new_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-4)&cpu.stack.mask);
+	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
+	reg_esp=new_esp;
 }
 
 Bitu CPU_Pop16(void) {
@@ -96,7 +141,7 @@ bool CPU_PrepareException(Bitu which,Bitu error) {
 
 bool CPU_CLI(void) {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
-		return CPU_PrepareException(13,0);
+		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
 		SETFLAGBIT(IF,false);
 		return false;
@@ -105,7 +150,7 @@ bool CPU_CLI(void) {
 
 bool CPU_STI(void) {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
-		return CPU_PrepareException(13,0);
+		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
  		SETFLAGBIT(IF,true);
 		return false;
@@ -114,18 +159,20 @@ bool CPU_STI(void) {
 
 bool CPU_POPF(Bitu use32) {
 	if ((reg_flags & FLAG_VM) && (GETFLAG(IOPL)!=FLAG_IOPL))
-		return CPU_PrepareException(13,0);
-	if (use32) 
-		CPU_SetFlagsd(CPU_Pop32());
-	else CPU_SetFlagsw(CPU_Pop16());
+		return CPU_PrepareException(EXCEPTION_GP,0);
+	Bitu mask=cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
+	if ((GETFLAG_IOPL<cpu.cpl) && !(reg_flags & FLAG_VM)) mask &= (~FLAG_IF);
+	if (use32)
+		CPU_SetFlags(CPU_Pop32(),mask);
+	else CPU_SetFlags(CPU_Pop16(),mask & 0xffff);
 	return false;
 }
 
 bool CPU_PUSHF(Bitu use32) {
 	if ((reg_flags & FLAG_VM) && (GETFLAG(IOPL)!=FLAG_IOPL))
-		return CPU_PrepareException(13,0);
+		return CPU_PrepareException(EXCEPTION_GP,0);
 	if (use32) 
-		CPU_Push32(reg_flags);
+		CPU_Push32(reg_flags & 0x00fcffff);
 	else CPU_Push16(reg_flags);
 	return false;
 }
@@ -191,17 +238,55 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	TaskStateSegment new_tss;
 	if (!new_tss.SetSelector(new_tss_selector)) 
 		E_Exit("Illegal TSS for switch");
-	/* Save current context in current TSS */
+	if (tstype==TSwitch_IRET) {
+		if (!cpu_tss.desc.IsBusy())
+			E_Exit("TSS not busy for IRET");
+	} else {
+		if (new_tss.desc.IsBusy())
+			E_Exit("TSS busy for JMP/CALL/INT");
+	}
+	if (!new_tss.desc.saved.seg.p)
+		E_Exit("TSS not present for switch");
+	Bitu new_cr3=0;
+	Bitu new_eax,new_ebx,new_ecx,new_edx,new_esp,new_ebp,new_esi,new_edi;
+	Bitu new_es,new_cs,new_ss,new_ds,new_fs,new_gs;
+	Bitu new_ldt,new_eip,new_eflags;
+	/* Read new context from new TSS */
+	if (new_tss.is386) {
+		new_cr3=mem_readd(new_tss.base+offsetof(TSS_32,cr3));
+		new_eip=mem_readd(new_tss.base+offsetof(TSS_32,eip));
+		new_eflags=mem_readd(new_tss.base+offsetof(TSS_32,eflags));
+		new_eax=mem_readd(new_tss.base+offsetof(TSS_32,eax));
+		new_ecx=mem_readd(new_tss.base+offsetof(TSS_32,ecx));
+		new_edx=mem_readd(new_tss.base+offsetof(TSS_32,edx));
+		new_ebx=mem_readd(new_tss.base+offsetof(TSS_32,ebx));
+		new_esp=mem_readd(new_tss.base+offsetof(TSS_32,esp));
+		new_ebp=mem_readd(new_tss.base+offsetof(TSS_32,ebp));
+		new_edi=mem_readd(new_tss.base+offsetof(TSS_32,edi));
+		new_esi=mem_readd(new_tss.base+offsetof(TSS_32,esi));
+
+		new_es=mem_readw(new_tss.base+offsetof(TSS_32,es));
+		new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
+		new_ss=mem_readw(new_tss.base+offsetof(TSS_32,ss));
+		new_ds=mem_readw(new_tss.base+offsetof(TSS_32,ds));
+		new_fs=mem_readw(new_tss.base+offsetof(TSS_32,fs));
+		new_gs=mem_readw(new_tss.base+offsetof(TSS_32,gs));
+		new_ldt=mem_readw(new_tss.base+offsetof(TSS_32,ldt));
+	} else {
+		E_Exit("286 task switch");
+	}
+
 	/* Check if we need to clear busy bit of old TASK */
 	if (tstype==TSwitch_JMP || tstype==TSwitch_IRET) {
 		cpu_tss.desc.SetBusy(false);
 		cpu_tss.SaveSelector();
 	}
-	Bitu new_cr3=0;
-	Bitu new_es,new_cs,new_ss,new_ds,new_fs,new_gs;
-	Bitu new_ldt;
+	Bit32u old_flags = reg_flags;
+	if (tstype==TSwitch_IRET) old_flags &= (~FLAG_NT);
+
+	/* Save current context in current TSS */
 	if (cpu_tss.is386) {
-		mem_writed(cpu_tss.base+offsetof(TSS_32,eflags),reg_flags);
+		mem_writed(cpu_tss.base+offsetof(TSS_32,eflags),old_flags);
 		mem_writed(cpu_tss.base+offsetof(TSS_32,eip),old_eip);
 
 		mem_writed(cpu_tss.base+offsetof(TSS_32,eax),reg_eax);
@@ -222,30 +307,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	} else {
 		E_Exit("286 task switch");
 	}
-	/* Load new context from new TSS */
-	if (new_tss.is386) {
-		new_cr3=mem_readd(new_tss.base+offsetof(TSS_32,cr3));
-		reg_eip=mem_readd(new_tss.base+offsetof(TSS_32,eip));
-		CPU_SetFlags(mem_readd(new_tss.base+offsetof(TSS_32,eflags)),FMASK_ALL | FLAG_VM);
-		reg_eax=mem_readd(new_tss.base+offsetof(TSS_32,eax));
-		reg_ecx=mem_readd(new_tss.base+offsetof(TSS_32,ecx));
-		reg_edx=mem_readd(new_tss.base+offsetof(TSS_32,edx));
-		reg_ebx=mem_readd(new_tss.base+offsetof(TSS_32,ebx));
-		reg_esp=mem_readd(new_tss.base+offsetof(TSS_32,esp));
-		reg_ebp=mem_readd(new_tss.base+offsetof(TSS_32,ebp));
-		reg_edi=mem_readd(new_tss.base+offsetof(TSS_32,edi));
-		reg_esi=mem_readd(new_tss.base+offsetof(TSS_32,esi));
 
-		new_es=mem_readw(new_tss.base+offsetof(TSS_32,es));
-		new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
-		new_ss=mem_readw(new_tss.base+offsetof(TSS_32,ss));
-		new_ds=mem_readw(new_tss.base+offsetof(TSS_32,ds));
-		new_fs=mem_readw(new_tss.base+offsetof(TSS_32,fs));
-		new_gs=mem_readw(new_tss.base+offsetof(TSS_32,gs));
-		new_ldt=mem_readw(new_tss.base+offsetof(TSS_32,ldt));
-	} else {
-		E_Exit("286 task switch");
-	}
 	/* Setup a back link to the old TSS in new TSS */
 	if (tstype==TSwitch_CALL_INT) {
 		if (new_tss.is386) {
@@ -254,15 +316,35 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 			mem_writew(new_tss.base+offsetof(TSS_16,back),cpu_tss.selector);
 		}
 		/* And make the new task's eflag have the nested task bit */
-		reg_flags|=FLAG_NT;
+		new_eflags|=FLAG_NT;
 	}
 	/* Set the busy bit in the new task */
-	if (tstype==TSwitch_JMP || tstype==TSwitch_IRET) {
+	if (tstype==TSwitch_JMP || tstype==TSwitch_CALL_INT) {
 		new_tss.desc.SetBusy(true);
 		new_tss.SaveSelector();
 	}
+
+//	cpu.cr0|=CR0_TASKSWITCHED;
 	/* Setup the new cr3 */
 	PAGING_SetDirBase(new_cr3);
+
+	/* Load new context */
+	if (new_tss.is386) {
+		reg_eip=new_eip;
+		CPU_SetFlags(new_eflags,FMASK_ALL | FLAG_VM);
+		reg_eax=new_eax;
+		reg_ecx=new_ecx;
+		reg_edx=new_edx;
+		reg_ebx=new_ebx;
+		reg_esp=new_esp;
+		reg_ebp=new_ebp;
+		reg_edi=new_edi;
+		reg_esi=new_esi;
+
+		new_cs=mem_readw(new_tss.base+offsetof(TSS_32,cs));
+	} else {
+		E_Exit("286 task switch");
+	}
 	/* Load the new selectors */
 	if (reg_flags & FLAG_VM) {
 //		LOG_MSG("Entering v86 task");
@@ -270,17 +352,15 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		cpu.code.big=false;
 		cpu.cpl=3;			//We don't have segment caches so this will do
 	} else {
-		//DEBUG_EnableDebugger();
 		/* Protected mode task */
-		CPU_LLDT(new_ldt);
+		if (new_ldt!=0) CPU_LLDT(new_ldt);
 		/* Load the new CS*/
 		Descriptor cs_desc;
 		cpu.cpl=new_cs & 3;
-		cpu.gdt.GetDescriptor(new_cs,cs_desc);
-		if (!cs_desc.saved.seg.p) {
+		if (!cpu.gdt.GetDescriptor(new_cs,cs_desc))
+			E_Exit("Task switch with CS beyond limits");
+		if (!cs_desc.saved.seg.p)
 			E_Exit("Task switch with non present code-segment");
-			return false;
-		}
 		switch (cs_desc.Type()) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
@@ -288,6 +368,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 			goto doconforming;
 		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
+			if (cpu.cpl < cs_desc.DPL()) E_Exit("Task CS RPL < DPL");
 doconforming:
 			Segs.phys[cs]=cs_desc.GetBase();
 			cpu.code.big=cs_desc.Big()>0;
@@ -321,7 +402,7 @@ bool CPU_IO_Exception(Bitu port,Bitu size) {
 	return false;
 doexception:
 	LOG(LOG_CPU,LOG_NORMAL)("IO Exception port %X",port);
-	return CPU_PrepareException(13,0);
+	return CPU_PrepareException(EXCEPTION_GP,0);
 }
 
 void CPU_Exception(Bitu which,Bitu error ) {
@@ -340,7 +421,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
 		DEBUG_HeavyWriteLogInstruction();
 #endif
- 		E_Exit("Call to interrupt 0xCD this is BAD");
+		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
 		if (DEBUG_Breakpoint()) {
 			CPU_Cycles=0;
@@ -349,7 +430,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	};
 #endif
 	if (!cpu.pmode) {
-			/* Save everything on a 16-bit stack */
+		/* Save everything on a 16-bit stack */
 		CPU_Push16(reg_flags & 0xffff);
 		CPU_Push16(SegValue(cs));
 		CPU_Push16(oldeip);
@@ -364,23 +445,31 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 		return;
 	} else {
 		/* Protected Mode Interrupt */
-//		if (type&CPU_INT_SOFTWARE && cpu.v86) goto realmode_interrupt;
-//		DEBUG_EnableDebugger();
-//		LOG_MSG("interrupt start CPL %d v86 %d",cpu.cpl,cpu.v86);
 		if ((reg_flags & FLAG_VM) && (type&CPU_INT_SOFTWARE)) {
 //			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
-				CPU_Exception(13,0);
+				CPU_Exception(EXCEPTION_GP,0);
 				return;
 			}
 		} 
 		Descriptor gate;
-//TODO Check for software interrupt and check gate's dpl<cpl
-		cpu.idt.GetDescriptor(num<<3,gate);
-		if (type&CPU_INT_SOFTWARE && gate.DPL()<cpu.cpl) {
-			CPU_Exception(13,num*8+2);
+
+		if (!cpu.idt.GetDescriptor(num<<3,gate)) {
+			// zone66
+			CPU_Exception(EXCEPTION_GP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1);
 			return;
 		}
+
+		if ((type&CPU_INT_SOFTWARE) && (gate.DPL()<cpu.cpl)) {
+			// zone66, win3.x e
+			CPU_Exception(EXCEPTION_GP,num*8+2);
+			return;
+		}
+
+		CPU_CHECK_COND(!gate.saved.seg.p,
+			"INT:Gate segment not present",
+			EXCEPTION_NP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1)
+
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:		case DESC_386_INT_GATE:
 		case DESC_286_TRAP_GATE:	case DESC_386_TRAP_GATE:
@@ -388,21 +477,58 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 				Descriptor cs_desc;
 				Bitu gate_sel=gate.GetSelector();
 				Bitu gate_off=gate.GetOffset();
-				cpu.gdt.GetDescriptor(gate_sel,cs_desc);
+				CPU_CHECK_COND((gate_sel & 0xfffc)==0,
+					"INT:Gate with CS zero selector",
+					EXCEPTION_GP,(type&CPU_INT_SOFTWARE)?0:1)
+				CPU_CHECK_COND(!cpu.gdt.GetDescriptor(gate_sel,cs_desc),
+					"INT:Gate with CS beyond limit",
+					EXCEPTION_GP,(gate_sel & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+
 				Bitu cs_dpl=cs_desc.DPL();
-				if (cs_dpl>cpu.cpl)	E_Exit("Interrupt to higher privilege");
+				CPU_CHECK_COND(cs_dpl>cpu.cpl,
+					"Interrupt to higher privilege",
+					EXCEPTION_GP,(gate_sel & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
 				switch (cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
 					if (cs_dpl<cpu.cpl) {
 						/* Prepare for gate to inner level */
+						CPU_CHECK_COND(!cs_desc.saved.seg.p,
+							"INT:Inner level:CS segment not present",
+							EXCEPTION_NP,(gate_sel & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+						CPU_CHECK_COND((reg_flags & FLAG_VM) && (cs_dpl!=0),
+							"V86 interrupt calling codesegment with DPL>0",
+							EXCEPTION_GP,gate_sel & 0xfffc)
+
 						Bitu n_ss,n_esp;
 						Bitu o_ss,o_esp;
 						o_ss=SegValue(ss);
 						o_esp=reg_esp;
 						cpu_tss.Get_SSx_ESPx(cs_dpl,n_ss,n_esp);
+						CPU_CHECK_COND((n_ss & 0xfffc)==0,
+							"INT:Gate with SS zero selector",
+							EXCEPTION_TS,(type&CPU_INT_SOFTWARE)?0:1)
 						Descriptor n_ss_desc;
-						cpu.gdt.GetDescriptor(n_ss,n_ss_desc);
+						CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_ss,n_ss_desc),
+							"INT:Gate with SS beyond limit",
+							EXCEPTION_TS,(n_ss & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+						CPU_CHECK_COND(((n_ss & 3)!=cs_dpl) || (n_ss_desc.DPL()!=cs_dpl),
+							"INT:Inner level with CS_DPL!=SS_DPL and SS_RPL",
+							EXCEPTION_TS,(n_ss & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+
+						// check if stack segment is a writable data segment
+						switch (n_ss_desc.Type()) {
+						case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+						case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+							break;
+						default:
+							E_Exit("INT:Inner level:Stack segment not writable.");		// or #TS(ss_sel+EXT)
+						}
+						CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
+							"INT:Inner level with nonpresent SS",
+							EXCEPTION_SS,(n_ss & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+
+						// commit point
 						Segs.phys[ss]=n_ss_desc.GetBase();
 						Segs.val[ss]=n_ss;
 						if (n_ss_desc.Big()) {
@@ -412,8 +538,10 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 						} else {
 							cpu.stack.big=false;
 							cpu.stack.mask=0xffff;
-							reg_sp=n_esp;
+							reg_sp=n_esp & 0xffff;
 						}
+
+						cpu.cpl=cs_dpl;
 						if (gate.Type() & 0x8) {	/* 32-bit Gate */
 							if (reg_flags & FLAG_VM) {
 								CPU_Push32(SegValue(gs));SegSet16(gs,0x0);
@@ -429,15 +557,20 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 							CPU_Push16(o_esp);
 						}
 //						LOG_MSG("INT:Gate to inner level SS:%X SP:%X",n_ss,n_esp);
-						cpu.cpl=cs_dpl;
 						goto do_interrupt;
 					} 
+					if (cs_dpl!=cpu.cpl)
+						E_Exit("Non-conforming intra privilege INT with DPL!=CPL");
 				case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				/* Prepare stack for gate to same priviledge */
-					if (reg_flags & FLAG_VM) 
-						E_Exit("V86 interrupt doesn't change to pl0");
+					/* Prepare stack for gate to same priviledge */
+					CPU_CHECK_COND(!cs_desc.saved.seg.p,
+							"INT:Same level:CS segment not present",
+						EXCEPTION_NP,(gate_sel & 0xfffc)+(type&CPU_INT_SOFTWARE)?0:1)
+					if ((reg_flags & FLAG_VM) && (cs_dpl<cpu.cpl))
+						E_Exit("V86 interrupt doesn't change to pl0");	// or #GP(cs_sel)
 
+					// commit point
 do_interrupt:
 					if (gate.Type() & 0x8) {	/* 32-bit Gate */
 						CPU_Push32(reg_flags);
@@ -454,16 +587,18 @@ do_interrupt:
 				default:
 					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",cs_desc.Type());
 				}
+
+				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
+				Segs.phys[cs]=cs_desc.GetBase();
+				cpu.code.big=cs_desc.Big()>0;
+				reg_eip=gate_off;
+
 				if (!(gate.Type()&1))
 					SETFLAGBIT(IF,false);
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
 				SETFLAGBIT(VM,false);
-				Segs.val[cs]=(gate_sel&0xfffc) | cpu.cpl;
-				Segs.phys[cs]=cs_desc.GetBase();
-				cpu.code.big=cs_desc.Big()>0;
 				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",gate_sel,gate_off,cs_desc.Big(),gate.Type() & 0x8 ? "386" : "286");
-				reg_eip=gate_off;
 				return;
 			}
 		case DESC_TASK_GATE:
@@ -482,6 +617,7 @@ do_interrupt:
 	return ; // make compiler happy
 }
 
+
 void CPU_IRET(bool use32,Bitu oldeip) {
 	if (!cpu.pmode) {					/* RealMode IRET */
 realmode_iret:
@@ -499,102 +635,110 @@ realmode_iret:
 	} else {	/* Protected mode IRET */
 		if (reg_flags & FLAG_VM) {
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
-				CPU_Exception(13,0);
+				// win3.x e
+				CPU_Exception(EXCEPTION_GP,0);
 				return;
 			} else goto realmode_iret;
 		}
-//		DEBUG_EnableDebugger();
-//		LOG_MSG("IRET start CPL %d v86 %d",cpu.cpl,cpu.v86);
 		/* Check if this is task IRET */	
 		if (GETFLAG(NT)) {
 			if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
-			if (!cpu_tss.IsValid()) E_Exit("TASK Iret without valid TSS");
+			CPU_CHECK_COND(!cpu_tss.IsValid(),
+				"TASK Iret without valid TSS",
+				EXCEPTION_TS,cpu_tss.selector & 0xfffc)
+			// check if busy is set
+			switch (cpu_tss.desc.Type()) {
+			case DESC_286_TSS_B:		case DESC_386_TSS_B:
+				break;
+			default:
+				E_Exit("TASK Iret:TSS not busy");		// or #TS(sel)
+			}
 			Bitu back_link=cpu_tss.Get_back();
 			CPU_SwitchTask(back_link,TSwitch_IRET,oldeip);
 			return;
 		}
 		Bitu n_cs_sel,n_eip,n_flags;
 		if (use32) {
+			// commit point
 			n_eip=CPU_Pop32();
 			n_cs_sel=CPU_Pop32() & 0xffff;
 			n_flags=CPU_Pop32();
-			if (n_flags & FLAG_VM) {
-				cpu.cpl=3;
-				CPU_SetFlags(n_flags,FMASK_ALL | FLAG_VM);
+			if ((n_flags & FLAG_VM) && (cpu.cpl==0)) {
+				reg_eip=n_eip & 0xffff;
 				Bitu n_ss,n_esp,n_es,n_ds,n_fs,n_gs;
 				n_esp=CPU_Pop32();
 				n_ss=CPU_Pop32() & 0xffff;
-
 				n_es=CPU_Pop32() & 0xffff;
 				n_ds=CPU_Pop32() & 0xffff;
 				n_fs=CPU_Pop32() & 0xffff;
 				n_gs=CPU_Pop32() & 0xffff;
+
+				CPU_SetFlags(n_flags,FMASK_ALL | FLAG_VM);
+				cpu.cpl=3;
+
 				CPU_SetSegGeneral(ss,n_ss);
 				CPU_SetSegGeneral(es,n_es);
 				CPU_SetSegGeneral(ds,n_ds);
 				CPU_SetSegGeneral(fs,n_fs);
 				CPU_SetSegGeneral(gs,n_gs);
-				reg_eip=n_eip & 0xffff;
 				reg_esp=n_esp;
 				cpu.code.big=false;
 				SegSet16(cs,n_cs_sel);
 				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);	
 				return;
 			}
+			if (n_flags & FLAG_VM) E_Exit("IRET from pmode to v86 with CPL!=0");
 		} else {
 			n_eip=CPU_Pop16();
 			n_cs_sel=CPU_Pop16();
 			n_flags=(reg_flags & 0xffff0000) | CPU_Pop16();
 			if (n_flags & FLAG_VM) E_Exit("VM Flag in 16-bit iret");
 		}
+		CPU_CHECK_COND((n_cs_sel & 0xfffc)==0,
+			"IRET:CS selector zero",
+			EXCEPTION_GP,0)
 		Bitu n_cs_rpl=n_cs_sel & 3;
 		Descriptor n_cs_desc;
-		cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc);
-		if (n_cs_rpl<cpu.cpl) 
-			E_Exit("IRET to lower privilege");
+		CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc),
+			"IRET:CS selector beyond limits",
+			EXCEPTION_GP,n_cs_sel & 0xfffc)
+		CPU_CHECK_COND(n_cs_rpl<cpu.cpl,
+			"IRET to lower privilege",
+			EXCEPTION_GP,n_cs_sel & 0xfffc)
+
+		switch (n_cs_desc.Type()) {
+		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
+		case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+			CPU_CHECK_COND(n_cs_rpl!=n_cs_desc.DPL(),
+				"IRET:NC:DPL!=RPL",
+				EXCEPTION_GP,n_cs_sel & 0xfffc)
+			break;
+		case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+		case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
+			CPU_CHECK_COND(n_cs_desc.DPL()>n_cs_rpl,
+				"IRET:C:DPL>RPL",
+				EXCEPTION_GP,n_cs_sel & 0xfffc)
+			break;
+		default:
+			E_Exit("IRET:Illegal descriptor type %X",n_cs_desc.Type());
+		}
+		CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
+			"IRET with nonpresent code segment",
+			EXCEPTION_NP,n_cs_sel & 0xfffc)
+
 		if (n_cs_rpl==cpu.cpl) {	
 			/* Return to same level */
-			switch (n_cs_desc.Type()) {
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
-			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (!(cpu.cpl==n_cs_desc.DPL())) E_Exit("IRET:Same Level:NC:DPL!=CPL");
-				break;
-			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
-			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				if (!(n_cs_desc.DPL()>=cpu.cpl)) E_Exit("IRET:Same level:C:DPL<CPL");
-				break;
-			default:
-				E_Exit("IRET:Same level:Illegal descriptor type %X",n_cs_desc.Type());
-			}
 			Segs.phys[cs]=n_cs_desc.GetBase();
 			cpu.code.big=n_cs_desc.Big()>0;
 			Segs.val[cs]=n_cs_sel;
 			reg_eip=n_eip;
 
-			CPU_SetFlagsd(n_flags);
+			Bitu mask=cpu.cpl ? (FMASK_NORMAL | FLAG_NT) : FMASK_ALL;
+			if (GETFLAG_IOPL<cpu.cpl) mask &= (~FLAG_IF);
+			CPU_SetFlags(n_flags,mask);
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		} else {
 			/* Return to outer level */
-			switch (n_cs_desc.Type()) {
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
-			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (n_cs_desc.DPL()!=n_cs_rpl) E_Exit("IRET:Outer level:NC:CS RPL != CS DPL");
-				break;
-			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
-			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				if (n_cs_desc.DPL()<=cpu.cpl) E_Exit("IRET:Outer level:C:DPL <= CPL");
-				break;
-			default:
-				E_Exit("IRET:Outer level:Illegal descriptor type %X",n_cs_desc.Type());
-			}
-			Segs.phys[cs]=n_cs_desc.GetBase();
-			cpu.code.big=n_cs_desc.Big()>0;
-			Segs.val[cs]=n_cs_sel;
-
-			CPU_SetFlagsd(n_flags);
-
-			cpu.cpl=n_cs_rpl;
-			reg_eip=n_eip;
 			Bitu n_ss,n_esp;
 			if (use32) {
 				n_esp=CPU_Pop32();
@@ -603,19 +747,92 @@ realmode_iret:
 				n_esp=CPU_Pop16();
 				n_ss=CPU_Pop16();
 			}
-			CPU_SetSegGeneral(ss,n_ss);
-			if (cpu.stack.big) {
+			CPU_CHECK_COND((n_ss & 0xfffc)==0,
+				"IRET:Outer level:SS selector zero",
+				EXCEPTION_GP,0)
+			CPU_CHECK_COND((n_ss & 3)!=n_cs_rpl,
+				"IRET:Outer level:SS rpl!=CS rpl",
+				EXCEPTION_GP,n_ss & 0xfffc)
+			Descriptor n_ss_desc;
+			CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_ss,n_ss_desc),
+				"IRET:Outer level:SS beyond limit",
+				EXCEPTION_GP,n_ss & 0xfffc)
+			CPU_CHECK_COND(n_ss_desc.DPL()!=n_cs_rpl,
+				"IRET:Outer level:SS dpl!=CS rpl",
+				EXCEPTION_GP,n_ss & 0xfffc)
+
+			// check if stack segment is a writable data segment
+			switch (n_ss_desc.Type()) {
+			case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+				break;
+			default:
+				E_Exit("IRET:Outer level:Stack segment not writable");		// or #GP(ss_sel)
+			}
+			CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
+				"IRET:Outer level:Stack segment not present",
+				EXCEPTION_NP,n_ss & 0xfffc)
+
+			Segs.phys[cs]=n_cs_desc.GetBase();
+			cpu.code.big=n_cs_desc.Big()>0;
+			Segs.val[cs]=n_cs_sel;
+
+			Bitu mask=cpu.cpl ? (FMASK_NORMAL | FLAG_NT) : FMASK_ALL;
+			if (GETFLAG_IOPL<cpu.cpl) mask &= (~FLAG_IF);
+			CPU_SetFlags(n_flags,mask);
+
+			cpu.cpl=n_cs_rpl;
+			reg_eip=n_eip;
+
+			Segs.val[ss]=n_ss;
+			Segs.phys[ss]=n_ss_desc.GetBase();
+			if (n_ss_desc.Big()) {
+				cpu.stack.big=true;
+				cpu.stack.mask=0xffffffff;
 				reg_esp=n_esp;
 			} else {
-				reg_sp=n_esp;
+				cpu.stack.big=false;
+				cpu.stack.mask=0xffff;
+				reg_sp=n_esp & 0xffff;
 			}
 
-			//TODO Maybe validate other segments, but why would anyone use them?
+			// borland extender, zrdx
+			Descriptor desc;
+			cpu.gdt.GetDescriptor(SegValue(es),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(ds),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(fs),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(gs),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
+			default: break;	}
+
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
 		return;
 	}
 }
+
 
 void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
@@ -628,24 +845,38 @@ void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 		cpu.code.big=false;
 		return;
 	} else {
+		CPU_CHECK_COND((selector & 0xfffc)==0,
+			"JMP:CS selector zero",
+			EXCEPTION_GP,0)
 		Bitu rpl=selector & 3;
 		Descriptor desc;
-		cpu.gdt.GetDescriptor(selector,desc);
-		if (!desc.saved.seg.p) {
-			CPU_Exception(0x0B,selector & 0xfffc);
-			return;
-		}
+		CPU_CHECK_COND(!cpu.gdt.GetDescriptor(selector,desc),
+			"JMP:CS beyond limits",
+			EXCEPTION_GP,selector & 0xfffc)
 		switch (desc.Type()) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
-			if (rpl>cpu.cpl) E_Exit("JMP:NC:RPL>CPL");
-			if (cpu.cpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
+			CPU_CHECK_COND(rpl>cpu.cpl,
+				"JMP:NC:RPL>CPL",
+				EXCEPTION_GP,selector & 0xfffc)
+			CPU_CHECK_COND(cpu.cpl!=desc.DPL(),
+				"JMP:NC:RPL != DPL",
+				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:Code:NC to %X:%X big %d",selector,offset,desc.Big());
 			goto CODE_jmp;
 		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:Code:C to %X:%X big %d",selector,offset,desc.Big());
+			CPU_CHECK_COND(cpu.cpl<desc.DPL(),
+				"JMP:C:CPL < DPL",
+				EXCEPTION_GP,selector & 0xfffc)
 CODE_jmp:
+			if (!desc.saved.seg.p) {
+				// win
+				CPU_Exception(EXCEPTION_NP,selector & 0xfffc);
+				return;
+			}
+
 			/* Normal jump to another selector:offset */
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
@@ -653,8 +884,12 @@ CODE_jmp:
 			reg_eip=offset;
 			return;
 		case DESC_386_TSS_A:
-			if (desc.DPL()<cpu.cpl) E_Exit("JMP:TSS:dpl<cpl");
-			if (desc.DPL()<rpl) E_Exit("JMP:TSS:dpl<rpl");
+			CPU_CHECK_COND(desc.DPL()<cpu.cpl,
+				"JMP:TSS:dpl<cpl",
+				EXCEPTION_GP,selector & 0xfffc)
+			CPU_CHECK_COND(desc.DPL()<rpl,
+				"JMP:TSS:dpl<rpl",
+				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:TSS to %X",selector);
 			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
 			break;
@@ -664,7 +899,6 @@ CODE_jmp:
 	}
 	assert(1);
 }
-
 
 
 void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
@@ -682,26 +916,39 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 		SegSet16(cs,selector);
 		return;
 	} else {
+		CPU_CHECK_COND((selector & 0xfffc)==0,
+			"CALL:CS selector zero",
+			EXCEPTION_GP,0)
 		Descriptor call;
 		Bitu rpl=selector & 3;
-		cpu.gdt.GetDescriptor(selector,call);
-		if (!call.saved.seg.p) {
-			CPU_Exception(0x0B,selector & 0xfffc);
-			return;
-		}
+		CPU_CHECK_COND(!cpu.gdt.GetDescriptor(selector,call),
+			"CALL:CS beyond limits",
+			EXCEPTION_GP,selector & 0xfffc)
 		/* Check for type of far call */
 		switch (call.Type()) {
 		case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
-			if (rpl>cpu.cpl) E_Exit("CALL:CODE:NC:RPL>CPL");
-			if (call.DPL()!=cpu.cpl) E_Exit("CALL:CODE:NC:DPL!=CPL");
+			CPU_CHECK_COND(rpl>cpu.cpl,
+				"CALL:CODE:NC:RPL>CPL",
+				EXCEPTION_GP,selector & 0xfffc)
+			CPU_CHECK_COND(call.DPL()!=cpu.cpl,
+				"CALL:CODE:NC:DPL!=CPL",
+				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:NC to %X:%X",selector,offset);
 			goto call_code;	
 		case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
-			if (call.DPL()>cpu.cpl) E_Exit("CALL:CODE:C:DPL>CPL");
+			CPU_CHECK_COND(call.DPL()>cpu.cpl,
+				"CALL:CODE:C:DPL>CPL",
+				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:C to %X:%X",selector,offset);
 call_code:
+			if (!call.saved.seg.p) {
+				// borland extender (RTM)
+				CPU_Exception(EXCEPTION_NP,selector & 0xfffc);
+				return;
+			}
+			// commit point
 			if (!use32) {
 				CPU_Push16(SegValue(cs));
 				CPU_Push16(oldeip);
@@ -718,45 +965,109 @@ call_code:
 		case DESC_386_CALL_GATE: 
 		case DESC_286_CALL_GATE:
 			{
-				if (call.DPL()<cpu.cpl) E_Exit("Call:Gate:Gate DPL<CPL");
-				if (call.DPL()<rpl)		E_Exit("Call:Gate:Gate DPL<RPL");			
+				CPU_CHECK_COND(call.DPL()<cpu.cpl,
+					"CALL:Gate:Gate DPL<CPL",
+					EXCEPTION_GP,selector & 0xfffc)
+				CPU_CHECK_COND(call.DPL()<rpl,
+					"CALL:Gate:Gate DPL<RPL",
+					EXCEPTION_GP,selector & 0xfffc)
+				CPU_CHECK_COND(!call.saved.seg.p,
+					"CALL:Gate:Segment not present",
+					EXCEPTION_NP,selector & 0xfffc)
 				Descriptor n_cs_desc;
 				Bitu n_cs_sel=call.GetSelector();
-				if (!cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc)) E_Exit("Call:Gate:Invalid CS selector.");
-				if (!n_cs_desc.saved.seg.p) {
-					CPU_Exception(0x0B,selector & 0xfffc);
-					return;
-				}
+
+				CPU_CHECK_COND((n_cs_sel & 0xfffc)==0,
+					"CALL:Gate:CS selector zero",
+					EXCEPTION_GP,0)
+				CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc),
+					"CALL:Gate:CS beyond limits",
+					EXCEPTION_GP,n_cs_sel & 0xfffc)
 				Bitu n_cs_dpl	= n_cs_desc.DPL();
+				CPU_CHECK_COND(n_cs_dpl>cpu.cpl,
+					"CALL:Gate:CS DPL>CPL",
+					EXCEPTION_GP,n_cs_sel & 0xfffc)
 				Bitu n_cs_rpl	= n_cs_sel & 3;
 				Bitu n_eip		= call.GetOffset();
 				switch (n_cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
-					/* Check if we goto innter priviledge */
+					/* Check if we goto inner priviledge */
 					if (n_cs_dpl < cpu.cpl) {
+						CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
+							"CALL:Gate:CS not present",
+							EXCEPTION_NP,n_cs_sel & 0xfffc)
 						/* Get new SS:ESP out of TSS */
 						Bitu n_ss_sel,n_esp;
 						Descriptor n_ss_desc;
 						cpu_tss.Get_SSx_ESPx(n_cs_dpl,n_ss_sel,n_esp);
-						if (!cpu.gdt.GetDescriptor(n_ss_sel,n_ss_desc)) E_Exit("Call:Gate:Invalid SS selector.");
-						/* New CPL is new SS DPL */
-						cpu.cpl			= n_ss_desc.DPL();
+						CPU_CHECK_COND((n_ss_sel & 0xfffc)==0,
+							"CALL:Gate:NC:SS selector zero",
+							EXCEPTION_TS,0)
+						CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_ss_sel,n_ss_desc),
+							"CALL:Gate:Invalid SS selector",
+							EXCEPTION_TS,n_ss_sel & 0xfffc)
+						CPU_CHECK_COND(((n_ss_sel & 3)!=n_cs_desc.DPL()) || (n_ss_desc.DPL()!=n_cs_desc.DPL()),
+							"CALL:Gate:Invalid SS selector privileges",
+							EXCEPTION_TS,n_ss_sel & 0xfffc)
+
+						switch (n_ss_desc.Type()) {
+						case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+						case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+							// writable data segment
+							break;
+						default:
+							E_Exit("Call:Gate:SS no writable data segment");	// or #TS(ss_sel)
+						}
+						CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
+							"CALL:Gate:Stack segment not present",
+							EXCEPTION_SS,n_ss_sel & 0xfffc)
+
 						/* Load the new SS:ESP and save data on it */
 						Bitu o_esp		= reg_esp;
 						Bitu o_ss		= SegValue(ss);
 						PhysPt o_stack  = SegPhys(ss)+(reg_esp & cpu.stack.mask);
-					
-						CPU_SetSegGeneral(ss,n_ss_sel);
-						if (cpu.stack.big) 	reg_esp=n_esp;
-						else reg_sp=n_esp;
+
+						// catch pagefaults
+						if (call.saved.gate.paramcount&31) {
+							if (call.Type()==DESC_386_CALL_GATE) {
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+									mem_readd(o_stack+i*4);
+							} else {
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
+									mem_readw(o_stack+i*2);
+							}
+						}
+
+						// commit point
+						Segs.val[ss]=n_ss_sel;
+						Segs.phys[ss]=n_ss_desc.GetBase();
+						if (n_ss_desc.Big()) {
+							cpu.stack.big=true;
+							cpu.stack.mask=0xffffffff;
+							reg_esp=n_esp;
+						} else {
+							cpu.stack.big=false;
+							cpu.stack.mask=0xffff;
+							reg_sp=n_esp & 0xffff;
+						}
+
+						cpu.cpl = n_cs_desc.DPL();
+						Bit16u oldcs    = SegValue(cs);
+						/* Switch to new CS:EIP */
+						Segs.phys[cs]	= n_cs_desc.GetBase();
+						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
+						cpu.code.big	= n_cs_desc.Big()>0;
+						reg_eip			= n_eip;
+						if (!use32)	reg_eip&=0xffff;
+
 						if (call.Type()==DESC_386_CALL_GATE) {
 							CPU_Push32(o_ss);		//save old stack
 							CPU_Push32(o_esp);
 							if (call.saved.gate.paramcount&31)
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
 									CPU_Push32(mem_readd(o_stack+i*4));
-							CPU_Push32(SegValue(cs));
+							CPU_Push32(oldcs);
 							CPU_Push32(oldeip);
 						} else {
 							CPU_Push16(o_ss);		//save old stack
@@ -764,30 +1075,44 @@ call_code:
 							if (call.saved.gate.paramcount&31)
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									CPU_Push16(mem_readw(o_stack+i*2));
-							CPU_Push16(SegValue(cs));
+							CPU_Push16(oldcs);
 							CPU_Push16(oldeip);
 						}
 
-						cpu.cpl = n_cs_desc.DPL();
-						/* Switch to new CS:EIP */
-						Segs.phys[cs]	= n_cs_desc.GetBase();
-						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
-						cpu.code.big	= n_cs_desc.Big()>0;
-						reg_eip			= n_eip;
-						if (!use32)	reg_eip&=0xffff;
 						break;		
-					}
+					} else if (n_cs_dpl > cpu.cpl)
+						E_Exit("CALL:GATE:CS DPL>CPL");		// or #GP(sel)
 				case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 				case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
-call_gate_same_privilege:
-					E_Exit("Call gate to same priviledge");
+					// zrdx extender
+
+					if (call.Type()==DESC_386_CALL_GATE) {
+						CPU_Push32(SegValue(cs));
+						CPU_Push32(oldeip);
+					} else {
+						CPU_Push16(SegValue(cs));
+						CPU_Push16(oldeip);
+					}
+
+					/* Switch to new CS:EIP */
+					Segs.phys[cs]	= n_cs_desc.GetBase();
+					Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
+					cpu.code.big	= n_cs_desc.Big()>0;
+					reg_eip			= n_eip;
+					if (!use32)	reg_eip&=0xffff;
 					break;
+				default:
+					E_Exit("CALL:GATE:CS no executable segment");
 				}
 			}			/* Call Gates */
 			break;
 		case DESC_386_TSS_A:
-			if (call.DPL()<cpu.cpl) E_Exit("CALL:TSS:dpl<cpl");
-			if (call.DPL()<rpl) E_Exit("CALL:TSS:dpl<rpl");
+			CPU_CHECK_COND(call.DPL()<cpu.cpl,
+				"CALL:TSS:dpl<cpl",
+				EXCEPTION_TS,selector & 0xfffc)
+			CPU_CHECK_COND(call.DPL()<rpl,
+				"CALL:TSS:dpl<rpl",
+				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
 			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
 			break;
@@ -822,39 +1147,50 @@ void CPU_RET(bool use32,Bitu bytes,Bitu oldeip) {
 
 		Descriptor desc;
 		Bitu rpl=selector & 3;
-		if (rpl<cpu.cpl) {
-			CPU_Exception(0x0B,selector & 0xfffc);
-			return;
-		}
-		cpu.gdt.GetDescriptor(selector,desc);
+		CPU_CHECK_COND(rpl<cpu.cpl,
+			"RET:rpl<CPL",
+			EXCEPTION_GP,selector & 0xfffc)
 
-		if (!desc.saved.seg.p) {
-			CPU_Exception(0x0B,selector & 0xfffc);
-			return;
-		};
+		CPU_CHECK_COND((selector & 0xfffc)==0,
+			"RET:CS selector zero",
+			EXCEPTION_GP,0)
+		CPU_CHECK_COND(!cpu.gdt.GetDescriptor(selector,desc),
+			"RET:CS beyond limits",
+			EXCEPTION_GP,selector & 0xfffc)
 
-		if (!use32) {
-			offset=CPU_Pop16();
-			selector=CPU_Pop16();
-		} else {
-			offset=CPU_Pop32();
-			selector=CPU_Pop32() & 0xffff;
-		}
 		if (cpu.cpl==rpl) {	
 			/* Return to same level */
 			switch (desc.Type()) {
 			case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 			case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
-				if (!(cpu.cpl==desc.DPL())) E_Exit("RET to NC segment of other privilege");
+				CPU_CHECK_COND(cpu.cpl!=desc.DPL(),
+					"RET to NC segment of other privilege",
+					EXCEPTION_GP,selector & 0xfffc)
 				goto RET_same_level;
 			case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 			case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
-				if (!(desc.DPL()>=cpu.cpl)) E_Exit("RET to C segment of higher privilege");
+				CPU_CHECK_COND(desc.DPL()>cpu.cpl,
+					"RET to C segment of higher privilege",
+					EXCEPTION_GP,selector & 0xfffc)
 				break;
 			default:
 				E_Exit("RET from illegal descriptor type %X",desc.Type());
 			}
 RET_same_level:
+			if (!desc.saved.seg.p) {
+				// borland extender (RTM)
+				CPU_Exception(EXCEPTION_NP,selector & 0xfffc);
+				return;
+			}
+
+			// commit point
+			if (!use32) {
+				offset=CPU_Pop16();
+				selector=CPU_Pop16();
+			} else {
+				offset=CPU_Pop32();
+				selector=CPU_Pop32() & 0xffff;
+			}
 
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
@@ -870,27 +1206,111 @@ RET_same_level:
 		} else {
 			/* Return to outer level */
 			if (bytes) E_Exit("RETF outer level with immediate value");
+			switch (desc.Type()) {
+			case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
+			case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
+				CPU_CHECK_COND(desc.DPL()!=rpl,
+					"RET to outer NC segment with DPL!=RPL",
+					EXCEPTION_GP,selector & 0xfffc)
+				break;
+			case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
+			case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
+				CPU_CHECK_COND(desc.DPL()>rpl,
+					"RET to outer C segment with DPL>RPL",
+					EXCEPTION_GP,selector & 0xfffc)
+				break;
+			default:
+				E_Exit("RET from illegal descriptor type %X",desc.Type());		// or #GP(selector)
+			}
+
+			CPU_CHECK_COND(!desc.saved.seg.p,
+				"RET:Outer level:CS not present",
+				EXCEPTION_NP,selector & 0xfffc)
+
+			// commit point
 			Bitu n_esp,n_ss;
 			if (use32) {
+				offset=CPU_Pop32();
+				selector=CPU_Pop32() & 0xffff;
 				n_esp = CPU_Pop32();
 				n_ss = CPU_Pop32() & 0xffff;
 			} else {
+				offset=CPU_Pop16();
+				selector=CPU_Pop16();
 				n_esp = CPU_Pop16();
 				n_ss = CPU_Pop16();
 			}
-			cpu.cpl = rpl;
 
-			CPU_SetSegGeneral(ss,n_ss);
-			if (cpu.stack.big) {
-                reg_esp = n_esp;
-			} else {
-				reg_sp = n_esp;
+			CPU_CHECK_COND((n_ss & 0xfffc)==0,
+				"RET to outer level with SS selector zero",
+				EXCEPTION_GP,0)
+
+			Descriptor n_ss_desc;
+			CPU_CHECK_COND(!cpu.gdt.GetDescriptor(n_ss,n_ss_desc),
+				"RET:SS beyond limits",
+				EXCEPTION_GP,n_ss & 0xfffc)
+
+			CPU_CHECK_COND(((n_ss & 3)!=rpl) || (n_ss_desc.DPL()!=rpl),
+				"RET to outer segment with invalid SS privileges",
+				EXCEPTION_GP,n_ss & 0xfffc)
+			switch (n_ss_desc.Type()) {
+			case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+				break;
+			default:
+				E_Exit("RET:SS selector type no writable data segment");	// or #GP(selector)
 			}
+			CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
+				"RET:Stack segment not present",
+				EXCEPTION_SS,n_ss & 0xfffc)
 
+			cpu.cpl = rpl;
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
 			reg_eip=offset;
+
+			Segs.val[ss]=n_ss;
+			Segs.phys[ss]=n_ss_desc.GetBase();
+			if (n_ss_desc.Big()) {
+				cpu.stack.big=true;
+				cpu.stack.mask=0xffffffff;
+				reg_esp=n_esp;
+			} else {
+				cpu.stack.big=false;
+				cpu.stack.mask=0xffff;
+				reg_sp=n_esp & 0xffff;
+			}
+
+			Descriptor desc;
+			cpu.gdt.GetDescriptor(SegValue(es),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(ds),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(fs),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
+			default: break;	}
+			cpu.gdt.GetDescriptor(SegValue(gs),desc);
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
+			default: break;	}
 
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
@@ -917,6 +1337,7 @@ void CPU_STR(Bitu & selector) {
 
 void CPU_LTR(Bitu selector) {
 	cpu_tss.SetSelector(selector);
+	cpu_tss.desc.SetBusy(true);
 }
 
 Bitu gdt_count=0;
@@ -1176,24 +1597,38 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 		}
 		return false;
 	} else {
-		Descriptor desc;
-		cpu.gdt.GetDescriptor(value,desc);
-
-		if (value!=0) {
-			if (!desc.saved.seg.p) {
-				if (seg==ss) E_Exit("CPU_SetSegGeneral: Stack segment not present.");
-				// Throw Exception 0x0B - Segment not present
-				return CPU_PrepareException(0x0B,value & 0xfffc);
-			} else if (seg==ss) {
-				// Stack segment loaded with illegal segment ?
-				if ((desc.saved.seg.type<DESC_DATA_EU_RO_NA) || (desc.saved.seg.type>DESC_DATA_ED_RW_A)) {
-					return CPU_PrepareException(0x0D,value & 0xfffc);
-				}
-			}
-		}
-		Segs.val[seg]=value;
-		Segs.phys[seg]=desc.GetBase();
 		if (seg==ss) {
+			// Stack needs to be non-zero
+			if ((value & 0xfffc)==0) {
+				E_Exit("CPU_SetSegGeneral: Stack segment zero");
+//				return CPU_PrepareException(EXCEPTION_GP,0);
+			}
+			Descriptor desc;
+			if (!cpu.gdt.GetDescriptor(value,desc)) {
+				E_Exit("CPU_SetSegGeneral: Stack segment beyond limits");
+//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+			}
+			if (((value & 3)!=cpu.cpl) || (desc.DPL()!=cpu.cpl)) {
+				E_Exit("CPU_SetSegGeneral: Stack segment with invalid privileges");
+//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+			}
+
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+				break;
+			default:
+				E_Exit("CPU_SetSegGeneral: Stack segment not writable");
+//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+			}
+
+			if (!desc.saved.seg.p) {
+				E_Exit("CPU_SetSegGeneral: Stack segment not present");	// or #SS(sel)
+//				return CPU_PrepareException(EXCEPTION_SS,value & 0xfffc);
+			}
+
+			Segs.val[seg]=value;
+			Segs.phys[seg]=desc.GetBase();
 			if (desc.Big()) {
 				cpu.stack.big=true;
 				cpu.stack.mask=0xffffffff;
@@ -1201,7 +1636,44 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 				cpu.stack.big=false;
 				cpu.stack.mask=0xffff;
 			}
+		} else {
+			if ((value & 0xfffc)==0) {
+				Segs.val[seg]=value;
+				Segs.phys[seg]=0;	// ??
+				return false;
+			}
+			Descriptor desc;
+			if (!cpu.gdt.GetDescriptor(value,desc)) {
+				E_Exit("CPU_SetSegGeneral: Segment beyond limits");
+//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+			}
+			switch (desc.Type()) {
+			case DESC_DATA_EU_RO_NA:		case DESC_DATA_EU_RO_A:
+			case DESC_DATA_EU_RW_NA:		case DESC_DATA_EU_RW_A:
+			case DESC_DATA_ED_RO_NA:		case DESC_DATA_ED_RO_A:
+			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
+			case DESC_CODE_R_NC_A:			case DESC_CODE_R_NC_NA:
+				if (((value & 3)>desc.DPL()) || (cpu.cpl>desc.DPL())) {
+					E_Exit("CPU_SetSegGeneral: Invalid privileges");
+//					return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+				}
+				break;
+			case DESC_CODE_R_C_A:			case DESC_CODE_R_C_NA:
+				break;
+			default:
+				// gabriel knight
+				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+
+			}
+			if (!desc.saved.seg.p) {
+				// win
+				return CPU_PrepareException(EXCEPTION_NP,value & 0xfffc);
+			}
+
+			Segs.val[seg]=value;
+			Segs.phys[seg]=desc.GetBase();
 		}
+
 		return false;
 	}
 }
@@ -1209,7 +1681,7 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 bool CPU_PopSeg(SegNames seg,bool use32) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 	if (CPU_SetSegGeneral(seg,val)) return true;
-	Bitu addsp=2 << use32;
+	Bitu addsp=use32?0x04:0x02;
 	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp+addsp)&cpu.stack.mask);
 	return false;
 }
@@ -1217,16 +1689,17 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 void CPU_CPUID(void) {
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
-		reg_eax=0;
-		reg_ebx=('G'<< 24) || ('e' << 16) || ('n' << 8) || 'u';
-		reg_edx=('i'<< 24) || ('n' << 16) || ('e' << 8) || 'T';
-		reg_ecx=('n'<< 24) || ('t' << 16) || ('e' << 8) || 'l';
+		reg_eax=1;
+		reg_eax=1;  /* Maximum level */ 
+		reg_ebx='G' | ('e' << 8) | ('n' << 16) | ('u'<< 24); 
+		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24); 
+		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24); 
 		break;
 	case 1:	/* get processor type/family/model/stepping and feature flags */
 		reg_eax=0x402;		/* intel 486 sx? */
 		reg_ebx=0;			/* Not Supported */
 		reg_ecx=0;			/* No features */
-		reg_edx=0;			/* Nothing either */
+		reg_edx=1;			/* FPU */
 		break;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled CPUID Function %x",reg_eax);
@@ -1246,7 +1719,7 @@ static Bits HLT_Decode(void) {
 
 void CPU_HLT(Bitu oldeip) {
 	if (cpu.cpl) {
-		CPU_Exception(13,0);	
+		CPU_Exception(EXCEPTION_GP,0);	
 		return;
 	}
 	reg_eip=oldeip;
