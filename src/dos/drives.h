@@ -21,11 +21,76 @@
 
 #include <sys/types.h>
 #include <dirent.h>
+#include <vector>
 #include "dos_system.h"
 #include "cross.h"
  
 
 bool WildFileCmp(const char * file, const char * wild);
+
+class DOS_Drive_Cache {
+public:
+	DOS_Drive_Cache					(void);
+	DOS_Drive_Cache					(const char* path);
+	~DOS_Drive_Cache				(void);
+
+	typedef enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
+
+	void		SetBaseDir			(const char* path);
+	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
+	bool		OpenDir				(const char* path);
+	bool		ReadDir				(struct dirent* result,struct stat* status);
+
+	void		ExpandName			(char* path);
+	char*		GetExpandName		(const char* path);
+	
+	void		CacheOut			(const char* path, bool ignoreLastDir = false);
+	void		AddEntry			(const char* path);
+
+	class CFileInfo {
+	public:	
+		~CFileInfo(void) {
+			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
+			fileList.clear();
+			longNameList.clear();
+			outputList.clear();
+		};
+		char		fullname	[CROSS_LEN];
+		char		orgname		[CROSS_LEN];
+		char		shortname	[DOS_NAMELENGTH_ASCII];
+		bool		isDir;
+		Bit16u		shortNr;
+		Bit16u		compareCount;
+		struct stat	status;
+		// contents
+		std::vector<CFileInfo*>	fileList;
+		std::vector<CFileInfo*>	longNameList;
+		std::vector<CFileInfo*>	outputList;
+	};
+
+private:
+
+	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
+	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
+	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
+	bool		SetResult			(CFileInfo* dir, struct dirent* result, struct stat* status, Bit16u entryNr);
+	bool		IsCachedIn			(CFileInfo* dir);
+	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
+	Bit16s		RemoveSpaces		(char* str);
+	bool		OpenDir				(CFileInfo* dir, char* path);
+	void		CreateEntry			(CFileInfo* dir, const char* name);
+
+	Bit32u		nextEntry;	
+	CFileInfo*	dirBase;
+	CFileInfo*  dirSearch;
+	char		dirPath				[CROSS_LEN];
+	bool		dirFirstTime;
+	TDirSort	sortDirType;
+	CFileInfo*	save_dir;
+	char		save_path			[CROSS_LEN];
+	char		save_expanded		[CROSS_LEN];
+
+};
 
 class localDrive : public DOS_Drive {
 public:
@@ -55,6 +120,7 @@ private:
 		Bit16u free_clusters;
 		Bit8u mediaid;
 	} allocation;
+	DOS_Drive_Cache	dirCache;
 };
 
 struct VFILE_Block;
