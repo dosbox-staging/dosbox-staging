@@ -37,6 +37,9 @@ void MIXER_SetFreq(MIXER_Channel * chan,Bit32u freq);
 void MIXER_SetMode(MIXER_Channel * chan,Bit8u mode);
 void MIXER_Enable(MIXER_Channel * chan,bool enable);
 
+/* PC Speakers functions, tightly related to the timer functions */
+
 void PCSPEAKER_Enable(bool enable);
-void PCSPEAKER_SetFreq(Bit32u freq);
+void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
+
 
