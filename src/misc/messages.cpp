@@ -42,12 +42,12 @@ struct MessageBlock
 
 static list<MessageBlock> Lang;
 typedef list<MessageBlock>::iterator itmb;
-void AddMessage(const char * _name, const char* _val)
+void MSG_Add(const char * _name, const char* _val)
 {
    Lang.push_back(MessageBlock(_name,_val));
 }
 
-void ReplaceMessage(const char * _name, const char* _val)
+void MSG_Replace(const char * _name, const char* _val)
 {
    //find the message
    for(itmb tel=Lang.begin();tel!=Lang.end();tel++)
@@ -60,7 +60,7 @@ void ReplaceMessage(const char * _name, const char* _val)
 	     }
      }
    //even if the message doesn't exist add it 
-   AddMessage(_name,_val);
+   MSG_Add(_name,_val);
 }
 
 static void LoadMessageFile(const char * fname) {
@@ -94,7 +94,7 @@ static void LoadMessageFile(const char * fname) {
 		/* End of string marker */
 		} else if (linein[0]=='.') {
 		/* Replace/Add the string to the internal langaugefile */
-		   ReplaceMessage(name,string);
+		   MSG_Replace(name,string);
 		} else {
 		/* Normal string to be added */
 			strcat(string,linein);
@@ -122,3 +122,15 @@ void MSG_Init(Section_prop * section) {
 		LoadMessageFile(file_name.c_str());
 	} else LoadMessageFile(section->Get_string("LANGUAGE"));
 }
+
+void MSG_Write(const char * location)
+{
+      FILE* out=fopen(location,"w+b");
+      if(out==NULL) return;//maybe an error?
+      for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
+	fprintf(out,":%s\n%s.\n",(*tel).name.c_str(),(*tel).val.c_str());
+      }
+   
+      fclose(out);
+}
+
