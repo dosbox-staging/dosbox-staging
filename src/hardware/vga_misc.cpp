@@ -18,8 +18,9 @@
 
 #include "dosbox.h"
 #include "inout.h"
-#include "timer.h"
+#include "pic.h"
 #include "vga.h"
+
 
 static Bit8u flip=0;
 static Bit32u keep_vretrace;
@@ -34,22 +35,12 @@ Bit8u read_p3d5(Bit32u port);
 static Bit8u read_p3da(Bit32u port) {
 	vga.internal.attrindex=false;
 	if (vga.config.retrace) {
-		vga.config.retrace=false;
-		vga.config.real_start=vga.config.display_start;
-		keep_vretrace=LastTicks+1;
-		keeping=true;
-		flip=0;
 		return 9;
 	}
-	if (keeping) {
-		if (LastTicks>(keep_vretrace)) keeping=false;
-		return 9;
-	} else {
-		flip++;
-		if (flip>10) flip=0;
-		if (flip>5)	return 1;
-		return 0;
-	}
+	flip++;
+	if (flip>10) flip=0;
+	if (flip>5)	return 1;
+	return 0;
 	/*
 		0	Either Vertical or Horizontal Retrace active if set
 		3	Vertical Retrace in progress if set
@@ -58,6 +49,7 @@ static Bit8u read_p3da(Bit32u port) {
 
 
 static void write_p3d8(Bit32u port,Bit8u val) {
+	LOG_DEBUG("Write %2X to 3da",val);
 	/*
 		3	Vertical Sync Select. If set Vertical Sync to the monitor is the
 			logical OR of the vertical sync and the vertical display enable.
@@ -75,7 +67,6 @@ static void write_p3c2(Bit32u port,Bit8u val) {
 		IO_FreeReadHandler(0x3b4);
 		IO_FreeWriteHandler(0x3b5);
 		IO_FreeReadHandler(0x3b5);
-
 	} else {
 		IO_RegisterWriteHandler(0x3b4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3b4,read_p3d4,"VGA:CRTC Index Select");
@@ -104,6 +95,17 @@ static Bit8u read_p3cc(Bit32u port) {
 	return p3c2data;
 }
 
+
+static void EndRetrace(void) {
+	vga.config.retrace=false;
+}
+
+void VGA_StartRetrace(void) {
+	/* Setup a timer to destroy the vertical retrace bit in a few microseconds */
+	vga.config.real_start=vga.config.display_start;
+	vga.config.retrace=true;
+	PIC_AddEvent(EndRetrace,667);
+}
 
 void VGA_SetupMisc(void) {
 	IO_RegisterReadHandler(0x3da,read_p3da,"VGA Input Status 1");
