@@ -1,3 +1,21 @@
+/*
+ *  Copyright (C) 2002-2003  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 typedef union {
     double d;
 #ifndef WORDS_BIGENDIAN
@@ -13,15 +31,6 @@ typedef union {
 #endif
     Bit64s ll;
 } FPU_Reg;
-
-/* the following deal with IEEE double-precision numbers */
-#define MAXEXPD 0x7ff
-#define EXPBIAS 1023
-#define EXPD(fp)	(((fp.l.upper) >> 20) & 0x7FF)
-#define SIGND(fp)	((fp.l.upper) & 0x80000000)
-#define MANTD(fp)	(fp.ll & ((1LL << 52) - 1))
-#define BIASEXPONENT(fp) fp.l.upper = (fp.l.upper & ~(0x7ff << 20)) | (EXPBIAS << 20)
-
 
 enum FPU_Tag {
 	TAG_Valid = 0,

@@ -21,6 +21,7 @@
 static void FPU_FINIT(void) {
 	FPU_SetCW(0x37F);
 	fpu.sw=0;
+	TOP=FPU_GET_TOP();
 	fpu.tags[0]=TAG_Empty;
 	fpu.tags[1]=TAG_Empty;
 	fpu.tags[2]=TAG_Empty;
@@ -40,26 +41,22 @@ static void FPU_FNOP(void){
 }
 
 static void FPU_PUSH(double in){
-	Bitu newtop = (FPU_GET_TOP() - 1) &7;
-	FPU_SET_TOP(newtop);
+	TOP = (TOP - 1) &7;
 	//actually check if empty
-	fpu.tags[newtop]=TAG_Valid;
-	fpu.regs[newtop].d=in;
+	fpu.tags[TOP]=TAG_Valid;
+	fpu.regs[TOP].d=in;
+//	LOG(LOG_FPU,LOG_ERROR)("Pushed at %d  %g to the stack",newtop,in);
 	return;
 }
 static void FPU_PUSH_ZERO(void){
-	Bitu newtop = (FPU_GET_TOP() - 1) &7;
-	FPU_SET_TOP(newtop);
-	//actually check if empty
-	fpu.tags[newtop]=TAG_Zero;
-	fpu.regs[newtop].d=0.0;
-	return;
+	FPU_PUSH(0.0);
+	return; //maybe oneday needed
 }
 static void FPU_FPOP(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.tags[top]=TAG_Empty;
+	fpu.tags[TOP]=TAG_Empty;
 	//maybe set zero in it as well
-	FPU_SET_TOP((top+1)&7);
+	TOP = ((TOP+1)&7);
+//	LOG(LOG_FPU,LOG_ERROR)("popped from %d  %g off the stack",top,fpu.regs[top].d);
 	return;
 }
 
@@ -70,49 +67,42 @@ static void FPU_FADD(Bitu op1, Bitu op2){
 }
 
 static void FPU_FSIN(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = sin(fpu.regs[top].d);
+	fpu.regs[TOP].d = sin(fpu.regs[TOP].d);
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 
 static void FPU_FSINCOS(void){
-	Bitu top = FPU_GET_TOP();
-
-	double temp = sin(fpu.regs[top].d);
-	FPU_PUSH(cos(fpu.regs[top].d));
-	fpu.regs[top].d = temp;
+	Real64 temp = fpu.regs[TOP].d;
+	fpu.regs[TOP].d = sin(temp);
+	FPU_PUSH(cos(temp));
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 
 static void FPU_FCOS(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = cos(fpu.regs[top].d);
+	fpu.regs[TOP].d = cos(fpu.regs[TOP].d);
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 
 static void FPU_FSQRT(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = sqrt(fpu.regs[top].d);
+	fpu.regs[TOP].d = sqrt(fpu.regs[TOP].d);
 	//flags and such :)
 	return;
 }
 static void FPU_FPATAN(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.regs[(top+1)&7].d = atan(fpu.regs[(top+1)&7].d/fpu.regs[top].d);
+	fpu.regs[ST(1)].d = atan(fpu.regs[ST(1)].d/fpu.regs[TOP].d);
 	FPU_FPOP();
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 static void FPU_FPTAN(void){
-	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = tan(fpu.regs[top].d);
+	fpu.regs[TOP].d = tan(fpu.regs[TOP].d);
 	FPU_PUSH(1.0);
 	FPU_SET_C2(0);
 	//flags and such :)
@@ -166,16 +156,16 @@ static void FPU_FST(Bitu st, Bitu other){
 
 static void FPU_FCOM(Bitu st, Bitu other){
 	if((fpu.tags[st] != TAG_Valid) || (fpu.tags[other] != TAG_Valid)){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C0(1);return;
+		FPU_SET_C3(1);FPU_SET_C1(1);FPU_SET_C0(1);return;
 	}
 	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);return;
+		FPU_SET_C3(1);FPU_SET_C1(0);FPU_SET_C0(0);return;
 	}
 	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(1);return;
+		FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(1);return;
 	}
 	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C0(0);return;
+	FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
@@ -202,3 +192,109 @@ static double FROUND(double in){
 		break;
 	}
 }
+
+static void FPU_FPREM(void){
+	Real64 valtop = fpu.regs[TOP].d;
+	Real64 valdiv = fpu.regs[ST(1)].d;
+	Real64 res = floor(valtop/valdiv);
+	res=valtop - res*valdiv;
+	fpu.regs[TOP].d = res;
+	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);
+}
+
+static void FPU_FXAM(void){
+	if(fpu.tags[TOP] == TAG_Empty)
+	{
+		FPU_SET_C3(1);FPU_SET_C0(1);
+		return;
+	}
+	if(fpu.regs[TOP].ll & 0x8000000000000000)	//sign
+	{ 
+		FPU_SET_C1(1);
+	}
+	else
+	{
+		FPU_SET_C1(0);
+	}
+	if(fpu.regs[TOP].d == 0.0)		//zero or normalized number.
+	{ 
+		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C0(0);
+	}
+	else{
+		FPU_SET_C3(0);FPU_SET_C2(1);FPU_SET_C0(0);
+	}
+}
+
+static void FPU_FBST(PhysPt addr)
+{
+	FPU_Reg val = fpu.regs[TOP];
+	bool sign = false;
+	if(val.d<0.0){ //sign
+		sign=true;
+		val.d=-val.d;
+	}
+	//numbers from back to front
+	Real64 temp=val.d;
+	Bitu p;
+	for(Bitu i=0;i<9;i++){
+		val.d=temp;
+		temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
+		p = static_cast<Bitu>(val.d - 10.0*temp);  
+		val.d=temp;
+		temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
+		p |= (static_cast<Bitu>(val.d - 10.0*temp)<<4);
+
+		mem_writeb(addr+i,p);
+	}
+	val.d=temp;
+	temp = static_cast<Real64>(static_cast<Bit64s>(floor(val.d/10.0)));
+	p = static_cast<Bitu>(val.d - 10.0*temp);
+	if(sign)
+		p|=0x80;
+	mem_writeb(addr+9,p);
+}
+
+#define BIAS80 16383
+#define BIAS64 1023
+
+static void FPU_FLD80(PhysPt addr)
+{
+	struct{
+		Bit16s begin;
+		FPU_Reg eind;
+	} test;
+	test.eind.l.lower=mem_readd(addr);
+	test.eind.l.upper =mem_readd(addr+4);
+	test.begin=mem_readw(addr+8);
+
+	Bit64s exp64= (((test.begin & 0x7fff) - BIAS80));
+	Bit64s blah= ((exp64 >0)?exp64:-exp64)&0x3ff;
+	Bit64s exp64final= ((exp64 >0)?blah:-blah) +BIAS64;
+
+	Bit64s mant64= (test.eind.ll >> 11) & 0xfffffffffffff;
+	Bit64s sign = (test.begin &0x8000)?1:0;
+	FPU_Reg result;
+	result.ll= (sign <<63)|(exp64final << 52)| mant64;
+	FPU_PUSH(result.d);
+	//mant64= test.mant80/2***64    * 2 **53 
+}
+
+static void FPU_ST80(PhysPt addr)
+{
+	struct{
+		Bit16s begin;
+		FPU_Reg eind;
+	} test;
+	Bit64s sign80= (fpu.regs[TOP].ll&0x8000000000000000)?1:0;
+	Bit64s exp80 =  fpu.regs[TOP].ll&0x7ff0000000000000;
+	Bit64s exp80final= (exp80>>52) - BIAS64 + BIAS80;
+	Bit64s mant80 = fpu.regs[TOP].ll&0x000fffffffffffff;
+	Bit64s mant80final= (mant80 << 11) | 0x8000000000000000;
+	test.begin= (static_cast<Bit16s>(sign80)<<15)| static_cast<Bit16s>(exp80final);
+	test.eind.ll=mant80final;
+	mem_writed(addr,test.eind.l.lower);
+	mem_writed(addr+4,test.eind.l.upper);
+	mem_writew(addr+8,test.begin);
+}
+
+

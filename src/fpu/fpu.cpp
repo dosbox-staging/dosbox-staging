@@ -27,6 +27,9 @@
 
 typedef PhysPt EAPoint;
 
+#define TOP fpu.top
+#define ST(i)  ( (fpu.top+ (i) ) & 7 )
+
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
@@ -99,37 +102,39 @@ INLINE Bitu FPU_GET_C3(void){
 #include "fpu_instructions.h"
 
 /* TODO   : ESC6normal => esc4normal+pop  or a define as well 
-          : Make a smarter top system. won't matter that much in speed though.
-          : #define ST fpu.top #define ST(i) (fpu.top+(i))&7  maybe*/
+*/
 
+/* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
+			STATUS WORD =>	FPU_SET_TOP(TOP) BEFORE a read
+							TOP=FPU_GET_TOP() after a write;
+			*/
 static void EATREE(Bitu _rm){
 	Bitu group=(_rm >> 3) & 7;
-	Bitu top = FPU_GET_TOP();
 	/* data will allready be put in register 8 by caller */
 	switch(group){
 		case 0x00:	/* FIADD */
-			FPU_FADD(top, 8);
+			FPU_FADD(TOP, 8);
 			break;
 		case 0x01:	/* FIMUL  */
-			FPU_FMUL(top, 8);
+			FPU_FMUL(TOP, 8);
 			break;
 		case 0x02:	/* FICOM */
-			FPU_FCOM(top,8);
+			FPU_FCOM(TOP,8);
 			break;
 		case 0x03:  /* FICOMP */
-			FPU_FCOM(top,8);
+			FPU_FCOM(TOP,8);
 			FPU_FPOP();
 			break;
 		case 0x04:	/* FISUB */
-			FPU_FSUB(top,8);
+			FPU_FSUB(TOP,8);
 			break;
 		case 0x05:  /* FISUBR */
-			FPU_FSUBR(top,8);
+			FPU_FSUBR(TOP,8);
 		case 0x06: /* FIDIV */
-			FPU_FDIV(top, 8);
+			FPU_FDIV(TOP, 8);
 			break;
 		case 0x07:  /* FIDIVR */
-			FPU_FDIVR(top,8);
+			FPU_FDIVR(TOP,8);
 			break;
 		default:
 			break;
@@ -138,10 +143,7 @@ static void EATREE(Bitu _rm){
 }
 
 void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
-	/* REGULAR TREE WITH 32 BITS REALS ? float ? */
-	//THIS SHOULD GO ALLRIGHT !?!
-//	LOG(LOG_FPU, LOG_WARN)("ESC 0 EA used (check the result!)");
-	
+	/* REGULAR TREE WITH 32 BITS REALS -> float */
 	union {
 		float f;
 		Bit32u l;
@@ -154,32 +156,31 @@ void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
 void FPU_ESC0_Normal(Bitu rm) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
-	Bitu top = FPU_GET_TOP();
 	switch (group){
 	case 0x00:		/* FADD ST,STi */
-		FPU_FADD(top,(top+sub)&7);
+		FPU_FADD(TOP,ST(sub));
 		break;
 	case 0x01:		/* FMUL  ST,STi */
-		FPU_FMUL(top,(top+sub)&7);
+		FPU_FMUL(TOP,ST(sub));
 		break;
 	case 0x02:		/* FCOM  STi */
-		FPU_FCOM(top,(top+sub)&7);
+		FPU_FCOM(TOP,ST(sub));
 		break;
 	case 0x03:		/* FCOMP STi */
-		FPU_FCOM(top,(top+sub)&7);
+		FPU_FCOM(TOP,ST(sub));
 		FPU_FPOP();
 		break;
 	case 0x04:		/* FSUB  ST,STi */
-		FPU_FSUB(top,(top+sub)&7);
+		FPU_FSUB(TOP,ST(sub));
 		break;	
 	case 0x05:		/* FSUBR ST,STi */
-		FPU_FSUBR(top,(top+sub)&7);
+		FPU_FSUBR(TOP,ST(sub));
 		break;
 	case 0x06:		/* FDIV  ST,STi */
-		FPU_FDIV(top,(top+sub)&7);
+		FPU_FDIV(TOP,ST(sub));
 		break;
 	case 0x07:		/* FDIVR ST,STi */
-		FPU_FDIVR(top,(top+sub)&7);
+		FPU_FDIVR(TOP,ST(sub));
 		break;
 	default:
 		break;
@@ -192,7 +193,7 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
 	switch(group){
-	case 0x00: /* FLD */
+	case 0x00: /* FLD float*/
 		{
 		union {
 			float f;
@@ -206,25 +207,25 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 	case 0x01: /* UNKNOWN */
 		LOG(LOG_FPU,LOG_WARN)("ESC EA 1:Unhandled group %d subfunction %d",group,sub);
 		break;
-	case 0x02: /* FST */
+	case 0x02: /* FST float*/
 		{
 		union {
 			float f;
 			Bit32u l;
 		}	blah;
 		//should depend on rounding method
-		blah.f = static_cast<float>(fpu.regs[FPU_GET_TOP()].d);
+		blah.f = static_cast<float>(fpu.regs[TOP].d);
 		mem_writed(addr,blah.l);
 		}
 		break;
 
-	case 0x03: /* FSTP */
+	case 0x03: /* FSTP float*/
 		{
 		union {
 			float f;
 			Bit32u l;
 		}	blah;
-		blah.f = static_cast<float>(fpu.regs[FPU_GET_TOP()].d);
+		blah.f = static_cast<float>(fpu.regs[TOP].d);
 		mem_writed(addr,blah.l);
 		}
 		FPU_FPOP();
@@ -250,42 +251,30 @@ void FPU_ESC1_Normal(Bitu rm) {
 	Bitu sub=(rm & 7);
 	switch (group){
 	case 0x00: /* FLD STi */
-		{
-			Bitu top = FPU_GET_TOP();
-			FPU_PUSH(fpu.regs[(top+sub)&7].d);
-		}
+			FPU_PUSH(fpu.regs[ST(sub)].d);
 		break;
 	case 0x01: /* FXCH STi */
-		{
-			Bitu top = FPU_GET_TOP();
-			FPU_FXCH(top,(top+sub)&7);
-		}
+			FPU_FXCH(TOP,ST(sub));
 		break;
 	case 0x04:
 		switch(sub){
 		case 0x00:       /* FCHS */
-						{
-				Bitu top = FPU_GET_TOP();
-				fpu.regs[top].d = -1.0*(fpu.regs[top].d);
-			}
+			fpu.regs[TOP].d = -1.0*(fpu.regs[TOP].d);
 			break;
 		case 0x01:       /* FABS */
-			{
-				Bitu top = FPU_GET_TOP();
-				fpu.regs[top].d = fabs(fpu.regs[top].d);
-			}
+			fpu.regs[TOP].d = fabs(fpu.regs[TOP].d);
 			break;
 		case 0x02:       /* UNKNOWN */
 		case 0x03:       /* ILLEGAL */
 			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
 			break;
 		case 0x04:       /* FTST */
-			{	Bitu top = FPU_GET_TOP();
-				fpu.regs[8].d=0.0;
-				FPU_FCOM(top,8);
-			}
+			fpu.regs[8].d=0.0;
+			FPU_FCOM(TOP,8);
 			break;
 		case 0x05:       /* FXAM */
+			FPU_FXAM();
+			break;
 		case 0x06:       /* FTSTP (cyrix)*/
 		case 0x07:       /* UNKNOWN */
 			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
@@ -335,7 +324,9 @@ void FPU_ESC1_Normal(Bitu rm) {
 		break;
 	case 0x07:
 		switch(sub){
-
+		case 0x00:		/* FPREM */
+			FPU_FPREM();
+			break;
 		case 0x02:		/* FSQRT */
 			FPU_FSQRT();
 			break;
@@ -344,9 +335,9 @@ void FPU_ESC1_Normal(Bitu rm) {
 			break;
 		case 0x04:		/* FRNDINT */
 			{
-				Bitu top = FPU_GET_TOP();
-				Bit32s temp= static_cast<Bit32s>(FROUND(fpu.regs[top].d));
-				fpu.regs[top].d=static_cast<double>(temp);
+//TODO
+				Bit64s temp= static_cast<Bit64s>(FROUND(fpu.regs[TOP].d));
+				fpu.regs[TOP].d=static_cast<double>(temp);
 			}			
 			//TODO
 			break;
@@ -356,6 +347,7 @@ void FPU_ESC1_Normal(Bitu rm) {
 		case 0x07:		/* FCOS */
 			FPU_FCOS();
 			break;
+		case 0x01:      /* FYL2XP1 */
 		default:
 			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
 			break;
@@ -398,15 +390,18 @@ void FPU_ESC3_EA(Bitu rm,PhysPt addr) {
 		break;
 
 	case 0x02:   /* FIST */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[top].d)));
-		}
+		mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));
 		break;
 	case 0x03:	/*FISTP */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[top].d)));	
-			FPU_FPOP();
-		}
+		mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));	
+		FPU_FPOP();
+		break;
+	case 0x05:	/* FLD 80 Bits Real */
+		FPU_FLD80(addr);
+		break;
+	case 0x07:	/* FSTP 80 Bits Real */
+		FPU_ST80(addr);
+		FPU_FPOP();
 		break;
 	default:
 		LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %d subfunction %d",group,sub);
@@ -458,32 +453,31 @@ void FPU_ESC4_Normal(Bitu rm) {
 	//LOOKS LIKE number 6 without popping*/
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
-	Bitu top = FPU_GET_TOP();
 	switch(group){
 	case 0x00:	/*FADDP STi,ST*/
-		FPU_FADD((top+sub)&7,top);
+		FPU_FADD(ST(sub),TOP);
 		break;
 	case 0x01:	/* FMULP STi,ST*/
-		FPU_FMUL((top+sub)&7,top);
+		FPU_FMUL(ST(sub),TOP);
 		break;
 	case 0x02:  /* FCOM*/
-		FPU_FCOM(top,(top+sub)&7);
+		FPU_FCOM(TOP,ST(sub));
 		break;     /* TODO IS THIS ALLRIGHT ????????? (maybe reverse operators) */
 	case 0x03:  /* FCOMP*/
-		FPU_FCOM(top,(top+sub)&7);
+		FPU_FCOM(TOP,ST(sub));
 		FPU_FPOP();
 		break;
 	case 0x04:  /* FSUBRP STi,ST*/
-		FPU_FSUBR((top+sub)&7,top);
+		FPU_FSUBR(ST(sub),TOP);
 		break;
 	case 0x05:  /* FSUBP  STi,ST*/
-		FPU_FSUB((top+sub)&7,top);
+		FPU_FSUB(ST(sub),TOP);
 		break;
 	case 0x06:	/* FDIVRP STi,ST*/
-		FPU_FDIVR((top+sub)&7,top);
+		FPU_FDIVR(ST(sub),TOP);
 		break;
 	case 0x07:  /* FDIVP STi,ST*/
-		FPU_FDIV((top+sub)&7,top);
+		FPU_FDIV(ST(sub),TOP);
 		break;
 	default:
 		break;
@@ -494,7 +488,7 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
 	switch(group){
-	case 0x00:  /* FLD */
+	case 0x00:  /* FLD double real*/
 		{
 				FPU_Reg blah;
 				blah.l.lower=mem_readd(addr);
@@ -502,24 +496,21 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 				FPU_PUSH(blah.d);
 		}
 		break;
-	case 0x01:  /* FISTTP */
+	case 0x01:  /* FISTTP longint*/
 		LOG(LOG_FPU,LOG_WARN)("ESC 5 EA:Unhandled group %d subfunction %d",group,sub);
 		break;
 
-	case 0x02:   /* FIST */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writed(addr,fpu.regs[top].l.lower);
-			mem_writed(addr+4,fpu.regs[top].l.upper);
-		}
+	case 0x02:   /* FIST double real*/
+		mem_writed(addr,fpu.regs[TOP].l.lower);
+		mem_writed(addr+4,fpu.regs[TOP].l.upper);
 		break;
-	case 0x03:	/*FISTP */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writed(addr,fpu.regs[top].l.lower);
-			mem_writed(addr+4,fpu.regs[top].l.upper);
-			FPU_FPOP();
-		}
+	case 0x03:	/*FISTP double real*/
+		mem_writed(addr,fpu.regs[TOP].l.lower);
+		mem_writed(addr+4,fpu.regs[TOP].l.upper);
+		FPU_FPOP();
 		break;
 	case 0x07:   /*FNSTSW    NG DISAGREES ON THIS*/
+		FPU_SET_TOP(TOP);
 		mem_writew(addr,fpu.sw);
 		//seems to break all dos4gw games :)
 		break;
@@ -531,26 +522,25 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 void FPU_ESC5_Normal(Bitu rm) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
-	Bitu top = FPU_GET_TOP();
 	switch(group){
 	case 0x00: /* FFREE STi */
-		fpu.tags[(top+sub)&7]=TAG_Empty;
+		fpu.tags[ST(sub)]=TAG_Empty;
 		break;
 	case 0x01: /* FXCH STi*/
-		FPU_FXCH(top,(top+sub)&7);
+		FPU_FXCH(TOP,ST(sub));
 		break;
 	case 0x02: /* FST STi */
-		FPU_FST(top,(top+sub)&7);
+		FPU_FST(TOP,ST(sub));
 		break;
 	case 0x03:  /* FSTP STi*/
-		FPU_FST(top,(top+sub)&7);
+		FPU_FST(TOP,ST(sub));
 		FPU_FPOP();
 		break;
 	case 0x04:	/* FUCOM STi */
-		FPU_FUCOM(top,(top+sub)&7);
+		FPU_FUCOM(TOP,ST(sub));
 		break;
-	case 0x05:
-		FPU_FUCOM(top,(top+sub)&7);
+	case 0x05:	/*FUCOMP STi */
+		FPU_FUCOM(TOP,ST(sub));
 		FPU_FPOP();
 		break;
 	default:
@@ -572,36 +562,36 @@ void FPU_ESC6_Normal(Bitu rm) {
 	/* get top before switch and pop afterwards */
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
-	Bitu top = FPU_GET_TOP();
 	switch(group){
 	case 0x00:	/*FADDP STi,ST*/
-		FPU_FADD((top+sub)&7,top);
+		FPU_FADD(ST(sub),TOP);
 		break;
 	case 0x01:	/* FMULP STi,ST*/
-		FPU_FMUL((top+sub)&7,top);
+		FPU_FMUL(ST(sub),TOP);
 		break;
 	case 0x02:  /* FCOMP5*/
-		FPU_FCOM(top,(top+sub)&7);
+		FPU_FCOM(TOP,ST(sub));
 		break;     /* TODO IS THIS ALLRIGHT ????????? */
 	case 0x03:  /* weird*/ /*FCOMPP*/
 		if(sub != 1){
 		LOG(LOG_FPU,LOG_WARN)("ESC 6:Unhandled group %d subfunction %d",group,sub);
+		;
 		break;
 		}
-		FPU_FCOM(top,(top+sub)&7);
-		FPU_FPOP();
+		FPU_FCOM(TOP,ST(1));
+		FPU_FPOP(); /* extra pop at the bottom*/
 		break;
 	case 0x04:  /* FSUBRP STi,ST*/
-		FPU_FSUBR((top+sub)&7,top);
+		FPU_FSUBR(ST(sub),TOP);
 		break;
 	case 0x05:  /* FSUBP  STi,ST*/
-		FPU_FSUB((top+sub)&7,top);
+		FPU_FSUB(ST(sub),TOP);
 		break;
 	case 0x06:	/* FDIVRP STi,ST*/
-		FPU_FDIVR((top+sub)&7,top);
+		FPU_FDIVR(ST(sub),TOP);
 		break;
 	case 0x07:  /* FDIVP STi,ST*/
-		FPU_FDIV((top+sub)&7,top);
+		FPU_FDIV(ST(sub),TOP);
 		break;
 	default:
 		break;
@@ -627,15 +617,11 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 		break;
 
 	case 0x02:   /* FIST Bit16s */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[top].d)));
-		}
+		mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[TOP].d)));
 		break;
 	case 0x03:	/* FISTP Bit16s */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[top].d)));	
-			FPU_FPOP();
-		}
+		mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[TOP].d)));	
+		FPU_FPOP();
 		break;
 	case 0x05:  /* FILD Bit32s */
 		{
@@ -643,11 +629,13 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 				FPU_PUSH( static_cast<double>(blah));
 		}
 		break;
+	case 0x06:	/* FBSTP packed BCD */
+		FPU_FBST(addr);
+		FPU_FPOP();
+		break;
 	case 0x07:  /* FISTP Bit32s */
-		{	Bitu top = FPU_GET_TOP();
-			mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[top].d)));	
-			FPU_FPOP();
-		}
+		mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));	
+		FPU_FPOP();
 		break;
 	default:
 		LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
@@ -661,6 +649,7 @@ void FPU_ESC7_Normal(Bitu rm) {
 	case 0x04:
 		switch(sub){
 			case 0x00:     /* FNSTSW AX*/
+				FPU_SET_TOP(TOP);
 				reg_ax = fpu.sw;
 				break;
 			default:
