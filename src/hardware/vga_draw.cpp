@@ -57,6 +57,21 @@ static Bit8u convert16[16]={
 	0x6,0xa,0x8,0xb,0xd,0xe,0xc,0xf
 };
 
+static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart,Bitu panning,Bitu line) {
+	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
+	Bit32u * draw=(Bit32u *)TempLine;
+	for (Bitu x=0;x<vga.draw.blocks;x++) {
+		Bitu val1=*reader++;
+		Bitu val2=convert16[val1&0xf];
+		val1=convert16[val1 >> 4];
+		*draw++=(val1 <<  0)  |
+				(val1 <<  8)  |
+				(val2 << 16)  |
+				(val2 << 24);
+	}
+	return TempLine;
+}
+
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
@@ -147,13 +162,13 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		*draw++=fg&mask1 | bg&~mask1;
 		*draw++=fg&mask2 | bg&~mask2;
 	}
-	Bits font_addr=(vga.config.cursor_start*2-vidstart)/2;
+	Bits font_addr=(vga.draw.cursor.address-vidstart)/2;
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	if (font_addr>=0 && font_addr<vga.draw.blocks) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
 		draw=(Bit32u *)&TempLine[font_addr*8];
-		Bit32u att=TXT_FG_Table[vga.mem.linear[vga.config.cursor_start*2+1]&0xf];
+		Bit32u att=TXT_FG_Table[vga.mem.linear[vga.draw.cursor.address+1]&0xf];
 		*draw++=att;*draw++=att;
 	}
 skip_cursor:
@@ -185,7 +200,7 @@ static void VGA_DrawPart(Bitu lines) {
 		}
 	}
 	if (--vga.draw.parts_left) {
-		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,
+		PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts,
 			 (vga.draw.parts_left!=1) ? vga.draw.parts_lines  : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
 		RENDER_EndUpdate();
@@ -209,8 +224,8 @@ void VGA_SetBlinking(Bitu enabled) {
 
 static void VGA_VerticalTimer(Bitu val) {
 	vga.config.retrace=false;
-	PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
-	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.micro.vend);
+	PIC_AddEvent(VGA_VerticalTimer,vga.draw.delay.vtotal);
+	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.delay.vend);
 	if (RENDER_StartUpdate()) {
 		vga.draw.parts_left=vga.draw.parts_total;
 		vga.draw.lines_done=0;
@@ -218,12 +233,14 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address_line=vga.config.hlines_skip;
 		vga.draw.split_line=(vga.config.line_compare/vga.draw.lines_scaled);
 		vga.draw.panning=vga.config.pel_panning;
-		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
+		PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts,vga.draw.parts_lines);
 	}
 	switch (vga.mode) {
 	case M_TEXT:
 		vga.draw.address=(vga.draw.address*2);
 	case M_TANDY_TEXT:
+	case M_HERC_TEXT:
+		vga.draw.cursor.address=vga.config.cursor_start*2;
 		vga.draw.cursor.count++;
 		/* check for blinking and blinking change delay */
 		FontMask[1]=(vga.draw.blinking & (vga.draw.cursor.count >> 4)) ?
@@ -234,7 +251,10 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address=(vga.draw.address*2)&0x1fff;
 		break;
 	}
-	if (machine==MCH_TANDY) vga.draw.address+=vga.tandy.disp_bank << 14;
+	if (machine==MCH_TANDY) {
+		vga.draw.address+=vga.tandy.disp_bank << 14;
+		vga.draw.cursor.address+=vga.tandy.disp_bank << 14;
+	}
 }
 
 void VGA_CheckScanLength(void) {
@@ -249,6 +269,7 @@ void VGA_CheckScanLength(void) {
 		break;
 	case M_CGA2:
 	case M_CGA4:
+	case M_CGA16:
 		vga.draw.address_add=80;
 		return;
 	case M_TANDY2:
@@ -257,9 +278,6 @@ void VGA_CheckScanLength(void) {
 	case M_TANDY4:
 		vga.draw.address_add=vga.draw.blocks/2;
 		break;
-	case M_CGA16:
-		vga.draw.address_add=vga.draw.blocks/2;
-		return;
 	case M_TANDY16:
 		vga.draw.address_add=vga.draw.blocks;
 		break;
@@ -282,7 +300,7 @@ void VGA_SetupDrawing(Bitu val) {
 		return;
 	}
 	/* Calculate the FPS for this screen */
-	double fps;Bitu clock;
+	float fps;Bitu clock;
 	Bitu htotal,hdispend,hbstart,hrstart;
 	Bitu vtotal,vdispend,vbstart,vrstart;
 	if (machine==MCH_VGA) {
@@ -338,16 +356,15 @@ void VGA_SetupDrawing(Bitu val) {
 	LOG(LOG_VGA,LOG_NORMAL)("H D End %d, V D End %d",hdispend,vdispend);
 	if (!htotal) return;
 	if (!vtotal) return;
-	fps=clock/(vtotal*htotal);
-	double linemicro=(1000000/fps);
+	fps=(float)clock/(vtotal*htotal);
+	float linetime=1000.0f/fps;
 	vga.draw.parts_total=VGA_PARTS;
-	vga.draw.micro.vtotal=(Bitu)(linemicro);
-	linemicro/=vtotal;		//Really make it the line_micro
-	vga.draw.micro.vend=(Bitu)(linemicro*vrstart);
-	vga.draw.micro.parts=(Bitu)((linemicro*vdispend)/vga.draw.parts_total);
-	vga.draw.micro.htotal=(Bitu)(linemicro);
-	vga.draw.micro.hend=(Bitu)((linemicro/htotal)*hrstart);
-
+	vga.draw.delay.vtotal=linetime;
+	linetime/=vtotal;		//Really make it the line_delay
+	vga.draw.delay.vend=linetime*vrstart;
+	vga.draw.delay.parts=(linetime*vdispend)/vga.draw.parts_total;
+	vga.draw.delay.htotal=linetime;
+	vga.draw.delay.hend=(linetime/htotal)*hrstart;
 
 	double correct_ratio=(100.0/525.0);
 	double aspect_ratio=((double)htotal/((double)vtotal)/correct_ratio);
@@ -376,6 +393,13 @@ void VGA_SetupDrawing(Bitu val) {
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_EGA_Line;
+		break;
+	case M_CGA16:
+		doublewidth=true;
+		doubleheight=true;
+		vga.draw.blocks=width*2;
+		width<<=3;
+		VGA_DrawLine=VGA_Draw_CGA16_Line;
 		break;
 	case M_CGA4:
 		doublewidth=true;
@@ -436,7 +460,7 @@ void VGA_SetupDrawing(Bitu val) {
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	default:
-		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA type %d while checking for resolution");
+		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA mode %d while checking for resolution",vga.mode);
 	};
 	VGA_CheckScanLength();
 	if (vga.draw.double_scan) {
@@ -467,6 +491,6 @@ void VGA_SetupDrawing(Bitu val) {
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
 #endif
 		RENDER_SetSize(width,height,8,aspect_ratio,doublewidth,doubleheight);
-		PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
+		PIC_AddEvent(VGA_VerticalTimer,vga.draw.delay.vtotal);
 	}
 };
