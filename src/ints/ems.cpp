@@ -551,7 +551,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah=EMM_NO_ERROR;
 		break;
 	case 0x4c:		/* Get Pages for one Handle */
-		if (!ValidHandle(reg_bx)) {reg_ah=EMM_INVALID_HANDLE;break;}
+		if (!ValidHandle(reg_dx)) {reg_ah=EMM_INVALID_HANDLE;break;}
 		reg_bx=emm_handles[reg_dx].pages;
 		reg_ah=EMM_NO_ERROR;
 		break;
