@@ -375,10 +375,10 @@
 	flags.cf=get_CF();flags.type=t_RCLd;					\
 	flags.var2.b=op2;flags.var1.d=load(op1);			\
 	if (flags.var2.b==1)	{								\
-		flags.result.d=flags.var1.d << 1 | flags.cf;		\
+	flags.result.d=(flags.var1.d << 1) | flags.cf;			\
 	} else 	{												\
 		flags.result.d=(flags.var1.d << flags.var2.b) |		\
-				(flags.cf << (flags.var2.b-1)) |			\
+				(flags.cf  << (flags.var2.b-1)) |			\
 				(flags.var1.d >> (33-flags.var2.b));		\
 	}														\
 	flags.cf=((flags.var1.d >> (32-flags.var2.b)) & 1);	\
