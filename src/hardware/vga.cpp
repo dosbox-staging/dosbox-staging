@@ -39,12 +39,24 @@ Bit32u FillTable[16]={
 	0xffff0000,0xffff00ff,0xffffff00,0xffffffff
 };
 
+static void EndRetrace(void) {
+	/* start the actual display update now */
+	RENDER_DoUpdate();
+	vga.config.retrace=false;
+}
 
-static void VGA_BlankTimer(void) {
-	PIC_AddEvent(&VGA_BlankTimer,vga.draw.blank);
+static void VGA_BlankTimer() {
+	PIC_AddEvent(VGA_BlankTimer,vga.draw.blank);
+	PIC_AddEvent(EndRetrace,667);
+	/* Setup a timer to destroy the vertical retrace bit in a few microseconds */
+	vga.config.real_start=vga.config.display_start;
+	vga.config.retrace=true;
+}
+
+static void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 	Bit8u * buf,* bufsplit;
 	/* Draw the current frame */
-	if (!vga.draw.resizing && RENDER_StartUpdate()) {
+	if (!vga.draw.resizing) {
 		if (vga.config.line_compare<vga.draw.lines) {
 			Bitu stop=vga.config.line_compare;
 			if (vga.draw.double_height) stop/=2;
@@ -69,8 +81,8 @@ static void VGA_BlankTimer(void) {
 				LOG_WARN("VGA:Unhandled split screen mode %d",vga.mode);
 				goto norender;
 			}
-			RENDER_Part(buf,0,0,vga.draw.width,stop);
-			RENDER_Part(bufsplit,0,stop,vga.draw.width,vga.draw.height-stop);
+			part_handler(buf,0,0,vga.draw.width,stop);
+			part_handler(bufsplit,0,stop,vga.draw.width,vga.draw.height-stop);
 		} else {
 drawnormal:
 			switch (vga.mode) {
@@ -96,15 +108,11 @@ drawnormal:
 				buf=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning/2];
 				break;
 			}
-			RENDER_Part(buf,0,0,vga.draw.width,vga.draw.height);
-
-
+			part_handler(buf,0,0,vga.draw.width,vga.draw.height);
 		}
-norender:
-		RENDER_EndUpdate();
-
+norender:;
 	}
-	VGA_StartRetrace();
+
 }
 
 void VGA_FindSettings(void) {
@@ -220,7 +228,7 @@ static void VGA_DoResize(void) {
 
 		LOG_VGA("Width %d, Height %d",width,height);
 		LOG_VGA("Flags %X, fps %f",flags,fps);
-		RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),flags);
+		RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),flags,&VGA_DrawHandler);
 		vga.draw.blank=(Bitu)(1000000/fps);
 		PIC_AddEvent(VGA_BlankTimer,vga.draw.blank);
 	}
