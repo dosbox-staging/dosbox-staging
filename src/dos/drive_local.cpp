@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.47 2004-04-13 12:08:43 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.48 2004-04-18 14:49:50 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,7 +127,7 @@ bool localDrive::FileUnlink(char * name) {
 };
 
 
-bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
+bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
 	char tempDir[CROSS_LEN];
 	strcpy(tempDir,basedir);
@@ -152,11 +152,12 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	
 	Bit8u sAttr;
 	dta.GetSearchParams(sAttr,tempDir);
-	if ((sAttr & DOS_ATTR_VOLUME) && (*_dir==0)) {
+	if ( (sAttr & DOS_ATTR_VOLUME) && ( (*_dir==0) || fcb_findfirst ) ) {
 	// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir
+	// or it's a fcb findfirst as that always returns label
 		if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
-			dta.SetResult("NOLABEL",0,0,0,DOS_ATTR_VOLUME);
+			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		}
 	    
@@ -532,7 +533,7 @@ bool cdromDrive::GetFileAttr(char * name,Bit16u * attr)
 	return result;
 };
 
-bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta)
+bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst)
 {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.35 2004-02-28 16:35:14 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.36 2004-04-18 14:49:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -428,3 +428,10 @@ void DOS_FCB::GetName(char * fillname) {
 	fillname[14]=0;
 }
 
+void DOS_FCB::GetAttr(Bit8u& attr) {
+	if(extended) attr=mem_readb(pt - 1);
+}
+
+void DOS_FCB::SetAttr(Bit8u attr) {
+	if(extended) mem_writeb(pt - 1,attr);
+}

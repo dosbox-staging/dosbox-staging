@@ -770,9 +770,12 @@ bool fatDrive::FileUnlink(char * name) {
 	return true;
 }
 
-bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta) {
+bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool fcb_findfirst) {
 	direntry dummyClust;
-	
+	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
+	dta.GetSearchParams(attr,pattern);
+	if(attr & DOS_ATTR_VOLUME) //check for root dir or fcb_findfirst
+		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled!!!!!");
 	if(!getDirClustNum(_dir, &cwdDirCluster, false)) return false;
 	dta.SetDirID(0);
 	return FindNextInternal(cwdDirCluster, dta, &dummyClust);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.22 2004-04-13 12:08:43 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.23 2004-04-18 14:49:48 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -217,7 +217,7 @@ public:
 	virtual bool RemoveDir(char * _dir)=0;
 	virtual bool MakeDir(char * _dir)=0;
 	virtual bool TestDir(char * _dir)=0;
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta)=0;
+	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
 	virtual bool GetFileAttr(char * name,Bit16u * attr)=0;
 	virtual bool Rename(char * oldname,char * newname)=0;

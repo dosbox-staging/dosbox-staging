@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.54 2004-04-18 10:36:28 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.55 2004-04-18 14:49:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -217,7 +217,7 @@ bool DOS_Rename(char * oldname,char * newname) {
 	return false;
 }
 
-bool DOS_FindFirst(char * search,Bit16u attr) {
+bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 	DOS_DTA dta(dos.dta);
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
 	char dir[DOS_PATHLENGTH];char pattern[DOS_PATHLENGTH];
@@ -234,7 +234,7 @@ bool DOS_FindFirst(char * search,Bit16u attr) {
 		strcpy(dir,fullsearch);
 	}		
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
-	if (Drives[drive]->FindFirst(dir,dta)) return true;
+	if (Drives[drive]->FindFirst(dir,dta,fcb_findfirst)) return true;
 	
 	return false;
 }
@@ -722,6 +722,7 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	DOS_FCB fcb(RealSeg(dos.dta),RealOff(dos.dta));
 	fcb.Create(find_fcb.Extended());
 	fcb.SetName(drive,file_name,ext);
+	fcb.SetAttr(attr);      /* Only adds attribute if fcb is extended */
 	fcb.SetSizeDateTime(size,date,time);
 }
 
@@ -777,7 +778,9 @@ bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
 	DOS_FCB fcb(seg,offset);
 	RealPt old_dta=dos.dta;dos.dta=dos.tables.tempdta;
 	char name[DOS_FCBNAME];fcb.GetName(name);
-	bool ret=DOS_FindFirst(name,DOS_ATTR_ARCHIVE);
+	Bit8u attr = DOS_ATTR_ARCHIVE;
+	fcb.GetAttr(attr); /* Gets search attributes if extended */
+	bool ret=DOS_FindFirst(name,attr,true);
 	dos.dta=old_dta;
 	if (ret) SaveFindResult(fcb);
 	return ret;

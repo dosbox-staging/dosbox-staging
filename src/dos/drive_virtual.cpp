@@ -185,8 +185,14 @@ bool Virtual_Drive::FileExists(const char* name){
 	return false;
 }
 
-bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta) {
+bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	search_file=first_file;
+	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
+	dta.GetSearchParams(attr,pattern);
+	if(attr & DOS_ATTR_VOLUME) {
+		dta.SetResult("DOSBOX",0,0,0,DOS_ATTR_ARCHIVE);
+		return true;
+	}
 	return FindNext(dta);
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.40 2004-04-13 12:08:43 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.41 2004-04-18 14:49:48 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -121,7 +121,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry);
 bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
 bool DOS_CreateFile(char * name,Bit16u attribute,Bit16u * entry);
 bool DOS_UnlinkFile(char * name);
-bool DOS_FindFirst(char *search,Bit16u attr);
+bool DOS_FindFirst(char *search,Bit16u attr,bool fcb_findfirst=false);
 bool DOS_FindNext(void);
 bool DOS_Canonicalize(char * name,char * big);
 bool DOS_CreateTempFile(char * name,Bit16u * entry);
@@ -461,6 +461,8 @@ public:
 	void SetRandom(Bit32u  _random);
 	Bit8u GetDrive(void);
 	bool Extended(void);
+	void GetAttr(Bit8u & attr);
+	void SetAttr(Bit8u attr);
 private:
 	bool extended;
 	PhysPt real_pt;

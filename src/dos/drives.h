@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.20 2004-04-03 19:22:33 canadacow Exp $ */
+/* $Id: drives.h,v 1.21 2004-04-18 14:49:50 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -38,7 +38,7 @@ public:
 	virtual bool RemoveDir(char * dir);
 	virtual bool MakeDir(char * dir);
 	virtual bool TestDir(char * dir);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta);
+	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
 	virtual bool Rename(char * oldname,char * newname);
@@ -129,7 +129,7 @@ public:
 	virtual bool RemoveDir(char * dir);
 	virtual bool MakeDir(char * dir);
 	virtual bool TestDir(char * dir);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta);
+	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
 	virtual bool Rename(char * oldname,char * newname);
@@ -195,7 +195,7 @@ public:
 	virtual bool MakeDir(char * dir);
 	virtual bool Rename(char * oldname,char * newname);
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta);
+	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual void SetDir(const char* path);
 	virtual bool isRemote(void);
 private:
@@ -213,7 +213,7 @@ public:
 	bool RemoveDir(char * dir);
 	bool MakeDir(char * dir);
 	bool TestDir(char * dir);
-	bool FindFirst(char * _dir,DOS_DTA & dta);
+	bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
 	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
