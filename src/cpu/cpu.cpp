@@ -86,7 +86,7 @@ void Interrupt(Bit8u num) {
 	case 0xcd:
  		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
-#ifdef C_DEBUG 
+#if C_DEBUG 
 	if (DEBUG_BreakPoint()) return;
 #endif
 		break;
@@ -117,15 +117,15 @@ void Interrupt(Bit8u num) {
 	flags.tf=false;
 /* Save everything on a 16-bit stack */
 	reg_sp-=2;
-	mem_writew(Segs[ss].phys+reg_sp,pflags);
+	mem_writew(SegPhys(ss)+reg_sp,pflags);
 	reg_sp-=2;
-	mem_writew(Segs[ss].phys+reg_sp,Segs[cs].value);
+	mem_writew(SegPhys(ss)+reg_sp,SegValue(cs));
 	reg_sp-=2;
-	mem_writew(Segs[ss].phys+reg_sp,reg_ip);
+	mem_writew(SegPhys(ss)+reg_sp,reg_ip);
 /* Get the new CS:IP from vector table */
 	Bit16u newip=mem_readw(num << 2);
 	Bit16u newcs=mem_readw((num <<2)+2);
-	SetSegment_16(cs,newcs);
+	SegSet16(cs,newcs);
 	reg_ip=newip;
 }
 
@@ -135,15 +135,6 @@ void SetCPU16bit()
 {	
 	CPU_Real_16_Slow_Start();
 }
-
-void SetSegment_16(Bit32u seg,Bit16u val) {
-	Segs[seg].value=val;
-	Bit32u off=(val << 4);
-	Segs[seg].host=memory+off;
-	Segs[seg].phys=off;
-	//TODO Maybe use this feature one day :)
-	//	Segs[seg].special=MEMORY_TestSpecial(off);
-};
 
 
 void CPU_Init(void) {
@@ -156,12 +147,12 @@ void CPU_Init(void) {
 	reg_ebp=0;
 	reg_esp=0;
 
-	SetSegment_16(cs,0);
-	SetSegment_16(ds,0);
-	SetSegment_16(es,0);
-	SetSegment_16(fs,0);
-	SetSegment_16(gs,0);
-	SetSegment_16(ss,0);
+	SegSet16(cs,0);
+	SegSet16(ds,0);
+	SegSet16(es,0);
+	SegSet16(fs,0);
+	SegSet16(gs,0);
+	SegSet16(ss,0);
 
 	reg_eip=0;
 	flags.type=t_UNKNOWN;
