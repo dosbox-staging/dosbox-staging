@@ -195,7 +195,7 @@ static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block)
 {
 	DOS_PSP psp(pspseg);
 	// if cmdtail==0 it will inited as empty in SetCommandTail
-	psp.SetCommandTail(block.data.exec.cmdtail);
+	psp.SetCommandTail(block.exec.cmdtail);
 }
 
 bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
@@ -232,7 +232,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
-		envseg=block.data.exec.envseg;
+		envseg=block.exec.envseg;
 		if (!MakeEnv(name,&envseg)) {
 			DOS_CloseFile(fhandle);
 			return false;
@@ -258,7 +258,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Setup a psp */
 		SetupPSP(pspseg,memsize,envseg);
 		SetupCMDLine(pspseg,block);
-	} else loadseg=block.data.overlay.loadseg;
+	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	loadaddress=HostMake(loadseg,0);
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
@@ -278,7 +278,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		}
 		/* Relocate the exe image */
 		Bit16u relocate;
-		if (flags==OVERLAY) relocate=block.data.overlay.relocation;
+		if (flags==OVERLAY) relocate=block.overlay.relocation;
 		else relocate=loadseg;
 		pos=head.reloctable;DOS_SeekFile(fhandle,&pos,0);
 		for (i=0;i<head.relocations;i++) {
@@ -314,8 +314,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* save vectors */
 		newpsp.SaveVectors();
 		/* copy fcbs */
-		newpsp.SetFCB1(block.data.exec.fcb1);
-		newpsp.SetFCB2(block.data.exec.fcb2);
+		newpsp.SetFCB1(block.exec.fcb1);
+		newpsp.SetFCB2(block.exec.fcb2);
 		/* Set the stack for new program */
 		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
