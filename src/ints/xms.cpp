@@ -284,30 +284,28 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 		Bit16u	sizeDelta	= xms_handles[handle].size - newSize;
 		Bit16u	next		= xms_handles[handle].next;
 		
-		if (next<XMS_HANDLES) {
-			if (xms_handles[next].active && !xms_handles[next].allocated) {
-				// add size / set phys
-				xms_handles[next].size += sizeDelta;
-				xms_handles[next].phys -= sizeDelta*1024;
-			} else {
-				// next block is in use, create a new lonely unused one :)
-				Bit16u newindex=1;
-				while (newindex<XMS_HANDLES) {
-					if (!xms_handles[newindex].active) break;
-					newindex++;
-				}
-				if (newindex>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
-				xms_handles[newindex].active	= true;
-				xms_handles[newindex].allocated = false;
-				xms_handles[newindex].locked	= 0;
-				xms_handles[newindex].prev		= handle;
-				xms_handles[newindex].next		= next;
-				xms_handles[newindex].phys		= xms_handles[handle].phys+newSize*1024;
-				xms_handles[newindex].size		= sizeDelta;
-
-				xms_handles[handle]  .next		= newindex;
-				xms_handles[next]    .prev		= newindex;
+		if ((next<XMS_HANDLES) && (xms_handles[next].active && !xms_handles[next].allocated)) {
+			// add size / set phys
+			xms_handles[next].size += sizeDelta;
+			xms_handles[next].phys -= sizeDelta*1024;
+		} else {
+			// next block is in use, create a new lonely unused one :)
+			Bit16u newindex=1;
+			while (newindex<XMS_HANDLES) {
+				if (!xms_handles[newindex].active) break;
+				newindex++;
 			}
+			if (newindex>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
+			xms_handles[newindex].active	= true;
+			xms_handles[newindex].allocated = false;
+			xms_handles[newindex].locked	= 0;
+			xms_handles[newindex].prev		= handle;
+			xms_handles[newindex].next		= next;
+			xms_handles[newindex].phys		= xms_handles[handle].phys+newSize*1024;
+			xms_handles[newindex].size		= sizeDelta;
+
+			xms_handles[handle]  .next		= newindex;
+			if (next<XMS_HANDLES) xms_handles[next].prev = newindex;
 		}
 		// Resize and allocate new mem 
 		xms_handles[handle].size	  = newSize;
@@ -362,6 +360,7 @@ static bool multiplex_xms(void) {
 };
 
 Bitu XMS_Handler(void) {
+	LOG(LOG_ERROR,"XMS: CALL %02X",reg_ah);
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */
@@ -395,7 +394,8 @@ Bitu XMS_Handler(void) {
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
 		break;
-	case XMS_ALLOCATE_EXTENDED_MEMORY:	{						/* 09 */
+	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
+		{
 		Bit16u handle = 0;
 		reg_bl = XMS_AllocateMemory(reg_dx,handle);
 		reg_dx = handle;
@@ -440,6 +440,7 @@ Bitu XMS_Handler(void) {
 		break;
 
 	}
+	LOG(LOG_ERROR,"XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
 }
 
