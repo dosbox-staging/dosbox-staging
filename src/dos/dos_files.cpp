@@ -499,15 +499,12 @@ static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
     return DOS_MakeName(naam,outname, outdrive);
 }
 #define FCB_SEP ":.;,=+"
-#define ILLEGAL ":.;,=+ \t/\"[]<>|\0x0\0x1\0x2\0x3\0x4\0x5\0x6\0x7\0x8\0x9\0xA\0xB\0xC\0xD\0xE\0xF\0x10\0x11\0x12\0x13\0x14\0x15\0x16\0x17\0x18x\0x19\0x1A\0x1B\0x1C\0x1D\0x1E\0x1F"
+#define ILLEGAL ":.;,=+ \t/\"[]<>|"
 
 static bool isvalid(const char* in){
-    char ill[]=ILLEGAL;    
-    char a[2];
-    a[0]=*in;a[1]='\0';
-    if(strcspn(a,ill)==0) return false;
-    return true;
-
+    
+	const char ill[]=ILLEGAL;    
+	return (*in>0x1F) && (strchr(ill,*in)==0);
 }
 
 static void vullen (char* veld,char* pveld){
