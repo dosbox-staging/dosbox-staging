@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.7 2004-09-09 18:36:50 qbix79 Exp $ */
+/* $Id: shell.h,v 1.8 2004-10-26 18:28:51 qbix79 Exp $ */
 
 #ifndef SHELL_H_
 #define SHELL_H_
@@ -118,7 +118,7 @@ struct SHELL_Cmd {
 };
 
 static inline void StripSpaces(char*&args) {
-	while(*args && ((*args == ' ') || (*args == '\t')))
+	while(args && *args && isspace(*reinterpret_cast<unsigned char*>(args)))
 		args++;
 }
 
