@@ -388,14 +388,20 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 	}
 };
 
-static void  mouse_reset(void) {
+void Mouse_SetResolution(Bit16u width, Bit16u height)
+{
+	mouse.max_x = width-1;
+	mouse.max_y = height-1;
+};
+
+static void  mouse_reset(void) 
+{
 	WriteMouseIntVector();
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 	mouse.shown=-1;
 	mouse.min_x=0;
-	mouse.max_x=639;
 	mouse.min_y=0;
-	mouse.max_y=199;
+	// Dont set max coordinates here. it is done by SetResolution!
 	mouse.x=0;				// civ wont work otherwise
 	mouse.y=100;
 	mouse.events=0;

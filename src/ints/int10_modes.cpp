@@ -20,6 +20,7 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
+#include "mouse.h"
 
 //TODO Maybe also add PCJR Video Modes could be nice :)
 //TODO include some credits to bochs/plex86 bios i used for info/tables
@@ -409,6 +410,8 @@ void INT10_SetVideoMode(Bit8u mode) {
 	INT10_SetActivePage(0);
 	/* Set some interrupt vectors */
 	RealSetVec(0x43,int10_romarea.font_8_first);
+	/* Tell mouse resolution change */
+	Mouse_SetResolution(vga_modes[line].swidth,vga_modes[line].sheight);
 };
 
 void INT10_SetGfxControllerToDefault()
