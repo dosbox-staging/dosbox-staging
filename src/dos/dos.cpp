@@ -691,11 +691,12 @@ static Bitu DOS_21Handler(void) {
 				CALLBACK_SCF(false);
 			} else {
 				CALLBACK_SCF(true);
-			};
+			}
+		} else if (reg_al==0x01) {
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Set File Date Time Faked");
+			CALLBACK_SCF(false);		
 		} else {
-			reg_cx=0;
-			reg_dx=0;
-			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Setting File Date is faked",reg_ah);
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subtion %X",reg_al);
 		}
 		break;
 	case 0x58:					/* Get/Set Memory allocation strategy */
