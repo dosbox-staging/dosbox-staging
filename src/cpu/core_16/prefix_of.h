@@ -309,9 +309,9 @@ switch(Fetchb()) {
 	case 0xba:												/* GRP8 Ew,Ib */
 		{
 			GetRM;
-			Bit16u mask=1 << (Fetchb() & 15);
 			if (rm >= 0xc0 ) {
 				GetEArw;
+				Bit16u mask=1 << (Fetchb() & 15);
 				flags.cf=(*earw & mask)>0;
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
@@ -330,6 +330,7 @@ switch(Fetchb()) {
 				}
 			} else {
 				GetEAa;Bit16u old=LoadMw(eaa);
+				Bit16u mask=1 << (Fetchb() & 15);
 				flags.cf=(old & mask)>0;
 				switch (rm & 0x38) {
 				case 0x20:									/* BT */
