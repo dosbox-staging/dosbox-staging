@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.3 2004-02-18 15:31:13 qbix79 Exp $ */
+/* $Id: shell.h,v 1.4 2004-03-10 13:35:03 qbix79 Exp $ */
 
 #ifndef SHELL_H_
 #define SHELL_H_
@@ -139,7 +139,8 @@ static inline char* ExpandDot(char*args, char* buffer)
 			buffer[1]=0;
 			strcat(buffer,args);
 			return buffer;
-		}
+		} else 
+			strcpy (buffer, args); 
 	}
 	else strcpy(buffer,args);
 	return buffer;
