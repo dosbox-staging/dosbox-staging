@@ -78,9 +78,9 @@ DOS_Drive_Cache::~DOS_Drive_Cache(void)
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) dirSearch[i] = 0;
 };
 
-Bit16u DOS_Drive_Cache::GetFreeID(void)
+Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
 {
-	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i]) return i;
+	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
 	LOG_ERROR("DIRCACHE: Too many open directorys!");
 	return 0;
 };
@@ -464,7 +464,7 @@ bool DOS_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 
 bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, char* expand, Bit16u& id)
 {
-	id = GetFreeID();
+	id = GetFreeID(dir);
 	dirSearch[id] = dir;
 	// Add "/"
 	char end[2]={CROSS_FILESPLIT,0};
@@ -511,7 +511,10 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
 	if (!IsCachedIn(dirSearch[id])) {
 		// Try to open directory
 		DIR* dirp = opendir(dirPath);
-		if (!dirp) return false;
+		if (!dirp) {
+			free[id] = true;
+			return false;
+		}
 		// Read complete directory
 		struct dirent* tmpres;
 		while (tmpres = readdir(dirp)) {			

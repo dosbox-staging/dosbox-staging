@@ -81,7 +81,8 @@ private:
 	bool		RemoveSpaces		(char* str);
 	bool		OpenDir				(CFileInfo* dir, char* path, Bit16u& id);
 	void		CreateEntry			(CFileInfo* dir, const char* name);
-	Bit16u		GetFreeID			(void);
+	Bit16u		GetFreeID			(CFileInfo* dir);
+
 
 	CFileInfo*	dirBase;
 	char		dirPath				[CROSS_LEN];
