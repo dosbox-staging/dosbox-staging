@@ -30,7 +30,7 @@ typedef Bit8u (*MEMORY_ReadHandler)(PhysPt pt);
 typedef void (*MEMORY_WriteHandler)(PhysPt pt,Bit8u val);
 
 #define PAGE_KB	16
-#define PAGE_SIZE PAGE_KB*1024
+#define PAGE_SIZE (PAGE_KB*1024)
 #define PAGE_SHIFT 14
 #define PAGE_COUNT(A) (A & ((1 << PAGE_SHIFT)-1) ? 1+(A >> PAGE_SHIFT) : (A >> PAGE_SHIFT) )
 #define MAX_PAGES PAGE_COUNT(C_MEM_MAX_SIZE*1024*1024)
