@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.57 2004-04-24 09:16:42 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.58 2004-06-10 07:13:02 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
 #include "cpu.h"
 #include "memory.h"
 #include "debug.h"
-#include "keyboard.h"
+#include "mapper.h"
 #include "setup.h"
 #include "paging.h"
 #include "support.h"
@@ -324,7 +324,7 @@ doexception:
 }
 
 void CPU_Exception(Bitu which,Bitu error ) {
-	LOG_MSG("Exception %d error %x",which,error);
+//	LOG_MSG("Exception %d error %x",which,error);
 	cpu.exception.error=error;
 	CPU_Interrupt(which,CPU_INT_EXCEPTION | ((which>=8) ? CPU_INT_HAS_ERROR : 0),reg_eip);
 }
@@ -1350,10 +1350,8 @@ void CPU_Init(Section* sec) {
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Init();
 #endif
-
-	KEYBOARD_AddEvent(KBD_f11,KBD_MOD_CTRL,CPU_CycleDecrease);
-	KEYBOARD_AddEvent(KBD_f12,KBD_MOD_CTRL,CPU_CycleIncrease);
-
+	MAPPER_AddHandler(CPU_CycleDecrease,MK_f11,MMOD1,"cycledown","Dec Cycles");
+	MAPPER_AddHandler(CPU_CycleIncrease,MK_f12,MMOD1,"cycleup"  ,"Inc Cycles");
 	CPU_Cycles=0;
 	CPU_CycleMax=section->Get_int("cycles");;
 	CPU_CycleUp=section->Get_int("cycleup");
