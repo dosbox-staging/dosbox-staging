@@ -649,11 +649,11 @@ void CreateMouseCallback(void)
 	// Create a mouse vector with weird address 
 	// for strange mouse detection routines in Sim City & Wasteland
 	Bit16u ofs = call_int33<<4;
-	real_writeb((Bit16u)CB_SEG,ofs+0,(Bit8u)0x90);	//NOP
-	real_writeb((Bit16u)CB_SEG,ofs+1,(Bit8u)0xFE);	//GRP 4
-	real_writeb((Bit16u)CB_SEG,ofs+2,(Bit8u)0x38);	//Extra Callback instruction
-	real_writew((Bit16u)CB_SEG,ofs+3,call_int33);	//The immediate word
-	real_writeb((Bit16u)CB_SEG,ofs+5,(Bit8u)0xCF);	//An IRET Instruction
+	phys_writeb(CB_BASE+ofs+0,(Bit8u)0x90);	//NOP
+	phys_writeb(CB_BASE+ofs+1,(Bit8u)0xFE);	//GRP 4
+	phys_writeb(CB_BASE+ofs+2,(Bit8u)0x38);	//Extra Callback instruction
+	phys_writew(CB_BASE+ofs+3,call_int33);	//The immediate word
+	phys_writeb(CB_BASE+ofs+5,(Bit8u)0xCF);	//An IRET Instruction
 	// Write weird vector
 	WriteMouseIntVector();
 };
