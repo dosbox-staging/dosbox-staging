@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.34 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.35 2005-03-01 07:19:38 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -597,6 +597,7 @@ public:
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
 			} else if (fstype=="iso") {
 				int error;
+				MSCDEX_SetCDInterface(CDROM_USE_SDL, -1); 
 				newdrive = new isoDrive(drive, temp_line.c_str(), mediaid, error);
 				switch (error) {
 					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));			break;
