@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.22 2004-10-12 16:19:45 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.23 2004-10-12 20:14:38 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -401,5 +401,6 @@ static void FPU_FXTRACT(void) {
 	Bit64s exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
 	Bit64s exp80final = (exp80>>52) - BIAS64;
 	Real64 mant = test.d / (pow(2.0,static_cast<Real64>(exp80final)));
+	fpu.regs[TOP].d=exp80final;
 	FPU_PUSH(mant); 
 }
