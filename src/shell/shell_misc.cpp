@@ -153,6 +153,7 @@ void DOS_Shell::InputCommand(char * line) {
 				// moves the cursor left
 				while (str_remain--) outc(8);
 			}
+			if (strlen(line) == 0 && l_completion.size()) l_completion.clear();
 			break;
 		case 0x0a:				/* New Line not handled */
 			/* Don't care */
@@ -200,8 +201,15 @@ void DOS_Shell::InputCommand(char * line) {
 						dta.GetResult(name,size,date,time,attr);
 						// add result to completion list
 
-						if (strcmp(name, ".") && strcmp(name, ".."))
-							l_completion.push_back(name);
+						char *ext;	// file extension
+						if (strcmp(name, ".") && strcmp(name, "..")) {
+							ext = strrchr(name, '.');
+							if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
+								// we add executables to the start of the list
+								l_completion.push_front(name);
+							else
+								l_completion.push_back(name);
+						}
 
 						res=DOS_FindNext();
 					}
