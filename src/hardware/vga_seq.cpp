@@ -55,6 +55,7 @@ void write_p3c5(Bit32u port,Bit8u val) {
 	case 2:		/* Map Mask */
 		seq(map_mask)=val & 15;
 		vga.config.full_map_mask=FillTable[val & 15];
+		vga.config.full_not_map_mask=~vga.config.full_map_mask;
 		/*
 			0  Enable writes to plane 0 if set
 			1  Enable writes to plane 1 if set
