@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: ems.cpp,v 1.31 2004-02-02 20:23:54 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -92,7 +93,7 @@ struct EMM_Handle {
 
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
-static Bitu call_int67;
+static Bitu call_int67,call_vdma;
 
 struct MoveRegion {
 	Bit32u bytes;
@@ -582,8 +583,25 @@ static Bitu INT67_Handler(void) {
 	return CBRET_NONE;
 }
 
+static Bitu INT4B_Handler() {
+	switch (reg_ah) {
+	case 0x81:
+		CALLBACK_SCF(true);
+		reg_ax=0x1;
+		break;
+	default:
+		LOG(LOG_MISC,LOG_WARN)("Unhandled interrupt 4B function %x",reg_ah);
+		break;
+	}
+	return CBRET_NONE;
+}
 
 void EMS_Init(Section* sec) {
+	/* Virtual DMA interrupt callback */
+	call_vdma=CALLBACK_Allocate();
+	CALLBACK_Setup(call_vdma,&INT4B_Handler,CB_IRET);
+	RealSetVec(0x4b,CALLBACK_RealPointer(call_vdma));
+
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (!section->Get_bool("ems")) return;
 	BIOS_ZeroExtendedSize();
