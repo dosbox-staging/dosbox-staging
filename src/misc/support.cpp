@@ -208,7 +208,7 @@ void S_Warn(char * format,...) {
 	va_start(msg,format);
 	vsprintf(buf,format,msg);
 	va_end(msg);
-#ifdef C_DEBUG
+#if C_DEBUG
 	DEBUG_ShowMsg(buf);
 #else
 	GFX_ShowMsg(buf);
