@@ -36,6 +36,7 @@ enum KBD_KEYS {
 	KBD_grave,KBD_minus,KBD_equals,KBD_backslash,KBD_leftbracket,KBD_rightbracket,
 	KBD_semicolon,KBD_quote,KBD_period,KBD_comma,KBD_slash,
 
+	KBD_printscreen,KBD_pause,
 	KBD_insert,KBD_home,KBD_pageup,KBD_delete,KBD_end,KBD_pagedown,
 	KBD_left,KBD_up,KBD_down,KBD_right,
 

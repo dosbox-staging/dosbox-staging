@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.21 2004-06-09 09:11:55 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.22 2004-06-30 14:40:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -601,9 +601,12 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 		if (!ReadSectors(GetSubUnit(drive),false,dirEntrySector,1,defBuffer)) return false;
 		// Get string part
 		foundName	= false;
-		useName		= searchPos;
-		searchPos	= strchr(searchPos,'\\'); 
-		if (searchPos) { *searchPos = 0; searchPos++; }
+		if (searchPos) { 
+			useName = searchPos; 
+			searchPos = strchr(searchPos,'\\'); 
+		}
+
+	   	if (searchPos) { *searchPos = 0; searchPos++; }
 		else foundComplete = true;
 
 		do {
@@ -622,7 +625,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 		if (foundName) {
 			// TO DO : name gefunden, Daten in den Buffer kopieren
 			if (foundComplete) {
-				if (copyFlag) E_Exit("MSCDEX: GetDirEntry: Unsupported copyflag");
+				if (copyFlag) LOG(LOG_MISC,LOG_ERROR)("MSCDEX: GetDirEntry: Unsupported copyflag. (result structure should be different");
 				// Direct copy
 				MEM_BlockCopy(buffer,defBuffer+index,entryLength);
 				error = iso ? 1:0;
@@ -917,7 +920,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-	MSCDEX_LOG("MSCDEX: INT 2F %04X",reg_ax);
+	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_bx);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
@@ -994,6 +997,7 @@ static bool MSCDEX_Handler(void)
 		case 0x1510:	/* Device driver request */
 						mscdex->SendDriverRequest(reg_cx,data);
 						return true;
+ 
 		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 						return true;
 

@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: sdl_mapper.cpp,v 1.5 2004-06-30 14:40:08 qbix79 Exp $ */
+
 #include <vector>
 #include <list>
 #include <string.h>
@@ -432,6 +434,7 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value) {
 		}
 	}
 	for (it=list->begin();it!=list->end();it++) {
+	/*BUG:CRASH if keymapper key is removed*/
 		if (validmod==(*it)->mods) (*it)->Activate(value);
 	}
 }
@@ -716,6 +719,15 @@ public:
 		case MK_kpminus:
 			key=SDLK_KP_MINUS;
 			break;
+		case MK_scrolllock:
+			key=SDLK_SCROLLOCK;
+			break;
+		case MK_pause:
+			key=SDLK_PAUSE;
+			break;
+		case MK_printscreen:
+			key=SDLK_PRINT;
+			break;
 		}
 		sprintf(buf,"%s \"key %d%s%s%s\"",
 			entry,
@@ -878,7 +890,8 @@ static void CreateLayout(void) {
 	/* Create the buttons for the Keyboard */
 #define BW 28
 #define BH 20
-#define PX(_X_) ((_X_)*BW)
+#define DX 5
+#define PX(_X_) ((_X_)*BW + DX)
 #define PY(_Y_) (30+(_Y_)*BH)
 	AddKeyButtonEvent(PX(0),PY(0),BW,BH,"ESC","esc",KBD_esc);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(0),BW,BH,combo_f[i].title,combo_f[i].entry,combo_f[i].key);
@@ -892,7 +905,7 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
 
-	AddKeyButtonEvent(0,PY(4),BW*3,BH,"SHIFT","lshift",KBD_leftshift);
+	AddKeyButtonEvent(PX(0),PY(4),BW*3,BH,"SHIFT","lshift",KBD_leftshift);
 	for (i=0;i<10;i++) AddKeyButtonEvent(PX(3+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
 	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
 
@@ -904,12 +917,16 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(14),PY(5),BW*2,BH,"CTRL","rctrl",KBD_rightctrl);
 
 	/* Arrow Keys */
-	AddKeyButtonEvent(PX(0),PY(7),BW,BH,"INS","insert",KBD_insert);
-	AddKeyButtonEvent(PX(1),PY(7),BW,BH,"HOM","home",KBD_home);
-	AddKeyButtonEvent(PX(2),PY(7),BW,BH,"PUP","pageup",KBD_pageup);
-	AddKeyButtonEvent(PX(0),PY(8),BW,BH,"DEL","delete",KBD_delete);
-	AddKeyButtonEvent(PX(1),PY(8),BW,BH,"END","end",KBD_end);
-	AddKeyButtonEvent(PX(2),PY(8),BW,BH,"PDN","pagedown",KBD_pagedown);
+   
+	AddKeyButtonEvent(PX(0),PY(7),BW,BH,"PRT","printscreen",KBD_printscreen);
+	AddKeyButtonEvent(PX(1),PY(7),BW,BH,"SCL","scrolllock",KBD_scrolllock);
+	AddKeyButtonEvent(PX(2),PY(7),BW,BH,"PAU","pause",KBD_pause);
+	AddKeyButtonEvent(PX(0),PY(8),BW,BH,"INS","insert",KBD_insert);
+	AddKeyButtonEvent(PX(1),PY(8),BW,BH,"HOM","home",KBD_home);
+	AddKeyButtonEvent(PX(2),PY(8),BW,BH,"PUP","pageup",KBD_pageup);
+	AddKeyButtonEvent(PX(0),PY(9),BW,BH,"DEL","delete",KBD_delete);
+	AddKeyButtonEvent(PX(1),PY(9),BW,BH,"END","end",KBD_end);
+	AddKeyButtonEvent(PX(2),PY(9),BW,BH,"PDN","pagedown",KBD_pagedown);
 	AddKeyButtonEvent(PX(1),PY(10),BW,BH,"\x18","up",KBD_up);
 	AddKeyButtonEvent(PX(0),PY(11),BW,BH,"\x1B","left",KBD_left);
 	AddKeyButtonEvent(PX(1),PY(11),BW,BH,"\x19","down",KBD_down);
@@ -947,7 +964,9 @@ static void CreateLayout(void) {
 	AddJButtonButton(PX(19),PY(3),BW,BH,"2" ,1,1);
 	AddJAxisButton  (PX(17),PY(4),BW,BH,"X-",1,false,false);
 	AddJAxisButton  (PX(18),PY(4),BW,BH,"Y+",1,true,true);
-	AddJAxisButton  (PX(19),PY(4),BW,BH,"X+",1,false,true);	/* The modifier buttons */
+	AddJAxisButton  (PX(19),PY(4),BW,BH,"X+",1,false,true);	
+   
+	/* The modifier buttons */
 	AddModButton(PX(0),PY(13),50,20,"Mod1",1);
 	AddModButton(PX(2),PY(13),50,20,"Mod2",2);
 	AddModButton(PX(4),PY(13),50,20,"Mod3",3);
@@ -961,8 +980,9 @@ static void CreateLayout(void) {
 		}
 	}
 	/* Create some text buttons */
-	new CTextButton(200,00,124,20,"Keyboard Layout");
-	
+	new CTextButton(PX(6),00,124,20,"Keyboard Layout");
+	new CTextButton(PX(16),00,124,20,"Joystick Layout");
+
 	bind_but.action=new CCaptionButton(200,330,0,0);
 
 	bind_but.event_title=new CCaptionButton(0,350,0,0);
@@ -1045,7 +1065,8 @@ static struct {
 	{"quote", SDLK_QUOTE},	{"backslash",SDLK_BACKSLASH},	{"lshift",SDLK_LSHIFT},
 	{"rshift",SDLK_RSHIFT},	{"lalt",SDLK_LALT},			{"ralt",SDLK_RALT},
 	{"lctrl",SDLK_LCTRL},	{"rctrl",SDLK_RCTRL},		{"comma",SDLK_COMMA},
-	{"period",SDLK_PERIOD},	{"slash",SDLK_SLASH},		{"pagedown",SDLK_PAGEDOWN},
+	{"period",SDLK_PERIOD},	{"slash",SDLK_SLASH},		{"printscreen",SDLK_PRINT},
+	{"scrolllock",SDLK_SCROLLOCK},	{"pause",SDLK_PAUSE},		{"pagedown",SDLK_PAGEDOWN},
 	{"pageup",SDLK_PAGEUP},	{"insert",SDLK_INSERT},		{"home",SDLK_HOME},
 	{"delete",SDLK_DELETE},	{"end",SDLK_END},			{"up",SDLK_UP},
 	{"left",SDLK_LEFT},		{"down",SDLK_DOWN},			{"right",SDLK_RIGHT},
@@ -1074,6 +1095,11 @@ static void CreateDefaultBinds(void) {
 		(*hit)->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);
 	}
+	/* JOYSTICK */
+	if (SDL_NumJoysticks()>0) {
+//	default mapping
+	}
+   
 }
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char * eventname,char * buttonname) {
@@ -1162,7 +1188,7 @@ void MAPPER_Run(void) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
 		(*evit)->DeActivateAll();
 	}
-
+		
 	bool mousetoggle=false;
 	if(mouselocked) {
 		mousetoggle=true;

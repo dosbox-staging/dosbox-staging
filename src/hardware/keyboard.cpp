@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.25 2004-06-20 22:03:34 harekiet Exp $ */
+/* $Id: keyboard.cpp,v 1.26 2004-06-30 14:40:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <assert.h>
@@ -320,6 +320,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_pagedown:extend=true;ret=81;break;
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
+	case KBD_pause:
+	case KBD_printscreen:
+		/* Not handled yet. But usuable in mapper for special events */
+		return;
 	default:
 		E_Exit("Unsupported key press");
 		break;
