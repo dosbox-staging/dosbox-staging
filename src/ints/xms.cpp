@@ -395,10 +395,12 @@ Bitu XMS_Handler(void) {
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
 		break;
-	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
-		reg_bl = XMS_AllocateMemory(reg_dx,reg_dx);
+	case XMS_ALLOCATE_EXTENDED_MEMORY:	{						/* 09 */
+		Bit16u handle = 0;
+		reg_bl = XMS_AllocateMemory(reg_dx,handle);
+		reg_dx = handle;
 		reg_ax = (reg_bl==0);		// set ax to success/failure
-		break;
+		}; break;
 	case XMS_FREE_EXTENDED_MEMORY:								/* 0a */
 		reg_bl = XMS_FreeMemory(reg_dx);
 		reg_ax = (reg_bl==0);
