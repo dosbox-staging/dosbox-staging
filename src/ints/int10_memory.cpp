@@ -68,7 +68,7 @@ void INT10_SetupRomMemory(void) {
 		real_writeb(0xC000,segoff++,static_functionality[i]);
 	}
 	MEM_BlockWrite(PhysMake(0xf000,0xfa6e),int10_font_08,128*8);
-
+	RealSetVec(0x1F,int10_romarea.font_8_second);
 };
 
 
