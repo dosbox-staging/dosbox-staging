@@ -13,6 +13,8 @@
   - VGA fixes
   - new wildcompare
   - support for size and disktype at mount.
+  - added new debugger functionalities: start/trace into INTs, write processor status log, 
+    step over rep and loop instructions, breakpoint support without using INT 03 (heavy debugging switch)
   
 0.55
   - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becomming unsigned).

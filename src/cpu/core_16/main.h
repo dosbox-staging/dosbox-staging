@@ -1079,7 +1079,7 @@ restart:
 					goto reploop;
 #ifdef CPU_386
 				case 0x66:
-					Rep_66(direct,from,to,repcheck);
+					Rep_66(direct,from,to);
 					break;
 #endif												
 					
