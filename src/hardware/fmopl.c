@@ -276,6 +276,7 @@ typedef struct fm_opl_f {
 	UINT8	wavesel;				/* waveform select enable flag	*/
 
 	int		T[2];					/* timer counters				*/
+	int		TC[2];
 	UINT8	st[2];					/* timer enable					*/
 
 #if BUILD_Y8950
@@ -1485,26 +1486,26 @@ static void OPLWriteReg(FM_OPL *OPL, int r, int v)
 			}
 			else
 			{	/* set IRQ mask ,timer enable*/
-				UINT8 st1 = v&1;
-				UINT8 st2 = (v>>1)&1;
+				OPL->st[0] = v&1;
+				OPL->st[1] = (v>>1)&1;
 
 				/* IRQRST,T1MSK,t2MSK,EOSMSK,BRMSK,x,ST2,ST1 */
 				OPL_STATUS_RESET(OPL, v & 0x78 );
 				OPL_STATUSMASK_SET(OPL, (~v) & 0x78 );
 
-				/* timer 2 */
-				if(OPL->st[1] != st2)
-				{
-					double interval = st2 ? (double)OPL->T[1]*OPL->TimerBase : 0.0;
-					OPL->st[1] = st2;
-					if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+1,interval);
-				}
 				/* timer 1 */
-				if(OPL->st[0] != st1)
+				if(OPL->st[0])
 				{
-					double interval = st1 ? (double)OPL->T[0]*OPL->TimerBase : 0.0;
-					OPL->st[0] = st1;
+					OPL->TC[0]=OPL->T[0]*20;
+					double interval = (double)OPL->T[0]*OPL->TimerBase;
 					if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+0,interval);
+				}
+				/* timer 2 */
+				if(OPL->st[1])
+				{
+					OPL->TC[1]=OPL->T[1]*20;
+					double interval =(double)OPL->T[1]*OPL->TimerBase;
+					if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+1,interval);
 				}
 			}
 			break;
@@ -1915,8 +1916,20 @@ static unsigned char OPLRead(FM_OPL *OPL,int a)
 		}
 
 		#endif
-
-		/* OPL and OPL2 */
+		if (OPL->st[0]) {
+			if (OPL->TC[0]) OPL->TC[0]--;
+			else {
+				OPL->TC[0]=OPL->T[0]*20;
+				OPL_STATUS_SET(OPL,0x40);
+			}
+		}
+		if (OPL->st[1]) {
+			if (OPL->TC[1]) OPL->TC[1]--;
+			else {
+				OPL->TC[1]=OPL->T[1]*20;
+				OPL_STATUS_SET(OPL,0x40);
+			}
+		}
 		return OPL->status & (OPL->statusmask|0x80);
 	}
 
@@ -1999,7 +2012,7 @@ static int OPLTimerOver(FM_OPL *OPL,int c)
 		}
 	}
 	/* reload timer */
-	if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+c,(double)OPL->T[c]*OPL->TimerBase);
+//	if (OPL->TimerHandler) (OPL->TimerHandler)(OPL->TimerParam+c,(double)OPL->T[c]*OPL->TimerBase);
 	return OPL->status>>7;
 }
 

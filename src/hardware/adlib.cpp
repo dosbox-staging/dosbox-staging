@@ -55,7 +55,8 @@ namespace OPL2 {
 		YM3812TimerOver(val>>8,val & 0xff);
 	}
 	void TimerHandler(int channel,double interval_Sec) {
-		PIC_AddEvent(TimerOver,1000000*interval_Sec,channel);		
+		if (interval_Sec==0.0) return;
+		PIC_AddEvent(TimerOver,(Bitu)(1000000.0*interval_Sec),channel);		
 	}
 }
 #undef OSD_CPU_H
@@ -67,7 +68,8 @@ namespace THEOPL3 {
 		YMF262TimerOver(val>>8,val & 0xff);
 	}
 	void TimerHandler(int channel,double interval_Sec) {
-		PIC_AddEvent(TimerOver,1000000*interval_Sec,channel);		
+		if (interval_Sec==0.0) return;
+		PIC_AddEvent(TimerOver,(Bitu)(1000000.0*interval_Sec),channel);		
 	}
 }
 

@@ -242,6 +242,7 @@ typedef struct {
 	UINT8	rhythm;					/* Rhythm mode					*/
 
 	int		T[2];					/* timer counters				*/
+	int		TC[2];
 	UINT8	st[2];					/* timer enable					*/
 
 	UINT32	address;				/* address register				*/
@@ -1726,26 +1727,26 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 			}
 			else
 			{	/* set IRQ mask ,timer enable */
-				UINT8 st1 = v & 1;
-				UINT8 st2 = (v>>1) & 1;
+				chip->st[0] = v & 1;
+				chip->st[1] = (v>>1) & 1;
 
 				/* IRQRST,T1MSK,t2MSK,x,x,x,ST2,ST1 */
 				OPL3_STATUS_RESET(chip, v & 0x60);
 				OPL3_STATUSMASK_SET(chip, (~v) & 0x60 );
 
-				/* timer 2 */
-				if(chip->st[1] != st2)
-				{
-					double interval = st2 ? (double)chip->T[1]*chip->TimerBase : 0.0;
-					chip->st[1] = st2;
-					if (chip->TimerHandler) (chip->TimerHandler)(chip->TimerParam+1,interval);
-				}
 				/* timer 1 */
-				if(chip->st[0] != st1)
+				if(chip->st[0])
 				{
-					double interval = st1 ? (double)chip->T[0]*chip->TimerBase : 0.0;
-					chip->st[0] = st1;
+					chip->TC[0]=chip->T[0]*20;
+					double interval = (double)chip->T[0]*chip->TimerBase;
 					if (chip->TimerHandler) (chip->TimerHandler)(chip->TimerParam+0,interval);
+				}
+				/* timer 2 */
+				if(chip->st[1])
+				{
+					chip->TC[1]=chip->T[1]*20;
+					double interval =(double)chip->T[1]*chip->TimerBase;
+					if (chip->TimerHandler) (chip->TimerHandler)(chip->TimerParam+1,interval);
 				}
 			}
 		break;
@@ -2440,7 +2441,20 @@ static unsigned char OPL3Read(OPL3 *chip,int a)
 {
 	if( a==0 )
 	{
-		/* status port */
+		if (chip->st[0]) {
+			if (chip->TC[0]) chip->TC[0]--;
+			else {
+				chip->TC[0]=chip->T[0]*20;
+				OPL3_STATUS_SET(chip,0x40);
+			}
+		}
+		if (chip->st[1]) {
+			if (chip->TC[1]) chip->TC[1]--;
+			else {
+				chip->TC[1]=chip->T[1]*20;
+				OPL3_STATUS_SET(chip,0x40);
+			}
+		}
 		return chip->status;
 	}
 
@@ -2460,7 +2474,7 @@ static int OPL3TimerOver(OPL3 *chip,int c)
 		OPL3_STATUS_SET(chip,0x40);
 	}
 	/* reload timer */
-	if (chip->TimerHandler) (chip->TimerHandler)(chip->TimerParam+c,(double)chip->T[c]*chip->TimerBase);
+//	if (chip->TimerHandler) (chip->TimerHandler)(chip->TimerParam+c,(double)chip->T[c]*chip->TimerBase);
 	return chip->status>>7;
 }
 
