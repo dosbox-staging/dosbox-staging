@@ -307,9 +307,10 @@
 		}
 	CASE_D(0x8f)												/* POP Ed */
 		{
+			Bit32u val=Pop_32();
 			GetRM;
-			if (rm >= 0xc0 ) {GetEArd;*eard=Pop_32();}
-			else {GetEAa;SaveMd(eaa,Pop_32());}
+			if (rm >= 0xc0 ) {GetEArd;*eard=val;}
+			else {GetEAa;SaveMd(eaa,val);}
 			break;
 		}
 	CASE_D(0x91)												/* XCHG ECX,EAX */

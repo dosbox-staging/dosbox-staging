@@ -511,9 +511,10 @@
 		}							
 	CASE_W(0x8f)												/* POP Ew */
 		{
+			Bit16u val=Pop_16();
 			GetRM;
-			if (rm >= 0xc0 ) {GetEArw;*earw=Pop_16();}
-			else {GetEAa;SaveMw(eaa,Pop_16());}
+			if (rm >= 0xc0 ) {GetEArw;*earw=val;}
+			else {GetEAa;SaveMw(eaa,val);}
 			break;
 		}
 	CASE_B(0x90)												/* NOP */

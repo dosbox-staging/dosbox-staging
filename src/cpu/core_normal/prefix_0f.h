@@ -36,7 +36,6 @@
 					Bitu loadval;
 					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
 					else {GetEAa;loadval=LoadMw(eaa);}
-					break;
 					switch (which) {
 					case 0x02:CPU_LLDT(loadval);break;
 					case 0x03:CPU_LTR(loadval);break;
@@ -44,6 +43,7 @@
 					case 0x05:CPU_VERW(loadval);break;
 					}
 				}
+				break;
 			default:
 				LOG(LOG_CPU,LOG_ERROR)("GRP6:Illegal call %2X",which);
 			}
