@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.27 2003-12-30 20:39:07 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.28 2004-01-02 18:47:13 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -123,8 +123,13 @@ static struct {
 
 INLINE void Mouse_AddEvent(Bit16u type) {
 	if (mouse.events<QUEUE_SIZE) {
-		mouse.event_queue[mouse.events].type=type;
-		mouse.event_queue[mouse.events].buttons=mouse.buttons;
+/* Always put the newest element in the front as that the events are 
+ * handled backwards (prevents doubleclicks while moving)
+ */
+		for(Bitu i = mouse.events ; i ; i--)
+			mouse.event_queue[i-1] = mouse.event_queue[i];
+		mouse.event_queue[0].type=type;
+		mouse.event_queue[0].buttons=mouse.buttons;
 		mouse.events++;
 	}
 	PIC_ActivateIRQ(MOUSE_IRQ);
