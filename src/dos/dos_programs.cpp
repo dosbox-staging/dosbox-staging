@@ -47,14 +47,8 @@ public:
 			}
 			return;
 		}
-		std::string type="dir";
-		
-		// get the drive letter
-		cmd->FindCommand(1,temp_line);
-		if (temp_line.size()>1) goto showusage;
-		drive=toupper(temp_line[0]);
-		if (!isalpha(drive)) goto showusage;
 
+		std::string type="dir";
 		cmd->FindString("-t",type,true);
 		if (type=="floppy" || type=="dir" || type=="cdrom") {
 			Bit16u sizes[4];
@@ -84,7 +78,12 @@ public:
 				scan++;
 			}
 			number[index]=0;sizes[count++]=atoi(number);
-
+		
+		// get the drive letter
+			cmd->FindCommand(1,temp_line);
+			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
+			drive=toupper(temp_line[0]);
+			if (!isalpha(drive)) goto showusage;
 
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
