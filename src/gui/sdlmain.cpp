@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.69 2004-07-12 12:42:20 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.70 2004-07-24 20:41:09 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -88,12 +88,19 @@ PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
 extern char** environ;
 #endif
 
-
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#if defined(HAVE_DDRAW_H)
+#include <ddraw.h>
+struct private_hwdata {
+	LPDIRECTDRAWSURFACE3 dd_surface;
+	LPDIRECTDRAWSURFACE3 dd_writebuf;
+};
+#endif
+
 #define STDOUT_FILE	TEXT("stdout.txt")
 #define STDERR_FILE	TEXT("stderr.txt")
 #define DEFAULT_CONFIG_FILE "/dosbox.conf"
@@ -108,6 +115,7 @@ void MAPPER_StartUp(Section * sec);
 
 enum SCREEN_TYPES	{ 
 	SCREEN_SURFACE,
+	SCREEN_SURFACE_DDRAW,
 	SCREEN_OVERLAY,
 	SCREEN_OPENGL
 };
@@ -148,6 +156,12 @@ struct SDL_Block {
 		bool pixel_data_range;
 #endif
 	} opengl;
+#endif
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	struct {
+		SDL_Surface * surface;
+		RECT rect;
+	} blit;
 #endif
 	SDL_Rect clip;
 	SDL_Surface * surface;
@@ -204,7 +218,7 @@ static void PauseDOSBox(void) {
 
 /* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags) {
-	Bitu testbpp,gotbpp,setflags;
+	Bitu testbpp,gotbpp;
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 check_surface:
@@ -212,6 +226,7 @@ check_surface:
 		if (flags & LOVE_8) testbpp=8;
 		else if (flags & LOVE_16) testbpp=16;
 		else if (flags & LOVE_32) testbpp=32;
+check_gotbpp:
 		if (sdl.desktop.fullscreen) gotbpp=SDL_VideoModeOK(640,480,testbpp,SDL_FULLSCREEN|SDL_HWSURFACE|SDL_HWPALETTE);
 		else gotbpp=sdl.desktop.bpp;
 		/* If we can't get our favorite mode check for another working one */
@@ -230,6 +245,14 @@ check_surface:
 		}
 		/* Not a valid display depth found? Let's just hope sdl provides conversions */
 		break;
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	case SCREEN_SURFACE_DDRAW:
+		if (!(flags&CAN_32|CAN_16)) goto check_surface;
+		if (flags & LOVE_16) testbpp=16;
+		else if (flags & LOVE_32) testbpp=32;
+		flags|=HAVE_SCALING;
+		goto check_gotbpp;
+#endif
 	case SCREEN_OVERLAY:
 		if (flags & NEED_RGB || !(flags&CAN_32)) goto check_surface;
 		flags|=HAVE_SCALING;
@@ -258,6 +281,36 @@ static int int_log2 (int val) {
     while ((val >>= 1) != 0)
 	log++;
     return log;
+}
+
+
+static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags,Bit32u bpp) {
+	if (sdl.desktop.fullscreen) {
+		if (sdl.desktop.fixed) {
+			double ratio_w=(double)sdl.desktop.width/(sdl.draw.width*sdl.draw.scalex);
+			double ratio_h=(double)sdl.desktop.height/(sdl.draw.height*sdl.draw.scaley);
+			if ( ratio_w < ratio_h) {
+				sdl.clip.w=(Bit16u)sdl.desktop.width;
+				sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w);
+			} else {
+				sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h);
+				sdl.clip.h=(Bit16u)sdl.desktop.height;
+			}
+			sdl.clip.x=(Sint16)((sdl.desktop.width-sdl.clip.w)/2);
+			sdl.clip.y=(Sint16)((sdl.desktop.height-sdl.clip.h)/2);
+			return sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+		} else {
+			sdl.clip.x=0;sdl.clip.y=0;
+			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
+			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
+			return sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+		}
+	} else {
+		sdl.clip.x=0;sdl.clip.y=0;
+		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*sdl.desktop.hwscale);
+		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*sdl.desktop.hwscale);
+		return sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_HWSURFACE);
+	}
 }
 
 GFX_Modes GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_ResetCallBack reset) {
@@ -304,38 +357,46 @@ dosurface:
 				break;
 		}
 		break;
-	case SCREEN_OVERLAY:
-		if (sdl.overlay) SDL_FreeYUVOverlay(sdl.overlay);
-		sdl.overlay=0;
-		if (!(flags&CAN_32) || (flags & NEED_RGB)) goto dosurface;
-		if (sdl.desktop.fullscreen) {
-			if (sdl.desktop.fixed) {
-				double ratio_w=(double)sdl.desktop.width/(width*scalex);
-				double ratio_h=(double)sdl.desktop.height/(height*scaley);
-				if ( ratio_w < ratio_h) {
-					sdl.clip.w=(Bit16u)sdl.desktop.width;
-					sdl.clip.h=(Bit16u)(height*scaley*ratio_w);
-				} else {
-					sdl.clip.w=(Bit16u)(width*scalex*ratio_h);
-					sdl.clip.h=(Bit16u)sdl.desktop.height;
-				}
-				sdl.clip.x=(Sint16)((sdl.desktop.width-sdl.clip.w)/2);
-				sdl.clip.y=(Sint16)((sdl.desktop.height-sdl.clip.h)/2);
-				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,0,
-					SDL_FULLSCREEN|SDL_HWSURFACE);
-			} else {
-				sdl.clip.x=0;sdl.clip.y=0;
-				sdl.clip.w=(Bit16u)(width*scalex);
-				sdl.clip.h=(Bit16u)(height*scaley);
-				sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,0,
-					SDL_FULLSCREEN|SDL_HWSURFACE);
-			}
-		} else {
-			sdl.clip.x=0;sdl.clip.y=0;
-			sdl.clip.w=(Bit16u)(width*scalex*sdl.desktop.hwscale);
-			sdl.clip.h=(Bit16u)(height*scaley*sdl.desktop.hwscale);
-			sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,0,SDL_HWSURFACE);
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	case SCREEN_SURFACE_DDRAW:
+		if (flags & CAN_16) bpp=16;
+		if (flags & CAN_32) bpp=32;
+		if (sdl.blit.surface) {
+			SDL_FreeSurface(sdl.blit.surface);
+			sdl.blit.surface=0;
 		}
+		if (!GFX_SetupSurfaceScaled(0,bpp)) goto dosurface;
+		sdl.blit.rect.top=sdl.clip.x;
+		sdl.blit.rect.left=sdl.clip.y;
+		sdl.blit.rect.right=sdl.clip.x+sdl.clip.w-1;
+		sdl.blit.rect.bottom=sdl.clip.y+sdl.clip.h-1;
+		sdl.blit.surface=SDL_CreateRGBSurface(SDL_HWSURFACE,sdl.draw.width,sdl.draw.height,
+				sdl.surface->format->BitsPerPixel,
+				sdl.surface->format->Rmask,
+				sdl.surface->format->Gmask,
+				sdl.surface->format->Bmask,
+				0);
+		if (!sdl.blit.surface || (!sdl.blit.surface->flags&SDL_HWSURFACE)) {
+			LOG_MSG("Failed to create ddraw surface, back to normal surface.");
+			goto dosurface;
+		}
+		switch (sdl.surface->format->BitsPerPixel) {
+			case 15:sdl.draw.mode=GFX_15;break;
+			case 16:sdl.draw.mode=GFX_16;break;
+			case 32:sdl.draw.mode=GFX_32;break;
+			default:
+				break;
+		}
+		sdl.desktop.type=SCREEN_SURFACE_DDRAW;
+		break;
+#endif
+	case SCREEN_OVERLAY:
+		if (sdl.overlay) {
+			SDL_FreeYUVOverlay(sdl.overlay);
+			sdl.overlay=0;
+		}
+		if (!(flags&CAN_32) || (flags & NEED_RGB)) goto dosurface;
+		if (!GFX_SetupSurfaceScaled(0,0)) goto dosurface;
 		sdl.overlay=SDL_CreateYUVOverlay(width*2,height,SDL_UYVY_OVERLAY,sdl.surface);
 		if (!sdl.overlay) {
 			LOG_MSG("SDL:Failed to create overlay, switching back to surface");
@@ -362,35 +423,7 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-		if (sdl.desktop.fullscreen) {
-			if (sdl.desktop.fixed) {
-				double ratio_w=(double)sdl.desktop.width/(width*scalex);
-				double ratio_h=(double)sdl.desktop.height/(height*scaley);
-				if ( ratio_w < ratio_h) {
-					sdl.clip.w=(Bit16u)sdl.desktop.width;
-					sdl.clip.h=(Bit16u)(height*scaley*ratio_w);
-				} else {
-					sdl.clip.w=(Bit16u)(width*scalex*ratio_h);
-					sdl.clip.h=(Bit16u)sdl.desktop.height;
-				}
-				sdl.clip.x=(Sint16)((sdl.desktop.width-sdl.clip.w)/2);
-				sdl.clip.y=(Sint16)((sdl.desktop.height-sdl.clip.h)/2);
-				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,0,
-					SDL_OPENGL|SDL_FULLSCREEN|SDL_HWSURFACE);
-			} else {
-				sdl.clip.x=0;sdl.clip.y=0;
-				sdl.clip.w=(Bit16u)(width*scalex);
-				sdl.clip.h=(Bit16u)(height*scaley);
-				sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,0,
-					SDL_OPENGL|SDL_FULLSCREEN|SDL_HWSURFACE);
-			}
-		} else {
-			sdl.clip.x=0;sdl.clip.y=0;
-			sdl.clip.w=(Bit16u)(width*scalex*sdl.desktop.hwscale);
-			sdl.clip.h=(Bit16u)(height*scaley*sdl.desktop.hwscale);
-			sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,0,
-				SDL_OPENGL|SDL_HWSURFACE);
-		}
+		GFX_SetupSurfaceScaled(SDL_OPENGL,0);
 		if (!sdl.surface || sdl.surface->format->BitsPerPixel<15) {
 			LOG_MSG("SDL:OPENGL:Can't open drawing surface, are you running in 16bpp(or higher) mode?");
 			goto dosurface;
@@ -514,6 +547,17 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		pixels+=sdl.clip.x*sdl.surface->format->BytesPerPixel;
 		pitch=sdl.surface->pitch;
 		return true;
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	case SCREEN_SURFACE_DDRAW:
+		if (SDL_LockSurface(sdl.blit.surface)) {
+			LOG_MSG("SDL Lock failed");
+			sdl.updating=false;
+			return false;
+		}
+		pixels=(Bit8u *)sdl.blit.surface->pixels;
+		pitch=sdl.blit.surface->pitch;
+		return true;
+#endif
 	case SCREEN_OVERLAY:
 		SDL_LockYUVOverlay(sdl.overlay);
 		pixels=(Bit8u *)*(sdl.overlay->pixels);
@@ -539,6 +583,18 @@ void GFX_EndUpdate(void) {
 		}
 		SDL_Flip(sdl.surface);
 		break;
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	case SCREEN_SURFACE_DDRAW:
+		if (SDL_MUSTLOCK(sdl.blit.surface)) {
+			SDL_UnlockSurface(sdl.blit.surface);
+		}
+		IDirectDrawSurface3_Blt(
+			sdl.surface->hwdata->dd_surface,&sdl.blit.rect,
+			sdl.blit.surface->hwdata->dd_surface,0,
+			DDBLT_WAIT, NULL);
+		SDL_Flip(sdl.surface);
+		break;
+#endif
 	case SCREEN_OVERLAY:
 		SDL_UnlockYUVOverlay(sdl.overlay);
 		SDL_DisplayYUVOverlay(sdl.overlay,&sdl.clip);
@@ -574,6 +630,7 @@ void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
+	case SCREEN_SURFACE_DDRAW:
 		return SDL_MapRGB(sdl.surface->format,red,green,blue);
 	case SCREEN_OVERLAY:
 		{
@@ -652,6 +709,10 @@ static void GUI_StartUp(Section * sec) {
 	const char * output=section->Get_string("output");
 	if (!strcasecmp(output,"surface")) {
 		sdl.desktop.want_type=SCREEN_SURFACE;
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+	} else if (!strcasecmp(output,"ddraw")) {
+		sdl.desktop.want_type=SCREEN_SURFACE_DDRAW;
+#endif
 	} else if (!strcasecmp(output,"overlay")) {
 		sdl.desktop.want_type=SCREEN_OVERLAY;
 #if C_OPENGL
