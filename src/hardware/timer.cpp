@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.21 2004-02-07 18:34:03 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.22 2004-03-03 12:37:12 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -27,6 +27,17 @@
 #include "mixer.h"
 #include "timer.h"
 
+static INLINE void BIN2BCD(Bit16u& val) {
+	Bit16u temp=val%10 + (((val/10)%10)<<4)+ (((val/100)%10)<<8) + (((val/1000)%10)<<12);
+	val=temp;
+}
+
+static INLINE void BCD2BIN(Bit16u& val) {
+	Bit16u temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
+	val=temp;
+}
+
+
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
 	
@@ -36,9 +47,11 @@ struct PIT_Block {
 	
 	Bit8u latch_mode;
 	Bit8u read_state;
-	Bit16s read_latch;
+	Bit16u read_latch;
 	Bit8u write_state;
 	Bit16u write_latch;
+   bool bcd;
+   bool go_read_latch;
 };
 
 static PIT_Block pit[3];
@@ -51,6 +64,7 @@ static void PIT0_Event(Bitu val) {
 static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
+	p->go_read_latch=false;
 
 	Bit64s micro=PIC_MicroCount()-p->start;
 	
@@ -91,6 +105,8 @@ static void counter_latch(Bitu counter) {
 static void write_latch(Bit32u port,Bit8u val) {
 	Bitu counter=port-0x40;
 	PIT_Block * p=&pit[counter];
+	if(p->bcd == true) BIN2BCD(p->write_latch);
+   
 	switch (p->write_state) {
 		case 0:
 			p->write_latch = p->write_latch | ((val & 0xff) << 8);
@@ -106,9 +122,14 @@ static void write_latch(Bit32u port,Bit8u val) {
 		case 2:
 			p->write_latch = (val & 0xff) << 8;
 		break;
-    }
+	}
+	if(p->bcd==true) BCD2BIN(p->write_latch);
+   
 	if (p->write_state != 0) {
-		if (p->write_latch == 0) p->cntr = 0x10000;
+		if (p->write_latch == 0) {
+		   if(p->bcd == false) {p->cntr = 0x10000;} else {p->cntr=9999;}
+		}
+	   
 		else p->cntr = p->write_latch;
 		p->start=PIC_MicroCount();
 		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
@@ -130,14 +151,16 @@ static void write_latch(Bit32u port,Bit8u val) {
 
 static Bit8u read_latch(Bit32u port) {
 	Bit32u counter=port-0x40;
-	if (pit[counter].read_latch == -1) 
+	if (pit[counter].go_read_latch == true) 
 		counter_latch(counter);
 	Bit8u ret;
+	if( pit[counter].bcd == true) BIN2BCD(pit[counter].read_latch);
+   
 	switch (pit[counter].read_state) {
     case 0: /* read MSB & return to state 3 */
       ret=(pit[counter].read_latch >> 8) & 0xff;
       pit[counter].read_state = 3;
-      pit[counter].read_latch = -1;
+      pit[counter].go_read_latch = true;
       break;
     case 3: /* read LSB followed by MSB */
       ret = (pit[counter].read_latch & 0xff);
@@ -147,17 +170,19 @@ static Bit8u read_latch(Bit32u port) {
       break;
     case 1: /* read LSB */
       ret = (pit[counter].read_latch & 0xff);
-      pit[counter].read_latch = -1;
+      pit[counter].go_read_latch = true;
       break;
     case 2: /* read MSB */
       ret = (pit[counter].read_latch >> 8) & 0xff;
-      pit[counter].read_latch = -1;
+      pit[counter].go_read_latch = true;
       break;
 	 default:
 	   ret=0;
 	   E_Exit("Timer.cpp: error in readlatch");
 	   break;
-  }
+	}
+	if( pit[counter].bcd == true) BCD2BIN(pit[counter].read_latch);
+   
   return ret;
 }
 
@@ -167,7 +192,10 @@ static void write_p43(Bit32u port,Bit8u val) {
 	case 0:
 	case 1:
 	case 2:
-		if (val & 1) E_Exit("PIT:Timer %d set to unsupported bcd mode",latch);
+		pit[latch].bcd = (val&1)>0;   
+		if (val & 1) if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
+		
+	   
 		if ((val & 0x30) == 0) {
 			/* Counter latch command */
 			counter_latch(latch);
@@ -201,16 +229,24 @@ void TIMER_Init(Section* sect) {
 	pit[0].cntr=0x10000;
 	pit[0].write_state = 3;
 	pit[0].read_state = 3;
-	pit[0].read_latch=-1;
+	pit[0].read_latch=0;
 	pit[0].write_latch=0;
 	pit[0].mode=3;
-	
+	pit[0].bcd = false;
+	pit[0].go_read_latch = true;
+
+	pit[1].bcd = false;
+	pit[1].go_read_latch = true;
+	pit[1].mode = 3;
+	pit[1].write_state = 3;   
 
 	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 	pit[2].micro=100;
-	pit[2].read_latch=-1;	/* MadTv1 */
+	pit[2].read_latch=0;	/* MadTv1 */
 	pit[2].write_state = 3; /* Chuck Yeager */
 	pit[2].mode=3;
+	pit[2].bcd=false;   
+	pit[2].go_read_latch=true;
 
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
