@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.76 2004-09-08 09:41:13 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.77 2004-09-09 08:39:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -235,16 +235,16 @@ void DOSBOX_Init(void) {
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
 		"aspect -- Do aspect correction.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
-		"          Supported are none,normal2x,advmame2x\n"
+		"          Supported are none,normal2x,advmame2x,advmame3x,advinterp2x,tv2x.\n"
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_string("core","normal");
-	secprop->Add_int("cycles",2500);
+	secprop->Add_int("cycles",3000);
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
-		"core -- CPU Core used in emulation: normal,full"
+		"core -- CPU Core used in emulation: simple,normal,full"
 #if (C_DYNAMIC_X86)
 		",dynamic"
 #endif
@@ -288,8 +288,8 @@ void DOSBOX_Init(void) {
 	MSG_Add("MIDI_CONFIGFILE_HELP",
 		"mpu401      -- Enable MPU-401 Emulation.\n"
 		"device      -- Device that will receive the MIDI data from MPU-401.\n"
-		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
 		"intelligent -- Operate in Intelligent mode.\n"
+		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
 		"config      -- Special configuration options for the device.\n"
 	);
 

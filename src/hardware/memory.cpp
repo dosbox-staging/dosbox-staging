@@ -479,9 +479,10 @@ void MEM_Init(Section * sec) {
 	Bitu memsize=section->Get_int("memsize");
 
 	if (memsize<1) memsize=1;
-	if (memsize>MAX_MEMORY) {
-		LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY);
-		memsize=MAX_MEMORY;
+	/* max 63 to solve problems with certain xms handlers */
+	if (memsize>MAX_MEMORY - 1) {
+		LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
+		memsize=MAX_MEMORY - 1;
 	}
 	MemBase=(HostPt)malloc(memsize*1024*1024);
 	if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
