@@ -53,7 +53,7 @@ void DEBUG_ShowMsg(char * format,...) {
 	va_end(msg);
 	wprintw(dbg.win_out,"%10d: %s\n",cycle_count,buf);
 	wrefresh(dbg.win_out);
-    if(debuglog) fprintf(debuglog,"%10d: %s\n",cycle_count,buf);
+	if(debuglog) fprintf(debuglog,"%10d: %s\n",cycle_count,buf);
 }
 
 void LOG::operator() (char* format, ...){
@@ -99,13 +99,15 @@ static void DrawBars(void) {
 		attrset(COLOR_PAIR(PAIR_BLACK_BLUE));
 	}
 	/* Show the Register bar */
-	mvaddstr(dbg.win_reg->_begy-1,0,"---[F1](Register Overview)---");
+	mvaddstr(dbg.win_reg->_begy-1,0,"---(Register Overview)---");
 	/* Show the Data Overview bar perhaps with more special stuff in the end */
-	mvaddstr(dbg.win_data->_begy-1,0,"---[F2](Data Overview)---");
+	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview)---");
 	/* Show the Code Overview perhaps with special stuff in bar too */
-	mvaddstr(dbg.win_code->_begy-1,0,"---[F3](Code Overview)---");
+	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview)---");
+	/* Show the Variable Overview bar */
+	mvaddstr(dbg.win_var->_begy-1,0,"---(Variable Overview)---");
 	/* Show the Output OverView */
-	mvaddstr(dbg.win_out->_begy-1,0,"---[F4](OutPut/Input)---");
+	mvaddstr(dbg.win_out->_begy-1,0,"---(OutPut/Input)---");
 	attrset(0);
 }
 
@@ -124,7 +126,10 @@ static void MakeSubWindows(void) {
 	/* The Code Window */
 	dbg.win_code=subwin(dbg.win_main,11,dbg.win_main->_maxx,outy,0);
 	outy+=12;
-	/* The output Window */	
+	/* The Variable Window */
+	dbg.win_var=subwin(dbg.win_main,4,dbg.win_main->_maxx,outy,0);
+	outy+=5;
+	/* The Output Window */	
 	dbg.win_out=subwin(dbg.win_main,dbg.win_main->_maxy-outy-1,dbg.win_main->_maxx,outy,0);
 	dbg.input_y=dbg.win_main->_maxy-1;
 	scrollok(dbg.win_out,TRUE);

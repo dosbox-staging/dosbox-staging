@@ -17,6 +17,9 @@
  */
 
 /* Local Debug Function */
+
+/* $Id: debug_inc.h,v 1.8 2004-08-28 12:51:35 qbix79 Exp $ */
+
 #include <curses.h>
 #include "mem.h"
 
@@ -34,6 +37,7 @@ struct DBGBlock {
 	WINDOW * win_reg;					/* Register Window */
 	WINDOW * win_data;					/* Data Output window */
 	WINDOW * win_code;					/* Disassembly/Debug point Window */
+	WINDOW * win_var;					/* Variable Window */
 	WINDOW * win_out;					/* Text Output Window */
 	Bit32u active_win;					/* Current active window */
 	Bit32u input_y;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.57 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.58 2004-08-28 12:51:35 qbix79 Exp $ */
 
 #include "programs.h"
 
@@ -26,6 +26,7 @@
 #include "dosbox.h"
 #if C_DEBUG
 #include "debug.h"
+#include "cross.h" //snprintf
 #include "cpu.h"
 #include "video.h"
 #include "pic.h"
@@ -53,13 +54,17 @@ int old_cursor_state;
 static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
+static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
+static void LogGDT(void);
+static void LogLDT(void);
+static void LogIDT(void);
+static void OutputVecTable(char* filename);
+static void DrawVariables(void);
+
 char* AnalyzeInstruction(char* inst, bool saveSelector);
-void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
 Bit32u GetHexValue(char* str, char*& hex);
-void LogGDT(void);
-void LogLDT(void);
-void LogIDT(void);
-void OutputVecTable(char* filename);
+
+
 
 class DEBUG;
 
@@ -67,12 +72,15 @@ DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
 bool	logHeavy	= false;
 
+
 // Heavy Debugging Vars for logging
 #if C_HEAVY_DEBUG
 static FILE*	cpuLogFile		= 0;
 static bool		cpuLog			= false;
 static int		cpuLogCounter	= 0;
 #endif
+
+
 
 static struct  {
 	Bit32u eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
@@ -86,6 +94,8 @@ DBGBlock dbg;
 static Bitu input_count;
 Bitu cycle_count;
 static bool debugging;
+
+
 static void SetColor(Bitu test) {
 	if (test) {
 		if (has_colors()) { wattrset(dbg.win_reg,COLOR_PAIR(PAIR_BYELLOW_BLACK));}
@@ -572,6 +582,10 @@ static bool StepOver()
 
 bool DEBUG_ExitLoop(void)
 {
+#if C_HEAVY_DEBUG
+	DrawVariables();
+#endif
+
 	if (exitLoop) {
 		exitLoop = false;
 		return true;
@@ -1446,13 +1460,14 @@ void DEBUG_DrawScreen(void) {
 	DrawData();
 	DrawCode();
 	DrawRegisters();
+	DrawVariables();
 }
 
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
 }
 
-void LogGDT(void)
+static void LogGDT(void)
 {
 	char out1[512];
 	Descriptor desc;
@@ -1471,7 +1486,7 @@ void LogGDT(void)
 	};
 };
 
-void LogLDT(void)
+static void LogLDT(void)
 {
 	char out1[512];
 	Descriptor desc;
@@ -1492,7 +1507,7 @@ void LogLDT(void)
 	};
 };
 
-void LogIDT(void)
+static void LogIDT(void)
 {
 	char out1[512];
 	Descriptor desc;
@@ -1759,7 +1774,7 @@ bool CDebugVar::LoadVars(char* name)
 	return true;
 };
 
-void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
+static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
@@ -1786,7 +1801,7 @@ void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 	DEBUG_ShowMsg("DEBUG: Memory dump success.");
 };
 
-void OutputVecTable(char* filename)
+static void OutputVecTable(char* filename)
 {
 	FILE* f = fopen(filename, "wt");
 	if (!f)
@@ -1802,6 +1817,35 @@ void OutputVecTable(char* filename)
 	DEBUG_ShowMsg("DEBUG: Interrupt vector table written to %s.", filename);
 }
 
+#define DEBUG_VAR_BUF_LEN 16
+static void DrawVariables(void)
+{
+	std::list<CDebugVar*>::iterator i;
+	CDebugVar *dv;
+	char buffer[DEBUG_VAR_BUF_LEN];
+
+	int idx = 0;
+	for(i=CDebugVar::varList.begin(); i != CDebugVar::varList.end(); i++, idx++) {
+
+		if (idx == 4*3) {
+			/* too many variables */
+			break;
+		}
+
+		dv = static_cast<CDebugVar*>(*i);
+
+		Bit16u value = mem_readw(dv->GetAdr());
+		snprintf(buffer,DEBUG_VAR_BUF_LEN, "0x%04x", value);
+
+		int y = idx / 3;
+		int x = (idx % 3) * 26;
+		mvwprintw(dbg.win_var, y, x, dv->GetName());
+		mvwprintw(dbg.win_var, y,  (x + DEBUG_VAR_BUF_LEN + 1) , buffer);
+	}
+
+	wrefresh(dbg.win_var);
+}
+#undef DEBUG_VAR_BUF_LEN
 // HEAVY DEBUGGING STUFF
 
 #if C_HEAVY_DEBUG
@@ -1882,8 +1926,8 @@ bool DEBUG_HeavyIsBreakpoint(void)
 	}
 	return false;
 };
-
 #endif // HEAVY DEBUG
+
 
 #endif // DEBUG
 
