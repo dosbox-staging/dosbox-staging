@@ -30,7 +30,7 @@ public:
 	CommandLine(int argc,char * argv[]);
 	CommandLine(char * name,char * cmdline);
 	const char * GetFileName(){ return file_name.c_str();}	
-
+    
 	bool FindExist(char * name,bool remove=false);
 	bool FindHex(char * name,int & value,bool remove=false);
 	bool FindInt(char * name,int & value,bool remove=false);
@@ -38,6 +38,7 @@ public:
 	bool FindCommand(int which,std::string & value);
 	bool FindStringBegin(char * begin,std::string & value, bool remove=false);
 	int GetCount(void);
+    void CommandLine::GetFullLine( char * in);
 private:
 	typedef std::list<std::string>::iterator cmd_it;
 	std::list<std::string> cmds;

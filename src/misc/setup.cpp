@@ -369,3 +369,13 @@ CommandLine::CommandLine(char * name,char * cmdline) {
 	}
 	if (inword || inquote) cmds.push_back(str);
 }
+
+void CommandLine::GetFullLine(char * in) {
+    cmd_it it;
+    *in=0;
+    char spatie[2]={' ',0};
+	for (it=cmds.begin();it!=cmds.end();it++) {
+        strcat(in,spatie);
+        strcat(in,(*it).c_str());
+    }
+}
