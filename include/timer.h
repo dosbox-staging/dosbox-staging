@@ -19,15 +19,13 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
 /* underlying clock rate in HZ */
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 extern Bit32u LastTicks;
 
 #define PIT_TICK_RATE 1193182
 
 #define GetTicks() SDL_GetTicks()
-
-extern bool TimerAgain;
 
 typedef void (*TIMER_TickHandler)(Bitu ticks);
 typedef void (*TIMER_MicroHandler)(void);
