@@ -47,7 +47,7 @@ public:
 	};
 	void PlayMsg(Bit8u * msg) {
 		Bit8u buf[128];Bitu pos=0;
-		Bitu len=MIDI_evt_len[msg & 0xff];
+		Bitu len=MIDI_evt_len[*msg];
 		for (;len>0;len--) {
 			buf[pos++] = SEQ_MIDIPUTC;
 			buf[pos++] = *msg;
