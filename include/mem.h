@@ -79,15 +79,19 @@ INLINE void writeb(HostPt off,Bit8u val) {
 	off[0]=val;
 };
 INLINE void writew(HostPt off,Bit16u val) {
-	off[0]=(Bit8u)((val & 0x00ff));
-	off[1]=(Bit8u)((val & 0xff00) >> 8);
+	off[0]=(Bit8u)(val);
+	off[1]=(Bit8u)(val >> 8);
 };
 INLINE void writed(HostPt off,Bit32u val) {
-	off[0]=(Bit8u)((val & 0x000000ff));
-	off[1]=(Bit8u)((val & 0x0000ff00) >> 8);
-	off[2]=(Bit8u)((val & 0x00ff0000) >> 16);
-	off[3]=(Bit8u)((val & 0xff000000) >> 24);
+	off[0]=(Bit8u)(val);
+	off[1]=(Bit8u)(val >> 8);
+	off[2]=(Bit8u)(val >> 16);
+	off[3]=(Bit8u)(val >> 24);
 };
+
+#define MLEB(_MLE_VAL_) (_MLE_VAL_)
+#define MLEW(_MLE_VAL_) (_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
+#define MLED(_MLE_VAL_) (_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
 
 #else
 
@@ -110,7 +114,16 @@ INLINE void writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
 };
 
+#define MLEB(_MLE_VAL_) (_MLE_VAL_)
+#define MLEW(_MLE_VAL_) (_MLE_VAL_)
+#define MLED(_MLE_VAL_) (_MLE_VAL_)
+
 #endif
+
+#define WLE(VAR_,VAL_)						\
+	if (sizeof(VAR_)==1) VAR_=MLEB(VAL_);	\
+	if (sizeof(VAR_)==2) VAR_=MLEW(VAL_);	\
+	if (sizeof(VAR_)==4) VAR_=MLED(VAL_);
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
 //TODO maybe make em inline to go a bit faster 
