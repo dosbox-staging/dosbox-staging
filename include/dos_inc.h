@@ -22,8 +22,9 @@
 #include <dos_system.h>
 #include <mem.h>
 
+#if defined (_MSC_VER)
 #pragma pack(1)
-
+#endif#
 struct CommandTail{
   Bit8u count;				/* number of bytes returned */
   char buffer[127];			 /* the buffer itself */
@@ -94,9 +95,13 @@ struct FCB {
 	Bit8u reserved[8];
 	Bit8u  current_relative_record_number; //open doesn't set this
 	Bit32u rel_record;      //open does not handle this
-};
-
+}
+#if defined (_MSC_VER)
+;
 #pragma pack()
+#else
+__attribute__ ((packed));
+#endif
 
 struct DOS_Date {
 	Bit16u year;
