@@ -26,8 +26,8 @@
 //TODO Make the full draw like the vga really does from video memory.
 
 static void VGA_CGA2_Draw(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=HostMake(0xB800,0);
-	Bit8u * flip=HostMake(0xB800,8*1024);
+	Bit8u * reader=&vga.mem.linear[0];
+	Bit8u * flip=&vga.mem.linear[8*1024];
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -55,8 +55,8 @@ static void VGA_CGA2_Draw(Bit8u * bitdata,Bitu pitch) {
 }
 
 static void VGA_CGA4_Draw(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=HostMake(0xB800,vga.config.display_start*2);
-	Bit8u * flip=HostMake(0xB800,8*1024);
+	Bit8u * reader=&vga.mem.linear[0];
+	Bit8u * flip=&vga.mem.linear[8*1024];
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -99,7 +99,7 @@ static void VGA_TANDY16_Draw(Bit8u * bitdata,Bitu pitch) {
 
 
 void VGA_TEXT_Draw(Bit8u * bitdata,Bitu start,Bitu panning,Bitu rows) {
-	Bit8u * reader=HostMake(0xb800,start);
+	Bit8u * reader=&vga.mem.linear[0];
 	Bit8u * draw_start=bitdata;
 /* Todo Blinking and high intensity colors */
 	Bitu next_charline=vga.draw.font_height*vga.draw.width;
@@ -177,7 +177,7 @@ void VGA_TEXT_Draw(Bit8u * bitdata,Bitu start,Bitu panning,Bitu rows) {
 
 		Bitu row=cur_start / (vga.config.scan_len*2);
 		Bitu col=cur_start % (vga.config.scan_len*2);
-		Bit32u att=*HostMake(0xb800,vga.config.cursor_start*2+1)&0xf;
+		Bit32u att=vga.mem.linear[vga.config.cursor_start*2+1]&0xf;
 		att=(att << 8) | att;
 		att=(att << 16) | att;
 

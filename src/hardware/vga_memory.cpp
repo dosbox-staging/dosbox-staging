@@ -24,10 +24,10 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "vga.h"
-
+#include "paging.h"
+#include "pic.h"
 
 static Bit8u VGA_NormalReadHandler(PhysPt start) {
-	start-=0xa0000;
 	vga.latch.d=vga.mem.latched[start].d;
 	switch (vga.config.read_mode) {
 	case 0:
@@ -56,7 +56,6 @@ INLINE static Bit32u RasterOp(Bit32u input,Bit32u mask) {
 	return 0;
 }
 
-
 INLINE static Bit32u ModeOperation(Bit8u val) {
 	Bit32u full;
 	switch (vga.config.write_mode) {
@@ -84,26 +83,7 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 	return full;
 }
 
-static Bit8u VGA_CGA_4_ReadHandler(PhysPt start) {
-	return vga.mem.linear[start-0xb8000];
-}
-
-static void VGA_CGA_4_WriteHandler(PhysPt start,Bit8u val) {
-	start-=0xb8000;
-	vga.mem.linear[start]=val;
-	Bitu off;
-	if (start>0x2000) off=320*(((start-0x2000)/80)*2+1)+((start-0x2000) % 80)*4;
-	else off=320*(((start)/80)*2)+(start % 80)*4;
-	Bit32u * draw=(Bit32u *)&vga.mem.linear[512*1024+off];
-	/* TODO Could also use a Bit32u lookup table for this */
-	*draw=CGA_4_Table[val];
-	draw=(Bit32u *)&vga.mem.linear[512*1024+off+0x4000*4];
-	*draw=CGA_4_Table[val];
-
-}
-
 static void VGA_GFX_16_WriteHandler(PhysPt start,Bit8u val) {
-	start-=0xa0000;
 	val=(val >> vga.config.data_rotate) | (val << (8-vga.config.data_rotate));
 	Bit32u data=ModeOperation(val);
 	/* Update video memory and the pixel buffer */
@@ -135,7 +115,6 @@ static void VGA_GFX_16_WriteHandler(PhysPt start,Bit8u val) {
 }
 
 static void VGA_GFX_256U_WriteHandler(PhysPt start,Bit8u val) {
-	start-=0xa0000;
 	Bit32u data=ModeOperation(val);
 //	Bit32u data=ExpandTable[val];
 	VGA_Latch pixels;
@@ -147,7 +126,6 @@ static void VGA_GFX_256U_WriteHandler(PhysPt start,Bit8u val) {
 }
 
 static void VGA_TEXT16_Write(PhysPt start,Bit8u val) {
-	start-=vga.config.mem_base;
 	/* Check for page 2 being enabled for writing */
 	if (vga.seq.map_mask & 0x4) {
 		vga.draw.font[start]=val;
@@ -156,53 +134,82 @@ static void VGA_TEXT16_Write(PhysPt start,Bit8u val) {
 }
 
 static Bit8u VGA_TEXT16_Read(PhysPt start) {
-	start-=vga.config.mem_base;
 	return vga.draw.font[start];
 }
 
 void VGA_SetupHandlers(void) {
-	/* Sets up the correct memory handler from the vga.mode setting */
-	MEM_ClearPageHandlers(PAGE_COUNT(0xa0000),PAGE_COUNT(0x20000));
+	HostPt where;
 	switch (vga.mode) {
 	case M_LIN8:
-		MEM_SetupMapping(PAGE_COUNT(0xa0000),PAGE_COUNT(0x10000),&vga.mem.linear[vga.s3.bank*64*1024]);
+		where=&vga.mem.linear[vga.s3.bank*64*1024];
 		break;
 	case M_VGA:
 		if (vga.config.chained) {
-			MEM_SetupMapping(PAGE_COUNT(0xa0000),PAGE_COUNT(0x10000),&vga.mem.linear[vga.s3.bank*64*1024]);
+			where=&vga.mem.linear[vga.s3.bank*64*1024];
 		} else {
-			MEM_SetupPageHandlers(PAGE_COUNT(0xa0000),PAGE_COUNT(0x10000),
-				&VGA_NormalReadHandler,&VGA_GFX_256U_WriteHandler);
+			vga.config.readhandler=&VGA_NormalReadHandler,
+			vga.config.writehandler=&VGA_GFX_256U_WriteHandler;
+			where=0;
 		}
 		break;
 	case M_EGA16:
-		MEM_SetupPageHandlers(PAGE_COUNT(0xa0000),PAGE_COUNT(0x10000),
-			&VGA_NormalReadHandler,&VGA_GFX_16_WriteHandler);
+		vga.config.readhandler=&VGA_NormalReadHandler,
+		vga.config.writehandler=&VGA_GFX_16_WriteHandler;
+		where=0;
 		break;	
 	case M_TEXT16:
 		/* Check if we're not in odd/even mode */
-		if (vga.gfx.miscellaneous & 0x2) break;
-		MEM_SetupPageHandlers(PAGE_COUNT(0xa0000),PAGE_COUNT(0x10000),&VGA_TEXT16_Read,&VGA_TEXT16_Write);
-		//Could also do it using 0xb8000, let's double map
-		MEM_SetupPageHandlers(PAGE_COUNT(0xb8000),PAGE_COUNT(0x8000),&VGA_TEXT16_Read,&VGA_TEXT16_Write);
+		if (vga.gfx.miscellaneous & 0x2) {
+			where=&vga.mem.linear[0];
+		} else {
+			vga.config.readhandler=&VGA_TEXT16_Read;
+			vga.config.writehandler=&VGA_TEXT16_Write;
+			where=0;
+		}
 		break;
 	case M_TANDY16:
-		MEM_SetupMapping(PAGE_COUNT(0xb8000),PAGE_COUNT(0x8000),&vga.mem.linear[vga.tandy.mem_bank << 14]);
+		where=&vga.mem.linear[vga.tandy.mem_bank << 14];
 		break;
 	case M_CGA4:
 	case M_CGA2:
+		where=&vga.mem.linear[0];
 		break;
 	default:
 		LOG_MSG("Unhandled vga mode %X",vga.mode);
 	}
+	VGA_RANGES range;
+	switch ((vga.gfx.miscellaneous >> 2) & 3) {
+	case 0:
+	case 1:
+		range=VGA_RANGE_A000;
+		break;
+	case 2:
+		range=VGA_RANGE_B000;
+		break;
+	case 3:
+		range=VGA_RANGE_B800;
+		break;
+	}
+	MEM_SetupVGA(range,where);
 }
 
+bool  lfb_update;
 
+static void VGA_DoUpdateLFB(void) {
+	lfb_update=false;
+	MEM_SetLFB(vga.s3.la_window << 4,sizeof(vga.mem.linear)/4096,&vga.mem.linear[0]);
+}
 
-
+void VGA_StartUpdateLFB(void) {
+	if (!lfb_update) {
+		lfb_update=true;
+		PIC_AddEvent(VGA_DoUpdateLFB,2000);	//2 milliseconds later
+	}
+}
 
 void VGA_SetupMemory() {
 	memset((void *)&vga.mem,0,512*1024*4);
-	/* Map linear frame buffer at 32 mb */
-	MEM_SetupMapping(PAGE_COUNT(32*1024*1024),PAGE_COUNT(2*1024*1024),&vga.mem);
+	/* Setup linear window to some initial value */
+	vga.s3.la_window=0xc000;
+	VGA_DoUpdateLFB();
 }

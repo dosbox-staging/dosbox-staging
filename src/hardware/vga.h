@@ -48,6 +48,10 @@ enum VGAModes {
 #define MH_SETRESET		0x0002;
 #define MH_BITMASK		0x0004;
 
+
+typedef Bit8u VGA_ReadHandler(PhysPt off);
+typedef void VGA_WriteHandler(PhysPt off,Bit8u val);
+
 typedef struct {
 	bool attrindex;
 } VGA_Internal;
@@ -78,7 +82,10 @@ typedef struct {
 	Bit8u bytes_skip;
 
 /* Specific stuff memory write/read handling */
-	PhysPt mem_base;
+
+	VGA_ReadHandler * readhandler;
+	VGA_WriteHandler * writehandler;
+	
 	Bit8u read_mode;
 	Bit8u write_mode;
 	Bit8u read_map_select;
@@ -128,6 +135,7 @@ typedef struct {
 	Bit8u reg_55;
 	Bit8u ex_hor_overflow;
 	Bit8u ex_ver_overflow;
+	Bit16u la_window;
 	struct {
 		Bit8u r;
 		Bit8u n;
@@ -262,13 +270,15 @@ typedef struct {
 	VGA_Memory mem;
 } VGA_Type;
 
+
+
 /* Functions for different resolutions */
 void VGA_SetMode(VGAModes mode);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(void);
 void VGA_SetupDrawing(void);
 
-/* Some support functions */
+/* Some DAC/Attribute functions */
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val);
 
@@ -285,6 +295,7 @@ void VGA_SetupSEQ(void);
 void VGA_SetClock(Bitu which,Bitu target);
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
+void VGA_StartUpdateLFB(void);
 
 extern VGA_Type vga;
 

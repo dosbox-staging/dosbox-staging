@@ -139,19 +139,7 @@ void write_p3cf(Bit32u port,Bit8u val) {
 		break;
 	case 6: /* Miscellaneous Register */
 		gfx(miscellaneous)=val;
-		switch ((val >> 2) & 3) {
-		case 0:
-		case 1:
-			vga.config.mem_base=0xa0000;
-			break;
-		case 2:
-			vga.config.mem_base=0xb0000;
-			break;
-		case 3:
-			vga.config.mem_base=0xb8000;
-			break;
-		}
-		if (vga.mode==M_TEXT16) VGA_SetupHandlers();
+		VGA_SetupHandlers();
 		/*
 			0	Indicates Graphics Mode if set, Alphanumeric mode else.
 			1	Enables Odd/Even mode if set.
