@@ -198,7 +198,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("keepsmall",false);
 	secprop->Add_string("snapshots","snaps");
-	secprop->Add_string("scaler","none");
+	secprop->Add_string("scaler","normal2x");
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_int("cycles",1800);
@@ -213,7 +213,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	secprop->Add_bool("nosound",false);
-	secprop->Add_int("freq",22050);
+	secprop->Add_int("rate",22050);
 	secprop->Add_int("blocksize",2048);
 	secprop->Add_string("wavedir","waves");
 	
@@ -240,8 +240,6 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("cms",false);
 	secprop->Add_int("cmsrate",22050);
 
-//	secprop=control->AddSection_prop("gus",&GUS_Init);
-
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
 	secprop->Add_bool("enabled",true);
 
@@ -250,6 +248,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("pcrate",22050);
 	secprop->AddInitFunction(&TANDYSOUND_Init);
 	secprop->Add_bool("tandy",false);
+	secprop->Add_int("tandyrate",22050);
 
 	secprop=control->AddSection_prop("bios",&BIOS_Init);
 	secprop->AddInitFunction(&INT10_Init);
