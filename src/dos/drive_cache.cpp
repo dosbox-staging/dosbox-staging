@@ -17,22 +17,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.32 2004-01-12 20:25:05 finsterr Exp $ */
+/* $Id: drive_cache.cpp,v 1.33 2004-03-03 12:40:59 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
 #include "dirent.h"
 #include "support.h"
 
-#if defined (WIN32)   /* Win 32 */
-#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
-#include <windows.h>
-#endif
-
 // STL stuff
 #include <vector>
 #include <iterator>
 #include <algorithm>
+
+#if defined (WIN32)   /* Win 32 */
+#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
+#include <windows.h>
+#endif
 
 int fileInfoCounter = 0;
 
