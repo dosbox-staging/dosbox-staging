@@ -102,6 +102,15 @@ public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
+	void writeb(PhysPt addr,Bitu val){
+		LOG_MSG("Write %x to rom at %x",val,addr);
+	}
+	void writew(PhysPt addr,Bitu val){
+		LOG_MSG("Write %x to rom at %x",val,addr);
+	}
+	void writed(PhysPt addr,Bitu val){
+		LOG_MSG("Write %x to rom at %x",val,addr);
+	}
 };
 
 class LFBPageHandler : public RAMPageHandler {
@@ -568,6 +577,14 @@ void MEM_Init(Section * sec) {
 		memory.hostpts[i]=0;				//0 handler is allocate memory
 		memory.phandlers[i]=&ram_page_handler;
 		memory.mhandles[i]=0;				//Set to 0 for memory allocation
+	}
+	/* Setup rom at 0xc0000-0xc8000 */
+	for (i=0xc0;i<0xc8;i++) {
+		memory.phandlers[i]=&rom_page_handler;
+	}
+	/* Setup rom at 0xf0000-0x0x100000 */
+	for (i=0xf0;i<0x100;i++) {
+		memory.phandlers[i]=&rom_page_handler;
 	}
 	/* Reset some links */
 	memory.links.used=0;
