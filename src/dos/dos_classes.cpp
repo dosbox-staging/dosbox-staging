@@ -163,7 +163,8 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 		Bit8u handle = srcpsp->GetFileHandle(i);
 		if(createchildpsp)
 		{	//copy obeying not inherit flag.(but dont duplicate them)
-			if(Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && (FindEntryByHandle(handle)==0xff))
+			bool allowCopy = (handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
+			if(Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
 			{    
 				SetFileHandle(i,handle);
 			}
