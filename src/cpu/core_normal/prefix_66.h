@@ -358,7 +358,7 @@
 		SETFLAGSd(Pop_32())
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
-			cpudecoder=CPU_Core_Normal_Decode_Trap;
+			cpudecoder=CPU_Core_Normal_Trap_Run;
 			goto decode_end;
 		}
 #endif
@@ -495,7 +495,7 @@
 			CPU_IRET(true);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
-				cpudecoder=CPU_Core_Normal_Decode_Trap;
+				cpudecoder=CPU_Core_Normal_Trap_Run;
 				return CBRET_NONE;
 			}
 #endif

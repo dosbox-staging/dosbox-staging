@@ -151,10 +151,7 @@ static GetEATable * EAPrefixTable[8] = {
 
 #define EALookupTable (*(core.ea_table))
 
-
-Bits CPU_Core_Normal_Decode_Trap(void);
-
-Bits CPU_Core_Normal_Decode(void) {
+Bits CPU_Core_Normal_Run(void) {
 decode_start:
 	if (cpu.code.big) {
 		core.index_default=0x200;
@@ -202,26 +199,23 @@ restart_opcode:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Normal_Decode_Trap(void) {
+Bits CPU_Core_Normal_Trap_Run(void) {
 
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
 	core.trap.skip=false;
 
-	Bits ret=CPU_Core_Normal_Decode();
-	if (!core.trap.skip) if (CPU_SW_Interrupt(1)) {
-		E_Exit("Exception in trap flag cpu core, noooooooo");
-	}
+	Bits ret=CPU_Core_Normal_Run();
+	if (!core.trap.skip) CPU_SW_Interrupt(1,0);
 	CPU_Cycles = oldCycles-1;
-	cpudecoder = &CPU_Core_Normal_Decode;
+	cpudecoder = &CPU_Core_Normal_Run;
 
 	return ret;
 }
 
 
 
-void CPU_Core_Normal_Start(bool big) {
-	if (GETFLAG(TF)) cpudecoder=CPU_Core_Normal_Decode_Trap;
-	else cpudecoder=CPU_Core_Normal_Decode;
+void CPU_Core_Normal_Init(void) {
+
 }
 

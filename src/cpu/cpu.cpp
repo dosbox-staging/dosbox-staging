@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.45 2003-12-17 23:10:00 finsterr Exp $ */
+/* $Id: cpu.cpp,v 1.46 2004-01-01 12:26:08 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -49,23 +49,21 @@ static struct {
 	Bitu which,errorcode;
 } exception;
 
-void CPU_Core_Full_Start(bool big);
-void CPU_Core_Normal_Start(bool big);
-void CPU_Dynamic_Start(bool big);
+void CPU_Core_Full_Init(void);
+void CPU_Core_Normal_Init(void);
+void CPU_Core_Dyn_X86_Init(void);
 
-static Bits CPU_Core_Normal_Decode(void);
-static Bits CPU_Core_Full_Decode(void);
+#if (C_DYNAMIC_X86)
 
-
-#if 1
-
-#define realcore_start CPU_Core_Normal_Start
+#define startcpu_core	CPU_Core_Dyn_X86_Run
 
 #else 
 
-#define realcore_start CPU_Core_Full_Start
+#define startcpu_core	CPU_Core_Normal_Run
+//#define startcpu_core	CPU_Core_Full_Run
 
 #endif
+
 
 void CPU_Push16(Bitu value) {
 	reg_esp-=2;
@@ -296,7 +294,7 @@ void CPU_Exception(Bitu which,Bitu error ) {
 }
 
 Bit8u lastint;
-bool CPU_Interrupt(Bitu num,Bitu type) {
+void CPU_Interrupt(Bitu num,Bitu type,Bitu opLen) {
 	lastint=num;
 #if C_DEBUG
 	switch (num) {
@@ -309,7 +307,7 @@ bool CPU_Interrupt(Bitu num,Bitu type) {
 	case 0x03:
 		if (DEBUG_Breakpoint()) {
 			CPU_Cycles=0;
-			return false;
+			return;
 		}
 	};
 #endif
@@ -326,7 +324,7 @@ bool CPU_Interrupt(Bitu num,Bitu type) {
 		Segs.val[cs]=mem_readw(base+(num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
 		cpu.code.big=false;
-		return false;
+		return;
 	} else {
 		/* Protected Mode Interrupt */
 //		if (type&CPU_INT_SOFTWARE && cpu.v86) goto realmode_interrupt;
@@ -335,16 +333,18 @@ bool CPU_Interrupt(Bitu num,Bitu type) {
 		if ((reg_flags & FLAG_VM) && (type&CPU_INT_SOFTWARE)) {
 //			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
-				CPU_SetupException(13,0);
-				return true;
+				reg_eip-=opLen;
+				CPU_Exception(13,0);
+				return;
 			}
 		} 
 		Descriptor gate;
 //TODO Check for software interrupt and check gate's dpl<cpl
 		cpu.idt.GetDescriptor(num<<3,gate);
 		if (type&CPU_INT_SOFTWARE && gate.DPL()<cpu.cpl) {
-			CPU_SetupException(13,num*8+2);
-			return true;
+			reg_eip-=opLen;
+			CPU_Exception(13,num*8+2);
+			return;
 		}
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:		case DESC_386_INT_GATE:
@@ -429,7 +429,7 @@ do_interrupt:
 				cpu.code.big=cs_desc.Big()>0;
 				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",gate_sel,gate_off,cs_desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=gate_off;
-				return false;
+				return;
 			}
 		case DESC_TASK_GATE:
 			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT);
@@ -438,13 +438,13 @@ do_interrupt:
 				if (cpu_tss.is386) CPU_Push32(cpu.exception.error);
 				else CPU_Push16(cpu.exception.error);
 			}
-			return false;
+			return;
 		default:
 			E_Exit("Illegal descriptor type %X for int %X",gate.Type(),num);
 		}
 	}
 	assert(1);
-	return false; // make compiler happy
+	return ; // make compiler happy
 }
 
 void CPU_IRET(bool use32) {
@@ -801,12 +801,6 @@ void CPU_RET(bool use32,Bitu bytes,Bitu opLen) {
 			offset=CPU_Pop32();
 			selector=CPU_Pop32() & 0xffff;
 		}
-		if (cpu.stack.big) {
-			reg_esp+=bytes;
-		} else {
-			reg_sp+=bytes;
-		}
-
 		if (cpu.cpl==rpl) {	
 			/* Return to same level */
 			switch (desc.Type()) {
@@ -827,11 +821,16 @@ RET_same_level:
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
 			reg_eip=offset;
+			if (cpu.stack.big) {
+				reg_esp+=bytes;
+			} else {
+				reg_sp+=bytes;
+			}
 			LOG(LOG_CPU,LOG_NORMAL)("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
 		} else {
-			/* Return to higher level */
-			if (bytes) E_Exit("RETF with immediate value");
+			/* Return to outer level */
+			if (bytes) E_Exit("RETF outeer level with immediate value");
 			Bitu n_esp,n_ss;
 			if (use32) {
 				n_esp = CPU_Pop32();
@@ -1179,17 +1178,18 @@ static Bits HLT_Decode(void) {
 	return 0;
 }
 
-bool CPU_HLT(void) {
+void CPU_HLT(Bitu opLen) {
 	if (cpu.cpl) {
-		CPU_SetupException(13,0);	
-		return true;
+		reg_eip-=opLen;
+		CPU_Exception(13,0);	
+		return;
 	}
 	CPU_Cycles=0;
 	cpu.hlt.cs=SegValue(cs);
 	cpu.hlt.eip=reg_eip;
 	cpu.hlt.old_decoder=cpudecoder;
 	cpudecoder=&HLT_Decode;
-	return false;
+	return;
 }
 
 
@@ -1248,7 +1248,14 @@ void CPU_Init(Section* sec) {
 	cpu.stack.big=false;
 	cpu.idt.SetBase(0);
 	cpu.idt.SetLimit(1023);
-	realcore_start(false);
+	
+	/* Init the cpu cores */
+	CPU_Core_Normal_Init();
+	CPU_Core_Full_Init();
+#if (C_DYNAMIC_X86)
+	CPU_Core_Dyn_X86_Init();
+#endif
+	cpudecoder=&startcpu_core;
 
 	CPU_JMP(false,0,0);					//Setup the first cpu core
 

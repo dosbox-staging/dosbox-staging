@@ -33,6 +33,11 @@ extern Bits CPU_CycleMax;
 typedef Bits (CPU_Decoder)(void);
 extern CPU_Decoder * cpudecoder;
 
+Bits CPU_Core_Normal_Run(void);
+Bits CPU_Core_Normal_Trap_Run(void);
+Bits CPU_Core_Full_Run(void);
+Bits CPU_Core_Dyn_X86_Run(void);
+
 //CPU Stuff
 
 extern Bit16u parity_lookup[256];
@@ -70,26 +75,23 @@ void CPU_RET(bool use32,Bitu bytes,Bitu opLen=0);
 #define CPU_INT_HAS_ERROR		0x4
 
 
-bool CPU_Interrupt(Bitu num,Bitu type);
+void CPU_Interrupt(Bitu num,Bitu type,Bitu opLen=0);
 INLINE void CPU_HW_Interrupt(Bitu num) {
 	CPU_Interrupt(num,0);
 }
-INLINE bool CPU_SW_Interrupt(Bitu num) {
-	return CPU_Interrupt(num,CPU_INT_SOFTWARE);
+INLINE void CPU_SW_Interrupt(Bitu num,Bitu OpLen) {
+	CPU_Interrupt(num,CPU_INT_SOFTWARE,OpLen);
 }
 
 void CPU_Exception(Bitu which,Bitu error=0);
 void CPU_StartException(void);
 void CPU_SetupException(Bitu which,Bitu error=0);
 
-
-
 void CPU_IRET(bool use32);
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
+void CPU_HLT(Bitu opLen);
 
 void CPU_CPUID(void);
-bool CPU_HLT(void);
-
 Bitu CPU_Pop16(void);
 Bitu CPU_Pop32(void);
 void CPU_Push16(Bitu value);

@@ -3,7 +3,7 @@
 #define VERSION "0.60"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
-#define C_DEBUG 0
+#define C_DEBUG 1
 
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
@@ -13,6 +13,12 @@
 
 /* Enable some heavy debugging options */
 #define C_HEAVY_DEBUG 0
+
+/* The type of cpu this host has */
+#define C_HOSTCPU X86
+
+/* Define to 1 to use x86 dynamic cpu core */
+#define C_DYNAMIC_X86 1
 
 /* Enable memory function inlining in */
 #define C_CORE_INLINE 0

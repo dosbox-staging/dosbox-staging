@@ -68,7 +68,7 @@ typedef PhysPt EAPoint;
 		goto nextopcode;									\
 	}
 
-Bits Full_DeCode(void) {
+Bits CPU_Core_Full_Run(void) {
 	FullData inst;	
 restart_core:
 	if (CPU_Cycles<=0) return CBRET_NONE;
@@ -82,7 +82,7 @@ restart_core:
 	EAPoint IPPoint;
 	LoadIP();
 	lflags.type=t_UNKNOWN;
-	while (CPU_Cycles--) {
+	while (CPU_Cycles-->0) {
 #if C_DEBUG
 		cycle_count++;
 #if C_HEAVY_DEBUG
@@ -110,6 +110,6 @@ exit_core:
 }
 
 
-void CPU_Core_Full_Start(bool big) {
-	cpudecoder=&Full_DeCode;
+void CPU_Core_Full_Init(void) {
+
 }

@@ -502,10 +502,7 @@ l_M_Ed:
 		goto nextopcode;
 	case D_HLT:
 		LEAVECORE;
-		if (CPU_HLT()) {
-			reg_eip-=IPPoint-inst.start;
-			CPU_StartException();
-		}
+		CPU_HLT(IPPoint-inst.start);
 		return CBRET_NONE;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);

@@ -561,7 +561,7 @@
 		SETFLAGSw(Pop_16());
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
-			cpudecoder=CPU_Core_Normal_Decode_Trap;
+			cpudecoder=CPU_Core_Normal_Trap_Run;
 			goto decode_end;
 		}
 #endif
@@ -752,10 +752,7 @@
 			return debugCallback;
 		}
 #endif			
-		if (CPU_SW_Interrupt(3)) {
-			reg_eip-=(core.ip_lookup-core.op_start);
-			CPU_StartException();
-		};
+		CPU_SW_Interrupt(3,(core.ip_lookup-core.op_start));
 #if CPU_TRAP_CHECK
 		core.trap.skip=true;
 #endif
@@ -769,10 +766,7 @@
 				return debugCallback;
 			}
 #endif
-			if (CPU_SW_Interrupt(num)) {
-				reg_eip-=core.ip_lookup-core.op_start;
-				CPU_StartException();
-			}
+			CPU_SW_Interrupt(num,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -782,10 +776,7 @@
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			LEAVECORE;
-			if (CPU_SW_Interrupt(4)) {
-				reg_eip-=core.ip_lookup-core.op_start;
-				CPU_StartException();
-			}
+			CPU_SW_Interrupt(4,core.ip_lookup-core.op_start);
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -802,7 +793,7 @@
 #endif
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
-				cpudecoder=CPU_Core_Normal_Decode_Trap;
+				cpudecoder=CPU_Core_Normal_Trap_Run;
 				return CBRET_NONE;
 			}
 #endif
@@ -960,11 +951,7 @@
 		break;		
 	CASE_B(0xf4)												/* HLT */
 		LEAVECORE;
-		if (CPU_HLT()) {
-			reg_eip-=core.ip_lookup-core.op_start;
-			CPU_Exception(13,0);
-			goto decode_start;
-		}
+		CPU_HLT(core.ip_lookup-core.op_start);
 		return CBRET_NONE;		//Needs to return for hlt cpu core
 	CASE_B(0xf5)												/* CMC */
 		FillFlags();

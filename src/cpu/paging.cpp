@@ -70,7 +70,6 @@ HostPt PageHandler::GetHostPt(Bitu phys_page) {
 }
 
 
-Bits Full_DeCode(void);
 struct PF_Entry {
 	Bitu cs;
 	Bitu eip;
@@ -86,7 +85,7 @@ struct {
 static Bits PageFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
-	Bitu ret=Full_DeCode();
+	Bitu ret=CPU_Core_Full_Run();
 	CPU_CycleLeft+=CPU_Cycles;
 	if (ret<0) E_Exit("Got a dosbox close machine in pagefault core?");
 	if (ret) 
