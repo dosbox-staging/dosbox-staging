@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.45 2004-06-10 08:48:53 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.46 2004-06-24 21:21:48 harekiet Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -209,28 +209,25 @@ INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 
 /* Remains some classes used to access certain things */
 #define sOffset(s,m) ((char*)&(((s*)NULL)->m)-(char*)NULL)
-#define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)sOffset(s,m))
-#define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)sOffset(s,m),val)
+#define sGet(s,m) GetIt(sizeof(((s *)&pt)->m),(PhysPt)sOffset(s,m))
+#define sSave(s,m,val) SaveIt(sizeof(((s *)&pt)->m),(PhysPt)sOffset(s,m),val)
 
 class MemStruct {
 public:
-	INLINE Bit8u GetIt(Bit8u,PhysPt addr) {
-		return mem_readb(pt+addr);
+	INLINE Bitu GetIt(Bitu size,PhysPt addr) {
+		switch (size) {
+		case 1:return mem_readb(pt+addr);
+		case 2:return mem_readw(pt+addr);
+		case 4:return mem_readd(pt+addr);
+		}
+		return 0;
 	}
-	INLINE Bit16u GetIt(Bit16u,PhysPt addr) {
-		return mem_readw(pt+addr);
-	}
-	INLINE Bit32u GetIt(Bit32u,PhysPt addr) {
-		return mem_readd(pt+addr);
-	}
-	INLINE void SaveIt(Bit8u,PhysPt addr,Bit8u val) {
-		mem_writeb(pt+addr,val);
-	}
-	INLINE void SaveIt(Bit16u,PhysPt addr,Bit16u val) {
-		mem_writew(pt+addr,val);
-	}
-	INLINE void SaveIt(Bit32u,PhysPt addr,Bit32u val) {
-		mem_writed(pt+addr,val);
+	INLINE void SaveIt(Bitu size,PhysPt addr,Bitu val) {
+		switch (size) {
+		case 1:mem_writeb(pt+addr,val);break;
+		case 2:mem_writew(pt+addr,val);break;
+		case 4:mem_writed(pt+addr,val);break;
+		}
 	}
 	INLINE void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
 	INLINE void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
