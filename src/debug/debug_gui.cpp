@@ -156,7 +156,7 @@ static void LOG_Init(Section * sec) {
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
-		buf[strlen(buf)-1]=0;
+		buf[strlen(buf)]=0;
 		lowcase(buf);
 		loggrp[i].enabled=sect->Get_bool(buf);
 	}
