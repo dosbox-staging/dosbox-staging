@@ -106,23 +106,27 @@ public:
 
 class Section {
 public:
-	Section(const char* _sectionname,void (*_initfunction)(Section*) ):sectionname(_sectionname){ initfunction=_initfunction;}
-	~Section(){ }
+	Section(const char* _sectionname) { sectionname=_sectionname; }
+	virtual ~Section(){ }
 
-	void (*initfunction)(Section*);
-	void ExecuteInit() { initfunction(this);}
-	
-	virtual void HandleInputline(char *gegevens){}
-	virtual void Print(FILE* outfile) { /*At this moment empty */ }
-	
+	typedef void (*InitFunction)(Section*);
+	void AddInitFunction(InitFunction func) {initfunctions.push_back(func);}
+	void ExecuteInit() { 
+		typedef std::list<InitFunction>::iterator func_it;
+		for (func_it tel=initfunctions.begin(); tel!=initfunctions.end(); tel++){ 
+			(*tel)(this);
+		}
+	}
+	std::list<InitFunction> initfunctions;
+	virtual void HandleInputline(char * _line){}
+	virtual void PrintData(FILE* outfile) {}
 	std::string sectionname;   
 };
 
 
 class Section_prop:public Section {
  public:
-	Section_prop(const char* _sectionname,void (*_initfunction)(Section*)):Section(_sectionname,_initfunction){ }
-	~Section_prop(){}
+	Section_prop(const char* _sectionname):Section(_sectionname){}
 
 	void Add_int(const char* _propname, int _value=0);
 	void Add_string(const char* _propname, char* _value=NULL);
@@ -134,7 +138,7 @@ class Section_prop:public Section {
 	bool Get_bool(const char* _propname);
     int Get_hex(const char* _propname);
 	void HandleInputline(char *gegevens);
-        void Print(FILE* outfile);
+	void PrintData(FILE* outfile);
    
 	std::list<Property*> properties;
 	typedef std::list<Property*>::iterator it;
@@ -142,9 +146,9 @@ class Section_prop:public Section {
 
 class Section_line: public Section{
 public:
-	Section_line(const char* _sectionname,void (*_initfunction)(Section*)):Section(_sectionname,_initfunction){}
+	Section_line(const char* _sectionname):Section(_sectionname){}
 	void HandleInputline(char* gegevens);
-        void Print(FILE* outfile);
+	void PrintData(FILE* outfile);
 	std::string data;
 };
 
@@ -164,7 +168,7 @@ public:
 	void Init();
 	void ShutDown();
 	void StartUp();
-        void PrintConfig(const char* configfilename);
+	void PrintConfig(const char* configfilename);
 	void ParseConfigFile(const char* configfilename);
 	
 	std::list<Section*> sectionlist;
