@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.63 2004-03-01 18:27:03 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.64 2004-03-10 22:50:51 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -41,6 +41,8 @@
 #include "support.h"
 #include "debug.h"
 
+//#define DISABLE_JOYSTICK
+
 #if C_OPENGL
 #include "SDL_opengl.h"
 
@@ -53,30 +55,35 @@
 
 #ifdef __WIN32__
 #define NVIDIA_PixelDataRange 1
+
 #ifndef WGL_NV_allocate_memory
 #define WGL_NV_allocate_memory 1
 typedef void * (APIENTRY * PFNWGLALLOCATEMEMORYNVPROC) (int size, float readfreq, float writefreq, float priority);
 typedef void (APIENTRY * PFNWGLFREEMEMORYNVPROC) (void *pointer);
+#endif
+
 PFNWGLALLOCATEMEMORYNVPROC db_glAllocateMemoryNV = NULL;
 PFNWGLFREEMEMORYNVPROC db_glFreeMemoryNV = NULL;
-#endif
+
 #else 
 
 #endif
 
 #if defined(NVIDIA_PixelDataRange)
+
 #ifndef GL_NV_pixel_data_range
 #define GL_NV_pixel_data_range 1
 #define GL_WRITE_PIXEL_DATA_RANGE_NV      0x8878
 typedef void (APIENTRYP PFNGLPIXELDATARANGENVPROC) (GLenum target, GLsizei length, GLvoid *pointer);
 typedef void (APIENTRYP PFNGLFLUSHPIXELDATARANGENVPROC) (GLenum target);
-PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
 #endif
+
+PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
+
 #endif
 
 #endif //C_OPENGL
 
-//#define DISABLE_JOYSTICK
 
 #if !(ENVIRON_INCLUDED)
 extern char** environ;
@@ -608,7 +615,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
 		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
 #if defined(NVIDIA_PixelDataRange)
-		sdl.opengl.pixel_data_range=(strstr(gl_ext,"GL_NV_pixel_data_range") >0 )&&
+		sdl.opengl.pixel_data_range=(strstr(gl_ext,"GL_NV_pixel_data_range") >0 ) &&
 			glPixelDataRangeNV && db_glAllocateMemoryNV && db_glFreeMemoryNV;
 #endif
     	} else {
