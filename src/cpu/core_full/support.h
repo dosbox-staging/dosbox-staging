@@ -13,9 +13,11 @@ enum {
 	L_REGbIb,L_REGwIw,L_REGdId,
 	L_POPw,L_POPd,
 	L_POPfw,L_POPfd,
+	L_PFLGw,L_PFLGd,
 	L_SEG,
 
 	L_FLG,L_INTO,
+
 
 	L_VAL,
 	L_PRESEG,
@@ -113,7 +115,7 @@ enum {
 	S_AIPw,S_C_AIPw,
 	S_AIPd,S_C_AIPd,
 
-	S_FLGb,S_FLGw,S_FLGd,
+	S_FLGb,
 	S_IP,S_IPIw,
 };
 

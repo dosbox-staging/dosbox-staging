@@ -103,9 +103,13 @@ restartopcode:
 		#include "core_full/save.h"
 nextopcode:;
 	}
-exit_core:
 	LEAVECORE;
 	return CBRET_NONE;
+illegalopcode:
+	LEAVECORE;
+	reg_eip-=(IPPoint-inst.opcode_start);
+	CPU_Exception(0x6,0);
+	goto restart_core;
 }
 
 

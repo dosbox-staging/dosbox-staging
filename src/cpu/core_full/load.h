@@ -206,6 +206,30 @@ l_M_Ed:
 		inst.op1.d = Pop_32();
 		inst.op2.d = Pop_16();
 		break;
+	case L_PFLGw:
+		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
+			LEAVECORE;reg_eip-=IPPoint-inst.opcode_start;
+			CPU_Exception(13,0);
+			goto restart_core;
+		}
+		SETFLAGSw(Pop_16());
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			SaveIP();	
+			return CBRET_NONE;
+		}
+		break;
+	case L_PFLGd:
+		if ((reg_flags & FLAG_VM) && ((reg_flags & FLAG_IOPL)!=FLAG_IOPL)) {
+			LEAVECORE;reg_eip-=IPPoint-inst.opcode_start;
+			CPU_Exception(13,0);
+			goto restart_core;
+		}
+		SETFLAGSd(Pop_32());
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			SaveIP();	
+			return CBRET_NONE;
+		}
+		break;
 	case L_Ib:
 		inst.op1.d=Fetchb();
 		break;
@@ -296,14 +320,14 @@ l_M_Ed:
 		break;
 	case D_IRETw:
 		LEAVECORE;
-		CPU_IRET(false);
+		CPU_IRET(false,IPPoint-inst.opcode_start);
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
 		goto restart_core;
 	case D_IRETd:
 		LEAVECORE;
-		CPU_IRET(true);
+		CPU_IRET(true,IPPoint-inst.opcode_start);
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
@@ -312,23 +336,23 @@ l_M_Ed:
 		{
 			Bitu words=Fetchw();
 			LEAVECORE;		
-			CPU_RET(false,words);
+			CPU_RET(false,words,IPPoint-inst.opcode_start);
 			goto restart_core;
 		}
 	case D_RETFw:
 		LEAVECORE;		
-		CPU_RET(false,0);
+		CPU_RET(false,0,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case D_RETFdIw:
 		{
 			Bitu words=Fetchw();
 			LEAVECORE;		
-			CPU_RET(true,words);
+			CPU_RET(true,words,IPPoint-inst.opcode_start);
 			goto restart_core;
 		}
 	case D_RETFd:
 		LEAVECORE;		
-		CPU_RET(true,0);
+		CPU_RET(true,0,IPPoint-inst.opcode_start);
 		goto restart_core;
 /* Direct operations */
 	case L_STRING:
@@ -403,14 +427,14 @@ l_M_Ed:
 		else reg_edx=0;
 		goto nextopcode;
 	case D_CLI:
-		SETFLAGBIT(IF,false);
+		LEAVECORE;
+		if (CPU_CLI(IPPoint-inst.opcode_start))
+			goto restart_core;
 		goto nextopcode;
 	case D_STI:
-		SETFLAGBIT(IF,true);
-		if (GETFLAG(IF) && PIC_IRQCheck) {
-			LEAVECORE;	
-			return CBRET_NONE;
-		}
+		LEAVECORE;
+		if (CPU_STI(IPPoint-inst.opcode_start))
+			goto restart_core;
 		goto nextopcode;
 	case D_STC:
 		FillFlags();SETFLAGBIT(CF,true);
@@ -531,6 +555,6 @@ l_M_Ed:
 		goto nextopcode;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
-		break;
+		goto illegalopcode;
 }
 

@@ -323,19 +323,19 @@ switch (inst.code.op) {
 		break;
 	case O_CALLFw:
 		LEAVECORE;
-		CPU_CALL(false,inst.op2.d,inst.op1.d);
+		CPU_CALL(false,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case O_CALLFd:
 		LEAVECORE;
-		CPU_CALL(true,inst.op2.d,inst.op1.d);
+		CPU_CALL(true,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case O_JMPFw:
 		LEAVECORE;
-		CPU_JMP(false,inst.op2.d,inst.op1.d);
+		CPU_JMP(false,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case O_JMPFd:
 		LEAVECORE;
-		CPU_JMP(true,inst.op2.d,inst.op1.d);
+		CPU_JMP(true,inst.op2.d,inst.op1.d,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case O_INT:
 		LEAVECORE;
@@ -458,19 +458,22 @@ switch (inst.code.op) {
 	case O_LAR:
 		{
 			FillFlags();
-			Bitu ar;CPU_LAR(inst.op1.d,ar);
+			Bitu ar=inst.op2.d;
+			CPU_LAR(inst.op1.w,ar);
 			inst.op1.d=(Bit32u)ar;
 		}
 		break;
 	case O_LSL:
 		{
 			FillFlags();
-			Bitu limit;CPU_LSL(inst.op1.d,limit);
+			Bitu limit=inst.op2.d;
+			CPU_LSL(inst.op1.w,limit);
 			inst.op1.d=(Bit32u)limit;
 		}
 		break;
 	case O_ARPL:
 		{
+			if ((reg_flags & FLAG_VM) || !cpu.pmode) goto illegalopcode;
 			FillFlags();
 			Bitu new_sel=inst.op1.d;
 			CPU_ARPL(new_sel,inst.op2.d);

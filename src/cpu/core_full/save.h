@@ -113,20 +113,6 @@ switch (inst.code.save) {
 	case S_FLGb:
 		SETFLAGSb(inst.op1.b);
 		break;
-	case S_FLGw:
-		SETFLAGSw(inst.op1.w);
-		if (GETFLAG(IF) && PIC_IRQCheck) {
-			SaveIP();	
-			return CBRET_NONE;
-		}
-		break;
-	case S_FLGd:
-		SETFLAGSd(inst.op1.d);
-		if (GETFLAG(IF) && PIC_IRQCheck) {
-			SaveIP();	
-			return CBRET_NONE;
-		}
-		break;
 	case 0:
 		break;
 	default:
