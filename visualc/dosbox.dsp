@@ -128,9 +128,53 @@ SOURCE=..\src\cpu\core_16\support.h
 SOURCE=..\src\cpu\core_16\table_ea.h
 # End Source File
 # End Group
+# Begin Group "core_full"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\ea_lookup.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\load.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\loadwrite.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\main.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\op.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\optable.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\save.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\string.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full\support.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\src\cpu\callback.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_full.cpp
 # End Source File
 # Begin Source File
 
