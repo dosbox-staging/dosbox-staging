@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.27 2004-09-05 14:23:04 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.28 2004-09-10 18:57:53 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -221,23 +221,32 @@ private:
 
 		localDrive* ldp=0;
 		if (!DOS_MakeName((char *)filename,fullname,&drive)) return NULL;
-		ldp=(localDrive*)Drives[drive];
-		tmpfile = ldp->GetSystemFilePtr(fullname, "r");
-		if(tmpfile == NULL) {
-			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
-			return NULL;
+
+		try {		
+			ldp=dynamic_cast<localDrive*>(Drives[drive]);
+			if(!ldp) return NULL;
+
+			tmpfile = ldp->GetSystemFilePtr(fullname, "r");
+			if(tmpfile == NULL) {
+				WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
+				return NULL;
+			}
+			fclose(tmpfile);
+			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
+			if(tmpfile == NULL) {
+				WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+				return NULL;
+			}
+
+			fseek(tmpfile,0L, SEEK_END);
+			*ksize = (ftell(tmpfile) / 1024);
+			*bsize = ftell(tmpfile);
+			return tmpfile;
 		}
-		fclose(tmpfile);
-		tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
-		if(tmpfile == NULL) {
-			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+		catch(...) {
 			return NULL;
 		}
 
-		fseek(tmpfile,0L, SEEK_END);
-		*ksize = (ftell(tmpfile) / 1024);
-		*bsize = ftell(tmpfile);
-		return tmpfile;
 	}
 
 	void printError(void) {
