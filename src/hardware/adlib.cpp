@@ -32,14 +32,29 @@
 namespace MAME {
   /* Defines */
 # define logerror(x)
-  /* Disable recurring warnings */
-#pragma warning ( disable : 4018 )
-#pragma warning ( disable : 4244 )
 
-  /* Bring in Tatsuyuki Satoh's OPL emulation */
-#define HAS_YM3812 1
-#include "fmopl.c"
+  /* Disable recurring warnings */
+# pragma warning ( disable : 4018 )
+# pragma warning ( disable : 4244 )
+
+  /* Work around ANSI compliance problem (see driver.h) */
+  struct __MALLOCPTR {
+    void* m_ptr;
+
+    __MALLOCPTR(void) : m_ptr(NULL) { }
+    __MALLOCPTR(void* src) : m_ptr(src) { }
+    void* operator=(void* rhs) { return (m_ptr = rhs); }
+    operator int*() const { return (int*)m_ptr; }
+    operator int**() const { return (int**)m_ptr; }
+    operator char*() const { return (char*)m_ptr; }
+  };
+
+  /* Bring in the MAME OPL emulation */
+# define HAS_YM3812 1
+# include "fmopl.c"
+
 }
+
 
 struct OPLTimer_t {
 	bool isEnabled;
@@ -50,9 +65,12 @@ struct OPLTimer_t {
 };
 
 static OPLTimer_t timer1,timer2;
-static MAME::FM_OPL * myopl;
 static Bit8u regsel;
+
 #define OPL_INTERNAL_FREQ     3600000   // The OPL operates at 3.6MHz
+#define OPL_NUM_CHIPS         1         // Number of OPL chips
+#define OPL_CHIP0             0
+
 static MIXER_Channel * adlib_chan;
 
 static void ADLIB_CallBack(Bit8u *stream, Bit32u len) {
@@ -60,7 +78,7 @@ static void ADLIB_CallBack(Bit8u *stream, Bit32u len) {
 	/* Calculate teh machine ms we are at now */
 
 	/* update 1 ms of data */
-	MAME::YM3812UpdateOne(myopl,(MAME::INT16 *)stream,len);
+	MAME::YM3812UpdateOne(0,(MAME::INT16 *)stream,len);
 }
 
 static Bit8u read_p388(Bit32u port) {
@@ -120,9 +138,9 @@ static void write_p389(Bit32u port,Bit8u val) {
 			} else timer2.isEnabled=false;
 			return;
 		default:		/* Normal OPL call queue it */
-			MAME::OPLWriteReg(myopl,regsel,val);	
+			/* Use a little hack to directly write to the register */
+			MAME::OPLWriteReg(MAME::OPL_YM3812[0],regsel,val);
 	}
-
 }
 
 static bool adlib_enabled;
@@ -168,7 +186,10 @@ void ADLIB_Init(Section* sec) {
 	timer2.isOverflowed=false;
 
 	#define ADLIB_FREQ 22050
-	myopl=MAME::OPLCreate(0,OPL_INTERNAL_FREQ,ADLIB_FREQ);
+	if (MAME::YM3812Init(OPL_NUM_CHIPS,OPL_INTERNAL_FREQ,ADLIB_FREQ)) {
+		E_Exit("Can't create adlib OPL Emulator");	
+	};
+
 
 	adlib_chan=MIXER_AddChannel(ADLIB_CallBack,ADLIB_FREQ,"ADLIB");
 	MIXER_SetMode(adlib_chan,MIXER_16MONO);

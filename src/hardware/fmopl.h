@@ -6,8 +6,7 @@
 #define BUILD_YM3526 (HAS_YM3526)
 #define BUILD_Y8950  (HAS_Y8950)
 
-/* --- system optimize --- */
-/* select bit size of output : 8 or 16 */
+/* select output bits size of output : 8 or 16 */
 #define OPL_SAMPLE_BITS 16
 
 /* compiler dependence */
@@ -25,13 +24,9 @@ typedef signed int		INT32;   /* signed 32bit   */
 typedef INT16 OPLSAMPLE;
 #endif
 #if (OPL_SAMPLE_BITS==8)
-typedef unsigned char  OPLSAMPLE;
+typedef INT8 OPLSAMPLE;
 #endif
 
-
-#if BUILD_Y8950
-#include "ymdeltat.h"
-#endif
 
 typedef void (*OPL_TIMERHANDLER)(int channel,double interval_Sec);
 typedef void (*OPL_IRQHANDLER)(int param,int irq);
@@ -39,153 +34,78 @@ typedef void (*OPL_UPDATEHANDLER)(int param,int min_interval_us);
 typedef void (*OPL_PORTHANDLER_W)(int param,unsigned char data);
 typedef unsigned char (*OPL_PORTHANDLER_R)(int param);
 
-/* !!!!! here is private section , do not access there member direct !!!!! */
 
-#define OPL_TYPE_WAVESEL   0x01  /* waveform select		*/
-#define OPL_TYPE_ADPCM     0x02  /* DELTA-T ADPCM unit	*/
-#define OPL_TYPE_KEYBOARD  0x04  /* keyboard interface	*/
-#define OPL_TYPE_IO        0x08  /* I/O port			*/
+#if BUILD_YM3812
 
-/* Saving is necessary for member of the 'R' mark for suspend/resume */
-/* ---------- OPL slot  ---------- */
-typedef struct fm_opl_slot {
-	const UINT32 *AR;	/* attack rate tab :&eg_table[AR<<2]*/
-	const UINT32 *DR;	/* decay rate tab  :&eg_table[DR<<2]*/
-	const UINT32 *RR;	/* release rate tab:&eg_table[RR<<2]*/
-	UINT8	KSR;		/* key scale rate					*/
-	UINT8	ARval;		/* current AR						*/
-	UINT8	ksl;		/* keyscale level					*/
-	UINT8	ksr;		/* key scale rate  :kcode>>KSR		*/
-	UINT8	mul;		/* multiple        :ML_TABLE[ML]	*/
+int  YM3812Init(int num, int clock, int rate);
+void YM3812Shutdown(void);
+void YM3812ResetChip(int which);
+int  YM3812Write(int which, int a, int v);
+unsigned char YM3812Read(int which, int a);
+int  YM3812TimerOver(int which, int c);
+void YM3812UpdateOne(int which, INT16 *buffer, int length);
 
-	/* Phase Generator */
-	UINT32	Cnt;		/* frequency count					*/
-	UINT32	Incr;		/* frequency step					*/
+void YM3812SetTimerHandler(int which, OPL_TIMERHANDLER TimerHandler, int channelOffset);
+void YM3812SetIRQHandler(int which, OPL_IRQHANDLER IRQHandler, int param);
+void YM3812SetUpdateHandler(int which, OPL_UPDATEHANDLER UpdateHandler, int param);
 
-	/* Envelope Generator */
-	UINT8	eg_type;	/* percussive/non-percussive mode	*/
-	UINT8	state;		/* phase type						*/
-	UINT32	TL;			/* total level     :TL << 3			*/
-	INT32	TLL;		/* adjusted now TL					*/
-	INT32	volume;		/* envelope counter					*/
-	UINT32	sl;			/* sustain level   :SL_TABLE[SL]	*/
-	UINT32	delta_ar;	/* envelope step for Attack			*/
-	UINT32	delta_dr;	/* envelope step for Decay			*/
-	UINT32	delta_rr;	/* envelope step for Release		*/
-
-	UINT32	key;		/* 0 = KEY OFF, >0 = KEY ON			*/
-
-	/* LFO */
-	UINT32	AMmask;		/* LFO Amplitude Modulation enable mask */
-	UINT8	vib;		/* LFO Phase Modulation enable flag (active high)*/
-
-	/* waveform select */
-	unsigned int *wavetable;
-}OPL_SLOT;
-
-/* ---------- OPL one of channel  ---------- */
-typedef struct fm_opl_channel {
-	OPL_SLOT SLOT[2];
-	UINT8   FB;			/* feedback shift value				*/
-	INT32   *connect1;	/* slot1 output pointer				*/
-	INT32   op1_out[2];	/* slot1 output for feedback		*/
-
-	/* phase generator state */
-	UINT32  block_fnum;	/* block+fnum						*/
-	UINT32  fc;			/* Freq. Increment base				*/
-	UINT32  ksl_base;	/* KeyScaleLevel Base step			*/
-	UINT8   kcode;		/* key code (for key scaling)		*/
-
-	UINT8   CON;		/* connection (algorithm) type		*/
-} OPL_CH;
-
-/* OPL state */
-typedef struct fm_opl_f {
-	/* FM channel slots */
-	OPL_CH P_CH[9];		/* OPL/OPL2 chips have 9 channels	*/
-
-	UINT8 rhythm;		/* Rhythm mode						*/
-
-	UINT32 eg_tab[16+64+16];	/* EG rate table: 16 (dummy) + 64 rates + 16 RKS */
-	UINT32 fn_tab[1024];	/* fnumber -> increment counter */
-
-	/* LFO */
-	UINT8  lfo_am_depth;
-	UINT8  lfo_pm_depth_range;
-	UINT32 lfo_am_cnt;
-	UINT32 lfo_am_inc;
-	UINT32 lfo_pm_cnt;
-	UINT32 lfo_pm_inc;
-
-	UINT32	noise_rng;	/* 23 bit noise shift register		*/
-	UINT32	noise_p;	/* current noise 'phase'			*/
-	UINT32	noise_f;	/* current noise period				*/
-
-	UINT8 wavesel;		/* waveform select enable flag		*/
-
-	int T[2];			/* timer counters					*/
-	UINT8 st[2];		/* timer enable						*/
-
-#if BUILD_Y8950
-	/* Delta-T ADPCM unit (Y8950) */
-
-	YM_DELTAT *deltat;
-
-	/* Keyboard / I/O interface unit*/
-	UINT8 portDirection;
-	UINT8 portLatch;
-	OPL_PORTHANDLER_R porthandler_r;
-	OPL_PORTHANDLER_W porthandler_w;
-	int port_param;
-	OPL_PORTHANDLER_R keyboardhandler_r;
-	OPL_PORTHANDLER_W keyboardhandler_w;
-	int keyboard_param;
 #endif
 
-	/* external event callback handlers */
-	OPL_TIMERHANDLER  TimerHandler;		/* TIMER handler	*/
-	int TimerParam;						/* TIMER parameter	*/
-	OPL_IRQHANDLER    IRQHandler;		/* IRQ handler		*/
-	int IRQParam;						/* IRQ parameter	*/
-	OPL_UPDATEHANDLER UpdateHandler;	/* stream update handler   */
-	int UpdateParam;					/* stream update parameter */
 
-	UINT8 type;			/* chip type						*/
-	UINT8 address;		/* address register					*/
-	UINT8 status;		/* status flag						*/
-	UINT8 statusmask;	/* status mask						*/
-	UINT8 mode;			/* Reg.08 : CSM,notesel,etc.		*/
+#if BUILD_YM3526
 
-	int clock;			/* master clock  (Hz)				*/
-	int rate;			/* sampling rate (Hz)				*/
-	double freqbase;	/* frequency base					*/
-	double TimerBase;	/* Timer base time (==sampling time)*/
-} FM_OPL;
+/*
+** Initialize YM3526 emulator(s).
+**
+** 'num' is the number of virtual YM3526's to allocate
+** 'clock' is the chip clock in Hz
+** 'rate' is sampling rate
+*/
+int  YM3526Init(int num, int clock, int rate);
+/* shutdown the YM3526 emulators*/
+void YM3526Shutdown(void);
+void YM3526ResetChip(int which);
+int  YM3526Write(int which, int a, int v);
+unsigned char YM3526Read(int which, int a);
+int  YM3526TimerOver(int which, int c);
+/*
+** Generate samples for one of the YM3526's
+**
+** 'which' is the virtual YM3526 number
+** '*buffer' is the output buffer pointer
+** 'length' is the number of samples that should be generated
+*/
+void YM3526UpdateOne(int which, INT16 *buffer, int length);
+
+void YM3526SetTimerHandler(int which, OPL_TIMERHANDLER TimerHandler, int channelOffset);
+void YM3526SetIRQHandler(int which, OPL_IRQHANDLER IRQHandler, int param);
+void YM3526SetUpdateHandler(int which, OPL_UPDATEHANDLER UpdateHandler, int param);
+
+#endif
 
 
-/* ---------- Generic interface section ---------- */
-#define OPL_TYPE_YM3526 (0)
-#define OPL_TYPE_YM3812 (OPL_TYPE_WAVESEL)
-#define OPL_TYPE_Y8950  (OPL_TYPE_ADPCM|OPL_TYPE_KEYBOARD|OPL_TYPE_IO)
+#if BUILD_Y8950
 
-FM_OPL *OPLCreate(int type, int clock, int rate);
-void OPLDestroy(FM_OPL *OPL);
-void OPLSetTimerHandler(FM_OPL *OPL,OPL_TIMERHANDLER TimerHandler,int channelOffset);
-void OPLSetIRQHandler(FM_OPL *OPL,OPL_IRQHANDLER IRQHandler,int param);
-void OPLSetUpdateHandler(FM_OPL *OPL,OPL_UPDATEHANDLER UpdateHandler,int param);
+#include "ymdeltat.h"
+
 /* Y8950 port handlers */
-void OPLSetPortHandler(FM_OPL *OPL,OPL_PORTHANDLER_W PortHandler_w,OPL_PORTHANDLER_R PortHandler_r,int param);
-void OPLSetKeyboardHandler(FM_OPL *OPL,OPL_PORTHANDLER_W KeyboardHandler_w,OPL_PORTHANDLER_R KeyboardHandler_r,int param);
+void Y8950SetPortHandler(int which, OPL_PORTHANDLER_W PortHandler_w, OPL_PORTHANDLER_R PortHandler_r, int param);
+void Y8950SetKeyboardHandler(int which, OPL_PORTHANDLER_W KeyboardHandler_w, OPL_PORTHANDLER_R KeyboardHandler_r, int param);
+void Y8950SetDeltaTMemory(int which, void * deltat_rom, int deltat_rom_size );
 
-void OPLResetChip(FM_OPL *OPL);
-int OPLWrite(FM_OPL *OPL,int a,int v);
-unsigned char OPLRead(FM_OPL *OPL,int a);
-int OPLTimerOver(FM_OPL *OPL,int c);
+int  Y8950Init (int num, int clock, int rate);
+void Y8950Shutdown (void);
+void Y8950ResetChip (int which);
+int  Y8950Write (int which, int a, int v);
+unsigned char Y8950Read (int which, int a);
+int  Y8950TimerOver (int which, int c);
+void Y8950UpdateOne (int which, INT16 *buffer, int length);
 
+void Y8950SetTimerHandler (int which, OPL_TIMERHANDLER TimerHandler, int channelOffset);
+void Y8950SetIRQHandler (int which, OPL_IRQHANDLER IRQHandler, int param);
+void Y8950SetUpdateHandler (int which, OPL_UPDATEHANDLER UpdateHandler, int param);
 
-/* YM3626/YM3812 local section */
-void YM3812UpdateOne(FM_OPL *OPL, INT16 *buffer, int length);
+#endif
 
-void Y8950UpdateOne(FM_OPL *OPL, INT16 *buffer, int length);
 
 #endif
