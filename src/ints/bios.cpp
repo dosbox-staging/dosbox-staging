@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.27 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.28 2004-01-26 14:08:16 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -39,7 +39,7 @@ static Bitu INT70_Handler(void) {
 	IO_Write(0x70,0xc);
 	IO_Read(0x71);
 	if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
-		Bits count=mem_readd(BIOS_WAIT_FLAG_COUNT);
+		Bit32u count=mem_readd(BIOS_WAIT_FLAG_COUNT);
 		if (count>997) {
 			mem_writed(BIOS_WAIT_FLAG_COUNT,count-997);
 		} else {
@@ -204,6 +204,7 @@ static Bitu INT15_Handler(void) {
 		break;
 	case 0x83:	/* BIOS - SET EVENT WAIT INTERVAL */
 		{
+			if(reg_al == 0x01) LOG(LOG_BIOS,LOG_WARN)("Bios set event interval cancelled: not handled");   
 			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
 				reg_ah=0x80;
 				CALLBACK_SCF(true);
