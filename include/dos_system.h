@@ -19,11 +19,10 @@
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
 
-#include "dosbox.h"
-#include "cross.h"
 #include <string.h>
 #include <vector>
-#include <dirent.h>
+#include "dosbox.h"
+#include "cross.h"
 
 #define DOS_NAMELENGTH 12
 #define DOS_NAMELENGTH_ASCII (DOS_NAMELENGTH+1)
@@ -187,7 +186,6 @@ public:
 public:
 	char		basePath			[CROSS_LEN];
 	char		dirPath				[CROSS_LEN];
-	DIR*		srch_opendir;
 };
 
 class DOS_Drive {
