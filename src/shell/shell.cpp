@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: shell.cpp,v 1.33 2003-09-08 18:25:44 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -56,7 +57,7 @@ DOS_Shell::DOS_Shell():Program(){
 	echo=true;
 	exit=false;
 	bf=0;
-
+	call=false;
 	completion_start = NULL;
 }
 
@@ -177,21 +178,24 @@ void DOS_Shell::Run(void) {
 		ParseLine(input_line);
 	}
 	do {
-		if (bf && bf->ReadLine(input_line)) {
-			if (echo) {
-				if (input_line[0]!='@') {
-					ShowPrompt();
-					WriteOut(input_line);
-					WriteOut("\n");
+		if (bf){
+			if(bf->ReadLine(input_line)) {
+				if (echo) {
+					if (input_line[0]!='@') {
+                        ShowPrompt();
+						WriteOut(input_line);
+						WriteOut("\n");
+					};
 				};
-			};
+			ParseLine(input_line);
+			if (echo) WriteOut("\n");
+			}
 		} else {
 			if (echo) ShowPrompt();
 			InputCommand(input_line);
-
+			ParseLine(input_line);
+			if (echo) WriteOut("\n");
 		}
-		ParseLine(input_line);
-		if (echo) WriteOut("\n");
 	} while (!exit);
 }
 
@@ -277,9 +281,9 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "DOSBox does not run protected mode games!\n"
-	   "For supported shell commands type: HELP\n"
-	   "For a short introduction type: INTRO\n\n"
-	   "For more information read the README file in DOSBox directory.\n"
+	   "For supported shell commands type: [33mHELP[0m\n"
+	   "For a short introduction type: [33mINTRO[0m\n\n"
+	   "For more information read the [31mREADME[0m file in DOSBox directory.\n"
 	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
 	);
 
@@ -300,7 +304,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
     MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
-    MSG_Add("SHELL_CMD_INTRO_HELP","Gives an introduction into dosbox\n");
+	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
     /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
