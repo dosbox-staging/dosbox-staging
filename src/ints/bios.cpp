@@ -101,6 +101,10 @@ static Bitu INT11_Handler(void) {
 static Bitu INT8_Handler(void) {
 	/* Increase the bios tick counter */
 	mem_writed(BIOS_TIMER,mem_readd(BIOS_TIMER)+1);
+	/* decrease floppy motor timer */
+	Bit8u val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
+	if (val>0) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
+	
 	CALLBACK_RunRealInt(0x1c);
 	IO_Write(0x20,0x20);
 	return CBRET_NONE;
