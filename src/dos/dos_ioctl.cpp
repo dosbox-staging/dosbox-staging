@@ -44,6 +44,21 @@ bool DOS_IOCTL(Bit8u call,Bit16u entry) {
 		LOG_DEBUG("DOS:IOCTL:07:Fakes output status is ready for handle %d",handle);
 		reg_al=0xff;
 		return true;
+	case 0x0D: {
+		PhysPt ptr	= SegPhys(ds)+reg_dx;
+		Bit8u drive = reg_bl ? reg_bl : DOS_GetDefaultDrive()+1; // A=1, B=2, C=3...
+		switch (reg_cl) {
+			case 0x60 :	mem_writeb(ptr  ,0x03);					// special function
+						mem_writeb(ptr+1,(drive>=3)?0x05:0x14);	// fixed disc(5), 1.44 floppy(14)
+						mem_writew(ptr+2,drive>=3);				// nonremovable ?
+						mem_writew(ptr+4,0x0000);				// num of cylinders
+						mem_writeb(ptr+6,0x00);					// media type (00=other type)
+						break;
+			default	:	LOG_ERROR("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
+						return false;
+		}
+		return true;
+		}
 	default:
 		LOG_ERROR("DOS:IOCTL Call %2X Handle %2X unhandled",reg_al,handle);
 		return false;
