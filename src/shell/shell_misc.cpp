@@ -119,9 +119,6 @@ void DOS_Shell::InputCommand(char * line) {
 	size_t first_len=strlen(old.buffer)+1;
 	memmove(&old.buffer[first_len],&old.buffer[0],CMD_OLDSIZE-first_len);
 	strcpy(old.buffer,line);		
-
-
-
 }
 
 void DOS_Shell::Execute(char * name,char * args) {
@@ -165,9 +162,9 @@ void DOS_Shell::Execute(char * name,char * args) {
 		cmd.count=strlen(line);
 		memcpy(cmd.buffer,line,strlen(line));
 		cmd.buffer[strlen(line)]=0xd;
-		MEM_BlockWrite(PhysMake(prog_info->psp_seg,128),&cmd,128);
-
-		block.InitExec(RealMake(prog_info->psp_seg,128));
+		/* Copy command line in stack block too */
+		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmd,128);
+		block.InitExec(RealMakeSeg(ss,reg_sp+0x100));
 		/* Save CS:IP to some point where i can return them from */
 		RealPt newcsip;
 		newcsip=CALLBACK_RealPointer(call_shellstop);
@@ -185,8 +182,6 @@ void DOS_Shell::Execute(char * name,char * args) {
 		CALLBACK_RunRealInt(0x21);
 		reg_sp+=0x200;
 	}
-
-
 }
 
 

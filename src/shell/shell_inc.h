@@ -24,6 +24,7 @@
 #include "regs.h"
 #include "support.h"
 #include "callback.h"
+#include "setup.h"
 
 #define CMD_MAXLINE 4096
 #define CMD_MAXCMDS 20
@@ -52,7 +53,7 @@ public:
 
 class DOS_Shell : public Program {
 public:
-	DOS_Shell(PROGRAM_Info * program_info);
+	DOS_Shell();
 	void Run(void);
 /* A load of subfunctions */
 	void ParseLine(char * line);

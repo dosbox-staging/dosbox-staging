@@ -28,10 +28,8 @@ static Bitu shellstop_handler(void) {
 	return CBRET_STOP;
 }
 
-static void SHELL_ProgramStart(PROGRAM_Info * info) {
-	DOS_Shell * tempshell=new DOS_Shell(info);
-	tempshell->Run();
-	delete tempshell;
+static void SHELL_ProgramStart(Program * * make) {
+	*make=new DOS_Shell;
 }
 
 #define AUTOEXEC_SIZE 4096
@@ -53,7 +51,7 @@ void SHELL_AddAutoexec(char * line,...) {
 }
 
 
-DOS_Shell::DOS_Shell(PROGRAM_Info * info):Program(info) {
+DOS_Shell::DOS_Shell():Program(){
 	input_handle=STDIN;
 	echo=true;
 	exit=false;
@@ -96,16 +94,19 @@ void DOS_Shell::ParseLine(char * line) {
 
 
 void DOS_Shell::Run(void) {
-	/* Check for a direct Command */
-	if (strncasecmp(prog_info->cmd_line,"/C ",3)==0) {
-		ParseLine(prog_info->cmd_line+3);
+	char input_line[CMD_MAXLINE];
+	std::string line;
+	if (cmd->FindString("/C",line,true)) {
+		strcpy(input_line,line.c_str());
+		line.erase();
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
 	WriteOut(MSG_Get("SHELL_STARTUP"));
-	char input_line[CMD_MAXLINE];
-	if (strncasecmp(prog_info->cmd_line,"/INIT ",6)==0) {
-		ParseLine(prog_info->cmd_line+6);
+	if (cmd->FindString("/INIT",line,true)) {
+		strcpy(input_line,line.c_str());
+		line.erase();
+		ParseLine(input_line);
 	}
 	do {
 		if (bf && bf->ReadLine(input_line)) {
@@ -136,8 +137,6 @@ void AUTOEXEC_Init(Section * sec) {
 	/* Register a virtual AUOEXEC.BAT file */
 
 	Section_line * section=static_cast<Section_line *>(sec);
-	SHELL_AddAutoexec("SET PATH=Z:\\");
-	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
 	char * extra=(char *)section->data.c_str();
 	if (extra) SHELL_AddAutoexec(extra);
 	/* Check to see for extra command line options to be added */
@@ -147,7 +146,7 @@ void AUTOEXEC_Init(Section * sec) {
 	}
 	/* Check for first command being a directory or file */
 	char buffer[CROSS_LEN];
-	if (control->cmdline->FindFirst(line)) {
+	if (control->cmdline->FindCommand(1,line)) {
 		struct stat test;
 		strcpy(buffer,line.c_str());
 		if (stat(buffer,&test)) {
@@ -172,23 +171,39 @@ nomount:
 	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
 }
 
+static char * path_string="PATH=Z:\\";
+static char * comspec_string="COMSPEC=Z:\\COMMAND.COM";
+static char * full_name="Z:\\COMMAND.COM";
+static char * init_line="/INIT AUTOEXEC.BAT";
+
 void SHELL_Init() {
+
 	call_shellstop=CALLBACK_Allocate();
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET);
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
+
 	/* Now call up the shell for the first time */
-	Bit16u psp_seg=DOS_GetMemory(16);
-	Bit16u env_seg=DOS_GetMemory(1+(4096/16));
+	Bit16u psp_seg=DOS_GetMemory(16+1)+1;
+	Bit16u env_seg=DOS_GetMemory(1+(4096/16))+1;
 	Bit16u stack_seg=DOS_GetMemory(2048/16);
 	SegSet16(ss,stack_seg);
 	reg_sp=2046;
-	/* Setup a fake MCB for the environment */
-	MCB * env_mcb=(MCB *)HostMake(env_seg,0);
+	/* Setup MCB and the environment */
+	MCB * env_mcb=(MCB *)HostMake(env_seg-1,0);
 	env_mcb->psp_segment=psp_seg;
 	env_mcb->size=4096/16;
-	real_writed(env_seg+1,0,0);
+	PhysPt env_write=PhysMake(env_seg,0);
+	MEM_BlockWrite(env_write,path_string,strlen(path_string)+1);
+	env_write+=strlen(path_string)+1;
+	MEM_BlockWrite(env_write,comspec_string,strlen(comspec_string)+1);
+	env_write+=strlen(comspec_string)+1;
+	mem_writeb(env_write++,0);
+	mem_writew(env_write,1);
+	env_write+=2;
+	MEM_BlockWrite(env_write,full_name,strlen(full_name)+1);
 
-	DOS_PSP psp(psp_seg); psp.MakeNew(env_mcb->size);
+	DOS_PSP psp(psp_seg);
+	psp.MakeNew(0);
 	psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
 	psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
 	psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
@@ -196,19 +211,19 @@ void SHELL_Init() {
 	psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
 	psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
 	psp.SetParent(psp_seg);
-	/* Set the environment and clear it */
-	psp.SetEnvironment(env_seg+1);
-	mem_writew(Real2Phys(RealMake(env_seg+1,0)),0);	
+	/* Set the environment */
+	psp.SetEnvironment(env_seg);
+	/* Set the command line for the shell start up */
+	CommandTail tail;
+	tail.count=strlen(init_line);
+	strcpy(tail.buffer,init_line);
+	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
 	/* Setup internal DOS Variables */
 	dos.dta=psp.GetDTA();
 	dos.psp=psp_seg;
-	PROGRAM_Info info;
-	strcpy(info.full_name,"Z:\\COMMAND.COM");
-	info.psp_seg=psp_seg;
-	MEM_BlockRead(PhysMake(dos.psp,0),&info.psp_copy,sizeof(sPSP));
-	char line[256];
-	strcpy(line,"/INIT Z:\\AUTOEXEC.BAT");
-	info.cmd_line=line;
 
-	SHELL_ProgramStart(&info);
+	Program * new_program;
+	SHELL_ProgramStart(&new_program);
+	new_program->Run();
+	delete new_program;
 }

@@ -65,9 +65,8 @@ void DOS_Shell::DoCommand(char * line) {
 	Bit32u cmd_index=0;
 	while (cmd_list[cmd_index].name) {
 		if (strcasecmp(cmd_list[cmd_index].name,cmd)==0) {
-//TODO CHECK Flags
 			(this->*(cmd_list[cmd_index].handler))(line);
-		        return;
+			return;
 		}
 		cmd_index++;
 	}
@@ -202,16 +201,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;
 	}
-
 	while (ret) {
-
 /* File name and extension */
 		char * ext="";
 		if (!optW && (*dta->name != '.')) {
 			ext = strrchr(dta->name, '.');
 			if (!ext) ext = "";
 			else *ext++ = '\0';
-		};
+		}
 	   
 		Bit8u day	= dta->date & 0x001f;
 		Bit8u month	= (dta->date >> 5) & 0x000f;
