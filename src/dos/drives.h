@@ -94,6 +94,7 @@ public:
     bool FileExists(const char* name);
     bool FileStat(const char* name, FileStat_Block* const stat_block);
 	Bit8u GetMediaByte(void);
+	void EmptyCache(void){}
 private:
 	VFILE_Block * search_file;
 };
