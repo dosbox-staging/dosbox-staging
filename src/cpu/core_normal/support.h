@@ -16,38 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define GETIP		(core.cseip-SegBase(cs))
-#define SAVEIP		reg_eip=GETIP;
-#define LOADIP		core.cseip=(SegBase(cs)+reg_eip);
 
-#define RUNEXCEPTION() {										\
-	FillFlags();												\
-	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
-	continue;													\
-}
+#define LoadMbs(off) (Bit8s)(LoadMb(off))
+#define LoadMws(off) (Bit16s)(LoadMw(off))
+#define LoadMds(off) (Bit32s)(LoadMd(off))
 
-#define EXCEPTION(blah)										\
-	{														\
-		CPU_Exception(blah);								\
-		continue;											\
-	}
+#define LoadRb(reg) reg
+#define LoadRw(reg) reg
+#define LoadRd(reg) reg
 
-static INLINE Bit8u Fetchb() {
-	Bit8u temp=LoadMb(core.cseip);
-	core.cseip+=1;
-	return temp;
-}
-
-static INLINE Bit16u Fetchw() {
-	Bit16u temp=LoadMw(core.cseip);
-	core.cseip+=2;
-	return temp;
-}
-static INLINE Bit32u Fetchd() {
-	Bit32u temp=LoadMd(core.cseip);
-	core.cseip+=4;
-	return temp;
-}
+#define SaveRb(reg,val)	reg=val
+#define SaveRw(reg,val)	reg=val
+#define SaveRd(reg,val)	reg=val
 
 static INLINE Bit8s Fetchbs() {
 	return Fetchb();
@@ -60,10 +40,18 @@ static INLINE Bit32s Fetchds() {
 	return Fetchd();
 }
 
-#define Push_16 CPU_Push16
-#define Push_32 CPU_Push32
-#define Pop_16 CPU_Pop16
-#define Pop_32 CPU_Pop32
+
+#define RUNEXCEPTION() {										\
+	FillFlags();												\
+	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
+	continue;													\
+}
+
+#define EXCEPTION(blah)										\
+	{														\
+		CPU_Exception(blah);								\
+		continue;											\
+	}
 
 //TODO Could probably make all byte operands fast?
 #define JumpCond16_b(COND) {						\

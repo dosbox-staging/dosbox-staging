@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.60 2004-08-04 09:12:51 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.61 2004-08-23 12:17:29 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -48,6 +48,7 @@ CPU_Decoder * cpudecoder;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
+void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 
 void CPU_Push16(Bitu value) {
@@ -1346,6 +1347,7 @@ void CPU_Init(Section* sec) {
 	
 	/* Init the cpu cores */
 	CPU_Core_Normal_Init();
+	CPU_Core_Simple_Init();
 	CPU_Core_Full_Init();
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Init();
@@ -1360,6 +1362,8 @@ void CPU_Init(Section* sec) {
 	cpudecoder=&CPU_Core_Normal_Run;
 	if (!strcasecmp(core,"normal")) {
 		cpudecoder=&CPU_Core_Normal_Run;
+	} else if (!strcasecmp(core,"simple")) {
+		cpudecoder=&CPU_Core_Simple_Run;
 	} else if (!strcasecmp(core,"full")) {
 		cpudecoder=&CPU_Core_Full_Run;
 	} 

@@ -31,22 +31,15 @@
 #include "debug.h"
 #endif
 
-#if (!C_CORE_INLINE)
+#include "paging.h"
+#define SegBase(c)	SegPhys(c)
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
+
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
-#else 
-#include "paging.h"
-#define LoadMb(off) mem_readb_inline(off)
-#define LoadMw(off) mem_readw_inline(off)
-#define LoadMd(off) mem_readd_inline(off)
-#define SaveMb(off,val)	mem_writeb_inline(off,val)
-#define SaveMw(off,val)	mem_writew_inline(off,val)
-#define SaveMd(off,val)	mem_writed_inline(off,val)
-#endif
 
 extern Bitu cycle_count;
 
@@ -89,7 +82,7 @@ static const Bit32u AddrMaskTable[2]={0x0000ffff,0xffffffff};
 
 static struct {
 	Bitu opcode_index;
-	PhysPt cseip;
+	HostPt cseip;
 	PhysPt base_ds,base_ss;
 	bool rep_zero;
 	Bitu prefixes;
@@ -99,27 +92,27 @@ static struct {
 	} trap;
 } core;
 
-#define GETIP		(core.cseip-SegBase(cs))
+#define GETIP		(core.cseip-SegBase(cs)-MemBase)
 #define SAVEIP		reg_eip=GETIP;
-#define LOADIP		core.cseip=(SegBase(cs)+reg_eip);
+#define LOADIP		core.cseip=(MemBase+SegBase(cs)+reg_eip);
 
 #define SegBase(c)	SegPhys(c)
 #define BaseDS		core.base_ds
 #define BaseSS		core.base_ss
 
 static INLINE Bit8u Fetchb() {
-	Bit8u temp=LoadMb(core.cseip);
+	Bit8u temp=host_readb(core.cseip);
 	core.cseip+=1;
 	return temp;
 }
 
 static INLINE Bit16u Fetchw() {
-	Bit16u temp=LoadMw(core.cseip);
+	Bit16u temp=host_readw(core.cseip);
 	core.cseip+=2;
 	return temp;
 }
 static INLINE Bit32u Fetchd() {
-	Bit32u temp=LoadMd(core.cseip);
+	Bit32u temp=host_readd(core.cseip);
 	core.cseip+=4;
 	return temp;
 }
@@ -136,7 +129,7 @@ static INLINE Bit32u Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Normal_Run(void) {
+Bits CPU_Core_Simple_Run(void) {
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;
@@ -155,6 +148,7 @@ Bits CPU_Core_Normal_Run(void) {
 #endif
 restart_opcode:
 		switch (core.opcode_index+Fetchb()) {
+
 		#include "core_normal/prefix_none.h"
 		#include "core_normal/prefix_0f.h"
 		#include "core_normal/prefix_66.h"
@@ -168,7 +162,7 @@ restart_opcode:
 				if (len>16) len=16;
 				char tempcode[16*2+1];char * writecode=tempcode;
 				for (;len>0;len--) {
-					sprintf(writecode,"%X",mem_readb(core.cseip++));
+//					sprintf(writecode,"%X",mem_readb(core.cseip++));
 					writecode+=2;
 				}
 				LOG(LOG_CPU,LOG_ERROR)("Illegal/Unhandled opcode %s",tempcode);
@@ -187,7 +181,7 @@ decode_end:
 	return CBRET_NONE;
 }
 
-Bits CPU_Core_Normal_Trap_Run(void) {
+Bits CPU_Core_Simple_Trap_Run(void) {
 
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
@@ -203,7 +197,7 @@ Bits CPU_Core_Normal_Trap_Run(void) {
 
 
 
-void CPU_Core_Normal_Init(void) {
+void CPU_Core_Simple_Init(void) {
 
 }
 

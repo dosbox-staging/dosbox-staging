@@ -17,10 +17,9 @@ static void DoString(STRING_OP type) {
 	Bitu	count,count_left;
 	Bits	add_index;
 	
-	if (TEST_PREFIX_SEG) si_base=core.seg_prefix_base;
-	else si_base=SegBase(ds);
+	si_base=BaseDS;
 	di_base=SegBase(es);
-	add_mask=AddrMaskTable[core.prefixes& PREFIX_ADDR];
+	add_mask=AddrMaskTable[core.prefixes & PREFIX_ADDR];
 	si_index=reg_esi & add_mask;
 	di_index=reg_edi & add_mask;
 	count=reg_ecx & add_mask;

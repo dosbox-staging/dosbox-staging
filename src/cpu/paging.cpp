@@ -93,7 +93,7 @@ static Bits PageFaultCore(void) {
 	if (!pf_queue.used) E_Exit("PF Core without PF");
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used-1];
 	X86PageEntry pentry;
-	pentry.load=MEM_PhysReadD(entry->page_addr);
+	pentry.load=phys_readd(entry->page_addr);
 	if (pentry.block.p && entry->cs == SegValue(cs) && entry->eip==reg_eip)
 		return -1;
 	return 0;
@@ -101,6 +101,8 @@ static Bits PageFaultCore(void) {
 #if C_DEBUG
 Bitu DEBUG_EnableDebugger(void);
 #endif
+
+bool first=false;
 
 void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	/* Save the state of the cpu cores */
@@ -112,6 +114,8 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	paging.cr2=lin_addr;
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used++];
 	LOG(LOG_PAGING,LOG_NORMAL)("PageFault at %X type %d queue %d",lin_addr,type,pf_queue.used);
+//	LOG_MSG("EAX:%04X ECX:%04X EDX:%04X EBX:%04X",reg_eax,reg_ecx,reg_edx,reg_ebx);
+//	LOG_MSG("CS:%04X EIP:%08X SS:%04x SP:%08X",SegValue(cs),reg_eip,SegValue(ss),reg_esp);
 	entry->cs=SegValue(cs);
 	entry->eip=reg_eip;
 	entry->page_addr=page_addr;
@@ -125,10 +129,9 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	LOG(LOG_PAGING,LOG_NORMAL)("Left PageFault for %x queue %d",lin_addr,pf_queue.used);
 	memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 	cpudecoder=old_cpudecoder;
+//	LOG_MSG("SS:%04x SP:%08X",SegValue(ss),reg_esp);
 }
  
-
-void MEM_PhysWriteD(Bitu addr,Bit32u val);
 class InitPageHandler : public PageHandler {
 public:
 	InitPageHandler() {flags=PFLAG_INIT|PFLAG_NOCODE;}
@@ -164,28 +167,28 @@ public:
 			Bitu t_index=lin_page & 0x3ff;
 			Bitu table_addr=(paging.base.page<<12)+d_index*4;
 			X86PageEntry table;
-			table.load=MEM_PhysReadD(table_addr);
+			table.load=phys_readd(table_addr);
 			if (!table.block.p) {
 				LOG(LOG_PAGING,LOG_ERROR)("NP Table");
 				PAGING_PageFault(lin_addr,table_addr,0);
-				table.load=MEM_PhysReadD(table_addr);
+				table.load=phys_readd(table_addr);
 				if (!table.block.p)
 					E_Exit("Pagefault didn't correct table");
 			}
 			table.block.a=table.block.d=1;		//Set access/Dirty
-			MEM_PhysWriteD(table_addr,table.load);
+			phys_writed(table_addr,table.load);
 			X86PageEntry entry;
 			Bitu entry_addr=(table.block.base<<12)+t_index*4;
-			entry.load=MEM_PhysReadD(entry_addr);
+			entry.load=phys_readd(entry_addr);
 			if (!entry.block.p) {
 				LOG(LOG_PAGING,LOG_ERROR)("NP Page");
 				PAGING_PageFault(lin_addr,entry_addr,0);
-				entry.load=MEM_PhysReadD(entry_addr);
+				entry.load=phys_readd(entry_addr);
 				if (!entry.block.p)
 					E_Exit("Pagefault didn't correct page");
 			}
 			entry.block.a=entry.block.d=1;		//Set access/Dirty
-			MEM_PhysWriteD(entry_addr,entry.load);
+			phys_writed(entry_addr,entry.load);
 			phys_page=entry.block.base;
 		} else {
 			if (lin_page<LINK_START) phys_page=mapfirstmb[lin_page];
@@ -200,10 +203,10 @@ bool PAGING_MakePhysPage(Bitu & page) {
 		Bitu d_index=page >> 10;
 		Bitu t_index=page & 0x3ff;
 		X86PageEntry table;
-		table.load=MEM_PhysReadD((paging.base.page<<12)+d_index*4);
+		table.load=phys_readd((paging.base.page<<12)+d_index*4);
 		if (!table.block.p) return false;
 		X86PageEntry entry;
-		entry.load=MEM_PhysReadD((table.block.base<<12)+t_index*4);
+		entry.load=phys_readd((table.block.base<<12)+t_index*4);
 		if (!entry.block.p) return false;
 		page=entry.block.base;
 		} else {
@@ -281,7 +284,7 @@ void PAGING_SetDirBase(Bitu cr3) {
 	
 	paging.base.page=cr3 >> 12;
 	paging.base.addr=cr3 & ~4095;
-	LOG(LOG_PAGING,LOG_NORMAL)("CR3:%X Base %X",cr3,paging.base.page);
+//	LOG(LOG_PAGING,LOG_NORMAL)("CR3:%X Base %X",cr3,paging.base.page);
 	if (paging.enabled) {
 		PAGING_ClearTLB();
 	}
@@ -292,9 +295,15 @@ void PAGING_Enable(bool enabled) {
 	if (paging.enabled==enabled) return;
 	paging.enabled=enabled;
 	if (!enabled) {
-		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
+//		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
 	} else {
-		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");
+		if (cpudecoder==CPU_Core_Simple_Run) {
+			LOG_MSG("CPU core simple won't run this game,switching to normal");
+			cpudecoder=CPU_Core_Normal_Run;
+			CPU_CycleLeft+=CPU_Cycles;
+			CPU_Cycles=0;
+		}
+//		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");
 		PAGING_SetDirBase(paging.cr3);
 	}
 	PAGING_ClearTLB();

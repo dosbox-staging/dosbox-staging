@@ -341,12 +341,12 @@
 	CASE_D(0x8d)												/* LEA Gd */
 		{
 			//Little hack to always use segprefixed version
-			core.seg_prefix_base=0;
 			GetRMrd;
+			BaseDS=BaseSS=0;
 			if (TEST_PREFIX_ADDR) {
-				*rmrd=(Bit32u)(*GetEA_SEG_ADDR[rm])();
+				*rmrd=(Bit32u)(*EATable[256+rm])();
 			} else {
-				*rmrd=(Bit32u)(*GetEA_SEG[rm])();
+				*rmrd=(Bit32u)(*EATable[rm])();
 			}
 			break;
 		}

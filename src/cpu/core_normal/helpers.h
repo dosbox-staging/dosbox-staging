@@ -141,3 +141,22 @@
 	}																		\
 }
 
+#define CASE_W(_WHICH)							\
+	case (OPCODE_NONE+_WHICH):
+
+#define CASE_D(_WHICH)							\
+	case (OPCODE_SIZE+_WHICH):
+
+#define CASE_B(_WHICH)							\
+	CASE_W(_WHICH)								\
+	CASE_D(_WHICH)
+
+#define CASE_0F_W(_WHICH)						\
+	case ((OPCODE_0F|OPCODE_NONE)+_WHICH):
+
+#define CASE_0F_D(_WHICH)						\
+	case ((OPCODE_0F|OPCODE_SIZE)+_WHICH):
+
+#define CASE_0F_B(_WHICH)						\
+	CASE_0F_W(_WHICH)							\
+	CASE_0F_D(_WHICH)

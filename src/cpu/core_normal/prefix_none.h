@@ -482,12 +482,12 @@
 	CASE_W(0x8d)												/* LEA Gw */
 		{
 			//Little hack to always use segprefixed version
-			core.seg_prefix_base=0;
+			BaseDS=BaseSS=0;
 			GetRMrw;
 			if (TEST_PREFIX_ADDR) {
-				*rmrw=(Bit16u)(*GetEA_SEG_ADDR[rm])();
+				*rmrw=(Bit16u)(*EATable[256+rm])();
 			} else {
-				*rmrw=(Bit16u)(*GetEA_SEG[rm])();
+				*rmrw=(Bit16u)(*EATable[rm])();
 			}
 			break;
 		}
@@ -788,18 +788,10 @@
 		reg_al = get_CF() ? 0xFF : 0;
 		break;
 	CASE_B(0xd7)												/* XLAT */
-		if (TEST_PREFIX_SEG) {
-			if (TEST_PREFIX_ADDR) {
-				reg_al=LoadMb(core.seg_prefix_base+(Bit32u)(reg_ebx+reg_al));
-			} else {
-				reg_al=LoadMb(core.seg_prefix_base+(Bit16u)(reg_bx+reg_al));
-			}
+		if (TEST_PREFIX_ADDR) {
+			reg_al=LoadMb(BaseDS+(Bit32u)(reg_ebx+reg_al));
 		} else {
-			if (TEST_PREFIX_ADDR) {
-				reg_al=LoadMb(SegBase(ds)+(Bit32u)(reg_ebx+reg_al));
-			} else {
-				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
-			}
+			reg_al=LoadMb(BaseDS+(Bit16u)(reg_bx+reg_al));
 		}
 		break;
 #ifdef CPU_FPU
