@@ -14,8 +14,8 @@
 /* Enable some heavy debugging options */
 #define C_HEAVY_DEBUG 0
 
-/* Enable some big compile-time increasing inlines */
-#define C_EXTRAINLINE 0
+/* Enable memory function inlining in */
+#define C_CORE_INLINE 0
 
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
