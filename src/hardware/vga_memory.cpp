@@ -126,34 +126,17 @@ static void VGA_GFX_256U_WriteHandler(PhysPt start,Bit8u val) {
 
 /* Gonna assume that whoever maps vga memory, maps it on 32/64kb boundary */
 
-#define LINK_MAX		64
 #define VGA_PAGES		(128/4)
 #define VGA_PAGE_A0		(0xA0000/4096)
 #define VGA_PAGE_B0		(0xB0000/4096)
 #define VGA_PAGE_B8		(0xB8000/4096)
 
 static struct {
-	Bitu used_links;
-	Bit32u links[LINK_MAX];
 	Bit8u ram_area[VGA_PAGES*4096];
 	Bitu map_base;
 } vgapages;
 	
-
-void VGA_ClearPageLinks(void) {
-	PAGING_ClearTLBEntries(vgapages.used_links,vgapages.links);
-	vgapages.used_links=0;
-}
-
-class VGA_PageHandler : public PageHandler {
-	void AddPageLink(Bitu lin_page, Bitu phys_page) {
-		if (vgapages.used_links<LINK_MAX) {
-			vgapages.links[vgapages.used_links++]=lin_page;
-		}
-	}
-};
-
-class VGARead_PageHandler : public VGA_PageHandler {
+class VGARead_PageHandler : public PageHandler {
 public:
 	Bitu readb(PhysPt addr) {
 		addr&=0xffff;
@@ -221,7 +204,7 @@ public:
 	}
 };
 
-class VGA_TEXT_PageHandler : public VGA_PageHandler {
+class VGA_TEXT_PageHandler : public PageHandler {
 public:
 	VGA_TEXT_PageHandler() {
 		flags=PFLAG_NOCODE;
@@ -239,7 +222,7 @@ public:
 };
 
 
-class VGA_RAM_PageHandler : public VGA_PageHandler {
+class VGA_RAM_PageHandler : public PageHandler {
 public:
 	VGA_RAM_PageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
@@ -250,7 +233,7 @@ public:
 	}
 };
 
-class VGA_MAP_PageHandler : public VGA_PageHandler {
+class VGA_MAP_PageHandler : public PageHandler {
 public:
 	VGA_MAP_PageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
@@ -261,7 +244,7 @@ public:
 	}
 };
 
-class VGA_TANDY_PageHandler : public VGA_PageHandler {
+class VGA_TANDY_PageHandler : public PageHandler {
 public:
 	VGA_TANDY_PageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
@@ -340,7 +323,7 @@ void VGA_SetupHandlers(void) {
 		MEM_SetPageHandler(VGA_PAGE_B0,8,&vgaph.hram);
 		break;
 	}
-	VGA_ClearPageLinks();
+	PAGING_ClearTLB();
 }
 
 bool  lfb_update;
@@ -359,5 +342,4 @@ void VGA_StartUpdateLFB(void) {
 
 void VGA_SetupMemory() {
 	memset((void *)&vga.mem,0,512*1024*4);
-	vgapages.used_links=0;
 }

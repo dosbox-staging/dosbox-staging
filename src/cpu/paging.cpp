@@ -132,10 +132,7 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 void MEM_PhysWriteD(Bitu addr,Bit32u val);
 class InitPageHandler : public PageHandler {
 public:
-	InitPageHandler() {flags=PFLAG_ILLEGAL;}
-	void AddPageLink(Bitu lin_page, Bitu phys_page) {
-		assert(0);
-	}
+	InitPageHandler() {flags=PFLAG_INIT|PFLAG_NOCODE;}
 	Bitu readb(PhysPt addr) {
 		InitPage(addr);
 		return mem_readb(addr);
@@ -179,7 +176,7 @@ public:
 			table.block.a=table.block.d=1;		//Set access/Dirty
 			MEM_PhysWriteD(table_addr,table.load);
 			X86PageEntry entry;
-			Bitu entry_addr=(table.block.base << 12)+t_index*4;
+			Bitu entry_addr=(table.block.base<<12)+t_index*4;
 			entry.load=MEM_PhysReadD(entry_addr);
 			if (!entry.block.p) {
 				LOG(LOG_PAGING,LOG_ERROR)("NP Page");
@@ -199,6 +196,23 @@ public:
 	}
 };
 
+bool PAGING_MakePhysPage(Bitu & page) {
+	if (paging.enabled) {
+		Bitu d_index=page >> 10;
+		Bitu t_index=page & 0x3ff;
+		X86PageEntry table;
+		table.load=MEM_PhysReadD((paging.base.page<<12)+d_index*4);
+		if (!table.block.p) return false;
+		X86PageEntry entry;
+		entry.load=MEM_PhysReadD((table.block.base<<12)+t_index*4);
+		if (!entry.block.p) return false;
+		page=entry.block.base;
+		} else {
+			if (page<LINK_START) page=mapfirstmb[page];
+			//Else keep it the same
+		}
+		return true;
+}
 
 static InitPageHandler init_page_handler;
 
@@ -207,37 +221,35 @@ Bitu PAGING_GetDirBase(void) {
 	return paging.cr3;
 }
 
-void PAGING_ClearTLB(void) {
-	LOG(LOG_PAGING,LOG_NORMAL)("Clearing TLB");
-	Bitu i;
-	for (i=0;i<LINK_START;i++) {
-		paging.tlb.read[i]=0;
-		paging.tlb.write[i]=0;
-		paging.tlb.handler[i]=&init_page_handler;
-	}
-	MEM_UnlinkPages();
-}
-
 void PAGING_InitTLB(void) {
 	for (Bitu i=0;i<TLB_SIZE;i++) {
 		paging.tlb.read[i]=0;
 		paging.tlb.write[i]=0;
 		paging.tlb.handler[i]=&init_page_handler;
-
 	}
+	paging.links.used=0;
 }
 
-void PAGING_ClearTLBEntries(Bitu pages,Bit32u * entries) {
-	for (;pages>0;pages--) {
+void PAGING_ClearTLB(void) {
+	Bit32u * entries=&paging.links.entries[0];
+	for (;paging.links.used>0;paging.links.used--) {
 		Bitu page=*entries++;
 		paging.tlb.read[page]=0;
 		paging.tlb.write[page]=0;
 		paging.tlb.handler[page]=&init_page_handler;
 	}
+	paging.links.used=0;
+}
+
+void PAGING_UnlinkPages(Bitu lin_page,Bitu pages) {
+	for (;pages>0;pages--) {
+		paging.tlb.read[lin_page]=0;
+		paging.tlb.write[lin_page]=0;
+		paging.tlb.handler[lin_page]=&init_page_handler;
+	}
 }
 
 void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
-
 	PageHandler * handler=MEM_GetPageHandler(phys_page);
 	Bitu lin_base=lin_page << 12;
 
@@ -249,8 +261,8 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 	else paging.tlb.read[lin_page]=0;
 	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=host_mem-lin_base;
 	else paging.tlb.write[lin_page]=0;
-
-	handler->AddPageLink(lin_page,phys_page);
+	if (paging.links.used>=PAGING_LINKS) E_Exit("Not enough paging links");
+	paging.links.entries[paging.links.used++]=lin_page;
 	paging.tlb.handler[lin_page]=handler;
 }
 

@@ -162,6 +162,7 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,memh);
 			memh=MEM_NextHandle(memh);
 		}
+		PAGING_ClearTLB();
 		return EMM_NO_ERROR;
 	} else if (log_page==NULL_PAGE) {
 		/* Unmapping it is */
@@ -169,6 +170,7 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 		emm_mappings[phys_page].page=NULL_PAGE;
 		for (Bitu i=0;i<4;i++) 
 			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,EMM_PAGEFRAME4K+phys_page*4+i);
+		PAGING_ClearTLB();
 		return EMM_NO_ERROR;
 	} else {
 		/* Illegal logical page it is */
@@ -441,6 +443,7 @@ static Bit8u MemoryRegion(void) {
 	}
 	return EMM_NO_ERROR;
 }
+
 
 static Bitu INT67_Handler(void) {
 	Bitu i;
