@@ -268,16 +268,17 @@ static void OPL_SaveRawEvent(void) {
 		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 		fclose(opl.raw.handle);
 		opl.raw.handle=0;
-		return;
+	} else {
+		opl.raw.handle=OpenCaptureFile("Raw Opl",".dro");
+		if (!opl.raw.handle) return;
+		opl.raw.index=0;
+		opl.raw.used=0;
+		opl.raw.done=0;
+		opl.raw.start=0;
+		opl.raw.last=0;
+		memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
+		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 	}
-	opl.raw.handle=OpenCaptureFile("Raw Opl",".dro");
-	opl.raw.index=0;
-	opl.raw.used=0;
-	opl.raw.done=0;
-	opl.raw.start=0;
-	opl.raw.last=0;
-	memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
-	fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 }
 
 static void OPL_Stop(Section* sec) {
