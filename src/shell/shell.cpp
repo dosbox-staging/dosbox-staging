@@ -141,15 +141,15 @@ void SHELL_Init() {
 	Bit16u psp_seg=DOS_GetMemory(16);
 	Bit16u env_seg=DOS_GetMemory(1+(4096/16));
 	Bit16u stack_seg=DOS_GetMemory(2048/16);
-	SetSegment_16(ss,stack_seg);
+	SegSet16(ss,stack_seg);
 	reg_sp=2046;
 	/* Setup a fake MCB for the environment */
-	MCB * env_mcb=(MCB *)real_host(env_seg,0);
+	MCB * env_mcb=(MCB *)HostMake(env_seg,0);
 	env_mcb->psp_segment=psp_seg;
 	env_mcb->size=4096/16;
 	real_writed(env_seg+1,0,0);
 
-	PSP * psp=(PSP *)real_host(psp_seg,0);
+	PSP * psp=(PSP *)HostMake(psp_seg,0);
 	Bit32u i;
 	for (i=0;i<20;i++) psp->files[i]=0xff;
 	psp->files[STDIN]=DOS_FindDevice("CON");
@@ -171,7 +171,7 @@ void SHELL_Init() {
 	PROGRAM_Info info;
 	strcpy(info.full_name,"Z:\\COMMAND.COM");
 	info.psp_seg=psp_seg;
-	MEM_BlockRead(real_phys(dos.psp,0),&info.psp_copy,sizeof(PSP));
+	MEM_BlockRead(PhysMake(dos.psp,0),&info.psp_copy,sizeof(PSP));
 	char line[256];
 	strcpy(line,"/INIT Z:\\AUTOEXEC.BAT");
 	info.cmd_line=line;

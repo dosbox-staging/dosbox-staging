@@ -114,7 +114,7 @@ void DOS_Shell::CMD_EXIT(char * args) {
 void DOS_Shell::CMD_CHDIR(char * args) {
 	if (!*args) {
 		Bit8u drive=DOS_GetDefaultDrive()+'A';
-		Bit8u dir[DOS_PATHLENGTH];
+		char dir[DOS_PATHLENGTH];
 		DOS_GetCurrentDir(0,dir);
 		WriteOut("%c:\\%s\n",drive,dir);
 	}
@@ -186,7 +186,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	if (strlen(args)==0) args="*.*";
 
 	/* Make a full path in the args */
-	if (!DOS_Canonicalize(args,(Bit8u*)path)) {
+	if (!DOS_Canonicalize(args,path)) {
 		WriteOut(MSG_Get("SHELL_CMD_DIR_PATH_ERROR"));
 		return;
 	}

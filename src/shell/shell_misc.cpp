@@ -24,7 +24,7 @@
 
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
-	Bit8u dir[DOS_PATHLENGTH];
+	char dir[DOS_PATHLENGTH];
 	DOS_GetCurrentDir(0,dir);
 	WriteOut("%c:\\%s>",drive,dir);
 }
@@ -149,9 +149,9 @@ void DOS_Shell::Execute(char * name,char * args) {
 		/* Allocate some stack space for tables in physical memory */
 		reg_sp-=0x200;
 		//Add Parameter block
-		DOS_ParamBlock block(Real2Phys(RealMake(Segs[ss].value,reg_sp)));
+		DOS_ParamBlock block(SegPhys(ss)+reg_sp);
 		//Add a filename
-		RealPt file_name=RealMake(Segs[ss].value,reg_sp+0x20);
+		RealPt file_name=RealMakeSeg(ss,reg_sp+0x20);
 		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
 		/* Fill the command line */
 		CommandTail cmd;
@@ -159,21 +159,21 @@ void DOS_Shell::Execute(char * name,char * args) {
 		cmd.count=strlen(args);
 		memcpy(cmd.buffer,args,strlen(args));
 		cmd.buffer[strlen(args)]=0xd;
-		MEM_BlockWrite(real_phys(prog_info->psp_seg,128),&cmd,128);
+		MEM_BlockWrite(PhysMake(prog_info->psp_seg,128),&cmd,128);
 
 		block.InitExec(RealMake(prog_info->psp_seg,128));
 		/* Save CS:IP to some point where i can return them from */
 		RealPt newcsip;
 		newcsip=CALLBACK_RealPointer(call_shellstop);
-		SetSegment_16(cs,RealSeg(newcsip));
+		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
 		/* Start up a dos execute interrupt */
 		reg_ax=0x4b00;
 		//Filename pointer
-		SetSegment_16(ds,Segs[ss].value);
+		SegSet16(ds,SegValue(ss));
 		reg_dx=RealOff(file_name);
 		//Paramblock
-		SetSegment_16(es,Segs[ss].value);
+		SegSet16(es,SegValue(ss));
 		reg_bx=reg_sp;
 		flags.intf=false;
 		CALLBACK_RunRealInt(0x21);
