@@ -255,7 +255,8 @@
 				GetEArw;
 				SETFLAGBIT(CF,(*earw & mask));
 			} else {
-				GetEAa;Bit16u old=LoadMw(eaa);
+				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
 			break;
@@ -279,7 +280,8 @@
 				SETFLAGBIT(CF,(*earw & mask));
 				*earw|=mask;
 			} else {
-				GetEAa;Bit16u old=LoadMw(eaa);
+				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old | mask);
 			}
@@ -311,7 +313,8 @@
 				SETFLAGBIT(CF,(*earw & mask));
 				*earw&= ~mask;
 			} else {
-				GetEAa;Bit16u old=LoadMw(eaa);
+				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old & ~mask);
 			}
@@ -399,7 +402,8 @@
 				SETFLAGBIT(CF,(*earw & mask));
 				*earw^=mask;
 			} else {
-				GetEAa;Bit16u old=LoadMw(eaa);
+				GetEAa;eaa+=(((Bit16s)*rmrw)>>4)*2;
+				Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old ^ mask);
 			}
