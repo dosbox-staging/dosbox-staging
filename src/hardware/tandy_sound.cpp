@@ -128,7 +128,7 @@ static void TANDYSOUND_CallBack(Bit8u * stream,Bit32u len) {
 
 void TANDYSOUND_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("STATUS")) return;
+	if(!section->Get_bool("tandy")) return;
 	IO_RegisterWriteHandler(0xc0,write_pc0,"Tandy Sound");
 	tandy_chan=MIXER_AddChannel(&TANDYSOUND_CallBack,TANDY_RATE,"TANDY");
 	MIXER_Enable(tandy_chan,false);
