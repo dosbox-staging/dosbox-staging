@@ -159,8 +159,7 @@
 	CASE_0F_D(0xa0)												/* PUSH FS */		
 		Push_32(SegValue(fs));break;
 	CASE_0F_D(0xa1)												/* POP FS */		
-		CPU_SetSegGeneral(fs,(Bit16u)Pop_32());break;
-
+		POPSEG(fs,Pop_32(),4);break;
 	CASE_0F_D(0xa3)												/* BT Ed,Gd */
 		{
 			FillFlags();GetRMrd;
@@ -183,7 +182,7 @@
 	CASE_0F_D(0xa8)												/* PUSH GS */		
 		Push_32(SegValue(gs));break;
 	CASE_0F_D(0xa9)												/* POP GS */		
-		CPU_SetSegGeneral(gs,(Bit16u)Pop_32());break;
+		POPSEG(gs,Pop_32(),4);break;
 	CASE_0F_D(0xab)												/* BTS Ed,Gd */
 		{
 			FillFlags();GetRMrd;
@@ -214,7 +213,9 @@
 	CASE_0F_D(0xb2)												/* LSS Ed */
 		{	
 			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(ss,LoadMw(eaa+4));
+			LOADSEG(ss,LoadMw(eaa+4));
+			CPU_Cycles++;
+			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_0F_D(0xb3)												/* BTR Ed,Gd */
@@ -235,13 +236,15 @@
 	CASE_0F_D(0xb4)												/* LFS Ed */
 		{	
 			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(fs,LoadMw(eaa+4));
+			LOADSEG(fs,LoadMw(eaa+4));
+			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_0F_D(0xb5)												/* LGS Ed */
 		{	
 			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(gs,LoadMw(eaa+4));
+			LOADSEG(gs,LoadMw(eaa+4));
+			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_0F_D(0xb6)												/* MOVZX Gd,Eb */

@@ -61,9 +61,12 @@ l_M_Ewx:
 			if (inst.rm<0xc0) inst.op1.ds=(Bit16s)LoadMw(inst.rm_eaa);
 			else inst.op1.ds=(Bit16s)reg_16(inst.rm_eai);
 			break;
+		case M_EwIb:
+			inst.op2.d=Fetchb();
+			goto l_M_Ew;
 		case M_EwIbx:
 			inst.op2.ds=Fetchbs();
-			goto l_M_Ew;			
+			goto l_M_Ew;		
 		case M_EwIw:
 			inst.op2.d=Fetchw();
 			goto l_M_Ew;
@@ -96,6 +99,9 @@ l_M_Ew:
 			if (inst.rm<0xc0) inst.op1.d=(Bit32s)LoadMd(inst.rm_eaa);
 			else inst.op1.d=(Bit32s)reg_32(inst.rm_eai);
 			break;
+		case M_EdIb:
+			inst.op2.d=Fetchb();
+			goto l_M_Ed;
 		case M_EdIbx:
 			inst.op2.ds=Fetchbs();
 			goto l_M_Ed;
@@ -486,7 +492,10 @@ l_M_Ed:
 		goto nextopcode;
 	case D_HLT:
 		LEAVECORE;
-		CPU_HLT(IPPoint-inst.start);
+		if (CPU_HLT()) {
+			reg_eip-=IPPoint-inst.start;
+			CPU_StartException();
+		}
 		return CBRET_NONE;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);

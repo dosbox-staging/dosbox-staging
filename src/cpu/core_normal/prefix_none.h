@@ -30,8 +30,8 @@
 		AXIw(ADDW);break;
 	CASE_W(0x06)												/* PUSH ES */		
 		Push_16(SegValue(es));break;
-	CASE_W(0x07)												/* POP ES */		
-		CPU_SetSegGeneral(es,Pop_16());break;
+	CASE_W(0x07)												/* POP ES */
+		POPSEG(es,Pop_16(),2);break;
 	CASE_B(0x08)												/* OR Eb,Gb */
 		RMEbGb(ORB);break;
 	CASE_W(0x09)												/* OR Ew,Gw */
@@ -65,7 +65,9 @@
 	CASE_W(0x16)												/* PUSH SS */		
 		Push_16(SegValue(ss));break;
 	CASE_W(0x17)												/* POP SS */		
-		CPU_SetSegGeneral(ss,Pop_16());break;
+		POPSEG(ss,Pop_16(),2);
+		CPU_Cycles++; //Always do another instruction
+		break;
 	CASE_B(0x18)												/* SBB Eb,Gb */
 		RMEbGb(SBBB);break;
 	CASE_W(0x19)												/* SBB Ew,Gw */
@@ -81,7 +83,8 @@
 	CASE_W(0x1e)												/* PUSH DS */		
 		Push_16(SegValue(ds));break;
 	CASE_W(0x1f)												/* POP DS */
-		CPU_SetSegGeneral(ds,Pop_16());break;
+		POPSEG(ds,Pop_16(),2);
+		break;
 	CASE_B(0x20)												/* AND Eb,Gb */
 		RMEbGb(ANDB);break;
 	CASE_W(0x21)												/* AND Ew,Gw */
@@ -489,21 +492,17 @@
 			if (rm >= 0xc0 ) {GetEArw;val=*earw;}
 			else {GetEAa;val=LoadMw(eaa);}
 			switch (which) {
+			case 0x02:					/* MOV SS,Ew */
+				CPU_Cycles++; //Always do another instruction
 			case 0x00:					/* MOV ES,Ew */
-				CPU_SetSegGeneral(es,val);break;
+			case 0x03:					/* MOV DS,Ew */
+			case 0x05:					/* MOV GS,Ew */
+			case 0x04:					/* MOV FS,Ew */
+				LOADSEG((SegNames)which,val);
+				break;
 			case 0x01:					/* MOV CS,Ew Illegal*/
 				E_Exit("CPU:Illegal MOV CS Call");
 				break;
-			case 0x02:					/* MOV SS,Ew */
-				CPU_SetSegGeneral(ss,val);
-				CPU_Cycles++; //Always do another instruction
-				break;
-			case 0x03:					/* MOV DS,Ew */
-				CPU_SetSegGeneral(ds,val);break;
-			case 0x04:					/* MOV FS,Ew */
-				CPU_SetSegGeneral(fs,val);break;
-			case 0x05:					/* MOV GS,Ew */
-				CPU_SetSegGeneral(gs,val);break;
 			default:
 				E_Exit("CPU:8E:Illegal RM Byte");
 			}
@@ -673,13 +672,15 @@
 	CASE_W(0xc4)												/* LES */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);CPU_SetSegGeneral(es,LoadMw(eaa+2));
+			LOADSEG(es,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_W(0xc5)												/* LDS */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);CPU_SetSegGeneral(ds,LoadMw(eaa+2));
+			LOADSEG(ds,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_B(0xc6)												/* MOV Eb,Ib */
@@ -751,7 +752,10 @@
 			return debugCallback;
 		}
 #endif			
-		CPU_SW_Interrupt(3,core.ip_lookup-core.op_start);
+		if (CPU_SW_Interrupt(3)) {
+			reg_eip-=(core.ip_lookup-core.op_start);
+			CPU_StartException();
+		};
 #if CPU_TRAP_CHECK
 		core.trap.skip=true;
 #endif
@@ -765,7 +769,10 @@
 				return debugCallback;
 			}
 #endif
-			CPU_SW_Interrupt(num,core.ip_lookup-core.op_start);
+			if (CPU_SW_Interrupt(num)) {
+				reg_eip-=core.ip_lookup-core.op_start;
+				CPU_StartException();
+			}
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -775,7 +782,10 @@
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			LEAVECORE;
-			CPU_SW_Interrupt(4,core.ip_lookup-core.op_start);
+			if (CPU_SW_Interrupt(4)) {
+				reg_eip-=core.ip_lookup-core.op_start;
+				CPU_StartException();
+			}
 #if CPU_TRAP_CHECK
 			core.trap.skip=true;
 #endif
@@ -950,8 +960,12 @@
 		break;		
 	CASE_B(0xf4)												/* HLT */
 		LEAVECORE;
-		CPU_HLT(core.ip_lookup-core.op_start);
-		return CBRET_NONE;
+		if (CPU_HLT()) {
+			reg_eip-=core.ip_lookup-core.op_start;
+			CPU_StartException();
+			goto decode_start;
+		}
+		return CBRET_NONE;		//Needs to return for hlt cpu core
 	CASE_B(0xf5)												/* CMC */
 		FillFlags();
 		SETFLAGBIT(CF,!(reg_flags & FLAG_CF));

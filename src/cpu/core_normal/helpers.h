@@ -141,3 +141,17 @@
 	}																		\
 }
 
+#define POPSEG(_SEG_,_VAL_,_ESP_CHANGE_)									\
+	if (CPU_SetSegGeneral(_SEG_,_VAL_)) {									\
+		LEAVECORE;															\
+		reg_eip-=(core.ip_lookup-core.op_start);reg_esp-=_ESP_CHANGE_;		\
+		CPU_StartException();goto decode_start;								\
+	}
+
+#define LOADSEG(_SEG_,_SEG_VAL_)											\
+	if (CPU_SetSegGeneral(_SEG_,_SEG_VAL_)) {								\
+		LEAVECORE;															\
+		reg_eip-=(core.ip_lookup-core.op_start);							\
+		CPU_StartException();goto decode_start;								\
+	}																		\
+

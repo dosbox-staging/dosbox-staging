@@ -133,7 +133,7 @@ enum {
 	M_Ewx,M_Ew,M_Gw,M_EwGw,M_GwEw,M_EwxGwx,
 	M_Edx,M_Ed,M_Gd,M_EdGd,M_GdEd,M_EdxGdx,
 	
-	M_EbIb,
+	M_EbIb,M_EwIb,M_EdIb,
 	M_EwIw,M_EwIbx,M_EwxIbx,M_EwxIwx,M_EwGwIb,M_EwGwCL,
 	M_EdId,M_EdIbx,M_EdGdIb,M_EdGdCL,
 	

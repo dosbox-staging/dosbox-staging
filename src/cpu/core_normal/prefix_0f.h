@@ -242,8 +242,9 @@
 
 	CASE_0F_W(0xa0)												/* PUSH FS */		
 		Push_16(SegValue(fs));break;
-	CASE_0F_W(0xa1)												/* POP FS */		
-		CPU_SetSegGeneral(fs,Pop_16());break;
+	CASE_0F_W(0xa1)												/* POP FS */	
+		POPSEG(fs,Pop_16(),2);
+		break;
 	CASE_0F_B(0xa2)												/* CPUID */
 		CPU_CPUID();break;
 	CASE_0F_W(0xa3)												/* BT Ew,Gw */
@@ -268,7 +269,7 @@
 	CASE_0F_W(0xa8)												/* PUSH GS */		
 		Push_16(SegValue(gs));break;
 	CASE_0F_W(0xa9)												/* POP GS */		
-		CPU_SetSegGeneral(gs,Pop_16());break;
+		POPSEG(fs,Pop_16(),2);break;
 	CASE_0F_W(0xab)												/* BTS Ew,Gw */
 		{
 			FillFlags();GetRMrw;
@@ -295,8 +296,10 @@
 		break;
 	CASE_0F_W(0xb2)												/* LSS Ew */
 		{	
+			CPU_Cycles++;
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);CPU_SetSegGeneral(ss,LoadMw(eaa+2));
+			LOADSEG(ss,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_0F_W(0xb3)												/* BTR Ew,Gw */
@@ -317,13 +320,15 @@
 	CASE_0F_W(0xb4)												/* LFS Ew */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);CPU_SetSegGeneral(fs,LoadMw(eaa+2));
+			LOADSEG(fs,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_0F_W(0xb5)												/* LGS Ew */
 		{	
 			GetRMrw;GetEAa;
-			*rmrw=LoadMw(eaa);CPU_SetSegGeneral(gs,LoadMw(eaa+2));
+			LOADSEG(gs,LoadMw(eaa+2));
+			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_0F_W(0xb6)												/* MOVZX Gw,Eb */

@@ -345,7 +345,10 @@ switch (inst.code.op) {
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) 
 			return debugCallback;
 #endif
-		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.start);
+		if (CPU_SW_Interrupt(inst.op1.b)) {
+			reg_eip-=IPPoint-inst.start;
+			CPU_StartException();
+		}	
 		goto restart_core;
 	case O_INb:
 		reg_al=IO_Read(inst.op1.d);
@@ -453,11 +456,11 @@ switch (inst.code.op) {
 		inst.op1.d=CPU_GET_CRX(inst.rm_index);
 		break;
 	case O_M_DRx_Rd:
-		LOG(LOG_CPU,LOG_NORMAL)("MOV DR%d,%X",inst.rm_index,inst.op1.d);
+//		LOG(LOG_CPU,LOG_NORMAL)("MOV DR%d,%X",inst.rm_index,inst.op1.d);
 		break;
 	case O_M_Rd_DRx:
 		inst.op1.d=0;
-		LOG(LOG_CPU,LOG_NORMAL)("MOV %X,DR%d",inst.op1.d,inst.rm_index);
+//		LOG(LOG_CPU,LOG_NORMAL)("MOV %X,DR%d",inst.op1.d,inst.rm_index);
 		break;
 	case O_LAR:
 		{
@@ -483,14 +486,14 @@ switch (inst.code.op) {
 		break;
 	case O_BSFw:
 		{
-			FillFlags();
 			if (!inst.op1.w) {
 				SETFLAGBIT(ZF,true);
+				goto nextopcode;
 			} else {
 				Bitu count=0;
-				while (count<16) {
-					if ((inst.op1.w>>count) & 1) break;
-					count++;
+				while (1) {
+					if (inst.op1.w & 0x1) break;
+					count++;inst.op1.w>>=1;
 				}
 				inst.op1.d=count;
 				SETFLAGBIT(ZF,false);
@@ -502,11 +505,12 @@ switch (inst.code.op) {
 			FillFlags();
 			if (!inst.op1.d) {
 				SETFLAGBIT(ZF,true);
+				goto nextopcode;
 			} else {
 				Bitu count=0;
-				while (count<32) {
-					if ((inst.op1.d>>count) & 1) break;
-					count++;
+				while (1) {
+					if (inst.op1.d & 0x1) break;
+					count++;inst.op1.d>>=1;
 				}
 				inst.op1.d=count;
 				SETFLAGBIT(ZF,false);
@@ -518,11 +522,12 @@ switch (inst.code.op) {
 			FillFlags();
 			if (!inst.op1.w) {
 				SETFLAGBIT(ZF,true);
+				goto nextopcode;
 			} else {
-				Bits count=15;
-				while (count>0) {
-					if ((inst.op1.w>>count) & 1) break;
-					count--;
+				Bitu count=15;
+				while (1) {
+					if (inst.op1.w & 0x8000) break;
+					count--;inst.op1.w<<=1;
 				}
 				inst.op1.d=count;
 				SETFLAGBIT(ZF,false);
@@ -534,11 +539,12 @@ switch (inst.code.op) {
 			FillFlags();
 			if (!inst.op1.d) {
 				SETFLAGBIT(ZF,true);
+				goto nextopcode;
 			} else {
-				Bits count=31;
-				while (count>0) {
-					if ((inst.op1.d>>count) & 1) break;
-					count--;
+				Bitu count=31;
+				while (1) {
+					if (inst.op1.d & 0x80000000) break;
+					count--;inst.op1.d<<=1;
 				}
 				inst.op1.d=count;
 				SETFLAGBIT(ZF,false);
@@ -546,57 +552,42 @@ switch (inst.code.op) {
 		}
 		break;
 	case O_BTw:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
+		break;
 	case O_BTSw:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
+		inst.op1.d|=(1 << (inst.op2.d & 15));
+		break;
 	case O_BTCw:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
+		inst.op1.d&=~(1 << (inst.op2.d & 15));
+		break;
 	case O_BTRw:
-		{
-			Bitu val;PhysPt read;
-			Bitu mask=1 << (inst.op1.d & 15);
-			FillFlags();
-			if (inst.rm<0xc0) {
-				read=inst.rm_eaa;//+2*(inst.op1.d / 16);
-				val=mem_readw(read);
-			} else {
-				val=reg_16(inst.rm_eai);
-			}
-			SETFLAGBIT(CF,(val&mask)>0);
-			if (inst.code.op==O_BTSw) val|=mask;
-			if (inst.code.op==O_BTRw) val&=~mask;
-			if (inst.code.op==O_BTCw) val^=mask;
-			if (inst.code.op==O_BTw) break;
-			if (inst.rm<0xc0) {
-				mem_writew(read,val);
-			} else {
-				reg_16(inst.rm_eai)=val;
-			}
-		}
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
+		inst.op1.d^=(1 << (inst.op2.d & 15));
 		break;
 	case O_BTd:
-	case O_BTSd:
-	case O_BTCd:
-	case O_BTRd:
-		{
-			Bitu val;PhysPt read;
-			Bitu mask=1 << (inst.op1.d & 31);
-			FillFlags();
-			if (inst.rm<0xc0) {
-				read=inst.rm_eaa;//+4*(inst.op1.d / 32);
-				val=mem_readd(read);
-			} else {
-				val=reg_32(inst.rm_eai);
-			}
-			SETFLAGBIT(CF,(val&mask)>0);
-			if (inst.code.op==O_BTSd) val|=mask;
-			if (inst.code.op==O_BTRd) val&=~mask;
-			if (inst.code.op==O_BTCd) val^=mask;
-			if (inst.code.op==O_BTd) break;
-			if (inst.rm<0xc0) {
-				mem_writed(read,val);
-			} else {
-				reg_32(inst.rm_eai)=val;
-			}
-		}
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
 		break;
+	case O_BTSd:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
+		inst.op1.d|=(1 << (inst.op2.d & 31));
+		break;
+	case O_BTCd:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
+		inst.op1.d&=~(1 << (inst.op2.d & 31));
+		break;
+	case O_BTRd:
+		FillFlags();
+		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
+		inst.op1.d^=(1 << (inst.op2.d & 31));
 	case O_BSWAP:
 		BSWAP(inst.op1.d);
 		break;

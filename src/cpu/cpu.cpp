@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.40 2003-12-10 13:20:26 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.41 2003-12-10 17:02:22 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -45,9 +45,13 @@ Bits CPU_CycleUp = 0;
 Bits CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
 
-void CPU_Real_16_Slow_Start(bool big);
+static struct {
+	Bitu which,errorcode;
+} exception;
+
 void CPU_Core_Full_Start(bool big);
 void CPU_Core_Normal_Start(bool big);
+void CPU_Dynamic_Start(bool big);
 
 static Bits CPU_Core_Normal_Decode(void);
 static Bits CPU_Core_Full_Decode(void);
@@ -272,12 +276,22 @@ doconforming:
 	return true;
 }
 
-Bit8u lastint;
-void CPU_Exception(Bitu num,Bitu error_code) {
-//	LOG_MSG("Exception %d CS:%X IP:%X FLAGS:%X",num,SegValue(cs),reg_eip,reg_flags);
-	CPU_Interrupt(num,error_code,((num>=8) ? CPU_INT_HAS_ERROR : 0));
+void CPU_StartException(void) {
+	CPU_Interrupt(cpu.exception.which,CPU_INT_EXCEPTION | ((cpu.exception.which>=8) ? CPU_INT_HAS_ERROR : 0));
 }
-void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
+void CPU_SetupException(Bitu which,Bitu error) {
+	cpu.exception.which=which;
+	cpu.exception.error=error;
+}
+
+void CPU_Exception(Bitu which,Bitu error ) {
+//	LOG_MSG("Exception %d CS:%X IP:%X FLAGS:%X",num,SegValue(cs),reg_eip,reg_flags);
+	CPU_SetupException(which,error);
+	CPU_StartException();
+}
+
+Bit8u lastint;
+bool CPU_Interrupt(Bitu num,Bitu type) {
 	lastint=num;
 #if C_DEBUG
 	switch (num) {
@@ -290,7 +304,7 @@ void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 	case 0x03:
 		if (DEBUG_Breakpoint()) {
 			CPU_Cycles=0;
-			return;
+			return false;
 		}
 	};
 #endif
@@ -307,7 +321,7 @@ void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 		Segs.val[cs]=mem_readw(base+(num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
 		cpu.code.big=false;
-		return;
+		return false;
 	} else {
 		/* Protected Mode Interrupt */
 //		if (type&CPU_INT_SOFTWARE && cpu.v86) goto realmode_interrupt;
@@ -316,18 +330,16 @@ void CPU_Interrupt(Bitu num,Bitu error_code,Bitu type) {
 		if ((reg_flags & FLAG_VM) && (type&CPU_INT_SOFTWARE)) {
 			LOG_MSG("Software int in v86, AH %X IOPL %x",reg_ah,(reg_flags & FLAG_IOPL) >>12);
 			if ((reg_flags & FLAG_IOPL)!=FLAG_IOPL) {
-				reg_eip-=error_code;
-				CPU_Exception(13,0);
-				return;
+				CPU_SetupException(13,0);
+				return true;
 			}
 		} 
 		Descriptor gate;
 //TODO Check for software interrupt and check gate's dpl<cpl
 		cpu.idt.GetDescriptor(num<<3,gate);
 		if (type&CPU_INT_SOFTWARE && gate.DPL()<cpu.cpl) {
-			reg_eip-=error_code;
-			CPU_Exception(13,num*8+2);
-			return;
+			CPU_SetupException(13,num*8+2);
+			return true;
 		}
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:		case DESC_386_INT_GATE:
@@ -393,12 +405,12 @@ do_interrupt:
 						CPU_Push32(reg_flags);
 						CPU_Push32(SegValue(cs));
 						CPU_Push32(reg_eip);
-						if (type & CPU_INT_HAS_ERROR) CPU_Push32(error_code);
+						if (type & CPU_INT_HAS_ERROR) CPU_Push32(cpu.exception.error);
 					} else {					/* 16-bit gate */
 						CPU_Push16(reg_flags & 0xffff);
 						CPU_Push16(SegValue(cs));
 						CPU_Push16(reg_ip);
-						if (type & CPU_INT_HAS_ERROR) CPU_Push16(error_code);
+						if (type & CPU_INT_HAS_ERROR) CPU_Push16(cpu.exception.error);
 					}
 					break;		
 				default:
@@ -414,16 +426,16 @@ do_interrupt:
 				cpu.code.big=cs_desc.Big()>0;
 				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",gate_sel,gate_off,cs_desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=gate_off;
-				return;
+				return false;
 			}
 		case DESC_TASK_GATE:
 			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT);
 			if (type & CPU_INT_HAS_ERROR) {
 				//TODO Be sure about this, seems somewhat unclear
-				if (cpu_tss.is386) CPU_Push32(error_code);
-				else CPU_Push16(error_code);
+				if (cpu_tss.is386) CPU_Push32(cpu.exception.error);
+				else CPU_Push16(cpu.exception.error);
 			}
-			return;
+			return false;
 		default:
 			E_Exit("Illegal descriptor type %X for int %X",gate.Type(),num);
 		}
@@ -1075,7 +1087,7 @@ void CPU_VERW(Bitu selector) {
 }
 
 
-void CPU_SetSegGeneral(SegNames seg,Bitu value) {
+bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	Segs.val[seg]=value;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
 		Segs.phys[seg]=value << 4;
@@ -1083,6 +1095,7 @@ void CPU_SetSegGeneral(SegNames seg,Bitu value) {
 			cpu.stack.big=false;
 			cpu.stack.mask=0xffff;
 		}
+		return false;
 	} else {
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(value,desc);
@@ -1096,6 +1109,7 @@ void CPU_SetSegGeneral(SegNames seg,Bitu value) {
 				cpu.stack.mask=0xffff;
 			}
 		}
+		return false;
 	}
 }
 
@@ -1129,17 +1143,14 @@ static Bits HLT_Decode(void) {
 	return 0;
 }
 
-void CPU_HLT(Bitu oplen) {
-	if (cpu.cpl) {
-		reg_eip-=oplen;
-		CPU_Exception(13,0);
-		return;
-	}
+bool CPU_HLT(void) {
+	if (cpu.cpl) return true;
 	CPU_Cycles=0;
 	cpu.hlt.cs=SegValue(cs);
 	cpu.hlt.eip=reg_eip;
 	cpu.hlt.old_decoder=cpudecoder;
 	cpudecoder=&HLT_Decode;
+	return false;
 }
 
 

@@ -24,8 +24,8 @@
 		EAXId(ADDD);break;
 	CASE_D(0x06)												/* PUSH ES */		
 		Push_32(SegValue(es));break;
-	CASE_D(0x07)												/* POP ES */		
-		CPU_SetSegGeneral(es,(Bit16u)Pop_32());break;
+	CASE_D(0x07)												/* POP ES */
+		POPSEG(es,Pop_32(),4);break;
 	CASE_D(0x09)												/* OR Ed,Gd */
 		RMEdGd(ORD);break;
 	CASE_D(0x0b)												/* OR Gd,Ed */
@@ -40,10 +40,12 @@
 		RMGdEd(ADCD);break;
 	CASE_D(0x15)												/* ADC EAX,Id */
 		EAXId(ADCD);break;
-	CASE_D(0x16)												/* PUSH SS */		
+	CASE_D(0x16)												/* PUSH SS */
 		Push_32(SegValue(ss));break;
-	CASE_D(0x17)												/* POP SS */		
-		CPU_SetSegGeneral(ss,(Bit16u)Pop_32());break;
+	CASE_D(0x17)												/* POP SS */
+		POPSEG(ss,Pop_32(),4);
+		CPU_Cycles++;
+		break;
 	CASE_D(0x19)												/* SBB Ed,Gd */
 		RMEdGd(SBBD);break;
 	CASE_D(0x1b)												/* SBB Gd,Ed */
@@ -53,7 +55,7 @@
 	CASE_D(0x1e)												/* PUSH DS */		
 		Push_32(SegValue(ds));break;
 	CASE_D(0x1f)												/* POP DS */
-		CPU_SetSegGeneral(ds,(Bit16u)Pop_32());break;
+		POPSEG(ds,Pop_32(),4);break;
 	CASE_D(0x21)												/* AND Ed,Gd */
 		RMEdGd(ANDD);break;	
 	CASE_D(0x23)												/* AND Gd,Ed */
@@ -417,13 +419,15 @@
 	CASE_D(0xc4)												/* LES */
 		{	
 			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(es,LoadMw(eaa+4));
+			LOADSEG(es,LoadMw(eaa+4));
+			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_D(0xc5)												/* LDS */
 		{	
 			GetRMrd;GetEAa;
-			*rmrd=LoadMd(eaa);CPU_SetSegGeneral(ds,LoadMw(eaa+4));
+			LOADSEG(ds,LoadMw(eaa+4));
+			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_D(0xc7)												/* MOV Ed,Id */
