@@ -38,6 +38,8 @@ VideoModeBlock ModeList[]={
 
 { 0x100  ,M_LIN8   ,640 ,400 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,0   },
 { 0x101  ,M_LIN8   ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,0	},
+{ 0x103  ,M_LIN8   ,800 ,600 ,100,37 ,8 ,16 ,1 ,0xA0000 ,0x10000,128 ,663 ,100,600 ,0	},
+
 
 { 0x150  ,M_LIN8   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 , _VGA_PIXEL_DOUBLE | _VGA_LINE_DOUBLE  },
 { 0x151  ,M_LIN8   ,320 ,240 ,40 ,30 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 , _VGA_PIXEL_DOUBLE | _VGA_LINE_DOUBLE  },
@@ -272,7 +274,7 @@ foundmode:
 	/* Vertical Blank Start */
 	IO_Write(crtc_base,0x15);IO_Write(crtc_base+1,(CurMode->vdispend+8));
 	overflow|=((CurMode->vdispend+8) & 0x100) >> 5;
-	max_scanline|=((CurMode->vdispend+8) & 0x200) >> 3;
+	max_scanline|=((CurMode->vdispend+8) & 0x200) >> 4;
 	ver_overflow|=((CurMode->vdispend+8) & 0x400) >> 8;
 	/* Vertical Retrace End */
 	IO_Write(crtc_base,0x16);IO_Write(crtc_base+1,(CurMode->vtotal-8));
