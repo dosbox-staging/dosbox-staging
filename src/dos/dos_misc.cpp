@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_misc.cpp,v 1.9 2004-03-14 16:21:10 qbix79 Exp $ */
+
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
@@ -60,10 +62,17 @@ static bool DOS_MultiplexFunctions(void) {
 		//TODO Maybe do some idling but could screw up other systems :)
 		reg_al=0;	
 		return true;
-	case 0x1689:   /*  Kernel IDLE CALL */
-		reg_al=0;    //Likely. Please check !!!!!!!!!!!!!!!
-		return true;   
+	case 0x1689:	/*  Kernel IDLE CALL */
 	case 0x168f:	/*  Close awareness crap */
+	   /* Removing warning */
+		return true;
+	case 0x4a01:	/* Query free hma space */
+	case 0x4a02:	/* ALLOCATE HMA SPACE */
+		LOG(LOG_DOSMISC,LOG_WARN)("INT 2f:4a HMA. DOSBox reports none available.");
+		reg_bx=0;	//number of bytes available in HMA or amount succesfully allocated
+		//ESDI=ffff:ffff Location of HMA/Allocated memory
+		SegSet16(es,0xffff);
+		reg_di=0xffff;
 		return true;
 	}
 
@@ -74,12 +83,12 @@ void DOS_SetupMisc(void) {
 	/* Setup the dos multiplex interrupt */
 	first_multiplex=0;
 	call_int2f=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int2f,&INT2F_Handler,CB_IRET);
+	CALLBACK_Setup(call_int2f,&INT2F_Handler,CB_IRET,"DOS Int 2f");
 	RealSetVec(0x2f,CALLBACK_RealPointer(call_int2f));
 	DOS_AddMultiplexHandler(DOS_MultiplexFunctions);
 	/* Setup the dos network interrupt */
 	call_int2a=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET);
-	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a));
+	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a,"DOS Int 2a"));
 };
 
