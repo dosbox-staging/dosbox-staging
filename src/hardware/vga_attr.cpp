@@ -22,7 +22,6 @@
 
 #define attr(blah) vga.attr.blah
 
-
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	vga.attr.palette[index]=val;
 	if (vga.attr.mode_control & 0x80) val=(val&0xf) | (vga.attr.color_select << 4);
@@ -63,9 +62,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 				}
 			}
 			if ((attr(mode_control) ^ val) & 0x08) {
-				/* Fill up background text mode color lookup table */
-				Bit32u b=(val & 8) ^ 0x8;
-				for (Bitu i=0;i<8;i++) TXT_BG_Table[i+8]=(b+i) | ((b+i) << 8)| ((b+i) <<16) | ((b+i) << 24);
+				VGA_SetBlinking(val & 0x8);
 			}
 			/*
 				Special hacks for games programming registers themselves,

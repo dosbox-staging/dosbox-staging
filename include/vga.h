@@ -124,6 +124,7 @@ typedef struct {
 	Bit8u font[64*1024];
 	Bitu font1_start;
 	Bitu font2_start;
+	Bitu blinking;
 	struct {
 		Bit8u sline,eline;
 		Bit8u count,delay;
@@ -161,6 +162,7 @@ typedef struct {
 } VGA_HERC;
 
 typedef struct {
+	Bit8u mode_control;
 	Bit8u color_select;
 } VGA_CGA;
 
@@ -311,6 +313,7 @@ void VGA_SetClock(Bitu which,Bitu target);
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
+void VGA_SetBlinking(Bitu enabled);
 
 extern VGA_Type vga;
 

@@ -101,7 +101,7 @@ static Bit8u * VGA_VGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * draw=VGA_DrawBuffer;
+	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
 	Bit8u * vidmem=&vga.mem.linear[vidstart];
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
@@ -112,60 +112,20 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		Bit32u fg=TXT_FG_Table[col&0xf];
 		Bit32u bg=TXT_BG_Table[col>>4];
 		mask1&=FontMask[col >> 7];mask2&=FontMask[col >> 7];
-		*(Bit32u*)draw=fg&mask1 | bg&~mask1;
-		draw+=4;
-		*(Bit32u*)draw=fg&mask2 | bg&~mask2;
-		draw+=4;
+		*draw++=fg&mask1 | bg&~mask1;
+		*draw++=fg&mask2 | bg&~mask2;
 	}
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
+	Bits font_addr=(vga.config.cursor_start*2-vidstart)/2;
+	if (font_addr>=0 && font_addr<vga.draw.blocks) {
+		if (line<vga.draw.cursor.sline) goto skip_cursor;
+		if (line>vga.draw.cursor.eline) goto skip_cursor;
+		draw=(Bit32u *)&VGA_DrawBuffer[font_addr*8];
+		Bit32u att=TXT_FG_Table[vga.mem.linear[vga.config.cursor_start*2+1]&0xf];
+		*draw++=att;*draw++=att;
+	}
+skip_cursor:
 	return VGA_DrawBuffer;
-}
-
-void VGA_TEXT_Draw(Bit8u * bitdata,Bitu start,Bitu panning,Bitu lines) {
-#if 0
-	Bit8u * reader=&vga.mem.linear[start*2];Bitu rows=lines/vga.draw.font_height;
-	for (Bitu cy=rows;cy>0;cy--) {
-		for (Bitu y=0;y<vga.draw.font_height;y++) {
-			Bit8u * draw=bitdata;
-			bitdata+=vga.draw.width;
-			for (Bitu cx=0;cx<vga.draw.cols;cx++) {
-				Bit8u chr=reader[cx*2];
-				Bit8u font=vga.draw.font[chr*32+y];
-				Bit32u mask1=TXT_Font_Table[font>>4];
-				Bit32u mask2=TXT_Font_Table[font&0xf];
-				Bit8u col=reader[cx*2+1];
-				Bit32u fg=TXT_FG_Table[col&0xf];
-				Bit32u bg=TXT_BG_Table[col>>4];
-				*(Bit32u*)draw=fg&mask1 | bg&~mask1;
-				draw+=4;
-				*(Bit32u*)draw=fg&mask2 | bg&~mask2;
-				draw+=4;
-			}
-		}
-		reader+=(vga.config.scan_len*4);
-	}
-/* Cursor handling */
-    if(vga.draw.cursor.enabled && (vga.draw.cursor.count>8)) {	/* Draw a cursor if enabled */
-		Bits cur_start=vga.config.cursor_start-start;
-		if (cur_start<0) return;
-
-		Bitu row=cur_start / (vga.config.scan_len*2);
-		Bitu col=cur_start % (vga.config.scan_len*2);
-		Bit32u att=vga.mem.linear[vga.config.cursor_start*2+1]&0xf;
-		att=TXT_BG_Table[att];
-
-		if ((col*8)>=vga.draw.width) return;
-		if ((row*vga.draw.font_height)>=vga.draw.height) return;
-		if (vga.draw.cursor.sline>=vga.draw.font_height) return;
-		if (vga.draw.cursor.sline>vga.draw.cursor.eline) return;
-		Bit8u * cursor_draw=bitdata+(row*vga.draw.font_height+vga.draw.cursor.sline)*vga.draw.width+col*8;
-	
-		for (Bits loop=vga.draw.cursor.eline-vga.draw.cursor.sline;loop>=0;loop--) {
-			*((Bit32u *)cursor_draw)=att;
-			*((Bit32u *)(cursor_draw+4))=att;
-			cursor_draw+=vga.draw.width;
-		}
-    }
-#endif
 }
 
 static void VGA_VerticalDisplayEnd(void) {
@@ -197,6 +157,21 @@ static void VGA_DrawPart(void) {
 	RENDER_EndUpdate();
 //	vga.draw.parts_left--;
 //	if (vga.draw.parts_left) PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts);
+}
+
+void VGA_SetBlinking(Bitu enabled) {
+	Bitu b;
+	LOG_MSG("Blinking %d",enabled);
+	if (enabled) {
+		b=0;vga.draw.blinking=-1;
+		vga.attr.mode_control|=0x08;
+		vga.cga.mode_control&=~0x20;
+	} else {
+		b=8;vga.draw.blinking=0;
+		vga.attr.mode_control&=~0x08;
+		vga.cga.mode_control|=0x20;
+	}
+	for (Bitu i=0;i<8;i++) TXT_BG_Table[i+8]=(b+i) | ((b+i) << 8)| ((b+i) <<16) | ((b+i) << 24);
 }
 
 static void VGA_VerticalTimer(void) {
@@ -364,10 +339,10 @@ void VGA_SetupDrawing(void) {
 	case M_TEXT2:
 	case M_TEXT16:
 		aspect_ratio=1.0;
-		vga.draw.address_line_total=vga.draw.font_height;
 		if (vga.draw.font_height<4 && (machine<MCH_VGA || machine==MCH_AUTO)) {
 			vga.draw.font_height=4;
 		};
+		vga.draw.address_line_total=vga.draw.font_height;
 		vga.draw.blocks=width;
 		vga.draw.address_add=vga.config.scan_len*4;
 		if (vga.seq.clocking_mode & 0x8) scalew*=2;

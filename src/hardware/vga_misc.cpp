@@ -57,15 +57,22 @@ static Bit8u read_p3da(Bit32u port) {
 
 
 static void write_p3d8(Bit32u port,Bit8u val) {
+	/* Check if someone changes the blinking/hi intensity bit */
 	switch (machine) {
+	case MCH_AUTO:
+		VGA_SetBlinking((val & 0x20));
+		switch (vga.mode) {
+		case M_CGA2:
+		case M_CGA4:
+		case M_CGA16:
+		case M_TANDY16:
+			goto m_cga;		
+		}
+		break;
 	case MCH_CGA:
-		goto cga_3d8;
-	};
-	switch (vga.mode) {
-	case M_CGA16:
-	case M_CGA4:
-	case M_CGA2:
-cga_3d8:
+	case MCH_TANDY:
+		VGA_SetBlinking((val & 0x20));
+m_cga:
 		if (val & 0x2) {
 			if (val & 0x10) {
 				if (val & 0x8) {
@@ -78,10 +85,10 @@ cga_3d8:
 		} else {
 			VGA_SetMode(M_TEXT16);
 		}
+		vga.cga.mode_control=val;
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("Write %2X to 3d8 in mode %d",val,vga.mode);
-		break;
 	}
 	/*
 		3	Vertical Sync Select. If set Vertical Sync to the monitor is the
@@ -116,6 +123,10 @@ static void write_p3d9(Bit32u port,Bit8u val) {
 		break;
 	case M_CGA16:
 		for(i=0;i<0x10;i++) VGA_ATTR_SetPalette(i,i);
+		break;
+	case M_TEXT16:
+		/* Assume a normal text palette has been set */
+//		VGA_ATTR_SetPalette(0,(val & 0x8) ? ((val & 7)+32) : (val &7));
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to %X in mode %d",val,port,vga.mode);
@@ -213,7 +224,9 @@ static void write_hercules(Bit32u port,Bit8u val) {
 		if ((vga.herc.enable_bits & 1) && ((vga.herc.mode_control ^ val)&0x2)) {
 			vga.herc.mode_control^=0x2;
 			if (vga.mode != M_HERC || vga.mode != M_TEXT2) {
+				VGA_ATTR_SetPalette(0,0x00);
 				VGA_ATTR_SetPalette(1,0x07);
+
 				/* Force 0x3b4/5 registers */
 				if (vga.misc_output & 1) write_p3c2(0,vga.misc_output & ~1);
 			}
