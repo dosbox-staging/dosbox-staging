@@ -169,6 +169,7 @@ static Bitu INT15_Handler(void) {
 		mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(SegValue(es),reg_bx));
 		mem_writed(BIOS_WAIT_FLAG_COUNT,reg_cx<<16|reg_dx);
 		mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
+		PIC_RemoveEvents(&WaitFlagEvent);
 		PIC_AddEvent(&WaitFlagEvent,reg_cx<<16|reg_dx);
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
