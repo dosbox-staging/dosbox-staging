@@ -36,13 +36,12 @@ struct Flag_Info {
 };
 
 struct Segment {
-	Bit16u value;
-	bool special;							/* Signal for pointing to special memory */
-	HostPt host;							/* The address of start in host memory */
-	PhysPt	phys;							/* The phyiscal address start in emulated machine */
+	Bit16u val;
+	PhysPt phys;							/* The phyiscal address start in emulated machine */
 };
 
-enum { cs=0,ds,es,fs,gs,ss};
+
+enum SegNames { cs=0,ds,es,fs,gs,ss};
 
 struct CPU_Regs {
 	union {
@@ -58,10 +57,30 @@ extern Segment Segs[6];
 extern Flag_Info flags;
 extern CPU_Regs cpu_regs;
 
-void SetSegment_16(Bit32u seg,Bit16u val);
+
+//#define SegPhys(index) Segs[index].phys
+//#define SegValue(index) Segs[index].val
+
+INLINE PhysPt SegPhys(SegNames index) {
+	return Segs[index].phys;
+}
+
+INLINE Bit16u SegValue(SegNames index) {
+	return Segs[index].val;
+}
+
+	
+INLINE RealPt RealMakeSeg(SegNames index,Bit16u off) {
+	return RealMake(SegValue(index),off);	
+}
 
 
-//extern Bit8u & reg_al=cpu_regs.ax.b.l;
+INLINE void SegSet16(Bitu index,Bit16u val) {
+	Segs[index].val=val;
+	Segs[index].phys=val << 4;
+}
+
+
 enum REG_NUM {
 	REG_NUM_AX, REG_NUM_CX, REG_NUM_DX, REG_NUM_BX,
 	REG_NUM_SP, REG_NUM_BP, REG_NUM_SI, REG_NUM_DI
