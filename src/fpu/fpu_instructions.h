@@ -104,7 +104,8 @@ static void FPU_FSQRT(void){
 }
 static void FPU_FPATAN(void){
 	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = atan(fpu.regs[top].d);
+	fpu.regs[(top+1)&7].d = atan(fpu.regs[(top+1)&7].d/fpu.regs[top].d);
+	FPU_FPOP();
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
@@ -112,6 +113,7 @@ static void FPU_FPATAN(void){
 static void FPU_FPTAN(void){
 	Bitu top = FPU_GET_TOP();
 	fpu.regs[top].d = tan(fpu.regs[top].d);
+	FPU_PUSH(1.0);
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
