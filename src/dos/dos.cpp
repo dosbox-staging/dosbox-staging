@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.66 2004-02-18 13:02:55 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.67 2004-02-28 16:35:14 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -764,6 +764,10 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
+	case 0x5f:					/* Network redirection */
+		reg_ax=0x0001;		//Failing it
+		CALLBACK_SCF(true);
+		break; 
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
@@ -872,7 +876,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x32:					/* Get drive parameter block for specific drive */
 	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
-	case 0x5f:					/* And Even More Network Functions */
     default:
         LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
         reg_al=0x00; /* default value */

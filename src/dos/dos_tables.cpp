@@ -57,6 +57,9 @@ void DOS_SetupTables(void) {
 	mem_writeb(Real2Phys(dos.tables.indosflag),0);
 	/* Create the DOS Info Block */
 	dos_infoblock.SetLocation(DOS_GetMemory(1+(sizeof(DOS_InfoBlock::sDIB)/16)));
+//	dos_infoblock.SetLocation(0x4e); //c2woody
+/* The above lines might be switched around when working on certain programs */
+   
 	/* Create a fake SFT, so programs think there are 100 file handles */
 	seg=DOS_GetMemory(1);
 	real_writed(seg,0,0xffffffff);		//Last File Table

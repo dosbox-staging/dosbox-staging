@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.34 2004-02-03 14:54:36 finsterr Exp $ */
+/* $Id: dos_classes.cpp,v 1.35 2004-02-28 16:35:14 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -64,11 +64,36 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	pt=PhysMake(seg,0);
 /* Clear the initual Block */
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
+
+	sSave(sDIB,activeCon,RealMake(0x54,0));
+
+	sSave(sDIB,regCXfrom5e,(Bit16u)0);
+	sSave(sDIB,countLRUcache,(Bit16u)0);
+	sSave(sDIB,countLRUopens,(Bit16u)0);
+
+	sSave(sDIB,protFCBs,(Bit16u)0);
+	sSave(sDIB,specialCodeSeg,(Bit16u)0);
+	sSave(sDIB,joindedDrives,(Bit8u)0);
+	sSave(sDIB,lastdrive,(Bit8u)0x18);
+
+	sSave(sDIB,setverPtr,(Bit32u)0);
+
+	sSave(sDIB,a20FixOfs,(Bit16u)0);
+	sSave(sDIB,pspLastIfHMA,(Bit16u)0);
+	sSave(sDIB,blockDevices,(Bit8u)0);
+	
+	sSave(sDIB,bootDrive,(Bit8u)0);
+	sSave(sDIB,useDwordMov,(Bit8u)1);
+	sSave(sDIB,extendedSize,(Bit16u)0x4000);	// >16mb
+
+	sSave(sDIB,sharingCount,(Bit16u)0);
+	sSave(sDIB,sharingDelay,(Bit16u)0);
+
 }
 
 void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb)
 {
-	sSave(sDIB,firstMCB,RealMake(_firstmcb,0));
+	sSave(sDIB,firstMCB,_firstmcb); //c2woody
 }
 
 void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table){

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id */
+/* $Id: dos_execute.cpp,v 1.35 2004-02-28 16:35:14 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -298,6 +298,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		else memsize=maxsize;
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
 		loadseg=pspseg+16;
+		if ((!iscom) & (head.minmemory == 0) & (head.maxmemory == 0))
+			loadseg = (0x9fed0 - imagesize)/16; //c2woody
+	   
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];

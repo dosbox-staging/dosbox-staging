@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.18 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.19 2004-02-28 16:35:14 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -97,6 +97,10 @@ bool DOS_IOCTL(void) {
 				mem_writew(ptr+2,drive>=2);				// nonremovable ?
 				mem_writew(ptr+4,0x0000);				// num of cylinders
 				mem_writeb(ptr+6,0x00);					// media type (00=other type)
+				// drive parameter block following
+				mem_writeb(ptr+7,drive);				// drive
+				mem_writeb(ptr+8,0x00);					// unit number
+				mem_writed(ptr+0x1f,0xffffffff);		// next parameter block
 				break;
 			default	:	
 				LOG(LOG_IOCTL,LOG_ERROR)("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);

@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_inc.h,v 1.38 2004-02-28 16:35:42 qbix79 Exp $ */
+
 #ifndef DOS_H_
 #define DOS_H_
 
@@ -349,19 +351,37 @@ public:
 	#pragma pack(1)
 	#endif
 	struct sDIB {		
-		Bit8u	stuff1[20];			// -0x18 some stuff, hopefully never used....
-		RealPt	firstMCB;			// -0x04  first memory control block
-		RealPt	firstDPB;			//  0x00 first drive parameter block
+		Bit16u	regCXfrom5e;		// -0x18 CX from last int21/ah=5e
+		Bit16u	countLRUcache;		// -0x16 LRU counter for FCB caching
+		Bit16u	countLRUopens;		// -0x14 LRU counter for FCB openings
+		Bit8u	stuff1[6];		// -0x12 some stuff, hopefully never used....
+		Bit16u	sharingCount;		// -0x0c sharing retry count
+		Bit16u	sharingDelay;		// -0x0a sharing retry delay
+		RealPt	diskBufPtr;		// -0x08 pointer to disk buffer
+		Bit16u	ptrCONinput;		// -0x04 pointer to con input
+		Bit16u	firstMCB;		// -0x02 first memory control block
+		RealPt	firstDPB;		//  0x00 first drive parameter block
 		RealPt	firstFileTable;		//  0x04 first system file table
 		RealPt	activeClock;		//  0x08 active clock device header
-		RealPt	activeCon;			//  0x0c active console device header
+		RealPt	activeCon;		//  0x0c active console device header
 		Bit16u	maxSectorLength;	//  0x10 maximum bytes per sector of any block device;
 		RealPt	discInfoBuffer;		//  0x12 pointer to disc info buffer
 		RealPt  curDirStructure;	//  0x16 pointer to current array of directory structure
-		RealPt	fcbTable;			//  0x1a pointer to system FCB table
-		Bit8u	stuff2[0x21];		//  0x1e more stuff
-		Bit16u	buffers_x;			//	x in BUFFERS x,y
-		Bit16u	buffers_y;			//	y in BUFFERS x,y
+		RealPt	fcbTable;		//  0x1a pointer to system FCB table
+		Bit16u	protFCBs;		//  0x1e protected fcbs
+		Bit8u	blockDevices;		//  0x20 installed block devices
+		Bit8u	lastdrive;		//  0x21 lastdrive
+		Bit8u	stuff2[0x12];		//  0x22 NUL driver
+		Bit8u	joindedDrives;		//  0x34 joined drives
+		Bit16u	specialCodeSeg;		//  0x35 special code segment
+		RealPt  setverPtr;		//  0x37 pointer to setver
+		Bit16u  a20FixOfs;		//  0x3b a20 fix routine offset
+		Bit16u  pspLastIfHMA;		//  0x3d psp of last program (if dos in hma)
+		Bit16u	buffers_x;		//  0x3f x in BUFFERS x,y
+		Bit16u	buffers_y;		//  0x41 y in BUFFERS x,y
+		Bit8u	bootDrive;		//  0x43 boot drive
+		Bit8u	useDwordMov;		//  0x44 use dword moves
+		Bit16u	extendedSize;		//  0x45 size of extended memory
 		// some more stuff, hopefully never used.
 	} GCC_ATTRIBUTE(packed);
 	#ifdef _MSC_VER
