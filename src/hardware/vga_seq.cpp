@@ -69,10 +69,10 @@ void write_p3c5(Bitu port,Bitu val,Bitu iolen) {
 	case 3:		/* Character Map Select */
 		{
 			seq(character_map_select)=val;
-			Bit8u font1=(val & 0x3) | ((val & 0x10) >> 2);
-			vga.draw.font1_start=((font1&3) * 16*1024) + ((font1 > 4) ? (8*1024) : 0);
-			Bit8u font2=((val & 0xc) >> 2) | ((val & 0x20) >> 3);
-			vga.draw.font2_start=((font2&3) * 16*1024) + ((font2 > 4) ? (8*1024) : 0);
+			Bit8u font1=((val & 0x3) << 1) | ((val & 0x10) >> 4);
+			vga.draw.font_tables[0]=&vga.draw.font[font1*8*1024];
+			Bit8u font2=((val & 0xc) >> 1) | ((val & 0x20) >> 5);
+			vga.draw.font_tables[1]=&vga.draw.font[font2*8*1024];
 		}
 		/*
 			0,1,4  Selects VGA Character Map (0..7) if bit 3 of the character

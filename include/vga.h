@@ -121,8 +121,7 @@ typedef struct {
 	bool double_scan_active;
 	Bit8u font_height;
 	Bit8u font[64*1024];
-	Bitu font1_start;
-	Bitu font2_start;
+	Bit8u * font_tables[2];
 	Bitu blinking;
 	struct {
 		Bit8u sline,eline;
