@@ -176,7 +176,8 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 		draw_start+=16*pitch;
 	};
 	VGA_StartRetrace();
-
+    
+    if(!(vga.internal.cursor & 0x2000)){
 	/* Draw a cursor */
 	if (((Bitu)vga.draw.cursor_col*8)>=vga.draw.width) return;
 	if (((Bitu)vga.draw.cursor_row*16)>=vga.draw.height) return;
@@ -186,5 +187,6 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 	}
 	vga.draw.cursor_count++;
 	if (vga.draw.cursor_count>16) vga.draw.cursor_count=0;
+    }
 };
 

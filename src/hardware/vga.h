@@ -20,13 +20,18 @@
 #define VGA_H_
 
 #include <mem.h>
+#include "dosbox.h"
 
+#undef TEXT
+#undef GRAPH
+/* conflicts with int10.h */
 enum { TEXT, GRAPH };
 enum { GFX_256C,GFX_256U,GFX_16,GFX_4,GFX_2, TEXT_16 };
 
 typedef struct {
 
 	bool attrindex;
+    Bit16u cursor;
 } VGA_Internal;
 
 typedef struct {

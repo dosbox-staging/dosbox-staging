@@ -25,6 +25,7 @@
 #include "video.h"
 #include "inout.h"
 #include "int10.h"
+#include "../hardware/vga.h"                /* Maybe move this thing */ 
 
 #define TEXT_SEG 0xb800
 
@@ -38,7 +39,8 @@ static Bitu INT10_Handler(void) {
 		INT10_SetVideoMode(reg_al);
 		break;
 	case 0x01:								/* Set TextMode Cursor Shape */
-		LOG_WARN("INT10:01:Set textmode cursor shape not supported");
+        vga.internal.cursor=reg_cx;         // maybe write some memory somewhere
+		LOG_DEBUG("INT10:01:Set textmode cursor shape partially supported: %X",reg_cx);
 		break;
 	case 0x02:								/* Set Cursor Pos */
 		//TODO Check some shit but not really usefull
