@@ -166,7 +166,7 @@ INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 			Bit16s w1 = b1 << 7;
 			Bit16s w2 = b2 << 7;
 			Bit16s diff = w2 - w1;
-			return (w1 + (((Bit32s)diff * (Bit32s)(CurAddr & 0x3fe)) >> 10));
+			return (Bit16s)(w1 + (((Bit32s)diff * (Bit32s)(CurAddr & 0x3fe)) >> 10));
 
 		}
 	} else {
@@ -188,7 +188,7 @@ INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 			Bit16s w1 = (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8));
 			Bit16s w2 = (Bit16s)((Bit16u)GUSRam[useAddr+2] | ((Bit16u)GUSRam[useAddr+3] << 8));
 			Bit16s diff = w2 - w1;
-			return (w1 + (((Bit32s)diff * (Bit32s)((CurAddr) & 0x3fe)) >> 10)) >> 2;
+			return (Bit16s)(w1 + (((Bit32s)diff * (Bit32s)((CurAddr) & 0x3fe)) >> 10)) >> 2;
 
 		}
 	}
@@ -210,7 +210,7 @@ public:
 	Bit32u CurAddr;
 	Bit8u PanPot;
 	Bit8u VolControl;
-	Bit16u channum;
+	Bit8u channum;
 
 	bool moving;
 	bool playing;
@@ -224,7 +224,7 @@ public:
 	Bit32s rightvol;
 	Bit32s nextramp;
 
-	GUSChannels(Bit16u num) { 
+	GUSChannels(Bit8u num) { 
 		channum = num;
 		playing = true; 
 		ramping = false; 
@@ -349,7 +349,7 @@ public:
 	
 		notifyonce = false;
 
-		for(i=0;i<len;i++) {
+		for(i=0;i<(int)len;i++) {
 			// Get sample
 			tmpsamp = GetSample(RealDelta, CurAddr, eightbit);
 		
@@ -834,7 +834,6 @@ static Bit8u read_gus(Bit32u port) {
 
 
 static void write_gus(Bit32u port,Bit8u val) {
-	FILE *fp;
 
 	switch(port - GUS_BASE) {
 	case 0x200:
@@ -1004,7 +1003,7 @@ void MakeTables(void)
 
 	for(i=0;i<256;i++) {
 		float a,b;
-		a = pow(2,(float)(i >> 4));
+		a = pow(2.0f,(float)(i >> 4));
 		b = 1.0+((float)(i & 0xf))/(float)16;
 		a *= b;
 		a /= 16;
@@ -1012,7 +1011,7 @@ void MakeTables(void)
 	}
 	for(i=0;i<4096;i++) {
 		float a,b;
-		a = pow(2,(float)(i >> 8));
+		a = pow(2.0f,(float)(i >> 8));
 		b = 1.0+((float)(i & 0xff))/(float)256;
 		a *= b;
 		a /= 16;

@@ -208,10 +208,10 @@ Bit16u DmaChannel::portRead(Bit32u port, bool eightbit) {
 		if(eightbit) {
 			if(ff) {
 				ff = !ff;
-				return (Bit8u)(currcnt-1 & 0xff);
+				return (Bit8u)(currcnt-1);
 			} else {
 				ff = !ff;
-				return (Bit8u)(currcnt-1 >> 8);
+				return (Bit8u)((currcnt-1) >> 8);
 			}
 		} else {
 			return (Bit16u)currcnt;
@@ -343,7 +343,7 @@ Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 	if (!count) return 0;
 	if (chan->addr_changed) chan->reset();
 
-	if (chan->currcnt>count) {
+	if (chan->currcnt>(Bits)count) {
 		MEM_BlockRead(chan->curraddr,buffer,count);
 		chan->curraddr+=count;
 		chan->current_addr+=count;
@@ -382,7 +382,7 @@ Bitu DMA_8_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
 
 	if (chan->masked) return 0;
 	if (!count) return 0;
-	if (chan->currcnt>count) {
+	if (chan->currcnt>(Bits)count) {
 		MEM_BlockWrite(chan->curraddr,buffer,count);
 		chan->curraddr+=count;
 		chan->currcnt-=count;
