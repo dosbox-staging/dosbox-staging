@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.76 2004-11-03 20:13:40 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.77 2004-11-16 14:24:52 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -187,24 +187,19 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x10 FCB-fileclose used, result:al=%d",reg_al);
 		break;
 	case 0x11:		/* Find First Matching File using FCB */
-		if(DOS_FCBFindFirst(SegValue(ds),reg_dx)){
-			reg_al=0;
-		}else{
-			reg_al=0xff;
-		}
+		if(DOS_FCBFindFirst(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0xFF;
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x11 FCB-FindFirst used, result:al=%d",reg_al);
 		break;
 	case 0x12:		/* Find Next Matching File using FCB */
-		if(DOS_FCBFindNext(SegValue(ds),reg_dx)){
-			reg_al=0;
-		}else{
-			reg_al=0xff;
-		}
+		if(DOS_FCBFindNext(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0xFF;
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x12 FCB-FindNext used, result:al=%d",reg_al);
 		break;
 	case 0x13:		/* Delete File using FCB */
 		if (DOS_FCBDeleteFile(SegValue(ds),reg_dx)) reg_al = 0x00;
 		else reg_al = 0xFF;
+		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x16 FCB-Delete used, result:al=%d",reg_al);
 		break;
 	case 0x14:		/* Sequential read from FCB */
 		reg_al = DOS_FCBRead(SegValue(ds),reg_dx,0);
@@ -426,6 +421,7 @@ static Bitu DOS_21Handler(void) {
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
+			LOG(LOG_MISC,LOG_NORMAL)("Remove dir failed on %s with error %X",name1,dos.errorcode);
 		}
 		break;
 	case 0x3b:		/* CHDIR Set current directory */
