@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.33 2003-09-29 21:05:59 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.34 2003-09-30 13:48:20 finsterr Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -101,6 +101,7 @@ bool CPU_CheckCodeType(CODE_TYPE type) {
 	switch (cpu.code.type) {
 	case CODE_REAL:
 		realcore_start(false);
+		cpu.code.big = false;
 		break;
 	case CODE_PMODE16:
 		pmodecore_start(false);
@@ -406,6 +407,71 @@ call_code:
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
 			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+		case DESC_286_CALL_GATE: { 
+			if (call.DPL()<cpu.cpl) E_Exit("286 Call Gate: Gate DPL<CPL");
+			if (call.DPL()<rpl)		E_Exit("286 Call Gate: Gate DPL<RPL");			
+			Descriptor code;
+			if (!cpu.gdt.GetDescriptor(call.GetSelector(),code)) E_Exit("286 Call Gate: Invalid code segment.");
+			Bitu seldpl = code.DPL();
+			if (seldpl<cpu.cpl) {
+				// higher privilidge level
+				// Get new SS selector for new privilege level from TSS
+				// We dont have a TSS now, so we ´simply use our existing stack...
+				// 1. Load new SS:eSP value from TSS
+				// 2. Load new CS:EIP value from gate
+				Bitu newcs	= call.GetSelector();
+				Bitu neweip	= call.GetOffset();
+				Bitu newcpl = seldpl;
+				Bitu oldcs	= SegValue(cs);
+				Bitu oldip	= reg_ip;
+				// 3. Load CS descriptor (Set RPL of CS to CPL)
+				Segs.phys[cs]	= code.GetBase();
+				cpu.code.big	= code.Big()>0;
+				reg_eip			= neweip;
+				// Set CPL to stack segment DPL
+			    // Set RPL of CS to CPL
+				cpu.cpl			= newcpl;
+				Segs.val[cs]	= (newcs & 0xfffc) | newcpl;
+				// 4. Load SS descriptor
+				// 5. Push long pointer of old stack onto new stack
+				Bitu oldsp = reg_sp;
+				CPU_Push16(SegValue(ss));
+				CPU_Push16(oldsp);
+				// 6. Get word count from call gate, mask to 5 bits
+				Bitu wordCount = call.saved.gate.paramcount;
+				if (wordCount>0) LOG(LOG_CPU,LOG_NORMAL)("CPU: Callgate 286 wordcount : %d)",wordCount);
+				// 7. Copy parameters from old stack onto new stack
+				while (wordCount>0) {
+					CPU_Push16(mem_readw(SegPhys(ss)+oldsp)); 
+					oldsp += 2; wordCount--;
+				}
+				// Push return address onto new stack
+				CPU_Push16(oldcs);
+				CPU_Push16(oldip);
+//				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Higher) %04X:%04X",newcs,neweip);
+				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			} else {
+				// same privilidge level
+				Bitu oldcs	= SegValue(cs);
+				Bitu oldip	= reg_ip;
+				Bitu newcs	= call.GetSelector() | 3;
+				Bitu neweip	= call.GetOffset();
+				// 3. Load CS descriptor (Set RPL of CS to CPL)
+				Descriptor code2;
+				if (!cpu.gdt.GetDescriptor(newcs,code2)) E_Exit("286 Call Gate: Invalid code segment.");
+				Segs.phys[cs]	= code.GetBase();
+				cpu.code.big	= code.Big()>0;
+			    // Set RPL of CS to CPL
+				cpu.cpl			= seldpl;
+				Segs.val[cs]	= (newcs & 0xfffc) | seldpl;
+				reg_eip			= neweip;
+				// Push return address onto new stack
+				CPU_Push16(oldcs);
+				CPU_Push16(oldip);
+//				LOG(LOG_MISC,LOG_ERROR)("CPU: Callgate (Same) %04X:%04X",newcs,neweip);
+				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
+			}; break;
+			};
 		default:
 			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
 
@@ -472,7 +538,17 @@ RET_same_level:
 			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		} else {
 			/* Return to higher level */
-			E_Exit("REturn to higher priviledge");
+			Bitu newsp = CPU_Pop16();
+			Bitu newss = CPU_Pop16();
+			cpu.cpl = rpl;
+			CPU_SetSegGeneral(ss,newss);
+			reg_esp = newsp;
+			Segs.phys[cs]=desc.GetBase();
+			cpu.code.big=desc.Big()>0;
+			Segs.val[cs]=selector;
+			reg_eip=offset;
+//			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
+			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		}
 		LOG(LOG_CPU,LOG_NORMAL)("Prot ret %X:%X",selector,offset);
 		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
