@@ -184,6 +184,7 @@ bool CDROM_Interface_Aspi::GetVendor(BYTE HA_num, BYTE SCSI_Id, BYTE SCSI_Lun, c
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,30000);
 //	LOG(LOG_MISC|LOG_ERROR,"SCSI: Pending done.");					
 
+	CloseHandle(hEvent);
 	if (srbExec.SRB_Status != SS_COMP) {
 		strcpy (szBuffer, "error" );
 		return false;
@@ -382,6 +383,8 @@ DWORD CDROM_Interface_Aspi::GetTOC(LPTOC toc)
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,30000);
 
+	CloseHandle(hEvent);
+
 	return (s.SRB_Status==SS_COMP);
 }
 
@@ -420,6 +423,8 @@ bool CDROM_Interface_Aspi::PlayAudioSector(unsigned long start,unsigned long len
 
 	if(dwStatus==SS_PENDING) WaitForSingleObject(hEvent,10000);
 
+	CloseHandle(hEvent);
+
 	return s.SRB_Status==SS_COMP;
 }
 
@@ -453,9 +458,9 @@ bool CDROM_Interface_Aspi::PauseAudio(bool resume)
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,30000);
 
-	if (s.SRB_Status!=SS_COMP) return false;
+	CloseHandle(hEvent);
 
-	return true;
+	return (s.SRB_Status==SS_COMP);
 };
 
 bool CDROM_Interface_Aspi::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
@@ -493,6 +498,8 @@ bool CDROM_Interface_Aspi::GetAudioSub(unsigned char& attr, unsigned char& track
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
 
+	CloseHandle(hEvent);
+	
 	if (s.SRB_Status!=SS_COMP) return false;
 
 	attr		= (pos.ADR<<4) | pos.Control;
@@ -542,6 +549,8 @@ bool CDROM_Interface_Aspi::GetUPC(unsigned char& attr, char* upcdata)
 	dwStatus = pSendASPI32Command((LPSRB)&s);
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
+
+	CloseHandle(hEvent);
 
 	if (s.SRB_Status!=SS_COMP) return false;
 
@@ -593,6 +602,8 @@ bool CDROM_Interface_Aspi::GetAudioStatus(bool& playing, bool& pause)
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
 
+	CloseHandle(hEvent);
+
 	if (s.SRB_Status!=SS_COMP) return false;
 
 	playing			= (sub.AudioStatus==0x11);
@@ -630,6 +641,8 @@ bool CDROM_Interface_Aspi::LoadUnloadMedia(bool unload)
 	dwStatus = pSendASPI32Command((LPSRB)&s);
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
+
+	CloseHandle(hEvent);
 
 	if (s.SRB_Status!=SS_COMP) return false;
 
@@ -695,6 +708,8 @@ bool CDROM_Interface_Aspi::ReadSectors(void* buffer, bool raw, unsigned long sec
 	dwStatus = pSendASPI32Command((LPSRB)&s);
 
 	if (dwStatus==SS_PENDING) WaitForSingleObject(hEvent,0xFFFFFFFF);
+
+	CloseHandle(hEvent);
 
 	if (s.SRB_Status!=SS_COMP) {
 		if (!raw) delete[] inPtr;
