@@ -76,6 +76,8 @@ static void ForwardPIT(float newindex) {
 	switch (spkr.pit_mode) {
 	case 0:
 		return;
+	case 1:
+		return;
 	case 2:
 		while (passed>0) {
 			/* passed the initial low cycle? */
@@ -171,6 +173,11 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		spkr.pit_last=((float)cntr-40)*(SPKR_VOLUME/40.0f);
 		AddDelayEntry(newindex,spkr.pit_last);
 		spkr.pit_index=0;
+		break;
+	case 1:
+		if (spkr.mode!=SPKR_PIT_ON) return;
+		spkr.pit_last=SPKR_VOLUME;
+		AddDelayEntry(newindex,spkr.pit_last);
 		break;
 	case 2:			/* Single cycle low, rest low high generator */
 		spkr.pit_index=0;
