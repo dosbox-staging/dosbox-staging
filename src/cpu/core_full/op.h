@@ -33,14 +33,14 @@ switch (inst.code.op) {
 		lflags.type=inst.code.op;
 		break;
 	case t_ADCb:	case t_ADCw:	case t_ADCd:
-		lflags.oldcf=get_CF();
+		lflags.oldcf=get_CF()!=0;
 		lf_var1d=inst.op1.d;
 		lf_var2d=inst.op2.d;
 		inst.op1.d=lf_resd=lf_var1d + lf_var2d + lflags.oldcf;
 		lflags.type=inst.code.op;
 		break;
 	case t_SBBb:	case t_SBBw:	case t_SBBd:
-		lflags.oldcf=get_CF();
+		lflags.oldcf=get_CF()!=0;
 		lf_var1d=inst.op1.d;
 		lf_var2d=inst.op2.d;
 		inst.op1.d=lf_resd=lf_var1d - lf_var2d - lflags.oldcf;
@@ -320,45 +320,29 @@ switch (inst.code.op) {
 		Push_32(reg_eip);
 		break;
 	case O_CALLFw:
-		SaveIP();
-		if (!CPU_CALL(false,inst.op2.d,inst.op1.d)) {
-			FillFlags();
-			return CBRET_NONE;
-		} 
-		LoadIP();
-		goto nextopcode;
+		LEAVECORE;
+		CPU_CALL(false,inst.op2.d,inst.op1.d);
+		goto restart_core;
 	case O_CALLFd:
-		SaveIP();
-		if (!CPU_CALL(true,inst.op2.d,inst.op1.d)) {
-			FillFlags();
-			return CBRET_NONE;
-		}
-		LoadIP();
-		goto nextopcode;
+		LEAVECORE;
+		CPU_CALL(true,inst.op2.d,inst.op1.d);
+		goto restart_core;
 	case O_JMPFw:
-		if (!CPU_JMP(false,inst.op2.d,inst.op1.d)){
-			FillFlags();
-			return CBRET_NONE;
-		}
-		LoadIP();
-		goto nextopcode;
+		LEAVECORE;
+		CPU_JMP(false,inst.op2.d,inst.op1.d);
+		goto restart_core;
 	case O_JMPFd:
-		if (!CPU_JMP(true,inst.op2.d,inst.op1.d)) {
-			FillFlags();
-			return CBRET_NONE;
-		}
-		LoadIP();
-		goto nextopcode;
-
+		LEAVECORE;
+		CPU_JMP(true,inst.op2.d,inst.op1.d);
+		goto restart_core;
 	case O_INT:
 		LEAVECORE;
 #if C_DEBUG
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return debugCallback;
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) return debugCallback;
 #endif
-		if (!Interrupt(inst.op1.b)) return CBRET_NONE;
-		LoadIP();
-		break;
+		Interrupt(inst.op1.b);
+		goto restart_core;
 	case O_INb:
 		reg_al=IO_Read(inst.op1.d);
 		goto nextopcode;

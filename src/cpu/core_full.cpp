@@ -63,13 +63,14 @@ typedef PhysPt EAPoint;
 		Bit8u new_num=blah;									\
 		IPPoint=inst.start_entry;							\
 		LEAVECORE;											\
-		Interrupt(new_num);									\
+		CPU_Exception(new_num,0);							\
 		LoadIP();											\
 		goto nextopcode;									\
 	}
 
 Bits Full_DeCode(void) {
 	FullData inst;	
+restart_core:
 	if (!cpu.code.big) {
 		inst.start_prefix=0x0;;
 		inst.start_entry=0x0;
@@ -83,6 +84,7 @@ Bits Full_DeCode(void) {
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;
+		CPU_Cycles--;
 #if C_HEAVY_DEBUG
 		SaveIP();
 		if (DEBUG_HeavyIsBreakpoint()) {
@@ -101,7 +103,6 @@ restartopcode:
 		#include "core_full/op.h"
 		#include "core_full/save.h"
 nextopcode:;
-		CPU_Cycles--;
 	}
 	LEAVECORE;
 	return CBRET_NONE;

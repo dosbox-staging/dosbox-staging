@@ -273,49 +273,41 @@ l_M_Ed:
 		inst.op1.d=4;
 		break;
 	case D_IRETw:
-		lflags.type=t_UNKNOWN;
-		if (!CPU_IRET(false)) return CBRET_NONE;
+		LEAVECORE;
+		CPU_IRET(false);
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
-		LoadIP();
-		goto nextopcode;
+		goto restart_core;
 	case D_IRETd:
-		lflags.type=t_UNKNOWN;
-		if (!CPU_IRET(true)) return CBRET_NONE;
+		LEAVECORE;
+		CPU_IRET(true);
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
-		LoadIP();
-		goto nextopcode;
+		goto restart_core;
 	case D_RETFwIw:
-		if (!CPU_RET(false,Fetchw())) {
-			FillFlags();
-			return CBRET_NONE;
+		{
+			Bitu words=Fetchw();
+			LEAVECORE;		
+			CPU_RET(false,words);
+			goto restart_core;
 		}
-		LoadIP();
-		goto nextopcode;
 	case D_RETFw:
-		if (!CPU_RET(false,0)) {
-			FillFlags();
-			return CBRET_NONE;
-		}
-		LoadIP();
-		goto nextopcode;
+		LEAVECORE;		
+		CPU_RET(false,0);
+		goto restart_core;
 	case D_RETFdIw:
-		if (!CPU_RET(true,Fetchw())) {
-			FillFlags();
-			return CBRET_NONE;
+		{
+			Bitu words=Fetchw();
+			LEAVECORE;		
+			CPU_RET(true,words);
+			goto restart_core;
 		}
-		LoadIP();
-		goto nextopcode;
 	case D_RETFd:
-		if (!CPU_RET(true,0)) {
-			FillFlags();
-			return CBRET_NONE;
-		}
-		LoadIP();
-		goto nextopcode;
+		LEAVECORE;		
+		CPU_RET(true,0);
+		goto restart_core;
 /* Direct operations */
 	case L_STRING:
 		#include "string.h"
@@ -378,16 +370,14 @@ l_M_Ed:
 		}
 		goto nextopcode;
 	case D_STC:
-		SETFLAGBIT(CF,true);
-		SetTypeCF();
+		FillFlags();SETFLAGBIT(CF,true);
 		goto nextopcode;
 	case D_CLC:
-		SETFLAGBIT(CF,false);
-		SetTypeCF();
+		FillFlags();SETFLAGBIT(CF,false);
 		goto nextopcode;
 	case D_CMC:
-		SETFLAGBIT(CF,!get_CF());
-		SetTypeCF();
+		FillFlags();
+		SETFLAGBIT(CF,!(reg_flags & FLAG_CF));
 		goto nextopcode;
 	case D_CLD:
 		SETFLAGBIT(DF,false);
