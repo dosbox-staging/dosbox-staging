@@ -171,7 +171,8 @@ void CALLBACK_Init(Section* sec) {
 	/* Setup all Interrupt to point to the default handler */
 	call_default=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET);
-	for (i=0;i<256;i++) {
+	/* Only setup default handler for first half of interrupt table */
+	for (i=0;i<128;i++) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
 	}
 #endif
