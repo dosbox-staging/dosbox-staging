@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 #include "int10.h"
 
 
-VGAROMAREA int10_romarea;
 static Bit8u static_functionality[0x10]=
 {
  /* 0 */ 0xff,  // All modes supported #1
@@ -40,35 +39,67 @@ static Bit8u static_functionality[0x10]=
  /* f */ 0x00   // reserved
 };
 
+static Bit16u map_offset[8]={
+	0x0000,0x4000,0x8000,0xc000,
+	0x2000,0x6000,0xa000,0xe000
+};
+
+void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
+	PhysPt where=PhysMake(0xa000,map_offset[map & 0x7]+offset*32);
+	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0x4);	//Enable plane 2
+	IO_Write(0x3ce,0x6);IO_Write(0x3cf,0x0);	//Disable odd/even and a0000 adressing
+	for (Bitu i=0;i<count;i++) {
+		MEM_BlockCopy(where,font,height);
+		where+=32;
+		font+=height;
+	}
+	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);	//Enable all planes
+	IO_Write(0x3ce,0x6);
+	IO_Write(0x3cf,0x0e);	//odd/even and b8000 adressing
+	/* Reload tables and registers with new values based on this height */
+	if (reload) {
+		//Max scanline 
+		IO_Write(0x3d4,0x9);
+		IO_Write(0x3d5,(IO_Read(0x3d5) & 0xe0)|(height-1));
+		//Vertical display end bios says, but should stay the same?
+		//Rows setting in bios segment
+		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,height);
+		//TODO Reprogram cursor size?
+	}
+}
+
+
+
 
 
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
-	Bit32u i;
-
-	Bit16u segoff=0;
-	int10_romarea.font_8_first=RealMake(0xC000,segoff);
+	Bitu i;
+	int10.rom.used=2;
+	real_writew(0xc000,0,0xaa55);
+	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
-		real_writeb(0xC000,segoff++,int10_font_08[i]);
+		real_writeb(0xC000,int10.rom.used++,int10_font_08[i]);
 	}
-	int10_romarea.font_8_second=RealMake(0xC000,segoff);
+	int10.rom.font_8_second=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
-		real_writeb(0xC000,segoff++,int10_font_08[i+128*8]);
+		real_writeb(0xC000,int10.rom.used++,int10_font_08[i+128*8]);
 	}
-	int10_romarea.font_14=RealMake(0xC000,segoff);
+	int10.rom.font_14=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<256*14;i++) {
-		real_writeb(0xC000,segoff++,int10_font_14[i]);
+		real_writeb(0xC000,int10.rom.used++,int10_font_14[i]);
 	}
-	int10_romarea.font_16=RealMake(0xC000,segoff);
+	int10.rom.font_16=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<256*16;i++) {
-		real_writeb(0xC000,segoff++,int10_font_16[i]);
+		real_writeb(0xC000,int10.rom.used++,int10_font_16[i]);
 	}
-	int10_romarea.static_state=RealMake(0xC000,segoff);
+	int10.rom.static_state=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<0x10;i++) {
-		real_writeb(0xC000,segoff++,static_functionality[i]);
+		real_writeb(0xC000,int10.rom.used++,static_functionality[i]);
 	}
 	MEM_BlockWrite(PhysMake(0xf000,0xfa6e),int10_font_08,128*8);
-	RealSetVec(0x1F,int10_romarea.font_8_second);
+	RealSetVec(0x1F,int10.rom.font_8_second);
 };
 
 

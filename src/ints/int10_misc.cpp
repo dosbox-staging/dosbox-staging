@@ -73,12 +73,12 @@ struct Dynamic_Functionality {
 
 void INT10_GetFuncStateInformation(PhysPt save) {
 	/* set static state pointer */
-	mem_writed(save,int10_romarea.static_state);
+	mem_writed(save,int10.rom.static_state);
 	/* Copy BIOS Segment areas */
 	Bit16u i;
 
 	/* First area in Bios Seg */
-	for (i=0;i<30;i++) {
+	for (i=0;i<0x1e;i++) {
 		mem_writeb(save+0x4+i,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE+i));
 	}
 	/* Second area */
@@ -89,31 +89,27 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	for (i=0x25;i<0x40;i++) mem_writeb(save+i,0);
 	/* DCC Index */
 	mem_writeb(save+0x25,real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX));
-	VGAMODES * curmode=GetCurrentMode();
-	if (!curmode) return;
 	Bit16u col_count=0;
-	switch (curmode->memmodel) {
-	case CTEXT:
-		col_count=2;break;
-	case MTEXT:
+	switch (CurMode->type) {
+	case M_TEXT16:
 		col_count=16;break;
-	case CGA:
-		col_count=4;break;
-	case PLANAR1:
+	case M_CGA2:
 		col_count=2;break;
-	case PLANAR2:
+	case M_CGA4:
 		col_count=4;break;
-	case PLANAR4:
+	case M_EGA16:
 		col_count=16;break;
-	case LINEAR8:
+	case M_VGA:
 		col_count=256;break;
+	default:
+		LOG(LOG_INT10,LOG_ERROR)("Get Func State illegal mode type %d",CurMode->type);
 	}
 	/* Colour count */
 	mem_writew(save+0x27,col_count);
 	/* Page count */
-	mem_writeb(save+0x29,curmode->nbpages);
+	mem_writeb(save+0x29,CurMode->ptotal);
 	/* scan lines */
-	switch (curmode->sheight) {
+	switch (CurMode->sheight) {
 	case 200:
 		mem_writeb(save+0x2a,0);break;
 	case 350:

@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "../hardware/vga.h"
+
 #define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
@@ -83,99 +85,64 @@
 #define VGAMEM_CTEXT 0xB800
 #define VGAMEM_MTEXT 0xB000
 
-
-
-/*
- *
- * Tables of default values for each mode
- *
- */
-#define MODE_MAX   0x13
-#define TEXT       0x00
-#define GRAPH      0x01
-
-#define CTEXT      0x00
-#define MTEXT      0x01
-#define CGA        0x02
-#define PLANAR1    0x03
-#define PLANAR2    0x04
-#define PLANAR4    0x05
-#define LINEAR8    0x06
-#define CGA2	   0x07
-// for Tandy
-
-#define TANDY16    0x0A
-	
-
-#define LINEAR15   0x10
-#define LINEAR16   0x11
-#define LINEAR24   0x12
-#define LINEAR32   0x13
-
-
 #define SCREEN_SIZE(x,y) (((x*y*2)|0x00ff)+1)
 #define SCREEN_MEM_START(x,y,p) ((((x*y*2)|0x00ff)+1)*p)
 #define SCREEN_IO_START(x,y,p) ((((x*y)|0x00ff)+1)*p)
 
+#define BIOS_NCOLS Bit16u ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
+#define BIOS_NROWS Bit16u nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1;
 
 extern Bit8u int10_font_08[256 * 8];
 extern Bit8u int10_font_14[256 * 14];
 extern Bit8u int10_font_16[256 * 16];
 
+struct VideoModeBlock {
+	Bitu	mode;
+	VGAModes	type;
+	Bitu	swidth, sheight;
+	Bitu	twidth, theight;
+	Bitu	cwidth, cheight;
+	Bitu	ptotal,pstart,plength;
 
-
-typedef struct
-{Bit8u  svgamode;
- Bit16u vesamode;
- Bit8u  type;		/* TEXT, GRAPH */
- Bit8u  memmodel;	/* CTEXT,MTEXT,CGA,PL1,PL2,PL4,P8,P15,P16,P24,P32 */
- Bit8u  nbpages; 
- Bit8u  pixbits;
- Bit16u swidth, sheight;
- Bit16u twidth, theight;
- Bit16u cwidth, cheight;
- Bit16u sstart;
- Bit16u slength;
- Bit8u  miscreg;
- Bit8u  pelmask;
- Bit8u  crtcmodel;
- Bit8u  actlmodel;
- Bit8u  grdcmodel;
- Bit8u  sequmodel;
- Bit8u  dacmodel;	/* 0 1 2 3 */
-} VGAMODES;
-
-extern VGAMODES vga_modes[MODE_MAX+1];
-
+	Bitu	htotal,vtotal;
+	Bitu	hdispend,vdispend;
+	Bitu	special;
+	
+};
+extern VideoModeBlock ModeList[];
+extern VideoModeBlock * CurMode;
 
 typedef struct {
-	RealPt font_8_first;
-	RealPt font_8_second;
-	RealPt font_14;
-	RealPt font_16;
-	RealPt static_state;
-} VGAROMAREA;
-extern VGAROMAREA int10_romarea;
+	struct {
+		RealPt font_8_first;
+		RealPt font_8_second;
+		RealPt font_14;
+		RealPt font_16;
+		RealPt static_state;
+		RealPt oemstring;
+		RealPt vesa_modes;
+		Bitu used;
+	} rom;
+} Int10Data;
 
-#define BIOS_NCOLS Bit16u ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
-#define BIOS_NROWS Bit16u nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1;
+extern Int10Data int10;
 
-inline Bit8u CURSOR_POS_COL(Bit8u page) {
+INLINE Bit8u CURSOR_POS_COL(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2);
 }
 
-inline Bit8u CURSOR_POS_ROW(Bit8u page) {
+INLINE Bit8u CURSOR_POS_ROW(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
 }
 
-
-void INT10_SetVideoMode(Bit8u mode);
+bool INT10_SetVideoMode(Bitu mode);
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page);
 
 void INT10_SetActivePage(Bit8u page);
 void INT10_GetFuncStateInformation(PhysPt save);
 
+void INT10_SetCursorShape(Bit8u first,Bit8u last);
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page);
@@ -185,9 +152,13 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 /* Graphics Stuff */
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color);
 void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color);
-VGAMODES * GetCurrentMode(void);
+
+/* Font Stuff */
+void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height);
 
 /* Palette Group */
+void INT10_SetBackgroundBorder(Bit8u val);
+void INT10_SetColorSelect(Bit8u val);
 void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val);
 void INT10_SetOverscanBorderColor(Bit8u val);
 void INT10_SetAllPaletteRegisters(PhysPt data);
@@ -199,17 +170,27 @@ void INT10_SetSingleDacRegister(Bit8u index,Bit8u red,Bit8u green,Bit8u blue);
 void INT10_GetSingleDacRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * blue);
 void INT10_SetDACBlock(Bit16u index,Bit16u count,PhysPt data);
 void INT10_GetDACBlock(Bit16u index,Bit16u count,PhysPt data);
+void INT10_SelectDACPage(Bit8u function,Bit8u mode);
+void INT10_SetPelMask(Bit8u mask);
+void INT10_GetPelMask(Bit8u & mask);
 
-/* Mouse pointer */
-void INT10_SetGfxControllerToDefault(void);
+
+
+/* Vesa Group */
+Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off);
+Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off);
+Bit8u VESA_SetSVGAMode(Bit16u mode);
+Bit8u VESA_GetSVGAMode(Bit16u & mode);
+Bit8u VESA_SetCPUWindow(Bit8u window,Bit16u address);
+Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address);
+Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u & bytes,Bit16u & pixels,Bit16u & lines);
+Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y);
+Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y);
+Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count);
+Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count);
 
 /* Sup Groups */
 void INT10_SetupRomMemory(void);
+void INT10_SetupVESA(void);
 
-struct Int10Data {
-	Bit8u mode;
-	VGAMODES * entry;
-};
-
-extern Int10Data int10;
 

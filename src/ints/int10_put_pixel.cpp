@@ -25,9 +25,8 @@ static Bit8u cga_masks[4]={~192,~48,~12,~3};
 static Bit8u cga_masks2[8]={~128,~64,~32,~16,~8,~4,~2,~1};
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 
-	VGAMODES * curmode=GetCurrentMode();	
-	switch (curmode->memmodel) {
-	case CGA:
+	switch (CurMode->type) {
+	case M_CGA4:
 		{
 				Bit16u off=(y>>1)*80+(x>>2);
 				if (y&1) off+=8*1024;
@@ -41,7 +40,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 				real_writeb(0xb800,off,old);
 		}
 		break;
-	case CGA2:
+	case M_CGA2:
 		{
 				Bit16u off=(y>>1)*80+(x>>3);
 				if (y&1) off+=8*1024;
@@ -55,7 +54,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 				real_writeb(0xb800,off,old);
 		}
 		break;
-	case PLANAR4:
+	case M_EGA16:
 		{
 			/* Set the correct bitmask for the pixel position */
 			IO_Write(0x3ce,0x8);Bit8u mask=128>>(x&7);IO_Write(0x3cf,mask);
@@ -67,7 +66,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x18); }
 			//Perhaps also set mode 1 
 			/* Calculate where the pixel is in video memory */
-			PhysPt off=0xa0000+curmode->slength*page+((y*curmode->swidth+x)>>3);
+			PhysPt off=0xa0000+CurMode->plength*page+((y*CurMode->swidth+x)>>3);
 			/* Bitmask and set/reset should do the rest */
 			mem_readb(off);
 			mem_writeb(off,0xff);
@@ -78,23 +77,18 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0); }
 			break;
 		}
-	case LINEAR8:
+	case M_VGA:
 		mem_writeb(Real2Phys(RealMake(0xa000,y*320+x)),color);
 		break;
-	case PLANAR1:
-	case PLANAR2:
-	case CTEXT:
-	case MTEXT:
 	default:
-		LOG(LOG_INT10,LOG_ERROR)("PutPixel Unhandled memory model %d",curmode->memmodel);
+		LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
 		break;
 	}	
 }
 
 void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
-	VGAMODES * curmode=GetCurrentMode();	
-	switch (curmode->memmodel) {
-	case CGA:
+	switch (CurMode->type) {
+	case M_CGA4:
 		{
 			Bit16u off=(y>>1)*80+(x>>2);
 			if (y&1) off+=8*1024;
@@ -102,7 +96,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			*color=(val>>(((3-x&3))*2)) & 3 ;
 		}
 		break;
-	case CGA2:
+	case M_CGA2:
 		{
 			Bit16u off=(y>>1)*80+(x>>3);
 			if (y&1) off+=8*1024;
@@ -110,10 +104,10 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			*color=(val>>(((7-x&7)))) & 1 ;
 		}
 		break;
-	case PLANAR4:
+	case M_EGA16:
 		{
 			/* Calculate where the pixel is in video memory */
-			PhysPt off=0xa0000+curmode->slength*page+((y*curmode->swidth+x)>>3);
+			PhysPt off=0xa0000+CurMode->plength*page+((y*CurMode->swidth+x)>>3);
 			Bitu shift=7-(x & 7);
 			/* Set the read map */
 			*color=0;
@@ -127,15 +121,11 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			*color|=((mem_readb(off)>>shift) & 1) << 3;
 			break;
 		}
-	case LINEAR8:
+	case M_VGA:
 		*color=mem_readb(PhysMake(0xa000,320*y+x));
 		break;
-	case PLANAR1:
-	case PLANAR2:
-	case CTEXT:
-	case MTEXT:
 	default:
-		LOG(LOG_INT10,LOG_ERROR)("GetPixel Unhandled memory model %d",curmode->memmodel);
+		LOG(LOG_INT10,LOG_ERROR)("GetPixel unhandled mode type %d",CurMode->type);
 		break;
 	}	
 }

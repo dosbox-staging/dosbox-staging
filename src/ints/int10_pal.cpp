@@ -29,6 +29,7 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 		IO_Write(VGAREG_ACTL_ADDRESS,reg);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,val);
 	}
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 
@@ -36,6 +37,7 @@ void INT10_SetOverscanBorderColor(Bit8u val) {
 	IO_Read(VGAREG_ACTL_RESET);
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,val);
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 void INT10_SetAllPaletteRegisters(PhysPt data) {
@@ -49,6 +51,7 @@ void INT10_SetAllPaletteRegisters(PhysPt data) {
 	// Then the border
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,mem_readb(data));
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 void INT10_ToggleBlinkingBit(Bit8u state) {
@@ -64,19 +67,20 @@ void INT10_ToggleBlinkingBit(Bit8u state) {
 	IO_Read(VGAREG_ACTL_RESET);
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,value);
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 void INT10_GetSinglePaletteRegister(Bit8u reg,Bit8u * val) {
 	if(reg<=ACTL_MAX_REG) {
 		IO_Read(VGAREG_ACTL_RESET);
-		IO_Write(VGAREG_ACTL_ADDRESS,reg);
+		IO_Write(VGAREG_ACTL_ADDRESS,reg+32);
 		*val=IO_Read(VGAREG_ACTL_READ_DATA);
 	}
 }
 
 void INT10_GetOverscanBorderColor(Bit8u * val) {
 	IO_Read(VGAREG_ACTL_RESET);
-	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
+	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	*val=IO_Read(VGAREG_ACTL_READ_DATA);
 }
 
@@ -89,7 +93,7 @@ void INT10_GetAllPaletteRegisters(PhysPt data) {
 		data++;
 	}
 	// Then the border
-	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
+	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	mem_writeb(data,IO_Read(VGAREG_ACTL_READ_DATA));
 }
 
@@ -123,4 +127,46 @@ void INT10_GetDACBlock(Bit16u index,Bit16u count,PhysPt data) {
 		mem_writeb(data++,IO_Read(VGAREG_DAC_DATA));
 		mem_writeb(data++,IO_Read(VGAREG_DAC_DATA));
 	}
-};
+}
+
+void INT10_SelectDACPage(Bit8u function,Bit8u mode) {
+	IO_Read(VGAREG_ACTL_RESET);
+	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+	Bit8u old10=IO_Read(VGAREG_ACTL_READ_DATA);
+	if (!function) {		//Select paging mode
+		if (mode) old10|=0x80;
+		else old10&=0x7f;
+		IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,old10);
+	} else {				//Select page
+		if (!(old10 & 0x80)) mode<<=2;
+		mode&=0xf;
+		IO_Write(VGAREG_ACTL_ADDRESS,0x14);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,mode);
+	}
+	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
+}
+
+void INT10_SetPelMask(Bit8u mask) {
+	IO_Write(VGAREG_PEL_MASK,mask);
+}	
+
+void INT10_GetPelMask(Bit8u & mask) {
+	mask=IO_Read(VGAREG_PEL_MASK);
+}	
+
+	
+void INT10_SetBackgroundBorder(Bit8u val) {
+//TODO Detect if we're CGA?
+	Bit8u old=IO_Read(0x3d9) & 0xf0;
+	old|=val & 0xf;
+	IO_Write(0x3d9,old);
+}
+
+void INT10_SetColorSelect(Bit8u val) {
+//TODO Detect if we're CGA?
+	Bit8u old=IO_Read(0x3d9) & ~0x20;
+	old|=(val & 1) << 5;
+	IO_Write(0x3d9,old);
+}
+
