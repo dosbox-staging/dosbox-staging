@@ -22,13 +22,12 @@
 #include <dos_system.h>
 #include <mem.h>
 
-#if defined (_MSC_VER)
-#pragma pack(1)
-#endif
+#pragma pack (push,1)
+
 struct CommandTail{
   Bit8u count;				/* number of bytes returned */
   char buffer[127];			 /* the buffer itself */
-};
+} GCC_ATTRIBUTE(packed);
 
 struct PSP {
 	Bit8u exit[2];				/* CP/M-like exit poimt */
@@ -56,7 +55,7 @@ struct PSP {
 	
 	CommandTail cmdtail;
 	
-};
+} GCC_ATTRIBUTE(packed);
 
 struct ParamBlock {
 	union {
@@ -73,7 +72,8 @@ struct ParamBlock {
 			RealPt initcsip;
 		} exec;
 	};
-};
+} GCC_ATTRIBUTE(packed);
+
 
 struct MCB {
 	Bit8u type;
@@ -81,27 +81,11 @@ struct MCB {
 	Bit16u size;	
 	Bit8u unused[3];
 	Bit8u filename[8];
-};
+} GCC_ATTRIBUTE(packed);
 
-struct FCB {
-	Bit8u drive;            //0 is current drive. when opened 0 is replaced by drivenumber
-	Bit8u filename[8];      //spacepadded to fit
-	Bit8u ext[3];           //spacepadded to fit
-	Bit16u current_block;   // set to 0 by open
-	Bit16u record_size;     // used by reads Set to 80h by OPEN function
-	Bit32u filesize;        //in bytes In this field, the first word is the low-order part of the size
-	Bit16u date;
-	Bit16u time;
-	Bit8u reserved[8];
-	Bit8u  current_relative_record_number; //open doesn't set this
-	Bit32u rel_record;      //open does not handle this
-}
-#if defined (_MSC_VER)
-;
-#pragma pack()
-#else
-__attribute__ ((packed));
-#endif
+#pragma pack (pop)
+
+
 
 struct DOS_Date {
 	Bit16u year;
@@ -130,7 +114,6 @@ struct DOS_Block {
 	struct  {
 		RealPt indosflag;
 	} tables;
-
 };
 
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
@@ -162,20 +145,21 @@ bool DOS_WriteFile(Bit16u handle,Bit8u * data,Bit16u * amount);
 bool DOS_SeekFile(Bit16u handle,Bit32u * pos,Bit32u type);
 bool DOS_CloseFile(Bit16u handle);
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry);
+bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 /* Routines for Drive Class */
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry);
 bool DOS_CreateFile(char * name,Bit16u attribute,Bit16u * entry);
 bool DOS_UnlinkFile(char * name);
 bool DOS_FindFirst(char *search,Bit16u attr);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(char * name,Bit8u * big);
+bool DOS_Canonicalize(char * name,char * big);
 bool DOS_CreateTempFile(char * name,Bit16u * entry);
 bool DOS_FileExists(char * name);
 /* Drive Handing Routines */
 Bit8u DOS_GetDefaultDrive(void);
 void DOS_SetDefaultDrive(Bit8u drive);
 bool DOS_SetDrive(Bit8u drive);
-bool DOS_GetCurrentDir(Bit8u drive,Bit8u * buffer);
+bool DOS_GetCurrentDir(Bit8u drive,char * bugger);
 bool DOS_ChangeDir(char * dir);
 bool DOS_MakeDir(char * dir);
 bool DOS_RemoveDir(char * dir);
@@ -223,7 +207,7 @@ INLINE Bit16u long2para(Bit32u size) {
 };
 
 INLINE Bit8u RealHandle(Bit16u handle) {
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	if (handle>=psp->max_files) return DOS_FILES;
 	return mem_readb(Real2Phys(psp->file_table)+handle);
 };
@@ -257,7 +241,7 @@ public:
 		off=pt;
 	}
 	DOS_FCB(Bit16u seg, Bit16u offset){
-		off=Real2Phys(RealMake(seg,offset));
+		off=PhysMake(seg,offset);
 	}
 	void Set_drive(Bit8u a);
 	void Set_filename(char* a); //writes an the first 8 bytes of a as the filename
@@ -281,6 +265,24 @@ private:
 };
 
 
+
+class DOS_ParamBlock {
+public:
+	DOS_ParamBlock(PhysPt pt){
+		off=pt;
+	};
+	void InitExec(RealPt cmdtail);
+	Bit16u loadseg(void);
+	Bit16u relocation(void);
+	Bit16u envseg(void);
+	RealPt initsssp(void);
+	RealPt initcsip(void);
+	RealPt fcb1(void);
+	RealPt fcb2(void);
+	RealPt cmdtail(void);
+private:
+	PhysPt off;
+};
 
 
 #endif
