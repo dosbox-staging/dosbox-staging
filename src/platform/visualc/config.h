@@ -39,3 +39,17 @@
 #define ENVIRON_LINKED 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
+
+typedef         double		Real64;
+/* The internal types */
+typedef  unsigned char		Bit8u;
+typedef    signed char		Bit8s;
+typedef unsigned short		Bit16u;
+typedef   signed short		Bit16s;
+typedef  unsigned long		Bit32u;
+typedef    signed long		Bit32s;
+typedef unsigned __int64	Bit64u;
+typedef   signed __int64	Bit64s;
+typedef unsigned int		Bitu;
+typedef signed int			Bits;
+

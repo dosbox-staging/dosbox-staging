@@ -24,25 +24,6 @@ void E_Exit(char * message,...);
 void MSG_Add(const char*,const char*); //add messages to the internal langaugefile
 const char* MSG_Get(char const *);         //get messages from the internal langaugafile
 
-/* The internal types */
-typedef  unsigned char     Bit8u;
-typedef    signed char     Bit8s;
-typedef unsigned short     Bit16u;
-typedef   signed short     Bit16s;
-typedef  unsigned long     Bit32u;
-typedef    signed long     Bit32s;
-typedef         double     Real64;
-#if defined(_MSC_VER)
-typedef unsigned __int64   Bit64u;
-typedef   signed __int64   Bit64s;
-#else
-typedef unsigned long long Bit64u;
-typedef   signed long long Bit64s;
-#endif
-
-typedef unsigned int Bitu;
-typedef signed int Bits;
-
 #include <stddef.h>
 #include "config.h"
 
