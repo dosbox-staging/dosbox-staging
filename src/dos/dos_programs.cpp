@@ -19,16 +19,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "sdl.h"
 #include "programs.h"
 #include "support.h"
 #include "drives.h"
 #include "cross.h"
 #include "regs.h"
 #include "callback.h"
+#include "cdrom.h"
 #include "../shell/shell_inc.h"
 
-void MSCDEX_SetUseASPI(bool use);
-bool MSCDEX_GetUseASPI(void);
+void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
 class MOUNT : public Program {
 public:
@@ -36,6 +37,16 @@ public:
 	{
 		DOS_Drive * newdrive;char drive;
 		
+		// Show list of cdroms
+		if (cmd->FindExist("-cd",false)) {
+			int num = SDL_CDNumDrives();
+			WriteOut("CDROMs found: %d\n",num);
+			for (int i=0; i<num; i++) {
+				WriteOut("%2d. %s\n",i,SDL_CDName(i));
+			};
+			return;
+		}
+
 		/* Parse the command line */
 		/* if the command line is empty show current mounts */
 		if (!cmd->GetCount()) {
@@ -100,10 +111,13 @@ public:
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
             Bit8u bit8size=(Bit8u) sizes[1];
 			if (type=="cdrom") {
-				bool oldaspi = MSCDEX_GetUseASPI();;
+				int num = -1;
+				cmd->FindInt("-usecd",num,true);
 				int error;
-				if (cmd->FindExist("-aspi",false)) MSCDEX_SetUseASPI(true);
-				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,error);
+				if (cmd->FindExist("-aspi",false))	MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);	else
+				if (cmd->FindExist("-ioctl",false)) MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
+				else								MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
+				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
 				switch (error) {
 					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -114,8 +128,6 @@ public:
 					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
 					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
 				};
-				MSCDEX_SetUseASPI(oldaspi);
-
 			} else {
 				newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 			}
@@ -262,7 +274,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
 	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CDRom-drives have to be continuous.\n");
 	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED","MSCDEX: Failure: Not yet supported.\n");
-	MSG_Add("MSCDEX_ERROR_PATH","MSCDEX: Failure: Path not valid (WIN32: Check if ASPI Driver is installed).\n");
+	MSG_Add("MSCDEX_ERROR_PATH","MSCDEX: Failure: Path not valid.\n");
 	MSG_Add("MSCDEX_TOO_MANY_DRIVES","MSCDEX: Failure: Too many CDRom-drives (max: 5). MSCDEX Installation failed.\n");
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
