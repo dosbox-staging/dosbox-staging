@@ -149,8 +149,8 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 	}
 };
 
-static void FormatNumber(Bit32u num,char * buf) {
-	Bit32u numm,numk,numb;
+static void FormatNumber(Bitu num,char * buf) {
+	Bitu numm,numk,numb;
 	numb=num % 1000;
 	num/=1000;
 	numk=num % 1000;
@@ -179,7 +179,6 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-
 	Bit32u byte_count,file_count,dir_count;
 	Bit32u w_count=0;
 	byte_count=file_count=dir_count=0;
@@ -194,8 +193,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	*(strrchr(path,'\\')+1)=0;
 	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
-	DTA_FindBlock * dta;
-	dta=(DTA_FindBlock *)Real2Host(dos.dta);
+	DOS_DTA dta(dos.dta);
 	bool ret=DOS_FindFirst(args,0xffff);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
@@ -203,37 +201,39 @@ void DOS_Shell::CMD_DIR(char * args) {
 	}
 	while (ret) {
 /* File name and extension */
+		char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
+		dta.GetResult(name,size,date,time,attr);
+
 		char * ext="";
-		if (!optW && (*dta->name != '.')) {
-			ext = strrchr(dta->name, '.');
+		if (!optW && (name[0] != '.')) {
+			ext = strrchr(name, '.');
 			if (!ext) ext = "";
 			else *ext++ = '\0';
 		}
-	   
-		Bit8u day	= dta->date & 0x001f;
-		Bit8u month	= (dta->date >> 5) & 0x000f;
-		Bit8u hour	= dta->time >> 5 >> 6;
-		Bit8u minute = (dta->time >> 5) & 0x003f;
-		Bit16u year = (dta->date >> 9) + 1980;
+		Bit8u day	= date & 0x001f;
+		Bit8u month	= (date >> 5) & 0x000f;
+		Bit16u year = (date >> 9) + 1980;
+		Bit8u hour	= (time >> 5 ) >> 6;
+		Bit8u minute = (time >> 5) & 0x003f;
 
 		/* output the file */
-		if (dta->attr & DOS_ATTR_DIRECTORY) {
+		if (attr & DOS_ATTR_DIRECTORY) {
 			if (optW) {
-				WriteOut("[%s]",dta->name);
-				for (Bitu i=14-strlen(dta->name);i>0;i--) WriteOut(" ");
+				WriteOut("[%s]",name);
+				for (Bitu i=14-strlen(name);i>0;i--) WriteOut(" ");
 			} else {
-				WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",dta->name,ext,"<DIR>",day,month,year,hour,minute);
+				WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);
 			}
 			dir_count++;
 		} else {
 			if (optW) {
-				WriteOut("%-16s",dta->name);
+				WriteOut("%-16s",name);
 			} else {
-				FormatNumber(dta->size,numformat);
-				WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",dta->name,ext,numformat,day,month,year,hour,minute);
+				FormatNumber(size,numformat);
+				WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",name,ext,numformat,day,month,year,hour,minute);
 			}
 			file_count++;
-			byte_count+=dta->size;
+			byte_count+=size;
 		}
 		if (optW) {
 			w_count++;
@@ -246,8 +246,15 @@ void DOS_Shell::CMD_DIR(char * args) {
 	/* Show the summary of results */
 	FormatNumber(byte_count,numformat);
 	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),file_count,numformat);
+	Bit8u drive=dta.GetSearchDrive();
 	//TODO Free Space
-	FormatNumber(1024*1024*100,numformat);
+	Bitu free_space=1024*1024*100;
+	if (Drives[drive]) {
+		Bit16u bytes_sector;Bit16u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
+		Drives[drive]->AllocationInfo(&bytes_sector,&sectors_cluster,&total_clusters,&free_clusters);
+		free_space=bytes_sector*sectors_cluster*free_clusters;
+	}
+	FormatNumber(free_space,numformat);
 	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
 }
 
