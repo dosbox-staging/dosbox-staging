@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.51 2005-02-10 10:21:12 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.52 2005-03-02 11:53:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -526,9 +526,15 @@ void DOS_Shell::CMD_IF(char * args) {
 	bool has_not=false;
 	char * comp=strchr(args,'=');
 	if (comp) {
-		if (comp[1]!='=') {SyntaxError();return;}
-		*comp++=' ';
-		*comp++=' ';
+		if (comp[1] == '=') {
+			*comp++ = ' ';
+			*comp++ = ' ';
+		} else if(strncasecmp(args,"ERRORLEVEL",10) == 0) {
+			/* this is in general a syntax error except for errorlevel */
+			*comp++ = ' ';
+			while(*comp++ == ' ') 
+				;	/*nothing */
+		} else {SyntaxError();return;}
 	};
 	char * word=StripWord(args);
 	if (strcasecmp(word,"NOT")==0) {
