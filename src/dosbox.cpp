@@ -84,27 +84,36 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
+Bitu RemainTicks;;
+Bitu LastTicks;
+
 static Bitu Normal_Loop(void) {
-	Bit32u new_ticks;
-	new_ticks=GetTicks();
-	if (new_ticks>LastTicks) {
-		Bit32u ticks=new_ticks-LastTicks;
-		if (ticks>20) ticks=20;
-		LastTicks=new_ticks;
-		TIMER_AddTicks(ticks);
+	Bitu ret,NewTicks;
+	while (RemainTicks) {
+		ret=PIC_RunQueue();
+		if (ret) return ret;
+		RemainTicks--;
+		TIMER_AddTick();
+		GFX_Events();
+	#if C_DEBUG
+		if (DEBUG_ExitLoop()) return 0;	
+	#endif
 	}
-	GFX_Events();
-	TIMER_CheckPIT();
-	PIC_runIRQs();
-	Bitu ret;
-	do {
-		PIC_IRQAgain=false;
-		ret=(*cpudecoder)(cpu_cycles);
-	} while (!ret && PIC_IRQAgain);
-#if C_DEBUG
-	if (DEBUG_ExitLoop()) return 0;
-#endif
-	return ret;
+	NewTicks=GetTicks();
+	if (NewTicks>LastTicks) {
+		RemainTicks+=NewTicks-LastTicks;
+		if (RemainTicks>20) {
+//			LOG_DEBUG("Ticks to handle overflow %d",RemainTicks);
+			RemainTicks=20;
+		}
+		LastTicks=NewTicks;
+	}
+	//TODO Make this selectable in the config file, since it gives some lag */
+	if (!RemainTicks) {
+		SDL_Delay(1);
+		return 0;
+	}
+	return 0;
 }
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
@@ -127,7 +136,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	/* Initialize some dosbox internals */
 	errorlevel=section->Get_int("warnings");
 	MSG_Add("DOSBOX_CONFIGFILE_HELP","General Dosbox settings\n");
-    LastTicks=GetTicks();
+	RemainTicks=0;LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 }
@@ -158,7 +167,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_string("snapshots","snapshots");
 	
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
-	secprop->Add_int("cycles",4000);
+	secprop->Add_int("cycles",1800);
 
 	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
@@ -183,6 +192,7 @@ void DOSBOX_Init(void) {
     secprop->Add_bool("cms",false);
 	
 	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
+	secprop->Add_bool("enabled",true);
 	secprop->Add_bool("sinewave",false);
 	secprop->AddInitFunction(&TANDYSOUND_Init);
 	secprop->Add_bool("tandy",false);
