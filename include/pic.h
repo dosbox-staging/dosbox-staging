@@ -57,7 +57,7 @@ void PIC_runIRQs(void);
 
 void PIC_RegisterIRQ(Bit32u irq,PIC_EOIHandler handler,char * name);
 void PIC_FreeIRQ(Bit32u irq);
-Bitu PIC_RunQueue(void);
+bool PIC_RunQueue(void);
 
 void PIC_AddIRQ(Bitu irq,Bitu delay);
 void PIC_AddEvent(PIC_EventHandler handler,Bitu delay);
