@@ -7,7 +7,7 @@ NOTE:
 
 While we hope that, one day, DOSBox will run virtually all programs
 ever made for the PC...we are not there yet. At present, DOSBox run on a high-
-end machine will roughly be the equivalent of a lowend 486 PC. While the 0.60
+end machine will roughly be the equivalent of a low-end 486 PC. The 0.60
 release has added support for "protected mode" allowing for more complex and
 recent programs, but note that this support is early in development and
 nowhere near as complete as the support for 386 real-mode games (or
@@ -56,7 +56,7 @@ Q: I can't type \ in DOSBox.
 Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
-Q: What sound hardware does DosBox presently emulate?
+Q: What sound hardware does DOSBox presently emulate?
 
 
 
@@ -64,20 +64,20 @@ Q: What sound hardware does DosBox presently emulate?
 
 
 Q: I've got a Z instead of a C at the prompt.
-A: In DOSBox you can mount directories as drives.
-   In win32: mount c D:\ would give you a C in DOSBox which points
-   at D:\ in win32.
-   In linux: mount c /home/username would give you a C in DOSBox
+A: You have to make your directories available as drives in DOSBox by using
+   the "mount" command. For example, in Windows "mount C D:\" would give
+   you a C in DOSBox which points at your Windows D:\ drive.
+   In Linux, "mount c /home/username" would give you a C in DOSBox
    which points at /home/username in Linux.
 
 Q: The mouse doesn't work.
-A: Normally dosbox detects the mouse being used by a game. If you click on 
+A: Normally DOSBox detects the mouse being used by a game. If you click on 
    the screen then it should get locked and work.
-   Sometimes the dosbox mouse detection doesn't work with certain games. You
+   Sometimes the DOSBox mouse detection doesn't work with certain games. You
    might have to force to lock the mouse then with ctrl-F10.
 
 Q: The sound stutters.
-A: You're using too much cpu power to keep dosbox running at the current speed.
+A: You're using too much cpu power to keep DOSBox running at the current speed.
    You can either lower the cycles or skip frames or get a faster machine.
 
 Q: I can't type \ in DOSBox.
@@ -85,11 +85,11 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
    Some possible fixes:
      1. Switch your keyboard layout.
      2. Use / instead.
-     3. Add the commands you want to execute in dosbox.conf
+     3. Add the commands you want to execute to dosbox.conf
 
 Q: The game/application can't find its CD-ROM.
-A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the cor-
-   rect label (-label LABEL). To enable more low-level cdrom support add
+A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the
+   correct label (-label LABEL). To enable more low-level CD-ROM support add
    the following switch to mount: -usecd #, where # is the number of your 
    CD-ROM drive reported by mount -cd. If you run Win32 you can specify -ioctl
    or -aspi. Look at the description elsewhere in this document for their 
@@ -100,11 +100,11 @@ A: Look at the section "To run resource-demanding games" for more information.
 
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 A: This is possible! Just create a config file: config -writeconf dosbox.conf .
-   Startup your favourite editor and look at all the settings present. To
+   Start your favourite editor and look at all the settings present. To
    start DOSBox with your new settings: dosbox -conf dosbox.conf
 
-Q: What sound hardware does DosBox presently emulate?
-A: DosBox emulates several legacy sound devices:
+Q: What sound hardware does DOSBox presently emulate?
+A: DOSBox emulates several legacy sound devices:
    - Internal PC speaker
      This emulation includes both the tone generator and several forms of
      digital sound output through the internal speaker.
@@ -134,8 +134,8 @@ A: DosBox emulates several legacy sound devices:
 
 
 Q: Great README, but I still don't get it.
-A: While unlikely this seems to happen. Maybe a look at "The Newbie's 
-   pictorial guide to dosbox" located at 
+A: While unlikely, this seems to happen. A look at "The Newbie's 
+   pictorial guide to DOSBox" located at 
    http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
 
 For more questions read the remainder of this README and/or check 
@@ -178,7 +178,7 @@ dosbox -version
         Start dosbox using the language string specified in "languagefile".
 
   -noconsole (Windows Only)
-        Start dosbox without showing the console window, output will
+        Start dosbox without showing the console window. Output will
 	be redirected to stdout.txt and stderr.txt
 	
   -machine machinetype
@@ -228,10 +228,10 @@ MOUNT -cd
         floppy, cdrom.
 
   -size drivesize
-        Sets the size of the drive. 
+        Sets the size of the drive.
 
   -freesize sizemb
-        Sets the amount of freespace avaiable on a drive in MB's. This
+        Sets the amount of free space available on a drive in MB's. This
         is a more simple version of -size.	
 
   -label drivelabel
@@ -263,7 +263,7 @@ MOUNT -cd
   programs that demand specific drive letters.
   
   For example: Touche: Adventures of The Fifth Musketeer must be run on your C:
-  drive. Using DOSBox and it's mount command, you can trick into thinking it
+  drive. Using DOSBox and its mount command, you can trick into thinking it
   is on C drive while placing it where you want it. For example, if the game
   were in D:\TOUCHE, you can use the command MOUNT C D:\ would allow you to
   run Touche from the D drive.
@@ -272,7 +272,7 @@ MOUNT -cd
   General MOUNT Examples:
   1. To mount c:\floppy as a floppy : 
        mount a c:\floppy -t floppy
-  2. To mount system cdrom drive E as cdrom drive D in dosbox:
+  2. To mount system cdrom drive E as cdrom drive D in DOSBox:
        mount d e:\ -t cdrom
   3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
      in dosbox:
@@ -323,7 +323,7 @@ RESCAN
   
 
 MIXER
-  Makes DOSBox display it's current volume settings. 
+  Makes DOSBox display its current volume settings. 
   You can change this way:
   
   mixer channel left:right [/NOSHOW]
@@ -432,13 +432,14 @@ A config file can be generated by CONFIG.COM, which can be found on the
 internal dosbox Z: drive when you start up dosbox. Look in the internal 
 programs section of the readme for usage of CONFIG.COM.
 You can edit the generated configfile to customize DOSBox.
+
 The file is divided into several sections (the names have [] around it). 
 Some sections have options which you can set.
 # and % indicate comment-lines. 
 The generated configfile contains the current settings. You can alter them and
 start DOSBox with the -conf switch to load the file and use these settings.
 
-DOSBox will if no configfile is specified with the -conf switch look in the
+If no configfile is specified with the -conf switch, DOSBox will look in the
 current directory for dosbox.conf. Then it will look for ~/.dosboxrc (Linux),
 ~\dosbox.conf (Win32) or "~/Library/Preferences/DOSBox Preferences" (MACOSX).
 
@@ -483,5 +484,5 @@ The Beta Testers.
 12. Contact:
 ============
 
-Dosbox Crew: dosbox.crew@gmail.com
+DOSBox Crew: dosbox.crew@gmail.com
 http://dosbox.sourceforge.net
