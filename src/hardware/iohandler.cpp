@@ -42,13 +42,13 @@ static void IO_WriteBlocked(Bit32u port,Bit8u val) {
 }
 
 static Bit8u  IO_ReadDefault(Bit32u port) {
-	LOG(LOG_ALL,LOG_ERROR)("Reading from undefined port %04X",port);
+	LOG(LOG_IO,LOG_ERROR)("Reading from undefined port %04X",port);
 	IO_RegisterReadHandler(port,&IO_ReadBlocked,"Blocked Read");
 	return 0xff;	
 }
 
 void IO_WriteDefault(Bit32u port,Bit8u val) {
-	LOG(LOG_ALL,LOG_ERROR)("Writing %02X to undefined port %04X",static_cast<Bit32u>(val),port);		
+	LOG(LOG_IO,LOG_ERROR)("Writing %02X to undefined port %04X",val,port);		
 	IO_RegisterWriteHandler(port,&IO_WriteBlocked,"Blocked Write");
 }
 
