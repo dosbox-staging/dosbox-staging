@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.11 2004-09-07 18:21:51 qbix79 Exp $ */
+/* $Id: paging.h,v 1.12 2004-10-12 10:45:10 harekiet Exp $ */
 
 #ifndef _PAGING_H_
 #define _PAGING_H_
@@ -41,7 +41,6 @@ class PageDirectory;
 
 //Allow 128 mb of memory to be linked
 #define PAGING_LINKS (128*1024/4)
-
 
 class PageHandler {
 public:
@@ -72,6 +71,8 @@ bool PAGING_MakePhysPage(Bitu & page);
 
 void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
+void MEM_ResetPageHandler(Bitu phys_page, Bitu pages);
+
 
 #ifdef _MSC_VER
 #pragma pack (1)

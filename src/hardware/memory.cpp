@@ -141,6 +141,13 @@ void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler) {
 	}
 }
 
+void MEM_ResetPageHandler(Bitu phys_page, Bitu pages) {
+	for (;pages>0;pages--) {
+		memory.phandlers[phys_page]=&ram_page_handler;
+		phys_page++;
+	}
+}
+
 Bitu mem_strlen(PhysPt pt) {
 	Bitu x=0;
 	while (x<1024) {

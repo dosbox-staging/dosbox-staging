@@ -15,9 +15,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-
-
 	
 #include <stdlib.h>
 #include <string.h>
@@ -135,8 +132,7 @@ static void VGA_GFX_256U_WriteHandler(PhysPt start,Bit8u val) {
 #define VGA_PAGE_B8		(0xB8000/4096)
 
 static struct {
-	Bit8u ram_area[VGA_PAGES*4096];
-	Bitu map_base;
+	Bitu base,mask;
 } vgapages;
 	
 class VGARead_PageHandler : public PageHandler {
@@ -213,29 +209,16 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
-		addr&=0xffff;
+		addr&=vgapages.mask;
 		return vga.draw.font[addr];
 	}
 	void writeb(PhysPt addr,Bitu val){
-		addr&=0xffff;
+		addr&=vgapages.mask;
 		if (vga.seq.map_mask & 0x4) {
 			vga.draw.font[addr]=(Bit8u)val;
 		}
 	}
 };
-
-
-class VGA_RAM_PageHandler : public PageHandler {
-public:
-	VGA_RAM_PageHandler() {
-		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
-	}
-	HostPt GetHostPt(Bitu phys_page) {
-		phys_page-=VGA_PAGE_A0;
-		return &vgapages.ram_area[phys_page*4096];
-	}
-};
-
 
 class VGA_MAP_PageHandler : public PageHandler {
 public:
@@ -243,7 +226,7 @@ public:
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
 	}
 	HostPt GetHostPt(Bitu phys_page) {
- 		phys_page-=vgapages.map_base;
+ 		phys_page-=vgapages.base;
 		return &vga.mem.linear[vga.s3.bank*64*1024+phys_page*4096];
 	}
 };
@@ -327,7 +310,6 @@ public:
 
 
 static struct vg {
-	VGA_RAM_PageHandler hram;
 	VGA_MAP_PageHandler hmap;
 	VGA_TEXT_PageHandler htext;
 	VGA_TANDY_PageHandler htandy;
@@ -380,27 +362,31 @@ void VGA_SetupHandlers(void) {
 	}
 	switch ((vga.gfx.miscellaneous >> 2) & 3) {
 	case 0:
-		vgapages.map_base=VGA_PAGE_A0;
+		vgapages.base=VGA_PAGE_A0;
+		vgapages.mask=0x1ffff;
 		MEM_SetPageHandler(VGA_PAGE_A0,32,range_handler);
 		break;
 	case 1:
-		vgapages.map_base=VGA_PAGE_A0;
+		vgapages.base=VGA_PAGE_A0;
+		vgapages.mask=0xffff;
 		MEM_SetPageHandler(VGA_PAGE_A0,16,range_handler);
-		MEM_SetPageHandler(VGA_PAGE_B0,16,&vgaph.hram);
+		MEM_ResetPageHandler(VGA_PAGE_B0,16);
 		break;
 	case 2:
 range_b000:
-		vgapages.map_base=VGA_PAGE_B0;
+		vgapages.base=VGA_PAGE_B0;
+		vgapages.mask=0x7fff;
 		MEM_SetPageHandler(VGA_PAGE_B0,8,range_handler);
-		MEM_SetPageHandler(VGA_PAGE_A0,16,&vgaph.hram);
-		MEM_SetPageHandler(VGA_PAGE_B8,8,&vgaph.hram);
+		MEM_ResetPageHandler(VGA_PAGE_A0,16);
+		MEM_ResetPageHandler(VGA_PAGE_B8,8);
 		break;
 	case 3:
 range_b800:
-		vgapages.map_base=VGA_PAGE_B8;
+		vgapages.base=VGA_PAGE_B8;
+		vgapages.mask=0x7fff;
 		MEM_SetPageHandler(VGA_PAGE_B8,8,range_handler);
-		MEM_SetPageHandler(VGA_PAGE_A0,16,&vgaph.hram);
-		MEM_SetPageHandler(VGA_PAGE_B0,8,&vgaph.hram);
+		MEM_ResetPageHandler(VGA_PAGE_A0,16);
+		MEM_ResetPageHandler(VGA_PAGE_B0,8);
 		break;
 	}
 
