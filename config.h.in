@@ -34,7 +34,7 @@
 #define C_FPU 0
 
 /* Maximum amount of memory we can support in megabytes*/
-#define C_MEM_MAXSIZE 16
+#define C_MEM_MAX_SIZE 16
 
 /* Maximum memory available for xms, should be lower than maxsize-1 */
 #define C_MEM_XMS_SIZE 8
