@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.33 2003-09-08 18:25:44 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.34 2003-09-21 12:16:02 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -212,12 +212,19 @@ void AUTOEXEC_Init(Section * sec) {
 	Section_line * section=static_cast<Section_line *>(sec);
 	char * extra=(char *)section->data.c_str();
 	if (extra) SHELL_AddAutoexec("%s",extra);
+	/* Check to see for extra command line options to be added (before the command specified on commandline) */
+	while (control->cmdline->FindString("-c",line,true))
+		SHELL_AddAutoexec((char *)line.c_str());
+	
+	/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
+	bool addexit = control->cmdline->FindExist("-exit",true);
+
 	/* Check for first command being a directory or file */
 	char buffer[CROSS_LEN];
 	if (control->cmdline->FindCommand(1,line)) {
 		struct stat test;
 		strcpy(buffer,line.c_str());
-		if (stat(buffer,&test)) {
+		if (stat(buffer,&test)){
 			getcwd(buffer,CROSS_LEN);
 			strcat(buffer,line.c_str());
 			if (stat(buffer,&test)) goto nomount;
@@ -233,11 +240,8 @@ void AUTOEXEC_Init(Section * sec) {
 			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
 			SHELL_AddAutoexec("C:");
 			SHELL_AddAutoexec(name);
+			if(addexit) SHELL_AddAutoexec("exit");
 		}
-	}
-	/* Check to see for extra command line options to be added */
-	while (control->cmdline->FindString("-c",line,true)) {
-		SHELL_AddAutoexec((char *)line.c_str());	
 	}
 nomount:
 	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
