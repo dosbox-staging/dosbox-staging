@@ -29,8 +29,6 @@
 #include "programs.h"
 
 #define SB_PIC_EVENTS 0
-#define SB_NEW_ADPCM 1
-
 
 #define DSP_MAJOR 3
 #define DSP_MINOR 1
@@ -130,7 +128,9 @@ struct SB_INFO {
 		Bit8u mic;
 	} mixer;
 	struct {
-		Bits reference,stepsize;
+		Bit8u reference;
+		Bits stepsize;
+		bool haveref;
 	} adpcm;
 	struct {
 		Bitu base;
@@ -261,29 +261,7 @@ static INLINE Bits Clip(Bits sample) {
 	return sample;
 }
 
-#if SB_NEW_ADCM
-static INLINE Bit16s decode_ADPCM_4_sample(Bit8u adpcm,Bits& reference,Bits& stepsize) {
-	static Bits quantize[] = { 230, 230, 230, 230, 307, 409, 512, 614 };
-
-	Bits scale=0;
-
-	if (adpcm & 4 ) scale += stepsize;
-	if (adpcm & 2 ) scale = Clip(scale + (stepsize >> 1));
-    if (adpcm & 1 ) scale = Clip(scale + (stepsize >> 2));
-	scale = Clip(stepsize >> 3);
-	if (adpcm & 8)  scale = -scale;
-
-	reference=Clip(scale+((reference * DC_OFFSET_FADE) >> 8));
-	// compute the next step size	
-	stepsize=(stepsize * quantize[adpcm & 0x7]) >> 8;
-	if (stepsize < MIN_ADAPTIVE_STEP_SIZE) stepsize=MIN_ADAPTIVE_STEP_SIZE;
-    else if (stepsize > MAX_ADAPTIVE_STEP_SIZE) stepsize=MAX_ADAPTIVE_STEP_SIZE;
- 
-	return (Bit16s)reference;
-}
-
-#else 
-static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bits& reference,Bits& scale) {
+static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x08) {
@@ -295,9 +273,7 @@ static INLINE Bit16s decode_ADPCM_4_sample(Bit8u sample,Bits& reference,Bits& sc
 	return (((Bit8s)reference)^0x80)<<8;
 }
 
-#endif
-
-static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bits& reference,Bits& scale) {
+static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x02) {
@@ -309,7 +285,7 @@ static INLINE Bit16s decode_ADPCM_2_sample(Bit8u sample,Bits& reference,Bits& sc
 	return (((Bit8s)reference)^0x80)<<8;
 }
 
-INLINE Bit16s decode_ADPCM_3_sample(Bit8u sample,Bits& reference,Bits& scale) {
+INLINE Bit16s decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
 
 	if (sample & 0x04) {
@@ -345,8 +321,9 @@ static void GenerateDMASound(Bitu size) {
 	}
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
-		if (sb.adpcm.reference==0x1000000) {
-			sb.adpcm.reference=0;
+		if (sb.adpcm.haveref) {
+			sb.adpcm.haveref=false;
+			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			skip++;read--;
 		}
@@ -358,8 +335,9 @@ static void GenerateDMASound(Bitu size) {
 		}
 		break;
 	case DSP_DMA_3:
-		if (sb.adpcm.reference==0x1000000) {
-			sb.adpcm.reference=0;
+		if (sb.adpcm.haveref) {
+			sb.adpcm.haveref=false;
+			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			skip++;read--;
 		}
@@ -385,8 +363,9 @@ static void GenerateDMASound(Bitu size) {
 		}
 		break;
 	case DSP_DMA_4:
-		if (sb.adpcm.reference==0x1000000) {
-			sb.adpcm.reference=0;
+		if (sb.adpcm.haveref) {
+			sb.adpcm.haveref=false;
+			sb.adpcm.reference=sb.dma.buf.b8[0];
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			skip++;read--;
 		}
@@ -525,7 +504,7 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 }
 
 static void DSP_DoDMATranfser(DMA_MODES mode) {
-	Bitu  bits;
+	char * type;
 	DSP_ChangeMode(MODE_NONE);
 	sb.dma.left=sb.dma.total;
 	sb.dma.mode=mode;
@@ -533,13 +512,12 @@ static void DSP_DoDMATranfser(DMA_MODES mode) {
 	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
 	sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
 	switch (mode) {
-	case DSP_DMA_2:bits=2;break;
-	case DSP_DMA_3:bits=3;break;
-	case DSP_DMA_4:bits=4;break;
-	case DSP_DMA_8:bits=8;break;
-	case DSP_DMA_16_ALIASED:
-	case DSP_DMA_16:
-		bits=16;break;
+	case DSP_DMA_2:type="2-bits ADPCM";break;
+	case DSP_DMA_3:type="3-bits ADPCM";break;
+	case DSP_DMA_4:type="4-bits ADPCM";break;
+	case DSP_DMA_8:type="8-bits PCM";break;
+	case DSP_DMA_16_ALIASED:type="16-bits(aliased) PCM";break;
+	case DSP_DMA_16:type="16-bits PCM";break;
 	default:
 		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d",mode);
 		return;
@@ -548,8 +526,8 @@ static void DSP_DoDMATranfser(DMA_MODES mode) {
 	sb.dma.mode=mode;
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 #if (C_DEBUG)
-	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%d-bits %s %s dma-rate %d size %d",
-		bits,
+	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s %s %s dma-rate %d size %d",
+		type,
 		sb.dma.stereo ? "Stereo" : "Mono",
 		sb.dma.autoinit ? "Auto-Init" : "Single-Cycle",
 		sb.dma.rate,sb.dma.total
@@ -678,24 +656,25 @@ static void DSP_DoCommand(void) {
 		sb.freq=(1000000 / (256 - sb.dsp.in.data[0]));
 		break;
 	case 0x41:	/* Set Output Samplerate */
+	case 0x42:	/* Set Input Samplerate */
 		sb.freq=(sb.dsp.in.data[0] << 8)  | sb.dsp.in.data[1];
 		break;
 	case 0x48:	/* Set DMA Block Size */
 		//TODO Maybe check limit for new irq?
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		break;
-    	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
-		sb.adpcm.reference=0x1000000;
+    case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
+		sb.adpcm.haveref=true;
     case 0x74:  /* 074h : Single Cycle 4-bit ADPCM */	
 		DSP_PrepareDMA_Old(DSP_DMA_4,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
-		sb.adpcm.reference=0x1000000;
+		sb.adpcm.haveref=true;
 	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_3,false);
 		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
-		sb.adpcm.reference=0x1000000;
+		sb.adpcm.haveref=true;
 	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_2,false);
 		break;
@@ -1064,6 +1043,10 @@ void SBLASTER_Init(Section* sec) {
 	}
 	PIC_RegisterIRQ(sb.hw.irq,0,"SB");
 	DSP_Reset();
-	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d T%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,sb.type);
+	char hdma[8]="";
+	if (sb.type==SBT_16) {
+		sprintf(hdma,"H%d ",sb.hw.dma16);
+	}
+	SHELL_AddAutoexec("SET BLASTER=A%3X I%d D%d %sT%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,hdma,sb.type);
 }
 
