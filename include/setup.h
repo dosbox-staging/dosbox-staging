@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: setup.h,v 1.14 2004-01-08 11:45:24 qbix79 Exp $ */
 
 #ifndef _SETUP_H_
 #define _SETUP_H_
@@ -180,7 +182,7 @@ public:
 	void ShutDown();
 	void StartUp();
 	void PrintConfig(const char* configfilename);
-	void ParseConfigFile(const char* configfilename);
+	bool ParseConfigFile(const char* configfilename);
 	void ParseEnv(char ** envp);
 
 	std::list<Section*> sectionlist;

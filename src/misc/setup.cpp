@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: setup.cpp,v 1.18 2004-01-08 11:46:40 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -226,36 +228,48 @@ Section* Config::GetSection(const char* _sectionname){
 	return NULL;
 }
 
-void Config::ParseConfigFile(const char* configfilename){
+bool Config::ParseConfigFile(const char* configfilename){
 	ifstream in(configfilename);
-	if (!in) {
-		LOG_MSG("CONFIG:Can't find config file %s, using default settings",configfilename);
-		return;
-	}
-	char gegevens[150];
+	if (!in) return false;
+	LOG_MSG("CONFIG:Loading settings from config file %s", configfilename);
+	char gegevens[1024];
 	Section* currentsection = NULL;
 	Section* testsec = NULL;
 	while (in) {
-		in.getline(gegevens,150);
+		in.getline(gegevens,1024);
 		char* temp;
-		switch(gegevens[0]){
+		char* s;
+		int len;
+		s = gegevens;
+		
+		/* strip trailing whitespace */
+		for (len = strlen(s); len > 0 && isspace(s[len - 1]); len--) {
+			/* nothing */
+		}
+		s[len] = 0;
+
+		/* strip leading whitespace */
+		while (isspace(s[0])) {
+			s++;
+		}
+		switch(s[0]){
 		case '%':
 		case '\0':
-		case '\n':
-        case '#':
+		case '#':
 		case ' ':
+		case '\n':
 			continue;
 			break;
 		case '[':
-			temp = strrchr(gegevens,']');
+			temp = strrchr(s,']');
 			*temp=0;
-			testsec = GetSection(&gegevens[1]);
+			testsec = GetSection(&s[1]);
 			if(testsec != NULL ) currentsection = testsec;
 			testsec = NULL;
 			break;
 		default:
 			try{
-				currentsection->HandleInputline(gegevens);
+				currentsection->HandleInputline(s);
 			}catch(const char* message){
 				message=0;
 				//EXIT with message
@@ -263,6 +277,7 @@ void Config::ParseConfigFile(const char* configfilename){
 			break;
 		}
 	}
+	return true;
 }
 
 void Config::ParseEnv(char ** envp) {

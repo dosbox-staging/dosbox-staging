@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.54 2003-11-12 13:27:39 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.55 2004-01-08 11:47:26 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
+
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -56,6 +57,11 @@ extern char** environ;
 #include <windows.h>
 #define STDOUT_FILE	TEXT("stdout.txt")
 #define STDERR_FILE	TEXT("stderr.txt")
+#define DEFAULT_CONFIG_FILE "/dosbox.conf"
+#elif defined(MACOSX)
+#define DEFAULT_CONFIG_FILE "/Library/Preferences/DOSBox Preferences"
+#else /*linux freebsd*/
+#define DEFAULT_CONFIG_FILE "/.dosboxrc"
 #endif
 
 enum SCREEN_TYPES	{ 
@@ -759,8 +765,19 @@ int main(int argc, char* argv[]) {
 		} else {
 			config_file="dosbox.conf";
 		}
-		/* Parse the config file */
-		control->ParseConfigFile(config_file.c_str());
+		/* Parse the config file
+		 * try open config file in $HOME if can't open dosbox.conf or specified file
+		 */
+		if (control->ParseConfigFile(config_file.c_str()) == false)  {
+			if ((getenv("HOME") != NULL)) {
+				config_file = (std::string)getenv("HOME") + 
+					      (std::string)DEFAULT_CONFIG_FILE;
+				if (control->ParseConfigFile(config_file.c_str()) == false) {
+					LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+				}
+			   
+			}
+		}
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
 #endif
