@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.65 2004-03-08 13:27:13 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.66 2004-03-10 13:49:30 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -209,8 +209,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
 		"memsize -- Amount of memory dosbox has in megabytes.\n"
-		"machine -- The type of machine tries to emulate:auto,hercules,cga,tandy,vga.\n"
-		"           Try a specific type if your game has problems with auto.\n"
+		"machine -- The type of machine tries to emulate:hercules,cga,tandy,vga.\n"
 	);
 
 	secprop=control->AddSection_prop("render",&RENDER_Init);
@@ -270,14 +269,16 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("midi",&MIDI_Init);
 	secprop->AddInitFunction(&MPU401_Init);
 	secprop->Add_bool("mpu401",true);
+	secprop->Add_bool("intelligent",false);   
 	secprop->Add_string("device","default");
 	secprop->Add_string("config","");
 	
 	MSG_Add("MIDI_CONFIGFILE_HELP",
-		"mpu401 -- Enable MPU-401 Emulation.\n"
-		"device -- Device that will receive the MIDI data from MPU-401.\n"
-		"          This can be default,alsa,oss,win32,coreaudio,none.\n"
-		"config -- Special configuration options for the device.\n"
+		"mpu401      -- Enable MPU-401 Emulation.\n"
+		"device      -- Device that will receive the MIDI data from MPU-401.\n"
+		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
+		"intelligent -- Operate in Intelligent mode.\n"
+		"config      -- Special configuration options for the device.\n"
 	);
 
 #if C_DEBUG
