@@ -198,7 +198,7 @@ static void SetupCMDLine(Bit16u pspseg,ParamBlock * block)
 	psp.SetCommandTail(block->exec.cmdtail);
 }
 
-bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
+bool DOS_Execute(char * name,ParamBlock * _block,Bit8u flags) {
 	EXE_Header head;Bitu i;
 	Bit16u fhandle;Bit16u len;Bit32u pos;
 	Bit16u pspseg,envseg,loadseg,memsize,readsize;
@@ -208,6 +208,11 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 	if (flags!=LOADNGO && flags!=OVERLAY) {
 		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name); 	
 	}
+	
+	// Parameter block may be overwritten on load, so save these values !
+	ParamBlock block;
+	memcpy(&block,_block,sizeof(ParamBlock));
+
 	/* Check for EXE or COM File */
 	bool iscom=false;
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
@@ -224,7 +229,7 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 	}
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
-		envseg=block->exec.envseg;
+		envseg=block.exec.envseg;
 		if (!MakeEnv(name,&envseg)) {
 			DOS_CloseFile(fhandle);
 			return false;
@@ -249,8 +254,8 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 		loadseg=pspseg+16;
 		/* Setup a psp */
 		SetupPSP(pspseg,memsize,envseg);
-		SetupCMDLine(pspseg,block);
-	} else loadseg=block->overlay.loadseg,0;
+		SetupCMDLine(pspseg,&block);
+	} else loadseg=block.overlay.loadseg,0;
 	/* Load the executable */
 	loadaddress=HostMake(loadseg,0);
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
@@ -270,7 +275,7 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 		}
 		/* Relocate the exe image */
 		Bit16u relocate;
-		if (flags==OVERLAY) relocate=block->overlay.relocation;
+		if (flags==OVERLAY) relocate=block.overlay.relocation;
 		else relocate=loadseg;
 		pos=head.reloctable;DOS_SeekFile(fhandle,&pos,0);
 		for (i=0;i<head.relocations;i++) {
@@ -306,8 +311,8 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 		/* save vectors */
 		newpsp.SaveVectors();
 		/* copy fcbs */
-		newpsp.SetFCB1(block->exec.fcb1);
-		newpsp.SetFCB2(block->exec.fcb2);
+		newpsp.SetFCB1(block.exec.fcb1);
+		newpsp.SetFCB2(block.exec.fcb2);
 		/* Set the stack for new program */
 		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
