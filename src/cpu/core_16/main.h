@@ -944,33 +944,24 @@ restart:
 				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
 			}
 			break;
-#ifdef USE_FPU
-#include "../../fpu/fpu_core_16/support.h"
+#ifdef CPU_FPU
 		case 0xd8:												/* FPU ESC 0 */
-			FPU_ESC_0;
-			break;
+			 FPU_ESC(0);break;
 		case 0xd9:												/* FPU ESC 1 */
-			FPU_ESC_1;
-			break;
+			 FPU_ESC(1);break;
 		case 0xda:												/* FPU ESC 2 */
-			FPU_ESC_2;
-			break;
+			 FPU_ESC(2);break;
 		case 0xdb:												/* FPU ESC 3 */
-			FPU_ESC_3;
-			break;
+			 FPU_ESC(3);break;
 		case 0xdc:												/* FPU ESC 4 */
-			FPU_ESC_4;
-			break;
+			 FPU_ESC(4);break;
 		case 0xdd:												/* FPU ESC 5 */
-			FPU_ESC_5;
-			break;
+			 FPU_ESC(5);break;
 		case 0xde:												/* FPU ESC 6 */
-			FPU_ESC_6;
-			break;
+			 FPU_ESC(6);break;
 		case 0xdf:												/* FPU ESC 7 */
-			FPU_ESC_7;
-			break;
-#else
+			 FPU_ESC(7);break;
+#else 
 		case 0xd8:												/* FPU ESC 0 */
 		case 0xd9:												/* FPU ESC 1 */
 		case 0xda:												/* FPU ESC 2 */
@@ -980,9 +971,8 @@ restart:
 		case 0xde:												/* FPU ESC 6 */
 		case 0xdf:												/* FPU ESC 7 */
 			{
-				GetRM;
-				if( rm < 0xc0 )
-					GetEAa;
+				Bit8u rm;
+				if (rm<0xc0) GetEAa;
 			}
 			break;
 #endif

@@ -207,7 +207,9 @@ static void InitSystems(void) {
 	HARDWARE_Init();
 	TIMER_Init();
 	CPU_Init();
+#ifdef C_FPU
 	FPU_Init();
+#endif
 	MIXER_Init();
 #ifdef C_DEBUG
 	DEBUG_Init();

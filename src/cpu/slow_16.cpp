@@ -24,7 +24,6 @@
 #include "pic.h"
 #include "fpu.h"
 
-
 typedef PhysPt EAPoint;
 
 #define SegBase(seg) Segs[seg].phys
@@ -41,27 +40,6 @@ typedef PhysPt EAPoint;
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
 
-
-/*
-typedef HostOff EAPoint;
-
-#define SegBase(seg) Segs[seg].host
-
-#define LoadMb(off) readb(off)
-#define LoadMw(off) readw(off)
-#define LoadMd(off) readd(off)
-
-#define LoadMbs(off) (Bit8s)(LoadMb(off))
-#define LoadMws(off) (Bit16s)(LoadMw(off))
-#define LoadMds(off) (Bit32s)(LoadMd(off))
-
-#define SaveMb(off,val)	writeb(off,val)
-#define SaveMw(off,val)	writew(off,val)
-#define SaveMd(off,val)	writed(off,val)
-
-*/
-
-
 #define LoadRb(reg) reg
 #define LoadRw(reg) reg
 #define LoadRd(reg) reg
@@ -72,12 +50,11 @@ typedef HostOff EAPoint;
 
 extern Bitu cycle_count;
 
-#define CPU_386
-#define USE_FPU
-#define FPU_386
-//TODO Change name
-#define FULLFLAGS
-
+/* Enable parts of the cpu emulation */
+#define CPU_386							//Enable 386 instructions
+#ifdef C_FPU
+#define CPU_FPU							//Enable FPU escape instructions
+#endif
 
 #include "core_16/support.h"
 static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count);

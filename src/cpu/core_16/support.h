@@ -44,9 +44,6 @@ static INLINE void ADDIPFAST(Bit16s blah) {
 	IPPoint+=blah;
 }
 
-#define ERRORRETURN(a) { error_ret=a;goto errorreturn; }
-
-
 static INLINE Bit8u Fetchb() {
 	Bit8u temp=LoadMb(IPPoint);
 	IPPoint+=1;
@@ -75,7 +72,6 @@ static INLINE Bit32s Fetchds() {
 	return Fetchd();
 }
 
-
 static INLINE void Push_16(Bit16u blah)	{
 	reg_sp-=2;
 	SaveMw(SegBase(ss)+reg_sp,blah);
@@ -97,12 +93,6 @@ static INLINE Bit32u Pop_32() {
 	reg_sp+=4;
 	return temp;
 };
-
-
-
-
-
-
 
 #define stringDI											\
 	EAPoint to;												\
@@ -185,7 +175,3 @@ static INLINE void Rep_66(Bit16s direct,EAPoint from,EAPoint to) {
 }
 
 
-//	if (flags.tf) {													\
-//		cpudecoder=CPU_Real_16_Slow_Decode_Special;					\
-//		return CBRET_NONE;											\
-//	}																\
