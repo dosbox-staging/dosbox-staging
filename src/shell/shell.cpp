@@ -207,7 +207,7 @@ void AUTOEXEC_Init(Section * sec) {
 	std::string line;
 	Section_line * section=static_cast<Section_line *>(sec);
 	char * extra=(char *)section->data.c_str();
-	if (extra) SHELL_AddAutoexec(extra);
+	if (extra) SHELL_AddAutoexec("%s",extra);
 	/* Check for first command being a directory or file */
 	char buffer[CROSS_LEN];
 	if (control->cmdline->FindCommand(1,line)) {
