@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.53 2003-11-08 10:09:52 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.54 2003-11-12 13:27:39 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -776,7 +776,9 @@ int main(int argc, char* argv[]) {
 		}
 #endif	
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
-			SwitchFullScreen();
+			if(!sdl.desktop.fullscreen) { //only switch if not allready in fullscreen
+				SwitchFullScreen();
+			}
 		}
 		/* Start up main machine */
 		control->StartUp();
