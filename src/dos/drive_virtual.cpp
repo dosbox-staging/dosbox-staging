@@ -190,7 +190,7 @@ bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
 	if(attr & DOS_ATTR_VOLUME) {
-		dta.SetResult("DOSBOX",0,0,0,DOS_ATTR_ARCHIVE);
+		dta.SetResult("DOSBOX",0,0,0,DOS_ATTR_VOLUME);
 		return true;
 	}
 	return FindNext(dta);
