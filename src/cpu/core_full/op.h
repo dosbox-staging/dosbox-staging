@@ -316,10 +316,10 @@ switch (inst.code.op) {
 		if (--reg_cx) break;
 		goto nextopcode;
 	case O_LOOPZ:
-		if (--reg_cx && !get_ZF()) break;
+		if (--reg_cx && get_ZF()) break;
 		goto nextopcode;
 	case O_LOOPNZ:
-		if (--reg_cx && get_ZF()) break;
+		if (--reg_cx && !get_ZF()) break;
 		goto nextopcode;
 	case O_JCXZ:
 		if (reg_cx) goto nextopcode;
