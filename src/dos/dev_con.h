@@ -144,6 +144,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             case 'M':/* scrolling UP*/ 
             default:
                 LOG_DEBUG("ANSI: unknown char %c after a esc",data[count]); /*prob () */
+                ClearAnsi();
                 break;
             }
             count++;
