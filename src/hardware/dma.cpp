@@ -82,6 +82,195 @@ void DmaController::portWrite(Bit32u port, Bit16u val, bool eightbit) {
 }
 
 
+Bit32u DmaChannel::Read(Bit32s requestsize, Bit8u * buffer) {
+	Bit32s bytesread;
+	bytesread = 0;
+	if(autoinit) {
+		while(requestsize>0) {
+			if(currcnt>=requestsize) {
+				MEM_BlockRead(curraddr,buffer,requestsize);
+				curraddr+=requestsize;
+				buffer+=requestsize;
+				currcnt-=requestsize;
+				bytesread+=requestsize;
+				requestsize=0;
+				break;
+			} else {
+				MEM_BlockRead(curraddr,buffer,currcnt);
+				bytesread+=currcnt;
+				buffer+=currcnt;
+				requestsize-=currcnt;
+				reset();
+				MakeCallback(true);
+			}
+		}
+		if(currcnt==0) {
+			reset();
+			MakeCallback(true);
+		}
+		return bytesread;
+
+	} else {
+		if(currcnt>=requestsize) {
+			MEM_BlockRead(curraddr,buffer,requestsize);
+			curraddr+=requestsize;
+			buffer+=requestsize;
+			currcnt-=requestsize;
+			bytesread+=requestsize;
+		} else {
+			MEM_BlockRead(curraddr,buffer,currcnt);
+			buffer+=currcnt;
+			requestsize-=currcnt;
+			bytesread+=currcnt;
+			currcnt=0;
+		}
+	}
+	if(currcnt==0) MakeCallback(true);
+	return bytesread;
+}
+
+Bit32u DmaChannel::Write(Bit32s requestsize, Bit8u * buffer) {
+	Bit32s byteswrite;
+	byteswrite = 0;
+	if(autoinit) {
+		while(requestsize>0) {
+			if(currcnt>=requestsize) {
+				MEM_BlockWrite(curraddr,buffer,requestsize);
+				curraddr+=requestsize;
+				buffer+=requestsize;
+				currcnt-=requestsize;
+				byteswrite+=requestsize;
+				requestsize=0;
+				break;
+			} else {
+				MEM_BlockWrite(curraddr,buffer,currcnt);
+				byteswrite+=currcnt;
+				buffer+=currcnt;
+				requestsize-=currcnt;
+				reset();
+				MakeCallback(true);
+			}
+		}
+		if(currcnt==0) {
+			reset();
+			MakeCallback(true);
+		}
+		return byteswrite;
+
+	} else {
+		if(currcnt>=requestsize) {
+			MEM_BlockWrite(curraddr,buffer,requestsize);
+			curraddr+=requestsize;
+			buffer+=requestsize;
+			currcnt-=requestsize;
+			byteswrite+=requestsize;
+		} else {
+			MEM_BlockWrite(curraddr,buffer,currcnt);
+			buffer+=currcnt;
+			requestsize-=currcnt;
+			byteswrite+=currcnt;
+			currcnt=0;
+		}
+	}
+	if(currcnt==0) MakeCallback(true);
+	return byteswrite;
+}
+
+
+void DmaChannel::calcPhys(void) {
+	if (DMA16) {
+		physaddr = (baseaddr << 1) | ((pageaddr >> 1) << 17);
+	} else {
+		physaddr = (baseaddr) | (pageaddr << 16);
+	}
+	curraddr = physaddr;
+	current_addr = baseaddr;
+}
+
+#define ff myController->flipflop
+
+Bit16u DmaChannel::portRead(Bit32u port, bool eightbit) {
+	if (port == ChannelPorts[DMA_BASEADDR][channum]) {
+		if(eightbit) {
+			if(ff) {
+				ff = !ff;
+				return current_addr & 0xff;
+			} else {
+				ff = !ff;
+				return current_addr >> 8;
+			}
+		} else {
+			return current_addr;
+		}
+	}
+	if (port == ChannelPorts[DMA_TRANSCOUNT][channum]) {
+		if(eightbit) {
+			if(ff) {
+				ff = !ff;
+				return (Bit8u)(currcnt & 0xff);
+			} else {
+				ff = !ff;
+				return (Bit8u)(currcnt >> 8);
+			}
+		} else {
+			return (Bit16u)currcnt;
+		}
+	}
+	if (port == ChannelPorts[DMA_PAGEREG][channum]) return pageaddr;
+	return 0xffff;
+}
+
+void DmaChannel::portWrite(Bit32u port, Bit16u val, bool eightbit) {
+	if (port == ChannelPorts[DMA_BASEADDR][channum]) {
+		if(eightbit) {
+			if(ff) {
+				baseaddr = (baseaddr & 0xff00) | (Bit8u)val;
+			} else {
+				baseaddr = (baseaddr & 0xff) | (val << 8);
+			}
+			ff = !ff;
+		} else {
+			baseaddr = val;
+		}
+		calcPhys();
+		reset();
+	}
+	if (port == ChannelPorts[DMA_TRANSCOUNT][channum]) {
+		if(eightbit) {
+			if(ff) {
+				transcnt = (transcnt & 0xff00) | (Bit8u)val;
+			} else {
+				transcnt = (transcnt & 0xff) | (val << 8);
+			}
+			ff = !ff;
+		} else {
+			transcnt = val;
+		}
+		currcnt = transcnt+1;
+		reset();
+		DMA_CheckEnabled(this);
+		MakeCallback(false);
+		
+	}
+	if (port == ChannelPorts[DMA_PAGEREG][channum]) {
+		pageaddr = val;
+		calcPhys();
+		reset();
+	}
+
+}
+
+#undef ff
+
+// Notify channel when mask changes
+void DmaChannel::Notify(void) {
+	if(!masked) {
+		DMA_CheckEnabled(this);
+		MakeCallback(false);
+	}
+}
+
+
 static Bit16u readDMAPorts(Bit32u port, bool eightbit) {
 	int i,j;
 
