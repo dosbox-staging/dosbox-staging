@@ -97,7 +97,8 @@ private:
 	void	GetIOCTLAdapter		(HANDLE hF,int * iDA,int * iDT,int * iDL);
 	bool	ScanRegistryFindKey	(HKEY& hKeyBase);
 	bool	ScanRegistry		(HKEY& hKeyBase);
-	BYTE	GetHostAdapter		(void);
+	BYTE	GetHostAdapter		(char* hardwareID);
+	bool	GetVendor			(BYTE HA_num, BYTE SCSI_Id, BYTE SCSI_Lun, char* szBuffer);
 		
 	// ASPI stuff
 	BYTE	haId;
