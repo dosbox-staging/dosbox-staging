@@ -15,7 +15,7 @@
   - A few internal DOS fixes.
   - Timer fixes for the hybrid loader.
   - Some small soundblaster fixes.
-  - The drive cache can now be cleared by a keycombo.
+  - The drive cache can now be cleared by a keycombo. (CTRL-F4)
   - A few keyboard fixes.
   - Compilation fixes on various platforms.
   - Quite some debugger improvements.
@@ -23,6 +23,8 @@
   - Added some cdrom detection checks.
   - Enabled insert in the shell. (Easier editing of commands)
   - Changed order in which executables appear with tab-completion.
+  - Fixed some issues with raw opl recording and using a slightly different
+    format
   
 0.62
   - Added blinking support in the shell and some color fixes.
