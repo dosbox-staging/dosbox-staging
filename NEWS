@@ -1,3 +1,18 @@
+0.55: 
+	- changed basedir handling. (linux/winXP)
+	- added some FCB-calls 
+	- improved support for user mousehandlers
+	- fixed EGA graphics
+	- fixed VGA graphics
+	- fixed the displaying of text in some graphics modes
+	- fixed write with size 0
+	- changed memory management.
+	- added full emm 3.2 support.
+	- fixed and cleaned up the cpu flags.
+	 changed interrupt handler.
+	- speeded up the graphics.
+	- speeded up the cpu-core
+
 0.50: 
       -added F3 to repeat the last typed command.
       -made it possible to change the shellmessages(dosshell). so 
