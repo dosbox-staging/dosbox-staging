@@ -55,7 +55,9 @@ void DOS_Init(Section*);
 
 
 void CPU_Init(Section*);
-//void FPU_Init();
+#if C_FPU
+void FPU_Init(Section*);
+#endif
 void DMA_Init(Section*);
 void MIXER_Init(Section*);
 void MIDI_Init(Section*);
@@ -185,7 +187,9 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_int("cycles",1800);
-
+#if C_FPU
+	secprop->AddInitFunction(&FPU_Init);
+#endif
 	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
@@ -252,9 +256,6 @@ void DOSBOX_Init(void) {
 
 	control->SetStartUp(&SHELL_Init);	
 
-#if C_FPU
-	FPU_Init();
-#endif
 }
 
 
