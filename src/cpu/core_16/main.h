@@ -971,7 +971,7 @@ restart:
 		case 0xde:												/* FPU ESC 6 */
 		case 0xdf:												/* FPU ESC 7 */
 			{
-				Bit8u rm;
+				Bit8u rm=Fetchb();
 				if (rm<0xc0) GetEAa;
 			}
 			break;
