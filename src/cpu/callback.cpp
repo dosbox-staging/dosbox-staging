@@ -32,7 +32,7 @@
 
 
 CallBack_Handler CallBack_Handlers[CB_MAX];
-static Bitu call_runint16,call_idle,call_default,call_runfar16;
+static Bitu call_stop,call_idle,call_default;
 
 static Bitu illegal_handler(void) {
 	E_Exit("Illegal CallBack Called");
@@ -73,23 +73,24 @@ static Bitu stop_handler(void) {
 
 
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off) {
-	real_writew((Bit16u)CB_SEG,(call_runfar16<<4)+1,off);
-	real_writew((Bit16u)CB_SEG,(call_runfar16<<4)+3,seg);
+	reg_sp-=4;
+	real_writew(Segs[es].value,reg_sp,call_stop<<4);
+	real_writew(Segs[es].value,reg_sp+2,CB_SEG);
 	Bit32u oldeip=reg_eip;
 	Bit16u oldcs=Segs[cs].value;
-	reg_eip=call_runfar16<<4;
-	SetSegment_16(cs,CB_SEG);
+	reg_eip=off;
+	SetSegment_16(cs,seg);
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
 	SetSegment_16(cs,oldcs);
 }
 
 void CALLBACK_RunRealInt(Bit8u intnum) {
-	real_writeb((Bit16u)CB_SEG,(call_runint16<<4)+1,intnum);
 	Bit32u oldeip=reg_eip;
 	Bit16u oldcs=Segs[cs].value;
-	reg_eip=call_runint16<<4;
+	reg_eip=call_stop<<4;
 	SetSegment_16(cs,CB_SEG);
+	Interrupt(intnum);
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
 	SetSegment_16(cs,oldcs);
@@ -139,20 +140,12 @@ void CALLBACK_Init(void) {
 	for (i=0;i<CB_MAX;i++) {
 		CallBack_Handlers[i]=&illegal_handler;
 	}
-	/* Setup the Software interrupt handler */
-	call_runint16=CALLBACK_Allocate();
-	CallBack_Handlers[call_runint16]=stop_handler;
-	real_writeb((Bit16u)CB_SEG,(call_runint16<<4),0xCD);				
-	real_writeb((Bit16u)CB_SEG,(call_runint16<<4)+2,0xFE);
-	real_writeb((Bit16u)CB_SEG,(call_runint16<<4)+3,0x38);
-	real_writew((Bit16u)CB_SEG,(call_runint16<<4)+4,call_runint16);
-	/* Setup the Far Call handler */
-	call_runfar16=CALLBACK_Allocate();
-	CallBack_Handlers[call_runfar16]=stop_handler;
-	real_writeb((Bit16u)CB_SEG,(call_runfar16<<4),0x9A);				
-	real_writeb((Bit16u)CB_SEG,(call_runfar16<<4)+5,0xFE);
-	real_writeb((Bit16u)CB_SEG,(call_runfar16<<4)+6,0x38);
-	real_writew((Bit16u)CB_SEG,(call_runfar16<<4)+7,call_runfar16);
+	/* Setup the Stop Handler */
+	call_stop=CALLBACK_Allocate();
+	CallBack_Handlers[call_stop]=stop_handler;
+	real_writeb((Bit16u)CB_SEG,(call_stop<<4)+0,0xFE);
+	real_writeb((Bit16u)CB_SEG,(call_stop<<4)+1,0x38);
+	real_writew((Bit16u)CB_SEG,(call_stop<<4)+2,call_stop);
 	/* Setup the idle handler */
 	call_idle=CALLBACK_Allocate();
 	CallBack_Handlers[call_idle]=stop_handler;
