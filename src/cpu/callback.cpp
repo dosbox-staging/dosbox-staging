@@ -16,17 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.24 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.25 2005-03-25 08:40:42 qbix79 Exp $ */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
 #include "cpu.h"
-#include "pic.h"
 
 /* CallBack are located at 0xC800:0 
    And they are 16 bytes each and you can define them to behave in certain ways like a
@@ -54,6 +52,10 @@ Bitu CALLBACK_Allocate(void) {
 	}
 	E_Exit("CALLBACK:Can't allocate handler.");
 	return 0;
+}
+
+void CALLBACK_DeAllocate(Bitu in) {
+	CallBack_Handlers[in]=&illegal_handler;
 }
 
 void CALLBACK_Idle(void) {
@@ -105,8 +107,6 @@ void CALLBACK_RunRealInt(Bit8u intnum) {
 	SegSet16(cs,oldcs);
 }
 
-
-
 void CALLBACK_SZF(bool val) {
 	Bit16u tempf=mem_readw(SegPhys(ss)+reg_sp+4) & 0xFFBF;
 	Bit16u newZF=(val==true) << 6;
@@ -119,8 +119,7 @@ void CALLBACK_SCF(bool val) {
 	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newCF));
 };
 
-void CALLBACK_SetDescription(Bitu nr, const char* descr)
-{
+void CALLBACK_SetDescription(Bitu nr, const char* descr) {
 	if (descr) {
 		CallBack_Description[nr] = new char[strlen(descr)+1];
 		strcpy(CallBack_Description[nr],descr);
@@ -128,8 +127,7 @@ void CALLBACK_SetDescription(Bitu nr, const char* descr)
 		CallBack_Description[nr] = 0;
 };
 
-const char* CALLBACK_GetDescription(Bitu nr)
-{
+const char* CALLBACK_GetDescription(Bitu nr) {
 	if (nr>=CB_MAX) return 0;
 	return CallBack_Description[nr];
 };
@@ -166,6 +164,14 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char*
 	return true;
 }
 
+void CALLBACK_RemoveSetup(Bitu callback) {
+	for (Bitu i = 0;i < 16;i++) {
+		phys_writeb(CB_BASE+(callback<<4)+i ,(Bit8u) 0x00);
+	}
+	CallBack_Description[callback] = 0;
+}
+
+
 bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress,const char* descr) {
 	if (callback>=CB_MAX) return false;
 	switch (type) {
@@ -194,6 +200,38 @@ bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu line
 	CallBack_Handlers[callback]=handler;
 	CALLBACK_SetDescription(callback,descr);
 	return true;
+}
+
+CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
+	if(!installed) return;
+	if(m_type == CALLBACK_HandlerObject::SETUP) {
+		if(vectorhandler.installed){
+			//See if we are the current handler. if so restore the old one
+			if(RealGetVec(vectorhandler.interrupt) == Get_RealPointer()) {
+				RealSetVec(vectorhandler.interrupt,vectorhandler.old_vector);
+			} else 
+				LOG(LOG_MISC,LOG_WARN)("Interrupt vector changed on %X %s",vectorhandler.interrupt,CALLBACK_GetDescription(m_callback));
+		}
+		CALLBACK_RemoveSetup(m_callback);
+	} else if(m_type == CALLBACK_HandlerObject::SETUPAT){
+		E_Exit("Callback:SETUP at not handled yet.");
+	} else E_Exit("what kind of callback is this!");
+	CALLBACK_DeAllocate(m_callback);
+}
+
+void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const char* description){
+	if(installed) E_Exit("Allready installed");
+	m_type=SETUP;
+	m_callback=CALLBACK_Allocate();
+	CALLBACK_Setup(m_callback,handler,type,description);
+	installed=true;
+}
+
+void CALLBACK_HandlerObject::Set_RealVec(Bit8u vec){
+	if(vectorhandler.installed) E_Exit ("double usage of vector handler");
+	vectorhandler.installed=true;
+	vectorhandler.interrupt=vec;
+	RealSetVec(vec,Get_RealPointer(),vectorhandler.old_vector);
 }
 
 void CALLBACK_Init(Section* sec) {
@@ -257,5 +295,3 @@ void CALLBACK_Init(Section* sec) {
 	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0d,(Bit8u)0xef);
 	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0e,(Bit8u)0xcb);	// retf
 }
-
-
