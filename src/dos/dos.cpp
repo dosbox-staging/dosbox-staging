@@ -204,8 +204,7 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:0x14 FCB-Read used, result:al=%d",reg_al);
 		break;
 	case 0x15:		/* Sequential write to FCB */
-		if (DOS_FCBWrite(SegValue(ds),reg_dx,0)==true) reg_al = 0x00;
-		else reg_al = 0x01;
+		reg_al=DOS_FCBWrite(SegValue(ds),reg_dx,0);
 		LOG_DEBUG("DOS:0x15 FCB-Write used, result:al=%d",reg_al);
 		break;
 	case 0x16:		/* Create or truncate file using FCB */
@@ -228,8 +227,7 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:0x21 FCB-Random read used, result:al=%d",reg_al);
 		break;
 	case 0x22:		/* Write random record to FCB */
-		if (DOS_FCBRandomWrite(SegValue(ds),reg_dx,1,true)) reg_al = 0x00;
-		else reg_al = 0x01;
+		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,1,true);
 		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
 		break;
 	case 0x23:		/* Get file size for FCB */

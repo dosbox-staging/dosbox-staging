@@ -696,7 +696,7 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	return FCB_READ_PARTIAL;
 }
 
-bool DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
+Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
 {
 	DOS_FCB fcb(seg,offset);
 	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
