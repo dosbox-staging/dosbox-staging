@@ -33,8 +33,7 @@ extern "C" {
 
 #pragma pack(push,4)
 
-#include "ntddk.h"
-
+//#include "ntddk.h"
 
 #define DD_SCSI_DEVICE_NAME               "\\Device\\ScsiPort"
 #define DD_SCSI_DEVICE_NAME_U             L"\\Device\\ScsiPort"
@@ -154,6 +153,7 @@ typedef struct _SCSI_INQUIRY_DATA {
 #define SCSI_IOCTL_DATA_IN                1
 #define SCSI_IOCTL_DATA_UNSPECIFIED       2
 
+/*
 typedef struct _DUMP_POINTERS {
 	PADAPTER_OBJECT  AdapterObject;
 	PVOID  MappedRegisterBase;
@@ -166,7 +166,7 @@ typedef struct _DUMP_POINTERS {
 	UCHAR  Spare1[2];
 	PVOID  DeviceObject;
 } DUMP_POINTERS, *PDUMP_POINTERS;
-
+*/
 #pragma pack(pop)
 
 #ifdef __cplusplus

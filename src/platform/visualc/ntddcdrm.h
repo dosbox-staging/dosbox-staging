@@ -33,10 +33,6 @@ extern "C" {
 
 #pragma pack(push,4)
 
-#include "ntddk.h"
-#include "ntddstor.h"
-
-
 #define IOCTL_CDROM_BASE                  FILE_DEVICE_CD_ROM
 
 #define IOCTL_CDROM_CHECK_VERIFY \
@@ -191,13 +187,6 @@ typedef struct _CDROM_TOC_ATIP_DATA_BLOCK {
   UCHAR  Reserved12;
 } CDROM_TOC_ATIP_DATA_BLOCK, *PCDROM_TOC_ATIP_DATA_BLOCK;
 
-typedef struct _CDROM_TOC_ATIP_DATA {
-  UCHAR  Length[2];
-  UCHAR  Reserved1;
-  UCHAR  Reserved2;
-  CDROM_TOC_ATIP_DATA_BLOCK  Descriptors[0];
-} CDROM_TOC_ATIP_DATA, *PCDROM_TOC_ATIP_DATA;
-
 /* CDROM_TOC_CD_TEXT_DATA_BLOCK.PackType constants */
 #define CDROM_CD_TEXT_PACK_ALBUM_NAME 0x80
 #define CDROM_CD_TEXT_PACK_PERFORMER  0x81
@@ -227,13 +216,6 @@ typedef struct _CDROM_TOC_CD_TEXT_DATA_BLOCK {
   UCHAR  CRC[2];
 } CDROM_TOC_CD_TEXT_DATA_BLOCK, *PCDROM_TOC_CD_TEXT_DATA_BLOCK;
 
-typedef struct _CDROM_TOC_CD_TEXT_DATA {
-  UCHAR  Length[2];
-  UCHAR  Reserved1;
-  UCHAR  Reserved2;
-  CDROM_TOC_CD_TEXT_DATA_BLOCK  Descriptors[0];
-} CDROM_TOC_CD_TEXT_DATA, *PCDROM_TOC_CD_TEXT_DATA;
-
 /* CDROM_TOC_FULL_TOC_DATA_BLOCK.Adr constants */
 #define ADR_NO_MODE_INFORMATION           0x0
 #define ADR_ENCODES_CURRENT_POSITION      0x1
@@ -250,20 +232,6 @@ typedef struct _CDROM_TOC_FULL_TOC_DATA_BLOCK {
   UCHAR  Zero;
   UCHAR  Msf[3];
 } CDROM_TOC_FULL_TOC_DATA_BLOCK, *PCDROM_TOC_FULL_TOC_DATA_BLOCK;
-
-typedef struct _CDROM_TOC_FULL_TOC_DATA {
-  UCHAR  Length[2];
-  UCHAR  FirstCompleteSession;
-  UCHAR  LastCompleteSession;
-  CDROM_TOC_FULL_TOC_DATA_BLOCK  Descriptors[0];
-} CDROM_TOC_FULL_TOC_DATA, *PCDROM_TOC_FULL_TOC_DATA;
-
-typedef struct _CDROM_TOC_PMA_DATA {
-  UCHAR  Length[2];
-  UCHAR  Reserved1;
-  UCHAR  Reserved2;
-  CDROM_TOC_FULL_TOC_DATA_BLOCK  Descriptors[0];
-} CDROM_TOC_PMA_DATA, *PCDROM_TOC_PMA_DATA;
 
 /* SUB_Q_HEADER.AudioStatus constants */
 #define AUDIO_STATUS_NOT_SUPPORTED  0x00
