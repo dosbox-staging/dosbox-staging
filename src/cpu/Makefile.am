@@ -1,6 +1,6 @@
-SUBDIRS = core_16 core_full
+SUBDIRS = core_16 core_full core_normal
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libcpu.a
 libcpu_a_SOURCES = callback.cpp cpu.cpp flags.cpp modrm.cpp modrm.h slow_16.cpp core_full.cpp instructions.h	\
-		   paging.cpp lazyflags.h 
+		   paging.cpp lazyflags.h core_normal.cpp

@@ -44,14 +44,19 @@ CPU_Decoder * cpudecoder;
 
 void CPU_Real_16_Slow_Start(bool big);
 void CPU_Core_Full_Start(bool big);
-void CPU_Core_Insane_Start(bool big);
+void CPU_Core_Normal_Start(bool big);
 
+#if 1
 
-typedef void DecoderStart(void);
+#define realcore_start CPU_Core_Normal_Start
+#define pmodecore_start CPU_Core_Normal_Start
 
-#define realcore_start CPU_Real_16_Slow_Start
-//#define realcore_start CPU_Core_Insane_Start
-//#define realcore_start CPU_Core_Full_Start
+#else 
+
+#define realcore_start CPU_Core_Full_Start
+#define pmodecore_start CPU_Core_Full_Start
+
+#endif
 
 void CPU_Push16(Bitu value) {
 	reg_esp-=2;
@@ -86,7 +91,7 @@ PhysPt SelBase(Bitu sel) {
 }
 
 void CPU_SetFlags(Bitu word) {
-	flags.word=(word|2)&~0x14;
+	flags.word=(word|2)&~0x28;
 }
 
 bool CPU_CheckCodeType(CODE_TYPE type) {
@@ -97,10 +102,10 @@ bool CPU_CheckCodeType(CODE_TYPE type) {
 		realcore_start(false);
 		break;
 	case CODE_PMODE16:
-		CPU_Core_Full_Start(false);
+		pmodecore_start(false);
 		break;
 	case CODE_PMODE32:
-		CPU_Core_Full_Start(true);
+		pmodecore_start(true);
 		break;
 	}
 	return false;
@@ -272,7 +277,7 @@ bool CPU_IRET(bool use32) {
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
 			reg_eip=offset;
 			CPU_SetFlags(old_flags);
-			LOG_MSG("IRET:Same level return to %X:%X",selector,offset);
+			LOG_MSG("IRET:Same level return to %X:%X big %d",selector,offset,cpu.code.big);
 		} else {
 			/* Return to higher privilege */
 			switch (desc.Type()) {
@@ -303,7 +308,7 @@ bool CPU_IRET(bool use32) {
 			reg_esp=new_esp;
 			CPU_SetSegGeneral(ss,new_ss);
 			//TODO Maybe validate other segments, but why would anyone use them?
-			LOG_MSG("IRET:Outer level return to %X:%X",selector,offset);
+			LOG_MSG("IRET:Outer level return to %X:X big %d",selector,offset,cpu.code.big);
 		}
 		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 	}
@@ -329,11 +334,11 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 			if (rpl>cpu.cpl) E_Exit("JMP:NC:RPL>CPL");
 			if (rpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
 			cpu.cpl=desc.DPL();
-			LOG_MSG("JMP:Code:NC to %X:%X",selector,offset);
+			LOG_MSG("JMP:Code:NC to %X:%X big %d",selector,offset,desc.Big());
 			goto CODE_jmp;
 		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
-			LOG_MSG("JMP:Code:C to %X:%X",selector,offset);
+			LOG_MSG("JMP:Code:C to %X:%X big %d",selector,offset,desc.Big());
 CODE_jmp:
 			/* Normal jump to another selector:offset */
 			Segs.phys[cs]=desc.GetBase();
@@ -524,7 +529,6 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 				cpu.pmode=true;
 				LOG_MSG("Protected mode");
 				PAGING_Enable((value & CR0_PAGING)>0);
-				CPU_Core_Full_Start(cpu.code.big);
 			} else {
 				cpu.pmode=false;
 				PAGING_Enable(false);
@@ -578,6 +582,7 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 	
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	Descriptor desc;Bitu rpl=selector & 3;
+	ar=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
@@ -625,6 +630,7 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 
 void CPU_LSL(Bitu selector,Bitu & limit) {
 	Descriptor desc;Bitu rpl=selector & 3;
+	limit=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
 		return;
