@@ -28,5 +28,6 @@ serialport.h \
 setup.h \
 support.h \
 timer.h \
+vga.h \
 video.h
 
