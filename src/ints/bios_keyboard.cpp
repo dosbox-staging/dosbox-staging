@@ -205,8 +205,8 @@ static Bitu IRQ1_Handler(void) {
 	Bitu scancode; //,ascii,mod;
 #if 1
 	scancode=reg_al;    //IO_Read(0x60); moved out of handler
-//	ascii=0;
-//	mod=0;
+
+
 #else
 	/* Old code capable of unicode keys. Dropped Readkey disabled in keyboard.cpp */   
 	KEYBOARD_ReadKey(scancode,ascii,mod);
@@ -219,7 +219,7 @@ static Bitu IRQ1_Handler(void) {
 	reg_ax=old_ax;Bit8u flags1,flags2,flags3,leds;
 	if (!(reg_flags&1)) goto irq1_return;
 
-	//TODO maybe implement the int 0x15 ah=4f scancode lookup hook
+
 	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
 	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
@@ -301,6 +301,7 @@ static Bitu IRQ1_Handler(void) {
 	case 0x50:
 	case 0x51:
 	case 0x52:
+	case 0x53: /* del . Not entirely correct, but works fine */
 		if(flags3 &0x02) {	/*extend key. e.g key above arrows or arrows*/
 			if(scancode == 0x52) flags2 |=0x80; /* press insert */		   
 			add_key((scancode <<8)|0xe0);
