@@ -4,5 +4,23 @@
   - changed the basedir routines to use the current working dir instead of argv[0]. This will fix and brake things :)
   - illegal command, now displays the command
   - wildcmp updated to be case insensitive
-  - added fcb:open,close,findfirst, findnext,
+  - added fcb:open,close,findfirst, findnext.
   - fixed rename in drive_local
+  - added new features to the debugger: breakpoint support / data view / command line
+  - partial support of list of lists (dos info block)
+  - full emm 3.2 support  
+  - partial emm 4.0 support
+  - fixes to graphics core fonts (text in sierra games is now correct)
+  - improved support for user mousehandlers
+  - fixed EGA graphics
+  - fixed VGA graphics
+  - fixed write with size 0
+  - changed memory management.
+  - fixed and cleaned up the cpu flags.
+  - changed interrupt handler.
+  - speeded up the graphics.
+  - speeded up the cpu-core
+  - changed dma 
+  - improved dma streams from emm memory
+  - added some cga videomodes
+  - added more funtions to the keyboard handler
