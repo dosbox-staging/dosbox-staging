@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.52 2004-11-13 12:04:47 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.53 2004-11-13 12:19:43 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -128,11 +128,11 @@ void DOS_Shell::ParseLine(char * line) {
 //	if (in || num>1) DOS_DuplicateEntry(0,&old_in);
 
 	if (in) {
-		if(DOS_OpenFile(in,2,&dummy)) { //Test if file exists
+		if(DOS_OpenFile(in,0,&dummy)) { //Test if file exists
 			DOS_CloseFile(dummy);
 			LOG_MSG("SHELL:Redirect input from %s",in);
 			DOS_CloseFile(0); //Close stdin
-			DOS_OpenFile(in,2,&dummy);//Open new stdin
+			DOS_OpenFile(in,0,&dummy);//Open new stdin
 		}
 	}
 	if (out){
