@@ -96,7 +96,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	CROSS_FILENAME(srch_dir);
 
 	char end[2]={CROSS_FILESPLIT,0};
-	if (srch_dir[strlen(srch_dir)]!=CROSS_FILESPLIT) strcat(srch_dir,end);
+	if (srch_dir[strlen(srch_dir)-1]!=CROSS_FILESPLIT) strcat(srch_dir,end);
 	if((srch_opendir=opendir(srch_dir))==NULL) return false;
 	return FindNext(dta);
 }
