@@ -23,6 +23,7 @@ programs.h \
 render.h \
 regs.h \
 render.h \
+serialport.h \
 setup.h \
 support.h \
 timer.h \

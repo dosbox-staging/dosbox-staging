@@ -40,25 +40,16 @@ void DEBUG_ShowMsg(char * format,...);
 
 struct LOG
 {
-	LOG(LOG_TYPES type, LOG_SEVERITIES severity)				{ return;}
-	void operator()(char const* buf)									{ return;}
-	void operator()(char const* buf, double f1)						{ return;}
-	void operator()(char const* buf, double f1, Bit32u u1)			{ return;}
-	void operator()(char const* buf, Bitu u1, double f1)				{ return;}
+	LOG(LOG_TYPES type, LOG_SEVERITIES severity)										{ return;}
+	void operator()(char const* buf)													{ return;}
+	void operator()(char const* buf, double f1)											{ return;}
+	void operator()(char const* buf, double f1, double f2)								{ return;}
+	void operator()(char const* buf, double f1, double f2, double f3)					{ return;}
 
-	void operator()(char const* buf, Bitu u1, Bitu u2)				{ return;}
-	void operator()(char const* buf, Bits u1, Bits u2)				{ return;}
-	void operator()(char const* buf, Bitu u1, Bits u2)				{ return;}
-	void operator()(char const* buf, Bits u1, Bitu u2)				{ return;}
-	void operator()(char const* buf, Bit32s& u1)						{ return;}	
-	void operator()(char const* buf, Bit32u& u1)						{ return;}
-	void operator()(char const* buf, Bits& s1)							{ return;}
-	void operator()(char const* buf, Bitu& u1)							{ return;}
-
-	void operator()(char const* buf, char const* s1)						{ return;}
-	void operator()(char const* buf, char const* s1, Bit32u u1)				{ return;}
-	void operator()(char const* buf, char const* s1, Bit32u u1, Bit32u u2)	{ return;}
-	void operator()(char const* buf, Bit32u u1, char const* s1)				{ return;}
+	void operator()(char const* buf, char const* s1)									{ return;}
+	void operator()(char const* buf, char const* s1, double f1)							{ return;}
+	void operator()(char const* buf, char const* s1, double f1,double f2)				{ return;}
+	void operator()(char const* buf, double  f1, char const* s1)						{ return;}
 
 
 
