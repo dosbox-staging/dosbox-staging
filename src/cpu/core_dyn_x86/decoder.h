@@ -311,7 +311,8 @@ static void dyn_check_bool_exception(DynReg * check) {
 	dyn_reduce_cycles();
 	dyn_set_eip_last();
 	dyn_save_critical_regs();
-	gen_call_function(&DynRunException,"");
+	gen_call_function((void *)&DynRunException,"");
+	dyn_flags_host_to_gen();
 	gen_return(BR_Normal);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
