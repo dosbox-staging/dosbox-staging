@@ -163,7 +163,7 @@ bool DOS_CreateFile(char * name,Bit16u attribute,Bit16u * entry);
 bool DOS_UnlinkFile(char * name);
 bool DOS_FindFirst(char *search,Bit16u attr);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(char * small,Bit8u * big);
+bool DOS_Canonicalize(char * name,Bit8u * big);
 bool DOS_CreateTempFile(char * name,Bit16u * entry);
 bool DOS_FileExists(char * name);
 /* Drive Handing Routines */
