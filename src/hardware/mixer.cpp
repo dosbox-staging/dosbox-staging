@@ -22,51 +22,48 @@
 */
 
 #include <string.h>
-#include <SDL.h>
+#include <dirent.h>
+
+#include "SDL.h"
+#include "mem.h"
 #include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
+#include "setup.h"
+#include "cross.h"
+#include "support.h"
+#include "keyboard.h"
 
 #define MIXER_MAXCHAN 8
-#define MIXER_BLOCKSIZE 1024
-#define MIXER_BUFSIZE MIXER_BLOCKSIZE*8
+#define MIXER_BUFSIZE (16*1024)
 #define MIXER_SSIZE 4
 #define MIXER_SHIFT 16
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
-#define MIXER_FREQ 22050
+#define MIXER_WAVESIZE MIXER_BUFSIZE
 
 #define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
 
-#define MAKE_m8(CHAN) ((Bit8s)(mix_temp.m8[pos][CHAN]^0x80) << 8)
-#define MAKE_s8(CHAN) ((Bit8s)(mix_temp.s8[pos][CHAN]^0x80) << 8)
-#define MAKE_m16(CHAN) mix_temp.m16[pos][CHAN]
-#define MAKE_s16(CHAN) mix_temp.s16[pos][CHAN]
+#define MAKE_m8(CHAN) ((Bit8s)(mixer.temp.m8[pos][CHAN]^0x80) << 8)
+#define MAKE_s8(CHAN) ((Bit8s)(mixer.temp.s8[pos][CHAN]^0x80) << 8)
+#define MAKE_m16(CHAN) mixer.temp.m16[pos][CHAN]
+#define MAKE_s16(CHAN) mixer.temp.s16[pos][CHAN]
 
 #define MIX_NORMAL(TYPE, LCHAN,RCHAN) {													\
-	(chan->handler)(((Bit8u*)&mix_temp)+sizeof(mix_temp.TYPE[0]),sample_toread);		\
+	(chan->handler)(((Bit8u*)&mixer.temp)+sizeof(mixer.temp.TYPE[0]),sample_toread);		\
 	Bitu sample_index=(1 << MIXER_SHIFT) - chan->sample_left;							\
 	Bit32s newsample;																	\
 	for (Bitu mix=0;mix<samples;mix++) {												\
 		Bitu pos=sample_index >> MIXER_SHIFT;sample_index+=chan->sample_add;			\
-		newsample=mix_buftemp[mix][0]+MAKE_##TYPE( LCHAN );								\
-		mix_buftemp[mix][0]=MIXER_CLIP(newsample);										\
-		newsample=mix_buftemp[mix][1]+MAKE_##TYPE( RCHAN );								\
-		mix_buftemp[mix][1]=MIXER_CLIP(newsample);										\
+		newsample=mixer.work[mix][0]+MAKE_##TYPE( LCHAN );								\
+		mixer.work[mix][0]=MIXER_CLIP(newsample);										\
+		newsample=mixer.work[mix][1]+MAKE_##TYPE( RCHAN );								\
+		mixer.work[mix][1]=MIXER_CLIP(newsample);										\
 	}																					\
-	chan->remain.TYPE[LCHAN]=mix_temp.TYPE[sample_index>>MIXER_SHIFT][LCHAN];			\
-	if (RCHAN) chan->remain.TYPE[RCHAN]=mix_temp.TYPE[sample_index>>MIXER_SHIFT][RCHAN];\
+	chan->remain=*(Bitu *)&mixer.temp.TYPE[sample_index>>MIXER_SHIFT];						\
 	chan->sample_left=sample_total-sample_index;										\
 	break;																				\
 }
  
-union Sample {
-	Bit16s m16[1];
-	Bit16s s16[2];
-	Bit8u m8[1];
-	Bit8u s8[2];
-	Bit32u full;
-};
-
 struct MIXER_Channel {
 	Bit8u volume;
 	Bit8u mode;
@@ -75,29 +72,45 @@ struct MIXER_Channel {
 	MIXER_MixHandler handler;
 	Bitu sample_add;
 	Bitu sample_left;
-	Sample remain;
+	Bitu remain;
 	bool playing;
 	MIXER_Channel * next;
 };
 
+static Bit8u wavheader[]={
+	'R','I','F','F',	0x0,0x0,0x0,0x0,		/* Bit32u Riff Chunk ID /  Bit32u riff size */
+	'W','A','V','E',	'f','m','t',' ',		/* Bit32u Riff Format  / Bit32u fmt chunk id */
+	0x10,0x0,0x0,0x0,	0x1,0x0,0x2,0x0,		/* Bit32u fmt size / Bit16u encoding/ Bit16u channels */
+	0x0,0x0,0x0,0x0,	0x0,0x0,0x0,0x0,		/* Bit32u freq / Bit32u byterate */
+	0x4,0x0,0x10,0x0,	'd','a','t','a',		/* Bit16u byte-block / Bit16u bits / Bit16u data chunk id */
+	0x0,0x0,0x0,0x0,							/* Bit32u data size */
+};
 
-static MIXER_Channel * first_channel;
-static union {
-	Bit16s	m16[MIXER_BUFSIZE][1];
-	Bit16s	s16[MIXER_BUFSIZE][2];
-	Bit8u	m8[MIXER_BUFSIZE][1];
-	Bit8u	s8[MIXER_BUFSIZE][2];
-	Bit32u	full[MIXER_BUFSIZE];
-} mix_temp;
-
-static Bit16s mix_bufout[MIXER_BUFSIZE][2];
-static Bit16s mix_buftemp[MIXER_BUFSIZE][2];
-static Bit32s mix_bufextra;
-static Bitu mix_writepos;
-static Bitu mix_readpos;
-static Bitu mix_ticks;
-static Bitu mix_add;
-static Bitu mix_remain;
+static struct {
+	struct {
+		Bit16s data[MIXER_BUFSIZE][2];
+		Bitu read,write;
+	} out;
+	Bit16s work[MIXER_BUFSIZE][2];
+	union {
+		Bit16s	m16[MIXER_BUFSIZE][1];
+		Bit16s	s16[MIXER_BUFSIZE][2];
+		Bit8u	m8[MIXER_BUFSIZE][1];
+		Bit8u	s8[MIXER_BUFSIZE][2];
+	} temp;
+	MIXER_Channel * channels;
+	bool nosound;
+	Bitu freq;
+	Bitu blocksize;
+	Bitu tick_add,tick_remain;
+	struct {
+		FILE * handle;
+		const char * dir;
+		Bit8u buf[MIXER_WAVESIZE];
+		Bitu used;
+		Bit32u length;
+	} wave; 
+} mixer;
 
 MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * name) {
 //TODO Find a free channel
@@ -108,10 +121,10 @@ MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * nam
 	chan->mode=MIXER_16STEREO;
 	chan->handler=handler;
 	chan->name=name;
-	chan->sample_add=(freq<<MIXER_SHIFT)/MIXER_FREQ;
+	chan->sample_add=(freq<<MIXER_SHIFT)/mixer.freq;
 	chan->sample_left=0;
-	chan->next=first_channel;
-	first_channel=chan;
+	chan->next=mixer.channels;
+	mixer.channels=chan;
 	return chan;
 };
 
@@ -119,7 +132,7 @@ void MIXER_SetFreq(MIXER_Channel * chan,Bit32u freq) {
 	if (chan) {
 		chan->freq=freq;
 		/* Calculate the new addition value */
-		chan->sample_add=(freq<<MIXER_SHIFT)/MIXER_FREQ;
+		chan->sample_add=(freq<<MIXER_SHIFT)/mixer.freq;
 	}	
 }	
 
@@ -142,9 +155,9 @@ static void MIXER_MixData(Bit32u samples) {
 /* This Should mix the channels */
 	if (!samples) return;
 	if (samples>MIXER_BUFSIZE) samples=MIXER_BUFSIZE;
-	/* 16-bit stereo is 4 bytes per sample */
-	memset((void *)&mix_buftemp,0,samples*MIXER_SSIZE);
-	MIXER_Channel * chan=first_channel;
+	/* Clear work buffer */
+	memset(mixer.work,0,samples*MIXER_SSIZE);
+	MIXER_Channel * chan=mixer.channels;
 	while (chan) {
 		if (chan->playing) {
 			/* This should always allocate 1 extra sample */
@@ -152,7 +165,7 @@ static void MIXER_MixData(Bit32u samples) {
 			Bitu sample_toread=sample_total >> MIXER_SHIFT;
 			if (sample_total & MIXER_REMAIN) sample_toread++;
 			sample_total=(sample_toread+1)<<MIXER_SHIFT;
-			mix_temp.full[0]=chan->remain.full;
+			*(Bitu *)&mixer.temp=chan->remain;
 			switch (chan->mode) {
 			case MIXER_8MONO:
 				MIX_NORMAL(m8,0,0);
@@ -173,77 +186,161 @@ static void MIXER_MixData(Bit32u samples) {
 		}
 		chan=chan->next;
 	}
-	Bit32u buf_remain=MIXER_BUFSIZE-mix_writepos;
+	Bitu buf_remain=MIXER_BUFSIZE-mixer.out.write;
 	/* Fill the samples size buffer with 0's */
 	if (buf_remain>samples) {
-		memcpy(&mix_bufout[mix_writepos][0],&mix_buftemp[0][0],samples*MIXER_SSIZE);
-		mix_writepos+=samples;
+		memcpy(&mixer.out.data[mixer.out.write][0],&mixer.work[0][0],samples*MIXER_SSIZE);
+		mixer.out.write+=samples;
 	} else {
-		memcpy(&mix_bufout[mix_writepos][0],&mix_buftemp[0][0],buf_remain*MIXER_SSIZE);
-		memcpy(&mix_bufout[0][0],&mix_buftemp[buf_remain][0],(samples-buf_remain)*MIXER_SSIZE);
-		mix_writepos=(mix_writepos+samples)-MIXER_BUFSIZE;
+		memcpy(&mixer.out.data[mixer.out.write][0],&mixer.work[0][0],buf_remain*MIXER_SSIZE);
+		memcpy(&mixer.out.data[0][0],&mixer.work[buf_remain][0],(samples-buf_remain)*MIXER_SSIZE);
+		mixer.out.write=(mixer.out.write+samples)-MIXER_BUFSIZE;
 	}
-
-
+	if (mixer.wave.handle) {
+		memcpy(&mixer.wave.buf[mixer.wave.used],&mixer.work[0][0],samples*MIXER_SSIZE);
+		mixer.wave.length+=samples*MIXER_SSIZE;
+		mixer.wave.used+=samples*MIXER_SSIZE;
+		if (mixer.wave.used>(MIXER_WAVESIZE-1024)){
+			fwrite(mixer.wave.buf,1,mixer.wave.used,mixer.wave.handle);
+			mixer.wave.used=0;
+		}
+	}
 }
 
-void MIXER_Mix(Bitu ticks) {
-/* Check for 1 ms of sound to mix */
-	Bitu count=(ticks*mix_add)+mix_remain;
-	mix_remain=count&((1<<10)-1);
-	count>>=10;
-	Bit32u size=MIXER_BUFSIZE+mix_writepos-mix_readpos;
+static void MIXER_Mix(Bitu ticks) {
+	mixer.tick_remain+=mixer.tick_add;
+	Bitu count=mixer.tick_remain>>MIXER_SHIFT;
+	mixer.tick_remain&=((1<<MIXER_SHIFT)-1);
+	Bitu size=MIXER_BUFSIZE+mixer.out.write-mixer.out.read;
 	if (size>=MIXER_BUFSIZE) size-=MIXER_BUFSIZE;
-	if (size>MIXER_BLOCKSIZE+2048) return;
+	if (size>mixer.blocksize*2) return;
 	MIXER_MixData(count);		
-
 }
 
-static Bit32u last_pos;
+static void MIXER_Mix_NoSound(Bitu ticks) {
+	mixer.tick_remain+=mixer.tick_add;
+	Bitu count=mixer.tick_remain>>MIXER_SHIFT;
+	mixer.tick_remain&=((1<<MIXER_SHIFT)-1);
+	MIXER_MixData(count);		
+}
+
+
 static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
-	/* Copy data from buf_out to the stream */
-
-	Bit32u remain=MIXER_BUFSIZE-mix_readpos;
-	if (remain>=(Bit32u)len/MIXER_SSIZE) {
-		memcpy((void *)stream,(void *)&mix_bufout[mix_readpos][0],len);
-	} else {
-		memcpy((void *)stream,(void *)&mix_bufout[mix_readpos][0],remain*MIXER_SSIZE);
-		stream+=remain*MIXER_SSIZE;
-		memcpy((void *)stream,(void *)&mix_bufout[0][0],(len)-remain*MIXER_SSIZE);
+	/* Copy data from out buffer to the stream */
+	Bitu size=MIXER_BUFSIZE+mixer.out.write-mixer.out.read;
+	if (size>=MIXER_BUFSIZE) size-=MIXER_BUFSIZE;
+	if (size*MIXER_SSIZE<len) {
+//		LOG(0,"Buffer underrun");
+		/* When there's a buffer underrun, keep the data so there will be more next time */
+		return;
 	}
-	mix_readpos+=(len/MIXER_SSIZE);
-	if (mix_readpos>=MIXER_BUFSIZE) mix_readpos-=MIXER_BUFSIZE;
+	Bitu remain=MIXER_BUFSIZE-mixer.out.read;
+	if (remain>=(Bitu)len/MIXER_SSIZE) {
+		memcpy((void *)stream,(void *)&mixer.out.data[mixer.out.read][0],len);
+	} else {
+		memcpy((void *)stream,(void *)&mixer.out.data[mixer.out.read][0],remain*MIXER_SSIZE);
+		stream+=remain*MIXER_SSIZE;
+		memcpy((void *)stream,(void *)&mixer.out.data[0][0],(len)-remain*MIXER_SSIZE);
+	}
+	mixer.out.read+=(len/MIXER_SSIZE);
+	if (mixer.out.read>=MIXER_BUFSIZE) mixer.out.read-=MIXER_BUFSIZE;
 }
 
+static void MIXER_WaveEvent(void) {
+	Bitu last=0;char file_name[CROSS_LEN];
+	DIR * dir;struct dirent * dir_ent;
 
+	/* Check for previously opened wave file */
+	if (mixer.wave.handle) {
+		LOG_MSG("Stopped recording");
+		/* Write last piece of audio in buffer */
+		fwrite(mixer.wave.buf,1,mixer.wave.used,mixer.wave.handle);
+		/* Fill in the header with useful information */
+		writed(&wavheader[4],mixer.wave.length+sizeof(wavheader)-8);
+		writed(&wavheader[0x18],mixer.freq);
+		writed(&wavheader[0x1C],mixer.freq*4);
+		writed(&wavheader[0x28],mixer.wave.length);
+		
+		fseek(mixer.wave.handle,0,0);
+		fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
+		fclose(mixer.wave.handle);
+		mixer.wave.handle=0;
+		return;
+	}
+	/* Find a filename to open */
+	dir=opendir(mixer.wave.dir);
+	if (!dir) {
+		LOG_MSG("Can't open waveout dir %s",mixer.wave.dir);
+		return;
+	}
+	while (dir_ent=readdir(dir)) {
+		char tempname[CROSS_LEN];
+		strcpy(tempname,dir_ent->d_name);
+		char * test=strstr(tempname,".wav");
+		if (!test) continue;
+		*test=0;
+		if (strlen(tempname)<5) continue;
+		if (strncmp(tempname,"wave",4)!=0) continue;
+		Bitu num=atoi(&tempname[4]);
+		if (num>=last) last=num+1;
+	}
+	closedir(dir);
+	sprintf(file_name,"%s%cwave%04d.wav",mixer.wave.dir,CROSS_FILESPLIT,last);
+	/* Open the actual file */
+	mixer.wave.handle=fopen(file_name,"wb");
+	if (!mixer.wave.handle) {
+		LOG_MSG("Can't open file %s for waveout",file_name);
+		return;
+	}
+	mixer.wave.length=0;
+	LOG_MSG("Started recording to file %s",file_name);
+	fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
+}
+
+static void MIXER_Stop(Section* sec) {
+	if (mixer.wave.handle) MIXER_WaveEvent();
+}
 
 void MIXER_Init(Section* sec) {
-    MSG_Add("MIXER_CONFIGFILE_HELP","Nothing to setup yet!\n");
+	sec->AddDestroyFunction(&MIXER_Stop);
+	MSG_Add("MIXER_CONFIGFILE_HELP","Nothing to setup yet!\n");
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	/* Read out config section */
+	mixer.freq=section->Get_int("freq");
+	mixer.nosound=section->Get_bool("nosound");
+	mixer.blocksize=section->Get_int("blocksize");
+	mixer.wave.dir=section->Get_string("wavedir");
+
 	/* Initialize the internal stuff */
-	first_channel=0;
-	mix_ticks=GetTicks();
-	mix_bufextra=0;
-	mix_writepos=0;
-	mix_readpos=0;
+	mixer.channels=0;
+	mixer.out.write=0;
+	mixer.out.read=0;
+	memset(mixer.out.data,0,sizeof(mixer.out.data));
+	mixer.wave.handle=0;
+	mixer.wave.used=0;
 
 	/* Start the Mixer using SDL Sound at 22 khz */
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
-	mix_add=((MIXER_FREQ) << 10)/1000;
-	mix_remain=0;
-	spec.freq=MIXER_FREQ;
+
+	spec.freq=mixer.freq;
 	spec.format=AUDIO_S16SYS;
 	spec.channels=2;
 	spec.callback=MIXER_CallBack;
 	spec.userdata=NULL;
-	spec.samples=MIXER_BLOCKSIZE;
-	
-	TIMER_RegisterTickHandler(MIXER_Mix);
+	spec.samples=mixer.blocksize;
 
-	if ( SDL_OpenAudio(&spec, &obtained) < 0 ) {
-		LOG_MSG("No sound output device found, starting in no sound mode");
+	mixer.tick_remain=0;
+	if (mixer.nosound || (SDL_OpenAudio(&spec, &obtained) < 0 )) {
+		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
+		TIMER_RegisterTickHandler(MIXER_Mix_NoSound);
+		LOG_MSG("MIXER:Running in nosound mode.");
 	} else {
-		MIXER_MixData(MIXER_BLOCKSIZE/MIXER_SSIZE);
+		mixer.freq=obtained.freq;
+		mixer.blocksize=obtained.samples;
+		mixer.tick_add=((mixer.freq+100) << MIXER_SHIFT)/1000;
+		TIMER_RegisterTickHandler(MIXER_Mix);
 		SDL_PauseAudio(0);
 	}
+	KEYBOARD_AddEvent(KBD_f6,KBD_MOD_CTRL,MIXER_WaveEvent);
 }
