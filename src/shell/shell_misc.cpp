@@ -152,6 +152,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 		reg_sp-=0x200;
 		//Add Parameter block
 		DOS_ParamBlock block(SegPhys(ss)+reg_sp);
+		block.Clear();
 		//Add a filename
 		RealPt file_name=RealMakeSeg(ss,reg_sp+0x20);
 		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
@@ -163,10 +164,11 @@ void DOS_Shell::Execute(char * name,char * args) {
 		cmd.buffer[strlen(line)]=0xd;
 		/* Copy command line in stack block too */
 		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmd,128);
-		block.InitExec(RealMakeSeg(ss,reg_sp+0x100));
+		/* Set the command line in the block and save it */
+		block.data.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
+		block.SaveData();
 		/* Save CS:IP to some point where i can return them from */
-		RealPt newcsip;
-		newcsip=CALLBACK_RealPointer(call_shellstop);
+		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
 		SegSet16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
 		/* Start up a dos execute interrupt */
