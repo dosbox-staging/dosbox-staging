@@ -71,7 +71,6 @@ public:
 
 };
 
-static Bit32u kut=10;
 static BlockReturn gen_runcode(Bit8u * code) {
 	BlockReturn retval;
 #if defined (_MSC_VER)
@@ -106,34 +105,25 @@ static BlockReturn gen_runcode(Bit8u * code) {
 	}
 #else
 	__asm__ volatile (
-		"pushfl							\n"
-		"movl %1,%%ebx					\n"
-		"andl %2,%%ebx					\n"
-		"popl %%ecx						\n"
-		"andl %3,%%ecx					\n"
-		"orl %%ebx,%%ecx				\n"
-		"pushl %%ecx					\n"
+		"movl %1,%%esi					\n"
+		"andl %2,%%esi					\n"
+		"pushl %%ebp					\n"
+		"pushl %%esi					\n"
 		"popfl							\n"
-		"call  %4						\n"
+		"calll  %4						\n"
+		"popl %%ebp						\n"
 		"pushfl							\n"
-		"movl %1,%%ebx					\n"
-		"andl %3,%%ebx					\n"
-		"popl %%ecx						\n"
-	    "andl %2,%%ecx					\n"
-		"orl %%ecx,%%ebx				\n"
-		"movl %%ebx,%1					\n"
+		"andl %3,(%1)					\n"
+		"popl %%esi						\n"
+	    "andl %2,%%esi					\n"
+		"orl %%esi,(%1)					\n"
 		:"=a" (retval)
-		:"m" (reg_flags), "n" (FMASK_TEST),"n" (~FMASK_TEST),"m" (code)
-		:"%ecx","%edx","%ebx","%ebp","%edi","%esi","cc","memory"
+		:"m" (reg_flags), "n" (FMASK_TEST),"n" (~FMASK_TEST),"r" (code)
+		:"%ecx","%edx","%ebx","%edi","%esi","cc","memory"
 	);
 #endif
 	return retval;
 }
-
-
-
-
-
 
 static GenReg * FindDynReg(DynReg * dynreg) {
 	x86gen.last_used++;
