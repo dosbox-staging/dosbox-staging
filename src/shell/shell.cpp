@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.46 2004-09-09 18:36:50 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.47 2004-09-23 18:19:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -47,7 +47,7 @@ void SHELL_AddAutoexec(char * line,...) {
 
 	size_t auto_len=strlen(autoexec_data);
 	if ((auto_len+strlen(line)+3)>AUTOEXEC_SIZE) {
-		E_Exit("SYSTEM:Autoexec.bat file overlow");
+		E_Exit("SYSTEM:Autoexec.bat file overflow");
 	}
 	sprintf((autoexec_data+auto_len),"%s\r\n",buf);
 }
@@ -296,13 +296,25 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Removing drive not supported. Doing nothing.\n");
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives");
 
-	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
-	   "This version runs some protected mode games!\n"
-	   "For supported shell commands type: [1;33mHELP[0m\n"
-	   "For a short introduction type: [1;33mINTRO[0m\n\n"
-	   "If you want more speed, try [31mctrl-F8[0m and [31mctrl-F12[0m.\n"	
-	   "For more information read the [31mREADME[0m file in DOSBox directory.\n"
-	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
+	MSG_Add("SHELL_STARTUP",
+		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
+		"\xBA \033[32mDOSBox Shell v" VERSION "\033[37m                                                 \xBA\n"
+		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
+		"\xBA For supported shell commands type: \033[1;33mHELP\033[37m                            \xBA\n"
+		"\xBA For a short introduction type: \033[1;33mINTRO\033[37m                               \xBA\n"
+		"\xBA                                                                    \xBA\n"
+		"\xBA If you want more speed, try \033[31;1mctrl-F8\033[37m and \033[31;1mctrl-F12\033[37m.                  \xBA\n"
+		"\xBA To activate the keymapper \033[31;1mctrl-F1\033[37m. Useful if you have problems.    \xBA\n"
+		"\xBA For more information read the \033[0;44;32mREADME\033[37;1m file in the DOSBox directory. \xBA\n"
+		"\xBA                                                                    \xBA\n"
+		"\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
+		"\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
+		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
+		//"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
 
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
