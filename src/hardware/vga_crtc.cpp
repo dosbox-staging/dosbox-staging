@@ -422,12 +422,12 @@ void write_p3d5(Bit32u port,Bit8u val) {
 			7	(928) RAS 6-MCLK. If set the random read/write cycle time is 6MCLKs,
 				if clear 7MCLKs
 		*/
-	case 0x59:	/* Linear Address Window Position Low */
-		vga.s3.la_window=(vga.s3.la_window&0xff00) | val;
+	case 0x59:	/* Linear Address Window Position High */
+		vga.s3.la_window=(vga.s3.la_window&0x00ff) | (val << 8);
 		VGA_StartUpdateLFB();
 		break;
-	case 0x5a:	/* Linear Address Window Position High */
-		vga.s3.la_window=(vga.s3.la_window&0x00ff) | (val << 8);
+	case 0x5a:	/* Linear Address Window Position Low */
+		vga.s3.la_window=(vga.s3.la_window&0xff00) | val;
 		VGA_StartUpdateLFB();
 		break;
 	case 0x5D:	/* Extended Horizontal Overflow */
