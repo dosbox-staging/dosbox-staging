@@ -109,6 +109,10 @@ static Bit8u read_p388(Bit32u port) {
 
 static void write_p388(Bit32u port,Bit8u val) {
 	regsel=val;
+
+	// The following writes this value to ultrasounds equivalent register.
+	// I don't know of any other way to do this
+	IO_Write(0x248,val);
 }
 
 static void write_p389(Bit32u port,Bit8u val) {
