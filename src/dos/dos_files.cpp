@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.43 2003-08-11 11:49:58 finsterr Exp $ */
+/* $Id: dos_files.cpp,v 1.44 2003-08-29 08:17:49 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -403,7 +403,7 @@ bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u ac
 // FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error
 {
 	Bit16u result = 0;
-	if (DOS_OpenFile(name, flags, entry)) {
+	if (DOS_OpenFile(name, (Bit8u)flags, entry)) {
 		// File already exists
 		switch (action & 0x0f) {
 			case 0x00 : return false;			// failed
@@ -693,7 +693,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 	if (!DOS_MakeName(shortname,fullname,&drive)) return false;
 	
 	/* Check, if file is already opened */
-	for (Bit16u i=0;i<DOS_FILES;i++) {
+	for (Bit8u i=0;i<DOS_FILES;i++) {
 		DOS_PSP psp(dos.psp);
 		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
 			handle = psp.FindEntryByHandle(i);
