@@ -142,9 +142,6 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	}
 
 	if (parentenv) {
-		// hack to allow creation from envblock in unused mem (0xCD)
-		if (mem_readb(envread)==0xCDCD) mem_writew(envread,0x0000); 
-
 		for (envsize=0; ;envsize++) {
 			if (envsize>=MAXENV - ENV_KEEPFREE) {
 				DOS_SetError(DOSERR_ENVIRONMENT_INVALID);
