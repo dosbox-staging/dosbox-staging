@@ -684,7 +684,6 @@ protected:
 		double f1, f2;
 		Bitu len,pos;
 		char str[256];
-		MIXER_Channel * chan;
 	} dial;
 };
 

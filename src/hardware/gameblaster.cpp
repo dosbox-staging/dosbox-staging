@@ -131,7 +131,7 @@ static int amplitude_lookup[16] = {
 /* global parameters */
 static double sample_rate;
 static SAA1099 saa1099[2];
-static MIXER_Channel * cms_chan;
+static MixerChannel * cms_chan;
 static Bit16s cms_buffer[2][2][CMS_BUFFER_SIZE];
 static Bit16s * cms_buf_point[4] = {
 	cms_buffer[0][0],cms_buffer[0][1],cms_buffer[1][0],cms_buffer[1][1] };
@@ -364,7 +364,7 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 
 
 static void write_cms(Bitu port,Bitu val,Bitu iolen) {
-	if (last_command + 100 < PIC_Ticks) MIXER_Enable(cms_chan,true); 
+	if (last_command + 1000 < PIC_Ticks) cms_chan->Enable(true); 
 	last_command = PIC_Ticks;
 	switch (port) {
 	case 0x0220:
@@ -390,32 +390,33 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 		}
 		break;
 	}
-	if (last_command > PIC_Ticks+1000) MIXER_Enable(cms_chan,true); 
 }
 
- static void CMS_CallBack(Bit8u * stream,Bit32u len) {
+ static void CMS_CallBack(Bitu len) {
 	if (len > CMS_BUFFER_SIZE) return;
 
 	saa1099_update(0, &cms_buf_point[0], (int)len);
 	saa1099_update(1, &cms_buf_point[2], (int)len);
 
+	 Bit16s * stream=(Bit16s *) MixTemp;
 	/* Mix chip outputs */
 	for (Bitu l=0;l<len;l++) {
 		register Bits left, right;
 		left = cms_buffer[0][LEFT][l] + cms_buffer[1][LEFT][l];
 		right = cms_buffer[0][RIGHT][l] + cms_buffer[1][RIGHT][l];
 
-		if (left>MAX_AUDIO) *(Bit16s *)stream=MAX_AUDIO;
-		else if (left<MIN_AUDIO) *(Bit16s *)stream=MIN_AUDIO;
-		else *(Bit16s *)stream=(Bit16s)left;
-		stream+=2;
+		if (left>MAX_AUDIO) *stream=MAX_AUDIO;
+		else if (left<MIN_AUDIO) *stream=MIN_AUDIO;
+		else *stream=(Bit16s)left;
+		stream++;
 
-		if (right>MAX_AUDIO) *(Bit16s *)stream=MAX_AUDIO;
-		else if (right<MIN_AUDIO) *(Bit16s *)stream=MIN_AUDIO;
-		else *(Bit16s *)stream=(Bit16s)right;
-		stream+=2;
+		if (right>MAX_AUDIO) *stream=MAX_AUDIO;
+		else if (right<MIN_AUDIO) *stream=MIN_AUDIO;
+		else *stream=(Bit16s)right;
+		stream++;
 	}
-	if (last_command + 5000 < PIC_Ticks) MIXER_Enable(cms_chan,false); 
+	cms_chan->AddSamples_s16(len,(Bit16s *)MixTemp);
+	if (last_command + 10000 < PIC_Ticks) cms_chan->Enable(false);
 }
 
 
@@ -428,8 +429,6 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 /* Register the Mixer CallBack */
 
 	cms_chan=MIXER_AddChannel(CMS_CallBack,rate,"CMS");
-	MIXER_SetMode(cms_chan,MIXER_16STEREO);
-	MIXER_Enable(cms_chan,true);
 	last_command=PIC_Ticks;
 	
 	for (int s=0;s<2;s++) {

@@ -45,7 +45,7 @@
 #define LOG_GUS
 
 Bit8u adlib_commandreg;
-static MIXER_Channel * gus_chan;
+static MixerChannel * gus_chan;
 static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
 static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
 static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
@@ -558,7 +558,7 @@ static void ExecuteGlobRegister(void) {
 		if(myGUS.ActiveChannels < 14) myGUS.ActiveChannels = 14;
 		if(myGUS.ActiveChannels > 32) myGUS.ActiveChannels = 32;
 		myGUS.ActiveMask=0xffffffffU >> (32-myGUS.ActiveChannels);
-		MIXER_Enable(gus_chan,true);
+		gus_chan->Enable(true);
 		myGUS.basefreq = (Bit32u)((float)1000000/(1.619695497*(float)(myGUS.ActiveChannels)));
 		LOG_GUS("GUS set to %d channels", myGUS.ActiveChannels);
 		for (i=0;i<myGUS.ActiveChannels;i++) guschan[i]->UpdateWaveRamp();
@@ -752,15 +752,15 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 	chan->Register_Callback(0);
 }
 
-static void GUS_CallBack(Bit8u * stream,Bit32u len) {
-	Bit32s buffer[4096];
-	memset(&buffer[0],0,len*8);
+static void GUS_CallBack(Bitu len) {
+	memset(&MixTemp,0,len*8);
 	Bitu i;
+	Bit16s * buf16 = (Bit16s *)MixTemp;
+	Bit32s * buf32 = (Bit32s *)MixTemp;
 	for(i=0;i<myGUS.ActiveChannels;i++) 
-		guschan[i]->generateSamples(&buffer[0],len);
-	Bit16s * bufptr = (Bit16s *)stream;
+		guschan[i]->generateSamples(buf32,len);
 	for(i=0;i<len*2;i++) {
-		Bit32s sample=((buffer[i] >> 13)*AutoAmp)>>9;
+		Bit32s sample=((buf32[i] >> 13)*AutoAmp)>>9;
 		if (sample>32767) {
 			sample=32767;                       
 			AutoAmp--;
@@ -768,8 +768,9 @@ static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 			sample=-32768;
 			AutoAmp--;
 		}
-		bufptr[i] = (Bit16s)(sample);
+		buf16[i] = (Bit16s)(sample);
 	}
+	gus_chan->AddSamples_s16(len,buf16);
 	CheckVoiceIrq();
 }
 
@@ -848,8 +849,6 @@ void GUS_Init(Section* sec) {
 	}
 	// Register the Mixer CallBack 
 	gus_chan=MIXER_AddChannel(GUS_CallBack,GUS_RATE,"GUS");
-	MIXER_SetMode(gus_chan,MIXER_16STEREO);
-	MIXER_Enable(gus_chan,false);
 	myGUS.gRegData=0x1;
 	GUSReset();
 	myGUS.gRegData=0x0;

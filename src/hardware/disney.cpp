@@ -22,9 +22,6 @@
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
-#include "programs.h"
-
-
 
 #define DISNEY_BASE 0x0378
 
@@ -35,11 +32,15 @@ static struct {
 	Bit8u status;
 	Bit8u control;
 	Bit8u buffer[DISNEY_SIZE];
-	Bitu used;
-	MIXER_Channel * chan;
+	Bitu used;Bitu last_used;
+	MixerChannel * chan;
 } disney;
 
 static void disney_write(Bitu port,Bitu val,Bitu iolen) {
+	if (!disney.last_used) {
+		disney.chan->Enable(true);
+	}
+	disney.last_used=PIC_Ticks;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 		disney.data=val;
@@ -80,17 +81,20 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 }
 
 
-static void DISNEY_CallBack(Bit8u * stream,Bit32u len) {
+static void DISNEY_CallBack(Bitu len) {
 	if (!len) return;
 	if (disney.used>len) {
-		memcpy(stream,disney.buffer,len);
+		disney.chan->AddSamples_m8(len,disney.buffer);
 		memmove(disney.buffer,&disney.buffer[len],disney.used-len);
 		disney.used-=len;
-		return;
 	} else {
-		memcpy(stream,disney.buffer,disney.used);
-		memset(stream+disney.used,0x80,len-disney.used);
+		disney.chan->AddSamples_m8(disney.used,disney.buffer);
+		disney.chan->AddSilence();
 		disney.used=0;
+	}
+	if (disney.last_used+5000<PIC_Ticks) {
+		disney.last_used=0;
+		disney.chan->Enable(false);
 	}
 }
 
@@ -104,11 +108,10 @@ void DISNEY_Init(Section* sec) {
 	IO_RegisterReadHandler(DISNEY_BASE,disney_read,IO_MB,3);
 
 	disney.chan=MIXER_AddChannel(&DISNEY_CallBack,7000,"DISNEY");
-	MIXER_SetMode(disney.chan,MIXER_8MONO);
-	MIXER_Enable(disney.chan,true);
 
 	disney.status=0x84;
 	disney.control=0;
 	disney.used=0;
+	disney.last_used=0;
 }
 

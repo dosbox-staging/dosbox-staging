@@ -86,7 +86,7 @@ namespace THEOPL3 {
 static struct {
 	bool active;
 	OPL_Mode mode;
-	MIXER_Channel * chan;
+	MixerChannel * chan;
 	Bit32u last_used;
 	Bit16s mixbuf[2][128];
 	struct {
@@ -103,30 +103,30 @@ static struct {
 	} raw;
 } opl;
 
-static void OPL_CallBack(Bit8u *stream, Bit32u len) {
+static void OPL_CallBack(Bitu len) {
 	/* Check for size to update and check for 1 ms updates to the opl registers */
-	/* Calculate teh machine ms we are at now */
-
-	/* update 1 ms of data */
 	Bitu i;
 	switch(opl.mode) {
 	case OPL_opl2:
-		OPL2::YM3812UpdateOne(0,(OPL2::INT16 *)stream,len);
+		OPL2::YM3812UpdateOne(0,(OPL2::INT16 *)MixTemp,len);
+		opl.chan->AddSamples_m16(len,(Bit16s*)MixTemp);
 		break;
 	case OPL_opl3:
-		THEOPL3::YMF262UpdateOne(0,(OPL2::INT16 *)stream,len);
+		THEOPL3::YMF262UpdateOne(0,(OPL2::INT16 *)MixTemp,len);
+		opl.chan->AddSamples_s16(len,(Bit16s*)MixTemp);
 		break;
 	case OPL_dualopl2:
 		OPL2::YM3812UpdateOne(0,(OPL2::INT16 *)opl.mixbuf[0],len);
 		OPL2::YM3812UpdateOne(1,(OPL2::INT16 *)opl.mixbuf[1],len);
 		for (i=0;i<len;i++) {
-			((Bit16u *)stream)[i*2+0]=opl.mixbuf[0][i];
-			((Bit16u *)stream)[i*2+1]=opl.mixbuf[1][i];
+			((Bit16s*)MixTemp)[i*2+0]=opl.mixbuf[0][i];
+			((Bit16s*)MixTemp)[i*2+1]=opl.mixbuf[1][i];
 		}
+		opl.chan->AddSamples_s16(len,(Bit16s*)MixTemp);
 		break;
 	}
 	if ((PIC_Ticks-opl.last_used)>5000) {
-		MIXER_Enable(opl.chan,false);
+		opl.chan->Enable(false);
 		opl.active=false;
 	}
 }
@@ -149,7 +149,7 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 	opl.last_used=PIC_Ticks;
 	if (!opl.active) {
 		opl.active=true;
-		MIXER_Enable(opl.chan,true);
+		opl.chan->Enable(true);
 	}
 	port&=3;
 	if (port&1) {
@@ -324,8 +324,6 @@ void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 	opl.mode=oplmode;
 	memset(&opl.raw,0,sizeof(opl.raw));
 	opl.chan=MIXER_AddChannel(OPL_CallBack,rate,"FM");
-	MIXER_SetMode(opl.chan,(opl.mode>OPL_opl2) ? MIXER_16STEREO : MIXER_16MONO);
-	MIXER_Enable(opl.chan,false);
 	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 	sec->AddDestroyFunction(&OPL_Stop);
 };

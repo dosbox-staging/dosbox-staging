@@ -28,6 +28,7 @@
 #include "setup.h"
 #include "pic.h"
 
+#define DAC_CLOCK 3570000
 #define MAX_OUTPUT 0x7fff
 #define STEP 0x10000
 
@@ -70,20 +71,22 @@ struct SN76496
 
 static struct SN76496 sn;
 static struct {
-	MIXER_Channel * chan;
+	MixerChannel * chan;
 	bool enabled;
 	Bitu last_write;
+	struct {
+		bool playing;
+		Bitu rate;
+	} dac;
 } tandy;
 
 
-
-static void SN76496Write(Bitu port,Bitu data,Bitu iolen)
-{
+static void SN76496Write(Bitu port,Bitu data,Bitu iolen) {
 	struct SN76496 *R = &sn;
 
 	tandy.last_write=PIC_Ticks;
 	if (!tandy.enabled) {
-		MIXER_Enable(tandy.chan,true);
+		tandy.chan->Enable(true);
 		tandy.enabled=true;
 	}
 
@@ -155,15 +158,15 @@ static void SN76496Write(Bitu port,Bitu data,Bitu iolen)
 	}
 }
 
-static void SN76496Update(Bit8u * stream,Bit32u length)
+static void SN76496Update(Bitu length)
 {
-	if ((tandy.last_write+1000)<PIC_Ticks) {
+	if ((tandy.last_write+5000)<PIC_Ticks) {
 		tandy.enabled=false;
-		MIXER_Enable(tandy.chan,false);
+		tandy.chan->Enable(false);
 	}
 	int i;
 	struct SN76496 *R = &sn;
-	Bit16s * buffer=(Bit16s *)stream;
+	Bit16s * buffer=(Bit16s *)MixTemp;
 
 	/* If the volume is 0, increase the counter */
 	for (i = 0;i < 4;i++)
@@ -177,7 +180,8 @@ static void SN76496Update(Bit8u * stream,Bit32u length)
 		}
 	}
 
-	while (length > 0)
+	Bitu count=length;
+	while (count)
 	{
 		int vol[4];
 		unsigned int out;
@@ -246,8 +250,9 @@ static void SN76496Update(Bit8u * stream,Bit32u length)
 
 		*(buffer++) = out / STEP;
 
-		length--;
+		count--;
 	}
+	tandy.chan->AddSamples_m16(length,(Bit16s *)MixTemp);
 }
 
 
@@ -266,6 +271,12 @@ static void SN76496_set_clock(int clock)
 	R->UpdateStep = (unsigned int)(((double)STEP * R->SampleRate * 16) / clock);
 }
 
+
+static void TandyDACWrite(Bitu port,Bitu data,Bitu iolen) {
+	LOG_MSG("Write tandy dac %X val %X",port,data);
+
+
+}
 
 
 static void SN76496_set_gain(int gain)
@@ -298,17 +309,18 @@ static void SN76496_set_gain(int gain)
 
 
 void TANDYSOUND_Init(Section* sec) {
+	if (machine!=MCH_TANDY) return;
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("tandy")) return;
 
-	IO_RegisterWriteHandler(0xc0,SN76496Write,IO_MB);
+	IO_RegisterWriteHandler(0xc0,SN76496Write,IO_MB,2);
+	IO_RegisterWriteHandler(0xc4,TandyDACWrite,IO_MB,4);
+
 
 	Bit32u sample_rate = section->Get_int("tandyrate");
 	tandy.chan=MIXER_AddChannel(&SN76496Update,sample_rate,"TANDY");
 
-	MIXER_Enable(tandy.chan,false);
 	tandy.enabled=false;
-	MIXER_SetMode(tandy.chan,MIXER_16MONO);
 
 	Bitu i;
 	struct SN76496 *R = &sn;
