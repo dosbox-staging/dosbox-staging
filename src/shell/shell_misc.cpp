@@ -165,7 +165,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 		/* Copy command line in stack block too */
 		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmd,128);
 		/* Set the command line in the block and save it */
-		block.data.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
+		block.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
 		block.SaveData();
 		/* Save CS:IP to some point where i can return them from */
 		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
