@@ -120,7 +120,7 @@ static BlockReturn gen_runcode(Bit8u * code) {
 		"pushl %%ebp					\n"
 		"pushl %%esi					\n"
 		"popfl							\n"
-		"calll  %4						\n"
+		"calll  *%4						\n"
 		"popl %%ebp						\n"
 		"pushfl							\n"
 		"andl %3,(%1)					\n"
