@@ -704,7 +704,7 @@ static void ExecuteGlobRegister(void) {
 		}
 		break;
 	case 0xE:  // Set active channel register
-		myGUS.activechan = (myGUS.gRegData & 31) + 1;
+		myGUS.activechan = (myGUS.gRegData & 31) +1;
 		if(myGUS.activechan < 14) myGUS.activechan = 14;
 		if(myGUS.activechan > 32) myGUS.activechan = 32;
 		MIXER_Enable(gus_chan,true);
@@ -716,7 +716,7 @@ static void ExecuteGlobRegister(void) {
 		myGUS.muperchan = (Bit32s)((float)1.6 * (float)myGUS.activechan * 1024);
 		LOG_MSG("GUS set to %d channels", myGUS.activechan);
 
-		for(i=0;i<=myGUS.activechan;i++) {	if(guschan[i] != NULL) guschan[i]->UpdateFreqCtrl(); }
+		for(i=0;i<myGUS.activechan;i++) {	if(guschan[i] != NULL) guschan[i]->UpdateFreqCtrl(); }
 	
 		break;
 	case 0x10:  // Undocumented register used in Fast Tracker 2
@@ -946,7 +946,7 @@ static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 	memset(&tmpbuf[0],0,len*8);
 
 	int i,t;
-	for(i=0;i<=myGUS.activechan;i++) {
+	for(i=0;i<myGUS.activechan;i++) {
 		if (guschan[i]->playing) {
 			guschan[i]->generateSamples(&buffer[0],len);
 
