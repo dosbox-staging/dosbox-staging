@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.29 2004-01-09 16:51:22 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.30 2004-01-11 18:49:59 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -418,14 +418,11 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 };
 
 static void mouse_reset_hardware(void){
-	mouse.sub_mask=0;
-	mouse.sub_seg=0;
-	mouse.sub_ofs=0;
 	PIC_SetIRQMask(MOUSE_IRQ,false);
 };
 
-static void  mouse_reset(void) 
-{
+void Mouse_NewVideoMode(void)
+{ //Does way to much. Many of this stuff should be moved to mouse_reset one day
 	WriteMouseIntVector();
    
 //	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
@@ -492,14 +489,20 @@ static void  mouse_reset(void)
 	mouse.cursorType = 0;
 	mouse.enabled=true;
 	mouse.oldshown=-1;
-     
+
 	SetMickeyPixelRate(8,16);
 }
 
-void Mouse_NewVideoMode(void)
-{
-	//mouse.shown = -1;	
-	mouse_reset();
+
+
+static void mouse_reset(void) {
+//Much to empty Mouse_NewVideoMode contains stuff that should be in here
+	Mouse_NewVideoMode();
+
+   	mouse.sub_mask=0;
+	mouse.sub_seg=0;
+	mouse.sub_ofs=0;
+
 	//Added this for cd-v19
 }
 
