@@ -18,8 +18,9 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
+#include <SDL.h>
+#include <SDL_thread.h>
+
 #include "dosbox.h"
 #include "video.h"
 #include "keyboard.h"
@@ -33,7 +34,27 @@
 //#define DISABLE_JOYSTICK
 
 
-SDL_Block sdl;
+struct SDL_Block {
+	bool active;							//If this isn't set don't draw
+	Bitu width;
+	Bitu height;
+	Bitu bpp;
+	GFX_DrawHandler * draw;
+	GFX_ResizeHandler * resize;
+	bool mouse_grabbed;
+	bool full_screen;
+	SDL_Thread * thread;
+	SDL_mutex * mutex;
+	SDL_Surface * surface;
+	SDL_Joystick * joy;
+	SDL_Color pal[256];
+	struct {
+		Bitu skip;
+		Bitu count;
+	}frames ;
+};
+
+static SDL_Block sdl;
 
 GFX_Info gfx_info;
 
@@ -93,6 +114,17 @@ static void CaptureMouse() {
 	}
 }
 
+static void DecreaseSkip() {
+	if (sdl.frames.skip>0) sdl.frames.skip--;
+	LOG_MSG("Frame Skip %d",sdl.frames.skip);
+}
+
+
+static void IncreaseSkip() {
+	if (sdl.frames.skip<10) sdl.frames.skip++;
+	LOG_MSG("Frame Skip %d",sdl.frames.skip);
+}
+
 static void SwitchFullScreen(void) {
 	GFX_Stop();
 	sdl.full_screen=!sdl.full_screen;
@@ -116,6 +148,9 @@ static void GFX_Redraw() {
 		E_Exit("Can't Lock Mutex");
 	};
 #endif	
+
+	if (++sdl.frames.count<sdl.frames.skip) return;
+	sdl.frames.count=0;
 	if (sdl.active) {
 		SDL_LockSurface(sdl.surface );
 		if (sdl.surface->pixels && sdl.draw) (*sdl.draw)((Bit8u *)sdl.surface->pixels);
@@ -183,10 +218,19 @@ void GFX_Start() {
 }
 
 
-void GUI_StartUp(Section * sec) {
- 	Section_prop * section=static_cast<Section_prop *>(sec);
+static void GUI_ShutDown(Section * sec) {
+	GFX_Stop();
+	if (sdl.full_screen) SwitchFullScreen();
+
+}
+
+static void GUI_StartUp(Section * sec) {
+	sec->AddDestroyFunction(&GUI_ShutDown);
+	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.full_screen=false;
+	sdl.frames.skip=0;
+	sdl.frames.count=0;
 	sdl.draw=0;
 	GFX_Resize(640,400,8,0);
 #if C_THREADED
@@ -198,8 +242,9 @@ void GUI_StartUp(Section * sec) {
 	SDL_EnableKeyRepeat(250,30);
 	
 /* Get some Keybinds */
-	KEYBOARD_AddEvent(KBD_f9,CTRL_PRESSED,SwitchFullScreen);
 	KEYBOARD_AddEvent(KBD_f10,CTRL_PRESSED,CaptureMouse);
+	KEYBOARD_AddEvent(KBD_f7,CTRL_PRESSED,DecreaseSkip);
+	KEYBOARD_AddEvent(KBD_f8,CTRL_PRESSED,IncreaseSkip);
 	KEYBOARD_AddEvent(KBD_enter,ALT_PRESSED,SwitchFullScreen);
 }
 
@@ -484,23 +529,15 @@ int main(int argc, char* argv[]) {
 			JOYSTICK_Enable(0,true);
 		}
 #endif	
-		if (control->cmdline->FindExist("-fullscreen")) {
-			sdl.full_screen=true;
-		} else {
-			sdl.full_screen=sdl_sec->Get_bool("FULLSCREEN");
-		}
-		if (sdl.full_screen) {
-			sdl.full_screen=false;
+		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("FULLSCREEN")) {
 			SwitchFullScreen();
 		}
-
-
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
 		LOG_ERROR("Exit to error: %s",error);
+		fgetc(stdin);
 	}
-	GFX_Stop();
 	return 0;
 };
