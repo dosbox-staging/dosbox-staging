@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.46 2004-04-03 19:23:06 canadacow Exp $ */
+/* $Id: drive_local.cpp,v 1.47 2004-04-13 12:08:43 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,7 +142,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 	if (tempDir[strlen(tempDir)-1]!=CROSS_FILESPLIT) strcat(tempDir,end);
 	
 	Bitu id;
-	if (!dirCache.FindFirst(tempDir,(Bitu)dos.dta,id))
+	if (!dirCache.FindFirst(tempDir,id))
 	{
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;

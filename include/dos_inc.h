@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.39 2004-04-03 19:19:29 canadacow Exp $ */
+/* $Id: dos_inc.h,v 1.40 2004-04-13 12:08:43 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -428,9 +428,9 @@ private:
 	#endif
 	struct sDTA {
 		Bit8u sdrive;						/* The Drive the search is taking place */
-		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit8u sname[8];						/* The Search pattern for the filename */		
 		Bit8u sext[3];						/* The Search pattern for the extenstion */
+		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit16u dirID;						/* custom: dir-search ID for multiple searches at the same time */
 		Bit8u fill[6];
 		Bit8u attr;
@@ -477,8 +477,11 @@ private:
 		Bit16u date;
 		Bit16u time;
 		/* Reserved Block should be 8 bytes */
+		Bit8u sft_entries;
+		Bit8u share_attributes;
+		Bit8u extra_info;
 		Bit8u file_handle;
-		Bit8u reserved[7];
+		Bit8u reserved[4];
 		/* end */
 		Bit8u  cur_rec;			/* Current record in current block */
 		Bit32u rndm;			/* Current relative record number */

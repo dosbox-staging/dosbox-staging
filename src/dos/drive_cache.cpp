@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.33 2004-03-03 12:40:59 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.34 2004-04-13 12:08:43 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -62,20 +62,22 @@ bool SortByDirNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFi
 
 DOS_Drive_Cache::DOS_Drive_Cache(void)
 {
-	dirBase		= new CFileInfo;
-	save_dir	= 0;
-	srchNr		= 0;
-	label[0]	= 0;
+	dirBase			= new CFileInfo;
+	save_dir		= 0;
+	srchNr			= 0;
+	label[0]		= 0;
+	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 };
 
 DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 {
-	dirBase		= new CFileInfo;
-	save_dir	= 0;
-	srchNr		= 0;
-	label[0]	= 0;
+	dirBase			= new CFileInfo;
+	save_dir		= 0;
+	srchNr			= 0;
+	label[0]		= 0;
+	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 	SetBaseDir(path);
@@ -90,6 +92,7 @@ DOS_Drive_Cache::~DOS_Drive_Cache(void)
 void DOS_Drive_Cache::Clear(void)
 {
 	delete dirBase; dirBase = 0;
+	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) dirSearch[i] = 0;
 };
 
@@ -431,8 +434,6 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		// Copy number
 		strcat(info->shortname,"~");
 		strcat(info->shortname,buffer);
-		// Create compare Count
-//		info->compareCount = tocopy;
 		// Add (and cut) Extension, if available
 		if (pos) {
 			// Step to last extension...
@@ -635,35 +636,29 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 };
 
 // FindFirst / FindNext
-bool DOS_Drive_Cache::FindFirst(char* path, Bitu dtaAddress, Bitu& id)
+bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id)
 {
 	Bit16u	dirID;
-	Bitu	dirFindFirstID = 0xffff;
+	Bitu	dirFindFirstID = this->nextFreeFindFirst++; //increase it for the next search
 
 	// Cache directory in 
 	if (!OpenDir(path,dirID)) return false;
-	// Seacrh if dta was already used before
-	for (Bitu n=0; n<MAX_OPENDIRS; n++) {
-		if (dirFindFirst[n]) {
-			if (dirFindFirst[n]->compareCount == dtaAddress) {
-				// Reuse old dta
-				dirFindFirstID = n; break;
-			}		
-		} else if (dirFindFirstID==0xffff) {
-			dirFindFirstID = n;
-		}	
-	} 
-	if (dirFindFirstID==0xffff) {
+
+	if (dirFindFirstID == MAX_OPENDIRS) {
 		// no free slot found...
-		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : All slots full.");
-		// always use first then
+		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next: All slots full. Resetting");
+		// Clear the internal list then.
 		dirFindFirstID = 0;
+		this->nextFreeFindFirst = 1; //the next free one after this search
+		for(Bitu n=0; n<MAX_OPENDIRS;n++) {	
+	     		// Clear and reuse slot
+			delete dirFindFirst[n];
+			dirFindFirst[n]=0;
+		}
+	   
 	}		
-	// Clear and reuse slot
-	delete dirFindFirst[dirFindFirstID];
 	dirFindFirst[dirFindFirstID] = new CFileInfo();
 	dirFindFirst[dirFindFirstID]-> nextEntry	= 0;
-	dirFindFirst[dirFindFirstID]-> compareCount	= dtaAddress;	
 
 	// Copy entries to use with FindNext
 	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.21 2004-03-04 19:49:14 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.22 2004-04-13 12:08:43 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -86,8 +86,8 @@ public:
 	Bit8u fhandle;	
 };
 
-#define MAX_OPENDIRS 16 
-
+#define MAX_OPENDIRS 2048
+//Can be high as it's only storage (16 bit variable)
 class DOS_Drive_Cache {
 public:
 	DOS_Drive_Cache					(void);
@@ -105,7 +105,7 @@ public:
 	char*		GetExpandName		(const char* path);
 	bool		GetShortName		(const char* fullname, char* shortname);
 	
-	bool		FindFirst			(char* path, Bitu dtaAddress, Bitu& id);
+	bool		FindFirst			(char* path, Bitu& id);
 	bool		FindNext			(Bitu id, char* &result);
 
 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
@@ -120,21 +120,19 @@ public:
 	public:	
 		CFileInfo(void) {
 			orgname[0] = shortname[0] = 0;
-			nextEntry = shortNr = compareCount = 0;
+			nextEntry = shortNr = 0;
 			isDir = false;
 		}
 		~CFileInfo(void) {
 			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
 			fileList.clear();
 			longNameList.clear();
-			compareCount = 0;
 		};
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
 		bool		isDir;
 		Bitu		nextEntry;
 		Bitu		shortNr;
-		Bitu		compareCount;
 		// contents
 		std::vector<CFileInfo*>	fileList;
 		std::vector<CFileInfo*>	longNameList;
@@ -143,18 +141,18 @@ public:
 private:
 
 	bool		RemoveTrailingDot	(char* shortname);
-	Bits		GetLongName			(CFileInfo* info, char* shortname);
+	Bits		GetLongName		(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
-	int			CompareShortname	(const char* compareName, const char* shortName);
-	bool		SetResult			(CFileInfo* dir, char * &result, Bit16u entryNr);
-	bool		IsCachedIn			(CFileInfo* dir);
-	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
+	int		CompareShortname	(const char* compareName, const char* shortName);
+	bool		SetResult		(CFileInfo* dir, char * &result, Bit16u entryNr);
+	bool		IsCachedIn		(CFileInfo* dir);
+	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
-	bool		OpenDir				(CFileInfo* dir, const char* path, Bit16u& id);
-	void		CreateEntry			(CFileInfo* dir, const char* name);
-	Bit16u		GetFreeID			(CFileInfo* dir);
-	void		Clear				(void);
+	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
+	void		CreateEntry		(CFileInfo* dir, const char* name);
+	Bit16u		GetFreeID		(CFileInfo* dir);
+	void		Clear			(void);
 
 	CFileInfo*	dirBase;
 	char		dirPath				[CROSS_LEN];
@@ -170,6 +168,7 @@ private:
 	char		dirSearchName		[MAX_OPENDIRS];
 	bool		free				[MAX_OPENDIRS];
 	CFileInfo*	dirFindFirst		[MAX_OPENDIRS];
+	Bitu		nextFreeFindFirst;
 
 	char		label				[CROSS_LEN];
 };
