@@ -29,6 +29,9 @@
 
 static Bitu call_int33,call_int74;
 
+// forward
+void WriteMouseIntVector(void);
+
 struct button_event {
 	Bit16u type;
 	Bit16u buttons;
@@ -90,6 +93,12 @@ static struct {
 	Bit16s	clipx,clipy;
 	Bit16s  hotx,hoty;
 	Bit16u  textAndMask, textXorMask;
+
+	float	mickeysPerPixel_x;
+	float	mickeysPerPixel_y;
+	float	pixelPerMickey_x;
+	float	pixelPerMickey_y;
+
 } mouse;
 
 #define X_MICKEY 8
@@ -306,12 +315,17 @@ void DrawCursor() {
 }
 
 void Mouse_CursorMoved(float x,float y) {
-	mouse.mickey_x+=x;
-	mouse.mickey_y+=y;
-	mouse.x+=x;
+
+	float dx = x * mouse.pixelPerMickey_x;
+	float dy = y * mouse.pixelPerMickey_y;
+
+	mouse.mickey_x += dx;
+	mouse.mickey_y += dy;
+
+	mouse.x += dx;
 	if (mouse.x>mouse.max_x) mouse.x=mouse.max_x;;
 	if (mouse.x<mouse.min_x) mouse.x=mouse.min_x;
-	mouse.y+=y;
+	mouse.y += dy;
 	if (mouse.y>mouse.max_y) mouse.y=mouse.max_y;;
 	if (mouse.y<mouse.min_y) mouse.y=mouse.min_y;
 	Mouse_AddEvent(MOUSE_MOVED);
@@ -364,8 +378,18 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.last_released_y[button]=POS_Y;
 }
 
+static void SetMickeyPixelRate(Bit16s px, Bit16s py)
+{
+	if ((px!=0) && (py!=0)) {
+		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
+		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
+		mouse.pixelPerMickey_x	 = X_MICKEY/(float)px;
+		mouse.pixelPerMickey_y 	 = Y_MICKEY/(float)py;	
+	}
+};
+
 static void  mouse_reset(void) {
-	real_writed(0,(0x33<<2),CALLBACK_RealPointer(call_int33));
+	WriteMouseIntVector();
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 	mouse.shown=-1;
 	mouse.min_x=0;
@@ -388,10 +412,13 @@ static void  mouse_reset(void) {
 	mouse.cursorMask = defaultCursorMask;
 	mouse.textAndMask= defaultTextAndMask;
 	mouse.textXorMask= defaultTextXorMask;
+
+	SetMickeyPixelRate(8,16);
 }
 
-
 static Bitu INT33_Handler(void) {
+
+//	LOG_DEBUG("MOUSE: %04X",reg_ax);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		reg_ax=0xffff;
@@ -488,11 +515,11 @@ static Bitu INT33_Handler(void) {
 		mouse.sub_ofs=reg_dx;
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
-		//TODO Maybe dunno for sure might be possible */
+		SetMickeyPixelRate(reg_cx,reg_dx);
 		break;
 	case 0x0B:	/* Read Motion Data */
-		reg_cx=(Bit16s)(mouse.mickey_x*X_MICKEY);
-		reg_dx=(Bit16s)(mouse.mickey_y*Y_MICKEY);
+		reg_cx=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
+		reg_dx=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
 		mouse.mickey_x=0;
 		mouse.mickey_y=0;
 		break;
@@ -511,6 +538,16 @@ static Bitu INT33_Handler(void) {
 			SegSet16(es,oldSeg);
 		}
 		break;		
+	case 0x1a:	/* Set mouse sensitivity */
+		SetMickeyPixelRate(reg_bx,reg_cx);
+		// ToDo : double mouse speed value
+		break;
+	case 0x1b:	/* Get mouse sensitivity */
+		reg_bx = Bit16s(X_MICKEY * mouse.mickeysPerPixel_x);
+		reg_cx = Bit16s(Y_MICKEY * mouse.mickeysPerPixel_y);
+		// ToDo : double mouse speed value
+		reg_dx = 64;
+		break;
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
 		break;
@@ -545,12 +582,13 @@ static Bitu INT74_Handler(void) {
 			reg_bx=mouse.event_queue[mouse.events].buttons;
 			reg_cx=POS_X;
 			reg_dx=POS_Y;
-			reg_si=(Bit16s)(mouse.mickey_x*X_MICKEY);
-			reg_di=(Bit16s)(mouse.mickey_y*Y_MICKEY);
-			if (mouse.event_queue[mouse.events].type==MOUSE_MOVED) {
+			reg_si=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
+			reg_di=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
+			// Hmm... this look ok, but moonbase wont work with it
+			/*if (mouse.event_queue[mouse.events].type==MOUSE_MOVED) {
 				mouse.mickey_x=0;
 				mouse.mickey_y=0;
-			}
+			}*/
 			CALLBACK_RunRealFar(mouse.sub_seg,mouse.sub_ofs);
 			reg_eax=oldeax;reg_ebx=oldebx;reg_ecx=oldecx;reg_edx=oldedx;
 			reg_esi=oldesi;reg_edi=oldedi;reg_ebp=oldebp;reg_esp=oldesp;
@@ -566,10 +604,34 @@ static Bitu INT74_Handler(void) {
 	return CBRET_NONE;
 }
 
-void MOUSE_Init(Section* sec) {
+void WriteMouseIntVector(void)
+{
+	// Create a mouse vector with weird address 
+	// for strange mouse detection routines in Sim City & Wasteland
+	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33<<4)-0x10+1));	// +1 = Skip NOP 
+};
+
+void CreateMouseCallback(void)
+{
+	// Create callback
 	call_int33=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET);
-	real_writed(0,(0x33<<2),CALLBACK_RealPointer(call_int33));
+	// Create a mouse vector with weird address 
+	// for strange mouse detection routines in Sim City & Wasteland
+	Bit16u ofs = call_int33<<4;
+	real_writeb((Bit16u)CB_SEG,ofs+0,(Bit8u)0x90);	//NOP
+	real_writeb((Bit16u)CB_SEG,ofs+1,(Bit8u)0xFE);	//GRP 4
+	real_writeb((Bit16u)CB_SEG,ofs+2,(Bit8u)0x38);	//Extra Callback instruction
+	real_writew((Bit16u)CB_SEG,ofs+3,call_int33);	//The immediate word
+	real_writeb((Bit16u)CB_SEG,ofs+5,(Bit8u)0xCF);	//An IRET Instruction
+	// Write weird vector
+	WriteMouseIntVector();
+};
+
+void MOUSE_Init(Section* sec) {
+	
+	// Callback 0x33
+	CreateMouseCallback();
 
 	call_int74=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET);
