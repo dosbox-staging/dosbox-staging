@@ -322,7 +322,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		sprintf(buffer,"%d",info->shortNr);
 		// Copy first letters
 		Bit16u tocopy;
-		if (len+strlen(buffer)>8)	tocopy = 8 - strlen(buffer) - 1;
+		if (len+strlen(buffer)+1>8)	tocopy = 8 - strlen(buffer) - 1;
 		else						tocopy = len;
 		strncpy(info->shortname,tmpName,tocopy);
 		info->shortname[tocopy] = 0;
