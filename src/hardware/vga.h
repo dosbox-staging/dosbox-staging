@@ -51,6 +51,7 @@ typedef struct {
 	bool vline_double;
 	Bit8u vline_height;
 
+	bool pixel_double;
 	/* Pixel Scrolling */
 	Bit8u pel_panning;				/* Amount of pixels to skip when starting horizontal line */
 	Bit8u hlines_skip;
@@ -211,6 +212,7 @@ void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu next_line);
 void VGA_DrawGFX256_Full(Bit8u * bitdata,Bitu next_line);
 void VGA_DrawGFX16_Full(Bit8u * bitdata,Bitu next_line);
 void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu next_line);
+void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu next_line);
 /* The Different Memory Read/Write Handlers */
 Bit8u VGA_NormalReadHandler(Bit32u start);
 void VGA_NormalWriteHandler(Bit32u start,Bit8u val);
@@ -250,6 +252,13 @@ extern Bit8u vga_rom_16[256 * 16];
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];
 extern Bit32u CGAWriteTable[256];
+
+#ifdef DEBUG_VGA
+#define LOG_VGA LOG_DEBUG
+#else
+#define LOG_VGA
+#endif
+
 
 #endif
 
