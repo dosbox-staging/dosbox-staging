@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.22 2003-08-06 14:46:58 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.23 2003-08-13 14:45:31 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -521,21 +521,23 @@ bool DOS_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 	return false;
 };	
 
-bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, char* expand, Bit16u& id)
+bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
 {
 	id = GetFreeID(dir);
 	dirSearch[id] = dir;
+	char expandcopy [CROSS_LEN];
+	strcpy(expandcopy,expand);   
 	// Add "/"
 	char end[2]={CROSS_FILESPLIT,0};
-	if (expand[strlen(expand)-1]!=CROSS_FILESPLIT) strcat(expand,end);
+	if (expandcopy[strlen(expandcopy)-1]!=CROSS_FILESPLIT) strcat(expandcopy,end);
 	// open dir
 	if (dirSearch[id]) {
 		// open dir
-		DIR* dirp = opendir(expand);
+		DIR* dirp = opendir(expandcopy);
 		if (dirp) { 
 			// Reset it..
 			closedir(dirp);
-			strcpy(dirPath,expand);
+			strcpy(dirPath,expandcopy);
 			free[id] = false;
 			return true;
 		}

@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dos_system.h,v 1.14 2003-08-13 14:46:15 qbix79 Exp $ */
+
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
 
@@ -140,7 +142,7 @@ private:
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
-	bool		OpenDir				(CFileInfo* dir, char* path, Bit16u& id);
+	bool		OpenDir				(CFileInfo* dir, const char* path, Bit16u& id);
 	void		CreateEntry			(CFileInfo* dir, const char* name);
 	Bit16u		GetFreeID			(CFileInfo* dir);
 	void		Clear				(void);
