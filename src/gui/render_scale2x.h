@@ -59,10 +59,6 @@ typedef Bit8u scale2x_uint8;
 typedef Bit16u scale2x_uint16;
 typedef Bit32u scale2x_uint32;
 
-#if !defined(__GNUC__) || !defined(__i386__)
-
-#define SCALE2X_NORMAL 1
-
 static void scale2x_line_8(scale2x_uint8* dst0, scale2x_uint8* dst1, const scale2x_uint8* src0, const scale2x_uint8* src1, const scale2x_uint8* src2, unsigned count)
 {
 	assert(count >= 2);
@@ -306,7 +302,7 @@ static void Scale2x_32(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
 }
 
-#else
+#if defined(__GNUC__) || defined(__i386__)
 
 #define SCALE2X_MMX 1
 
@@ -539,10 +535,13 @@ static void Render_Scale2x_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,B
 	render.op.bpp=bpp;
 	render.op.pitch=pitch;
 	render.op.type=OP_AdvMame2x;
-#if defined(SCALE2X_NORMAL)
 	switch (bpp) {
 	case 8:	
+#if defined(SCALE2X_MMX)
+		render.op.part_handler=Scale2x_8_mmx;
+#else
 		render.op.part_handler=Scale2x_8;
+#endif
 		break;
 	case 16:	
 		render.op.part_handler=Scale2x_16;;
@@ -554,10 +553,6 @@ static void Render_Scale2x_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,B
 		E_Exit("RENDER:Unsupported display depth of %d",bpp);
 		break;
 	}
-#elif defined(SCALE2X_MMX)
-	assert (bpp==8);
-	render.op.part_handler=Scale2x_8_mmx;
-#endif
 	RENDER_ResetPal();
 }
 

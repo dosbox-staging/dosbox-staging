@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.18 2003-10-14 23:32:32 harekiet Exp $ */
+/* $Id: render.cpp,v 1.19 2003-10-15 08:20:50 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -359,10 +359,10 @@ normalop:
 		case DoubleBoth:
 			mode_callback=Render_Scale2x_CallBack;
 			width*=2;height*=2;
-#if defined (SCALE2X_NORMAL)
+#if defined (SCALE2X_MMX)
 			flags=GFX_SHADOW;
-#elif defined (SCALE2X_MMX)
-			flags=GFX_FIXED_BPP;
+#else
+			flags=GFX_SHADOW;
 #endif
 			break;
 		default:
