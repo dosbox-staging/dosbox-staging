@@ -274,6 +274,44 @@ void INT10_SetVideoMode(Bit8u mode) {
 	modeset_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 
 
+
+	/* Reset Attribute ctl into address mode just to be safe */
+
+	IO_Read(VGAREG_ACTL_RESET);
+	// Set the High Attribute Ctl
+	for(i=0x10;i<=ACTL_MAX_REG;i++) {
+		IO_Write(VGAREG_ACTL_ADDRESS,(Bit8u)i);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,actl_regs[vga_modes[line].actlmodel][i]);
+	}
+	// Set Sequencer Ctl
+	for(i=0;i<=SEQU_MAX_REG;i++) {
+		IO_Write(VGAREG_SEQU_ADDRESS,(Bit8u)i);
+		IO_Write(VGAREG_SEQU_DATA,sequ_regs[vga_modes[line].sequmodel][i]);
+	}
+
+	// Set Grafx Ctl
+	for(i=0;i<=GRDC_MAX_REG;i++) {
+		IO_Write(VGAREG_GRDC_ADDRESS,(Bit8u)i);
+		IO_Write(VGAREG_GRDC_DATA,grdc_regs[vga_modes[line].grdcmodel][i]);
+	}
+
+	// Set CRTC address VGA or MDA
+	crtc_addr=vga_modes[line].memmodel==MTEXT?VGAREG_MDA_CRTC_ADDRESS:VGAREG_VGA_CRTC_ADDRESS;
+	// Set CRTC regs
+	for(i=0;i<=CRTC_MAX_REG;i++) {
+		IO_Write(crtc_addr,(Bit8u)i);
+		IO_Write(crtc_addr+1,crtc_regs[vga_modes[line].crtcmodel][i]);
+	}
+
+	// Set the misc register
+	IO_Write(VGAREG_WRITE_MISC_OUTPUT,vga_modes[line].miscreg);
+
+	// Enable video
+	IO_Write(VGAREG_ACTL_ADDRESS,0x20);
+	IO_Read(VGAREG_ACTL_RESET);
+
+	//Set the palette
+	if ((modeset_ctl&0x08)==0x8) LOG_DEBUG("INT10:Mode set without palette");
 	if((modeset_ctl&0x08)==0) {
 		// Set the PEL mask
 		IO_Write(VGAREG_PEL_MASK,vga_modes[line].pelmask);
@@ -312,40 +350,13 @@ void INT10_SetVideoMode(Bit8u mode) {
 		}
 	}
 
-	/* Reset Attribute ctl into address mode just to be safe */
-
 	IO_Read(VGAREG_ACTL_RESET);
-	// Set Attribute Ctl
-	for(i=0;i<=ACTL_MAX_REG;i++) {
+	// Set the Low Attribute Ctl
+	for(i=0;i<=0xf;i++) {
 		IO_Write(VGAREG_ACTL_ADDRESS,(Bit8u)i);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,actl_regs[vga_modes[line].actlmodel][i]);
 	}
-	// Set Sequencer Ctl
-	for(i=0;i<=SEQU_MAX_REG;i++) {
-		IO_Write(VGAREG_SEQU_ADDRESS,(Bit8u)i);
-		IO_Write(VGAREG_SEQU_DATA,sequ_regs[vga_modes[line].sequmodel][i]);
-	}
-
-	// Set Grafx Ctl
-	for(i=0;i<=GRDC_MAX_REG;i++) {
-		IO_Write(VGAREG_GRDC_ADDRESS,(Bit8u)i);
-		IO_Write(VGAREG_GRDC_DATA,grdc_regs[vga_modes[line].grdcmodel][i]);
-	}
-
-	// Set CRTC address VGA or MDA
-	crtc_addr=vga_modes[line].memmodel==MTEXT?VGAREG_MDA_CRTC_ADDRESS:VGAREG_VGA_CRTC_ADDRESS;
-	// Set CRTC regs
-	for(i=0;i<=CRTC_MAX_REG;i++) {
-		IO_Write(crtc_addr,(Bit8u)i);
-		IO_Write(crtc_addr+1,crtc_regs[vga_modes[line].crtcmodel][i]);
-	}
-
-	// Set the misc register
-	IO_Write(VGAREG_WRITE_MISC_OUTPUT,vga_modes[line].miscreg);
-
-	// Enable video
-	IO_Write(VGAREG_ACTL_ADDRESS,0x20);
-	IO_Read(VGAREG_ACTL_RESET);
+	
 	Bit32u tel;
 	if(clearmem) {
 		if(vga_modes[line].type==TEXT) {
@@ -377,6 +388,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,cheight);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem << 7)));
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0xF9);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
 	// FIXME We nearly have the good tables. to be reworked
