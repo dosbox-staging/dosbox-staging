@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.72 2004-08-19 10:18:11 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.73 2004-08-27 13:41:34 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -83,7 +83,6 @@ PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
 
 #endif //C_OPENGL
 
-
 #if !(ENVIRON_INCLUDED)
 extern char** environ;
 #endif
@@ -110,6 +109,11 @@ struct private_hwdata {
 #define DEFAULT_CONFIG_FILE "/.dosboxrc"
 #endif
 
+#if C_SET_PRIORITY
+#include <sys/resource.h>
+#define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
+#endif
+
 void MAPPER_Init(void);
 void MAPPER_StartUp(Section * sec);
 
@@ -118,6 +122,13 @@ enum SCREEN_TYPES	{
 	SCREEN_SURFACE_DDRAW,
 	SCREEN_OVERLAY,
 	SCREEN_OPENGL
+};
+
+enum PRIORITY_LEVELS {
+	PRIORITY_LEVEL_LOWER,
+	PRIORITY_LEVEL_NORMAL,
+	PRIORITY_LEVEL_HIGHER,
+	PRIORITY_LEVEL_HIGHEST
 };
 
 
@@ -161,8 +172,13 @@ struct SDL_Block {
 	struct {
 		SDL_Surface * surface;
 		RECT rect;
+		DDBLTFX fx;
 	} blit;
 #endif
+	struct {
+		PRIORITY_LEVELS focus;
+		PRIORITY_LEVELS nofocus;
+	} priority;
 	SDL_Rect clip;
 	SDL_Surface * surface;
 	SDL_Overlay * overlay;
@@ -250,6 +266,7 @@ check_gotbpp:
 		if (!(flags&CAN_32|CAN_16)) goto check_surface;
 		if (flags & LOVE_16) testbpp=16;
 		else if (flags & LOVE_32) testbpp=32;
+		else testbpp=0;
 		flags|=HAVE_SCALING;
 		goto check_gotbpp;
 #endif
@@ -365,11 +382,13 @@ dosurface:
 			SDL_FreeSurface(sdl.blit.surface);
 			sdl.blit.surface=0;
 		}
-		if (!GFX_SetupSurfaceScaled(0,bpp)) goto dosurface;
-		sdl.blit.rect.top=sdl.clip.x;
-		sdl.blit.rect.left=sdl.clip.y;
-		sdl.blit.rect.right=sdl.clip.x+sdl.clip.w-1;
-		sdl.blit.rect.bottom=sdl.clip.y+sdl.clip.h-1;
+		memset(&sdl.blit.fx,0,sizeof(DDBLTFX));
+		sdl.blit.fx.dwSize=sizeof(DDBLTFX);
+		if (!GFX_SetupSurfaceScaled((sdl.desktop.doublebuf && sdl.desktop.fullscreen) ? SDL_DOUBLEBUF : 0,bpp)) goto dosurface;
+		sdl.blit.rect.top=sdl.clip.y;
+		sdl.blit.rect.left=sdl.clip.x;
+		sdl.blit.rect.right=sdl.clip.x+sdl.clip.w;
+		sdl.blit.rect.bottom=sdl.clip.y+sdl.clip.h;
 		sdl.blit.surface=SDL_CreateRGBSurface(SDL_HWSURFACE,sdl.draw.width,sdl.draw.height,
 				sdl.surface->format->BitsPerPixel,
 				sdl.surface->format->Rmask,
@@ -537,7 +556,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	case SCREEN_SURFACE:
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (SDL_LockSurface(sdl.surface)) {
-				LOG_MSG("SDL Lock failed");
+//				LOG_MSG("SDL Lock failed");
 				sdl.updating=false;
 				return false;
 			}
@@ -550,7 +569,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 #if defined(HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
 		if (SDL_LockSurface(sdl.blit.surface)) {
-			LOG_MSG("SDL Lock failed");
+//			LOG_MSG("SDL Lock failed");
 			sdl.updating=false;
 			return false;
 		}
@@ -574,6 +593,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 }
 
 void GFX_EndUpdate(void) {
+	int ret;
 	if (!sdl.updating) return;
 	sdl.updating=false;
 	switch (sdl.desktop.type) {
@@ -588,10 +608,19 @@ void GFX_EndUpdate(void) {
 		if (SDL_MUSTLOCK(sdl.blit.surface)) {
 			SDL_UnlockSurface(sdl.blit.surface);
 		}
-		IDirectDrawSurface3_Blt(
-			sdl.surface->hwdata->dd_surface,&sdl.blit.rect,
+		ret=IDirectDrawSurface3_Blt(
+			sdl.surface->hwdata->dd_writebuf,&sdl.blit.rect,
 			sdl.blit.surface->hwdata->dd_surface,0,
 			DDBLT_WAIT, NULL);
+		switch (ret) {
+		case DD_OK:
+			break;
+		case DDERR_SURFACELOST:
+			IDirectDrawSurface3_Restore(sdl.blit.surface->hwdata->dd_surface);
+			break;
+		default:
+			LOG_MSG("DDRAW:Failed to blit, error %X",ret);
+		}
 		SDL_Flip(sdl.surface);
 		break;
 #endif
@@ -652,6 +681,7 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 }
 
 void GFX_Stop() {
+	if (sdl.updating) GFX_EndUpdate();
 	sdl.active=false;
 }
 
@@ -670,6 +700,40 @@ static void KillSwitch(void){
 	throw 1;
 }
 
+static void SetPriority(PRIORITY_LEVELS level) {
+	switch (level) {
+#ifdef WIN32
+	case PRIORITY_LEVEL_LOWER:
+		SetPriorityClass(GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
+		break;
+	case PRIORITY_LEVEL_NORMAL:
+		SetPriorityClass(GetCurrentProcess(),NORMAL_PRIORITY_CLASS);
+		break;
+	case PRIORITY_LEVEL_HIGHER:
+		SetPriorityClass(GetCurrentProcess(),ABOVE_NORMAL_PRIORITY_CLASS);
+		break;
+	case PRIORITY_LEVEL_HIGHEST:
+		SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS);
+		break;
+#elif C_SET_PRIORITY
+	case PRIORITY_LEVEL_LOWER:
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+(PRIO_TOTAL/3));
+		break;
+	case PRIORITY_LEVEL_NORMAL:
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+(PRIO_TOTAL/2));
+		break;
+	case PRIORITY_LEVEL_HIGHER:
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/5)));
+		break;
+	case PRIORITY_LEVEL_HIGHEST:
+		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/4)));
+		break;
+#endif
+	default:
+		break;
+	}
+}
+
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -677,13 +741,38 @@ static void GUI_StartUp(Section * sec) {
 	sdl.updating=false;
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
-	if (section->Get_bool("highpriority")) {
-#ifdef WIN32
-		LOG_MSG("SEtting priority %d",
-		SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS)
-		);
-//TODO add more platforms, with configure checks for get/setpriority
-#endif
+	const char * priority=section->Get_string("priority");
+	if (priority && priority[0]) {
+		Bitu next;
+		if (!strncasecmp(priority,"lower",5)) {
+			sdl.priority.focus=PRIORITY_LEVEL_LOWER;next=5;
+		} else if (!strncasecmp(priority,"normal",6)) {
+			sdl.priority.focus=PRIORITY_LEVEL_NORMAL;next=6;
+		} else if (!strncasecmp(priority,"higher",6)) {
+			sdl.priority.focus=PRIORITY_LEVEL_HIGHER;next=6;
+		} else if (!strncasecmp(priority,"highest",7)) {
+			sdl.priority.focus=PRIORITY_LEVEL_HIGHEST;next=7;
+		} else {
+			next=0;sdl.priority.focus=PRIORITY_LEVEL_HIGHER;
+		}
+		priority=&priority[next];
+		if (next && priority[0]==',' && priority[1]) {
+			priority++;
+			if (!strncasecmp(priority,"lower",5)) {
+				sdl.priority.nofocus=PRIORITY_LEVEL_LOWER;
+			} else if (!strncasecmp(priority,"normal",6)) {
+				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
+			} else if (!strncasecmp(priority,"higher",6)) {
+				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHER;
+			} else if (!strncasecmp(priority,"highest",7)) {
+				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHEST;
+			} else {
+				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
+			}
+		} else sdl.priority.nofocus=sdl.priority.focus;
+	} else {
+		sdl.priority.focus=PRIORITY_LEVEL_HIGHER;
+		sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
 	}
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
@@ -834,9 +923,10 @@ void GFX_Events() {
 	    switch (event.type) {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
-				if (!event.active.gain && sdl.mouse.locked) {
-					CaptureMouse();	
-				}
+				if (event.active.gain) {
+					if (sdl.mouse.locked) CaptureMouse();	
+					SetPriority(sdl.priority.focus);
+				} else SetPriority(sdl.priority.nofocus);
 			}
 			break;
 		case SDL_MOUSEMOTION:
@@ -922,7 +1012,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
 		sdl_sec->Add_bool("waitonerror",true);
-		sdl_sec->Add_bool("highpriority",true);
+		sdl_sec->Add_string("priority","higher,normal");
 		sdl_sec->Add_string("mapperfile","mapper.txt");
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
@@ -939,8 +1029,10 @@ int main(int argc, char* argv[]) {
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
-			"highpriority -- Run dosbox in high prioty, helps sound output alot.\n"
-		);
+			"priority -- Priority levels for dosbox: lower,normal,higher,highest.\n"
+			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
+			"mapperfile -- File used to load/save the key/event mappings from.\n"
+			);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
