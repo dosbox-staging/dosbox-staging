@@ -639,6 +639,10 @@ SOURCE=..\src\fpu\fpu_instructions.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\fpu\fpu_instructions_x86.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\fpu\fpu_types.h
 # End Source File
 # End Group

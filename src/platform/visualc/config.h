@@ -33,6 +33,9 @@
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
+/* Define to 1 to use a x86 assembly fpu core */
+#define C_FPU_X86 1
+
 /* environ is defined */
 #define ENVIRON_INCLUDED 1
 

@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: fpu_types.h,v 1.12 2005-02-22 13:06:06 qbix79 Exp $ */
 typedef union {
     double d;
 #ifndef WORDS_BIGENDIAN
@@ -32,6 +33,15 @@ typedef union {
     Bit64s ll;
 } FPU_Reg;
 
+typedef struct {
+    Bit32u m1;
+    Bit32u m2;
+    Bit16u m3;
+
+    Bit16u d1;
+    Bit32u d2;
+} FPU_P_Reg;
+
 enum FPU_Tag {
 	TAG_Valid = 0,
 	TAG_Zero  = 1,
@@ -39,13 +49,13 @@ enum FPU_Tag {
 	TAG_Empty = 3
 };
 
-
 enum FPU_Round {
 	ROUND_Nearest = 0,		
 	ROUND_Down    = 1,
 	ROUND_Up      = 2,	
 	ROUND_Chop    = 3
 };
+
 //get pi from a real library
 #define PI		3.14159265358979323846
 #define L2E		1.4426950408889634

@@ -50,6 +50,14 @@ In step 1 you could add the following switches:
         enables some memory increasing inlines. This greatly increases 
         compiletime for maybe a increase in speed.
 
+--disable-dynamic-x86
+        disables the dynamic cpu core. Although it's unstable it can greatly
+        improve the speed of dosbox on x86 hosts.
+
+--disable-fpu-x86
+        disables the assembly fpu core. Although relatively new the x86 fpu 
+	core has more accuracy then the regular fpu core. 
+
 Check the src subdir for the binary.
 
 
