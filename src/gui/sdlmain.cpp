@@ -570,9 +570,5 @@ int main(int argc, char* argv[]) {
 		LOG_ERROR("Exit to error: %s",error);
 		fgetc(stdin);
 	}
-#if C_DEBUG
-	DEBUG_ShutDown();
-#endif
-
 	return 0;
 };
