@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.26 2003-12-10 14:59:53 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.27 2003-12-30 20:39:07 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -100,7 +100,14 @@ static struct {
 	float	mickeysPerPixel_y;
 	float	pixelPerMickey_x;
 	float	pixelPerMickey_y;
-
+	Bit16u  updateRegion_x[2];
+	Bit16u  updateRegion_y[2];
+	Bit16u  page;
+	Bit16u  doubleSpeedThreshold;
+	Bit16u  language;
+	Bit16u  cursorType;
+	bool enabled;
+	Bit16s oldshown;
 } mouse;
 
 #define X_MICKEY 8
@@ -253,7 +260,21 @@ void RestoreCursorBackground()
 void DrawCursor() {
 	
 	if (mouse.shown<0) return;
+// Check video page
+	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
 
+// Check if cursor in update region
+/*	if ((POS_X >= mouse.updateRegion_x[0]) && (POS_X <= mouse.updateRegion_x[1]) &&
+	    (POS_Y >= mouse.updateRegion_y[0]) && (POS_Y <= mouse.updateRegion_y[1])) {
+		if (CurMode->type==M_TEXT16)
+			RestoreCursorBackgroundText();
+		else
+			RestoreCursorBackground();
+		mouse.shown--;
+		return;
+	}
+   */ /*Not sure yet what to do update region should be set to ??? */
+		 
 	// Get Clipping ranges
 
 	// In Textmode ?
@@ -456,7 +477,17 @@ static void  mouse_reset(void)
 	mouse.cursorMask = defaultCursorMask;
 	mouse.textAndMask= defaultTextAndMask;
 	mouse.textXorMask= defaultTextXorMask;
-
+	mouse.language   = 0;
+	mouse.page               = 0;
+	mouse.doubleSpeedThreshold = 64;
+	mouse.updateRegion_x[0] = 1;
+	mouse.updateRegion_y[0] = 1;
+	mouse.updateRegion_x[1] = 1;
+	mouse.updateRegion_y[1] = 1;
+	mouse.cursorType = 0;
+	mouse.enabled=true;
+	mouse.oldshown=-1;
+     
 	SetMickeyPixelRate(8,16);
 }
 
@@ -557,10 +588,12 @@ static Bitu INT33_Handler(void) {
 			mouse.cursorMask = userdefCursorMask;
 			mouse.hotx		 = reg_bx;
 			mouse.hoty		 = reg_cx;
+			mouse.cursorType = 2;
 			DrawCursor();
 		}
 		break;
 	case 0x0a:	/* Define Text Cursor */
+		mouse.cursorType = reg_bx;
 		mouse.textAndMask = reg_cx;
 		mouse.textXorMask = reg_dx;
 		break;
@@ -578,6 +611,19 @@ static Bitu INT33_Handler(void) {
 		mouse.mickey_x=0;
 		mouse.mickey_y=0;
 		break;
+	case 0x10:      /* Define screen region for updating */
+		mouse.updateRegion_x[0]=reg_cx;
+		mouse.updateRegion_y[0]=reg_dx;
+		mouse.updateRegion_x[1]=reg_si;
+		mouse.updateRegion_y[1]=reg_di;
+		break;
+	case 0x11:      /* Get number of buttons */
+		reg_ax=0xffff;
+		reg_bx=MOUSE_BUTTONS;
+		break;
+	case 0x13:      /* Set double-speed threshold */
+		mouse.doubleSpeedThreshold=(reg_bx ? reg_bx : 64);
+ 		break;
 	case 0x14: /* Exchange event-handler */ 
 		{	
 			Bit16u oldSeg = mouse.sub_seg;
@@ -623,13 +669,51 @@ static Bitu INT33_Handler(void) {
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
 		break;
+	case 0x1d:      /* Set display page number */
+		mouse.page=reg_bx;
+		break;
+	case 0x1e:      /* Get display page number */
+		reg_bx=mouse.page;
+		break;
+	case 0x1f:	/* Disable Mousedriver */
+		/* ES:BX old mouse driver Zero at the moment TODO */ 
+		reg_bx=0;
+		SegSet16(es,0);	   
+		mouse.enabled=false; /* Just for reporting not doing a thing with it */
+		mouse.oldshown=mouse.shown;
+		mouse.shown=-1;
+		break;
+	case 0x20:	/* Enable Mousedriver */
+		mouse.enabled=true;
+		mouse.shown=mouse.oldshown;
+		break;
+	case 0x22:      /* Set language for messages */
+ 			/*
+			 *                        Values for mouse driver language:
+			 * 
+			 *                        00h     English
+			 *                        01h     French
+			 *                        02h     Dutch
+			 *                        03h     German
+			 *                        04h     Swedish
+			 *                        05h     Finnish
+			 *                        06h     Spanish
+			 *                        07h     Portugese
+			 *                        08h     Italian
+			 *                
+			 */
+		mouse.language=reg_bx;
+		break;
+	case 0x23:      /* Get language for messages */
+		reg_bx=mouse.language;
+		break;
 	case 0x24:	/* Get Software version and mouse type */
 		reg_bx=0x805;	//Version 8.05 woohoo 
 		reg_ch=0x04;	/* PS/2 type */
-		reg_cl=MOUSE_IRQ;		/* Hmm ps2 irq dunno */
+		reg_cl=0;//MOUSE_IRQ;		/* Hmm ps2 irq 0!!!! */
 		break;
 	case 0x26: /* Get Maximum virtual coordinates */
-		reg_bx=(mouse.shown < 0 ? 0xffff : 0x0000);
+		reg_bx=(mouse.enabled ? 0x0000 : 0xffff);
 		reg_cx=mouse.max_x;
 		reg_dx=mouse.max_y;
 		break;
