@@ -208,7 +208,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	Bitu headersize,imagesize;
 	DOS_ParamBlock block(block_pt);
 	block.LoadData();
-	if (flags!=LOADNGO && flags!=OVERLAY) {
+	if (flags!=LOADNGO && flags!=OVERLAY && flags!=LOAD) {
 		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name); 	
 	}
 	/* Check for EXE or COM File */
@@ -302,6 +302,20 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
 	}
+	
+	if (flags==LOAD) {
+		DOS_PSP callpsp(dos.psp);
+		/* Save the SS:SP on the PSP of calling program */
+		callpsp.SetStack(RealMakeSeg(ss,reg_sp));
+		/* Switch the psp's */
+		dos.psp=pspseg;
+
+		block.exec.initsssp = sssp;
+		block.exec.initcsip = csip;
+		block.SaveData();
+		return true;
+	}
+
 	if (flags==LOADNGO) {
 		/* Get Caller's program CS:IP of the stack and set termination address to that */
 		RealSetVec(0x22,RealMake(mem_readw(SegPhys(ss)+reg_sp+2),mem_readw(SegPhys(ss)+reg_sp)));
