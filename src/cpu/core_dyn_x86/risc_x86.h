@@ -474,55 +474,32 @@ static void gen_sop_word(SingleOps op,bool dword,DynReg * dr1) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_byte(ShiftOps op,DynReg * drecx,DynReg * dr1,Bit8u di1) {
+static void gen_shift_byte_cl(Bitu op,DynReg * dr1,Bit8u di1,DynReg * drecx) {
 	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	GenReg * gr1=FindDynReg(dr1);
-	switch (op) {
-	case SHIFT_ROL:cache_addw(0xc0d2+((gr1->index+di1)<<8));break;
-	case SHIFT_ROR:cache_addw(0xc8d2+((gr1->index+di1)<<8));break;
-	case SHIFT_RCL:cache_addw(0xd0d2+((gr1->index+di1)<<8));break;
-	case SHIFT_RCR:cache_addw(0xd8d2+((gr1->index+di1)<<8));break;
-	case SHIFT_SHL:cache_addw(0xe0d2+((gr1->index+di1)<<8));break;
-	case SHIFT_SHR:cache_addw(0xe8d2+((gr1->index+di1)<<8));break;
-	case SHIFT_SAR:cache_addw(0xf8d2+((gr1->index+di1)<<8));break;
-	default:
-		IllegalOption();
-	}
+	cache_addw(0xc0d2+(((Bit16u)op) << 11)+ ((gr1->index+di1)<<8));
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_word(ShiftOps op,DynReg * drecx,bool dword,DynReg * dr1) {
-	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
+static void gen_shift_byte_imm(Bitu op,DynReg * dr1,Bit8u di1,Bit8u imm) {
 	GenReg * gr1=FindDynReg(dr1);
-	if (!dword) cache_addb(0x66);
-	switch (op) {
-	case SHIFT_ROL:cache_addw(0xc0d3+((gr1->index)<<8));break;
-	case SHIFT_ROR:cache_addw(0xc8d3+((gr1->index)<<8));break;
-	case SHIFT_RCL:cache_addw(0xd0d3+((gr1->index)<<8));break;
-	case SHIFT_RCR:cache_addw(0xd8d3+((gr1->index)<<8));break;
-	case SHIFT_SHL:cache_addw(0xe0d3+((gr1->index)<<8));break;
-	case SHIFT_SHR:cache_addw(0xe8d3+((gr1->index)<<8));break;
-	case SHIFT_SAR:cache_addw(0xf8d3+((gr1->index)<<8));break;
-	default:
-		IllegalOption();
-	}
+	cache_addw(0xc0c0+(((Bit16u)op) << 11) + ((gr1->index+di1)<<8));
+	cache_addb(imm);
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_shift_word_imm(ShiftOps op,bool dword,DynReg * dr1,Bit8u imm) {
+static void gen_shift_word_cl(Bitu op,bool dword,DynReg * dr1,DynReg * drecx) {
+	ForceDynReg(x86gen.regs[X86_REG_ECX],drecx);
 	GenReg * gr1=FindDynReg(dr1);
 	if (!dword) cache_addb(0x66);
-	switch (op) {
-	case SHIFT_ROL:cache_addw(0xc0c1+((gr1->index)<<8));break;
-	case SHIFT_ROR:cache_addw(0xc8c1+((gr1->index)<<8));break;
-	case SHIFT_RCL:cache_addw(0xd0c1+((gr1->index)<<8));break;
-	case SHIFT_RCR:cache_addw(0xd8c1+((gr1->index)<<8));break;
-	case SHIFT_SHL:cache_addw(0xe0c1+((gr1->index)<<8));break;
-	case SHIFT_SHR:cache_addw(0xe8c1+((gr1->index)<<8));break;
-	case SHIFT_SAR:cache_addw(0xf8c1+((gr1->index)<<8));break;
-	default:
-		IllegalOption();
-	}
+	cache_addw(0xc0d3+(((Bit16u)op) << 11) + ((gr1->index)<<8));
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+static void gen_shift_word_imm(Bitu op,bool dword,DynReg * dr1,Bit8u imm) {
+	GenReg * gr1=FindDynReg(dr1);
+	if (!dword) cache_addb(0x66);
+	cache_addw(0xc0c1+(((Bit16u)op) << 11) + ((gr1->index)<<8));
 	cache_addb(imm);
 	dr1->flags|=DYNFLG_CHANGED;
 }
@@ -707,6 +684,11 @@ static Bit8u * gen_create_branch(BranchTypes type) {
 }
 
 static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
+#if C_DEBUG
+	Bits len=from-data;
+	if (len<0) len=-len;
+	if (len>126) LOG_MSG("BIg jump %d",len);
+#endif
 	*data=(from-data-1);
 }
 

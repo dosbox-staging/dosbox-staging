@@ -149,8 +149,8 @@ static void dyn_string(STRING_OP op) {
 		gen_releasereg(DREG(CYCLES));
 		dyn_savestate(&cycle_state);
 		Bit8u * cycle_branch=gen_create_branch(BR_NLE);
-		gen_lea(DREG(EIP),DREG(EIP),0,0,decode.op_start-decode.code_start);
-		dyn_releaseregs();
+		gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
+		dyn_save_critical_regs();
 		gen_return(BR_Cycles);
 		gen_fill_branch(cycle_branch);
 		dyn_loadstate(&cycle_state);

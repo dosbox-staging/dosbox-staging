@@ -78,7 +78,7 @@ enum ShiftOps {
 	SHIFT_ROL,SHIFT_ROR,
 	SHIFT_RCL,SHIFT_RCR,
 	SHIFT_SHL,SHIFT_SHR,
-	SHIFT_SAR,
+	SHIFT_SAL,SHIFT_SAR,
 };
 
 enum BranchTypes {
@@ -150,27 +150,22 @@ struct DynState {
 	DynReg regs[G_MAX];
 };
 
-static void dyn_releaseregs(void) {
-	for (Bitu i=0;i<G_MAX;i++) gen_releasereg(&DynRegs[i]);
-}
-static void dyn_load_flags(void) {
-	/* Load the host flags with emulated flags */
-	gen_dop_word(DOP_MOV,true,DREG(TMPW),DREG(FLAGS));
-	gen_dop_word_imm(DOP_AND,true,DREG(TMPW),FMASK_TEST);
-	gen_load_flags(DREG(TMPW));
-	gen_releasereg(DREG(TMPW));
+static void dyn_flags_host_to_gen(void) {
+	gen_dop_word(DOP_MOV,true,DREG(EXIT),DREG(FLAGS));
+	gen_dop_word_imm(DOP_AND,true,DREG(EXIT),FMASK_TEST);
+	gen_load_flags(DREG(EXIT));
+	gen_releasereg(DREG(EXIT));
 	gen_releasereg(DREG(FLAGS));
 }
 
-static void dyn_save_flags(void) {
-	/* Store the host flags back in emulated ones */
+static void dyn_flags_gen_to_host(void) {
 	gen_save_flags(DREG(EXIT));
 	gen_dop_word_imm(DOP_AND,true,DREG(EXIT),FMASK_TEST);
 	gen_dop_word_imm(DOP_AND,true,DREG(FLAGS),~FMASK_TEST);
 	gen_dop_word(DOP_OR,true,DREG(FLAGS),DREG(EXIT)); //flags are marked for save
 	gen_releasereg(DREG(EXIT));
+	gen_releasereg(DREG(FLAGS));
 }
-
 
 static void dyn_savestate(DynState * state) {
 	for (Bitu i=0;i<G_MAX;i++) {
