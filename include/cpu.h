@@ -35,6 +35,7 @@ extern CPU_Decoder * cpudecoder;
 
 Bits CPU_Core_Normal_Run(void);
 Bits CPU_Core_Normal_Trap_Run(void);
+Bits CPU_Core_Simple_Run(void);
 Bits CPU_Core_Full_Run(void);
 Bits CPU_Core_Dyn_X86_Run(void);
 
@@ -414,6 +415,7 @@ INLINE void CPU_SetFlagsw(Bitu word) {
 	Bitu mask=(cpu.cpl ? FMASK_NORMAL : FMASK_ALL) & 0xffff;
 	CPU_SetFlags(word,mask);
 };
+
 
 #endif
 
