@@ -61,6 +61,10 @@ switch (inst.code.save) {
 		reg_16(inst.rm_index)=inst.op1.w;
 		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w);
 		break;
+	case S_SEGGd:
+		reg_32(inst.rm_index)=inst.op1.d;
+		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w);
+		break;
 	case S_PUSHw:
 		Push_16(inst.op1.w);
 		break;
