@@ -337,22 +337,26 @@ public:
 	void SetLocation(Bit16u  seg);
 	void SetFirstMCB(Bit16u _first_mcb);
 	void SetfirstFileTable(RealPt _first_table);
+	void SetBuffers(Bit16u x,Bit16u y);
 	RealPt GetPointer (void);
-private:
+
 	#ifdef _MSC_VER
 	#pragma pack(1)
 	#endif
 	struct sDIB {		
-		Bit8u	stuff1[22];			// some stuff, hopefully never used....
-		Bit16u	firstMCB;			// first memory control block
-		RealPt	firstDPB;			// first drive parameter block
-		RealPt	firstFileTable;		// first system file table
-		RealPt	activeClock;		// active clock device header
-		RealPt	activeCon;			// active console device header
-		Bit16u	maxSectorLength;	// maximum bytes per sector of any block device;
-		RealPt	discInfoBuffer;		// pointer to disc info buffer
-		RealPt  curDirStructure;	// pointer to current array of directory structure
-		RealPt	fcbTable;			// pointer to system FCB table
+		Bit8u	stuff1[22];			// -0x18 some stuff, hopefully never used....
+		Bit16u	firstMCB;			// -0x2  first memory control block
+		RealPt	firstDPB;			//  0x00 first drive parameter block
+		RealPt	firstFileTable;		//  0x04 first system file table
+		RealPt	activeClock;		//  0x08 active clock device header
+		RealPt	activeCon;			//  0x0c active console device header
+		Bit16u	maxSectorLength;	//  0x10 maximum bytes per sector of any block device;
+		RealPt	discInfoBuffer;		//  0x12 pointer to disc info buffer
+		RealPt  curDirStructure;	//  0x16 pointer to current array of directory structure
+		RealPt	fcbTable;			//  0x1a pointer to system FCB table
+		Bit8u	stuff2[0x21];		//  0x1e more stuff
+		Bit16u	buffers_x;			//	x in BUFFERS x,y
+		Bit16u	buffers_y;			//	y in BUFFERS x,y
 		// some more stuff, hopefully never used.
 	} GCC_ATTRIBUTE(packed);
 	#ifdef _MSC_VER
