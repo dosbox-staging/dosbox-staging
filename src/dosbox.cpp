@@ -244,11 +244,18 @@ static void InitSystems(void) {
 
 void DOSBOX_Init(int argc, char* argv[]) {
 /* Find the base directory */
-    getcwd(dosbox_basedir,CROSS_LEN);
-    char a[2];
-    a[0]=CROSS_FILESPLIT;
-    a[1]='\0';
-    strcat(dosbox_basedir,a);
+    strcpy(dosbox_basedir,argv[0]);
+	char * last=strrchr(dosbox_basedir,CROSS_FILESPLIT); //if windowsversion fails: 
+    if (!last){     
+            getcwd(dosbox_basedir,CROSS_LEN);
+            char a[2];
+            a[0]=CROSS_FILESPLIT;
+            a[1]='\0';
+            strcat(dosbox_basedir,a);
+    } else {
+	*++last=0;
+    }
+
 	/* Parse the command line with a setup function */
 	int argl=1;
 	if (argc>1) {
