@@ -32,7 +32,10 @@ void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main);
 class Program {
 public:
 	Program();
-	virtual ~Program(){}
+	virtual ~Program(){
+		delete cmd;
+		delete psp;
+	}
 	std::string temp_line;
 	CommandLine * cmd;
 	DOS_PSP * psp;
