@@ -33,44 +33,38 @@
 
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
-	Bit32s cntr;
+	
+	Bitu cntr;
+	Bits micro;
+	Bit64u start;
+	
 	Bit8u latch_mode;
 	Bit8u read_state;
 	Bit16s read_latch;
 	Bit8u write_state;
 	Bit16u write_latch;
-	Bit32u last_ticks;
 };
 
-bool TimerAgain;
-Bit32u LastTicks;
 static PIT_Block pit[3];
-static Bit32u pit_ticks;		/* The amount of pit ticks one host tick is bit shifted */
-static Bit32u timer_ticks;		/* The amount of pit ticks bitshifted one timer cycle needs */
-static Bit32u timer_buildup;	/* The amount of pit ticks waiting */
 
-#define TIMER_AVERAGE 5
-static struct TimerBlock {
-	float req[TIMER_AVERAGE];
-	Bitu req_index;
-	Bitu req_count;
-	float req_average;
-	Bitu ticks;
-} timer;
-
-#define PIT_SHIFT 9
-#define MAX_PASSED ((PIT_TICK_RATE/4) << PIT_SHIFT)		/* Alow 1/4 second of timer build up */
-
+static void PIT0_Event(void) {
+	PIC_ActivateIRQ(0);
+	PIC_AddEvent(PIT0_Event,pit[0].micro);
+}
 
 static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
-	timer.req_count++;
-	float pos=timer.req_average*timer.req_count;
-	Bit16u ticks=pos*p->cntr;
+	
+	Bit64u micro=PIC_MicroCount();
+	micro-=p->start;
+	micro%=p->micro;
+	Bit16u ticks=(Bit16u)(((float)micro/(float)p->micro)*(float)p->cntr);
+
 	switch (p->mode) {
 	case 2:
 	case 3:
+	case 4:
 		p->read_latch=(Bit16u)ticks;
 		break;
 	default:
@@ -81,9 +75,8 @@ static void counter_latch(Bitu counter) {
 }
 
 
-
 static void write_latch(Bit32u port,Bit8u val) {
-	Bit32u counter=port-0x40;
+	Bitu counter=port-0x40;
 	PIT_Block * p=&pit[counter];
 	switch (p->write_state) {
 		case 0:
@@ -104,12 +97,12 @@ static void write_latch(Bit32u port,Bit8u val) {
 	if (p->write_state != 0) {
 		if (p->write_latch == 0) p->cntr = 0x10000;
 		else p->cntr = p->write_latch;
-		p->last_ticks=LastTicks;
+		p->start=PIC_MicroCount();
+		p->micro=1000000/((float)PIT_TICK_RATE/(float)p->cntr);
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
-			PIC_DeActivateIRQ(0);
-			timer_ticks=p->cntr << PIT_SHIFT;
-			timer_buildup=0;
+			PIC_RemoveEvents(PIT0_Event);
+			PIC_AddEvent(PIT0_Event,p->micro);
 			LOG_DEBUG("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
@@ -118,7 +111,6 @@ static void write_latch(Bit32u port,Bit8u val) {
 		default:
 			LOG_ERROR("PIT:Illegal timer selected for writing");
 		}
-
     }
 }
 
@@ -194,14 +186,10 @@ struct Timer {
 			TIMER_TickHandler handler;
 		} tick;
 		struct{
-			Bitu count;
-			Bitu total;
+			Bits left;
+			Bits total;
 			TIMER_MicroHandler handler;
 		} micro;
-		struct {
-			Bitu end;
-			TIMER_DelayHandler handler;
-		} delay;
 	};
 };
 
@@ -220,85 +208,51 @@ TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro) 
 	Timer *	new_timer=new(Timer);
 	new_timer->type=T_MICRO;
 	new_timer->micro.handler=handler;
-	new_timer->micro.total=micro;
-	new_timer->micro.count=0;
 	Timers.push_front(new_timer);
+	TIMER_SetNewMicro(new_timer,micro);
 	return (TIMER_Block *)new_timer;
 }
 
-TIMER_Block * TIMER_RegisterDelayHandler(TIMER_DelayHandler handler,Bitu delay) {
-//Todo maybe check for a too long delay 
-	Timer *	new_timer=new(Timer);
-	new_timer->type=T_DELAY;
-	new_timer->delay.handler=handler;
-	new_timer->delay.end=LastTicks+delay;
-	Timers.push_front(new_timer);
-	return (TIMER_Block *)new_timer;
-
-}
 void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro) {	
 	Timer *	timer=(Timer *)block;	
 	if (timer->type!=T_MICRO) E_Exit("TIMER:Illegal handler type");
-	timer->micro.count=0;
 	timer->micro.total=micro;
+	Bitu index=PIC_Index();
+	while ((1000-index)>micro) {
+		PIC_AddEvent(timer->micro.handler,micro);
+		micro+=micro;
+		index+=micro;
+	}
+	timer->micro.left=timer->micro.total-(1000-index);
 }
 
-void TIMER_AddTicks(Bit32u ticks) {
-/* Add pit ticks to the counter */
-	timer_buildup+=ticks*pit_ticks;
-	if (timer_buildup>MAX_PASSED) timer_buildup=MAX_PASSED;
+void TIMER_AddTick(void) {
+	Bits index;
 	/* Check if there are timer handlers that need to be called */
-	Bitu add_micro=timer.ticks*1000;
 	std::list<Timer *>::iterator i;
 	for(i=Timers.begin(); i != Timers.end(); ++i) {
 		Timer * timers=(*i);
 		switch (timers->type) {
 		case T_TICK:
-			if (timer.ticks) timers->tick.handler(timer.ticks);
+			timers->tick.handler(1);
 			break;
 		case T_MICRO:
-			timers->micro.count+=add_micro;
-			if (timers->micro.count>=timers->micro.total) {
-				timers->micro.count-=timers->micro.total;
-				timers->micro.handler();
+			index=1000;
+			while (index>=timers->micro.left) {
+				PIC_AddEvent(timers->micro.handler,timers->micro.left);
+				index-=timers->micro.left;
+				timers->micro.left=timers->micro.total;
 			}
-			break;
-		case T_DELAY:
-			/* Also unregister the timer handler from the list */
-			if (LastTicks>timers->delay.end) {
-				std::list<Timer *>::iterator remove;
-				timers->delay.handler();
-				remove=i++;
-				Timers.erase(remove);
-			}
+			timers->micro.left-=index;
 			break;
 		default:
 			E_Exit("TIMER:Illegal handler type");
-		};
+		}
 	
-	};
-	timer.ticks=ticks;
-}
-
-
-void TIMER_CheckPIT(void) {
-	if (timer_buildup>timer_ticks) {
-		timer_buildup-=timer_ticks;
-		/* Calculate amount of times the time index was requested */
-		timer.req[timer.req_index]=timer.req_count;
-		timer.req_index++;if (timer.req_index>=TIMER_AVERAGE) timer.req_index=0;
-		timer.req_count=0;
-		Bitu l;float total=0;
-		for (l=0;l<TIMER_AVERAGE;l++) total+=timer.req[l];
-		timer.req_average=1/(total/TIMER_AVERAGE);
-		PIC_ActivateIRQ(0);
-		return;
 	}
 }
 
-
 void TIMER_Init(Section* sect) {
-	Bitu i;
 	IO_RegisterWriteHandler(0x40,write_latch,"PIT Timer 0");
 	IO_RegisterWriteHandler(0x42,write_latch,"PIT Timer 2");
 	IO_RegisterWriteHandler(0x43,write_p43,"PIT Mode Control");
@@ -312,11 +266,9 @@ void TIMER_Init(Section* sect) {
 	pit[0].read_latch=-1;
 	pit[0].write_latch=0;
 	pit[0].mode=3;
-	timer_ticks=pit[0].cntr << PIT_SHIFT;
-	timer_buildup=0;
-	timer.req_index=0;
-	for (i=0;i<TIMER_AVERAGE;i++) timer.req[i]=0;
-	pit_ticks=(PIT_TICK_RATE << PIT_SHIFT)/1000;
-	PIC_RegisterIRQ(0,&TIMER_CheckPIT,"PIT 0 Timer");
+
+	pit[0].micro=1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr);
+	pit[2].micro=100;
+	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
 
