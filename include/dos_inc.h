@@ -260,6 +260,7 @@ public:
 	void	SetFCB2				(RealPt src);
 	void	SetCommandTail		(RealPt src);	
 	bool	SetNumFiles			(Bit16u fileNum);
+	Bit16u	FindEntryByHandle	(Bit8u handle);
 	
 private:
 	#pragma pack(1)
