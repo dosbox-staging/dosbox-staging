@@ -145,29 +145,39 @@ void DOS_Shell::Execute(char * name,char * args) {
 	/* Run the .bat file */
 		bf=new BatchFile(this,fullname,args);
 	} else {
-	/* Run the .exe or .com file */
-		ParamBlock block;
+		/* Run the .exe or .com file from the shell */
+		/* Allocate some stack space for tables in physical memory */
+		reg_sp-=0x200;
+		//Add Parameter block
+		DOS_ParamBlock block(Real2Phys(RealMake(Segs[ss].value,reg_sp)));
+		//Add a filename
+		RealPt file_name=RealMake(Segs[ss].value,reg_sp+0x20);
+		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
 		/* Fill the command line */
 		CommandTail cmd;
 		if (strlen(args)>126) args[126]=0;
 		cmd.count=strlen(args);
 		memcpy(cmd.buffer,args,strlen(args));
 		cmd.buffer[strlen(args)]=0xd;
-
 		MEM_BlockWrite(real_phys(prog_info->psp_seg,128),&cmd,128);
-		block.exec.cmdtail=RealMake(prog_info->psp_seg,128);
-		block.exec.envseg=0;
-		block.exec.fcb1=0;
-		block.exec.fcb2=0;
+
+		block.InitExec(RealMake(prog_info->psp_seg,128));
 		/* Save CS:IP to some point where i can return them from */
 		RealPt newcsip;
 		newcsip=CALLBACK_RealPointer(call_shellstop);
 		SetSegment_16(cs,RealSeg(newcsip));
 		reg_ip=RealOff(newcsip);
-
-		DOS_Execute(fullname,&block,0);
-		DOSBOX_RunMachine();
-		Bit16u blah=0;
+		/* Start up a dos execute interrupt */
+		reg_ax=0x4b00;
+		//Filename pointer
+		SetSegment_16(ds,Segs[ss].value);
+		reg_dx=RealOff(file_name);
+		//Paramblock
+		SetSegment_16(es,Segs[ss].value);
+		reg_bx=reg_sp;
+		flags.intf=false;
+		CALLBACK_RunRealInt(0x21);
+		reg_sp+=0x200;
 	}
 
 
