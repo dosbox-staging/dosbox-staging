@@ -153,6 +153,10 @@ switch(Fetchb()) {
 		break;
 	case 0x68:												/* PUSH Id */
 		Push_32(Fetchd());break;
+	case 0x64:												/* SEG FS: */
+		SegPrefix_66(fs);break;
+	case 0x65:												/* SEG GS: */
+		SegPrefix_66(gs);break;
 	case 0x69:												/* IMUL Gd,Ed,Id */
 		{
 			GetRMrd;
@@ -164,12 +168,21 @@ switch(Fetchb()) {
 			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
 			else {flags.cf=true;flags.of=true;}
 			break;
-		};	  
-
-
-
+		}
 	case 0x6a:												/* PUSH Ib */
 		Push_32(Fetchbs());break;
+	case 0x6b:												/* IMUL Gd,Ed,Ib */
+		{
+			GetRMrd;
+			Bit64s res;
+			if (rm >= 0xc0 ) {GetEArd;res=(Bit64s)(*eards) * (Bit64s)Fetchbs();}
+			else {GetEAa;res=(Bit64s)LoadMds(eaa) * (Bit64s)Fetchbs();}
+			*rmrd=(Bit32s)(res);
+			flags.type=t_MUL;
+			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
+			else {flags.cf=true;flags.of=true;}
+			break;
+		}
 	case 0x81:												/* Grpl Ed,Id */
 		{
 			GetRM;
