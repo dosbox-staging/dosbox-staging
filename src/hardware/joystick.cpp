@@ -46,14 +46,14 @@ static Bit8u read_p201(Bit32u port) {
 	if (stick[0].enabled) {
 		if (stick[0].xcount) stick[0].xcount--; else ret&=~1;
 		if (stick[0].ycount) stick[0].ycount--; else ret&=~2;
-		if (stick[0].button[0]) ret&=16;
-		if (stick[0].button[1]) ret&=32;
+		if (stick[0].button[0]) ret&=~16;
+		if (stick[0].button[1]) ret&=~32;
 	}
 	if (stick[1].enabled) {
 		if (stick[1].xcount) stick[1].xcount--; else ret&=~4;
 		if (stick[1].ycount) stick[1].ycount--; else ret&=~8;
-		if (stick[1].button[0]) ret&=64;
-		if (stick[1].button[1]) ret&=128;
+		if (stick[1].button[0]) ret&=~64;
+		if (stick[1].button[1]) ret&=~128;
 	}
 	return ret;
 }
