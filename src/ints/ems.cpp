@@ -387,6 +387,9 @@ static Bit8u HandleNameSearch(void) {
 			}
 		}
 		break;
+	case 0x02: /* Get Total number of handles */
+	  reg_bx=EMM_MAX_HANDLES;
+	  break;
 	default:
 		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
