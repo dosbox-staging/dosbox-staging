@@ -106,7 +106,7 @@ bool localDrive::FindFirst(char * search,DTA_FindBlock * dta) {
 	strcpy(directory,name);
 /* make sure / is last sign */
 	if (pdir) closedir(pdir);
-	if(directory[(strlen(directory)-1)]!=CROSS_FILESPLIT) strcat(directory, "/");  
+	if(directory[(strlen(directory)-1)]!=CROSS_FILESPLIT) strcat(directory, CROSS_FILESPLIT);  
 	if((pdir=opendir(directory))==NULL) return false;
 	return FindNext(dta);
 }
