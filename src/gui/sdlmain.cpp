@@ -569,6 +569,7 @@ int main(int argc, char* argv[]) {
 		/* Shutdown everything */
 	} catch (char * error) {
         if (sdl.full_screen) SwitchFullScreen();
+	    if (sdl.mouse.locked) CaptureMouse();
 		LOG_MSG("Exit to error: %sPress enter to continue.",error);
 		fgetc(stdin);
 	}
