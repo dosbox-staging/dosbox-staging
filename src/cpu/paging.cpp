@@ -296,9 +296,6 @@ void PAGING_Enable(bool enabled) {
 		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
 	} else {
 		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");
-#if !(C_DEBUG)
-		E_Exit("CPU Paging features aren't supported");
-#endif
 		PAGING_SetDirBase(paging.cr3);
 	}
 	PAGING_ClearTLB();
