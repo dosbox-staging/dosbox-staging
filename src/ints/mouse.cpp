@@ -558,6 +558,10 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x21:	/* Software Reset */
 		//TODO reset internal mouse software variables likes mickeys
+		mouse.events	= 0;
+		mouse.sub_mask	= 0;
+		mouse.sub_seg	= 0;
+		mouse.sub_ofs	= 0;
 		reg_ax=0xffff;
 		reg_bx=2;
 		break;
