@@ -538,7 +538,7 @@ static void Render_Scale2x_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,B
 	render.op.height=height;
 	render.op.bpp=bpp;
 	render.op.pitch=pitch;
-	render.op.type=OP_Scale2x;
+	render.op.type=OP_AdvMame2x;
 #if defined(SCALE2X_NORMAL)
 	switch (bpp) {
 	case 8:	

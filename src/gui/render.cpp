@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.16 2003-09-29 21:05:05 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.17 2003-10-14 15:27:39 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -38,8 +38,8 @@ struct PalData {
 		Bit8u blue;
 		Bit8u unused;
 	} rgb[256];
-	Bitu first;
-	Bitu last;
+	volatile Bitu first;
+	volatile Bitu last;
 	union {
 		Bit32u bpp32[256];
 		Bit16u bpp16[256];
@@ -82,7 +82,6 @@ static struct {
 		const char * dir;
 	} shot;
 #endif
-	bool keep_small;
 	bool screenshot;
 	bool active;
 } render;
@@ -261,7 +260,11 @@ doagain:
 		render.op.dest=render.op.pixels=data;
 		render.src.draw_handler(render.op.part_handler);
 		break;
-	case OP_Scale2x:
+	case OP_Blit:
+		render.op.dest=render.op.pixels=data;
+		render.src.draw_handler(render.op.part_handler);
+		break;
+	case OP_AdvMame2x:
 		render.op.dest=render.op.pixels=data;
 		render.src.draw_handler(render.op.part_handler);
 		break;
@@ -291,6 +294,17 @@ static void RENDER_Resize(Bitu * width,Bitu * height) {
 		else *width=(Bitu)(*height*render.src.ratio);
 	}
 }
+
+static void Render_Blit_CallBack(Bitu width,Bitu height,Bitu bpp,Bitu pitch,Bitu flags) {
+	render.op.width=width;
+	render.op.height=height;
+	render.op.bpp=bpp;
+	render.op.pitch=pitch;
+	render.op.type=OP_Blit;
+	render.op.part_handler=GFX_Render_Blit;
+	RENDER_ResetPal();
+}
+
 
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags,RENDER_Draw_Handler draw_handler) {
 	if ((!width) || (!height) || (!pitch)) { 
@@ -323,21 +337,26 @@ normalop:
 			flags=0;
 			break;
 		case DoubleBoth:
-			if (render.keep_small) {
-				render.src.flags=0;
-				flags=0;
-			} else {
-				width*=2;height*=2;
-				flags=GFX_SHADOW;
-			}
+			render.src.flags=0;
+			flags=0;
 			break;
 		}
 		mode_callback=Render_Normal_CallBack;
 		break;
-	case OP_Scale2x:
+	case OP_Normal2x:
 		switch (render.src.flags) {
 		case DoubleBoth:
-			if (render.keep_small) goto normalop;
+			width*=2;height*=2;
+            flags=GFX_SHADOW;
+			mode_callback=Render_Normal_CallBack;
+			break;
+		default:
+			goto normalop;
+		}		
+		break;
+	case OP_AdvMame2x:
+		switch (render.src.flags) {
+		case DoubleBoth:
 			mode_callback=Render_Scale2x_CallBack;
 			width*=2;height*=2;
 #if defined (SCALE2X_NORMAL)
@@ -373,12 +392,11 @@ static void DecreaseFrameSkip(void) {
 }
 
 void RENDER_Init(Section * sec) {
-	MSG_Add("RENDER_CONFIGFILE_HELP","Available scalers: scale2x, none\n");
+	MSG_Add("RENDER_CONFIGFILE_HELP","Available scalers: none, normal2x, advmame2x\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	render.pal.first=256;
 	render.pal.last=0;
-	render.keep_small=section->Get_bool("keepsmall");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
 #if (C_SSHOT)
@@ -392,7 +410,8 @@ void RENDER_Init(Section * sec) {
 		scaler=section->Get_string("scaler");
 	}
 	if (!strcasecmp(scaler,"none")) render.op.want_type=OP_None;
-	else if (!strcasecmp(scaler,"scale2x")) render.op.want_type=OP_Scale2x;
+	else if (!strcasecmp(scaler,"normal2x")) render.op.want_type=OP_Normal2x;
+	else if (!strcasecmp(scaler,"advmame2x")) render.op.want_type=OP_AdvMame2x;
 	else {
 		render.op.want_type=OP_None;
 		LOG_MSG("Illegal scaler type %s,falling back to none.",scaler);
