@@ -16,9 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.82 2005-02-24 11:35:32 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.83 2005-03-25 12:06:48 qbix79 Exp $ */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -37,8 +36,6 @@ DOS_InfoBlock dos_infoblock;
 
 #define DOS_COPYBUFSIZE 0x10000
 Bit8u dos_copybuf[DOS_COPYBUFSIZE];
-
-static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -996,64 +993,66 @@ static Bitu DOS_29Handler(void) {
 }
 
 
-void DOS_ShutDown(Section* sec)
-{	
-	for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
+class DOS:public Module_base{
+private:
+	CALLBACK_HandlerObject callback[7];
+public:
+	DOS(Section* configuration):Module_base(configuration){
+		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
+		callback[0].Set_RealVec(0x20);
+
+		callback[1].Install(DOS_21Handler,CB_IRET_STI,"DOS Int 21");
+		callback[1].Set_RealVec(0x21);
+
+		callback[2].Install(DOS_25Handler,CB_RETF,"DOS Int 25");
+		callback[2].Set_RealVec(0x25);
+
+		callback[3].Install(DOS_26Handler,CB_RETF,"DOS Int 26");
+		callback[3].Set_RealVec(0x26);
+
+		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");
+		callback[4].Set_RealVec(0x27);
+
+		callback[5].Install(DOS_28Handler,CB_IRET,"DOS Int 28");
+		callback[5].Set_RealVec(0x28);
+
+		callback[6].Install(DOS_29Handler,CB_IRET,"CON Output Int 29");
+		callback[6].Set_RealVec(0x29);
+
+		DOS_SetupFiles();								/* Setup system File tables */
+		DOS_SetupDevices();							/* Setup dos devices */
+		DOS_SetupTables();
+		DOS_SetupMemory();								/* Setup first MCB */
+		DOS_SetupPrograms();
+		DOS_SetupMisc();							/* Some additional dos interrupts */
+		DOS_SetDefaultDrive(25);
+	
+		dos.version.major=5;
+		dos.version.minor=0;
+	
+		/* Setup time and date */
+		time_t curtime;struct tm *loctime;
+		curtime = time (NULL);loctime = localtime (&curtime);
+	
+		dos.date.day=(Bit8u)loctime->tm_mday;
+		dos.date.month=(Bit8u)loctime->tm_mon+1;
+		dos.date.year=(Bit16u)loctime->tm_year+1900;
+		Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*18.2);
+		mem_writed(BIOS_TIMER,ticks);
+	}
+	~DOS(){
+		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
+	}
 };
 
+static DOS* test;
 
-void DOS_Init(Section* sec) {
-	call_20=CALLBACK_Allocate();
-	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET,"DOS Int 20");
-	RealSetVec(0x20,CALLBACK_RealPointer(call_20));
-
-	call_21=CALLBACK_Allocate();
-	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET_STI,"DOS Int 21");
-	RealSetVec(0x21,CALLBACK_RealPointer(call_21));
-
-	call_25=CALLBACK_Allocate();
-	CALLBACK_Setup(call_25,DOS_25Handler,CB_RETF,"DOS Int 25");
-	RealSetVec(0x25,CALLBACK_RealPointer(call_25));
-	
-	call_26=CALLBACK_Allocate();
-	CALLBACK_Setup(call_26,DOS_26Handler,CB_RETF,"DOS Int 26");
-	RealSetVec(0x26,CALLBACK_RealPointer(call_26));
-	
-	call_27=CALLBACK_Allocate();
-	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET,"DOS Int 27");
-	RealSetVec(0x27,CALLBACK_RealPointer(call_27));
-
-	call_28=CALLBACK_Allocate();
-	CALLBACK_Setup(call_28,DOS_28Handler,CB_IRET,"DOS Int 28");
-	RealSetVec(0x28,CALLBACK_RealPointer(call_28));
-
-	call_29=CALLBACK_Allocate();
-	CALLBACK_Setup(call_29,DOS_29Handler,CB_IRET,"CON Output Int 29");
-	RealSetVec(0x29,CALLBACK_RealPointer(call_29));
-
-	DOS_SetupFiles();								/* Setup system File tables */
-	DOS_SetupDevices();							/* Setup dos devices */
-	DOS_SetupTables();
-	DOS_SetupMemory();								/* Setup first MCB */
-	DOS_SetupPrograms();
-	DOS_SetupMisc();							/* Some additional dos interrupts */
-	DOS_SetDefaultDrive(25);
-
-	dos.version.major=5;
-	dos.version.minor=0;
-
-	/* Setup time and date */
-	time_t curtime;struct tm *loctime;
-	curtime = time (NULL);loctime = localtime (&curtime);
-
-	dos.date.day=(Bit8u)loctime->tm_mday;
-	dos.date.month=(Bit8u)loctime->tm_mon+1;
-	dos.date.year=(Bit16u)loctime->tm_year+1900;
-	Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*18.2);
-	mem_writed(BIOS_TIMER,ticks);
-
-	/* shutdown function */
-	sec->AddDestroyFunction(&DOS_ShutDown);	
-
+void DOS_ShutDown(Section* sec) {
+	delete test;
 }
 
+void DOS_Init(Section* sec) {
+	test = new DOS(sec);
+	/* shutdown function */
+	sec->AddDestroyFunction(&DOS_ShutDown,false);
+}
