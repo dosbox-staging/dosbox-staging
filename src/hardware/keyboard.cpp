@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.22 2004-04-03 19:35:34 harekiet Exp $ */
+/* $Id: keyboard.cpp,v 1.23 2004-04-07 09:36:59 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -83,6 +83,7 @@ void KEYBOARD_ClrBuffer(void) {
 	keyb.scheduled=false;
 	PIC_DeActivateIRQ(1);
 	keyb.key_on_60=false;
+/* maybe remove PIC_EVENTS  */
 }
 
 /* Read an entry from the keycode buffer */
@@ -122,7 +123,7 @@ void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
 		PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 	}
 }
-
+/*  Disabled as it's not used anymore. Left in here incase new code fails
 void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
 	keyb.key_on_60=false; //else no new keys get scheduled :)
 	switch (keyb.buf.state) {
@@ -146,6 +147,7 @@ void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
 		break;
 	}
 }
+*/
 
 static Bitu read_p60(Bitu port,Bitu iolen) {
 	keyb.key_on_60 = false;
@@ -247,6 +249,7 @@ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 		keyb.active=false;
 		PIC_DeActivateIRQ(1);
 		PIC_RemoveEvents(KEYBOARD_GetCode);
+		keyb.scheduled=false;
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("De-Activated");
 		break;
 	case 0xd0:		/* Outport on buffer */
