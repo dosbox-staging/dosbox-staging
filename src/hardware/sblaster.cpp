@@ -42,6 +42,7 @@
 #define DSP_WRITE_DATA 0x0C
 #define DSP_WRITE_STATUS 0x0C
 #define DSP_READ_STATUS 0x0E
+#define DSP_ACK_16BIT 0x0f
 
 #define DSP_NO_COMMAND 0
 
@@ -512,6 +513,8 @@ static void DSP_DoDMATranfser(DMA_MODES mode) {
 	sb.tmp.index=0;
 	sb.dma.rate_mul=(sb.dma.rate<<16)/sb.hw.rate;
 	sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
+	sb.irq.pending_8bit=false;
+	sb.irq.pending_16bit=false;
 	switch (mode) {
 	case DSP_DMA_2:type="2-bits ADPCM";break;
 	case DSP_DMA_3:type="3-bits ADPCM";break;
@@ -945,6 +948,9 @@ static Bitu read_sb(Bitu port,Bitu iolen) {
 		sb.irq.pending_8bit=false;
 		if (sb.dsp.out.used) return 0xff;
 		else return 0x7f;
+	case DSP_ACK_16BIT:
+		sb.irq.pending_16bit=false;
+		break;
 	case DSP_WRITE_STATUS:
 		switch (sb.dsp.state) {
 		case DSP_S_NORMAL:
@@ -1066,10 +1072,10 @@ void SBLASTER_Init(Section* sec) {
 	MIXER_SetFreq(sb.chan,sb.hw.rate);
 	MIXER_SetMode(sb.chan,MIXER_16STEREO);
 
-	for (i=4;i<0xf;i++) {
+	for (i=4;i<=0xf;i++) {
 		if (i==8 || i==9) continue;
 		//Disable mixer ports for lower soundblaster
-		if (sb.type<SBT_PRO1 && (i==4 || i==5)) continue; 
+		if ((sb.type==SBT_1 || sb.type==SBT_2) && (i==4 || i==5)) continue; 
 		IO_RegisterReadHandler(sb.hw.base+i,read_sb,IO_MB);
 		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,IO_MB);
 	}
