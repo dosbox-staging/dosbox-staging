@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.48 2004-09-25 09:19:53 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.49 2004-09-28 15:31:21 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -265,17 +265,17 @@ static char * init_line="/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
 	/* Add messages */
-	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path\n");
+	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path.\n");
 	MSG_Add("SHELL_CMD_HELP","supported commands are:\n");
-	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on\n");
-	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off\n");
-	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s\n");
-	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s\n");
-	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s\n");
-	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s\n");
-	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s\n");
+	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
+	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off.\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
+	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
+	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
+	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
+	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
 	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
-	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined\n");
+	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined.\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
 	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME","IF EXIST: Missing filename.\n");
 	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER","IF ERRORLEVEL: Missing number.\n");
@@ -285,9 +285,9 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
-	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
-	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must [31mmount[0m it first. Type [1;33mintro[0m for more information.\n");
+	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes.\n");
+	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
@@ -303,11 +303,11 @@ void SHELL_Init() {
 		"\xBA \033[32mDOSBox Shell v" VERSION "\033[37m                                                 \xBA\n"
 		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
 		"\xBA For supported shell commands type: \033[1;33mHELP\033[37m                            \xBA\n"
-		"\xBA For a short introduction type: \033[1;33mINTRO\033[37m                               \xBA\n"
+		"\xBA For a short introduction type: \033[33mINTRO\033[37m                               \xBA\n"
 		"\xBA                                                                    \xBA\n"
-		"\xBA If you want more speed, try \033[31;1mctrl-F8\033[37m and \033[31;1mctrl-F12\033[37m.                  \xBA\n"
-		"\xBA To activate the keymapper \033[31;1mctrl-F1\033[37m. Useful if you have problems.    \xBA\n"
-		"\xBA For more information read the \033[36;1mREADME\033[37m file in the DOSBox directory. \xBA\n"
+		"\xBA If you want more speed, try \033[31mctrl-F8\033[37m and \033[31mctrl-F12\033[37m.                  \xBA\n"
+		"\xBA To activate the keymapper \033[31mctrl-F1\033[37m.                                 \xBA\n"
+		"\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
 		"\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
 		"\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
@@ -335,7 +335,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
-	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive\n");
+	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Run a program. For batch file compatibility only.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
