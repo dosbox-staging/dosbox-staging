@@ -1,10 +1,32 @@
+/*
+ *  Copyright (C) 2002-2004  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+enum REP_Type {
+	REP_NONE=0,REP_NZ,REP_Z
+};
+
 static struct DynDecode {
 	PhysPt code;
 	PhysPt code_start;
 	PhysPt op_start;
 	bool big_op;
 	bool big_addr;
-	bool rep;
+	REP_Type rep;
 	Bitu cycles;
 	CacheBlock * block;
 	struct {
@@ -15,8 +37,6 @@ static struct DynDecode {
 	} modrm;
 	DynReg * segprefix;
 } decode;
-
-#include "helpers.h"
 
 static Bit8u INLINE decode_fetchb(void) {
 	return mem_readb(decode.code++);
@@ -48,6 +68,7 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
 	if (dword) gen_call_function((void *)&mem_writed,"%Dd%Dd",addr,val);
 	else gen_call_function((void *)&mem_writew,"%Dd%Dw",addr,val);
 }
+
 
 static void dyn_reduce_cycles(void) {
 	if (!decode.cycles) decode.cycles++;
@@ -209,6 +230,9 @@ static void dyn_fill_ea(bool addseg=true) {
 	}
 }
 
+#include "helpers.h"
+#include "string.h"
+
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];
 	if (decode.modrm.mod<3) {
@@ -359,6 +383,7 @@ static void dyn_mov_ev_gb(bool sign) {
 		dyn_read_byte(DREG(EA),DREG(TMPB),false);
 		gen_releasereg(DREG(EA));
 		gen_extend_byte(sign,decode.big_op,rm_reg,DREG(TMPB),0);
+		gen_releasereg(DREG(TMPB));
 	} else {
 		gen_extend_byte(sign,decode.big_op,rm_reg,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
 	}
@@ -644,7 +669,7 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 		dyn_fill_ea();
 		gen_lea(DREG(TMPW),DREG(EA),0,0,decode.big_op ? 4:2);
 		dyn_read_word(DREG(TMPW),DREG(TMPW),false);
-		dyn_load_seg(seg,DREG(TMPW),false);
+		dyn_load_seg(seg,DREG(TMPW),false);gen_releasereg(DREG(TMPW));
 		dyn_read_word(DREG(EA),&DynRegs[decode.modrm.reg],decode.big_op);
 		gen_releasereg(DREG(EA));
 	} else {
@@ -900,7 +925,7 @@ static CacheBlock * CreateCacheBlock(PhysPt start,bool big,Bitu max_opcodes) {
 	decode.block=cache_openblock();
 	gen_save_host_direct(&cache.block.running,(Bit32u)decode.block);
 	for (i=0;i<G_MAX;i++) {
-		DynRegs[i].flags&=~(DYNFLG_LOADONCE|DYNFLG_CHANGED);
+		DynRegs[i].flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED);
 		DynRegs[i].genreg=0;
 	}
 	gen_reinit();
@@ -919,7 +944,7 @@ static CacheBlock * CreateCacheBlock(PhysPt start,bool big,Bitu max_opcodes) {
 		decode.big_addr=big;
 		decode.big_op=big;
 		decode.segprefix=0;
-		decode.rep=false;
+		decode.rep=REP_NONE;
 		decode.cycles++;
 		decode.op_start=decode.code;
 restart_prefix:
@@ -1170,10 +1195,18 @@ restart_prefix:
 			dyn_write_word(DREG(EA),DREG(EAX),decode.big_op);
 			gen_releasereg(DREG(EA));
 			break;
+		/* MOVSB/W/D*/
+		case 0xa4:dyn_string(STR_MOVSB);break;
+		case 0xa5:dyn_string(decode.big_op ? STR_MOVSD : STR_MOVSW);break;
 		/* TEST AL,AX Imm */
 		case 0xa8:gen_dop_byte_imm(DOP_TEST,DREG(EAX),0,decode_fetchb());break;
 		case 0xa9:gen_dop_word_imm(DOP_TEST,decode.big_op,DREG(EAX),decode.big_op ? decode_fetchd() :  decode_fetchw());break;
-
+		/* STOSB/W/D*/
+		case 0xaa:dyn_string(STR_STOSB);break;
+		case 0xab:dyn_string(decode.big_op ? STR_STOSD : STR_STOSW);break;
+		/* LODSB/W/D*/
+		case 0xac:dyn_string(STR_LODSB);break;
+		case 0xad:dyn_string(decode.big_op ? STR_LODSD : STR_LODSW);break;
 		//Mov Byte reg,Imm byte
 		case 0xb0:case 0xb1:case 0xb2:case 0xb3:case 0xb4:case 0xb5:case 0xb6:case 0xb7:	
 			gen_dop_byte_imm(DOP_MOV,&DynRegs[opcode&3],opcode&4,decode_fetchb());
@@ -1257,6 +1290,12 @@ restart_prefix:
 				gen_call_function((void*)&IO_WriteW,"%Dw%Dw",DREG(EDX),DREG(EAX));
 			}
 			break;
+		case 0xf2:		//REPNE/NZ
+			decode.rep=REP_NZ;
+			goto restart_prefix;
+		case 0xf3:		//REPE/Z
+			decode.rep=REP_Z;
+			goto restart_prefix;
 		/* Change carry flag */
 		case 0xf5:		//CMC
 		case 0xf8:		//CLC

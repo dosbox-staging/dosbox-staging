@@ -70,7 +70,6 @@ enum DualOps {
 	DOP_AND,DOP_OR,
 	DOP_MOV,
 	DOP_TEST,
-	DOP_IMUL,
 	DOP_XCHG,
 };
 
@@ -108,8 +107,8 @@ enum BlockReturn {
 #define DYNFLG_HAS8			0x2		//Would like 16-bit host reg support
 #define DYNFLG_LOAD			0x4		//Load value when accessed
 #define DYNFLG_SAVE			0x8		//Needs to be saved back at the end of block
-#define DYNFLG_CHANGED		0x10	//Load value only once because of save
-#define DYNFLG_LOADONCE		0x20	//Load value only once because of save
+#define DYNFLG_CHANGED		0x10	//Value is in a register and changed from load
+#define DYNFLG_ACTIVE		0x20	//Register has an active value
 
 class GenReg;
 class CodePageHandler;
@@ -325,7 +324,7 @@ void CPU_Core_Dyn_X86_Init(void) {
 	DynRegs[G_STACK].data=&extra_regs.stack;
 	DynRegs[G_STACK].flags=0;
 	DynRegs[G_CYCLES].data=&CPU_Cycles;
-	DynRegs[G_CYCLES].flags=DYNFLG_LOAD|DYNFLG_SAVE;;
+	DynRegs[G_CYCLES].flags=DYNFLG_LOAD|DYNFLG_SAVE;
 	DynRegs[G_TMPB].data=&extra_regs.tmpb;
 	DynRegs[G_TMPB].flags=DYNFLG_HAS8|DYNFLG_HAS16;
 	DynRegs[G_TMPW].data=&extra_regs.tmpd;

@@ -1,4 +1,20 @@
-#define GEN_HAS_IMM	1
+/*
+ *  Copyright (C) 2002-2004  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 
 static void gen_init(void);
 
@@ -39,11 +55,11 @@ public:
 		last_used=x86gen.last_used;
 		dynreg->flags&=~DYNFLG_CHANGED;
 		dynreg->genreg=this;
-		if (dynreg->flags & (DYNFLG_LOAD|DYNFLG_LOADONCE)) {
-			dynreg->flags&=~DYNFLG_LOADONCE;
+		if (dynreg->flags & (DYNFLG_LOAD|DYNFLG_ACTIVE)) {
 			cache_addw(0x058b+(index << (8+3)));		//Mov reg,[data]
 			cache_addd((Bit32u)dynreg->data);
 		}
+		dynreg->flags|=DYNFLG_ACTIVE;
 	}
 	void Save(void) {
 		if (!dynreg) IllegalOption();
@@ -56,13 +72,12 @@ public:
 		if (dynreg->flags&DYNFLG_CHANGED && dynreg->flags&DYNFLG_SAVE) {
 			Save();
 		}
-		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_LOADONCE);
+		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE);
 		dynreg->genreg=0;dynreg=0;
 	}
 	void Clear(void) {
 		if (!dynreg) return;
 		if (dynreg->flags&DYNFLG_CHANGED) {
-			dynreg->flags|=DYNFLG_LOADONCE;
 			Save();
 		}
 		dynreg->genreg=0;dynreg=0;
@@ -176,10 +191,15 @@ static GenReg * ForceDynReg(GenReg * genreg,DynReg * dynreg) {
 	genreg->Load(dynreg);
 	return genreg;
 }
+
+static void gen_preloadreg(DynReg * dynreg) {
+	FindDynReg(dynreg);
+}
+
 static void gen_releasereg(DynReg * dynreg) {
 	GenReg * genreg=dynreg->genreg;
 	if (genreg) genreg->Release();
-	else dynreg->flags&=~(DYNFLG_LOADONCE|DYNFLG_CHANGED);
+	else dynreg->flags&=~(DYNFLG_ACTIVE|DYNFLG_CHANGED);
 }
 
 static void gen_setupreg(DynReg * dnew,DynReg * dsetup) {
@@ -203,12 +223,12 @@ static void gen_synchreg(DynReg * dnew,DynReg * dsynch) {
 		}
 	}
 	/* Always use the loadonce flag from either state */
-	dnew->flags|=(dsynch->flags & dnew->flags&DYNFLG_LOADONCE);
+	dnew->flags|=(dsynch->flags & dnew->flags&DYNFLG_ACTIVE);
 	if ((dnew->flags ^ dsynch->flags) & DYNFLG_CHANGED) {
 		/* Ensure the changed value gets saved */	
 		if (dnew->flags & DYNFLG_CHANGED) {
 			dnew->genreg->Save();
-		}
+		} else dnew->flags|=DYNFLG_CHANGED;
 	}
 }
 
@@ -498,6 +518,24 @@ static void gen_shift_word(ShiftOps op,DynReg * drecx,bool dword,DynReg * dr1) {
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
+static void gen_shift_word_imm(ShiftOps op,bool dword,DynReg * dr1,Bit8u imm) {
+	GenReg * gr1=FindDynReg(dr1);
+	if (!dword) cache_addb(0x66);
+	switch (op) {
+	case SHIFT_ROL:cache_addw(0xc0c1+((gr1->index)<<8));break;
+	case SHIFT_ROR:cache_addw(0xc8c1+((gr1->index)<<8));break;
+	case SHIFT_RCL:cache_addw(0xd0c1+((gr1->index)<<8));break;
+	case SHIFT_RCR:cache_addw(0xd8c1+((gr1->index)<<8));break;
+	case SHIFT_SHL:cache_addw(0xe0c1+((gr1->index)<<8));break;
+	case SHIFT_SHR:cache_addw(0xe8c1+((gr1->index)<<8));break;
+	case SHIFT_SAR:cache_addw(0xf8c1+((gr1->index)<<8));break;
+	default:
+		IllegalOption();
+	}
+	cache_addb(imm);
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
 static void gen_cbw(bool dword,DynReg * dyn_ax) {
 	ForceDynReg(x86gen.regs[X86_REG_EAX],dyn_ax);
 	if (!dword) cache_addb(0x66);
@@ -678,9 +716,21 @@ static Bit8u * gen_create_branch(BranchTypes type) {
 	return (cache.pos-1);
 }
 
-static void gen_fill_branch(Bit8u * data) {
-	*data=(cache.pos-data-1);
+static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
+	*data=(from-data-1);
 }
+
+static Bit8u * gen_create_jump(Bit8u * to=0) {
+	/* First free all registers */
+	cache_addb(0xe9);
+	cache_addd(to-(cache.pos+4));
+	return (cache.pos-4);
+}
+
+static void gen_fill_jump(Bit8u * data,Bit8u * to=cache.pos) {
+	*(Bit32u*)data=(to-data-4);
+}
+
 
 static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 	cache_addb(0xa1);
