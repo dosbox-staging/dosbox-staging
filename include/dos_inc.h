@@ -419,10 +419,8 @@ extern DOS_InfoBlock dos_infoblock;;
 
 INLINE Bit8u RealHandle(Bit16u handle) {
 	
-	// test out of range
-	if (handle>0xFF) return 0xff;
 	DOS_PSP psp(dos.psp);	
-	return psp.GetFileHandle((Bit8u)handle);
+	return psp.GetFileHandle(handle);
 }
 
 #endif
