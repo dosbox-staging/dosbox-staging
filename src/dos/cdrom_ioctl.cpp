@@ -57,7 +57,7 @@ bool CDROM_Interface_Linux::Open(void)
 	return (dhandle>=0);
 };
 
-void CDROM_Interface_Ioctl::Close(void)
+void CDROM_Interface_Linux::Close(void)
 {
 	close (dhandle);
 };
