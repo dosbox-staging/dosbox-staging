@@ -105,7 +105,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	struct dirent * dir_ent;
 	struct stat stat_block;
 	char full_name[CROSS_LEN];
-	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH];
+	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
 	Bit8u find_attr;
 
 	if(!srch_opendir) return false;

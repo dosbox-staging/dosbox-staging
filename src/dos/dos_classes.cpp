@@ -244,7 +244,7 @@ void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
 	memcpy(pattern,temp,8);
 	pattern[8]='.';
 	memcpy(&pattern[9],&temp[8],3);
-//	pattern[12]=0;
+	pattern[12]=0;
 
 }
 
