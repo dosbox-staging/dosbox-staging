@@ -24,8 +24,8 @@ enum OPL_Mode {
 	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3
 };
 
-void OPL_Init(Section* sec,OPL_Mode,Bitu rate);
-void CMS_Init(Section* sec,Bitu rate);
+void OPL_Init(Section* sec,Bitu base,OPL_Mode mode,Bitu rate);
+void CMS_Init(Section* sec,Bitu base,Bitu rate);
 
 #endif
 
