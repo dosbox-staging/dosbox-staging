@@ -271,12 +271,12 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		pos=headersize;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		while (imagesize>0x7FFF) {
 			readsize=0x8000;DOS_ReadFile(fhandle,loadaddress,&readsize);
-			if (readsize!=0x8000) E_Exit("Illegal header");
+			if (readsize!=0x8000) LOG_WARN("Illegal header");
 			loadaddress+=0x8000;imagesize-=0x8000;
 		}
 		if (imagesize>0) {
 			readsize=(Bit16u)imagesize;DOS_ReadFile(fhandle,loadaddress,&readsize);
-			if (readsize!=imagesize) E_Exit("Illegal header");
+			if (readsize!=imagesize) LOG_WARN("Illegal header");
 		}
 		/* Relocate the exe image */
 		Bit16u relocate;
