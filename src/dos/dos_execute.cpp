@@ -251,7 +251,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	/* Convert the header to correct endian, i hope this works */
 	HostPt endian=(HostPt)&head;
 	for (i=0;i<sizeof(EXE_Header)/2;i++) {
-		*((Bit16u *)endian)=readw(endian);
+		*((Bit16u *)endian)=host_readw(endian);
 		endian+=2;
 	}
 	if (len<sizeof(EXE_Header)) iscom=true;	
@@ -321,7 +321,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		pos=head.reloctable;DOS_SeekFile(fhandle,&pos,0);
 		for (i=0;i<head.relocations;i++) {
 			readsize=4;DOS_ReadFile(fhandle,(Bit8u *)&relocpt,&readsize);
-			relocpt=readd((Bit8u *)&relocpt);		//Endianize
+			relocpt=host_readd((HostPt)&relocpt);		//Endianize
 			PhysPt address=PhysMake(RealSeg(relocpt)+loadseg,RealOff(relocpt));
 			mem_writew(address,mem_readw(address)+relocate);
 		}
