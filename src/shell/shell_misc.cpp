@@ -90,7 +90,7 @@ void DOS_Shell::InputCommand(char * line) {
 					break;
 
 				case 0x48:	/* UP */
-					if (it_history == l_history.end()) break;
+					if (l_history.empty() || it_history == l_history.end()) break;
 
 					for (;str_index>0; str_index--) {
 						// removes all characters
@@ -101,9 +101,31 @@ void DOS_Shell::InputCommand(char * line) {
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 1;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
-
 					it_history ++;
-					if (it_history == l_history.end()) it_history = l_history.begin();
+
+					break;
+
+				case 0x50:	/* DOWN */
+					if (l_history.empty() || it_history == l_history.begin()) break;
+
+					// not very nice but works ..
+					it_history --;
+					if (it_history == l_history.begin()) {
+						// no previous commands in history
+						it_history ++;
+						break;
+					} else it_history --;
+
+					for (;str_index>0; str_index--) {
+						// removes all characters
+						outc(8); outc(' '); outc(8);
+					}
+					strcpy(line, it_history->c_str());
+					len = it_history->length();
+					str_len = str_index = len;
+					size = CMD_MAXLINE - str_index - 1;
+					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
+					it_history ++;
 
 					break;
 
