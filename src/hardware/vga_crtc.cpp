@@ -423,12 +423,16 @@ void write_p3d5(Bit32u port,Bit8u val) {
 				if clear 7MCLKs
 		*/
 	case 0x59:	/* Linear Address Window Position High */
-		vga.s3.la_window=(vga.s3.la_window&0x00ff) | (val << 8);
-		VGA_StartUpdateLFB();
+		if ((vga.s3.la_window&0xff00) ^ (val << 8)) {
+			vga.s3.la_window=(vga.s3.la_window&0x00ff) | (val << 8);
+			VGA_StartUpdateLFB();
+		}
 		break;
 	case 0x5a:	/* Linear Address Window Position Low */
-		vga.s3.la_window=(vga.s3.la_window&0xff00) | val;
-		VGA_StartUpdateLFB();
+		if ((vga.s3.la_window&0x00ff) ^ val) {
+			vga.s3.la_window=(vga.s3.la_window&0xff00) | val;
+			VGA_StartUpdateLFB();
+		}
 		break;
 	case 0x5D:	/* Extended Horizontal Overflow */
 		if ((val & vga.s3.ex_hor_overflow) ^ 3) {
