@@ -150,6 +150,17 @@
 		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		break;
+	CASE_D(0x62)												/* BOUND Ed */
+		{
+			Bit32s bound_min, bound_max;
+			GetRMrd;GetEAa;
+			bound_min=LoadMd(eaa);
+			bound_max=LoadMd(eaa+4);
+			if ( (((Bit32s)*rmrd) < bound_min) || (((Bit32s)*rmrd) > bound_max) ) {
+				EXCEPTION(5);
+			}
+		}
+		break;
 	CASE_D(0x63)												/* ARPL Ed,Rd */
 		{
 			FillFlags();
@@ -279,7 +290,7 @@
 					E_Exit("CPU:8c:Illegal RM Byte");
 				}
 				if (rm >= 0xc0 ) {GetEArd;*eard=val;}
-				else {GetEAa;SaveMd(eaa,val);}
+				else {GetEAa;SaveMw(eaa,val);}
 				break;
 			}	
 	CASE_D(0x8d)												/* LEA Gd */
