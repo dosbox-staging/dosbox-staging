@@ -96,6 +96,7 @@ public:
 	virtual bool FileExists(const char* name)=0;
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
 	virtual Bit8u GetMediaByte(void)=0;
+	virtual void SetDir(const char* path) { strcpy(curdir,path); };
 	char * GetInfo(void);
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
