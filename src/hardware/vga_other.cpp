@@ -64,24 +64,29 @@ static void write_crtc_data_other(Bitu port,Bitu val,Bitu iolen) {
 		if (vga.other.max_scanline ^ val) VGA_StartResize();
 		vga.other.max_scanline=val;
 		break;
-		vga.config.display_start=(vga.config.display_start & 0xFF00FF)| (val << 8);
+	case 0x0A:	/* Cursor Start Register */
+		vga.draw.cursor.sline = val&0x1f;
+		vga.draw.cursor.enabled = ((val & 0x60) != 0x20);
+		break;
+	case 0x0B:	/* Cursor End Register */
+		vga.draw.cursor.eline = val&0x1f;
 		break;
 	case 0x0C:	/* Start Address High Register */
-		vga.config.display_start=(vga.config.display_start & 0xFF00FF)| (val << 8);
+		vga.config.display_start=(vga.config.display_start & 0x00FF) | (val << 8);
 		break;
 	case 0x0D:	/* Start Address Low Register */
-		vga.config.display_start=(vga.config.display_start & 0xFFFF00)| val;
+		vga.config.display_start=(vga.config.display_start & 0xFF00) | val;
 		break;
 	case 0x0E:	/*Cursor Location High Register */
-		vga.config.cursor_start&=0xff00ff;
+		vga.config.cursor_start&=0x00ff;
 		vga.config.cursor_start|=val << 8;
 		break;
 	case 0x0F:	/* Cursor Location Low Register */
-		vga.config.cursor_start&=0xffff00;
+		vga.config.cursor_start&=0xff00;
 		vga.config.cursor_start|=val;
 		break;
 	default:
-		LOG_MSG("Write %X to illgal index %x",val,vga.other.index);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Write %X to illegal index %x",val,vga.other.index);
 	}
 }
 static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
@@ -113,7 +118,7 @@ static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
 	case 0x0F:	/* Cursor Location Low Register */
 		return vga.config.cursor_start;
 	default:
-		LOG_MSG("Read from illgal index %x",vga.other.index);
+		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Read from illegal index %x",vga.other.index);
 	}
 	return (Bitu)-1;
 }
