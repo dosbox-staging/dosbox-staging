@@ -97,10 +97,10 @@ public:
 	int			AddDrive			(Bit16u _drive, char* physicalPath, Bit8u& subUnit);
 	void		GetDrives			(PhysPt data);
 	void		GetDriverInfo		(PhysPt data);
-	bool		GetCopyrightName	(Bit16u drive, PhysPt data) { return false; };
-	bool		GetAbstractName		(Bit16u drive, PhysPt data) { return false; };
-	bool		GetDocumentationName(Bit16u drive, PhysPt data) { return false; };
-	bool		ReadVTOC			(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)	{ return false; };
+	bool		GetCopyrightName	(Bit16u drive, PhysPt data);
+	bool		GetAbstractName		(Bit16u drive, PhysPt data);
+	bool		GetDocumentationName(Bit16u drive, PhysPt data);
+	bool		ReadVTOC			(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error);
 	bool		ReadSectors			(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data);
 	bool		ReadSectors			(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data);
 	bool		ReadSectorsMSF		(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data);
@@ -271,7 +271,9 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		devHeader.SetNumSubUnits(devHeader.GetNumSubUnits()+1);
 		dinfo[numDrives].drive		= (Bit8u)_drive;
 		dinfo[numDrives].physDrive	= toupper(physicalPath[0]);
-		numDrives++;	
+		numDrives++;
+		// stop audio
+		StopAudio(subUnit);
 		return result;
 	}
 	return 4;
@@ -420,6 +422,60 @@ Bit32u CMscdex::GetVolumeSize(Bit8u subUnit)
 	return 0;
 };
 
+bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)	
+{ 
+	ReadSectors(GetSubUnit(drive),false,/*150+*/16,1,data) ? error=0:error=MSCDEX_ERROR_DRIVE_NOT_READY;
+	return (error==0);
+};
+
+bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) 
+{	
+	Bit16u error,seg,size = 128;
+	bool success = false;
+	if (DOS_AllocateMemory(&seg,&size)) {
+		PhysPt ptoc = PhysMake(seg,0);
+		success = ReadVTOC(drive,0x00,ptoc,error);
+		if (success) {
+			MEM_BlockCopy(data,ptoc+702,37);
+			mem_writeb(data+37,0);
+		};
+		DOS_FreeMemory(seg);
+	}
+	return success; 
+};
+
+bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) 
+{ 
+	Bit16u error,seg,size = 128;
+	bool success = false;
+	if (DOS_AllocateMemory(&seg,&size)) {
+		PhysPt ptoc = PhysMake(seg,0);
+		success = ReadVTOC(drive,0x00,ptoc,error);
+		if (success) {
+			MEM_BlockCopy(data,ptoc+739,37);
+			mem_writeb(data+37,0);
+		};
+		DOS_FreeMemory(seg);
+	}
+	return success; 
+};
+
+bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) 
+{ 
+	Bit16u error,seg,size = 128;
+	bool success = false;
+	if (DOS_AllocateMemory(&seg,&size)) {
+		PhysPt ptoc = PhysMake(seg,0);
+		success = ReadVTOC(drive,0x00,ptoc,error);
+		if (success) {
+			MEM_BlockCopy(data,ptoc+776,37);
+			mem_writeb(data+37,0);
+		};
+		DOS_FreeMemory(seg);
+	}
+	return success; 
+};
+
 bool CMscdex::GetUPC(Bit8u subUnit, Bit8u& attr, char* upc)
 {
 	if (subUnit>=numDrives) return false;
@@ -554,7 +610,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
 
-//	if (funcNr!=0x03) LOG("MSCDEX: Driver Function %02X",funcNr);
+//	LOG(LOG_ERROR,"MSCDEX: Driver Function %02X",funcNr);
 
 	switch (funcNr) {
 	
@@ -720,7 +776,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-//	if (reg_ax!=0x1510) LOG("MSCEEX: INT 2F %04X",reg_ax);
+//	LOG(LOG_ERROR,"MSCDEX: INT 2F %04X",reg_ax);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
@@ -754,7 +810,7 @@ static bool MSCDEX_Handler(void)
 							CALLBACK_SCF(true);							
 						};
 						return true;		
-/*		case 0x1505: {	// read vtoc 
+		case 0x1505: {	// read vtoc 
 						Bit16u error = 0;
 						if (mscdex->ReadVTOC(reg_cx,reg_dx,data,error)) {
 							CALLBACK_SCF(false);
@@ -763,7 +819,7 @@ static bool MSCDEX_Handler(void)
 							CALLBACK_SCF(true);							
 						};
 					 };
-						return true;*/		
+						return true;
 		case 0x1508: {	// read sectors 
 						Bit32u sector = (reg_si<<16)+reg_di;
 						if (mscdex->ReadSectors(reg_cx,sector,reg_dx,data)) {
