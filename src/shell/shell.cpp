@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.47 2004-09-23 18:19:50 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.48 2004-09-25 09:19:53 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -307,7 +307,7 @@ void SHELL_Init() {
 		"\xBA                                                                    \xBA\n"
 		"\xBA If you want more speed, try \033[31;1mctrl-F8\033[37m and \033[31;1mctrl-F12\033[37m.                  \xBA\n"
 		"\xBA To activate the keymapper \033[31;1mctrl-F1\033[37m. Useful if you have problems.    \xBA\n"
-		"\xBA For more information read the \033[0;44;32mREADME\033[37;1m file in the DOSBox directory. \xBA\n"
+		"\xBA For more information read the \033[36;1mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
 		"\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
 		"\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
