@@ -125,7 +125,8 @@ again:
 	} while (c!='\n' && n);
 	*cmd_write++=0;
 	if (cmd[0]==':') {
-		if (strcasecmp(cmd+1,where)==0) return true;
+		char *nospace = trim(cmd+1);   
+		if (strcasecmp(nospace,where)==0) return true;
 	}
 	if (!n) {
 		delete this;
