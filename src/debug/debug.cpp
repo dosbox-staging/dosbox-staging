@@ -90,7 +90,8 @@ struct SCodeViewData {
 
 } codeViewData;
 
-static Bit16u	dataSeg,dataOfs;
+static Bit16u	dataSeg;
+static Bit32u	dataOfs;
 static bool		showExtend = true;
 
 /***********/
@@ -107,7 +108,7 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
 	if (cpu.state & STATE_PROTECTED) return PhysMakeProt(seg,offset);
-	return PhysMake(seg,offset);
+	return (seg<<4)+offset;
 };
 
 bool GetDescriptorInfo(char* selname, char* out1, char* out2)
@@ -541,7 +542,7 @@ bool DEBUG_ExitLoop(void)
 
 static void DrawData(void) {
 	
-	Bit16u add = dataOfs;
+	Bit32u add = dataOfs;
 	Bit32u address;
 	/* Data win */	
 	for (int y=0; y<8; y++) {
@@ -662,7 +663,7 @@ static void DrawCode(void)
 		char* res = 0;
 		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		waddstr(dbg.win_code,dline);
-		for (c=28-strlen(dline);c>0;c--) waddch(dbg.win_code,' ');
+		if (strlen(dline)<28) for (c=28-strlen(dline);c>0;c--) waddch(dbg.win_code,' ');
 		if (showExtend) {
 			waddstr(dbg.win_code,res);
 			for (c=strlen(res);c<20;c++) waddch(dbg.win_code,' ');
@@ -715,6 +716,15 @@ Bit32u GetHexValue(char* str, char*& hex)
 
 	hex = str;
 	while (*hex==' ') hex++;
+	if (strstr(hex,"EAX")==hex) { hex+=3; return reg_eax; };
+	if (strstr(hex,"EBX")==hex) { hex+=3; return reg_ebx; };
+	if (strstr(hex,"ECX")==hex) { hex+=3; return reg_ecx; };
+	if (strstr(hex,"EDX")==hex) { hex+=3; return reg_edx; };
+	if (strstr(hex,"ESI")==hex) { hex+=3; return reg_esi; };
+	if (strstr(hex,"EDI")==hex) { hex+=3; return reg_edi; };
+	if (strstr(hex,"EBP")==hex) { hex+=3; return reg_ebp; };
+	if (strstr(hex,"ESP")==hex) { hex+=3; return reg_esp; };
+	if (strstr(hex,"EIP")==hex) { hex+=3; return reg_eip; };
 	if (strstr(hex,"AX")==hex) { hex+=2; return reg_ax; };
 	if (strstr(hex,"BX")==hex) { hex+=2; return reg_bx; };
 	if (strstr(hex,"CX")==hex) { hex+=2; return reg_cx; };
@@ -730,15 +740,6 @@ Bit32u GetHexValue(char* str, char*& hex)
 	if (strstr(hex,"FS")==hex) { hex+=2; return SegValue(fs); };
 	if (strstr(hex,"GS")==hex) { hex+=2; return SegValue(gs); };
 	if (strstr(hex,"SS")==hex) { hex+=2; return SegValue(ss); };
-	if (strstr(hex,"EAX")==hex) { hex+=3; return reg_eax; };
-	if (strstr(hex,"EBX")==hex) { hex+=3; return reg_ebx; };
-	if (strstr(hex,"ECX")==hex) { hex+=3; return reg_ecx; };
-	if (strstr(hex,"EDX")==hex) { hex+=3; return reg_edx; };
-	if (strstr(hex,"ESI")==hex) { hex+=3; return reg_esi; };
-	if (strstr(hex,"EDI")==hex) { hex+=3; return reg_edi; };
-	if (strstr(hex,"EBP")==hex) { hex+=3; return reg_ebp; };
-	if (strstr(hex,"ESP")==hex) { hex+=3; return reg_esp; };
-	if (strstr(hex,"EIP")==hex) { hex+=3; return reg_eip; };
 
 	while (*hex) {
 		if ((*hex>='0') && (*hex<='9')) value = (value<<4)+*hex-'0';	  else
@@ -755,6 +756,15 @@ bool ChangeRegister(char* str)
 
 	char* hex = str;
 	while (*hex==' ') hex++;
+	if (strstr(hex,"EAX")==hex) { hex+=3; reg_eax = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EBX")==hex) { hex+=3; reg_ebx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ECX")==hex) { hex+=3; reg_ecx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EDX")==hex) { hex+=3; reg_edx = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ESI")==hex) { hex+=3; reg_esi = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EDI")==hex) { hex+=3; reg_edi = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EBP")==hex) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"ESP")==hex) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
+	if (strstr(hex,"EIP")==hex) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
 	if (strstr(hex,"AX")==hex) { hex+=2; reg_ax = GetHexValue(hex,hex); } else
 	if (strstr(hex,"BX")==hex) { hex+=2; reg_bx = GetHexValue(hex,hex); } else
 	if (strstr(hex,"CX")==hex) { hex+=2; reg_cx = GetHexValue(hex,hex); } else
@@ -770,15 +780,6 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"FS")==hex) { hex+=2; SegSet16(fs,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"GS")==hex) { hex+=2; SegSet16(gs,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"SS")==hex) { hex+=2; SegSet16(ss,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"EAX")==hex) { hex+=3; reg_eax = GetHexValue(hex,hex); } else
-	if (strstr(hex,"EBX")==hex) { hex+=3; reg_ebx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"ECX")==hex) { hex+=3; reg_ecx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"EDX")==hex) { hex+=3; reg_edx = GetHexValue(hex,hex); } else
-	if (strstr(hex,"ESI")==hex) { hex+=3; reg_esi = GetHexValue(hex,hex); } else
-	if (strstr(hex,"EDI")==hex) { hex+=3; reg_edi = GetHexValue(hex,hex); } else
-	if (strstr(hex,"EBP")==hex) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
-	if (strstr(hex,"ESP")==hex) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
-	if (strstr(hex,"EIP")==hex) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
 	if (strstr(hex,"AF")==hex) { hex+=2; SETFLAGBIT(AF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"CF")==hex) { hex+=2; SETFLAGBIT(CF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"DF")==hex) { hex+=2; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
