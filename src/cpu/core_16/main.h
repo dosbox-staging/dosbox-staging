@@ -946,7 +946,7 @@ restart:
 			break;
 		case 0xed:												/* IN AX,DX */
 			reg_al=IO_Read(reg_dx);
-			reg_ah=IO_Read(reg_dx+1);			
+			reg_ah=IO_Read(reg_dx+1);
 			break;
 		case 0xee:												/* OUT DX,AL */
 			IO_Write(reg_dx,reg_al); 
@@ -969,7 +969,9 @@ restart:
 			Repeat_Normal(true,false);
 			continue;
 		case 0xf4:												/* HLT */
-			break;
+			SAVEIP;
+			CPU_HLT();
+			return 0x0;
 		case 0xf5:												/* CMC */
 			SETFLAGBIT(CF,!get_CF());
 			if (flags.type!=t_CF) flags.prev_type=flags.type;
@@ -1113,7 +1115,9 @@ restart:
 						case CBRET_NONE:
 							LOADIP;
 						break;
-						case CBRET_STOP:return ret;
+						case CBRET_STOP:
+							//TODO Maybe save flags at some time
+							return ret;
 						default:
 							E_Exit("CPU:Callback %d returned illegal %d code",call,ret);
 						};
