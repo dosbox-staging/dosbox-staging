@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.27 2003-09-08 18:21:19 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.28 2003-09-24 19:36:14 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -60,6 +60,7 @@ void DOS_Shell::DoCommand(char * line) {
 	while (*line) {
 		if (*line==32) break;
 		if (*line=='/') break;
+		if (*line=='\t') break;
 		if ((*line=='.') ||(*line =='\\')) {  //allow stuff like cd.. and dir.exe cd\kees
 			*cmd_write=0;
 			Bit32u cmd_index=0;
