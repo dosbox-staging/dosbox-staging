@@ -24,6 +24,10 @@
 #include "keyboard.h"
 #include "setup.h"
 
+#if 1
+#undef LOG_MSG
+#define LOG_MSG
+#endif
 
 Flag_Info flags;
 CPU_Regs cpu_regs;
@@ -181,7 +185,6 @@ bool Interrupt(Bitu num) {
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:
 		case DESC_386_INT_GATE:
-		SETFLAGBIT(IF,false);
 		case DESC_286_TRAP_GATE:
 		case DESC_386_TRAP_GATE:
 			{
@@ -203,7 +206,7 @@ bool Interrupt(Bitu num) {
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 				/* Prepare stack for gate to same priviledge */
 					if (gate.Type() & 0x8) {	/* 32-bit Gate */
-						CPU_Push32(flags.word & 0xffff);
+						CPU_Push32(flags.word);
 						CPU_Push32(SegValue(cs));
 						CPU_Push32(reg_eip);
 					} else {					/* 16-bit gate */
@@ -216,7 +219,7 @@ bool Interrupt(Bitu num) {
 				default:
 					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",desc.Type());
 				}
-				
+				if (!(gate.Type()&1)) SETFLAGBIT(IF,false);			
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
 				Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
@@ -464,7 +467,7 @@ RET_same_level:
 			Segs.big[cs]=desc.Big();
 			Segs.val[cs]=selector;
 			reg_eip=offset;
-			LOG(LOG_CPU,"RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
+			LOG_MSG("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return CPU_CheckState();
 		} else {
 			/* Return to higher level */
