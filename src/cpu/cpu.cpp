@@ -29,27 +29,22 @@ Flag_Info flags;
 
 CPU_Regs cpu_regs;
 
-
-
 Segment Segs[6];
-Bit32u cpu_cycles;
+Bitu cpu_cycles;
 
 CPU_Decoder * cpudecoder;
 
-
 static void CPU_CycleIncrease(void) {
-	Bit32u old_cycles=cpu_cycles;
-	cpu_cycles=(Bit32u)(cpu_cycles*1.2);
+	Bitu old_cycles=cpu_cycles;
+	cpu_cycles=(Bitu)(cpu_cycles*1.2);
 	if (cpu_cycles==old_cycles) cpu_cycles++;
 	LOG_MSG("CPU:%d cycles",cpu_cycles);
-
 }
 
 static void CPU_CycleDecrease(void) {
-	cpu_cycles=(Bit32u)(cpu_cycles/1.2);
+	cpu_cycles=(Bitu)(cpu_cycles/1.2);
 	if (!cpu_cycles) cpu_cycles=1;
 	LOG_MSG("CPU:%d cycles",cpu_cycles);
-
 }
 
 Bit8u lastint;
@@ -168,7 +163,8 @@ void CPU_Init(Section* sec) {
 	flags.io=0;
 
 	SetCPU16bit();
-	cpu_cycles=section->Get_int("CYCLES");
+	cpu_cycles=section->Get_int("cycles");
+	if (!cpu_cycles) cpu_cycles=300;
 	KEYBOARD_AddEvent(KBD_f11,CTRL_PRESSED,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,CTRL_PRESSED,CPU_CycleIncrease);
 
