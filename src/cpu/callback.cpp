@@ -52,6 +52,8 @@ Bitu CALLBACK_Allocate(void) {
 
 void CALLBACK_Idle(void) {
 /* this makes the cpu execute instructions to handle irq's and then come back */
+	bool oldintf=flags.intf;
+	flags.intf=true;
 	Bit16u oldcs=SegValue(cs);
 	Bit32u oldeip=reg_eip;
 	SegSet16(cs,CB_SEG);
@@ -59,6 +61,7 @@ void CALLBACK_Idle(void) {
 	DOSBOX_RunMachine();
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
+	flags.intf=oldintf;
 }
 
 static Bitu default_handler(void) {
