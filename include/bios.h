@@ -39,7 +39,7 @@
 /* #define bios_keyboard_buffer            (*(unsigned int   *) 0x41e) */
 #define BIOS_DRIVE_ACTIVE               0x43e
 #define BIOS_DRIVE_RUNNING              0x43f
-#define BIOS_MOTOR_NACHLAUFZEIT         0x440
+#define BIOS_DISK_MOTOR_TIMEOUT         0x440
 #define BIOS_DISK_STATUS                0x441
 /* #define bios_fdc_result_buffer          (*(unsigned short *) 0x442) */
 #define BIOS_VIDEO_MODE                 0x449
