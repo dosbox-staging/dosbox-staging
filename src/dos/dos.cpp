@@ -284,9 +284,12 @@ static Bitu DOS_21Handler(void) {
 		reg_al=DOS_GetDefaultDrive();
 		break;
 	case 0x1a:		/* Set Disk Transfer Area Address */
-		dos.dta=RealMakeSeg(ds,reg_dx);
+		{
+			dos.dta=RealMakeSeg(ds,reg_dx);
+			DOS_PSP psp(dos.psp);
+			psp.SetDTA(dos.dta);
+		}
 		break;
-
 	case 0x1c:		/* Get allocation info for specific drive */
 		LOG_DEBUG("DOS: Allocation Info call not supported correctly");
 		SegSet16(ds,0xf000);
@@ -535,7 +538,6 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x43:					/* Get/Set file attributes */
-//TODO FIX THIS HACK
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		switch (reg_al)
 		case 0x00:				/* Get */
@@ -580,7 +582,6 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x47:					/* CWD Get current directory */
-		//TODO Memory
 		if (DOS_GetCurrentDir(reg_dl,name1)) {
 			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,strlen(name1)+1);	
 			reg_ax=0x0100;
@@ -626,9 +627,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x4b:					/* EXEC Load and/or execute program */
 		{ 
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-			if (DOS_Execute(name1,(ParamBlock *)Phys2Host(SegPhys(es)+reg_bx),reg_al)) {
-				CALLBACK_SCF(false);
-			} else {
+			if (!DOS_Execute(name1,(ParamBlock *)Phys2Host(SegPhys(es)+reg_bx),reg_al)) {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}
@@ -638,9 +637,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x4c:					/* EXIT Terminate with return code */
 		{
 			if (DOS_Terminate(false)) {
-				dos.return_code=reg_al;
-				dos.return_mode=RETURN_EXIT;
-				CALLBACK_SCF(false);
+				/* This can't ever return false normally */
 			} else {            
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
