@@ -402,10 +402,6 @@ SOURCE=..\src\hardware\vga_draw.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\hardware\vga_fonts.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\hardware\vga_gfx.cpp
 # End Source File
 # Begin Source File
@@ -531,6 +527,10 @@ SOURCE=..\src\ints\int10_pal.cpp
 # Begin Source File
 
 SOURCE=..\src\ints\int10_put_pixel.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\ints\int10_vesa.cpp
 # End Source File
 # End Group
 # Begin Source File
