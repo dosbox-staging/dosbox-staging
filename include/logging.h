@@ -45,6 +45,8 @@ struct LOG
 	void operator()(char const* buf, double f1)											{ return;}
 	void operator()(char const* buf, double f1, double f2)								{ return;}
 	void operator()(char const* buf, double f1, double f2, double f3)					{ return;}
+	void operator()(char const* buf, double f1, double f2, double f3, double f4)					{ return;}
+	void operator()(char const* buf, double f1, double f2, double f3, double f4, double f5)					{ return;}
 
 	void operator()(char const* buf, char const* s1)									{ return;}
 	void operator()(char const* buf, char const* s1, double f1)							{ return;}
