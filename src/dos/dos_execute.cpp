@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.35 2004-02-28 16:35:14 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.36 2004-03-12 14:21:33 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -65,7 +65,7 @@ struct EXE_Header {
 
 
 static void SaveRegisters(void) {
-	reg_sp-=20;
+	reg_sp-=18;
 	mem_writew(SegPhys(ss)+reg_sp+ 0,reg_ax);
 	mem_writew(SegPhys(ss)+reg_sp+ 2,reg_cx);
 	mem_writew(SegPhys(ss)+reg_sp+ 4,reg_dx);
@@ -87,7 +87,7 @@ static void RestoreRegisters(void) {
 	reg_bp=mem_readw(SegPhys(ss)+reg_sp+12);
 	SegSet16(ds,mem_readw(SegPhys(ss)+reg_sp+14));
 	SegSet16(es,mem_readw(SegPhys(ss)+reg_sp+16));
-	reg_sp+=20;
+	reg_sp+=18;
 }
 
 

@@ -60,6 +60,9 @@ static bool DOS_MultiplexFunctions(void) {
 		//TODO Maybe do some idling but could screw up other systems :)
 		reg_al=0;	
 		return true;
+	case 0x1689:   /*  Kernel IDLE CALL */
+		reg_al=0;    //Likely. Please check !!!!!!!!!!!!!!!
+		return true;   
 	case 0x168f:	/*  Close awareness crap */
 		return true;
 	}
