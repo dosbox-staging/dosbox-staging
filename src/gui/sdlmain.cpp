@@ -222,11 +222,10 @@ void GFX_Start() {
 	sdl.active=true;
 }
 
-
 static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
+	if (sdl.mouse.locked) CaptureMouse();
 	if (sdl.full_screen) SwitchFullScreen();
-
 }
 
 static void GUI_StartUp(Section * sec) {
@@ -238,7 +237,6 @@ static void GUI_StartUp(Section * sec) {
 	sdl.frames.skip=0;
 	sdl.frames.count=0;
 	sdl.draw=0;
-
 	sdl.mouse.locked=false;
 	sdl.mouse.requestlock=false;
 	sdl.mouse.autoenable=section->Get_bool("autolock");
