@@ -29,7 +29,7 @@
 	dos work a bit easier.
 */
 
-#pragma pack (push,1)
+#pragma pack (1)
 
 struct sPSP {
 	Bit8u exit[2];				/* CP/M-like exit poimt */
@@ -86,7 +86,7 @@ struct sFCB {
 	Bit32u rel_record;      //open does not handle this
 } GCC_ATTRIBUTE(packed);
 
-#pragma pack (pop)
+#pragma pack ()
 
 #define sGet(s,m) GetIt(((s *)0)->m,(PhysPt)&(((s *)0)->m))
 #define sSave(s,m,val) SaveIt(((s *)0)->m,(PhysPt)&(((s *)0)->m),val)
