@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <png.h>
 #include <dirent.h>
 
 #include "dosbox.h"
@@ -26,10 +25,7 @@
 #include "keyboard.h"
 #include "cross.h"
 
-
 #define MAX_RES 2048
-
-
 
 struct PalData {
 	struct { 
@@ -55,18 +51,16 @@ static struct {
 		Bitu pitch;
 		Bitu flags;
 		float ratio;
-		RENDER_Part_Handler part_handler;
 		RENDER_Draw_Handler draw_handler;
 	} src;
 	struct {
 		Bitu width;
 		Bitu height;
 		Bitu pitch;
-		Bitu next_line;
-		Bitu next_pixel;
 		Bitu bpp;		/* The type of BPP the operation requires for input */
-		RENDER_Operation want_type;
 		RENDER_Operation type;
+		RENDER_Operation want_type;
+		RENDER_Part_Handler part_handler;
 		void * dest;
 		void * buffer;
 		void * pixels;
@@ -77,6 +71,13 @@ static struct {
 	} frameskip;
 	Bitu flags;
 	PalData pal;
+#if (C_SSHOT)
+	struct {
+		RENDER_Operation type;
+		Bitu pitch;
+		const char * dir;
+	} shot;
+#endif
 	bool keep_small;
 	bool screenshot;
 	bool active;
@@ -86,9 +87,13 @@ static struct {
 static void RENDER_ResetPal(void);
 
 /* Include the different rendering routines */
-#include "render_support.h"
+#include "render_normal.h"
+#include "render_scale2x.h"
 
-static const char * snapshots_dir;
+
+#if (C_SSHOT)
+#include <png.h>
+
 
 /* Take a screenshot of the data that should be rendered */
 static void TakeScreenShot(Bit8u * bitmap) {
@@ -109,9 +114,9 @@ static void TakeScreenShot(Bit8u * bitmap) {
 		return;
     }	
 /* Find a filename to open */
-	dir=opendir(snapshots_dir);
+	dir=opendir(render.shot.dir);
 	if (!dir) {
-		LOG_MSG("Can't open snapshot dir %s",snapshots_dir);
+		LOG_MSG("Can't open snapshot dir %s",render.shot.dir);
 		return;
 	}
 	while (dir_ent=readdir(dir)) {
@@ -126,7 +131,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 		if (num>=last) last=num+1;
 	}
 	closedir(dir);
-	sprintf(file_name,"%s%csnap%05d.png",snapshots_dir,CROSS_FILESPLIT,last);
+	sprintf(file_name,"%s%csnap%05d.png",render.shot.dir,CROSS_FILESPLIT,last);
 /* Open the actual file */
 	FILE * fp=fopen(file_name,"wb");
 	if (!fp) {
@@ -162,7 +167,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	/*Allocate an array of scanline pointers*/
 	row_pointers=(png_bytep*)malloc(render.src.height*sizeof(png_bytep));
 	for (i=0;i<render.src.height;i++) {
-		row_pointers[i]=(bitmap+i*render.src.pitch);
+		row_pointers[i]=(bitmap+i*render.src.width);
 	}
 	/*tell the png library what to encode.*/
 	png_set_rows(png_ptr, info_ptr, row_pointers);
@@ -180,6 +185,12 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	free(row_pointers);
 }
 
+static void EnableScreenShot(void) {
+	render.shot.type=render.op.type;
+	render.op.type=OP_Shot;
+}
+
+#endif
 
 
 /* This could go kinda bad with multiple threads */
@@ -237,11 +248,28 @@ void RENDER_DoUpdate(void) {
 
 static void RENDER_DrawScreen(void * data) {
 	switch (render.op.type) {
+doagain:
 	case OP_None:
 		render.op.dest=render.op.pixels=data;
+		render.src.draw_handler(render.op.part_handler);
 		break;
+	case OP_Scale2x:
+		render.op.dest=render.op.pixels=data;
+		render.src.draw_handler(render.op.part_handler);
+		break;
+#if (C_SSHOT)
+	case OP_Shot:
+		render.shot.pitch=render.op.pitch;
+		render.op.pitch=render.src.width;
+		render.op.pixels=malloc(render.src.width*render.src.height);
+		render.src.draw_handler(Normal_DN_8);
+		TakeScreenShot((Bit8u *)render.op.pixels);
+		free(render.op.pixels);
+		render.op.pitch=render.shot.pitch;
+		render.op.type=render.shot.type;
+		goto doagain;
+#endif
 	}
-	render.src.draw_handler(render.src.part_handler);
 }
 
 static void RENDER_Resize(Bitu * width,Bitu * height) {
@@ -260,7 +288,6 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu 
 	if ((!width) || (!height) || (!pitch)) { 
 		render.active=false;return;	
 	}
-
 	GFX_Stop();
 	render.src.width=width;
 	render.src.height=height;
@@ -270,7 +297,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu 
 	render.src.flags=flags;
 	render.src.draw_handler=draw_handler;
 
-	GFX_ModeCallBack mode_callback;
+	GFX_ModeCallBack mode_callback=0;
 	switch (render.op.want_type) {
 
 	case OP_None:
@@ -290,17 +317,29 @@ normalop:
 		flags=0;
 		mode_callback=Render_Normal_CallBack;
 		break;
+	case OP_Scale2x:
+		switch (render.src.flags) {
+		case DoubleBoth:
+			if (render.keep_small) goto normalop;
+			mode_callback=Render_Scale2x_CallBack;
+			width*=2;height*=2;
+#if defined (SCALE2X_NORMAL)
+			flags=0;
+#elif defined (SCALE2X_MMX)
+			flags=GFX_FIXED_BPP;
+#endif
+			break;
+		default:
+			goto normalop;
+		}		
+
+		break;
 	default:
 		goto normalop;
 	
 	}
 	GFX_SetSize(width,height,bpp,flags,mode_callback,RENDER_DrawScreen);
 	GFX_Start();
-}
-
-static void EnableScreenShot(void) {
-//TODO switch to a special screenshot part handler
-	render.screenshot=true;
 }
 
 static void IncreaseFrameSkip(void) {
@@ -315,14 +354,23 @@ static void DecreaseFrameSkip(void) {
 
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	snapshots_dir=section->Get_string("snapshots");
 
 	render.pal.first=256;
 	render.pal.last=0;
 	render.keep_small=section->Get_bool("keepsmall");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
+#if (C_SSHOT)
+	render.shot.dir=section->Get_string("snapshots");
 	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
+#endif
+	const char *  scaler=section->Get_string("scaler");
+	if (!stricmp(scaler,"none"))	render.op.want_type=OP_None;
+	else if (!stricmp(scaler,"scale2x")) render.op.want_type=OP_Scale2x;
+	else {
+		render.op.want_type=OP_None;
+		LOG_MSG("Illegal scaler type %s,falling back to none.",scaler);
+	}
 	KEYBOARD_AddEvent(KBD_f7,KBD_MOD_CTRL,DecreaseFrameSkip);
 	KEYBOARD_AddEvent(KBD_f8,KBD_MOD_CTRL,IncreaseFrameSkip);
 }
