@@ -187,5 +187,106 @@ void Config::ParseConfigFile(const char* configfilename){
 	}
 }
 
+void Config::SetStartUp(void (*_function)(void)) { 
+	_start_function=_function;
+}
 
 
+void Config::StartUp(void) {
+	(*_start_function)();
+}
+
+
+
+
+bool CommandLine::FindExist(char * name,bool remove) {
+	cmd_it it;
+	if (!(FindEntry(name,it,false))) return false;
+	if (remove) cmds.erase(it);
+	return true;
+}
+
+bool CommandLine::FindHex(char * name,int & value,bool remove) {
+	cmd_it it,it_next;
+	if (!(FindEntry(name,it,true))) return false;
+	it_next=it;it_next++;
+	sscanf((*it_next).c_str(),"%X",&value);
+	if (remove) cmds.erase(it,it_next);
+	return true;
+}
+
+bool CommandLine::FindInt(char * name,int & value,bool remove) {
+	cmd_it it,it_next;
+	if (!(FindEntry(name,it,true))) return false;
+	it_next=it;it_next++;
+	value=atoi((*it_next).c_str());
+	if (remove) cmds.erase(it,it_next);
+	return true;
+}
+
+bool CommandLine::FindString(char * name,std::string & value,bool remove) {
+	cmd_it it,it_next;
+	if (!(FindEntry(name,it,true))) return false;
+	it_next=it;it_next++;
+	value=*it_next;
+	if (remove) cmds.erase(it,it_next);
+	return true;
+}
+
+bool CommandLine::FindFirst(std::string & value) {
+	if (cmds.empty()) return false;
+	value=*cmds.begin();
+	return true;
+}
+
+bool CommandLine::FindEntry(char * name,cmd_it & it,bool neednext) {
+	for (it=cmds.begin();it!=cmds.end();it++) {
+		if ((*it)==name) {
+			cmd_it itnext=it;itnext++;
+			if (neednext && (itnext==cmds.end())) return false;
+			return true;
+		}
+	}
+	return false;
+}
+
+CommandLine::CommandLine(int argc,char * argv[]) {
+	if (argc>0) {
+		file_name=argv[0];
+	}
+	int i=1;
+	while (i<argc) {
+		cmds.push_back(argv[i]);
+		i++;
+	}
+}
+
+
+CommandLine::CommandLine(char * name,char * cmdline) {
+	if (name) file_name=name;
+	/* Parse the cmds and put them in the list */
+	bool inword,inquote;char c;
+	inword=false;inquote=false;
+	std::string str;
+	while ((c=*cmdline)!=0) {
+		if (inquote) {
+			if (c!='"') str+=c;
+			else {
+				inquote=false;
+				cmds.push_back(str);
+				str.erase();
+			}
+		}else if (inword) {
+			if (c!=' ') str+=c;
+			else {
+				inword=false;
+				cmds.push_back(str);
+				str.erase();
+			}
+		} 
+		else if (c=='"') { inquote=true;}
+		else if (c!=' ') { str+=c;inword=true;}
+		cmdline++;
+	}
+	if (inword || inquote) cmds.push_back(str);
+}
