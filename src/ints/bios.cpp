@@ -145,6 +145,10 @@ static Bitu INT15_Handler(void) {
 		LOG_WARN("Request BIOS Configuration INT 15 C0");
 		CALLBACK_SCF(true);
 		break;
+	case 0x4f:	/* BIOS - Keyboard intercept */
+		/* Carry should be set but let's just set it just in case */
+		CALLBACK_SCF(true);
+		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
 		//Does anyone even use this?
 		LOG_WARN("INT15:84:Bios Joystick functionality not done");
