@@ -63,8 +63,8 @@ emptyline:
 				*cmd_write++=c;
 		}
 	} while (c!='\n' && n);
-	*cmd_write++=0;
-	if (!n) {
+	*cmd_write=0;
+	if (!n && cmd_write==temp) {
 		delete this;
 		return false;	
 	}
