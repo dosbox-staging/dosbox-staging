@@ -28,6 +28,7 @@ enum { CB_RETF,CB_IRET,CB_IRET_STI };
 
 #define CB_MAX 1024
 #define CB_SEG 0xC800
+#define CB_BASE (CB_SEG << 4)
 
 enum {	
 	CBRET_NONE=0,CBRET_STOP=1
