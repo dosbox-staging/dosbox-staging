@@ -23,34 +23,9 @@
 #include "keyboard.h"
 #include "setup.h"
 
-#pragma pack(1)
-struct Descriptor {
-	Bit32u limit_0_15	:16;
-	Bit32u base_0_15	:16;
-	Bit32u base_16_23	:8;
-	Bit32u type			:5;
-	Bit32u dpl			:2;
-	Bit32u p			:1;
-	Bit32u limit_16_19	:4;
-	Bit32u avl			:1;
-	Bit32u r			:1;
-	Bit32u d			:1;
-	Bit32u g			:1;
-	Bit32u base_24_31	:8;
-};
-#pragma pack()
-
 struct CPUBlock {
 	
-
-	struct {
-		PhysPt phys_base;
-		Bit32u base;
-		Bit16u limit;
-	} gdt,idt;
 };
-
-
 
 Flag_Info flags;
 
