@@ -16,10 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+typedef void (* DMA_EnableCallBack)(bool enable);
 
-Bit16u DMA_8_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
-Bit16u DMA_8_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
 
-Bit16u DMA_16_Read(Bit32u channel,Bit8u * buffer,Bit16u count);
-Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count);
+void DMA_SetEnableCallBack(Bitu channel,DMA_EnableCallBack callback);
+
+Bitu DMA_8_Read(Bitu channel,Bit8u * buffer,Bitu count);
+Bitu DMA_8_Write(Bitu dmachan,Bit8u * buffer,Bitu count);
+
+Bitu DMA_16_Read(Bitu channel,Bit8u * buffer,Bitu count);
+Bitu DMA_16_Write(Bitu dmachan,Bit8u * buffer,Bitu count);
 
