@@ -950,6 +950,7 @@ Bitu DPMI::Int21Handler(void)
 	PushStack(reg_esp);
 	PushStack(SegValue(ds));
 	PushStack(SegValue(es));
+	PushStack(SegValue(cs));
 
 	/* Swtich to real mode */
 	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);		
@@ -958,7 +959,7 @@ Bitu DPMI::Int21Handler(void)
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.int21Return));
 	// setup stack
 	SegSet16(ss,rm_ss);
-	reg_sp = rm_sp;
+	reg_esp = rm_sp;
 	// Call realmode interrupt
 	DPMI_LOG("DPMI: INT 21 %04X called.",reg_ax);
 	Interrupt(0x21);
@@ -976,15 +977,15 @@ Bitu DPMI::Int21HandlerReturn(void)
 	/* Switch to protected mode */
 	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
 	// Restore Registers
+	Bitu newcs = PopStack();
 	CPU_SetSegGeneral(es,PopStack());
 	CPU_SetSegGeneral(ds,PopStack());
 	reg_esp = PopStack(); 
 	CPU_SetSegGeneral(ss,PopStack());		
-	// DPMI_RestoreSegments();
 	// Set carry flag
 	DPMI_CALLBACK_SCF(flags.word & 1);
 	DPMI_LOG("DPMI: INT 21 RETURN");	
-	CPU_JMP(dpmi.client.bit32,SegValue(cs),reg_eip);
+	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	return 0;
 }
 
