@@ -17,12 +17,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.23 2003-08-13 14:45:31 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.24 2003-08-13 14:55:24 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
 #include "dirent.h"
 #include "support.h"
+
+#if defined (WIN32)   /* Win 32 */
+#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
+#include <windows.h>
+#endif
 
 // STL stuff
 #include <vector>
