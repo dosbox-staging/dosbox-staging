@@ -109,7 +109,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	Bit16u count=0;
     Bitu i;
     Bit8s col,row;
-    static bool ansiwarned=false;
+    static bool ansi_enabled=false;
 
     while (*size>count) {
         if (!ansi.esc){
@@ -119,16 +119,17 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                 /* start the sequence */
                 ansi.esc=true;
                 count++;
-                if(!ansiwarned) {
+                if(!ansi_enabled) {
                     LOG(LOG_IOCTL,"ANSI sequences detected. enabling ansi support"); /* maybe LOG_MSG */
-                    ansiwarned=true;
+                    ansi_enabled=true;
                 }
                 continue;
 
             } else { 
-               INT10_TeletypeOutput(data[count],ansi.attr,true,0);
-               count++;
-               continue;
+				// pass attribute only if ansi is enabled
+				INT10_TeletypeOutput(data[count],ansi.attr,ansi_enabled,0);
+				count++;
+				continue;
             };
         };
         /* ansi.esc=true */
