@@ -274,24 +274,33 @@ static void AllocateMem_WriteHandler(PhysPt pt,Bit8u val)
 
 // A20 Line Handlers
 static Bit8u controlport_data = 0;
+static bool a20_enabled;
+
+bool MEM_A20_Enabled(void) {
+	return a20_enabled;
+}
+
+void MEM_A20_Enable(bool enable) {
+	if (a20_enabled==enable) return;
+	a20_enabled=enable;
+	if (enable) {
+		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),((Bit8u*)memory)+1024*1024);
+	} else {
+		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
+	}
+	LOG(LOG_MISC,"A20 Line is %s",enable ? "Enabled" : "Disabled");
+}
 
 static void write_p92(Bit32u port,Bit8u val) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
-	if ((val&2) & !(controlport_data&2)) {
-		// ensable HMA
-		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),((Bit8u*)memory)+1024*1024);
-	};	
-	if (!(val&2) && (controlport_data&2)) {
-		// disable HMA
-		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
-	};		
-	controlport_data = val;
-};
+	controlport_data = val & ~2;
+	MEM_A20_Enable((val & 2)>0);
+}
 
 static Bit8u read_p92(Bit32u port) {
-	return controlport_data;
-};
+	return controlport_data | a20_enabled ? 0x02 : 0;
+}
 
 static void MEM_ShutDown(Section * sec) {
 	for (Bitu i=0; i<C_MEM_MAX_SIZE; i++) {
@@ -304,13 +313,6 @@ static void MEM_ShutDown(Section * sec) {
 void MEM_Init(Section * sect) {
 	/* Init all tables */
 	Bitu i;
-	i=MAX_PAGES;
-	for (i=0;i<MAX_PAGES;i++) {
-		ReadHostTable[i]=0;
-		WriteHostTable[i]=0;
-		ReadHandlerTable[i]=&Default_ReadHandler;
-		WriteHandlerTable[i]=&Default_WriteHandler;
-	}
 	/* Allocate the first mb of memory + hma */
 	memory=(Bit8u *)malloc(1024*1024+64*1024);	
 	if (!memory) {
@@ -320,6 +322,7 @@ void MEM_Init(Section * sect) {
 	/* Setup tables for first mb */
 	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);
 	/* Setup tables for HMA Area */
+	a20_enabled=false;
 	MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
 	// Setup default handlers for unallocated xms
 	for (Bitu p=PAGE_COUNT((1024+64)*1024);p<MAX_PAGES;p++) {
