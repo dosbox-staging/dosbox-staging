@@ -57,12 +57,16 @@ void write_p3c0(Bit32u port,Bit8u val) {
 			break;
 		case 0x10: /* Mode Control Register */
 			if ((attr(mode_control) ^ val) & 0x80) {
-				attr(mode_control)=val;
+				attr(mode_control)^=0x80;
 				for (Bitu i=0;i<0x10;i++) {
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 				}
 			}
-			attr(mode_control)=val;
+			if ((attr(mode_control) ^ val) & 0x08) {
+				/* Fill up background text mode color lookup table */
+				Bit32u b=(val & 8) ^ 0x8;
+				for (Bitu i=0;i<8;i++) TXT_BG_Table[i+8]=(b+i) | ((b+i) << 8)| ((b+i) <<16) | ((b+i) << 24);
+			}
 			/*
 				Special hacks for games programming registers themselves,
 				Doesn't work if they program EGA16 themselves, 
@@ -73,6 +77,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 			} else {
 				if (vga.mode==M_VGA) VGA_SetMode(M_EGA16);
 			}
+			attr(mode_control)=val;
 			//TODO Monochrome mode
 			//TODO 9 bit characters
 			//TODO line wrapping split screen shit see bit 5

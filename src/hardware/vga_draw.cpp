@@ -100,6 +100,8 @@ static Bit8u * VGA_VGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	return &vga.mem.linear[vidstart*4+panning/2];
 }
 
+
+static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit8u * draw=VGA_DrawBuffer;
 	Bit8u * vidmem=&vga.mem.linear[vidstart];
@@ -111,6 +113,7 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		Bitu col=vidmem[cx*2+1];
 		Bit32u fg=TXT_FG_Table[col&0xf];
 		Bit32u bg=TXT_BG_Table[col>>4];
+		mask1&=FontMask[col >> 7];mask2&=FontMask[col >> 7];
 		*(Bit32u*)draw=fg&mask1 | bg&~mask1;
 		draw+=4;
 		*(Bit32u*)draw=fg&mask2 | bg&~mask2;
@@ -199,7 +202,6 @@ static void VGA_DrawPart(void) {
 
 static void VGA_VerticalTimer(void) {
 	vga.config.retrace=false;
-	vga.draw.cursor.count++;vga.draw.cursor.count&=0xf;
 	PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.micro.vend);
 	vga.draw.parts_left=4;
@@ -208,6 +210,14 @@ static void VGA_VerticalTimer(void) {
 	vga.draw.address_line=vga.config.hlines_skip;
 	vga.draw.split_line=vga.draw.lines_total-(vga.config.line_compare/vga.draw.lines_scaled);
 	vga.draw.panning=vga.config.pel_panning;
+	switch (vga.mode) {
+	case M_TEXT2:case M_TEXT16:
+		vga.draw.cursor.count++;
+		/* check for blinking and blinking change delay */
+		FontMask[1]=(vga.attr.mode_control & (vga.draw.cursor.count >> 1) & 0x8) ?
+			0 : 0xffffffff;
+		break;
+	}
 	if (RENDER_StartUpdate()) {
 		VGA_DrawPart();
 	}
