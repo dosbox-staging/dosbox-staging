@@ -27,8 +27,8 @@
 #include "paging.h"
 
 #if 1
-#undef LOG_MSG
-#define LOG_MSG
+#undef LOG
+#define LOG(X,Y)
 #endif
 
 Flag_Info flags;
@@ -189,7 +189,7 @@ bool Interrupt(Bitu num) {
 				Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
 				Segs.phys[cs]=desc.GetBase();
 				cpu.code.big=desc.Big()>0;
-				LOG_MSG("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
+				LOG(LOG_CPU,LOG_NORMAL)("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=offset;
 				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 			}
@@ -280,7 +280,7 @@ bool CPU_IRET(bool use32) {
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
 			reg_eip=offset;
 			CPU_SetFlags(old_flags);
-			LOG_MSG("IRET:Same level return to %X:%X big %d",selector,offset,cpu.code.big);
+			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level return to %X:%X big %d",selector,offset,cpu.code.big);
 		} else {
 			/* Return to higher privilege */
 			switch (desc.Type()) {
@@ -311,7 +311,7 @@ bool CPU_IRET(bool use32) {
 			reg_esp=new_esp;
 			CPU_SetSegGeneral(ss,new_ss);
 			//TODO Maybe validate other segments, but why would anyone use them?
-			LOG_MSG("IRET:Outer level return to %X:X big %d",selector,offset,cpu.code.big);
+			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level return to %X:X big %d",selector,offset,cpu.code.big);
 		}
 		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 	}
@@ -338,11 +338,11 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 			if (rpl>cpu.cpl) E_Exit("JMP:NC:RPL>CPL");
 			if (rpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
 			cpu.cpl=desc.DPL();
-			LOG_MSG("JMP:Code:NC to %X:%X big %d",selector,offset,desc.Big());
+			LOG(LOG_CPU,LOG_NORMAL)("JMP:Code:NC to %X:%X big %d",selector,offset,desc.Big());
 			goto CODE_jmp;
 		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
-			LOG_MSG("JMP:Code:C to %X:%X big %d",selector,offset,desc.Big());
+			LOG(LOG_CPU,LOG_NORMAL)("JMP:Code:C to %X:%X big %d",selector,offset,desc.Big());
 CODE_jmp:
 			/* Normal jump to another selector:offset */
 			Segs.phys[cs]=desc.GetBase();
@@ -384,12 +384,12 @@ bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 		case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
 			if (rpl>cpu.cpl) E_Exit("CALL:CODE:NC:RPL>CPL");
 			if (call.DPL()!=cpu.cpl) E_Exit("CALL:CODE:NC:DPL!=CPL");
-			LOG_MSG("CALL:CODE:NC to %X:%X",selector,offset);
+			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:NC to %X:%X",selector,offset);
 			goto call_code;	
 		case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
 			if (call.DPL()>cpu.cpl) E_Exit("CALL:CODE:C:DPL>CPL");
-			LOG_MSG("CALL:CODE:C to %X:%X",selector,offset);
+			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:C to %X:%X",selector,offset);
 call_code:
 			if (!use32) {
 				CPU_Push16(SegValue(cs));
@@ -467,13 +467,13 @@ RET_same_level:
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
 			reg_eip=offset;
-			LOG_MSG("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
+			LOG(LOG_CPU,LOG_NORMAL)("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		} else {
 			/* Return to higher level */
 			E_Exit("REturn to higher priviledge");
 		}
-		LOG_MSG("Prot ret %X:%X",selector,offset);
+		LOG(LOG_CPU,LOG_NORMAL)("Prot ret %X:%X",selector,offset);
 		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 	}
 	return false;
@@ -487,7 +487,7 @@ void CPU_SLDT(Bitu & selector) {
 Bitu tr=0;
 void CPU_LLDT(Bitu selector) {
 	cpu.gdt.LLDT(selector);
-	LOG_MSG("LDT Set to %X",selector);
+	LOG(LOG_CPU,LOG_NORMAL)("LDT Set to %X",selector);
 }
 
 void CPU_STR(Bitu & selector) {
@@ -496,18 +496,18 @@ void CPU_STR(Bitu & selector) {
 
 void CPU_LTR(Bitu selector) {
 	tr=selector;
-	LOG_MSG("TR Set to %X",selector);
+	LOG(LOG_CPU,LOG_NORMAL)("TR Set to %X",selector);
 }
 
 
 void CPU_LGDT(Bitu limit,Bitu base) {
-	LOG_MSG("GDT Set to base:%X limit:%X",base,limit);
+	LOG(LOG_CPU,LOG_NORMAL)("GDT Set to base:%X limit:%X",base,limit);
 	cpu.gdt.SetLimit(limit);
 	cpu.gdt.SetBase(base);
 }
 
 void CPU_LIDT(Bitu limit,Bitu base) {
-	LOG_MSG("IDT Set to base:%X limit:%X",base,limit);
+	LOG(LOG_CPU,LOG_NORMAL)("IDT Set to base:%X limit:%X",base,limit);
 	cpu.idt.SetLimit(limit);
 	cpu.idt.SetBase(base);
 }
@@ -533,12 +533,12 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 //TODO Maybe always first change to core_full for a change to cr0
 			if (value & CR0_PROTECTION) {
 				cpu.pmode=true;
-				LOG_MSG("Protected mode");
+				LOG(LOG_CPU,LOG_NORMAL)("Protected mode");
 				PAGING_Enable((value & CR0_PAGING)>0);
 			} else {
 				cpu.pmode=false;
 				PAGING_Enable(false);
-				LOG_MSG("Real mode");
+				LOG(LOG_CPU,LOG_NORMAL)("Real mode");
 			}
 			return false;		//Only changes with next CS change
 		}
