@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.28 2004-09-10 22:15:20 harekiet Exp $ */
+/* $Id: keyboard.cpp,v 1.29 2004-10-12 16:21:22 qbix79 Exp $ */
 
 #include <string.h>
 #include <assert.h>
@@ -136,7 +136,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 			break;
 		case 0xf5:	 /* Reset keyboard and disable scanning */
 			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, disable scanning");			
-            keyb.scanning=false;
+			keyb.scanning=false;
 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xf6:	/* Reset keyboard and enable scanning */
@@ -153,7 +153,18 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 	case CMD_SETOUTPORT:
 		MEM_A20_Enable((val & 2)>0);
 		break;
-	case CMD_SETTYPERATE:
+	case CMD_SETTYPERATE: 
+		{
+			static const int delay[] = { 250, 500, 750, 1000 };
+			static const int repeat[] = 
+				{ 33,37,42,46,50,54,58,63,67,75,83,92,100,
+				  109,118,125,133,149,167,182,200,217,233,
+				  250,270,303,333,370,400,435,476,500 };
+			keyb.repeat.pause = delay[(val>>5)&3];
+			keyb.repeat.rate = repeat[val&0x1f];
+			keyb.command=CMD_NONE;
+		}
+		/* Fallthrough! as setleds does what we want */
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
 		KEYBOARD_ClrBuffer();

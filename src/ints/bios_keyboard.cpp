@@ -400,11 +400,19 @@ static Bitu INT16_Handler(void) {
 		reg_al=mem_readb(BIOS_KEYBOARD_FLAGS1);
 		break;
 	case 0x03:	/* SET TYPEMATIC RATE AND DELAY */
-		LOG(LOG_BIOS,LOG_ERROR)("INT16:Unhandled Typematic Rate Call %2X BX=%X",reg_al,reg_bx);
+		if (reg_al == 0x00) { // set default delay and rate
+			IO_Write(0x60,0xf3);
+			IO_Write(0x60,0x20); // 500 msec delay, 30 cps
+		} else if (reg_al == 0x05) { // set repeat rate and delay
+			IO_Write(0x60,0xf3);
+			IO_Write(0x60,(reg_bh&3)<<5|(reg_bl&0x1f));
+		} else {
+			LOG(LOG_BIOS,LOG_ERROR)("INT16:Unhandled Typematic Rate Call %2X BX=%X",reg_al,reg_bx);
+		}
 		break;
 	case 0x05:	/* STORE KEYSTROKE IN KEYBOARD BUFFER */
 //TODO make add_key bool :)
-		add_key(reg_ax);
+		add_key(reg_cx);
 		reg_al=0;
 		break;
 	case 0x12: /* GET EXTENDED SHIFT STATES */
