@@ -39,7 +39,7 @@ public:
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
 	bool		OpenDir				(const char* path);
-	bool		ReadDir				(struct dirent* result,struct stat* status);
+	bool		ReadDir				(struct dirent* result);
 
 	void		ExpandName			(char* path);
 	char*		GetExpandName		(const char* path);
@@ -61,7 +61,6 @@ public:
 		bool		isDir;
 		Bit16u		shortNr;
 		Bit16u		compareCount;
-		struct stat	status;
 		// contents
 		std::vector<CFileInfo*>	fileList;
 		std::vector<CFileInfo*>	longNameList;
@@ -73,7 +72,7 @@ private:
 	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
-	bool		SetResult			(CFileInfo* dir, struct dirent* result, struct stat* status, Bit16u entryNr);
+	bool		SetResult			(CFileInfo* dir, struct dirent* result, Bit16u entryNr);
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
 	Bit16s		RemoveSpaces		(char* str);

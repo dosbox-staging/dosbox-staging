@@ -114,6 +114,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	
 	struct dirent dir_ent;
 	struct stat stat_block;
+	char full_name[CROSS_LEN];
 
 	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
 	Bit8u find_attr;
@@ -121,9 +122,15 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	dta.GetSearchParams(srch_attr,srch_pattern);
 	
 again:
-	if (!dirCache.ReadDir(&dir_ent,&stat_block)) return false;
+	if (!dirCache.ReadDir(&dir_ent)) return false;
 
 	if(!WildFileCmp(dir_ent.d_name,srch_pattern)) goto again;
+
+	strcpy(full_name,srch_dir);
+	strcat(full_name,dir_ent.d_name);
+	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
+		goto again;
+	}	
 
 	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
 	else find_attr=DOS_ATTR_ARCHIVE;

@@ -79,8 +79,7 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	strcpy(dirBase->fullname,baseDir);
 	if (OpenDir(baseDir)) {
 		struct dirent result;
-		struct stat status;
-		ReadDir(&result,&status);
+		ReadDir(&result);
 	};
 };
 
@@ -122,6 +121,13 @@ void DOS_Drive_Cache::AddEntry(const char* path)
 
 	if (pos) {
 		strcpy(file,pos+1);	
+		
+		// already in ?
+		if (GetLongName(dir,file)>=0) {
+			int brk = 0;
+			return;
+		};
+
 		CreateEntry(dir,file);
 		// Sort Lists - filelist has to be alphabetically sorted
 		std::sort(dir->fileList.begin(), dir->fileList.end(), SortByName);
@@ -132,14 +138,17 @@ void DOS_Drive_Cache::AddEntry(const char* path)
 			case ALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByNameRev);		break;
 			case DIRALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirNameRev);	break;
 		};
-	}
+//		LOG_DEBUG("DIR: Added Entry %s",path);
+	} else {
+//		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
+	};
 };
 
 void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 {
 	char expand[CROSS_LEN] = { 0 };
 	CFileInfo* dir;
-
+	
 	if (ignoreLastDir) {
 		char tmp[CROSS_LEN] = { 0 };
 		Bit32s len = strrchr(path,CROSS_FILESPLIT) - path;
@@ -205,7 +214,6 @@ Bit16s DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 	Bit16s mid,res;
 	while (low<=high) {
 		mid = (low+high)/2;
-		CFileInfo* test = curDir->fileList[mid];
 		res = strcmp(shortName,curDir->fileList[mid]->shortname);
 		if (res>0)	low  = mid+1; else
 		if (res<0)	high = mid-1; else
@@ -256,11 +264,11 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 
 	// Should shortname version be created ?
 	bool createShort = (len>8) || (lenExt>3);
-//	if (!createShort) {
-//		char buffer[CROSS_LEN];
-//		strcpy(buffer,tmpName);
-//		createShort = (GetLongName(curDir,buffer)>=0);
-//	}
+	if (!createShort) {
+		char buffer[CROSS_LEN];
+		strcpy(buffer,tmpName);
+		createShort = (GetLongName(curDir,buffer)>=0);
+	}
 
 	if (createShort) {
 		// Create number
@@ -341,8 +349,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,work)) {
 					struct dirent result;
-					struct stat status;
-					ReadDir(&result,&status);
+					ReadDir(&result);
 				};
 			}
 		};
@@ -401,7 +408,6 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name)
 	strcpy(buffer,dirPath);
 	strcat(buffer,info->fullname);
 	stat  (buffer,&status);
-	memcpy(&info->status,&status,sizeof(status));
 	info->isDir	= (S_ISDIR(status.st_mode)>0);
 	// Check for long filenames...
 	CreateShortName(dir, info);		
@@ -410,18 +416,12 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name)
 	dir->outputList.push_back(info);
 };
 
-bool DOS_Drive_Cache::ReadDir(struct dirent* result, struct stat *status)
+bool DOS_Drive_Cache::ReadDir(struct dirent* result)
 {
 	if (dirFirstTime) {		
 		if (!IsCachedIn(dirSearch)) {
 			// Try to open directory
 			DIR* dirp = opendir(dirPath);
-			if (!dirp) {
-//				LOG_DEBUG("DIR: Error Caching in %s",dirPath);			
-				return false;
-			} else {		
-//				LOG_DEBUG("DIR: Caching in %s",dirPath);
-			};
 			// Read complete directory
 			struct dirent* tmpres;
 			while (tmpres = readdir(dirp)) {			
@@ -438,23 +438,30 @@ bool DOS_Drive_Cache::ReadDir(struct dirent* result, struct stat *status)
 				case ALPHABETICALREV	: std::sort(dirSearch->outputList.begin(), dirSearch->outputList.end(), SortByNameRev);		break;
 				case DIRALPHABETICALREV	: std::sort(dirSearch->outputList.begin(), dirSearch->outputList.end(), SortByDirNameRev);	break;
 			};
+			// Info
+/*			if (!dirp) {
+				LOG_DEBUG("DIR: Error Caching in %s",dirPath);			
+				return false;
+			} else {	
+				char buffer[128];
+				sprintf(buffer,"DIR: Caching in %s (%d Files)",dirPath,dirSearch->fileList.size());
+				LOG_DEBUG(buffer);
+			};*/
 		} else {
 			dirFirstTime=false;
 		}
 		// Reset it..
 		nextEntry = 0;
 	};
-	return SetResult(dirSearch, result, status, nextEntry);
+	return SetResult(dirSearch, result, nextEntry);
 };
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* result, struct stat* status, Bit16u entryNr)
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* result, Bit16u entryNr)
 {
 	if (entryNr>=dir->outputList.size()) return false;
 	CFileInfo* info = dir->outputList[entryNr];
 	// copy filename, short version
 	strcpy(result->d_name,info->shortname);
-	// copy file status
-	memcpy(status,&info->status,sizeof(info->status));
 	// Set to next Entry
 	nextEntry = entryNr+1;
 	return true;
