@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.26 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.27 2004-08-31 15:56:10 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -36,6 +36,8 @@ static INLINE void BCD2BIN(Bit16u& val) {
 	Bit16u temp= (val&0x0f) +((val>>4)&0x0f) *10 +((val>>8)&0x0f) *100 +((val>>12)&0x0f) *1000;
 	val=temp;
 }
+
+static bool pit0_scheduled;
 struct PIT_Block {
 	Bit8u mode;								/* Current Counter Mode */
 	
@@ -48,15 +50,17 @@ struct PIT_Block {
 	Bit16u read_latch;
 	Bit8u write_state;
 	Bit16u write_latch;
-   bool bcd;
-   bool go_read_latch;
+	bool bcd;
+	bool go_read_latch;
 };
 
 static PIT_Block pit[3];
 
 static void PIT0_Event(Bitu val) {
 	PIC_ActivateIRQ(0);
-	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].micro);
+	if (pit[0].mode!=0) {
+		PIC_AddEvent(PIT0_Event,pit[0].micro);
+	} else pit0_scheduled=false;
 }
 
 static void counter_latch(Bitu counter) {
@@ -121,19 +125,22 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 			p->write_latch = (val & 0xff) << 8;
 		break;
 	}
-	if(p->bcd==true) BCD2BIN(p->write_latch);
-   
-	if (p->write_state != 0) {
+	if (p->bcd==true) BCD2BIN(p->write_latch);
+   	if (p->write_state != 0) {
 		if (p->write_latch == 0) {
-		   if(p->bcd == false) {p->cntr = 0x10000;} else {p->cntr=9999;}
+			if (p->bcd == false) p->cntr = 0x10000;
+			else p->cntr=9999;
 		} else p->cntr = p->write_latch;
 		p->start=PIC_MicroCount();
 		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
 		if (!p->micro) 	p->micro=1;
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
-			PIC_RemoveEvents(PIT0_Event);
-			PIC_AddEvent(PIT0_Event,p->micro);
+			if (!p->mode || !pit0_scheduled) {
+				pit0_scheduled=true;
+				PIC_RemoveEvents(PIT0_Event);
+				PIC_AddEvent(PIT0_Event,p->micro);
+			}
 			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,(Bit32u)p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
@@ -253,6 +260,7 @@ void TIMER_Init(Section* sect) {
 	pit[1].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[1].cntr));
 	pit[2].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[2].cntr));
 
+	pit0_scheduled=true;
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
 
