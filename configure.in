@@ -78,7 +78,7 @@ case "$target" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
        ;;
-    darwin*)
+    *-*-darwin*)
        dnl We have a problem here: both MacOS X and Darwin report 
        dnl the same signature "powerpc-apple-darwin*" - so we have
        dnl to do more to distinguish them.
