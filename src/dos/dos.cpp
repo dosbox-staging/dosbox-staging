@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.68 2004-03-12 14:21:33 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.69 2004-03-14 16:54:21 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -929,8 +929,14 @@ static Bitu DOS_28Handler(void) {
 }
 
 static Bitu DOS_29Handler(void) {
-    LOG(LOG_DOSMISC,LOG_ERROR)("int 29 called");
-    return CBRET_NONE;
+	static bool int29warn=false;
+	if(!int29warn) { 
+		LOG(LOG_DOSMISC,LOG_WARN)("Int 29 called. Redirecting to int 10:0x0e");
+		int29warn=true;
+	}
+	reg_ah=0x0e;
+	CALLBACK_RunRealInt(0x10);
+	return CBRET_NONE;
 }
 
 static Bitu DOS_CaseMapFunc(void) {
@@ -946,32 +952,32 @@ void DOS_ShutDown(Section* sec)
 
 void DOS_Init(Section* sec) {
 	call_20=CALLBACK_Allocate();
-	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET);
+	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET,"DOS Int 20");
 	RealSetVec(0x20,CALLBACK_RealPointer(call_20));
 
 	call_21=CALLBACK_Allocate();
-	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET_STI);
+	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET_STI,"DOS Int 21");
 	RealSetVec(0x21,CALLBACK_RealPointer(call_21));
 
 	call_25=CALLBACK_Allocate();
-	CALLBACK_Setup(call_25,DOS_25Handler,CB_RETF);
+	CALLBACK_Setup(call_25,DOS_25Handler,CB_RETF,"DOS Int 25");
 	RealSetVec(0x25,CALLBACK_RealPointer(call_25));
 	
 	call_26=CALLBACK_Allocate();
-	CALLBACK_Setup(call_26,DOS_26Handler,CB_RETF);
+	CALLBACK_Setup(call_26,DOS_26Handler,CB_RETF,"DOS Int 26");
 	RealSetVec(0x26,CALLBACK_RealPointer(call_26));
 	
 	call_27=CALLBACK_Allocate();
-	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET);
+	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET,"DOS Int 27");
 	RealSetVec(0x27,CALLBACK_RealPointer(call_27));
 
-    call_28=CALLBACK_Allocate();
-    CALLBACK_Setup(call_28,DOS_28Handler,CB_IRET);
-    RealSetVec(0x28,CALLBACK_RealPointer(call_28));
+	call_28=CALLBACK_Allocate();
+	CALLBACK_Setup(call_28,DOS_28Handler,CB_IRET,"DOS Int 28");
+	RealSetVec(0x28,CALLBACK_RealPointer(call_28));
 
-    call_29=CALLBACK_Allocate();
-    CALLBACK_Setup(call_29,DOS_29Handler,CB_IRET);
-    RealSetVec(0x29,CALLBACK_RealPointer(call_29));
+	call_29=CALLBACK_Allocate();
+	CALLBACK_Setup(call_29,DOS_29Handler,CB_IRET,"CON Output Int 29");
+	RealSetVec(0x29,CALLBACK_RealPointer(call_29));
 
 	DOS_SetupFiles();								/* Setup system File tables */
 	DOS_SetupDevices();							/* Setup dos devices */
@@ -999,6 +1005,6 @@ void DOS_Init(Section* sec) {
 
 	/* case map routine INT 0x21 0x38 */
 	call_casemap = CALLBACK_Allocate();
-    CALLBACK_Setup(call_casemap,DOS_CaseMapFunc,CB_RETF);
+	CALLBACK_Setup(call_casemap,DOS_CaseMapFunc,CB_RETF,"DOS CaseMap");
 }
 
