@@ -100,7 +100,7 @@
 	CASE_0F_W(0x02)												/* LAR Gw,Ew */
 		{
 			FillFlags();
-			GetRMrw;Bitu ar;
+			GetRMrw;Bitu ar=*rmrw;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LAR(*earw,ar);
 			} else {
@@ -112,7 +112,7 @@
 	CASE_0F_W(0x03)												/* LSL Gw,Ew */
 		{
 			FillFlags();
-			GetRMrw;Bitu limit;
+			GetRMrw;Bitu limit=*rmrw;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LSL(*earw,limit);
 			} else {

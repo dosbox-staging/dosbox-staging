@@ -101,7 +101,7 @@
 	CASE_0F_D(0x02)												/* LAR Gd,Ed */
 		{
 			FillFlags();
-			GetRMrd;Bitu ar;
+			GetRMrd;Bitu ar=*rmrd;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LAR(*earw,ar);
 			} else {
@@ -113,7 +113,7 @@
 	CASE_0F_D(0x03)												/* LSL Gd,Ew */
 		{
 			FillFlags();
-			GetRMrd;Bitu limit;
+			GetRMrd;Bitu limit=*rmrd;
 			/* Just load 16-bit values for selectors */
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LSL(*earw,limit);
