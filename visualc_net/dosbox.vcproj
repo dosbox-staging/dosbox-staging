@@ -426,6 +426,12 @@
 				<File
 					RelativePath="..\src\hardware\timer.cpp">
 				</File>
+				<File
+					RelativePath="..\src\hardware\ipx.cpp">
+				</File>
+				<File
+					RelativePath="..\src\hardware\ipxserver.cpp">
+				</File>
 				<Filter
 					Name="vga"
 					Filter="">
