@@ -170,7 +170,10 @@ typedef struct {
 	Bit8u mem_bank;
 	Bit8u disp_bank;
 	Bit8u reg_index;
-	bool set_reg;
+	Bit8u mode_control1;
+	Bit8u palette_mask;
+	Bit8u border_color;
+	Bit8u mode_control2;
 } VGA_TANDY;
 
 typedef struct {
