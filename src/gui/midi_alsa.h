@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.5 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.6 2004-01-21 07:43:10 harekiet Exp $ */
 
 #include <alsa/asoundlib.h>
 #include <ctype.h>
@@ -104,6 +104,10 @@ public:
 			break;
 		case 0xC0:
 			snd_seq_ev_set_pgmchange(&ev, chanID, midiCmd[1]);
+			send_event(0);
+			break;
+		case 0xD0:
+			snd_seq_ev_set_chanpress(&ev, chanID, midiCmd[1]);
 			send_event(0);
 			break;
 		case 0xE0:{
