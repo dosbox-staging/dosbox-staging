@@ -54,6 +54,8 @@
 #define XMS_OUT_OF_SPACE					0xa0
 #define XMS_OUT_OF_HANDLES					0xa1
 #define XMS_INVALID_HANDLE					0xa2
+#define XMS_BLOCK_NOT_LOCKED				0xaa
+#define XMS_BLOCK_LOCKED					0xab
 
 struct XMS_Block {
 	Bit16u prev,next;
@@ -292,8 +294,13 @@ foundnew:
 			reg_bl=XMS_INVALID_HANDLE;
 			return CBRET_NONE;
 		}
-		if (xms_handles[reg_dx].locked) xms_handles[reg_dx].locked--;
-		reg_ax=1;reg_bl=0;
+		if (xms_handles[reg_dx].locked) {
+			xms_handles[reg_dx].locked--;
+			reg_ax=1;reg_bl=0;
+		} else {
+			reg_ax=0;
+			reg_bl=XMS_BLOCK_NOT_LOCKED;
+		}
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION:						/* 0e */
 		/* Check for a valid handle */
