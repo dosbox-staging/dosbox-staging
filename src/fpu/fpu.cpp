@@ -97,11 +97,23 @@ void FPU_ESC3_Normal(Bitu rm) {
 	switch (group) {
 	case 0x04:
 		switch (sub) {
-		case 0x03:				//FINIT
+		case 0x00:				//FNENI
+		case 0x01:				//FNDIS
+			LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfuntion :%d",sub);
+			break;
+		case 0x02:				//FNCLEX FCLEX
+			FPU_FCLEX();
+			break;
+		case 0x03:				//FNINIT FINIT
 			FPU_FINIT();
 			break;
+		case 0x04:				//FNSETPM
+		case 0x05:				//FRSTPM
+			LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
+			FPU_FNOP();
+			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",group,sub);
+			E_Exit("ESC 3:ILLEGAL OPCODE group %d subfunction %d",group,sub);
 		}
 		break;
 	default:

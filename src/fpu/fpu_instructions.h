@@ -29,3 +29,10 @@ static void FPU_FINIT(void) {
 	fpu.tags[6]=TAG_Empty;
 	fpu.tags[7]=TAG_Empty;
 }
+static void FPU_FCLEX(void){
+	fpu.sw&=0x7f00;				//should clear exceptions
+};
+
+static void FPU_FNOP(void){
+	return;
+}
