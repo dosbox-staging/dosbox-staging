@@ -9,17 +9,17 @@
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
-#define LoadMb(off) mem_readb(off)
-#define LoadMw(off) mem_readw(off)
-#define LoadMd(off) mem_readd(off)
+#define LoadMb(off) mem_readb_inline(off)
+#define LoadMw(off) mem_readw_inline(off)
+#define LoadMd(off) mem_readd_inline(off)
 
 #define LoadMbs(off) (Bit8s)(LoadMb(off))
 #define LoadMws(off) (Bit16s)(LoadMw(off))
 #define LoadMds(off) (Bit32s)(LoadMd(off))
 
-#define SaveMb(off,val)	mem_writeb(off,val)
-#define SaveMw(off,val)	mem_writew(off,val)
-#define SaveMd(off,val)	mem_writed(off,val)
+#define SaveMb(off,val)	mem_writeb_inline(off,val)
+#define SaveMw(off,val)	mem_writew_inline(off,val)
+#define SaveMd(off,val)	mem_writed_inline(off,val)
 
 #define LoadD(reg) reg
 #define SaveD(reg,val)	reg=val
@@ -32,15 +32,13 @@ static EAPoint IPPoint;
 #include "core_full/ea_lookup.h"
 #include "instructions.h"
 
-static bool had_code[16][16];
-
 static INLINE void DecodeModRM(void) {
 	inst.rm=Fetchb();
 	inst.rm_index=(inst.rm >> 3) & 7;
 	inst.rm_eai=inst.rm&07;
 	inst.rm_mod=inst.rm>>6;
 	/* Decode address of mod/rm if needed */
-	if (inst.rm<0xc0) inst.rm_eaa=RMAddress();
+	if (inst.rm<0xc0) inst.rm_eaa=(inst.prefix & PREFIX_ADDR) ? RMAddress_32() : RMAddress_16();
 }
 
 
@@ -53,9 +51,6 @@ Bitu Full_DeCode(void) {
 		CPU_Cycles--;
 restartopcode:
 		inst.entry=(inst.entry & 0xffffff00) | Fetchb();
-		if (inst.entry<0x100) {
-			*(bool *)(&had_code[0][0]+inst.entry)=true;
-		}
 
 		inst.code=OpCodeTable[inst.entry];
 		#include "core_full/load.h"
