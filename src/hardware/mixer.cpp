@@ -22,7 +22,7 @@
 */
 
 #include <string.h>
-#include <SDL/SDL.h>
+#include <SDL.h>
 #include "dosbox.h"
 #include "mixer.h"
 #include "timer.h"
