@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.55 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.56 2005-03-25 09:11:08 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,13 +53,24 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
-	FILE * hand=fopen(dirCache.GetExpandName(newname),"wb+");
+	dirCache.ExpandName(newname);
+	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
+	bool existing_file=false;
+	
+	FILE * test=fopen(newname,"rb+");
+	if(test) {
+		fclose(test);
+		existing_file=true;
+
+	}
+	
+	FILE * hand=fopen(newname,"wb+");
 	if (!hand){
 		LOG_MSG("Warning: file creation failed: %s",newname);
 		return false;
 	}
    
-	dirCache.AddEntry(newname, true);
+	if(!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
 	*file=new localFile(name,hand,0x202);
 
