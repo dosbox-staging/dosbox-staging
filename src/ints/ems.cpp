@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.38 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.39 2005-03-25 11:59:24 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -93,7 +93,7 @@ struct EMM_Handle {
 
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
-static Bitu call_int67,call_vdma;
+
 
 struct MoveRegion {
 	Bit32u bytes;
@@ -609,40 +609,84 @@ static Bitu INT4B_Handler() {
 	return CBRET_NONE;
 }
 
-void EMS_Init(Section* sec) {
+
+class EMS: public Module_base {
+private:
+	/* location in protected unfreeable memory where the ems name and callback are
+	 * stored  32 bytes.*/
+	static Bit16u emsnameseg;
+	RealPt old4b_pointer,old67_pointer;
+	CALLBACK_HandlerObject call_vdma,int67;
+
+public:
+	EMS(Section* configuration):Module_base(configuration){
+
 	/* Virtual DMA interrupt callback */
-	call_vdma=CALLBACK_Allocate();
-	CALLBACK_Setup(call_vdma,&INT4B_Handler,CB_IRET,"Int 4b vdma");
-	RealSetVec(0x4b,CALLBACK_RealPointer(call_vdma));
+		call_vdma.Install(&INT4B_Handler,CB_IRET,"Int 4b vdma");
+		call_vdma.Set_RealVec(0x4b);
+		
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if (!section->Get_bool("ems")) return;
+		BIOS_ZeroExtendedSize(true);
+		int67.Install(&INT67_Handler,CB_IRET,"Int 67 ems");
+		Bit16u call_int67=int67.Get_callback();
 
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if (!section->Get_bool("ems")) return;
-	BIOS_ZeroExtendedSize();
-	call_int67=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,"Int 67 ems");
-/* Register the ems device */
-	DOS_Device * newdev = new device_EMM();
-	DOS_AddDevice(newdev);
+	/* Register the ems device */
+		//TODO MAYBE put it in the class.
+		DOS_Device * newdev = new device_EMM();
+		DOS_AddDevice(newdev);
+	
+	/* Add a little hack so it appears that there is an actual ems device installed */
+		char * emsname="EMMXXXX0";
+		if(!emsnameseg) emsnameseg=DOS_GetMemory(2);	//We have 32 bytes
+		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,strlen(emsname)+1);
+	/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
+		char buf[16];
+		MEM_BlockRead(PhysMake(CB_SEG,call_int67<<4),buf,0xa);
+		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,0xa);
+		RealSetVec(0x67,RealMake(emsnameseg,0),old67_pointer);
+	/* Clear handle and page tables */
+		Bitu i;
+		for (i=0;i<EMM_MAX_HANDLES;i++) {
+			emm_handles[i].mem=0;
+			emm_handles[i].pages=NULL_HANDLE;
+			memset(&emm_handles[i].name,0,8);
+		}
+		for (i=0;i<EMM_MAX_PHYS;i++) {
+			emm_mappings[i].page=NULL_PAGE;
+			emm_mappings[i].handle=NULL_HANDLE;
+		}
+	}
+	
+	~EMS() {
+		Section_prop * section=static_cast<Section_prop *>(m_configuration);
+		if (!section->Get_bool("ems")) return;
+		/* Undo Biosclearing */
+		BIOS_ZeroExtendedSize(false);
+ 
+		/* Remove ems device */
+		device_EMM newdev;
+		DOS_DelDevice(&newdev);
 
-/* Add a little hack so it appears that there is an actual ems device installed */
-	char * emsname="EMMXXXX0";
-	Bit16u seg=DOS_GetMemory(2);	//We have 32 bytes
-	MEM_BlockWrite(PhysMake(seg,0xa),emsname,strlen(emsname)+1);
-/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
-	char buf[16];
-	MEM_BlockRead(PhysMake(CB_SEG,call_int67<<4),buf,0xa);
-	MEM_BlockWrite(PhysMake(seg,0),buf,0xa);
-	RealSetVec(0x67,RealMake(seg,0));
-/* Clear handle and page tables */
-	Bitu i;
-	for (i=0;i<EMM_MAX_HANDLES;i++) {
-		emm_handles[i].mem=0;
-		emm_handles[i].pages=NULL_HANDLE;
-		memset(&emm_handles[i].name,0,8);
+		/* Remove the emsname and callback hack */
+		char buf[32]= { 0 };
+		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,32);
+		RealSetVec(0x67,old67_pointer);
+		/* Clear handle and page tables */
+		//TODO
 	}
-	for (i=0;i<EMM_MAX_PHYS;i++) {
-		emm_mappings[i].page=NULL_PAGE;
-		emm_mappings[i].handle=NULL_HANDLE;
-	}
+};
+		
+static EMS* test;
+
+void EMS_ShutDown(Section* sec) {
+	delete test;	
 }
 
+void EMS_Init(Section* sec) {
+	test = new EMS(sec);
+	sec->AddDestroyFunction(&EMS_ShutDown,true);
+}
+
+//Initialize static members
+Bit16u EMS::emsnameseg = 0;

@@ -16,24 +16,26 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.40 2005-02-24 17:50:58 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.41 2005-03-25 11:59:24 qbix79 Exp $ */
 
-#include <time.h>
 #include "dosbox.h"
+#include "mem.h"
 #include "bios.h"
 #include "regs.h"
 #include "cpu.h"
 #include "callback.h"
 #include "inout.h"
-#include "mem.h"
 #include "pic.h"
 #include "joystick.h"
-#include "dos_inc.h"
 #include "mouse.h"
+#include "setup.h"
 
-static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
-static Bitu call_int1,call_int70,call_int14;
+
+/* if mem_systems 0 then size_extended is reported as the real size else 
+ * zero is reported. ems and xms can increase or decrease the other_memsystems
+ * counter using the BIOS_ZeroExtendedSize call */
 static Bit16u size_extended;
+static Bits other_memsystems=0;
 
 static Bitu INT70_Handler(void) {
 	/* Acknowledge irq with cmos */
@@ -311,7 +313,7 @@ static Bitu INT15_Handler(void) {
 			break;
 		}	
 	case 0x88:	/* SYSTEM - GET EXTENDED MEMORY SIZE (286+) */
-		reg_ax=size_extended;
+		reg_ax=other_memsystems?0:size_extended;
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function 0x88 Remaining %04X kb",reg_ax);
 		CALLBACK_SCF(false);
 		break;
@@ -414,108 +416,132 @@ static Bitu INT1_Single_Step(void) {
 	return CBRET_NONE;
 }
 
-void BIOS_ZeroExtendedSize(void) {
-	size_extended=0;
+void BIOS_ZeroExtendedSize(bool in) {
+	if(in) other_memsystems++; 
+	else other_memsystems--;
+	if(other_memsystems < 0) other_memsystems=0;
 }
 
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-void BIOS_Init(Section* sec) {
-	MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
-	/* Clear the Bios Data Area */
-	for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
-	/* Setup all the interrupt handlers the bios controls */
-	/* INT 8 Clock IRQ Handler */
-	//TODO Maybe give this a special callback that will also call int 8 instead of starting 
-	//a new system
-	call_int8=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int8,&INT8_Handler,CB_IRET,"Int 8 Clock");
-	phys_writeb(CB_BASE+(call_int8<<4)+0,(Bit8u)0xFE);		//GRP 4
-	phys_writeb(CB_BASE+(call_int8<<4)+1,(Bit8u)0x38);		//Extra Callback instruction
-	phys_writew(CB_BASE+(call_int8<<4)+2,call_int8);		//The immediate word          
-	phys_writeb(CB_BASE+(call_int8<<4)+4,(Bit8u)0x50);		// push ax
-	phys_writeb(CB_BASE+(call_int8<<4)+5,(Bit8u)0xb0);		// mov al, 0x20
-	phys_writeb(CB_BASE+(call_int8<<4)+6,(Bit8u)0x20);
-	phys_writeb(CB_BASE+(call_int8<<4)+7,(Bit8u)0xe6);		// out 0x20, al
-	phys_writeb(CB_BASE+(call_int8<<4)+8,(Bit8u)0x20);
-	phys_writeb(CB_BASE+(call_int8<<4)+9,(Bit8u)0x58);		// pop ax
-	phys_writeb(CB_BASE+(call_int8<<4)+10,(Bit8u)0xcf);		// iret
+class BIOS:public Module_base{
+private:
+	CALLBACK_HandlerObject callback[10];
+public:
+	BIOS(Section* configuration):Module_base(configuration){
+		MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
+		/* Clear the Bios Data Area */
+		for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
+		/* Setup all the interrupt handlers the bios controls */
+		/* INT 8 Clock IRQ Handler */
+		//TODO Maybe give this a special callback that will also call int 8 instead of starting 
+		//a new system
+		callback[0].Install(INT8_Handler,CB_IRET,"Int 8 Clock");
+		callback[0].Set_RealVec(0x8);
+		Bit16u call_int8=callback[0].Get_callback();
+		phys_writeb(CB_BASE+(call_int8<<4)+0,(Bit8u)0xFE);		//GRP 4
+		phys_writeb(CB_BASE+(call_int8<<4)+1,(Bit8u)0x38);		//Extra Callback instruction
+		phys_writew(CB_BASE+(call_int8<<4)+2,call_int8);		//The immediate word          
+		phys_writeb(CB_BASE+(call_int8<<4)+4,(Bit8u)0x50);		// push ax
+		phys_writeb(CB_BASE+(call_int8<<4)+5,(Bit8u)0xb0);		// mov al, 0x20
+		phys_writeb(CB_BASE+(call_int8<<4)+6,(Bit8u)0x20);
+		phys_writeb(CB_BASE+(call_int8<<4)+7,(Bit8u)0xe6);		// out 0x20, al
+		phys_writeb(CB_BASE+(call_int8<<4)+8,(Bit8u)0x20);
+		phys_writeb(CB_BASE+(call_int8<<4)+9,(Bit8u)0x58);		// pop ax
+		phys_writeb(CB_BASE+(call_int8<<4)+10,(Bit8u)0xcf);		// iret
 
-	mem_writed(BIOS_TIMER,0);			//Calculate the correct time
-	RealSetVec(0x8,CALLBACK_RealPointer(call_int8));
-	/* INT 11 Get equipment list */
-	call_int11=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int11,&INT11_Handler,CB_IRET,"Int 11 Equipment");
-	RealSetVec(0x11,CALLBACK_RealPointer(call_int11));
-	/* INT 12 Memory Size default at 640 kb */
-	call_int12=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int12,&INT12_Handler,CB_IRET,"Int 12 Memory");
-	RealSetVec(0x12,CALLBACK_RealPointer(call_int12));
-	mem_writew(BIOS_MEMORY_SIZE,640);
-	/* INT 13 Bios Disk Support */
-	BIOS_SetupDisks();
-	call_int14=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int14,&INT14_Handler,CB_IRET,"Int 14 COM-port");
-	RealSetVec(0x14,CALLBACK_RealPointer(call_int14));
-	/* INT 15 Misc Calls */
-	call_int15=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int15,&INT15_Handler,CB_IRET,"Int 15 Bios");
-	RealSetVec(0x15,CALLBACK_RealPointer(call_int15));
-	/* INT 16 Keyboard handled in another file */
-	BIOS_SetupKeyboard();
-	/* INT 16 Printer Routines */
-	call_int17=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int17,&INT17_Handler,CB_IRET,"Int 17 Printer");
-	RealSetVec(0x17,CALLBACK_RealPointer(call_int17));
-	/* INT 1A TIME and some other functions */
-	call_int1a=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int1a,&INT1A_Handler,CB_IRET_STI,"Int 1a Time");
-	RealSetVec(0x1A,CALLBACK_RealPointer(call_int1a));
-	/* INT 1C System Timer tick called from INT 8 */
-	call_int1c=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int1c,&INT1C_Handler,CB_IRET,"Int 1c Timer tick");
-	RealSetVec(0x1C,CALLBACK_RealPointer(call_int1c));
-	/* IRQ 8 RTC Handler */
-	call_int70=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int70,&INT70_Handler,CB_IRET,"Int 70 RTC");
-	RealSetVec(0x70,CALLBACK_RealPointer(call_int70));
+		mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 
-	/* Some defeault CPU error interrupt handlers */
-	call_int1=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET,"Int 1 Single step");
-	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
+		/* INT 11 Get equipment list */
+		callback[1].Install(&INT11_Handler,CB_IRET,"Int 11 Equipment");
+		callback[1].Set_RealVec(0x11);
 
-	/* Setup some stuff in 0x40 bios segment */
-	/* Test for parallel port */
-	if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
-	/* Test for serial port */
-	Bitu index=0;
-	if (IO_Read(0x3fa)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
-	if (IO_Read(0x2fa)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
-	/* Setup equipment list */
-	Bitu config=0x4400;						//1 Floppy, 2 serial and 1 parrallel
+		/* INT 12 Memory Size default at 640 kb */
+		callback[2].Install(&INT12_Handler,CB_IRET,"Int 12 Memory");
+		callback[2].Set_RealVec(0x12);
+		mem_writew(BIOS_MEMORY_SIZE,640);
+		
+		/* INT 13 Bios Disk Support */
+		BIOS_SetupDisks();
+
+		callback[3].Install(&INT14_Handler,CB_IRET,"Int 14 COM-port");
+		callback[3].Set_RealVec(0x14);
+
+		/* INT 15 Misc Calls */
+		callback[4].Install(&INT15_Handler,CB_IRET,"Int 15 Bios");
+		callback[4].Set_RealVec(0x15);
+
+		/* INT 16 Keyboard handled in another file */
+		BIOS_SetupKeyboard();
+
+		/* INT 17 Printer Routines */
+		callback[5].Install(&INT17_Handler,CB_IRET,"Int 17 Printer");
+		callback[5].Set_RealVec(0x17);
+
+		/* INT 1A TIME and some other functions */
+		callback[6].Install(&INT1A_Handler,CB_IRET_STI,"Int 1a Time");
+		callback[6].Set_RealVec(0x1A);
+
+		/* INT 1C System Timer tick called from INT 8 */
+		callback[7].Install(&INT1C_Handler,CB_IRET,"Int 1c Timer tick");
+		callback[7].Set_RealVec(0x1C);
+		
+		/* IRQ 8 RTC Handler */
+		callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
+		callback[8].Set_RealVec(0x70);
+
+		/* Some defeault CPU error interrupt handlers */
+		callback[9].Install(&INT1_Single_Step,CB_IRET,"Int 1 Single step");
+		callback[9].Set_RealVec(0x1);
+		
+		/* Setup some stuff in 0x40 bios segment */
+		/* Test for parallel port */
+		if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
+		/* Test for serial port */
+		Bitu index=0;
+		if (IO_Read(0x3fa)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
+		if (IO_Read(0x2fa)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
+		/* Setup equipment list */
+		//1 Floppy, 2 serial and 1 parrallel
+		Bitu config=0x4400;
 #if (C_FPU)
-	config|=0x2;					//FPU
+		//FPU
+		config|=0x2;
 #endif
-	switch (machine) {
-	case MCH_HERC:
-		config|=0x30;						//Startup monochrome
-		break;
-	case MCH_CGA:	case MCH_TANDY:
-		config|=0x20;				//Startup 80x25 color
-		break;
-	default:
-		config|=0;							//EGA VGA
-		break;
+		switch (machine) {
+		case MCH_HERC:
+			//Startup monochrome
+			config|=0x30;
+			break;
+		case MCH_CGA:	
+		case MCH_TANDY:
+			//Startup 80x25 color
+			config|=0x20;
+			break;
+		default:
+			//EGA VGA
+			config|=0;
+			break;
+		}
+		// PS2 mouse
+		config |= 0x04;
+		mem_writew(BIOS_CONFIGURATION,config);
+		/* Setup extended memory size */
+		IO_Write(0x70,0x30);
+		size_extended=IO_Read(0x71);
+		IO_Write(0x70,0x31);
+		size_extended|=(IO_Read(0x71) << 8);		
 	}
-	config |= 0x04;					// PS2 mouse
-	mem_writew(BIOS_CONFIGURATION,config);
-	/* Setup extended memory size */
-	IO_Write(0x70,0x30);
-	size_extended=IO_Read(0x71);
-	IO_Write(0x70,0x31);
-	size_extended|=(IO_Read(0x71) << 8);
+};
+
+static BIOS* test;
+
+void BIOS_Destroy(Section* sec){
+	delete test;
 }
 
-
+void BIOS_Init(Section* sec) {
+	test = new BIOS(sec);
+	sec->AddDestroyFunction(&BIOS_Destroy,false);
+}

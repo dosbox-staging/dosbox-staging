@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.34 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.35 2005-03-25 11:59:24 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -101,7 +101,6 @@ Bitu XMS_GetEnabledA20(void)
 	return (IO_Read(0x92)&2)>0;
 };
 
-static Bit16u call_xms;
 static RealPt xms_callback;
 
 static XMS_Block xms_handles[XMS_HANDLES];
@@ -341,36 +340,63 @@ Bitu XMS_Handler(void) {
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
 }
-
-void XMS_Init(Section* sec) {
-	
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if (!section->Get_bool("xms")) return;
-	Bitu i;
-	BIOS_ZeroExtendedSize();
-	DOS_AddMultiplexHandler(multiplex_xms);
-	call_xms=CALLBACK_Allocate();
-	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF, "XMS Handler");
-	xms_callback=CALLBACK_RealPointer(call_xms);
-   
-	/* Overide the callback with one that can be hooked */
-	phys_writeb(CB_BASE+(call_xms<<4)+0,(Bit8u)0xeb);       //jump near
-	phys_writeb(CB_BASE+(call_xms<<4)+1,(Bit8u)0x03);       //offset
-	phys_writeb(CB_BASE+(call_xms<<4)+2,(Bit8u)0x90);       //NOP
-	phys_writeb(CB_BASE+(call_xms<<4)+3,(Bit8u)0x90);       //NOP
-	phys_writeb(CB_BASE+(call_xms<<4)+4,(Bit8u)0x90);       //NOP
-	phys_writeb(CB_BASE+(call_xms<<4)+5,(Bit8u)0xFE);       //GRP 4
-	phys_writeb(CB_BASE+(call_xms<<4)+6,(Bit8u)0x38);       //Extra Callback instruction
-	phys_writew(CB_BASE+(call_xms<<4)+7,call_xms);		//The immediate word          
-	phys_writeb(CB_BASE+(call_xms<<4)+9,(Bit8u)0xCB);       //A RETF Instruction
-   
-	for (i=0;i<XMS_HANDLES;i++) {
-		xms_handles[i].free=true;
-		xms_handles[i].mem=-1;
-		xms_handles[i].size=0;
-		xms_handles[i].locked=0;
+class XMS: public Module_base {
+private:
+	CALLBACK_HandlerObject callbackhandler;
+public:
+	XMS(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		if (!section->Get_bool("xms")) return;
+		Bitu i;
+		BIOS_ZeroExtendedSize(true);
+		DOS_AddMultiplexHandler(multiplex_xms);
+		callbackhandler.Install(&XMS_Handler,CB_RETF, "XMS Handler");
+		xms_callback=callbackhandler.Get_RealPointer();
+		Bit16u call_xms=callbackhandler.Get_callback();
+	   
+		/* Override the callback with one that can be hooked */
+		phys_writeb(CB_BASE+(call_xms<<4)+0,(Bit8u)0xeb);       //jump near
+		phys_writeb(CB_BASE+(call_xms<<4)+1,(Bit8u)0x03);       //offset
+		phys_writeb(CB_BASE+(call_xms<<4)+2,(Bit8u)0x90);       //NOP
+		phys_writeb(CB_BASE+(call_xms<<4)+3,(Bit8u)0x90);       //NOP
+		phys_writeb(CB_BASE+(call_xms<<4)+4,(Bit8u)0x90);       //NOP
+		phys_writeb(CB_BASE+(call_xms<<4)+5,(Bit8u)0xFE);       //GRP 4
+		phys_writeb(CB_BASE+(call_xms<<4)+6,(Bit8u)0x38);       //Extra Callback instruction
+		phys_writew(CB_BASE+(call_xms<<4)+7,call_xms);		//The immediate word          
+		phys_writeb(CB_BASE+(call_xms<<4)+9,(Bit8u)0xCB);       //A RETF Instruction
+	   
+		for (i=0;i<XMS_HANDLES;i++) {
+			xms_handles[i].free=true;
+			xms_handles[i].mem=-1;
+			xms_handles[i].size=0;
+			xms_handles[i].locked=0;
+		}
+		/* Disable the 0 handle */
+		xms_handles[0].free	= false;
 	}
-	/* Disable the 0 handle */
-	xms_handles[0].free	= false;
+
+	~XMS(){
+		Section_prop * section = static_cast<Section_prop *>(m_configuration);
+		if (!section->Get_bool("xms")) return;
+		/* Undo biosclearing */
+		BIOS_ZeroExtendedSize(false);
+
+		/* Remove Multiplex */
+		DOS_DelMultiplexHandler(multiplex_xms);
+
+		/* Free used memory while skipping the 0 handle */
+		for (Bitu i = 1;i<XMS_HANDLES;i++) 
+			if(!xms_handles[i].free) XMS_FreeMemory(i);
+	}
+
+};
+static XMS* test;
+
+void XMS_ShutDown(Section* sec) {
+	delete test;	
 }
 
+void XMS_Init(Section* sec) {
+	test = new XMS(sec);
+	sec->AddDestroyFunction(&XMS_ShutDown,true);
+}
