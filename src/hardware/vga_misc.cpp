@@ -20,6 +20,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "vga.h"
+#include "../ints/int10.h"
 
 static Bit8u flip=0;
 
@@ -28,10 +29,21 @@ Bit8u read_p3d4(Bit32u port);
 void write_p3d5(Bit32u port,Bit8u val);
 Bit8u read_p3d5(Bit32u port);
 
+static void write_p3d9(Bit32u port,Bit8u val);
+
 static Bit8u read_p3da(Bit32u port) {
 	vga.internal.attrindex=false;
+	vga.tandy.set_reg=true;
 	if (vga.config.retrace) {
-		return 9;
+		switch (vga.mode) {
+		case M_HERC:
+			 return 0x81;
+		case M_TEXT2:
+			if (machine==MCH_HERC) return 0x81;
+			if (machine==MCH_AUTO) return 0x89;
+		default:
+			return 9;
+		}
 	}
 	flip++;
 	if (flip>10) flip=0;
@@ -45,14 +57,32 @@ static Bit8u read_p3da(Bit32u port) {
 
 
 static void write_p3d8(Bit32u port,Bit8u val) {
+	switch (machine) {
+	case MCH_CGA:
+		goto cga_3d8;
+	};
 	switch (vga.mode) {
+	case M_CGA16:
 	case M_CGA4:
-
+	case M_CGA2:
+cga_3d8:
+		if (val & 0x2) {
+			if (val & 0x10) {
+				if (val & 0x8) {
+					VGA_SetMode(M_CGA16);		//Video burst 16 160x200 color mode
+				} else {
+					VGA_SetMode(M_CGA2);
+				}
+			} else VGA_SetMode(M_CGA4);
+			write_p3d9(0x3d9,vga.cga.color_select);	//Setup the correct palette
+		} else {
+			VGA_SetMode(M_TEXT16);
+		}
 		break;
 	default:
+		LOG(LOG_VGAMISC,LOG_NORMAL)("Write %2X to 3d8 in mode %d",val,vga.mode);
 		break;
 	}
-	LOG(LOG_VGAMISC,LOG_NORMAL)("Write %2X to 3d8",val);
 	/*
 		3	Vertical Sync Select. If set Vertical Sync to the monitor is the
 			logical OR of the vertical sync and the vertical display enable.
@@ -60,50 +90,46 @@ static void write_p3d8(Bit32u port,Bit8u val) {
 }
 
 static void write_p3d9(Bit32u port,Bit8u val) {
+	Bitu i;
+	vga.cga.color_select=val;
 	switch (vga.mode) {
 	case M_CGA2:
-		vga.cga.color_select=val;
 		/* changes attribute 1 */
-		vga.attr.palette[1]=(val & 7) + ((val & 8) ? 0x38 : 0);
-		VGA_DAC_CombineColor(1,vga.attr.palette[0]);
+		VGA_ATTR_SetPalette(0,0);
+		VGA_ATTR_SetPalette(1,val & 0xf);
 		break;
 	case M_CGA4:
-		vga.cga.color_select=val;
-		/* changes attribute 0 */
-		VGA_ATTR_SetPalette(0,(val & 7) + ((val & 8) ? 0x38 : 0));
-		if (val & 0x020) {
-			VGA_ATTR_SetPalette(1,0x13);
-			VGA_ATTR_SetPalette(2,0x15);
-			VGA_ATTR_SetPalette(3,0x17);
-		} else {
-			VGA_ATTR_SetPalette(1,0x02);
-			VGA_ATTR_SetPalette(2,0x04);
-			VGA_ATTR_SetPalette(3,0x06);
+			/* changes attribute 0 */
+		{
+			VGA_ATTR_SetPalette(0,(val & 0xf));
+			Bit8u pal_base=(val & 0x10) ? 0x08 : 0;
+			if (val & 0x020) {
+				VGA_ATTR_SetPalette(1,0x03+pal_base);
+				VGA_ATTR_SetPalette(2,0x05+pal_base);
+				VGA_ATTR_SetPalette(3,0x07+pal_base);
+			} else {
+				VGA_ATTR_SetPalette(1,0x02+pal_base);
+				VGA_ATTR_SetPalette(2,0x04+pal_base);
+				VGA_ATTR_SetPalette(3,0x06+pal_base);
+			}
 		}
 		break;
-	/*	Color Select register
-		Text modes:      320x200 modes:         640x200 mode:
-		0  Blue border      Blue background        Blue ForeGround
-		1  Green border     Green background       Green ForeGround
-		2  Red border       Red background         Red ForeGround
-		3  Bright border    Bright background      Bright ForeGround
-		4  Backgr. color    Alt. intens. colors    Alt. intens colors
-		5  No func.         Selects palette
-				Palette 0 is Green, red and brown,
-				Palette 1 is Cyan, magenta and white.
-	*/
+	case M_CGA16:
+		for(i=0;i<0x10;i++) VGA_ATTR_SetPalette(i,i);
+		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to %X in mode %d",val,port,vga.mode);
 	}
 }
 
 static void write_p3df(Bit32u port,Bit8u val) {
+	if (machine==MCH_TANDY) goto tandy_3df;
 	switch (vga.mode) {
 	case M_TANDY16:
+tandy_3df:
 		vga.tandy.disp_bank=val & ((val & 0x80) ? 0x6 : 0x7);
 		vga.tandy.mem_bank=(val >> 3) & ((val & 0x80) ? 0x6 : 0x7);
 		VGA_SetupHandlers();
-
 		break;
 		/*
 			0-2	Identifies the page of main memory being displayed in units of 16K.
@@ -122,36 +148,44 @@ static void write_p3df(Bit32u port,Bit8u val) {
 }
 
 static Bit8u read_p3d9(Bit32u port) {
-	switch (vga.mode) {
-	case M_CGA2:
-	case M_CGA4:
+	switch (machine) {
+	case MCH_AUTO:
+	case MCH_CGA:
+	case MCH_TANDY:
 		return vga.cga.color_select;
 	default:
 		return 0xff;
-	}
+	};
 }
 
 
 static void write_p3c2(Bit32u port,Bit8u val) {
 	vga.misc_output=val;
+
 	if (val & 0x1) {
 		IO_RegisterWriteHandler(0x3d4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3d4,read_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterWriteHandler(0x3d5,write_p3d5,"VGA:CRTC Data Register");
 		IO_RegisterReadHandler(0x3d5,read_p3d5,"VGA:CRTC Data Register");
+		IO_RegisterReadHandler(0x3da,read_p3da,"VGA Input Status 1");
+		
 		IO_FreeWriteHandler(0x3b4);
 		IO_FreeReadHandler(0x3b4);
 		IO_FreeWriteHandler(0x3b5);
 		IO_FreeReadHandler(0x3b5);
+		IO_FreeReadHandler(0x3ba);
 	} else {
 		IO_RegisterWriteHandler(0x3b4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3b4,read_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterWriteHandler(0x3b5,write_p3d5,"VGA:CRTC Data Register");
 		IO_RegisterReadHandler(0x3b5,read_p3d5,"VGA:CRTC Data Register");
+		IO_RegisterReadHandler(0x3ba,read_p3da,"VGA Input Status 1");
+
 		IO_FreeWriteHandler(0x3d4);
 		IO_FreeReadHandler(0x3d4);
 		IO_FreeWriteHandler(0x3d5);
 		IO_FreeReadHandler(0x3d5);
+		IO_FreeReadHandler(0x3da);
 	}
 	/*
 		0	If set Color Emulation. Base Address=3Dxh else Mono Emulation. Base Address=3Bxh.
@@ -171,20 +205,63 @@ static Bit8u read_p3cc(Bit32u port) {
 	return vga.misc_output;
 }
 
+
+static void write_hercules(Bit32u port,Bit8u val) {
+	switch (port) {
+	case 0x3b8:
+		if (vga.herc.enable_bits & 1) {
+			if (vga.mode != M_HERC || vga.mode != M_TEXT2) {
+				VGA_ATTR_SetPalette(1,0x0f);
+				/* Hack around like it looks we are in 0xb000 segment */
+				vga.gfx.miscellaneous=(vga.gfx.miscellaneous & ~0x0c)|0x0a;
+				if (vga.misc_output & 1) write_p3c2(0,vga.misc_output & ~1);
+			}
+			if (val & 0x2) {
+				if (vga.mode != M_HERC) VGA_SetMode(M_HERC);
+			} else {
+				if (vga.mode != M_TEXT2) VGA_SetMode(M_TEXT2);
+			}
+		}
+		if (vga.herc.enable_bits & 0x2) {
+			LOG_MSG("Herc page %d",val >> 7);
+		}
+		vga.herc.mode_control=val;
+		break;
+	case 0x3bf:
+		vga.herc.enable_bits=val;
+		break;
+	default:
+		LOG_MSG("write %x to Herc port %x",val,port);
+	}
+}
+
+static Bit8u read_hercules(Bit32u port) {
+	switch (port) {
+	case 0x3b8:
+	default:
+		LOG_MSG("read from Herc port %x",port);
+	}
+	return 0;
+}
+
+
+
+
 void VGA_SetupMisc(void) {
-	IO_RegisterReadHandler(0x3da,read_p3da,"VGA Input Status 1");
-	IO_RegisterReadHandler(0x3ba,read_p3da,"VGA Input Status 1");
+//	if (machine==MCH_HERC) EnableHercules();
 
+	vga.herc.enable_bits=0;
 	IO_RegisterWriteHandler(0x3d8,write_p3d8,"VGA Feature Control Register");
-
-	
 	IO_RegisterWriteHandler(0x3d9,write_p3d9,"CGA Color Select Register");
 	IO_RegisterReadHandler(0x3d9,read_p3d9,"CGA Color Select Register");
-	
-	
-	IO_RegisterWriteHandler(0x3c2,write_p3c2,"VGA Misc Output");
 
+	IO_RegisterWriteHandler(0x3c2,write_p3c2,"VGA Misc Output");
 	IO_RegisterReadHandler(0x3cc,read_p3cc,"VGA Misc Output");
+
+	if (machine==MCH_HERC || machine==MCH_AUTO) {
+		IO_RegisterWriteHandler(0x3b8,write_hercules,"Hercules");
+		IO_RegisterWriteHandler(0x3bf,write_hercules,"Hercules");
+	}
 	IO_RegisterWriteHandler(0x3df,write_p3df,"PCJR Setting");
 
 }
