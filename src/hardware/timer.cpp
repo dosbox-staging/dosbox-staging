@@ -297,7 +297,7 @@ void TIMER_CheckPIT(void) {
 }
 
 
-void TIMER_Init(void) {
+void TIMER_Init(Section* sect) {
 	Bitu i;
 	IO_RegisterWriteHandler(0x40,write_latch,"PIT Timer 0");
 	IO_RegisterWriteHandler(0x42,write_latch,"PIT Timer 2");

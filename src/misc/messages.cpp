@@ -38,7 +38,7 @@ struct MessageBlock
 static MessageBlock * first_message;
 
 
-static void LoadMessageFile(char * fname) {
+static void LoadMessageFile(const char * fname) {
 	FILE * mfile=fopen(fname,"rb");
 /* This should never happen and since other modules depend on this use a normal printf */
 	if (!mfile) {
@@ -97,11 +97,8 @@ char * MSG_Get(char * msg) {
 
 
 
-void MSG_Init(void) {
+void MSG_Init(Section_prop * section) {
 	/* Load the messages from "dosbox.lang file" */
 	first_message=0;
-	char filein[CROSS_LEN];
-	strcpy(filein,dosbox_basedir);
-	strcat(filein,"dosbox.lang");
-	LoadMessageFile(filein);
+	LoadMessageFile(section->Get_string("LANGUAGE"));
 }

@@ -167,7 +167,7 @@ bool Program::SetEnv(char * env_entry,char * new_string) {
 //TODO Hash table :)
 
 
-void PROGRAMS_Init(void) {
+void PROGRAMS_Init(Section* sec) {
 	/* Setup a special callback to start virtual programs */
 	call_program=CALLBACK_Allocate();
 	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF);

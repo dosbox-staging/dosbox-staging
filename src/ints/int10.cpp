@@ -259,7 +259,7 @@ static void INT10_InitVGA(void) {
 	IO_Write(0x3c5,0x02);
 };
 
-void INT10_StartUp(void) {
+void INT10_Init(Section* sec) {
 	INT10_InitVGA();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	

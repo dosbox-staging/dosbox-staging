@@ -47,6 +47,9 @@ typedef signed int Bits;
 #include "config.h"
 #include "../settings.h"
 
+class Section;
+
+
 typedef Bitu (LoopHandler)(void);
 
 void DOSBOX_RunMachine();
@@ -56,6 +59,8 @@ void DOSBOX_SetNormalLoop();
 void DOSBOX_Init(int argc, char* argv[]);
 void DOSBOX_StartUp(void);
 
+class Config;
+extern Config * control;
 
 #endif
 

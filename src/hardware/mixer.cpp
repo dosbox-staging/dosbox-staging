@@ -217,7 +217,7 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 
 
 
-void MIXER_Init(void) {
+void MIXER_Init(Section* sec) {
 	/* Initialize the internal stuff */
 	first_channel=0;
 	mix_ticks=GetTicks();

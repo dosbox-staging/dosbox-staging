@@ -146,7 +146,7 @@ void VGA_StartResize(void) {
 }
 
 
-void VGA_Init() {
+void VGA_Init(Section* sec) {
 	vga.draw.resizing=false;
 	VGA_SetupMemory();
 	VGA_SetupMisc();

@@ -21,6 +21,7 @@
 #include "memory.h"
 #include "debug.h"
 #include "keyboard.h"
+#include "setup.h"
 
 //Regs regs;
 
@@ -137,7 +138,8 @@ void SetCPU16bit()
 }
 
 
-void CPU_Init(void) {
+void CPU_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
 	reg_eax=0;
 	reg_ebx=0;
 	reg_ecx=0;
@@ -166,7 +168,7 @@ void CPU_Init(void) {
 	flags.io=0;
 
 	SetCPU16bit();
-	cpu_cycles=2000;
+	cpu_cycles=section->Get_int("CYCLES");
 	KEYBOARD_AddEvent(KBD_f11,CTRL_PRESSED,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,CTRL_PRESSED,CPU_CycleIncrease);
 

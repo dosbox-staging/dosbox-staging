@@ -91,7 +91,7 @@ void JOYSTICK_Move_Y(Bitu which,float y) {
 }
 
 
-void JOYSTICK_Init(void) {
+void JOYSTICK_Init(Section* sec) {
 	IO_RegisterReadHandler(0x201,read_p201,"JOYSTICK");
 	IO_RegisterWriteHandler(0x201,write_p201,"JOYSTICK");
 	stick[0].enabled=false;

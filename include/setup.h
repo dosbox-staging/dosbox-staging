@@ -20,6 +20,127 @@
 #define _SETUP_H_
 
 #include <cross.h>
+#include <string>
+#include <list>
+
+union Value{
+	int _hex;
+	bool _bool;
+	int _int;
+	std::string* _string;
+};
+
+class Property {
+public:
+	Property(const char* _propname):propname(_propname) { }
+	virtual void SetValue(char* input)=0;
+	Value GetValue() { return __value; }
+	std::string propname;
+	Value __value;
+	virtual ~Property(){ }
+};
+
+class Prop_int:public Property {
+public:
+	Prop_int(const char* _propname, int _value):Property(_propname) { 
+		__value._int=_value;
+	}
+	void SetValue(char* input);
+	~Prop_int(){ }
+};
+
+class Prop_bool:public Property {
+public:
+	Prop_bool(const char* _propname, bool _value):Property(_propname) { 
+		__value._bool=_value;
+	}
+	void SetValue(char* input);
+	~Prop_bool(){ }
+};
+
+class Prop_string:public Property{
+public:
+	Prop_string(const char* _propname, char* _value):Property(_propname) { 
+		__value._string=new std::string(_value);
+	}
+	~Prop_string(){
+		delete __value._string;
+	}
+	void SetValue(char* input);
+};
+class Prop_hex:public Property {
+public:
+	Prop_hex(const char* _propname, int _value):Property(_propname) { 
+		__value._hex=_value;
+	}
+	void SetValue(char* input);
+	~Prop_hex(){ }
+};
+
+class Section {
+public:
+	Section(const char* _sectionname,void (*_initfunction)(Section*) ):sectionname(_sectionname){ initfunction=_initfunction;}
+	~Section(){ }
+
+	void (*initfunction)(Section*);
+	void ExecuteInit() { initfunction(this);}
+	
+	virtual void HandleInputline(char *gegevens){}
+	
+	std::string sectionname;   
+};
+
+
+class Section_prop:public Section {
+ public:
+	Section_prop(const char* _sectionname,void (*_initfunction)(Section*)):Section(_sectionname,_initfunction){ }
+	~Section_prop(){}
+
+	void Add_int(const char* _propname, int _value=0);
+	void Add_string(const char* _propname, char* _value=NULL);
+	void Add_bool(const char* _propname, bool _value=false);
+	void Add_hex(const char* _propname, int _value=0);
+
+	int Get_int(const char* _propname);
+	const char* Get_string(const char* _propname);
+	bool Get_bool(const char* _propname);
+    int Get_hex(const char* _propname);
+	void HandleInputline(char *gegevens);
+
+	std::list<Property*> properties;
+	typedef std::list<Property*>::iterator it;
+};
+
+class Section_line: public Section{
+public:
+	Section_line(const char* _sectionname,void (*_initfunction)(Section*)):Section(_sectionname,_initfunction){}
+	void HandleInputline(char* gegevens);
+
+	std::string data;
+};
+
+class Config{
+public:
+	Config(){};
+
+	Section * AddSection(const char * _name,void (*_initfunction)(Section*));
+	Section_line * AddSection_line(const char * _name,void (*_initfunction)(Section*));
+	Section_prop * AddSection_prop(const char * _name,void (*_initfunction)(Section*));
+	
+	Section* GetSection(const char* _sectionname);
+
+	void Init();
+	void ParseConfigFile(const char* configfilename);
+
+	std::list<Section*> sectionlist;
+	typedef std::list<Section*>::iterator it;
+};
+
+
+
+
+
+
 enum { S_STRING,S_HEX,S_INT,S_BOOL};
 
 typedef char *(String_Handler)(char * input);
@@ -38,6 +159,7 @@ private:
 
 
 
-extern char dosbox_basedir[CROSS_LEN];	
+extern char dosbox_basedir[CROSS_LEN];
+	
 
 #endif

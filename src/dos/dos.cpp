@@ -850,7 +850,7 @@ static Bitu DOS_20Handler(void) {
 }
 
 
-void DOS_Init(void) {
+void DOS_Init(Section* sec) {
 	call_20=CALLBACK_Allocate();
 	CALLBACK_Setup(call_20,DOS_20Handler,CB_IRET);
 	RealSetVec(0x20,CALLBACK_RealPointer(call_20));

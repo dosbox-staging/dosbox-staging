@@ -193,7 +193,7 @@ static void INT15_StartUp(void) {
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-void BIOS_Init(void) {
+void BIOS_Init(Section* sec) {
 	/* Clear the Bios Data Area */
 	for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
 	/* Setup all the interrupt handlers the bios controls */
@@ -205,7 +205,7 @@ void BIOS_Init(void) {
 	mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 	RealSetVec(0x8,CALLBACK_RealPointer(call_int8));
 	/* INT10 Video Bios */
-	INT10_StartUp();
+	
 	/* INT 11 Get equipment list */
 	call_int11=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int11,&INT11_Handler,CB_IRET);

@@ -23,6 +23,7 @@
 #include "dma.h"
 #include "pic.h"
 #include "hardware.h"
+#include "setup.h"
 
 #define SB_BASE 0x220
 #define SB_IRQ 5
@@ -603,14 +604,16 @@ static void SB_OutputHandler (char * towrite) {
 
 
 
-void SBLASTER_Init(void) {
+void SBLASTER_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");
 	MIXER_Enable(sb.chan,false);
 	sb.state=DSP_S_NORMAL;
 /* Setup the hardware handler part */
-	sb.base=SB_BASE;
-	sb.irq=SB_IRQ;
-	sb.dma=SB_DMA;
+	sb.base=section->Get_hex("BASE");
+	sb.irq=section->Get_int("IRQ");
+	sb.dma=section->Get_int("DMA");
 	SB_Enable(true);
 
 	sb.hwblock.dev_name="SB";

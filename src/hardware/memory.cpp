@@ -222,7 +222,7 @@ Bit32u mem_readd(PhysPt pt){
 
 
 
-void MEM_Init(void) {
+void MEM_Init(Section * sect) {
 	/* Init all tables */
 	Bitu i;
 	i=MAX_PAGES;
@@ -235,7 +235,7 @@ void MEM_Init(void) {
 	/* Allocate the first mb of memory */
 	memory=(Bit8u *)malloc(1024*1024);	
 	if (!memory) {
-		E_Exit("Can't allocate memory for memory");
+		throw("Can't allocate memory for memory");
 	}
 	/* Setup tables for first mb */
 	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);

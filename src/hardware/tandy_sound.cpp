@@ -25,6 +25,7 @@
 #include "inout.h"
 #include "mixer.h"
 #include "mem.h"
+#include "setup.h"
 
 #define TANDY_DIV 111860 
 #define TANDY_RATE 22050
@@ -125,7 +126,9 @@ static void TANDYSOUND_CallBack(Bit8u * stream,Bit32u len) {
 	}
 };
 
-void TANDY_Init(void) {
+void TANDYSOUND_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	IO_RegisterWriteHandler(0xc0,write_pc0,"Tandy Sound");
 	tandy_chan=MIXER_AddChannel(&TANDYSOUND_CallBack,TANDY_RATE,"TANDY");
 	MIXER_Enable(tandy_chan,false);

@@ -80,7 +80,7 @@ void IO_FreeWriteHandler(Bit32u port) {
 }
 
 
-void IO_Init(void) {
+void IO_Init(Section * sect) {
 	for (Bitu i=0;i<IO_MAX;i++) {
 		IO_RegisterReadHandler(i,&IO_ReadDefault,"Default Read");
 		IO_RegisterWriteHandler(i,&IO_WriteDefault,"Default Write");

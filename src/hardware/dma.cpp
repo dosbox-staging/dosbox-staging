@@ -203,7 +203,7 @@ Bit16u DMA_16_Write(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 
 
 
-void DMA_Init(void) {
+void DMA_Init(Section* sec) {
 	for (Bit32u i=0;i<0x10;i++) {
 		IO_RegisterWriteHandler(i,write_dma,"DMA1");
 	}

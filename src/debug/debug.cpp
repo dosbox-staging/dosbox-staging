@@ -702,7 +702,7 @@ static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
 }
 
-void DEBUG_Init(void) {
+void DEBUG_Init(Section* sec) {
 	#ifdef WIN32
 	WIN32_Console();
 	#endif

@@ -22,10 +22,10 @@
 #include "mixer.h"
 #include "mem.h"
 #include "hardware.h"
+#include "setup.h"
 
 #define CMS_RATE 22050
 #define CMS_VOLUME 6000
-
 
 #define FREQ_SHIFT 16
 
@@ -213,7 +213,11 @@ static void CMS_OutputHandler (char * towrite) {
 };
 
 
-void CMS_Init(void) {
+
+
+void CMS_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	Bits i;
 /* Register the Mixer CallBack */
 	cms_chan=MIXER_AddChannel(CMS_CallBack,CMS_RATE,"CMS");

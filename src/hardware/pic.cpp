@@ -312,7 +312,7 @@ void PIC_runIRQs(void) {
 }
 
 
-void PIC_Init(void) {
+void PIC_Init(Section* sec) {
 	/* Setup pic0 and pic1 with initial values like DOS has normally */
 	PIC_IRQCheck=0;
 	PIC_IRQActive=PIC_NOIRQ;

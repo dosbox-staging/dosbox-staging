@@ -35,57 +35,57 @@
 #include "setup.h"
 #include "cross.h"
 #include "programs.h"
+#include "support.h"
 
+ /* NEEDS A CLEANUP */
 char dosbox_basedir[CROSS_LEN];
+Config * control;
 
 //The whole load of startups for all the subfunctions
-void MSG_Init(void);
-void MEM_Init(void);
-void VGA_Init(void);
-void CALLBACK_Init();
-void DOS_Init();
-void RENDER_Init(void);
 
-void CPU_Init();
+void MSG_Init(Section_prop *);
+void MEM_Init(Section *);
+void IO_Init(Section * );
+void CALLBACK_Init(Section*);
+void PROGRAMS_Init(Section*);
+
+
+void VGA_Init(Section*);
+
+void DOS_Init(Section*);
+
+
+void CPU_Init(Section*);
 //void FPU_Init();
-void IO_Init(void);
-void DMA_Init(void);
-void MIXER_Init(void);
-void HARDWARE_Init(void);
+void DMA_Init(Section*);
+void MIXER_Init(Section*);
+void HARDWARE_Init(Section*);
 
 
-void KEYBOARD_Init(void);	//TODO This should setup INT 16 too but ok ;)
-void JOYSTICK_Init(void);
-void MOUSE_Init(void);
-void SBLASTER_Init(void);
-void ADLIB_Init(void);
-void PCSPEAKER_Init(void);
-void TANDY_Init(void);
-void CMS_Init(void);
+void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
+void JOYSTICK_Init(Section*);
+void MOUSE_Init(Section*);
+void SBLASTER_Init(Section*);
+void ADLIB_Init(Section*);
+void PCSPEAKER_Init(Section*);
+void TANDYSOUND_Init(Section*);
+void CMS_Init(Section*);
 
-void PIC_Init(void);
-void TIMER_Init(void);
-void BIOS_Init(void);
-void DEBUG_Init(void);
+void PIC_Init(Section*);
+void TIMER_Init(Section*);
+void BIOS_Init(Section*);
+void DEBUG_Init(Section*);
 
 
-void PLUGIN_Init(void);
+
 
 /* Dos Internal mostly */
-void EMS_Init(void);
-void XMS_Init(void);
-void PROGRAMS_Init(void);
+void EMS_Init(Section*);
+void XMS_Init(Section*);
+
 void SHELL_Init(void);
 
-
-void CALLBACK_ShutDown(void);
-void PIC_ShutDown(void);
-void KEYBOARD_ShutDown(void);
-void CPU_ShutDown(void);
-void VGA_ShutDown(void);
-void BIOS_ShutDown(void);
-void MEMORY_ShutDown(void);
-
+void INT10_Init(Section*);
 
 
 
@@ -129,50 +129,124 @@ void DOSBOX_RunMachine(void){
 }
 
 
-
-static void InitSystems(void) {
-	MSG_Init();
-	MEM_Init();
-	IO_Init();
-	CALLBACK_Init();
-	PROGRAMS_Init();
-	HARDWARE_Init();
-	TIMER_Init();
-	CPU_Init();
-#if C_FPU
-	FPU_Init();
-#endif
-	MIXER_Init();
-#if C_DEBUG
-	DEBUG_Init();
-#endif
-
-	LastTicks=GetTicks();
-	DOSBOX_SetLoop(&Normal_Loop);
-
-	//Start up individual hardware
-	DMA_Init();
-	PIC_Init();
-	VGA_Init();
-	KEYBOARD_Init();
-	MOUSE_Init();
-	JOYSTICK_Init();
-	SBLASTER_Init();
-//	TANDY_Init();
-	PCSPEAKER_Init();
-	ADLIB_Init();
-	CMS_Init();
-
-	PLUGIN_Init();
-/* Most of the interrupt handlers */
-	BIOS_Init();
-	DOS_Init();
-	EMS_Init();		//Needs dos first
-	XMS_Init();		//Needs dos first
+static void DOSBOX_RealInit(Section * sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	MSG_Init(section);
 }
 
 
 void DOSBOX_Init(int argc, char* argv[]) {
+/* ADD A GOOD AND CLEAN ENV (see DOSBOX_Init2) */
+
+
+	char base_dir[CROSS_LEN];
+	char file_name[CROSS_LEN];
+	control=new Config;
+
+	strcpy(base_dir,argv[0]);
+	char * last=strrchr(base_dir,CROSS_FILESPLIT); //if windowsversion fails: 
+	if (!last) {   
+		getcwd(base_dir,CROSS_LEN);
+		char a[2];
+		a[0]=CROSS_FILESPLIT;
+		a[1]='\0';
+		strcat(base_dir,a);
+    } else {
+		*++last=0;
+    }
+
+	
+	//	Section * sec;
+	Section_prop * secprop;
+//	Section_line * secline;
+    
+	secprop=control->AddSection_prop("DOSBOX",&DOSBOX_RealInit);
+	strcpy(file_name,base_dir);
+	strcat(file_name,"dosbox.lang");
+	secprop->Add_string("LANGUAGE",file_name);
+	secprop->Add_int("WARNINGS",0);
+	
+	control->AddSection		("MEMORY",&MEM_Init);
+	control->AddSection		("IO",&IO_Init);
+	control->AddSection		("CALLBACK",&CALLBACK_Init);
+    control->AddSection		("PIC",&PIC_Init);
+	control->AddSection		("PROGRAMS",&PROGRAMS_Init);
+	control->AddSection_prop("TIMER",&TIMER_Init);
+	secprop=control->AddSection_prop("CPU",&CPU_Init);
+	secprop->Add_int("CYCLES",3000);
+	secprop=control->AddSection_prop("MIXER",&MIXER_Init);
+#if C_DEBUG
+	secprop=control->AddSection_prop("'DEBUG",&DEBUG_Init);
+#endif
+	control->AddSection		("DMA",&DMA_Init);
+	control->AddSection		("VGA",&VGA_Init);
+	control->AddSection		("KEYBOARD",&KEYBOARD_Init);
+	secprop=control->AddSection_prop("MOUSE",&MOUSE_Init);
+	control->AddSection		("JOYSTICK",&JOYSTICK_Init);
+	
+	secprop=control->AddSection_prop("SBLASTER",&SBLASTER_Init);
+    secprop->Add_hex("BASE",0x220);
+	secprop->Add_int("IRQ",5);
+	secprop->Add_int("DMA",1);
+	secprop->Add_bool("STATUS",true);
+
+	secprop=control->AddSection_prop("TANDYSOUND",&TANDYSOUND_Init);
+    secprop->Add_bool("STATUS",false);
+	
+	secprop=control->AddSection_prop("PCSPEAKER",&PCSPEAKER_Init);
+
+	secprop=control->AddSection_prop("ADLIB",&ADLIB_Init);
+    secprop->Add_bool("STATUS",true);
+	
+	secprop=control->AddSection_prop("CMS",&CMS_Init);
+    secprop->Add_bool("STATUS",false);
+
+	secprop=control->AddSection_prop("BIOS",&BIOS_Init);
+	secprop=control->AddSection_prop("VIDBIOS",&INT10_Init);
+	secprop=control->AddSection_prop("DOS",&DOS_Init);
+	secprop=control->AddSection_prop("EMS",&EMS_Init);
+	secprop->Add_bool("STATUS",true);
+	secprop->Add_int("SIZE",4);
+	secprop=control->AddSection_prop("XMS",&XMS_Init);
+	secprop->Add_bool("STATUS",true);
+	secprop->Add_int("SIZE",8);
+
+
+	strcpy(file_name,base_dir);
+	strcat(file_name,"dosbox.conf");
+	/* Parse the command line to find config file name */
+	int i;
+	i=1;
+	while (i<argc) {
+		if ((strcasecmp(argv[i],"-conf")==0) && i<(argc-1)) {
+			strcpy(file_name,argv[i+1]);
+			break;
+		}
+	}
+	control->ParseConfigFile(file_name);
+/* Parse the command line to find all other options */
+
+	/*Init all the systems with the acquired settings */
+	control->Init();
+
+//	HARDWARE_Init();
+#if C_FPU
+	FPU_Init();
+#endif
+
+
+	//Start up individual hardware
+
+/* Most of the interrupt handlers */
+
+	LastTicks=GetTicks();
+	DOSBOX_SetLoop(&Normal_Loop);
+}
+
+
+void DOSBOX2_Init(int argc, char* argv[]) {
+
+
 /* Find the base directory */
 	SHELL_AddAutoexec("SET PATH=Z:\\");
 	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
@@ -233,7 +307,7 @@ void DOSBOX_Init(int argc, char* argv[]) {
 		}
 		argl++;
 	}
-	InitSystems();	
+	
 }
 
 

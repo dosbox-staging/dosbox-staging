@@ -310,7 +310,7 @@ static Bitu INT74_Handler(void) {
 };
 
 
-void MOUSE_Init(void) {
+void MOUSE_Init(Section* sec) {
 	call_int33=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET);
 	real_writed(0,(0x33<<2),CALLBACK_RealPointer(call_int33));

@@ -23,6 +23,7 @@
 #include "mem.h"
 #include "regs.h"
 #include "dos_system.h"
+#include "setup.h"
 
 
 #define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
@@ -324,7 +325,9 @@ foundnew:
 
 
 
-void XMS_Init(void) {
+void XMS_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);

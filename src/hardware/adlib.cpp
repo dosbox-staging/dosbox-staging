@@ -24,7 +24,7 @@
 #include "mixer.h"
 #include "timer.h"
 #include "hardware.h"
-
+#include "setup.h"
 /* 
 	Thanks to vdmsound for nice simple way to implement this
 */
@@ -192,8 +192,9 @@ static void ADLIB_OutputHandler (char * towrite) {
 
 
 
-void ADLIB_Init(void) {
-
+void ADLIB_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	timer1.isMasked=true;
 	timer1.base=0;
 	timer1.count=0;

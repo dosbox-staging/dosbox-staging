@@ -135,7 +135,7 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
 	return true;
 }
 
-void CALLBACK_Init(void) {
+void CALLBACK_Init(Section* sec) {
 	Bitu i;
 	for (i=0;i<CB_MAX;i++) {
 		CallBack_Handlers[i]=&illegal_handler;

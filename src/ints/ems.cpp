@@ -27,6 +27,7 @@
 #include "regs.h"
 #include "inout.h"
 #include "dos_inc.h"
+#include "setup.h"
 
 #define EMM_USEHANDLER 1
 
@@ -454,7 +455,9 @@ static Bitu INT67_Handler(void) {
 
 
 
-void EMS_Init(void) {
+void EMS_Init(Section* sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("STATUS")) return;
 	call_int67=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET);
 /* Register the ems device */

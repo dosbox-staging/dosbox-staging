@@ -321,7 +321,7 @@ void KEYBOARD_AddKey(Bitu keytype,bool pressed) {
 	KEYBOARD_AddCode(ret);
 };
 
-void KEYBOARD_Init(void) {
+void KEYBOARD_Init(Section* sec) {
 	IO_RegisterWriteHandler(0x60,write_p60,"Keyboard");
 	IO_RegisterReadHandler(0x60,read_p60,"Keyboard");
 	IO_RegisterWriteHandler(0x61,write_p61,"Keyboard");
