@@ -124,7 +124,7 @@ return_address:
 		"popl %%ebp							\n"
 		:"=a" (retval), "=c" (tempflags)
 		:"r" (tempflags),"r" (code)
-		:"%edx","%ebx","%edi","%esi","%ebp","cc","memory"
+		:"%edx","%ebx","%edi","%esi","cc","memory"
 	);
 	reg_flags=(reg_flags & ~FMASK_TEST) | (tempflags & FMASK_TEST);
 #endif

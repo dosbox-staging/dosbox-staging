@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.37 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.38 2004-05-15 07:57:04 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -146,7 +146,7 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 	/* FCBs are filled with 0 */
 	// ....
 	/* Init file pointer and max_files */
-	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files[0])));
+	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files)));
 	sSave(sPSP,max_files,20);
 	for (i=0;i<20;i++) SetFileHandle(i,0xff);
 
@@ -243,7 +243,7 @@ void DOS_PSP::SetCommandTail(RealPt src)
 		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),Real2Phys(src),128);
 	} else {	// empty
 		sSave(sPSP,cmdtail.count,0x00);
-		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer[0]),0x0d);
+		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer),0x0d);
 	};
 };
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.43 2004-05-05 21:56:04 harekiet Exp $ */
+/* $Id: dos_inc.h,v 1.44 2004-05-15 07:57:02 harekiet Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -214,22 +214,22 @@ INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 
 class MemStruct {
 public:
-	INLINE Bit8u GetIt(Bit8u&,PhysPt addr) {
+	INLINE Bit8u GetIt(Bit8u,PhysPt addr) {
 		return mem_readb(pt+addr);
 	}
-	INLINE Bit16u GetIt(Bit16u&,PhysPt addr) {
+	INLINE Bit16u GetIt(Bit16u,PhysPt addr) {
 		return mem_readw(pt+addr);
 	}
-	INLINE Bit32u GetIt(Bit32u&,PhysPt addr) {
+	INLINE Bit32u GetIt(Bit32u,PhysPt addr) {
 		return mem_readd(pt+addr);
 	}
-	INLINE void SaveIt(Bit8u&,PhysPt addr,Bit8u val) {
+	INLINE void SaveIt(Bit8u,PhysPt addr,Bit8u val) {
 		mem_writeb(pt+addr,val);
 	}
-	INLINE void SaveIt(Bit16u&,PhysPt addr,Bit16u val) {
+	INLINE void SaveIt(Bit16u,PhysPt addr,Bit16u val) {
 		mem_writew(pt+addr,val);
 	}
-	INLINE void SaveIt(Bit32u&,PhysPt addr,Bit32u val) {
+	INLINE void SaveIt(Bit32u,PhysPt addr,Bit32u val) {
 		mem_writed(pt+addr,val);
 	}
 	INLINE void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
