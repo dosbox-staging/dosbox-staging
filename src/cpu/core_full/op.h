@@ -539,6 +539,7 @@ switch (inst.code.op) {
 		BSWAP(inst.op1.d);
 		break;
 	case O_FPU:
+#if C_FPU
 		switch (((inst.rm>=0xc0) << 3) | inst.code.save) {
 		case 0x00:	FPU_ESC0_EA(inst.rm,inst.rm_eaa);break;
 		case 0x01:	FPU_ESC1_EA(inst.rm,inst.rm_eaa);break;
@@ -559,6 +560,10 @@ switch (inst.code.op) {
 		case 0x0f:	FPU_ESC7_Normal(inst.rm);break;
 		}
 		goto nextopcode;
+#else
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled FPU ESCAPE %d",inst.code.save);
+		goto nextopcode;
+#endif
 	case 0:
 		break;
 	default:
