@@ -282,6 +282,36 @@ private:
 	PhysPt off;
 };
 
+class DOS_InfoBlock {
+public:
+	DOS_InfoBlock			(void) { seg=0; dib=0; };
+
+	void	SetLocation		(Bit16u segment);
+	void	SetFirstMCB		(RealPt pt);
+	void	GetDIBPointer	(Bit16u& segment, Bit16u& offset);
+	
+private:
+	#pragma pack (push,1)
+	struct SDosInfoBlock {		
+		Bit8u	stuff1[22];			// some stuff, hopefully never used....
+		RealPt	firstMCB;			// first memory control block
+		RealPt	firstDPB;			// first drive parameter block
+		RealPt	firstFileTable;		// first system file table
+		RealPt	activeClock;		// active clock device header
+		RealPt	activeCon;			// active console device header
+		Bit16u	maxSectorLength;	// maximum bytes per sector of any block device;
+		RealPt	discInfoBuffer;		// pointer to disc info buffer
+		RealPt  curDirStructure;	// pointer to current array of directory structure
+		RealPt	fcbTable;			// pointer to system FCB table
+		// some more stuff, hopefully never used.
+	} GCC_ATTRIBUTE(packed);
+	#pragma pack (pop)
+
+	SDosInfoBlock*	dib;
+	Bit16u			seg;
+};
+
+extern DOS_InfoBlock dosInfoBlock;
 
 #endif
 
