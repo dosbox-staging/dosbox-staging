@@ -532,7 +532,9 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(false);
 			break;
 		default:
-			E_Exit("DOS:0x43:Illegal subfunction %2X",reg_al);
+			LOG(LOG_MISC,LOG_ERROR)("DOS:0x43:Illegal subfunction %2X",reg_al);
+			CALLBACK_SCF(false);
+			break;
 		}
 		break;
 	case 0x44:					/* IOCTL Functions */
