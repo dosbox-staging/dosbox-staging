@@ -148,6 +148,35 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
 	return true;
 }
 
+bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress) {
+	if (callback>=CB_MAX) return false;
+	switch (type) {
+	case CB_RETF:
+		mem_writeb(linearAddress+0,(Bit8u)0xFE);	//GRP 4
+		mem_writeb(linearAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		mem_writew(linearAddress+2, callback);		//The immediate word
+		mem_writeb(linearAddress+4,(Bit8u)0xCB);	//A RETF Instruction
+		break;
+	case CB_IRET:
+		mem_writeb(linearAddress+0,(Bit8u)0xFE);	//GRP 4
+		mem_writeb(linearAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		mem_writew(linearAddress+2,callback);		//The immediate word
+		mem_writeb(linearAddress+4,(Bit8u)0xCF);	//An IRET Instruction
+		break;
+	case CB_IRET_STI:
+		mem_writeb(linearAddress+0,(Bit8u)0xFB);	//STI
+		mem_writeb(linearAddress+1,(Bit8u)0xFE);	//GRP 4
+		mem_writeb(linearAddress+2,(Bit8u)0x38);	//Extra Callback instruction
+		mem_writew(linearAddress+3, callback);		//The immediate word
+		mem_writeb(linearAddress+5,(Bit8u)0xCF);	//An IRET Instruction
+		break;
+	default:
+		E_Exit("CALLBACK:Setup:Illegal type %d",type);
+	}
+	CallBack_Handlers[callback]=handler;
+	return true;
+}
+
 void CALLBACK_Init(Section* sec) {
 	Bitu i;
 	for (i=0;i<CB_MAX;i++) {

@@ -47,6 +47,7 @@ void CALLBACK_RunRealInt(Bit8u intnum);
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off);
 
 bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type);
+bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress);
 
 bool CALLBACK_Free(Bitu callback);
 
