@@ -26,7 +26,7 @@
 #include <string.h>
 #include "dosbox.h"
 #include "support.h"
-
+#include "video.h"
 
 /* 
 	Ripped some source from freedos for this one.
@@ -230,6 +230,7 @@ void E_Exit(char * format,...) {
 	printf(buf);
 	printf("Press ENTER to stop\n");
 	fgetc(stdin);
-   	exit(2);
+	GFX_Stop();
+	exit(2);
 
 };
