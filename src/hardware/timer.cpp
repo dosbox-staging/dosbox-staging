@@ -58,7 +58,6 @@ static struct TimerBlock {
 	Bitu ticks;
 } timer;
 
-#define PIT_TICK_RATE 1193182
 #define PIT_SHIFT 9
 #define MAX_PASSED ((PIT_TICK_RATE/4) << PIT_SHIFT)		/* Alow 1/4 second of timer build up */
 
@@ -114,7 +113,7 @@ static void write_latch(Bit32u port,Bit8u val) {
 			LOG_DEBUG("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
-			PCSPEAKER_SetFreq(PIT_TICK_RATE/p->cntr);
+			PCSPEAKER_SetCounter(p->cntr,p->mode);
 			break;
 		default:
 			LOG_ERROR("PIT:Illegal timer selected for writing");
@@ -285,8 +284,6 @@ void TIMER_AddTicks(Bit32u ticks) {
 void TIMER_CheckPIT(void) {
 	if (timer_buildup>timer_ticks) {
 		timer_buildup-=timer_ticks;
-		if (timer_buildup>timer_ticks) TimerAgain=true;
-		else TimerAgain=false;
 		/* Calculate amount of times the time index was requested */
 		timer.req[timer.req_index]=timer.req_count;
 		timer.req_index++;if (timer.req_index>=TIMER_AVERAGE) timer.req_index=0;
@@ -296,7 +293,7 @@ void TIMER_CheckPIT(void) {
 		timer.req_average=1/(total/TIMER_AVERAGE);
 		PIC_ActivateIRQ(0);
 		return;
-	} else TimerAgain=false;
+	}
 }
 
 
