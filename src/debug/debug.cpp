@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.55 2004-06-20 19:13:10 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.56 2004-07-12 12:42:19 qbix79 Exp $ */
 
 #include "programs.h"
 
@@ -1672,7 +1672,7 @@ void DEBUG_Init(Section* sec) {
 	MSG_Add("DEBUG_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	DEBUG_DrawScreen();
 	/* Add some keyhandlers */
-	MAPPER_AddHandler(DEBUG_Enable,MK_kpminus,0,"debugger","Debugger");
+	MAPPER_AddHandler(DEBUG_Enable,MK_pause,0,"debugger","Debugger");
 	/* Clear the TBreakpoint list */
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.28 2004-07-04 21:18:05 harekiet Exp $ */
+/* $Id: render.cpp,v 1.29 2004-07-12 12:42:20 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -360,17 +360,17 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,double ratio,bool dblw,bool 
 	RENDER_ReInit();
 }
 
-extern void GFX_SetTitle(Bits cycles, Bits frameskip);
+extern void GFX_SetTitle(Bits cycles, Bits frameskip,bool paused);
 static void IncreaseFrameSkip(void) {
 	if (render.frameskip.max<10) render.frameskip.max++;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
-	GFX_SetTitle(-1,render.frameskip.max);
+	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 
 static void DecreaseFrameSkip(void) {
 	if (render.frameskip.max>0) render.frameskip.max--;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
-	GFX_SetTitle(-1,render.frameskip.max);
+	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 
 void RENDER_Init(Section * sec) {
@@ -404,6 +404,6 @@ void RENDER_Init(Section * sec) {
 	}
 	MAPPER_AddHandler(DecreaseFrameSkip,MK_f7,MMOD1,"decfskip","Dec Fskip");
 	MAPPER_AddHandler(IncreaseFrameSkip,MK_f8,MMOD1,"incfskip","Inc Fskip");
-	GFX_SetTitle(-1,render.frameskip.max);
+	GFX_SetTitle(-1,render.frameskip.max,false);
 }
 

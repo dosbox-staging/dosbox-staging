@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.58 2004-06-10 07:13:02 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.59 2004-07-12 12:42:19 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1290,7 +1290,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 	reg_esp=(reg_esp&~cpu.stack.mask)|((sp_index)&cpu.stack.mask);
 }
 
-extern void GFX_SetTitle(Bits cycles ,Bits frameskip);
+extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
 static void CPU_CycleIncrease(void) {
 	Bits old_cycles=CPU_CycleMax;
 	if(CPU_CycleUp < 100){
@@ -1302,7 +1302,7 @@ static void CPU_CycleIncrease(void) {
 	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
-	GFX_SetTitle(CPU_CycleMax,-1);
+	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
 static void CPU_CycleDecrease(void) {
@@ -1314,7 +1314,7 @@ static void CPU_CycleDecrease(void) {
 	CPU_CycleLeft=0;CPU_Cycles=0;
 	if (CPU_CycleMax <= 0) CPU_CycleMax=1;
 	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
-	GFX_SetTitle(CPU_CycleMax,-1);
+	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
 void CPU_Init(Section* sec) {
@@ -1377,6 +1377,6 @@ void CPU_Init(Section* sec) {
 	if(!CPU_CycleUp)   CPU_CycleUp = 500;
 	if(!CPU_CycleDown) CPU_CycleDown = 20;
 	CPU_CycleLeft=0;
-	GFX_SetTitle(CPU_CycleMax,-1);
+	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.42 2004-07-08 20:08:52 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.43 2004-07-12 12:42:20 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -93,14 +93,14 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
-extern void GFX_SetTitle(Bits cycles,Bits frameskip);
+extern void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused);
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
 	mcb.GetFileName(name);
 	if (!strlen(name)) strcpy(name,"DOSBOX");
 	RunningProgram=name;
-	GFX_SetTitle(-1,-1);
+	GFX_SetTitle(-1,-1,false);
 }
 
 bool DOS_Terminate(bool tsr) {

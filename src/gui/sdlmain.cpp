@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.68 2004-07-05 11:54:53 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.69 2004-07-12 12:42:20 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -166,15 +166,41 @@ static SDL_Block sdl;
 static void CaptureMouse(void);
 
 extern char * RunningProgram;
-void GFX_SetTitle(Bits cycles,Bits frameskip){
+void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 	char title[200]={0};
 	static Bits internal_cycles=0;
 	static Bits internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
-	sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+	if(paused)
+		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s PAUSED",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+	else
+		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);     
 	SDL_WM_SetCaption(title,VERSION);
 }
+
+static void PauseDOSBox(void) {
+	GFX_SetTitle(-1,-1,true);
+	bool paused = true;
+	SDL_Delay(500);
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		// flush event queue.
+	}
+	while (paused) {
+		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+		switch (event.type) {
+		case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
+		case SDL_KEYUP:
+			if(event.key.keysym.sym==SDLK_PAUSE){
+				paused=false;
+				GFX_SetTitle(-1,-1,false);
+				break;
+			}
+		}
+	}
+}
+ 
 
 /* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags) {
@@ -679,6 +705,11 @@ static void GUI_StartUp(Section * sec) {
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
 	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
+#if C_DEBUG
+	/* Pause binds with activate-debugger */
+#else
+	MAPPER_AddHandler(PauseDOSBox,MK_pause,0,"pause","Pause");
+#endif
 }
 
 void Mouse_AutoLock(bool enable) {
