@@ -74,31 +74,13 @@ public:
 static Bit32u kut=10;
 static BlockReturn gen_runcode(Bit8u * code) {
 	BlockReturn retval;
-	#define NEW_MASK $FMASK_TEST
-	__asm__ volatile (
-
-		"pushfl							\n"
-		"movl %1,%%ebx					\n"
-		"andl %2,%%ebx					\n"
-		"popl %%ecx						\n"
-		"andl %3,%%ecx					\n"
-		"orl %%ebx,%%ecx				\n"
-		"pushl %%ecx					\n"
-		"popfl							\n"
-		"call  %4						\n"
-		"pushfl							\n"
-		"movl %1,%%ebx					\n"
-		"andl %3,%%ebx					\n"
-		"popl %%ecx						\n"
-	    "andl %2,%%ecx					\n"
-		"orl %%ecx,%%ebx				\n"
-		"movl %%ebx,%1					\n"
-		:"=a" (retval)
-		:"m" (reg_flags), "n" (FMASK_TEST),"n" (~FMASK_TEST),"m" (code)
-		:"%ecx","%edx","%ebx","%ebp","%edi","%esi","cc","memory"
-	);
-#if 0
+#if defined (_MSC_VER)
+	__asm {
 /* Prepare the flags */
+		push	ebx
+		push	ebp
+		push	esi
+		push	edi
 		pushfd	
 		mov		ebx,[reg_flags]
 		and		ebx,FMASK_TEST
@@ -122,6 +104,28 @@ static BlockReturn gen_runcode(Bit8u * code) {
 		pop		ebx
 		mov		[retval],eax
 	}
+#else
+	__asm__ volatile (
+		"pushfl							\n"
+		"movl %1,%%ebx					\n"
+		"andl %2,%%ebx					\n"
+		"popl %%ecx						\n"
+		"andl %3,%%ecx					\n"
+		"orl %%ebx,%%ecx				\n"
+		"pushl %%ecx					\n"
+		"popfl							\n"
+		"call  %4						\n"
+		"pushfl							\n"
+		"movl %1,%%ebx					\n"
+		"andl %3,%%ebx					\n"
+		"popl %%ecx						\n"
+	    "andl %2,%%ecx					\n"
+		"orl %%ecx,%%ebx				\n"
+		"movl %%ebx,%1					\n"
+		:"=a" (retval)
+		:"m" (reg_flags), "n" (FMASK_TEST),"n" (~FMASK_TEST),"m" (code)
+		:"%ecx","%edx","%ebx","%ebp","%edi","%esi","cc","memory"
+	);
 #endif
 	return retval;
 }
