@@ -91,6 +91,11 @@ static Bit8u read_dma(Bit32u port) {
 		}
 		cont->flipflop=!cont->flipflop;
 		break;
+	case 0x08:	/* Read Status */
+		ret=cont->status_reg;
+		cont->status_reg&=0xf;	/* Clear lower 4 bits on read */
+		break;
+
 	default:
 		LOG_WARN("DMA:Unhandled read from %d",port);
 	}
@@ -128,6 +133,8 @@ static void write_dma(Bit32u port,Bit8u val) {
 	case 0x09:	/* Request Register */
 		if (val&4) {
 			/* Set Request bit */
+			Bitu channel = val & 0x03;
+			cont->status_reg |= (1 << (channel+4));
 		} else {
 			Bitu channel = val & 0x03;
 			cont->status_reg &= ~(1 << (channel+4));
@@ -183,13 +190,15 @@ Bit16u DMA_8_Read(Bit32u dmachan,Bit8u * buffer,Bit16u count) {
 		chan->current_address=chan->base_address;
 		DMA_DEBUG("DMA:Transfer from %d size %d",(chan->page << 16)+chan->base_address,chan->current_count);
 	}
-	if (chan->current_count>=count) {
+	if (chan->current_count>count) {
 		MEM_BlockRead(chan->address,buffer,count);
 		chan->address+=count;
 		chan->current_address+=count;
 		chan->current_count-=count;
 		return count;
 	} else {
+		/* Set the end of counter bit */
+		dma[0].status_reg|=(1 << dmachan);
 		/* Copy remaining piece of first buffer */
 		MEM_BlockRead(chan->address,buffer,chan->current_count);
 		buffer+=chan->current_count;
