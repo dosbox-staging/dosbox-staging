@@ -34,6 +34,7 @@
 #include "mixer.h"
 #include "debug_inc.h"
 #include "timer.h"
+#include "../ints/xms.h"
 #include "../shell/shell_inc.h"
 
 #ifdef WIN32
@@ -1090,24 +1091,25 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-		
-		static char outmask[] = "%s:[%04X]=%02X";
-		
-		if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
+		if (address<(XMS_GetSize()+1)*1024*1024) {
+			static char outmask[] = "%s:[%04X]=%02X";
+			
+			if (cpu.state & STATE_PROTECTED) outmask[6] = '8';
 
-		switch (DasmLastOperandSize()) {
-			case 8 : {	Bit8u val = mem_readb(address);
-						outmask[12] = '2';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
-			case 16: {	Bit16u val = mem_readw(address);
-						outmask[12] = '4';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
-			case 32: {	Bit32u val = mem_readd(address);
-						outmask[12] = '8';
-						sprintf(result,outmask,prefix,adr,val);
-					 }	break;
+			switch (DasmLastOperandSize()) {
+				case 8 : {	Bit8u val = mem_readb(address);
+							outmask[12] = '2';
+							sprintf(result,outmask,prefix,adr,val);
+						 }	break;
+				case 16: {	Bit16u val = mem_readw(address);
+							outmask[12] = '4';
+							sprintf(result,outmask,prefix,adr,val);
+						 }	break;
+				case 32: {	Bit32u val = mem_readd(address);
+							outmask[12] = '8';
+							sprintf(result,outmask,prefix,adr,val);
+						 }	break;
+			}
 		}
 		// Variable found ?
 		CDebugVar* var = CDebugVar::FindVar(address);
