@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.13 2003-09-30 08:56:52 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.14 2003-10-13 19:44:46 finsterr Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -28,6 +28,7 @@
 bool DOS_IOCTL(void) {
 	Bitu handle;Bit8u drive;
 	if (reg_al<8) {				/* call 0-7 use a file handle */
+		Bitu what = reg_bx;
 		handle=RealHandle(reg_bx);
 		if (handle>=DOS_FILES) {
 			DOS_SetError(DOSERR_INVALID_HANDLE);

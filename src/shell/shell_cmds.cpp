@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.29 2003-10-11 12:16:35 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.30 2003-10-13 19:44:47 finsterr Exp $ */
 
 #include <string.h>
 
@@ -265,7 +265,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
 	DOS_DTA dta(dos.dta);
-	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+//	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+	bool ret=DOS_FindFirst(args,0xffff);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;

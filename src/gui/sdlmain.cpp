@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.45 2003-09-30 08:59:18 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.46 2003-10-13 19:44:46 finsterr Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -284,7 +284,7 @@ static void GUI_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.full_screen=false;
-	sdl.nowait=section->Get_bool("nowait");
+	sdl.nowait=false; //section->Get_bool("nowait");
 	sdl.mouse.locked=false;
 	sdl.mouse.requestlock=false;
 	sdl.mouse.autoenable=section->Get_bool("autolock");
@@ -300,7 +300,7 @@ static void GUI_StartUp(Section * sec) {
 	/* Initialize screen for first time */
 	GFX_SetSize(640,400,8,0,0,0);
 	SDL_EnableKeyRepeat(250,30);
-	SDL_EnableUNICODE(1);
+	SDL_EnableUNICODE(0);
 /* Get some Keybinds */
 	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
 	KEYBOARD_AddEvent(KBD_f10,KBD_MOD_CTRL,CaptureMouse);

@@ -212,7 +212,7 @@ INLINE void ResetDMA8(DMA_CHANNEL * chan) {
 	chan->address=(chan->page << 16)+chan->base_address;
 	chan->current_count=chan->base_count+1;
 	chan->current_address=chan->base_address;
-	LOG(LOG_DMA,LOG_NORMAL)("Setup at address %X:%X count %X",chan->page<<12,chan->base_address,chan->current_count);
+//	LOG(LOG_DMA,LOG_NORMAL)("Setup at address %X:%X count %X",chan->page<<12,chan->base_address,chan->current_count);
 }
 
 Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {

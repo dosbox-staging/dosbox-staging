@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.53 2003-10-02 18:00:54 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.54 2003-10-13 19:44:46 finsterr Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +38,8 @@ Bit8u dos_copybuf[0x10000];
 static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
 static Bitu call_casemap;
 
+void DEBUG_HeavyWriteLogInstruction(void);
+
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
@@ -47,6 +49,8 @@ static Bitu DOS_21Handler(void) {
 
 	DOS_PSP psp(dos.psp);
 	psp.SetStack(RealMake(SegValue(ss),reg_sp));
+
+	LOG(LOG_MISC,LOG_ERROR)("DOS: Call %04X %04X %04X %04X",reg_ax,reg_bx,reg_cx,reg_dx);
 
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
@@ -270,6 +274,8 @@ static Bitu DOS_21Handler(void) {
 			dos.dta=RealMakeSeg(ds,reg_dx);
 			DOS_PSP psp(dos.psp);
 			psp.SetDTA(dos.dta);
+			DOS_DTA dta(dos.dta);
+			LOG(LOG_MISC,LOG_ERROR)("DOS:1A:Set DTA %04X:%04X (ID:%04X)",SegValue(ds),reg_dx,dta.GetDirID());
 		}
 		break;
 	case 0x25:		/* Set Interrupt Vector */
@@ -321,6 +327,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x2f:		/* Get Disk Transfer Area */
 		SegSet16(es,RealSeg(dos.dta));
 		reg_bx=RealOff(dos.dta);
+		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:2F:Get DTA: %04X:%04X",SegValue(es),reg_bx);
 		break;
 	case 0x30:		/* Get DOS Version */
 		if (reg_al==0) reg_bh=0xFF;		/* Fake Microsoft DOS */
@@ -331,6 +338,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x31:		/* Terminate and stay resident */
 		//TODO First get normal files executing
 		// Important: This service does not set the carry flag!
+		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Terminated.");
 		DOS_ResizeMemory(dos.psp,&reg_dx);
 		DOS_Terminate(true);
 		dos.return_code=reg_al;
@@ -527,7 +535,7 @@ static Bitu DOS_21Handler(void) {
 			break;
 		case 0x01:				/* Set */
 			LOG(LOG_MISC,LOG_ERROR)("DOS:Set File Attributes for %s not supported",name1);
-			CALLBACK_SCF(false);
+			CALLBACK_SCF(true);
 			break;
 		default:
 			LOG(LOG_MISC,LOG_ERROR)("DOS:0x43:Illegal subfunction %2X",reg_al);
@@ -618,6 +626,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x4c:					/* EXIT Terminate with return code */
 		
         {
+			DEBUG_HeavyWriteLogInstruction();
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Terminated 0x4C.");
 			if (DOS_Terminate(false)) {
 				/* This can't ever return false normally */
 			} else {            

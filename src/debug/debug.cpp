@@ -369,6 +369,14 @@ bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 	} else
 		ignoreAddressOnce = 0;
 
+	// TEMP
+	static bool once = false;
+	if (!once) {
+		if ((intNr==0x21) && (reg_ah==0x3f) && (reg_cx==8450)) {
+			once = true;
+			return true;
+		}
+	}
 	// Search matching breakpoint
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
@@ -629,8 +637,10 @@ static void DrawRegisters(void) {
 
 	oldflags=flags.word;
 
-	if (cpu.pmode)	mvwprintw(dbg.win_reg,0,76,"Prot");
-	else			mvwprintw(dbg.win_reg,0,76,"Real");
+	if (cpu.pmode) {
+		if (cpu.code.big)	mvwprintw(dbg.win_reg,0,76,"Pr32");
+		else				mvwprintw(dbg.win_reg,0,76,"Pr16");
+	} else mvwprintw(dbg.win_reg,0,76,"Real");
 
 	// Selector info, if available
 	if ((cpu.pmode) && curSelectorName[0]) {		
@@ -877,6 +887,13 @@ bool ParseCommand(char* str)
 		return true;
 	}
 
+	found = strstr(str,"SR ");
+	if (found) { // Set register value
+		found+=2;
+		if (ChangeRegister(found))	DEBUG_ShowMsg("DEBUG: Set Register success.");
+		else						DEBUG_ShowMsg("DEBUG: Set Register failure.");
+		return true;
+	}	
 	found = strstr(str,"BP ");
 	if (found) { // Add new breakpoint
 		found+=3;
@@ -958,13 +975,6 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("DEBUG: Logfile LOGCPU.TXT created.");
 		return true;
 	}
-	found = strstr(str,"SR ");
-	if (found) { // Set register value
-		found+=2;
-		if (ChangeRegister(found))	DEBUG_ShowMsg("DEBUG: Set Register success.");
-		else						DEBUG_ShowMsg("DEBUG: Set Register failure.");
-		return true;
-	}	
 	found = strstr(str,"SM ");
 	if (found) { // Set memory with following values
 		found+=3;
@@ -1614,7 +1624,7 @@ void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
 
 #if C_HEAVY_DEBUG
 
-const Bit32u LOGCPUMAX = 20000;
+const Bit32u LOGCPUMAX = 100000;
 
 static Bit16u logCpuCS [LOGCPUMAX];
 static Bit32u logCpuEIP[LOGCPUMAX];
@@ -1669,8 +1679,168 @@ bool DEBUG_HeavyIsBreakpoint(void)
 		skipFirstInstruction = false;
 		return false;
 	}
-	PhysPt where = SegPhys(cs)+reg_eip;
+
+	static bool once = false;
+	static Bit8u oldValue = 0;
+
+/*	if (!once && (mem_readb(0x276000)==205)) {
+		LOG(LOG_MISC,LOG_ERROR)("Changed to 205");
+		DEBUG_HeavyWriteLogInstruction();
+		once = true;
+		exitLoop = true;
+		DEBUG_Enable();
+		return true;
+	}
 	
+	/*
+	if (cpu.pmode) {	
+		
+		if ((SegValue(cs)==0x010F) && (reg_eip==0x45941)) {
+			LOG(LOG_MISC,LOG_ERROR)("REP MOVSB DS:ESI=%04X:%08X ES:EDI=%04X:%08X ECX=%08X",SegValue(ds),reg_esi,SegValue(es),reg_edi,reg_ecx);
+		}
+
+		Descriptor desc;
+		if (cpu.gdt.GetDescriptor(0x10F,desc)) {
+			Bit8u newValue = mem_readb(desc.GetBase()+0x45941);
+			if (oldValue!=newValue) {
+				LOG(LOG_MISC,LOG_ERROR)("Value changed from %02X to %02X",oldValue,newValue);
+				DEBUG_HeavyWriteLogInstruction();
+				once = true;
+				exitLoop = true;
+				DEBUG_Enable();
+				oldValue = newValue;
+				return true;
+			}
+		};
+	};
+	
+	
+/*	if (!once && cpu.pmode) {	
+//		if (mem_readw(0x779e64+0x2A5A)==0x05d4) {
+		if (mem_readw(0x74cef0+0x0786)==0x05d4) {
+			LOG(LOG_MISC,LOG_ERROR)("Compare value set to 0x05d4");
+			DEBUG_HeavyWriteLogInstruction();
+			once = true;
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		}
+	}
+		
+		/*
+		Descriptor desc;
+		if (!once && cpu.gdt.GetDescriptor(0x43c,desc)) {
+//			if (mem_readw(desc.GetBase()+0x97B4)==0x018C) {
+			if (mem_readw(desc.GetBase()+0x2E10)==0x0000) {
+				LOG(LOG_MISC,LOG_ERROR)("Index set ot 0x018C");
+				//once = true;
+				mem_writew(desc.GetBase()+0x2E10,0x0010);
+				exitLoop = true;
+				DEBUG_Enable();
+				return true;
+			};
+		}
+	}
+	
+/*	static Bitu lastval = 0;
+//	if (mem_readd(0x11F000+0xB856)!=lastval) {
+	if (mem_readd(0x11F000)!=lastval) {
+//		lastval = mem_readd(0x11F000+0xB856);
+		lastval = mem_readd(0x11F000);
+		LOG(LOG_MISC,LOG_ERROR)("Changed to %08X",lastval);
+		if (lastval==0) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		};
+	}
+	
+	
+	if (cpu.pmode) {	
+		if (mem_readd(SegPhys(cs)+reg_eip)==0) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		}
+	}
+*/
+/*	if (cpu.pmode) {	
+		if ((SegValue(cs)==0x397) && (reg_eip==0x23B)) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		}
+	}
+*/
+/*	if (cpu.pmode) {	
+		if (mem_readd(0x23602c)==0x00236030) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		}
+	}
+*/
+//	if (!once && cpu.pmode) {	
+	
+/*		if (mem_readw(0x007f6904+2)==0xFEF0) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			once = true;
+			return true;
+		};
+
+/*		Descriptor desc;
+		if (cpu.gdt.GetDescriptor(0x0514,desc) && desc.saved.seg.p) {
+//			if (desc.GetBase()!=0) { //6EEC1F1) {
+			if (mem_readw(desc.GetBase()+0x000095a4)==0x006F) { //6EEC1F1) {
+				DEBUG_HeavyWriteLogInstruction();
+				exitLoop = true;
+				DEBUG_Enable();
+				once = true;
+				return true;
+			}
+		}
+/*		if ((SegValue(cs)==0x01B) && (reg_eip==0x018C) && (reg_ax==0x0267)) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			once = true;
+			return true;
+		}*/
+/*		if ((SegValue(cs)==0x01B) && (reg_eip==0x018C) && (((reg_cx<<16)+reg_dx)==0x20)) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			once = true;
+			return true;
+		}*/
+//	}
+
+/*	if (!once && cpu.pmode) {	
+		if ((SegValue(cs)==0x001B) && (reg_eip==0x018C) && (reg_ax==0x0008) && (((reg_cx<<16)+reg_dx)==0x20)) {
+			DEBUG_HeavyWriteLogInstruction();
+			exitLoop = true;
+			DEBUG_Enable();
+			once = true;
+			return true;
+		}
+	}
+*/	
+
+/*	if (SegValue(es)==0xFD5D) {
+		DEBUG_HeavyWriteLogInstruction();
+		exitLoop = true;
+		DEBUG_Enable();
+		return true;
+	};
+*/
+
+	PhysPt where = SegPhys(cs)+reg_eip;
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
 //		exitLoop = true;
 //		DEBUG_Enable();

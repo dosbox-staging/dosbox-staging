@@ -196,7 +196,7 @@ void LOG_StartUp(void) {
 	
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	sect->Add_string("logfile","");
+	sect->Add_string("logfile","log.txt");
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
