@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.14 2003-09-08 18:06:44 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.15 2003-10-22 15:48:20 harekiet Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -56,7 +56,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	if ((cache) && (*size)) {
 		data[count++]=cache;
         if(dos.echo) {
-            INT10_TeletypeOutput(cache,7,false);
+            INT10_TeletypeOutput(cache,7);
         }
         cache=0;
 
@@ -71,8 +71,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
   			*size=count;
 			reg_ax=oldax;
             if(dos.echo) { 
-                 INT10_TeletypeOutput(13,7,false); //maybe don't do this ( no need for it actually ) (but it's compatible)
-                 INT10_TeletypeOutput(10,7,false);
+                 INT10_TeletypeOutput(13,7); //maybe don't do this ( no need for it actually ) (but it's compatible)
+                 INT10_TeletypeOutput(10,7);
             }
 			return true;
             break;
@@ -80,8 +80,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
             if(*size==1) data[count++]=reg_al;  //one char at the time so give back that BS
             else if(count) {                    //Remove data if it exists (extended keys don't go right)
                 data[count--]=0;
-                INT10_TeletypeOutput(8,7,false);
-                INT10_TeletypeOutput(' ',7,false);
+                INT10_TeletypeOutput(8,7);
+                INT10_TeletypeOutput(' ',7);
             } else {
                 continue;                       //no data read yet so restart whileloop.
             }
@@ -98,7 +98,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
             
             }
         if(dos.echo) { //what to do if *size==1 and character is BS ?????
-            INT10_TeletypeOutput(reg_al,7,false);
+            INT10_TeletypeOutput(reg_al,7);
         }
 	}
 	*size=count;
@@ -124,7 +124,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 
             } else { 
 				// pass attribute only if ansi is enabled
-				INT10_TeletypeOutput(data[count],ansi.attr,ansi.enabled);
+				INT10_TeletypeOutputAttr(data[count],ansi.attr,ansi.enabled);
 				count++;
 				continue;
             };
@@ -315,7 +315,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                 LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: esc[%dJ called : not supported",ansi.data[0]);
                 break;
             }
-            for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutput(' ',ansi.attr,true);
+            for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
             ClearAnsi();
             INT10_SetCursorPos(0,0,0);
             break;
@@ -334,7 +334,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             ClearAnsi();
             break;
         case 'K':/* erase till end of line */ 
-			for(i = CURSOR_POS_COL(0);i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutput(' ',ansi.attr,true);
+			for(i = CURSOR_POS_COL(0);i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
             ClearAnsi(); /* maybe set cursor back to starting place ???? */
 			break;
         case 'l':/* (if code =7) disable linewrap */
