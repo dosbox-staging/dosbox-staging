@@ -76,27 +76,22 @@ static BlockReturn gen_runcode(Bit8u * code) {
 #if defined (_MSC_VER)
 	__asm {
 /* Prepare the flags */
+		mov		eax,[code]
 		push	ebx
 		push	ebp
 		push	esi
 		push	edi
-		pushfd	
 		mov		ebx,[reg_flags]
 		and		ebx,FMASK_TEST
-		pop		ecx
-		and		ecx,~FMASK_TEST
-		or		ecx,ebx
-		push	ecx
+		push	ebx
 		popfd
-		call	dword ptr [code];
+		call	eax
 /* Restore the flags */
 		pushfd	
-		mov		ebx,[reg_flags]
-		and		ebx,~FMASK_TEST
+		and		dword ptr [reg_flags],~FMASK_TEST
 		pop		ecx
 		and		ecx,FMASK_TEST
-		or		ebx,ecx
-		mov		[reg_flags],ebx
+		or		[reg_flags],ecx
 		pop		edi
 		pop		esi
 		pop		ebp
