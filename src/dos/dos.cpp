@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.64 2004-01-19 17:51:04 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.65 2004-02-02 11:38:44 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -519,6 +519,7 @@ static Bitu DOS_21Handler(void) {
 		case 0x00:				/* Get */
 		{
 			if (DOS_GetFileAttr(name1,&reg_cx)) {
+				reg_ax=reg_cx; /* Undocumented */   
 				CALLBACK_SCF(false);
 			} else {
 				CALLBACK_SCF(true);
