@@ -65,7 +65,7 @@ void DEBUG_ShowMsg(char * format,...) {
 	if (logBuffPos!=logBuff.end()) {
 		logBuffPos=logBuff.end();
 		DEBUG_RefreshPage(0);
-		mvwprintw(dbg.win_out,dbg.win_out->_maxy, 0, "");
+		mvwprintw(dbg.win_out,dbg.win_out->_maxy-1, 0, "");
 	}
 	logBuff.push_back(newLine);
 	if (logBuff.size()>500) {
