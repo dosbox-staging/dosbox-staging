@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.25 2004-03-07 08:16:20 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.26 2004-03-07 10:30:15 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -138,7 +138,7 @@ static INLINE void CGA4_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,B
 
 static INLINE void TANDY16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
-	PhysPt dest=base+((CurMode->twidth*row)*cheight+cleft)*4;
+	PhysPt dest=base+((CurMode->twidth*row)*(cheight/4)+cleft)*4;
 	Bitu copy=(cright-cleft)*4;Bitu nextline=CurMode->twidth*4;
 	attr=(attr & 0xf) | (attr & 0xf) << 4;
 	for (Bitu i=0;i<cheight/4U;i++) {
@@ -419,7 +419,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	//TODO Check for out of bounds
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline=mem_readb(fontdata++); //added ++ for at least the CGA modes.
+		Bit8u bitline=mem_readb(fontdata++);
 		Bit16u tx=x;
 		while (bitsel) {
 			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);
