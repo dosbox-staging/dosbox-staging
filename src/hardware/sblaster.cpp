@@ -549,12 +549,14 @@ static void DSP_DoDMATranfser(DMA_MODES mode) {
 	DSP_ChangeMode(MODE_DMA_WAIT);
 	sb.dma.mode=mode;
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+#if (C_DEBUG)
 	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%d-bits %s %s dma-rate %d size %d",
 		bits,
 		sb.dma.stereo ? "Stereo" : "Mono",
 		sb.dma.autoinit ? "Auto-Init" : "Single-Cycle",
 		sb.dma.rate,sb.dma.total
 	);
+#endif
 }
 
 static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
