@@ -140,7 +140,7 @@ static void LOG_Destroy(Section* sec) {
 static void LOG_Init(Section * sec) {
 	Section_prop * sect=static_cast<Section_prop *>(sec);
 	const char * blah=sect->Get_string("logfile");
-	if(blah && (debuglog = fopen(blah,"wt+"))){
+	if(blah && blah[0] &&(debuglog = fopen(blah,"wt+"))){
 	}else{
 		debuglog=0;
 	}
