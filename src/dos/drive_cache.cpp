@@ -104,7 +104,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 	if (pos) {
 		// Last Entry = File
 		strcpy(dir,pos+1); 
-		if (strchr(dir,'~')) GetLongName(dirInfo, dir);
+		GetLongName(dirInfo, dir);
 		strcat(work,dir);
 	}
 	return work;
@@ -122,12 +122,6 @@ void DOS_Drive_Cache::AddEntry(const char* path)
 	if (pos) {
 		strcpy(file,pos+1);	
 		
-		// already in ?
-		if (GetLongName(dir,file)>=0) {
-			int brk = 0;
-			return;
-		};
-
 		CreateEntry(dir,file);
 		// Sort Lists - filelist has to be alphabetically sorted
 		std::sort(dir->fileList.begin(), dir->fileList.end(), SortByName);
@@ -245,25 +239,37 @@ Bit16s DOS_Drive_Cache::RemoveSpaces(char* str)
 
 void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 {
-	Bit16s len	  = 0;
-	Bit16s lenExt = 0;
-	char tmpName[CROSS_LEN];
+	Bit16s	len			= 0;
+	Bit16s	lenExt		= 0;
+	bool	createShort = 0;
+
+	char tmpNameBuffer[CROSS_LEN];
+
+	char* tmpName = tmpNameBuffer;
 
 	// Remove Spaces
 	strcpy(tmpName,info->fullname);
-	len = RemoveSpaces(tmpName);		
+	len = RemoveSpaces(tmpName);
 
 	// Get Length of filename
 	char* pos = strchr(tmpName,'.');
 	if (pos) {
-		len = (Bit16u)(pos - tmpName);
 		// Get Length of extension
 		lenExt = strlen(pos)-1;
+		// ignore preceding '.' if extension is longer than "3"
+		if (lenExt>3) {
+			while (*tmpName=='.') tmpName++;
+			createShort = true;
+		};
+		pos = strchr(tmpName,'.');
+		if (pos)	len = (Bit16u)(pos - tmpName);
+		else		len = strlen(tmpName);
+
 	} else 
 		len = strlen(tmpName);
 
 	// Should shortname version be created ?
-	bool createShort = (len>8) || (lenExt>3);
+	if (!createShort) createShort = (len>8);
 	if (!createShort) {
 		char buffer[CROSS_LEN];
 		strcpy(buffer,tmpName);
