@@ -65,11 +65,14 @@ typedef struct {
 	Bit8u color_compare;
 	Bit8u data_rotate;
 	Bit8u raster_op;
-	Bit8u enable_set_reset;
-	Bit8u set_reset;
 
 	Bit32u full_bit_mask;
 	Bit32u full_map_mask;
+	Bit32u full_not_map_mask;
+	Bit32u full_set_reset;
+	Bit32u full_not_enable_set_reset;
+	Bit32u full_enable_set_reset;
+	Bit32u full_enable_and_set_reset;
 
 } VGA_Config;
 
@@ -215,14 +218,10 @@ void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu next_line);
 void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu next_line);
 /* The Different Memory Read/Write Handlers */
 Bit8u VGA_NormalReadHandler(Bit32u start);
-void VGA_NormalWriteHandler(Bit32u start,Bit8u val);
 
 void VGA_GFX_256U_WriteHandler(Bit32u start,Bit8u val);
 void VGA_GFX_16_WriteHandler(Bit32u start,Bit8u val);
 void VGA_GFX_4_WriteHandler(Bit32u start,Bit8u val);
-
-Bit8u VGA_ChainedReadHandler(Bit32u start);
-void VGA_ChainedWriteHandler(Bit32u start,Bit8u val);
 
 Bit8u VGA_GFX_4_ReadHandler(Bit32u start);
 
@@ -248,12 +247,14 @@ extern VGA_Type vga;
 extern Bit8u vga_rom_8[256 * 8];
 extern Bit8u vga_rom_14[256 * 14];
 extern Bit8u vga_rom_16[256 * 16];
-//extern Bit8u vga_buffer[1024*1024];
+
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];
 extern Bit32u CGAWriteTable[256];
+extern Bit32u Expand16Table[4][16];
+extern Bit32u Expand16BigTable[0x10000];
 
-#ifdef DEBUG_VGA
+#if DEBUG_VGA
 #define LOG_VGA LOG_DEBUG
 #else
 #define LOG_VGA
