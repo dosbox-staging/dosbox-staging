@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.23 2004-04-03 19:34:10 harekiet Exp $ */
+/* $Id: timer.cpp,v 1.24 2004-06-17 07:27:55 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -128,9 +128,7 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 	if (p->write_state != 0) {
 		if (p->write_latch == 0) {
 		   if(p->bcd == false) {p->cntr = 0x10000;} else {p->cntr=9999;}
-		}
-	   
-		else p->cntr = p->write_latch;
+		} else p->cntr = p->write_latch;
 		p->start=PIC_MicroCount();
 		p->micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)p->cntr));
 		switch (counter) {
@@ -193,9 +191,10 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 	case 1:
 	case 2:
 		pit[latch].bcd = (val&1)>0;   
-		if (val & 1) if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
-		
-	   
+		if (val & 1) {
+			if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
+		}
+
 		if ((val & 0x30) == 0) {
 			/* Counter latch command */
 			counter_latch(latch);
@@ -220,10 +219,11 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 
 void TIMER_Init(Section* sect) {
 	IO_RegisterWriteHandler(0x40,write_latch,IO_MB);
+//	IO_RegisterWriteHandler(0x41,write_latch,IO_MB);
 	IO_RegisterWriteHandler(0x42,write_latch,IO_MB);
 	IO_RegisterWriteHandler(0x43,write_p43,IO_MB);
 	IO_RegisterReadHandler(0x40,read_latch,IO_MB);
-//	IO_RegisterReadHandler(0x41,read_p41,IO_MB);
+	IO_RegisterReadHandler(0x41,read_latch,IO_MB);
 	IO_RegisterReadHandler(0x42,read_latch,IO_MB);
 	/* Setup Timer 0 */
 	pit[0].cntr=0x10000;
@@ -236,17 +236,25 @@ void TIMER_Init(Section* sect) {
 	pit[0].go_read_latch = true;
 
 	pit[1].bcd = false;
+	pit[1].write_state = 1;
+	pit[1].read_state = 1;
 	pit[1].go_read_latch = true;
-	pit[1].mode = 3;
+	pit[1].cntr = 18;
+	pit[1].mode = 2;
 	pit[1].write_state = 3;   
 
-	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
-	pit[2].micro=100;
 	pit[2].read_latch=0;	/* MadTv1 */
 	pit[2].write_state = 3; /* Chuck Yeager */
+	pit[2].read_state = 3;
 	pit[2].mode=3;
 	pit[2].bcd=false;   
+	pit[2].cntr=1320;
 	pit[2].go_read_latch=true;
+
+	pit[0].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[0].cntr));
+	pit[1].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[1].cntr));
+	pit[2].micro=(Bits)(1000000/((float)PIT_TICK_RATE/(float)pit[2].cntr));
+
 
 	PIC_AddEvent(PIT0_Event,pit[0].micro);
 }
