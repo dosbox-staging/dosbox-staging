@@ -106,6 +106,8 @@ bool DOS_Canonicalize(char * name,char * big);
 bool DOS_CreateTempFile(char * name,Bit16u * entry);
 bool DOS_FileExists(char * name);
 
+/* Helper Functions */
+bool DOS_MakeName(char * name,char * fullname,Bit8u * drive);
 /* Drive Handing Routines */
 Bit8u DOS_GetDefaultDrive(void);
 void DOS_SetDefaultDrive(Bit8u drive);
