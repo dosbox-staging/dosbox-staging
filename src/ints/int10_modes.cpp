@@ -31,16 +31,16 @@ VideoModeBlock ModeList_VGA[]={
 { 0x010  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
 { 0x011  ,M_EGA16  ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,449 ,80 ,480 ,0	},/*was EGA_2 */
 { 0x012  ,M_EGA16  ,640 ,480 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,0	},
-{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,0 },
+{ 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,0   },
 
 { 0x100  ,M_LIN8   ,640 ,400 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,0   },
 { 0x101  ,M_LIN8   ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,0	},
 { 0x103  ,M_LIN8   ,800 ,600 ,100,37 ,8 ,16 ,1 ,0xA0000 ,0x10000,128 ,663 ,100,600 ,0	},
 
-{ 0x150  ,M_LIN8   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 , 0},
-{ 0x151  ,M_LIN8   ,320 ,240 ,40 ,30 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 , 0},
-{ 0x152  ,M_LIN8   ,320 ,400 ,40 ,50 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 , 0 },
-{ 0x153  ,M_LIN8   ,320 ,480 ,40 ,60 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 , 0 },
+{ 0x150  ,M_LIN8   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 , _EGA_LINE_DOUBLE },
+{ 0x151  ,M_LIN8   ,320 ,240 ,40 ,30 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 , _EGA_LINE_DOUBLE },
+{ 0x152  ,M_LIN8   ,320 ,400 ,40 ,50 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 , 0  },
+{ 0x153  ,M_LIN8   ,320 ,480 ,40 ,60 ,8 ,8  ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 , 0  },
 
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
@@ -167,10 +167,8 @@ static void FinishSetMode(bool clearmem) {
 		case M_EGA16:	
 		case M_VGA:
 		case M_LIN8:
-			/* Just clear the whole 2 mb of memory */
-			for (i=0;i<2*1024*1024/4;i++) {
-				mem_writed(S3_LFB_BASE+i*4,0);
-			}
+			/* Hack we just acess the memory directly */
+			memset(&vga.mem,0,sizeof(vga.mem));
 		}
 	}
 	/* Setup the BIOS */
@@ -509,9 +507,20 @@ bool INT10_SetVideoMode(Bitu mode) {
 		Bitu clock=CurMode->vtotal*8*CurMode->htotal*70;
 		VGA_SetClock(3,clock/1000);
 	}
+	Bit8u misc_control_2;
+	/* Setup Pixel format */
+	switch (CurMode->type) {
+	case M_LIN8:
+		if (CurMode->swidth < 640) misc_control_2=0x0;		//Use single pixel mode,M_VGA then
+		else misc_control_2=0x10;
+		break;
+	default:
+		misc_control_2=0x0;
+		break;
+	}
+	IO_WriteB(0x3d4,0x67);IO_WriteB(0x3d5,misc_control_2);
 	/* Write Misc Output */
 	IO_Write(0x3c2,misc_output);
-
 	/* Program Graphics controller */
 	Bit8u gfx_data[GFX_REGS];
 	memset(gfx_data,0,GFX_REGS);
@@ -668,12 +677,12 @@ dac_text16:
 	IO_Write(crtc_base,0x58);IO_Write(crtc_base+1,0x3);	//Enable 8 mb of linear addressing
 	IO_Write(crtc_base,0x38);IO_Write(crtc_base+1,0x48);	//Register lock 1
 	IO_Write(crtc_base,0x39);IO_Write(crtc_base+1,0xa5);	//Register lock 2
-	
+
+	FinishSetMode(clearmem);
 	/* Load text mode font */
 	if (CurMode->type==M_TEXT) {
 		INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
 	}
-	FinishSetMode(clearmem);
 	return true;
 }
 
