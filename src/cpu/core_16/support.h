@@ -95,11 +95,15 @@ static INLINE Bit32u Pop_32() {
 		from=SegBase(ds)+reg_si;							\
 	}
 
-
 #include "helpers.h"
 #include "table_ea.h"
 #include "../modrm.h"
 #include "instructions.h"
+
+
+static Bit8s table_df_8[2]={1,-1};
+static Bit16s table_df_16[2]={2,-2};
+static Bit32s table_df_32[2]={4,-4};
 
 
 static void Repeat_Normal(bool testz,bool prefix_66) {
@@ -110,6 +114,7 @@ static void Repeat_Normal(bool testz,bool prefix_66) {
 	if (flags.df) direct=-1;
 	else direct=1;
 	base_di=SegBase(es);
+	if (prefix.mark & PREFIX_ADDR) E_Exit("Unhandled 0x67 prefixed string op");
 rep_again:	
 	if (prefix.mark & PREFIX_SEG) {
 		base_si=(prefix.segbase);
@@ -134,6 +139,16 @@ rep_again:
 		goto rep_again;
 	case 0x3e:			/* DS Prefix */
 		prefix.segbase=SegBase(ds);
+		prefix.mark|=PREFIX_SEG;
+		prefix.count++;
+		goto rep_again;
+	case 0x64:			/* FS Prefix */
+		prefix.segbase=SegBase(fs);
+		prefix.mark|=PREFIX_SEG;
+		prefix.count++;
+		goto rep_again;
+	case 0x65:			/* GS Prefix */
+		prefix.segbase=SegBase(gs);
 		prefix.mark|=PREFIX_SEG;
 		prefix.count++;
 		goto rep_again;

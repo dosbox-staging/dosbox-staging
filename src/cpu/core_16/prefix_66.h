@@ -149,12 +149,23 @@ switch(Fetchb()) {
 		reg_edi=Pop_32();reg_edi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		break;
-	case 0x68:												/* PUSH Id */
-		Push_32(Fetchd());break;
 	case 0x64:												/* SEG FS: */
 		SegPrefix_66(fs);break;
 	case 0x65:												/* SEG GS: */
 		SegPrefix_66(gs);break;
+	case 0x67:												/* Address Size Prefix */
+#ifdef CPU_PREFIX_67
+			prefix.mark|=PREFIX_ADDR;
+#ifdef CPU_PREFIX_COUNT
+			prefix.count++;
+#endif  			
+			lookupEATable=EAPrefixTable[prefix.mark];
+			goto restart_66;
+#else
+			NOTDONE;
+#endif
+	case 0x68:												/* PUSH Id */
+		Push_32(Fetchd());break;
 	case 0x69:												/* IMUL Gd,Ed,Id */
 		{
 			GetRMrd;
@@ -267,6 +278,15 @@ switch(Fetchb()) {
 	case 0x8c:												
 		LOG_WARN("CPU:66:8c looped back");
 		break;
+	case 0x8d:												/* LEA */
+		{
+			prefix.segbase=0;
+			prefix.mark|=PREFIX_SEG;
+			lookupEATable=EAPrefixTable[prefix.mark];
+			GetRMrd;GetEAa;
+			*rmrd=(Bit32u)eaa;
+			break;
+		}
 	case 0x8f:												/* POP Ed */
 		{
 			GetRM;
@@ -321,14 +341,12 @@ switch(Fetchb()) {
 		}
 	case 0xa1:												/* MOV EAX,Ow */
 		{
-			GetEADirect;
-			reg_eax=LoadMd(eaa);
+			reg_eax=LoadMd(GetEADirect[prefix.mark]());
 		}
 		break;
 	case 0xa3:												/* MOV Ow,EAX */
 		{
-			GetEADirect;
-			SaveMd(eaa,reg_eax);
+			SaveMd(GetEADirect[prefix.mark](),reg_eax);
 		}
 		break;
 	case 0xa5:												/* MOVSD */
@@ -383,6 +401,18 @@ switch(Fetchb()) {
 		reg_edi=Fetchd();break;
 	case 0xc1:												/* GRP2 Ed,Ib */
 		GRP2D(Fetchb());break;
+	case 0xc4:												/* LES */
+		{	
+			GetRMrd;GetEAa;
+			*rmrd=LoadMd(eaa);SegSet16(es,LoadMw(eaa+4));
+			break;
+		}
+	case 0xc5:												/* LDS */
+		{	
+			GetRMrd;GetEAa;
+			*rmrd=LoadMd(eaa);SegSet16(ds,LoadMw(eaa+4));
+			break;
+		}
 	case 0xc7:												/* MOV Ed,Id */
 		{
 			GetRM;

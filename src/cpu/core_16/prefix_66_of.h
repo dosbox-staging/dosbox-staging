@@ -33,6 +33,14 @@ switch (Fetchb()) {
 			else {GetEAa;DSHRD(eaa,*rmrd,Fetchb(),LoadMd,SaveMd);}
 			break;
 		}
+	case 0xad:												/* SHRD Ed,Gd,Cl */
+		{
+			GetRMrd;
+			if (rm >= 0xc0 ) {GetEArd;DSHRD(*eard,*rmrd,reg_cl,LoadRd,SaveRd);}
+			else {GetEAa;DSHRD(eaa,*rmrd,reg_cl,LoadMd,SaveMd);}
+			break;
+		}
+
 	case 0xb6:											/* MOVZX Gd,Eb */
 		{
 			GetRMrd;															
@@ -44,8 +52,8 @@ switch (Fetchb()) {
 		{
 			GetRMrd;
 			Bit64s res;
-			if (rm >= 0xc0 ) {GetEArd;res=(Bit64s)(*rmrd) * (Bit64s)(*eards);}
-			else {GetEAa;res=(Bit64s)(*rmrd) * (Bit64s)LoadMds(eaa);}
+			if (rm >= 0xc0 ) {GetEArd;res=((Bit64s)((Bit32s)*rmrd) * (Bit64s)((Bit32s)*eards));}
+			else {GetEAa;res=((Bit64s)((Bit32s)*rmrd) * (Bit64s)LoadMds(eaa));}
 			*rmrd=(Bit32s)(res);
 			flags.type=t_MUL;
 			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {flags.cf=false;flags.of=false;}
@@ -106,6 +114,56 @@ switch (Fetchb()) {
 			}
 			if (flags.type!=t_CF) flags.prev_type=flags.type;
 			flags.type=t_CF;
+			break;
+		}
+	case 0xbb:												/* BTC Ed,Gd */
+		{
+			GetRMrd;
+			Bit32u mask=1 << (*rmrd & 31);
+			if (rm >= 0xc0 ) {
+				GetEArd;
+				flags.cf=(*eard & mask)>0;
+				*eard^=mask;
+			} else {
+				GetEAa;Bit32u old=LoadMd(eaa);
+				flags.cf=(old & mask)>0;
+				SaveMd(eaa,old ^ mask);
+			}
+			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			break;
+		}
+	case 0xbc:												/* BSF Gd,Ed */
+		{
+			GetRMrd;
+			Bit32u result,value;
+			if (rm >= 0xc0) { GetEArd; value=*eard; } 
+			else			{ GetEAa; value=LoadMd(eaa); }
+			if (value==0) {
+				flags.zf = true;
+			} else {
+				result = 0;
+				while ((value & 0x01)==0) { result++; value>>=1; }
+				flags.zf = false;
+				*rmrd = result;
+			}
+			flags.type=t_UNKNOWN;
+			break;
+		}
+	case 0xbd:												/*  BSR Gd,Ed */
+		{
+			GetRMrd;
+			Bit32u result,value;
+			if (rm >= 0xc0) { GetEArd; value=*eard; } 
+			else			{ GetEAa; value=LoadMd(eaa); }
+			if (value==0) {
+				flags.zf = true;
+			} else {
+				result = 35;	// Operandsize-1
+				while ((value & 0x80000000)==0) { result--; value<<=1; }
+				flags.zf = false;
+				*rmrd = result;
+			}
+			flags.type=t_UNKNOWN;
 			break;
 		}
 	case 0xbe:												/* MOVSX Gd,Eb */

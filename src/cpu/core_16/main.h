@@ -293,7 +293,16 @@ restart:
 			#include "prefix_66.h"
 			break;
 		case 0x67:												/* Address Size Prefix */
+#ifdef CPU_PREFIX_67
+			prefix.mark|=PREFIX_ADDR;
+#ifdef CPU_PREFIX_COUNT
+			prefix.count++;
+#endif  			
+			lookupEATable=EAPrefixTable[prefix.mark];
+			goto restart;
+#else
 			NOTDONE;
+#endif
 			break;
 #endif
 		case 0x68:												/* PUSH Iw */
@@ -657,26 +666,22 @@ restart:
 			}
 		case 0xa0:												/* MOV AL,Ob */
 			{
-				GetEADirect;
-				reg_al=LoadMb(eaa);
+				reg_al=LoadMb(GetEADirect[prefix.mark]());
 			}
 			break;
 		case 0xa1:												/* MOV AX,Ow */
 			{
-				GetEADirect;
-				reg_ax=LoadMw(eaa);
+				reg_ax=LoadMw(GetEADirect[prefix.mark]());
 			}
 			break;
 		case 0xa2:												/* MOV Ob,AL */
 			{
-				GetEADirect;
-				SaveMb(eaa,reg_al);
+				SaveMb(GetEADirect[prefix.mark](),reg_al);
 			}
 			break;
 		case 0xa3:												/* MOV Ow,AX */
 			{
-				GetEADirect;
-				SaveMw(eaa,reg_ax);
+				SaveMw(GetEADirect[prefix.mark](),reg_ax);
 			}
 			break;
 		case 0xa4:												/* MOVSB */
@@ -956,6 +961,7 @@ restart:
 		case 0xde:												/* FPU ESC 6 */
 		case 0xdf:												/* FPU ESC 7 */
 			{
+				LOG_WARN("FPU used");
 				Bit8u rm=Fetchb();
 				if (rm<0xc0) GetEAa;
 			}
@@ -974,9 +980,15 @@ restart:
 			else ADDIPFAST(1);
 			break;
 		case 0xe3:												/* JCXZ */
-			if (!reg_cx) ADDIPFAST(Fetchbs());
-			else ADDIPFAST(1);
-			break;
+			{ 
+				Bitu test;
+				if (prefix.mark & PREFIX_ADDR) {
+					test=reg_ecx;PrefixReset;
+				} else test=reg_cx;
+				if (!test) ADDIPFAST(Fetchbs());
+				else ADDIPFAST(1);
+				break;
+			}
 		case 0xe4:												/* IN AL,Ib */
 			{ Bit16u port=Fetchb();reg_al=IO_Read(port);}
 			break;

@@ -55,9 +55,13 @@ extern Bitu cycle_count;
 
 /* Enable parts of the cpu emulation */
 #define CPU_386							//Enable 386 instructions
+#define CPU_PREFIX_67					//Enable the 0x67 prefix
+#define CPU_PREFIX_COUNT				//Enable counting of prefixes
+
 #if C_FPU
 #define CPU_FPU							//Enable FPU escape instructions
 #endif
+
 
 #include "core_16/support.h"
 static Bitu CPU_Real_16_Slow_Decode_Trap(void);
@@ -73,7 +77,11 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 		if (DEBUG_HeavyIsBreakpoint()) return 1;
 #endif
 		#include "core_16/main.h"
-//		if (prefix.count) LOG_DEBUG("Prefix for non prefixed instruction");
+		if (prefix.count) {
+			PrefixReset;
+			//DEBUG_HeavyWriteLogInstruction();
+			LOG_DEBUG("Prefix for non prefixed instruction");
+		}
 		CPU_Cycles--;
 	}
 	#include "core_16/stop.h"		

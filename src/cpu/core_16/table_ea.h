@@ -19,6 +19,8 @@
 /* Some variables for EA Loolkup */
 
 typedef EAPoint (*GetEATable[256])(void);
+typedef EAPoint (*EA_LookupHandler)(void);
+
 static GetEATable * lookupEATable;
 
 #define PREFIX_NONE		0x0
@@ -34,6 +36,7 @@ static struct {
 
 /* Gets initialized at the bottem, can't seem to declare forward references */
 static GetEATable * EAPrefixTable[4];
+
 
 #define SegPrefix(blah)										\
 	prefix.segbase=SegBase(blah);							\
@@ -54,29 +57,6 @@ static GetEATable * EAPrefixTable[4];
 	prefix.mark=PREFIX_NONE;								\
 	prefix.count=0;											\
 	lookupEATable=EAPrefixTable[PREFIX_NONE];
-
-#if 1
-
-#define GetEADirect														\
-EAPoint eaa;switch (prefix.mark) {											\
-case PREFIX_NONE:eaa=SegBase(ds)+Fetchw();break;						\
-case PREFIX_SEG:eaa=prefix.segbase+Fetchw();PrefixReset;break;			\
-case PREFIX_ADDR:eaa=SegBase(ds)+Fetchd();PrefixReset;break;			\
-case PREFIX_SEG_ADDR:eaa=prefix.segbase+Fetchd();PrefixReset;break;		\
-}
-
-#else
-
-#define GetEADirect																\
-EAPoint eaa;																	\
-if (!prefix.mark) { eaa=SegBase(ds)+Fetchw();}										\
-else if (prefix.mark == PREFIX_SEG) { eaa=prefix.segbase+Fetchw();PrefixReset;}		\
-else if (prefix.mark == PREFIX_ADDR) { eaa=SegBase(ds)+Fetchd();PrefixReset;}			\
-else if (prefix.mark == PREFIX_SEG_ADDR) { eaa=prefix.segbase+Fetchd();PrefixReset;}
-
-#endif 
-
-
 
 
 /* The MOD/RM Decoder for EA for this decoder's addressing modes */
@@ -240,32 +220,32 @@ INLINE EAPoint Sib(Bitu mode) {
 };
 
 
-static EAPoint EA_32_00_n(void) { return SegBase(ds)+reg_eax; }
-static EAPoint EA_32_01_n(void) { return SegBase(ds)+reg_ecx; }
-static EAPoint EA_32_02_n(void) { return SegBase(ds)+reg_edx; }
-static EAPoint EA_32_03_n(void) { return SegBase(ds)+reg_ebx; }
-static EAPoint EA_32_04_n(void) { return Sib(0);}
-static EAPoint EA_32_05_n(void) { return SegBase(ds)+Fetchd(); }
-static EAPoint EA_32_06_n(void) { return SegBase(ds)+reg_esi; }
-static EAPoint EA_32_07_n(void) { return SegBase(ds)+reg_edi; }
+static EAPoint EA_32_00_n(void) { PrefixReset;return SegBase(ds)+reg_eax; }
+static EAPoint EA_32_01_n(void) { PrefixReset;return SegBase(ds)+reg_ecx; }
+static EAPoint EA_32_02_n(void) { PrefixReset;return SegBase(ds)+reg_edx; }
+static EAPoint EA_32_03_n(void) { PrefixReset;return SegBase(ds)+reg_ebx; }
+static EAPoint EA_32_04_n(void) { PrefixReset;return Sib(0);}
+static EAPoint EA_32_05_n(void) { PrefixReset;return SegBase(ds)+Fetchd(); }
+static EAPoint EA_32_06_n(void) { PrefixReset;return SegBase(ds)+reg_esi; }
+static EAPoint EA_32_07_n(void) { PrefixReset;return SegBase(ds)+reg_edi; }
 
-static EAPoint EA_32_40_n(void) { return SegBase(ds)+reg_eax+Fetchbs(); }
-static EAPoint EA_32_41_n(void) { return SegBase(ds)+reg_ecx+Fetchbs(); }
-static EAPoint EA_32_42_n(void) { return SegBase(ds)+reg_edx+Fetchbs(); }
-static EAPoint EA_32_43_n(void) { return SegBase(ds)+reg_ebx+Fetchbs(); }
-static EAPoint EA_32_44_n(void) { return Sib(1)+Fetchbs();}
-static EAPoint EA_32_45_n(void) { return SegBase(ss)+reg_ebp+Fetchbs(); }
-static EAPoint EA_32_46_n(void) { return SegBase(ds)+reg_esi+Fetchbs(); }
-static EAPoint EA_32_47_n(void) { return SegBase(ds)+reg_edi+Fetchbs(); }
+static EAPoint EA_32_40_n(void) { PrefixReset;return SegBase(ds)+reg_eax+Fetchbs(); }
+static EAPoint EA_32_41_n(void) { PrefixReset;return SegBase(ds)+reg_ecx+Fetchbs(); }
+static EAPoint EA_32_42_n(void) { PrefixReset;return SegBase(ds)+reg_edx+Fetchbs(); }
+static EAPoint EA_32_43_n(void) { PrefixReset;return SegBase(ds)+reg_ebx+Fetchbs(); }
+static EAPoint EA_32_44_n(void) { PrefixReset;return Sib(1)+Fetchbs();}
+static EAPoint EA_32_45_n(void) { PrefixReset;return SegBase(ss)+reg_ebp+Fetchbs(); }
+static EAPoint EA_32_46_n(void) { PrefixReset;return SegBase(ds)+reg_esi+Fetchbs(); }
+static EAPoint EA_32_47_n(void) { PrefixReset;return SegBase(ds)+reg_edi+Fetchbs(); }
 
-static EAPoint EA_32_80_n(void) { return SegBase(ds)+reg_eax+Fetchds(); }
-static EAPoint EA_32_81_n(void) { return SegBase(ds)+reg_ecx+Fetchds(); }
-static EAPoint EA_32_82_n(void) { return SegBase(ds)+reg_edx+Fetchds(); }
-static EAPoint EA_32_83_n(void) { return SegBase(ds)+reg_ebx+Fetchds(); }
-static EAPoint EA_32_84_n(void) { return Sib(2)+Fetchds();}
-static EAPoint EA_32_85_n(void) { return SegBase(ss)+reg_ebp+Fetchds(); }
-static EAPoint EA_32_86_n(void) { return SegBase(ds)+reg_esi+Fetchds(); }
-static EAPoint EA_32_87_n(void) { return SegBase(ds)+reg_edi+Fetchds(); }
+static EAPoint EA_32_80_n(void) { PrefixReset;return SegBase(ds)+reg_eax+Fetchds(); }
+static EAPoint EA_32_81_n(void) { PrefixReset;return SegBase(ds)+reg_ecx+Fetchds(); }
+static EAPoint EA_32_82_n(void) { PrefixReset;return SegBase(ds)+reg_edx+Fetchds(); }
+static EAPoint EA_32_83_n(void) { PrefixReset;return SegBase(ds)+reg_ebx+Fetchds(); }
+static EAPoint EA_32_84_n(void) { PrefixReset;return Sib(2)+Fetchds();}
+static EAPoint EA_32_85_n(void) { PrefixReset;return SegBase(ss)+reg_ebp+Fetchds(); }
+static EAPoint EA_32_86_n(void) { PrefixReset;return SegBase(ds)+reg_esi+Fetchds(); }
+static EAPoint EA_32_87_n(void) { PrefixReset;return SegBase(ds)+reg_edi+Fetchds(); }
 
 static GetEATable GetEA_32_n={
 /* 00 */
@@ -327,7 +307,8 @@ INLINE EAPoint Sib_s(Bitu mode) {
 	case 7:	/* EDI Base */
 		base=prefix.segbase+reg_edi;break;
 	}
-	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);	PrefixReset;
+	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);
+	PrefixReset;
 	return base;
 };
 
@@ -396,4 +377,21 @@ static GetEATable GetEA_32_s={
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
 
+static EAPoint GetEADirect_NONE(void) {
+	EAPoint result=SegBase(ds)+Fetchw();
+	return result;
+}
+static EAPoint GetEADirect_SEG(void) {
+	EAPoint result=prefix.segbase+Fetchw();PrefixReset;
+	return result;
+}
+static EAPoint GetEADirect_ADDR(void) {
+	EAPoint result=SegBase(ds)+Fetchd();PrefixReset;
+	return result;
+}
+static EAPoint GetEADirect_SEG_ADDR(void) {
+	EAPoint result=prefix.segbase+Fetchd();PrefixReset;
+	return result;
+}
 
+static EA_LookupHandler GetEADirect[4]={GetEADirect_NONE,GetEADirect_SEG,GetEADirect_ADDR,GetEADirect_SEG_ADDR};
