@@ -104,16 +104,16 @@ INLINE void host_writed(HostPt off,Bit32u val) {
 #endif
 
 
-INLINE void var_write(Bit8u & var, Bit8u val) {
-	host_writeb((HostPt)&var, val);
+INLINE void var_write(Bit8u * var, Bit8u val) {
+	host_writeb((HostPt)var, val);
 }
 
-INLINE void var_write(Bit16u & var, Bit16u val) {
-	host_writew((HostPt)&var, val);
+INLINE void var_write(Bit16u * var, Bit16u val) {
+	host_writew((HostPt)var, val);
 }
 
-INLINE void var_write(Bit32u & var, Bit32u val) {
-	host_writed((HostPt)&var, val);
+INLINE void var_write(Bit32u * var, Bit32u val) {
+	host_writed((HostPt)var, val);
 }
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
