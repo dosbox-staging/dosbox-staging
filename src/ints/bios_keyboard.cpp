@@ -207,6 +207,12 @@ static Bitu IRQ1_Handler(void) {
 	KEYBOARD_ReadKey(scancode,ascii,mod);
 //	LOG(0,"Got code %X ascii %C mod %X",scancode,ascii,mod);
 #endif	
+	Bit16u old_ax=reg_ax;
+	reg_flags|=1;
+	reg_ah=0x4f;reg_al=scancode;
+	CALLBACK_RunRealInt(0x15);
+	reg_ax=old_ax;
+	if (!(reg_flags&1)) goto irq1_return;
 
 	//TODO maybe implement the int 0x15 ah=4f scancode lookup hook
 	Bit8u flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
@@ -284,6 +290,7 @@ irq1_end:
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flags1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
+irq1_return:
 	IO_Write(0x20,0x20);
 #if 0
 	/* Signal the keyboard for next code */
