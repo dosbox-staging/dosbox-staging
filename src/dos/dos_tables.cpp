@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.14 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.15 2004-09-21 20:04:55 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -96,7 +96,7 @@ void DOS_SetupTables(void) {
 
 	/* Allocate DCBS DOUBLE BYTE CHARACTER SET LEAD-BYTE TABLE */
 	dos.tables.dcbs=RealMake(DOS_GetMemory(12),0);
-	mem_writew(Real2Phys(dos.tables.dcbs),0); //empty table
+	mem_writed(Real2Phys(dos.tables.dcbs),0); //empty table
 
 	/* Create a fake FCB SFT */
 	seg=DOS_GetMemory(4);

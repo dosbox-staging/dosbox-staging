@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.74 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.75 2004-09-21 20:04:55 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -847,8 +847,7 @@ static Bitu DOS_21Handler(void) {
 			case 6: // Get pointer to collating sequence table
 			case 7: // Get pointer to double byte char set table
 				mem_writeb(data,reg_al);
-				mem_writew(data+1,0x0000);	// We dont have this table...
-				mem_writew(data+3,0x0000);	// End of table
+				mem_writed(data+1,dos.tables.dcbs); //used to be 0
 				reg_cx=5;
 				CALLBACK_SCF(false);
 				break;
