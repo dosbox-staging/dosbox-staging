@@ -344,7 +344,10 @@ void DOS_Shell::Run(void) {
 #if C_DEBUG
 		WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
-		if (machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+		if (machine == MCH_CGA) {
+			if (mono_cga) WriteOut(MSG_Get("SHELL_STARTUP_CGA_MONO"));
+			else WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+		}
 		if (machine == MCH_HERC) WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
 		WriteOut(MSG_Get("SHELL_STARTUP_END"));
 
@@ -629,6 +632,9 @@ void SHELL_Init() {
 	        "\xBA Use \033[31mF12\033[37m to set composite output ON, OFF, or AUTO (default).        \xBA\n"
 	        "\xBA \033[31m(Alt-)F11\033[37m changes hue; \033[31mctrl-alt-F11\033[37m selects early/late CGA model.  \xBA\n"
 	        "\xBA                                                                    \xBA\n"
+	);
+	MSG_Add("SHELL_STARTUP_CGA_MONO","\xBA Use \033[31mF11\033[37m to cycle through green, amber, white and paper-white mode, \xBA\n"
+	        "\xBA and \033[31mAlt-F11\033[37m to change contrast/brightness settings.                \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_HERC","\xBA Use \033[31mF11\033[37m to cycle through white, amber, and green monochrome color. \xBA\n"
 	        "\xBA                                                                    \xBA\n"
