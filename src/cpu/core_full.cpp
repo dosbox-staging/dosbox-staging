@@ -3,6 +3,7 @@
 #include "pic.h"
 #include "regs.h"
 #include "cpu.h"
+#include "fpu.h"
 #include "debug.h"
 #include "inout.h"
 #include "callback.h"
