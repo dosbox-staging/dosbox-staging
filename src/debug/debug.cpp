@@ -73,6 +73,25 @@ struct BreakPoint {
 
 static std::list<struct BreakPoint> BPoints;
 
+static Bit16u dataSeg,dataOfs;
+
+static void DrawData() {
+	
+	Bit16u add = 0;
+	/* Data win */	
+	for (int y=0; y<8; y++) {
+		// Adress
+		mvwprintw (dbg.win_data,1+y,0,"%04X:%04X",dataSeg,dataOfs+add);
+		for (int x=0; x<16; x++) {
+			Bit8u ch = real_readb(dataSeg,dataOfs+add);
+			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
+			if (ch<32) ch='.';
+			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);			
+			add++;
+		};
+	}	
+	wrefresh(dbg.win_data);
+};
 
 static void DrawRegisters(void) {
 	/* Main Registers */
@@ -177,8 +196,6 @@ bool DEBUG_BreakPoint(void) {
 }
 
 
-
-
 Bit32u DEBUG_CheckKeys(void) {
 	int key=getch();
 	Bit32u ret=0;
@@ -203,6 +220,22 @@ Bit32u DEBUG_CheckKeys(void) {
 			ret=(*cpudecoder)(5);
 			break;
 
+		case 'd':	dataSeg = Segs[ds].value;
+					dataOfs = reg_si;
+					break;
+		case 'e':	dataSeg = Segs[es].value;
+					dataOfs = reg_di;
+					break;
+		case 'x':	dataSeg = Segs[ds].value;
+					dataOfs = reg_dx;
+					break;
+		case 'b':	dataSeg = Segs[es].value;
+					dataOfs = reg_bx;
+					break;
+
+		case 'r' :	dataOfs -= 16;	break;
+		case 'f' :	dataOfs += 16;	break;
+
 		default:
 			ret=(*cpudecoder)(1);
 		};
@@ -210,7 +243,6 @@ Bit32u DEBUG_CheckKeys(void) {
 	}
 	return ret;
 };
-
 
 Bitu DEBUG_Loop(void) {
 //TODO Disable sound
@@ -229,7 +261,7 @@ void DEBUG_Enable(void) {
 void DEBUG_DrawScreen(void) {
 	DrawRegisters();
 	DrawCode();
-
+	DrawData();
 }
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
