@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.16 2003-10-09 13:50:27 finsterr Exp $ */
+/* $Id: dos_system.h,v 1.17 2003-10-29 19:42:19 finsterr Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -140,6 +140,7 @@ private:
 	Bits		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
+	int			CompareShortname	(const char* compareName, const char* shortName);
 	bool		SetResult			(CFileInfo* dir, char * &result, Bit16u entryNr);
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
