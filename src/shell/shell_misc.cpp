@@ -102,6 +102,19 @@ void DOS_Shell::InputCommand(char * line) {
 			outc('\n');
 			size=0;			//Kill the while loop
 			break;
+		case'\t':
+			{	
+				Bit8u c=' ';Bit16u n=1;
+				for(Bitu i=0; i !=4 ;i++)
+				{
+					line[str_index]=c;
+					str_len++;//This should depend on insert being active
+					str_index++;
+					size--;
+					DOS_WriteFile(STDOUT,&c,&n);
+				}
+			}
+			break;
 		default:
 			line[str_index]=c;
 			str_len++;//This should depend on insert being active

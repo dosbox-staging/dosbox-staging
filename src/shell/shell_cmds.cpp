@@ -31,6 +31,7 @@ static SHELL_Cmd cmd_list[]={
 {	"DEL",		1,			&DOS_Shell::CMD_DELETE,		"SHELL_CMD_DELETE_HELP"},
 {	"DELETE",	0,			&DOS_Shell::CMD_DELETE,		"SHELL_CMD_DELETE_HELP"},
 {	"ECHO",		0,			&DOS_Shell::CMD_ECHO,		"SHELL_CMD_ECHO_HELP"},
+{	"ECHO.",	1,			&DOS_Shell::CMD_EHCODOT,	"SHELL_CMD_ECHO_HELP"},
 {	"EXIT",		0,			&DOS_Shell::CMD_EXIT,		"SHELL_CMD_EXIT_HELP"},	
 {	"HELP",		0,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP"},
 {	"MD",		0,			&DOS_Shell::CMD_MKDIR,		"SHELL_CMD_MKDIR_HELP"},
@@ -150,6 +151,10 @@ void DOS_Shell::CMD_ECHO(char * args) {
 	}
 	WriteOut("%s\n",args);
 };
+
+void DOS_Shell::CMD_EHCODOT(char* args) {
+	WriteOut("\n");
+}
 
 void DOS_Shell::CMD_EXIT(char * args) {
 	exit=true;
