@@ -103,7 +103,7 @@ bool CPU_IRET(bool use32);
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 
 void CPU_CPUID(void);
-
+void CPU_HLT(void);
 
 //Flag Handling
 Bitu get_CF(void);
@@ -386,6 +386,9 @@ struct CPUBlock {
 	struct {
 		Bitu prefix,entry;
 	} full;
+	struct {
+		Bitu eip,cs;
+	} hlt;
 };
 
 extern CPUBlock cpu;

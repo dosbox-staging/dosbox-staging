@@ -469,6 +469,10 @@ l_M_Ed:
 	case D_CPUID:
 		CPU_CPUID();
 		goto nextopcode;
+	case D_HLT:
+		SaveIP();
+		CPU_HLT();
+		return 0x0;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		break;

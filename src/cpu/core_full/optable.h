@@ -172,7 +172,7 @@ static OpCode OpCodeTable[1024]={
 /* 0xf0 - 0xf7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_PREREPNE	,0			,0		,0		},{L_PREREP	,0			,0		,0		},
-{0			,0			,0		,0		},{D_CMC	,0			,0		,0		},
+{D_HLT		,0			,0		,0		},{D_CMC	,0			,0		,0		},
 {L_MODRM	,8			,0		,M_GRP	},{L_MODRM	,9			,0		,M_GRP	},
 /* 0xf8 - 0xff */
 {D_CLC		,0			,0		,0		},{D_STC	,0			,0		,0		},
