@@ -169,6 +169,42 @@ SOURCE=..\src\cpu\core_full\string.h
 SOURCE=..\src\cpu\core_full\support.h
 # End Source File
 # End Group
+# Begin Group "core_normal"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\helpers.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\prefix_0f.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\prefix_66.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\prefix_66_0f.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\prefix_none.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\string.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\support.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal\table_ea.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\src\cpu\callback.cpp
@@ -176,6 +212,10 @@ SOURCE=..\src\cpu\callback.cpp
 # Begin Source File
 
 SOURCE=..\src\cpu\core_full.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\core_normal.cpp
 # End Source File
 # Begin Source File
 
@@ -188,6 +228,10 @@ SOURCE=..\src\cpu\flags.cpp
 # Begin Source File
 
 SOURCE=..\src\cpu\instructions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\cpu\lazyflags.h
 # End Source File
 # Begin Source File
 
