@@ -208,6 +208,12 @@ void DOS_FCB::Set_date(Bit16u a){
 void DOS_FCB::Set_time(Bit16u a){
 	mem_writew(off+offsetof(sFCB,time)+FCB_EXTENDED,a);
 }
+void DOS_FCB::Set_current_record(Bit8u a){
+	mem_writeb(off+offsetof(sFCB,current_relative_record_number)+FCB_EXTENDED,a);
+}
+void DOS_FCB::Set_random_record(Bit32u a){
+	mem_writed(off+offsetof(sFCB,rel_record)+FCB_EXTENDED,a);
+}
 Bit8u DOS_FCB::Get_drive(void){
 	return mem_readb(off+offsetof(sFCB,drive)+FCB_EXTENDED);
 }
@@ -231,6 +237,12 @@ Bit16u DOS_FCB::Get_date(void){
 }
 Bit16u DOS_FCB::Get_time(void){
 	return mem_readw(off+offsetof(sFCB,time)+FCB_EXTENDED);
+}
+Bit8u DOS_FCB::Get_current_record(void){
+	return mem_readb(off+offsetof(sFCB,current_relative_record_number)+FCB_EXTENDED);
+}
+Bit32u DOS_FCB::Get_random_record(void){
+	return mem_readd(off+offsetof(sFCB,rel_record)+FCB_EXTENDED);
 }
 
 

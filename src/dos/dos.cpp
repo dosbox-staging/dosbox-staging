@@ -202,19 +202,64 @@ static Bitu DOS_21Handler(void) {
 		break;
 
 	case 0x13:		/* Delete File using FCB */
+		if (DOS_FCBDeleteFile(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0xFF;
+		break;
 	case 0x14:		/* Sequential read from FCB */
+		reg_al = DOS_FCBRead(SegValue(ds),reg_dx,0);
+		LOG_DEBUG("DOS:0x14 FCB-Read used, result:al=%d",reg_al);
+		break;
 	case 0x15:		/* Sequential write to FCB */
+		if (DOS_FCBWrite(SegValue(ds),reg_dx,0)) reg_al = 0x00;
+		else reg_al = 0x01;
+		LOG_DEBUG("DOS:0x15 FCB-Write used, result:al=%d",reg_al);
+		break;
 	case 0x16:		/* Create or truncate file using FCB */
-	case 0x17:		/* Rename file using FCB */
+		if (DOS_FCBCreate(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0x01;
+		LOG_DEBUG("DOS:0x16 FCB-Create used, result:al=%d",reg_al);
+		break;
+	case 0x17:		/* Rename file using FCB */		
+		if (DOS_FCBRenameFile(SegValue(ds),reg_dx)) reg_al = 0x00;
+		else reg_al = 0xFF;
+		break;
 	case 0x21:		/* Read random record from FCB */
+		{	DOS_FCB fcb(SegValue(ds),reg_dx);
+			Bit8u curRec = fcb.Get_current_record();
+			Bit16u curBlock = fcb.Get_current_block();
+			reg_al = DOS_FCBRead(SegValue(ds),reg_dx,0);
+			fcb.Set_current_record(curRec);
+			fcb.Set_current_block(curBlock);
+		}
+		LOG_DEBUG("DOS:0x21 FCB-Random read used, result:al=%d",reg_al);
+		break;
 	case 0x22:		/* Write random record to FCB */
+		{	DOS_FCB fcb(SegValue(ds),reg_dx);
+			Bit8u curRec = fcb.Get_current_record();
+			Bit16u curBlock = fcb.Get_current_block();
+			if (DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx)) reg_al = 0x00;
+			else reg_al = 0x01;
+			fcb.Set_current_record(curRec);
+			fcb.Set_current_block(curBlock);		
+		}
+		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
+		break;
 	case 0x23:		/* Get file size for FCB */
+		if (DOS_FCBGetFileSize(SegValue(ds),reg_dx,reg_cx)) reg_al = 0x00;
+		else reg_al = 0xFF;
+		break;
 	case 0x24:		/* Set Random Record number for FCB */
+		{	DOS_FCB fcb(SegValue(ds),reg_dx);
+			fcb.Set_random_record(fcb.Get_current_block()*128+fcb.Get_current_record());
+		} break;
 	case 0x27:		/* Random block read from FCB */
-	case 0x28:		/* Random Block read to FCB */
-		LOG_ERROR("DOS:Unhandled call %02X, FCB Stuff",reg_ah);
-		reg_al=0xff;		/* FCB Calls FAIL */
-		//CALLBACK_SCF(true); not needed.
+		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,reg_cx);
+		LOG_DEBUG("DOS:0x27 FCB-Random read used, result:al=%d",reg_al);
+		break;
+	case 0x28:		/* Random Block write to FCB */
+		if (DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx)) reg_al = 0x00;
+		else reg_al = 0x01;
+		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
 		break;
 
 	case 0x29:		/* Parse filename into FCB */

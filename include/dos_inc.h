@@ -188,6 +188,14 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset);
 bool DOS_FCBClose(Bit16u seg,Bit16u offset);
 bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset);
 bool DOS_FCBFindNext(Bit16u seg,Bit16u offset);
+Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset, Bit16u numBlocks);
+bool DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u numBlocks);
+bool DOS_FCBCreate(Bit16u seg,Bit16u offset);
+Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec);
+bool DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec);
+bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec);
+bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset);
+bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset);
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change);
 /* Extra DOS Interrupts */
 void DOS_SetupMisc(void);
@@ -249,6 +257,8 @@ public:
 	void Set_filesize(Bit32u a);
 	void Set_date(Bit16u a);
 	void Set_time(Bit16u a);
+	void Set_current_record(Bit8u a);
+	void Set_random_record(Bit32u a);
 	// others nog yet handled
 	Bit8u Get_drive(void);
 	void Get_filename(char* a);
@@ -258,6 +268,8 @@ public:
 	Bit32u Get_filesize(void);
 	Bit16u Get_date(void);
 	Bit16u Get_time(void);
+	Bit8u  Get_current_record(void);
+	Bit32u Get_random_record(void);
 private:
 	PhysPt off;
 };
