@@ -548,7 +548,7 @@
 	}
 
 #define MULB(op1,load,save)									\
-	lflags.type=t_MUL;										\
+	FillFlags();											\
 	reg_ax=reg_al*load(op1);								\
 	if (reg_ax & 0xff00) {									\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
@@ -558,10 +558,10 @@
 
 #define MULW(op1,load,save)									\
 {															\
+	FillFlags();											\
 	Bitu tempu=(Bitu)reg_ax*(Bitu)(load(op1));				\
 	reg_ax=(Bit16u)(tempu);									\
 	reg_dx=(Bit16u)(tempu >> 16);							\
-	lflags.type=t_MUL;										\
 	if (reg_dx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -571,10 +571,10 @@
 
 #define MULD(op1,load,save)									\
 {															\
+	FillFlags();											\
 	Bit64u tempu=(Bit64u)reg_eax*(Bit64u)(load(op1));		\
 	reg_eax=(Bit32u)(tempu);								\
 	reg_edx=(Bit32u)(tempu >> 32);							\
-	lflags.type=t_MUL;										\
 	if (reg_edx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -651,7 +651,7 @@
 
 #define IMULB(op1,load,save)								\
 {															\
-	lflags.type=t_MUL;										\
+	FillFlags();											\
 	reg_ax=((Bit8s)reg_al) * ((Bit8s)(load(op1)));			\
 	if ((reg_ax & 0xff80)==0xff80 ||						\
 		(reg_ax & 0xff80)==0x0000) {						\
@@ -664,10 +664,10 @@
 
 #define IMULW(op1,load,save)								\
 {															\
+	FillFlags();											\
 	Bits temps=((Bit16s)reg_ax)*((Bit16s)(load(op1)));		\
 	reg_ax=(Bit16s)(temps);									\
 	reg_dx=(Bit16s)(temps >> 16);							\
-	lflags.type=t_MUL;										\
 	if (((temps & 0xffff8000)==0xffff8000 ||				\
 		(temps & 0xffff8000)==0x0000)) {					\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
@@ -678,11 +678,11 @@
 
 #define IMULD(op1,load,save)								\
 {															\
+	FillFlags();											\
 	Bit64s temps=((Bit64s)((Bit32s)reg_eax))*				\
 				 ((Bit64s)((Bit32s)(load(op1))));			\
 	reg_eax=(Bit32u)(temps);								\
 	reg_edx=(Bit32u)(temps >> 32);							\
-	lflags.type=t_MUL;										\
 	if ((reg_edx==0xffffffff) &&							\
 		(reg_eax & 0x80000000) ) {							\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
@@ -696,10 +696,10 @@
 
 #define DIMULW(op1,op2,op3,load,save)						\
 {															\
+	FillFlags();											\
 	Bits res;												\
 	res=((Bit16s)op2) * ((Bit16s)op3);						\
 	save(op1,res & 0xffff);									\
-	lflags.type=t_MUL;										\
 	if ((res> -32768)  && (res<32767)) {					\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
 	} else {												\
@@ -709,9 +709,9 @@
 
 #define DIMULD(op1,op2,op3,load,save)						\
 {															\
+	FillFlags();											\
 	Bit64s res=((Bit64s)((Bit32s)op2))*((Bit64s)((Bit32s)op3));	\
 	save(op1,(Bit32s)res);									\
-	lflags.type=t_MUL;										\
 	if ((res>-((Bit64s)(2147483647)+1)) &&					\
 		(res<(Bit64s)2147483647)) {							\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
