@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.46 2004-01-01 12:26:08 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.47 2004-01-07 21:37:47 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -26,6 +26,7 @@
 #include "keyboard.h"
 #include "setup.h"
 #include "paging.h"
+#include "support.h"
 
 Bitu DEBUG_EnableDebugger(void);
 
@@ -1255,9 +1256,6 @@ void CPU_Init(Section* sec) {
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Init();
 #endif
-	cpudecoder=&startcpu_core;
-
-	CPU_JMP(false,0,0);					//Setup the first cpu core
 
 	KEYBOARD_AddEvent(KBD_f11,KBD_MOD_CTRL,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,KBD_MOD_CTRL,CPU_CycleIncrease);
@@ -1266,6 +1264,23 @@ void CPU_Init(Section* sec) {
 	CPU_CycleMax=section->Get_int("cycles");;
 	CPU_CycleUp=section->Get_int("cycleup");
 	CPU_CycleDown=section->Get_int("cycledown");
+	const char * core=section->Get_string("core");
+	cpudecoder=&CPU_Core_Normal_Run;
+	if (!strcasecmp(core,"normal")) {
+		cpudecoder=&CPU_Core_Normal_Run;
+	} else if (!strcasecmp(core,"full")) {
+		cpudecoder=&CPU_Core_Full_Run;
+	} 
+#if (C_DYNAMIC_X86)
+	else if (!strcasecmp(core,"dynamic")) {
+		cpudecoder=&CPU_Core_Dyn_X86_Run;
+	} 
+#endif
+	else {
+		LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
+	}
+	CPU_JMP(false,0,0);					//Setup the first cpu core
+
 	if (!CPU_CycleMax) CPU_CycleMax = 1800;
 	if(!CPU_CycleUp)   CPU_CycleUp = 500;
 	if(!CPU_CycleDown) CPU_CycleDown = 20;

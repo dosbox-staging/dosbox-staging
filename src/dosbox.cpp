@@ -221,10 +221,16 @@ void DOSBOX_Init(void) {
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
+	secprop->Add_string("core","normal");
 	secprop->Add_int("cycles",1800);
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
+		"core -- CPU Core used in emulation: normal,full"
+#if (C_DYNAMIC_X86)
+		",dynamic"
+#endif
+		".\n"
 		"cycles -- Amount of instructions dosbox tries to emulate each millsecond.\n"
 		"          Setting this higher than your machine can handle is bad!\n"
 		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
