@@ -24,6 +24,8 @@
 extern Bit32u LastTicks;
 #define GetTicks() SDL_GetTicks()
 
+extern bool TimerAgain;
+
 typedef void (*TIMER_TickHandler)(Bitu ticks);
 typedef void (*TIMER_MicroHandler)(void);
 typedef void (*TIMER_DelayHandler)(void);
