@@ -27,8 +27,8 @@
 
 #include "cdrom.h"
 
-//#define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
-#define MSCDEX_LOG
+#define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
+//#define MSCDEX_LOG
 
 #define MSCDEX_VERSION_HIGH	2
 #define MSCDEX_VERSION_LOW	23
@@ -261,11 +261,12 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 								}
 							#endif
 							#if defined (LINUX)
-								if (useCdromInterface==CDROM_USE_IOCTL) {
+								// Always use IOCTL in Linux
+//								if (useCdromInterface==CDROM_USE_IOCTL) {
 									cdrom[numDrives] = new CDROM_Interface_Ioctl();
 									LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
 									break;
-								}
+//								}
 							#endif
 							cdrom[numDrives] = new CDROM_Interface_SDL();
 							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
