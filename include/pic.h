@@ -63,5 +63,6 @@ void PIC_AddEvent(PIC_EventHandler handler,Bitu delay);
 
 void PIC_RemoveEvents(PIC_EventHandler handler);
 
+void PIC_SetIRQMask(Bitu irq, bool masked);
 #endif
 

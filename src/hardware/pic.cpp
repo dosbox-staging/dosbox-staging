@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.14 2003-11-27 18:57:42 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.15 2003-12-10 14:55:08 qbix79 Exp $ */
 
 #include <list>
 
@@ -261,6 +261,19 @@ void PIC_runIRQs(void) {
 	}
 }
 
+void PIC_SetIRQMask(Bitu irq, bool masked) {
+	irqs[irq].masked=masked;
+	if (irqs[irq].active && !irqs[irq].masked) { 
+		PIC_IRQCheck|=(1 << (irq));
+	} else { 
+		PIC_IRQCheck&=~(1 << (irq));
+	};
+	if (PIC_IRQCheck) {
+		CPU_CycleLeft+=CPU_Cycles;
+		CPU_Cycles=0;
+	}
+}
+
 static void AddEntry(PICEntry * entry) {
 	PICEntry * find_entry=pic.next_entry;
 	if (!find_entry) {
@@ -483,7 +496,7 @@ void PIC_Init(Section* sec) {
 	irqs[0].masked=false;					/* Enable system timer */
 	irqs[1].masked=false;					/* Enable Keyboard IRQ */
 	irqs[8].masked=false;					/* Enable RTC IRQ */
-	irqs[12].masked=false;					/* Enable Mouse IRQ */
+/*	irqs[12].masked=false;	moved to mouse.cpp */				/* Enable Mouse IRQ */
 	IO_RegisterReadHandler(0x20,read_command,"Master PIC Command");
 	IO_RegisterReadHandler(0x21,read_data,"Master PIC Data");
 	IO_RegisterWriteHandler(0x20,write_command,"Master PIC Command");
