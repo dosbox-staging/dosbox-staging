@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.62 2004-02-19 12:24:51 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.63 2004-03-01 18:27:03 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -504,7 +504,11 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 			Bit8u y =  ( 9797*(red) + 19237*(green) +  3734*(blue) ) >> 15;
 			Bit8u u =  (18492*((blue)-(y)) >> 15) + 128;
 			Bit8u v =  (23372*((red)-(y)) >> 15) + 128;
+#ifdef WORDS_BIGENDIAN
+			return (y << 0) | (v << 8) | (y << 16) | (u << 24);
+#else
 			return (u << 0) | (y << 8) | (v << 16) | (y << 24);
+#endif
 		}
 	case SCREEN_OPENGL:
 //		return ((red << 0) | (green << 8) | (blue << 16)) | (255 << 24);
