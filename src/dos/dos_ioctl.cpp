@@ -26,16 +26,20 @@
 #define MAX_DEVICE 20
 static DOS_File * dos_devices[MAX_DEVICE];
 
-bool DOS_IOCTL(Bit8u call,Bit16u entry) {
-	Bit32u handle=RealHandle(entry);
-	if (handle>=DOS_FILES) {
-		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false;
-	};
-	if (!Files[handle]) {
-		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false;
-	};
+
+bool DOS_IOCTL(void) {
+	Bitu handle;Bit8u drive;
+	if (reg_al<8) {				/* call 0-7 use a file handle */
+		handle=RealHandle(reg_bx);
+		if (handle>=DOS_FILES) {
+			DOS_SetError(DOSERR_INVALID_HANDLE);
+			return false;
+		}
+		if (!Files[handle]) {
+			DOS_SetError(DOSERR_INVALID_HANDLE);
+			return false;
+		}
+	}
 	switch(reg_al) {
 	case 0x00:		/* Get Device Information */
 		reg_dx=Files[handle]->GetInformation();
@@ -44,23 +48,46 @@ bool DOS_IOCTL(Bit8u call,Bit16u entry) {
 		LOG_DEBUG("DOS:IOCTL:07:Fakes output status is ready for handle %d",handle);
 		reg_al=0xff;
 		return true;
-	case 0x0D: {
-		PhysPt ptr	= SegPhys(ds)+reg_dx;
-		Bit8u drive = reg_bl ? reg_bl : DOS_GetDefaultDrive()+1; // A=1, B=2, C=3...
-		switch (reg_cl) {
-			case 0x60 :	mem_writeb(ptr  ,0x03);					// special function
-						mem_writeb(ptr+1,(drive>=3)?0x05:0x14);	// fixed disc(5), 1.44 floppy(14)
-						mem_writew(ptr+2,drive>=3);				// nonremovable ?
-						mem_writew(ptr+4,0x0000);				// num of cylinders
-						mem_writeb(ptr+6,0x00);					// media type (00=other type)
-						break;
-			default	:	LOG_ERROR("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
-						return false;
+	case 0x08:		/* Check if block device removable */
+		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+		if (Drives[drive]) {
+			if (drive<2) reg_ax=0;	/* Drive a,b are removable if mounted */
+			else reg_ax=1;
+			return true;
+		} else {
+			DOS_SetError(DOSERR_INVALID_DRIVE);
+			return false;
 		}
-		return true;
+	case 0x0D:		/* Generic block device request */
+		{
+			PhysPt ptr	= SegPhys(ds)+reg_dx;
+			drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+			switch (reg_cl) {
+			case 0x60:		/* Get Device parameters */
+				mem_writeb(ptr  ,0x03);					// special function
+				mem_writeb(ptr+1,(drive>=2)?0x05:0x14);	// fixed disc(5), 1.44 floppy(14)
+				mem_writew(ptr+2,drive>=2);				// nonremovable ?
+				mem_writew(ptr+4,0x0000);				// num of cylinders
+				mem_writeb(ptr+6,0x00);					// media type (00=other type)
+				break;
+			default	:	
+				LOG_ERROR("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
+				return false;
+			}
+			return true;
 		}
+	case 0xE:		/* Get Logical Drive Map */
+		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+		if (Drives[drive]) {
+			reg_al=0;		/* Only 1 logical drive assigned */
+			return true;
+		} else {
+			DOS_SetError(DOSERR_INVALID_DRIVE);
+			return false;
+		}
+		break;
 	default:
-		LOG_ERROR("DOS:IOCTL Call %2X Handle %2X unhandled",reg_al,handle);
+		LOG_ERROR("DOS:IOCTL Call %2X unhandled",reg_al);
 		return false;
 	};
 	return false;
