@@ -51,6 +51,16 @@
 			si_index=(si_index+add_index) & add_mask;
 		}
 		break;
+	case R_OUTSD:
+		add_index<<=2;
+		for (;count>0;count--) {
+			IO_Write(reg_dx,LoadMb(si_base+si_index));
+			IO_Write(reg_dx+1,LoadMb(si_base+si_index+1));
+			IO_Write(reg_dx+2,LoadMb(si_base+si_index+2));
+			IO_Write(reg_dx+3,LoadMb(si_base+si_index+3));
+			si_index=(si_index+add_index) & add_mask;
+		}
+		break;
 	case R_INSB:
 		for (;count>0;count--) {
 			reg_dx,SaveMb(di_base+di_index,IO_Read(reg_dx));
