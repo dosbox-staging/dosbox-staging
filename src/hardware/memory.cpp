@@ -40,14 +40,13 @@ void MEM_BlockRead(PhysPt off,void * data,Bitu size) {
 		Bitu start=off & (PAGE_SIZE-1);
 		Bitu tocopy=PAGE_SIZE-start;
 		if (tocopy>size) tocopy=size;
+		size-=tocopy;
 		if (ReadHostTable[page]) {
 			memcpy(idata,ReadHostTable[page]+off,tocopy);
-			idata+=tocopy;
-			off+=tocopy;
+			idata+=tocopy;off+=tocopy;
 		} else {
 			for (;tocopy>0;tocopy--) *idata++=ReadHandlerTable[page](off++);
 		}
-		size-=tocopy;
 	}
 }
 
@@ -58,14 +57,13 @@ void MEM_BlockWrite(PhysPt off,void * data,Bitu size) {
 		Bitu start=off & (PAGE_SIZE-1);
 		Bitu tocopy=PAGE_SIZE-start;
 		if (tocopy>size) tocopy=size;
+		size-=tocopy;
 		if (WriteHostTable[page]) {
 			memcpy(WriteHostTable[page]+off,idata,tocopy);
-			idata+=tocopy;
-			off+=tocopy;
+			idata+=tocopy;off+=tocopy;
 		} else {
 			for (;tocopy>0;tocopy--) WriteHandlerTable[page](off++,*idata++);
 		}
-		size-=tocopy;
 	}
 }
 
