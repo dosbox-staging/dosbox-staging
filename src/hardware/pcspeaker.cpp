@@ -223,7 +223,7 @@ void PCSPEAKER_Init(Section* sec) {
 	spkr.wave.count.half=spkr.wave.new_count.half=(0x10000 << SPKR_SHIFT)/2;
 
 	/* Register the sound channel */
-	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,spkr.hw.rate,"PC-SPEAKER");
+	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,spkr.hw.rate,"SPKR");
 	MIXER_Enable(spkr.chan,false);
 	MIXER_SetMode(spkr.chan,MIXER_16MONO);
 }

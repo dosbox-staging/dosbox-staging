@@ -170,7 +170,7 @@ void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 	opl.last_used=0;
 	opl.mode=oplmode;
 
-	opl.chan=MIXER_AddChannel(OPL_CallBack,rate,"ADLIB");
+	opl.chan=MIXER_AddChannel(OPL_CallBack,rate,"FM");
 	MIXER_SetMode(opl.chan,(opl.mode>OPL_opl2) ? MIXER_16STEREO : MIXER_16MONO);
 	MIXER_Enable(opl.chan,false);
 };
