@@ -43,7 +43,7 @@
 #define MIXER_SHIFT 14
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_WAVESIZE MIXER_BUFSIZE
-#define MIXER_VOLSHIFT 14
+#define MIXER_VOLSHIFT 13
 
 #define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
 
@@ -264,7 +264,7 @@ static void MIXER_MixData(Bitu needed) {
 	}
 	if (mixer.wave.handle) {
 		Bitu added=needed-mixer.done;
-		Bitu readpos=(mixer.pos+mixer.done-added)&MIXER_BUFMASK;
+		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
 		while (added--) {
 			Bits sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
 			mixer.wave.buf[mixer.wave.used][0]=MIXER_CLIP(sample);
