@@ -212,7 +212,7 @@ static void write_p61(Bit32u port,Bit8u val) {
 
 static void write_p64(Bit32u port,Bit8u val) {
 	switch (val) {
-	case 0xad:		/* Activate keyboard */
+	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
 		if (keyb.buf.used && !keyb.scheduled) {
 			keyb.scheduled=true;
@@ -220,7 +220,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 		}
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
 		break;
-	case 0xae:		/* Deactivate keyboard */
+	case 0xad:		/* Deactivate keyboard */
 		keyb.active=false;
 		PIC_DeActivateIRQ(1);
 		PIC_RemoveEvents(KEYBOARD_GetCode);
