@@ -461,7 +461,6 @@ static void DSP_StartDMATranfser(DMA_MODES mode) {
 	char * type;
 	/* First fill with current whatever is playing */
 	DSP_ChangeMode(MODE_NONE);
-	sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 	sb.dma.left=sb.dma.total;
 	if (sb.use_time_constant) {
 		sb.dma.rate=(1000000 / (256 - sb.time_constant));
@@ -568,6 +567,7 @@ static void DSP_DoCommand(void) {
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
+		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_8_SINGLE);
 		break;
 	case 0x90:	/* Auto Init 8-bit DMA High Speed */
@@ -585,9 +585,11 @@ static void DSP_DoCommand(void) {
     case 0x75:  /* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.reference=0x1000000;
     case 0x74:  /* 074h : Single Cycle 4-bit ADPCM */	
+		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_4_SINGLE);
 		break;
 	case 0x80:	/* Silence DAC */
+		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_8_SILENCE);
 		break;
 	case 0xd0:	/* Halt 8-bit DMA */
