@@ -8,13 +8,14 @@ enum LOG_TYPES {
 	LOG_FCB,LOG_FILES,LOG_IOCTL,LOG_EXEC,LOG_DOSMISC,
 	LOG_PIT,LOG_KEYBOARD,LOG_PIC,
 	LOG_MOUSE,LOG_BIOS,LOG_GUI,LOG_MISC,
-	LOG_MAX
+	LOG_IO,
+	LOG_MAX,
 };
 
 enum LOG_SEVERITIES {
 	LOG_NORMAL,
     LOG_WARN,
-	LOG_ERROR
+	LOG_ERROR,
 };
 
 #if C_DEBUG
@@ -32,6 +33,8 @@ public:
 
 };
 
+void DEBUG_ShowMsg(char * format,...);
+#define LOG_MSG DEBUG_ShowMsg
 
 #else  //C_DEBUG
 
@@ -61,6 +64,8 @@ struct LOG
 
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
+void GFX_ShowMsg(char * format,...);
+#define LOG_MSG GFX_ShowMsg
 
 #endif //C_DEBUG
 
