@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.8 2004-10-26 18:28:51 qbix79 Exp $ */
+/* $Id: shell.h,v 1.9 2004-11-13 12:06:39 qbix79 Exp $ */
 
 #ifndef SHELL_H_
 #define SHELL_H_
@@ -102,6 +102,7 @@ public:
 	void CMD_LOADHIGH(char* args);
 	void CMD_CHOICE(char * args);
 	void CMD_ATTRIB(char * args);
+	void CMD_PATH(char * args);
 	/* The shell's variables */
 	Bit16u input_handle;
 	BatchFile * bf;

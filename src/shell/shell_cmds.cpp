@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.49 2004-10-21 15:38:39 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.50 2004-11-13 12:06:39 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -56,6 +56,7 @@ static SHELL_Cmd cmd_list[]={
 {	"LH",		1,			&DOS_Shell::CMD_LOADHIGH,	"SHELL_CMD_LOADHIGH_HELP"},
 {	"CHOICE",	0,			&DOS_Shell::CMD_CHOICE,		"SHELL_CMD_CHOICE_HELP"},
 {	"ATTRIB",	0,			&DOS_Shell::CMD_ATTRIB,		"SHELL_CMD_ATTRIB_HELP"},
+{	"PATH",		1,			&DOS_Shell::CMD_PATH,		"SHELL_CMD_PATH_HELP"},
 {0,0,0,0}
 };
 
@@ -68,6 +69,7 @@ void DOS_Shell::DoCommand(char * line) {
 		if (*line==32) break;
 		if (*line=='/') break;
 		if (*line=='\t') break;
+		if (*line=='=') break;
 		if ((*line=='.') ||(*line =='\\')) {  //allow stuff like cd.. and dir.exe cd\kees
 			*cmd_write=0;
 			Bit32u cmd_index=0;
@@ -727,3 +729,21 @@ void DOS_Shell::CMD_ATTRIB(char *args){
 	// No-Op for now.
 }
 
+void DOS_Shell::CMD_PATH(char *args){
+	if(args && *args && strlen(args)){
+		char pathstring[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
+		strcpy(pathstring,"set PATH=");
+		while(args && *args && (*args=='='|| *args==' ')) 
+		     args++;
+		strcat(pathstring,args);
+		this->ParseLine(pathstring);
+		return;
+	} else {
+		std::string line;
+		if(GetEnvStr("PATH",line)) {
+        		WriteOut("%s",line.c_str());
+		} else {
+			WriteOut("PATH=(null)");
+		}
+	}
+}
