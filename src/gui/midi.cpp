@@ -80,7 +80,7 @@ MidiHandler Midi_none;
 
 #include "midi_win32.h"
 
-#elif
+#else
 
 #include "midi_oss.h"
 
