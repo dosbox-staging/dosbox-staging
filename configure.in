@@ -36,7 +36,6 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
 dnl Checks for libraries.
-AC_CHECK_LIB(png, png_check_sig, , AC_MSG_ERROR([*** libpng not found!]), -lz)
 
 #Check if the compiler support attributes
 AC_MSG_CHECKING(if compiler allows __attribute__)
@@ -45,6 +44,33 @@ AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;],
 
 #Check for big endian machine, should #define WORD_BIGENDIAN if so
 AC_C_BIGENDIAN
+
+#Features to enable/disable
+AH_TEMPLATE(C_DEBUG,[Define to 1 to enable internal debugger, requires libcurses])
+AC_ARG_ENABLE(debug,[  --enable-debug          Enable debug mode],[
+   AC_CHECK_HEADER(curses.h,have_curses_h=yes,)
+   AC_CHECK_LIB(curses, initscr, have_curses_lib=yes, , )
+
+   if test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
+     AC_DEFINE(C_DEBUG,1)
+   else 
+     AC_MSG_WARN([Can't enable debug mode without libcurses])
+   fi
+],)
+
+AH_TEMPLATE(C_SSHOTS,[Define to 1 to enable screenshots, requires libpng])
+AC_ARG_ENABLE(shots,[  --enable-shots          Enable screenshot support],[
+  AC_CHECK_HEADER(png.h,have_png_h=yes,)
+  AC_CHECK_LIB(png, png_check_sig, have_png_lib=yes, , -lz)
+
+  if test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
+    AC_DEFINE(C_SSHOTS,1)
+  else 
+    AC_MSG_WARN([Can't enable screenshots without libpng])
+  fi
+],)
+
+
 
 AC_OUTPUT([ 
 Makefile

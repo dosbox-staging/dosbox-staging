@@ -10,8 +10,4 @@ autoheader
 automake --gnits --include-deps --add-missing --copy 
 autoconf
 
-#Copy settings.h.cvs to settings.h and that's it,
-
-directory=`dirname $0`
-cp $directory/settings.h.cvs $directory/settings.h
-echo "Now you are ready to run ./configure also check settings.h for extra build settings"
+echo "Now you are ready to run ./configure, afterwards check config.h for extra build settings"
