@@ -291,6 +291,27 @@ void DOSBOX_Init(void) {
 		"cmsrate -- Sample rate of cms emulation.\n"
 	);
 
+	secprop=control->AddSection_prop("gus",&GUS_Init); 
+	secprop->Add_bool("gus",true); 	
+	secprop->Add_int("rate",22050);
+    secprop->Add_hex("base",0x240);
+	secprop->Add_int("irq1",5);
+	secprop->Add_int("irq2",5);
+	secprop->Add_int("dma1",3);
+	secprop->Add_int("dma2",3);
+	secprop->Add_string("ultradir","C:\\ULTRASND");
+
+	MSG_Add("GUS_CONFIGFILE_HELP",
+		"gus -- Enable the Gravis Ultrasound emulation.\n"
+		"base,irq1,irq2,dma1,dma2 -- The IO/IRQ/DMA addresses of the \n"
+		"           Gravis Ultrasound. (Same IRQ's and DMA's are OK.)\n"
+		"rate -- Sample rate of Ultrasound emulation.\n"
+		"ultradir -- Path to Ultrasound directory.  In this directory\n"
+		"            there should be a MIDI directory that contains\n"
+		"            the patch files for GUS playback.  Patch sets used\n"
+		"            with Timidity should work fine.\n"
+	);
+
 	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
 	secprop->Add_bool("pcspeaker",true);
 	secprop->Add_int("pcrate",22050);
@@ -318,7 +339,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&EMS_Init);
 	secprop->Add_bool("ems",true);
 	secprop->AddInitFunction(&DPMI_Init);
-	secprop->Add_bool("dpmi",true);
+	secprop->Add_bool("dpmi",false);
 
     MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
@@ -342,7 +363,8 @@ void DOSBOX_Init(void) {
 		"listenport -- TCP Port the momdem listens on for incoming connections.\n"
 	);
 #endif
-	
+
+
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
