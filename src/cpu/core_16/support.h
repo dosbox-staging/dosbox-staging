@@ -88,9 +88,9 @@ static INLINE Bit32u Pop_32() {
 
 #define stringSI											\
 	EAPoint from;											\
-	if (segprefix_on) {										\
+	if (prefixes & PREFIX_SEG) {										\
 		from=(segprefix_base+reg_si);						\
-		SegPrefixReset;										\
+		PrefixReset;										\
 	} else {												\
 		from=SegBase(ds)+reg_si;							\
 	}
