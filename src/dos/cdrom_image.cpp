@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.5 2005-02-10 10:20:50 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.6 2005-03-25 09:05:04 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -572,7 +572,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	if (stat(filename.c_str(), &test) == 0) return true;
 	
 	// check if file with path relative to cue file exists
-#ifndef WIN32
+#if !defined(WIN32)
 	string tmpstr(pathname + "/" + filename);
 	if (stat(tmpstr.c_str(), &test) == 0) {
 		filename = tmpstr;
