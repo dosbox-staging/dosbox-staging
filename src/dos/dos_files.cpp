@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.51 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.52 2004-02-02 19:20:38 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -53,6 +53,11 @@ void DOS_SetDefaultDrive(Bit8u drive) {
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
+	if(strlen(name) == 0) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+   
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
 	Bitu r,w;
