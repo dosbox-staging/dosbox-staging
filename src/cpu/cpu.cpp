@@ -96,7 +96,7 @@ PhysPt SelBase(Bitu sel) {
 
 bool CPU_CheckState(void) {
 	cpu.state=0;
-	if (!cpu.cr0 & CR0_PROTECTION) {
+	if (!(cpu.cr0 & CR0_PROTECTION)) {
 		cpu.full.entry=cpu.full.prefix=0;
 		return true;
 	} else {
@@ -665,8 +665,66 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 		SETFLAGBIT(ZF,false);
 		return;
 	}
-	cpu.gdt.GetDescriptor(selector,desc);
 	limit=desc.GetLimit();
+	SETFLAGBIT(ZF,true);
+}
+
+void CPU_VERR(Bitu selector) {
+	Descriptor desc;Bitu rpl=selector & 3;
+	flags.type=t_UNKNOWN;
+	if (!cpu.gdt.GetDescriptor(selector,desc)){
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	if (!desc.saved.seg.p) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	switch (desc.Type()){
+	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:	
+		//Conforming readable code segments can be always read 
+		break;
+	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
+	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+	case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
+	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+
+	case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
+			SETFLAGBIT(ZF,false);
+			return;
+		}
+		break;
+	default:
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	SETFLAGBIT(ZF,true);
+}
+
+void CPU_VERW(Bitu selector) {
+	Descriptor desc;Bitu rpl=selector & 3;
+	flags.type=t_UNKNOWN;
+	if (!cpu.gdt.GetDescriptor(selector,desc)){
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	if (!desc.saved.seg.p) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	switch (desc.Type()){
+	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
+			SETFLAGBIT(ZF,false);
+			return;
+		}
+		break;
+	default:
+		SETFLAGBIT(ZF,false);
+		return;
+	}
 	SETFLAGBIT(ZF,true);
 }
 

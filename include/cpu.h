@@ -90,6 +90,9 @@ Bitu CPU_GET_CRX(Bitu cr);
 void CPU_SMSW(Bitu & word);
 bool CPU_LMSW(Bitu word);
 
+void CPU_VERR(Bitu selector);
+void CPU_VERW(Bitu selector);
+
 bool CPU_JMP(bool use32,Bitu selector,Bitu offset);
 bool CPU_CALL(bool use32,Bitu selector,Bitu offset);
 bool CPU_RET(bool use32,Bitu bytes);
