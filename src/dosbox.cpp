@@ -203,6 +203,8 @@ void DOSBOX_Init(void) {
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
 		"memsize -- Amount of memory dosbox has in megabytes.\n"
+		"machine -- The type of machine tries to emulate.\n"
+		"           You can select from auto,hercules,tandy,vga.\n"
 	);
 
 	secprop=control->AddSection_prop("render",&RENDER_Init);
