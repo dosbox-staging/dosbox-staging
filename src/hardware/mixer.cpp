@@ -35,35 +35,69 @@
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_FREQ 22050
 
+#define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
+
+#define MAKE_m8(CHAN) ((Bit8s)(mix_temp.m8[pos][CHAN]^0x80) << 8)
+#define MAKE_s8(CHAN) ((Bit8s)(mix_temp.s8[pos][CHAN]^0x80) << 8)
+#define MAKE_m16(CHAN) mix_temp.m16[pos][CHAN]
+#define MAKE_s16(CHAN) mix_temp.s16[pos][CHAN]
+
+#define MIX_NORMAL(TYPE, LCHAN,RCHAN) {													\
+	(chan->handler)(((Bit8u*)&mix_temp)+sizeof(mix_temp.TYPE[0]),sample_toread);		\
+	Bitu sample_index=(1 << MIXER_SHIFT) - chan->sample_left;							\
+	Bit32s newsample;																	\
+	for (Bitu mix=0;mix<samples;mix++) {												\
+		Bitu pos=sample_index >> MIXER_SHIFT;sample_index+=chan->sample_add;			\
+		newsample=mix_buftemp[mix][0]+MAKE_##TYPE( LCHAN );								\
+		mix_buftemp[mix][0]=MIXER_CLIP(newsample);										\
+		newsample=mix_buftemp[mix][1]+MAKE_##TYPE( RCHAN );								\
+		mix_buftemp[mix][1]=MIXER_CLIP(newsample);										\
+	}																					\
+	chan->remain.TYPE[LCHAN]=mix_temp.TYPE[sample_index>>MIXER_SHIFT][LCHAN];			\
+	if (RCHAN) chan->remain.TYPE[RCHAN]=mix_temp.TYPE[sample_index>>MIXER_SHIFT][RCHAN];\
+	chan->sample_left=sample_total-sample_index;										\
+	break;																				\
+}
+ 
+union Sample {
+	Bit16s m16[1];
+	Bit16s s16[2];
+	Bit8u m8[1];
+	Bit8u s8[2];
+	Bit32u full;
+};
 
 struct MIXER_Channel {
 	Bit8u volume;
 	Bit8u mode;
-	Bit32u freq;
+	Bitu freq;
 	char * name;
 	MIXER_MixHandler handler;
-	Bit32u sample_add;
-	Bit32u sample_remain;
-	Bit16s sample_data[2];
+	Bitu sample_add;
+	Bitu sample_left;
+	Sample remain;
 	bool playing;
 	MIXER_Channel * next;
 };
 
+
 static MIXER_Channel * first_channel;
 static union {
-	Bit16s temp_m16[MIXER_BUFSIZE][1];
-	Bit16s temp_s16[MIXER_BUFSIZE][2];
-	Bit8u temp_m8[MIXER_BUFSIZE][1];
-	Bit8u temp_s8[MIXER_BUFSIZE][2];
-};
+	Bit16s	m16[MIXER_BUFSIZE][1];
+	Bit16s	s16[MIXER_BUFSIZE][2];
+	Bit8u	m8[MIXER_BUFSIZE][1];
+	Bit8u	s8[MIXER_BUFSIZE][2];
+	Bit32u	full[MIXER_BUFSIZE];
+} mix_temp;
+
 static Bit16s mix_bufout[MIXER_BUFSIZE][2];
 static Bit16s mix_buftemp[MIXER_BUFSIZE][2];
 static Bit32s mix_bufextra;
-static Bit32u mix_writepos;
-static Bit32u mix_readpos;
-static Bit32u mix_ticks;
-static Bit32u mix_add;
-static Bit32u mix_remain;
+static Bitu mix_writepos;
+static Bitu mix_readpos;
+static Bitu mix_ticks;
+static Bitu mix_add;
+static Bitu mix_remain;
 
 MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * name) {
 //TODO Find a free channel
@@ -75,6 +109,7 @@ MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * nam
 	chan->handler=handler;
 	chan->name=name;
 	chan->sample_add=(freq<<MIXER_SHIFT)/MIXER_FREQ;
+	chan->sample_left=0;
 	chan->next=first_channel;
 	first_channel=chan;
 	return chan;
@@ -112,69 +147,25 @@ static void MIXER_MixData(Bit32u samples) {
 	MIXER_Channel * chan=first_channel;
 	while (chan) {
 		if (chan->playing) {
-			Bit32u chan_samples=samples*chan->sample_add;
-			Bit32u real_samples=chan_samples>>MIXER_SHIFT;
-			if (chan_samples & MIXER_REMAIN) real_samples++;
-			(chan->handler)((Bit8u*)&temp_m8,real_samples);
+			/* This should always allocate 1 extra sample */
+ 			Bitu sample_total=(samples*chan->sample_add)-chan->sample_left;
+			Bitu sample_toread=sample_total >> MIXER_SHIFT;
+			if (sample_total & MIXER_REMAIN) sample_toread++;
+			sample_total=(sample_toread+1)<<MIXER_SHIFT;
+			mix_temp.full[0]=chan->remain.full;
 			switch (chan->mode) {
 			case MIXER_8MONO:
-				/* Mix a 8 bit mono stream into the final 16 bit stereo output stream */
-				{
-					/* Mix the data with output buffer */
-					Bit32s newsample;Bit32u sample_read=0;Bit32u sample_add=chan->sample_add;
-					for (Bit32u mix=0;mix<samples;mix++) {
-						Bit32u pos=sample_read >> MIXER_SHIFT;
-						sample_read+=sample_add;
-						newsample=mix_buftemp[mix][0]+((Bit8s)(temp_m8[pos][0]^0x80) << 8);
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][0]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][0]=MIN_AUDIO;
-						else mix_buftemp[mix][0]=(Bit16s)newsample;
-						newsample=mix_buftemp[mix][1]+((Bit8s)(temp_m8[pos][0]^0x80) << 8);
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][1]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][1]=MIN_AUDIO;
-						else mix_buftemp[mix][1]=(Bit16s)newsample;
-					}
-					break;
-				}
+				MIX_NORMAL(m8,0,0);
+				break;
 			case MIXER_16MONO:
-				/* Mix a 16 bit mono stream into the final 16 bit stereo output stream */
-				{
-					Bit32s newsample;Bit32u sample_read=0;Bit32u sample_add=chan->sample_add;
-					for (Bit32u mix=0;mix<samples;mix++) {
-						Bit32u pos=sample_read >> MIXER_SHIFT;
-						sample_read+=sample_add;
-						newsample=mix_buftemp[mix][0]+temp_m16[pos][0];
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][0]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][0]=MIN_AUDIO;
-						else mix_buftemp[mix][0]=(Bit16s)newsample;
-						newsample=mix_buftemp[mix][1]+temp_m16[pos][0];
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][1]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][1]=MIN_AUDIO;
-						else mix_buftemp[mix][1]=(Bit16s)newsample;
-					}
-					break;
-				}
+				MIX_NORMAL(m16,0,0);
+				break;
 			case MIXER_16STEREO:
-				/* Mix a 16 bit stereo stream into the final 16 bit stereo output stream */
-				{
-					Bit32s newsample;Bit32u sample_read=0;Bit32u sample_add=chan->sample_add;
-					for (Bit32u mix=0;mix<samples;mix++) {
-						Bit32u pos=sample_read >> MIXER_SHIFT;
-						sample_read+=sample_add;
-						newsample=mix_buftemp[mix][0]+temp_s16[pos][0];
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][0]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][0]=MIN_AUDIO;
-						else mix_buftemp[mix][0]=(Bit16s)newsample;
-						newsample=mix_buftemp[mix][1]+temp_s16[pos][1];
-						if (newsample>MAX_AUDIO) mix_buftemp[mix][1]=MAX_AUDIO;
-						else if (newsample<MIN_AUDIO) mix_buftemp[mix][1]=MIN_AUDIO;
-						else mix_buftemp[mix][1]=(Bit16s)newsample;
-					}
-					break;
-
-				}
+				MIX_NORMAL(s16,0,0);
+				break;
 			default:
 				E_Exit("MIXER:Illegal sound mode %2X",chan->mode);
+				break;
 			}
 		}
 		chan=chan->next;
@@ -210,7 +201,7 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	/* Copy data from buf_out to the stream */
 
 	Bit32u remain=MIXER_BUFSIZE-mix_readpos;
-	if (remain>=len/MIXER_SSIZE) {
+	if (remain>=(Bit32u)len/MIXER_SSIZE) {
 		memcpy((void *)stream,(void *)&mix_bufout[mix_readpos][0],len);
 	} else {
 		memcpy((void *)stream,(void *)&mix_bufout[mix_readpos][0],remain*MIXER_SSIZE);
