@@ -104,9 +104,19 @@ static Bitu INT8_Handler(void) {
 	/* decrease floppy motor timer */
 	Bit8u val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
 	if (val>0) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
-	
+	/* and running drive */
+	mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
+	// Save ds,dx,ax
+	Bit16u oldds = SegValue(ds);
+	Bit16u olddx = reg_dx;
+	Bit16u oldax = reg_ax;
+	// run int 1c	
 	CALLBACK_RunRealInt(0x1c);
 	IO_Write(0x20,0x20);
+	// restore old values
+	SegSet16(ds,oldds);
+	reg_dx = olddx;
+	reg_ax = oldax;
 	return CBRET_NONE;
 };
 
