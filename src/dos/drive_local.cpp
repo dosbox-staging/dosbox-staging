@@ -230,7 +230,7 @@ bool localDrive::FileExists(const char* name) const {
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
-	FILE* Temp=fopen(newname,"br");
+	FILE* Temp=fopen(newname,"rb");
 	if(Temp==NULL) return false;
 	fclose(Temp);
 	return true;
