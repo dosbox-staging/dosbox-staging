@@ -30,25 +30,30 @@
 
 #define DOS_FILESTART 4
 
+#define FCB_SUCCESS     0
+#define FCB_READ_NODATA	1
+#define FCB_READ_PARTIAL 3
+#define FCB_ERR_NODATA  1
+#define FCB_ERR_EOF     3
+#define FCB_ERR_WRITE   1
+
 
 DOS_File * Files[DOS_FILES];
 DOS_Drive * Drives[DOS_DRIVES];
-static Bit8u CurrentDrive=2;			//Init on C:
-
 
 Bit8u DOS_GetDefaultDrive(void) {
-	return CurrentDrive;
+	return dos.current_drive;
 }
 
 void DOS_SetDefaultDrive(Bit8u drive) {
-	if (drive<=DOS_DRIVES) CurrentDrive=drive;
+	if (drive<=DOS_DRIVES) dos.current_drive=drive;
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
 	Bitu r,w;
-	*drive=CurrentDrive;
+	*drive=dos.current_drive;
 	/* First get the drive */
 	if (name[1]==':') {
 		*drive=(name[0] | 0x20)-'a';
@@ -180,19 +185,30 @@ bool DOS_Rename(char * oldname,char * newname) {
 }
 
 bool DOS_FindFirst(char * search,Bit16u attr) {
+	DOS_DTA dta(dos.dta);
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
+	char dir[DOS_PATHLENGTH];char pattern[DOS_PATHLENGTH];
 	if (!DOS_MakeName(search,fullsearch,&drive)) return false;
-	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-	dtablock->sattr=attr | DOS_ATTR_ARCHIVE;
-	dtablock->sdrive=drive;
-	if (Drives[drive]->FindFirst(fullsearch,dtablock)) return true;
+	/* Split the search in dir and pattern */
+	char * find_last;
+	find_last=strrchr(fullsearch,'\\');
+	if (!find_last) {	/*No dir */
+		strcpy(pattern,fullsearch);
+		dir[0]=0;
+	} else {
+		*find_last=0;
+		strcpy(pattern,find_last+1);
+		strcpy(dir,fullsearch);
+	}		
+	dta.SetupSearch(drive,attr | DOS_ATTR_ARCHIVE,pattern);
+	if (Drives[drive]->FindFirst(dir,dta)) return true;
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
 }
 
 bool DOS_FindNext(void) {
-	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-	if (Drives[dtablock->sdrive]->FindNext(dtablock)) return true;
+	DOS_DTA dta(dos.dta);
+	if (Drives[dta.GetSearchDrive()]->FindNext(dta)) return true;
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
 }
@@ -388,7 +404,7 @@ bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit16u * sectors,Bit16u * c
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
-	return Drives[drive]->FreeSpace(bytes,sectors,clusters,free);
+	return Drives[drive]->AllocationInfo(bytes,sectors,clusters,free);
 }
 
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
@@ -457,36 +473,21 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 	return true;
 }
 
+
 #if 1
-static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
-	char naam[15];
-	Bit8s teller=0;
-	Bit8u drive=fcb->Get_drive();
-	if(drive!=0){ 
-		naam[0]=(drive-1)+'A';
-		naam[1]=':';
-		naam[2]='\0';}
-    else{
-		naam[0]='\0';
-    };
-	char temp[10];
-	fcb->Get_filename(temp);
-	temp[8]='.';
-	temp[9]='\0';
-	strcat(naam,temp);
-	char ext[4];
-	fcb->Get_ext(ext);
-	ext[3]='\0';
-	strcat(naam,ext);
-    return DOS_MakeName(naam,outname, outdrive);
+
+static bool FCB_MakeName2 (DOS_FCB & fcb, char* outname, Bit8u* outdrive){
+	char short_name[DOS_FCBNAME];
+	fcb.GetName(short_name);
+	return DOS_MakeName(short_name,outname, outdrive);
 }
+
 #define FCB_SEP ":.;,=+"
 #define ILLEGAL ":.;,=+ \t/\"[]<>|"
 
-static bool isvalid(const char* in){
-    
+static bool isvalid(const char in){
 	const char ill[]=ILLEGAL;    
-	return (Bit8u(*in)>0x1F) && (strchr(ill,*in)==0);
+	return (Bit8u(in)>0x1F) && (!strchr(ill,in));
 }
 
 static void vullen (char* veld,char* pveld){
@@ -495,389 +496,321 @@ static void vullen (char* veld,char* pveld){
     }
     return;
 }
+
+#define PARSE_SEP_STOP          0x01
+#define PARSE_DFLT_DRIVE        0x02
+#define PARSE_BLNK_FNAME        0x04
+#define PARSE_BLNK_FEXT         0x08
+
+#define PARSE_RET_NOWILD        0
+#define PARSE_RET_WILD          1
+#define PARSE_RET_BADDRIVE      0xff
+
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change){
-    char* backup;
-    backup=string;
+    
+	char * string_begin=string;Bit8u ret=0;
     DOS_FCB fcb(seg,offset);
-    Bit8u retwaarde=0;    
-    char naam[9]="        ";
-    char ext[4]="   ";
-    if((parser & 1) && *string)  {       //ignore leading seperator
-        char sep[] = FCB_SEP;  
-        char a[2];
-         a[0]= *string;a[1]='\0';
-        if (strcspn(a,sep)==0) string++;
-    } 
-    if((!(parser &4)) ==true){ // fill name with spaces if no name
-        fcb.Set_filename(naam);
-    }
-    if((!(parser &8)) ==true){ // fill ext with spaces if no ext
-        fcb.Set_ext(ext);
-    }
-    if((parser & 2)==false) fcb.Set_drive(0); //Set allready the defaultdrive (Will stay set when it's not specified)
-    // strip leading spaces
-    while((*string==' ')||(*string=='\t')) string++;
-    if( *(string+1)==':') {
-        Bit8u drive=toupper(*string);
-        if( (drive>'Z') | (drive<'A') | (Drives[drive-'A']==NULL)) {
-            *change=string-backup;
-            return 0xFF;
-        }
-        fcb.Set_drive(drive-'A'+1);
-        string+=2;
-    }
-    //startparsing
-    char* pnaam=naam;
-    while(isvalid(string)==true) {
-        if(*string=='*'){
-            vullen(naam,pnaam);  //fill with ????
-            string++;
-            retwaarde=1;
-            break;
-        }
-
-        *pnaam=*string;
-        pnaam++;
-        string++;
-    }
-    fcb.Set_filename(naam);
-    if((*string=='.')==false) {
-        *change=string-backup;
-        return retwaarde;
-    }    
-    //extension exist
-    string++;
-    char* pext=ext;
-        while(isvalid(string)==true) {
-        if(*string=='*'){
-            vullen(ext,pext);   //fill with ????
-            string++;
-            retwaarde=1;
-            break;
-        }
-
-        *pext=*string;
-        pext++;
-        string++;
-    }
-    fcb.Set_ext(ext);
-    *change=string-backup;
-    return retwaarde;
+	bool hasdrive,hasname,hasext;
+	hasdrive=hasname=hasext=false;
+	Bitu index;bool finished;Bit8u fill;
+/* First get the old data from the fcb */
+#pragma pack (1)
+	union {
+		struct {
+			char drive[2];
+			char name[9];
+			char ext[4];
+		} part GCC_ATTRIBUTE (packed) ;
+		char full[DOS_FCBNAME];
+	} fcb_name;
+#pragma pack()
+	/* Get the old information from the previous fcb */
+	fcb.GetName(fcb_name.full);fcb_name.part.drive[1]=0;fcb_name.part.name[8]=0;fcb_name.part.ext[3]=0;
+	/* Strip of the leading sepetaror */
+	if((parser & PARSE_SEP_STOP) && *string)  {       //ignore leading seperator
+		char sep[] = FCB_SEP;char a[2];
+		a[0]= *string;a[1]='\0';
+		if (strcspn(a,sep)==0) string++;
+	} 
+	/* strip leading spaces */
+	while((*string==' ')||(*string=='\t')) string++;
+	/* Check for a drive */
+	if (string[1]==':') {
+		fcb_name.part.drive[0]=0;
+		hasdrive=true;
+		if (isalpha(string[0]) && Drives[toupper(string[0])-'A']) {
+			fcb_name.part.drive[0]=toupper(string[0])-'A'+1;
+		} else ret=0xff;
+		string+=2;
+	}
+	/* Special checks for . and .. */
+	if (string[0]=='.') {
+		string++;
+		if (!string[0])	{
+			hasname=true;
+			ret=PARSE_RET_NOWILD;
+			strcpy(fcb_name.part.name,".       ");
+			goto savefcb;
+		}
+		if (string[1]=='.' && !string[1])	{
+			string++;
+			hasname=true;
+			ret=PARSE_RET_NOWILD;
+			strcpy(fcb_name.part.name,"..      ");
+			goto savefcb;
+		}
+		goto checkext;
+	}
+	/* Copy the name */	
+	hasname=true;finished=false;fill=' ';index=0;
+	while (index<8) {
+		if (!finished) {
+			if (string[0]=='*') {fill='?';fcb_name.part.name[index]='?';if (!ret) ret=1;finished=true;}
+			else if (string[0]=='?') {fcb_name.part.name[index]='?';if (!ret) ret=1;}
+			else if (isvalid(string[0])) {fcb_name.part.name[index]=toupper(string[0]);}
+			else { finished=true;continue; }
+			string++;
+		} else {
+			fcb_name.part.name[index]=fill;
+		}
+		index++;
+	}
+	if (!(string[0]=='.')) goto savefcb;
+	string++;
+checkext:
+	/* Copy the extension */
+	hasext=true;finished=false;fill=' ';index=0;
+	while (index<3) {
+		if (!finished) {
+			if (string[0]=='*') {fill='?';fcb_name.part.ext[index]='?';finished=true;}
+			else if (string[0]=='?') {fcb_name.part.ext[index]='?';if (!ret) ret=1;}
+			else if (isvalid(string[0])) {fcb_name.part.ext[index]=toupper(string[0]);}
+			else { finished=true;continue; }
+			string++;
+		} else {
+			fcb_name.part.ext[index]=fill;
+		}
+		index++;
+	}
+savefcb:
+	if (!hasdrive & !(parser & PARSE_DFLT_DRIVE)) fcb_name.part.drive[0]=dos.current_drive+1; 
+	if (!hasname & !(parser & PARSE_BLNK_FNAME)) strcpy(fcb_name.part.name,"        ");
+	if (!hasext & !(parser & PARSE_BLNK_FEXT)) strcpy(fcb_name.part.ext,"   ");		
+	fcb.SetName(fcb_name.part.drive[0],fcb_name.part.name,fcb_name.part.ext);
+	*change=(Bit8u)(string-string_begin);
+	return ret;
 }
 
-void DOS_FCBSetDateTime(DOS_FCB& fcb,struct stat& stat_block)
-{
-	Bit16u constant;
-	struct tm *time;
-	if((time=localtime(&stat_block.st_mtime))!=0){
+static void DTAExtendName(char * name,char * filename,char * ext) {
+	char * find=strchr(name,'.');
+	if (find) {
+		strcpy(ext,find+1);
+		*find=0;
+	} else ext[0]=0;
+	strcpy(filename,name);
+	Bitu i;
+	for (i=strlen(name);i<8;i++) filename[i]=' ';filename[8]=0;
+	for (i=strlen(ext);i<3;i++) ext[i]=' ';ext[3]=0;
+}
 
-	    constant=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-	    fcb.Set_time(constant);
-        constant=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
-        fcb.Set_date(constant);
-    }
-    else{
-        constant=6;
-	    fcb.Set_time(constant);
-        constant=4;
-        fcb.Set_date(constant);
-    }
-};
+static void SaveFindResult(DOS_FCB & find_fcb) {
+	DOS_DTA find_dta(dos.tables.tempdta);
+	char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;Bit8u drive;
+	char file_name[9];char ext[4];
+	find_dta.GetResult(name,size,date,time,attr);
+	drive=find_fcb.GetDrive();
+	/* Create a correct file and extention */
+	DTAExtendName(name,file_name,ext);	
+	DOS_FCB fcb(RealSeg(dos.dta),RealOff(dos.dta));
+	fcb.Create(find_fcb.Extended());
+	fcb.SetName(drive,file_name,ext);
+	fcb.SetSizeDateTime(size,date,time);
+}
 
-bool DOS_FCBOpen(Bit16u seg,Bit16u offset) { 
+bool DOS_FCBOpenCreate(Bit16u seg,Bit16u offset) { 
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	char fullname[DOS_PATHLENGTH];
-	if(!FCB_MakeName (&fcb, fullname, &drive)) return false;
-    if(!Drives[drive]->FileExists(fullname)) return false; //not really needed as stat will error.
-
-	struct stat stat_block;
-	if(!Drives[drive]->FileStat(fullname, &stat_block)) return false; 
-	fcb.Set_filesize((Bit32u)stat_block.st_size);
-	Bit16u constant = 0;
-	fcb.Set_current_block(constant);
-	constant=0x80;
-	fcb.Set_record_size(constant);
-
-	DOS_FCBSetDateTime(fcb,stat_block);
-  
-    fcb.Set_drive(drive +1);
+	char shortname[DOS_FCBNAME];Bit16u handle;
+	fcb.GetName(shortname);
+	if (!DOS_OpenFile(shortname,2,&handle)) return false;
+	fcb.FileOpen((Bit8u)handle);
 	return true;
 }
 
-bool DOS_FCBClose(Bit16u seg,Bit16u offset) 
-{   DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	char fullname[DOS_PATHLENGTH];
-	if(!FCB_MakeName (&fcb, fullname, &drive)) return false;
-    if(!Drives[drive]->FileExists(fullname)) return false;
-	
-	return true;}
+bool DOS_FCBClose(Bit16u seg,Bit16u offset) {
+	DOS_FCB fcb(seg,offset);
+	Bit8u fhandle;
+	fcb.FileClose(fhandle);
+	DOS_CloseFile(fhandle);
+	return true;
+}
 
 bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
 {
-	DOS_FCB* fcb = new DOS_FCB(seg,offset);
-	Bit8u drive;
-	Bitu i;
-	char fullname[DOS_PATHLENGTH];
-	FCB_MakeName (fcb, fullname, &drive);
-	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-      dtablock->sattr=DOS_ATTR_ARCHIVE;
-	dtablock->sdrive=drive;
-
-	if(Drives[drive]->FindFirst(fullname,dtablock)==false) return false;
-  
-	char naam[9];
-	char ext[4];
-	char * point=strrchr(dtablock->name,'.');
-	if(point==NULL|| *(point+1)=='\0') {
-		ext[0]=' ';
-		ext[1]=' ';
-		ext[2]=' ';
-	}else{
-		strcpy(ext,(point+1));
-		i=strlen((point+1));
-		while(i!=3) {ext[i]=' ';i++;}
-	}
-
-	if(point!=NULL) *point='\0';
-  
-	strcpy (naam,dtablock->name);
-	i=strlen(dtablock->name);
-	while(i!=8) {naam[i]=' '; i++;}
-	delete fcb;
-	DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Phys(dos.dta));
-	fcbout->Set_drive(drive +1);
-	fcbout->Set_filename(naam);
-	fcbout->Set_ext(ext);
-	delete fcbout;
-	return true;
-
+	DOS_FCB fcb(seg,offset);
+	RealPt old_dta=dos.dta;dos.dta=dos.tables.tempdta;
+	char name[DOS_FCBNAME];fcb.GetName(name);
+	bool ret=DOS_FindFirst(name,DOS_ATTR_ARCHIVE);
+	dos.dta=old_dta;
+	if (ret) SaveFindResult(fcb);
+	return ret;
 }
+
 bool DOS_FCBFindNext(Bit16u seg,Bit16u offset)
 {
-  DOS_FCB* fcb = new DOS_FCB(seg,offset);
-  Bit8u drive;
-  Bitu i;
-  char fullname[DOS_PATHLENGTH];
-  FCB_MakeName (fcb, fullname, &drive);
-  DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-  dtablock->sattr=DOS_ATTR_ARCHIVE;
-  dtablock->sdrive=drive;
-
-  if(Drives[dtablock->sdrive]->FindNext(dtablock)==false) return false;
-  char naam[9];
-  char ext[4];
-  char * point=strrchr(dtablock->name,'.');
-  if(point==NULL|| *(point+1)=='\0') {
-	ext[0]=' ';
-	ext[1]=' ';
-	ext[2]=' ';
-	}else
-  {
-		strcpy(ext,point+1);
-		i=strlen(point+1); 
-		while(i!=3) {ext[i]=' ';i++;}
-  }
-
-  if(point!=NULL) *point='\0';
-  
-  strcpy (naam,dtablock->name);
-  i=strlen(dtablock->name);
-  while(i!=8) {naam[i]=' '; i++;}
-  delete fcb;
-  DOS_FCB* fcbout= new DOS_FCB(Real2Phys(dos.dta));
-  fcbout->Set_drive(drive +1);
-  fcbout->Set_filename(naam);
-  fcbout->Set_ext(ext);
-  delete fcbout;
-  return true;
-  }
-
-bool DOS_FCBCreate(Bit16u seg,Bit16u offset)
-{
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	DOS_File* file;
-	char fullname[DOS_PATHLENGTH];
-	
-	if (!FCB_MakeName (&fcb, fullname, &drive))	return false;    
-	if (!Drives[drive]->FileCreate(&file,fullname,0)) return false;
-	// Set Date & time
-	struct stat stat_block;
-	Drives[drive]->FileStat(fullname, &stat_block); 
-	DOS_FCBSetDateTime(fcb,stat_block);
-	file->Close();
-	// Clear fcb
-	fcb.Set_record_size(128); // ?
-	fcb.Set_current_record(0);
-	fcb.Set_random_record(0);
-	fcb.Set_filesize(0);
-	return true;
-};
+	RealPt old_dta=dos.dta;dos.dta=dos.tables.tempdta;
+	bool ret=DOS_FindNext();
+	dos.dta=old_dta;
+	if (ret) SaveFindResult(fcb);
+	return ret;
+}
 
-Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno)
-{
+Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	DOS_File* file;
-	char fullname[DOS_PATHLENGTH];
-	// Open file
-	if (!FCB_MakeName (&fcb, fullname, &drive))	return 0x01;    
-	if (!Drives[drive]->FileOpen(&file,fullname,OPEN_READ)) return 0x01;
-	// Position file
-	Bit32u filePos	= (fcb.Get_current_block()*128+fcb.Get_current_record()) * fcb.Get_record_size();
-	if (!file->Seek(&filePos,0x00))	 { file->Close(); return 0x01; };	// end of file
-	// Calculate target
-	Bit8u* target	= HostMake(RealSeg(dos.dta),RealOff(dos.dta)+recno*fcb.Get_record_size());
-	// Read record
-	Bit16u toRead = fcb.Get_record_size();
-	if (!file->Read(target,&toRead)) { file->Close(); return 0x01; };
-	// fill with 0
-	memset(target+toRead,0,fcb.Get_record_size()-toRead);
-	// Update record
-	Bit8u curRec = fcb.Get_current_record() + 1;
-	if (curRec>128) {
-		fcb.Set_current_record(0);
-		fcb.Set_current_block(fcb.Get_current_block()+1);
-	} else
-		fcb.Set_current_record(curRec);
-	
-	file->Close();
-	// check for error
-	if (toRead<fcb.Get_record_size()) return 0x03;
-	return 0x00;
+	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
+	fcb.GetSeqData(fhandle,rec_size);
+	fcb.GetRecord(cur_block,cur_rec);
+	Bit32u pos=((cur_block*128)+cur_rec)*rec_size;
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET)) return FCB_READ_NODATA; 
+	Bit16u toread=rec_size;
+	if (!DOS_ReadFile(fhandle,dos_copybuf,&toread)) return FCB_READ_NODATA;
+	if (toread==0) return FCB_READ_NODATA;
+	if (toread<rec_size) {
+		PhysPt fill=Real2Phys(dos.dta)+toread;
+		Bitu i=rec_size-toread;
+		for (;i>0;i--) mem_writeb(fill++,0);
+	}
+	MEM_BlockWrite(Real2Phys(dos.dta)+recno*rec_size,dos_copybuf,rec_size);
+	if (++cur_rec>127) { cur_block++;cur_rec=0; }
+	fcb.SetRecord(cur_block,cur_rec);
+	if (toread==rec_size) return FCB_SUCCESS;
+	if (toread==0) return FCB_READ_NODATA;
+	return FCB_READ_PARTIAL;
 }
 
 bool DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
 {
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	DOS_File* file;
-	char fullname[DOS_PATHLENGTH];
-	// Open file	
-	if (!FCB_MakeName (&fcb, fullname, &drive))		return false;    
-	if (!Drives[drive]->FileOpen(&file,fullname,OPEN_WRITE)) return false;
-	// Position file
-	Bit32u filePos	= (fcb.Get_current_block()*128+fcb.Get_current_record()) * fcb.Get_record_size();
-	if (!file->Seek(&filePos,0x00))	{ file->Close(); return false; };	// end of file
-	// Calculate source
-	Bit8u* source = HostMake(RealSeg(dos.dta),RealOff(dos.dta)+recno*fcb.Get_record_size());
-	// Write record
-	Bit16u toWrite = fcb.Get_record_size();
-	if (!file->Write(source,&toWrite)) { file->Close(); return false; };
-	// Update size
-	Bit32u fsize = fcb.Get_filesize() + toWrite;
-	fcb.Set_filesize(fsize);
-	// Update Date & Time
-	struct stat stat_block;
-	Drives[drive]->FileStat(fullname, &stat_block); 
-	DOS_FCBSetDateTime(fcb,stat_block);
-	// Update record
-	Bit8u curRec = fcb.Get_current_record() + 1;
-	if (curRec>128) {
-		fcb.Set_current_record(0);
-		fcb.Set_current_block(fcb.Get_current_block()+1);
-	} else
-		fcb.Set_current_record(curRec);
-	
-	file->Close(); 
-	return (toWrite==fcb.Get_record_size());
-};
+	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
+	fcb.GetSeqData(fhandle,rec_size);
+	fcb.GetRecord(cur_block,cur_rec);
+	Bit32u pos=((cur_block*128)+cur_rec)*rec_size;
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET)) return FCB_ERR_WRITE; 
+	MEM_BlockRead(Real2Phys(dos.dta)+recno*rec_size,dos_copybuf,rec_size);
+	Bit16u towrite=rec_size;
+	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite)) return FCB_ERR_WRITE;
+	Bit32u size;Bit16u date,time;
+	fcb.GetSizeDateTime(size,date,time);
+	if (pos+towrite>size) size=pos+towrite;
+	//TODO Set time to current time?
+	fcb.SetSizeDateTime(size,date,time);
+	if (++cur_rec>127) { cur_block++;cur_rec=0; }	
+	fcb.SetRecord(cur_block,cur_rec);
+	return FCB_SUCCESS;
+}
 
-Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec)
-{
+Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+
 	DOS_FCB fcb(seg,offset);
-	Bit16u recno = 0;
-	Bit8u error;
-	// Calculate block&rec
-	fcb.Set_current_block (Bit16u(fcb.Get_random_record() / 128));
-	fcb.Set_current_record(Bit8u (fcb.Get_random_record() % 127));
+	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
+	/* Set the correct record from the random data */
+	fcb.GetRandom(random);
+	if (restore) fcb.GetRecord(old_block,old_rec);
+	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	// Read records
 	for (int i=0; i<numRec; i++) {
 		error = DOS_FCBRead(seg,offset,i);
 		if (error!=0x00) break;
-	};
-	// update fcb
-	fcb.Set_random_record(fcb.Get_current_block()*128+fcb.Get_current_record());
+	}
+	Bit16u new_block;Bit8u new_rec;
+	fcb.GetRecord(new_block,new_rec);
+	if (restore) fcb.SetRecord(old_block,old_rec);
+	/* Update the random record pointer with new position */
+	fcb.SetRandom(new_block*128+new_rec);
 	return error;
-};
+}
 
-bool DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec)
-{
+bool DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	DOS_FCB fcb(seg,offset);
-	Bit16u recno = 0;
-	bool noerror = true;
-	// Calculate block&rec
-	fcb.Set_current_block (Bit16u(fcb.Get_random_record() / 128));
-	fcb.Set_current_record(Bit8u (fcb.Get_random_record() % 127));
-	// Read records
+	Bit32u random;Bit16u old_block;Bit8u old_rec;bool noerror;
+
+	/* Set the correct record from the random data */
+	fcb.GetRandom(random);
+	if (restore) fcb.GetRecord(old_block,old_rec);
+	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
+	/* Write records */
 	for (int i=0; i<numRec; i++) {
 		noerror = DOS_FCBWrite(seg,offset,i);
 		if (!noerror) break;
-	};
-	// update fcb
-	fcb.Set_random_record(fcb.Get_current_block()*128+fcb.Get_current_record());
+	}
+	Bit16u new_block;Bit8u new_rec;
+	fcb.GetRecord(new_block,new_rec);
+	if (restore) fcb.SetRecord(old_block,old_rec);
+	/* Update the random record pointer with new position */
+	fcb.SetRandom(new_block*128+new_rec);
 	return noerror;
-};
+}
 
-bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec)
-{
+bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec) {
+	char shortname[DOS_PATHLENGTH];Bit16u entry;Bit8u handle;Bit16u rec_size;
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	DOS_File* file;
-	char fullname[DOS_PATHLENGTH];
-	// Open file	
-	if (!FCB_MakeName (&fcb, fullname, &drive))		return false;    
-	if (!Drives[drive]->FileOpen(&file,fullname,OPEN_WRITE)) return false;
-	struct stat stat_block;
-	if(!Drives[drive]->FileStat(fullname, &stat_block)) { file->Close(); return false; };
-	Bit32u fsize = (Bit32u)stat_block.st_size;
-    //compute the size and update the fcb
-    fcb.Set_random_record(fsize / fcb.Get_record_size());
-    if ((fsize % fcb.Get_record_size())!=0) fcb.Set_random_record(fcb.Get_random_record()+1);
-	fcb.Set_filesize(fsize);
+	fcb.GetName(shortname);
+	if (!DOS_OpenFile(shortname,0,&entry)) return false;
+	handle=RealHandle(entry);
+	Bit32u size=Files[handle]->size;
+	DOS_CloseFile(entry);fcb.GetSeqData(handle,rec_size);
+	Bit32u random=(size/rec_size);
+	if (size % rec_size) random++;
+	fcb.SetRandom(random);
 	return true;
-};
+}
 
-bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset)
-{
+bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset){
 	DOS_FCB fcb(seg,offset);
-	Bit8u drive;
-	char fullname[DOS_PATHLENGTH];
-	// Open file	
-	if (!FCB_MakeName (&fcb, fullname, &drive))		return false;    
-	return Drives[drive]->FileUnlink(fullname);
-};
+	char shortname[DOS_FCBNAME];
+	fcb.GetName(shortname);
+	return DOS_UnlinkFile(shortname);
+}
 
-bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset)
-{
-	Bit8u olddrive,newdrive;
+bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset){
 	DOS_FCB fcbold(seg,offset);
 	DOS_FCB fcbnew(seg,offset+16);
-	char oldfullname[DOS_PATHLENGTH];
-	char newfullname[DOS_PATHLENGTH];
-	if (!FCB_MakeName (&fcbold, oldfullname, &olddrive)) return false;    
-	if (!FCB_MakeName (&fcbnew, newfullname, &newdrive)) return false;    	
-	//TODO Test for different drives maybe
-	return (Drives[newdrive]->Rename(oldfullname,newfullname));
-};
+	char oldname[DOS_FCBNAME];
+	char newname[DOS_FCBNAME];
+	fcbold.GetName(oldname);fcbnew.GetName(newname);
+	return DOS_Rename(oldname,newname);
+}
+
+void DOS_FCBSetRandomRecord(Bit16u seg, Bit16u offset) {
+	DOS_FCB fcb(seg,offset);
+	Bit16u block;Bit8u rec;
+	fcb.GetRecord(block,rec);
+	fcb.SetRandom(block*128+rec);
+}
 
 #endif
 
 bool DOS_FileExists(char * name) {
-
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
 	return Drives[drive]->FileExists(fullname);
 }
 
+bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters) {
+	if (!drive) drive=dos.current_drive;
+	else drive--;
+	if (!Drives[drive]) return false;
+	Bit16u _free_clusters;
+	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
+	SegSet16(ds,RealSeg(dos.tables.mediaid));
+	reg_bx=RealOff(dos.tables.mediaid+drive);
+	return true;
+}
 
 bool DOS_SetDrive(Bit8u drive) {
 	if (Drives[drive]) {
 		DOS_SetDefaultDrive(drive);
 		return true;
-
 	} else {
 		return false;
 	}
