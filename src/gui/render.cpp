@@ -252,7 +252,9 @@ void RENDER_DoUpdate(void) {
 
 static void RENDER_DrawScreen(void * data) {
 	switch (render.op.type) {
+#if (C_SSHOT)
 doagain:
+#endif
 	case OP_None:
 		render.op.dest=render.op.pixels=data;
 		render.src.draw_handler(render.op.part_handler);
