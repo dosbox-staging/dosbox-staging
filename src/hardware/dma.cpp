@@ -62,6 +62,7 @@ void DmaController::portWrite(Bit32u port, Bit16u val, bool eightbit) {
 			DmaChannels[i]->Notify();
 			r++;
 		}
+
 	}
 	if(port == ControllerPorts[ctrlnum][DMA_CLEARREG]) {
 		found = true;
@@ -75,7 +76,7 @@ void DmaController::portWrite(Bit32u port, Bit16u val, bool eightbit) {
 		DmaChannels[dmachan]->autoinit = ((val & 0x10) == 0x10);
 		DmaChannels[dmachan]->dir = ((val & 0x20) == 0x20);
 		DmaChannels[dmachan]->dmamode = (val >> 6) & 0x3;
-		DMA_CheckEnabled(DmaChannels[dmachan]);
+		DmaChannels[dmachan]->Notify();
 	}
 	if(!found) LOG_MSG("Write to DMA port %x with %x", port, val);
 
@@ -207,10 +208,10 @@ Bit16u DmaChannel::portRead(Bit32u port, bool eightbit) {
 		if(eightbit) {
 			if(ff) {
 				ff = !ff;
-				return (Bit8u)(currcnt & 0xff);
+				return (Bit8u)(currcnt-1 & 0xff);
 			} else {
 				ff = !ff;
-				return (Bit8u)(currcnt >> 8);
+				return (Bit8u)(currcnt-1 >> 8);
 			}
 		} else {
 			return (Bit16u)currcnt;
@@ -233,7 +234,7 @@ void DmaChannel::portWrite(Bit32u port, Bit16u val, bool eightbit) {
 			baseaddr = val;
 		}
 		calcPhys();
-		reset();
+		addr_changed = true;
 	}
 	if (port == ChannelPorts[DMA_TRANSCOUNT][channum]) {
 		if(eightbit) {
@@ -247,7 +248,7 @@ void DmaChannel::portWrite(Bit32u port, Bit16u val, bool eightbit) {
 			transcnt = val;
 		}
 		currcnt = transcnt+1;
-		reset();
+		addr_changed = true;
 		DMA_CheckEnabled(this);
 		MakeCallback(false);
 		
@@ -340,6 +341,8 @@ Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 	
 	if (chan->masked) return 0;
 	if (!count) return 0;
+	if (chan->addr_changed) chan->reset();
+
 	if (chan->currcnt>count) {
 		MEM_BlockRead(chan->curraddr,buffer,count);
 		chan->curraddr+=count;
@@ -357,7 +360,7 @@ Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 			chan->current_addr+=count;
 			chan->currcnt=0;
 			chan->enabled=false;
-			LOG(LOG_DMA,LOG_NORMAL)("8-bit Channel %d reached terminal count");
+			LOG(LOG_DMA,LOG_NORMAL)("8-bit Channel %d reached terminal count",chan->channum);
 			return count;
 		} else {
 			buffer+=chan->currcnt;
@@ -420,7 +423,10 @@ Bitu DMA_16_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
 	return 0;
 }
 
-void DMA_SetEnabled(DmaChannel * chan,bool enabled) {
+void DMA_SetEnabled(void * usechan,bool enabled) {
+	DmaChannel * chan;
+	chan = (DmaChannel *)usechan;
+
 	if (chan->enabled == enabled) return;
 	chan->enabled=enabled;
 	if (chan->enable_callback) (*chan->enable_callback)(enabled);
