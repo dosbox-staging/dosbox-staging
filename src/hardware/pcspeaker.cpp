@@ -21,6 +21,7 @@
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
+#include "pic.h"
 
 
 #ifndef PI
@@ -31,117 +32,187 @@
 #define SPKR_RATE 22050
 #define SPKR_VOLUME 5000
 
-#define SPKR_SHIFT 16
+#define SPKR_SHIFT 10
 
-#define SIN_ENT 1024
-#define SIN_MAX (SIN_ENT << SPKR_SHIFT)
-
-#define FREQ_MAX (2 << SPKR_SHIFT)
-#define FREQ_HALF (FREQ_MAX >> 1)
-
-struct Speaker {
-	Bitu freq_add;
-	Bitu freq_pos;
-	Bit16s volume;
-	MIXER_Channel * chan;
-	bool enabled;
-	bool realsound;
-	bool sinewave;
-	Bitu mode;
-	Bit16u buffer[SPKR_BUF];
-	Bit16s table[SIN_ENT];
-	Bitu buf_pos;
+enum SPKR_MODE {
+	MODE_NONE,MODE_WAVE,MODE_DELAY,MODE_ONOFF,MODE_REAL,
 };
 
 
-static Speaker spkr;
+static struct {
+	Bit16s volume;
+	MIXER_Channel * chan;
+	Bit16u buffer[SPKR_BUF];
+	SPKR_MODE mode,old_mode;
+	struct {
+		Bit16s buf[SPKR_BUF];
+		Bitu used;
+	} real;
+	struct {
+		Bitu index;
+		struct {
+			Bitu max,half;
+		} count,new_count;
+	} wave;
+	struct {
+		Bit16s buf[SPKR_BUF];
+		Bitu pos;
+	} out;
+	struct {
+		Bitu index;
+		Bitu max;
+	} delay;
+	struct {
+		Bitu vol;
+		Bitu rate;
+		Bitu rate_conv;
+		Bitu tick_add;
+	} hw;
+	bool onoff;
+	Bitu buf_pos;
+} spkr;
 
-
-void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
-	spkr.mode=mode;
-	switch (mode) {
-	case 0:
-		if (cntr>72) cntr=72;
-		spkr.realsound=true;
-		if (spkr.buf_pos<SPKR_BUF) spkr.buffer[spkr.buf_pos++]=(cntr-36)*600;
-		break;
-	case 3:
-		if (spkr.sinewave) {
-			spkr.freq_add=(Bitu)(SIN_MAX/((float)SPKR_RATE/(PIT_TICK_RATE/(float)cntr)));
-		} else {
-			spkr.freq_add=(Bitu)(FREQ_MAX/((float)SPKR_RATE/(PIT_TICK_RATE/(float)cntr)));
+/* TODO Maybe interpolate at the moment we switch between on/off */
+static void GenerateSound(Bitu size) {
+	while (spkr.out.pos<size) {
+		Bitu samples=size-spkr.out.pos;
+		Bit16s * stream=&spkr.out.buf[spkr.out.pos];
+		switch (spkr.mode) {
+		case MODE_NONE:
+			memset(stream,0,samples*2);
+			spkr.out.pos+=samples;
+			break;
+		case MODE_WAVE:
+			{
+				for (Bitu i=0;i<samples;i++) {
+					spkr.wave.index+=spkr.hw.tick_add;
+					if (spkr.wave.index>=spkr.wave.count.max) {
+						*stream++=+spkr.volume;					
+						spkr.wave.index-=spkr.wave.count.max;
+						spkr.wave.count.max=spkr.wave.new_count.max;
+						spkr.wave.count.half=spkr.wave.new_count.half;
+					} else if (spkr.wave.index>spkr.wave.count.half) {
+						*stream++=-spkr.volume;					
+					} else {
+						*stream++=+spkr.volume;					
+					}
+				}
+				spkr.out.pos+=samples;
+			}
+			break;
+		case MODE_ONOFF:
+			{
+				Bit16s val=spkr.onoff ? spkr.volume : -spkr.volume;
+				for (Bitu i=0;i<samples;i++) *stream++=val;
+				spkr.out.pos+=samples;
+			}
+			break;
+		case MODE_REAL:
+			{
+				Bitu buf_add=(spkr.real.used<<16)/samples;
+				Bitu buf_pos=0;
+				spkr.real.used=0;spkr.mode=MODE_NONE;
+				for (Bitu i=0;i<samples;i++) {
+					*stream++=spkr.real.buf[buf_pos >> 16];
+					buf_pos+=buf_add;
+				}
+				spkr.out.pos+=samples;
+				break;
+			}
+		case MODE_DELAY:
+			{
+				for (Bitu i=0;i<samples;i++) {
+					spkr.delay.index+=spkr.hw.tick_add;
+					if (spkr.delay.index<=spkr.delay.max) {
+						*stream++=+spkr.volume;
+					} else {
+						*stream++=-spkr.volume;
+					}
+				}
+			}			
+			spkr.out.pos+=samples;
+			break;
 		}
-		break;
-	case 4:
-		spkr.freq_pos=(Bitu)(SPKR_RATE/(PIT_TICK_RATE/(float)cntr));
 	}
 }
 
-void PCSPEAKER_Enable(bool enable) {
-	spkr.enabled=enable;
-	MIXER_Enable(spkr.chan,enable);
+void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
+	Bitu index=PIC_Index();
+	Bitu len=(spkr.hw.rate_conv*index)>>16;
+	if (spkr.mode==MODE_NONE) MIXER_Enable(spkr.chan,true);
+	switch (mode) {
+	case 0:		/* Mode 0 one shot, used with realsound */
+		if (cntr>72) cntr=72;
+		if (spkr.mode!=MODE_REAL) GenerateSound(len);
+		spkr.mode=MODE_REAL;
+		if (spkr.real.used<SPKR_BUF) spkr.real.buf[spkr.real.used++]=(cntr-36)*600;
+		break;
+	case 3:		/* Square wave generator */
+		GenerateSound(len);
+		spkr.mode=MODE_WAVE;
+		spkr.wave.new_count.max=cntr << SPKR_SHIFT;
+		spkr.wave.new_count.half=(cntr/2) << SPKR_SHIFT;
+		break;
+	case 4:		/* Keep high till end of count */
+		GenerateSound(len);
+		spkr.delay.max=cntr << SPKR_SHIFT;
+		spkr.delay.index=0;
+		spkr.mode=MODE_DELAY;
+	}
+}
+
+void PCSPEAKER_SetType(Bitu mode) {
+	Bitu index=PIC_Index();
+	Bitu len=(spkr.hw.rate_conv*index)>>16;
+	GenerateSound(len);
+	if (spkr.mode==MODE_NONE) MIXER_Enable(spkr.chan,true);
+	switch (mode) {
+	case 0:
+		if (spkr.mode==MODE_ONOFF && spkr.onoff) spkr.onoff=false;
+		else spkr.mode=MODE_NONE;
+		break;
+	case 1:
+		if (spkr.mode!=MODE_ONOFF) spkr.old_mode=spkr.mode;
+		spkr.mode=MODE_ONOFF;
+		spkr.onoff=false;
+		break;
+	case 2:
+		spkr.onoff=true;
+		if (spkr.mode!=MODE_ONOFF) spkr.old_mode=spkr.mode;
+		spkr.mode=MODE_ONOFF;
+		break;
+	case 3:
+		if (spkr.mode==MODE_ONOFF) spkr.mode=spkr.old_mode;		
+		break;
+	};
 }
 
 static void PCSPEAKER_CallBack(Bit8u * stream,Bit32u len) {
-	switch (spkr.mode) {
-	case 0:
-		/* Generate the "RealSound" */
-		{
-			Bitu buf_add=(spkr.buf_pos<<16)/len;
-			Bitu buf_pos=0;
-			spkr.buf_pos=0;spkr.realsound=0;
-			while (len-->0) {
-				*(Bit16s*)(stream)=spkr.buffer[buf_pos >> 16];
-				buf_pos+=buf_add;
-				stream+=2;
-			}
-			break;
-		}
-	case 3:
-		if (spkr.sinewave) while (len-->0) {
-			spkr.freq_pos+=spkr.freq_add;
-			spkr.freq_pos&=(SIN_MAX-1);
-			*(Bit16s*)(stream)=spkr.table[spkr.freq_pos>>SPKR_SHIFT];
-			stream+=2;
-		} else while (len-->0) {
-			spkr.freq_pos+=spkr.freq_add;
-			if (spkr.freq_pos>=FREQ_MAX) spkr.freq_pos-=FREQ_MAX;
-			if (spkr.freq_pos>=FREQ_HALF) {
-				*(Bit16s*)(stream)=spkr.volume;
-			} else {
-				*(Bit16s*)(stream)=-spkr.volume;
-			}
-			stream+=2;
-		}
-		break;
-	case 4:
-		while (len-->0) {
-			if (spkr.freq_pos) {
-				*(Bit16s*)(stream)=spkr.volume;
-				spkr.freq_pos--;
-			} else {
-				*(Bit16s*)(stream)=-spkr.volume;
-			}
-			stream+=2;
-		}
-		break;
-	}
+	if (spkr.out.pos<len) GenerateSound(len);
+	memcpy(stream,spkr.out.buf,len*2);
+	memcpy(spkr.out.buf,&spkr.out.buf[len],(spkr.out.pos-len)*2);
+	spkr.out.pos-=len;
+	if (spkr.mode==MODE_NONE) MIXER_Enable(spkr.chan,false);
 }
 
 void PCSPEAKER_Init(Section* sec) {
-    MSG_Add("SPEAKER_CONFIGFILE_HELP","pcspeaker related options.\n");
+    MSG_Add("SPEAKER_CONFIGFILE_HELP","PC-Speaker and TandySound options.\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("enabled")) return;
-	spkr.sinewave=section->Get_bool("sinewave");
-	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,SPKR_RATE,"PC-SPEAKER");
+	spkr.volume=SPKR_VOLUME;
+	spkr.old_mode=spkr.mode=MODE_NONE;
+	spkr.real.used=0;
+	spkr.out.pos=0;
+//	spkr.hw.vol=section->Get_int("volume");
+	spkr.hw.rate=section->Get_int("pcrate");
+	spkr.hw.rate_conv=(spkr.hw.rate<<16)/1000000;
+	spkr.hw.tick_add=(Bitu)((double)PIT_TICK_RATE*(double)(1 << SPKR_SHIFT)/(double)spkr.hw.rate);
+	spkr.wave.index=0;
+	spkr.wave.count.max=spkr.wave.new_count.max=0x10000 << SPKR_SHIFT;
+	spkr.wave.count.half=spkr.wave.new_count.half=(0x10000 << SPKR_SHIFT)/2;
+
+	/* Register the sound channel */
+	spkr.chan=MIXER_AddChannel(&PCSPEAKER_CallBack,spkr.hw.rate,"PC-SPEAKER");
 	MIXER_Enable(spkr.chan,false);
 	MIXER_SetMode(spkr.chan,MIXER_16MONO);
-	spkr.volume=SPKR_VOLUME;
-	spkr.enabled=false;
-	spkr.realsound=false;
-	spkr.buf_pos=0;
-	/* Generate the sine wave */
-	for (Bitu i=0;i<SIN_ENT;i++) {
-		spkr.table[i]=(Bit16s)(sin(2*PI/SIN_ENT*i)*SPKR_VOLUME*1.5);
-	}
 }
