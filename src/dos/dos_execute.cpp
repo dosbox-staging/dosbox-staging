@@ -96,7 +96,7 @@ bool DOS_Terminate(bool tsr) {
 	/* Free Files owned by process */
 	if (!tsr) curpsp.CloseFiles();	
 	/* Get the termination address */
-	RealPt old22 = RealGetVec(0x22);
+	RealPt old22 = curpsp.GetInt22();
 	/* Restore vector 22,23,24 */
 	curpsp.RestoreVectors();
 	/* Set the parent PSP */
@@ -106,8 +106,8 @@ bool DOS_Terminate(bool tsr) {
 	dos.dta = parentpsp.GetDTA();
 	/* Restore the SS:SP to the previous one */
 	SegSet16(ss,RealSeg(parentpsp.GetStack()));
-	reg_sp = RealOff(parentpsp.GetStack());	
-	/* Restore the stored registers */
+	reg_sp = RealOff(parentpsp.GetStack());		
+	/* Restore the old CS:IP from int 22h */
 	RestoreRegisters();
 	/* Set the CS:IP stored in int 0x22 back on the stack */
 	mem_writew(SegPhys(ss)+reg_sp+0,RealOff(old22));
@@ -303,6 +303,8 @@ bool DOS_Execute(char * name,ParamBlock * block,Bit8u flags) {
 		dos.psp=pspseg;
 		DOS_PSP newpsp(dos.psp);
 		dos.dta=newpsp.GetDTA();
+		/* save vectors */
+		newpsp.SaveVectors();
 		/* copy fcbs */
 		newpsp.SetFCB1(block->exec.fcb1);
 		newpsp.SetFCB2(block->exec.fcb2);
