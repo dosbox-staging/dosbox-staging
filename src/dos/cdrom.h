@@ -138,6 +138,10 @@ public:
 
 private:
 
+	bool	Open				(void);
+	void	Close				(void);
+	
+	char	pathname[32];
 	HANDLE	hIOCTL;
 	TMSF	oldLeadOut;
 };
@@ -169,7 +173,10 @@ public:
 	bool	LoadUnloadMedia		(bool unload);
 
 private:
+	bool	Open				(void);
+	void	Close				(void);
 
+	char	pathname[64];
 	int		dhandle;
 	TMSF	oldLeadOut;
 };

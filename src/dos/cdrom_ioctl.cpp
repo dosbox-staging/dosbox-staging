@@ -24,12 +24,14 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include <linux/cdrom.h>
 
 #include "cdrom.h"
 
 CDROM_Interface_Linux::CDROM_Interface_Linux(void)
 {
+	pathname[0] = 0;
 	memset(&oldLeadOut,0,sizeof(oldLeadOut));
 };
 
@@ -37,21 +39,39 @@ CDROM_Interface_Linux::~CDROM_Interface_Linux(void)
 {
 	// Stop Audio, if neccessary
 	StopAudio();
-	close(dhandle);
 };
 
 bool CDROM_Interface_Linux::SetDevice(char* path)
 {
-	dhandle = open(path,O_RDONLY|O_NONBLOCK);
+	strcpy(pathname,path);
+	if (Open()) {
+		Close();
+		return true;
+	};
+	return false;
+};
+
+bool CDROM_Interface_Linux::Open(void)
+{
+	dhandle = open(pathname,O_RDONLY|O_NONBLOCK);
 	return (dhandle>=0);
+};
+
+void CDROM_Interface_Ioctl::Close(void)
+{
+	close (dhandle);
 };
 
 bool CDROM_Interface_Linux::GetAudioTracks(int& stTrack, int& endTrack, TMSF& leadOut) 
 {
     struct cdrom_tochdr header; 
 
+	Open();
     /* read the header information */
-    if (ioctl(dhandle, CDROMREADTOCHDR, &header) != 0) return false;
+    if (ioctl(dhandle, CDROMREADTOCHDR, &header) != 0) {
+		Close();
+		return false;
+	}
 
     /* store the resulting information */
     stTrack		= header.cdth_trk0;		/* you can assume this to be zero */
@@ -63,23 +83,31 @@ bool CDROM_Interface_Linux::GetAudioTracks(int& stTrack, int& endTrack, TMSF& le
 	entry.cdte_track	= CDROM_LEADOUT;	/* find the address of the leadout track */
 	entry.cdte_format	= CDROM_MSF;		/* choose MSF addressing */
 
-	if (ioctl(dhandle, CDROMREADTOCENTRY,&entry)!=0) return false;
+	if (ioctl(dhandle, CDROMREADTOCENTRY,&entry)!=0) {
+		Close();
+		return false;
+	}
 
 	leadOut.min	= entry.cdte_addr.msf.minute;
 	leadOut.sec	= entry.cdte_addr.msf.second;
 	leadOut.fr	= entry.cdte_addr.msf.frame; 	
 
+	Close();
 	return false;
 };
 
 bool CDROM_Interface_Linux::GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr)
 {
+	Open();
 	struct cdrom_tocentry entry; 
 	
 	entry.cdte_track	= track;			/* find the address of the first track */
 	entry.cdte_format	= CDROM_MSF;		/* choose MSF addressing */
 
-	if (ioctl(dhandle, CDROMREADTOCENTRY,&entry)!=0) return false;
+	if (ioctl(dhandle, CDROMREADTOCENTRY,&entry)!=0) {
+		Close();
+		return false;
+	}
 	
 	/* attribtute */
 	attr		= (entry.cdte_adr<<4) | entry.cdte_ctrl;
@@ -87,6 +115,8 @@ bool CDROM_Interface_Linux::GetAudioTrackInfo	(int track, TMSF& start, unsigned 
 	start.min	= entry.cdte_addr.msf.minute;
 	start.sec	= entry.cdte_addr.msf.second;
 	start.fr	= entry.cdte_addr.msf.frame; 
+	
+	Close();
 	return true;
 };
 
@@ -95,26 +125,40 @@ bool CDROM_Interface_Linux::PlayAudioSector(unsigned long start,unsigned long le
 	struct cdrom_blk addr;
 	addr.from = start;
 	addr.len  = len;
-	return (ioctl(dhandle, CDROMPLAYBLK, &addr)==0);
+	Open();
+	bool res = (ioctl(dhandle, CDROMPLAYBLK, &addr)==0);
+	Close();
+	return res;
 }
 
 bool CDROM_Interface_Linux::StopAudio(void)
 {
-	return (ioctl(dhandle,CDROMSTOP,0)==0);
+	Open();
+	bool res = (ioctl(dhandle,CDROMSTOP,0)==0);
+	Close();
+	return res;
 };
 
 bool CDROM_Interface_Linux::PauseAudio(bool resume)
 {
-	if (resume) return (ioctl(dhandle, CDROMRESUME,0)==0);
-	else		return (ioctl(dhandle, CDROMPAUSE,0)==0);
+	Open();
+	bool res = false;
+	if (resume) res = (ioctl(dhandle, CDROMRESUME,0)==0);
+	else		res = (ioctl(dhandle, CDROMPAUSE,0)==0);
+	Close();
+	return res;
 };
 
 bool CDROM_Interface_Linux::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
 {
 	struct cdrom_subchnl sub;
 
+	Open();
 	sub.cdsc_format = CDROM_MSF;
-	if (ioctl(dhandle, CDROMSUBCHNL, &sub)!=0) return false;
+	if (ioctl(dhandle, CDROMSUBCHNL, &sub)!=0) {
+		Close();
+		return false;
+	}
 
 	/* attribute */
 	attr		= (sub.cdsc_adr<<4) | sub.cdsc_ctrl;
@@ -126,30 +170,42 @@ bool CDROM_Interface_Linux::GetAudioSub(unsigned char& attr, unsigned char& trac
 	absPos.fr	= sub.cdsc_reladdr.msf.frame;
 	absPos.sec	= sub.cdsc_reladdr.msf.second;
 	absPos.min	= sub.cdsc_reladdr.msf.minute;
+	Close();
 	return true;
 };
 
 bool CDROM_Interface_Linux::GetUPC(unsigned char& attr, char* upcdata)
 {
-	return (ioctl(dhandle, CDROM_GET_UPC, (void*)upcdata)==0);		
+	Open();
+	bool res = (ioctl(dhandle, CDROM_GET_UPC, (void*)upcdata)==0);		
+	Close();
+	return res;
 };
 
 bool CDROM_Interface_Linux::GetAudioStatus(bool& playing, bool& pause)
 {
+	Open();
 	struct cdrom_subchnl sub;
 
 	sub.cdsc_format = CDROM_MSF;
-	if (ioctl(dhandle, CDROMSUBCHNL, &sub)!=0) return false;
+	if (ioctl(dhandle, CDROMSUBCHNL, &sub)!=0) {
+		Close();
+		return false;
+	};
 
 	playing			= (sub.cdsc_audiostatus==CDROM_AUDIO_PLAY);
 	pause			= (sub.cdsc_audiostatus==CDROM_AUDIO_PAUSED);
 
+	Close();
 	return true;
 };
 
 bool CDROM_Interface_Linux::LoadUnloadMedia(bool unload)
 {
-   return (ioctl(dhandle, CDROMEJECT,0)==0);
+	Open();
+	bool res = (ioctl(dhandle, CDROMEJECT,0)==0);
+	Close();
+	return res;
 };
 
 bool CDROM_Interface_Linux::GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged, bool& trayOpen)
@@ -202,6 +258,7 @@ int CDROM_GetMountType(char* path)
 
 CDROM_Interface_Ioctl::CDROM_Interface_Ioctl()
 {
+	pathname[0] = 0;
 	hIOCTL = INVALID_HANDLE_VALUE;
 	memset(&oldLeadOut,0,sizeof(oldLeadOut));
 };
@@ -209,7 +266,6 @@ CDROM_Interface_Ioctl::CDROM_Interface_Ioctl()
 CDROM_Interface_Ioctl::~CDROM_Interface_Ioctl()
 {
 	StopAudio();
-	CloseHandle(hIOCTL);
 };
 
 bool CDROM_Interface_Ioctl::GetUPC(unsigned char& attr, char* upc)
@@ -220,10 +276,12 @@ bool CDROM_Interface_Ioctl::GetUPC(unsigned char& attr, char* upc)
 
 bool CDROM_Interface_Ioctl::GetAudioTracks(int& stTrack, int& endTrack, TMSF& leadOut) 
 {
+	Open();
 	CDROM_TOC toc;
 	DWORD	byteCount;
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_TOC, NULL, 0, 
 									&toc, sizeof(toc), &byteCount,NULL);
+	Close();
 	if (!bStat) return false;
 
 	stTrack		= toc.FirstTrack;
@@ -236,10 +294,12 @@ bool CDROM_Interface_Ioctl::GetAudioTracks(int& stTrack, int& endTrack, TMSF& le
 
 bool CDROM_Interface_Ioctl::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr)
 {
+	Open();
 	CDROM_TOC toc;
 	DWORD	byteCount;
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_TOC, NULL, 0, 
 									&toc, sizeof(toc), &byteCount,NULL);
+	Close();
 	if (!bStat) return false;
 	
 	attr		= (toc.TrackData[track-1].Adr << 4) | toc.TrackData[track].Control;
@@ -251,6 +311,8 @@ bool CDROM_Interface_Ioctl::GetAudioTrackInfo(int track, TMSF& start, unsigned c
 
 bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
 {
+	Open();
+
 	CDROM_SUB_Q_DATA_FORMAT insub;
 	SUB_Q_CHANNEL_DATA sub;
 	DWORD	byteCount;
@@ -259,6 +321,7 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_Q_CHANNEL, &insub, sizeof(insub), 
 									&sub, sizeof(sub), &byteCount,NULL);
+	Close();
 	if (!bStat) return false;
 
 	attr		= (sub.CurrentPosition.ADR << 4) | sub.CurrentPosition.Control;
@@ -270,11 +333,14 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 	absPos.min	= sub.CurrentPosition.AbsoluteAddress[1];
 	absPos.sec	= sub.CurrentPosition.AbsoluteAddress[2];
 	absPos.fr	= sub.CurrentPosition.AbsoluteAddress[3];
+	
 	return true;
 };
 
 bool CDROM_Interface_Ioctl::GetAudioStatus(bool& playing, bool& pause)
 {
+	Open();
+
 	CDROM_SUB_Q_DATA_FORMAT insub;
 	SUB_Q_CHANNEL_DATA sub;
 	DWORD byteCount;
@@ -283,6 +349,7 @@ bool CDROM_Interface_Ioctl::GetAudioStatus(bool& playing, bool& pause)
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_READ_Q_CHANNEL, &insub, sizeof(insub), 
 									&sub, sizeof(sub), &byteCount,NULL);
+	Close();
 	if (!bStat) return false;
 
 	playing = (sub.CurrentPosition.Header.AudioStatus == AUDIO_STATUS_IN_PROGRESS);
@@ -310,6 +377,7 @@ bool CDROM_Interface_Ioctl::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 
 bool CDROM_Interface_Ioctl::PlayAudioSector	(unsigned long start,unsigned long len)
 {
+	Open();
 	CDROM_PLAY_AUDIO_MSF audio;
 	DWORD	byteCount;
 	// Start
@@ -325,37 +393,44 @@ bool CDROM_Interface_Ioctl::PlayAudioSector	(unsigned long start,unsigned long l
 
 	BOOL	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_PLAY_AUDIO_MSF, &audio, sizeof(audio), 
 									NULL, 0, &byteCount,NULL);
+	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::PauseAudio(bool resume)
 {
+	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	if (resume) bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_RESUME_AUDIO, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
 	else		bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_PAUSE_AUDIO, NULL, 0, 
 										NULL, 0, &byteCount,NULL);
+	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::StopAudio(void)
 {
+	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	bStat = DeviceIoControl(hIOCTL,IOCTL_CDROM_STOP_AUDIO, NULL, 0, 
 							NULL, 0, &byteCount,NULL);	
+	Close();
 	return bStat>0;
 };
 
 bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 {
+	Open();
 	BOOL bStat; 
 	DWORD byteCount;
 	if (unload) bStat = DeviceIoControl(hIOCTL,IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
 	else		bStat = DeviceIoControl(hIOCTL,IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, 
 										NULL, 0, &byteCount,NULL);	
+	Close();
 	return bStat>0;
 };
 
@@ -396,23 +471,36 @@ bool CDROM_Interface_Ioctl::ReadSectors(void* buffer, bool raw, unsigned long se
 bool CDROM_Interface_Ioctl::SetDevice(char* path)
 {
 	if (GetDriveType(path)==DRIVE_CDROM) {
-		char buffer [256];
 		char letter [3] = { 0, ':', 0 };
 		letter[0] = path[0];
-		strcpy(buffer,"\\\\.\\");
-		strcat(buffer,letter);
-		hIOCTL	= CreateFile(buffer,			// drive to open
-							GENERIC_READ,		// read access
-							FILE_SHARE_READ |	// share mode
-							FILE_SHARE_WRITE, 
-							NULL,				// default security attributes
-							OPEN_EXISTING,		// disposition
-							0,					// file attributes
-							NULL);				// do not copy file attributes
-		return (hIOCTL!=INVALID_HANDLE_VALUE);
+		strcpy(pathname,"\\\\.\\");
+		strcat(pathname,letter);
+		if (Open()) {
+			Close();
+			return true;
+		};
 	}
 	return false;
+}
+
+bool CDROM_Interface_Ioctl::Open(void)
+{
+	hIOCTL	= CreateFile(pathname,			// drive to open
+						GENERIC_READ,		// read access
+						FILE_SHARE_READ |	// share mode
+						FILE_SHARE_WRITE, 
+						NULL,				// default security attributes
+						OPEN_EXISTING,		// disposition
+						0,					// file attributes
+						NULL);				// do not copy file attributes
+	return (hIOCTL!=INVALID_HANDLE_VALUE);
 };
+
+void CDROM_Interface_Ioctl::Close(void)
+{
+	CloseHandle(hIOCTL);
+};
+
 /*
 int CDROM_GetMountType(char* path)
 // 0 - physical CDROM
