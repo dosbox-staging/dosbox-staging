@@ -318,6 +318,7 @@ static void dyn_check_bool_exception(DynReg * check) {
 	gen_fill_branch(branch);
 }
 
+
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];
 	if (decode.modrm.mod<3) {
@@ -1247,6 +1248,7 @@ restart_prefix:
 			break;
 		case 0x9d:		//POPF
 			gen_releasereg(DREG(ESP));
+			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_POPF,"%Rd%Id",DREG(TMPB),decode.big_op);
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			dyn_flags_host_to_gen();
@@ -1319,7 +1321,7 @@ restart_prefix:
 		case 0xca:dyn_ret_far(decode_fetchw());goto finish_block;
 		case 0xcb:dyn_ret_far(0);goto finish_block;
 		/* Interrupt */
-		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
+//		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
 		/* IRET */
 		case 0xcf:dyn_iret();goto finish_block;
 
