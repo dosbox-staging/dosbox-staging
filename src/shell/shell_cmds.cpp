@@ -53,7 +53,7 @@ void DOS_Shell::DoCommand(char * line) {
 	while (*line) {
 		if (*line==32) break;
 		if (*line=='/') break;
-		if (*line=='.') break;
+		if ((*line=='.') && (*(line+1)=='.')) break;
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;
