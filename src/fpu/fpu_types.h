@@ -32,10 +32,10 @@ enum FPU_Tag {
 
 
 enum FPU_Round {
-	ROUND_Nearest = 0,
+	ROUND_Nearest = 0,		
 	ROUND_Down    = 1,
-	ROUND_Up      = 2,
+	ROUND_Up      = 2,	
 	ROUND_Chop    = 3
 };
 //get pi from a real library
-#define PI 3.1415926535
+#define PI 3.14159265358979323846
