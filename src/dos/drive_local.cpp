@@ -182,7 +182,7 @@ bool localDrive::MakeDir(char * dir) {
 #if defined (WIN32)						/* MS Visual C++ */
 	int temp=mkdir(newdir);
 #else
-	int temp=mkdir(newdir,0);
+	int temp=mkdir(newdir,0700);
 #endif
 	return (temp==0);
 }
