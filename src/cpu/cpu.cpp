@@ -58,7 +58,7 @@ DecoderStart * CPU_DecorderStarts[8]={
 	CPU_Core_Full_Start,				//32-bit prot,32-bit stack
 };
 
-INLINE void CPU_Push16(Bitu value) {
+void CPU_Push16(Bitu value) {
 	if (cpu.state & STATE_STACK32) {
 		reg_esp-=2;
 		mem_writew(SegPhys(ss)+reg_esp,value);
@@ -68,7 +68,7 @@ INLINE void CPU_Push16(Bitu value) {
 	}
 }
 
-INLINE void CPU_Push32(Bitu value) {
+void CPU_Push32(Bitu value) {
 	if (cpu.state & STATE_STACK32) {
 		reg_esp-=4;
 		mem_writed(SegPhys(ss)+reg_esp,value);
@@ -78,7 +78,7 @@ INLINE void CPU_Push32(Bitu value) {
 	}
 }
 
-INLINE Bitu CPU_Pop16(void) {
+Bitu CPU_Pop16(void) {
 	if (cpu.state & STATE_STACK32) {
 		Bitu val=mem_readw(SegPhys(ss)+reg_esp);
 		reg_esp+=2;
@@ -90,7 +90,7 @@ INLINE Bitu CPU_Pop16(void) {
 	}
 }
 
-INLINE Bitu CPU_Pop32(void) {
+Bitu CPU_Pop32(void) {
 	if (cpu.state & STATE_STACK32) {
 		Bitu val=mem_readd(SegPhys(ss)+reg_esp);
 		reg_esp+=4;
