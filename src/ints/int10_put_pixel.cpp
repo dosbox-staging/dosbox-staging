@@ -21,12 +21,6 @@
 #include "inout.h"
 #include "int10.h"
 
-union VGA_Memory {
-	Bit8u linear[64*1024*4];
-	Bit8u paged[64*1024][4];
-};	
-extern VGA_Memory vga_mem;
-
 static Bit8u cga_masks[4]={~192,~48,~12,~3};
 
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
@@ -39,7 +33,12 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			Bit16u off=(y>>1)*80+(x>>2);
 			if (y&1) off+=8*1024;
 			Bit8u old=real_readb(0xb800,off);
-			old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+			if (color & 0x80) {
+				color&=3;
+				old^=color << (2*(3-(x&3)));
+			} else {
+				old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+			}
 			real_writeb(0xb800,off,old);
 		}
 		break;
@@ -51,20 +50,27 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			IO_Write(0x3ce,0x0);IO_Write(0x3cf,color);
 			/* Enable all the set/resets */
 			IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
+			/* test for xorring */
+			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x18); }
 			//Perhaps also set mode 1 
 			/* Calculate where the pixel is in video memory */
-			Bit16u base_address=((((curmode->sheight*curmode->swidth)>>3)|0xff)+1)*page;	
-			PhysPt off=0xa0000+base_address+((y*curmode->swidth+x)>>3);
+			PhysPt off=0xa0000+curmode->slength*page+((y*curmode->swidth+x)>>3);
 			/* Bitmask and set/reset should do the rest */
 			mem_readb(off);
 			mem_writeb(off,0xff);
+			/* Restore bitmask */	
+			IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
+			/* Restore write operating if changed */
+			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0); }
 			break;
 		}
-	case CTEXT:
-	case MTEXT:
+	case LINEAR8:
+		mem_writeb(Real2Phys(RealMake(0xa000,y*320+x)),color);
+		break;
 	case PLANAR1:
 	case PLANAR2:
-	case LINEAR8:
+	case CTEXT:
+	case MTEXT:
 	default:
 		LOG_WARN("INT10:PutPixel Unhanled memory model");
 		break;
@@ -72,7 +78,6 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 }
 
 void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
-
 	VGAMODES * curmode=GetCurrentMode();	
 	switch (curmode->memmodel) {
 	case CGA:
@@ -83,6 +88,30 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			*color=val<<((x&3)*2);
 		}
 		break;
+	case PLANAR4:
+		{
+			/* Calculate where the pixel is in video memory */
+			PhysPt off=0xa0000+curmode->slength*page+((y*curmode->swidth+x)>>3);
+			Bitu shift=7-(x & 7);
+			/* Set the read map */
+			*color=0;
+			IO_Write(0x3ce,0x4);IO_Write(0x3cf,0);
+			*color|=((mem_readb(off)>>shift) & 1) << 0;
+			IO_Write(0x3ce,0x4);IO_Write(0x3cf,1);
+			*color|=((mem_readb(off)>>shift) & 1) << 1;
+			IO_Write(0x3ce,0x4);IO_Write(0x3cf,2);
+			*color|=((mem_readb(off)>>shift) & 1) << 2;
+			IO_Write(0x3ce,0x4);IO_Write(0x3cf,3);
+			*color|=((mem_readb(off)>>shift) & 1) << 3;
+			break;
+		}
+	case LINEAR8:
+		*color=mem_readb(PhysMake(0xa000,320*y+x));
+		break;
+	case PLANAR1:
+	case PLANAR2:
+	case CTEXT:
+	case MTEXT:
 	default:
 		LOG_WARN("INT10:GetPixel Unhanled memory model");
 		break;
