@@ -670,9 +670,17 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;		
 	case 0x57:					/* Get/Set File's Date and Time */
-		reg_cx=0;
-		reg_dx=0;
-		LOG_DEBUG("DOS:57:Getting/Setting File Date is faked",reg_ah);
+		if (reg_al==0x00) {
+			if (DOS_GetFileDate(reg_bx,&reg_cx,&reg_dx)) {
+				CALLBACK_SCF(false);
+			} else {
+				CALLBACK_SCF(true);
+			};
+		} else {
+			reg_cx=0;
+			reg_dx=0;
+			LOG_DEBUG("DOS:57:Setting File Date is faked",reg_ah);
+		}
 		break;
 	case 0x58:					/* Get/Set Memory allocation strategy */
 		switch (reg_al) {

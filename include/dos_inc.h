@@ -98,6 +98,7 @@ bool DOS_SeekFile(Bit16u handle,Bit32u * pos,Bit32u type);
 bool DOS_CloseFile(Bit16u handle);
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry);
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
+bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry);

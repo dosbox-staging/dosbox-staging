@@ -816,6 +816,32 @@ bool DOS_SetDrive(Bit8u drive) {
 	}
 };
 
+bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate)
+{
+	Bit32u handle=RealHandle(entry);
+	if (handle>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	struct stat stat_block;
+	if (fstat(handle, &stat_block)!=0) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false; 
+	}
+	struct tm *time;
+	if ((time=localtime(&stat_block.st_mtime))!=0) {
+	    *otime = (time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
+        *odate = ((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
+    } else {
+        *otime = 6;
+        *odate = 4;
+    }
+	return true;
+};
 
 void DOS_SetupFiles (void) {
 	/* Setup the File Handles */
