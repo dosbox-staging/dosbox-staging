@@ -35,7 +35,8 @@ static Bit8u TempLine[1280];
 static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
-		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
+		Bitu val=vga.mem.linear[vidstart+line];
+		vidstart=(vidstart+1)&0x1dfff;
 		*draw++=CGA_2_Table[val >> 4];
 		*draw++=CGA_2_Table[val & 0xf];
 	}
@@ -45,7 +46,8 @@ static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
+		Bitu val=vga.mem.linear[vidstart+line];
+		vidstart=(vidstart+1)&0x1dfff;
 		*draw++=CGA_4_Table[val];
 	}
 	return TempLine;
@@ -57,7 +59,7 @@ static Bit8u convert16[16]={
 };
 
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[(vga.tandy.disp_bank << 14) + vidstart + (line * 8 * 1024)];
+	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=*reader++;Bitu val2=*reader++;
@@ -70,7 +72,7 @@ static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[(vga.tandy.disp_bank << 14) + vidstart + (line * 8 * 1024)];
+	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=*reader++;Bitu val2=*reader++;
@@ -130,10 +132,6 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 		return VGA_Draw_VGA_Line(vidstart, panning, line);
 	}
 }
-
-
-
-
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
@@ -233,6 +231,7 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address=(vga.draw.address*2)&0x1fff;
 		break;
 	}
+	if (machine==MCH_TANDY) vga.draw.address+=vga.tandy.disp_bank << 14;
 	if (RENDER_StartUpdate()) {
 		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
 	}
