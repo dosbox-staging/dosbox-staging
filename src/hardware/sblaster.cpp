@@ -390,9 +390,6 @@ static void GenerateDMASound(Bitu size) {
 			sb.adpcm.stepsize=MIN_ADAPTIVE_STEP_SIZE;
 			skip++;read--;
 		}
-		if (sb.dma.left<size) size=sb.dma.left;
-		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-		sb.dma.left-=read;
 		for (i=0;i<read;i++) {
 			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i] >> 4,sb.adpcm.reference,sb.adpcm.stepsize);
 			sb.tmp.buf.m[done++]=decode_ADPCM_4_sample(sb.dma.buf.b8[skip+i]& 0xf,sb.adpcm.reference,sb.adpcm.stepsize);
