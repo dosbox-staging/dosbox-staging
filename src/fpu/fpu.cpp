@@ -298,15 +298,20 @@ void FPU_ESC1_Normal(Bitu rm) {
 			FPU_PUSH(1.0);
 			break;
 		case 0x01:       /* FLDL2T */
+			FPU_PUSH(L2T);
+			break;
 		case 0x02:       /* FLDL2E */
-			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+			FPU_PUSH(L2E);
 			break;
 		case 0x03:       /* FLDPI */
 			FPU_PUSH(PI);
 			break;
 		case 0x04:       /* FLDLG2 */
+			FPU_PUSH(LG2);
+			break;
 		case 0x05:       /* FLDLN2 */
-			LOG(LOG_FPU,LOG_WARN)("ESC 1:Unhandled group %X subfunction %X",group,sub);
+			FPU_PUSH(LN2);
+			break;
 		case 0x06:       /* FLDZ*/
 			FPU_PUSH_ZERO();
 			break;
@@ -611,24 +616,36 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
 	switch(group){
-	case 0x00:  /* FLD */
+	case 0x00:  /* FILD Bit16s */
 		{
 				Bit16s blah = mem_readw(addr);
 				FPU_PUSH( static_cast<double>(blah));
 		}
 		break;
-	case 0x01:  /* FISTTP */
+	case 0x01:  /* FISTTP Bit16s */
 		LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
 		break;
 
-	case 0x02:   /* FIST */
+	case 0x02:   /* FIST Bit16s */
 		{	Bitu top = FPU_GET_TOP();
 			mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[top].d)));
 		}
 		break;
-	case 0x03:	/*FISTP */
+	case 0x03:	/* FISTP Bit16s */
 		{	Bitu top = FPU_GET_TOP();
 			mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[top].d)));	
+			FPU_FPOP();
+		}
+		break;
+	case 0x05:  /* FILD Bit32s */
+		{
+				Bit32s blah = mem_readd(addr);
+				FPU_PUSH( static_cast<double>(blah));
+		}
+		break;
+	case 0x07:  /* FISTP Bit32s */
+		{	Bitu top = FPU_GET_TOP();
+			mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[top].d)));	
 			FPU_FPOP();
 		}
 		break;
