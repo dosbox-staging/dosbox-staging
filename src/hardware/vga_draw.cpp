@@ -57,7 +57,7 @@ void VGA_Render_TEXT_16(Bit8u * * data) {
 }
 
 void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=real_host(0xB800,0);
+	Bit8u * reader=HostMake(0xB800,0);
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -88,7 +88,7 @@ void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
 
 
 void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=real_host(0xB800,0);
+	Bit8u * reader=HostMake(0xB800,0);
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -152,7 +152,7 @@ void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu pitch) {
 
 
 void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=real_off(0xB800,0);
+	Bit8u * reader=HostMake(0xB800,0);
 	Bit8u * draw_start=bitdata;;
 /* Todo Blinking and high intensity colors */
 	for (Bitu cy=0;cy<(vga.draw.height/16);cy++) {
@@ -167,7 +167,7 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 			for (Bitu y=0;y<16;y++) {
 				Bit8u bit_mask=*findex++;
 				#include "font-switch.h"
-				draw+=+pitch;
+				draw+=pitch;
 			};
 			draw_char+=8;
 		};
