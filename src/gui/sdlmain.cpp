@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.59 2004-01-29 17:00:24 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.60 2004-01-30 21:11:34 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -131,6 +131,7 @@ struct SDL_Block {
 		GLuint texture;
 		GLuint displaylist;
 		GLint max_texsize;
+		bool bilinear;
 		bool packed_pixel;
 		bool paletted_texture;
 #if defined(NVIDIA_PixelDataRange)
@@ -340,6 +341,7 @@ dosurface:
 			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		}
 		sdl.opengl.pitch=width*4;
+		glViewport(sdl.clip.x,sdl.clip.y,sdl.clip.w,sdl.clip.h);
 		glMatrixMode (GL_PROJECTION);
 		glDeleteTextures(1,&sdl.opengl.texture);
  		glGenTextures(1,&sdl.opengl.texture);
@@ -347,13 +349,17 @@ dosurface:
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		// Bilinear filtering
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		if (sdl.opengl.bilinear) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		} else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		}
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
 
-		glClearColor (1.0, 0.0, 0.0, 1.0);
+		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glShadeModel (GL_FLAT); 
 		glDisable (GL_DEPTH_TEST);
@@ -540,6 +546,10 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.height=section->Get_int("fullheight");
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
 	sdl.desktop.hwscale=section->Get_float("hwscale");
+	if (sdl.desktop.hwscale<0.1f) {
+		LOG_MSG("SDL:Can't hwscale lower than 0.1");
+		sdl.desktop.hwscale=0.1f;
+	}
 	if (!sdl.desktop.width) {
 #ifdef WIN32
 		sdl.desktop.width=GetSystemMetrics(SM_CXSCREEN);
@@ -565,6 +575,10 @@ static void GUI_StartUp(Section * sec) {
 #if C_OPENGL
 	} else if (!strcasecmp(output,"opengl")) {
 		sdl.desktop.want_type=SCREEN_OPENGL;
+		sdl.opengl.bilinear=true;
+	} else if (!strcasecmp(output,"openglnb")) {
+		sdl.desktop.want_type=SCREEN_OPENGL;
+		sdl.opengl.bilinear=false;
 #endif
 	} else {
 		LOG_MSG("SDL:Unsupported output device %s, switching back to surface",output);
@@ -922,10 +936,10 @@ int main(int argc, char* argv[]) {
 			"fullwidth/height -- What resolution to use for fullscreen, use together with fullfixed.\n"
 			"output -- What to use for output: surface,overlay"
 #if C_OPENGL
-			",opengl"
+			",opengl,openglnb"
 #endif
 			".\n"
-			"hwscale -- Extra scaling of window if the output devive supports hardware scaling.\n"
+			"hwscale -- Extra scaling of window if the output device supports hardware scaling.\n"
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
