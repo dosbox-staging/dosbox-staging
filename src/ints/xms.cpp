@@ -169,8 +169,6 @@ Bitu XMS_FreeMemory(Bitu handle)
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
 		return XMS_INVALID_HANDLE;
 	}
-	/* Remove the mapping to the memory */
-	MEM_ClearMapping(PAGE_COUNT(xms_handles[handle].phys),PAGE_COUNT(xms_handles[handle].size*1024));
 	/* Free the memory in the block and merge the blocks previous and next block */
 	Bit16u prev=xms_handles[handle].prev;
 	Bit16u next=xms_handles[handle].next;
