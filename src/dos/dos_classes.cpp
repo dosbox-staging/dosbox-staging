@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.31 2003-09-30 13:51:15 finsterr Exp $ */
+/* $Id: dos_classes.cpp,v 1.32 2003-10-09 13:47:06 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -256,7 +256,7 @@ void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	sSave(sDTA,sattr,_sattr);
 	/* Fill with spaces */
 	Bitu i;
-	for (i=0;i<12;i++) mem_writeb(pt+offsetof(sDTA,sname)+i,' ');
+	for (i=0;i<11;i++) mem_writeb(pt+offsetof(sDTA,sname)+i,' ');
 	char * find_ext;
 	find_ext=strchr(pattern,'.');
 	if (find_ext) {
