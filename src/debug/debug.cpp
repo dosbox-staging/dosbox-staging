@@ -174,7 +174,7 @@ std::list<CDebugVar*> CDebugVar::varList;
 
 bool skipFirstInstruction = false;
 
-enum EBreakpoint { BKPNT_UNKNOWN, BKPNT_PHYSICAL, BKPNT_INTERRUPT, BKPNT_MEMORY };
+enum EBreakpoint { BKPNT_UNKNOWN, BKPNT_PHYSICAL, BKPNT_INTERRUPT, BKPNT_MEMORY, BKPNT_MEMORY_PROT, BKPNT_MEMORY_LINEAR };
 
 #define BPINT_ALL 0x100
 
@@ -341,19 +341,29 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 		} 
 #if C_HEAVY_DEBUG
 		// Memory breakpoint support
-		else if ((bp->GetType()==BKPNT_MEMORY) && bp->IsActive()) {
+		else if (bp->IsActive()) {
+			if ((bp->GetType()==BKPNT_MEMORY) || (bp->GetType()==BKPNT_MEMORY_PROT) || (bp->GetType()==BKPNT_MEMORY_LINEAR)) {
+				// Watch Protected Mode Memoryonly in pmode
+				if (bp->GetType()==BKPNT_MEMORY_PROT) {
+					// Check if pmode is active
+					if (!cpu.pmode) return false;
+					// Check if descriptor is valid
+					Descriptor desc;
+					if (!cpu.gdt.GetDescriptor(bp->GetSegment(),desc)) return false;
+					if (desc.GetLimit()==0) return false;
+				}
 
-			Bitu address = GetAddress(bp->GetSegment(),bp->GetOffset());
-//			Bitu address = bp->GetSegment()*16 + bp->GetOffset();
-			Bit8u value = mem_readb(address);
-			if (bp->GetValue() != value) {
-				// Yup, memory value changed
-	
-				DEBUG_ShowMsg("DEBUG: Memory breakpoint: %04X:%04X - %02X -> %02X",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
-				bp->SetValue(value);
-				return true;
-			};
-		
+				Bitu address; 
+				if (bp->GetType()==BKPNT_MEMORY_LINEAR) address = bp->GetOffset();
+				else address = GetAddress(bp->GetSegment(),bp->GetOffset());
+				Bit8u value = mem_readb(address);
+				if (bp->GetValue() != value) {
+					// Yup, memory value changed
+					DEBUG_ShowMsg("DEBUG: Memory breakpoint %s: %04X:%04X - %02X -> %02X",(bp->GetType()==BKPNT_MEMORY_PROT)?"(Prot)":"",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
+					bp->SetValue(value);
+					return true;
+				};		
+			} 		
 		};
 #endif
 	};
@@ -629,8 +639,11 @@ static void DrawRegisters(void) {
 
 	oldflags=flags.word;
 
-	if (cpu.pmode)	mvwprintw(dbg.win_reg,0,76,"Prot");
-	else			mvwprintw(dbg.win_reg,0,76,"Real");
+	if (cpu.pmode) {
+		if (cpu.code.big)	mvwprintw(dbg.win_reg,0,76,"Pr32");
+		else				mvwprintw(dbg.win_reg,0,76,"Pr16");
+	} else	
+		mvwprintw(dbg.win_reg,0,76,"Real");
 
 	// Selector info, if available
 	if ((cpu.pmode) && curSelectorName[0]) {		
@@ -896,6 +909,25 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("DEBUG: Set memory breakpoint at %04X:%04X",seg,ofs);
 		return true;
 	}
+	found = strstr(str,"BPPM ");
+	if (found) { // Add new breakpoint
+		found+=4;
+		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
+		Bit32u ofs = GetHexValue(found,found);
+		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg,ofs);
+		if (bp) bp->SetType(BKPNT_MEMORY_PROT);
+		DEBUG_ShowMsg("DEBUG: Set prot-mode memory breakpoint at %04X:%08X",seg,ofs);
+		return true;
+	}
+	found = strstr(str,"BPLM ");
+	if (found) { // Add new breakpoint
+		found+=4;
+		Bitu ofs		= GetHexValue(found,found);
+		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(0,ofs);
+		if (bp) bp->SetType(BKPNT_MEMORY_LINEAR);
+		DEBUG_ShowMsg("DEBUG: Set linear memory breakpoint at %08X",ofs);
+		return true;
+	}
 #endif
 	found = strstr(str,"BPINT");
 	if (found) { // Add Interrupt Breakpoint
@@ -1051,6 +1083,8 @@ bool ParseCommand(char* str)
 		wprintw(dbg.win_out,"BPINT  [intNr] [ah]       - Set interrupt breakpoint with ah\n");
 #if C_HEAVY_DEBUG
 		wprintw(dbg.win_out,"BPM    [segment]:[offset] - Set memory breakpoint (memory change)\n");
+		wprintw(dbg.win_out,"BPPM   [selector]:[offset]- Set pmode-memory breakpoint (memory change)\n");
+		wprintw(dbg.win_out,"BPLM   [linear address]   - Set linear memory breakpoint (memory change)\n");
 #endif
 		wprintw(dbg.win_out,"BPLIST                    - List breakpoints\n");		
 		wprintw(dbg.win_out,"BPDEL  [bpNr] / *         - Delete breakpoint nr / all\n");
@@ -1672,8 +1706,6 @@ bool DEBUG_HeavyIsBreakpoint(void)
 	PhysPt where = SegPhys(cs)+reg_eip;
 	
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
-//		exitLoop = true;
-//		DEBUG_Enable();
 		return true;	
 	}
 	return false;
