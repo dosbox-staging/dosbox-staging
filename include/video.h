@@ -38,6 +38,7 @@ Bitu GFX_GetBestMode(Bitu bpp,Bitu & gfx_flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
 void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,double scalex,double scaley,GFX_ResetCallBack cb_reset);
 
+void GFX_ResetScreen(void);
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
