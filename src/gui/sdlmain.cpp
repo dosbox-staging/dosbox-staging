@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.78 2004-09-10 07:44:15 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.79 2004-09-29 19:14:10 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -931,6 +931,10 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	}
 }
 
+static Bit8u laltstate = SDL_KEYUP;
+static Bit8u raltstate = SDL_KEYUP;
+
+
 void GFX_Events() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -961,6 +965,16 @@ void GFX_Events() {
 		case SDL_QUIT:
 			throw(0);
 			break;
+#ifdef WIN32
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			// ignore event alt+tab
+			if (event.key.keysym.sym==SDLK_LALT) laltstate = event.key.type;
+			if (event.key.keysym.sym==SDLK_RALT) raltstate = event.key.type;
+			if (((event.key.keysym.sym==SDLK_TAB)) &&
+				((laltstate==SDL_KEYDOWN) || (raltstate==SDL_KEYDOWN))) break;
+#endif
+
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
