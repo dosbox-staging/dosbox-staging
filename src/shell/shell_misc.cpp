@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.31 2004-08-04 09:12:57 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.32 2004-09-08 18:58:48 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -183,6 +183,10 @@ void DOS_Shell::InputCommand(char * line) {
 						completion_start = line;
 						completion_index = 0;
 					}
+
+					char *path;
+					if ((path = strrchr(line+completion_index,'\\'))) completion_index = path-line+1;
+					if ((path = strrchr(line+completion_index,'/'))) completion_index = path-line+1;
 
 					// build the completion list
 					char mask[DOS_PATHLENGTH];
