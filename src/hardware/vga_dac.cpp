@@ -81,6 +81,7 @@ static void write_p3c8(Bit32u port,Bit8u val) {
 }
 
 static void write_p3c9(Bit32u port,Bit8u val) {
+	val&=0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
 		vga.dac.rgb[vga.dac.write_index].red=val;
