@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.28 2004-09-10 18:57:53 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.29 2004-09-15 20:49:07 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -480,8 +480,7 @@ public:
 			} 
 			cmd->FindString("-size",str_size,true);
 			if ((type=="hdd") && (str_size.size()==0)) {
-				WriteOut("Must specify drive geometry for hard drives:\n");
-				WriteOut("bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
 				return;
 			}
 			char number[20];
@@ -501,36 +500,36 @@ public:
 				// get the drive letter
 				cmd->FindCommand(1,temp_line);
 				if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
-					WriteOut("Must specify drive letter to mount image at.\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
 				drive=toupper(temp_line[0]);
 				if (!isalpha(drive)) {
-					WriteOut("Must specify drive letter to mount image at.\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
 			} else if (fstype=="none") {
 				cmd->FindCommand(1,temp_line);
 				if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
-					WriteOut("Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb)\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
 				drive=temp_line[0]-'0';
 				if(drive>3) {
-					WriteOut("Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb)\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
 			} else {
-				WriteOut("Format \"%s\" is unsupported. Specify \"fat\" or \"none\".\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"));
 				return;
 			}
 
 			if (!cmd->FindCommand(2,temp_line)) {
-				WriteOut("Must specify file image to mount\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
 				return;
 			}
 			if (!temp_line.size()) {
-				WriteOut("Must specify file image to mount\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
 				return;
 			}
 			struct stat test;
@@ -542,7 +541,7 @@ public:
 				
 				Bit8u drive;
 				if (!DOS_MakeName(tmp, fullname, &drive)) {
-					WriteOut("Image file not found\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
 					return;
 				}
 				
@@ -551,13 +550,13 @@ public:
 				temp_line = tmp;
 				
 				if (stat(temp_line.c_str(),&test)) {
-					WriteOut("Image file not found\n");
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
 					return;
 				}
 			}
 			
 			if ((test.st_mode & S_IFDIR)) {
-				WriteOut("To mount directories, use the MOUNT command, not the IMGMOUNT command\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNG_MOUNT"));
 				return;
 			}
 
@@ -590,15 +589,15 @@ public:
 		}
 		if(fstype=="fat") {
 			if (Drives[drive-'A']) {
-				WriteOut("Drive already mounted at that letter\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED"));
 				if (newdrive) delete newdrive;
 				return;
 			}
-			if (!newdrive) WriteOut("Can't create drive from file\n");
+			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 			Drives[drive-'A']=newdrive;
 			// Set the correct media byte in the table 
 			mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',mediaid);
-			WriteOut("Drive %c mounted as %s\n",drive,temp_line.c_str());
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
 			if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
 				if(imageDiskList[2] == NULL) {
 					imageDiskList[2] = ((fatDrive *)newdrive)->loadedDisk;
@@ -616,20 +615,20 @@ public:
 			}
 		} else if (fstype=="iso") {
 			if (Drives[drive-'A']) {
-				WriteOut("Drive already mounted at that letter\n");
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED"));
 				if (newdrive) delete newdrive;
 				return;
 			}
-			if (!newdrive) WriteOut("Can't create drive from file\n");
+			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 			Drives[drive-'A']=newdrive;
 			// Set the correct media byte in the table 
 			mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',mediaid);
-			WriteOut("Drive %c mounted as %s\n",drive,temp_line.c_str());
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
 		} else if (fstype=="none") {
 			if(imageDiskList[drive] != NULL) delete imageDiskList[drive];
 			imageDiskList[drive] = newImage;
 			updateDPT();
-			WriteOut("Drive number %d mounted as %s\n",drive,temp_line.c_str());
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive,temp_line.c_str());
 		}
 
 		// check if volume label is given
@@ -675,26 +674,26 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"[2J[32;1mWelcome to DOSBox[0m, an x86 emulator with sound and graphics.\n"
+		"[2J[33;1mWelcome to DOSBox[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
 		"\n"	    
 		"Here are some commands to get you started:\n"
 		"Before you can use the files located on your own filesystem,\n"
 		"You have to mount the directory containing the files.\n"
-		"For Windows:\n"
-		"\033[33mmount c c:\\dosprog\033[0m will create a C drive in dosbox with c:\\dosprog as contents.\n"
+		"For \033[1mWindows\033[0m:\n"
+		"\033[34;1mmount c c:\\dosprog\033[0m will create a C drive in DOSBox with c:\\dosprog as contents.\n"
 		"\n"
-		"For other platforms:\n"
-		"\033[33mmount c /home/user/dosprog\033[0m will do the same.\n"
+		"For \033[1mother platforms\033[0m:\n"
+		"\033[34;1mmount c /home/user/dosprog\033[0m will do the same.\n"
 		"\n"
-		"When the mount has succesfully completed you can type \033[33mc:\033[0m to go to your freshly\n"
-		"mounted C-drive. Typing \033[33mdir\033[0m there will show its contents."
-		" \033[33mcd\033[0m will allow you to\n"
-		"enter a directory (recognised by the [] in a directory listing).\n"
+		"When the mount has succesfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
+		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
+		" \033[34;1mcd\033[0m will allow you to\n"
+		"enter a directory (recognised by the \033[1m[]\033[0m in a directory listing).\n"
 		"You can run programs/files which end with [31m.exe .bat[0m and [31m.com[0m.\n"
 
 		"\n"
-		"[43;30mDOSBox will stop/exit without a warning if an error occured![0m\n"
+		"[32;1mDOSBox will stop/exit without a warning if an error occured![0m\n"
 		);
 
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
@@ -713,6 +712,18 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
+
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY","Must specify drive geometry for hard drives:\n"
+		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
+	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
+	MSG_Add("PROGRAM_IMGMOUNG_FILE_NOT_FOUND","Image file not found.\n");
+	MSG_Add("PROGRAM_IMGMOUNG_MOUNT","To mount directories, use the MOUNT command, not the IMGMOUNT command.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED","Drive already mounted at that letter.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
 
 	/*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
