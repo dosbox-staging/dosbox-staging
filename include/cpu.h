@@ -339,7 +339,7 @@ protected:
 class GDTDescriptorTable : public DescriptorTable {
 public:
 	bool GetDescriptor	(Bitu selector, Descriptor& desc) {
-		Bitu address=selector&=~7;
+		Bitu address=selector & ~7;
 		if (selector & 4) {
 			if (address>=ldt_limit) return false;
 			desc.Load(ldt_base+address);
