@@ -101,7 +101,7 @@ static void DISNEY_CallBack(Bit8u * stream,Bit32u len) {
 void DISNEY_Init(Section* sec) {
 	MSG_Add("DISNEY_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("enabled")) return;
+	if(!section->Get_bool("disney")) return;
 
 	IO_RegisterWriteHandler(DISNEY_BASE,disney_write,"DISNEY");
 	IO_RegisterWriteHandler(DISNEY_BASE+1,disney_write,"DISNEY");
