@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.15 2005-03-24 10:32:09 qbix79 Exp $ */
+/* $Id: paging.h,v 1.16 2005-03-25 11:41:26 qbix79 Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -146,20 +146,22 @@ INLINE Bit8u mem_readb_inline(PhysPt address) {
 }
 
 INLINE Bit16u mem_readw_inline(PhysPt address) {
-	if (address & 1) return mem_unalignedreadw(address);
+	if (!(address & 1)) {
+		Bitu index=(address>>12);
 
-	Bitu index=(address>>12);
-	if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
-	else return paging.tlb.handler[index]->readw(address);
+		if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
+		else return paging.tlb.handler[index]->readw(address);
+	} else return mem_unalignedreadw(address);
 }
 
 
 INLINE Bit32u mem_readd_inline(PhysPt address) {
-	if (address & 3) return mem_unalignedreadd(address);
+	if (!(address & 3)) {
+		Bitu index=(address>>12);
 
-	Bitu index=(address>>12);
-	if (paging.tlb.read[index]) return host_readd(paging.tlb.read[index]+address);
-	else return paging.tlb.handler[index]->readd(address);
+		if (paging.tlb.read[index]) return host_readd(paging.tlb.read[index]+address);
+		else return paging.tlb.handler[index]->readd(address);
+	} else return mem_unalignedreadd(address);
 }
 
 INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
@@ -170,21 +172,21 @@ INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
 }
 
 INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
-	if (address & 1) {mem_unalignedwritew(address,val);return;}
+	if (!(address & 1)) {
+		Bitu index=(address>>12);
 
-	Bitu index=(address>>12);
-
-	if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
-	else paging.tlb.handler[index]->writew(address,val);
+		if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
+		else paging.tlb.handler[index]->writew(address,val);
+	} else mem_unalignedwritew(address,val);
 }
 
 INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
-	if (address & 3) {mem_unalignedwrited(address,val);return;}
+	if (!(address & 3)) {
+		Bitu index=(address>>12);
 
-	Bitu index=(address>>12);
-	if (paging.tlb.write[index]) host_writed(paging.tlb.write[index]+address,val);
-	else paging.tlb.handler[index]->writed(address,val);
-
+		if (paging.tlb.write[index]) host_writed(paging.tlb.write[index]+address,val);
+		else paging.tlb.handler[index]->writed(address,val);
+	} else mem_unalignedwrited(address,val);
 }
 
 #endif
