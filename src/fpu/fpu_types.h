@@ -1,4 +1,5 @@
 
+
 enum { FPUREG_VALID=0, FPUREG_ZERO, FPUREG_PNAN, FPUREG_NNAN, FPUREG_EMPTY };
 
 enum {
@@ -6,12 +7,12 @@ enum {
 	t_FDIVP, t_FCHS, t_FCOMP,
 
 	t_FUNKNOWN,
-	t_FNOTDONE,
+	t_FNOTDONE
 };
 
 struct FPU_Flag_Info { 
 	struct {
-		Real r;
+		Real64 r;
 		Bit8u tag;
 	} var1,var2, result;
 	struct {
@@ -27,6 +28,6 @@ struct FPU_Flag_Info {
 };
 
 struct FPU_Reg {
-	Real r;
+	Real64 r;
 	Bit8u tag;
 };

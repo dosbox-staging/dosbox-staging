@@ -19,8 +19,8 @@
 #include "dosbox.h"
 #include "fpu.h"
 #include "pic.h"
-
-//extern FPU_Flag_Info fpu_flags;
+#include "fpu_types.h"
+extern FPU_Flag_Info fpu_flags;
 
 bool FPU_get_C3() {
 	switch(fpu_flags.type) {
