@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002 - 2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include "debug.h"
 #include "debug_inc.h"
 
+extern int old_cursor_state;
 void DEBUG_ShowMsg(char * msg) {
 	char buf[1024];
 	strcpy(buf,msg);
@@ -125,6 +126,7 @@ void DBGUI_StartUp(void) {
 	#ifndef WIN32
 	resizeterm(50,80);
 	touchwin(dbg.win_main);
+	old_cursor_state = curs_set(0);
 	#endif
 	start_color();
 	cycle_count=0;

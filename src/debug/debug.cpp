@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002 - 2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ void WIN32_Console();
 #include <termios.h>
 #include <unistd.h>
 static struct termios consolesettings;
+int old_cursor_state;
 #endif
 // Forwards
 static void DrawCode(void);
@@ -1147,8 +1148,11 @@ void DEBUG_SetupConsole(void)
 static void DEBUG_ShutDown(Section * sec) 
 {
 	CBreakpoint::DeleteAll();
-	#ifndef WIN32        
+	#ifndef WIN32
+	curs_set(old_cursor_state);
 	tcsetattr(0, TCSANOW,&consolesettings);
+	printf("\e[0m\e[2J");
+	fflush(NULL);
 	#endif
 };
 
