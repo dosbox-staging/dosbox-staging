@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.34 2004-04-13 12:08:43 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.35 2004-04-13 13:35:48 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -116,8 +116,7 @@ void DOS_Drive_Cache::SetLabel(const char* vname)
 	while (togo>0) {
 		if (vname[vnamePos]==0) break;
 		if (!point && (vname[vnamePos]=='.')) { togo=4; point=true; }
-		label[labelPos]	= vname[vnamePos];
-		label[labelPos] = *upcase(&label[labelPos]);
+		label[labelPos] = toupper(vname[vnamePos]);
 		labelPos++; vnamePos++;
 		togo--;
 		if ((togo==0) && !point) { 
