@@ -3,3 +3,4 @@
   - int10_writechar has been updated to move the cursor position.
   - changed the basedir routines to use the current working dir instead of argv[0]. This will fix and brake things :)
   - illegal command, now displays the command
+  - wildcmp updated to be case insensitive

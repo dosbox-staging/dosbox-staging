@@ -85,7 +85,8 @@ char *trim(char *str) {
 bool wildcmp(char *wild, char *string) {
 	char *cp, *mp;
 	while ((*string) && (*wild != '*')) {
-		if ((*wild != *string) && (*wild != '?')) {
+		if ((*upcase(wild) != *upcase(string)) && (*wild != '?')) { 
+
 			return false;
 		}
 		wild++;
@@ -99,7 +100,7 @@ bool wildcmp(char *wild, char *string) {
 			}
 			mp = wild;
 			cp = string+1;
-		} else if ((*wild == *string) || (*wild == '?')) {
+		} else if ((*upcase(wild) == *upcase(string)) || (*wild == '?')) {
 			wild++;
 			string++;
 		} else {
