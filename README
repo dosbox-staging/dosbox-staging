@@ -253,26 +253,27 @@ A: You're using too much cpu power to keep dosbox running at the current speed.
    You can either lower the cycles or skip frames or get a faster machine.
 
 Q: I can't type \ in DOSBox.
-A: This is a known problem. It only occurs if your keyboard layout isn't US-
-   International. Some possible fixes:
+A: This is a known problem. It only occurs if your keyboard layout isn't US.
+   Some possible fixes:
      1. Switch your keyboard layout.
      2. Use / instead.
      3. Add the commands you want to execute in dosbox.conf
 
-Q: The game/application can't find it's CD-ROM.
+Q: The game/application can't find its CD-ROM.
 A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the cor-
    rect label (-label LABEL). To enable more low-level cdrom support add
-   the following switch to mount -usecd #, where # is the number of your CD-ROM
-   drive reported by mount -cd. If you run Win32 you can specify -ioctl or
-   -aspi. Look at the description elsewhere in this document for their meaning.
+   the following switch to mount: -usecd #, where # is the number of your 
+   CD-ROM drive reported by mount -cd. If you run Win32 you can specify -ioctl
+   or -aspi. Look at the description elsewhere in this document for their 
+   meaning.
 
 Q: The game/application runs much too slow!
-A: Look at the secion "To run resource-demanding games" for more information
+A: Look at the secion "To run resource-demanding games" for more information.
 
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 A: This is possible! Just create a config file: config -writeconf dosbox.conf .
    Startup your favourite editor and look at all the settings present. To
-   start dosbox with your new settings: dosbox -conf dosbox.conf
+   start DOSBox with your new settings: dosbox -conf dosbox.conf
 
 Q: Great README, but I still don't get it.
 A: While unlikely this seems to happen. Maybe a look at "The Newbie's 
