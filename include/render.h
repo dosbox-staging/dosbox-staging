@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __RENDER_H
-#define __RENDER_H
+#ifndef DOSBOX_RENDER_H
+#define DOSBOX_RENDER_H
 
 typedef void (* RENDER_Line_Handler)(const Bit8u * src);
 
@@ -29,4 +29,3 @@ extern RENDER_Line_Handler RENDER_DrawLine;
 
 
 #endif
-

@@ -16,13 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.14 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: paging.h,v 1.15 2005-03-24 10:32:09 qbix79 Exp $ */
 
-#ifndef _PAGING_H_
-#define _PAGING_H_
+#ifndef DOSBOX_PAGING_H
+#define DOSBOX_PAGING_H
 
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
+#endif
+#ifndef DOSBOX_MEM_H
 #include "mem.h"
+#endif
 
 class PageDirectory;
 

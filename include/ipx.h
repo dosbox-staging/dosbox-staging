@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _IPX_H_
-#define _IPX_H_
+#ifndef DOSBOX_IPX_H
+#define DOSBOX_IPX_H
 
 // In Use Flag codes
 #define USEFLAG_AVAILABLE  0x00
@@ -89,4 +89,3 @@ void PackIP(IPaddress ipAddr, PackedIP *ipPack);
 #endif
 
 #endif
-

@@ -16,10 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined __REGS_H
-#define __REGS_H
+#ifndef DOSBOX_REGS_H
+#define DOSBOX_REGS_H
 
-#include <mem.h>
+#ifndef DOSBOX_MEM_H
+#include "mem.h"
+#endif
 
 #define FLAG_CF		0x00000001
 #define FLAG_PF		0x00000004
@@ -165,4 +167,3 @@ enum {
 #define reg_flags cpu_regs.flags
 
 #endif
-

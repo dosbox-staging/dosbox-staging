@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef MAPPER_H_
-#define MAPPER_H_
+#ifndef DOSBOX_MAPPER_H
+#define DOSBOX_MAPPER_H
 
 enum MapKeys {
 	MK_f1,MK_f2,MK_f3,MK_f4,MK_f5,MK_f6,MK_f7,MK_f8,MK_f9,MK_f10,MK_f11,MK_f12,

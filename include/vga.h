@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef VGA_H_
-#define VGA_H_
+#ifndef DOSBOX_VGA_H
+#define DOSBOX_VGA_H
 
-#include <mem.h>
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
+#endif
 
 enum VGAModes {
 	M_CGA2,M_CGA4,
@@ -360,4 +361,3 @@ extern Bit32u Expand16BigTable[0x10000];
 
 
 #endif
-

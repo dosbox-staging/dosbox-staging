@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __VIDEO_H
-#define __VIDEO_H
+#ifndef DOSBOX_VIDEO_H
+#define DOSBOX_VIDEO_H
 
 typedef void (* GFX_ResetCallBack)(void);
 
@@ -67,4 +67,3 @@ void GFX_CaptureMouse(void);
 extern bool mouselocked; //true if mouse is confined to window
 
 #endif
-

@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _KEYBOARD_H_
-#define _KEYBOARD_H_
+#ifndef DOSBOX_KEYBOARD_H
+#define DOSBOX_KEYBOARD_H
 
 enum KBD_KEYS {
 	KBD_NONE,

@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _IPXSERVER_H_
-#define _IPXSERVER_H_
+#ifndef DOSBOX_IPXSERVER_H_
+#define DOSBOX_IPXSERVER_H_
 
 #if C_IPX
 
@@ -47,4 +47,3 @@ Bit8u packetCRC(Bit8u *buffer, Bit16u bufSize);
 #endif
 
 #endif
-

@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef _HARDWARE_H_
-#define _HARDWARE_H_
+#ifndef DOSBOX_HARDWARE_H
+#define DOSBOX_HARDWARE_H
 
 #include <stdio.h>
 
@@ -33,5 +33,3 @@ FILE * OpenCaptureFile(const char * type,const char * ext);
 
 
 #endif
-
-

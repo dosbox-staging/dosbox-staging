@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.h,v 1.8 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: mouse.h,v 1.9 2005-03-24 10:32:09 qbix79 Exp $ */
 
-#ifndef _MOUSE_H_
-#define _MOUSE_H_
+#ifndef DOSBOX_MOUSE_H
+#define DOSBOX_MOUSE_H
 
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);
@@ -36,4 +36,3 @@ void Mouse_AutoLock(bool enable);
 void Mouse_NewVideoMode(void);
 
 #endif
-

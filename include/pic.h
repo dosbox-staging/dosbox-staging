@@ -16,8 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __PIC_H
-#define __PIC_H
+#ifndef DOSBOX_PIC_H
+#define DOSBOX_PIC_H
 
 
 /* CPU Cycle Timing */
@@ -60,4 +60,3 @@ void PIC_RemoveEvents(PIC_EventHandler handler);
 
 void PIC_SetIRQMask(Bitu irq, bool masked);
 #endif
-
