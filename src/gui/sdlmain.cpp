@@ -20,6 +20,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef MACOSX
+extern char** environ;
+#endif
+
 #include "SDL.h"
 #include "SDL_thread.h"
 
