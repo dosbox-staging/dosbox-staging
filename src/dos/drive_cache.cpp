@@ -208,6 +208,7 @@ Bit16s DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 	Bit16s mid,res;
 	while (low<=high) {
 		mid = (low+high)/2;
+		CFileInfo* test = curDir->fileList[mid];
 		res = strcmp(shortName,curDir->fileList[mid]->shortname);
 		if (res>0)	low  = mid+1; else
 		if (res<0)	high = mid-1; else
@@ -221,27 +222,24 @@ Bit16s DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 	return -1;
 };
 
-Bit16s DOS_Drive_Cache::RemoveSpaces(char* str)
+bool DOS_Drive_Cache::RemoveSpaces(char* str)
 // Removes all spaces
-// return length of string upto first '.'
 {
 	char*	curpos	= str;
 	char*	chkpos	= str;
 	Bit16s	len		= -1;
 	while (*chkpos!=0) { 
-		if (*chkpos=='.') { if (len<0) len = curpos - str; };
 		if (*chkpos==' ') chkpos++; else *curpos++ = *chkpos++; 
 	}
 	*curpos = 0;
-	if (len<0) len = curpos - str;
-	return len;
+	return (curpos!=chkpos);
 };
 
 void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 {
 	Bit16s	len			= 0;
 	Bit16s	lenExt		= 0;
-	bool	createShort = 0;
+	bool	createShort = false;
 
 	char tmpNameBuffer[CROSS_LEN];
 
@@ -249,7 +247,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 
 	// Remove Spaces
 	strcpy(tmpName,info->fullname);
-	len = RemoveSpaces(tmpName);
+	createShort = RemoveSpaces(tmpName);
 
 	// Get Length of filename
 	char* pos = strchr(tmpName,'.');
@@ -269,7 +267,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		len = strlen(tmpName);
 
 	// Should shortname version be created ?
-	if (!createShort) createShort = (len>8);
+	createShort = createShort || (len>8);
 	if (!createShort) {
 		char buffer[CROSS_LEN];
 		strcpy(buffer,tmpName);
@@ -432,11 +430,12 @@ bool DOS_Drive_Cache::ReadDir(struct dirent* result)
 			struct dirent* tmpres;
 			while (tmpres = readdir(dirp)) {			
 				CreateEntry(dirSearch,tmpres->d_name);
+				// Sort Lists - filelist has to be alphabetically sorted, even in between (for finding double file names) 
+				// hmpf.. bit slow probably...
+				std::sort(dirSearch->fileList.begin(), dirSearch->fileList.end(), SortByName);
 			}
 			// close dir
 			closedir(dirp);
-			// Sort Lists - filelist has to be alphabetically sorted
-			std::sort(dirSearch->fileList.begin(), dirSearch->fileList.end(), SortByName);
 			// Output list - user defined
 			switch (sortDirType) {
 				case ALPHABETICAL		: std::sort(dirSearch->outputList.begin(), dirSearch->outputList.end(), SortByName);		break;

@@ -75,7 +75,7 @@ private:
 	bool		SetResult			(CFileInfo* dir, struct dirent* result, Bit16u entryNr);
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
-	Bit16s		RemoveSpaces		(char* str);
+	bool		RemoveSpaces		(char* str);
 	bool		OpenDir				(CFileInfo* dir, char* path);
 	void		CreateEntry			(CFileInfo* dir, const char* name);
 
