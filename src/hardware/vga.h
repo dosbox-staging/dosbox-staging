@@ -115,6 +115,8 @@ typedef struct {
 	Bitu lines;
 	Bit8u font_height;
 	Bit8u font[64*1024];
+	Bitu font1_start;
+	Bitu font2_start;
 	Bitu rows,cols;
 	struct {
 		Bit8u sline,eline;
