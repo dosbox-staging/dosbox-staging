@@ -72,7 +72,26 @@ static Bitu INT10_Handler(void) {
 		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80) LOG(LOG_INT10,LOG_NORMAL)("Tandy set CRT/CPU Page Func %x",reg_al);
+		if (reg_al & 0x80 && machine==MCH_TANDY) {
+			Bit8u crtcpu=real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE);		
+			switch (reg_al) {
+			case 0x80:
+				reg_bh=crtcpu & 7;
+				reg_bl=(crtcpu >> 3) & 0x7;
+				break;
+			case 0x81:
+				crtcpu=(crtcpu & 0xc7) | ((reg_bl & 7) << 3);
+				break;
+			case 0x82:
+				crtcpu=(crtcpu & 0xf8) | (reg_bh & 7);
+				break;
+			case 0x83:
+				crtcpu=(crtcpu & 0xc0) | (reg_bh & 7) | ((reg_bl & 7) << 3);
+				break;
+			}
+			IO_WriteB(0x3df,crtcpu);
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE,crtcpu);
+		}
 		else INT10_SetActivePage(reg_al);
 		break;	
 	case 0x06:								/* Scroll Up */

@@ -184,7 +184,7 @@ static void FinishSetMode(bool clearmem) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
 	// FIXME We nearly have the good tables. to be reworked
-	real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x08);    // 8 is VGA should be ok for now
+	if (machine==MCH_VGA) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x08);    // 8 is VGA should be ok for now
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER,0x00);
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER+2,0x00);
 
@@ -246,7 +246,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 	//Vertical sync position
 	IO_WriteW(crtc_base,0x07 | (CurMode->vdispend+1) << 8);
 	//Maximum scanline
-	Bit8u scanline;
+	Bit8u scanline,crtpage;
 	switch(CurMode->type) {
 	case M_TEXT:
 		if (machine==MCH_HERC) scanline=14;
@@ -296,13 +296,18 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//block border
 		IO_WriteB(0x3da,0x3);							//Tandy color overrides?
 		switch (CurMode->mode) {
-		case 0x8:	case 0x9:
+		case 0x8:	
+			IO_WriteB(0x3de,0x14);break;
+		case 0x9:
 			IO_WriteB(0x3de,0x14);break;
 		case 0xa:
 			IO_WriteB(0x3de,0x0c);break;
 		default:
 			IO_WriteB(0x3de,0x0);break;
 		}
+		crtpage=(CurMode->mode>=0x9) ? 0xf6 : 0x3f;
+		IO_WriteB(0x3df,crtpage);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CRTCPU_PAGE,crtpage);
 		mode_control=mode_control_list[CurMode->mode];
 		if (CurMode->mode == 0x6 || CurMode->mode==0xa) color_select=0x3f;
 		else color_select=0x30;
