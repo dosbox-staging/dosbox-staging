@@ -200,7 +200,7 @@ bool DOS_FindFirst(char * search,Bit16u attr) {
 		strcpy(pattern,find_last+1);
 		strcpy(dir,fullsearch);
 	}		
-	dta.SetupSearch(drive,attr | DOS_ATTR_ARCHIVE,pattern);
+	dta.SetupSearch(drive,(Bit8u)attr,pattern);
 	if (Drives[drive]->FindFirst(dir,dta)) return true;
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
@@ -454,8 +454,7 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 
 
 bool DOS_CreateTempFile(char * name,Bit16u * entry) {
-
-/* First add random crap to the end of the name and try to open */
+	/* First add random crap to the end of the name and try to open */
 	/* Todo maybe check for euhm existence of the path name */
 	char * tempname;
 	tempname=name+strlen(name);
@@ -468,7 +467,7 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 		for (i=9;i<12;i++) {
 			tempname[i]=(rand()%26)+'A';
 		}
-		tempname[13]=0;
+		tempname[12]=0;
 	} while (!DOS_CreateFile(name,0,entry));
 	return true;
 }
