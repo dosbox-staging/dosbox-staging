@@ -341,8 +341,8 @@ switch (inst.code.op) {
 	case O_INT:
 		LEAVECORE;
 #if C_DEBUG
-		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return 1;
-		else if (DEBUG_IntBreakpoint(inst.op1.b)) return 1;
+		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return -1;
+		else if (DEBUG_IntBreakpoint(inst.op1.b)) return -1;
 #endif
 		Interrupt(inst.op1.b);
 		LoadIP();
@@ -370,21 +370,8 @@ switch (inst.code.op) {
 		IO_Write(inst.op1.d+3,(Bit8u)(reg_eax >> 24));
 		goto nextopcode;
 	case O_CBACK:
-		if (inst.op1.d<CB_MAX) { 
-			LEAVECORE;
-			Bitu ret=CallBack_Handlers[inst.op1.d]();
-			switch (ret) {
-			case CBRET_NONE:
-				LoadIP();
-				goto nextopcode;
-			case CBRET_STOP:
-				return ret;
-			default:
-				E_Exit("CPU:Callback %d returned illegal %d code",inst.op1.d,ret);
-			}
-		} else {  
-			E_Exit("Too high CallBack Number %d called",inst.op1.d);				
-		}
+		LEAVECORE;
+		return inst.op1.d;
 	case O_GRP6w:
 	case O_GRP6d:
 		switch (inst.rm_index) {

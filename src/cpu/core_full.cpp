@@ -1,3 +1,21 @@
+/*
+ *  Copyright (C) 2002-2003  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include "dosbox.h"
 
 #include "pic.h"
@@ -11,17 +29,9 @@
 #include "callback.h"
 
 
-Bit8u PAGE_Readb(PhysPt address);
-Bit16u PAGE_Readw(PhysPt address);
-Bit32u PAGE_Readd(PhysPt address);
-
-void PAGE_Writeb(PhysPt address,Bit8u val);
-void PAGE_Writew(PhysPt address,Bit16u val);
-void PAGE_Writed(PhysPt address,Bit32u val);
-
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
-#if 1
+
 #define LoadMb(off) mem_readb_inline(off)
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
@@ -33,22 +43,6 @@ typedef PhysPt EAPoint;
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
-
-#else
-
-#define LoadMb(off) PAGE_Readb(off)
-#define LoadMw(off) PAGE_Readw(off)
-#define LoadMd(off) PAGE_Readd(off)
-
-#define LoadMbs(off) (Bit8s)(LoadMb(off))
-#define LoadMws(off) (Bit16s)(LoadMw(off))
-#define LoadMds(off) (Bit32s)(LoadMd(off))
-
-#define SaveMb(off,val)	PAGE_Writeb(off,val)
-#define SaveMw(off,val)	PAGE_Writew(off,val)
-#define SaveMd(off,val)	PAGE_Writed(off,val)
-
-#endif
 
 #define LoadD(reg) reg
 #define SaveD(reg,val)	reg=val
@@ -84,7 +78,7 @@ static INLINE void DecodeModRM(void) {
 		goto nextopcode;									\
 	}
 
-Bitu Full_DeCode(void) {
+Bits Full_DeCode(void) {
 
 	LoadIP();
 	flags.type=t_UNKNOWN;
@@ -100,8 +94,8 @@ Bitu Full_DeCode(void) {
 #endif
 #endif
 		inst.start=IPPoint;
-		inst.entry=cpu.full.entry;
-		inst.prefix=cpu.full.prefix;
+		inst.entry=inst.start_entry;
+		inst.prefix=inst.start_prefix;
 restartopcode:
 		inst.entry=(inst.entry & 0xffffff00) | Fetchb();
 
@@ -117,6 +111,13 @@ nextopcode:;
 }
 
 
-void CPU_Core_Full_Start(void) {
+void CPU_Core_Full_Start(bool big) {
+	if (!big) {
+		inst.start_prefix=0x0;;
+		inst.start_entry=0x0;
+	} else {
+		inst.start_prefix=PREFIX_ADDR;
+		inst.start_entry=0x200;
+	}
 	cpudecoder=&Full_DeCode;
 }

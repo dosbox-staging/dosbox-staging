@@ -176,6 +176,8 @@ static struct {
 	Bitu cond;
 	bool repz;
 	Bitu prefix;
+	Bitu start_prefix;
+	Bitu start_entry;
 } inst;
 
 

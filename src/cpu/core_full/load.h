@@ -383,7 +383,7 @@ l_M_Ed:
 		{
 			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
 			Bitu frame_ptr=reg_esp-2;
-			if (cpu.state & STATE_STACK32) {
+			if (cpu.stack.big) {
 				reg_esp-=2;
 				mem_writew(SegBase(ss)+reg_esp,reg_bp);
 				for (Bitu i=1;i<level;i++) {	
@@ -415,7 +415,7 @@ l_M_Ed:
 		{
 			Bitu bytes=Fetchw();Bitu level=Fetchb() & 0x1f;
 			Bitu frame_ptr=reg_esp-4;
-			if (cpu.state & STATE_STACK32) {
+			if (cpu.stack.big) {
 				reg_esp-=4;
 				mem_writed(SegBase(ss)+reg_esp,reg_ebp);
 				for (Bitu i=1;i<level;i++) {	
@@ -444,19 +444,13 @@ l_M_Ed:
 			goto nextopcode;
 		}
 	case D_LEAVEw:
-		if (cpu.state & STATE_STACK32) {
-			reg_esp=reg_ebp;
-		} else {
-			reg_sp=reg_bp;
-		}
+		reg_esp&=~cpu.stack.mask;
+		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_bp=Pop_16();
 		goto nextopcode;
 	case D_LEAVEd:
-		if (cpu.state & STATE_STACK32) {
-			reg_esp=reg_ebp;
-		} else {
-			reg_sp=reg_bp;
-		}
+		reg_esp&=~cpu.stack.mask;
+		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_ebp=Pop_32();
 		goto nextopcode;
 	case D_DAA:
@@ -477,7 +471,7 @@ l_M_Ed:
 	case D_HLT:
 		LEAVECORE;
 		CPU_HLT();
-		return 0x0;
+		return CBRET_NONE;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		break;
