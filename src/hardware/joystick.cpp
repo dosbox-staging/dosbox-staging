@@ -60,12 +60,12 @@ static Bit8u read_p201(Bit32u port) {
 
 static void write_p201(Bit32u port,Bit8u val) {
 	if (stick[0].enabled) {
-		stick[0].xcount=(Bitu)(stick[0].xpos*RANGE+RANGE*2);
-		stick[0].ycount=(Bitu)(stick[0].ypos*RANGE+RANGE*2);
+		stick[0].xcount=(Bitu)((stick[0].xpos*RANGE)+RANGE);
+		stick[0].ycount=(Bitu)((stick[0].ypos*RANGE)+RANGE);
 	}
 	if (stick[1].enabled) {
-		stick[1].xcount=(Bitu)(stick[1].xpos*RANGE+RANGE*2);
-		stick[1].ycount=(Bitu)(stick[1].ypos*RANGE+RANGE*2);
+		stick[1].xcount=(Bitu)((stick[1].xpos*RANGE)+RANGE);
+		stick[1].ycount=(Bitu)((stick[1].ypos*RANGE)+RANGE);
 	}
 
 }
