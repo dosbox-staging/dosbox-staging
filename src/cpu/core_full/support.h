@@ -25,8 +25,8 @@ enum {
 	L_PREOP,L_PREADD,L_PREREP,L_PREREPNE,
 	L_STRING,
 
-	L_IRETw,L_IRETd,
 /* Direct ones */
+	D_IRETw,D_IRETd,
 	D_PUSHAw,D_PUSHAd,
 	D_POPAw,D_POPAd,
 	D_DAA,D_DAS,
@@ -39,6 +39,9 @@ enum {
 	D_ENTERw,D_ENTERd,
 	D_LEAVEw,D_LEAVEd,
 	L_ERROR,
+
+	D_RETFw,D_RETFd,
+	D_RETFwIw,D_RETFdIw,
 };
 
 
@@ -48,12 +51,15 @@ enum {
 	O_XCHG_AX,O_XCHG_EAX,
 	O_IMULRw,O_IMULRd,
 	O_BOUNDw,O_BOUNDd,
-	O_CALL_N,O_CALL_F,
+	O_CALLNw,O_CALLNd,
+	O_CALLFw,O_CALLFd,
+	O_JMPFw,O_JMPFd,
+
 	O_OPAL,O_ALOP,
 	O_OPAX,O_AXOP,
 	O_OPEAX,O_EAXOP,
 	O_INT,
-	O_SEGDS,O_SEGES,O_SEGFS,O_SEGGS,
+	O_SEGDS,O_SEGES,O_SEGFS,O_SEGGS,O_SEGSS,
 	O_LOOP,O_LOOPZ,O_LOOPNZ,O_JCXZ,
 	O_INb,O_INw,O_INd,
 	O_OUTb,O_OUTw,O_OUTd,
@@ -70,6 +76,18 @@ enum {
 	O_DSHRw,O_DSHRd,
 	O_C_O	,O_C_NO	,O_C_B	,O_C_NB	,O_C_Z	,O_C_NZ	,O_C_BE	,O_C_NBE,
 	O_C_S	,O_C_NS	,O_C_P	,O_C_NP	,O_C_L	,O_C_NL	,O_C_LE	,O_C_NLE,
+
+	O_GRP6w,O_GRP6d,
+	O_GRP7w,O_GRP7d,
+	O_M_Cd_Rd,O_M_Rd_Cd,
+	O_LAR,
+	
+	O_BTw,O_BTSw,O_BTRw,O_BTCw,
+	O_BTd,O_BTSd,O_BTRd,O_BTCd,
+	O_BSFw,O_BSRw,
+
+
+
 };
 
 enum {
@@ -87,12 +105,11 @@ enum {
 	S_SEGGw,S_SEGGd,
 
 	
-	S_ADDIP,S_C_ADDIP,
+	S_AIPw,S_C_AIPw,
+	S_AIPd,S_C_AIPd,
 
 	S_FLGb,S_FLGw,S_FLGd,
 	S_IP,S_IPIw,
-	S_CSIP,S_CSIPIw,
-
 };
 
 enum {
@@ -134,7 +151,7 @@ struct OpCode {
 static struct {
 	Bitu entry;
 	Bitu entry_default;
-	Bit8u rm;
+	Bitu rm;
 	EAPoint rm_eaa;
 	Bitu rm_off;
 	Bitu rm_eai;
@@ -150,7 +167,7 @@ static struct {
 	struct {
 		EAPoint base;
 	} seg;
-	bool cond;
+	Bitu cond;
 	bool repz;
 	Bitu prefix;
 } inst;

@@ -213,10 +213,8 @@ l_M_Ed:
 		inst.op1.d=reg_32(inst.code.extra);
 		break;
 	case L_FLG:
-		inst.op1.d=	(get_CF() << 0)   | (get_PF() << 2) | (get_AF() << 4) | 
-					(get_ZF() << 6)   | (get_SF() << 7) | (flags.tf << 8) |
-					(flags.intf << 9) |(flags.df << 10) | (get_OF() << 11) | 
-					(flags.io << 12) | (flags.nt <<14);
+		FILLFLAGS;
+		inst.op1.d = flags.word;
 		break;
 	case L_SEG:
 		inst.op1.d=SegValue((SegNames)inst.code.extra);
@@ -263,25 +261,47 @@ l_M_Ed:
 		if (!get_OF()) goto nextopcode;
 		inst.op1.d=4;
 		break;
-	case L_IRETw:
-		inst.op1.d=Pop_16();
-		inst.op2.d=Pop_16();
-		{
-			Bitu temp=Pop_16();
-			Save_Flagsw(temp);
-		}
-		break;
+	case D_IRETw:
+		CPU_IRET(false);
+		LoadIP();
+		goto nextopcode;
+	case D_IRETd:
+		CPU_IRET(true);
+		LoadIP();
+		goto nextopcode;
+	case D_RETFwIw:
+		CPU_RET(false,Fetchw());
+		LoadIP();
+		goto nextopcode;
+	case D_RETFw:
+		CPU_RET(false,0);
+		LoadIP();
+		goto nextopcode;
+	case D_RETFdIw:
+		CPU_RET(true,Fetchw());
+		LoadIP();
+		goto nextopcode;
+	case D_RETFd:
+		CPU_RET(true,0);
+		LoadIP();
+		goto nextopcode;
 /* Direct operations */
 	case L_STRING:
 		#include "string.h"
-		goto nextopcode;		
+		goto nextopcode;
 	case D_PUSHAw:
-		Push_16(reg_ax);Push_16(reg_cx);Push_16(reg_dx);Push_16(reg_bx);
-		Push_16(reg_sp);Push_16(reg_bp);Push_16(reg_si);Push_16(reg_di);
+		{
+			Bit16u old_sp=reg_sp;
+			Push_16(reg_ax);Push_16(reg_cx);Push_16(reg_dx);Push_16(reg_bx);
+			Push_16(old_sp);Push_16(reg_bp);Push_16(reg_si);Push_16(reg_di);
+		}
 		goto nextopcode;
 	case D_PUSHAd:
-		Push_32(reg_eax);Push_32(reg_ecx);Push_32(reg_edx);Push_32(reg_ebx);
-		Push_32(reg_esp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
+		{
+			Bit32u old_esp=reg_esp;
+			Push_32(reg_eax);Push_32(reg_ecx);Push_32(reg_edx);Push_32(reg_ebx);
+			Push_32(old_esp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
+		}
 		goto nextopcode;
 	case D_POPAw:
 		reg_di=Pop_16();reg_si=Pop_16();reg_bp=Pop_16();Pop_16();//Don't save SP
@@ -310,36 +330,36 @@ l_M_Ed:
 		else reg_edx=0;
 		goto nextopcode;
 	case D_CLI:
-		flags.intf=false;
+		SETFLAGBIT(IF,false);
 		goto nextopcode;
 	case D_STI:
-		flags.intf=true;
-		if (flags.intf && PIC_IRQCheck) {
+		SETFLAGBIT(IF,true);
+		if (PIC_IRQCheck) {
 			SaveIP();
 			PIC_runIRQs();	
 			LoadIP();
 		}
 		goto nextopcode;
 	case D_STC:
-		flags.cf=true;
+		SETFLAGBIT(CF,true);
 		if (flags.type!=t_CF) flags.prev_type=flags.type;
 		flags.type=t_CF;
 		goto nextopcode;
 	case D_CLC:
-		flags.cf=false;
+		SETFLAGBIT(CF,false);
 		if (flags.type!=t_CF) flags.prev_type=flags.type;
 		flags.type=t_CF;
 		goto nextopcode;
 	case D_CMC:
-		flags.cf=!get_CF();
+		SETFLAGBIT(CF,!get_CF());
 		if (flags.type!=t_CF) flags.prev_type=flags.type;
 		flags.type=t_CF;
 		goto nextopcode;
 	case D_CLD:
-		flags.df=false;
+		SETFLAGBIT(DF,false);
 		goto nextopcode;
 	case D_STD:
-		flags.df=true;
+		SETFLAGBIT(DF,true);
 		goto nextopcode;
 	case D_NOP:
 		goto nextopcode;
@@ -357,63 +377,16 @@ l_M_Ed:
 		reg_bp=Pop_16();
 		goto nextopcode;
 	case D_DAA:
-		if (((reg_al & 0x0F)>0x09) || get_AF()) {
-			reg_al+=0x06;
-			flags.af=true;
-		} else {
-			flags.af=false;
-		}
-		flags.cf=get_CF();
-		if ((reg_al > 0x9F) || flags.cf) {
-			reg_al+=0x60;
-			flags.cf=true;
-		} else {
-			flags.cf=false;
-		}
-		flags.sf=(reg_al&0x80)>0;
-		flags.zf=(reg_al==0);
-		flags.type=t_UNKNOWN;
+		DAA();
 		goto nextopcode;
 	case D_DAS:
-		if (((reg_al & 0x0f) > 9) || get_AF()) {
-			reg_al-=6;
-			flags.af=true;
-		} else {
-			flags.af=false;
-		}
-		if ((reg_al>0x9f) || get_CF()) {
-			reg_al-=0x60;
-			flags.cf=true;
-		} else {
-			flags.cf=false;
-		}
-		flags.type=t_UNKNOWN;
+		DAS();
 		goto nextopcode;
 	case D_AAA:
-		if (get_AF() || ((reg_al & 0xf) > 9))
-		{
-			reg_al += 6;
-			reg_ah += 1;
-			flags.af=true;
-			flags.cf=true;
-		} else {
-			flags.af=false;
-			flags.cf=false;
-		}
-		reg_al &= 0x0F;
-		flags.type=t_UNKNOWN;
+		AAA();
 		goto nextopcode;
 	case D_AAS:
-		if (((reg_al & 0x0f)>9) || get_AF()) {
-			reg_ah--;
-			if (reg_al < 6) reg_ah--;
-			reg_al=(reg_al-6) & 0xF;
-			flags.af=flags.cf=true;
-		} else {
-			flags.af=flags.cf=false;
-		}
-		reg_al&=0xf;
-		flags.type=t_UNKNOWN;
+		AAS();
 		goto nextopcode;
 	default:
 		LOG(LOG_CPU|LOG_ERROR,"LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);

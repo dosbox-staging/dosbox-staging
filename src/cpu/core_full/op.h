@@ -47,12 +47,12 @@ switch (inst.code.op) {
 		flags.type=inst.code.op;
 		break;
 	case t_INCb:	case t_INCw:	case t_INCd:
-		flags.cf=get_CF();
+		SETFLAGBIT(CF,get_CF());
 		inst.op1.d=flags.result.d=inst.op1.d+1;
 		flags.type=inst.code.op;
 		break;
 	case t_DECb:	case t_DECw:	case t_DECd:
-		flags.cf=get_CF();
+		SETFLAGBIT(CF,get_CF());
 		inst.op1.d=flags.result.d=inst.op1.d-1;
 		flags.type=inst.code.op;
 		break;
@@ -170,150 +170,52 @@ switch (inst.code.op) {
 		
 	/* Special instructions */
 	case O_IMULRw:
-		inst.op1.ds=inst.op1.ds*inst.op2.ds;		
-		flags.type=t_MUL;
-		if ((inst.op1.ds> -32768)  && (inst.op1.ds<32767)) {
-			flags.cf=false;flags.of=false;
-		} else {
-			flags.cf=true;flags.of=true;
-		}
+		DIMULW(inst.op1.ws,inst.op1.ws,inst.op2.ws,LoadD,SaveD);
 		break;
 	case O_IMULRd:
-		{
-			Bit64s res=(Bit64s)inst.op1.ds*(Bit64s)inst.op2.ds;		
-			inst.op1.ds=(Bit32s)res;
-			flags.type=t_MUL;
-			if ((res>-((Bit64s)(2147483647)+1)) && (res<(Bit64s)2147483647)) {
-				flags.cf=false;flags.of=false;
-			} else {
-				flags.cf=true;flags.of=true;
-			}
-			break;
-		}
+		DIMULD(inst.op1.ds,inst.op1.ds,inst.op2.ds,LoadD,SaveD);
+		break;
 	case O_MULb:
-		flags.type=t_MUL;
-		reg_ax=reg_al*inst.op1.b;
-		flags.cf=flags.of=((reg_ax & 0xff00) !=0);
+		MULB(inst.op1.b,LoadD,0);
 		goto nextopcode;
 	case O_MULw:
-		{
-			Bit32u tempu=(Bit32u)reg_ax*(Bit32u)inst.op1.w;
-			reg_ax=(Bit16u)(tempu);
-			reg_dx=(Bit16u)(tempu >> 16);
-			flags.type=t_MUL;
-			flags.cf=flags.of=(reg_dx !=0);
-			goto nextopcode;
-		}	
+		MULW(inst.op1.w,LoadD,0);
+		goto nextopcode;
 	case O_MULd:
-		{
-			Bit64u tempu=(Bit64u)reg_eax*(Bit64u)inst.op1.d;
-			reg_eax=(Bit32u)(tempu);
-			reg_edx=(Bit32u)(tempu >> 32);
-			flags.type=t_MUL;
-			flags.cf=flags.of=(reg_edx !=0);
-			goto nextopcode;
-		}		
+		MULD(inst.op1.d,LoadD,0);
+		goto nextopcode;
 	case O_IMULb:
-		flags.type=t_MUL;
-		reg_ax=((Bit8s)reg_al)*inst.op1.bs;
-		flags.cf=flags.of=!((reg_ax & 0xff80)==0xff80 || (reg_ax & 0xff80)==0x0000);
+		IMULB(inst.op1.b,LoadD,0);
 		goto nextopcode;
 	case O_IMULw:
-		{
-			Bit32s temps=(Bit16s)reg_ax*inst.op1.ws;
-			reg_ax=(Bit16s)(temps);
-			reg_dx=(Bit16s)(temps >> 16);
-			flags.type=t_MUL;
-			flags.cf=flags.of=!((temps & 0xffffff80)==0xffffff80 || (temps & 0xffffff80)==0x0000);
-			goto nextopcode;
-		}	
+		IMULW(inst.op1.w,LoadD,0);
+		goto nextopcode;
 	case O_IMULd:
-		{
-			Bit64s temps=(Bit64s)((Bit32s)reg_eax)*(Bit64s)inst.op1.ds;
-			reg_eax=(Bit32u)(temps);
-			reg_edx=(Bit32u)(temps >> 32);
-			flags.type=t_MUL;
-			if ( (reg_edx==0xffffffff) && (reg_eax & 0x80000000) ) {
-				flags.cf=flags.of=false;
-			} else if ( (reg_edx==0x00000000) && (reg_eax<0x80000000) ) {
-				flags.cf=flags.of=false;
-			} else {
-				flags.cf=flags.of=true;
-			}
-			goto nextopcode;
-		}	
+		IMULD(inst.op1.d,LoadD,0);
+		goto nextopcode;
 	case O_DIVb:
-		{
-			if (!inst.op1.b) goto doint;
-			Bitu val=reg_ax;Bitu quo=val/inst.op1.b;
-			reg_ah=(Bit8u)(val % inst.op1.b);
-			reg_al=(Bit8u)quo;
-			if (quo!=reg_al) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}
+		DIVB(inst.op1.b,LoadD,0);
+		goto nextopcode;
 	case O_DIVw:
-		{
-			if (!inst.op1.w) goto doint;
-			Bitu val=(reg_dx<<16)|reg_ax;Bitu quo=val/inst.op1.w;
-			reg_dx=(Bit16u)(val % inst.op1.w);
-			reg_ax=(Bit16u)quo;
-			if (quo!=reg_ax) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}
+		DIVW(inst.op1.w,LoadD,0);
+		goto nextopcode;
 	case O_DIVd:
-		{
-			if (!inst.op1.d) goto doint;
-			Bit64u val=(((Bit64u)reg_edx)<<32)|reg_eax;
-			Bit64u quo=val/inst.op1.d;
-			reg_edx=(Bit32u)(val % inst.op1.d);
-			reg_eax=(Bit32u)quo;
-			if (quo!=(Bit64u)reg_eax) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}
+		DIVD(inst.op1.d,LoadD,0);
+		goto nextopcode;
 	case O_IDIVb:
-		{
-			if (!inst.op1.b) goto doint;
-			Bits val=(Bit16s)reg_ax;Bits quo=val/inst.op1.bs;
-			reg_ah=(Bit8s)(val % inst.op1.bs);
-			reg_al=(Bit8s)quo;
-			if (quo!=(Bit8s)reg_al) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}
+		IDIVB(inst.op1.b,LoadD,0);
+		goto nextopcode;
 	case O_IDIVw:
-		{
-			if (!inst.op1.w) goto doint;
-			Bits val=(Bit32s)((reg_dx<<16)|reg_ax);Bits quo=val/inst.op1.ws;
-			reg_dx=(Bit16u)(val % inst.op1.ws);
-			reg_ax=(Bit16s)quo;
-			if (quo!=(Bit16s)reg_ax) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}			
+		IDIVW(inst.op1.w,LoadD,0);
+		goto nextopcode;
 	case O_IDIVd:
-		{
-			if (!inst.op1.d) goto doint;
-			Bit64s val=(((Bit64u)reg_edx)<<32)|reg_eax;
-			Bit64s quo=val/inst.op1.ds;
-			reg_edx=(Bit32s)(val % inst.op1.ds);
-			reg_eax=(Bit32s)(quo);
-			if (quo!=(Bit64s)((Bit32s)reg_eax)) { inst.op1.b=0;goto doint;}
-			goto nextopcode;
-		}			
+		IDIVD(inst.op1.d,LoadD,0);
+		goto nextopcode;
 	case O_AAM:
-		reg_ah=reg_al / inst.op1.b;
-		reg_al=reg_al % inst.op1.b;
-		flags.type=t_UNKNOWN;
-		flags.sf=(reg_ah & 0x80) > 0;
-		flags.zf=(reg_ax == 0);
-		//TODO PF
-		flags.pf=0;
+		AAM(inst.op1.b);
 		goto nextopcode;
 	case O_AAD:
-		reg_al=reg_ah*inst.op1.b+reg_al;
-		reg_ah=0;
-		flags.cf=(reg_al>=0x80);
-		flags.zf=(reg_al==0);
-		//TODO PF
-		flags.type=t_UNKNOWN;
+		AAD(inst.op1.b);
 		goto nextopcode;
 
 	case O_C_O:		inst.cond=get_OF();								break;
@@ -363,19 +265,37 @@ switch (inst.code.op) {
 	case O_SEGGS:
 		inst.code.extra=gs;
 		break;
-
-		
+	case O_SEGSS:
+		inst.code.extra=ss;
+		break;
+	
 	case O_LOOP:
-		if (--reg_cx) break;
+		if (inst.prefix & PREFIX_ADDR) {
+			if (--reg_ecx) break;
+		} else {
+			if (--reg_cx) break;
+		}
 		goto nextopcode;
 	case O_LOOPZ:
-		if (--reg_cx && get_ZF()) break;
+		if (inst.prefix & PREFIX_ADDR) {
+			if (--reg_ecx && get_ZF()) break;
+		} else {
+			if (--reg_cx && get_ZF()) break;
+		}
 		goto nextopcode;
 	case O_LOOPNZ:
-		if (--reg_cx && !get_ZF()) break;
+		if (inst.prefix & PREFIX_ADDR) {
+			if (--reg_ecx && !get_ZF()) break;
+		} else {
+			if (--reg_cx && !get_ZF()) break;
+		}
 		goto nextopcode;
 	case O_JCXZ:
-		if (reg_cx) goto nextopcode;
+		if (inst.prefix & PREFIX_ADDR) {
+			if (reg_ecx) goto nextopcode;
+		} else {
+			if (reg_cx) goto nextopcode;
+		}
 		break;
 	case O_XCHG_AX:
 		{
@@ -391,16 +311,28 @@ switch (inst.code.op) {
 			inst.op1.d=temp;
 			break;
 		}
-	case O_CALL_N:
+	case O_CALLNw:
 		SaveIP();
 		Push_16(reg_ip);
 		break;
-	case O_CALL_F:
-		Push_16(SegValue(cs));
+	case O_CALLNd:
 		SaveIP();
-		Push_16(reg_ip);
+		Push_32(reg_eip);
 		break;
-doint:
+	case O_CALLFw:
+		SaveIP();
+		CPU_CALL(false,inst.op2.d,inst.op1.d);
+		LoadIP();
+		goto nextopcode;
+	case O_CALLFd:
+		SaveIP();
+		CPU_CALL(true,inst.op2.d,inst.op1.d);
+		LoadIP();
+		goto nextopcode;
+	case O_JMPFw:
+		CPU_JMP(false,inst.op2.d,inst.op1.d);
+		LoadIP();
+		goto nextopcode;
 	case O_INT:
 		SaveIP();
 #if C_DEBUG
@@ -448,6 +380,95 @@ doint:
 		} else {  
 			E_Exit("Too high CallBack Number %d called",inst.op1.d);				
 		}
+	case O_GRP6w:
+	case O_GRP6d:
+		switch (inst.rm_index) {
+		case 0x02:	/* LLDT */
+			CPU_LLDT(inst.op1.d);
+			goto nextopcode;		/* Else value will saved */
+		default:
+			LOG(LOG_ERROR|LOG_CPU,"Group 6 Illegal subfunction %X",inst.rm_index);
+		}
+		break;
+	case O_GRP7w:
+	case O_GRP7d:
+		switch (inst.rm_index) {
+		case 0:		/* SGDT */
+			{
+				Bitu limit,base;
+				CPU_SGDT(limit,base);
+				SaveMw(inst.rm_eaa,limit);
+				SaveMd(inst.rm_eaa+2,base);
+				break;
+			}
+		case 1:		/* SIDT */
+			{
+				Bitu limit,base;
+				CPU_SIDT(limit,base);
+				SaveMw(inst.rm_eaa,limit);
+				SaveMd(inst.rm_eaa+2,base);
+				break;
+			}
+		case 2:		/* LGDT */
+			CPU_LGDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
+			break;
+		case 3:		/* LIDT */
+			CPU_LIDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
+			break;
+		case 4:		/* SMSW */
+			{
+				Bitu word;CPU_SMSW(word);
+				SaveMw(inst.rm_eaa,word);
+				break;
+			}
+		case 6:		/* LMSW */
+			{
+				Bitu word=LoadMw(inst.rm_eaa);
+				CPU_LMSW(word);
+				break;
+			}
+		default:
+			LOG(LOG_ERROR|LOG_CPU,"Group 7 Illegal subfunction %X",inst.rm_index);
+		}
+		break;
+	case O_M_Cd_Rd:
+		CPU_SET_CRX(inst.rm_index,inst.op1.d);
+		break;
+	case O_M_Rd_Cd:
+		inst.op1.d=CPU_GET_CRX(inst.rm_index);
+		break;
+	case O_LAR:
+		{
+			Bitu ar;CPU_LAR(inst.op1.d,ar);
+			inst.op2.d=ar;
+		}
+		break;
+	case O_BTd:
+	case O_BTSd:
+	case O_BTCd:
+	case O_BTRd:
+		{
+			Bitu val;PhysPt read;
+			Bitu mask=1 << (inst.op1.d & 31);
+			FILLFLAGS;
+			if (inst.rm<0xc0) {
+				read=inst.rm_eaa+4*(inst.op1.d / 32);
+				val=mem_readd(read);
+			} else {
+				val=reg_32(inst.rm_eai);
+			}
+			SETFLAGBIT(CF,(val&mask)>0);
+			if (inst.code.op==O_BTSd) val|=mask;
+			if (inst.code.op==O_BTRd) val&=~mask;
+			if (inst.code.op==O_BTCd) val^=mask;
+			if (inst.code.op==O_BTd) break;
+			if (inst.rm<0xc0) {
+				mem_writed(read,val);
+			} else {
+				reg_32(inst.rm_eai)=val;
+			}
+		}
+		break;
 	case 0:
 		break;
 	default:

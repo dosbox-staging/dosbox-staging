@@ -10,8 +10,9 @@
 	else si_base=SegBase(ds);
 	di_base=SegBase(es);
 	if (inst.prefix & PREFIX_ADDR) {
-		add_mask=0;
-		si_index=reg_esi;di_index=reg_edi;
+		add_mask=0xFFFFFFFF;
+		si_index=reg_esi;
+		di_index=reg_edi;
 		count=reg_ecx;
 	} else {
 		add_mask=0xFFFF;
@@ -23,7 +24,7 @@
 		count=1;
 	}
 	
-	add_index=flags.df ? -1 : 1;
+	add_index=GETFLAG(DF) ? -1 : 1;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
 		for (;count>0;count--) {

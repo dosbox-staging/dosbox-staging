@@ -13,7 +13,7 @@ static INLINE Bit8u Fetchb() {
 	IPPoint+=1;
 	return temp;
 }
-
+	
 static INLINE Bit16u Fetchw() {
 	Bit16u temp=LoadMw(IPPoint);
 	IPPoint+=2;
@@ -37,39 +37,50 @@ static INLINE Bit32s Fetchds() {
 }
 
 static INLINE void Push_16(Bit16u blah)	{
-	reg_sp-=2;
-	SaveMw(SegBase(ss)+reg_sp,blah);
-};
+	if (cpu.state & STATE_STACK32) {
+		reg_esp-=2;
+		SaveMw(SegBase(ss)+reg_esp,blah);
+	} else {
+		reg_sp-=2;
+		SaveMw(SegBase(ss)+reg_sp,blah);
+	}
+}
 
 static INLINE void Push_32(Bit32u blah)	{
-	reg_sp-=4;
-	SaveMd(SegBase(ss)+reg_sp,blah);
-};
-
-static INLINE Bit16u Pop_16() {
-	Bit16u temp=LoadMw(SegBase(ss)+reg_sp);
-	reg_sp+=2;
-	return temp;
-};
-
-static INLINE Bit32u Pop_32() {
-	Bit32u temp=LoadMd(SegBase(ss)+reg_sp);
-	reg_sp+=4;
-	return temp;
-};
-
-
-#define Save_Flagsw(FLAGW)											\
-{																	\
-	flags.type=t_UNKNOWN;											\
-	flags.cf	=(FLAGW & 0x001)>0;flags.pf	=(FLAGW & 0x004)>0;		\
-	flags.af	=(FLAGW & 0x010)>0;flags.zf	=(FLAGW & 0x040)>0;		\
-	flags.sf	=(FLAGW & 0x080)>0;flags.tf	=(FLAGW & 0x100)>0;		\
-	flags.intf	=(FLAGW & 0x200)>0;									\
-	flags.df	=(FLAGW & 0x400)>0;flags.of	=(FLAGW & 0x800)>0;		\
-	flags.io	=(FLAGW >> 12) & 0x03;								\
-	flags.nt	=(FLAGW & 0x4000)>0;								\
+	if (cpu.state & STATE_STACK32) {
+		reg_esp-=4;
+		SaveMd(SegBase(ss)+reg_esp,blah);
+	} else {
+		reg_sp-=4;
+		SaveMd(SegBase(ss)+reg_sp,blah);
+	}
 }
+
+static INLINE Bit16u Pop_16(void) {
+	if (cpu.state & STATE_STACK32) {
+		Bit16u temp=LoadMw(SegBase(ss)+reg_esp);
+		reg_esp+=2;
+		return temp;
+	} else {
+		Bit16u temp=LoadMw(SegBase(ss)+reg_sp);
+		reg_sp+=2;
+		return temp;
+	}
+}
+
+static INLINE Bit32u Pop_32(void) {
+	if (cpu.state & STATE_STACK32) {
+		Bit32u temp=LoadMd(SegBase(ss)+reg_esp);
+		reg_esp+=4;
+		return temp;
+	} else {
+		Bit32u temp=LoadMd(SegBase(ss)+reg_sp);
+		reg_sp+=4;
+		return temp;
+	}
+}
+
+
 #if 0
 	if (flags.intf && PIC_IRQCheck) {								\
 		SaveIP();													\

@@ -52,14 +52,14 @@ switch (inst.code.save) {
 		reg_32(inst.code.extra)=inst.op1.d;
 		break;	
 	case S_SEGI:
-		SegSet16(inst.code.extra,inst.op1.w);
+		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op1.w);
 		break;
 	case S_SEGm:
-		SegSet16(inst.rm_index,inst.op1.w);
+		CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w);
 		break;
 	case S_SEGGw:
 		reg_16(inst.rm_index)=inst.op1.w;
-		SegSet16(inst.code.extra,inst.op2.w);
+		CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w);
 		break;
 	case S_PUSHw:
 		Push_16(inst.op1.w);
@@ -68,19 +68,19 @@ switch (inst.code.save) {
 		Push_32(inst.op1.d);
 		break;
 
-	case S_C_ADDIP:
+	case S_C_AIPw:
 		if (!inst.cond) goto nextopcode;
-	case S_ADDIP:
+	case S_AIPw:
 		SaveIP();
 		reg_eip+=inst.op1.d;
 		reg_eip&=0xffff;
 		LoadIP();
 		break;
-	case S_CSIPIw:
-		reg_esp+=Fetchw();
-	case S_CSIP:
-		reg_eip=inst.op1.d;
-		SegSet16(cs,inst.op2.w);
+	case S_C_AIPd:
+		if (!inst.cond) goto nextopcode;
+	case S_AIPd:
+		SaveIP();
+		reg_eip+=inst.op1.d;
 		LoadIP();
 		break;
 	case S_IPIw:
@@ -91,15 +91,13 @@ switch (inst.code.save) {
 		LoadIP();
 		break;
 	case S_FLGb:
-		flags.of	=get_OF();
-		flags.type=t_UNKNOWN;
-		flags.cf	=(inst.op1.d & 0x001)>0;flags.pf	=(inst.op1.d & 0x004)>0;
-		flags.af	=(inst.op1.d & 0x010)>0;flags.zf	=(inst.op1.d & 0x040)>0;
-		flags.sf	=(inst.op1.d & 0x080)>0;
+		SETFLAGSb(inst.op1.d);
 		break;
 	case S_FLGw:
-	case S_FLGd:		//TODO Check full 32bit flags one day
-		Save_Flagsw(inst.op1.w);
+		SETFLAGSw(inst.op1.d);
+		break;
+	case S_FLGd:
+		SETFLAGSd(inst.op1.d);
 		break;
 	case 0:
 		break;

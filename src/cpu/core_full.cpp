@@ -32,6 +32,7 @@ static EAPoint IPPoint;
 #include "core_full/ea_lookup.h"
 #include "instructions.h"
 
+
 static INLINE void DecodeModRM(void) {
 	inst.rm=Fetchb();
 	inst.rm_index=(inst.rm >> 3) & 7;
@@ -41,14 +42,25 @@ static INLINE void DecodeModRM(void) {
 	if (inst.rm<0xc0) inst.rm_eaa=(inst.prefix & PREFIX_ADDR) ? RMAddress_32() : RMAddress_16();
 }
 
+#define EXCEPTION(blah)										\
+	{														\
+		Bit8u new_num=blah;									\
+		SaveIP();											\
+		Interrupt(new_num);									\
+		LoadIP();											\
+		goto nextopcode;									\
+	}
 
 Bitu Full_DeCode(void) {
+
 	LoadIP();
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;
 #endif
 		CPU_Cycles--;
+		inst.entry=cpu.full.entry;
+		inst.prefix=cpu.full.prefix;
 restartopcode:
 		inst.entry=(inst.entry & 0xffffff00) | Fetchb();
 
@@ -56,9 +68,7 @@ restartopcode:
 		#include "core_full/load.h"
 		#include "core_full/op.h"
 		#include "core_full/save.h"
-nextopcode:		
-		inst.prefix=0;
-		inst.entry=0;
+nextopcode:;
 	}	
 	SaveIP();
 	return 0;

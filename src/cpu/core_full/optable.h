@@ -80,15 +80,15 @@ static OpCode OpCodeTable[1024]={
 
 
 /* 0x70 - 0x77 */
-{L_Ibx		,O_C_O		,S_C_ADDIP,0	},{L_Ibx	,O_C_NO		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_B		,S_C_ADDIP,0	},{L_Ibx	,O_C_NB		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_Z		,S_C_ADDIP,0	},{L_Ibx	,O_C_NZ		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_BE		,S_C_ADDIP,0	},{L_Ibx	,O_C_NBE	,S_C_ADDIP,0	},
+{L_Ibx		,O_C_O		,S_C_AIPw,0		},{L_Ibx	,O_C_NO		,S_C_AIPw,0		},
+{L_Ibx		,O_C_B		,S_C_AIPw,0		},{L_Ibx	,O_C_NB		,S_C_AIPw,0		},
+{L_Ibx		,O_C_Z		,S_C_AIPw,0		},{L_Ibx	,O_C_NZ		,S_C_AIPw,0		},
+{L_Ibx		,O_C_BE		,S_C_AIPw,0		},{L_Ibx	,O_C_NBE	,S_C_AIPw,0		},
 /* 0x78 - 0x7f */
-{L_Ibx		,O_C_S		,S_C_ADDIP,0	},{L_Ibx	,O_C_NS		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_P		,S_C_ADDIP,0	},{L_Ibx	,O_C_NP		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_L		,S_C_ADDIP,0	},{L_Ibx	,O_C_NL		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_LE		,S_C_ADDIP,0	},{L_Ibx	,O_C_NLE	,S_C_ADDIP,0	},
+{L_Ibx		,O_C_S		,S_C_AIPw,0		},{L_Ibx	,O_C_NS		,S_C_AIPw,0		},
+{L_Ibx		,O_C_P		,S_C_AIPw,0		},{L_Ibx	,O_C_NP		,S_C_AIPw,0		},
+{L_Ibx		,O_C_L		,S_C_AIPw,0		},{L_Ibx	,O_C_NL		,S_C_AIPw,0		},
+{L_Ibx		,O_C_LE		,S_C_AIPw,0		},{L_Ibx	,O_C_NLE	,S_C_AIPw,0		},
 
 
 /* 0x80 - 0x87 */
@@ -109,7 +109,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGw		,O_XCHG_AX	,S_REGw	,REGI_SI},{L_REGw	,O_XCHG_AX	,S_REGw	,REGI_DI},
 /* 0x98 - 0x9f */
 {D_CBW		,0			,0		,0		},{D_CWD	,0			,0		,0		},
-{L_Ifw		,O_CALL_F	,S_CSIP	,0		},{L_ERROR	,0			,0		,0		},
+{L_Ifw		,O_CALLFw	,0		,0		},{L_ERROR	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHw,0		},{L_POPw	,0			,S_FLGw	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
@@ -142,9 +142,9 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0			,S_Eb	,M_Ib	},{L_MODRM	,0			,S_Ew	,M_Iw	},
 /* 0xc8 - 0xcf */
 {D_ENTERw	,0			,0		,0		},{D_LEAVEw	,0			,0		,0		},
-{L_POPfw	,0			,S_CSIPIw,0		},{L_POPfw	,0			,S_CSIP	,0		},
+{D_RETFwIw	,0			,0		,0		},{D_RETFw	,0			,0		,0		},
 {L_VAL		,O_INT		,0		,3		},{L_Ib		,O_INT		,0		,0		},
-{L_INTO		,O_INT		,0		,0		},{L_IRETw	,0			,S_CSIP	,0		},
+{L_INTO		,O_INT		,0		,0		},{D_IRETw	,0			,0		,0		},
 
 /* 0xd0 - 0xd7 */
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,6			,0	,M_GRP_1	},
@@ -159,13 +159,13 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0			,0		,0		},{L_MODRM	,0			,0		,0		},
 
 /* 0xe0 - 0xe7 */
-{L_Ibx		,O_LOOPNZ	,S_ADDIP,0		},{L_Ibx	,O_LOOPZ	,S_ADDIP,0		},
-{L_Ibx		,O_LOOP		,S_ADDIP,0		},{L_Ibx	,O_JCXZ		,S_ADDIP,0		},
+{L_Ibx		,O_LOOPNZ	,S_AIPw	,0		},{L_Ibx	,O_LOOPZ	,S_AIPw	,0		},
+{L_Ibx		,O_LOOP		,S_AIPw	,0		},{L_Ibx	,O_JCXZ		,S_AIPw	,0		},
 {L_Ib		,O_INb		,0		,0		},{L_Ib		,O_INw		,0		,0		},
 {L_Ib		,O_OUTb		,0		,0		},{L_Ib		,O_OUTw		,0		,0		},
 /* 0xe8 - 0xef */
-{L_Iw		,O_CALL_N	,S_ADDIP,0		},{L_Iwx	,0			,S_ADDIP,0		},
-{L_Ifw		,0			,S_CSIP	,0		},{L_Ibx	,0			,S_ADDIP,0		},
+{L_Iw		,O_CALLNw	,S_AIPw	,0		},{L_Iwx	,0			,S_AIPw	,0		},
+{L_Ifw		,O_JMPFw	,0		,0		},{L_Ibx	,0			,S_AIPw	,0		},
 {L_REGw		,O_INb		,0		,REGI_DX},{L_REGw	,O_INw		,0		,REGI_DX},
 {L_REGw		,O_OUTb		,0		,REGI_DX},{L_REGw	,O_OUTw		,0		,REGI_DX},
 
@@ -181,7 +181,7 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0xb		,0		,M_GRP	},{L_MODRM	,0xc		,0		,M_GRP	},
 
 /* 0x100 - 0x107 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_GRP6w	,0		,0		},{L_MODRM	,O_GRP7w	,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
@@ -203,8 +203,8 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
 /* 0x120 - 0x127 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Rd_Cd	,S_Ed	,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Cd_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
@@ -271,15 +271,15 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
 /* 0x180 - 0x187 */
-{L_Iwx		,O_C_O		,S_C_ADDIP,0	},{L_Iwx	,O_C_NO		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_B		,S_C_ADDIP,0	},{L_Iwx	,O_C_NB		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_Z		,S_C_ADDIP,0	},{L_Iwx	,O_C_NZ		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_BE		,S_C_ADDIP,0	},{L_Iwx	,O_C_NBE	,S_C_ADDIP,0	},
+{L_Iwx		,O_C_O		,S_C_AIPw,0		},{L_Iwx	,O_C_NO		,S_C_AIPw,0		},
+{L_Iwx		,O_C_B		,S_C_AIPw,0		},{L_Iwx	,O_C_NB		,S_C_AIPw,0		},
+{L_Iwx		,O_C_Z		,S_C_AIPw,0		},{L_Iwx	,O_C_NZ		,S_C_AIPw,0		},
+{L_Iwx		,O_C_BE		,S_C_AIPw,0		},{L_Iwx	,O_C_NBE	,S_C_AIPw,0		},
 /* 0x188 - 0x18f */
-{L_Iwx		,O_C_S		,S_C_ADDIP,0	},{L_Iwx	,O_C_NS		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_P		,S_C_ADDIP,0	},{L_Iwx	,O_C_NP		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_L		,S_C_ADDIP,0	},{L_Iwx	,O_C_NL		,S_C_ADDIP,0	},
-{L_Iwx		,O_C_LE		,S_C_ADDIP,0	},{L_Iwx	,O_C_NLE	,S_C_ADDIP,0	},
+{L_Iwx		,O_C_S		,S_C_AIPw,0		},{L_Iwx	,O_C_NS		,S_C_AIPw,0		},
+{L_Iwx		,O_C_P		,S_C_AIPw,0		},{L_Iwx	,O_C_NP		,S_C_AIPw,0		},
+{L_Iwx		,O_C_L		,S_C_AIPw,0		},{L_Iwx	,O_C_NL		,S_C_AIPw,0		},
+{L_Iwx		,O_C_LE		,S_C_AIPw,0		},{L_Iwx	,O_C_NLE	,S_C_AIPw,0		},
 
 /* 0x190 - 0x197 */
 {L_MODRM	,O_C_O		,S_C_Eb,0		},{L_MODRM	,O_C_NO		,S_C_Eb,0		},
@@ -294,23 +294,23 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x1a0 - 0x1a7 */
 {L_SEG		,0		,S_PUSHw	,fs		},{L_POPw	,0			,S_SEGI	,fs		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{L_MODRM	,O_BTw		,0		,0		},
 {L_MODRM	,O_DSHLw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHLw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1a8 - 0x1af */
 {L_SEG		,0		,S_PUSHw	,gs		},{L_POPw	,0			,S_SEGI	,gs		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{L_MODRM	,O_BTSw		,0		,0		},
 {L_MODRM	,O_DSHRw	,S_Ew,M_EwGwIb	},{L_MODRM	,O_DSHRw	,S_Ew	,M_EwGwCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRw	,S_Gw	,M_EwxGwx	},
 
 /* 0x1b0 - 0x1b7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_SEGSS	,S_SEGGw,M_Efw	},{L_MODRM	,O_BTRw		,0		,0		},
 {L_MODRM	,O_SEGFS	,S_SEGGw,M_Efw	},{L_MODRM	,O_SEGGS	,S_SEGGw,M_Efw	},
 {L_MODRM	,0			,S_Gw	,M_Eb	},{L_MODRM	,0			,S_Gw	,M_Ew	},
 /* 0x1b8 - 0x1bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,0xe		,0		,M_GRP	},{L_MODRM	,O_BTCw		,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_MODRM	,0			,S_Gw	,M_Ebx	},{L_MODRM	,0			,S_Gw	,M_Ewx	},
 
@@ -429,8 +429,7 @@ static OpCode OpCodeTable[1024]={
 {D_PUSHAd	,0			,0		,0		},{D_POPAd	,0			,0		,0		},
 {L_MODRM	,O_BOUNDd	,0		,0		},{0		,0			,0		,0		},
 {L_PRESEG	,0			,0		,fs		},{L_PRESEG	,0			,0		,gs		},
-//TODO check ox66 0x66 prefix
-{0			,0			,0		,0		},{L_PREADD	,0			,0		,0		},
+{L_PREOP	,0			,0		,0		},{L_PREADD	,0			,0		,0		},
 /* 0x268 - 0x26f */
 {L_Id		,0			,S_PUSHd,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdId},
 {L_Ibx		,0			,S_PUSHd,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdIbx},
@@ -438,15 +437,15 @@ static OpCode OpCodeTable[1024]={
 {L_STRING	,R_OUTSB	,0		,0		},{L_STRING	,R_OUTSD	,0		,0		},
 
 /* 0x270 - 0x277 */
-{L_Ibx		,O_C_O		,S_C_ADDIP,0	},{L_Ibx	,O_C_NO		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_B		,S_C_ADDIP,0	},{L_Ibx	,O_C_NB		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_Z		,S_C_ADDIP,0	},{L_Ibx	,O_C_NZ		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_BE		,S_C_ADDIP,0	},{L_Ibx	,O_C_NBE	,S_C_ADDIP,0	},
+{L_Ibx		,O_C_O		,S_C_AIPd,0		},{L_Ibx	,O_C_NO		,S_C_AIPd,0		},
+{L_Ibx		,O_C_B		,S_C_AIPd,0		},{L_Ibx	,O_C_NB		,S_C_AIPd,0		},
+{L_Ibx		,O_C_Z		,S_C_AIPd,0		},{L_Ibx	,O_C_NZ		,S_C_AIPd,0		},
+{L_Ibx		,O_C_BE		,S_C_AIPd,0		},{L_Ibx	,O_C_NBE	,S_C_AIPd,0		},
 /* 0x278 - 0x27f */
-{L_Ibx		,O_C_S		,S_C_ADDIP,0	},{L_Ibx	,O_C_NS		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_P		,S_C_ADDIP,0	},{L_Ibx	,O_C_NP		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_L		,S_C_ADDIP,0	},{L_Ibx	,O_C_NL		,S_C_ADDIP,0	},
-{L_Ibx		,O_C_LE		,S_C_ADDIP,0	},{L_Ibx	,O_C_NLE	,S_C_ADDIP,0	},
+{L_Ibx		,O_C_S		,S_C_AIPd,0		},{L_Ibx	,O_C_NS		,S_C_AIPd,0		},
+{L_Ibx		,O_C_P		,S_C_AIPd,0		},{L_Ibx	,O_C_NP		,S_C_AIPd,0		},
+{L_Ibx		,O_C_L		,S_C_AIPd,0		},{L_Ibx	,O_C_NL		,S_C_AIPd,0		},
+{L_Ibx		,O_C_LE		,S_C_AIPd,0		},{L_Ibx	,O_C_NLE	,S_C_AIPd,0		},
 
 /* 0x280 - 0x287 */
 {L_MODRM	,0			,0		,M_GRP	},{L_MODRM	,2			,0		,M_GRP	},
@@ -467,7 +466,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGd		,O_XCHG_EAX	,S_REGd	,REGI_SI},{L_REGd	,O_XCHG_EAX	,S_REGd	,REGI_DI},
 /* 0x298 - 0x29f */
 {D_CBW		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
-{L_Ifd		,O_CALL_F	,S_CSIP	,0		},{L_ERROR	,0			,0		,0		},
+{L_Ifd		,O_CALLFd	,0		,0		},{L_ERROR	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHd,0		},{L_POPd	,0			,S_FLGd	,0		},
 {L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
@@ -500,9 +499,9 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0			,S_Eb	,M_Ib	},{L_MODRM	,0			,S_Ed	,M_Id	},
 /* 0x2c8 - 0x2cf */
 {D_ENTERd	,0			,0		,0		},{D_LEAVEd	,0			,0		,0		},
-{L_POPfd	,0			,S_CSIPIw,0		},{L_POPfd	,0			,S_CSIP	,0		},
+{D_RETFdIw	,0			,0		,0		},{D_RETFd	,0			,0		,0		},
 {L_VAL		,O_INT		,0		,3		},{L_Ib		,O_INT		,0		,0		},
-{L_INTO		,O_INT		,0		,0		},{L_IRETd	,0			,S_CSIP	,0		},
+{L_INTO		,O_INT		,0		,0		},{D_IRETd	,0			,0		,0		},
 
 /* 0x2d0 - 0x2d7 */
 {L_MODRM	,5			,0	,M_GRP_1	},{L_MODRM	,7			,0	,M_GRP_1	},
@@ -516,13 +515,13 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0			,0		,0		},{L_MODRM	,0			,0		,0		},
 
 /* 0x2e0 - 0x2e7 */
-{L_Ibx		,O_LOOPNZ	,S_ADDIP,0		},{L_Ibx	,O_LOOPZ	,S_ADDIP,0		},
-{L_Ibx		,O_LOOP		,S_ADDIP,0		},{L_Ibx	,O_JCXZ		,S_ADDIP,0		},
+{L_Ibx		,O_LOOPNZ	,S_AIPd	,0		},{L_Ibx	,O_LOOPZ	,S_AIPd	,0		},
+{L_Ibx		,O_LOOP		,S_AIPd	,0		},{L_Ibx	,O_JCXZ		,S_AIPd	,0		},
 {L_Ib		,O_INb		,0		,0		},{L_Ib		,O_INd		,0		,0		},
 {L_Ib		,O_OUTb		,0		,0		},{L_Ib		,O_OUTd		,0		,0		},
 /* 0x2e8 - 0x2ef */
-{L_Id		,O_CALL_N	,S_ADDIP,0		},{L_Idx	,0			,S_ADDIP,0		},
-{L_Ifd		,0			,S_CSIP	,0		},{L_Ibx	,0			,S_ADDIP,0		},
+{L_Id		,O_CALLNd	,S_AIPd	,0		},{L_Idx	,0			,S_AIPd	,0		},
+{L_Ifd		,O_JMPFd	,0		,0		},{L_Ibx	,0			,S_AIPd	,0		},
 {L_REGw		,O_INb		,0		,REGI_DX},{L_REGw	,O_INd		,0		,REGI_DX},
 {L_REGw		,O_OUTb		,0		,REGI_DX},{L_REGw	,O_OUTd		,0		,REGI_DX},
 
@@ -538,179 +537,179 @@ static OpCode OpCodeTable[1024]={
 {L_MODRM	,0xb		,0		,M_GRP	},{L_MODRM	,0xd		,0		,M_GRP	},
 
 
-/* 0x200 - 0x207 */
+/* 0x300 - 0x307 */
+{L_MODRM	,O_GRP6d	,S_Ew	,M_Ew	},{L_MODRM	,O_GRP7d	,0		,0		},
+{L_MODRM	,O_LAR		,S_Gw	,M_Ew	},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x208 - 0x20f */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-
-/* 0x210 - 0x217 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x218 - 0x21f */
+/* 0x308 - 0x30f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x220 - 0x227 */
+/* 0x310 - 0x317 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x318 - 0x31f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x228 - 0x22f */
+/* 0x320 - 0x327 */
+{L_MODRM	,O_M_Rd_Cd	,S_Ed	,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Cd_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x328 - 0x32f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x230 - 0x237 */
+/* 0x330 - 0x337 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x238 - 0x23f */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-
-/* 0x240 - 0x247 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x248 - 0x24f */
+/* 0x338 - 0x33f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x250 - 0x257 */
+/* 0x340 - 0x347 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x258 - 0x25f */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-
-/* 0x260 - 0x267 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x268 - 0x26f */
+/* 0x348 - 0x34f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
+/* 0x350 - 0x357 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x358 - 0x35f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x270 - 0x277 */
+/* 0x360 - 0x367 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x278 - 0x27f */
+/* 0x368 - 0x36f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x280 - 0x287 */
-{L_Idx		,O_C_O		,S_C_ADDIP,0	},{L_Idx	,O_C_NO		,S_C_ADDIP,0	},
-{L_Idx		,O_C_B		,S_C_ADDIP,0	},{L_Idx	,O_C_NB		,S_C_ADDIP,0	},
-{L_Idx		,O_C_Z		,S_C_ADDIP,0	},{L_Idx	,O_C_NZ		,S_C_ADDIP,0	},
-{L_Idx		,O_C_BE		,S_C_ADDIP,0	},{L_Idx	,O_C_NBE	,S_C_ADDIP,0	},
-/* 0x288 - 0x28f */
-{L_Idx		,O_C_S		,S_C_ADDIP,0	},{L_Idx	,O_C_NS		,S_C_ADDIP,0	},
-{L_Idx		,O_C_P		,S_C_ADDIP,0	},{L_Idx	,O_C_NP		,S_C_ADDIP,0	},
-{L_Idx		,O_C_L		,S_C_ADDIP,0	},{L_Idx	,O_C_NL		,S_C_ADDIP,0	},
-{L_Idx		,O_C_LE		,S_C_ADDIP,0	},{L_Idx	,O_C_NLE	,S_C_ADDIP,0	},
 
-/* 0x290 - 0x297 */
+/* 0x370 - 0x377 */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x378 - 0x37f */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x380 - 0x387 */
+{L_Idx		,O_C_O		,S_C_AIPd,0		},{L_Idx	,O_C_NO		,S_C_AIPd,0		},
+{L_Idx		,O_C_B		,S_C_AIPd,0		},{L_Idx	,O_C_NB		,S_C_AIPd,0		},
+{L_Idx		,O_C_Z		,S_C_AIPd,0		},{L_Idx	,O_C_NZ		,S_C_AIPd,0		},
+{L_Idx		,O_C_BE		,S_C_AIPd,0		},{L_Idx	,O_C_NBE	,S_C_AIPd,0		},
+/* 0x388 - 0x38f */
+{L_Idx		,O_C_S		,S_C_AIPd,0		},{L_Idx	,O_C_NS		,S_C_AIPd,0		},
+{L_Idx		,O_C_P		,S_C_AIPd,0		},{L_Idx	,O_C_NP		,S_C_AIPd,0		},
+{L_Idx		,O_C_L		,S_C_AIPd,0		},{L_Idx	,O_C_NL		,S_C_AIPd,0		},
+{L_Idx		,O_C_LE		,S_C_AIPd,0		},{L_Idx	,O_C_NLE	,S_C_AIPd,0		},
+
+/* 0x390 - 0x397 */
 {L_MODRM	,O_C_O		,S_C_Eb,0		},{L_MODRM	,O_C_NO		,S_C_Eb,0		},
 {L_MODRM	,O_C_B		,S_C_Eb,0		},{L_MODRM	,O_C_NB		,S_C_Eb,0		},
 {L_MODRM	,O_C_Z		,S_C_Eb,0		},{L_MODRM	,O_C_NZ		,S_C_Eb,0		},
 {L_MODRM	,O_C_BE		,S_C_Eb,0		},{L_MODRM	,O_C_NBE	,S_C_Eb,0		},
-/* 0x298 - 0x29f */
+/* 0x398 - 0x39f */
 {L_MODRM	,O_C_S		,S_C_Eb,0		},{L_MODRM	,O_C_NS		,S_C_Eb,0		},
 {L_MODRM	,O_C_P		,S_C_Eb,0		},{L_MODRM	,O_C_NP		,S_C_Eb,0		},
 {L_MODRM	,O_C_L		,S_C_Eb,0		},{L_MODRM	,O_C_NL		,S_C_Eb,0		},
 {L_MODRM	,O_C_LE		,S_C_Eb,0		},{L_MODRM	,O_C_NLE	,S_C_Eb,0		},
 
-/* 0x2a0 - 0x2a7 */
+/* 0x3a0 - 0x3a7 */
 {L_SEG		,0		,S_PUSHd	,fs		},{L_POPd	,0			,S_SEGI	,fs		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{L_MODRM	,O_BTd		,0		,0		},
 {L_MODRM	,O_DSHLd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHLd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x2a8 - 0x2af */
+/* 0x3a8 - 0x3af */
 {L_SEG		,0		,S_PUSHd	,gs		},{L_POPd	,0			,S_SEGI	,gs		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{L_MODRM	,O_BTSd		,0		,0		},
 {L_MODRM	,O_DSHRd	,S_Ed,M_EdGdIb	},{L_MODRM	,O_DSHRd	,S_Ed	,M_EdGdCL	},
 {0			,0			,0		,0		},{L_MODRM	,O_IMULRd	,S_Gd	,M_EdxGdx	},
 
-/* 0x2b0 - 0x2b7 */
+/* 0x3b0 - 0x3b7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{L_MODRM	,O_BTRd		,0		,0		},
 {L_MODRM	,O_SEGFS	,S_SEGGd,M_Efd	},{L_MODRM	,O_SEGGS	,S_SEGGd,M_Efd	},
 {L_MODRM	,0			,S_Gd	,M_Eb	},{L_MODRM	,0			,S_Gd	,M_Ew	},
-/* 0x2b8 - 0x2bf */
+/* 0x3b8 - 0x3bf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,0xf		,0		,M_GRP	},{L_MODRM	,O_BTCd		,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {L_MODRM	,0			,S_Gd	,M_Ebx	},{L_MODRM	,0			,S_Gd	,M_Ewx	},
 
-/* 0x2c0 - 0x2cc */
+/* 0x3c0 - 0x3cc */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x2c8 - 0x2cf */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-
-/* 0x2d0 - 0x2d7 */
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x2d8 - 0x2df */
+/* 0x3c8 - 0x3cf */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x2e0 - 0x2ee */
+/* 0x3d0 - 0x3d7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x2e8 - 0x2ef */
+/* 0x3d8 - 0x3df */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 
-/* 0x2f0 - 0x2fc */
+/* 0x3e0 - 0x3ee */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
-/* 0x2f8 - 0x2ff */
+/* 0x3e8 - 0x3ef */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+
+/* 0x3f0 - 0x3fc */
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+{0			,0			,0		,0		},{0		,0			,0		,0		},
+/* 0x3f8 - 0x3ff */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
@@ -785,16 +784,26 @@ static OpCode Groups[16][8]={
 {0		,0			,0		,0			},{0	,O_CBACK	,0		,M_Iw		},
 },{	/* 0x0c Group 5 Ew */
 {0		,t_INCw		,S_Ew	,M_Ew		},{0	,t_DECw		,S_Ew	,M_Ew		},
-{0		,O_CALL_N	,S_IP	,M_Ew		},{0	,O_CALL_F	,S_CSIP	,M_Efw		},
-{0		,0			,S_IP	,M_Ew		},{0	,0			,S_CSIP	,M_Efw		},
+{0		,O_CALLNw	,S_IP	,M_Ew		},{0	,O_CALLFw	,0		,M_Efw		},
+{0		,0			,S_IP	,M_Ew		},{0	,O_JMPFw	,0		,M_Efw		},
 {0		,0			,S_PUSHw,M_Ew		},{0	,0			,0		,0			},
 },{	/* 0x0d Group 5 Ed */
 {0		,t_INCd		,S_Ed	,M_Ed		},{0	,t_DECd		,S_Ed	,M_Ed		},
-{0		,O_CALL_N	,S_IP	,M_Ed		},{0	,O_CALL_F	,S_CSIP	,M_Efd		},
-{0		,0			,S_IP	,M_Ed		},{0	,0			,S_CSIP	,M_Efd		},
+{0		,O_CALLNd	,S_IP	,M_Ed		},{0	,O_CALLFd	,0		,M_Efd		},
+{0		,0			,S_IP	,M_Ed		},{0	,O_JMPFd	,0		,M_Efd		},
 {0		,0			,S_PUSHd,M_Ed		},{0	,0			,0		,0			},
 
 
+},{	/* 0x0e Group 8 Ew */
+{0		,0			,0		,0			},{0	,0			,0		,0			},
+{0		,0			,0		,0			},{0	,0			,0		,0			},
+{0		,O_BTw		,0		,M_Ib		},{0	,O_BTSw		,0		,M_Ib		},
+{0		,O_BTRw		,0		,M_Ib		},{0	,O_BTCw		,0		,M_Ib		},
+},{	/* 0x0f Group 8 Ed */
+{0		,0			,0		,0			},{0	,0			,0		,0			},
+{0		,0			,0		,0			},{0	,0			,0		,0			},
+{0		,O_BTd		,0		,M_Ib		},{0	,O_BTSd		,0		,M_Ib		},
+{0		,O_BTRd		,0		,M_Ib		},{0	,O_BTCd		,0		,M_Ib		},
 
 
 
