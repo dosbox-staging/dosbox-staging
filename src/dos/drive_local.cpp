@@ -30,7 +30,7 @@
 
 class localFile : public DOS_File {
 public:
-	localFile(FILE * handle,Bit16u devinfo);
+	localFile(const char* name, FILE * handle,Bit16u devinfo);
 	bool Read(Bit8u * data,Bit16u * size);
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
@@ -53,7 +53,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	if (!hand) return false;
 	dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
-	*file=new localFile(hand,0x202);
+	*file=new localFile(name,hand,0x202);
 	return true;
 };
 
@@ -78,7 +78,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	FILE * hand=fopen(newname,type);
 	Bit32u err=errno;
 	if (!hand) return false;
-	*file=new localFile(hand,0x202);
+	*file=new localFile(name,hand,0x202);
 //	(*file)->SetFileName(newname);
 	return true;
 };
@@ -346,6 +346,7 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 
 bool localFile::Close() {
 	
+	open=false;
 	fclose(fhandle);
 	return true;
 }
@@ -355,7 +356,7 @@ Bit16u localFile::GetInformation(void) {
 }
 	
 
-localFile::localFile(FILE * handle,Bit16u devinfo) {
+localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 	fhandle=handle;
 	info=devinfo;
 	struct stat temp_stat;
@@ -370,6 +371,10 @@ localFile::localFile(FILE * handle,Bit16u devinfo) {
 	size=(Bit32u)temp_stat.st_size;
 	attr=DOS_ATTR_ARCHIVE;
 	last_action=NONE;
+
+	open=true;
+	name=0;
+	SetName(_name);
 }
 
 

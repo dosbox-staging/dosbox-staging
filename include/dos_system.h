@@ -19,6 +19,7 @@
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
 
+#include <string.h>
 #include "dosbox.h"
 
 #define DOS_NAMELENGTH 12
@@ -48,18 +49,25 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	virtual ~DOS_File(){};
-	virtual bool Read(Bit8u * data,Bit16u * size)=0;
-	virtual bool Write(Bit8u * data,Bit16u * size)=0;
-	virtual bool Seek(Bit32u * pos,Bit32u type)=0;
-	virtual bool Close()=0;
-	virtual Bit16u GetInformation(void)=0;
+	DOS_File()		{ name=0; };
+	virtual	~DOS_File(){};
+	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
+	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
+	virtual bool	Seek(Bit32u * pos,Bit32u type)=0;
+	virtual bool	Close()=0;
+	virtual Bit16u	GetInformation(void)=0;
+	virtual void	SetName(const char* _name)	{ if (name) delete[] name; name = new char[strlen(_name)+1]; strcpy(name,_name); }
+	virtual char*	GetName(void)				{ return name; };
+	virtual bool	IsOpen()					{ return open; };
+	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcmp(name,_name)==0; };
 	Bit8u type;
 	Bit32u flags;
 	Bit16u time;
 	Bit16u date;
 	Bit16u attr;
 	Bit32u size;
+	bool open;
+	char* name;
 /* Some Device Specific Stuff */
 };
 
