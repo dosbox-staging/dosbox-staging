@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.29 2003-10-29 19:43:22 finsterr Exp $ */
+/* $Id: drive_cache.cpp,v 1.30 2003-12-26 20:39:27 finsterr Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -34,6 +34,7 @@
 #include <iterator>
 #include <algorithm>
 
+int fileInfoCounter = 0;
 
 bool SortByName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) 
 {
@@ -127,7 +128,7 @@ void DOS_Drive_Cache::SetLabel(const char* vname)
 
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
 {
-	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
+	for (Bit16u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
 	LOG(LOG_FILES,LOG_NORMAL)("DIRCACHE: Too many open directories!");
 	return 0;
 };
@@ -211,7 +212,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists)
 void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir)
 {
 	CacheOut(path,ignoreLastDir);
-	if (dirSearch[srchNr]->nextEntry>0) dirSearch[srchNr]->nextEntry--;
+	if (dirSearch[srchNr] && (dirSearch[srchNr]->nextEntry>0)) dirSearch[srchNr]->nextEntry--;
 
 	if (!ignoreLastDir) {
 		// Check if there are any open search dir that are affected by this...
@@ -246,7 +247,10 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 
 //	LOG_DEBUG("DIR: Caching out %s : dir %s",expand,dir->orgname);
 	// delete file objects...
-	for(Bit32u i=0; i<dir->fileList.size(); i++) delete dir->fileList[i];
+	for(Bit32u i=0; i<dir->fileList.size(); i++) {
+		if (dirSearch[srchNr]==dir->fileList[i]) dirSearch[srchNr] = 0;
+		delete dir->fileList[i]; dir->fileList[i] = 0;
+	}
 	// clear lists
 	dir->fileList.clear();
 	dir->longNameList.clear();
