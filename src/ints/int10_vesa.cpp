@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: int10_vesa.cpp,v 1.6 2004-01-07 20:26:38 qbix79 Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -325,7 +327,7 @@ void INT10_SetupVESA(void) {
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
 	Bitu len=strlen(string_oem)+1;
 	for (i=0;i<len;i++) {
-		phys_writeb(0xc0000+i+int10.rom.used++,string_oem[i]);
+		phys_writeb(0xc0000+int10.rom.used++,string_oem[i]);
 	}
 	/* Copy the pmode interface block */
 	int10.rom.pmode_interface=RealMake(0xc000,int10.rom.used);
