@@ -190,7 +190,9 @@ static void VGA_DrawPart(Bitu lines) {
 	vga.draw.parts_left--;
 	if (vga.draw.parts_left) {
 		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
-	} else RENDER_EndUpdate();
+	} else {
+		RENDER_EndUpdate();
+	}
 }
 
 void VGA_SetBlinking(Bitu enabled) {
@@ -199,11 +201,11 @@ void VGA_SetBlinking(Bitu enabled) {
 	if (enabled) {
 		b=0;vga.draw.blinking=1; //used to -1 but blinking is unsigned
 		vga.attr.mode_control|=0x08;
-		vga.tandy.mode_control&=~0x20;
+		vga.tandy.mode_control|=0x20;
 	} else {
 		b=8;vga.draw.blinking=0;
 		vga.attr.mode_control&=~0x08;
-		vga.tandy.mode_control|=0x20;
+		vga.tandy.mode_control&=~0x20;
 	}
 	for (Bitu i=0;i<8;i++) TXT_BG_Table[i+8]=(b+i) | ((b+i) << 8)| ((b+i) <<16) | ((b+i) << 24);
 }
@@ -220,11 +222,12 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.panning=vga.config.pel_panning;
 	switch (vga.mode) {
 	case M_TEXT:
+		vga.draw.address=(vga.draw.address*2);
+	case M_TANDY_TEXT:
 		vga.draw.cursor.count++;
 		/* check for blinking and blinking change delay */
-		FontMask[1]=(vga.attr.mode_control & (vga.draw.cursor.count >> 1) & 0x8) ?
+		FontMask[1]=(vga.draw.blinking & (vga.draw.cursor.count >> 4)) ?
 			0 : 0xffffffff;
-		vga.draw.address=(vga.draw.address*2);
 		break;
 	case M_CGA4:case M_CGA2:case M_CGA16:
 	case M_TANDY2:case M_TANDY4:case M_TANDY16:
@@ -471,6 +474,7 @@ void VGA_SetupDrawing(Bitu val) {
 	if (( width != vga.draw.width) || (height != vga.draw.height)) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
+		PIC_RemoveEvents(VGA_DrawPart);
 		vga.draw.width=width;
 		vga.draw.height=height;
 		vga.draw.scaleh=scaleh;
