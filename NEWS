@@ -1,3 +1,41 @@
+0.61
+  - Added a beta dynamic cpu for x86 hosts (very unstable)
+  - Added opengl and hardware overlay display output
+  - Rewrote the vga screen updates to go in lines
+  - Added paging and v86 support to cpu emulation
+  - Added a config option to simulate a certain type of machine
+  - Added hercules graphics emulation
+  - Made CGA/TANDY modes more compatible
+  - Updated textmode drawing routines to support blinking colors
+  - Fixed VESA set page function that was documented wrong
+  - Fixed some wrongly emulated cpu opcodes.
+  - improved exception handling
+  - debugger: fixes; logging of gdt,lgt,idt, new commands(Fizzban)
+  - fixed some mscdex issues (drive letter header error, added get directory entry)
+  - added/fixed some bios funcs
+  - added some rarely used xms functions (thanks c2woody!)
+  - implemented GUS emulation
+  - Added 16-bit DMA support (for GUS and eventually SB16)
+  - Fixed many small bugs in filehandling routines
+  - Many small FPU fixes (c2woody/Fizzban)
+  - Some keyboard improvements (pharlab games)
+  - Some Timer and cmos/rtc fixes (Mirek/Srecko/Others)
+  - Lot's of mouse fixes (Help from various people)
+  - Enabled internal modem
+  - Made the DOS parsing routines a bit more flexible
+  - Added Subst (Srecko)
+  - Added cdrom ioctl support for linux (prompt)
+  - Many internal DOS fixes: memory/files/datastructures.
+  - Got some help from c2woody in allowing more than 1 irq being served
+  - Disabled DPMI (not needed anymore. DOSBox handles almost every extender)
+  - Search configfile in $HOME directory if none present in current directory
+  - Added another way to switch to protected mode. (Thanks Morten Eriksen!)
+  - Fixed some odd badly documented behaviour with PSP/DTA
+  - Added some warnings on opening of readonly files in writemode(DOS default).
+  - Many shell enhanchements
+  - Fixed a win32 specific bug dealing with filenames starting with a "."
+  - Fixed some bugs with the directory structure: not found/can't save errors
+
 0.60
   - rewrote memory system for future paging support
   - fixed several EMS and XMS bugs and rewrite for new memory system
