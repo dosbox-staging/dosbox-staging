@@ -40,7 +40,7 @@ void IO_WriteW(Bitu port,Bit16u val) {
 	else LOG(LOG_IO,LOG_WARN)("WriteW:Out or range write %X to port %4X",val,port);
 }
 void IO_WriteD(Bitu port,Bit32u val) {
-	if (port<(IO_MAX & ~3)) return io.write_d[port](port,val);
+	if (port<(IO_MAX & ~3)) io.write_d[port](port,val);
 	else LOG(LOG_IO,LOG_WARN)("WriteD:Out or range write %X to port %4X",val,port);
 }
 
