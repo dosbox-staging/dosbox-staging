@@ -32,7 +32,7 @@ DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
-static Bitu call_20,call_21,call_27,call_28;
+static Bitu call_20,call_21,call_27,call_28,call_29;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -239,11 +239,11 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x27:		/* Random block read from FCB */
 		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,reg_cx,false);
-		LOG_DEBUG("DOS:0x27 FCB-Random read used, result:al=%d",reg_al);
+		LOG_DEBUG("DOS:0x27 FCB-Random(block) read used, result:al=%d",reg_al);
 		break;
 	case 0x28:		/* Random Block write to FCB */
 		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx,false);
-		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
+		LOG_DEBUG("DOS:0x28 FCB-Random(block) write used, result:al=%d",reg_al);
 		break;
 	case 0x29:		/* Parse filename into FCB */
         {   Bit8u difference;
@@ -852,6 +852,11 @@ static Bitu DOS_28Handler(void) {
     return CBRET_NONE;
 }
 
+static Bitu DOS_29Handler(void) {
+    LOG_DEBUG("int 29 called");
+    return CBRET_NONE;
+}
+
 void DOS_Init(Section* sec) {
     MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
 	call_20=CALLBACK_Allocate();
@@ -869,6 +874,10 @@ void DOS_Init(Section* sec) {
     call_28=CALLBACK_Allocate();
     CALLBACK_Setup(call_28,DOS_28Handler,CB_IRET);
     RealSetVec(0x28,CALLBACK_RealPointer(call_28));
+
+    call_29=CALLBACK_Allocate();
+    CALLBACK_Setup(call_29,DOS_29Handler,CB_IRET);
+    RealSetVec(0x29,CALLBACK_RealPointer(call_29));
 
 	DOS_SetupFiles();								/* Setup system File tables */
 	DOS_SetupDevices();							/* Setup dos devices */
