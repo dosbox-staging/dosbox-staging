@@ -1,3 +1,26 @@
+0.56:
+  - added support for a configclass/configfile
+  - added support for writing out the configclass into a configfile
+  - removed the language file and made it internal
+  - added support for writing the language file (will override the internal one)
+  - improved mousesupport
+  - updated readme
+  - support for screenshots
+  - some cpu-bug fixes
+  - dma changes
+  - Real Sound support
+  - EMM fixes and new functions.
+  - VGA fixes
+  - new wildcompare
+  - support for size and disktype at mount.
+  - added new debugger functionalities: start/trace into INTs, write processor status log, 
+    step over rep and loop instructions, breakpoint support without using INT 03 (heavy debugging switch)
+  - Added more cpu instructions and changed the string operations.
+  - Added classes for most of the internal dos structures.
+  - Rewrote most of the fcb calls to use normal dos calls.
+
+
+
 0.55: 
 	- changed basedir handling. (linux/winXP)
 	- added some FCB-calls 
