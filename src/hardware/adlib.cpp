@@ -100,6 +100,8 @@ static struct {
 		Bit32u used;
 		Bit32u done;
 		Bit8u cmd[2];
+		bool opl3;
+		bool dualopl2;
 	} raw;
 } opl;
 
@@ -172,17 +174,19 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bit8u dro_header[]={
-	'D','B','R','A',		/* Bit32u ID */
-	'W','O','P','L',		/* Bit32u ID */
-	0x0,0x0,0x0,0x0,		/* Bit32u total milliseconds */
-	0x0,0x0,0x0,0x0,		/* Bit32u total data */
-	0x0,					/* Type 0=opl2,1=opl3,2=dual-opl2 */
+	'D','B','R','A',		/* 0x00, Bit32u ID */
+	'W','O','P','L',		/* 0x04, Bit32u ID */
+	0x0,0x00,				/* 0x08, Bit16u version low */
+	0x1,0x00,				/* 0x09, Bit16u version high */
+	0x0,0x0,0x0,0x0,		/* 0x0c, Bit32u total milliseconds */
+	0x0,0x0,0x0,0x0,		/* 0x10, Bit32u total data */
+	0x0,0x0,0x0,0x0			/* 0x14, Bit32u Type 0=opl2,1=opl3,2=dual-opl2 */
 };
 /* Commands 
 	0x00 Bit8u, millisecond delay+1
-	0x01 Bit16u, millisecond delay+1
 	0x02 none, Use the low index/data pair
 	0x03 none, Use the high index/data pair
+	0x10 Bit16u, millisecond delay+1
 	0xxx Bit8u, send command and data to current index/data pair
 */ 
 
@@ -194,9 +198,13 @@ static void OPL_RawEmptyBuffer(void) {
 
 #define ADDBUF(_VAL_) opl.raw.buffer[opl.raw.used++]=_VAL_;
 static void OPL_RawAdd(Bitu index,Bitu val) {
-	/* Check if we have yet to start */
 	Bit8u cmd=opl.raw.cmd[index];
-	if (cmd<=3) return;
+	/* check for cmd's we use for special meaning 
+	   These only control timers or are unused
+	*/
+	if (cmd == 2 || cmd == 3 || cmd == 0x10) return;
+	if (cmd == 4 && !index) return;
+	/* Check if we have yet to start */
 	if (!opl.raw.handle) {
 		if (cmd<0xb0 || cmd>0xb8) return;
 		if (!(val&0x20))  return;
@@ -211,24 +219,36 @@ static void OPL_RawAdd(Bitu index,Bitu val) {
 		memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
 		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 		/* Check the registers to add */
-		for (i=4;i<256;i++) {
+		for (i=0;i<256;i++) {
 			if (!opl.raw.regs[0][i]) continue;
 			if (i>=0xb0 && i<=0xb8) continue;
 			ADDBUF((Bit8u)i);
 			ADDBUF(opl.raw.regs[0][i]);
 		}
 		bool donesecond=false;
-		for (i=4;i<256;i++) {
-			if (!opl.raw.regs[0][i]) continue;
+		/* Check if we already have an opl3 enable bit logged */
+		if (opl.raw.regs[1][5] & 1)
+			opl.raw.opl3 = true;
+		for (i=0;i<256;i++) {
+			if (!opl.raw.regs[1][i]) continue;
 			if (i>=0xb0 && i<=0xb8) continue;
 			if (!donesecond) {
+				/* Or already have dual opl2 */
+				opl.raw.dualopl2 = true;
 				donesecond=true;
 				ADDBUF(0x3);
 			}
 			ADDBUF((Bit8u)i);
-			ADDBUF(opl.raw.regs[0][i]);
+			ADDBUF(opl.raw.regs[1][i]);
 		}
 		if (donesecond) ADDBUF(0x2);
+	}
+	/* Check if we enable opl3 or access dual opl2 mode */
+	if (cmd == 5 && index && (val & 1)) {
+		opl.raw.opl3 = true;
+	}
+	if (index && val && cmd>=0xb0 && cmd<=0xb8) {
+		opl.raw.dualopl2 = true;
 	}
 	/* Check how much time has passed, Allow an extra 5 milliseconds? */
 	if (PIC_Ticks>(opl.raw.last+5)) {
@@ -268,13 +288,11 @@ static void OPL_SaveRawEvent(void) {
 	if (opl.raw.handle) {
 		OPL_RawEmptyBuffer();
 		/* Fill in the header with useful information */
-		host_writed(&dro_header[0x08],opl.raw.last-opl.raw.start);
-		host_writed(&dro_header[0x0c],opl.raw.done);
-		switch (opl.mode) {
-		case OPL_opl2:host_writeb(&dro_header[0x10],0x0);break;
-		case OPL_opl3:host_writeb(&dro_header[0x10],0x1);break;
-		case OPL_dualopl2:host_writeb(&dro_header[0x10],0x2);break;
-		}
+		host_writed(&dro_header[0x0c],opl.raw.last-opl.raw.start);
+		host_writed(&dro_header[0x10],opl.raw.done);
+		if (opl.raw.opl3 && opl.raw.dualopl2) host_writed(&dro_header[0x14],0x1);
+		else if (opl.raw.dualopl2) host_writed(&dro_header[0x14],0x2);
+		else host_writed(&dro_header[0x14],0x0);
 		fseek(opl.raw.handle,0,0);
 		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
 		fclose(opl.raw.handle);
