@@ -33,26 +33,28 @@ switch (inst.code.op) {
 		lflags.type=inst.code.op;
 		break;
 	case t_ADCb:	case t_ADCw:	case t_ADCd:
-		lflags.oldcf=get_CF()!=0;
+		lflags.oldcf=(get_CF()!=0);
 		lf_var1d=inst.op1.d;
 		lf_var2d=inst.op2.d;
 		inst.op1.d=lf_resd=lf_var1d + lf_var2d + lflags.oldcf;
 		lflags.type=inst.code.op;
 		break;
 	case t_SBBb:	case t_SBBw:	case t_SBBd:
-		lflags.oldcf=get_CF()!=0;
+		lflags.oldcf=(get_CF()!=0);
 		lf_var1d=inst.op1.d;
 		lf_var2d=inst.op2.d;
 		inst.op1.d=lf_resd=lf_var1d - lf_var2d - lflags.oldcf;
 		lflags.type=inst.code.op;
 		break;
 	case t_INCb:	case t_INCw:	case t_INCd:
-		SETFLAGBIT(CF,get_CF());
+		LoadCF;
+		lf_var1d=inst.op1.d;
 		inst.op1.d=lf_resd=inst.op1.d+1;
 		lflags.type=inst.code.op;
 		break;
 	case t_DECb:	case t_DECw:	case t_DECd:
-		SETFLAGBIT(CF,get_CF());
+		LoadCF;
+		lf_var1d=inst.op1.d;
 		inst.op1.d=lf_resd=inst.op1.d-1;
 		lflags.type=inst.code.op;
 		break;
@@ -218,22 +220,22 @@ switch (inst.code.op) {
 		AAD(inst.op1.b);
 		goto nextopcode;
 
-	case O_C_O:		inst.cond=get_OF();								break;
-	case O_C_NO:	inst.cond=!get_OF();							break;
-	case O_C_B:		inst.cond=get_CF();								break;
-	case O_C_NB:	inst.cond=!get_CF();							break;
-	case O_C_Z:		inst.cond=get_ZF();								break;
-	case O_C_NZ:	inst.cond=!get_ZF();							break;
-	case O_C_BE:	inst.cond=get_CF() || get_ZF();					break;
-	case O_C_NBE:	inst.cond=!get_CF() && !get_ZF();				break;
-	case O_C_S:		inst.cond=get_SF();								break;
-	case O_C_NS:	inst.cond=!get_SF();							break;
-	case O_C_P:		inst.cond=get_PF();								break;
-	case O_C_NP:	inst.cond=!get_PF();							break;
-	case O_C_L:		inst.cond=get_SF() != get_OF();					break;
-	case O_C_NL:	inst.cond=get_SF() == get_OF();					break;
-	case O_C_LE:	inst.cond=get_ZF() || (get_SF() != get_OF());	break;
-	case O_C_NLE:	inst.cond=(get_SF() == get_OF()) && !get_ZF();	break;
+	case O_C_O:		inst.cond=TFLG_O;	break;
+	case O_C_NO:	inst.cond=TFLG_NO;	break;
+	case O_C_B:		inst.cond=TFLG_B;	break;
+	case O_C_NB:	inst.cond=TFLG_NB;	break;
+	case O_C_Z:		inst.cond=TFLG_Z;	break;
+	case O_C_NZ:	inst.cond=TFLG_NZ;	break;
+	case O_C_BE:	inst.cond=TFLG_BE;	break;
+	case O_C_NBE:	inst.cond=TFLG_NBE;	break;
+	case O_C_S:		inst.cond=TFLG_S;	break;
+	case O_C_NS:	inst.cond=TFLG_NS;	break;
+	case O_C_P:		inst.cond=TFLG_P;	break;
+	case O_C_NP:	inst.cond=TFLG_NP;	break;
+	case O_C_L:		inst.cond=TFLG_L;	break;
+	case O_C_NL:	inst.cond=TFLG_NL;	break;
+	case O_C_LE:	inst.cond=TFLG_LE;	break;
+	case O_C_NLE:	inst.cond=TFLG_NLE;	break;
 
 	case O_ALOP:
 		reg_al=LoadMb(inst.rm_eaa);
