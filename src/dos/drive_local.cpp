@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.53 2004-11-03 23:13:55 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.54 2004-11-16 14:13:46 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,10 +208,6 @@ again:
 	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) { 
 		goto again;//No symlinks and such
 	}	
-
-	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
-	else find_attr=DOS_ATTR_ARCHIVE;
- 	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 
 	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
 	else find_attr=DOS_ATTR_ARCHIVE;
