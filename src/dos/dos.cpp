@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.75 2004-09-21 20:04:55 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.76 2004-11-03 20:13:40 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,7 +36,6 @@ DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
 static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
-static Bitu call_casemap;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -401,18 +400,8 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x38:					/* Set Country Code */	
 		if (reg_al==0) {		/* Get country specidic information */
-			PhysPt pt = SegPhys(ds)+reg_dx;
-			mem_writew(pt   ,0x00); // USA
-			mem_writeb(pt+ 2, '$'); mem_writeb(pt+ 3,0x00);
-			mem_writeb(pt+ 7, '.'); mem_writeb(pt+ 8,0x00);
-			mem_writeb(pt+ 9, '.'); mem_writeb(pt+10,0x00);
-			mem_writeb(pt+11, '.'); mem_writeb(pt+12,0x00);
-			mem_writeb(pt+13, '.'); mem_writeb(pt+14,0x00);
-			mem_writeb(pt+15,0x01); // currency format
-			mem_writeb(pt+16,0x02);	// num digits
-			mem_writeb(pt+17,0x00); // time format
-			mem_writed(pt+18,CALLBACK_RealPointer(call_casemap));
-			mem_writew(pt+22,0x00); // data list seperator
+			PhysPt dest = SegPhys(ds)+reg_dx;
+			MEM_BlockWrite(dest,dos.tables.country,0x22);
 			reg_bx = 0x01;
 			CALLBACK_SCF(false);
 			break;
@@ -634,8 +623,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x00:
 		reg_ax=0x4c00;				/* Terminate Program */
 	case 0x4c:					/* EXIT Terminate with return code */
-		
-        {
+	        {
 			if (DOS_Terminate(false)) {
 				/* This can't ever return false normally */
 			} else {            
@@ -814,30 +802,25 @@ static Bitu DOS_21Handler(void) {
 		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
 		break;
 	case 0x65:					/* Get extented country information and a lot of other useless shit*/
-		/* Todo maybe fully support this for now we set it standard for USA */
-		{
-			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:65:Extended country information call");
+		{ /* Todo maybe fully support this for now we set it standard for USA */ 
+			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:65:Extended country information call %X",reg_ax);
+			if(reg_cx < 0x05 ) {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				CALLBACK_SCF(true);
+				break;
+			}
 			PhysPt data=SegPhys(es)+reg_di;
 			switch (reg_al) {
 			case 1:
-				mem_writeb(data,reg_al);
-				mem_writew(data+0x01,0x1c);
-				mem_writew(data+0x03,1);
-				mem_writew(data+0x05,0x01b5);
-				mem_writew(data+0x07,0x0000);           // date format
-				mem_writeb(data+0x08,0x24);             // currency symbol
-				mem_writew(data+0x0a,0x0000);
-				mem_writew(data+0x0c,0x0000);
-				mem_writew(data+0x0e,0x002c);           // thousands separator
-				mem_writew(data+0x10,0x002e);           // decimal separator
-				mem_writew(data+0x12,0x002d);           // date separator
-				mem_writew(data+0x14,0x003a);           // time separator
-				mem_writeb(data+0x16,0x00);             // currency format
-				mem_writeb(data+0x17,0x02);             // digits after decimal in currency
-				mem_writeb(data+0x18,0x00);             // time format
-				mem_writed(data+0x19,CALLBACK_RealPointer(call_casemap));
-				mem_writew(data+0x1d,0x002c);           // list separator
-				reg_cx=0x1f;
+				mem_writeb(data + 0x00,reg_al);
+				mem_writew(data + 0x01,0x26);
+				mem_writew(data + 0x03,1);
+				if(reg_cx > 0x06 ) mem_writew(data+0x05,0x01b5);
+				if(reg_cx > 0x08 ) {
+					Bitu amount = (reg_cx>=0x29)?0x22:(reg_cx-7);
+					MEM_BlockWrite(data + 0x07,dos.tables.country,amount);
+					reg_cx=(reg_cx>=0x29)?0x29:reg_cx;
+				}
 				CALLBACK_SCF(false);
 				break;
 			case 2:	// Get pointer to uppercase table
@@ -980,10 +963,6 @@ static Bitu DOS_29Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bitu DOS_CaseMapFunc(void) {
-    //LOG(LOG_DOSMISC,LOG_ERROR)("Case map routine called : %c",reg_al);
-    return CBRET_NONE;
-};
 
 void DOS_ShutDown(Section* sec)
 {	
@@ -1044,8 +1023,5 @@ void DOS_Init(Section* sec) {
 	/* shutdown function */
 	sec->AddDestroyFunction(&DOS_ShutDown);	
 
-	/* case map routine INT 0x21 0x38 */
-	call_casemap = CALLBACK_Allocate();
-	CALLBACK_Setup(call_casemap,DOS_CaseMapFunc,CB_RETF,"DOS CaseMap");
 }
 
