@@ -332,7 +332,7 @@ Bitu XMS_Handler(void) {
 void XMS_Init(Section* sec) {
 	
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if (!section->Get_bool("ems")) return;
+	if (!section->Get_bool("xms")) return;
 	Bitu i;
 
 	DOS_AddMultiplexHandler(multiplex_xms);
