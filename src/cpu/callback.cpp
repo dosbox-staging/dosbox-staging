@@ -40,7 +40,7 @@ static Bitu illegal_handler(void) {
 }
 
 Bitu CALLBACK_Allocate(void) {
-	for (Bitu i=0;(i<CB_MAX);i++) {
+	for (Bitu i=1;(i<CB_MAX);i++) {
 		if (CallBack_Handlers[i]==&illegal_handler) {
 			CallBack_Handlers[i]=0;
 			return i;	
