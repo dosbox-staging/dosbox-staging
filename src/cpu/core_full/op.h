@@ -408,6 +408,13 @@ switch (inst.code.op) {
 		case 0x03:	/* LTR */
 			CPU_LTR(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
+		case 0x04:	/* VERR */
+			CPU_VERR(inst.op1.d);
+			goto nextopcode;		/* Else value will saved */
+		case 0x05:	/* VERW */
+			CPU_VERW(inst.op1.d);
+			goto nextopcode;		/* Else value will saved */
+
 
 		default:
 			LOG(LOG_ERROR|LOG_CPU,"Group 6 Illegal subfunction %X",inst.rm_index);
@@ -527,6 +534,9 @@ switch (inst.code.op) {
 				reg_32(inst.rm_eai)=val;
 			}
 		}
+		break;
+	case O_BSWAP:
+		BSWAP(inst.op1.d);
 		break;
 	case 0:
 		break;
