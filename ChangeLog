@@ -11,6 +11,14 @@
   - debugger shows selector- and cpu mode info
   - added SELINFO (selector information) command to debugger
   - added reference counting for dos files
+  - Added tabcompletion !!
+  - Added basic fpu support.
+  - Fixed several bugs with case sensitive filesystems.
+  - Added more shell commands and improved their behaviour.
+  - Mouse improvements.
+  - Real time clock inprovements.
+  - DMA fixes.
+  - Improved .BAT file support.
 
 0.58
   - fixed date and time issues with fcbs
