@@ -555,10 +555,10 @@ skipsave:
 
 static void dyn_mov_ev_seg(void) {
 	dyn_get_modrm();
-	gen_load_host(&Segs.val[(SegNames) decode.modrm.reg],DREG(TMPW),2);
+	gen_load_host(&Segs.val[decode.modrm.reg],DREG(TMPW),2);
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
-		dyn_write_word(DREG(EA),DREG(TMPW),decode.big_op);
+		dyn_write_word(DREG(EA),DREG(TMPW),false);
 		gen_releasereg(DREG(EA));
 	} else {
 		gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],DREG(TMPW));
@@ -572,12 +572,13 @@ static void dyn_mov_seg_ev(void) {
 	if (seg==cs) IllegalOption();
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
-		dyn_read_word(DREG(EA),DREG(EA),decode.big_op);
+		dyn_read_word(DREG(EA),DREG(EA),false);
 		gen_call_function((void *)&CPU_SetSegGeneral,"%Id%Drw",seg,DREG(EA));
 	} else {
 		gen_call_function((void *)&CPU_SetSegGeneral,"%Id%Dw",seg,&DynRegs[decode.modrm.rm]);
 	}
 	gen_releasereg(&DynRegs[G_ES+seg]);
+	if (seg==ss) gen_releasereg(DREG(SMASK));
 }
 
 
@@ -592,6 +593,7 @@ static void dyn_pop_seg(SegNames seg) {
 	dyn_pop(DREG(TMPW));
 	gen_call_function((void*)&CPU_SetSegGeneral,"%Id%Drw",seg,DREG(TMPW));
 	gen_releasereg(&DynRegs[G_ES+seg]);
+	if (seg==ss) gen_releasereg(DREG(SMASK));
 	gen_restoreflags();
 }
 
@@ -813,7 +815,7 @@ static CacheBlock * CreateCacheBlock(PhysPt start,bool big,Bitu max_opcodes) {
 	decode.code=start;
 	Bitu cycles=0;
 	decode.block=cache_openblock();
-	gen_save_host_direct(&core_dyn.lastblock,(Bit32u)decode.block);
+	gen_save_host_direct(&cache.block.running,(Bit32u)decode.block);
 	for (i=0;i<G_MAX;i++) {
 		DynRegs[i].flags&=~(DYNFLG_LOADONCE|DYNFLG_CHANGED);
 		DynRegs[i].genreg=0;
@@ -857,7 +859,6 @@ restart_prefix:
 		case 0x0c:gen_dop_byte_imm(DOP_OR,DREG(EAX),0,decode_fetchb());break;
 		case 0x0d:gen_dop_word_imm(DOP_OR,decode.big_op,DREG(EAX),decode.big_op ? decode_fetchd() :  decode_fetchw());break;
 		case 0x0e:dyn_push_seg(cs);break;
-//TODO opcode 0x0f prefixed
 		case 0x0f:
 		{
 			Bitu dual_code=decode_fetchb();
@@ -981,13 +982,12 @@ restart_prefix:
 		case 0x78:case 0x79:case 0x7a:case 0x7b:case 0x7c:case 0x7d:case 0x7e:case 0x7f:	
 			dyn_branched_exit((BranchTypes)(opcode&0xf),(Bit8s)decode_fetchb());	
 			return decode.block;
-			/* Group 1 */
-
+		/* Group 1 */
 		case 0x80:dyn_grp1_eb_ib();break;
 		case 0x81:dyn_grp1_ev_ivx(false);break;
 		case 0x82:dyn_grp1_eb_ib();break;
 		case 0x83:dyn_grp1_ev_ivx(true);break;
-			/* TEST Gb,Eb Gv,Ev */			//Can use G,E since results don't get saved
+		/* TEST Gb,Eb Gv,Ev */
 		case 0x84:dyn_dop_gbeb(DOP_TEST);break;
 		case 0x85:dyn_dop_gvev(DOP_TEST);break;
 		/* XCHG Eb,Gb Ev,Gv */
@@ -1000,14 +1000,14 @@ restart_prefix:
 		case 0x8b:dyn_mov_gvev();break;
 		/* MOV ev,seg */
 		case 0x8c:dyn_mov_ev_seg();break;
-		/* LEA Gv */
+			/* LEA Gv */
 		case 0x8d:
 			dyn_get_modrm();dyn_fill_ea(false);
 			gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.reg],DREG(EA));
 			gen_releasereg(DREG(EA));
 			break;
 		/* Mov seg,ev */
-//		case 0x8e:dyn_mov_seg_ev();break;
+		case 0x8e:dyn_mov_seg_ev();break;
 		/* POP Ev */
 		case 0x8f:dyn_pop_ev();break;
 		//NOP
@@ -1081,7 +1081,7 @@ restart_prefix:
 		/* Interrupt */
 		case 0xcd:dyn_interrupt(decode_fetchb());return decode.block;
 		/* IRET */
-		case 0xcF:dyn_iret();return decode.block;
+		case 0xcf:dyn_iret();return decode.block;
 		//GRP2 Eb/Ev,1
 		case 0xd0:dyn_grp2_eb(grp2_1);break;
 		case 0xd1:dyn_grp2_ev(grp2_1);break;
