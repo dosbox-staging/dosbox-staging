@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.44 2003-09-29 21:22:01 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.45 2003-09-30 08:59:18 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -83,8 +83,8 @@ static void CaptureMouse(void);
 
 void GFX_SetTitle(Bits cycles,Bits frameskip){
 	char title[200]={0};
-	static internal_cycles=0;
-	static internal_frameskip=0;
+	static Bits internal_cycles=0;
+	static Bits internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	sprintf(title,"DOSBox %s, Cpu Cycles: %8d, Frameskip %2d",VERSION,internal_cycles,internal_frameskip);
