@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.28 2003-09-24 19:36:14 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.29 2003-10-11 12:16:35 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -110,7 +110,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	StripSpaces(args);
 	if (!DOS_Canonicalize(args,full)) { WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));return; }
 //TODO Maybe support confirmation for *.* like dos does.	
-	bool res=DOS_FindFirst(args,0xff);
+	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
 		WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);return;
 	}
@@ -565,3 +565,4 @@ void DOS_Shell::CMD_CALL(char * args){
 	this->ParseLine(args);
 	this->call=false;
 }
+
