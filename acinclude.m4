@@ -185,7 +185,7 @@ AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes f
 AH_BOTTOM([#define INLINE inline])
 
 AH_BOTTOM([#if C_HAS_ATTRIBUTE
-#define GCC_ATTRIBUTE __attribute__
+#define GCC_ATTRIBUTE(x) __attribute__ ((x))
 #else
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #endif])
