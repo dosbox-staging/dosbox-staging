@@ -134,6 +134,8 @@ static void SwitchFullScreen(void) {
 			sdl.width=0;sdl.height=0;
 			(*sdl.resize)(&sdl.width,&sdl.height);
 		}
+		// be sure not to dont draw sdl mouse
+		SDL_ShowCursor(SDL_DISABLE);	
 	}
 	ResetScreen();
 	GFX_Start();
