@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "dos_inc.h"
+
 class device_CON : public DOS_Device {
 public:
 	device_CON();
@@ -27,13 +29,18 @@ public:
 private:
 	Bit8u cache;
 };
+void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
 
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
 	Bit16u count=0;
 	if ((cache) && (*size)) {
 		data[count++]=cache;
-		cache=0;
+        if(dos.echo) {
+            INT10_TeletypeOutput(cache,7,false,0);
+        }
+        cache=0;
+
 	}
 	while (*size>count) {
 		reg_ah=0;
@@ -41,11 +48,22 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		switch(reg_al) {
 		case 13:
 			data[count++]=0x0D;
-			if (*size>count) data[count++]=0x0A;
-			//else cache=0x0A;  // it's only expanded if there is room for it.
-			*size=count;
+			if (*size>count) data[count++]=0x0A;    // it's only expanded if there is room for it. (NO cache)
+  			*size=count;
 			reg_ax=oldax;
 			return true;
+            break;
+        case 8:
+            if(*size==1) data[count++]=reg_al;  //one char at the time so give back that BS
+            else if(count) {                    //Remove data if it exists (extended keys don't go right)
+                data[count--]=0;
+                INT10_TeletypeOutput(8,7,false,0);
+                INT10_TeletypeOutput(' ',7,false,0);
+            } else {
+                continue;                       //no data read yet so restart whileloop.
+            }
+                
+            break;
 		default:
 			data[count++]=reg_al;
 			break;
@@ -54,14 +72,18 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 			if (*size>count) data[count++]=reg_ah;
 			else cache=reg_ah;
 			break;
-		}
+            
+            }
+        if(dos.echo) { //what to do if *size==1 and character is BS ?????
+            INT10_TeletypeOutput(reg_al,7,false,0);
+        }
 	}
 	*size=count;
 	reg_ax=oldax;
 	return true;
 }
 
-extern void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
+
 bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	Bit16u count=0;
 	while (*size>count) {

@@ -47,6 +47,7 @@ void DOS_Shell::InputCommand(char * line) {
 	Bitu str_len=0;Bitu str_index=0;
 
 	while (size) {
+        dos.echo=false;
 		DOS_ReadFile(input_handle,&c,&n);
 		if (!n) {
 			size=0;			//Kill the while loop

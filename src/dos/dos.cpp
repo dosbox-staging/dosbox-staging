@@ -46,9 +46,11 @@ static Bitu DOS_21Handler(void) {
 	case 0x01:		/* Read character from STDIN, with echo */
 		{	
 			Bit8u c;Bit16u n=1;
+             dos.echo=true;
 			DOS_ReadFile(STDIN,&c,&n);
 			reg_al=c;
-			DOS_WriteFile(STDOUT,&c,&n);
+            dos.echo=false;
+
 		}
 		break;
 	case 0x02:		/* Write character to STDOUT */
@@ -452,6 +454,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3f:		/* READ Read from file or device */
 		{ 
 			Bit16u toread=reg_cx;
+            dos.echo=true;
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
@@ -460,6 +463,7 @@ static Bitu DOS_21Handler(void) {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}
+            dos.echo=false;
 			break;
 		}
 	case 0x40:					/* WRITE Write to file or device */
@@ -806,19 +810,20 @@ static Bitu DOS_21Handler(void) {
 		CALLBACK_SCF(true);
 		LOG_WARN("DOS:Windows long file name support call %2X",reg_al);
 		break;
-	case 0x68:					/* FFLUSH Commit file */
-	case 0xE0:
-	case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x1e:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x20:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-	case 0x6b:		            /* NULL Function */
-	case 0x61:		            /* UNUSED */
-	case 0x63:					/* Weirdo double byte stuff (fails but say it succeeded) */
+    case 0x68:                  /* FFLUSH Commit file */
+    case 0x63:					/* Weirdo double byte stuff (fails but say it succeeded) available only in MSDOS 2.25  */
+        CALLBACK_SCF(false);    //mirek
+    case 0xE0:
+    case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+    case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+    case 0x1e:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+    case 0x20:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+    case 0x6b:		            /* NULL Function */
+    case 0x61:		            /* UNUSED */
     case 0xEF:                  /* Used in Ancient Art Of War CGA */
 	case 0x5d:					/* Network Functions */
 	default:
-        LOG_DEBUG("DOS:Unhandled call %02X al=%02X. Set al to default of 0 no carry",reg_ah,reg_al);
+        LOG_DEBUG("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
         reg_al=0x00; /* default value */
 		break;
 	};
