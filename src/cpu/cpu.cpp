@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.51 2004-01-11 12:52:57 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.52 2004-01-13 08:56:10 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -87,7 +87,7 @@ PhysPt SelBase(Bitu sel) {
 }
 
 void CPU_SetFlags(Bitu word,Bitu mask) {
-	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
+	reg_flags=(reg_flags & ~mask)|(word & mask)|2|FLAG_ID;
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
 
@@ -1229,7 +1229,6 @@ void CPU_Init(Section* sec) {
 	SegSet16(gs,0);
 	SegSet16(ss,0);
 
-	reg_flags=0x2;
 	CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
 	cpu.cr0=0xffffffff;
 	CPU_SET_CRX(0,0);						//Initialize
