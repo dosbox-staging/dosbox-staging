@@ -118,6 +118,7 @@ bool MIDI_Available(void)  {
 
 
 void MIDI_Init(Section * sect) {
+	MSG_Add("MIDI_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	midi.available=MIDI_StartUp();
 }
 

@@ -66,7 +66,7 @@ public:
 	void CMD_CLS(char * args);
 	void CMD_COPY(char * args);
 	void CMD_DIR(char * args);
-    void CMD_DELETE(char * args);
+	void CMD_DELETE(char * args);
 	void CMD_ECHO(char * args);
 	void CMD_EXIT(char * args);
 	void CMD_MKDIR(char * args);
@@ -77,9 +77,10 @@ public:
 	void CMD_GOTO(char * args);
 	void CMD_TYPE(char * args);
 	void CMD_REM(char * args);
-    void CMD_RENAME(char * args);
+	void CMD_RENAME(char * args);
 	void SyntaxError(void);
-    void CMD_PAUSE(char * args);
+	void CMD_PAUSE(char * args);
+	void CMD_INTRO(char * args);	
 	/* The shell's variables */
 	Bit16u input_handle;
 	BatchFile * bf;

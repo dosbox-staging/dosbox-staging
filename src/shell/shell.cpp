@@ -212,6 +212,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "DOSBox does not run protected mode games!\n"
 	   "For supported shell commands type: HELP\n"
+	   "For a short introduction type: INTRO\n\n"
 	   "For more information read the README file in DOSBox directory.\n"
 	   "\nHAVE FUN!\nThe DOSBox Team\n\n"
 	);
@@ -233,7 +234,32 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
     MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
-
+    MSG_Add("SHELL_CMD_INTRO_HELP","Gives an introduction into dosbox\n");
+    MSG_Add("SHELL_CMD_INTRO",
+"Welcome to DOSBox, a x86 emulator with sound and graphics\n"
+"DOSBox creates a shell for you which looks like old plain DOS\n"
+"\n"	    
+"Here are some commands to get you started:\n"
+"Before you can use the files located on your own filesystem,\n"
+"You have to mount the directory containing the files.\n"
+"For MS Windows users:\n"
+"mount c c:\\dosprog will create a C drive in dosbox with c:\\dosprog as contents.\n"
+"\n"
+"For linux users:\n"
+"mount c /home/user/dosprog will do the same.\n"
+"\n"
+"Mac OS and others:\n"
+"\n"
+"I have no idea\n"
+"\n"
+"When the mount has succesfully completed you can type c: to go to your freshly\n"
+"mounted C-drive. Typing dir there will show its contents. cd will allow you to\n"
+"enter a directory (recognised by the [] in a directory listing).\n"
+"You can run programs/files which end at .exe .bat and .com .\n"
+"\n"
+"DOSBox will stop/exit without a warning if an error occured!\n"
+	     );
+	    
     /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */

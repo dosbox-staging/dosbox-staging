@@ -14,7 +14,7 @@
 
 
 void GUS_Init(Section* sec) {
-
+    MSG_Add("GUS_CONFIGFILE_HELP","Nothing to setup yet!\n");
 
 
 
