@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.23 2003-09-17 20:29:56 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.24 2003-09-24 19:35:01 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -521,7 +521,7 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if(max - min + 1 > 640) max = min + 640 - 1;
+			//if(max - min + 1 > 640) max = min + 640 - 1;
 			mouse.min_x=min;
 			mouse.max_x=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
