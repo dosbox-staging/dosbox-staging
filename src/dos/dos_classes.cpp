@@ -194,13 +194,13 @@ void DOS_PSP::NewPt(Bit16u segment)
 
 void DOS_PSP::MakeNew(Bit16u mem_size) 
 {
-		/* get previous */
+	/* get previous */
 	DOS_PSP prevpsp(dos.psp);
 	/* Clear it first */	
 	for (Bitu i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
 	// Set size
 //	SaveIt(((sPSP*)Phys2Host(pt))->next_seg,0,mem_size);
-	sSave(sPSP,next_seg,mem_size);
+	sSave(sPSP,next_seg,seg+mem_size);
 	/* far call opcode */
 	sSave(sPSP,far_call,0xea);
 //	sSave(sPSP,cmp_entry
