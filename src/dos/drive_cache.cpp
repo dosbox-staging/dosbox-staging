@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.38 2004-09-15 14:00:13 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.39 2004-10-05 19:50:03 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -125,6 +125,9 @@ void DOS_Drive_Cache::SetLabel(const char* vname)
 		}
 	};
 	label[labelPos]=0;
+	//Remove trailing dot.
+	if((labelPos > 0) && (label[labelPos-1] == '.'))
+		label[labelPos-1]=0;
 //	LOG(LOG_ALL,LOG_ERROR)("CACHE: Set volume label to %s",label);
 };
 
@@ -145,10 +148,17 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	};
 	// Get Volume Label
 #if defined (WIN32)
-	char label[256];
+	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
-	if (GetVolumeInformation(drive,label,256,NULL,NULL,NULL,NULL,0)) SetLabel(label);
+	UINT type_drive=GetDriveType(drive);
+	if(type_drive != DRIVE_FIXED) { 
+		//Only add label for non-fixed drives. (so stuff like "mount c c:\piet -t cdrom -label piet" works)
+		if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+			LOG(LOG_MISC,LOG_NORMAL)("Cache: setting label for (non-fixed localdrive) to %s",labellocal);
+			SetLabel(labellocal);
+		}
+	}
 #endif
 };
 
