@@ -154,22 +154,6 @@ char * StripWord(char * cmd) {
 	}
 	return trim(cmd+strlen(begin)+1);
 }
-extern void DEBUG_ShowMsg(Bit32u entry,char* format,...);
-extern void GFX_ShowMsg(char * msg);
-
-void S_Warn(char * format,...) {
-	char buf[1024];
-	va_list msg;
-	
-	va_start(msg,format);
-	vsprintf(buf,format,msg);
-	va_end(msg);
-#if C_DEBUG
-	DEBUG_ShowMsg(0,buf);
-#else
-	GFX_ShowMsg(buf);
-#endif
-}
 
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
