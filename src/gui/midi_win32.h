@@ -16,11 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: midi_win32.h,v 1.10 2005-01-20 20:35:29 qbix79 Exp $ */
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 #include <mmsystem.h>
+#include <string>
+#include <sstream>
 
 class MidiHandler_win32: public MidiHandler {
 private:
@@ -34,11 +38,26 @@ public:
 	bool Open(const char * conf) {
 		if (isOpen) return false;
 		m_event = CreateEvent (NULL, true, true, NULL);
-		MMRESULT res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD)m_event, 0, CALLBACK_EVENT);
+		MMRESULT res;
+		if(conf && *conf) {
+			std::string strconf(conf);
+			std::istringstream configmidi(strconf);
+			unsigned int nummer = midiOutGetNumDevs();
+			configmidi >> nummer;
+			if(nummer < midiOutGetNumDevs()){
+				MIDIOUTCAPS mididev;
+				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
+				LOG_MSG("MIDI:win32 selected %s",mididev.szPname);
+				res = midiOutOpen(&m_out, nummer, (DWORD)m_event, 0, CALLBACK_EVENT);
+			}
+		} else {
+			res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD)m_event, 0, CALLBACK_EVENT);
+		}
 		if (res != MMSYSERR_NOERROR) return false;
 		isOpen=true;
 		return true;
 	};
+
 	void Close(void) {
 		if (!isOpen) return;
 		isOpen=false;

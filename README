@@ -409,7 +409,13 @@ MIXER
   /NOSHOW
       Prevents DOSBox from showing the result if you set one
       of the volume levels.
-  
+
+  /LISTMIDI
+      Lists the available midi devices on your pc (Windows). To select a 
+      device other than the Windows default midi-mapper, add a line 
+      'config=id' to the [midi] section in the configuration file, where
+      'id' is the number for the device as listed by LISTMIDI.
+
   
 IMGMOUNT
   A utility to mount disk images and CD-ROM images in DOSBox.

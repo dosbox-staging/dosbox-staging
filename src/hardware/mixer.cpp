@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: mixer.cpp,v 1.28 2005-01-20 20:35:28 qbix79 Exp $ */
+
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
 	That should call the mixer start from there or something.
@@ -25,6 +27,15 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <math.h>
+
+#if defined (WIN32)
+//Midi listing
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <mmsystem.h>
+#endif
 
 #include "SDL.h"
 #include "mem.h"
@@ -399,13 +410,12 @@ public:
 		}
 		if (!w) vol1=vol0;
 	}
-	void ShowVolume(char * name,float vol0,float vol1) {
-		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
-			vol0*100,vol1*100,
-			20*log(vol0)/log(10.0f),20*log(vol1)/log(10.0f)
-		);
-	}
+
 	void Run(void) {
+		if(cmd->FindExist("/LISTMIDI")) {
+			ListMidi();
+			return;
+		}
 		if (cmd->FindString("MASTER",temp_line,false)) {
 			MakeVolume((char *)temp_line.c_str(),mixer.mastervol[0],mixer.mastervol[1]);
 		}
@@ -424,6 +434,26 @@ public:
 		for (chan=mixer.channels;chan;chan=chan->next) 
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
+private:
+	void ShowVolume(char * name,float vol0,float vol1) {
+		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
+			vol0*100,vol1*100,
+			20*log(vol0)/log(10.0f),20*log(vol1)/log(10.0f)
+		);
+	}
+
+	void ListMidi(){
+#if defined (WIN32)
+		unsigned int total = midiOutGetNumDevs();	
+		for(unsigned int i=0;i<total;i++) {
+			MIDIOUTCAPS mididev;
+			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+			WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
+		}
+#endif
+	return;
+	};
+
 };
 
 static void MIXER_ProgramStart(Program * * make) {
