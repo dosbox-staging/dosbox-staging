@@ -25,8 +25,8 @@
 					Bitu saveval;
 					if (!which) CPU_SLDT(saveval);
 					else CPU_STR(saveval);
-					if (rm >= 0xc0) {GetEArd;*eard=saveval;}
-					else {GetEAa;SaveMd(eaa,saveval);}
+					if (rm >= 0xc0) {GetEArw;*earw=(Bit16u)saveval;}
+					else {GetEAa;SaveMw(eaa,saveval);}
 				}
 				break;
 			case 0x02:case 0x03:case 0x04:case 0x05:
@@ -57,13 +57,13 @@
 				switch (which) {
 				case 0x00:										/* SGDT */
 					CPU_SGDT(limit,base);
-					SaveMw(eaa,limit);
-					SaveMd(eaa+2,base);
+					SaveMw(eaa,(Bit16u)limit);
+					SaveMd(eaa+2,(Bit32u)base);
 					break;
 				case 0x01:										/* SIDT */
 					CPU_SIDT(limit,base);
-					SaveMw(eaa,limit);
-					SaveMd(eaa+2,base);
+					SaveMw(eaa,(Bit16u)limit);
+					SaveMd(eaa+2,(Bit32u)base);
 					break;
 				case 0x02:										/* LGDT */
 					CPU_LGDT(LoadMw(eaa),LoadMd(eaa+2));
@@ -73,22 +73,22 @@
 					break;
 				case 0x04:										/* SMSW */
 					CPU_SMSW(limit);
-					SaveMw(eaa,limit);
+					SaveMw(eaa,(Bit16u)limit);
 					break;
 				case 0x06:										/* LMSW */
 					limit=LoadMw(eaa);
-					if (!CPU_LMSW(limit)) goto decode_end;
+					if (!CPU_LMSW((Bit16u)limit)) goto decode_end;
 					break;
 				}
 			} else {
-				GetEArw;Bitu limit;
+				GetEArd;Bitu limit;
 				switch (which) {
 				case 0x04:										/* SMSW */
 					CPU_SMSW(limit);
-					*earw=limit;
+					*eard=(Bit32u)limit;
 					break;
 				case 0x06:										/* LMSW */
-					if (!CPU_LMSW(*earw)) goto decode_end;
+					if (!CPU_LMSW(*eard)) goto decode_end;
 					break;
 				default:
 					LOG(LOG_CPU,LOG_ERROR)("Illegal group 7 RM subfunction %d",which);
