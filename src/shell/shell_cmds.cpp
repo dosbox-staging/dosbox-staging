@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.33 2003-10-14 23:34:23 harekiet Exp $ */
+/* $Id: shell_cmds.cpp,v 1.34 2003-10-21 18:18:01 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -251,10 +251,26 @@ void DOS_Shell::CMD_DIR(char * args) {
 	byte_count=file_count=dir_count=0;
 
 	char buffer[CROSS_LEN];
-	if (strlen(args)==0) args="*.*"; //no arguments.
-	if ((strlen(args)==1) && (args[0]==' ')) args="*.*"; //stuff like dir /p
+	args = trim(args);
+	int argLen = strlen(args);
+	if (argLen == 0) {
+		strcpy(args,"*.*"); //no arguments.
+	} else {
+		switch (args[argLen-1])
+		{
+		case '\\':	// handle \, C:\, etc.
+		case ':' :	// handle C:, etc.
+			strcat(args,"*.*");
+			break;
+		case '*':	// handle *, \*, C:\*, etc.
+					// (not ideal - could end up *.*.*, but that'll net the same result)
+			strcat(args,".*");
+			break;
+		default:
+			break;
+		}
+	}
 	args = ExpandDot(args,buffer);
-	StripSpaces(args);
 
 	/* Make a full path in the args */
 	if (!DOS_Canonicalize(args,path)) {
