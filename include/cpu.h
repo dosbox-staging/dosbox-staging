@@ -19,19 +19,22 @@
 #ifndef __CPU_H
 #define __CPU_H
 
-#include <dosbox.h>
-#include <regs.h>
-#include <mem.h>
+#include "dosbox.h" 
+#include "regs.h"
+#include "mem.h"
 
 /* Some common Defines */
 /* A CPU Handler */
-typedef Bitu (CPU_Decoder)(Bits count);
+typedef Bitu (CPU_Decoder)(void);
 extern CPU_Decoder * cpudecoder;
-extern Bitu cpu_cycles;
+
+/* CPU Cycle Timing */
+extern Bits CPU_Cycles;
+extern Bits CPU_CycleLeft;
+extern Bits CPU_CycleMax;
 
 //CPU Stuff
 void SetCPU16bit();
-
 
 //Types of Flag changing instructions
 enum {
@@ -62,9 +65,6 @@ enum {
 	t_UNKNOWN,
 	t_NOTDONE,
 };
-
-enum { rep_NONE,rep_Z,rep_NZ };
-
 
 void Interrupt(Bit8u num);
 
