@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: pic.cpp,v 1.14 2003-11-27 18:57:42 qbix79 Exp $ */
+
 #include <list>
 
 #include "dosbox.h"
@@ -70,6 +72,9 @@ static struct {
 static void write_command(Bit32u port,Bit8u val) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 	Bitu irq_base=port==0x20 ? 0 : 8;
+	Bitu i;
+	Bit16u IRQ_priority_table[16] = 
+	{ 0,1,8,9,10,11,12,13,14,15,2,3,4,5,6,7 };
 	switch (val) {
 	case 0x0A: /* select read interrupt request register */
 		pic->request_issr=false;
@@ -90,7 +95,13 @@ static void write_command(Bit32u port,Bit8u val) {
 			irqs[PIC_IRQActive].inservice=false;
 			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
 			PIC_IRQActive=PIC_NOIRQ;
-		}//TODO Warnings?
+			for (i=0; i<=15; i++){
+				if(irqs[IRQ_priority_table[i]].inservice) {
+					PIC_IRQActive=IRQ_priority_table[i];
+					break;
+				}
+			}
+		} //TODO Warnings?
 		break;
 	case 0x60:case 0x61:case 0x62:case 0x63:case 0x64:case 0x65:case 0x66:case 0x67:
 		/* Spefific EOI 0-7 */
@@ -98,6 +109,12 @@ static void write_command(Bit32u port,Bit8u val) {
 			irqs[PIC_IRQActive].inservice=false;
 			if (irqs[PIC_IRQActive].handler!=0) irqs[PIC_IRQActive].handler();
 			PIC_IRQActive=PIC_NOIRQ;
+			for (i=0; i<=15; i++) {
+				if (irqs[IRQ_priority_table[i]].inservice) {
+					PIC_IRQActive=IRQ_priority_table[i];
+					break;
+				}
+			}
 		}//TODO Warnings?
 		break;
 	case 0xC0:case 0xC1:case 0xC2:case 0xC3:case 0xC4:case 0xC5:case 0xC6:case 0xC7:
@@ -221,19 +238,24 @@ void PIC_DeActivateIRQ(Bitu irq) {
 void PIC_runIRQs(void) {
 	Bitu i;
 	if (!GETFLAG(IF)) return;
-	if (PIC_IRQActive!=PIC_NOIRQ) return;
 	if (!PIC_IRQCheck) return;
+	Bit16u IRQ_priority_lookup[17] = 
+		{ 0,1,10,11,12,13,14,15,2,3,4,5,6,7,8,9,16 };
+	Bit16u activeIRQ = PIC_IRQActive;
+	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
 	for (i=0;i<=15;i++) {
-		if (i!=2) {
-			if (!irqs[i].masked && irqs[i].active) {
-				irqs[i].active=false;
-				PIC_IRQCheck&=~(1 << i);
-				CPU_HW_Interrupt(irqs[i].vector);
-				if (!pics[0].auto_eoi) {
-					PIC_IRQActive=i;
-					irqs[i].inservice=true;
+		if (IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]){ 
+			if (i!=2) {
+				if (!irqs[i].masked && irqs[i].active) {
+					irqs[i].active=false;
+					PIC_IRQCheck&=~(1 << i);
+					CPU_HW_Interrupt(irqs[i].vector);
+					if (!pics[0].auto_eoi) {
+						PIC_IRQActive=i;
+						irqs[i].inservice=true;
+					}
+					return;
 				}
-				return;
 			}
 		}
 	}
