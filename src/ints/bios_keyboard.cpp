@@ -211,13 +211,13 @@ static Bitu IRQ1_Handler(void) {
 	reg_flags|=1;
 	reg_ah=0x4f;reg_al=scancode;
 	CALLBACK_RunRealInt(0x15);
-	reg_ax=old_ax;
+	reg_ax=old_ax;Bit8u flags1,flags2,flags3;
 	if (!(reg_flags&1)) goto irq1_return;
 
 	//TODO maybe implement the int 0x15 ah=4f scancode lookup hook
-	Bit8u flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
-	Bit8u flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
-	Bit8u flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
+	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
+	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
+	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
 	switch (scancode) {
 	/* First the hard ones  */
 	case 0xe0:													/* Extended key */
