@@ -62,7 +62,10 @@ enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
 enum DSP_MODES {
 	MODE_NONE,
 	MODE_DAC,
-	MODE_DMA,MODE_DMA_PAUSE
+	MODE_DMA,
+	MODE_DMA_PAUSE,
+	MODE_DMA_MASKED
+
 };
 
 enum DMA_MODES {
@@ -189,6 +192,7 @@ static void DSP_ChangeMode(DSP_MODES mode);
 static void CheckDMAEnd();
 static void END_DMA_Event(Bitu);
 static void DMA_Silent_Event(Bitu val);
+static void GenerateDMASound(Bitu size);
 
 static void DSP_SetSpeaker(bool how) {
 	if (sb.speaker==how) return;
@@ -224,15 +228,17 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
-			sb.mode=MODE_DMA_PAUSE;
-//			DSP_ChangeMode(MODE_DMA_PAUSE);
-			LOG(LOG_SB,LOG_NORMAL)("DMA masked,stopping output");
+			GenerateDMASound(sb.dma.min);
+			sb.mode=MODE_DMA_MASKED;
+//			DSP_ChangeMode(MODE_DMA_MASKED);
+			LOG(LOG_SB,LOG_NORMAL)("DMA masked,stopping output, left %d",chan->currcnt);
 		}
 	} else if (event==DMA_UNMASKED) {
-		if (sb.mode==MODE_DMA_PAUSE && sb.dma.mode!=DSP_DMA_NONE) {
+		if (sb.mode==MODE_DMA_MASKED && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
+//			sb.mode=MODE_DMA;
 			CheckDMAEnd();
-			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %X",chan->autoinit,chan->basecnt);
+			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %d",chan->autoinit,chan->basecnt);
 		}
 	}
 }
@@ -378,6 +384,7 @@ static void GenerateDMASound(Bitu size) {
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(END_DMA_Event);
 		if (!sb.dma.autoinit) {
+			LOG(LOG_SB,LOG_NORMAL)("Single cycle transfer ended");
 			sb.mode=MODE_NONE;
 			sb.dma.mode=DSP_DMA_NONE;
 		}
@@ -454,7 +461,7 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 
 static void DSP_DoDMATranfser(DMA_MODES mode,Bitu freq,bool stereo) {
 	char * type;
-	sb.mode=MODE_DMA_PAUSE;
+	sb.mode=MODE_DMA_MASKED;
 	sb.chan->FillUp();
 	sb.dma.left=sb.dma.total;
 	sb.dma.mode=mode;
@@ -970,6 +977,7 @@ static void SBLASTER_CallBack(Bitu len) {
 	switch (sb.mode) {
 	case MODE_NONE:
 	case MODE_DMA_PAUSE:
+	case MODE_DMA_MASKED:
 		sb.chan->AddSilence();
 		break;
 	case MODE_DAC:
