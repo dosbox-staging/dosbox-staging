@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.42 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.43 2004-12-07 21:49:13 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -407,10 +407,9 @@ void DrawCursor() {
 void Mouse_CursorMoved(float x,float y) {
 	float dx = x * mouse.pixelPerMickey_x;
 	float dy = y * mouse.pixelPerMickey_y;
-	if((fabs(x) > 1.0) || (mouse.senv_y < 1.0)) dx *= mouse.senv_x;
 
+	if((fabs(x) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
 	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
-
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
@@ -543,8 +542,8 @@ void Mouse_NewVideoMode(void)
 	mouse.min_x = 0;
 	mouse.min_y = 0;
 	// Dont set max coordinates here. it is done by SetResolution!
-	mouse.x = static_cast<float>(mouse.max_x / 2);
-	mouse.y = static_cast<float>(mouse.max_y / 2);
+	mouse.x = static_cast<float>((mouse.max_x + 1)/ 2);
+	mouse.y = static_cast<float>((mouse.max_y + 1)/ 2);
 	mouse.events = 0;
 	mouse.mickey_x = 0;
 	mouse.mickey_y = 0;
@@ -580,6 +579,12 @@ void Mouse_NewVideoMode(void)
 
 static void mouse_reset(void) {
 //Much to empty Mouse_NewVideoMode contains stuff that should be in here
+
+	/* Remove drawn mouse Legends of Valor */
+	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
+	else RestoreCursorBackgroundText();
+	mouse.shown = -1;
+
 	Mouse_NewVideoMode();
 
    	mouse.sub_mask=0;
@@ -589,8 +594,6 @@ static void mouse_reset(void) {
 
 	mouse.senv_y=1.0;
 
-
-	//Added this for cd-v19
 }
 
 static Bitu INT33_Handler(void) {
@@ -613,8 +616,8 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x02:	/* Hide Mouse */
 		{
-			if (CurMode->type!=M_TEXT)		RestoreCursorBackground();
-			else							RestoreCursorBackgroundText();
+			if (CurMode->type!=M_TEXT) RestoreCursorBackground();
+			else RestoreCursorBackgroundText();
 			mouse.shown--;
 		}
 		break;
@@ -624,8 +627,14 @@ static Bitu INT33_Handler(void) {
 		reg_dx=POS_Y;
 		break;
 	case 0x04:	/* Position Mouse */
-		mouse.x = static_cast<float>(((reg_cx > mouse.max_x) ? mouse.max_x : reg_cx));
-		mouse.y = static_cast<float>(((reg_dx > mouse.max_y) ? mouse.max_y : reg_dx));
+		if(reg_cx > mouse.max_x) mouse.x = static_cast<float>(mouse.max_x); 
+		else if (mouse.min_x > reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
+		else mouse.x = static_cast<float>(reg_cx);
+
+		if(reg_dx > mouse.max_y) mouse.y = static_cast<float>(mouse.max_y);
+		else if (mouse.min_y > reg_dx) mouse.y = static_cast<float>(mouse.min_y); 
+		else mouse.y = static_cast<float>(reg_dx);
+
 		DrawCursor();
 		break;
 	case 0x05:	/* Return Button Press Data */
@@ -906,6 +915,7 @@ void MOUSE_Init(Section* sec) {
 	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
 	ps2_callback=CALLBACK_RealPointer(call_ps2);
 	memset(&mouse,0,sizeof(mouse));
+	mouse.shown=-1; //Hide mouse on startup
 	mouse_reset_hardware();
 	mouse_reset();
 }

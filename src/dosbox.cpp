@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.80 2004-09-21 19:32:15 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.81 2004-12-07 21:49:06 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -260,7 +260,6 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
-	secprop->AddInitFunction(&MOUSE_Init);
 	secprop->AddInitFunction(&JOYSTICK_Init);
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
@@ -353,6 +352,7 @@ void DOSBOX_Init(void) {
 	);
 	secprop=control->AddSection_prop("bios",&BIOS_Init);
 	secprop->AddInitFunction(&INT10_Init);
+	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	//TODO Maybe combine most of the dos stuff in one section like ems,xms
