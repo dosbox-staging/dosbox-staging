@@ -121,6 +121,10 @@
 			*rmrw=(Bit16u)limit;
 		}
 		break;
+#if !(C_DEBUG)
+	CASE_0F_B(0x06)												/* CLTS */
+		break;
+#endif
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
 		{
 			GetRM;
