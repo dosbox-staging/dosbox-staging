@@ -35,8 +35,9 @@ public:
 	bool FindHex(char * name,int & value,bool remove=false);
 	bool FindInt(char * name,int & value,bool remove=false);
 	bool FindString(char * name,std::string & value,bool remove=false);
-
-	bool FindFirst(std::string & value);
+	bool FindCommand(int which,std::string & value);
+	bool FindStringBegin(char * begin,std::string & value, bool remove=false);
+	int GetCount(void);
 private:
 	typedef std::list<std::string>::iterator cmd_it;
 	std::list<std::string> cmds;
