@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.61 2004-02-10 16:35:02 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.62 2004-02-19 12:24:51 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -526,6 +526,7 @@ static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
 	if (sdl.mouse.locked) CaptureMouse();
 	if (sdl.desktop.fullscreen) SwitchFullScreen();
+	SDL_Quit();   //Becareful this should be removed if on the fly renderchanges are allowed
 }
 
 static void KillSwitch(void){
@@ -995,8 +996,6 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-        if (sdl.desktop.fullscreen) SwitchFullScreen();
-	    if (sdl.mouse.locked) CaptureMouse();
 		LOG_MSG("Exit to error: %s",error);
 		if(sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
@@ -1010,8 +1009,11 @@ int main(int argc, char* argv[]) {
 
 	}
 	catch (int){ 
-		if (sdl.desktop.fullscreen) SwitchFullScreen();
-	    if (sdl.mouse.locked) CaptureMouse();
+		;//nothing pressed killswitch
 	}
+	catch(...){   
+		throw;//dunno what happened. rethrow for sdl to catch
+	}
+   
 	return 0;
 };
