@@ -52,6 +52,7 @@ static bool DPMI_Multiplex(void) {
 }
 
 void DPMI_Init(Section* sec) {
+	return;
 	DOS_AddMultiplexHandler(DPMI_Multiplex);
 
 
