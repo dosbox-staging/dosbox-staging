@@ -51,12 +51,12 @@ Bits ConvDecWord(char * word);
 Bits ConvHexWord(char * word);
 
 INLINE char * upcase(char * str) {
-    for (char* idx = str; *idx ; idx++) *idx = toupper(*idx);
+    for (char* idx = str; *idx ; idx++) *idx = toupper(*reinterpret_cast<unsigned char*>(idx));
     return str;
 }
 
 INLINE char * lowcase(char * str) {
-	for(char* idx = str; *idx ; idx++)  *idx = tolower(*idx);
+	for(char* idx = str; *idx ; idx++)  *idx = tolower(*reinterpret_cast<unsigned char*>(idx));
 	return str;
 }
 

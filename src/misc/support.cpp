@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.25 2004-08-04 09:12:56 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.26 2004-10-17 14:54:41 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -48,14 +48,14 @@ void strreplace(char * str,char o,char n) {
 	}
 }
 char *ltrim(char *str) { 
-	while (*str && (*str==' ' || *str=='\t')) str++;
+	while (*str && isspace(*reinterpret_cast<unsigned char*>(str))) str++;
 	return str;
 }
 
 char *rtrim(char *str) {
 	char *p;
 	p = strchr(str, '\0');
-	while (--p >= str && isspace(*p));
+	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p)));
 	p[1] = '\0';
 	return str;
 }
@@ -84,7 +84,7 @@ bool ScanCMDBool(char * cmd,char * check) {
 char * ScanCMDRemain(char * cmd) {
 	char * scan,*found;;
 	if ((scan=found=strchr(cmd,'/'))) {
-		while (*scan!=' ' && *scan!='\t' && *scan!=0) scan++;
+		while (*scan && isspace(*reinterpret_cast<unsigned char*>(scan))!=0) scan++;
 		*scan=0;
 		return found;
 	} else return 0; 
@@ -104,7 +104,7 @@ char * StripWord(char *&line) {
 	}
 	char * begin=scan;
 	for (;char c=*scan;scan++) {
-		if (c==' ' || c=='\t') {
+		if (isspace(*reinterpret_cast<unsigned char*>(&c))) {
 			*scan++=0;
 			break;
 		}
@@ -130,7 +130,7 @@ Bits ConvDecWord(char * word) {
 
 Bits ConvHexWord(char * word) {
 	Bitu ret=0;
-	while (char c=toupper(*word)) {
+	while (char c=toupper(*reinterpret_cast<unsigned char*>(word))) {
 		ret*=16;
 		if (c>='0' && c<='9') ret+=c-'0';
 		else if (c>='A' && c<='F') ret+=10+(c-'A');
