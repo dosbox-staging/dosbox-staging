@@ -1205,6 +1205,8 @@ restart:
 					}	
 					CMPW(reg_ax,LoadMw(to+(reg_di-direct*2)),LoadRw,0);
 					break;
+				case 0x90: /* NOP - yes it is really used this way... eternam */ 
+					break; 
 				default:
 					E_Exit("Illegal REP prefix %2X",repcode);
 				}
