@@ -6,6 +6,8 @@
 #include "cpu.h"
 #include "callback.h"
 
+/* $Id: mpu401.cpp,v 1.11 2004-12-07 21:33:26 qbix79 Exp $ */
+
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
 
@@ -325,6 +327,8 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 		case CMD_REQUEST_VERSION:
 			QueueByte(MSG_CMD_ACK);
 			QueueByte(MPU_VERSION);
+			mpu.state.irq_pending=true;
+			PIC_ActivateIRQ(mpu.irq); //timequest
 			return;
 		case CMD_REQUEST_REVISION:
 			QueueByte(MSG_CMD_ACK);
@@ -737,6 +741,8 @@ void MPU401_Init(Section* sec) {
 	mpu.mode=M_UART;
 
 	if (!(mpu.intelligent=section->Get_bool("intelligent"))) return;
-	mpu.irq=2;
+	/*Set IRQ and unmask it(for timequest/princess maker 2) */
+	mpu.irq=9;
+	PIC_SetIRQMask(mpu.irq,false);
 	MPU401_Reset();
 }
