@@ -273,10 +273,12 @@ void VGA_SetupOther(void) {
 	if (machine==MCH_CGA || machine==MCH_TANDY) {
 		extern Bit8u int10_font_08[256 * 8];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_08[i*8],8);
+		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
 	}
 	if (machine==MCH_HERC) {
 		extern Bit8u int10_font_14[256 * 14];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_14[i*14],14);
+		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
 	}
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
