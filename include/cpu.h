@@ -61,9 +61,9 @@ bool CPU_LMSW(Bitu word);
 void CPU_VERR(Bitu selector);
 void CPU_VERW(Bitu selector);
 
-void CPU_JMP(bool use32,Bitu selector,Bitu offset);
-void CPU_CALL(bool use32,Bitu selector,Bitu offset);
-void CPU_RET(bool use32,Bitu bytes);
+void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen=0);
+void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu opLen=0);
+void CPU_RET(bool use32,Bitu bytes,Bitu opLen=0);
 
 #define CPU_INT_SOFTWARE		0x1
 #define CPU_INT_EXCEPTION		0x2

@@ -145,9 +145,11 @@
 	CASE_D(0x5f)												/* POP EDI */
 		reg_edi=Pop_32();break;
 	CASE_D(0x60)												/* PUSHAD */
+	{
+		Bitu tmpesp = reg_esp;
 		Push_32(reg_eax);Push_32(reg_ecx);Push_32(reg_edx);Push_32(reg_ebx);
-		Push_32(reg_esp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
-		break;
+		Push_32(tmpesp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
+	}; break;
 	CASE_D(0x61)												/* POPAD */
 		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
@@ -478,13 +480,13 @@
 		{ 
 			Bitu words=Fetchw();
 			LEAVECORE;
-			CPU_RET(true,words);
+			CPU_RET(true,words,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_D(0xcb)												/* RETF */			
 		{ 
 			LEAVECORE;
-            CPU_RET(true,0);
+            CPU_RET(true,0,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_D(0xcf)												/* IRET */
@@ -528,7 +530,7 @@
 			Bit32u newip=Fetchd();
 			Bit16u newcs=Fetchw();
 			LEAVECORE;
-			CPU_JMP(true,newcs,newip);
+			CPU_JMP(true,newcs,newip,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_D(0xed)												/* IN EAX,DX */
@@ -615,7 +617,7 @@
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
 					LEAVECORE;
-					CPU_JMP(true,newcs,newip);
+					CPU_JMP(true,newcs,newip,core.ip_lookup-core.op_start);
 					goto decode_start;
 				}
 				break;

@@ -548,7 +548,7 @@
 		{ 
 			Bit16u newip=Fetchw();Bit16u newcs=Fetchw();
 			LEAVECORE;
-			CPU_CALL(false,newcs,newip);
+			CPU_CALL(false,newcs,newip,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_B(0x9b)												/* WAIT */
@@ -738,12 +738,12 @@
 		{
 			Bitu words=Fetchw();		
 			LEAVECORE;
-			CPU_RET(false,words);
+			CPU_RET(false,words,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_W(0xcb)												/* RETF */			
 		LEAVECORE;
-		CPU_RET(false,0);
+		CPU_RET(false,0,core.ip_lookup-core.op_start);
 		goto decode_start;
 	CASE_B(0xcc)												/* INT3 */
 		LEAVECORE;
@@ -935,7 +935,7 @@
 			Bit16u newip=Fetchw();
 			Bit16u newcs=Fetchw();
 			LEAVECORE;
-			CPU_JMP(false,newcs,newip);
+			CPU_JMP(false,newcs,newip,core.ip_lookup-core.op_start);
 			goto decode_start;
 		}
 	CASE_B(0xeb)												/* JMP Jb */
@@ -962,7 +962,7 @@
 		LEAVECORE;
 		if (CPU_HLT()) {
 			reg_eip-=core.ip_lookup-core.op_start;
-			CPU_StartException();
+			CPU_Exception(13,0);
 			goto decode_start;
 		}
 		return CBRET_NONE;		//Needs to return for hlt cpu core
@@ -1123,7 +1123,7 @@
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
 					LEAVECORE;
-					CPU_CALL(false,newcs,newip);
+					CPU_CALL(false,newcs,newip,core.ip_lookup-core.op_start);
 					goto decode_start;
 				}
 				break;
@@ -1137,7 +1137,7 @@
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
 					LEAVECORE;
-					CPU_JMP(false,newcs,newip);
+					CPU_JMP(false,newcs,newip,core.ip_lookup-core.op_start);
 					goto decode_start;
 				}
 				break;
