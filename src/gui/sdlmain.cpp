@@ -458,7 +458,10 @@ static void HandleVideoResize(SDL_ResizeEvent * resize) {
 
 }
 
+static Bit8u laltstate = SDL_KEYUP;
+
 void GFX_Events() {
+	
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 	    switch (event.type) {
@@ -471,6 +474,9 @@ void GFX_Events() {
 			break;
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
+			// ignore event lalt+tab
+			if (event.key.keysym.sym==SDLK_LALT) laltstate = event.key.type;
+			if ((event.key.keysym.sym==SDLK_TAB) && (laltstate==SDL_KEYDOWN)) break;
 			HandleKey(&event.key);
 			break;
 		case SDL_MOUSEMOTION:
