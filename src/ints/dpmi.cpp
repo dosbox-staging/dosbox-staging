@@ -1467,6 +1467,7 @@ Bitu DPMI::Int31Handler(void)
 					}; break;
 		case 0x0100:{// Allocate DOS Memory Block
 					Bit16u blocks = reg_bx;
+					DPMI_LOG("DPMI: 0100: Allocate DOS Mem: (%04X Blocks)",blocks);
 					if (DOS_AllocateMemory(&reg_ax,&blocks)) {
 						// Allocate Selector for block
 						SetDescriptor desc; Bitu base; Bitu numDesc;
@@ -1678,16 +1679,14 @@ Bitu DPMI::Int31Handler(void)
 					Bitu	length = (reg_bx<<16)+reg_cx;
 					// TEMP
 					Bit16u largest,total;
+					DPMI_LOG("DPMI: 0501: Allocate memory (%d KB)",length/1024);
 					if (AllocateMem(length,handle,linear)) {
 						reg_si = 0; reg_di = handle;
 						reg_bx = (linear>>16);
 						reg_cx = (linear&0xFFFF);
 						DPMI_CALLBACK_SCF(false);
 						XMS_QueryFreeMemory(largest,total);				// in KB					
-						if (total==2804) {
-							int brk = 0;
-						}
-						DPMI_LOG("DPMI: 0501: Allocation success (%d KB) (R:%d KB)",length/1024,total);
+						DPMI_LOG("DPMI: 0501: Allocation success: H:%04X%04X (%d KB) (R:%d KB)",reg_si,reg_di,length/1024,total);
 					} else {
 						reg_ax = DPMI_ERROR_PHYSICAL_MEMORY_UNAVAILABLE;
 						DPMI_CALLBACK_SCF(true);
@@ -1696,6 +1695,7 @@ Bitu DPMI::Int31Handler(void)
 					};
 					}; break;
 		case 0x0502://Free Memory Block
+					DPMI_LOG("DPMI: 0502: Free Mem: H:%04X%04X",reg_si,reg_di);
 					if (XMS_FreeMemory((reg_si<<16)+reg_di)==0) {
 						FreeXMSHandle((reg_si<<16)+reg_di);
 						DPMI_CALLBACK_SCF(false);
@@ -1706,8 +1706,10 @@ Bitu DPMI::Int31Handler(void)
 					};
 					break;
 		case 0x0503:{//Resize Memory Block
-					Bit32u	newSize = (Bitu(reg_bx<<16)+reg_cx)/1024;
+					Bitu    newByte = (reg_bx<<16)+reg_cx;
+					Bit32u	newSize = (newByte/1024)+((newByte & 1023)>0);
 					Bitu	handle  = (reg_si<<16)+reg_di;
+					DPMI_LOG("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize);
 					if (XMS_ResizeMemory(handle,newSize)==0) {
 						if (XMS_LockMemory(handle,newSize)==0) {
 							reg_bx = (newSize>>16);
