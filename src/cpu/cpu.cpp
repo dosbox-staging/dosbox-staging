@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.53 2004-01-14 17:09:41 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.54 2004-02-26 07:42:53 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -345,7 +345,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu opLen) {
 				Bitu gate_off=gate.GetOffset();
 				cpu.gdt.GetDescriptor(gate_sel,cs_desc);
 				Bitu cs_dpl=cs_desc.DPL();
-				if (cs_dpl>cpu.cpl) E_Exit("Interrupt to higher privilege");
+				if (cs_dpl>cpu.cpl)	E_Exit("Interrupt to higher privilege");
 				switch (cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
@@ -410,7 +410,7 @@ do_interrupt:
 					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",cs_desc.Type());
 				}
 				if (!(gate.Type()&1))
-					SETFLAGBIT(IF,false);			
+					SETFLAGBIT(IF,false);
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
 				SETFLAGBIT(VM,false);
@@ -506,7 +506,7 @@ realmode_iret:
 		Bitu n_cs_rpl=n_cs_sel & 3;
 		Descriptor n_cs_desc;
 		cpu.gdt.GetDescriptor(n_cs_sel,n_cs_desc);
-		if (n_cs_rpl<cpu.cpl)
+		if (n_cs_rpl<cpu.cpl) 
 			E_Exit("IRET to lower privilege");
 		if (n_cs_rpl==cpu.cpl) {	
 			/* Return to same level */
@@ -526,6 +526,7 @@ realmode_iret:
 			cpu.code.big=n_cs_desc.Big()>0;
 			Segs.val[cs]=n_cs_sel;
 			reg_eip=n_eip;
+
 			CPU_SetFlagsd(n_flags);
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		} else {
@@ -545,9 +546,11 @@ realmode_iret:
 			Segs.phys[cs]=n_cs_desc.GetBase();
 			cpu.code.big=n_cs_desc.Big()>0;
 			Segs.val[cs]=n_cs_sel;
+
+			CPU_SetFlagsd(n_flags);
+
 			cpu.cpl=n_cs_rpl;
 			reg_eip=n_eip;
-			CPU_SetFlagsd(n_flags);
 			Bitu n_ss,n_esp;
 			if (use32) {
 				n_esp=CPU_Pop32();
@@ -562,8 +565,9 @@ realmode_iret:
 			} else {
 				reg_sp=n_esp;
 			}
+
 			//TODO Maybe validate other segments, but why would anyone use them?
-			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:X big %d",n_cs_sel,n_eip,cpu.code.big);
+			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
 		return;
 	}
@@ -592,8 +596,7 @@ void CPU_JMP(bool use32,Bitu selector,Bitu offset,Bitu opLen) {
 		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
 		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
 			if (rpl>cpu.cpl) E_Exit("JMP:NC:RPL>CPL");
-			if (rpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
-			cpu.cpl=desc.DPL();
+			if (cpu.cpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:Code:NC to %X:%X big %d",selector,offset,desc.Big());
 			goto CODE_jmp;
 		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
@@ -709,19 +712,22 @@ call_code:
 						if (call.Type()==DESC_386_CALL_GATE) {
 							CPU_Push32(o_ss);		//save old stack
 							CPU_Push32(o_esp);
-							for (Bitu i=0;i<(call.saved.gate.paramcount&31);i++) 
-								CPU_Push32(mem_readd(o_stack+i*4));
+							if (call.saved.gate.paramcount&31>0)
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+									CPU_Push32(mem_readd(o_stack+i*4));
 							CPU_Push32(SegValue(cs));
 							CPU_Push32(reg_eip);
 						} else {
 							CPU_Push16(o_ss);		//save old stack
 							CPU_Push16(o_esp);
-							for (Bitu i=0;i<(call.saved.gate.paramcount&31);i++) 
-								CPU_Push16(mem_readw(o_stack+i*2));
+							if (call.saved.gate.paramcount&31>0)
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
+									CPU_Push16(mem_readw(o_stack+i*2));
 							CPU_Push16(SegValue(cs));
 							CPU_Push16(reg_eip);
 						}
 
+						cpu.cpl = n_cs_desc.DPL();
 						/* Switch to new CS:EIP */
 						Segs.phys[cs]	= n_cs_desc.GetBase();
 						Segs.val[cs]	= (n_cs_sel & 0xfffc) | cpu.cpl;
@@ -775,7 +781,11 @@ void CPU_RET(bool use32,Bitu bytes,Bitu opLen) {
 
 		Descriptor desc;
 		Bitu rpl=selector & 3;
-		if (rpl<cpu.cpl) E_Exit("RET to lower privilege");
+		if (rpl<cpu.cpl) {
+			reg_eip -= opLen;
+			CPU_Exception(0x0B,selector & 0xfffc);
+			return;
+		}
 		cpu.gdt.GetDescriptor(selector,desc);
 
 		if (!desc.saved.seg.p) {
@@ -820,7 +830,7 @@ RET_same_level:
 			return;
 		} else {
 			/* Return to outer level */
-			if (bytes) E_Exit("RETF outeer level with immediate value");
+			if (bytes) E_Exit("RETF outer level with immediate value");
 			Bitu n_esp,n_ss;
 			if (use32) {
 				n_esp = CPU_Pop32();
@@ -830,16 +840,19 @@ RET_same_level:
 				n_ss = CPU_Pop16();
 			}
 			cpu.cpl = rpl;
+
 			CPU_SetSegGeneral(ss,n_ss);
 			if (cpu.stack.big) {
                 reg_esp = n_esp;
 			} else {
 				reg_sp = n_esp;
 			}
+
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
-			Segs.val[cs]=selector;
+			Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
 			reg_eip=offset;
+
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
 		}
@@ -964,6 +977,10 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 }
 	
 void CPU_LAR(Bitu selector,Bitu & ar) {
+	if (selector == 0) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
 	Descriptor desc;Bitu rpl=selector & 3;
 	ar=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
@@ -975,15 +992,19 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 		break;
 	
+	case DESC_286_INT_GATE:		case DESC_286_TRAP_GATE:	{
+	case DESC_386_INT_GATE:		case DESC_386_TRAP_GATE:
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+
 	case DESC_LDT:
 	case DESC_TASK_GATE:
 
 	case DESC_286_TSS_A:		case DESC_286_TSS_B:
-	case DESC_286_INT_GATE:		case DESC_286_TRAP_GATE:	
 	case DESC_286_CALL_GATE:
 
 	case DESC_386_TSS_A:		case DESC_386_TSS_B:
-	case DESC_386_INT_GATE:		case DESC_386_TRAP_GATE:
 	case DESC_386_CALL_GATE:
 	
 
@@ -1008,6 +1029,10 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 }
 
 void CPU_LSL(Bitu selector,Bitu & limit) {
+	if (selector == 0) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
 	Descriptor desc;Bitu rpl=selector & 3;
 	limit=0;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
@@ -1018,7 +1043,7 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 		break;
-	
+
 	case DESC_LDT:
 	case DESC_286_TSS_A:
 	case DESC_286_TSS_B:
@@ -1047,6 +1072,10 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 }
 
 void CPU_VERR(Bitu selector) {
+	if (selector == 0) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
 	Descriptor desc;Bitu rpl=selector & 3;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
@@ -1075,6 +1104,10 @@ void CPU_VERR(Bitu selector) {
 }
 
 void CPU_VERW(Bitu selector) {
+	if (selector == 0) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
 	Descriptor desc;Bitu rpl=selector & 3;
 	if (!cpu.gdt.GetDescriptor(selector,desc)){
 		SETFLAGBIT(ZF,false);
