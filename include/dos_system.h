@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.19 2004-01-10 14:03:33 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.20 2004-01-12 20:25:57 finsterr Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -117,6 +117,11 @@ public:
 
 	class CFileInfo {
 	public:	
+		CFileInfo(void) {
+			orgname[0] = shortname[0] = 0;
+			nextEntry = shortNr = compareCount = 0;
+			isDir = false;
+		}
 		~CFileInfo(void) {
 			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
 			fileList.clear();
