@@ -143,23 +143,15 @@ else
 fi
 
 AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_net])
-AC_CHECK_HEADER(SDL/SDL_net.h,have_sdl_net_h=yes,)
-AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
-if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-  LIBS="$LIBS -lSDL_net"
-   AC_DEFINE(C_MODEM,1)
-else 
-   AC_MSG_WARN([Can't find SDL_net, internal modem disabled])
-fi
-
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL/SDL_net.h,have_sdl_net_h=yes,)
 AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
   LIBS="$LIBS -lSDL_net"
+   AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
-   AC_MSG_WARN([Can't find SDL_net, IPX networking disabled])
+   AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
