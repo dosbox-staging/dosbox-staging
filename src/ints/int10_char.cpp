@@ -111,6 +111,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 	if(rlr>=nrows) rlr=(Bit8u)nrows-1;
 	if(clr>=ncols) clr=(Bit8u)ncols-1;
 	clr++;
+
 	/* Get the correct page */
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	VGAMODES * curmode=GetCurrentMode();	
@@ -131,7 +132,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 		nlines=rlr-rul+1;
 		goto filling;
 	}
-	do {
+	while (start!=end) {
 		start+=next;
 		switch (curmode->memmodel) {
 		case MTEXT:
@@ -142,7 +143,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 		case PLANAR4:		
 			PLANAR4_CopyRow(curmode,cul,clr,start,start+nlines,base);break;
 		}	
-	} while (start!=end);
+	} 
 	/* Fill some lines */
 filling:
 	if (nlines>0) {
