@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "sdl.h"
 #include "programs.h"
 #include "support.h"
 #include "drives.h"
