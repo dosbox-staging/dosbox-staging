@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.49 2004-01-10 18:42:28 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.50 2004-01-11 12:29:03 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -67,24 +67,24 @@ void CPU_Core_Dyn_X86_Init(void);
 
 
 void CPU_Push16(Bitu value) {
-	reg_esp-=2;
+	reg_esp=(reg_esp&~cpu.stack.mask)|(reg_esp-2)&cpu.stack.mask;
 	mem_writew(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
 }
 
 void CPU_Push32(Bitu value) {
-	reg_esp-=4;
+	reg_esp=(reg_esp&~cpu.stack.mask)|(reg_esp-4)&cpu.stack.mask;
 	mem_writed(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
 }
 
 Bitu CPU_Pop16(void) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp+=2;
+	reg_esp=(reg_esp&~cpu.stack.mask)|(reg_esp+2)&cpu.stack.mask;
 	return val;
 }
 
 Bitu CPU_Pop32(void) {
 	Bitu val=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp+=4;
+	reg_esp=(reg_esp&~cpu.stack.mask)|(reg_esp+4)&cpu.stack.mask;
 	return val;
 }
 
@@ -100,6 +100,7 @@ PhysPt SelBase(Bitu sel) {
 
 void CPU_SetFlags(Bitu word,Bitu mask) {
 	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
+	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
 
 class TaskStateSegment {
