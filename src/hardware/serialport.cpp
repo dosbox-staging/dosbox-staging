@@ -301,7 +301,8 @@ void CSerial::rx_adds(Bit8u * data,Bitu size) {
 		}
 		if (FIFOenabled && (rx_fifo.used < FIFOsize)) return;
 		if (ints.active != INT_RX) raiseint(INT_RX);
-	} else LOG_MSG("WTF");
+	}
+//	else LOG_MSG("WTF");
 }
 
 void CSerial::tx_addb(Bit8u data) {
@@ -317,7 +318,7 @@ void CSerial::tx_addb(Bit8u data) {
 			raiseint(INT_TX);
 		}
 	} else {
-		LOG_MSG("tx addb");
+//		LOG_MSG("tx addb");
 	}
 }
 
@@ -333,7 +334,7 @@ Bit8u CSerial::rx_readb() {
 		else raiseint(INT_RX);
 		return val;
 	} else {
-		LOG_MSG("WTF rx readb");
+//		LOG_MSG("WTF rx readb");
 		return 0;
 	}
 }
@@ -347,7 +348,7 @@ Bit8u CSerial::tx_readb() {
 		if (FIFOenabled && !tx_fifo.used) raiseint(INT_TX);
 		return val;
 	} else  {
-		LOG_MSG("WTF tx readb");
+//		LOG_MSG("WTF tx readb");
 		return 0;
 	}
 }
