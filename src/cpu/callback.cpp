@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: callback.cpp,v 1.16 2003-09-29 21:06:49 qbix79 Exp $ */
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -204,7 +206,7 @@ void CALLBACK_Init(Section* sec) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
 	}
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
-	real_writed(0,0xf*4,0);
+	//real_writed(0,0xf*4,0); some games don't like it
 }
 
 
