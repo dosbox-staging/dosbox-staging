@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.61 2004-02-02 15:42:38 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.62 2004-02-08 08:35:59 canadacow Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -80,6 +80,7 @@ void CMS_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
 void MODEM_Init(Section*); 
+void IPX_Init(Section*);
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
@@ -100,6 +101,8 @@ void SHELL_Init(void);
 void INT10_Init(Section*);
 
 static LoopHandler * loop;
+
+bool SDLNetInited;
 
 Bits RemainTicks;;
 Bits LastTicks;
@@ -183,10 +186,12 @@ void DOSBOX_Init(void) {
 	Section_prop * secprop;
 	Section_line * secline;
 
+	SDLNetInited = false;
+
 	/* Setup all the different modules making up DOSBox */
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
-	secprop->Add_string("language","");
+    secprop->Add_string("language","");
 	secprop->Add_string("machine","auto");
 
 #if C_DEBUG	
@@ -251,7 +256,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	secprop->Add_bool("nosound",false);
-	secprop->Add_int("rate",22050);
+	secprop->Add_int("rate",32000);
 	secprop->Add_int("blocksize",2048);
 	secprop->Add_string("wavedir","waves");
 
@@ -310,7 +315,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("gus",&GUS_Init); 
 	secprop->Add_bool("gus",true); 	
 	secprop->Add_int("rate",22050);
-	secprop->Add_hex("base",0x240);
+    secprop->Add_hex("base",0x240);
 	secprop->Add_int("irq1",5);
 	secprop->Add_int("irq2",5);
 	secprop->Add_int("dma1",3);
@@ -337,7 +342,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DISNEY_Init);
 	secprop->Add_bool("disney",true);
 
-	MSG_Add("SPEAKER_CONFIGFILE_HELP",
+    MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
 		"tandy -- Enable Tandy 3-Voice emulation.\n"
@@ -380,6 +385,14 @@ void DOSBOX_Init(void) {
 		"modem -- Enable virtual modem emulation.\n"
 		"comport -- COM Port modem is connected to.\n"
 		"listenport -- TCP Port the momdem listens on for incoming connections.\n"
+	);
+#endif
+
+#if C_IPX
+	secprop=control->AddSection_prop("ipx",&IPX_Init);
+	secprop->Add_bool("ipx", true);
+	MSG_Add("IPX_CONFIGFILE_HELP",
+		"ipx -- Enable ipx over UDP/IP emulation.\n"
 	);
 #endif
 
