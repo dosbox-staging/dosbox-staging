@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.35 2005-02-10 10:21:12 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.36 2005-03-25 09:02:46 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +24,7 @@
 #include <iterator>  //std::front_inserter
 #include "shell.h"
 #include "regs.h"
+#include "callback.h"
 
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
@@ -54,7 +55,12 @@ void DOS_Shell::InputCommand(char * line) {
 
 	while (size) {
 		dos.echo=false;
-		DOS_ReadFile(input_handle,&c,&n);
+		while(!DOS_ReadFile(input_handle,&c,&n)) {
+			Bit16u dummy;
+			DOS_CloseFile(input_handle);
+			DOS_OpenFile("con",2,&dummy);
+			LOG(LOG_MISC,LOG_ERROR)("Reopening the input handle.This is a bug!");
+		}
 		if (!n) {
 			size=0;			//Kill the while loop
 			continue;
@@ -521,4 +527,3 @@ char * DOS_Shell::Which(char * name) {
 	}
 	return 0;
 }
-

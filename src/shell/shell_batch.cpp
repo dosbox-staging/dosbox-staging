@@ -16,13 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.15 2005-02-10 10:21:12 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.16 2005-03-25 09:02:43 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "shell.h"
-
+#include "support.h"
 
 BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
 	prev=host->bf;

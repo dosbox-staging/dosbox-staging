@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.52 2005-03-02 11:53:00 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.53 2005-03-25 09:02:44 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -25,6 +25,7 @@
 #include "callback.h"
 #include "regs.h"
 #include "../dos/drives.h"
+#include "support.h"
 
 static SHELL_Cmd cmd_list[]={
 {	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"SHELL_CMD_CHDIR_HELP"},
