@@ -16,9 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#if !defined __MEM_H
-#define __MEM_H
-#include <dosbox.h>
+#ifndef DOSBOX_MEM_H
+#define DOSBOX_MEM_H
+
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
 
 typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
@@ -199,7 +202,12 @@ INLINE RealPt RealMake(Bit16u seg,Bit16u off) {
 
 INLINE void RealSetVec(Bit8u vec,RealPt pt) {
 	mem_writed(vec<<2,pt);
-}	
+}
+
+INLINE void RealSetVec(Bit8u vec,RealPt pt,RealPt &old) {
+	old = mem_readd(vec<<2);
+	mem_writed(vec<<2,pt);
+}
 
 INLINE RealPt RealGetVec(Bit8u vec) {
 	return mem_readd(vec<<2);
