@@ -2,7 +2,7 @@
 switch (inst.code.save) {
 /* Byte */
 	case S_C_Eb:
-		inst.op1.b=inst.cond;
+		inst.op1.b=inst.cond ? 1 : 0;
 	case S_Eb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst.op1.b);
 		else reg_8(inst.rm_eai)=inst.op1.b;
