@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.46 2005-02-24 20:14:57 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.47 2005-03-01 11:13:29 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -200,20 +200,16 @@ INLINE void Mouse_AddEvent(Bit16u type) {
 // ***************************************************************************
 // Mouse cursor - text mode
 // ***************************************************************************
+/* Write and read directly to the screen. Do no use int_setcursorpos (LOTUS123) */
+extern void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr);
+extern void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result);
 
 void RestoreCursorBackgroundText()
 {
 	if (mouse.shown<0) return;
 
 	if (mouse.background) {
-		// Save old Cursorposition
-		Bit8u oldx = CURSOR_POS_ROW(0);
-		Bit8u oldy = CURSOR_POS_COL(0);
-		// Restore background
-		INT10_SetCursorPos	((Bit8u)mouse.backposy,(Bit8u)mouse.backposx,0);
-		INT10_WriteChar		(mouse.backData[0],mouse.backData[1],0,1,true);
-		// Restore old cursor position
-		INT10_SetCursorPos	(oldx,oldy,0);
+		WriteChar(mouse.backposx,mouse.backposy,0,mouse.backData[0],mouse.backData[1],true);
 		mouse.background = false;
 	}
 };
@@ -223,26 +219,19 @@ void DrawCursorText()
 	// Restore Background
 	RestoreCursorBackgroundText();
 
-	// Save old Cursorposition
-	Bit8u oldx = CURSOR_POS_ROW(0);
-	Bit8u oldy = CURSOR_POS_COL(0);
 
 	// Save Background
-	Bit16u result;
-	INT10_SetCursorPos	(POS_Y>>3,POS_X>>3,0);
-	INT10_ReadCharAttr	(&result,0);
-	mouse.backData[0]	= result & 0xFF;
-	mouse.backData[1]	= result>>8;
 	mouse.backposx		= POS_X>>3;
 	mouse.backposy		= POS_Y>>3;
-	mouse.background	= true;
 
+	Bit16u result;
+	ReadCharAttr(mouse.backposx,mouse.backposy,0,&result);
+	mouse.backData[0]	= result & 0xFF;
+	mouse.backData[1]	= result>>8;
+	mouse.background	= true;
 	// Write Cursor
 	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
-	INT10_WriteChar	(result&0xFF,result>>8,0,1,true);
-
-	// Restore old cursor position
-	INT10_SetCursorPos (oldx,oldy,0);
+	WriteChar(mouse.backposx,mouse.backposy,0,result&0xFF,result>>8,true);
 };
 
 // ***************************************************************************
@@ -325,7 +314,7 @@ void RestoreCursorBackground()
 };
 
 void DrawCursor() {
-	
+
 	if (mouse.shown<0) return;
 // Check video page
 	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
@@ -901,7 +890,7 @@ void CreateMouseCallback(void)
 };
 
 void MOUSE_Init(Section* sec) {
-	
+
 	// Callback 0x33
 	CreateMouseCallback();
 	call_int74=CALLBACK_Allocate();

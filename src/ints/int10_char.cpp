@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.31 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.32 2005-03-01 11:13:29 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -378,12 +378,22 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 	// Compute the address  
 	Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	address+=(cur_row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+cur_col)*2;
-	// REad the char 
+	// Read the char 
 	PhysPt where = CurMode->pstart+address;
 	*result=mem_readw(where);
 }
 
-static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
+void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
+	/* Used by the mouse */
+	Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+	address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
+	// Read the char 
+	PhysPt where = CurMode->pstart+address;
+	*result=mem_readw(where);
+}
+
+void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
+	/* Externally used by the mouse routine */
 	PhysPt fontdata;
 	Bitu x,y;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
