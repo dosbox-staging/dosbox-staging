@@ -158,7 +158,8 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	if (!DOS_AllocateMemory(segment,&size)) return false;
 	envwrite=PhysMake(*segment,0);
 	if (parentenv) {
-		mem_memcpy(envwrite,envread,envsize);
+		MEM_BlockCopy(envwrite,envread,envsize);
+//		mem_memcpy(envwrite,envread,envsize);
 		envwrite+=envsize;
 	} else {
 		mem_writeb(envwrite++,0);
