@@ -212,7 +212,7 @@ Bit8u DOS_FCB::Get_drive(void){
 	return mem_readb(off+offsetof(sFCB,drive)+FCB_EXTENDED);
 }
 void DOS_FCB::Get_filename(char * a){
-	MEM_BlockRead(off+offsetof(sFCB,filename),a,8);
+	MEM_BlockRead(off+offsetof(sFCB,filename)+FCB_EXTENDED,a,8);
 }
 void DOS_FCB::Get_ext(char * a){
 	MEM_BlockRead(off+offsetof(sFCB,ext)+FCB_EXTENDED,a,3);
