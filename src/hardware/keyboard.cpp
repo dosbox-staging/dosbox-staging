@@ -63,10 +63,12 @@ static Bit8u read_p61(Bit32u port) {
 static void write_p61(Bit32u port,Bit8u val) {
 //TODO Enable spreaker through here :)	
 	if ((val&128)) {					/* Keyboard acknowledge */
-		kbuf_used--;
-		kbuf_pos++;
-		if (kbuf_pos>=KEYBUFSIZE) kbuf_pos=0;
-		if (kbuf_used>0) PIC_ActivateIRQ(1);
+		if (kbuf_used) {
+			kbuf_used--;
+			kbuf_pos++;
+			if (kbuf_pos>=KEYBUFSIZE) kbuf_pos=0;
+			if (kbuf_used) PIC_ActivateIRQ(1);
+		}
 	}
 	port_61_data=val;
 	if ((val & 3)==3) {
