@@ -62,7 +62,7 @@ Bitu Full_DeCode(void) {
 		if (DEBUG_HeavyIsBreakpoint()) return 1;
 #endif
 #endif
-		CPU_Cycles--;
+		inst.start=IPPoint;
 		inst.entry=cpu.full.entry;
 		inst.prefix=cpu.full.prefix;
 restartopcode:
@@ -73,6 +73,7 @@ restartopcode:
 		#include "core_full/op.h"
 		#include "core_full/save.h"
 nextopcode:;
+		CPU_Cycles--;
 	}	
 	SaveIP();
 	return 0;
