@@ -302,7 +302,7 @@ static void Scale2x_32(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	scale2x_line_32((Bit32u *)dest,(Bit32u *)(dest+render.op.pitch),src-render.src.pitch,src,src,dx);
 }
 
-#if defined(__GNUC__) || defined(__i386__)
+#if defined(__GNUC__) && defined(__i386__)
 
 #define SCALE2X_MMX 1
 
