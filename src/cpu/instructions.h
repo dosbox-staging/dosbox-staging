@@ -290,22 +290,20 @@
 
 #define RCLB(op1,op2,load,save)								\
 	if (op2%9) {											\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit8u cf=get_CF()!=0;								\
-		lf_var1b=load(op1);								\
-		lf_var2b=op2%9;									\
+		Bit8u cf=(Bit8u)FillFlags()&0x1;					\
+		lf_var1b=load(op1);									\
+		lf_var2b=op2%9;										\
 		lflags.type=t_RCLb;									\
-		lf_resb=(lf_var1b << lf_var2b) |		\
-				(cf << (lf_var2b-1)) |					\
-				(lf_var1b >> (9-lf_var2b));			\
-		SETFLAGBIT(CF,((lf_var1b >> (8-lf_var2b)) & 1));			\
- 		save(op1,lf_resb);							\
+		lf_resb=(lf_var1b << lf_var2b) |					\
+				(cf << (lf_var2b-1)) |						\
+				(lf_var1b >> (9-lf_var2b));					\
+		SETFLAGBIT(CF,((lf_var1b >> (8-lf_var2b)) & 1));	\
+ 		save(op1,lf_resb);									\
 	}
 
 #define RCLW(op1,op2,load,save)								\
 	if (op2%17) {											\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit16u cf=get_CF()!=0;									\
+		Bit16u cf=(Bit16u)FillFlags()&0x1;					\
 		lf_var1w=load(op1);								\
 		lf_var2b=op2%17;								\
 		lflags.type=t_RCLw;									\
@@ -318,8 +316,7 @@
 
 #define RCLD(op1,op2,load,save)								\
 	if (op2) {												\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit32u cf=get_CF()!=0;									\
+		Bit32u cf=(Bit32u)FillFlags()&0x1;					\
 		lf_var1d=load(op1);								\
 		lf_var2b=op2;									\
 		lflags.type=t_RCLd;									\
@@ -336,8 +333,7 @@
 
 #define RCRB(op1,op2,load,save)								\
 	if (op2%9) {											\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit8u cf=get_CF()!=0;									\
+		Bit8u cf=(Bit8u)FillFlags()&0x1;					\
 		lf_var1b=load(op1);								\
 		lf_var2b=op2%9;									\
 		lflags.type=t_RCRb;									\
@@ -349,8 +345,7 @@
 
 #define RCRW(op1,op2,load,save)								\
 	if (op2%17) {											\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit16u cf=get_CF()!=0;									\
+		Bit16u cf=(Bit16u)FillFlags()&0x1;					\
 		lf_var1w=load(op1);								\
 		lf_var2b=op2%17;								\
 		lflags.type=t_RCRw;									\
@@ -362,8 +357,7 @@
 
 #define RCRD(op1,op2,load,save)								\
 	if (op2) {												\
-		LoadZF;LoadSF;LoadAF;								\
-		Bit32u cf=get_CF()!=0;									\
+		Bit32u cf=(Bit32u)FillFlags()&0x1;					\
 		lf_var1d=load(op1);								\
 		lf_var2b=op2;									\
 		lflags.type=t_RCRd;									\
