@@ -16,10 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "dosbox.h"
+#ifdef C_FPU
+
 #include <math.h>
 #include <float.h>
 #include "mem.h"
-#include "dosbox.h"
 #include "fpu.h"
 
 typedef PhysPt EAPoint;
@@ -36,12 +38,15 @@ typedef PhysPt EAPoint;
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
 
+typedef double Real;
+
+#include "fpu_types.h"
+#include "fpu_instructions.h"
+
 FPU_Flag_Info fpu_flags;
-FPU_Regs fpu_regs;
+FPU_Reg fpu_regs[8];
 
 #define FPU_GetZF	fpu_flags.sw.zf = FPU_get_ZF();
-
-#include "fpu_core_16/instructions.h"
 
 #define FPU_ParseCW(newcw) { \
 	fpu_flags.cw.ic = ((bool)((newcw&0x1000)>>12)?true:false); \
@@ -264,8 +269,9 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 void FPU_ESC7_Normal(Bitu rm) {
 }
 
+
 void FPU_Init(void) {
 	fpu_flags.type = t_FUNKNOWN;
 }
 
-
+#endif
