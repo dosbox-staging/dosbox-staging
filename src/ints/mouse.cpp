@@ -93,6 +93,7 @@ static struct {
 	Bit16s	clipx,clipy;
 	Bit16s  hotx,hoty;
 	Bit16u  textAndMask, textXorMask;
+	Bit16u	resy;
 
 	float	mickeysPerPixel_x;
 	float	mickeysPerPixel_y;
@@ -390,8 +391,8 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 
 void Mouse_SetResolution(Bit16u width, Bit16u height)
 {
-	mouse.max_x = width-1;
-	mouse.max_y = height-1;
+	mouse.resy	= height-1;
+	mouse.shown = -1;		// hide cursor
 };
 
 static void  mouse_reset(void) 
@@ -401,6 +402,8 @@ static void  mouse_reset(void)
 	mouse.shown=-1;
 	mouse.min_x=0;
 	mouse.min_y=0;
+	mouse.max_x=639;
+	mouse.max_y=mouse.resy;
 	// Dont set max coordinates here. it is done by SetResolution!
 	mouse.x=0;				// civ wont work otherwise
 	mouse.y=100;
@@ -644,6 +647,7 @@ void MOUSE_Init(Section* sec) {
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 
 	memset(&mouse,0,sizeof(mouse));
+	mouse.resy = 199;	// Init with startup value
 	mouse_reset();
 }
 
