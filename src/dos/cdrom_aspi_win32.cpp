@@ -16,19 +16,22 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_aspi_win32.cpp,v 1.7 2004-01-02 14:38:30 qbix79 Exp $ */
+/* $Id: cdrom_aspi_win32.cpp,v 1.8 2004-01-02 23:10:31 finsterr Exp $ */
 
 #if defined (WIN32)
 
 #include <ctype.h>
 
+#include "dosbox.h"
 #include "cdrom.h"
+
 //Are actually system includes but leave for now
+#include "wnaspi32.h"
 #include "ntddcdrm.h"
 #include "ntddscsi.h"
-//#include "scsi.h"			// Aspi stuff
 #include "scsidefs.h"
-#include "dosbox.h"
+
+#include <winioctl.h>
 
 // *****************************************************************
 // Windows ASPI functions (should work for all WIN with ASPI layer)

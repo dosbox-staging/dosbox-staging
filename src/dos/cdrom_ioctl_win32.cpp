@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_ioctl_win32.cpp,v 1.7 2004-01-02 14:38:30 qbix79 Exp $ */
+/* $Id: cdrom_ioctl_win32.cpp,v 1.8 2004-01-02 23:10:31 finsterr Exp $ */
 
 #if defined (WIN32)
 
@@ -27,7 +27,7 @@
 #include <windows.h>
 #include <winioctl.h>			// Ioctl stuff
 #include <io.h>
-//Actually a system include but leave for now
+
 #include "ntddcdrm.h"			// Ioctl stuff
 #include "cdrom.h"
 
