@@ -661,6 +661,7 @@ static void DSP_DoCommand(void) {
 	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
     case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:
 		/* Generic 8/16 bit DMA */
+		DSP_SetSpeaker(true);		//SB16 always has speaker enabled
 		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
 		DSP_PrepareDMA_New((sb.dsp.cmd & 0x10) ? DSP_DMA_16 : DSP_DMA_8,
 			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8),
