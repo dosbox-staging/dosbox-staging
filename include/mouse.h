@@ -26,5 +26,5 @@ void Mouse_ButtonPressed(Bit8u button);
 void Mouse_ButtonReleased(Bit8u button);
 
 void Mouse_AutoLock(bool enable);
-void Mouse_SetResolution(Bit16u width, Bit16u height);
+void Mouse_NewVideoMode(void);
 
