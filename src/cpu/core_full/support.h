@@ -82,7 +82,8 @@ enum {
 	O_GRP6w,O_GRP6d,
 	O_GRP7w,O_GRP7d,
 	O_M_Cd_Rd,O_M_Rd_Cd,
-	O_LAR,
+	O_LAR,O_LSL,
+	O_ARPL,
 	
 	O_BTw,O_BTSw,O_BTRw,O_BTCw,
 	O_BTd,O_BTSd,O_BTRd,O_BTCd,

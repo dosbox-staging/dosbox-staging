@@ -333,6 +333,11 @@ switch (inst.code.op) {
 		CPU_JMP(false,inst.op2.d,inst.op1.d);
 		LoadIP();
 		goto nextopcode;
+	case O_JMPFd:
+		CPU_JMP(true,inst.op2.d,inst.op1.d);
+		LoadIP();
+		goto nextopcode;
+
 	case O_INT:
 		SaveIP();
 #if C_DEBUG
@@ -383,9 +388,27 @@ switch (inst.code.op) {
 	case O_GRP6w:
 	case O_GRP6d:
 		switch (inst.rm_index) {
+		case 0x00:	/* SLDT */
+			{
+				Bitu selector;
+				CPU_SLDT(selector);
+				inst.op1.d=selector;
+			}
+			break;
+		case 0x01:	/* STR */
+			{
+				Bitu selector;
+				CPU_STR(selector);
+				inst.op1.d=selector;
+			}
+			break;
 		case 0x02:	/* LLDT */
 			CPU_LLDT(inst.op1.d);
 			goto nextopcode;		/* Else value will saved */
+		case 0x03:	/* LTR */
+			CPU_LTR(inst.op1.d);
+			goto nextopcode;		/* Else value will saved */
+
 		default:
 			LOG(LOG_ERROR|LOG_CPU,"Group 6 Illegal subfunction %X",inst.rm_index);
 		}
@@ -437,7 +460,46 @@ switch (inst.code.op) {
 	case O_LAR:
 		{
 			Bitu ar;CPU_LAR(inst.op1.d,ar);
-			inst.op2.d=ar;
+			inst.op1.d=ar;
+		}
+		break;
+	case O_LSL:
+		{
+			Bitu limit;CPU_LSL(inst.op1.d,limit);
+			inst.op1.d=limit;
+		}
+		break;
+	case O_ARPL:
+		{
+			Bitu new_sel=inst.op1.d;
+			CPU_ARPL(new_sel,inst.op2.d);
+			inst.op1.d=new_sel;
+		}
+		break;
+	case O_BTw:
+	case O_BTSw:
+	case O_BTCw:
+	case O_BTRw:
+		{
+			Bitu val;PhysPt read;
+			Bitu mask=1 << (inst.op1.d & 15);
+			FILLFLAGS;
+			if (inst.rm<0xc0) {
+				read=inst.rm_eaa+2*(inst.op1.d / 16);
+				val=mem_readw(read);
+			} else {
+				val=reg_16(inst.rm_eai);
+			}
+			SETFLAGBIT(CF,(val&mask)>0);
+			if (inst.code.op==O_BTSw) val|=mask;
+			if (inst.code.op==O_BTRw) val&=~mask;
+			if (inst.code.op==O_BTCw) val^=mask;
+			if (inst.code.op==O_BTw) break;
+			if (inst.rm<0xc0) {
+				mem_writew(read,val);
+			} else {
+				reg_16(inst.rm_eai)=val;
+			}
 		}
 		break;
 	case O_BTd:

@@ -195,7 +195,10 @@ l_M_Ed:
 		inst.op1.d=Fetchw();
 		inst.op2.d=Fetchw();
 		break;
-
+	case L_Ifd:
+		inst.op1.d=Fetchd();
+		inst.op2.d=Fetchw();
+		break;
 /* Direct load of registers */
 	case L_REGbIb:
 		inst.op2.d=Fetchb();
@@ -376,8 +379,20 @@ l_M_Ed:
 			goto nextopcode;
 		}
 	case D_LEAVEw:
-		reg_sp=reg_bp;
+		if (cpu.state & STATE_STACK32) {
+			reg_esp=reg_ebp;
+		} else {
+			reg_sp=reg_bp;
+		}
 		reg_bp=Pop_16();
+		goto nextopcode;
+	case D_LEAVEd:
+		if (cpu.state & STATE_STACK32) {
+			reg_esp=reg_ebp;
+		} else {
+			reg_sp=reg_bp;
+		}
+		reg_ebp=Pop_32();
 		goto nextopcode;
 	case D_DAA:
 		DAA();

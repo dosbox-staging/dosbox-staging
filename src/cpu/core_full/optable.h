@@ -69,7 +69,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x60 - 0x67 */
 {D_PUSHAw	,0			,0		,0		},{D_POPAw	,0			,0		,0		},
-{L_MODRM	,O_BOUNDw	,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_BOUNDw	,0		,0		},{L_MODRM	,O_ARPL		,S_Ew	,M_EwGw	},
 {L_PRESEG	,0			,0		,fs		},{L_PRESEG	,0			,0		,gs		},
 {L_PREOP	,0			,0		,0		},{L_PREADD	,0			,0		,0		},
 /* 0x68 - 0x6f */
@@ -182,7 +182,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x100 - 0x107 */
 {L_MODRM	,O_GRP6w	,S_Ew	,M_Ew	},{L_MODRM	,O_GRP7w	,S_Ew	,M_Ew	},
-{L_MODRM	,O_LAR		,S_Gw	,M_Ew	},{0		,0			,0		,0		},
+{L_MODRM	,O_LAR		,S_Gw	,M_Ew	},{L_MODRM	,O_LSL		,S_Gw	,M_Ew	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x108 - 0x10f */
@@ -539,7 +539,7 @@ static OpCode OpCodeTable[1024]={
 
 /* 0x300 - 0x307 */
 {L_MODRM	,O_GRP6d	,S_Ew	,M_Ew	},{L_MODRM	,O_GRP7d	,S_Ew	,M_Ew	},
-{L_MODRM	,O_LAR		,S_Gd	,M_Ed	},{0		,0			,0		,0		},
+{L_MODRM	,O_LAR		,S_Gd	,M_Ew	},{L_MODRM	,O_LSL		,S_Gd	,M_Ew	},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x308 - 0x30f */
