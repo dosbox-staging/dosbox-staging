@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.27 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.28 2005-03-25 09:14:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -862,6 +862,10 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 							case 0x01 : // (un)Lock door 
 										// do nothing -> report as success
 										break;
+							case 0x02 : // Reset Drive
+										LOG(LOG_MISC,LOG_WARN)("cdromDrive reset");
+										mscdex->StopAudio(subUnit);
+										break;
 							case 0x05 :	// load media
 										mscdex->LoadUnloadMedia(subUnit,false);
 										break;
@@ -1076,4 +1080,3 @@ void MSCDEX_Init(Section* sec)
 	/* Create MSCDEX */
 	mscdex = new CMscdex;
 };
-
