@@ -154,8 +154,8 @@ char * StripWord(char * cmd) {
 	}
 	return trim(cmd+strlen(begin)+1);
 }
-
-void GFX_ShowMsg(char * msg);
+extern void DEBUG_ShowMsg(Bit32u entry,char* format,...);
+extern void GFX_ShowMsg(char * msg);
 
 void S_Warn(char * format,...) {
 	char buf[1024];
