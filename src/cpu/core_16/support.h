@@ -376,7 +376,10 @@ countzero:
 		PIC_runIRQs();												\
 		LOADIP;														\
 	}																\
-	if (flags.tf)	LOG_DEBUG("CPU:Trap Flag not supported");			\
+	if (flags.tf) {													\
+		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
+		count=0;													\
+	}																\
 }
 
 #else 
@@ -394,7 +397,10 @@ countzero:
 		PIC_runIRQs();												\
 		LOADIP;														\
 	}																\
-	if (flags.tf)	LOG_DEBUG("CPU:Trap Flag not supported");			\
+	if (flags.tf) {													\
+		cpudecoder=&CPU_Real_16_Slow_Decode_Trap;					\
+		count=0;													\
+	}																\
 }
 
 #endif

@@ -60,7 +60,8 @@ extern Bitu cycle_count;
 #endif
 
 #include "core_16/support.h"
-static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count);
+static Bitu CPU_Real_16_Slow_Decode_Special(Bits count);
+static Bitu CPU_Real_16_Slow_Decode_Trap(Bits count);
 
 static Bitu CPU_Real_16_Slow_Decode(Bits count) {
 #include "core_16/start.h"		
@@ -77,6 +78,17 @@ static Bitu CPU_Real_16_Slow_Decode(Bits count) {
 	#include "core_16/stop.h"		
 	return CBRET_NONE;
 }
+
+static Bitu CPU_Real_16_Slow_Decode_Trap(Bits count) 
+{
+	CPU_Real_16_Slow_Decode(1);
+
+	LOG_DEBUG("TRAP: Trap Flag executed");
+	INTERRUPT(1);
+	cpudecoder=&CPU_Real_16_Slow_Decode;
+
+	return CBRET_NONE;
+};
 
 static Bitu CPU_Real_16_Slow_Decode_Special(Bits count) {
 	while (count>0) {

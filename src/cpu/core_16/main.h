@@ -856,10 +856,15 @@ restart:
 			}
 			break;
 		case 0xcc:												/* INT3 */
+#if C_DEBUG	
+			SAVEIP;
+			if (DEBUG_Breakpoint()) {
+				LOADIP;
+				return 1;
+			}
+			LOADIP;
+#endif			
 			INTERRUPT(3);
-#if C_DEBUG 
-			return 1; 
-#endif
 			break;
 		case 0xcd:												/* INT Ib */	
 			{
