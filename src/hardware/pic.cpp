@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.17 2004-02-07 18:35:17 harekiet Exp $ */
+/* $Id: pic.cpp,v 1.18 2004-02-08 13:04:34 harekiet Exp $ */
 
 #include <list>
 
@@ -393,6 +393,7 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler) {
 	while (ticker) {
 		if (ticker->handler==handler) {
 			*where=ticker->next;
+			delete ticker;
 			return;
 		}
 		where=&ticker->next;
