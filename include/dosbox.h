@@ -56,8 +56,7 @@ void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();
 
-void DOSBOX_Init(int argc, char* argv[]);
-void DOSBOX_StartUp(void);
+void DOSBOX_Init(void);
 
 class Config;
 extern Config * control;
