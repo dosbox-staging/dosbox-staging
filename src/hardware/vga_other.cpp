@@ -209,6 +209,7 @@ static void write_cga(Bitu port,Bitu val,Bitu iolen) {
 		} else {
 			VGA_SetMode(M_TANDY_TEXT);
 		}
+		VGA_SetBlinking(val & 0x20);
 		break;
 	case 0x3d9:
 		write_color_select(val);
@@ -220,6 +221,7 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=val;
+		VGA_SetBlinking(val & 0x20);
 		TANDY_FindMode();
 		break;
 	case 0x3d9:
