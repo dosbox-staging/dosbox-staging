@@ -172,7 +172,7 @@ void INT10_ScrollDownWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8u nlines
 
 
 void INT10_SetActivePage(Bit8u page);
-void INT10_GetFuncStateInformation(Bit16u seg,Bit16u off);
+void INT10_GetFuncStateInformation(PhysPt save);
 
 
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page);
