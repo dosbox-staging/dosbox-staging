@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.24 2003-09-08 18:22:57 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.25 2003-09-21 13:30:25 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -397,7 +397,7 @@ char * DOS_Shell::Which(char * name) {
 
 
 	/* No Path in filename look through path environment string */
-	static char path[DOS_PATHLENGTH];std::string temp;
+	char path[DOS_PATHLENGTH];std::string temp;
 	if (!GetEnvStr("PATH",temp)) return 0;
 	const char * pathenv=temp.c_str();
 	if (!pathenv) return 0;
@@ -406,12 +406,21 @@ char * DOS_Shell::Which(char * name) {
 	pathenv++;
 	char * path_write=path;
 	while (*pathenv) {
-		if (*pathenv!=';') {
+		/* remove ; and ;; at the beginning. (and from the second entry etc) */
+		while(*pathenv && (*pathenv ==';'))
+			pathenv++;
+
+		/* Clear old path */
+		for(Bitu dummy = 0;dummy < DOS_PATHLENGTH; dummy++)
+			path[dummy] = 0;	//OVERKILL could be strlen(path). but run no risks
+
+		/* get next entry */
+		while(*pathenv && (*pathenv !=';'))
 			*path_write++=*pathenv++;
-		}
-		if (*pathenv==';' || *(pathenv)==0) {
-			if (*path_write!='\\') *path_write++='\\';
-			*path_write++=0;
+		
+		/* check entry */
+		if(Bitu len=strlen(path)){
+			if(path[strlen(path)-1]!='\\')	strcat(path,"\\");
 			strcat(path,name);
 			strcpy(which_ret,path);
 			if (DOS_FileExists(which_ret)) return which_ret;
@@ -424,10 +433,9 @@ char * DOS_Shell::Which(char * name) {
 			strcpy(which_ret,path);
 			strcat(which_ret,bat_ext);
 			if (DOS_FileExists(which_ret)) return which_ret;
-		
-			path_write=path;
-			if (*pathenv) pathenv++;
 		}
+		path_write=path;	/* reset it */
+			
 	}
 	return 0;
 }
