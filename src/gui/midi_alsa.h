@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.9 2004-08-04 09:12:54 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.10 2004-12-16 11:17:42 qbix79 Exp $ */
 
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
@@ -112,7 +112,7 @@ public:
 			}
 			break;
 		default:
-			LOG(LOG_MISC,LOG_WARN)("ALSA:Unknown Command: %08x", (int)msg);
+			LOG(LOG_MISC,LOG_WARN)("ALSA:Unknown Command: %08lx", (long)msg);
 			send_event(1);
 			break;
 		}
