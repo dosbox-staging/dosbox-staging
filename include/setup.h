@@ -37,8 +37,8 @@ public:
 	bool FindString(char * name,std::string & value,bool remove=false);
 	bool FindCommand(int which,std::string & value);
 	bool FindStringBegin(char * begin,std::string & value, bool remove=false);
+	bool FindStringRemain(char * name,std::string & value);
 	int GetCount(void);
-    void CommandLine::GetFullLine( char * in);
 private:
 	typedef std::list<std::string>::iterator cmd_it;
 	std::list<std::string> cmds;

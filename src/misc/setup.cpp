@@ -325,6 +325,18 @@ bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove)
 	return false;
 }
 
+bool CommandLine::FindStringRemain(char * name,std::string & value) {
+	cmd_it it;value="";
+	if (!FindEntry(name,it)) return false;
+	it++;
+	for (;it!=cmds.end();it++) {
+		value+=" ";
+		value+=(*it);
+	}
+	return true;
+}
+
+
 int CommandLine::GetCount(void) {
 	return cmds.size();
 }
@@ -370,12 +382,3 @@ CommandLine::CommandLine(char * name,char * cmdline) {
 	if (inword || inquote) cmds.push_back(str);
 }
 
-void CommandLine::GetFullLine(char * in) {
-    cmd_it it;
-    *in=0;
-    char spatie[2]={' ',0};
-	for (it=cmds.begin();it!=cmds.end();it++) {
-        strcat(in,spatie);
-        strcat(in,(*it).c_str());
-    }
-}
