@@ -142,8 +142,7 @@ public:
 			inESR = true;
 			//LOG_MSG("Write %x to %x", real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4), RealMake(RealSeg(ipx_esrptraddr), RealOff(ipx_esrptraddr)));
 			real_writed(RealSeg(ipx_esrptraddr), RealOff(ipx_esrptraddr),real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4));
-			CPU_CALL(false, RealSeg(ipx_esrcallback), RealOff(ipx_esrcallback));
-
+			CPU_CALL(false, RealSeg(ipx_esrcallback), RealOff(ipx_esrcallback),0);
 		}
 	}
 
