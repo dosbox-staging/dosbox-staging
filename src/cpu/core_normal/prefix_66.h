@@ -150,6 +150,21 @@
 		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
 		break;
+	CASE_D(0x63)												/* ARPL Ed,Rd */
+		{
+			FillFlags();
+			GetRMrw;
+			if (rm >= 0xc0 ) {
+				GetEArd;Bitu new_sel=(Bit16u)*eard;
+				CPU_ARPL(new_sel,*rmrw);
+				*eard=(Bit32u)new_sel;
+			} else {
+				GetEAa;Bitu new_sel=LoadMw(eaa);
+				CPU_ARPL(new_sel,*rmrw);
+				SaveMd(eaa,(Bit32u)new_sel);
+			}
+		}
+		break;
 	CASE_D(0x68)												/* PUSH Id */
 		Push_32(Fetchd());break;
 	CASE_D(0x69)												/* IMUL Gd,Ed,Id */
@@ -312,6 +327,17 @@
 		if (reg_eax & 0x80000000) reg_edx=0xffffffff;
 		else reg_edx=0;
 		break;
+	CASE_D(0x9a)												/* CALL FAR Ad */
+		{ 
+			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
+			SAVEIP;
+			if (CPU_CALL(true,newcs,newip)) {
+				LOADIP;
+			} else {
+				FillFlags();return CBRET_NONE;
+			}
+			break;
+		}
 	CASE_D(0x9c)												/* PUSHFD */
 		FillFlags();
 		Push_32(flags.word);
