@@ -22,30 +22,39 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "dos_system.h"
+#include "cross.h"
+ 
+
+bool WildFileCmp(const char * file, const char * wild);
 
 class localDrive : public DOS_Drive {
 public:
-	localDrive(char * startdir);
+	localDrive(const char * startdir,Bit16u _bytes_sector,Bit16u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
 	bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
 	bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	bool FileUnlink(char * name);
 	bool RemoveDir(char * dir);
 	bool MakeDir(char * dir);
 	bool TestDir(char * dir);
-	bool FindFirst(char * search,DTA_FindBlock * dta);
-	bool FindNext(DTA_FindBlock * dta);
+	bool FindFirst(char * _dir,DOS_DTA & dta);
+	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
-	bool FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free);
-	bool FileExists(const char* name) const ;
-	bool FileStat(const char* name, struct stat* const stat_block) const;
+	bool AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	bool FileExists(const char* name);
+	bool FileStat(const char* name, FileStat_Block * const stat_block);
+	Bit8u GetMediaByte(void);
 private:
-	bool FillDTABlock(DTA_FindBlock * dta);
-	char basedir[512];
-	char directory[512];
-	char wild_name[15];
-	char * wild_ext;
-	DIR *pdir;
+	char basedir[CROSS_LEN];
+	char srch_dir[CROSS_LEN];
+	DIR * srch_opendir;
+	struct {
+		Bit16u bytes_sector;
+		Bit16u sectors_cluster;
+		Bit16u total_clusters;
+		Bit16u free_clusters;
+		Bit8u mediaid;
+	} allocation;
 };
 
 struct VFILE_Block;
@@ -60,17 +69,16 @@ public:
 	bool RemoveDir(char * dir);
 	bool MakeDir(char * dir);
 	bool TestDir(char * dir);
-	bool FindFirst(char * search,DTA_FindBlock * dta);
-	bool FindNext(DTA_FindBlock * dta);
+	bool FindFirst(char * _dir,DOS_DTA & dta);
+	bool FindNext(DOS_DTA & dta);
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
-	bool FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free);
-    bool FileExists(const char* name) const ;
-    bool FileStat(const char* name, struct stat* const stat_block) const;
-
+	bool AllocationInfo(Bit16u * _bytes_sector,Bit16u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+    bool FileExists(const char* name);
+    bool FileStat(const char* name, FileStat_Block* const stat_block);
+	Bit8u GetMediaByte(void);
 private:
 	VFILE_Block * search_file;
-	char search_string[255];
 };
 
 #endif
