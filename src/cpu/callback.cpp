@@ -23,7 +23,7 @@
 #include "callback.h"
 #include "mem.h"
 #include "cpu.h"
-
+#include "pic.h"
 
 /* CallBack are located at 0xC800:0 
    And they are 16 bytes each and you can define them to behave in certain ways like a
@@ -62,6 +62,8 @@ void CALLBACK_Idle(void) {
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
 	flags.intf=oldintf;
+	if (CPU_CycleLeft<300) CPU_CycleLeft=1;
+	else CPU_CycleLeft-=300;
 }
 
 static Bitu default_handler(void) {
@@ -119,17 +121,25 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
 	if (callback>=CB_MAX) return false;
 	switch (type) {
 	case CB_RETF:
-		real_writeb((Bit16u)CB_SEG,(callback<<4),(Bit8u)0xFE);		//GRP 4
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
 		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
 		real_writew((Bit16u)CB_SEG,(callback<<4)+2,callback);		//The immediate word
 		real_writeb((Bit16u)CB_SEG,(callback<<4)+4,(Bit8u)0xCB);	//A RETF Instruction
 		break;
 	case CB_IRET:
-		real_writeb((Bit16u)CB_SEG,(callback<<4),(Bit8u)0xFE);		//GRP 4
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
 		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
 		real_writew((Bit16u)CB_SEG,(callback<<4)+2,callback);		//The immediate word
 		real_writeb((Bit16u)CB_SEG,(callback<<4)+4,(Bit8u)0xCF);	//An IRET Instruction
 		break;
+	case CB_IRET_STI:
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFB);	//STI
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0xFE);	//GRP 4
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+2,(Bit8u)0x38);	//Extra Callback instruction
+		real_writew((Bit16u)CB_SEG,(callback<<4)+3,callback);		//The immediate word
+		real_writeb((Bit16u)CB_SEG,(callback<<4)+5,(Bit8u)0xCF);	//An IRET Instruction
+		break;
+
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 
