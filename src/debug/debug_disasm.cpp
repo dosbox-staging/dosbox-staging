@@ -116,8 +116,6 @@ static int modrmv;            /* flag for getting modrm byte */
 static int sibv;              /* flag for getting sib byte   */
 static int opsize;            /* just like it says ...       */
 static int addrsize;
-static int addr20bit=0;
-static int addr24bit=0;
 static int addr32bit=0;
 
 /* some defines for extracting instruction bit fields from bytes */
@@ -444,13 +442,8 @@ static char *addr_to_hex(UINT32 addr, int splitup) {
     else
 #endif
 
-		if (addr20bit) {
-			sprintf(buffer, "%05X", addr&0xfffff );
-		} else if (addr24bit) {
-			sprintf(buffer, "%06X", addr&0xffffff );
-		} else if (addr32bit) {
-			sprintf(buffer, "%08X", addr );
-		}
+	sprintf(buffer, "%08X", addr );
+	
   }
 
   return buffer;
@@ -874,7 +867,6 @@ static void percent(char type, char subtype)
             vofs = (INT16)vofs;
 			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,0);
             break;
-#if 0
 			/* i386 */
        case 4:
             vofs = (UINT32)getbyte();           /* yuk! */
@@ -883,7 +875,6 @@ static void percent(char type, char subtype)
             vofs |= (UINT32)getbyte() << 24;
 			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,1);
             break;
-#endif
        }
 	   if (vofs<0)
 		   uprintf("%s ($-%x)", name, -vofs);
@@ -1087,7 +1078,7 @@ Bitu DasmI386(char* buffer, PhysPt pc, Bitu cur_ip, bool bit32)
 	ubufp = buffer;
 	first_space = 1;
 
-	addr32bit=1;addr20bit=addr24bit=0;
+	addr32bit=1;
 
 	prefix = 0;
 	modrmv = sibv = -1;     /* set modrm and sib flags */
