@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.69 2004-05-11 18:42:37 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.70 2004-06-28 01:41:20 canadacow Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -79,6 +79,7 @@ void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
 void MODEM_Init(Section*); 
 void IPX_Init(Section*);
+void DIRECTSERIAL_Init(Section* sec);
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
@@ -368,6 +369,17 @@ void DOSBOX_Init(void) {
 		"modem -- Enable virtual modem emulation.\n"
 		"comport -- COM Port modem is connected to.\n"
 		"listenport -- TCP Port the momdem listens on for incoming connections.\n"
+#if C_DIRECTSERIAL
+	secprop=control->AddSection_prop("directserial",&DIRECTSERIAL_Init);
+	secprop->Add_bool("directserial", true);
+	secprop->Add_hex("comport",1); 
+	secprop->Add_string("realport", "COM1");
+	secprop->Add_int("defaultbps", 1200);
+	secprop->Add_string("parity", "N"); // Could be N, E, O
+	secprop->Add_int("bytesize", 8); // Could be 5 to 8
+	secprop->Add_int("stopbit", 1); // Could be 1 or 2
+#endif
+	 
 	);
 #endif
 

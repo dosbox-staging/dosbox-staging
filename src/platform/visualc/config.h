@@ -1,6 +1,8 @@
 #define INLINE __forceinline
 
-#define VERSION "0.60"
+#define VERSION "0.61"
+
+#define C_DIRECTSERIAL 1
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 1

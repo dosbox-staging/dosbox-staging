@@ -17,6 +17,8 @@
  */
 
 #include <string.h>
+#include <assert.h>
+#include <list>
 
 #include "dosbox.h"
 #include "inout.h"
@@ -29,389 +31,220 @@
 #include "serialport.h"
 
 #define SERIALBASERATE 115200
-#define SERIALPORT_COUNT 2
-
 #define LOG_UART LOG_MSG
-CSerial *serialports[SERIALPORT_COUNT];
 
+CSerialList seriallist;
 
-void CSerial::setdivisor(Bit8u dmsb, Bit8u dlsb) {
-	Bitu divsize=(dmsb << 8) | dlsb;
-	if (divsize!=0) {
+void CSerial::UpdateBaudrate(void) {
+	Bitu divsize=(divisor_msb << 8) | divisor_lsb;
+	if (divsize) {
 		bps = SERIALBASERATE / divsize;
 	}
 }
 
 
+void CSerial::Timer(void) {
+	dotxint=true;
+	checkint();
+}
+
 void CSerial::checkint(void) {
-	/* Find lowest priority interrupt to activate */
-	Bitu i;
-	for (i=0;i<INT_NONE;i++) {
-		if (ints.requested & ints.enabled & (1 << i)) {
-			PIC_ActivateIRQ(irq);
-			ints.active=(INT_TYPES)i;
+	/* Check which irq to activate */
+	//TODO Check for line status changes, but we can't get errors anyway
+	//Since we only check once every millisecond, we just ignore the fifosize parameter
+	if ((ier & 0x1) && rqueue->inuse()) {
+//		LOG_MSG("RX IRQ with %d",rqueue->inuse());
+		iir=0x4;
+	} else if ((ier & 0x2) && !tqueue->inuse() && dotxint) {
+		iir=0x2;
+	} else if ((ier & 0x8) && (mstatus & 0x0f)) {
+		iir=0x0;
+	} else {
+		iir=0x1;
+		PIC_DeActivateIRQ(irq);
 			return;
 		}
-	}
-	/* Not a single interrupt schedulded, lower IRQ */
-	PIC_DeActivateIRQ(irq);
-	ints.active=INT_NONE;
+	if (mctrl & 0x8) PIC_ActivateIRQ(irq);
+	else PIC_DeActivateIRQ(irq);
 }
 
-void CSerial::raiseint(INT_TYPES type) {
-//	LOG_MSG("Raising int %X rx size %d tx size %d",type,rx_fifo.used,tx_fifo.used);
-	ints.requested|=1 << type;
-	checkint();
-}
-
-void CSerial::lowerint(INT_TYPES type){
-	ints.requested&=~(1 << type);
-	checkint();
-}
-
-
-void CSerial::write_port(Bitu port, Bitu val) {
-
-	port-=base;
-//	LOG_UART("Serial write %X val %x %c",port,val,val);
-	switch(port) {
+void CSerial::write_reg(Bitu reg, Bitu val) {
+//	if (port!=9 && port!=8) LOG_MSG("Serial write %X val %x %c",port,val,val);
+	switch(reg) {
 	case 0x8:  // Transmit holding buffer + Divisor LSB
 		if (dlab) {
 			divisor_lsb = val;
-			setdivisor(divisor_msb, divisor_lsb);
+			UpdateBaudrate();
 			return;
 		}
-		if (local_loopback) {
-			rx_addb(val);
-		} else tx_addb(val);
+		if (local_loopback) rqueue->addb(val);
+		else tqueue->addb(val);
 		break;
 	case 0x9:  // Interrupt enable register + Divisor MSB
 		if (dlab) {
 			divisor_msb = val;
-			setdivisor(divisor_msb, divisor_lsb);
+			UpdateBaudrate();
 			return;
+		} else {
+            ier = val;
+			dotxint=true;
 		}
-		/* Only enable the FIFO interrupt by default */
-		ints.enabled=1 << INT_RX_FIFO;
-		if (val & 0x1) ints.enabled|=1 << INT_RX;
-		if (val & 0x2) ints.enabled|=1 << INT_TX;
-		if (val & 0x4) ints.enabled|=1 << INT_LS;
-		if (val & 0x8) ints.enabled|=1 << INT_MS;
-		ierval = val;		
-		checkint();
 		break;
 	case 0xa:  // FIFO Control register
-		FIFOenabled = false;
-		if (val & 0x1) {
-//			FIFOenabled = true;
-			timeout = 0;
-		}
-		if (val & 0x2) {		//Clear receiver FIFO
-			rx_fifo.used=0;
-			rx_fifo.pos=0;
-		}
-		if (val & 0x4) {		//Clear transmit FIFO
-			tx_fifo.used=0;
-			tx_fifo.pos=0;
-		}
+		FIFOenabled = (val & 0x1) > 0;
+		if (val & 0x2) rqueue->clear(); //Clear receiver FIFO
+		if (val & 0x4) tqueue->clear();	//Clear transmit FIFO
 		if (val & 0x8) LOG(LOG_MISC,LOG_WARN)("UART:Enabled DMA mode");
 		switch (val >> 6) {
-		case 0:
-			FIFOsize = 1;
-			break;
-		case 1:
-			FIFOsize = 4;
-			break;
-		case 2:
-			FIFOsize = 8;
-			break;
-		case 3:
-			FIFOsize = 14;
-			break;
+		case 0:FIFOsize = 1;break;
+		case 1:FIFOsize = 4;break;
+		case 2:FIFOsize = 8;break;
+		case 3:FIFOsize = 14;break;
 		}
 		break;
 	case 0xb:  // Line control register
 		linectrl = val;
-		wordlen = (val & 0x3);
-		dlab = (val & 0x80) > 0;
+		dlab = (val & 0x80);
 		break;
 	case 0xc:  // Modem control register
-		dtr  = val & 0x01;
-		rts  = (val & 0x02) > 0 ;
-		out1 = (val & 0x04) > 0;
-		out2 = (val & 0x08) > 0;
-		if (mc_handler) (*mc_handler)(val & 0xf);
-		local_loopback = (val & 0x10) > 0;
+		mctrl=val;
+		local_loopback = (val & 0x10);
 		break;
 	case 0xf:  // Scratch register
 		scratch = val;
 		break;
 	default:
-		LOG_UART("Modem: Write to 0x%x, with 0x%x '%c'\n", port,val,val);
+		LOG_UART("Modem: Write to 0x%x, with 0x%x '%c'\n", reg,val,val);
 		break;
 	}
 }
 
-void CSerial::write_serial(Bitu port, Bitu val,Bitu iolen) {
-	int i;
-
-	for(i=0;i<SERIALPORT_COUNT;i++){
-		if( (port>=serialports[i]->base+0x8) && (port<=(serialports[i]->base+0xf)) ) {
-			serialports[i]->write_port(port,val);
+static void WriteSerial(Bitu port,Bitu val,Bitu iolen) {
+	Bitu check=port&~0xf;
+	for (CSerial_it it=seriallist.begin();it!=seriallist.end();it++){
+		CSerial * serial=(*it);
+		if (check==serial->base) {
+			serial->write_reg(port&0xf,val);
+			return;
 		}
 	}
 }
 
-Bitu CSerial::read_port(Bitu port) {
-	Bit8u outval = 0;
+static Bitu ReadSerial(Bitu port,Bitu iolen) {
+	Bitu check=port&~0xf;
+	
+	for (CSerial_it it=seriallist.begin();it!=seriallist.end();it++){
+		CSerial * serial=(*it);
+		if (check==serial->base) {
 
-	port-=base;
-//	LOG_MSG("Serial read form %X",port);
-	switch(port) {
+				return serial->read_reg(port&0xf);
+		}
+	}
+	return 0;
+}
+
+void SERIAL_Update(void) {
+	for (CSerial_it it=seriallist.begin();it!=seriallist.end();it++){
+		CSerial * serial=(*it);
+		serial->Timer();
+	}
+}
+
+
+
+Bitu CSerial::read_reg(Bitu reg) {
+	Bitu retval;
+//	if (port!=0xd && port!=0xa) LOG_MSG("REad from port %x",reg);
+	switch(reg) {
 	case 0x8:  //  Receive buffer + Divisor LSB
 		if (dlab) {
 			return divisor_lsb ;
 		} else {
-			outval = rx_readb();
-//			LOG_UART("Read from %X %X %c remain %d",port,outval,outval,rx_fifo.used);		
-			return outval;
+			retval=rqueue->getb();
+			//LOG_MSG("Received char %x %c",retval,retval);
+			checkint();
+			return retval;
 		}
 	case 0x9:  // Interrupt enable register + Divisor MSB
 		if (dlab) {
 			return divisor_msb ;
 		} else {
-//			LOG_UART("Read from %X %X",port,ierval);
-			return ierval;
+			return ier;
 		}
 	case 0xa:  // Interrupt identification register
-		switch (ints.active) {
-		case INT_MS:
-			outval = 0x0;
-			break;
-		case INT_TX:
-			outval = 0x2;
-			lowerint(INT_TX);
-			goto skipreset;
-		case INT_RX:
-			outval = 0x4;
-			break;
-		case INT_RX_FIFO:
-			lowerint(INT_RX_FIFO);
-			outval = 0xc;
-			goto skipreset;
-		case INT_LS:
-			outval = 0x6;
-			break;
-		case INT_NONE:
-			outval = 0x1;
-			break;
+		retval=iir;	
+		if (iir==2) {
+			dotxint=false;
+			iir=1;
 		}
-		ints.active=INT_NONE;
-skipreset:	
-		if (FIFOenabled) outval |= 3 << 6;
-//		LOG_UART("Read from %X %X",port,outval);		
-		return outval;
+//		LOG_MSG("Read iir %d after %d",retval,iir);
+		return retval | ((FIFOenabled) ? (3 << 6) : 0);
 	case 0xb:  // Line control register
-		LOG_UART("Read from %X %X",port,outval);
 		return linectrl;
 	case 0xC:  // Modem control register
-		outval = dtr | (rts << 1)  | (out1 << 2) | (out2 << 3) | (local_loopback << 4);
-//		LOG_UART("Read from %X %X",port,outval);
-		return outval;
+		return mctrl;
 	case 0xD:  // Line status register
-		lowerint(INT_LS);
-		outval = 0x40;
-		if (FIFOenabled) {
-			if (!tx_fifo.used) outval|=0x20;
-		} else if (tx_fifo.used<FIFO_SIZE) outval|=0x20;
-
-		if (rx_fifo.used) outval|= 1;
-//		LOG_UART("Read from %X %X",port,outval);
-		return outval;
-		break;
+		retval = 0x40;
+		if (!tqueue->inuse()) retval|=0x20;
+		if (rqueue->inuse()) retval|= 1;
+//		LOG_MSG("Read from line status %x",retval);
+		return retval;
 	case 0xE:  // modem status register 
-		lowerint(INT_MS);
-//		LOG_UART("Read from %X %X",port,outval);		
-		outval=mstatus;
+		retval=mstatus;
 		mstatus&=0xf0;
-		return outval;
+		checkint();
+		return retval;
 	case 0xF:  // Scratch register
 		return scratch;
 	default:
 		//LOG_DEBUG("Modem: Read from 0x%x\n", port);
 		break;
 	}
-
-	return 0x00;
-
-	
-
-}
-
-Bitu CSerial::read_serial(Bitu port,Bitu iolen)
-{
-	int i;
-	for(i=0;i<SERIALPORT_COUNT;i++){
-		if( (port>=serialports[i]->base+0x8) && (port<=(serialports[i]->base+0xf)) ) {
-			return serialports[i]->read_port(port);
-		}
-	}
 	return 0x00;	
 }
 
-Bitu CSerial::rx_free() {
-	return FIFO_SIZE-rx_fifo.used;
-}
 
-Bitu CSerial::tx_free() {
-	return FIFO_SIZE-tx_fifo.used;
-}
-
-Bitu CSerial::tx_size() {
-	if (FIFOenabled && rx_fifo.used && (rx_lastread < (PIC_Ticks-2))) {
-		raiseint(INT_RX_FIFO);
-	}
-	return tx_fifo.used;
-}
-
-Bitu CSerial::rx_size() {
-	return rx_fifo.used;
-}
-
-void CSerial::rx_addb(Bit8u data) {
-//	LOG_UART("RX add %c",data);
-	if (rx_fifo.used<FIFO_SIZE) {
-		Bitu where=rx_fifo.pos+rx_fifo.used;
-		if (where>=FIFO_SIZE) where-=FIFO_SIZE;
-		rx_fifo.data[where]=data;
-		rx_fifo.used++;
-		if (FIFOenabled && (rx_fifo.used < FIFOsize)) return;
-		/* Raise rx irq if possible */
-		if (ints.active != INT_RX) raiseint(INT_RX);
-	} 
-}
-
-void CSerial::rx_adds(Bit8u * data,Bitu size) {
-	if ((rx_fifo.used+size)<=FIFO_SIZE) {
-		Bitu where=rx_fifo.pos+rx_fifo.used;
-		rx_fifo.used+=size;
-		while (size--) {
-			if (where>=FIFO_SIZE) where-=FIFO_SIZE;
-			rx_fifo.data[where++]=*data++;
-		}
-		if (FIFOenabled && (rx_fifo.used < FIFOsize)) return;
-		if (ints.active != INT_RX) raiseint(INT_RX);
-	}
-//	else LOG_MSG("WTF");
-}
-
-void CSerial::tx_addb(Bit8u data) {
-//	LOG_UART("TX add %c",data);
-	if (tx_fifo.used<FIFO_SIZE) {
-		Bitu where=tx_fifo.pos+tx_fifo.used;
-		if (where>=FIFO_SIZE) where-=FIFO_SIZE;
-		tx_fifo.data[where]=data;
-		tx_fifo.used++;
-		if (tx_fifo.used<(FIFO_SIZE-16)) {
-			/* Only generate FIFO irq's every 16 bytes */
-			if (FIFOenabled && (tx_fifo.used & 0xf)) return;
-			raiseint(INT_TX);
-		}
-	} else {
-//		LOG_MSG("tx addb");
+void CSerial::SetModemStatus(Bit8u status) {
+	status&=0xf;
+	Bit8u oldstatus=mstatus >> 4;
+	if (oldstatus ^ status ) {
+		mstatus=(mstatus & 0xf) | status << 4;
+		mstatus|=(oldstatus ^ status) & ((status & 0x4) | (0xf-0x4));
 	}
 }
 
-Bit8u CSerial::rx_readb() {
-	if (rx_fifo.used) {
-		rx_lastread=PIC_Ticks;
-		Bit8u val=rx_fifo.data[rx_fifo.pos];
-		rx_fifo.pos++;
-		if (rx_fifo.pos>=FIFO_SIZE) rx_fifo.pos-=FIFO_SIZE;
-		rx_fifo.used--;
-		//Don't care for FIFO Size
-		if (FIFOenabled || !rx_fifo.used) lowerint(INT_RX);
-		else raiseint(INT_RX);
-		return val;
-	} else {
-//		LOG_MSG("WTF rx readb");
-		return 0;
-	}
-}
-
-Bit8u CSerial::tx_readb() {
-	if (tx_fifo.used) {
-		Bit8u val=tx_fifo.data[tx_fifo.pos];
-		tx_fifo.pos++;
-		if (tx_fifo.pos>=FIFO_SIZE) tx_fifo.pos-=FIFO_SIZE;
-		tx_fifo.used--;
-		if (FIFOenabled && !tx_fifo.used) raiseint(INT_TX);
-		return val;
-	} else  {
-//		LOG_MSG("WTF tx readb");
-		return 0;
-	}
-}
-
-
-void CSerial::setmodemstatus(Bit8u status) {
-	Bitu oldstatus=mstatus >> 4;
-	if(oldstatus ^ status ) {
-		mstatus=status << 4;
-		mstatus|=(oldstatus ^ status);
-		raiseint(INT_MS);
-	}
-}
-
-Bit8u CSerial::getmodemstatus() {
-	return (mstatus >> 4);
-}
-
-Bit8u CSerial::getlinestatus() {
-	return read_port(0xd);
-}
-
-
-void CSerial::SetMCHandler(MControl_Handler * mcontrol) {
-	mc_handler=mcontrol;
-}
 
 CSerial::CSerial (Bit16u initbase, Bit8u initirq, Bit32u initbps) {
 
-	int i;
+	Bitu i;
 	Bit16u initdiv;
 
 	base=initbase;
 	irq=initirq;
 	bps=initbps;
 
-	mc_handler = 0;
-	tx_fifo.used = tx_fifo.pos = 0;
-	rx_fifo.used = rx_fifo.pos = 0;
-
-	rx_lastread = PIC_Ticks;
-	linectrl = dtr = rts = out1 = out2 = 0;
 	local_loopback = 0;
-	ierval = 0;
-	ints.enabled=1 << INT_RX_FIFO;
-	ints.active=INT_NONE;
-	ints.requested=0;
+	ier = 0;
+	iir = 1;
 
 	FIFOenabled = false;	
 	FIFOsize = 1;
-	timeout = 0;
 	dlab = 0;
-	ierval = 0;
+	mstatus = 0;
 
 	initdiv = SERIALBASERATE / bps;
-	setdivisor(initdiv >> 8, initdiv & 0x0f);
+	UpdateBaudrate();
 
-	for (i=8;i<=0xf;i++) {
-		IO_RegisterWriteHandler(initbase+i,write_serial,IO_MB);
-		IO_RegisterReadHandler(initbase+i,read_serial,IO_MB);
+	for (i=base;i<=(base+8);i++) {
+		IO_RegisterWriteHandler(i+8,WriteSerial,IO_MB);
+		IO_RegisterReadHandler(i+8,ReadSerial,IO_MB);
 	}
 	
 	PIC_RegisterIRQ(irq,0,"SERIAL");
+
+	rqueue=new CFifo(QUEUE_SIZE);
+	tqueue=new CFifo(QUEUE_SIZE);
+
 
 
 };
@@ -422,20 +255,12 @@ CSerial::~CSerial(void)
 };
 
 
-
-CSerial *getComport(Bitu portnum)
-{
-	return serialports[portnum-1];
-}
-
 void SERIAL_Init(Section* sec) {
-
 	unsigned long args = 1;
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 //	if(!section->Get_bool("enabled")) return;
 
-	serialports[0] = new CSerial(0x3f0,4,SERIALBASERATE);
-	serialports[1] = new CSerial(0x2f0,3,SERIALBASERATE);
+	TIMER_AddTickHandler(&SERIAL_Update);
 }
 
