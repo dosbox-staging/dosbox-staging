@@ -51,7 +51,7 @@ Bit8u MIDI_evt_len[256] = {
 
   3,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,3,  // 0xe0
 
-  0,2,3,2, 0,0,1,0, 1,0,1,1, 1,0,1,1   // 0xf0
+  0,2,3,2, 0,0,1,0, 1,0,1,1, 1,0,1,0   // 0xf0
 };
 
 class MidiHandler;
@@ -110,6 +110,7 @@ static struct {
 	struct {
 		FILE * handle;
 		Bit8u buffer[RAWBUF+SYSEX_SIZE];
+		bool capturing;
 		Bitu used,done;
 		Bit32u last;
 	} raw;
@@ -134,7 +135,15 @@ static INLINE void RawAddNumber(Bit32u val) {
 	ADDBUF(val  & 0x7f);
 }
 static INLINE void RawAddDelta(void) {
-	if (!midi.raw.last) midi.raw.last=PIC_Ticks;
+	if (!midi.raw.handle) {
+		midi.raw.handle=OpenCaptureFile("Raw Midi",".mid");
+		if (!midi.raw.handle) {
+			midi.raw.capturing=false;		
+			return;
+		}
+		fwrite(midi_header,1,sizeof(midi_header),midi.raw.handle);
+		midi.raw.last=PIC_Ticks;
+	}
 	Bit32u delta=PIC_Ticks-midi.raw.last;
 	midi.raw.last=PIC_Ticks;
 	RawAddNumber(delta);
@@ -151,8 +160,10 @@ static INLINE void RawAddData(Bit8u * data,Bitu len) {
 
 static void MIDI_SaveRawEvent(void) {
 	/* Check for previously opened wave file */
-	if (midi.raw.handle) {
+	if (midi.raw.capturing) {
 		LOG_MSG("Stopping raw midi saving.");
+		midi.raw.capturing=false;
+		if (!midi.raw.handle) return;
 		ADDBUF(0x00);//Delta time
 		ADDBUF(0xff);ADDBUF(0x2F);ADDBUF(0x00);		//End of track event
 		fwrite(midi.raw.buffer,1,midi.raw.used,midi.raw.handle);
@@ -167,11 +178,11 @@ static void MIDI_SaveRawEvent(void) {
 		fclose(midi.raw.handle);
 		midi.raw.handle=0;
 	} else {
-		midi.raw.handle=OpenCaptureFile("Raw Midi",".mid");
-		if (!midi.raw.handle) return;
-		fwrite(midi_header,1,sizeof(midi_header),midi.raw.handle);
+		LOG_MSG("Preparing for raw midi capture, will start with first data.");
 		midi.raw.used=0;
 		midi.raw.done=0;
+		midi.raw.handle=0;
+		midi.raw.capturing=true;
 	}
 }
 
@@ -186,7 +197,7 @@ void MIDI_RawOutByte(Bit8u data) {
 			midi.sysex.buf[midi.sysex.used++]=0xf7;
 			midi.handler->PlaySysex(midi.sysex.buf,midi.sysex.used);
 			LOG(LOG_ALL,LOG_NORMAL)("Sysex message size %d",midi.sysex.used);
-			if (midi.raw.handle) {
+			if (midi.raw.capturing) {
 				RawAddDelta();
 				ADDBUF(0xf0);
 				RawAddNumber(midi.sysex.used-1);
@@ -206,7 +217,7 @@ void MIDI_RawOutByte(Bit8u data) {
 	if (midi.cmd_len) {
 		midi.cmd_buf[midi.cmd_pos++]=data;
 		if (midi.cmd_pos >= midi.cmd_len) {
-			if (midi.raw.handle) {
+			if (midi.raw.capturing) {
 				RawAddDelta();
 				RawAddData(midi.cmd_buf,midi.cmd_len);
 			}
@@ -235,6 +246,7 @@ void MIDI_Init(Section * sec) {
 	midi.status=0x00;
 	midi.cmd_pos=0;
 	midi.cmd_len=0;
+	midi.raw.capturing=false;
 	if (!strcasecmp(dev,"default")) goto getdefault;
 	handler=handler_list;
 	while (handler) {
