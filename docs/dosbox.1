@@ -1,11 +1,12 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "June 5, 2004"
+.TH DOSBOX 1 "Sept 23, 2004"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
 .SH SYNOPSIS
 .B dosbox
 .B [\-fullscreen]
+.B [\-startmapper]
 .BI "[\-conf " configfile ]
 .BI "[\-lang " langfile ]
 .B [file]
@@ -24,6 +25,9 @@ A summary of options is included below.
 .TP
 .B \-fullscreen
 .RB "Start " dosbox " in fullscreen mode."
+.TP
+.B \-startmapper
+.RB "Start the internal keymapper on startup of " dosbox ". You can use it to change the keys " dosbox " uses."
 .TP
 .BI \-c  " command" 
 .RI "Runs the specified " command " before running " 
@@ -137,6 +141,30 @@ The amount of memory to eat up (in kb). Example -32, -64 or -128
 .B \-f
 Frees all memory eaten up by loadfix.
 .RE
+.TP
+.B IMGMOUNT
+.LP
+.RB "A utility to mount disk images and CD-ROM images in " DOSBox .
+.TP
+.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RE
+.TP
+.B BOOT
+.LP
+.RB "Boot will start floppy images or hard disk images independent of the operating system emulation offered by " DOSBox ".  This will allow you to play booter floppies or boot to other operating systems inside "DOSBox .
+.TP
+.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RE
+.TP
+.B IPX
+.LP
+.RB "You need to enable IPX networking in the configuration file of "DOSBox .
+.RB "All of the IPX networking is managed through the internal " DOSBox " program
+.BR IPXNET ". For help on the IPX networking from inside " DOSBox ", type"
+.BR "IPXNET HELP" " and the program will list out the commands and relevant documentation."
+.TP
+.RB "Read the " README " of " DOSBox " for the full and correct syntax."
+.RE
 .SH FILES
 Configuration and language files use a format similar to Windows .ini files. If a file named
 .BR dosbox.conf " is found in the current directory, it will be automatically loaded."
@@ -144,10 +172,18 @@ Configuration and language files use a format similar to Windows .ini files. If 
 .TP 12m
 .IP ALT\-ENTER
 Go full screen and back.
+.IP CTRL\-F1
+Start the keymapper.
+.IP CTRL\-F4
+Swap mounted disk-image (Only used with imgmount).
 .IP CTRL\-F5
 Save a screenshot.
 .IP CTRL\-F6
 Start/Stop recording sound output to a wave file.
+.IP CTRL\-ALT\-F7
+Start/Stop recording of OPL commands.
+.IP CTRL\-ALT\-F8
+Start/Stop the recording of raw MIDI commands.
 .IP CTRL\-F7
 Decrease frameskip.
 .IP CTRL\-F8
@@ -161,8 +197,9 @@ Slow down emulation (Increase DOSBox Cycles).
 .IP CTRL\-F12
 Speed up emulation (Decrease DOSBox Cycles).
 .PP
-.B "Note: "
-Once you increase your DOSBox cycles beyond your computer's maximum
+These are the default keybindings. They can be changed in the keymapper.
+.PP
+.BR "Note: " "Once you increase your " DOSBox " cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
 This maximum will vary from computer to computer, there is no standard.
 .SH "SYSTEM REQUIREMENTS"
