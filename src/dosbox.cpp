@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.78 2004-09-10 07:44:12 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.79 2004-09-10 08:02:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -287,8 +287,8 @@ void DOSBOX_Init(void) {
 	
 	MSG_Add("MIDI_CONFIGFILE_HELP",
 		"mpu401      -- Enable MPU-401 Emulation.\n"
-		"device      -- Device that will receive the MIDI data from MPU-401.\n"
 		"intelligent -- Operate in Intelligent mode.\n"
+		"device      -- Device that will receive the MIDI data from MPU-401.\n"
 		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
 		"config      -- Special configuration options for the device.\n"
 	);
