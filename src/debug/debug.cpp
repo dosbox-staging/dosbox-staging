@@ -111,9 +111,14 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
-	if (cpu.pmode) return PhysMakeProt(seg,offset);
+	if (seg==SegValue(cs)) return SegPhys(cs)+offset;
+	if (cpu.pmode) {
+		Descriptor desc;
+		if (cpu.gdt.GetDescriptor(seg,desc)) return PhysMakeProt(seg,offset);
+	}
 	return (seg<<4)+offset;
-};
+}
+
 
 bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 {
@@ -641,8 +646,9 @@ static void DrawRegisters(void) {
 	oldflags=reg_flags;
 
 	if (cpu.pmode) {
-		if (cpu.code.big)	mvwprintw(dbg.win_reg,0,76,"Pr32");
-		else				mvwprintw(dbg.win_reg,0,76,"Pr16");
+		if (reg_flags & FLAG_VM) mvwprintw(dbg.win_reg,0,76,"VM86");
+		else if (cpu.code.big) mvwprintw(dbg.win_reg,0,76,"Pr32");
+		else mvwprintw(dbg.win_reg,0,76,"Pr16");
 	} else	
 		mvwprintw(dbg.win_reg,0,76,"Real");
 
@@ -1020,7 +1026,7 @@ bool ParseCommand(char* str)
 		found+=4;
 		Bit8u intNr = (Bit8u)GetHexValue(found,found);
 		DEBUG_ShowMsg("DEBUG: Tracing INT %02X",intNr);
-		Interrupt(intNr);
+		CPU_HW_Interrupt(intNr);
 		SetCodeWinStart();
 		return true;
 	}
@@ -1034,7 +1040,7 @@ bool ParseCommand(char* str)
 		debugging=false;
 		DrawCode();
 		DOSBOX_SetNormalLoop();
-		Interrupt(intNr);
+		CPU_HW_Interrupt(intNr);
 		return true;
 	}	
 	found = strstr(str,"SELINFO ");
@@ -1156,7 +1162,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-		if (address<MEM_TotalPages()*MEM_PAGE_SIZE) {
+		if (!(paging.tlb.handler[address >> 12]->flags & PFLAG_ILLEGAL)) {
 			static char outmask[] = "%s:[%04X]=%02X";
 			
 			if (cpu.pmode) outmask[6] = '8';
@@ -1236,7 +1242,7 @@ Bit32u DEBUG_CheckKeys(void) {
 	};	
 	
 	int key=getch();
-	Bit32u ret=0;
+	Bits ret=0;
 	if (key>0) {
 		switch (toupper(key)) {
 		case '1':
@@ -1321,7 +1327,6 @@ Bit32u DEBUG_CheckKeys(void) {
 							skipFirstInstruction = true; // for heavy debugger
 							CPU_Cycles = 1;
 							Bitu ret=(*cpudecoder)();
-							if (ret>0) ret=(*CallBack_Handlers[ret])();
 							SetCodeWinStart();
 							CBreakpoint::ignoreOnce = 0;
 						}
@@ -1331,11 +1336,20 @@ Bit32u DEBUG_CheckKeys(void) {
 						skipFirstInstruction = true; // for heavy debugger
 						CPU_Cycles = 1;
 						ret = (*cpudecoder)();
-						if (ret>0) ret=(*CallBack_Handlers[ret])();
 						SetCodeWinStart();
 						CBreakpoint::ignoreOnce = 0;
 						break;
 		}
+		if (ret<0) return ret;
+		if (ret>0){
+			ret=(*CallBack_Handlers[ret])();
+			if (ret) {
+				exitLoop=true;
+				CPU_Cycles=CPU_CycleLeft=0;
+				return ret;
+			}
+		}
+		ret=0;
 		DEBUG_DrawScreen();
 	}
 	return ret;
@@ -1497,6 +1511,7 @@ Bitu DEBUG_EnableDebugger(void)
 {
 	exitLoop = true;
 	DEBUG_Enable();
+	CPU_Cycles=CPU_CycleLeft=0;
 	return 0;
 };
 
