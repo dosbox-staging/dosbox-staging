@@ -129,22 +129,22 @@ switch (inst.code.op) {
 
 	case O_DSHLw:
 		{
-			DSHLW(inst.op1.w,inst.op2.w,inst.imm.b,,LoadD,SaveD);
+			DSHLW(inst.op1.w,inst.op2.w,inst.imm.b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHRw:
 		{
-			DSHRW(inst.op1.w,inst.op2.w,inst.imm.b,,LoadD,SaveD);
+			DSHRW(inst.op1.w,inst.op2.w,inst.imm.b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHLd:
 		{
-			DSHLD(inst.op1.d,inst.op2.d,inst.imm.b,,LoadD,SaveD);
+			DSHLD(inst.op1.d,inst.op2.d,inst.imm.b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHRd:
 		{
-			DSHRD(inst.op1.d,inst.op2.d,inst.imm.b,,LoadD,SaveD);
+			DSHRD(inst.op1.d,inst.op2.d,inst.imm.b,LoadD,SaveD);
 			break;
 		}
 
