@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.55 2005-02-10 10:21:12 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.56 2005-02-24 11:48:01 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -400,12 +400,21 @@ void SHELL_Init() {
 	DOS_PSP psp(psp_seg);
 	psp.MakeNew(0);
 	dos.psp(psp_seg);
+
+	/* The start of the filetable in the psp must look like this:
+	 * 01 01 01 00 02
+	 * In order to achieve this: First open 2 files. Close the first and
+	 * duplicate the second (so the entries get 01) */
 	Bit16u dummy=0;
 	DOS_OpenFile("CON",2,&dummy);/* STDIN  */
 	DOS_OpenFile("CON",2,&dummy);/* STDOUT */
-	DOS_OpenFile("CON",2,&dummy);/* STDERR */
+	DOS_CloseFile(0);            /* Close STDIN */
+	DOS_ForceDuplicateEntry(1,0);/* "new" STDIN */
+	DOS_ForceDuplicateEntry(1,2);/* STDERR */
+//	DOS_OpenFile("CON",2,&dummy);/* STDERR */
 	DOS_OpenFile("CON",2,&dummy);/* STDAUX */
 	DOS_OpenFile("CON",2,&dummy);/* STDPRN */
+
 	psp.SetParent(psp_seg);
 	/* Set the environment */
 	psp.SetEnvironment(env_seg);
