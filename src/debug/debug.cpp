@@ -946,16 +946,21 @@ static void DEBUG_ProgramStart(Program * * make) {
 
 // INIT 
 
-void DEBUG_Init(Section* sec) {
+void DEBUG_SetupConsole(void)
+{
 	#ifdef WIN32
 	WIN32_Console();
-	#endif
+	#endif	
 	memset((void *)&dbg,0,sizeof(dbg));
 	debugging=false;
 	dbg.active_win=3;
 	input_count=0;
 	/* Start the Debug Gui */
 	DBGUI_StartUp();
+};
+
+void DEBUG_Init(Section* sec) {
+
 	DEBUG_DrawScreen();
 	/* Add some keyhandlers */
 	KEYBOARD_AddEvent(KBD_kpminus,0,DEBUG_Enable);

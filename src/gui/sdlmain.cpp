@@ -518,6 +518,11 @@ void GFX_ShowMsg(char * msg) {
 };
 
 int main(int argc, char* argv[]) {
+	
+#if C_DEBUG
+	DEBUG_SetupConsole();
+#endif
+	
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
