@@ -123,27 +123,6 @@ static struct {
       { 0x5300, 0x532e,   none,   none }  /* Del */
       };
 
-/*
-Old Stuff not needed after i ripped Bochs :)
-static Bit8u KeyNoShift[128]={
-	27,'1','2','3',		'4','5','6','7',	'8','9','0','-',	'=',8,9,'q',
-	'w','e','r','t',	'y','u','i','o',	'p','[',']',13,		255,'a','s','d',
-	'f','g','h','j',	'k','l',';','\'',	'`',255,'\\','z',	'x','c','v','b',
-	'n','m',',','.',	'/',255,'*',255,	' ',255,0,0,		0,0,0,0,
-	0,0,0,0,			255,255,0,0,		0,'-',0,255,		0,'+',0,0,
-	0,0,0,0,			0
-};
-
-static Bit8u KeyShift[128]={
-	27,'!','@','#',		'$','%','^','&',	'*','(',')','_',	'+',8,9,'Q',
-	'W','E','R','T',	'Y','U','I','O',	'P','{','}',13,		255,'A','S','D',
-	'F','G','H','J',	'K','L',':','"',	'~',255,'|','Z',	'X','C','V','B',
-	'N','M','<','>',	'?',255,'*',255,	' ',255,0,0,		0,0,0,0,
-	0,0,0,0,			255,255,0,0,		0,'-',0,255,		0,'+',0,0,
-	0,0,0,0,			0
-};
-*/
-
 static void add_key(Bit16u code) {
 	Bit16u start,end,head,tail,ttail;
 	start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
@@ -151,10 +130,12 @@ static void add_key(Bit16u code) {
 	head =mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	tail =mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 	ttail=tail+2;
-	if (ttail>=end) ttail=start;
+	if (ttail>=end) {
+		ttail=start;
+	}
 	/* Check for buffer Full */
 	//TODO Maybe beeeeeeep or something although that should happend when internal buffer is full
-	if (ttail==head) return;			
+	if (ttail==head) return;
 	real_writew(0x40,tail,code);
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,ttail);
 }
