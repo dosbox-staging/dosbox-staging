@@ -68,6 +68,7 @@ public:
 	char* GetName(void) { return "alsa"; }
 	void PlaySysex(Bit8u * sysex,Bitu len) {
 		snd_seq_ev_set_sysex(&ev, len, sysex);
+		send_event(1);
 	}
 
 	void PlayMsg(Bit32u msg) {
