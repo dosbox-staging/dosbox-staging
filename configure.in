@@ -107,4 +107,5 @@ src/platform/Makefile
 src/platform/visualc/Makefile
 visualc/Makefile
 include/Makefile
+docs/Makefile
 ])
