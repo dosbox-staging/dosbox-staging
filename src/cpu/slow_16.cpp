@@ -61,20 +61,20 @@ extern Bitu cycle_count;
 
 #include "core_16/support.h"
 static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count);
-static Bitu CPU_Real_16_Slow_Decode(Bitu count) {
+
+static Bitu CPU_Real_16_Slow_Decode(Bits count) {
 #include "core_16/start.h"		
-	while (count) {
+	do {
 #if C_DEBUG
 		cycle_count++;		
 #endif
-		count--;
 		#include "core_16/main.h"	
-	}
+	} while (--count>0);
 	#include "core_16/stop.h"		
 	return CBRET_NONE;
 }
 
-static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count) {
+static Bitu CPU_Real_16_Slow_Decode_Special(Bits count) {
 	while (count>0) {
 		if (flags.tf) {
 			Interrupt(3);
