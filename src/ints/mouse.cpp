@@ -44,6 +44,9 @@ struct button_event {
 #define CURSORY 16
 #define HIGHESTBIT (1<<(CURSORX-1))
 
+static Bit16u defaultTextAndMask = 0x77FF;
+static Bit16u defaultTextXorMask = 0x7700;
+
 static Bit16u defaultScreenMask[CURSORY] = {
 		0x3FFF, 0x1FFF, 0x0FFF, 0x07FF,
 		0x03FF, 0x01FF, 0x00FF, 0x007F,
@@ -86,6 +89,7 @@ static struct {
 	Bit16u* cursorMask;
 	Bit16s	clipx,clipy;
 	Bit16s  hotx,hoty;
+	Bit16u  textAndMask, textXorMask;
 } mouse;
 
 #define X_MICKEY 8
@@ -107,6 +111,58 @@ INLINE void Mouse_AddEvent(Bit16u type) {
 	}
 	PIC_ActivateIRQ(12);
 }
+
+// ***************************************************************************
+// Mouse cursor - text mode
+// ***************************************************************************
+
+void RestoreCursorBackgroundText()
+{
+	if (mouse.shown<0) return;
+
+	if (mouse.background) {
+		// Save old Cursorposition
+		Bit8u oldx = CURSOR_POS_ROW(0);
+		Bit8u oldy = CURSOR_POS_COL(0);
+		// Restore background
+		INT10_SetCursorPos	((Bit8u)mouse.backposy,(Bit8u)mouse.backposx,0);
+		INT10_WriteChar		(mouse.backData[0],mouse.backData[1],0,1,true);
+		// Restore old cursor position
+		INT10_SetCursorPos	(oldx,oldy,0);
+		mouse.background = false;
+	}
+};
+
+void DrawCursorText()
+{	
+	// Restore Background
+	RestoreCursorBackgroundText();
+
+	// Save old Cursorposition
+	Bit8u oldx = CURSOR_POS_ROW(0);
+	Bit8u oldy = CURSOR_POS_COL(0);
+
+	// Save Background
+	Bit16u result;
+	INT10_SetCursorPos	(POS_Y>>3,POS_X>>3,0);
+	INT10_ReadCharAttr	(&result,0);
+	mouse.backData[0]	= result & 0xFF;
+	mouse.backData[1]	= result>>8;
+	mouse.backposx		= POS_X>>3;
+	mouse.backposy		= POS_Y>>3;
+	mouse.background	= true;
+
+	// Write Cursor
+	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
+	INT10_WriteChar	(result&0xFF,result>>8,0,1,true);
+
+	// Restore old cursor position
+	INT10_SetCursorPos (oldx,oldy,0);
+};
+
+// ***************************************************************************
+// Mouse cursor - graphic mode
+// ***************************************************************************
 
 static gfxReg[9];
 
@@ -189,6 +245,13 @@ void DrawCursor() {
 	// Get Clipping ranges
 	VGAMODES * curmode=GetCurrentMode();	
 	if (!curmode) return;
+	
+	// In Textmode ?
+	if (curmode->type==TEXT) {
+		DrawCursorText();
+		return;
+	}
+
 	mouse.clipx = curmode->swidth-1;
 	mouse.clipy = curmode->sheight-1;
 
@@ -323,6 +386,8 @@ static void  mouse_reset(void) {
 	mouse.background = false;
 	mouse.screenMask = defaultScreenMask;
 	mouse.cursorMask = defaultCursorMask;
+	mouse.textAndMask= defaultTextAndMask;
+	mouse.textXorMask= defaultTextXorMask;
 }
 
 
@@ -340,8 +405,12 @@ static Bitu INT33_Handler(void) {
 		DrawCursor();
 		break;
 	case 0x02:	/* Hide Mouse */
-		RestoreCursorBackground();
-		mouse.shown--;
+		{
+			VGAMODES * curmode=GetCurrentMode();	
+			if (curmode && curmode->type==GRAPH)	RestoreCursorBackground();
+			else									RestoreCursorBackgroundText();
+			mouse.shown--;
+		}
 		break;
 	case 0x03:	/* Return position and Button Status */
 		reg_bx=mouse.buttons;
@@ -400,7 +469,8 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x0a:	/* Define Text Cursor */
-		/* Don't see much need for supporting this */
+		mouse.textAndMask = reg_cx;
+		mouse.textXorMask = reg_dx;
 		break;
 	case 0x0c:	/* Define interrupt subroutine parameters */
 		mouse.sub_mask=reg_cx;
