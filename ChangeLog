@@ -27,7 +27,6 @@
   - rewrote upcase/lowcase functions so they work fine with gcc3.2
   - SHELL: added rename and delete
   - added support for command /C. Fixed crashes in the shell
-  - support for screenshots
   - fixed various bugs when exiting dosbox
   - fixed a bug in XMS
   - fixed a bug with the joystick when pressing a button
