@@ -21,7 +21,7 @@
 #include <list>
 
 #include "dosbox.h"
-#ifdef C_DEBUG
+#if C_DEBUG
 #include "debug.h"
 #include "cpu.h"
 #include "video.h"

@@ -19,7 +19,7 @@
 
 
 #include "dosbox.h"
-#ifdef C_DEBUG
+#if C_DEBUG
 
 #include <stdlib.h>
 #include <stdarg.h>

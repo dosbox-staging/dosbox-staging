@@ -63,7 +63,7 @@ Any comments/updates/bug reports to:
 
 */
 #include "dosbox.h"
-#ifdef C_DEBUG
+#if C_DEBUG
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
