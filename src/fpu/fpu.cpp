@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.16 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.17 2004-01-19 18:54:15 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -572,7 +572,7 @@ void FPU_ESC5_Normal(Bitu rm) {
 void FPU_ESC6_EA(Bitu rm,PhysPt addr) {
 	/* 16 bit (word integer) operants */
 	Bit16s blah = mem_readw(addr);
-	fpu.regs[8].d = static_cast<double>(blah);
+	fpu.regs[8].d = static_cast<Real64>(blah);
 	EATREE(rm);
 }
 
@@ -628,7 +628,7 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 	case 0x00:  /* FILD Bit16s */
 		{
 				Bit16s blah = mem_readw(addr);
-				FPU_PUSH( static_cast<double>(blah));
+				FPU_PUSH( static_cast<Real64>(blah));
 		}
 		break;
 	case 0x01:  /* FISTTP Bit16s */
@@ -642,18 +642,25 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 		mem_writew(addr,static_cast<Bit16s>(FROUND(fpu.regs[TOP].d)));	
 		FPU_FPOP();
 		break;
-	case 0x05:  /* FILD Bit32s */
+	case 0x05:  /* FILD Bit64s */
 		{
-				Bit32s blah = mem_readd(addr);
-				FPU_PUSH( static_cast<double>(blah));
+			FPU_Reg blah;
+			blah.l.lower = mem_readd(addr);
+			blah.l.upper = mem_readd(addr+4);
+			FPU_PUSH(static_cast<Real64>(blah.ll));
 		}
 		break;
 	case 0x06:	/* FBSTP packed BCD */
 		FPU_FBST(addr);
 		FPU_FPOP();
 		break;
-	case 0x07:  /* FISTP Bit32s */
-		mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));	
+	case 0x07:  /* FISTP Bit64s */
+		{
+			FPU_Reg blah;
+			blah.ll = static_cast<Bit64s>(FROUND(fpu.regs[TOP].d));
+			mem_writed(addr,blah.l.lower);
+			mem_writed(addr+4,blah.l.upper);
+		}
 		FPU_FPOP();
 		break;
 	case 0x04:   /* FBLD packed BCD */
