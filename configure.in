@@ -43,6 +43,8 @@ AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
     [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
 
+#Check for big endian machine, should #define WORD_BIGENDIAN if so
+AC_C_BIGENDIAN
 
 AC_OUTPUT([ 
 Makefile
