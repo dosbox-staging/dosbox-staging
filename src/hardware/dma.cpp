@@ -53,11 +53,12 @@ struct DMA_CHANNEL {
 	Bit16u base_address;
 	Bit16u base_count;
 	Bit16u current_address;
-	Bit32u current_count;
+	Bitu current_count;
 	Bit8u page;
 	bool masked;
 	PhysPt address;
 	bool addr_changed;
+	bool enabled;
 	DMA_EnableCallBack enable_callback;
 };
 
@@ -70,6 +71,8 @@ struct DMA_CONTROLLER {
 };
 
 static DMA_CONTROLLER dma[2];
+void DMA_TestChannel(DMA_CHANNEL * chan);
+
 static Bit8u read_dma(Bit32u port) {
 	/* only use first dma for now */
 	DMA_CONTROLLER * cont=&dma[0];
@@ -120,6 +123,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		} else {
 			chan->base_address=(chan->base_address & 0x00ff) | (val<<8);
 		}
+//		LOG_MSG("DMA:Address %X",chan->base_address);
 		cont->flipflop=!cont->flipflop;
 		chan->addr_changed=true;
 		break;
@@ -130,8 +134,10 @@ static void write_dma(Bit32u port,Bit8u val) {
 		} else {
 			chan->base_count=(chan->base_count & 0x00ff) | (val<<8);
 		}
+//		LOG_MSG("DMA:count %X",chan->base_count);
 		cont->flipflop=!cont->flipflop;
 		chan->addr_changed=true;
+		DMA_TestChannel(chan);
 		break;
 	case 0x08:	/* Command Register */
 		if (val != 4) LOG(LOG_ERROR,"DMA1:Illegal command %2X",val);
@@ -150,7 +156,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 	case 0x0a:	/* single mask bit register */
 		chan=&cont->chan[val & 0x3];
 		chan->masked=(val & 4)>0;
-		if (chan->enable_callback) chan->enable_callback(!chan->masked);
+		DMA_TestChannel(chan);
 		break;
 	case 0x0b:	/* mode register */
 		chan=&cont->chan[val & 0x3];
@@ -161,7 +167,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		if (chan->mode.address_decrement) {
 			LOG(LOG_ERROR,"DMA:Address Decrease not supported yet");
 		}
-
+		DMA_TestChannel(chan);
 		break;
 	case 0x0c:	/* Clear Flip/Flip */
 		cont->flipflop=true;
@@ -194,6 +200,7 @@ INLINE void ResetDMA8(DMA_CHANNEL * chan) {
 	chan->address=(chan->page << 16)+chan->base_address;
 	chan->current_count=chan->base_count+1;
 	chan->current_address=chan->base_address;
+//	LOG_MSG("DMA8:Setup at address %X:%X count %X",chan->page<<12,chan->base_address,chan->current_count);
 }
 
 
@@ -217,6 +224,8 @@ Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 			count=chan->current_count;
 			chan->current_address+=count;;
 			chan->current_count=0;
+			if (chan->enable_callback) chan->enable_callback(false);
+			chan->enabled=false;
 			return count;
 		} else {
 			buffer+=chan->current_count;
@@ -269,8 +278,6 @@ Bitu DMA_8_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
 }
 
 
-
-
 Bitu DMA_16_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
 
 	return 0;
@@ -282,23 +289,37 @@ Bitu DMA_16_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
 	return 0;
 }
 
+void DMA_TestChannel(DMA_CHANNEL * chan) {
+	if (!chan->enable_callback) return;
+	bool enabled;
+	if (chan->masked) enabled=false;
+	else {
+		if (chan->mode.autoinit_enable) enabled=true;
+		else if (chan->current_count || chan->addr_changed) enabled=true;
+		else enabled=false;
+	}
+	if (enabled == chan->enabled) return;
+	chan->enabled=enabled;
+	chan->enable_callback(enabled);
 
+}
 
 
 void DMA_SetEnableCallBack(Bitu channel,DMA_EnableCallBack callback) {
+	DMA_CHANNEL * chan;
 	if (channel<4) {
-		dma[0].chan[channel].enable_callback=callback;
-		if (callback) callback(!dma[0].chan[channel].masked);
-		return;
-	}
-	if (channel<8) {
-		dma[1].chan[channel-4].enable_callback=callback;
-		if (callback) callback(!dma[1].chan[channel-4].masked);
-	}
+		chan=&dma[0].chan[channel];
+	} else if (channel<8) {
+		chan=&dma[1].chan[channel-4];
+	} else return;
+	chan->enabled=false;
+	chan->enable_callback=callback;
+	DMA_TestChannel(chan);
 }
 
 void DMA_Init(Section* sec) {
-	for (Bit32u i=0;i<0x10;i++) {
+	Bitu i;
+	for (i=0;i<0x10;i++) {
 		IO_RegisterWriteHandler(i,write_dma,"DMA1");
 		IO_RegisterReadHandler(i,read_dma,"DMA1");
 	}
