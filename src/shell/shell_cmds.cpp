@@ -38,6 +38,7 @@ static SHELL_Cmd cmd_list[]={
 	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP",
 	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP",
 	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP",
+    "RENAME",   0,          &DOS_Shell::CMD_RENAME,     "SHELL_CMD_RENAME_HELP",
 	
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
@@ -90,6 +91,17 @@ void DOS_Shell::CMD_HELP(char * args){
 	}
 
 }
+
+void DOS_Shell::CMD_RENAME(char * args){
+    if(!*args) {SyntaxError();return;}
+    if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_RENAME_WILD"));}
+    char * arg2 =StripWord(args);
+    DOS_Rename(args,arg2);
+}
+
+
+
+
 
 void DOS_Shell::CMD_ECHO(char * args) {
 	if (!*args) {

@@ -76,6 +76,7 @@ public:
 	void CMD_GOTO(char * args);
 	void CMD_TYPE(char * args);
 	void CMD_REM(char * args);
+    void CMD_RENAME(char * args);
 	void SyntaxError(void);
 
 	/* The shell's variables */
