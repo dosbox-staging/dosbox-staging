@@ -49,17 +49,16 @@ INLINE Bit64u PIC_MicroCount(void) {
 	return PIC_Ticks*1000+PIC_Index();
 }
 
-void PIC_ActivateIRQ(Bit32u irq);
+void PIC_ActivateIRQ(Bitu irq);
 
-void PIC_DeActivateIRQ(Bit32u irq);
+void PIC_DeActivateIRQ(Bitu irq);
 
 void PIC_runIRQs(void);
 
-void PIC_RegisterIRQ(Bit32u irq,PIC_EOIHandler handler,char * name);
-void PIC_FreeIRQ(Bit32u irq);
+void PIC_RegisterIRQ(Bitu irq,PIC_EOIHandler handler,char * name);
+void PIC_FreeIRQ(Bitu irq);
 bool PIC_RunQueue(void);
 
-void PIC_AddIRQ(Bitu irq,Bitu delay);
 void PIC_AddEvent(PIC_EventHandler handler,Bitu delay);
 
 void PIC_RemoveEvents(PIC_EventHandler handler);

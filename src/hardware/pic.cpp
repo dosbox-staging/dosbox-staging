@@ -55,14 +55,7 @@ Bitu PIC_IRQActive;
 static IRQ_Block irqs[16];
 static PIC_Controller pics[2];
 
-
-enum QUEUE_TYPE { 
-	IRQ,EVENT
-};
-
 struct PICEntry {
-	QUEUE_TYPE type;
-	Bitu irq;
 	Bitu index;
 	PIC_EventHandler event;
 	PICEntry * next;
@@ -126,6 +119,12 @@ static void write_data(Bit32u port,Bit8u val) {
 			if (irqs[i+irq_base].active && !irqs[i+irq_base].masked) PIC_IRQCheck|=(1 << (i+irq_base));
 			else PIC_IRQCheck&=~(1 << (i+irq_base));
 		};
+#if 0
+		if (PIC_IRQCheck) {
+			CPU_CycleLeft+=CPU_Cycles;
+			CPU_Cycles=0;
+		}
+#endif
 		break;
 	case 1:                        /* icw2          */
 		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",static_cast<Bitu>(port==0x21 ? 0 : 1),static_cast<Bitu>(val));
@@ -187,13 +186,13 @@ static Bit8u read_data(Bit32u port) {
 	return ret;
 }
 
-void PIC_RegisterIRQ(Bit32u irq,PIC_EOIHandler handler,char * name) {
+void PIC_RegisterIRQ(Bitu irq,PIC_EOIHandler handler,char * name) {
 	if (irq>15) E_Exit("PIC:Illegal IRQ");
 	irqs[irq].name=name;
 	irqs[irq].handler=handler;
 }
 
-void PIC_FreeIRQ(Bit32u irq) {
+void PIC_FreeIRQ(Bitu irq) {
 	if (irq>15) E_Exit("PIC:Illegal IRQ");
 	irqs[irq].name=0;
 	irqs[irq].handler=0;
@@ -202,7 +201,7 @@ void PIC_FreeIRQ(Bit32u irq) {
 	PIC_IRQCheck&=~(1 << irq);
 }
 
-void PIC_ActivateIRQ(Bit32u irq) {
+void PIC_ActivateIRQ(Bitu irq) {
 	if (irq<16) {
 		irqs[irq].active=true;
 		if (!irqs[irq].masked) {
@@ -211,7 +210,7 @@ void PIC_ActivateIRQ(Bit32u irq) {
 	}
 }
 
-void PIC_DeActivateIRQ(Bit32u irq) {
+void PIC_DeActivateIRQ(Bitu irq) {
 	if (irq<16) {
 		irqs[irq].active=false;
 		PIC_IRQCheck&=~(1 << irq);
@@ -279,22 +278,6 @@ void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
 	Bitu index=delay+PIC_Index();
 	entry->index=index;
 	entry->event=handler;
-	entry->type=EVENT;
-	pic.free_entry=pic.free_entry->next;
-	AddEntry(entry);
-}
-
-void PIC_AddIRQ(Bitu irq,Bitu delay) {
-	if (irq>15) E_Exit("PIC:Illegal IRQ");
-	if (!pic.free_entry) {
-		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
-		return;
-	}
-	PICEntry * entry=pic.free_entry;
-	Bitu index=delay+PIC_Index();
-	entry->index=index;
-	entry->irq=irq;
-	entry->type=IRQ;
 	pic.free_entry=pic.free_entry->next;
 	AddEntry(entry);
 }
@@ -305,29 +288,26 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 	PICEntry * prev_entry;
 	prev_entry=0;
 	while (entry) {
-		switch (entry->type) {
-		case EVENT:
-			if (entry->event==handler) {
-				if (prev_entry) {
-					prev_entry->next=entry->next;
-					entry->next=pic.free_entry;
-					pic.free_entry=entry;
-					entry=prev_entry->next;
-					continue;
-				} else {
-					pic.next_entry=entry->next;
-					entry->next=pic.free_entry;
-					pic.free_entry=entry;
-					entry=pic.next_entry;
-					continue;
-				}
+		if (entry->event==handler) {
+			if (prev_entry) {
+				prev_entry->next=entry->next;
+				entry->next=pic.free_entry;
+				pic.free_entry=entry;
+				entry=prev_entry->next;
+				continue;
+			} else {
+				pic.next_entry=entry->next;
+				entry->next=pic.free_entry;
+				pic.free_entry=entry;
+				entry=pic.next_entry;
+				continue;
 			}
-			break;
 		}
 		prev_entry=entry;
 		entry=entry->next;
-	}
+	}	
 }
+
 
 bool PIC_RunQueue(void) {
 	/* Check to see if a new milisecond needs to be started */
@@ -341,14 +321,7 @@ bool PIC_RunQueue(void) {
 	while (pic.next_entry && pic.next_entry->index<=index) {
 		PICEntry * entry=pic.next_entry;
 		pic.next_entry=entry->next;
-		switch (entry->type) {
-		case EVENT:
-			(entry->event)();
-			break;
-		case IRQ:
-			PIC_ActivateIRQ(entry->irq);
-			break;
-		}
+		(entry->event)();
 		/* Put the entry in the free list */
 		entry->next=pic.free_entry;
 		pic.free_entry=entry;
