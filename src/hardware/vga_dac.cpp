@@ -99,13 +99,13 @@ static void write_p3c9(Bit32u port,Bit8u val) {
 			break;
 		default:
 			/* Check for attributes and DAC entry link */
-			if (vga.dac.rgb[vga.dac.index].attr_entry>15) return;
-			if (vga.attr.palette[vga.dac.rgb[vga.dac.index].attr_entry]==vga.dac.index) {
-				RENDER_SetPal(vga.dac.rgb[vga.dac.index].attr_entry,
+			for (Bitu i=0;i<16;i++) {
+				if (vga.dac.attr[i]==vga.dac.index) {
+					RENDER_SetPal(i,
 					vga.dac.rgb[vga.dac.index].red << 2,
 					vga.dac.rgb[vga.dac.index].green << 2,
-					vga.dac.rgb[vga.dac.index].blue << 2
-				);
+					vga.dac.rgb[vga.dac.index].blue << 2);
+				}
 			}
 		}
 		vga.dac.index++;
@@ -140,7 +140,8 @@ static Bit8u read_p3c9(Bit32u port) {
 
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	/* Check if this is a new color */
-	vga.dac.rgb[pal].attr_entry=attr;
+	vga.dac.attr[attr]=pal;
+	if (vga.mode != GFX_256U && vga.mode != GFX_256C) 
 	RENDER_SetPal(attr,
 		vga.dac.rgb[pal].red << 2,
 		vga.dac.rgb[pal].green << 2,
