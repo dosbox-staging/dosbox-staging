@@ -55,12 +55,13 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
 	*file=new localFile(name,hand,0x202);
+
 	return true;
 };
 
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	char * type;
-	switch (flags) {
+	switch (flags &3) {
 	case OPEN_READ:type="rb"; break;
 	case OPEN_WRITE:type="rb+"; break;
 	case OPEN_READWRITE:type="rb+"; break;
@@ -80,6 +81,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 //	Bit32u err=errno;
 	if (!hand) return false;
 	*file=new localFile(name,hand,0x202);
+	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
 	return true;
 };

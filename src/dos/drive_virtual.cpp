@@ -132,6 +132,7 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		if (strcasecmp(name,cur_file->name)==0) {
 		/* We have a match */
 			*file=new Virtual_File(cur_file->data,cur_file->size);
+			(*file)->flags=flags;
 			return true;
 		}
 		cur_file=cur_file->next;

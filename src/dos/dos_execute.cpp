@@ -95,11 +95,12 @@ bool DOS_Terminate(bool tsr) {
 	dos.return_mode=RETURN_EXIT;
 	
 	Bit16u mempsp = dos.psp;
+
 	DOS_PSP curpsp(dos.psp);
 	if (dos.psp==curpsp.GetParent()) return true;
-
 	/* Free Files owned by process */
-	if (!tsr) curpsp.CloseFiles();	
+	if (!tsr) curpsp.CloseFiles();
+	
 	/* Get the termination address */
 	RealPt old22 = curpsp.GetInt22();
 	/* Restore vector 22,23,24 */
@@ -173,10 +174,18 @@ bool DOS_NewPSP(Bit16u segment, Bit16u size)
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
 	DOS_PSP psp_parent(psp.GetParent());
-	psp.CopyFileTable(&psp_parent);
+	psp.CopyFileTable(&psp_parent,false);
 	return true;
 };
 
+bool DOS_ChildPSP(Bit16u segment, Bit16u size)
+{
+	DOS_PSP psp(segment);
+	psp.MakeNew(size);
+	DOS_PSP psp_parent(psp.GetParent());
+	psp.CopyFileTable(&psp_parent,true);
+	return true;
+};
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	
 	/* Fix the PSP for psp and environment MCB's */
@@ -188,11 +197,11 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
 	psp.SetEnvironment(envseg);
-	/* Copy file handles */
-	if (DOS_PSP::rootpsp!=dos.psp) {
+	/* Copy file handles   //QBIX::ALWAYS COPY BUT LEFT ORIGINAL INCASE OF MISTAKES
+/*	if (DOS_PSP::rootpsp!=dos.psp) { */
 		// TODO: Improve this 
 		// If prog wasnt started from commandline copy file table (California Games 2)
-		DOS_PSP oldpsp(dos.psp);
+/*		DOS_PSP oldpsp(dos.psp);
 		psp.CopyFileTable(&oldpsp);
 	} else {
 		psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
@@ -201,8 +210,11 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 		psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
 		psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
 		psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
-	}
+	} */
 	/* Save old DTA in psp */
+		DOS_PSP oldpsp(dos.psp);
+		psp.CopyFileTable(&oldpsp,true);
+
 	psp.SetDTA(dos.dta);
 	/* Setup the DTA */
 	dos.dta=RealMake(pspseg,0x80);

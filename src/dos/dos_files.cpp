@@ -287,13 +287,11 @@ bool DOS_CloseFile(Bit16u entry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-//TODO Figure this out with devices :)	
-
-	DOS_PSP psp(dos.psp);
-	if (entry>STDPRN) psp.SetFileHandle(entry,0xff);
-
 	/* Devices won't allow themselves to be closed or killed */
-	if (Files[handle]->Close()) {
+	if (Files[handle]->Close()) 
+	{   //if close succesfull => delete file/update psp
+		DOS_PSP psp(dos.psp);
+		psp.SetFileHandle(entry,0xff);
 		delete Files[handle];
 		Files[handle]=0;
 	}
@@ -335,7 +333,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
 	if (flags>2) LOG(LOG_FILES|LOG_ERROR,"Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,"file open command %X file %s",flags,name);
-	flags&=3;
+	
 	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
 	bool device=false;char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
