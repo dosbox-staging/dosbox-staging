@@ -48,7 +48,6 @@ typedef signed int Bits;
 
 #include <stddef.h>
 #include "config.h"
-#include "../settings.h"
 
 class Section;
 
