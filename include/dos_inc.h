@@ -195,6 +195,12 @@ bool DOS_FreeMemory(Bit16u segment);
 void DOS_FreeProcessMemory(Bit16u pspseg);
 Bit16u DOS_GetMemory(Bit16u pages);
 
+
+/* FCB stuff */
+bool DOS_FCBOpen(Bit16u seg,Bit16u offset);
+bool DOS_FCBClose(Bit16u seg,Bit16u offset);
+bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset);
+bool DOS_FCBFindNext(Bit16u seg,Bit16u offset);
 /* Extra DOS Interrupts */
 void DOS_SetupMisc(void);
 

@@ -164,9 +164,38 @@ static Bitu DOS_21Handler(void) {
 		reg_al=26;
 		break;
 	case 0x0f:		/* Open File using FCB */
+		if(DOS_FCBOpen(Segs[ds].value,reg_dx)){
+			reg_al=0;
+		}else{
+			reg_al=0xff;
+		}
+		LOG_DEBUG("DOS:0x0f FCB-fileopen used");
+		break;
+
 	case 0x10:		/* Close File using FCB */
+		if(DOS_FCBClose(Segs[ds].value,reg_dx)){
+		reg_al=0;
+		}else{
+			reg_al=0xff;
+		}
+		LOG_DEBUG("DOS:0x0f FCB-fileclose used");
+		break;
 	case 0x11:		/* Find First Matching File using FCB */
+		if(DOS_FCBFindFirst(Segs[ds].value,reg_dx)){
+		reg_al=0;
+		}else{
+			reg_al=0xff;
+		}
+		LOG_DEBUG("DOS:0x0f FCB-FindFirst used");
+		break;
 	case 0x12:		/* Find Next Matching File using FCB */
+		if(DOS_FCBFindNext(Segs[ds].value,reg_dx)){
+		reg_al=0;
+		}else{
+			reg_al=0xff;
+		}
+		LOG_DEBUG("DOS:0x0f FCB-FindNext used");
+		break;
 	case 0x13:		/* Delete File using FCB */
 	case 0x14:		/* Sequential read from FCB */
 	case 0x15:		/* Sequential write to FCB */
@@ -180,7 +209,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x28:		/* Random Block read to FCB */
 		LOG_ERROR("DOS:Unhandled call %02X, FCB Stuff",reg_ah);
 		reg_al=0xff;		/* FCB Calls FAIL */
-		CALLBACK_SCF(true);
+		//CALLBACK_SCF(true); not needed.
 		break;
 	case 0x29:		/* Parse filename into FCB */
 //TODO Give errors for unsupported functions

@@ -18,11 +18,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "dosbox.h"
 #include "mem.h"
 #include "cpu.h"
 #include "dos_inc.h"
 #include "drives.h"
+#include "cross.h"
 
 #define DOS_FILESTART 4
 
@@ -446,9 +448,10 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 	} while (!DOS_CreateFile(name,0,entry));
 	return true;
 }
-#if 0
-void FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
+#if 1
+static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
 	char naam[15];
+	Bit8s teller=0;
 	Bit8u drive=fcb->Get_drive();
 	if(drive!=0){ 
 		naam[0]=(drive-1)+'A';
@@ -457,21 +460,16 @@ void FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
     else{
 		naam[0]='\0';
     };
-	char temp[9];
+	char temp[10];
 	fcb->Get_filename(temp);
-	temp[9]='.';
-	strncat(naam,temp,9);
-	char ext[3];
+	temp[8]='.';
+	temp[9]='\0';
+	strcat(naam,temp);
+	char ext[4];
 	fcb->Get_ext(ext);
-	if(drive!=0) {
-		strncat(&naam[11],ext,3);
-		naam[14]='\0';
-	}else{
-		strncat(&naam[9],ext,3);
-		naam[12]='\0';
-	};
-	DOS_MakeName(naam,outname, outdrive);
-	return;
+	ext[3]='\0';
+	strcat(naam,ext);
+    return DOS_MakeName(naam,outname, outdrive);
 }
 
 
@@ -479,14 +477,13 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 	DOS_FCB fcb(seg,offset);
 	Bit8u drive;
 	char fullname[DOS_PATHLENGTH];
-	FCB_MakeName (&fcb, fullname, &drive);
-	if(DOS_FileExists(fullname)==false) return false;
-	
+	if(!FCB_MakeName (&fcb, fullname, &drive)) return false;
+    if(!Drives[drive]->FileExists(fullname)) return false; //not really needed as stat will error.
 
-	struct stat stat_block;
-  stat(fullname, &stat_block); 
+  struct stat stat_block;
+  if(!Drives[drive]->FileStat(fullname, &stat_block)) return false; 
   fcb.Set_filesize((Bit32u)stat_block.st_size);
-  Bit16u constant =0;
+  Bit16u constant = 0;
   fcb.Set_current_block(constant);
   constant=0x80;
   fcb.Set_record_size(constant);
@@ -494,52 +491,60 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 	time=localtime(&stat_block.st_mtime);
 
 	constant=(time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-	fcb->Set_time(constant);
+	fcb.Set_time(constant);
     constant=((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
-    fcb->Set_date(constant);
-  fcb->Set_drive(drive +1);
+    fcb.Set_date(constant);
+  fcb.Set_drive(drive +1);
   return true;
   }
 
-bool FCB_Close(void) 
-{ return true;}
+bool DOS_FCBClose(Bit16u seg,Bit16u offset) 
+{   DOS_FCB fcb(seg,offset);
+	Bit8u drive;
+	char fullname[DOS_PATHLENGTH];
+	if(!FCB_MakeName (&fcb, fullname, &drive)) return false;
+    if(!Drives[drive]->FileExists(fullname)) return false;
+	
+	return true;}
 
-bool FCB_FindFirst(Bit16u seg,Bit16u offset)
-{FCB* fcb = new FCB(seg,offset);
-  Bit8u drive;
-  Bitu i;
-  char fullname[DOS_PATHLENGTH];
-  FCB_MakeName (fcb, fullname, &drive);
-  DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
-  if(Drives[drive]->FindFirst(fullname,dtablock)==false) return false;
+bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
+{
+	DOS_FCB* fcb = new DOS_FCB(seg,offset);
+	Bit8u drive;
+	Bitu i;
+	char fullname[DOS_PATHLENGTH];
+	FCB_MakeName (fcb, fullname, &drive);
+	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
+	if(Drives[drive]->FindFirst(fullname,dtablock)==false) return false;
   
-  char naam[8];
-  char ext[3];
-  char * point=strrchr(dtablock->name,'.');
-  if(point==NULL|| *(point+1)=='\0') {
-  ext[0]=' ';
-  ext[1]=' ';
-  ext[2]=' ';
-  }else
-  {strcpy(ext,point+1);
-  Bitu i;
-      i=strlen(point+1);
-  while(i!=3) ext[i-1]=' ';
-  }
+	char naam[8];
+	char ext[3];
+	char * point=strrchr(dtablock->name,'.');
+	if(point==NULL|| *(point+1)=='\0') {
+		ext[0]=' ';
+		ext[1]=' ';
+		ext[2]=' ';
+	}else{
+		strcpy(ext,(point+1));
+		i=strlen((point+1));
+		while(i!=3) {ext[i]=' ';i++;}
+	}
 
-  if(point!=NULL) *point='\0';
+	if(point!=NULL) *point='\0';
   
-  strcpy (naam,dtablock->name);
-  i=strlen(dtablock->name);
-  while(i!=8) naam[i-1]=' ';
-  FCB* fcbout= new FCB((PhysPt)Real2Host(dos.dta));
-  fcbout->Set_drive(drive +1);
-  fcbout->Set_filename(naam);
-  fcbout->Set_ext(ext);
-  return true;
-  }
-bool FCB_FindNext(Bit16u seg,Bit16u offset)
-{FCB* fcb = new FCB(seg,offset);
+	strcpy (naam,dtablock->name);
+	i=strlen(dtablock->name);
+	while(i!=8) {naam[i]=' '; i++;}
+	DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Host(dos.dta));
+	fcbout->Set_drive(drive +1);
+	fcbout->Set_filename(naam);
+	fcbout->Set_ext(ext);
+	return true;
+
+}
+bool DOS_FCBFindNext(Bit16u seg,Bit16u offset)
+{
+  DOS_FCB* fcb = new DOS_FCB(seg,offset);
   Bit8u drive;
   Bitu i;
   char fullname[DOS_PATHLENGTH];
@@ -550,22 +555,22 @@ bool FCB_FindNext(Bit16u seg,Bit16u offset)
   char ext[3];
   char * point=strrchr(dtablock->name,'.');
   if(point==NULL|| *(point+1)=='\0') {
-  ext[0]=' ';
-  ext[1]=' ';
-  ext[2]=' ';
-  }else
-  {strcpy(ext,point+1);
-  Bitu i;
-      i=strlen(point+1);
-  while(i!=3) ext[i-1]=' ';
+	ext[0]=' ';
+	ext[1]=' ';
+	ext[2]=' ';
+	}else
+  {
+		strcpy(ext,point+1);
+		i=strlen(point+1); 
+		while(i!=3) {ext[i]=' ';i++;}
   }
 
   if(point!=NULL) *point='\0';
   
   strcpy (naam,dtablock->name);
   i=strlen(dtablock->name);
-  while(i!=8) naam[i-1]=' ';
-  FCB* fcbout= new FCB((PhysPt)Real2Host(dos.dta));
+  while(i!=8) {naam[i]=' '; i++;}
+  DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Host(dos.dta));
   fcbout->Set_drive(drive +1);
   fcbout->Set_filename(naam);
   fcbout->Set_ext(ext);
@@ -575,12 +580,10 @@ bool FCB_FindNext(Bit16u seg,Bit16u offset)
 #endif
 
 bool DOS_FileExists(char * name) {
-	Bit16u handle;
-	if (DOS_OpenFile(name,0,&handle)) {
-		DOS_CloseFile(handle);
-		return true;
-	} 
-	return false;
+
+	char fullname[DOS_PATHLENGTH];Bit8u drive;
+	if (!DOS_MakeName(name,fullname,&drive)) return false;
+	return Drives[drive]->FileExists(fullname);
 }
 
 

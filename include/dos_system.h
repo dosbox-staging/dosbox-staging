@@ -82,6 +82,8 @@ public:
 	virtual bool GetFileAttr(char * name,Bit16u * attr)=0;
 	virtual bool Rename(char * oldname,char * newname)=0;
 	virtual bool FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free)=0;
+	virtual bool FileExists(const char* name) const=0;
+	virtual bool FileStat(const char* name, struct stat* const stat_block) const=0;
 	char * GetInfo(void);
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
