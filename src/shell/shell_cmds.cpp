@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.40 2004-04-01 13:00:05 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.41 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -121,7 +121,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
 	char * end=strrchr(full,'\\')+1;*end=0;
 	char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u time,date;Bit8u attr;
-	DOS_DTA dta(dos.dta);
+	DOS_DTA dta(dos.dta());
 	while (res) {
 		dta.GetResult(name,size,date,time,attr);	
 		if (!(attr & (DOS_ATTR_DIRECTORY|DOS_ATTR_READ_ONLY))) {
@@ -286,7 +286,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	*(strrchr(path,'\\')+1)=0;
 	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
-	DOS_DTA dta(dos.dta);
+	DOS_DTA dta(dos.dta());
 	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
@@ -359,7 +359,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 void DOS_Shell::CMD_COPY(char * args) {
 	StripSpaces(args);
-	DOS_DTA dta(dos.dta);
+	DOS_DTA dta(dos.dta());
 	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	char name[DOS_NAMELENGTH_ASCII];
 

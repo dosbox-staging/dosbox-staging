@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.70 2004-03-23 18:24:05 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.71 2004-05-04 18:34:07 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,20 +45,20 @@ void DOS_SetError(Bit16u code) {
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
 	if (((reg_ah != 0x50) && (reg_ah != 0x51) && (reg_ah != 0x62) && (reg_ah != 0x64)) && (reg_ah<0x6c)) {
-		DOS_PSP psp(dos.psp);
+		DOS_PSP psp(dos.psp());
 		psp.SetStack(RealMake(SegValue(ss),reg_sp-18));
 	}
+
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
 	switch (reg_ah) {
 	case 0x01:		/* Read character from STDIN, with echo */
 		{	
 			Bit8u c;Bit16u n=1;
-             dos.echo=true;
+			dos.echo=true;
 			DOS_ReadFile(STDIN,&c,&n);
 			reg_al=c;
-            dos.echo=false;
-
+			dos.echo=false;
 		}
 		break;
 	case 0x02:		/* Write character to STDOUT */
@@ -181,7 +181,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x10:		/* Close File using FCB */
 		if(DOS_FCBClose(SegValue(ds),reg_dx)){
-		reg_al=0;
+			reg_al=0;
 		}else{
 			reg_al=0xff;
 		}
@@ -189,7 +189,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x11:		/* Find First Matching File using FCB */
 		if(DOS_FCBFindFirst(SegValue(ds),reg_dx)){
-		reg_al=0;
+			reg_al=0;
 		}else{
 			reg_al=0xff;
 		}
@@ -197,7 +197,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x12:		/* Find Next Matching File using FCB */
 		if(DOS_FCBFindNext(SegValue(ds),reg_dx)){
-		reg_al=0;
+			reg_al=0;
 		}else{
 			reg_al=0xff;
 		}
@@ -254,29 +254,26 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x28 FCB-Random(block) write used, result:al=%d",reg_al);
 		break;
 	case 0x29:		/* Parse filename into FCB */
-        {   Bit8u difference;
-            char string[1024];
-            MEM_StrCopy(SegPhys(ds)+reg_si,string,1024);
-            reg_al=FCB_Parsename(SegValue(es),reg_di,reg_al ,string, &difference);
-            reg_si+=difference;
-        }
+		{   
+			Bit8u difference;
+			char string[1024];
+			MEM_StrCopy(SegPhys(ds)+reg_si,string,1024);
+			reg_al=FCB_Parsename(SegValue(es),reg_di,reg_al ,string, &difference);
+			reg_si+=difference;
+		}
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:29:FCB Parse Filename, result:al=%d",reg_al);
-        break;
+		break;
 	case 0x19:		/* Get current default drive */
 		reg_al=DOS_GetDefaultDrive();
 		break;
 	case 0x1a:		/* Set Disk Transfer Area Address */
-		{
-			dos.dta=RealMakeSeg(ds,reg_dx);
-			DOS_PSP psp(dos.psp);
-			psp.SetDTA(dos.dta);
-		}
+		dos.dta(RealMakeSeg(ds,reg_dx));
 		break;
 	case 0x25:		/* Set Interrupt Vector */
 		RealSetVec(reg_al,RealMakeSeg(ds,reg_dx));
 		break;
 	case 0x26:		/* Create new PSP */
-		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp).GetSize());
+		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp()).GetSize());
 		break;
 	case 0x2a:		/* Get System Date */
 		{
@@ -319,29 +316,43 @@ static Bitu DOS_21Handler(void) {
 		dos.verify=(reg_al==1);
 		break;
 	case 0x2f:		/* Get Disk Transfer Area */
-		SegSet16(es,RealSeg(dos.dta));
-		reg_bx=RealOff(dos.dta);
+		SegSet16(es,RealSeg(dos.dta()));
+		reg_bx=RealOff(dos.dta());
 		break;
 	case 0x30:		/* Get DOS Version */
 		if (reg_al==0) reg_bh=0xFF;		/* Fake Microsoft DOS */
 		if (reg_al==1) reg_bh=0x10;		/* DOS is in HMA */
 		reg_al=dos.version.major;
 		reg_ah=dos.version.minor;
+		/* Serialnumber */
+		reg_bl=0x00;
+		reg_cx=0x0000;
 		break;
 	case 0x31:		/* Terminate and stay resident */
 		//TODO First get normal files executing
 		// Important: This service does not set the carry flag!
-		DOS_ResizeMemory(dos.psp,&reg_dx);
+		DOS_ResizeMemory(dos.psp(),&reg_dx);
 		DOS_Terminate(true);
-		dos.return_code=reg_al;
+		dos.return_code=reg_al; //Officially a field in the SDA
 		dos.return_mode=RETURN_TSR;
+		break;
+        case 0x32: /* Get drive parameter block for specific drive */
+		{	/* Officially a dpb should be returned as well. The disk detection part is implemented */
+			Bitu drive=reg_dl;if(!drive) drive=dos.current_drive;else drive--;
+			if(Drives[drive]) {
+				reg_al=0x00;
+				LOG(LOG_DOSMISC,LOG_ERROR)("Get drive parameter block.");   
+			} else {
+				reg_al=0xff;
+			}
+		}
 		break;
 	case 0x33:		/* Extended Break Checking */
 		switch (reg_al) {
 			case 0:reg_dl=dos.breakcheck;break;			/* Get the breakcheck flag */
 			case 1:dos.breakcheck=(reg_dl>0);break;		/* Set the breakcheck flag */
 			case 2:{bool old=dos.breakcheck;dos.breakcheck=(reg_dl>0);reg_dl=old;}break;
-			case 5:reg_dl=3;break;							/* Always boot from c: :) */
+			case 5:reg_dl=3;break;//TODO should be z						/* Always boot from c: :) */
 			case 6:											/* Get true version number */
 				reg_bl=dos.version.major;
 				reg_bh=dos.version.minor;
@@ -353,8 +364,8 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x34:		/* Get INDos Flag */
-		SegSet16(es,RealSeg(dos.tables.indosflag));
-		reg_bx=RealOff(dos.tables.indosflag);
+		SegSet16(es,DOS_SDA_SEG);
+		reg_bx=DOS_SDA_OFS + 0x01;
 		break;
 	case 0x35:		/* Get interrupt vector */
 		reg_bx=real_readw(0,((Bit16u)reg_al)*4);
@@ -363,8 +374,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x36:		/* Get Free Disk Space */
 		{
 			Bit16u bytes,clusters,free;
-            Bit8u sectors;
-			if	(DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
+			Bit8u sectors;
+			if(DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
 				reg_ax=sectors;
 				reg_bx=free;
 				reg_cx=bytes;
@@ -466,7 +477,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3f:		/* READ Read from file or device */
 		{ 
 			Bit16u toread=reg_cx;
-            dos.echo=true;
+			dos.echo=true;
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
@@ -475,7 +486,7 @@ static Bitu DOS_21Handler(void) {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}
-            dos.echo=false;
+			dos.echo=false;
 			break;
 		}
 	case 0x40:					/* WRITE Write to file or device */
@@ -621,7 +632,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 //TODO Check for use of execution state AL=5
 	case 0x00:
-           reg_ax=0x4c00;       /* Terminate Program */
+		reg_ax=0x4c00;				/* Terminate Program */
 	case 0x4c:					/* EXIT Terminate with return code */
 		
         {
@@ -634,7 +645,7 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x4d:					/* Get Return code */
-		reg_al=dos.return_code;
+		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
 		reg_ah=dos.return_mode;
 		break;
 	case 0x4e:					/* FINDFIRST Find first matching file */
@@ -657,10 +668,10 @@ static Bitu DOS_21Handler(void) {
 		};
 		break;		
 	case 0x50:					/* Set current PSP */
-		dos.psp=reg_bx;
+		dos.psp(reg_bx);
 		break;
 	case 0x51:					/* Get current PSP */
-		reg_bx=dos.psp;
+		reg_bx=dos.psp();
 		break;
 	case 0x52: {				/* Get list of lists */
 		RealPt addr=dos_infoblock.GetPointer();
@@ -671,14 +682,14 @@ static Bitu DOS_21Handler(void) {
 //TODO Think hard how shit this is gonna be
 //And will any game ever use this :)
 	case 0x53:					/* Translate BIOS parameter block to drive parameter block */
-        E_Exit("Unhandled Dos 21 call %02X",reg_ah);
-        break;
+		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+		break;
 	case 0x54:					/* Get verify flag */
-        reg_al=dos.verify?1:0;
+		reg_al=dos.verify?1:0;
 		break;
 	case 0x55:					/* Create Child PSP*/
 		DOS_ChildPSP(reg_dx,reg_si);
-		dos.psp = reg_dx;
+		dos.psp(reg_dx);
 		break;
 	case 0x56:					/* RENAME Rename file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
@@ -764,6 +775,15 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
+	case 0x5d:					/* Network Functions */
+		if(reg_al == 0x06) {
+			SegSet16(ds,DOS_SDA_SEG);
+			reg_si = DOS_SDA_OFS;
+			reg_cx = 0x80;  // swap if in dos
+			reg_dx = 0x1a;  // swap always
+			LOG(LOG_DOSMISC,LOG_ERROR)("Get SDA, Let's hope for the best!");
+		}
+		break;
 	case 0x5f:					/* Network redirection */
 		reg_ax=0x0001;		//Failing it
 		CALLBACK_SCF(true);
@@ -779,7 +799,7 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 	case 0x62:					/* Get Current PSP Address */
-		reg_bx=dos.psp;
+		reg_bx=dos.psp();
 		break;
 	case 0x64:					/* Set device driver lookahead flag */
 		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
@@ -840,7 +860,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x67:					/* Set handle count */
 		/* Weird call to increase amount of file handles needs to allocate memory if >20 */
 		{
-			DOS_PSP psp(dos.psp);
+			DOS_PSP psp(dos.psp());
 			psp.SetNumFiles(reg_bx);
 			CALLBACK_SCF(false);
 			break;
@@ -873,6 +893,7 @@ static Bitu DOS_21Handler(void) {
 		CALLBACK_SCF(true);
 		LOG(LOG_DOSMISC,LOG_NORMAL)("DOS:Windows long file name support call %2X",reg_al);
 		break;
+
     case 0x68:                  /* FFLUSH Commit file */
     case 0x63:					/* Weirdo double byte stuff (fails but say it succeeded) available only in MSDOS 2.25  */
         CALLBACK_SCF(false);    //mirek
@@ -884,10 +905,8 @@ static Bitu DOS_21Handler(void) {
     case 0x6b:		            /* NULL Function */
     case 0x61:		            /* UNUSED */
     case 0xEF:                  /* Used in Ancient Art Of War CGA */
-	case 0x5d:					/* Network Functions ||HMMM seems to critical error info and return 1!! Maybe implement it.??*/
-	                            /* al=06 clears cf and leaves al=6 and returns crit error flag location*/
 	case 0x1f:					/* Get drive parameter block for default drive */
-	case 0x32:					/* Get drive parameter block for specific drive */
+
 	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
     default:
@@ -912,7 +931,7 @@ static Bitu DOS_27Handler(void)
 {
 	// Terminate & stay resident
 	Bit16u para = (reg_dx/16)+((reg_dx % 16)>0);
-	if (DOS_ResizeMemory(dos.psp,&para)) DOS_Terminate(true);
+	if (DOS_ResizeMemory(dos.psp(),&para)) DOS_Terminate(true);
 	return CBRET_NONE;
 }
 static Bitu DOS_25Handler(void) {
@@ -921,9 +940,10 @@ static Bitu DOS_25Handler(void) {
 		SETFLAGBIT(CF,true);
 	}else{
 		SETFLAGBIT(CF,false);
-		reg_ax=0;
 		if((reg_cx != 1) ||(reg_dx != 1))
-			LOG(LOG_DOSMISC,LOG_NORMAL)("int 25 called but not as diskdetection");
+			LOG(LOG_DOSMISC,LOG_NORMAL)("int 25 called but not as diskdetection drive %X",reg_al);
+
+	   reg_ax=0;
 	}
     return CBRET_NONE;
 }

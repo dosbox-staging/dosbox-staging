@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.40 2004-02-19 12:00:38 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.41 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -376,8 +376,9 @@ void SHELL_Init() {
 	strcpy(tail.buffer,init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
 	/* Setup internal DOS Variables */
-	dos.dta=psp.GetDTA();
-	dos.psp=psp_seg;
+
+	dos.dta(RealMake(psp_seg,0x80));
+	dos.psp(psp_seg);
 
 	Program * new_program;
 	SHELL_ProgramStart(&new_program);

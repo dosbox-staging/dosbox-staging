@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.20 2004-04-03 19:34:10 harekiet Exp $ */
+/* $Id: pic.cpp,v 1.21 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <list>
 
@@ -44,6 +44,7 @@ struct PIC_Controller {
 	Bitu active;
 	Bitu inservice;
 
+	bool special;
 	bool auto_eoi;
 	bool request_issr;
 	Bit8u vector_base;
@@ -103,6 +104,11 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 			}
 		} //TODO Warnings?
 		break;
+	case 0x4a:	/* OCW3 select read interrupt request register */
+		LOG(LOG_PIC,LOG_NORMAL)("port %X : special OFF",port);
+		pic->special = false;
+		pic->request_issr = false;
+		break;
 	case 0x60:case 0x61:case 0x62:case 0x63:case 0x64:case 0x65:case 0x66:case 0x67:
 		/* Spefific EOI 0-7 */
 		if (PIC_IRQActive==(irq_base+val-0x60U)) {
@@ -116,6 +122,15 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 				}
 			}
 		}//TODO Warnings?
+		break;
+	case 0x68:/* OCW3 select */
+		pic->special=true;
+		LOG(LOG_PIC,LOG_NORMAL)("port %X : special ON",port);
+		break;
+	case 0x6b:	/* OCW3 select read interrupt in-service register */
+		LOG(LOG_PIC,LOG_NORMAL)("port %X : special ON",port);
+		pic->special = true;
+		pic->request_issr = true;
 		break;
 	case 0xC0:case 0xC1:case 0xC2:case 0xC3:case 0xC4:case 0xC5:case 0xC6:case 0xC7:
 		/* Priority order, no need for it */
@@ -244,7 +259,7 @@ void PIC_runIRQs(void) {
 	Bit16u activeIRQ = PIC_IRQActive;
 	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
 	for (i=0;i<=15;i++) {
-		if (IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]){
+	   if ((IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]) || (pics[ (i<8)?0:1].special) ){
 		  	if (!irqs[i].masked && irqs[i].active) {
 				irqs[i].active=false;
 				PIC_IRQCheck&=~(1 << i);
@@ -443,6 +458,7 @@ void PIC_Init(Section* sec) {
 		pics[i].auto_eoi=false;
 		pics[i].auto_eoi=false;
 		pics[i].request_issr=false;
+		pics[i].special=false;
 		pics[i].icw_index=0;
 		pics[i].icw_words=0;
 	}

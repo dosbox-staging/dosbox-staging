@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.23 2004-04-03 19:21:28 canadacow Exp $ */
+/* $Id: dos_programs.cpp,v 1.24 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +46,7 @@ public:
 		// Show list of cdroms
 		if (cmd->FindExist("-cd",false)) {
 			int num = SDL_CDNumDrives();
-			WriteOut("CDROMs found: %d\n",num);
+   			WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"),num);
 			for (int i=0; i<num; i++) {
 				WriteOut("%2d. %s\n",i,SDL_CDName(i));
 			};
@@ -151,7 +151,7 @@ public:
 		Drives[drive-'A']=newdrive;
 		/* Set the correct media byte in the table */
 		mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',newdrive->GetMediaByte());
-		WriteOut("Drive %c mounted as %s\n",drive,newdrive->GetInfo());
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		/* check if volume label is given */
 		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
 		return;
@@ -443,6 +443,8 @@ static void INTRO_ProgramStart(Program * * make) {
 
 void DOS_SetupPrograms(void) {
     /*Add Messages */
+
+	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1","Current mounted drives are:\n");
     MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");

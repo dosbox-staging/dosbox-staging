@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.28 2004-01-10 14:03:36 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.29 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -196,7 +196,7 @@ void DOS_Shell::InputCommand(char * line) {
 					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
 					if (!res) break;	// TODO: beep
 
-					DOS_DTA dta(dos.dta);
+					DOS_DTA dta(dos.dta());
 					char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 
 					while (res) {
@@ -369,10 +369,10 @@ void DOS_Shell::Execute(char * name,char * args) {
 		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmd,128);
 		/* Parse FCB (first two parameters) and put them into the current DOS_PSP */
 		Bit8u add;
-		FCB_Parsename(dos.psp,0x5C,0x00,cmd.buffer,&add);
-		FCB_Parsename(dos.psp,0x6C,0x00,&cmd.buffer[add],&add);
-		block.exec.fcb1=RealMake(dos.psp,0x5C);
-		block.exec.fcb2=RealMake(dos.psp,0x6C);
+		FCB_Parsename(dos.psp(),0x5C,0x00,cmd.buffer,&add);
+		FCB_Parsename(dos.psp(),0x6C,0x00,&cmd.buffer[add],&add);
+		block.exec.fcb1=RealMake(dos.psp(),0x5C);
+		block.exec.fcb2=RealMake(dos.psp(),0x6C);
 		/* Set the command line in the block and save it */
 		block.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
 		block.SaveData();

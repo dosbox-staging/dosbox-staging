@@ -2,6 +2,19 @@
   - Fixed commandline parsing when .bat files involved (fixes -exit)
   - Fixed issues with tabs in commandline not being processed correctly
   - Returned filename in ds:dx in create-random-file (c2woody)
+  - Cleaned/improved shutdown sequence.
+  - Fixed a bug with date and time used on open files.
+  - Added ps2 mouse-emulation in bios interrupts. (c2woody)
+  - Made our XMS driver conform the specs better. (c2woody)
+  - Added intelligent mpu401 emulation. (Srecko)
+  - Changed sensitivity settings of the mouse.
+  - Fixed a bug with an unterminated string in the drivelabel.
+  - Changed file search routines a bit to be more compatible.
+  - Added support for attribute-searching with fcb's
+  - Changed OpenGL so that it is initialized only when used.
+  - Added basic SDA.
+  - Changed psp and dta functions to use dta.
+  - Added some more PIC commands. (c2woody)
 
 0.61
   - Added a beta dynamic cpu for x86 hosts (very unstable)

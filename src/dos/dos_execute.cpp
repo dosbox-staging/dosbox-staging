@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.38 2004-04-29 06:10:28 harekiet Exp $ */
+/* $Id: dos_execute.cpp,v 1.39 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -95,7 +95,7 @@ static void RestoreRegisters(void) {
 
 extern void GFX_SetTitle(Bits cycles,Bits frameskip);
 void DOS_UpdatePSPName(void) {
-	DOS_MCB mcb(dos.psp-1);
+	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
 	mcb.GetFileName(name);
 	if (!strlen(name)) strcpy(name,"DOSBOX");
@@ -108,10 +108,10 @@ bool DOS_Terminate(bool tsr) {
 	dos.return_code=reg_al;
 	dos.return_mode=RETURN_EXIT;
 	
-	Bit16u mempsp = dos.psp;
+	Bit16u mempsp = dos.psp();
 
-	DOS_PSP curpsp(dos.psp);
-	if (dos.psp==curpsp.GetParent()) return true;
+	DOS_PSP curpsp(mempsp);
+	if (mempsp==curpsp.GetParent()) return true;
 	/* Free Files owned by process */
 	if (!tsr) curpsp.CloseFiles();
 	
@@ -120,10 +120,9 @@ bool DOS_Terminate(bool tsr) {
 	/* Restore vector 22,23,24 */
 	curpsp.RestoreVectors();
 	/* Set the parent PSP */
-	dos.psp = curpsp.GetParent();
+	dos.psp(curpsp.GetParent());
 	DOS_PSP parentpsp(curpsp.GetParent());
-	/* Restore the DTA of the parent psp */
-	dos.dta = parentpsp.GetDTA();
+
 	/* Restore the SS:SP to the previous one */
 	SegSet16(ss,RealSeg(parentpsp.GetStack()));
 	reg_sp = RealOff(parentpsp.GetStack());		
@@ -141,7 +140,7 @@ bool DOS_Terminate(bool tsr) {
 
 static bool MakeEnv(char * name,Bit16u * segment) {
 	/* If segment to copy environment is 0 copy the caller's environment */
-	DOS_PSP psp(dos.psp);
+	DOS_PSP psp(dos.psp());
 	PhysPt envread,envwrite;
 	Bit16u envsize=1;
 	bool parentenv=true;
@@ -211,27 +210,11 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
 	psp.SetEnvironment(envseg);
-	/* Copy file handles   //QBIX::ALWAYS COPY BUT LEFT ORIGINAL INCASE OF MISTAKES
-/*	if (DOS_PSP::rootpsp!=dos.psp) { */
-		// TODO: Improve this 
-		// If prog wasnt started from commandline copy file table (California Games 2)
-/*		DOS_PSP oldpsp(dos.psp);
-		psp.CopyFileTable(&oldpsp);
-	} else {
-		psp.SetFileHandle(STDIN ,DOS_FindDevice("CON"));
-		psp.SetFileHandle(STDOUT,DOS_FindDevice("CON"));
-		psp.SetFileHandle(STDERR,DOS_FindDevice("CON"));
-		psp.SetFileHandle(STDAUX,DOS_FindDevice("CON"));
-		psp.SetFileHandle(STDNUL,DOS_FindDevice("CON"));
-		psp.SetFileHandle(STDPRN,DOS_FindDevice("CON"));
-	} */
-	/* Save old DTA in psp */
-		DOS_PSP oldpsp(dos.psp);
-		psp.CopyFileTable(&oldpsp,true);
 
-	psp.SetDTA(dos.dta);
-	/* Setup the DTA */
-	dos.dta=RealMake(pspseg,0x80);
+	/* Copy file handles */
+	DOS_PSP oldpsp(dos.psp());
+	psp.CopyFileTable(&oldpsp,true);
+
 }
 
 static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block) {
@@ -311,12 +294,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	/* Load the executable */
 	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
 	loadaddress=PhysMake(loadseg,0);
+
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
 		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		readsize=0xffff-256;
 		DOS_ReadFile(fhandle,loadbuf,&readsize);
 		MEM_BlockWrite(loadaddress,loadbuf,readsize);
-	} else {		/* EXE Load in 32kb blocks and then relocate */
+	} else {	/* EXE Load in 32kb blocks and then relocate */
 		pos=headersize;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		while (imagesize>0x7FFF) {
 			readsize=0x8000;DOS_ReadFile(fhandle,loadbuf,&readsize);
@@ -350,7 +334,6 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		SetupPSP(pspseg,memsize,envseg);
 		SetupCMDLine(pspseg,block);
 	};
-
 	CALLBACK_SCF(false);		/* Carry flag cleared for caller if successfull */
 	if (flags==OVERLAY) return true;			/* Everything done for overlays */
 	RealPt csip,sssp;
@@ -364,12 +347,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 
 	if (flags==LOAD) {
-		DOS_PSP callpsp(dos.psp);
+		DOS_PSP callpsp(dos.psp());
 		/* Save the SS:SP on the PSP of calling program */
 		callpsp.SetStack(RealMakeSeg(ss,reg_sp));
 		/* Switch the psp's */
-		dos.psp=pspseg;
-
+		dos.psp(pspseg);
+		DOS_PSP newpsp(dos.psp());
+		dos.dta(RealMake(newpsp.GetSegment(),0x80));
 		block.exec.initsssp = sssp;
 		block.exec.initcsip = csip;
 		block.SaveData();
@@ -380,14 +364,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Get Caller's program CS:IP of the stack and set termination address to that */
 		RealSetVec(0x22,RealMake(mem_readw(SegPhys(ss)+reg_sp+2),mem_readw(SegPhys(ss)+reg_sp)));
 		SaveRegisters();
-		DOS_PSP callpsp(dos.psp);
+		DOS_PSP callpsp(dos.psp());
 		/* Save the SS:SP on the PSP of calling program */
 		callpsp.SetStack(RealMakeSeg(ss,reg_sp));
 		/* Switch the psp's and set new DTA */
-		dos.psp=pspseg;
-		DOS_PSP newpsp(dos.psp);
-		newpsp.SetDTA(dos.dta); /* Original: change this and line below. This way seems better(zone66 and unpack) */
-		//dos.dta=newpsp.GetDTA();
+		dos.psp(pspseg);
+		DOS_PSP newpsp(dos.psp());
+		dos.dta(RealMake(newpsp.GetSegment(),0x80));
 		/* save vectors */
 		newpsp.SaveVectors();
 		/* copy fcbs */
@@ -423,7 +406,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			index++;
 		}
 		memset(&stripname[index],0,8-index);
-		DOS_MCB pspmcb(dos.psp-1);
+		DOS_MCB pspmcb(dos.psp()-1);
 		pspmcb.SetFileName(stripname);
 		DOS_UpdatePSPName();
 		return true;

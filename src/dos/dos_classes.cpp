@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.36 2004-04-18 14:49:48 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.37 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -119,7 +119,7 @@ Bit16u DOS_PSP::rootpsp = 0;
 void DOS_PSP::MakeNew(Bit16u mem_size) 
 {
 	/* get previous */
-	DOS_PSP prevpsp(dos.psp);
+	DOS_PSP prevpsp(dos.psp());
 	/* Clear it first */
 	Bitu i;
 	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
@@ -137,12 +137,12 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 	sSave(sPSP,service[1],0x21);
 	sSave(sPSP,service[2],0xcb);
 	/* psp and psp-parent */
-	sSave(sPSP,psp_parent,dos.psp);
-	sSave(sPSP,prev_psp,RealMake(dos.psp,0));
+	sSave(sPSP,psp_parent,dos.psp());
+	sSave(sPSP,prev_psp,0xffffffff);
+	sSave(sPSP,dos_version,0x0005);
 	/* terminate 22,break 23,crititcal error 24 address stored */
 	SaveVectors();
-	/* Process DTA */
-	sSave(sPSP,dta,RealMake(seg,128));
+
 	/* FCBs are filled with 0 */
 	// ....
 	/* Init file pointer and max_files */
@@ -434,4 +434,10 @@ void DOS_FCB::GetAttr(Bit8u& attr) {
 
 void DOS_FCB::SetAttr(Bit8u attr) {
 	if(extended) mem_writeb(pt - 1,attr);
+}
+
+void DOS_SDA::Init() {
+	/* Clear */
+	for(Bitu i=0;i<sizeof(sSDA);i++) mem_writeb(pt+i,0x00);
+	sSave(sSDA,drive_crit_error,0xff);   
 }

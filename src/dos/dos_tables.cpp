@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.9 2004-03-23 18:51:21 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.10 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -38,6 +38,8 @@ RealPt DOS_TableUpCase;
 RealPt DOS_TableLowCase;
 
 static Bit16u dos_memseg;
+Bit16u sdaseg;
+
 Bit16u DOS_GetMemory(Bit16u pages) {
 	if (pages+dos_memseg>=0xe000) {
 		E_Exit("DOS:Not enough memory for internal tables");
@@ -54,9 +56,6 @@ void DOS_SetupTables(void) {
 	dos.tables.mediaid=RealMake(DOS_GetMemory(2),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
 	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
-	// setup the indos flag at 5f:0f (MEM_START-1) cos pharlap (crusader) wants it...
-	dos.tables.indosflag = RealMake(0x5f,0xf);	
-	mem_writeb(Real2Phys(dos.tables.indosflag),0);
 	/* Create the DOS Info Block */
 	dos_infoblock.SetLocation(0x4e); //c2woody
    
@@ -79,5 +78,9 @@ void DOS_SetupTables(void) {
 	//CON string
 	real_writew(0x54,0x20+0x00, (Bit16u) 0x4f43);
 	real_writew(0x54,0x20+0x02, (Bit16u) 0x204e);
- 
+	/* Allocate some fake memory else pharlab doesn't like the indos pointer */
+	sdaseg=DOS_GetMemory(12);
+	sdaseg=DOS_GetMemory(3);
+	DOS_SDA(sdaseg,0).Init();
+   
 }

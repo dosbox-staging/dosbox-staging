@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.12 2004-01-09 12:34:53 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.13 2004-05-04 18:34:08 qbix79 Exp $ */
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -65,7 +65,7 @@ static Bitu PROGRAMS_Handler(void) {
 	PROGRAMS_Main * handler=0;			//It will get sneakily itinialized
 	Bitu size=sizeof(PROGRAMS_Main *);
 	/* Read the handler from program code in memory */
-	PhysPt reader=PhysMake(dos.psp,256+sizeof(exe_block));
+	PhysPt reader=PhysMake(dos.psp(),256+sizeof(exe_block));
 	HostPt writer=(HostPt)&handler;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
@@ -81,13 +81,13 @@ static Bitu PROGRAMS_Handler(void) {
 
 Program::Program() {
 	/* Find the command line and setup the PSP */
-	psp = new DOS_PSP(dos.psp);
+	psp = new DOS_PSP(dos.psp());
 	/* Scan environment for filename */
 	PhysPt envscan=PhysMake(psp->GetEnvironment(),0);
 	while (mem_readb(envscan)) envscan+=mem_strlen(envscan)+1;	
 	envscan+=3;
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp,128),&tail,128);
+	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
 	if (tail.count<127) tail.buffer[tail.count]=0;
 	else tail.buffer[126]=0;
 	char filename[256];

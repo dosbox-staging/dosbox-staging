@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.41 2004-04-18 14:49:48 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.42 2004-05-04 18:34:07 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -45,27 +45,6 @@ struct DOS_Version {
 	Bit8u major,minor,revision;
 };
 
-struct DOS_Block {
-	DOS_Date date;
-	DOS_Version version;
-	Bit16u firstMCB;
-	Bit16u errorcode;
-	Bit16u psp;
-	Bit16u env;
-	RealPt cpmentry;
-	RealPt dta;
-	Bit8u return_code,return_mode;
-	
-	Bit8u current_drive;
-	bool verify;
-	bool breakcheck;
-	bool echo;          // if set to true dev_con::read will echo input 
-	struct  {
-		RealPt indosflag;
-		RealPt mediaid;
-		RealPt tempdta;
-	} tables;
-};
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -93,7 +72,7 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_DRIVES 26
 
 /* internal Dos Tables */
-extern DOS_Block dos;
+
 extern DOS_File * Files[DOS_FILES];
 extern DOS_Drive * Drives[DOS_DRIVES];
 extern Bit8u dos_copybuf[0x10000];
@@ -273,8 +252,6 @@ public:
 	void	RestoreVectors		(void);
 	void	SetSize				(Bit16u size)			{ sSave(sPSP,next_seg,size);		};
 	Bit16u	GetSize				(void)					{ return sGet(sPSP,next_seg);		};
-	void	SetDTA				(RealPt ptdta)			{ sSave(sPSP,dta,ptdta);			};
-	RealPt	GetDTA				(void)					{ return sGet(sPSP,dta);			};
 	void	SetEnvironment		(Bit16u envseg)			{ sSave(sPSP,environment,envseg);	};
 	Bit16u	GetEnvironment		(void)					{ return sGet(sPSP,environment);	};
 	Bit16u	GetSegment			(void)					{ return seg;						};
@@ -312,8 +289,11 @@ private:
 		Bit16u	max_files;			/* Maximum open files */
 		RealPt	file_table;			/* Pointer to File Table PSP:0x18 */
 		RealPt	prev_psp;			/* Pointer to previous PSP */
-		RealPt	dta;				/* Pointer to current Process DTA */
-		Bit8u	fill_2[16];			/* Lot's of unused stuff i can't care aboue */
+	   Bit8u interim_flag;
+	   Bit8u truename_flag;
+	   Bit16u nn_flags;
+	   Bit16u dos_version;
+		Bit8u	fill_2[14];			/* Lot's of unused stuff i can't care aboue */
 		Bit8u	service[3];			/* INT 0x21 Service call int 0x21;retf; */
 		Bit8u	fill_3[9];			/* This has some blocks with FCB info */
 		Bit8u	fcb1[16];			/* first FCB */
@@ -520,10 +500,77 @@ private:
 	#endif
 };
 
-extern DOS_InfoBlock dos_infoblock;;
+extern Bit16u sdaseg;
+#define DOS_SDA_SEG sdaseg
+#define DOS_SDA_OFS 0
+
+
+class DOS_SDA : public MemStruct {
+public:
+	DOS_SDA(Bit16u _seg,Bit16u _offs) { SetPt(_seg,_offs); }
+	void Init();   
+	void SetDrive(Bit8u _drive) { sSave(sSDA,current_drive, _drive); }
+	void SetDTA(Bit32u _dta) { sSave(sSDA,current_dta, _dta); }
+	void SetPSP(Bit16u _psp) { sSave(sSDA,current_psp, _psp); }
+	Bit8u GetDrive(void) { return sGet(sSDA,current_drive); }
+	Bit16u GetPSP(void) { return sGet(sSDA,current_psp); }
+	Bit32u GetDTA(void) { return sGet(sSDA,current_dta); }
+	
+	
+private:
+	#ifdef _MSC_VER
+	#pragma pack (1)
+	#endif
+	struct sSDA {
+		Bit8u crit_error_flag;		/* 0x00 Critical Error Flag */
+		Bit8u inDOS_flag;		/* 0x01 InDOS flag (count of active INT 21 calls) */
+		Bit8u drive_crit_error;		/* 0x02 Drive on which current critical error occurred or FFh */
+		Bit8u locus_of_last_error;	/* 0x03 locus of last error */
+		Bit16u extended_error_code;	/* 0x04 extended error code of last error */
+		Bit8u suggested_action;		/* 0x06 suggested action for last error */
+		Bit8u error_class;		/* 0x07 class of last error*/
+		Bit32u last_error_pointer; 	/* 0x08 ES:DI pointer for last error */
+		Bit32u current_dta;		/* 0x0C current DTA (Disk Transfer Address) */
+		Bit16u current_psp; 		/* 0x10 current PSP */
+		Bit16u sp_int_23;		/* 0x12 stores SP across an INT 23 */
+		Bit16u return_code;		/* 0x14 return code from last process termination (zerod after reading with AH=4Dh) */
+		Bit8u current_drive;		/* 0x16 current drive */
+		Bit8u extended_break_flag; 	/* 0x17 extended break flag */
+		Bit8u fill[2];			/* 0x18 flag: code page switching || flag: copy of previous byte in case of INT 24 Abort*/
+	} GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
+	#pragma pack()
+	#endif
+};
+extern DOS_InfoBlock dos_infoblock;
+
+struct DOS_Block {
+	DOS_Date date;
+	DOS_Version version;
+	Bit16u firstMCB;
+	Bit16u errorcode;
+	Bit16u psp(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetPSP();};
+	void psp(Bit16u _seg){ DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetPSP(_seg);};
+	Bit16u env;
+	RealPt cpmentry;
+	RealPt dta(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDTA();};
+	void dta(RealPt _dta){DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDTA(_dta);};
+	Bit8u return_code,return_mode;
+	
+	Bit8u current_drive;
+	bool verify;
+	bool breakcheck;
+	bool echo;          // if set to true dev_con::read will echo input 
+	struct  {
+		RealPt mediaid;
+		RealPt tempdta;
+	} tables;
+};
+
+extern DOS_Block dos;
 
 INLINE Bit8u RealHandle(Bit16u handle) {
-	DOS_PSP psp(dos.psp);	
+	DOS_PSP psp(dos.psp());	
 	return psp.GetFileHandle(handle);
 }
 
