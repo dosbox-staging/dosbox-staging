@@ -22,7 +22,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "mixer.h"
-#include "timer.h"
+#include "pic.h"
 #include "hardware.h"
 #include "setup.h"
 /* 
@@ -45,8 +45,8 @@ struct OPLTimer_t {
 	bool isEnabled;
 	bool isMasked;
 	bool isOverflowed;
-	Bit32u count;
-	Bit32u base;
+	Bit64u count;
+	Bit64u base;
 };
 
 static OPLTimer_t timer1,timer2;
@@ -65,20 +65,20 @@ static void ADLIB_CallBack(Bit8u *stream, Bit32u len) {
 
 static Bit8u read_p388(Bit32u port) {
 	Bit8u ret=0;
-	Bit32u new_ticks=GetTicks();
+	Bit64u micro=PIC_MicroCount();
 	if (timer1.isEnabled) {
-		if ((new_ticks-timer1.base)>timer1.count) {
+		if ((micro-timer1.base)>timer1.count) {
 			timer1.isOverflowed=true;
-			timer1.base=new_ticks;
+			timer1.base=micro;
 		}
 		if (timer1.isOverflowed || !timer1.isMasked) {
 			ret|=0xc0;
 		}
 	}
 	if (timer2.isEnabled) {
-		if ((new_ticks-timer2.base)>timer2.count) {
+		if ((micro-timer2.base)>timer2.count) {
 			timer2.isOverflowed=true;
-			timer2.base=new_ticks;
+			timer2.base=micro;
 		}
 		if (timer2.isOverflowed || !timer2.isMasked) {
 			ret|=0xA0;
@@ -94,10 +94,10 @@ static void write_p388(Bit32u port,Bit8u val) {
 static void write_p389(Bit32u port,Bit8u val) {
 	switch (regsel) {
 		case 0x02:	/* Timer 1 */
-			timer1.count=(val*80/1000);
+			timer1.count=val*80;
 			return;
 		case 0x03:	/* Timer 2 */
-			timer2.count=(val*320/1000);
+			timer2.count=val*320;
 			return;
 		case 0x04:	/* IRQ clear / mask and Timer enable */
 			if (val&0x80) {
@@ -105,20 +105,19 @@ static void write_p389(Bit32u port,Bit8u val) {
 				timer2.isOverflowed=false;
 				return;
 			}
-			if (val&0x40) {
-				timer1.isMasked=true;
-			} else {
-				timer1.isMasked=false;
-				timer1.isEnabled=((val&1)>0);
-				timer1.base=GetTicks();
-			}
-			if (val&0x20) {
-				timer2.isMasked=true;
-			} else {
-				timer2.isMasked=false;
-				timer2.isEnabled=((val&2)>0);
-				timer2.base=GetTicks();
-			}
+			if (val&0x40) timer1.isMasked=true;
+			else timer1.isMasked=false;
+
+			if (val&1) {
+				timer1.isEnabled=true;
+				timer1.base=PIC_MicroCount();
+			} else timer1.isEnabled=false;
+			if (val&0x20) timer2.isMasked=true;
+			else timer2.isMasked=false;
+			if (val&2) {
+				timer2.isEnabled=true;
+				timer2.base=PIC_MicroCount();
+			} else timer2.isEnabled=false;
 			return;
 		default:		/* Normal OPL call queue it */
 			MAME::OPLWriteReg(myopl,regsel,val);	
