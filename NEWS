@@ -1,4 +1,45 @@
-0.56:
+0.57
+  - added support for command /C
+  - fixed all fcb-write functions
+  - fixed fcb-parseline
+  - added debugger under linux/freebsd 
+  - added debugger memory breakpoints and autolog function (heavy debug)
+  - added loadfix.com program that eats up memory (default 64kb)
+    Usage  : loadfix [-option] [programname] [parameters]...
+    Example: loadfix mm2      (Allocates 64kb and starts executable mm2)
+             loadfix -32 mm2  (Allocates 32kb and starts executable mm2)
+             loadfix -128     (Allocates 128kb)
+             loadfix -f       (frees all previous allocated memory)
+  - added echoing of characters for input function
+  - added support for backspace for input function
+  - added partial support for int10:01 set cursortype
+  - fixed most of the problems/bugs with character input.
+  - fixed allocationinfo call.(darksun series)
+  - improved dos support for non-existant functions
+  - Split screen support
+  - prefix 66 67 support
+  - rewrote timingscheme so 1000 hz timers don't cause problems anymore
+  - update adlib emulation
+  - fixed some isues with the mouse (double clicks and visible when it shouldn't be)
+  - improved mouse behaviour (mickey/pixel rate) and detection routines.
+  - basic ansi.sys support
+  - Disney sound system emulation 
+  - rewrote upcase/lowcase functions so they work fine with gcc3.2
+  - SHELL: added rename and delete
+  - added support for command /C. Fixed crashes in the shell
+  - fixed various bugs when exiting dosbox
+  - fixed a bug in XMS
+  - fixed a bug with the joystick when pressing a button
+  - create nicer configfiles.
+  - bios_disk function improved. 
+  - trapflag support
+  - improved vertical retrace timing.
+  - PIT Timer improvements and many bug fixes
+  - Many many bug fixes to the DOS subsystem
+  - Support for memory allocation strategy
+  - rewrote cpu mainloop to act more like a real cpu
+  
+0.56
   - added support for a configclass/configfile
   - added support for writing out the configclass into a configfile
   - removed the language file and made it internal
@@ -18,31 +59,34 @@
   - Added more cpu instructions and changed the string operations.
   - Added classes for most of the internal dos structures.
   - Rewrote most of the fcb calls to use normal dos calls.
-
-
-
-0.55: 
-	- changed basedir handling. (linux/winXP)
-	- added some FCB-calls 
-	- improved support for user mousehandlers
-	- fixed EGA graphics
-	- fixed VGA graphics
-	- fixed the displaying of text in some graphics modes
-	- fixed write with size 0
-	- changed memory management.
-	- added full emm 3.2 support.
-	- fixed and cleaned up the cpu flags.
-	 changed interrupt handler.
-	- speeded up the graphics.
-	- speeded up the cpu-core
-	- added new features to the debugger: breakpoint support / data view / command line	
- 	- partial support of list of lists (dos info block)
-	- partial emm 4.0 support
-	- fixes to graphics core fonts (text in sierra games is now correct)
-	- changed dma 
-	- improved dma streams from emm memory
-	- added some cga videomodes
-  	- added more funtions to the keyboard handler
+  
+0.55
+  - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becomming unsigned).
+  - fixed compilation error on FreeBSD when #disable_joystick was defined
+  - int10_writechar has been updated to move the cursor position.
+  - changed the basedir routines to use the current working dir instead of argv[0]. This will fix and brake things :)
+  - illegal command, now displays the command
+  - wildcmp updated to be case insensitive
+  - added fcb:open,close,findfirst, findnext.
+  - fixed rename in drive_local
+  - added new features to the debugger: breakpoint support / data view / command line
+  - partial support of list of lists (dos info block)
+  - full emm 3.2 support  
+  - partial emm 4.0 support
+  - fixes to graphics core fonts (text in sierra games is now correct)
+  - improved support for user mousehandlers
+  - fixed EGA graphics
+  - fixed VGA graphics
+  - fixed write with size 0
+  - changed memory management.
+  - fixed and cleaned up the cpu flags.
+  - changed interrupt handler.
+  - speeded up the graphics.
+  - speeded up the cpu-core
+  - changed dma 
+  - improved dma streams from emm memory
+  - added some cga videomodes
+  - added more funtions to the keyboard handler
 
 0.50: 
       -added F3 to repeat the last typed command.
