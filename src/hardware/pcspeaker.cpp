@@ -16,16 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-#include <dosbox.h>
-#include <mixer.h>
 #include <math.h>
+#include "dosbox.h"
+#include "mixer.h"
+#include "timer.h"
 
 
 #ifndef PI
 #define PI 3.14159265358979323846
 #endif
 
+#define SPKR_BUF 4096
 #define SPKR_RATE 22050
 #define SPKR_VOLUME 5000
 
@@ -41,14 +42,26 @@ struct Speaker {
 	Bit16s volume;
 	MIXER_Channel * chan;
 	bool enabled;
+	bool realsound;
+	Bit16u buffer[SPKR_BUF];
+	Bitu buf_pos;
 };
 
 
 static Speaker spkr;
 
 
-void PCSPEAKER_SetFreq(Bit32u freq) {
-	spkr.freq_add=(Bit32u)(FREQ_MAX/((float)SPKR_RATE/(float)freq));
+void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
+	switch (mode) {
+	case 0:
+		if (cntr>72) cntr=72;
+		spkr.realsound=true;
+		spkr.buffer[spkr.buf_pos++]=(cntr-36)*600;
+		break;
+	case 3:
+		spkr.freq_add=(Bit32u)(FREQ_MAX/((float)SPKR_RATE/(PIT_TICK_RATE/(float)cntr)));
+		break;
+	}
 }
 
 void PCSPEAKER_Enable(bool enable) {
@@ -57,25 +70,29 @@ void PCSPEAKER_Enable(bool enable) {
 }
 
 static void PCSPEAKER_CallBack(Bit8u * stream,Bit32u len) {
-	/* Generate the speaker wave, TODO Improve :) */
-	for (Bit32u c=0;c<len;c++) {
-		spkr.freq_pos+=spkr.freq_add;
-		if (spkr.freq_pos>=FREQ_MAX) spkr.freq_pos-=FREQ_MAX;
-		if (spkr.freq_pos>=FREQ_HALF) {
-			*(Bit16s*)(stream)=spkr.volume;
-		} else {
-			*(Bit16s*)(stream)=-spkr.volume;
+	if (spkr.realsound) {
+	/* Generate the "RealSound" */
+		Bitu buf_add=(spkr.buf_pos<<16)/len;
+		Bitu buf_pos=0;
+		spkr.buf_pos=0;spkr.realsound=0;
+		while (len-->0) {
+			*(Bit16s*)(stream)=spkr.buffer[buf_pos >> 16];
+			buf_pos+=buf_add;
+			stream+=2;
 		}
-/*
-		if (spkr.freq_pos>=FREQ_HALF) { 
-			spkr.freq_pos-=FREQ_HALF;
-			spkr.volume=-spkr.volume;
-		};
-		*(Bit16s*)(stream)=spkr.volume;
-*/
-		stream+=2;
+	} else {
+	/* Generate a square wave */
+		while (len-->0) {
+			spkr.freq_pos+=spkr.freq_add;
+			if (spkr.freq_pos>=FREQ_MAX) spkr.freq_pos-=FREQ_MAX;
+			if (spkr.freq_pos>=FREQ_HALF) {
+				*(Bit16s*)(stream)=spkr.volume;
+			} else {
+				*(Bit16s*)(stream)=-spkr.volume;
+			}
+			stream+=2;
+		}
 	}
-
 }
 
 void PCSPEAKER_Init(void) {
@@ -84,4 +101,6 @@ void PCSPEAKER_Init(void) {
 	MIXER_SetMode(spkr.chan,MIXER_16MONO);
 	spkr.volume=SPKR_VOLUME;
 	spkr.enabled=false;
+	spkr.realsound=false;
+	spkr.buf_pos=0;
 }
