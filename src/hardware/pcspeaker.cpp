@@ -49,7 +49,6 @@ static Speaker spkr;
 
 void PCSPEAKER_SetFreq(Bit32u freq) {
 	spkr.freq_add=(Bit32u)(FREQ_MAX/((float)SPKR_RATE/(float)freq));
-	spkr.freq_pos=0;
 }
 
 void PCSPEAKER_Enable(bool enable) {
