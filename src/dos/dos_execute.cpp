@@ -165,7 +165,8 @@ bool DOS_NewPSP(Bit16u segment, Bit16u size)
 {
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
-	psp.CopyFileTable(&DOS_PSP(psp.GetParent()));
+	DOS_PSP psp_parent(psp.GetParent());
+	psp.CopyFileTable(&psp_parent);
 	return true;
 };
 
