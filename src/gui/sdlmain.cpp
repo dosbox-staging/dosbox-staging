@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.79 2004-09-29 19:14:10 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.80 2004-10-02 11:31:47 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <sys/types.h>
 
 #include "SDL.h"
 
@@ -690,7 +691,6 @@ static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
 	if (sdl.mouse.locked) CaptureMouse();
 	if (sdl.desktop.fullscreen) SwitchFullScreen();
-	SDL_Quit();   //Becareful this should be removed if on the fly renderchanges are allowed
 }
 
 static void KillSwitch(void){
@@ -698,6 +698,15 @@ static void KillSwitch(void){
 }
 
 static void SetPriority(PRIORITY_LEVELS level) {
+
+#if C_SET_PRIORITY
+// Do nothing if priorties are not the same and not root, else the highest 
+// priority can not be set as users can only lower priority (not restore it)
+
+	if((sdl.priority.focus != sdl.priority.nofocus ) && 
+		(getuid()!=0) ) return;
+
+#endif
 	switch (level) {
 #ifdef WIN32
 	case PRIORITY_LEVEL_LOWER:
@@ -713,17 +722,18 @@ static void SetPriority(PRIORITY_LEVELS level) {
 		SetPriorityClass(GetCurrentProcess(),HIGH_PRIORITY_CLASS);
 		break;
 #elif C_SET_PRIORITY
+/* Linux use group as dosbox has mulitple threads under linux */
 	case PRIORITY_LEVEL_LOWER:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+(PRIO_TOTAL/3));
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-(PRIO_TOTAL/3));
 		break;
 	case PRIORITY_LEVEL_NORMAL:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+(PRIO_TOTAL/2));
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-(PRIO_TOTAL/2));
 		break;
 	case PRIORITY_LEVEL_HIGHER:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/5) );
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/5) );
 		break;
 	case PRIORITY_LEVEL_HIGHEST:
-		setpriority (PRIO_PROCESS, 0,PRIO_MIN+((3*PRIO_TOTAL)/4) );
+		setpriority (PRIO_PGRP, 0,PRIO_MAX-((3*PRIO_TOTAL)/4) );
 		break;
 #endif
 	default:
@@ -771,6 +781,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.priority.focus=PRIORITY_LEVEL_HIGHER;
 		sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
 	}
+	SetPriority(sdl.priority.focus); //Assume focus on startup
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
@@ -1124,8 +1135,9 @@ int main(int argc, char* argv[]) {
 	catch (int){ 
 		;//nothing pressed killswitch
 	}
-	catch(...){   
-		throw;//dunno what happened. rethrow for sdl to catch
+	catch(...){
+		throw;//dunno what happened. rethrow for sdl to catch 
 	}
+	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 	return 0;
 };
