@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.40 2004-07-11 20:02:08 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.41 2004-07-13 16:56:06 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -484,19 +484,12 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py){
 	}
 };
 static void SetSensitivity(Bit16s px, Bit16s py){
-
 	if ((px!=0) && (py!=0)) {
-
 		px--;  //Inspired by cutemouse 
-
 		py--;  //Although their cursor update routine is far more complex then ours
-
 		mouse.senv_x=(static_cast<float>(px)*px)/3600.0 +1.0/3.0;
-
 		mouse.senv_y=(static_cast<float>(py)*py)/3600.0 +1.0/3.0;
-
      }
-
 };
 
 
@@ -550,7 +543,7 @@ void Mouse_NewVideoMode(void)
 	mouse.min_x = 0;
 	mouse.min_y = 0;
 	// Dont set max coordinates here. it is done by SetResolution!
-	mouse.x = 0;				// civ wont work otherwise
+	mouse.x = static_cast<float>(mouse.max_x / 2);
 	mouse.y = static_cast<float>(mouse.max_y / 2);
 	mouse.events = 0;
 	mouse.mickey_x = 0;
@@ -664,7 +657,6 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if(min == max) break; //Wayne's World
 			mouse.min_x=min;
 			mouse.max_x=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
@@ -677,7 +669,6 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if(min == max) break; //Wayne's World
 			mouse.min_y=min;
 			mouse.max_y=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
