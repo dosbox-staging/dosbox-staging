@@ -58,6 +58,7 @@ struct XMS_Block {
 	Bit16u prev,next;
 	Bit16u size;					/* Size in kb's */
 	PhysPt phys;
+	Bit8u locked;
 	void * data;
 	bool active;
 };
@@ -155,8 +156,10 @@ foundnew:
 						xms_handles[new_index].next=xms_handles[index].next;
 						xms_handles[new_index].prev=index;
 						xms_handles[index].next=new_index;
+						xms_handles[index].locked=0;
 						xms_handles[new_index].active=true;
 						xms_handles[new_index].data=0;
+						xms_handles[new_index].locked=0;
 						xms_handles[new_index].size=xms_handles[index].size-reg_dx;
 						xms_handles[new_index].phys=xms_handles[index].phys+reg_dx*1024;
 						xms_handles[index].size=reg_dx;
@@ -275,6 +278,7 @@ foundnew:
 				reg_bl=XMS_INVALID_HANDLE;
 				return CBRET_NONE;
 			}
+			if (xms_handles[reg_dx].locked<255) xms_handles[reg_dx].locked++;
 			reg_bx=(Bit16u)(xms_handles[reg_dx].phys & 0xFFFF);
 			reg_dx=(Bit16u)(xms_handles[reg_dx].phys>>16);
 			reg_ax=1;
@@ -287,9 +291,21 @@ foundnew:
 			reg_bl=XMS_INVALID_HANDLE;
 			return CBRET_NONE;
 		}
+		if (xms_handles[reg_dx].locked) xms_handles[reg_dx].locked--;
 		reg_ax=1;reg_bl=0;
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION:						/* 0e */
+		/* Check for a valid handle */
+		if (!reg_dx || (reg_dx>=XMS_HANDLES) || !xms_handles[reg_dx].active || !xms_handles[reg_dx].data ) {
+			reg_ax=0;
+			reg_bl=XMS_INVALID_HANDLE;
+			return CBRET_NONE;
+		}
+		reg_bh=xms_handles[reg_dx].locked;
+		/* Find available blocks */
+		reg_bx=0;{ for (Bitu i=0;i<XMS_HANDLES;i++) if (!xms_handles[i].data) reg_bx++;}
+		reg_dx=xms_handles[reg_dx].size;
+		break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		LOG_WARN("XMS:Unhandled call %2X",reg_ah);
 		break;
@@ -321,6 +337,7 @@ void XMS_Init(void) {
 		xms_handles[i].next=0xffff;
 		xms_handles[i].prev=0xffff;
 		xms_handles[i].size=0;
+		xms_handles[i].locked=0;
 	}
 	/* Disable the 0 handle */
 	xms_handles[0].active=true;
