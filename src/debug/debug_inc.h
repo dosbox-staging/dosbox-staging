@@ -51,7 +51,7 @@ struct DASMLine {
 
 extern DBGBlock dbg;
 
-
 /* Local Debug Stuff */
 Bitu DasmI386(char* buffer, PhysPt pc, Bitu cur_ip, bool bit32);
 int  DasmLastOperandSize(void);
+
