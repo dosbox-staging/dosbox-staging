@@ -336,7 +336,7 @@ range_b800:
 
 bool  lfb_update;
 
-static void VGA_DoUpdateLFB(void) {
+static void VGA_DoUpdateLFB(Bitu val) {
 	lfb_update=false;
 	MEM_SetLFB(vga.s3.la_window << 4 ,sizeof(vga.mem.linear)/4096,&vga.mem.linear[0]);
 }

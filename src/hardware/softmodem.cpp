@@ -44,7 +44,6 @@
 #define CONNECTED (M_CTS | M_DSR | M_DCD )
 #define DISCONNECTED (M_CTS | M_DSR )
 
-
 /* DTMF tone generator */
 float col[] = { 1209.0, 1336.0, 1477.0, 1633.0 };
 float row[] = { 697.0, 770.0, 852.0, 941.0 };
@@ -299,11 +298,23 @@ static void DoCommand() {
 
 
 static void MC_Changed(Bitu new_mc) {
-	
+	LOG_MSG("DTR %d RTS %d",new_mc & 1,new_mc & 2);
+	if (!(new_mc & 1) && mhd.socket) {
+		sendStr("\nNO CARRIER\n");
+		SDLNet_TCP_DelSocket(mhd.socketset,mhd.socket);
+		SDLNet_TCP_Close(mhd.socket);
+		mhd.socket=0;
+		mhd.commandmode = true;
+	}
+	mdm->setmodemstatus(
+		((new_mc & 1 ) ? M_DSR : 0) |
+		((new_mc & 2) ? M_CTS : 0) |
+		(mhd.socket ? M_DCD : 0)
 
+		);	
 }
 
-static void MODEM_Hardware(Bitu ticks) {
+static void MODEM_Hardware(void) {
 	int result =0;
 	unsigned long args = 1;
 	bool sendbyte = true;
@@ -345,6 +356,7 @@ static void MODEM_Hardware(Bitu ticks) {
 				if(txval == '+') {
 					mhd.plusinc++;
 					if(mhd.plusinc>=3) {
+						LOG_MSG("Entering command mode");
 						mhd.commandmode = true;
 						sendStr("\nOK\n");
 						mhd.plusinc = 0;
@@ -369,7 +381,7 @@ static void MODEM_Hardware(Bitu ticks) {
 	SDLNet_CheckSockets(mhd.socketset,0);
 	/* Handle outgoing to the serial port */
 	if(!mhd.commandmode && mhd.socket && mdm->rx_free() && SDLNet_SocketReady(mhd.socket)) {
-		usesize = mdm->rx_free();			
+		usesize = mdm->rx_free();
 		result = SDLNet_TCP_Recv(mhd.socket, tmpbuf, usesize);
 		if (result>0) {
 			mdm->rx_adds(tmpbuf,result);
@@ -426,31 +438,6 @@ static void MODEM_Hardware(Bitu ticks) {
 	}
 
 }
-
-/*
-03F8  -W  serial port, transmitter holding register (THR), which contains the
-	  character to be sent. Bit 0 is sent first.
-		bit 7-0	  data bits when DLAB=0 (Divisor Latch Access Bit)
-03F8  R-  receiver buffer register (RBR), which contains the received
-	  character. Bit 0 is received first
-		 bit 7-0   data bits when DLAB=0 (Divisor Latch Access Bit)
-03F8  RW  divisor latch low byte (DLL) when DLAB=1 (see #P0876)
-03F9  RW  divisor latch high byte (DLM) when DLAB=1 (see #P0876)
-03F9  RW  interrupt enable register (IER) when DLAB=0 (see #P0877)
-03FA  R-  interrupt identification register (see #P0878)
-	Information about a pending interrupt is stored here. When the ID
-	  register is addressed, thehighest priority interrupt is held, and
-	  no other interrupts are acknowledged until the CPU services that
-	  interrupt.
-03FA  -W  16650 FIFO Control Register (FCR) (see #P0879)
-03FB  RW  line control register (LCR) (see #P0880)
-03FC  RW  modem control register (see #P0881)
-03FD  R-  line status register (LSR) (see #P0882)
-03FE  R-  modem status register (MSR) (see #P0883)
-03FF  RW  scratch register (SCR)
-	(not used for serial I/O; available to any application using 16450,
-	  16550) (not present on original 8250)
-*/
 
 static void MODEM_CallBack(Bit8u * stream,Bit32u len) {
 	char *cp;
@@ -613,7 +600,7 @@ void MODEM_Init(Section* sec) {
 	mdm->setmodemstatus(DISCONNECTED);
 	mdm->SetMCHandler(&MC_Changed);
 
-	TIMER_RegisterTickHandler(&MODEM_Hardware);
+	TIMER_AddTickHandler(&MODEM_Hardware);
 
 	/* Initialize the sockets and setup the listening port */
 	mhd.socketset = SDLNet_AllocSocketSet(1);
