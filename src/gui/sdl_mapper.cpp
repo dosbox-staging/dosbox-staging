@@ -16,7 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.6 2004-08-04 09:12:54 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.7 2004-09-07 08:58:02 qbix79 Exp $ */
+
+#define OLD_JOYSTICK 1
 
 #include <vector>
 #include <list>
@@ -252,11 +254,11 @@ public:
 		else DeactivateBindList(&lists[key]);
 		return 0;
 	}
-private:
 	CBind * CreateKeyBind(SDLKey _key) {
 		assert((Bitu)_key<keys);
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
+private:
 	char * ConfigStart(void) {
 		return configname;
 	}
@@ -341,6 +343,10 @@ public:
 		neg_axis_lists=new CBindList[axes];
 		button_lists=new CBindList[buttons];
 		hat_lists=new CBindList[hats];
+#if OLD_JOYSTICK
+		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(stick),axes,buttons);
+		JOYSTICK_Enable(stick,true);
+#endif	   
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -374,7 +380,29 @@ public:
 		} else return 0;
 	}
 	bool CheckEvent(SDL_Event * event) {
+#if OLD_JOYSTICK
+		SDL_JoyAxisEvent * jaxis = NULL;
+		SDL_JoyButtonEvent * jbutton = NULL;
 
+	switch(event->type) {
+		case SDL_JOYAXISMOTION:
+			jaxis = &event->jaxis;
+			if(jaxis->axis == 0)
+				JOYSTICK_Move_X(stick,(float)(jaxis->value/32768.0));
+			else if(jaxis->axis == 1)
+				JOYSTICK_Move_Y(stick,(float)(jaxis->value/32768.0));
+			break;
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+			jbutton = &event->jbutton;
+			bool state;
+			state=jbutton->type==SDL_JOYBUTTONDOWN;
+			if (jbutton->button<2) {
+				JOYSTICK_Button(stick,jbutton->button,state);
+			}
+			break;
+	}
+#endif
 		return false;
 	}
 private:
@@ -950,7 +978,7 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(4),PY(11),BW*2,BH,"0","kp_0",KBD_kp0);
 	AddKeyButtonEvent(PX(6),PY(11),BW,BH,".","kp_period",KBD_kpperiod);
 
-
+#if (!OLD_JOYSTICK)
 	/* Joystick Buttons/Texts */
 	AddJButtonButton(PX(17),PY(0),BW,BH,"1" ,0,0);
 	AddJAxisButton  (PX(18),PY(0),BW,BH,"Y-",0,true,false);
@@ -965,7 +993,7 @@ static void CreateLayout(void) {
 	AddJAxisButton  (PX(17),PY(4),BW,BH,"X-",1,false,false);
 	AddJAxisButton  (PX(18),PY(4),BW,BH,"Y+",1,true,true);
 	AddJAxisButton  (PX(19),PY(4),BW,BH,"X+",1,false,true);	
-   
+#endif   
 	/* The modifier buttons */
 	AddModButton(PX(0),PY(13),50,20,"Mod1",1);
 	AddModButton(PX(2),PY(13),50,20,"Mod2",2);
@@ -981,8 +1009,9 @@ static void CreateLayout(void) {
 	}
 	/* Create some text buttons */
 	new CTextButton(PX(6),00,124,20,"Keyboard Layout");
+#if (!OLD_JOYSTICK)
 	new CTextButton(PX(16),00,124,20,"Joystick Layout");
-
+#endif
 	bind_but.action=new CCaptionButton(200,330,0,0);
 
 	bind_but.event_title=new CCaptionButton(0,350,0,0);
@@ -1107,6 +1136,7 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char * eve
 	strcpy(tempname,"hand_");
 	strcat(tempname,eventname);
 	new CHandlerEvent(tempname,handler,key,mods,buttonname);
+	return ;
 }
 
 static void MAPPER_SaveBinds(void) {
