@@ -273,7 +273,8 @@ switch(Fetchb()) {
 		}
 	case 0x9d:												/* POPFD */
 		{
-			Save_Flagsw((Bit16u)(Pop_32()&0xffff));
+			Bit16u val=(Bit16u)(Pop_32()&0xffff);
+			Save_Flagsw(val);
 			break;
 		}
 	case 0xa1:												/* MOV EAX,Ow */
