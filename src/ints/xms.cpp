@@ -60,12 +60,10 @@
 #define XMS_BLOCK_LOCKED					0xab
 
 struct XMS_Block {
-	Bit16u	prev,next;
-	Bit16u	size;					/* Size in kb's */
-	PhysPt	phys;
+	Bitu	size;
+	MemHandle mem;
 	Bit8u	locked;
-	bool	allocated;
-	bool	active;
+	bool	free;
 };
 
 #pragma pack (push,1)
@@ -103,18 +101,14 @@ static RealPt xms_callback;
 
 static XMS_Block xms_handles[XMS_HANDLES];
 
+static INLINE bool InvalidHandle(Bitu handle) {
+	return (!handle || (handle>=XMS_HANDLES) || xms_handles[handle].free);
+}
+
 Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
-	Bit16u index=1;
-	largestFree=totalFree=0;
-	while (xms_handles[index].active) {
-		if (!xms_handles[index].allocated) {
-			if (xms_handles[index].size>largestFree) largestFree=xms_handles[index].size;
-			totalFree+=xms_handles[index].size;
-		}
-		if (xms_handles[index].next<XMS_HANDLES) index=xms_handles[index].next;
-		else break;
-	}
+	totalFree=(Bit16u)(MEM_FreeTotal()*4);
+	largestFree=(Bit16u)(MEM_FreeLargest()*4);
 	if (!totalFree) return XMS_OUT_OF_SPACE;
 	return 0;
 };
@@ -122,134 +116,89 @@ Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 // size = kb
 {
+	/* Find free handle */
 	Bit16u index=1;
-	/* First make reg_dx a multiple of PAGE_KB */
-	if (size & (PAGE_KB-1)) size=(size&(~(PAGE_KB-1)))+PAGE_KB;
-	while (xms_handles[index].active) {
-		/* Find a free block, check if there's enough size */
-		if (!xms_handles[index].allocated && xms_handles[index].size>=size) {
-			/* Check if block is bigger than request */
-			if (xms_handles[index].size>size) {
-				/* Split Block, find new handle and split up memory */
-				Bit16u new_index=1;
-				while (new_index<XMS_HANDLES) {
-					if (!xms_handles[new_index].active) goto foundnew;
-					new_index++;
-				}
-				handle = 0;
-				return XMS_OUT_OF_HANDLES;
-	foundnew:
-				xms_handles[new_index].next=xms_handles[index].next;
-				xms_handles[new_index].prev=index;
-				xms_handles[index].next=new_index;
-				xms_handles[index].locked=0;
-				xms_handles[new_index].active=true;
-				xms_handles[new_index].allocated=0;
-				xms_handles[new_index].locked=0;
-				xms_handles[new_index].size=xms_handles[index].size-size;
-				xms_handles[new_index].phys=xms_handles[index].phys+size*1024;
-				xms_handles[index].size=size;
-			}
-			/* Use the data from handle index to allocate the actual memory */
-			handle = index;
-			xms_handles[index].allocated = 1;
-			//CheckAllocationArea(xms_handles[index].phys,xms_handles[index].size*1024);
-			return 0;
-		}	
-		/* Not a free block or too small advance to next one if possible */
-		if (xms_handles[index].next < XMS_HANDLES ) index=xms_handles[index].next;
-		else break;
+	while (!xms_handles[index].free) {
+		if (++index>XMS_HANDLES) return XMS_OUT_OF_HANDLES;
 	}
-	/* Found no good blocks give some errors */
-	return XMS_OUT_OF_SPACE;
+	Bitu pages=(size/4) + (size & 3) ? 1 : 0;
+	MemHandle mem=MEM_AllocatePages(pages,true);
+	if (!mem) return XMS_OUT_OF_SPACE;
+	xms_handles[index].free=false;
+	xms_handles[index].mem=mem;
+	xms_handles[index].locked=0;
+	xms_handles[index].size=size;
+	handle=index;
+	return 0;
 };
 
 Bitu XMS_FreeMemory(Bitu handle)
 {
-	/* Check for a valid handle */
-	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
-		return XMS_INVALID_HANDLE;
-	}
-	/* Free the memory in the block and merge the blocks previous and next block */
-	Bit16u prev=xms_handles[handle].prev;
-	Bit16u next=xms_handles[handle].next;
-	xms_handles[handle].allocated=0;
-	if ((next<XMS_HANDLES) && !xms_handles[next].allocated) {
-		xms_handles[next].active=false;
-		xms_handles[handle].size+=xms_handles[next].size;
-		xms_handles[handle].next=xms_handles[next].next;
-		next=xms_handles[handle].next;
-		if (next<XMS_HANDLES) xms_handles[next].prev=handle;
-	}
-	if ((prev<XMS_HANDLES) && !xms_handles[prev].allocated) {
-		xms_handles[handle].active=false;
-		xms_handles[prev].size+=xms_handles[handle].size;
-		next=xms_handles[handle].next;
-		xms_handles[prev].next=next;
-		if (next<XMS_HANDLES) xms_handles[next].prev=prev;
-	}
+	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
+	MEM_ReleasePages(xms_handles[handle].mem);
+	xms_handles[handle].mem=-1;
+	xms_handles[handle].size=0;
+	xms_handles[handle].free=true;
 	return 0;
 };
 
 Bitu XMS_MoveMemory(PhysPt bpt)
 {
-	XMS_MemMove block;
-	/* Fill the block with mem_read's and shit */
-	block.length=mem_readd(bpt+offsetof(XMS_MemMove,length));
-	block.src_handle=mem_readw(bpt+offsetof(XMS_MemMove,src_handle));
-	block.src.offset=mem_readd(bpt+offsetof(XMS_MemMove,src.offset));
-	block.dest_handle=mem_readw(bpt+offsetof(XMS_MemMove,dest_handle));
-	block.dest.offset=mem_readd(bpt+offsetof(XMS_MemMove,dest.offset));
-	PhysPt src,dest;
-	if (block.src_handle) {
-		if ((block.src_handle>=XMS_HANDLES) || !xms_handles[block.src_handle].active ||!xms_handles[block.src_handle].allocated) {
+	/* Read the block with mem_read's */
+	Bitu length=mem_readd(bpt+offsetof(XMS_MemMove,length));
+	Bitu src_handle=mem_readw(bpt+offsetof(XMS_MemMove,src_handle));
+	union {
+		RealPt realpt;
+		Bit32u offset;
+	} src,dest;
+	src.offset=mem_readd(bpt+offsetof(XMS_MemMove,src.offset));
+	Bitu dest_handle=mem_readw(bpt+offsetof(XMS_MemMove,dest_handle));
+	dest.offset=mem_readd(bpt+offsetof(XMS_MemMove,dest.offset));
+	PhysPt srcpt,destpt;
+	if (src_handle) {
+		if (InvalidHandle(src_handle)) {
 			return 0xa3;	/* Src Handle invalid */
 		}
-		if (block.src.offset>=(xms_handles[block.src_handle].size*1024U)) {
+		if (src.offset>=(xms_handles[src_handle].size*1024U)) {
 			return 0xa4;	/* Src Offset invalid */
 		}
-		if (block.length>xms_handles[block.src_handle].size*1024U-block.src.offset) {
+		if (length>xms_handles[src_handle].size*1024U-src.offset) {
 			return 0xa7;	/* Length invalid */
 		}
-		src=xms_handles[block.src_handle].phys+block.src.offset;
+		srcpt=(xms_handles[src_handle].mem*4096)+src.offset;
 	} else {
-		src=Real2Phys(block.src.realpt);
+		srcpt=Real2Phys(src.realpt);
 	}
-	if (block.dest_handle) {
-		if ((block.dest_handle>=XMS_HANDLES) || !xms_handles[block.dest_handle].active ||!xms_handles[block.dest_handle].allocated) {
+	if (dest_handle) {
+		if (InvalidHandle(dest_handle)) {
 			return 0xa3;	/* Dest Handle invalid */
 		}
-		if (block.dest.offset>=(xms_handles[block.dest_handle].size*1024U)) {
+		if (dest.offset>=(xms_handles[dest_handle].size*1024U)) {
 			return 0xa4;	/* Dest Offset invalid */
 		}
-		if (block.length>xms_handles[block.dest_handle].size*1024U-block.dest.offset) {
+		if (length>xms_handles[dest_handle].size*1024U-dest.offset) {
 			return 0xa7;	/* Length invalid */
 		}
-		dest=xms_handles[block.dest_handle].phys+block.dest.offset;
+		destpt=(xms_handles[dest_handle].mem*4096)+dest.offset;
 	} else {
-		dest=Real2Phys(block.dest.realpt);
+		destpt=Real2Phys(dest.realpt);
 	}
-	MEM_BlockCopy(dest,src,block.length);
+//	LOG_MSG("XMS move src %X dest %X length %X",srcpt,destpt,length);
+	mem_memcpy(destpt,srcpt,length);
 	return 0;
 }
 
 Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
 {
-	/* Check for a valid handle */
-	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
-		return XMS_INVALID_HANDLE;
-	}
+	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	if (xms_handles[handle].locked<255) xms_handles[handle].locked++;
-	address = xms_handles[handle].phys;
+	address = xms_handles[handle].mem*4096;
 	return 0;
 };
 
 Bitu XMS_UnlockMemory(Bitu handle)
 {
-	/* Check for a valid handle */
-	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
-		return XMS_INVALID_HANDLE;
-	}
+ 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	if (xms_handles[handle].locked) {
 		xms_handles[handle].locked--;
 		return 0;
@@ -259,94 +208,27 @@ Bitu XMS_UnlockMemory(Bitu handle)
 
 Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
 {
-	/* Check for a valid handle */
-	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
-		return XMS_INVALID_HANDLE;
-	}
+	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	lockCount = xms_handles[handle].locked;
 	/* Find available blocks */
-	numFree=0;{ for (Bitu i=1;i<XMS_HANDLES;i++) if (!xms_handles[i].allocated) numFree++;}
+	numFree=0;
+	for (Bitu i=1;i<XMS_HANDLES;i++) {
+		if (xms_handles[i].free) numFree++;
+	}
 	size=xms_handles[handle].size;
 	return 0;
 };
 
 Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 {
-	/* Check for a valid handle */
-	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
-		return XMS_INVALID_HANDLE;
-	}
+	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;	
 	// Block has to be unlocked
 	if (xms_handles[handle].locked>0) return XMS_BLOCK_LOCKED;
-	
-	if (newSize<xms_handles[handle].size) {
-		// shrink block...
-		Bit16u	sizeDelta	= xms_handles[handle].size - newSize;
-		Bit16u	next		= xms_handles[handle].next;
-		
-		if ((next<XMS_HANDLES) && (xms_handles[next].active && !xms_handles[next].allocated)) {
-			// add size / set phys
-			xms_handles[next].size += sizeDelta;
-			xms_handles[next].phys -= sizeDelta*1024;
-		} else {
-			// next block is in use, create a new lonely unused one :)
-			Bit16u newindex=1;
-			while (newindex<XMS_HANDLES) {
-				if (!xms_handles[newindex].active) break;
-				newindex++;
-			}
-			if (newindex>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
-			xms_handles[newindex].active	= true;
-			xms_handles[newindex].allocated = false;
-			xms_handles[newindex].locked	= 0;
-			xms_handles[newindex].prev		= handle;
-			xms_handles[newindex].next		= next;
-			xms_handles[newindex].phys		= xms_handles[handle].phys+newSize*1024;
-			xms_handles[newindex].size		= sizeDelta;
-
-			xms_handles[handle]  .next		= newindex;
-			if (next<XMS_HANDLES) xms_handles[next].prev = newindex;
-		}
-		// Resize and allocate new mem 
-		xms_handles[handle].size	  = newSize;
-		xms_handles[handle].allocated = 1;
-		//CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
-		
-	} else if (newSize>xms_handles[handle].size) {
-		// Lets see if successor has enough free space to do that 
-		Bit16u	oldSize		= xms_handles[handle].size;
-		Bit16u	next		= xms_handles[handle].next;
-		Bit16u	sizeDelta	= newSize - xms_handles[handle].size;
-		if (next<XMS_HANDLES && !xms_handles[next].allocated) {
-			if (xms_handles[next].size>sizeDelta) {
-				// remove size from it
-				xms_handles[next].size-=sizeDelta;
-				xms_handles[next].phys+=sizeDelta*1024;
-			} else if (xms_handles[next].size==sizeDelta) {
-				// exact match, skip it 
-				xms_handles[handle].next	= xms_handles[next].next;
-				xms_handles[next].active	= false;
-			} else {
-				// Not enough mem available
-				LOG(LOG_MISC,LOG_ERROR)("XMS: Resize failure: out of mem 1");
-				return XMS_OUT_OF_SPACE;
-			};
-			// Resize and allocate new mem 
-			xms_handles[handle].size		= newSize;
-			xms_handles[handle].allocated	= 1;
-			//CheckAllocationArea(xms_handles[handle].phys,xms_handles[handle].size*1024);
-		} else {
-			// No more free mem ?
-			LOG(LOG_MISC,LOG_ERROR)("XMS: Resize failure: out of mem 2");
-			return XMS_OUT_OF_SPACE;
-		};
-	};	
-	return 0;
-};
-
-// Return size of xms mem in mb
-static Bitu xms_size = 0;
-Bitu XMS_GetSize(void) { return xms_size; };
+	Bitu pages=newSize/4 + (newSize & 3) ? 1 : 0;
+	if (MEM_ReAllocatePages(xms_handles[handle].mem,pages,true)) {
+		return 0;
+	} else return XMS_OUT_OF_SPACE;
+}
 
 static bool multiplex_xms(void) {
 	switch (reg_ax) {
@@ -448,33 +330,22 @@ Bitu XMS_Handler(void) {
 }
 
 void XMS_Init(Section* sec) {
+	
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	Bitu size=section->Get_int("xmssize");
-	if (!size) return;
-	Bitu memavail=(MEM_TotalSize()-1088)/1024;
+	if (!section->Get_bool("ems")) return;
+	Bitu i;
 
-	if (size>memavail) size=memavail;
-	xms_size = size;
 	DOS_AddMultiplexHandler(multiplex_xms);
 	call_xms=CALLBACK_Allocate();
 	CALLBACK_Setup(call_xms,&XMS_Handler,CB_RETF);
 	xms_callback=CALLBACK_RealPointer(call_xms);
-	/* Setup the handler table */
-	Bitu i;
 	for (i=0;i<XMS_HANDLES;i++) {
-		xms_handles[i].active=false;
-		xms_handles[i].allocated=0;
-		xms_handles[i].next=0xffff;
-		xms_handles[i].prev=0xffff;
+		xms_handles[i].free=true;
+		xms_handles[i].mem=-1;
 		xms_handles[i].size=0;
 		xms_handles[i].locked=0;
 	}
 	/* Disable the 0 handle */
-	xms_handles[0].active	=true;
-	xms_handles[0].allocated=true;
-	/* Setup the 1st handle */
-	xms_handles[1].active=true;
-	xms_handles[1].phys=1088*1024;		/* right behind the hma area */
-	xms_handles[1].size=size*1024-64;
+	xms_handles[0].free	= false;
 }
 

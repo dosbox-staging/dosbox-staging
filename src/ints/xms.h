@@ -19,9 +19,6 @@
 #ifndef __XMS_H__
 #define __XMS_H__
 
-// Return size of xms mem in mb
-Bitu	XMS_GetSize				(void);
-
 Bitu	XMS_QueryFreeMemory		(Bit16u& largestFree, Bit16u& totalFree);
 Bitu	XMS_AllocateMemory		(Bitu size, Bit16u& handle);
 Bitu	XMS_FreeMemory			(Bitu handle);
