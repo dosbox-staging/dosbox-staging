@@ -1,4 +1,4 @@
-DOSBox v0.62
+DOSBox v0.63
 
 
 =====
@@ -151,8 +151,8 @@ A: DOSBox emulates several legacy sound devices:
    - Adlib
      Borrowed from MAME, this emulation is almost perfect and includes the 
      Adlib's ability to almost play digitized sound.
-   - SoundBlaster Pro
-     Coupled with the Adlib, DOSBox provides Soundblaster Pro level 8-bit 
+   - SoundBlaster 16
+     Coupled with the Adlib, DOSBox provides Soundblaster 16 level 16-bit 
      stereo sound.
    - Disney Soundsource
      Using the printer port, this sound device outputs digital sound only.
@@ -250,7 +250,8 @@ MOUNT "Emulated Drive letter" "Real Drive or Directory"
       [-t type] [-aspi] [-ioctl] [-usecd number] [-size drivesize] 
       [-label drivelabel] [-freesize sizemb]
 MOUNT -cd
-    
+MOUNT -u "Emulated Drive letter"
+
   Program to mount local directories as drives inside DOSBox.
 
   "Emulated Drive letter"
@@ -291,6 +292,9 @@ MOUNT -cd
 
   -cd
         Displays all detected cdrom drives and their numbers. Use with -usecd.
+
+  -u
+        Removes the mount. Doesn't work for Z:\.
 
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
