@@ -156,12 +156,26 @@ Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle)
 	return 0xFF;
 };
 
-void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp)
+void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 {
 	/* Copy file table from calling process */
 	for (Bit16u i=0;i<20;i++) {
 		Bit8u handle = srcpsp->GetFileHandle(i);
-		SetFileHandle(i,handle);
+		if(createchildpsp)
+		{	//copy obeying not inherit flag.
+			if(Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT))
+			{    
+				SetFileHandle(i,handle);
+			}
+			else
+			{
+				SetFileHandle(i,0xff);
+			}
+		}
+		else
+		{	//normal copy so don't mind the inheritance
+			SetFileHandle(i,handle);
+		}
 	}
 };
 

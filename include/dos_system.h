@@ -51,7 +51,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File()		{ name=0; };
+	DOS_File():flags(0)		{ name=0; };
 	virtual	~DOS_File(){};
 	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
@@ -220,7 +220,7 @@ public:
 	DOS_Drive_Cache dirCache;
 };
 
-enum { OPEN_READ=0,OPEN_WRITE=1,OPEN_READWRITE=2 };
+enum { OPEN_READ=0,OPEN_WRITE=1,OPEN_READWRITE=2, DOS_NOT_INHERIT=128};
 enum { DOS_SEEK_SET=0,DOS_SEEK_CUR=1,DOS_SEEK_END=2};
 
 

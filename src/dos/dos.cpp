@@ -666,7 +666,7 @@ static Bitu DOS_21Handler(void) {
         reg_al=dos.verify?1:0;
 		break;
 	case 0x55:					/* Create Child PSP*/
-		DOS_NewPSP(reg_dx,reg_si);
+		DOS_ChildPSP(reg_dx,reg_si);
 		dos.psp = reg_dx;
 		break;
 	case 0x56:					/* RENAME Rename file */

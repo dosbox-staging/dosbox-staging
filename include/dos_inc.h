@@ -125,6 +125,7 @@ void DOS_SetupDevices(void);
 
 /* Execute and new process creation */
 bool DOS_NewPSP(Bit16u pspseg,Bit16u size);
+bool DOS_ChildPSP(Bit16u pspseg,Bit16u size);
 bool DOS_Execute(char * name,PhysPt block,Bit8u flags);
 bool DOS_Terminate(bool tsr);
 
@@ -237,7 +238,7 @@ class DOS_PSP :public MemStruct {
 public:
 	DOS_PSP						(Bit16u segment)		{ SetPt(segment);seg=segment;psp=(sPSP *)HostMake(segment,0);};
 	void	MakeNew				(Bit16u memSize);
-	void	CopyFileTable		(DOS_PSP* srcpsp);
+	void	CopyFileTable		(DOS_PSP* srcpsp,bool createchildpsp);
 	Bit16u	FindFreeFileEntry	(void);
 	void	CloseFiles			(void);
 
@@ -263,7 +264,7 @@ public:
 	void	SetCommandTail		(RealPt src);	
 	bool	SetNumFiles			(Bit16u fileNum);
 	Bit16u	FindEntryByHandle	(Bit8u handle);
-	
+			
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)
