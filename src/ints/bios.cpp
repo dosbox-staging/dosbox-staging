@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.36 2004-10-23 15:15:06 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.37 2004-12-08 22:39:49 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -238,7 +238,7 @@ static Bitu INT15_Handler(void) {
 		}
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
-		if (reg_dx==0x0000) {
+		if (reg_dx == 0x0000) {
 			// Get Joystick button status
 			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
 				reg_al  = (JOYSTICK_GetButton(0,0)<<7)|(JOYSTICK_GetButton(0,1)<<6);
@@ -249,15 +249,25 @@ static Bitu INT15_Handler(void) {
 				reg_ax = 0x00f0; reg_dx = 0x0201;
 				CALLBACK_SCF(true);
 			}
-		} else if (reg_dx==0x0001) {
-			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
-				reg_ax = (Bit16u)JOYSTICK_GetMove_X(0);
-				reg_bx = (Bit16u)JOYSTICK_GetMove_Y(0);
-				reg_cx = (Bit16u)JOYSTICK_GetMove_X(1);
-				reg_dx = (Bit16u)JOYSTICK_GetMove_Y(1);
+		} else if (reg_dx == 0x0001) {
+			if (JOYSTICK_IsEnabled(0)) {
+				reg_ax = (Bit16u)(JOYSTICK_GetMove_X(0)*127+128);
+				reg_bx = (Bit16u)(JOYSTICK_GetMove_Y(0)*127+128);
+				if(JOYSTICK_IsEnabled(1)) {
+					reg_cx = (Bit16u)(JOYSTICK_GetMove_X(1)*127+128);
+					reg_dx = (Bit16u)(JOYSTICK_GetMove_Y(1)*127+128);
+				}
+				else {
+					reg_cx = reg_dx = 0;
+				}
+				CALLBACK_SCF(false);
+			} else if (JOYSTICK_IsEnabled(1)) {
+				reg_ax = reg_bx = 0;
+				reg_cx = (Bit16u)(JOYSTICK_GetMove_X(1)*127+128);
+				reg_dx = (Bit16u)(JOYSTICK_GetMove_Y(1)*127+128);
 				CALLBACK_SCF(false);
 			} else {			
-				reg_ax=reg_bx=reg_cx=reg_dx=0;
+				reg_ax = reg_bx = reg_cx = reg_dx = 0;
 				CALLBACK_SCF(true);
 			}
 		} else {
