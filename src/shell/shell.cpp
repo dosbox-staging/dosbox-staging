@@ -180,6 +180,7 @@ static char * init_line="/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
 	/* Add messages */
+	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path\n");
 	MSG_Add("SHELL_CMD_HELP","supported commands are:\n");
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off\n");
@@ -199,7 +200,6 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_FILE_NOT_FOUND","File %s not found.\n");
 	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
-	MSG_Add("SHELL_CMD_DIR_PATH_ERROR","Illegal Path\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");

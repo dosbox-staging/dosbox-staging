@@ -90,13 +90,26 @@ void DOS_Shell::CMD_DELETE(char * args) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
 	}
-    if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
-
-	if (!DOS_UnlinkFile(args)) {
-	        WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);
+	char full[DOS_PATHLENGTH];
+	if (!DOS_Canonicalize(args,full)) { WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));return; }
+//TODO Maybe support confirmation for *.* like dos does.	
+	bool res=DOS_FindFirst(args,0xff);
+	if (!res) {
+		WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),args);return;
 	}
-
-};
+	//end can't be 0, but if it is we'll get a nice crash, who cares :)
+	char * end=strrchr(full,'\\')+1;*end=0;
+	char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u time,date;Bit8u attr;
+	DOS_DTA dta(dos.dta);
+	while (res) {
+		dta.GetResult(name,size,date,time,attr);	
+		if (!(attr & (DOS_ATTR_DIRECTORY|DOS_ATTR_READ_ONLY))) {
+			strcpy(end,name);
+			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
+		}
+		res=DOS_FindNext();
+	}
+}
 
 void DOS_Shell::CMD_HELP(char * args){
 	/* Print the help */
@@ -216,7 +229,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	/* Make a full path in the args */
 	if (!DOS_Canonicalize(args,path)) {
-		WriteOut(MSG_Get("SHELL_CMD_DIR_PATH_ERROR"));
+		WriteOut(MSG_Get("SHELL_CMD_ILLEGAL_PATH"));
 		return;
 	}
 	*(strrchr(path,'\\')+1)=0;
