@@ -32,23 +32,7 @@
 //#define DISABLE_JOYSTICK
 
 
-struct SDL_Block {
-	bool active;							//If this isn't set don't draw
-	Bitu width;
-	Bitu height;
-	Bitu bpp;
-	GFX_DrawHandler * draw;
-	GFX_ResizeHandler * resize;
-	bool mouse_grabbed;
-	bool full_screen;
-	SDL_Thread * thread;
-	SDL_mutex * mutex;
-	SDL_Surface * surface;
-	SDL_Joystick * joy;
-	SDL_Color pal[256];
-};
-
-static SDL_Block sdl;
+SDL_Block sdl;
 
 GFX_Info gfx_info;
 
@@ -119,6 +103,10 @@ static void SwitchFullScreen(void) {
 	}
 	ResetScreen();
 	GFX_Start();
+}
+//only prototype existed
+void GFX_SwitchFullScreen(void) {
+    SwitchFullScreen();
 }
 
 static void GFX_Redraw() {

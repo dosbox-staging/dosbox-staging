@@ -216,6 +216,10 @@ void S_Warn(char * format,...) {
 }
 
 void E_Exit(char * format,...) {
+    
+    if (sdl.full_screen) {
+        GFX_SwitchFullScreen();
+    }
 
 	char buf[1024];
 
@@ -225,7 +229,7 @@ void E_Exit(char * format,...) {
 	va_start(msg,format);
 	vsprintf(buf+strlen(buf),format,msg);
 	va_end(msg);
-
+    
 	strcat(buf,"\n");
 	printf(buf);
 	printf("Press ENTER to stop\n");
