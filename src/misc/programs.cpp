@@ -80,14 +80,16 @@ Program::Program() {
 	/* Find the command line and setup the PSP */
 	psp = new DOS_PSP(dos.psp);
 	/* Scan environment for filename */
-	char * envscan=(char *)HostMake(psp->GetEnvironment(),0);
-	while (*envscan) envscan+=strlen(envscan)+1;	
+	PhysPt envscan=PhysMake(psp->GetEnvironment(),0);
+	while (mem_readb(envscan)) envscan+=mem_strlen(envscan)+1;	
 	envscan+=3;
 	CommandTail tail;
 	MEM_BlockRead(PhysMake(dos.psp,128),&tail,128);
 	if (tail.count<127) tail.buffer[tail.count]=0;
 	else tail.buffer[126]=0;
-	cmd = new CommandLine(envscan,tail.buffer);
+	char filename[256];
+	MEM_StrCopy(envscan,filename,256);
+	cmd = new CommandLine(filename,tail.buffer);
 }
 
 void Program::WriteOut(const char * format,...) {
