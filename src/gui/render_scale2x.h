@@ -59,7 +59,7 @@ typedef Bit8u scale2x_uint8;
 typedef Bit16u scale2x_uint16;
 typedef Bit32u scale2x_uint32;
 
-#if !defined(__GNUC__) && !defined(__i386__)
+#if !defined(__GNUC__) || !defined(__i386__)
 
 #define SCALE2X_NORMAL 1
 
