@@ -231,49 +231,63 @@ bool MIDI_Available(void)  {
 	return midi.available;
 }
 
-static void MIDI_Stop(Section* sec) {
-	if (midi.raw.handle) MIDI_SaveRawEvent();
-}
 
-void MIDI_Init(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	const char * dev=section->Get_string("device");
-	const char * conf=section->Get_string("config");
-	/* If device = "default" go for first handler that works */
-	MidiHandler * handler;
-	MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
-	sec->AddDestroyFunction(&MIDI_Stop);
-	midi.status=0x00;
-	midi.cmd_pos=0;
-	midi.cmd_len=0;
-	midi.raw.capturing=false;
-	if (!strcasecmp(dev,"default")) goto getdefault;
-	handler=handler_list;
-	while (handler) {
-		if (!strcasecmp(dev,handler->GetName())) {
-			if (!handler->Open(conf)) {
-				LOG_MSG("MIDI:Can't open device:%s with config:%s.",dev,conf);	
-				goto getdefault;
+class MIDI:public Module_base{
+public:
+	MIDI(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		const char * dev=section->Get_string("device");
+		const char * conf=section->Get_string("config");
+		/* If device = "default" go for first handler that works */
+		MidiHandler * handler;
+		//TODO!!!!!!!!!!!!!!!
+//		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+		midi.status=0x00;
+		midi.cmd_pos=0;
+		midi.cmd_len=0;
+		midi.raw.handle=0;
+		midi.raw.capturing=false;
+		if (!strcasecmp(dev,"default")) goto getdefault;
+		handler=handler_list;
+		while (handler) {
+			if (!strcasecmp(dev,handler->GetName())) {
+				if (!handler->Open(conf)) {
+					LOG_MSG("MIDI:Can't open device:%s with config:%s.",dev,conf);	
+					goto getdefault;
+				}
+				midi.handler=handler;
+				midi.available=true;	
+				LOG_MSG("MIDI:Opened device:%s",handler->GetName());
+				return;
 			}
-			midi.handler=handler;
-			midi.available=true;	
-			LOG_MSG("MIDI:Opened device:%s",handler->GetName());
-			return;
+			handler=handler->next;
 		}
-		handler=handler->next;
-	}
-	LOG_MSG("MIDI:Can't find device:%s, finding default handler.",dev);	
+		LOG_MSG("MIDI:Can't find device:%s, finding default handler.",dev);	
 getdefault:	
-	handler=handler_list;
-	while (handler) {
-		if (handler->Open(conf)) {
-			midi.available=true;	
-			midi.handler=handler;
-			LOG_MSG("MIDI:Opened device:%s",handler->GetName());
-			return;
+		handler=handler_list;
+		while (handler) {
+			if (handler->Open(conf)) {
+				midi.available=true;	
+				midi.handler=handler;
+				LOG_MSG("MIDI:Opened device:%s",handler->GetName());
+				return;
+			}
+			handler=handler->next;
 		}
-		handler=handler->next;
+		/* This shouldn't be possible */
 	}
-	/* This shouldn't be possible */
+	~MIDI(){
+		if(midi.raw.handle) MIDI_SaveRawEvent();
+		if(midi.available) midi.handler->Close();
+		midi.available = false;
+		midi.handler = 0;
+	}
+};
+static MIDI* test;
+void MIDI_Destroy(Section* sec){
+	delete test;
 }
-
+void MIDI_Init(Section * sec) {
+	test = new MIDI(sec);
+	sec->AddDestroyFunction(&MIDI_Destroy,true);
+}
