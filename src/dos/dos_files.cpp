@@ -650,6 +650,7 @@ bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
 	fcbout->Set_drive(drive +1);
 	fcbout->Set_filename(naam);
 	fcbout->Set_ext(ext);
+	delete fcbout;
 	return true;
 
 }
@@ -689,6 +690,7 @@ bool DOS_FCBFindNext(Bit16u seg,Bit16u offset)
   fcbout->Set_drive(drive +1);
   fcbout->Set_filename(naam);
   fcbout->Set_ext(ext);
+  delete fcbout;
   return true;
   }
 
