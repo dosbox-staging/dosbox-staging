@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.23 2004-01-28 14:39:05 harekiet Exp $ */
+/* $Id: render.cpp,v 1.24 2004-01-30 13:40:49 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -319,6 +319,7 @@ bool RENDER_StartUpdate(void) {
 
 void RENDER_EndUpdate(void) {
 	if (!render.updating) return;
+#if (C_SSHOT)
 	switch (render.op.type) {
 	case OP_None:
 	case OP_Normal2x:
@@ -331,6 +332,7 @@ void RENDER_EndUpdate(void) {
 		render.op.type=render.shot.type;
 		break;
 	}
+#endif	/* If Things are added to please check the define */   
 	GFX_EndUpdate();
 	RENDER_DrawLine=RENDER_EmptyLineHandler;
 	render.updating=false;
