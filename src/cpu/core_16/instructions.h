@@ -649,3 +649,6 @@
 	flags.result.d=(flags.var1.d >> flags.var2.b) | (op2 << (32-flags.var2.b));	\
 	save(op1,flags.result.d);											\
 	flags.type=t_DSHRd;
+
+#define BSWAP(op1)														\
+	op1 = (op1>>24)|((op1>>8)&0xFF00)|((op1<<8)&0xFF0000)|((op1<<24)&0xFF000000);

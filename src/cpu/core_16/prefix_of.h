@@ -350,7 +350,40 @@ switch(Fetchb()) {
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
 			break;
 		}
-	/* 0xbc BSF Gw,Ew */
+	case 0xbc:													/* 0xbc BSF Gw,Ew */
+		{
+			GetRMrw;
+			Bit16u result,value;
+			if (rm >= 0xc0) { GetEArw; value=*earw; } 
+			else			{ GetEAa; value=LoadMw(eaa); }
+			if (value==0) {
+				flags.zf = true;
+			} else {
+				result = 0;
+				while ((value & 0x01)==0) { result++; value>>=1; }
+				flags.zf = false;
+				*rmrw = result;
+			}
+			flags.type=t_UNKNOWN;
+			break;
+		}
+	case 0xbd:												/* 0xbd BSR Gw,Ew */
+		{
+			GetRMrw;
+			Bit16u result,value;
+			if (rm >= 0xc0) { GetEArw; value=*earw; } 
+			else			{ GetEAa; value=LoadMw(eaa); }
+			if (value==0) {
+				flags.zf = true;
+			} else {
+				result = 15;	// Operandsize-1
+				while ((value & 0x8000)==0) { result--; value<<=1; }
+				flags.zf = false;
+				*rmrw = result;
+			}
+			flags.type=t_UNKNOWN;
+			break;
+		}
 	/* 0xbd BSR Gw,Ew */
 	case 0xbe:												/* MOVSX Gw,Eb */
 		{
@@ -363,6 +396,15 @@ switch(Fetchb()) {
 	/* 0xc1 XADD Ew,Gw (486) */
 	/* 0xc7 CMPXCHG8B Mq (P5) */
 	/* 0xc8-cf BSWAP Rw (odd behavior,486) */
+	case 0xc8:	BSWAP(reg_eax);		break;
+	case 0xc9:	BSWAP(reg_ecx);		break;
+	case 0xca:	BSWAP(reg_edx);		break;
+	case 0xcb:	BSWAP(reg_ebx);		break;
+	case 0xcc:	BSWAP(reg_esp);		break;
+	case 0xcd:	BSWAP(reg_ebp);		break;
+	case 0xce:	BSWAP(reg_esi);		break;
+	case 0xcf:	BSWAP(reg_edi);		break;
+		
 	/* 0xd1 PSRLW Rq,Eq (MMX) */
 	/* 0xd2 PSRLD Rq,Eq (MMX) */
 	/* 0xd3 PSRLQ Rq,Eq (MMX) */
