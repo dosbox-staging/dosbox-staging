@@ -37,19 +37,17 @@
 #include "programs.h"
 #include "support.h"
 
- /* NEEDS A CLEANUP */
-char dosbox_basedir[CROSS_LEN];
 Config * control;
-Bitu errorlevel=1; //during startup display reason for Exits
-//The whole load of startups for all the subfunctions
+Bitu errorlevel;
 
+/* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
 void MEM_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
 
-
+void RENDER_Init(Section*);
 void VGA_Init(Section*);
 
 void DOS_Init(Section*);
@@ -76,9 +74,6 @@ void TIMER_Init(Section*);
 void BIOS_Init(Section*);
 void DEBUG_Init(Section*);
 
-
-
-
 /* Dos Internal mostly */
 void EMS_Init(Section*);
 void XMS_Init(Section*);
@@ -86,9 +81,6 @@ void AUTOEXEC_Init(Section*);
 void SHELL_Init(void);
 
 void INT10_Init(Section*);
-
-
-
 
 static LoopHandler * loop;
 
@@ -110,8 +102,7 @@ static Bitu Normal_Loop(void) {
 		ret=(*cpudecoder)(cpu_cycles);
 	} while (!ret && PIC_IRQAgain);
 	return ret;
-};
-
+}
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
 	loop=handler;
@@ -128,12 +119,11 @@ void DOSBOX_RunMachine(void){
 	} while (!ret);
 }
 
-
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
-	errorlevel=section->Get_int("WARNINGS");
-        LastTicks=GetTicks();
+	errorlevel=section->Get_int("warnings");
+	LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 }
@@ -146,70 +136,67 @@ void DOSBOX_Init(void) {
 
 	/* Setup all the different modules making up DOSBox */
 	
-	secprop=control->AddSection_prop("DOSBOX",&DOSBOX_RealInit);
+	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
+	secprop->Add_string("language","");
+	secprop->Add_int("warnings",4);
 	
-	secprop->Add_string("LANGUAGE","");
-	secprop->Add_int("WARNINGS",0);
+	secprop->AddInitFunction(&MEM_Init);
+	secprop->AddInitFunction(&IO_Init);
+	secprop->AddInitFunction(&CALLBACK_Init);
+	secprop->AddInitFunction(&PIC_Init);
+	secprop->AddInitFunction(&PROGRAMS_Init);
+	secprop->AddInitFunction(&TIMER_Init);
+	secprop->AddInitFunction(&RENDER_Init);
+	secprop->Add_string("snapshots","snapshots");
 	
-	control->AddSection		("MEMORY",&MEM_Init);
-	control->AddSection		("IO",&IO_Init);
-	control->AddSection		("CALLBACK",&CALLBACK_Init);
-    control->AddSection		("PIC",&PIC_Init);
-	control->AddSection		("PROGRAMS",&PROGRAMS_Init);
-	control->AddSection_prop("TIMER",&TIMER_Init);
-	secprop=control->AddSection_prop("CPU",&CPU_Init);
-	secprop->Add_int("CYCLES",3000);
-	secprop=control->AddSection_prop("MIXER",&MIXER_Init);
+	secprop=control->AddSection_prop("cpu",&CPU_Init);
+	secprop->Add_int("cycles",4000);
+
+	secprop->AddInitFunction(&DMA_Init);
+	secprop->AddInitFunction(&VGA_Init);
+	secprop->AddInitFunction(&KEYBOARD_Init);
+	secprop->AddInitFunction(&MOUSE_Init);
+	secprop->AddInitFunction(&JOYSTICK_Init);
+
+	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 #if C_DEBUG
-	secprop=control->AddSection_prop("'DEBUG",&DEBUG_Init);
+	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
-	control->AddSection		("DMA",&DMA_Init);
-	control->AddSection		("VGA",&VGA_Init);
-	control->AddSection		("KEYBOARD",&KEYBOARD_Init);
-	secprop=control->AddSection_prop("MOUSE",&MOUSE_Init);
-	control->AddSection		("JOYSTICK",&JOYSTICK_Init);
-	
-	secprop=control->AddSection_prop("SBLASTER",&SBLASTER_Init);
-    secprop->Add_hex("BASE",0x220);
-	secprop->Add_int("IRQ",5);
-	secprop->Add_int("DMA",1);
-	secprop->Add_bool("STATUS",true);
+	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init);
+    secprop->Add_hex("base",0x220);
+	secprop->Add_int("irq",7);
+	secprop->Add_int("dma",1);
+	secprop->Add_int("hdma",5);
+	secprop->Add_bool("enabled",true);
 
-	secprop=control->AddSection_prop("TANDYSOUND",&TANDYSOUND_Init);
-    secprop->Add_bool("STATUS",false);
+	secprop->AddInitFunction(&ADLIB_Init);
+	secprop->Add_bool("adlib",true);
+	secprop->AddInitFunction(&CMS_Init);
+    secprop->Add_bool("cms",false);
 	
-	secprop=control->AddSection_prop("PCSPEAKER",&PCSPEAKER_Init);
+	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
+	secprop->Add_bool("sinewave",false);
+	secprop->AddInitFunction(&TANDYSOUND_Init);
+	secprop->Add_bool("tandy",false);
 
-	secprop=control->AddSection_prop("ADLIB",&ADLIB_Init);
-    secprop->Add_bool("STATUS",true);
-	
-	secprop=control->AddSection_prop("CMS",&CMS_Init);
-    secprop->Add_bool("STATUS",false);
-
-	secprop=control->AddSection_prop("BIOS",&BIOS_Init);
-	secprop=control->AddSection_prop("VIDBIOS",&INT10_Init);
+	secprop=control->AddSection_prop("bios",&BIOS_Init);
+	secprop->AddInitFunction(&INT10_Init);
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
-	
-	secprop=control->AddSection_prop("DOS",&DOS_Init);
-	secprop=control->AddSection_prop("EMS",&EMS_Init);
-	secprop->Add_bool("STATUS",true);
-	secprop->Add_int("SIZE",4);
-	secprop=control->AddSection_prop("XMS",&XMS_Init);
-	secprop->Add_bool("STATUS",true);
-	secprop->Add_int("SIZE",8);
+	//TODO Maybe combine most of the dos stuff in one section like ems,xms
+	secprop=control->AddSection_prop("dos",&DOS_Init);
+	secprop->AddInitFunction(&EMS_Init);
+	secprop->Add_int("emssize",4);
+	secprop->AddInitFunction(&XMS_Init);
+	secprop->Add_int("xmssize",8);
 
-	secline=control->AddSection_line("AUTOEXEC",&AUTOEXEC_Init);
+	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 
 	control->SetStartUp(&SHELL_Init);	
 
-//	HARDWARE_Init();
 #if C_FPU
 	FPU_Init();
 #endif
-
-
-
 }
 
 
