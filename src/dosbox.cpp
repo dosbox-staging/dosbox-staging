@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dosbox.cpp,v 1.60 2004-01-13 19:02:58 qbix79 Exp $ */
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -171,7 +173,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
 	else if (strcasecmp(mtype,"vga")==0) machine=MCH_VGA;
 	else if (strcasecmp(mtype,"auto")==0) machine=MCH_AUTO;
-	else LOG_MSG("DOSBOX:Unkown machine type %s",mtype);
+	else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
 }
 
 
@@ -182,7 +184,7 @@ void DOSBOX_Init(void) {
 	/* Setup all the different modules making up DOSBox */
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
-    secprop->Add_string("language","");
+	secprop->Add_string("language","");
 	secprop->Add_string("machine","auto");
 
 #if C_DEBUG	
@@ -231,7 +233,7 @@ void DOSBOX_Init(void) {
 		",dynamic"
 #endif
 		".\n"
-		"cycles -- Amount of instructions dosbox tries to emulate each millsecond.\n"
+		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"
 		"          Setting this higher than your machine can handle is bad!\n"
 		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
 		"cycledown    Setting it lower than 100 will be a percentage.\n"
@@ -306,7 +308,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("gus",&GUS_Init); 
 	secprop->Add_bool("gus",true); 	
 	secprop->Add_int("rate",22050);
-    secprop->Add_hex("base",0x240);
+	secprop->Add_hex("base",0x240);
 	secprop->Add_int("irq1",5);
 	secprop->Add_int("irq2",5);
 	secprop->Add_int("dma1",3);
@@ -333,7 +335,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DISNEY_Init);
 	secprop->Add_bool("disney",true);
 
-    MSG_Add("SPEAKER_CONFIGFILE_HELP",
+	MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
 		"tandy -- Enable Tandy 3-Voice emulation.\n"
