@@ -42,6 +42,10 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
   -lang languagefile
         Start dosbox using the language string specified in "languagefile".
 
+  -noconsole (Windows Only)
+        Start dosbox without showing the console window, output will
+	be redirected to stdout.txt and stderr.txt
+
 Note: If a name/command/configfile/languagefile contains a space in it, put
       the whole name/command/configfile/languagefile between quotes("example").
 
