@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.22 2003-09-17 19:15:49 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.23 2003-09-17 20:29:56 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -391,6 +391,11 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 	}
 };
 
+static void mouse_reset_hardware(void){
+	mouse.sub_mask=0;
+	mouse.sub_seg=0;
+	mouse.sub_ofs=0;
+};
 
 static void  mouse_reset(void) 
 {
@@ -435,10 +440,6 @@ static void  mouse_reset(void)
 	mouse.events=0;
 	mouse.mickey_x=0;
 	mouse.mickey_y=0;
-	//mouse.sub_mask=0;
-	//mouse.sub_seg=0;
-	//mouse.sub_ofs=0;
-	//disabled this for iron seed
 
 	mouse.hotx		 = 0;
 	mouse.hoty		 = 0;
@@ -463,9 +464,10 @@ static Bitu INT33_Handler(void) {
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X",reg_ax);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
+		mouse_reset_hardware(); /* fallthrough */
 	case 0x21:	/* Software Reset */
 		reg_ax=0xffff;
-		reg_bx=MOUSE_BUTTONS;		
+		reg_bx=MOUSE_BUTTONS;
 		mouse_reset();
 		Mouse_AutoLock(true);
 		break;
@@ -528,10 +530,11 @@ static Bitu INT33_Handler(void) {
 	case 0x08:	/* Define vertical cursor range */
 		{	// not sure what to take instead of the CurMode (see case 0x07 as well)
 			// especially the cases where sheight= 400 and we set it with the mouse_reset to 200
+			//disabled it at the moment. Seems to break syndicate who want 400 in mode 13
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if(static_cast<Bitu>(max - min + 1) > CurMode->sheight) max = min + CurMode->sheight - 1;
+		//	if(static_cast<Bitu>(max - min + 1) > CurMode->sheight) max = min + CurMode->sheight - 1;
 			mouse.min_y=min;
 			mouse.max_y=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
@@ -678,6 +681,7 @@ void MOUSE_Init(Section* sec) {
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 
 	memset(&mouse,0,sizeof(mouse));
+	mouse_reset_hardware();
 	mouse_reset();
 }
 
