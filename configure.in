@@ -187,14 +187,14 @@ else
   AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
 fi
 
-AH_TEMPLATE(C_PRIORITY_NICE,[Define to 1 if you have nice priority changing support])
-AC_MSG_CHECKING(for nice priority changing)
+AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
+AC_MSG_CHECKING(for setpriority support)
 AC_LINK_IFELSE([
 #include <sys/resource.h>
 int main(int argc,char * argv[]) {
-	return nice(10);
+	return setpriority (PRIO_PROCESS, 0,PRIO_MIN+PRIO_MAX);
 };
-],AC_MSG_RESULT(yes);AC_DEFINE(C_PRIORITY_NICE,1),AC_MSG_RESULT(no))
+],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
 
 
 dnl Some host detection and actions for them
