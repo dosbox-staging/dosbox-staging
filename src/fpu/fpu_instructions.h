@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: fpu_instructions.h,v 1.12 2003-09-24 19:46:36 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -156,16 +157,16 @@ static void FPU_FST(Bitu st, Bitu other){
 
 static void FPU_FCOM(Bitu st, Bitu other){
 	if((fpu.tags[st] != TAG_Valid) || (fpu.tags[other] != TAG_Valid)){
-		FPU_SET_C3(1);FPU_SET_C2(1);FPU_SET_C1(1);FPU_SET_C0(1);return;
+		FPU_SET_C3(1);FPU_SET_C1(1);FPU_SET_C0(1);return;
 	}
 	if(fpu.regs[st].d == fpu.regs[other].d){
-		FPU_SET_C3(1);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
+		FPU_SET_C3(1);FPU_SET_C1(0);FPU_SET_C0(0);return;
 	}
 	if(fpu.regs[st].d < fpu.regs[other].d){
-		FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(1);return;
+		FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(1);return;
 	}
 	// st > other
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
+	FPU_SET_C3(0);FPU_SET_C1(0);FPU_SET_C0(0);return;
 }
 
 static void FPU_FUCOM(Bitu st, Bitu other){
@@ -175,8 +176,10 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 
 static double FROUND(double in){
 	switch(fpu.round){
-	case ROUND_Nearest:
-		return((in-floor(in)>=0.5)?(floor(in)+1):(floor(in)));
+	case ROUND_Nearest:	
+		if (in-floor(in)>0.5) return (floor(in)+1);
+		else if (in-floor(in)<0.5) return (floor(in));
+		else return (((static_cast<Bit64s>(floor(in)))&1)!=0)?(floor(in)+1):(floor(in));
 		break;
 	case ROUND_Down:
 		return (floor(in));
@@ -197,9 +200,13 @@ static void FPU_FPREM(void){
 	Real64 valtop = fpu.regs[TOP].d;
 	Real64 valdiv = fpu.regs[ST(1)].d;
 	Real64 res = floor(valtop/valdiv);
+	Bit64s ressaved = static_cast<Bit64s>(res);
 	res=valtop - res*valdiv;
 	fpu.regs[TOP].d = res;
-	FPU_SET_C3(0);FPU_SET_C2(0);FPU_SET_C1(0);FPU_SET_C0(0);
+	FPU_SET_C3(static_cast<Bitu>(ressaved&4));
+	FPU_SET_C2(static_cast<Bitu>(ressaved&2));
+	FPU_SET_C1(static_cast<Bitu>(ressaved&1));
+	FPU_SET_C0(0);
 }
 
 static void FPU_FXAM(void){
