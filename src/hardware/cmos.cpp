@@ -23,6 +23,7 @@
 #include "pic.h"
 #include "inout.h"
 #include "mem.h"
+#include "bios.h"
 
 static struct {
 	Bit8u regs[0x40];
@@ -114,6 +115,8 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 		LOG(LOG_BIOS,LOG_ERROR)("CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
 	}
+	Bitu drive_a, drive_b;
+	Bit8u hdparm;
 	time_t curtime;
 	struct tm *loctime;
 
@@ -168,6 +171,85 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 			} 
 			return val;
 		}
+	case 0x10:		/* Floppy size */
+		drive_a = 0;
+		drive_b = 0;
+		if(imageDiskList[0] != NULL) drive_a = imageDiskList[0]->GetBiosType();
+		if(imageDiskList[1] != NULL) drive_b = imageDiskList[1]->GetBiosType();
+		return ((drive_a << 4) | (drive_b));
+	/* First harddrive info */
+	case 0x12:
+		hdparm = 0;
+		if(imageDiskList[2] != NULL) hdparm |= 0xf;
+		if(imageDiskList[3] != NULL) hdparm |= 0xf0;
+		return hdparm;
+	case 0x19:
+		if(imageDiskList[2] != NULL) return 47; /* User defined type */
+		return 0;
+	case 0x1b:
+		if(imageDiskList[2] != NULL) return (imageDiskList[2]->cylinders & 0xff);
+		return 0;
+	case 0x1c:
+		if(imageDiskList[2] != NULL) return ((imageDiskList[2]->cylinders & 0xff00)>>8);
+		return 0;
+	case 0x1d:
+		if(imageDiskList[2] != NULL) return (imageDiskList[2]->heads);
+		return 0;
+	case 0x1e:
+		if(imageDiskList[2] != NULL) return 0xff;
+		return 0;
+	case 0x1f:
+		if(imageDiskList[2] != NULL) return 0xff;
+		return 0;
+	case 0x20:
+		if(imageDiskList[2] != NULL) return (0xc0 | (((imageDiskList[2]->heads) > 8) << 3));
+		return 0;
+	case 0x21:
+		if(imageDiskList[2] != NULL) return (imageDiskList[2]->cylinders & 0xff);
+		return 0;
+	case 0x22:
+		if(imageDiskList[2] != NULL) return ((imageDiskList[2]->cylinders & 0xff00)>>8);
+		return 0;
+	case 0x23:
+		if(imageDiskList[2] != NULL) return (imageDiskList[2]->sectors);
+		return 0;
+	/* Second harddrive info */
+	case 0x1a:
+		if(imageDiskList[3] != NULL) return 47; /* User defined type */
+		return 0;
+	case 0x24:
+		if(imageDiskList[3] != NULL) return (imageDiskList[3]->cylinders & 0xff);
+		return 0;
+	case 0x25:
+		if(imageDiskList[3] != NULL) return ((imageDiskList[3]->cylinders & 0xff00)>>8);
+		return 0;
+	case 0x26:
+		if(imageDiskList[3] != NULL) return (imageDiskList[3]->heads);
+		return 0;
+	case 0x27:
+		if(imageDiskList[3] != NULL) return 0xff;
+		return 0;
+	case 0x28:
+		if(imageDiskList[3] != NULL) return 0xff;
+		return 0;
+	case 0x29:
+		if(imageDiskList[3] != NULL) return (0xc0 | (((imageDiskList[3]->heads) > 8) << 3));
+		return 0;
+	case 0x2a:
+		if(imageDiskList[3] != NULL) return (imageDiskList[3]->cylinders & 0xff);
+		return 0;
+	case 0x2b:
+		if(imageDiskList[3] != NULL) return ((imageDiskList[3]->cylinders & 0xff00)>>8);
+		return 0;
+	case 0x2c:
+		if(imageDiskList[3] != NULL) return (imageDiskList[3]->sectors);
+		return 0;
+	case 0x39:
+		return 0;
+	case 0x3a:
+		return 0;
+
+
 	case 0x0b:		/* Status register B */
 	case 0x0f:		/* Shutdown status byte */
 	case 0x17:		/* Extended memory in KB Low Byte */
