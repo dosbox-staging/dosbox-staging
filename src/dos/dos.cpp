@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.57 2003-10-14 23:33:33 harekiet Exp $ */
+/* $Id: dos.cpp,v 1.58 2003-10-17 16:56:38 finsterr Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -527,7 +527,12 @@ static Bitu DOS_21Handler(void) {
 			break;
 		case 0x01:				/* Set */
 			LOG(LOG_MISC,LOG_ERROR)("DOS:Set File Attributes for %s not supported",name1);
-			CALLBACK_SCF(false);
+			if (DOS_SetFileAttr(name1,reg_cx)) {
+				CALLBACK_SCF(false);
+			} else {
+				CALLBACK_SCF(true);
+				reg_ax=dos.errorcode;
+			}
 			break;
 		default:
 			LOG(LOG_MISC,LOG_ERROR)("DOS:0x43:Illegal subfunction %2X",reg_al);

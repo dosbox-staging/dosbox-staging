@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.47 2003-10-10 13:50:34 finsterr Exp $ */
+/* $Id: dos_files.cpp,v 1.48 2003-10-17 16:56:06 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -445,6 +445,21 @@ bool DOS_GetFileAttr(char * name,Bit16u * attr) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
+}
+
+bool DOS_SetFileAttr(char * name,Bit16u attr) 
+// this function does not change the file attributs
+// it just does some tests if file is available 
+// returns false when using on cdrom (stonekeep)
+{
+	Bit16u attrTemp;
+	char fullname[DOS_PATHLENGTH];Bit8u drive;
+	if (!DOS_MakeName(name,fullname,&drive)) return false;	
+	if (strcmp(Drives[drive]->GetInfo(),"CDRom.")==0) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+	return Drives[drive]->GetFileAttr(fullname,&attrTemp);
 }
 
 bool DOS_Canonicalize(char * name,char * big) {

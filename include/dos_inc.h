@@ -117,6 +117,7 @@ bool DOS_RemoveDir(char * dir);
 bool DOS_Rename(char * oldname,char * newname);
 bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * clusters,Bit16u * free);
 bool DOS_GetFileAttr(char * name,Bit16u * attr);
+bool DOS_SetFileAttr(char * name,Bit16u attr);
 
 /* IOCTL Stuff */
 bool DOS_IOCTL(void);
