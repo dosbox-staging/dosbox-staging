@@ -517,4 +517,15 @@ int CDROM_GetMountType(char* path)
 	return 2;
 };
 */
+#else
+
+// Get Mounttype function for unsupported systems
+// always return 0 - physical cdrom
+
+int CDROM_GetMountType(char* path)
+// Always return 0;
+{
+	return 0;
+};
+
 #endif
