@@ -374,6 +374,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 }
 
 static Bit8u HandleNameSearch(void) {
+	char name[9];
 	Bit16u handle=0;PhysPt data;
 	switch (reg_al) {
 	case 0x00:	/* Get all handle names */
@@ -387,6 +388,18 @@ static Bit8u HandleNameSearch(void) {
 			}
 		}
 		break;
+	case 0x01: /* Search for a handle name */
+		MEM_StrCopy(SegPhys(ds)+reg_si,name,8);name[8]=0;
+		for (handle=0;handle<EMM_MAX_HANDLES;handle++) {
+			if (emm_handles[handle].pages!=NULL_HANDLE) {
+				if (!strncmp(name,emm_handles[handle].name,8)) {
+					reg_dx=handle;
+					return EMM_NO_ERROR;
+				}
+			}
+		}
+		return EMM_NOT_FOUND;
+		break;
 	case 0x02: /* Get Total number of handles */
 	  reg_bx=EMM_MAX_HANDLES;
 	  break;
@@ -395,6 +408,25 @@ static Bit8u HandleNameSearch(void) {
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
+}
+
+static Bit8u GetSetHandleName(void) {
+	Bit16u handle=reg_dx;
+	switch (reg_al) {
+	case 0x00:	/* Get Handle Name */
+		if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) return EMM_INVALID_HANDLE;
+		MEM_BlockWrite(SegPhys(es)+reg_di,emm_handles[handle].name,8);
+		break;
+	case 0x01:	/* Set Handle Name */
+		if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) return EMM_INVALID_HANDLE;
+		MEM_BlockRead(SegPhys(es)+reg_di,emm_handles[handle].name,8);
+		break;
+	default:
+		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		return EMM_FUNC_NOSUP;
+	}
+	return EMM_NO_ERROR;
+
 }
 
 
@@ -614,12 +646,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah=EMM_ReallocatePages(reg_dx,reg_bx);
 		break;
 	case 0x53: // Set/Get Handlename
-		if (reg_al==0x00) { // Get Name not supported
-			LOG(LOG_ERROR|LOG_MISC,"EMS:Get handle name not supported",reg_ah);
-			reg_ah=EMM_FUNC_NOSUP;					
-		} else { // Set name, not supported but faked
-			reg_ah=EMM_NO_ERROR;	
-		}
+		reg_ah=GetSetHandleName();
 		break;
 	case 0x54:	/* Handle Functions */
 		reg_ah=HandleNameSearch();
