@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: dev_con.h,v 1.14 2003-09-08 18:06:44 qbix79 Exp $ */
+
 #include "dos_inc.h"
 #include "../ints/int10.h"
 #include <string.h>
@@ -36,6 +38,7 @@ private:
     struct ansi { /* should create a constructor which fills them with the appriorate values */
         bool esc;
         bool sci;
+		bool enabled;
         Bit8u attr;
         Bit8u data[NUMBER_ANSI_DATA];
         Bit8u numberofarg;
@@ -107,8 +110,8 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	Bit16u count=0;
     Bitu i;
-    Bit8s col,row;
-    static bool ansi_enabled=false;
+    Bit8u col,row;
+	Bit8u tempdata;
     while (*size>count) {
         if (!ansi.esc){
             if(data[count]=='\033') {
@@ -117,20 +120,16 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                 /* start the sequence */
                 ansi.esc=true;
                 count++;
-                if(!ansi_enabled) {
-                    LOG(LOG_IOCTL,LOG_NORMAL)("ANSI sequences detected. enabling ansi support"); /* maybe LOG_MSG */
-                    ansi_enabled=true;
-                }
                 continue;
 
             } else { 
 				// pass attribute only if ansi is enabled
-				INT10_TeletypeOutput(data[count],ansi.attr,ansi_enabled);
+				INT10_TeletypeOutput(data[count],ansi.attr,ansi.enabled);
 				count++;
 				continue;
             };
         };
-        /* ansi.esc=true */
+
         if(!ansi.sci){
             
             switch(data[count]){
@@ -169,10 +168,11 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             break;
         case 'm':               /* SGR */
             for(i=0;i<=ansi.numberofarg;i++){ 
-
+				ansi.enabled=true;
                 switch(ansi.data[i]){
                 case 0: /* normal */
                     ansi.attr=0x7;
+					ansi.enabled=false;
                     break;
                 case 1: /* bold mode on*/
                     ansi.attr|=0x8;
@@ -264,19 +264,48 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             INT10_SetCursorPos(--(ansi.data[0]),--(ansi.data[1]),0); /*ansi=1 based, int10 is 0 based */
             ClearAnsi();
             break;
+			/* cursor up down and forward and backward only change the row or the col not both */
         case 'A': /* cursor up*/
             col=CURSOR_POS_COL(0) ;
-            row=CURSOR_POS_ROW(0) - (ansi.data[0]? ansi.data[0] : 1);
+            row=CURSOR_POS_ROW(0) ;
+			tempdata = (ansi.data[0]? ansi.data[0] : 1);
+			if(tempdata > row)
+			{ row=0; } 
+			else 
+			{ row-=tempdata;}
+			INT10_SetCursorPos(row,col,0);
+            ClearAnsi();
+            break;
+		case 'B': /*cursor Down */
+			col=CURSOR_POS_COL(0) ;
+            row=CURSOR_POS_ROW(0) ;
+			tempdata = (ansi.data[0]? ansi.data[0] : 1);
+			if(tempdata + static_cast<Bitu>(row) >= ansi.nrows)
+			{ row = ansi.nrows - 1;}
+			else
+			{ row += tempdata; }
+            INT10_SetCursorPos(row,col,0);
+            ClearAnsi();
+			break;
+        case 'C': /*cursor forward */
+            col=CURSOR_POS_COL(0);
+			row=CURSOR_POS_ROW(0);
+            tempdata=(ansi.data[0]? ansi.data[0] : 1);
+			if(tempdata + static_cast<Bitu>(col) >= ansi.ncols) 
+			{ col = ansi.ncols - 1;} 
+			else
+			{ col += tempdata;}
             INT10_SetCursorPos(row,col,0);
             ClearAnsi();
             break;
-        case 'C': /*cursor forward */
-            col=CURSOR_POS_COL(0) + (ansi.data[0]? ansi.data[0] : 1);
+		case 'D': /*Cursor Backward  */
+            col=CURSOR_POS_COL(0);
             row=CURSOR_POS_ROW(0);
-            while(col>=ansi.ncols) {
-                row++;
-                col = col - ansi.ncols;         // should depend on linebrake mode
-            }
+			tempdata=(ansi.data[0]? ansi.data[0] : 1);
+            if(tempdata > col)
+			{col = 0;}
+			else
+			{ col -= tempdata;}
             INT10_SetCursorPos(row,col,0);
             ClearAnsi();
             break;
@@ -295,16 +324,6 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: set/reset mode called(not supported)");
             ClearAnsi();
             break;
-        case 'D': /*Cursor Backward  */
-            col=CURSOR_POS_COL(0) - (ansi.data[0]? ansi.data[0] : 1);
-            row=CURSOR_POS_ROW(0);
-            while(col<0) {
-                row--;
-                col = col + ansi.ncols ;        // should depend on linebrake mode
-            }
-            INT10_SetCursorPos(row,col,0);
-            ClearAnsi();
-            break;
         case 'u': /* Restore Cursor Pos */
             INT10_SetCursorPos(ansi.saverow,ansi.savecol,0);
             ClearAnsi();
@@ -314,7 +333,10 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             ansi.saverow=CURSOR_POS_ROW(0);
             ClearAnsi();
             break;
-        case 'K':/* erase till end of line */
+        case 'K':/* erase till end of line */ 
+			for(i = CURSOR_POS_COL(0);i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutput(' ',ansi.attr,true);
+            ClearAnsi(); /* maybe set cursor back to starting place ???? */
+			break;
         case 'l':/* (if code =7) disable linewrap */
         case 'p':/* reassign keys (needs strings) */
         case 'i':/* printer stuff */
@@ -352,11 +374,12 @@ device_CON::device_CON() {
 	cache=0;
     ansi.esc=false;
     ansi.sci=false;
+	ansi.enabled=false;
     ansi.attr=0x7;
     ansi.numberofarg=0;
     for(Bit8u i=0; i<NUMBER_ANSI_DATA;i++) ansi.data[i]=0;
     ansi.ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS); //should be updated once set/reset mode is implemented
-    ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+    ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
     ansi.saverow=0;
     ansi.savecol=0;
 	ClearAnsi();
