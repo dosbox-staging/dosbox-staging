@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.10 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.11 2004-06-10 08:48:53 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -78,9 +78,13 @@ void DOS_SetupTables(void) {
 	//CON string
 	real_writew(0x54,0x20+0x00, (Bit16u) 0x4f43);
 	real_writew(0x54,0x20+0x02, (Bit16u) 0x204e);
+
+	/* Allocate DCBS DOUBLE BYTE CHARACTER SET LEAD-BYTE TABLE */
+	dos.tables.dcbs=RealMake(DOS_GetMemory(3),0);
+	mem_writew(Real2Phys(dos.tables.dcbs),0); //empty table
+
 	/* Allocate some fake memory else pharlab doesn't like the indos pointer */
 	sdaseg=DOS_GetMemory(12);
-	sdaseg=DOS_GetMemory(3);
 	DOS_SDA(sdaseg,0).Init();
    
 }

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.71 2004-05-04 18:34:07 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.72 2004-06-10 08:48:53 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -801,6 +801,14 @@ static Bitu DOS_21Handler(void) {
 	case 0x62:					/* Get Current PSP Address */
 		reg_bx=dos.psp();
 		break;
+	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
+		if(reg_al == 0) {
+			SegSet16(ds,RealSeg(dos.tables.dcbs));
+			reg_si=RealOff(dos.tables.dcbs);		
+			reg_al = 0;
+			CALLBACK_SCF(false); //undocumented
+		} else reg_al = 0xff; //Doesn't officially touch carry flag
+		break;
 	case 0x64:					/* Set device driver lookahead flag */
 		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
 		break;
@@ -895,7 +903,6 @@ static Bitu DOS_21Handler(void) {
 		break;
 
     case 0x68:                  /* FFLUSH Commit file */
-    case 0x63:					/* Weirdo double byte stuff (fails but say it succeeded) available only in MSDOS 2.25  */
         CALLBACK_SCF(false);    //mirek
     case 0xE0:
     case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */

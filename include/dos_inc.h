@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.44 2004-05-15 07:57:02 harekiet Exp $ */
+/* $Id: dos_inc.h,v 1.45 2004-06-10 08:48:53 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -563,6 +563,7 @@ struct DOS_Block {
 	struct  {
 		RealPt mediaid;
 		RealPt tempdta;
+		RealPt dcbs;
 	} tables;
 };
 
