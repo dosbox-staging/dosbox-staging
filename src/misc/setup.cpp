@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -222,7 +222,8 @@ void Config::ParseConfigFile(const char* configfilename){
 		return;
 	}
 	char gegevens[150];
-	Section* currentsection;
+	Section* currentsection = NULL;
+	Section* testsec = NULL;
 	while (in) {
 		in.getline(gegevens,150);
 		char* temp;
@@ -237,7 +238,9 @@ void Config::ParseConfigFile(const char* configfilename){
 		case '[':
 			temp = strrchr(gegevens,']');
 			*temp=0;
-			currentsection=GetSection(&gegevens[1]);
+			testsec = GetSection(&gegevens[1]);
+			if(testsec != NULL ) currentsection = testsec;
+			testsec = NULL;
 			break;
 		default:
 			try{
