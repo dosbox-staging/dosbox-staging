@@ -63,6 +63,7 @@ extern Bitu cycle_count;
 #endif
 
 
+#include "instructions.h"
 #include "core_16/support.h"
 static Bitu CPU_Real_16_Slow_Decode_Trap(void);
 
@@ -71,10 +72,10 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;		
-#endif
 #if C_HEAVY_DEBUG
 		SAVEIP;
 		if (DEBUG_HeavyIsBreakpoint()) return 1;
+#endif
 #endif
 		#include "core_16/main.h"
 		if (prefix.count) {
@@ -102,6 +103,7 @@ static Bitu CPU_Real_16_Slow_Decode_Trap(void) {
 
 	return CBRET_NONE;
 }
+
 
 void CPU_Real_16_Slow_Start(void) {
 	cpudecoder=&CPU_Real_16_Slow_Decode;
