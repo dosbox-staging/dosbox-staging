@@ -176,7 +176,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("keepsmall",false);
-	secprop->Add_string("snapshots","snapshots");
+	secprop->Add_string("snapshots","snaps");
 	secprop->Add_string("scaler","none");
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
@@ -189,6 +189,11 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&JOYSTICK_Init);
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
+	secprop->Add_bool("nosound",false);
+	secprop->Add_int("freq",22050);
+	secprop->Add_int("blocksize",2048);
+	secprop->Add_string("wavedir","waves");
+	
 	secprop=control->AddSection_prop("midi",&MIDI_Init);
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
