@@ -391,11 +391,11 @@ static void HandleKey(SDL_KeyboardEvent * key) {
 	case SDLK_KP_ENTER:code=KBD_kpenter;break;
 	case SDLK_KP_PERIOD:code=KBD_kpperiod;break;
 
-//	case SDLK_:code=key_;break;
 	/* Special Keys */
 	default:
-//TODO maybe give warning for keypress unknown		
-		return;
+		code=KBD_1;
+		LOG(LOG_ERROR|LOG_KEYBOARD,"Unhandled SDL keysym %d",key->keysym.sym);
+		break;
 	}
 	/* Check the modifiers */
 	Bitu mod=
