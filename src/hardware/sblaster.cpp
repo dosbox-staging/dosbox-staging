@@ -388,7 +388,7 @@ static void GenerateDMASound(Bitu size) {
 			sb.tmp.buf.m[read+1]=decode_ADPCM_3_sample((sb.dma.buf.b8[read*3/8]>>3)&7,sb.adpcm.reference,sb.adpcm.stepsize);
 			read+=2;
 			if (ad==2) {
-				sb.tmp.buf.m[read]=decode_ADPCM_3_sample(((sb.dma.buf.b8[(read-2)*3/8-1]>>6)&3)&(sb.dma.buf.b8[read*3/8]&1),     sb.adpcm.reference,sb.adpcm.stepsize);
+				sb.tmp.buf.m[read]=decode_ADPCM_3_sample(((sb.dma.buf.b8[(read-2)*3/8-1]>>6)&3)&(sb.dma.buf.b8[(read-2)*3/8]&1),     sb.adpcm.reference,sb.adpcm.stepsize);
 				sb.tmp.buf.m[read+1]=decode_ADPCM_3_sample((sb.dma.buf.b8[(read-2)*3/8]>>1)&7,sb.adpcm.reference,sb.adpcm.stepsize);
 				sb.tmp.buf.m[read+2]=decode_ADPCM_3_sample((sb.dma.buf.b8[(read-2)*3/8]>>4)&7,sb.adpcm.reference,sb.adpcm.stepsize);
 				read+=3;
@@ -693,21 +693,21 @@ static void DSP_DoCommand(void) {
 		//TODO Maybe check limit for new irq?
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		break;
-    case 0x75:  /* 075h : Single Cycle 4-bit ADPCM Reference */
+    	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.reference=0x1000000;
-    case 0x74:  /* 074h : Single Cycle 4-bit ADPCM */	
+    	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */	
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_4_SINGLE);
 		break;
-	case 0x77:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
+	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
 		sb.adpcm.reference=0x1000000;
-	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
+	case 0x76:	/* 076h : Single Cycle 3-bit(2.6bit) ADPCM */
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_3_SINGLE);
 		break;
-	case 0x17:  /* 074h : Single Cycle 2-bit ADPCM Reference*/
+	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.reference=0x1000000;
-	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
+	case 0x16:	/* 016h : Single Cycle 2-bit ADPCM */
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		DSP_StartDMATranfser(DMA_2_SINGLE);
 		break;

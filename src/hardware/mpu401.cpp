@@ -178,7 +178,7 @@ static struct {
 		bool conductor,cond_req,cond_set;
 		bool allnotes,realtime,allthru;
 		bool playing;
-		bool wsd,wsm;
+		bool wsd,wsm,wsd_start;
 		bool midi_thru;
 		bool run_irq,irq_pending;
 		Bits data_onoff;
@@ -245,18 +245,20 @@ static void MPU401_WriteCommand(Bit32u port,Bit8u val) {
 	}
 	else if (val>=0xa0 && val<=0xa7) {/* Request play counter */
 		if (mpu.state.cmask&(1<<(val&7))) QueueByte(mpu.playbuf[val&7].counter);
-	} 
+	}
 	else if (val>=0xd0 && val<=0xd7) { /* Request to send data */
 		mpu.state.channel=val&7;
 		//if (!mpu.playbuf[mpu.state.channel].active)
 		mpu.state.wsd=true;
 		mpu.state.wsm=false;
+		mpu.state.wsd_start=true;
 	} 
 	else
 	switch (val) {
 		case CMD_REQUEST_TO_SEND_SYSTEM_MSG:
 			mpu.state.wsd=false;
 			mpu.state.wsm=true;
+			mpu.state.wsd_start=true;
 			break;
 		case CMD_CONDUCTOR_ON:
 			mpu.state.cond_set=true;
@@ -443,16 +445,43 @@ static void MPU401_WriteData(Bit32u port,Bit8u val) {
 			mpu.state.command_byte=0;
 			return;
 	}
+	static Bitu length,cnt;
 	if (mpu.state.wsd) {
-		if (val>=0xf0 && !mpu.state.allthru) return;
-		MIDI_RawOutByte(val);
-		mpu.state.wsd=0;
+		if (mpu.state.wsd_start) {
+			mpu.state.wsd_start=0;
+			cnt=0;
+			switch (val&0xf0) {
+				case 0xc0:
+				case 0xd0: 
+					length=2;
+					break;
+				case 0xf0:
+					if (!mpu.state.allthru) {mpu.state.wsd=0;return;}
+					else {length=1;break;}
+				default:
+					length=3;
+			}
+		}
+		if (cnt<length) {MIDI_RawOutByte(val);cnt++;}
+		if (cnt==length) mpu.state.wsd=0;
 		return;
 	}
 	if (mpu.state.wsm) {
 		if (val==CMD_EOX) {mpu.state.wsm=0;return;}
-		if (val>=0xf0 && !mpu.state.allthru) return;
-		MIDI_RawOutByte(val);
+		if (mpu.state.wsd_start) {
+			mpu.state.wsd_start=0;
+			cnt=0;
+			switch (val) {
+				case 0xf2:{ length=3; break;}
+				case 0xf3:{ length=2; break;}
+				case 0xf6:{ length=1; break;}
+				case 0xf0:{ length=0; break;}
+				default:
+					length=0;
+			}
+		}
+		if (!length || cnt<length) {MIDI_RawOutByte(val);cnt++;}
+		if (cnt==length) mpu.state.wsm=0;
 		return;
 	}
 	if (mpu.state.cond_req) { /* Command */
