@@ -354,6 +354,9 @@ public:
 	Bit8u GetSearchDrive(void);
 	void GetSearchParams(Bit8u & _sattr,char * _spattern);
 	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
+
+	void	SetDirID(Bit16u entry)		{ sSave(sDTA,dirID,entry); };
+	Bit16u	GetDirID(void)				{ return sGet(sDTA,dirID); };
 private:
 	#pragma pack(1)
 	struct sDTA {
@@ -361,7 +364,8 @@ private:
 		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit8u sname[8];						/* The Search pattern for the filename */		
 		Bit8u sext[3];						/* The Search pattern for the extenstion */
-		Bit8u fill[8];
+		Bit16u dirID;						/* custom: dir-search ID for multiple searches at the same time */
+		Bit8u fill[6];
 		Bit8u attr;
 		Bit16u time;
 		Bit16u date;
