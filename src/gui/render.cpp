@@ -366,7 +366,7 @@ static void DecreaseFrameSkip(void) {
 }
 
 void RENDER_Init(Section * sec) {
-	MSG_Add("RENDER_CONFIGFILE_HELP","Available renderers:scale2x, none\n");
+	MSG_Add("RENDER_CONFIGFILE_HELP","Available scalers: scale2x, none\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	render.pal.first=256;
