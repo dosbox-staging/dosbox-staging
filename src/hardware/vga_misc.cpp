@@ -46,8 +46,8 @@ static Bit8u read_p3da(Bit32u port) {
 		}
 	}
 	flip++;
-	if (flip>10) flip=0;
-	if (flip>5)	return 1;
+	if (flip>20) flip=0;
+	if (flip>10) return 1;
 	return 0;
 	/*
 		0	Either Vertical or Horizontal Retrace active if set
