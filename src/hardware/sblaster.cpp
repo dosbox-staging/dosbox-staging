@@ -241,49 +241,103 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	}
 }
 
-#define MIN_ADAPTIVE_STEP_SIZE 511
+#define MIN_ADAPTIVE_STEP_SIZE 0
 #define MAX_ADAPTIVE_STEP_SIZE 32767
 #define DC_OFFSET_FADE 254
 
-static INLINE Bits Clip(Bits sample) {
-	if (sample>MAX_AUDIO) return MAX_AUDIO;
-	if (sample<MIN_AUDIO) return MIN_AUDIO;
-	return sample;
-}
-
 static INLINE Bit8u decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
-	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
+	static const Bit8s scaleMap[64] = {
+		0,  1,  2,  3,  4,  5,  6,  7,  0,  -1,  -2,  -3,  -4,  -5,  -6,  -7,
+		1,  3,  5,  7,  9, 11, 13, 15, -1,  -3,  -5,  -7,  -9, -11, -13, -15,
+		2,  6, 10, 14, 18, 22, 26, 30, -2,  -6, -10, -14, -18, -22, -26, -30,
+		4, 12, 20, 28, 36, 44, 52, 60, -4, -12, -20, -28, -36, -44, -52, -60
+	};
+	static const Bit8u adjustMap[64] = {
+		  0, 0, 0, 0, 0, 16, 16, 16,
+		  0, 0, 0, 0, 0, 16, 16, 16,
+		240, 0, 0, 0, 0, 16, 16, 16,
+		240, 0, 0, 0, 0, 16, 16, 16,
+		240, 0, 0, 0, 0, 16, 16, 16,
+		240, 0, 0, 0, 0, 16, 16, 16,
+		240, 0, 0, 0, 0,  0,  0,  0,
+		240, 0, 0, 0, 0,  0,  0,  0
+	};
 
-	if (sample & 0x08) {
-		reference = max(0x00, reference - ((sample & 0x07) << scale));
-	} else {
-		reference = min(0xff, reference + ((sample & 0x07) << scale));
+	Bits samp = sample + scale;
+
+	if ((samp < 0) || (samp > 63)) { 
+		LOG(LOG_SB,LOG_ERROR)("Bad ADPCM-4 sample");
+		if(samp < 0 ) samp =  0;
+		if(samp > 63) samp = 63;
 	}
-	scale = max(2, min(6, scaleMap[sample & 0x07]));
+
+	Bits ref = reference + scaleMap[samp];
+	if (ref > 0xff) reference = 0xff;
+	else if (ref < 0x00) reference = 0x00;
+	else reference = ref;
+	scale = (scale + adjustMap[samp]) & 0xff;
+	
 	return reference;
 }
 
 static INLINE Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
-	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
+	static const Bit8s scaleMap[24] = {
+		0,  1,  0,  -1, 1,  3,  -1,  -3,
+		2,  6, -2,  -6, 4, 12,  -4, -12,
+		8, 24, -8, -24, 6, 48, -16, -48
+	};
+	static const Bit8u adjustMap[24] = {
+		  0, 4,   0, 4,
+		252, 4, 252, 4, 252, 4, 252, 4,
+		252, 4, 252, 4, 252, 4, 252, 4,
+		252, 0, 252, 0
+	};
 
-	if (sample & 0x02) {
-		reference = max(0x00, reference - ((sample & 0x01) << (scale+2)));
-	} else {
-		reference = min(0xff, reference + ((sample & 0x01) << (scale+2)));
+	Bits samp = sample + scale;
+	if ((samp < 0) || (samp > 23)) {
+		LOG(LOG_SB,LOG_ERROR)("Bad ADPCM-2 sample");
+		if(samp < 0 ) samp =  0;
+		if(samp > 23) samp = 23;
 	}
-	scale = max(2, min(6, scaleMap[sample & 0x07]));
+
+	Bits ref = reference + scaleMap[samp];
+	if (ref > 0xff) reference = 0xff;
+	else if (ref < 0x00) reference = 0x00;
+	else reference = ref;
+	scale = (scale + adjustMap[samp]) & 0xff;
+
 	return reference;
 }
 
 INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
-	static Bits scaleMap[8] = { -2, -1, 0, 0, 1, 1, 1, 1 };
+	static const Bit8s scaleMap[40] = { 
+		0,  1,  2,  3,  0,  -1,  -2,  -3,
+		1,  3,  5,  7, -1,  -3,  -5,  -7,
+		2,  6, 10, 14, -2,  -6, -10, -14,
+		4, 12, 20, 28, -4, -12, -20, -28,
+		5, 15, 25, 35, -5, -15, -25, -35
+	};
+	static const Bit8u adjustMap[40] = {
+		  0, 0, 0, 8,   0, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 8, 248, 0, 0, 8,
+		248, 0, 0, 0, 248, 0, 0, 0
+	};
 
-	if (sample & 0x04) {
-		reference = max(0x00, reference - ((sample & 0x03) << (scale+1)));
-	} else {
-		reference = min(0xff, reference + ((sample & 0x03) << (scale+1)));
+	Bits samp = sample + scale;
+	if ((samp < 0) || (samp > 39)) {
+		LOG(LOG_SB,LOG_ERROR)("Bad ADPCM-3 sample");
+		if(samp < 0 ) samp =  0;
+		if(samp > 39) samp = 39;
 	}
-	scale = max(2, min(6, scaleMap[sample & 0x07]));
+
+	Bits ref = reference + scaleMap[samp];
+	if (ref > 0xff) reference = 0xff;
+	else if (ref < 0x00) reference = 0x00;
+	else reference = ref;
+	scale = (scale + adjustMap[samp]) & 0xff;
+
 	return reference;
 }
 
@@ -320,7 +374,7 @@ static void GenerateDMASound(Bitu size) {
 		for (;i<read;i++) {
 			MixTemp[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 5) & 0x7,sb.adpcm.reference,sb.adpcm.stepsize);
 			MixTemp[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] >> 2) & 0x7,sb.adpcm.reference,sb.adpcm.stepsize);
-			MixTemp[done++]=decode_ADPCM_2_sample((sb.dma.buf.b8[i] >> 0) & 0x3,sb.adpcm.reference,sb.adpcm.stepsize);
+			MixTemp[done++]=decode_ADPCM_3_sample((sb.dma.buf.b8[i] & 0x3) << 1,sb.adpcm.reference,sb.adpcm.stepsize);
 		}
 		sb.chan->AddSamples_m8(done,MixTemp);
 		break;
@@ -888,7 +942,7 @@ static Bit8u CTMIXER_Read(void) {
 	case 0x22:		/* Master Volume (SBPRO) */
 		return	MAKEPROVOL(sb.mixer.master);
 	case 0x04:		/* DAC Volume (SBPRO) */
-        return	MAKEPROVOL(sb.mixer.dac);
+		return MAKEPROVOL(sb.mixer.dac);
 //	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro */
 	case 0x0a:		/* Mic Level (SBPRO) */
 		return (sb.mixer.mic >> 1);
