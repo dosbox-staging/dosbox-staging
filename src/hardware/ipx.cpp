@@ -23,6 +23,8 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include "cross.h"
+#include "support.h"
 #include "cpu.h"
 #include "SDL_net.h"
 #include "regs.h"
@@ -861,7 +863,7 @@ class IPXNET : public Program {
 public:
 	void HelpCommand(const char *helpStr) {
 		// Help on connect command
-		if(stricmp("connect", helpStr) == 0) {
+		if(strcasecmp("connect", helpStr) == 0) {
 			WriteOut("IPXNET CONNECT opens a connection to an IPX tunneling server running on another\n");
 			WriteOut("DosBox session.  The \"address\" parameter specifies the IP address or host name\n");
 			WriteOut("of the server computer.  One can also specify the UDP port to use.  By default\n");
@@ -871,14 +873,14 @@ public:
 			return;
 		}
 		// Help on the disconnect command
-		if(stricmp("disconnect", helpStr) == 0) {
+		if(strcasecmp("disconnect", helpStr) == 0) {
 			WriteOut("IPXNET DISCONNECT closes the connection to the IPX tunneling server.\n\n");
 			WriteOut("The syntax for IPXNET DISCONNECT is:\n\n");
 			WriteOut("IPXNET DISCONNECT\n\n");
 			return;
 		}
 		// Help on the startserver command
-		if(stricmp("startserver", helpStr) == 0) {
+		if(strcasecmp("startserver", helpStr) == 0) {
 			WriteOut("IPXNET STARTSERVER starts and IPX tunneling server on this DosBox session.  By\n");
 			WriteOut("default, the server will accept connections on UDP port 213, though this can be\n");
 			WriteOut("changed.  Once the server is started, DosBox will automatically start a client\n");
@@ -888,7 +890,7 @@ public:
 			return;
 		}
 		// Help on the stop server command
-		if(stricmp("stopserver", helpStr) == 0) {
+		if(strcasecmp("stopserver", helpStr) == 0) {
 			WriteOut("IPXNET STOPSERVER stops the IPX tunneling server running on this DosBox\nsession.");
 			WriteOut("  Care should be taken to ensure that all other connections have\nterminated ");
 			WriteOut("as well sinnce stoping the server may cause lockups on other\nmachines still using ");
@@ -898,7 +900,7 @@ public:
 			return;
 		}
 		// Help on the ping command
-		if(stricmp("ping", helpStr) == 0) {
+		if(strcasecmp("ping", helpStr) == 0) {
 			WriteOut("IPXNET PING broadcasts a ping request through the IPX tunneled network.  In    \n");
 			WriteOut("response, all other connected computers will respond to the ping and report\n");
 			WriteOut("the time it took to receive and send the ping message.\n\n");
@@ -907,7 +909,7 @@ public:
 			return;
 		}
 		// Help on the status command
-		if(stricmp("status", helpStr) == 0) {
+		if(strcasecmp("status", helpStr) == 0) {
 			WriteOut("IPXNET STATUS reports the current state of this DosBox's sessions IPX tunneling\n");
 			WriteOut("network.  For a list of the computers connected to the network use the IPXNET \n");
 			WriteOut("PING command.\n\n");
@@ -927,7 +929,7 @@ public:
 		}
 		
 		if(cmd->FindCommand(1, temp_line)) {
-			if(stricmp("help", temp_line.c_str()) == 0) {
+			if(strcasecmp("help", temp_line.c_str()) == 0) {
 				if(!cmd->FindCommand(2, temp_line)) {
 					WriteOut("The following are valid IPXNET commands:\n\n");
 					WriteOut("IPXNET CONNECT        IPXNET DISCONNECT       IPXNET STARTSERVER\n");
@@ -941,7 +943,7 @@ public:
 				}
 				return;
 			} 
-			if(stricmp("startserver", temp_line.c_str()) == 0) {
+			if(strcasecmp("startserver", temp_line.c_str()) == 0) {
 				if(!isIpxServer) {
 					if(incomingPacket.connected) {
 						WriteOut("IPX Tunneling Client alreadu connected to another server.  Disconnect first.\n");
@@ -966,7 +968,7 @@ public:
 				}
 				return;
 			}
-			if(stricmp("stopserver", temp_line.c_str()) == 0) {
+			if(strcasecmp("stopserver", temp_line.c_str()) == 0) {
 				if(!isIpxServer) {
 					WriteOut("IPX Tunneling Server not running in this DosBox session.\n");
 				} else {
@@ -978,7 +980,7 @@ public:
 				}
 				return;
 			}
-			if(stricmp("connect", temp_line.c_str()) == 0) {
+			if(strcasecmp("connect", temp_line.c_str()) == 0) {
 				char strHost[1024];
 				if(incomingPacket.connected) {
 					WriteOut("IPX Tunneling Client already connected.\n");
@@ -1004,7 +1006,7 @@ public:
 				return;
 			}
 			
-			if(stricmp("disconnect", temp_line.c_str()) == 0) {
+			if(strcasecmp("disconnect", temp_line.c_str()) == 0) {
 				if(!incomingPacket.connected) {
 					WriteOut("IPX Tunneling Client not connected.\n");
 					return;
@@ -1016,7 +1018,7 @@ public:
 				return;
 			}
 
-			if(stricmp("status", temp_line.c_str()) == 0) {
+			if(strcasecmp("status", temp_line.c_str()) == 0) {
 				WriteOut("IPX Tunneling Status:\n\n");
 				WriteOut("Server status: ");
 				if(isIpxServer) WriteOut("ACTIVE\n"); else WriteOut("INACTIVE\n");
@@ -1040,7 +1042,7 @@ public:
 				return;
 			}
 
-			if(stricmp("ping", temp_line.c_str()) == 0) {
+			if(strcasecmp("ping", temp_line.c_str()) == 0) {
 				Bit32u ticks;
 				IPXHeader pingHead;
 
