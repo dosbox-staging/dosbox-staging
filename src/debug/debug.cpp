@@ -616,28 +616,28 @@ static void DrawRegisters(void) {
 
 	/*Individual flags*/
 
-	SetColor((flags.word ^ oldflags)&FLAG_CF);
+	SetColor((reg_flags ^ oldflags)&FLAG_CF);
 	mvwprintw (dbg.win_reg,1,53,"%01X",GETFLAG(CF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_ZF);
+	SetColor((reg_flags ^ oldflags)&FLAG_ZF);
 	mvwprintw (dbg.win_reg,1,56,"%01X",GETFLAG(ZF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_SF);
+	SetColor((reg_flags ^ oldflags)&FLAG_SF);
 	mvwprintw (dbg.win_reg,1,59,"%01X",GETFLAG(SF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_OF);
+	SetColor((reg_flags ^ oldflags)&FLAG_OF);
 	mvwprintw (dbg.win_reg,1,62,"%01X",GETFLAG(OF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_AF);
+	SetColor((reg_flags ^ oldflags)&FLAG_AF);
 	mvwprintw (dbg.win_reg,1,65,"%01X",GETFLAG(AF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_PF);
+	SetColor((reg_flags ^ oldflags)&FLAG_PF);
 	mvwprintw (dbg.win_reg,1,68,"%01X",GETFLAG(PF) ? 1:0);
 
 
-	SetColor((flags.word ^ oldflags)&FLAG_DF);
+	SetColor((reg_flags ^ oldflags)&FLAG_DF);
 	mvwprintw (dbg.win_reg,1,71,"%01X",GETFLAG(DF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_IF);
+	SetColor((reg_flags ^ oldflags)&FLAG_IF);
 	mvwprintw (dbg.win_reg,1,74,"%01X",GETFLAG(IF) ? 1:0);
-	SetColor((flags.word ^ oldflags)&FLAG_TF);
+	SetColor((reg_flags ^ oldflags)&FLAG_TF);
 	mvwprintw (dbg.win_reg,1,77,"%01X",GETFLAG(TF) ? 1:0);
 
-	oldflags=flags.word;
+	oldflags=reg_flags;
 
 	if (cpu.pmode) {
 		if (cpu.code.big)	mvwprintw(dbg.win_reg,0,76,"Pr32");

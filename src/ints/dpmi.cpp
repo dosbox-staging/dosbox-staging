@@ -549,7 +549,7 @@ void DPMI::CopyRegistersToBuffer(PhysPt data)
 	mem_writed(data+0x14, reg_edx);
 	mem_writed(data+0x18, reg_ecx);
 	mem_writed(data+0x1C, reg_eax);
-	mem_writew(data+0x20, flags.word);
+	mem_writew(data+0x20, reg_flags);
 	mem_writew(data+0x22, SegValue(es));
 	mem_writew(data+0x24, SegValue(ds));
 	mem_writew(data+0x26, SegValue(fs));
@@ -702,7 +702,7 @@ void DPMI::CreateException(Bitu num, Bitu errorCode)
 	if (dpmi.client.bit32) {
 		CPU_Push32(SegValue(ss));
 		CPU_Push32(reg_esp);
-		CPU_Push32(flags.word);
+		CPU_Push32(reg_flags);
 		CPU_Push32(SegValue(cs));
 		CPU_Push32(reg_eip-2);						// FIXME: Fake !
 		CPU_Push32(errorCode);
@@ -711,7 +711,7 @@ void DPMI::CreateException(Bitu num, Bitu errorCode)
 	} else {
 		CPU_Push16(SegValue(ss));
 		CPU_Push16(reg_sp);
-		CPU_Push16(flags.word);
+		CPU_Push16(reg_flags);
 		CPU_Push16(SegValue(cs));
 		CPU_Push16(reg_ip-2);						// FIXME: Fake !
 		CPU_Push16(errorCode);
@@ -834,7 +834,7 @@ Bitu DPMI::RealModeCallback(void)
 	CPU_SetSegGeneral(ss,dpmi.protStackSelector[dpmi.protStackCurrent++]);	
 	reg_esp = DPMI_PROTMODE_STACKSIZE;
 	// prepare stack for iret
-	if (dpmi.client.bit32) CPU_Push32(flags.word); else CPU_Push16(flags.word);
+	if (dpmi.client.bit32) CPU_Push32(reg_flags); else CPU_Push16(reg_flags);
 	// Setup cs:ip to return to DPMI_ReturnFromRealModeCallback
 	CPU_SetSegGeneral(cs,GDT_CODE);
 	reg_eip = RealOff(CALLBACK_RealPointer(callback.rmCallbackReturn));
@@ -842,7 +842,7 @@ Bitu DPMI::RealModeCallback(void)
 	SetVirtualIntFlag(false);
 	SETFLAGBIT(IF,false);
 	SETFLAGBIT(TF,false);
-	CPU_Push32(flags.word);
+	CPU_Push32(reg_flags);
 	CPU_CALL(dpmi.client.bit32,dpmi.rmCallback[num].codeSelector,dpmi.rmCallback[num].codeOffset);
 	return 0;
 };
@@ -893,7 +893,7 @@ Bitu DPMI::CallRealIRETFrame(void)
 	// Provide Stack
 	ProvideRealModeStack(prStack,toCopy);
 	// Push flags
-	CPU_Push16(flags.word);
+	CPU_Push16(reg_flags);
 	// Setup IP
 	Bitu newCS = mem_readw(data+0x2C);
 	Bitu newIP = mem_readw(data+0x2A);
@@ -949,7 +949,7 @@ Bitu DPMI::SimulateInt(void)
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.simintReturn));
 	// Push flags from structure on stack
 	DPMI_LOG("DPMI: SimInt1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
-	flags.word = mem_readw(data+0x20);
+	reg_flags = mem_readw(data+0x20);
 	Interrupt(num);
 	DPMI_LOG("DPMI: SimInt2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	return 0;
@@ -1011,7 +1011,7 @@ Bitu DPMI::ptorHandler(void)
 //	if (num==0x0F)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
 	// Prepare flags for real int
-	// CPU_SetFlagsw(flags.word & 0x3ED5); // 0011111011010101b
+	// CPU_SetFlagsw(reg_flags & 0x3ED5); // 0011111011010101b
 	Interrupt(num);
 	return 0;
 } 
@@ -1039,11 +1039,11 @@ Bitu DPMI::ptorHandlerReturn(void)
 	// Change flags on stack to reflect possible results from ints
 	if (dpmi.client.bit32) {
 		Bit32u oldFlags  = mem_readd(SegPhys(ss)+reg_esp+8) & ~FLAG_MASK;// leave only flags that cannot be changed by int 
-		Bit32u userFlags = flags.word & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
+		Bit32u userFlags = reg_flags & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writed(SegPhys(ss)+reg_esp+8,oldFlags|userFlags);
 	} else {
 		Bit16u oldFlags  = mem_readw(SegPhys(ss)+reg_sp+4) & ~FLAG_MASK; // leave only flags that cannot be changed by int 
-		Bit16u userFlags = flags.word & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
+		Bit16u userFlags = reg_flags & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writew(SegPhys(ss)+reg_sp+4,oldFlags|userFlags);
 	};
 	SetVirtualIntFlag(true);
@@ -1096,7 +1096,7 @@ Bitu DPMI::Int21HandlerReturn(void)
 	reg_esp = PopStack(); 
 	CPU_SetSegGeneral(ss,PopStack());		
 	// Set carry flag
-	DPMI_CALLBACK_SCF(flags.word & 1);
+	DPMI_CALLBACK_SCF(reg_flags & 1);
 	DPMI_LOG("DPMI: INT 21 RETURN");	
 	SetVirtualIntFlag(true);
 	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
@@ -1121,7 +1121,7 @@ Bitu DPMI::HWIntDefaultHandler()
 			// originalroutine aufrufen
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
-			CPU_Push16(flags.word);
+			CPU_Push16(reg_flags);
 			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
@@ -1146,7 +1146,7 @@ Bitu DPMI::HWIntDefaultHandler()
 			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
-			CPU_Push16(flags.word);
+			CPU_Push16(reg_flags);
 			CPU_CALL(false,RealSeg(vec),RealOff(vec));
 		}
 	} else {
@@ -1156,7 +1156,7 @@ Bitu DPMI::HWIntDefaultHandler()
 		if (dpmi.rmCallback[index].stop) {
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
-			CPU_Push16(flags.word);
+			CPU_Push16(reg_flags);
 			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
@@ -1173,7 +1173,7 @@ Bitu DPMI::HWIntDefaultHandler()
 			} else {
 				// kein spezieller Protmode handler - Rufe originalroutine auf
 				PrepareReflectToReal(num);
-				CPU_Push16(flags.word);
+				CPU_Push16(reg_flags);
 				SetVirtualIntFlag(false);
 				SETFLAGBIT(IF,false);
 				SETFLAGBIT(TF,false);
@@ -1203,7 +1203,7 @@ void DPMI::SaveRegisterState(Bitu num)
 	save_edi[num] = reg_edi;
 	save_ebp[num] = reg_ebp;
 	save_esp[num] = reg_esp;
-	save_fl [num] = flags.word;	
+	save_fl [num] = reg_flags;	
 };
 
 void DPMI::LoadRegisterState(Bitu num)
@@ -1218,7 +1218,7 @@ void DPMI::LoadRegisterState(Bitu num)
 	reg_edx = save_edx[num];
 	reg_esi = save_esi[num];
 	reg_edi = save_edi[num];
-	flags.word = save_fl [num];	
+	reg_flags = save_fl [num];	
 };
 
 Bitu DPMI::EnterProtMode(void) {
