@@ -283,13 +283,18 @@ static Bitu DOS_21Handler(void) {
 		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp).GetSize());
 		break;
 	case 0x2a:		/* Get System Date */
-		reg_al=0;	/* It's always sunday TODO find that correct formula */
-		reg_cx=dos.date.year;
-		reg_dh=dos.date.month;
-		reg_dl=dos.date.day;
+		{
+			CALLBACK_Idle();
+			int a = (14 - dos.date.month)/12;
+			int y = dos.date.year - a;
+			int m = dos.date.month + 12*a - 2;
+			reg_al=(dos.date.day+y+(y/4)-(y/100)+(y/400)+(31*m)/12) % 7;
+			reg_cx=dos.date.year;
+			reg_dh=dos.date.month;
+			reg_dl=dos.date.day;
+		}
 		break;
 	case 0x2b:		/* Set System Date */
-//TODO Check for months with less then 31 days 
 		if (reg_cx<1980) { reg_al=0xff;break;}
 		if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
 		if ((reg_dl>31) || (reg_dl==0))	{ reg_al=0xff;break;}
@@ -301,12 +306,13 @@ static Bitu DOS_21Handler(void) {
 	case 0x2c:		/* Get System Time */
 //TODO Get time through bios calls date is fixed
 		{
+			CALLBACK_Idle();
 			Bit32u ticks=mem_readd(BIOS_TIMER);
 			Bit32u seconds=(ticks*10)/182;
 			reg_ch=(Bit8u)(seconds/3600);
-			reg_cl=(Bit8u)(seconds % 3600)/60;
+			reg_cl=(Bit8u)((seconds % 3600)/60);
 			reg_dh=(Bit8u)(seconds % 60);
-			reg_dl=(Bit8u)(ticks % 19)*5;
+			reg_dl=(Bit8u)((ticks % 19)*5);
 		}
 		break;
 	case 0x2d:		/* Set System Time */
@@ -456,7 +462,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x3f:		/* READ Read from file or device */
 		{ 
 			Bit16u toread=reg_cx;
-			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:READ:Buffer overflow %d",reg_cx+reg_dx);
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
@@ -470,7 +475,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x40:					/* WRITE Write to file or device */
 		{
 			Bit16u towrite=reg_cx;
-			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:WRITE:Buffer overflow %d",reg_cx+reg_dx);
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
 			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
 				reg_ax=towrite;
@@ -730,8 +734,10 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
-	case 0x5c:					/* FLOCK File region locking */
 	case 0x5d:					/* Network Functions */
+		LOG_WARN("DOS:5D:Unhandled call %X",reg_al);
+		break;
+	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
 	case 0x5f:					/* And Even More Network Functions */
 		E_Exit("DOS:Unhandled call %02X",reg_ah);
@@ -852,8 +858,16 @@ void DOS_Init(Section* sec) {
 	DOS_SetupPrograms();
 	DOS_SetupMisc();							/* Some additional dos interrupts */
 	DOS_SetDefaultDrive(25);
-	/* Execute the file that should be */
+
 	dos.version.major=5;
 	dos.version.minor=0;
-//	DOS_RunProgram(startname);
-};
+	/* Setup time and date */
+	time_t curtime;struct tm *loctime;
+	curtime = time (NULL);loctime = localtime (&curtime);
+
+	dos.date.day=(Bit8u)loctime->tm_mday;
+	dos.date.month=(Bit8u)loctime->tm_mon+1;
+	dos.date.year=(Bit16u)loctime->tm_year+1900;
+	Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*18.2);
+	mem_writed(BIOS_TIMER,ticks);
+}
