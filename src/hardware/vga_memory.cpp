@@ -409,12 +409,11 @@ range_b800:
 	PAGING_ClearTLB();
 }
 
-bool  lfb_update;
+static bool lfb_update;
 
 static void VGA_DoUpdateLFB(Bitu val) {
 	lfb_update=false;
 	MEM_SetLFB(vga.s3.la_window << 4 ,sizeof(vga.mem.linear)/4096,&vga.mem.linear[0]);
-	LOG_MSG("LIN: Reconfiguing linear page address");
 }
 
 void VGA_StartUpdateLFB(void) {
