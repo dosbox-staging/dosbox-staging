@@ -48,7 +48,7 @@ static Bit8u  IO_ReadDefault(Bit32u port) {
 }
 
 void IO_WriteDefault(Bit32u port,Bit8u val) {
-	LOG(LOG_IO,LOG_ERROR)("Writing %02X to undefined port %04X",val,port);		
+	LOG(LOG_IO,LOG_ERROR)("Writing %02X to undefined port %04X",static_cast<Bit32u>(val),port);		
 	IO_RegisterWriteHandler(port,&IO_WriteBlocked,"Blocked Write");
 }
 
