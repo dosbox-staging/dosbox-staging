@@ -23,96 +23,101 @@
 #include "support.h"
 #include "drives.h"
 #include "cross.h"
-
+#include "regs.h"
+#include "callback.h"
 
 class MOUNT : public Program {
 public:
-	MOUNT(PROGRAM_Info * program_info);
-	void Run(void);
-};
-
-
-MOUNT::MOUNT(PROGRAM_Info * info):Program(info) {
-
-}
-
-
-void MOUNT::Run(void) {
-/* Parse the command line */
-	/* if the command line is empty show current mounts */
-
-	if (!*prog_info->cmd_line) {
-		WriteOut("Current mounted drives are\n");
-		for (int d=0;d<DOS_DRIVES;d++) {
-			if (Drives[d]) {
-				WriteOut("Drive %c is mounted as %s\n",d+'A',Drives[d]->GetInfo());
+	MOUNT(PROGRAM_Info * program_info):Program(program_info){};
+	void Run(void){
+		/* Parse the command line */
+		/* if the command line is empty show current mounts */
+		if (!*prog_info->cmd_line) {
+			WriteOut("Current mounted drives are\n");
+			for (int d=0;d<DOS_DRIVES;d++) {
+				if (Drives[d]) {
+					WriteOut("Drive %c is mounted as %s\n",d+'A',Drives[d]->GetInfo());
+				}
 			}
+			return;
 		}
-		return;
-	}
 
-	char drive;
-	drive=toupper(*prog_info->cmd_line);
-	char * dir=strchr(prog_info->cmd_line,' ');
-	if (dir) {
-		if (!*dir) dir=0;
-		else dir=trim(dir);
-	};
+		char drive;	drive=toupper(*prog_info->cmd_line);
 
-	if (!isalpha(drive) || !dir) {
-		WriteOut("Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
-		return;
-	};
-	struct stat test;
-	if (stat(dir,&test)) {
-		WriteOut("Directory %s Doesn't exist",dir);
-		return;
+		char * dir=strchr(prog_info->cmd_line,' ');	if (dir) {
+			if (!*dir) dir=0;
+			else dir=trim(dir);
+		}
+		if (!isalpha(drive) || !dir) {
+			WriteOut("Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
+			return;
+		};
+		struct stat test;
+		if (stat(dir,&test)) {
+			WriteOut("Directory %s Doesn't exist",dir);
+			return;
+		}
+		/* Not a switch so a normal directory/file */
+		if (!(test.st_mode & S_IFDIR)) {
+			WriteOut("%s isn't a directory",dir);
+			return;
+		}
+		if (Drives[drive-'A']) {
+			WriteOut("Drive %c already mounted with %s\n",drive,Drives[drive-'A']->GetInfo());
+			return;
+		}
+		char fulldir[DOS_PATHLENGTH];
+		strcpy(fulldir,dir);
+		static char theend[2]={CROSS_FILESPLIT,0};
+		char * last=strrchr(fulldir,CROSS_FILESPLIT);
+		if (!last || *(++last))  strcat(fulldir,theend);
+		Drives[drive-'A']=new localDrive(fulldir);
+		WriteOut("Mounting drive %c as %s\n",drive,fulldir);
 	}
-	/* Not a switch so a normal directory/file */
-	if (!(test.st_mode & S_IFDIR)) {
-		WriteOut("%s isn't a directory",dir);
-		return;
-	}
-	if (Drives[drive-'A']) {
-		WriteOut("Drive %c already mounted with %s\n",drive,Drives[drive-'A']->GetInfo());
-		return;
-	}
-	char fulldir[DOS_PATHLENGTH];
-	strcpy(fulldir,dir);
-	static char theend[2]={CROSS_FILESPLIT,0};
-	char * last=strrchr(fulldir,CROSS_FILESPLIT);
-	if (!last || *(++last))  strcat(fulldir,theend);
-	Drives[drive-'A']=new localDrive(fulldir);
-	WriteOut("Mounting drive %c as %s\n",drive,fulldir);
-}
+};
 
 static void MOUNT_ProgramStart(PROGRAM_Info * info) {
 	MOUNT * tempmount=new MOUNT(info);
-	tempmount->Run();
+	tempmount->Run() ;
 	delete tempmount;
 }
 
-
 class MEM : public Program {
 public:
-	MEM(PROGRAM_Info * program_info);
-	void Run(void);
+	MEM(PROGRAM_Info * program_info):Program(program_info){};
+	void Run(void) {
+		/* Show conventional Memory */
+		WriteOut("\n");
+		Bit16u seg,blocks;blocks=0xffff;
+		DOS_AllocateMemory(&seg,&blocks);
+		WriteOut("%10d Kb free conventional memory\n",blocks*16/1024);
+		/* Test for and show free XMS */
+		reg_ax=0x4300;CALLBACK_RunRealInt(0x2f);
+		if (reg_al==0x80) {
+			reg_ax=0x4310;CALLBACK_RunRealInt(0x2f);
+			Bit16u xms_seg=SegValue(es);Bit16u xms_off=reg_bx;
+			reg_ah=8;
+			CALLBACK_RunRealFar(xms_seg,xms_off);
+			if (!reg_bl) {
+				WriteOut("%10d Kb free extended memory\n",reg_dx);
+			}
+		}	
+		/* Test for and show free EMS */
+		Bit16u handle;
+		if (DOS_OpenFile("EMMXXXX0",0,&handle)) {
+			DOS_CloseFile(handle);
+			reg_ah=0x42;
+			CALLBACK_RunRealInt(0x67);
+			WriteOut("%10d Kb free expanded memory\n",reg_bx*16);
+		}
+	}
 };
 
 
-MEM::MEM(PROGRAM_Info * info):Program(info) {
-
-}
-
-
-void MEM::Run(void) {
-
-}
 
 static void MEM_ProgramStart(PROGRAM_Info * info) {
 	MEM mem(info);
 	mem.Run();
-	
 }
 
 
@@ -203,7 +208,7 @@ static void UPCASE_ProgramStart(PROGRAM_Info * info) {
 
 void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
-//	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart); /*next release */
+	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 #if !defined (WIN32)						/* Unix */
 	PROGRAMS_MakeFile("UPCASE.COM",UPCASE_ProgramStart);
 #endif
