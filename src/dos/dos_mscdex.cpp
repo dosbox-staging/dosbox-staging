@@ -342,12 +342,12 @@ bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 	Bit8u min		= (start>>16) & 0xFF;
 	Bit8u sec		= (start>> 8) & 0xFF;
 	Bit8u fr		= (start>> 0) & 0xFF;
-	Bit32u sector	= min*60*76+sec*75+fr - 150;
-	min				= (length>>16) & 0xFF;
-	sec				= (length>> 8) & 0xFF;
-	fr				= (length>> 0) & 0xFF;	
-	Bit32u seclen	= min*60*76+sec*75+fr - 150;
-	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,seclen);
+	Bit32u sector	= min*60*75+sec*75+fr - 150;
+//	min				= (length>>16) & 0xFF;
+//	sec				= (length>> 8) & 0xFF;
+//	fr				= (length>> 0) & 0xFF;	
+//	Bit32u seclen	= min*60*75+sec*75+fr - 150;
+	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
 };
 
 bool CMscdex::GetSubChannelData(Bit8u subUnit, Bit8u& attr, Bit8u& track, Bit8u &index, TMSF& rel, TMSF& abs)
@@ -397,7 +397,7 @@ bool CMscdex::StopAudio(Bit8u subUnit)
 		if (dinfo[subUnit].audioPlay) {
 			TMSF pos;
 			GetCurrentPos(subUnit,pos);
-			dinfo[subUnit].audioStart	= pos.min*60*76+pos.sec*75+pos.fr - 150;
+			dinfo[subUnit].audioStart	= pos.min*60*75+pos.sec*75+pos.fr - 150;
 			dinfo[subUnit].audioPaused  = true;
 		} else {	
 			dinfo[subUnit].audioPaused  = false;
@@ -519,7 +519,7 @@ bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, 
 	Bit8u min		= (start>>16) & 0xFF;
 	Bit8u sec		= (start>> 8) & 0xFF;
 	Bit8u fr		= (start>> 0) & 0xFF;
-	Bit32u sector	= min*60*76+sec*75+fr - 150;
+	Bit32u sector	= min*60*75+sec*75+fr - 150;
 	// TODO: Check, if num has to be converted too ?!
 	return ReadSectors(subUnit,raw,sector,num,data);
 };
@@ -633,14 +633,14 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
 
-//	LOG(LOG_ERROR,"MSCDEX: Driver Function %02X",funcNr);
+	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Driver Function %02X",funcNr);
 
 	switch (funcNr) {
 	
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-						//if (subFuncNr!=0x0B) LOG("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
+						if (subFuncNr!=0x0B) LOG(LOG_MISC,LOG_ERROR)("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 : /* Get Device Header address */
 										mem_writed(buffer+1,RealMake(mscdex->rootDriverHeaderSeg,0));
@@ -799,7 +799,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-//	LOG(LOG_ERROR,"MSCDEX: INT 2F %04X",reg_ax);
+	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: INT 2F %04X",reg_ax);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
