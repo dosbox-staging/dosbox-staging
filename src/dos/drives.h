@@ -21,7 +21,7 @@
 
 #include <sys/types.h>
 #include <dirent.h>
-
+#include "dos_system.h"
 
 class localDrive : public DOS_Drive {
 public:
@@ -37,6 +37,8 @@ public:
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
 	bool FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free);
+	bool FileExists(const char* name) const ;
+	bool FileStat(const char* name, struct stat* const stat_block) const;
 private:
 	bool FillDTABlock(DTA_FindBlock * dta);
 	char basedir[512];
@@ -63,6 +65,9 @@ public:
 	bool GetFileAttr(char * name,Bit16u * attr);
 	bool Rename(char * oldname,char * newname);
 	bool FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit16u * free);
+    bool FileExists(const char* name) const ;
+    bool FileStat(const char* name, struct stat* const stat_block) const;
+
 private:
 	VFILE_Block * search_file;
 	char search_string[255];

@@ -19,10 +19,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "dosbox.h"
 #include "dos_system.h"
 #include "drives.h"
 #include "support.h"
+#include "cross.h"
 
 struct VFILE_Block {
 	char * name;
@@ -148,6 +150,32 @@ bool Virtual_Drive::MakeDir(char * dir) {
 }
 
 bool Virtual_Drive::TestDir(char * dir) {
+	return false;
+}
+
+bool Virtual_Drive::FileStat(const char* name, struct stat* const stat_block) const {
+    	VFILE_Block * cur_file=first_file;
+	while (cur_file) {
+		if (strcasecmp(name,cur_file->name)==0) {
+			stat_block->st_size=cur_file->size;
+			struct tm tijd;
+			tijd.tm_hour=0;tijd.tm_min=0;tijd.tm_sec=0;
+			tijd.tm_year=80;tijd.tm_mday=6;tijd.tm_mon=0;
+			stat_block->st_mtime=mktime(&tijd);
+			/* more not needed at the moment (fcbopen.....)*/
+			return true;
+		}
+		cur_file=cur_file->next;
+	}
+	return false;
+}
+
+bool Virtual_Drive::FileExists(const char* name) const {
+	VFILE_Block * cur_file=first_file;
+	while (cur_file) {
+		if (strcasecmp(name,cur_file->name)==0) return true;
+		cur_file=cur_file->next;
+	}
 	return false;
 }
 

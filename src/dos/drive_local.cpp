@@ -187,6 +187,7 @@ bool localDrive::RemoveDir(char * dir) {
 	char newdir[512];
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
+	CROSS_FILENAME(newdir);
 	int temp=rmdir(newdir);
 	return (temp==0);
 }
@@ -195,6 +196,7 @@ bool localDrive::TestDir(char * dir) {
 	char newdir[512];
 	strcpy(newdir,basedir);
 	strcat(newdir,dir);
+	CROSS_FILENAME(newdir);
 	int temp=access(newdir,F_OK);
 	return (temp==0);
 }
@@ -206,8 +208,8 @@ bool localDrive::Rename(char * oldname,char * newname) {
 	CROSS_FILENAME(newold);
 	char newnew[512];
 	strcpy(newnew,basedir);
-	strcat(newnew,newnew);
-	CROSS_FILENAME(newname);
+	strcat(newnew,newname);
+	CROSS_FILENAME(newnew);
 	int temp=rename(newold,newnew);
 	return (temp==0);
 
@@ -222,6 +224,28 @@ bool localDrive::FreeSpace(Bit16u * bytes,Bit16u * sectors,Bit16u * clusters,Bit
 	*free=1700;
 	return true;
 };
+
+bool localDrive::FileExists(const char* name) const {
+	char newname[512];
+	strcpy(newname,basedir);
+	strcat(newname,name);
+	CROSS_FILENAME(newname);
+	FILE* Temp=fopen(newname,"br");
+	if(Temp==NULL) return false;
+	fclose(Temp);
+	return true;
+}
+
+bool localDrive::FileStat(const char* name, struct stat* const stat_block) const {
+	char newname[512];
+	strcpy(newname,basedir);
+	strcat(newname,name);
+	CROSS_FILENAME(newname);
+	if(stat(newname,stat_block)!=0) return false;
+	return true;
+
+}
+
 
 
 localDrive::localDrive(char * startdir) {
@@ -274,4 +298,5 @@ localFile::localFile(FILE * handle,Bit16u devinfo) {
 	fhandle=handle;
 	info=devinfo;
 }
+
 
