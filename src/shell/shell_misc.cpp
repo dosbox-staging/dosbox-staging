@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.22 2003-08-19 18:01:57 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.23 2003-09-01 18:19:55 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -293,12 +293,26 @@ void DOS_Shell::Execute(char * name,char * args) {
 		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),name);
 		return;
 	}
-	if (strcasecmp(strrchr(fullname, '.'), ".bat") == 0) {
-	/* Run the .bat file */
+	
+	char* extension =strrchr(fullname,'.');
+	
+	/*always disallow files without extension from being executed. */
+	/*only internal commands can be run this way and they never get in this handler */
+	if(extension == 0)
+	{
+		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
+		return;
+	}
+	if (strcasecmp(extension, ".bat") == 0) 
+	{	/* Run the .bat file */
 		bf=new BatchFile(this,fullname,line);
-	} else {
-		if(strcasecmp(strrchr(fullname, '.'), ".com") !=0) {
-			if(strcasecmp(strrchr(fullname, '.'), ".exe") !=0){
+	} 
+	else 
+	{	/* only .bat .exe .com extensions maybe be executed by the shell */
+		if(strcasecmp(extension, ".com") !=0) 
+		{
+			if(strcasecmp(extension, ".exe") !=0)
+			{
 		  		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
 				return;
 			}
