@@ -70,10 +70,20 @@ static struct MemoryBlock {
 class IllegalPageHandler : public PageHandler {
 public:
 	void AddPageLink(Bitu lin_page, Bitu phys_page) {
-
 	}
+
 	IllegalPageHandler() {
-		flags=0;
+		flags=PFLAG_ILLEGAL|PFLAG_NOCODE;
+	}
+	Bitu readb(PhysPt addr) {
+		LOG_MSG("Illegal read from %x",addr);
+		return 0;
+	} 
+	void writeb(PhysPt addr,Bitu val) {
+		LOG_MSG("Illegal write to %x",addr);
+	}
+	HostPt GetHostPt(Bitu phys_page) {
+		return 0;
 	}
 };
 
@@ -134,7 +144,7 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	} else if ((phys_page>=memory.lfb.start_page) && (phys_page<memory.lfb.end_page)) {
 		return &lfb_page_handler;
 	}
-	return 0;
+	return &illegal_page_handler;
 }
 
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler) {
@@ -482,8 +492,14 @@ void phys_writed(PhysPt addr,Bit32u val) {
 	phys_writeb(addr+3,(Bit8u)(val >> 24));
 }
 
-Bit32u phys_page_readd(Bitu page,Bitu index) {
-	return 0;
+Bit32u MEM_PhysReadD(Bitu addr) {
+	Bitu page=addr >> 12;
+	Bitu index=(addr & 4095);
+	HostPt block=memory.hostpts[page];
+	if (!block) {
+		E_Exit("Reading from empty page");
+	}
+	return host_readd(block+index);
 }
 
 
