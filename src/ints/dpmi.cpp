@@ -268,13 +268,9 @@ private:
 		RealPt	realModeVec	[DPMI_REALVEC_MAX];
 		Bitu	oldRealVec	[DPMI_REALVEC_MAX];
 		Bitu	defaultHWIntFromProtMode[DPMI_REALVEC_MAX];
-		Bitu	firstRmCallback;
-		Bitu	firstRmCallbackInt;
-		bool	inHWINTDefaultHandler[DPMI_REALVEC_MAX];
 
 		PhysPt	ptorint_base;		/* Base of pmode int handlers that reflect to realmode */
 		Bitu	exceptionSelector[DPMI_EXCEPTION_MAX],exceptionOffset[DPMI_EXCEPTION_MAX];
-
 
 		Bitu	xmsHandles[DPMI_XMSHANDLES_MAX];
 		Bitu	protStack;
@@ -448,7 +444,6 @@ void DPMI::CopyRegistersToBuffer(PhysPt data)
 	mem_writed(data+0x14, reg_edx);
 	mem_writed(data+0x18, reg_ecx);
 	mem_writed(data+0x1C, reg_eax);
-	FILLFLAGS;
 	mem_writew(data+0x20, flags.word);
 	mem_writew(data+0x22, SegValue(es));
 	mem_writew(data+0x24, SegValue(ds));
@@ -469,7 +464,7 @@ void DPMI::LoadRegistersFromBuffer(PhysPt data)
 	reg_edx = mem_readd(data+0x14);
 	reg_ecx	= mem_readd(data+0x18);
 	reg_eax	= mem_readd(data+0x1C);
-	SETFLAGSw(mem_readw(data+0x20));
+	CPU_SetFlagsw(mem_readw(data+0x20));
 	SegSet16(es,mem_readw(data+0x22));
 	SegSet16(ds,mem_readw(data+0x24));
 	SegSet16(fs,mem_readw(data+0x26));
@@ -630,14 +625,14 @@ Bitu DPMI::ExceptionReturn(void)
 		error	= CPU_Pop32();
 		reg_eip = CPU_Pop32();
 		CPU_SetSegGeneral(cs,CPU_Pop32());
-		SETFLAGSd(CPU_Pop32());
+		CPU_SetFlagsd(CPU_Pop32());
 		reg_esp = CPU_Pop32();
 		CPU_SetSegGeneral(ss,CPU_Pop32());
 	} else {
 		error	= CPU_Pop16();
 		reg_eip = CPU_Pop16();
 		CPU_SetSegGeneral(cs,CPU_Pop16());
-		SETFLAGSw(CPU_Pop16());
+		CPU_SetFlagsw(CPU_Pop16());
 		reg_esp = CPU_Pop16();
 		CPU_SetSegGeneral(ss,CPU_Pop16());
 	};
@@ -690,7 +685,7 @@ Bitu DPMI::RealModeCallback(void)
 {
 	// Call protected mode function		
 	Bitu num = mem_readw(PhysPt(SegPhys(cs)+reg_eip-2));
-	num -= dpmi.firstRmCallback;
+	num -= dpmi.rmCallback[0].id;
 	if ((num>=DPMI_REALMODE_CALLBACK_MAX) || !dpmi.rmCallback[num].inUse) E_Exit("DPMI: Illegal Realmode callback %02X.",num);
 
 	if (dpmi.rmCallback[num].inCall) DPMI_LOG("DPMI: Recursive Realmode callback %02X",num);
@@ -733,7 +728,6 @@ Bitu DPMI::RealModeCallback(void)
 	CPU_SetSegGeneral(ss,dpmi.protStackSelector[dpmi.protStackCurrent++]);	
 	reg_esp = DPMI_PROTMODE_STACKSIZE;
 	// prepare stack for iret
-	FILLFLAGS;
 	if (dpmi.client.bit32) CPU_Push32(flags.word); else CPU_Push16(flags.word);
 	// Setup cs:ip to return to DPMI_ReturnFromRealModeCallback
 	CPU_SetSegGeneral(cs,GDT_CODE);
@@ -789,7 +783,6 @@ Bitu DPMI::CallRealIRETFrame(void)
 	// Provide Stack
 	ProvideRealModeStack(prStack,toCopy);
 	// Push flags
-	FILLFLAGS;
 	CPU_Push16(flags.word);
 	// Setup IP
 	Bitu newCS = mem_readw(data+0x2C);
@@ -898,7 +891,7 @@ Bitu DPMI::ptorHandler(void)
 	if (num==0x0F)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
 	// Prepare flags for real int
-	// SETFLAGSw(flags.word & 0x3ED5); // 0011111011010101b
+	// CPU_SetFlagsw(flags.word & 0x3ED5); // 0011111011010101b
 	Interrupt(num);
 	return 0;
 } 
@@ -919,12 +912,6 @@ Bitu DPMI::ptorHandlerReturn(void)
 		DPMI_LOG("DPMI: INT %02X RETURN",num);	
 	// hardware ints exit here
 	if (((num>=0x08) && (num<=0x0F)) || ((num>=0x70) && (num<=0x77))) {
-		for (Bitu i=0; i<DPMI_REALVEC_MAX; i++) {
-			if (rmIndexToInt[i]==num) {
-				dpmi.inHWINTDefaultHandler[i] = false;	
-				break;
-			};
-		};
 		return 0;
 	}
 	// Change flags on stack to reflect possible results from ints
@@ -999,12 +986,7 @@ Bitu DPMI::HWIntDefaultHandler()
 	Bitu num	= rmIndexToInt[index];
 
 	RealPt vec  = RealGetVec(num);
-	// Falls INT in protected mode gestartet wurde ist hier callCount noch 0
-	if (num==0x0F) {
-		int brk = 0;
-	};
-	
-	SetVirtualIntFlag(false);	
+
 	if (dpmi.rmCallback[index].callCount==0) {
 		// INT PROT (Use Handler is already done).
 		// Wenn rmcb noch in Realmode Int table installiert, dann originalMethode aufrufef
@@ -1012,7 +994,6 @@ Bitu DPMI::HWIntDefaultHandler()
 			// originalroutine aufrufen
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
-			FILLFLAGS;
 			CPU_Push16(flags.word);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
@@ -1034,7 +1015,6 @@ Bitu DPMI::HWIntDefaultHandler()
 				}
 			};					
 			PrepareReflectToReal(num);
-			FILLFLAGS;
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
 			CPU_Push16(flags.word);
@@ -1047,7 +1027,6 @@ Bitu DPMI::HWIntDefaultHandler()
 		if (dpmi.rmCallback[index].stop) {
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
-			FILLFLAGS;
 			CPU_Push16(flags.word);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
@@ -1064,7 +1043,6 @@ Bitu DPMI::HWIntDefaultHandler()
 			} else {
 				// kein spezieller Protmode handler - Rufe originalroutine auf
 				PrepareReflectToReal(num);
-				FILLFLAGS;
 				CPU_Push16(flags.word);
 				SETFLAGBIT(IF,false);
 				SETFLAGBIT(TF,false);
@@ -1198,7 +1176,7 @@ Bitu DPMI::RealSaveState(void)
 		save_gs [1] = mem_readw(data+ 8);
 		save_ss [1] = mem_readw(data+10);
 		save_eax[1] = mem_readd(data+12);
-		save_ebx[1] = mem_readd(data+26);
+		save_ebx[1] = mem_readd(data+16);
 		save_ecx[1] = mem_readd(data+20);
 		save_edx[1] = mem_readd(data+24);
 		save_edi[1] = mem_readd(data+28);
@@ -1244,7 +1222,7 @@ Bitu DPMI::ProtSaveState(void)
 		save_gs [0] = mem_readw(data+ 8);
 		save_ss [0] = mem_readw(data+10);
 		save_eax[0] = mem_readd(data+12);
-		save_ebx[0] = mem_readd(data+26);
+		save_ebx[0] = mem_readd(data+16);
 		save_ecx[0] = mem_readd(data+20);
 		save_edx[0] = mem_readd(data+24);
 		save_edi[0] = mem_readd(data+28);
@@ -2380,7 +2358,6 @@ void DPMI::Setup()
 		CALLBACK_Setup(dpmi.rmCallback[i].id,DPMI_RealModeCallback,CB_IRET);	
 		dpmi.rmCallback[i].inUse = false;
 	};
-	dpmi.firstRmCallback = dpmi.rmCallback[0].id;
 
 	/* Setup some callbacks used only in pmode */
 	callback.apimsdosentry=CALLBACK_Allocate();
