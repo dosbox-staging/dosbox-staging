@@ -233,9 +233,12 @@ bool CommandLine::FindString(char * name,std::string & value,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindFirst(std::string & value) {
-	if (cmds.empty()) return false;
-	value=*cmds.begin();
+bool CommandLine::FindCommand(int which,std::string & value) {
+	if (which<1) return false;
+	if (which>cmds.size()) return false;
+	cmd_it it=cmds.begin();
+	for (;which>1;which--) it++;
+	value=(*it);
 	return true;
 }
 
@@ -248,6 +251,24 @@ bool CommandLine::FindEntry(char * name,cmd_it & it,bool neednext) {
 		}
 	}
 	return false;
+}
+
+bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove) {
+	cmd_it it;
+	for (it=cmds.begin();it!=cmds.end();it++) {
+		if (strncmp(begin,(*it).c_str(),strlen(begin))==0) {
+			value=((*it).c_str()+strlen(begin));
+			return true;
+		}
+	}
+	return false;
+
+
+
+}
+
+int CommandLine::GetCount(void) {
+	return cmds.size();
 }
 
 CommandLine::CommandLine(int argc,char * argv[]) {
