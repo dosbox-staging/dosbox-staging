@@ -17,6 +17,12 @@
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 0
 
+/* environ is defined */
+#define ENVIRON_INCLUDED 1
+
+/* environ can be linked */
+#define ENVIRON_LINKED 1
+
 /* Maximum memory address range in megabytes */
 #define C_MEM_MAX_SIZE 12
 
