@@ -495,6 +495,8 @@ static __inline__ void scale2x_8_mmx_single(scale2x_uint8* dst, const scale2x_ui
 		"movq %%mm2,(%3)\n"
 		"movq %%mm3,8(%3)\n"
 
+		"emms"
+
 		: "+r" (src0), "+r" (src1), "+r" (src2), "+r" (dst), "+r" (count)
 		:
 		: "cc"
