@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.61 2003-11-20 10:29:32 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.62 2003-12-30 19:07:42 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,10 +44,10 @@ void DOS_SetError(Bit16u code) {
 
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
-
-	DOS_PSP psp(dos.psp);
-	psp.SetStack(RealMake(SegValue(ss),reg_sp));
-
+	if (((reg_ah != 0x50) && (reg_ah != 0x51) && (reg_ah != 0x62) && (reg_ah != 0x64)) && (reg_ah<0x6c)) {
+		DOS_PSP psp(dos.psp);
+		psp.SetStack(RealMake(SegValue(ss),reg_sp-20));
+	}
 	char name1[DOSNAMEBUF+1];
 	char name2[DOSNAMEBUF+1];
 	switch (reg_ah) {
