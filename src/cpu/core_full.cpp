@@ -55,7 +55,6 @@ static EAPoint IPPoint;
 #include "core_full/ea_lookup.h"
 #include "instructions.h"
 
-
 static INLINE void DecodeModRM(void) {
 	inst.rm=Fetchb();
 	inst.rm_index=(inst.rm >> 3) & 7;
@@ -89,7 +88,7 @@ Bits Full_DeCode(void) {
 		SaveIP();
 		if (DEBUG_HeavyIsBreakpoint()) {
 			LEAVECORE;
-			return 1;
+			return debugCallback;
 		};
 #endif
 #endif

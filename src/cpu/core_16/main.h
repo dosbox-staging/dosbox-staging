@@ -798,8 +798,9 @@ restart:
 #if C_DEBUG	
 			SAVEIP;
 			if (DEBUG_Breakpoint()) {
+				LOADIP;
 				LEAVECORE;
-				return -1;
+				return debugCallback;
 			}
 			LOADIP;
 #endif			
@@ -811,8 +812,9 @@ restart:
 #if C_DEBUG
 				SAVEIP;
 				if (DEBUG_IntBreakpoint(num)) {
+					LOADIP;
 					LEAVECORE;	
-					return -1;
+					return debugCallback;
 				}
 #endif
 				EXCEPTION(num);				

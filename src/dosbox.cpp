@@ -111,6 +111,9 @@ static Bitu Normal_Loop(void) {
 			if (ret>0) {
 				Bitu blah=(*CallBack_Handlers[ret])();
 				if (blah) return blah;
+#if C_DEBUG
+				if (DEBUG_ExitLoop()) return 0;
+#endif
 			}
 		} else {
 			if (RemainTicks>0) {
@@ -260,6 +263,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("ems",true);
 	secprop->AddInitFunction(&DPMI_Init);
 	secprop->Add_bool("dpmi",true);
+
 #if C_MODEM
 	secprop=control->AddSection_prop("modem",&MODEM_Init); 
 	secprop->Add_bool("enabled",true); 	

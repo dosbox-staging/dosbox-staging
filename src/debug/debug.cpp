@@ -512,8 +512,8 @@ bool DEBUG_Breakpoint(void)
 	// Found. Breakpoint is valid
 	reg_eip -= 1;
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
-	exitLoop = true;
-	DEBUG_Enable();
+//	exitLoop = true;
+//	DEBUG_Enable();
 	return true;
 };
 
@@ -526,8 +526,8 @@ bool DEBUG_IntBreakpoint(Bit8u intNum)
 	// Found. Breakpoint is valid
 	reg_eip -= 2;
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
-	exitLoop = true;
-	DEBUG_Enable();
+//	exitLoop = true;
+//	DEBUG_Enable();
 	return true;
 };
 
@@ -628,8 +628,8 @@ static void DrawRegisters(void) {
 
 	oldflags=flags.word;
 
-	if (cpu.pmode) mvwprintw(dbg.win_reg,0,76,"Prot");
-	else							 mvwprintw(dbg.win_reg,0,76,"Real");
+	if (cpu.pmode)	mvwprintw(dbg.win_reg,0,76,"Prot");
+	else			mvwprintw(dbg.win_reg,0,76,"Real");
 
 	// Selector info, if available
 	if ((cpu.pmode) && curSelectorName[0]) {		
@@ -1272,6 +1272,7 @@ Bit32u DEBUG_CheckKeys(void) {
 							skipFirstInstruction = true; // for heavy debugger
 							CPU_Cycles = 1;
 							Bitu ret=(*cpudecoder)();
+							if (ret>0) ret=(*CallBack_Handlers[ret])();
 							SetCodeWinStart();
 							CBreakpoint::ignoreOnce = 0;
 						}
@@ -1280,15 +1281,11 @@ Bit32u DEBUG_CheckKeys(void) {
 						skipFirstInstruction = true; // for heavy debugger
 						CPU_Cycles = 1;
 						ret = (*cpudecoder)();
+						if (ret>0) ret=(*CallBack_Handlers[ret])();
 						SetCodeWinStart();
 						CBreakpoint::ignoreOnce = 0;
 						break;
-
-//		default:
-//			// FIXME : Is this correct ?
-//			if (key<0x200) ret=(*cpudecoder)(1);
-//			break;
-		};
+		}
 		DEBUG_DrawScreen();
 	}
 	return ret;
@@ -1308,7 +1305,6 @@ Bitu DEBUG_Loop(void) {
 		DOSBOX_SetNormalLoop();
 		return 0;
 	}
-
 	return DEBUG_CheckKeys();
 }
 
@@ -1371,7 +1367,8 @@ static bool DEBUG_Log_Loop(int count) {
 						
 			CPU_Cycles = 1;
 			ret=(*cpudecoder)();
-		
+			if (ret>0) ret=(*CallBack_Handlers[ret])();
+
 			count--;
 			if (count==0) break;
 
@@ -1446,6 +1443,13 @@ void DEBUG_CheckExecuteBreakpoint(Bit16u seg, Bit32u off)
 	};
 };
 
+Bitu DEBUG_EnableDebugger(void)
+{
+	exitLoop = true;
+	DEBUG_Enable();
+	return 0;
+};
+
 static void DEBUG_ProgramStart(Program * * make) {
 	*make=new DEBUG;
 }
@@ -1481,6 +1485,8 @@ static void DEBUG_ShutDown(Section * sec)
 	#endif
 };
 
+Bitu debugCallback;
+
 void DEBUG_Init(Section* sec) {
 
 	MSG_Add("DEBUG_CONFIGFILE_HELP","Nothing to setup yet!\n");
@@ -1492,6 +1498,9 @@ void DEBUG_Init(Section* sec) {
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */
 	PROGRAMS_MakeFile("DEBUG.COM",DEBUG_ProgramStart);
+	/* Setup callback */
+	debugCallback=CALLBACK_Allocate();
+	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF);
 	/* shutdown function */
 	sec->AddDestroyFunction(&DEBUG_ShutDown);
 }
@@ -1602,7 +1611,7 @@ void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
 
 #if C_HEAVY_DEBUG
 
-const Bit32u LOGCPUMAX = 200;
+const Bit32u LOGCPUMAX = 20000;
 
 static Bit16u logCpuCS [LOGCPUMAX];
 static Bit32u logCpuEIP[LOGCPUMAX];
@@ -1681,8 +1690,8 @@ bool DEBUG_HeavyIsBreakpoint(void)
 	PhysPt where = SegPhys(cs)+reg_eip;
 	
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
-		exitLoop = true;
-		DEBUG_Enable();
+//		exitLoop = true;
+//		DEBUG_Enable();
 		return true;	
 	}
 	return false;

@@ -341,8 +341,8 @@ switch (inst.code.op) {
 	case O_INT:
 		LEAVECORE;
 #if C_DEBUG
-		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return -1;
-		else if (DEBUG_IntBreakpoint(inst.op1.b)) return -1;
+		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) return debugCallback;
+		else if (DEBUG_IntBreakpoint(inst.op1.b)) return debugCallback;
 #endif
 		Interrupt(inst.op1.b);
 		LoadIP();

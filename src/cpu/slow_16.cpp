@@ -84,7 +84,7 @@ decode_start:
 		cycle_count++;		
 #if C_HEAVY_DEBUG
 		LEAVECORE;
-		if (DEBUG_HeavyIsBreakpoint()) return 1;
+		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
 		core_16.ip_start=core_16.ip_lookup;

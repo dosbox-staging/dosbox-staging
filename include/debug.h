@@ -25,6 +25,7 @@ void DEBUG_CheckExecuteBreakpoint(Bit16u seg, Bit32u off);
 bool DEBUG_ExitLoop(void);
 
 extern Bitu cycle_count;
+extern Bitu debugCallback;
 
 #ifdef C_HEAVY_DEBUG
 bool DEBUG_HeavyIsBreakpoint(void);
