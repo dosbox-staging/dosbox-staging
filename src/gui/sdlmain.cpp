@@ -18,6 +18,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
+
 #include "SDL.h"
 #include "SDL_thread.h"
 
@@ -551,6 +553,7 @@ int main(int argc, char* argv[]) {
 		}
 		/* Parse the config file */
 		control->ParseConfigFile(config_file.c_str());
+		control->ParseEnv(environ);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
