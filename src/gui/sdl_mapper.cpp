@@ -44,7 +44,7 @@ enum {
 
 enum BB_Types {
 	BB_Next,BB_Prev,BB_Add,BB_Del,
-	BB_Save,BB_Reset
+	BB_Save,BB_Reset,BB_Exit
 };
 
 enum BC_Types {
@@ -554,6 +554,7 @@ public:
 		switch (type) {
 		case BB_Add: 
 			mapper.addbind=true;
+			SetActiveBind(0);
 			break;
 		case BB_Del:
 			if (mapper.abindit!=mapper.aevent->bindlist.end())  {
@@ -568,12 +569,15 @@ public:
 		case BB_Next:
 			if (mapper.abindit!=mapper.aevent->bindlist.end()) 
 				mapper.abindit++;
-            if (mapper.abindit==mapper.aevent->bindlist.end()) 
+			if (mapper.abindit==mapper.aevent->bindlist.end()) 
 				mapper.abindit=mapper.aevent->bindlist.begin();
 			SetActiveBind(*(mapper.abindit));
 			break;
 		case BB_Save:
 			MAPPER_SaveBinds();
+			break;
+		case BB_Exit:   
+			mapper.exit=true;
 			break;
 		}
 	}
@@ -735,6 +739,7 @@ struct {
 	CCaptionButton *  selected;
 	CCaptionButton *  action;
 	CBindButton * save;
+	CBindButton * exit;   
 	CBindButton * add;
 	CBindButton * del;
 	CBindButton * next;
@@ -977,6 +982,7 @@ static void CreateLayout(void) {
 	bind_but.del=new CBindButton(300,380,50,20,"Del",BB_Del);
 
 	bind_but.save=new CBindButton(400,450,50,20,"Save",BB_Save);
+	bind_but.exit=new CBindButton(450,450,50,20,"Exit",BB_Exit);
 
 	bind_but.bind_title->Change("Bind Title");
 }
@@ -1156,6 +1162,13 @@ void MAPPER_Run(void) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
 		(*evit)->DeActivateAll();
 	}
+
+	bool mousetoggle=false;
+	if(mouselocked) {
+		mousetoggle=true;
+		GFX_CaptureMouse();
+	}
+   
 	mapper.surface=SDL_SetVideoMode(640,480,8,0);
 	/* Set some palette entries */
 	SDL_SetPalette(mapper.surface, SDL_LOGPAL|SDL_PHYSPAL, map_pal, 0, 4);
@@ -1171,6 +1184,7 @@ void MAPPER_Run(void) {
 		BIND_MappingEvents();
 		SDL_Delay(1);
 	}
+	if(mousetoggle) GFX_CaptureMouse();
 	GFX_ResetScreen();
 }
 

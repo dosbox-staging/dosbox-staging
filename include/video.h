@@ -62,5 +62,9 @@ void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch);
 void GFX_EndUpdate(void);
 
+/* Mouse related */
+void GFX_CaptureMouse(void);
+extern bool mouselocked; //true if mouse is confined to window
+
 #endif
 

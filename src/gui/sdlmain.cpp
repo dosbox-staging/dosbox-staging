@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.66 2004-06-10 07:18:19 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.67 2004-06-13 12:10:08 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -440,7 +440,7 @@ dosurface:
 	return sdl.draw.mode;
 }
 
-
+bool mouselocked; //Global variable for mapper
 static void CaptureMouse(void) {
 	sdl.mouse.locked=!sdl.mouse.locked;
 	if (sdl.mouse.locked) {
@@ -450,6 +450,11 @@ static void CaptureMouse(void) {
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
 		SDL_ShowCursor(SDL_ENABLE);
 	}
+        mouselocked=sdl.mouse.locked;
+}
+
+void GFX_CaptureMouse(void) {
+	CaptureMouse();
 }
 
 static void SwitchFullScreen(void) {
@@ -590,6 +595,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 	sdl.mouse.locked=false;
+	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
 	sdl.desktop.fixed=section->Get_bool("fullfixed");
 	sdl.desktop.width=section->Get_int("fullwidth");
