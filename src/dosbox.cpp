@@ -106,8 +106,9 @@ static Bitu Normal_Loop(void) {
 	PIC_runIRQs();
 	Bitu ret;
 	do {
+		PIC_IRQAgain=false;
 		ret=(*cpudecoder)(cpu_cycles);
-	} while (!ret && TimerAgain);
+	} while (!ret && PIC_IRQAgain);
 	return ret;
 };
 
@@ -158,9 +159,9 @@ static void InitSystems(void) {
 	JOYSTICK_Init();
 	SBLASTER_Init();
 //	TANDY_Init();
-//	PCSPEAKER_Init();
+	PCSPEAKER_Init();
 	ADLIB_Init();
-//	CMS_Init();
+	CMS_Init();
 
 	PLUGIN_Init();
 /* Most of the interrupt handlers */
@@ -175,33 +176,29 @@ void DOSBOX_Init(int argc, char* argv[]) {
 /* Find the base directory */
 	SHELL_AddAutoexec("SET PATH=Z:\\");
 	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
-    strcpy(dosbox_basedir,argv[0]);
+	strcpy(dosbox_basedir,argv[0]);
 	char * last=strrchr(dosbox_basedir,CROSS_FILESPLIT); //if windowsversion fails: 
-    if (!last){     
-            getcwd(dosbox_basedir,CROSS_LEN);
-            char a[2];
-            a[0]=CROSS_FILESPLIT;
-            a[1]='\0';
-            strcat(dosbox_basedir,a);
+	if (!last) {   
+		getcwd(dosbox_basedir,CROSS_LEN);
+		char a[2];
+		a[0]=CROSS_FILESPLIT;
+		a[1]='\0';
+		strcat(dosbox_basedir,a);
     } else {
-	*++last=0;
+		*++last=0;
     }
 	/* Parse the command line with a setup function */
 	int argl=1;
 	if (argc>1) {
 		if (*argv[1]!='-') { 
-                        char mount_buffer[CROSS_LEN];
-                        if( (*argv[1]=='/') || 
-                            (*argv[1]=='.') || 
-                            (*argv[1]=='~') ||
-                            (*(argv[1]+1) ==':') ) { 
-	                     strcpy(mount_buffer,argv[1]); 
-		        } else {
-	                    getcwd(mount_buffer,CROSS_LEN);
-			 strcat(mount_buffer,argv[1]);
-	                };
-	   
-		
+			char mount_buffer[CROSS_LEN];
+			if( (*argv[1]=='/') || (*argv[1]=='.') || (*argv[1]=='~') || (*(argv[1]+1) ==':') ) {
+				strcpy(mount_buffer,argv[1]); 
+			} else {
+				getcwd(mount_buffer,CROSS_LEN);
+				strcat(mount_buffer,argv[1]);
+			};
+
 			struct stat test;
 			if (stat(mount_buffer,&test)) {
 				E_Exit("%s Doesn't exist",mount_buffer);
@@ -231,14 +228,11 @@ void DOSBOX_Init(int argc, char* argv[]) {
 			argl++;
 			continue;
 		}
-			SHELL_AddAutoexec(argv[argl]);
+		SHELL_AddAutoexec(argv[argl]);
 		if (sw_c) {
 		}
 		argl++;
 	}
-
-
-	
 	InitSystems();	
 }
 
