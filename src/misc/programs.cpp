@@ -60,9 +60,9 @@ static Bitu PROGRAMS_Handler(void) {
 	/* First get the current psp */
 	PROGRAM_Info * info=new PROGRAM_Info;
 	info->psp_seg=dos.psp;
-	MEM_BlockRead(real_phys(dos.psp,0),&info->psp_copy,sizeof(PSP));
+	MEM_BlockRead(PhysMake(dos.psp,0),&info->psp_copy,sizeof(PSP));
 	/* Get the file name cmd_line 0 */
-	PhysPt envblock=real_phys(info->psp_copy.environment,0);
+	PhysPt envblock=PhysMake(info->psp_copy.environment,0);
 	do {} while (mem_readw(envblock++));
 	envblock+=3;
 	MEM_StrCopy(envblock,info->full_name,32);
@@ -107,7 +107,7 @@ char * Program::GetEnvStr(char * env_str) {
 	/* Walk through the internal environment and see for a match */
 /* Taking some short cuts here to not fuck around with memory structure */
 
-	char * envstart=(char *)real_host(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
 	size_t len=strlen(env_str);
 	while (*envstart) {
 		if (strncasecmp(env_str,envstart,len)==0 && envstart[len]=='=') {
@@ -119,7 +119,7 @@ char * Program::GetEnvStr(char * env_str) {
 };
 
 char * Program::GetEnvNum(Bit32u num) {
-	char * envstart=(char *)real_host(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
 	while (*envstart) {
 		if (!num) return envstart;
 		envstart+=strlen(envstart)+1;	
@@ -129,7 +129,7 @@ char * Program::GetEnvNum(Bit32u num) {
 }
 
 Bit32u Program::GetEnvCount(void) {
-	char * envstart=(char *)real_host(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
 	Bit32u num=0;
 	while (*envstart) {
 		envstart+=strlen(envstart)+1;	
@@ -139,13 +139,13 @@ Bit32u Program::GetEnvCount(void) {
 }
 
 bool Program::SetEnv(char * env_entry,char * new_string) {
-	MCB * env_mcb=(MCB *)real_host(prog_info->psp_copy.environment-1,0);
+	MCB * env_mcb=(MCB *)HostMake(prog_info->psp_copy.environment-1,0);
 	upcase(env_entry);
 	Bit32u env_size=env_mcb->size*16;
 	if (!env_size) E_Exit("SHELL:Illegal environment size");
 	/* First try to find the old entry */
 	size_t len=strlen(env_entry);
-	char * envstart=(char *)real_host(prog_info->psp_copy.environment,0);
+	char * envstart=(char *)HostMake(prog_info->psp_copy.environment,0);
 	while (*envstart) {
 		if (strncasecmp(env_entry,envstart,len)==0 && envstart[len]=='=') {
 			/* Now remove this entry */
