@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.18 2004-02-08 13:04:34 harekiet Exp $ */
+/* $Id: pic.cpp,v 1.19 2004-03-10 13:53:40 qbix79 Exp $ */
 
 #include <list>
 
@@ -74,7 +74,7 @@ static void write_command(Bit32u port,Bit8u val) {
 	Bitu irq_base=port==0x20 ? 0 : 8;
 	Bitu i;
 	Bit16u IRQ_priority_table[16] = 
-	{ 0,1,8,9,10,11,12,13,14,15,2,3,4,5,6,7 };
+	{ 0,1,2,9,10,11,12,13,14,15,3,4,5,6,7,8 };
 	switch (val) {
 	case 0x0A: /* select read interrupt request register */
 		pic->request_issr=false;
@@ -240,22 +240,21 @@ void PIC_runIRQs(void) {
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) return;
 	Bit16u IRQ_priority_lookup[17] = 
-		{ 0,1,10,11,12,13,14,15,2,3,4,5,6,7,8,9,16 };
+		{ 0,1,2,11,12,13,14,15,3,4,5,6,7,8,9,10,16 };
 	Bit16u activeIRQ = PIC_IRQActive;
 	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
 	for (i=0;i<=15;i++) {
-		if (IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]){ 
-			if (i!=2) {
-				if (!irqs[i].masked && irqs[i].active) {
-					irqs[i].active=false;
-					PIC_IRQCheck&=~(1 << i);
-					CPU_HW_Interrupt(irqs[i].vector);
-					if (!pics[0].auto_eoi) {
-						PIC_IRQActive=i;
-						irqs[i].inservice=true;
-					}
-					return;
+		if (IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]){
+		  	if (!irqs[i].masked && irqs[i].active) {
+				irqs[i].active=false;
+				PIC_IRQCheck&=~(1 << i);
+				if (i==2) i=9;
+				CPU_HW_Interrupt(irqs[i].vector);
+				if (!pics[0].auto_eoi) {
+					PIC_IRQActive=i;
+					irqs[i].inservice=true;
 				}
+				return;
 			}
 		}
 	}
