@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.14 2003-10-19 19:21:12 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.15 2003-11-11 18:28:05 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -260,6 +260,13 @@ void FPU_ESC1_Normal(Bitu rm) {
 	case 0x01: /* FXCH STi */
 			FPU_FXCH(TOP,ST(sub));
 		break;
+	case 0x02: /* FNOP */
+			FPU_FNOP();
+		break;
+	case 0x03: /* FSTP STi */
+			FPU_FST(TOP,ST(sub));
+			FPU_FPOP();
+		break;   
 	case 0x04:
 		switch(sub){
 		case 0x00:       /* FCHS */
@@ -661,6 +668,14 @@ void FPU_ESC7_Normal(Bitu rm) {
 	Bitu group=(rm >> 3) & 7;
 	Bitu sub=(rm & 7);
 	switch (group){
+	case 0x01: /* FXCH STi*/
+			FPU_FXCH(TOP,ST(sub));
+		break;
+	case 0x02:  /* FSTP STi*/
+	case 0x03:  /* FSTP STi*/
+			FPU_FST(TOP,ST(sub));
+			FPU_FPOP();
+		break;
 	case 0x04:
 		switch(sub){
 			case 0x00:     /* FNSTSW AX*/
