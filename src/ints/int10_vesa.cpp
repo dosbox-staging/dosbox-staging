@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.9 2004-06-10 20:23:50 harekiet Exp $ */
+/* $Id: int10_vesa.cpp,v 1.10 2004-06-18 20:27:10 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -231,8 +231,8 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u & bytes,Bit16u & pixels,Bit16u & 
 	case 0x00:	/* Set in pixels */
 		bytes=(pixels*bpp);
 	case 0x02:	/* Set in bytes */
-		scan_len=bytes/4;
-		if (bytes % 4) scan_len++;
+		scan_len=bytes/8;
+		if (bytes % 8) scan_len++;
 		vga.config.scan_len=scan_len;
 		VGA_StartResize();
 		break;
@@ -246,8 +246,8 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u & bytes,Bit16u & pixels,Bit16u & 
 		return 0x1;			//Illegal call
 	}
 	/* Write the scan line to video card the simple way */
-	pixels=(vga.config.scan_len*4)/bpp;
-	bytes=vga.config.scan_len*4;
+	pixels=(vga.config.scan_len*8)/bpp;
+	bytes=vga.config.scan_len*8;
 	return 0x0;
 }
 
