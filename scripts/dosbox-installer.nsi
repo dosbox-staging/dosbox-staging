@@ -74,9 +74,9 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.conf.lnk"  
 
 ; remove directories used.
-  RMDir "$INSTDIR"
   RMDir "$INSTDIR\snaps"
   RMDir "$INSTDIR\waves"
+  RMDir "$INSTDIR"
   RMDir "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}"
 SectionEnd
 
