@@ -67,6 +67,9 @@ void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
 void MEM_UnlinkPages(void);
 
+Bit32u MEM_PhysReadD(Bitu addr);
+
+
 
 
 #pragma pack(1)
@@ -92,6 +95,7 @@ union X86PageEntry {
 
 struct PagingBlock {
 	Bitu			cr3;
+	Bitu			cr2;
 	struct {
 		Bitu page;
 		PhysPt addr;
