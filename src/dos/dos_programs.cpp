@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.35 2005-03-01 07:19:38 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.36 2005-04-06 20:48:14 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -757,7 +757,7 @@ void DOS_SetupPrograms(void) {
 		"\n"
 		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
-		"\033[34;1mmount -cd\033[0m"
+		"\033[34;1mmount -cd\033[0m\n"
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
