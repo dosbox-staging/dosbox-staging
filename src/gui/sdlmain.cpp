@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.74 2004-08-27 14:01:44 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.75 2004-09-01 06:46:49 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -924,9 +924,14 @@ void GFX_Events() {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
-					if (sdl.mouse.locked) CaptureMouse();	
+					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
+						CaptureMouse();	
 					SetPriority(sdl.priority.focus);
-				} else SetPriority(sdl.priority.nofocus);
+				} else {
+					if (sdl.mouse.locked) 
+						CaptureMouse();	
+					SetPriority(sdl.priority.nofocus);
+				}
 			}
 			break;
 		case SDL_MOUSEMOTION:
