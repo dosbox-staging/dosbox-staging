@@ -176,13 +176,11 @@
 			break;
 		}
 	CASE_0F_D(0xa4)												/* SHLD Ed,Gd,Ib */
-		{
-			GetRMrd;
-			if (rm >= 0xc0 ) {GetEArd;DSHLD(*eard,*rmrd,Fetchb(),LoadRd,SaveRd);}
-			else {GetEAa;DSHLD(eaa,*rmrd,Fetchb(),LoadMd,SaveMd);}
-			break;
-		}
-
+		RMEdGdOp3(DSHLD,Fetchb());
+		break;
+	CASE_0F_D(0xa5)												/* SHLD Ed,Gd,CL */
+		RMEdGdOp3(DSHLD,reg_cl);
+		break;
 	CASE_0F_D(0xa8)												/* PUSH GS */		
 		Push_32(SegValue(gs));break;
 	CASE_0F_D(0xa9)												/* POP GS */		
@@ -205,19 +203,11 @@
 		}
 	
 	CASE_0F_D(0xac)												/* SHRD Ed,Gd,Ib */
-		{
-			GetRMrd;
-			if (rm >= 0xc0 ) {GetEArd;DSHRD(*eard,*rmrd,Fetchb(),LoadRd,SaveRd);}
-			else {GetEAa;DSHRD(eaa,*rmrd,Fetchb(),LoadMd,SaveMd);}
-			break;
-		}
-	CASE_0F_D(0xad)												/* SHRD Ed,Gd,Cl */
-		{
-			GetRMrd;
-			if (rm >= 0xc0 ) {GetEArd;DSHRD(*eard,*rmrd,reg_cl,LoadRd,SaveRd);}
-			else {GetEAa;DSHRD(eaa,*rmrd,reg_cl,LoadMd,SaveMd);}
-			break;
-		}
+		RMEdGdOp3(DSHRD,Fetchb());
+		break;
+	CASE_0F_D(0xad)												/* SHRD Ed,Gd,CL */
+		RMEdGdOp3(DSHRD,reg_cl);
+		break;
 	CASE_0F_D(0xb4)												/* LFS Ed */
 		{	
 			GetRMrd;GetEAa;
