@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.43 2004-05-20 13:17:27 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.44 2004-08-03 19:37:04 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -239,6 +239,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	bool optW=ScanCMDBool(args,"W");
 	bool optS=ScanCMDBool(args,"S");
 	bool optP=ScanCMDBool(args,"P");
+	bool optAD=ScanCMDBool(args,"AD");
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
@@ -292,11 +293,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		return;
 	}
-	while (ret) {
-/* File name and extension */
+ 
+	do {    /* File name and extension */
 		char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 		dta.GetResult(name,size,date,time,attr);
 
+		/* Skip non-directories if option AD is present */
+		if(optAD && !(attr&DOS_ATTR_DIRECTORY) ) continue;
+   
 		char * ext="";
 		if (!optW && (name[0] != '.')) {
 			ext = strrchr(name, '.');
@@ -331,13 +335,12 @@ void DOS_Shell::CMD_DIR(char * args) {
 		if (optW) {
 			w_count++;
 		}
-		ret=DOS_FindNext();
 		if(optP) {
 			if(!(++p_count%(22*w_size))) {
 				CMD_PAUSE(args);
 			}
 		}
-	}
+	} while ( (ret=DOS_FindNext()) );
 	if (optW) {
 		if (w_count%5)	WriteOut("\n");
 	}
