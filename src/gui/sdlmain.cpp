@@ -499,7 +499,7 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-		LOG_ERROR("Exit to error %s",error);
+		LOG_ERROR("Exit to error: %s",error);
 	}
 	GFX_Stop();
 	return 0;

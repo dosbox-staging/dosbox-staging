@@ -40,7 +40,7 @@
  /* NEEDS A CLEANUP */
 char dosbox_basedir[CROSS_LEN];
 Config * control;
-
+Bitu errorlevel=1; //during startup display reason for Exits
 //The whole load of startups for all the subfunctions
 
 void MSG_Init(Section_prop *);
@@ -132,7 +132,8 @@ void DOSBOX_RunMachine(void){
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
-	LastTicks=GetTicks();
+	errorlevel=section->Get_int("WARNINGS");
+        LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 }
