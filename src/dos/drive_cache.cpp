@@ -106,7 +106,7 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	Bit16u id;
 	strcpy(basePath,baseDir);
 	if (OpenDir(baseDir,id)) {
-		struct dirent* result;
+		char * result;
 		ReadDir(id,result);
 	};
 };
@@ -427,7 +427,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		strcpy(work,basePath);
 		if (OpenDir(curDir,work,id)) {
 			char buffer[CROSS_LEN];
-			struct dirent* result;
+			char * result;
 			strcpy(buffer,dirPath);
 			ReadDir(id,result);
 			strcpy(dirPath,buffer);
@@ -460,7 +460,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,work,id)) {
 					char buffer[CROSS_LEN];
-					struct dirent* result;
+					char * result;
 					strcpy(buffer,dirPath);
 					ReadDir(id,result);
 					strcpy(dirPath,buffer);
@@ -534,7 +534,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name)
 	dir->outputList.push_back(info);
 };
 
-bool DOS_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
+bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
 {
 	// shouldnt happen...
 	if (id>MAX_OPENDIRS) return false;
@@ -579,15 +579,15 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
 	return false;
 };
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, struct dirent* &result, Bit16u entryNr)
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 {
-	static struct dirent res;
+	static char res[CROSS_LEN];
 
-	result = &res;
+	result = res;
 	if (entryNr>=dir->outputList.size()) return false;
 	CFileInfo* info = dir->outputList[entryNr];
 	// copy filename, short version
-	strcpy(result->d_name,info->shortname);
+	strcpy(res,info->shortname);
 	// Set to next Entry
 	dir->nextEntry = entryNr+1;
 	return true;
@@ -615,10 +615,16 @@ bool DOS_No_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 	return true;
 };
 
-bool DOS_No_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
+bool DOS_No_Drive_Cache::ReadDir(Bit16u id, char* &result)
 {
+	
+	static char res[CROSS_LEN];
+	dirent * ent;		
+
 	if (!srch_opendir) return false;
-	if ((result=readdir(srch_opendir))==NULL) {
+	if ((ent=readdir(srch_opendir))==NULL) {
+		strcpy(res,ent->d_name);
+		result=res;
 		closedir(srch_opendir);
 		srch_opendir=NULL;
 		return false;

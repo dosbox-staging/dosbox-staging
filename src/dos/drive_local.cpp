@@ -115,7 +115,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 
 bool localDrive::FindNext(DOS_DTA & dta) {
 	
-	struct dirent* dir_ent;
+	char * dir_ent;
 	struct stat stat_block;
 	char full_name[CROSS_LEN];
 
@@ -131,10 +131,10 @@ again:
 		return false;
 	}
 
-	if(!WildFileCmp(dir_ent->d_name,srch_pattern)) goto again;
+	if(!WildFileCmp(dir_ent,srch_pattern)) goto again;
 
 	strcpy(full_name,srchInfo[id].srch_dir);
-	strcat(full_name,dir_ent->d_name);
+	strcat(full_name,dir_ent);
 	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
 		goto again;
 	}	
@@ -150,8 +150,8 @@ again:
 	/*file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
 
-	if(strlen(dir_ent->d_name)<DOS_NAMELENGTH_ASCII){
-		strcpy(find_name,dir_ent->d_name);
+	if(strlen(dir_ent)<DOS_NAMELENGTH_ASCII){
+		strcpy(find_name,dir_ent);
 		upcase(find_name);
 	} 
 

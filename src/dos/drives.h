@@ -40,7 +40,7 @@ public:
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
 	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, struct dirent* &result);
+	bool		ReadDir				(Bit16u id, char* &result);
 
 	void		ExpandName			(char* path);
 	char*		GetExpandName		(const char* path);
@@ -78,7 +78,7 @@ private:
 	Bit16s		GetLongName			(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
 	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
-	bool		SetResult			(CFileInfo* dir, struct dirent* &result, Bit16u entryNr);
+	bool		SetResult			(CFileInfo* dir, char * &result, Bit16u entryNr);
 	bool		IsCachedIn			(CFileInfo* dir);
 	CFileInfo*	FindDirInfo			(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
@@ -115,7 +115,7 @@ public:
 	void		SetBaseDir			(const char* path);
 	void		SetDirSort			(TDirSort sort) {};
 	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, struct dirent* &result);
+	bool		ReadDir				(Bit16u id, char * &result);
 
 	void		ExpandName			(char* path) {};
 	char*		GetExpandName		(const char* path) { return (char*)path; };
@@ -211,5 +211,7 @@ public:
 private:
 	VFILE_Block * search_file;
 };
+
+
 
 #endif
