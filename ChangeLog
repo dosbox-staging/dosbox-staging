@@ -1,3 +1,8 @@
+0.62
+  - Fixed commandline parsing when .bat files involved (fixes -exit)
+  - Fixed issues with tabs in commandline not being processed correctly
+  - Returned filename in ds:dx in create-random-file (c2woody)
+
 0.61
   - Added a beta dynamic cpu for x86 hosts (very unstable)
   - Added opengl and hardware overlay display output

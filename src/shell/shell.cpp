@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.39 2004-02-03 08:35:29 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.40 2004-02-19 12:00:38 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -244,7 +244,15 @@ void AUTOEXEC_Init(Section * sec) {
 			if (access(buffer,F_OK)) goto nomount;
 			SHELL_AddAutoexec("MOUNT C \"%s\"",buffer);
 			SHELL_AddAutoexec("C:");
-			SHELL_AddAutoexec(name);
+			upcase(name);
+			if(strstr(name,".BAT")==0) {
+				SHELL_AddAutoexec(name);
+			} else {
+				char call[CROSS_LEN] = { 0 };
+				strcpy(call,"CALL ");
+				strcat(call,name);
+				SHELL_AddAutoexec(call);
+			}
 			if(addexit) SHELL_AddAutoexec("exit");
 		}
 	}
