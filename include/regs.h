@@ -35,25 +35,6 @@ struct Flag_Info {
 	bool oldcf;
 };
 
-struct FPU_Flag_Info { 
-	struct {
-		Real64 r;
-		Bit8u tag;
-	} var1,var2, result;
-	struct {
-		bool bf,c3,c2,c1,c0,ir,sf,pf,uf,of,zf,df,in;
-		Bit8s tos;
-	} sw;
-	struct {
-		bool ic,ie,sf,pf,uf,of,zf,df,in;
-		Bit8u rc,pc;
-	} cw;
-	Bitu type;
-	Bitu prev_type;
-};
-
-
-
 struct Segment {
 	Bit16u value;
 	bool special;							/* Signal for pointing to special memory */
@@ -61,18 +42,7 @@ struct Segment {
 	PhysPt	phys;							/* The phyiscal address start in emulated machine */
 };
 
-
-
-
 enum { cs=0,ds,es,fs,gs,ss};
-
-extern Segment Segs[6];
-extern Flag_Info flags;
-extern FPU_Flag_Info fpu_flags;
-//extern Regs regs;
-
-void SetSegment_16(Bit32u seg,Bit16u val);
-
 
 struct CPU_Regs {
 	union {
@@ -84,19 +54,15 @@ struct CPU_Regs {
 	} ax,bx,cx,dx,si,di,sp,bp,ip;
 };
 
-struct FPU_Regs {
-	struct {
-		Real64 r;
-		Bit8u tag;
-	} st[8];
-};
-
+extern Segment Segs[6];
+extern Flag_Info flags;
 extern CPU_Regs cpu_regs;
 
-#define reg_al cpu_regs.ax.b.l
+void SetSegment_16(Bit32u seg,Bit16u val);
+
 
 //extern Bit8u & reg_al=cpu_regs.ax.b.l;
-
+#define reg_al cpu_regs.ax.b.l
 #define reg_ah cpu_regs.ax.b.h
 #define reg_ax cpu_regs.ax.w
 #define reg_eax cpu_regs.ax.d
@@ -130,10 +96,6 @@ extern CPU_Regs cpu_regs;
 
 #define reg_ip cpu_regs.ip.w
 #define reg_eip cpu_regs.ip.d
-
-
-
-
 
 #endif
 
