@@ -23,7 +23,7 @@
 #pragma warning ( disable : 4786 )
 #endif
 
-#include <cross.h>
+#include "cross.h"
 #include <string>
 #include <list>
 
