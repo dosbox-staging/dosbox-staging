@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.45 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.46 2005-02-24 20:14:57 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -506,7 +506,7 @@ void Mouse_NewVideoMode(void)
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-	mouse.shown=-1;
+//	mouse.shown=-1;//Disabled as ida doesn't have mousecursor anymore
 	/* Get the correct resolution from the current video mode */
 	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
 	switch (mode) {
