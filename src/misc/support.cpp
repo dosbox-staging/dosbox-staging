@@ -171,21 +171,18 @@ void S_Warn(char * format,...) {
 	GFX_ShowMsg(buf);
 #endif
 }
+
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
-    
-//	char buf[1024];    //see above
-        if(errorlevel>=1){
-	
-	va_list msg;
-	va_start(msg,format);
-	vsprintf(buf,format,msg);
-	va_end(msg);
-    
-	strcat(buf,"\n");
+	if(errorlevel>=1) {
+		va_list msg;
+		va_start(msg,format);
+		vsprintf(buf,format,msg);
+		va_end(msg);
+		
+		strcat(buf,"\n");
 	} else  {
-	strcpy(buf,"an unsupported feature\n");
+		strcpy(buf,"an unsupported feature\n");
 	}
-      
 	throw(buf);
-};
+}
