@@ -45,12 +45,15 @@ void WIN32_Console();
 static struct termios consolesettings;
 int old_cursor_state;
 #endif
+
 // Forwards
 static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
 char* AnalyzeInstruction(char* inst, bool saveSelector);
 void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num);
+Bit32u GetHexValue(char* str, char*& hex);
+
 class DEBUG;
 
 DEBUG*	pDebugcom	= 0;
@@ -122,7 +125,8 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	if (strstr(selname,"es") || strstr(selname,"ES")) sel = SegValue(es); else
 	if (strstr(selname,"fs") || strstr(selname,"FS")) sel = SegValue(fs); else
 	if (strstr(selname,"gs") || strstr(selname,"GS")) sel = SegValue(gs); else
-	if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss); 
+	if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss); else
+	sel = GetHexValue(selname,selname);
 	// FIXME: Call Gate Descriptors
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		sprintf(out1,"%s: b:%08X type:%02X parbg",selname,desc.GetBase(),desc.saved.seg.type);
@@ -204,6 +208,7 @@ public:
 	static CBreakpoint*		AddMemBreakpoint	(Bit16u seg, Bit32u off);
 	static void				ActivateBreakpoints	(PhysPt adr, bool activate);
 	static bool				CheckBreakpoint		(PhysPt adr);
+	static bool				CheckBreakpoint		(Bitu seg, Bitu off);
 	static bool				CheckIntBreakpoint	(PhysPt adr, Bit8u intNr, Bit16u ahValue);
 	static bool				IsBreakpoint		(PhysPt where);
 	static bool				IsBreakpointDrawn	(PhysPt where);
@@ -257,6 +262,7 @@ void CBreakpoint::Activate(bool _active)
 // Statics
 std::list<CBreakpoint*> CBreakpoint::BPoints;
 CBreakpoint*			CBreakpoint::ignoreOnce = 0;
+Bitu					ignoreAddressOnce = 0;
 
 CBreakpoint* CBreakpoint::AddBreakpoint(Bit16u seg, Bit32u off, bool once)
 {
@@ -302,15 +308,21 @@ void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 	};
 };
 
-bool CBreakpoint::CheckBreakpoint(PhysPt adr)
+bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 // Checks if breakpoint is valid an should stop execution
 {
+	if ((ignoreAddressOnce!=0) && (GetAddress(seg,off)==ignoreAddressOnce)) {
+		ignoreAddressOnce = 0;
+		return false;
+	} else
+		ignoreAddressOnce = 0;
+
 	// Search matching breakpoint
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
 		bp = static_cast<CBreakpoint*>(*i);
-		if ((bp->GetType()==BKPNT_PHYSICAL) && bp->IsActive() && (bp->GetLocation()==adr)) {
+		if ((bp->GetType()==BKPNT_PHYSICAL) && bp->IsActive() && (bp->GetSegment()==seg) && (bp->GetOffset()==off)) {
 			// Ignore Once ?
 			if (ignoreOnce==bp) {
 				ignoreOnce=0;
@@ -331,8 +343,10 @@ bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 #if C_HEAVY_DEBUG
 		// Memory breakpoint support
 		else if ((bp->GetType()==BKPNT_MEMORY) && bp->IsActive()) {
-			
-			Bit8u value = mem_readb(bp->GetLocation());
+
+			Bitu address = GetAddress(bp->GetSegment(),bp->GetOffset());
+//			Bitu address = bp->GetSegment()*16 + bp->GetOffset();
+			Bit8u value = mem_readb(address);
 			if (bp->GetValue() != value) {
 				// Yup, memory value changed
 	
@@ -350,6 +364,12 @@ bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 // Checks if interrupt breakpoint is valid an should stop execution
 {
+	if ((ignoreAddressOnce!=0) && (adr==ignoreAddressOnce)) {
+		ignoreAddressOnce = 0;
+		return false;
+	} else
+		ignoreAddressOnce = 0;
+
 	// Search matching breakpoint
 	std::list<CBreakpoint*>::iterator i;
 	CBreakpoint* bp;
@@ -437,6 +457,9 @@ bool CBreakpoint::IsBreakpoint(PhysPt adr)
 	CBreakpoint* bp;
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
 		bp = static_cast<CBreakpoint*>(*i);
+		if ((bp->GetType()==BKPNT_PHYSICAL) && (bp->GetSegment()==adr)) {
+			return true;
+		};
 		if ((bp->GetType()==BKPNT_PHYSICAL) && (bp->GetLocation()==adr)) {
 			return true;
 		};
@@ -487,7 +510,7 @@ bool DEBUG_Breakpoint(void)
 	/* First get the phyiscal address and check for a set Breakpoint */
 //	PhysPt where=SegPhys(cs)+reg_eip-1;
 	PhysPt where=GetAddress(SegValue(cs),reg_eip-1);
-	if (!CBreakpoint::CheckBreakpoint(where)) return false;
+	if (!CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip-1)) return false;
 	// Found. Breakpoint is valid
 	reg_eip -= 1;
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
@@ -515,7 +538,7 @@ static bool StepOver()
 //	PhysPt start=SegPhys(cs)+reg_eip;
 	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
-	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32)>0);
+	size=DasmI386(dline, start, reg_eip, (cpu.state & STATE_USE32>0));
 
 	if (strstr(dline,"call") || strstr(dline,"int") || strstr(dline,"loop") || strstr(dline,"rep")) {
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip+size, true);
@@ -543,6 +566,7 @@ bool DEBUG_ExitLoop(void)
 
 static void DrawData(void) {
 	
+	Bit8u ch;
 	Bit32u add = dataOfs;
 	Bit32u address;
 	/* Data win */	
@@ -551,7 +575,7 @@ static void DrawData(void) {
 		mvwprintw (dbg.win_data,1+y,0,"%04X:%04X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
-			Bit8u ch = mem_readb(address);
+			if (address<8*1024*1024) ch = mem_readb(address); else ch = 0;
 			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
 			if (ch<32) ch='.';
 			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);			
@@ -607,6 +631,9 @@ static void DrawRegisters(void) {
 	mvwprintw (dbg.win_reg,1,77,"%01X",GETFLAG(TF) ? 1:0);
 
 	oldflags=flags.word;
+
+	if (cpu.state & STATE_PROTECTED) mvwprintw(dbg.win_reg,0,76,"Prot");
+	else							 mvwprintw(dbg.win_reg,0,76,"Real");
 
 	// Selector info, if available
 	if ((cpu.state & STATE_PROTECTED) && curSelectorName[0]) {		
@@ -994,6 +1021,15 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("%s",out2);
 	};
 
+/*	found = strstr(str,"EXCEPTION ");
+	if (found) {
+		found += 9;
+		Bit8u num = GetHexValue(found,found);		
+		DPMI_CreateException(num,0xDD);
+		DEBUG_ShowMsg("Exception %04X",num);
+	};
+*/	
+
 #if C_HEAVY_DEBUG
 	found = strstr(str,"HEAVYLOG");
 	if (found) { // Create Cpu log file
@@ -1228,7 +1264,8 @@ Bit32u DEBUG_CheckKeys(void) {
 						break;
 		case KEY_F(5):	// Run Programm
 						debugging=false;
-						CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);
+						CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);						
+						ignoreAddressOnce = SegPhys(cs)+reg_eip;
 						DOSBOX_SetNormalLoop();	
 						break;
 		case KEY_F(9):	// Set/Remove TBreakpoint
@@ -1627,13 +1664,33 @@ bool DEBUG_HeavyIsBreakpoint(void)
 		return false;
 	}
 
+/*	static bool once = false;
+	Descriptor desc;
+	if (!once && cpu.gdt.GetDescriptor(0x44,desc)) {
+		if (desc.GetBase()==0x40000000) {
+			LOG(LOG_ERROR,"Selector 44 base 0x40000000: %04X,%08X",SegValue(cs),reg_eip);
+			once = true;
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		};
+	}
+*/
+/*	if (cpu.state & STATE_PROTECTED) {
+		if ((reg_ebx==0x000F)) {
+			exitLoop = true;
+			DEBUG_Enable();
+			return true;
+		}
+	}
+*/
 	PhysPt where = SegPhys(cs)+reg_eip;
 	
-	if (CBreakpoint::CheckBreakpoint(where)) {
+	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
 		exitLoop = true;
 		DEBUG_Enable();
-		return true;
-	};
+		return true;	
+	}
 	return false;
 };
 
