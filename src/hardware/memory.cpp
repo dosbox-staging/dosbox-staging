@@ -69,11 +69,8 @@ static struct MemoryBlock {
 
 class IllegalPageHandler : public PageHandler {
 public:
-	void AddPageLink(Bitu lin_page, Bitu phys_page) {
-	}
-
 	IllegalPageHandler() {
-		flags=PFLAG_ILLEGAL|PFLAG_NOCODE;
+		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
 		LOG_MSG("Illegal read from %x",addr);
@@ -89,13 +86,6 @@ public:
 
 class RAMPageHandler : public PageHandler {
 public:
-	void AddPageLink(Bitu lin_page, Bitu phys_page) {
-		/* Always clear links in first MB on TLB change */
-		if (lin_page<LINK_START) return;
-		if (memory.links.used<MAX_LINKS) {
-			memory.links.pages[memory.links.used++]=lin_page;
-		} else E_Exit("MEM:Ran out of page links");
-	}
 	RAMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
@@ -152,11 +142,6 @@ void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler) {
 		memory.phandlers[phys_page]=handler;
 		phys_page++;
 	}
-}
-
-void MEM_UnlinkPages(void) {
-	PAGING_ClearTLBEntries(memory.links.used,memory.links.pages);
-	memory.links.used=0;
 }
 
 Bitu mem_strlen(PhysPt pt) {

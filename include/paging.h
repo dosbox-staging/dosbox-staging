@@ -32,9 +32,13 @@ class PageDirectory;
 #define PFLAG_HASROM		0x4
 #define PFLAG_HASCODE		0x8				//Page contains dynamic code
 #define PFLAG_NOCODE		0x10			//No dynamic code can be generated here
-#define PFLAG_ILLEGAL		0x20			//No dynamic code can be generated here
+#define PFLAG_INIT			0x20			//No dynamic code can be generated here
 
 #define LINK_START	((1024+64)/4)			//Start right after the HMA
+
+//Allow 128 mb of memory to be linked
+#define PAGING_LINKS (128*1024/4)
+
 
 class PageHandler {
 public:
@@ -44,7 +48,6 @@ public:
 	virtual void writeb(PhysPt addr,Bitu val);
 	virtual void writew(PhysPt addr,Bitu val);
 	virtual void writed(PhysPt addr,Bitu val);
-	virtual void AddPageLink(Bitu lin_page, Bitu phys_page)=0;
 	virtual HostPt GetHostPt(Bitu phys_page);
 	Bitu flags;
 };
@@ -57,15 +60,15 @@ Bitu PAGING_GetDirBase(void);
 void PAGING_SetDirBase(Bitu cr3);
 void PAGING_InitTLB(void);
 void PAGING_ClearTLB(void);
-void PAGING_ClearTLBEntries(Bitu pages,Bit32u * entries);
 
 void PAGING_LinkPage(Bitu lin_page,Bitu phys_page);
+void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 /* This maps the page directly, only use when paging is disabled */
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
+bool PAGING_MakePhysPage(Bitu & page);
 
 void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
 void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
-void MEM_UnlinkPages(void);
 
 Bit32u MEM_PhysReadD(Bitu addr);
 
@@ -106,6 +109,10 @@ struct PagingBlock {
 		PageHandler * handler[TLB_SIZE];
 		Bit32u	phys_page[TLB_SIZE];
 	} tlb;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} links;
 	bool			enabled;
 };
 
