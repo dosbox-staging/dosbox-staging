@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include "dosbox.h"
 #include "mem.h"
+#include "inout.h"
+#include "setup.h"
 
 HostPt memory;
 HostPt ReadHostTable[MAX_PAGES];
@@ -148,6 +150,7 @@ void MEM_ClearMapping(Bitu startpage,Bitu pages) {
 	}
 }
 
+#if (!C_EXTRAINLINE)
 static void HandlerWritew(Bitu page,PhysPt pt,Bit16u val) {
 		WriteHandlerTable[page](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[page](pt+1,(Bit8u)((val >>  8) & 0xff)  );
@@ -169,6 +172,7 @@ void mem_writeb(PhysPt pt,Bit8u val) {
 
 void mem_writew(PhysPt pt,Bit16u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
+//		HandlerWritew(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 	} else writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
@@ -176,6 +180,7 @@ void mem_writew(PhysPt pt,Bit16u val) {
 
 void mem_writed(PhysPt pt,Bit32u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
+//		HandlerWrited(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+2,(Bit8u)((val >> 16) & 0xff)  );
@@ -205,6 +210,7 @@ Bit8u mem_readb(PhysPt pt) {
 
 Bit16u mem_readw(PhysPt pt) {
 	if (!ReadHostTable[pt >> PAGE_SHIFT]) {
+//		return HandlerReadw(pt >> PAGE_SHIFT,pt);
 		return	
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
@@ -214,6 +220,7 @@ Bit16u mem_readw(PhysPt pt) {
 Bit32u mem_readd(PhysPt pt){
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
+//		return HandlerReadd(pt >> PAGE_SHIFT,pt);
 		return 
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0))       |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8  |
@@ -221,6 +228,80 @@ Bit32u mem_readd(PhysPt pt){
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
 	}
 }
+#endif
+
+// Big block memory alloction
+
+#define GETBIGBLOCKNR(nr) nr/(1024*1024)
+
+static void*	mem_block[C_MEM_MAX_SIZE];
+
+static bool AllocateBigBlock(Bitu block)
+{
+	if ((block<1) || (block>C_MEM_MAX_SIZE)) return false;
+	if (!mem_block[block]) {
+		// Allocate it 
+		mem_block[block] = malloc(1024*1024);
+		if (!mem_block[block]) E_Exit("XMS: Failed to allocate XMS block.");
+		else LOG(LOG_ERROR,"XMS: Allocated big block %d.",block);
+		// Map it with default handler
+		MEM_SetupMapping(PAGE_COUNT(1024*1024*block),PAGE_COUNT(1024*1024),mem_block[block]);
+	}
+	return true;
+};
+
+static Bit8u AllocateMem_ReadHandler(PhysPt pt) 
+{
+	// Allocate mem, set deafult handler
+	if (AllocateBigBlock(GETBIGBLOCKNR(pt))) {
+		// Pass request to new handler
+		return mem_readb(pt);
+	}
+	return 0;
+}
+
+static void AllocateMem_WriteHandler(PhysPt pt,Bit8u val) 
+{
+	// Allocate mem, if needed
+	if (AllocateBigBlock(GETBIGBLOCKNR(pt))) {
+		// Pass request to new handler
+		mem_writeb(pt,val);
+	}
+}
+
+// A20 Line Handlers
+static Bit8u controlport_data = 0;
+
+static void write_p92(Bit32u port,Bit8u val) {	
+	// Bit 0 = system reset (switch back to real mode)
+	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
+	if ((val&2) & !(controlport_data&2)) {
+		// ensable HMA 
+		for (Bitu p=PAGE_COUNT(1024*1024);p<PAGE_COUNT(1088*1024);p++) {
+			ReadHostTable[p]=0;
+			WriteHostTable[p]=0;
+			ReadHandlerTable[p]=&AllocateMem_ReadHandler;
+			WriteHandlerTable[p]=&AllocateMem_WriteHandler;
+		}
+	};	
+	if (!(val&2) && (controlport_data&2)) {
+		// disable HMA
+		MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
+	};		
+	controlport_data = val;
+};
+
+static Bit8u read_p92(Bit32u port) {
+	return controlport_data;
+};
+
+static void MEM_ShutDown(Section * sec) {
+	for (Bitu i=0; i<C_MEM_MAX_SIZE; i++) {
+		delete mem_block[i];
+		mem_block[i] = 0;
+	};
+	delete memory;
+};
 
 void MEM_Init(Section * sect) {
 	/* Init all tables */
@@ -242,6 +323,20 @@ void MEM_Init(Section * sect) {
 	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);
 	/* Setup tables for HMA Area */
 	MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
+	// Setup default handlers for unallocated xms
+	for (Bitu p=PAGE_COUNT(1024*1024);p<MAX_PAGES;p++) {
+		ReadHostTable[p]=0;
+		WriteHostTable[p]=0;
+		ReadHandlerTable[p]=&AllocateMem_ReadHandler;
+		WriteHandlerTable[p]=&AllocateMem_WriteHandler;
+	}
+	// clear unallocated memory blocks
+	for (i=0; i<C_MEM_MAX_SIZE; i++) mem_block[i] = 0;
+	// A20 Line - PS/2 system control port A
+	IO_RegisterWriteHandler(0x92,write_p92,"Control Port");
+	IO_RegisterReadHandler(0x92,read_p92,"Control Port");
+	/* shutdown function */
+	sect->AddDestroyFunction(&MEM_ShutDown);
 }
 
 
