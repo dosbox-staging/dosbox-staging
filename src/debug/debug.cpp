@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.52 2004-01-27 14:52:28 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.53 2004-04-24 09:20:11 harekiet Exp $ */
 
 #include "programs.h"
 
@@ -535,35 +535,26 @@ void CBreakpoint::ShowList(void)
 bool DEBUG_Breakpoint(void)
 {
 	/* First get the phyiscal address and check for a set Breakpoint */
-//	PhysPt where=SegPhys(cs)+reg_eip-1;
-	PhysPt where=GetAddress(SegValue(cs),reg_eip-1);
-	if (!CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip-1)) return false;
+	PhysPt where=GetAddress(SegValue(cs),reg_eip);
+	if (!CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) return false;
 	// Found. Breakpoint is valid
-	reg_eip -= 1;
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
-//	exitLoop = true;
-//	DEBUG_Enable();
 	return true;
 };
 
 bool DEBUG_IntBreakpoint(Bit8u intNum)
 {
 	/* First get the phyiscal address and check for a set Breakpoint */
-//	PhysPt where=SegPhys(cs)+reg_eip-2;
-	PhysPt where=GetAddress(SegValue(cs),reg_eip-2);
+	PhysPt where=GetAddress(SegValue(cs),reg_eip);
 	if (!CBreakpoint::CheckIntBreakpoint(where,intNum,reg_ah)) return false;
 	// Found. Breakpoint is valid
-	reg_eip -= 2;
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
-//	exitLoop = true;
-//	DEBUG_Enable();
 	return true;
 };
 
 static bool StepOver()
 {
 	exitLoop = false;
-//	PhysPt start=SegPhys(cs)+reg_eip;
 	PhysPt start=GetAddress(SegValue(cs),reg_eip);
 	char dline[200];Bitu size;
 	size=DasmI386(dline, start, reg_eip, cpu.code.big);
