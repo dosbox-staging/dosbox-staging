@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.80 2004-10-02 11:31:47 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.81 2004-11-09 21:35:50 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -194,6 +194,9 @@ static SDL_Block sdl;
 static void CaptureMouse(void);
 
 extern char * RunningProgram;
+//Globals for keyboard initialisation
+bool startup_state_numlock=false;
+bool startup_state_capslock=false;
 void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 	char title[200]={0};
 	static Bits internal_cycles=0;
@@ -825,7 +828,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.height=768;
 #endif
 	}
-    sdl.mouse.autoenable=section->Get_bool("autolock");
+	sdl.mouse.autoenable=section->Get_bool("autolock");
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	const char * output=section->Get_string("output");
@@ -893,6 +896,10 @@ static void GUI_StartUp(Section * sec) {
 #else
 	MAPPER_AddHandler(PauseDOSBox,MK_pause,0,"pause","Pause");
 #endif
+	/* Get Keyboard state of numlock and capslock */
+	SDLMod keystate = SDL_GetModState();
+	if(keystate&KMOD_NUM) startup_state_numlock = true;
+	if(keystate&KMOD_CAPS) startup_state_capslock = true;
 }
 
 void Mouse_AutoLock(bool enable) {

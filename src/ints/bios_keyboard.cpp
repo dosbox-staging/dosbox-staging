@@ -438,17 +438,26 @@ static Bitu INT16_Handler(void) {
 	return CBRET_NONE;
 }
 
+//Keyboard initialisation. src/gui/sdlmain.cpp
+extern bool startup_state_numlock;
+extern bool startup_state_capslock;
+
 static void InitBiosSegment(void) {
 	/* Setup the variables for keyboard in the bios data segment */
 	mem_writew(BIOS_KEYBOARD_BUFFER_START,0x1e);
 	mem_writew(BIOS_KEYBOARD_BUFFER_END,0x3e);
 	mem_writew(BIOS_KEYBOARD_BUFFER_HEAD,0x1e);
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,0x1e);
-	mem_writeb(BIOS_KEYBOARD_FLAGS1,0);
+	Bit8u flag1 = 0;
+	Bit8u leds = 16; /* Ack recieved */
+	if(startup_state_capslock) { flag1|=0x40; leds|=0x04;}
+	if(startup_state_numlock){ flag1|=0x20; leds|=0x02;}
+	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
-	mem_writeb(BIOS_KEYBOARD_FLAGS3,16);	/* Enhanced keyboard installed */
+	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
 	mem_writeb(BIOS_KEYBOARD_TOKEN,0);
-	mem_writeb(BIOS_KEYBOARD_LEDS,16);
+	mem_writeb(BIOS_KEYBOARD_LEDS,leds);
+
 }
 
 void BIOS_SetupKeyboard(void) {
