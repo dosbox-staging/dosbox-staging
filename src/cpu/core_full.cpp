@@ -68,7 +68,7 @@ Bits CPU_Core_Full_Run(void) {
 		cycle_count++;
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
-			LEAVECORE;
+			FillFlags();
 			return debugCallback;
 		};
 #endif
