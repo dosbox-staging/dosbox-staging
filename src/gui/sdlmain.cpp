@@ -497,8 +497,8 @@ int main(int argc, char* argv[]) {
 		sdl.joy=SDL_JoystickOpen(0);
 		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(0),SDL_JoystickNumAxes(sdl.joy),SDL_JoystickNumButtons(sdl.joy));
 		JOYSTICK_Enable(0,true);
+		}
 #endif
-	}
 /* Start dosbox up */
 	DOSBOX_StartUp();	
 	}
