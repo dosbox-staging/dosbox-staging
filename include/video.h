@@ -33,6 +33,8 @@ struct GFX_PalEntry {
 
 #define GFX_FIXED_BPP	0x01
 #define GFX_RESIZEABLE	0x02
+#define GFX_SHADOW		0x04
+
 
 #define MODE_SET 0x01
 #define MODE_FULLSCREEN 0x02
