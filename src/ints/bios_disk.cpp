@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: bios_disk.cpp,v 1.17 2005-02-11 21:17:04 qbix79 Exp $ */
+
 #include "dosbox.h"
 #include "callback.h"
 #include "bios.h"
@@ -25,6 +27,7 @@
 #include "mapper.h"
 
 #define MAX_SWAPPABLE_DISKS 20
+#define MAX_DISK_IMAGES 4
 
 diskGeo DiskGeometryList[] = {
 	{160,  8, 1, 40, 0},
@@ -48,7 +51,7 @@ DOS_DTA *imgDTA;
 bool killRead;
 
 /* 2 floppys and 2 harddrives, max */
-imageDisk *imageDiskList[4];
+imageDisk *imageDiskList[MAX_DISK_IMAGES];
 imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
 Bits swapPosition;
 
@@ -275,15 +278,25 @@ static Bitu INT13_DiskHandler(void) {
 	//LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
 	switch(reg_ah) {
 	case 0x0: /* Reset disk */
-		if(driveInactive(drivenum)) return CBRET_NONE;
-		last_status = 0x00;
-        CALLBACK_SCF(false);
+		{
+			bool any_images = false;
+			for(Bitu i = 0;i < MAX_DISK_IMAGES;i++) {
+				if(imageDiskList[i]) any_images=true;
+			}
+			/* if there aren't any diskimages (so only localdrives and virtual drives)
+			 * always succeed on reset disk. If there are diskimages then and only then
+			 * do real checks
+			 */
+			if(any_images && driveInactive(drivenum)) return CBRET_NONE;
+			last_status = 0x00;
+			CALLBACK_SCF(false);
+		}
         break;
 	case 0x1: /* Get status of last operation */
 
 		if(last_status != 0x00) {
 			reg_ah = last_status;
-		CALLBACK_SCF(true);
+			CALLBACK_SCF(true);
 		} else {
 			reg_ah = 0x00;
 			CALLBACK_SCF(false);
@@ -406,7 +419,6 @@ static Bitu INT13_DiskHandler(void) {
 void BIOS_SetupDisks(void) {
 /* TODO Start the time correctly */
 	call_int13=CALLBACK_Allocate();	
-	//CALLBACK_Setup(call_int13,&INT13_SmallHandler,CB_IRET);
 	CALLBACK_Setup(call_int13,&INT13_DiskHandler,CB_IRET,"Int 13 Bios disk");
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
 	int i;
@@ -438,4 +450,3 @@ void BIOS_SetupDisks(void) {
 	MAPPER_AddHandler(swapInNextDisk,MK_f4,MMOD1,"swapimg","Swap Image");
 	killRead = false;
 }
-
