@@ -106,14 +106,29 @@ static void write_p3d9(Bit32u port,Bit8u val) {
 		{
 			VGA_ATTR_SetPalette(0,(val & 0xf));
 			Bit8u pal_base=(val & 0x10) ? 0x08 : 0;
-			if (val & 0x020) {
-				VGA_ATTR_SetPalette(1,0x03+pal_base);
-				VGA_ATTR_SetPalette(2,0x05+pal_base);
-				VGA_ATTR_SetPalette(3,0x07+pal_base);
+			/* Check for BW Mode */
+			if (vga.cga.mode_control & 0x4) {
+				if (val & 0x20) {
+					VGA_ATTR_SetPalette(1,0x03+pal_base);
+					VGA_ATTR_SetPalette(2,0x04+pal_base);
+					VGA_ATTR_SetPalette(3,0x07+pal_base);
+				} else {
+					//TODO Maybe? will anyone ever use,
+					//will also need to setup a BW palette,but could put it behind normal cga...
+					VGA_ATTR_SetPalette(1,0x02+pal_base);
+					VGA_ATTR_SetPalette(2,0x04+pal_base);
+					VGA_ATTR_SetPalette(3,0x06+pal_base);
+				}
 			} else {
-				VGA_ATTR_SetPalette(1,0x02+pal_base);
-				VGA_ATTR_SetPalette(2,0x04+pal_base);
-				VGA_ATTR_SetPalette(3,0x06+pal_base);
+				if (val & 0x20) {
+					VGA_ATTR_SetPalette(1,0x03+pal_base);
+					VGA_ATTR_SetPalette(2,0x05+pal_base);
+					VGA_ATTR_SetPalette(3,0x07+pal_base);
+				} else {
+					VGA_ATTR_SetPalette(1,0x02+pal_base);
+					VGA_ATTR_SetPalette(2,0x04+pal_base);
+					VGA_ATTR_SetPalette(3,0x06+pal_base);
+				}
 			}
 		}
 		break;
