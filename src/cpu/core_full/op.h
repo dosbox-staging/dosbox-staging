@@ -586,6 +586,7 @@ switch (inst.code.op) {
 		FillFlags();
 		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
 		inst.op1.d&=~(1 << (inst.op2.d & 31));
+		break;
 	case O_BSWAP:
 		BSWAP(inst.op1.d);
 		break;
