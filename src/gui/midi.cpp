@@ -203,14 +203,16 @@ void MIDI_RawOutByte(Bit8u data) {
 			midi.sysex.used=1;
 		}
 	}
-	midi.cmd_buf[midi.cmd_pos++]=data;
-	if (midi.cmd_len && midi.cmd_pos >= midi.cmd_len) {
-		if (midi.raw.handle) {
-			RawAddDelta();
-			RawAddData(midi.cmd_buf,midi.cmd_len);
+	if (midi.cmd_len) {
+		midi.cmd_buf[midi.cmd_pos++]=data;
+		if (midi.cmd_pos >= midi.cmd_len) {
+			if (midi.raw.handle) {
+				RawAddDelta();
+				RawAddData(midi.cmd_buf,midi.cmd_len);
+			}
+			midi.handler->PlayMsg(midi.cmd_buf);
+			midi.cmd_pos=1;		//Use Running status
 		}
-		midi.handler->PlayMsg(midi.cmd_buf);
-		midi.cmd_pos=1;		//Use Running status
 	}
 }
 
