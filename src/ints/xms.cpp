@@ -233,7 +233,7 @@ foundnew:
 					reg_bl=0xa4;	/* Src Offset invalid */
 					return CBRET_NONE;
 				}
-				if (block.length>=xms_handles[block.src_handle].size*1024U-block.src.offset) {
+				if (block.length>xms_handles[block.src_handle].size*1024U-block.src.offset) {
 					reg_ax=0;
 					reg_bl=0xa7;	/* Length invalid */
 					return CBRET_NONE;
@@ -254,7 +254,7 @@ foundnew:
 					reg_bl=0xa4;	/* Dest Offset invalid */
 					return CBRET_NONE;
 				}
-				if (block.length>=xms_handles[block.dest_handle].size*1024U-block.dest.offset) {
+				if (block.length>xms_handles[block.dest_handle].size*1024U-block.dest.offset) {
 					reg_ax=0;
 					reg_bl=0xa7;	/* Length invalid */
 					return CBRET_NONE;
