@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2004  The DOSBox Team
+ *  Copyright (C) 2002-2005  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.29 2004-10-12 16:21:22 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.30 2005-02-10 10:21:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <assert.h>

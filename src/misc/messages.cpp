@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2004  The DOSBox Team
+ *  Copyright (C) 2002-2005  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: messages.cpp,v 1.16 2005-02-03 10:17:44 qbix79 Exp $ */
+/* $Id: messages.cpp,v 1.17 2005-02-10 10:21:11 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

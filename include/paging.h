@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2004  The DOSBox Team
+ *  Copyright (C) 2002-2005  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.13 2004-12-22 19:49:24 harekiet Exp $ */
+/* $Id: paging.h,v 1.14 2005-02-10 10:20:47 qbix79 Exp $ */
 
 #ifndef _PAGING_H_
 #define _PAGING_H_
