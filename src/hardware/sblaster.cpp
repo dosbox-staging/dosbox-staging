@@ -224,14 +224,15 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
-			DSP_ChangeMode(MODE_NONE);
-			LOG(LOG_SB,LOG_NORMAL)("DMA deactivated,stopping output");
+			sb.mode=MODE_DMA_PAUSE;
+//			DSP_ChangeMode(MODE_DMA_PAUSE);
+			LOG(LOG_SB,LOG_NORMAL)("DMA masked,stopping output");
 		}
 	} else if (event==DMA_UNMASKED) {
-		if (sb.mode!=MODE_DMA && sb.dma.mode!=DSP_DMA_NONE) {
+		if (sb.mode==MODE_DMA_PAUSE && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
 			CheckDMAEnd();
-			LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output, auto %d block %X",chan->autoinit,chan->basecnt);
+			LOG(LOG_SB,LOG_NORMAL)("DMA unmasked,starting output, auto %d block %X",chan->autoinit,chan->basecnt);
 		}
 	}
 }
@@ -453,6 +454,7 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 
 static void DSP_DoDMATranfser(DMA_MODES mode,Bitu freq,bool stereo) {
 	char * type;
+	sb.mode=MODE_DMA_PAUSE;
 	sb.chan->FillUp();
 	sb.dma.left=sb.dma.total;
 	sb.dma.mode=mode;
@@ -670,7 +672,7 @@ static void DSP_DoCommand(void) {
 	case 0xd5:	/* Halt 16-bit DMA */
 //		DSP_ChangeMode(MODE_NONE);
 //		Games sometimes already program a new dma before stopping, gives noise
-		sb.mode=MODE_DMA;
+		sb.mode=MODE_DMA_PAUSE;
 		PIC_RemoveEvents(END_DMA_Event);
 		break;
 	case 0xd1:	/* Enable Speaker */
