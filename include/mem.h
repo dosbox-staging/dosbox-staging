@@ -26,37 +26,27 @@ typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
 typedef Bit32u RealPt;
 
-typedef Bit8u (*MEMORY_ReadHandler)(PhysPt pt);
-typedef void (*MEMORY_WriteHandler)(PhysPt pt,Bit8u val);
+typedef Bits MemHandle;
 
-#define PAGE_KB	16
-#define PAGE_SIZE (PAGE_KB*1024)
-#define PAGE_SHIFT 14
-#define PAGE_COUNT(A) (A & ((1 << PAGE_SHIFT)-1) ? 1+(A >> PAGE_SHIFT) : (A >> PAGE_SHIFT) )
-
-extern HostPt ReadHostTable[];
-extern HostPt WriteHostTable[];
-extern MEMORY_ReadHandler ReadHandlerTable[];
-extern MEMORY_WriteHandler WriteHandlerTable[];
-
-
-INLINE Bit16u PAGES(Bit32u bytes) {
-	if ((bytes & 4095) == 0) return (Bit16u)(bytes>>12);
-	return (Bit16u)(1+(bytes>>12));
-}
-
-void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEMORY_WriteHandler write);
-void MEM_ClearPageHandlers(Bitu startpage,Bitu pages);
-
-void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data);
-void MEM_ClearMapping(Bitu startpage,Bitu pages);
+#define MEM_PAGESIZE 4096
 
 bool MEM_A20_Enabled(void);
 void MEM_A20_Enable(bool enable);
 
-Bitu MEM_TotalSize(void);			//Memory size in KB 
+/* Memory management / EMS mapping */
+HostPt MEM_GetBlockPage(void);
+Bitu MEM_FreeTotal(void);			//Free 4 kb pages
+Bitu MEM_FreeLargest(void);			//Largest free 4 kb pages block
+Bitu MEM_TotalPages(void);			//Total amount of 4 kb pages
+MemHandle MEM_AllocatePages(Bitu pages,bool sequence);
+PhysPt MEM_AllocatePage(void);
+void MEM_ReleasePages(MemHandle handle);
+bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence);
+void MEM_MapPages(Bitu phys_page,MemHandle mem,Bitu mem_page,Bitu pages);
+void MEM_UnmapPages(Bitu phys_page,Bitu pages);
 
-extern HostPt memory;
+
+MemHandle MEM_NextHandle(MemHandle handle);
 
 /* 
 	The folowing six functions are used everywhere in the end so these should be changed for
@@ -88,9 +78,9 @@ INLINE void writed(HostPt off,Bit32u val) {
 	off[3]=(Bit8u)(val >> 24);
 };
 
-#define MLEB(_MLE_VAL_)   (_MLE_VAL_)
-#define MLEW(_MLE_VAL_) ( (_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
-#define MLED(_MLE_VAL_) ( (_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
+#define MLEB(_MLE_VAL_) (_MLE_VAL_)
+#define MLEW(_MLE_VAL_) ((_MLE_VAL_ >> 8) | (_MLE_VAL_ << 8))
+#define MLED(_MLE_VAL_) ((_MLE_VAL_ >> 24)|((_MLE_VAL_ >> 8)&0xFF00)|((_MLE_VAL_ << 8)&0xFF0000)|((_MLE_VAL_ << 24)&0xFF000000))
 
 #else
 
@@ -125,8 +115,6 @@ INLINE void writed(HostPt off,Bit32u val) {
 	if (sizeof(VAR_)==4) VAR_=MLED(VAL_);
 
 /* The Folowing six functions are slower but they recognize the paged memory system */
-//TODO maybe make em inline to go a bit faster 
-
 
 Bit8u  mem_readb(PhysPt pt);
 Bit16u mem_readw(PhysPt pt);
@@ -136,62 +124,21 @@ void mem_writeb(PhysPt pt,Bit8u val);
 void mem_writew(PhysPt pt,Bit16u val);
 void mem_writed(PhysPt pt,Bit32u val);
 
-INLINE void mem_writeb_inline(PhysPt pt,Bit8u val) {
-	if (WriteHostTable[pt >> PAGE_SHIFT]) writeb(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
-	else {
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt,val);
-	}
-}
+void phys_writeb(PhysPt addr,Bit8u val);
+void phys_writew(PhysPt addr,Bit16u val);
+void phys_writed(PhysPt addr,Bit32u val);
 
-INLINE void mem_writew_inline(PhysPt pt,Bit16u val) {
-	if (WriteHostTable[pt >> PAGE_SHIFT]) writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
-	else {
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
-	}
-}
-
-INLINE void mem_writed_inline(PhysPt pt,Bit32u val) {
-	if (WriteHostTable[pt >> PAGE_SHIFT]) writed(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
-	else {
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >>  8) & 0xff)  );
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+2,(Bit8u)((val >> 16) & 0xff)  );
-		WriteHandlerTable[pt >> PAGE_SHIFT](pt+3,(Bit8u)((val >> 24) & 0xff)  );
-	}
-}
-
-INLINE Bit8u mem_readb_inline(PhysPt pt) {
-	if (ReadHostTable[pt >> PAGE_SHIFT]) return readb(ReadHostTable[pt >> PAGE_SHIFT]+pt);
-	else {
-		return ReadHandlerTable[pt >> PAGE_SHIFT](pt);
-	}
-}
-
-INLINE Bit16u mem_readw_inline(PhysPt pt) {
-	if (ReadHostTable[pt >> PAGE_SHIFT]) return readw(ReadHostTable[pt >> PAGE_SHIFT]+pt);
-	else {
-		return 
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
-	}
-}
-
-INLINE Bit32u mem_readd_inline(PhysPt pt){
-	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
-	else {
-		return 
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0))       |
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8  |
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+2)) << 16 |
-			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
-	}
-}
+/* These don't check for alignment, better be sure it's correct */
+Bit32u phys_page_readd(Bitu page,Bitu off);
 
 void MEM_BlockWrite(PhysPt pt,void * data,Bitu size);
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size);
 void MEM_BlockCopy(PhysPt dest,PhysPt src,Bitu size);
 void MEM_StrCopy(PhysPt pt,char * data,Bitu size);
+
+void mem_memcpy(PhysPt dest,PhysPt src,Bitu size);
+Bitu mem_strlen(PhysPt pt);
+void mem_strcpy(PhysPt dest,PhysPt src);
 
 /* The folowing functions are all shortcuts to the above functions using physical addressing */
 
@@ -215,13 +162,6 @@ INLINE void real_writed(Bit16u seg,Bit16u off,Bit32u val) {
 	mem_writed(((seg<<4)+off),val);
 }
 
-INLINE HostPt HostMake(Bit16u seg,Bit16u off) {
-	return memory+(seg<<4)+off;
-}
-
-INLINE HostPt Phys2Host(PhysPt pt) {
-	return memory+pt;
-}
 
 INLINE Bit16u RealSeg(RealPt pt) {
 	return (Bit16u)(pt>>16);
@@ -237,10 +177,6 @@ INLINE PhysPt Real2Phys(RealPt pt) {
 
 INLINE PhysPt PhysMake(Bit16u seg,Bit16u off) {
 	return (seg<<4)+off;
-}
-
-INLINE HostPt Real2Host(RealPt pt) {
-	return memory+(RealSeg(pt)<<4) +RealOff(pt);
 }
 
 INLINE RealPt RealMake(Bit16u seg,Bit16u off) {
