@@ -55,12 +55,14 @@ void DOS_SetupTables(void) {
 	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
 	mem_writeb(Real2Phys(dos.tables.indosflag),0);
 	/* Create the DOS Info Block */
-	dos_infoblock.SetLocation(DOS_GetMemory(6));
+	dos_infoblock.SetLocation(DOS_GetMemory(1+(sizeof(DOS_InfoBlock::sDIB)/16)));
 	/* Create a fake SFT, so programs think there are 100 file handles */
 	seg=DOS_GetMemory(1);
 	real_writed(seg,0,0xffffffff);		//Last File Table
 	real_writew(seg,4,100);				//File Table supports 100 files
 	dos_infoblock.SetfirstFileTable(RealMake(seg,0));
+	/* Set buffers to a nice value */
+	dos_infoblock.SetBuffers(50,50);
 }
 
 

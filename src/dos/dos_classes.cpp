@@ -73,6 +73,12 @@ void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table){
 	sSave(sDIB,firstFileTable,_first_table);
 }
 
+void DOS_InfoBlock::SetBuffers(Bit16u x,Bit16u y) {
+	sSave(sDIB,buffers_x,x);
+	sSave(sDIB,buffers_y,y);
+
+}
+
 RealPt DOS_InfoBlock::GetPointer(void)
 {
 	return RealMake(seg,offsetof(sDIB,firstDPB));
@@ -164,7 +170,7 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 		if(createchildpsp)
 		{	//copy obeying not inherit flag.(but dont duplicate them)
 			bool allowCopy = (handle==0) || ((handle>0) && (FindEntryByHandle(handle)==0xff));
-			if(Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
+			if((handle<DOS_FILES) && Files[handle] && !(Files[handle]->flags & DOS_NOT_INHERIT) && allowCopy)
 			{    
 				SetFileHandle(i,handle);
 			}
