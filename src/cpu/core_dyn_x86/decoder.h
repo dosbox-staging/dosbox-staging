@@ -298,6 +298,25 @@ static void dyn_fill_ea(bool addseg=true) {
 #include "helpers.h"
 #include "string.h"
 
+static void DynRunException(void) {
+	CPU_Exception(cpu.exception.which,cpu.exception.error);
+}
+
+static void dyn_check_bool_exception(DynReg * check) {
+	Bit8u * branch;DynState state;
+	gen_dop_byte(DOP_OR,check,0,check,0);
+	branch=gen_create_branch(BR_Z);
+	dyn_savestate(&state);
+	dyn_flags_gen_to_host();
+	dyn_reduce_cycles();
+	dyn_set_eip_last();
+	dyn_save_critical_regs();
+	gen_call_function(&DynRunException,"");
+	gen_return(BR_Normal);
+	dyn_loadstate(&state);
+	gen_fill_branch(branch);
+}
+
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];
 	if (decode.modrm.mod<3) {
@@ -589,7 +608,6 @@ static void dyn_grp2_ev(grp2_types type) {
 }
 
 static void dyn_grp3_eb(void) {
-	DynState state;Bit8u * branch;
 	dyn_get_modrm();DynReg * src;Bit8u src_i;
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
@@ -623,18 +641,7 @@ static void dyn_grp3_eb(void) {
 		gen_releasereg(DREG(EAX));
 		gen_call_function((decode.modrm.reg==6) ? (void *)&dyn_helper_divb : (void *)&dyn_helper_idivb,
 			"%Rd%Drl",DREG(TMPB),DREG(TMPB));
-		gen_dop_word(DOP_OR,true,DREG(TMPB),DREG(TMPB));
-		branch=gen_create_branch(BR_Z);
-		dyn_savestate(&state);
-		dyn_reduce_cycles();	
-		dyn_set_eip_last();
-		dyn_flags_gen_to_host();
-		dyn_save_critical_regs();
-		gen_call_function((void *)&CPU_Exception,"%Id%Id",0,0);
-		dyn_flags_host_to_gen();
-		gen_return(BR_Normal);
-		dyn_loadstate(&state);
-		gen_fill_branch(branch);
+		dyn_check_bool_exception(DREG(TMPB));
 		goto skipsave;
 	}
 	/* Save the result if memory op */
@@ -644,7 +651,6 @@ skipsave:
 }
 
 static void dyn_grp3_ev(void) {
-	DynState state;Bit8u * branch;
 	dyn_get_modrm();DynReg * src;
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();src=DREG(TMPW);
@@ -675,19 +681,8 @@ static void dyn_grp3_ev(void) {
 		void * func=(decode.modrm.reg==6) ?
 			(decode.big_op ? (void *)&dyn_helper_divd : (void *)&dyn_helper_divw) :
 			(decode.big_op ? (void *)&dyn_helper_idivd : (void *)&dyn_helper_idivw);
-		gen_call_function(func,"%Rd%Drd",DREG(TMPW),DREG(TMPW));
-		gen_dop_word(DOP_OR,true,DREG(TMPW),DREG(TMPW));
-		branch=gen_create_branch(BR_Z);
-		dyn_savestate(&state);
-		dyn_reduce_cycles();	
-		dyn_set_eip_last();
-		dyn_flags_gen_to_host();
-		dyn_save_critical_regs();
-		gen_call_function((void *)&CPU_Exception,"%Id%Id",0,0);
-		dyn_flags_host_to_gen();
-		gen_return(BR_Normal);
-		dyn_loadstate(&state);
-		gen_fill_branch(branch);
+		gen_call_function(func,"%Rd%Drd",DREG(TMPB),DREG(TMPW));
+		dyn_check_bool_exception(DREG(TMPB));
 		goto skipsave;
 	}
 	/* Save the result if memory op */
@@ -712,24 +707,6 @@ static void dyn_mov_ev_seg(void) {
 static void dyn_synch_eip(void) {
 	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.code-decode.code_start);
-}
-
-static void DynRunException(void) {
-	CPU_Exception(cpu.exception.which,cpu.exception.error);
-}
-static void dyn_check_bool_exception(DynReg * check) {
-	Bit8u * branch;DynState state;
-	gen_dop_byte(DOP_OR,check,0,check,0);
-	branch=gen_create_branch(BR_Z);
-	dyn_savestate(&state);
-	dyn_flags_gen_to_host();
-	dyn_reduce_cycles();
-	dyn_set_eip_last();
-	dyn_save_critical_regs();
-	gen_call_function((void *)&DynRunException,"");
-	gen_return(BR_Normal);
-	dyn_loadstate(&state);
-	gen_fill_branch(branch);
 }
 
 static void dyn_load_seg(SegNames seg,DynReg * src) {
