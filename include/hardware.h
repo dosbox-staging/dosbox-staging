@@ -19,8 +19,13 @@
 #ifndef _HARDWARE_H_
 #define _HARDWARE_H_
 
+class Section;
+enum OPL_Mode {
+	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3
+};
 
-
+void OPL_Init(Section* sec,OPL_Mode,Bitu rate);
+void CMS_Init(Section* sec,Bitu rate);
 
 #endif
 
