@@ -200,6 +200,8 @@ void INT10_GetSingleDacRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * bl
 void INT10_SetDACBlock(Bit16u index,Bit16u count,PhysPt data);
 void INT10_GetDACBlock(Bit16u index,Bit16u count,PhysPt data);
 
+/* Mouse pointer */
+void INT10_SetGfxControllerToDefault(void);
 
 /* Sup Groups */
 void INT10_SetupRomMemory(void);

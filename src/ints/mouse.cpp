@@ -40,6 +40,27 @@ struct button_event {
 #define POS_X (Bit16s)(mouse.x)
 #define POS_Y (Bit16s)(mouse.y)
 
+#define CURSORX 16
+#define CURSORY 16
+#define HIGHESTBIT (1<<(CURSORX-1))
+
+static Bit16u defaultScreenMask[CURSORY] = {
+		0x3FFF, 0x1FFF, 0x0FFF, 0x07FF,
+		0x03FF, 0x01FF, 0x00FF, 0x007F,
+		0x003F, 0x001F, 0x01FF, 0x00FF,
+		0x30FF, 0xF87F, 0xF87F, 0xFCFF
+};
+
+static Bit16u defaultCursorMask[CURSORY] = {
+		0x0000, 0x4000, 0x6000, 0x7000,
+		0x7800, 0x7C00, 0x7E00, 0x7F00,
+		0x7F80, 0x7C00, 0x6C00, 0x4600,
+		0x0600, 0x0300, 0x0300, 0x0000
+};
+
+static Bit16u userdefScreenMask[CURSORY];
+static Bit16u userdefCursorMask[CURSORY];
+
 static struct {
 	Bit16u buttons;
 	Bit16u times_pressed[MOUSE_BUTTONS];
@@ -57,6 +78,14 @@ static struct {
 	Bit32u events;
 	Bit16u sub_seg,sub_ofs;
 	Bit16u sub_mask;
+
+	bool	background;
+	Bit16s	backposx, backposy;
+	Bit8u	backData[CURSORX*CURSORY];
+	Bit16u*	screenMask;
+	Bit16u* cursorMask;
+	Bit16s	clipx,clipy;
+	Bit16s  hotx,hoty;
 } mouse;
 
 #define X_MICKEY 8
@@ -79,8 +108,138 @@ INLINE void Mouse_AddEvent(Bit16u type) {
 	PIC_ActivateIRQ(12);
 }
 
-static void DrawCursor() {
+static gfxReg[9];
+
+void SaveVgaRegisters()
+{
+	for (int i=0; i<9; i++) {
+		IO_Write	(0x3CE,i);
+		gfxReg[i] = IO_Read(0x3CF);
+	};
+	// Set default
+	INT10_SetGfxControllerToDefault();
+};
+
+void RestoreVgaRegisters()
+{
+	for (int i=0; i<9; i++) {
+		IO_Write(0x3CE,i);
+		IO_Write(0x3CF,gfxReg[i]);
+	};
+};
+
+void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx1, Bit16u& addx2, Bit16u& addy)
+{
+	addx1 = addx2 = addy = 0;
+	// Clip up
+	if (y1<0) {
+		addy += (-y1);
+		y1 = 0;
+	}
+	// Clip down
+	if (y2>mouse.clipy) {
+		y2 = mouse.clipy;		
+	};
+	// Clip left
+	if (x1<0) {
+		addx1 += (-x1);
+		x1 = 0;
+	};
+	// Clip right
+	if (x2>mouse.clipx) {
+		addx2 = x2 - mouse.clipx;
+		x2 = mouse.clipx;
+	};
+};
+
+void RestoreCursorBackground()
+{
 	if (mouse.shown<0) return;
+
+	SaveVgaRegisters();
+	if (mouse.background) {
+		// Restore background
+		Bit16s x,y;
+		Bit16u addx1,addx2,addy;
+		Bit16u dataPos	= 0;
+		Bit16s x1		= mouse.backposx;
+		Bit16s y1		= mouse.backposy;
+		Bit16s x2		= x1 + CURSORX - 1;
+		Bit16s y2		= y1 + CURSORY - 1;	
+
+		ClipCursorArea(x1, x2, y1, y2, addx1, addx2, addy);
+
+		dataPos = addy * CURSORX;
+		for (y=y1; y<=y2; y++) {
+			dataPos += addx1;
+			for (x=x1; x<=x2; x++) {
+				INT10_PutPixel(x,y,0,mouse.backData[dataPos++]);
+			};
+			dataPos += addx2;
+		};
+		mouse.background = false;
+	};
+	RestoreVgaRegisters();
+};
+
+void DrawCursor() {
+	
+	if (mouse.shown<0) return;
+
+	// Get Clipping ranges
+	VGAMODES * curmode=GetCurrentMode();	
+	if (!curmode) return;
+	mouse.clipx = curmode->swidth-1;
+	mouse.clipy = curmode->sheight-1;
+
+	RestoreCursorBackground();
+
+	SaveVgaRegisters();
+
+	// Save Background
+	Bit16s x,y;
+	Bit16u addx1,addx2,addy;
+	Bit16u dataPos	= 0;
+	Bit16s x1		= POS_X - mouse.hotx;
+	Bit16s y1		= POS_Y - mouse.hoty;
+	Bit16s x2		= x1 + CURSORX - 1;
+	Bit16s y2		= y1 + CURSORY - 1;	
+
+	ClipCursorArea(x1,x2,y1,y2, addx1, addx2, addy);
+
+	dataPos = addy * CURSORX;
+	for (y=y1; y<=y2; y++) {
+		dataPos += addx1;
+		for (x=x1; x<=x2; x++) {
+			INT10_GetPixel(x,y,0,&mouse.backData[dataPos++]);
+		};
+		dataPos += addx2;
+	};
+	mouse.background= true;
+	mouse.backposx	= POS_X - mouse.hotx;
+	mouse.backposy	= POS_Y - mouse.hoty;
+
+	// Draw Mousecursor
+	dataPos = addy * CURSORX;
+	for (y=y1; y<=y2; y++) {
+		Bit16u scMask = mouse.screenMask[addy+y-y1];
+		Bit16u cuMask = mouse.cursorMask[addy+y-y1];
+		if (addx1>0) { scMask<<=addx1; cuMask<<=addx1; dataPos += addx1; };
+		for (x=x1; x<=x2; x++) {
+			Bit8u pixel = 0;
+			// ScreenMask
+			if (scMask & HIGHESTBIT) pixel = mouse.backData[dataPos];
+			scMask<<=1;
+			// CursorMask
+			if (cuMask & HIGHESTBIT) pixel = pixel ^ 0x0F;
+			cuMask<<=1;
+			// Set Pixel
+			INT10_PutPixel(x,y,0,pixel);
+			dataPos++;
+		};
+		dataPos += addx2;
+	};
+	RestoreVgaRegisters();
 }
 
 void Mouse_CursorMoved(float x,float y) {
@@ -158,6 +317,12 @@ static void  mouse_reset(void) {
 	mouse.sub_mask=0;
 	mouse.sub_seg=0;
 	mouse.sub_ofs=0;
+
+	mouse.hotx		 = 0;
+	mouse.hoty		 = 0;
+	mouse.background = false;
+	mouse.screenMask = defaultScreenMask;
+	mouse.cursorMask = defaultCursorMask;
 }
 
 
@@ -172,8 +337,10 @@ static Bitu INT33_Handler(void) {
 	case 0x01:	/* Show Mouse */
 		mouse.shown++;
 		if (mouse.shown>0) mouse.shown=0;
+		DrawCursor();
 		break;
 	case 0x02:	/* Hide Mouse */
+		RestoreCursorBackground();
 		mouse.shown--;
 		break;
 	case 0x03:	/* Return position and Button Status */
@@ -184,6 +351,7 @@ static Bitu INT33_Handler(void) {
 	case 0x04:	/* Position Mouse */
 		mouse.x=(float)reg_cx;
 		mouse.y=(float)reg_dx;
+		DrawCursor();
 		break;
 	case 0x05:	/* Return Button Press Data */
 		{
@@ -220,7 +388,16 @@ static Bitu INT33_Handler(void) {
 		mouse.max_y=reg_dx;
 		break;
 	case 0x09:	/* Define GFX Cursor */
-		LOG_WARN("MOUSE:Define gfx cursor not supported");
+		{
+			PhysPt src = SegPhys(es)+reg_dx;
+			MEM_BlockRead(src          ,userdefScreenMask,CURSORY*2);
+			MEM_BlockRead(src+CURSORY*2,userdefCursorMask,CURSORY*2);
+			mouse.screenMask = userdefScreenMask;
+			mouse.cursorMask = userdefCursorMask;
+			mouse.hotx		 = reg_bx;
+			mouse.hoty		 = reg_cx;
+			DrawCursor();
+		}
 		break;
 	case 0x0a:	/* Define Text Cursor */
 		/* Don't see much need for supporting this */

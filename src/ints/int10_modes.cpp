@@ -411,3 +411,15 @@ void INT10_SetVideoMode(Bit8u mode) {
 	/* Set some interrupt vectors */
 	RealSetVec(0x43,int10_romarea.font_8_first);
 };
+
+void INT10_SetGfxControllerToDefault()
+// reset gfx controller to default values
+// needed for drawing mouse pointer
+{
+	Bit8u line=FindVideoMode(real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE)&127);
+	// Set Grafx Ctl
+	for(Bit8u i=0;i<=GRDC_MAX_REG;i++) {
+		IO_Write(VGAREG_GRDC_ADDRESS,(Bit8u)i);
+		IO_Write(VGAREG_GRDC_DATA,grdc_regs[vga_modes[line].grdcmodel][i]);
+	}	
+};
