@@ -131,6 +131,7 @@ static void EATREE(Bitu _rm){
 			break;
 		case 0x05:  /* FISUBR */
 			FPU_FSUBR(TOP,8);
+			break;
 		case 0x06: /* FIDIV */
 			FPU_FDIV(TOP, 8);
 			break;
@@ -312,6 +313,12 @@ void FPU_ESC1_Normal(Bitu rm) {
 		break;
 	case 0x06:
 		switch(sub){
+		case 0x00:   /* F2XM1 */
+			FPU_F2XM1();
+			break;
+		case 0x01:	  /* FYL2X */
+			FPU_FYL2X();
+			break;
 		case 0x02:	 /* FPTAN  */
 			FPU_FPTAN();
 			break;
@@ -341,6 +348,9 @@ void FPU_ESC1_Normal(Bitu rm) {
 				fpu.regs[TOP].d=static_cast<double>(temp);
 			}			
 			//TODO
+			break;
+		case 0x05:		/* FSCALE */
+			FPU_FSCALE();
 			break;
 		case 0x06:		/* FSIN */
 			FPU_FSIN();
@@ -638,8 +648,11 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 		mem_writed(addr,static_cast<Bit32s>(FROUND(fpu.regs[TOP].d)));	
 		FPU_FPOP();
 		break;
+	case 0x04:   /* FBLD packed BCD */
+		//Don't think anybody will ever use this.
 	default:
 		LOG(LOG_FPU,LOG_WARN)("ESC 7 EA:Unhandled group %d subfunction %d",group,sub);
+		break;
 	}
 }
 
