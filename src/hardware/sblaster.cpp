@@ -936,7 +936,7 @@ static Bit8u MIXER_Read(void) {
 }
 
 
-static Bit8u read_sb(Bit32u port) {
+static Bitu read_sb(Bitu port,Bitu iolen) {
 	switch (port-sb.hw.base) {
 	case MIXER_INDEX:
 		return sb.mixer.index;
@@ -968,7 +968,7 @@ static Bit8u read_sb(Bit32u port) {
 	return 0xff;
 }
 
-static void write_sb(Bit32u port,Bit8u val) {
+static void write_sb(Bitu port,Bitu val,Bitu iolen) {
 	switch (port-sb.hw.base) {
 	case DSP_RESET:
 		DSP_DoReset(val);
@@ -1062,8 +1062,8 @@ void SBLASTER_Init(Section* sec) {
 
 	for (i=4;i<0xf;i++) {
 		if (i==8 || i==9) continue;
-		IO_RegisterReadHandler(sb.hw.base+i,read_sb,"SB");
-		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,"SB");
+		IO_RegisterReadHandler(sb.hw.base+i,read_sb,IO_MB);
+		IO_RegisterWriteHandler(sb.hw.base+i,write_sb,IO_MB);
 	}
 	PIC_RegisterIRQ(sb.hw.irq,0,"SB");
 	DSP_Reset();

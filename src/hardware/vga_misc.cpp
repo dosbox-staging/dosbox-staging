@@ -23,17 +23,12 @@
 
 static Bit8u flip=0;
 
-void write_p3d4_vga(Bit32u port,Bit8u val);
-Bit8u read_p3d4_vga(Bit32u port);
-void write_p3d5_vga(Bit32u port,Bit8u val);
-Bit8u read_p3d5_vga(Bit32u port);
+void write_p3d4_vga(Bitu port,Bitu val,Bitu iolen);
+Bitu read_p3d4_vga(Bitu port,Bitu iolen);
+void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen);
+Bitu read_p3d5_vga(Bitu port,Bitu iolen);
 
-void write_p3d4_cga(Bit32u port,Bit8u val);
-Bit8u read_p3d4_cga(Bit32u port);
-void write_p3d5_cga(Bit32u port,Bit8u val);
-Bit8u read_p3d5_cga(Bit32u port);
-
-static Bit8u read_p3da(Bit32u port) {
+static Bitu read_p3da(Bitu port,Bitu iolen) {
 	vga.internal.attrindex=false;
 	if (vga.config.retrace) {
 		switch (machine) {
@@ -54,32 +49,32 @@ static Bit8u read_p3da(Bit32u port) {
 }
 
 
-static void write_p3c2(Bit32u port,Bit8u val) {
+static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
 	vga.misc_output=val;
 	if (val & 0x1) {
-		IO_RegisterWriteHandler(0x3d4,write_p3d4_vga,"VGA:CRTC Index Select");
-		IO_RegisterReadHandler(0x3d4,read_p3d4_vga,"VGA:CRTC Index Select");
-		IO_RegisterWriteHandler(0x3d5,write_p3d5_vga,"VGA:CRTC Data Register");
-		IO_RegisterReadHandler(0x3d5,read_p3d5_vga,"VGA:CRTC Data Register");
-		IO_RegisterReadHandler(0x3da,read_p3da,"VGA Input Status 1");
+		IO_RegisterWriteHandler(0x3d4,write_p3d4_vga,IO_MB);
+		IO_RegisterReadHandler(0x3d4,read_p3d4_vga,IO_MB);
+		IO_RegisterWriteHandler(0x3d5,write_p3d5_vga,IO_MB);
+		IO_RegisterReadHandler(0x3d5,read_p3d5_vga,IO_MB);
+		IO_RegisterReadHandler(0x3da,read_p3da,IO_MB);
 		
-		IO_FreeWriteHandler(0x3b4);
-		IO_FreeReadHandler(0x3b4);
-		IO_FreeWriteHandler(0x3b5);
-		IO_FreeReadHandler(0x3b5);
-		IO_FreeReadHandler(0x3ba);
+		IO_FreeWriteHandler(0x3b4,IO_MB);
+		IO_FreeReadHandler(0x3b4,IO_MB);
+		IO_FreeWriteHandler(0x3b5,IO_MB);
+		IO_FreeReadHandler(0x3b5,IO_MB);
+		IO_FreeReadHandler(0x3ba,IO_MB);
 	} else {
-		IO_RegisterWriteHandler(0x3b4,write_p3d4_vga,"VGA:CRTC Index Select");
-		IO_RegisterReadHandler(0x3b4,read_p3d4_vga,"VGA:CRTC Index Select");
-		IO_RegisterWriteHandler(0x3b5,write_p3d5_vga,"VGA:CRTC Data Register");
-		IO_RegisterReadHandler(0x3b5,read_p3d5_vga,"VGA:CRTC Data Register");
-		IO_RegisterReadHandler(0x3ba,read_p3da,"VGA Input Status 1");
+		IO_RegisterWriteHandler(0x3b4,write_p3d4_vga,IO_MB);
+		IO_RegisterReadHandler(0x3b4,read_p3d4_vga,IO_MB);
+		IO_RegisterWriteHandler(0x3b5,write_p3d5_vga,IO_MB);
+		IO_RegisterReadHandler(0x3b5,read_p3d5_vga,IO_MB);
+		IO_RegisterReadHandler(0x3ba,read_p3da,IO_MB);
 
-		IO_FreeWriteHandler(0x3d4);
-		IO_FreeReadHandler(0x3d4);
-		IO_FreeWriteHandler(0x3d5);
-		IO_FreeReadHandler(0x3d5);
-		IO_FreeReadHandler(0x3da);
+		IO_FreeWriteHandler(0x3d4,IO_MB);
+		IO_FreeReadHandler(0x3d4,IO_MB);
+		IO_FreeWriteHandler(0x3d5,IO_MB);
+		IO_FreeReadHandler(0x3d5,IO_MB);
+		IO_FreeReadHandler(0x3da,IO_MB);
 	}
 	/*
 		0	If set Color Emulation. Base Address=3Dxh else Mono Emulation. Base Address=3Bxh.
@@ -95,7 +90,7 @@ static void write_p3c2(Bit32u port,Bit8u val) {
 }
 
 
-static Bit8u read_p3cc(Bit32u port) {
+static Bitu read_p3cc(Bitu port,Bitu iolen) {
 	return vga.misc_output;
 }
 
@@ -103,12 +98,12 @@ static Bit8u read_p3cc(Bit32u port) {
 
 void VGA_SetupMisc(void) {
 	if (machine==MCH_VGA) {
-		IO_RegisterWriteHandler(0x3c2,write_p3c2,"VGA Misc Output");
-		IO_RegisterReadHandler(0x3cc,read_p3cc,"VGA Misc Output");
+		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
+		IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
 	} else if (machine==MCH_CGA || machine==MCH_TANDY) {
-		IO_RegisterReadHandler(0x3da,read_p3da,"VGA Input Status 1");
+		IO_RegisterReadHandler(0x3da,read_p3da,IO_MB);
 	} else if (machine==MCH_HERC) {
-		IO_RegisterReadHandler(0x3ba,read_p3da,"VGA Input Status 1");
+		IO_RegisterReadHandler(0x3ba,read_p3da,IO_MB);
 	}
 
 }

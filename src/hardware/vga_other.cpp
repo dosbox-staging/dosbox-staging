@@ -21,15 +21,15 @@
 #include "inout.h"
 #include "vga.h"
 
-static void write_crtc_index_other(Bit32u port,Bit8u val) {
+static void write_crtc_index_other(Bitu port,Bitu val,Bitu iolen) {
 	vga.other.index=val;
 }
 
-static Bit8u read_crtc_index_other(Bit32u port) {
+static Bitu read_crtc_index_other(Bitu port,Bitu iolen) {
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bit32u port,Bit8u val) {
+static void write_crtc_data_other(Bitu port,Bitu val,Bitu iolen) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		if (vga.other.htotal ^ val) VGA_StartResize();
@@ -84,7 +84,7 @@ static void write_crtc_data_other(Bit32u port,Bit8u val) {
 		LOG_MSG("Write %X to illgal index %x",val,vga.other.index);
 	}
 }
-static Bit8u read_crtc_data_other(Bit32u port) {
+static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		return vga.other.htotal;
@@ -115,6 +115,7 @@ static Bit8u read_crtc_data_other(Bit32u port) {
 	default:
 		LOG_MSG("Read from illgal index %x",vga.other.index);
 	}
+	return (Bitu)-1;
 }
 
 static void write_color_select(Bit8u val) {
@@ -140,7 +141,6 @@ static void write_color_select(Bit8u val) {
 			}
 		}
 		break;
-	case M_CGA16:
 	case M_TEXT:
 	case M_TANDY16:
 		break;
@@ -153,11 +153,6 @@ static void write_mode_control(Bit8u val) {
 	VGA_SetBlinking((val & 0x20));
 	if (val & 0x2) {
 		if (val & 0x10) {
-			if (val & 0x8) {
-				VGA_SetMode(M_CGA16);		//Video burst 16 160x200 color mode
-			} else {
-				VGA_SetMode(M_CGA2);
-			}
 		} else VGA_SetMode(M_CGA4);
 		write_color_select(vga.tandy.color_select);	//Setup the correct palette
 	} else {
@@ -198,13 +193,17 @@ static void write_tandy_reg(Bit8u val) {
 	}
 }
 
-static void write_cga(Bit32u port,Bit8u val) {
+static void write_cga(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=val;
 		if (vga.tandy.mode_control & 0x2) {
 			if (vga.tandy.mode_control & 0x10) {
-				VGA_SetMode(M_TANDY2);
+				if (val & 0x8 && machine==MCH_CGA) {
+					VGA_SetMode(M_CGA16);		//Video burst 16 160x200 color mode
+				} else {
+					VGA_SetMode(M_TANDY2);
+				}
 			} else VGA_SetMode(M_TANDY4);
 			write_color_select(vga.tandy.color_select);
 		} else {
@@ -217,7 +216,7 @@ static void write_cga(Bit32u port,Bit8u val) {
 	}
 }
 
-static void write_tandy(Bit32u port,Bit8u val) {
+static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=val;
@@ -240,7 +239,7 @@ static void write_tandy(Bit32u port,Bit8u val) {
 	}
 }
 
-static void write_hercules(Bit32u port,Bit8u val) {
+static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
 	case 0x3b8:
 		if (vga.herc.enable_bits & 1) {
@@ -263,7 +262,7 @@ static void write_hercules(Bit32u port,Bit8u val) {
 	}
 }
 
-static Bit8u read_hercules(Bit32u port) {
+static Bitu read_hercules(Bitu port,Bitu iolen) {
 	LOG_MSG("read from Herc port %x",port);
 	return 0;
 }
@@ -280,28 +279,28 @@ void VGA_SetupOther(void) {
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_14[i*14],14);
 	}
 	if (machine==MCH_CGA) {
-		IO_RegisterWriteBHandler(0x3d8,write_cga);
-		IO_RegisterWriteBHandler(0x3d9,write_cga);
+		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
+		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
 	}
 	if (machine==MCH_HERC) {
 		vga.herc.enable_bits=0;
 		vga.herc.mode_control=0x8;
-		IO_RegisterWriteBHandler(0x3b8,write_hercules);
-		IO_RegisterWriteBHandler(0x3bf,write_hercules);
+		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
+		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
 	}
 	if (machine==MCH_TANDY) {
-		IO_RegisterWriteBHandler(0x3d8,write_tandy);
-		IO_RegisterWriteBHandler(0x3d9,write_tandy);
-		IO_RegisterWriteBHandler(0x3de,write_tandy);
-		IO_RegisterWriteBHandler(0x3df,write_tandy);
-		IO_RegisterWriteBHandler(0x3da,write_tandy);
+		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
 	}
 	if (machine==MCH_CGA || machine==MCH_HERC || machine==MCH_TANDY) {
 		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;
-		IO_RegisterWriteBHandler(base,write_crtc_index_other);		
-		IO_RegisterWriteBHandler(base+1,write_crtc_data_other);
-		IO_RegisterReadBHandler(base,read_crtc_index_other);		
-		IO_RegisterReadBHandler(base+1,read_crtc_data_other);
+		IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
+		IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);
+		IO_RegisterReadHandler(base,read_crtc_index_other,IO_MB);
+		IO_RegisterReadHandler(base+1,read_crtc_data_other,IO_MB);
 	}
 
 }

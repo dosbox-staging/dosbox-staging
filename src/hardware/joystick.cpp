@@ -32,7 +32,7 @@ struct JoyStick {
 static JoyStick stick[2];
 
 
-static Bit8u read_p201(Bit32u port) {
+static Bitu read_p201(Bitu port,Bitu iolen) {
 	/**  Format of the byte to be returned:       
 	**                        | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 	**                        +-------------------------------+
@@ -58,7 +58,7 @@ static Bit8u read_p201(Bit32u port) {
 	return ret;
 }
 
-static void write_p201(Bit32u port,Bit8u val) {
+static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 	if (stick[0].enabled) {
 		stick[0].xcount=(Bitu)((stick[0].xpos*RANGE)+RANGE);
 		stick[0].ycount=(Bitu)((stick[0].ypos*RANGE)+RANGE);
@@ -115,8 +115,8 @@ float JOYSTICK_GetMove_Y(Bitu which)
 };
 
 void JOYSTICK_Init(Section* sec) {
-	IO_RegisterReadHandler(0x201,read_p201,"JOYSTICK");
-	IO_RegisterWriteHandler(0x201,write_p201,"JOYSTICK");
+	IO_RegisterReadHandler(0x201,read_p201,IO_MB);
+	IO_RegisterWriteHandler(0x201,write_p201,IO_MB);
 	stick[0].enabled=false;
 	stick[1].enabled=false;
 }

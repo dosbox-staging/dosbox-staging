@@ -512,14 +512,14 @@ void MEM_PhysWriteD(Bitu addr,Bit32u val) {
 }
 
 
-static void write_p92(Bit32u port,Bit8u val) {	
+static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
 	memory.a20.controlport = val & ~2;
 	MEM_A20_Enable((val & 2)>0);
 }
 
-static Bit8u read_p92(Bit32u port) {
+static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
 
@@ -589,8 +589,8 @@ void MEM_Init(Section * sec) {
 	/* Reset some links */
 	memory.links.used=0;
 	// A20 Line - PS/2 system control port A
-	IO_RegisterWriteHandler(0x92,write_p92,"Control Port");
-	IO_RegisterReadHandler(0x92,read_p92,"Control Port");
+	IO_RegisterWriteHandler(0x92,write_p92,IO_MB);
+	IO_RegisterReadHandler(0x92,read_p92,IO_MB);
 	MEM_A20_Enable(false);
 	/* shutdown function */
 	sec->AddDestroyFunction(&MEM_ShutDown);

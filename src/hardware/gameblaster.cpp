@@ -363,7 +363,7 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 }
 
 
-static void write_cms(Bit32u port,Bit8u val) {
+static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 	if (last_command + 100 < PIC_Ticks) MIXER_Enable(cms_chan,true); 
 	last_command = PIC_Ticks;
 	switch (port) {
@@ -424,10 +424,7 @@ static void write_cms(Bit32u port,Bit8u val) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sample_rate=rate;
 
-	IO_RegisterWriteHandler(base+0x0,write_cms,"CMS");
-	IO_RegisterWriteHandler(base+0x1,write_cms,"CMS");
-	IO_RegisterWriteHandler(base+0x2,write_cms,"CMS");
-	IO_RegisterWriteHandler(base+0x3,write_cms,"CMS");
+	IO_RegisterWriteHandler(base,write_cms,IO_MB,4);
 	
 /* Register the Mixer CallBack */
 

@@ -16,43 +16,50 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-typedef Bit8u  (IO_ReadBHandler)(Bit32u port);
-typedef Bit16u (IO_ReadWHandler)(Bit32u port);
-typedef Bit32u (IO_ReadDHandler)(Bit32u port);
-typedef void (IO_WriteBHandler)(Bit32u port,Bit8u value);
-typedef void (IO_WriteWHandler)(Bit32u port,Bit16u value);
-typedef void (IO_WriteDHandler)(Bit32u port,Bit32u value);
+#define IO_MAX (64*1024+3)
 
-void IO_RegisterReadBHandler(Bitu port,IO_ReadBHandler * handler);
-void IO_RegisterReadWHandler(Bitu port,IO_ReadWHandler * handler);
-void IO_RegisterReadDHandler(Bitu port,IO_ReadDHandler * handler);
+#define IO_MB	0x1
+#define IO_MW	0x2
+#define IO_MD	0x4
+#define IO_MA	(IO_MB | IO_MW | IO_MD )
 
-void IO_RegisterWriteBHandler(Bitu port,IO_WriteBHandler * handler);
-void IO_RegisterWriteWHandler(Bitu port,IO_WriteWHandler * handler);
-void IO_RegisterWriteDHandler(Bitu port,IO_WriteDHandler * handler);
+typedef Bitu IO_ReadHandler(Bitu port,Bitu iolen);
+typedef void IO_WriteHandler(Bitu port,Bitu val,Bitu iolen);
 
-void IO_FreeReadHandler(Bitu port);
-void IO_FreeWriteHandler(Bitu port);
+extern IO_WriteHandler * io_writehandlers[3][IO_MAX];
+extern IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
-void IO_WriteB(Bitu port,Bit8u val);
-Bit8u IO_ReadB(Bitu port);
-void IO_WriteW(Bitu port,Bit16u val);
-Bit16u IO_ReadW(Bitu port);
-void IO_WriteD(Bitu port,Bit32u val);
-Bit32u IO_ReadD(Bitu port);
+void IO_RegisterReadHandler(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
+void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
+
+void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=0);
+void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=0);
+
+INLINE void IO_WriteB(Bitu port,Bitu val) {
+	io_writehandlers[0][port](port,val,1);
+};
+INLINE void IO_WriteW(Bitu port,Bitu val) {
+	io_writehandlers[1][port](port,val,2);
+};
+INLINE void IO_WriteD(Bitu port,Bitu val) {
+	io_writehandlers[2][port](port,val,4);
+};
+
+INLINE Bitu IO_ReadB(Bitu port) {
+	return io_readhandlers[0][port](port,1);
+}
+INLINE Bitu IO_ReadW(Bitu port) {
+	return io_readhandlers[1][port](port,2);
+}
+INLINE Bitu IO_ReadD(Bitu port) {
+	return io_readhandlers[2][port](port,4);
+}
 
 INLINE void IO_Write(Bitu port,Bit8u val) {
 	IO_WriteB(port,val);
 }
 INLINE Bit8u IO_Read(Bitu port){
 	return IO_ReadB(port);
-}
-
-INLINE void IO_RegisterReadHandler(Bitu port,IO_ReadBHandler * handler,char * name) {
-	IO_RegisterReadBHandler(port,handler);
-}
-INLINE void IO_RegisterWriteHandler(Bitu port,IO_WriteBHandler * handler,char * name) {
-	IO_RegisterWriteBHandler(port,handler);
 }
 
 

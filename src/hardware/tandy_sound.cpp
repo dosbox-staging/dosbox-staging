@@ -77,7 +77,7 @@ static struct {
 
 
 
-static void SN76496Write(Bit32u port,Bit8u data)
+static void SN76496Write(Bitu port,Bitu data,Bitu iolen)
 {
 	struct SN76496 *R = &sn;
 
@@ -301,7 +301,7 @@ void TANDYSOUND_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("tandy")) return;
 
-	IO_RegisterWriteHandler(0xc0,SN76496Write,"Tandy Sound");
+	IO_RegisterWriteHandler(0xc0,SN76496Write,IO_MB);
 
 	Bit32u sample_rate = section->Get_int("tandyrate");
 	tandy.chan=MIXER_AddChannel(&SN76496Update,sample_rate,"TANDY");

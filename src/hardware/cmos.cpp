@@ -62,12 +62,12 @@ static void cmos_checktimer(void) {
 	PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 }
 
-void cmos_selreg(Bit32u port,Bit8u val) {
+void cmos_selreg(Bitu port,Bitu val,Bitu iolen) {
 	cmos.reg=val & 0x3f;
 	cmos.nmi=(val & 0x80)>0;
 }
 
-static void cmos_writereg(Bit32u port,Bit8u val) {
+static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
 	switch (cmos.reg) {
 	case 0x00:		/* Seconds */
 	case 0x02:		/* Minutes */
@@ -84,10 +84,9 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 		LOG(LOG_BIOS,LOG_NORMAL)("CMOS:Trying to set alarm");
 		cmos.regs[cmos.reg]=val;
 		break;
-
 	case 0x0a:		/* Status reg A */
 		cmos.regs[cmos.reg]=val & 0x7f;
-		if (val & 0x70!=0x20) LOG(LOG_BIOS,LOG_ERROR)("CMOS Illegal 22 stage divider value");
+		if ((val & 0x70)!=0x20) LOG(LOG_BIOS,LOG_ERROR)("CMOS Illegal 22 stage divider value");
 		cmos.timer.div=(val & 0xf);
 		cmos_checktimer();
 		break;
@@ -110,7 +109,7 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 
 #define MAKE_RETURN(_VAL) (cmos.bcd ? (((_VAL / 10) << 4) | (_VAL % 10)) : _VAL);
 
-static Bit8u cmos_readreg(Bit32u port) {
+static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 	if (cmos.reg>0x3f) {
 		LOG(LOG_BIOS,LOG_ERROR)("CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
@@ -189,14 +188,14 @@ void CMOS_SetRegister(Bitu regNr, Bit8u val)
 };
 
 void CMOS_Init(Section* sec) {
-	IO_RegisterWriteHandler(0x70,cmos_selreg,"CMOS");
-	IO_RegisterWriteHandler(0x71,cmos_writereg,"CMOS");
-	IO_RegisterReadHandler(0x71,cmos_readreg,"CMOS");
+	IO_RegisterWriteHandler(0x70,cmos_selreg,IO_MB);
+	IO_RegisterWriteHandler(0x71,cmos_writereg,IO_MB);
+	IO_RegisterReadHandler(0x71,cmos_readreg,IO_MB);
 	cmos.timer.enabled=false;
 	cmos.reg=0xa;
-	cmos_writereg(0x71,0x26);
+	cmos_writereg(0x71,0x26,1);
 	cmos.reg=0xb;
-	cmos_writereg(0x71,0);
+	cmos_writereg(0x71,0,1);
 	/* Fill in extended memory size */
 	Bitu exsize=(MEM_TotalPages()*4)-1024;
 	cmos.regs[0x17]=(Bit8u)exsize;

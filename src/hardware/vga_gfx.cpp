@@ -23,15 +23,15 @@
 #define gfx(blah) vga.gfx.blah
 static bool index9warned=false;
 
-static void write_p3ce(Bit32u port,Bit8u val) {
+static void write_p3ce(Bitu port,Bitu val,Bitu iolen) {
 	gfx(index)=val & 0x0f;
 }
 
-static Bit8u read_p3ce(Bit32u port) {
+static Bitu read_p3ce(Bitu port,Bitu iolen) {
 	return gfx(index);
 }
 
-static void write_p3cf(Bit32u port,Bit8u val) {
+static void write_p3cf(Bitu port,Bitu val,Bitu iolen) {
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		gfx(set_reset)=val & 0x0f;
@@ -184,7 +184,7 @@ static void write_p3cf(Bit32u port,Bit8u val) {
 	}
 }
 
-static Bit8u read_p3cf(Bit32u port) {
+static Bitu read_p3cf(Bitu port,Bitu iolen) {
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		return gfx(set_reset);
@@ -214,10 +214,10 @@ static Bit8u read_p3cf(Bit32u port) {
 
 void VGA_SetupGFX(void) {
 	if (machine==MCH_VGA) {
-		IO_RegisterWriteHandler(0x3ce,write_p3ce,"VGA Graphics Index");
-		IO_RegisterWriteHandler(0x3cf,write_p3cf,"VGA Graphics Data");
-		IO_RegisterReadHandler(0x3ce,read_p3ce,"Vga Graphics Index");
-		IO_RegisterReadHandler(0x3cf,read_p3cf,"Vga Graphics Data");
+		IO_RegisterWriteHandler(0x3ce,write_p3ce,IO_MB);
+		IO_RegisterWriteHandler(0x3cf,write_p3cf,IO_MB);
+		IO_RegisterReadHandler(0x3ce,read_p3ce,IO_MB);
+		IO_RegisterReadHandler(0x3cf,read_p3cf,IO_MB);
 	}
 }
 

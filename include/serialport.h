@@ -50,11 +50,11 @@ public:
 	virtual ~CSerial();
 
 	// External port functions for IOHandlers //
-	void write_port(Bit32u port, Bit8u val);
-	Bit8u read_port(Bit32u port);
+	void write_port(Bitu port, Bitu val);
+	Bitu read_port(Bitu port);
 
-	static void write_serial(Bit32u port,Bit8u val);
-	static Bit8u read_serial(Bit32u port);
+	static void write_serial(Bitu port,Bitu val,Bitu iolen);
+	static Bitu read_serial(Bitu port,Bitu iolen);
 
 	void SetMCHandler(MControl_Handler * mcontrol);
 	

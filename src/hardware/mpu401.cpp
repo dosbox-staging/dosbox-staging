@@ -214,13 +214,13 @@ static void ClrQueue(void) {
 	mpu.queue_pos=0;
 }
 
-static Bit8u MPU401_ReadStatus(Bit32u port) {
+static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 	Bit8u ret=0x3f;	/* Bits 6 and 7 clear */
 	if (!mpu.queue_used) ret|=0x80;
 	return ret;
 }
 
-static void MPU401_WriteCommand(Bit32u port,Bit8u val) {
+static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Command %x",val);
 	if (val && val<=0x2f) {
 		switch (val&3) {
@@ -386,7 +386,7 @@ static void MPU401_WriteCommand(Bit32u port,Bit8u val) {
 	QueueByte(MSG_CMD_ACK);
 }
 
-static Bit8u MPU401_ReadData(Bit32u port) {
+static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 	Bit8u ret=MSG_CMD_ACK;
 	if (mpu.queue_used) {
 		ret=mpu.queue[mpu.queue_pos];
@@ -409,7 +409,7 @@ static Bit8u MPU401_ReadData(Bit32u port) {
 	return ret;
 }
 
-static void MPU401_WriteData(Bit32u port,Bit8u val) {
+static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
 	if (mpu.mode==M_UART) {MIDI_RawOutByte(val);return;}
 	if (mpu.state.command_byte) MPU401_EOIHandler(); /* S101, Time Quest */
 	switch (mpu.state.command_byte) {
@@ -613,8 +613,8 @@ static void UpdateTrack(Bit8u chan) {
 
 static void UpdateConductor(void) {
 	if (mpu.condbuf.type!=OVERFLOW) {
-		MPU401_WriteCommand(0x331,mpu.condbuf.value[0]);
-		if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1]);
+		MPU401_WriteCommand(0x331,mpu.condbuf.value[0],1);
+		if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1],1);
 	}
 	mpu.condbuf.vlength=0;
 	mpu.condbuf.type=OVERFLOW;
@@ -727,10 +727,10 @@ void MPU401_Init(Section* sec) {
 
 	if (!MIDI_Available()) return;
 
-	IO_RegisterWriteHandler(0x330,&MPU401_WriteData,"MPU401");
-	IO_RegisterWriteHandler(0x331,&MPU401_WriteCommand,"MPU401");
-	IO_RegisterReadHandler(0x330,&MPU401_ReadData,"MPU401");
-	IO_RegisterReadHandler(0x331,&MPU401_ReadStatus,"MPU401");
+	IO_RegisterWriteHandler(0x330,&MPU401_WriteData,IO_MB);
+	IO_RegisterWriteHandler(0x331,&MPU401_WriteCommand,IO_MB);
+	IO_RegisterReadHandler(0x330,&MPU401_ReadData,IO_MB);
+	IO_RegisterReadHandler(0x331,&MPU401_ReadStatus,IO_MB);
 
 	mpu.queue_used=0;
 	mpu.queue_pos=0;

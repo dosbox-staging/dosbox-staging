@@ -20,9 +20,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "mixer.h"
-#include "dma.h"
 #include "pic.h"
-#include "hardware.h"
 #include "setup.h"
 #include "programs.h"
 
@@ -41,7 +39,7 @@ static struct {
 	MIXER_Channel * chan;
 } disney;
 
-static void disney_write(Bit32u port,Bit8u val) {
+static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 		disney.data=val;
@@ -62,8 +60,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 	}
 }
 
-static Bit8u disney_read(Bit32u port) {
-
+static Bitu disney_read(Bitu port,Bitu iolen) {
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 //		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
@@ -103,13 +100,8 @@ void DISNEY_Init(Section* sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if(!section->Get_bool("disney")) return;
 
-	IO_RegisterWriteHandler(DISNEY_BASE,disney_write,"DISNEY");
-	IO_RegisterWriteHandler(DISNEY_BASE+1,disney_write,"DISNEY");
-	IO_RegisterWriteHandler(DISNEY_BASE+2,disney_write,"DISNEY");
-
-	IO_RegisterReadHandler(DISNEY_BASE,disney_read,"DISNEY");
-	IO_RegisterReadHandler(DISNEY_BASE+1,disney_read,"DISNEY");
-	IO_RegisterReadHandler(DISNEY_BASE+2,disney_read,"DISNEY");
+	IO_RegisterWriteHandler(DISNEY_BASE,disney_write,IO_MB,3);
+	IO_RegisterReadHandler(DISNEY_BASE,disney_read,IO_MB,3);
 
 	disney.chan=MIXER_AddChannel(&DISNEY_CallBack,7000,"DISNEY");
 	MIXER_SetMode(disney.chan,MIXER_8MONO);

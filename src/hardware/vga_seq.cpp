@@ -22,15 +22,15 @@
 
 #define seq(blah) vga.seq.blah
 
-Bit8u read_p3c4(Bit32u port) {
+Bitu read_p3c4(Bitu port,Bitu iolen) {
 	return seq(index);
 }
 
-void write_p3c4(Bit32u port,Bit8u val) {
+void write_p3c4(Bitu port,Bitu val,Bitu iolen) {
 	seq(index)=val;
 };
 
-void write_p3c5(Bit32u port,Bit8u val) {
+void write_p3c5(Bitu port,Bitu val,Bitu iolen) {
 	if (seq(index)>0x8 && vga.s3.pll.lock!=0x6) return;
 //	LOG_MSG("SEQ WRITE reg %X val %X",seq(index),val);
 	switch(seq(index)) {
@@ -127,7 +127,7 @@ void write_p3c5(Bit32u port,Bit8u val) {
 };
 
 
-Bit8u read_p3c5(Bit32u port) {
+Bitu read_p3c5(Bitu port,Bitu iolen) {
 //	LOG_MSG("VGA:SEQ:Read from index %2X",seq(index));
 	if (seq(index)>0x8 && vga.s3.pll.lock!=0x6) return seq(index);
 	switch(seq(index)) {
@@ -168,10 +168,10 @@ Bit8u read_p3c5(Bit32u port) {
 
 void VGA_SetupSEQ(void) {
 	if (machine==MCH_VGA) {
-		IO_RegisterWriteHandler(0x3c4,write_p3c4,"VGA:Sequencer Index");
-		IO_RegisterWriteHandler(0x3c5,write_p3c5,"VGA:Sequencer Data");
-		IO_RegisterReadHandler(0x3c4,read_p3c4,"VGA:Sequencer Index");
-		IO_RegisterReadHandler(0x3c5,read_p3c5,"VGA:Sequencer Data");
+		IO_RegisterWriteHandler(0x3c4,write_p3c4,IO_MB);
+		IO_RegisterWriteHandler(0x3c5,write_p3c5,IO_MB);
+		IO_RegisterReadHandler(0x3c4,read_p3c4,IO_MB);
+		IO_RegisterReadHandler(0x3c5,read_p3c5,IO_MB);
 	}
 }
 

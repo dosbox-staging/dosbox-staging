@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.21 2004-02-07 18:35:24 harekiet Exp $ */
+/* $Id: keyboard.cpp,v 1.22 2004-04-03 19:35:34 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -147,7 +147,7 @@ void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
 	}
 }
 
-static Bit8u read_p60(Bit32u port) {
+static Bitu read_p60(Bitu port,Bitu iolen) {
 	keyb.key_on_60 = false;
 	switch (keyb.buf.state) {
 	case STATE_NORMAL:
@@ -168,7 +168,7 @@ static Bit8u read_p60(Bit32u port) {
 	return 0;
 }	
 
-static void write_p60(Bit32u port,Bit8u val) {
+static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
 		KEYBOARD_ClrBuffer();
@@ -217,13 +217,13 @@ static void write_p60(Bit32u port,Bit8u val) {
 	}
 }
 
-static Bit8u read_p61(Bit32u port) {
+static Bitu read_p61(Bitu port,Bitu iolen) {
 	port_61_data^=0x20;
 	port_61_data^=0x10;
 	return port_61_data;
 }
 
-static void write_p61(Bit32u port,Bit8u val) {
+static void write_p61(Bitu port,Bitu val,Bitu iolen) {
 /*
 	if (val & 128) if (!keyb.read_active) KEYBOARD_ReadBuffer();
 	Keys should get acknowledged just by reading 0x60.
@@ -233,7 +233,7 @@ static void write_p61(Bit32u port,Bit8u val) {
 	port_61_data=val;
 }
 
-static void write_p64(Bit32u port,Bit8u val) {
+static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
@@ -261,7 +261,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 	}
 }
 
-static Bit8u read_p64(Bit32u port) {
+static Bitu read_p64(Bitu port,Bitu iolen) {
 //	Bit8u status= 0x1c | ((keyb.buf.used ||keyb.key_on_60)? 0x1 : 0x0);
 //	Old one. Digitracker 2 doesn't like this. key_on_60 is much more advanged.
 	Bit8u status= 0x1c | (keyb.key_on_60? 0x1 : 0x0);
@@ -420,12 +420,12 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
 }
 
 void KEYBOARD_Init(Section* sec) {
-	IO_RegisterWriteHandler(0x60,write_p60,"Keyboard");
-	IO_RegisterReadHandler(0x60,read_p60,"Keyboard");
-	IO_RegisterWriteHandler(0x61,write_p61,"Keyboard");
-	IO_RegisterReadHandler(0x61,read_p61,"Keyboard");
-	IO_RegisterWriteHandler(0x64,write_p64,"Keyboard");
-	IO_RegisterReadHandler(0x64,read_p64,"Keyboard");
+	IO_RegisterWriteHandler(0x60,write_p60,IO_MB);
+	IO_RegisterReadHandler(0x60,read_p60,IO_MB);
+	IO_RegisterWriteHandler(0x61,write_p61,IO_MB);
+	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
+	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
+	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
 
 	port_61_data=0;				/* Direct Speaker control and output disabled */
 //	memset(&event_handlers,0,sizeof(event_handlers));

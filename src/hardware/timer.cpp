@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.22 2004-03-03 12:37:12 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.23 2004-04-03 19:34:10 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -102,7 +102,7 @@ static void counter_latch(Bitu counter) {
 }
 
 
-static void write_latch(Bit32u port,Bit8u val) {
+static void write_latch(Bitu port,Bitu val,Bitu iolen) {
 	Bitu counter=port-0x40;
 	PIT_Block * p=&pit[counter];
 	if(p->bcd == true) BIN2BCD(p->write_latch);
@@ -149,7 +149,7 @@ static void write_latch(Bit32u port,Bit8u val) {
     }
 }
 
-static Bit8u read_latch(Bit32u port) {
+static Bitu read_latch(Bitu port,Bitu iolen) {
 	Bit32u counter=port-0x40;
 	if (pit[counter].go_read_latch == true) 
 		counter_latch(counter);
@@ -186,7 +186,7 @@ static Bit8u read_latch(Bit32u port) {
   return ret;
 }
 
-static void write_p43(Bit32u port,Bit8u val) {
+static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 	Bitu latch=(val >> 6) & 0x03;
 	switch (latch) {
 	case 0:
@@ -219,12 +219,12 @@ static void write_p43(Bit32u port,Bit8u val) {
 
 
 void TIMER_Init(Section* sect) {
-	IO_RegisterWriteHandler(0x40,write_latch,"PIT Timer 0");
-	IO_RegisterWriteHandler(0x42,write_latch,"PIT Timer 2");
-	IO_RegisterWriteHandler(0x43,write_p43,"PIT Mode Control");
-	IO_RegisterReadHandler(0x40,read_latch,"PIT Timer 0");
-//	IO_RegisterReadHandler(0x41,read_p41,"PIT Timer	1");
-	IO_RegisterReadHandler(0x42,read_latch,"PIT Timer 2");
+	IO_RegisterWriteHandler(0x40,write_latch,IO_MB);
+	IO_RegisterWriteHandler(0x42,write_latch,IO_MB);
+	IO_RegisterWriteHandler(0x43,write_p43,IO_MB);
+	IO_RegisterReadHandler(0x40,read_latch,IO_MB);
+//	IO_RegisterReadHandler(0x41,read_p41,IO_MB);
+	IO_RegisterReadHandler(0x42,read_latch,IO_MB);
 	/* Setup Timer 0 */
 	pit[0].cntr=0x10000;
 	pit[0].write_state = 3;

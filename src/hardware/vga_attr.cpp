@@ -28,7 +28,7 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	VGA_DAC_CombineColor(index,val);
 }
 
-void write_p3c0(Bit32u port,Bit8u val) {
+void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
@@ -156,7 +156,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 	}
 }
 
-Bit8u read_p3c1(Bit32u port) {
+Bitu read_p3c1(Bitu port,Bitu iolen) {
 	vga.internal.attrindex=false;
 	switch (attr(index)) {
 			/* Palette */
@@ -188,8 +188,8 @@ Bit8u read_p3c1(Bit32u port) {
 
 void VGA_SetupAttr(void) {
 	if (machine==MCH_VGA) {
-		IO_RegisterWriteHandler(0x3c0,write_p3c0,"VGA Attribute controller");
-		IO_RegisterReadHandler(0x3c1,read_p3c1,"VGA Attribute Read");
+		IO_RegisterWriteHandler(0x3c0,write_p3c0,IO_MB);
+		IO_RegisterReadHandler(0x3c1,read_p3c1,IO_MB);
 	}
 }
 

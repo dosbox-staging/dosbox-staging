@@ -127,7 +127,7 @@ static Bitu DMA_ReadControllerReg(DmaController * cont,Bitu reg,Bitu len) {
 }
 
 
-static void DMA_Write_PortB(Bit32u port,Bit8u val) {
+static void DMA_Write_Port(Bitu port,Bitu val,Bitu iolen) {
 	if (port<0x10) {
 		DMA_WriteControllerReg(DmaControllers[0],port,val,1);
 	} else if (port>=0xc0 && port <=0xdf) {
@@ -142,15 +142,11 @@ static void DMA_Write_PortB(Bit32u port,Bit8u val) {
 	}
 }
 
-
-static void DMA_Write_PortW(Bit32u port,Bit16u val) {
-	LOG_MSG("Ahh 16bit write port %x val %x",port,val);
-}
-static Bit8u DMA_Read_PortB(Bit32u port) {
+static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
 	if (port<0x10) {
-		return DMA_ReadControllerReg(DmaControllers[0],port,1);
+		return DMA_ReadControllerReg(DmaControllers[0],port,iolen);
 	} else if (port>=0xc0 && port <=0xdf) {
-		return DMA_ReadControllerReg(DmaControllers[1],(port-0xc0) >> 1,1);
+		return DMA_ReadControllerReg(DmaControllers[1],(port-0xc0) >> 1,iolen);
 	} else switch (port) {
 		case 0x81:return DmaChannels[2]->pagenum;
 		case 0x82:return DmaChannels[3]->pagenum;
@@ -159,6 +155,7 @@ static Bit8u DMA_Read_PortB(Bit32u port) {
 		case 0x8a:return DmaChannels[7]->pagenum;
 		case 0x8b:return DmaChannels[5]->pagenum;
 	}
+	return 0;
 }
 
 DmaChannel::DmaChannel(Bit8u num, bool dma16) {
@@ -244,27 +241,27 @@ void DMA_Init(Section* sec) {
 		DmaChannels[i] = new DmaChannel(i,i>=4);
 	}
 	for (i=0;i<0x10;i++) {
-		IO_RegisterWriteBHandler(i,DMA_Write_PortB);
-		IO_RegisterWriteWHandler(i,DMA_Write_PortW);
-		IO_RegisterReadBHandler(i,DMA_Read_PortB);
+		Bitu mask=i<8 ? (IO_MB|IO_MW) : IO_MB;
+		IO_RegisterWriteHandler(i,DMA_Write_Port,mask);
+		IO_RegisterReadHandler(i,DMA_Read_Port,mask);
 		if (machine==MCH_VGA) {
-			IO_RegisterWriteBHandler(0xc0+i*2,DMA_Write_PortB);
-			IO_RegisterReadBHandler(0xc0+i*2,DMA_Read_PortB);
+			IO_RegisterWriteHandler(0xc0+i*2,DMA_Write_Port,mask);
+			IO_RegisterReadHandler(0xc0+i*2,DMA_Read_Port,mask);
 		}
 	}
-	IO_RegisterWriteBHandler(0x81,DMA_Write_PortB);
-	IO_RegisterWriteBHandler(0x82,DMA_Write_PortB);
-	IO_RegisterWriteBHandler(0x83,DMA_Write_PortB);
-	IO_RegisterWriteBHandler(0x89,DMA_Write_PortB);
-	IO_RegisterWriteBHandler(0x8a,DMA_Write_PortB);
-	IO_RegisterWriteBHandler(0x8b,DMA_Write_PortB);
+	IO_RegisterWriteHandler(0x81,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x82,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x83,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x89,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x8a,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x8b,DMA_Write_Port,IO_MB);
 
-	IO_RegisterReadBHandler(0x81,DMA_Read_PortB);
-	IO_RegisterReadBHandler(0x82,DMA_Read_PortB);
-	IO_RegisterReadBHandler(0x83,DMA_Read_PortB);
-	IO_RegisterReadBHandler(0x89,DMA_Read_PortB);
-	IO_RegisterReadBHandler(0x8a,DMA_Read_PortB);
-	IO_RegisterReadBHandler(0x8b,DMA_Read_PortB);
+	IO_RegisterReadHandler(0x81,DMA_Read_Port,IO_MB);
+	IO_RegisterReadHandler(0x82,DMA_Read_Port,IO_MB);
+	IO_RegisterReadHandler(0x83,DMA_Read_Port,IO_MB);
+	IO_RegisterReadHandler(0x89,DMA_Read_Port,IO_MB);
+	IO_RegisterReadHandler(0x8a,DMA_Read_Port,IO_MB);
+	IO_RegisterReadHandler(0x8b,DMA_Read_Port,IO_MB);
 
 }
 

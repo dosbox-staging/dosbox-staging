@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.19 2004-03-10 13:53:40 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.20 2004-04-03 19:34:10 harekiet Exp $ */
 
 #include <list>
 
@@ -69,7 +69,7 @@ static struct {
 	PICEntry * next_entry;
 } pic;
 
-static void write_command(Bit32u port,Bit8u val) {
+static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 	Bitu irq_base=port==0x20 ? 0 : 8;
 	Bitu i;
@@ -125,7 +125,7 @@ static void write_command(Bit32u port,Bit8u val) {
 	}
 }
 
-static void write_data(Bit32u port,Bit8u val) {
+static void write_data(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	Bitu irq_base=(port==0x21) ? 0 : 8;
 	Bitu i;
@@ -175,7 +175,7 @@ static void write_data(Bit32u port,Bit8u val) {
 }
 
 
-static Bit8u read_command(Bit32u port) {
+static Bitu read_command(Bitu port,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 	Bitu irq_base=(port==0x20) ? 0 : 8;
 	Bitu i;Bit8u ret=0;Bit8u b=1;
@@ -193,7 +193,7 @@ static Bit8u read_command(Bit32u port) {
 	return ret;
 }
 
-static Bit8u read_data(Bit32u port) {
+static Bitu read_data(Bitu port,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	Bitu irq_base=(port==0x21) ? 0 : 8;
 	Bitu i;Bit8u ret=0;Bit8u b=1;
@@ -460,14 +460,14 @@ void PIC_Init(Section* sec) {
 	irqs[1].masked=false;					/* Enable Keyboard IRQ */
 	irqs[8].masked=false;					/* Enable RTC IRQ */
 /*	irqs[12].masked=false;	moved to mouse.cpp */				/* Enable Mouse IRQ */
-	IO_RegisterReadHandler(0x20,read_command,"Master PIC Command");
-	IO_RegisterReadHandler(0x21,read_data,"Master PIC Data");
-	IO_RegisterWriteHandler(0x20,write_command,"Master PIC Command");
-	IO_RegisterWriteHandler(0x21,write_data,"Master PIC Data");
-	IO_RegisterReadHandler(0xa0,read_command,"Slave PIC Command");
-	IO_RegisterReadHandler(0xa1,read_data,"Slave PIC Data");
-	IO_RegisterWriteHandler(0xa0,write_command,"Slave PIC Command");
-	IO_RegisterWriteHandler(0xa1,write_data,"Slave PIC Data");
+	IO_RegisterReadHandler(0x20,read_command,IO_MB);
+	IO_RegisterReadHandler(0x21,read_data,IO_MB);
+	IO_RegisterWriteHandler(0x20,write_command,IO_MB);
+	IO_RegisterWriteHandler(0x21,write_data,IO_MB);
+	IO_RegisterReadHandler(0xa0,read_command,IO_MB);
+	IO_RegisterReadHandler(0xa1,read_data,IO_MB);
+	IO_RegisterWriteHandler(0xa0,write_command,IO_MB);
+	IO_RegisterWriteHandler(0xa1,write_data,IO_MB);
 	/* Initialize the pic queue */
 	for (i=0;i<PIC_QUEUESIZE-1;i++) {
 		pic.entries[i].next=&pic.entries[i+1];

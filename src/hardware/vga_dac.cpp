@@ -51,36 +51,36 @@ Note:  Each read or write of this register will cycle through first the
 enum {DAC_READ,DAC_WRITE};
 
 
-static void write_p3c6(Bit32u port,Bit8u val) {
+static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
 	if (val!=0xff) LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:Pel Mask not 0xff");
 	vga.dac.pel_mask=val;
 }
 
 
-static Bit8u read_p3c6(Bit32u port) {
+static Bitu read_p3c6(Bitu port,Bitu iolen) {
 	return vga.dac.pel_mask;
 }
 
 
-static void write_p3c7(Bit32u port,Bit8u val) {
+static void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
 	vga.dac.read_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
 
 }
 
-static Bit8u read_p3c7(Bit32u port) {
+static Bitu read_p3c7(Bitu port,Bitu iolen) {
 	if (vga.dac.state==DAC_READ) return 0x3;
 	else return 0x0;
 }
 
-static void write_p3c8(Bit32u port,Bit8u val) {
+static void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
 	vga.dac.write_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_WRITE;
 }
 
-static void write_p3c9(Bit32u port,Bit8u val) {
+static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 	val&=0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -121,7 +121,7 @@ static void write_p3c9(Bit32u port,Bit8u val) {
 	};
 }
 
-static Bit8u read_p3c9(Bit32u port) {
+static Bitu read_p3c9(Bitu port,Bitu iolen) {
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -183,13 +183,13 @@ void VGA_SetupDAC(void) {
 	vga.dac.write_index=0;
 	if (machine==MCH_VGA) {
 		/* Setup the DAC IO port Handlers */
-		IO_RegisterWriteHandler(0x3c6,write_p3c6,"PEL Mask");	
-		IO_RegisterReadHandler(0x3c6,read_p3c6,"PEL Mask");
-		IO_RegisterWriteHandler(0x3c7,write_p3c7,"PEL Read Mode");
-		IO_RegisterReadHandler(0x3c7,read_p3c7,"PEL Status Mode");
-		IO_RegisterWriteHandler(0x3c8,write_p3c8,"PEL Write Mode");
-		IO_RegisterWriteHandler(0x3c9,write_p3c9,"PEL Data");	
-		IO_RegisterReadHandler(0x3c9,read_p3c9,"PEL Data");
+		IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);
+		IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
+		IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
+		IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
+		IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
+		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
+		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
 	}
 };
 

@@ -24,15 +24,15 @@
 
 #define crtc(blah) vga.crtc.blah
 
-void write_p3d4_vga(Bit32u port,Bit8u val) {
+void write_p3d4_vga(Bitu port,Bitu val,Bitu iolen) {
 	crtc(index)=val;
 }
 
-Bit8u read_p3d4_vga(Bit32u port) {
+Bitu read_p3d4_vga(Bitu port,Bitu iolen) {
 	return crtc(index);
 }
 
-void write_p3d5_vga(Bit32u port,Bit8u val) {
+void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 //	if (crtc(index)>0x18) LOG_MSG("VGA CRCT write %X to reg %X",val,crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
@@ -509,7 +509,7 @@ void write_p3d5_vga(Bit32u port,Bit8u val) {
 	}
 }
 
-Bit8u read_p3d5_vga(Bit32u port) {
+Bitu read_p3d5_vga(Bitu port,Bitu iolen) {
 //	LOG_MSG("VGA CRCT read from reg %X",crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */

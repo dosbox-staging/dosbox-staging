@@ -113,7 +113,7 @@ static void OPL_CallBack(Bit8u *stream, Bit32u len) {
 	}
 }
 
-Bit8u OPL_Read(Bit32u port) {
+static Bitu OPL_Read(Bitu port,Bitu iolen) {
 	Bitu addr=port & 3;
 	switch (opl.mode) {
 	case OPL_opl2:
@@ -126,7 +126,7 @@ Bit8u OPL_Read(Bit32u port) {
 	return 0xff;
 }
 
-void OPL_Write(Bit32u port,Bit8u val) {
+void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 	opl.last_used=PIC_Ticks;
 	if (!opl.active) {
 		opl.active=true;
@@ -147,7 +147,6 @@ void OPL_Write(Bit32u port,Bit8u val) {
 }
 
 void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
-	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (OPL2::YM3812Init(2,OPL2_INTERNAL_FREQ,rate)) {
 		E_Exit("Can't create OPL2 Emulator");	
@@ -158,16 +157,13 @@ void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 		E_Exit("Can't create OPL3 Emulator");	
 	};
 	THEOPL3::YMF262SetTimerHandler(0,THEOPL3::TimerHandler,0);
-	for (i=0;i<4;i++) {
-        IO_RegisterWriteHandler(0x388+i,OPL_Write,"OPL Write");
-		IO_RegisterReadHandler(0x388+i,OPL_Read,"OPL read");
-		IO_RegisterWriteHandler(base+i,OPL_Write,"OPL Write");
-		IO_RegisterReadHandler(base+i,OPL_Read,"OPL read");
-	}
-	IO_RegisterWriteHandler(base+8,OPL_Write,"OPL Write");
-	IO_RegisterWriteHandler(base+9,OPL_Write,"OPL Write");
-	IO_RegisterReadHandler(base+8,OPL_Read,"OPL read");
-	IO_RegisterReadHandler(base+9,OPL_Read,"OPL read");
+	IO_RegisterWriteHandler(0x388,OPL_Write,IO_MB,4);
+	IO_RegisterReadHandler(0x388,OPL_Read,IO_MB,4);
+	IO_RegisterWriteHandler(base,OPL_Write,IO_MB,4);
+	IO_RegisterReadHandler(base,OPL_Read,IO_MB,4);
+
+	IO_RegisterWriteHandler(base+8,OPL_Write,IO_MB,2);
+	IO_RegisterReadHandler(base+8,OPL_Read,IO_MB,2);
 
 
 	opl.active=false;
