@@ -91,13 +91,13 @@ static Bitu Normal_Loop(void) {
 	Bitu ret,NewTicks;
 	while (RemainTicks) {
 		ret=PIC_RunQueue();
+	#if C_DEBUG
+		if (DEBUG_ExitLoop()) return 0;	
+	#endif
 		if (ret) return ret;
 		RemainTicks--;
 		TIMER_AddTick();
 		GFX_Events();
-	#if C_DEBUG
-		if (DEBUG_ExitLoop()) return 0;	
-	#endif
 	}
 	NewTicks=GetTicks();
 	if (NewTicks>LastTicks) {
