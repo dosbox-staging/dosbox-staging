@@ -26,14 +26,12 @@ typedef void (*MIXER_MixHandler)(Bit8u * sampdate,Bit32u len);
 #define MAX_AUDIO ((1<<(16-1))-1)
 #define MIN_AUDIO -(1<<(16-1))
 
-
-
 struct MIXER_Channel;
 
-
-MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bit32u freq,char * name);
-void MIXER_SetVolume(MIXER_Channel * chan,Bit8u vol);
-void MIXER_SetFreq(MIXER_Channel * chan,Bit32u freq);
+MIXER_Channel * MIXER_AddChannel(MIXER_MixHandler handler,Bitu freq,char * name);
+MIXER_Channel * MIXER_FindChannel(const char * name);
+void MIXER_SetVolume(MIXER_Channel * chan,float left,float right);
+void MIXER_SetFreq(MIXER_Channel * chan,Bitu freq);
 void MIXER_SetMode(MIXER_Channel * chan,Bit8u mode);
 void MIXER_Enable(MIXER_Channel * chan,bool enable);
 
