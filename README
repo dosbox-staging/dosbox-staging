@@ -73,7 +73,7 @@ In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory" 
       [-t type] [-aspi] [-ioctl] [-usecd number] [-size drivesize] 
-      [-label drivelabel]
+      [-label drivelabel] [-freesize sizemb]
 MOUNT -cd
     
   Program to mount local directories as drives inside DOSBox.
@@ -92,6 +92,10 @@ MOUNT -cd
 
   -size drivesize
         Sets the size of the drive. 
+
+  -freesize sizemb
+        Sets the amount of freespace avaiable on a drive in MB's. This
+        is a more simple version of -size.	
 
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some 
@@ -136,9 +140,11 @@ MOUNT -cd
   3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
      in dosbox:
        mount d /media/cdrom -t cdrom -usecd 0
-  4. To mount a drive with 870 mb free diskspace (rarely needed! experts only):
+  4. To mount a drive with 870 mb free diskspace (simple version):
+       mount c d:\ -freesize 870
+  5. To mount a drive with 870 mb free diskspace (experts only, full control):
        mount c d:\ -size 4025,127,16513,1700
-  5. To mount /home/dos/dosgames as drive C in DOSBox:
+  6. To mount /home/dos/dosgames as drive C in DOSBox:
        mount c /home/dos/dosgames
 
 MEM

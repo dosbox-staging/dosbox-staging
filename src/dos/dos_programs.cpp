@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.24 2004-05-04 18:34:08 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.25 2004-05-20 11:11:45 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -84,6 +84,15 @@ public:
 				WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
 				return;
 			}
+			/* Parse the free space in mb's */
+			std::string mb_size;
+			if(cmd->FindString("-freesize",mb_size,true)) {
+				char teststr[1024];
+				Bit16u sizemb = static_cast<Bit16u>(atoi(mb_size.c_str()));
+				sprintf(teststr,"512,127,16513,%d",sizemb*1024*1024/(512*127));
+				str_size=teststr;
+			}
+		   
 			cmd->FindString("-size",str_size,true);
 			char number[20];const char * scan=str_size.c_str();
 			Bitu index=0;Bitu count=0;
