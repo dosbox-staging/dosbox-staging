@@ -136,6 +136,59 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & handle) {
 	return EMM_NO_ERROR;
 }
 
+static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
+	/* Check for valid handle */
+	if (handle>=EMM_MAX_HANDLES || emm_handles[handle].first_page==NULL_PAGE) return EMM_INVALID_HANDLE;
+	/* Check for enough pages */
+	if ((emm_handles[handle].pages+EMM_GetFreePages())<pages) return EMM_OUT_OF_LOG;
+	Bit16u page=emm_handles[handle].first_page;
+	Bit16u last=NULL_PAGE;
+	Bit16u page_count=emm_handles[handle].pages;
+	while (pages>0 && page_count>0) {
+		if (emm_pages[page].handle!=handle) E_Exit("EMM:Error illegal handle reference");
+		last=page;
+		page=emm_pages[page].next;
+		pages--;
+		page_count--;
+	}
+	/* Free the rest of the handles */
+	if (page_count && !pages) {
+		emm_handles[handle].pages-=page_count;
+		while (page_count>0) {
+			free(emm_pages[page].memory);
+			emm_pages[page].memory=0;
+			emm_pages[page].handle=NULL_HANDLE;
+			Bit16u next_page=emm_pages[page].next;
+			emm_pages[page].next=NULL_PAGE;
+			page=next_page;page_count--;
+		}
+		pages=emm_handles[handle].pages;
+		return EMM_NO_ERROR;
+	} 
+	if (!page_count && pages) {
+	/* Allocate extra pages */
+		emm_handles[handle].pages+=pages;	
+		page=0;
+		while (pages) {
+			if (emm_pages[page].handle==NULL_HANDLE) {
+				emm_pages[page].handle=handle;
+				emm_pages[page].memory=malloc(EMM_PAGE_SIZE);
+				if (!emm_pages[page].memory) E_Exit("EMM:Cannont allocate memory");
+				emm_pages[last].next=page;
+				last=page;
+				pages--;
+			} else {
+				if (++page>=EMM_MAX_PAGES) E_Exit("EMM:Ran out of pages");
+			}
+		}
+		pages=emm_handles[handle].pages;
+		return EMM_NO_ERROR;
+	} 
+	/* Size exactly the same as the original size */
+	pages=emm_handles[handles].pages;
+	return EMM_NO_ERROR;
+}
+
 static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 	/* Check for too high physical page */
 	if (phys_page>=EMM_MAX_PHYS) return EMM_ILL_PHYS;
@@ -334,6 +387,9 @@ static Bitu INT67_Handler(void) {
 				}
 				break;
 		}
+		break;
+	case 0x51:	/* Reallocate Pages */
+		reg_ah=EMM_ReallocatePages(reg_dx,reg_bx);
 		break;
 	case 0x53: // Set/Get Handlename
 		if (reg_al==0x00) { // Get Name not supported
