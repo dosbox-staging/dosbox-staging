@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.41 2004-07-05 11:54:44 harekiet Exp $ */
+/* $Id: dos_execute.cpp,v 1.42 2004-07-08 20:08:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -282,7 +282,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
 		loadseg=pspseg+16;
 		if ((!iscom) & (head.minmemory == 0) & (head.maxmemory == 0))
-			loadseg = (0x9fed0 - imagesize)/16; //c2woody
+			loadseg = (0x9e000 - imagesize)/16; //c2woody
 	   
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */

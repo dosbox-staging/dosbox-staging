@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.38 2004-05-15 07:57:04 harekiet Exp $ */
+/* $Id: dos_classes.cpp,v 1.39 2004-07-08 20:08:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -65,8 +65,6 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 /* Clear the initual Block */
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
 
-	sSave(sDIB,activeCon,RealMake(0x54,0));
-
 	sSave(sDIB,regCXfrom5e,(Bit16u)0);
 	sSave(sDIB,countLRUcache,(Bit16u)0);
 	sSave(sDIB,countLRUopens,(Bit16u)0);
@@ -89,6 +87,17 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	sSave(sDIB,sharingCount,(Bit16u)0);
 	sSave(sDIB,sharingDelay,(Bit16u)0);
 
+	sSave(sDIB,nulNextDriver,(Bit32u)0xffffffff);
+	sSave(sDIB,nulAttributes,(Bit16u)0x8004);
+	sSave(sDIB,nulStrategy,(Bit32u)0x00000000);
+	sSave(sDIB,nulString[0],(Bit8u)0x4e);
+	sSave(sDIB,nulString[1],(Bit8u)0x55);
+	sSave(sDIB,nulString[2],(Bit8u)0x4c);
+	sSave(sDIB,nulString[3],(Bit8u)0x20);
+	sSave(sDIB,nulString[4],(Bit8u)0x20);
+	sSave(sDIB,nulString[5],(Bit8u)0x20);
+	sSave(sDIB,nulString[6],(Bit8u)0x20);
+	sSave(sDIB,nulString[7],(Bit8u)0x20);
 }
 
 void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb)
@@ -104,6 +113,26 @@ void DOS_InfoBlock::SetBuffers(Bit16u x,Bit16u y) {
 	sSave(sDIB,buffers_x,x);
 	sSave(sDIB,buffers_y,y);
 
+}
+
+void DOS_InfoBlock::SetCurDirStruct(Bit32u _curdirstruct)
+{
+	sSave(sDIB,curDirStructure,_curdirstruct);
+}
+
+void DOS_InfoBlock::SetFCBTable(Bit32u _fcbtable)
+{
+	sSave(sDIB,fcbTable,_fcbtable);
+}
+
+void DOS_InfoBlock::SetDeviceChainStart(Bit32u _devchain)
+{
+	sSave(sDIB,nulNextDriver,_devchain);
+}
+
+void DOS_InfoBlock::SetDiskInfoBuffer(Bit32u _dinfobuf)
+{
+	sSave(sDIB,diskInfoBuffer,_dinfobuf);
 }
 
 RealPt DOS_InfoBlock::GetPointer(void)

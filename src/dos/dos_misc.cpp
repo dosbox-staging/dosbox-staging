@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.10 2004-03-14 19:41:04 qbix79 Exp $ */
+/* $Id: dos_misc.cpp,v 1.11 2004-07-08 20:08:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -58,6 +58,41 @@ static Bitu INT2A_Handler(void) {
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
+	case 0x1607:
+		if (reg_bx == 0x15) {
+			switch (reg_cx) {
+				case 0x0000:		// query instance
+					reg_cx = 0x0001;
+					reg_dx = 0x50;		// dos driver segment
+					SegSet16(es,0x50);	// patch table seg
+					reg_bx = 0x60;		// patch table ofs
+					return true;
+				case 0x0001:		// set patches
+					reg_ax = 0xb97c;
+					reg_bx = (reg_dx & 0x16);
+					reg_dx = 0xa2ab;
+					return true;
+				case 0x0003:		// get size of data struc
+					if (reg_dx==0x0001) {
+						// CDS size requested
+						reg_ax = 0xb97c;
+						reg_dx = 0xa2ab;
+						reg_cx = 0x000e;	// size
+					}
+					return true;
+				case 0x0004:		// instanced data
+					reg_dx = 0;		// none
+					return true;
+				case 0x0005:		// get device driver size
+					reg_ax = 0;
+					reg_dx = 0;
+					return true;
+				default:
+					return false;
+			}
+		}
+		else if (reg_bx == 0x18) return true;	// idle callout
+		else return false;
 	case 0x1680:	/*  RELEASE CURRENT VIRTUAL MACHINE TIME-SLICE */
 		//TODO Maybe do some idling but could screw up other systems :)
 		reg_al=0;	

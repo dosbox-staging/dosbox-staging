@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.46 2004-06-24 21:21:48 harekiet Exp $ */
+/* $Id: dos_inc.h,v 1.47 2004-07-08 20:08:52 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -340,6 +340,10 @@ public:
 	void SetFirstMCB(Bit16u _first_mcb);
 	void SetfirstFileTable(RealPt _first_table);
 	void SetBuffers(Bit16u x,Bit16u y);
+	void SetCurDirStruct(Bit32u _curdirstruct);
+	void SetFCBTable(Bit32u _fcbtable);
+	void SetDeviceChainStart(Bit32u _devchain);
+	void SetDiskInfoBuffer(Bit32u _dinfobuf);
 	RealPt GetPointer (void);
 
 	#ifdef _MSC_VER
@@ -349,7 +353,7 @@ public:
 		Bit16u	regCXfrom5e;		// -0x18 CX from last int21/ah=5e
 		Bit16u	countLRUcache;		// -0x16 LRU counter for FCB caching
 		Bit16u	countLRUopens;		// -0x14 LRU counter for FCB openings
-		Bit8u	stuff1[6];		// -0x12 some stuff, hopefully never used....
+		Bit8u	stuff[6];		// -0x12 some stuff, hopefully never used....
 		Bit16u	sharingCount;		// -0x0c sharing retry count
 		Bit16u	sharingDelay;		// -0x0a sharing retry delay
 		RealPt	diskBufPtr;		// -0x08 pointer to disk buffer
@@ -360,13 +364,16 @@ public:
 		RealPt	activeClock;		//  0x08 active clock device header
 		RealPt	activeCon;		//  0x0c active console device header
 		Bit16u	maxSectorLength;	//  0x10 maximum bytes per sector of any block device;
-		RealPt	discInfoBuffer;		//  0x12 pointer to disc info buffer
+		RealPt	diskInfoBuffer;		//  0x12 pointer to disk info buffer
 		RealPt  curDirStructure;	//  0x16 pointer to current array of directory structure
 		RealPt	fcbTable;		//  0x1a pointer to system FCB table
 		Bit16u	protFCBs;		//  0x1e protected fcbs
 		Bit8u	blockDevices;		//  0x20 installed block devices
 		Bit8u	lastdrive;		//  0x21 lastdrive
-		Bit8u	stuff2[0x12];		//  0x22 NUL driver
+		Bit32u	nulNextDriver;	//  0x22 NUL driver next pointer
+		Bit16u	nulAttributes;	//  0x26 NUL driver aattributes
+		Bit32u	nulStrategy;	//  0x28 NUL driver strategy routine
+		Bit8u	nulString[8];	//  0x2c NUL driver name string
 		Bit8u	joindedDrives;		//  0x34 joined drives
 		Bit16u	specialCodeSeg;		//  0x35 special code segment
 		RealPt  setverPtr;		//  0x37 pointer to setver

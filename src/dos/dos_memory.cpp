@@ -21,7 +21,7 @@
 #include "dos_inc.h"
 
 
-#define MEM_START 0x60					//First Segment that DOS can use
+#define MEM_START 0x68					//First Segment that DOS can use
 //#define MEM_START 4000					//First Segment that DOS can use
 
 static Bit16u memAllocStrategy = 0x00;
