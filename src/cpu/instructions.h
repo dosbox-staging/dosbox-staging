@@ -297,7 +297,7 @@
 				(cf << (flags.var2.b-1)) |					\
 				(flags.var1.b >> (9-flags.var2.b));			\
 		SETFLAGBIT(CF,((flags.var1.b >> (8-flags.var2.b)) & 1));			\
-		SETFLAGBIT(OF,((flags.result.b & 0x80) ^ (cf ? 0x80 : 0)) != 0);	\
+		SETFLAGBIT(OF,(flags.var1.b ^ flags.result.b) & 0x80);				\
  		save(op1,flags.result.b);							\
 	}
 
@@ -312,7 +312,7 @@
 				(cf << (flags.var2.b-1)) |					\
 				(flags.var1.w >> (17-flags.var2.b));		\
 		SETFLAGBIT(CF,((flags.var1.w >> (16-flags.var2.b)) & 1));				\
-		SETFLAGBIT(OF,((flags.result.w & 0x8000) ^ (cf ? 0x8000 : 0)) != 0);	\
+		SETFLAGBIT(OF,(flags.var1.w ^ flags.result.w) & 0x8000);				\
 		save(op1,flags.result.w);							\
 	}
 
@@ -330,8 +330,8 @@
 			(cf << (flags.var2.b-1)) |						\
 			(flags.var1.d >> (33-flags.var2.b));			\
 		}													\
-		SETFLAGBIT(CF,((flags.var1.d >> (32-flags.var2.b)) & 1));							\
-		SETFLAGBIT(OF,((flags.result.d & 0x80000000) ^ (cf ? 0x80000000 : 0)) != 0);	\
+		SETFLAGBIT(CF,((flags.var1.d >> (32-flags.var2.b)) & 1));				\
+		SETFLAGBIT(OF,(flags.var1.d ^ flags.result.d) & 0x80000000);			\
 		save(op1,flags.result.d);							\
 	}
 
