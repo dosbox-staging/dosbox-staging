@@ -98,6 +98,7 @@ switch (inst.code.save) {
 		flags.sf	=(inst.op1.d & 0x080)>0;
 		break;
 	case S_FLGw:
+	case S_FLGd:		//TODO Check full 32bit flags one day
 		Save_Flagsw(inst.op1.w);
 		break;
 	case 0:
