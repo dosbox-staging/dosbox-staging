@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.36 2004-10-23 15:15:06 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.37 2005-01-12 12:44:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -119,20 +119,22 @@ static bool INLINE ValidHandle(Bit16u handle) {
 	return true;
 }
 
-static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & handle) {
+static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & dhandle) {
 	/* Check for 0 page allocation */
 	if (!pages) return EMM_ZERO_PAGES;
 	/* Check for enough free pages */
-	if ((MEM_FreeTotal()/4)<pages) { handle=NULL_HANDLE; return EMM_OUT_OF_LOG;}
-	handle=1;
+	if ((MEM_FreeTotal()/ 4) < pages) { return EMM_OUT_OF_LOG;}
+	Bit16u handle = 1;
 	/* Check for a free handle */
-	while (emm_handles[handle].pages!=NULL_HANDLE) {
-		if (++handle>=EMM_MAX_HANDLES) {handle=NULL_HANDLE;return EMM_OUT_OF_HANDLES;}
+	while (emm_handles[handle].pages != NULL_HANDLE) {
+		if (++handle >= EMM_MAX_HANDLES) {return EMM_OUT_OF_HANDLES;}
 	}
-	MemHandle mem=MEM_AllocatePages(pages*4,false);
+	MemHandle mem = MEM_AllocatePages(pages*4,false);
 	if (!mem) E_Exit("EMS:Memory allocation failure");
-	emm_handles[handle].pages=pages;
-	emm_handles[handle].mem=mem;
+	emm_handles[handle].pages = pages;
+	emm_handles[handle].mem = mem;
+	/* Change handle only if there is no error. */
+	dhandle = handle;
 	return EMM_NO_ERROR;
 }
 
