@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.34 2003-09-21 12:16:02 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.35 2003-09-30 19:12:44 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -74,13 +74,16 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 	while (ch=*lr++) {
 		switch (ch) {
 		case '>':
-			*append=(*lr)=='>';
-			if (append) lr++;
+			*append=((*lr)=='>');
+			if (*append) lr++;
 			lr=ltrim(lr);
 			if (*ofn) free(*ofn);
 			*ofn=lr;
 			while (*lr && *lr!=' ') lr++;
-			*lr=0;
+			if(*lr && *(lr+1)) 
+				*lr++=0; 
+			else 
+				*lr=0;
 			*ofn=strdup(*ofn);
 			continue;
 		case '<':
@@ -88,7 +91,10 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			lr=ltrim(lr);
 			*ifn=lr;
 			while (*lr && *lr!=' ') lr++;
-			*lr=0;
+			if(*lr && *(lr+1)) 
+				*lr++=0; 
+			else 
+				*lr=0;
 			*ifn=strdup(*ifn);
 			continue;
 		case '|':
@@ -284,7 +290,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_COPY_SUCCESS","   %d File(s) copied.\n");
 
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
-	   "DOSBox does not run protected mode games!\n"
+	   "This version runs some protected mode games!\n"
 	   "For supported shell commands type: [33mHELP[0m\n"
 	   "For a short introduction type: [33mINTRO[0m\n\n"
 	   "For more information read the [31mREADME[0m file in DOSBox directory.\n"
