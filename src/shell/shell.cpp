@@ -204,7 +204,11 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
-	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
+#if defined (WIN32)
+   MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\nDOSBox doesn't not run protected mode games!\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
+#else
+   MSG_Add("SHELL_STARTUP","DOSBox Shell v0.57\nDOSBox doesn't run protected mode games!\nDOSBox only works with upcase filenames as dos is case-insensitive.\nSee the UPCASE command and the README for details\nFor Help and supported commands: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
+#endif
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
     MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
     MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
