@@ -196,8 +196,9 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 {
 	/* get previous */
 	DOS_PSP prevpsp(dos.psp);
-	/* Clear it first */	
-	for (Bitu i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
+	/* Clear it first */
+        Bitu i;
+	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
 	// Set size
 	sSave(sPSP,next_seg,mem_size);
 	/* far call opcode */
