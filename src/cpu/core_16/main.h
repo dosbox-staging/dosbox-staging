@@ -1091,14 +1091,10 @@ restart:
 			flags.type=t_CF;
 			break;
 		case 0xfa:												/* CLI */
-//			if (DPMI_IsActive()) DPMI_SetVirtualIntFlag(false);
-//			else 
-				SETFLAGBIT(IF,false);
+			SETFLAGBIT(IF,false);
 			break;
 		case 0xfb:												/* STI */
-//			if (DPMI_IsActive()) DPMI_SetVirtualIntFlag(true);
-//			else 
-				SETFLAGBIT(IF,true);
+			SETFLAGBIT(IF,true);
 #ifdef CPU_PIC_CHECK
 			if (GETFLAG(IF) && PIC_IRQCheck) goto decode_end;
 #endif

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.47 2003-10-13 21:56:53 finsterr Exp $ */
+/* $Id: sdlmain.cpp,v 1.48 2003-10-14 08:38:36 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

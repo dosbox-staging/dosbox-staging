@@ -839,7 +839,7 @@ Bitu DPMI::RealModeCallback(void)
 	reg_eip = RealOff(CALLBACK_RealPointer(callback.rmCallbackReturn));
 	// call protected mode func
 	SetVirtualIntFlag(false);
-//	SETFLAGBIT(IF,false);
+	SETFLAGBIT(IF,false);
 	SETFLAGBIT(TF,false);
 	CPU_Push32(flags.word);
 	CPU_CALL(dpmi.client.bit32,dpmi.rmCallback[num].codeSelector,dpmi.rmCallback[num].codeOffset);
@@ -900,7 +900,7 @@ Bitu DPMI::CallRealIRETFrame(void)
 	SegSet16(cs,RealSeg(CALLBACK_RealPointer(callback.rmIntFrameReturn)));
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.rmIntFrameReturn));
 	SetVirtualIntFlag(false);
-//	SETFLAGBIT(IF,false);
+	SETFLAGBIT(IF,false);
 	SETFLAGBIT(TF,false);
 	CPU_CALL(false,newCS,newIP);
 	return 0;

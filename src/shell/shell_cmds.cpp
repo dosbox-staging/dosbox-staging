@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.31 2003-10-13 22:01:07 finsterr Exp $ */
+/* $Id: shell_cmds.cpp,v 1.32 2003-10-14 08:38:36 qbix79 Exp $ */
 
 #include <string.h>
 

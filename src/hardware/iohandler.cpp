@@ -24,9 +24,7 @@ IO_WriteBlock IO_WriteTable[IO_MAX];
 
 void IO_Write(Bitu num,Bit8u val) {
 	if (num<IO_MAX) IO_WriteTable[num].handler(num,val);
-	else {
-		LOG(LOG_IO,LOG_WARN)("IO:Out or range write %X2 to port %4X",val,num);
-	}
+	else LOG(LOG_IO,LOG_WARN)("IO:Out or range write %X2 to port %4X",val,num);
 }
 
 Bit8u IO_Read(Bitu num) {

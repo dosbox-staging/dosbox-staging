@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.15 2003-10-13 21:56:25 finsterr Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.16 2003-10-14 08:38:35 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"

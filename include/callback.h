@@ -24,7 +24,7 @@
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
 
-enum { CB_RETF,CB_IRET,CB_IRET_STI,CB_IRET_ONLY };
+enum { CB_RETF,CB_IRET,CB_IRET_STI };
 
 #define CB_MAX 1024
 #define CB_SEG 0xC800

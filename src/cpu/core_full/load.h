@@ -368,14 +368,10 @@ l_M_Ed:
 		else reg_edx=0;
 		goto nextopcode;
 	case D_CLI:
-//		if (DPMI_IsActive()) DPMI_SetVirtualIntFlag(false);
-//		else 
-			SETFLAGBIT(IF,false);
+		SETFLAGBIT(IF,false);
 		goto nextopcode;
 	case D_STI:
-//		if (DPMI_IsActive()) DPMI_SetVirtualIntFlag(true);
-//		else 
-			SETFLAGBIT(IF,true);
+		SETFLAGBIT(IF,true);
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			LEAVECORE;	
 			return CBRET_NONE;
