@@ -75,7 +75,7 @@ bool CDROM_Interface_Ioctl::GetAudioTrackInfo(int track, TMSF& start, unsigned c
 //	Close();
 	if (!bStat) return false;
 	
-	attr		= (toc.TrackData[track-1].Adr << 4) | toc.TrackData[track].Control;
+	attr		= (toc.TrackData[track-1].Control << 4) & 0xEF;
 	start.min	= toc.TrackData[track-1].Address[1];
 	start.sec	= toc.TrackData[track-1].Address[2];
 	start.fr	= toc.TrackData[track-1].Address[3];
@@ -97,7 +97,7 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 //	Close();
 	if (!bStat) return false;
 
-	attr		= (sub.CurrentPosition.ADR << 4) | sub.CurrentPosition.Control;
+	attr		= (sub.CurrentPosition.Control << 4) & 0xEF;
 	track		= sub.CurrentPosition.TrackNumber;
 	index		= sub.CurrentPosition.IndexNumber;
 	relPos.min	= sub.CurrentPosition.TrackRelativeAddress[1];

@@ -292,7 +292,7 @@ bool CDROM_Interface_Aspi::GetAudioTrackInfo	(int track, TMSF& start, unsigned c
 		start.min	= (unsigned char)(toc.tracks[track-1].lAddr >>  8) &0xFF;
 		start.sec	= (unsigned char)(toc.tracks[track-1].lAddr >> 16) &0xFF;
 		start.fr	= (unsigned char)(toc.tracks[track-1].lAddr >> 24) &0xFF;
-		attr		= toc.tracks[track-1].cAdrCtrl;
+		attr		= (toc.tracks[track-1].cAdrCtrl << 4) & 0xEF;
 		return true;
 	};		
 	return false;
@@ -503,7 +503,7 @@ bool CDROM_Interface_Aspi::GetAudioSub(unsigned char& attr, unsigned char& track
 	
 	if (s.SRB_Status!=SS_COMP) return false;
 
-	attr		= (pos.ADR<<4) | pos.Control;
+	attr		= (pos.Control<<4) &0xEF;
 	track		= pos.TrackNumber;
 	index		= pos.IndexNumber;
 	absPos.min	= pos.AbsoluteAddress[1];
