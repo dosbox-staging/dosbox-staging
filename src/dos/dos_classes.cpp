@@ -29,175 +29,63 @@
 	dos work a bit easier.
 */
 
-#pragma pack (1)
 
-union sParamBlock {
-	struct {
-		Bit16u loadseg;
-		Bit16u relocation;
-	} overlay;
-	struct {
-		Bit16u envseg;
-		RealPt cmdtail;
-		RealPt fcb1;
-		RealPt fcb2;
-		RealPt initsssp;
-		RealPt initcsip;
-	} exec;
-} GCC_ATTRIBUTE(packed);
-
-struct sFCB {
-	Bit8u drive;            //0 is current drive. when opened 0 is replaced by drivenumber
-	Bit8u filename[8];      //spacepadded to fit
-	Bit8u ext[3];           //spacepadded to fit
-	Bit16u current_block;   // set to 0 by open
-	Bit16u record_size;     // used by reads Set to 80h by OPEN function
-	Bit32u filesize;        //in bytes In this field, the first word is the low-order part of the size
-	Bit16u date;
-	Bit16u time;
-	Bit8u reserved[8];
-	Bit8u  current_relative_record_number; //open doesn't set this
-	Bit32u rel_record;      //open does not handle this
-} GCC_ATTRIBUTE(packed);
-
-#pragma pack ()
-
-#define FCB_EXTENDED (mem_readb(off)==0xFF ? 7:0)
-
-void DOS_FCB::Set_drive(Bit8u a){
-	mem_writeb(off+offsetof(sFCB,drive)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_filename(char * a){
-	MEM_BlockWrite(off+offsetof(sFCB,filename)+FCB_EXTENDED,a,8);
-}
-void DOS_FCB::Set_ext(char * a) {
-	MEM_BlockWrite(off+offsetof(sFCB,ext)+FCB_EXTENDED,a,3);
-}
-void DOS_FCB::Set_current_block(Bit16u a){
-	mem_writew(off+offsetof(sFCB,current_block)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_record_size(Bit16u a){
-	mem_writew(off+offsetof(sFCB,record_size)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_filesize(Bit32u a){
-	mem_writed(off+offsetof(sFCB,filesize)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_date(Bit16u a){
-	mem_writew(off+offsetof(sFCB,date)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_time(Bit16u a){
-	mem_writew(off+offsetof(sFCB,time)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_current_record(Bit8u a){
-	mem_writeb(off+offsetof(sFCB,current_relative_record_number)+FCB_EXTENDED,a);
-}
-void DOS_FCB::Set_random_record(Bit32u a){
-	mem_writed(off+offsetof(sFCB,rel_record)+FCB_EXTENDED,a);
-}
-Bit8u DOS_FCB::Get_drive(void){
-	return mem_readb(off+offsetof(sFCB,drive)+FCB_EXTENDED);
-}
-void DOS_FCB::Get_filename(char * a){
-	MEM_BlockRead(off+offsetof(sFCB,filename)+FCB_EXTENDED,a,8);
-}
-void DOS_FCB::Get_ext(char * a){
-	MEM_BlockRead(off+offsetof(sFCB,ext)+FCB_EXTENDED,a,3);
-}
-Bit16u DOS_FCB::Get_current_block(void){
-	return mem_readw(off+offsetof(sFCB,current_block)+FCB_EXTENDED);
-}
-Bit16u DOS_FCB::Get_record_size(void){
-	return mem_readw(off+offsetof(sFCB,record_size)+FCB_EXTENDED);
-}
-Bit32u DOS_FCB::Get_filesize(void){
-	return mem_readd(off+offsetof(sFCB,filesize)+FCB_EXTENDED);
-}
-Bit16u DOS_FCB::Get_date(void){
-	return mem_readw(off+offsetof(sFCB,date)+FCB_EXTENDED);
-}
-Bit16u DOS_FCB::Get_time(void){
-	return mem_readw(off+offsetof(sFCB,time)+FCB_EXTENDED);
-}
-Bit8u DOS_FCB::Get_current_record(void){
-	return mem_readb(off+offsetof(sFCB,current_relative_record_number)+FCB_EXTENDED);
-}
-Bit32u DOS_FCB::Get_random_record(void){
-	return mem_readd(off+offsetof(sFCB,rel_record)+FCB_EXTENDED);
+void DOS_ParamBlock::Clear(void) {
+	memset(&data,0,sizeof(data));
 }
 
-
-void DOS_ParamBlock::InitExec(RealPt cmdtail) {
-	mem_writew(off+offsetof(sParamBlock,exec.envseg),0);
-	mem_writed(off+offsetof(sParamBlock,exec.fcb1),0);
-	mem_writed(off+offsetof(sParamBlock,exec.fcb2),0);
-	mem_writed(off+offsetof(sParamBlock,exec.cmdtail),cmdtail);
+void DOS_ParamBlock::LoadData(void) {
+	data.exec.envseg=sGet(sPBlock,exec.envseg);
+	data.exec.cmdtail=sGet(sPBlock,exec.cmdtail);
+	data.exec.fcb1=sGet(sPBlock,exec.fcb1);
+	data.exec.fcb2=sGet(sPBlock,exec.fcb2);
+	data.exec.initsssp=sGet(sPBlock,exec.initsssp);
+	data.exec.initcsip=sGet(sPBlock,exec.initcsip);
 }
 
-Bit16u DOS_ParamBlock::loadseg(void) {
-	return mem_readw(off+offsetof(sParamBlock,overlay.loadseg));
-}
-Bit16u DOS_ParamBlock::relocation(void){
-	return mem_readw(off+offsetof(sParamBlock,overlay.loadseg));
-}
-Bit16u DOS_ParamBlock::envseg(void){
-	return mem_readw(off+offsetof(sParamBlock,exec.envseg));
-}
-RealPt DOS_ParamBlock::initsssp(void){
-	return mem_readd(off+offsetof(sParamBlock,exec.initsssp));
-}
-RealPt DOS_ParamBlock::initcsip(void){
-	return mem_readd(off+offsetof(sParamBlock,exec.initcsip));
-}
-RealPt DOS_ParamBlock::fcb1(void){
-	return mem_readd(off+offsetof(sParamBlock,exec.fcb1));
-}
-RealPt DOS_ParamBlock::fcb2(void){
-	return mem_readd(off+offsetof(sParamBlock,exec.fcb2));
-}
-RealPt DOS_ParamBlock::cmdtail(void){
-	return mem_readd(off+offsetof(sParamBlock,exec.cmdtail));
+void DOS_ParamBlock::SaveData(void) {
+	sSave(sPBlock,exec.envseg,data.exec.envseg);
+	sSave(sPBlock,exec.cmdtail,data.exec.cmdtail);
+	sSave(sPBlock,exec.fcb1,data.exec.fcb1);
+	sSave(sPBlock,exec.fcb2,data.exec.fcb2);
+	sSave(sPBlock,exec.initsssp,data.exec.initsssp);
+	sSave(sPBlock,exec.initcsip,data.exec.initcsip);
 }
 
-// * Dos Info Block (list of lists) *
 
 void DOS_InfoBlock::SetLocation(Bit16u segment)
 {
 	seg = segment;
-	dib = (SDosInfoBlock*)HostMake(segment,0);
-	Bit16u size = sizeof(SDosInfoBlock);
-	memset(dib,0,sizeof(SDosInfoBlock));
-};
+	pt=PhysMake(seg,0);
+/* Clear the initual Block */
+	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
+}
 
-void DOS_InfoBlock::SetFirstMCB(RealPt pt)
+void DOS_InfoBlock::SetFirstMCB(RealPt _firstmcb)
 {
-	dib->firstMCB = pt;
-};
+	sSave(sDIB,firstMCB,_firstmcb);
+}
 
-void DOS_InfoBlock::GetDIBPointer(Bit16u& segment, Bit16u& offset)
+void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table){
+	sSave(sDIB,firstFileTable,_first_table);
+}
+
+RealPt DOS_InfoBlock::GetPointer(void)
 {
-	segment = seg;
-	offset	= offsetof(SDosInfoBlock,firstDPB);
-};
+	return RealMake(seg,offsetof(sDIB,firstDPB));
+}
 
 
 /* program Segment prefix */
 
 Bit16u DOS_PSP::rootpsp = 0;
 
-void DOS_PSP::NewPt(Bit16u segment) 
-{
-	seg	= segment;
-	pt	= PhysMake(segment,0);
-	// debug
-	psp = (sPSP*)Phys2Host(pt);
-};
-
 void DOS_PSP::MakeNew(Bit16u mem_size) 
 {
 	/* get previous */
 	DOS_PSP prevpsp(dos.psp);
 	/* Clear it first */
-        Bitu i;
+	Bitu i;
 	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);
 	// Set size
 	sSave(sPSP,next_seg,mem_size);
@@ -225,7 +113,7 @@ void DOS_PSP::MakeNew(Bit16u mem_size)
 	for (i=0;i<20;i++) SetFileHandle(i,0xff);
 
 	/* User Stack pointer */
-	if (prevpsp.GetSegment()!=0) sSave(sPSP,stack,prevpsp.GetStack());
+//	if (prevpsp.GetSegment()!=0) sSave(sPSP,stack,prevpsp.GetStack());
 
 	if (rootpsp==0) rootpsp = seg;
 }
@@ -289,7 +177,7 @@ void DOS_PSP::RestoreVectors(void)
 void DOS_PSP::SetCommandTail(RealPt src)
 {
 	if (src) {	// valid source
-		memcpy((void*)(Phys2Host(pt)+offsetof(sPSP,cmdtail)),(void*)Real2Host(src),128);
+		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),Real2Phys(src),128);
 	} else {	// empty
 		sSave(sPSP,cmdtail.count,0x00);
 		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer[0]),0x0d);
@@ -304,4 +192,169 @@ void DOS_PSP::SetFCB1(RealPt src)
 void DOS_PSP::SetFCB2(RealPt src)
 {
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
+};
+
+
+void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
+	sSave(sDTA,sdrive,_sdrive);
+	sSave(sDTA,sattr,_sattr);
+	/* Fill with spaces */
+	Bitu i;
+	for (i=0;i<12;i++) mem_writeb(pt+offsetof(sDTA,sname)+i,' ');
+	char * find_ext;
+	find_ext=strchr(pattern,'.');
+	if (find_ext) {
+		Bitu size=find_ext-pattern;if (size>8) size=8;
+		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,size);
+		find_ext++;
+		MEM_BlockWrite(pt+offsetof(sDTA,sext),find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext));
+	} else {
+		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,(strlen(pattern) > 8) ? 8 : strlen(pattern));
+	}
+}
+
+void DOS_DTA::SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _time,Bit8u _attr) {
+	MEM_BlockWrite(pt+offsetof(sDTA,name),(void *)_name,DOS_NAMELENGTH_ASCII);
+	sSave(sDTA,size,_size);
+	sSave(sDTA,date,_date);
+	sSave(sDTA,time,_time);
+	sSave(sDTA,attr,_attr);
+}
+
+
+void DOS_DTA::GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr) {
+	MEM_BlockRead(pt+offsetof(sDTA,name),_name,DOS_NAMELENGTH_ASCII);
+	_size=sGet(sDTA,size);
+	_date=sGet(sDTA,date);
+	_time=sGet(sDTA,time);
+	_attr=sGet(sDTA,attr);
+}
+
+Bit8u DOS_DTA::GetSearchDrive(void) {
+	return sGet(sDTA,sdrive);
+}
+
+void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
+	attr=sGet(sDTA,sattr);
+	char temp[11];
+	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
+	memcpy(pattern,temp,8);
+	pattern[8]='.';
+	memcpy(&pattern[9],&temp[8],3);
+	pattern[12]=0;
+
+}
+
+DOS_FCB::DOS_FCB(Bit16u seg,Bit16u off) { 
+	SetPt(seg,off); 
+	real_pt=pt;
+	if (sGet(sFCB,drive)==0xff) {
+		pt+=7;
+		extended=true;
+	} else extended=false;
+}
+
+bool DOS_FCB::Extended(void) {
+	return extended;
+}
+
+void DOS_FCB::Create(bool _extended) {
+	Bitu fill;
+	if (_extended) fill=36+7;
+	else fill=36;
+	Bitu i;
+	for (i=0;i<fill;i++) mem_writeb(real_pt+i,0);
+	pt=real_pt;
+	if (_extended) {
+		mem_writeb(real_pt,0xff);
+		pt+=7;
+		extended=true;
+	} else extended=false;
+}
+
+void DOS_FCB::SetName(Bit8u _drive,char * _fname,char * _ext) {
+	sSave(sFCB,drive,_drive);
+	MEM_BlockWrite(pt+offsetof(sFCB,filename),_fname,8);
+	MEM_BlockWrite(pt+offsetof(sFCB,ext),_ext,3);
+}
+
+void DOS_FCB::SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time) {
+	sSave(sFCB,filesize,_size);
+	sSave(sFCB,date,_date);
+	sSave(sFCB,time,_time);
+}
+
+void DOS_FCB::GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time) {
+	_size=sGet(sFCB,filesize);
+
+}
+
+void DOS_FCB::GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec) {
+	_cur_block=sGet(sFCB,cur_block);
+	_cur_rec=sGet(sFCB,cur_rec);
+
+}
+
+void DOS_FCB::SetRecord(Bit16u _cur_block,Bit8u _cur_rec) {
+	sSave(sFCB,cur_block,_cur_block);
+	sSave(sFCB,cur_rec,_cur_rec);
+}
+
+void DOS_FCB::GetSeqData(Bit8u & _fhandle,Bit16u & _rec_size) {
+	_fhandle=sGet(sFCB,file_handle);
+	_rec_size=sGet(sFCB,rec_size);
+}
+
+
+void DOS_FCB::GetRandom(Bit32u & _random) {
+	_random=sGet(sFCB,rndm);
+}
+
+void DOS_FCB::SetRandom(Bit32u _random) {
+	sSave(sFCB,rndm,_random);
+}
+
+void DOS_FCB::FileOpen(Bit8u _fhandle) {
+	sSave(sFCB,drive,GetDrive());
+	sSave(sFCB,file_handle,_fhandle);
+	sSave(sFCB,cur_block,0);
+	sSave(sFCB,rec_size,128);
+	sSave(sFCB,rndm,0);
+	Bit8u temp=RealHandle(_fhandle);
+	sSave(sFCB,filesize,Files[temp]->size);
+	sSave(sFCB,time,Files[temp]->time);
+	sSave(sFCB,date,Files[temp]->date);
+}
+
+void DOS_FCB::FileClose(Bit8u & _fhandle) {
+	_fhandle=sGet(sFCB,file_handle);
+	sSave(sFCB,file_handle,0xff);
+}
+
+Bit8u DOS_FCB::GetDrive(void) {
+	Bit8u drive=sGet(sFCB,drive);
+	if (!drive) return dos.current_drive;
+	else return drive-1;
+}
+
+void DOS_FCB::GetName(char * fillname) {
+	fillname[0]=GetDrive()+'A';
+	fillname[1]=':';
+	MEM_BlockRead(pt+offsetof(sFCB,filename),&fillname[2],8);
+	fillname[10]='.';
+	MEM_BlockRead(pt+offsetof(sFCB,ext),&fillname[11],3);
+	fillname[14]=0;
+}
+
+class DOS_MCB : public MemStruct{
+public:
+	DOS_MCB(Bit16u seg) { SetPt(seg); }
+private:
+	struct sMCB {
+		Bit8u type;
+		Bit16u psp_segment;
+		Bit16u size;	
+		Bit8u unused[3];
+		Bit8u filename[8];
+	} GCC_ATTRIBUTE(packed);
 };
