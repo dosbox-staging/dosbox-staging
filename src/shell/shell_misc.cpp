@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.33 2004-10-20 19:53:50 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.34 2005-01-11 21:08:08 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -171,7 +171,7 @@ void DOS_Shell::InputCommand(char * line) {
 				// moves the cursor left
 				while (str_remain--) outc(8);
 			}
-			if (strlen(line) == 0 && l_completion.size()) l_completion.clear();
+			if (l_completion.size()) l_completion.clear();
 			break;
 		case 0x0a:				/* New Line not handled */
 			/* Don't care */
@@ -213,8 +213,14 @@ void DOS_Shell::InputCommand(char * line) {
 						strcpy(mask, "*.*");
 					}
 
+					RealPt save_dta=dos.dta();
+					dos.dta(dos.tables.tempdta);
+
 					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
-					if (!res) break;	// TODO: beep
+					if (!res) {
+						dos.dta(save_dta);
+						break;	// TODO: beep
+					}
 
 					DOS_DTA dta(dos.dta());
 					char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
@@ -239,6 +245,7 @@ void DOS_Shell::InputCommand(char * line) {
 					/* Add excutable list to front of completion list. */
 					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
 					it_completion = l_completion.begin();
+					dos.dta(save_dta);
 				}
 
 				if (l_completion.size() && it_completion->length()) {
