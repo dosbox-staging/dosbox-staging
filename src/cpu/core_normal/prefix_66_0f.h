@@ -336,7 +336,7 @@
 			if (value==0) {
 				SETFLAGBIT(ZF,true);
 			} else {
-				result = 35;	// Operandsize-1
+				result = 31;	// Operandsize-1
 				while ((value & 0x80000000)==0) { result--; value<<=1; }
 				SETFLAGBIT(ZF,false);
 				*rmrd = result;
