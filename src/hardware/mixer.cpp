@@ -157,11 +157,14 @@ static void MIXER_MixData(Bit32u samples) {
 			case MIXER_8MONO:
 				MIX_NORMAL(m8,0,0);
 				break;
+			case MIXER_8STEREO:
+				MIX_NORMAL(m8,0,1);
+				break;
 			case MIXER_16MONO:
 				MIX_NORMAL(m16,0,0);
 				break;
 			case MIXER_16STEREO:
-				MIX_NORMAL(s16,0,0);
+				MIX_NORMAL(s16,0,1);
 				break;
 			default:
 				E_Exit("MIXER:Illegal sound mode %2X",chan->mode);
