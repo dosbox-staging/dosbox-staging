@@ -148,7 +148,6 @@ Bit16u DOS_PSP::FindFreeFileEntry(void)
 Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle)
 {
 	PhysPt files=Real2Phys(sGet(sPSP,file_table));
-	Bit16u max = sGet(sPSP,max_files);
 	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
 		if (mem_readb(files+i)==handle) return i;
 	}	

@@ -24,31 +24,31 @@
 
 
 static SHELL_Cmd cmd_list[]={
-	"CD",		0,			&DOS_Shell::CMD_CHDIR,		"SHELL_CMD_CHDIR_HELP",
-	"CLS",		0,			&DOS_Shell::CMD_CLS,		"SHELL_CMD_CLS_HELP",
-	"COPY",		0,			&DOS_Shell::CMD_COPY,		"SHELL_CMD_COPY_HELP",
-	"DIR",		0,			&DOS_Shell::CMD_DIR,		"SHELL_CMD_DIR_HELP",
-    "DEL",		1,			&DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
-    "DELETE",   0,          &DOS_Shell::CMD_DELETE,     "SHELL_CMD_DELETE_HELP",
-	"ECHO",		0,			&DOS_Shell::CMD_ECHO,		"SHELL_CMD_ECHO_HELP",
-	"EXIT",		0,			&DOS_Shell::CMD_EXIT,		"SHELL_CMD_EXIT_HELP",	
-	"HELP",		0,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP",
-	"MD",		0,			&DOS_Shell::CMD_MKDIR,		"SHELL_CMD_MKDIR_HELP",
-	"RD",		0,			&DOS_Shell::CMD_RMDIR,		"SHELL_CMD_RMDIR_HELP",
-	"SET",		0,			&DOS_Shell::CMD_SET,		"SHELL_CMD_SET_HELP",
-	"IF",		0,			&DOS_Shell::CMD_IF,			"SHELL_CMD_IF_HELP",
-	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP",
-	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP",
-	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP",
-	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
-	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP",
-	"PAUSE",	0,			&DOS_Shell::CMD_PAUSE,		"SHELL_CMD_PAUSE_HELP",
+{	"CD",		0,			&DOS_Shell::CMD_CHDIR,		"SHELL_CMD_CHDIR_HELP"},
+{	"CLS",		0,			&DOS_Shell::CMD_CLS,		"SHELL_CMD_CLS_HELP"},
+{	"COPY",		0,			&DOS_Shell::CMD_COPY,		"SHELL_CMD_COPY_HELP"},
+{	"DIR",		0,			&DOS_Shell::CMD_DIR,		"SHELL_CMD_DIR_HELP"},
+{	"DEL",		1,			&DOS_Shell::CMD_DELETE,		"SHELL_CMD_DELETE_HELP"},
+{	"DELETE",	0,			&DOS_Shell::CMD_DELETE,		"SHELL_CMD_DELETE_HELP"},
+{	"ECHO",		0,			&DOS_Shell::CMD_ECHO,		"SHELL_CMD_ECHO_HELP"},
+{	"EXIT",		0,			&DOS_Shell::CMD_EXIT,		"SHELL_CMD_EXIT_HELP"},	
+{	"HELP",		0,			&DOS_Shell::CMD_HELP,		"SHELL_CMD_HELP_HELP"},
+{	"MD",		0,			&DOS_Shell::CMD_MKDIR,		"SHELL_CMD_MKDIR_HELP"},
+{	"RD",		0,			&DOS_Shell::CMD_RMDIR,		"SHELL_CMD_RMDIR_HELP"},
+{	"SET",		0,			&DOS_Shell::CMD_SET,		"SHELL_CMD_SET_HELP"},
+{	"IF",		0,			&DOS_Shell::CMD_IF,			"SHELL_CMD_IF_HELP"},
+{	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP"},
+{	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP"},
+{	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP"},
+{	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
+{	"REN",		1,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
+{	"PAUSE",	0,			&DOS_Shell::CMD_PAUSE,		"SHELL_CMD_PAUSE_HELP"},
 /*
 	"CHDIR",	0,			&DOS_Shell::CMD_CHDIR,		"Change Directory",
 	"MKDIR",	0,			&DOS_Shell::CMD_MKDIR,		"Make Directory",
 	"RMDIR",	0,			&DOS_Shell::CMD_RMDIR,		"Remove Directory",
 */
-	0,0,0,0
+{	0,0,0,0}
 };
 
 void DOS_Shell::DoCommand(char * line) {

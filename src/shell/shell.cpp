@@ -75,8 +75,6 @@ void DOS_Shell::ParseLine(char * line) {
 
 	char * in=0;
 	char * out=0;
-	char * fname0=0;
-	char * fname1=0;
 
 	/* Check for a leading @ */
  	if (line[0]=='@') line[0]=' ';
