@@ -374,7 +374,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Switch the psp's and set new DTA */
 		dos.psp=pspseg;
 		DOS_PSP newpsp(dos.psp);
-		dos.dta=newpsp.GetDTA();
+		newpsp.SetDTA(dos.dta); /* Original: change this and line below. This way seems better(zone66 and unpack) */
+		//dos.dta=newpsp.GetDTA();
 		/* save vectors */
 		newpsp.SaveVectors();
 		/* copy fcbs */
