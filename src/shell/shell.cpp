@@ -19,7 +19,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
-
+#include "setup.h"
 #include "shell_inc.h"
 
 Bitu call_shellstop;
@@ -132,6 +132,45 @@ void DOS_Shell::SyntaxError(void) {
 
 
 
+void AUTOEXEC_Init(Section * sec) {
+	/* Register a virtual AUOEXEC.BAT file */
+
+	Section_line * section=static_cast<Section_line *>(sec);
+	SHELL_AddAutoexec("SET PATH=Z:\\");
+	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
+	char * extra=(char *)section->data.c_str();
+	if (extra) SHELL_AddAutoexec(extra);
+	/* Check to see for extra command line options to be added */
+	std::string line;
+	while (control->cmdline->FindString("-c",line,true)) {
+		SHELL_AddAutoexec((char *)line.c_str());	
+	}
+	/* Check for first command being a directory or file */
+	char buffer[CROSS_LEN];
+	if (control->cmdline->FindFirst(line)) {
+		struct stat test;
+		strcpy(buffer,line.c_str());
+		if (stat(buffer,&test)) {
+			getcwd(buffer,CROSS_LEN);
+			strcat(buffer,line.c_str());
+			if (stat(buffer,&test)) goto nomount;
+		}
+		if (test.st_mode & S_IFDIR) { 
+			SHELL_AddAutoexec("MOUNT C %s",buffer);
+			SHELL_AddAutoexec("C:");
+		} else {
+			char * name=strrchr(buffer,CROSS_FILESPLIT);
+			if (!name) goto nomount;
+			*name++=0;
+			if (access(buffer,F_OK)) goto nomount;
+			SHELL_AddAutoexec("MOUNT C %s",buffer);
+			SHELL_AddAutoexec("C:");
+			SHELL_AddAutoexec(name);
+		}
+	}
+nomount:
+	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+}
 
 void SHELL_Init() {
 	call_shellstop=CALLBACK_Allocate();
@@ -171,7 +210,5 @@ void SHELL_Init() {
 	strcpy(line,"/INIT Z:\\AUTOEXEC.BAT");
 	info.cmd_line=line;
 
-/* Handle the last AUTOEXEC.BAT Setup stuff */
-	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
 	SHELL_ProgramStart(&info);
 }
