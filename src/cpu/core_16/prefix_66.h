@@ -69,8 +69,6 @@ switch(Fetchb()) {
 		RMGdEd(CMPD);break;
 	case 0x3d:												/* CMP EAX,Id */
 		EAXId(CMPD);break;
-
-	
 	case 0x26:												/* SEG ES: */
 		SegPrefix_66(es);break;
 	case 0x2e:												/* SEG CS: */
@@ -396,7 +394,14 @@ switch(Fetchb()) {
 		GRP2D(1);break;
 	case 0xd3:												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
-
+	case 0xf2:												/* REPNZ */
+		prefix.count++;
+		count-=Repeat_Normal(false,true,count);
+		break;
+	case 0xf3:												/* REPZ */
+		prefix.count++;
+		count-=Repeat_Normal(true,true,count);
+		break;
 	case 0xf7:												/* GRP3 Ed(,Id) */
 		{ 
 			union {	Bit64u u;Bit64s s;} temp;
