@@ -150,7 +150,8 @@ Bit8u VESA_GetSVGAMode(Bit16u & mode) {
 }
 
 Bit8u VESA_SetCPUWindow(Bit8u window,Bit16u address) {
-	if (!window && (address<32)) {
+//TODO Check with univbe if it doesn't check for window param either
+	if ((address<32)) {
 		IO_Write(0x3d4,0x6a);
 		IO_Write(0x3d5,(Bit8u)address);
 		return 0x0;
@@ -158,11 +159,10 @@ Bit8u VESA_SetCPUWindow(Bit8u window,Bit16u address) {
 }
 
 Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address) {
-	if (!window) {
-		IO_Write(0x3d4,0x6a);
-		address=IO_Read(0x3d5);
-		return 0x0;
-	} else return 0x1;
+//TODO Check with univbe if it doesn't check for window param either
+	IO_Write(0x3d4,0x6a);
+	address=IO_Read(0x3d5);
+	return 0x0;
 }
 
 
@@ -268,7 +268,8 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y) {
 static char oemstring[]="S3 Incorporated. Trio64";
 
 static Bitu SetWindowPositionHandler(void) {
-	VESA_SetCPUWindow(reg_bl,reg_dx);
+	if (reg_bh) VESA_GetCPUWindow(reg_bl,reg_dx);
+	else VESA_SetCPUWindow(reg_bl,reg_dx);
 	return 0;
 }
 
