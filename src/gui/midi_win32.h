@@ -18,7 +18,6 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include <mmreg.h>
 
 static HMIDIOUT m_out;
 static MIDIHDR m_hdr;
