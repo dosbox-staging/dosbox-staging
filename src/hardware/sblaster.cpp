@@ -98,6 +98,7 @@ struct SB_INFO {
 			Bitu pos,used;
 		} in,out;
 		Bit8u test_register;
+		Bitu write_busy;
 	} dsp;
 	struct {
 		Bit16s data[DSP_DACSIZE];
@@ -434,6 +435,7 @@ static void DSP_Reset(void) {
 	DSP_ChangeMode(MODE_NONE);
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
+	sb.dsp.write_busy=0;
 	sb.dma.left=0;
 	sb.dma.total=0;
 	sb.freq=22050;
@@ -520,6 +522,10 @@ static void DSP_DoCommand(void) {
 	case 0xd4:
 		DSP_ChangeMode(MODE_DMA_WAIT);
 		DMA_SetEnableCallBack(sb.hw.dma8,DMA_Enable);
+		break;
+	case 0xda:	/* Exit Autoinitialize 8-bit */
+		/* Set mode to single transfer so it ends with current block */
+		if (sb.dma.mode==DMA_8_AUTO) sb.dma.mode=DMA_8_SINGLE;
 		break;
 	case 0xe0:	/* DSP Identification - SB2.0+ */
 		DSP_FlushData();
@@ -640,6 +646,8 @@ static Bit8u read_sb(Bit32u port) {
 	case DSP_WRITE_STATUS:
 		switch (sb.dsp.state) {
 		case DSP_S_NORMAL:
+			sb.dsp.write_busy++;
+			if (sb.dsp.write_busy & 8) return 0xff;
 			return 0x7f;
 		case DSP_S_RESET:
 			return 0xff;
