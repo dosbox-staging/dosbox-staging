@@ -16,8 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+// Pharlap Special Infos:
+// - Dont hook hardware ints
+// - CMOS Memory Size has to return 0 otherwise it tries to map physical memory
+// - Set PM Int Vector : Use it on current idt, not only dpmi one (ultima 8 mouse check fails otherwise)
+// - Ultima 8 wants 40 Files (Hack in PSP::SetNumFiles
+// - Ultima 8 and Bioforge work with DPL 3
+// - Crusaders 1+2 seem to need DPL 0, which is bad...
+// - Bioforge uses more than 2048 descriptos in ldt (4096)
+
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 #include "dosbox.h"
 #include "dos_inc.h"
 #include "callback.h"
@@ -28,12 +38,13 @@
 #include "inout.h"
 #include "cpu.h"
 
+#include "debug.h"
+
 //#define DPMI_LOG		LOG(LOG_MISC,LOG_ERROR)
 #define DPMI_LOG		
 
 #define DPMI_LOG_ERROR	LOG(LOG_MISC,LOG_ERROR)
-//#define DPMI_LOG_ERROR		
-
+//#define DPMI_LOG_ERROR
 
 #define DPMI_ALLOC_NEEDEDMEM_HIGH 1
 
@@ -46,13 +57,12 @@
 #define GDT_DOSDATA		((0x4 << 3) | DPMI_DPL)
 #define GDT_ENVIRONMENT	((0x5 << 3) | DPMI_DPL)
 
-// TEMP
 #define GDT_DOSSEG40	(0x40)
 
 /* Amount of descriptors in each table */ 
 #define GDT_SIZE		32
 #define IDT_SIZE		256
-#define LDT_SIZE		2048
+#define LDT_SIZE		4096
 #define INT_SIZE		256
 
 #define TOTAL_SIZE		((GDT_SIZE+IDT_SIZE+LDT_SIZE+INT_SIZE)*8)
@@ -90,7 +100,9 @@
 #define DPMI_CB_EXCEPTIONRETURN_OFFSET	260*8
 #define DPMI_CB_VENDORENTRY_OFFSET		261*8
 
-#define DPMI_HOOK_HARDWARE_INTS			1
+static bool g_hookHardwareInts = true;
+
+void CMOS_SetRegister(Bitu regNr, Bit8u val);
 
 static Bitu rmIndexToInt[DPMI_REALVEC_MAX] = 
 { 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x1C };
@@ -98,9 +110,11 @@ static Bitu rmIndexToInt[DPMI_REALVEC_MAX] =
 // General functions
 void CALLBACK32_SCF(bool val) 
 {
-	Bit32u tempf=mem_readd(SegPhys(ss)+reg_esp+8) & 0xFFFFFFFE;
+	Bitu v_esp = 0;
+	if (cpu.stack.big) v_esp = reg_esp; else v_esp = reg_sp;
+	Bit32u tempf=mem_readd(SegPhys(ss)+v_esp+8) & 0xFFFFFFFE;
 	Bit32u newCF=(val==true);
-	mem_writed(SegPhys(ss)+reg_esp+8,(tempf | newCF));
+	mem_writed(SegPhys(ss)+v_esp+8,(tempf | newCF));
 };
 
 #define DPMI_CALLBACK_SCF(b) if (dpmi.client.bit32) CALLBACK32_SCF(b); else CALLBACK_SCF(b)
@@ -255,11 +269,16 @@ public:
 	bool		RemoveSharedMem			(Bitu handle);
 
 	// special msdos api stuff
+	void		SetupPharlapSelectors	(void);
+	bool		Pharlap_AllocateMem		(Bitu size, Bitu& outHandle, Bitu& linear);
 	Bitu		GetSegmentFromSelector	(Bitu selector);
 	bool		GetMsdosSelector		(Bitu realseg, Bitu realoff, Bitu &protsel, Bitu &protoff);
 	void		API_Init_MSDOS			(void);
 	Bitu		API_Entry_MSDOS			(void);
 	Bitu		API_Int21_MSDOS			(void);
+
+	// debug
+	void		Debug_ShowDescriptors	(void);
 
 private:
 	Bitu		Mask					(Bitu value);
@@ -309,10 +328,15 @@ private:
 
 		bool	pharlap;
 		bool	suppressRMCB;
+
+		// Pharlap stuff
+		Bitu	initialcs,initialds;
+		Bitu	initialenv;
 	} dpmi;
 
 	Bit32u*	modIntTable;
 	DPMI*	prevDPMI;
+	std::vector<Bitu> dosSelectorList;
 	
 	Bitu	dtaAddress;
 	Bitu	save_cs[2],save_ds[2],save_es[2],save_fs[2],save_gs[2],save_ss[2];
@@ -383,9 +407,12 @@ DPMI::DPMI(void)
 DPMI::~DPMI(void)
 {
 	MEM_ReleasePages(dpmi.mem_handle);	
+	dosSelectorList.clear();
 	// TODO: Free all memory allocated with DOS_GetMemory
 	// Activate previous dpmi
 	activeDPMI = prevDPMI;
+	// Restore hookHardwareInts ability which may be changed by a pharlap program
+	if (!activeDPMI) g_hookHardwareInts = true;
 };
 
 void DPMI::ClearXMSHandles(void)
@@ -811,6 +838,7 @@ Bitu DPMI::RealModeCallback(void)
 	CPU_SetSegGeneral(cs,GDT_CODE);
 	reg_eip = RealOff(CALLBACK_RealPointer(callback.rmCallbackReturn));
 	// call protected mode func
+	SetVirtualIntFlag(false);
 	SETFLAGBIT(IF,false);
 	SETFLAGBIT(TF,false);
 	CPU_Push32(flags.word);
@@ -837,6 +865,7 @@ Bitu DPMI::RealModeCallbackReturn(void)
 	Bitu newCS = mem_readw(data+0x2C);
 	Bitu newIP = mem_readw(data+0x2A);	
 	UpdateRealModeStack();
+	SetVirtualIntFlag(true);
 	DPMI_LOG("DPMI: CB: Retored cs:ip = %04X:%04X (%d)",newCS,newIP);
 	CPU_JMP(false,newCS,newIP);
 	return 0;
@@ -870,6 +899,7 @@ Bitu DPMI::CallRealIRETFrame(void)
 	// Setup cs:ip to return to DPMI_CallRealIRETFrame callback
 	SegSet16(cs,RealSeg(CALLBACK_RealPointer(callback.rmIntFrameReturn)));
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.rmIntFrameReturn));
+	SetVirtualIntFlag(false);
 	SETFLAGBIT(IF,false);
 	SETFLAGBIT(TF,false);
 	CPU_CALL(false,newCS,newIP);
@@ -891,6 +921,7 @@ Bitu DPMI::CallRealIRETFrameReturn(void)
 	
 	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 
+	SetVirtualIntFlag(true);
 	DPMI_CALLBACK_SCF(false);
 	return 0;
 };
@@ -898,10 +929,6 @@ Bitu DPMI::CallRealIRETFrameReturn(void)
 Bitu DPMI::SimulateInt(void)
 {
 	Bitu num = reg_bl;
-	// TEMP
-	if (num==0x5C) {
-		int brk = 0;
-	}
 	DPMI_LOG("DPMI: SIM INT %02X %04X called. cs = %04X",num,reg_ax,SegValue(cs));
 	// Save changed registers
 	PushStack(SegValue(cs));
@@ -943,6 +970,7 @@ Bitu DPMI::SimulateIntReturn(void)
 	Bitu newcs = PopStack();
 	DPMI_LOG("DPMI: SimIntRet: JUMP to %04X:%08X",newcs,reg_eip);
 	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
+	SetVirtualIntFlag(true);
 	// Free last realmode stack
 	DPMI_CALLBACK_SCF(false);
 	DPMI_LOG("DPMI: SimIntRet2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
@@ -974,10 +1002,10 @@ Bitu DPMI::ptorHandler(void)
 {
 	/* Pmode interrupt handler that maps the interrupt to realmode */
 	Bitu num = reg_eip >> 3;
-	if (!dpmi.vIntFlag) {
-		if ((num>=0x08) && (num<=0x0F)) return 0;
-		if ((num>=0x70) && (num<=0x77)) return 0;
-	};
+//	if (!dpmi.vIntFlag) {
+//		if ((num>=0x08) && (num<=0x0F)) return 0;
+//		if ((num>=0x70) && (num<=0x77)) return 0;
+//	};
 	PrepareReflectToReal(num);	
 //	if (num==0x0F)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
@@ -1003,6 +1031,7 @@ Bitu DPMI::ptorHandlerReturn(void)
 		DPMI_LOG("DPMI: INT %02X RETURN",num);	
 	// hardware ints exit here
 	if (((num>=0x08) && (num<=0x0F)) || ((num>=0x70) && (num<=0x77))) {
+		SetVirtualIntFlag(true);	
 		CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 		return 0;
 	}
@@ -1016,6 +1045,7 @@ Bitu DPMI::ptorHandlerReturn(void)
 		Bit16u userFlags = flags.word & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writew(SegPhys(ss)+reg_sp+4,oldFlags|userFlags);
 	};
+	SetVirtualIntFlag(true);
 	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	return 0;
 }
@@ -1067,6 +1097,7 @@ Bitu DPMI::Int21HandlerReturn(void)
 	// Set carry flag
 	DPMI_CALLBACK_SCF(flags.word & 1);
 	DPMI_LOG("DPMI: INT 21 RETURN");	
+	SetVirtualIntFlag(true);
 	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	return 0;
 }
@@ -1090,6 +1121,7 @@ Bitu DPMI::HWIntDefaultHandler()
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
 			CPU_Push16(flags.word);
+			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
 			CPU_CALL(false,RealSeg(dpmi.oldRealVec[index]),RealOff(dpmi.oldRealVec[index]));
@@ -1110,6 +1142,7 @@ Bitu DPMI::HWIntDefaultHandler()
 				}
 			};					
 			PrepareReflectToReal(num);
+			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
 			CPU_Push16(flags.word);
@@ -1123,6 +1156,7 @@ Bitu DPMI::HWIntDefaultHandler()
 			dpmi.rmCallback[index].stop = false;
 			PrepareReflectToReal(num);
 			CPU_Push16(flags.word);
+			SetVirtualIntFlag(false);
 			SETFLAGBIT(IF,false);
 			SETFLAGBIT(TF,false);
 			CPU_CALL(false,RealSeg(dpmi.oldRealVec[index]),RealOff(dpmi.oldRealVec[index]));			
@@ -1139,6 +1173,7 @@ Bitu DPMI::HWIntDefaultHandler()
 				// kein spezieller Protmode handler - Rufe originalroutine auf
 				PrepareReflectToReal(num);
 				CPU_Push16(flags.word);
+				SetVirtualIntFlag(false);
 				SETFLAGBIT(IF,false);
 				SETFLAGBIT(TF,false);
 				CPU_CALL(false,RealSeg(dpmi.oldRealVec[index]),RealOff(dpmi.oldRealVec[index]));			
@@ -1151,6 +1186,7 @@ Bitu DPMI::HWIntDefaultHandler()
 void DPMI::SaveRegisterState(Bitu num)
 // Copy Current Registers to structure
 {
+	return;
 	save_cs[num] = SegValue(cs);
 	save_ds[num] = SegValue(ds);
 	save_es[num] = SegValue(es);
@@ -1172,6 +1208,7 @@ void DPMI::SaveRegisterState(Bitu num)
 void DPMI::LoadRegisterState(Bitu num)
 // Copy Current Registers to structure
 {
+	return;
 	CPU_SetSegGeneral(fs,save_fs[num]);
 	CPU_SetSegGeneral(gs,save_gs[num]);
 	reg_eax = save_eax[num];
@@ -1342,7 +1379,7 @@ bool DPMI::GetVirtualIntFlag(void)
 
 void DPMI::SetVirtualIntFlag(bool on)
 {
-	dpmi.vIntFlag = on;
+	dpmi.vIntFlag = 1; //on;
 };
 
 bool DPMI::AllocateMem(Bitu size, Bitu& outHandle, Bitu& linear)
@@ -1359,7 +1396,7 @@ bool DPMI::SetAccessRights(Bitu selector, SetDescriptor& desc, Bitu rights)
 	// must equal caller DPL
 	if (((rights & 0x60)>>5)!=DPMI_DPL) {
 		DPMI_LOG("DPMI: Set Rights %04X : %04X failure (dpl=%02X)",selector,rights,(rights & 0x60)>>5);
-		return false;
+//		return false;
 	}
 	// must be 1
 	if ((rights & 0x10)==0)	{
@@ -1374,7 +1411,7 @@ bool DPMI::SetAccessRights(Bitu selector, SetDescriptor& desc, Bitu rights)
 	// all tests passed, set rights for 16 + 32 Bit
 	desc.SetType (rights&0x1F);
 	desc.saved.seg.dpl = (rights&0x60)>>5;
-//	desc.saved.seg.dpl = DPMI_DPL;
+	desc.saved.seg.dpl = DPMI_DPL;
 	desc.saved.seg.p   = (rights&0x80)>0;
 	// extended rights for 32 Bit apps
 	if (dpmi.client.bit32) {
@@ -1527,7 +1564,7 @@ Bitu DPMI::Int31Handler(void)
 		case 0x000B:{//Get Descriptor
 					SetDescriptor desc;
 					if (cpu.gdt.GetDescriptor(reg_bx,desc)) {
-						desc.Save(SegPhys(es)+reg_edi);
+						desc.Save(SegPhys(es)+Mask(reg_edi));
 						DPMI_CALLBACK_SCF(false);
 						DPMI_LOG("DPMI: 000B: Get Descriptor %04X : B:%08X L:%08X",reg_bx,desc.GetBase(),desc.GetLimit());
 					} else {
@@ -1539,8 +1576,8 @@ Bitu DPMI::Int31Handler(void)
 		case 0x000C:{//Set Descriptor
 					SetDescriptor desc;
 					if (cpu.gdt.GetDescriptor(reg_bx,desc)) {
-						desc.Load   (SegPhys(es)+reg_edi);
-						Bitu rights = (mem_readb(SegPhys(es)+reg_edi+6)<<8) + mem_readb(SegPhys(es)+reg_edi+5);
+						desc.Load   (SegPhys(es)+Mask(reg_edi));
+						Bitu rights = (mem_readb(SegPhys(es)+Mask(reg_edi)+6)<<8) + mem_readb(SegPhys(es)+Mask(reg_edi)+5);
 						if (!SetAccessRights(reg_bx,desc,rights)) {
 							DPMI_LOG_ERROR("DPMI: 000C: Set Rights %04X : failure",reg_bx);
 							reg_ax = DPMI_ERROR_INVALID_VALUE;
@@ -1561,17 +1598,17 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_LOG("DPMI: 000D: Alloc Specific LDT Selector: %04X",reg_bx);
 					SetDescriptor desc; 
 					if (cpu.gdt.GetDescriptor(reg_bx,desc)) {
-						if (!desc.saved.seg.p) {
+//						if (!desc.saved.seg.p) {
 							desc.saved.seg.p = 1;
-							desc.SetLimit(0);
-							desc.SetBase (0);
+//							desc.SetLimit(0xDEADAAAA);
+//							desc.SetBase (0xDEADBBBB);
 							desc.Save	 (dpmi.ldt.base+(reg_bx & ~7));						
 							DPMI_CALLBACK_SCF(false);					 
 							break;
-						} else {
-							DPMI_LOG_ERROR("DPMI: 000D: Invalid Selector: %04X",reg_bx);
-							reg_ax = DPMI_ERROR_DESCRIPTOR_UNAVAILABLE;
-						};
+//						} else {
+//							DPMI_LOG_ERROR("DPMI: 000D: Invalid Selector: %04X",reg_bx);
+//							reg_ax = DPMI_ERROR_DESCRIPTOR_UNAVAILABLE;
+//						};
 					} else  reg_ax = DPMI_ERROR_INVALID_SELECTOR;
 					DPMI_CALLBACK_SCF(true);					 
 					}; break;
@@ -1662,7 +1699,8 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0202:// Get Processor Exception Handler Vector
 					if (reg_bl<DPMI_EXCEPTION_MAX) {
 						reg_cx  = dpmi.exceptionSelector[reg_bl];
-						reg_edx = dpmi.exceptionOffset[reg_bl];
+						if (dpmi.client.bit32)	reg_edx = dpmi.exceptionOffset[reg_bl];
+						else					reg_dx	= dpmi.exceptionOffset[reg_bl];
 						DPMI_LOG("DPMI: 0202: Get Exception Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
 						DPMI_CALLBACK_SCF(false);
 					} else {
@@ -1672,8 +1710,8 @@ Bitu DPMI::Int31Handler(void)
 					break;
 		case 0x0203:// Set Processor Exception Handler Vector
 					if (reg_bl<DPMI_EXCEPTION_MAX) {
-						dpmi.exceptionSelector[reg_bl] = reg_cx;
-						dpmi.exceptionOffset[reg_bl] = reg_edx;
+						dpmi.exceptionSelector[reg_bl]	= reg_cx;
+						dpmi.exceptionOffset[reg_bl]	= Mask(reg_edx);
 						DPMI_LOG("DPMI: 0203: Set Exception Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
 						DPMI_CALLBACK_SCF(false);
 					} else {
@@ -1685,9 +1723,18 @@ Bitu DPMI::Int31Handler(void)
 					break;
 		case 0x0204:{// Get Protected Mode Interrupt Vector
 					SetDescriptor gate;
-					gate.Load(dpmi.idt.base+reg_bl*8);
-					reg_cx  = gate.GetSelector();
-					reg_edx = gate.GetOffset();
+					if (dpmi.pharlap) {
+						// TEMP: Unknown if this is correct
+						gate.Load(cpu.idt.GetBase()+reg_bl*8);
+						reg_cx  = gate.GetSelector();
+						if (dpmi.client.bit32)	reg_edx = gate.GetOffset();
+						else					reg_dx	= gate.GetOffset();
+					} else {
+						gate.Load(dpmi.idt.base+reg_bl*8);
+						reg_cx  = gate.GetSelector();
+						if (dpmi.client.bit32)	reg_edx = gate.GetOffset();
+						else					reg_dx	= gate.GetOffset();
+					}
 					DPMI_LOG("DPMI: 0204: Get Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
@@ -1696,14 +1743,17 @@ Bitu DPMI::Int31Handler(void)
 					gate.Clear();
 					gate.saved.seg.p=1;
 					gate.SetSelector(reg_cx);
-					gate.SetOffset(reg_edx);
+					gate.SetOffset(Mask(reg_edx));
 					gate.SetType(dpmi.client.bit32?DESC_386_INT_GATE:DESC_286_INT_GATE);
 					gate.saved.seg.dpl = DPMI_DPL;
 					gate.Save(dpmi.idt.base+reg_bl*8);
-					DPMI_LOG("DPMI: 0205: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
+					if (dpmi.pharlap) {
+						gate.Save(cpu.idt.GetBase()+reg_bl*8);						
+						DPMI_LOG("DPMI: 0205: Pharlap: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
+					} else 
+						DPMI_LOG("DPMI: 0205: Set Prot Int Vector %02X (%04X:%08X)",reg_bl,reg_cx,reg_edx);
 					DPMI_CALLBACK_SCF(false);
-					Bitu num = reg_bl;
-					};break;
+					}; break;
 		case 0x0300:// Simulate Real Mode Interrupt
 					SimulateInt();
 					break;
@@ -1715,7 +1765,7 @@ Bitu DPMI::Int31Handler(void)
 					for	(Bitu i=0; i<DPMI_REALMODE_CALLBACK_MAX; i++) if (!dpmi.rmCallback[i].inUse) { num = i; break; };
 					if (num<DPMI_REALMODE_CALLBACK_MAX) {
 						Bitu segment, offset;
-						if (AllocateRealModeCallback(SegValue(ds),reg_esi,SegValue(es),reg_edi,segment,offset)) {
+						if (AllocateRealModeCallback(SegValue(ds),Mask(reg_esi),SegValue(es),Mask(reg_edi),segment,offset)) {
 							reg_cx = segment; reg_dx = offset;
 							DPMI_LOG("DPMI: 0303: Allocate Callback (%04X:%04X)",reg_cx,reg_dx);
 							DPMI_CALLBACK_SCF(false);
@@ -1748,7 +1798,8 @@ Bitu DPMI::Int31Handler(void)
 					reg_bx = RealSeg(entry);
 					reg_cx = RealOff(entry);
 					reg_si = GDT_PROTCODE;
-					reg_edi= DPMI_CB_SAVESTATE_OFFSET;
+					if (dpmi.client.bit32)	reg_edi= DPMI_CB_SAVESTATE_OFFSET;
+					else					reg_di = DPMI_CB_SAVESTATE_OFFSET;
 					reg_ax = 0; // 20 bytes buffer needed
 					DPMI_CALLBACK_SCF(false);
 					DPMI_LOG("DPMI: 0305: Get State Save/Rest : R:%04X:%04X P:%04X:%08X",reg_bx,reg_cx,reg_si,reg_edi);
@@ -1758,7 +1809,8 @@ Bitu DPMI::Int31Handler(void)
 					reg_bx = RealSeg(entry);
 					reg_cx = RealOff(entry);
 					reg_si = GDT_PROTCODE;
-					reg_edi= DPMI_CB_ENTERREALMODE_OFFSET;
+					if (dpmi.client.bit32)	reg_edi= DPMI_CB_ENTERREALMODE_OFFSET;
+					else					reg_di = DPMI_CB_ENTERREALMODE_OFFSET;
 					DPMI_CALLBACK_SCF(false);
 					DPMI_LOG("DPMI: 0306: Get Raw Switch      : R:%04X:%04X P:%04X:%08X",reg_bx,reg_cx,reg_si,reg_edi);
 					}; break;	
@@ -1773,13 +1825,14 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0401: // Get DPMI Capabilities - always fails in 0.9
 					DPMI_LOG("DPMI: 0401: Get Capabilities");
 					reg_ax = 0x08;		// CONVENTIONAL MEMORY MAPPING capability supported
+//					reg_ax = 0x00;
 					DPMI_CALLBACK_SCF(false);					
 					break;
 		case 0x0500:{// Get Free Memory Information
-					PhysPt data = SegPhys(es) + (dpmi.client.bit32 ? reg_edi:reg_di);
+					PhysPt data = SegPhys(es) + Mask(reg_edi);
 					Bitu large	= MEM_FreeLargest();		
 					Bitu total	= MEM_FreeTotal();			
-					Bitu size	= large;		
+					Bitu size	= large;
 					mem_writed(data+0x00,large*DPMI_PAGE_SIZE);	// Size in bytes
 					mem_writed(data+0x04,large);				// total number of pages
 					mem_writed(data+0x08,large);				// largest block in pages
@@ -1798,22 +1851,25 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0501:{// Allocate Memory	
 					Bitu handle,linear;
 					Bitu length = (reg_bx<<16)+reg_cx;
-					//DPMI_LOG("DPMI: 0501: Allocate memory (%d KB)",length/1024);
-					if (AllocateMem(length,handle,linear)) {
+
+					bool res = false;
+					if (dpmi.pharlap)	res = Pharlap_AllocateMem(length,handle,linear);
+					else				res = AllocateMem(length,handle,linear);
+					if (res) {
 						reg_si = handle>>16; 
 						reg_di = handle&0xFFFF;
 						reg_bx = linear>>16;
 						reg_cx = linear&0xFFFF;
 						DPMI_CALLBACK_SCF(false);
 						// TEMP
-						Bitu total  = MEM_FreeLargest();				// in KB					
-						DPMI_LOG("DPMI: 0501: Allocation success: H:%04X%04X (%d KB) (R:%d KB)",reg_si,reg_di,length/1024 + ((length%1024)>0),total*4);
+//						Bitu total  = MEM_FreeLargest();				// in KB					
+//						DPMI_LOG_ERROR("DPMI: 0501: Allocation success: H:%04X%04X (%d KB) (R:%d KB)",reg_si,reg_di,length/1024 + ((length%1024)>0),total*4);
 					} else {
 						reg_ax = DPMI_ERROR_PHYSICAL_MEMORY_UNAVAILABLE;
 						DPMI_CALLBACK_SCF(true);
 						// TEMP
 						Bitu total = MEM_FreeLargest();				// in KB					
-						DPMI_LOG_ERROR("DPMI: 0501: Allocation failure (%d KB) (R:%d KB)",length/1024 + ((length%1024)>0),total*4);
+						DPMI_LOG("DPMI: 0501: Allocation failure (%d KB) (R:%d KB)",length/1024 + ((length%1024)>0),total*4);
 					};
 					}; break;
 		case 0x0502://Free Memory Block
@@ -1827,7 +1883,7 @@ Bitu DPMI::Int31Handler(void)
 					Bitu newByte		= (reg_bx<<16)+reg_cx;
 					Bitu newSize		= (newByte/DPMI_PAGE_SIZE)+((newByte & (DPMI_PAGE_SIZE-1))>0);
 					MemHandle handle	= (reg_si<<16)+reg_di;
-					DPMI_LOG_ERROR("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize*4);
+					DPMI_LOG("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize*4);
 					if (MEM_ReAllocatePages(handle,newSize,true)) {
 						linear = handle * DPMI_PAGE_SIZE;
 						reg_si = handle>>16;
@@ -1837,7 +1893,7 @@ Bitu DPMI::Int31Handler(void)
 						DPMI_CALLBACK_SCF(false);					
 					} else if (AllocateMem(newByte,newHandle,linear)) {							
 						// Not possible, try to allocate
-						DPMI_LOG_ERROR("DPMI: 0503: Reallocated Memory: %d KB",newSize*4);
+						DPMI_LOG("DPMI: 0503: Reallocated Memory: %d KB",newSize*4);
 						reg_si = newHandle>>16;
 						reg_di = newHandle&0xFFFF;
 						reg_bx = linear>>16;
@@ -1866,11 +1922,11 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_CALLBACK_SCF(false);
 					break;
 		case 0x0509:{//Map Conventional Memory in Memory Block
-					Bitu xmsAddress	= reg_esi*DPMI_PAGE_SIZE;
-					Bitu handle		= reg_esi;
-					Bitu offset		= reg_ebx;
-					Bitu numPages	= reg_ecx;
-					Bitu linearAdr	= reg_edx;
+					Bitu xmsAddress	= Mask(reg_esi)*DPMI_PAGE_SIZE;
+					Bitu handle		= Mask(reg_esi);
+					Bitu offset		= Mask(reg_ebx);
+					Bitu numPages	= Mask(reg_ecx);
+					Bitu linearAdr	= Mask(reg_edx);
 					if ((linearAdr & 3) || ((xmsAddress+offset) & 3)) {
 						// Not page aligned
 						DPMI_LOG_ERROR("DPMI: Cannot map conventional memory (address not page aligned).");
@@ -1919,12 +1975,13 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0800:{//Physical Address Mapping
 					// bx and cx remain the same linear address = physical address
 					Bitu phys	= (reg_bx<<16) + reg_cx;
+					Bitu linear	= (reg_bx<<16) + reg_cx;
 					Bitu size   = (reg_si<<16) + reg_di;
-					MEM_MapPagesDirect(phys/DPMI_PAGE_SIZE,phys/DPMI_PAGE_SIZE,size/DPMI_PAGE_SIZE);
-					Bitu linear = phys;
+					MEM_MapPagesDirect(linear/DPMI_PAGE_SIZE,phys/DPMI_PAGE_SIZE,size/DPMI_PAGE_SIZE);
+					//Bitu linear = phys;
 					reg_bx		= linear>>16; 
 					reg_cx		= linear & 0xFFFF;
-					DPMI_LOG_ERROR("DPMI: 0800: Phys-adr-map not supported : %08X (%08X) - %08X.",phys,size,linear);
+					DPMI_LOG_ERROR("DPMI: 0800: Phys-adr-map not supported : Start:%08X (Size:%08X) - Linear:%08X.",phys,size,linear);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
 		case 0x0801:// Free physical address mapping
@@ -1944,26 +2001,30 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_CALLBACK_SCF(false);					
 					break;
 		case 0x0902:{//Get Virtual Interrupt State
-					reg_al = dpmi.vIntFlag;
-					reg_al = 0; // TEMP
-					DPMI_LOG("DPMI: 0900: Get vi             : %01X",reg_al);
+					reg_al = 0; //dpmi.vIntFlag;
+					DPMI_LOG("DPMI: 0902: Get vi             : %01X",reg_al);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
 		case 0x0A00:{//Get Vendor Specific API Entry Point
 					char name[256];
-					MEM_StrCopy(SegPhys(ds)+reg_esi,name,255);
+					MEM_StrCopy(SegPhys(ds)+Mask(reg_esi),name,255);
 					LOG(LOG_MISC,LOG_WARN)("DPMI: Get API: %s",name);
 					if (strcmp(name,"MS-DOS")==0) {
 						CPU_SetSegGeneral(es,GDT_PROTCODE);
-						reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+						if (dpmi.client.bit32)	reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+						else					reg_di	= DPMI_CB_APIMSDOSENTRY_OFFSET;
 						API_Init_MSDOS();
 						DPMI_CALLBACK_SCF(false);
-//					} else if (strstr(name,"HWINT")!=0) {
-//						reg_ax = DPMI_ERROR_UNSUPPORTED;
-//						DPMI_CALLBACK_SCF(true);
+					} else if (strstr(name,"HWINT_SUPPORT")!=0) {
+						reg_ax = DPMI_ERROR_UNSUPPORTED;
+						DPMI_CALLBACK_SCF(true);
+					} else if (strstr(name,"CE_SUPPORT")!=0) {
+						reg_ax = DPMI_ERROR_UNSUPPORTED;
+						DPMI_CALLBACK_SCF(true);
 					} else if (strstr(name,"PHARLAP")!=0) {
 						CPU_SetSegGeneral(es,GDT_PROTCODE);
-						reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+						if (dpmi.client.bit32)	reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+						else					reg_di	= DPMI_CB_APIMSDOSENTRY_OFFSET;
 						API_Init_MSDOS();
 						DPMI_CALLBACK_SCF(false);
 						dpmi.pharlap = true;
@@ -1974,7 +2035,7 @@ Bitu DPMI::Int31Handler(void)
 					}; break;
 		case 0x0D00:{//Allocate Shared Memory
 					char name[256];
-					PhysPt data		= SegPhys(es)+reg_edi;
+					PhysPt data		= SegPhys(es)+Mask(reg_edi);
 					Bitu length		= mem_readd(data);
 					Bitu pages		= (length/DPMI_PAGE_SIZE)+((length%DPMI_PAGE_SIZE)>0);
 					Bitu handle		= mem_readd(data+0x08);
@@ -2045,11 +2106,12 @@ Bitu DPMI::Int2fHandler(void)
 	case 0x168A:	// Only available in protected mode
 		// Get Vendor-Specific API Entry Point
 		char name[256];
-		MEM_StrCopy(SegPhys(ds)+reg_esi,name,255);
+		MEM_StrCopy(SegPhys(ds)+Mask(reg_esi),name,255);
 		LOG(LOG_MISC,LOG_WARN)("DPMI: 0x2F 0x168A: Get Specific API :%s",name);
 		if (strcmp(name,"MS-DOS")==0) {
 			CPU_SetSegGeneral(es,GDT_PROTCODE);
-			reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+			if (dpmi.client.bit32)	reg_edi = DPMI_CB_APIMSDOSENTRY_OFFSET;
+			else					reg_di	= DPMI_CB_APIMSDOSENTRY_OFFSET;
 			reg_al  = 0x00;	// Success, whatever they want...
 			API_Init_MSDOS();
 		};
@@ -2124,8 +2186,25 @@ void DPMI::RestoreHookedInterrupt(Bitu num, RealPt oldVec)
 	gate.Save		(dpmi.idt.base+num*8);
 }
 
+void DPMI::Debug_ShowDescriptors(void)
+{
+	char out1[512];
+	SetDescriptor desc;
+	Bitu i=0;
+	PhysPt address = dpmi.ldt.base;
+	while (i<LDT_SIZE) {
+		desc.Load(address);
+		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3)|4|DPMI_DPL,desc.GetBase(),desc.saved.seg.type);
+		DPMI_LOG(out1);
+		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
+		DPMI_LOG(out1);
+		address+=8; i++;
+	};
+};
+
 void DPMI::Terminate(void) 
 {
+//	Debug_ShowDescriptors();
 	Bitu i;
 	cpu.cpl	= 0;
 	dpmi.client.have = false;
@@ -2140,13 +2219,13 @@ void DPMI::Terminate(void)
 			MEM_ReleasePages(dpmi.xmsHandles[i]);
 	}
 
-#if DPMI_HOOK_HARDWARE_INTS
-	// 4.Restore hooked ints
-	for (i=0; i<DPMI_REALVEC_MAX; i++) {
-		if (RealGetVec(rmIndexToInt[i])!=0)
-			RestoreHookedInterrupt(rmIndexToInt[i],dpmi.oldRealVec[i]);
+	if (g_hookHardwareInts) {
+		// 4.Restore hooked ints
+		for (i=0; i<DPMI_REALVEC_MAX; i++) {
+			if (RealGetVec(rmIndexToInt[i])!=0)
+				RestoreHookedInterrupt(rmIndexToInt[i],dpmi.oldRealVec[i]);
+		}
 	}
-#endif
 };
 
 void DPMI::CreateStackSpace(void)
@@ -2276,6 +2355,7 @@ Bitu DPMI::Entrypoint(void)
 	} 
 	if (!adr) E_Exit("DPMI: Couldnt get environment.");
 	
+	dpmi.initialenv = adr;
 	desc.Clear();
 	desc.SetBase (adr);
 	desc.SetLimit(0xFF);
@@ -2287,6 +2367,7 @@ Bitu DPMI::Entrypoint(void)
 	psp.SetEnvironment(first);
 	first+=8;
 	/* Setup Selector for DS */
+	dpmi.initialds = SegValue(ds);
 	desc.Clear();
 	desc.SetLimit(0xffff);
 	desc.SetBase (SegValue(ds) << 4);
@@ -2299,7 +2380,7 @@ Bitu DPMI::Entrypoint(void)
 	/* Get the CS;IP of the stack before changing it */
 	Bitu old_cs,old_eip;
 	old_eip=mem_readw(SegPhys(ss)+reg_sp);
-	old_cs=mem_readw(SegPhys(ss)+reg_sp+2);
+	dpmi.initialcs = old_cs = mem_readw(SegPhys(ss)+reg_sp+2);
 	reg_esp+=4;
 	/* Setup Selector for SS and clear high word of ESP */
 	desc.Clear();
@@ -2331,15 +2412,15 @@ Bitu DPMI::Entrypoint(void)
 	// Create Real and ProtMode Stacks
 	CreateStackSpace();
 
-#if DPMI_HOOK_HARDWARE_INTS
-	// Hook Interrupts in real mode to reflect them to protected mode
-	Bitu num;
-	for (i=0; i<DPMI_REALVEC_MAX; i++) {
-		num = rmIndexToInt[i];
-		dpmi.oldRealVec[i]	= HookInterrupt(num, dpmi.defaultHWIntFromProtMode[i]);
-		dpmi.realModeVec[i] = RealGetVec(num);
+	if (g_hookHardwareInts) {
+		// Hook Interrupts in real mode to reflect them to protected mode
+		Bitu num;
+		for (i=0; i<DPMI_REALVEC_MAX; i++) {
+			num = rmIndexToInt[i];
+			dpmi.oldRealVec[i]	= HookInterrupt(num, dpmi.defaultHWIntFromProtMode[i]);
+			dpmi.realModeVec[i] = RealGetVec(num);
+		};
 	};
-#endif
 
 	dpmi.vIntFlag = 1;
 	cpu.cpl = DPMI_DPL;
@@ -2379,7 +2460,16 @@ static bool DPMI_Multiplex(void) {
 				reg_bx = 0x0100;		// DPMI Version
 				return true;*/
 	case 0xED03:
-	case 0xF100: DPMI_LOG("DPMI:INT 2F: Pharlap Detection : %04X.",reg_ax);
+	case 0xF100:// Seems like a Pharlap extender game wants to start up here,
+				// so set cmos extended memory informtion to null to avoid mapping
+				// of physical memory pharlap likes to do....
+				CMOS_SetRegister(0x17,0x00);
+				CMOS_SetRegister(0x18,0x00);
+				CMOS_SetRegister(0x30,0x00);
+				CMOS_SetRegister(0x31,0x00);
+				// Dont hook hardware ints, pharlap doesnt like that
+				g_hookHardwareInts = false;
+				DPMI_LOG("DPMI:INT 2F: Pharlap Detection : %04X.",reg_ax);
 	};
 	return false;
 }
@@ -2451,13 +2541,16 @@ void DPMI::Setup()
 	Bitu numPages		= ((xmssize+protStackSize) >> 12);
 
 #if DPMI_ALLOC_NEEDEDMEM_HIGH
-	/* Allocate the GDT,LDT,IDT Stack space (High Mem) */
+	// Allocate the GDT,LDT,IDT Stack space (High Mem) 
+	Bitu max		= MEM_FreeLargest();
+	Bitu temphandle = MEM_AllocatePages(max-numPages,true);
 	dpmi.mem_handle = MEM_AllocatePages(numPages,true);
 	if (dpmi.mem_handle==0) {
 		LOG_MSG("DPMI:Can't allocate XMS memory, disabling dpmi support.");
 		return;
 	}
 	Bitu address = dpmi.mem_handle*DPMI_PAGE_SIZE;;
+	MEM_ReleasePages(temphandle);	
 #else
 	// load LDT and stuff in low mem (
 	Bit16u segment;
@@ -2535,14 +2628,14 @@ void DPMI::Setup()
 	code.saved.seg.big = 0;
 	code.saved.seg.dpl = 0;
 	code.Save    (dpmi.gdt.base+(GDT_DOSSEG40 & ~7));
-	
-#if DPMI_HOOK_HARDWARE_INTS
-	// Setup Hardware Interrupt handler
-	for (i=0; i<DPMI_REALVEC_MAX; i++) {
-		dpmi.defaultHWIntFromProtMode[i]=CALLBACK_Allocate();
-		CALLBACK_Setup(dpmi.defaultHWIntFromProtMode[i],DPMI_HWIntDefaultHandler,CB_IRET);
-	};
-#endif
+
+	if (g_hookHardwareInts) {
+		// Setup Hardware Interrupt handler
+		for (i=0; i<DPMI_REALVEC_MAX; i++) {
+			dpmi.defaultHWIntFromProtMode[i]=CALLBACK_Allocate();
+			CALLBACK_Setup(dpmi.defaultHWIntFromProtMode[i],DPMI_HWIntDefaultHandler,CB_IRET);
+		};
+	}
 
 	// Init Realmode Callbacks
 	for (i=0; i<DPMI_REALMODE_CALLBACK_MAX; i++) {
@@ -2586,6 +2679,83 @@ void DPMI::Setup()
 // Special Extender capabilities : MS-DOS
 // *********************************************************************
 
+void DPMI::SetupPharlapSelectors(void)
+{
+	SetDescriptor desc; 
+	Bitu base,limit,type;
+	Bitu sel=0x04; 
+	while (sel<=0x4C) {
+		switch (sel) {
+			case 0x04	:	// Writable data segment ot the program psp
+			case 0x24	:	base	= dpmi.client.psp << 4;
+							limit	= 0xFF;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+			case 0x0C	:	// Readable code segment (initially loaded into cs)
+							base	= dpmi.initialcs << 4;
+							limit	= 0xFFFF;
+							type	= DESC_CODE_R_NC_A;
+							break;
+			case 0x14	:	// Writeable data segment (initially loaded into ds,es...)
+							base	= dpmi.initialds << 4;
+							limit	= 0xFFFF;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+			case 0x1C	:	// Writeable data segment to screen area (TODO: will be switched if func 10 00 is executed)
+			case 0x44	:	// FIXME
+							base	= 0xA0000;
+							limit	= 0xFFFF;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+			case 0x2C	:	// writeable data segment to the env block
+							base	= dpmi.initialenv;
+							limit	= 0xFF;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+			case 0x34	:	// writeable data segment that maps the first mb of dos memory
+							base	= 0x00000;
+							limit	= 0xFFFFF;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+			case 0x3C	:	// Writable data segment maps waitek fpu memory
+			case 0x4C	:	// Writable data segment maps cyrix fpu memory
+							base	= 0x00000000;
+							limit	= 0x00000000;
+							type	= DESC_DATA_ED_RW_A;
+							break;
+		}
+		if (cpu.gdt.GetDescriptor(sel,desc)) {
+			desc.Clear();
+			desc.SetBase (base);
+			desc.SetLimit(limit);
+			desc.SetType (type);
+			desc.saved.seg.p   = 1;
+			desc.saved.seg.dpl = DPMI_DPL;
+			desc.Save(dpmi.ldt.base+(sel & ~7));
+		}
+		sel += 8;
+	}					
+}
+
+bool DPMI::Pharlap_AllocateMem(Bitu size, Bitu& outHandle, Bitu& linear)
+{
+	DPMI_LOG("PHARLAP Allocation");
+
+	Bitu pages		= (size/DPMI_PAGE_SIZE) + ((size%DPMI_PAGE_SIZE)>0);	// Convert to 4KB pages
+	Bitu maxPages	= MEM_FreeLargest();
+	if (maxPages<pages) return false;
+
+	Bitu tempHandle = MEM_AllocatePages(maxPages-pages,true);
+	outHandle		= MEM_AllocatePages(pages,true);
+	linear			= outHandle*DPMI_PAGE_SIZE;
+	if (outHandle!=0) {
+		SetXMSHandle(outHandle);
+	}
+	
+	MEM_ReleasePages(tempHandle);
+	return (outHandle!=0);
+};
+
 Bitu DPMI::GetSegmentFromSelector(Bitu selector)
 {
 	Bitu base = 0xDEAD;
@@ -2600,12 +2770,25 @@ Bitu DPMI::GetSegmentFromSelector(Bitu selector)
 
 bool DPMI::GetMsdosSelector(Bitu realseg, Bitu realoff, Bitu &protsel, Bitu &protoff)
 {
+	// Check if selector is already in list
+	for (Bitu i=0; i<dosSelectorList.size(); i++) {
+		Bitu dossel = dosSelectorList[i];
+		SetDescriptor desc;
+		desc.Load	(dpmi.ldt.base+(dossel & ~7));
+		if (desc.GetBase()==realseg<<4) {
+			protoff = realoff;
+			protsel = dossel;
+			return true;
+		}
+	};
+	// Allocate new one
 	if (AllocateLDTDescriptor(1,protsel)) {
 		SetDescriptor desc;
 		desc.Load		(dpmi.ldt.base+(protsel & ~7));
 		desc.SetBase	(realseg<<4);
 		desc.SetLimit	(0xFFFF);
 		desc.Save		(dpmi.ldt.base+(protsel & ~7));
+		dosSelectorList.push_back(protsel);
 	} else E_Exit("DPMI:MSDOS: No more selectors.");
 	protoff = realoff;
 	return true;
@@ -2620,11 +2803,13 @@ void DPMI::API_Init_MSDOS(void)
 	gate.SetSelector(GDT_CODE);
 	gate.SetOffset	(RealOff(func));
 	gate.Save		(dpmi.idt.base+0x21*8);			
+	// Setup pharlap special descriptors
+	// if (dpmi.pharlap) SetupPharlapSelectors();
 };
 
 Bitu DPMI::API_Entry_MSDOS(void) 
 {
-	LOG(LOG_MISC,LOG_WARN)("DPMI: MSDOS Extension API Entry.");
+	LOG(LOG_MISC,LOG_WARN)("DPMI: MSDOS Extension API Entry: ax:%04X.",reg_ax);
 	switch (reg_ax) {
 		case 0x0000:// Get MS-DOS Extension Version
 					reg_ax = 0x0000;
@@ -2650,7 +2835,7 @@ Bitu DPMI::Mask(Bitu value)
 
 Bitu DPMI::API_Int21_MSDOS(void)
 {
-	DPMI_LOG("DPMI:MSDOS-API:INT 21 %04X",reg_ax);
+//	DPMI_LOG_ERROR("DPMI:MSDOS-API:INT 21 %04X",reg_ax);
 	Bitu protsel,protoff,seg,off;
 	Bitu sax = reg_ax;
 	switch (reg_ah) {
@@ -2687,7 +2872,8 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					SetDescriptor gate;
 					gate.Load(dpmi.idt.base+reg_al*8);
 					CPU_SetSegGeneral(es,gate.GetSelector());
-					reg_ebx = gate.GetOffset();
+					if (dpmi.client.bit32)	reg_ebx = gate.GetOffset();
+					else					reg_bx	= gate.GetOffset();
 					DPMI_CALLBACK_SCF(false);
 					}; break;
 
@@ -2696,7 +2882,8 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					off = RealOff(dos.dta);
 					GetMsdosSelector(seg,off,protsel,protoff);
 					CPU_SetSegGeneral(es,protsel);
-					reg_ebx = protoff;
+					if (dpmi.client.bit32)	reg_ebx = protoff;
+					else					reg_bx	= protoff;
 					break;
 	
 		case 0x34 : // Get INDOS Flag address
@@ -2705,6 +2892,14 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					GetMsdosSelector(seg,off,protsel,protoff);
 					CPU_SetSegGeneral(es,protsel);
 					reg_bx = protoff;
+					break;
+		case 0x38: /* Get/set Country code */
+					if (dpmi.client.bit32) {
+						E_Exit("DPMI:MSDOS-API:function %04X not yet supported.",reg_ax);
+					} else {
+						// reflect to real mode	
+						DPMI_Int21Handler();
+					}
 					break;
 		case 0x39:{ // MKDIR Create directory 
 					char name1[256];
@@ -2716,48 +2911,57 @@ Bitu DPMI::API_Int21_MSDOS(void)
 						CALLBACK_SCF(true);
 					}
 					}; break;
+		case 0x3b:	{ /* CHDIR Set current directory */
+					char name1[256];
+					MEM_StrCopy(SegPhys(ds)+Mask(reg_edx),name1,255);
+					if  (DOS_ChangeDir(name1)) {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Set Directory %s ",name1);
+						CALLBACK_SCF(false);
+					} else {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Set Directory %s failed",name1);
+						reg_ax=dos.errorcode;
+						CALLBACK_SCF(true);
+					}
+					}; break;
 		case 0x3c:	{ /* CREATE Create of truncate file */
 					char name1[256];
 					MEM_StrCopy(SegPhys(ds)+Mask(reg_edx),name1,255);
 					if (DOS_CreateFile(name1,reg_cx,&reg_ax)) {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Create file %s success (%d)",name1,reg_ax);
 						DPMI_CALLBACK_SCF(false);
 					} else {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Create file %s failed",name1);
 						reg_ax=dos.errorcode;
 						DPMI_CALLBACK_SCF(true);
 					}
 					}; break;
 		case 0x3d:	{ /* OPEN Open existing file */
 					char name1[256];
+					Bitu savedax = reg_ax;
 					MEM_StrCopy(SegPhys(ds)+Mask(reg_edx),name1,255);
 					if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
-						DPMI_LOG("DOS: Open success: %s",name1);
+						DPMI_LOG("DOS: Open success: %s (%d)",name1,reg_ax);
 						DPMI_CALLBACK_SCF(false);
 					} else {
-						DOS_PSP psp(dos.psp);
-						psp.SetNumFiles(40);
-						if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
-							DPMI_LOG_ERROR("DOS: Open success (Hack): %s",name1);
-							DPMI_CALLBACK_SCF(false);							
-							break;
-						};
+						DPMI_LOG("DOS: Open failure: %s ",name1);
 						reg_ax=dos.errorcode;
 						DPMI_CALLBACK_SCF(true);
 					}
 					};break;
 		case 0x3f:	/* READ Read from file or device */
 					{ 
-						if (reg_ecx>0xFFFF) {
-							E_Exit("DPMI:DOS: Read file size > 0xffff");							
-						};
+						if (Mask(reg_ecx)>0xFFFF) E_Exit("DPMI:DOS: Read file size > 0xffff");							
 
 						Bit16u toread = Mask(reg_ecx);
 						dos.echo = true;
 						if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 							MEM_BlockWrite(SegPhys(ds)+Mask(reg_edx),dos_copybuf,toread);
-							reg_eax=toread;
+							if (dpmi.client.bit32) reg_eax=toread; else reg_ax=toread;
+//							LOG(LOG_MISC,LOG_ERROR)("READ FILE Handle:%d Size:%d Read:%d",reg_bx,toread,reg_eax);
 							DPMI_CALLBACK_SCF(false);
 
 						} else {
+							LOG(LOG_MISC,LOG_ERROR)("DOS: Read file %d failed",reg_bx);
 							reg_ax=dos.errorcode;
 							DPMI_CALLBACK_SCF(true);
 						}
@@ -2767,12 +2971,13 @@ Bitu DPMI::API_Int21_MSDOS(void)
 		case 0x40:	{/* WRITE Write to file or device */
 					Bit16u towrite = Mask(reg_ecx);
 					MEM_BlockRead(SegPhys(ds)+Mask(reg_edx),dos_copybuf,towrite);
-					if (reg_bx>=5) LOG(LOG_MISC,LOG_ERROR)("INT 21 40: %s",(char *)dos_copybuf);
+//					if (reg_bx<=5) LOG(LOG_MISC,LOG_ERROR)("INT 21 40: %s",(char *)dos_copybuf);
 					if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
-						reg_eax=towrite;
+						if (dpmi.client.bit32)	reg_eax=towrite;
+						else					reg_ax =towrite;
 	   					DPMI_CALLBACK_SCF(false);
 					} else {
-						DPMI_LOG_ERROR("DPMI:MSDOS:Write file failure.");
+						DPMI_LOG("DPMI:MSDOS:Write %d file failure.",reg_bx);
 						reg_ax=dos.errorcode;
 						DPMI_CALLBACK_SCF(true);
 					}
@@ -2790,11 +2995,17 @@ Bitu DPMI::API_Int21_MSDOS(void)
 		case 0x42:	/* LSEEK Set current file position */
 					{
 						Bit32u pos=(reg_cx<<16) + reg_dx;
+						Bit32u topos = pos;
 						if (DOS_SeekFile(reg_bx,&pos,reg_al)) {
 							reg_dx=(Bit16u)(pos >> 16);
 							reg_ax=(Bit16u)(pos & 0xFFFF);
 							DPMI_CALLBACK_SCF(false);
+							if ((reg_al==0) && (topos!=pos)) {
+								LOG(LOG_MISC,LOG_ERROR)("SEEK FILE Handle:%d Seek:%d Pos:%d",reg_bx,topos,pos);
+								LOG(LOG_MISC,LOG_ERROR)("SEEK FILE ERROR : Pos differs");
+							}
 						} else {
+							LOG(LOG_MISC,LOG_ERROR)("DOS: Seek file %d failed",reg_bx);
 							reg_ax=dos.errorcode;
 							DPMI_CALLBACK_SCF(true);
 						}
@@ -2814,7 +3025,7 @@ Bitu DPMI::API_Int21_MSDOS(void)
 						}
 						break;
 					case 0x01:				/* Set */
-						DPMI_LOG_ERROR("DOS:Set File Attributes for %s not supported",name1);
+						DPMI_LOG("DOS:Set File Attributes for %s not supported",name1);
 						DPMI_CALLBACK_SCF(false);
 						break;
 					default:
@@ -2822,15 +3033,31 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					}
 					}; break;
 
+		case 0x47:	{ /* CWD Get current directory */
+					char name1[256];
+					if (DOS_GetCurrentDir(reg_dl,name1)) {
+						MEM_BlockWrite(SegPhys(ds)+Mask(reg_esi),name1,strlen(name1)+1);	
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Get Dir %s ",name1);
+						reg_ax=0x0100;
+						CALLBACK_SCF(false);
+					} else {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Get Dir failed %s ",name1);
+						reg_ax=dos.errorcode;
+						CALLBACK_SCF(true);
+					}
+					}; break;
+
 		case 0x4E:	{/* Get first dir entry */
 					char name1[256];
 					MEM_StrCopy(SegPhys(ds)+Mask(reg_edx),name1,255);
 					if (DOS_FindFirst(name1,reg_cx)) {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Find Dir entry %s success",name1);
 						DPMI_CALLBACK_SCF(false);	
 						// Copy result to internal dta
 						if (dtaAddress) MEM_BlockCopy(dtaAddress,PhysMake(RealSeg(dos.dta),RealOff(dos.dta)),dpmi.pharlap?43:128);
 						reg_ax=0;			/* Undocumented */
 					} else {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: Find Dir entry %s failure",name1);
 						reg_ax=dos.errorcode;
 						DPMI_CALLBACK_SCF(true);
 					};
@@ -2839,11 +3066,13 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					// Copy data to dos dta
 					if (dtaAddress) MEM_BlockCopy(PhysMake(RealSeg(dos.dta),RealOff(dos.dta)),dtaAddress,dpmi.pharlap?43:128);
 					if (DOS_FindNext()) {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: FindNext Dir entry success");
 						CALLBACK_SCF(false);
 						// Copy result to internal dta
 						if (dtaAddress) MEM_BlockCopy(dtaAddress,PhysMake(RealSeg(dos.dta),RealOff(dos.dta)),dpmi.pharlap?43:128);
 						reg_ax=0xffff;			/* Undocumented */
 					} else {
+						LOG(LOG_MISC,LOG_ERROR)("DOS: FindNext Dir entry failure");
 						reg_ax=dos.errorcode;
 						CALLBACK_SCF(true);
 					};
@@ -2866,12 +3095,20 @@ Bitu DPMI::API_Int21_MSDOS(void)
 					Bitu segment = GetSegmentFromSelector(reg_dx);
 					DOS_ChildPSP(segment,reg_si);
 					dos.psp = segment;
-					if (dpmi.pharlap) {
-						DOS_PSP psp(dos.psp);
-						psp.SetNumFiles(40);						
-					};
 					DPMI_LOG("DPMI:MSDOS:0x55:Create new psp:%04X",segment);					
 					}; break;
+		case 0x56:	{ /* RENAME Rename file */
+					char name1[256+1];
+					char name2[256+1];
+					MEM_StrCopy(SegPhys(ds)+Mask(reg_edx),name1,256);
+					MEM_StrCopy(SegPhys(es)+Mask(reg_edi),name2,256);
+					if (DOS_Rename(name1,name2)) {
+						DPMI_CALLBACK_SCF(false);			
+					} else {
+						reg_ax=dos.errorcode;
+						DPMI_CALLBACK_SCF(true);
+					}
+					}; break;		
 		case 0x5D : // Get Address of dos swappable area
 					// FIXME: This is totally faked...
 					// FIXME: Add size in bytes (at least pharlap)
@@ -2899,17 +3136,13 @@ Bitu DPMI::API_Int21_MSDOS(void)
 //		case 0x30: // Pharlap extended information
 		case 0x31:  
 		case 0x32:  
-		case 0x38:
 		case 0x3A:
-		case 0x3B:
-		case 0x47:
 		case 0x48: // Pharlap = 4KB mem pages
 		case 0x49:
 		case 0x4A: // Pharlap = 4KB mem pages
 		case 0x4B:
 		case 0x52:
 		case 0x53:
-		case 0x56:
 		case 0x59:
 		case 0x5A:
 		case 0x5B:
@@ -2926,8 +3159,8 @@ Bitu DPMI::API_Int21_MSDOS(void)
 		case 0x44:	if ((reg_al==0x02) || (reg_al==0x03) || (reg_al==0x04) || (reg_al==0x05) || (reg_al==0x0C) || (reg_al==0x0D)) {
 						E_Exit("DPMI:MSDOS-API:function %04X not yet supported.",reg_ax);
 					};
-		case 0x0E: case 0x19: case 0x2A: case 0x2C: case 0x2D: case 0x30: case 0x36:
-		case 0x3E: case 0x4C: case 0x58: case 0x67:
+		case 0x07: case 0x0B: case 0x0E: case 0x19: case 0x2A: case 0x2C: case 0x2D: case 0x30: 
+		case 0x36: case 0x3E: case 0x4C: case 0x58: case 0x67:
 					{
 						// reflect to real mode	
 						DPMI_Int21Handler();
