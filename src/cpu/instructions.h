@@ -220,7 +220,6 @@
 	flags.type=t_DECd;
 
 #define ROLB(op1,op2,load,save)								\
-	if (op2&0x07)	{										\
 		LoadZF;LoadSF;LoadAF;								\
 		flags.var1.b=load(op1);								\
 		flags.var2.b=op2&0x07;								\
@@ -228,10 +227,9 @@
 				(flags.var1.b >> (8-flags.var2.b));			\
 		save(op1,flags.result.b);							\
 		flags.type=t_ROLb;									\
-	}
+
 
 #define ROLW(op1,op2,load,save)								\
-	if (op2&0x0F) {											\
 		LoadZF;LoadSF;LoadAF;								\
 		flags.var1.w=load(op1);								\
 		flags.var2.b=op2&0x0F;								\
@@ -239,10 +237,9 @@
 				(flags.var1.w >> (16-flags.var2.b));		\
 		save(op1,flags.result.w);							\
 		flags.type=t_ROLw;									\
-	}
+
 
 #define ROLD(op1,op2,load,save)								\
-	if (op2) {												\
 		LoadZF;LoadSF;LoadAF;								\
 		flags.var1.d=load(op1);								\
 		flags.var2.b=op2;									\
@@ -250,10 +247,9 @@
 				(flags.var1.d >> (32-flags.var2.b));		\
 		save(op1,flags.result.d);							\
 		flags.type=t_ROLd;									\
-	}
+
 
 #define RORB(op1,op2,load,save)								\
-	if (op2&0x07)	{										\
 		LoadZF;LoadSF;LoadAF;								\
 		flags.var1.b=load(op1);								\
 		flags.var2.b=op2&0x07;								\
@@ -261,7 +257,7 @@
 				(flags.var1.b << (8-flags.var2.b));			\
 		save(op1,flags.result.b);							\
 		flags.type=t_RORb;									\
-	}														\
+
 
 #define RORW(op1,op2,load,save)								\
 	if (op2&0x0F) {											\
@@ -380,52 +376,52 @@
 
 
 #define SHLB(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.b=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.b=load(op1);flags.var2.b=op2;				\
 	flags.result.b=flags.var1.b << flags.var2.b;			\
 	save(op1,flags.result.b);								\
 	flags.type=t_SHLb;
 
 #define SHLW(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.w=load(op1);flags.var2.b=op2 ;			\
+	if (!op2) break;										\
+	flags.var1.w=load(op1);flags.var2.b=op2 ;				\
 	flags.result.w=flags.var1.w << flags.var2.b;			\
 	save(op1,flags.result.w);								\
 	flags.type=t_SHLw;
 
 #define SHLD(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.d=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.d=load(op1);flags.var2.b=op2;				\
 	flags.result.d=flags.var1.d << flags.var2.b;			\
 	save(op1,flags.result.d);								\
 	flags.type=t_SHLd;
 
 
 #define SHRB(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.b=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.b=load(op1);flags.var2.b=op2;				\
 	flags.result.b=flags.var1.b >> flags.var2.b;			\
 	save(op1,flags.result.b);								\
 	flags.type=t_SHRb;
 
 #define SHRW(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.w=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.w=load(op1);flags.var2.b=op2;				\
 	flags.result.w=flags.var1.w >> flags.var2.b;			\
 	save(op1,flags.result.w);								\
 	flags.type=t_SHRw;
 
 #define SHRD(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.d=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.d=load(op1);flags.var2.b=op2;				\
 	flags.result.d=flags.var1.d >> flags.var2.b;			\
 	save(op1,flags.result.d);								\
 	flags.type=t_SHRd;
 
 
 #define SARB(op1,op2,load,save)								\
-	if (!op2) break;								\
-	flags.var1.b=load(op1);flags.var2.b=op2;			\
+	if (!op2) break;										\
+	flags.var1.b=load(op1);flags.var2.b=op2;				\
 	if (flags.var2.b>8) flags.var2.b=8;						\
     if (flags.var1.b & 0x80) {								\
 		flags.result.b=(flags.var1.b >> flags.var2.b)|		\
@@ -531,24 +527,28 @@
 		reg_ah=reg_al / BLAH;								\
 		reg_al=reg_al % BLAH;								\
 		flags.type=t_UNKNOWN;								\
-		SETFLAGBIT(SF,(reg_ah & 0x80));						\
-		SETFLAGBIT(ZF,(reg_ax == 0));						\
-		SETFLAGBIT(PF,false);								\
+		SETFLAGBIT(SF,(reg_al & 0x80));						\
+		SETFLAGBIT(ZF,(reg_al == 0));						\
+		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
 	}
 
 
+//Took this from bochs, i seriously hate these weird bcd opcodes
 #define AAD(op1)											\
 	{														\
-		Bit8u BLAH=op1;										\
-		reg_al=reg_ah*BLAH+reg_al;							\
-		reg_ah=0;											\
-		SETFLAGBIT(CF,(reg_al>=0x80));						\
-		SETFLAGBIT(ZF,(reg_al==0));							\
-		SETFLAGBIT(PF,false);								\
+		Bit16u ax1 = reg_ah * op1;							\
+		Bit16u ax2 = ax1 + reg_al;							\
+		Bit8u old_al = reg_al;								\
+		reg_al = (Bit8u) ax2;								\
+		reg_ah = 0;											\
+		SETFLAGBIT(AF,(ax1 & 0x08) != (ax2 & 0x08));		\
+		SETFLAGBIT(CF,ax2 > 0xff);							\
+		SETFLAGBIT(OF,(reg_al & 0x80) != (old_al & 0x80));	\
+		SETFLAGBIT(SF,reg_al >= 0x80);						\
+		SETFLAGBIT(ZF,reg_al == 0);							\
+		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
 		flags.type=t_UNKNOWN;								\
 	}
-
-
 
 #define MULB(op1,load,save)									\
 	flags.type=t_MUL;										\
