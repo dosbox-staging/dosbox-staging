@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+
 #include "dosbox.h"
 #include "mem.h"
 #include "cpu.h"
@@ -93,9 +94,10 @@ static Bitu CPU_Real_16_Slow_Decode_Special(Bitu count) {
 
 void CPU_Real_16_Slow_Start(void) {
 
-	lookupEATable=&GetEA_16_n;
-	segprefix_base=0;
-	segprefix_on=false;
 	cpudecoder=&CPU_Real_16_Slow_Decode;
-
+	EAPrefixTable[0]=&GetEA_16_n;
+	EAPrefixTable[1]=&GetEA_16_s;
+	EAPrefixTable[2]=&GetEA_32_n;
+	EAPrefixTable[3]=&GetEA_32_s;
+	PrefixReset;
 };
