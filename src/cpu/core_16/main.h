@@ -887,10 +887,17 @@ restart:
 			break;
 		case 0xcc:												/* INT3 */
 			INTERRUPT(3);
+#if C_DEBUG 
+			return 0; 
+#endif
 			break;
 		case 0xcd:												/* INT Ib */	
 			{
 				Bit8u num=Fetchb();
+#if C_DEBUG
+				SAVEIP;
+				if (DEBUG_IntBreakpoint(num)) return 0;
+#endif
 				INTERRUPT(num);				
 			}
 			break;

@@ -24,6 +24,10 @@
 #include "pic.h"
 #include "fpu.h"
 
+#if C_DEBUG
+#include "debug.h"
+#endif
+
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)
 #define LoadMb(off) mem_readb(off)

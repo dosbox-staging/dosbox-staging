@@ -18,6 +18,7 @@
 
 void DEBUG_DrawScreen(void);
 bool DEBUG_BreakPoint(void);
+bool DEBUG_IntBreakpoint(Bit8u intNum);
 void DEBUG_Enable(void);
 
 extern Bitu cycle_count;

@@ -50,6 +50,7 @@ typedef Bitu (LoopHandler)(void);
 
 void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
+void DOSBOX_SetNormalLoop();
 
 void DOSBOX_Init(int argc, char* argv[]);
 void DOSBOX_StartUp(void);

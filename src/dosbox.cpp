@@ -105,7 +105,7 @@ void DOS_Init();
 void RENDER_Init(void);
 
 void CPU_Init();
-void FPU_Init();
+//void FPU_Init();
 void IO_Init(void);
 void DMA_Init(void);
 void MIXER_Init(void);
@@ -189,6 +189,9 @@ void DOSBOX_SetLoop(LoopHandler * handler) {
 	loop=handler;
 }
 
+void DOSBOX_SetNormalLoop() {
+	loop=Normal_Loop;
+}
 
 void DOSBOX_RunMachine(void){
 	Bitu ret;
@@ -208,11 +211,11 @@ static void InitSystems(void) {
 	HARDWARE_Init();
 	TIMER_Init();
 	CPU_Init();
-#ifdef C_FPU
+#if C_FPU
 	FPU_Init();
 #endif
 	MIXER_Init();
-#ifdef C_DEBUG
+#if C_DEBUG
 	DEBUG_Init();
 #endif
 	//Start up individual hardware
