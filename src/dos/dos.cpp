@@ -704,7 +704,15 @@ static Bitu DOS_21Handler(void) {
 		LOG_DEBUG("DOS:57:Getting/Setting File Date is faked",reg_ah);
 		break;
 	case 0x58:					/* Get/Set Memory allocation strategy */
-		LOG_DEBUG("DOS:58:Not Supported Set//Get memory allocation");
+		switch (reg_al) {
+		case 0:		/* Get Strategy */
+			reg_ax=0;			//Low memory first fit
+			break;
+		case 1:		/* Set Strategy */
+			break;
+		default:
+			LOG_DEBUG("DOS:58:Not Supported Set//Get memory allocation call %X",reg_al);
+		}
 		break;
 	case 0x59:					/* Get Extended error information */
 		reg_ax=dos.errorcode;
