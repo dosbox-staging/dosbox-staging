@@ -105,7 +105,6 @@ Bitu DEBUG_EnableDebugger(void);
 
 void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	/* Save the state of the cpu cores */
-	LOG_MSG("PageFault at %X type %d queue %d",lin_addr,type,pf_queue.used);
 	LazyFlags old_lflags;
 	memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 	CPU_Decoder * old_cpudecoder;
@@ -113,21 +112,24 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu type) {
 	cpudecoder=&PageFaultCore;
 	paging.cr2=lin_addr;
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used++];
+	LOG(LOG_PAGING,LOG_NORMAL)("PageFault at %X type %d queue %d",lin_addr,type,pf_queue.used);
 	entry->cs=SegValue(cs);
 	entry->eip=reg_eip;
 	entry->page_addr=page_addr;
 	//Caused by a write by default?
-	CPU_Exception(14,0x2 | ((cpu.cpl>0) ? 0x1 : 0));
+	CPU_Exception(14,0x2 );
 #if C_DEBUG
-	DEBUG_EnableDebugger();
+//	DEBUG_EnableDebugger();
 #endif
 	DOSBOX_RunMachine();
 	pf_queue.used--;
+	LOG(LOG_PAGING,LOG_NORMAL)("Left PageFault for %x queue %d",lin_addr,pf_queue.used);
 	memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 	cpudecoder=old_cpudecoder;
 }
  
 
+void MEM_PhysWriteD(Bitu addr,Bit32u val);
 class InitPageHandler : public PageHandler {
 public:
 	InitPageHandler() {flags=PFLAG_ILLEGAL;}
@@ -174,6 +176,8 @@ public:
 				if (!table.block.p)
 					E_Exit("Pagefault didn't correct table");
 			}
+			table.block.a=table.block.d=1;		//Set access/Dirty
+			MEM_PhysWriteD(table_addr,table.load);
 			X86PageEntry entry;
 			Bitu entry_addr=(table.block.base << 12)+t_index*4;
 			entry.load=MEM_PhysReadD(entry_addr);
@@ -184,8 +188,9 @@ public:
 				if (!entry.block.p)
 					E_Exit("Pagefault didn't correct page");
 			}
+			entry.block.a=entry.block.d=1;		//Set access/Dirty
+			MEM_PhysWriteD(entry_addr,entry.load);
 			phys_page=entry.block.base;
-			LOG_MSG("Linked page lin page %X to phys page %X",lin_page,phys_page);
 		} else {
 			if (lin_page<LINK_START) phys_page=mapfirstmb[lin_page];
 			else phys_page=lin_page;
@@ -236,6 +241,8 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 	PageHandler * handler=MEM_GetPageHandler(phys_page);
 	Bitu lin_base=lin_page << 12;
 
+	if (lin_page>=TLB_SIZE || phys_page>=TLB_SIZE) 
+		E_Exit("Illegal page");
 	HostPt host_mem=handler->GetHostPt(phys_page);
 	paging.tlb.phys_page[lin_page]=phys_page;
 	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=host_mem-lin_base;
