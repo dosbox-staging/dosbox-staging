@@ -39,6 +39,7 @@ Bit32u FillTable[16]={
 
 static PageEntry VGA_PageEntry;
 
+void VGA_Render_GFX_2(Bit8u * * data);
 void VGA_Render_GFX_4(Bit8u * * data);
 void VGA_Render_GFX_16(Bit8u * * data);
 void VGA_Render_GFX_256C(Bit8u * * data);
@@ -67,7 +68,8 @@ void VGA_FindSettings(void) {
 		} else if (vga.config.cga_enabled) {
 			/* 4 color cga */
 			//TODO Detect hercules modes, probably set them up in bios too
-			vga.mode=GFX_4;
+			if (vga.config.pixel_double) vga.mode=GFX_4;
+			else vga.mode=GFX_2;
 //			VGA_PageEntry.base=0xB8000;
 //			VGA_PageEntry.handler.read=VGA_GFX_4_ReadHandler;
 //			VGA_PageEntry.handler.write=VGA_GFX_4_WriteHandler;
@@ -119,6 +121,12 @@ static void VGA_DoResize(void) {
 		pitch=width;
 		renderer=&VGA_Render_GFX_4;
 		break;
+	case GFX_2:
+		width<<=3;
+		height<<=1;
+		pitch=width;
+		renderer=&VGA_Render_GFX_2;
+		break;
 	case TEXT_16:
 		/* probably a 16-color text mode, got to detect mono mode somehow */
 		width<<=3;		/* 8 bit wide text font */
@@ -144,14 +152,11 @@ void VGA_StartResize(void) {
 }
 
 
-
-
 void VGA_Init() {
 	vga.draw.resizing=false;
 	VGA_SetupMemory();
 	VGA_SetupMisc();
 	VGA_SetupDAC();
-	VGA_SetupCRTC();
 	VGA_SetupGFX();
 	VGA_SetupSEQ();
 	VGA_SetupAttr();
