@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.25 2003-09-21 13:30:25 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.26 2003-10-10 09:21:35 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -293,21 +293,52 @@ void DOS_Shell::Execute(char * name,char * args) {
 		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),name);
 		return;
 	}
-	
+
 	char* extension =strrchr(fullname,'.');
 	
 	/*always disallow files without extension from being executed. */
 	/*only internal commands can be run this way and they never get in this handler */
 	if(extension == 0)
 	{
-		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
-		return;
+		char temp_name[256],* temp_fullname;
+		//try to add .com, .exe and .bat extensions to filename
+		
+		strcpy(temp_name,fullname);
+		strcat(temp_name,".COM");
+		temp_fullname=Which(temp_name);
+		if (temp_fullname) { extension=".com";strcpy(fullname,temp_fullname); }
+
+		else 
+		{
+			strcpy(temp_name,fullname);
+			strcat(temp_name,".EXE");
+			temp_fullname=Which(temp_name);
+		 	if (temp_fullname) { extension=".exe";strcpy(fullname,temp_fullname);}
+
+			else 
+			{
+				strcpy(temp_name,fullname);
+				strcat(temp_name,".BAT");
+				temp_fullname=Which(temp_name);
+		 		if (temp_fullname) { extension=".bat";strcpy(fullname,temp_fullname);}
+
+				else  
+				{
+		 			WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
+		 			return;
+				}
+			
+			}	
+		}
 	}
+	
 	if (strcasecmp(extension, ".bat") == 0) 
 	{	/* Run the .bat file */
 		/* delete old batch file if call is not active*/
+		bool temp_echo=echo; /*keep the current echostate (as delete bf might change it )*/
 		if(bf && !call) delete bf;
 		bf=new BatchFile(this,fullname,line);
+		echo=temp_echo; //restore it.
 	} 
 	else 
 	{	/* only .bat .exe .com extensions maybe be executed by the shell */
