@@ -23,18 +23,19 @@
 #include "regs.h"
 #include "mem.h"
 
-/* Some common Defines */
-/* A CPU Handler */
-typedef Bitu (CPU_Decoder)(void);
-extern CPU_Decoder * cpudecoder;
-
 /* CPU Cycle Timing */
 extern Bits CPU_Cycles;
 extern Bits CPU_CycleLeft;
 extern Bits CPU_CycleMax;
 
+/* Some common Defines */
+/* A CPU Handler */
+typedef Bitu (CPU_Decoder)(void);
+extern CPU_Decoder * cpudecoder;
+
+
 //CPU Stuff
-void SetCPU16bit();
+void SetCPU16bit( );
 
 //Types of Flag changing instructions
 enum {
@@ -100,65 +101,168 @@ bool get_PF(void);
 // Descriptor
 // *********************************************************************
 
+#define CR0_PROTECTION		0x00000001
+#define CR0_FPUENABLED		0x00000002
+#define CR0_FPUMONITOR		0x00000004
+#define CR0_TASKSWITCH		0x00000008
+#define CR0_FPUPRESENT		0x00000010
+#define CR0_PAGING			0x80000000
+
+
+#define DESC_INVALID				0x0
+#define DESC_286_TSS_A				0x1
+#define DESC_LDT					0x2
+#define DESC_286_TSS_B				0x3
+#define DESC_286_CALL_GATE			0x4
+#define DESC_TASK_GATE				0x5
+#define DESC_286_INT_GATE			0x6
+#define DESC_286_TRAP_GATE			0x7
+
+#define DESC_386_TSS_A				0x9
+#define DESC_386_TSS_B				0xb
+#define DESC_386_CALL_GATE			0xc
+#define DESC_386_INT_GATE			0xe
+#define DESC_386_TRAP_GATE			0xf
+
+
 class Descriptor
 {
 public:
-	void LoadValues	(Bit32u address) {
-		Bit32u* data = (Bit32u*)&desc;
+	Descriptor() { saved.fill[0]=saved.fill[1]=0; }
+
+	void Load(PhysPt address) {
+		Bit32u* data = (Bit32u*)&saved;
 		*data	  = mem_readd(address);
 		*(data+1) = mem_readd(address+4);
 	}
-	void SaveValues	(Bit32u address) {
-		Bit32u* data = (Bit32u*)&desc;
+	void Save(PhysPt address) {
+		Bit32u* data = (Bit32u*)&saved;
 		mem_writed(address,*data);
 		mem_writed(address+4,*(data+1));
 	}
-	Bit32u	GetBase		(void) { return (desc.base_24_31<<24) | (desc.base_16_23<<16) | desc.base_0_15; };
-	Bit32u	GetLimit	(void) {
-		Bit32u limit = (desc.limit_16_19<<16) | desc.limit_0_15;
-		if (desc.g)	return (limit<<12) | 0xFFF;
+	PhysPt GetBase (void) { 
+		return (saved.seg.base_24_31<<24) | (saved.seg.base_16_23<<16) | saved.seg.base_0_15; 
+	}
+	Bitu GetLimit (void) {
+		Bitu limit = (saved.seg.limit_16_19<<16) | saved.seg.limit_0_15;
+		if (saved.seg.g)	return (limit<<12) | 0xFFF;
 		return limit;
 	}
-
+	Bitu GetType(void) {
+		return saved.seg.type;
+	}
+	Bitu GetOffset(void) {
+		return (saved.gate.offset_16_31 << 16) | saved.gate.offset_0_15;
+	}
+	Bitu Conforming(void) {
+		return saved.seg.type & 8;
+	}
+	Bitu GetDPL(void) {
+		return saved.seg.dpl;
+	}
 public:
 #pragma pack(1)
-	typedef struct SDescriptor {
+	struct S_Descriptor {
 		Bit32u limit_0_15	:16;
 		Bit32u base_0_15	:16;
 		Bit32u base_16_23	:8;
-		Bit32u type			:5;
+		Bit32u type			:4;
+		Bit32u s			:1;
 		Bit32u dpl			:2;
 		Bit32u p			:1;
 		Bit32u limit_16_19	:4;
 		Bit32u avl			:1;
 		Bit32u r			:1;
-		Bit32u d			:1;
+		Bit32u big			:1;
 		Bit32u g			:1;
 		Bit32u base_24_31	:8;
-	} TDescriptor;
-#pragma pack()
-	
-	TDescriptor desc;
-};
-
-class DescriptorTable
-{
-	Bit32u	GetBase			(void)			{ return baseAddress;	};
-	Bit16u	GetLimit		(void)			{ return limit;			};
-	void	SetBase			(Bit32u base)	{ baseAddress = base;	};
-	void	SetLimit		(Bit16u size)	{ limit		  = size;	};
-
-	bool GetDescriptor	(Bit16u selector, Descriptor& desc) {
-			// selector = the plain index 
-		if (selector>=limit>>3) return false;
-		desc.LoadValues(baseAddress+(selector<<3));
-		return true;
 	};
+	struct G_Descriptor {
+		Bit32u offset_0_15	:16;
+		Bit32u selector		:16;
+		Bit32u paramcount	:5;
+		Bit32u reserved		:3;
+		Bit32u type			:4;
+		Bit32u s			:1;
+		Bit32u dpl			:2;
+		Bit32u p			:1;
+		Bit32u offset_16_31	:16;
+	};
+#pragma pack()
 
-private:
-	Bit32u  baseAddress;
-	Bit16u	limit;
+	union {
+		S_Descriptor seg;
+		G_Descriptor gate;
+		Bit32u fill[2];
+	} saved;
 };
+
+class DescriptorTable {
+public:
+	PhysPt	GetBase			(void)			{ return table_base;	}
+	Bitu	GetLimit		(void)			{ return table_limit;	}
+	void	SetBase			(PhysPt _base)	{ table_base = _base;	}
+	void	SetLimit		(Bitu _limit)	{ table_limit= _limit;	}
+
+	bool GetDescriptor	(Bitu selector, Descriptor& desc) {
+		selector&=~7;
+		if (selector>=table_limit) return false;
+		desc.Load(table_base+(selector));
+		return true;
+	}
+protected:
+	PhysPt table_base;
+	Bitu table_limit;
+};
+
+class GDTDescriptorTable : public DescriptorTable {
+public:
+	bool GetDescriptor	(Bitu selector, Descriptor& desc) {
+		Bitu address=selector&=~7;
+		if (selector & 4) {
+			if (address>=ldt_limit) return false;
+			desc.Load(ldt_base+address);
+			return true;
+		} else {
+			if (address>=table_limit) return false;
+			desc.Load(table_base+address);
+			return true;
+		}
+	}
+
+	Bitu SLDT(void)	{
+		return ldt_value;
+	}
+	bool LLDT(Bitu value)	{
+//TODO checking
+		Descriptor desc;
+		GetDescriptor(value,desc);
+		ldt_base=desc.GetBase();
+		ldt_limit=desc.GetLimit();
+		ldt_value=value;
+		return true;
+	}
+private:
+	PhysPt ldt_base;
+	Bitu ldt_limit;
+	Bitu ldt_value;
+};
+
+struct CPUBlock {
+	Bitu protmode;						/* Are we in protected mode */
+	Bitu cpl;							/* Current Privilege */
+	Bitu conforming;					/* Current descriptor is conforming */
+	Bitu big;							/* Current descriptor is USE32 */
+	Bitu state;
+	Bitu cr0;
+	GDTDescriptorTable gdt;
+	DescriptorTable idt;
+	struct {
+		Bitu prefix,entry;
+	} full;
+};
+
+extern CPUBlock cpu;
 
 #endif
 
