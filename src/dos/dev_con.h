@@ -63,21 +63,13 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 
 extern void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page);
 bool device_CON::Write(Bit8u * data,Bit16u * size) {
-//TODO Hack a way to call int 0x10
-	Bit16u oldax=reg_ax;Bit16u oldbx=reg_bx;
 	Bit16u count=0;
 	while (*size>count) {
-/*
-		reg_al=data[count];
-		reg_ah=0x0e;
-		reg_bx=0x0007;
-		CALLBACK_RunRealInt(0x10);
-*/
+
 		INT10_TeletypeOutput(data[count],7,false,0);
 		count++;
 	}
 	*size=count;
-//	reg_ax=oldax;reg_bx=oldbx;
 	return true;
 }
 
