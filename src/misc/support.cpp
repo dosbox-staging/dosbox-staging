@@ -217,13 +217,8 @@ void S_Warn(char * format,...) {
 
 void E_Exit(char * format,...) {
     
-    if (sdl.full_screen) {
-        GFX_SwitchFullScreen();
-    }
-
 	char buf[1024];
 
-//	SysShutDown();
 	va_list msg;
 	strcpy(buf,"EXIT:");
 	va_start(msg,format);
@@ -232,9 +227,5 @@ void E_Exit(char * format,...) {
     
 	strcat(buf,"\n");
 	printf(buf);
-	printf("Press ENTER to stop\n");
-	fgetc(stdin);
-	GFX_Stop();
-	exit(2);
-
+	throw(buf);
 };
