@@ -441,9 +441,6 @@ Bitu PIC_RunQueue(void) {
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	if (CPU_CycleLeft<=0) {
-		CPU_CycleLeft=CPU_CycleMax;
-	}
 	while (CPU_CycleLeft>0) {
 		/* Check the queue for an entry */
 		Bitu index=PIC_Index();
@@ -482,8 +479,10 @@ Bitu PIC_RunQueue(void) {
 		}
 		if (ret) return ret;	
 	}
-	/* Go through the list of scheduled irq's and lower their index with 1000 */
+	/* Prepare everything for next round */
+	CPU_CycleLeft=CPU_CycleMax;
 	PIC_Ticks++;
+	/* Go through the list of scheduled irq's and lower their index with 1000 */
 	PICEntry * entry=pic.next_entry;
 	while (entry) {
 		if (entry->index>1000) entry->index-=1000;
