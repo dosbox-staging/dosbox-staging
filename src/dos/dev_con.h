@@ -361,6 +361,7 @@ device_CON::device_CON() {
     ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
     ansi.saverow=0;
     ansi.savecol=0;
+	ClearAnsi();
 }
 
 void device_CON::ClearAnsi(void){
