@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.49 2003-10-14 15:27:22 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.50 2003-10-14 20:44:15 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -48,6 +48,16 @@
 extern char** environ;
 #endif
 
+
+#ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#define STDOUT_FILE	TEXT("stdout.txt")
+#define STDERR_FILE	TEXT("stderr.txt")
+#endif
+
 struct SDL_Block {
 	volatile bool active;							//If this isn't set don't draw
 	volatile bool drawing;
@@ -57,7 +67,7 @@ struct SDL_Block {
 	Bitu flags;
 	GFX_ModeCallBack mode_callback;
 	bool full_screen;
-	bool nowait;
+	bool wait_on_error;
 	SDL_Surface * surface;
 	SDL_Surface * blit_surface;
 	SDL_Joystick * joy;
@@ -294,7 +304,7 @@ static void GUI_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.full_screen=false;
-	sdl.nowait=section->Get_bool("nowait");
+	sdl.wait_on_error=section->Get_bool("waitonerror");
 	sdl.mouse.locked=false;
 	sdl.mouse.requestlock=false;
 	sdl.mouse.autoenable=section->Get_bool("autolock");
@@ -309,7 +319,7 @@ static void GUI_StartUp(Section * sec) {
 #endif
 	/* Initialize screen for first time */
 	sdl.surface=SDL_SetVideoMode(640,400,0,0);
-	if (sdl.surface->format->BitsPerPixel==32) {
+	if (sdl.surface->format->BitsPerPixel==24) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_SetSize(640,400,8,0,0,0);
@@ -319,6 +329,7 @@ static void GUI_StartUp(Section * sec) {
 	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
 	KEYBOARD_AddEvent(KBD_f10,KBD_MOD_CTRL,CaptureMouse);
 	KEYBOARD_AddEvent(KBD_enter,KBD_MOD_ALT,SwitchFullScreen);
+
 }
 
 void Mouse_AutoLock(bool enable) {
@@ -596,7 +607,28 @@ int main(int argc, char* argv[]) {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
-	
+
+		/* Can't disable the console with debugger enabled */
+#if defined(WIN32) && !(C_DEBUG)
+		if (control->cmdline->FindExist("-noconsole")) {
+			FreeConsole();
+			/* Redirect standard input and standard output */
+			freopen(STDOUT_FILE, "w", stdout);
+			freopen(STDERR_FILE, "w", stderr);
+			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);	/* Line buffered */
+			setbuf(stderr, NULL);					/* No buffering */
+		} else {
+			if (AllocConsole()) {
+				fclose(stdin);
+				fclose(stdout);
+				fclose(stderr);
+				freopen("CONIN$","w",stdin);
+				freopen("CONOUT$","w",stdout);
+				freopen("CONOUT$","w",stderr);
+			}
+		}
+#endif  //defined(WIN32) && !(C_DEBUG)
+
 #if C_DEBUG
 		DEBUG_SetupConsole();
 #endif
@@ -611,8 +643,9 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
-		sdl_sec->Add_bool("nowait",true);
+		sdl_sec->Add_bool("waitonerror",true);
 		/* Init all the dosbox subsystems */
+
 		DOSBOX_Init();
 		std::string config_file;
 		if (control->cmdline->FindString("-conf",config_file,true)) {
@@ -645,8 +678,17 @@ int main(int argc, char* argv[]) {
 	} catch (char * error) {
         if (sdl.full_screen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
-		LOG_MSG("Exit to error: %sPress enter to continue.",error);
-		if(!sdl.nowait) fgetc(stdin);
+		LOG_MSG("Exit to error: %s",error);
+		if(sdl.wait_on_error) {
+			//TODO Maybe look for some way to show message in linux?
+#if (C_DEBUG)
+			LOG_MSG("Press enter to continue",error);
+			fgetc(stdin);
+#elif defined(WIN32)
+			Sleep(5000);
+#endif 
+		}
+
 	}
 	catch (int){ 
         if (sdl.full_screen) SwitchFullScreen();
