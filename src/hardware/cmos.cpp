@@ -71,6 +71,7 @@ static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
 	case 0x07:		/* Date of month */
 	case 0x08:		/* Month */
 	case 0x09:		/* Year */
+	case 0x32:              /* Century */
 		/* Ignore writes to change alarm */
 		break;
 	case 0x01:		/* Seconds Alarm */
@@ -102,7 +103,7 @@ static void cmos_writereg(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-#define MAKE_RETURN(_VAL) (cmos.bcd ? (((_VAL / 10) << 4) | (_VAL % 10)) : _VAL);
+#define MAKE_RETURN(_VAL) (cmos.bcd ? ((((_VAL) / 10) << 4) | ((_VAL) % 10)) : (_VAL));
 
 static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 	if (cmos.reg>0x3f) {
@@ -128,13 +129,15 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 	case 0x04:		/* Hours */
 		return 	MAKE_RETURN(loctime->tm_hour);
 	case 0x06:		/* Day of week */
-		return 	MAKE_RETURN(loctime->tm_wday);
+		return 	MAKE_RETURN(loctime->tm_wday + 1);
 	case 0x07:		/* Date of month */
 		return 	MAKE_RETURN(loctime->tm_mday);
 	case 0x08:		/* Month */
-		return 	MAKE_RETURN(loctime->tm_mon);
+		return 	MAKE_RETURN(loctime->tm_mon + 1);
 	case 0x09:		/* Year */
-		return 	MAKE_RETURN(loctime->tm_year);
+		return 	MAKE_RETURN(loctime->tm_year % 100);
+	case 0x32:		/* Century */
+		return 	MAKE_RETURN(loctime->tm_year / 100 + 19);
 	case 0x01:		/* Seconds Alarm */
 	case 0x03:		/* Minutes Alarm */
 	case 0x05:		/* Hours Alarm */

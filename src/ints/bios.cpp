@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.39 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.40 2005-02-24 17:50:58 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -79,19 +79,20 @@ static Bitu INT1A_Handler(void) {
 		reg_cl=IO_Read(0x71);
 		IO_Write(0x70,0x00);		//Seconds
 		reg_dh=IO_Read(0x71);
-		reg_dl=0;					//Daylight saving disabled
+		reg_dl=0;			//Daylight saving disabled
 		CALLBACK_SCF(false);
 		break;
-	case 0x04:	/* GET REAL-TIME ClOCK DATA  (AT,XT286,PS) */
-        reg_dx=0;
-        reg_cx=0x2003;
-        CALLBACK_SCF(false);
-        LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
-        break;
-//		reg_dx=reg_cx=0;
-//		CALLBACK_SCF(false);
-//		LOG(LOG_BIOS,LOG_ERROR)("INT1A:04:Faked RTC get date call");
-//		break;
+	case 0x04:	/* GET REAL-TIME ClOCK DATE  (AT,XT286,PS) */
+		IO_Write(0x70,0x32);		//Centuries
+		reg_ch=IO_Read(0x71);
+		IO_Write(0x70,0x09);		//Years
+		reg_cl=IO_Read(0x71);
+		IO_Write(0x70,0x08);		//Months
+		reg_dh=IO_Read(0x71);
+		IO_Write(0x70,0x07);		//Days
+		reg_dl=IO_Read(0x71);
+		CALLBACK_SCF(false);
+		break;
 	case 0x80:	/* Pcjr Setup Sound Multiplexer */
 		LOG(LOG_BIOS,LOG_ERROR)("INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
 		break;
