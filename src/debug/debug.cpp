@@ -20,7 +20,6 @@
 
 #include <string.h>
 #include <list>
-#include <direct.h>
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -971,6 +970,7 @@ static void DEBUG_ShutDown(Section * sec)
 
 void DEBUG_Init(Section* sec) {
 
+	MSG_Add("DEBUG_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	DEBUG_DrawScreen();
 	/* Add some keyhandlers */
 	KEYBOARD_AddEvent(KBD_kpminus,0,DEBUG_Enable);
