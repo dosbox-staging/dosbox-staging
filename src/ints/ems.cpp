@@ -669,8 +669,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah = EMM_NO_ERROR;
 		break;
 	case 0xDE:		/* VCPI Functions */
-		errorlevel=1;
-		E_Exit("Protected mode not supported");
+		LOG(LOG_ERROR|LOG_MISC,"EMS:VCPI Call %2X not supported",reg_al);
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	default:
