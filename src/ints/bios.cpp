@@ -276,6 +276,8 @@ void BIOS_Init(Section* sec) {
 	CALLBACK_Setup(call_int1,&INT1_Single_Step,CB_IRET);
 	RealSetVec(0x1,CALLBACK_RealPointer(call_int1));
 
+	/* Test for some hardware */
+	if (IO_Read(0x378)!=0xff) real_writed(0x40,0x08,0x378);
 }
 
 
