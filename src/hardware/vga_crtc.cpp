@@ -28,6 +28,11 @@ void write_p3d4(Bit32u port,Bit8u val) {
 	crtc(index)=val;
 }
 
+Bit8u read_p3d4(Bit32u port) {
+	return crtc(index);
+}
+
+
 void write_p3d5(Bit32u port,Bit8u val) {
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
@@ -37,7 +42,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 	case 0x01:	/* Horizontal Display End Register */
 		crtc(horizontal_display_end)=val;
 		vga.config.hdisplayend=val+1;
-		VGA_FindSettings();
+		VGA_StartResize();
 		/* 	0-7  Number of Character Clocks Displayed -1 */
 		break;
 	case 0x02:	/* Start Horizontal Blanking Register */
@@ -78,8 +83,8 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		break;
 	case 0x07:	/* Overflow Register */
 		crtc(overflow)=val;
-		vga.config.vdisplayend=(vga.config.vdisplayend&0xFF)|((val&2)<<7)|((val&64)<<2);
-		VGA_FindSettings();
+		vga.config.vdisplayend=(vga.config.vdisplayend&0xFF)|(((val>>1) & 1)<<8)|(((val>>6) & 1)<<9);
+		VGA_StartResize();
 		/*
 			0  Bit 8 of Vertical Total (3d4h index 6)
 			1  Bit 8 of Vertical Display End (3d4h index 12h)
@@ -108,7 +113,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		crtc(maximum_scan_line)=val;
 		vga.config.vline_double=(val & 128)>1;
 		vga.config.vline_height=(val & 0xf);
-		VGA_FindSettings();
+		VGA_StartResize();
 		/*
 			0-4	Number of scan lines in a character row -1. In graphics modes this is
 				the number of times (-1) the line is displayed before passing on to
@@ -183,7 +188,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 	case 0x12:	/* Vertical Display End Register */
 		crtc(vertical_display_end)=val;
 		vga.config.vdisplayend=(vga.config.vdisplayend & 0x300)|val;
-		VGA_FindSettings();
+		VGA_StartResize();
 		/*
 			0-7	Lower 8 bits of Vertical Display End. The display ends when the line
 				counter reaches this value. Bit 8 is found in 3d4h index 7 bit 1.
@@ -193,7 +198,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 	case 0x13:	/* Offset register */
 		crtc(offset)=val;
 		vga.config.scan_len=val;
-		VGA_FindSettings();
+		VGA_StartResize();
 		/*
 			0-7	Number of bytes in a scanline / K. Where K is 2 for byte mode, 4 for
 				word mode and 8 for Double Word mode.
@@ -317,16 +322,4 @@ Bit8u read_p3d5(Bit32u port) {
 
 
 
-void VGA_SetupCRTC(void) {
-	IO_RegisterWriteHandler(0x3d4,write_p3d4,"VGA:CRTC Index Select");
-	IO_RegisterWriteHandler(0x3d5,write_p3d5,"VGA:CRTC Data Register");
-	IO_RegisterReadHandler(0x3d5,read_p3d5,"VGA:CRTC Data Register");
-
-//	IO_RegisterWriteHandler(0x3b4,write_p3d4,"VGA:CRTC Index Select");
-//	IO_RegisterWriteHandler(0x3b5,write_p3d5,"VGA:CRTC Data Register");
-//	IO_RegisterReadHandler(0x3b5,read_p3d5,"VGA:CRTC Data Register");
-
-
-
-}
 
