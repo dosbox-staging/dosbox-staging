@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.18 2004-01-07 12:18:58 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.19 2004-01-29 16:58:24 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -117,13 +117,14 @@ void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
 		keyb.buf.code[start].mod=mod;
 	}
 	/* Start up an event to start the first IRQ */
-	if (!keyb.scheduled) {
+	if (!keyb.scheduled && !keyb.key_on_60) {
 		keyb.scheduled=true;
 		PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 	}
 }
 
 void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
+	keyb.key_on_60=false; //else no new keys get scheduled :)
 	switch (keyb.buf.state) {
 	case STATE_NORMAL:
 		if (keyb.buf.used && !keyb.scheduled) {
@@ -147,18 +148,21 @@ void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
 }
 
 static Bit8u read_p60(Bit32u port) {
+	keyb.key_on_60 = false;
 	switch (keyb.buf.state) {
 	case STATE_NORMAL:
-		if (keyb.buf.used && !keyb.scheduled) {
+      		if (keyb.buf.used && !keyb.scheduled) { //key60 is false
 			keyb.scheduled=true;
 			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 		}
+
 		return keyb.buf.code[keyb.buf.pos].scancode;	
 	case STATE_EXTEND:
-		if (!keyb.scheduled) {
+      		if (!keyb.scheduled) {
 			keyb.scheduled=true;
 			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 		}
+
 		return 224;
 	}
 	return 0;
@@ -187,7 +191,7 @@ static void write_p60(Bit32u port,Bit8u val) {
 		case 0xf4:	/* Enable keyboard,clear buffer, start scanning */
 			keyb.active=true;
 			KEYBOARD_ClrBuffer();
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated port 60");
 			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
 			break;
 		case 0xf5:	 /* Reset keyboard and disable scanning */
@@ -233,11 +237,11 @@ static void write_p64(Bit32u port,Bit8u val) {
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
-		if (keyb.buf.used && !keyb.scheduled) {
+		if (keyb.buf.used && !keyb.scheduled && !keyb.key_on_60) {
 			keyb.scheduled=true;
 			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 		}
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated port 64");
 		break;
 	case 0xad:		/* Deactivate keyboard */
 		keyb.active=false;
