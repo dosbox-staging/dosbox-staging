@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.46 2004-09-09 18:36:50 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.47 2004-09-18 10:20:54 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -239,6 +239,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 	char numformat[16];
 	char path[DOS_PATHLENGTH];
 
+	std::string line;
+	if(GetEnvStr("DIRCMD",line)){
+		std::string::size_type idx = line.find('=');
+		std::string value=line.substr(idx +1 , std::string::npos);
+		line = std::string(args) + " " + value;
+		args=const_cast<char*>(line.c_str());
+	}
+   
 	bool optW=ScanCMDBool(args,"W");
 	bool optS=ScanCMDBool(args,"S");
 	bool optP=ScanCMDBool(args,"P");
