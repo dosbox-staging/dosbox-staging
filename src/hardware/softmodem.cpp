@@ -334,7 +334,8 @@ public:
 			Dial(foundstr);
 			goto ret_none;
 			}
-		char * scanbuf=&mhd.cmdbuf[2];char chr;Bitu num;
+		char * scanbuf;
+		scanbuf=&mhd.cmdbuf[2];char chr;Bitu num;
 		while (chr=*scanbuf++) {
 			switch (chr) {
 			case 'I':	//Some strings about firmware
