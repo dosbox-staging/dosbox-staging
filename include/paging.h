@@ -221,5 +221,4 @@ INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
 	else ENTRY_writed(plink->entry,address,val);
 }
 
-
 #endif
