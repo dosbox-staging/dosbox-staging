@@ -123,6 +123,7 @@ public:
 		enable_callback = NULL;
 		newcallback = NULL;
 		if(num == 4) return;
+		addr_changed=false;	
 
 		for(i=0;i<3;i++) {
 			IO_RegisterReadBHandler(ChannelPorts[i][num],read_dmaB);
@@ -147,6 +148,7 @@ public:
 	void RegisterCallback(DMA_NewCallBack useCallBack) { newcallback = useCallBack; }
 
 	void reset(void) {
+		addr_changed=false;
 		curraddr = physaddr;
 		currcnt = transcnt+1;
 		current_addr = baseaddr;
