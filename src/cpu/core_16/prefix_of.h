@@ -97,12 +97,38 @@ switch(Fetchb()) {
 			}
 		}
 		break;
+	case 0x20:												/* MOV Rd.CRx */
+		{
+			GetRM;
+			Bitu which=(rm >> 3) & 7;
+			if (rm >= 0xc0 ) {
+				GetEArd;
+				*eard=CPU_GET_CRX(which);
+			} else {
+				GetEAa;
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%d with non-register",which);
+			}
+		}
+		break;
+	case 0x22:												/* MOV CRx,Rd */
+		{
+			GetRM;
+			Bitu which=(rm >> 3) & 7;
+			if (rm >= 0xc0 ) {
+				GetEArd;
+				if (!CPU_SET_CRX(which,*eard)) goto decode_end;
+			} else {
+				GetEAa;
+				LOG(LOG_CPU,LOG_ERROR)("MOV CR%,XXX with non-register",which);
+			}
+		}
+		break;
 	case 0x23:												/* MOV DRx,Rd */
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
 			if (rm >= 0xc0 ) {
-				GetEArw;
+				GetEArd;
 			} else {
 				GetEAa;
 				LOG(LOG_CPU,LOG_ERROR)("MOV DR%,XXX with non-register",which);
