@@ -76,8 +76,10 @@ static void FPU_FSIN(void){
 
 static void FPU_FSINCOS(void){
 	Bitu top = FPU_GET_TOP();
-	fpu.regs[top].d = sin(fpu.regs[top].d);
+
+	double temp = sin(fpu.regs[top].d);
 	FPU_PUSH(cos(fpu.regs[top].d));
+	fpu.regs[top].d = temp;
 	//flags and such :)
 	return;
 }
