@@ -33,9 +33,11 @@ namespace MAME {
   /* Defines */
 # define logerror(x)
 
+#ifdef _MSC_VER
   /* Disable recurring warnings */
 # pragma warning ( disable : 4018 )
 # pragma warning ( disable : 4244 )
+#endif
 
   /* Work around ANSI compliance problem (see driver.h) */
   struct __MALLOCPTR {

@@ -518,7 +518,9 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 	hasdrive=hasname=hasext=false;
 	Bitu index;bool finished;Bit8u fill;
 /* First get the old data from the fcb */
+#ifdef _MSC_VER
 #pragma pack (1)
+#endif
 	union {
 		struct {
 			char drive[2];
@@ -527,7 +529,9 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 		} part GCC_ATTRIBUTE (packed) ;
 		char full[DOS_FCBNAME];
 	} fcb_name;
+#ifdef _MSC_VER
 #pragma pack()
+#endif
 	/* Get the old information from the previous fcb */
 	fcb.GetName(fcb_name.full);fcb_name.part.drive[1]=0;fcb_name.part.name[8]=0;fcb_name.part.ext[3]=0;
 	/* Strip of the leading sepetaror */

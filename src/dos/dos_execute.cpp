@@ -24,7 +24,9 @@
 #include "callback.h"
 #include "debug.h"
 
+#ifdef _MSC_VER
 #pragma pack(1)
+#endif
 struct EXE_Header {
 	Bit16u signature;					/* EXE Signature MZ or ZM */
 	Bit16u extrabytes;					/* Bytes on the last page */
@@ -41,7 +43,9 @@ struct EXE_Header {
 	Bit16u reloctable;
 	Bit16u overlay;
 } GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
 #pragma pack()
+#endif
 
 #define MAGIC1 0x5a4d
 #define MAGIC2 0x4d5a

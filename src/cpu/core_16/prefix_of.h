@@ -381,7 +381,7 @@ switch(Fetchb()) {
 	case 0xbe:												/* MOVSX Gw,Eb */
 		{
 			GetRMrw;															
-			if (rm >= 0xc0 ) {GetEArb;*rmrw=*earbs;}
+			if (rm >= 0xc0 ) {GetEArb;*rmrw=*(Bit8s *)earb;}
 			else {GetEAa;*rmrw=LoadMbs(eaa);}
 			break;
 		}

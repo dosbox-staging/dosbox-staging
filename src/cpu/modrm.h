@@ -53,24 +53,12 @@ extern Bit32u * lookupRMEAregd[256];
 
 
 #define GetEArb												\
-	union {													\
-		Bit8u * earb;										\
-		Bit8s * earbs;										\
-	};														\
-	earb=lookupRMEAregb[rm];
+	Bit8u * earb=lookupRMEAregb[rm];
 
 #define GetEArw												\
-	union {													\
-		Bit16u * earw;										\
-		Bit16s * earws;										\
-	};														\
-	earw=lookupRMEAregw[rm];
+	Bit16u * earw=lookupRMEAregw[rm];
 
 #define GetEArd												\
-	union {													\
-		Bit32u * eard;										\
-		Bit32s * eards;										\
-	};														\
-	eard=lookupRMEAregd[rm];
+	Bit32u * eard=lookupRMEAregd[rm];
 
 

@@ -22,14 +22,16 @@
 #include <dos_system.h>
 #include <mem.h>
 
+#ifdef _MSC_VER
 #pragma pack (1)
+#endif
 struct CommandTail{
   Bit8u count;				/* number of bytes returned */
   char buffer[127];			 /* the buffer itself */
 } GCC_ATTRIBUTE(packed);
-
-
+#ifdef _MSC_VER
 #pragma pack ()
+#endif
 
 struct DOS_Date {
 	Bit16u year;
@@ -263,7 +265,9 @@ public:
 	Bit16u	FindEntryByHandle	(Bit8u handle);
 	
 private:
+	#ifdef _MSC_VER
 	#pragma pack(1)
+	#endif
 	struct sPSP {
 		Bit8u	exit[2];			/* CP/M-like exit poimt */
 		Bit16u	next_seg;			/* Segment of first byte beyond memory allocated or program */
@@ -289,7 +293,9 @@ private:
 		Bit8u	fill_4[4];			/* unused */
 		CommandTail cmdtail;		
 	} GCC_ATTRIBUTE(packed);
-	#pragma pack()	
+	#ifdef _MSC_VER
+	#pragma pack()
+	#endif
 	Bit16u	seg;
 	sPSP*	psp;
 public:
@@ -302,7 +308,9 @@ public:
 	void Clear(void);
 	void LoadData(void);
 	void SaveData(void);		/* Save it as an exec block */
+	#ifdef _MSC_VER
 	#pragma pack (1)
+	#endif
 	struct sOverlay {
 		Bit16u loadseg;
 		Bit16u relocation;
@@ -315,7 +323,9 @@ public:
 		RealPt initsssp;
 		RealPt initcsip;
 	}GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
 	#pragma pack()
+	#endif
 	sExec exec;
 	sOverlay overlay;
 };
@@ -328,7 +338,9 @@ public:
 	void SetfirstFileTable(RealPt _first_table);
 	RealPt GetPointer (void);
 private:
+	#ifdef _MSC_VER
 	#pragma pack(1)
+	#endif
 	struct sDIB {		
 		Bit8u	stuff1[22];			// some stuff, hopefully never used....
 		Bit16u	firstMCB;			// first memory control block
@@ -342,7 +354,9 @@ private:
 		RealPt	fcbTable;			// pointer to system FCB table
 		// some more stuff, hopefully never used.
 	} GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
 	#pragma pack ()
+	#endif
 	Bit16u	seg;
 };
 
@@ -360,7 +374,9 @@ public:
 	void	SetDirID(Bit16u entry)		{ sSave(sDTA,dirID,entry); };
 	Bit16u	GetDirID(void)				{ return sGet(sDTA,dirID); };
 private:
+	#ifdef _MSC_VER
 	#pragma pack(1)
+	#endif
 	struct sDTA {
 		Bit8u sdrive;						/* The Drive the search is taking place */
 		Bit8u sattr;						/* The Attributes that need to be found */
@@ -374,7 +390,9 @@ private:
 		Bit32u size;
 		char name[DOS_NAMELENGTH_ASCII];
 	} GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
 	#pragma pack()
+	#endif
 };
 
 class DOS_FCB: public MemStruct {
@@ -397,7 +415,9 @@ public:
 private:
 	bool extended;
 	PhysPt real_pt;
+	#ifdef _MSC_VER
 	#pragma pack (1)
+	#endif
 	struct sFCB {
 		Bit8u drive;			/* Drive number 0=default, 1=A, etc */
 		Bit8u filename[8];		/* Space padded name */
@@ -414,7 +434,9 @@ private:
 		Bit8u  cur_rec;			/* Current record in current block */
 		Bit32u rndm;			/* Current relative record number */
 	} GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
 	#pragma pack ()
+	#endif
 };
 
 class DOS_MCB : public MemStruct{
@@ -429,7 +451,9 @@ public:
 	Bit16u GetSize(void) { return sGet(sMCB,size);}
 	Bit16u GetPSPSeg(void) { return sGet(sMCB,psp_segment);}
 private:
+	#ifdef _MSC_VER
 	#pragma pack (1)
+	#endif
 	struct sMCB {
 		Bit8u type;
 		Bit16u psp_segment;
@@ -437,7 +461,9 @@ private:
 		Bit8u unused[3];
 		Bit8u filename[8];
 	} GCC_ATTRIBUTE(packed);
+	#ifdef _MSC_VER
 	#pragma pack ()
+	#endif
 };
 
 extern DOS_InfoBlock dos_infoblock;;

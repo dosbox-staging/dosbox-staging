@@ -162,14 +162,14 @@ switch (Fetchb()) {
 	case 0xbe:												/* MOVSX Gd,Eb */
 		{
 			GetRMrd;															
-			if (rm >= 0xc0 ) {GetEArb;*rmrd=*earbs;}
+			if (rm >= 0xc0 ) {GetEArb;*rmrd=*(Bit8s *)earb;}
 			else {GetEAa;*rmrd=LoadMbs(eaa);}
 			break;
 		}
 	case 0xbf:												/* MOVSX Gd,Ew */
 		{
 			GetRMrd;															
-			if (rm >= 0xc0 ) {GetEArw;*rmrd=*earws;}
+			if (rm >= 0xc0 ) {GetEArw;*rmrd=*(Bit16s *)earw;}
 			else {GetEAa;*rmrd=LoadMws(eaa);}
 			break;
 		}

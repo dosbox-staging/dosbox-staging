@@ -19,7 +19,9 @@
 #ifndef _SETUP_H_
 #define _SETUP_H_
 
+#ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
+#endif
 
 #include <cross.h>
 #include <string>
