@@ -468,7 +468,6 @@ Bitu MEM_FreeLargest(void) {
 	return largest;
 }
 
-
 Bitu MEM_FreeTotal(void) {
 	Bitu free=0;
 	Bitu index=XMS_START;	
@@ -479,6 +478,15 @@ Bitu MEM_FreeTotal(void) {
 	return free;
 }
 
+Bitu MEM_AllocatedPages(MemHandle handle) 
+{
+	Bitu pages = 0;
+	while (handle>0) {
+		pages++;
+		handle=memory.entries[handle].next_handle;
+	}
+	return pages;
+}
 
 //TODO Maybe some protection for this whole allocation scheme
 
