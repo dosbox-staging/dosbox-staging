@@ -167,10 +167,11 @@ Bit8u read_p3c5(Bit32u port) {
 
 
 void VGA_SetupSEQ(void) {
-	IO_RegisterWriteHandler(0x3c4,write_p3c4,"VGA:Sequencer Index");
-	IO_RegisterWriteHandler(0x3c5,write_p3c5,"VGA:Sequencer Data");
-	IO_RegisterReadHandler(0x3c4,read_p3c4,"VGA:Sequencer Index");
-	IO_RegisterReadHandler(0x3c5,read_p3c5,"VGA:Sequencer Data");
-
+	if (machine==MCH_VGA) {
+		IO_RegisterWriteHandler(0x3c4,write_p3c4,"VGA:Sequencer Index");
+		IO_RegisterWriteHandler(0x3c5,write_p3c5,"VGA:Sequencer Data");
+		IO_RegisterReadHandler(0x3c4,read_p3c4,"VGA:Sequencer Index");
+		IO_RegisterReadHandler(0x3c5,read_p3c5,"VGA:Sequencer Data");
+	}
 }
 

@@ -105,7 +105,7 @@ static void write_p3c9(Bit32u port,Bit8u val) {
 		default:
 			/* Check for attributes and DAC entry link */
 			for (Bitu i=0;i<16;i++) {
-				if (vga.dac.attr[i]==vga.dac.write_index) {
+				if (vga.attr.palette[i]==vga.dac.write_index) {
 					RENDER_SetPal(i,
 					vga.dac.rgb[vga.dac.write_index].red << 2,
 					vga.dac.rgb[vga.dac.write_index].green << 2,
@@ -145,7 +145,7 @@ static Bit8u read_p3c9(Bit32u port) {
 
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	/* Check if this is a new color */
-	vga.dac.attr[attr]=pal;
+	vga.attr.palette[attr]=pal;
 	switch (vga.mode) {
 	case M_VGA:
 	case M_LIN8:
@@ -159,6 +159,20 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	}
 }
 
+void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue) {
+	vga.dac.rgb[entry].red=red;
+	vga.dac.rgb[entry].green=green;
+	vga.dac.rgb[entry].blue=blue;
+	switch (vga.mode) {
+	case M_VGA:
+	case M_LIN8:
+		return;
+	}
+	for (Bitu i=0;i<16;i++) 
+		if (vga.attr.palette[i]==entry)
+			RENDER_SetPal(i,red << 2,green << 2,blue << 2);
+}
+
 void VGA_SetupDAC(void) {
 	vga.dac.first_changed=256;
 	vga.dac.bits=6;
@@ -167,14 +181,16 @@ void VGA_SetupDAC(void) {
 	vga.dac.state=DAC_READ;
 	vga.dac.read_index=0;
 	vga.dac.write_index=0;
-	/* Setup the DAC IO port Handlers */
-	IO_RegisterWriteHandler(0x3c6,write_p3c6,"PEL Mask");	
-	IO_RegisterReadHandler(0x3c6,read_p3c6,"PEL Mask");
-	IO_RegisterWriteHandler(0x3c7,write_p3c7,"PEL Read Mode");
-	IO_RegisterReadHandler(0x3c7,read_p3c7,"PEL Status Mode");
-	IO_RegisterWriteHandler(0x3c8,write_p3c8,"PEL Write Mode");
-	IO_RegisterWriteHandler(0x3c9,write_p3c9,"PEL Data");	
-	IO_RegisterReadHandler(0x3c9,read_p3c9,"PEL Data");
+	if (machine==MCH_VGA) {
+		/* Setup the DAC IO port Handlers */
+		IO_RegisterWriteHandler(0x3c6,write_p3c6,"PEL Mask");	
+		IO_RegisterReadHandler(0x3c6,read_p3c6,"PEL Mask");
+		IO_RegisterWriteHandler(0x3c7,write_p3c7,"PEL Read Mode");
+		IO_RegisterReadHandler(0x3c7,read_p3c7,"PEL Status Mode");
+		IO_RegisterWriteHandler(0x3c8,write_p3c8,"PEL Write Mode");
+		IO_RegisterWriteHandler(0x3c9,write_p3c9,"PEL Data");	
+		IO_RegisterReadHandler(0x3c9,read_p3c9,"PEL Data");
+	}
 };
 
 

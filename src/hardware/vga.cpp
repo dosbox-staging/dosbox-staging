@@ -48,6 +48,20 @@ void VGA_SetMode(VGAModes mode) {
 	VGA_StartResize();
 }
 
+void VGA_DetermineMode(void) {
+	/* Test for graphics or alphanumeric mode */
+	if (vga.attr.mode_control & 1) {
+		if (!(vga.crtc.mode_control & 0x1)) {
+			if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
+			else VGA_SetMode(M_CGA2);
+		} else if (vga.attr.mode_control & 0x40) {
+			VGA_SetMode(M_VGA);
+		} else VGA_SetMode(M_EGA16);
+	} else {
+		VGA_SetMode(M_TEXT);
+	}
+}
+
 void VGA_StartResize(void) {
 	if (!vga.draw.resizing) {
 		vga.draw.resizing=true;
@@ -88,34 +102,56 @@ void VGA_SetClock(Bitu which,Bitu target) {
 	VGA_StartResize();
 }
 
+void VGA_SetCGA2Table(Bit8u val0,Bit8u val1) {
+	Bit8u total[2]={ val0,val1};
+	for (Bitu i=0;i<16;i++) {
+		CGA_2_Table[i]=
+#ifdef WORDS_BIGENDIAN
+			(total[(i >> 0) & 1] << 0  ) | (total[(i >> 1) & 1] << 8  ) |
+			(total[(i >> 2) & 1] << 16 ) | (total[(i >> 3) & 1] << 24 );
+#else 
+			(total[(i >> 3) & 1] << 0  ) | (total[(i >> 2) & 1] << 8  ) |
+			(total[(i >> 1) & 1] << 16 ) | (total[(i >> 0) & 1] << 24 );
+#endif
+	}
+}
+
+void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3) {
+	Bit8u total[4]={ val0,val1,val2,val3};
+	for (Bitu i=0;i<256;i++) {
+		CGA_4_Table[i]=
+#ifdef WORDS_BIGENDIAN
+			(total[(i >> 0) & 3] << 0  ) | (total[(i >> 2) & 3] << 8  ) |
+			(total[(i >> 4) & 3] << 16 ) | (total[(i >> 6) & 3] << 24 );
+#else
+			(total[(i >> 6) & 3] << 0  ) | (total[(i >> 4) & 3] << 8  ) |
+			(total[(i >> 2) & 3] << 16 ) | (total[(i >> 0) & 3] << 24 );
+#endif
+	}	
+}
 void VGA_Init(Section* sec) {
 	vga.draw.resizing=false;
+	vga.mode=M_ERROR;			//For first init
 	VGA_SetupMemory();
 	VGA_SetupMisc();
 	VGA_SetupDAC();
 	VGA_SetupGFX();
 	VGA_SetupSEQ();
 	VGA_SetupAttr();
+	VGA_SetupOther();
 	VGA_SetClock(0,CLK_25);
 	VGA_SetClock(1,CLK_28);
 /* Generate tables */
+	VGA_SetCGA2Table(0,1);
+	VGA_SetCGA4Table(0,1,2,3);
 	Bitu i,j;
 	for (i=0;i<256;i++) {
 		ExpandTable[i]=i | (i << 8)| (i <<16) | (i << 24);
-#ifdef WORDS_BIGENDIAN
-		CGA_4_Table[i]=((i>>0)&3) | (((i>>2)&3) << 8)| (((i>>4)&3) <<16) | (((i>>6)&3) << 24);
-#else
-		CGA_4_Table[i]=((i>>6)&3) | (((i>>4)&3) << 8)| (((i>>2)&3) <<16) | (((i>>0)&3) << 24);
-
-
-#endif
 	}
 	for (i=0;i<16;i++) {
 		TXT_FG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
 		TXT_BG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
-
 #ifdef WORDS_BIGENDIAN
-		CGA_2_Table[i]=((i>>0)&1) | (((i>>1)&1) << 8)| (((i>>1)&1) <<16) | (((i>>3)&1) << 24);
 		FillTable[i]=
 			((i & 1) ? 0xff000000 : 0) |
 			((i & 2) ? 0x00ff0000 : 0) |
@@ -127,7 +163,6 @@ void VGA_Init(Section* sec) {
 			((i & 4) ? 0x00ff0000 : 0) |
 			((i & 8) ? 0xff000000 : 0) ;
 #else 
-		CGA_2_Table[i]=((i>>3)&1) | (((i>>2)&1) << 8)| (((i>>1)&1) <<16) | (((i>>0)&1) << 24);
 		FillTable[i]=
 			((i & 1) ? 0x000000ff : 0) |
 			((i & 2) ? 0x0000ff00 : 0) |
@@ -138,7 +173,6 @@ void VGA_Init(Section* sec) {
 			((i & 2) ? 0x00ff0000 : 0) |
 			((i & 4) ? 0x0000ff00 : 0) |
 			((i & 8) ? 0x000000ff : 0) ;
-
 #endif
 	}
 	for (j=0;j<4;j++) {

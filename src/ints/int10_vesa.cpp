@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.7 2004-01-11 09:27:52 harekiet Exp $ */
+/* $Id: int10_vesa.cpp,v 1.8 2004-02-29 22:18:24 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -125,12 +125,12 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	
 	Bitu i=0;
 	if (mode<0x100) return 0x01;
-	while (ModeList[i].mode!=0xffff) {
-		if (mode==ModeList[i].mode) goto foundit; else i++;
+	while (ModeList_VGA[i].mode!=0xffff) {
+		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
 	}
 	return 0x01;
 foundit:
-	VideoModeBlock * mblock=&ModeList[i];
+	VideoModeBlock * mblock=&ModeList_VGA[i];
 	switch (mblock->type) {
 	case M_LIN8:		//Linear 8-bit
 		WLE(minfo.ModeAttributes,0x9b);
@@ -310,9 +310,9 @@ void INT10_SetupVESA(void) {
 	i=0;
 	int10.rom.vesa_modes=RealMake(0xc000,int10.rom.used);
 //TODO Maybe add normal vga modes too, but only seems to complicate things
-	while (ModeList[i].mode!=0xffff) {
-		if (ModeList[i].mode>=0x100){
-			phys_writew(PhysMake(0xc000,int10.rom.used),ModeList[i].mode);
+	while (ModeList_VGA[i].mode!=0xffff) {
+		if (ModeList_VGA[i].mode>=0x100){
+			phys_writew(PhysMake(0xc000,int10.rom.used),ModeList_VGA[i].mode);
 			int10.rom.used+=2;
 		}
 		i++;

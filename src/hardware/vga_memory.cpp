@@ -247,11 +247,17 @@ public:
 class VGA_TANDY_PageHandler : public PageHandler {
 public:
 	VGA_TANDY_PageHandler() {
-		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
+		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
+//			|PFLAG_NOCODE;
 	}
 	HostPt GetHostPt(Bitu phys_page) {
-		phys_page-=vgapages.map_base;
-		return &vga.mem.linear[(vga.tandy.mem_bank << 14)+(phys_page * 4096)];
+		if (phys_page>=0xb8) {
+			phys_page-=0xb8;
+			return &vga.mem.linear[(vga.tandy.mem_bank << 14)+(phys_page * 4096)];
+		} else {
+			phys_page-=0x80;
+			return &vga.mem.linear[phys_page * 4096];
+		}
 	}
 };
 
@@ -268,7 +274,22 @@ static struct {
 
 void VGA_SetupHandlers(void) {
 	PageHandler * range_handler;
+	switch (machine) {
+	case MCH_CGA:
+		range_handler=&vgaph.hmap;
+		goto range_b800;
+	case MCH_HERC:
+		range_handler=&vgaph.hmap;
+		if (vga.herc.mode_control&0x80) goto range_b800;
+		else goto range_b000;
+	case MCH_TANDY:
+		range_handler=&vgaph.htandy;
+		MEM_SetPageHandler(0x80,32,range_handler);
+		goto range_b800;
+	}
 	switch (vga.mode) {
+	case M_ERROR:
+		return;
 	case M_LIN8:
 		range_handler=&vgaph.hmap;
 		break;
@@ -282,29 +303,15 @@ void VGA_SetupHandlers(void) {
 	case M_EGA16:
 		range_handler=&vgaph.h16;
 		break;	
-	case M_TEXT2:
-	case M_TEXT16:
+	case M_TEXT:
 		/* Check if we're not in odd/even mode */
-		if (vga.gfx.miscellaneous & 0x2) {
-			range_handler=&vgaph.hmap;
-		} else {
-			range_handler=&vgaph.htext;
-		}
+		if (vga.gfx.miscellaneous & 0x2) range_handler=&vgaph.hmap;
+		else range_handler=&vgaph.htext;
 		break;
-	case M_TANDY16:
-		range_handler=&vgaph.htandy;
-		break;
-	case M_CGA16:
 	case M_CGA4:
 	case M_CGA2:
 		range_handler=&vgaph.hmap;
 		break;
-	case M_HERC:
-		range_handler=&vgaph.hmap;
-		if (vga.herc.mode_control&0x80) goto range_b800;
-		else goto range_b000;
-	default:
-		LOG_MSG("Unhandled vga mode %X",vga.mode);
 	}
 	switch ((vga.gfx.miscellaneous >> 2) & 3) {
 	case 0:

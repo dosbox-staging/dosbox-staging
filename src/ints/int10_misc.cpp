@@ -91,10 +91,8 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	mem_writeb(save+0x25,real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX));
 	Bit16u col_count=0;
 	switch (CurMode->type) {
-	case M_TEXT16:
+	case M_TEXT:
 		col_count=16;break;
-	case M_TEXT2:
-		col_count=2;break;	//		??
 	case M_CGA2:
 		col_count=2;break;
 	case M_CGA4:

@@ -23,13 +23,13 @@
 #include "dosbox.h"
 
 enum VGAModes {
-	M_TEXT2,M_TEXT16,
-	M_HERC,
-	M_CGA2,M_CGA4,M_CGA16,
-	M_TANDY16,
-	M_EGA2,M_EGA4,M_EGA16,
+	M_TEXT,
+	M_HERC_GFX,M_HERC_TEXT,
+	M_CGA2,M_CGA4,
+	M_EGA16,
 	M_VGA,
 	M_LIN8,
+	M_CGA16,M_TANDY2,M_TANDY4,M_TANDY16,M_TANDY_TEXT,
 	M_ERROR,
 };
 
@@ -161,18 +161,28 @@ typedef struct {
 } VGA_HERC;
 
 typedef struct {
-	Bit8u mode_control;
-	Bit8u color_select;
-} VGA_CGA;
+	Bit8u index;
+	Bit8u htotal;
+	Bit8u hdend;
+	Bit8u hsyncp;
+	Bit8u hsyncw;
+	Bit8u vtotal;
+	Bit8u vdend;
+	Bit8u vadjust;
+	Bit8u vsyncp;
+	Bit8u vsyncw;
+	Bit8u max_scanline;
+} VGA_OTHER;
 
 typedef struct {
+	Bit8u mode_control;
+	Bit8u color_select;
 	Bit8u mem_bank;
 	Bit8u disp_bank;
 	Bit8u reg_index;
-	Bit8u mode_control1;
+	Bit8u gfx_control;
 	Bit8u palette_mask;
 	Bit8u border_color;
-	Bit8u mode_control2;
 } VGA_TANDY;
 
 typedef struct {
@@ -255,7 +265,6 @@ typedef struct {
 	Bit8u read_index;
 	Bitu first_changed;
 	RGBEntry rgb[0x100];
-	Bit8u attr[16];
 } VGA_Dac;
 
 union VGA_Latch {
@@ -284,8 +293,8 @@ typedef struct {
 	VGA_Latch latch;
 	VGA_S3 s3;
 	VGA_HERC herc;
-	VGA_CGA cga;
 	VGA_TANDY tandy;
+	VGA_OTHER other;
 	VGA_Memory mem;
 } VGA_Type;
 
@@ -293,6 +302,7 @@ typedef struct {
 
 /* Functions for different resolutions */
 void VGA_SetMode(VGAModes mode);
+void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(void);
 void VGA_SetupDrawing(Bitu val);
@@ -300,6 +310,7 @@ void VGA_CheckScanLength(void);
 
 /* Some DAC/Attribute functions */
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
+void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue);
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val);
 
 /* The VGA Subfunction startups */
@@ -310,6 +321,7 @@ void VGA_SetupCRTC(void);
 void VGA_SetupMisc(void);
 void VGA_SetupGFX(void);
 void VGA_SetupSEQ(void);
+void VGA_SetupOther(void);
 
 /* Some Support Functions */
 void VGA_SetClock(Bitu which,Bitu target);
@@ -317,6 +329,8 @@ void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(Bitu enabled);
+void VGA_SetCGA2Table(Bit8u val0,Bit8u val1);
+void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
 
 extern VGA_Type vga;
 

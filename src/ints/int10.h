@@ -104,11 +104,10 @@ struct VideoModeBlock {
 
 	Bitu	htotal,vtotal;
 	Bitu	hdispend,vdispend;
-	Bitu	rate;
 	Bitu	special;
 	
 };
-extern VideoModeBlock ModeList[];
+extern VideoModeBlock ModeList_VGA[];
 extern VideoModeBlock * CurMode;
 
 typedef struct {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.22 2004-01-28 18:04:18 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.23 2004-02-29 22:18:24 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -174,7 +174,7 @@ static INLINE void TEXT_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,B
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page) {
 /* Do some range checking */
-	if (CurMode->type>M_TEXT16) page=0xff;
+	if (CurMode->type!=M_TEXT) page=0xff;
 	BIOS_NCOLS;BIOS_NROWS;
 	if(rul>rlr) return;
 	if(cul>clr) return;
@@ -204,8 +204,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 	while (start!=end) {
 		start+=next;
 		switch (CurMode->type) {
-		case M_TEXT2:
-		case M_TEXT16:
+		case M_TEXT:
 			TEXT_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_CGA2:
 			CGA2_CopyRow(cul,clr,start,start+nlines,base);break;
@@ -229,8 +228,7 @@ filling:
 	}
 	for (;nlines>0;nlines--) {
 		switch (CurMode->type) {
-		case M_TEXT2:
-		case M_TEXT16:
+		case M_TEXT:
 			TEXT_FillRow(cul,clr,start,base,attr);break;
 		case M_CGA2:
 			CGA2_FillRow(cul,clr,start,base,attr);break;
@@ -363,8 +361,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	Bitu x,y;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
-	case M_TEXT2:
-	case M_TEXT16:
+	case M_TEXT:
 		{	
 			// Compute the address  
 			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
@@ -410,7 +407,7 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
 	//TODO Check if this page thing is correct
-	if (CurMode->type>M_TEXT16) page=0xff;
+	if (CurMode->type!=M_TEXT) page=0xff;
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
@@ -474,12 +471,12 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 
 
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
-	INT10_TeletypeOutputAttr(chr,attr,CurMode->type>M_TEXT16);
+	INT10_TeletypeOutputAttr(chr,attr,CurMode->type!=M_TEXT);
 }
 
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page) {
 	//TODO Check if this page thing is correct
-	if (CurMode->type>M_TEXT16) page=0xff;
+	if (CurMode->type!=M_TEXT) page=0xff;
 
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	BIOS_NCOLS;BIOS_NROWS;

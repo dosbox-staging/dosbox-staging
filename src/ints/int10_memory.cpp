@@ -80,8 +80,10 @@ void INT10_SetupRomMemory(void) {
 	PhysPt rom_base=PhysMake(0xc000,0);
 	Bitu i;
 	int10.rom.used=3;  //	int10.rom.used=2; Size of ROM added
-	phys_writew(rom_base+0,0xaa55);
-	phys_writeb(rom_base+2,0x40); // Size of ROM: 64 512-blocks = 32KB
+	if (machine==MCH_VGA) {
+		phys_writew(rom_base+0,0xaa55);
+		phys_writeb(rom_base+2,0x40); // Size of ROM: 64 512-blocks = 32KB
+	}
 	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
 		phys_writeb(rom_base+int10.rom.used++,int10_font_08[i]);

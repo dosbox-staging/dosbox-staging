@@ -22,19 +22,17 @@
 #include "debug.h"
 #include "cpu.h"
 
-
 #define crtc(blah) vga.crtc.blah
 
-void write_p3d4(Bit32u port,Bit8u val) {
+void write_p3d4_vga(Bit32u port,Bit8u val) {
 	crtc(index)=val;
 }
 
-Bit8u read_p3d4(Bit32u port) {
+Bit8u read_p3d4_vga(Bit32u port) {
 	return crtc(index);
 }
 
-
-void write_p3d5(Bit32u port,Bit8u val) {
+void write_p3d5_vga(Bit32u port,Bit8u val) {
 //	if (crtc(index)>0x18) LOG_MSG("VGA CRCT write %X to reg %X",val,crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */
@@ -256,6 +254,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		break;
 	case 0x17:	/* Mode Control Register */
 		crtc(mode_control)=val;
+		VGA_DetermineMode();
 		/*
 			0	If clear use CGA compatible memory addressing system
 				by substituting character row scan counter bit 0 for address bit 13,
@@ -495,7 +494,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 	}
 }
 
-Bit8u read_p3d5(Bit32u port) {
+Bit8u read_p3d5_vga(Bit32u port) {
 //	LOG_MSG("VGA CRCT read from reg %X",crtc(index));
 	switch(crtc(index)) {
 	case 0x00:	/* Horizontal Total Register */

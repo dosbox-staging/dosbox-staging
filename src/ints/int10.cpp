@@ -445,7 +445,7 @@ static void SetupTandyBios(void) {
 
 void INT10_Init(Section* sec) {
 	INT10_InitVGA();
-	if (machine==MCH_TANDY || machine==MCH_AUTO) SetupTandyBios();
+	if (machine==MCH_TANDY) SetupTandyBios();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET);

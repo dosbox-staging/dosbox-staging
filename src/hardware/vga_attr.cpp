@@ -23,7 +23,6 @@
 #define attr(blah) vga.attr.blah
 
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
-	vga.attr.palette[index]=val;
 	if (vga.attr.mode_control & 0x80) val=(val&0xf) | (vga.attr.color_select << 4);
 	else val|=(vga.attr.color_select & 0xc) << 4;
 	VGA_DAC_CombineColor(index,val);
@@ -69,16 +68,9 @@ void write_p3c0(Bit32u port,Bit8u val) {
 				Doesn't work if they program EGA16 themselves, 
 				but haven't encountered that yet
 			*/
-			if (val&0x40) {
-				if (vga.mode<M_VGA) VGA_SetMode(M_VGA);
-			} else {
-				if (vga.mode==M_VGA) VGA_SetMode(M_EGA16);
-			}
 			attr(mode_control)=val;
-			//TODO Monochrome mode
+			VGA_DetermineMode();
 			//TODO 9 bit characters
-			//TODO line wrapping split screen shit see bit 5
-			//TODO index 14h weirdo dac switch bits
 			/*
 				0	Graphics mode if set, Alphanumeric mode else.
 				1	Monochrome mode if set, color mode else.
@@ -116,8 +108,7 @@ void write_p3c0(Bit32u port,Bit8u val) {
 		case 0x13:	/* Horizontal PEL Panning Register */
 			attr(horizontal_pel_panning)=val & 0xF;
 			switch (vga.mode) {
-			case M_TEXT2:
-			case M_TEXT16:
+			case M_TEXT:
 				if (val==0x7) vga.config.pel_panning=7;
 				if (val>0x7) vga.config.pel_panning=0;
 				else vga.config.pel_panning=val+1;
@@ -196,8 +187,10 @@ Bit8u read_p3c1(Bit32u port) {
 
 
 void VGA_SetupAttr(void) {
-	IO_RegisterWriteHandler(0x3c0,write_p3c0,"VGA Attribute controller");
-	IO_RegisterReadHandler(0x3c1,read_p3c1,"VGA Attribute Read");
+	if (machine==MCH_VGA) {
+		IO_RegisterWriteHandler(0x3c0,write_p3c0,"VGA Attribute controller");
+		IO_RegisterReadHandler(0x3c1,read_p3c1,"VGA Attribute Read");
+	}
 }
 
 
