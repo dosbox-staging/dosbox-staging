@@ -63,6 +63,7 @@ struct DOS_Block {
 	Bit8u current_drive;
 	bool verify;
 	bool breakcheck;
+	bool echo;          // if set to true dev_con::read will echo input 
 	struct  {
 		RealPt indosflag;
 		RealPt mediaid;
