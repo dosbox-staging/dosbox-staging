@@ -16,22 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.10 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: shell.h,v 1.11 2005-03-25 09:46:53 qbix79 Exp $ */
 
-#ifndef SHELL_H_
-#define SHELL_H_
-
+#ifndef DOSBOX_SHELL_H
+#define DOSBOX_SHELL_H
 
 #include <ctype.h>
-#include <stdio.h>
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
-#include "mem.h"
+#endif
+#ifndef DOSBOX_PROGRAMS_H
 #include "programs.h"
-#include "dos_inc.h"
-#include "regs.h"
-#include "support.h"
-#include "callback.h"
-#include "setup.h"
+#endif
 
 #include <string>
 #include <list>
@@ -143,5 +139,18 @@ static inline char* ExpandDot(char*args, char* buffer) {
 	else strcpy(buffer,args);
 	return buffer;
 }
+
+/* Object to manage lines in the autoexec.bat The lines get removed from
+ * the file if the object gets destroyed. The environment is updated
+ * as well if the line set a a variable */
+class AutoexecObject{
+private:
+	bool installed;
+	char buf[256];
+public:
+	AutoexecObject():installed(false){};
+	void Install(char * line,...);
+	~AutoexecObject();
+};
 
 #endif
