@@ -311,9 +311,15 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
+	BIOS_NCOLS;BIOS_NROWS;
 	while (count>0) {
 		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
 		count--;
+		cur_col++;
+		if(cur_col==ncols) {
+			cur_col=0;
+			cur_row++;
+		}
 	}
 }
 
