@@ -461,12 +461,10 @@ static Bitu INT33_Handler(void) {
 	case 0x05:	/* Return Button Press Data */
 		{
 			Bit16u but=reg_bx;
-			if (but>=MOUSE_BUTTONS) break;
 			reg_ax=mouse.buttons;
+			if (but>=MOUSE_BUTTONS) break;
 			reg_cx=mouse.last_pressed_x[but];
-			mouse.last_pressed_x[but]=0;
 			reg_dx=mouse.last_pressed_y[but];
-			mouse.last_pressed_y[but]=0;
 			reg_bx=mouse.times_pressed[but];
 			mouse.times_pressed[but]=0;
 			break;
@@ -474,12 +472,10 @@ static Bitu INT33_Handler(void) {
 	case 0x06:	/* Return Button Release Data */
 		{
 			Bit16u but=reg_bx;
-			if (but>=MOUSE_BUTTONS) break;
 			reg_ax=mouse.buttons;
+			if (but>=MOUSE_BUTTONS) break;
 			reg_cx=mouse.last_released_x[but];
-			mouse.last_released_x[but]=0;
 			reg_dx=mouse.last_released_y[but];
-			mouse.last_released_y[but]=0;
 			reg_bx=mouse.times_released[but];
 			mouse.times_released[but]=0;
 			break;
