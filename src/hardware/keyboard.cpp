@@ -16,11 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.30 2005-02-10 10:21:08 qbix79 Exp $ */
-
-#include <string.h>
-#include <assert.h>
-#include <timer.h>
+/* $Id: keyboard.cpp,v 1.31 2005-03-25 11:55:20 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -28,6 +24,7 @@
 #include "pic.h"
 #include "mem.h"
 #include "mixer.h"
+#include "timer.h"
 
 #define KEYBUFSIZE 32
 #define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char

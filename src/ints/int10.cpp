@@ -16,18 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>
 #include "dosbox.h"
-#include "bios.h"
 #include "mem.h"
 #include "callback.h"
 #include "regs.h"
-#include "video.h"
 #include "inout.h"
 #include "int10.h"
 #include "setup.h"
-#include "support.h"
-#include "vga.h"
 
 Int10Data int10;
 static Bitu call_10;
