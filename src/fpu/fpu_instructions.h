@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.23 2004-10-12 20:14:38 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.24 2004-10-13 19:26:26 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -321,7 +321,7 @@ static void FPU_ST80(PhysPt addr,Bitu reg)
 	Bit64s exp80 =  fpu.regs[reg].ll&LONGTYPE(0x7ff0000000000000);
 	Bit64s exp80final= (exp80>>52) - BIAS64 + BIAS80;
 	Bit64s mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
-	Bit64s mant80final= (mant80 << 11) | LONGTYPE(0x8000000000000000);
+	Bit64s mant80final= (mant80 << 11);
 	test.begin= (static_cast<Bit16s>(sign80)<<15)| static_cast<Bit16s>(exp80final);
 	test.eind.ll=mant80final;
 	mem_writed(addr,test.eind.l.lower);
