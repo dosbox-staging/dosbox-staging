@@ -64,7 +64,7 @@ __attribute__ ((packed));
 
 
 bool DOS_Terminate(bool tsr) {
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	if (!tsr) {
 		/* Free Files owned by process */
 		for (Bit16u i=0;i<psp->max_files;i++) {
@@ -73,16 +73,16 @@ bool DOS_Terminate(bool tsr) {
 		DOS_FreeProcessMemory(dos.psp);
 	};
 	dos.psp=psp->psp_parent;
-	PSP * oldpsp=(PSP *)real_off(dos.psp,0);
+	PSP * oldpsp=(PSP *)HostMake(dos.psp,0);
 	/* Restore the DTA */
 	dos.dta=psp->dta;
 	/* Restore the old CS:IP from int 22h */
 	RealPt old22;
 	old22=RealGetVec(0x22);
-	SetSegment_16(cs,RealSeg(old22));
+	SegSet16(cs,RealSeg(old22));
 	reg_ip=RealOff(old22);
 	/* Restore the SS:SP to the previous one */
-	SetSegment_16(ss,RealSeg(oldpsp->stack));
+	SegSet16(ss,RealSeg(oldpsp->stack));
 	reg_sp=RealOff(oldpsp->stack);
 	/* Restore interrupt 22,23,24 */
 	RealSetVec(0x22,psp->int_22);
@@ -97,17 +97,17 @@ bool DOS_Terminate(bool tsr) {
 static bool MakeEnv(char * name,Bit16u * segment) {
 
 	/* If segment to copy environment is 0 copy the caller's environment */
-	PSP * psp=(PSP *)real_off(dos.psp,0);
+	PSP * psp=(PSP *)HostMake(dos.psp,0);
 	Bit8u * envread,*envwrite;
 	Bit16u envsize=1;
 	bool parentenv=true;
 
 	if (*segment==0) {
 		if (!psp->environment) parentenv=false;				//environment seg=0
-		envread=real_off(psp->environment,0);
+		envread=HostMake(psp->environment,0);
 	} else {
 		if (!*segment) parentenv=false;						//environment seg=0
-		envread=real_off(*segment,0);
+		envread=HostMake(*segment,0);
 	}
 
 	//TODO Make a good DOS first psp 
@@ -123,7 +123,7 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	}
 	Bit16u size=long2para(envsize+ENV_KEEPFREE);
 	if (!DOS_AllocateMemory(segment,&size)) return false;
-	envwrite=real_off(*segment,0);
+	envwrite=HostMake(*segment,0);
 	if (parentenv) {
 		bmemcpy(envwrite,envread,envsize);
 		envwrite+=envsize;
@@ -133,12 +133,12 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	*((Bit16u *) envwrite)=1;
 	envwrite+=2;
 	//TODO put the filename here 
-	return DOS_Canonicalize(name,envwrite);
+	return DOS_Canonicalize(name,(char *)envwrite);
 };
 
 bool DOS_NewPSP(Bit16u pspseg) {
-	PSP * newpsp=(PSP *)real_off(pspseg,0);
-	PSP * prevpsp=(PSP *)real_off(dos.psp,0);
+	PSP * newpsp=(PSP *)HostMake(pspseg,0);
+	PSP * prevpsp=(PSP *)HostMake(dos.psp,0);
 
 	memset((void *)newpsp,0,sizeof(PSP));
 	newpsp->exit[0]=0xcd;newpsp->exit[1]=0x20;
@@ -169,11 +169,11 @@ bool DOS_NewPSP(Bit16u pspseg) {
 
 static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 	
-	PSP * psp=(PSP *)real_off(pspseg,0);
+	PSP * psp=(PSP *)HostMake(pspseg,0);
 	/* Fix the PSP index of this MCB */
-	MCB * pspmcb=(MCB *)real_off(pspseg-1,0);
+	MCB * pspmcb=(MCB *)HostMake(pspseg-1,0);
 	pspmcb->psp_segment=pspseg;
-	MCB * envmcb=(MCB *)real_off(envseg-1,0);
+	MCB * envmcb=(MCB *)HostMake(envseg-1,0);
 	envmcb->psp_segment=pspseg;
 
 	memset((void *)psp,0,sizeof(PSP));
@@ -210,7 +210,7 @@ static void SetupPSP(Bit16u pspseg,Bit16u memsize,Bit16u envseg) {
 }
 
 static void SetupCMDLine(Bit16u pspseg,ParamBlock * block) {
-	PSP * psp=(PSP *)real_off(pspseg,0);
+	PSP * psp=(PSP *)HostMake(pspseg,0);
 
 	if (block->exec.cmdtail) {
 		memcpy((void *)&psp->cmdtail,(void *)Real2Host(block->exec.cmdtail),128);
@@ -232,7 +232,7 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	Bit16u envseg,comseg;
 	Bit32u pos;
 
-	PSP * callpsp=(PSP *)real_off(dos.psp,0);
+	PSP * callpsp=(PSP *)HostMake(dos.psp,0);
 
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
 	if (flag!=OVERLAY) {
@@ -258,9 +258,9 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	DOS_SeekFile(fhandle,&pos,0);	
 	readsize=0xffff-256;
 	if (flag==OVERLAY) {
-		DOS_ReadFile(fhandle,real_host(comseg,0),&readsize);
+		DOS_ReadFile(fhandle,HostMake(comseg,0),&readsize);
 	} else {
-		DOS_ReadFile(fhandle,real_host(comseg,256),&readsize);
+		DOS_ReadFile(fhandle,HostMake(comseg,256),&readsize);
 	}
 	DOS_CloseFile(fhandle);
 	if (flag==OVERLAY) /* Everything what should be done for Overlays */
@@ -268,19 +268,19 @@ static bool COM_Load(char * name,ParamBlock * block,Bit8u flag) {
 	SetupPSP(comseg,size,envseg);
 	SetupCMDLine(comseg,block);
 	/* Setup termination Address */
-	RealSetVec(0x22,RealMake(Segs[cs].value,reg_ip));
+	RealSetVec(0x22,RealMakeSeg(cs,reg_ip));
 	/* Everything setup somewhat setup CS:IP and SS:SP */
 	/* First save the SS:SP of program that called execute */
-	callpsp->stack=RealMake(Segs[ss].value,reg_sp);
+	callpsp->stack=RealMakeSeg(ss,reg_sp);
 	/* Clear out first Stack entry to point to int 20h at psp:0 */
 	real_writew(comseg,0xfffe,0);
 	dos.psp=comseg;
 	switch (flag) {
 	case LOADNGO:
-		SetSegment_16(cs,comseg);
-		SetSegment_16(ss,comseg);
-		SetSegment_16(ds,comseg);
-		SetSegment_16(es,comseg);
+		SegSet16(cs,comseg);
+		SegSet16(ss,comseg);
+		SegSet16(ds,comseg);
+		SegSet16(es,comseg);
 		flags.intf=true;
 		reg_ip=0x100;
 		reg_sp=0xFFFE;
@@ -305,7 +305,7 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 	Bit16u envseg,pspseg,exeseg;
 	Bit32u imagesize,headersize;
 
-	PSP * callpsp=(PSP *)real_off(dos.psp,0);
+	PSP * callpsp=(PSP *)HostMake(dos.psp,0);
 
 	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
 	if (flag!=OVERLAY) {
@@ -353,7 +353,7 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 	}
 	/* Load the image in 32k blocks */
 	DOS_SeekFile(fhandle,&headersize,0);
-	Bit8u * imageoff=real_off(exeseg,0);
+	Bit8u * imageoff=HostMake(exeseg,0);
 //TODO File size checking and remove size
 	// Remove psp size
 //	imagesize=256;
@@ -395,15 +395,15 @@ static bool EXE_Load(char * name,ParamBlock * block,Bit8u flag) {
 	if (flag==OVERLAY) return true;
 
 	/* Setup termination Address */
-	RealSetVec(0x22,RealMake(Segs[cs].value,reg_ip));
+	RealSetVec(0x22,RealMakeSeg(cs,reg_ip));
 	/* Start up the actual EXE if we need to */
 	//TODO check for load and return
-	callpsp->stack=RealMake(Segs[ss].value,reg_sp);
+	callpsp->stack=RealMakeSeg(ss,reg_sp);
 	dos.psp=pspseg;
-	SetSegment_16(cs,exeseg+header.initCS);
-	SetSegment_16(ss,exeseg+header.initSS);
-	SetSegment_16(ds,pspseg);
-	SetSegment_16(es,pspseg);
+	SegSet16(cs,exeseg+header.initCS);
+	SegSet16(ss,exeseg+header.initSS);
+	SegSet16(ds,pspseg);
+	SegSet16(es,pspseg);
 	reg_ip=header.initIP;
 	reg_sp=header.initSP;
 	reg_ax=0;	
