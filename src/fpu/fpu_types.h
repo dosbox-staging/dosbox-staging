@@ -1,33 +1,39 @@
+typedef union {
+    double d;
+#ifndef WORDS_BIGENDIAN
+    struct {
+        Bit32u lower;
+        Bit32s upper;
+    } l;
+#else
+    struct {
+        Bit32s upper;
+        Bit32u lower;
+    } l;
+#endif
+    Bit64s ll;
+} FPU_Reg;
+
+/* the following deal with IEEE double-precision numbers */
+#define MAXEXPD 0x7ff
+#define EXPBIAS 1023
+#define EXPD(fp)	(((fp.l.upper) >> 20) & 0x7FF)
+#define SIGND(fp)	((fp.l.upper) & 0x80000000)
+#define MANTD(fp)	(fp.ll & ((1LL << 52) - 1))
+#define BIASEXPONENT(fp) fp.l.upper = (fp.l.upper & ~(0x7ff << 20)) | (EXPBIAS << 20)
 
 
-enum { FPUREG_VALID=0, FPUREG_ZERO, FPUREG_PNAN, FPUREG_NNAN, FPUREG_EMPTY };
-
-enum {
-	t_FLD=0, t_FLDST, t_FDIV,
-	t_FDIVP, t_FCHS, t_FCOMP,
-
-	t_FUNKNOWN,
-	t_FNOTDONE
+enum FPU_Tag {
+	TAG_Valid = 0,
+	TAG_Zero  = 1,
+	TAG_Weird = 2,
+	TAG_Empty = 3
 };
 
-struct FPU_Flag_Info { 
-	struct {
-		Real64 r;
-		Bit8u tag;
-	} var1,var2, result;
-	struct {
-		bool bf,c3,c2,c1,c0,ir,sf,pf,uf,of,zf,df,in;
-		Bit8s tos;
-	} sw;
-	struct {
-		bool ic,ie,sf,pf,uf,of,zf,df,in;
-		Bit8u rc,pc;
-	} cw;
-	Bitu type;
-	Bitu prev_type;
-};
 
-struct FPU_Reg {
-	Real64 r;
-	Bit8u tag;
+enum FPU_Round {
+	ROUND_Nearest = 0,
+	ROUND_Down    = 1,
+	ROUND_Up      = 2,
+	ROUND_Chop    = 3
 };
