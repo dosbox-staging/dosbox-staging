@@ -1,4 +1,5 @@
   - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becomming unsigned).
   - fixed compilation error on FreeBSD when #disable_joystick was defined
   - int10_writechar has been updated to move the cursor position.
+  - changed the basedir routines to use the current working dir instead of argv[0]. This will fix and brake things :)
 
