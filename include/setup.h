@@ -179,7 +179,8 @@ public:
 	void StartUp();
 	void PrintConfig(const char* configfilename);
 	void ParseConfigFile(const char* configfilename);
-	
+	void ParseEnv(char ** envp);
+
 	std::list<Section*> sectionlist;
 	typedef std::list<Section*>::iterator it;
 	typedef std::list<Section*>::reverse_iterator reverse_it;
