@@ -462,7 +462,7 @@ void VGA_SetupDrawing(void) {
 		vga.draw.pitch=pitch;
 		vga.draw.scaleh=scaleh;
 
-		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, Pitch %d fps %f",width,height,pitch,fps);
+		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, fps %f",width,height,fps);
 		LOG(LOG_VGA,LOG_NORMAL)("Scalew %d, Scaleh %d aspect %f",scalew,scaleh,aspect_ratio);
 		RENDER_SetSize(width,height,8,pitch,aspect_ratio,scalew,scaleh,&VGA_DrawHandler);
 		vga.draw.blank=(Bitu)(1000000/fps);
