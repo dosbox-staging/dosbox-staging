@@ -169,11 +169,16 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(true);
 		break;
 	case 0x83:	/* BIOS - SET EVENT WAIT INTERVAL */
-		mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(SegValue(es),reg_bx));
-		mem_writed(BIOS_WAIT_FLAG_COUNT,reg_cx<<16|reg_dx);
-		mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
-		PIC_RemoveEvents(&WaitFlagEvent);
-		PIC_AddEvent(&WaitFlagEvent,reg_cx<<16|reg_dx);
+		{
+			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) break;
+			Bit32s count=(reg_cx<<16)|reg_dx;
+			if (count<1000) count=1000;
+			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(SegValue(es),reg_bx));
+			mem_writed(BIOS_WAIT_FLAG_COUNT,count);
+			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
+			PIC_RemoveEvents(&WaitFlagEvent);
+			PIC_AddEvent(&WaitFlagEvent,count);
+		}
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
 		if (reg_dx==0x0000) {
