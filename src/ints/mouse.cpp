@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: mouse.cpp,v 1.22 2003-09-17 19:15:49 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -261,9 +262,11 @@ void DrawCursor() {
 		return;
 	}
 
-	mouse.clipx = CurMode->swidth-1;
+	mouse.clipx = CurMode->swidth-1;	/* Get from bios ? */
 	mouse.clipy = CurMode->sheight-1;
-
+	Bit16s xratio = 640 / CurMode->swidth;  /* might be mouse.max_x-.mouse.min_x+1/swidth */
+											/* might even be vidmode == 0x13?2:1 */
+	
 	RestoreCursorBackground();
 
 	SaveVgaRegisters();
@@ -272,7 +275,7 @@ void DrawCursor() {
 	Bit16s x,y;
 	Bit16u addx1,addx2,addy;
 	Bit16u dataPos	= 0;
-	Bit16s x1		= POS_X - mouse.hotx;
+	Bit16s x1		= POS_X / xratio - mouse.hotx;
 	Bit16s y1		= POS_Y - mouse.hoty;
 	Bit16s x2		= x1 + CURSORX - 1;
 	Bit16s y2		= y1 + CURSORY - 1;	
@@ -288,7 +291,7 @@ void DrawCursor() {
 		dataPos += addx2;
 	};
 	mouse.background= true;
-	mouse.backposx	= POS_X - mouse.hotx;
+	mouse.backposx	= POS_X / xratio - mouse.hotx;
 	mouse.backposy	= POS_Y - mouse.hoty;
 
 	// Draw Mousecursor
@@ -388,10 +391,6 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 	}
 };
 
-void Mouse_NewVideoMode(void)
-{
-	mouse.shown = -1;		// hide cursor
-}
 
 static void  mouse_reset(void) 
 {
@@ -436,9 +435,10 @@ static void  mouse_reset(void)
 	mouse.events=0;
 	mouse.mickey_x=0;
 	mouse.mickey_y=0;
-	mouse.sub_mask=0;
-	mouse.sub_seg=0;
-	mouse.sub_ofs=0;
+	//mouse.sub_mask=0;
+	//mouse.sub_seg=0;
+	//mouse.sub_ofs=0;
+	//disabled this for iron seed
 
 	mouse.hotx		 = 0;
 	mouse.hoty		 = 0;
@@ -451,9 +451,16 @@ static void  mouse_reset(void)
 	SetMickeyPixelRate(8,16);
 }
 
+void Mouse_NewVideoMode(void)
+{
+	//mouse.shown = -1;	
+	mouse_reset();
+	//Added this for cd-v19
+}
+
 static Bitu INT33_Handler(void) {
 
-//	LOG(0,"MOUSE: %04X",reg_ax);
+//	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X",reg_ax);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 	case 0x21:	/* Software Reset */
@@ -481,8 +488,8 @@ static Bitu INT33_Handler(void) {
 		reg_dx=POS_Y;
 		break;
 	case 0x04:	/* Position Mouse */
-		mouse.x=(float)reg_cx;
-		mouse.y=(float)reg_dx;
+		mouse.x = static_cast<float>(((reg_cx > mouse.max_x) ? mouse.max_x : reg_cx));
+		mouse.y = static_cast<float>(((reg_dx > mouse.max_y) ? mouse.max_y : reg_dx));
 		DrawCursor();
 		break;
 	case 0x05:	/* Return Button Press Data */
@@ -508,20 +515,23 @@ static Bitu INT33_Handler(void) {
 			break;
 		}
 	case 0x07:	/* Define horizontal cursor range */
-		{
+		{	//lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
+			if(max - min + 1 > 640) max = min + 640 - 1;
 			mouse.min_x=min;
 			mouse.max_x=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
 		}
 		break;
 	case 0x08:	/* Define vertical cursor range */
-		{
+		{	// not sure what to take instead of the CurMode (see case 0x07 as well)
+			// especially the cases where sheight= 400 and we set it with the mouse_reset to 200
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
+			if(static_cast<Bitu>(max - min + 1) > CurMode->sheight) max = min + CurMode->sheight - 1;
 			mouse.min_y=min;
 			mouse.max_y=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
