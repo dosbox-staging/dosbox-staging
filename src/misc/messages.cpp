@@ -31,42 +31,36 @@ using namespace std;
 
 #define LINE_IN_MAXLEN 1024
 
-struct MessageBlock
-{
-   string name;
-   string val;
-   MessageBlock(const char* _name, const char* _val):
-   name(_name),val(_val)
-     {}
+struct MessageBlock {
+	string name;
+	string val;
+	MessageBlock(const char* _name, const char* _val):
+	name(_name),val(_val){}
 };
 
 static list<MessageBlock> Lang;
 typedef list<MessageBlock>::iterator itmb;
-void MSG_Add(const char * _name, const char* _val)
-{
-   Lang.push_back(MessageBlock(_name,_val));
+void MSG_Add(const char * _name, const char* _val) {
+	Lang.push_back(MessageBlock(_name,_val));
 }
 
-void MSG_Replace(const char * _name, const char* _val)
-{
-   //find the message
-   for(itmb tel=Lang.begin();tel!=Lang.end();tel++)
-     {
-	if((*tel).name==_name)
-	     {  itmb teln=tel;
-		teln++;
-		Lang.erase(tel,teln);
-		break;
-	     }
-     }
-   //even if the message doesn't exist add it 
-   MSG_Add(_name,_val);
+void MSG_Replace(const char * _name, const char* _val) {
+	/* Find the message */
+	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
+		if((*tel).name==_name) { 
+			itmb teln=tel;
+			teln++;
+			Lang.erase(tel,teln);
+			break;
+		}
+	}
+	/* Even if the message doesn't exist add it */
+	MSG_Add(_name,_val);
 }
-
 static void LoadMessageFile(const char * fname) {
 	if(*fname=='\0') return;//empty string=no languagefile
-        FILE * mfile=fopen(fname,"rb");
-/* This should never happen and since other modules depend on this use a normal printf */
+	FILE * mfile=fopen(fname,"rb");
+	/* This should never happen and since other modules depend on this use a normal printf */
 	if (!mfile) {
 		E_Exit("MSG:Can't load messages: %s",fname);
 	}
@@ -103,16 +97,25 @@ static void LoadMessageFile(const char * fname) {
 	}
 	fclose(mfile);
 }
+
 const char * MSG_Get(char const * msg) {
-      for(itmb tel=Lang.begin();tel!=Lang.end();tel++)
-      {
-	
-	        if((*tel).name==msg)
-	  {
-	     return  (*tel).val.c_str();
-	  }
-     }
-   return "Message not Found!\n";
+	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){	
+		if((*tel).name==msg)
+		{
+			return  (*tel).val.c_str();
+		}
+	}
+	return "Message not Found!\n";
+}
+
+
+void MSG_Write(const char * location) {
+	FILE* out=fopen(location,"w+b");
+	if(out==NULL) return;//maybe an error?
+	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
+		fprintf(out,":%s\n%s.\n",(*tel).name.c_str(),(*tel).val.c_str());
+	}
+	fclose(out);
 }
 
 void MSG_Init(Section_prop * section) {
@@ -122,15 +125,3 @@ void MSG_Init(Section_prop * section) {
 		LoadMessageFile(file_name.c_str());
 	} else LoadMessageFile(section->Get_string("LANGUAGE"));
 }
-
-void MSG_Write(const char * location)
-{
-      FILE* out=fopen(location,"w+b");
-      if(out==NULL) return;//maybe an error?
-      for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
-	fprintf(out,":%s\n%s.\n",(*tel).name.c_str(),(*tel).val.c_str());
-      }
-   
-      fclose(out);
-}
-
