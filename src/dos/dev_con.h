@@ -74,7 +74,9 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 }
 
 bool device_CON::Seek(Bit32u * pos,Bit32u type) {
-	return false;
+	// seek is valid
+	*pos = 0;
+	return true;
 }
 
 bool device_CON::Close() {
