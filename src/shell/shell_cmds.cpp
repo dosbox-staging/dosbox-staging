@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.38 2004-02-24 09:27:29 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.39 2004-03-10 14:08:18 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -616,11 +616,13 @@ void DOS_Shell::CMD_SUBST (char * args) {
 	
 		if( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
 		char newname[CROSS_LEN];   
-		strcpy(newname, ldp->basedir);
+		strcpy(newname, ldp->basedir);	   
 		strcat(newname,fulldir);
 		CROSS_FILENAME(newname);
 		ldp->dirCache.ExpandName(newname);
+		strcat(mountstring,"\"");	   
 		strcat(mountstring, newname);
+		strcat(mountstring,"\"");	   
 		this->ParseLine(mountstring);
 	}
 	catch(int a){
@@ -631,7 +633,11 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		}
 		return;
 	}
-
+	catch(...) {		//dynamic cast failed =>so no localdrive
+		WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
+		return;
+	}
+   
 	return;
 }
 
