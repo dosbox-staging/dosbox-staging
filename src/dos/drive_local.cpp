@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.49 2004-08-04 09:12:53 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.50 2004-08-08 12:39:54 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -160,12 +160,9 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
 			return true;
 		}
-	    
-		if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
-			// Get Volume Label
-			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
-			return true;
-		}
+		// Get Volume Label && ignore search string (pandora)
+		dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+		return true;
 	}
 	return FindNext(dta);
 }
