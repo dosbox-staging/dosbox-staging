@@ -311,6 +311,10 @@ Bit8u localDrive::GetMediaByte(void) {
 	return allocation.mediaid;
 }
 
+bool localDrive::isRemote(void) {
+	return false;
+}
+
 localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid) {
 	strcpy(basedir,startdir);
 	sprintf(info,"local directory %s",startdir);
@@ -499,3 +503,7 @@ void cdromDrive::SetDir(const char* path)
 	}
 	localDrive::SetDir(path);
 };
+
+bool cdromDrive::isRemote(void) {
+	return true;
+}

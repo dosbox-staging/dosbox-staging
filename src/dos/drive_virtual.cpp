@@ -227,3 +227,6 @@ Bit8u Virtual_Drive::GetMediaByte(void) {
 	return 0xF8;
 }
 
+bool Virtual_Drive::isRemote(void) {
+	return false;
+}

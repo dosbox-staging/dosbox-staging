@@ -41,7 +41,7 @@ public:
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual Bit8u GetMediaByte(void);
-
+	virtual bool isRemote(void);
 private:
 	char basedir[CROSS_LEN];
 	
@@ -71,6 +71,7 @@ public:
 	virtual bool GetFileAttr(char * name,Bit16u * attr);
 	virtual bool FindFirst(char * _dir,DOS_DTA & dta);
 	virtual void SetDir(const char* path);
+	virtual bool isRemote(void);
 private:
 	Bit8u subUnit;
 };
@@ -95,6 +96,7 @@ public:
     bool FileStat(const char* name, FileStat_Block* const stat_block);
 	Bit8u GetMediaByte(void);
 	void EmptyCache(void){}
+	bool isRemote(void);
 private:
 	VFILE_Block * search_file;
 };

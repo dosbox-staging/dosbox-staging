@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.16 2003-10-14 08:38:35 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.17 2003-11-08 18:00:46 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -78,8 +78,9 @@ bool DOS_IOCTL(void) {
 		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
 		if (Drives[drive]) {
 			reg_dx=0;
-			//TODO Cdrom drives are remote
+			if (Drives[drive]->isRemote()) reg_dx|=(1 << 12);
 			//TODO Set bit 9 on drives that don't support direct I/O
+			reg_al=0;
 			return true;
 		} else {
 			DOS_SetError(DOSERR_INVALID_DRIVE);
