@@ -49,10 +49,11 @@ Bit16u DOS_GetMemory(Bit16u pages) {
 void DOS_SetupTables(void) {
 	dos_memseg=0xd000;
 	Bit16u seg;Bitu i;
-	dos.tables.indosflag=RealMake(DOS_GetMemory(1),0);
 	dos.tables.mediaid=RealMake(DOS_GetMemory(2),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
 	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
+	// setup the indos flag at 5f:0f (MEM_START-1) cos pharlap (crusader) wants it...
+	dos.tables.indosflag = RealMake(0x5f,0xf);	
 	mem_writeb(Real2Phys(dos.tables.indosflag),0);
 	/* Create the DOS Info Block */
 	dos_infoblock.SetLocation(DOS_GetMemory(1+(sizeof(DOS_InfoBlock::sDIB)/16)));
@@ -64,8 +65,3 @@ void DOS_SetupTables(void) {
 	/* Set buffers to a nice value */
 	dos_infoblock.SetBuffers(50,50);
 }
-
-
-	
-
-
