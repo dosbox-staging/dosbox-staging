@@ -278,19 +278,15 @@ switch(Fetchb()) {
 			break;
 		}
 	case 0xa1:												/* MOV EAX,Ow */
-		if (segprefix_on)	{
-			reg_eax=LoadMd(segprefix_base+Fetchw());
-			SegPrefixReset;
-		} else {
-			reg_eax=LoadMd(SegBase(ds)+Fetchw());
+		{
+			GetEADirect;
+			reg_eax=LoadMd(eaa);
 		}
 		break;
 	case 0xa3:												/* MOV Ow,EAX */
-		if (segprefix_on)	{
-			SaveMd((segprefix_base+Fetchw()),reg_eax);
-			SegPrefixReset;
-		} else {
-			SaveMd((SegBase(ds)+Fetchw()),reg_eax);
+		{
+			GetEADirect;
+			SaveMd(eaa,reg_eax);
 		}
 		break;
 	case 0xa5:												/* MOVSD */

@@ -274,7 +274,7 @@ restart:
 				GetRMrw;GetEAa;
 				bound_min=LoadMw(eaa);
 				bound_max=LoadMw(eaa+2);
-				if ( (*rmrw < bound_min) || (*rmrw > bound_max) ) {
+				if ( (((Bit16s)*rmrw) < bound_min) || (((Bit16s)*rmrw) > bound_max) ) {
 					INTERRUPT(5);
 				}
 			}
@@ -675,35 +675,27 @@ restart:
 				break;
 			}
 		case 0xa0:												/* MOV AL,Ob */
-			if (segprefix_on)	{
-				reg_al=LoadMb(segprefix_base+Fetchw());
-				SegPrefixReset;
-			} else {
-				reg_al=LoadMb(SegBase(ds)+Fetchw());
+			{
+				GetEADirect;
+				reg_al=LoadMb(eaa);
 			}
 			break;
 		case 0xa1:												/* MOV AX,Ow */
-			if (segprefix_on)	{
-				reg_ax=LoadMw(segprefix_base+Fetchw());
-				SegPrefixReset;
-			} else {
-				reg_ax=LoadMw(SegBase(ds)+Fetchw());
+			{
+				GetEADirect;
+				reg_ax=LoadMw(eaa);
 			}
 			break;
 		case 0xa2:												/* MOV Ob,AL */
-			if (segprefix_on)	{
-				SaveMb((segprefix_base+Fetchw()),reg_al);
-				SegPrefixReset;
-			} else {
-				SaveMb((SegBase(ds)+Fetchw()),reg_al);
+			{
+				GetEADirect;
+				SaveMb(eaa,reg_al);
 			}
 			break;
 		case 0xa3:												/* MOV Ow,AX */
-			if (segprefix_on)	{
-				SaveMw((segprefix_base+Fetchw()),reg_ax);
-				SegPrefixReset;
-			} else {
-				SaveMw((SegBase(ds)+Fetchw()),reg_ax);
+			{
+				GetEADirect;
+				SaveMw(eaa,reg_ax);
 			}
 			break;
 		case 0xa4:												/* MOVSB */
@@ -944,9 +936,9 @@ restart:
 			reg_al = get_CF() ? 0xFF : 0;
 			break;
 		case 0xd7:												/* XLAT */
-			if (segprefix_on) {
+			if (prefixes & PREFIX_SEG) {
 				reg_al=LoadMb(segprefix_base+(Bit16u)(reg_bx+reg_al));
-				SegPrefixReset;
+				PrefixReset;
 			} else {
 				reg_al=LoadMb(SegBase(ds)+(Bit16u)(reg_bx+reg_al));
 			}
@@ -1061,9 +1053,9 @@ restart:
 			{	
 				EAPoint to=SegBase(es);
 				EAPoint from;
-				if (segprefix_on) {
+				if (prefixes & PREFIX_SEG) {
 					from=(segprefix_base);
-					SegPrefixReset;
+					PrefixReset;
 				} else {
 					from=SegBase(ds);
 				}

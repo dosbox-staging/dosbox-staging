@@ -21,25 +21,44 @@
 typedef EAPoint (*GetEATable[256])(void);
 static GetEATable * lookupEATable;
 
+#define PREFIX_NONE		0x0
+#define PREFIX_SEG		0x1
+#define PREFIX_ADDR		0x2
+#define PREFIX_SEG_ADDR	0x3
+
+
+static Bitu prefixes;
 static EAPoint segprefix_base;
-static bool segprefix_on=false;
+
+/* Gets initialized at the bottem, can't seem to declare forward references */
+static GetEATable * EAPrefixTable[4];
+
 
 #define SegPrefix(blah)										\
 	segprefix_base=SegBase(blah);							\
-	segprefix_on=true;										\
-	lookupEATable=&GetEA_16_s;								\
+	prefixes|=PREFIX_SEG;									\
+  	lookupEATable=EAPrefixTable[prefixes];					\
 	goto restart;											\
 
 #define SegPrefix_66(blah)									\
 	segprefix_base=SegBase(blah);							\
-	segprefix_on=true;										\
-	lookupEATable=&GetEA_16_s;								\
+	prefixes|=PREFIX_SEG;									\
+  	lookupEATable=EAPrefixTable[prefixes];					\
 	goto restart_66;										\
 
 
+#define PrefixReset														\
+	prefixes=PREFIX_NONE;lookupEATable=EAPrefixTable[PREFIX_NONE];
 
-#define SegPrefixReset										\
-	segprefix_on=false;lookupEATable=&GetEA_16_n;
+#define GetEADirect														\
+EAPoint eaa;switch (prefixes) {											\
+case PREFIX_NONE:eaa=SegBase(ds)+Fetchw();break;						\
+case PREFIX_SEG:eaa=segprefix_base+Fetchw();PrefixReset;break;			\
+case PREFIX_ADDR:eaa=SegBase(ds)+Fetchd();PrefixReset;break;			\
+case PREFIX_SEG_ADDR:eaa=segprefix_base+Fetchd();PrefixReset;break;		\
+}
+
+
 
 
 /* The MOD/RM Decoder for EA for this decoder's addressing modes */
@@ -106,34 +125,34 @@ static GetEATable GetEA_16_n={
 };
 
 
-#define prefixed(val) EAPoint ret=segprefix_base+val;SegPrefixReset;return ret;
+#define segprefixed(val) EAPoint ret=segprefix_base+val;PrefixReset;return ret;
 
-static EAPoint EA_16_00_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_si)) }
-static EAPoint EA_16_01_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_di)) }
-static EAPoint EA_16_02_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_si)) }
-static EAPoint EA_16_03_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_di)) }
-static EAPoint EA_16_04_s(void) { prefixed((Bit16u)(reg_si)) }
-static EAPoint EA_16_05_s(void) { prefixed((Bit16u)(reg_di)) }
-static EAPoint EA_16_06_s(void) { prefixed((Bit16u)(Fetchw()))  }
-static EAPoint EA_16_07_s(void) { prefixed((Bit16u)(reg_bx)) }
+static EAPoint EA_16_00_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si)) }
+static EAPoint EA_16_01_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di)) }
+static EAPoint EA_16_02_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si)) }
+static EAPoint EA_16_03_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di)) }
+static EAPoint EA_16_04_s(void) { segprefixed((Bit16u)(reg_si)) }
+static EAPoint EA_16_05_s(void) { segprefixed((Bit16u)(reg_di)) }
+static EAPoint EA_16_06_s(void) { segprefixed((Bit16u)(Fetchw()))  }
+static EAPoint EA_16_07_s(void) { segprefixed((Bit16u)(reg_bx)) }
 
-static EAPoint EA_16_40_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs())) }
-static EAPoint EA_16_41_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs())) }
-static EAPoint EA_16_42_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs())) }
-static EAPoint EA_16_43_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs())) }
-static EAPoint EA_16_44_s(void) { prefixed((Bit16u)(reg_si+Fetchbs())) }
-static EAPoint EA_16_45_s(void) { prefixed((Bit16u)(reg_di+Fetchbs())) }
-static EAPoint EA_16_46_s(void) { prefixed((Bit16u)(reg_bp+Fetchbs())) }
-static EAPoint EA_16_47_s(void) { prefixed((Bit16u)(reg_bx+Fetchbs())) }
+static EAPoint EA_16_40_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchbs())) }
+static EAPoint EA_16_41_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchbs())) }
+static EAPoint EA_16_42_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchbs())) }
+static EAPoint EA_16_43_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchbs())) }
+static EAPoint EA_16_44_s(void) { segprefixed((Bit16u)(reg_si+Fetchbs())) }
+static EAPoint EA_16_45_s(void) { segprefixed((Bit16u)(reg_di+Fetchbs())) }
+static EAPoint EA_16_46_s(void) { segprefixed((Bit16u)(reg_bp+Fetchbs())) }
+static EAPoint EA_16_47_s(void) { segprefixed((Bit16u)(reg_bx+Fetchbs())) }
 
-static EAPoint EA_16_80_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws())) }
-static EAPoint EA_16_81_s(void) { prefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws())) }
-static EAPoint EA_16_82_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws())) }
-static EAPoint EA_16_83_s(void) { prefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws())) }
-static EAPoint EA_16_84_s(void) { prefixed((Bit16u)(reg_si+Fetchws())) }
-static EAPoint EA_16_85_s(void) { prefixed((Bit16u)(reg_di+Fetchws())) }
-static EAPoint EA_16_86_s(void) { prefixed((Bit16u)(reg_bp+Fetchws())) }
-static EAPoint EA_16_87_s(void) { prefixed((Bit16u)(reg_bx+Fetchws())) }
+static EAPoint EA_16_80_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_si+Fetchws())) }
+static EAPoint EA_16_81_s(void) { segprefixed((Bit16u)(reg_bx+(Bit16s)reg_di+Fetchws())) }
+static EAPoint EA_16_82_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_si+Fetchws())) }
+static EAPoint EA_16_83_s(void) { segprefixed((Bit16u)(reg_bp+(Bit16s)reg_di+Fetchws())) }
+static EAPoint EA_16_84_s(void) { segprefixed((Bit16u)(reg_si+Fetchws())) }
+static EAPoint EA_16_85_s(void) { segprefixed((Bit16u)(reg_di+Fetchws())) }
+static EAPoint EA_16_86_s(void) { segprefixed((Bit16u)(reg_bp+Fetchws())) }
+static EAPoint EA_16_87_s(void) { segprefixed((Bit16u)(reg_bx+Fetchws())) }
 
 static GetEATable GetEA_16_s={
 /* 00 */
@@ -280,4 +299,118 @@ static GetEATable GetEA_32_n={
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
 	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
 };
+
+INLINE EAPoint Sib_s(Bitu mode) {
+	Bit8u sib=Fetchb();
+	EAPoint base;
+	switch (sib&7) {
+	case 0:	/* EAX Base */
+		base=segprefix_base+reg_eax;break;
+	case 1:	/* ECX Base */
+		base=segprefix_base+reg_ecx;break;
+	case 2:	/* EDX Base */
+		base=segprefix_base+reg_edx;break;
+	case 3:	/* EBX Base */
+		base=segprefix_base+reg_ebx;break;
+	case 4:	/* ESP Base */
+		base=segprefix_base+reg_esp;break;
+	case 5:	/* #1 Base */
+		if (!mode) {
+			base=segprefix_base+Fetchd();break;
+		} else {
+			base=segprefix_base+reg_ebp;break;
+		}
+	case 6:	/* ESI Base */
+		base=segprefix_base+reg_esi;break;
+	case 7:	/* EDI Base */
+		base=segprefix_base+reg_edi;break;
+	}
+	Bitu shift=sib >> 6;
+	switch ((sib >>3) &7) {
+	case 0:	/* EAX Index */
+		base+=(Bit32s)reg_eax<<shift;break;
+	case 1:	/* ECX Index */
+		base+=(Bit32s)reg_ecx<<shift;break;
+	case 2:	/* EDX Index */
+		base+=(Bit32s)reg_edx<<shift;break;
+	case 3:	/* EBX Index */
+		base+=(Bit32s)reg_ebx<<shift;break;
+	case 4:	/* None */
+		break;
+	case 5:	/* EBP Index */
+		base+=(Bit32s)reg_ebp<<shift;break;
+	case 6:	/* ESI Index */
+		base+=(Bit32s)reg_esi<<shift;break;
+	case 7:	/* EDI Index */
+		base+=(Bit32s)reg_edi<<shift;break;
+	};
+	PrefixReset;
+	return base;
+};
+
+#define segprefixed_32(val) EAPoint ret=segprefix_base+(Bit32u)(val);PrefixReset;return ret;
+
+static EAPoint EA_32_00_s(void) { segprefixed_32(reg_eax); }
+static EAPoint EA_32_01_s(void) { segprefixed_32(reg_ecx); }
+static EAPoint EA_32_02_s(void) { segprefixed_32(reg_edx); }
+static EAPoint EA_32_03_s(void) { segprefixed_32(reg_ebx); }
+static EAPoint EA_32_04_s(void) { return Sib_s(0);}
+static EAPoint EA_32_05_s(void) { segprefixed_32(Fetchd()); }
+static EAPoint EA_32_06_s(void) { segprefixed_32(reg_esi); }
+static EAPoint EA_32_07_s(void) { segprefixed_32(reg_edi); }
+
+static EAPoint EA_32_40_s(void) { segprefixed_32(reg_eax+Fetchbs()); }
+static EAPoint EA_32_41_s(void) { segprefixed_32(reg_ecx+Fetchbs()); }
+static EAPoint EA_32_42_s(void) { segprefixed_32(reg_edx+Fetchbs()); }
+static EAPoint EA_32_43_s(void) { segprefixed_32(reg_ebx+Fetchbs()); }
+static EAPoint EA_32_44_s(void) { return Sib(1)+Fetchbs();}
+static EAPoint EA_32_45_s(void) { segprefixed_32(reg_ebp+Fetchbs()); }
+static EAPoint EA_32_46_s(void) { segprefixed_32(reg_esi+Fetchbs()); }
+static EAPoint EA_32_47_s(void) { segprefixed_32(reg_edi+Fetchbs()); }
+
+static EAPoint EA_32_80_s(void) { segprefixed_32(reg_eax+Fetchds()); }
+static EAPoint EA_32_81_s(void) { segprefixed_32(reg_ecx+Fetchds()); }
+static EAPoint EA_32_82_s(void) { segprefixed_32(reg_edx+Fetchds()); }
+static EAPoint EA_32_83_s(void) { segprefixed_32(reg_ebx+Fetchds()); }
+static EAPoint EA_32_84_s(void) { return Sib(2)+Fetchds();}
+static EAPoint EA_32_85_s(void) { segprefixed_32(reg_ebp+Fetchds()); }
+static EAPoint EA_32_86_s(void) { segprefixed_32(reg_esi+Fetchds()); }
+static EAPoint EA_32_87_s(void) { segprefixed_32(reg_edi+Fetchds()); }
+
+
+static GetEATable GetEA_32_s={
+/* 00 */
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+	EA_32_00_s,EA_32_01_s,EA_32_02_s,EA_32_03_s,EA_32_04_s,EA_32_05_s,EA_32_06_s,EA_32_07_s,
+/* 01 */
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+	EA_32_40_s,EA_32_41_s,EA_32_42_s,EA_32_43_s,EA_32_44_s,EA_32_45_s,EA_32_46_s,EA_32_47_s,
+/* 10 */
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+	EA_32_80_s,EA_32_81_s,EA_32_82_s,EA_32_83_s,EA_32_84_s,EA_32_85_s,EA_32_86_s,EA_32_87_s,
+/* 11 These are illegal so make em 0 */
+	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,
+	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0
+};
+
 

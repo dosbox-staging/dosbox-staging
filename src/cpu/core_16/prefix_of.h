@@ -23,6 +23,7 @@ switch(Fetchb()) {
 			break;
 			GetRM;
 			switch (rm & 0x38) {
+			case 0x00:
 			default:
 				E_Exit("CPU:GRP6:Illegal call %2X",(rm>>3) &3);
 			}
@@ -350,7 +351,7 @@ switch(Fetchb()) {
 			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
 			break;
 		}
-	case 0xbc:													/* 0xbc BSF Gw,Ew */
+	case 0xbc:												/* 0xbc BSF Gw,Ew */
 		{
 			GetRMrw;
 			Bit16u result,value;
