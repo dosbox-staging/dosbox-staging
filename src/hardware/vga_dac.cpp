@@ -65,13 +65,13 @@ static Bit8u read_p3c6(Bit32u port) {
 
 
 static void write_p3c7(Bit32u port,Bit8u val) {
-	vga.dac.index=val;
+	vga.dac.read_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
 }
 
 static void write_p3c8(Bit32u port,Bit8u val) {
-	vga.dac.index=val;
+	vga.dac.write_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_WRITE;
 }
@@ -79,36 +79,36 @@ static void write_p3c8(Bit32u port,Bit8u val) {
 static void write_p3c9(Bit32u port,Bit8u val) {
 	switch (vga.dac.pel_index) {
 	case 0:
-		vga.dac.rgb[vga.dac.index].red=val;
+		vga.dac.rgb[vga.dac.write_index].red=val;
 		vga.dac.pel_index=1;
 		break;
 	case 1:
-		vga.dac.rgb[vga.dac.index].green=val;
+		vga.dac.rgb[vga.dac.write_index].green=val;
 		vga.dac.pel_index=2;
 		break;
 	case 2:
-		vga.dac.rgb[vga.dac.index].blue=val;
+		vga.dac.rgb[vga.dac.write_index].blue=val;
 		switch (vga.mode) {
 		case GFX_256C:
 		case GFX_256U:
-				RENDER_SetPal(vga.dac.index,
-					vga.dac.rgb[vga.dac.index].red << 2,
-					vga.dac.rgb[vga.dac.index].green << 2,
-					vga.dac.rgb[vga.dac.index].blue << 2
+				RENDER_SetPal(vga.dac.write_index,
+					vga.dac.rgb[vga.dac.write_index].red << 2,
+					vga.dac.rgb[vga.dac.write_index].green << 2,
+					vga.dac.rgb[vga.dac.write_index].blue << 2
 				);
 			break;
 		default:
 			/* Check for attributes and DAC entry link */
 			for (Bitu i=0;i<16;i++) {
-				if (vga.dac.attr[i]==vga.dac.index) {
+				if (vga.dac.attr[i]==vga.dac.write_index) {
 					RENDER_SetPal(i,
-					vga.dac.rgb[vga.dac.index].red << 2,
-					vga.dac.rgb[vga.dac.index].green << 2,
-					vga.dac.rgb[vga.dac.index].blue << 2);
+					vga.dac.rgb[vga.dac.write_index].red << 2,
+					vga.dac.rgb[vga.dac.write_index].green << 2,
+					vga.dac.rgb[vga.dac.write_index].blue << 2);
 				}
 			}
 		}
-		vga.dac.index++;
+		vga.dac.write_index++;
 		vga.dac.pel_index=0;
 		break;
 	default:
@@ -120,16 +120,16 @@ static Bit8u read_p3c9(Bit32u port) {
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
-		ret=vga.dac.rgb[vga.dac.index].red;
+		ret=vga.dac.rgb[vga.dac.read_index].red;
 		vga.dac.pel_index=1;
 		break;
 	case 1:
-		ret=vga.dac.rgb[vga.dac.index].green;
+		ret=vga.dac.rgb[vga.dac.read_index].green;
 		vga.dac.pel_index=2;
 		break;
 	case 2:
-		ret=vga.dac.rgb[vga.dac.index].blue;
-		vga.dac.index++;
+		ret=vga.dac.rgb[vga.dac.read_index].blue;
+		vga.dac.read_index++;
 		vga.dac.pel_index=0;
 		break;
 	default:
@@ -155,6 +155,8 @@ void VGA_SetupDAC(void) {
 	vga.dac.pel_mask=0xff;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
+	vga.dac.read_index=0;
+	vga.dac.write_index=0;
 
 	/* Setup the DAC IO port Handlers */
 	IO_RegisterWriteHandler(0x3c6,write_p3c6,"PEL Mask");	

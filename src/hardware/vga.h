@@ -1,4 +1,4 @@
-/*
+ /*
  *  Copyright (C) 2002  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,9 +42,11 @@ typedef struct {
 	bool retrace;					/* A retrace has started */
 	Bitu scan_len;
 
-/* Screen resolution and memory mode */	
-	Bitu vdisplayend;
-	Bitu hdisplayend;
+/* Some other screen related variables */
+	Bitu line_compare;
+
+	Bitu clock;
+	bool clock_half;
 
 	bool chained;					/* Enable or Disabled Chain 4 Mode */
 	bool gfxmode;					/* Yes or No Easy no */
@@ -56,7 +58,6 @@ typedef struct {
 	bool vline_double;
 	Bit8u vline_height;
 
-	bool pixel_double;
 	/* Pixel Scrolling */
 	Bit8u pel_panning;				/* Amount of pixels to skip when starting horizontal line */
 	Bit8u hlines_skip;
@@ -85,12 +86,16 @@ typedef struct {
 	bool resizing;
 	Bitu width;
 	Bitu height;
+	Bitu pitch;
+	Bitu blank;
+	bool double_width;
+	bool double_height;
+	Bitu lines;
 	Bit8u * font;
 	Bit8u font_height;
-	Bit8u cursor_enable;
-	Bit8u cursor_row;
-	Bit8u cursor_col;
-	Bit8u cursor_count;
+	struct {
+		Bitu row,col,sline,eline,count;
+	} cursor;
 } VGA_Draw;
 
 
@@ -170,7 +175,8 @@ typedef struct {
 	Bit8u pel_mask;
 	Bit8u pel_index;	
 	Bit8u state;
-	Bit8u index;
+	Bit8u write_index;
+	Bit8u read_index;
 	Bitu first_changed;
 	RGBEntry rgb[0x100];
 	Bit8u attr[16];
@@ -202,8 +208,8 @@ typedef struct {
 	VGA_Dac dac;
 	VGA_Latch latch;
 	VGA_Memory mem;
-//Special little hack to let the memory run over into the buffer
-	Bit8u buffer[1024*1024];
+/* Extra buffer following main video ram with double data for overflowing of addresses */
+	Bit8u buffer[1024*1024];	/* 256 kb vid ram with 16 colors and double addresses */
 } VGA_Type;
 
 
@@ -217,11 +223,10 @@ void VGA_StartResize(void);
 
 /* The Different Drawing functions */
 void VGA_DrawTEXT(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX256_Full(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX16_Full(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu next_line);
-void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu next_line);
+void VGA_DrawGFX256U_Full(Bit8u * bitdata,Bitu next_line);
+void VGA_DrawGFX16_Fast(Bit8u * bitdata,Bitu next_line);
+void VGA_DrawGFX4_Fast(Bit8u * bitdata,Bitu next_line);
+void VGA_DrawGFX2_Fast(Bit8u * bitdata,Bitu next_line);
 /* The Different Memory Read/Write Handlers */
 Bit8u VGA_NormalReadHandler(Bit32u start);
 

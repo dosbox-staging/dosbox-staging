@@ -21,45 +21,11 @@
 #include "video.h"
 #include "vga.h"
 
+//TODO Make the full draw like the vga really does from video memory.
 
-/* This Should draw a complete 16 colour screen */
-void VGA_Render_GFX_2(Bit8u * * data) {
-	*data=vga.buffer;
-	VGA_DrawGFX2_Full(vga.buffer,vga.draw.width);
-	VGA_StartRetrace();
-}
-
-void VGA_Render_GFX_4(Bit8u * * data) {
-	*data=vga.buffer;
-	VGA_DrawGFX4_Full(vga.buffer,vga.draw.width);
-	VGA_StartRetrace();
-}
-
-void VGA_Render_GFX_16(Bit8u * * data) {
-//	*data=&vga.buffer[vga.config.display_start*8+vga.config.pel_panning];
-	*data=&vga.buffer[vga.config.real_start*8+vga.config.pel_panning];
-	VGA_StartRetrace();
-}
-
-void VGA_Render_GFX_256U(Bit8u * * data) {
-//	*data=&vga.mem.linear[vga.config.display_start*4+vga.config.pel_panning];
-	*data=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning];
-	VGA_StartRetrace();
-}
-
-void VGA_Render_GFX_256C(Bit8u * * data) {
-	*data=memory+0xa0000;
-	VGA_StartRetrace();
-}
-
-void VGA_Render_TEXT_16(Bit8u * * data) {
-	*data=vga.buffer;
-	if (data && !vga.draw.resizing) VGA_DrawTEXT(vga.buffer,vga.draw.width);
-	VGA_StartRetrace();
-}
-
-void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
+void VGA_DrawGFX2_Fast(Bit8u * bitdata,Bitu pitch) {
 	Bit8u * reader=HostMake(0xB800,0);
+	Bit8u * flip=HostMake(0xB800,8*1024);
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -70,7 +36,7 @@ void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
 		};
 		draw=bitdata;
 		//TODO Look up table like in 4color mode
-		for (Bit32u x=0;x<vga.draw.width>>3;x++) {
+		for (Bit32u x=vga.draw.width>>3;x>0;x--) {
 			Bit8u val=*(tempread++);
 			*(draw+0)=(val>>7)&1;
 			*(draw+1)=(val>>6)&1;
@@ -83,14 +49,12 @@ void VGA_DrawGFX2_Full(Bit8u * bitdata,Bitu pitch) {
 			draw+=8;
 		}
 		bitdata+=pitch;
-	};
-	VGA_StartRetrace();
+	}
 }
 
-
-
-void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu pitch) {
-	Bit8u * reader=HostMake(0xB800,0);
+void VGA_DrawGFX4_Fast(Bit8u * bitdata,Bitu pitch) {
+	Bit8u * reader=HostMake(0xB800,vga.config.display_start*2);
+	Bit8u * flip=HostMake(0xB800,8*1024);
 	Bit8u * draw;
 	for (Bitu y=0;y<vga.draw.height;y++) {
 		Bit8u * tempread;
@@ -98,7 +62,8 @@ void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu pitch) {
 		if (y&1) {
 			tempread+=8*1024;
 			reader+=80;
-		};
+			if (reader>=flip) reader-=8*1024;
+		}
 		draw=bitdata;
 		for (Bit32u x=0;x<vga.draw.width>>2;x++) {
 			Bit8u val=*(tempread++);
@@ -106,12 +71,10 @@ void VGA_DrawGFX4_Full(Bit8u * bitdata,Bitu pitch) {
 			draw+=4;
 		}
 		bitdata+=pitch;
-	};
-	VGA_StartRetrace();
+	}
 }
 
 /* Draw the screen using the lookup buffer */
-//TODO include split screen or something
 void VGA_DrawGFX16_Fast(Bit8u * bitdata,Bitu next_line) {
 	Bit8u * reader=&vga.buffer[vga.config.display_start*8+vga.config.pel_panning];
 	for (Bitu y=0;y<vga.draw.height;y++) {
@@ -119,12 +82,9 @@ void VGA_DrawGFX16_Fast(Bit8u * bitdata,Bitu next_line) {
 		bitdata+=vga.draw.width+next_line;
 		reader+=vga.config.scan_len*16;
 	}
-	VGA_StartRetrace();
-};
+}
 
-
-
-void VGA_DrawGFX256_Full(Bit8u * bitdata,Bitu next_line) {
+void VGA_DrawGFX256U_Fast(Bit8u * bitdata,Bitu next_line) {
 	Bit16u yreader=vga.config.display_start*1;
 	/* TODO add pel panning */
 	for (Bitu y=0;y<vga.draw.height;y++) {
@@ -137,21 +97,8 @@ void VGA_DrawGFX256_Full(Bit8u * bitdata,Bitu next_line) {
 		}
 		yreader+=vga.config.scan_len*2;
 		bitdata+=next_line;
-	};
-	VGA_StartRetrace();
-};
-
-void VGA_DrawGFX256_Fast(Bit8u * bitdata,Bitu pitch) {
-	/* For now just copy 64 kb of memory with pitch support */
-	Bit8u * reader=memory+0xa0000;
-	for (Bitu y=0;y<vga.draw.height;y++) {
-		memcpy((void *)bitdata,(void *)reader,vga.draw.width);
-		bitdata+=pitch;
-		reader+=vga.draw.width;
 	}
-	VGA_StartRetrace();
-};
-
+}
 
 void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 	Bit8u * reader=HostMake(0xB800,0);
@@ -175,18 +122,16 @@ void VGA_DrawTEXT(Bit8u * bitdata,Bitu pitch) {
 		};
 		draw_start+=16*pitch;
 	};
-	VGA_StartRetrace();
-    
-    if(!(vga.internal.cursor & 0x2000)){
-	/* Draw a cursor */
-	if (((Bitu)vga.draw.cursor_col*8)>=vga.draw.width) return;
-	if (((Bitu)vga.draw.cursor_row*16)>=vga.draw.height) return;
-	Bit8u * cursor_draw=bitdata+(vga.draw.cursor_row*16+15)*pitch+vga.draw.cursor_col*8;
-	if (vga.draw.cursor_count>8) {
-		for (Bit8u loop=0;loop<8;loop++) *cursor_draw++=15;
-	}
-	vga.draw.cursor_count++;
-	if (vga.draw.cursor_count>16) vga.draw.cursor_count=0;
+    if(!(vga.internal.cursor & 0x2000)) {
+		/* Draw a cursor */
+		if (((Bitu)vga.draw.cursor.col*8)>=vga.draw.width) return;
+		if (((Bitu)vga.draw.cursor.row*16)>=vga.draw.height) return;
+		Bit8u * cursor_draw=bitdata+(vga.draw.cursor.row*16+15)*pitch+vga.draw.cursor.col*8;
+		if (vga.draw.cursor.count>8) {
+			for (Bit8u loop=0;loop<8;loop++) *cursor_draw++=15;
+		}
+		vga.draw.cursor.count++;
+		if (vga.draw.cursor.count>16) vga.draw.cursor.count=0;
     }
 };
 

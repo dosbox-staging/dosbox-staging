@@ -70,6 +70,7 @@ void write_p3cf(Bit32u port,Bit8u val) {
 	case 3: /* Data Rotate */
 		gfx(data_rotate)=val;
 		vga.config.data_rotate=val & 7;
+		if (vga.config.data_rotate) LOG_WARN("VGA:Data Rotate used %d",val &7);
 		vga.config.raster_op=(val>>3) & 3;
 		/* 
 			0-2	Number of positions to rotate data right before it is written to

@@ -49,10 +49,12 @@ void write_p3c0(Bit32u port,Bit8u val) {
 			*/
 			break;
 		case 0x10: /* Mode Control Register */
-			attr(mode_control)=val;
-			vga.config.gfxmode=val&1;
-			vga.config.vga_enabled=(val & 64)>0;
-			VGA_FindSettings();
+			if (val != attr(mode_control)) {
+				attr(mode_control)=val;
+				vga.config.gfxmode=val&1;
+				vga.config.vga_enabled=(val & 0x40)>0;
+				VGA_FindSettings();
+			}
 			//TODO Monochrome mode
 			//TODO 9 bit characters
 			//TODO line wrapping split screen shit see bit 5

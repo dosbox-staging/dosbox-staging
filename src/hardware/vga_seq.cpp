@@ -36,9 +36,10 @@ void write_p3c5(Bit32u port,Bit8u val) {
 		seq(reset)=val;
 		break;
 	case 1:		/* Clocking Mode */
-		seq(clocking_mode)=val;
-		vga.config.pixel_double=(val & 8)>0;
-		VGA_FindSettings();
+		if (val!=seq(clocking_mode)) {
+			seq(clocking_mode)=val;
+			VGA_StartResize();
+		}
 		/* TODO Figure this out :)
 			0	If set character clocks are 8 dots wide, else 9.
 			2	If set loads video serializers every other character

@@ -40,13 +40,72 @@ Bit32u FillTable[16]={
 };
 
 
+static void VGA_BlankTimer(void) {
+	PIC_AddEvent(&VGA_BlankTimer,vga.draw.blank);
+	Bit8u * buf,* bufsplit;
+	/* Draw the current frame */
+	if (!vga.draw.resizing && RENDER_StartUpdate()) {
+		if (vga.config.line_compare<vga.draw.lines) {
+			Bitu stop=vga.config.line_compare;
+			if (vga.draw.double_height) stop/=2;
+			if (stop>=vga.draw.height){
+				LOG_VGA("Split at %d",stop);
+				goto drawnormal;
+			}
+			switch (vga.mode) {
+			case GFX_16:
+				buf=&vga.buffer[vga.config.real_start*8+vga.config.pel_panning];
+				bufsplit=vga.buffer;
+				break;
+			case GFX_256U:
+				buf=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning/2];
+				bufsplit=vga.mem.linear;
+				break;
+			case GFX_256C:
+				buf=memory+0xa0000;
+				bufsplit=memory+0xa0000;
+				break;
+			default:
+				LOG_WARN("VGA:Unhandled split screen mode %d",vga.mode);
+				goto norender;
+			}
+			RENDER_Part(buf,0,0,vga.draw.width,stop);
+			RENDER_Part(bufsplit,0,stop,vga.draw.width,vga.draw.height-stop);
+		} else {
+drawnormal:
+			switch (vga.mode) {
+			case GFX_2:
+				VGA_DrawGFX2_Fast(vga.buffer,vga.draw.width);
+				buf=vga.buffer;
+				break;
+			case GFX_4:
+				VGA_DrawGFX4_Fast(vga.buffer,vga.draw.width);
+				buf=vga.buffer;
+				break;
+			case TEXT_16:
+				VGA_DrawTEXT(vga.buffer,vga.draw.width);
+				buf=vga.buffer;
+				break;
+			case GFX_16:
+				buf=&vga.buffer[vga.config.real_start*8+vga.config.pel_panning];
+				break;
+			case GFX_256C:
+				buf=memory+0xa0000;
+				break;
+			case GFX_256U:
+				buf=&vga.mem.linear[vga.config.real_start*4+vga.config.pel_panning/2];
+				break;
+			}
+			RENDER_Part(buf,0,0,vga.draw.width,vga.draw.height);
 
-void VGA_Render_GFX_2(Bit8u * * data);
-void VGA_Render_GFX_4(Bit8u * * data);
-void VGA_Render_GFX_16(Bit8u * * data);
-void VGA_Render_GFX_256C(Bit8u * * data);
-void VGA_Render_GFX_256U(Bit8u * * data);
-void VGA_Render_TEXT_16(Bit8u * * data);
+
+		}
+norender:
+		RENDER_EndUpdate();
+
+	}
+	VGA_StartRetrace();
+}
 
 void VGA_FindSettings(void) {
 	/* Sets up the correct memory handler from the vga.mode setting */
@@ -67,8 +126,10 @@ void VGA_FindSettings(void) {
 		} else if (vga.config.cga_enabled) {
 			/* 4 color cga */
 			//TODO Detect hercules modes, probably set them up in bios too
-			if (vga.config.pixel_double) vga.mode=GFX_4;
-			else vga.mode=GFX_2;
+			if (vga.seq.clocking_mode & 0x8) {
+				vga.mode=GFX_4;
+//					MEM_SetupPageHandlers(PAGE_COUNT(0x0b8000),PAGE_COUNT(0x10000),&VGA_GFX_4_ReadHandler,&VGA_GFX_4_WriteHandler);
+			} else vga.mode=GFX_2;
 			//TODO Maybe also use a page handler for cga mode
 		} else {
 			/* 16 color ega */
@@ -83,69 +144,95 @@ void VGA_FindSettings(void) {
 }
 
 static void VGA_DoResize(void) {
-	vga.draw.resizing=false;
-	Bitu width,height,pitch;
-	RENDER_Handler * renderer;
+	/* Calculate the FPS for this screen */
+	double fps;
+	Bitu vtotal=2 + (vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8) | ((vga.crtc.overflow & 0x20) << 4) );
+	Bitu htotal=5 + vga.crtc.horizontal_total;
+	Bitu vdispend = 1 + (vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7) | ((vga.crtc.overflow & 0x40) << 3) );
+	Bitu hdispend = 1 + (vga.crtc.horizontal_display_end);
+	//TODO Maybe check if blanking comes before display_end
 
-	height=vga.config.vdisplayend+1;
-	if (vga.config.vline_height>0) {
-		height/=(vga.config.vline_height+1);
-	}
-	if (vga.config.vline_double) height>>=1;
-	width=vga.config.hdisplayend;
+	double clock=(double)vga.config.clock;
+	/* Check for 8 for 9 character clock mode */
+	if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
+	/* Check for pixel doubling, master clock/2 */
+	if (vga.seq.clocking_mode & 0x8) clock/=2;
+
+	LOG_VGA("H total %d, V Total %d",htotal,vtotal);
+	LOG_VGA("H D End %d, V D End %d",hdispend,vdispend);
+	fps=clock/(vtotal*htotal);
+
+	vga.draw.resizing=false;
+	Bitu width,height,pitch,flags;
+
+	flags=0;
+	vga.draw.lines=height=vdispend;
+	width=hdispend;
+	vga.draw.double_height=vga.config.vline_double;
+	vga.draw.double_width=(vga.seq.clocking_mode & 0x8)>0;
+	vga.draw.font_height=vga.config.vline_height+1;
 	switch (vga.mode) {
 	case GFX_256C:
-		renderer=&VGA_Render_GFX_256C;
-		width<<=2;
-		pitch=vga.config.scan_len*8;
-		break;
 	case GFX_256U:
+		vga.draw.double_width=true;		//Hack since 256 color modes use 2 clocks for a pixel
+		/* Don't know might do this different sometime, will have to do for now */
+		if (!vga.draw.double_height) {
+			if (vga.config.vline_height&1) {
+				vga.draw.double_height=true;
+				vga.draw.font_height/=2;
+			}
+		}
 		width<<=2;
 		pitch=vga.config.scan_len*8;
-		renderer=&VGA_Render_GFX_256U;
 		break;
 	case GFX_16:
 		width<<=3;
 		pitch=vga.config.scan_len*16;
-		renderer=&VGA_Render_GFX_16;
 		break;
 	case GFX_4:
 		width<<=3;
-		height<<=1;
 		pitch=width;
-		renderer=&VGA_Render_GFX_4;
 		break;
 	case GFX_2:
 		width<<=3;
-		height<<=1;
 		pitch=width;
-		renderer=&VGA_Render_GFX_2;
 		break;
 	case TEXT_16:
 		/* probably a 16-color text mode, got to detect mono mode somehow */
-		width<<=3;		/* 8 bit wide text font */
-		vga.draw.font_height=vga.config.vline_height+1;
-		height<<=4;
+		width<<=3;				/* 8 bit wide text font */
 		if (width>640) width=640;
 		if (height>480) height=480;
 		pitch=width;
-		renderer=&VGA_Render_TEXT_16;
 	};
+	if (vga.draw.double_height) {
+		flags|=DoubleHeight;
+		height/=2;
+	}
+	if (vga.draw.double_width) {
+		flags|=DoubleWidth;
+		/* Double width is dividing main clock, the width should be correct already for this */
+	}
+	if (( width != vga.draw.width) || (height != vga.draw.height) || (pitch != vga.draw.pitch)) {
+		PIC_RemoveEvents(VGA_BlankTimer);
+		vga.draw.width=width;
+		vga.draw.height=height;
+		vga.draw.pitch=pitch;
 
-	vga.draw.width=width;
-	vga.draw.height=height;
-	RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),0,renderer);
-
+		LOG_VGA("Width %d, Height %d",width,height);
+		LOG_VGA("Flags %X, fps %f",flags,fps);
+		RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),flags);
+		vga.draw.blank=(Bitu)(1000000/fps);
+		PIC_AddEvent(VGA_BlankTimer,vga.draw.blank);
+	}
 };
 
 void VGA_StartResize(void) {
 	if (!vga.draw.resizing) {
 		vga.draw.resizing=true;
 		/* Start a resize after 50 ms */
-		PIC_AddEvent(VGA_DoResize,500);
+		PIC_AddEvent(VGA_DoResize,50000);
 	}
 }
-
 
 void VGA_Init(Section* sec) {
 	vga.draw.resizing=false;

@@ -58,7 +58,8 @@ static void write_p3d8(Bit32u port,Bit8u val) {
 
 static void write_p3c2(Bit32u port,Bit8u val) {
 	p3c2data=val;
-	if (val & 1) {
+
+	if (val & 0x1) {
 		IO_RegisterWriteHandler(0x3d4,write_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterReadHandler(0x3d4,read_p3d4,"VGA:CRTC Index Select");
 		IO_RegisterWriteHandler(0x3d5,write_p3d5,"VGA:CRTC Data Register");
@@ -77,6 +78,11 @@ static void write_p3c2(Bit32u port,Bit8u val) {
 		IO_FreeWriteHandler(0x3d5);
 		IO_FreeReadHandler(0x3d5);
 	}
+	if (val & 0x4) vga.config.clock=28322000;
+	else vga.config.clock=25175000;
+	
+	VGA_StartResize();
+	
 	/*
 		0	If set Color Emulation. Base Address=3Dxh else Mono Emulation. Base Address=3Bxh.
 		2-3	Clock Select. 0: 25MHz, 1: 28MHz

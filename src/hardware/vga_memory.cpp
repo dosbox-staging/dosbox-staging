@@ -92,20 +92,21 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 }
 
 Bit8u VGA_GFX_4_ReadHandler(Bit32u start) {
-	return vga.mem.linear[start];
+	return vga.mem.linear[start-0xb8000];
 }
 
 void VGA_GFX_4_WriteHandler(Bit32u start,Bit8u val) {
-	start-=0xa0000;
+	start-=0xb8000;
 	vga.mem.linear[start]=val;
-	Bitu line=start / 320;
-	Bitu x=start % 320;
-	Bit8u * draw=&vga.buffer[start<<2];
+	Bitu off;
+	if (start>0x2000) off=320*(((start-0x2000)/80)*2+1)+((start-0x2000) % 80)*4;
+	else off=320*(((start)/80)*2)+(start % 80)*4;
+	Bit32u * draw=(Bit32u *)&vga.buffer[off];
 	/* TODO Could also use a Bit32u lookup table for this */
-	*(draw+0)=(val>>6)&3;
-	*(draw+1)=(val>>4)&3;
-	*(draw+2)=(val>>2)&3;
-	*(draw+3)=(val)&3;
+	*draw=CGAWriteTable[val];
+	draw=(Bit32u *)&vga.buffer[off+0x4000*4];
+	*draw=CGAWriteTable[val];
+
 }
 
 void VGA_GFX_16_WriteHandler(Bit32u start,Bit8u val) {

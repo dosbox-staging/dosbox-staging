@@ -40,9 +40,10 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		/* 	0-7  Horizontal Total Character Clocks-5 */
 		break;
 	case 0x01:	/* Horizontal Display End Register */
-		crtc(horizontal_display_end)=val;
-		vga.config.hdisplayend=val+1;
-		VGA_StartResize();
+		if (val != crtc(horizontal_display_end)) {
+			crtc(horizontal_display_end)=val;
+			VGA_StartResize();
+		}
 		/* 	0-7  Number of Character Clocks Displayed -1 */
 		break;
 	case 0x02:	/* Start Horizontal Blanking Register */
@@ -75,7 +76,10 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/	
 		break;
 	case 0x06: /* Vertical Total Register */
-		crtc(vertical_total)=val;	
+		if (val != crtc(vertical_total)) {
+			crtc(vertical_total)=val;	
+			VGA_StartResize();
+		}
 		/*	0-7	Lower 8 bits of the Vertical Total. Bit 8 is found in 3d4h index 7
 				bit 0. Bit 9 is found in 3d4h index 7 bit 5.
 			Note: For the VGA this value is the number of scan lines in the display -2.
@@ -83,8 +87,11 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		break;
 	case 0x07:	/* Overflow Register */
 		crtc(overflow)=val;
-		vga.config.vdisplayend=(vga.config.vdisplayend&0xFF)|(((val>>1) & 1)<<8)|(((val>>6) & 1)<<9);
-		VGA_StartResize();
+		vga.config.line_compare=(vga.config.line_compare & 0x2ff) | (val & 0x10) << 4;
+		if ((vga.crtc.overflow ^ val) & 0xef) {
+			crtc(overflow)=val;
+			VGA_StartResize();
+		} else crtc(overflow)=val;
 		/*
 			0  Bit 8 of Vertical Total (3d4h index 6)
 			1  Bit 8 of Vertical Display End (3d4h index 12h)
@@ -110,10 +117,13 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x09: /* Maximum Scan Line Register */
-		crtc(maximum_scan_line)=val;
 		vga.config.vline_double=(val & 128)>1;
 		vga.config.vline_height=(val & 0xf);
-		VGA_StartResize();
+		vga.config.line_compare=(vga.config.line_compare & 0x1ff)|(val&0x40)<<3;
+		if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
+			crtc(maximum_scan_line)=val;
+			VGA_StartResize();
+		} else crtc(maximum_scan_line)=val;
 		/*
 			0-4	Number of scan lines in a character row -1. In graphics modes this is
 				the number of times (-1) the line is displayed before passing on to
@@ -152,16 +162,16 @@ void write_p3d5(Bit32u port,Bit8u val) {
 	case 0x0E:	/*Cursor Location High Register */
 		crtc(cursor_location_high)=val;
 		if (vga.config.scan_len<2) break;
-		vga.draw.cursor_row=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))/(vga.config.scan_len*2);
-		vga.draw.cursor_col=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))%(vga.config.scan_len*2);
+		vga.draw.cursor.row=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))/(vga.config.scan_len*2);
+		vga.draw.cursor.col=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))%(vga.config.scan_len*2);
 		/*	0-7  Upper 8 bits of the address of the cursor */
 		break;
 	case 0x0F:	/* Cursor Location Low Register */
 //TODO update cursor on screen
 		crtc(cursor_location_low)=val;
 		if (vga.config.scan_len<2) break;
-		vga.draw.cursor_row=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))/(vga.config.scan_len*2);
-		vga.draw.cursor_col=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))%(vga.config.scan_len*2);
+		vga.draw.cursor.row=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))/(vga.config.scan_len*2);
+		vga.draw.cursor.col=(crtc(cursor_location_high)<<8|crtc(cursor_location_low))%(vga.config.scan_len*2);
 		/*	0-7  Lower 8 bits of the address of the cursor */
 		break;
 	case 0x10:	/* Vertical Retrace Start Register */
@@ -186,9 +196,10 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x12:	/* Vertical Display End Register */
-		crtc(vertical_display_end)=val;
-		vga.config.vdisplayend=(vga.config.vdisplayend & 0x300)|val;
-		VGA_StartResize();
+		if (val!=crtc(vertical_display_end)) {
+			crtc(vertical_display_end)=val;
+			VGA_StartResize();
+		}
 		/*
 			0-7	Lower 8 bits of Vertical Display End. The display ends when the line
 				counter reaches this value. Bit 8 is found in 3d4h index 7 bit 1.
@@ -196,9 +207,11 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x13:	/* Offset register */
-		crtc(offset)=val;
-		vga.config.scan_len=val;
-		VGA_StartResize();
+		if (val!=crtc(offset)) {
+			crtc(offset)=val;
+			vga.config.scan_len=val;
+			VGA_StartResize();
+		}
 		/*
 			0-7	Number of bytes in a scanline / K. Where K is 2 for byte mode, 4 for
 				word mode and 8 for Double Word mode.
@@ -228,9 +241,11 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x17:	/* Mode Control Register */
-		crtc(mode_control)=val;
-		vga.config.cga_enabled=!((val&1)>0);
-		VGA_FindSettings();
+		if (val!=crtc(mode_control)) {
+			crtc(mode_control)=val;
+			vga.config.cga_enabled=!((val&1)>0);
+			VGA_FindSettings();
+		}
 		/*
 			0	If clear use CGA compatible memory addressing system
 				by substituting character row scan counter bit 0 for address bit 13,
@@ -249,6 +264,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		break;
 	case 0x18:	/* Line Compare Register */
 		crtc(line_compare)=val;
+		vga.config.line_compare=(vga.config.line_compare & 0x300) | val;
 		/*
 			0-7	Lower 8 bits of the Line Compare. When the Line counter reaches this
 				value, the display address wraps to 0. Provides Split Screen
