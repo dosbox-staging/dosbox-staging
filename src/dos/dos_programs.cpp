@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.32 2004-10-26 18:18:22 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.33 2004-11-13 12:08:43 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -130,7 +130,7 @@ public:
 			}
 			number[index]=0;sizes[count++]=atoi(number);
 		
-		// get the drive letter
+			// get the drive letter
 			cmd->FindCommand(1,temp_line);
 			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
 			drive=toupper(temp_line[0]);
@@ -138,6 +138,10 @@ public:
 
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
+#if defined (WIN32)
+			/* Removing trailing backslash if not root dir so stat will succeed */
+			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
+#endif
 			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
@@ -185,8 +189,8 @@ public:
 		/* Set the correct media byte in the table */
 		mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',newdrive->GetMediaByte());
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
-		/* check if volume label is given */
-		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
+		/* check if volume label is given and don't allow it to updated in the future */
+		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),false);
 		return;
 showusage:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"));

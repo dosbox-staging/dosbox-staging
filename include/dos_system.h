@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.27 2004-11-03 23:13:53 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.28 2004-11-13 12:08:42 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -127,7 +127,7 @@ public:
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	void		EmptyCache			(void);
-	void		SetLabel			(const char* name);
+	void		SetLabel			(const char* name,bool allowupdate=true);
 	char*		GetLabel			(void) { return label; };
 
 	class CFileInfo {
@@ -185,6 +185,7 @@ private:
 	Bitu		nextFreeFindFirst;
 
 	char		label				[CROSS_LEN];
+	bool		updatelabel;
 };
 
 class DOS_No_Drive_Cache {

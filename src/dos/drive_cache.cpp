@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.39 2004-10-05 19:50:03 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.40 2004-11-13 12:08:43 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -69,6 +69,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(void)
 	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
+	updatelabel = true;
 };
 
 DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
@@ -81,6 +82,7 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 	SetBaseDir(path);
+	updatelabel = true;
 };
 
 DOS_Drive_Cache::~DOS_Drive_Cache(void)
@@ -107,8 +109,14 @@ void DOS_Drive_Cache::EmptyCache(void)
 	SetBaseDir(basePath);
 };
 
-void DOS_Drive_Cache::SetLabel(const char* vname)
+void DOS_Drive_Cache::SetLabel(const char* vname,bool allowupdate)
 {
+/* allowupdate defaults to true. if mount sets a label then allowupdate is 
+ * false and will this function return at once after the first call.
+ * The label will be set at the first call. */
+
+	if(!this->updatelabel) return;
+	this->updatelabel = allowupdate;
 	Bitu togo		= 8;
 	Bitu vnamePos	= 0;
 	Bitu labelPos	= 0;
@@ -128,7 +136,7 @@ void DOS_Drive_Cache::SetLabel(const char* vname)
 	//Remove trailing dot.
 	if((labelPos > 0) && (label[labelPos-1] == '.'))
 		label[labelPos-1]=0;
-//	LOG(LOG_ALL,LOG_ERROR)("CACHE: Set volume label to %s",label);
+	LOG(LOG_DOSMISC,LOG_NORMAL)("DIRCACHE: Set volume label to %s",label);
 };
 
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
@@ -151,13 +159,9 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
-	UINT type_drive=GetDriveType(drive);
-	if(type_drive != DRIVE_FIXED) { 
-		//Only add label for non-fixed drives. (so stuff like "mount c c:\piet -t cdrom -label piet" works)
-		if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
-			LOG(LOG_MISC,LOG_NORMAL)("Cache: setting label for (non-fixed localdrive) to %s",labellocal);
-			SetLabel(labellocal);
-		}
+	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+		/* Set label and allow being updated */
+		SetLabel(labellocal,true);
 	}
 #endif
 };
