@@ -85,6 +85,8 @@ void MSCDEX_Init(Section*);
 /* Dos Internal mostly */
 void EMS_Init(Section*);
 void XMS_Init(Section*);
+void DPMI_Init(Section*);
+
 void AUTOEXEC_Init(Section*);
 void SHELL_Init(void);
 
@@ -166,8 +168,8 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("warnings",0);
 #endif
 	
-	secprop->AddInitFunction(&MEM_Init);
 	secprop->AddInitFunction(&IO_Init);
+	secprop->AddInitFunction(&MEM_Init);
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);
 	secprop->AddInitFunction(&PROGRAMS_Init);
@@ -234,10 +236,12 @@ void DOSBOX_Init(void) {
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	//TODO Maybe combine most of the dos stuff in one section like ems,xms
 	secprop=control->AddSection_prop("dos",&DOS_Init);
-	secprop->AddInitFunction(&EMS_Init);
-	secprop->Add_int("emssize",4);
 	secprop->AddInitFunction(&XMS_Init);
 	secprop->Add_int("xmssize",8);
+	secprop->AddInitFunction(&EMS_Init);
+	secprop->Add_int("emssize",4);
+	secprop->AddInitFunction(&DPMI_Init);
+	
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
