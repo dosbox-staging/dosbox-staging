@@ -7,6 +7,9 @@
 /* Use multi threading to speed up things on multi cpu's, also gives a nice frame-skipping effect :) */
 #define C_THREADED
 
+/* Enable the FPU module, still only for beta testing */
+//#define C_FPU
+
 /* Enable debugging for several modules, requires C_LOGGING */
 #define DEBUG_SBLASTER					/* SoundBlaster Debugging*/
 #define DEBUG_DMA					/* DMA Debugging */
