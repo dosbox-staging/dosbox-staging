@@ -116,7 +116,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 
 	/* Get the correct page */
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-	PhysPt base=CurMode->pstart+CurMode->plength*page;
+	PhysPt base=CurMode->pstart+page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 
 	/* See how much lines need to be copied */
 	Bit8u start,end;Bits next;
@@ -174,22 +174,22 @@ filling:
 void INT10_SetActivePage(Bit8u page) {
 
 	Bit16u mem_address;
-	Bit8u cur_col=0 ,cur_row=0 ;
 	
 	if (page>7) return;
-	mem_address=page*CurMode->plength;
+	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
-
+	if (CurMode->mode<0x8) mem_address>>=1;
 	/* Write the new start address in vgahardware */
 	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0c);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(mem_address&0xff00)>>8);
+	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)(mem_address>>8));
 	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0d);
-	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,mem_address&0x00ff);
+	IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)mem_address);
 
 	// And change the BIOS page
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE,page);
-
+	Bit8u cur_row=CURSOR_POS_ROW(page);
+	Bit8u cur_col=CURSOR_POS_COL(page);
 	// Display the cursor, now the page is active
 	INT10_SetCursorPos(cur_row,cur_col,page);
 }
@@ -253,26 +253,29 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	Bit8u current=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	if(page==current) {
 		// Get the dimensions
-		BIOS_NCOLS;BIOS_NROWS;
+		BIOS_NCOLS;
 		// Calculate the address knowing nbcols nbrows and page num
-		address=SCREEN_IO_START(ncols,nrows,page)+col+row*ncols;
+		address=(ncols*row)+col+real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START);
 		// CRTC regs 0x0e and 0x0f
 		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0e);
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(address&0xff00)>>8);
+		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)(address>>8));
 		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS),0x0f);
-		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,address&0x00ff);
+		IO_Write(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)+1,(Bit8u)address);
 	}
 }
 
 
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
  
-	Bit16u address=SCREEN_MEM_START(ncols,nrows,page)+(cur_col+cur_row*ncols)*2;
-	*result=real_readw(0xb800,address);
+	// Compute the address  
+	Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+	address+=(cur_row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+cur_col)*2;
+	// REad the char 
+	PhysPt where = CurMode->pstart+address;
+	*result=mem_readw(where);
 }
 
 
@@ -283,7 +286,8 @@ static void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool
 	case M_TEXT16:
 		{	
 			// Compute the address  
-			Bit16u address=SCREEN_MEM_START(CurMode->twidth,CurMode->theight,page)+(col+row*CurMode->twidth)*2;
+			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+			address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
 			// Write the char 
 			PhysPt where = CurMode->pstart+address;
 			mem_writeb(where,chr);
@@ -341,10 +345,9 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 }
 
 
-void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page) {
+void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr) {
 	//TODO Check if this page thing is correct
-	if (CurMode->type!=M_TEXT16) page=0xff;
-	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+	Bit8u page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
@@ -365,7 +368,7 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr, Bit8u page) {
 		break;
 	case '\t':
 		do {
-			INT10_TeletypeOutput(' ',attr,showattr,page);
+			INT10_TeletypeOutput(' ',attr,showattr);
 			cur_row=CURSOR_POS_ROW(page);
 			cur_col=CURSOR_POS_COL(page);
 		} while(cur_col%8==0);
@@ -411,7 +414,7 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 			attr=mem_readb(string);
 			string++;
 		}
-		INT10_TeletypeOutput(chr,attr,true,page);
+		INT10_TeletypeOutput(chr,attr,true);
 		count--;
 	}
 	if (flag & 1) {
