@@ -26,6 +26,7 @@ regs.h \
 render.h \
 serialport.h \
 setup.h \
+shell.h \
 support.h \
 timer.h \
 vga.h \
