@@ -342,7 +342,7 @@ graphics_chars:
 			break;
 		case 0x06:
 			reg_al=0x4f;
-			reg_ah=VESA_ScanLineLength(reg_al,reg_bx,reg_cx,reg_dx);
+			reg_ah=VESA_ScanLineLength(reg_bl,reg_bx,reg_cx,reg_dx);
 			break;
 		case 0x07:
 			switch (reg_bl) {
