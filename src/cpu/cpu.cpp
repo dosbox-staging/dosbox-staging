@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.38 2003-11-18 22:29:31 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.39 2003-11-18 22:35:56 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -827,7 +827,8 @@ void CPU_STR(Bitu & selector) {
 void CPU_LTR(Bitu selector) {
 	cpu_tss.SetSelector(selector);
 }
-static gdt_count=0;
+
+Bitu gdt_count=0;
 
 void CPU_LGDT(Bitu limit,Bitu base) {
 	LOG(LOG_CPU,LOG_NORMAL)("GDT Set to base:%X limit:%X count %d",base,limit,gdt_count++);
