@@ -181,18 +181,19 @@ void SaveVgaRegisters()
 	for (int i=0; i<9; i++) {
 		IO_Write	(0x3CE,i);
 		gfxReg[i] = IO_Read(0x3CF);
-	};
-	// Set default
-	INT10_SetGfxControllerToDefault();
-};
+	}
+	/* Setup some default values in GFX regs that should work */
+	IO_Write	(0x3CE,3);IO_Write(0x3Cf,0);		//disable rotate and operation
+	IO_Write	(0x3CE,5);IO_Write(0x3Cf,0);		//Force read/write mode 0
+}
 
 void RestoreVgaRegisters()
 {
 	for (int i=0; i<9; i++) {
 		IO_Write(0x3CE,i);
 		IO_Write(0x3CF,gfxReg[i]);
-	};
-};
+	}
+}
 
 void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx1, Bit16u& addx2, Bit16u& addy)
 {
@@ -253,17 +254,15 @@ void DrawCursor() {
 	if (mouse.shown<0) return;
 
 	// Get Clipping ranges
-	VGAMODES * curmode=GetCurrentMode();	
-	if (!curmode) return;
-	
+
 	// In Textmode ?
-	if (curmode->type==TEXT) {
+	if (CurMode->type==M_TEXT16) {
 		DrawCursorText();
 		return;
 	}
 
-	mouse.clipx = curmode->swidth-1;
-	mouse.clipy = curmode->sheight-1;
+	mouse.clipx = CurMode->swidth-1;
+	mouse.clipy = CurMode->sheight-1;
 
 	RestoreCursorBackground();
 
@@ -389,10 +388,10 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py)
 	}
 };
 
-void Mouse_SetResolution(Bit16u width, Bit16u height)
+void Mouse_NewVideoMode(void)
 {
 	mouse.shown = -1;		// hide cursor
-};
+}
 
 static void  mouse_reset(void) 
 {
@@ -471,9 +470,8 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x02:	/* Hide Mouse */
 		{
-			VGAMODES * curmode=GetCurrentMode();	
-			if (curmode && curmode->type==GRAPH)	RestoreCursorBackground();
-			else									RestoreCursorBackgroundText();
+			if (CurMode->type!=M_TEXT16)	RestoreCursorBackground();
+			else							RestoreCursorBackgroundText();
 			mouse.shown--;
 		}
 		break;
@@ -514,7 +512,6 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if (!(max & 1)) max--;
 			mouse.min_x=min;
 			mouse.max_x=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
@@ -525,7 +522,6 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			if (!(max & 1)) max--;
 			mouse.min_y=min;
 			mouse.max_y=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
@@ -630,6 +626,7 @@ static Bitu INT74_Handler(void) {
 		}
 	}
 	IO_Write(0xa0,0x20);
+	IO_Write(0x20,0x20);
 	/* Check for more Events if so reactivate IRQ */
 	if (mouse.events) {
 		PIC_ActivateIRQ(12);
