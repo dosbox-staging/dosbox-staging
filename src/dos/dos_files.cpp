@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.44 2003-08-29 08:17:49 harekiet Exp $ */
+/* $Id: dos_files.cpp,v 1.45 2003-10-04 12:40:28 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -81,7 +81,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
 		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-		case '\'':
+		case '\'':	case '+':
 			upname[w++]=c;
 			break;
 		default:
@@ -390,6 +390,8 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	bool exists=false;
 	if (!device) exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
 	if (exists || device ) { 
+		// devices can only be opened once
+		if (device && ((*entry=psp.FindEntryByHandle(handle))!=0xff)) return true;
 		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
