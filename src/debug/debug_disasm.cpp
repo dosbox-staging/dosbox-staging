@@ -1111,6 +1111,11 @@ Bitu DasmI386(char* buffer, PhysPt pc, Bitu cur_ip, bool bit32)
 	return getbyte_mac-pc;
 }
 
+int DasmLastOperandSize()
+{
+	return opsize;
+};
+
 
 #endif
 
