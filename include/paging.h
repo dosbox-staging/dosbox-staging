@@ -22,49 +22,52 @@
 #include "mem.h"
 
 class PageDirectory;
-struct PageEntry;
-struct PageLink;
 
 #define MEM_PAGE_SIZE	(4096)
 #define XMS_START		(0x110)
+#define TLB_SIZE		(1024*1024)
 
-enum EntryTypes {		//The type of memory contained in this link
-	ENTRY_VGA,
-	ENTRY_CHANGES,
-	ENTRY_INIT,
-	ENTRY_NA,
-	ENTRY_ROM,
-	ENTRY_LFB,
-	ENTRY_RAM,
-	ENTRY_ALLOC,
-};
+#define PFLAG_READABLE		0x1
+#define PFLAG_WRITEABLE		0x2
+#define PFLAG_HASROM		0x4
+#define PFLAG_HASCODE		0x8				//Page contains dynamic code
+#define PFLAG_NOCODE		0x10			//No dynamic code can be generated here
+#define PFLAG_ILLEGAL		0x20			//No dynamic code can be generated here
 
-enum VGA_RANGES {
-	VGA_RANGE_A000,
-	VGA_RANGE_B000,
-	VGA_RANGE_B800,
-};
+#define LINK_START	((1024+64)/4)			//Start right after the HMA
 
-
-class PageChange {
+class PageHandler {
 public:
-	virtual void Changed(PageLink * link,Bitu start,Bitu end)=0;
+	virtual Bitu readb(PhysPt addr);
+	virtual Bitu readw(PhysPt addr);
+	virtual Bitu readd(PhysPt addr);
+	virtual void writeb(PhysPt addr,Bitu val);
+	virtual void writew(PhysPt addr,Bitu val);
+	virtual void writed(PhysPt addr,Bitu val);
+	virtual void AddPageLink(Bitu lin_page, Bitu phys_page)=0;
+	virtual HostPt GetHostPt(Bitu phys_page);
+	Bitu flags;
 };
 
 /* Some other functions */
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled(void);
 
-void MEM_CheckLinks(PageEntry * theentry);
-
-PageDirectory * MEM_DefaultDirectory(void);
 Bitu PAGING_GetDirBase(void);
 void PAGING_SetDirBase(Bitu cr3);
+void PAGING_InitTLB(void);
+void PAGING_ClearTLB(void);
+void PAGING_ClearTLBEntries(Bitu pages,Bit32u * entries);
 
-PageLink * MEM_LinkPage(Bitu phys_page,PhysPt lin_base);
+void PAGING_LinkPage(Bitu lin_page,Bitu phys_page);
+/* This maps the page directly, only use when paging is disabled */
+void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
 
-void MEM_UnlinkPage(PageLink * link);
 void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
+void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
+void MEM_UnlinkPages(void);
+
+
 
 #pragma pack(1)
 typedef struct {
@@ -87,57 +90,18 @@ union X86PageEntry {
 	X86_PageEntryBlock block;
 };
 
-struct PageLink {
-	HostPt read;
-	HostPt write;
-	PageChange * change;
-	PhysPt lin_base;
-	PageEntry * entry;
-	union {
-		PageDirectory * dir;
-		Bitu table;
-	} data;
-	PageLink * next;
-};
-
-struct PageEntry {
-	PageLink * links;
-	EntryTypes type;
-	union {
-		HostPt mem;
-		PhysPt vga_base;
-		PageDirectory * dir;
-	} data;
-	MemHandle next_handle;
-};
-
-class PageDirectory {
-public:
-	PageDirectory();
-	~PageDirectory();
-	void ClearDirectory(void);
-	void SetBase(PhysPt page);
-	void LinkPage(Bitu lin_page,Bitu phys_page);
-	bool InitPage(Bitu lin_address);
-	bool InitPageLinear(Bitu lin_address);
-	void InvalidateTable(Bitu table);
-	void InvalidateLink(Bitu table,Bitu index);
-	PageDirectory * next;
-	PageLink	*links[1024*1024];
-	PageLink	*tables[1024];
-	PageLink	*link_dir;						//Handler for main directory table
-	PageEntry	entry_init;						//Handler for pages that need init
-	PageLink	link_init;						//Handler for pages that need init
-	Bit32u		base_page;						//Base got from CR3
-	PageChange * table_change;
-	PageChange * dir_change;
-};
-
 struct PagingBlock {
-	PageDirectory   * cache;
-	PageDirectory	* dir;
-	PageLink		* free_link;
 	Bitu			cr3;
+	struct {
+		Bitu page;
+		PhysPt addr;
+	} base;
+	struct {
+		HostPt read[TLB_SIZE];
+		HostPt write[TLB_SIZE];
+		PageHandler * handler[TLB_SIZE];
+		Bit32u	phys_page[TLB_SIZE];
+	} tlb;
 	bool			enabled;
 };
 
@@ -145,24 +109,7 @@ extern PagingBlock paging;
 
 /* Some support functions */
 
-static INLINE PageLink * GetPageLink(PhysPt address) {
-	Bitu index=(address>>12);
-	return paging.dir->links[index];
-}
-
-void PAGING_AddFreePageLink(PageLink * link);
-
-PageLink * PAGING_GetFreePageLink(void);
-void MEM_SetupVGA(VGA_RANGES range,HostPt base);
-
-/* Page Handler functions */
-
-Bit8u  ENTRY_readb(PageEntry * pentry,PhysPt address);
-Bit16u ENTRY_readw(PageEntry * pentry,PhysPt address);
-Bit32u ENTRY_readd(PageEntry * pentry,PhysPt address);
-void ENTRY_writeb(PageEntry * pentry,PhysPt address,Bit8u  val);
-void ENTRY_writew(PageEntry * pentry,PhysPt address,Bit16u val);
-void ENTRY_writed(PageEntry * pentry,PhysPt address,Bit32u val);
+PageHandler * MEM_GetPageHandler(Bitu phys_page);
 
 /* Unaligned address handlers */
 Bit16u mem_unalignedreadw(PhysPt address);
@@ -173,52 +120,51 @@ void mem_unalignedwrited(PhysPt address,Bit32u val);
 /* Special inlined memory reading/writing */
 
 INLINE Bit8u mem_readb_inline(PhysPt address) {
-	PageLink * plink=GetPageLink(address);
-
-	if (plink->read) return readb(plink->read+address);
-	else return ENTRY_readb(plink->entry,address);
+	Bitu index=(address>>12);
+	if (paging.tlb.read[index]) return host_readb(paging.tlb.read[index]+address);
+	else return paging.tlb.handler[index]->readb(address);
 }
 
 INLINE Bit16u mem_readw_inline(PhysPt address) {
 	if (address & 1) return mem_unalignedreadw(address);
-	PageLink * plink=GetPageLink(address);
 
-	if (plink->read) return readw(plink->read+address);
-	else return ENTRY_readw(plink->entry,address);
+	Bitu index=(address>>12);
+	if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
+	else return paging.tlb.handler[index]->readw(address);
 }
 
 
 INLINE Bit32u mem_readd_inline(PhysPt address) {
 	if (address & 3) return mem_unalignedreadd(address);
-	PageLink * plink=GetPageLink(address);
 
-	if (plink->read) return readd(plink->read+address);
-	else return ENTRY_readd(plink->entry,address);
+	Bitu index=(address>>12);
+	if (paging.tlb.read[index]) return host_readd(paging.tlb.read[index]+address);
+	else return paging.tlb.handler[index]->readd(address);
 }
 
 INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
-	PageLink * plink=GetPageLink(address);
+	Bitu index=(address>>12);
 
-	if (plink->write) writeb(plink->write+address,val);
-	else ENTRY_writeb(plink->entry,address,val);
+	if (paging.tlb.write[index]) host_writeb(paging.tlb.write[index]+address,val);
+	else return paging.tlb.handler[index]->writeb(address,val);
 }
 
 INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
 	if (address & 1) {mem_unalignedwritew(address,val);return;}
 
-	PageLink * plink=GetPageLink(address);
+	Bitu index=(address>>12);
 
-	if (plink->write) writew(plink->write+address,val);
-	else ENTRY_writew(plink->entry,address,val);
+	if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
+	else return paging.tlb.handler[index]->writew(address,val);
 }
 
 INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
 	if (address & 3) {mem_unalignedwrited(address,val);return;}
 
-	PageLink * plink=GetPageLink(address);
+	Bitu index=(address>>12);
+	if (paging.tlb.write[index]) host_writed(paging.tlb.write[index]+address,val);
+	else return paging.tlb.handler[index]->writed(address,val);
 
-	if (plink->write) writed(plink->write+address,val);
-	else ENTRY_writed(plink->entry,address,val);
 }
 
 #endif

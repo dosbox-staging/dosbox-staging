@@ -26,7 +26,7 @@ typedef Bit32u PhysPt;
 typedef Bit8u * HostPt;
 typedef Bit32u RealPt;
 
-typedef Bits MemHandle;
+typedef Bit32s MemHandle;
 
 #define MEM_PAGESIZE 4096
 
@@ -43,12 +43,9 @@ MemHandle MEM_AllocatePages(Bitu pages,bool sequence);
 PhysPt MEM_AllocatePage(void);
 void MEM_ReleasePages(MemHandle handle);
 bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence);
-void MEM_MapPagesHandle(Bitu lin_page,MemHandle mem,Bitu mem_page,Bitu pages);
-void MEM_MapPagesDirect(Bitu lin_page,Bitu phys_page,Bitu pages);
-void MEM_UnmapPages(Bitu phys_page,Bitu pages);
-
 
 MemHandle MEM_NextHandle(MemHandle handle);
+MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 
 /* 
 	The folowing six functions are used everywhere in the end so these should be changed for
@@ -57,23 +54,23 @@ MemHandle MEM_NextHandle(MemHandle handle);
 
 #ifdef WORDS_BIGENDIAN
 
-INLINE Bit8u readb(HostPt off) {
+INLINE Bit8u host_readb(HostPt off) {
 	return off[0];
 };
-INLINE Bit16u readw(HostPt off) {
+INLINE Bit16u host_readw(HostPt off) {
 	return off[0] | (off[1] << 8);
 };
-INLINE Bit32u readd(HostPt off) {
+INLINE Bit32u host_readd(HostPt off) {
 	return off[0] | (off[1] << 8) | (off[2] << 16) | (off[3] << 24);
 };
-INLINE void writeb(HostPt off,Bit8u val) {
+INLINE void host_writeb(HostPt off,Bit8u val) {
 	off[0]=val;
 };
-INLINE void writew(HostPt off,Bit16u val) {
+INLINE void host_writew(HostPt off,Bit16u val) {
 	off[0]=(Bit8u)(val);
 	off[1]=(Bit8u)(val >> 8);
 };
-INLINE void writed(HostPt off,Bit32u val) {
+INLINE void host_writed(HostPt off,Bit32u val) {
 	off[0]=(Bit8u)(val);
 	off[1]=(Bit8u)(val >> 8);
 	off[2]=(Bit8u)(val >> 16);
@@ -86,22 +83,22 @@ INLINE void writed(HostPt off,Bit32u val) {
 
 #else
 
-INLINE Bit8u readb(HostPt off) {
+INLINE Bit8u host_readb(HostPt off) {
 	return *(Bit8u *)off;
 };
-INLINE Bit16u readw(HostPt off) {
+INLINE Bit16u host_readw(HostPt off) {
 	return *(Bit16u *)off;
 };
-INLINE Bit32u readd(HostPt off) {
+INLINE Bit32u host_readd(HostPt off) {
 	return *(Bit32u *)off;
 };
-INLINE void writeb(HostPt off,Bit8u val) {
+INLINE void host_writeb(HostPt off,Bit8u val) {
 	*(Bit8u *)(off)=val;
 };
-INLINE void writew(HostPt off,Bit16u val) {
+INLINE void host_writew(HostPt off,Bit16u val) {
 	*(Bit16u *)(off)=val;
 };
-INLINE void writed(HostPt off,Bit32u val) {
+INLINE void host_writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
 };
 
