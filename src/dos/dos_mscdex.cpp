@@ -260,6 +260,13 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 									break;
 								}
 							#endif
+							#if defined (LINUX)
+								if (useCdromInterface==CDROM_USE_IOCTL) {
+									cdrom[numDrives] = new CDROM_Interface_Ioctl();
+									LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
+									break;
+								}
+							#endif
 							cdrom[numDrives] = new CDROM_Interface_SDL();
 							LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: SDL Interface.");
 						  } break;

@@ -5,8 +5,10 @@
 #define MAX_ASPI_CDROM	5
 
 #include <string.h>
+#include "dosbox.h"
 #include "mem.h"
 #include "SDL.h"
+
 
 #define RAW_SECTOR_SIZE		2352
 #define COOKED_SECTOR_SIZE	2048
@@ -180,5 +182,22 @@ private:
 };
 
 #endif /* WIN 32 */
+
+#if defined (LINUX)
+
+class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
+{
+public:
+	CDROM_Interface_Ioctl		(void);
+
+	bool	SetDevice		(char* path, int forceCD);
+	bool	GetUPC			(unsigned char& attr, char* upc);
+	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
+
+private:
+	char	device_name[512];
+};
+
+#endif /* LINUX */
 
 #endif /* __CDROM_INTERFACE__ */

@@ -166,6 +166,9 @@ case "$target" in
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
        LIBS="$LIBS -framework AudioUnit"
        ;;
+    *-*-linux-gnu*)
+       AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
+       ;;
 esac
 
 AC_OUTPUT([ 
