@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.53 2004-04-24 09:20:11 harekiet Exp $ */
+/* $Id: debug.cpp,v 1.54 2004-06-10 07:23:01 harekiet Exp $ */
 
 #include "programs.h"
 
@@ -29,7 +29,7 @@
 #include "cpu.h"
 #include "video.h"
 #include "pic.h"
-#include "keyboard.h"
+#include "mapper.h"
 #include "cpu.h"
 #include "callback.h"
 #include "inout.h"
@@ -1672,8 +1672,7 @@ void DEBUG_Init(Section* sec) {
 	MSG_Add("DEBUG_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	DEBUG_DrawScreen();
 	/* Add some keyhandlers */
-	KEYBOARD_AddEvent(KBD_kpminus,0,DEBUG_Enable);
-	KEYBOARD_AddEvent(KBD_kpplus,0,DEBUG_RaiseTimerIrq);
+	MAPPER_AddHandler(DEBUG_Enable,MK_kpminus,0,"debugger","Debugger");
 	/* Clear the TBreakpoint list */
 	memset((void*)&codeViewData,0,sizeof(codeViewData));
 	/* setup debug.com */

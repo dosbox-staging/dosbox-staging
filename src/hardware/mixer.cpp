@@ -34,7 +34,7 @@
 #include "setup.h"
 #include "cross.h"
 #include "support.h"
-#include "keyboard.h"
+#include "mapper.h"
 #include "programs.h"
 
 #define MIXER_MAXCHAN 8
@@ -423,6 +423,6 @@ void MIXER_Init(Section* sec) {
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudio(0);
 	}
-	KEYBOARD_AddEvent(KBD_f6,KBD_MOD_CTRL,MIXER_WaveEvent);
+	MAPPER_AddHandler(MIXER_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }

@@ -16,6 +16,7 @@ ipx.h \
 ipxserver.h \
 keyboard.h \
 logging.h \
+mapper.h \
 mem.h \
 mixer.h \
 modules.h \

@@ -21,8 +21,8 @@
 #include "bios.h"
 #include "regs.h"
 #include "mem.h"
-#include "keyboard.h"
 #include "dos_inc.h" /* for Drives[] */
+#include "mapper.h"
 
 #define MAX_SWAPPABLE_DISKS 20
 
@@ -67,9 +67,6 @@ void updateDPT(void) {
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xb,0);
 		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xc,tmpcyl);
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xe,tmpsect);
-		
-		
-
 	}
 	if(imageDiskList[3] != NULL) {
 		imageDiskList[3]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
@@ -77,8 +74,6 @@ void updateDPT(void) {
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1))+2,tmpheads);
 		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1))+0xe,tmpsect);
 	}
-
-
 }
 
 void swapInDisks(void) {
@@ -436,10 +431,7 @@ void BIOS_SetupDisks(void) {
 /* Setup the Bios Area */
 	mem_writeb(BIOS_HARDDISK_COUNT,2);
 
-	KEYBOARD_AddEvent(KBD_f4,KBD_MOD_CTRL, swapInNextDisk);
-
+	MAPPER_AddHandler(swapInNextDisk,MK_f4,MMOD1,"swapimg","Swap Image");
 	killRead = false;
-
-
-};
+}
 

@@ -16,9 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.23 2004-04-07 09:36:59 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.24 2004-06-10 07:19:46 harekiet Exp $ */
 
 #include <string.h>
+#include <assert.h>
+#include <timer.h>
+
 #include "dosbox.h"
 #include "keyboard.h"
 #include "inout.h"
@@ -27,7 +30,7 @@
 #include "mixer.h"
 
 #define KEYBUFSIZE 32
-#define KEYDELAY 150
+#define KEYDELAY 300			//Considering 20-30 khz serial clock and 11 bits/char
 
 enum KeyCommands {
 	CMD_NONE,
@@ -36,189 +39,131 @@ enum KeyCommands {
 	CMD_SETOUTPORT
 };
 
-enum KeyStates {
-	STATE_NORMAL,
-	STATE_EXTEND,
-};
-
-struct KeyCode {
-	Bit8u scancode;
-	Bit8u ascii;
-	KeyStates state;
-	Bitu mod;
-};
-
-struct KeyEvent {
-	Bits type;
-	Bitu state;
-	KEYBOARD_EventHandler * handler;
-	KeyEvent * next;
-};
-
-struct KeyBlock {
+static struct {
+	Bit8u buffer[KEYBUFSIZE];
+	Bitu used;
+	Bitu pos;
 	struct {
-		KeyCode code[KEYBUFSIZE];
-		Bitu used;
-		Bitu pos;
-		KeyStates state;
-	} buf;
-	Bitu write_state;
-	Bit64u last_index;
+		KBD_KEYS key;
+		Bitu wait;
+		Bitu pause,rate;
+	} repeat;
 	KeyCommands command;
-	bool enabled;
+	Bit8u p60data;
+	bool p60changed;
 	bool active;
+	bool scanning;
 	bool scheduled;
-	bool key_on_60;
-};
+} keyb;
 
-static KeyBlock keyb;
-static Bit8u cur_scancode;
-static Bit8u port_61_data;
-//TODO Are these initialized at 0 at startup? Hope so :)
-static KeyEvent * event_handlers[KBD_LAST];
-
-void KEYBOARD_ClrBuffer(void) {
-	keyb.buf.used=0;
-	keyb.buf.pos=0;
-	keyb.scheduled=false;
-	PIC_DeActivateIRQ(1);
-	keyb.key_on_60=false;
-/* maybe remove PIC_EVENTS  */
+static void KEYBOARD_SetPort60(Bit8u val) {
+	keyb.p60changed=true;
+	keyb.p60data=val;
+	PIC_ActivateIRQ(1);
 }
 
-/* Read an entry from the keycode buffer */
-void KEYBOARD_GetCode(Bitu val) {
+static void KEYBOARD_TransferBuffer(Bitu val) {
 	keyb.scheduled=false;
-	switch (keyb.buf.state) {
-	case STATE_NORMAL:
-		/* Check for a next key */
-		if (!keyb.buf.used) return;
-		keyb.buf.used--;
-		keyb.buf.pos++;
-		if (keyb.buf.pos>=KEYBUFSIZE) keyb.buf.pos-=KEYBUFSIZE;
-		keyb.buf.state=keyb.buf.code[keyb.buf.pos].state;
-		break;
-	case STATE_EXTEND:
-		keyb.buf.state=STATE_NORMAL;
-		break;
+	if (!keyb.used) {
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("Transfer started with empty buffer");
+		return;
 	}
-	keyb.key_on_60=true;
-	if (keyb.enabled) PIC_ActivateIRQ(1);
+	Bit8u data=keyb.buffer[keyb.pos];
+	KEYBOARD_SetPort60(keyb.buffer[keyb.pos]);
+	if (++keyb.pos>=KEYBUFSIZE) keyb.pos-=KEYBUFSIZE;
+	keyb.used--;
 }
 
-void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
-//	LOG_MSG("Add key scan %d ascii %c",scancode,ascii);
-	if (keyb.buf.used<KEYBUFSIZE) {
-		keyb.buf.used++;
-		Bitu start=keyb.buf.pos+keyb.buf.used;
-		if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
-		keyb.buf.code[start].scancode=scancode;
-		keyb.buf.code[start].ascii=ascii;
-		keyb.buf.code[start].state=state;
-		keyb.buf.code[start].mod=mod;
+
+static void KEYBOARD_ClrBuffer(void) {
+	keyb.used=0;
+	keyb.pos=0;
+	PIC_RemoveEvents(KEYBOARD_TransferBuffer);
+	keyb.scheduled=false;
+}
+
+static void KEYBOARD_AddBuffer(Bit8u data) {
+	if (keyb.used>=KEYBUFSIZE) {
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("Buffer full, dropping code");
+		return;
 	}
+	Bitu start=keyb.pos+keyb.used;
+	if (start>=KEYBUFSIZE) start-=KEYBUFSIZE;
+	keyb.buffer[start]=data;
+	keyb.used++;
 	/* Start up an event to start the first IRQ */
-	if (!keyb.scheduled && !keyb.key_on_60) {
+	if (!keyb.scheduled && !keyb.p60changed) {
 		keyb.scheduled=true;
-		PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
 	}
 }
-/*  Disabled as it's not used anymore. Left in here incase new code fails
-void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
-	keyb.key_on_60=false; //else no new keys get scheduled :)
-	switch (keyb.buf.state) {
-	case STATE_NORMAL:
-		if (keyb.buf.used && !keyb.scheduled) {
-			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
-		}
-		scancode=keyb.buf.code[keyb.buf.pos].scancode;
-		ascii=keyb.buf.code[keyb.buf.pos].ascii;
-		mod=keyb.buf.code[keyb.buf.pos].mod;
-		break;
-	case STATE_EXTEND:
-		scancode=224;
-		mod=0;
-		ascii=0;
-		if (!keyb.scheduled) {
-			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
-		}
-		break;
-	}
-}
-*/
+
 
 static Bitu read_p60(Bitu port,Bitu iolen) {
-	keyb.key_on_60 = false;
-	switch (keyb.buf.state) {
-	case STATE_NORMAL:
-      		if (keyb.buf.used && !keyb.scheduled) { //key60 is false
-			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
-		}
-
-		return keyb.buf.code[keyb.buf.pos].scancode;	
-	case STATE_EXTEND:
-      		if (!keyb.scheduled) {
-			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
-		}
-
-		return 224;
+	keyb.p60changed=false;
+	if (!keyb.scheduled && keyb.used) {
+		keyb.scheduled=true;
+		PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
 	}
-	return 0;
+	return keyb.p60data;
 }	
 
 static void write_p60(Bitu port,Bitu val,Bitu iolen) {
+	LOG_MSG("write port 60 %x",val);
 	switch (keyb.command) {
 	case CMD_NONE:	/* None */
+		/* No active command this would normally get sent to the keyboard then */
 		KEYBOARD_ClrBuffer();
 		switch (val) {
 		case 0xed:	/* Set Leds */
 			keyb.command=CMD_SETLEDS;
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xee:	/* Echo */
-			KEYBOARD_AddCode(0xee,0,0,STATE_NORMAL);
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xf2:	/* Identify keyboard */
 			/* AT's just send acknowledge */
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xf3: /* Typematic rate programming */
 			keyb.command=CMD_SETTYPERATE;
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 			break;
 		case 0xf4:	/* Enable keyboard,clear buffer, start scanning */
-			keyb.active=true;
-			KEYBOARD_ClrBuffer();
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated port 60");
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Clear buffer,enable Scaning");
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+			keyb.scanning=true;
 			break;
 		case 0xf5:	 /* Reset keyboard and disable scanning */
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, disable scanning");			
+            keyb.scanning=false;
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+			break;
 		case 0xf6:	/* Reset keyboard and enable scanning */
-			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset");
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("Reset, enable scanning");
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+			keyb.scanning=false;
 			break;
 		default:
 			/* Just always acknowledge strange commands */
 			LOG(LOG_KEYBOARD,LOG_ERROR)("60:Unhandled command %X",val);
-			KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 		}
 		return;
 	case CMD_SETOUTPORT:
 		MEM_A20_Enable((val & 2)>0);
 		break;
-
 	case CMD_SETTYPERATE:
 	case CMD_SETLEDS:
 		keyb.command=CMD_NONE;
-		KEYBOARD_AddCode(0xfa,0,0,STATE_NORMAL);	/* Acknowledge */
+		KEYBOARD_ClrBuffer();
+		KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
 		break;
 	}
 }
 
+static Bit8u port_61_data;
 static Bitu read_p61(Bitu port,Bitu iolen) {
 	port_61_data^=0x20;
 	port_61_data^=0x10;
@@ -226,12 +171,7 @@ static Bitu read_p61(Bitu port,Bitu iolen) {
 }
 
 static void write_p61(Bitu port,Bitu val,Bitu iolen) {
-/*
-	if (val & 128) if (!keyb.read_active) KEYBOARD_ReadBuffer();
-	Keys should get acknowledged just by reading 0x60.
-	Perhaps disable controller when bit 7=1
-*/
-	if ((port_61_data ^val) & 3) PCSPEAKER_SetType(val & 3);
+	if ((port_61_data ^ val) & 3) PCSPEAKER_SetType(val & 3);
 	port_61_data=val;
 }
 
@@ -239,21 +179,18 @@ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 	switch (val) {
 	case 0xae:		/* Activate keyboard */
 		keyb.active=true;
-		if (keyb.buf.used && !keyb.scheduled && !keyb.key_on_60) {
+		if (keyb.used && !keyb.scheduled && !keyb.p60changed) {
 			keyb.scheduled=true;
-			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+			PIC_AddEvent(KEYBOARD_TransferBuffer,KEYDELAY);
 		}
-		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated port 64");
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("Activated");
 		break;
 	case 0xad:		/* Deactivate keyboard */
 		keyb.active=false;
-		PIC_DeActivateIRQ(1);
-		PIC_RemoveEvents(KEYBOARD_GetCode);
-		keyb.scheduled=false;
 		LOG(LOG_KEYBOARD,LOG_NORMAL)("De-Activated");
 		break;
 	case 0xd0:		/* Outport on buffer */
-		KEYBOARD_AddCode(MEM_A20_Enabled() ? 0x02 : 0,0,0,STATE_NORMAL);
+		KEYBOARD_SetPort60(MEM_A20_Enabled() ? 0x02 : 0);
 		break;
 	case 0xd1:		/* Write to outport */
 		keyb.command=CMD_SETOUTPORT;
@@ -265,28 +202,11 @@ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bitu read_p64(Bitu port,Bitu iolen) {
-//	Bit8u status= 0x1c | ((keyb.buf.used ||keyb.key_on_60)? 0x1 : 0x0);
-//	Old one. Digitracker 2 doesn't like this. key_on_60 is much more advanged.
-	Bit8u status= 0x1c | (keyb.key_on_60? 0x1 : 0x0);
-	keyb.key_on_60=false;
+	Bit8u status= 0x1c | (keyb.p60changed? 0x1 : 0x0);
 	return status;
 }
 
-void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) {
-	KeyEvent * newevent=new KeyEvent;
-/* Add the event in the correct key structure */
-	if (keytype>=KBD_LAST) {
-		LOG(LOG_KEYBOARD,LOG_ERROR)("Illegal key %d for handler",keytype);
-	}
-	newevent->next=event_handlers[keytype];
-	event_handlers[keytype]=newevent;
-	newevent->type=keytype;
-	newevent->state=state;
-	newevent->handler=handler;
-}
-
-
-void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
+void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	Bit8u ret=0;bool extend=false;
 	switch (keytype) {
 	case KBD_esc:ret=1;break;
@@ -389,7 +309,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
 
 	case KBD_kpenter:extend=true;ret=28;break;
 	case KBD_rightctrl:extend=true;ret=29;break;
-	case KBD_kpslash:extend=true;ret=53;break;
+	case KBD_kpdivide:extend=true;ret=53;break;
 	case KBD_rightalt:extend=true;ret=56;break;
 	case KBD_home:extend=true;ret=71;break;
 	case KBD_up:extend=true;ret=72;break;
@@ -405,21 +325,25 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,Bitu unicode,Bitu mod,bool pressed) {
 		E_Exit("Unsupported key press");
 		break;
 	}
-	/* check for active key events */
-	KeyEvent * checkevent=event_handlers[keytype];
-	while (checkevent) {
-		if ((mod & checkevent->state)==checkevent->state) {
-			if (checkevent->type==keytype && pressed) {
-				(*checkevent->handler)();
-				return;
-			}
-			if (checkevent->type==keytype) return;
-		}
-		checkevent=checkevent->next;
-	}
 	/* Add the actual key in the keyboard queue */
-	if (!pressed) ret+=128;
-	KEYBOARD_AddCode(ret,(Bit8u)unicode,mod,extend ? STATE_EXTEND : STATE_NORMAL);
+	if (pressed) {
+		if (keyb.repeat.key==keytype) keyb.repeat.wait=keyb.repeat.rate;		
+		else keyb.repeat.wait=keyb.repeat.pause;
+		keyb.repeat.key=keytype;
+	} else {
+		keyb.repeat.key=KBD_NONE;
+		keyb.repeat.wait=0;
+		ret+=128;
+	}
+	if (extend) KEYBOARD_AddBuffer(0xe0); 
+	KEYBOARD_AddBuffer(ret);
+}
+
+static void KEYBOARD_TickHandler(void) {
+	if (keyb.repeat.wait) {
+		keyb.repeat.wait--;
+		if (!keyb.repeat.wait) KEYBOARD_AddKey(keyb.repeat.key,true);
+	}
 }
 
 void KEYBOARD_Init(Section* sec) {
@@ -429,14 +353,16 @@ void KEYBOARD_Init(Section* sec) {
 	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
 	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
 	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
-
-	port_61_data=0;				/* Direct Speaker control and output disabled */
-//	memset(&event_handlers,0,sizeof(event_handlers));
-	/* Clear the keyb struct */
+	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
+	write_p61(0,0,0);
+	/* Init the keyb struct */
 	keyb.active=true;
-	keyb.enabled=true;
+	keyb.scanning=true;
 	keyb.command=CMD_NONE;
-	keyb.last_index=0;
-	keyb.key_on_60=false;
+	keyb.p60changed=false;
+	keyb.repeat.key=KBD_NONE;
+	keyb.repeat.pause=500;
+	keyb.repeat.rate=33;
+	keyb.repeat.wait=0;
 	KEYBOARD_ClrBuffer();
 }

@@ -20,6 +20,7 @@
 #define _KEYBOARD_H_
 
 enum KBD_KEYS {
+	KBD_NONE,
 	KBD_1,	KBD_2,	KBD_3,	KBD_4,	KBD_5,	KBD_6,	KBD_7,	KBD_8,	KBD_9,	KBD_0,		
 	KBD_q,	KBD_w,	KBD_e,	KBD_r,	KBD_t,	KBD_y,	KBD_u,	KBD_i,	KBD_o,	KBD_p,	
 	KBD_a,	KBD_s,	KBD_d,	KBD_f,	KBD_g,	KBD_h,	KBD_j,	KBD_k,	KBD_l,	KBD_z,
@@ -39,21 +40,12 @@ enum KBD_KEYS {
 	KBD_left,KBD_up,KBD_down,KBD_right,
 
 	KBD_kp1,KBD_kp2,KBD_kp3,KBD_kp4,KBD_kp5,KBD_kp6,KBD_kp7,KBD_kp8,KBD_kp9,KBD_kp0,
-	KBD_kpslash,KBD_kpmultiply,KBD_kpminus,KBD_kpplus,KBD_kpenter,KBD_kpperiod,
+	KBD_kpdivide,KBD_kpmultiply,KBD_kpminus,KBD_kpplus,KBD_kpenter,KBD_kpperiod,
 
+	
 	KBD_LAST
 };
 
-typedef void(KEYBOARD_EventHandler)(void);
-
-void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler);
-void KEYBOARD_AddKey(KBD_KEYS key,Bitu ascii,Bitu mod,bool pressed);
-void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod);
-
-
-#define KBD_MOD_ALT		0x1
-#define KBD_MOD_CTRL	0x2
-#define KBD_MOD_SHIFT	0x4
-
+void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed);
 
 #endif
