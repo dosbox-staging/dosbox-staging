@@ -38,7 +38,7 @@
 #include "support.h"
 
 Config * control;
-Bitu errorlevel;
+Bitu errorlevel=1;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
@@ -142,7 +142,11 @@ void DOSBOX_Init(void) {
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
     secprop->Add_string("language","");
+#if C_DEBUG	
 	secprop->Add_int("warnings",4);
+#else 
+	secprop->Add_int("warnings",0);
+#endif
 	
 	secprop->AddInitFunction(&MEM_Init);
 	secprop->AddInitFunction(&IO_Init);
