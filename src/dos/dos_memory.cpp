@@ -180,11 +180,17 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 
 void DOS_SetupMemory(void) {
-	DOS_MCB mcb((Bit16u)MEM_START);
+	// Create a dummy device MCB with PSPSeg=0x0008
+	DOS_MCB mcb_devicedummy((Bit16u)MEM_START);
+	mcb_devicedummy.SetPSPSeg(0x0008);				// Devices
+	mcb_devicedummy.SetSize(1);
+	mcb_devicedummy.SetType(0x4d);					// More blocks will follow
+	
+	DOS_MCB mcb((Bit16u)MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
-	mcb.SetSize(0x9FFE - MEM_START);
+	mcb.SetSize(0x9FFE - MEM_START - 2);
 	mcb.SetType(0x5a);								//Last Block
+
 	dos.firstMCB=MEM_START;
 	dos_infoblock.SetFirstMCB(MEM_START);
 }
-
