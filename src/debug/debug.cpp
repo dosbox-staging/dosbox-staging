@@ -676,7 +676,8 @@ bool ChangeRegister(char* str)
 bool ParseCommand(char* str)
 {
 	char* found = str;
-	while (*found) *found++=toupper(*found);
+	for(char* idx = found;*idx != 0; idx++)
+		*idx = toupper(*idx);
 	found = strstr(str,"BP ");
 	if (found) { // Add new breakpoint
 		found+=3;
