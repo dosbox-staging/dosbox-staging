@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.20 2003-11-08 09:53:11 harekiet Exp $ */
+/* $Id: render.cpp,v 1.21 2004-01-08 21:16:25 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -92,6 +92,7 @@ static struct {
 		RENDER_Operation type;
 		Bitu pitch;
 		const char * dir;
+		Bit8u * buffer;
 	} shot;
 #endif
 	bool screenshot;
@@ -110,6 +111,15 @@ static void RENDER_ResetPal(void);
 
 #if (C_SSHOT)
 #include <png.h>
+
+static void RENDER_ShotDraw(Bit8u * src,Bitu x,Bitu y,Bitu _dx,Bitu _dy) {
+	Bit8u * dst=render.shot.buffer+render.src.width*y;
+	for (;_dy>0;_dy--) {
+		memcpy(dst,src,_dx);
+		dst+=render.src.width;
+		src+=render.src.pitch;
+	}
+}
 
 /* Take a screenshot of the data that should be rendered */
 static void TakeScreenShot(Bit8u * bitmap) {
@@ -280,10 +290,10 @@ void RENDER_DoUpdate(void) {
 
 static void RENDER_DrawScreen(Bit8u * data,Bitu pitch) {
 	render.op.pitch=pitch;
-	switch (render.op.type) {
 #if (C_SSHOT)
 doagain:
 #endif
+	switch (render.op.type) {
 	case OP_None:
 	case OP_Normal2x:
 	case OP_AdvMame2x:
@@ -292,13 +302,10 @@ doagain:
 		break;
 #if (C_SSHOT)
 	case OP_Shot:
-		render.shot.pitch=render.op.pitch;
-		render.op.pitch=render.src.width;
-		render.op.pixels=(Bit8u*)malloc(render.src.width*render.src.height);
-//		render.src.draw_handler(Normal_DN_8);
-		TakeScreenShot((Bit8u *)render.op.pixels);
-		free(render.op.pixels);
-		render.op.pitch=render.shot.pitch;
+		render.shot.buffer=(Bit8u*)malloc(render.src.width*render.src.height);
+		render.src.draw_handler(&RENDER_ShotDraw);
+		TakeScreenShot(render.shot.buffer);
+		free(render.shot.buffer);
 		render.op.type=render.shot.type;
 		goto doagain;
 #endif
