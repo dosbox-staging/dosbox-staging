@@ -25,7 +25,7 @@
 #include "mouse.h"
 #include "pic.h"
 #include "inout.h"
-
+#include "int10.h"
 
 static Bitu call_int33,call_int74;
 
@@ -35,24 +35,22 @@ struct button_event {
 };
 
 #define QUEUE_SIZE 32
-//TODO Maybe use :)
+#define MOUSE_BUTTONS 3
 #define MOUSE_IRQ 12
-#define POS_X (Bit16s)(mouse.x*mouse.range_x)
-#define POS_Y (Bit16s)(mouse.y*mouse.range_y)
-
+#define POS_X (Bit16s)(mouse.x)
+#define POS_Y (Bit16s)(mouse.y)
 
 static struct {
 	Bit16u buttons;
-	Bit16u times_pressed[3];
-	Bit16u times_released[3];
-	Bit16u last_released_x[3];
-	Bit16u last_released_y[3];
-	Bit16u last_pressed_x[3];
-	Bit16u last_pressed_y[3];
+	Bit16u times_pressed[MOUSE_BUTTONS];
+	Bit16u times_released[MOUSE_BUTTONS];
+	Bit16u last_released_x[MOUSE_BUTTONS];
+	Bit16u last_released_y[MOUSE_BUTTONS];
+	Bit16u last_pressed_x[MOUSE_BUTTONS];
+	Bit16u last_pressed_y[MOUSE_BUTTONS];
 	Bit16s shown;
 	float add_x,add_y;
 	Bit16u min_x,max_x,min_y,max_y;
-	float range_x,range_y;
 	float mickey_x,mickey_y;
 	float x,y;
 	button_event event_queue[QUEUE_SIZE];
@@ -61,8 +59,8 @@ static struct {
 	Bit16u sub_mask;
 } mouse;
 
-#define X_MICKEY 500
-#define Y_MICKEY 500
+#define X_MICKEY 8
+#define Y_MICKEY 8
 
 #define MOUSE_MOVED 1
 #define MOUSE_LEFT_PRESSED 2
@@ -72,7 +70,7 @@ static struct {
 #define MOUSE_MIDDLE_PRESSED 32
 #define MOUSE_MIDDLE_RELEASED 64
 
-inline void Mouse_AddEvent(Bit16u type) {
+INLINE void Mouse_AddEvent(Bit16u type) {
 	if (mouse.events<QUEUE_SIZE) {
 		mouse.event_queue[mouse.events].type=type;
 		mouse.event_queue[mouse.events].buttons=mouse.buttons;
@@ -81,22 +79,27 @@ inline void Mouse_AddEvent(Bit16u type) {
 	PIC_ActivateIRQ(12);
 }
 
+static void DrawCursor() {
+	if (mouse.shown<0) return;
+}
+
 void Mouse_CursorMoved(float x,float y) {
 	mouse.mickey_x+=x;
 	mouse.mickey_y+=y;
 	mouse.x+=x;
-	if (mouse.x>1) mouse.x=1;
-	if (mouse.x<0) mouse.x=0;
+	if (mouse.x>mouse.max_x) mouse.x=mouse.max_x;;
+	if (mouse.x<mouse.min_x) mouse.x=mouse.min_x;
 	mouse.y+=y;
-	if (mouse.y>1) mouse.y=1;
-	if (mouse.y<0) mouse.y=0;
+	if (mouse.y>mouse.max_y) mouse.y=mouse.max_y;;
+	if (mouse.y<mouse.min_y) mouse.y=mouse.min_y;
 	Mouse_AddEvent(MOUSE_MOVED);
+	DrawCursor();
 }
 
 void Mouse_CursorSet(float x,float y) {
-
 	mouse.x=x;
 	mouse.y=y;
+	DrawCursor();
 }
 
 void Mouse_ButtonPressed(Bit8u button) {
@@ -139,7 +142,6 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.last_released_y[button]=POS_Y;
 }
 
-
 static void  mouse_reset(void) {
 	real_writed(0,(0x33<<2),CALLBACK_RealPointer(call_int33));
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
@@ -148,8 +150,6 @@ static void  mouse_reset(void) {
 	mouse.max_x=639;
 	mouse.min_y=0;
 	mouse.max_y=199;
-	mouse.range_x=639;
-	mouse.range_y=199;
 	mouse.x=0;				// civ wont work otherwise
 	mouse.y=100;
 	mouse.events=0;
@@ -158,7 +158,7 @@ static void  mouse_reset(void) {
 	mouse.sub_mask=0;
 	mouse.sub_seg=0;
 	mouse.sub_ofs=0;
-};
+}
 
 
 static Bitu INT33_Handler(void) {
@@ -167,6 +167,7 @@ static Bitu INT33_Handler(void) {
 		reg_ax=0xffff;
 		reg_bx=0;
 		mouse_reset();
+		Mouse_AutoLock(true);
 		break;
 	case 0x01:	/* Show Mouse */
 		mouse.shown++;
@@ -181,12 +182,13 @@ static Bitu INT33_Handler(void) {
 		reg_dx=POS_Y;
 		break;
 	case 0x04:	/* Position Mouse */
-		mouse.x=((float)reg_cx)/mouse.range_x;
-		mouse.y=((float)reg_dx)/mouse.range_y;
+		mouse.x=(float)reg_cx;
+		mouse.y=(float)reg_dx;
 		break;
 	case 0x05:	/* Return Button Press Data */
 		{
 			Bit16u but=reg_bx;
+			if (but>=MOUSE_BUTTONS) break;
 			reg_ax=mouse.buttons;
 			reg_cx=mouse.last_pressed_x[but];
 			mouse.last_pressed_x[but]=0;
@@ -199,6 +201,7 @@ static Bitu INT33_Handler(void) {
 	case 0x06:	/* Return Button Release Data */
 		{
 			Bit16u but=reg_bx;
+			if (but>=MOUSE_BUTTONS) break;
 			reg_ax=mouse.buttons;
 			reg_cx=mouse.last_released_x[but];
 			mouse.last_released_x[but]=0;
@@ -211,13 +214,10 @@ static Bitu INT33_Handler(void) {
 	case 0x07:	/* Define horizontal cursor range */
 		mouse.min_x=reg_cx;
 		mouse.max_x=reg_dx;
-		mouse.range_x=mouse.max_x-mouse.min_x;
-//TODO Check for range start 0
 		break;
 	case 0x08:	/* Define vertical cursor range */
 		mouse.min_y=reg_cx;
 		mouse.max_y=reg_dx;
-		mouse.range_y=mouse.max_y-mouse.min_y;
 		break;
 	case 0x09:	/* Define GFX Cursor */
 		LOG_WARN("MOUSE:Define gfx cursor not supported");
@@ -240,7 +240,8 @@ static Bitu INT33_Handler(void) {
 		mouse.mickey_y=0;
 		break;
 	case 0x14: /* Exchange event-handler */ 
-		{	Bit16u oldSeg = mouse.sub_seg;
+		{	
+			Bit16u oldSeg = mouse.sub_seg;
 			Bit16u oldOfs = mouse.sub_ofs;
 			Bit16u oldMask= mouse.sub_mask;
 			// Set new values
@@ -251,7 +252,8 @@ static Bitu INT33_Handler(void) {
 			reg_cx = oldMask;
 			reg_dx = oldOfs;
 			SegSet16(es,oldSeg);
-		}; break;		
+		}
+		break;		
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
 		break;
@@ -267,9 +269,9 @@ static Bitu INT33_Handler(void) {
 		break;
 	default:
 		LOG_ERROR("Mouse Function %2X",reg_ax);
-	};
+	}
 	return CBRET_NONE;
-};
+}
 
 static Bitu INT74_Handler(void) {
 	if (mouse.events>0) {
@@ -301,14 +303,11 @@ static Bitu INT74_Handler(void) {
 	}
 	IO_Write(0xa0,0x20);
 	/* Check for more Events if so reactivate IRQ */
-
 	if (mouse.events) {
 		PIC_ActivateIRQ(12);
 	}
-
 	return CBRET_NONE;
-};
-
+}
 
 void MOUSE_Init(Section* sec) {
 	call_int33=CALLBACK_Allocate();
@@ -319,7 +318,7 @@ void MOUSE_Init(Section* sec) {
 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET);
 	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 
-	memset((void *)&mouse,0,sizeof(mouse));
+	memset(&mouse,0,sizeof(mouse));
 	mouse_reset();
-};
+}
 
