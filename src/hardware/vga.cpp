@@ -124,7 +124,8 @@ static void VGA_DoResize(void) {
 	case TEXT_16:
 		/* probably a 16-color text mode, got to detect mono mode somehow */
 		width<<=3;		/* 8 bit wide text font */
-		height<<=4;		/* 16 bit font height */
+		vga.draw.font_height=vga.config.vline_height+1;
+		height<<=4;
 		if (width>640) width=640;
 		if (height>480) height=480;
 		pitch=width;
@@ -141,7 +142,7 @@ void VGA_StartResize(void) {
 	if (!vga.draw.resizing) {
 		vga.draw.resizing=true;
 		/* Start a resize after 50 ms */
-		TIMER_RegisterDelayHandler(VGA_DoResize,50);
+		PIC_AddEvent(VGA_DoResize,500);
 	}
 }
 
