@@ -33,7 +33,6 @@ static void write_p3d9(Bit32u port,Bit8u val);
 
 static Bit8u read_p3da(Bit32u port) {
 	vga.internal.attrindex=false;
-	vga.tandy.set_reg=true;
 	if (vga.config.retrace) {
 		switch (vga.mode) {
 		case M_HERC:
@@ -54,7 +53,6 @@ static Bit8u read_p3da(Bit32u port) {
 		3	Vertical Retrace in progress if set
 	*/
 }
-
 
 static void write_p3d8(Bit32u port,Bit8u val) {
 	/* Check if someone changes the blinking/hi intensity bit */
@@ -128,6 +126,47 @@ static void write_p3d9(Bit32u port,Bit8u val) {
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to %X in mode %d",val,port,vga.mode);
+	}
+}
+
+static void write_p3da(Bit32u port,Bit8u val) {
+	if (machine==MCH_TANDY) goto tandy_3da;
+	switch (vga.mode) {
+	case M_TANDY16:
+tandy_3da:
+		vga.tandy.reg_index=val;
+		break;
+	default:
+		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to %X in mode %d",val,port,vga.mode);
+		break;
+
+	}
+}
+
+
+static void write_p3de(Bit32u port,Bit8u val) {
+	if (machine==MCH_TANDY) goto tandy_3de;
+	switch (vga.mode) {
+	case M_TANDY16:
+tandy_3de:
+		switch (vga.tandy.reg_index) {
+		case 0x2:	/* Border color */
+			vga.tandy.border_color=val;
+			break;
+		/* palette colors */
+		case 0x10: case 0x11: case 0x12: case 0x13:
+		case 0x14: case 0x15: case 0x16: case 0x17:
+		case 0x18: case 0x19: case 0x1a: case 0x1b:
+		case 0x1c: case 0x1d: case 0x1e: case 0x1f:
+			VGA_ATTR_SetPalette(vga.tandy.reg_index-0x10,val & 0xf);
+			break;
+		default:		
+			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
+		}
+		break;
+	default:
+		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to %X in mode %d",val,port,vga.mode);
+		break;
 	}
 }
 
@@ -273,7 +312,9 @@ void VGA_SetupMisc(void) {
 		IO_RegisterWriteHandler(0x3b8,write_hercules,"Hercules");
 		IO_RegisterWriteHandler(0x3bf,write_hercules,"Hercules");
 	}
-	IO_RegisterWriteHandler(0x3df,write_p3df,"PCJR Setting");
+	IO_RegisterWriteHandler(0x3de,write_p3de,"PCJR Reg Write");
+	IO_RegisterWriteHandler(0x3df,write_p3df,"PCJR Bank Select");
+	IO_RegisterWriteHandler(0x3da,write_p3da,"PCJR Reg Select");
 
 }
 
