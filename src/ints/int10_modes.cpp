@@ -583,6 +583,7 @@ att_text16:
 			att_data[i]=i;
 			att_data[i+8]=i+0x38;
 		}
+		att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
 		break;
 	case M_CGA2:
 		att_data[0x10]=0x01;		//Color Graphics
