@@ -310,7 +310,7 @@ static void GenerateSound(Bitu size) {
 		case MODE_DMA_WAIT:
 		case MODE_DMA_PAUSE:
 		case MODE_NONE:
-			memset(&sb.out.buf[sb.out.pos],0,samples*2);
+			memset(&sb.out.buf[sb.out.pos],0,samples*4);
 			sb.out.pos+=samples;
 			break;
 		case MODE_DAC:
@@ -436,11 +436,6 @@ static void DSP_AddData(Bit8u val) {
 	}
 }
 
-static void DSP_HaltDMA(void) {
-	DSP_ChangeMode(MODE_NONE);
-	sb.dma.mode=DMA_NONE;
-	PIC_RemoveEvents(END_DMA_Event);
-}
 
 static void DSP_Reset(void) {
 	DSP_ChangeMode(MODE_NONE);
@@ -492,7 +487,6 @@ static void DSP_DoCommand(void) {
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
-		/* Set the length of the transfer */
 		DSP_StartDMATranfser(DMA_8_SINGLE);
 		break;
 	case 0x90:	/* Auto Init 8-bit DMA High Speed */
@@ -517,13 +511,22 @@ static void DSP_DoCommand(void) {
 		DSP_StartDMATranfser(DMA_8_SILENCE);
 		break;
 	case 0xd0:	/* Halt 8-bit DMA */
-		DSP_HaltDMA();
+		if (sb.dma.left) {
+			DSP_ChangeMode(MODE_DMA_PAUSE);
+#if SB_PIC_EVENTS
+			PIC_RemoveEvents(END_DMA_Event);
+#endif
+		} else DSP_ChangeMode(MODE_NONE);
 		break;
 	case 0xd1:	/* Enable Speaker */
 		DSP_SetSpeaker(true);
 		break;
 	case 0xd3:	/* Disable Speaker */
 		DSP_SetSpeaker(false);
+		break;
+	case 0xd4:
+		DSP_ChangeMode(MODE_DMA_WAIT);
+		DMA_SetEnableCallBack(sb.hw.dma8,DMA_Enable);
 		break;
 	case 0xe0:	/* DSP Identification - SB2.0+ */
 		DSP_FlushData();
@@ -559,7 +562,6 @@ static void DSP_DoCommand(void) {
 		DSP_FlushData();
 		DSP_AddData(sb.dsp.test_register);;
 		break;
-
 	case 0xf2:	/* Trigger 8bit IRQ */
 		DSP_FlushData();
 		DSP_AddData(0xaa);
