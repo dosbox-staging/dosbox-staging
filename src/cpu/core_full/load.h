@@ -268,6 +268,10 @@ l_M_Ed:
 		flags.type=t_UNKNOWN;
 		CPU_IRET(false);
 		LoadIP();
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			SaveIP();	
+			return CBRET_NONE;
+		}
 		goto nextopcode;
 	case D_IRETd:
 		flags.type=t_UNKNOWN;
@@ -346,10 +350,9 @@ l_M_Ed:
 		goto nextopcode;
 	case D_STI:
 		SETFLAGBIT(IF,true);
-		if (PIC_IRQCheck) {
-			SaveIP();
-			PIC_runIRQs();	
-			LoadIP();
+		if (GETFLAG(IF) && PIC_IRQCheck) {
+			LEAVECORE;	
+			return CBRET_NONE;
 		}
 		goto nextopcode;
 	case D_STC:
