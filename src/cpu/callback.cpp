@@ -121,23 +121,23 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type) {
 	if (callback>=CB_MAX) return false;
 	switch (type) {
 	case CB_RETF:
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
-		real_writew((Bit16u)CB_SEG,(callback<<4)+2,callback);		//The immediate word
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+4,(Bit8u)0xCB);	//A RETF Instruction
+		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(CB_BASE+(callback<<4)+2,callback);		//The immediate word
+		phys_writeb(CB_BASE+(callback<<4)+4,(Bit8u)0xCB);	//A RETF Instruction
 		break;
 	case CB_IRET:
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
-		real_writew((Bit16u)CB_SEG,(callback<<4)+2,callback);		//The immediate word
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+4,(Bit8u)0xCF);	//An IRET Instruction
+		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(CB_BASE+(callback<<4)+2,callback);		//The immediate word
+		phys_writeb(CB_BASE+(callback<<4)+4,(Bit8u)0xCF);	//An IRET Instruction
 		break;
 	case CB_IRET_STI:
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+0,(Bit8u)0xFB);	//STI
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+1,(Bit8u)0xFE);	//GRP 4
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+2,(Bit8u)0x38);	//Extra Callback instruction
-		real_writew((Bit16u)CB_SEG,(callback<<4)+3,callback);		//The immediate word
-		real_writeb((Bit16u)CB_SEG,(callback<<4)+5,(Bit8u)0xCF);	//An IRET Instruction
+		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFB);	//STI
+		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(CB_BASE+(callback<<4)+2,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(CB_BASE+(callback<<4)+3,callback);		//The immediate word
+		phys_writeb(CB_BASE+(callback<<4)+5,(Bit8u)0xCF);	//An IRET Instruction
 		break;
 
 	default:
@@ -185,16 +185,16 @@ void CALLBACK_Init(Section* sec) {
 	/* Setup the Stop Handler */
 	call_stop=CALLBACK_Allocate();
 	CallBack_Handlers[call_stop]=stop_handler;
-	real_writeb((Bit16u)CB_SEG,(call_stop<<4)+0,0xFE);
-	real_writeb((Bit16u)CB_SEG,(call_stop<<4)+1,0x38);
-	real_writew((Bit16u)CB_SEG,(call_stop<<4)+2,call_stop);
+	phys_writeb(CB_BASE+(call_stop<<4)+0,0xFE);
+	phys_writeb(CB_BASE+(call_stop<<4)+1,0x38);
+	phys_writew(CB_BASE+(call_stop<<4)+2,call_stop);
 	/* Setup the idle handler */
 	call_idle=CALLBACK_Allocate();
 	CallBack_Handlers[call_idle]=stop_handler;
-	for (i=0;i<=11;i++) real_writeb((Bit16u)CB_SEG,(call_idle<<4)+i,0x90);
-	real_writeb((Bit16u)CB_SEG,(call_idle<<4)+12,0xFE);
-	real_writeb((Bit16u)CB_SEG,(call_idle<<4)+13,0x38);
-	real_writew((Bit16u)CB_SEG,(call_idle<<4)+14,call_idle);
+	for (i=0;i<=11;i++) phys_writeb(CB_BASE+(call_idle<<4)+i,0x90);
+	phys_writeb(CB_BASE+(call_idle<<4)+12,0xFE);
+	phys_writeb(CB_BASE+(call_idle<<4)+13,0x38);
+	phys_writew(CB_BASE+(call_idle<<4)+14,call_idle);
 
 	/* Setup all Interrupt to point to the default handler */
 	call_default=CALLBACK_Allocate();
@@ -204,7 +204,7 @@ void CALLBACK_Init(Section* sec) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
 	}
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
-
+	real_writed(0,0xf*4,0);
 }
 
 
