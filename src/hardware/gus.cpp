@@ -978,11 +978,13 @@ void MakeTables(void)
 
 
 void GUS_Init(Section* sec) {
+	if(machine!=MCH_VGA) return;
+	Section_prop * section=static_cast<Section_prop *>(sec);
+	if(!section->Get_bool("gus")) return;
+
 	memset(&myGUS,0,sizeof(myGUS));
 	memset(GUSRam,0,1024*1024);
 
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("gus")) return;
 	myGUS.rate=section->Get_int("rate");
 
 	myGUS.portbase = section->Get_hex("base") - 0x200;
