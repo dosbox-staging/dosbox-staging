@@ -94,8 +94,9 @@ extern Bitu cycle_count;
 	core.seg_prefix_base=SegBase(_SEG);		\
 	goto restart_prefix;
 
-#define DO_PREFIX_ADDR()									\
-	core.prefixes|=(core.prefix_default ^ PREFIX_ADDR) & PREFIX_ADDR;		\
+#define DO_PREFIX_ADDR()					\
+	core.prefixes=(core.prefixes & ~PREFIX_ADDR) |					\
+	(core.prefix_default ^ PREFIX_ADDR) & PREFIX_ADDR;				\
 	goto restart_prefix;
 
 #define DO_PREFIX_REP(_ZERO)				\
