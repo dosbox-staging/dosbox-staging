@@ -155,7 +155,7 @@ void Section_line::PrintData(FILE* outfile) {
 }
 
 void Config::PrintConfig(const char* configfilename){
-	char temp[50];
+	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
@@ -165,9 +165,20 @@ void Config::PrintConfig(const char* configfilename){
 		fprintf(outfile,"[%s]\n",temp);
 		upcase(temp);
 		strcat(temp,"_CONFIGFILE_HELP");
-		fprintf(outfile,"# %s",MSG_Get(temp));
+		const char * helpstr=MSG_Get(temp);
+		char * helpwrite=helpline;
+		while (*helpstr) {
+			*helpwrite++=*helpstr;
+			if (*helpstr == '\n') {
+				*helpwrite=0;
+				fprintf(outfile,"# %s",helpline);
+				helpwrite=helpline;
+			}
+			helpstr++;
+		}
+		fprintf(outfile,"\n");
 		(*tel)->PrintData(outfile);
-		fprintf(outfile,"\n");	/* Always an empty line between sections */
+		fprintf(outfile,"\n");		/* Always an empty line between sections */
 	}
 	fclose(outfile);
 }
@@ -313,7 +324,7 @@ bool CommandLine::FindString(char * name,std::string & value,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindCommand(int which,std::string & value) {
+bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	if (which<1) return false;
 	if (which>cmds.size()) return false;
 	cmd_it it=cmds.begin();
@@ -356,7 +367,7 @@ bool CommandLine::FindStringRemain(char * name,std::string & value) {
 }
 
 
-int CommandLine::GetCount(void) {
+unsigned int CommandLine::GetCount(void) {
 	return cmds.size();
 }
 
