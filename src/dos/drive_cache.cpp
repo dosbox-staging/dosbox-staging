@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.31 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.32 2004-01-12 20:25:05 finsterr Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -138,7 +138,7 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	Bit16u id;
 	strcpy(basePath,baseDir);
 	if (OpenDir(baseDir,id)) {
-		char * result;
+		char* result = 0;
 		ReadDir(id,result);
 	};
 	// Get Volume Label
@@ -478,7 +478,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		strcpy(work,basePath);
 		if (OpenDir(curDir,work,id)) {
 			char buffer[CROSS_LEN];
-			char * result;
+			char* result = 0;
 			strcpy(buffer,dirPath);
 			ReadDir(id,result);
 			strcpy(dirPath,buffer);
@@ -508,7 +508,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,expandedPath,id)) {
 					char buffer[CROSS_LEN];
-					char * result;
+					char* result = 0;
 					strcpy(buffer,dirPath);
 					ReadDir(id,result);
 					strcpy(dirPath,buffer);
