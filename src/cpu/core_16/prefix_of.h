@@ -262,6 +262,7 @@ switch(Fetchb()) {
 		{	
 			GetRMrw;GetEAa;
 			*rmrw=LoadMw(eaa);SegSet16(ss,LoadMw(eaa+2));
+			CPU_Cycles++;//Be sure we run another instruction
 			break;
 		}
 	case 0xb3:												/* BTR Ew,Gw */

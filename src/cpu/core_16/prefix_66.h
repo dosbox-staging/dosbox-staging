@@ -155,7 +155,7 @@ switch(Fetchb()) {
 		SegPrefix_66(gs);break;
 	case 0x67:												/* Address Size Prefix */
 #ifdef CPU_PREFIX_67
-			core_16.prefixes|=PREFIX_ADDR;
+			core_16.prefixes^=PREFIX_ADDR;
 			lookupEATable=EAPrefixTable[core_16.prefixes];
 			goto restart_66;
 #else

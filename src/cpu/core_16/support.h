@@ -42,17 +42,18 @@ static INLINE void ADDIPFAST(Bit16s blah) {
 	}
 
 
-#define EXCEPTION(blah)										\
-	{														\
-		Bit8u new_num=blah;									\
-		LEAVECORE;											\
-		if (Interrupt(new_num)) {							\
-			if (GETFLAG(TF)) {								\
-				cpudecoder=CPU_Real_16_Slow_Decode_Trap;	\
-				return CBRET_NONE;						\
-			}												\
-			goto decode_start;								\
-		} else return CBRET_NONE;							\
+#define EXCEPTION(blah)											\
+	{															\
+		Bit8u new_num=blah;										\
+		core_16.ip_lookup=core_16.ip_start;						\
+		LEAVECORE;												\
+		if (Interrupt(new_num)) {								\
+			if (GETFLAG(TF)) {									\
+				cpudecoder=CPU_Real_16_Slow_Decode_Trap;		\
+				return CBRET_NONE;								\
+			}													\
+			goto decode_start;									\
+		} else return CBRET_NONE;								\
 	}
 
 static INLINE Bit8u Fetchb() {

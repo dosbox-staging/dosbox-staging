@@ -67,7 +67,8 @@ restart:
 		Push_16(SegValue(ss));break;
 	case 0x17:												/* POP SS */		
 		SegSet16(ss,Pop_16());
-		goto restart;
+		CPU_Cycles++;//Be sure we run another instruction
+		break;
 	case 0x18:												/* SBB Eb,Gb */
 		RMEbGb(SBBB);break;
 	case 0x19:												/* SBB Ew,Gw */
@@ -251,7 +252,7 @@ restart:
 			break;
 		case 0x67:												/* Address Size Prefix */
 #ifdef CPU_PREFIX_67
-			core_16.prefixes|=PREFIX_ADDR;
+			core_16.prefixes^=PREFIX_ADDR;
 			lookupEATable=EAPrefixTable[core_16.prefixes];
 			goto restart;
 #else
@@ -517,7 +518,7 @@ restart:
 					break;
 				case 0x10:					/* MOV SS,Ew */
 					SegSet16(ss,val);
-					goto restart;
+					CPU_Cycles++;//Be sure we run another instruction
 					break;
 				case 0x18:					/* MOV DS,Ew */
 					SegSet16(ds,val);break;
@@ -591,8 +592,8 @@ restart:
 			break;
 		case 0x9f:												/* LAHF */
 			{
-				reg_ah=(get_CF() << 0) | (get_PF() << 2) | (get_AF() << 4) | 
-					    (get_ZF() << 6) | (get_SF() << 7);
+				FILLFLAGS;
+				reg_ah=(Bit8u)flags.word;
 				break;
 			}
 		case 0xa0:												/* MOV AL,Ob */
@@ -795,29 +796,37 @@ restart:
 			}
 			break;
 		case 0xcc:												/* INT3 */
+			LEAVECORE;
 #if C_DEBUG	
-			SAVEIP;
 			if (DEBUG_Breakpoint()) {
-				LOADIP;
-				LEAVECORE;
 				return debugCallback;
 			}
-			LOADIP;
-#endif			
-			EXCEPTION(3);
-			break;
+#endif		
+			if (Interrupt(3)) {
+				if (GETFLAG(TF)) {
+					LOG_MSG("Switch to trap decoder");
+					cpudecoder=CPU_Real_16_Slow_Decode_Trap;
+					return CBRET_NONE;
+				}
+				goto decode_start;
+			} else return CBRET_NONE;
 		case 0xcd:												/* INT Ib */	
 			{
 				Bit8u num=Fetchb();
+				LEAVECORE;
 #if C_DEBUG
-				SAVEIP;
 				if (DEBUG_IntBreakpoint(num)) {
-					LOADIP;
-					LEAVECORE;	
 					return debugCallback;
 				}
 #endif
-				EXCEPTION(num);				
+				if (Interrupt(num)) {
+					if (GETFLAG(TF)) {
+						LOG_MSG("Switch to trap decoder");
+						cpudecoder=CPU_Real_16_Slow_Decode_Trap;
+						return CBRET_NONE;
+					}
+					goto decode_start;
+				} else return CBRET_NONE;
 			}
 			break;
 		case 0xce:												/* INTO */
