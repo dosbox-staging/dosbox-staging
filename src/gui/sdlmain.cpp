@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.51 2003-10-14 23:32:32 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.52 2003-10-30 09:08:58 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -42,7 +42,7 @@
 #include "debug.h"
 
 //#define DISABLE_JOYSTICK
-#define C_GFXTHREADED 1						//Enabled by default
+#define C_GFXTHREADED 0						//Enabled by default
 
 #if !(ENVIRON_INCLUDED)
 extern char** environ;
@@ -104,26 +104,25 @@ void GFX_SetTitle(Bits cycles,Bits frameskip){
 /* Reset the screen with current values in the sdl structure */
 static void ResetScreen(void) {
 	GFX_Stop();
-	if (sdl.full_screen) { 
-		if (sdl.flags & GFX_SHADOW) {
-			withshadow:
-			/* TODO Maybe allocate a shadow surface and blit yourself and do real double buffering too */
-			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_SWSURFACE|SDL_FULLSCREEN);
+	Bit32u mode_flags=0;
+	if (sdl.full_screen) {
+		mode_flags|=SDL_FULLSCREEN;
+		if (sdl.bpp==8) mode_flags|=SDL_HWPALETTE;
+		if (sdl.flags & GFX_SHADOW)	{
+			mode_flags|=SDL_SWSURFACE;
 		} else {
-			Bitu test_bpp=SDL_VideoModeOK(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
-			if (test_bpp != sdl.bpp) 
-				goto withshadow;
-			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN|SDL_DOUBLEBUF);
+			mode_flags|=SDL_HWSURFACE|SDL_DOUBLEBUF;
 		}
+	} else mode_flags|=SDL_SWSURFACE;
+	if (sdl.flags & GFX_FIXED_BPP) {
+	dofixed:
+		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,mode_flags);
 	} else {
-		if (sdl.flags & GFX_FIXED_BPP) {
-			withfixed:
-			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE);
-		} else {
-			sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
-			if (sdl.surface->format->BitsPerPixel==24) 
-				goto withfixed;
-		}
+		Bitu test_bpp=SDL_VideoModeOK(sdl.width,sdl.height,sdl.bpp,mode_flags);
+		if (test_bpp==sdl.bpp) goto dofixed;
+		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,mode_flags);
+		if (sdl.surface->format->BitsPerPixel==24) goto dofixed;
+	
 	}
 	if (sdl.surface==0) {
 		E_Exit("SDL:Can't get a surface error:%s.",SDL_GetError());
@@ -134,9 +133,7 @@ static void ResetScreen(void) {
 		sdl.surface->format->Rmask,sdl.surface->format->Gmask,sdl.surface->format->Bmask,sdl.surface->format->Amask
 	);
 			
-
 	GFX_SetTitle(-1,-1);
-
 	Bitu flags=MODE_SET;
 	if (sdl.full_screen) flags|=MODE_FULLSCREEN;
 	if (sdl.mode_callback) sdl.mode_callback(sdl.surface->w,sdl.surface->h,sdl.surface->format->BitsPerPixel,sdl.surface->pitch,flags);
@@ -701,5 +698,5 @@ int main(int argc, char* argv[]) {
         if (sdl.full_screen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
 	}
-    return 0;
+	return 0;
 };
