@@ -33,6 +33,8 @@
   - Fixed some odd badly documented behaviour with PSP/DTA
   - Added some warnings on opening of readonly files in writemode(DOS default).
   - Many shell enhanchements
+  - Fixed a win32 specific bug dealing with filenames starting with a "."
+  - Fixed some bugs with the directory structure: not found/can't save errors
   
 0.60
   - rewrote memory system for future paging support
