@@ -336,7 +336,7 @@ bool CBreakpoint::CheckBreakpoint(PhysPt adr)
 			if (bp->GetValue() != value) {
 				// Yup, memory value changed
 	
-				DEBUG_ShowMsg(0,"DEBUG: Memory breakpoint: %04X:%04X - %02X -> %02X",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
+				DEBUG_ShowMsg("DEBUG: Memory breakpoint: %04X:%04X - %02X -> %02X",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
 				bp->SetValue(value);
 				return true;
 			};
@@ -822,7 +822,7 @@ bool ParseCommand(char* str)
 		};
 		name[15] = 0;
 		
-		DEBUG_ShowMsg(0,"DEBUG: Created debug var %s at %04X:%04X",name,seg,ofs);
+		DEBUG_ShowMsg("DEBUG: Created debug var %s at %04X:%04X",name,seg,ofs);
 		CDebugVar::InsertVariable(name,GetAddress(seg,ofs));
 		return true;
 	}
@@ -836,8 +836,8 @@ bool ParseCommand(char* str)
 			else { name[i] = 0; break; };
 		};
 		name[12] = 0;		
-		if (CDebugVar::SaveVars(name))	DEBUG_ShowMsg(0,"DEBUG: Variable list save (%s) : ok.",name);
-		else							DEBUG_ShowMsg(0,"DEBUG: Variable list save (%s) : failure",name);
+		if (CDebugVar::SaveVars(name))	DEBUG_ShowMsg("DEBUG: Variable list save (%s) : ok.",name);
+		else							DEBUG_ShowMsg("DEBUG: Variable list save (%s) : failure",name);
 		return true;
 	}
 
@@ -850,8 +850,8 @@ bool ParseCommand(char* str)
 			else { name[i] = 0; break; };
 		};
 		name[12] = 0;		
-		if (CDebugVar::LoadVars(name))	DEBUG_ShowMsg(0,"DEBUG: Variable list load (%s) : ok.",name);
-		else							DEBUG_ShowMsg(0,"DEBUG: Variable list load (%s) : failure",name);
+		if (CDebugVar::LoadVars(name))	DEBUG_ShowMsg("DEBUG: Variable list load (%s) : ok.",name);
+		else							DEBUG_ShowMsg("DEBUG: Variable list load (%s) : failure",name);
 		return true;
 	}
 
@@ -861,7 +861,7 @@ bool ParseCommand(char* str)
 		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint::AddBreakpoint(seg,ofs,false);
-		DEBUG_ShowMsg(0,"DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
+		DEBUG_ShowMsg("DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
 		return true;
 	}
 #if C_HEAVY_DEBUG
@@ -871,7 +871,7 @@ bool ParseCommand(char* str)
 		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint::AddMemBreakpoint(seg,ofs);
-		DEBUG_ShowMsg(0,"DEBUG: Set memory breakpoint at %04X:%04X",seg,ofs);
+		DEBUG_ShowMsg("DEBUG: Set memory breakpoint at %04X:%04X",seg,ofs);
 		return true;
 	}
 #endif
@@ -882,10 +882,10 @@ bool ParseCommand(char* str)
 		Bit8u valAH	= GetHexValue(found,found);
 		if ((valAH==0x00) && (*found=='*')) {
 			CBreakpoint::AddIntBreakpoint(intNr,BPINT_ALL,false);
-			DEBUG_ShowMsg(0,"DEBUG: Set interrupt breakpoint at INT %02X",intNr);
+			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X",intNr);
 		} else {
 			CBreakpoint::AddIntBreakpoint(intNr,valAH,false);
-			DEBUG_ShowMsg(0,"DEBUG: Set interrupt breakpoint at INT %02X AH=%02X",intNr,valAH);
+			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X AH=%02X",intNr,valAH);
 		}
 		return true;
 	}
@@ -904,7 +904,7 @@ bool ParseCommand(char* str)
 		Bit8u bpNr	= GetHexValue(found,found); 
 		if ((bpNr==0x00) && (*found=='*')) { // Delete all
 			CBreakpoint::DeleteAll();		
-			DEBUG_ShowMsg(0,"DEBUG: Breakpoints deleted.");
+			DEBUG_ShowMsg("DEBUG: Breakpoints deleted.");
 		} else {		
 			// delete single breakpoint
 			CBreakpoint::DeleteByIndex(bpNr);
@@ -916,7 +916,7 @@ bool ParseCommand(char* str)
 		found++;
 		Bit16u codeSeg = GetHexValue(found,found); found++;
 		Bit32u codeOfs = GetHexValue(found,found);
-		DEBUG_ShowMsg(0,"DEBUG: Set code overview to %04X:%04X",codeSeg,codeOfs);
+		DEBUG_ShowMsg("DEBUG: Set code overview to %04X:%04X",codeSeg,codeOfs);
 		codeViewData.useCS	= codeSeg;
 		codeViewData.useEIP = codeOfs;
 		return true;
@@ -926,22 +926,22 @@ bool ParseCommand(char* str)
 		found++;
 		dataSeg = GetHexValue(found,found); found++;
 		dataOfs = GetHexValue(found,found);
-		DEBUG_ShowMsg(0,"DEBUG: Set data overview to %04X:%04X",dataSeg,dataOfs);
+		DEBUG_ShowMsg("DEBUG: Set data overview to %04X:%04X",dataSeg,dataOfs);
 		return true;
 	}
 	found = strstr(str,"LOG ");
 	if (found) { // Create Cpu log file
 		found+=4;
-		DEBUG_ShowMsg(0,"DEBUG: Starting log");
+		DEBUG_ShowMsg("DEBUG: Starting log");
 		DEBUG_Log_Loop(GetHexValue(found,found));
-		DEBUG_ShowMsg(0,"DEBUG: Logfile LOGCPU.TXT created.");
+		DEBUG_ShowMsg("DEBUG: Logfile LOGCPU.TXT created.");
 		return true;
 	}
 	found = strstr(str,"SR ");
 	if (found) { // Set register value
 		found+=2;
-		if (ChangeRegister(found))	DEBUG_ShowMsg(0,"DEBUG: Set Register success.");
-		else						DEBUG_ShowMsg(0,"DEBUG: Set Register failure.");
+		if (ChangeRegister(found))	DEBUG_ShowMsg("DEBUG: Set Register success.");
+		else						DEBUG_ShowMsg("DEBUG: Set Register failure.");
 		return true;
 	}	
 	found = strstr(str,"SM ");
@@ -958,14 +958,14 @@ bool ParseCommand(char* str)
 				count++;
 			}
 		};
-		DEBUG_ShowMsg(0,"DEBUG: Memory changed.");
+		DEBUG_ShowMsg("DEBUG: Memory changed.");
 		return true;
 	}
 	found = strstr(str,"INTT ");
 	if (found) { // Create Cpu log file
 		found+=4;
 		Bit8u intNr = GetHexValue(found,found);
-		DEBUG_ShowMsg(0,"DEBUG: Tracing INT %02X",intNr);
+		DEBUG_ShowMsg("DEBUG: Tracing INT %02X",intNr);
 		Interrupt(intNr);
 		SetCodeWinStart();
 		return true;
@@ -974,7 +974,7 @@ bool ParseCommand(char* str)
 	if (found) { // Create Cpu log file
 		found+=4;
 		Bit8u intNr = GetHexValue(found,found);
-		DEBUG_ShowMsg(0,"DEBUG: Starting INT %02X",intNr);
+		DEBUG_ShowMsg("DEBUG: Starting INT %02X",intNr);
 		CBreakpoint::AddBreakpoint		(SegValue(cs),reg_eip, true);
 		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip-1,true);
 		debugging=false;
@@ -989,17 +989,17 @@ bool ParseCommand(char* str)
 		while (found[0]==' ') found++;
 		char out1[200],out2[200];
 		GetDescriptorInfo(found,out1,out2);
-		DEBUG_ShowMsg(0,"SelectorInfo %s:",found);
-		DEBUG_ShowMsg(0,"%s",out1);
-		DEBUG_ShowMsg(0,"%s",out2);
+		DEBUG_ShowMsg("SelectorInfo %s:",found);
+		DEBUG_ShowMsg("%s",out1);
+		DEBUG_ShowMsg("%s",out2);
 	};
 
 #if C_HEAVY_DEBUG
 	found = strstr(str,"HEAVYLOG");
 	if (found) { // Create Cpu log file
 		logHeavy = !logHeavy;
-		if (logHeavy)	DEBUG_ShowMsg(0,"DEBUG: Heavy cpu logging on.");
-		else			DEBUG_ShowMsg(0,"DEBUG: Heavy cpu logging off.");
+		if (logHeavy)	DEBUG_ShowMsg("DEBUG: Heavy cpu logging on.");
+		else			DEBUG_ShowMsg("DEBUG: Heavy cpu logging off.");
 		return true;
 	}
 #endif
@@ -1209,7 +1209,7 @@ Bit32u DEBUG_CheckKeys(void) {
 					ParseCommand(codeViewData.inputStr);
 					break;
 		case 'T'  :	DEBUG_RaiseTimerIrq(); 
-					DEBUG_ShowMsg(0,"Debug: Timer Int started.");
+					DEBUG_ShowMsg("Debug: Timer Int started.");
 					break;
 		case 'V'  : showExtend = !showExtend;	
 					break;
@@ -1544,7 +1544,7 @@ void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
 {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
-		DEBUG_ShowMsg(0,"DEBUG: Memory dump failed.");
+		DEBUG_ShowMsg("DEBUG: Memory dump failed.");
 		return;
 	}
 	
@@ -1564,7 +1564,7 @@ void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
 		fprintf(f,"%s\n",buffer);
 	};
 	fclose(f);
-	DEBUG_ShowMsg(0,"DEBUG: Memory dump success.");
+	DEBUG_ShowMsg("DEBUG: Memory dump success.");
 };
 
 // HEAVY DEBUGGING STUFF
@@ -1597,11 +1597,11 @@ void DEBUG_HeavyWriteLogInstruction(void)
 
 	logHeavy = false;
 	
-	DEBUG_ShowMsg(0,"DEBUG: Creating cpu log LOGCPU_INT_CD.TXT");
+	DEBUG_ShowMsg("DEBUG: Creating cpu log LOGCPU_INT_CD.TXT");
 
 	FILE* f = fopen("LOGCPU_INT_CD.TXT","wt");
 	if (!f) {
-		DEBUG_ShowMsg(0,"DEBUG: Failed.");	
+		DEBUG_ShowMsg("DEBUG: Failed.");	
 		return;
 	}
 
@@ -1614,7 +1614,7 @@ void DEBUG_HeavyWriteLogInstruction(void)
 	
 	fclose(f);
 
-	DEBUG_ShowMsg(0,"DEBUG: Done.");	
+	DEBUG_ShowMsg("DEBUG: Done.");	
 };
 
 bool DEBUG_HeavyIsBreakpoint(void)
