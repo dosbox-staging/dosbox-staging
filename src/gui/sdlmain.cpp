@@ -27,6 +27,7 @@
 #include "joystick.h"
 #include "pic.h"
 #include "timer.h"
+#include "setup.h"
 
 
 //#define DISABLE_JOYSTICK
@@ -182,17 +183,18 @@ void GFX_Start() {
 }
 
 
-void GFX_StartUp() {
+void GUI_StartUp(Section * sec) {
+ 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.full_screen=false;
 	sdl.draw=0;
+	GFX_Resize(640,400,8,0);
 #if C_THREADED
 	sdl.mutex=SDL_CreateMutex();
 	sdl.thread = SDL_CreateThread(&SDLGFX_Thread,0);
 #else 
 	TIMER_RegisterMicroHandler(GFX_Redraw,1000000/70);
 #endif
-	GFX_Resize(640,400,8,0);
 	SDL_EnableKeyRepeat(250,30);
 	
 /* Get some Keybinds */
@@ -439,24 +441,6 @@ void GFX_Events() {
 		}
     }
 }
-#if 0
-
-void E_Exit(char * format,...) {
-	char buf[1024];
-
-	va_list msg;
-	strcpy(buf,"EXIT:");
-	va_start(msg,format);
-	vsprintf(buf+strlen(buf),format,msg);
-	va_end(msg);
-	waddstr(dbg.win_out,buf);
-	wprintw(dbg.win_out," %d\n",cycle_count);
-	wrefresh(dbg.win_out);
-	throw ((Bitu)1);
-}
-
-#endif
-
 
 void GFX_ShowMsg(char * msg) {
 	char buf[1024];
@@ -466,36 +450,57 @@ void GFX_ShowMsg(char * msg) {
 };
 
 int main(int argc, char* argv[]) {
-	try { 
-	if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
+	try {
+		CommandLine com_line(argc,argv);
+		Config myconf(&com_line);
+		control=&myconf;
+
+		if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 #ifndef DISABLE_JOYSTICK
 		|SDL_INIT_JOYSTICK
 	
 #endif
-		) < 0 ) {
-       E_Exit("Can't init SDL %s",SDL_GetError());
-	}
-	GFX_StartUp();
-/* Init all the dosbox subsystems */
-	DOSBOX_Init(argc,argv);
-/* Start the systems that SDL should provide */
+		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+		Section_prop * sdl_sec=control->AddSection_prop("SDL",&GUI_StartUp);
+		sdl_sec->Add_bool("FULLSCREEN",false);
+		/* Init all the dosbox subsystems */
+		DOSBOX_Init();
+		std::string config_file;
+		if (control->cmdline->FindString("-conf",config_file,true)) {
+			
+		} else {
+			config_file="dosbox.conf";
+		}
+		/* Parse the config file */
+		control->ParseConfigFile(config_file.c_str());
+		/* Init all the sections */
+		control->Init();
+		/* Some extra SDL Functions */
 #ifndef DISABLE_JOYSTICK
-	if (SDL_NumJoysticks()>0) {
-		SDL_JoystickEventState(SDL_ENABLE);
-		sdl.joy=SDL_JoystickOpen(0);
-		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(0),SDL_JoystickNumAxes(sdl.joy),SDL_JoystickNumButtons(sdl.joy));
-		JOYSTICK_Enable(0,true);
-	}
-#endif
-	/* Start dosbox up */
-	DOSBOX_StartUp();	
-	}
-	catch (Bitu e) {
-		LOG_MSG("Exit to error %d",e);
+		if (SDL_NumJoysticks()>0) {
+			SDL_JoystickEventState(SDL_ENABLE);
+			sdl.joy=SDL_JoystickOpen(0);
+			LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(0),SDL_JoystickNumAxes(sdl.joy),SDL_JoystickNumButtons(sdl.joy));
+			JOYSTICK_Enable(0,true);
+		}
+#endif	
+		if (control->cmdline->FindExist("-fullscreen")) {
+			sdl.full_screen=true;
+		} else {
+			sdl.full_screen=sdl_sec->Get_bool("FULLSCREEN");
+		}
+		if (sdl.full_screen) {
+			sdl.full_screen=false;
+			SwitchFullScreen();
+		}
+
+
+		/* Start up main machine */
+		control->StartUp();
+		/* Shutdown everything */
+	} catch (char * error) {
+		LOG_ERROR("Exit to error %s",error);
 	}
 	GFX_Stop();
-
-	
-
 	return 0;
 };
