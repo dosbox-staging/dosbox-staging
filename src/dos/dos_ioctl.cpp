@@ -40,8 +40,16 @@ bool DOS_IOCTL(void) {
 	case 0x00:		/* Get Device Information */
 		reg_dx=Files[handle]->GetInformation();
 		return true;
+    case 0x06:      /* Get Input Status */
+		if (Files[handle]->GetInformation() & 0x8000) {		//Check for device
+			reg_al=(Files[handle]->GetInformation() & 0x40) ? 0xff : 0;
+		} else {
+			LOG(LOG_IOCTL,LOG_NORMAL)("06:Unsupported File handle %d",handle);
+			reg_al=0xff;
+		}
+		return true;
 	case 0x07:		/* Get Output Status */
-		LOG(LOG_IOCTL,LOG_NORMAL)("DOS:IOCTL:07:Fakes output status is ready for handle %d",handle);
+		LOG(LOG_IOCTL,LOG_NORMAL)("07:Fakes output status is ready for handle %d",handle);
 		reg_al=0xff;
 		return true;
 	case 0x08:		/* Check if block device removable */
@@ -93,13 +101,6 @@ bool DOS_IOCTL(void) {
 			return false;
 		}
 		break;
-    case 0x06:      /* Get Input Status */
-        if(reg_bx==0x00) { /* might work for other handles, but tested it only for STDIN */
-            if(Files[handle]->GetInformation() & 0x40) reg_al=0x00; else
-            reg_al=0xFF;
-            return true;
-            break;
-        }
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
 		return false;
