@@ -30,15 +30,8 @@ static HWBlock * firsthw=0;
 
 class HWSET : public Program {
 public:
-	HWSET(PROGRAM_Info * program_info);
 	void Run(void);
-
 };
-
-
-HWSET::HWSET(PROGRAM_Info * info):Program(info) {
-
-}
 
 void HW_Register(HWBlock * block) {
 	block->next=firsthw;
@@ -48,8 +41,8 @@ void HW_Register(HWBlock * block) {
 
 void HWSET::Run(void) {
 	/* Hopefull enough space */
+#if 0
 	char buf[1024];
-
 	HWBlock * loopblock;
 	if 	(!*prog_info->cmd_line) {
 	/* No command line given give overview of hardware */
@@ -100,18 +93,15 @@ founddev:
 		WriteOut("Command overview for %s\n%s",loopblock->full_name,loopblock->help);
 	}
 	return;
+#endif
 }
 
-static void HWSET_ProgramStart(PROGRAM_Info * info) {
-	HWSET * tempHWSET=new HWSET(info);
-	tempHWSET->Run();
-	delete tempHWSET;
+static void HWSET_ProgramStart(Program * * make) {
+	*make=new HWSET;
 }
-
 
 
 void HARDWARE_Init(void) {
 	PROGRAMS_MakeFile("HWSET.COM",HWSET_ProgramStart);
-
 };
 
