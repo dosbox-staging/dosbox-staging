@@ -61,7 +61,7 @@ typedef PhysPt EAPoint;
 #define EXCEPTION(blah)										\
 	{														\
 		Bit8u new_num=blah;									\
-		IPPoint=inst.start_entry;							\
+		IPPoint=inst.opcode_start;							\
 		LEAVECORE;											\
 		CPU_Exception(new_num,0);							\
 		LoadIP();											\
@@ -93,7 +93,7 @@ restart_core:
 		};
 #endif
 #endif
-		inst.start=IPPoint;
+		inst.opcode_start=IPPoint;
 		inst.entry=inst.start_entry;
 		inst.prefix=inst.start_prefix;
 restartopcode:

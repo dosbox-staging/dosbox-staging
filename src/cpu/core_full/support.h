@@ -155,7 +155,7 @@ struct OpCode {
 
 struct FullData {
 	Bitu entry;
-	EAPoint start;
+	EAPoint opcode_start;
 	Bitu rm;
 	EAPoint rm_eaa;
 	Bitu rm_off;

@@ -58,7 +58,7 @@ switch (inst.code.save) {
 	case S_SEGm:
 		if (CPU_SetSegGeneral((SegNames)inst.rm_index,inst.op1.w)) {
 			LEAVECORE;
-			reg_eip-=(IPPoint-inst.start);
+			reg_eip-=(IPPoint-inst.opcode_start);
 			CPU_StartException();
 			goto restart_core;
 		}
@@ -66,7 +66,7 @@ switch (inst.code.save) {
 	case S_SEGGw:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
 			LEAVECORE;
-			reg_eip-=(IPPoint-inst.start);
+			reg_eip-=(IPPoint-inst.opcode_start);
 			CPU_StartException();
 			goto restart_core;
 		}
@@ -75,7 +75,7 @@ switch (inst.code.save) {
 	case S_SEGGd:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst.op2.w)) {
 			LEAVECORE;
-			reg_eip-=(IPPoint-inst.start);
+			reg_eip-=(IPPoint-inst.opcode_start);
 			CPU_StartException();
 			goto restart_core;
 		}

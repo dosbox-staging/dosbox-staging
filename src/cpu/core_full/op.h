@@ -345,7 +345,7 @@ switch (inst.code.op) {
 		else if (DEBUG_IntBreakpoint(inst.op1.b)) 
 			return debugCallback;
 #endif
-		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.start);
+		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.opcode_start);
 		goto restart_core;
 	case O_INb:
 		reg_al=IO_ReadB(inst.op1.d);

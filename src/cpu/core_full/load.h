@@ -359,14 +359,14 @@ l_M_Ed:
 	case D_POPSEGw:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_16())) {
 			LEAVECORE;
-			reg_eip-=(IPPoint-inst.start);reg_esp-=2;
+			reg_eip-=(IPPoint-inst.opcode_start);reg_esp-=2;
 			CPU_StartException();goto restart_core;
 		}
 		goto nextopcode;
 	case D_POPSEGd:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,Pop_32())) {
 			LEAVECORE;
-			reg_eip-=(IPPoint-inst.start);reg_esp-=4;
+			reg_eip-=(IPPoint-inst.opcode_start);reg_esp-=4;
 			CPU_StartException();goto restart_core;
 		}
 		goto nextopcode;
@@ -524,7 +524,7 @@ l_M_Ed:
 		goto nextopcode;
 	case D_HLT:
 		LEAVECORE;
-		CPU_HLT(IPPoint-inst.start);
+		CPU_HLT(IPPoint-inst.opcode_start);
 		return CBRET_NONE;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
