@@ -460,6 +460,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3f:		/* READ Read from file or device */
 		{ 
 			Bit16u toread=reg_cx;
+			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:READ:Buffer overflow");
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
@@ -473,6 +474,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x40:					/* WRITE Write to file or device */
 		{
 			Bit16u towrite=reg_cx;
+			if (reg_cx+reg_dx>0xffff) LOG_DEBUG("DOS:WRITE:Buffer overflow");
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
 			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
 				reg_ax=towrite;
@@ -838,8 +840,8 @@ void DOS_Init(Section* sec) {
 
 	DOS_SetupFiles();								/* Setup system File tables */
 	DOS_SetupDevices();							/* Setup dos devices */
-	DOS_SetupMemory();								/* Setup first MCB */
 	DOS_SetupTables();
+	DOS_SetupMemory();								/* Setup first MCB */
 	DOS_SetupPrograms();
 	DOS_SetupMisc();							/* Some additional dos interrupts */
 	DOS_SetDefaultDrive(25);
