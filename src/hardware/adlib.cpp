@@ -28,7 +28,6 @@
 /* 
 	Thanks to vdmsound for nice simple way to implement this
 */
-
 # define logerror
 
 #ifdef _MSC_VER
@@ -133,6 +132,7 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 		MIXER_Enable(opl.chan,true);
 	}
 	Bitu addr=port & 3;
+	if (!addr) adlib_commandreg=val;
 	switch (opl.mode) {
 	case OPL_opl2:
 		OPL2::YM3812Write(0,addr,val);
@@ -159,12 +159,13 @@ void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 	THEOPL3::YMF262SetTimerHandler(0,THEOPL3::TimerHandler,0);
 	IO_RegisterWriteHandler(0x388,OPL_Write,IO_MB,4);
 	IO_RegisterReadHandler(0x388,OPL_Read,IO_MB,4);
-	IO_RegisterWriteHandler(base,OPL_Write,IO_MB,4);
-	IO_RegisterReadHandler(base,OPL_Read,IO_MB,4);
+	if (oplmode>=OPL_dualopl2) {
+		IO_RegisterWriteHandler(base,OPL_Write,IO_MB,4);
+		IO_RegisterReadHandler(base,OPL_Read,IO_MB,4);
+	}
 
 	IO_RegisterWriteHandler(base+8,OPL_Write,IO_MB,2);
 	IO_RegisterReadHandler(base+8,OPL_Read,IO_MB,2);
-
 
 	opl.active=false;
 	opl.last_used=0;

@@ -983,6 +983,10 @@ static void write_sb(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
+static void adlib_gusforward(Bitu port,Bitu val,Bitu iolen) {
+	adlib_commandreg=val;
+}
+
 static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 	if (!len) return;
 	GenerateSound(len);
@@ -1029,7 +1033,7 @@ void SBLASTER_Init(Section* sec) {
 	else {
 		switch (sb.type) {
 		case SBT_NONE:opl_mode=OPL_none;break;
-		case SBT_1:opl_mode=OPL_cms;break;
+		case SBT_1:opl_mode=OPL_opl2;break;
 		case SBT_2:opl_mode=OPL_opl2;break;
 		case SBT_PRO1:opl_mode=OPL_dualopl2;break;
 		case SBT_PRO2:
@@ -1039,11 +1043,14 @@ void SBLASTER_Init(Section* sec) {
 	}
 	switch (opl_mode) {
 	case OPL_none:
+		IO_RegisterWriteHandler(0x388,adlib_gusforward,IO_MB);
 		break;
 	case OPL_cms:
+		IO_RegisterWriteHandler(0x388,adlib_gusforward,IO_MB);
 		CMS_Init(section,sb.hw.base,oplrate);
 		break;
 	case OPL_opl2:
+		CMS_Init(section,sb.hw.base,oplrate);
 	case OPL_dualopl2:
 	case OPL_opl3:
 		OPL_Init(section,sb.hw.base,opl_mode,oplrate);
