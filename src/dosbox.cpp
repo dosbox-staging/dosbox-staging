@@ -111,10 +111,10 @@ static Bitu Normal_Loop(void) {
 			if (ret>0) {
 				Bitu blah=(*CallBack_Handlers[ret])();
 				if (blah) return blah;
-#if C_DEBUG
-				if (DEBUG_ExitLoop()) return 0;
-#endif
 			}
+#if C_DEBUG
+			if (DEBUG_ExitLoop()) return 0;
+#endif
 		} else {
 			if (RemainTicks>0) {
 				TIMER_AddTick();
@@ -222,9 +222,13 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_int("cycles",1800);
+	secprop->Add_int("cycleup",500);
+	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
 		"cycles -- Amount of instructions dosbox tries to emulate each millsecond.\n"
 		"          Setting this higher than your machine can handle is bad!\n"
+		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
+		"cycledown    Setting it lower than 100 will be a percentage.\n"
 	);
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
