@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.72 2004-06-10 08:48:53 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.73 2004-07-22 08:26:49 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -661,7 +661,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x4f:					/* FINDNEXT Find next matching file */
 		if (DOS_FindNext()) {
 			CALLBACK_SCF(false);
-			reg_ax=0xffff;			/* Undocumented */
+			/* reg_ax=0xffff;*/			/* Undocumented */
+			reg_ax=0;				/* Undocumented:Qbix Willy beamish */
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
