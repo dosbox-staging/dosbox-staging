@@ -26,7 +26,27 @@
 #include "joystick.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
-static Bitu call_int1;
+static Bitu call_int1,call_int70;
+
+static Bitu INT70_Handler(void) {
+	if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
+		Bits count=mem_readd(BIOS_WAIT_FLAG_COUNT);
+		if (count>997) {
+			mem_writed(BIOS_WAIT_FLAG_COUNT,count-997);
+		} else {
+			mem_writed(BIOS_WAIT_FLAG_COUNT,0);
+			PhysPt where=Real2Phys(mem_readd(BIOS_WAIT_FLAG_POINTER));
+			mem_writeb(where,mem_readb(where)|0x80);
+			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
+			IO_Write(0x70,0xb);
+			IO_Write(0x71,IO_Read(0x71)&~0x40);
+		}
+	} 
+	/* Signal EOI to both pics */
+	IO_Write(0xa0,0x20);
+	IO_Write(0x20,0x20);
+	return 0;
+}
 
 static Bitu INT1A_Handler(void) {
 	switch (reg_ah) {
@@ -42,9 +62,14 @@ static Bitu INT1A_Handler(void) {
 		mem_writed(BIOS_TIMER,(reg_cx<<16)|reg_dx);
 		break;
 	case 0x02:	/* GET REAL-TIME CLOCK TIME (AT,XT286,PS) */
-		reg_dx=reg_cx=0;
+		IO_Write(0x70,0x04);		//Hours
+		reg_ch=IO_Read(0x71);
+		IO_Write(0x70,0x02);		//Minutes
+		reg_cl=IO_Read(0x71);
+		IO_Write(0x70,0x00);		//Seconds
+		reg_dh=IO_Read(0x71);
+		reg_dl=0;					//Daylight saving disabled
 		CALLBACK_SCF(false);
-		LOG(LOG_BIOS,"INT1A:02:Faked RTC get time call");
 		break;
 	case 0x04:	/* GET REAL-TIME ClOCK DATA  (AT,XT286,PS) */
 		reg_dx=reg_cx=0;
@@ -149,11 +174,6 @@ static Bitu INT17_Handler(void) {
 	return CBRET_NONE;
 }
 
-static void WaitFlagEvent(void) {
-	PhysPt where=Real2Phys(mem_readd(BIOS_WAIT_FLAG_POINTER));
-	mem_writeb(where,mem_readb(where)|0x80);
-	mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
-}
 
 static Bitu INT15_Handler(void) {
 	switch (reg_ah) {
@@ -170,14 +190,19 @@ static Bitu INT15_Handler(void) {
 		break;
 	case 0x83:	/* BIOS - SET EVENT WAIT INTERVAL */
 		{
-			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) break;
-			Bit32s count=(reg_cx<<16)|reg_dx;
-			if (count<1000) count=1000;
+			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
+				reg_ah=0x80;
+				CALLBACK_SCF(true);
+				break;
+			}
+			Bit32u count=(reg_cx<<16)|reg_dx;
 			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(SegValue(es),reg_bx));
 			mem_writed(BIOS_WAIT_FLAG_COUNT,count);
 			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,1);
-			PIC_RemoveEvents(&WaitFlagEvent);
-			PIC_AddEvent(&WaitFlagEvent,count);
+			/* Reprogram RTC to start */
+			IO_Write(0x70,0xb);
+			IO_Write(0x71,IO_Read(0x71)|0x40);
+			CALLBACK_SCF(false);
 		}
 		break;
 	case 0x84:	/* BIOS - JOYSTICK SUPPORT (XT after 11/8/82,AT,XT286,PS) */
@@ -214,7 +239,10 @@ static Bitu INT15_Handler(void) {
 			CALLBACK_SCF(false);
 		}
 	case 0x88:	/* SYSTEM - GET EXTENDED MEMORY SIZE (286+) */
-		reg_ax=0;
+		IO_Write(0x70,0x30);
+		reg_al=IO_Read(0x71);
+		IO_Write(0x70,0x31);
+		reg_ah=IO_Read(0x71);
 		CALLBACK_SCF(false);
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
@@ -297,6 +325,10 @@ void BIOS_Init(Section* sec) {
 	call_int1c=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int1c,&INT1C_Handler,CB_IRET);
 	RealSetVec(0x1C,CALLBACK_RealPointer(call_int1c));
+	/* IRQ 8 RTC Handler */
+	call_int70=CALLBACK_Allocate();
+	CALLBACK_Setup(call_int70,&INT70_Handler,CB_IRET);
+	RealSetVec(0x70,CALLBACK_RealPointer(call_int70));
 
 	/* Some defeault CPU error interrupt handlers */
 	call_int1=CALLBACK_Allocate();
