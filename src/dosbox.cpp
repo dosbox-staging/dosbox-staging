@@ -199,7 +199,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&CMS_Init);
     secprop->Add_bool("cms",false);
 
-	secprop=control->AddSection_prop("gus",&GUS_Init);
+//	secprop=control->AddSection_prop("gus",&GUS_Init);
 	
 	secprop=control->AddSection_prop("disney",&DISNEY_Init);
 
