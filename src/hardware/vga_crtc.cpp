@@ -219,12 +219,9 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		*/
 		break;
 	case 0x13:	/* Offset register */
-		if (val!=crtc(offset)) {
-			crtc(offset)=val;
-			vga.config.scan_len&=0x300;
-			vga.config.scan_len|=val;
-			VGA_StartResize();
-		}
+		crtc(offset)=val;
+		vga.config.scan_len&=0x300;
+		vga.config.scan_len|=val;
 		/*
 			0-7	Number of bytes in a scanline / K. Where K is 2 for byte mode, 4 for
 				word mode and 8 for Double Word mode.
