@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2003  The DOSBox Team
+ *  Copyright (C) 2002-2004  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id */
 
 #include <string.h>
 #include "dosbox.h"
@@ -118,6 +120,7 @@ bool DOS_Terminate(bool tsr) {
 	/* Set the CS:IP stored in int 0x22 back on the stack */
 	mem_writew(SegPhys(ss)+reg_sp+0,RealOff(old22));
 	mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(old22));
+	mem_writew(SegPhys(ss)+reg_sp+4,0x200); //stack isn't preserved
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(mempsp);
 	return true;
