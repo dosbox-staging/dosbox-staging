@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ public:
 	device_EMM(){name="EMMXXXX0";}
 	bool Read(Bit8u * data,Bit16u * size) { return false;}
 	bool Write(Bit8u * data,Bit16u * size){ 
-		LOG_DEBUG("Write to ems device");	
+		LOG(LOG_IOCTL,"EMS:Write to device");	
 		return false;
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}
@@ -367,7 +367,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 		reg_al=2+reg_bx*(2+sizeof(EMM_Mapping));
 		break;
 	default:
-		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
@@ -391,7 +391,7 @@ static Bit8u HandleNameSearch(void) {
 	  reg_bx=EMM_MAX_HANDLES;
 	  break;
 	default:
-		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	return EMM_NO_ERROR;
@@ -417,7 +417,7 @@ static Bit8u MemoryRegion(void) {
 	Bit8u buf_src[EMM_PAGE_SIZE];
 	Bit8u buf_dest[EMM_PAGE_SIZE];
 	if (reg_al>1) {
-		LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 		return EMM_FUNC_NOSUP;
 	}
 	LoadMoveRegion(SegPhys(ds)+reg_si,region);
@@ -578,7 +578,7 @@ static Bitu INT67_Handler(void) {
 			reg_ah=EMM_NO_ERROR;
 			break;
 		default:
-			LOG_ERROR("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
+			LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
 			reg_ah=EMM_FUNC_NOSUP;
 			break;
 		}
@@ -615,7 +615,7 @@ static Bitu INT67_Handler(void) {
 		break;
 	case 0x53: // Set/Get Handlename
 		if (reg_al==0x00) { // Get Name not supported
-			LOG_ERROR("EMS:Get handle name not supported",reg_ah);
+			LOG(LOG_ERROR|LOG_MISC,"EMS:Get handle name not supported",reg_ah);
 			reg_ah=EMM_FUNC_NOSUP;					
 		} else { // Set name, not supported but faked
 			reg_ah=EMM_NO_ERROR;	
@@ -626,7 +626,7 @@ static Bitu INT67_Handler(void) {
 		break;
 	case 0x57:	/* Memory region */
 		reg_ah=MemoryRegion();
-		if (reg_ah) LOG_WARN("ems 57 move failed");
+		if (reg_ah) LOG(LOG_ERROR,"EMS:Function 57 move failed");
 		break;
 	case 0x58: // Get mappable physical array address array
 		if (reg_al==0x00) {
@@ -642,11 +642,12 @@ static Bitu INT67_Handler(void) {
 		reg_ah = EMM_NO_ERROR;
 		break;
 	case 0xDE:		/* VCPI Functions */
-		LOG_ERROR("VCPI Functions %X not supported",reg_al);
+		errorlevel=1;
+		E_Exit("Protected mode not supported");
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	default:
-		LOG_ERROR("EMS:Call %2X not supported",reg_ah);
+		LOG(LOG_ERROR|LOG_MISC,"EMS:Call %2X not supported",reg_ah);
 		reg_ah=EMM_FUNC_NOSUP;
 		break;
 	}
@@ -660,7 +661,7 @@ void EMS_Init(Section* sec) {
 	Bitu size=section->Get_int("emssize");
 	if (!size) return;
 	if ((size*(1024/16))>EMM_MAX_PAGES) {
-		LOG_DEBUG("EMS Max size is %d",EMM_MAX_PAGES/(1024/16));
+		LOG_MSG("EMS Max size is %d",EMM_MAX_PAGES/(1024/16));
 		emm_page_count=EMM_MAX_PAGES;
 	} else {
 		emm_page_count=size*(1024/16);

@@ -73,7 +73,7 @@ static void counter_latch(Bitu counter) {
 		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
 	default:
-		LOG_ERROR("PIT:Illegal Mode %d for reading counter %d",p->mode,counter);
+		LOG(LOG_ERROR|LOG_PIT,"Illegal Mode %d for reading counter %d",p->mode,counter);
 		micro%=p->micro;
 		p->read_latch=(Bit16u)(p->cntr-(((float)micro/(float)p->micro)*(float)p->cntr));
 		break;
@@ -109,14 +109,14 @@ static void write_latch(Bit32u port,Bit8u val) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			PIC_RemoveEvents(PIT0_Event);
 			PIC_AddEvent(PIT0_Event,p->micro);
-			LOG_DEBUG("PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
+			LOG(LOG_PIT,"PIT 0 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
 //			LOG_DEBUG("PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
 			PCSPEAKER_SetCounter(p->cntr,p->mode);
 			break;
 		default:
-			LOG_ERROR("PIT:Illegal timer selected for writing");
+			LOG(LOG_ERROR|LOG_PIT,"PIT:Illegal timer selected for writing");
 		}
     }
 }

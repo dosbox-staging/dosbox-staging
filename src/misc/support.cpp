@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -156,7 +156,6 @@ char * StripWord(char * cmd) {
 }
 
 void GFX_ShowMsg(char * msg);
-void DEBUG_ShowMsg(char * msg);
 
 void S_Warn(char * format,...) {
 	char buf[1024];
@@ -166,7 +165,7 @@ void S_Warn(char * format,...) {
 	vsprintf(buf,format,msg);
 	va_end(msg);
 #if C_DEBUG
-	DEBUG_ShowMsg(buf);
+	DEBUG_ShowMsg(0,buf);
 #else
 	GFX_ShowMsg(buf);
 #endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 		full=RasterOp(vga.config.full_set_reset,ExpandTable[val] & vga.config.full_bit_mask);
 		break;
 	default:
-		LOG_ERROR("VGA:Unsupported write mode %d",vga.config.write_mode);
+		LOG(LOG_VGAMISC,"VGA:Unsupported write mode %d",vga.config.write_mode);
 	}
 	return full;
 }

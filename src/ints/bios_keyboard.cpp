@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -312,8 +312,7 @@ static Bitu INT16_Handler(void) {
 		reg_al=mem_readb(BIOS_KEYBOARD_FLAGS1);
 		break;
 	case 0x03:	/* SET TYPEMATIC RATE AND DELAY */
-//Have to implement this trhough SDL
-		LOG_DEBUG("INT16:Unhandled Typematic Rate Call %2X",reg_al);
+		LOG(LOG_ERROR|LOG_BIOS,"INT16:Unhandled Typematic Rate Call %2X",reg_al);
 		break;
 	case 0x05:	/* STORE KEYSTROKE IN KEYBOARD BUFFER */
 //TODO make add_key bool :)
@@ -326,10 +325,10 @@ static Bitu INT16_Handler(void) {
 		break;
 	case 0x55:
 		/* Weird call used by some dos apps */
-		LOG_DEBUG("INT16:55:Word TSR compatible call");
+		LOG(LOG_BIOS,"INT16:55:Word TSR compatible call");
 		break;
 	default:
-		LOG_ERROR("INT16:Unhandled call %02X",reg_ah);
+		LOG(LOG_ERROR|LOG_BIOS,"INT16:Unhandled call %02X",reg_ah);
 		break;
 
 	};

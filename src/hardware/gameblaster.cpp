@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ static void write_cms(Bit32u port,Bit8u val) {
 			cms->noise[1].freq_add=noise_freq[(val>>4) & 3];
 			break;
 		default:
-			LOG_ERROR("CMS %d:Illegal register %X2 Selected for write",sel,cms->reg);
+			LOG(LOG_ERROR,"CMS %d:Illegal register %X2 Selected for write",sel,cms->reg);
 			break;
 		};
 		break;

@@ -89,11 +89,11 @@ void MEM_StrCopy(PhysPt off,char * data,Bitu size) {
 }
 
 static Bit8u Illegal_ReadHandler(PhysPt pt) {
-	LOG_ERROR("Illegal read from address %4X",pt);
+	LOG(LOG_ERROR,"MEM:Illegal read from address %4X",pt);
 	return 0;
 }
 static void Illegal_WriteHandler(PhysPt pt,Bit8u val) {
-	LOG_ERROR("Illegal write val %2X to address %4X",val,pt);
+	LOG(LOG_ERROR,"Illegal write val %2X to address %4X",val,pt);
 }
 
 /* Could only be called when the pt host entry is 0 ah well :) */
@@ -129,7 +129,7 @@ void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
 void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
 	if (startpage+pages>=MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
 	HostPt base=(HostPt)(data)-startpage*PAGE_SIZE;
-	if (!base) LOG_DEBUG("MEMORY:Unlucky memory allocation");
+	if (!base) LOG_MSG("MEMORY:Unlucky memory allocation");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=base;
 		WriteHostTable[i]=base;

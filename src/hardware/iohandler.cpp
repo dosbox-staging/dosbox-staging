@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,12 +24,12 @@ IO_WriteBlock IO_WriteTable[IO_MAX];
 
 void IO_Write(Bitu num,Bit8u val) {
 	if (num<IO_MAX) IO_WriteTable[num].handler(num,val);
-	else LOG_ERROR("IO:Out or range write %X2 to port %4X",val,num);
+	else LOG(LOG_ERROR,"IO:Out or range write %X2 to port %4X",val,num);
 }
 
 Bit8u IO_Read(Bitu num) {
 	if (num<IO_MAX) return IO_ReadTable[num].handler(num);
-	else LOG_ERROR("IO:Out or range read from port %4X",num);
+	else LOG(LOG_ERROR,"IO:Out or range read from port %4X",num);
 	return 0xff;
 }
 
@@ -42,13 +42,13 @@ static void IO_WriteBlocked(Bit32u port,Bit8u val) {
 }
 
 static Bit8u  IO_ReadDefault(Bit32u port) {
-	LOG_WARN("Reading from undefined port %04X",port);
+	LOG(LOG_ERROR,"Reading from undefined port %04X",port);
 	IO_RegisterReadHandler(port,&IO_ReadBlocked,"Blocked Read");
 	return 0xff;	
 }
 
 void IO_WriteDefault(Bit32u port,Bit8u val) {
-	LOG_WARN("Writing %02X to undefined port %04X",val,port);		
+	LOG(LOG_ERROR,"Writing %02X to undefined port %04X",val,port);		
 	IO_RegisterWriteHandler(port,&IO_WriteBlocked,"Blocked Write");
 }
 

@@ -81,7 +81,7 @@ DOS_Drive_Cache::~DOS_Drive_Cache(void)
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
 {
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
-	LOG_ERROR("DIRCACHE: Too many open directorys!");
+	LOG(LOG_FILES,"DIRCACHE: Too many open directories!");
 	return 0;
 };
 

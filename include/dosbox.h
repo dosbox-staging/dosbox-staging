@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,6 @@ typedef signed int Bits;
 
 class Section;
 
-
 typedef Bitu (LoopHandler)(void);
 
 void DOSBOX_RunMachine();
@@ -65,101 +64,25 @@ class Config;
 extern Config * control;
 extern Bitu errorlevel;
 
-inline void LOG_MSG(char* message)
-{
-      if(errorlevel>=0) S_Warn(message);
-}
+#define LOG_MSG S_Warn
 
-template <class type1>
-inline void LOG_MSG(char* message,type1 arg1)
-{
-   
-      if(errorlevel>=0) S_Warn(message,arg1);
-}
+enum LOG_TYPES {
+	LOG_ALL,
+	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
+	LOG_SB,LOG_DMA,
+	LOG_FPU,LOG_CPU,
+	LOG_FCB,LOG_FILES,LOG_IOCTL,LOG_EXEC,LOG_DOSMISC,
+	LOG_PIT,LOG_KEYBOARD,LOG_PIC,
+	LOG_MOUSE,LOG_BIOS,LOG_GUI,LOG_MISC,
+	LOG_MAX,LOG_ERROR=0x80
+};
 
-template <class type1,class type2>
-inline void LOG_MSG(char* message,type1 arg1,type2 arg2)
-{
-   
-      if(errorlevel>=0) S_Warn(message,arg1,arg2);
-}
-
-template <class type1,class type2, class type3>
-inline void LOG_MSG(char* message,type1 arg1,type2 arg2,type3 arg3)
-{
-   
-      if (errorlevel>=0)S_Warn(message,arg1,arg2,arg3);
-}
-
-#if C_LOGGING
-inline void LOG_DEBUG(char * message)
-{
-   
-      if(errorlevel>=2) S_Warn(message);
-}
-
-template <class type>
-inline void LOG_DEBUG(char * message, type type1)
-{
-   
-      if(errorlevel>=2) S_Warn(message,type1);
-}
-
-template <class type>
-inline void LOG_WARN(char * message, type type1)
-{
-   
-      if(errorlevel>=1) S_Warn(message,type1);
-}
-
-inline void LOG_WARN(char* message)
-{
-   
-        if(errorlevel>=1) S_Warn(message);
-}
-
-inline void LOG_ERROR(char * message)
-{
-   
-      if(errorlevel>=0) S_Warn(message);
-}
-
-template <class type>
-inline void LOG_ERROR(char * message, type type1)
-{
-   
-      if(errorlevel>=0) S_Warn(message,type1);
-}
-
-template <class type1, class type2>
-inline void LOG_ERROR(char * message, type1 arg1,type2 arg2)
-{
-   
-      if(errorlevel>=0) S_Warn(message,arg1,arg2);
-}
-
-template <class type1, class type2>
-inline void LOG_WARN(char * message, type1 arg1,type2 arg2)
-{
-   
-      if(errorlevel>=1) S_Warn(message,arg1,arg2);
-}
-
-template <class type1, class type2>
-inline void LOG_DEBUG(char * message, type1 arg1,type2 arg2)
-{
-   
-      if(errorlevel>=2) S_Warn(message,arg1,arg2);
-}
-
+#if C_DEBUG
+extern void DEBUG_ShowMsg(Bit32u msgmask, char * msg,...);
+#define LOG DEBUG_ShowMsg
 #else
-#define LOG_DEBUG
-#define LOG_WARN
-#define LOG_ERROR
-#endif
+#define LOG
+#endif /* C_DEBUG */
 
-
-
-
-#endif
+#endif /* __DOSBOX_H */
 

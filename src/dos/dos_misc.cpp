@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ static Bitu INT2F_Handler(void) {
 		if ((*loop_multiplex->handler)()) return CBRET_NONE;
 		loop_multiplex=loop_multiplex->next;
 	}
-	LOG_WARN("DOS:Multiplex Unhandled call %4X",reg_ax);	
+	LOG(LOG_ERROR,"DOS:Multiplex Unhandled call %4X",reg_ax);	
 	return CBRET_NONE;
 };
 

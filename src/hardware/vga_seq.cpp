@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -91,7 +91,7 @@ void write_p3c5(Bit32u port,Bit8u val) {
 		VGA_FindSettings();
 		break;
 	default:
-		LOG_ERROR("VGA:SEQ:Write to illegal index %2X",seq(index));
+		LOG(LOG_VGAMISC,"VGA:SEQ:Write to illegal index %2X",seq(index));
 	};
 };
 
@@ -113,7 +113,7 @@ Bit8u read_p3c5(Bit32u port) {
 	case 4:	/* Memory Mode */
 		return seq(memory_mode);
 	default:
-		LOG_ERROR("VGA:SEQ:Read from illegal index %2X",seq(index));
+		LOG(LOG_VGAMISC,"VGA:SEQ:Read from illegal index %2X",seq(index));
 	};
 	return 0;
 };

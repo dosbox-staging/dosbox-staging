@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,12 +28,6 @@
 
 
 #define SB_PIC_EVENTS 0
-
-#if DEBUG_SBLASTER
-#define SB_DEBUG S_Warn
-#else
-#define SB_DEBUG
-#endif
 
 #define DSP_MAJOR 2
 #define DSP_MINOR 0
@@ -349,9 +343,8 @@ static void GenerateSound(Bitu size) {
 		}
 	}
 	if (sb.out.pos>SB_BUF_SIZE) {
-		LOG_WARN("Buffer full?");
+		LOG(LOG_ERROR|LOG_SB,"Generation Buffer Full!!!!");
 		sb.out.pos=0;
-
 	}
 }
 
@@ -414,7 +407,7 @@ static void DSP_StartDMATranfser(DMA_MODES mode) {
 		sb.tmp.add_index=(sb.dma.rate<<16)/sb.hw.rate;
 		break;
 	default:
-		LOG_ERROR("DSP:Illegal transfer mode %d",mode);
+		LOG(LOG_ERROR|LOG_SB,"DSP:Illegal transfer mode %d",mode);
 		return;
 	}
 	//TODO Use the 16-bit dma for 16-bit transfers
@@ -422,7 +415,7 @@ static void DSP_StartDMATranfser(DMA_MODES mode) {
 	sb.dma.mode=mode;
 	DMA_SetEnableCallBack(sb.hw.dma8,DMA_Enable);
 	//TODO with stereo divide add_index
-	SB_DEBUG("SB:DMA Transfer:%s rate %d size %d",type,sb.dma.rate,sb.dma.total);
+	LOG(LOG_SB,"DMA Transfer:%s rate %d size %d",type,sb.dma.rate,sb.dma.total);
 }
 
 static void DSP_AddData(Bit8u val) {
@@ -432,7 +425,7 @@ static void DSP_AddData(Bit8u val) {
 		sb.dsp.out.data[start]=val;
 		sb.dsp.out.used++;
 	} else {
-		LOG_ERROR("SB:DSP:Data Output buffer full this is weird");
+		LOG(LOG_ERROR|LOG_SB,"DSP:Data Output buffer full");
 	}
 }
 
@@ -539,7 +532,7 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xe2:	/* Weird DMA identification write routine */
 		{
-			LOG_WARN("Call 0xe2");
+			LOG(LOG_SB,"DSP Function 0xe2");
 			for (Bitu i = 0; i < 8; i++)
 				if ((sb.dsp.in.data[0] >> i) & 0x01) sb.e2.value += E2_incr_table[sb.e2.count % 4][i];
 			 sb.e2.value += E2_incr_table[sb.e2.count % 4][8];
@@ -568,7 +561,7 @@ static void DSP_DoCommand(void) {
 		PIC_AddIRQ(sb.hw.irq,0);
 		break;
 	default:
-		LOG_WARN("SB:DSP:Unhandled command %2X",sb.dsp.cmd);
+		LOG(LOG_ERROR|LOG_SB,"DSP:Unhandled command %2X",sb.dsp.cmd);
 		break;
 	}
 	sb.dsp.cmd=DSP_NO_COMMAND;
@@ -611,7 +604,7 @@ static void MIXER_Write(Bit8u val) {
 		sb.mixer.master=val;
 		break;
 	default:
-		LOG_WARN("SB:MIXER:Write to unhandled index %X",sb.mixer.index);
+		LOG(LOG_ERROR|LOG_SB,"MIXER:Write to unhandled index %X",sb.mixer.index);
 	}
 }
 
@@ -624,7 +617,7 @@ static Bit8u MIXER_Read(void) {
 		ret=sb.mixer.master;
 		break;
 	default:
-		LOG_WARN("SB:MIXER:Read from unhandled index %X",sb.mixer.index);
+		LOG(LOG_ERROR|LOG_SB,"MIXER:Read from unhandled index %X",sb.mixer.index);
 		ret=0xff;
 	}
 	return ret;
@@ -658,7 +651,7 @@ static Bit8u read_sb(Bit32u port) {
 	case DSP_RESET:
 		return 0xff;
 	default:
-		LOG_WARN("SB:Unhandled read from SB Port %4X",port);
+		LOG(LOG_SB,"Unhandled read from SB Port %4X",port);
 		break;
 	}
 	return 0xff;
@@ -687,13 +680,12 @@ static void write_sb(Bit32u port,Bit8u val) {
 		break;
 
 	default:
-		LOG_WARN("SB:Unhandled write to SB Port %4X",port);
+		LOG(LOG_SB,"Unhandled write to SB Port %4X",port);
 		break;
 	}
 }
 
 static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
-	unsigned char tmpbuf[65536];
 	if (!len) return;
 	GenerateSound(len);
 	memcpy(stream,sb.out.buf,len*4);
@@ -702,7 +694,6 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 		sb.out.pos-=len;
 	}
 	else sb.out.pos=0;
-	//TODO Copy remainder
 	if (sb.mode==MODE_NONE) DSP_SetSpeaker(false);
 	return;
 }

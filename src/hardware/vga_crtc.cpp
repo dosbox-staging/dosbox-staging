@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -274,7 +274,7 @@ void write_p3d5(Bit32u port,Bit8u val) {
 		
 		break;
 	default:
-		LOG_ERROR("VGA:CRTC:Write to unknown index %2X",val,crtc(index));
+		LOG(LOG_VGAMISC,"VGA:CRTC:Write to unknown index %2X",val,crtc(index));
 	}
 }
 
@@ -331,7 +331,7 @@ Bit8u read_p3d5(Bit32u port) {
 	case 0x18:	/* Line Compare Register */
 		return crtc(line_compare);
 	default:
-		LOG_ERROR("VGA:CRTC:Read from unknown index %X",crtc(index));
+		LOG(LOG_VGAMISC,"VGA:CRTC:Read from unknown index %X",crtc(index));
 	}
 	return 0;
 }

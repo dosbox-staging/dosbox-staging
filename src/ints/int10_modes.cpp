@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -259,7 +259,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	mode&=mode & 127;
 	line=FindVideoMode(mode);
 	if (line==0xff) {
-		LOG_ERROR("INT10:Trying to set non supported video mode %X",mode);
+		LOG(LOG_ERROR|LOG_INT10,"INT10:Trying to set non supported video mode %X",mode);
 		return;	
 	}
 	
@@ -314,7 +314,7 @@ void INT10_SetVideoMode(Bit8u mode) {
 	IO_Read(VGAREG_ACTL_RESET);
 
 	//Set the palette
-	if ((modeset_ctl&0x08)==0x8) LOG_DEBUG("INT10:Mode set without palette");
+	if ((modeset_ctl&0x08)==0x8) LOG(LOG_INT10,"Mode set without palette");
 	if((modeset_ctl&0x08)==0) {
 		// Set the PEL mask
 		IO_Write(VGAREG_PEL_MASK,vga_modes[line].pelmask);

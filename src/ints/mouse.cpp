@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -567,7 +567,7 @@ static Bitu INT33_Handler(void) {
 		reg_cl=0;		/* Hmm ps2 irq dunno */
 		break;
 	default:
-		LOG_ERROR("Mouse Function %2X",reg_ax);
+		LOG(LOG_ERROR|LOG_MOUSE,"Mouse Function %2X",reg_ax);
 	}
 	return CBRET_NONE;
 }

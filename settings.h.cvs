@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,9 +23,6 @@
 #define C_DEBUG 0
 #define C_HEAVY_DEBUG 0
 
-/* Enable the logging of extra information for debugging to the console */
-#define C_LOGGING 0
-
 /* Enable some big compile-time increasing inlines, great for speed though */
 #define C_EXTRAINLINE 0
 
@@ -34,10 +31,5 @@
 
 /* Maximum memory range in megabytes */
 #define C_MEM_MAX_SIZE 12
-
-/* Enable debug messages for several modules, requires C_LOGGING */
-#define DEBUG_SBLASTER 0	/* SoundBlaster Debugging*/
-#define DEBUG_DMA 0			/* DMA Debugging */
-#define DEBUG_DOS 0			/* DOS Debugging */
 
 #endif

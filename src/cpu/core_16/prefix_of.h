@@ -62,7 +62,7 @@ switch(Fetchb()) {
 	case 0x23:												/* MOV DRx,Rd */
 		{
 			GetRM;
-			LOG_DEBUG("CPU:0F:23 does nothing");
+			LOG(LOG_CPU,"CPU:0F:23 does nothing");
 		}
 		break;
 	/* 0x24 MOV Rd,TRx (386) */

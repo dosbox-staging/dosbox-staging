@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ static void cmos_checktimer(void) {
 	if (!cmos.timer.div && !cmos.timer.enabled) return;
 	if (cmos.timer.div<=2) cmos.timer.div+=7;
 	cmos.timer.micro=(Bitu) (10000000.0/(32768.0 / (1 << (cmos.timer.div - 1))));
-	LOG_DEBUG("RTC Timer at %f hz",1000000.0/cmos.timer.micro);
+	LOG(LOG_PIT,"RTC Timer at %f hz",1000000.0/cmos.timer.micro);
 	PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 }
 
@@ -77,25 +77,25 @@ static void cmos_writereg(Bit32u port,Bit8u val) {
 		break;
 	case 0x0a:		/* Status reg A */
 		cmos.regs[cmos.reg]=val & 0x7f;
-		if (val & 0x70!=0x20) LOG_DEBUG("CMOS Illegal 22 stage divider value");
+		if (val & 0x70!=0x20) LOG(LOG_ERROR|LOG_BIOS,"CMOS Illegal 22 stage divider value");
 		cmos.timer.div=(val & 0xf);
 		cmos_checktimer();
 		break;
 	case 0x0b:		/* Status reg B */
 		cmos.regs[cmos.reg]=val & 0x7f;
 		cmos.timer.enabled=(val & 0x40)>0;
-		if (val&0x10) LOG_DEBUG("CMOS:Updated ended interrupt not supported yet");
+		if (val&0x10) LOG(LOG_ERROR|LOG_BIOS,"CMOS:Updated ended interrupt not supported yet");
 		cmos_checktimer();
 		break;
 	default:
 		cmos.regs[cmos.reg]=val & 0x7f;
-		LOG_DEBUG("CMOS:Unhandled register %x",cmos.reg);
+		LOG(LOG_ERROR|LOG_BIOS,"CMOS:Unhandled register %x",cmos.reg);
 	}
 }
 
 static Bit8u cmos_readreg(Bit32u port) {
 	if (cmos.reg>0x3f) {
-		LOG_DEBUG("CMOS:Read from illegal register %x",cmos.reg);
+		LOG(LOG_ERROR|LOG_BIOS,"CMOS:Read from illegal register %x",cmos.reg);
 		return 0xff;
 	}
 	switch (cmos.reg) {

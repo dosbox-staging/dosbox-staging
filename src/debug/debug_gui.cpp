@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002 - 2003  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,25 +20,43 @@
 
 #include "dosbox.h"
 #if C_DEBUG
-
+#include "setup.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <curses.h>
 #include <string.h>
 
+#include "support.h"
 #include "regs.h"
 #include "debug.h"
 #include "debug_inc.h"
 
-extern int old_cursor_state;
-void DEBUG_ShowMsg(char * msg) {
-	char buf[1024];
-	strcpy(buf,msg);
+struct _LogGroup {
+	char * front;
+	bool enabled;
+};
 
-	waddstr(dbg.win_out,buf);
-	wprintw(dbg.win_out," %d\n",cycle_count);
+namespace {
+	_LogGroup loggrp[LOG_MAX]={"",true,0};
+
+	FILE* debuglog;
+};
+
+extern int old_cursor_state;
+void DEBUG_ShowMsg(Bit32u entry, char * format,...) {
+	
+	if (!(entry & LOG_ERROR) && entry && !loggrp[entry].enabled) return;
+
+	char buf[1024];
+	strcpy(buf,loggrp[entry&127].front);
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(&buf[strlen(buf)],format,msg);
+	va_end(msg);
+	wprintw(dbg.win_out,"%10d: %s\n",cycle_count,buf);
 	wrefresh(dbg.win_out);
+    if(debuglog) fprintf(debuglog,"%10d: %s\n",cycle_count,buf);
 }
 
 
@@ -114,6 +132,68 @@ static void MakePairs(void) {
 	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
 	init_pair(PAIR_GREY_RED, COLOR_WHITE/*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
+static void LOG_Destroy(Section* sec) {
+	
+	if(debuglog) fclose(debuglog);
+}
+
+static void LOG_Init(Section * sec) {
+	Section_prop * sect=static_cast<Section_prop *>(sec);
+	const char * blah=sect->Get_string("logfile");
+	if(blah && (debuglog = fopen(blah,"wt+"))){
+	}else{
+		debuglog=0;
+	}
+	sect->AddDestroyFunction(LOG_Destroy);
+	char buf[1024];
+	for (Bitu i=1;i<LOG_MAX;i++) {
+		strcpy(buf,loggrp[i].front);
+		buf[strlen(buf)-1]=0;
+		loggrp[i].enabled=sect->Get_bool(buf);
+	}
+}
+
+
+void LOG_StartUp(void) {
+	/* Setup logging groups */
+	loggrp[LOG_VGA].front="VGA:";
+	loggrp[LOG_VGAGFX].front="VGAGFX:";
+	loggrp[LOG_VGAMISC].front="VGAMISC:";
+	loggrp[LOG_INT10].front="INT10:";
+	loggrp[LOG_SB].front="SBLASTER:";
+	loggrp[LOG_DMA].front="DMA:";
+	
+	loggrp[LOG_FPU].front="FPU:";
+	loggrp[LOG_CPU].front="CPU:";
+
+	loggrp[LOG_FCB].front="FCB:";
+	loggrp[LOG_FILES].front="FILES:";
+	loggrp[LOG_IOCTL].front="IOCTL:";
+	loggrp[LOG_EXEC].front="EXEC";
+	loggrp[LOG_DOSMISC].front="DOSMISC:";
+
+	loggrp[LOG_PIT].front="PIT:";
+	loggrp[LOG_KEYBOARD].front="KEYBOARD:";
+	loggrp[LOG_PIC].front="PIC:";
+
+	loggrp[LOG_MOUSE].front="MOUSE:";
+	loggrp[LOG_BIOS].front="BIOS:";
+	loggrp[LOG_GUI].front="GUI:";
+	loggrp[LOG_MISC].front="MISC:";
+	
+	/* Register the log section */
+	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
+	sect->Add_string("logfile","");
+	char buf[1024];
+	for (Bitu i=1;i<LOG_MAX;i++) {
+		strcpy(buf,loggrp[i].front);
+		buf[strlen(buf)-1]=0;
+		lowcase(buf);
+		sect->Add_bool(buf,true);
+	}
+}
+
+
 
 
 void DBGUI_StartUp(void) {
@@ -132,7 +212,6 @@ void DBGUI_StartUp(void) {
 	cycle_count=0;
 	MakePairs();
 	MakeSubWindows();
-
 
 }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ static void write_p60(Bit32u port,Bit8u val) {
 			KEYBOARD_AddCode(0xfa);	/* Acknowledge */
 			break;
 		default:
-			LOG_DEBUG("KEYB:60:Unhandled command %X",val);
+			LOG(LOG_ERROR|LOG_KEYBOARD,"60:Unhandled command %X",val);
 		}
 		return;
 	case CMD_SETTYPERATE:
@@ -159,7 +159,7 @@ static void write_p64(Bit32u port,Bit8u val) {
 		keyb.active=false;
 		break;
 	default:
-		LOG_DEBUG("Port 64 write with val %d",val);
+		LOG(LOG_ERROR|LOG_KEYBOARD,"Port 64 write with val %d",val);
 		break;
 	}
 }
@@ -173,7 +173,7 @@ void KEYBOARD_AddEvent(Bitu keytype,Bitu state,KEYBOARD_EventHandler * handler) 
 	KeyEvent * newevent=new KeyEvent;
 /* Add the event in the correct key structure */
 	if (keytype>=KBD_LAST) {
-		LOG_ERROR("KEYBOARD:Illegal key %d for handler",keytype);
+		LOG(LOG_ERROR|LOG_KEYBOARD,"Illegal key %d for handler",keytype);
 	}
 	newevent->next=event_handlers[keytype];
 	event_handlers[keytype]=newevent;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ void CALLBACK_Idle(void) {
 }
 
 static Bitu default_handler(void) {
-	LOG_WARN("Illegal Unhandled Interrupt Called %X",lastint);
+	LOG(LOG_ERROR|LOG_CPU,"Illegal Unhandled Interrupt Called %X",lastint);
 	return CBRET_NONE;
 };
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -59,12 +59,12 @@ void Interrupt(Bit8u num) {
 
 	switch (num) {
 	case 0x00:
- 		LOG_WARN("Divide Error");
+ 		LOG(LOG_CPU,"Divide Error");
 		break;
 	case 0x06:
 		break;
 	case 0x07:
-		LOG_WARN("Co Processor Exception");
+		LOG(LOG_FPU,"Co Processor Exception");
 		break;
 	case 0x08:
 	case 0x09:
@@ -86,7 +86,7 @@ void Interrupt(Bit8u num) {
 		break;
 	case 0xcd:
 #if C_HEAVY_DEBUG
- 		LOG_DEBUG("Call to interrupt 0xCD this is BAD");
+ 		LOG(LOG_CPU|LOG_ERROR,"Call to interrupt 0xCD this is BAD");
 		DEBUG_HeavyWriteLogInstruction();
 #endif
  		E_Exit("Call to interrupt 0xCD this is BAD");
@@ -96,7 +96,7 @@ void Interrupt(Bit8u num) {
 #endif
 		break;
 	case 0x05:
-		LOG_MSG("CPU:Out Of Bounds interrupt");
+		LOG(LOG_CPU,"CPU:Out Of Bounds interrupt");
 		break;
 	default:
 //		LOG_WARN("Call to unsupported INT %02X call %02X",num,reg_ah);

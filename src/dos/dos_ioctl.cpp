@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ bool DOS_IOCTL(void) {
 		reg_dx=Files[handle]->GetInformation();
 		return true;
 	case 0x07:		/* Get Output Status */
-		LOG_DEBUG("DOS:IOCTL:07:Fakes output status is ready for handle %d",handle);
+		LOG(LOG_IOCTL,"DOS:IOCTL:07:Fakes output status is ready for handle %d",handle);
 		reg_al=0xff;
 		return true;
 	case 0x08:		/* Check if block device removable */
@@ -71,7 +71,7 @@ bool DOS_IOCTL(void) {
 				mem_writeb(ptr+6,0x00);					// media type (00=other type)
 				break;
 			default	:	
-				LOG_ERROR("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
+				LOG(LOG_IOCTL|LOG_ERROR,"DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
 				return false;
 			}
 			return true;
@@ -94,7 +94,7 @@ bool DOS_IOCTL(void) {
             break;
         }
 	default:
-		LOG_ERROR("DOS:IOCTL Call %2X unhandled",reg_al);
+		LOG(LOG_DOSMISC|LOG_ERROR,"DOS:IOCTL Call %2X unhandled",reg_al);
 		return false;
 	};
 	return false;

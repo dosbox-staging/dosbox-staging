@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,18 +44,18 @@ static Bitu INT1A_Handler(void) {
 	case 0x02:	/* GET REAL-TIME CLOCK TIME (AT,XT286,PS) */
 		reg_dx=reg_cx=0;
 		CALLBACK_SCF(false);
-		LOG_WARN("INT1A:02:Faked RTC get time call");
+		LOG(LOG_BIOS,"INT1A:02:Faked RTC get time call");
 		break;
 	case 0x04:	/* GET REAL-TIME ClOCK DATA  (AT,XT286,PS) */
 		reg_dx=reg_cx=0;
 		CALLBACK_SCF(false);
-		LOG_WARN("INT1A:04:Faked RTC get date call");
+		LOG(LOG_ERROR|LOG_BIOS,"INT1A:04:Faked RTC get date call");
 		break;
 	case 0x80:	/* Pcjr Setup Sound Multiplexer */
-		LOG_WARN("INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
+		LOG(LOG_ERROR|LOG_BIOS,"INT1A:80:Setup tandy sound multiplexer to %d",reg_al);
 		break;
 	case 0x81:	/* Tandy sound system checks */
-		LOG_WARN("INT1A:81:Tandy DAC Check failing");
+		LOG(LOG_ERROR|LOG_BIOS,"INT1A:81:Tandy DAC Check failing");
 		break;
 /*
 	INT 1A - Tandy 2500, Tandy 1000L series - DIGITAL SOUND - INSTALLATION CHECK
@@ -68,7 +68,7 @@ static Bitu INT1A_Handler(void) {
 			clear on return, then call AH=84h"Tandy"
 */
 	default:
-		LOG_WARN("INT1A:Undefined call %2X",reg_ah);
+		LOG(LOG_ERROR|LOG_BIOS,"INT1A:Undefined call %2X",reg_ah);
 	}
 	return CBRET_NONE;
 }	
@@ -96,7 +96,8 @@ static Bitu INT11_Handler(void) {
           internal modem installed (PC/Convertible)
     14-15 number of parallel ports installed
 	*/
-	reg_eax=0x104D;
+	reg_ax=0x104D;
+	LOG(LOG_BIOS,"INT11:Equipment list returned %X",reg_ax);
 	return CBRET_NONE;
 }
 
@@ -132,7 +133,7 @@ static Bitu INT12_Handler(void) {
 };
 
 static Bitu INT17_Handler(void) {
-	LOG_ERROR("INT17:Not supported call for bios printer support");
+	LOG(LOG_BIOS,"INT17:Function %X",reg_ah);
 	switch(reg_ah) {
 	case 0x00:		/* PRINTER: Write Character */
 		reg_ah=1;	/* Report a timeout */
@@ -146,7 +147,7 @@ static Bitu INT17_Handler(void) {
 		E_Exit("Unhandled INT 17 call %2X",reg_ah);
 	};
 	return CBRET_NONE;
-};
+}
 
 static void WaitFlagEvent(void) {
 	PhysPt where=Real2Phys(mem_readd(BIOS_WAIT_FLAG_POINTER));
@@ -157,10 +158,10 @@ static void WaitFlagEvent(void) {
 static Bitu INT15_Handler(void) {
 	switch (reg_ah) {
 	case 0x06:
-		LOG_WARN("Calling unkown int15 function 6");
+		LOG(LOG_BIOS,"INT15 Unkown Function 6");
 		break;
 	case 0xC0:	/* Get Configuration*/
-		LOG_WARN("Request BIOS Configuration INT 15 C0");
+		LOG(LOG_ERROR|LOG_BIOS,"Request BIOS Configuration INT 15 C0");
 		CALLBACK_SCF(true);
 		break;
 	case 0x4f:	/* BIOS - Keyboard intercept */
@@ -198,7 +199,7 @@ static Bitu INT15_Handler(void) {
 				CALLBACK_SCF(true);
 			}
 		} else {
-			LOG_WARN("INT15:84: Unknown Bios Joystick functionality.");
+			LOG(LOG_ERROR|LOG_BIOS,"INT15:84:Unknown Bios Joystick functionality.");
 		}
 		break;
 	case 0x86:	/* BIOS - WAIT (AT,PS) */
@@ -220,18 +221,16 @@ static Bitu INT15_Handler(void) {
 		reg_ah=0;
 		break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
+	case 0xc4:	/* BIOS POS Programma option Select */
 		/* 
 			Damn programs should use the mouse drivers 
 			So let's fail these calls 
 		*/
-		CALLBACK_SCF(true);
-		break;
-	case 0xc4:	/* BIOS POS Programma option Select */
-		LOG_WARN("INT15:C4:Call for POS Function %2x",reg_al);
+		LOG(LOG_BIOS,"INT15:Function %X called,bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
 		break;
 	default:
-		LOG_WARN("INT15:Unknown call %2X",reg_ah);
+		LOG(LOG_ERROR|LOG_BIOS,"INT15:Unknown call %2X",reg_ah);
 		reg_ah=0x86;
 		CALLBACK_SCF(false);
 	}
@@ -242,7 +241,7 @@ static Bitu INT1_Single_Step(void) {
 	static bool warned=false;
 	if (!warned) {
 		warned=true;
-		LOG_WARN("INT 1:Single Step called");
+		LOG(LOG_CPU,"INT 1:Single Step called");
 	}
 	return CBRET_NONE;
 }

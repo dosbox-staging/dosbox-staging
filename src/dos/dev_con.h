@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                 ansi.esc=true;
                 count++;
                 if(!ansiwarned) {
-                    LOG_WARN("ANSI sequences detected. enabling ansi support"); /* maybe LOG_MSG */
+                    LOG(LOG_IOCTL,"ANSI sequences detected. enabling ansi support"); /* maybe LOG_MSG */
                     ansiwarned=true;
                 }
                 continue;
@@ -143,7 +143,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             case 'D':/* scrolling DOWN*/
             case 'M':/* scrolling UP*/ 
             default:
-                LOG_DEBUG("ANSI: unknown char %c after a esc",data[count]); /*prob () */
+                LOG(LOG_IOCTL,"ANSI: unknown char %c after a esc",data[count]); /*prob () */
                 ClearAnsi();
                 break;
             }
@@ -179,13 +179,13 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
                     ansi.attr|=0x8;
                     break;
                 case 4: /* underline */
-                    LOG_DEBUG("ANSI:no support for underline yet");
+                    LOG(LOG_IOCTL,"ANSI:no support for underline yet");
                     break;
                 case 5: /* blinking */
-                    LOG_DEBUG("ANSI:no support for blinking yet");
+                    LOG(LOG_IOCTL,"ANSI:no support for blinking yet");
                     break;
                 case 7: /* reverse */
-                    LOG_DEBUG("ANSI:no support for reverse yet");
+                    LOG(LOG_IOCTL,"ANSI:no support for reverse yet");
                     break;
                 case 30: /* fg color black */
                     ansi.attr&=0xf8;
@@ -284,7 +284,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
         case 'J': /*erase screen and move cursor home*/
             if(ansi.data[0]==0) ansi.data[0]=2;
             if(ansi.data[0]!=2) {/* only number 2 (the standard one supported) */ 
-                LOG_DEBUG("ANSI: esc[%dJ called : not supported",ansi.data[0]);
+                LOG(LOG_IOCTL,"ANSI: esc[%dJ called : not supported",ansi.data[0]);
                 break;
             }
             for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutput(' ',ansi.attr,true,0);
@@ -293,7 +293,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
             break;
         case 'h': /* set MODE (if code =7 enable linewrap) */
         case 'I': /*RESET MODE */
-            LOG_DEBUG("ANSI: set/reset mode called(not supported)");
+            LOG(LOG_IOCTL,"ANSI: set/reset mode called(not supported)");
             ClearAnsi();
             break;
         case 'D': /*Cursor Backward  */
@@ -320,7 +320,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
         case 'p':/* reassign keys (needs strings) */
         case 'i':/* printer stuff */
         default:
-            LOG_DEBUG("ANSI: unhandled char %c in esc[",data[count]);
+            LOG(LOG_IOCTL,"ANSI: unhandled char %c in esc[",data[count]);
             ClearAnsi();
             break;
         }

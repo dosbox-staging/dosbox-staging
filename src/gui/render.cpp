@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 /* Find a filename to open */
 	dir=opendir(snapshots_dir);
 	if (!dir) {
-		LOG_WARN("Can't open snapshot dir %s",snapshots_dir);
+		LOG_MSG("Can't open snapshot dir %s",snapshots_dir);
 		return;
 	}
 	while (dir_ent=readdir(dir)) {
@@ -130,7 +130,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 /* Open the actual file */
 	FILE * fp=fopen(file_name,"wb");
 	if (!fp) {
-		LOG_WARN("Can't open snapshot file %s",file_name);
+		LOG_MSG("Can't open snapshot file %s",file_name);
 		return;
 	}
 /* Finalize the initing of png library */

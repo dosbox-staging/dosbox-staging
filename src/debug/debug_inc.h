@@ -37,6 +37,7 @@ struct DBGBlock {
 	WINDOW * win_out;					/* Text Output Window */
 	Bit32u active_win;					/* Current active window */
 	Bit32u input_y;
+	Bit32u global_mask;					/* Current msgmask */
 };
 
 

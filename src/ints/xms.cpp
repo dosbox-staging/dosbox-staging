@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ Bitu XMS_Handler(void) {
 	case XMS_LOCAL_ENABLE_A20:									/* 05 */
 	case XMS_LOCAL_DISABLE_A20:									/* 06 */
 	case XMS_QUERY_A20:											/* 07 */
-		LOG_WARN("XMS:Unhandled call %2X",reg_ah);
+		LOG(LOG_ERROR|LOG_MISC,"XMS:Unhandled call %2X",reg_ah);
 		break;	
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
 		/* Scan the tree for free memory and find largest free block */
@@ -316,7 +316,7 @@ foundnew:
 		reg_dx=xms_handles[reg_dx].size;
 		break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
-		LOG_WARN("XMS:Unhandled call %2X",reg_ah);
+		LOG(LOG_ERROR|LOG_MISC,"XMS:Unhandled call %2X",reg_ah);
 		break;
 	case XMS_ALLOCATE_UMB:										/* 10 */
 		reg_ax=0;
@@ -325,7 +325,8 @@ foundnew:
 		break;
 	case XMS_DEALLOCATE_UMB:									/* 11 */
 	default:
-		LOG_WARN("XMS:Unhandled call %2X",reg_ah);break;
+		LOG(LOG_ERROR|LOG_MISC,"XMS:Unhandled call %2X",reg_ah);
+		break;
 
 	}
 	return CBRET_NONE;

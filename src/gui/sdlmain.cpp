@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ struct SDL_Block {
 	Bitu flags;
 	GFX_ModeCallBack mode_callback;
 	bool full_screen;
+	bool nowait;
 	SDL_Surface * surface;
 	SDL_Joystick * joy;
 	SDL_cond *cond;
@@ -234,6 +235,7 @@ static void GUI_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.full_screen=false;
+	sdl.nowait=section->Get_bool("nowait");
 	sdl.mouse.locked=false;
 	sdl.mouse.requestlock=false;
 	sdl.mouse.autoenable=section->Get_bool("autolock");
@@ -498,7 +500,7 @@ void GFX_Events() {
 			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
-			E_Exit("Closed the SDL Window");
+			throw(true);
 			break;
 		}
     }
@@ -512,15 +514,17 @@ void GFX_ShowMsg(char * msg) {
 };
 
 int main(int argc, char* argv[]) {
-	
-#if C_DEBUG
-	DEBUG_SetupConsole();
-#endif
+
+
 	
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
+	
+#if C_DEBUG
+		DEBUG_SetupConsole();
+#endif
 
 		if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 #ifndef DISABLE_JOYSTICK
@@ -532,7 +536,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
-
+		sdl_sec->Add_bool("nowait",false);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
@@ -564,7 +568,11 @@ int main(int argc, char* argv[]) {
         if (sdl.full_screen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
 		LOG_MSG("Exit to error: %sPress enter to continue.",error);
-		fgetc(stdin);
+		if(!sdl.nowait) fgetc(stdin);
+	}
+	catch (...){ 
+        if (sdl.full_screen) SwitchFullScreen();
+	    if (sdl.mouse.locked) CaptureMouse();
 	}
     return 0;
 };

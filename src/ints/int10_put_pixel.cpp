@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	case CTEXT:
 	case MTEXT:
 	default:
-		LOG_WARN("INT10:PutPixel Unhandled memory model %d",curmode->memmodel);
+		LOG(LOG_ERROR|LOG_INT10,"PutPixel Unhandled memory model %d",curmode->memmodel);
 		break;
 	}	
 }
@@ -135,7 +135,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 	case CTEXT:
 	case MTEXT:
 	default:
-		LOG_WARN("INT10:GetPixel Unhanled memory model");
+		LOG(LOG_ERROR|LOG_INT10,"GetPixel Unhandled memory model %d",curmode->memmodel);
 		break;
 	}	
 }

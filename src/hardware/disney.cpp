@@ -1,3 +1,21 @@
+/*
+ *  Copyright (C) 2002-2003  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 #include <string.h>
 #include "dosbox.h"
 #include "inout.h"
@@ -29,7 +47,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 		disney.data=val;
 		break;
 	case 1:		/* Status Port */		
-		LOG_WARN("DISNEY:Status write %x",val);
+		LOG(LOG_MISC,"DISNEY:Status write %x",val);
 		break;
 	case 2:		/* Control Port */
 //		LOG_WARN("DISNEY:Control write %x",val);
@@ -38,7 +56,7 @@ static void disney_write(Bit32u port,Bit8u val) {
 				disney.buffer[disney.used++]=disney.data;
 			}
 		}
-		if (val&0x10) LOG_DEBUG("DISNEY:Parallel IRQ Enabled");
+		if (val&0x10) LOG(LOG_ERROR,"DISNEY:Parallel IRQ Enabled");
 		disney.control=val;
 		break;
 	}
@@ -48,16 +66,16 @@ static Bit8u disney_read(Bit32u port) {
 
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
-		LOG_WARN("DISNEY:Read from data port");
+//		LOG(LOG_MISC,"DISNEY:Read from data port");
 		return disney.data;
 		break;
 	case 1:		/* Status Port */	
-//		LOG_WARN("DISNEY:Read from status port %X",disney.status);
+//		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
 		if (disney.used>=16) return 0x40;
 		else return 0x0;
 		break;
 	case 2:		/* Control Port */
-		LOG_WARN("DISNEY:Read from control port");
+		LOG(LOG_MISC,"DISNEY:Read from control port");
 		return disney.control;
 		break;
 	}

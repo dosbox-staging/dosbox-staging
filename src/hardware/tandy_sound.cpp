@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ static void write_pc0(Bit32u port,Bit8u val) {
 //			tandy.chan[tandy.reg>>1].freq_pos=0;
 			break;		
 		default:
-			LOG_WARN("TANDY:Illegal dual byte reg %d",tandy.reg);
+			LOG(0,"TANDY:Illegal dual byte reg %d",tandy.reg);
 		};
 	}
 

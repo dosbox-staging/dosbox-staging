@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ enum {DAC_READ,DAC_WRITE};
 
 
 static void write_p3c6(Bit32u port,Bit8u val) {
-	if (val!=0xff) LOG_ERROR("VGA:Pel Mask not 0xff");
+	if (val!=0xff) LOG(LOG_VGAGFX,"VGA:Pel Mask not 0xff");
 	vga.dac.pel_mask=val;
 }
 
@@ -112,7 +112,7 @@ static void write_p3c9(Bit32u port,Bit8u val) {
 		vga.dac.pel_index=0;
 		break;
 	default:
-		LOG_ERROR("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
+		LOG(LOG_VGAGFX,"VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
 	};
 }
 
@@ -133,7 +133,7 @@ static Bit8u read_p3c9(Bit32u port) {
 		vga.dac.pel_index=0;
 		break;
 	default:
-		LOG_ERROR("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
+		LOG(LOG_VGAMISC,"VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
 	}
 	return ret;
 }

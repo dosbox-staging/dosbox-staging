@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x01:								/* Set TextMode Cursor Shape */
         vga.internal.cursor=reg_cx;         // maybe write some memory somewhere
-		LOG_DEBUG("INT10:01:Set textmode cursor shape partially supported: %X",reg_cx);
+		LOG(LOG_INT10,"INT10:01:Set textmode cursor shape partially supported: %X",reg_cx);
 		break;
 	case 0x02:								/* Set Cursor Pos */
 		//TODO Check some shit but not really usefull
@@ -54,11 +54,11 @@ static Bitu INT10_Handler(void) {
 		reg_dh=CURSOR_POS_ROW(reg_bh);
 		break;
 	case 0x04:								/* read light pen pos YEAH RIGHT */
-		LOG_WARN("INT10:04:Ligthpen not supported");
+		/* Light pen is not supported */
 		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80) LOG_DEBUG("Func %x",reg_al);
+		if (reg_al & 0x80) LOG(LOG_INT10,"Func %x",reg_al);
 		else INT10_SetActivePage(reg_al);
 		break;	
 	case 0x06:								/* Scroll Up */
@@ -81,11 +81,9 @@ static Bitu INT10_Handler(void) {
 		break;
 	case 0x0B:								/* Set Background/Border Colour & Set Palette*/
         if(!warned_int10_0b) {
-            LOG_WARN("INT 10:0B Unsupported: Set Background/border colour & Set Pallete");
+            LOG(LOG_ERROR|LOG_INT10,"Function 0B Unsupported: Set Background/border colour & Set Pallete");
             warned_int10_0b=true;
         }
-		break;
-		E_Exit("Unsupported int 10 call %02X" ,reg_ah);
 		break;
 	case 0x0C:								/* Write Graphics Pixel */
 		INT10_PutPixel(reg_cx,reg_dx,reg_bh,reg_al);
@@ -137,7 +135,7 @@ static Bitu INT10_Handler(void) {
 			INT10_GetDACBlock(reg_bx,reg_cx,SegPhys(es)+reg_dx);
 			break;
 		default:
-			LOG_WARN("INT10:10:Unhandled EGA/VGA Palette Function %2X",reg_al);
+			LOG(LOG_ERROR|LOG_INT10,"Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
 		}
 		break;
 	case 0x11:								/* Character generator functions */
@@ -182,12 +180,12 @@ static Bitu INT10_Handler(void) {
 				break;
 			default:
 				reg_cx=16;
-				LOG_DEBUG("INT10:11:30 Request for font %2X",reg_bh);	
+				LOG(LOG_ERROR|LOG_INT10,"Fucntion 11:30 Request for font %2X",reg_bh);	
 			}
 			reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 			break;
 		default:
-			LOG_WARN("INT10:11:Unsupported character generator call %2X",reg_al);
+			LOG(LOG_ERROR|LOG_INT10,"Function 11:Unsupported character generator call %2X",reg_al);
 		}
 		break;
 	case 0x12:								/* alternate function select */
@@ -200,7 +198,7 @@ static Bitu INT10_Handler(void) {
 				break;
 			}
 		default:
-			LOG_WARN("Alternate functions select %2X not handled",reg_bl);
+			LOG(LOG_ERROR|LOG_INT10,"Function 12:Call %2X not handled",reg_bl);
 		}
 		break;
 	case 0x13:								/* Write String */
@@ -217,7 +215,6 @@ static Bitu INT10_Handler(void) {
 			reg_al=0x1A;
 			break;
 		}
-		LOG_DEBUG("INT10:1A:Display Combination call %2X",reg_al);
 		break;
 	case 0x1B:								/* functionality State Information */
 		switch (reg_bx) {
@@ -226,15 +223,15 @@ static Bitu INT10_Handler(void) {
 			reg_al=0x1B;
 			break;
 		default:
-			LOG_WARN("INT10:1B:Unhandled call BX %2X",reg_bx);
+			LOG(LOG_ERROR|LOG_INT10,"Function 1B:Unhandled call BX %2X",reg_bx);
 		}
 		break;
 	case 0xff:
-		if (!warned_ff) LOG_WARN("INT10:FF:Weird NC call");
+		if (!warned_ff) LOG(LOG_INT10,"INT10:FF:Weird NC call");
 		warned_ff=true;
 		break;
 	default:
-		LOG_WARN("Unhandled INT 10 call %2X",reg_ah);
+		LOG(LOG_ERROR|LOG_INT10,"Function %2X not supported",reg_ah);
 	};
 	return CBRET_NONE;
 }
@@ -273,8 +270,6 @@ void INT10_Init(Section* sec) {
 	INT10_InitVGA();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
-	//TODO ERRORS ERRORS ERRORS
-	if (call_10==-1) E_Exit("Error can't allocate Video Int 10 CallBack\n");
 	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET);
 	RealSetVec(0x10,CALLBACK_RealPointer(call_10));
 	//Init the 0x40 segment and init the datastructures in the the video rom area

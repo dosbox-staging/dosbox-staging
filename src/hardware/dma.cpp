@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ static Bit8u read_dma(Bit32u port) {
 		break;
 
 	default:
-		LOG_WARN("DMA:Unhandled read from %d",port);
+		LOG(LOG_ERROR,"DMA:Unhandled read from %d",port);
 	}
 	return ret;
 }
@@ -130,7 +130,7 @@ static void write_dma(Bit32u port,Bit8u val) {
 		chan->addr_changed=true;
 		break;
 	case 0x08:	/* Command Register */
-		if (val != 4) LOG_WARN("DMA1:Illegal command %2X",val);
+		if (val != 4) LOG(LOG_ERROR,"DMA1:Illegal command %2X",val);
 		cont->command_reg=val;
 		break;
 	case 0x09:	/* Request Register */
@@ -155,7 +155,7 @@ static void write_dma(Bit32u port,Bit8u val) {
  		chan->mode.autoinit_enable = (val & 0x10) > 0;
 		chan->mode.transfer_type = (val >> 2) & 0x03;
 		if (chan->mode.address_decrement) {
-			LOG_WARN("DMA:Address Decrease not supported yet");
+			LOG(LOG_ERROR,"DMA:Address Decrease not supported yet");
 		}
 
 		break;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -333,7 +333,8 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 
 bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	/* First check for devices */
-	if (flags>2) LOG_DEBUG("Special file open command %X file %s",flags,name);
+	if (flags>2) LOG(LOG_FILES|LOG_ERROR,"Special file open command %X file %s",flags,name);
+	else LOG(LOG_FILES,"file open command %X file %s",flags,name);
 	flags&=3;
 	DOS_PSP psp(dos.psp);
 	Bit8u handle=DOS_FindDevice((char *)name);
@@ -344,19 +345,6 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		/* First check if the name is correct */
 		if (!DOS_MakeName(name,fullname,&drive)) return false;
 		
-		/* Check, if file is already opened */
-/*		for (i=0;i<DOS_FILES;i++) {
-			if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
-				*entry = psp.FindEntryByHandle(i);
-				if (*entry==0xFF) {
-					// This shouldnt happen
-					LOG_ERROR("DOS: File %s is opened but has no psp entry.",name);
-					return false;
-				}
-				return true;
-			}
-		}
-*/
 		/* Check for a free file handle */
 			for (i=0;i<DOS_FILES;i++) {
 			if (!Files[i]) {
@@ -669,7 +657,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 			handle = psp.FindEntryByHandle(i);
 			if (handle==0xFF) {
 				// This shouldnt happen
-				LOG_ERROR("DOS: File %s is opened but has no psp entry.",shortname);
+				LOG(LOG_FILES|LOG_ERROR,"DOS: File %s is opened but has no psp entry.",shortname);
 				return false;
 			}
 			fcb.FileOpen((Bit8u)handle);

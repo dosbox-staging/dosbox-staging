@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -134,7 +134,7 @@ bool get_CF(void) {
 	case t_DIV:
 		return false;	/* Unkown */
 	default:
-		LOG_WARN("get_CF Unknown %d",flags.type);
+		LOG(LOG_ERROR|LOG_CPU,"get_CF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -229,7 +229,7 @@ again:
 	case t_MUL:
 		return false;			          /* Unkown */
 	default:
-		LOG_WARN("get_AF Unknown %d",flags.type);
+		LOG(LOG_ERROR|LOG_CPU,"get_AF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -314,7 +314,7 @@ again:
 	case t_MUL:
 		return false;		/* Unkown */
 	default:
-		LOG_WARN("get_ZF Unknown %d",flags.type);
+		LOG(LOG_ERROR|LOG_CPU,"get_ZF Unknown %d",flags.type);
 	}
 	return false;
 }
@@ -398,7 +398,7 @@ again:
 	case t_MUL:
 		return false;	/* Unkown */
 	default:
-		LOG_WARN("get_SF Unkown %d",flags.type);
+		LOG(LOG_ERROR|LOG_CPU,"get_SF Unkown %d",flags.type);
 	}
 	return false;
 
@@ -539,7 +539,7 @@ again:
 	case t_DIV:
 		return false;		/* Unkown */
 	default:
-		LOG_WARN("get_OF Unkown %d",flags.type);
+		LOG(LOG_ERROR|LOG_CPU,"get_OF Unkown %d",flags.type);
 	}
 	return false;
 }

@@ -42,6 +42,7 @@ Bitu errorlevel=1;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
+void LOG_StartUp(void);
 void MEM_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
@@ -158,6 +159,7 @@ void DOSBOX_Init(void) {
     secprop->Add_string("language","");
 #if C_DEBUG	
 	secprop->Add_int("warnings",4);
+	LOG_StartUp();
 #else 
 	secprop->Add_int("warnings",0);
 #endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ static Bitu CPU_Real_16_Slow_Decode(void) {
 		if (prefix.count) {
 			PrefixReset;
 			//DEBUG_HeavyWriteLogInstruction();
-			LOG_DEBUG("Prefix for non prefixed instruction");
+			LOG(LOG_CPU,"Prefix for non prefixed instruction");
 		}
 		CPU_Cycles--;
 	}

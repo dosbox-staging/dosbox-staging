@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002  The DOSBox Team
+ *  Copyright (C) 2002-2003  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ static void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 			Bitu stop=vga.config.line_compare;
 			if (vga.draw.double_height) stop/=2;
 			if (stop>=vga.draw.height){
-				LOG_VGA("Split at %d",stop);
+				LOG(LOG_VGAGFX,"Split at %d",stop);
 				goto drawnormal;
 			}
 			switch (vga.mode) {
@@ -73,7 +73,7 @@ static void VGA_DrawHandler(RENDER_Part_Handler part_handler) {
 				bufsplit=memory+0xa0000;
 				break;
 			default:
-				LOG_WARN("VGA:Unhandled split screen mode %d",vga.mode);
+				LOG(LOG_VGAGFX,"VGA:Unhandled split screen mode %d",vga.mode);
 				goto norender;
 			}
 			part_handler(buf,0,0,vga.draw.width,stop);
@@ -161,8 +161,8 @@ static void VGA_DoResize(void) {
 	/* Check for pixel doubling, master clock/2 */
 	if (vga.seq.clocking_mode & 0x8) clock/=2;
 
-	LOG_VGA("H total %d, V Total %d",htotal,vtotal);
-	LOG_VGA("H D End %d, V D End %d",hdispend,vdispend);
+	LOG(LOG_VGA,"H total %d, V Total %d",htotal,vtotal);
+	LOG(LOG_VGA,"H D End %d, V D End %d",hdispend,vdispend);
 	fps=clock/(vtotal*htotal);
 
 	vga.draw.resizing=false;
@@ -221,8 +221,8 @@ static void VGA_DoResize(void) {
 		vga.draw.height=height;
 		vga.draw.pitch=pitch;
 
-		LOG_VGA("Width %d, Height %d",width,height);
-		LOG_VGA("Flags %X, fps %f",flags,fps);
+		LOG(LOG_VGA,"Width %d, Height %d",width,height);
+		LOG(LOG_VGA,"Flags %X, fps %f",flags,fps);
 		RENDER_SetSize(width,height,8,pitch,((float)width/(float)height),flags,&VGA_DrawHandler);
 		vga.draw.blank=(Bitu)(1000000/fps);
 		PIC_AddEvent(VGA_BlankTimer,vga.draw.blank);
