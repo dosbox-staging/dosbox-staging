@@ -182,14 +182,20 @@ void CONFIG::Run(void) {
 	FILE * f;
 	if (cmd->FindString("-writeconf",temp_line,true)) {
 		f=fopen(temp_line.c_str(),"wb+");
-		if (!f) WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+		if (!f) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+			return;
+		}
 		fclose(f);
 		control->PrintConfig(temp_line.c_str());
 		return;
 	}
 	if (cmd->FindString("-writelang",temp_line,true)) {
 		f=fopen(temp_line.c_str(),"wb+");
-		if (!f) WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+		if (!f) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
+			return;
+		}
 		fclose(f);
 		MSG_Write(temp_line.c_str());
 		return;
