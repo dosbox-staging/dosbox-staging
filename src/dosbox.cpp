@@ -210,7 +210,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
 	secprop->Add_string("snapdir","snaps");
-	secprop->Add_bool("aspect",true);
+	secprop->Add_bool("aspect",false);
 	secprop->Add_string("scaler","normal2x");
 	MSG_Add("RENDER_CONFIGFILE_HELP",
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
