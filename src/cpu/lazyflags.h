@@ -26,9 +26,9 @@ Bitu get_PF(void);
 
 #define SETFLAGSb(FLAGB)													\
 {																			\
+	SETFLAGBIT(OF,get_OF());												\
 	flags.type=t_UNKNOWN;													\
-	flags.word&=0xffffff00;													\
-	flags.word|=(FLAGB&0xff);												\
+	CPU_SetFlags((flags.word&0xffffff00)|((FLAGB) & 0xff));					\
 }
 
 #define SETFLAGSw(FLAGW)													\
