@@ -35,10 +35,10 @@ public:
 		/* Parse the command line */
 		/* if the command line is empty show current mounts */
 		if (!cmd->GetCount()) {
-			WriteOut("Current mounted drives are\n");
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 			for (int d=0;d<DOS_DRIVES;d++) {
 				if (Drives[d]) {
-					WriteOut("Drive %c is mounted as %s\n",d+'A',Drives[d]->GetInfo());
+					WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),d+'A',Drives[d]->GetInfo());
 				}
 			}
 			return;
@@ -75,12 +75,12 @@ public:
 			if (!temp_line.size()) goto showusage;
 			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
-				WriteOut("Directory %s Doesn't exist",temp_line.c_str());
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 				return;
 			}
 			/* Not a switch so a normal directory/file */
 			if (!(test.st_mode & S_IFDIR)) {
-				WriteOut("%s isn't a directory",temp_line.c_str());
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 				return;
 			}
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
@@ -91,7 +91,7 @@ public:
 		drive=toupper(temp_line[0]);
 		if (!isalpha(drive)) goto showusage;
 		if (Drives[drive-'A']) {
-			WriteOut("Drive %c already mounted with %s\n",drive,Drives[drive-'A']->GetInfo());
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ALLREADY_MOUNDTED"),drive,Drives[drive-'A']->GetInfo());
 			if (newdrive) delete newdrive;
 			return;
 		}
@@ -102,7 +102,7 @@ public:
 		WriteOut("Drive %c mounted as %s\n",drive,newdrive->GetInfo());
 		return;
 showusage:
-		WriteOut("Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
+		WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"));
 		return;
 	}
 };
@@ -118,7 +118,7 @@ public:
 		WriteOut("\n");
 		Bit16u seg,blocks;blocks=0xffff;
 		DOS_AllocateMemory(&seg,&blocks);
-		WriteOut("%10d Kb free conventional memory\n",blocks*16/1024);
+		WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
 		/* Test for and show free XMS */
 		reg_ax=0x4300;CALLBACK_RunRealInt(0x2f);
 		if (reg_al==0x80) {
@@ -127,7 +127,7 @@ public:
 			reg_ah=8;
 			CALLBACK_RunRealFar(xms_seg,xms_off);
 			if (!reg_bl) {
-				WriteOut("%10d Kb free extended memory\n",reg_dx);
+				WriteOut(MSG_Get("PROGRAM_MEM_EXTEND"),reg_dx);
 			}
 		}	
 		/* Test for and show free EMS */
@@ -136,7 +136,7 @@ public:
 			DOS_CloseFile(handle);
 			reg_ah=0x42;
 			CALLBACK_RunRealInt(0x67);
-			WriteOut("%10d Kb free expanded memory\n",reg_bx*16);
+			WriteOut(MSG_Get("PROGRAM_MEM_EXPAND"),reg_bx*16);
 		}
 	}
 };
@@ -163,10 +163,10 @@ void UPCASE::upcasedir(const char * directory) {
 	struct stat finfo;
 
 	if(!(sdir=opendir(directory)))	{
-		WriteOut("Failed to open directory %s\n",directory);
+		WriteOut(MSG_Get("PROGRAM_UPCASE_ERROR_DIR"),directory);
 		return;
 	}
-	WriteOut("Scanning directory %s\n",fullname);
+	WriteOut(MSG_Get("PROGRAM_UPCASE_SCANNING_DIR"),fullname);
 	while (tempdata=readdir(sdir)) {
 		if (strcmp(tempdata->d_name,".")==0) continue;
 		if (strcmp(tempdata->d_name,"..")==0) continue;
@@ -177,7 +177,7 @@ void UPCASE::upcasedir(const char * directory) {
 		strcat(newname,"/");
 		upcase(tempdata->d_name);
 		strcat(newname,tempdata->d_name);
-		WriteOut("Renaming %s to %s\n",fullname,newname);
+		WriteOut(MSG_Get("PROGRAM_UPCASE_RENAME"),fullname,newname);
 		rename(fullname,newname);
 		stat(fullname,&finfo);
 		if(S_ISDIR(finfo.st_mode)) {
@@ -191,31 +191,27 @@ void UPCASE::upcasedir(const char * directory) {
 void UPCASE::Run(void) {
 	/* First check if the directory exists */
 	struct stat info;
-	WriteOut("UPCASE 0.1 Directory case convertor.\n");
+	WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_1"));
 	if (!cmd->GetCount()) {
-		WriteOut("Usage UPCASE [local directory]\n");
-		WriteOut("This tool will convert all files and subdirectories in a directory.\n");
-		WriteOut("Be VERY sure this directory contains only dos related material.\n");
-		WriteOut("Otherwise you might horribly screw up your filesystem.\n");
+		WriteOut(MSG_Get("PROGRAM_UPCASE_USAGE"));
 		return;
 	}
 	cmd->FindCommand(1,temp_line);
 	if (stat(temp_line.c_str(),&info)) {
-		WriteOut("%s doesn't exist\n",temp_line.c_str());
+		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_ERROR_1"),temp_line.c_str());
 		return;
 	}
 	if(!S_ISDIR(info.st_mode)) {
-		WriteOut("%s isn't a directory\n",temp_line.c_str());
+		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_ERROR_2"),temp_line.c_str());
 		return;
 	}
-	WriteOut("Converting the wrong directories can be very harmfull, please be carefull.\n");
-	WriteOut("Are you really really sure you want to convert %s to upcase?Y/N\n",temp_line.c_str());
+	WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_CHOICE"),temp_line.c_str());
 	Bit8u key;Bit16u n=1;
 	DOS_ReadFile(STDIN,&key,&n);
 	if (toupper(key)=='Y') {
 		upcasedir(temp_line.c_str());	
 	} else {
-		WriteOut("Okay better not do it.\n");
+		WriteOut(MSG_Get("PROGRAM_UPCASE_RUN_NO"));
 	}
 }
 
@@ -225,7 +221,30 @@ static void UPCASE_ProgramStart(Program * * make) {
 #endif
 
 void DOS_SetupPrograms(void) {
-	
+    /*Add Messages */
+	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_1","Current mounted drives are:\n");
+    MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
+    MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
+    MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
+    MSG_Add("PROGRAM_MOUNT_USAGE","Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
+
+    MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
+    MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
+    MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
+
+#if !defined (WIN32)                        /* Unix */
+    MSG_Add("PROGRAM_UPCASE_ERROR_DIR","Failed to open directory %s\n");
+    MSG_Add("PROGRAM_UPCASE_SCANNING_DIR","Scanning directory %s\n");
+    MSG_Add("PROGRAM_UPCASE_RENAME","Renaming %s to %s\n");
+    MSG_Add("PROGRAM_UPCASE_RUN_1","UPCASE 0.1 Directory case convertor.\n");
+    MSG_Add("PROGRAM_UPCASE_USAGE","Usage UPCASE [local directory]\nThis tool will convert all files and subdirectories in a directory.\nBe VERY sure this directory contains only dos related material.\nOtherwise you might horribly screw up your filesystem.\n");
+    MSG_Add("PROGRAM_UPCASE_RUN_ERROR_1","%s doesn't exist\n");
+    MSG_Add("PROGRAM_UPCASE_RUN_ERROR_2","%s isn't a directory\n");
+    MSG_Add("PROGRAM_UPCASE_RUN_CHOICE","Converting the wrong directories can be very harmfull, please be carefull.\nAre you really really sure you want to convert %s to upcase?Y/N\n");
+    MSG_Add("PROGRAM_UPCASE_RUN_NO","Okay better not do it.\n");
+#endif
+    /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
 #if !defined (WIN32)						/* Unix */

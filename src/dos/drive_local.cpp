@@ -121,7 +121,7 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	strcpy(full_name,srch_dir);
 	strcat(full_name,dir_ent->d_name);
 	if(stat(full_name,&stat_block)!=0){
-		exit(1);
+		goto again;
 	}
 	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
 	else find_attr=DOS_ATTR_ARCHIVE;

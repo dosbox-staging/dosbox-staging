@@ -202,7 +202,21 @@ void SHELL_Init() {
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v0.40\nFor Help and supported commands type: HELP\n\nHAVE FUN!\nThe DOSBox Team\n\n");
-	/* Regular startup */
+	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
+    MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
+    MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
+    MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
+    MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
+    MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
+    MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
+    MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
+    MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
+    MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
+    MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
+    MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
+    MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
+
+    /* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
 
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET);
