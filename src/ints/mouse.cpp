@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.39 2004-07-06 19:12:28 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.40 2004-07-11 20:02:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -508,13 +508,11 @@ void Mouse_NewVideoMode(void)
 { //Does way to much. Many of this stuff should be moved to mouse_reset one day
 	WriteMouseIntVector();
    
-//	real_writed(0,(0x74<<2),CALLBACK_RealPointer(call_int74));
 	if(MOUSE_IRQ > 7) {
 		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-
 	mouse.shown=-1;
 	/* Get the correct resolution from the current video mode */
 	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
@@ -548,15 +546,15 @@ void Mouse_NewVideoMode(void)
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
 		break;
 	} 
-	mouse.max_x=639;
-	mouse.min_x=0;
-	mouse.min_y=0;
+	mouse.max_x = 639;
+	mouse.min_x = 0;
+	mouse.min_y = 0;
 	// Dont set max coordinates here. it is done by SetResolution!
-	mouse.x=0;				// civ wont work otherwise
-	mouse.y=static_cast<float>(mouse.max_y/2);
-	mouse.events=0;
-	mouse.mickey_x=0;
-	mouse.mickey_y=0;
+	mouse.x = 0;				// civ wont work otherwise
+	mouse.y = static_cast<float>(mouse.max_y / 2);
+	mouse.events = 0;
+	mouse.mickey_x = 0;
+	mouse.mickey_y = 0;
 
 	mouse.hotx		 = 0;
 	mouse.hoty		 = 0;
@@ -661,10 +659,12 @@ static Bitu INT33_Handler(void) {
 		}
 	case 0x07:	/* Define horizontal cursor range */
 		{	//lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
+			//Iron seed works if newvideo mode with mode 13 sets 0-639
+			//Larry 6 actually wants newvideo mode with mode 13 to set it to 0-319
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-			//if(max - min + 1 > 640) max = min + 640 - 1;
+			if(min == max) break; //Wayne's World
 			mouse.min_x=min;
 			mouse.max_x=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
@@ -677,7 +677,7 @@ static Bitu INT33_Handler(void) {
 			Bits max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
-		//	if(static_cast<Bitu>(max - min + 1) > CurMode->sheight) max = min + CurMode->sheight - 1;
+			if(min == max) break; //Wayne's World
 			mouse.min_y=min;
 			mouse.max_y=max;
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
@@ -705,7 +705,6 @@ static Bitu INT33_Handler(void) {
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
-	        mouse.max_x=CurMode->swidth;//Larry 6
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
 		SetMickeyPixelRate(reg_cx,reg_dx);
@@ -905,7 +904,7 @@ void MOUSE_Init(Section* sec) {
 	// Callback 0x33
 	CreateMouseCallback();
 	call_int74=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET);
+	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET,"int 74");
 	if(MOUSE_IRQ > 7) {
 		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
 	} else {
