@@ -41,6 +41,9 @@ bool get_CF(void) {
 	case t_DECw:
 	case t_DECd:
 	case t_MUL:
+	case t_RCLb:
+	case t_RCLw:
+	case t_RCLd:
 		return flags.cf;
 		break;
 	
@@ -72,34 +75,32 @@ bool get_CF(void) {
 	case t_CMPd:
 		return (flags.var1.d<flags.var2.d);
 	case t_SHLb:
-		if (flags.var2.b>=8) return false;
+		if (flags.var2.b>8) return false;
 		else return (flags.var1.b >> (8-flags.var2.b)) & 1;
 	case t_SHLw:
-		if (flags.var2.b>=16) return false;
+		if (flags.var2.b>16) return false;
 		else return (flags.var1.w >> (16-flags.var2.b)) & 1;
 	case t_SHLd:
-		return (flags.var1.d >> (32 - flags.var2.b)) & 0x01;
 	case t_DSHLw:	/* Hmm this is not correct for shift higher than 16 */
-		return (flags.var1.d >> (32 - flags.var2.b)) & 0x01;
 	case t_DSHLd:
-		return (flags.var1.d >> (32 - flags.var2.b)) & 0x01;
-
+		return (flags.var1.d >> (32 - flags.var2.b)) & 1;
+	case t_RCRb:
 	case t_SHRb:
-		return (flags.var1.b >> (flags.var2.b - 1)) & 0x01;
+		return (flags.var1.b >> (flags.var2.b - 1)) & 1;
+	case t_RCRw:
 	case t_SHRw:
-		return (flags.var1.w >> (flags.var2.b - 1)) & 0x01;
+		return (flags.var1.w >> (flags.var2.b - 1)) & 1;
+	case t_RCRd:
 	case t_SHRd:
-		return (flags.var1.d >> (flags.var2.b - 1)) & 0x01;
-	case t_SARb:
-		return (flags.var1.b >> (flags.var2.b - 1)) & 0x01;
-	case t_SARw:
-		return (flags.var1.w >> (flags.var2.b - 1)) & 0x01;
-	case t_SARd:
-		return (flags.var1.d >> (flags.var2.b - 1)) & 0x01;
 	case t_DSHRw:	/* Hmm this is not correct for shift higher than 16 */
-		return (flags.var1.d >> (flags.var2.b - 1)) & 0x01;
 	case t_DSHRd:
-		return (flags.var1.d >> (flags.var2.b - 1)) & 0x01;
+		return (flags.var1.d >> (flags.var2.b - 1)) & 1;
+	case t_SARb:
+		return (((Bit8s) flags.var1.b) >> (flags.var2.b - 1)) & 1;
+	case t_SARw:
+		return (((Bit16s) flags.var1.w) >> (flags.var2.b - 1)) & 1;
+	case t_SARd:
+		return (((Bit32s) flags.var1.d) >> (flags.var2.b - 1)) & 1;
 	case t_NEGb:
 		return (flags.var1.b!=0);
 	case t_NEGw:
@@ -107,29 +108,17 @@ bool get_CF(void) {
 	case t_NEGd:
 		return (flags.var1.d!=0);
 	case t_ROLb:
-		return (flags.result.b & 1)>0;
+		return flags.result.b & 1;
 	case t_ROLw:
-		return (flags.result.w & 1)>0;
+		return flags.result.w & 1;
 	case t_ROLd:
-		return (flags.result.d & 1)>0;
+		return flags.result.d & 1;
 	case t_RORb:
 		return (flags.result.b & 0x80)>0;
 	case t_RORw:
 		return (flags.result.w & 0x8000)>0;
 	case t_RORd:
 		return (flags.result.d & 0x80000000)>0;
-	case t_RCLb:
-		return ((flags.var1.b >> (8-flags.var2.b))&1)>0;
-	case t_RCLw:
-		return ((flags.var1.w >> (16-flags.var2.b))&1)>0;
-	case t_RCLd:
-		return ((flags.var1.d >> (32-flags.var2.b))&1)>0;
-	case t_RCRb:
-		return ((flags.var1.b >> (flags.var2.b-1))&1)>0;
-	case t_RCRw:
-		return ((flags.var1.w >> (flags.var2.b-1))&1)>0;
-	case t_RCRd:
-		return ((flags.var1.d >> (flags.var2.b-1))&1)>0;
 	case t_ORb:
 	case t_ORw:
 	case t_ORd:
@@ -427,6 +416,9 @@ again:
 	switch (type) {
 	case t_UNKNOWN:
 	case t_MUL:
+	case t_RCLb:
+	case t_RCLw:
+	case t_RCLd:
 		return flags.of;
 	case t_CF:
 		type=flags.prev_type;
@@ -448,9 +440,9 @@ again:
 	case t_ADDd:
 	case t_ADCd:
 //TODO fix dword Overflow
-		var1d31 = flags.var1.d & 0x8000;
-		var2d31 = flags.var2.d & 0x8000;
-		resultd31 = flags.result.d & 0x8000;
+		var1d31 = flags.var1.d & 0x80000000;
+		var2d31 = flags.var2.d & 0x80000000;
+		resultd31 = flags.result.d & 0x80000000;
 		return (var1d31 == var2d31) && (resultd31 ^ var2d31);	
 	case t_SBBb:
 	case t_SUBb:
@@ -471,10 +463,10 @@ again:
 	case t_SBBd:
 	case t_SUBd:
 	case t_CMPd:
-		var1d31 = flags.var1.d & 0x8000;
-		var2d31 = flags.var2.d & 0x8000;
-		resultd31 = flags.result.d & 0x8000;
-		return (var1d31 ^ var2d31) && (var1d31 ^ resultd31);	
+		var1d31 = flags.var1.d & 0x80000000;
+		var2d31 = flags.var2.d & 0x80000000;
+		resultd31 = flags.result.d & 0x80000000;
+		return (var1d31 ^ var2d31) && (var1d31 ^ resultd31);
 	case t_INCb:
 		return (flags.result.b == 0x80);
 	case t_INCw:
@@ -494,39 +486,43 @@ again:
 	case t_NEGd:
 		return (flags.var1.d == 0x80000000);
 	case t_ROLb:
-	case t_RORb:
-	case t_RCLb:
-	case t_RCRb:
-	case t_SHLb:
-		if (flags.var2.b==1) return ((flags.var1.b ^ flags.result.b) & 0x80) >0;
-		break;
+		return ((flags.result.b & 0x80) ^ (flags.result.b & 1 ? 0x80 : 0)) != 0;
 	case t_ROLw:
-	case t_RORw:
-	case t_RCLw:
-	case t_RCRw:
-	case t_SHLw:
-	case t_DSHLw:		//TODO This is euhm inccorect i think but let's keep it for now
-		if (flags.var2.b==1) return ((flags.var1.w ^ flags.result.w) & 0x8000) >0;
-		break;
+		return ((flags.result.w & 0x8000) ^ (flags.result.w & 1 ? 0x8000 : 0)) != 0;
 	case t_ROLd:
-	case t_RORd:
-	case t_RCLd:
-	case t_RCRd:
+		return ((flags.result.d & 0x80000000) ^ (flags.result.d & 1 ? 0x80000000 : 0)) != 0;
+	case t_SHLb:
+		if (flags.var2.b>9) return false;
+		return ((flags.result.b & 0x80) ^
+			((flags.var1.b << (flags.var2.b - 1)) & 0x80)) != 0;
+	case t_SHLw:
+		if (flags.var2.b>17) return false;
+		return ((flags.result.w & 0x8000) ^
+			((flags.var1.w << (flags.var2.b - 1)) & 0x8000)) != 0;
+	case t_DSHLw:	/* Hmm this is not correct for shift higher than 16 */
+		return ((flags.result.w & 0x8000) ^
+			(((flags.var1.d << (flags.var2.b - 1)) >> 16) & 0x8000)) != 0;
 	case t_SHLd:
 	case t_DSHLd:
-		if (flags.var2.b==1) return ((flags.var1.d ^ flags.result.d) & 0x80000000) >0;
-		break;
+		return ((flags.result.d & 0x80000000) ^
+			((flags.var1.d << (flags.var2.b - 1)) & 0x80000000)) != 0;
+	case t_RORb:
+	case t_RCRb:
+		return ((flags.result.b ^ (flags.result.b << 1)) & 0x80) > 0;
+	case t_RORw:
+	case t_RCRw:
+	case t_DSHRw:
+		return ((flags.result.w ^ (flags.result.w << 1)) & 0x8000) > 0;
+	case t_RORd:
+	case t_RCRd:
+	case t_DSHRd:
+		return ((flags.result.d ^ (flags.result.d << 1)) & 0x80000000) > 0;
 	case t_SHRb:
-		if (flags.var2.b==1) return (flags.var1.b >= 0x80);
-		break;
+		return (flags.result.b >= 0x40);
 	case t_SHRw:
-	case t_DSHRw:						//TODO
-		if (flags.var2.b==1) return (flags.var1.w >= 0x8000);
-		break;
+		return (flags.result.w >= 0x4000);
 	case t_SHRd:
-	case t_DSHRd:						//TODO
-		if (flags.var2.b==1) return (flags.var1.d >= 0x80000000);
-		break;
+		return (flags.result.d >= 0x40000000);
 	case t_SARb:
 	case t_SARw:
 	case t_SARd:
