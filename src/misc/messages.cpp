@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: messages.cpp,v 1.16 2005-02-03 10:17:44 qbix79 Exp $ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,9 +58,7 @@ void MSG_Replace(const char * _name, const char* _val) {
 	/* Find the message */
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
 		if((*tel).name==_name) { 
-			itmb teln=tel;
-			teln++;
-			Lang.erase(tel,teln);
+			Lang.erase(tel);
 			break;
 		}
 	}
