@@ -1,4 +1,14 @@
 0.61
+  - Added a beta dynamic cpu for x86 hosts (very unstable)
+  - Added opengl and hardware overlay display output
+  - Rewrote the vga screen updates to go in lines
+  - Added paging and v86 support to cpu emulation
+  - Added a config option to simulate a certain type of machine
+  - Added hercules graphics emulation
+  - Made CGA/TANDY modes more compatible
+  - Updated textmode drawing routines to support blinking colors
+  - Fixed VESA set page function that was documented wrong
+  - Fixed some wrongly emulated cpu opcodes.
   - improved exception handling
   - debugger: fixes; logging of gdt,lgt,idt, new commands(Fizzban)
   - fixed some mscdex issues (drive letter header error, added get directory entry)
@@ -14,7 +24,7 @@
   - Enabled internal modem
   - Made the DOS parsing routines a bit more flexible
   - Added Subst (Srecko)
-  - Added ioctl support for linux (prompt)
+  - Added cdrom ioctl support for linux (prompt)
   - Many internal DOS fixes: memory/files/datastructures.
   - Got some help from c2woody in allowing more than 1 irq being served
   - Disabled DPMI (not needed anymore. DOSBox handles almost every extender)
