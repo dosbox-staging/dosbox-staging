@@ -86,7 +86,7 @@ PhysPt SelBase(Bitu sel) {
 }
 
 void CPU_SetFlags(Bitu word) {
-	flags.word=word;
+	flags.word=(word|2)&~0x14;
 }
 
 bool CPU_CheckCodeType(CODE_TYPE type) {
@@ -524,6 +524,7 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 				cpu.pmode=true;
 				LOG_MSG("Protected mode");
 				PAGING_Enable((value & CR0_PAGING)>0);
+				CPU_Core_Full_Start(cpu.code.big);
 			} else {
 				cpu.pmode=false;
 				PAGING_Enable(false);
@@ -850,7 +851,7 @@ void CPU_Init(Section* sec) {
 	SegSet16(ss,0);
 
 	reg_eip=0;
-	flags.word=FLAG_IF;
+	CPU_SetFlags(FLAG_IF);				//Enable interrupts
 	cpu.cr0=0xffffffff;
 	CPU_SET_CRX(0,0);					//Initialize
 	cpu.v86=false;
