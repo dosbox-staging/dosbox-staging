@@ -269,7 +269,7 @@
 	CASE_0F_W(0xa8)												/* PUSH GS */		
 		Push_16(SegValue(gs));break;
 	CASE_0F_W(0xa9)												/* POP GS */		
-		POPSEG(fs,Pop_16(),2);break;
+		POPSEG(gs,Pop_16(),2);break;
 	CASE_0F_W(0xab)												/* BTS Ew,Gw */
 		{
 			FillFlags();GetRMrw;
