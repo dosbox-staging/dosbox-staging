@@ -91,9 +91,10 @@ switch (inst.code.save) {
 		LoadIP();
 		break;
 	case S_FLGb:
-		flags.type=t_UNKNOWN;											\
-		flags.cf	=(inst.op1.d & 0x001)>0;flags.pf	=(inst.op1.d & 0x004)>0;		\
-		flags.af	=(inst.op1.d & 0x010)>0;flags.zf	=(inst.op1.d & 0x040)>0;		\
+		flags.of	=get_OF();
+		flags.type=t_UNKNOWN;
+		flags.cf	=(inst.op1.d & 0x001)>0;flags.pf	=(inst.op1.d & 0x004)>0;
+		flags.af	=(inst.op1.d & 0x010)>0;flags.zf	=(inst.op1.d & 0x040)>0;
 		flags.sf	=(inst.op1.d & 0x080)>0;
 		break;
 	case S_FLGw:

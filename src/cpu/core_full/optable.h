@@ -111,7 +111,7 @@ static OpCode OpCodeTable[1024]={
 {D_CBW		,0			,0		,0		},{D_CWD	,0			,0		,0		},
 {L_Ifw		,O_CALL_F	,S_CSIP	,0		},{L_ERROR	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHw,0		},{L_POPw	,0			,S_FLGw	,0		},
-{L_FLG		,0			,S_REGb	,REGI_AH},{L_REGb	,0			,S_FLGb	,REGI_AH},
+{L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
 /* 0xa0 - 0xa7 */
 {L_OP		,O_ALOP		,0		,0		},{L_OP		,O_AXOP		,0		,0		},
@@ -469,7 +469,7 @@ static OpCode OpCodeTable[1024]={
 {D_CBW		,0			,0		,0		},{D_CDQ	,0			,0		,0		},
 {L_Ifd		,O_CALL_F	,S_CSIP	,0		},{L_ERROR	,0			,0		,0		},
 {L_FLG		,0			,S_PUSHd,0		},{L_POPd	,0			,S_FLGd	,0		},
-{L_FLG		,0			,S_REGb	,REGI_AH},{L_REGb	,0			,S_FLGb	,REGI_AH},
+{L_REGb		,0			,S_FLGb	,REGI_AH},{L_FLG	,0			,S_REGb	,REGI_AH},
 
 /* 0x2a0 - 0x2a7 */
 {L_OP		,O_ALOP		,0		,0		},{L_OP		,O_EAXOP	,0		,0		},
