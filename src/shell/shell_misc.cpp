@@ -61,7 +61,7 @@ void DOS_Shell::InputCommand(char * line) {
 				case 0x3d:		/* F3 */
 					if (strlen(old.buffer)>str_len) {
 						reader=&old.buffer[str_len];
-						while (c=*reader++) {
+						while ((c=*reader++)) {
 							line[str_index]=c;
 							str_len++;
 							str_index++;
