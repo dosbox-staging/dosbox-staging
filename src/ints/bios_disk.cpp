@@ -238,19 +238,19 @@ static Bitu GetDosDriveNumber(Bitu biosNum) {
 
 static bool driveInactive(Bitu driveNum) {
 	if(driveNum>=(2 + MAX_HDD_IMAGES)) {
-		LOG_MSG("Disk %d non-existant", driveNum);
+		LOG(LOG_BIOS,LOG_ERROR)("Disk %d non-existant", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
 		return true;
 	}
 	if(imageDiskList[driveNum] == NULL) {
-		LOG_MSG("Disk %d not active", driveNum);
+		LOG(LOG_BIOS,LOG_ERROR)("Disk %d not active", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
 		return true;
 	}
 	if(!imageDiskList[driveNum]->active) {
-		LOG_MSG("Disk %d not active", driveNum);
+		LOG(LOG_BIOS,LOG_ERROR)("Disk %d not active", driveNum);
 		last_status = 0x01;
 		CALLBACK_SCF(true);
 		return true;
@@ -391,7 +391,7 @@ static Bitu INT13_DiskHandler(void) {
 		CALLBACK_SCF(false);
 		break;
 	default:
-		LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
+		LOG(LOG_BIOS,LOG_ERROR)("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
 		reg_ah=0xff;
 		CALLBACK_SCF(true);
 	}
