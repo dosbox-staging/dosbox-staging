@@ -266,11 +266,6 @@ static Bitu DOS_21Handler(void) {
 			psp.SetDTA(dos.dta);
 		}
 		break;
-	case 0x1f:		/* Get drive parameter block for default drive */
-		
-	case 0x32:		/* Get drive parameter block for specific drive */
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
-		break;		/* TODO maybe but hardly think a game needs this */
 	case 0x25:		/* Set Interrupt Vector */
 		RealSetVec(reg_al,RealMakeSeg(ds,reg_dx));
 		break;
@@ -686,18 +681,18 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x58:					/* Get/Set Memory allocation strategy */
 		switch (reg_al) {
-		case 0:		/* Get Strategy */
+		case 0:					/* Get Strategy */
 			reg_ax=DOS_GetMemAllocStrategy();
 			break;
-		case 1:		/* Set Strategy */
+		case 1:					/* Set Strategy */
 			DOS_SetMemAllocStrategy(reg_bx);
 			break;
-		case 2:		/* Get UMB Link Status */
-			reg_ax=1; /* no UMB support */
+		case 2:					/* Get UMB Link Status */
+			reg_ax=1;	// no UMB support 
 			CALLBACK_SCF(true);
 			break;
-		case 3:		/* Set UMB Link Status */
-			reg_ax=1; /* failure, no support */
+		case 3:					/* Set UMB Link Status */
+			reg_ax=1;	// failure, no support
 			CALLBACK_SCF(true);
 			break;
 		default:
@@ -743,12 +738,6 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
-
-	case 0x5c:					/* FLOCK File region locking */
-	case 0x5e:					/* More Network Functions */
-	case 0x5f:					/* And Even More Network Functions */
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
-		break;
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
@@ -836,6 +825,11 @@ static Bitu DOS_21Handler(void) {
     case 0xEF:                  /* Used in Ancient Art Of War CGA */
 	case 0x5d:					/* Network Functions ||HMMM seems to critical error info and return 1!! Maybe implement it.??*/
 	                            /* al=06 clears cf and leaves al=6 and returns crit error flag location*/
+	case 0x1f:					/* Get drive parameter block for default drive */
+	case 0x32:					/* Get drive parameter block for specific drive */
+	case 0x5c:					/* FLOCK File region locking */
+	case 0x5e:					/* More Network Functions */
+	case 0x5f:					/* And Even More Network Functions */
     default:
         LOG(LOG_ERROR|LOG_MISC,"DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
         reg_al=0x00; /* default value */
