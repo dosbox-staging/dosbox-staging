@@ -45,7 +45,7 @@ static Bitu INT13_SmallHandler(void) {
             reg_ah=0x80;
             CALLBACK_SCF(true);
         }
-        LOG_WARN("INT 13:04 Verify sector used on %d, with result %d",reg_dl,reg_ah);
+        LOG_DEBUG("INT 13:04 Verify sector used on %d, with result %d",reg_dl,reg_ah);
         break;
           
 	case 0x08:	/* Get Drive Parameters */
