@@ -138,6 +138,7 @@ bool Interrupt(Bitu num) {
 		reg_eip=mem_readw(num << 2);
 		Segs.val[cs]=mem_readw((num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
+		cpu.code.big=false;
 		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		/* Protected Mode Interrupt */
@@ -213,6 +214,7 @@ bool CPU_Exception(Bitu exception,Bit32u error_code) {
 		reg_eip=mem_readw(exception << 2);
 		Segs.val[cs]=mem_readw((exception << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
+		cpu.code.big=false;
 		return CPU_CheckCodeType(CODE_REAL);
 	} else { /* Protected Mode Exception */
 	
@@ -233,6 +235,7 @@ bool CPU_IRET(bool use32) {
 			SegSet16(cs,CPU_Pop16());
 			CPU_SetFlagsw(CPU_Pop16());
 		}
+		cpu.code.big=false;
 		return CPU_CheckCodeType(CODE_REAL);
 	} else {	/* Protected mode IRET */
 		/* Check if this is task IRET */
@@ -323,6 +326,7 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 			reg_eip=offset;
 		}
 		SegSet16(cs,selector);
+		cpu.code.big=false;
 		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		Bitu rpl=selector & 3;
@@ -367,6 +371,7 @@ bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 			CPU_Push32(reg_eip);
 			reg_eip=offset;
 		}
+		cpu.code.big=false;
 		SegSet16(cs,selector);
 		return CPU_CheckCodeType(CODE_REAL);
 	} else {
@@ -422,6 +427,7 @@ bool CPU_RET(bool use32,Bitu bytes) {
 		reg_esp+=bytes;
 		SegSet16(cs,new_cs);
 		reg_eip=new_ip;
+		cpu.code.big=false;
 		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		Bitu offset,selector;
@@ -561,7 +567,7 @@ Bitu CPU_GET_CRX(Bitu cr) {
 
 
 void CPU_SMSW(Bitu & word) {
-	word=cpu.cr0 & 0xffff;
+	word=cpu.cr0;
 }
 
 bool CPU_LMSW(Bitu word) {
