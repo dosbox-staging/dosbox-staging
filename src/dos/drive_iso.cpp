@@ -16,13 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.6 2005-03-16 20:44:56 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.7 2005-03-25 09:06:46 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
 #include "cdrom.h"
 #include "dosbox.h"
 #include "dos_system.h"
+#include "support.h"
 #include "drives.h"
 
 using namespace std;
