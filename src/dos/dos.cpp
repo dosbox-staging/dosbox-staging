@@ -253,7 +253,7 @@ static Bitu DOS_21Handler(void) {
             char string[1024];
             MEM_StrCopy(SegPhys(ds)+reg_si,string,1024);
             reg_al=FCB_Parsename(SegValue(es),reg_di,reg_al ,string, &difference);
-            reg_di+=difference;
+            reg_si+=difference;
         }
 		LOG_DEBUG("DOS:29:FCB Parse Filename, result:al=%d",reg_al);
         break;
