@@ -170,12 +170,12 @@ static	CDROM_Interface_Image* images[26];
 
 private:
 	// player
-static	void	CDAudioCallBack(Bit8u *stream, Bit32u len);
+static	void	CDAudioCallBack(Bitu len);
 	int	GetTrack(int sector);
 
 static  struct imagePlayer {
 		CDROM_Interface_Image *cd;
-		MIXER_Channel   *channel;
+		MixerChannel   *channel;
 		SDL_mutex 	*mutex;
 		Bit8u   buffer[8192];
 		int     bufLen;

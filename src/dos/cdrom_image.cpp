@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.1 2004-08-13 19:43:02 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.2 2004-08-23 09:22:23 harekiet Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -139,9 +139,8 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
 		player.mutex = SDL_CreateMutex();
 		if (!player.channel) {
 			player.channel = MIXER_AddChannel(&CDAudioCallBack, 44100, "CDAUDIO");
-			MIXER_SetMode(player.channel, MIXER_16STEREO);
 		}
-		MIXER_Enable(player.channel, true);
+		player.channel->Enable(true);
 	}
 	refCount++;
 }
@@ -156,7 +155,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 		Sound_Quit();
 #endif
 		SDL_DestroyMutex(player.mutex);
-		MIXER_Enable(player.channel, false);
+		player.channel->Enable(false);
 	}
 }
 
@@ -302,12 +301,12 @@ bool CDROM_Interface_Image::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 	return tracks[track].file->read(buffer, seek, length);
 }
 
-void CDROM_Interface_Image::CDAudioCallBack(Bit8u *stream, Bit32u len)
+void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 {
 	len *= 4;       // 16 bit, stereo
 	if (!len) return;
 	if (!player.isPlaying || player.isPaused) {
-		memset(stream, 0, len);
+		player.channel->AddSilence();
 		return;
 	}
 	
@@ -328,8 +327,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bit8u *stream, Bit32u len)
 		}
 	}
 	SDL_mutexV(player.mutex);
-	
-	memcpy(stream, player.buffer, len);
+	player.channel->AddSamples_s16(len/4,(Bit16s *)player.buffer);
 	memmove(player.buffer, &player.buffer[len], player.bufLen - len);
 	player.bufLen -= len;
 }
