@@ -16,12 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.23 2003-11-14 00:04:25 harekiet Exp $ */
+/* $Id: bios.cpp,v 1.24 2003-11-26 09:25:51 harekiet Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
 #include "bios.h"
 #include "regs.h"
+#include "cpu.h"
 #include "callback.h"
 #include "inout.h"
 #include "mem.h"
@@ -247,6 +248,24 @@ static Bitu INT15_Handler(void) {
 		reg_ax=size_extended;
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function 0x88 Remaining %04X kb",reg_ax);
 		CALLBACK_SCF(false);
+		break;
+	case 0x89:	/* SYSTEM - SWITCH TO PROTECTED MODE */
+		{
+			IO_Write(0x20,0x10);IO_Write(0x21,reg_bh);IO_Write(0x21,0);
+			IO_Write(0xA0,0x10);IO_Write(0xA1,reg_bl);IO_Write(0xA1,0);
+			MEM_A20_Enable(true);
+			PhysPt table=SegPhys(es)+reg_si;
+			CPU_LGDT(mem_readw(table+0x8),mem_readd(table+0x8+0x2) & 0xFFFFFF);
+			CPU_LIDT(mem_readw(table+0x10),mem_readd(table+0x10+0x2) & 0xFFFFFF);
+			CPU_SET_CRX(0,CPU_GET_CRX(0)|1);
+			CPU_SetSegGeneral(ds,0x18);
+			CPU_SetSegGeneral(es,0x20);
+			CPU_SetSegGeneral(ss,0x28);
+			reg_sp+=6;			//Clear stack of interrupt frame
+			CPU_SetFlags(0,FMASK_ALL);
+			reg_ax=0;
+			CPU_JMP(false,0x30,reg_cx);
+		}
 		break;
 	case 0x90:	/* OS HOOK - DEVICE BUSY */
 		CALLBACK_SCF(false);
