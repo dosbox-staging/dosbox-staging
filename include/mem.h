@@ -128,7 +128,6 @@ void phys_writew(PhysPt addr,Bit16u val);
 void phys_writed(PhysPt addr,Bit32u val);
 
 /* These don't check for alignment, better be sure it's correct */
-Bit32u phys_page_readd(Bitu page,Bitu off);
 
 void MEM_BlockWrite(PhysPt pt,void * data,Bitu size);
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size);
