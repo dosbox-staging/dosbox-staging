@@ -1,3 +1,4 @@
+0.57
   - added support for command /C
   - fixed all fcb-write functions
   - fixed fcb-parseline
@@ -15,8 +16,29 @@
   - fixed most of the problems/bugs with character input.
   - fixed allocationinfo call.(darksun series)
   - improved dos support for non-existant functions
-
-
+  - Split screen support
+  - prefix 66 67 support
+  - rewrote timingscheme so 1000 hz timers don't cause problems anymore
+  - update adlib emulation
+  - fixed some isues with the mouse (double clicks and visible when it shouldn't be)
+  - basic ansi.sys support
+  - Disney sound system emulation 
+  - rewrote upcase/lowcase functions so they work fine with gcc3.2
+  - SHELL: added rename and delete
+  - added support for command /C. Fixed crashes in the shell
+  - support for screenshots
+  - fixed various bugs when exiting dosbox
+  - fixed a bug in XMS
+  - fixed a bug with the joystick when pressing a button
+  - create nicer configfiles.
+  - bios_disk function improved. 
+  - trapflag support
+  - improved vertical retrace timing.
+  - PIT Timer improvements and many bug fixes
+  - Many many bug fixes to the DOS subsystem
+  - Support for memory allocation strategy
+  - rewrote cpu mainloop to act more like a real cpu
+  
 0.56
   - added support for a configclass/configfile
   - added support for writing out the configclass into a configfile
