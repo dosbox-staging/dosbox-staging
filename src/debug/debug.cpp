@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.48 2003-12-17 21:52:23 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.49 2003-12-29 23:16:46 harekiet Exp $ */
 
 #include "programs.h"
 
@@ -1164,7 +1164,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-		if (!(paging.tlb.handler[address >> 12]->flags & PFLAG_ILLEGAL)) {
+		if (!(paging.tlb.handler[address >> 12]->flags & PFLAG_INIT)) {
 			static char outmask[] = "%s:[%04X]=%02X";
 			
 			if (cpu.pmode) outmask[6] = '8';
