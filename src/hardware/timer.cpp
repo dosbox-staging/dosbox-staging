@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.20 2004-01-10 11:43:41 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.21 2004-02-07 18:34:03 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -43,7 +43,7 @@ struct PIT_Block {
 
 static PIT_Block pit[3];
 
-static void PIT0_Event(void) {
+static void PIT0_Event(Bitu val) {
 	PIC_ActivateIRQ(0);
 	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].micro);
 }

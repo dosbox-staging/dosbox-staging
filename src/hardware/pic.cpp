@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.16 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.17 2004-02-07 18:35:17 harekiet Exp $ */
 
 #include <list>
 
@@ -58,7 +58,7 @@ static IRQ_Block irqs[16];
 static PIC_Controller pics[2];
 
 struct PICEntry {
-	Bitu index;
+	Bitu index;Bitu value;
 	PIC_EventHandler event;
 	PICEntry * next;
 };
@@ -305,7 +305,7 @@ static void AddEntry(PICEntry * entry) {
 	}
 }
 
-void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
+void PIC_AddEvent(PIC_EventHandler handler,Bitu delay,Bitu val) {
 	if (!pic.free_entry) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
@@ -314,6 +314,7 @@ void PIC_AddEvent(PIC_EventHandler handler,Bitu delay) {
 	Bitu index=delay+PIC_Index();
 	entry->index=index;
 	entry->event=handler;
+	entry->value=val;
 	pic.free_entry=pic.free_entry->next;
 	AddEntry(entry);
 }
@@ -357,7 +358,7 @@ bool PIC_RunQueue(void) {
 	while (pic.next_entry && pic.next_entry->index<=index) {
 		PICEntry * entry=pic.next_entry;
 		pic.next_entry=entry->next;
-		(entry->event)();
+		(entry->event)(entry->value);
 		/* Put the entry in the free list */
 		entry->next=pic.free_entry;
 		pic.free_entry=entry;
@@ -378,90 +379,52 @@ bool PIC_RunQueue(void) {
 }
 
 /* The TIMER Part */
-
-enum { T_TICK,T_MICRO,T_DELAY};
-
-struct Timer {
-	Bitu type;
-	union {
-		struct {
-			TIMER_TickHandler handler;
-		} tick;
-		struct{
-			Bits left;
-			Bits total;
-			TIMER_MicroHandler handler;
-		} micro;
-	};
+struct TickerBlock {
+	TIMER_TickHandler handler;
+	TickerBlock * next;
 };
 
-static Timer * first_timer=0;
-static std::list<Timer *> Timers;
+static TickerBlock * firstticker=0;
 
-TIMER_Block * TIMER_RegisterTickHandler(TIMER_TickHandler handler) {
-	Timer *	new_timer=new(Timer);
-	new_timer->type=T_TICK;
-	new_timer->tick.handler=handler;
-	Timers.push_front(new_timer);
-	return (TIMER_Block *)new_timer;
-}
 
-TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro) {
-	Timer *	new_timer=new(Timer);
-	new_timer->type=T_MICRO;
-	new_timer->micro.handler=handler;
-	Timers.push_front(new_timer);
-	TIMER_SetNewMicro(new_timer,micro);
-	return (TIMER_Block *)new_timer;
-}
-
-void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro) {	
-	Timer *	timer=(Timer *)block;	
-	if (timer->type!=T_MICRO) E_Exit("TIMER:Illegal handler type");
-	timer->micro.total=micro;
-	Bitu index=PIC_Index();
-	while ((1000-index)>micro) {
-		PIC_AddEvent(timer->micro.handler,micro);
-		micro+=micro;
-		index+=micro;
+void TIMER_DelTickHandler(TIMER_TickHandler handler) {
+	TickerBlock * ticker=firstticker;
+	TickerBlock * * where=&firstticker;
+	while (ticker) {
+		if (ticker->handler==handler) {
+			*where=ticker->next;
+			return;
+		}
+		where=&ticker->next;
+		ticker=ticker->next;
 	}
-	timer->micro.left=timer->micro.total-(1000-index);
+}
+
+void TIMER_AddTickHandler(TIMER_TickHandler handler) {
+	TickerBlock * newticker=new TickerBlock;
+	newticker->next=firstticker;
+	newticker->handler=handler;
+	firstticker=newticker;
 }
 
 void TIMER_AddTick(void) {
 	/* Setup new amount of cycles for PIC */
-	
 	CPU_CycleLeft=CPU_CycleMax;
 	CPU_Cycles=0;
 	PIC_Ticks++;
-	/* Go through the list of scheduled irq's and lower their index with 1000 */
+	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic.next_entry;
 	while (entry) {
 		if (entry->index>1000) entry->index-=1000;
 		else entry->index=0;
 		entry=entry->next;
 	}
-	Bits index;
-	/* Check if there are timer handlers that need to be called */
-	std::list<Timer *>::iterator i;
-	for(i=Timers.begin(); i != Timers.end(); ++i) {
-		Timer * timers=(*i);
-		switch (timers->type) {
-		case T_TICK:
-			timers->tick.handler(1);
-			break;
-		case T_MICRO:
-			index=1000;
-			while (index>=timers->micro.left) {
-				PIC_AddEvent(timers->micro.handler,timers->micro.left);
-				index-=timers->micro.left;
-				timers->micro.left=timers->micro.total;
-			}
-			timers->micro.left-=index;
-			break;
-		default:
-			E_Exit("TIMER:Illegal handler type");
-		}
+	/* Call our list of ticker handlers */
+	TickerBlock * ticker=firstticker;
+	while (ticker) {
+		TickerBlock * nextticker=ticker->next;
+		ticker->handler();
+		ticker=nextticker;
 	}
 }
 

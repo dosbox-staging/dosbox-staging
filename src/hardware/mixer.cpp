@@ -208,7 +208,7 @@ static void MIXER_MixData(Bit32u samples) {
 	}
 }
 
-static void MIXER_Mix(Bitu ticks) {
+static void MIXER_Mix(void) {
 	mixer.tick_remain+=mixer.tick_add;
 	Bitu count=mixer.tick_remain>>MIXER_SHIFT;
 	mixer.tick_remain&=((1<<MIXER_SHIFT)-1);
@@ -218,7 +218,7 @@ static void MIXER_Mix(Bitu ticks) {
 	MIXER_MixData(count);		
 }
 
-static void MIXER_Mix_NoSound(Bitu ticks) {
+static void MIXER_Mix_NoSound(void) {
 	mixer.tick_remain+=mixer.tick_add;
 	Bitu count=mixer.tick_remain>>MIXER_SHIFT;
 	mixer.tick_remain&=((1<<MIXER_SHIFT)-1);
@@ -334,16 +334,16 @@ void MIXER_Init(Section* sec) {
 	if (mixer.nosound) {
 		LOG_MSG("MIXER:No Sound Mode Selected.");
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
-		TIMER_RegisterTickHandler(MIXER_Mix_NoSound);
+		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
 		LOG_MSG("MIXER:Can't open audio: %s , running in nosound mode.",SDL_GetError());
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
-		TIMER_RegisterTickHandler(MIXER_Mix_NoSound);
+		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
 		mixer.tick_add=((mixer.freq+100) << MIXER_SHIFT)/1000;
-		TIMER_RegisterTickHandler(MIXER_Mix);
+		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudio(0);
 	}
 	KEYBOARD_AddEvent(KBD_f6,KBD_MOD_CTRL,MIXER_WaveEvent);

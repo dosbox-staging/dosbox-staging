@@ -43,7 +43,7 @@ static struct {
 	bool update_ended;
 } cmos;
 
-static void cmos_timerevent(void) {
+static void cmos_timerevent(Bitu val) {
 	PIC_ActivateIRQ(8); 
 	if(cmos.timer.enabled) PIC_AddEvent(cmos_timerevent,cmos.timer.micro);
 	if (cmos.ack) {

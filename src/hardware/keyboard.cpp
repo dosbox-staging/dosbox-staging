@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.20 2004-01-29 20:13:29 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.21 2004-02-07 18:35:24 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -86,7 +86,7 @@ void KEYBOARD_ClrBuffer(void) {
 }
 
 /* Read an entry from the keycode buffer */
-void KEYBOARD_GetCode(void) {
+void KEYBOARD_GetCode(Bitu val) {
 	keyb.scheduled=false;
 	switch (keyb.buf.state) {
 	case STATE_NORMAL:

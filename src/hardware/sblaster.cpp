@@ -525,7 +525,7 @@ static void GenerateSound(Bitu size) {
 	}
 }
 
-static void END_DMA_Event(void) {
+static void END_DMA_Event(Bitu val) {
 	GenerateDMASound(sb.dma.left);
 }
 
@@ -551,7 +551,7 @@ static void DSP_ChangeMode(DSP_MODES mode) {
 	sb.mode=mode;
 }
 
-static void DSP_RaiseIRQEvent(void) {
+static void DSP_RaiseIRQEvent(Bitu val) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 

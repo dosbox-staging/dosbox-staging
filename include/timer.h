@@ -25,19 +25,11 @@
 
 #define GetTicks() SDL_GetTicks()
 
-typedef void (*TIMER_TickHandler)(Bitu ticks);
-typedef void (*TIMER_MicroHandler)(void);
-
-typedef void TIMER_Block;
-
+typedef void (*TIMER_TickHandler)(void);
 
 /* Register a function that gets called everytime if 1 or more ticks pass */
-TIMER_Block * TIMER_RegisterTickHandler(TIMER_TickHandler handler);
-/* Register a function to be called every x microseconds */
-TIMER_Block * TIMER_RegisterMicroHandler(TIMER_MicroHandler handler,Bitu micro);
-
-/* Set the microseconds value to a new value */
-void TIMER_SetNewMicro(TIMER_Block * block,Bitu micro);
+void TIMER_AddTickHandler(TIMER_TickHandler handler);
+void TIMER_DelTickHandler(TIMER_TickHandler handler);
 
 /* This will add 1 milliscond to all timers */
 void TIMER_AddTick(void);

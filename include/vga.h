@@ -94,7 +94,6 @@ typedef struct {
 	bool drawing;
 	Bitu width;
 	Bitu height;
-	Bitu pitch;
 	Bitu blocks;
 	Bitu panning;
 	Bitu address;
@@ -296,7 +295,7 @@ typedef struct {
 void VGA_SetMode(VGAModes mode);
 void VGA_SetupHandlers(void);
 void VGA_StartResize(void);
-void VGA_SetupDrawing(void);
+void VGA_SetupDrawing(Bitu val);
 
 /* Some DAC/Attribute functions */
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal);
