@@ -61,6 +61,50 @@ bool GetRegistryValue(HKEY& hKey,char* valueName, char* buffer, ULONG bufferSize
 
 BYTE CDROM_Interface_Aspi::GetHostAdapter(void)
 {
+	SRB_HAInquiry sh;
+	SRB_GDEVBlock sd;
+	DWORD d		= pGetASPI32SupportInfo();
+	int cnt		= LOBYTE(LOWORD(d));
+	int i,j,k,max;
+
+	for(i=0; i<cnt; i++) {
+		memset(&sh, 0, sizeof(sh));
+		sh.SRB_Cmd  = SC_HA_INQUIRY;
+		sh.SRB_HaId = i;
+		pSendASPI32Command((LPSRB)&sh);
+		if (sh.SRB_Status!=SS_COMP) continue;
+
+		max = (int)sh.HA_Unique[3];
+		
+		for(j=0; j<max; j++) {
+			for(k=0; k<8; k++) {
+				memset(&sd, 0, sizeof(sd));
+				sd.SRB_Cmd    = SC_GET_DEV_TYPE;
+				sd.SRB_HaId   = i;
+				sd.SRB_Target = j;
+				sd.SRB_Lun    = k;
+				pSendASPI32Command((LPSRB)&sd);
+				if (sd.SRB_Status == SS_COMP) {
+					if (sd.SRB_DeviceType == DTYPE_CDROM) {						
+						if ((target==j) && (lun==k)) {
+							LOG(LOG_MISC|LOG_ERROR,"SCSI: Host Adapter found: %d",i);								
+							return i;
+						}
+//						hid = i;
+//						tid = j;
+//						lun = k;
+					}
+				}
+			}
+		}
+	}
+	LOG(LOG_ERROR,"SCSI: Host Adapter not found: %d",i);									
+	return 0;
+};
+
+/*
+BYTE CDROM_Interface_Aspi::GetHostAdapter(void)
+{
 	SRB_ExecSCSICmd s;DWORD dwStatus;
 	BYTE buffer[40];
 
@@ -92,7 +136,7 @@ BYTE CDROM_Interface_Aspi::GetHostAdapter(void)
 	LOG(LOG_MISC|LOG_ERROR,"SCSI: Host Adapter not found.");								
 	return 0;
 };
-
+*/
 bool CDROM_Interface_Aspi::ScanRegistryFindKey(HKEY& hKeyBase)
 // hKey has to be open
 {
