@@ -278,7 +278,7 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	struct tm *time;
 	if((time=localtime(&temp_stat.st_mtime))!=0) {
 		stat_block->time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
-		stat_block->date=DOS_PackDate(time->tm_year,time->tm_mon,time->tm_mday);
+		stat_block->date=DOS_PackDate(time->tm_year+1900,time->tm_mon+1,time->tm_mday);
 	} else {
 
 	}
@@ -364,9 +364,9 @@ localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 	struct tm * ltime;
 	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
 		time=DOS_PackTime(ltime->tm_hour,ltime->tm_min,ltime->tm_sec);
-		date=DOS_PackDate(ltime->tm_year,ltime->tm_mon,ltime->tm_mday);
+		date=DOS_PackDate(ltime->tm_year+1900,ltime->tm_mon+1,ltime->tm_mday);
 	} else {
-		time=0;date=0;
+		time=1;date=1;
 	}
 	size=(Bit32u)temp_stat.st_size;
 	attr=DOS_ATTR_ARCHIVE;

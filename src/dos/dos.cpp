@@ -229,7 +229,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x22:		/* Write random record to FCB */
 		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,1,true);
-		LOG_DEBUG("DOS:0x28 FCB-Random write used, result:al=%d",reg_al);
+		LOG_DEBUG("DOS:0x22 FCB-Random write used, result:al=%d",reg_al);
 		break;
 	case 0x23:		/* Get file size for FCB */
 		if (DOS_FCBGetFileSize(SegValue(ds),reg_dx,reg_cx)) reg_al = 0x00;

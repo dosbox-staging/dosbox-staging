@@ -22,6 +22,7 @@
 #include <ctype.h>
 
 #include "dosbox.h"
+#include "bios.h"
 #include "mem.h"
 #include "cpu.h"
 #include "dos_inc.h"
@@ -726,7 +727,17 @@ Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
 	Bit32u size;Bit16u date,time;
 	fcb.GetSizeDateTime(size,date,time);
 	if (pos+towrite>size) size=pos+towrite;
-	//TODO Set time to current time?
+	//time doesn't keep track of endofday
+	date = DOS_PackDate(dos.date.year,dos.date.month,dos.date.day);
+	Bit32u ticks = mem_readd(BIOS_TIMER);
+	Bit32u seconds = (ticks*10)/182;
+	Bit16u hour = (Bit16u)(seconds/3600);
+	Bit16u min = (Bit16u)((seconds % 3600)/60);
+	Bit16u sec = (Bit16u)(seconds % 60);
+	time = DOS_PackTime(hour,min,sec);
+	Bit8u temp=RealHandle(fhandle);
+	Files[temp]->time=time;
+	Files[temp]->date=date;
 	fcb.SetSizeDateTime(size,date,time);
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }	
 	fcb.SetRecord(cur_block,cur_rec);

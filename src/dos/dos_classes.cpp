@@ -314,7 +314,8 @@ void DOS_FCB::SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time) {
 
 void DOS_FCB::GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time) {
 	_size=sGet(sFCB,filesize);
-
+	_date=sGet(sFCB,date);
+	_time=sGet(sFCB,time);
 }
 
 void DOS_FCB::GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec) {
