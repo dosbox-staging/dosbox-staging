@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.15 2004-01-10 14:03:35 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.16 2004-01-11 09:41:52 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -96,7 +96,7 @@ static void FPU_FSQRT(void){
 	return;
 }
 static void FPU_FPATAN(void){
-	fpu.regs[ST(1)].d = atan(fpu.regs[ST(1)].d/fpu.regs[TOP].d);
+	fpu.regs[ST(1)].d = atan2(fpu.regs[ST(1)].d,fpu.regs[TOP].d);
 	FPU_FPOP();
 	FPU_SET_C2(0);
 	//flags and such :)
