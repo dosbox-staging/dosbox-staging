@@ -182,6 +182,7 @@ case "$target" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
        AC_CHECK_HEADERS(ddraw.h)
+       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 only).])
        ;;
     *-*-darwin*)
        dnl We have a problem here: both MacOS X and Darwin report 

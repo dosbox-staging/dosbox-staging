@@ -2,7 +2,6 @@
 
 #define VERSION "0.61"
 
-#define C_DIRECTSERIAL 1
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 1
@@ -42,6 +41,9 @@
 
 /* Define to 1 if you have the <ddraw.h> header file. */
 #define HAVE_DDRAW_H 1
+
+/* Define to 1 if you want serial passthrough support (Win32 only). */
+#define C_DIRECTSERIAL 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.71 2004-07-04 20:59:38 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.72 2004-07-30 01:41:10 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -58,9 +58,11 @@ void DOS_Init(Section*);
 
 
 void CPU_Init(Section*);
+
 #if C_FPU
 void FPU_Init(Section*);
 #endif
+
 void DMA_Init(Section*);
 void MIXER_Init(Section*);
 void MIDI_Init(Section*);
@@ -77,9 +79,18 @@ void PCSPEAKER_Init(Section*);
 void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
+
+#if C_MODEM
 void MODEM_Init(Section*); 
+#endif
+
+#if C_IPX
 void IPX_Init(Section*);
+#endif
+
+#if C_DIRECTSERIAL
 void DIRECTSERIAL_Init(Section* sec);
+#endif
 
 void PIC_Init(Section*);
 void TIMER_Init(Section*);
@@ -188,7 +199,7 @@ void DOSBOX_Init(void) {
 	/* Setup all the different modules making up DOSBox */
 	
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
-    secprop->Add_string("language","");
+	secprop->Add_string("language","");
 	secprop->Add_string("machine","vga");
 	secprop->Add_string("captures","capture");
 
@@ -267,7 +278,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("midi",&MIDI_Init);
 	secprop->AddInitFunction(&MPU401_Init);
 	secprop->Add_bool("mpu401",true);
-	secprop->Add_bool("intelligent",false);   
+	secprop->Add_bool("intelligent",true);   
 	secprop->Add_string("device","default");
 	secprop->Add_string("config","");
 	
@@ -284,7 +295,7 @@ void DOSBOX_Init(void) {
 #endif
 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init);
 	secprop->Add_string("type","sb16");
-    secprop->Add_hex("base",0x220);
+	secprop->Add_hex("base",0x220);
 	secprop->Add_int("irq",7);
 	secprop->Add_int("dma",1);
 	secprop->Add_int("hdma",5);
@@ -306,7 +317,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("gus",&GUS_Init); 
 	secprop->Add_bool("gus",true); 	
 	secprop->Add_int("rate",22050);
-    secprop->Add_hex("base",0x240);
+	secprop->Add_hex("base",0x240);
 	secprop->Add_int("irq1",5);
 	secprop->Add_int("irq2",5);
 	secprop->Add_int("dma1",3);
@@ -333,7 +344,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DISNEY_Init);
 	secprop->Add_bool("disney",true);
 
-    MSG_Add("SPEAKER_CONFIGFILE_HELP",
+	MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
 		"tandy -- Enable Tandy 3-Voice emulation.\n"
@@ -350,7 +361,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init);
 	secprop->Add_bool("ems",true);
-    MSG_Add("DOS_CONFIGFILE_HELP",
+	MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
 		"ems -- Enable EMS support.\n"
 	);
@@ -370,13 +381,22 @@ void DOSBOX_Init(void) {
 #endif
 #if C_DIRECTSERIAL
 	secprop=control->AddSection_prop("directserial",&DIRECTSERIAL_Init);
-	secprop->Add_bool("directserial", true);
+	secprop->Add_bool("directserial", false);
 	secprop->Add_hex("comport",1); 
 	secprop->Add_string("realport", "COM1");
 	secprop->Add_int("defaultbps", 1200);
 	secprop->Add_string("parity", "N"); // Could be N, E, O
 	secprop->Add_int("bytesize", 8); // Could be 5 to 8
 	secprop->Add_int("stopbit", 1); // Could be 1 or 2
+	MSG_Add("DIRECTSERIAL_CONFIGFILE_HELP",
+		"directserial -- Enable serial passthrough support.\n"
+		"comport -- COM Port inside DOSBox.\n"
+		"realport -- COM Port on the Host.\n"
+		"defaultbps -- Default BPS.\n"
+		"parity -- Parity of the packets. This can be N, E or O.\n"
+		"bytesize -- Size of each packet. This can be 5 or 8.\n"
+		"stopbit -- The number of stopbits. This can be 1 or 2.\n"
+	);
 #endif
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init);
