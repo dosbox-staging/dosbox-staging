@@ -106,12 +106,12 @@ public:
 	void LoadValues	(Bit32u address) {
 		Bit32u* data = (Bit32u*)&desc;
 		*data	  = mem_readd(address);
-		*(data+1) = mem_readd(address+1);
+		*(data+1) = mem_readd(address+4);
 	}
 	void SaveValues	(Bit32u address) {
 		Bit32u* data = (Bit32u*)&desc;
 		mem_writed(address,*data);
-		mem_writed(address+1,*(data+1));
+		mem_writed(address+4,*(data+1));
 	}
 	Bit32u	GetBase		(void) { return (desc.base_24_31<<24) | (desc.base_16_23<<16) | desc.base_0_15; };
 	Bit32u	GetLimit	(void) {
