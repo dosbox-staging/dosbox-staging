@@ -230,6 +230,8 @@ switch(Fetchb()) {
 			}
 		}
 		break;
+	case 0x85:												/* TEST Ed,Gd */
+		RMEdGd(TESTD);break;
 	case 0x8f:												/* POP Ed */
 		{
 			GetRM;
