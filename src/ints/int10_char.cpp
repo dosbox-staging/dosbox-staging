@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.18 2003-09-09 19:25:04 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.19 2003-09-24 19:33:26 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -378,7 +378,7 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr,bool showattr) {
 			INT10_TeletypeOutput(' ',attr,showattr);
 			cur_row=CURSOR_POS_ROW(page);
 			cur_col=CURSOR_POS_COL(page);
-		} while(cur_col%8==0);
+		} while(cur_col%8);
 		break;
 	default:
 		/* Draw the actual Character */
