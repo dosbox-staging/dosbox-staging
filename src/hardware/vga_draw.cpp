@@ -52,7 +52,7 @@ void VGA_Render_GFX_256C(Bit8u * * data) {
 
 void VGA_Render_TEXT_16(Bit8u * * data) {
 	*data=vga.buffer;
-	VGA_DrawTEXT(vga.buffer,vga.draw.width);
+	if (!vga.draw.resizing) VGA_DrawTEXT(vga.buffer,vga.draw.width);
 	vga.config.retrace=true;
 }
 
