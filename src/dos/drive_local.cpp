@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: drive_local.cpp,v 1.41 2003-12-29 22:42:23 qbix79 Exp $ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +53,11 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	FILE * hand=fopen(dirCache.GetExpandName(newname),"wb+");
-	if (!hand) return false;
+	if (!hand){
+		LOG_MSG("Warning: file creation failed: %s",newname);
+		return false;
+	}
+   
 	dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
 	*file=new localFile(name,hand,0x202);
@@ -79,7 +85,17 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 
 	FILE * hand=fopen(newname,type);
 //	Bit32u err=errno;
-	if (!hand) return false;
+	if (!hand) { 
+		if((flags&3) != OPEN_READ) {
+			FILE * hmm=fopen(newname,"rb");
+			if (hmm) {
+				fclose(hmm);
+				LOG_MSG("Warning: file %s exists and failed to open in write mode.\nPlease Remove write-protection",newname);
+			}
+		}
+		return false;
+	}
+   
 	*file=new localFile(name,hand,0x202);
 	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
@@ -100,7 +116,7 @@ bool localDrive::FileUnlink(char * name) {
 
 
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
-	
+
 	char tempDir[CROSS_LEN];
 	strcpy(tempDir,basedir);
 	strcat(tempDir,_dir);
@@ -132,7 +148,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta) {
 }
 
 bool localDrive::FindNext(DOS_DTA & dta) {
-	
+
 	char * dir_ent;
 	struct stat stat_block;
 	char full_name[CROSS_LEN];
@@ -376,7 +392,6 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 }
 
 bool localFile::Close() {
-	
 	// only close if one reference left
 	if (refCtr==1) {
 		fclose(fhandle);
