@@ -17,6 +17,18 @@
  */
 
 switch(Fetchb()) {
+	case 0x00:												/* GRP 6 */
+		{
+			INTERRUPT(6);
+			break;
+			GetRM;
+			switch (rm & 0x38) {
+			default:
+				E_Exit("CPU:GRP6:Illegal call %2X",(rm>>3) &3);
+			}
+		}
+		break;
+
 	case 0x01:												/* GRP 7 */
 		{
 			GetRM;
@@ -27,7 +39,7 @@ switch(Fetchb()) {
 				else {GetEAa;SaveMw(eaa,0);}
 				break;
 			default:
-				E_Exit("CPU:GRP7:Illegal call %2X",rm);
+				E_Exit("CPU:GRP7:Illegal call %2X",(rm>>3) &3);
 			}
 		}
 		break;
