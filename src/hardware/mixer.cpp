@@ -35,6 +35,7 @@
 #include "cross.h"
 #include "support.h"
 #include "mapper.h"
+#include "hardware.h"
 #include "programs.h"
 
 #define MIXER_MAXCHAN 8
@@ -108,7 +109,6 @@ static struct {
 	Bitu tick_add,tick_remain;
 	struct {
 		FILE * handle;
-		const char * dir;
 		Bit16s buf[MIXER_WAVESIZE][2];
 		Bitu used;
 		Bit32u length;
@@ -265,9 +265,6 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 }
 
 static void MIXER_WaveEvent(void) {
-	Bitu last=0;char file_name[CROSS_LEN];
-	DIR * dir;struct dirent * dir_ent;
-
 	/* Check for previously opened wave file */
 	if (mixer.wave.handle) {
 		LOG_MSG("Stopped recording");
@@ -285,34 +282,10 @@ static void MIXER_WaveEvent(void) {
 		mixer.wave.handle=0;
 		return;
 	}
-	/* Find a filename to open */
-	dir=opendir(mixer.wave.dir);
-	if (!dir) {
-		LOG_MSG("Can't open waveout dir %s",mixer.wave.dir);
-		return;
-	}
-	while ((dir_ent=readdir(dir))) {
-		char tempname[CROSS_LEN];
-		strcpy(tempname,dir_ent->d_name);
-		char * test=strstr(tempname,".wav");
-		if (!test) continue;
-		*test=0;
-		if (strlen(tempname)<5) continue;
-		if (strncmp(tempname,"wave",4)!=0) continue;
-		Bitu num=atoi(&tempname[4]);
-		if (num>=last) last=num+1;
-	}
-	closedir(dir);
-	sprintf(file_name,"%s%cwave%04d.wav",mixer.wave.dir,CROSS_FILESPLIT,last);
-	/* Open the actual file */
-	mixer.wave.handle=fopen(file_name,"wb");
-	if (!mixer.wave.handle) {
-		LOG_MSG("Can't open file %s for waveout",file_name);
-		return;
-	}
+	mixer.wave.handle=OpenCaptureFile("Wave Outut",".wav");
+	if (!mixer.wave.handle) return;
 	mixer.wave.length=0;
 	mixer.wave.used=0;
-	LOG_MSG("Started recording to file %s",file_name);
 	fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
 }
 
@@ -384,7 +357,6 @@ void MIXER_Init(Section* sec) {
 	mixer.freq=section->Get_int("rate");
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.blocksize=section->Get_int("blocksize");
-	mixer.wave.dir=section->Get_string("wavedir");
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
