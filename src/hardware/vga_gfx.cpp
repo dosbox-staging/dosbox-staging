@@ -36,7 +36,9 @@ void write_p3cf(Bit32u port,Bit8u val) {
 	switch (gfx(index)) {
 	case 0:	/* Set/Reset Register */
 		gfx(set_reset)=val & 0x0f;
-		vga.config.set_reset=val & 0x0f;
+		vga.config.full_set_reset=FillTable[val & 0x0f];
+		vga.config.full_enable_and_set_reset=vga.config.full_set_reset &
+			vga.config.full_enable_set_reset;
 		/*
 			0	If in Write Mode 0 and bit 0 of 3CEh index 1 is set a write to
 				display memory will set all the bits in plane 0 of the byte to this
@@ -50,15 +52,10 @@ void write_p3cf(Bit32u port,Bit8u val) {
 		break;
 	case 1: /* Enable Set/Reset Register */
 		gfx(enable_set_reset)=val & 0x0f;
-		vga.config.enable_set_reset=val & 0x0f;
-		/*
-			0  If set enables Set/reset of plane 0 in Write Mode 0.
-			1  Same for plane 1.
-			2  Same for plane 2.
-			3  Same for plane 3.
-		*/
-//		LOG_DEBUG("Enable Set Reset = %2X",val);
-		break;
+		vga.config.full_enable_set_reset=FillTable[val & 0x0f];
+		vga.config.full_not_enable_set_reset=~vga.config.full_enable_set_reset;
+		vga.config.full_enable_and_set_reset=vga.config.full_set_reset &
+			vga.config.full_enable_set_reset;
 	case 2: /* Color Compare Register */
 		gfx(color_compare)=val & 0x0f;
 		/*
