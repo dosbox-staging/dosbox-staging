@@ -89,46 +89,6 @@ LINK32=link.exe
 # Begin Group "cpu"
 
 # PROP Default_Filter ""
-# Begin Group "core_16"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\helpers.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\main.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\prefix_66.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\prefix_66_of.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\prefix_of.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\start.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\stop.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\support.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\cpu\core_16\table_ea.h
-# End Source File
-# End Group
 # Begin Group "core_full"
 
 # PROP Default_Filter ""
