@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.32 2004-03-31 22:01:22 harekiet Exp $ */
+/* $Id: ems.cpp,v 1.33 2004-05-07 23:20:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -150,9 +150,20 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 //	LOG_MSG("EMS MapPage handle %d phys %d log %d",handle,phys_page,log_page);
 	/* Check for too high physical page */
 	if (phys_page>=EMM_MAX_PHYS) return EMM_ILL_PHYS;
+
+	/* unmapping doesn't need valid handle (as handle isn't used) */
+	if (log_page==NULL_PAGE) {
+		/* Unmapping */
+		emm_mappings[phys_page].handle=NULL_HANDLE;
+		emm_mappings[phys_page].page=NULL_PAGE;
+		for (Bitu i=0;i<4;i++) 
+			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,EMM_PAGEFRAME4K+phys_page*4+i);
+		PAGING_ClearTLB();
+		return EMM_NO_ERROR;
+	}
 	/* Check for valid handle */
 	if (!ValidHandle(handle)) return EMM_INVALID_HANDLE;
-	/* Check to do unmapping or mappning */
+	
 	if (log_page<emm_handles[handle].pages) {
 		/* Mapping it is */
 		emm_mappings[phys_page].handle=handle;
@@ -165,15 +176,7 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 		}
 		PAGING_ClearTLB();
 		return EMM_NO_ERROR;
-	} else if (log_page==NULL_PAGE) {
-		/* Unmapping it is */
-		emm_mappings[phys_page].handle=NULL_HANDLE;
-		emm_mappings[phys_page].page=NULL_PAGE;
-		for (Bitu i=0;i<4;i++) 
-			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,EMM_PAGEFRAME4K+phys_page*4+i);
-		PAGING_ClearTLB();
-		return EMM_NO_ERROR;
-	} else {
+	} else  {
 		/* Illegal logical page it is */
 		return EMM_LOG_OUT_RANGE;
 	}
