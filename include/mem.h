@@ -158,15 +158,6 @@ INLINE void real_writed(Bit16u seg,Bit16u off,Bit32u val) {
 //#define real_writew(seg,off,val) mem_writew((((seg)<<4)+(off)),val)
 //#define real_writed(seg,off,val) mem_writed((((seg)<<4)+(off)),val)
 
-inline Bit32u real_getvec(Bit8u num) {
-	return real_readd(0,(num<<2));
-}
-/*
-inline void real_setvec(Bit8u num,Bit32u addr) {
-	real_writed(0,(num<<2),addr);
-};
-
-*/
 
 INLINE Bit16u RealSeg(RealPt pt) {
 	return (Bit16u)(pt>>16);
