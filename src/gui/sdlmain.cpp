@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.77 2004-09-09 10:36:45 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.78 2004-09-10 07:44:15 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1041,6 +1041,9 @@ int main(int argc, char* argv[]) {
 			"output -- What to use for output: surface,overlay"
 #if C_OPENGL
 			",opengl,openglnb"
+#endif
+#if defined(HAVE_DDRAW_H) && defined(WIN32)
+			",ddraw"
 #endif
 			".\n"
 			"hwscale -- Extra scaling of window if the output device supports hardware scaling.\n"
