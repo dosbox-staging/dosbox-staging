@@ -25,7 +25,9 @@
 #include "video.h"
 #include "inout.h"
 #include "int10.h"
-#include "../hardware/vga.h"                /* Maybe move this thing */ 
+#include "setup.h"
+#include "support.h"
+#include "vga.h"
 
 Int10Data int10;
 static Bitu call_10;
@@ -70,7 +72,7 @@ static Bitu INT10_Handler(void) {
 		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80) LOG(LOG_INT10,LOG_NORMAL)("Func %x",reg_al);
+		if (reg_al & 0x80) LOG(LOG_INT10,LOG_NORMAL)("Tandy set CRT/CPU Page Func %x",reg_al);
 		else INT10_SetActivePage(reg_al);
 		break;	
 	case 0x06:								/* Scroll Up */
@@ -105,7 +107,7 @@ static Bitu INT10_Handler(void) {
 		INT10_GetPixel(reg_cx,reg_dx,reg_bh,&reg_al);
 		break;
 	case 0x0E:								/* Teletype OutPut */
-		INT10_TeletypeOutput(reg_al,reg_bl,false);
+		INT10_TeletypeOutput(reg_al,reg_bl);
 		break;
 	case 0x0F:								/* Get videomode */
 		reg_bh=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
@@ -255,6 +257,7 @@ graphics_chars:
 		}
 		break;
 	case 0x12:								/* alternate function select */
+		if (machine<MCH_VGA) break;
 		switch (reg_bl) {
 		case 0x10:							/* Get EGA Information */
 			{
@@ -279,6 +282,7 @@ graphics_chars:
 		INT10_WriteString(reg_dh,reg_dl,reg_al,reg_bl,SegPhys(es)+reg_bp,reg_cx,reg_bh);
 		break;
 	case 0x1A:								/* Display Combination */
+		if (machine<MCH_VGA) break;
 		if (reg_al==0) {
 			reg_bx=real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX);
 			reg_al=0x1A;
@@ -291,6 +295,7 @@ graphics_chars:
 		}
 		break;
 	case 0x1B:								/* functionality State Information */
+		if (machine<MCH_VGA) break;
 		switch (reg_bx) {
 		case 0x0000:
 			INT10_GetFuncStateInformation(SegPhys(es)+reg_di);
@@ -301,6 +306,7 @@ graphics_chars:
 		}
 		break;
 	case 0x1C:	/* Video Save Area */
+		if (machine<MCH_VGA) break;
 		if (reg_al==0) reg_bx = 0;
 		reg_al = 0x1C;	
 		break;
@@ -386,15 +392,12 @@ graphics_chars:
 		break;
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("Function %2X not supported",reg_ah);
+		reg_al=0x00;		//Successfull
 	};
 	return CBRET_NONE;
 }
 
 static void INT10_Seg40Init(void) {
-	//This should fill the ega vga structures
-	// init detected hardware BIOS Area 
-	real_writew(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE,real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0xFFCF);
-	// Just for the first int10 find its children
 	// the default char height
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,16);
 	// Clear the screen 
@@ -410,16 +413,35 @@ static void INT10_Seg40Init(void) {
 
 static void INT10_InitVGA(void) {
 /* switch to color mode and enable CPU access 480 lines */
-
 	IO_Write(0x3c2,0xc3);
-
 	/* More than 64k */
 	IO_Write(0x3c4,0x04);
 	IO_Write(0x3c5,0x02);
 };
 
+static void SetupTandyBios(void) {
+	static Bit8u TandyConfig[130]= {
+		0x21, 0x42, 0x49, 0x4f, 0x53, 0x20, 0x52, 0x4f, 0x4d, 0x20, 0x76, 0x65, 0x72,
+		0x73, 0x69, 0x6f, 0x6e, 0x20, 0x30, 0x32, 0x2e, 0x30, 0x30, 0x2e, 0x30, 0x30,
+		0x0d, 0x0a, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69, 0x62, 0x69, 0x6c, 0x69,
+		0x74, 0x79, 0x20, 0x53, 0x6f, 0x66, 0x74, 0x77, 0x61, 0x72, 0x65, 0x0d, 0x0a,
+		0x43, 0x6f, 0x70, 0x79, 0x72, 0x69, 0x67, 0x68, 0x74, 0x20, 0x28, 0x43, 0x29,
+		0x20, 0x31, 0x39, 0x38, 0x34, 0x2c, 0x31, 0x39, 0x38, 0x35, 0x2c, 0x31, 0x39,
+		0x38, 0x36, 0x2c, 0x31, 0x39, 0x38, 0x37, 0x0d, 0x0a, 0x50, 0x68, 0x6f, 0x65,
+		0x6e, 0x69, 0x78, 0x20, 0x53, 0x6f, 0x66, 0x74, 0x77, 0x61, 0x72, 0x65, 0x20,
+		0x41, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74, 0x65, 0x73, 0x20, 0x4c, 0x74,
+		0x64, 0x2e, 0x0d, 0x0a, 0x61, 0x6e, 0x64, 0x20, 0x54, 0x61, 0x6e, 0x64, 0x79
+	};
+	Bitu i;
+	real_writeb(0xffff,0xe,0xff);
+	for(i=0;i<130;i++) {
+		phys_writeb(0xf0000+i+0xc000, TandyConfig[i]);
+	}
+}
+
 void INT10_Init(Section* sec) {
 	INT10_InitVGA();
+	if (machine==MCH_TANDY || machine==MCH_AUTO) SetupTandyBios();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET);
@@ -428,7 +450,7 @@ void INT10_Init(Section* sec) {
 	INT10_SetupRomMemory();
 	INT10_Seg40Init();
 	INT10_SetupVESA();
-	INT10_SetVideoMode(3);
+	INT10_SetVideoMode(machine==MCH_HERC ? 0x7 : 0x3);
 };
 
 
