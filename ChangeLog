@@ -1,22 +1,32 @@
 0.60
+  - rewrote memory system for future paging support
+  - fixed several EMS and XMS bugs and rewrite for new memory system
+  - added some support for tandy video modes
+  - added MAME Tandy 3 voice emulation
+  - added MAME CMS/GameBlaster emulation
+  - added serial port emulation with virtual tcp/ip modem (somewhat buggy)
+  - sound blaster emulation is now sb pro 2.0 compatible
+  - added basic support for 32-bit protected mode
+  - VGA now tries to emulate an S3 Trio 64 card with 2 MB
+  - VESA 2.0 support for some 256 color modes
+  - rewrote large piece of video bios code for better compatibility
   - added support for the not inheritance flags.
   - created functions for creating child psp.
   - updated errorcodes of findfirst (thanks Mirek!)
-  - added basic support for vidmode 0x7
   - rewrote loggingsystem to generate less warnings
-  - Added dos protected mode interface (dpmi)
+  - added dos protected mode interface (dpmi)
   - added cdrom label support
   - improved cdrom audio playing
   - fixed and improved directory cache
   - debugger shows selector- and cpu mode info
   - added SELINFO (selector information) command to debugger
   - added reference counting for dos files
-  - Added tabcompletion !!
-  - Added basic fpu support.
-  - Fixed several bugs with case sensitive filesystems.
-  - Added more shell commands and improved their behaviour.
-  - Mouse improvements.
-  - Real time clock inprovements.
+  - added tab-completion
+  - added basic fpu support.
+  - fixed several bugs with case sensitive filesystems.
+  - added more shell commands and improved their behaviour.
+  - mouse improvements.
+  - real time clock improvements.
   - DMA fixes.
   - Improved .BAT file support.
 
