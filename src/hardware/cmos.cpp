@@ -116,3 +116,4 @@ void CMOS_Init(Section* sec) {
 	IO_RegisterReadHandler(0x71,cmos_readreg,"CMOS");
 	cmos.timer.enabled=false;
 }
+
