@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -532,10 +533,12 @@ void GFX_Events() {
     }
 }
 
-void GFX_ShowMsg(char * msg) {
-	char buf[1024];
-	strcpy(buf,msg);
-	strcat(buf,"\n");
+void GFX_ShowMsg(char * format,...) {
+	char buf[512];
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(buf,format,msg);
+	va_end(msg);
 	printf(buf);
 };
 
@@ -550,7 +553,7 @@ int main(int argc, char* argv[]) {
 		DEBUG_SetupConsole();
 #endif
 
-		if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
+		if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 #ifndef DISABLE_JOYSTICK
 		|SDL_INIT_JOYSTICK
 	
