@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.48 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.49 2004-01-10 18:42:28 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -41,7 +41,7 @@ Segments Segs;
 
 Bits CPU_Cycles = 0;
 Bits CPU_CycleLeft = 0;
-Bits CPU_CycleMax = 1800;
+Bits CPU_CycleMax = 2500;
 Bits CPU_CycleUp = 0;
 Bits CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
@@ -1281,7 +1281,7 @@ void CPU_Init(Section* sec) {
 	}
 	CPU_JMP(false,0,0);					//Setup the first cpu core
 
-	if (!CPU_CycleMax) CPU_CycleMax = 1800;
+	if (!CPU_CycleMax) CPU_CycleMax = 2500;
 	if(!CPU_CycleUp)   CPU_CycleUp = 500;
 	if(!CPU_CycleDown) CPU_CycleDown = 20;
 	CPU_CycleLeft=0;

@@ -222,7 +222,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init);
 	secprop->Add_string("core","normal");
-	secprop->Add_int("cycles",1800);
+	secprop->Add_int("cycles",2500);
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
