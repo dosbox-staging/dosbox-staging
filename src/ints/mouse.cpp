@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.34 2004-03-18 19:53:08 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.35 2004-03-23 20:25:41 qbix79 Exp $ */
 
 #include <string.h>
+#include <math.h>
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
@@ -162,6 +163,8 @@ static struct {
 	float	mickeysPerPixel_y;
 	float	pixelPerMickey_x;
 	float	pixelPerMickey_y;
+	float	senv_x;
+	float	senv_y;
 	Bit16u  updateRegion_x[2];
 	Bit16u  updateRegion_y[2];
 	Bit16u  page;
@@ -406,16 +409,15 @@ void DrawCursor() {
 }
 
 void Mouse_CursorMoved(float x,float y) {
-
 	float dx = x * mouse.pixelPerMickey_x;
 	float dy = y * mouse.pixelPerMickey_y;
+	if((fabs(x) > 1.0) || (mouse.senv_y < 1.0)) dx=mouse.senv_x*x;
+	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy=mouse.senv_y*y;
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
-
 	mouse.x += dx;
 	mouse.y += dy;
-	
 	/* ignore constraints if using PS2 mouse callback in the bios */
 	if (!useps2callback) {		
 		if (mouse.x > mouse.max_x) mouse.x = mouse.max_x;
@@ -474,14 +476,21 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.last_released_y[button]=POS_Y;
 }
 
-static void SetMickeyPixelRate(Bit16s px, Bit16s py)
-{
+static void SetMickeyPixelRate(Bit16s px, Bit16s py){
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
 		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
 		mouse.pixelPerMickey_x	 = X_MICKEY/(float)px;
 		mouse.pixelPerMickey_y 	 = Y_MICKEY/(float)py;	
 	}
+};
+static void SetSensitivity(Bit16s px, Bit16s py){
+	if ((px!=0) && (py!=0)) {
+		px--;  //Inspired by cutemouse 
+		py--;  //Although their cursor update routine is far more complex then ours
+		mouse.senv_x=(static_cast<float>(px)*px)/3600.0 +1.0/3.0;
+		mouse.senv_y=(static_cast<float>(py)*py)/3600.0 +1.0/3.0;
+     }
 };
 
 static void mouse_reset_hardware(void){
@@ -575,6 +584,8 @@ static void mouse_reset(void) {
    	mouse.sub_mask=0;
 	mouse.sub_seg=0;
 	mouse.sub_ofs=0;
+	mouse.senv_x=1.0;
+	mouse.senv_y=1.0;
 
 	//Added this for cd-v19
 }
@@ -738,12 +749,14 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x1a:	/* Set mouse sensitivity */
-		SetMickeyPixelRate(reg_bx,reg_cx);
+		SetSensitivity(reg_bx,reg_cx);
+		LOG(LOG_MOUSE,LOG_WARN)("Set sensitivity used with %d %d",reg_bx,reg_cx);
 		// ToDo : double mouse speed value
 		break;
 	case 0x1b:	/* Get mouse sensitivity */
-		reg_bx = Bit16s(X_MICKEY * mouse.mickeysPerPixel_x);
-		reg_cx = Bit16s(Y_MICKEY * mouse.mickeysPerPixel_y);
+		reg_bx = Bit16s((60.0* sqrt(mouse.senv_x- (1.0/3.0)) ) +1.0);
+		reg_cx = Bit16s((60.0* sqrt(mouse.senv_y- (1.0/3.0)) ) +1.0);
+		LOG(LOG_MOUSE,LOG_WARN)("Get sensitivity %d %d",reg_bx,reg_cx);
 		// ToDo : double mouse speed value
 		reg_dx = 64;
 		break;
