@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.26 2004-12-07 21:29:14 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.27 2004-12-16 19:22:11 qbix79 Exp $ */
 
 #include <list>
 
@@ -74,15 +74,15 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 	Bitu irq_base=port==0x20 ? 0 : 8;
 	Bitu i;
-	Bit16u IRQ_priority_table[16] = 
-	{ 0,1,2,9,10,11,12,13,14,15,3,4,5,6,7,8 };
+	static Bit16u IRQ_priority_table[16] = 
+		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
 	if (val&0x10) {		// ICW1 issued
 		if (val&0x02) E_Exit("PIC: single mode not handled");	// (would have to skip ICW3)
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
 		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
 		pic->icw_index=1;			// next is ICW3
-		pic->icw_words=2+val&0x01;	// =3 if ICW4 needed
+		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
 	} else if (val&0x08) {	// OCW3 issued
 		if (val&0x04) E_Exit("PIC: poll command not handled");
 		if (val&0x02) {		// function select
@@ -137,20 +137,31 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	Bitu irq_base=(port==0x21) ? 0 : 8;
 	Bitu i;
+	bool old_irq2_mask = irqs[2].masked;
 	switch(pic->icw_index) {
 	case 0:                        /* mask register */
 		LOG(LOG_PIC,LOG_NORMAL)("%d mask %X",port==0x21 ? 0 : 1,val);
 		for (i=0;i<=7;i++) {
 			irqs[i+irq_base].masked=(val&(1<<i))>0;
-			if (irqs[i+irq_base].active && !irqs[i+irq_base].masked) PIC_IRQCheck|=(1 << (i+irq_base));
-			else PIC_IRQCheck&=~(1 << (i+irq_base));
-		};
-#if 0
+			if(port==0x21) {
+				if (irqs[i+irq_base].active && !irqs[i+irq_base].masked) PIC_IRQCheck|=(1 << (i+irq_base));
+				else PIC_IRQCheck&=~(1 << (i+irq_base));
+			} else {
+				if (irqs[i+irq_base].active && !irqs[i+irq_base].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i+irq_base));
+				else PIC_IRQCheck&=~(1 << (i+irq_base));
+			}
+		}
+		if(irqs[2].masked != old_irq2_mask) {
+		/* Irq 2 mask has changed recheck second pic */
+			for(i=8;i<=15;i++) {
+				if (irqs[i].active && !irqs[i].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i));
+				else PIC_IRQCheck&=~(1 << (i));
+			}
+		}
 		if (PIC_IRQCheck) {
 			CPU_CycleLeft+=CPU_Cycles;
 			CPU_Cycles=0;
 		}
-#endif
 		break;
 	case 1:                        /* icw2          */
 		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",port==0x21 ? 0 : 1,val);
@@ -177,7 +188,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 
 		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
-		if ((val&0x10)==0) E_Exit("PIC:ICW4: %x, special fully-nested mode not handled",val);
+		if ((val&0x10)!=0) E_Exit("PIC:ICW4: %x, special fully-nested mode not handled",val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
@@ -220,8 +231,14 @@ static Bitu read_data(Bitu port,Bitu iolen) {
 void PIC_ActivateIRQ(Bitu irq) {
 	if (irq<16) {
 		irqs[irq].active=true;
-		if (!irqs[irq].masked) {
-			PIC_IRQCheck|=(1 << irq);
+		if( irq < 8 ) {
+			if (!irqs[irq].masked) {
+				PIC_IRQCheck|=(1 << irq);
+			}
+		} else {
+			if (!irqs[irq].masked && !irqs[2].masked) {
+				PIC_IRQCheck|=(1 << irq);
+			}
 		}
 	}
 }
@@ -232,40 +249,84 @@ void PIC_DeActivateIRQ(Bitu irq) {
 		PIC_IRQCheck&=~(1 << irq);
 	}
 }
+static inline bool PIC_startIRQ(Bitu i) {
+	/* irqs on second pic only if irq 2 isn't masked */
+	if( i > 7 && irqs[2].masked) return false;
+	irqs[i].active = false;
+	PIC_IRQCheck&= ~(1 << i);
+	CPU_HW_Interrupt(irqs[i].vector);
+	if (!pics[ (i<8)?0:1 ].auto_eoi) {
+		PIC_IRQActive = i;
+		irqs[i].inservice = true;
+	} else if (pics[ (i<8)?0:1 ].rotate_on_auto_eoi) {
+		E_Exit("rotate on auto EOI not handled");
+	}
+	return true;
+}
 
 void PIC_runIRQs(void) {
-	Bitu i;
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) return;
-	Bit16u IRQ_priority_lookup[17] = 
+
+	static Bitu IRQ_priority_order[16] = 
+		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
+	static Bit16u IRQ_priority_lookup[17] =
 		{ 0,1,2,11,12,13,14,15,3,4,5,6,7,8,9,10,16 };
 	Bit16u activeIRQ = PIC_IRQActive;
 	if (activeIRQ==PIC_NOIRQ) activeIRQ = 16;
-	for (i=0;i<=15;i++) {
-		if ((IRQ_priority_lookup[i]<IRQ_priority_lookup[activeIRQ]) || (pics[ (i<8)?0:1].special) ){
-			if (!irqs[i].masked && irqs[i].active) if (i != 2) {
-				irqs[i].active=false;
-				PIC_IRQCheck&=~(1 << i);
-				CPU_HW_Interrupt(irqs[i].vector);
-				if (!pics[0].auto_eoi) {
-					PIC_IRQActive=i;
-					irqs[i].inservice=true;
-				} else if (pics[0].rotate_on_auto_eoi) {
-					E_Exit("rotate on auto EOI not handled");
+	/* Get the priority of the active irq */
+	Bit16u Priority_Active_IRQ = IRQ_priority_lookup[activeIRQ];
+
+	Bitu i,j;
+	/* j is the priority (walker)
+	 * i is the irq at the current priority */
+
+	/* If one of the pics is in special mode use a check that cares for that. */
+	if(pics[0].special || pics[1].special) {
+		for (j = 0; j<= 15; j++) {
+			i = IRQ_priority_order[j];
+			if ( (j < Priority_Active_IRQ) || (pics[ (i<8)?0:1 ].special) ) {
+				if (!irqs[i].masked && irqs[i].active) {
+					/* the irq line is active. it's not masked and
+					 * the irq is allowed priority wise. So let's start it */
+					/* If started succesfully return, else go for the next */
+					if(PIC_startIRQ(i)) return;
 				}
-				return;
+			}
+		}
+	} else {
+		for (j = 0; j < Priority_Active_IRQ; j++) {
+			i = IRQ_priority_order[j];
+			if (!irqs[i].masked && irqs[i].active) {
+				if(PIC_startIRQ(i)) return;
 			}
 		}
 	}
 }
 
 void PIC_SetIRQMask(Bitu irq, bool masked) {
+	bool old_irq2_mask = irqs[2].masked;
 	irqs[irq].masked=masked;
-	if (irqs[irq].active && !irqs[irq].masked) { 
-		PIC_IRQCheck|=(1 << (irq));
-	} else { 
-		PIC_IRQCheck&=~(1 << (irq));
-	};
+	if(irq < 8) {
+		if (irqs[irq].active && !irqs[irq].masked) { 
+			PIC_IRQCheck|=(1 << (irq));
+		} else { 
+			PIC_IRQCheck&=~(1 << (irq));
+		}
+	} else {
+		if (irqs[irq].active && !irqs[irq].masked && !irqs[2].masked) {
+			PIC_IRQCheck|=(1 << (irq));
+		} else { 
+			PIC_IRQCheck&=~(1 << (irq));
+		}
+	}
+	if(irqs[2].masked != old_irq2_mask) {
+	/* Irq 2 mask has changed recheck second pic */
+		for(Bitu i=8;i<=15;i++) {
+			if (irqs[i].active && !irqs[i].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i));
+			else PIC_IRQCheck&=~(1 << (i));
+		}
+	}
 	if (PIC_IRQCheck) {
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=0;
@@ -457,8 +518,8 @@ void PIC_Init(Section* sec) {
 	}
 	irqs[0].masked=false;					/* Enable system timer */
 	irqs[1].masked=false;					/* Enable Keyboard IRQ */
+	irqs[2].masked=false;					/* Enable second pic */
 	irqs[8].masked=false;					/* Enable RTC IRQ */
-/*	irqs[12].masked=false;	moved to mouse.cpp */				/* Enable Mouse IRQ */
 	IO_RegisterReadHandler(0x20,read_command,IO_MB);
 	IO_RegisterReadHandler(0x21,read_data,IO_MB);
 	IO_RegisterWriteHandler(0x20,write_command,IO_MB);
