@@ -146,6 +146,10 @@ void CPU_SetFlags(Bitu word,Bitu mask);
 #define DESC_CODE_R_C_A				0x1e
 #define DESC_CODE_R_C_NA			0x1f
 
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
+
 struct S_Descriptor {
 #ifdef WORDS_BIGENDIAN
 	Bit32u base_0_15	:16;
@@ -239,8 +243,9 @@ struct TSS_32 {
     Bit32u ldt;                  /* The local descriptor table */
 } GCC_ATTRIBUTE(packed);
 
+#ifdef _MSC_VER
 #pragma pack()
-
+#endif
 class Descriptor
 {
 public:
