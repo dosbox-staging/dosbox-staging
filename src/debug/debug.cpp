@@ -36,6 +36,9 @@
 #include "timer.h"
 #include "../shell/shell_inc.h"
 
+// TEMP 
+CPUBlock cpu;
+
 #ifdef WIN32
 void WIN32_Console();
 #else
@@ -48,7 +51,7 @@ int old_cursor_state;
 static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
-char* AnalyzeInstruction(char* inst);
+char* AnalyzeInstruction(char* inst, bool saveSelector);
 void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num);
 class DEBUG;
 
@@ -60,7 +63,7 @@ static struct  {
 	Bit32u eax,ebx,ecx,edx,esi,edi,ebp,esp,eip;
 } oldregs;
 
-
+static char curSelectorName[3] = { 0,0,0 };
 
 static Segment oldsegs[6];
 static Flag_Info oldflags;
@@ -92,6 +95,44 @@ struct SCodeViewData {
 
 static Bit16u	dataSeg,dataOfs;
 static bool		showExtend = true;
+
+/***********/
+/* Helpers */
+/***********/
+
+Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
+{
+	Descriptor desc;
+	if (cpu.gdt.GetDescriptor(selector,desc)) return desc.GetBase()+offset;
+	return 0;
+};
+
+Bit32u GetAddress(Bit16u seg, Bit32u offset)
+{
+	if (cpu.protmode) return PhysMakeProt(seg,offset);
+	return PhysMake(seg,offset);
+};
+
+bool GetDescriptorInfo(char* selname, char* out1, char* out2)
+{
+	Bit16u sel;
+	Descriptor desc;
+
+	if (strstr(selname,"cs") || strstr(selname,"CS")) sel = SegValue(cs); else
+	if (strstr(selname,"ds") || strstr(selname,"DS")) sel = SegValue(ds); else 
+	if (strstr(selname,"es") || strstr(selname,"ES")) sel = SegValue(es); else
+	if (strstr(selname,"fs") || strstr(selname,"FS")) sel = SegValue(fs); else
+	if (strstr(selname,"gs") || strstr(selname,"GS")) sel = SegValue(gs); else
+	if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss); 
+	// FIXME: Call Gate Descriptors
+	if (cpu.gdt.GetDescriptor(sel,desc)) {
+		sprintf(out1,"%s: b:%08X type:%01X sparg",selname,desc.GetBase(),desc.saved.seg.type);
+		sprintf(out2,"    l:%08X dpl :%01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.s,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.g);
+		return true;
+	}
+	out1[0] = out2[0] = 0;
+	return false;
+};
 
 /********************/
 /* DebugVar   stuff */
@@ -137,7 +178,7 @@ class CBreakpoint
 public:
 	CBreakpoint								(void)						{ location = 0; active = once = false; segment = 0; offset = 0; intNr = 0; ahValue = 0; type = BKPNT_UNKNOWN; };
 
-	void					SetAddress		(Bit16u seg, Bit32u off)	{ location = PhysMake(seg,off);	type = BKPNT_PHYSICAL; segment = seg; offset = off; };
+	void					SetAddress		(Bit16u seg, Bit32u off)	{ location = GetAddress(seg,off);	type = BKPNT_PHYSICAL; segment = seg; offset = off; };
 	void					SetAddress		(PhysPt adr)				{ location = adr;				type = BKPNT_PHYSICAL; };
 	void					SetInt			(Bit8u _intNr, Bit16u ah)	{ intNr = _intNr, ahValue = ah; type = BKPNT_INTERRUPT; };
 	void					SetOnce			(bool _once)				{ once = _once; };
@@ -498,12 +539,14 @@ bool DEBUG_ExitLoop(void)
 static void DrawData(void) {
 	
 	Bit16u add = dataOfs;
+	Bit32u address;
 	/* Data win */	
 	for (int y=0; y<8; y++) {
 		// Adress
 		mvwprintw (dbg.win_data,1+y,0,"%04X:%04X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
-			Bit8u ch = real_readb(dataSeg,add);
+			address = GetAddress(dataSeg,add);
+			Bit8u ch = mem_readb(address);
 			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
 			if (ch<32) ch='.';
 			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);			
@@ -534,7 +577,6 @@ static void DrawRegisters(void) {
 	SetColor(SegValue(cs)!=oldsegs[cs].val);oldsegs[cs].val=SegValue(cs);mvwprintw (dbg.win_reg,1,31,"%04X",SegValue(cs));
 
 	/*Individual flags*/
-
 	flags.cf=get_CF();SetColor(flags.cf!=oldflags.cf);oldflags.cf=flags.cf;mvwprintw (dbg.win_reg,1,53,"%01X",flags.cf);
 	flags.zf=get_ZF();SetColor(flags.zf!=oldflags.zf);oldflags.zf=flags.zf;mvwprintw (dbg.win_reg,1,56,"%01X",flags.zf);
 	flags.sf=get_SF();SetColor(flags.sf!=oldflags.sf);oldflags.sf=flags.sf;mvwprintw (dbg.win_reg,1,59,"%01X",flags.sf);
@@ -542,10 +584,17 @@ static void DrawRegisters(void) {
 	flags.af=get_AF();SetColor(flags.af!=oldflags.af);oldflags.af=flags.af;mvwprintw (dbg.win_reg,1,65,"%01X",flags.af);
 	flags.pf=get_PF();SetColor(flags.pf!=oldflags.pf);oldflags.pf=flags.pf;mvwprintw (dbg.win_reg,1,68,"%01X",flags.pf);
 
-
 	SetColor(flags.df!=oldflags.df);oldflags.df=flags.df;mvwprintw (dbg.win_reg,1,71,"%01X",flags.df);
 	SetColor(flags.intf!=oldflags.intf);oldflags.intf=flags.intf;mvwprintw (dbg.win_reg,1,74,"%01X",flags.intf);
 	SetColor(flags.tf!=oldflags.tf);oldflags.tf=flags.tf;mvwprintw (dbg.win_reg,1,77,"%01X",flags.tf);
+
+	// Selector info, if available
+	if (cpu.protmode && curSelectorName[0]) {		
+		char out1[200], out2[200];
+		GetDescriptorInfo(curSelectorName,out1,out2);
+		mvwprintw(dbg.win_reg,2,28,out1);
+		mvwprintw(dbg.win_reg,3,28,out2);
+	}
 
 	wattrset(dbg.win_reg,0);
 	mvwprintw(dbg.win_reg,3,60,"%d       ",cycle_count);
@@ -554,11 +603,13 @@ static void DrawRegisters(void) {
 
 static void DrawCode(void) 
 {
+	bool saveSel; 
 	Bit32u disEIP = codeViewData.useEIP;
-	PhysPt start  = codeViewData.useCS*16 + codeViewData.useEIP;
+	PhysPt start  = GetAddress(codeViewData.useCS,codeViewData.useEIP);
 	char dline[200];Bitu size;Bitu c;
 	
 	for (Bit32u i=0;i<10;i++) {
+		saveSel = false;
 		if (has_colors()) {
 			if ((codeViewData.useCS==SegValue(cs)) && (disEIP == reg_eip)) {
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREEN_BLACK));			
@@ -567,10 +618,12 @@ static void DrawCode(void)
 					codeViewData.cursorSeg = SegValue(cs);
 					codeViewData.cursorOfs = disEIP;
 				}
+				saveSel = (i == codeViewData.cursorPos);
 			} else if (i == codeViewData.cursorPos) {
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_BLACK_GREY));			
 				codeViewData.cursorSeg = codeViewData.useCS;
 				codeViewData.cursorOfs = disEIP;
+				saveSel = true;
 			} else if (CBreakpoint::IsBreakpointDrawn(start)) {
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREY_RED));			
 			} else {
@@ -578,13 +631,17 @@ static void DrawCode(void)
 			}
 		}
 
-		size=DasmI386(dline, start, disEIP, false);
+		bool toolarge = false;
+		Bitu drawsize = size = DasmI386(dline, start, disEIP, false);
 		mvwprintw(dbg.win_code,i,0,"%04X:%04X  ",codeViewData.useCS,disEIP);
-		for (c=0;c<size;c++) wprintw(dbg.win_code,"%02X",mem_readb(start+c));
-		for (c=20;c>=size*2;c--) waddch(dbg.win_code,' ');
+		
+		if (drawsize>10) { toolarge = true; drawsize = 9; };
+		for (c=0;c<drawsize;c++) wprintw(dbg.win_code,"%02X",mem_readb(start+c));
+		if (toolarge) { wprintw(dbg.win_code,".."); drawsize++; };
+		for (c=20;c>=drawsize*2;c--) waddch(dbg.win_code,' ');
 		
 		char* res = 0;
-		if (showExtend) res = AnalyzeInstruction(dline);
+		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		waddstr(dbg.win_code,dline);
 		for (c=28-strlen(dline);c>0;c--) waddch(dbg.win_code,' ');
 		if (showExtend) {
@@ -745,7 +802,7 @@ bool ParseCommand(char* str)
 		name[15] = 0;
 		
 		DEBUG_ShowMsg(0,"DEBUG: Created debug var %s at %04X:%04X",name,seg,ofs);
-		CDebugVar::InsertVariable(name,PhysMake(seg,ofs));
+		CDebugVar::InsertVariable(name,GetAddress(seg,ofs));
 		return true;
 	}
 	
@@ -764,7 +821,7 @@ bool ParseCommand(char* str)
 	}
 
 	found = strstr(str,"LV ");
-	if (found) { // Save variables
+	if (found) { // load variables
 		found+=3;
 		char name[13];
 		for (int i=0; i<12; i++) {
@@ -876,7 +933,7 @@ bool ParseCommand(char* str)
 			while (*found==' ') found++;
 			if (*found) {
 				Bit8u value = GetHexValue(found,found); found++;
-				mem_writeb(PhysMake(seg,ofs+count),value);
+				mem_writeb(GetAddress(seg,ofs+count),value);
 				count++;
 			}
 		};
@@ -905,6 +962,16 @@ bool ParseCommand(char* str)
 		Interrupt(intNr);
 		return true;
 	}	
+	found = strstr(str,"SELINFO ");
+	if (found) {
+		found += 8;
+		while (found[0]==' ') found++;
+		char out1[200],out2[200];
+		GetDescriptorInfo(found,out1,out2);
+		DEBUG_ShowMsg(0,"SelectorInfo %s:",found);
+		DEBUG_ShowMsg(0,"%s",out1);
+		DEBUG_ShowMsg(0,"%s",out2);
+	};
 
 #if C_HEAVY_DEBUG
 	found = strstr(str,"HEAVYLOG");
@@ -950,6 +1017,7 @@ bool ParseCommand(char* str)
 		wprintw(dbg.win_out,"LV [seg]:[off] [name]     - Load var list from file\n");
 
 		wprintw(dbg.win_out,"MEMDUMP [seg]:[off] [len] - Write memory to file memdump.txt\n");
+		wprintw(dbg.win_out,"SELINFO [segName]         - Show selector info\n");
 		wprintw(dbg.win_out,"H                         - Help\n");
 		
 		wrefresh(dbg.win_out);
@@ -958,7 +1026,7 @@ bool ParseCommand(char* str)
 	return false;
 };
 
-char* AnalyzeInstruction(char* inst)
+char* AnalyzeInstruction(char* inst, bool saveSelector)
 {
 	static char result[256];
 	
@@ -1001,19 +1069,28 @@ char* AnalyzeInstruction(char* inst)
 			} else 
 				pos++;
 		};
+		Bit32u address = GetAddress(seg,adr);
+		
+		static char outmask[] = "%s:[%04X]=%02X";
+		
+		if (cpu.protmode) outmask[6] = '8';
+
 		switch (DasmLastOperandSize()) {
-			case 8 : {	Bit8u val = mem_readb( PhysMake (seg,adr) );
-						sprintf(result,"%s:[%04X]=%02X",prefix,adr,val);
+			case 8 : {	Bit8u val = mem_readb(address);
+						outmask[12] = '2';
+						sprintf(result,outmask,prefix,adr,val);
 					 }	break;
-			case 16: {	Bit16u val = mem_readw( PhysMake (seg,adr) );
-						sprintf(result,"%s:[%04X]=%04X",prefix,adr,val);
+			case 16: {	Bit16u val = mem_readw(address);
+						outmask[12] = '4';
+						sprintf(result,outmask,prefix,adr,val);
 					 }	break;
-			case 32: {	Bit32u val = mem_readd( PhysMake (seg,adr) );
-						sprintf(result,"%s:[%04X]=%08X",prefix,adr,val);
+			case 32: {	Bit32u val = mem_readd(address);
+						outmask[12] = '8';
+						sprintf(result,outmask,prefix,adr,val);
 					 }	break;
 		}
 		// Variable found ?
-		CDebugVar* var = CDebugVar::FindVar(PhysMake(seg,adr));
+		CDebugVar* var = CDebugVar::FindVar(address);
 		if (var) {
 			// Replace occurance
 			char* pos1 = strchr(inst,'[');
@@ -1025,6 +1102,10 @@ char* AnalyzeInstruction(char* inst)
 				strcat(inst,var->GetName());	// add var name
 				strcat(inst,temp);				// add end
 			};
+		};
+		// show descriptor info, if available
+		if (cpu.protmode && saveSelector) {
+			strcpy(curSelectorName,prefix);
 		};
 	};
 	return result;
@@ -1129,7 +1210,7 @@ Bit32u DEBUG_CheckKeys(void) {
 						DOSBOX_SetNormalLoop();	
 						break;
 		case KEY_F(9):	// Set/Remove TBreakpoint
-						{	PhysPt ptr = PhysMake(codeViewData.cursorSeg,codeViewData.cursorOfs);
+						{	PhysPt ptr = GetAddress(codeViewData.cursorSeg,codeViewData.cursorOfs);
 							if (CBreakpoint::IsBreakpoint(ptr)) CBreakpoint::DeleteBreakpoint(ptr);
 							else								CBreakpoint::AddBreakpoint(codeViewData.cursorSeg, codeViewData.cursorOfs, false);
 						}
@@ -1189,9 +1270,9 @@ void DEBUG_Enable(void) {
 }
 
 void DEBUG_DrawScreen(void) {
-	DrawRegisters();
 	DrawData();
 	DrawCode();
+	DrawRegisters();
 }
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
@@ -1201,13 +1282,13 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 {
 	static char empty[15] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
 
-	PhysPt start = PhysMake(segValue,eipValue);
+	PhysPt start = GetAddress(segValue,eipValue);
 	char dline[200];Bitu size;
 	size = DasmI386(dline, start, reg_eip, false);
 	Bitu len = strlen(dline);
 	char* res = empty;
 	if (showExtend) {
-		res = AnalyzeInstruction(dline);
+		res = AnalyzeInstruction(dline,false);
 		if (!res || (strlen(res)==0)) res = empty;
 	};
 	
@@ -1360,6 +1441,9 @@ void DEBUG_Init(Section* sec) {
 	PROGRAMS_MakeFile("DEBUG.COM",DEBUG_ProgramStart);
 	/* shutdown function */
 	sec->AddDestroyFunction(&DEBUG_ShutDown);
+
+	// TEMP
+	cpu.protmode = 0;
 }
 
 // DEBUGGING VAR STUFF
@@ -1452,7 +1536,7 @@ void SaveMemory(Bit16u seg, Bit16u ofs1, Bit32s num)
 
 		sprintf(buffer,"%04X:%04X   ",seg,ofs1);
 		for (Bit16u x=0; x<16; x++) {
-			sprintf	(temp,"%02X ",mem_readb(PhysMake(seg,ofs1+x)));
+			sprintf	(temp,"%02X ",mem_readb(GetAddress(seg,ofs1+x)));
 			strcat	(buffer,temp);
 		};
 		ofs1+=16;
