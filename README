@@ -86,6 +86,9 @@ MOUNT -cd
   -cd
         Displays all detected cdrom drives and their numbers. Use with -usecd.
 
+  -label name
+        Set the cd label to the given name. Needed on some systems if the cd label isnt read correctly.
+
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
 
@@ -105,9 +108,21 @@ CONFIG [-writeconf] [-writelang] localfile
   Write the current configuration or language settings to file.
   "localfile" is located on the local drive !!! 
 
-LOADFIX
+LOADFIX [-option] [programname] [parameters]
   Program to "eat up" memory. Useful for old programs which don't expect much
   memory to be free.
+
+  -[size]	number of kb to "eat up", default = 64kb
+  
+  -f		frees all previously allocated memory
+  
+  Examples:
+  1. To start mm2.exe and allocate 64kb memory :
+     loadfix mm2
+  2. To start mm2.exe and allocate 32kb memory :
+     loadfix -32 mm2
+  3. To free previous allocated memory :
+     loadfix -f
 
 For more information use the /? command line switch with the programs.
 
