@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.60 2004-01-13 19:02:58 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.61 2004-02-02 15:42:38 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -166,8 +166,10 @@ static void DOSBOX_RealInit(Section * sec) {
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 
-	machine=MCH_AUTO;
-	const char * mtype=section->Get_string("machine");
+	machine=MCH_AUTO;std::string cmd_machine;
+	const char * mtype;
+	if (control->cmdline->FindString("-machine",cmd_machine,true)) mtype=cmd_machine.c_str();
+	else mtype=section->Get_string("machine");
 	if (strcasecmp(mtype,"cga")==0) machine=MCH_CGA;
 	else if (strcasecmp(mtype,"tandy")==0) machine=MCH_TANDY;
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
@@ -205,8 +207,8 @@ void DOSBOX_Init(void) {
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
 		"memsize -- Amount of memory dosbox has in megabytes.\n"
-		"machine -- The type of machine tries to emulate.\n"
-		"           You can select from auto,hercules,tandy,vga.\n"
+		"machine -- The type of machine tries to emulate:auto,hercules,cga,tandy,vga.\n"
+		"           Try a specific type if your game has problems with auto.\n"
 	);
 
 	secprop=control->AddSection_prop("render",&RENDER_Init);
