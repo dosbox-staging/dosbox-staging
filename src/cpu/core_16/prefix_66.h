@@ -401,13 +401,18 @@ switch(Fetchb()) {
 		GRP2D(1);break;
 	case 0xd3:												/* GRP2 Ed,CL */
 		GRP2D(reg_cl);break;
+	case 0xed:												/* IN EAX,DX */
+		reg_eax=IO_Read(reg_dx) | 
+				(IO_Read(reg_dx+1) << 8) | 
+				(IO_Read(reg_dx+2) << 16) | 
+				(IO_Read(reg_dx+3) << 24);
+		break;
 	case 0xef:												/* OUT DX,EAX */
 		IO_Write(reg_dx,(Bit8u)(reg_eax>>0));
 		IO_Write(reg_dx+1,(Bit8u)(reg_eax>>8));
 		IO_Write(reg_dx+2,(Bit8u)(reg_eax>>16));
 		IO_Write(reg_dx+3,(Bit8u)(reg_eax>>24));
 		break;
-
 	case 0xf2:												/* REPNZ */
 		prefix.count++;
 		Repeat_Normal(false,true);
