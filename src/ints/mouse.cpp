@@ -164,7 +164,7 @@ void DrawCursorText()
 // Mouse cursor - graphic mode
 // ***************************************************************************
 
-static gfxReg[9];
+static Bit8u gfxReg[9];
 
 void SaveVgaRegisters()
 {
