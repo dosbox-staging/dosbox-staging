@@ -131,3 +131,12 @@
 
 #define EAXId(inst)															\
 	{ inst(reg_eax,Fetchd(),LoadRd,SaveRd);}
+
+#define FPU_ESC(code) {														\
+	Bit8u rm=Fetchb();														\
+	if (rm>=0xc0) {															\
+		FPU_ESC ## code ## _Normal(rm);										\
+	} else {																\
+		GetEAa;FPU_ESC ## code ## _EA(rm,eaa);								\
+	}																		\
+}
