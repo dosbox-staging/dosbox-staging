@@ -324,11 +324,11 @@ void Mouse_CursorMoved(float x,float y) {
 	mouse.mickey_y += dy;
 
 	mouse.x += dx;
-	if (mouse.x>mouse.max_x) mouse.x=mouse.max_x;;
-	if (mouse.x<mouse.min_x) mouse.x=mouse.min_x;
+	if (mouse.x>=mouse.max_x) mouse.x=mouse.max_x-1.0f;
+	if (mouse.x< mouse.min_x) mouse.x=mouse.min_x;
 	mouse.y += dy;
-	if (mouse.y>mouse.max_y) mouse.y=mouse.max_y;;
-	if (mouse.y<mouse.min_y) mouse.y=mouse.min_y;
+	if (mouse.y>=mouse.max_y) mouse.y=mouse.max_y-1.0f;
+	if (mouse.y< mouse.min_y) mouse.y=mouse.min_y;
 	Mouse_AddEvent(MOUSE_MOVED);
 	DrawCursor();
 }
