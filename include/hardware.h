@@ -26,6 +26,7 @@ enum OPL_Mode {
 
 void OPL_Init(Section* sec,Bitu base,OPL_Mode mode,Bitu rate);
 void CMS_Init(Section* sec,Bitu base,Bitu rate);
+extern Bit8u adlib_commandreg;
 
 #endif
 

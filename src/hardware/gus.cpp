@@ -43,7 +43,9 @@ static Bit8u dmatable[6] = { 3, 1, 5, 5, 6, 7 };
 
 static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
 
-Bit32s AutoAmp=1024;
+static Bit32s AutoAmp=1024;
+
+Bit8u adlib_commandreg;
 
 struct GFGus {
 	Bit8u gRegSelect;
@@ -62,16 +64,12 @@ struct GFGus {
 	Bit32s mupersamp;
 	Bit32s muperchan;
 
-	
-	Bit8u timerReg;
 	struct GusTimer {
 		Bit16u bytetimer;
 		Bit32s countdown;
 		Bit32s setting;
 		bool active;
 	} timers[2];
-
-
 	Bit32u rate;
 	Bit16u portbase;
 	Bit16u dma1;
@@ -511,7 +509,7 @@ static void GUSReset(void)
 {
 	if((myGUS.gRegData & 0x1) == 0x1) {
 		// Reset
-		myGUS.timerReg = 85;
+		adlib_commandreg = 85;
 		memset(&myGUS.irq, 0, sizeof(myGUS.irq));
 	}
 	if((myGUS.gRegData & 0x4) != 0) {
@@ -770,7 +768,6 @@ static void ExecuteGlobRegister(void) {
 
 
 static Bitu read_gus(Bitu port,Bitu iolen) {
-
 	switch(port - GUS_BASE) {
 	case 0x206:
 		Bit8u temp;
@@ -788,13 +785,12 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 	case 0x208:
 		Bit8u tmptime;
 		tmptime = 0;
-
 		if(myGUS.irq.T1) tmptime |= (1 << 6);
 		if(myGUS.irq.T2) tmptime |= (1 << 5);
 		if((myGUS.irq.T1) || (myGUS.irq.T2)) tmptime |= (1 << 7);
 		return tmptime;
 	case 0x20a:
-		return myGUS.timerReg;
+		return adlib_commandreg;
 	case 0x302:
 		return (Bit8u)myGUS.gCurChannel;
 	case 0x303:
@@ -825,12 +821,14 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		myGUS.mixControl = val;
 		break;
 	case 0x208:
-		myGUS.timerReg = val;
+		adlib_commandreg = val;
 		break;
 	case 0x209:
+//TODO adlib_commandreg should be 4 for this to work else it should just latch the value
 		myGUS.timers[0].active = ((val & 0x1) > 0);
 		myGUS.timers[1].active = ((val & 0x2) > 0);
 		break;
+//TODO Check if 0x20a register is also available on the gus like on the interwave
 	case 0x20b:
 		if((myGUS.mixControl & 0x40) != 0) {
 			// IRQ configuration
@@ -1025,7 +1023,7 @@ void GUS_Init(Section* sec) {
 	myGUS.irq2 = section->Get_int("irq2");
 	strcpy(&myGUS.ultradir[0], section->Get_string("ultradir"));
 
-	myGUS.timerReg = 85;
+	adlib_commandreg = 85;
 	myGUS.timers[0].active = false;
 	myGUS.timers[1].active = false;
 	
