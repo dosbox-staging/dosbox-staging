@@ -32,7 +32,7 @@
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)
-#define	EMM_MAX_HANDLES	50				/* 255 Max */
+#define	EMM_MAX_HANDLES	100				/* 255 Max */
 #define EMM_PAGE_SIZE	(16*1024U)
 #define EMM_MAX_PAGES	(32 * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
@@ -241,7 +241,8 @@ static Bit8u EMM_PartialPageMapping(void) {
 		mem_writew(data,count);data+=2;
 		for (;count>0;count--) {
 			Bit16u page=mem_readw(list);list+=2;
-			if (page>=EMM_MAX_PHYS) return EMM_ILL_PHYS;
+			if ((page<EMM_PAGEFRAME) || (page>=EMM_PAGEFRAME+0x1000)) return EMM_ILL_PHYS;
+			page = (page-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
 			mem_writew(data,page);data+=2;
 			MEM_BlockWrite(data,&emm_mappings[page],sizeof(EMM_Mapping));
 			data+=sizeof(EMM_Mapping);
@@ -348,7 +349,7 @@ static Bit8u MemoryRegion(void) {
 		return EMM_FUNC_NOSUP;
 	}
 	LoadMoveRegion(SegPhys(ds)+reg_si,region);
-/* Parse the region for information */
+	/* Parse the region for information */
 	PhysPt src_mem,dest_mem;
 	MemHandle src_handle,dest_handle;
 	Bitu src_off,dest_off;Bitu src_remain,dest_remain;
