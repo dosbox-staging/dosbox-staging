@@ -4,7 +4,8 @@ static void Render_Normal_8_None(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
 	Bitu next_dest=render.op.pitch-dx;
 	Bitu rem=dx&3;dx>>=2;
 	for (;dy>0;dy--) {
-		for (Bitu tempx=dx;tempx>0;tempx--) {
+	        Bitu tempx;
+		for (tempx=dx;tempx>0;tempx--) {
 			Bit32u temp=*(Bit32u *)src;src+=4;
 			*(Bit32u *)dest=temp;
 			dest+=4;
@@ -35,7 +36,8 @@ static void Render_Normal_8_DoubleHeight(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu 
 	Bitu next_dest=(2*render.op.pitch)-dx;
 	Bitu rem=dx&3;dx>>=2;
 	for (;dy>0;dy--) {
-		for (Bitu tempx=dx;tempx>0;tempx--) {
+	        Bitu tempx;
+		for (tempx=dx;tempx>0;tempx--) {
 			Bit32u temp=*(Bit32u *)src;src+=4;
 			*(Bit32u *)dest=temp;
 			*(Bit32u *)(dest+render.op.pitch)=temp;
