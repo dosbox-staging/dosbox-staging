@@ -156,6 +156,6 @@ void DOS_SetupMemory(void) {
 	mcb->size=0x9FFE - MEM_START;
 	mcb->type=0x5a;									//Last Block
 	dos.firstMCB=MEM_START;
-	dos_infoblock.SetFirstMCB(RealMake(MEM_START,0));
+	dos_infoblock.SetFirstMCB(MEM_START);
 }
 
