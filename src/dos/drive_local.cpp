@@ -184,7 +184,8 @@ bool localDrive::MakeDir(char * dir) {
 #else
 	int temp=mkdir(newdir,0700);
 #endif
-	return (temp==0);
+	// if dir already exists, return success too.
+	return (temp==0) || ((temp!=0) && (errno==EEXIST));
 }
 
 bool localDrive::RemoveDir(char * dir) {
