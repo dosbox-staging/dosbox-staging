@@ -230,7 +230,7 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	/* Copy data from out buffer to the stream */
 	Bitu size=MIXER_BUFSIZE+mixer.out.write-mixer.out.read;
 	if (size>=MIXER_BUFSIZE) size-=MIXER_BUFSIZE;
-	if (size*MIXER_SSIZE<len) {
+	if (size*MIXER_SSIZE<(Bitu)len) {
 //		LOG(0,"Buffer underrun");
 		/* When there's a buffer underrun, keep the data so there will be more next time */
 		return;
