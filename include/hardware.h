@@ -19,6 +19,8 @@
 #ifndef _HARDWARE_H_
 #define _HARDWARE_H_
 
+#include <stdio.h>
+
 class Section;
 enum OPL_Mode {
 	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3
@@ -27,6 +29,8 @@ enum OPL_Mode {
 void OPL_Init(Section* sec,Bitu base,OPL_Mode mode,Bitu rate);
 void CMS_Init(Section* sec,Bitu base,Bitu rate);
 extern Bit8u adlib_commandreg;
+FILE * OpenCaptureFile(const char * type,const char * ext);
+
 
 #endif
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.70 2004-06-28 01:41:20 canadacow Exp $ */
+/* $Id: dosbox.cpp,v 1.71 2004-07-04 20:59:38 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -50,7 +50,7 @@ void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
-
+void CREDITS_Init(Section*);
 void RENDER_Init(Section*);
 void VGA_Init(Section*);
 
@@ -190,6 +190,7 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
     secprop->Add_string("language","");
 	secprop->Add_string("machine","vga");
+	secprop->Add_string("captures","capture");
 
 #if C_DEBUG	
 	LOG_StartUp();
@@ -198,6 +199,7 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
+	secprop->AddInitFunction(&HARDWARE_Init);
 	secprop->Add_int("memsize",16);
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);
@@ -210,16 +212,15 @@ void DOSBOX_Init(void) {
 		"language -- Select another language file.\n"
 		"memsize -- Amount of memory dosbox has in megabytes.\n"
 		"machine -- The type of machine tries to emulate:hercules,cga,tandy,vga.\n"
+		"captures -- Directory where things like wave,midi,screenshot get captured.\n"
 	);
 
 	secprop=control->AddSection_prop("render",&RENDER_Init);
 	secprop->Add_int("frameskip",0);
-	secprop->Add_string("snapdir","snaps");
 	secprop->Add_bool("aspect",false);
 	secprop->Add_string("scaler","normal2x");
 	MSG_Add("RENDER_CONFIGFILE_HELP",
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
-		"snapdir -- Directory where screenshots get saved.\n"
 		"aspect -- Do aspect correction.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
 		"          Supported are none,normal2x,advmame2x\n"
@@ -254,7 +255,6 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("nosound",false);
 	secprop->Add_int("rate",22050);
 	secprop->Add_int("blocksize",2048);
-	secprop->Add_string("wavedir","waves");
 
 	MSG_Add("MIXER_CONFIGFILE_HELP",
 		"nosound -- Enable silent mode, sound is still emulated though.\n"
@@ -262,8 +262,6 @@ void DOSBOX_Init(void) {
 		"        probably lower their sound quality.\n"
 		"blocksize -- Mixer block size, larger blocks might help sound stuttering\n"
 		"             but sound will also be more lagged.\n"
-		"wavedir -- Directory where saved sound output goes when you use the\n"
-		"           sound record key-combination, check README file.\n"
 	);
 	
 	secprop=control->AddSection_prop("midi",&MIDI_Init);
@@ -358,7 +356,6 @@ void DOSBOX_Init(void) {
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
-
 #if C_MODEM
 	secprop=control->AddSection_prop("modem",&MODEM_Init); 
 	secprop->Add_bool("modem",true); 	
@@ -369,6 +366,8 @@ void DOSBOX_Init(void) {
 		"modem -- Enable virtual modem emulation.\n"
 		"comport -- COM Port modem is connected to.\n"
 		"listenport -- TCP Port the momdem listens on for incoming connections.\n"
+	);
+#endif
 #if C_DIRECTSERIAL
 	secprop=control->AddSection_prop("directserial",&DIRECTSERIAL_Init);
 	secprop->Add_bool("directserial", true);
@@ -379,10 +378,6 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("bytesize", 8); // Could be 5 to 8
 	secprop->Add_int("stopbit", 1); // Could be 1 or 2
 #endif
-	 
-	);
-#endif
-
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init);
 	secprop->Add_bool("ipx", true);
@@ -390,14 +385,10 @@ void DOSBOX_Init(void) {
 		"ipx -- Enable ipx over UDP/IP emulation.\n"
 	);
 #endif
-
-
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
-
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
 	);
-
 	control->SetStartUp(&SHELL_Init);
 }
 
