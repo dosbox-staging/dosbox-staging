@@ -96,7 +96,6 @@ static void RENDER_ResetPal(void);
 #if (C_SSHOT)
 #include <png.h>
 
-
 /* Take a screenshot of the data that should be rendered */
 static void TakeScreenShot(Bit8u * bitmap) {
 	Bitu last=0;char file_name[CROSS_LEN];
@@ -107,18 +106,10 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	png_color palette[256];
 	Bitu i;
 
-/* First try to alloacte the png structures */
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
-	if (!png_ptr) return;
-	info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
-		png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
-		return;
-    }	
 /* Find a filename to open */
 	dir=opendir(render.shot.dir);
 	if (!dir) {
-		LOG_MSG("Can't open snapshot dir %s",render.shot.dir);
+		LOG_MSG("Can't open snapshot directory %s",render.shot.dir);
 		return;
 	}
 	while (dir_ent=readdir(dir)) {
@@ -133,14 +124,24 @@ static void TakeScreenShot(Bit8u * bitmap) {
 		if (num>=last) last=num+1;
 	}
 	closedir(dir);
-	sprintf(file_name,"%s%csnap%05d.png",render.shot.dir,CROSS_FILESPLIT,last);
-/* Open the actual file */
+	sprintf(file_name,"%s%csnap%04d.png",render.shot.dir,CROSS_FILESPLIT,last);
+	/* Open the actual file */
 	FILE * fp=fopen(file_name,"wb");
 	if (!fp) {
-		LOG_MSG("Can't open snapshot file %s",file_name);
+		LOG_MSG("Can't open file %s for snapshot",file_name);
 		return;
 	}
-/* Finalize the initing of png library */
+
+	/* First try to alloacte the png structures */
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
+	if (!png_ptr) return;
+	info_ptr = png_create_info_struct(png_ptr);
+    if (!info_ptr) {
+		png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
+		return;
+    }
+
+	/* Finalize the initing of png library */
 	png_init_io(png_ptr, fp);
 	png_set_compression_level(png_ptr,Z_BEST_COMPRESSION);
 	
@@ -185,6 +186,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	
 	/*clean up dynamically allocated RAM.*/
 	free(row_pointers);
+	LOG_MSG("Took snapshot in file %s",file_name);
 }
 
 static void EnableScreenShot(void) {
@@ -305,18 +307,27 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu 
 	case OP_None:
 normalop:
 		switch (render.src.flags) {
-		case DoubleNone:break;
-		case DoubleWidth:width*=2;break;
-		case DoubleHeight:height*=2;break;
+		case DoubleNone:
+			flags=0;			
+			break;
+		case DoubleWidth:
+			width*=2;
+			flags=GFX_SHADOW;
+			break;
+		case DoubleHeight:
+			height*=2;
+			flags=0;
+			break;
 		case DoubleBoth:
 			if (render.keep_small) {
 				render.src.flags=0;
+				flags=0;
 			} else {
 				width*=2;height*=2;
+				flags=GFX_SHADOW;
 			}
 			break;
 		}
-		flags=0;
 		mode_callback=Render_Normal_CallBack;
 		break;
 	case OP_Scale2x:
@@ -326,7 +337,7 @@ normalop:
 			mode_callback=Render_Scale2x_CallBack;
 			width*=2;height*=2;
 #if defined (SCALE2X_NORMAL)
-			flags=0;
+			flags=GFX_SHADOW;
 #elif defined (SCALE2X_MMX)
 			flags=GFX_FIXED_BPP;
 #endif
