@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.54 2004-06-10 07:23:01 harekiet Exp $ */
+/* $Id: debug.cpp,v 1.55 2004-06-20 19:13:10 qbix79 Exp $ */
 
 #include "programs.h"
 
@@ -902,6 +902,30 @@ bool ParseCommand(char* str)
 		else							DEBUG_ShowMsg("DEBUG: Variable list load (%s) : failure",name);
 		return true;
 	}
+	found = strstr(str,"SR ");
+	if (found) { // Set register value
+		found+=2;
+		if (ChangeRegister(found))	DEBUG_ShowMsg("DEBUG: Set Register success.");
+		else						DEBUG_ShowMsg("DEBUG: Set Register failure.");
+		return true;
+	}	
+	found = strstr(str,"SM ");
+	if (found) { // Set memory with following values
+		found+=3;
+		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
+		Bit32u ofs = GetHexValue(found,found); found++;
+		Bit16u count = 0;
+		while (*found) {
+			while (*found==' ') found++;
+			if (*found) {
+				Bit8u value = (Bit8u)GetHexValue(found,found); found++;
+				mem_writeb(GetAddress(seg,ofs+count),value);
+				count++;
+			}
+		};
+		DEBUG_ShowMsg("DEBUG: Memory changed.");
+		return true;
+	}
 
 	found = strstr(str,"BP ");
 	if (found) { // Add new breakpoint
@@ -1016,30 +1040,6 @@ bool ParseCommand(char* str)
 		return true;
 	}
 #endif
-	found = strstr(str,"SR ");
-	if (found) { // Set register value
-		found+=2;
-		if (ChangeRegister(found))	DEBUG_ShowMsg("DEBUG: Set Register success.");
-		else						DEBUG_ShowMsg("DEBUG: Set Register failure.");
-		return true;
-	}	
-	found = strstr(str,"SM ");
-	if (found) { // Set memory with following values
-		found+=3;
-		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
-		Bit32u ofs = GetHexValue(found,found); found++;
-		Bit16u count = 0;
-		while (*found) {
-			while (*found==' ') found++;
-			if (*found) {
-				Bit8u value = (Bit8u)GetHexValue(found,found); found++;
-				mem_writeb(GetAddress(seg,ofs+count),value);
-				count++;
-			}
-		};
-		DEBUG_ShowMsg("DEBUG: Memory changed.");
-		return true;
-	}
 	found = strstr(str,"INTT ");
 	if (found) { // Create Cpu log file
 		found+=4;
