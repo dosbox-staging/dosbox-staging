@@ -71,6 +71,7 @@ static INLINE void DecodeModRM(void) {
 #define EXCEPTION(blah)										\
 	{														\
 		Bit8u new_num=blah;									\
+		IPPoint=inst.start_entry;							\
 		LEAVECORE;											\
 		Interrupt(new_num);									\
 		LoadIP();											\
