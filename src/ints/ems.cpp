@@ -185,7 +185,7 @@ static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
 		return EMM_NO_ERROR;
 	} 
 	/* Size exactly the same as the original size */
-	pages=emm_handles[handles].pages;
+	pages=emm_handles[handle].pages;
 	return EMM_NO_ERROR;
 }
 
