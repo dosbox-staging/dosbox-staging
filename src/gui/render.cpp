@@ -67,13 +67,13 @@ static void MakeTables(void) {
 	Bitu i;Bit32u c,a;
 	c=0;a=(render.src.width<<16)/gfx_info.width;
 	for (i=0;i<gfx_info.width;i++) {
-		render.stretch_x[i]=c>> 16;
 		c=(c&0xffff)+a;
+		render.stretch_x[i]=c>> 16;
 	}
 	c=0;a=(render.src.height<<16)/gfx_info.height;
 	for (i=0;i<gfx_info.height;i++) {
-		render.stretch_y[i]=(c>> 16)*render.src.pitch;
 		c=(c&0xffff)+a;
+		render.stretch_y[i]=(c>>16)*render.src.pitch;
 	}
 }
 
