@@ -50,6 +50,7 @@ struct SDL_Block {
 	SDL_mutex *mutex;
 	SDL_Thread *thread;
 	SDL_sem *sem;
+	volatile bool kill_thread;
 #endif
 	GFX_DrawCallBack draw_callback;
 	struct {
@@ -74,7 +75,7 @@ static void ResetScreen(void) {
 		else sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
 	}
 	if (sdl.surface==0) {
-		E_Exit("SDL:Can't get a surface.");
+		E_Exit("SDL:Can't get a surface error:%s.",SDL_GetError());
 	}
 
 	SDL_WM_SetCaption(VERSION,VERSION);
@@ -148,6 +149,7 @@ static void SDL_DrawScreen(void) {
 #if C_GFXTHREADED
 int SDL_DisplayThread(void * data) {
 	while (!SDL_SemWait(sdl.sem)) {
+		if (sdl.kill_thread) return 0;
 		if (!sdl.active) continue;
 		SDL_mutexP(sdl.mutex);
 		SDL_DrawScreen();
@@ -217,7 +219,9 @@ static void GUI_ShutDown(Section * sec) {
 	if (sdl.mouse.locked) CaptureMouse();
 	if (sdl.full_screen) SwitchFullScreen();
 #if C_GFXTHREADED
-	SDL_KillThread(sdl.thread);
+	sdl.kill_thread=true;
+	SDL_SemPost(sdl.sem);
+	SDL_WaitThread(sdl.thread,0);
 	SDL_DestroyMutex(sdl.mutex);
 	SDL_DestroySemaphore(sdl.sem);
 #endif
@@ -236,6 +240,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 #if C_GFXTHREADED
+	sdl.kill_thread=false;
 	sdl.mutex=SDL_CreateMutex();
 	sdl.sem=SDL_CreateSemaphore(0);
 	sdl.thread=SDL_CreateThread(&SDL_DisplayThread,0);
@@ -249,11 +254,7 @@ static void GUI_StartUp(Section * sec) {
 	KEYBOARD_AddEvent(KBD_enter,ALT_PRESSED,SwitchFullScreen);
 }
 
-void GFX_ShutDown() {
-	if (sdl.full_screen) SwitchFullScreen();
-	if (sdl.mouse.locked) CaptureMouse();
-	GFX_Stop();
-}
+
 
 void Mouse_AutoLock(bool enable) {
 	sdl.mouse.autolock=enable;
