@@ -193,9 +193,9 @@ void DOS_SetupMemory(void) {
 	
 	DOS_MCB mcb((Bit16u)MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
-	if (machine!=MCH_TANDY) {
-		mcb.SetSize(0x9FFE - MEM_START - 2);
-	} else mcb.SetSize(0x7FFE - MEM_START - 2);
+	if (machine==MCH_TANDY) {
+		mcb.SetSize(0x97FE - MEM_START - 2);
+	} else mcb.SetSize(0x9FFE - MEM_START - 2);
 	mcb.SetType(0x5a);								//Last Block
 
 	dos.firstMCB=MEM_START;
