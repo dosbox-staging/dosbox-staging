@@ -42,9 +42,10 @@ static Bitu INT10_Handler(void) {
 	case 0x0e:
 	case 0x10:
 	case 0x4f:
+
 		break;
 	default:
-		LOG(LOG_INT10,LOG_NORMAL)("Function AX:%04X , BX %04X",reg_ax,reg_bx);
+		LOG(LOG_INT10,LOG_NORMAL)("Function AX:%04X , BX %04X DX %04X",reg_ax,reg_bx,reg_dx);
 		break;
 	}
 #endif
@@ -104,7 +105,7 @@ static Bitu INT10_Handler(void) {
 		INT10_GetPixel(reg_cx,reg_dx,reg_bh,&reg_al);
 		break;
 	case 0x0E:								/* Teletype OutPut */
-		INT10_TeletypeOutput(reg_al,reg_bl,false,reg_bh);
+		INT10_TeletypeOutput(reg_al,reg_bl,false);
 		break;
 	case 0x0F:								/* Get videomode */
 		reg_bh=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
@@ -173,6 +174,9 @@ static Bitu INT10_Handler(void) {
 		case 0x02:			/* Load 8x8 font */
 		case 0x12:
 			INT10_LoadFont(Real2Phys(int10.rom.font_8_first),true,256,0,0,8);
+			break;
+		case 0x03:			/* Set Block Specifier */
+			IO_Write(0x3c4,0x3);IO_Write(0x3c5,reg_bl);
 			break;
 /* Graphics mode calls */
 		case 0x20:			/* Set User 8x8 Graphics characters */
@@ -364,6 +368,13 @@ graphics_chars:
 				reg_ah=0x01;
 			}
 			break;
+		case 0x0a:							/* Get Pmode Inteface */
+			reg_edi=RealOff(int10.rom.pmode_interface);
+			SegSet16(es,RealSeg(int10.rom.pmode_interface));
+			reg_cx=int10.rom.pmode_interface_size;
+			reg_ax=0x004f;
+			break;
+
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X",reg_al);
 			reg_al=0x0;
