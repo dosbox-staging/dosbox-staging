@@ -25,9 +25,9 @@
 
 /* Some common Defines */
 /* A CPU Handler */
-typedef Bitu (CPU_Decoder)(Bitu count);
+typedef Bitu (CPU_Decoder)(Bits count);
 extern CPU_Decoder * cpudecoder;
-extern Bit32u cpu_cycles;
+extern Bitu cpu_cycles;
 
 //CPU Stuff
 void SetCPU16bit();
