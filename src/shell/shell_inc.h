@@ -79,7 +79,7 @@ public:
 	void CMD_REM(char * args);
     void CMD_RENAME(char * args);
 	void SyntaxError(void);
-
+    void CMD_PAUSE(char * args);
 	/* The shell's variables */
 	Bit16u input_handle;
 	BatchFile * bf;

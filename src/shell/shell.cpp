@@ -188,7 +188,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s\n");
-   MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s\n");
+	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s\n");
 	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
 	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
@@ -204,6 +204,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free\n");
 	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
+    MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
+	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");
 
 	MSG_Add("SHELL_STARTUP","DOSBox Shell v" VERSION "\n"
 	   "DOSBox does not run protected mode games!\n"
