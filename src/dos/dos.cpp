@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.65 2004-02-02 11:38:44 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.66 2004-02-18 13:02:55 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -736,6 +736,7 @@ static Bitu DOS_21Handler(void) {
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			if (DOS_CreateTempFile(name1,&handle)) {
 				reg_ax=handle;
+				MEM_BlockWrite(SegPhys(ds)+reg_dx,name1,strlen(name1)+1);
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
