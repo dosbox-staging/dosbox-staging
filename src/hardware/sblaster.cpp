@@ -238,6 +238,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_UNMASKED) sb.dma.active=true;
 	if (sb.mode==MODE_DMA_WAIT && sb.dma.active) {
 		LOG(LOG_SB,LOG_NORMAL)("DMA Activated,starting output");
+//		LOG_MSG("DMA Size %x base %x Addr %x",chan->currcnt,chan->pagebase,chan->curraddr);
 		DSP_ChangeMode(MODE_DMA);
 		CheckDMAEnd();
 		return;
@@ -638,6 +639,18 @@ static void DSP_E2_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	}
 }
 
+static void DSP_ADC_CallBack(DmaChannel * chan, DMAEvent event) {
+	if (event!=DMA_UNMASKED) return;
+	Bit8u val=128;
+    while (sb.dma.left--) {
+		DmaChannels[sb.hw.dma8]->Write(1,&val);
+	}
+	SB_RaiseIRQ(SB_IRQ_8);
+	DmaChannels[sb.hw.dma8]->Register_Callback(0);
+}
+
+Bitu DEBUG_EnableDebugger(void);
+
 static void DSP_DoCommand(void) {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
@@ -652,6 +665,10 @@ static void DSP_DoCommand(void) {
 		}
 		break;
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
+		sb.dma.left=sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
+		LOG(LOG_SB,LOG_ERROR)("DSP:Faked ADC for %d bytes",sb.dma.total);
+		DmaChannels[sb.hw.dma8]->Register_Callback(DSP_ADC_CallBack);
+		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
 		DSP_PrepareDMA_Old(DSP_DMA_8,false);
