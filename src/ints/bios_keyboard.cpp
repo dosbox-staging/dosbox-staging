@@ -284,7 +284,7 @@ static Bitu IRQ1_Handler(void) {
 	case 0xc6:flags1 ^=0x10;flags2 &=~0x10;leds ^=0x01;break;
 //	case 0x52:flags2|=128;break;//See numpad					/* Insert */
 	case 0xd2:	
-		if(flags3&0x02) { 
+		if(flags3&0x02) { /* Maybe honour the insert on keypad as well */
 			flags1^=0x80;
 			flags2&=~0x80;
 			break; 
@@ -302,10 +302,7 @@ static Bitu IRQ1_Handler(void) {
 	case 0x51:
 	case 0x52:
 		if(flags3 &0x02) {	/*extend key. e.g key above arrows or arrows*/
-			if(scancode == 0x52) {	/* press insert */		   
-				flags2 |=0x80;
-				break;
-			}
+			if(scancode == 0x52) flags2 |=0x80; /* press insert */		   
 			add_key((scancode <<8)|0xe0);
 			break;
 		}
