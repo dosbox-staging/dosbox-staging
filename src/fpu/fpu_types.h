@@ -37,3 +37,5 @@ enum FPU_Round {
 	ROUND_Up      = 2,
 	ROUND_Chop    = 3
 };
+//get pi from a real library
+#define PI 3.1415926535
