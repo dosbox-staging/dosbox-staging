@@ -271,6 +271,10 @@ SOURCE=..\include\render.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\gui\render_support.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\gui\sdlmain.cpp
 # End Source File
 # Begin Source File
@@ -339,11 +343,19 @@ SOURCE=..\src\hardware\cmos.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\hardware\disney.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\hardware\dma.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\src\hardware\gameblaster.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\hardware\gus.cpp
 # End Source File
 # Begin Source File
 
