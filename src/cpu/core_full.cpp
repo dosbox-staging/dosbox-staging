@@ -57,6 +57,10 @@ Bitu Full_DeCode(void) {
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;
+#if C_HEAVY_DEBUG
+		SaveIP();
+		if (DEBUG_HeavyIsBreakpoint()) return 1;
+#endif
 #endif
 		CPU_Cycles--;
 		inst.entry=cpu.full.entry;
