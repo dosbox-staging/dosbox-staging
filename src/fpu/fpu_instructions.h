@@ -303,7 +303,7 @@ static void FPU_F2XM1(void){
 }
 
 static void	FPU_FYL2X(void){
-	fpu.regs[ST(1)].d*=log(fpu.regs[TOP].d)/log(2);
+	fpu.regs[ST(1)].d*=log(fpu.regs[TOP].d)/log(static_cast<Real64>(2.0));
 	FPU_FPOP();
 	return;
 }
