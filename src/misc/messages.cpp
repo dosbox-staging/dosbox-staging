@@ -37,7 +37,6 @@ struct MessageBlock
 
 static MessageBlock * first_message;
 
-
 static void LoadMessageFile(const char * fname) {
 	FILE * mfile=fopen(fname,"rb");
 /* This should never happen and since other modules depend on this use a normal printf */
@@ -85,7 +84,6 @@ static void LoadMessageFile(const char * fname) {
 	fclose(mfile);
 }
 
-
 char * MSG_Get(char * msg) {
 	MessageBlock * index=first_message;
 	while (index) {
@@ -95,10 +93,11 @@ char * MSG_Get(char * msg) {
 	return "Message not found";
 }
 
-
-
 void MSG_Init(Section_prop * section) {
 	/* Load the messages from "dosbox.lang file" */
 	first_message=0;
-	LoadMessageFile(section->Get_string("LANGUAGE"));
+	std::string file_name;
+	if (control->cmdline->FindString("-lang",file_name)) {
+		LoadMessageFile(file_name.c_str());
+	} else LoadMessageFile(section->Get_string("LANGUAGE"));
 }
