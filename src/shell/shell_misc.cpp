@@ -16,13 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.32 2004-09-08 18:58:48 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.33 2004-10-20 19:53:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm> //std::copy
+#include <iterator>  //std::front_inserter
 #include "shell.h"
 #include "regs.h"
-
 
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
@@ -130,7 +131,21 @@ void DOS_Shell::InputCommand(char * line) {
 					it_history ++;
 
 					break;
-
+				case 0x53:/* DELETE */
+					{
+						if(str_index>=str_len) break;
+						Bit16u a=str_len-str_index-1;
+						Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index+1]);
+						DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
+						outc(' ');outc(8);
+						for(Bitu i=str_index;i<str_len-1;i++) {
+							line[i]=line[i+1];
+							outc(8);
+						}
+						line[--str_len]=0;
+						size++;
+					}
+					break;
 				default:
 					break;
 				}
@@ -204,6 +219,7 @@ void DOS_Shell::InputCommand(char * line) {
 					DOS_DTA dta(dos.dta());
 					char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 
+					std::list<std::string> executable;
 					while (res) {
 						dta.GetResult(name,size,date,time,attr);
 						// add result to completion list
@@ -212,15 +228,16 @@ void DOS_Shell::InputCommand(char * line) {
 						if (strcmp(name, ".") && strcmp(name, "..")) {
 							ext = strrchr(name, '.');
 							if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
-								// we add executables to the start of the list
-								l_completion.push_front(name);
+								// we add executables to the a seperate list and place that list infront of the normal files
+								executable.push_front(name);
 							else
 								l_completion.push_back(name);
 						}
 
 						res=DOS_FindNext();
 					}
-
+					/* Add excutable list to front of completion list. */
+					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
 					it_completion = l_completion.begin();
 				}
 
@@ -250,14 +267,27 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		default:
 			if (l_completion.size()) l_completion.clear();
+			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
+				outc(' ');//move cursor one to the right.
+				Bit16u a = str_len - str_index;
+				Bit8u* text=reinterpret_cast<Bit8u*>(&line[str_index]);
+				DOS_WriteFile(STDOUT,text,&a);//write buffer to screen
+				outc(8);//undo the cursor the right.
+				for(Bitu i=str_len;i>str_index;i--) {
+					line[i]=line[i-1]; //move internal buffer
+					outc(8); //move cursor back (from write buffer to screen)
+				}
+				line[++str_len]=0;//new end (as the internal buffer moved one place to the right
+				size--;
+			};
+		   
 			line[str_index]=c;
 			str_index ++;
 			if (str_index > str_len){ 
 				line[str_index] = '\0';
-				str_len++;//This should depend on insert being active
+				str_len++;
 				size--;
 			}
-		   
 			DOS_WriteFile(STDOUT,&c,&n);
 			break;
 		}
