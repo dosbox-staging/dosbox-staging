@@ -201,6 +201,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset);
 bool DOS_FCBClose(Bit16u seg,Bit16u offset);
 bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset);
 bool DOS_FCBFindNext(Bit16u seg,Bit16u offset);
+Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change);
 /* Extra DOS Interrupts */
 void DOS_SetupMisc(void);
 

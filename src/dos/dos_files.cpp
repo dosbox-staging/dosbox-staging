@@ -471,8 +471,96 @@ static bool FCB_MakeName (DOS_FCB* fcb, char* outname, Bit8u* outdrive){
 	strcat(naam,ext);
     return DOS_MakeName(naam,outname, outdrive);
 }
+#define FCB_SEP ":.;,=+"
+#define ILLEGAL ":.;,=+ \t/\"[]<>|\0x0\0x1\0x2\0x3\0x4\0x5\0x6\0x7\0x8\0x9\0xA\0xB\0xC\0xD\0xE\0xF\0x10\0x11\0x12\0x13\0x14\0x15\0x16\0x17\0x18x\0x19\0x1A\0x1B\0x1C\0x1D\0x1E\0x1F"
+
+static bool isvalid(const char* in){
+    char ill[]=ILLEGAL;    
+    char a[2];
+    a[0]=*in;a[1]='\0';
+    if(strcspn(a,ill)==0) return false;
+    return true;
+
+}
+
+static void vullen (char* veld,char* pveld){
+    for(Bitu i=(pveld-veld);i<strlen(veld);i++){
+        *(veld+i)='?';
+    }
+    return;
+}
+Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change){
+    char* backup;
+    backup=string;
+    DOS_FCB fcb(seg,offset);
+    Bit8u retwaarde=0;    
+    char naam[9]="        ";
+    char ext[4]="   ";
+    if(parser & 1) {       //ignore leading seperator
+        char sep[] = FCB_SEP;  
+        char a[2];
+         a[0]= *string;a[1]='\0';
+        if (strcspn(a,sep)==0) string++;
+    } 
+    if((!(parser &3)) ==true){ // fill name with spaces if no name
+        fcb.Set_filename(naam);
+    }
+    if((!(parser &4)) ==true){ // fill ext with spaces if no ext
+        fcb.Set_ext(ext);
+    }
+    if((parser & 2)==false) fcb.Set_drive(0); //Set allready the defaultdrive (Will stay set when it's not specified)
+    // strip leading spaces
+    while((*string==' ')||(*string=='\t')) string++;
+    if( *(string+1)==':') {
+        Bit8u drive=toupper(*string);
+        if( (drive>'Z') | (drive<'A') ) {
+            *change=string-backup;
+            return 0xFF;
+        }
+        fcb.Set_drive(drive-'A'+1);
+        string+=2;
+    }
+    //startparsing
+    char* pnaam=naam;
+    while(isvalid(string)==true) {
+        if(*string=='*'){
+            vullen(naam,pnaam);  //fill with ????
+            string++;
+            retwaarde=1;
+            break;
+        }
+
+        *pnaam=*string;
+        pnaam++;
+        string++;
+    }
+    fcb.Set_filename(naam);
+    if((*string=='.')==false) {
+        *change=string-backup;
+        return retwaarde;
+    }    
+    //extension exist
+    string++;
+    char* pext=ext;
+        while(isvalid(string)==true) {
+        if(*string=='*'){
+            vullen(ext,pext);   //fill with ????
+            string++;
+            retwaarde=1;
+            break;
+        }
+
+        *pext=*string;
+        pext++;
+        string++;
+    }
+    fcb.Set_ext(ext);
+    *change=string-backup;
+    return retwaarde;
 
 
+
+}
 bool DOS_FCBOpen(Bit16u seg,Bit16u offset) { 
 	DOS_FCB fcb(seg,offset);
 	Bit8u drive;
@@ -487,6 +575,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
   fcb.Set_current_block(constant);
   constant=0x80;
   fcb.Set_record_size(constant);
+
     struct tm *time;
     if((time=localtime(&stat_block.st_mtime))!=0){
 
@@ -522,10 +611,13 @@ bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
 	char fullname[DOS_PATHLENGTH];
 	FCB_MakeName (fcb, fullname, &drive);
 	DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
+      dtablock->sattr=DOS_ATTR_ARCHIVE;
+	dtablock->sdrive=drive;
+
 	if(Drives[drive]->FindFirst(fullname,dtablock)==false) return false;
   
-	char naam[8];
-	char ext[3];
+	char naam[9];
+	char ext[4];
 	char * point=strrchr(dtablock->name,'.');
 	if(point==NULL|| *(point+1)=='\0') {
 		ext[0]=' ';
@@ -542,7 +634,8 @@ bool DOS_FCBFindFirst(Bit16u seg,Bit16u offset)
 	strcpy (naam,dtablock->name);
 	i=strlen(dtablock->name);
 	while(i!=8) {naam[i]=' '; i++;}
-	DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Host(dos.dta));
+	delete fcb;
+	DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Phys(dos.dta));
 	fcbout->Set_drive(drive +1);
 	fcbout->Set_filename(naam);
 	fcbout->Set_ext(ext);
@@ -557,9 +650,12 @@ bool DOS_FCBFindNext(Bit16u seg,Bit16u offset)
   char fullname[DOS_PATHLENGTH];
   FCB_MakeName (fcb, fullname, &drive);
   DTA_FindBlock * dtablock=(DTA_FindBlock *)Real2Host(dos.dta);
+  dtablock->sattr=DOS_ATTR_ARCHIVE;
+  dtablock->sdrive=drive;
+
   if(Drives[dtablock->sdrive]->FindNext(dtablock)==false) return false;
-  char naam[8];
-  char ext[3];
+  char naam[9];
+  char ext[4];
   char * point=strrchr(dtablock->name,'.');
   if(point==NULL|| *(point+1)=='\0') {
 	ext[0]=' ';
@@ -577,7 +673,8 @@ bool DOS_FCBFindNext(Bit16u seg,Bit16u offset)
   strcpy (naam,dtablock->name);
   i=strlen(dtablock->name);
   while(i!=8) {naam[i]=' '; i++;}
-  DOS_FCB* fcbout= new DOS_FCB((PhysPt)Real2Host(dos.dta));
+  delete fcb;
+  DOS_FCB* fcbout= new DOS_FCB(Real2Phys(dos.dta));
   fcbout->Set_drive(drive +1);
   fcbout->Set_filename(naam);
   fcbout->Set_ext(ext);

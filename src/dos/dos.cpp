@@ -178,24 +178,27 @@ static Bitu DOS_21Handler(void) {
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x0f FCB-fileclose used");
+		LOG_DEBUG("DOS:0x10 FCB-fileclose used");
 		break;
+
 	case 0x11:		/* Find First Matching File using FCB */
 		if(DOS_FCBFindFirst(Segs[ds].value,reg_dx)){
 		reg_al=0;
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x0f FCB-FindFirst used");
+		LOG_DEBUG("DOS:0x11 FCB-FindFirst used");
 		break;
+
 	case 0x12:		/* Find Next Matching File using FCB */
 		if(DOS_FCBFindNext(Segs[ds].value,reg_dx)){
 		reg_al=0;
 		}else{
 			reg_al=0xff;
 		}
-		LOG_DEBUG("DOS:0x0f FCB-FindNext used");
+		LOG_DEBUG("DOS:0x12 FCB-FindNext used");
 		break;
+
 	case 0x13:		/* Delete File using FCB */
 	case 0x14:		/* Sequential read from FCB */
 	case 0x15:		/* Sequential write to FCB */
@@ -211,21 +214,17 @@ static Bitu DOS_21Handler(void) {
 		reg_al=0xff;		/* FCB Calls FAIL */
 		//CALLBACK_SCF(true); not needed.
 		break;
+
 	case 0x29:		/* Parse filename into FCB */
-//TODO Give errors for unsupported functions
-		{
-			MEM_StrCopy(real_phys(Segs[ds].value,reg_si),name1,DOSNAMEBUF);
-/* only detect the call program use to detect the existence of a harddisk */
-			if ((strlen((char *)name1)==2) && (name1[1]==':')) {
-				Bit8u drive=toupper(name1[0])-'A';
-				if (Drives[drive]) reg_al=0;
-				else reg_al=0xff;
-				break;
-			}
-			LOG_DEBUG("DOS:29:FCB Parse Filename:%s",name1);
-		};
-		reg_al=0xff;		/* FCB Calls FAIL */
-		break;
+        {   Bit8u difference;
+            char string[1024];
+            MEM_StrCopy(Real2Phys(RealMake(Segs[ds].value,reg_si)) ,string,1024);
+            reg_al=FCB_Parsename(Segs[es].value,reg_di,reg_al ,string, &difference);
+            reg_di+=difference;
+        }
+		LOG_DEBUG("DOS:29:FCB Parse Filename result:%d",reg_al);
+        break;
+
 	case 0x18:		/* NULL Function for CP/M compatibility or Extended rename FCB */
 	case 0x1d:		/* NULL Function for CP/M compatibility or Extended rename FCB */
 	case 0x1e:		/* NULL Function for CP/M compatibility or Extended rename FCB */
