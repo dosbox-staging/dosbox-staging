@@ -263,21 +263,33 @@ void DOSBOX_Init(int argc, char* argv[]) {
 	/* Parse the command line with a setup function */
 	int argl=1;
 	if (argc>1) {
-		if (*argv[1]!='-') {
+		if (*argv[1]!='-') { 
+                        char mount_buffer[CROSS_LEN];
+                        if( (*argv[1]=='/') || 
+                            (*argv[1]=='.') || 
+                            (*argv[1]=='~') ||
+                            (*(argv[1]+1) ==':') ) { 
+	                     strcpy(mount_buffer,argv[1]); 
+		        } else {
+	                    getcwd(mount_buffer,CROSS_LEN);
+			 strcat(mount_buffer,argv[1]);
+	                };
+	   
+		
 			struct stat test;
-			if (stat(argv[1],&test)) {
-				E_Exit("%s Doesn't exist",argv[1]);
+			if (stat(mount_buffer,&test)) {
+				E_Exit("%s Doesn't exist",mount_buffer);
 			}
 			/* Not a switch so a normal directory/file */
 			if (test.st_mode & S_IFDIR) { 
-				SHELL_AddAutoexec("MOUNT C %s",argv[1]);
+				SHELL_AddAutoexec("MOUNT C %s",mount_buffer);
 				SHELL_AddAutoexec("C:");
 			} else {
 				char * name=strrchr(argv[1],CROSS_FILESPLIT);
-				if (!name) E_Exit("This is weird %s",argv[1]);
+				if (!name) E_Exit("This is weird %s",mount_buffer);
 				*name++=0;
-				if (access(argv[1],F_OK)) E_Exit("Illegal Directory %s",argv[1]);
-				SHELL_AddAutoexec("MOUNT C %s",argv[1]);
+				if (access(argv[1],F_OK)) E_Exit("Illegal Directory %s",mount_buffer);
+				SHELL_AddAutoexec("MOUNT C %s",mount_buffer);
 				SHELL_AddAutoexec("C:");
 				SHELL_AddAutoexec(name);
 			}
