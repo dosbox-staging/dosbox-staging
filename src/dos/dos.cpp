@@ -35,6 +35,7 @@ DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
 static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
+static Bitu call_casemap;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -385,15 +386,26 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_ERROR|LOG_MISC,"DOS:0x37:Call for not supported switchchar");
 		break;
 	case 0x38:					/* Set Country Code */	
-		LOG(LOG_ERROR|LOG_MISC,"DOS:Setting country code not supported");
-		CALLBACK_SCF(true);
-		break;
 		if (reg_al==0) {		/* Get country specidic information */
-
+			PhysPt pt = SegPhys(ds)+reg_dx;
+			mem_writew(pt   ,0x00); // USA
+			mem_writeb(pt+ 2, '$'); mem_writeb(pt+ 3,0x00);
+			mem_writeb(pt+ 7, '.'); mem_writeb(pt+ 8,0x00);
+			mem_writeb(pt+ 9, '.'); mem_writeb(pt+10,0x00);
+			mem_writeb(pt+11, '.'); mem_writeb(pt+12,0x00);
+			mem_writeb(pt+13, '.'); mem_writeb(pt+14,0x00);
+			mem_writeb(pt+15,0x01); // currency format
+			mem_writeb(pt+16,0x02);	// num digits
+			mem_writeb(pt+17,0x00); // time format
+			mem_writed(pt+18,CALLBACK_RealPointer(call_casemap));
+			mem_writew(pt+22,0x00); // data list seperator
+			reg_bx = 0x01;
+			CALLBACK_SCF(false);
+			break;
 		} else {				/* Set country code */
-			
-
+			LOG(LOG_ERROR|LOG_MISC,"DOS:Setting country code not supported");
 		}
+		CALLBACK_SCF(true);
 		break;
 	case 0x39:		/* MKDIR Create directory */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
@@ -768,7 +780,18 @@ static Bitu DOS_21Handler(void) {
 				reg_cx=4;
 				CALLBACK_SCF(false);
 				break;
-			 default:
+			case 2:	// Get pointer to uppercase table
+			case 3: // Get pointer to lowercase table
+			case 4: // Get pointer to filename uppercase table
+			case 5: // Get pointer to filename terminator table
+			case 6: // Get pointer to collating sequence table
+			case 7: // Get pointer to double byte char set table
+				mem_writew(data  ,0x0000);	// We dont have this table...
+				mem_writew(data+2,0x0000);	// End of table
+				reg_cx=4;
+				CALLBACK_SCF(false);
+				break;
+			default:
 				E_Exit("DOS:0x65:Unhandled country information call %2X",reg_al);	
 			};
 			break;
@@ -890,10 +913,16 @@ static Bitu DOS_29Handler(void) {
     return CBRET_NONE;
 }
 
+static Bitu DOS_CaseMapFunc(void) {
+    //LOG(LOG_ERROR|LOG_MISC,"Case map routine called : %c",reg_al);
+    return CBRET_NONE;
+};
+
 void DOS_ShutDown(Section* sec)
 {	
 	for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
 };
+
 
 void DOS_Init(Section* sec) {
     MSG_Add("DOS_CONFIGFILE_HELP","Setting a memory size to 0 will disable it.\n");
@@ -935,6 +964,7 @@ void DOS_Init(Section* sec) {
 
 	dos.version.major=5;
 	dos.version.minor=0;
+
 	/* Setup time and date */
 	time_t curtime;struct tm *loctime;
 	curtime = time (NULL);loctime = localtime (&curtime);
@@ -948,6 +978,8 @@ void DOS_Init(Section* sec) {
 	/* shutdown function */
 	sec->AddDestroyFunction(&DOS_ShutDown);	
 
-				
+	/* case map routine INT 0x21 0x38 */
+	call_casemap = CALLBACK_Allocate();
+    CALLBACK_Setup(call_casemap,DOS_CaseMapFunc,CB_RETF);
 }
 
