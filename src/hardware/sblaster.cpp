@@ -75,8 +75,11 @@ struct SB_INFO {
 	Bit8u data_out[DSP_BUFSIZE];
 	Bit8u data_out_pos;
 	Bit8u data_out_used;
-	Bit8u dac_data[DSP_DACSIZE];
-	Bit32u dac_used;
+	struct {
+		Bit8u data[DSP_DACSIZE];
+		Bitu used;
+		Bit8u last;
+	} dac;
 	Bit8u test_register;
 /*ADPCM Part */
 	Bits adpcm_reference;
@@ -175,7 +178,7 @@ static void DSP_StartDMATranfser(Bit8u mode) {
 
 		break;
 	case MODE_ADPCM_4S:
-		MIXER_SetFreq(sb.chan,sb.freq*2);
+		MIXER_SetFreq(sb.chan,sb.freq);
 		SB_DEBUG("DSP:ADPCM 4 bit single cycle rate %d size %X",sb.freq,sb.samples_total);
 		break;
 
@@ -204,7 +207,8 @@ static void DSP_Reset(void) {
 	sb.cmd_len=0;
 	sb.cmd_in_pos=0;
 	sb.use_time_constant=false;
-	sb.dac_used=0;
+	sb.dac.used=0;
+	sb.dac.last=0x80;
 	e2_value=0xaa;
 	e2_count=0;
 	DSP_HaltDMA();
@@ -229,8 +233,8 @@ static void DSP_DoCommand(void) {
 	switch (sb.cmd) {
 	case 0x10:	/* Direct DAC */
 		sb.mode=MODE_DAC;
-		if (sb.dac_used<DSP_DACSIZE) {
-			sb.dac_data[sb.dac_used++]=sb.cmd_in[0];
+		if (sb.dac.used<DSP_DACSIZE) {
+			sb.dac.data[sb.dac.used++]=sb.cmd_in[0];
 		}
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA */
@@ -425,38 +429,49 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 	case MODE_DAC:
 		/* Stretch the inputted dac data over len samples */
 		{
-			Bit32u dac_add=(sb.dac_used<<16)/len;
-			Bit32u dac_pos=0;
-			while (len-->0) {
-				*(stream++)=sb.dac_data[dac_pos>>16];
-				dac_pos+=dac_add;
+			if (sb.dac.used) {
+				Bitu dac_add=(sb.dac.used<<16)/len;
+				Bitu dac_pos=0;
+				while (len-->0) {
+					*(stream++)=sb.dac.data[dac_pos>>16];
+					dac_pos+=dac_add;
+				}
+				dac_pos-=dac_add;
+				sb.dac.last=sb.dac.data[dac_pos>>16];
+				sb.dac.used=0;
+			} else {
+				memset(stream,sb.dac.last,len);
 			}
 		}
-		sb.dac_used=0;
-		sb.mode=MODE_NONE;
 		break;
 	case MODE_PCM_8A:
-		DMA_8_Read(sb.dma,stream,(Bit16u)len);
-		if (sb.samples_left>len) {
-			sb.samples_left-=len;
-		} else {
-			if (len>(sb.samples_total+sb.samples_left)) sb.samples_left=sb.samples_total;
-			else sb.samples_left=sb.samples_total+sb.samples_left-len;			
-			PIC_ActivateIRQ(sb.irq);
+		{
+			Bit16u read=DMA_8_Read(sb.dma,stream,(Bit16u)len);
+			if (sb.samples_left>read) {
+				sb.samples_left-=read;
+			} else {
+				if (read>(sb.samples_total+sb.samples_left)) sb.samples_left=sb.samples_total;
+				else sb.samples_left=sb.samples_total+sb.samples_left-read;			
+				PIC_ActivateIRQ(sb.irq);
+			}
+			if (read<len) memset(stream+read,0x80,len-read);
 		}
 		break;
 	case MODE_PCM_8S:
-		if (sb.samples_left>=len) {
-			DMA_8_Read(sb.dma,stream,(Bit16u)len);
-			sb.samples_left-=len;
-		} else if (sb.samples_left && (sb.samples_left<len)) {
-			DMA_8_Read(sb.dma,stream,(Bit16u)sb.samples_left);
-			memset(stream+sb.samples_left,0x80,len-sb.samples_left);
-			sb.samples_left=0;
-		}
-		if (sb.samples_left==0) {
-			DSP_StopDMA();
-			PIC_ActivateIRQ(sb.irq);
+		{
+			Bit16u read;
+			if (sb.samples_left>=len) {
+				read=DMA_8_Read(sb.dma,stream,(Bit16u)len);
+				sb.samples_left-=read;
+			} else {
+				read=DMA_8_Read(sb.dma,stream,(Bit16u)sb.samples_left);
+				sb.samples_left=0;
+			} 
+			if (read<len) memset(stream+read,0x80,len-read);
+			if (sb.samples_left==0) {
+				DSP_StopDMA();
+				PIC_ActivateIRQ(sb.irq);
+			}	
 		}
 		break;
 	case MODE_ADPCM_4S:
@@ -470,26 +485,28 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 			if (sb.adpcm_reference < 0) {
 				dma_size++;
 			}
+			Bit16u read;
 			/* Read from the DMA Channel */
 			if (sb.samples_left>=dma_size) {
-				DMA_8_Read(sb.dma,decode_pos,(Bit16u)dma_size);
-				sb.samples_left-=dma_size;
+				read=DMA_8_Read(sb.dma,decode_pos,(Bit16u)dma_size);
 			} else if (sb.samples_left<dma_size) {
-				DMA_8_Read(sb.dma,decode_pos,(Bit16u)sb.samples_left);
-//Could go wrong with the reference byte i think.
-				memset(stream+sb.samples_left*2,0x80,len-sb.samples_left*2);
-				len=sb.samples_left*2;
-				sb.samples_left=0;
+				read=DMA_8_Read(sb.dma,decode_pos,(Bit16u)sb.samples_left);
+			}
+			sb.samples_left-=read;
+			if (sb.adpcm_reference < 0 && read) {
+				sb.adpcm_reference=*decode_pos++;
+				read--;
+			}
+			if ((read*2U)<(Bitu)len) {
+				memset(stream+read*2,0x80,len-read*2);
+				len=read*2;
 			}
 			if (sb.samples_left==0) {
-			//	if (sb.mode==MODE_PCM_8A) sb.samples_left=sb.samples_total;
-			//	else 
 				DSP_StopDMA();
 				PIC_ActivateIRQ(sb.irq);
 			}
-			if (sb.adpcm_reference < 0) {
-				sb.adpcm_reference=*decode_pos++;
-			}
+			if (!read) return;
+			/* Decode the actual samples read from dma */
 			for (Bitu i=len/2;i>0;i--) {
 				*stream++=decode_ADPCM_4_sample(*decode_pos >> 4,sb.adpcm_reference,sb.adpcm_scale);
 				*stream++=decode_ADPCM_4_sample(*decode_pos++   ,sb.adpcm_reference,sb.adpcm_scale);
@@ -501,7 +518,8 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 				sb.adpcm_remain=-1;
 			}
 		}
-	}
+		break;
+	}	/* End switch */
 }
 
 
