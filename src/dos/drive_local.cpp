@@ -336,6 +336,11 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	}
 	fpos_t temppos;
 	int ret=fseek(fhandle,*pos,seektype);
+	if (ret!=0) {
+		// Out of file range, pretend everythings ok 
+		// and move file pointer top end of file... ?! (Black Thorne)
+		fseek(fhandle,0,SEEK_END);
+	};
 	fgetpos(fhandle,&temppos);
 //TODO Hope we don't encouter files with 64 bits size
 	Bit32u * fake_pos=(Bit32u*)&temppos;
