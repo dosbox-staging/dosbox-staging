@@ -65,10 +65,12 @@ struct GFGus {
 	Bit32s muperchan;
 
 	struct GusTimer {
-		Bit16u bytetimer;
-		Bit32s countdown;
-		Bit32s setting;
-		bool active;
+		Bit8u value;
+		bool reached;
+		bool raiseirq;
+		bool masked;
+		bool running;
+		Bit32u delay;
 	} timers[2];
 	Bit32u rate;
 	Bit16u portbase;
@@ -86,8 +88,7 @@ struct GFGus {
 	struct IRQStat {
 		bool MIDITx;
 		bool MIDIRx;
-		bool T1;
-		bool T2;
+		bool T[2];
 		bool Resv;
 		bool WaveTable;
 		bool VolRamp;
@@ -503,19 +504,22 @@ static void GUSReset(void)
 		myGUS.irqenabled = false;
 	}
 
-	myGUS.timers[0].active = false;
-	myGUS.timers[1].active = false;
-	myGUS.timers[0].bytetimer = 0x0;
-	myGUS.timers[1].bytetimer = 0x0;
+	myGUS.timers[0].raiseirq = false;
+	myGUS.timers[1].raiseirq = false;
+	myGUS.timers[0].reached = false;
+	myGUS.timers[1].reached = false;
+	myGUS.timers[0].running = false;
+	myGUS.timers[1].running = false;
+
+	myGUS.timers[0].value = 0xff;
+	myGUS.timers[1].value = 0xff;
 	
 	// Stop all channels
 	int i;
 	for(i=0;i<32;i++) {
 		guschan[i]->WriteVoiceCtrl(0x3);
-
 	}
 	IRQFifo.stackpos = -1;
-
 }
 
 
@@ -600,6 +604,15 @@ static Bit16u ExecuteReadRegister(void) {
 		return myGUS.gRegData;
 	}
 }
+
+static void GUS_TimerEvent(Bitu val) {
+	if (!myGUS.timers[val].masked) myGUS.timers[val].reached=true;
+	if (myGUS.timers[val].raiseirq) {
+		myGUS.irq.T[val]=true;
+		PIC_ActivateIRQ(myGUS.irq1); 
+	}
+	if (myGUS.timers[val].running) PIC_AddEvent(GUS_TimerEvent,myGUS.timers[val].delay,val);
+};
 
   
 static void ExecuteGlobRegister(void) {
@@ -721,21 +734,18 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
 		myGUS.TimerControl = (Bit8u)(myGUS.gRegData>>8);
-		if((myGUS.TimerControl & 0x08) !=0) myGUS.timers[1].countdown = myGUS.timers[1].setting;
-		if((myGUS.TimerControl & 0x04) !=0) myGUS.timers[0].countdown = myGUS.timers[0].setting;
-		myGUS.irq.T1 = false;
-		myGUS.irq.T2 = false;
-		PIC_DeActivateIRQ(myGUS.irq1);
+		myGUS.timers[0].raiseirq=(myGUS.TimerControl & 0x04)>0;
+		if (!myGUS.timers[0].raiseirq) myGUS.irq.T[0]=false;
+		myGUS.timers[1].raiseirq=(myGUS.TimerControl & 0x08)>0;
+		if (!myGUS.timers[1].raiseirq) myGUS.irq.T[1]=false;
 		break;
 	case 0x46:  // Timer 1 control
-		myGUS.timers[0].bytetimer = (Bit8u)(myGUS.gRegData>>8);
-		myGUS.timers[0].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[0].bytetimer) * ((Bit32s)80 << 10);
-		myGUS.timers[0].countdown = myGUS.timers[0].setting;
+		myGUS.timers[0].value = (Bit8u)(myGUS.gRegData>>8);
+		myGUS.timers[0].delay = (0x100 - myGUS.timers[0].value) * 80;
 		break;
 	case 0x47:  // Timer 2 control
-		myGUS.timers[1].bytetimer = (Bit8u)(myGUS.gRegData>>8);
-		myGUS.timers[1].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[1].bytetimer) * ((Bit32s)360 << 10);
-		myGUS.timers[1].countdown = myGUS.timers[1].setting;
+		myGUS.timers[1].value = (Bit8u)(myGUS.gRegData>>8);
+		myGUS.timers[1].delay = (0x100 - myGUS.timers[1].value) * 320;
 		break;
 	case 0x49:  // DMA sampling control register
 		myGUS.SampControl = (Bit8u)(myGUS.gRegData>>8);
@@ -759,8 +769,8 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 		temp = 0;
 		if(myGUS.irq.MIDITx) temp |= 1;
 		if(myGUS.irq.MIDIRx) temp |= 2;
-		if(myGUS.irq.T1) temp |= 4;
-		if(myGUS.irq.T2) temp |= 8;
+		if(myGUS.irq.T[0]) temp |= 4;
+		if(myGUS.irq.T[1]) temp |= 8;
 		if(myGUS.irq.Resv) temp |= 16;
 		if(myGUS.irq.WaveTable) temp |= 32;
 		if(myGUS.irq.VolRamp) temp |= 64;
@@ -770,9 +780,11 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 	case 0x208:
 		Bit8u tmptime;
 		tmptime = 0;
-		if(myGUS.irq.T1) tmptime |= (1 << 6);
-		if(myGUS.irq.T2) tmptime |= (1 << 5);
-		if((myGUS.irq.T1) || (myGUS.irq.T2)) tmptime |= (1 << 7);
+		if (myGUS.timers[0].reached) tmptime |= (1 << 6);
+		if (myGUS.timers[1].reached) tmptime |= (1 << 5);
+		if (tmptime & 0x60) tmptime |= (1 << 7);
+		if (myGUS.irq.T[0]) tmptime|=(1 << 2);
+		if (myGUS.irq.T[1]) tmptime|=(1 << 1);
 		return tmptime;
 	case 0x20a:
 		return adlib_commandreg;
@@ -810,8 +822,25 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x209:
 //TODO adlib_commandreg should be 4 for this to work else it should just latch the value
-		myGUS.timers[0].active = ((val & 0x1) > 0);
-		myGUS.timers[1].active = ((val & 0x2) > 0);
+		if (val & 0x80) {
+			myGUS.timers[0].reached=false;
+			myGUS.timers[1].reached=false;
+			return;
+		}
+		myGUS.timers[0].masked=(val & 0x40)>0;
+		myGUS.timers[1].masked=(val & 0x20)>0;
+		if (val & 0x1) {
+			if (!myGUS.timers[0].running) {
+				PIC_AddEvent(GUS_TimerEvent,myGUS.timers[0].delay,0);
+				myGUS.timers[0].running=true;
+			}
+		} else myGUS.timers[0].running=false;
+		if (val & 0x2) {
+			if (!myGUS.timers[1].running) {
+				PIC_AddEvent(GUS_TimerEvent,myGUS.timers[1].delay,1);
+				myGUS.timers[1].running=true;
+			}
+		} else myGUS.timers[1].running=false;
 		break;
 //TODO Check if 0x20a register is also available on the gus like on the interwave
 	case 0x20b:
@@ -830,7 +859,6 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 				LOG_GUS("Attempt to assign GUS to wrong DMA - at %x, assigned %x", myGUS.dma1, dmatable[temp]);
 			}
 		}
-
 		break;
 	case 0x302:
 		myGUS.gCurChannel = val ;
@@ -850,7 +878,6 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		myGUS.gRegData = (0x00ff & myGUS.gRegData) | val << 8;
 		ExecuteGlobRegister();
 		break;
-
 	case 0x307:
 		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = val;
 		break;
@@ -916,37 +943,9 @@ static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 		}
 		bufptr[i] = (Bit16s)(sample);
 	}
-
 	if(myGUS.irqenabled) {
 		if(IRQFifo.stackpos >= 0) {
 			PIC_ActivateIRQ(myGUS.irq1);
-		}
-	}
-
-	if(myGUS.timers[0].active) {
-		myGUS.timers[0].countdown-=(len * (Bit32u)myGUS.mupersamp);
-		if(!myGUS.irq.T1) {
-			// Expire Timer 1
-			if(myGUS.timers[0].countdown < 0) {
-				if((myGUS.TimerControl & 0x04) !=0) {
-					PIC_ActivateIRQ(myGUS.irq1);
-				}
-				myGUS.irq.T1 = true;
-				//LOG_GUS("T1 timer expire");
-				//myGUS.timers[0].countdown = myGUS.timers[0].setting;
-			}
-		}
-	}
-	if(myGUS.timers[1].active) {
-		if(!myGUS.irq.T2) {
-			myGUS.timers[1].countdown-=(len * (Bit32u)myGUS.mupersamp);
-			// Expire Timer 2
-			if(myGUS.timers[1].countdown < 0) {
-				if((myGUS.TimerControl & 0x08) !=0) {
-					PIC_ActivateIRQ(myGUS.irq1);
-				}
-				myGUS.irq.T2 = true;
-			}
 		}
 	}
 }
@@ -979,8 +978,6 @@ void MakeTables(void)
 
 
 void GUS_Init(Section* sec) {
-
-	
 	memset(&myGUS,0,sizeof(myGUS));
 	memset(GUSRam,0,1024*1024);
 
@@ -994,11 +991,6 @@ void GUS_Init(Section* sec) {
 	myGUS.irq1 = section->Get_int("irq1");
 	myGUS.irq2 = section->Get_int("irq2");
 	strcpy(&myGUS.ultradir[0], section->Get_string("ultradir"));
-
-	adlib_commandreg = 85;
-	myGUS.timers[0].active = false;
-	myGUS.timers[1].active = false;
-	
 
 	memset(&myGUS.irq, 0, sizeof(myGUS.irq));
 	IRQFifo.stackpos = -1;
@@ -1049,13 +1041,11 @@ void GUS_Init(Section* sec) {
 	for(i=0;i<=32;i++) {
 		guschan[i] = new GUSChannels(i);
 	}
-
 	// Register the Mixer CallBack 
-
 	gus_chan=MIXER_AddChannel(GUS_CallBack,GUS_RATE,"GUS");
 	MIXER_SetMode(gus_chan,MIXER_16STEREO);
 	MIXER_Enable(gus_chan,false);
-
+	GUSReset();
 	int portat = 0x200+GUS_BASE;
 	// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
 	SHELL_AddAutoexec("SET ULTRASND=%3X,%d,%d,%d,%d",portat,myGUS.dma1,myGUS.dma2,myGUS.irq1,myGUS.irq2);
