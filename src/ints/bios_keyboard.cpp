@@ -377,29 +377,34 @@ irq1_return:
 }
 
 static Bitu INT16_Handler(void) {
-	Bit16u temp;	
+	Bit16u temp;
+	bool extended = false; //accept extended keycodes (call 0x10 0x11)
 	switch (reg_ah) {
+	case 0x10: /* GET KEYSTROKE (extended) */
+		extended = true;	/* Fallthrough */
 	case 0x00: /* GET KEYSTROKE */
-	case 0x10:
+	//Officially: the non extended version should skip all extended keys.
+	//For improved compatibility: clear the extended part (0xe0)
 		{
-//TODO find a more elegant way to do this
 			do {
+				//TODO find a more elegant way to do this
 				temp=get_key();
 				if (temp==0) { CALLBACK_Idle();};
 			} while (temp==0);
 			reg_ax=temp;
-			if(reg_al==0xe0) reg_al=0; //extended key 
+			if(!extended && reg_al==0xe0) reg_al=0; //no extended 
 			break;
 		}
+	case 0x11: /* CHECK FOR KEYSTROKE (extended) */
+		extended = true;	/* Fallthrough */
 	case 0x01: /* CHECK FOR KEYSTROKE */
-	case 0x11:
 		temp=check_key();
 		if (temp==0) {
 			CALLBACK_SZF(true);
 		} else {
 			CALLBACK_SZF(false);
 			reg_ax=temp;
-			if(reg_al==0xe0) reg_al=0; //extended key 
+			if(!extended && reg_al==0xe0) reg_al=0; //no extended 
 		}
 		break;
 	case 0x02:	/* GET SHIFT FlAGS */
