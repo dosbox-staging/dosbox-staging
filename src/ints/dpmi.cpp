@@ -220,7 +220,7 @@ public:
 
 	// Real mode reflection callbacks
 	void		PrepareReflectToReal	(Bitu num);
-	Bitu		CallRealIRETFrame		(void);
+	Bitu		CallRealIRETFrame		(bool callAsInt);
 	Bitu		CallRealIRETFrameReturn	(void);
 	Bitu		SimulateInt				(void);
 	Bitu		SimulateIntReturn		(void);
@@ -874,7 +874,7 @@ Bitu DPMI::RealModeCallbackReturn(void)
 
 static Bitu count = 0;
 
-Bitu DPMI::CallRealIRETFrame(void)
+Bitu DPMI::CallRealIRETFrame(bool callAsInt)
 {
 	Bitu calledIP = mem_readd(SegPhys(ss)+reg_esp);
 	Bitu calledCS = mem_readd(SegPhys(ss)+reg_esp+4);
@@ -893,7 +893,7 @@ Bitu DPMI::CallRealIRETFrame(void)
 	// Provide Stack
 	ProvideRealModeStack(prStack,toCopy);
 	// Push flags
-	CPU_Push16(reg_flags);
+	if (callAsInt) CPU_Push16(reg_flags);
 	// Setup IP
 	Bitu newCS = mem_readw(data+0x2C);
 	Bitu newIP = mem_readw(data+0x2A);
@@ -1758,8 +1758,11 @@ Bitu DPMI::Int31Handler(void)
 		case 0x0300:// Simulate Real Mode Interrupt
 					SimulateInt();
 					break;
+		case 0x0301:// Call Real Mode Procedure With RET Frame
+					CallRealIRETFrame(false);
+					break;
 		case 0x0302:// Call Real Mode Procedure With IRET Frame
-					CallRealIRETFrame();
+					CallRealIRETFrame(true);
 					break;
 		case 0x0303:{//Allocate Real Mode Callback Address
 					Bitu num = 0;
@@ -2133,7 +2136,7 @@ Bitu DPMI::Int2fHandler(void)
 static Bitu DPMI_ExceptionReturn(void)			{ if (activeDPMI) return activeDPMI->ExceptionReturn();			return 0;};
 static Bitu DPMI_RealModeCallback(void)			{ if (activeDPMI) return activeDPMI->RealModeCallback();		return 0;};
 static Bitu DPMI_RealModeCallbackReturn(void)	{ if (activeDPMI) return activeDPMI->RealModeCallbackReturn();	return 0;};
-static Bitu DPMI_CallRealIRETFrame(void)		{ if (activeDPMI) return activeDPMI->CallRealIRETFrame();		return 0;};
+static Bitu DPMI_CallRealIRETFrame(void)		{ if (activeDPMI) return activeDPMI->CallRealIRETFrame(true);	return 0;};
 static Bitu DPMI_CallRealIRETFrameReturn(void)	{ if (activeDPMI) return activeDPMI->CallRealIRETFrameReturn(); return 0;};
 static Bitu DPMI_SimulateInt(void)				{ if (activeDPMI) return activeDPMI->SimulateInt();				return 0;};
 static Bitu DPMI_SimulateIntReturn(void)		{ if (activeDPMI) return activeDPMI->SimulateIntReturn();		return 0;};
