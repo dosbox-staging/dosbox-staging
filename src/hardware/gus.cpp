@@ -57,8 +57,8 @@ struct GFGus {
 
 	Bit32u basefreq;
 	Bit16u activechan;
-	Bit16u mupersamp;
-	Bit16u muperchan;
+	Bit32s mupersamp;
+	Bit32s muperchan;
 
 	
 	Bit16u timerReg;
@@ -179,7 +179,8 @@ INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 
 		if(Delta >= 1024) {
 			
-			return (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8)) >> 1;
+			return (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8)) >> 2
+		;
 
 		} else {
 
@@ -187,7 +188,7 @@ INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 			Bit16s w1 = (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8));
 			Bit16s w2 = (Bit16s)((Bit16u)GUSRam[useAddr+2] | ((Bit16u)GUSRam[useAddr+3] << 8));
 			Bit16s diff = w2 - w1;
-			return (w1 + (((Bit32s)diff * (Bit32s)((CurAddr) & 0x3fe)) >> 10)) >> 1;
+			return (w1 + (((Bit32s)diff * (Bit32s)((CurAddr) & 0x3fe)) >> 10)) >> 2;
 
 		}
 	}
@@ -278,6 +279,9 @@ public:
 		return FreqCont;
 	}
 
+	// Used when GUS changes channel numbers during playback
+	void UpdateFreqCtrl() { WriteFreqCtrl(FreqCont); }
+
 	// Pan position register
 	void WritePanPot(Bit8u val) {
 		if(val<8) {
@@ -362,7 +366,9 @@ public:
 			if(dir) {
 				// Increment backwards
 				if (moving) CurAddr -= RealDelta;
-				if ((!eightbit) && (moving)) CurAddr -= RealDelta;
+
+				//Thought 16-bit needed this
+				//if ((!eightbit) && (moving)) CurAddr -= RealDelta;
 				
 				if(CurAddr <= StartAddr) {
 					if((VolControl & 0x4) == 0) {
@@ -388,7 +394,9 @@ public:
 
 				// Increment forwards
 				if (moving) CurAddr += RealDelta;
-				if ((!eightbit) && (moving)) CurAddr += RealDelta;
+
+				//Thought 16-bit needed this
+				//if ((!eightbit) && (moving)) CurAddr += RealDelta;
 				if(CurAddr >= EndAddr) {
 					if((VolControl & 0x4) == 0) {
 						if((voiceCont & 0x8) != 0) {
@@ -463,10 +471,10 @@ public:
 
 					switch(VolRampRate >> 6) {
 					case 0:
-						nextramp += myGUS.muperchan;
+						nextramp += myGUS.muperchan; 
 						break;
 					case 1:
-						nextramp += myGUS.muperchan * 8;
+						nextramp += myGUS.muperchan* 8;
 						break;
 					case 2:
 						nextramp += myGUS.muperchan * 64;
@@ -514,6 +522,8 @@ static void GUSReset(void)
 
 	myGUS.timers[0].active = false;
 	myGUS.timers[1].active = false;
+	myGUS.timers[0].bytetimer = 0x0;
+	myGUS.timers[1].bytetimer = 0x0;
 	
 	// Stop all channels
 	int i;
@@ -541,6 +551,9 @@ static Bit16u ExecuteReadRegister(void) {
 		return (Bit16u)(tmpreg << 8);
 	case 0x42:  // Dma address register
 		return myGUS.dmaAddr;
+	case 0x45:  // Timer control register.  Identical in operation to Adlib's timer
+		return (Bit16u)(myGUS.TimerControl << 8);
+		break;
 	case 0x49:  // Dma sample register
 		tmpreg = myGUS.DMAControl & 0xbf;
 		if(myGUS.irq.DMATC) tmpreg |= 0x40;
@@ -607,6 +620,7 @@ static Bit16u ExecuteReadRegister(void) {
 
   
 static void ExecuteGlobRegister(void) {
+	int i;
 	//LOG_MSG("Access global register %x with %x", myGUS.gRegSelect, myGUS.gRegData);
 	switch(myGUS.gRegSelect) {
 	case 0x0:  // Channel voice control register
@@ -698,9 +712,14 @@ static void ExecuteGlobRegister(void) {
 		
 		float simple;
 		simple = (1.0 / (float)GUS_RATE) / 0.000001;
-		myGUS.mupersamp = (Bit16u)simple;
-		myGUS.muperchan = (Bit16u)((float)1.6 * (float)myGUS.activechan);
+		myGUS.mupersamp = (Bit32s)simple*1024;
+		myGUS.muperchan = (Bit32s)((float)1.6 * (float)myGUS.activechan * 1024);
 		LOG_MSG("GUS set to %d channels", myGUS.activechan);
+
+		for(i=0;i<=myGUS.activechan;i++) {	if(guschan[i] != NULL) guschan[i]->UpdateFreqCtrl(); }
+	
+		break;
+	case 0x10:  // Undocumented register used in Fast Tracker 2
 		break;
 	case 0x41:  // Dma control register
 		myGUS.DMAControl = (Bit8u)myGUS.gRegData;
@@ -713,6 +732,7 @@ static void ExecuteGlobRegister(void) {
 		myGUS.dmaAddr = myGUS.gRegData;
 		break;
 	case 0x43:  // MSB Peek/poke DRAM position
+
 		myGUS.gDramAddr = (0xff0000 & myGUS.gDramAddr) | ((Bit32u)myGUS.gRegData);
 		break;
 	case 0x44:  // LSW Peek/poke DRAM position
@@ -729,12 +749,12 @@ static void ExecuteGlobRegister(void) {
 
 	case 0x46:  // Timer 1 control
 		myGUS.timers[0].bytetimer = (Bit8u)myGUS.gRegData;
-		myGUS.timers[0].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[0].bytetimer) * (Bit32s)80;
+		myGUS.timers[0].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[0].bytetimer) * ((Bit32s)80 << 10);
 		myGUS.timers[0].countdown = myGUS.timers[0].setting;
 		break;
 	case 0x47:  // Timer 2 control
 		myGUS.timers[1].bytetimer = (Bit8u)myGUS.gRegData;
-		myGUS.timers[1].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[1].bytetimer) * (Bit32s)360;
+		myGUS.timers[1].setting = ((Bit32s)0xff - (Bit32s)myGUS.timers[1].bytetimer) * ((Bit32s)360 << 10);
 		myGUS.timers[1].countdown = myGUS.timers[1].setting;
 		break;
 	case 0x49:  // DMA sampling control register
@@ -972,7 +992,7 @@ static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 
 	
 	bufptr = (Bit16s *)stream;
-	for(i=0;i<len*2;i++) bufptr[i] = (Bit16s)(tmpbuf[i]);
+	for(i=0;i<len*2;i++) bufptr[i] = (Bit16s)(tmpbuf[i] & 0xffff);
 
 }
 
