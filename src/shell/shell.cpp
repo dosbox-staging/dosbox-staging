@@ -158,8 +158,9 @@ void SHELL_Init() {
 	psp->file_table=RealMake(psp_seg,offsetof(PSP,files));
 	/* Save old DTA in psp */
 	psp->dta=dos.dta;
+	/* Set the environment and clear it */
 	psp->environment=env_seg+1;
-
+	mem_writew(Real2Phys(RealMake(env_seg+1,0)),0);
 	/* Setup internal DOS Variables */
 	dos.dta=RealMake(psp_seg,0x80);
 	dos.psp=psp_seg;
