@@ -79,7 +79,7 @@ struct ModemHd {
 	char remotestr[4096];
 
 	bool dialing;
-	float f1, f2;
+	double f1, f2;
 	Bitu diallen;
 	Bitu dialpos;
 	char dialstr[256];
@@ -455,7 +455,7 @@ static void MODEM_Hardware(Bitu ticks) {
 static void MODEM_CallBack(Bit8u * stream,Bit32u len) {
 	char *cp;
 	float ci,ri;
-	Bit32u innum, splitnum, quad, eighth, sixth, amp;
+	int innum, splitnum, quad, eighth, sixth, amp;
 	Bit8u curchar;
 	Bit32s buflen = (Bit32s)len;
 	if(mhd.incomingcall) {
