@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.13 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_misc.cpp,v 1.14 2005-02-14 15:58:50 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -58,6 +58,12 @@ static Bitu INT2A_Handler(void) {
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
+	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
+		/* Should do a lot more. Let's see if we can get away with it */
+		LOG(LOG_DOSMISC,LOG_ERROR)("Some BAD filetable call used bx=%X",reg_bx);
+		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
+		else CALLBACK_SCF(true);
+		return true;
 	case 0x1607:
 		if (reg_bx == 0x15) {
 			switch (reg_cx) {
