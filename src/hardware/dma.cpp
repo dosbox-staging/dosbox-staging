@@ -33,7 +33,7 @@
 #include "inout.h"
 #include "dma.h"
 
-#ifdef DEBUG_DMA
+#if DEBUG_DMA
 #define DMA_DEBUG LOG_DEBUG
 #else
 #define DMA_DEBUG
