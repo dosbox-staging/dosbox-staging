@@ -9,14 +9,14 @@
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.47 2004-07-08 20:08:52 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.48 2004-08-04 09:12:50 qbix79 Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_

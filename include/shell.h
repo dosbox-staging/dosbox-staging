@@ -9,14 +9,14 @@
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.5 2004-05-11 18:58:18 harekiet Exp $ */
+/* $Id: shell.h,v 1.6 2004-08-04 09:12:51 qbix79 Exp $ */
 
 #ifndef SHELL_H_
 #define SHELL_H_

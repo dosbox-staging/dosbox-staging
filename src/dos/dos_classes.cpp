@@ -9,14 +9,14 @@
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.40 2004-07-14 20:25:35 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.41 2004-08-04 09:12:53 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>

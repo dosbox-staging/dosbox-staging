@@ -9,14 +9,14 @@
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Library General Public License for more details.
+ *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.72 2004-07-30 01:41:10 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.73 2004-08-04 09:12:51 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
