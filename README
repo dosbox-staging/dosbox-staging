@@ -1,4 +1,5 @@
-DOSBox v0.61
+DOSBox v0.62
+
 
 =====
 NOTE: 
@@ -14,9 +15,141 @@ earlier). Also note that "protected mode" games need substantially more
 resources and may require a much faster processor for you to run it properly
 in DOSBox.
 
+
+
 ======
-Usage:
+INDEX:
 ======
+1. Quickstart
+2. FAQ
+3. Usage
+4. Internal Programs
+5. Special Keys
+6. System Requirements
+7. To run resource-demanding games
+8. The config file
+9. The language file
+10. Building your own version of DOSBox
+11. Special thanks
+12. Contact
+
+
+==============
+1. Quickstart:
+==============
+
+Type INTRO in dosbox. That's it. 
+
+
+
+
+=======
+2. FAQ:
+=======
+
+Some Frequently Asked Questions:
+
+Q: I've got a Z instead of a C at the prompt.
+Q: The mouse doesn't work.
+Q: The sound stutters.
+Q: I can't type \ in DOSBox.
+Q: The game/application can't find its CD-ROM.
+Q: The game/application runs much too slow!
+Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
+Q: What sound hardware does DosBox presently emulate?
+
+
+
+
+
+
+Q: I've got a Z instead of a C at the prompt.
+A: In DOSBox you can mount directories as drives.
+   In win32: mount c D:\ would give you a C in DOSBox which points
+   at D:\ in win32.
+   In linux: mount c /home/username would give you a C in DOSBox
+   which points at /home/username in Linux.
+
+Q: The mouse doesn't work.
+A: Normally dosbox detects the mouse being used by a game. If you click on 
+   the screen then it should get locked and work.
+   Sometimes the dosbox mouse detection doesn't work with certain games. You
+   might have to force to lock the mouse then with ctrl-F10.
+
+Q: The sound stutters.
+A: You're using too much cpu power to keep dosbox running at the current speed.
+   You can either lower the cycles or skip frames or get a faster machine.
+
+Q: I can't type \ in DOSBox.
+A: This is a known problem. It only occurs if your keyboard layout isn't US.
+   Some possible fixes:
+     1. Switch your keyboard layout.
+     2. Use / instead.
+     3. Add the commands you want to execute in dosbox.conf
+
+Q: The game/application can't find its CD-ROM.
+A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the cor-
+   rect label (-label LABEL). To enable more low-level cdrom support add
+   the following switch to mount: -usecd #, where # is the number of your 
+   CD-ROM drive reported by mount -cd. If you run Win32 you can specify -ioctl
+   or -aspi. Look at the description elsewhere in this document for their 
+   meaning.
+
+Q: The game/application runs much too slow!
+A: Look at the section "To run resource-demanding games" for more information.
+
+Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
+A: This is possible! Just create a config file: config -writeconf dosbox.conf .
+   Startup your favourite editor and look at all the settings present. To
+   start DOSBox with your new settings: dosbox -conf dosbox.conf
+
+Q: What sound hardware does DosBox presently emulate?
+A: DosBox emulates several legacy sound devices:
+   - Internal PC speaker
+     This emulation includes both the tone generator and several forms of
+     digital sound output through the internal speaker.
+   - Creative CMS/Gameblaster
+     The is the first card released by Creative Labs(R).  The default 
+     configuration places it on port 0x220.  It should be noted that enabling 
+     this with the Adlib emulation may result in conflicts.
+   - Tandy 3 voice
+     The emulation of this sound hardware is complete with the exception of 
+     the noise channel, which is not very well documented and as such is only 
+     a best guess as to the sound's accuracy.
+   - Adlib
+     Borrowed from MAME, this emulation is almost perfect and includes the 
+     Adlib's ability to almost play digitized sound.
+   - SoundBlaster Pro
+     Coupled with the Adlib, DosBox provides Soundblaster Pro level 8-bit 
+     stereo sound.
+   - Disney Soundsource
+     Using the printer port, this sound device outputs digital sound only.
+   - Gravis Ultrasound
+     The emulation of this hardware is nearly complete, though the MIDI 
+     capabilities have been left out since an MPU-401 has been 
+     emulated in other code.
+   - MPU-401
+     A MIDI passthrough interface is also emulated.  This method of sound 
+     output will only work when used with a General Midi or MT-32 device.
+
+
+Q: Great README, but I still don't get it.
+A: While unlikely this seems to happen. Maybe a look at "The Newbie's 
+   pictorial guide to dosbox" located at 
+   http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
+
+For more questions read the remainder of this README and/or check 
+the site/forum:
+http://dosbox.sourceforge.net
+
+
+
+
+=========
+3. Usage:
+=========
+
+An overview of the commandline options you can give to DOSBox:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
@@ -68,9 +201,9 @@ In Windows you can also drag directories/files onto the dosbox executable.
  
 
 
-==================
-Internal Programs:
-==================
+=====================
+4. Internal Programs:
+=====================
 
 DOSBox supports most of the DOS commands found in command.com. 
 In addition, the following commands are available: 
@@ -112,7 +245,7 @@ MOUNT -cd
 
   -ioctl   
         Forces to use ioctl commands. Only valid if mounting a cdrom under 
-        windows which support them (Win2000/XP/NT).
+        a Windows OS which support them (Win2000/XP/NT).
 
   -usecd number
         Forces to use SDL cdrom support for drive number.
@@ -183,13 +316,54 @@ Examples:
   3. To free previous allocated memory :
      loadfix -f
 
+
+RESCAN
+  Make DOSBox reread the directory structure. Useful if you changed something
+  on a mounted drive outside of DOSBox.
+  
+
+MIXER
+  Makes DOSBox display it's current volume settings. 
+  You can change this way:
+  
+  mixer channel left:right [/NOSHOW]
+  
+  channel
+      Can be one of the following: MASTER, DISNEY, SPKR, GUS, SB, FM.
+  
+  left:right
+      The volume levels in percentages. If you put a D in front it will be
+      in deciBell (example mixer gus d-10).
+  
+  /NOSHOW
+      Prevents DOSBox from showing the result if you set one
+      of the volume levels.
+  
+  
+IMGMOUNT
+  A utility to mount disk images and cdrom images in DOSBox.
+  
+  CDROM: either iso or cue/bin is supported:
+  IMGMOUNT DRIVE imagefile -t iso
+  
+  imagefile 
+     location is inside DOSBox.
+
+  disk image
+
+IPX
+
+BOOT
+
+
 For more information use the /? command line switch with the programs.
 
 
 
-=============
-Special Keys:
-=============
+
+================
+5. Special Keys:
+================
 
 ALT-ENTER       Go full screen and back.
 CTRL-F5	        Save a screenshot.
@@ -205,9 +379,11 @@ NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
 This maximum will vary from computer to computer, there is no standard.
 
-====================
-System requirements:
-====================
+
+
+=======================
+6. System requirements:
+=======================
 
 Fast machine. My guess would be pentium-2 400+ to get decent emulation
 of games written for an 286 machine.
@@ -216,9 +392,10 @@ them to run fast though!! Be sure to read the next section on how to speed
 it up somewhat.
 
 
-================================
-To run resource-demanding games: 
-================================
+
+===================================
+7. To run resource-demanding games: 
+===================================
 
 DOSBox emulates the CPU, the sound and graphic cards, and some other
 stuff, all at the same time. You can overclock DOSBox by using CTRL+F12, but
@@ -246,89 +423,10 @@ You can also try to disable the sound through the setup utility of the game
 to further reduce load on your CPU. 
 
 
-====
-FAQ:
-====
 
-Q: I've got a Z instead of a C at the prompt.
-A: In DOSBox you can mount directories as drives.
-   In win32: mount c D:\ would give you a C in DOSBox which points
-   at D:\ in win32.
-   In linux: mount c /home/username would give you a C in DOSBox
-   which points at /home/username in Linux.
-
-Q: The mouse doesn't work.
-A: Normally dosbox detects the mouse being used by a game. If you click on 
-   the screen then it should get locked and work.
-   Sometimes the dosbox mouse detection doesn't work with certain games. You
-   might have to force to lock the mouse then with ctrl-F10.
-
-Q: The sound stutters.
-A: You're using too much cpu power to keep dosbox running at the current speed.
-   You can either lower the cycles or skip frames or get a faster machine.
-
-Q: I can't type \ in DOSBox.
-A: This is a known problem. It only occurs if your keyboard layout isn't US.
-   Some possible fixes:
-     1. Switch your keyboard layout.
-     2. Use / instead.
-     3. Add the commands you want to execute in dosbox.conf
-
-Q: The game/application can't find its CD-ROM.
-A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the cor-
-   rect label (-label LABEL). To enable more low-level cdrom support add
-   the following switch to mount: -usecd #, where # is the number of your 
-   CD-ROM drive reported by mount -cd. If you run Win32 you can specify -ioctl
-   or -aspi. Look at the description elsewhere in this document for their 
-   meaning.
-
-Q: The game/application runs much too slow!
-A: Look at the section "To run resource-demanding games" for more information.
-
-Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
-A: This is possible! Just create a config file: config -writeconf dosbox.conf .
-   Startup your favourite editor and look at all the settings present. To
-   start DOSBox with your new settings: dosbox -conf dosbox.conf
-
-Q: What sound hardware does DosBox presently emulate?
-A: DosBox emulates several legacy sound devices:
-   - Internal PC speaker
-     This emulation includes both the tone generator and several forms of digital
-     sound output through the internal speaker.
-   - Creative CMS/Gameblaster
-     The is the first card released by Creative Labs(R).  The default configuration places
-     it on port 0x220.  It should be noted that enabling this with the Adlib emulation may
-     result in conflicts.
-   - Tandy 3 voice
-     The emulation of this sound hardware is complete with the exception of the noise channel,
-     which is not very well documented and as such is only a best guess as to the sound's accuracy.
-   - Adlib
-     Borrowed from MAME, this emulation is almost perfect and includes the Adlib's ability to almost
-     play digitized sound.
-   - SoundBlaster Pro
-     Coupled with the Adlib, DosBox provides Soundblaster Pro level 8-bit stereo sound.
-   - Disney Soundsource
-     Using the printer port, this sound device outputs digital sound only.
-   - Gravis Ultrasound
-     The emulation of this hardware is nearly complete, though the MIDI capabilities have been left
-     out since an MPU-401 has been emulated in other code.
-   - MPU-401
-     A MIDI passthrough interface is also emulated.  This method of sound output will only work when
-     used with a General Midi or MT-32 device.
-
-
-Q: Great README, but I still don't get it.
-A: While unlikely this seems to happen. Maybe a look at "The Newbie's 
-   pictorial guide to dosbox" located at 
-   http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
-
-For more questions check the site/forum:
-http://dosbox.sourceforge.net
-
-
-================
-The Config File:
-================
+===================
+8. The Config File:
+===================
 
 A config file can be generated by CONFIG.COM, which can be found on the 
 internal dosbox Z: drive when you start up dosbox. Look in the internal 
@@ -341,14 +439,14 @@ The generated configfile contains the current settings. You can alter them and
 start DOSBox with the -conf switch to load the file and use these settings.
 
 DOSBox will if no configfile is specified with the -conf switch look in the
-current directory for dosbox.conf. Then it will look for ~/.dosboxrc (linux),
-~\dosbox.conf (win32) or "~/Library/Preferences/DOSBox Preferences" (MACOSX).
+current directory for dosbox.conf. Then it will look for ~/.dosboxrc (Linux),
+~\dosbox.conf (Win32) or "~/Library/Preferences/DOSBox Preferences" (MACOSX).
 
 
 
-==================
-The Language File:
-==================
+=====================
+9. The Language File:
+=====================
 
 A language file can be generated by CONFIG.COM. 
 Read it and you will hopefully understand how to change it. 
@@ -357,16 +455,19 @@ or you can setup the filename in the config file in the [dosbox] section.
 There's a language= entry that can be changed with the filename.
 
 
-====================================
-Building your own version of DOSBox:
-====================================
+
+========================================
+10. Building your own version of DOSBox:
+========================================
 
 Download the source.
 Check the INSTALL in the source distribution.
 
-===============
-Special Thanks:
-===============
+
+
+===================
+11. Special Thanks:
+===================
 
 Vlad R. of the vdmsound project for excellent sound blaster info.
 Tatsuyuki Satoh of the Mame Team for making an excellent FM emulator.
@@ -376,9 +477,11 @@ Pierre-Yves Gérardy for hosting the old Beta Board.
 Colin Snover for hosting our forum.
 The Beta Testers.
 
-========
-Contact:
-========
 
-Harekiet harekiet@zophar.net
+
+============
+12. Contact:
+============
+
+Dosbox Crew: dosbox.crew@gmail.com
 http://dosbox.sourceforge.net
