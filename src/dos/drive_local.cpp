@@ -76,7 +76,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	dirCache.ExpandName(newname);
 
 	FILE * hand=fopen(newname,type);
-	Bit32u err=errno;
+//	Bit32u err=errno;
 	if (!hand) return false;
 	*file=new localFile(name,hand,0x202);
 //	(*file)->SetFileName(newname);
@@ -382,4 +382,77 @@ localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 	SetName(_name);
 }
 
+// ********************************************
+// CDROM DRIVE
+// ********************************************
 
+int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
+bool MSCDEX_HasMediaChanged(Bit8u subUnit);
+
+cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error)
+		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid)
+{
+	// Init mscdex
+	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
+	strcpy(info,"CDRom.");
+};
+
+bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
+{
+	if ((flags==OPEN_READWRITE) || (flags==OPEN_WRITE)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+	return localDrive::FileOpen(file,name,flags);
+};
+
+bool cdromDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
+};
+
+bool cdromDrive::FileUnlink(char * name)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
+};
+
+bool cdromDrive::RemoveDir(char * dir)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
+};
+
+bool cdromDrive::MakeDir(char * dir)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
+};
+
+bool cdromDrive::Rename(char * oldname,char * newname)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return false;
+};
+
+bool cdromDrive::GetFileAttr(char * name,Bit16u * attr)
+{
+	bool result = localDrive::GetFileAttr(name,attr);
+	if (result) *attr |= DOS_ATTR_READ_ONLY;
+	return result;
+};
+
+bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta)
+{
+	// If media has changed, reInit drivecache.
+	if (MSCDEX_HasMediaChanged(subUnit)) dirCache.EmptyCache();
+	return localDrive::FindFirst(_dir,dta);
+};
+
+void cdromDrive::SetDir(const char* path)
+{
+	// If media has changed, reInit drivecache.
+	if (MSCDEX_HasMediaChanged(subUnit)) dirCache.EmptyCache();
+	localDrive::SetDir(path);
+};

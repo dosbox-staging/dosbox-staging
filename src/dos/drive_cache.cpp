@@ -74,8 +74,24 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 
 DOS_Drive_Cache::~DOS_Drive_Cache(void)
 {
+	Clear();
+};
+
+void DOS_Drive_Cache::Clear(void)
+{
 	delete dirBase; dirBase = 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) dirSearch[i] = 0;
+};
+
+void DOS_Drive_Cache::EmptyCache(void)
+{
+	// Empty Cache and reinit
+	Clear();
+	dirBase		= new CFileInfo;
+	save_dir	= 0;
+	srchNr		= 0;
+	for (Bit32u i=0; i<MAX_OPENDIRS; i++) free[i] = true; 
+	SetBaseDir(basePath);
 };
 
 Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
@@ -145,6 +161,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists)
 			case DIRALPHABETICAL	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirName);		break;
 			case ALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByNameRev);		break;
 			case DIRALPHABETICALREV	: std::sort(dir->outputList.begin(), dir->outputList.end(), SortByDirNameRev);	break;
+			case NOSORT				: break;
 		};
 
 		Bit16s index = GetLongName(dir,file);
@@ -221,7 +238,6 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname)
 	char expand[CROSS_LEN] = {0};
 	CFileInfo* curDir = FindDirInfo(fullname,expand);
 
-	Bit16s foundNr	= 0;	
 	Bit16s low		= 0;
 	Bit16s high		= curDir->longNameList.size()-1;
 	Bit16s mid, res;
@@ -288,7 +304,6 @@ bool DOS_Drive_Cache::RemoveSpaces(char* str)
 {
 	char*	curpos	= str;
 	char*	chkpos	= str;
-	Bit16s	len		= -1;
 	while (*chkpos!=0) { 
 		if (*chkpos==' ') chkpos++; else *curpos++ = *chkpos++; 
 	}
@@ -517,7 +532,7 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
 		}
 		// Read complete directory
 		struct dirent* tmpres;
-		while (tmpres = readdir(dirp)) {			
+		while ((tmpres = readdir(dirp))!=NULL) {			
 			CreateEntry(dirSearch[id],tmpres->d_name);
 			// Sort Lists - filelist has to be alphabetically sorted, even in between (for finding double file names) 
 			// hmpf.. bit slow probably...
@@ -531,6 +546,7 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, struct dirent* &result)
 			case DIRALPHABETICAL	: std::sort(dirSearch[id]->outputList.begin(), dirSearch[id]->outputList.end(), SortByDirName);		break;
 			case ALPHABETICALREV	: std::sort(dirSearch[id]->outputList.begin(), dirSearch[id]->outputList.end(), SortByNameRev);		break;
 			case DIRALPHABETICALREV	: std::sort(dirSearch[id]->outputList.begin(), dirSearch[id]->outputList.end(), SortByDirNameRev);	break;
+			case NOSORT				: break;
 		};
 		// Info
 /*		if (!dirp) {
