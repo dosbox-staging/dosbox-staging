@@ -104,6 +104,7 @@ struct VideoModeBlock {
 
 	Bitu	htotal,vtotal;
 	Bitu	hdispend,vdispend;
+	Bitu	rate;
 	Bitu	special;
 	
 };
