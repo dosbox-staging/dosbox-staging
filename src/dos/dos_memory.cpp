@@ -29,15 +29,15 @@ static void DOS_CompressMemory(void) {
 	MCB * pmcb;MCB * pmcbnext;
 	Bit16u mcb_segment;
 	mcb_segment=dos.firstMCB;
-	pmcb=(MCB *)real_off(mcb_segment,0);
+	pmcb=(MCB *)HostMake(mcb_segment,0);
 	while (pmcb->type!=0x5a) {
-		pmcbnext=pmcbnext=(MCB *)real_off(mcb_segment+pmcb->size+1,0);
+		pmcbnext=pmcbnext=(MCB *)HostMake(mcb_segment+pmcb->size+1,0);
 		if ((pmcb->psp_segment==0) && (pmcbnext->psp_segment==0)) {
 			pmcb->size+=pmcbnext->size+1;
 			pmcb->type=pmcbnext->type;
 		} else {
 			mcb_segment+=pmcb->size+1;
-			pmcb=(MCB *)real_off(mcb_segment,0);
+			pmcb=(MCB *)HostMake(mcb_segment,0);
 		}
 	}
 }
@@ -45,14 +45,14 @@ static void DOS_CompressMemory(void) {
 void DOS_FreeProcessMemory(Bit16u pspseg) {
 	MCB * pmcb;
 	Bit16u mcb_segment=dos.firstMCB;
-	pmcb=(MCB *)real_off(mcb_segment,0);
+	pmcb=(MCB *)HostMake(mcb_segment,0);
 	while (true) {
 		if (pmcb->psp_segment==pspseg) {
 			pmcb->psp_segment=MCB_FREE;
 		}
 		mcb_segment+=pmcb->size+1;
 		if (pmcb->type==0x5a) break;
-		pmcb=(MCB *)real_off(mcb_segment,0);
+		pmcb=(MCB *)HostMake(mcb_segment,0);
 	}
 	DOS_CompressMemory();
 };
@@ -64,7 +64,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	bool stop=false;mcb_segment=dos.firstMCB;
 	DOS_CompressMemory();
 	while(!stop) {
-		pmcb=(MCB *)real_off(mcb_segment,0);
+		pmcb=(MCB *)HostMake(mcb_segment,0);
 		if (pmcb->psp_segment==0) {
 			/* Check for enough free memory in current block */
 			if (pmcb->size<(*blocks)) {
@@ -78,7 +78,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 				return true;
 			} else {
 				/* If so allocate it */
-				pmcbnext=(MCB *)real_off(mcb_segment+*blocks+1,0);
+				pmcbnext=(MCB *)HostMake(mcb_segment+*blocks+1,0);
 				pmcbnext->psp_segment=MCB_FREE;
 				pmcbnext->type=pmcb->type;
 				pmcbnext->size=pmcb->size-*blocks-1;
@@ -105,8 +105,8 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	DOS_CompressMemory();
 	MCB * pmcb,* pmcbnext,* pmcbnew;
-	pmcb=(MCB *)real_off(segment-1,0);
-	pmcbnext=(MCB *)real_off(segment+pmcb->size,0);
+	pmcb=(MCB *)HostMake(segment-1,0);
+	pmcbnext=(MCB *)HostMake(segment+pmcb->size,0);
 	Bit16u total=pmcb->size;
 	if (pmcb->type!=0x5a) {
 		if (pmcbnext->psp_segment==MCB_FREE) {
@@ -118,7 +118,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 			pmcb->type=pmcbnext->type;
 		}
 		pmcb->size=*blocks;
-		pmcbnew=(MCB *)real_off(segment+*blocks,0);
+		pmcbnew=(MCB *)HostMake(segment+*blocks,0);
 		pmcbnew->size=total-*blocks-1;
 		pmcbnew->type=pmcb->type;
 		pmcbnew->psp_segment=MCB_FREE;
@@ -141,7 +141,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 bool DOS_FreeMemory(Bit16u segment) {
 //TODO Check if allowed to free this segment
 	MCB * pmcb;
-	pmcb=(MCB *)real_off(segment-1,0);
+	pmcb=(MCB *)HostMake(segment-1,0);
 	pmcb->psp_segment=MCB_FREE;
 	DOS_CompressMemory();
 	return true;
@@ -153,7 +153,7 @@ bool DOS_FreeMemory(Bit16u segment) {
 void DOS_SetupMemory(void) {
 //TODO Maybe allocate some memory for dos transfer buffers
 //Although i could use bios regions for that for max free low memory
-	MCB * mcb=(MCB *) real_off(MEM_START,0);
+	MCB * mcb=(MCB *) HostMake(MEM_START,0);
 	mcb->psp_segment=MCB_FREE;						//Free
 	mcb->size=0x9FFE - MEM_START;
 	mcb->type=0x5a;									//Last Block
