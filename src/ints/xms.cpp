@@ -84,7 +84,7 @@ struct XMS_MemMove{
 } GCC_ATTRIBUTE(packed);
 #pragma pack (pop)
 
-static Bitu XMS_EnableA20(bool enable)
+Bitu XMS_EnableA20(bool enable)
 {
 	Bit8u val = IO_Read	(0x92);
 	if (enable) IO_Write(0x92,val | 2);
@@ -92,7 +92,7 @@ static Bitu XMS_EnableA20(bool enable)
 	return 0;
 };
 
-static Bitu XMS_GetEnabledA20(void)
+Bitu XMS_GetEnabledA20(void)
 {
 	return (IO_Read(0x92)&2)>0;
 };
@@ -102,7 +102,7 @@ static RealPt xms_callback;
 
 static XMS_Block xms_handles[XMS_HANDLES];
 
-static Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
+Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
 	Bit16u index=1;
 	largestFree=totalFree=0;
@@ -118,7 +118,7 @@ static Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	return 0;
 };
 
-static Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
+Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 // size = kb
 {
 	Bit16u index=1;
@@ -163,7 +163,7 @@ static Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	return XMS_OUT_OF_SPACE;
 };
 
-static Bitu XMS_FreeMemory(Bitu handle)
+Bitu XMS_FreeMemory(Bitu handle)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -192,7 +192,7 @@ static Bitu XMS_FreeMemory(Bitu handle)
 	return 0;
 };
 
-static Bitu XMS_MoveMemory(PhysPt bpt)
+Bitu XMS_MoveMemory(PhysPt bpt)
 {
 	XMS_MemMove block;
 	/* Fill the block with mem_read's and shit */
@@ -234,7 +234,7 @@ static Bitu XMS_MoveMemory(PhysPt bpt)
 	return 0;
 }
 
-static Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
+Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -245,7 +245,7 @@ static Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
 	return 0;
 };
 
-static Bitu XMS_UnlockMemory(Bitu handle)
+Bitu XMS_UnlockMemory(Bitu handle)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -258,7 +258,7 @@ static Bitu XMS_UnlockMemory(Bitu handle)
 	return XMS_BLOCK_NOT_LOCKED;
 };
 
-static Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
+Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
@@ -271,7 +271,7 @@ static Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFr
 	return 0;
 };
 
-static Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
+Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 {
 	/* Check for a valid handle */
 	if (!handle || (handle>=XMS_HANDLES) || !xms_handles[handle].active || !xms_handles[handle].allocated ) {
