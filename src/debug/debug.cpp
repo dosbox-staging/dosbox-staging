@@ -875,22 +875,28 @@ Bit32u DEBUG_CheckKeys(void) {
 	if (key>0) {
 		switch (toupper(key)) {
 		case '1':
-			ret=(*cpudecoder)(100);
+			CPU_Cycles = 100;
+			ret=(*cpudecoder)();
 			break;
 		case '2':
-			ret=(*cpudecoder)(500);
+			CPU_Cycles = 500;
+			ret=(*cpudecoder)();
 			break;
 		case '3':
-			ret=(*cpudecoder)(1000);
+			CPU_Cycles = 1000;
+			ret=(*cpudecoder)();
 			break;
 		case '4':
-			ret=(*cpudecoder)(5000);
+			CPU_Cycles = 5000;
+			ret=(*cpudecoder)();
 			break;
 		case '5':
-			ret=(*cpudecoder)(10000);
+			CPU_Cycles = 10000;
+			ret=(*cpudecoder)();
 			break;
 		case 'q':
-			ret=(*cpudecoder)(5);
+			CPU_Cycles = 5;
+			ret=(*cpudecoder)();
 			break;
 		case 'D':	dataSeg = SegValue(ds);
 					dataOfs = reg_si;
@@ -944,14 +950,16 @@ Bit32u DEBUG_CheckKeys(void) {
 						if (StepOver()) return 0;
 						else {
 							skipFirstInstruction = true; // for heavy debugger
-							Bitu ret=(*cpudecoder)(1);
+							CPU_Cycles = 1;
+							Bitu ret=(*cpudecoder)();
 							SetCodeWinStart();
 							CBreakpoint::ignoreOnce = 0;
 						}
 						break;
 		case KEY_F(11):	// trace into
 						skipFirstInstruction = true; // for heavy debugger
-						ret = (*cpudecoder)(1);
+						CPU_Cycles = 1;
+						ret = (*cpudecoder)();
 						SetCodeWinStart();
 						CBreakpoint::ignoreOnce = 0;
 						break;
@@ -1031,13 +1039,13 @@ static bool DEBUG_Log_Loop(int count) {
 			LogInstruction(csValue,eipValue,buffer);
 			fprintf(f,"%s",buffer);
 						
-			PIC_IRQAgain=false;
-			ret=(*cpudecoder)(1);
+			CPU_Cycles = 1;
+			ret=(*cpudecoder)();
 		
 			count--;
 			if (count==0) break;
 
-		} while (!ret && PIC_IRQAgain);
+		} while (!ret);
 		if (ret) break;
 	} while (count>0);
 	
