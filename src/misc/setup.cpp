@@ -127,7 +127,7 @@ void Section_prop::HandleInputline(char *gegevens){
 	*rest=0;
 	gegevens=trim(gegevens);
 	for(it tel=properties.begin();tel!=properties.end();tel++){
-		if((*tel)->propname==gegevens){
+		if(!strcasecmp((*tel)->propname.c_str(),gegevens)){
 			(*tel)->SetValue(rest+1);
 			return;
 		}
@@ -211,14 +211,17 @@ Config::~Config() {
 
 Section* Config::GetSection(const char* _sectionname){
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
-		if ( (*tel)->sectionname==_sectionname) return (*tel);
+		if (!strcasecmp((*tel)->sectionname.c_str(),_sectionname)) return (*tel);
 	}
 	return NULL;
 }
 
 void Config::ParseConfigFile(const char* configfilename){
 	ifstream in(configfilename);
-	if (!in) LOG_MSG("CONFIG:Can't find config file %s, using default settings",configfilename);
+	if (!in) {
+		LOG_MSG("CONFIG:Can't find config file %s, using default settings",configfilename);
+		return;
+	}
 	char gegevens[150];
 	Section* currentsection;
 	while (in) {
@@ -302,7 +305,7 @@ bool CommandLine::FindCommand(int which,std::string & value) {
 
 bool CommandLine::FindEntry(char * name,cmd_it & it,bool neednext) {
 	for (it=cmds.begin();it!=cmds.end();it++) {
-		if ((*it)==name) {
+		if (!strcasecmp((*it).c_str(),name)) {
 			cmd_it itnext=it;itnext++;
 			if (neednext && (itnext==cmds.end())) return false;
 			return true;
