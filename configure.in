@@ -181,6 +181,7 @@ dnl Some host detection and actions for them
 case "$target" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
+       AC_CHECK_HEADERS(ddraw.h)
        ;;
     *-*-darwin*)
        dnl We have a problem here: both MacOS X and Darwin report 
