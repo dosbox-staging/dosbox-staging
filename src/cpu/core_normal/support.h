@@ -79,6 +79,8 @@ static INLINE Bit32s Fetchds() {
 	return Fetchd();
 }
 
+#if 0
+
 static INLINE void Push_16(Bit16u blah)	{
 	reg_esp-=2;
 	SaveMw(SegBase(ss)+(reg_esp & cpu.stack.mask),blah);
@@ -100,6 +102,15 @@ static INLINE Bit32u Pop_32() {
 	reg_esp+=4;
 	return temp;
 };
+
+#else 
+
+#define Push_16 CPU_Push16
+#define Push_32 CPU_Push32
+#define Pop_16 CPU_Pop16
+#define Pop_32 CPU_Pop32
+
+#endif
 
 #define JumpSIb(blah) 										\
 	if (blah) {												\

@@ -27,26 +27,34 @@ static INLINE Bit32u the_Fetchd(EAPoint & loc) {
 #define Fetchws() (Bit16s)the_Fetchw(IPPoint)
 #define Fetchds() (Bit32s)the_Fetchd(IPPoint)
 
-
+#if 0
 static INLINE void Push_16(Bit16u blah)	{
 	reg_esp-=2;
-	SaveMw(SegBase(ss) + (reg_esp & cpu.stack.mask),blah);
+	SaveMw(SegBase(ss)+(reg_esp & cpu.stack.mask),blah);
 }
 
 static INLINE void Push_32(Bit32u blah)	{
 	reg_esp-=4;
-	SaveMd(SegBase(ss) + (reg_esp & cpu.stack.mask),blah);
+	SaveMd(SegBase(ss)+(reg_esp & cpu.stack.mask),blah);
 }
 
 static INLINE Bit16u Pop_16(void) {
-	Bit16u temp=LoadMw(SegBase(ss) + (reg_esp & cpu.stack.mask));
+	Bit16u temp=LoadMw(SegBase(ss)+(reg_esp & cpu.stack.mask));
 	reg_esp+=2;
 	return temp;
 }
 
 static INLINE Bit32u Pop_32(void) {
-	Bit32u temp=LoadMd(SegBase(ss) + (reg_esp & cpu.stack.mask));
+	Bit32u temp=LoadMd(SegBase(ss)+(reg_esp & cpu.stack.mask));
 	reg_esp+=4;
 	return temp;
 }
 
+#else
+
+#define Push_16 CPU_Push16
+#define Push_32 CPU_Push32
+#define Pop_16 CPU_Pop16
+#define Pop_32 CPU_Pop32
+
+#endif
