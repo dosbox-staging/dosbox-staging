@@ -199,7 +199,6 @@ void LOG_StartUp(void) {
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
-		buf[strlen(buf)-1]=0;
 		lowcase(buf);
 		sect->Add_bool(buf,true);
 	}
