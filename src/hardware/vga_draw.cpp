@@ -26,40 +26,38 @@
 
 #define VGA_PARTS 4
 
-static Bit8u VGA_DrawBuffer[2048];
-
 typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart,Bitu panning,Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
 static Bit8u * VGA_HERC_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit8u * reader=&vga.mem.linear[vidstart+(line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
 		Bitu val=*reader++;
 		*draw++=CGA_2_Table[val >> 4];
 		*draw++=CGA_2_Table[val & 0xf];
 	}
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 static Bit8u * VGA_CGA2_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
 		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
 		*draw++=CGA_2_Table[val >> 4];
 		*draw++=CGA_2_Table[val & 0xf];
 	}
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 static Bit8u * VGA_CGA4_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
 		*draw++=CGA_4_Table[val];
 	}
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 
@@ -69,18 +67,18 @@ static Bit8u convert16[16]={
 };
 
 static Bit8u * VGA_CGA16_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	line*=8*1024;Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	line*=8*1024;Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val=vga.mem.linear[vidstart+line];vidstart=(vidstart+1)&0x1fff;
 		Bit32u full=convert16[val >> 4] | convert16[val & 0xf] << 16;
 		*draw++=full|=full<<8;
 	}
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 static Bit8u * VGA_TANDY16_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit8u * reader=&vga.mem.linear[(vga.tandy.disp_bank << 14) + vidstart + (line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=*reader++;Bitu val2=*reader++;
 		*draw++=(val1 & 0x0f) << 8  |
@@ -88,7 +86,7 @@ static Bit8u * VGA_TANDY16_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 				(val2 & 0x0f) << 24 |
 				(val2 & 0xf0) << 12;
 	}
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 static Bit8u * VGA_EGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
@@ -101,7 +99,7 @@ static Bit8u * VGA_VGA_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit32u * draw=(Bit32u *)&VGA_DrawBuffer[0];
+	Bit32u * draw=(Bit32u *)RENDER_TempLine;
 	Bit8u * vidmem=&vga.mem.linear[vidstart];
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
@@ -120,12 +118,12 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	if (font_addr>=0 && font_addr<vga.draw.blocks) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
-		draw=(Bit32u *)&VGA_DrawBuffer[font_addr*8];
+		draw=(Bit32u *)&RENDER_TempLine[font_addr*8];
 		Bit32u att=TXT_FG_Table[vga.mem.linear[vga.config.cursor_start*2+1]&0xf];
 		*draw++=att;*draw++=att;
 	}
 skip_cursor:
-	return VGA_DrawBuffer;
+	return RENDER_TempLine;
 }
 
 static void VGA_VerticalDisplayEnd(void) {
@@ -295,6 +293,7 @@ void VGA_SetupDrawing(void) {
 		break;
 	case M_CGA4:
 	case M_CGA16:							//Let is use 320x200 res and double pixels myself
+		aspect_ratio/=2;					//Hack for half the vtotal in cga mode
 		scaleh=2;scalew=2;
 		vga.draw.blocks=width;
 		width<<=2;
@@ -305,6 +304,7 @@ void VGA_SetupDrawing(void) {
 		VGA_DrawLine=(vga.mode == M_CGA4) ? VGA_CGA4_Draw_Line : VGA_CGA16_Draw_Line;
 		break;
 	case M_CGA2:
+		aspect_ratio/=2;					//Hack for half the vtotal in cga mode
 		scaleh=2;
 		vga.draw.address_line_total=2;
 		vga.draw.blocks=width;
