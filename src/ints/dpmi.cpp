@@ -487,24 +487,24 @@ void DPMI::ProvideRealModeStack(PhysPt prStack, Bitu toCopy)
 	// Check stack, if zero provide it
 	if ((SegValue(ss)==0) && (reg_sp==0)) {
 		SegSet16(ss,rm_ss);
-		reg_sp = rm_sp;
+		reg_esp = rm_sp;
 	} else {
-		if (SegValue(ss)==rm_ss) reg_sp = rm_sp;
+		if (SegValue(ss)==rm_ss) reg_esp = rm_sp;
 	};
 	// We have to be in realmode here
 	if (toCopy>0) {
 		Bitu numBytes = toCopy*2;
-		if (reg_sp<numBytes) E_Exit("DPMI:CopyStack: SP invalid.");
-		PhysPt targetStack = SegValue(ss)+reg_sp-numBytes;
+		if (reg_esp<numBytes) E_Exit("DPMI:CopyStack: SP invalid.");
+		PhysPt targetStack = SegValue(ss)+reg_esp-numBytes;
 		MEM_BlockCopy(targetStack,prStack,numBytes);
-		reg_sp -= numBytes;
+		reg_esp -= numBytes;
 	}
 };
 
 void DPMI::UpdateRealModeStack()
 {
 	if (SegValue(ss)==rm_ss) {
-		if (reg_sp>DPMI_REALMODE_STACKSIZE) E_Exit("DPMI:Realmode stack out of range: %04X",reg_sp);
+		if (reg_esp>DPMI_REALMODE_STACKSIZE) E_Exit("DPMI:Realmode stack out of range: %04X",reg_esp);
 		rm_sp = reg_sp;
 	}
 };
@@ -620,23 +620,24 @@ Bitu DPMI::ExceptionReturn(void)
 {
 	Bitu error;
 	// Restore Registers
+	Bitu newcs;
 	if (dpmi.client.bit32) {
 		error	= CPU_Pop32();
 		reg_eip = CPU_Pop32();
-		CPU_SetSegGeneral(cs,CPU_Pop32());
+		newcs	= CPU_Pop32();
 		CPU_SetFlagsd(CPU_Pop32());
 		reg_esp = CPU_Pop32();
 		CPU_SetSegGeneral(ss,CPU_Pop32());
 	} else {
 		error	= CPU_Pop16();
 		reg_eip = CPU_Pop16();
-		CPU_SetSegGeneral(cs,CPU_Pop16());
+		newcs	= CPU_Pop16();
 		CPU_SetFlagsw(CPU_Pop16());
 		reg_esp = CPU_Pop16();
 		CPU_SetSegGeneral(ss,CPU_Pop16());
 	};
 	DPMI_LOG("DPMI: Return from Exception. Jump to %04X:%08X",SegValue(cs),reg_eip);
-	CPU_JMP(dpmi.client.bit32,SegValue(cs),reg_eip);
+	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	return 0;
 };
 
@@ -758,10 +759,12 @@ Bitu DPMI::RealModeCallbackReturn(void)
 	Bitu newCS = mem_readw(data+0x2C);
 	Bitu newIP = mem_readw(data+0x2A);	
 	UpdateRealModeStack();
-	DPMI_LOG("DPMI: CB: Retored cs:ip = %04X:%04X",newCS,newIP);
+	DPMI_LOG("DPMI: CB: Retored cs:ip = %04X:%04X (%d)",newCS,newIP);
 	CPU_JMP(false,newCS,newIP);
 	return 0;
 };
+
+static Bitu count = 0;
 
 Bitu DPMI::CallRealIRETFrame(void)
 {
@@ -799,15 +802,17 @@ Bitu DPMI::CallRealIRETFrameReturn(void)
 {
 	UpdateRealModeStack();
 	// returning from realmode func
-	DPMI_LOG("DPMI: LEAVE REAL PROC IRETF");
+	DPMI_LOG("DPMI: LEAVE REAL PROC IRETF %d",count);
 	/* Switch to protected mode */
 	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
 	// Save registers into real mode structure
 	CopyRegistersToBuffer(PopStack());
 	// Restore changed Resgisters
 	RestoreRegister();
-	CPU_SetSegGeneral(cs,PopStack());
-	// Free last realmode stack
+	Bitu newcs = PopStack();
+	
+	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
+
 	DPMI_CALLBACK_SCF(false);
 	return 0;
 };
@@ -815,7 +820,7 @@ Bitu DPMI::CallRealIRETFrameReturn(void)
 Bitu DPMI::SimulateInt(void)
 {
 	Bitu num = reg_bl;
-	DPMI_LOG("DPMI: SIM INT %02X %04X called.",num,reg_ax);
+	DPMI_LOG("DPMI: SIM INT %02X %04X called. cs = %04X",num,reg_ax,SegValue(cs));
 	// Save changed registers
 	PushStack(SegValue(cs));
 	SaveRegister();
@@ -833,10 +838,10 @@ Bitu DPMI::SimulateInt(void)
 	SegSet16(cs,RealSeg(CALLBACK_RealPointer(callback.simintReturn)));
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.simintReturn));
 	// Push flags from structure on stack
-	DPMI_LOG("DPMI: SimInt1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_sp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
+	DPMI_LOG("DPMI: SimInt1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	flags.word = mem_readw(data+0x20);
 	Interrupt(num);
-	DPMI_LOG("DPMI: SimInt2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_sp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
+	DPMI_LOG("DPMI: SimInt2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	return 0;
 };
 
@@ -844,7 +849,7 @@ Bitu DPMI::SimulateIntReturn(void)
 {
 	// returning from realmode func
 	DPMI_LOG("DPMI: SIM INT return");
-	DPMI_LOG("DPMI: SimIntRet1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_sp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
+	DPMI_LOG("DPMI: SimIntRet1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 
 	UpdateRealModeStack();
 	/* Switch to protected mode */
@@ -853,10 +858,12 @@ Bitu DPMI::SimulateIntReturn(void)
 	CopyRegistersToBuffer(PopStack());
 	// Restore changed Resgisters
 	RestoreRegister();
-	CPU_SetSegGeneral(cs,PopStack());
+	Bitu newcs = PopStack();
+	DPMI_LOG("DPMI: SimIntRet: JUMP to %04X:%08X",newcs,reg_eip);
+	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	// Free last realmode stack
 	DPMI_CALLBACK_SCF(false);
-	DPMI_LOG("DPMI: SimIntRet2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_sp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
+	DPMI_LOG("DPMI: SimIntRet2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	return 0;
 };
 
@@ -871,11 +878,14 @@ void DPMI::PrepareReflectToReal(Bitu num)
 	/* Swtich to real mode */
 	CPU_SET_CRX(0,cpu.cr0 & ~CR0_PROTECTION);
 	// Setup cs:ip to return to intreturn
+	Bitu retcs = RealSeg(CALLBACK_RealPointer(callback.ptorintReturn));
+	Bitu retip = RealOff(CALLBACK_RealPointer(callback.ptorintReturn));
+	
 	SegSet16(cs,RealSeg(CALLBACK_RealPointer(callback.ptorintReturn)));
 	reg_ip = RealOff(CALLBACK_RealPointer(callback.ptorintReturn));
 	// setup stack
 	SegSet16(ss,rm_ss);
-	reg_sp = rm_sp;
+	reg_esp = rm_sp;
 }
 
 Bitu DPMI::ptorHandler(void) 
@@ -887,7 +897,7 @@ Bitu DPMI::ptorHandler(void)
 		if ((num>=0x70) && (num<=0x77)) return 0;
 	};
 	PrepareReflectToReal(num);	
-	if (num==0x0F)
+//	if (num==0x0F)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
 	// Prepare flags for real int
 	// CPU_SetFlagsw(flags.word & 0x3ED5); // 0011111011010101b
@@ -902,15 +912,16 @@ Bitu DPMI::ptorHandlerReturn(void)
 	/* Switch to protected mode */
 	CPU_SET_CRX(0,cpu.cr0 | CR0_PROTECTION);
 	// Restore Registers
-	CPU_SetSegGeneral(cs,PopStack());
-	reg_eip  = PopStack();
-	Bitu num = PopStack();
-	reg_esp	 = PopStack(); 
+	Bitu newcs	= PopStack();
+	reg_eip		= PopStack();
+	Bitu num	= PopStack();
+	reg_esp		= PopStack(); 
 	RestoreSegments();
 //	if (num==0x0F) 
 		DPMI_LOG("DPMI: INT %02X RETURN",num);	
 	// hardware ints exit here
 	if (((num>=0x08) && (num<=0x0F)) || ((num>=0x70) && (num<=0x77))) {
+		CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 		return 0;
 	}
 	// Change flags on stack to reflect possible results from ints
@@ -923,6 +934,7 @@ Bitu DPMI::ptorHandlerReturn(void)
 		Bit16u userFlags = flags.word & FLAG_MASK;						 // Mask out illegal flags not to change by int (0011111011010101b)
 		mem_writew(SegPhys(ss)+reg_sp+4,oldFlags|userFlags);
 	};
+	CPU_JMP(dpmi.client.bit32,newcs,reg_eip);
 	return 0;
 }
 
@@ -972,6 +984,7 @@ Bitu DPMI::Int21HandlerReturn(void)
 	// Set carry flag
 	DPMI_CALLBACK_SCF(flags.word & 1);
 	DPMI_LOG("DPMI: INT 21 RETURN");	
+	CPU_JMP(dpmi.client.bit32,SegValue(cs),reg_eip);
 	return 0;
 }
 
@@ -1522,7 +1535,7 @@ Bitu DPMI::Int31Handler(void)
 							DPMI_CALLBACK_SCF(true);
 						};
 					} else {
-						DPMI_LOG_ERROR("DPMI: 0100: Allocation failure : %04X (R:%04X)",reg_bx,blocks);
+						DPMI_LOG("DPMI: 0100: Allocation failure : %04X (R:%04X)",reg_bx,blocks);
 						reg_bx = blocks;
 						reg_ax = 0x008; // Insufficient memory
 						DPMI_CALLBACK_SCF(true);
@@ -1544,7 +1557,7 @@ Bitu DPMI::Int31Handler(void)
 								sel+=8;
 							};
 							DPMI_CALLBACK_SCF(false);
-							DPMI_LOG_ERROR("DPMI: 0101: Free Dos Mem: %04X",reg_dx);
+							DPMI_LOG("DPMI: 0101: Free Dos Mem: %04X",reg_dx);
 							break;
 						}
 					} 
@@ -1910,7 +1923,7 @@ Bitu DPMI::Int31Handler(void)
 Bitu DPMI::Int2fHandler(void) 
 {
 	// Only available in ProtectedMode
-	//LOG(LOG_MISC,LOG_WARN)("DPMI: 0x2F %04x",reg_ax);
+	// LOG(LOG_MISC,LOG_WARN)("DPMI: 0x2F %04x",reg_ax);
 	switch (reg_ax) {	
 	case 0x1686:		/* Get CPU Mode */
 		reg_ax = 0;
