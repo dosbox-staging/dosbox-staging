@@ -130,7 +130,7 @@ void MSG_Write(const char * location) {
 
 void MSG_Init(Section_prop * section) {
 	std::string file_name;
-	if (control->cmdline->FindString("-lang",file_name)) {
+	if (control->cmdline->FindString("-lang",file_name,true)) {
 		LoadMessageFile(file_name.c_str());
 	} else LoadMessageFile(section->Get_string("language"));
 }
