@@ -1196,6 +1196,16 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 			strcpy(curSelectorName,prefix);
 		};
 	};
+	// If it is a callback add additional info
+	pos = strstr(inst,"callback");
+	if (pos) {
+		pos += 9;
+		Bitu nr = GetHexValue(pos,pos);
+		const char* descr = CALLBACK_GetDescription(nr);
+		if (descr) {
+			strcat(inst,"  ("); strcat(inst,descr); strcat(inst,")");
+		}
+	};
 	return result;
 };
 
