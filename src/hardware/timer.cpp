@@ -149,12 +149,12 @@ static Bit8u read_latch(Bit32u port) {
         else
       pit[counter].read_state = 0;
       break;
-    case 1: /* read MSB */
-      ret = (pit[counter].read_latch >> 8) & 0xff;
+    case 1: /* read LSB */
+      ret = (pit[counter].read_latch & 0xff);
       pit[counter].read_latch = -1;
       break;
-    case 2: /* read LSB */
-      ret = (pit[counter].read_latch & 0xff);
+    case 2: /* read MSB */
+      ret = (pit[counter].read_latch >> 8) & 0xff;
       pit[counter].read_latch = -1;
       break;
 	 default:
