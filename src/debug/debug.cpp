@@ -467,7 +467,7 @@ bool DEBUG_IntBreakpoint(Bit8u intNum)
 
 static bool StepOver()
 {
-	PhysPt start=Segs[cs].phys+reg_eip;
+	PhysPt start=SegPhys(cs)+reg_eip;
 	char dline[200];Bitu size;
 	size=DasmI386(dline, start, reg_eip, false);
 
