@@ -27,17 +27,12 @@
 #include "vga.h"
 
 VGA_Type vga;
+
 Bit32u CGAWriteTable[256];
 Bit32u ExpandTable[256];
 Bit32u Expand16Table[4][16];
 Bit32u Expand16BigTable[0x10000];
-
-Bit32u FillTable[16]={	
-	0x00000000,0x000000ff,0x0000ff00,0x0000ffff,
-	0x00ff0000,0x00ff00ff,0x00ffff00,0x00ffffff,
-	0xff000000,0xff0000ff,0xff00ff00,0xff00ffff,
-	0xffff0000,0xffff00ff,0xffffff00,0xffffffff
-};
+Bit32u FillTable[16];
 
 static void EndRetrace(void) {
 	/* start the actual display update now */
@@ -254,15 +249,40 @@ void VGA_Init(Section* sec) {
 	Bitu i,j;
 	for (i=0;i<256;i++) {
 		ExpandTable[i]=i | (i << 8)| (i <<16) | (i << 24);
+#ifdef WORDS_BIGENDIAN
+		CGAWriteTable[i]=((i>>0)&3) | (((i>>2)&3) << 8)| (((i>>4)&3) <<16) | (((i>>6)&3) << 24);
+#else
 		CGAWriteTable[i]=((i>>6)&3) | (((i>>4)&3) << 8)| (((i>>2)&3) <<16) | (((i>>0)&3) << 24);
+#endif
+	}
+	for (i=0;i<16;i++) {
+#ifdef WORDS_BIGENDIAN
+		FillTable[i]=	((i & 1) ? 0xff000000 : 0) |
+						((i & 2) ? 0x00ff0000 : 0) |
+						((i & 4) ? 0x0000ff00 : 0) |
+						((i & 8) ? 0x000000ff : 0) ;
+#else 
+		FillTable[i]=	((i & 1) ? 0x000000ff : 0) |
+						((i & 2) ? 0x0000ff00 : 0) |
+						((i & 4) ? 0x00ff0000 : 0) |
+						((i & 8) ? 0xff000000 : 0) ;
+#endif
 	}
 	for (j=0;j<4;j++) {
 		for (i=0;i<16;i++) {
+#ifdef WORDS_BIGENDIAN
+			Expand16Table[j][i] =
+				((i & 1) ? 1 << j : 0) |
+				((i & 2) ? 1 << (8 + j) : 0) |
+				((i & 4) ? 1 << (16 + j) : 0) |
+				((i & 8) ? 1 << (24 + j) : 0);
+#else
 			Expand16Table[j][i] =
 				((i & 1) ? 1 << (24 + j) : 0) |
 				((i & 2) ? 1 << (16 + j) : 0) |
 				((i & 4) ? 1 << (8 + j) : 0) |
 				((i & 8) ? 1 << j : 0);
+#endif
 		}
 	}
 	for (i=0;i<0x10000;i++) {
