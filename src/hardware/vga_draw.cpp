@@ -31,7 +31,6 @@ typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart,Bitu panning,Bitu line);
 static VGA_Line_Handler VGA_DrawLine;
 static Bit8u TempLine[1280];
 
-
 static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
@@ -171,8 +170,6 @@ static void VGA_HorizontalTimer(void) {
 }
 
 static void VGA_DrawPart(Bitu lines) {
-	Bitu subline=0;Bitu vidofs=vga.config.real_start;
-	Bit8u * draw=0;
 	while (lines--) {
 		vga.draw.lines_done++;
 		Bit8u * data=VGA_DrawLine(vga.draw.address,vga.draw.panning,vga.draw.address_line);
@@ -187,10 +184,11 @@ static void VGA_DrawPart(Bitu lines) {
 			vga.draw.address_line=0;
 		}
 	}
-	vga.draw.parts_left--;
-	if (vga.draw.parts_left) {
-		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
+	if (--vga.draw.parts_left) {
+		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,
+			 (vga.draw.parts_left!=1) ? vga.draw.parts_lines  : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
+		vga.draw.drawing=false;
 		RENDER_EndUpdate();
 	}
 }
@@ -235,7 +233,8 @@ static void VGA_VerticalTimer(Bitu val) {
 		break;
 	}
 	if (machine==MCH_TANDY) vga.draw.address+=vga.tandy.disp_bank << 14;
-	if (RENDER_StartUpdate()) {
+	if (!vga.draw.drawing && RENDER_StartUpdate()) {
+		vga.draw.drawing=true;
 		PIC_AddEvent(VGA_DrawPart,vga.draw.micro.parts,vga.draw.parts_lines);
 	}
 }
@@ -313,17 +312,19 @@ void VGA_SetupDrawing(Bitu val) {
 		if (vga.seq.clocking_mode & 0x8) {
 			htotal*=2;
 		}
-		vga.draw.font_height=(vga.crtc.maximum_scan_line&0xf)+1;
+		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0xf)+1;
 		/* Check for dual transfer whatever thing,master clock/2 */
 		if (vga.s3.pll.cmd & 0x10) clock/=2;
+		vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
 	} else {
-		vga.draw.font_height=vga.other.max_scanline+1;
+		vga.draw.address_line_total=vga.other.max_scanline+1;
 		htotal=vga.other.htotal;
 		hdispend=vga.other.hdend;
 		hrstart=vga.other.hsyncp;
-		vtotal=vga.draw.font_height*vga.other.vtotal+vga.other.vadjust;
-		vdispend=vga.draw.font_height*vga.other.vdend;
-		vrstart=vga.draw.font_height*vga.other.vsyncp;
+		vtotal=vga.draw.address_line_total*vga.other.vtotal+vga.other.vadjust;
+		vdispend=vga.draw.address_line_total*vga.other.vdend;
+		vrstart=vga.draw.address_line_total*vga.other.vsyncp;
+		vga.draw.double_scan=false;
 		switch (machine) {
 		case MCH_CGA:
 		case MCH_TANDY:
@@ -352,29 +353,20 @@ void VGA_SetupDrawing(Bitu val) {
 
 	double correct_ratio=(100.0/525.0);
 	double aspect_ratio=((double)htotal/((double)vtotal)/correct_ratio);
-	
+
 	vga.draw.resizing=false;
-	Bitu width,height;
-	Bitu scalew=1;
-	Bitu scaleh=1;
-	width=hdispend;
-	height=vdispend;
-	vga.draw.double_scan=false;
+	Bitu width=hdispend;
+	Bitu height=vdispend;
+	bool doubleheight=false;
+	bool doublewidth=false;
 	switch (vga.mode) {
 	case M_VGA:
-		scalew=2;scaleh*=vga.draw.font_height;
-		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
-		vga.draw.lines_scaled=scaleh;
-		vga.draw.address_line_total=1;
-		height/=scaleh;width<<=2;
+		doublewidth=true;
+		width<<=2;
 		VGA_DrawLine=VGA_Draw_VGA_Line;
 		break;
 	case M_LIN8:
-		scaleh*=vga.draw.font_height;
-		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
-		vga.draw.lines_scaled=scaleh;
-		vga.draw.address_line_total=1;
-		height/=scaleh;width<<=3;
+		width<<=3;
 		/* Use HW mouse cursor drawer if enabled */
 		if(vga.s3.hgc.curmode & 0x1) {
 			VGA_DrawLine=VGA_Draw_VGA_Line_HWMouse;
@@ -383,85 +375,65 @@ void VGA_SetupDrawing(Bitu val) {
 		}
 		break;
 	case M_EGA16:
-		scaleh*=vga.draw.font_height;
-		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
-		vga.draw.lines_scaled=scaleh;
-		if (vga.seq.clocking_mode & 0x8) scalew*=2;
-		width<<=3;height/=scaleh;
-		vga.draw.address_line_total=1;
+		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
+		width<<=3;
 		VGA_DrawLine=VGA_Draw_EGA_Line;
 		break;
 	case M_CGA4:
-		scaleh=2;scalew*=2;
+		doublewidth=true;
 		vga.draw.blocks=width*2;
-		vga.draw.lines_scaled=1;
-		vga.draw.address_line_total=2;
-		width<<=3;height/=2;
+		width<<=3;
 		VGA_DrawLine=VGA_Draw_2BPP_Line;
 		break;
 	case M_CGA2:
-		scaleh=2;
+		doubleheight=true;
 		vga.draw.blocks=width;
-		vga.draw.lines_scaled=1;
-		vga.draw.address_line_total=2;
-		width<<=4;height/=2;
+		width<<=4;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
 		aspect_ratio=1.0;
-		vga.draw.address_line_total=vga.draw.font_height;
 		vga.draw.blocks=width;
-		if (vga.seq.clocking_mode & 0x8) scalew*=2;
-		if (vga.crtc.maximum_scan_line&0x80) scaleh*=2;
-		height/=scaleh;
-		vga.draw.lines_scaled=scaleh;
+		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		width<<=3;				/* 8 bit wide text font */
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	case M_HERC_GFX:
 		aspect_ratio=1.5;
-		vga.draw.address_line_total=vga.draw.font_height;
 		vga.draw.blocks=width*2;
-		vga.draw.lines_scaled=1;
 		width*=16;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY2:
-		scaleh=2;aspect_ratio=1.2;
-		scalew=(vga.tandy.mode_control & 0x10) ? 1 : 2;
-		vga.draw.blocks=width*8/scalew;
-		vga.draw.address_line_total=vga.draw.font_height;
-		vga.draw.lines_scaled=1;
+		aspect_ratio=1.2;
+		doubleheight=true;
+		doublewidth=(vga.tandy.mode_control & 0x10)==0;
+		vga.draw.blocks=width * (doublewidth ? 4:8);
 		width=vga.draw.blocks*2;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY4:
-		scaleh=2;aspect_ratio=1.2;
-		scalew=(vga.tandy.mode_control & 0x10) ? 1 : 2;
-		vga.draw.blocks=width*8/scalew;
-		vga.draw.address_line_total=vga.draw.font_height;
-		vga.draw.lines_scaled=1;
+		aspect_ratio=1.2;
+		doubleheight=true;
+		doublewidth=(vga.tandy.mode_control & 0x10)==0;
+		vga.draw.blocks=width * (doublewidth ? 4:8);
 		width=vga.draw.blocks*2;
 		VGA_DrawLine=VGA_Draw_2BPP_Line;
 		break;
 	case M_TANDY16:
-		scaleh=2;aspect_ratio=1.2;
-		scalew=(vga.tandy.mode_control & 0x10) ? 1 : 2;
-		vga.draw.blocks=width*4/scalew;
-		vga.draw.address_line_total=vga.draw.font_height;
-		vga.draw.lines_scaled=1;
+		aspect_ratio=1.2;
+		doubleheight=true;
+		doublewidth=(vga.tandy.mode_control & 0x10)==0;
+		vga.draw.blocks=width * (doublewidth ? 2:4);
 		width=vga.draw.blocks*2;
 		VGA_DrawLine=VGA_Draw_4BPP_Line;
 		break;
 	case M_TANDY_TEXT:
-		scalew=(vga.tandy.mode_control & 0x1) ? 1 : 2;
+		doublewidth=(vga.tandy.mode_control & 0x1)==0;
 	case M_HERC_TEXT:
 		aspect_ratio=1;
-		scaleh=(vga.mode==M_HERC_TEXT) ? 1 : 2;
-		vga.draw.lines_scaled=1;
-		vga.draw.address_line_total=vga.draw.font_height;
+		doubleheight=(vga.mode!=M_HERC_TEXT);
 		vga.draw.blocks=width;
-		vga.draw.lines_scaled=1;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
@@ -469,19 +441,34 @@ void VGA_SetupDrawing(Bitu val) {
 		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA type %d while checking for resolution");
 	};
 	VGA_CheckScanLength();
+	if (vga.draw.double_scan) {
+		height/=2;
+		doubleheight=true;
+	}
+	//Only check for exra double heigh in vga modes
+	if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
+		vga.draw.address_line_total/=2;
+		doubleheight=true;
+		height/=2;
+	}
 	vga.draw.lines_total=height;
 	vga.draw.parts_lines=vga.draw.lines_total/vga.draw.parts_total;
 	if (( width != vga.draw.width) || (height != vga.draw.height)) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
 		PIC_RemoveEvents(VGA_DrawPart);
+		vga.draw.drawing=false;
 		vga.draw.width=width;
 		vga.draw.height=height;
-		vga.draw.scaleh=scaleh;
+		vga.draw.doublewidth=doublewidth;
+		vga.draw.doubleheight=doubleheight;
+		if (doubleheight) vga.draw.lines_scaled=2;
+		else vga.draw.lines_scaled=1;
 
 		LOG(LOG_VGA,LOG_NORMAL)("Width %d, Height %d, fps %f",width,height,fps);
-		LOG(LOG_VGA,LOG_NORMAL)("Scalew %d, Scaleh %d aspect %f",scalew,scaleh,aspect_ratio);
-		RENDER_SetSize(width,height,8,aspect_ratio,scalew>1,scaleh>1);
+		LOG(LOG_VGA,LOG_NORMAL)("%s width, %s height aspect %f",
+			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
+		RENDER_SetSize(width,height,8,aspect_ratio,doublewidth,doubleheight);
 		PIC_AddEvent(VGA_VerticalTimer,vga.draw.micro.vtotal);
 	}
 };

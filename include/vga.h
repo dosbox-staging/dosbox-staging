@@ -23,12 +23,12 @@
 #include "dosbox.h"
 
 enum VGAModes {
-	M_TEXT,
-	M_HERC_GFX,M_HERC_TEXT,
 	M_CGA2,M_CGA4,
 	M_EGA16,
 	M_VGA,
 	M_LIN8,
+	M_TEXT,
+	M_HERC_GFX,M_HERC_TEXT,
 	M_CGA16,M_TANDY2,M_TANDY4,M_TANDY16,M_TANDY_TEXT,
 	M_ERROR,
 };
@@ -114,10 +114,8 @@ typedef struct {
 		Bitu hend;
 		Bitu parts;
 	} micro;
-	Bitu scaleh;
 	bool double_scan;
-	bool double_scan_active;
-	Bit8u font_height;
+	bool doublewidth,doubleheight;
 	Bit8u font[64*1024];
 	Bit8u * font_tables[2];
 	Bitu blinking;
