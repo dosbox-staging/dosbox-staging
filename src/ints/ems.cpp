@@ -156,13 +156,19 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 		/* Mapping it is */
 		emm_mappings[phys_page].handle=handle;
 		emm_mappings[phys_page].page=log_page;
-		MEM_MapPagesHandle(EMM_PAGEFRAME4K+phys_page*4,emm_handles[handle].mem,log_page*4,4);
+		
+		MemHandle memh=MEM_NextHandleAt(emm_handles[handle].mem,log_page*4);;
+		for (Bitu i=0;i<4;i++) {
+			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,memh);
+			memh=MEM_NextHandle(memh);
+		}
 		return EMM_NO_ERROR;
 	} else if (log_page==NULL_PAGE) {
 		/* Unmapping it is */
 		emm_mappings[phys_page].handle=NULL_HANDLE;
 		emm_mappings[phys_page].page=NULL_PAGE;
-		MEM_UnmapPages(EMM_PAGEFRAME4K+phys_page*4,4);
+		for (Bitu i=0;i<4;i++) 
+			PAGING_MapPage(EMM_PAGEFRAME4K+phys_page*4+i,EMM_PAGEFRAME4K+phys_page*4+i);
 		return EMM_NO_ERROR;
 	} else {
 		/* Illegal logical page it is */

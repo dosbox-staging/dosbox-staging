@@ -37,6 +37,7 @@
 #include "setup.h"
 #include "inout.h"
 #include "cpu.h"
+#include "paging.h"
 
 #include "debug.h"
 
@@ -1485,8 +1486,8 @@ Bitu DPMI::Int31Handler(void)
 					SetDescriptor desc;
 					if (cpu.gdt.GetDescriptor(reg_bx,desc)) {
 						DPMI_LOG("DPMI: 0006: Get Base %04X : B:%08X",reg_bx,desc.GetBase());
-						reg_cx = desc.GetBase()>>16;
-						reg_dx = desc.GetBase()&0xFFFF;
+						reg_cx = (Bit16u)(desc.GetBase()>>16);
+						reg_dx = (Bit16u)(desc.GetBase()&0xFFFF);
 						DPMI_CALLBACK_SCF(false);					
 					} else {
 						DPMI_LOG_ERROR("DPMI: 0006: Invalid Selector: %04X",reg_bx);
@@ -1886,18 +1887,18 @@ Bitu DPMI::Int31Handler(void)
 					DPMI_LOG("DPMI: 0503: Resize Memory: H:%08X (%d KB)",handle,newSize*4);
 					if (MEM_ReAllocatePages(handle,newSize,true)) {
 						linear = handle * DPMI_PAGE_SIZE;
-						reg_si = handle>>16;
-						reg_di = handle&0xFFFF;
-						reg_bx = linear>>16;
-						reg_cx = linear&0xFFFF;
+						reg_si = (Bit16u)(handle>>16);
+						reg_di = (Bit16u)(handle&0xFFFF);
+						reg_bx = (Bit16u)(linear>>16);
+						reg_cx = (Bit16u)(linear&0xFFFF);
 						DPMI_CALLBACK_SCF(false);					
 					} else if (AllocateMem(newByte,newHandle,linear)) {							
 						// Not possible, try to allocate
 						DPMI_LOG("DPMI: 0503: Reallocated Memory: %d KB",newSize*4);
-						reg_si = newHandle>>16;
-						reg_di = newHandle&0xFFFF;
-						reg_bx = linear>>16;
-						reg_cx = linear&0xFFFF;
+						reg_si = (Bit16u)(newHandle>>16);
+						reg_di = (Bit16u)(newHandle&0xFFFF);
+						reg_bx = (Bit16u)(linear>>16);
+						reg_cx = (Bit16u)(linear&0xFFFF);
 						// copy contents
 						Bitu size = MEM_AllocatedPages(handle);
 						if (newSize<size) size = newSize;
@@ -1927,14 +1928,16 @@ Bitu DPMI::Int31Handler(void)
 					Bitu offset		= Mask(reg_ebx);
 					Bitu numPages	= Mask(reg_ecx);
 					Bitu linearAdr	= Mask(reg_edx);
-					if ((linearAdr & 3) || ((xmsAddress+offset) & 3)) {
+					if ((linearAdr & (DPMI_PAGE_SIZE-1)) || ((xmsAddress+offset) & (DPMI_PAGE_SIZE-1))) {
 						// Not page aligned
 						DPMI_LOG_ERROR("DPMI: Cannot map conventional memory (address not page aligned).");
 						reg_ax = DPMI_ERROR_INVALID_LINEAR_ADDRESS;
 						DPMI_CALLBACK_SCF(true);					
 						break;
 					}
-					MEM_MapPagesDirect(linearAdr/DPMI_PAGE_SIZE,(xmsAddress+offset)/DPMI_PAGE_SIZE,numPages);
+					linearAdr/=DPMI_PAGE_SIZE;
+					xmsAddress/=DPMI_PAGE_SIZE;
+					for (;numPages;numPages--) PAGING_MapPage(linearAdr++,xmsAddress++);
 					DPMI_CALLBACK_SCF(false);
 					}; break;
 		case 0x0600:{//Lock Linear Region
@@ -1977,7 +1980,7 @@ Bitu DPMI::Int31Handler(void)
 					Bitu phys	= (reg_bx<<16) + reg_cx;
 					Bitu linear	= (reg_bx<<16) + reg_cx;
 					Bitu size   = (reg_si<<16) + reg_di;
-					MEM_MapPagesDirect(linear/DPMI_PAGE_SIZE,phys/DPMI_PAGE_SIZE,size/DPMI_PAGE_SIZE);
+					//MEM_MapPagesDirect(linear/DPMI_PAGE_SIZE,phys/DPMI_PAGE_SIZE,size/DPMI_PAGE_SIZE);
 					//Bitu linear = phys;
 					reg_bx		= linear>>16; 
 					reg_cx		= linear & 0xFFFF;
