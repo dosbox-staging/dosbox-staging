@@ -307,7 +307,7 @@ void MIXER_Init(Section* sec) {
 	MSG_Add("MIXER_CONFIGFILE_HELP","Nothing to setup yet!\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Read out config section */
-	mixer.freq=section->Get_int("freq");
+	mixer.freq=section->Get_int("rate");
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.blocksize=section->Get_int("blocksize");
 	mixer.wave.dir=section->Get_string("wavedir");
