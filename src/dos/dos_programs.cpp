@@ -25,6 +25,7 @@
 #include "cross.h"
 #include "regs.h"
 #include "callback.h"
+#include "..\shell\shell_inc.h"
 
 class MOUNT : public Program {
 public:
@@ -220,6 +221,69 @@ static void UPCASE_ProgramStart(Program * * make) {
 }
 #endif
 
+// LOADFIX
+
+class LOADFIX : public Program {
+public:
+	void Run(void);
+};
+
+void LOADFIX::Run(void) 
+{
+	Bit16u commandNr	= 1;
+	Bit16u kb			= 64;
+	if (cmd->FindCommand(commandNr,temp_line)) {
+		if (temp_line[0]=='-') {
+			char ch = temp_line[1];
+			if ((*upcase(&ch)=='D') || (*upcase(&ch)=='F')) {
+				// Deallocate all
+				DOS_FreeProcessMemory(0x40);
+				WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOCALL"),kb);
+				return;
+			} else {
+				// Set mem amount to allocate
+				kb = atoi(temp_line.c_str()+1);
+				if (kb==0) kb=64;
+				commandNr++;
+			}
+		}
+	}
+	// Allocate Memory
+	Bit16u segment;
+	Bit16u blocks = kb*1024/16;
+	if (DOS_AllocateMemory(&segment,&blocks)) {
+		MCB* pmcb = (MCB*)HostMake(segment-1,0);
+		pmcb->psp_segment = 0x40;	// use fake segment
+		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"),kb);
+		// Prepare commandline...
+		if (cmd->FindCommand(commandNr++,temp_line)) {
+			// get Filename
+			char filename[128];
+			strncpy(filename,temp_line.c_str(),128);
+			// Setup commandline
+			bool ok;
+			char args[256];
+			args[0] = 0;
+			do {
+				ok = cmd->FindCommand(commandNr++,temp_line);
+				strncat(args,temp_line.c_str(),256);
+				strncat(args," ",256);
+			} while (ok);			
+			// Use shell to start program
+			DOS_Shell shell;
+			shell.Execute(filename,args);
+			DOS_FreeMemory(segment);		
+			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
+		}
+	} else {
+		WriteOut(MSG_Get("PROGRAM_LOADFIX_ERROR"),kb);	
+	}
+};
+
+static void LOADFIX_ProgramStart(Program * * make) {
+	*make=new LOADFIX;
+}
+
 void DOS_SetupPrograms(void) {
     /*Add Messages */
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
@@ -232,6 +296,11 @@ void DOS_SetupPrograms(void) {
     MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
     MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
     MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
+
+	MSG_Add("PROGRAM_LOADFIX_ALLOC","%d kb allocated.\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOC","%d kb freed.\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
+	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
 #if !defined (WIN32)                        /* Unix */
     MSG_Add("PROGRAM_UPCASE_ERROR_DIR","Failed to open directory %s\n");
@@ -247,6 +316,7 @@ void DOS_SetupPrograms(void) {
     /*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
+	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
 #if !defined (WIN32)						/* Unix */
 	PROGRAMS_MakeFile("UPCASE.COM",UPCASE_ProgramStart);
 #endif
