@@ -27,6 +27,9 @@
 
 #include "cdrom.h"
 
+//#define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
+#define MSCDEX_LOG
+
 #define MSCDEX_VERSION_HIGH	2
 #define MSCDEX_VERSION_LOW	23
 #define MSCDEX_MAX_DRIVES	5
@@ -191,7 +194,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		Bit16u seg = DOS_GetMemory(driverSize/16+((driverSize%16)>0));
 		DOS_DeviceHeader devHeader(PhysMake(seg,0));
 		devHeader.SetNextDeviceHeader	(0xFFFFFFFF);
-		devHeader.SetDriveLetter		('A'+_drive);
+		devHeader.SetDriveLetter		(_drive+1);
 		devHeader.SetNumSubUnits		(1);
 		devHeader.SetName				("MSCD001 ");
 
@@ -205,8 +208,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		real_writeb(seg,off+4,(Bit8u)0xCB);		//A RETF Instruction
 		devHeader.SetStrategy(off);
 		
-		// Create Callback Interrupt
-		off += 5;
+		// Create Callback Interruptoff += 5;
 		Bitu call_interrupt=CALLBACK_Allocate();
 		CallBack_Handlers[call_interrupt]=MSCDEX_Interrupt_Handler;
 		real_writeb(seg,off+0,(Bit8u)0xFE);		//GRP 4
@@ -268,7 +270,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 							return 6;
 		};
 		if (!cdrom[numDrives]->SetDevice(physicalPath,forceCD)) return 3;
-		subUnit = numDrives;
+		subUnit = (Bit8u)numDrives;
 		// Set drive
 		DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
 		devHeader.SetNumSubUnits(devHeader.GetNumSubUnits()+1);
@@ -339,9 +341,9 @@ bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
 bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 {
 	if (subUnit>=numDrives) return false;
-	Bit8u min		= (start>>16) & 0xFF;
-	Bit8u sec		= (start>> 8) & 0xFF;
-	Bit8u fr		= (start>> 0) & 0xFF;
+	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
+	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
+	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
 };
@@ -511,9 +513,9 @@ bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, Ph
 bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, PhysPt data)
 {
 	if (subUnit>=numDrives) return false;
-	Bit8u min		= (start>>16) & 0xFF;
-	Bit8u sec		= (start>> 8) & 0xFF;
-	Bit8u fr		= (start>> 0) & 0xFF;
+	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
+	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
+	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
 	// TODO: Check, if num has to be converted too ?!
 	return ReadSectors(subUnit,raw,sector,num,data);
@@ -625,14 +627,14 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
 
-//	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Driver Function %02X",funcNr);
+	MSCDEX_LOG("MSCDEX: Driver Function %02X",funcNr);
 
 	switch (funcNr) {
 	
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						subFuncNr		= mem_readb(buffer);
-//						LOG(LOG_MISC,LOG_ERROR)("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
+						MSCDEX_LOG("MSCDEX: IOCTL INPUT Subfunction %02X",subFuncNr);
 						switch (subFuncNr) {
 							case 0x00 : /* Get Device Header address */
 										mem_writed(buffer+1,RealMake(mscdex->rootDriverHeaderSeg,0));
@@ -784,6 +786,7 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	
 	// Set Statusword
 	mem_writew(data+3,mscdex->GetStatusWord(subUnit));
+	MSCDEX_LOG("MSCDEX: Status : %04X",mem_readw(data+3));						
 	return CBRET_NONE;
 }
 
@@ -792,7 +795,7 @@ static bool MSCDEX_Handler(void)
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-//	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: INT 2F %04X",reg_ax);
+	MSCDEX_LOG("MSCDEX: INT 2F %04X",reg_ax);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
@@ -861,7 +864,7 @@ static bool MSCDEX_Handler(void)
 						mscdex->GetDrives(data);
 						return true;
 		case 0x1510:	/* Device driver request */
-						mscdex->SendDriverRequest(reg_cx & 0xFF,data);
+						mscdex->SendDriverRequest(reg_cx,data);
 						return true;
 		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 						return true;
