@@ -63,7 +63,9 @@ struct SCodeViewData {
 	Bit16u  firstInstSize;
 	Bit16u	useCS;
 	Bit32u	useEIPlast, useEIPmid;
-	Bit32u	useEIP, cursorAdr;
+	Bit32u	useEIP;
+	Bit16u  cursorSeg;
+	Bit32u	cursorOfs;
 	bool	inputMode;
 	char	inputStr[255];
 
@@ -84,6 +86,8 @@ typedef struct SBreakPoint {
 	Bit8u	olddata;
 	Bit8u	type;
 	Bit16u	ahValue;
+	Bit16u  segment;
+	Bit32u	offset;
 	bool	once;
 	bool	enabled;
 	bool	active;
@@ -143,13 +147,15 @@ static void SetBreakpoints(void)
 	}
 }
 
-static void AddBreakpoint(PhysPt off, bool once) 
+static void AddBreakpoint(Bit16u seg, Bit32u ofs, bool once) 
 {
 	TBreakpoint bp;
 	bp.type		= BKPNT_PHYSICAL;
 	bp.enabled	= true;
 	bp.active	= false;
-	bp.location	= off;
+	bp.location	= PhysMake(seg,ofs);
+	bp.segment	= seg;
+	bp.offset	= ofs;
 	bp.once		= once;
 	BPoints.push_front(bp);
 }
@@ -190,7 +196,7 @@ static bool StepOver()
 	size=DasmI386(dline, start, reg_eip, false);
 
 	if (strstr(dline,"call") || strstr(dline,"int")) {
-		AddBreakpoint (Real2Phys(RealMake(SegValue(cs),reg_eip+size)), true);
+		AddBreakpoint (SegValue(cs),reg_eip+size, true);
 		SetBreakpoints();
 		debugging=false;
 		DrawCode();
@@ -215,6 +221,7 @@ bool DEBUG_BreakPoint(void) {
 	}
 	if (!found) return false;
 	RemoveBreakpoint(where);
+	ClearBreakpoints();
 	reg_eip -= 1;
 	DEBUG_Enable();
 	return true;
@@ -245,7 +252,7 @@ bool DEBUG_IntBreakpoint(Bit8u intNum)
 
 	// Remove normal breakpoint here, cos otherwise 0xCC wont be removed here
 	RemoveBreakpoint(where);
-	RemoveBreakpoint(where+2);
+	ClearBreakpoints();
 	reg_eip -= 2;
 	DEBUG_Enable();
 	return true;
@@ -324,11 +331,13 @@ static void DrawCode(void)
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREEN_BLACK));			
 				if (codeViewData.cursorPos==-1) {
 					codeViewData.cursorPos = i; // Set Cursor 
-					codeViewData.cursorAdr = start;
+					codeViewData.cursorSeg = SegValue(cs);
+					codeViewData.cursorOfs = disEIP;
 				}
 			} else if (i == codeViewData.cursorPos) {
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_BLACK_GREY));			
-				codeViewData.cursorAdr = start;
+				codeViewData.cursorSeg = codeViewData.useCS;
+				codeViewData.cursorOfs = disEIP;
 			} else if (IsBreakpoint(start)) {
 				wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREY_RED));			
 			} else {
@@ -388,6 +397,31 @@ Bit32u GetHexValue(char* str, char*& hex)
 
 	hex = str;
 	while (*hex==' ') hex++;
+	if (strstr(hex,"AX")==hex) { hex+=2; return reg_ax; };
+	if (strstr(hex,"BX")==hex) { hex+=2; return reg_bx; };
+	if (strstr(hex,"CX")==hex) { hex+=2; return reg_cx; };
+	if (strstr(hex,"DX")==hex) { hex+=2; return reg_dx; };
+	if (strstr(hex,"SI")==hex) { hex+=2; return reg_si; };
+	if (strstr(hex,"DI")==hex) { hex+=2; return reg_di; };
+	if (strstr(hex,"BP")==hex) { hex+=2; return reg_bp; };
+	if (strstr(hex,"SP")==hex) { hex+=2; return reg_sp; };
+	if (strstr(hex,"IP")==hex) { hex+=2; return reg_ip; };
+	if (strstr(hex,"CS")==hex) { hex+=2; return SegValue(cs); };
+	if (strstr(hex,"DS")==hex) { hex+=2; return SegValue(ds); };
+	if (strstr(hex,"ES")==hex) { hex+=2; return SegValue(es); };
+	if (strstr(hex,"FS")==hex) { hex+=2; return SegValue(fs); };
+	if (strstr(hex,"GS")==hex) { hex+=2; return SegValue(gs); };
+	if (strstr(hex,"SS")==hex) { hex+=2; return SegValue(ss); };
+	if (strstr(hex,"EAX")==hex) { hex+=3; return reg_eax; };
+	if (strstr(hex,"EBX")==hex) { hex+=3; return reg_ebx; };
+	if (strstr(hex,"ECX")==hex) { hex+=3; return reg_ecx; };
+	if (strstr(hex,"EDX")==hex) { hex+=3; return reg_edx; };
+	if (strstr(hex,"ESI")==hex) { hex+=3; return reg_esi; };
+	if (strstr(hex,"EDI")==hex) { hex+=3; return reg_edi; };
+	if (strstr(hex,"EBP")==hex) { hex+=3; return reg_ebp; };
+	if (strstr(hex,"ESP")==hex) { hex+=3; return reg_esp; };
+	if (strstr(hex,"EIP")==hex) { hex+=3; return reg_eip; };
+
 	while (*hex) {
 		if ((*hex>='0') && (*hex<='9')) value = (value<<4)+*hex-'0';	  else
 		if ((*hex>='A') && (*hex<='F')) value = (value<<4)+*hex-'A'+10; 
@@ -406,7 +440,7 @@ bool ParseCommand(char* str)
 		found+=3;
 		Bit16u seg = GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
-		AddBreakpoint((seg<<4)+ofs,false);
+		AddBreakpoint(seg,ofs,false);
 		LOG_DEBUG("DEBUG: Set breakpoint at %04X:%04X",seg,ofs);
 		return true;
 	}
@@ -424,10 +458,56 @@ bool ParseCommand(char* str)
 		}
 		return true;
 	}
+	found = strstr(str,"BPLIST");
+	if (found) {
+		wprintw(dbg.win_out,"Breakpoint list:\n");
+		wprintw(dbg.win_out,"-------------------------------------------------------------------------\n");
+		Bit32u nr = 0;
+		// iterate list 
+		std::list<TBreakpoint>::iterator i;
+		for(i=BPoints.begin(); i != BPoints.end(); i++) {
+			if ((*i).type==BKPNT_PHYSICAL) {
+				wprintw(dbg.win_out,"%02X. BP %04X:%04X\n",nr,(*i).segment,(*i).offset);
+				nr++;
+			} else if ((*i).type==BKPNT_INTERRUPT) {
+				if ((*i).ahValue==BPINT_ALL) wprintw(dbg.win_out,"%02X. BPINT %02X\n",nr,(*i).olddata);					
+				else					     wprintw(dbg.win_out,"%02X. BPINT %02X AH=%02X\n",nr,(*i).olddata,(*i).ahValue);
+				nr++;
+			};
+		}
+		wrefresh(dbg.win_out);
+		return true;
+	};
+
 	found = strstr(str,"BPDEL");
 	if (found) { // Delete Breakpoints
-		(BPoints.clear)();		
-		LOG_DEBUG("DEBUG: Breakpoints deleted.");
+		found+=5;
+		Bit8u bpNr	= GetHexValue(found,found); 
+		if ((bpNr==0x00) && (*found=='*')) { // Delete all
+			(BPoints.clear)();		
+			LOG_DEBUG("DEBUG: Breakpoints deleted.");
+		} else {		
+			// delete single breakpoint
+			Bit16u nr = 0;
+			std::list<TBreakpoint>::iterator i;
+			for(i=BPoints.begin(); i != BPoints.end(); i++) {
+				if ((*i).type==BKPNT_PHYSICAL) {
+					if (nr==bpNr) {
+						DeleteBreakpoint((*i).location);
+						LOG_DEBUG("DEBUG: Breakpoint %02X deleted.",nr);
+						break;
+					} 
+					nr++;
+				} else if ((*i).type==BKPNT_INTERRUPT) {
+					if (nr==bpNr) {
+						(BPoints.erase)(i);
+						LOG_DEBUG("DEBUG: Breakpoint %02X. deleted.",nr);
+						break;;
+					}
+					nr++;
+				}
+			}
+		}
 		return true;
 	}
 	found = strstr(str,"C ");
@@ -450,24 +530,24 @@ bool ParseCommand(char* str)
 	}
 	if ((*str=='H') || (*str=='?')) {
 		wprintw(dbg.win_out,"Debugger keys:\n");
-		wprintw(dbg.win_out,"-------------------------------------------------------------------------\n");
-		wprintw(dbg.win_out,"F5                       - Run\n");
-		wprintw(dbg.win_out,"F9                       - Set/Remove breakpoint\n");
-		wprintw(dbg.win_out,"F10/F11                  - Step over / trace into instruction\n");
-		wprintw(dbg.win_out,"Up/Down                  - Move code view cursor\n");
-		wprintw(dbg.win_out,"Return                   - Enable command line input\n");
-		wprintw(dbg.win_out,"D/E/S/X/B                - Set data view to DS:SI/ES:DI/SS:SP/DS:DX/ES:BX\n");
-		wprintw(dbg.win_out,"R/F                      - Scroll data view\n");
+		wprintw(dbg.win_out,"--------------------------------------------------------------------------\n");
+		wprintw(dbg.win_out,"F5                        - Run\n");
+		wprintw(dbg.win_out,"F9                        - Set/Remove breakpoint\n");
+		wprintw(dbg.win_out,"F10/F11                   - Step over / trace into instruction\n");
+		wprintw(dbg.win_out,"Up/Down                   - Move code view cursor\n");
+		wprintw(dbg.win_out,"Return                    - Enable command line input\n");
+		wprintw(dbg.win_out,"D/E/S/X/B                 - Set data view to DS:SI/ES:DI/SS:SP/DS:DX/ES:BX\n");
+		wprintw(dbg.win_out,"R/F                       - Scroll data view\n");
 		wprintw(dbg.win_out,"\n");
-		wprintw(dbg.win_out,"Debugger commands (enter all values in hex):\n");
-		wprintw(dbg.win_out,"-------------------------------------------------------------------------\n");
-		wprintw(dbg.win_out,"BP    [segment]:[offset] - Set breakpoint\n");
-		wprintw(dbg.win_out,"BPINT [intNr] *          - Set interrupt breakpoint\n");
-		wprintw(dbg.win_out,"BPINT [intNr] [ah]       - Set interrupt breakpoint with ah\n");
-		wprintw(dbg.win_out,"BPDEL                    - Delete breakpoints\n");
-		wprintw(dbg.win_out,"C     [segment]:[offset] - Set code view address\n");
-		wprintw(dbg.win_out,"D     [segment]:[offset] - Set data view address\n");
-		wprintw(dbg.win_out,"H                        - Help\n");
+		wprintw(dbg.win_out,"Debugger commands (enter all values in hex or as register):\n");
+		wprintw(dbg.win_out,"--------------------------------------------------------------------------\n");
+		wprintw(dbg.win_out,"BP     [segment]:[offset] - Set breakpoint\n");
+		wprintw(dbg.win_out,"BPINT  [intNr] *          - Set interrupt breakpoint\n");
+		wprintw(dbg.win_out,"BPINT  [intNr] [ah]       - Set interrupt breakpoint with ah\n");
+		wprintw(dbg.win_out,"BPLIST                    - List breakpoints\n");		
+		wprintw(dbg.win_out,"BPDEL  [bpNr] / *         - Delete breakpoint nr / all\n");
+		wprintw(dbg.win_out,"C / D  [segment]:[offset] - Set code / data view address\n");
+		wprintw(dbg.win_out,"H                         - Help\n");
 		wrefresh(dbg.win_out);
 		return TRUE;
 	}
@@ -560,8 +640,10 @@ Bit32u DEBUG_CheckKeys(void) {
 						DOSBOX_SetNormalLoop();	
 						break;
 		case KEY_F(9):	// Set/Remove TBreakpoint
-						if (IsBreakpoint(codeViewData.cursorAdr)) DeleteBreakpoint(codeViewData.cursorAdr);
-						else AddBreakpoint(codeViewData.cursorAdr, false);
+						{	PhysPt ptr = PhysMake(codeViewData.cursorSeg,codeViewData.cursorOfs);
+							if (IsBreakpoint(ptr)) DeleteBreakpoint(ptr);
+							else AddBreakpoint(codeViewData.cursorSeg, codeViewData.cursorOfs, false);
+						}
 						break;
 		case KEY_F(10):	// Step over inst
 						if (StepOver()) return 0;
@@ -593,8 +675,7 @@ Bitu DEBUG_Loop(void) {
 	Bit32u oldEIP	= reg_eip;
 	PIC_runIRQs();
 	if ((oldCS!=SegValue(cs)) || (oldEIP!=reg_eip)) {
-		PhysPt intBpAdr = Real2Phys(RealMake(oldCS,oldEIP));
-		AddBreakpoint(intBpAdr,true);
+		AddBreakpoint(oldCS,oldEIP,true);
 		SetBreakpoints();
 		debugging=false;
 		DOSBOX_SetNormalLoop();
