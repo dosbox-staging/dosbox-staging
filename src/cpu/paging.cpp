@@ -23,169 +23,165 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "paging.h"
-#include "../hardware/vga.h"
-
+#include "regs.h"
 
 #define LINK_TOTAL		(64*1024)
 
-static PageLink			link_list[LINK_TOTAL];
-struct PagingBlock		paging;
+PagingBlock paging;
+static Bit32u mapfirstmb[LINK_START];
 
-class PageDirChange : public PageChange {
-public:
-	PageDirChange(PageDirectory * mydir) { dir=mydir;}
-	void Changed(PageLink * link,Bitu start,Bitu end) {
-		start>>=2;end>>=2;
-		for (;start<=end;start++) {
-			dir->InvalidateTable(start);
-		}
-	}
-private:
-	PageDirectory * dir;
+Bitu PageHandler::readb(PhysPt addr) {
+	E_Exit("No byte handler for read from %d",addr);	
+	return 0;
+}
+Bitu PageHandler::readw(PhysPt addr) {
+	return 
+		(readb(addr+0) << 0) |
+		(readb(addr+1) << 8);
+}
+Bitu PageHandler::readd(PhysPt addr) {
+	return 
+		(readb(addr+0) << 0)  |
+		(readb(addr+1) << 8)  |
+		(readb(addr+2) << 16) |
+		(readb(addr+3) << 24);
+}
+
+void PageHandler::writeb(PhysPt addr,Bitu val) {
+	E_Exit("No byte handler for write to %d",addr);	
 };
 
-class PageTableChange : public PageChange {
+void PageHandler::writew(PhysPt addr,Bitu val) {
+	writeb(addr+0,(Bit8u) (val >> 0));
+	writeb(addr+1,(Bit8u) (val >> 8));
+}
+void PageHandler::writed(PhysPt addr,Bitu val) {
+	writeb(addr+0,(Bit8u) (val >> 0));
+	writeb(addr+1,(Bit8u) (val >> 8));
+	writeb(addr+2,(Bit8u) (val >> 16));
+	writeb(addr+3,(Bit8u) (val >> 24));
+};
+
+HostPt PageHandler::GetHostPt(Bitu phys_page) {
+	return 0;
+}
+
+
+class InitPageHandler : public PageHandler {
 public:
-	PageTableChange(PageDirectory * mydir) { dir=mydir;}
-	void Changed(PageLink * link,Bitu start,Bitu end) {
-		start>>=2;end>>=2;
-		for (;start<=end;start++) {
-			dir->InvalidateLink(link->data.table,start);
-		}
+	InitPageHandler() {flags=0;}
+	void AddPageLink(Bitu lin_page, Bitu phys_page) {
+		assert(0);
 	}
-private:
-	PageDirectory * dir;
+	Bitu readb(PhysPt addr) {
+		InitPage(addr);
+		return mem_readb(addr);
+	}
+	Bitu readw(PhysPt addr) {
+		InitPage(addr);
+		return mem_readw(addr);
+	}
+	Bitu readd(PhysPt addr) {
+		InitPage(addr);
+		return mem_readd(addr);
+	}
+	void writeb(PhysPt addr,Bitu val) {
+		InitPage(addr);
+		mem_writeb(addr,val);
+	}
+	void writew(PhysPt addr,Bitu val) {
+		InitPage(addr);
+		mem_writew(addr,val);
+	}
+	void writed(PhysPt addr,Bitu val) {
+		InitPage(addr);
+		mem_writed(addr,val);
+	}
+	void InitPage(Bitu addr) {
+		Bitu lin_page=addr >> 12;
+		Bitu phys_page;
+		if (paging.enabled) {
+			E_Exit("No paging support");
+		} else {
+			if (lin_page<LINK_START) phys_page=mapfirstmb[lin_page];
+			else phys_page=lin_page;
+		}
+		PAGING_LinkPage(lin_page,phys_page);
+	}
 };
 
 
-
-PageDirectory::PageDirectory()	{
-	entry_init.data.dir=this;
-	entry_init.type=ENTRY_INIT;
-	link_init.read=0;
-	link_init.write=0;
-	link_init.entry=&entry_init;
-	table_change = new PageTableChange(this);
-	dir_change = new PageDirChange(this);
-}
-PageDirectory::~PageDirectory() {
-	delete table_change;
-	delete dir_change;
-}
-void PageDirectory::ClearDirectory(void) {
-	Bitu i;
-	for (i=0;i<1024*1024;i++) links[i]=&link_init;
-	for (i=0;i<1024;i++) {
-		tables[i]=0;
-	}
-}
-void PageDirectory::SetBase(PhysPt page) {
-	base_page=page;
-	ClearDirectory();
-	/* Setup handler for PageDirectory changes */
-	link_dir=MEM_LinkPage(base_page,0);
-	if (!link_dir) E_Exit("PAGING:Directory setup on illegal address");
-	link_dir->data.dir=this;
-	link_dir->change=dir_change;
-	MEM_CheckLinks(link_dir->entry);
-}
-void PageDirectory::LinkPage(Bitu lin_page,Bitu phys_page) {
-	if (links[lin_page] != &link_init) MEM_UnlinkPage(links[lin_page]);
-	PageLink * link=MEM_LinkPage(phys_page,lin_page*4096);
-	if (link) links[lin_page]=link;
-	else links[lin_page]=&link_init;
-}
-
-bool PageDirectory::InitPage(Bitu lin_address) {
-	Bitu lin_page=lin_address >> 12;
-	Bitu table=lin_page >> 10;
-	Bitu index=lin_page & 0x3ff;
-	/* Check if there already is table linked */
-	if (!tables[table]) {
-		X86PageEntry table_entry;
-		table_entry.load=phys_page_readd(base_page,0);
-		if (!table_entry.block.p) {
-			LOG(LOG_PAGING,LOG_ERROR)("NP TABLE");
-			return false;
-		}
-		PageLink * link=MEM_LinkPage(table_entry.block.base,table_entry.block.base);
-		if (!link) return false;
-		link->data.table=table;
-		link->change=table_change;
-		MEM_CheckLinks(link->entry);
-		tables[table]=link;
-	}
-	X86PageEntry entry;
-	entry.load=phys_page_readd(tables[table]->lin_base,index);
-	if (!entry.block.p) {
-		LOG(LOG_PAGING,LOG_ERROR)("NP PAGE");
-		return false;
-	}
-	PageLink * link=MEM_LinkPage(entry.block.base,lin_page*4096);
-	if (!link) return false;
-	links[lin_page]=link;
-	return true;
-}
-
-
-bool PageDirectory::InitPageLinear(Bitu lin_address) {
-	Bitu phys_page=lin_address >> 12;
-	PageLink * link=MEM_LinkPage(phys_page,phys_page*4096);
-	if (link) {
-		/* Set the page entry in our table */
-		links[phys_page]=link;
-		return true;
-	}
-	return false;
-}
-
-
-void PageDirectory::InvalidateTable(Bitu table) {
-	if (tables[table]) {
-		MEM_UnlinkPage(tables[table]);
-		tables[table]=0;
-		for (Bitu i=(table*1024);i<(table+1)*1024;i++) {
-			if (links[i]!=&link_init) {
-				MEM_UnlinkPage(links[i]);
-				links[i]=&link_init;
-			}
-		}
-	}
-}
-
-void PageDirectory::InvalidateLink(Bitu table,Bitu index) {
-	Bitu i=(table*1024)+index;
-	if (links[i]!=&link_init) {
-		MEM_UnlinkPage(links[i]);
-		links[i]=&link_init;
-	}
-}
+static InitPageHandler init_page_handler;
 
 
 Bitu PAGING_GetDirBase(void) {
 	return paging.cr3;
 }
 
+void PAGING_ClearTLB(void) {
+	LOG(LOG_PAGING,LOG_NORMAL)("Clearing TLB");
+	Bitu i;
+	for (i=0;i<LINK_START;i++) {
+		paging.tlb.read[i]=0;
+		paging.tlb.write[i]=0;
+		paging.tlb.handler[i]=&init_page_handler;
+	}
+	MEM_UnlinkPages();
+}
+
+void PAGING_InitTLB(void) {
+	for (Bitu i=0;i<TLB_SIZE;i++) {
+		paging.tlb.read[i]=0;
+		paging.tlb.write[i]=0;
+		paging.tlb.handler[i]=&init_page_handler;
+
+	}
+}
+
+void PAGING_ClearTLBEntries(Bitu pages,Bit32u * entries) {
+	for (;pages>0;pages--) {
+		Bitu page=*entries++;
+		paging.tlb.read[page]=0;
+		paging.tlb.write[page]=0;
+		paging.tlb.handler[page]=&init_page_handler;
+	}
+}
+
+void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
+
+	PageHandler * handler=MEM_GetPageHandler(phys_page);
+	Bitu lin_base=lin_page << 12;
+
+	HostPt host_mem=handler->GetHostPt(phys_page);
+	paging.tlb.phys_page[lin_page]=phys_page;
+	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=host_mem-lin_base;
+	else paging.tlb.read[lin_page]=0;
+	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=host_mem-lin_base;
+	else paging.tlb.write[lin_page]=0;
+
+	handler->AddPageLink(lin_page,phys_page);
+	paging.tlb.handler[lin_page]=handler;
+}
+
+void PAGING_MapPage(Bitu lin_page,Bitu phys_page) {
+	if (lin_page<LINK_START) {
+		mapfirstmb[lin_page]=phys_page;
+		paging.tlb.read[lin_page]=0;
+		paging.tlb.write[lin_page]=0;
+		paging.tlb.handler[lin_page]=&init_page_handler;
+	} else {
+		PAGING_LinkPage(lin_page,phys_page);
+	}
+}
+
 void PAGING_SetDirBase(Bitu cr3) {
 	paging.cr3=cr3;
-	Bitu base_page=cr3 >> 12;
-	LOG(LOG_PAGING,LOG_NORMAL)("CR3:%X Base %X",cr3,base_page);
+	
+	paging.base.page=cr3 >> 12;
+	paging.base.addr=cr3 & ~4095;
+	LOG(LOG_PAGING,LOG_NORMAL)("CR3:%X Base %X",cr3,paging.base.page);
 	if (paging.enabled) {
-		/* Check if we already have this one cached */
-		PageDirectory * dir=paging.cache;
-		while (dir) {
-			if (dir->base_page==base_page) {
-				paging.dir=dir;
-				return;
-			}
-			dir=dir->next;
-		}
-		/* Couldn't find cached directory, make a new one */
-		dir=new PageDirectory();
-		dir->next=paging.cache;
-		paging.cache=dir;
-		dir->SetBase(base_page);
-		paging.dir=dir;
+		PAGING_ClearTLB();
 	}
 }
 
@@ -195,7 +191,6 @@ void PAGING_Enable(bool enabled) {
 	paging.enabled=enabled;
 	if (!enabled) {
 		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
-		paging.dir=MEM_DefaultDirectory();
 	} else {
 		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");
 #if !(C_DEBUG)
@@ -203,51 +198,20 @@ void PAGING_Enable(bool enabled) {
 #endif
 		PAGING_SetDirBase(paging.cr3);
 	}
+	PAGING_ClearTLB();
 }
 
 bool PAGING_Enabled(void) {
 	return paging.enabled;
 }
 
-
-void PAGING_FreePageLink(PageLink * link) {
-	MEM_UnlinkPage(link);
-	PAGING_AddFreePageLink(link);
-}
-
-void PAGING_LinkPage(PageDirectory * dir,Bitu lin_page,Bitu phys_page) {
-	PageLink * link=MEM_LinkPage(phys_page,lin_page*4096);
-	/* Only replace if we can */
-	if (link) {
-		PAGING_FreePageLink(dir->links[lin_page]);
-		dir->links[lin_page]=link;
+void PAGING_Init(Section * sec) {
+	/* Setup default Page Directory, force it to update */
+	paging.enabled=false;
+	PAGING_InitTLB();
+	Bitu i;
+	for (i=0;i<LINK_START;i++) {
+		mapfirstmb[i]=i;
 	}
 }
 
-void PAGING_AddFreePageLink(PageLink * link) {
-	link->read=0;
-	link->write=0;
-	link->change=0;
-	link->next=paging.free_link;
-	link->entry=0;
-	paging.free_link=link;
-}
-
-PageLink * PAGING_GetFreePageLink(void) {
-	PageLink * ret;
-	if (paging.free_link) ret=paging.free_link;
-	else E_Exit("PAGING:Ran out of PageEntries");
-	paging.free_link=ret->next;
-	ret->next=0;
-	return ret;
-}
-
-void PAGING_Init(Section * sec) {
-	Bitu i;
-	/* Setup the free pages tables for fast page allocation */
-	paging.cache=0;
-	paging.free_link=0;
-	for (i=0;i<LINK_TOTAL;i++) PAGING_AddFreePageLink(&link_list[i]);
-	/* Setup default Page Directory, force it to update */
-	paging.enabled=true;PAGING_Enable(false);
-}
