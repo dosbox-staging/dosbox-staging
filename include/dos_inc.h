@@ -349,8 +349,8 @@ public:
 	#pragma pack(1)
 	#endif
 	struct sDIB {		
-		Bit8u	stuff1[22];			// -0x18 some stuff, hopefully never used....
-		Bit16u	firstMCB;			// -0x2  first memory control block
+		Bit8u	stuff1[20];			// -0x18 some stuff, hopefully never used....
+		RealPt	firstMCB;			// -0x04  first memory control block
 		RealPt	firstDPB;			//  0x00 first drive parameter block
 		RealPt	firstFileTable;		//  0x04 first system file table
 		RealPt	activeClock;		//  0x08 active clock device header

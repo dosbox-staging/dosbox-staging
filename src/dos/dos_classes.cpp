@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.33 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.34 2004-02-03 14:54:36 finsterr Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -68,7 +68,7 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 
 void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb)
 {
-	sSave(sDIB,firstMCB,_firstmcb);
+	sSave(sDIB,firstMCB,RealMake(_firstmcb,0));
 }
 
 void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table){
