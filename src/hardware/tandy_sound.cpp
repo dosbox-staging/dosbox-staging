@@ -311,7 +311,6 @@ static void SN76496_set_gain(int gain)
 void TANDYSOUND_Init(Section* sec) {
 	if (machine!=MCH_TANDY) return;
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("tandy")) return;
 
 	IO_RegisterWriteHandler(0xc0,SN76496Write,IO_MB,2);
 	IO_RegisterWriteHandler(0xc4,TandyDACWrite,IO_MB,4);

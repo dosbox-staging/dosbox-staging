@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.75 2004-08-23 08:24:07 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.76 2004-09-08 09:41:13 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -340,7 +340,6 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("pcspeaker",true);
 	secprop->Add_int("pcrate",22050);
 	secprop->AddInitFunction(&TANDYSOUND_Init);
-	secprop->Add_bool("tandy",true);
 	secprop->Add_int("tandyrate",22050);
 	secprop->AddInitFunction(&DISNEY_Init);
 	secprop->Add_bool("disney",true);
@@ -348,8 +347,8 @@ void DOSBOX_Init(void) {
 	MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
-		"tandy -- Enable Tandy 3-Voice emulation.\n"
 		"tandyrate -- Sample rate of the Tandy 3-Voice generation.\n"
+		"             Tandysound emulation is present if machine is set to tandy.\n"
 		"disney -- Enable Disney Sound Source emulation.\n"
 	);
 	secprop=control->AddSection_prop("bios",&BIOS_Init);
