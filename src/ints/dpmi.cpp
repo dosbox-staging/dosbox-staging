@@ -981,7 +981,7 @@ Bitu DPMI::SimulateInt(void)
 	// Push flags from structure on stack
 	DPMI_LOG("DPMI: SimInt1: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	reg_flags = mem_readw(data+0x20);
-	CPU_SW_Interrupt(num,0);
+	CPU_SW_Interrupt(num);
 	DPMI_LOG("DPMI: SimInt2: StackInfo %04X:%04X (%02X %02X)",SegValue(ss),reg_esp,mem_readb(0xD0100+0x01FA),mem_readb(0xD0100+0x01FB));
 	return 0;
 };
@@ -1043,7 +1043,7 @@ Bitu DPMI::ptorHandler(void)
 	DPMI_LOG("DPMI: INT %02X %04X called.",num,reg_ax);
 	// Prepare flags for real int
 	// CPU_SetFlagsw(reg_flags & 0x3ED5); // 0011111011010101b
-	CPU_SW_Interrupt(num,0);
+	CPU_SW_Interrupt(num);
 	return 0;
 } 
 
@@ -1106,7 +1106,7 @@ Bitu DPMI::Int21Handler(void)
 	reg_esp = rm_sp;
 	// Call realmode interrupt
 	DPMI_LOG("DPMI: INT 21 %04X called.",reg_ax);
-	CPU_SW_Interrupt(0x21,0);
+	CPU_SW_Interrupt(0x21);
 	if (reg_ah==0x4C) {
 		// Shut doen dpmi and restore previous one
 		delete this;
