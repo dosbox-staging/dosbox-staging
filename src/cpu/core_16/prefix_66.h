@@ -414,13 +414,13 @@ switch(Fetchb()) {
 					Bit32u val;
 					if (rm >= 0xc0 ) {GetEArd;val=*eard;}
 					else {GetEAa;val=LoadMd(eaa);}
-					if (val==0)	{Interrupt(0);break;}
+					if (val==0)	{INTERRUPT(0);break;}
 					temp.u=(((Bit64u)reg_edx)<<32)|reg_eax;
 					quotient.u=temp.u/val;
 					reg_edx=(Bit32u)(temp.u % val);
 					reg_eax=(Bit32u)(quotient.u & 0xffffffff);
 					if (quotient.u>0xffffffff) 
-						Interrupt(0);
+						INTERRUPT(0);
 					break;
 				}
 			case 0x38:					/* IDIV Ed */
@@ -429,13 +429,13 @@ switch(Fetchb()) {
 					Bit32s val;
 					if (rm >= 0xc0 ) {GetEArd;val=*eards;}
 					else {GetEAa;val=LoadMds(eaa);}
-					if (val==0)	{Interrupt(0);break;}
+					if (val==0)	{INTERRUPT(0);break;}
 					temp.s=(((Bit64u)reg_edx)<<32)|reg_eax;
 					quotient.s=(temp.s/val);
 					reg_edx=(Bit32s)(temp.s % val);
 					reg_eax=(Bit32s)(quotient.s);
 					if (quotient.s!=(Bit32s)reg_eax) 
-						Interrupt(0);
+						INTERRUPT(0);
 					break;
 				}
 			}
