@@ -344,7 +344,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		if (!DOS_MakeName(name,fullname,&drive)) return false;
 		
 		/* Check, if file is already opened */
-		for (i=0;i<DOS_FILES;i++) {
+/*		for (i=0;i<DOS_FILES;i++) {
 			if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
 				*entry = psp.FindEntryByHandle(i);
 				if (*entry==0xFF) {
@@ -355,7 +355,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 				return true;
 			}
 		}
-
+*/
 		/* Check for a free file handle */
 			for (i=0;i<DOS_FILES;i++) {
 			if (!Files[i]) {
