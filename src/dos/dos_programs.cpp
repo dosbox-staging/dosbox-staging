@@ -68,14 +68,15 @@ public:
 			if (type=="floppy") {
 				str_size="512,1,2847,2847";/* All space free */
 				mediaid=0xF0;		/* Floppy 1.44 media */
-			}
-			if (type=="dir") {
+			} else if (type=="dir") {
 				str_size="512,127,16513,1700";
 				mediaid=0xF8;		/* Hard Disk */
-			}
-			if (type=="cdrom") {
+			} else if (type=="cdrom") {
 				str_size="650,127,16513,1700";
 				mediaid=0xF8;		/* Hard Disk */
+			} else {
+				WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
+				return;
 			}
 			cmd->FindString("-size",str_size,true);
 			char number[20];const char * scan=str_size.c_str();
@@ -131,6 +132,9 @@ public:
 			} else {
 				newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 			}
+		} else {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"),type.c_str());
+			return;
 		}
 		if (Drives[drive-'A']) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_ALLREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
@@ -293,6 +297,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_STATUS_1","Current mounted drives are:\n");
     MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
     MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
     MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
     MSG_Add("PROGRAM_MOUNT_USAGE","Usage MOUNT Drive-Letter Local-Directory\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
 
