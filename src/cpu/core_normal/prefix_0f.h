@@ -142,7 +142,6 @@
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			LOG_MSG("MOV REG,DR%d",which);
 			if (rm >= 0xc0 ) {
 				GetEArd;
 			} else {
@@ -168,7 +167,6 @@
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			LOG_MSG("MOV DR%d,REG",which);
 			if (rm >= 0xc0 ) {
 				GetEArd;
 			} else {

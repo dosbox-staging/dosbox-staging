@@ -120,7 +120,7 @@
 			} else {
 				GetEAa;CPU_LSL(LoadMw(eaa),limit);
 			}
-			*rmrd=(Bit16u)limit;
+			*rmrd=(Bit32u)limit;
 		}
 		break;
 	CASE_0F_D(0x80)												/* JO */
