@@ -209,15 +209,17 @@ void DOS_PSP::SetFCB2(RealPt src)
 
 bool DOS_PSP::SetNumFiles(Bit16u fileNum)
 {
-	// Allocate needed paragraphs
-	Bit16u para = (fileNum/16)+((fileNum%16)>0);
-	RealPt data	= RealMake(DOS_GetMemory(para),0);
-	sSave(sPSP,file_table,data);
-	sSave(sPSP,max_files,fileNum);
 	if (fileNum>20) {
+		// Allocate needed paragraphs
+		Bit16u para = (fileNum/16)+((fileNum%16)>0);
+		RealPt data	= RealMake(DOS_GetMemory(para),0);
+		sSave(sPSP,file_table,data);
+		sSave(sPSP,max_files,fileNum);
 		Bit16u i;
-		for (i=0; i<20; i++) SetFileHandle(i,sGet(sPSP,files[i]));
+		for (i=0; i<20; i++)		SetFileHandle(i,sGet(sPSP,files[i]));
 		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
+	} else {
+		sSave(sPSP,max_files,fileNum);
 	};
 	return true;
 };
