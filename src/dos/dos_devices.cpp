@@ -34,6 +34,27 @@
 static DOS_Device * devices[MAX_DEVICES];
 static Bit32u device_count;
 
+class device_NUL : public DOS_Device {
+public:
+	device_NUL() { name="NUL"; };
+	bool Read(Bit8u * data,Bit16u * size) {
+		for(Bitu i = 0; i < *size;i++) 
+			data[i]=0; 
+		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:READ");	   
+		return true;
+	}
+	bool Write(Bit8u * data,Bit16u * size) {
+		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:WRITE");
+		return true;
+	}
+	bool Seek(Bit32u * pos,Bit32u type) {
+		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:SEEK");
+		return true;
+	}
+	bool Close() { return true; }
+	Bit16u GetInformation(void) { return 0x8004; }
+};
+
 Bit8u DOS_FindDevice(char * name) {
 	/* loop through devices */
 	Bit8u index=0;
@@ -73,5 +94,8 @@ void DOS_SetupDevices(void) {
 	DOS_Device * newdev;
 	newdev=new device_CON();
 	DOS_AddDevice(newdev);
+   	DOS_Device * newdev2;
+	newdev2=new device_NUL();
+	DOS_AddDevice(newdev2);
 }
 
