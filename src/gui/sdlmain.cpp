@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -40,7 +41,7 @@
 //#define DISABLE_JOYSTICK
 #define C_GFXTHREADED 1						//Enabled by default
 
-#if defined(MACOSX)
+#if !(ENVIRON_INCLUDED)
 extern char** environ;
 #endif
 
@@ -55,7 +56,7 @@ struct SDL_Block {
 	bool full_screen;
 	bool nowait;
 	SDL_Surface * surface;
-	SDL_Surface * shadow_surface;
+	SDL_Surface * blit_surface;
 	SDL_Joystick * joy;
 	SDL_cond *cond;
 #if C_GFXTHREADED
@@ -94,6 +95,12 @@ static void ResetScreen(void) {
 	if (sdl.surface==0) {
 		E_Exit("SDL:Can't get a surface error:%s.",SDL_GetError());
 	}
+	/* Create special surface for direct blitting if needed */
+	if (sdl.blit_surface) SDL_FreeSurface(sdl.blit_surface);
+	sdl.blit_surface=SDL_CreateRGBSurfaceFrom(0,0,0,sdl.surface->format->BytesPerPixel,0,
+		sdl.surface->format->Rmask,sdl.surface->format->Gmask,sdl.surface->format->Bmask,sdl.surface->format->Amask
+	);
+			
 
 	SDL_WM_SetCaption(VERSION,VERSION);
 
@@ -140,6 +147,19 @@ static void SwitchFullScreen(void) {
 
 void GFX_SwitchFullScreen(void) {
     SwitchFullScreen();
+}
+
+/* Special render part handler that blits directly to the output screen */
+void GFX_Render_Blit(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
+	sdl.blit_surface->w=dx;
+	sdl.blit_surface->h=dy;
+	sdl.blit_surface->pitch=dx;
+	sdl.blit_surface->pixels=src;
+	SDL_UnlockSurface(sdl.surface);
+	SDL_Rect dest;
+	dest.x=x;
+	dest.y=y;
+	SDL_BlitSurface(sdl.blit_surface,0,sdl.surface,&dest);
 }
 
 static void SDL_DrawScreen(void) {
@@ -257,6 +277,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.autoenable=section->Get_bool("autolock");
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
+	sdl.blit_surface=0;
 #if C_GFXTHREADED
 	sdl.kill_thread=false;
 	sdl.mutex=SDL_CreateMutex();
@@ -527,7 +548,7 @@ void GFX_Events() {
 			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
-			throw(true);
+			throw(0);
 			break;
 		}
     }
@@ -543,7 +564,6 @@ void GFX_ShowMsg(char * format,...) {
 };
 
 int main(int argc, char* argv[]) {
-
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
@@ -574,7 +594,9 @@ int main(int argc, char* argv[]) {
 		}
 		/* Parse the config file */
 		control->ParseConfigFile(config_file.c_str());
+#if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
+#endif
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
@@ -598,7 +620,7 @@ int main(int argc, char* argv[]) {
 		LOG_MSG("Exit to error: %sPress enter to continue.",error);
 		if(!sdl.nowait) fgetc(stdin);
 	}
-	catch (...){ 
+	catch (int){ 
         if (sdl.full_screen) SwitchFullScreen();
 	    if (sdl.mouse.locked) CaptureMouse();
 	}
