@@ -28,7 +28,6 @@
 #include "regs.h"
 #include "dos_inc.h"
 #include "setup.h"
-#include "cpu.h"
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
@@ -881,12 +880,12 @@ static Bitu DOS_27Handler(void)
 	return CBRET_NONE;
 }
 static Bitu DOS_25Handler(void) {
-	flags.type=t_UNKNOWN;
+	flags.type=0;
 	if(Drives[reg_al]==0){
 		reg_ax=0x8002;
-		flags.cf=true;
+		SETFLAGBIT(CF,true);
 	}else{
-		flags.cf=false;
+		SETFLAGBIT(CF,false);
 		reg_ax=0;
 		if((reg_cx != 1) ||(reg_dx != 1))
 			LOG(LOG_DOSMISC,"int 25 called but not as diskdetection");
@@ -895,13 +894,12 @@ static Bitu DOS_25Handler(void) {
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC,"int 26 called: hope for the best!");
-	flags.type=t_UNKNOWN;
+	flags.type=0;
 	if(Drives[reg_al]==0){
-
 		reg_ax=0x8002;
-		flags.cf=true;
+		SETFLAGBIT(CF,true);
 	}else{
-		flags.cf=false;
+		SETFLAGBIT(CF,false);
 		reg_ax=0;
 	}
     return CBRET_NONE;
