@@ -17,6 +17,7 @@
  */
 
 
+#include <assert.h>
 #include "dosbox.h"
 #include "cpu.h"
 #include "memory.h"
@@ -41,66 +42,37 @@ Bits CPU_CycleMax=1500;
 
 CPU_Decoder * cpudecoder;
 
-void CPU_Real_16_Slow_Start(void);
-void CPU_Core_Full_Start(void);
+void CPU_Real_16_Slow_Start(bool big);
+void CPU_Core_Full_Start(bool big);
+void CPU_Core_Insane_Start(bool big);
+
 
 typedef void DecoderStart(void);
 
-//Determine correct core, to start from cpu state.
-DecoderStart * CPU_DecorderStarts[8]={
-	CPU_Real_16_Slow_Start,				//16-bit real,16-bit stack
-//	CPU_Core_Full_Start,				//16-bit prot,16-bit stack
-	CPU_Core_Full_Start,				//16-bit prot,16-bit stack
-	0,									//32-bit real,16-bit stack		ILLEGAL
-	CPU_Core_Full_Start,				//32-bit prot,16-bit stack
-	0,									//16-bit real,32-bit stack		ILLEGAL
-	CPU_Core_Full_Start,				//16-bit prot,32-bit stack
-	0,									//32-bit real,32-bit stack		ILLEGAL
-	CPU_Core_Full_Start,				//32-bit prot,32-bit stack
-};
+#define realcore_start CPU_Real_16_Slow_Start
+//#define realcore_start CPU_Core_Insane_Start
+//#define realcore_start CPU_Core_Full_Start
 
 void CPU_Push16(Bitu value) {
-	if (cpu.state & STATE_STACK32) {
-		reg_esp-=2;
-		mem_writew(SegPhys(ss)+reg_esp,value);
-	} else {
-		reg_sp-=2;
-		mem_writew(SegPhys(ss)+reg_sp,value);
-	}
+	reg_esp-=2;
+	mem_writew(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
 }
 
 void CPU_Push32(Bitu value) {
-	if (cpu.state & STATE_STACK32) {
-		reg_esp-=4;
-		mem_writed(SegPhys(ss)+reg_esp,value);
-	} else {
-		reg_sp-=4;
-		mem_writed(SegPhys(ss)+reg_sp,value);
-	}
+	reg_esp-=4;
+	mem_writed(SegPhys(ss) + (reg_esp & cpu.stack.mask) ,value);
 }
 
 Bitu CPU_Pop16(void) {
-	if (cpu.state & STATE_STACK32) {
-		Bitu val=mem_readw(SegPhys(ss)+reg_esp);
-		reg_esp+=2;
-		return val;
-	} else {
-		Bitu val=mem_readw(SegPhys(ss)+reg_sp);
-		reg_sp+=2;
-		return val;
-	}
+	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+	reg_esp+=2;
+	return val;
 }
 
 Bitu CPU_Pop32(void) {
-	if (cpu.state & STATE_STACK32) {
-		Bitu val=mem_readd(SegPhys(ss)+reg_esp);
-		reg_esp+=4;
-		return val;
-	} else {
-		Bitu val=mem_readd(SegPhys(ss)+reg_sp);
-		reg_sp+=4;
-		return val;
-	}
+	Bitu val=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+	reg_esp+=4;
+	return val;
 }
 
 PhysPt SelBase(Bitu sel) {
@@ -117,61 +89,28 @@ void CPU_SetFlags(Bitu word) {
 	flags.word=word;
 }
 
-bool CPU_CheckState(void) {
-	Bitu old_state=cpu.state;
-	cpu.state=0;	
-	if (!(cpu.cr0 & CR0_PROTECTION)) {
-		cpu.full.entry=cpu.full.prefix=0;
-	} else {
-		cpu.state|=STATE_PROTECTED;
-		if (Segs.big[cs]) {
-			cpu.state|=STATE_USE32;
-			cpu.full.entry=0x200;
-			cpu.full.prefix=0x02;		/* PREFIX_ADDR */
-		} else {
-			cpu.full.entry=cpu.full.prefix=0;
-		}
-		if (Segs.big[ss]) cpu.state|=STATE_STACK32;
-		LOG_MSG("CPL Level %x at %X:%X",cpu.cpl,SegValue(cs),reg_eip);
+bool CPU_CheckCodeType(CODE_TYPE type) {
+	if (cpu.code.type==type) return true;
+	cpu.code.type=type;
+	switch (cpu.code.type) {
+	case CODE_REAL:
+		realcore_start(false);
+		break;
+	case CODE_PMODE16:
+		CPU_Core_Full_Start(false);
+		break;
+	case CODE_PMODE32:
+		CPU_Core_Full_Start(true);
+		break;
 	}
-	if (old_state==cpu.state) return true;
-	(*CPU_DecorderStarts[cpu.state])();
 	return false;
 }
 
 Bit8u lastint;
 bool Interrupt(Bitu num) {
 	lastint=num;
-//DEBUG THINGIE to check fucked ints
-
 #if C_DEBUG
 	switch (num) {
-	case 0x00:
- 		LOG(LOG_CPU,LOG_NORMAL)("Divide Error");
-		break;
-	case 0x06:
-		break;
-	case 0x07:
-		LOG(LOG_FPU,LOG_NORMAL)("Co Processor Exception");
-		break;
-	case 0x08:
-	case 0x09:
-	case 0x10:
-	case 0x11:
-	case 0x12:
-	case 0x13:
-	case 0x15:
-	case 0x16:
-	case 0x17:
-	case 0x1A:
-	case 0x1C:
-	case 0x21:
-	case 0x2a:
-	case 0x2f:
-	case 0x33:
-	case 0x67:
-	case 0x74:
-		break;
 	case 0xcd:
 #if C_HEAVY_DEBUG
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
@@ -180,17 +119,10 @@ bool Interrupt(Bitu num) {
  		E_Exit("Call to interrupt 0xCD this is BAD");
 	case 0x03:
 		if (DEBUG_Breakpoint()) return true;
-		break;
-	case 0x05:
-		LOG(LOG_CPU,LOG_NORMAL)("CPU:Out Of Bounds interrupt");
-		break;
-	default:
-//		LOG_WARN("Call to unsupported INT %02X call %02X",num,reg_ah);
-		break;
 	};
 #endif
 
-	if (!(cpu.state & STATE_PROTECTED)) { /* RealMode Interrupt */	
+	if (!cpu.pmode) {
 		/* Save everything on a 16-bit stack */
 		CPU_Push16(flags.word & 0xffff);
 		CPU_Push16(SegValue(cs));
@@ -201,8 +133,9 @@ bool Interrupt(Bitu num) {
 		reg_eip=mem_readw(num << 2);
 		Segs.val[cs]=mem_readw((num << 2)+2);
 		Segs.phys[cs]=Segs.val[cs]<<4;
-		return true;
-	} else { /* Protected Mode Interrupt */
+		return CPU_CheckCodeType(CODE_REAL);
+	} else {
+		/* Protected Mode Interrupt */
 		Descriptor gate;
 //TODO Check for software interrupt and check gate's dpl<cpl
 		cpu.idt.GetDescriptor(num<<3,gate);
@@ -249,20 +182,43 @@ bool Interrupt(Bitu num) {
 				SETFLAGBIT(NT,false);
 				Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
 				Segs.phys[cs]=desc.GetBase();
-				Segs.big[cs]=desc.Big();
+				cpu.code.big=desc.Big()>0;
 				LOG_MSG("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=offset;
-				return CPU_CheckState();
+				return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 			}
 		default:
 			E_Exit("Illegal descriptor type %X for int %X",gate.Type(),num);
 		}
 	}
-	return true;
+	assert(1);
+	return false;
+}
+
+
+bool CPU_Exception(Bitu exception,Bit32u error_code) {
+	if (!cpu.pmode) { /* RealMode Interrupt */	
+		/* Save everything on a 16-bit stack */
+		CPU_Push16(flags.word & 0xffff);
+		CPU_Push16(SegValue(cs));
+		CPU_Push16(reg_ip);
+		SETFLAGBIT(IF,false);
+		SETFLAGBIT(TF,false);
+		/* Get the new CS:IP from vector table */
+		reg_eip=mem_readw(exception << 2);
+		Segs.val[cs]=mem_readw((exception << 2)+2);
+		Segs.phys[cs]=Segs.val[cs]<<4;
+		return CPU_CheckCodeType(CODE_REAL);
+	} else { /* Protected Mode Exception */
+	
+
+
+	}
+	return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 }
 
 bool CPU_IRET(bool use32) {
-	if (!(cpu.state & STATE_PROTECTED)) {		/*RealMode IRET */
+	if (!cpu.pmode || cpu.v86) {		/* RealMode IRET */
 		if (use32) {
 			reg_eip=CPU_Pop32();
 			SegSet16(cs,CPU_Pop32());
@@ -272,9 +228,15 @@ bool CPU_IRET(bool use32) {
 			SegSet16(cs,CPU_Pop16());
 			CPU_SetFlagsw(CPU_Pop16());
 		}
-		return true;
+		return CPU_CheckCodeType(CODE_REAL);
 	} else {	/* Protected mode IRET */
-		if (GETFLAG(NT)) E_Exit("No task support");
+		/* Check if this is task IRET */
+		if (GETFLAG(NT)) {
+		if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
+			E_Exit("Task IRET");
+
+
+		}
 		Bitu selector,offset,old_flags;
 		if (use32) {
 			offset=CPU_Pop32();
@@ -289,7 +251,8 @@ bool CPU_IRET(bool use32) {
 		Bitu rpl=selector & 3;
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(selector,desc);
-		if (rpl<cpu.cpl) E_Exit("IRET to lower privilege");
+		if (rpl<cpu.cpl)
+			E_Exit("IRET to lower privilege");
 		if (cpu.cpl==rpl) {	
 			/* Return to same level */
 			switch (desc.Type()) {
@@ -305,7 +268,7 @@ bool CPU_IRET(bool use32) {
 				E_Exit("IRET from illegal descriptor type %X",desc.Type());
 			}
 			Segs.phys[cs]=desc.GetBase();
-			Segs.big[cs]=desc.Big();
+			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
 			reg_eip=offset;
 			CPU_SetFlags(old_flags);
@@ -325,7 +288,7 @@ bool CPU_IRET(bool use32) {
 				E_Exit("IRET from illegal descriptor type %X",desc.Type());
 			}
 			Segs.phys[cs]=desc.GetBase();
-			Segs.big[cs]=desc.Big();
+			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
 			cpu.cpl=rpl;
 			reg_eip=offset;
@@ -342,20 +305,20 @@ bool CPU_IRET(bool use32) {
 			//TODO Maybe validate other segments, but why would anyone use them?
 			LOG_MSG("IRET:Outer level return to %X:%X",selector,offset);
 		}
-		return CPU_CheckState();
+		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 	}
 	return false;
 }
 
 bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
-	if (!(cpu.state & STATE_PROTECTED)) {
+	if (!cpu.pmode || cpu.v86) {
 		if (!use32) {
 			reg_eip=offset&0xffff;
 		} else {
 			reg_eip=offset;
 		}
 		SegSet16(cs,selector);
-		return true;
+		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		Bitu rpl=selector & 3;
 		Descriptor desc;
@@ -374,22 +337,22 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 CODE_jmp:
 			/* Normal jump to another selector:offset */
 			Segs.phys[cs]=desc.GetBase();
-			Segs.big[cs]=desc.Big();
+			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
-			return CPU_CheckState();
+			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		default:
 			E_Exit("JMP Illegal descriptor type %X",desc.Type());
-
 		}
-
 	}
+	assert(1);
 	return false;
 }
 
 
+
 bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
-	if (!(cpu.state & STATE_PROTECTED)) {
+	if (!cpu.pmode || cpu.v86) {
 		if (!use32) {
 			CPU_Push16(SegValue(cs));
 			CPU_Push16(reg_ip);
@@ -400,7 +363,7 @@ bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 			reg_eip=offset;
 		}
 		SegSet16(cs,selector);
-		return true;
+		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		Descriptor call;
 		Bitu rpl=selector & 3;
@@ -428,22 +391,21 @@ call_code:
 				reg_eip=offset;
 			}
 			Segs.phys[cs]=call.GetBase();
-			Segs.big[cs]=call.Big();
+			cpu.code.big=call.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
-			return CPU_CheckState();
+			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		default:
 			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
 
-		};
-		return CPU_CheckState();
+		}
 	}
-	return false;
+	assert(1);
 }
 
 
 bool CPU_RET(bool use32,Bitu bytes) {
-	if (!(cpu.state & STATE_PROTECTED)) {
+	if (!cpu.pmode || cpu.v86) {
 		Bitu new_ip,new_cs;
 		if (!use32) {
 			new_ip=CPU_Pop16();
@@ -455,7 +417,7 @@ bool CPU_RET(bool use32,Bitu bytes) {
 		reg_esp+=bytes;
 		SegSet16(cs,new_cs);
 		reg_eip=new_ip;
-		return true;
+		return CPU_CheckCodeType(CODE_REAL);
 	} else {
 		Bitu offset,selector;
 		if (!use32) {
@@ -465,7 +427,7 @@ bool CPU_RET(bool use32,Bitu bytes) {
 			offset=CPU_Pop32();
 			selector=CPU_Pop32() & 0xffff;
 		}
-		if (cpu.state & STATE_STACK32) {
+		if (cpu.stack.big) {
 			reg_esp+=bytes;
 		} else {
 			reg_sp+=bytes;
@@ -491,17 +453,17 @@ bool CPU_RET(bool use32,Bitu bytes) {
 			}
 RET_same_level:	
 			Segs.phys[cs]=desc.GetBase();
-			Segs.big[cs]=desc.Big();
+			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=selector;
 			reg_eip=offset;
 			LOG_MSG("RET - Same level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
-			return CPU_CheckState();
+			return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 		} else {
 			/* Return to higher level */
 			E_Exit("REturn to higher priviledge");
 		}
 		LOG_MSG("Prot ret %X:%X",selector,offset);
-		return CPU_CheckState();
+		return CPU_CheckCodeType(cpu.code.big ? CODE_PMODE32 : CODE_PMODE16);
 	}
 	return false;
 }
@@ -557,14 +519,17 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 			Bitu changed=cpu.cr0 ^ value;		
 			if (!changed) return true;
 			cpu.cr0=value;
+//TODO Maybe always first change to core_full for a change to cr0
 			if (value & CR0_PROTECTION) {
+				cpu.pmode=true;
 				LOG_MSG("Protected mode");
 				PAGING_Enable((value & CR0_PAGING)>0);
 			} else {
+				cpu.pmode=false;
 				PAGING_Enable(false);
 				LOG_MSG("Real mode");
 			}
-			return CPU_CheckState();
+			return false;		//Only changes with next CS change
 		}
 	case 3:
 		PAGING_SetDirBase(value);
@@ -757,22 +722,29 @@ void CPU_VERW(Bitu selector) {
 }
 
 
-bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
+void CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	Segs.val[seg]=value;
-	if (cpu.state & STATE_PROTECTED) {
+	if (!cpu.pmode || cpu.v86) {
+		Segs.phys[seg]=value << 4;
+//TODO maybe just always do this when they enable/real/v86 mode
+		if (seg==ss) {
+			cpu.stack.big=false;
+			cpu.stack.mask=0xffff;
+		}
+	} else {
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(value,desc);
 		Segs.phys[seg]=desc.GetBase();
-//		LOG_MSG("Segment %d Set with base %X limit %X",seg,desc.GetBase(),desc.GetLimit());
 		if (seg==ss) {
-			Segs.big[ss]=desc.Big();
-			return CPU_CheckState();
-		} else return true;
-	} else {
-		Segs.phys[seg]=value << 4;
-		return true;
-	} 
-	return false;
+			if (desc.Big()) {
+				cpu.stack.big=true;
+				cpu.stack.mask=0xffffffff;
+			} else {
+				cpu.stack.big=false;
+				cpu.stack.mask=0xffff;
+			}
+		}
+	}
 }
 
 void CPU_CPUID(void) {
@@ -793,24 +765,52 @@ void CPU_CPUID(void) {
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled CPUID Function %x",reg_eax);
 		break;
 	}
-	
 }
 
-static Bitu HLT_Decode(void) {
-	/* Stay here just as long until an external interrupt has changed CS:EIP */
-	if ((reg_eip!=cpu.hlt.eip) || (SegValue(cs)!=cpu.hlt.cs)) {
-		cpu.state=0xff;			//force a new state to set decoder
-		CPU_CheckState();
-		return 0x0;
-	}
+void CPU_ReadTaskSeg32(PhysPt base,TaskSegment_32 * seg) {
+	seg->back   =mem_readw(base+offsetof(TSS_386,back   ));
+	seg->esp0   =mem_readd(base+offsetof(TSS_386,esp0   ));
+	seg->ss0    =mem_readw(base+offsetof(TSS_386,ss0    ));
+	seg->esp1   =mem_readd(base+offsetof(TSS_386,esp1   ));
+	seg->ss1    =mem_readw(base+offsetof(TSS_386,ss1    ));
+	seg->esp2   =mem_readd(base+offsetof(TSS_386,esp2   ));
+	seg->ss2    =mem_readw(base+offsetof(TSS_386,ss2    ));
+	
+	seg->cr3    =mem_readd(base+offsetof(TSS_386,cr3    ));
+	seg->eflags =mem_readd(base+offsetof(TSS_386,eflags ));
+	seg->eip    =mem_readd(base+offsetof(TSS_386,eip    ));
+	
+	seg->eax    =mem_readd(base+offsetof(TSS_386,eax    ));
+	seg->ecx    =mem_readd(base+offsetof(TSS_386,ecx    ));
+	seg->edx    =mem_readd(base+offsetof(TSS_386,edx    ));
+	seg->ebx    =mem_readd(base+offsetof(TSS_386,ebx    ));
+	seg->esp    =mem_readd(base+offsetof(TSS_386,esp    ));
+	seg->ebp    =mem_readd(base+offsetof(TSS_386,ebp    ));
+	seg->esi    =mem_readd(base+offsetof(TSS_386,esi    ));
+	seg->edi    =mem_readd(base+offsetof(TSS_386,edi    ));
+
+	seg->es     =mem_readw(base+offsetof(TSS_386,es     ));
+	seg->cs     =mem_readw(base+offsetof(TSS_386,cs     ));
+	seg->ss     =mem_readw(base+offsetof(TSS_386,ss     ));
+	seg->ds     =mem_readw(base+offsetof(TSS_386,ds     ));
+	seg->fs     =mem_readw(base+offsetof(TSS_386,fs     ));
+	seg->gs     =mem_readw(base+offsetof(TSS_386,gs     ));
+
+	seg->ldt    =mem_readw(base+offsetof(TSS_386,ldt    ));
+	seg->trap   =mem_readw(base+offsetof(TSS_386,trap   ));
+	seg->io     =mem_readw(base+offsetof(TSS_386,io     ));
+
+}
+
+static Bits HLT_Decode(void) {
+	/* Once an interrupt occurs, it should change cpu core */
 	CPU_Cycles=0;
-	return 0x0;
+	return 0;
 }
 
 void CPU_HLT(void) {
-	cpu.hlt.cs=SegValue(cs);
-	cpu.hlt.eip=reg_eip;
 	CPU_Cycles=0;
+	cpu.code.type=CODE_INIT;
 	cpudecoder=&HLT_Decode;
 }
 
@@ -851,12 +851,15 @@ void CPU_Init(Section* sec) {
 
 	reg_eip=0;
 	flags.word=FLAG_IF;
+	cpu.cr0=0xffffffff;
+	CPU_SET_CRX(0,0);					//Initialize
+	cpu.v86=false;
+	cpu.code.big=false;
+	cpu.code.type=CODE_INIT;			//So a new cpu core will be started
+	cpu.stack.mask=0xffff;
+	cpu.stack.big=false;
 
-	cpu.full.entry=cpu.full.prefix=0;
-	cpu.state=0xff;			//To initialize it the first time
-	cpu.cr0=false;
-
-	CPU_CheckState();
+	CPU_JMP(false,0,0);					//Setup the first cpu core
 
 	KEYBOARD_AddEvent(KBD_f11,KBD_MOD_CTRL,CPU_CycleDecrease);
 	KEYBOARD_AddEvent(KBD_f12,KBD_MOD_CTRL,CPU_CycleIncrease);
