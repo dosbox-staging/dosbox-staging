@@ -153,7 +153,7 @@ struct OpCode {
 
 static struct {
 	Bitu entry;
-	Bitu entry_default;
+	EAPoint start;
 	Bitu rm;
 	EAPoint rm_eaa;
 	Bitu rm_off;
