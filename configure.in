@@ -36,6 +36,15 @@ AC_C_INLINE
 AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
+
+AC_MSG_CHECKING(if environ can be included)
+AC_TRY_LINK([#include <unistd.h>
+#include <stdlib.h>],[*environ;],
+[AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_INCLUDED,1,[environ can be included])],AC_MSG_RESULT(no))
+AC_MSG_CHECKING(if environ can be linked)
+AC_TRY_LINK([extern char ** environ;],[*environ;],
+[AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
+
 dnl Checks for libraries.
 
 #Check if the compiler support attributes
