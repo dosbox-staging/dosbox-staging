@@ -27,7 +27,7 @@ Bitu get_SF(void);
 Bitu get_OF(void);
 Bitu get_PF(void);
 
-void FillFlags(void);
+Bitu FillFlags(void);
 
 #include "regs.h"
 
@@ -80,6 +80,23 @@ extern LazyFlags lflags;
 #define LoadOF SETFLAGBIT(OF,get_OF());
 #define LoadAF SETFLAGBIT(AF,get_AF());
 
+#define TFLG_O		(get_OF())
+#define TFLG_NO		(!get_OF())
+#define TFLG_B		(get_CF())
+#define TFLG_NB		(!get_CF())
+#define TFLG_Z		(get_ZF())
+#define TFLG_NZ		(!get_ZF())
+#define TFLG_BE		(get_CF() || get_ZF())
+#define TFLG_NBE	(!get_CF() && !get_ZF())
+#define TFLG_S		(get_SF())
+#define TFLG_NS		(!get_SF())
+#define TFLG_P		(get_PF())
+#define TFLG_NP		(!get_PF())
+#define TFLG_L		((get_SF()!=0) != (get_OF()!=0))
+#define TFLG_NL		((get_SF()!=0) == (get_OF()!=0))
+#define TFLG_LE		(get_ZF()  || ((get_SF()!=0) != (get_OF()!=0)))
+#define TFLG_NLE	(!get_ZF() && ((get_SF()!=0) == (get_OF()!=0)))
+
 //Types of Flag changing instructions
 enum {
 	t_UNKNOWN=0,
@@ -102,20 +119,12 @@ enum {
 	t_RCLb,t_RCLw,t_RCLd,
 	t_RCRb,t_RCRw,t_RCRd,
 	t_NEGb,t_NEGw,t_NEGd,
-	t_CF,t_ZF,
-
+	
 	t_DSHLw,t_DSHLd,
 	t_DSHRw,t_DSHRd,
 	t_MUL,t_DIV,
 	t_NOTDONE,
 	t_LASTFLAG
 };
-
-INLINE void SetTypeCF(void) {
-	if (lflags.type!=t_CF)	{ 
-		lflags.prev_type=lflags.type;
-		lflags.type=t_CF;
-	}
-}
 
 #endif
