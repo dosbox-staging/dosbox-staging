@@ -1,59 +1,178 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "March 31, 2003"
+.TH DOSBOX 1 "October 5, 2003"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
-dosbox \- an x86/DOS emulator with sound/graphics primarily for games
+dosbox \- an x86/DOS emulator with sound/graphics
 .SH SYNOPSIS
 .B dosbox
-[\fB-fullscreen\fR]
-[\fB-conf\fR \fIconfigfile\fR]
-[\fB-lang\fR \fIlangfile\fR]
-[\fBfile\fR]
-[\fB-c\fR \fIcommand1\fR <\fIcommand2\fR>...]
-.br
+.B [\-fullscreen]
+.BI "[\-conf " configfile ]
+.BI "[\-lang " langfile ]
+.B [file]
+.BI "[\-c " command ]
+.B [\-exit]
 .SH DESCRIPTION
 This manual page briefly documents
-\fBdosbox\fR, an x86/DOS emulator capable of running many games.
+.BR "dosbox" ", an x86/DOS emulator."
 .TP
-The optional \fBfile\fR argument should be a DOS executable or a directory. If it is a dos executable (.com .exe .bat) the program will run automatically. If it is a directory, a DOS session will run with the directory mounted as C:.
+.RB "The optional " file " argument should be a DOS executable or a directory. If it is a dos executable (.com .exe .bat) the program will run automatically. If it is a directory, a DOS session will run with the directory mounted as C:."
 .SH OPTIONS
 A summary of options is included below.
 .TP
-\fB-fullscreen\fR
-Start DOSBox in fullscreen mode
+.B \-fullscreen
+.RB "Start " dosbox " in fullscreen mode."
 .TP
-\fB-c\fR \fIcommand 1\fR [\fIcommand 2\fR] ...
-Run one or more DOS commands after starting \fBdosbox\fR. If an executable is
-also specified, these commands will be executed before running the program.
+.BI \-c  " command" 
+.RI "Runs the specified " command " before running " 
+.BR file . 
+.RI "Multiple commands can be specified. Each " command " should start with \-c though."
 .TP
-\fB-conf\fR \fIconfigfile\fR
-Start \fBdosbox\fR with the options specified in \fIconfigfile\fR
+.BI \-conf " configfile
+.RB "Start " dosbox " with the options specified in "
+.IR configfile .
 .TP
-\fB-lang\fR \fIlangfile\fR
-Start \fBdosbox\fR with the language specified in \fIlangfile\fR
-.SH INTERNAL COMMANDS
+.BI \-lang " langfile
+.RB "Start " dosbox " with the language specified in "
+.IR langfile .
+.TP
+.B \-exit
+.BR dosbox " will exit after running the program specified by " file .
+.SH "INTERNAL COMMANDS"
 .B dosbox
 supports most of the DOS commands found in command.com. In addition, the
 following extra commands are available:
+.HP
+.BI "MOUNT [\-t " type "] [-size " size ]
+.I driveletter sourcedirectory 
+.B [\-aspi] [\-ioctl]
+.BI "[\-usecd " number "] [\-label " drivelabel ]
+.LP
+.B MOUNT \-cd
+.LP
+.RB "Program to mount local directories as drives inside " dosbox .
+.RS
 .TP
-\fBMOUNT\fR [\fB-t\fR \fItype\fR] [\fB-size\fR \fIsize\fR] \fBdriveletter\fR \fBsourcedirectory\fR [\fB-aspi\fR]
-Map \fBsourcedirectory\fR to \fBdriveletter\fR.
-\fItype\fR may be \fIdir\fR for a hard drive, \fIfloppy\fR for a floppy
-drive or \fIcdrom\fR for a cdrom. \fIsize\fR specifies the size of the volume.
-You can force ASPI mode for a cdrom with \fB-aspi\fR.
+.I driveletter
+The driveletter inside dosbox (eg. C).
 .TP
-\fBMEM\fR
+.I sourcedirectory
+The local directory you want to have inside dosbox.
+.TP
+.BI \-t " type"
+Type of the mounted directory. Supported are: dir (standard), floppy, cdrom.
+.TP 
+.BI \-size " drivesize"
+Sets the size of the drive.
+.TP
+.BI \-label " drivelabel"
+.RI "Sets the name of the drive to " drivelabel ". Needed on some" 
+systems if the cd label isnt read correctly. Useful when a 
+program can't find its cdrom.
+.TP
+.B \-aspi
+Forces to use the aspi layer. Only valid if mounting a cdrom under 
+Windows systems with an ASPI-Layer.
+.TP
+.B \-ioctl   
+Forces to use ioctl commands. Only valid if mounting a cdrom under 
+windows which support them (Win2000/XP/NT).
+.TP
+.BI \-usecd " number"
+Forces to use SDL cdrom support for drive number.
+.IR Number " can be found by "
+.BR \-cd ". Valid on all systems."
+.TP
+.B \-cd
+.RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
+.RE
+.TP
+.B MEM
+.LP
 Display the amount of free memory
 .TP
-\fBCONFIG\fR [\fB-writeconf\fR] [\fB-writelang\fR] \fBfile\fR
-Write the current configuration or language settings to \fBfile\fR
+.B CONFIG [\-writeconf] [\-writelang] file
+.LP
+.RB "Write the current configuration or language settings to " file .
+.TP 
+.B LOADFIX [\-size] [programname] [parameters]
+.LP
+.B LOADFIX \-f
+.LP
+Program to eat up memory, Usefull for old programs which don't expect much memory to be free.
+.RS
+.TP
+.B [programname]
+The name of the program which is executed after loadfix eats up it's memory.
+.TP
+.B [parameters]
+.RB "Parameters given to the " programname " executable."
+.TP
+.B \-size
+The amount of memory to eat up (in kb). Example -32, -64 or -128 
+.TP
+.B \-f
+Frees all memory eaten up by loadfix.
+.RE
 .SH FILES
 Configuration and language files use a format similar to Windows .ini files. If a file named
-\fBdosbox.conf\fR is found in the current directory, it will be automatically loaded.
+.BR dosbox.conf " is found in the current directory, it will be automatically loaded."
+.SH "SPECIAL KEYS"
+.TP 12m
+.IP ALT\-ENTER
+Go full screen and back.
+.IP CTRL\-F5
+Save a screenshot.
+.IP CTRL\-F6
+Start/Stop recording sound output to a wave file.
+.IP CTRL\-F7
+Decrease frameskip.
+.IP CTRL\-F8
+Increase frameskip.
+.IP CTRL\-F9
+Kill dosbox.
+.IP CTRL\-F10
+Capture/Release the mouse.
+.IP CTRL\-F11
+Slow down emulation.
+.IP CTRL\-F12
+Speed up emulation.
+.SH "SYSTEM REQUIREMENTS"
+Fast machine. My guess would be pentium\-2 400+ to get decent emulation
+of games written for an 286 machine.
+For protected mode games a 1 Ghz machine is recommended and don't expect
+them to run fast though!! Be sure to read the next section on how to speed
+it up somewhat.
+.SS "To run resource\-demanding games"
+.BR dosbox " emulates the CPU, the sound and graphic cards, and some other"
+.RB " stuff, all at the same time. You can overclock " dosbox " by using CTRL+F12, but"
+you'll be limited by the power of your actual CPU. You can see how much free
+time your true CPU has by various utils (top).  Once 100% of your real CPU time is
+.RB "used there is no further way to speed up " dosbox " unless you reduce the load"
+.RB "generated by the non\-CPU parts of " dosbox .
+.PP
+So:
+.PP
+.RB "Close every program but " dosbox .
+.PP
+.RB "Overclock  " dosbox " until 100% of your CPU is used.(CTRL+F12)" 
+.PP
+.RB "Since VGA emulation is the most demanding part of " dosbox " in terms of actual"
+CPU usage, we'll start here. Increase the number of frames skipped (in
+increments of one) by pressing CRTL+F8. Your CPU usage should decrease.
+Go back one step and repeat this until the game runs fast enough for you.
+Please note that this is a trade off: you lose in fluidity of video what you
+gain in speed.
+.SH NOTES
+.RB "While we hope that, one day, " dosbox " will run virtually all programs ever made for the PC..."
+.RB "we are not there yet. At present, " dosbox " run on a 1 Gigahertz PC is roughly the equivalent of a 16MHz 386 PC."
+While the 0.60 release has added support for "protected mode" allowing for more complex and recent programs, 
+but note that this support is early in development and nowhere near as complete as the support for 386 real\-mode 
+games (or earlier). Also note that "protected mode" games need substantially more resources and may 
+.RB "require a much faster processor for you to run it properly in " dosbox .
 .SH BUGS
-Not all DOS programs work properly. Notably, any program that uses protected mode will not work at all.
-DOSBox will exit without warning if an error occured.
-.SH SEE ALSO
+Not all DOS programs work properly.
+.BR dosbox " will exit without warning if an error occured."
+.SH "SEE ALSO"
 The README in /usr/share/doc/dosbox
 .SH AUTHOR
 This manual page was written by Peter Veenstra <H.P.Veenstra@student.rug.nl> and James Oakley <jfunk@funktronics.ca>,
