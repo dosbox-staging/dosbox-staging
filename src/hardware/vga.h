@@ -243,6 +243,7 @@ void VGA_SetupSEQ(void);
 
 /* Some Support Functions */
 void VGA_DACSetEntirePalette(void);
+void VGA_StartRetrace(void);
 
 extern VGA_Type vga;
 extern Bit8u vga_rom_08[256 * 8];
