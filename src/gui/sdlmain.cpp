@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.58 2004-01-29 09:26:45 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.59 2004-01-29 17:00:24 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -598,7 +598,7 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_SetSize(640,400,8,1.0,1.0,0);
-//	SDL_EnableKeyRepeat(250,30);
+	SDL_EnableKeyRepeat(250,40);
 	SDL_EnableUNICODE(1);
 /* Get some Keybinds */
 	KEYBOARD_AddEvent(KBD_f9,KBD_MOD_CTRL,KillSwitch);
