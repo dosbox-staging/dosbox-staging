@@ -29,7 +29,7 @@
 
 #define MAX_RES 2048
 
-typedef void (* RENDER_Part_Handler)(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy);
+
 
 struct PalData {
 	struct { 
@@ -56,6 +56,7 @@ static struct {
 		Bitu flags;
 		float ratio;
 		RENDER_Part_Handler part_handler;
+		RENDER_Draw_Handler draw_handler;
 	} src;
 	struct {
 		Bitu width;
@@ -224,36 +225,23 @@ void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
 	if (render.pal.last<entry) render.pal.last=entry;
 }
 
-bool RENDER_StartUpdate(void) {
+void RENDER_DoUpdate(void) {
 	if (render.frameskip.count<render.frameskip.max) {
 		render.frameskip.count++;
-		return false;
+		return;
 	}
 	render.frameskip.count=0;
 	if (render.src.bpp==8) Check_Palette();
-	switch (render.op.type) {
-	case OP_None:
-		render.op.dest=render.op.pixels=GFX_StartUpdate();
-		break;
-	}
-	if (render.op.dest) return true;
-	else return false;
+	GFX_DoUpdate();
 }
 
-void RENDER_EndUpdate(void) {
+static void RENDER_DrawScreen(void * data) {
 	switch (render.op.type) {
 	case OP_None:
-		/* Nothing to be done */
-		render.op.pixels=0;
+		render.op.dest=render.op.pixels=data;
 		break;
 	}
-	GFX_EndUpdate();
-}
-
-/* Update the data ready to be sent out for blitting onto the screen */
-void RENDER_Part(Bit8u * src,Bitu x,Bitu y,Bitu dx,Bitu dy) {
-	(render.src.part_handler)(src,x,y,dx,dy);
-	return;
+	render.src.draw_handler(render.src.part_handler);
 }
 
 static void RENDER_Resize(Bitu * width,Bitu * height) {
@@ -268,18 +256,21 @@ static void RENDER_Resize(Bitu * width,Bitu * height) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags) {
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu pitch,float ratio,Bitu flags,RENDER_Draw_Handler draw_handler) {
 	if ((!width) || (!height) || (!pitch)) { 
 		render.active=false;return;	
 	}
+
+	GFX_Stop();
 	render.src.width=width;
 	render.src.height=height;
 	render.src.bpp=bpp;
 	render.src.pitch=pitch;
 	render.src.ratio=ratio;
 	render.src.flags=flags;
+	render.src.draw_handler=draw_handler;
 
-	GFX_ModeCallBack callback;
+	GFX_ModeCallBack mode_callback;
 	switch (render.op.want_type) {
 
 	case OP_None:
@@ -297,16 +288,18 @@ normalop:
 			break;
 		}
 		flags=0;
-		callback=Render_Normal_CallBack;
+		mode_callback=Render_Normal_CallBack;
 		break;
 	default:
 		goto normalop;
 	
 	}
-	GFX_SetSize(width,height,bpp,flags,callback);
+	GFX_SetSize(width,height,bpp,flags,mode_callback,RENDER_DrawScreen);
+	GFX_Start();
 }
 
 static void EnableScreenShot(void) {
+//TODO switch to a special screenshot part handler
 	render.screenshot=true;
 }
 
@@ -319,7 +312,6 @@ static void DecreaseFrameSkip(void) {
 	if (render.frameskip.max>0) render.frameskip.max--;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
 }
-
 
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);

@@ -18,7 +18,8 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <SDL.h>
+#include "SDL.h"
+#include "SDL_Thread.h"
 
 #include "dosbox.h"
 #include "video.h"
@@ -31,9 +32,11 @@
 #include "debug.h"
 
 //#define DISABLE_JOYSTICK
+#define C_GFXTHREADED 1						//Enabled by default
 
 struct SDL_Block {
 	bool active;							//If this isn't set don't draw
+	bool drawing;
 	Bitu width;
 	Bitu height;
 	Bitu bpp;
@@ -42,6 +45,11 @@ struct SDL_Block {
 	bool full_screen;
 	SDL_Surface * surface;
 	SDL_Joystick * joy;
+	SDL_cond *cond;
+	SDL_mutex *mutex;
+	SDL_Thread *thread;
+	SDL_sem *sem;
+	GFX_DrawCallBack draw_callback;
 	struct {
 		bool autolock;
 		bool autoenable;
@@ -58,17 +66,17 @@ static void CaptureMouse(void);
 static void ResetScreen(void) {
 	GFX_Stop();
 	if (sdl.full_screen) { 
-	/* First get the original resolution */
 		sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE|SDL_HWPALETTE|SDL_FULLSCREEN);
 	} else {
 		if (sdl.flags & GFX_FIXED_BPP) sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,sdl.bpp,SDL_HWSURFACE);
 		else sdl.surface=SDL_SetVideoMode(sdl.width,sdl.height,0,SDL_HWSURFACE);
 	}
 	if (sdl.surface==0) {
-		E_Exit("SDL:Would be nice if I could get a surface.");
+		E_Exit("SDL:Can't get a surface.");
 	}
+
 	SDL_WM_SetCaption(VERSION,VERSION);
-/* also fill up gfx_info structure */
+
 	Bitu flags=MODE_SET;
 	if (sdl.full_screen) flags|=MODE_FULLSCREEN;
 	if (sdl.mode_callback) sdl.mode_callback(sdl.surface->w,sdl.surface->h,sdl.surface->format->BitsPerPixel,sdl.surface->pitch,flags);
@@ -76,18 +84,16 @@ static void ResetScreen(void) {
 }
 
 
-void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack callback) {
+void GFX_SetSize(Bitu width,Bitu height,Bitu bpp,Bitu flags,GFX_ModeCallBack mode_callback, GFX_DrawCallBack draw_callback){
 	GFX_Stop();
 	sdl.width=width;
 	sdl.height=height;
 	sdl.bpp=bpp;
 	sdl.flags=flags;
-	sdl.mode_callback=callback;
+	sdl.mode_callback=mode_callback;
+	sdl.draw_callback=draw_callback;
 	ResetScreen();
-	GFX_Start();
 }
-
-
 
 
 static void CaptureMouse(void) {
@@ -112,29 +118,57 @@ static void SwitchFullScreen(void) {
 
 	ResetScreen();
 }
-//only prototype existed
+
 void GFX_SwitchFullScreen(void) {
     SwitchFullScreen();
 }
 
-void * GFX_StartUpdate(void) {
-	if (sdl.active) {
-		if (SDL_MUSTLOCK(sdl.surface)) if (SDL_LockSurface(sdl.surface)) return 0;
-		return sdl.surface->pixels;
-	} else {
-		return 0;
-	}
+static void SDL_DrawScreen(void) {
+		sdl.drawing=true;
+		
+		if (SDL_MUSTLOCK(sdl.surface)) {
+			if (SDL_LockSurface(sdl.surface)) E_Exit("SDL:Can't lock surface");
+		}
+		sdl.draw_callback(sdl.surface->pixels);
+
+		if (SDL_MUSTLOCK(sdl.surface)) {
+			SDL_UnlockSurface(sdl.surface);
+		}
+		SDL_Flip(sdl.surface);
+		sdl.drawing=false;	
 }
 
-void GFX_EndUpdate(void) {
-	if (SDL_MUSTLOCK(sdl.surface)) SDL_UnlockSurface(sdl.surface );
-	if (sdl.full_screen) SDL_Flip(sdl.surface);
-	else SDL_UpdateRect(sdl.surface,0,0,0,0);
+
+int SDL_DisplayThread(void * data) {
+	while (!SDL_SemWait(sdl.sem)) {
+		if (!sdl.active) continue;
+		SDL_mutexP(sdl.mutex);
+		SDL_DrawScreen();
+		SDL_mutexV(sdl.mutex);
+	}
+	return 0;
+}
+
+
+void GFX_DoUpdate(void) {
+	if (!sdl.active) return;
+	if (sdl.drawing) return;
+#if C_GFXTHREADED
+	SDL_SemPost(sdl.sem);
+#else 
+	SDL_DrawScreen();
+#endif
+
 }
 
 
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
-/* I should probably not change the GFX_PalEntry :) */
+#if C_GFXTHREADED
+	if (SDL_mutexP(sdl.mutex)) {
+		E_Exit("SDL:Can't lock Mutex");
+	};
+#endif
+	/* I should probably not change the GFX_PalEntry :) */
 	if (sdl.full_screen) {
 		if (!SDL_SetPalette(sdl.surface,SDL_PHYSPAL,(SDL_Color *)entries,start,count)) {
 			E_Exit("SDL:Can't set palette");
@@ -144,6 +178,11 @@ void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
 			E_Exit("SDL:Can't set palette");
 		}
 	}
+#if C_GFXTHREADED
+	if (SDL_mutexV(sdl.mutex)) {
+		E_Exit("SDL:Can't release Mutex");
+	};
+#endif
 }
 
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
@@ -151,9 +190,15 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 }
 
 void GFX_Stop() {
+#if C_GFXTHREADED
+	SDL_mutexP(sdl.mutex);
+#endif
 	sdl.active=false;
-}
+#if C_GFXTHREADED
+	SDL_mutexV(sdl.mutex);
+#endif
 
+}
 
 void GFX_Start() {
 	sdl.active=true;
@@ -163,6 +208,12 @@ static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
 	if (sdl.mouse.locked) CaptureMouse();
 	if (sdl.full_screen) SwitchFullScreen();
+#if C_GFXTHREADED
+	SDL_KillThread(sdl.thread);
+	SDL_DestroyMutex(sdl.mutex);
+	SDL_DestroySemaphore(sdl.sem);
+#endif
+
 }
 
 static void GUI_StartUp(Section * sec) {
@@ -176,7 +227,13 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.autoenable=section->Get_bool("autolock");
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
-	GFX_SetSize(640,400,8,0,0);
+#if C_GFXTHREADED
+	sdl.mutex=SDL_CreateMutex();
+	sdl.sem=SDL_CreateSemaphore(0);
+	sdl.thread=SDL_CreateThread(&SDL_DisplayThread,0);
+#endif
+	/* Initialize screen for first time */
+	GFX_SetSize(640,400,8,0,0,0);
 	SDL_EnableKeyRepeat(250,30);
 	
 /* Get some Keybinds */
