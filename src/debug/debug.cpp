@@ -106,12 +106,12 @@ static void DrawRegisters(void) {
 	SetColor(reg_esp!=oldregs.esp);oldregs.esp=reg_esp;mvwprintw (dbg.win_reg,3,18,"%08X",reg_esp);
 	SetColor(reg_eip!=oldregs.eip);oldregs.eip=reg_eip;mvwprintw (dbg.win_reg,1,42,"%08X",reg_eip);
 	
-	SetColor(Segs[ds].value!=oldsegs[ds].value);oldsegs[ds].value=Segs[ds].value;mvwprintw (dbg.win_reg,0,31,"%04X",Segs[ds].value);
-	SetColor(Segs[es].value!=oldsegs[es].value);oldsegs[es].value=Segs[es].value;mvwprintw (dbg.win_reg,0,41,"%04X",Segs[es].value);
-	SetColor(Segs[fs].value!=oldsegs[fs].value);oldsegs[fs].value=Segs[fs].value;mvwprintw (dbg.win_reg,0,51,"%04X",Segs[fs].value);
-	SetColor(Segs[gs].value!=oldsegs[gs].value);oldsegs[gs].value=Segs[gs].value;mvwprintw (dbg.win_reg,0,61,"%04X",Segs[gs].value);
-	SetColor(Segs[ss].value!=oldsegs[ss].value);oldsegs[ss].value=Segs[ss].value;mvwprintw (dbg.win_reg,0,71,"%04X",Segs[ss].value);
-	SetColor(Segs[cs].value!=oldsegs[cs].value);oldsegs[cs].value=Segs[cs].value;mvwprintw (dbg.win_reg,1,31,"%04X",Segs[cs].value);
+	SetColor(SegValue(ds)!=oldsegs[ds].val);oldsegs[ds].val=SegValue(ds);mvwprintw (dbg.win_reg,0,31,"%04X",SegValue(ds));
+	SetColor(SegValue(es)!=oldsegs[es].val);oldsegs[es].val=SegValue(es);mvwprintw (dbg.win_reg,0,41,"%04X",SegValue(es));
+	SetColor(SegValue(fs)!=oldsegs[fs].val);oldsegs[fs].val=SegValue(fs);mvwprintw (dbg.win_reg,0,51,"%04X",SegValue(fs));
+	SetColor(SegValue(gs)!=oldsegs[gs].val);oldsegs[gs].val=SegValue(gs);mvwprintw (dbg.win_reg,0,61,"%04X",SegValue(gs));
+	SetColor(SegValue(ss)!=oldsegs[ss].val);oldsegs[ss].val=SegValue(ss);mvwprintw (dbg.win_reg,0,71,"%04X",SegValue(ss));
+	SetColor(SegValue(cs)!=oldsegs[cs].val);oldsegs[cs].val=SegValue(cs);mvwprintw (dbg.win_reg,1,31,"%04X",SegValue(cs));
 
 	/*Individual flags*/
 
@@ -134,11 +134,11 @@ static void DrawRegisters(void) {
 
 
 static void DrawCode(void) {
-	PhysPt start=Segs[cs].phys+reg_eip;
+	PhysPt start=SegPhys(cs)+reg_eip;
 	char dline[200];Bitu size;Bitu c;
 	for (Bit32u i=0;i<10;i++) {
 		size=DasmI386(dline, start, reg_eip, false);
-		mvwprintw(dbg.win_code,i,0,"%02X:%04X  ",Segs[cs].value,(start-Segs[cs].phys));
+		mvwprintw(dbg.win_code,i,0,"%02X:%04X  ",SegValue(cs),(start-SegPhys(cs)));
 		for (c=0;c<size;c++) wprintw(dbg.win_code,"%02X",mem_readb(start+c));
 		for (c=20;c>=size*2;c--) waddch(dbg.win_code,' ');
 		waddstr(dbg.win_code,dline);
@@ -173,10 +173,9 @@ static void AddBreakPoint(PhysPt off) {
 }
 
 
-
 bool DEBUG_BreakPoint(void) {
 	/* First get the phyiscal address and check for a set breakpoint */
-	PhysPt where=real_phys(Segs[cs].value,reg_ip-1);
+	PhysPt where=SegPhys(cs)+reg_ip-1;
 	bool found=false;
 	std::list<BreakPoint>::iterator i;
 	for(i=BPoints.begin(); i != BPoints.end(); ++i) {
@@ -220,16 +219,16 @@ Bit32u DEBUG_CheckKeys(void) {
 			ret=(*cpudecoder)(5);
 			break;
 
-		case 'd':	dataSeg = Segs[ds].value;
+		case 'd':	dataSeg = SegValue(ds);
 					dataOfs = reg_si;
 					break;
-		case 'e':	dataSeg = Segs[es].value;
+		case 'e':	dataSeg = SegValue(es);
 					dataOfs = reg_di;
 					break;
-		case 'x':	dataSeg = Segs[ds].value;
+		case 'x':	dataSeg = SegValue(ds);
 					dataOfs = reg_dx;
 					break;
-		case 'b':	dataSeg = Segs[es].value;
+		case 'b':	dataSeg = SegValue(es);
 					dataOfs = reg_bx;
 					break;
 
