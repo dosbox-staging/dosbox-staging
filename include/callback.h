@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: callback.h,v 1.10 2004-12-28 16:13:26 qbix79 Exp $ */
+
 #ifndef __CALLBACK_H
 #define __CALLBACK_H
 
@@ -55,5 +57,8 @@ bool CALLBACK_Free(Bitu callback);
 
 void CALLBACK_SCF(bool val);
 void CALLBACK_SZF(bool val);
+
+extern Bitu call_priv_io;
+
 #endif
 

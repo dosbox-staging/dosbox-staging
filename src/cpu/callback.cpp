@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.22 2004-08-29 11:22:37 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.23 2004-12-28 16:13:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,6 +38,7 @@ CallBack_Handler CallBack_Handlers[CB_MAX];
 char* CallBack_Description[CB_MAX];
 
 static Bitu call_stop,call_idle,call_default;
+Bitu call_priv_io;
 
 static Bitu illegal_handler(void) {
 	E_Exit("Illegal CallBack Called");
@@ -237,6 +238,24 @@ void CALLBACK_Init(Section* sec) {
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
 	real_writed(0,0x5c*4,CALLBACK_RealPointer(call_default)); //Network stuff
 	//real_writed(0,0xf*4,0); some games don't like it
+
+	call_priv_io=CALLBACK_Allocate();
+
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x00,(Bit8u)0xec);	// in al, dx
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x01,(Bit8u)0xcb);	// retf
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x02,(Bit8u)0xed);	// in ax, dx
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x03,(Bit8u)0xcb);	// retf
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x04,(Bit8u)0x66);	// in eax, dx
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x05,(Bit8u)0xed);
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x06,(Bit8u)0xcb);	// retf
+
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x08,(Bit8u)0xee);	// out dx, al
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x09,(Bit8u)0xcb);	// retf
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0a,(Bit8u)0xef);	// out dx, ax
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0b,(Bit8u)0xcb);	// retf
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0c,(Bit8u)0x66);	// out dx, eax
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0d,(Bit8u)0xef);
+	phys_writeb(CB_BASE+(call_priv_io<<4)+0x0e,(Bit8u)0xcb);	// retf
 }
 
 

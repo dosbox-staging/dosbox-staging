@@ -16,6 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: inout.h,v 1.6 2004-12-28 16:13:26 qbix79 Exp $ */
+
+#ifndef __INOUT_H
+#define __INOUT_H
+
 #define IO_MAX (64*1024+3)
 
 #define IO_MB	0x1
@@ -35,25 +40,13 @@ void IO_RegisterWriteHandler(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu 
 void IO_FreeReadHandler(Bitu port,Bitu mask,Bitu range=0);
 void IO_FreeWriteHandler(Bitu port,Bitu mask,Bitu range=0);
 
-INLINE void IO_WriteB(Bitu port,Bitu val) {
-	io_writehandlers[0][port](port,val,1);
-};
-INLINE void IO_WriteW(Bitu port,Bitu val) {
-	io_writehandlers[1][port](port,val,2);
-};
-INLINE void IO_WriteD(Bitu port,Bitu val) {
-	io_writehandlers[2][port](port,val,4);
-};
+void IO_WriteB(Bitu port,Bitu val);
+void IO_WriteW(Bitu port,Bitu val);
+void IO_WriteD(Bitu port,Bitu val);
 
-INLINE Bitu IO_ReadB(Bitu port) {
-	return io_readhandlers[0][port](port,1);
-}
-INLINE Bitu IO_ReadW(Bitu port) {
-	return io_readhandlers[1][port](port,2);
-}
-INLINE Bitu IO_ReadD(Bitu port) {
-	return io_readhandlers[2][port](port,4);
-}
+Bitu IO_ReadB(Bitu port);
+Bitu IO_ReadW(Bitu port);
+Bitu IO_ReadD(Bitu port);
 
 INLINE void IO_Write(Bitu port,Bit8u val) {
 	IO_WriteB(port,val);
@@ -62,4 +55,5 @@ INLINE Bit8u IO_Read(Bitu port){
 	return IO_ReadB(port);
 }
 
+#endif
 
