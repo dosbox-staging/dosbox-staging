@@ -47,6 +47,8 @@ typedef PhysPt EAPoint;
 #define LoadD(reg) reg
 #define SaveD(reg,val)	reg=val
 
+
+
 #include "core_full/loadwrite.h"
 #include "core_full/support.h"
 #include "core_full/optable.h"
@@ -77,7 +79,7 @@ Bits Full_DeCode(void) {
 	}
 	EAPoint IPPoint;
 	LoadIP();
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 	while (CPU_Cycles>0) {
 #if C_DEBUG
 		cycle_count++;

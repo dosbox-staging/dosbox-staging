@@ -558,7 +558,7 @@
 		break; /* No waiting here */
 	CASE_W(0x9c)												/* PUSHF */
 		FillFlags();
-		Push_16(flags.word);
+		Push_16(reg_flags);
 		break;
 	CASE_W(0x9d)												/* POPF */
 		SETFLAGSw(Pop_16());
@@ -577,7 +577,7 @@
 		break;
 	CASE_B(0x9f)												/* LAHF */
 		FillFlags();
-		reg_ah=flags.word&0xff;
+		reg_ah=reg_flags&0xff;
 		break;
 	CASE_B(0xa0)												/* MOV AL,Ob */
 		{
@@ -974,8 +974,7 @@
 		return CBRET_NONE;
 	CASE_B(0xf5)												/* CMC */
 		SETFLAGBIT(CF,!get_CF());
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF()	;
 		break;
 	CASE_B(0xf6)												/* GRP3 Eb(,Ib) */
 		{	
@@ -996,13 +995,13 @@
 				}
 			case 0x03:											/* NEG Eb */
 				{
-					flags.type=t_NEGb;
+					lflags.type=t_NEGb;
 					if (rm >= 0xc0 ) {
-						GetEArb;flags.var1.b=*earb;flags.result.b=0-flags.var1.b;
-						*earb=flags.result.b;
+						GetEArb;lf_var1b=*earb;lf_resb=0-lf_var1b;
+						*earb=lf_resb;
 					} else {
-						GetEAa;flags.var1.b=LoadMb(eaa);flags.result.b=0-flags.var1.b;
- 						SaveMb(eaa,flags.result.b);
+						GetEAa;lf_var1b=LoadMb(eaa);lf_resb=0-lf_var1b;
+ 						SaveMb(eaa,lf_resb);
 					}
 					break;
 				}
@@ -1040,13 +1039,13 @@
 				}
 			case 0x03:											/* NEG Ew */
 				{
-					flags.type=t_NEGw;
+					lflags.type=t_NEGw;
 					if (rm >= 0xc0 ) {
-						GetEArw;flags.var1.w=*earw;flags.result.w=0-flags.var1.w;
-						*earw=flags.result.w;
+						GetEArw;lf_var1w=*earw;lf_resw=0-lf_var1w;
+						*earw=lf_resw;
 					} else {
-						GetEAa;flags.var1.w=LoadMw(eaa);flags.result.w=0-flags.var1.w;
- 						SaveMw(eaa,flags.result.w);
+						GetEAa;lf_var1w=LoadMw(eaa);lf_resw=0-lf_var1w;
+ 						SaveMw(eaa,lf_resw);
 					}
 					break;
 				}
@@ -1067,13 +1066,11 @@
 		}
 	CASE_B(0xf8)												/* CLC */
 		SETFLAGBIT(CF,false);
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF();
 		break;
 	CASE_B(0xf9)												/* STC */
 		SETFLAGBIT(CF,true);
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF();
 		break;
 	CASE_B(0xfa)												/* CLI */
 		SETFLAGBIT(IF,false);

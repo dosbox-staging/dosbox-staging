@@ -16,6 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#if !defined __LAZYFLAGS_H
+#define __LAZYFLAG_H
+
 //Flag Handling
 Bitu get_CF(void);
 Bitu get_AF(void);
@@ -26,22 +29,48 @@ Bitu get_PF(void);
 
 void FillFlags(void);
 
+#include "regs.h"
+
+struct LazyFlags {
+    GenReg32 var1,var2,res;
+	Bitu type;
+	Bitu prev_type;
+	Bitu oldcf;
+};
+
+extern LazyFlags lfags;
+
+#define lf_var1b lflags.var1.byte[BL_INDEX]
+#define lf_var2b lflags.var2.byte[BL_INDEX]
+#define lf_resb lflags.res.byte[BL_INDEX]
+
+#define lf_var1w lflags.var1.word[W_INDEX]
+#define lf_var2w lflags.var2.word[W_INDEX]
+#define lf_resw lflags.res.word[W_INDEX]
+
+#define lf_var1d lflags.var1.dword[DW_INDEX]
+#define lf_var2d lflags.var2.dword[DW_INDEX]
+#define lf_resd lflags.res.dword[DW_INDEX]
+
+
+extern LazyFlags lflags;
+
 #define SETFLAGSb(FLAGB)													\
 {																			\
 	SETFLAGBIT(OF,get_OF());												\
-	flags.type=t_UNKNOWN;													\
-	CPU_SetFlags((flags.word&0xffffff00)|((FLAGB) & 0xff));					\
+	lflags.type=t_UNKNOWN;													\
+	CPU_SetFlags((reg_flags&0xffffff00)|((FLAGB) & 0xff));					\
 }
 
 #define SETFLAGSw(FLAGW)													\
 {																			\
-	flags.type=t_UNKNOWN;													\
+	lflags.type=t_UNKNOWN;													\
 	CPU_SetFlagsw(FLAGW);													\
 }
 
 #define SETFLAGSd(FLAGD)													\
 {																			\
-	flags.type=t_UNKNOWN;													\
+	lflags.type=t_UNKNOWN;													\
 	CPU_SetFlags(FLAGD);													\
 }
 
@@ -82,3 +111,11 @@ enum {
 	t_LASTFLAG
 };
 
+INLINE void SetTypeCF(void) {
+	if (lflags.type!=t_CF)	{ 
+		lflags.prev_type=lflags.type;
+		lflags.type=t_CF;
+	}
+}
+
+#endif

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.35 2003-10-14 23:31:51 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.36 2003-10-26 19:00:38 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -32,7 +32,6 @@
 #define LOG(X,Y)
 #endif
 
-Flag_Info flags;
 CPU_Regs cpu_regs;
 CPUBlock cpu;
 Segments Segs;
@@ -92,7 +91,7 @@ PhysPt SelBase(Bitu sel) {
 }
 
 void CPU_SetFlags(Bitu word) {
-	flags.word=(word|2)&~0x28;
+	reg_flags=(word|2)&~0x28;
 }
 
 bool CPU_CheckCodeType(CODE_TYPE type) {
@@ -131,7 +130,7 @@ bool Interrupt(Bitu num) {
 
 	if (!cpu.pmode) {
 		/* Save everything on a 16-bit stack */
-		CPU_Push16(flags.word & 0xffff);
+		CPU_Push16(reg_flags & 0xffff);
 		CPU_Push16(SegValue(cs));
 		CPU_Push16(reg_ip);
 		SETFLAGBIT(IF,false);
@@ -172,11 +171,11 @@ bool Interrupt(Bitu num) {
 				case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 				/* Prepare stack for gate to same priviledge */
 					if (gate.Type() & 0x8) {	/* 32-bit Gate */
-						CPU_Push32(flags.word);
+						CPU_Push32(reg_flags);
 						CPU_Push32(SegValue(cs));
 						CPU_Push32(reg_eip);
 					} else {					/* 16-bit gate */
-						CPU_Push16(flags.word & 0xffff);
+						CPU_Push16(reg_flags & 0xffff);
 						CPU_Push16(SegValue(cs));
 						CPU_Push16(reg_ip);
 					}
@@ -207,7 +206,7 @@ bool Interrupt(Bitu num) {
 bool CPU_Exception(Bitu exception,Bit32u error_code) {
 	if (!cpu.pmode) { /* RealMode Interrupt */	
 		/* Save everything on a 16-bit stack */
-		CPU_Push16(flags.word & 0xffff);
+		CPU_Push16(reg_flags & 0xffff);
 		CPU_Push16(SegValue(cs));
 		CPU_Push16(reg_ip);
 		SETFLAGBIT(IF,false);
@@ -256,7 +255,7 @@ bool CPU_IRET(bool use32) {
 		} else {
 			offset=CPU_Pop16();
 			selector=CPU_Pop16();
-			old_flags=(flags.word & 0xffff0000) | CPU_Pop16();
+			old_flags=(reg_flags & 0xffff0000) | CPU_Pop16();
 		}
 		Bitu rpl=selector & 3;
 		Descriptor desc;

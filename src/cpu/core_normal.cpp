@@ -154,7 +154,7 @@ static Bits CPU_Core_Normal_Decode_Trap(void);
 static Bits CPU_Core_Normal_Decode(void) {
 decode_start:
 	LOADIP;
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 	while (CPU_Cycles>0) {
 		core.op_start=core.ip_lookup;
 		core.opcode_index=core.index_default;

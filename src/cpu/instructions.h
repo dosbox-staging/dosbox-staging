@@ -20,265 +20,265 @@
 
 /* All Byte genereal instructions */
 #define ADDB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b+flags.var2.b;					\
-	save(op1,flags.result.b);								\
-	flags.type=t_ADDb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b+lf_var2b;					\
+	save(op1,lf_resb);								\
+	lflags.type=t_ADDb;
 
 #define ADCB(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b+flags.var2.b+flags.oldcf;		\
-	save(op1,flags.result.b);								\
-	flags.type=t_ADCb;
+	lflags.oldcf=get_CF();									\
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b+lf_var2b+lflags.oldcf;		\
+	save(op1,lf_resb);								\
+	lflags.type=t_ADCb;
 
 #define SBBB(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b-(flags.var2.b+flags.oldcf);	\
-	save(op1,flags.result.b);								\
-	flags.type=t_SBBb;
+	lflags.oldcf=get_CF();									\
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b-(lf_var2b+lflags.oldcf);	\
+	save(op1,lf_resb);								\
+	lflags.type=t_SBBb;
 
 #define SUBB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b-flags.var2.b;					\
-	save(op1,flags.result.b);								\
-	flags.type=t_SUBb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b-lf_var2b;					\
+	save(op1,lf_resb);								\
+	lflags.type=t_SUBb;
 
 #define ORB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b | flags.var2.b;				\
-	save(op1,flags.result.b);								\
-	flags.type=t_ORb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b | lf_var2b;				\
+	save(op1,lf_resb);								\
+	lflags.type=t_ORb;
 
 #define XORB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b ^ flags.var2.b;				\
-	save(op1,flags.result.b);								\
-	flags.type=t_XORb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b ^ lf_var2b;				\
+	save(op1,lf_resb);								\
+	lflags.type=t_XORb;
 
 #define ANDB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b & flags.var2.b;				\
-	save(op1,flags.result.b);								\
-	flags.type=t_ANDb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b & lf_var2b;				\
+	save(op1,lf_resb);								\
+	lflags.type=t_ANDb;
 
 #define CMPB(op1,op2,load,save)								\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b-flags.var2.b;					\
-	flags.type=t_CMPb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b-lf_var2b;					\
+	lflags.type=t_CMPb;
 
 #define TESTB(op1,op2,load,save)							\
-	flags.var1.b=load(op1);flags.var2.b=op2;					\
-	flags.result.b=flags.var1.b & flags.var2.b;				\
-	flags.type=t_TESTb;
+	lf_var1b=load(op1);lf_var2b=op2;					\
+	lf_resb=lf_var1b & lf_var2b;				\
+	lflags.type=t_TESTb;
 
 /* All Word General instructions */
 
 #define ADDW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w+flags.var2.w;					\
-	save(op1,flags.result.w);								\
-	flags.type=t_ADDw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w+lf_var2w;					\
+	save(op1,lf_resw);								\
+	lflags.type=t_ADDw;
 
 #define ADCW(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w+flags.var2.w+flags.oldcf;		\
-	save(op1,flags.result.w);								\
-	flags.type=t_ADCw;
+	lflags.oldcf=get_CF();									\
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w+lf_var2w+lflags.oldcf;		\
+	save(op1,lf_resw);								\
+	lflags.type=t_ADCw;
 
 #define SBBW(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w-(flags.var2.w+flags.oldcf);	\
-	save(op1,flags.result.w);								\
-	flags.type=t_SBBw;
+	lflags.oldcf=get_CF();									\
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w-(lf_var2w+lflags.oldcf);	\
+	save(op1,lf_resw);								\
+	lflags.type=t_SBBw;
 
 #define SUBW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w-flags.var2.w;					\
-	save(op1,flags.result.w);								\
-	flags.type=t_SUBw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w-lf_var2w;					\
+	save(op1,lf_resw);								\
+	lflags.type=t_SUBw;
 
 #define ORW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w | flags.var2.w;				\
-	save(op1,flags.result.w);								\
-	flags.type=t_ORw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w | lf_var2w;				\
+	save(op1,lf_resw);								\
+	lflags.type=t_ORw;
 
 #define XORW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w ^ flags.var2.w;				\
-	save(op1,flags.result.w);								\
-	flags.type=t_XORw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w ^ lf_var2w;				\
+	save(op1,lf_resw);								\
+	lflags.type=t_XORw;
 
 #define ANDW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w & flags.var2.w;				\
-	save(op1,flags.result.w);								\
-	flags.type=t_ANDw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w & lf_var2w;				\
+	save(op1,lf_resw);								\
+	lflags.type=t_ANDw;
 
 #define CMPW(op1,op2,load,save)								\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w-flags.var2.w;					\
-	flags.type=t_CMPw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w-lf_var2w;					\
+	lflags.type=t_CMPw;
 
 #define TESTW(op1,op2,load,save)							\
-	flags.var1.w=load(op1);flags.var2.w=op2;					\
-	flags.result.w=flags.var1.w & flags.var2.w;				\
-	flags.type=t_TESTw;
+	lf_var1w=load(op1);lf_var2w=op2;					\
+	lf_resw=lf_var1w & lf_var2w;				\
+	lflags.type=t_TESTw;
 
 /* All DWORD General Instructions */
 
 #define ADDD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d+flags.var2.d;					\
-	save(op1,flags.result.d);								\
-	flags.type=t_ADDd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d+lf_var2d;					\
+	save(op1,lf_resd);								\
+	lflags.type=t_ADDd;
 
 #define ADCD(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d+flags.var2.d+flags.oldcf;		\
-	save(op1,flags.result.d);								\
-	flags.type=t_ADCd;
+	lflags.oldcf=get_CF();									\
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d+lf_var2d+lflags.oldcf;		\
+	save(op1,lf_resd);								\
+	lflags.type=t_ADCd;
 
 #define SBBD(op1,op2,load,save)								\
-	flags.oldcf=get_CF();									\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d-(flags.var2.d+flags.oldcf);	\
-	save(op1,flags.result.d);								\
-	flags.type=t_SBBd;
+	lflags.oldcf=get_CF();									\
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d-(lf_var2d+lflags.oldcf);	\
+	save(op1,lf_resd);								\
+	lflags.type=t_SBBd;
 
 #define SUBD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d-flags.var2.d;					\
-	save(op1,flags.result.d);								\
-	flags.type=t_SUBd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d-lf_var2d;					\
+	save(op1,lf_resd);								\
+	lflags.type=t_SUBd;
 
 #define ORD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d | flags.var2.d;				\
-	save(op1,flags.result.d);								\
-	flags.type=t_ORd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d | lf_var2d;				\
+	save(op1,lf_resd);								\
+	lflags.type=t_ORd;
 
 #define XORD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d ^ flags.var2.d;				\
-	save(op1,flags.result.d);								\
-	flags.type=t_XORd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d ^ lf_var2d;				\
+	save(op1,lf_resd);								\
+	lflags.type=t_XORd;
 
 #define ANDD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d & flags.var2.d;				\
-	save(op1,flags.result.d);								\
-	flags.type=t_ANDd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d & lf_var2d;				\
+	save(op1,lf_resd);								\
+	lflags.type=t_ANDd;
 
 #define CMPD(op1,op2,load,save)								\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d-flags.var2.d;					\
-	flags.type=t_CMPd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d-lf_var2d;					\
+	lflags.type=t_CMPd;
 
 
 #define TESTD(op1,op2,load,save)							\
-	flags.var1.d=load(op1);flags.var2.d=op2;					\
-	flags.result.d=flags.var1.d & flags.var2.d;				\
-	flags.type=t_TESTd;
+	lf_var1d=load(op1);lf_var2d=op2;					\
+	lf_resd=lf_var1d & lf_var2d;				\
+	lflags.type=t_TESTd;
 
 
 
 
 #define INCB(op1,load,save)									\
-	LoadCF;flags.result.b=load(op1)+1;						\
-	save(op1,flags.result.b);								\
-	flags.type=t_INCb;										\
+	LoadCF;lf_resb=load(op1)+1;						\
+	save(op1,lf_resb);								\
+	lflags.type=t_INCb;										\
 
 #define INCW(op1,load,save)									\
-	LoadCF;flags.result.w=load(op1)+1;						\
-	save(op1,flags.result.w);								\
-	flags.type=t_INCw;
+	LoadCF;lf_resw=load(op1)+1;						\
+	save(op1,lf_resw);								\
+	lflags.type=t_INCw;
 
 #define INCD(op1,load,save)									\
-	LoadCF;flags.result.d=load(op1)+1;						\
-	save(op1,flags.result.d);								\
-	flags.type=t_INCd;
+	LoadCF;lf_resd=load(op1)+1;						\
+	save(op1,lf_resd);								\
+	lflags.type=t_INCd;
 
 #define DECB(op1,load,save)									\
-	LoadCF;flags.result.b=load(op1)-1;						\
-	save(op1,flags.result.b);								\
-	flags.type=t_DECb;
+	LoadCF;lf_resb=load(op1)-1;						\
+	save(op1,lf_resb);								\
+	lflags.type=t_DECb;
 
 #define DECW(op1,load,save)									\
-	LoadCF;flags.result.w=load(op1)-1;						\
-	save(op1,flags.result.w);								\
-	flags.type=t_DECw;
+	LoadCF;lf_resw=load(op1)-1;						\
+	save(op1,lf_resw);								\
+	lflags.type=t_DECw;
 
 #define DECD(op1,load,save)									\
-	LoadCF;flags.result.d=load(op1)-1;						\
-	save(op1,flags.result.d);								\
-	flags.type=t_DECd;
+	LoadCF;lf_resd=load(op1)-1;						\
+	save(op1,lf_resd);								\
+	lflags.type=t_DECd;
 
 #define ROLB(op1,op2,load,save)								\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.b=load(op1);								\
-		flags.var2.b=op2&0x07;								\
-		flags.result.b=(flags.var1.b << flags.var2.b) |		\
-				(flags.var1.b >> (8-flags.var2.b));			\
-		save(op1,flags.result.b);							\
-		flags.type=t_ROLb;									\
+		lf_var1b=load(op1);								\
+		lf_var2b=op2&0x07;								\
+		lf_resb=(lf_var1b << lf_var2b) |		\
+				(lf_var1b >> (8-lf_var2b));			\
+		save(op1,lf_resb);							\
+		lflags.type=t_ROLb;									\
 
 
 #define ROLW(op1,op2,load,save)								\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.w=load(op1);								\
-		flags.var2.b=op2&0x0F;								\
-		flags.result.w=(flags.var1.w << flags.var2.b) |		\
-				(flags.var1.w >> (16-flags.var2.b));		\
-		save(op1,flags.result.w);							\
-		flags.type=t_ROLw;									\
+		lf_var1w=load(op1);								\
+		lf_var2b=op2&0x0F;								\
+		lf_resw=(lf_var1w << lf_var2b) |		\
+				(lf_var1w >> (16-lf_var2b));		\
+		save(op1,lf_resw);							\
+		lflags.type=t_ROLw;									\
 
 
 #define ROLD(op1,op2,load,save)								\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.d=load(op1);								\
-		flags.var2.b=op2;									\
-		flags.result.d=(flags.var1.d << flags.var2.b) |		\
-				(flags.var1.d >> (32-flags.var2.b));		\
-		save(op1,flags.result.d);							\
-		flags.type=t_ROLd;									\
+		lf_var1d=load(op1);								\
+		lf_var2b=op2;									\
+		lf_resd=(lf_var1d << lf_var2b) |		\
+				(lf_var1d >> (32-lf_var2b));		\
+		save(op1,lf_resd);							\
+		lflags.type=t_ROLd;									\
 
 
 #define RORB(op1,op2,load,save)								\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.b=load(op1);								\
-		flags.var2.b=op2&0x07;								\
-		flags.result.b=(flags.var1.b >> flags.var2.b) |		\
-				(flags.var1.b << (8-flags.var2.b));			\
-		save(op1,flags.result.b);							\
-		flags.type=t_RORb;									\
+		lf_var1b=load(op1);								\
+		lf_var2b=op2&0x07;								\
+		lf_resb=(lf_var1b >> lf_var2b) |		\
+				(lf_var1b << (8-lf_var2b));			\
+		save(op1,lf_resb);							\
+		lflags.type=t_RORb;									\
 
 
 #define RORW(op1,op2,load,save)								\
 	if (op2&0x0F) {											\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.w=load(op1);								\
-		flags.var2.b=op2&0x0F;								\
-		flags.result.w=(flags.var1.w >> flags.var2.b) |		\
-				(flags.var1.w << (16-flags.var2.b));		\
-		save(op1,flags.result.w);							\
-		flags.type=t_RORw;									\
+		lf_var1w=load(op1);								\
+		lf_var2b=op2&0x0F;								\
+		lf_resw=(lf_var1w >> lf_var2b) |		\
+				(lf_var1w << (16-lf_var2b));		\
+		save(op1,lf_resw);							\
+		lflags.type=t_RORw;									\
 	}
 
 #define RORD(op1,op2,load,save)								\
 	if (op2) {												\
 		LoadZF;LoadSF;LoadAF;								\
-		flags.var1.d=load(op1);								\
-		flags.var2.b=op2;									\
-		flags.result.d=(flags.var1.d >> flags.var2.b) |		\
-				(flags.var1.d << (32-flags.var2.b));		\
-		save(op1,flags.result.d);							\
-		flags.type=t_RORd;									\
+		lf_var1d=load(op1);								\
+		lf_var2b=op2;									\
+		lf_resd=(lf_var1d >> lf_var2b) |		\
+				(lf_var1d << (32-lf_var2b));		\
+		save(op1,lf_resd);							\
+		lflags.type=t_RORd;									\
 	}
 
 
@@ -286,176 +286,176 @@
 	if (op2%9) {											\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit8u cf=get_CF();									\
-		flags.var1.b=load(op1);								\
-		flags.var2.b=op2%9;									\
-		flags.type=t_RCLb;									\
-		flags.result.b=(flags.var1.b << flags.var2.b) |		\
-				(cf << (flags.var2.b-1)) |					\
-				(flags.var1.b >> (9-flags.var2.b));			\
-		SETFLAGBIT(CF,((flags.var1.b >> (8-flags.var2.b)) & 1));			\
-		SETFLAGBIT(OF,(flags.var1.b ^ flags.result.b) & 0x80);				\
- 		save(op1,flags.result.b);							\
+		lf_var1b=load(op1);								\
+		lf_var2b=op2%9;									\
+		lflags.type=t_RCLb;									\
+		lf_resb=(lf_var1b << lf_var2b) |		\
+				(cf << (lf_var2b-1)) |					\
+				(lf_var1b >> (9-lf_var2b));			\
+		SETFLAGBIT(CF,((lf_var1b >> (8-lf_var2b)) & 1));			\
+		SETFLAGBIT(OF,(lf_var1b ^ lf_resb) & 0x80);				\
+ 		save(op1,lf_resb);							\
 	}
 
 #define RCLW(op1,op2,load,save)								\
 	if (op2%17) {											\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit16u cf=get_CF();									\
-		flags.var1.w=load(op1);								\
-		flags.var2.b=op2%17;								\
-		flags.type=t_RCLw;									\
-		flags.result.w=(flags.var1.w << flags.var2.b) |		\
-				(cf << (flags.var2.b-1)) |					\
-				(flags.var1.w >> (17-flags.var2.b));		\
-		SETFLAGBIT(CF,((flags.var1.w >> (16-flags.var2.b)) & 1));				\
-		SETFLAGBIT(OF,(flags.var1.w ^ flags.result.w) & 0x8000);				\
-		save(op1,flags.result.w);							\
+		lf_var1w=load(op1);								\
+		lf_var2b=op2%17;								\
+		lflags.type=t_RCLw;									\
+		lf_resw=(lf_var1w << lf_var2b) |		\
+				(cf << (lf_var2b-1)) |					\
+				(lf_var1w >> (17-lf_var2b));		\
+		SETFLAGBIT(CF,((lf_var1w >> (16-lf_var2b)) & 1));				\
+		SETFLAGBIT(OF,(lf_var1w ^ lf_resw) & 0x8000);				\
+		save(op1,lf_resw);							\
 	}
 
 #define RCLD(op1,op2,load,save)								\
 	if (op2) {												\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit32u cf=get_CF();									\
-		flags.var1.d=load(op1);								\
-		flags.var2.b=op2;									\
-		flags.type=t_RCLd;									\
-		if (flags.var2.b==1)	{							\
-			flags.result.d=(flags.var1.d << 1) | cf;		\
+		lf_var1d=load(op1);								\
+		lf_var2b=op2;									\
+		lflags.type=t_RCLd;									\
+		if (lf_var2b==1)	{							\
+			lf_resd=(lf_var1d << 1) | cf;		\
 		} else 	{											\
-			flags.result.d=(flags.var1.d << flags.var2.b) |	\
-			(cf << (flags.var2.b-1)) |						\
-			(flags.var1.d >> (33-flags.var2.b));			\
+			lf_resd=(lf_var1d << lf_var2b) |	\
+			(cf << (lf_var2b-1)) |						\
+			(lf_var1d >> (33-lf_var2b));			\
 		}													\
-		SETFLAGBIT(CF,((flags.var1.d >> (32-flags.var2.b)) & 1));				\
-		SETFLAGBIT(OF,(flags.var1.d ^ flags.result.d) & 0x80000000);			\
-		save(op1,flags.result.d);							\
+		SETFLAGBIT(CF,((lf_var1d >> (32-lf_var2b)) & 1));				\
+		SETFLAGBIT(OF,(lf_var1d ^ lf_resd) & 0x80000000);			\
+		save(op1,lf_resd);							\
 	}
 
 #define RCRB(op1,op2,load,save)								\
 	if (op2%9) {											\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit8u cf=get_CF();									\
-		flags.var1.b=load(op1);								\
-		flags.var2.b=op2%9;									\
-		flags.type=t_RCRb;									\
-	 	flags.result.b=(flags.var1.b >> flags.var2.b) |		\
-				(cf << (8-flags.var2.b)) |					\
-				(flags.var1.b << (9-flags.var2.b));			\
-		save(op1,flags.result.b);							\
+		lf_var1b=load(op1);								\
+		lf_var2b=op2%9;									\
+		lflags.type=t_RCRb;									\
+	 	lf_resb=(lf_var1b >> lf_var2b) |		\
+				(cf << (8-lf_var2b)) |					\
+				(lf_var1b << (9-lf_var2b));			\
+		save(op1,lf_resb);							\
 	}
 
 #define RCRW(op1,op2,load,save)								\
 	if (op2%17) {											\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit16u cf=get_CF();									\
-		flags.var1.w=load(op1);								\
-		flags.var2.b=op2%17;								\
-		flags.type=t_RCRw;									\
-	 	flags.result.w=(flags.var1.w >> flags.var2.b) |		\
-				(cf << (16-flags.var2.b)) |					\
-				(flags.var1.w << (17-flags.var2.b));		\
-		save(op1,flags.result.w);							\
+		lf_var1w=load(op1);								\
+		lf_var2b=op2%17;								\
+		lflags.type=t_RCRw;									\
+	 	lf_resw=(lf_var1w >> lf_var2b) |		\
+				(cf << (16-lf_var2b)) |					\
+				(lf_var1w << (17-lf_var2b));		\
+		save(op1,lf_resw);							\
 	}
 
 #define RCRD(op1,op2,load,save)								\
 	if (op2) {												\
 		LoadZF;LoadSF;LoadAF;								\
 		Bit32u cf=get_CF();									\
-		flags.var1.d=load(op1);								\
-		flags.var2.b=op2;									\
-		flags.type=t_RCRd;									\
-		if (flags.var2.b==1) {								\
-			flags.result.d=flags.var1.d >> 1 | cf << 31;	\
+		lf_var1d=load(op1);								\
+		lf_var2b=op2;									\
+		lflags.type=t_RCRd;									\
+		if (lf_var2b==1) {								\
+			lf_resd=lf_var1d >> 1 | cf << 31;	\
 		} else {											\
- 			flags.result.d=(flags.var1.d >> flags.var2.b) |	\
-				(cf << (32-flags.var2.b)) |					\
-				(flags.var1.d << (33-flags.var2.b));		\
+ 			lf_resd=(lf_var1d >> lf_var2b) |	\
+				(cf << (32-lf_var2b)) |					\
+				(lf_var1d << (33-lf_var2b));		\
 		}													\
-		save(op1,flags.result.d);							\
+		save(op1,lf_resd);							\
 	}
 
 
 #define SHLB(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;				\
-	flags.result.b=flags.var1.b << flags.var2.b;			\
-	save(op1,flags.result.b);								\
-	flags.type=t_SHLb;
+	lf_var1b=load(op1);lf_var2b=op2;				\
+	lf_resb=lf_var1b << lf_var2b;			\
+	save(op1,lf_resb);								\
+	lflags.type=t_SHLb;
 
 #define SHLW(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.w=load(op1);flags.var2.b=op2 ;				\
-	flags.result.w=flags.var1.w << flags.var2.b;			\
-	save(op1,flags.result.w);								\
-	flags.type=t_SHLw;
+	lf_var1w=load(op1);lf_var2b=op2 ;				\
+	lf_resw=lf_var1w << lf_var2b;			\
+	save(op1,lf_resw);								\
+	lflags.type=t_SHLw;
 
 #define SHLD(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.d=load(op1);flags.var2.b=op2;				\
-	flags.result.d=flags.var1.d << flags.var2.b;			\
-	save(op1,flags.result.d);								\
-	flags.type=t_SHLd;
+	lf_var1d=load(op1);lf_var2b=op2;				\
+	lf_resd=lf_var1d << lf_var2b;			\
+	save(op1,lf_resd);								\
+	lflags.type=t_SHLd;
 
 
 #define SHRB(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;				\
-	flags.result.b=flags.var1.b >> flags.var2.b;			\
-	save(op1,flags.result.b);								\
-	flags.type=t_SHRb;
+	lf_var1b=load(op1);lf_var2b=op2;				\
+	lf_resb=lf_var1b >> lf_var2b;			\
+	save(op1,lf_resb);								\
+	lflags.type=t_SHRb;
 
 #define SHRW(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.w=load(op1);flags.var2.b=op2;				\
-	flags.result.w=flags.var1.w >> flags.var2.b;			\
-	save(op1,flags.result.w);								\
-	flags.type=t_SHRw;
+	lf_var1w=load(op1);lf_var2b=op2;				\
+	lf_resw=lf_var1w >> lf_var2b;			\
+	save(op1,lf_resw);								\
+	lflags.type=t_SHRw;
 
 #define SHRD(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.d=load(op1);flags.var2.b=op2;				\
-	flags.result.d=flags.var1.d >> flags.var2.b;			\
-	save(op1,flags.result.d);								\
-	flags.type=t_SHRd;
+	lf_var1d=load(op1);lf_var2b=op2;				\
+	lf_resd=lf_var1d >> lf_var2b;			\
+	save(op1,lf_resd);								\
+	lflags.type=t_SHRd;
 
 
 #define SARB(op1,op2,load,save)								\
 	if (!op2) break;										\
-	flags.var1.b=load(op1);flags.var2.b=op2;				\
-	if (flags.var2.b>8) flags.var2.b=8;						\
-    if (flags.var1.b & 0x80) {								\
-		flags.result.b=(flags.var1.b >> flags.var2.b)|		\
-		(0xff << (8 - flags.var2.b));						\
+	lf_var1b=load(op1);lf_var2b=op2;				\
+	if (lf_var2b>8) lf_var2b=8;						\
+    if (lf_var1b & 0x80) {								\
+		lf_resb=(lf_var1b >> lf_var2b)|		\
+		(0xff << (8 - lf_var2b));						\
 	} else {												\
-		flags.result.b=flags.var1.b >> flags.var2.b;		\
+		lf_resb=lf_var1b >> lf_var2b;		\
     }														\
-	save(op1,flags.result.b);								\
-	flags.type=t_SARb;
+	save(op1,lf_resb);								\
+	lflags.type=t_SARb;
 
 #define SARW(op1,op2,load,save)								\
 	if (!op2) break;								\
-	flags.var1.w=load(op1);flags.var2.b=op2;			\
-	if (flags.var2.b>16) flags.var2.b=16;					\
-	if (flags.var1.w & 0x8000) {							\
-		flags.result.w=(flags.var1.w >> flags.var2.b)|		\
-		(0xffff << (16 - flags.var2.b));					\
+	lf_var1w=load(op1);lf_var2b=op2;			\
+	if (lf_var2b>16) lf_var2b=16;					\
+	if (lf_var1w & 0x8000) {							\
+		lf_resw=(lf_var1w >> lf_var2b)|		\
+		(0xffff << (16 - lf_var2b));					\
 	} else {												\
-		flags.result.w=flags.var1.w >> flags.var2.b;		\
+		lf_resw=lf_var1w >> lf_var2b;		\
     }														\
-	save(op1,flags.result.w);								\
-	flags.type=t_SARw;
+	save(op1,lf_resw);								\
+	lflags.type=t_SARw;
 
 #define SARD(op1,op2,load,save)								\
 	if (!op2) break;								\
-	flags.var2.b=op2;flags.var1.d=load(op1);			\
-	if (flags.var1.d & 0x80000000) {						\
-		flags.result.d=(flags.var1.d >> flags.var2.b)|		\
-		(0xffffffff << (32 - flags.var2.b));				\
+	lf_var2b=op2;lf_var1d=load(op1);			\
+	if (lf_var1d & 0x80000000) {						\
+		lf_resd=(lf_var1d >> lf_var2b)|		\
+		(0xffffffff << (32 - lf_var2b));				\
 	} else {												\
-		flags.result.d=flags.var1.d >> flags.var2.b;		\
+		lf_resd=lf_var1d >> lf_var2b;		\
     }														\
-	save(op1,flags.result.d);								\
-	flags.type=t_SARd;
+	save(op1,lf_resd);								\
+	lflags.type=t_SARd;
 
 
 
@@ -474,7 +474,7 @@
 	}														\
 	SETFLAGBIT(SF,(reg_al&0x80));							\
 	SETFLAGBIT(ZF,(reg_al==0));								\
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 
 
 #define DAS()												\
@@ -490,7 +490,7 @@
 	} else {												\
 		SETFLAGBIT(CF,false);								\
 	}														\
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 
 
 #define AAA()												\
@@ -505,7 +505,7 @@
 		SETFLAGBIT(CF,false);								\
 	}														\
 	reg_al &= 0x0F;											\
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 
 #define AAS()												\
 	if (((reg_al & 0x0f)>9) || get_AF()) {					\
@@ -519,14 +519,14 @@
 		SETFLAGBIT(CF,false);								\
 	}														\
 	reg_al &= 0x0F;											\
-	flags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;
 
 #define AAM(op1)											\
 	{														\
 		Bit8u BLAH=op1;										\
 		reg_ah=reg_al / BLAH;								\
 		reg_al=reg_al % BLAH;								\
-		flags.type=t_UNKNOWN;								\
+		lflags.type=t_UNKNOWN;								\
 		SETFLAGBIT(SF,(reg_al & 0x80));						\
 		SETFLAGBIT(ZF,(reg_al == 0));						\
 		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
@@ -547,11 +547,11 @@
 		SETFLAGBIT(SF,reg_al >= 0x80);						\
 		SETFLAGBIT(ZF,reg_al == 0);							\
 		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
-		flags.type=t_UNKNOWN;								\
+		lflags.type=t_UNKNOWN;								\
 	}
 
 #define MULB(op1,load,save)									\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	reg_ax=reg_al*load(op1);								\
 	if (reg_ax & 0xff00) {									\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
@@ -564,7 +564,7 @@
 	Bitu tempu=(Bitu)reg_ax*(Bitu)(load(op1));				\
 	reg_ax=(Bit16u)(tempu);									\
 	reg_dx=(Bit16u)(tempu >> 16);							\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if (reg_dx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -577,7 +577,7 @@
 	Bit64u tempu=(Bit64u)reg_eax*(Bit64u)(load(op1));		\
 	reg_eax=(Bit32u)(tempu);								\
 	reg_edx=(Bit32u)(tempu >> 32);							\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if (reg_edx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -654,7 +654,7 @@
 
 #define IMULB(op1,load,save)								\
 {															\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	reg_ax=((Bit8s)reg_al) * ((Bit8s)(load(op1)));			\
 	if ((reg_ax & 0xff80)==0xff80 ||						\
 		(reg_ax & 0xff80)==0x0000) {						\
@@ -670,7 +670,7 @@
 	Bits temps=((Bit16s)reg_ax)*((Bit16s)(load(op1)));		\
 	reg_ax=(Bit16s)(temps);									\
 	reg_dx=(Bit16s)(temps >> 16);							\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if (((temps & 0xffff8000)==0xffff8000 ||				\
 		(temps & 0xffff8000)==0x0000)) {					\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
@@ -685,7 +685,7 @@
 				 ((Bit64s)((Bit32s)(load(op1))));			\
 	reg_eax=(Bit32u)(temps);								\
 	reg_edx=(Bit32u)(temps >> 32);							\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if ((reg_edx==0xffffffff) &&							\
 		(reg_eax & 0x80000000) ) {							\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
@@ -702,7 +702,7 @@
 	Bits res;												\
 	res=((Bit16s)op2) * ((Bit16s)op3);						\
 	save(op1,res & 0xffff);									\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if ((res> -32768)  && (res<32767)) {					\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
 	} else {												\
@@ -714,7 +714,7 @@
 {															\
 	Bit64s res=((Bit64s)((Bit32s)op2))*((Bit64s)((Bit32s)op3));	\
 	save(op1,(Bit32s)res);									\
-	flags.type=t_MUL;										\
+	lflags.type=t_MUL;										\
 	if ((res>-((Bit64s)(2147483647)+1)) &&					\
 		(res<(Bit64s)2147483647)) {							\
 		SETFLAGBIT(CF,false);SETFLAGBIT(OF,false);			\
@@ -827,39 +827,39 @@
 #define DSHLW(op1,op2,op3,load,save)									\
 	Bit8u val=op3 & 0x1F;												\
 	if (!val) break;													\
-	flags.var2.b=val;flags.var1.d=(load(op1)<<16)|op2;					\
-	Bit32u tempd=flags.var1.d << flags.var2.b;							\
-  	if (flags.var2.b>16) tempd |= (op2 << (flags.var2.b - 16));			\
-	flags.result.w=(Bit16u)(tempd >> 16);								\
-	save(op1,flags.result.w);											\
-	flags.type=t_DSHLw;
+	lf_var2b=val;lf_var1d=(load(op1)<<16)|op2;					\
+	Bit32u tempd=lf_var1d << lf_var2b;							\
+  	if (lf_var2b>16) tempd |= (op2 << (lf_var2b - 16));			\
+	lf_resw=(Bit16u)(tempd >> 16);								\
+	save(op1,lf_resw);											\
+	lflags.type=t_DSHLw;
 
 #define DSHLD(op1,op2,op3,load,save)									\
 	Bit8u val=op3 & 0x1F;												\
 	if (!val) break;													\
-	flags.var2.b=val;flags.var1.d=load(op1);							\
-	flags.result.d=(flags.var1.d << flags.var2.b) | (op2 >> (32-flags.var2.b));	\
-	save(op1,flags.result.d);											\
-	flags.type=t_DSHLd;
+	lf_var2b=val;lf_var1d=load(op1);							\
+	lf_resd=(lf_var1d << lf_var2b) | (op2 >> (32-lf_var2b));	\
+	save(op1,lf_resd);											\
+	lflags.type=t_DSHLd;
 
 /* double-precision shift right has high bits in second argument */
 #define DSHRW(op1,op2,op3,load,save)									\
 	Bit8u val=op3 & 0x1F;												\
 	if (!val) break;													\
-	flags.var2.b=val;flags.var1.d=(op2<<16)|load(op1);					\
-	Bit32u tempd=flags.var1.d >> flags.var2.b;							\
-  	if (flags.var2.b>16) tempd |= (op2 << (32-flags.var2.b ));			\
-	flags.result.w=(Bit16u)(tempd);										\
-	save(op1,flags.result.w);											\
-	flags.type=t_DSHRw;
+	lf_var2b=val;lf_var1d=(op2<<16)|load(op1);					\
+	Bit32u tempd=lf_var1d >> lf_var2b;							\
+  	if (lf_var2b>16) tempd |= (op2 << (32-lf_var2b ));			\
+	lf_resw=(Bit16u)(tempd);										\
+	save(op1,lf_resw);											\
+	lflags.type=t_DSHRw;
 
 #define DSHRD(op1,op2,op3,load,save)									\
 	Bit8u val=op3 & 0x1F;												\
 	if (!val) break;													\
-	flags.var2.b=val;flags.var1.d=load(op1);							\
-	flags.result.d=(flags.var1.d >> flags.var2.b) | (op2 << (32-flags.var2.b));	\
-	save(op1,flags.result.d);											\
-	flags.type=t_DSHRd;
+	lf_var2b=val;lf_var1d=load(op1);							\
+	lf_resd=(lf_var1d >> lf_var2b) | (op2 << (32-lf_var2b));	\
+	save(op1,lf_resd);											\
+	lflags.type=t_DSHRd;
 
 #define BSWAP(op1)														\
 	op1 = (op1>>24)|((op1>>8)&0xFF00)|((op1<<8)&0xFF0000)|((op1<<24)&0xFF000000);

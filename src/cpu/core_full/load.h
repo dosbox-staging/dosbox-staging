@@ -225,7 +225,7 @@ l_M_Ed:
 		break;
 	case L_FLG:
 		FillFlags();
-		inst.op1.d = flags.word;
+		inst.op1.d = reg_flags;
 		break;
 	case L_SEG:
 		inst.op1.d=SegValue((SegNames)inst.code.extra);
@@ -273,7 +273,7 @@ l_M_Ed:
 		inst.op1.d=4;
 		break;
 	case D_IRETw:
-		flags.type=t_UNKNOWN;
+		lflags.type=t_UNKNOWN;
 		if (!CPU_IRET(false)) return CBRET_NONE;
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
@@ -281,7 +281,7 @@ l_M_Ed:
 		LoadIP();
 		goto nextopcode;
 	case D_IRETd:
-		flags.type=t_UNKNOWN;
+		lflags.type=t_UNKNOWN;
 		if (!CPU_IRET(true)) return CBRET_NONE;
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
@@ -379,18 +379,15 @@ l_M_Ed:
 		goto nextopcode;
 	case D_STC:
 		SETFLAGBIT(CF,true);
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF();
 		goto nextopcode;
 	case D_CLC:
 		SETFLAGBIT(CF,false);
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF();
 		goto nextopcode;
 	case D_CMC:
 		SETFLAGBIT(CF,!get_CF());
-		if (flags.type!=t_CF) flags.prev_type=flags.type;
-		flags.type=t_CF;
+		SetTypeCF();
 		goto nextopcode;
 	case D_CLD:
 		SETFLAGBIT(DF,false);

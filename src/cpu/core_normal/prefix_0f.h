@@ -245,7 +245,7 @@
 				GetEAa;Bit16u old=LoadMw(eaa);
 				SETFLAGBIT(CF,(old & mask));
 			}
-			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xa4)												/* SHLD Ew,Gw,Ib */
@@ -271,7 +271,7 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old | mask);
 			}
-			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xac)												/* SHRD Ew,Gw,Ib */
@@ -302,7 +302,7 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old & ~mask);
 			}
-			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xb4)												/* LFS Ew */
@@ -374,7 +374,7 @@
 					E_Exit("CPU:0F:BA:Illegal subfunction %X",rm & 0x38);
 				}
 			}
-			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xbb)												/* BTC Ew,Gw */
@@ -390,7 +390,7 @@
 				SETFLAGBIT(CF,(old & mask));
 				SaveMw(eaa,old ^ mask);
 			}
-			if (flags.type!=t_CF)	{ flags.prev_type=flags.type;flags.type=t_CF;	}
+			SetTypeCF();
 			break;
 		}
 	CASE_0F_W(0xbc)												/* BSF Gw,Ew */
@@ -407,7 +407,7 @@
 				SETFLAGBIT(ZF,false);
 				*rmrw = result;
 			}
-			flags.type=t_UNKNOWN;
+			lflags.type=t_UNKNOWN;
 			break;
 		}
 	CASE_0F_W(0xbd)												/* BSR Gw,Ew */
@@ -424,7 +424,7 @@
 				SETFLAGBIT(ZF,false);
 				*rmrw = result;
 			}
-			flags.type=t_UNKNOWN;
+			lflags.type=t_UNKNOWN;
 			break;
 		}
 	CASE_0F_W(0xbe)												/* MOVSX Gw,Eb */

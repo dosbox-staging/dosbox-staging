@@ -351,7 +351,7 @@
 		}
 	CASE_D(0x9c)												/* PUSHFD */
 		FillFlags();
-		Push_32(flags.word);
+		Push_32(reg_flags);
 		break;
 	CASE_D(0x9d)												/* POPFD */
 		SETFLAGSd(Pop_32())
@@ -583,13 +583,13 @@
 				}
 			case 0x03:											/* NEG Ed */
 				{
-					flags.type=t_NEGd;
+					lflags.type=t_NEGd;
 					if (rm >= 0xc0 ) {
-							GetEArd;flags.var1.d=*eard;flags.result.d=0-flags.var1.d;
-						*eard=flags.result.d;
+							GetEArd;lf_var1d=*eard;lf_resd=0-lf_var1d;
+						*eard=lf_resd;
 					} else {
-						GetEAa;flags.var1.d=LoadMd(eaa);flags.result.d=0-flags.var1.d;
-							SaveMd(eaa,flags.result.d);
+						GetEAa;lf_var1d=LoadMd(eaa);lf_resd=0-lf_var1d;
+							SaveMd(eaa,lf_resd);
 					}
 					break;
 				}

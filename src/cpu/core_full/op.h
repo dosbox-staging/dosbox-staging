@@ -1,60 +1,60 @@
 /* Do the actual opcode */
 switch (inst.code.op) {
 	case t_ADDb:	case t_ADDw:	case t_ADDd:
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d + flags.var2.d;
-		flags.type=inst.code.op;
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d + lf_var2d;
+		lflags.type=inst.code.op;
 		break;
 	case t_CMPb:	case t_CMPw:	case t_CMPd:
 	case t_SUBb:	case t_SUBw:	case t_SUBd:
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d - flags.var2.d;
-		flags.type=inst.code.op;
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d - lf_var2d;
+		lflags.type=inst.code.op;
 		break;
 	case t_ORb:		case t_ORw:		case t_ORd:
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d | flags.var2.d;
-		flags.type=inst.code.op;
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d | lf_var2d;
+		lflags.type=inst.code.op;
 		break;
 	case t_XORb:	case t_XORw:	case t_XORd:
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d ^ flags.var2.d;
-		flags.type=inst.code.op;
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d ^ lf_var2d;
+		lflags.type=inst.code.op;
 		break;
 	case t_TESTb:	case t_TESTw:	case t_TESTd:
 	case t_ANDb:	case t_ANDw:	case t_ANDd:
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d & flags.var2.d;
-		flags.type=inst.code.op;
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d & lf_var2d;
+		lflags.type=inst.code.op;
 		break;
 	case t_ADCb:	case t_ADCw:	case t_ADCd:
-		flags.oldcf=get_CF();
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d + flags.var2.d + flags.oldcf;
-		flags.type=inst.code.op;
+		lflags.oldcf=get_CF();
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d + lf_var2d + lflags.oldcf;
+		lflags.type=inst.code.op;
 		break;
 	case t_SBBb:	case t_SBBw:	case t_SBBd:
-		flags.oldcf=get_CF();
-		flags.var1.d=inst.op1.d;
-		flags.var2.d=inst.op2.d;
-		inst.op1.d=flags.result.d=flags.var1.d - flags.var2.d - flags.oldcf;
-		flags.type=inst.code.op;
+		lflags.oldcf=get_CF();
+		lf_var1d=inst.op1.d;
+		lf_var2d=inst.op2.d;
+		inst.op1.d=lf_resd=lf_var1d - lf_var2d - lflags.oldcf;
+		lflags.type=inst.code.op;
 		break;
 	case t_INCb:	case t_INCw:	case t_INCd:
 		SETFLAGBIT(CF,get_CF());
-		inst.op1.d=flags.result.d=inst.op1.d+1;
-		flags.type=inst.code.op;
+		inst.op1.d=lf_resd=inst.op1.d+1;
+		lflags.type=inst.code.op;
 		break;
 	case t_DECb:	case t_DECw:	case t_DECd:
 		SETFLAGBIT(CF,get_CF());
-		inst.op1.d=flags.result.d=inst.op1.d-1;
-		flags.type=inst.code.op;
+		inst.op1.d=lf_resd=inst.op1.d-1;
+		lflags.type=inst.code.op;
 		break;
 /* Using the instructions.h defines */
 	case t_ROLb:
@@ -149,19 +149,19 @@ switch (inst.code.op) {
 		}
 
 	case t_NEGb:
-		flags.var1.b=inst.op1.b;
-		inst.op1.b=flags.result.b=0-inst.op1.b;
-		flags.type=t_NEGb;
+		lf_var1b=inst.op1.b;
+		inst.op1.b=lf_resb=0-inst.op1.b;
+		lflags.type=t_NEGb;
 		break;
 	case t_NEGw:
-		flags.var1.w=inst.op1.w;
-		inst.op1.w=flags.result.w=0-inst.op1.w;
-		flags.type=t_NEGw;
+		lf_var1w=inst.op1.w;
+		inst.op1.w=lf_resw=0-inst.op1.w;
+		lflags.type=t_NEGw;
 		break;
 	case t_NEGd:
-		flags.var1.d=inst.op1.d;
-		inst.op1.d=flags.result.d=0-inst.op1.d;
-		flags.type=t_NEGd;
+		lf_var1d=inst.op1.d;
+		inst.op1.d=lf_resd=0-inst.op1.d;
+		lflags.type=t_NEGd;
 		break;
 	
 	case O_NOT:

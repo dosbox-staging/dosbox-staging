@@ -1,4 +1,4 @@
-SUBDIRS = core_16 core_full core_normal
+SUBDIRS = core_full core_normal
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libcpu.a
