@@ -82,7 +82,7 @@ void DEBUG_Init(Section*);
 /* Dos Internal mostly */
 void EMS_Init(Section*);
 void XMS_Init(Section*);
-
+void AUTOEXEC_Init(Section*);
 void SHELL_Init(void);
 
 void INT10_Init(Section*);
@@ -131,39 +131,23 @@ void DOSBOX_RunMachine(void){
 
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+	/* Initialize some dosbox internals */
+	LastTicks=GetTicks();
+	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 }
 
 
-void DOSBOX_Init(int argc, char* argv[]) {
-/* ADD A GOOD AND CLEAN ENV (see DOSBOX_Init2) */
-
-
-	char base_dir[CROSS_LEN];
-	char file_name[CROSS_LEN];
-	control=new Config;
-
-	strcpy(base_dir,argv[0]);
-	char * last=strrchr(base_dir,CROSS_FILESPLIT); //if windowsversion fails: 
-	if (!last) {   
-		getcwd(base_dir,CROSS_LEN);
-		char a[2];
-		a[0]=CROSS_FILESPLIT;
-		a[1]='\0';
-		strcat(base_dir,a);
-    } else {
-		*++last=0;
-    }
-
-	
-	//	Section * sec;
+void DOSBOX_Init(void) {
+//	Section * sec;
 	Section_prop * secprop;
-//	Section_line * secline;
-    
+	Section_line * secline;
+
+	/* Setup all the different modules making up DOSBox */
+	
 	secprop=control->AddSection_prop("DOSBOX",&DOSBOX_RealInit);
-	strcpy(file_name,base_dir);
-	strcat(file_name,"dosbox.lang");
-	secprop->Add_string("LANGUAGE",file_name);
+	
+	secprop->Add_string("LANGUAGE","dosbox.lang");
 	secprop->Add_int("WARNINGS",0);
 	
 	control->AddSection		("MEMORY",&MEM_Init);
@@ -203,6 +187,9 @@ void DOSBOX_Init(int argc, char* argv[]) {
 
 	secprop=control->AddSection_prop("BIOS",&BIOS_Init);
 	secprop=control->AddSection_prop("VIDBIOS",&INT10_Init);
+
+	/* All the DOS Related stuff, which will eventually start up in the shell */
+	
 	secprop=control->AddSection_prop("DOS",&DOS_Init);
 	secprop=control->AddSection_prop("EMS",&EMS_Init);
 	secprop->Add_bool("STATUS",true);
@@ -211,23 +198,9 @@ void DOSBOX_Init(int argc, char* argv[]) {
 	secprop->Add_bool("STATUS",true);
 	secprop->Add_int("SIZE",8);
 
+	secline=control->AddSection_line("AUTOEXEC",&AUTOEXEC_Init);
 
-	strcpy(file_name,base_dir);
-	strcat(file_name,"dosbox.conf");
-	/* Parse the command line to find config file name */
-	int i;
-	i=1;
-	while (i<argc) {
-		if ((strcasecmp(argv[i],"-conf")==0) && i<(argc-1)) {
-			strcpy(file_name,argv[i+1]);
-			break;
-		}
-	}
-	control->ParseConfigFile(file_name);
-/* Parse the command line to find all other options */
-
-	/*Init all the systems with the acquired settings */
-	control->Init();
+	control->SetStartUp(&SHELL_Init);	
 
 //	HARDWARE_Init();
 #if C_FPU
@@ -235,82 +208,7 @@ void DOSBOX_Init(int argc, char* argv[]) {
 #endif
 
 
-	//Start up individual hardware
 
-/* Most of the interrupt handlers */
-
-	LastTicks=GetTicks();
-	DOSBOX_SetLoop(&Normal_Loop);
 }
 
 
-void DOSBOX2_Init(int argc, char* argv[]) {
-
-
-/* Find the base directory */
-	SHELL_AddAutoexec("SET PATH=Z:\\");
-	SHELL_AddAutoexec("SET COMSPEC=Z:\\COMMAND.COM");
-	strcpy(dosbox_basedir,argv[0]);
-	char * last=strrchr(dosbox_basedir,CROSS_FILESPLIT); //if windowsversion fails: 
-	if (!last) {   
-		getcwd(dosbox_basedir,CROSS_LEN);
-		char a[2];
-		a[0]=CROSS_FILESPLIT;
-		a[1]='\0';
-		strcat(dosbox_basedir,a);
-    } else {
-		*++last=0;
-    }
-	/* Parse the command line with a setup function */
-	int argl=1;
-	if (argc>1) {
-		if (*argv[1]!='-') { 
-			char mount_buffer[CROSS_LEN];
-			if( (*argv[1]=='/') || (*argv[1]=='.') || (*argv[1]=='~') || (*(argv[1]+1) ==':') ) {
-				strcpy(mount_buffer,argv[1]); 
-			} else {
-				getcwd(mount_buffer,CROSS_LEN);
-				strcat(mount_buffer,argv[1]);
-			};
-
-			struct stat test;
-			if (stat(mount_buffer,&test)) {
-				E_Exit("%s Doesn't exist",mount_buffer);
-			}
-			/* Not a switch so a normal directory/file */
-			if (test.st_mode & S_IFDIR) { 
-				SHELL_AddAutoexec("MOUNT C %s",mount_buffer);
-				SHELL_AddAutoexec("C:");
-			} else {
-				char * name=strrchr(argv[1],CROSS_FILESPLIT);
-				if (!name) E_Exit("This is weird %s",mount_buffer);
-				*name++=0;
-				if (access(argv[1],F_OK)) E_Exit("Illegal Directory %s",mount_buffer);
-				SHELL_AddAutoexec("MOUNT C %s",mount_buffer);
-				SHELL_AddAutoexec("C:");
-				SHELL_AddAutoexec(name);
-			}
-			argl++;
-		}
-	}
-	bool sw_c=false;
-	while (argl<argc) {
-		if (*argv[argl]=='-') {
-			sw_c=false;
-			if (strcmp(argv[argl],"-c")==0) sw_c=true;
-			else E_Exit("Illegal switch %s",argv[argl]);
-			argl++;
-			continue;
-		}
-		SHELL_AddAutoexec(argv[argl]);
-		if (sw_c) {
-		}
-		argl++;
-	}
-	
-}
-
-
-void DOSBOX_StartUp(void) {
-	SHELL_Init();
-};
