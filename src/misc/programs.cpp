@@ -32,8 +32,8 @@ Bitu call_program;
 /* This registers a file on the virtual drive and creates the correct structure for it*/
 
 static Bit8u exe_block[]={
-	0xbc,0x00,0x03,					//MOV SP,0x300 decrease stack size
-	0xbb,0x30,0x00,					//MOV BX,0x030 for memory resize
+	0xbc,0x00,0x04,					//MOV SP,0x400 decrease stack size
+	0xbb,0x40,0x00,					//MOV BX,0x040 for memory resize
 	0xb4,0x4a,						//MOV AH,0x4A	Resize memory block
 	0xcd,0x21,						//INT 0x21
 //pos 12 is callback number
@@ -70,7 +70,7 @@ static Bitu PROGRAMS_Handler(void) {
 	new_program->Run();
 	delete new_program;
 	return CBRET_NONE;
-};
+}
 
 
 /* Main functions used in all program */
