@@ -260,7 +260,9 @@ bool Interrupt(Bitu num) {
 bool CPU_IRET(bool use32) {
 	if (!(cpu.state & STATE_PROTECTED)) {		/*RealMode IRET */
 		if (use32) {
-			E_Exit("No support for IRETD in real mode");
+			reg_eip=CPU_Pop32();
+			SegSet16(cs,CPU_Pop32());
+			SETFLAGSw(CPU_Pop32());
 		} else {
 			reg_eip=CPU_Pop16();
 			SegSet16(cs,CPU_Pop16());
