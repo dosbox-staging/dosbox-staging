@@ -367,7 +367,11 @@ static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	switch (button->state) {
 	case SDL_PRESSED:
-		if (sdl.mouse.requestlock && !sdl.mouse.locked) CaptureMouse();
+		if (sdl.mouse.requestlock && !sdl.mouse.locked) {
+			CaptureMouse();
+			// Dont pass klick to mouse handler
+			break;
+		}
 		switch (button->button) {
 		case SDL_BUTTON_LEFT:
 			Mouse_ButtonPressed(0);
