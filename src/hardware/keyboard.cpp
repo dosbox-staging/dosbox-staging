@@ -24,7 +24,7 @@
 #include "mixer.h"
 
 #define KEYBUFSIZE 32
-#define KEYDELAY 250
+#define KEYDELAY 150
 
 enum KeyCommands {
 	CMD_NONE,
@@ -77,6 +77,7 @@ void KEYBOARD_ClrBuffer(void) {
 	keyb.buf.used=0;
 	keyb.buf.pos=0;
 	keyb.read_active=false;
+	keyb.scheduled=false;
 	PIC_DeActivateIRQ(1);
 }
 
@@ -100,6 +101,7 @@ void KEYBOARD_GetCode(void) {
 }
 
 void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
+//	LOG_MSG("Add key scan %d ascii %c",scancode,ascii);
 	if (keyb.buf.used<KEYBUFSIZE) {
 		keyb.buf.used++;
 		Bitu start=keyb.buf.pos+keyb.buf.used;
@@ -119,19 +121,22 @@ void KEYBOARD_AddCode(Bit8u scancode,Bit8u ascii,Bitu mod,KeyStates state) {
 void KEYBOARD_ReadKey(Bitu & scancode,Bitu & ascii,Bitu & mod) {
 	switch (keyb.buf.state) {
 	case STATE_NORMAL:
-		scancode=keyb.buf.code[keyb.buf.pos].scancode;
-		ascii=keyb.buf.code[keyb.buf.pos].ascii;
-		mod=keyb.buf.code[keyb.buf.pos].mod;
 		if (keyb.buf.used && !keyb.scheduled) {
 			keyb.scheduled=true;
 			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
 		}
+		scancode=keyb.buf.code[keyb.buf.pos].scancode;
+		ascii=keyb.buf.code[keyb.buf.pos].ascii;
+		mod=keyb.buf.code[keyb.buf.pos].mod;
 		break;
 	case STATE_EXTEND:
-		KEYBOARD_GetCode();
 		scancode=224;
 		mod=0;
 		ascii=0;
+		if (!keyb.scheduled) {
+			keyb.scheduled=true;
+			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		}
 		break;
 	}
 }
@@ -145,7 +150,10 @@ static Bit8u read_p60(Bit32u port) {
 		}
 		return keyb.buf.code[keyb.buf.pos].scancode;	
 	case STATE_EXTEND:
-		KEYBOARD_GetCode();
+		if (!keyb.scheduled) {
+			keyb.scheduled=true;
+			PIC_AddEvent(KEYBOARD_GetCode,KEYDELAY);
+		}
 		return 224;
 	}
 	return 0;
@@ -384,7 +392,5 @@ void KEYBOARD_Init(Section* sec) {
 	keyb.enabled=true;
 	keyb.command=CMD_NONE;
 	keyb.last_index=0;
-	keyb.buf.pos=0;
-	keyb.buf.used=0;
 	KEYBOARD_ClrBuffer();
 }
