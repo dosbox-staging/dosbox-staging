@@ -383,7 +383,6 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x223:
 		saa1099[1].selected_reg = val & 0x1f;
-
 		if (saa1099[1].selected_reg == 0x18 || saa1099[1].selected_reg == 0x19) {
 			/* clock the envelope channels */
 			if (saa1099[1].env_clock[0]) saa1099_envelope(1,0);
@@ -416,7 +415,7 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 		else *(Bit16s *)stream=(Bit16s)right;
 		stream+=2;
 	}
-	if (last_command + 1000 < PIC_Ticks) MIXER_Enable(cms_chan,false); 
+	if (last_command + 5000 < PIC_Ticks) MIXER_Enable(cms_chan,false); 
 }
 
 
@@ -435,7 +434,6 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 	
 	for (int s=0;s<2;s++) {
 		struct SAA1099 *saa = &saa1099[s];
-
 		memset(saa, 0, sizeof(struct SAA1099));
 	}
 }
