@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.19 2003-09-30 08:58:10 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.20 2003-10-14 20:39:02 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -159,20 +159,14 @@ char * StripWord(char * cmd) {
 
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(char * format,...) {
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUG && C_HEAVY_DEBUG
  	DEBUG_HeavyWriteLogInstruction();
 #endif
-#endif
-	if(errorlevel>=1) {
-		va_list msg;
-		va_start(msg,format);
-		vsprintf(buf,format,msg);
-		va_end(msg);
-		
-		strcat(buf,"\n");
-	} else  {
-		strcpy(buf,"an unsupported feature\n");
-	}
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(buf,format,msg);
+	va_end(msg);
+	strcat(buf,"\n");
+
 	throw(buf);
 }

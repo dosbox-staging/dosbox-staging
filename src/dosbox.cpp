@@ -38,7 +38,6 @@
 #include "support.h"
 
 Config * control;
-Bitu errorlevel=1;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
@@ -159,7 +158,6 @@ void DOSBOX_RunMachine(void){
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
-	errorlevel=section->Get_int("warnings");
 	MSG_Add("DOSBOX_CONFIGFILE_HELP","General Dosbox settings\n");
 	RemainTicks=0;LastTicks=GetTicks();
 	DOSBOX_SetLoop(&Normal_Loop);
@@ -177,12 +175,8 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
     secprop->Add_string("language","");
 #if C_DEBUG	
-	secprop->Add_int("warnings",4);
 	LOG_StartUp();
-#else 
-	secprop->Add_int("warnings",0);
 #endif
-	
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);

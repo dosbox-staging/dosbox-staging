@@ -59,8 +59,6 @@ void DOSBOX_Init(void);
 
 class Config;
 extern Config * control;
-extern Bitu errorlevel;
-
 
 #ifndef __LOGGING_H_
 #include "logging.h"
