@@ -70,17 +70,19 @@ enum {
 
 
 void CPU_LLDT(Bitu selector);
+void CPU_LTR(Bitu selector);
 void CPU_LIDT(Bitu limit,Bitu base);
 void CPU_LGDT(Bitu limit,Bitu base);
 
+void CPU_STR(Bitu & selector);
 void CPU_SLDT(Bitu & selector);
 void CPU_SIDT(Bitu & limit,Bitu & base);
 void CPU_SGDT(Bitu & limit,Bitu & base);
 
-void CPU_SLDT(Bitu & limit,Bitu & base);
 
-
+void CPU_ARPL(Bitu & dest_sel,Bitu src_sel);
 void CPU_LAR(Bitu selector,Bitu & ar);
+void CPU_LSL(Bitu selector,Bitu & limit);
 
 bool CPU_SET_CRX(Bitu cr,Bitu value);
 Bitu CPU_GET_CRX(Bitu cr);

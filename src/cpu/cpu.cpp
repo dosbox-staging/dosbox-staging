@@ -105,7 +105,7 @@ bool CPU_CheckState(void) {
 			cpu.full.entry=cpu.full.prefix=0;
 		}
 		if (Segs.big[ss]) cpu.state|=STATE_STACK32;
-		LOG_MSG("CPL Level %x",cpu.cpl);
+		LOG_MSG("CPL Level %x at %X:%X",cpu.cpl,SegValue(cs),reg_eip);
 	}
 	return true;
 }
@@ -175,7 +175,9 @@ bool Interrupt(Bitu num) {
 		return true;
 	} else { /* Protected Mode Interrupt */
 		Descriptor gate;
+//TODO Check for software interrupt and check gate's dpl<cpl
 		cpu.idt.GetDescriptor(num<<3,gate);
+		if (gate.DPL()<cpu.cpl) E_Exit("INT:Gate DPL<CPL");
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:
 		case DESC_386_INT_GATE:
@@ -212,15 +214,15 @@ bool Interrupt(Bitu num) {
 			
 					break;		
 				default:
-					E_Exit("Interrupt gate points to selector with unhandled type %x",desc.Type());
+					E_Exit("INT:Gate Selector points to illegal descriptor with type %x",desc.Type());
 				}
 				
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
-				Segs.val[cs]=selector;
+				Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
 				Segs.phys[cs]=desc.GetBase();
 				Segs.big[cs]=desc.Big();
-				LOG_MSG("Interrupt/Task Gate to %X:%X big %d",selector,reg_eip,desc.Big());
+				LOG_MSG("INT:Gate to %X:%X big %d %s",selector,reg_eip,desc.Big(),gate.Type() & 0x8 ? "386" : "286");
 				reg_eip=offset;
 				return CPU_CheckState();
 			}
@@ -243,13 +245,12 @@ bool CPU_IRET(bool use32) {
 		return true;
 	} else {	/* Protected mode IRET */
 		if (GETFLAG(NT)) E_Exit("No task support");
-		if (GETFLAG(VM)) E_Exit("No vm86 support");
 		Bitu selector,offset,old_flags;
 		if (use32) {
 			offset=CPU_Pop32();
 			selector=CPU_Pop32() & 0xffff;
 			old_flags=CPU_Pop32();
-			if (old_flags &FLAG_VM) E_Exit("No vm86 support");
+			if (old_flags & FLAG_VM) E_Exit("No vm86 support");
 		} else {
 			offset=CPU_Pop16();
 			selector=CPU_Pop16();
@@ -264,34 +265,54 @@ bool CPU_IRET(bool use32) {
 			switch (desc.Type()) {
 			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
 			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (!(cpu.cpl==desc.DPL())) E_Exit("IRET to NC segment of other privilege");
-				goto IRET_same_level;
+				if (!(cpu.cpl==desc.DPL())) E_Exit("IRET:Same Level:NC:DPL!=CPL");
+				break;
 			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
 			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
-				if (!(desc.DPL()>=cpu.cpl)) E_Exit("IRET to C segment of higher privilege");
+				if (!(desc.DPL()>=cpu.cpl)) E_Exit("IRET:Same level:C:DPL<CPL");
 				break;
 			default:
 				E_Exit("IRET from illegal descriptor type %X",desc.Type());
 			}
-IRET_same_level:	
 			Segs.phys[cs]=desc.GetBase();
 			Segs.big[cs]=desc.Big();
-			Segs.val[cs]=selector;
+			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;;
 			reg_eip=offset;
 			SETFLAGSw(old_flags);
 			LOG_MSG("IRET:Same level return to %X:%X",selector,offset);
 		} else {
-			E_Exit("IRET to other privilege");
-			/* Return to higher level */
+			/* Return to higher privilege */
+			switch (desc.Type()) {
+			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:
+			case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+				if (!(cpu.cpl==rpl)) E_Exit("IRET:Outer level:NC:RPL != DPL");
+				break;
+			case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+			case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
+				if (!(desc.DPL()>cpu.cpl)) E_Exit("IRET:Outer level:C:DPL <= CPL");
+				break;
+			default:
+				E_Exit("IRET from illegal descriptor type %X",desc.Type());
+			}
+			Segs.phys[cs]=desc.GetBase();
+			Segs.big[cs]=desc.Big();
+			Segs.val[cs]=selector;
+			cpu.cpl=rpl;
+			reg_eip=offset;
+			Bitu new_ss,new_esp;
+			if (use32) {
+				new_esp=CPU_Pop32();
+				new_ss=CPU_Pop32() & 0xffff;
+			} else {
+				new_esp=CPU_Pop16();
+				new_ss=CPU_Pop16();
+			}
+			reg_esp=new_esp;
+			CPU_SetSegGeneral(ss,new_ss);
+			//TODO Maybe validate other segments, but why would anyone use them?
+			LOG_MSG("IRET:Outer level return to %X:%X",selector,offset);
 		}
 		return CPU_CheckState();
-
-
-
-
-
-
-		return true;
 	}
 	return false;
 }
@@ -306,26 +327,25 @@ bool CPU_JMP(bool use32,Bitu selector,Bitu offset) {
 		SegSet16(cs,selector);
 		return true;
 	} else {
+		Bitu rpl=selector & 3;
 		Descriptor desc;
 		cpu.gdt.GetDescriptor(selector,desc);
 		switch (desc.Type()) {
-		case DESC_CODE_N_NC_A:
-		case DESC_CODE_N_NC_NA:
-		case DESC_CODE_R_NC_A:
-		case DESC_CODE_R_NC_NA:
-			if (cpu.cpl<desc.DPL()) E_Exit("JMP to higher PL");
+		case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+		case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+			if (rpl>cpu.cpl) E_Exit("JMP:NC:RPL>CPL");
+			if (rpl!=desc.DPL()) E_Exit("JMP:NC:RPL != DPL");
 			cpu.cpl=desc.DPL();
+			LOG_MSG("JMP:Code:NC to %X:%X",selector,offset);
 			goto CODE_jmp;
-		case DESC_CODE_N_C_A:
-		case DESC_CODE_N_C_NA:
-		case DESC_CODE_R_C_A:
-		case DESC_CODE_R_C_NA:
+		case DESC_CODE_N_C_A:		case DESC_CODE_N_C_NA:
+		case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
+			LOG_MSG("JMP:Code:C to %X:%X",selector,offset);
 CODE_jmp:
 			/* Normal jump to another selector:offset */
-			LOG_MSG("CODE JMP to %X:%X DPL %X",selector,offset,desc.DPL());
 			Segs.phys[cs]=desc.GetBase();
 			Segs.big[cs]=desc.Big();
-			Segs.val[cs]=selector;
+			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			reg_eip=offset;
 			return CPU_CheckState();
 		default:
@@ -352,7 +372,40 @@ bool CPU_CALL(bool use32,Bitu selector,Bitu offset) {
 		SegSet16(cs,selector);
 		return true;
 	} else {
-		E_Exit("Prot call");
+		Descriptor call;
+		Bitu rpl=selector & 3;
+		cpu.gdt.GetDescriptor(selector,call);
+		/* Check for type of far call */
+		switch (call.Type()) {
+		case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
+		case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
+			if (rpl>cpu.cpl) E_Exit("CALL:CODE:NC:RPL>CPL");
+			if (call.DPL()!=cpu.cpl) E_Exit("CALL:CODE:NC:DPL!=CPL");
+			LOG_MSG("CALL:CODE:NC to %X:%X",selector,offset);
+			goto call_code;	
+		case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
+		case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
+			if (call.DPL()>cpu.cpl) E_Exit("CALL:CODE:C:DPL>CPL");
+			LOG_MSG("CALL:CODE:C to %X:%X",selector,offset);
+call_code:
+			if (!use32) {
+				CPU_Push16(SegValue(cs));
+				CPU_Push16(reg_ip);
+				reg_eip=offset&0xffff;
+			} else {
+				CPU_Push32(SegValue(cs));
+				CPU_Push32(reg_eip);
+				reg_eip=offset;
+			}
+			Segs.phys[cs]=call.GetBase();
+			Segs.big[cs]=call.Big();
+			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
+			reg_eip=offset;
+			return CPU_CheckState();
+		default:
+			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
+
+		};
 		return CPU_CheckState();
 	}
 	return false;
@@ -381,6 +434,11 @@ bool CPU_RET(bool use32,Bitu bytes) {
 		} else {
 			offset=CPU_Pop32();
 			selector=CPU_Pop32() & 0xffff;
+		}
+		if (cpu.state & STATE_STACK32) {
+			reg_esp+=bytes;
+		} else {
+			reg_sp+=bytes;
 		}
 		Descriptor desc;
 		Bitu rpl=selector & 3;
@@ -419,14 +477,25 @@ RET_same_level:
 }
 
 
-void CPU_SLDT(Bitu selector) {
+void CPU_SLDT(Bitu & selector) {
 	selector=cpu.gdt.SLDT();
 }
 
+Bitu tr=0;
 void CPU_LLDT(Bitu selector) {
 	cpu.gdt.LLDT(selector);
 	LOG_MSG("LDT Set to %X",selector);
 }
+
+void CPU_STR(Bitu & selector) {
+	selector=tr;
+}
+
+void CPU_LTR(Bitu selector) {
+	tr=selector;
+	LOG_MSG("TR Set to %X",selector);
+}
+
 
 void CPU_LGDT(Bitu limit,Bitu base) {
 	LOG_MSG("GDT Set to base:%X limit:%X",base,limit);
@@ -491,10 +560,21 @@ void CPU_SMSW(Bitu & word) {
 
 bool CPU_LMSW(Bitu word) {
 	word&=0xffff;
-	word|=cpu.cr0&0xffff0000;
+	word|=(cpu.cr0&0xffff0000);
 	return CPU_SET_CRX(0,word);
 }
 
+void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
+	flags.type=t_UNKNOWN;	
+	if ((dest_sel & 3) < (src_sel & 3)) {
+		dest_sel=(dest_sel & 0xfffc) + (src_sel & 3);
+//		dest_sel|=0xff3f0000;
+		SETFLAGBIT(ZF,true);
+	} else {
+		SETFLAGBIT(ZF,false);
+	} 
+}
+	
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	Descriptor desc;Bitu rpl=selector & 3;
 	flags.type=t_UNKNOWN;
@@ -507,36 +587,28 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 		return;
 	}
 	switch (desc.Type()){
-	case DESC_CODE_N_C_A:
-	case DESC_CODE_N_C_NA:
-	case DESC_CODE_R_C_A:
-	case DESC_CODE_R_C_NA:
+	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
 		break;
-	case DESC_INVALID:
-	case DESC_286_TSS_A:
+	
 	case DESC_LDT:
-	case DESC_286_TSS_B:
-	case DESC_286_CALL_GATE:
 	case DESC_TASK_GATE:
-	case DESC_286_INT_GATE:
-	case DESC_286_TRAP_GATE:
-	case DESC_386_TSS_A:
-	case DESC_386_TSS_B:
+
+	case DESC_286_TSS_A:		case DESC_286_TSS_B:
+	case DESC_286_INT_GATE:		case DESC_286_TRAP_GATE:	
+	case DESC_286_CALL_GATE:
+
+	case DESC_386_TSS_A:		case DESC_386_TSS_B:
+	case DESC_386_INT_GATE:		case DESC_386_TRAP_GATE:
 	case DESC_386_CALL_GATE:
-	case DESC_386_INT_GATE:
-	case DESC_386_TRAP_GATE:
-	case DESC_DATA_EU_RO_NA:
-	case DESC_DATA_EU_RO_A:
-	case DESC_DATA_EU_RW_NA:
-	case DESC_DATA_EU_RW_A:
-	case DESC_DATA_ED_RO_NA:
-	case DESC_DATA_ED_RO_A:
-	case DESC_DATA_ED_RW_NA:
-	case DESC_DATA_ED_RW_A:
-	case DESC_CODE_N_NC_A:
-	case DESC_CODE_N_NC_NA:
-	case DESC_CODE_R_NC_A:
-	case DESC_CODE_R_NC_NA:
+	
+
+	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
+	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+	case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
+	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+	case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+	case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
 		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
 			SETFLAGBIT(ZF,false);
 			return;
@@ -550,6 +622,51 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 	ar=desc.saved.fill[1] & 0x00ffff00;
 	SETFLAGBIT(ZF,true);
 }
+
+void CPU_LSL(Bitu selector,Bitu & limit) {
+	Descriptor desc;Bitu rpl=selector & 3;
+	flags.type=t_UNKNOWN;
+	if (!cpu.gdt.GetDescriptor(selector,desc)){
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	if (!desc.saved.seg.p) {
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	switch (desc.Type()){
+	case DESC_CODE_N_C_A:	case DESC_CODE_N_C_NA:
+	case DESC_CODE_R_C_A:	case DESC_CODE_R_C_NA:
+		break;
+	
+	case DESC_LDT:
+	case DESC_286_TSS_A:
+	case DESC_286_TSS_B:
+	
+	case DESC_386_TSS_A:
+	case DESC_386_TSS_B:
+
+	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
+	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+	case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:
+	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+	
+	case DESC_CODE_N_NC_A:		case DESC_CODE_N_NC_NA:
+	case DESC_CODE_R_NC_A:		case DESC_CODE_R_NC_NA:
+		if (desc.DPL()<cpu.cpl || desc.DPL() < rpl) {
+			SETFLAGBIT(ZF,false);
+			return;
+		}
+		break;
+	default:
+		SETFLAGBIT(ZF,false);
+		return;
+	}
+	cpu.gdt.GetDescriptor(selector,desc);
+	limit=desc.GetLimit();
+	SETFLAGBIT(ZF,true);
+}
+
 
 bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 	Segs.val[seg]=value;
