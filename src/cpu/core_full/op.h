@@ -479,53 +479,65 @@ switch (inst.code.op) {
 	case O_BSFw:
 		{
 			FILLFLAGS;
-			if (!inst.op1.w) SETFLAGBIT(ZF,true);
-			Bitu count=0;
-			while (count<16) {
-				if ((inst.op1.w>>count) & 1) break;
-				count++;
+			if (!inst.op1.w) {
+				SETFLAGBIT(ZF,true);
+			} else {
+				Bitu count=0;
+				while (count<16) {
+					if ((inst.op1.w>>count) & 1) break;
+					count++;
+				}
+				inst.op1.d=count;
+				SETFLAGBIT(ZF,false);
 			}
-			inst.op1.d=count;
-			SETFLAGBIT(ZF,false);
 		}
 		break;
 	case O_BSFd:
 		{
 			FILLFLAGS;
-			if (!inst.op1.d) SETFLAGBIT(ZF,true);
-			Bitu count=0;
-			while (count<32) {
-				if ((inst.op1.d>>count) & 1) break;
-				count++;
+			if (!inst.op1.d) {
+				SETFLAGBIT(ZF,true);
+			} else {
+				Bitu count=0;
+				while (count<32) {
+					if ((inst.op1.d>>count) & 1) break;
+					count++;
+				}
+				inst.op1.d=count;
+				SETFLAGBIT(ZF,false);
 			}
-			inst.op1.d=count;
-			SETFLAGBIT(ZF,false);
 		}
 		break;
 	case O_BSRw:
 		{
 			FILLFLAGS;
-			if (!inst.op1.w) SETFLAGBIT(ZF,true);
-			Bits count=15;
-			while (count>0) {
-				if ((inst.op1.w>>count) & 1) break;
-				count--;
+			if (!inst.op1.w) {
+				SETFLAGBIT(ZF,true);
+			} else {
+				Bits count=15;
+				while (count>0) {
+					if ((inst.op1.w>>count) & 1) break;
+					count--;
+				}
+				inst.op1.d=count;
+				SETFLAGBIT(ZF,false);
 			}
-			inst.op1.d=count;
-			SETFLAGBIT(ZF,false);
 		}
 		break;
 	case O_BSRd:
 		{
 			FILLFLAGS;
-			if (!inst.op1.d) SETFLAGBIT(ZF,true);
-			Bits count=31;
-			while (count>0) {
-				if ((inst.op1.d>>count) & 1) break;
-				count--;
+			if (!inst.op1.d) {
+				SETFLAGBIT(ZF,true);
+			} else {
+				Bits count=31;
+				while (count>0) {
+					if ((inst.op1.d>>count) & 1) break;
+					count--;
+				}
+				inst.op1.d=count;
+				SETFLAGBIT(ZF,false);
 			}
-			inst.op1.d=count;
-			SETFLAGBIT(ZF,false);
 		}
 		break;
 	case O_BTw:
