@@ -31,6 +31,7 @@ HostPt WriteHostTable[MAX_PAGES];
 MEMORY_ReadHandler ReadHandlerTable[MAX_PAGES];
 MEMORY_WriteHandler WriteHandlerTable[MAX_PAGES];
 
+
 /* Page handlers only work in lower memory */
 #define LOW_PAGE_LIMIT PAGE_COUNT(1024*1024)
 #define MAX_PAGE_LIMIT PAGE_COUNT(C_MEM_MAX_SIZE*1024*1024)
@@ -92,7 +93,7 @@ void MEM_StrCopy(PhysPt off,char * data,Bitu size) {
 
 static Bit8u Illegal_ReadHandler(PhysPt pt) {
 	LOG(LOG_ERROR,"MEM:Illegal read from address %4X",pt);
-	return 0;
+	return 0xff;
 }
 static void Illegal_WriteHandler(PhysPt pt,Bit8u val) {
 	LOG(LOG_ERROR,"Illegal write val %2X to address %4X",val,pt);
@@ -108,7 +109,7 @@ static void Default_WriteHandler(PhysPt pt,Bit8u val) {
 
 
 void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEMORY_WriteHandler write) {
-	if (startpage+pages>=LOW_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=0;
 		WriteHostTable[i]=0;
@@ -119,7 +120,7 @@ void MEM_SetupPageHandlers(Bitu startpage,Bitu pages,MEMORY_ReadHandler read,MEM
 
 
 void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
-	if (startpage+pages>=LOW_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=memory;
 		WriteHostTable[i]=memory;
@@ -129,7 +130,7 @@ void MEM_ClearPageHandlers(Bitu startpage,Bitu pages) {
 }
 
 void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
-	if (startpage+pages>=MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
 	HostPt base=(HostPt)(data)-startpage*PAGE_SIZE;
 	if (!base) LOG_MSG("MEMORY:Unlucky memory allocation");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
@@ -141,7 +142,7 @@ void MEM_SetupMapping(Bitu startpage,Bitu pages,void * data) {
 }
 
 void MEM_ClearMapping(Bitu startpage,Bitu pages) {
-	if (startpage+pages>=MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
+	if (startpage+pages>MAX_PAGE_LIMIT) E_Exit("Memory:Illegal page for handler");
 	for (Bitu i=startpage;i<startpage+pages;i++) {
 		ReadHostTable[i]=0;
 		WriteHostTable[i]=0;
@@ -150,7 +151,6 @@ void MEM_ClearMapping(Bitu startpage,Bitu pages) {
 	}
 }
 
-#if (!C_EXTRAINLINE)
 static void HandlerWritew(Bitu page,PhysPt pt,Bit16u val) {
 		WriteHandlerTable[page](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[page](pt+1,(Bit8u)((val >>  8) & 0xff)  );
@@ -172,7 +172,6 @@ void mem_writeb(PhysPt pt,Bit8u val) {
 
 void mem_writew(PhysPt pt,Bit16u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
-//		HandlerWritew(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 	} else writew(WriteHostTable[pt >> PAGE_SHIFT]+pt,val);
@@ -180,7 +179,6 @@ void mem_writew(PhysPt pt,Bit16u val) {
 
 void mem_writed(PhysPt pt,Bit32u val) {
 	if (!WriteHostTable[pt >> PAGE_SHIFT]) {
-//		HandlerWrited(pt >> PAGE_SHIFT,pt,val);
 		WriteHandlerTable[pt >>	PAGE_SHIFT](pt+0,(Bit8u)(val & 0xff));
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+1,(Bit8u)((val >> 8) & 0xff)  );
 		WriteHandlerTable[pt >> PAGE_SHIFT](pt+2,(Bit8u)((val >> 16) & 0xff)  );
@@ -210,7 +208,6 @@ Bit8u mem_readb(PhysPt pt) {
 
 Bit16u mem_readw(PhysPt pt) {
 	if (!ReadHostTable[pt >> PAGE_SHIFT]) {
-//		return HandlerReadw(pt >> PAGE_SHIFT,pt);
 		return	
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0)) |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8;
@@ -220,7 +217,6 @@ Bit16u mem_readw(PhysPt pt) {
 Bit32u mem_readd(PhysPt pt){
 	if (ReadHostTable[pt >> PAGE_SHIFT]) return readd(ReadHostTable[pt >> PAGE_SHIFT]+pt);
 	else {
-//		return HandlerReadd(pt >> PAGE_SHIFT,pt);
 		return 
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+0))       |
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+1)) << 8  |
@@ -228,51 +224,9 @@ Bit32u mem_readd(PhysPt pt){
 			(ReadHandlerTable[pt >> PAGE_SHIFT](pt+3)) << 24;
 	}
 }
-#endif
 
-// Big block memory alloction
 
-#define GETBIGBLOCKNR(nr) nr/(1024*1024)
-
-static Bit8u*	mem_block[C_MEM_MAX_SIZE];
-
-static bool AllocateBigBlock(Bitu block)
-{
-	if ((block<1) || (block>C_MEM_MAX_SIZE)) return false;
-	if (!mem_block[block]) {
-		// Allocate it 
-		Bitu start = (block==1)? (1024+64)*1024:1024*1024*block;
-		Bitu size  = (block==1)? (1024-64)*1024:1024*1024;
-		mem_block[block] = (Bit8u*)malloc(size);
-		if (!mem_block[block]) E_Exit("XMS: Failed to allocate XMS block.");
-//		else LOG(LOG_ERROR,"XMS: Allocated big block %d.",block);
-		// Map it with default handler
-		MEM_SetupMapping(PAGE_COUNT(start),PAGE_COUNT(size),mem_block[block]);
-		memset(mem_block[block],0,size);
-	}
-	return true;
-};
-
-static Bit8u AllocateMem_ReadHandler(PhysPt pt) 
-{
-	// Allocate mem, set deafult handler
-	if (AllocateBigBlock(GETBIGBLOCKNR(pt))) {
-		// Pass request to new handler
-		return mem_readb(pt);
-	}
-	return 0;
-}
-
-static void AllocateMem_WriteHandler(PhysPt pt,Bit8u val) 
-{
-	// Allocate mem, if needed
-	if (AllocateBigBlock(GETBIGBLOCKNR(pt))) {
-		// Pass request to new handler
-		mem_writeb(pt,val);
-	}
-}
-
-// A20 Line Handlers
+/* A20 Line Handling */
 static Bit8u controlport_data = 0;
 static bool a20_enabled;
 
@@ -299,45 +253,46 @@ static void write_p92(Bit32u port,Bit8u val) {
 }
 
 static Bit8u read_p92(Bit32u port) {
-	return controlport_data | a20_enabled ? 0x02 : 0;
+	return controlport_data | (a20_enabled ? 0x02 : 0);
 }
 
 static void MEM_ShutDown(Section * sec) {
-	for (Bitu i=0; i<C_MEM_MAX_SIZE; i++) {
-		free(mem_block[i]);
-		mem_block[i] = 0;
-	};
-	free(memory); memory=0;
+	free(memory);
+	memory=0;
 };
 
-void MEM_Init(Section * sect) {
-	/* Init all tables */
-	Bitu i;
-	/* Allocate the first mb of memory + hma */
-	memory=(Bit8u *)malloc(1024*1024+64*1024);	
+void MEM_Init(Section * sec) {
+	Section_prop * section=static_cast<Section_prop *>(sec);
+
+	/* Clear paging tables */
+	MEM_SetupPageHandlers(0,MAX_PAGE_LIMIT,Illegal_ReadHandler,Illegal_WriteHandler);
+	/* Allocate memory and setup tables */
+	Bitu memsize=section->Get_int("memsize");
+	if (memsize<1) memsize=1;
+	if (memsize>(C_MEM_MAX_SIZE-1)) {
+		LOG_MSG("Maximum memory size is %d MB",C_MEM_MAX_SIZE-1);
+		memsize=C_MEM_MAX_SIZE-1;
+	}
+	memory=(Bit8u *)malloc(memsize*1024*1024+64*1024);	
 	if (!memory) {
 		throw("Can't allocate memory for memory");
 	}
-	memset(memory,0xcd,1024*1024);
+	/* Clear memory*/
+	memset(memory,0xcd,memsize*1024*1024+64*1024);
 	/* Setup tables for first mb */
 	MEM_SetupMapping(0,PAGE_COUNT(1024*1024),memory);
 	/* Setup tables for HMA Area */
 	a20_enabled=false;
 	MEM_SetupMapping(PAGE_COUNT(1024*1024),PAGE_COUNT(64*1024),memory);
-	// Setup default handlers for unallocated xms
-	for (Bitu p=PAGE_COUNT((1024+64)*1024);p<MAX_PAGES;p++) {
-		ReadHostTable[p]=0;
-		WriteHostTable[p]=0;
-		ReadHandlerTable[p]=&AllocateMem_ReadHandler;
-		WriteHandlerTable[p]=&AllocateMem_WriteHandler;
+	/* Setup tables for extended memory */
+	if (memsize>1) {
+		MEM_SetupMapping(PAGE_COUNT((1024+64)*1024),PAGE_COUNT((((memsize-1)*1024)-64)*1024),memory+(1024+64)*1024);
 	}
-	// clear unallocated memory blocks
-	for (i=0; i<C_MEM_MAX_SIZE; i++) mem_block[i] = 0;
 	// A20 Line - PS/2 system control port A
 	IO_RegisterWriteHandler(0x92,write_p92,"Control Port");
 	IO_RegisterReadHandler(0x92,read_p92,"Control Port");
 	/* shutdown function */
-	sect->AddDestroyFunction(&MEM_ShutDown);
+	sec->AddDestroyFunction(&MEM_ShutDown);
 }
 
 
