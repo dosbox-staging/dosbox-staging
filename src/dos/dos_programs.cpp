@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.22 2004-01-10 14:03:34 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.23 2004-04-03 19:21:28 canadacow Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,9 +28,13 @@
 #include "regs.h"
 #include "callback.h"
 #include "cdrom.h"
+#include "dos_system.h"
+#include "dos_inc.h"
+#include "bios.h"
 
 
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
+void IMGMOUNT_ProgramStart(Program * * make);
 
 class MOUNT : public Program {
 public:
@@ -196,6 +200,150 @@ static void MEM_ProgramStart(Program * * make) {
 	*make=new MEM;
 }
 
+extern Bit32u floppytype;
+
+
+
+class BOOT : public Program {
+private:
+	FILE *getFSFile(Bit8u * filename, Bit32u *ksize, Bit32u *bsize) {
+		Bit8u drive;
+		FILE *tmpfile;
+		char fullname[DOS_PATHLENGTH];
+
+		localDrive* ldp=0;
+		if (!DOS_MakeName((char *)filename,fullname,&drive)) return NULL;
+		ldp=(localDrive*)Drives[drive];
+		tmpfile = ldp->GetSystemFilePtr(fullname, "r");
+		if(tmpfile == NULL) {
+			WriteOut("Bootdisk file does not exist.  Failing.\n");
+			return NULL;
+		}
+		fclose(tmpfile);
+		tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
+		if(tmpfile == NULL) {
+			WriteOut("Cannot open bootdisk file.  Failing.\n");
+			return NULL;
+		}
+
+		fseek(tmpfile,0L, SEEK_END);
+		*ksize = (ftell(tmpfile) / 1024);
+		*bsize = ftell(tmpfile);
+		return tmpfile;
+	}
+
+	void printError(void) {
+		WriteOut("This command boots DosBox from either a floppy or hard disk image.\n\n");
+		WriteOut("For this command, one can specify a succession of floppy disks swappable\n");
+		WriteOut("by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If\n");
+		WriteOut("no drive letter is specified, this defaults to booting from the A drive.\n");
+		WriteOut("The only bootable drive letters are A, C, and D.  For booting from a hard\n");
+		WriteOut("drive (C or D), the image should have already been mounted using the\n");
+		WriteOut("IMGMOUNT command.\n\n");
+		WriteOut("The syntax of this command is:\n\n");
+		WriteOut("BOOT [diskimg1.img diskimg2.img] [-l driveletter]\n");                     
+	}
+
+
+public:
+
+	void Run(void) {
+		FILE *usefile;
+		Bitu i; 
+		Bit32u floppysize, rombytesize;
+		Bit8u drive;
+
+		if(!cmd->GetCount()) {
+			printError();
+			return;
+		}
+		i=0;
+		drive = 'A';
+		while(i<cmd->GetCount()) {
+			if(cmd->FindCommand(i+1, temp_line)) {
+				if(temp_line == "-l") {
+					/* Specifying drive... next argument then is the drive */
+					i++;
+					if(cmd->FindCommand(i+1, temp_line)) {
+						drive=toupper(temp_line[0]);
+						if ((drive != 'A') && (drive != 'C') && (drive != 'D')) {
+							printError();
+							return;
+						}
+
+					} else {
+						printError();
+						return;
+					}
+					i++;
+					continue;
+				}
+
+				WriteOut("Opening image file: %s\n", temp_line.c_str());
+				usefile = getFSFile((Bit8u *)temp_line.c_str(), &floppysize, &rombytesize);
+				if(usefile != NULL) {
+					if(diskSwap[i] != NULL) delete diskSwap[i];
+					diskSwap[i] = new imageDisk(usefile, (Bit8u *)temp_line.c_str(), floppysize, false);
+
+				} else {
+					WriteOut("Cannot open %s", temp_line.c_str());
+					return;
+				}
+
+			}
+			i++;
+		}
+
+		swapPosition = 0;
+
+		swapInDisks();
+
+		if(imageDiskList[drive-65]==NULL) {
+			WriteOut("Unable to boot off of drive %c", drive);
+			return;
+		}
+
+		WriteOut("Booting from drive %c...\n", drive);
+		
+		bootSector bootarea;
+		imageDiskList[drive-65]->Read_Sector(0,0,1,(Bit8u *)&bootarea);
+		for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
+
+		
+
+		SegSet16(cs, 0);
+		reg_ip = 0x7c00;
+
+				
+
+		/* Most likely a PCJr ROM */
+		/* Write it to E000:0000 */
+		/* Code inoperable at the moment */
+
+		/*
+		Bit8u rombuff[65536];
+		fseek(tmpfile,512L, SEEK_SET);
+		rombytesize-=512;
+		fread(rombuff, 1, rombytesize, tmpfile);
+		fclose(tmpfile);
+		for(i=0;i<rombytesize;i++) real_writeb(0xe000,i,rombuff[i]);
+		SegSet16(cs,0xe000);
+		SegSet16(ds,0x0060);
+		SegSet16(es,0x0060);
+		SegSet16(ss,0x0060);
+		reg_ip = 0x0;
+		reg_sp = 0x0;
+		reg_cx = 0xffff;
+		DEBUG_EnableDebugger();
+		*/
+	}
+};
+
+
+static void BOOT_ProgramStart(Program * * make) {
+	*make=new BOOT;
+}
+
 
 
 // LOADFIX
@@ -351,4 +499,6 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("LOADFIX.COM",LOADFIX_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
+	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
+	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 }

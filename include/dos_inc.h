@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.38 2004-02-28 16:35:42 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.39 2004-04-03 19:19:29 canadacow Exp $ */
 
 #ifndef DOS_H_
 #define DOS_H_
@@ -66,6 +66,25 @@ struct DOS_Block {
 		RealPt tempdta;
 	} tables;
 };
+
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
+union bootSector {
+	struct entries {
+		Bit8u jump[3];
+		Bit8u oem_name[8];
+		Bit16u bytesect;
+		Bit8u sectclust;
+		Bit16u reserve_sect;
+		Bit8u misc[496];
+	} bootdata;
+	Bit8u rawdata[512];
+} GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
+#pragma pack ()
+#endif
+
 
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
 enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
