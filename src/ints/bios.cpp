@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.25 2003-12-11 22:12:41 finsterr Exp $ */
+/* $Id: bios.cpp,v 1.26 2003-12-17 23:04:40 finsterr Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -28,6 +28,7 @@
 #include "mem.h"
 #include "pic.h"
 #include "joystick.h"
+#include "dos_inc.h"
 
 static Bitu call_int1a,call_int11,call_int8,call_int17,call_int12,call_int15,call_int1c;
 static Bitu call_int1,call_int70;
@@ -173,14 +174,30 @@ static Bitu INT17_Handler(void) {
 
 
 static Bitu INT15_Handler(void) {
+	static Bitu biosConfigSeg=0;
+	
 	switch (reg_ah) {
 	case 0x06:
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15 Unkown Function 6");
 		break;
 	case 0xC0:	/* Get Configuration*/
-		LOG(LOG_BIOS,LOG_ERROR)("Request BIOS Configuration INT 15 C0");
-		CALLBACK_SCF(true);
-		break;
+		{
+			if (biosConfigSeg==0) biosConfigSeg = DOS_GetMemory(1); //We have 16 bytes
+			PhysPt data	= PhysMake(biosConfigSeg,0);
+			mem_writew(data,8);						// 3 Bytes following
+			mem_writeb(data+2,0xFC);				// Model ID			
+			mem_writeb(data+3,0x00);				// Submodel ID
+			mem_writeb(data+4,0x01);				// Bios Revision
+			mem_writeb(data+5,(1<<6)|(1<<5)|(1<<4));// Feature Byte 1
+			mem_writeb(data+6,(1<<6));				// Feature Byte 2
+			mem_writeb(data+7,0);					// Feature Byte 3
+			mem_writeb(data+8,0);					// Feature Byte 4
+			mem_writeb(data+9,0);					// Feature Byte 4
+			CPU_SetSegGeneral(es,biosConfigSeg);
+			reg_bx = 0;
+			reg_ah = 0;
+			CALLBACK_SCF(false);
+		}; break;
 	case 0x4f:	/* BIOS - Keyboard intercept */
 		/* Carry should be set but let's just set it just in case */
 		CALLBACK_SCF(true);
