@@ -96,9 +96,13 @@ static Bit8u read_dma(Bit32u port) {
 		ret=cont->status_reg;
 		cont->status_reg&=0xf;	/* Clear lower 4 bits on read */
 		break;
-
+	case 0x0a:	
+	case 0x0e:
+		/* Seem to return 0 on a real controller */
+		ret=0x0;
+		break;
 	default:
-		LOG(LOG_ERROR,"DMA:Unhandled read from %d",port);
+		LOG(LOG_ERROR,"DMA:Unhandled read from %X",port);
 	}
 	return ret;
 }
@@ -162,7 +166,9 @@ static void write_dma(Bit32u port,Bit8u val) {
 	case 0x0c:	/* Clear Flip/Flip */
 		cont->flipflop=true;
 		break;
-	};
+	default:
+		LOG(LOG_ERROR,"DMA:Unhandled write %X to %X",val,port);
+	};	
 };
 
 
