@@ -31,25 +31,28 @@
 
 
 void DOS_ParamBlock::Clear(void) {
-	memset(&data,0,sizeof(data));
+	memset(&exec,0,sizeof(exec));
+	memset(&overlay,0,sizeof(overlay));
 }
 
 void DOS_ParamBlock::LoadData(void) {
-	data.exec.envseg=sGet(sPBlock,exec.envseg);
-	data.exec.cmdtail=sGet(sPBlock,exec.cmdtail);
-	data.exec.fcb1=sGet(sPBlock,exec.fcb1);
-	data.exec.fcb2=sGet(sPBlock,exec.fcb2);
-	data.exec.initsssp=sGet(sPBlock,exec.initsssp);
-	data.exec.initcsip=sGet(sPBlock,exec.initcsip);
+	exec.envseg=sGet(sExec,envseg);
+	exec.cmdtail=sGet(sExec,cmdtail);
+	exec.fcb1=sGet(sExec,fcb1);
+	exec.fcb2=sGet(sExec,fcb2);
+	exec.initsssp=sGet(sExec,initsssp);
+	exec.initcsip=sGet(sExec,initcsip);
+	overlay.loadseg=sGet(sOverlay,loadseg);
+	overlay.relocation=sGet(sOverlay,relocation);
 }
 
 void DOS_ParamBlock::SaveData(void) {
-	sSave(sPBlock,exec.envseg,data.exec.envseg);
-	sSave(sPBlock,exec.cmdtail,data.exec.cmdtail);
-	sSave(sPBlock,exec.fcb1,data.exec.fcb1);
-	sSave(sPBlock,exec.fcb2,data.exec.fcb2);
-	sSave(sPBlock,exec.initsssp,data.exec.initsssp);
-	sSave(sPBlock,exec.initcsip,data.exec.initcsip);
+	sSave(sExec,envseg,exec.envseg);
+	sSave(sExec,cmdtail,exec.cmdtail);
+	sSave(sExec,fcb1,exec.fcb1);
+	sSave(sExec,fcb2,exec.fcb2);
+	sSave(sExec,initsssp,exec.initsssp);
+	sSave(sExec,initcsip,exec.initcsip);
 }
 
 
@@ -61,7 +64,7 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
 }
 
-void DOS_InfoBlock::SetFirstMCB(RealPt _firstmcb)
+void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb)
 {
 	sSave(sDIB,firstMCB,_firstmcb);
 }
