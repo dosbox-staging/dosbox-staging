@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.60 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.61 2005-02-24 11:29:26 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -558,14 +558,12 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 };
 
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
-	// Dont duplicate console handles
-/*	if (entry<=STDPRN) {
-		newentry = entry;
-		return true;
-	};
-*/
-	Bit8u orig=RealHandle(entry);
-	if (orig>=DOS_FILES) {
+	if(entry == newentry) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	Bit8u orig = RealHandle(entry);
+	if (orig >= DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -573,18 +571,13 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	Bit8u newone=RealHandle(newentry);
-	if (newone>=DOS_FILES) {
-		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false;
-	};
-	if (Files[newone]) {
+	Bit8u newone = RealHandle(newentry);
+	if (newone < DOS_FILES && Files[newone]) {
 		DOS_CloseFile(newentry);
-		return false;
-	};
+	}
 	DOS_PSP psp(dos.psp());
 	Files[orig]->AddRef();
-	psp.SetFileHandle(newentry,(Bit8u)entry);
+	psp.SetFileHandle(newentry,orig);
 	return true;
 };
 
@@ -1034,8 +1027,3 @@ void DOS_SetupFiles (void) {
 	}
 	Drives[25]=new Virtual_Drive();
 }
-
-
-
-
-
