@@ -33,7 +33,7 @@ DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
 Bit8u dos_copybuf[0x10000];
-static Bitu call_20,call_21,call_27,call_28,call_29;
+static Bitu call_20,call_21,call_25,call_26,call_27,call_28,call_29;
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -860,7 +860,29 @@ static Bitu DOS_27Handler(void)
 	if (DOS_ResizeMemory(dos.psp,&para)) DOS_Terminate(true);
 	return CBRET_NONE;
 }
-
+static Bitu DOS_25Handler(void) {
+	if(Drives[reg_al]==0){
+		reg_ax=0x8002;
+		CALLBACK_SCF(true);
+	}else{
+		CALLBACK_SCF(false);
+		reg_ax=0;
+		if((reg_cx != 1) ||(reg_dx != 1))
+			LOG(LOG_DOSMISC,"int 25 called but not as diskdetection");
+	}
+    return CBRET_NONE;
+}
+static Bitu DOS_26Handler(void) {
+	LOG(LOG_DOSMISC,"int 26 called: hope for the best!");
+	if(Drives[reg_al]==0){
+		reg_ax=0x8002;
+		CALLBACK_SCF(true);
+	}else{
+		CALLBACK_SCF(false);
+		reg_ax=0;
+	}
+    return CBRET_NONE;
+}
 static Bitu DOS_28Handler(void) {
     return CBRET_NONE;
 }
@@ -885,6 +907,14 @@ void DOS_Init(Section* sec) {
 	CALLBACK_Setup(call_21,DOS_21Handler,CB_IRET_STI);
 	RealSetVec(0x21,CALLBACK_RealPointer(call_21));
 
+	call_25=CALLBACK_Allocate();
+	CALLBACK_Setup(call_25,DOS_25Handler,CB_RETF);
+	RealSetVec(0x25,CALLBACK_RealPointer(call_25));
+	
+	call_26=CALLBACK_Allocate();
+	CALLBACK_Setup(call_26,DOS_21Handler,CB_RETF);
+	RealSetVec(0x26,CALLBACK_RealPointer(call_26));
+	
 	call_27=CALLBACK_Allocate();
 	CALLBACK_Setup(call_27,DOS_27Handler,CB_IRET);
 	RealSetVec(0x27,CALLBACK_RealPointer(call_27));
@@ -919,5 +949,7 @@ void DOS_Init(Section* sec) {
 
 	/* shutdown function */
 	sec->AddDestroyFunction(&DOS_ShutDown);	
+
+				
 }
 
