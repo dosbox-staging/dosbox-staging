@@ -17,7 +17,6 @@
  */
 
 #include <string.h>
-#include "sdl_syswm.h"
 
 #include "dosbox.h"
 #include "inout.h"
@@ -439,3 +438,4 @@ void SERIAL_Init(Section* sec) {
 	serialports[0] = new CSerial(0x3f0,4,SERIALBASERATE);
 	serialports[1] = new CSerial(0x2f0,3,SERIALBASERATE);
 }
+
