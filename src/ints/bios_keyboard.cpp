@@ -329,7 +329,7 @@ static Bitu INT16_Handler(void) {
 		LOG_DEBUG("INT16:55:Word TSR compatible call");
 		break;
 	default:
-		E_Exit("INT16:Unhandled call %02X",reg_ah);
+		LOG_ERROR("INT16:Unhandled call %02X",reg_ah);
 		break;
 
 	};
