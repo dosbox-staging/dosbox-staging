@@ -16,13 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.52 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.53 2005-03-24 10:18:45 qbix79 Exp $ */
 
-#ifndef DOS_H_
-#define DOS_H_
+#ifndef DOSBOX_DOS_INC_H
+#define DOSBOX_DOS_INC_H
 
-#include <dos_system.h>
-#include <mem.h>
+#ifndef DOSBOX_DOS_SYSTEM_H
+#include "dos_system.h"
+#endif
+#ifndef DOSBOX_MEM_H
+#include "mem.h"
+#endif
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -584,4 +588,3 @@ INLINE Bit8u RealHandle(Bit16u handle) {
 }
 
 #endif
-

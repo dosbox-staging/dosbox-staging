@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.12 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: cross.h,v 1.13 2005-03-24 10:18:45 qbix79 Exp $ */
 
-#ifndef _CROSS_H
-#define _CROSS_H
+#ifndef DOSBOX_CROSS_H
+#define DOSBOX_CROSS_H
 
 #include <stdio.h>
 #include <sys/stat.h>
@@ -57,4 +57,3 @@
 #endif
 
 #endif
-

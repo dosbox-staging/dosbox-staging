@@ -16,12 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __CPU_H
-#define __CPU_H
+#ifndef DOSBOX_CPU_H
+#define DOSBOX_CPU_H
 
+#ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h" 
+#endif
+#ifndef DOSBOX_REGS_H
 #include "regs.h"
+#endif
+#ifndef DOSBOX_MEM_H
 #include "mem.h"
+#endif
 
 /* CPU Cycle Timing */
 extern Bits CPU_Cycles;
@@ -418,4 +424,3 @@ INLINE void CPU_SetFlagsw(Bitu word) {
 
 
 #endif
-
