@@ -15,6 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id */
+
 #include <ctype.h>
 #include <stdio.h>
 #include "dosbox.h"
@@ -92,7 +95,6 @@ public:
 	void CMD_RENAME(char * args);
 	void SyntaxError(void);
 	void CMD_PAUSE(char * args);
-	void CMD_EHCODOT(char* args);
 	/* The shell's variables */
 	Bit16u input_handle;
 	BatchFile * bf;
@@ -106,5 +108,33 @@ struct SHELL_Cmd {
     void (DOS_Shell::*handler)(char * args);		/* Handler for this command */
     const char * help;								/* String with command help */
 };
+
+static inline void StripSpaces(char*&args)
+{
+	while(*args && (*args == ' '))
+		args++;
+}
+
+
+static inline char* ExpandDot(char*args, char* buffer)
+{
+	if(*args=='.')
+	{
+		if(*(args+1)==0)
+		{
+			strcpy(buffer,"*.*");
+			return buffer;
+		}
+		if( (*(args+1)!='.') && (*(args+1)!='\\') )
+		{
+			buffer[0]='*';
+			buffer[1]=0;
+			strcat(buffer,args);
+			return buffer;
+		}
+	}
+	else strcpy(buffer,args);
+	return buffer;
+}
 
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.21 2003-08-01 16:48:25 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.22 2003-08-19 18:01:57 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -219,7 +219,7 @@ void DOS_Shell::InputCommand(char * line) {
 					it_completion = l_completion.begin();
 				}
 
-				if (it_completion->length()) {
+				if (l_completion.size() && it_completion->length()) {
 					for (;str_index > completion_index; str_index--) {
 						// removes all characters
 						outc(8); outc(' '); outc(8);
@@ -265,13 +265,20 @@ void DOS_Shell::InputCommand(char * line) {
 
 void DOS_Shell::Execute(char * name,char * args) {
 	char * fullname;
-    char line[255];
-    if(strlen(args)!=0){
-        line[0]=' ';line[1]=0;
-        strcat(line,args);
-    }else{
-        line[0]=0;
-    };
+	char line[255];
+	if(strlen(args)!= 0){
+		if(*args != ' '){ //put a space in front
+			line[0]=' ';line[1]=0;
+			strcat(line,args);
+		}
+		else
+		{
+			strcpy(line,args);
+		}
+	}else{
+		line[0]=0;
+	};
+
 	/* check for a drive change */
 	if ((strcmp(name + 1, ":") == 0) && isalpha(*name))
 	{
@@ -290,6 +297,12 @@ void DOS_Shell::Execute(char * name,char * args) {
 	/* Run the .bat file */
 		bf=new BatchFile(this,fullname,line);
 	} else {
+		if(strcasecmp(strrchr(fullname, '.'), ".com") !=0) {
+			if(strcasecmp(strrchr(fullname, '.'), ".exe") !=0){
+		  		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
+				return;
+			}
+	  	}
 		/* Run the .exe or .com file from the shell */
 		/* Allocate some stack space for tables in physical memory */
 		reg_sp-=0x200;
