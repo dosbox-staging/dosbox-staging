@@ -29,7 +29,6 @@ void DOS_Shell::ShowPrompt(void) {
 	WriteOut("%c:\\%s>",drive,dir);
 }
 
-
 static void outc(Bit8u c) {
 	Bit16u n=1;
 	DOS_WriteFile(STDOUT,&c,&n);
@@ -212,9 +211,10 @@ char * DOS_Shell::Which(char * name) {
 		if (DOS_FileExists(which_ret)) return which_ret;
 	}
 
-	/* No Path in filename look through %path% */
-	static char path[DOS_PATHLENGTH];
-	char * pathenv=GetEnvStr("PATH");
+	/* No Path in filename look through path environment string */
+	static char path[DOS_PATHLENGTH];std::string temp;
+	if (!GetEnvStr("PATH",temp)) return 0;
+	const char * pathenv=temp.c_str();
 	if (!pathenv) return 0;
 	pathenv=strchr(pathenv,'=');
 	if (!pathenv) return 0;
