@@ -54,9 +54,11 @@
   - Added some more PIC commands (c2woody).
   - Added BCD counting to the timers.
   - Fix some vesa functions.
+  - Add some basic support for 132x25 and 132x45 textmodes.
   - Improved Tandy emulation a lot.
   - Lowered cpu usage when dosbox is idle.
   - Allow virtualisation of some basic IO-ports (c2woody).
+  
 
 0.61
   - Added a beta dynamic cpu for x86 hosts (very unstable)
