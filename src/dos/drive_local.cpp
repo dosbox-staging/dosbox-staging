@@ -197,6 +197,7 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 	struct stat status;
 	if (stat(newname,&status)==0) {
 		*attr=DOS_ATTR_ARCHIVE;
+		if(status.st_mode & S_IFDIR) *attr|=DOS_ATTR_DIRECTORY;
 		return true;
 	}
 	*attr=0;
