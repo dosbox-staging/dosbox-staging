@@ -52,7 +52,7 @@ class CDROM_Interface_SDL : public CDROM_Interface
 {
 public:
 	CDROM_Interface_SDL			(void);
-	~CDROM_Interface_SDL		(void);
+	virtual ~CDROM_Interface_SDL(void);
 
 	bool	SetDevice			(char* path, int forceCD);
 	bool	GetUPC				(unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
@@ -104,7 +104,7 @@ class CDROM_Interface_Aspi : public CDROM_Interface
 {
 public:
 	CDROM_Interface_Aspi		(void);
-	~CDROM_Interface_Aspi		(void);
+	virtual ~CDROM_Interface_Aspi(void);
 
 	bool	SetDevice			(char* path, int forceCD);
 
@@ -151,7 +151,7 @@ class CDROM_Interface_Ioctl : public CDROM_Interface
 {
 public:
 	CDROM_Interface_Ioctl		(void);
-	~CDROM_Interface_Ioctl		(void);
+	virtual ~CDROM_Interface_Ioctl(void);
 
 	bool	SetDevice			(char* path, int forceCD);
 
