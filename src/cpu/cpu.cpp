@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "keyboard.h"
 #include "setup.h"
+#include "paging.h"
 
 #if 1
 #undef LOG_MSG
@@ -556,14 +557,18 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 			Bitu changed=cpu.cr0 ^ value;		
 			if (!changed) return true;
 			cpu.cr0=value;
-			if (value & CR0_PAGING) LOG_MSG("Paging enabled");
 			if (value & CR0_PROTECTION) {
 				LOG_MSG("Protected mode");
+				PAGING_Enable((value & CR0_PAGING)>0);
 			} else {
+				PAGING_Enable(false);
 				LOG_MSG("Real mode");
 			}
 			return CPU_CheckState();
 		}
+	case 3:
+		PAGING_SetDirBase(value);
+		break;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
 		break;
@@ -575,6 +580,8 @@ Bitu CPU_GET_CRX(Bitu cr) {
 	switch (cr) {
 	case 0:
 		return cpu.cr0;
+	case 3:
+		return PAGING_GetDirBase();
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV XXX, CR%d",cr);
 		break;
