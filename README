@@ -376,17 +376,121 @@ IMGMOUNT
   A utility to mount disk images and CD-ROM images in DOSBox.
   
   CD-ROM: either iso or cue/bin is supported:
-  IMGMOUNT DRIVE imagefile -t iso
-  
-  imagefile 
-     location is inside DOSBox.
+  IMGMOUNT DRIVE [imagefile] -t [image_type] -fs [image_format] -size [sectorsbytesize, sectorsperhead, heads, cylinders]
+  imagefile
+	location of the image files to mount in DosBox.  Path is relative to a mount 
+	point already inside DosBox.  
+   
+  -t 
+	The following are valid image types:
+	floppy: Specifies a floppy image or images.  DosBox will automatically identify the disk geometry (i.e, 360K
+	        1.2MB, 720K, 1.44MB, etc.)
+	iso: Specifies a CD-ROM iso image.  The geometry is automatic and set for this size.
+	hdd: Specifies a harddrive image.  The proper CHS geometry must be set for this to work.
 
-  disk image
+  -fs 
+	The following are valid file system formats:
+	iso: Specifies the ISO 9660 CD-ROM format.
+	fat: Specifies the image uses the FAT file system.  DosBox will attempt to mount this image as a drive
+             in DosBox and make the files available from inside DosBox.
+	none: DosBox will make no attempt to read the file system on the disk.  This is useful if one needs to 
+	      format it or one wants to boot off of the disk using the BOOT command.  When using the "none" file
+	      system, one must specify the drive number (2 or 3, where 2 = master, 3 = slave) rather than a drive 
+              letter.  For example, to mount a 70MB image as the slave drive device, one would type:
+	      "imgmount 3 d:\test.img -size 512,63,16,142 -fs none" (without the quotes)  Compare this with a mount to
+	      read the drive in DosBox, which would read as: "imgmount e: d:\test.img -size 512,63,16,142"
+
+  -size 
+	The Cylinders, Heads and Sectors specification of the drive.  Required to mount hard drive images.
+
+BOOT
+  Boot will start floppy images or hard disk images independent of the operating system emulation offered by
+  DosBox.  This will allow you to play booter floppies or boot to other operating systems inside DosBox.
+
+  BOOT [diskimg1.img diskimg2.img .. diskimgN.img] [-l driveletter]
+
+  diskimgN.img 
+	This can be any number of floppy disk images one wants mounted after DosBox boots the specified drive letter.
+	To swap between images, one hits CTRL+F4 to swap out the current disk and swap in the next disk in the list. Once
+	the last disk in the list is swapped out, the list loops back to the beginning.
+  [-l driveletter]
+	This parameter allows one to specify the drive to boot from.  The default is the A drive, the floppy drive.  One
+	can also boot off of a hard drive image mounted as master by specifying "-l C" without the quotes, or the drive
+	as slave by specifying "-l D"
+
 
 IPX
 
-BOOT
+  All of the IPX networking is managed through the internal DosBox program 
+  IPXNET. For help on the IPX networking from inside DosBox, type “IPXNET HELP” 
+  (without quotes) and the program will list out the commands and relevant 
+  documentation. 
 
+  With regard to actually setting up a network, one system needs to be the server. 
+  To set this up, in a DosBox section, one should type “IPXNET STARTSERVER” 
+  (without the quotes). The server DosBox session will automatically add itself 
+  to the virtual IPX network. In turn, for every other computer that should be 
+  part of the virtual IPX network, you’ll need to type “IPXNET CONNECT 
+  <computer host name or IP>”. For example, if your server is at bob.dosbox.com, 
+  you would type “IPXNET CONNECT bob.dosbox.com” on every non-server system. 
+  
+  The following is an IPXNET command reference: 
+
+  IPXNET CONNECT 
+
+  	IPXNET CONNECT opens a connection to an IPX tunneling server 
+	running on another DosBox session. The "address" parameter specifies 
+	the IP address or host name of the server computer. One can also 
+	specify the UDP port to use. By default IPXNET uses port 213, the 
+	assigned IANA port for IPX tunneling, for its connection. 
+
+	The syntax for IPXNET CONNECT is: 
+	IPXNET CONNECT address <port> 
+
+  IPXNET DISCONNECT 
+
+	IPXNET DISCONNECT closes the connection to the IPX tunneling server. 
+
+	The syntax for IPXNET DISCONNECT is: 
+	IPXNET DISCONNECT 
+
+  IPXNET STARTSERVER 
+
+	IPXNET STARTSERVER starts and IPX tunneling server on this DosBox 
+	session. By default, the server will accept connections on UDP port 
+	213, though this can be changed. Once the server is started, DosBox 
+	will automatically start a client connection to the IPX tunneling server. 
+
+	The syntax for IPXNET STARTSERVER is: 
+	IPXNET STARTSERVER <port> 
+
+  IPXNET STOPSERVER 
+
+	IPXNET STOPSERVER stops the IPX tunneling server running on this DosBox
+	session. Care should be taken to ensure that all other connections have 
+	terminated as well since stopping the server may cause lockups on other 
+	machines still using the IPX tunneling server. 
+
+	The syntax for IPXNET STOPSERVER is: 
+	IPXNET STOPSERVER 
+
+  IPXNET PING 
+
+	IPXNET PING broadcasts a ping request through the IPX tunneled network. 
+	In response, all other connected computers will respond to the ping 
+	and report the time it took to receive and send the ping message. 
+
+	The syntax for IPXNET PING is: 
+	IPXNET PING 
+
+  IPXNET STATUS 
+
+	IPXNET STATUS reports the current state of this DosBox's sessions 
+	IPX tunneling network. For a list of the computers connected to the 
+	network use the IPXNET PING command. 
+
+	The syntax for IPXNET STATUS is: 
+	IPXNET STATUS 
 
 For more information use the /? command line switch with the programs.
 
