@@ -50,7 +50,8 @@
 #define	XMS_ALLOCATE_UMB					0x10
 #define	XMS_DEALLOCATE_UMB					0x11
 
-#define	HIGH_MEMORY_IN_USE					0x92
+#define	HIGH_MEMORY_NOT_EXIST				0x90
+#define	HIGH_MEMORY_IN_USE					0x91
 #define	HIGH_MEMORY_NOT_ALLOCATED			0x93
 #define XMS_OUT_OF_SPACE					0xa0
 #define XMS_OUT_OF_HANDLES					0xa1
@@ -368,6 +369,15 @@ Bitu XMS_Handler(void) {
 		reg_bx=XMS_DRIVER_VERSION;
 		reg_dx=0;	/* No we don't have HMA */
 		break;
+	case XMS_ALLOCATE_HIGH_MEMORY:								/* 01 */
+		reg_ax=0;
+		reg_bl=HIGH_MEMORY_NOT_EXIST;
+		break;
+	case XMS_FREE_HIGH_MEMORY:									/* 02 */
+		reg_ax=0;
+		reg_bl=HIGH_MEMORY_NOT_EXIST;
+		break;
+		
 	case XMS_GLOBAL_ENABLE_A20:									/* 03 */
 	case XMS_LOCAL_ENABLE_A20:									/* 05 */
 		reg_bl = XMS_EnableA20(true);
@@ -423,8 +433,6 @@ Bitu XMS_Handler(void) {
 		reg_bl=0xb1;	//No UMB Available
 		reg_dx=0;
 		break;
-	case XMS_ALLOCATE_HIGH_MEMORY:								/* 01 */
-	case XMS_FREE_HIGH_MEMORY:									/* 02 */
 	case XMS_DEALLOCATE_UMB:									/* 11 */
 		LOG(LOG_ERROR|LOG_MISC,"XMS:Unhandled call %2X",reg_ah);
 		break;
