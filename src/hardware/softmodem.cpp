@@ -23,6 +23,7 @@
 #if C_MODEM
 
 #include <string.h>
+#include <ctype.h>
 #include "SDL_net.h"
 
 #include "inout.h"
