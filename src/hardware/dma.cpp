@@ -189,7 +189,7 @@ again:
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
-//		ReachedTC();			//No module uses it so disable
+		ReachedTC();
 		if (autoinit) {
 			currcnt=basecnt;
 			curraddr=baseaddr;
