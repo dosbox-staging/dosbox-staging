@@ -1,5 +1,5 @@
 !define VER_MAYOR 0
-!define VER_MINOR 61
+!define VER_MINOR 62
 
 ; The name of the installer
 Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
@@ -15,7 +15,7 @@ DirText "This will install DOSBox v${VER_MAYOR}.${VER_MINOR} on your computer. C
 SetCompressor bzip2
 
 LicenseData COPYING
-LicenseText "DOSBox v${VER_MAYOR}.${VER_MINOR} License" "Next->"
+LicenseText "DOSBox v${VER_MAYOR}.${VER_MINOR} License" "Next >"
 
 ; The stuff to install
 Section "ThisNameIsIgnoredSoWhyBother?"
@@ -62,6 +62,9 @@ Section "Uninstall"
   Delete $INSTDIR\SDL.dll
   Delete $INSTDIR\SDL_net.dll
   Delete $INSTDIR\libpng12.dll
+  ;Files left by sdl taking over the console
+  Delete $INSTDIR\stdout.txt
+  Delete $INSTDIR\stderr.txt
 
   ; MUST REMOVE UNINSTALLER, too
   Delete $INSTDIR\uninstall.exe
