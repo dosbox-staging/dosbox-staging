@@ -393,6 +393,11 @@ foundmode:
 	switch (CurMode->type) {
 	case M_EGA16:
 		if (CurMode->mode>0xe) goto att_text16;
+			for (i=0;i<8;i++) {
+			att_data[i]=i;
+			att_data[i+8]=i+0x10;
+		}
+		break;
 	case M_TANDY16:
 		att_data[0x10]=0x01;		//Color Graphics
 		for (i=0;i<16;i++) {
@@ -437,6 +442,12 @@ skipatt:
 	switch (CurMode->type) {
 	case M_EGA16:
 		if (CurMode->mode>0xe) goto dac_text16;
+		for (i=0;i<64;i++) {
+			IO_Write(0x3c9,ega_palette[i][0]);
+			IO_Write(0x3c9,ega_palette[i][1]);
+			IO_Write(0x3c9,ega_palette[i][2]);
+		}
+		break;
 	case M_CGA2:
 	case M_CGA4:
 	case M_TANDY16:
