@@ -164,6 +164,12 @@ void DOS_Shell::Execute(char * name,char * args) {
 		cmd.buffer[strlen(line)]=0xd;
 		/* Copy command line in stack block too */
 		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmd,128);
+		/* Parse FCB (first two parameters) and put them into the current DOS_PSP */
+		Bit8u add;
+		FCB_Parsename(dos.psp,0x5C,0x00,cmd.buffer,&add);
+		FCB_Parsename(dos.psp,0x6C,0x00,&cmd.buffer[add],&add);
+		block.exec.fcb1=RealMake(dos.psp,0x5C);
+		block.exec.fcb2=RealMake(dos.psp,0x6C);
 		/* Set the command line in the block and save it */
 		block.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
 		block.SaveData();
