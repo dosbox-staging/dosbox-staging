@@ -378,7 +378,12 @@ void RENDER_Init(Section * sec) {
 	render.shot.dir=section->Get_string("snapshots");
 	KEYBOARD_AddEvent(KBD_f5,KBD_MOD_CTRL,EnableScreenShot);
 #endif
-	const char *  scaler=section->Get_string("scaler");
+	const char * scaler;std::string cline;
+	if (control->cmdline->FindString("-scaler",cline,false)) {
+		scaler=cline.c_str();
+	} else {
+		scaler=section->Get_string("scaler");
+	}
 	if (!strcasecmp(scaler,"none")) render.op.want_type=OP_None;
 	else if (!strcasecmp(scaler,"scale2x")) render.op.want_type=OP_Scale2x;
 	else {
