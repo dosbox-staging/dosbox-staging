@@ -20,10 +20,14 @@
 DIR * opendir(const char *dirname) {
     
     static DIR dir;
+	int len;
 
     /* Stash the directory name */
     strcpy(dir.pathName,dirname);
-	strcat(dir.pathName,"\\*.*");
+
+	len = strlen(dirname);
+	if ((len>0) && (dirname[len-1]=='\\'))	strcat(dir.pathName,"*.*");
+	else									strcat(dir.pathName,"\\*.*");
 
     /* set the handle to invalid and set the firstTime flag */
     dir.handle    = INVALID_HANDLE_VALUE;
