@@ -348,26 +348,22 @@ switch (inst.code.op) {
 		CPU_SW_Interrupt(inst.op1.b,IPPoint-inst.start);
 		goto restart_core;
 	case O_INb:
-		reg_al=IO_Read(inst.op1.d);
+		reg_al=IO_ReadB(inst.op1.d);
 		goto nextopcode;
 	case O_INw:
-		reg_ax=IO_Read(inst.op1.d) | (IO_Read(inst.op1.d+1) << 8);
+		reg_ax=IO_ReadW(inst.op1.d);
 		goto nextopcode;
 	case O_INd:
-		reg_eax=IO_Read(inst.op1.d) | (IO_Read(inst.op1.d+1) << 8) | (IO_Read(inst.op1.d+2) << 16) | (IO_Read(inst.op1.d+3) << 24);
+		reg_eax=IO_ReadD(inst.op1.d);
 		goto nextopcode;
 	case O_OUTb:
-		IO_Write(inst.op1.d,reg_al);
+		IO_WriteB(inst.op1.d,reg_al);
 		goto nextopcode;
 	case O_OUTw:
-		IO_Write(inst.op1.d+0,(Bit8u)reg_ax);
-		IO_Write(inst.op1.d+1,(Bit8u)(reg_ax >> 8));
+		IO_WriteW(inst.op1.d,reg_ax);
 		goto nextopcode;
 	case O_OUTd:
-		IO_Write(inst.op1.d+0,(Bit8u)reg_eax);
-		IO_Write(inst.op1.d+1,(Bit8u)(reg_eax >> 8));
-		IO_Write(inst.op1.d+2,(Bit8u)(reg_eax >> 16));
-		IO_Write(inst.op1.d+3,(Bit8u)(reg_eax >> 24));
+		IO_WriteD(inst.op1.d,reg_eax);
 		goto nextopcode;
 	case O_CBACK:
 		LEAVECORE;
