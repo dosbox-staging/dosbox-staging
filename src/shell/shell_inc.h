@@ -47,6 +47,7 @@ public:
 	bool echo;
 	DOS_Shell * shell;
 	BatchFile * prev;
+	CommandLine * cmd;
 };
 
 
