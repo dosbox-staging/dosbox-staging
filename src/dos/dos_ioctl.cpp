@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.22 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.23 2005-03-25 08:39:05 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -106,6 +106,31 @@ bool DOS_IOCTL(void) {
 				mem_writeb(ptr+8,0x00);					// unit number
 				mem_writed(ptr+0x1f,0xffffffff);		// next parameter block
 				break;
+			case 0x46:
+			case 0x66:	/* Volume label */
+				{			
+					char const* bufin=Drives[drive]->GetLabel();
+					char buffer[11] ={' '};
+
+					char* find_ext=strchr(bufin,'.');
+					if (find_ext) {
+						Bitu size=find_ext-bufin;if (size>8) size=8;
+						memcpy(buffer,bufin,size);
+						find_ext++;
+						memcpy(buffer+size,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext)); 
+					} else {
+						memcpy(buffer,bufin,(strlen(bufin) > 8) ? 8 : strlen(bufin));
+					}
+			
+					char buf2[8]={ 'F','A','T','1','6',' ',' ',' '};
+					if(drive<2) buf2[4] = '2'; //FAT12 for floppies
+
+					mem_writew(ptr+0,0);			// 0
+					mem_writed(ptr+2,0x1234);		//Serial number
+					MEM_BlockWrite(ptr+6,buffer,11);//volumename
+					if(reg_cl == 0x66) MEM_BlockWrite(ptr+0x11, buf2,8);//filesystem
+				}
+				break;
 			default	:	
 				LOG(LOG_IOCTL,LOG_ERROR)("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
 				return false;
@@ -136,4 +161,3 @@ bool DOS_GetSTDINStatus(void) {
 	if (Files[handle] && (Files[handle]->GetInformation() & 64)) return false;
 	return true;
 };
-

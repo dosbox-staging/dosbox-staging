@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.27 2005-03-16 20:44:55 qbix79 Exp $ */
+/* $Id: drives.h,v 1.28 2005-03-25 08:39:05 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -302,6 +302,7 @@ public:
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	bool readSector(Bit8u *buffer, Bit32u sector);
+	virtual char const* GetLabel(void) {return discLabel;};
 private:
 	int  readDirEntry(isoDirEntry *de, Bit8u *data);
 	bool loadImage();
