@@ -46,7 +46,6 @@ bool get_CF(void) {
 	case t_RCLd:
 		return flags.cf;
 		break;
-	
 	case t_ADDb:	
 		return (flags.result.b<flags.var1.b);
 	case t_ADDw:	
@@ -131,12 +130,11 @@ bool get_CF(void) {
 	case t_TESTb:
 	case t_TESTw:
 	case t_TESTd:
+		return false;	/* Set to false */
 	case t_DIV:
-		return false;
-
-	
+		return false;	/* Unkown */
 	default:
-		E_Exit("get_CF Unknown %d",flags.type);
+		LOG_WARN("get_CF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -166,7 +164,6 @@ again:
 	case t_CF:
 		type=flags.prev_type;
 		goto again;
-
 	case t_ADDb:	
 	case t_ADCb:
 	case t_SBBb:
@@ -223,15 +220,16 @@ again:
 	case t_SHRd:
 	case t_SARb:
 	case t_SARw:
+	case t_SARd:
 	case t_DSHLw:
 	case t_DSHLd:
 	case t_DSHRw:
 	case t_DSHRd:
 	case t_DIV:
 	case t_MUL:
-		return false;			          /* undefined */
+		return false;			          /* Unkown */
 	default:
-		E_Exit("get_AF Unknown %d",flags.type);
+		LOG_WARN("get_AF Unknown %d",flags.type);
 	}
 	return 0;
 }
@@ -314,9 +312,9 @@ again:
 		return (flags.result.d==0);
 	case t_DIV:
 	case t_MUL:
-		return false;
+		return false;		/* Unkown */
 	default:
-		E_Exit("get_ZF Unknown %d",flags.type);
+		LOG_WARN("get_ZF Unknown %d",flags.type);
 	}
 	return false;
 }
@@ -344,7 +342,6 @@ again:
 	case t_CF:
 		type=flags.prev_type;
 		goto again;
-	
 	case t_ADDb:
 	case t_ORb:
 	case t_ADCb:
@@ -399,9 +396,9 @@ again:
 		return	(flags.result.d>=0x80000000);
 	case t_DIV:
 	case t_MUL:
-		return false;
+		return false;	/* Unkown */
 	default:
-		E_Exit("get_SF Unkown %d",flags.type);
+		LOG_WARN("get_SF Unkown %d",flags.type);
 	}
 	return false;
 
@@ -419,6 +416,9 @@ again:
 	case t_RCLb:
 	case t_RCLw:
 	case t_RCLd:
+	case t_SARb:
+	case t_SARw:
+	case t_SARd:
 		return flags.of;
 	case t_CF:
 		type=flags.prev_type;
@@ -523,9 +523,6 @@ again:
 		return (flags.result.w >= 0x4000);
 	case t_SHRd:
 		return (flags.result.d >= 0x40000000);
-	case t_SARb:
-	case t_SARw:
-	case t_SARd:
 	case t_ORb:
 	case t_ORw:
 	case t_ORd:
@@ -538,10 +535,11 @@ again:
 	case t_TESTb:
 	case t_TESTw:
 	case t_TESTd:
+	return false;			/* Return false */
 	case t_DIV:
-		return false;
+		return false;		/* Unkown */
 	default:
-		E_Exit("get_OF Unkown %d",flags.type);
+		LOG_WARN("get_OF Unkown %d",flags.type);
 	}
 	return false;
 }
