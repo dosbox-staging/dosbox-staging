@@ -40,10 +40,6 @@ public:
 	bool ReadLine(char * line);
 	bool Goto(char * where);
 	Bit16u file_handle;
-	Bit32u line_count;	
-	char * cmd_words[CMD_MAXCMDS];
-	char cmd_buffer[128];							//Command line can only be 128 chars
-	Bit32u cmd_count;
 	bool echo;
 	DOS_Shell * shell;
 	BatchFile * prev;

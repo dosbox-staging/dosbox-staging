@@ -32,7 +32,6 @@ BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
 		//TODO Come up with something better
 		E_Exit("SHELL:Can't open BatchFile");
 	}
-	line_count=0;
 };
 
 BatchFile::~BatchFile() {
