@@ -40,6 +40,9 @@
 /* environ can be linked */
 #define ENVIRON_LINKED 1
 
+/* Define to 1 if you have the <ddraw.h> header file. */
+#define HAVE_DDRAW_H 1
+
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 
 typedef         double		Real64;
