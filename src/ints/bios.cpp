@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.37 2004-12-08 22:39:49 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.38 2004-12-19 16:46:04 qbix79 Exp $ */
 
 #include <time.h>
 #include "dosbox.h"
@@ -358,6 +358,7 @@ static Bitu INT15_Handler(void) {
 			} else CALLBACK_SCF(true);
 			break;
 		case 0x01:		// reset
+			Mouse_SetPS2State(false);
 			reg_bx=0x00aa;	// mouse
 			CALLBACK_SCF(false);
 			break;
