@@ -843,9 +843,8 @@ static void SBLASTER_CallBack(Bit8u * stream,Bit32u len) {
 
 void SBLASTER_Init(Section* sec) {
 	Bitu i;
-    MSG_Add("SBLASTER_CONFIGFILE_HELP","Sound Blaster related options.\n");
 	Section_prop * section=static_cast<Section_prop *>(sec);
-	if(!section->Get_bool("enabled")) return;
+	if(!section->Get_bool("sblaster")) return;
 	sb.chan=MIXER_AddChannel(&SBLASTER_CallBack,22050,"SBLASTER");
 	MIXER_Enable(sb.chan,false);
 	sb.dsp.state=DSP_S_NORMAL;
