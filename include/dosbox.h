@@ -68,6 +68,7 @@ enum MachineType {
 };
 
 extern MachineType machine;
+extern bool SDLNetInited;
 
 #ifndef __LOGGING_H_
 #include "logging.h"
