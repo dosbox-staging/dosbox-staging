@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.31 2004-01-31 22:42:49 harekiet Exp $ */
+/* $Id: mouse.cpp,v 1.32 2004-02-29 22:22:56 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -283,7 +283,7 @@ void DrawCursor() {
 	// Get Clipping ranges
 
 	// In Textmode ?
-	if (CurMode->type<=M_TEXT16) {
+	if (CurMode->type==M_TEXT) {
 		DrawCursorText();
 		return;
 	}
@@ -444,6 +444,9 @@ void Mouse_NewVideoMode(void)
 	case 0x05:
 	case 0x06:
 	case 0x07:
+	case 0x08:
+	case 0x09:
+	case 0x0a:
 	case 0x0d:
 	case 0x0e:
 	case 0x13:
@@ -526,7 +529,7 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x02:	/* Hide Mouse */
 		{
-			if (CurMode->type>M_TEXT16)		RestoreCursorBackground();
+			if (CurMode->type!=M_TEXT)		RestoreCursorBackground();
 			else							RestoreCursorBackgroundText();
 			mouse.shown--;
 		}
