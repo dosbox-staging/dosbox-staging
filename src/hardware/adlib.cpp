@@ -144,7 +144,7 @@ void OPL_Write(Bit32u port,Bit8u val) {
 	}
 }
 
-void OPL_Init(Section* sec,OPL_Mode oplmode,Bitu rate) {
+void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
 	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	if (OPL2::YM3812Init(2,OPL2_INTERNAL_FREQ,rate)) {
@@ -159,9 +159,15 @@ void OPL_Init(Section* sec,OPL_Mode oplmode,Bitu rate) {
 	for (i=0;i<4;i++) {
         IO_RegisterWriteHandler(0x388+i,OPL_Write,"OPL Write");
 		IO_RegisterReadHandler(0x388+i,OPL_Read,"OPL read");
-        IO_RegisterWriteHandler(0x220+i,OPL_Write,"OPL Write");
-		IO_RegisterReadHandler(0x220+i,OPL_Read,"OPL read");
+		IO_RegisterWriteHandler(base+i,OPL_Write,"OPL Write");
+		IO_RegisterReadHandler(base+i,OPL_Read,"OPL read");
 	}
+	IO_RegisterWriteHandler(base+8,OPL_Write,"OPL Write");
+	IO_RegisterWriteHandler(base+9,OPL_Write,"OPL Write");
+	IO_RegisterReadHandler(base+8,OPL_Read,"OPL read");
+	IO_RegisterReadHandler(base+9,OPL_Read,"OPL read");
+
+
 	opl.active=false;
 	opl.last_used=0;
 	opl.mode=oplmode;

@@ -420,14 +420,14 @@ static void write_cms(Bit32u port,Bit8u val) {
 }
 
 
- void CMS_Init(Section* sec,Bitu rate) {
+ void CMS_Init(Section* sec,Bitu base,Bitu rate) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sample_rate=rate;
 
-	IO_RegisterWriteHandler(0x220,write_cms,"CMS");
-	IO_RegisterWriteHandler(0x221,write_cms,"CMS");
-	IO_RegisterWriteHandler(0x222,write_cms,"CMS");
-	IO_RegisterWriteHandler(0x223,write_cms,"CMS");
+	IO_RegisterWriteHandler(base+0x0,write_cms,"CMS");
+	IO_RegisterWriteHandler(base+0x1,write_cms,"CMS");
+	IO_RegisterWriteHandler(base+0x2,write_cms,"CMS");
+	IO_RegisterWriteHandler(base+0x3,write_cms,"CMS");
 	
 /* Register the Mixer CallBack */
 
