@@ -392,6 +392,7 @@ struct CPUBlock {
 	struct {
 		Bitu which,error;
 	} exception;
+	Bits direction;
 };
 
 extern CPUBlock cpu;
