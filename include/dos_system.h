@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.20 2004-01-12 20:25:57 finsterr Exp $ */
+/* $Id: dos_system.h,v 1.21 2004-03-04 19:49:14 qbix79 Exp $ */
 
 #ifndef DOSSYSTEM_H_
 #define DOSSYSTEM_H_
@@ -54,7 +54,7 @@ class DOS_DTA;
 class DOS_File {
 public:
 	DOS_File():flags(0)		{ name=0; refCtr = 0; };
-	virtual	~DOS_File(){};
+	virtual	~DOS_File(){if(name) delete [] name;};
 	virtual bool	Read(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Seek(Bit32u * pos,Bit32u type)=0;
@@ -66,6 +66,7 @@ public:
 	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcmp(name,_name)==0; };
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
+	virtual bool	UpdateDateTimeFromHost()	{ return true; }
 	Bit8u type;
 	Bit32u flags;
 	Bit16u time;

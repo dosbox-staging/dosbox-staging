@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.44 2004-01-11 16:48:32 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.45 2004-03-04 19:49:21 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +39,7 @@ public:
 	bool Seek(Bit32u * pos,Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
+	bool UpdateDateTimeFromHost(void);   
 private:
 	FILE * fhandle;
 	enum { NONE,READ,WRITE } last_action;
@@ -436,6 +437,21 @@ localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 	name=0;
 	SetName(_name);
 }
+
+bool localFile::UpdateDateTimeFromHost(void) {
+	if(!open) return false;
+	struct stat temp_stat;
+	fstat(fileno(fhandle),&temp_stat);
+	struct tm * ltime;
+	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
+		time=DOS_PackTime(ltime->tm_hour,ltime->tm_min,ltime->tm_sec);
+		date=DOS_PackDate(ltime->tm_year+1900,ltime->tm_mon+1,ltime->tm_mday);
+	} else {
+		time=1;date=1;
+	}
+	return true;
+}
+
 
 // ********************************************
 // CDROM DRIVE

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.52 2004-02-02 19:20:38 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.53 2004-03-04 19:49:14 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -966,19 +966,12 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	struct stat stat_block;
-	if (fstat(handle, &stat_block)!=0) {
+	if (!Files[handle]->UpdateDateTimeFromHost()) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false; 
 	}
-	struct tm *time;
-	if ((time=localtime(&stat_block.st_mtime))!=0) {
-	    *otime = (time->tm_hour<<11)+(time->tm_min<<5)+(time->tm_sec/2); /* standard way. */
-        *odate = ((time->tm_year-80)<<9)+((time->tm_mon+1)<<5)+(time->tm_mday);
-    } else {
-        *otime = 6;
-        *odate = 4;
-    }
+	*otime = Files[handle]->time;
+	*odate = Files[handle]->date;
 	return true;
 };
 
