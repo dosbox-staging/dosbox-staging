@@ -240,8 +240,10 @@ void DMA_Init(Section* sec) {
 	for(i=0;i<8;i++) {
 		DmaChannels[i] = new DmaChannel(i,i>=4);
 	}
+	
 	for (i=0;i<0x10;i++) {
-		Bitu mask=i<8 ? (IO_MB|IO_MW) : IO_MB;
+		Bitu mask=IO_MB;
+		if (i<8) mask|=IO_MW;
 		IO_RegisterWriteHandler(i,DMA_Write_Port,mask);
 		IO_RegisterReadHandler(i,DMA_Read_Port,mask);
 		if (machine==MCH_VGA) {
@@ -249,20 +251,11 @@ void DMA_Init(Section* sec) {
 			IO_RegisterReadHandler(0xc0+i*2,DMA_Read_Port,mask);
 		}
 	}
-	IO_RegisterWriteHandler(0x81,DMA_Write_Port,IO_MB);
-	IO_RegisterWriteHandler(0x82,DMA_Write_Port,IO_MB);
-	IO_RegisterWriteHandler(0x83,DMA_Write_Port,IO_MB);
-	IO_RegisterWriteHandler(0x89,DMA_Write_Port,IO_MB);
-	IO_RegisterWriteHandler(0x8a,DMA_Write_Port,IO_MB);
-	IO_RegisterWriteHandler(0x8b,DMA_Write_Port,IO_MB);
+	IO_RegisterWriteHandler(0x81,DMA_Write_Port,IO_MB,3);
+	IO_RegisterWriteHandler(0x89,DMA_Write_Port,IO_MB,3);
 
-	IO_RegisterReadHandler(0x81,DMA_Read_Port,IO_MB);
-	IO_RegisterReadHandler(0x82,DMA_Read_Port,IO_MB);
-	IO_RegisterReadHandler(0x83,DMA_Read_Port,IO_MB);
-	IO_RegisterReadHandler(0x89,DMA_Read_Port,IO_MB);
-	IO_RegisterReadHandler(0x8a,DMA_Read_Port,IO_MB);
-	IO_RegisterReadHandler(0x8b,DMA_Read_Port,IO_MB);
-
+	IO_RegisterReadHandler(0x81,DMA_Read_Port,IO_MB,3);
+	IO_RegisterReadHandler(0x89,DMA_Read_Port,IO_MB,3);
 }
 
 
