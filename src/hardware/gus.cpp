@@ -121,9 +121,6 @@ static void pushIRQ(Bit8u channum, bool WaveIRQ, bool RampIRQ) {
 		IRQFifo.entry[IRQFifo.stackpos].channum = channum;
 		IRQFifo.entry[IRQFifo.stackpos].RampIRQ = RampIRQ;
 		IRQFifo.entry[IRQFifo.stackpos].WaveIRQ = WaveIRQ;
-
-
-
 	} else {
 		LOG_GUS("GUS IRQ Fifo full!");
 	}
@@ -149,27 +146,23 @@ static void popIRQ(IRQFifoEntry * tmpentry) {
 
 
 // Returns a single 16-bit sample from the Gravis's RAM
-static INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
+static INLINE Bit32s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 	Bit32u useAddr;
 	Bit32u holdAddr;
 	useAddr = CurAddr >> 9;
 	if(eightbit) {
 		if(Delta >= 1024) {
-			Bit8s tmpsmall = (Bit8s)GUSRam[useAddr];
-			return (Bit16s)(tmpsmall << 7);
+			Bit32s tmpsmall = (Bit8s)GUSRam[useAddr];
+//			return tmpsmall << 7;
+			return tmpsmall << 8;
 		} else {
-
 			// Interpolate
-			Bit8s b1 = (Bit8s)GUSRam[useAddr];
-			Bit8s b2 = (Bit8s)GUSRam[useAddr+1];
-			Bit32s w1 = b1 << 8;
-			Bit32s w2 = b2 << 8;
+			Bit32s w1 = ((Bit8s)GUSRam[useAddr+0]) << 8;
+			Bit32s w2 = ((Bit8s)GUSRam[useAddr+1]) << 8;
 			Bit32s diff = w2 - w1;
-			return (Bit16s)(w1+((diff*(CurAddr&511))>>9));
-
+			return (w1+((diff*(Bit32s)(CurAddr&511))>>9));
 		}
 	} else {
-		
 		// Formula used to convert addresses for use with 16-bit samples
 		holdAddr = useAddr & 0xc0000L;
 		useAddr = useAddr & 0x1ffffL;
@@ -177,17 +170,14 @@ static INLINE Bit16s GetSample(Bit32u Delta, Bit32u CurAddr, bool eightbit) {
 		useAddr = (holdAddr | useAddr);
 
 		if(Delta >= 1024) {
-			
-			return (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8)) >> 2
-		;
-
+//			return (GUSRam[useAddr+0] | (((Bit8s)GUSRam[useAddr+1]) << 8)) >> 2;
+			return (GUSRam[useAddr+0] | (((Bit8s)GUSRam[useAddr+1]) << 8));
 		} else {
-
 			// Interpolate
-			Bit16s w1 = (Bit16s)((Bit16u)GUSRam[useAddr] | ((Bit16u)GUSRam[useAddr+1] << 8));
-			Bit16s w2 = (Bit16s)((Bit16u)GUSRam[useAddr+2] | ((Bit16u)GUSRam[useAddr+3] << 8));
+			Bit32s w1 = (GUSRam[useAddr+0] | (((Bit8s)GUSRam[useAddr+1]) << 8));
+			Bit32s w2 = (GUSRam[useAddr+2] | (((Bit8s)GUSRam[useAddr+3]) << 8));
 			Bit32s diff = w2 - w1;
-			return (Bit16s)(w1+((diff*(CurAddr&511))>>9));
+			return (w1+((diff*(Bit32s)(CurAddr&511))>>9));
 		}
 	}
 }
@@ -339,9 +329,9 @@ public:
 	// It should be noted that unless a channel is stopped, it will
 	// continue to return the sample it is pointing to, regardless
 	// of whether or not the channel is moving or ramping.
-	void generateSamples(Bit16s * stream,Bit32u len) {
+	void generateSamples(Bit32s * stream,Bit32u len) {
 		int i;
-		Bit16s tmpsamp;
+		Bit32s tmpsamp;
 		bool eightbit;
 		eightbit = ((voiceCont & 0x4) == 0);
 	
@@ -357,11 +347,9 @@ public:
 			tmpsamp = (tmpsamp * vol16bit[CurVolume]) >> 12;
 
 			// Output stereo sample
-			stream[i<<1] = (Bit16s)(((Bit32s)tmpsamp * (Bit32s)leftvol)>>8) ;
-			stream[(i<<1)+1] = (Bit16s)(((Bit32s)tmpsamp * rightvol)>>8);
-			
-
-			if(dir) {
+			stream[i<<1]+= tmpsamp * leftvol;
+			stream[(i<<1)+1]+= tmpsamp * rightvol;
+			if (dir) {
 				// Increment backwards but don't let it get below zero.
 				if (moving) { if(CurAddr > RealDelta) CurAddr -= RealDelta; else CurAddr = 0; }
 			   
@@ -383,11 +371,8 @@ public:
 						NotifyEndSamp();
 					} else {
 						NotifyEndSamp();
-
 					}
-					
 				}
-
 			} else {
 
 				// Increment forwards
@@ -465,8 +450,10 @@ public:
 						}
 
 					}
-
-
+#if 1
+					static Bit32u rampmultable[4]={1,8,64,512};
+					nextramp += myGUS.muperchan*rampmultable[VolRampRate >> 6];
+#else
 					switch(VolRampRate >> 6) {
 					case 0:
 						nextramp += myGUS.muperchan; 
@@ -483,13 +470,11 @@ public:
 					default:
 						nextramp += myGUS.muperchan * 512;
 						break;
-
 					}
-					
+#endif					
 				}
 
 			}
-
 
 		}
 
@@ -905,24 +890,31 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 	chan->Register_Callback(0);
 }
 
-
 static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 
-	Bit16s *bufptr;
-	Bit16s buffer[4096];
-	Bit32s tmpbuf[4096];
-
-	memset(&buffer[0],0,len*4);
-	memset(&tmpbuf[0],0,len*8);
-
-	Bitu i,t;
+	Bit32s buffer[4096];
+	memset(&buffer[0],0,len*8);
+	Bitu i;
 	for(i=0;i<=myGUS.activechan;i++) {
 		if (guschan[i]->playing) {
 			guschan[i]->generateSamples(&buffer[0],len);
-			for(t=0;t<len*2;t++) {
-				tmpbuf[t]+=(Bit32s)buffer[t];
-			}
 		}
+	}
+	Bit32s sample;
+	Bit16s * bufptr = (Bit16s *)stream;
+//	static Bitu showamp;
+//	if ((++showamp&127)==0) LOG_MSG("AutoAmp: %d",AutoAmp);
+	for(i=0;i<len*2;i++) {
+		sample=((buffer[i] >> 8)*AutoAmp)>>9;
+		if (sample>32767) {
+			sample=32767;
+			AutoAmp--;
+		} else if (sample<-32768)
+		{
+			sample=-32768;
+			AutoAmp--;
+		}
+		bufptr[i] = (Bit16s)(sample);
 	}
 
 	if(myGUS.irqenabled) {
@@ -957,26 +949,6 @@ static void GUS_CallBack(Bit8u * stream,Bit32u len) {
 			}
 		}
 	}
-
-	
-	Bit32s sample;
-	bufptr = (Bit16s *)stream;
-//	LOG_GUS("AutoAmp: %i\n",AutoAmp);
-	for(i=0;i<len*2;i++)
-	{
-		sample=(tmpbuf[i]*AutoAmp)>>9;
-		if (sample>32767)
-		{
-			sample=32767;
-			AutoAmp--;
-		} else if (sample<-32768)
-		{
-			sample=-32768;
-			AutoAmp--;
-		}
-		bufptr[i] = (Bit16s)(sample);
-	}
-
 }
 
 
