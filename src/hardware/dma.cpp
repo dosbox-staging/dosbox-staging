@@ -30,445 +30,226 @@
 DmaChannel *DmaChannels[8];
 DmaController *DmaControllers[2];
 
-
-Bit16u DmaController::portRead(Bit32u port, bool eightbit) {
-	LOG_MSG("Reading DMA controller at %x", port);
-	return 0xffff;
+static void DMA_WriteControllerReg(DmaController * cont,Bitu reg,Bitu val,Bitu len) {
+	DmaChannel * chan;Bitu i;
+	Bitu base=cont->chanbase;
+	switch (reg) {
+	case 0x0:case 0x2:case 0x4:case 0x6:
+		chan=DmaChannels[base+(reg >> 1)];
+		cont->flipflop=!cont->flipflop;
+		if (cont->flipflop) {
+			chan->baseaddr=(chan->baseaddr&0xff00)|val;
+			chan->curraddr=(chan->curraddr&0xff00)|val;
+		} else {
+			chan->baseaddr=(chan->baseaddr&0x00ff)|(val << 8);
+			chan->curraddr=(chan->curraddr&0x00ff)|(val << 8);
+		}
+		break;
+	case 0x1:case 0x3:case 0x5:case 0x7:
+		chan=DmaChannels[base+(reg >> 1)];
+		cont->flipflop=!cont->flipflop;
+		if (cont->flipflop) {
+			chan->basecnt=(chan->basecnt&0xff00)|val;
+			chan->currcnt=(chan->currcnt&0xff00)|val;
+		} else {
+			chan->basecnt=(chan->basecnt&0x00ff)|(val << 8);
+			chan->currcnt=(chan->currcnt&0x00ff)|(val << 8);
+		}
+		break;
+	case 0x8:		/* Comand reg not used */
+		break;
+	case 0x9:		/* Request registers, memory to memory */
+		//TODO Warning?
+		break;
+	case 0xa:		/* Mask Register */
+		chan=DmaChannels[base+(val & 3 )];
+		chan->SetMask((val & 0x4)>0);
+		break;
+	case 0xb:		/* Mode Register */
+		chan=DmaChannels[base+(val & 3 )];
+		chan->autoinit=(val & 0x10) > 0;
+		chan->increment=(val & 0x20) > 0;
+		//TODO Maybe other bits?
+		break;
+	case 0xc:		/* Clear Flip/Flip */
+		cont->flipflop=false;
+		break;
+	case 0xd:		/* Master Clear/Reset */
+		for (i=0;i<4;i++) {
+			DmaChannels[base+i]->SetMask(true);
+			DmaChannels[base+i]->tcount=false;
+		}
+		cont->flipflop=false;
+		break;
+	case 0xe:		/* Clear Mask register */		
+		for (i=0;i<4;i++) {
+			DmaChannels[base+i]->SetMask(false);
+		}
+		break;
+	case 0xf:		/* Multiple Mask register */
+		for (i=0;i<4;i++) {
+			DmaChannels[base+i]->SetMask(val & 1);
+			val>>=1;
+		}
+		break;
+	}
 }
 
-void DmaController::portWrite(Bit32u port, Bit16u val, bool eightbit) {
-	bool found;
-	found = false;
-	if(port == ControllerPorts[ctrlnum][DMA_CLRMASKREG]) {
-		found = true;
-		flipflop = true;
-		// Disable DMA requests
-		// Clear command and status registers
-	}
-	if(port == ControllerPorts[ctrlnum][DMA_SINGLEREG]) {
-		found = true;
-		int dmachan;
-		dmachan = (ctrlnum * 2) + (val & 0x3);
-		DmaChannels[dmachan]->masked = ((val & 0x4) == 0x4);
-		DmaChannels[dmachan]->Notify();
-	}
-	if(port == ControllerPorts[ctrlnum][DMA_WRITEALLREG]) {
-		found = true;
-		int dmachan,i,r;
-		dmachan = (ctrlnum * 2);
-		r = 0;
-		for(i=dmachan;i<dmachan+4;i++) {
-			DmaChannels[i]->masked = (((val >> r) & 0x1) == 0x1);
-			DmaChannels[i]->Notify();
-			r++;
+static Bitu DMA_ReadControllerReg(DmaController * cont,Bitu reg,Bitu len) {
+	DmaChannel * chan;Bitu i,ret;
+	Bitu base=cont->chanbase;
+	switch (reg) {
+	case 0x0:case 0x2:case 0x4:case 0x6:
+		chan=DmaChannels[base+(reg >> 1)];
+		cont->flipflop=!cont->flipflop;
+		if (cont->flipflop) {
+			return chan->curraddr & 0xff;
+		} else {
+			return (chan->curraddr >> 8) & 0xff;
 		}
-
+	case 0x1:case 0x3:case 0x5:case 0x7:
+		chan=DmaChannels[base+(reg >> 1)];
+		cont->flipflop=!cont->flipflop;
+		if (cont->flipflop) {
+			return chan->currcnt & 0xff;
+		} else {
+			return (chan->currcnt >> 8) & 0xff;
+		}
+	case 0x8:
+		ret=0;
+		for (i=0;i<4;i++) {
+			chan=DmaChannels[base+i];
+			if (chan->tcount) ret|=1 << i;
+			chan->tcount=false;
+			if (chan->callback) ret|=1 << (i+4);
+		}
+		return ret;
+	default:
+		LOG_MSG("Trying to read undefined DMA Red %x",reg);
 	}
-	if(port == ControllerPorts[ctrlnum][DMA_CLEARREG]) {
-		found = true;
-		flipflop = true;
-	}
-	if(port == ControllerPorts[ctrlnum][DMA_MODEREG]) {
-		found = true;
-		int dmachan;
-		dmachan = (ctrlnum * 2) + (val & 0x3);
-		DmaChannels[dmachan]->trantype = (val >> 2) & 0x3;
-		DmaChannels[dmachan]->autoinit = ((val & 0x10) == 0x10);
-		DmaChannels[dmachan]->dir = ((val & 0x20) == 0x20);
-		DmaChannels[dmachan]->dmamode = (val >> 6) & 0x3;
-		DmaChannels[dmachan]->Notify();
-	}
-	if(!found) LOG_MSG("Write to DMA port %x with %x", port, val);
-
+	return 0xffffffff;
 }
 
 
-Bit32u DmaChannel::Read(Bit32s requestsize, Bit8u * buffer) {
-	Bit32s bytesread;
-	bytesread = 0;
-	if(autoinit) {
-		while(requestsize>0) {
-			if(currcnt>=requestsize) {
-				MEM_BlockRead(curraddr,buffer,requestsize);
-				curraddr+=requestsize;
-				buffer+=requestsize;
-				currcnt-=requestsize;
-				bytesread+=requestsize;
-				requestsize=0;
-				break;
-			} else {
-				MEM_BlockRead(curraddr,buffer,currcnt);
-				bytesread+=currcnt;
-				buffer+=currcnt;
-				requestsize-=currcnt;
-				reset();
-				MakeCallback(true);
-			}
-		}
-		if(currcnt==0) {
-			reset();
-			MakeCallback(true);
-		}
-		return bytesread;
+static void DMA_Write_PortB(Bit32u port,Bit8u val) {
+	if (port<0x10) {
+		DMA_WriteControllerReg(DmaControllers[0],port,val,1);
+	} else if (port>=0xc0 && port <=0xdf) {
+		DMA_WriteControllerReg(DmaControllers[1],(port-0xc0) >> 1,val,1);
+	} else switch (port) {
+		case 0x81:DmaChannels[2]->SetPage(val);break;
+		case 0x82:DmaChannels[3]->SetPage(val);break;		
+		case 0x83:DmaChannels[1]->SetPage(val);break;
+		case 0x89:DmaChannels[6]->SetPage(val);break;
+		case 0x8a:DmaChannels[7]->SetPage(val);break;		
+		case 0x8b:DmaChannels[5]->SetPage(val);break;
+	}
+}
 
+static Bit8u DMA_Read_PortB(Bit32u port) {
+	if (port<0x10) {
+		return DMA_ReadControllerReg(DmaControllers[0],port,1);
+	} else if (port>=0xc0 && port <=0xdf) {
+		return DMA_ReadControllerReg(DmaControllers[1],(port-0xc0) >> 1,1);
+	}
+}
+
+DmaChannel::DmaChannel(Bit8u num, bool dma16) {
+		masked = true;
+		callback = NULL;
+		if(num == 4) return;
+		channum = num;
+		DMA16 = dma16 ? 0x1 : 0x0;
+		pagenum = 0;
+		pagebase = 0;
+		baseaddr = 0;
+		curraddr = 0;
+		basecnt = 0;
+		currcnt = 0;
+		increment = true;
+		autoinit = false;
+		tcount = false;
+}
+
+Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
+	Bitu done=0;
+again:
+	Bitu left=(currcnt+1);
+	if (want<left) {
+		MEM_BlockRead(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		done+=want;
+		curraddr+=want;
+		currcnt-=want;
 	} else {
-		if(currcnt>=requestsize) {
-			MEM_BlockRead(curraddr,buffer,requestsize);
-			curraddr+=requestsize;
-			buffer+=requestsize;
-			currcnt-=requestsize;
-			bytesread+=requestsize;
+		MEM_BlockRead(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		buffer+=left << DMA16;
+		want-=left;
+		done+=left;
+		ReachedTC();
+		if (autoinit) {
+			currcnt=basecnt;
+			curraddr=baseaddr;
+			if (want) goto again;
 		} else {
-			MEM_BlockRead(curraddr,buffer,currcnt);
-			buffer+=currcnt;
-			requestsize-=currcnt;
-			bytesread+=currcnt;
-			currcnt=0;
+			curraddr+=left;
+			currcnt=0xffff;
+			SetMask(true);
 		}
 	}
-	if(currcnt==0) MakeCallback(true);
-	return bytesread;
+	return done;
 }
-
-Bit32u DmaChannel::Write(Bit32s requestsize, Bit8u * buffer) {
-	Bit32s byteswrite;
-	byteswrite = 0;
-	if(autoinit) {
-		while(requestsize>0) {
-			if(currcnt>=requestsize) {
-				MEM_BlockWrite(curraddr,buffer,requestsize);
-				curraddr+=requestsize;
-				buffer+=requestsize;
-				currcnt-=requestsize;
-				byteswrite+=requestsize;
-				requestsize=0;
-				break;
-			} else {
-				MEM_BlockWrite(curraddr,buffer,currcnt);
-				byteswrite+=currcnt;
-				buffer+=currcnt;
-				requestsize-=currcnt;
-				reset();
-				MakeCallback(true);
-			}
-		}
-		if(currcnt==0) {
-			reset();
-			MakeCallback(true);
-		}
-		return byteswrite;
-
+Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
+	Bitu done=0;
+again:
+	Bitu left=(currcnt+1);
+	if (want<left) {
+		MEM_BlockWrite(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		done+=want;
+		curraddr+=want;
+		currcnt-=want;
 	} else {
-		if(currcnt>=requestsize) {
-			MEM_BlockWrite(curraddr,buffer,requestsize);
-			curraddr+=requestsize;
-			buffer+=requestsize;
-			currcnt-=requestsize;
-			byteswrite+=requestsize;
+		MEM_BlockWrite(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		buffer+=left << DMA16;
+		want-=left;
+		done+=left;
+		ReachedTC();
+		if (autoinit) {
+			currcnt=basecnt;
+			curraddr=baseaddr;
+			if (want) goto again;
 		} else {
-			MEM_BlockWrite(curraddr,buffer,currcnt);
-			buffer+=currcnt;
-			requestsize-=currcnt;
-			byteswrite+=currcnt;
-			currcnt=0;
+			curraddr+=left;
+			currcnt=0xffff;
+			SetMask(true);
 		}
 	}
-	if(currcnt==0) MakeCallback(true);
-	return byteswrite;
+	return done;
 }
 
-
-void DmaChannel::calcPhys(void) {
-	if (DMA16) {
-		physaddr = (baseaddr << 1) | ((pageaddr >> 1) << 17);
-	} else {
-		physaddr = (baseaddr) | (pageaddr << 16);
-	}
-	curraddr = physaddr;
-	current_addr = baseaddr;
-}
-
-#define ff myController->flipflop
-
-Bit16u DmaChannel::portRead(Bit32u port, bool eightbit) {
-	if (port == ChannelPorts[DMA_BASEADDR][channum]) {
-		if(eightbit) {
-			if(ff) {
-				ff = !ff;
-				return current_addr & 0xff;
-			} else {
-				ff = !ff;
-				return current_addr >> 8;
-			}
-		} else {
-			return current_addr;
-		}
-	}
-	if (port == ChannelPorts[DMA_TRANSCOUNT][channum]) {
-		if(eightbit) {
-			if(ff) {
-				ff = !ff;
-				return (Bit8u)(currcnt-1);
-			} else {
-				ff = !ff;
-				return (Bit8u)((currcnt-1) >> 8);
-			}
-		} else {
-			return (Bit16u)currcnt;
-		}
-	}
-	if (port == ChannelPorts[DMA_PAGEREG][channum]) return pageaddr;
-	return 0xffff;
-}
-
-void DmaChannel::portWrite(Bit32u port, Bit16u val, bool eightbit) {
-	if (port == ChannelPorts[DMA_BASEADDR][channum]) {
-		if(eightbit) {
-			if(ff) {
-				baseaddr = (baseaddr & 0xff00) | (Bit8u)val;
-			} else {
-				baseaddr = (baseaddr & 0xff) | (val << 8);
-			}
-			ff = !ff;
-		} else {
-			baseaddr = val;
-		}
-		calcPhys();
-		addr_changed = true;
-	}
-	if (port == ChannelPorts[DMA_TRANSCOUNT][channum]) {
-		if(eightbit) {
-			if(ff) {
-				transcnt = (transcnt & 0xff00) | (Bit8u)val;
-			} else {
-				transcnt = (transcnt & 0xff) | (val << 8);
-			}
-			ff = !ff;
-		} else {
-			transcnt = val;
-		}
-		currcnt = transcnt+1;
-		addr_changed = true;
-		DMA_CheckEnabled(this);
-		MakeCallback(false);
-		
-	}
-	if (port == ChannelPorts[DMA_PAGEREG][channum]) {
-		pageaddr = val;
-		calcPhys();
-		reset();
-	}
-
-}
-
-#undef ff
-
-// Notify channel when mask changes
-void DmaChannel::Notify(void) {
-	if(!masked) {
-		DMA_CheckEnabled(this);
-		MakeCallback(false);
-	}
-}
-
-
-static Bit16u readDMAPorts(Bit32u port, bool eightbit) {
-	int i,j;
-
-	// Check for controller access
-	for(i=0;i<2;i++) {
-		for(j=0;j<7;j++) {
-			if(ControllerPorts[i][j] == port) {
-				return DmaControllers[i]->portRead(port, eightbit);
-			}
-		}
-	}
-
-	// Check for DMA access
-	for(i=0;i<8;i++) {
-		for(j=0;j<3;j++) {
-			if(ChannelPorts[j][i] == port) {
-				return DmaChannels[i]->portRead(port, eightbit);
-			}
-		}
-	}
-
-	LOG_MSG("Unmatched read port %x", port);
-
-	return 0xffff;
-
-}
-
-static void writeDMAPorts(Bit32u port, Bit16u val, bool eightbit) {
-	int i,j;
-
-	// Check for controller access
-	for(i=0;i<2;i++) {
-		for(j=0;j<7;j++) {
-			if(ControllerPorts[i][j] == port) {
-				DmaControllers[i]->portWrite(port,val,eightbit);
-				return;
-			}
-		}
-	}
-
-	// Check for DMA access
-	for(i=0;i<8;i++) {
-		for(j=0;j<3;j++) {
-			if(ChannelPorts[j][i] == port) {
-				DmaChannels[i]->portWrite(port,val,eightbit);
-				return;
-			}
-		}
-	}
-
-	LOG_MSG("Unmatched write port %x - val %x", port, val);
-
-}
-
-Bit8u read_dmaB(Bit32u port) { return (Bit8u)readDMAPorts(port,true); }
-
-Bit16u read_dmaW(Bit32u port) { 	return readDMAPorts(port,false); }
-
-void write_dmaB(Bit32u port,Bit8u val) { writeDMAPorts(port,val,true); }
-
-void write_dmaW(Bit32u port,Bit16u val) { writeDMAPorts(port,val,false); }
-
-
-// Deprecated DMA read/write routines -- Keep compatibility with Sound Blaster
-Bitu DMA_8_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
-	DmaChannel *chan=DmaChannels[dmachan];
-	
-	if (chan->masked) return 0;
-	if (!count) return 0;
-	if (chan->addr_changed) chan->reset();
-
-	if (chan->currcnt>(Bits)count) {
-		MEM_BlockRead(chan->curraddr,buffer,count);
-		chan->curraddr+=count;
-		chan->current_addr+=count;
-		chan->currcnt-=count;
-		return count;
-	} else {
-		// Copy remaining piece of first buffer 
-		MEM_BlockRead(chan->curraddr,buffer,chan->currcnt);
-		if (!chan->autoinit) {
-			// Set the end of counter bit 
-			//dma[0].status_reg|=(1 << dmachan);
-			count=chan->currcnt;
-			chan->curraddr+=count;
-			chan->current_addr+=count;
-			chan->currcnt=0;
-			chan->enabled=false;
-			LOG(LOG_DMA,LOG_NORMAL)("8-bit Channel %d reached terminal count",chan->channum);
-			return count;
-		} else {
-			buffer+=chan->currcnt;
-			Bitu left=count-(Bit16u)chan->currcnt;
-			// Autoinit reset the dma channel 
-			chan->reset();
-			// Copy the rest of the buffer
-			MEM_BlockRead(chan->curraddr,buffer,left);
-			chan->curraddr+=left;
-			chan->current_addr+=left;
-			chan->currcnt-=left;
-			return count;
-		} 
-	}
-}
-
-Bitu DMA_8_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
-	DmaChannel *chan=DmaChannels[dmachan];
-
-	if (chan->masked) return 0;
-	if (!count) return 0;
-	if (chan->currcnt>(Bits)count) {
-		MEM_BlockWrite(chan->curraddr,buffer,count);
-		chan->curraddr+=count;
-		chan->currcnt-=count;
-		return count;
-	} else {
-		// Copy remaining piece of first buffer
-		MEM_BlockWrite(chan->curraddr,buffer,chan->currcnt);
-		if (!chan->autoinit) {
-			// Set the end of counter bit 
-			//dma[0].status_reg|=(1 << dmachan);
-			count=chan->currcnt;
-			chan->curraddr+=count;;
-			chan->currcnt=0;
-			return count;
-		} else {
-			buffer+=chan->currcnt;
-			Bitu left=count-(Bit16u)chan->currcnt;
-			// Autoinit reset the dma channel
-			chan->reset();
-			// Copy the rest of the buffer
-			MEM_BlockWrite(chan->curraddr,buffer,left);
-			chan->curraddr+=left;
-			chan->currcnt-=left;
-			return count;
-		} 
-	}
-}
-
-
-Bitu DMA_16_Read(Bitu dmachan,Bit8u * buffer,Bitu count) {
-
-	return 0;
-}
-
-Bitu DMA_16_Write(Bitu dmachan,Bit8u * buffer,Bitu count) {
-
-
-	return 0;
-}
-
-void DMA_SetEnabled(void * usechan,bool enabled) {
-	DmaChannel * chan;
-	chan = (DmaChannel *)usechan;
-
-	if (chan->enabled == enabled) return;
-	chan->enabled=enabled;
-	if (chan->enable_callback) (*chan->enable_callback)(enabled);
-}
-
-void DMA_CheckEnabled(void * usechan) {
-	DmaChannel * chan;
-	chan = (DmaChannel *)usechan;
-
-	bool enabled;
-	if (chan->masked) enabled=false;
-	else {
-		if (chan->autoinit) enabled=true;
-		else if (chan->currcnt) enabled=true;
-		else enabled=false;
-	}
-	DMA_SetEnabled(chan,enabled);
-}
-
-
-void DMA_SetEnableCallBack(Bitu channel,DMA_EnableCallBack callback) {
-	DmaChannel * chan;
-	chan = DmaChannels[channel];
-	chan->enabled=false;
-	chan->enable_callback=callback;
-	DMA_CheckEnabled(chan);
-}
 
 
 void DMA_Init(Section* sec) {
-	
 	Bitu i;
-
 	DmaControllers[0] = new DmaController(0);
 	DmaControllers[1] = new DmaController(1);
 
-	for(i=0;i<4;i++) {
-		DmaChannels[i] = new DmaChannel(i,DmaControllers[0],false);
+	for(i=0;i<8;i++) {
+		DmaChannels[i] = new DmaChannel(i,i>=4);
 	}
-	for(i=4;i<8;i++) {
-		DmaChannels[i] = new DmaChannel(i,DmaControllers[1],true);
+	for (i=0;i<0x10;i++) {
+		IO_RegisterWriteBHandler(i,DMA_Write_PortB);
+		IO_RegisterReadBHandler(i,DMA_Read_PortB);
+		if (machine==MCH_VGA) {
+			IO_RegisterWriteBHandler(0xc0+i*2,DMA_Write_PortB);
+			IO_RegisterReadBHandler(0xc0+i*2,DMA_Read_PortB);
+		}
 	}
+	IO_RegisterWriteBHandler(0x81,DMA_Write_PortB);
+	IO_RegisterWriteBHandler(0x82,DMA_Write_PortB);
+	IO_RegisterWriteBHandler(0x83,DMA_Write_PortB);
+	IO_RegisterWriteBHandler(0x89,DMA_Write_PortB);
+	IO_RegisterWriteBHandler(0x8a,DMA_Write_PortB);
+	IO_RegisterWriteBHandler(0x8b,DMA_Write_PortB);
 
 }
 
