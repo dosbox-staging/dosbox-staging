@@ -1,9 +1,9 @@
 #define INLINE __forceinline
 
-#define VERSION "0.58"
+#define VERSION "0.60"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
-#define C_DEBUG 1
+#define C_DEBUG 0
 
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
