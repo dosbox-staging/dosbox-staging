@@ -662,7 +662,7 @@ static void reg_name(int regnum, char size)
     uprintf("st(%d)", regnum);
     return;
   }
-  if (((size == 'v') && (opsize == 32)) || (size == 'd'))
+  if ((((size == 'c') || (size == 'v')) && (opsize == 32)) || (size == 'd'))
     uputchar('e');
   if ((size=='q' || size == 'b' || size=='c') && !wordop) {
     uputchar("acdbacdb"[regnum]);
