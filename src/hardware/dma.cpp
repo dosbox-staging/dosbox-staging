@@ -16,10 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
-	Based the port handling from the bochs dma code.
-*/
-
 #include <string.h>
 #include "dosbox.h"
 #include "mem.h"
@@ -146,11 +142,22 @@ static void DMA_Write_PortB(Bit32u port,Bit8u val) {
 	}
 }
 
+
+static void DMA_Write_PortW(Bit32u port,Bit16u val) {
+	LOG_MSG("Ahh 16bit write port %x val %x",port,val);
+}
 static Bit8u DMA_Read_PortB(Bit32u port) {
 	if (port<0x10) {
 		return DMA_ReadControllerReg(DmaControllers[0],port,1);
 	} else if (port>=0xc0 && port <=0xdf) {
 		return DMA_ReadControllerReg(DmaControllers[1],(port-0xc0) >> 1,1);
+	} else switch (port) {
+		case 0x81:return DmaChannels[2]->pagenum;
+		case 0x82:return DmaChannels[3]->pagenum;
+		case 0x83:return DmaChannels[1]->pagenum;
+		case 0x89:return DmaChannels[6]->pagenum;
+		case 0x8a:return DmaChannels[7]->pagenum;
+		case 0x8b:return DmaChannels[5]->pagenum;
 	}
 }
 
@@ -238,6 +245,7 @@ void DMA_Init(Section* sec) {
 	}
 	for (i=0;i<0x10;i++) {
 		IO_RegisterWriteBHandler(i,DMA_Write_PortB);
+		IO_RegisterWriteWHandler(i,DMA_Write_PortW);
 		IO_RegisterReadBHandler(i,DMA_Read_PortB);
 		if (machine==MCH_VGA) {
 			IO_RegisterWriteBHandler(0xc0+i*2,DMA_Write_PortB);
@@ -250,6 +258,13 @@ void DMA_Init(Section* sec) {
 	IO_RegisterWriteBHandler(0x89,DMA_Write_PortB);
 	IO_RegisterWriteBHandler(0x8a,DMA_Write_PortB);
 	IO_RegisterWriteBHandler(0x8b,DMA_Write_PortB);
+
+	IO_RegisterReadBHandler(0x81,DMA_Read_PortB);
+	IO_RegisterReadBHandler(0x82,DMA_Read_PortB);
+	IO_RegisterReadBHandler(0x83,DMA_Read_PortB);
+	IO_RegisterReadBHandler(0x89,DMA_Read_PortB);
+	IO_RegisterReadBHandler(0x8a,DMA_Read_PortB);
+	IO_RegisterReadBHandler(0x8b,DMA_Read_PortB);
 
 }
 
