@@ -691,6 +691,14 @@ static Bitu DOS_21Handler(void) {
 		case 1:		/* Set Strategy */
 			DOS_SetMemAllocStrategy(reg_bx);
 			break;
+		case 2:		/* Get UMB Link Status */
+			reg_ax=1; /* no UMB support */
+			CALLBACK_SCF(true);
+			break;
+		case 3:		/* Set UMB Link Status */
+			reg_ax=1; /* failure, no support */
+			CALLBACK_SCF(true);
+			break;
 		default:
 			LOG_DEBUG("DOS:58:Not Supported Set//Get memory allocation call %X",reg_al);
 		}
