@@ -172,6 +172,9 @@
 					RelativePath="..\src\cpu\core_normal.cpp">
 				</File>
 				<File
+					RelativePath="..\src\cpu\core_simple.cpp">
+				</File>
+				<File
 					RelativePath="..\src\cpu\cpu.cpp">
 				</File>
 				<File
