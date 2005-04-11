@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.23 2005-03-25 08:39:05 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.24 2005-04-11 17:56:27 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -26,7 +26,7 @@
 #include "dos_inc.h"
 
 bool DOS_IOCTL(void) {
-	Bitu handle;Bit8u drive;
+	Bitu handle=0;Bit8u drive=0;
 	if (reg_al<8) {				/* call 0-7 use a file handle */
 		handle=RealHandle(reg_bx);
 		if (handle>=DOS_FILES) {
@@ -35,6 +35,12 @@ bool DOS_IOCTL(void) {
 		}
 		if (!Files[handle]) {
 			DOS_SetError(DOSERR_INVALID_HANDLE);
+			return false;
+		}
+	} else  { 				/* the others use a diskdrive */
+		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+		if( !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
+			DOS_SetError(DOSERR_INVALID_DRIVE);
 			return false;
 		}
 	}
@@ -66,34 +72,20 @@ bool DOS_IOCTL(void) {
 		reg_al=0xff;
 		return true;
 	case 0x08:		/* Check if block device removable */
-		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
-		if (Drives[drive]) {
-			/* Drive a,b are removable if mounted *
-			 * So are cdrom drives                */
-			if (drive < 2  || Drives[drive]->isRemovable())
-				reg_ax=0;	
-			else 	reg_ax=1;
-			return true;
-		} else {
-			DOS_SetError(DOSERR_INVALID_DRIVE);
-			return false;
-		}
+		/* cdrom drives and drive a&b are removable */
+		if (drive < 2  || Drives[drive]->isRemovable())
+			reg_ax=0;
+		else 	reg_ax=1;
+		return true;
 	case 0x09:		/* Check if block device remote */
-		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
-		if (Drives[drive]) {
-			reg_dx=0;
-			if (Drives[drive]->isRemote()) reg_dx|=(1 << 12);
-			//TODO Set bit 9 on drives that don't support direct I/O
-			reg_al=0;
-			return true;
-		} else {
-			DOS_SetError(DOSERR_INVALID_DRIVE);
-			return false;
-		}
+		reg_dx=0;
+		if (Drives[drive]->isRemote()) reg_dx|=(1 << 12);
+		//TODO Set bit 9 on drives that don't support direct I/O
+		reg_al=0;
+		return true;
 	case 0x0D:		/* Generic block device request */
 		{
 			PhysPt ptr	= SegPhys(ds)+reg_dx;
-			drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
 			switch (reg_cl) {
 			case 0x60:		/* Get Device parameters */
 				mem_writeb(ptr  ,0x03);					// special function
@@ -138,15 +130,8 @@ bool DOS_IOCTL(void) {
 			return true;
 		}
 	case 0xE:		/* Get Logical Drive Map */
-		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
-		if (Drives[drive]) {
-			reg_al=0;		/* Only 1 logical drive assigned */
-			return true;
-		} else {
-			DOS_SetError(DOSERR_INVALID_DRIVE);
-			return false;
-		}
-		break;
+		reg_al = 0;		/* Only 1 logical drive assigned */
+		return true;
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
 		return false;
