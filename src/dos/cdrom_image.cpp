@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.6 2005-03-25 09:05:04 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.7 2005-04-15 15:58:07 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -256,7 +256,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	Bitu buflen = num * sectorSize;
 	Bit8u* buf = new Bit8u[buflen];
 	
-	bool success;
+	bool success = true; //Gobliiins reads 0 sectors
 	for(int i = 0; i < num; i++) {
 		success = ReadSector(&buf[i * sectorSize], raw, sector);
 		if (!success) break;
