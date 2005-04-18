@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.62 2005-02-10 10:20:50 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.63 2005-04-18 18:46:27 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -1375,6 +1375,7 @@ Bit32u DEBUG_CheckKeys(void) {
 							ParseCommand(codeViewData.inputStr);
 							break;
 				case 0x107:     //backspace (linux)
+				case 0x7f:	//backspace in some terminal emulators (linux)
 				case 0x08:	// delete
 							if (strlen(codeViewData.inputStr)>0) codeViewData.inputStr[strlen(codeViewData.inputStr)-1] = 0;
 							break;
