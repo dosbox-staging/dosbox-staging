@@ -376,3 +376,10 @@
 			else {GetEAa;*rmrd=LoadMws(eaa);}
 			break;
 		}
+	CASE_0F_D(0xc1)												/* XADD Gd,Ed */
+		{
+			GetRMrd;Bit32u oldrmrd=*rmrd;
+			if (rm >= 0xc0 ) {GetEArd;*rmrd=*eard;*eard+=oldrmrd;}
+			else {GetEAa;*rmrd=LoadMd(eaa);SaveMd(eaa,LoadMd(eaa)+oldrmrd);}
+			break;
+		}

@@ -444,6 +444,20 @@
 			else {GetEAa;*rmrw=LoadMbs(eaa);}
 			break;
 		}
+	CASE_0F_B(0xc0)												/* XADD Gb,Eb */
+		{
+			GetRMrb;Bit8u oldrmrb=*rmrb;
+			if (rm >= 0xc0 ) {GetEArb;*rmrb=*earb;*earb+=oldrmrb;}
+			else {GetEAa;*rmrb=LoadMb(eaa);SaveMb(eaa,LoadMb(eaa)+oldrmrb);}
+			break;
+		}
+	CASE_0F_W(0xc1)												/* XADD Gw,Ew */
+		{
+			GetRMrw;Bit16u oldrmrw=*rmrw;
+			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;*earw+=oldrmrw;}
+			else {GetEAa;*rmrw=LoadMw(eaa);SaveMw(eaa,LoadMw(eaa)+oldrmrw);}
+			break;
+		}
 	CASE_0F_B(0xc8)												/* BSWAP EAX */
 		BSWAP(reg_eax);break;
 	CASE_0F_B(0xc9)												/* BSWAP ECX */

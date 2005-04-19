@@ -926,7 +926,7 @@
 		IO_WriteW(reg_dx,reg_ax);
 		break;
 	CASE_B(0xf0)												/* LOCK */
-		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
+		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK"); /* FIXME: see case D_LOCK in core_full/load.h */
 		break;
 	CASE_B(0xf2)												/* REPNZ */
 		DO_PREFIX_REP(false);	
