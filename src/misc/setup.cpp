@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.25 2005-03-25 12:00:52 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.26 2005-04-19 15:30:03 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -168,7 +168,15 @@ void Section_prop::PrintData(FILE* outfile){
 	}
 }
 
-   
+bool Section_prop::HasProperty(const char* _property) {
+	for(it tel=properties.begin();tel!=properties.end();tel++){
+		if(!strcasecmp((*tel)->propname.c_str(),_property)){
+			return true;
+		}
+	}
+	return false;
+}
+	     
 void Section_line::HandleInputline(char* line){ 
 	data+=line;
 	data+="\n";
@@ -178,13 +186,17 @@ void Section_line::PrintData(FILE* outfile) {
 	fprintf(outfile,"%s",data.c_str());
 }
 
+bool Section_line::HasProperty(const char* _property) {
+	return false;
+}
+
 void Config::PrintConfig(const char* configfilename){
 	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */
-		strcpy(temp,(*tel)->sectionname.c_str());
+		strcpy(temp,(*tel)->GetName());
 		lowcase(temp);
 		fprintf(outfile,"[%s]\n",temp);
 		upcase(temp);
@@ -207,12 +219,6 @@ void Config::PrintConfig(const char* configfilename){
 	fclose(outfile);
 }
    
-Section* Config::AddSection(const char* _name,void (*_initfunction)(Section*)){
-	Section* blah = new Section(_name);
-	blah->AddInitFunction(_initfunction);
-	sectionlist.push_back(blah);
-	return blah;
-}
 
 Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Section*),bool canchange){
 	Section_prop* blah = new Section_prop(_name);
@@ -235,6 +241,23 @@ void Config::Init(){
 	}
 }
 
+void Section::ExecuteInit(bool initall) {
+	typedef std::list<Function_wrapper>::iterator func_it;
+	for (func_it tel=initfunctions.begin(); tel!=initfunctions.end(); tel++) {
+		if(initall || (*tel).canchange) (*tel).function(this);
+	}
+}
+
+void Section::ExecuteDestroy(bool destroyall) {
+	typedef std::list<Function_wrapper>::iterator func_it;
+	for (func_it tel=destroyfunctions.begin(); tel!=destroyfunctions.end(); ) {
+		if(destroyall || (*tel).canchange) {
+			(*tel).function(this);
+			tel=destroyfunctions.erase(tel); //Remove destroyfunction once used
+		} else tel++;
+	}
+}
+
 Config::~Config() {
 	reverse_it cnt=sectionlist.rbegin();
 	while (cnt!=sectionlist.rend()) {
@@ -245,11 +268,18 @@ Config::~Config() {
 
 Section* Config::GetSection(const char* _sectionname){
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
-		if (!strcasecmp((*tel)->sectionname.c_str(),_sectionname)) return (*tel);
+		if (!strcasecmp((*tel)->GetName(),_sectionname)) return (*tel);
 	}
 	return NULL;
 }
 
+Section* Config::GetSectionFromProperty(const char* prop)
+{
+   	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+		if ((*tel)->HasProperty(prop)) return (*tel);
+	}
+	return NULL;
+}
 bool Config::ParseConfigFile(const char* configfilename){
 	ifstream in(configfilename);
 	if (!in) return false;
