@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.68 2005-03-25 11:45:37 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.69 2005-04-21 19:12:47 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1877,9 +1877,9 @@ public:
 			LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
 		}
 	
-		if (!CPU_CycleMax) CPU_CycleMax = 2500;
-		if(!CPU_CycleUp)   CPU_CycleUp = 500;
-		if(!CPU_CycleDown) CPU_CycleDown = 20;
+		if(CPU_CycleMax <= 0) CPU_CycleMax = 2500;
+		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
+		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 		return true;
 	}
