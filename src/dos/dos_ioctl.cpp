@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.24 2005-04-11 17:56:27 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.25 2005-04-21 18:42:10 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -104,7 +104,7 @@ bool DOS_IOCTL(void) {
 					char const* bufin=Drives[drive]->GetLabel();
 					char buffer[11] ={' '};
 
-					char* find_ext=strchr(bufin,'.');
+					char const* find_ext=strchr(bufin,'.');
 					if (find_ext) {
 						Bitu size=find_ext-bufin;if (size>8) size=8;
 						memcpy(buffer,bufin,size);

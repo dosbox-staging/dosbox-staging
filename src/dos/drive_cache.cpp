@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.42 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.43 2005-04-21 18:43:28 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -315,7 +315,7 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname)
 
 int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* shortName)
 {
-	char* cpos = strchr(shortName,'~');
+	char const* cpos = strchr(shortName,'~');
 	if (cpos) {
 /* the following code is replaced as it's not safe when char* is 64 bits */
 /*		Bits compareCount1	= (int)cpos - (int)shortName;
