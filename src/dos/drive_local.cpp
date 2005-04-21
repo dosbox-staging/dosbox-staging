@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.56 2005-03-25 09:11:08 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.57 2005-04-21 18:46:23 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -420,7 +420,7 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	//TODO Give some doserrorcode;
 		return false;//ERROR
 	}
-	int ret=fseek(fhandle,*pos,seektype);
+	int ret=fseek(fhandle,*reinterpret_cast<Bit32s*>(pos),seektype);
 	if (ret!=0) {
 		// Out of file range, pretend everythings ok 
 		// and move file pointer top end of file... ?! (Black Thorne)
