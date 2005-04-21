@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.83 2005-03-08 09:34:27 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.84 2005-04-21 18:51:54 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -795,7 +795,7 @@ static void GUI_StartUp(Section * sec) {
 		strcpy(res,fullresolution);
 		fullresolution = lowcase (res);//so x and X are allowed
 
-		char* height = strchr(fullresolution,'x');
+		char* height = const_cast<char*>(strchr(fullresolution,'x'));
 		if(height && * height) {
 			*height = 0;
 			sdl.desktop.height = atoi(height+1);
