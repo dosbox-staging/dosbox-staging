@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.83 2005-02-10 10:20:47 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.84 2005-04-21 21:17:45 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -208,17 +208,17 @@ void DOSBOX_Init(void) {
 	LOG_StartUp();
 #endif
 	
-	secprop->AddInitFunction(&IO_Init);
-	secprop->AddInitFunction(&PAGING_Init);
-	secprop->AddInitFunction(&MEM_Init);
-	secprop->AddInitFunction(&HARDWARE_Init);
+	secprop->AddInitFunction(&IO_Init);//done
+	secprop->AddInitFunction(&PAGING_Init);//done
+	secprop->AddInitFunction(&MEM_Init);//done
+	secprop->AddInitFunction(&HARDWARE_Init);//done
 	secprop->Add_int("memsize",16);
 	secprop->AddInitFunction(&CALLBACK_Init);
-	secprop->AddInitFunction(&PIC_Init);
+	secprop->AddInitFunction(&PIC_Init);//done
 	secprop->AddInitFunction(&PROGRAMS_Init);
-	secprop->AddInitFunction(&TIMER_Init);
-	secprop->AddInitFunction(&CMOS_Init);
-	secprop->AddInitFunction(&SERIAL_Init); 
+	secprop->AddInitFunction(&TIMER_Init);//done
+	secprop->AddInitFunction(&CMOS_Init);//done
+	secprop->AddInitFunction(&SERIAL_Init); //done
 		
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
@@ -238,7 +238,7 @@ void DOSBOX_Init(void) {
 		"          Supported are none,normal2x,advmame2x,advmame3x,advinterp2x,interp2x,tv2x.\n"
 	);
 
-	secprop=control->AddSection_prop("cpu",&CPU_Init);
+	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	secprop->Add_string("core","normal");
 	secprop->Add_int("cycles",3000);
 	secprop->Add_int("cycleup",500);
@@ -257,10 +257,10 @@ void DOSBOX_Init(void) {
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
 #endif
-	secprop->AddInitFunction(&DMA_Init);
+	secprop->AddInitFunction(&DMA_Init);//done
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
-	secprop->AddInitFunction(&JOYSTICK_Init);
+	secprop->AddInitFunction(&JOYSTICK_Init);//done
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	secprop->Add_bool("nosound",false);
@@ -277,8 +277,8 @@ void DOSBOX_Init(void) {
 		"prebuffer -- How many milliseconds of data to keep on top of the blocksize.\n"
 	);
 	
-	secprop=control->AddSection_prop("midi",&MIDI_Init);
-	secprop->AddInitFunction(&MPU401_Init);
+	secprop=control->AddSection_prop("midi",&MIDI_Init,true);//done
+	secprop->AddInitFunction(&MPU401_Init,true);//done
 	secprop->Add_bool("mpu401",true);
 	secprop->Add_bool("intelligent",true);   
 	secprop->Add_string("device","default");
@@ -296,7 +296,7 @@ void DOSBOX_Init(void) {
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
-	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init);
+	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
 	secprop->Add_string("type","sb16");
 	secprop->Add_hex("base",0x220);
 	secprop->Add_int("irq",7);
@@ -315,7 +315,7 @@ void DOSBOX_Init(void) {
 		"oplrate -- Sample rate of OPL music emulation.\n"
 		);
 
-	secprop=control->AddSection_prop("gus",&GUS_Init); 
+	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	secprop->Add_bool("gus",true); 	
 	secprop->Add_int("rate",22050);
 	secprop->Add_hex("base",0x240);
@@ -336,12 +336,12 @@ void DOSBOX_Init(void) {
 		"            with Timidity should work fine.\n"
 	);
 
-	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init);
+	secprop=control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
 	secprop->Add_bool("pcspeaker",true);
 	secprop->Add_int("pcrate",22050);
-	secprop->AddInitFunction(&TANDYSOUND_Init);
+	secprop->AddInitFunction(&TANDYSOUND_Init,true);//done
 	secprop->Add_int("tandyrate",22050);
-	secprop->AddInitFunction(&DISNEY_Init);
+	secprop->AddInitFunction(&DISNEY_Init,true);//done
 	secprop->Add_bool("disney",true);
 
 	MSG_Add("SPEAKER_CONFIGFILE_HELP",
@@ -351,16 +351,16 @@ void DOSBOX_Init(void) {
 		"             Tandysound emulation is present if machine is set to tandy.\n"
 		"disney -- Enable Disney Sound Source emulation.\n"
 	);
-	secprop=control->AddSection_prop("bios",&BIOS_Init);
+	secprop=control->AddSection_prop("bios",&BIOS_Init,false);//done
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	//TODO Maybe combine most of the dos stuff in one section like ems,xms
-	secprop=control->AddSection_prop("dos",&DOS_Init);
-	secprop->AddInitFunction(&XMS_Init);
+	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
+	secprop->AddInitFunction(&XMS_Init,true);//done
 	secprop->Add_bool("xms",true);
-	secprop->AddInitFunction(&EMS_Init);
+	secprop->AddInitFunction(&EMS_Init,true);//done
 	secprop->Add_bool("ems",true);
 	MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
@@ -369,7 +369,7 @@ void DOSBOX_Init(void) {
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 #if C_MODEM
-	secprop=control->AddSection_prop("modem",&MODEM_Init); 
+	secprop=control->AddSection_prop("modem",&MODEM_Init,true);//done
 	secprop->Add_bool("modem",false); 	
 	secprop->Add_hex("comport",2); 
 	secprop->Add_int("listenport",23);
@@ -412,4 +412,3 @@ void DOSBOX_Init(void) {
 	);
 	control->SetStartUp(&SHELL_Init);
 }
-

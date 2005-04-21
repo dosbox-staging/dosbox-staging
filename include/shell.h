@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.11 2005-03-25 09:46:53 qbix79 Exp $ */
+/* $Id: shell.h,v 1.12 2005-04-21 21:17:45 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -71,7 +71,9 @@ public:
 	void InputCommand(char * line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
-	void Execute(char * name,char * args);
+	bool Execute(char * name,char * args);
+	/* Checks if it matches a hardware-property */
+	bool CheckConfig(char* cmd,char*line);
 /* Some internal used functions */
 	char * Which(char * name);
 /* Some supported commands */

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.18 2005-02-10 10:21:11 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.19 2005-04-21 21:17:45 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -197,7 +197,8 @@ void MSG_Write(const char *);
 
 void CONFIG::Run(void) {
 	FILE * f;
-	if (cmd->FindString("-writeconf",temp_line,true)) {
+	if (cmd->FindString("-writeconf",temp_line,true) 
+			|| cmd->FindString("-wc",temp_line,true)) {
 		f=fopen(temp_line.c_str(),"wb+");
 		if (!f) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
@@ -207,7 +208,8 @@ void CONFIG::Run(void) {
 		control->PrintConfig(temp_line.c_str());
 		return;
 	}
-	if (cmd->FindString("-writelang",temp_line,true)) {
+	if (cmd->FindString("-writelang",temp_line,true)
+			||cmd->FindString("-wl",temp_line,true)) {
 		f=fopen(temp_line.c_str(),"wb+");
 		if (!f) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
@@ -217,7 +219,68 @@ void CONFIG::Run(void) {
 		MSG_Write(temp_line.c_str());
 		return;
 	}
-	WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+
+	/* Code for the configuration changes                                  *
+	 * Official format: config -set "section property=value"               *
+	 * Accepted: without quotes and/or without -set and/or without section *
+	 *           and/or the "=" replaced by a " "                          */
+
+	if (cmd->FindString("-set",temp_line,true)) { //get all arguments
+		std::string temp2 = "";
+		cmd->GetStringRemain(temp2);//So -set n1 n2=n3 can be used without quotes
+		if(temp2!="") temp_line = temp_line + " " + temp2;
+	} else 	if(!cmd->GetStringRemain(temp_line)) {//no set 
+			WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE")); //and no arguments specified
+			return;
+	};
+	//Wanted input: n1 n2=n3
+	char copy[1024];
+	strcpy(copy,temp_line.c_str());
+	//seperate section from property
+	const char* temp = strchr(copy,' ');
+	if((temp && *temp) || (temp=strchr(copy,'=')) ) copy[temp++ - copy]= 0;
+	else {
+		WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+		return;
+	}
+	//if n1 n2 n3 then replace last space with =
+	const char* sign = strchr(temp,'=');
+	if(!sign) {
+		sign = strchr(temp,' ');
+		if(sign) {
+			copy[sign - copy] = '=';
+		} else {
+			//2 items specified (no space nor = between n2 and n3
+			//assume that they posted: property value
+			//Try to determine the section.
+			Section* sec=control->GetSectionFromProperty(copy);
+			if(!sec){
+				if(control->GetSectionFromProperty(temp)) return; //Weird situation:ignore
+				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),copy);
+				return;
+			} //Hack to allow config ems true
+			char buffer[1024];strcpy(buffer,copy);strcat(buffer,"=");strcat(buffer,temp);
+			sign = strchr(buffer,' '); 
+			if(sign) buffer[sign - buffer] = '=';
+			strcpy(copy,sec->GetName());
+			temp = buffer;
+		}
+	}
+	
+	/* Input processed. Now the real job starts
+	 * copy contains the likely "sectionname" 
+	 * temp contains "property=value" 
+	 * the section is destroyed and a new input line is given to
+	 * the configuration parser. Then the section is restarted.
+	 */
+	char* inputline = const_cast<char*>(temp);
+	Section* sec = 0;
+	sec = control->GetSection(copy);
+	if(!sec) { WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"),copy);return;}
+	sec->ExecuteDestroy(false);
+	sec->HandleInputline(inputline);
+	sec->ExecuteInit(false);
+	return;
 }
 
 
@@ -234,4 +297,6 @@ void PROGRAMS_Init(Section* sec) {
 
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","Can't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_USAGE","Config tool:\nUse -writeconf filename to write the current config.\nUse -writelang filename to write the current language strings.\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR","Section %s doesn't exist.\n");
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","Property %s doesn't have a section.\n");
 }

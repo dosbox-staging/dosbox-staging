@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.53 2005-03-25 09:02:44 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.54 2005-04-21 21:17:46 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -60,6 +60,20 @@ static SHELL_Cmd cmd_list[]={
 {	"PATH",		1,			&DOS_Shell::CMD_PATH,		"SHELL_CMD_PATH_HELP"},
 {0,0,0,0}
 };
+bool DOS_Shell::CheckConfig(char* cmd,char*line) {
+	Section* test = control->GetSectionFromProperty(cmd);
+	if(!test) return false;
+	if(line && !line[0]) {
+		char* val = test->GetPropValue(cmd);
+		if(val) WriteOut("%s\n",val);
+		return true;
+	}
+	char newcom[1024]; newcom[0] = 0; strcpy(newcom,"z:\\config ");
+	strcat(newcom,test->GetName());	strcat(newcom," ");
+	strcat(newcom,cmd);strcat(newcom,line);
+	DoCommand(newcom);
+	return true;
+}
 
 void DOS_Shell::DoCommand(char * line) {
 /* First split the line into command and arguments */
@@ -96,7 +110,9 @@ void DOS_Shell::DoCommand(char * line) {
 		cmd_index++;
 	}
 /* This isn't an internal command execute it */
-	Execute(cmd,line);
+	if(Execute(cmd,line)) return;
+	if(CheckConfig(cmd,line)) return;
+	WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),cmd);
 }
 
 

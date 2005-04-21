@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.37 2005-04-01 10:15:26 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.38 2005-04-21 21:17:46 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -99,6 +99,19 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 					break;
 
+				case 0x47:	/* HOME */
+					while (str_index) {
+						outc(8);
+						str_index--;
+					}
+					break;
+
+				case 0x4F:	/* END */
+					while (str_index < str_len) {
+						outc(line[str_index++]);
+					}
+					break;
+
 				case 0x48:	/* UP */
 					if (l_history.empty() || it_history == l_history.end()) break;
 
@@ -112,7 +125,6 @@ void DOS_Shell::InputCommand(char * line) {
 					size = CMD_MAXLINE - str_index - 2;
 					DOS_WriteFile(STDOUT, (Bit8u *)line, &len);
 					it_history ++;
-
 					break;
 
 				case 0x50:	/* DOWN */
@@ -315,7 +327,9 @@ void DOS_Shell::InputCommand(char * line) {
 	if (l_completion.size()) l_completion.clear();
 }
 
-void DOS_Shell::Execute(char * name,char * args) {
+bool DOS_Shell::Execute(char * name,char * args) {
+/* return true  => don't check for hardware changes in do_command 
+ * return false =>       check for hardware changes in do_command */
 	char * fullname;
 	char line[CMD_MAXLINE];
 	if(strlen(args)!= 0){
@@ -337,15 +351,12 @@ void DOS_Shell::Execute(char * name,char * args) {
 		if (!DOS_SetDrive(toupper(name[0])-'A')) {
 			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0]));
 		}
-		return;
+		return true;
 	}
 	/* Check for a full name */
 	fullname=Which(name);
-	if (!fullname) {
-		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),name);
-		return;
-	}
-
+	if (!fullname) return false;
+	
 	char* extension =strrchr(fullname,'.');
 	
 	/*always disallow files without extension from being executed. */
@@ -376,8 +387,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 
 				else  
 				{
-		 			WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
-		 			return;
+		 			return false;
 				}
 			
 			}	
@@ -396,11 +406,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 	{	/* only .bat .exe .com extensions maybe be executed by the shell */
 		if(strcasecmp(extension, ".com") !=0) 
 		{
-			if(strcasecmp(extension, ".exe") !=0)
-			{
-		  		WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),fullname);
-				return;
-			}
+			if(strcasecmp(extension, ".exe") !=0) return false;
 	  	}
 		/* Run the .exe or .com file from the shell */
 		/* Allocate some stack space for tables in physical memory */
@@ -453,6 +459,7 @@ void DOS_Shell::Execute(char * name,char * args) {
 		SegSet16(cs,oldcs);
 #endif
 	}
+	return true; //Executable started
 }
 
 
