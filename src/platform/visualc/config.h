@@ -52,6 +52,7 @@
 #define C_DIRECTSERIAL 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
+#define GCC_UNLIKELY(x) (x)
 
 typedef         double		Real64;
 /* The internal types */

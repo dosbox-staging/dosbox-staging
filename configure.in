@@ -58,6 +58,17 @@ AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
     [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
 
+#Check if the compiler supports __builtin_expect
+AH_TEMPLATE([C_HAS_BUILTIN_EXPECT],[Determines if the compilers supports __builtin_expect for branch prediction.])
+AC_MSG_CHECKING(if compiler allows __builtin_expect)
+AC_TRY_COMPILE([],[
+int main(int argc,char* argv[]){ 
+int x=10;if( __builtin_expect ((x==1),0) ) ;
+return 0; 
+}
+], [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_BUILTIN_EXPECT)],AC_MSG_RESULT(no))
+
+
 AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
 
 #Check for big endian machine, should #define WORD_BIGENDIAN if so

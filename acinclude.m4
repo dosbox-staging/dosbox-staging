@@ -331,6 +331,12 @@ AH_BOTTOM([#if C_HAS_ATTRIBUTE
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #endif])
 
+AH_BOTTOM([#if C_HAS_BUILTIN_EXPECT
+#define GCC_UNLIKELY(x) __builtin_expect((x),0)
+#else
+#define GCC_UNLIKELY(x) (x)
+#endif])
+
 AH_BOTTOM([
 typedef         double     Real64;
 
