@@ -53,7 +53,9 @@ bool CDROM_Interface_SDL::SetDevice (char* path, int forceCD)
 	int num = SDL_CDNumDrives();
 	if ((forceCD>=0) && (forceCD<num)) {
 		driveID = forceCD;
-		return true;
+	        cd = SDL_CDOpen(driveID);
+	        SDL_CDStatus(cd);
+	   	return true;
 	};	
 	
 	const char* cdname = 0;
