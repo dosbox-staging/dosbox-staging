@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.30 2005-03-29 07:05:44 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.31 2005-04-21 21:06:27 qbix79 Exp $ */
 
 #include <list>
 
@@ -78,14 +78,14 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	Bitu i;
 	static Bit16u IRQ_priority_table[16] = 
 		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
-	if (val&0x10) {		// ICW1 issued
+	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
 		if (val&0x02) E_Exit("PIC: single mode not handled");	// (would have to skip ICW3)
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
 		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
 		pic->icw_index=1;			// next is ICW3
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
-	} else if (val&0x08) {	// OCW3 issued
+	} else if (GCC_UNLIKELY(val&0x08)) {	// OCW3 issued
 		if (val&0x04) E_Exit("PIC: poll command not handled");
 		if (val&0x02) {		// function select
 			if (val&0x01) pic->request_issr=true;	/* select read interrupt in-service register */
@@ -105,7 +105,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
-			if (val&0x80) E_Exit("rotate mode not supported");
+			if (GCC_UNLIKELY(val&0x80)) E_Exit("rotate mode not supported");
 			if (val&0x40) {		// specific EOI
 				if (PIC_IRQActive==(irq_base+val-0x60U)) {
 					irqs[PIC_IRQActive].inservice=false;
@@ -136,7 +136,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 				if (val&0x80) pic->rotate_on_auto_eoi=true;
 				else pic->rotate_on_auto_eoi=false;
 			} else if (val&0x80) {
-				E_Exit("set priority command not handled");
+				LOG(LOG_PIC,LOG_NORMAL)("set priority command not handled");
 			}	// else NOP command
 		}
 	}	// end OCW2
