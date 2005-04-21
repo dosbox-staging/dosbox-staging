@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.48 2005-03-24 19:16:33 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.49 2005-04-21 18:34:47 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -339,8 +339,8 @@ void DrawCursor() {
 
 	mouse.clipx = CurMode->swidth-1;	/* Get from bios ? */
 	mouse.clipy = CurMode->sheight-1;
-	Bit16s xratio = 640 / CurMode->swidth;  /* might be mouse.max_x-.mouse.min_x+1/swidth */
-											/* might even be vidmode == 0x13?2:1 */
+	Bit16s xratio = 640 / CurMode->swidth;/* might be vidmode == 0x13?2:1 */
+	if(xratio==0) xratio = 1;
 	
 	RestoreCursorBackground();
 
