@@ -16,15 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <stdlib.h>
-#include <string.h>
 
 #include "dosbox.h"
 #include "video.h"
 #include "pic.h"
-#include "timer.h"
 #include "vga.h"
-#include "inout.h"
 
 VGA_Type vga;
 
@@ -199,4 +195,3 @@ void VGA_Init(Section* sec) {
 		}
 	}
 }
-
