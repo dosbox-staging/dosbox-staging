@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.19 2005-04-19 15:29:59 qbix79 Exp $ */
+/* $Id: setup.h,v 1.20 2005-04-21 19:53:40 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -66,16 +66,16 @@ public:
 	Property(const char* _propname):propname(_propname) { }
 	virtual void SetValue(char* input)=0;
 	virtual void GetValuestring(char* str)=0;
-	Value GetValue() { return __value;}
-	std::string propname;
-	Value __value;
+	Value GetValue() { return value;}
 	virtual ~Property(){ }
+	std::string propname;
+	Value value;
 };
 
 class Prop_int:public Property {
 public:
 	Prop_int(const char* _propname, int _value):Property(_propname) { 
-		__value._int=_value;
+		value._int=_value;
 	}
 	void SetValue(char* input);
         void GetValuestring(char* str);
@@ -84,7 +84,7 @@ public:
 class Prop_float:public Property {
 public:
 	Prop_float(const char* _propname, float _value):Property(_propname){
-		__value._float=_value;
+		value._float=_value;
 	}
 	void SetValue(char* input);
 	void GetValuestring(char* str);
@@ -94,7 +94,7 @@ public:
 class Prop_bool:public Property {
 public:
 	Prop_bool(const char* _propname, bool _value):Property(_propname) { 
-		__value._bool=_value;
+		value._bool=_value;
 	}
 	void SetValue(char* input);
         void GetValuestring(char* str);
@@ -104,10 +104,10 @@ public:
 class Prop_string:public Property{
 public:
 	Prop_string(const char* _propname, char* _value):Property(_propname) { 
-		__value._string=new std::string(_value);
+		value._string=new std::string(_value);
 	}
 	~Prop_string(){
-		delete __value._string;
+		delete value._string;
 	}
 	void SetValue(char* input);
         void GetValuestring(char* str);
@@ -115,7 +115,7 @@ public:
 class Prop_hex:public Property {
 public:
 	Prop_hex(const char* _propname, int _value):Property(_propname) { 
-		__value._hex=_value;
+		value._hex=_value;
 	}
 	void SetValue(char* input);
 	~Prop_hex(){ }
@@ -147,7 +147,7 @@ public:
 	void ExecuteDestroy(bool destroyall=true);
 	const char* GetName() {return sectionname.c_str();}
 
-	virtual bool HasProperty(const char* _property)=0;
+	virtual char* GetPropValue(const char* _property)=0;
 	virtual void HandleInputline(char * _line){}
 	virtual void PrintData(FILE* outfile) {}
 	virtual ~Section(){ExecuteDestroy(true); }
@@ -173,7 +173,7 @@ public:
 	float Get_float(const char* _propname);
 	void HandleInputline(char *gegevens);
 	void PrintData(FILE* outfile);
-	virtual bool HasProperty(const char* _property);
+	virtual char* GetPropValue(const char* _property);
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	virtual ~Section_prop(){ExecuteDestroy(true);}
 };
@@ -184,7 +184,7 @@ public:
 	~Section_line(){ExecuteDestroy(true);}
 	void HandleInputline(char* gegevens);
 	void PrintData(FILE* outfile);
-	virtual bool HasProperty(const char* _property);
+	virtual char* GetPropValue(const char* _property);
 	std::string data;
 };
 

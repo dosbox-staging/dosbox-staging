@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.26 2005-04-19 15:30:03 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.27 2005-04-21 19:53:41 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -32,51 +32,51 @@ using namespace std;
 
 void Prop_float::SetValue(char* input){
 	input=trim(input);
-	__value._float= atof(input);
+	value._float= atof(input);
 }
 
 void Prop_int::SetValue(char* input){
 	input=trim(input);
-	__value._int= atoi(input);
+	value._int= atoi(input);
 }
 
 void Prop_string::SetValue(char* input){
 	input=trim(input);
-	__value._string->assign(input);
+	value._string->assign(input);
 }
 	
 void Prop_bool::SetValue(char* input){
 	input=lowcase(trim(input));
 	/* valid false entries: 0 ,d*, of* ,f*  everything else gets true */
 	if((input[0]=='0') || (input[0]=='d') || ( (input[0]=='o') && (input[1]=='f')) || (input[0]=='f')){
-		__value._bool=false;
+		value._bool=false;
 	}else{
-		__value._bool=true;
+		value._bool=true;
 	}
 }
 void Prop_hex::SetValue(char* input){
 	input=trim(input);
-	if(!sscanf(input,"%X",&(__value._hex))) __value._hex=0;
+	if(!sscanf(input,"%X",&(value._hex))) value._hex=0;
 }
 
 void Prop_int::GetValuestring(char* str){
-        sprintf(str,"%d",__value._int);
+        sprintf(str,"%d",value._int);
 }
 
 void Prop_string::GetValuestring(char* str){
-        sprintf(str,"%s",__value._string->c_str());
+        sprintf(str,"%s",value._string->c_str());
 }
 
 void Prop_bool::GetValuestring(char* str){
-        sprintf(str,"%s",__value._bool?"true":"false");
+        sprintf(str,"%s",value._bool?"true":"false");
 }
 
 void Prop_float::GetValuestring(char* str){
-	sprintf(str,"%1.2f",__value._float);
+	sprintf(str,"%1.2f",value._float);
 }
 
 void Prop_hex::GetValuestring(char* str){
-        sprintf(str,"%X",__value._hex);
+        sprintf(str,"%X",value._hex);
 }
 
 void Section_prop::Add_float(const char* _propname, float _value) {
@@ -168,15 +168,17 @@ void Section_prop::PrintData(FILE* outfile){
 	}
 }
 
-bool Section_prop::HasProperty(const char* _property) {
+static char buffer[1024];
+char* Section_prop::GetPropValue(const char* _property) {
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if(!strcasecmp((*tel)->propname.c_str(),_property)){
-			return true;
+			(*tel)->GetValuestring(buffer);
+			return buffer;
 		}
 	}
-	return false;
+	return NULL;
 }
-	     
+
 void Section_line::HandleInputline(char* line){ 
 	data+=line;
 	data+="\n";
@@ -186,8 +188,8 @@ void Section_line::PrintData(FILE* outfile) {
 	fprintf(outfile,"%s",data.c_str());
 }
 
-bool Section_line::HasProperty(const char* _property) {
-	return false;
+char* Section_line::GetPropValue(const char* _property) {
+	return NULL;
 }
 
 void Config::PrintConfig(const char* configfilename){
@@ -276,7 +278,7 @@ Section* Config::GetSection(const char* _sectionname){
 Section* Config::GetSectionFromProperty(const char* prop)
 {
    	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
-		if ((*tel)->HasProperty(prop)) return (*tel);
+		if ((*tel)->GetPropValue(prop)) return (*tel);
 	}
 	return NULL;
 }
