@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.27 2005-04-21 19:53:41 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.28 2005-04-22 09:09:09 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -32,7 +32,7 @@ using namespace std;
 
 void Prop_float::SetValue(char* input){
 	input=trim(input);
-	value._float= atof(input);
+	value._float= static_cast<float>(atof(input));
 }
 
 void Prop_int::SetValue(char* input){
