@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.31 2005-03-25 10:12:05 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.32 2005-04-25 09:23:54 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -56,12 +56,13 @@
 #define MIXER_WAVESIZE MIXER_BUFSIZE
 #define MIXER_VOLSHIFT 13
 
-// #define MIXER_CLIP(SAMP) (SAMP>MAX_AUDIO) ? (Bit16s)MAX_AUDIO : (SAMP<MIN_AUDIO) ? (Bit16s)MIN_AUDIO : ((Bit16s)SAMP)
-
-Bit16s bound[]={0,MAX_AUDIO,MIN_AUDIO};
-
-#define INIT_CLIP(SAMP) bound[0]=SAMP
-#define MIXER_CLIP(SAMP) bound[(SAMP>MAX_AUDIO)|(SAMP<MIN_AUDIO)<<1]
+static inline Bit16s MIXER_CLIP(Bits SAMP) {
+	if (SAMP>MIN_AUDIO) {
+		if (SAMP<MAX_AUDIO)
+			return SAMP;
+		else return MAX_AUDIO;
+	} else return MIN_AUDIO;
+}
 
 struct MIXER_Channel {
 	double vol_main[2];
@@ -300,10 +301,8 @@ static void MIXER_MixData(Bitu needed) {
 		Bits sample;
 		while (added--) {
 			sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
-			INIT_CLIP(sample);
 			mixer.wave.buf[mixer.wave.used][0]=MIXER_CLIP(sample);
 			sample=mixer.work[readpos][1] >> MIXER_VOLSHIFT;
-			INIT_CLIP(sample);
 			mixer.wave.buf[mixer.wave.used][1]=MIXER_CLIP(sample);
 			readpos=(readpos+1)&MIXER_BUFMASK;
 			if (++mixer.wave.used==MIXER_WAVESIZE) {
@@ -369,11 +368,9 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	Bits sample;
 	while (need--) {
 		sample=mixer.work[mixer.pos][0]>>MIXER_VOLSHIFT;
-		INIT_CLIP(sample);
 		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][0]=0;
 		sample=mixer.work[mixer.pos][1]>>MIXER_VOLSHIFT;
-		INIT_CLIP(sample);
 		*output++=MIXER_CLIP(sample);
 		mixer.work[mixer.pos][1]=0;
 		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
