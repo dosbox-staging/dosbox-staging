@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.69 2005-04-21 19:12:47 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.70 2005-04-25 19:01:11 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1667,8 +1667,8 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 			case DESC_DATA_ED_RW_NA:		case DESC_DATA_ED_RW_A:
 			case DESC_CODE_R_NC_A:			case DESC_CODE_R_NC_NA:
 				if (((value & 3)>desc.DPL()) || (cpu.cpl>desc.DPL())) {
-					E_Exit("CPU_SetSegGeneral: Invalid privileges");
-//					return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+					// extreme pinball
+					return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
 				}
 				break;
 			case DESC_CODE_R_C_A:			case DESC_CODE_R_C_NA:
