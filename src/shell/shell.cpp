@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.58 2005-04-03 17:37:09 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.59 2005-04-26 14:31:41 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -288,7 +288,7 @@ void DOS_Shell::SyntaxError(void) {
 }
 
 namespace{
-	AutoexecObject autoexec[6];
+	AutoexecObject autoexec[16];
 }
 
 void AUTOEXEC_Init(Section * sec) {
@@ -298,42 +298,54 @@ void AUTOEXEC_Init(Section * sec) {
 	char * extra=(char *)section->data.c_str();
 	if (extra) autoexec[0].Install("%s",extra);
 	/* Check to see for extra command line options to be added (before the command specified on commandline) */
-	while (control->cmdline->FindString("-c",line,true))
-		autoexec[1].Install((char *)line.c_str());
+	/* Maximum of extra commands: 10 */
+	Bitu i = 1;
+	while (control->cmdline->FindString("-c",line,true) && (i <= 11))
+		autoexec[i++].Install((char *)line.c_str());
 	
 	/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
 	bool addexit = control->cmdline->FindExist("-exit",true);
 
 	/* Check for first command being a directory or file */
 	char buffer[CROSS_LEN];
+	char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
 	if (control->cmdline->FindCommand(1,line)) {
 		struct stat test;
 		strcpy(buffer,line.c_str());
 		if (stat(buffer,&test)){
 			getcwd(buffer,CROSS_LEN);
+			strcat(buffer,cross_filesplit);
 			strcat(buffer,line.c_str());
 			if (stat(buffer,&test)) goto nomount;
 		}
 		if (test.st_mode & S_IFDIR) { 
-			autoexec[2].Install("MOUNT C \"%s\"",buffer);
-			autoexec[3].Install("C:");
+			autoexec[12].Install("MOUNT C \"%s\"",buffer);
+			autoexec[13].Install("C:");
 		} else {
-			char * name=strrchr(buffer,CROSS_FILESPLIT);
-			if (!name) goto nomount;
-			*name++=0;
+			char* name = strrchr(buffer,CROSS_FILESPLIT);
+			if (!name) {//Only a filename 
+				line = buffer;
+				getcwd(buffer,CROSS_LEN);
+				strcat(buffer,cross_filesplit);
+				strcat(buffer,line.c_str());
+				if(stat(buffer,&test)) goto nomount;
+				name = strrchr(buffer,CROSS_FILESPLIT);
+				if(!name) goto nomount;
+			}
+			*name++ = 0;
 			if (access(buffer,F_OK)) goto nomount;
-			autoexec[2].Install("MOUNT C \"%s\"",buffer);
-			autoexec[3].Install("C:");
+			autoexec[12].Install("MOUNT C \"%s\"",buffer);
+			autoexec[13].Install("C:");
 			upcase(name);
 			if(strstr(name,".BAT")==0) {
-				autoexec[4].Install(name);
+				autoexec[14].Install(name);
 			} else {
 				char call[CROSS_LEN] = { 0 };
 				strcpy(call,"CALL ");
 				strcat(call,name);
-				autoexec[4].Install(call);
+				autoexec[14].Install(call);
 			}
-			if(addexit) autoexec[5].Install("exit");
+			if(addexit) autoexec[15].Install("exit");
 		}
 	}
 nomount:
