@@ -124,3 +124,54 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	mem_writeb(save+0x31,3);
 }
 
+static void EGA_RIL(Bit16u dx, Bitu& port, Bitu& regs) {
+	port = 0;
+	regs = 0; //if nul is returned it's a single register port
+	switch(dx) {
+	case 0x00: /* CRT Controller (25 reg) 3B4h mono modes, 3D4h color modes */
+		port = real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+		regs = 25;
+		break;
+	case 0x08: /* Sequencer (5 registers) 3C4h */
+		port = 0x3C4;
+		regs = 5;
+		break;
+	case 0x10: /* Graphics Controller (9 registers) 3CEh */
+		port = 0x3CE;
+		regs = 9;
+		break;
+	case 0x18: /* Attribute Controller (20 registers) 3C0h */
+		port = 0x3c0;
+		regs = 20;
+		break;
+	case 0x20: /* Miscellaneous Output register 3C2h */
+		port = 0x3C2;
+		break;
+	case 0x28: /* Feature Control register (3BAh mono modes, 3DAh color modes) */
+		port = real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6;
+		break;
+	case 0x30: /* Graphics 1 Position register 3CCh */
+		port = 0x3CC;
+		break;
+	case 0x38: /* Graphics 2 Position register 3CAh */
+		port = 0x3CA;
+		break;
+	default:
+		LOG(LOG_INT10,LOG_ERROR)("unknown RIL port selection %X",dx);
+		break;
+	}
+}
+
+void INT10_EGA_RIL_F1(Bit8u & bl, Bit8u bh, Bit16u dx) {
+	Bitu port = 0;
+	Bitu regs = 0;
+	EGA_RIL(dx,port,regs);
+	if(regs == 0) {
+		IO_Write(port,bl);
+	} else {
+		IO_Write(port,bl);
+		IO_Write(port+1,bh);
+		bl = bh;//Not sure
+		LOG(LOG_INT10,LOG_NORMAL)("EGA RIL used with multi-reg");
+	}
+}

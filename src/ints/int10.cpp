@@ -432,6 +432,9 @@ graphics_chars:
 			reg_al=0x0;
 		}
 		break;
+	case 0xf1:
+		INT10_EGA_RIL_F1(reg_bl, reg_bh, reg_dx);
+		break;
 	case 0xff:
 		if (!warned_ff) LOG(LOG_INT10,LOG_NORMAL)("INT10:FF:Weird NC call");
 		warned_ff=true;
