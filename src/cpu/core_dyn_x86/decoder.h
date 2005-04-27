@@ -1339,6 +1339,7 @@ restart_prefix:
 		case 0xd2:dyn_grp2_eb(grp2_cl);break;
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
 		//FPU
+#ifdef CPU_FPU
 		case 0xd8:
 			DYN_FPU_ESC(0);
 			break;
@@ -1363,6 +1364,7 @@ restart_prefix:
 		case 0xdf:
 			DYN_FPU_ESC(7);
 			break;
+#endif
 		//Loop's 
 		case 0xe2:dyn_loop(LOOP_NONE);goto finish_block;
 		case 0xe3:dyn_loop(LOOP_JCXZ);goto finish_block;

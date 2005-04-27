@@ -49,6 +49,10 @@
 #define DYN_LOG
 #endif
 
+#if C_FPU
+#define CPU_FPU 1                                               //Enable FPU escape instructions
+#endif
+
 enum {
 	G_EAX,G_ECX,G_EDX,G_EBX,
 	G_ESP,G_EBP,G_ESI,G_EDI,
