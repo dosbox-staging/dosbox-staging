@@ -16,6 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include "fpu.h"
+#define DYN_FPU_ESC(code) {					\
+	dyn_get_modrm(); \
+	if (decode.modrm.val >= 0xc0) { \
+		gen_call_function((void*)&FPU_ESC ## code ## _Normal,"%Id",decode.modrm.val); \
+	} else { \
+		dyn_fill_ea(); \
+		gen_call_function((void*)&FPU_ESC ## code ## _EA,"%Id%Dd",decode.modrm.val,DREG(EA)); \
+		gen_releasereg(DREG(EA)); \
+	}																		\
+}
+
 enum REP_Type {
 	REP_NONE=0,REP_NZ,REP_Z
 };
@@ -133,14 +145,14 @@ static void dyn_set_eip_last_end(DynReg * endreg) {
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
 }
 
-static INLINE void dyn_set_eip_end(void) {
-	gen_protectflags();
-	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.code-decode.code_start);
-}
-
-static INLINE void dyn_set_eip_last(void) {
-	gen_protectflags();
-	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
+ static INLINE void dyn_set_eip_end(void) {
+ 	gen_protectflags();
+	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.code-decode.code_start);
+ }
+ 
+ static INLINE void dyn_set_eip_last(void) {
+ 	gen_protectflags();
+	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.op_start-decode.code_start);
 }
 
 static void dyn_push(DynReg * dynreg) {
@@ -704,11 +716,6 @@ static void dyn_mov_ev_seg(void) {
 		gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],DREG(TMPW));
 	}
 	gen_releasereg(DREG(TMPW));
-}
-
-static void dyn_synch_eip(void) {
-	gen_protectflags();
-	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.code-decode.code_start);
 }
 
 static void dyn_load_seg(SegNames seg,DynReg * src) {
@@ -1331,7 +1338,31 @@ restart_prefix:
 		//GRP2 Eb/Ev,CL
 		case 0xd2:dyn_grp2_eb(grp2_cl);break;
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
-
+		//FPU
+		case 0xd8:
+			DYN_FPU_ESC(0);
+			break;
+		case 0xd9:
+			DYN_FPU_ESC(1);
+			break;
+		case 0xda:
+			DYN_FPU_ESC(2);
+			break;
+		case 0xdb:
+			DYN_FPU_ESC(3);
+			break;
+		case 0xdc:
+			DYN_FPU_ESC(4);
+			break;
+		case 0xdd:
+			DYN_FPU_ESC(5);
+			break;
+		case 0xde:
+			DYN_FPU_ESC(6);
+			break;
+		case 0xdf:
+			DYN_FPU_ESC(7);
+			break;
 		//Loop's 
 		case 0xe2:dyn_loop(LOOP_NONE);goto finish_block;
 		case 0xe3:dyn_loop(LOOP_JCXZ);goto finish_block;
