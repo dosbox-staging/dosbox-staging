@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.15 2005-03-24 21:41:26 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.16 2005-04-27 18:58:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -95,8 +95,8 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	}
 	/* Fill common data */
 	MEM_BlockWrite(buffer,(void *)"VESA",4);			//Identification
+	mem_writew(buffer+0x04,0x200);					//Vesa version 0x200
 	if (vbe2) {
-		mem_writew(buffer+0x04,0x200);					//Vesa version 0x200
 		mem_writed(buffer+0x06,RealMake(seg,vbe2_pos));
 		for (i=0;i<sizeof(string_oem);i++) real_writeb(seg,vbe2_pos++,string_oem[i]);
 		mem_writew(buffer+0x14,0x200);					//VBE 2 software revision
@@ -107,7 +107,6 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 		mem_writed(buffer+0x1e,RealMake(seg,vbe2_pos));
 		for (i=0;i<sizeof(string_productrev);i++) real_writeb(seg,vbe2_pos++,string_productrev[i]);
 	} else {
-		mem_writew(buffer+0x04,0x102);					//Vesa version 0x102
 		mem_writed(buffer+0x06,int10.rom.oemstring);	//Oemstring
 	}
 	mem_writed(buffer+0x0a,0x0);					//Capabilities and flags
@@ -186,14 +185,19 @@ Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address) {
 
 
 Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count) {
+//Structure is (vesa 3.0 doc): blue,green,red,alignment
+	Bit8u r,g,b;
 	if (index>255) return 0x1;
 	if (index+count>256) return 0x1;
 	IO_Write(0x3c8,index);
 	while (count) {
-		IO_Write(0x3c9,mem_readb(data++));
-		IO_Write(0x3c9,mem_readb(data++));
-		IO_Write(0x3c9,mem_readb(data++));
+		b = mem_readb(data++);
+		g = mem_readb(data++);
+		r = mem_readb(data++);
 		data++;
+		IO_Write(0x3c9,r);
+		IO_Write(0x3c9,g);
+		IO_Write(0x3c9,b);
 		count--;
 	}
 	return 0x00;
@@ -201,13 +205,17 @@ Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count) {
 
 
 Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count) {
+	Bit8u r,g,b;
 	if (index>255) return 0x1;
 	if (index+count>256) return 0x1;
 	IO_Write(0x3c7,index);
 	while (count) {
-		mem_writeb(data++,IO_Read(0x3c9));
-		mem_writeb(data++,IO_Read(0x3c9));
-		mem_writeb(data++,IO_Read(0x3c9));
+		r = IO_Read(0x3c9);
+		g = IO_Read(0x3c9);
+		b = IO_Read(0x3c9);
+		mem_writeb(data++,b);
+		mem_writeb(data++,g);
+		mem_writeb(data++,r);
 		data++;
 		count--;
 	}
