@@ -25,7 +25,7 @@
 		dyn_fill_ea(); \
 		gen_call_function((void*)&FPU_ESC ## code ## _EA,"%Id%Dd",decode.modrm.val,DREG(EA)); \
 		gen_releasereg(DREG(EA)); \
-	}																		\
+	} \
 }
 
 enum REP_Type {
@@ -1362,7 +1362,15 @@ restart_prefix:
 			DYN_FPU_ESC(6);
 			break;
 		case 0xdf:
-			DYN_FPU_ESC(7);
+			dyn_get_modrm();
+			if (decode.modrm.val >= 0xc0) {
+				if (decode.modrm.val == 0xe0) gen_releasereg(DREG(EAX)); /* FSTSW */
+				gen_call_function((void*)&FPU_ESC7_Normal,"%Id",decode.modrm.val);
+			} else {
+				dyn_fill_ea();
+				gen_call_function((void*)&FPU_ESC7_EA,"%Id%Dd",decode.modrm.val,DREG(EA));
+				gen_releasereg(DREG(EA));
+			}
 			break;
 #endif
 		//Loop's 
