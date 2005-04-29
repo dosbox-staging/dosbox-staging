@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.32 2005-04-25 09:23:54 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.33 2005-04-29 13:45:26 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -57,11 +57,11 @@
 #define MIXER_VOLSHIFT 13
 
 static inline Bit16s MIXER_CLIP(Bits SAMP) {
-	if (SAMP>MIN_AUDIO) {
-		if (SAMP<MAX_AUDIO)
+	if (SAMP < MAX_AUDIO) {
+		if (SAMP > MIN_AUDIO)
 			return SAMP;
-		else return MAX_AUDIO;
-	} else return MIN_AUDIO;
+		else return MIN_AUDIO;
+	} else return MAX_AUDIO;
 }
 
 struct MIXER_Channel {
@@ -485,11 +485,14 @@ static void MIXER_ProgramStart(Program * * make) {
 
 MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,char * name){
 	if(!installed) {
-		if(strlen(name)>31) E_Exit("Too long mixer channel name");
+		if(strlen(name) > 31) E_Exit("Too long mixer channel name");
 		strncpy(m_name,name,31);
-		installed=true;
+		installed = true;
 		return MIXER_AddChannel(handler,freq,name);
-	} else E_Exit("allready added mixer channel.");
+	} else {
+		E_Exit("allready added mixer channel.");
+		return 0; //Compiler happy
+	}
 }
 
 MixerObject::~MixerObject(){
