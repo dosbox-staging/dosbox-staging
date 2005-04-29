@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.83 2005-03-25 12:06:48 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.84 2005-04-29 13:32:31 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -802,7 +802,7 @@ static Bitu DOS_21Handler(void) {
 		} else reg_al = 0xff; //Doesn't officially touch carry flag
 		break;
 	case 0x64:					/* Set device driver lookahead flag */
-		E_Exit("Unhandled Dos 21 call %02X",reg_ah);
+		LOG(LOG_DOSMISC,LOG_NORMAL)("set driver look ahead flag");
 		break;
 	case 0x65:					/* Get extented country information and a lot of other useless shit*/
 		{ /* Todo maybe fully support this for now we set it standard for USA */ 
