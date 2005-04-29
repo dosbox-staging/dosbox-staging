@@ -484,6 +484,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 	case M_LIN8:
 		underline=0x60;			//Seems to enable the every 4th clock on my s3
 		break;
+	case M_CGA2:
 	case M_CGA4:
 		max_scanline|=1;
 		break;
@@ -566,10 +567,10 @@ bool INT10_SetVideoMode(Bitu mode) {
 	case M_EGA16:
 		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
 		break;
-	case M_CGA2:
 	case M_CGA4:
 	case M_TANDY16:
 		gfx_data[0x5]|=0x20;		//CGA mode
+	case M_CGA2:
 		gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
 		break;
 	}
