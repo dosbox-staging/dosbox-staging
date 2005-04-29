@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.59 2005-04-26 14:31:41 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.60 2005-04-29 14:10:45 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -29,8 +29,8 @@
 #include "support.h"
 
 Bitu call_shellstop;
-//Larger scope so shell_del autoexec can use it to
-//remove things from the environment
+/* Larger scope so shell_del autoexec can use it to
+ * remove things from the environment */
 Program * new_program = 0; 
 
 static Bitu shellstop_handler(void) {
@@ -47,7 +47,7 @@ static std::vector<std::string> autoexec_strings;
 typedef std::vector<std::string>::iterator auto_it;
 
 void AutoexecObject::Install(char* line,...) {
-	if(installed) E_Exit("autoexec: allready created %s",buf);
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf);
 	installed = true;
 	va_list msg;
 	
@@ -67,7 +67,12 @@ void VFILE_Remove(const char *name);
 
 AutoexecObject::~AutoexecObject(){
 	if(!installed) return;
+
+	// On destruction of the object the autoexec.bat is updated 
+	// so that the line isn't present anymore 
+	// First remove the current autoexec.bat
 	VFILE_Remove("AUTOEXEC.BAT");
+
 	// Remove the line from the autoexecbuffer
 	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
 		if((*it) == buf) {
@@ -104,9 +109,6 @@ DOS_Shell::DOS_Shell():Program(){
 	call=false;
 	completion_start = NULL;
 }
-
-
-
 
 Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 
@@ -157,36 +159,33 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 void DOS_Shell::ParseLine(char * line) {
 	LOG(LOG_EXEC,LOG_ERROR)("Parsing command line: %s",line);
 	/* Check for a leading @ */
- 	if (line[0]=='@') line[0]=' ';
-	line=trim(line);
+ 	if (line[0] == '@') line[0] = ' ';
+	line = trim(line);
 
 	/* Do redirection and pipe checks */
 	
-	char * in=0;
-	char * out=0;
+	char * in  = 0;
+	char * out = 0;
 
-	Bit16u old_in,old_out;
 	Bit16u dummy,dummy2;
 	Bit32u bigdummy = 0;
 	Bitu num = 0;		/* Number of commands in this line */
 	bool append;
-	bool normalstdin=false;		/* wether stdin/out are open on start. */
-	bool normalstdout=false;	/* Bug: Assumed is they are "con"      */
+	bool normalstdin  = false;	/* wether stdin/out are open on start. */
+	bool normalstdout = false;	/* Bug: Assumed is they are "con"      */
 	
 	num = GetRedirection(line,&in, &out,&append);
 	if (num>1) LOG_MSG("SHELL:Multiple command on 1 line not supported");
-//	if (in || num>1) DOS_DuplicateEntry(0,&old_in);
-	
 	if (in || out) {
-			normalstdin  = (psp->GetFileHandle(0)!=0xff); 
-			normalstdout = (psp->GetFileHandle(1)!=0xff); 
+			normalstdin  = (psp->GetFileHandle(0) != 0xff); 
+			normalstdout = (psp->GetFileHandle(1) != 0xff); 
 	}
 	if (in) {
 		if(DOS_OpenFile(in,0,&dummy)) { //Test if file exists
 			DOS_CloseFile(dummy);
 			LOG_MSG("SHELL:Redirect input from %s",in);
 			if(normalstdin) DOS_CloseFile(0); //Close stdin
-			DOS_OpenFile(in,0,&dummy);//Open new stdin
+			DOS_OpenFile(in,0,&dummy); //Open new stdin
 		}
 	}
 	if (out){
@@ -195,14 +194,14 @@ void DOS_Shell::ParseLine(char * line) {
 		if(!normalstdin && !in) DOS_OpenFile("con",2,&dummy);
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
-		if(append){
-			if( (status=DOS_OpenFile(out,2,&dummy)) )
+		if(append) {
+			if( (status = DOS_OpenFile(out,2,&dummy)) )
 				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
 		}
 		else 
-			status=DOS_OpenFileExtended(out,2,2,0x12,&dummy,&dummy2);
+			status = DOS_OpenFileExtended(out,2,2,0x12,&dummy,&dummy2);
 		
-		if(!status && normalstdout)	DOS_OpenFile("con",2,&dummy); //Read only file, open con again
+		if(!status && normalstdout) DOS_OpenFile("con",2,&dummy); //Read only file, open con again
 		if(!normalstdin && !in) DOS_CloseFile(0);
 	}
 	/* Run the actual command */
@@ -231,7 +230,7 @@ void DOS_Shell::RunInternal(void)
 	while(bf && bf->ReadLine(input_line)) 
 	{
 		if (echo) {
-				if (input_line[0]!='@') {
+				if (input_line[0] != '@') {
 					ShowPrompt();
 					WriteOut(input_line);
 					WriteOut("\n");
@@ -297,6 +296,7 @@ void AUTOEXEC_Init(Section * sec) {
 	Section_line * section=static_cast<Section_line *>(sec);
 	char * extra=(char *)section->data.c_str();
 	if (extra) autoexec[0].Install("%s",extra);
+
 	/* Check to see for extra command line options to be added (before the command specified on commandline) */
 	/* Maximum of extra commands: 10 */
 	Bitu i = 1;
@@ -323,7 +323,7 @@ void AUTOEXEC_Init(Section * sec) {
 			autoexec[13].Install("C:");
 		} else {
 			char* name = strrchr(buffer,CROSS_FILESPLIT);
-			if (!name) {//Only a filename 
+			if (!name) { //Only a filename 
 				line = buffer;
 				getcwd(buffer,CROSS_LEN);
 				strcat(buffer,cross_filesplit);
@@ -337,9 +337,10 @@ void AUTOEXEC_Init(Section * sec) {
 			autoexec[12].Install("MOUNT C \"%s\"",buffer);
 			autoexec[13].Install("C:");
 			upcase(name);
-			if(strstr(name,".BAT")==0) {
+			if(strstr(name,".BAT") == 0) {
 				autoexec[14].Install(name);
 			} else {
+			/* BATch files are called else exit will not work */
 				char call[CROSS_LEN] = { 0 };
 				strcpy(call,"CALL ");
 				strcat(call,name);
@@ -490,7 +491,6 @@ void SHELL_Init() {
 	DOS_CloseFile(0);            /* Close STDIN */
 	DOS_ForceDuplicateEntry(1,0);/* "new" STDIN */
 	DOS_ForceDuplicateEntry(1,2);/* STDERR */
-//	DOS_OpenFile("CON",2,&dummy);/* STDERR */
 	DOS_OpenFile("CON",2,&dummy);/* STDAUX */
 	DOS_OpenFile("CON",2,&dummy);/* STDPRN */
 
@@ -511,5 +511,5 @@ void SHELL_Init() {
 	SHELL_ProgramStart(&new_program);
 	new_program->Run();
 	delete new_program;
-	new_program=0;//Make clear that it shouldn't be used anymore
+	new_program = 0;//Make clear that it shouldn't be used anymore
 }
