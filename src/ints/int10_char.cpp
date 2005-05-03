@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.32 2005-03-01 11:13:29 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.33 2005-05-03 15:27:29 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -424,6 +424,26 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight;
 		break;
 	}
+
+	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
+		static bool warned_use = false;
+		if(GCC_UNLIKELY(!warned_use)){ 
+			LOG(LOG_INT10,LOG_ERROR)("writechar used without attribute in non-textmode");
+			warned_use = true;
+		}
+		switch(CurMode->type) {
+		case M_CGA4:
+		case M_CGA2:
+			attr = 0x1;
+			break;
+		case M_TANDY16:
+		case M_EGA16:
+		default:
+			attr = 0xf;
+			break;
+		}
+	}
+
 	x=8*col;
 	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
 	//TODO Check for out of bounds
