@@ -174,12 +174,32 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xe0) | (val & 0x1f);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
-	IO_Write(0x3d9,temp);
+	if (machine == MCH_CGA || machine == MCH_TANDY)
+		IO_Write(0x3d9,temp);
+	else if (machine == MCH_VGA) {
+		val = ((val << 1) & 0x10) | (val & 0x7);
+		INT10_SetSinglePaletteRegister( 0, val );
+		val = (temp & 0x10) | 2 | ((temp & 0x20) >> 5);
+		INT10_SetSinglePaletteRegister( 1, val );
+		val+=2;
+		INT10_SetSinglePaletteRegister( 2, val );
+		val+=2;
+		INT10_SetSinglePaletteRegister( 3, val );
+	}
 }
 
 void INT10_SetColorSelect(Bit8u val) {
 	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xdf) | ((val & 1) ? 0x20 : 0x0);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
-	IO_Write(0x3d9,temp);
+	if (machine == MCH_CGA || machine == MCH_TANDY)
+		IO_Write(0x3d9,temp);
+	else if (machine == MCH_VGA) {
+		val = (temp & 0x10) | 2 | val;
+		INT10_SetSinglePaletteRegister( 1, val );
+		val+=2;
+		INT10_SetSinglePaletteRegister( 2, val );
+		val+=2;
+		INT10_SetSinglePaletteRegister( 3, val );
+	}
 }
