@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.33 2005-05-03 15:27:29 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.34 2005-05-04 19:33:46 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -517,10 +517,12 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 	}
 	// Do we need to scroll ?
 	if(cur_row==nrows) {
-		INT10_ScrollWindow(0,0,nrows-1,ncols-1,-1,0x07,page);
+		//Fill with black on non-text modes and with 0x7 on textmode
+		Bit8u fill = (CurMode->type == M_TEXT)?0x7:0;
+		INT10_ScrollWindow(0,0,nrows-1,ncols-1,-1,fill,page);
 		cur_row--;
 	}
- 	// Set the cursor for the page
+	// Set the cursor for the page
 	INT10_SetCursorPos(cur_row,cur_col,page);
 }
 
