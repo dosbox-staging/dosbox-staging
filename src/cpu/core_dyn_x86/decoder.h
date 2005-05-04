@@ -498,7 +498,7 @@ static void dyn_mov_ev_gb(bool sign) {
 
 static void dyn_mov_ev_gw(bool sign) {
 	if (!decode.big_op) {
-		dyn_mov_evgv();
+		dyn_mov_gvev();
 		return;
 	}
 	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg];
