@@ -427,6 +427,7 @@ l_M_Ed:
 		goto nextopcode;
 	case D_WAIT:
 	case D_NOP:
+		goto nextopcode;
 	case D_LOCK: /* FIXME: according to intel, LOCK should raise an exception if it's not followed by one of a small set of instructions;
 			probably doesn't matter for our purposes as it is a pentium prefix anyhow */
 		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK");
