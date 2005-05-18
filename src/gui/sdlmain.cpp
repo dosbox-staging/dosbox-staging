@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.84 2005-04-21 18:51:54 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.85 2005-05-18 21:59:58 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1132,11 +1132,13 @@ int main(int argc, char* argv[]) {
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
-		LOG_MSG("Exit to error: %s",error);
+		GFX_ShowMsg("Exit to error: %s",error);
+		fflush(NULL);
 		if(sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
-			LOG_MSG("Press enter to continue");
+			GFX_ShowMsg("Press enter to continue");
+			fflush(NULL);
 			fgetc(stdin);
 #elif defined(WIN32)
 			Sleep(5000);
