@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.16 2005-03-25 09:02:43 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.17 2005-05-18 17:29:09 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +28,7 @@ BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
 	prev=host->bf;
 	echo=host->echo;
 	shell=host;
-	cmd=new CommandLine(0,cmd_line);
+	cmd=new CommandLine(name,cmd_line);
 	if (!DOS_OpenFile(name,128,&file_handle)) {
 		//TODO Come up with something better
 		E_Exit("SHELL:Can't open BatchFile");
@@ -70,12 +70,19 @@ emptyline:
 		env_write=env_name;
 		if (*cmd_read=='%') {
 			cmd_read++;
-			if (cmd_read[0]=='%') {
+			if (cmd_read[0] == '%') {
 				cmd_read++;
 				*cmd_write++='%';
 			}
-			size_t len=strspn(cmd_read,"0123456789");
-			if (len) {
+			if (cmd_read[0] == '0') {  /* Handle %0 */
+				const char *file_name = cmd->GetFileName();
+				cmd_read++;
+				strcpy(cmd_write,file_name);
+				cmd_write+=strlen(file_name);
+				continue;
+			}
+			size_t len=strspn(cmd_read,"123456789");
+			if (len) {  /* Handle %1 %2 .. %9 */
 				memcpy(env_name,cmd_read,len);
 				env_name[len]=0;cmd_read+=len;
 				len=atoi(env_name);
