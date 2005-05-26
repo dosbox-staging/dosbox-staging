@@ -108,6 +108,15 @@ void INT10_SetupRomMemory(void) {
 		phys_writeb(PhysMake(0xf000,0xfa6e)+i,int10_font_08[i]);
 	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
+
+	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
+		/* Sum of all bytes in rom module 256 should be 0 */
+		Bit8u sum = 0;
+		for (i = 0;i < 32 * 1024;i++) //32 KB romsize
+			sum += phys_readb(rom_base + i); //OVERFLOW IS OKAY
+		sum = 256 - sum;
+		phys_writeb(rom_base+int10.rom.used++,sum);
+	}
 };
 
 
