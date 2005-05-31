@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.60 2005-04-29 14:10:45 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.61 2005-05-31 20:19:13 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -195,8 +195,11 @@ void DOS_Shell::ParseLine(char * line) {
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
 		if(append) {
-			if( (status = DOS_OpenFile(out,2,&dummy)) )
+			if( (status = DOS_OpenFile(out,2,&dummy)) ) {
 				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
+			} else {
+				status = DOS_CreateFile(out,2,&dummy); //Create if not exists.
+			}
 		}
 		else 
 			status = DOS_OpenFileExtended(out,2,2,0x12,&dummy,&dummy2);
