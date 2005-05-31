@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.62 2005-03-01 19:39:55 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.63 2005-05-31 18:38:54 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -270,7 +270,14 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 
 bool DOS_FindNext(void) {
 	DOS_DTA dta(dos.dta());
-	if (Drives[dta.GetSearchDrive()]->FindNext(dta)) return true;
+	Bit8u i = dta.GetSearchDrive();
+	if(i >= DOS_DRIVES || !Drives[i]) {
+		/* Corrupt search. */
+		LOG(LOG_FILES,LOG_ERROR)("Corrupt search!!!!");
+		DOS_SetError(DOSERR_NO_MORE_FILES); 
+		return false;
+	} 
+	if (Drives[i]->FindNext(dta)) return true;
 	return false;
 }
 

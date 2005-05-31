@@ -35,7 +35,7 @@ bool WildFileCmp(const char * file, const char * wild)
 	strcpy(wild_name,"        ");
 	strcpy(wild_ext,"   ");
 
-	find_ext=strchr(file,'.');
+	find_ext=strrchr(file,'.');
 	if (find_ext) {
 		Bitu size=find_ext-file;if (size>8) size=8;
 		memcpy(file_name,file,size);
@@ -45,7 +45,7 @@ bool WildFileCmp(const char * file, const char * wild)
 		memcpy(file_name,file,(strlen(file) > 8) ? 8 : strlen(file));
 	}
 	upcase(file_name);upcase(file_ext);
-	find_ext=strchr(wild,'.');
+	find_ext=strrchr(wild,'.');
 	if (find_ext) {
 		Bitu size=find_ext-wild;if (size>8) size=8;
 		memcpy(wild_name,wild,size);
