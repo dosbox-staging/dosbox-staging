@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.49 2005-04-21 18:34:47 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.50 2005-06-02 17:27:27 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -631,6 +631,7 @@ static Bitu INT33_Handler(void) {
 		{
 			Bit16u but=reg_bx;
 			reg_ax=mouse.buttons;
+			reg_bx++;
 			if (but>=MOUSE_BUTTONS) break;
 			reg_cx=mouse.last_pressed_x[but];
 			reg_dx=mouse.last_pressed_y[but];
@@ -642,6 +643,7 @@ static Bitu INT33_Handler(void) {
 		{
 			Bit16u but=reg_bx;
 			reg_ax=mouse.buttons;
+			reg_bx++;
 			if (but>=MOUSE_BUTTONS) break;
 			reg_cx=mouse.last_released_x[but];
 			reg_dx=mouse.last_released_y[but];
