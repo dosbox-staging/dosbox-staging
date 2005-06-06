@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.17 2005-02-11 21:17:04 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.18 2005-06-06 16:07:31 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -388,8 +388,8 @@ static Bitu INT13_DiskHandler(void) {
 		reg_bl = imageDiskList[drivenum]->GetBiosType();
 		Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
 		imageDiskList[drivenum]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
-		reg_ch = tmpcyl;
-		reg_cl = tmpsect;
+		reg_ch = tmpcyl & 0xff;
+		reg_cl = (((tmpcyl >> 2) & 0xc0) | (tmpsect & 0x3f)); 
 		reg_dh = tmpheads-1;
 		last_status = 0x00;
 		reg_dl = 0;
