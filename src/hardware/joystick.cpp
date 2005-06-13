@@ -16,11 +16,17 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: joystick.cpp,v 1.12 2005-06-13 14:48:02 qbix79 Exp $ */
+
+#include <string.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "setup.h"
+#include "joystick.h"
+#include "pic.h"
 
 #define RANGE 64
+#define TIMEOUT 10
 
 struct JoyStick {
 	bool enabled;
@@ -29,11 +35,23 @@ struct JoyStick {
 	bool button[2];
 };
 
-
+JoystickType joytype;
 static JoyStick stick[2];
 
+static Bit32u last_write = 0;
+static bool write_active = false;
 
 static Bitu read_p201(Bitu port,Bitu iolen) {
+	/* Reset Joystick to 0 after TIMEOUT ms */
+	if(write_active && ((PIC_Ticks - last_write) > TIMEOUT)) {
+		write_active = false;
+		stick[0].xcount = 0;
+		stick[1].xcount = 0;
+		stick[0].ycount = 0;
+		stick[1].ycount = 0;
+//		LOG_MSG("reset by time %d %d",PIC_Ticks,last_write);
+	}
+
 	/**  Format of the byte to be returned:       
 	**                        | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 	**                        +-------------------------------+
@@ -60,6 +78,9 @@ static Bitu read_p201(Bitu port,Bitu iolen) {
 }
 
 static void write_p201(Bitu port,Bitu val,Bitu iolen) {
+	/* Store writetime index */
+	write_active = true;
+	last_write = PIC_Ticks;
 	if (stick[0].enabled) {
 		stick[0].xcount=(Bitu)((stick[0].xpos*RANGE)+RANGE);
 		stick[0].ycount=(Bitu)((stick[0].ypos*RANGE)+RANGE);
@@ -121,6 +142,14 @@ private:
 	IO_WriteHandleObject WriteHandler;
 public:
 	JOYSTICK(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		const char * type=section->Get_string("joysticktype");
+		if (!strcasecmp(type,"none")) joytype=JOY_NONE;
+		else if (!strcasecmp(type,"2axis")) joytype=JOY_2AXIS;
+		else if (!strcasecmp(type,"4axis")) joytype=JOY_4AXIS;
+		else if (!strcasecmp(type,"fcs")) joytype=JOY_FCS;
+		else if (!strcasecmp(type,"ch")) joytype=JOY_CH;
+		else joytype=JOY_2AXIS;
 		ReadHandler.Install(0x201,read_p201,IO_MB);
 		WriteHandler.Install(0x201,write_p201,IO_MB);
 		stick[0].enabled=false;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.84 2005-04-21 21:17:45 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.85 2005-06-13 14:48:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -260,7 +260,6 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DMA_Init);//done
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
-	secprop->AddInitFunction(&JOYSTICK_Init);//done
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	secprop->Add_bool("nosound",false);
@@ -354,6 +353,14 @@ void DOSBOX_Init(void) {
 	secprop=control->AddSection_prop("bios",&BIOS_Init,false);//done
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
+	secprop->AddInitFunction(&JOYSTICK_Init);
+	secprop->Add_string("joysticktype","2axis");
+	MSG_Add("BIOS_CONFIGFILE_HELP",
+	        "joysticktype -- Type of joystick to emulate: none, 2axis, 4axis,\n"
+	        "                fcs (Thrustmaster) ,ch (CH Flightstick).\n"
+	        "                none disables joystick emulation.\n"
+	        "                2axis is the default and supports two joysticks.\n"
+	);
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	//TODO Maybe combine most of the dos stuff in one section like ems,xms
