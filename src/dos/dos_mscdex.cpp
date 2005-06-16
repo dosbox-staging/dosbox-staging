@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.28 2005-03-25 09:14:48 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.29 2005-06-16 18:28:36 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -630,8 +630,8 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 				return true;
 			}
 			// directory wechseln
-			dirEntrySector	= mem_readd(defBuffer+index+2);
-			dirSize			= mem_readd(defBuffer+index+10);
+			dirEntrySector = mem_readd(defBuffer+index+2);
+			dirSize	= mem_readd(defBuffer+index+10);
 		} else {
 			// continue search in next sector
 			dirSize -= 2048;
@@ -765,11 +765,15 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 							case 0x01 :{/* Get current position */
 										TMSF pos;
 										mscdex->GetCurrentPos(subUnit,pos);
-										mem_writeb(buffer+1,0x01); // Red book
+										/*mem_writeb(buffer+1,0x01); // Red book
 										mem_writeb(buffer+2,pos.fr);
 										mem_writeb(buffer+3,pos.sec);
 										mem_writeb(buffer+4,pos.min);
-										mem_writeb(buffer+5,0x00);
+										mem_writeb(buffer+5,0x00);*/
+							//Changed to HSG as default 
+							//(Seems to fix a few broken games which don't test for it)
+										mem_writeb(buffer+1,0x00); //HSG
+										mem_writed(buffer+2,MSF_TO_FRAMES (pos.min, pos.sec, pos.fr));
 									   }break;
 							case 0x06 : /* Get Device status */
 										mem_writed(buffer+1,mscdex->GetDeviceStatus(subUnit)); 
