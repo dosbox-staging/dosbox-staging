@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.41 2005-03-25 11:59:24 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.42 2005-06-21 18:47:25 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -244,8 +244,7 @@ static Bitu INT15_Handler(void) {
 		if (reg_dx == 0x0000) {
 			// Get Joystick button status
 			if (JOYSTICK_IsEnabled(0) || JOYSTICK_IsEnabled(1)) {
-				reg_al  = (JOYSTICK_GetButton(0,0)<<7)|(JOYSTICK_GetButton(0,1)<<6);
-				reg_al |= (JOYSTICK_GetButton(1,0)<<5)|(JOYSTICK_GetButton(1,1)<<4);
+				reg_al = IO_ReadB(0x201)&0xf0;
 				CALLBACK_SCF(false);
 			} else {
 				// dos values
