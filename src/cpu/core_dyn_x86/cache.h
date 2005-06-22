@@ -235,10 +235,13 @@ void CacheBlock::Clear(void) {
 		}
 		if (link[ind].to!=&link_blocks[ind]) {
 			CacheBlock * * wherelink=&link[ind].to->link[ind].from;
-			while (*wherelink!=this) {
-				wherelink=&(*wherelink)->link[ind].next;
+			while (*wherelink != this && *wherelink) {
+				wherelink = &(*wherelink)->link[ind].next;
 			}
-			*wherelink=(*wherelink)->link[ind].next;
+			if(*wherelink) 
+				*wherelink = (*wherelink)->link[ind].next;
+			else
+				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 		}
 	} else 
 		cache_addunsedblock(this);
