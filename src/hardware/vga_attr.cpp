@@ -157,7 +157,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 }
 
 Bitu read_p3c1(Bitu port,Bitu iolen) {
-	vga.internal.attrindex=false;
+//	vga.internal.attrindex=false;
 	switch (attr(index)) {
 			/* Palette */
 	case 0x00:		case 0x01:		case 0x02:		case 0x03:
