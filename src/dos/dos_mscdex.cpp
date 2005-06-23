@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.29 2005-06-16 18:28:36 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.30 2005-06-23 20:13:58 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -921,8 +921,19 @@ static Bitu MSCDEX_Interrupt_Handler(void)
 	return CBRET_NONE;
 }
 
-static bool MSCDEX_Handler(void)
-{
+static bool MSCDEX_Handler(void) {
+	if(reg_ah == 0x11) {
+		if(reg_al == 0x00) { 
+			reg_al = 0xff;
+			return true;
+		} else {
+			LOG(LOG_MISC,LOG_ERROR)("NETWORK REDIRECTOR USED!!!");
+			reg_ax = 0x49;//NETWERK SOFTWARE NOT INSTALLED
+			CALLBACK_SCF(true);
+			return true;
+		}
+	}
+
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
