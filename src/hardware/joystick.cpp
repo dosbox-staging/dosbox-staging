@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.12 2005-06-13 14:48:02 qbix79 Exp $ */
+/* $Id: joystick.cpp,v 1.13 2005-06-23 18:34:30 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -24,6 +24,7 @@
 #include "setup.h"
 #include "joystick.h"
 #include "pic.h"
+#include "support.h"
 
 #define RANGE 64
 #define TIMEOUT 10

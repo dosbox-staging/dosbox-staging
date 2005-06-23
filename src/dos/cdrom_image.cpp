@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.7 2005-04-15 15:58:07 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.8 2005-06-23 18:34:29 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -32,6 +32,8 @@
 
 #if !defined(WIN32)
 #include <libgen.h>
+#else
+#include <string.h>
 #endif
 
 using namespace std;
@@ -387,6 +389,23 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file, int sectorSize, bool mod
 	return (pvd[0] == 1 && !strncmp((char*)(&pvd[1]), "CD001", 5) && pvd[6] == 1);
 }
 
+#if defined(WIN32)
+static string dirname(const char * file) {
+	char * sep = strrchr(file, '\\');
+	if (sep == NULL)
+		sep = strrchr(file, '/');
+	if (sep == NULL)
+		return "";
+	else {
+		int len = (int)(sep - file);
+		char tmp[MAX_FILENAME_LENGTH];
+		strncpy(tmp, file, len);
+		tmp[len] = '\0';
+		return tmp;
+	}
+}
+#endif
+
 bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 {
 	Track track = {0, 0, 0, 0, 0, 0, false, NULL};
@@ -399,11 +418,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	bool canAddTrack = false;
 	char tmp[MAX_FILENAME_LENGTH];	// dirname can change its argument
 	strncpy(tmp, cuefile, MAX_FILENAME_LENGTH);
-#if defined(WIN32)
-	string pathname("");
-#else
 	string pathname(dirname(tmp));
-#endif
 	ifstream in;
 	in.open(cuefile, ios::in);
 	if (in.fail()) return false;
@@ -572,13 +587,11 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	if (stat(filename.c_str(), &test) == 0) return true;
 	
 	// check if file with path relative to cue file exists
-#if !defined(WIN32)
 	string tmpstr(pathname + "/" + filename);
 	if (stat(tmpstr.c_str(), &test) == 0) {
 		filename = tmpstr;
 		return true;
 	}
-#endif
 	// finally check if file is in a dosbox local drive
 	char fullname[CROSS_LEN];
 	char tmp[CROSS_LEN];
