@@ -833,7 +833,8 @@ static void DSP_DoWrite(Bit8u val) {
 }
 
 static Bit8u DSP_ReadData(void) {
-	Bit8u data=0;	
+/* Static so it repeats the last value on succesive reads (JANGLE DEMO) */
+	static Bit8u data = 0;
 	if (sb.dsp.out.used) {
 		data=sb.dsp.out.data[sb.dsp.out.pos];
 		sb.dsp.out.pos++;
