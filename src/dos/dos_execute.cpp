@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.45 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.46 2005-07-04 20:20:19 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -131,7 +131,7 @@ bool DOS_Terminate(bool tsr) {
 	/* Set the CS:IP stored in int 0x22 back on the stack */
 	mem_writew(SegPhys(ss)+reg_sp+0,RealOff(old22));
 	mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(old22));
-	mem_writew(SegPhys(ss)+reg_sp+4,0x200); //stack isn't preserved
+	mem_writew(SegPhys(ss)+reg_sp+4,reg_flags&(~FLAG_CF));
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(mempsp);
 	DOS_UpdatePSPName();
@@ -376,10 +376,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		reg_sp-=6;
 		mem_writew(SegPhys(ss)+reg_sp+0,RealOff(csip));
 		mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(csip));
-		mem_writew(SegPhys(ss)+reg_sp+4,0x200);
+		/* DOS starts programs with a RETF, so our IRET
+		   should not modify the flags (e.g. IOPL in v86 mode) */
+		mem_writew(SegPhys(ss)+reg_sp+4,reg_flags&(~FLAG_CF));
 		/* Setup the rest of the registers */
 		reg_ax=0;reg_si=0x100;
-		reg_cx=reg_dx=reg_bx=reg_di=reg_bp=0;
+		reg_cx=reg_dx=reg_bx=reg_di=0;
+		reg_bp=0x91c;	/* DOS internal stack begin relict */
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
 #if C_DEBUG		
 		/* Started from debug.com, then set breakpoint at start */

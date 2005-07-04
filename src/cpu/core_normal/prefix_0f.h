@@ -128,7 +128,9 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm >= 0xc0 ) {
 				GetEArd;
-				*eard=CPU_GET_CRX(which);
+				Bit32u crx_value;
+				if (CPU_READ_CRX(which,crx_value)) RUNEXCEPTION();
+				*eard=crx_value;
 			} else {
 				GetEAa;
 				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%d with non-register",which);
@@ -153,7 +155,7 @@
 			Bitu which=(rm >> 3) & 7;
 			if (rm >= 0xc0 ) {
 				GetEArd;
-				if (CPU_SET_CRX(which,*eard)) RUNEXCEPTION();
+				if (CPU_WRITE_CRX(which,*eard)) RUNEXCEPTION();
 			} else 	goto illegal_opcode;
 		}
 		break;

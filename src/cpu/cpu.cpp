@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.70 2005-04-25 19:01:11 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.71 2005-07-04 20:20:18 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -82,7 +82,7 @@ void CPU_Core_Dyn_X86_Init(void);
 }
 #elif defined(CPU_CHECK_EXCEPT)
 #define CPU_CHECK_COND(cond,msg,exc,sel) {	\
-	if (cond) {
+	if (cond) {					\
 		CPU_Exception(exc,sel);		\
 		return;				\
 	}					\
@@ -158,10 +158,14 @@ bool CPU_STI(void) {
 }
 
 bool CPU_POPF(Bitu use32) {
-	if ((reg_flags & FLAG_VM) && (GETFLAG(IOPL)!=FLAG_IOPL))
+	if (cpu.pmode && GETFLAG(VM) && (GETFLAG(IOPL)!=FLAG_IOPL)) {
+		/* Not enough privileges to execute POPF */
 		return CPU_PrepareException(EXCEPTION_GP,0);
-	Bitu mask=cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
-	if ((GETFLAG_IOPL<cpu.cpl) && !(reg_flags & FLAG_VM)) mask &= (~FLAG_IF);
+	}
+	Bitu mask=FMASK_ALL;
+	/* IOPL field can only be modified when CPL=0 or in real mode: */
+	if (cpu.pmode && (cpu.cpl>0)) mask &= (~FLAG_IOPL);
+	if (cpu.pmode && !GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) mask &= (~FLAG_IF);
 	if (use32)
 		CPU_SetFlags(CPU_Pop32(),mask);
 	else CPU_SetFlags(CPU_Pop16(),mask & 0xffff);
@@ -169,10 +173,12 @@ bool CPU_POPF(Bitu use32) {
 }
 
 bool CPU_PUSHF(Bitu use32) {
-	if ((reg_flags & FLAG_VM) && (GETFLAG(IOPL)!=FLAG_IOPL))
+	if (cpu.pmode && GETFLAG(VM) && (GETFLAG(IOPL)!=FLAG_IOPL)) {
+		/* Not enough privileges to execute PUSHF */
 		return CPU_PrepareException(EXCEPTION_GP,0);
+	}
 	if (use32) 
-		CPU_Push32(reg_flags & 0x00fcffff);
+		CPU_Push32(reg_flags & 0xfcffff);
 	else CPU_Push16(reg_flags);
 	return false;
 }
@@ -631,15 +637,14 @@ do_interrupt:
 
 void CPU_IRET(bool use32,Bitu oldeip) {
 	if (!cpu.pmode) {					/* RealMode IRET */
-realmode_iret:
 		if (use32) {
 			reg_eip=CPU_Pop32();
 			SegSet16(cs,CPU_Pop32());
-			CPU_SetFlagsd(CPU_Pop32());
+			CPU_SetFlags(CPU_Pop32(),FMASK_ALL);
 		} else {
 			reg_eip=CPU_Pop16();
 			SegSet16(cs,CPU_Pop16());
-			CPU_SetFlagsw(CPU_Pop16());
+			CPU_SetFlags(CPU_Pop16(),FMASK_ALL & 0xffff);
 		}
 		cpu.code.big=false;
 		return;
@@ -649,7 +654,21 @@ realmode_iret:
 				// win3.x e
 				CPU_Exception(EXCEPTION_GP,0);
 				return;
-			} else goto realmode_iret;
+			} else {
+				if (use32) {
+					reg_eip=CPU_Pop32();
+					SegSet16(cs,CPU_Pop32());
+					/* IOPL can not be modified in v86 mode by IRET */
+					CPU_SetFlags(CPU_Pop32(),FMASK_NORMAL|FLAG_NT);
+				} else {
+					reg_eip=CPU_Pop16();
+					SegSet16(cs,CPU_Pop16());
+					/* IOPL can not be modified in v86 mode by IRET */
+					CPU_SetFlags(CPU_Pop16(),FMASK_NORMAL|FLAG_NT);
+				}
+				cpu.code.big=false;
+				return;
+			}
 		}
 		/* Check if this is task IRET */	
 		if (GETFLAG(NT)) {
@@ -1380,12 +1399,12 @@ void CPU_SIDT(Bitu & limit,Bitu & base) {
 }
 
 
-bool CPU_SET_CRX(Bitu cr,Bitu value) {
+void CPU_SET_CRX(Bitu cr,Bitu value) {
 	switch (cr) {
 	case 0:
 		{
 			Bitu changed=cpu.cr0 ^ value;		
-			if (!changed) return false;
+			if (!changed) return;
 			cpu.cr0=value;
 			if (value & CR0_PROTECTION) {
 				cpu.pmode=true;
@@ -1408,6 +1427,11 @@ bool CPU_SET_CRX(Bitu cr,Bitu value) {
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
 		break;
 	}
+}
+
+bool CPU_WRITE_CRX(Bitu cr,Bitu value) {
+	if (cpu.pmode && GETFLAG(VM)) return CPU_PrepareException(EXCEPTION_GP,0);
+	else CPU_SET_CRX(cr,value);
 	return false;
 }
 
@@ -1424,6 +1448,12 @@ Bitu CPU_GET_CRX(Bitu cr) {
 		break;
 	}
 	return 0;
+}
+
+bool CPU_READ_CRX(Bitu cr,Bit32u & retvalue) {
+	if (cpu.pmode && GETFLAG(VM)) return CPU_PrepareException(EXCEPTION_GP,0);
+	retvalue=CPU_GET_CRX(cr);
+	return false;
 }
 
 

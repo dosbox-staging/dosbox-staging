@@ -63,8 +63,10 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel);
 void CPU_LAR(Bitu selector,Bitu & ar);
 void CPU_LSL(Bitu selector,Bitu & limit);
 
-bool CPU_SET_CRX(Bitu cr,Bitu value);
+void CPU_SET_CRX(Bitu cr,Bitu value);
+bool CPU_WRITE_CRX(Bitu cr,Bitu value);
 Bitu CPU_GET_CRX(Bitu cr);
+bool CPU_READ_CRX(Bitu cr,Bit32u & retvalue);
 
 void CPU_SMSW(Bitu & word);
 Bitu CPU_LMSW(Bitu word);
