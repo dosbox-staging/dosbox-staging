@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.39 2005-03-25 11:59:24 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.40 2005-07-05 20:22:02 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -30,6 +30,8 @@
 #include "inout.h"
 #include "dos_inc.h"
 #include "setup.h"
+#include "support.h"
+#include "cpu.h"
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)
@@ -42,6 +44,10 @@
 
 #define NULL_HANDLE	0xffff
 #define	NULL_PAGE	0xffff
+
+#define ENABLE_VCPI 1
+#define ENABLE_V86_STARTUP 0
+
 
 /* EMM errors */
 #define EMM_NO_ERROR			0x00
@@ -94,6 +100,13 @@ struct EMM_Handle {
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
 
+static struct {
+	bool enabled;
+	Bit16u ems_handle;
+	Bitu pm_interface;
+	MemHandle private_area;
+	Bit8u pic1_remapping,pic2_remapping;
+} vcpi ;
 
 struct MoveRegion {
 	Bit32u bytes;
@@ -198,7 +211,9 @@ static Bit8u EMM_ReleaseMemory(Bit16u handle) {
 
 static Bit8u EMM_SavePageMap(Bit16u handle) {
 	/* Check for valid handle */
-	if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) return EMM_INVALID_HANDLE;
+	if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) {
+		if (handle!=0) return EMM_INVALID_HANDLE;
+	}
 	/* Check for previous save */
 	if (emm_handles[handle].saved_page_map) return EMM_PAGE_MAP_SAVED;
 	/* Copy the mappings over */
@@ -220,7 +235,9 @@ static Bit8u EMM_RestoreMappingTable(void) {
 }
 static Bit8u EMM_RestorePageMap(Bit16u handle) {
 	/* Check for valid handle */
-	if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) return EMM_INVALID_HANDLE;
+	if (handle>=EMM_MAX_HANDLES || emm_handles[handle].pages==NULL_HANDLE) {
+		if (handle!=0) return EMM_INVALID_HANDLE;
+	}
 	/* Check for previous save */
 	if (!emm_handles[handle].saved_page_map) return EMM_INVALID_HANDLE;
 	/* Restore the mappings */
@@ -585,8 +602,153 @@ static Bitu INT67_Handler(void) {
 		};
 		break;
 	case 0xDE:		/* VCPI Functions */
-		LOG(LOG_MISC,LOG_ERROR)("EMS:VCPI Call %2X not supported",reg_al);
-		reg_ah=EMM_FUNC_NOSUP;
+		if (!vcpi.enabled) {
+			LOG(LOG_MISC,LOG_ERROR)("EMS:VCPI Call %2X not supported",reg_al);
+			reg_ah=EMM_FUNC_NOSUP;
+		} else {
+			switch (reg_al) {
+			case 0x00:		/* VCPI Installation Check */
+				reg_ah=EMM_NO_ERROR;
+				reg_bx=0x100;
+				break;
+			case 0x01:		/* VCPI Get Protected Mode Interface */
+				/* Set up page table buffer */
+				for (Bitu ct=0; ct<0xff; ct++) {
+					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
+					real_writew(SegValue(es),reg_di+ct*4+0x01,ct*0x10);	// mapping
+					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
+				}
+				for (Bitu ct=0xff; ct<0x100; ct++) {
+					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
+					real_writew(SegValue(es),reg_di+ct*4+0x01,(ct-0xff)*0x10+0x1100);	// mapping
+					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
+				}
+				reg_di+=0x800;		// advance pointer by 0x200*4
+				
+				/* Set up three descriptor table entries */
+				real_writed(SegValue(ds),reg_si+0x00,0x8000ffff);	// descriptor 1 (code segment)
+				real_writed(SegValue(ds),reg_si+0x04,0x00009a0c);	// descriptor 1
+				real_writed(SegValue(ds),reg_si+0x08,0x0000ffff);	// descriptor 2 (data segment)
+				real_writed(SegValue(ds),reg_si+0x0c,0x00009200);	// descriptor 2
+				real_writed(SegValue(ds),reg_si+0x10,0x0000ffff);	// descriptor 3
+				real_writed(SegValue(ds),reg_si+0x14,0x00009200);	// descriptor 3
+
+				reg_ebx=(vcpi.pm_interface&0xffff);
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x02:		/* VCPI Maximum Physical Address */
+				reg_edx=((MEM_TotalPages()*MEM_PAGESIZE)-1)&0xfffff000;
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x03:		/* VCPI Get Number of Free Pages */
+				reg_edx=MEM_FreeTotal();
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x04: {	/* VCPI Allocate one Page */
+				MemHandle mem = MEM_AllocatePages(1,false);
+				if (mem) {
+					reg_edx=mem<<12;
+					reg_ah=EMM_NO_ERROR;
+				} else {
+					reg_ah=EMM_OUT_OF_LOG;
+				}
+				break;
+				}
+			case 0x05:		/* VCPI Free Page */
+				MEM_ReleasePages(reg_edx>>12);
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x06: {	/* VCPI Get Physical Address of Page in 1st MB */
+				if (((reg_cx<<8)>=EMM_PAGEFRAME) && ((reg_cx<<8)<EMM_PAGEFRAME+0x1000)) {
+					/* Page is in Pageframe, so check what EMS-page it is
+					   and return the physical address */
+					Bit8u phys_page;
+					Bit16u mem_seg=reg_cx<<8;
+					if (mem_seg<EMM_PAGEFRAME+0x400) phys_page=0;
+					else if (mem_seg<EMM_PAGEFRAME+0x800) phys_page=1;
+					else if (mem_seg<EMM_PAGEFRAME+0xc00) phys_page=2;
+					else phys_page=3;
+					Bit16u handle=emm_mappings[phys_page].handle;
+					if (handle==0xffff) {
+						reg_ah=EMM_ILL_PHYS;
+						break;
+					} else {
+						MemHandle memh=MEM_NextHandleAt(
+							emm_handles[handle].mem,
+							emm_mappings[phys_page].page*4);
+						reg_edx=(memh+(reg_cx&3))<<12;
+					}
+				} else {
+					/* Page not in Pageframe, so just translate into physical address */
+					reg_edx=reg_cx<<12;
+				}
+
+				reg_ah=EMM_NO_ERROR;
+				}
+				break;
+			case 0x0a:		/* VCPI Get PIC Vector Mappings */
+				reg_bx=vcpi.pic1_remapping;		// master PIC
+				reg_cx=vcpi.pic2_remapping;		// slave PIC
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x0b:		/* VCPI Set PIC Vector Mappings */
+				reg_flags&=(~FLAG_IF);
+				vcpi.pic1_remapping=reg_bx&0xff;
+				vcpi.pic2_remapping=reg_cx&0xff;
+				reg_ah=EMM_NO_ERROR;
+				break;
+			case 0x0c: {	/* VCPI Switch from V86 to Protected Mode */
+				reg_flags&=(~FLAG_IF);
+				cpu.cpl=0;
+
+				/* Read data from ESI (linear address) */
+				Bit32u new_cr3=mem_readd(reg_esi);
+				Bit32u new_gdt_addr=mem_readd(reg_esi+4);
+				Bit32u new_idt_addr=mem_readd(reg_esi+8);
+				Bit16u new_ldt=mem_readw(reg_esi+0x0c);
+				Bit16u new_tr=mem_readw(reg_esi+0x0e);
+				Bit32u new_eip=mem_readd(reg_esi+0x10);
+				Bit16u new_cs=mem_readw(reg_esi+0x14);
+
+				/* Get GDT and IDT entries */
+				Bit16u new_gdt_limit=mem_readw(new_gdt_addr);
+				Bit32u new_gdt_base=mem_readd(new_gdt_addr+2);
+				Bit16u new_idt_limit=mem_readw(new_idt_addr);
+				Bit32u new_idt_base=mem_readd(new_idt_addr+2);
+
+				/* Switch to protected mode, paging enabled if necessary */
+				Bit32u new_cr0=CPU_GET_CRX(0)|1;
+				if (new_cr3!=0) new_cr0|=0x80000000;
+				CPU_SET_CRX(0, new_cr0);
+				CPU_SET_CRX(3, new_cr3);
+
+				PhysPt tbaddr=new_gdt_base+(new_tr&0xfff8)+5;
+				Bit8u tb=mem_readb(tbaddr);
+				mem_writeb(tbaddr, tb&0xfd);
+
+				/* Load tables and initialize segment registers */
+				CPU_LGDT(new_gdt_limit, new_gdt_base);
+				CPU_LIDT(new_idt_limit, new_idt_base);
+				CPU_LLDT(new_ldt);
+				CPU_LTR(new_tr);
+
+				CPU_SetSegGeneral(ds,0);
+				CPU_SetSegGeneral(es,0);
+				CPU_SetSegGeneral(fs,0);
+				CPU_SetSegGeneral(gs,0);
+
+				/* Switch to protected mode */
+				reg_flags&=(~(FLAG_VM|FLAG_NT));
+				reg_flags|=0x3000;
+				CPU_JMP(true, new_cs, new_eip, 0);
+				}
+				break;
+			default:
+				LOG(LOG_MISC,LOG_ERROR)("EMS:VCPI Call %x not supported",reg_ax);
+				reg_ah=EMM_FUNC_NOSUP;
+				break;
+			}
+		}
 		break;
 	default:
 		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X not supported",reg_ah);
@@ -594,6 +756,263 @@ static Bitu INT67_Handler(void) {
 		break;
 	}
 	return CBRET_NONE;
+}
+
+static Bitu VCPI_PM_Handler() {
+//	LOG_MSG("VCPI PMODE handler, function %x",reg_ax);
+	switch (reg_ax) {
+	case 0xDE03:		/* VCPI Get Number of Free Pages */
+		reg_edx=MEM_FreeTotal();
+		reg_ah=EMM_NO_ERROR;
+		break;
+	case 0xDE04: {		/* VCPI Allocate one Page */
+		MemHandle mem = MEM_AllocatePages(1,false);
+		if (mem) {
+			reg_edx=mem<<12;
+			reg_ah=EMM_NO_ERROR;
+		} else {
+			reg_ah=EMM_OUT_OF_LOG;
+		}
+		break;
+		}
+	case 0xDE05:		/* VCPI Free Page */
+		MEM_ReleasePages(reg_edx>>12);
+		reg_ah=EMM_NO_ERROR;
+		break;
+	case 0xDE0C: {		/* VCPI Switch from Protected Mode to V86 */
+		reg_flags&=(~FLAG_IF);
+
+		/* Flags need to be filled in, VM=true, IOPL=3 */
+		mem_writed(SegPhys(ss) + (reg_esp & cpu.stack.mask)+0x10, 0x23002);
+
+		/* Disable Paging */
+		CPU_SET_CRX(0, CPU_GET_CRX(0)&0x7ffffff7);
+		CPU_SET_CRX(3, 0);
+
+		PhysPt tbaddr=vcpi.private_area+0x0000+(0x10&0xfff8)+5;
+		Bit8u tb=mem_readb(tbaddr);
+		mem_writeb(tbaddr, tb&0xfd);
+
+		/* Load descriptor table registers */
+		CPU_LGDT(0xff, vcpi.private_area+0x0000);
+		CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
+		CPU_LLDT(0x08);
+		CPU_LTR(0x10);
+
+		reg_flags&=(~FLAG_NT);
+		reg_esp+=8;		// skip interrupt return information
+
+		/* Switch to v86-task */
+		CPU_IRET(true,0);
+		}
+		break;
+	default:
+		LOG(LOG_MISC,LOG_WARN)("Unhandled VCPI-function %x in protected mode",reg_al);
+		break;
+	}
+	return CBRET_NONE;
+}
+
+static Bitu V86_Monitor() {
+	/* Calculate which interrupt did occur */
+	Bitu int_num=(mem_readw(SegPhys(ss)+(reg_esp & cpu.stack.mask))-0x2803);
+
+	/* See if Exception 0x0d and not Interrupt 0x0d */
+	if ((int_num==(0x0d*4)) && ((reg_sp&0xffff)!=0x1fda)) {
+		/* Protection violation during V86-execution,
+		   needs intervention by monitor (depends on faulting opcode) */
+
+		reg_esp+=6;		// skip ip of CALL and error code of EXCEPTION 0x0d
+
+		/* Get adress of faulting instruction */
+		Bit16u v86_cs=mem_readw(SegPhys(ss)+((reg_esp+4) & cpu.stack.mask));
+		Bit16u v86_ip=mem_readw(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask));
+		Bit8u v86_opcode=mem_readb((v86_cs<<4)+v86_ip);
+//		LOG_MSG("v86 monitor caught protection violation at %x:%x, opcode=%x",v86_cs,v86_ip,v86_opcode);
+		switch (v86_opcode) {
+			case 0x0f:		// double byte opcode
+				v86_opcode=mem_readb((v86_cs<<4)+v86_ip+1);
+				switch (v86_opcode) {
+					case 0x20: {	// mov reg,CRx
+						Bitu rm_val=mem_readb((v86_cs<<4)+v86_ip+2);
+						Bitu which=(rm_val >> 3) & 7;
+						if ((rm_val<0xc0) || (rm_val>=0xe8))
+							E_Exit("Invalid opcode 0x0f 0x20 %x caused a protection fault!",rm_val);
+						Bit32u crx=CPU_GET_CRX(which);
+						switch (rm_val&3) {
+							case 0:	reg_eax=crx;	break;
+							case 1:	reg_ecx=crx;	break;
+							case 2:	reg_edx=crx;	break;
+							case 3:	reg_ebx=crx;	break;
+							case 4:	reg_esp=crx;	break;
+							case 5:	reg_ebp=crx;	break;
+							case 6:	reg_esi=crx;	break;
+							case 7:	reg_edi=crx;	break;
+						}
+						mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+3);
+						}
+						break;
+					case 0x22: {	// mov CRx,reg
+						Bitu rm_val=mem_readb((v86_cs<<4)+v86_ip+2);
+						Bitu which=(rm_val >> 3) & 7;
+						if ((rm_val<0xc0) || (rm_val>=0xe8))
+							E_Exit("Invalid opcode 0x0f 0x22 %x caused a protection fault!",rm_val);
+						Bit32u crx;
+						switch (rm_val&3) {
+							case 0:	crx=reg_eax;	break;
+							case 1:	crx=reg_ecx;	break;
+							case 2:	crx=reg_edx;	break;
+							case 3:	crx=reg_ebx;	break;
+							case 4:	crx=reg_esp;	break;
+							case 5:	crx=reg_ebp;	break;
+							case 6:	crx=reg_esi;	break;
+							case 7:	crx=reg_edi;	break;
+						}
+						if (which==0) crx|=1;	// protection bit always on
+						CPU_SET_CRX(which,crx);
+						mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+3);
+						}
+						break;
+					default:
+						E_Exit("Unhandled opcode 0x0f %x caused a protection fault!",v86_opcode);
+				}
+				break;
+			case 0xe4:		// IN AL,Ib
+				reg_al=IO_ReadB(mem_readb((v86_cs<<4)+v86_ip+1));
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
+				break;
+			case 0xe5:		// IN AX,Ib
+				reg_ax=IO_ReadW(mem_readb((v86_cs<<4)+v86_ip+1));
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
+				break;
+			case 0xe6:		// OUT Ib,AL
+				IO_WriteB(mem_readb((v86_cs<<4)+v86_ip+1),reg_al);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
+				break;
+			case 0xe7:		// OUT Ib,AX
+				IO_WriteW(mem_readb((v86_cs<<4)+v86_ip+1),reg_ax);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
+				break;
+			case 0xec:		// IN AL,DX
+				reg_al=IO_ReadB(reg_dx);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			case 0xed:		// IN AX,DX
+				reg_ax=IO_ReadW(reg_dx);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			case 0xee:		// OUT DX,AL
+				IO_WriteB(reg_dx,reg_al);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			case 0xef:		// OUT DX,AX
+				IO_WriteW(reg_dx,reg_ax);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			case 0xf0:		// LOCK prefix
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			case 0xf4:		// HLT
+				reg_flags|=FLAG_IF;
+				CPU_HLT(reg_eip);
+				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
+				break;
+			default:
+				E_Exit("Unhandled opcode %x caused a protection fault!",v86_opcode);
+		}
+		return CBRET_NONE;
+	}
+
+	/* Get address to interrupt handler */
+	Bit16u vint_vector_seg=mem_readw(SegValue(ds)+int_num+2);
+	Bit16u vint_vector_ofs=mem_readw(int_num);
+	if (reg_sp!=0x1fda) reg_esp+=(2+3*4);	// Interrupt from within protected mode
+	else reg_esp+=2;
+
+	/* Read entries that were pushed onto the stack by the interrupt */
+	Bit16u return_ip=mem_readw(SegPhys(ss)+(reg_esp & cpu.stack.mask));
+	Bit16u return_cs=mem_readw(SegPhys(ss)+((reg_esp+4) & cpu.stack.mask));
+	Bit32u return_eflags=mem_readd(SegPhys(ss)+((reg_esp+8) & cpu.stack.mask));
+
+	/* Modify stack to call v86-interrupt handler */
+	mem_writed(SegPhys(ss)+(reg_esp & cpu.stack.mask),vint_vector_ofs);
+	mem_writed(SegPhys(ss)+((reg_esp+4) & cpu.stack.mask),vint_vector_seg);
+	mem_writed(SegPhys(ss)+((reg_esp+8) & cpu.stack.mask),return_eflags&(~(FLAG_IF|FLAG_TF)));
+
+	/* Adjust SP of v86-stack */
+	Bit16u v86_ss=mem_readw(SegPhys(ss)+((reg_esp+0x10) & cpu.stack.mask));
+	Bit16u v86_sp=mem_readw(SegPhys(ss)+((reg_esp+0x0c) & cpu.stack.mask))-6;
+	mem_writew(SegPhys(ss)+((reg_esp+0x0c) & cpu.stack.mask),v86_sp);
+
+	/* Return to original code after v86-interrupt handler */
+	mem_writew((v86_ss<<4)+v86_sp+0,return_ip);
+	mem_writew((v86_ss<<4)+v86_sp+2,return_cs);
+	mem_writew((v86_ss<<4)+v86_sp+4,(Bit16u)(return_eflags&0xffff));
+	return CBRET_NONE;
+}
+
+static void SetupVCPI() {
+	vcpi.enabled=true;
+
+	vcpi.pic1_remapping=0x08;	// master PIC base
+	vcpi.pic2_remapping=0x70;	// slave PIC base
+
+	/* Allocate one EMS-page for private VCPI-data in memory beyond 1MB */
+	EMM_AllocateMemory(1,vcpi.ems_handle);
+	vcpi.private_area=emm_handles[vcpi.ems_handle].mem<<12;
+
+	/* GDT */
+	mem_writed(vcpi.private_area+0x0000,0x00000000);	// descriptor 0
+	mem_writed(vcpi.private_area+0x0004,0x00000000);	// descriptor 0
+
+	Bit32u ldt_address=(vcpi.private_area+0x1000);
+	Bit16u ldt_limit=0xff;
+	Bit32u ldt_desc_part=((ldt_address&0xffff)<<16)|ldt_limit;
+	mem_writed(vcpi.private_area+0x0008,ldt_desc_part);	// descriptor 1 (LDT)
+	ldt_desc_part=((ldt_address&0xff0000)>>16)|(ldt_address&0xff000000)|0x8200;
+	mem_writed(vcpi.private_area+0x000c,ldt_desc_part);	// descriptor 1
+
+	Bit32u tss_address=(vcpi.private_area+0x3000);
+	Bit32u tss_desc_part=((tss_address&0xffff)<<16)|(0x0068+0x200);
+	mem_writed(vcpi.private_area+0x0010,tss_desc_part);	// descriptor 2 (TSS)
+	tss_desc_part=((tss_address&0xff0000)>>16)|(tss_address&0xff000000)|0x8900;
+	mem_writed(vcpi.private_area+0x0014,tss_desc_part);	// descriptor 2
+
+	/* LDT */
+	mem_writed(vcpi.private_area+0x1000,0x00000000);	// descriptor 0
+	mem_writed(vcpi.private_area+0x1004,0x00000000);	// descriptor 0
+	Bit32u cs_desc_part=((vcpi.private_area&0xffff)<<16)|0xffff;
+	mem_writed(vcpi.private_area+0x1008,cs_desc_part);	// descriptor 1 (code)
+	cs_desc_part=((vcpi.private_area&0xff0000)>>16)|(vcpi.private_area&0xff000000)|0x9a00;
+	mem_writed(vcpi.private_area+0x100c,cs_desc_part);	// descriptor 1
+	Bit32u ds_desc_part=((vcpi.private_area&0xffff)<<16)|0xffff;
+	mem_writed(vcpi.private_area+0x1010,ds_desc_part);	// descriptor 2 (data)
+	ds_desc_part=((vcpi.private_area&0xff0000)>>16)|(vcpi.private_area&0xff000000)|0x9200;
+	mem_writed(vcpi.private_area+0x1014,ds_desc_part);	// descriptor 2
+
+	/* IDT setup */
+	for (Bitu int_ct=0; int_ct<0x100; int_ct++) {
+		/* build a CALL NEAR V86MON, the value of IP pushed by the
+			CALL is used to identify the interrupt number */
+		mem_writeb(vcpi.private_area+0x2800+int_ct*4+0,0xe8);	// call
+		mem_writew(vcpi.private_area+0x2800+int_ct*4+1,0x05fd-(int_ct*4));
+		mem_writeb(vcpi.private_area+0x2800+int_ct*4+3,0xcf);	// iret (dummy)
+
+		/* put a Gate-Descriptor into the IDT */
+		mem_writed(vcpi.private_area+0x2000+int_ct*8+0,0x000c0000|(0x2800+int_ct*4));
+		mem_writed(vcpi.private_area+0x2000+int_ct*8+4,0x0000ee00);
+	}
+
+	/* TSS */
+	for (Bitu tse_ct=0; tse_ct<0x68+0x200; tse_ct++) {
+		/* clear the TSS as most entries are not used here */
+		mem_writeb(vcpi.private_area+0x3000,0);
+	}
+	/* Set up the ring0-stack */
+	mem_writed(vcpi.private_area+0x3004,0x00002000);	// esp
+	mem_writed(vcpi.private_area+0x3008,0x00000014);	// ss
+
+	mem_writed(vcpi.private_area+0x3066,0x0068);		// io-map base (map follows, all zero)
 }
 
 static Bitu INT4B_Handler() {
@@ -616,7 +1035,7 @@ private:
 	 * stored  32 bytes.*/
 	static Bit16u emsnameseg;
 	RealPt old4b_pointer,old67_pointer;
-	CALLBACK_HandlerObject call_vdma,int67;
+	CALLBACK_HandlerObject call_vdma,int67,call_vcpi,call_v86mon;
 
 public:
 	EMS(Section* configuration):Module_base(configuration){
@@ -624,6 +1043,8 @@ public:
 	/* Virtual DMA interrupt callback */
 		call_vdma.Install(&INT4B_Handler,CB_IRET,"Int 4b vdma");
 		call_vdma.Set_RealVec(0x4b);
+
+		vcpi.enabled=false;
 		
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("ems")) return;
@@ -656,6 +1077,51 @@ public:
 			emm_mappings[i].page=NULL_PAGE;
 			emm_mappings[i].handle=NULL_HANDLE;
 		}
+
+		if (!ENABLE_VCPI) return;
+
+		/* Install a callback that handles VCPI-requests in protected mode requests */
+		call_vcpi.Install(&VCPI_PM_Handler,CB_RETF,"VCPI PM");
+		vcpi.pm_interface=(call_vcpi.Get_callback())<<4;
+
+		/* Use IRETD instead of IRET for this protected mode callback */
+		mem_writeb(CB_BASE+vcpi.pm_interface+4,(Bit8u)0x66);
+		mem_writeb(CB_BASE+vcpi.pm_interface+5,(Bit8u)0xCB);       //A IRETD Instruction
+
+		/* Initialize private data area and set up descriptor tables */
+		SetupVCPI();
+
+		/* Install v86-callback that handles interrupts occuring
+		   in v86 mode, including protection fault exceptions */
+		call_v86mon.Install(&V86_Monitor,CB_IRET,"V86 Monitor");
+
+		mem_writeb(vcpi.private_area+0x2e00,(Bit8u)0xFE);       //GRP 4
+		mem_writeb(vcpi.private_area+0x2e01,(Bit8u)0x38);       //Extra Callback instruction
+		mem_writew(vcpi.private_area+0x2e02,call_v86mon.Get_callback());		//The immediate word
+		mem_writeb(vcpi.private_area+0x2e04,(Bit8u)0x66);
+		mem_writeb(vcpi.private_area+0x2e05,(Bit8u)0xCF);       //A IRETD Instruction
+
+		/* Testcode only, starts up dosbox in v86-mode */
+		if (ENABLE_V86_STARTUP) {
+			/* Prepare V86-task */
+			CPU_SET_CRX(0, 1);
+			CPU_LGDT(0xff, vcpi.private_area+0x0000);
+			CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
+			CPU_LLDT(0x08);
+			CPU_LTR(0x10);
+
+			CPU_Push32(SegValue(gs));
+			CPU_Push32(SegValue(fs));
+			CPU_Push32(SegValue(ds));
+			CPU_Push32(SegValue(es));
+			CPU_Push32(SegValue(ss));
+			CPU_Push32(0x23002);
+			CPU_Push32(SegValue(cs));
+			CPU_Push32(reg_eip&0xffff);
+			/* Switch to V86-mode */
+			cpu.cpl=0;
+			CPU_IRET(true,0);
+		}
 	}
 	
 	~EMS() {
@@ -674,6 +1140,20 @@ public:
 		RealSetVec(0x67,old67_pointer);
 		/* Clear handle and page tables */
 		//TODO
+
+		if (!ENABLE_VCPI) return;
+
+		/* Free private data area in expanded memory */
+		EMM_ReleaseMemory(vcpi.ems_handle);
+
+		if (cpu.pmode && GETFLAG(VM)) {
+			/* Switch back to real mode if in v86-mode */
+			CPU_SET_CRX(0, 0);
+			CPU_SET_CRX(3, 0);
+			reg_flags&=(~(FLAG_IOPL|FLAG_VM));
+			CPU_LIDT(0x3ff, 0);
+			cpu.cpl=0;
+		}
 	}
 };
 		
