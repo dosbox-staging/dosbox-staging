@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.40 2005-07-05 20:22:02 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.41 2005-07-07 19:53:02 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -35,7 +35,7 @@
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)
-#define	EMM_MAX_HANDLES	100				/* 255 Max */
+#define	EMM_MAX_HANDLES	200				/* 255 Max */
 #define EMM_PAGE_SIZE	(16*1024U)
 #define EMM_MAX_PAGES	(32 * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
