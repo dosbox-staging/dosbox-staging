@@ -75,6 +75,7 @@ void INT10_GetSinglePaletteRegister(Bit8u reg,Bit8u * val) {
 		IO_Read(VGAREG_ACTL_RESET);
 		IO_Write(VGAREG_ACTL_ADDRESS,reg+32);
 		*val=IO_Read(VGAREG_ACTL_READ_DATA);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,*val);
 	}
 }
 
@@ -82,6 +83,7 @@ void INT10_GetOverscanBorderColor(Bit8u * val) {
 	IO_Read(VGAREG_ACTL_RESET);
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	*val=IO_Read(VGAREG_ACTL_READ_DATA);
+	IO_Write(VGAREG_ACTL_WRITE_DATA,*val);
 }
 
 void INT10_GetAllPaletteRegisters(PhysPt data) {
@@ -136,9 +138,10 @@ void INT10_SelectDACPage(Bit8u function,Bit8u mode) {
 	if (!function) {		//Select paging mode
 		if (mode) old10|=0x80;
 		else old10&=0x7f;
-		IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+		//IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,old10);
 	} else {				//Select page
+		IO_Write(VGAREG_ACTL_WRITE_DATA,old10);
 		if (!(old10 & 0x80)) mode<<=2;
 		mode&=0xf;
 		IO_Write(VGAREG_ACTL_ADDRESS,0x14);
@@ -151,9 +154,11 @@ void INT10_GetDACPage(Bit8u* mode,Bit8u* page) {
 	IO_Read(VGAREG_ACTL_RESET);
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	Bit8u reg10=IO_Read(VGAREG_ACTL_READ_DATA);
+	IO_Write(VGAREG_ACTL_WRITE_DATA,reg10);
 	*mode=(reg10&0x80)?0x01:0x00;
 	IO_Write(VGAREG_ACTL_ADDRESS,0x14);
 	*page=IO_Read(VGAREG_ACTL_READ_DATA);
+	IO_Write(VGAREG_ACTL_WRITE_DATA,*page);
 	if(*mode) {
 		*page&=0xf;
 	} else {
