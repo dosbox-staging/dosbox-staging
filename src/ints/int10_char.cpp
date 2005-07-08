@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.34 2005-05-04 19:33:46 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.35 2005-07-08 13:48:58 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -369,29 +369,73 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	}
 }
 
+void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
+	/* Externally used by the mouse routine */
+	PhysPt fontdata;
+	Bitu x,y;
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	bool split_chr = false;
+	switch (CurMode->type) {
+	case M_TEXT:
+		{	
+			// Compute the address  
+			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+			address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
+			// read the char 
+			PhysPt where = CurMode->pstart+address;
+			*result=mem_readw(where);
+		}
+		return;
+	case M_CGA4:
+	case M_CGA2:
+	case M_TANDY16:
+		split_chr = true;
+		/* Fallthrough */
+	default:		/* EGA/VGA don't have a split font-table */
+		for(Bit16u chr=0;chr <= 255 ;chr++) {
+			if (!split_chr || (chr<128)) fontdata = Real2Phys(RealGetVec(0x43))+chr*cheight;
+			else fontdata = Real2Phys(RealGetVec(0x1F))+(chr-128)*cheight;
 
+			x=8*col;
+			y=cheight*row;
+			bool error=false;
+			for (Bit8u h=0;h<cheight;h++) {
+				Bit8u bitsel=128;
+				Bit8u bitline=mem_readb(fontdata++);
+				Bit8u res=0;
+				Bit8u vidline=0;
+				Bit16u tx=x;
+				while (bitsel) {
+					//Construct bitline in memory
+					INT10_GetPixel(tx,y,page,&res);
+					if(res) vidline|=bitsel;
+					tx++;
+					bitsel>>=1;
+				}
+				y++;
+				if(bitline != vidline){
+					/* It's not character 'chr', move on to the next */
+					error = true;
+					break;
+				}
+			}
+			if(!error){
+				/* We found it */
+				*result = chr;
+				return;
+			}
+		}
+		LOG(LOG_INT10,LOG_ERROR)("ReadChar didn't find character");
+		*result = 0;
+		break;
+	}
+}
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
- 
-	// Compute the address  
-	Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-	address+=(cur_row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+cur_col)*2;
-	// Read the char 
-	PhysPt where = CurMode->pstart+address;
-	*result=mem_readw(where);
+	ReadCharAttr(cur_col,cur_row,page,result);
 }
-
-void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
-	/* Used by the mouse */
-	Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-	address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
-	// Read the char 
-	PhysPt where = CurMode->pstart+address;
-	*result=mem_readw(where);
-}
-
 void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	/* Externally used by the mouse routine */
 	PhysPt fontdata;
@@ -559,4 +603,3 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 		INT10_SetCursorPos(cur_row,cur_col,page);
 	}
 }
-
