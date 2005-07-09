@@ -442,17 +442,17 @@ switch (inst.code.op) {
 			}
 		case 6:		/* LMSW */
 			FillFlags();
-			CPU_LMSW(inst.op1.w);
+			if (CPU_LMSW(inst.op1.w)) RunException();
 			goto nextopcode;
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
 		}
 		break;
 	case O_M_CRx_Rd:
-		CPU_SET_CRX(inst.rm_index,inst.op1.d);
+		if (CPU_WRITE_CRX(inst.rm_index,inst.op1.d)) RunException();
 		break;
 	case O_M_Rd_CRx:
-		inst.op1.d=CPU_GET_CRX(inst.rm_index);
+		if (CPU_READ_CRX(inst.rm_index,inst.op1.d)) RunException();
 		break;
 	case O_M_DRx_Rd:
 //		LOG(LOG_CPU,LOG_NORMAL)("MOV DR%d,%X",inst.rm_index,inst.op1.d);

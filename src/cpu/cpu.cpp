@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.71 2005-07-04 20:20:18 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.72 2005-07-09 13:07:48 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -52,6 +52,7 @@ void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 
 
+#define EXCEPTION_UD			6
 #define EXCEPTION_TS			10
 #define EXCEPTION_NP			11
 #define EXCEPTION_SS			12
@@ -1430,8 +1431,10 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 }
 
 bool CPU_WRITE_CRX(Bitu cr,Bitu value) {
-	if (cpu.pmode && GETFLAG(VM)) return CPU_PrepareException(EXCEPTION_GP,0);
-	else CPU_SET_CRX(cr,value);
+	/* Check if privileged to access control registers */
+	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
+	if ((cr==1) || (cr>4)) return CPU_PrepareException(EXCEPTION_UD,0);
+	CPU_SET_CRX(cr,value);
 	return false;
 }
 
@@ -1451,7 +1454,9 @@ Bitu CPU_GET_CRX(Bitu cr) {
 }
 
 bool CPU_READ_CRX(Bitu cr,Bit32u & retvalue) {
-	if (cpu.pmode && GETFLAG(VM)) return CPU_PrepareException(EXCEPTION_GP,0);
+	/* Check if privileged to access control registers */
+	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
+	if ((cr==1) || (cr>4)) return CPU_PrepareException(EXCEPTION_UD,0);
 	retvalue=CPU_GET_CRX(cr);
 	return false;
 }
@@ -1462,6 +1467,7 @@ void CPU_SMSW(Bitu & word) {
 }
 
 Bitu CPU_LMSW(Bitu word) {
+	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	word&=0xf;
 	if (cpu.cr0 & 1) word|=1; 
 	word|=(cpu.cr0&0xfffffff0);
