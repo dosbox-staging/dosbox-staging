@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.30 2005-06-23 20:13:58 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.31 2005-07-10 20:29:14 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -309,7 +309,7 @@ PhysPt CMscdex::GetDefaultBuffer(void)
 		Bit16u size = 128; //Size in block is size in pages ?
 		defaultBuffer = DOS_GetMemory(size);
 	};
-	return defaultBuffer;
+	return PhysMake(defaultBuffer,0);
 };
 
 void CMscdex::GetDriverInfo	(PhysPt data)
