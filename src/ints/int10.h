@@ -78,6 +78,9 @@
 #define VGAREG_MDA_WRITE_FEATURE_CTL   0x3ba
 #define VGAREG_VGA_WRITE_FEATURE_CTL   0x3da
 #define VGAREG_ACTL_RESET              0x3da
+#define VGAREG_TDY_RESET               0x3da
+#define VGAREG_TDY_ADDRESS             0x3da
+#define VGAREG_TDY_DATA                0x3de
 
 #define VGAREG_MDA_MODECTL             0x3b8
 #define VGAREG_CGA_MODECTL             0x3d8

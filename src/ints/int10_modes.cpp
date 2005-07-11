@@ -172,6 +172,7 @@ static void FinishSetMode(bool clearmem) {
 		switch (CurMode->type) {
 		case M_CGA4:
 		case M_CGA2:
+		case M_TANDY16:
 			for (i=0;i<16*1024;i++) {
 				real_writew(0xb800,i*2,0x0000);
 			}

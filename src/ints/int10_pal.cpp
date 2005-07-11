@@ -24,12 +24,21 @@
 #define ACTL_MAX_REG   0x14
 
 void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
-	if(reg<=ACTL_MAX_REG) {
-		IO_Read(VGAREG_ACTL_RESET);
-		IO_Write(VGAREG_ACTL_ADDRESS,reg);
-		IO_Write(VGAREG_ACTL_WRITE_DATA,val);
+	switch (machine) {
+	case MCH_TANDY:
+		IO_Read(VGAREG_TDY_RESET);
+		IO_Write(VGAREG_TDY_ADDRESS,reg+0x10);
+		IO_Write(VGAREG_TDY_DATA,val);
+		break;
+	case MCH_VGA:
+		if(reg<=ACTL_MAX_REG) {
+			IO_Read(VGAREG_ACTL_RESET);
+			IO_Write(VGAREG_ACTL_ADDRESS,reg);
+			IO_Write(VGAREG_ACTL_WRITE_DATA,val);
+		}
+		IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
+		break;
 	}
-	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 
@@ -41,17 +50,33 @@ void INT10_SetOverscanBorderColor(Bit8u val) {
 }
 
 void INT10_SetAllPaletteRegisters(PhysPt data) {
-	IO_Read(VGAREG_ACTL_RESET);
-	// First the colors
-	for(Bit8u i=0;i<0x10;i++) {
-		IO_Write(VGAREG_ACTL_ADDRESS,i);
+	switch (machine) {
+	case MCH_TANDY:
+		IO_Read(VGAREG_TDY_RESET);
+		// First the colors
+		for(Bit8u i=0;i<0x10;i++) {
+			IO_Write(VGAREG_TDY_ADDRESS,i+0x10);
+			IO_Write(VGAREG_TDY_DATA,mem_readb(data));
+			data++;
+		}
+		// Then the border
+		IO_Write(VGAREG_TDY_ADDRESS,0x02);
+		IO_Write(VGAREG_TDY_DATA,mem_readb(data));
+		break;
+	case MCH_VGA:
+		IO_Read(VGAREG_ACTL_RESET);
+		// First the colors
+		for(Bit8u i=0;i<0x10;i++) {
+			IO_Write(VGAREG_ACTL_ADDRESS,i);
+			IO_Write(VGAREG_ACTL_WRITE_DATA,mem_readb(data));
+			data++;
+		}
+		// Then the border
+		IO_Write(VGAREG_ACTL_ADDRESS,0x11);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,mem_readb(data));
-		data++;
+		IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
+		break;
 	}
-	// Then the border
-	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
-	IO_Write(VGAREG_ACTL_WRITE_DATA,mem_readb(data));
-	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 }
 
 void INT10_ToggleBlinkingBit(Bit8u state) {
