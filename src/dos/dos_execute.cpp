@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.46 2005-07-04 20:20:19 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.47 2005-07-12 18:59:31 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -252,6 +252,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	if (len<sizeof(EXE_Header)) iscom=true;	
 	if ((head.signature!=MAGIC1) && (head.signature!=MAGIC2)) iscom=true;
 	else {
+		if(head.pages & ~0x07ff) /* 1 MB dos maximum address limit. Fixes TC3 IDE (kippesoep) */
+			LOG(LOG_EXEC,LOG_NORMAL)("Weird header: head.pages > 1 MB");
+		head.pages&=0x07ff;
 		headersize = head.headersize*16;
 		imagesize = head.pages*512-headersize; 
 		if (imagesize+headersize<512) imagesize = 512-headersize;
@@ -299,13 +302,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		while (imagesize>0x7FFF) {
 			readsize=0x8000;DOS_ReadFile(fhandle,loadbuf,&readsize);
 			MEM_BlockWrite(loadaddress,loadbuf,readsize);
-			if (readsize!=0x8000) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
+//			if (readsize!=0x8000) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
 			loadaddress+=0x8000;imagesize-=0x8000;
 		}
 		if (imagesize>0) {
 			readsize=(Bit16u)imagesize;DOS_ReadFile(fhandle,loadbuf,&readsize);
 			MEM_BlockWrite(loadaddress,loadbuf,readsize);
-			if (readsize!=imagesize) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
+//			if (readsize!=imagesize) LOG(LOG_EXEC,LOG_NORMAL)("Illegal header");
 		}
 		/* Relocate the exe image */
 		Bit16u relocate;
@@ -410,9 +413,3 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 	return false;
 }
-
-
-
-
-
-
