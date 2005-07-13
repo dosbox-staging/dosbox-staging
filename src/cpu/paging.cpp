@@ -172,32 +172,36 @@ public:
 			table.load=phys_readd(table_addr);
 			if (!table.block.p) {
 				LOG(LOG_PAGING,LOG_NORMAL)("NP Table");
-				PAGING_PageFault(lin_addr,table_addr,false,0);	// read fault
+				PAGING_PageFault(lin_addr,table_addr,false,writing?0x02:0x00);
 				table.load=phys_readd(table_addr);
 				if (!table.block.p)
 					E_Exit("Pagefault didn't correct table");
 			}
-			table.block.a=1;		//Set access
-			phys_writed(table_addr,table.load);
+			if (!table.block.a) {
+				table.block.a=1;		//Set access
+            	phys_writed(table_addr,table.load);
+			}
 			X86PageEntry entry;
 			Bitu entry_addr=(table.block.base<<12)+t_index*4;
 			entry.load=phys_readd(entry_addr);
 			if (!entry.block.p) {
 //				LOG(LOG_PAGING,LOG_NORMAL)("NP Page");
-				PAGING_PageFault(lin_addr,entry_addr,false,0);
+				PAGING_PageFault(lin_addr,entry_addr,false,writing?0x02:0x00);
 				entry.load=phys_readd(entry_addr);
 				if (!entry.block.p)
 					E_Exit("Pagefault didn't correct page");
 			}
-			entry.block.a=1;		//Set access
 			if (cpu.cpl==3) {
-				if ((entry.block.us==0) || (table.block.us==0) || (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
+				if ((entry.block.us==0) || (table.block.us==0) && (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
 					LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
-					PAGING_PageFault(lin_addr,entry_addr,writing,0x05);
+					PAGING_PageFault(lin_addr,entry_addr,writing,0x05 | (writing?0x02:0x00));
 				}
 			}
-			entry.block.d=1;		//Set dirty
-			phys_writed(entry_addr,entry.load);
+			if ((!entry.block.a) || (!entry.block.d)) {
+				entry.block.a=1;		//Set access
+				entry.block.d=1;		//Set dirty
+				phys_writed(entry_addr,entry.load);
+			}
 			phys_page=entry.block.base;
 		} else {
 			if (lin_page<LINK_START) phys_page=paging.firstmb[lin_page];
