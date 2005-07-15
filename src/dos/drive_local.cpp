@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.58 2005-06-15 17:47:26 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.59 2005-07-15 15:23:22 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,18 +53,18 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	char* temp_name = dirCache.GetExpandName(newname); //Can only be used in till a new drive_cache action is preformed */
 	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
 	bool existing_file=false;
 	
-	FILE * test=fopen(newname,"rb+");
+	FILE * test=fopen(temp_name,"rb+");
 	if(test) {
 		fclose(test);
 		existing_file=true;
 
 	}
 	
-	FILE * hand=fopen(newname,"wb+");
+	FILE * hand=fopen(temp_name,"wb+");
 	if (!hand){
 		LOG_MSG("Warning: file creation failed: %s",newname);
 		return false;
