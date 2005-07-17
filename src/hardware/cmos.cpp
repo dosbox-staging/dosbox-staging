@@ -281,7 +281,7 @@ public:
 		cmos.reg=0xa;
 		cmos_writereg(0x71,0x26,1);
 		cmos.reg=0xb;
-		cmos_writereg(0x71,0,1);
+		cmos_writereg(0x71,0x2,1);	//Struct tm *loctime is of 24 hour format,
 		/* Fill in extended memory size */
 		Bitu exsize=(MEM_TotalPages()*4)-1024;
 		cmos.regs[0x17]=(Bit8u)exsize;
