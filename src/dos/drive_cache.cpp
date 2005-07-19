@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.43 2005-04-21 18:43:28 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.44 2005-07-19 19:45:31 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -262,8 +262,7 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 		char tmp[CROSS_LEN] = { 0 };
 		Bit32s len = strrchr(path,CROSS_FILESPLIT) - path;
 		if (len>0) { 
-			strncpy(tmp,path,len); 
-			tmp[len] = 0; 
+			safe_strncpy(tmp,path,len+1); 
 		} else	{
 			strcpy(tmp,path);
 		}
@@ -463,11 +462,10 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		info->shortNr = CreateShortNameID(curDir,tmpName);
 		sprintf(buffer,"%d",info->shortNr);
 		// Copy first letters
-		Bit16u tocopy;
+		Bit16u tocopy = 0;
 		if (len+strlen(buffer)+1>8)	tocopy = 8 - strlen(buffer) - 1;
 		else						tocopy = len;
-		strncpy(info->shortname,tmpName,tocopy);
-		info->shortname[tocopy] = 0;
+		safe_strncpy(info->shortname,tmpName,tocopy+1);
 		// Copy number
 		strcat(info->shortname,"~");
 		strcat(info->shortname,buffer);
@@ -527,7 +525,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 	do {
 //		bool errorcheck = false;
 		pos = strchr(start,CROSS_FILESPLIT);
-		if (pos) { strncpy(dir,start,pos-start); dir[pos-start] = 0; /*errorcheck = true;*/ }
+		if (pos) { safe_strncpy(dir,start,pos-start+1); /*errorcheck = true;*/ }
 		else	 { strcpy(dir,start); };
  
 		// Path found

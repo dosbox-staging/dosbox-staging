@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.8 2005-06-23 18:34:29 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.9 2005-07-19 19:45:16 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include "cdrom.h"
 #include "drives.h"
+#include "support.h"
 
 #if !defined(WIN32)
 #include <libgen.h>
@@ -399,8 +400,7 @@ static string dirname(const char * file) {
 	else {
 		int len = (int)(sep - file);
 		char tmp[MAX_FILENAME_LENGTH];
-		strncpy(tmp, file, len);
-		tmp[len] = '\0';
+		safe_strncpy(tmp, file, len+1);
 		return tmp;
 	}
 }
@@ -417,7 +417,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	bool success;
 	bool canAddTrack = false;
 	char tmp[MAX_FILENAME_LENGTH];	// dirname can change its argument
-	strncpy(tmp, cuefile, MAX_FILENAME_LENGTH);
+	safe_strncpy(tmp, cuefile, MAX_FILENAME_LENGTH);
 	string pathname(dirname(tmp));
 	ifstream in;
 	in.open(cuefile, ios::in);
@@ -595,7 +595,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	// finally check if file is in a dosbox local drive
 	char fullname[CROSS_LEN];
 	char tmp[CROSS_LEN];
-	strncpy(tmp, filename.c_str(), CROSS_LEN);
+	safe_strncpy(tmp, filename.c_str(), CROSS_LEN);
 	Bit8u drive;
 	if (!DOS_MakeName(tmp, fullname, &drive)) return false;
 	

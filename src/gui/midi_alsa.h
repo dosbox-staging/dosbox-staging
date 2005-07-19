@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.11 2005-02-10 10:20:52 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.12 2005-07-19 19:45:31 qbix79 Exp $ */
 
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
@@ -129,7 +129,7 @@ public:
 		
 		// try to use port specified in config file
 		if (conf && conf[0]) { 
-			strncpy(var, conf, 10);
+			safe_strncpy(var, conf, 10);
 			if (parse_addr(var, &seq_client, &seq_port) < 0) {
 				LOG_MSG("ALSA:Invalid alsa port %s", var);
 				return false;

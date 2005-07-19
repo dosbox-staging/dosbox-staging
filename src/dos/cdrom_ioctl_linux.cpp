@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include "cdrom.h"
+#include "support.h"
 
 #if defined (LINUX)
 #include <fcntl.h>
@@ -45,7 +46,7 @@ bool CDROM_Interface_Ioctl::GetUPC(unsigned char& attr, char* upc)
 	
 	if (ret > 0) {
 		attr = 0;
-		strncpy(upc, (char*)cdrom_mcn.medium_catalog_number, 14);
+		safe_strncpy(upc, (char*)cdrom_mcn.medium_catalog_number, 14);
 	}
 
 	return (ret > 0);
@@ -86,7 +87,7 @@ bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD)
 	
 	if (success) {
 		const char* tmp = SDL_CDName(forceCD);
-		if (tmp) strncpy(device_name, tmp, 512);
+		if (tmp) safe_strncpy(device_name, tmp, 512);
 		else success = false;
 	}
 	

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.36 2005-04-06 20:48:14 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.37 2005-07-19 19:45:16 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -422,7 +422,7 @@ void LOADFIX::Run(void)
 		if (cmd->FindCommand(commandNr++,temp_line)) {
 			// get Filename
 			char filename[128];
-			strncpy(filename,temp_line.c_str(),128);
+			safe_strncpy(filename,temp_line.c_str(),128);
 			// Setup commandline
 			bool ok;
 			char args[256];
@@ -570,10 +570,10 @@ public:
 				// convert dosbox filename to system filename
 				char fullname[CROSS_LEN];
 				char tmp[CROSS_LEN];
-				strncpy(tmp, temp_line.c_str(), CROSS_LEN);
+				safe_strncpy(tmp, temp_line.c_str(), CROSS_LEN);
 				
 				Bit8u drive;
-				if (!DOS_MakeName(tmp, fullname, &drive)) {
+				if (!DOS_MakeName(tmp, fullname, &drive) || strncmp(Drives[drive]->GetInfo(),"local directory",15)) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
 					return;
 				}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.63 2005-04-18 18:46:27 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.64 2005-07-19 19:45:15 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -175,7 +175,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 class CDebugVar
 {
 public:
-	CDebugVar(char* _name, PhysPt _adr) { adr=_adr; (strlen(name)<15)?strcpy(name,_name):strncpy(name,_name,15); name[15]=0; };
+	CDebugVar(char* _name, PhysPt _adr) { adr=_adr; safe_strncpy(name,_name,16); };
 	
 	char*	GetName(void) { return name; };
 	PhysPt	GetAdr (void) { return adr;  };
@@ -1673,7 +1673,7 @@ public:
 		char filename[128];
 		char args[256];
 		cmd->FindCommand(1,temp_line);
-		strncpy(filename,temp_line.c_str(),128);
+		safe_strncpy(filename,temp_line.c_str(),128);
 		// Read commandline
 		Bit16u i	=2;
 		bool ok		= false; 

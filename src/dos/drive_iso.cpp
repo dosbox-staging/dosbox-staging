@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.7 2005-03-25 09:06:46 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.8 2005-07-19 19:45:31 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -446,7 +446,7 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 	if (!strcmp(path, "")) return true;
 	
 	char isoPath[ISO_MAXPATHNAME];
-	strncpy(isoPath, path, ISO_MAXPATHNAME);
+	safe_strncpy(isoPath, path, ISO_MAXPATHNAME);
 	strreplace(isoPath, '\\', '/');
 	
 	int beginPos = 0;
@@ -456,8 +456,7 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 			char name[38];
 			if (pos - beginPos >= 38) return false;
 			if (beginPos >= ISO_MAXPATHNAME) return false;
-			strncpy(name, &isoPath[beginPos], pos - beginPos);
-			name[pos - beginPos] = 0;
+			safe_strncpy(name, &isoPath[beginPos], pos - beginPos + 1);
 			beginPos = pos + 1;
 			if (!IS_DIR(de->fileFlags)) return false;
 			if (!lookupSingle(de, name, EXTENT_LOCATION(*de), DATA_LENGTH(*de))) return false;

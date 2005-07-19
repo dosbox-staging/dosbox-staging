@@ -29,7 +29,7 @@ public:
 	char * GetName(void) { return "oss";};
 	bool Open(const char * conf) {
 		char devname[512];
-		if (conf && conf[0]) strncpy(devname,conf,512);
+		if (conf && conf[0]) safe_strncpy(devname,conf,512);
 		else strcpy(devname,"/dev/sequencer");
 		char * devfind=(strrchr(devname,','));
 		if (devfind) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.85 2005-05-18 21:59:58 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.86 2005-07-19 19:45:32 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -316,18 +316,24 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags,Bit32u bpp) {
 			}
 			sdl.clip.x=(Sint16)((sdl.desktop.width-sdl.clip.w)/2);
 			sdl.clip.y=(Sint16)((sdl.desktop.height-sdl.clip.h)/2);
-			return sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+			sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+			if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.desktop.width,sdl.desktop.height,bpp,SDL_GetError());
+			return sdl.surface;
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
 			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
-			return sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+			sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_FULLSCREEN|SDL_HWSURFACE);
+			if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.clip.w,sdl.clip.h,bpp,SDL_GetError());
+			return sdl.surface;
 		}
 	} else {
 		sdl.clip.x=0;sdl.clip.y=0;
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*sdl.desktop.hwscale);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*sdl.desktop.hwscale);
-		return sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_HWSURFACE);
+		sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_HWSURFACE);
+		if (sdl.surface == NULL) E_Exit("Could not set windowed video mode %ix%i-%i: %s",sdl.clip.w,sdl.clip.h,bpp,SDL_GetError());
+		return sdl.surface;
 	}
 }
 
@@ -357,14 +363,17 @@ dosurface:
 				sdl.clip.y=(Sint16)((sdl.desktop.height-height)/2);
 				sdl.surface=SDL_SetVideoMode(sdl.desktop.width,sdl.desktop.height,bpp,
 					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
+				if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.desktop.width,sdl.desktop.height,bpp,SDL_GetError());
 			} else {
 				sdl.clip.x=0;sdl.clip.y=0;
 				sdl.surface=SDL_SetVideoMode(width,height,bpp,
 					SDL_FULLSCREEN|SDL_HWSURFACE|(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
+				if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
 			sdl.surface=SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+			if (sdl.surface == NULL) E_Exit("Could not set windowed video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
 		}
 		if (sdl.surface) switch (sdl.surface->format->BitsPerPixel) {
 			case 8:sdl.draw.mode=GFX_8;break;
@@ -857,6 +866,10 @@ static void GUI_StartUp(Section * sec) {
 #if C_OPENGL
    if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
 	sdl.surface=SDL_SetVideoMode(640,400,0,SDL_OPENGL);
+	if (sdl.surface == NULL) {
+		LOG_MSG("Could not initialize OpenGL, switching back to surface");
+		sdl.desktop.want_type=SCREEN_SURFACE;
+	} else {
 	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
 	sdl.opengl.displaylist=0;
@@ -877,11 +890,13 @@ static void GUI_StartUp(Section * sec) {
     	} else {
 		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
 	}
+	}
 	} /* OPENGL is requested end */
    
 #endif	//OPENGL
 	/* Initialize screen for first time */
 	sdl.surface=SDL_SetVideoMode(640,400,0,0);
+	if (sdl.surface == NULL) E_Exit("Could not initialize video: %s",SDL_GetError());
 	sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
 	if (sdl.desktop.bpp==24) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");

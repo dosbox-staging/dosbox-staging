@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.12 2005-06-13 14:48:02 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.13 2005-07-19 19:45:31 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -95,7 +95,7 @@ static CBindList holdlist;
 class CEvent {
 public:
 	CEvent(char * _entry) {
-		strncpy(entry,_entry,16);
+		safe_strncpy(entry,_entry,16);
 		events.push_back(this);
 		bindlist.clear();
 		activity=0;
@@ -1444,6 +1444,7 @@ void MAPPER_Run(void) {
 	/* Be sure that there is no update in progress */
 	GFX_EndUpdate();
 	mapper.surface=SDL_SetVideoMode(640,480,8,0);
+	if (mapper.surface == NULL) E_Exit("Could not initialize video mode for mapper: %s",SDL_GetError());
 
 	/* Set some palette entries */
 	SDL_SetPalette(mapper.surface, SDL_LOGPAL|SDL_PHYSPAL, map_pal, 0, 4);

@@ -34,6 +34,8 @@
 //#define	nocasestrcmp(a,b) stricmp(a,b)
 #endif
 
+#define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
+
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif

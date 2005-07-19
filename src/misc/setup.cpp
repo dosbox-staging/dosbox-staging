@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.28 2005-04-22 09:09:09 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.29 2005-07-19 19:45:33 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -337,7 +337,7 @@ bool Config::ParseConfigFile(const char* configfilename){
 void Config::ParseEnv(char ** envp) {
 	for(char** env=envp; *env;env++) {
 		char copy[1024];
-		strncpy(copy,*env,1024);
+		safe_strncpy(copy,*env,1024);
 		if(strncasecmp(copy,"DOSBOX_",7))
 			continue;
 		char* sec_name = &copy[7];
