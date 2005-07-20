@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.37 2005-07-19 19:45:16 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.38 2005-07-20 11:35:53 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -299,7 +299,7 @@ public:
 		drive = 'A';
 		while(i<cmd->GetCount()) {
 			if(cmd->FindCommand(i+1, temp_line)) {
-				if(temp_line == "-l") {
+				if((temp_line == "-l") || (temp_line == "-L")) {
 					/* Specifying drive... next argument then is the drive */
 					i++;
 					if(cmd->FindCommand(i+1, temp_line)) {
@@ -341,7 +341,7 @@ public:
 			return;
 		}
 
-		WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"),"Booting from drive %c...\n", drive);
+		WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 		
 		bootSector bootarea;
 		imageDiskList[drive-65]->Read_Sector(0,0,1,(Bit8u *)&bootarea);
