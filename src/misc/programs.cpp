@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.19 2005-04-21 21:17:45 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.20 2005-07-20 12:00:45 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -127,9 +127,15 @@ bool Program::GetEnvStr(const char * entry,std::string & result) {
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) return false;
 		env_read+=strlen(env_string)+1;
-		if (!strchr(env_string,'=')) continue;
-		if (strncasecmp(entry,env_string,strlen(entry))!=0) continue;
-		result=env_string;
+		char* equal = strchr(env_string,'=');
+		if (!equal) continue;
+		/* replace the = with \0 to get the length */
+		*equal = 0;
+		if (strlen(env_string) != strlen(entry)) continue;
+		if (strcasecmp(entry,env_string)!=0) continue;
+		/* restore the = to get the original result */
+		*equal = '=';
+		result = env_string;
 		return true;
 	} while (1);
 	return false;
