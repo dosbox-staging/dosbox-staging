@@ -138,6 +138,24 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	DOS_MCB mcb(segment-1);
 	Bit16u total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
+	if (*blocks<=total) {
+		if (GCC_UNLIKELY(*blocks==total)) {
+			/* Nothing to do */
+			return true;
+		}
+		/* Shrinking MCB */
+		DOS_MCB	mcb_new_next(segment+(*blocks));
+		mcb.SetSize(*blocks);
+		mcb_new_next.SetType(mcb.GetType());
+		if (mcb.GetType()==0x5a) {
+			/* Further blocks follow */
+			mcb.SetType(0x4d);
+		}
+
+		mcb_new_next.SetSize(total-*blocks-1);
+		mcb_new_next.SetPSPSeg(MCB_FREE);
+		return true;
+	}
 	if (mcb.GetType()!=0x5a) {
 		if (mcb_next.GetPSPSeg()==MCB_FREE) {
 			total+=mcb_next.GetSize()+1;
