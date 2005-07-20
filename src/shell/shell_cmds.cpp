@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.54 2005-04-21 21:17:46 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.55 2005-07-20 15:27:20 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -551,7 +551,11 @@ void DOS_Shell::CMD_IF(char * args) {
 			*comp++ = ' ';
 			while(*comp++ == ' ') 
 				;	/*nothing */
-		} else {SyntaxError();return;}
+		} else if(strncasecmp(args," set ",5) !=0) {
+			/* if cond set a=b is allowed as well */
+			SyntaxError();
+			return;
+		}
 	};
 	char * word=StripWord(args);
 	if (strcasecmp(word,"NOT")==0) {
