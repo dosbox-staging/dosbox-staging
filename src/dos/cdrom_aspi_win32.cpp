@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_aspi_win32.cpp,v 1.14 2005-07-19 19:45:16 qbix79 Exp $ */
+/* $Id: cdrom_aspi_win32.cpp,v 1.15 2005-07-21 07:48:37 qbix79 Exp $ */
 
 #if defined (WIN32)
 
@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 #include "cdrom.h"
+#include "support.h"
 
 //Are actually system includes but leave for now
 #include "wnaspi32.h"
