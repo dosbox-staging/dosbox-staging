@@ -117,11 +117,13 @@ void INT10_GetAllPaletteRegisters(PhysPt data) {
 	for(Bit8u i=0;i<0x10;i++) {
 		IO_Write(VGAREG_ACTL_ADDRESS,i);
 		mem_writeb(data,IO_Read(VGAREG_ACTL_READ_DATA));
+		IO_Read(VGAREG_ACTL_RESET);
 		data++;
 	}
 	// Then the border
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	mem_writeb(data,IO_Read(VGAREG_ACTL_READ_DATA));
+	IO_Read(VGAREG_ACTL_RESET);
 }
 
 void INT10_SetSingleDacRegister(Bit8u index,Bit8u red,Bit8u green,Bit8u blue) {
