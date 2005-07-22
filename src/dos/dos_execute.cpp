@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.47 2005-07-12 18:59:31 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.48 2005-07-22 10:03:20 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -243,21 +243,31 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		DOS_CloseFile(fhandle);
 		return false;
 	}
-	/* Convert the header to correct endian, i hope this works */
-	HostPt endian=(HostPt)&head;
-	for (i=0;i<sizeof(EXE_Header)/2;i++) {
-		*((Bit16u *)endian)=host_readw(endian);
-		endian+=2;
-	}
-	if (len<sizeof(EXE_Header)) iscom=true;	
-	if ((head.signature!=MAGIC1) && (head.signature!=MAGIC2)) iscom=true;
-	else {
-		if(head.pages & ~0x07ff) /* 1 MB dos maximum address limit. Fixes TC3 IDE (kippesoep) */
-			LOG(LOG_EXEC,LOG_NORMAL)("Weird header: head.pages > 1 MB");
-		head.pages&=0x07ff;
-		headersize = head.headersize*16;
-		imagesize = head.pages*512-headersize; 
-		if (imagesize+headersize<512) imagesize = 512-headersize;
+	if (len<sizeof(EXE_Header)) {
+		if (len==0) {
+			/* Prevent executing zero byte files */
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			DOS_CloseFile(fhandle);
+			return false;
+		}
+		/* Otherwise must be a .com file */
+		iscom=true;
+	} else {
+		/* Convert the header to correct endian, i hope this works */
+		HostPt endian=(HostPt)&head;
+		for (i=0;i<sizeof(EXE_Header)/2;i++) {
+			*((Bit16u *)endian)=host_readw(endian);
+			endian+=2;
+		}
+		if ((head.signature!=MAGIC1) && (head.signature!=MAGIC2)) iscom=true;
+		else {
+			if(head.pages & ~0x07ff) /* 1 MB dos maximum address limit. Fixes TC3 IDE (kippesoep) */
+				LOG(LOG_EXEC,LOG_NORMAL)("Weird header: head.pages > 1 MB");
+			head.pages&=0x07ff;
+			headersize = head.headersize*16;
+			imagesize = head.pages*512-headersize; 
+			if (imagesize+headersize<512) imagesize = 512-headersize;
+		}
 	}
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
@@ -284,9 +294,11 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		else memsize=maxsize;
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
 		loadseg=pspseg+16;
-		if ((!iscom) & (head.minmemory == 0) & (head.maxmemory == 0))
-			loadseg = (0x9e000 - imagesize)/16; //c2woody
-	   
+		if (!iscom) {
+			/* Check if requested to load program into upper part of allocated memory */
+			if ((head.minmemory == 0) && (head.maxmemory == 0))
+				loadseg = ((pspseg+memsize)*0x10-imagesize)/0x10;
+		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
