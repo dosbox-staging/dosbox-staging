@@ -523,3 +523,7 @@ void VGA_SetupDrawing(Bitu val) {
 		PIC_AddEvent(VGA_VerticalTimer,vga.draw.delay.vtotal);
 	}
 };
+
+void VGA_KillDrawing(void) {
+	PIC_RemoveEvents(VGA_DrawPart);
+}

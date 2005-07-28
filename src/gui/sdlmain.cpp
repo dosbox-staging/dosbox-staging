@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.86 2005-07-19 19:45:32 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.87 2005-07-28 19:53:42 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -40,6 +40,7 @@
 #include "support.h"
 #include "debug.h"
 #include "mapper.h"
+#include "vga.h"
 
 //#define DISABLE_JOYSTICK
 
@@ -979,8 +980,16 @@ void GFX_Events() {
 						CaptureMouse();	
 					SetPriority(sdl.priority.focus);
 				} else {
-					if (sdl.mouse.locked) 
-						CaptureMouse();	
+					if (sdl.mouse.locked) {
+#ifdef WIN32
+						if (sdl.desktop.fullscreen) {
+							VGA_KillDrawing();
+							sdl.desktop.fullscreen=false;
+							GFX_ResetScreen();
+						}
+#endif
+						CaptureMouse();
+					}
 					SetPriority(sdl.priority.nofocus);
 				}
 			}
