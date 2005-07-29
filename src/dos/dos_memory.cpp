@@ -134,8 +134,17 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 
 
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
-	DOS_CompressMemory();
+	if (segment < MEM_START+1) {
+		LOG(LOG_DOSMISC,LOG_ERROR)("Program resizes %X, take care",segment);
+	}
+      
 	DOS_MCB mcb(segment-1);
+	if ((mcb.GetType()!=0x4d) && (mcb.GetType()!=0x5a)) {
+		DOS_SetError(DOSERR_MCB_DESTROYED);
+		return false;
+	}
+
+	DOS_CompressMemory();
 	Bit16u total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
@@ -188,12 +197,17 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 
 bool DOS_FreeMemory(Bit16u segment) {
 //TODO Check if allowed to free this segment
-	if ((segment-1) < MEM_START){
+	if (segment < MEM_START+1) {
 		LOG(LOG_DOSMISC,LOG_ERROR)("Program tried to free %X ---ERROR",segment);
+		DOS_SetError(DOSERR_MB_ADDRESS_INVALID);
 		return false;
 	}
       
 	DOS_MCB mcb(segment-1);
+	if ((mcb.GetType()!=0x4d) && (mcb.GetType()!=0x5a)) {
+		DOS_SetError(DOSERR_MB_ADDRESS_INVALID);
+		return false;
+	}
 	mcb.SetPSPSeg(MCB_FREE);
 	DOS_CompressMemory();
 	return true;
