@@ -16,13 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.37 2005-03-25 11:52:32 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.38 2005-07-30 10:11:40 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
 #include "inout.h"
 #include "setup.h"
 #include "paging.h"
+#include "regs.h"
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define MAX_MEMORY	64
@@ -60,11 +61,11 @@ public:
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
-		LOG_MSG("Illegal read from %x",addr);
+		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 		return 0;
 	} 
 	void writeb(PhysPt addr,Bitu val) {
-		LOG_MSG("Illegal write to %x",addr);
+		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 	}
 	HostPt GetHostPt(Bitu phys_page) {
 		return 0;
@@ -530,4 +531,12 @@ void MEM_Init(Section * sec) {
 	/* shutdown function */
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);
+
+	// initialize interrupt handlers to 0
+	// this makes availible interrupts detectable even in compiler debug mode
+	// tyrian network helper app is suffering from this
+	// 
+	// DISABLED IT BY DEFAULT. (qbix79). But the code is there in case 
+	// somebody needs it
+	//for(Bitu icntr = 0; icntr <0xFF; icntr++) RealSetVec(icntr,0);
 }
