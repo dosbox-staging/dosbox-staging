@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.85 2005-06-13 14:48:00 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.86 2005-07-30 14:41:31 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -80,17 +80,11 @@ void TANDYSOUND_Init(Section*);
 void DISNEY_Init(Section*);
 void SERIAL_Init(Section*); 
 
-#if C_MODEM
-void MODEM_Init(Section*); 
-#endif
 
 #if C_IPX
 void IPX_Init(Section*);
 #endif
 
-#if C_DIRECTSERIAL
-void DIRECTSERIAL_Init(Section* sec);
-#endif
 void SID_Init(Section* sec);
 
 void PIC_Init(Section*);
@@ -218,7 +212,6 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&PROGRAMS_Init);
 	secprop->AddInitFunction(&TIMER_Init);//done
 	secprop->AddInitFunction(&CMOS_Init);//done
-	secprop->AddInitFunction(&SERIAL_Init); //done
 		
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
@@ -351,15 +344,32 @@ void DOSBOX_Init(void) {
 		"disney -- Enable Disney Sound Source emulation.\n"
 	);
 	secprop=control->AddSection_prop("bios",&BIOS_Init,false);//done
-	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
-	secprop->AddInitFunction(&JOYSTICK_Init);
-	secprop->Add_string("joysticktype","2axis");
 	MSG_Add("BIOS_CONFIGFILE_HELP",
 	        "joysticktype -- Type of joystick to emulate: none, 2axis, 4axis,\n"
 	        "                fcs (Thrustmaster) ,ch (CH Flightstick).\n"
 	        "                none disables joystick emulation.\n"
 	        "                2axis is the default and supports two joysticks.\n"
+	);
+
+	secprop->AddInitFunction(&INT10_Init);
+	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
+	secprop->AddInitFunction(&JOYSTICK_Init);
+	secprop->Add_string("joysticktype","2axis");
+
+	// had to rename these to serial due to conflicts in config
+	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
+	secprop->Add_string("serial1","dummy");
+	secprop->Add_string("serial2","dummy");
+	secprop->Add_string("serial3","disabled");
+	secprop->Add_string("serial4","disabled");
+	MSG_Add("SERIAL_CONFIGFILE_HELP",
+	        "serial1-4 -- set type of device connected to com port.\n"
+	        "             Can be disabled, dummy, modem, directserial.\n"
+	        "             Additional parameters must be in the same line in the form of\n"
+	        "             parameter:value. Parameters for all types are irq, startbps, bytesize,\n"
+	        "             stopbits, parity (all optional).\n"
+	        "             for directserial: realport (required).\n"
+	        "             for modem: listenport (optional).\n"
 	);
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
@@ -375,39 +385,8 @@ void DOSBOX_Init(void) {
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
-#if C_MODEM
-	secprop=control->AddSection_prop("modem",&MODEM_Init,true);//done
-	secprop->Add_bool("modem",false); 	
-	secprop->Add_hex("comport",2); 
-	secprop->Add_int("listenport",23);
-	
-	MSG_Add("MODEM_CONFIGFILE_HELP",
-		"modem -- Enable virtual modem emulation.\n"
-		"comport -- COM Port modem is connected to.\n"
-		"listenport -- TCP Port the modem listens on for incoming connections.\n"
-	);
-#endif
-#if C_DIRECTSERIAL
-	secprop=control->AddSection_prop("directserial",&DIRECTSERIAL_Init);
-	secprop->Add_bool("directserial", false);
-	secprop->Add_hex("comport",1); 
-	secprop->Add_string("realport", "COM1");
-	secprop->Add_int("defaultbps", 1200);
-	secprop->Add_string("parity", "N"); // Could be N, E, O
-	secprop->Add_int("bytesize", 8); // Could be 5 to 8
-	secprop->Add_int("stopbit", 1); // Could be 1 or 2
-	MSG_Add("DIRECTSERIAL_CONFIGFILE_HELP",
-		"directserial -- Enable serial passthrough support.\n"
-		"comport -- COM Port inside DOSBox.\n"
-		"realport -- COM Port on the Host.\n"
-		"defaultbps -- Default BPS.\n"
-		"parity -- Parity of the packets. This can be N, E or O.\n"
-		"bytesize -- Size of each packet. This can be 5 or 8.\n"
-		"stopbit -- The number of stopbits. This can be 1 or 2.\n"
-	);
-#endif
 #if C_IPX
-	secprop=control->AddSection_prop("ipx",&IPX_Init);
+	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
 	secprop->Add_bool("ipx", false);
 	MSG_Add("IPX_CONFIGFILE_HELP",
 		"ipx -- Enable ipx over UDP/IP emulation.\n"

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.42 2005-06-21 18:47:25 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.43 2005-07-30 14:41:31 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -177,14 +177,179 @@ static Bitu INT17_Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bitu INT14_Handler(void) {
-	switch (reg_ah) {
+static Bitu INT14_Handler(void)
+{
+	Bit16u port = real_readw(0x40,reg_dx*2); // DX is always port number
+	if(reg_dx > 0x3 || port==0)	// no more than 4 serial ports
+	{
+		LOG_MSG("BIOS INT14: port %d does not exist.",reg_dx);
+		return CBRET_NONE;
+	}
+	switch (reg_ah)
+	{
 	case 0x00:	/* Init port */
+		// Parameters:
+		// AL: port parameters
+		// Return: 
+		// AH: line status
+		// AL: modem status
 		{
-			Bitu port=real_readw(0x40,reg_dx*2);
+			// set baud rate
+			Bitu baudrate = 9600;
+			Bit16u baudresult;
+			Bitu rawbaud=reg_al>>5;
+			
+			if(rawbaud==0){ baudrate=110;}
+			else if (rawbaud==1){ baudrate=150;}
+			else if (rawbaud==2){ baudrate=300;}
+			else if (rawbaud==3){ baudrate=600;}
+			else if (rawbaud==4){ baudrate=1200;}
+			else if (rawbaud==5){ baudrate=2400;}
+			else if (rawbaud==6){ baudrate=4800;}
+			else if (rawbaud==7){ baudrate=9600;}
+
+			baudresult = (Bit16u)(115200 / baudrate);
+
+			IO_WriteB(port+3, 0x80);	// enable divider access
+			IO_WriteB(port,(Bit8u)baudresult&0xff);
+			IO_WriteB(port+1,(Bit8u)(baudresult>>8));
+
+			// set line parameters, disable divider access
+			IO_WriteB(port+3, reg_al&0x1F);//LCR
+			
+			// disable interrupts
+			IO_WriteB(port+1, 0);
+			IO_ReadB(port+2);
+			// put RTS and DTR on
+			IO_WriteB(port+4,0x3);
+
+			// get result
 			reg_ah=IO_ReadB(port+5);
 			reg_al=IO_ReadB(port+6);
-			LOG_MSG("AX %X DX %X",reg_ax,reg_dx);
+		}
+		break;
+	case 0x01:	/* Write character */
+		// Parameters:
+		// AL: character
+		// Return: 
+		// AH: line status
+		// AL: modem status
+		{
+			if((IO_ReadB(port+5)&&0x20)==0)
+			{
+				// TODO: should wait until they become empty->timeout
+				LOG_MSG("BIOS INT14: port %d: transmit register not empty.",reg_dx);
+				reg_ah = IO_ReadB(port+5)|0x80;
+				return CBRET_NONE;
+			}
+			// transmit it
+			IO_WriteB(port,reg_al);
+			
+			if((IO_ReadB(port+5)&&0x60)==0)
+			{
+				// TODO: should wait until they become empty->timeout
+				LOG_MSG("BIOS INT14: port %d: transmit register not empty after write.",reg_dx);
+				reg_ah = IO_ReadB(port+5)|0x80;
+				return CBRET_NONE;
+			}
+			
+			// get result
+			reg_ah=IO_ReadB(port+5);
+			reg_al=IO_ReadB(port+6);
+		}
+		break;
+	
+	case 0x02:	/* Read character */
+		{
+			if((IO_ReadB(port+5)&0x1)!=0)
+			{
+				reg_al=IO_ReadB(port);
+			}
+			else
+			{
+				// TODO: should wait until timeout
+				LOG_MSG("BIOS INT14: port %d: nothing received.",reg_dx);
+				reg_ah = IO_ReadB(port+5)|0x80;
+				return CBRET_NONE;
+			}
+			reg_ah=IO_ReadB(port+5);
+		}
+		break;
+	case 0x03: // get status
+		{
+			reg_ah=IO_ReadB(port+5);
+			//LOG_MSG("status reg_ah: %x",reg_ah);
+			reg_al=IO_ReadB(port+6);
+		}
+		break;
+	case 0x04:	// extended initialisation
+		// Parameters:
+		// AL: break
+		// BH: parity
+		// BL: stopbit
+		// CH: word length
+		// CL: baudrate
+		{
+			Bit8u lcr = 0;
+			
+			// baud rate
+			Bitu baudrate = 9600;
+			Bit16u baudresult;
+			Bitu rawbaud=reg_cl;
+			
+			if(rawbaud==0){ baudrate=110;}
+			else if (rawbaud==1){ baudrate=150;}
+			else if (rawbaud==2){ baudrate=300;}
+			else if (rawbaud==3){ baudrate=600;}
+			else if (rawbaud==4){ baudrate=1200;}
+			else if (rawbaud==5){ baudrate=2400;}
+			else if (rawbaud==6){ baudrate=4800;}
+			else if (rawbaud==7){ baudrate=9600;}
+			else if (rawbaud==8){ baudrate=19200;}
+
+			baudresult = (Bit16u)(115200 / baudrate);
+
+			IO_WriteB(port+3, 0x80);	// enable divider access
+			IO_WriteB(port,(Bit8u)baudresult&0xff);
+			IO_WriteB(port+1,(Bit8u)(baudresult>>8));
+			
+			// line configuration
+			// break
+			if(reg_al!=0) lcr=0x40;
+			// parity
+			if(reg_bh!=0)
+			{
+				if(reg_bh==1)lcr|=0x8;// odd
+				else if(reg_bh==2)lcr|=0x18;// even
+				else if(reg_bh==3)lcr|=0x28;// mark
+				else if(reg_bh==4)lcr|=0x38;// mark
+			}
+			// stopbit
+			if(reg_bl!=0)
+			{
+				lcr|=0x4;
+			}
+			// data length
+			lcr|=(reg_ch&0x3);
+			IO_WriteB(port+3,lcr);
+
+			reg_ah=IO_ReadB(port+5);
+			reg_al=IO_ReadB(port+6);
+		}
+		break;
+	case 0x05:	// modem control
+		{
+			if(reg_al==0)	// read MCR
+			{
+				reg_bl=IO_ReadB(port+4);
+			}
+			else if(reg_al==1)	// write MCR
+			{
+				IO_WriteB(port+4,reg_bl);
+			}
+			else LOG_MSG("BIOS INT14: port %d, function 5: invalid subfunction.",reg_dx);
+			reg_ah=IO_ReadB(port+5);
+			reg_al=IO_ReadB(port+6);
 		}
 		break;
 	default:
@@ -429,7 +594,6 @@ private:
 	CALLBACK_HandlerObject callback[10];
 public:
 	BIOS(Section* configuration):Module_base(configuration){
-		MSG_Add("BIOS_CONFIGFILE_HELP","Nothing to setup yet!\n");
 		/* Clear the Bios Data Area */
 		for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
 		/* Setup all the interrupt handlers the bios controls */
@@ -495,15 +659,61 @@ public:
 		callback[9].Set_RealVec(0x1);
 		
 		/* Setup some stuff in 0x40 bios segment */
-		/* Test for parallel port */
-		if (IO_Read(0x378)!=0xff) real_writew(0x40,0x08,0x378);
-		/* Test for serial port */
-		Bitu index=0;
-		if (IO_Read(0x3fa)!=0xff) real_writew(0x40,(index++)*2,0x3f8);
-		if (IO_Read(0x2fa)!=0xff) real_writew(0x40,(index++)*2,0x2f8);
-		/* Setup equipment list */
-		//1 Floppy, 2 serial and 1 parrallel
-		Bitu config=0x4400;
+		/* detect parallel ports */
+	Bit8u DEFAULTPORTTIMEOUT = 10;	// 10 whatevers
+	Bitu ppindex=0; // number of lpt ports
+	if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
+		// this is our LPT1
+		mem_writew(BIOS_ADDRESS_LPT1,0x378);
+		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
+		ppindex++;
+		if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+			// this is our LPT2
+			mem_writew(BIOS_ADDRESS_LPT2,0x278);
+			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+			ppindex++;
+			if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+				// this is our LPT3
+				mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
+				mem_writeb(BIOS_LPT3_TIMEOUT,DEFAULTPORTTIMEOUT);
+				ppindex++;
+			}
+		} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+			// this is our LPT2
+			mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
+			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+			ppindex++;
+		}
+	} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+		// this is our LPT1
+		mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
+		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
+		ppindex++;
+		if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+			// this is our LPT2
+			mem_writew(BIOS_ADDRESS_LPT2,0x278);
+			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+			ppindex++;
+		}
+	}
+	else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+		// this is our LPT1
+		mem_writew(BIOS_ADDRESS_LPT1,0x278);
+		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
+		ppindex++;
+	}
+
+	/* Setup equipment list */
+	// look http://www.bioscentral.com/misc/bda.htm
+	
+	//Bitu config=0x4400;	//1 Floppy, 2 serial and 1 parrallel 
+	Bitu config = 0;
+	
+	// set number of parallel ports
+	// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
+	//else if(ppindex == 1) config |= 0x0000;
+	if(ppindex == 2) config |= 0x4000;
+	else config |= 0xc000;	// 3 ports
 #if (C_FPU)
 		//FPU
 		config|=0x2;
@@ -533,6 +743,36 @@ public:
 		size_extended|=(IO_Read(0x71) << 8);		
 	}
 };
+
+// set com port data in bios data area
+// parameter: array of 4 com port base addresses, 0 = none
+void BIOS_SetComPorts(Bit16u baseaddr[]) {
+	Bit8u DEFAULTPORTTIMEOUT = 10;	// 10 whatevers
+	Bit16u portcount=0;
+	Bit16u equipmentword;
+	for(Bitu i = 0; i < 4; i++) {
+		if(baseaddr[i]!=0) portcount++;
+		if(i==0) {	// com1
+			mem_writew(BIOS_BASE_ADDRESS_COM1,baseaddr[i]);
+			mem_writeb(BIOS_COM1_TIMEOUT,DEFAULTPORTTIMEOUT);
+		} else if(i==1) {
+			mem_writew(BIOS_BASE_ADDRESS_COM2,baseaddr[i]);
+			mem_writeb(BIOS_COM2_TIMEOUT,DEFAULTPORTTIMEOUT);
+		} else if(i==2) {
+			mem_writew(BIOS_BASE_ADDRESS_COM3,baseaddr[i]);
+			mem_writeb(BIOS_COM3_TIMEOUT,DEFAULTPORTTIMEOUT);
+		} else {
+			mem_writew(BIOS_BASE_ADDRESS_COM4,baseaddr[i]);
+			mem_writeb(BIOS_COM4_TIMEOUT,DEFAULTPORTTIMEOUT);
+		}
+	}
+	// set equipment word
+	equipmentword = mem_readw(BIOS_CONFIGURATION);
+	equipmentword &= (~0x0E00);
+	equipmentword |= (portcount << 9);
+	mem_writew(BIOS_CONFIGURATION,equipmentword);
+}
+
 
 static BIOS* test;
 

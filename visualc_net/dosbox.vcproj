@@ -405,9 +405,6 @@
 					RelativePath="..\src\hardware\cmos.cpp">
 				</File>
 				<File
-					RelativePath="..\src\hardware\directserial_win32.cpp">
-				</File>
-				<File
 					RelativePath="..\src\hardware\dma.cpp">
 				</File>
 				<File
@@ -439,12 +436,6 @@
 				</File>
 				<File
 					RelativePath="..\src\hardware\pic.cpp">
-				</File>
-				<File
-					RelativePath="..\src\hardware\serialport.cpp">
-				</File>
-				<File
-					RelativePath="..\src\hardware\softmodem.cpp">
 				</File>
 				<File
 					RelativePath="..\src\hardware\timer.cpp">
@@ -512,6 +503,31 @@
 					</File>
 					<File
 						RelativePath="..\src\hardware\tandy_sound.cpp">
+					</File>
+				</Filter>
+				<Filter
+					Name="serialport"
+					Filter="">
+					<File
+						RelativePath="..\src\hardware\serialport\directserial_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\directserial_win32.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\serialdummy.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\serialdummy.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\serialport.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\softmodem.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\softmodem.h">
 					</File>
 				</Filter>
 			</Filter>
