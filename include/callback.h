@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.12 2005-03-24 20:59:04 qbix79 Exp $ */
+/* $Id: callback.h,v 1.13 2005-07-30 09:49:28 qbix79 Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -76,7 +76,10 @@ private:
 public:
 	CALLBACK_HandlerObject():installed(false),m_type(NONE){vectorhandler.installed=false;}
 	~CALLBACK_HandlerObject();
+	//Install and allocate a callback.
 	void Install(CallBack_Handler handler,Bitu type,const char* description=0);
+	//Only allocate a callback number
+	void Allocate(CallBack_Handler handler,const char* description=0);
 	Bit16u Get_callback(){return m_callback;}
 	RealPt Get_RealPointer(){ return RealMake(CB_SEG,m_callback << 4);}
 	void Set_RealVec(Bit8u vec);

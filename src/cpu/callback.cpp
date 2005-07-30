@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.26 2005-03-25 10:12:04 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.27 2005-07-30 09:49:29 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -168,7 +168,6 @@ void CALLBACK_RemoveSetup(Bitu callback) {
 	for (Bitu i = 0;i < 16;i++) {
 		phys_writeb(CB_BASE+(callback<<4)+i ,(Bit8u) 0x00);
 	}
-	CallBack_Description[callback] = 0;
 }
 
 
@@ -215,7 +214,10 @@ CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
 		CALLBACK_RemoveSetup(m_callback);
 	} else if(m_type == CALLBACK_HandlerObject::SETUPAT){
 		E_Exit("Callback:SETUP at not handled yet.");
+	} else if(m_type == CALLBACK_HandlerObject::NONE){
+		//Do nothing. Merely DeAllocate the callback
 	} else E_Exit("what kind of callback is this!");
+	CallBack_Description[m_callback] = 0;
 	CALLBACK_DeAllocate(m_callback);
 }
 
@@ -225,6 +227,15 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const ch
 		m_type=SETUP;
 		m_callback=CALLBACK_Allocate();
 		CALLBACK_Setup(m_callback,handler,type,description);
+	} else E_Exit("Allready installed");
+}
+void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* description) {
+	if(!installed) {
+		installed=true;
+		m_type=NONE;
+		m_callback=CALLBACK_Allocate();
+		CALLBACK_SetDescription(m_callback,description);
+		CallBack_Handlers[m_callback]=handler;
 	} else E_Exit("Allready installed");
 }
 
