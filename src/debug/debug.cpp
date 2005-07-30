@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.64 2005-07-19 19:45:15 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.65 2005-07-30 10:13:24 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -537,6 +537,9 @@ void CBreakpoint::ShowList(void)
 		} else if (bp->GetType()==BKPNT_MEMORY) {
 			DEBUG_ShowMsg("%02X. BPMEM %04X:%04X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
 			nr++;
+		} else if (bp->GetType()==BKPNT_MEMORY_PROT) {
+			DEBUG_ShowMsg("%02X. BPPM %04X:%08X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
+			nr++;
 		};
 	}
 };
@@ -965,8 +968,11 @@ bool ParseCommand(char* str)
 		Bit16u seg = (Bit16u)GetHexValue(found,found);found++; // skip ":"
 		Bit32u ofs = GetHexValue(found,found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg,ofs);
-		if (bp) bp->SetType(BKPNT_MEMORY_PROT);
-		DEBUG_ShowMsg("DEBUG: Set prot-mode memory breakpoint at %04X:%08X\n",seg,ofs);
+		if (bp)
+		{
+			bp->SetType(BKPNT_MEMORY_PROT);
+			DEBUG_ShowMsg("DEBUG: Set prot-mode memory breakpoint at %04X:%08X\n",seg,ofs);
+		}
 		return true;
 	}
 	found = strstr(str,"BPLM ");
