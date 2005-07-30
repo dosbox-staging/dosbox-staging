@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: ipx.cpp,v 1.7 2005-07-30 10:02:39 qbix79 Exp $ */
+
 #include "dosbox.h"
 
 #if C_IPX
@@ -39,43 +41,33 @@
 #include "timer.h"
 #include "SDL_net.h"
 #include "programs.h"
+#include "pic.h"
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
-#define DOS_MEMSEG		0xd000;
 
-Bit32u tcpPort;
-bool isIpxServer;
-bool isIpxConnected;
-IPaddress ipxClientIp;  // IPAddress for client connection to server
-IPaddress ipxServConnIp;  // IPAddress for client connection to server
-TCPsocket ipxTCPClientSocket;
-UDPsocket ipxClientSocket;
-int UDPChannel;  // Channel used by UDP connection
-Bit8u recvBuffer[IPXBUFFERSIZE]; // Incoming packet buffer
-Bitu call_ipx; // Callback of RETF entrypoint
-Bitu call_ipxint; // Callback of INT 7A entrypoint
-Bitu call_ipxesr1; // Callback of ESR init routine
-Bitu call_ipxesr2; // Callback of ESR return routine
-Bit16u dospage;
-static RealPt ipx_callback;
-static RealPt ipx_intcallback;
-static RealPt ipx_esrcallback;
-static RealPt ipx_esrptraddr;
-static RealPt processedECB;
-
-SDLNet_SocketSet clientSocketSet;
-static bool inESR;
 
 struct ipxnetaddr {
 	Uint8 netnum[4];   // Both are big endian
 	Uint8 netnode[6];
 } localIpxAddr;
 
-struct fragmentDescriptor {
-	Bit16u offset;
-	Bit16u segment;
-	Bit16u size;
-};
+
+
+Bit32u tcpPort;
+bool isIpxServer;
+bool isIpxConnected;
+IPaddress ipxClientIp;  // IPAddress for client connection to server
+IPaddress ipxServConnIp;  // IPAddress for client connection to server
+//TCPsocket ipxTCPClientSocket;
+UDPsocket ipxClientSocket;
+int UDPChannel;  // Channel used by UDP connection
+Bit8u recvBuffer[IPXBUFFERSIZE]; // Incoming packet buffer
+
+static RealPt ipx_callback;
+
+SDLNet_SocketSet clientSocketSet;
+
+static bool ESRnotificationRequired = false;	
 
 packetBuffer incomingPacket;
 
@@ -93,113 +85,153 @@ void PackIP(IPaddress ipAddr, PackedIP *ipPack) {
 	ipPack->port = ipAddr.port;
 }
 
-class ECBClass {
-public:
-	RealPt ECBAddr;
-    
-	ECBClass *prevECB;
-	ECBClass *nextECB;
-
-	Bit16u getSocket(void) {
-		return swapByte(real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 0xa));
-	}
-
-	Bit8u getInUseFlag(void) {
-		return real_readb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8);
-	}
-
-	void setInUseFlag(Bit8u flagval) {
-		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8, flagval);
-	}
-
-	void setCompletionFlag(Bit8u flagval) {
-		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x9, flagval);
-	}
-
-	Bit16u getFragCount(void) {
-		return real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 34);
-	}
-
-	void getFragDesc(Bit16u descNum, fragmentDescriptor *fragDesc) {
-		Bit16u memoff = RealOff(ECBAddr) + 30 + ((descNum+1) * 6);
-		fragDesc->offset = real_readw(RealSeg(ECBAddr), memoff);
-		memoff+=2;
-		fragDesc->segment = real_readw(RealSeg(ECBAddr), memoff);
-		memoff+=2;
-		fragDesc->size = real_readw(RealSeg(ECBAddr), memoff);
-	}
-
-	RealPt getESRAddr(void) {
-		return RealMake(real_readw(RealSeg(ECBAddr), RealOff(ECBAddr)+6), real_readw(RealSeg(ECBAddr), RealOff(ECBAddr)+4));
-	}
-
-	void NotifyESR(void) {
-		RealPt tmpAddr = getESRAddr();
-		if(tmpAddr == 0) return;
-		if(!inESR) {
-			//LOG_MSG("Calling ESR");
-			processedECB = ECBAddr;
-			inESR = true;
-			//LOG_MSG("Write %x to %x", real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4), RealMake(RealSeg(ipx_esrptraddr), RealOff(ipx_esrptraddr)));
-			real_writed(RealSeg(ipx_esrptraddr), RealOff(ipx_esrptraddr),real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4));
-			CPU_CALL(false, RealSeg(ipx_esrcallback), RealOff(ipx_esrcallback),0);
-		}
-	}
-
-	void setImmAddress(Bit8u *immAddr) {
-		Bits i;
-		for(i=0;i<6;i++) {
-			real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr)+28, immAddr[i]);
-		}
-	}
-
-};
-
 ECBClass *ECBList;  // Linked list of ECB's
+ECBClass* ESRList;	// ECBs waiting to be ESR notified
 
-ECBClass * CreateECB(RealPt useAddr) {
-	ECBClass *tmpECB;
-	tmpECB = new ECBClass();
+#ifdef IPX_DEBUGMSG 
+Bitu ECBSerialNumber = 0;
+Bitu ECBAmount = 0;
+#endif
+
+
+ECBClass::ECBClass(Bit16u segment, Bit16u offset) {
+	ECBAddr = RealMake(segment, offset);
 	
-	tmpECB->ECBAddr = useAddr;
-	tmpECB->prevECB = NULL;
-	tmpECB->nextECB = NULL;
+#ifdef IPX_DEBUGMSG
+	SerialNumber = ECBSerialNumber;
+	ECBSerialNumber++;
+	ECBAmount++;
+
+	LOG_MSG("ECB: SN%7d created.   Number of ECBs: %3d, ESR %4x:%4x, ECB %4x:%4x",
+		SerialNumber,ECBAmount,
+		real_readw(RealSeg(ECBAddr),
+		RealOff(ECBAddr)+6),
+		real_readw(RealSeg(ECBAddr),
+		RealOff(ECBAddr)+4),segment,offset);
+#endif
+	isInESRList = false;
+	prevECB = NULL;
+	nextECB = NULL;
 	
-	if (ECBList == NULL) {
-		ECBList = tmpECB;
-	} else {
+	if (ECBList == NULL)
+		ECBList = this;
+	else {
 		// Transverse the list until we hit the end
-		ECBClass *useECB;
-		useECB = ECBList;
-		while(useECB->nextECB != NULL) {
+		ECBClass *useECB = ECBList;
+		
+		while(useECB->nextECB != NULL)
 			useECB = useECB->nextECB;
+
+		useECB->nextECB = this;
+		this->prevECB = useECB;
+	}
+}
+
+Bit16u ECBClass::getSocket(void) {
+	return swapByte(real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 0xa));
+}
+
+Bit8u ECBClass::getInUseFlag(void) {
+	return real_readb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8);
+}
+
+void ECBClass::setInUseFlag(Bit8u flagval) {
+	iuflag = flagval;
+	real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8, flagval);
+}
+
+void ECBClass::setCompletionFlag(Bit8u flagval) {
+	real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x9, flagval);
+}
+
+Bit16u ECBClass::getFragCount(void) {
+	return real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 34);
+}
+
+void ECBClass::getFragDesc(Bit16u descNum, fragmentDescriptor *fragDesc) {
+	Bit16u memoff = RealOff(ECBAddr) + 30 + ((descNum+1) * 6);
+	fragDesc->offset = real_readw(RealSeg(ECBAddr), memoff);
+	memoff += 2;
+	fragDesc->segment = real_readw(RealSeg(ECBAddr), memoff);
+	memoff += 2;
+	fragDesc->size = real_readw(RealSeg(ECBAddr), memoff);
+}
+
+RealPt ECBClass::getESRAddr(void) {
+	return RealMake(real_readw(RealSeg(ECBAddr),
+		RealOff(ECBAddr)+6),
+		real_readw(RealSeg(ECBAddr),
+		RealOff(ECBAddr)+4));
+}
+
+void ECBClass::NotifyESR(void) {
+	Bit32u ESRval = real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4);
+
+	if(ESRval) {
+#ifdef IPX_DEBUGMSG 
+		LOG_MSG("ECB: SN%7d to be notified.", SerialNumber);
+#endif
+		// take the ECB out of the current list
+		if(prevECB == NULL) {	// was the first in the list
+			ECBList = nextECB;
+			if(ECBList != NULL) ECBList->prevECB = NULL;
+		} else {		// not the first
+			prevECB->nextECB = nextECB;
+			if(nextECB != NULL) nextECB->prevECB = prevECB;
 		}
-		useECB->nextECB = tmpECB;
-		tmpECB->prevECB = useECB;
-	}
 
-	return tmpECB;
+		nextECB = NULL;
+		// put it to the notification queue
+		if(ESRList==NULL) {
+			ESRList = this;
+			prevECB = NULL;
+		} else  {// put to end of ESR list
+			ECBClass* useECB = ESRList;
+		
+			while(useECB->nextECB != NULL)
+				useECB = useECB->nextECB;
+
+			useECB->nextECB = this;
+			prevECB = useECB;
+		}
+		isInESRList = true;
+		//LOG_MSG("ECB put to notification list");
+		PIC_ActivateIRQ(11);
+	}
+	// this one does not want to be notified, delete it right away
+	else delete this;
 }
 
-void DeleteECB(ECBClass * useECB) {
-	if(useECB == NULL) return;
+void ECBClass::setImmAddress(Bit8u *immAddr) {
+	for(Bitu i=0;i<6;i++)
+		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr)+28, immAddr[i]);
+}
 
-	if(useECB->prevECB == NULL) {
-		ECBList = useECB->nextECB;
-		if(ECBList != NULL) ECBList->prevECB = NULL;
+ECBClass::~ECBClass() {
+#ifdef IPX_DEBUGMSG 
+	ECBAmount--;
+	LOG_MSG("ECB: SN%7d destroyed. Remaining ECBs: %3d", SerialNumber,ECBAmount);
+#endif
+
+	if(isInESRList) {
+		// in ESR list, always the first element is deleted.
+		ESRList=nextECB;
 	} else {
-		useECB->prevECB->nextECB = useECB->nextECB;
-		if(useECB->nextECB != NULL) useECB->nextECB->prevECB = useECB->prevECB;
+		if(prevECB == NULL) {	// was the first in the list
+			ECBList = nextECB;
+			if(ECBList != NULL) ECBList->prevECB = NULL;
+		} else {	// not the first
+			prevECB->nextECB = nextECB;
+			if(nextECB != NULL) nextECB->prevECB = prevECB;
+		}
 	}
-	delete useECB;
 }
 
-Bit16u socketCount;
-Bit16u opensockets[SOCKTABLESIZE]; 
+static Bit16u socketCount;
+static Bit16u opensockets[SOCKTABLESIZE]; 
 
 static bool sockInUse(Bit16u sockNum) {
-	Bit16u i;
-	for(i=0;i<socketCount;i++) {
+	for(Bitu i=0;i<socketCount;i++) {
 		if (opensockets[i] == sockNum) return true;
 	}
 	return false;
@@ -207,7 +239,7 @@ static bool sockInUse(Bit16u sockNum) {
 
 static void OpenSocket(void) {
 	Bit16u sockNum, sockAlloc;
-
+	//LOG_MSG("IPX: DOSINT used.");
 	sockNum = swapByte(reg_dx);
 
 	if(socketCount >= SOCKTABLESIZE) {
@@ -236,11 +268,12 @@ static void OpenSocket(void) {
 
 	reg_al = 0x00; // Success
 	reg_dx = swapByte(sockNum);  // Convert back to big-endian
-
 }
 
 static void CloseSocket(void) {
 	Bit16u sockNum, i;
+	ECBClass* tmpECB = ECBList;
+	ECBClass* tmp2ECB = ECBList;
 
 	sockNum = swapByte(reg_dx);
 	if(!sockInUse(sockNum)) return;
@@ -253,16 +286,33 @@ static void CloseSocket(void) {
 		}
 	}
 	--socketCount;
+	
+	// delete all ECBs of that socket
+	while(tmpECB!=0) {
+		tmp2ECB = tmpECB->nextECB;
+		if(tmpECB->getSocket()==sockNum) {
+			tmpECB->setCompletionFlag(COMP_CANCELLED);
+			delete tmpECB;
+		}
+		tmpECB = tmp2ECB;
+	}
 }
 
-static bool IPX_Multiplex(void)
-{
+//static RealPt IPXVERpointer;
+
+static bool IPX_Multiplex(void) {
 	if(reg_ax != 0x7a00) return false;
 	reg_al = 0xff;
 	SegSet16(es,RealSeg(ipx_callback));
 	reg_di = RealOff(ipx_callback);
+	
+	//reg_bx = RealOff(IPXVERpointer);
+	//reg_cx = RealSeg(ipx_callback);
 	return true;
 }
+
+//static void sendPackets();
+static void sendPacket(ECBClass* sendecb);
 
 static void handleIpxRequest(void) {
 	ECBClass *tmpECB;
@@ -276,35 +326,64 @@ static void handleIpxRequest(void) {
 			LOG_MSG("IPX: Close socket %4x", swapByte(reg_dx));
 			CloseSocket();
 			break;
+		case 0x0002:	// get local target
+			reg_al=0xfa;	// fail
+			break;
+
 		case 0x0003:  // Send packet
 			if(!incomingPacket.connected) {
-				tmpECB = CreateECB(RealMake(SegValue(es), reg_si));
+				tmpECB = new ECBClass(SegValue(es),reg_si);//CreateECB(RealMake(SegValue(es), reg_si),true);
 				tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 				tmpECB->setCompletionFlag(COMP_UNDELIVERABLE);
-				DeleteECB(tmpECB);
+				delete tmpECB;	// not notify?
+				//DeleteECB(tmpECB);
 				reg_al = 0xff; // Failure
 			} else {
-				tmpECB = CreateECB(RealMake(SegValue(es), reg_si));
+				tmpECB = new ECBClass(SegValue(es),reg_si);//CreateECB(RealMake(SegValue(es), reg_si),true);
 				tmpECB->setInUseFlag(USEFLAG_SENDING);
+				//LOG_MSG("IPX: Sending packet on %4x", tmpECB->getSocket());
 				reg_al = 0x00; // Success
+				sendPacket(tmpECB);
 			}
-			//LOG_MSG("IPX: Sending packet on %4x", tmpECB->getSocket());
+			
+			//sendPackets();
 			break;
 		case 0x0004:  // Listen for packet
-			tmpECB = CreateECB(RealMake(SegValue(es), reg_si));
+			tmpECB = new ECBClass(SegValue(es),reg_si);//CreateECB(RealMake(SegValue(es), reg_si),false);
 			if(!sockInUse(tmpECB->getSocket())) {
 				reg_al = 0xff;  // Socket is not open
 				tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 				tmpECB->setCompletionFlag(COMP_HARDWAREERROR);
-				DeleteECB(tmpECB);
+				delete tmpECB;
 			} else {
 				reg_al = 0x00;  // Success
 				tmpECB->setInUseFlag(USEFLAG_LISTENING);
-				//LOG_MSG("IPX: Listen for packet on 0x%4x - ESR address %4x:%4x", tmpECB->getSocket(), RealSeg(tmpECB->getESRAddr()), RealOff(tmpECB->getESRAddr()));
+				/*LOG_MSG("IPX: Listen for packet on 0x%4x - ESR address %4x:%4x",
+					tmpECB->getSocket(),
+					RealSeg(tmpECB->getESRAddr()),
+					RealOff(tmpECB->getESRAddr()));*/
 			}
 			
 			
 			break;
+		case 0x0006:	// cancel operation
+			{
+				RealPt ecbaddress = RealMake(SegValue(es),reg_si);
+				ECBClass* tmpECB= ECBList;
+				ECBClass* tmp2ECB;
+				while(tmpECB) {
+					tmp2ECB=tmpECB->nextECB;
+					if(tmpECB->ECBAddr == ecbaddress) {
+						delete tmpECB;	// TODO: invoke flags... check if it can be canceled
+#ifdef IPX_DEBUGMSG 
+						LOG_MSG("IPX: ECB canceled.");
+#endif
+					}
+					tmpECB=tmp2ECB;
+				}
+				reg_al=0;	// Success
+				break;
+			}
 		case 0x0008:  // Get interval marker
 			// ????
 			break;
@@ -316,13 +395,18 @@ static void handleIpxRequest(void) {
 
 				addrptr = (Bit8u *)&localIpxAddr;
 				for(i=0;i<10;i++) {
-                    real_writeb(SegValue(es),reg_si+i,addrptr[i]);
+					real_writeb(SegValue(es),reg_si+i,addrptr[i]);
 				}
 				break;
 			}
 		case 0x000a:  // Relinquish control
 			// Idle thingy
 			break;
+		case 0x0010:  // SPX install check
+			{
+				reg_al=0;	// SPX not installed
+				break;
+			}
 		default:
 			LOG_MSG("Unhandled IPX function: %4x", reg_bx);
 			break;
@@ -343,12 +427,9 @@ Bitu IPX_IntHandler(void) {
 }
 
 static void disconnectServer(bool unexpected) {
-	
 	// There is no Timer remove code, hence this has to be done manually
 	incomingPacket.connected = false;
-
 	if(unexpected) LOG_MSG("IPX: Server disconnected unexpectedly");
-
 }
 
 static void pingAck(IPaddress retAddr) {
@@ -375,7 +456,6 @@ static void pingAck(IPaddress retAddr) {
 	regPacket.channel = UDPChannel;
 	
 	result = SDLNet_UDP_Send(ipxClientSocket, regPacket.channel, &regPacket);
-
 }
 
 static void pingSend(void) {
@@ -406,7 +486,6 @@ static void pingSend(void) {
 	if(!result) {
 		LOG_MSG("IPX: SDLNet_UDP_Send: %s\n", SDLNet_GetError());
 	}
-
 }
 
 static void receivePacket(Bit8u *buffer, Bit16s bufSize) {
@@ -433,9 +512,9 @@ static void receivePacket(Bit8u *buffer, Bit16s bufSize) {
 		}
 	}
 
-
 	useECB = ECBList;
-	while(useECB != NULL) {
+	while(useECB != NULL)
+	{
 		nextECB = useECB->nextECB;
 		if(useECB->getInUseFlag() == USEFLAG_LISTENING) {
 			if(useECB->getSocket() == useSocket) {
@@ -451,10 +530,13 @@ static void receivePacket(Bit8u *buffer, Bit16s bufSize) {
 							useECB->setCompletionFlag(COMP_SUCCESS);
 							useECB->setImmAddress(&buffer[22]);  // Write in source node
 							hostaddr = *((Bit32u *)&buffer[24]);
-
-							//LOG_MSG("IPX: Received packet of %d bytes from %d.%d.%d.%d (%x CRC)", bufSize, CONVIP(hostaddr), packetCRC(&buffer[30], bufSize-30));
+							
+#ifdef IPX_DEBUGMSG
+							LOG_MSG("IPX: Received packet of %d bytes from %d.%d.%d.%d (%x CRC)", bufSize, CONVIP(hostaddr), packetCRC(&buffer[30], bufSize-30));
+#endif
+							
 							useECB->NotifyESR();
-							DeleteECB(useECB);
+							//DeleteECB(useECB);
 							return;
 						}
 					}
@@ -462,35 +544,51 @@ static void receivePacket(Bit8u *buffer, Bit16s bufSize) {
 				if(bufoffset < bufSize) {
 					useECB->setCompletionFlag(COMP_MALFORMED);
 					useECB->NotifyESR();
-					DeleteECB(useECB);
+					//DeleteECB(useECB);
 					return;
 				}
 			}
 		}
 		useECB = nextECB;
 	}
-
+#ifdef IPX_DEBUGMSG 
+	LOG_MSG("IPX: RX Packet loss!");
+#endif
 }
 
-static void sendPacketsTCP(void) {
-	ECBClass *useECB;
-	ECBClass *nextECB;
+static void IPX_UDPClientLoop(void) {
+	int numrecv;
+	UDPpacket inPacket;
+	inPacket.data = (Uint8 *)recvBuffer;
+	inPacket.maxlen = IPXBUFFERSIZE;
+	inPacket.channel = UDPChannel;
+
+	//do
+	//{
+		// Its amazing how much simpler UDP is than TCP
+		numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
+		if(numrecv) receivePacket(inPacket.data, inPacket.len);
+
+	//}while(numrecv>0);
+	
+}
+// don't waste time scanning the list
+static void sendPacket(ECBClass* sendecb) {
 	char outbuffer[IPXBUFFERSIZE];
 	fragmentDescriptor tmpFrag; 
 	Bit16u i, fragCount,t;
 	Bit16s packetsize;
 	Bit16u *wordptr;
 	Bits result;
-
-	useECB = ECBList;
-	while(useECB != NULL) {
-		nextECB = useECB->nextECB;
-		if(useECB->getInUseFlag() == USEFLAG_SENDING) {
-			useECB->setInUseFlag(USEFLAG_AVAILABLE);
+	UDPpacket outPacket;
+	
+	//if(useECB->getInUseFlag() == USEFLAG_SENDING)
+	//	{
+			sendecb->setInUseFlag(USEFLAG_AVAILABLE);
 			packetsize = 0;
-			fragCount = useECB->getFragCount(); 
+			fragCount = sendecb->getFragCount(); 
 			for(i=0;i<fragCount;i++) {
-				useECB->getFragDesc(i,&tmpFrag);
+				sendecb->getFragDesc(i,&tmpFrag);
 				if(i==0) {
 					// Fragment containing IPX header
 					// Must put source address into header
@@ -507,127 +605,46 @@ static void sendPacketsTCP(void) {
 					packetsize++;
 					if(packetsize>=IPXBUFFERSIZE) {
 						LOG_MSG("IPX: Packet size to be sent greater than %d bytes.", IPXBUFFERSIZE);
-						useECB->setCompletionFlag(COMP_MALFORMED);
-						useECB->NotifyESR();
-						DeleteECB(useECB);
-						goto nextECB;
+						sendecb->setCompletionFlag(COMP_UNDELIVERABLE);
+						sendecb->NotifyESR();
+						//DeleteECB(useECB);
+						return;
 					}
 				}
-			}
-			result = SDLNet_TCP_Send(ipxTCPClientSocket, &packetsize, 2);
-			if(result != 2) {
-				useECB->setCompletionFlag(COMP_UNDELIVERABLE);
-				useECB->NotifyESR();
-				DeleteECB(useECB);
-				disconnectServer(true); 
-				return;
 			}
 			
 			// Add length and source socket to IPX header
 			wordptr = (Bit16u *)&outbuffer[0];
 			// Blank CRC
-            wordptr[0] = 0xffff;
+			wordptr[0] = 0xffff;
 			// Length
 			wordptr[1] = swapByte(packetsize);
 			// Source socket
-			wordptr[14] = swapByte(useECB->getSocket());
+			wordptr[14] = swapByte(sendecb->getSocket());
 
-			result = SDLNet_TCP_Send(ipxTCPClientSocket, &outbuffer[0], packetsize);
-			if(result != packetsize) {
-				useECB->setCompletionFlag(COMP_UNDELIVERABLE);
-				useECB->NotifyESR();
-				DeleteECB(useECB);
+			outPacket.channel = UDPChannel;
+			outPacket.data = (Uint8 *)&outbuffer[0];
+			outPacket.len = packetsize;
+			outPacket.maxlen = packetsize;
+			// Since we're using a channel, we won't send the IP address again
+			result = SDLNet_UDP_Send(ipxClientSocket, UDPChannel, &outPacket);
+			if(result == 0) {
+				LOG_MSG("IPX: Could not send packet: %s", SDLNet_GetError());
+				sendecb->setCompletionFlag(COMP_UNDELIVERABLE);
+				sendecb->NotifyESR();
+				//DeleteECB(useECB);
 				disconnectServer(true);
-				return;
-			}
-			useECB->setInUseFlag(USEFLAG_AVAILABLE);
-			useECB->setCompletionFlag(COMP_SUCCESS);
-			useECB->NotifyESR();
-			DeleteECB(useECB);
-
-		}
-nextECB:
-
-		useECB = nextECB;
-	}
-
-}
-
-
-static void IPX_TCPClientLoop(void) {
-	Bits result;
-
-	// Check for incoming packets
-	SDLNet_CheckSockets(clientSocketSet,0);
-	
-	if(SDLNet_SocketReady(ipxClientSocket)) {
-		if(!incomingPacket.inPacket) {
-			if(!incomingPacket.waitsize) {
-				result = SDLNet_TCP_Recv(ipxTCPClientSocket, &incomingPacket.packetSize, 2);
-				if(result!=2) {
-					if(result>0) {
-						incomingPacket.waitsize = true;
-						goto finishReceive;
-					} else {
-						disconnectServer(true);
-						goto finishReceive;
-					}
-				}
-				incomingPacket.packetRead = 0;
+				//return;
 			} else {
-				Bit8u * nextchar;
-				nextchar = (Bit8u *)&incomingPacket.packetSize;
-				nextchar++;
-				result = SDLNet_TCP_Recv(ipxTCPClientSocket, nextchar, 1);
-				if(result!=1) {
-					if(result>0) {
-						LOG_MSG("IPX: Packet overrun");
-					} else {
-						disconnectServer(true);
-						goto finishReceive;
-					}
-				}
-				incomingPacket.waitsize = false;
-				incomingPacket.packetRead = 0;
+				sendecb->setInUseFlag(USEFLAG_AVAILABLE);
+				sendecb->setCompletionFlag(COMP_SUCCESS);
+#ifdef IPX_DEBUGMSG
+				LOG_MSG("Packet sent: size: %d",packetsize);
+#endif
+				sendecb->NotifyESR();
 			}
-			incomingPacket.inPacket = true;
-		}
-		result = SDLNet_TCP_Recv(ipxTCPClientSocket, &incomingPacket.buffer[incomingPacket.packetRead], incomingPacket.packetSize);
-		if (result>0) {
-			incomingPacket.packetRead+=result;
-			incomingPacket.packetSize-=result;
-			if(incomingPacket.packetSize<=0) {
-				// IPX packet is complete.  Now interpret IPX header and try to match to listening ECB
-				receivePacket(&incomingPacket.buffer[0], incomingPacket.packetRead);
-				incomingPacket.inPacket = false;
-			}
-		} else {
-			// Clost active socket
-			disconnectServer(true);
-		}
-
-	}
-
-finishReceive:;
-
-
+		//}
 }
-
-static void IPX_UDPClientLoop(void) {
-	int numrecv;
-	UDPpacket inPacket;
-	inPacket.data = (Uint8 *)recvBuffer;
-	inPacket.maxlen = IPXBUFFERSIZE;
-	inPacket.channel = UDPChannel;
-
-	// Its amazing how much simpler UDP is than TCP
-	numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
-	if(numrecv) {
-		receivePacket(inPacket.data, inPacket.len);
-	}
-	
-}
-
 static void sendPackets() {
 	ECBClass *useECB;
 	ECBClass *nextECB;
@@ -666,7 +683,7 @@ static void sendPackets() {
 						LOG_MSG("IPX: Packet size to be sent greater than %d bytes.", IPXBUFFERSIZE);
 						useECB->setCompletionFlag(COMP_UNDELIVERABLE);
 						useECB->NotifyESR();
-						DeleteECB(useECB);
+						//DeleteECB(useECB);
 						goto nextECB;
 					}
 				}
@@ -675,7 +692,7 @@ static void sendPackets() {
 			// Add length and source socket to IPX header
 			wordptr = (Bit16u *)&outbuffer[0];
 			// Blank CRC
-            wordptr[0] = 0xffff;
+			wordptr[0] = 0xffff;
 			// Length
 			wordptr[1] = swapByte(packetsize);
 			// Source socket
@@ -691,28 +708,44 @@ static void sendPackets() {
 				LOG_MSG("IPX: Could not send packet: %s", SDLNet_GetError());
 				useECB->setCompletionFlag(COMP_UNDELIVERABLE);
 				useECB->NotifyESR();
-				DeleteECB(useECB);
+				//DeleteECB(useECB);
 				disconnectServer(true);
-				return;
+				//return;
+			} else {
+				useECB->setInUseFlag(USEFLAG_AVAILABLE);
+				useECB->setCompletionFlag(COMP_SUCCESS);
+				//LOG_MSG("Packet sent: size: %d",packetsize);
+				useECB->NotifyESR();
+				//DeleteECB(useECB);
 			}
-			useECB->setInUseFlag(USEFLAG_AVAILABLE);
-			useECB->setCompletionFlag(COMP_SUCCESS);
-			useECB->NotifyESR();
-			DeleteECB(useECB);
-
 		}
 nextECB:
-
 		useECB = nextECB;
 	}
-
 }
 
+//RealPt ESRJmpDisplacementAddr;
+//RealPt ESRTargetAddr;
+//RealPt ESRDummyRetAddr;
+/*
+void repeatESR(bool rep) 
+{
+	if(rep) real_writeb(
+		RealSeg(ESRJmpDisplacementAddr),
+		RealOff(ESRJmpDisplacementAddr),
+		(Bit8u)0xF5);
+	else real_writeb(
+		RealSeg(ESRJmpDisplacementAddr),
+		RealOff(ESRJmpDisplacementAddr),
+		(Bit8u)0);
+}
+*/
+ECBClass* ESRHANDLER_useECB;
 static void IPX_ClientLoop(void) {
-	IPX_UDPClientLoop();
 
+	IPX_UDPClientLoop();
 	// Send outgoing packets
-	sendPackets();
+	//sendPackets();
 }
 
 
@@ -802,14 +835,12 @@ bool ConnectToServer(char *strAddr) {
 
 				LOG_MSG("IPX: Connected to server.  IPX address is %d:%d:%d:%d:%d:%d", CONVIPX(localIpxAddr.netnode));
 
-
 				incomingPacket.connected = true;
 				TIMER_AddTickHandler(&IPX_ClientLoop);
 				return true;
 			}
 		} else {
 			LOG_MSG("IPX: Unable to open socket");
-
 		}
 	} else {
 		LOG_MSG("IPX: Unable resolve connection to server");
@@ -1061,9 +1092,6 @@ public:
 				}
 				return;
 			}
-
-
-
 		}
 
 		/*
@@ -1086,103 +1114,161 @@ static void IPXNET_ProgramStart(Program * * make) {
 }
 
 Bitu IPX_ESRHandler1(void) {
-	CPU_Push32(reg_flags);
-	CPU_Push32(reg_eax);CPU_Push32(reg_ecx);CPU_Push32(reg_edx);CPU_Push32(reg_ebx);
-	CPU_Push32(reg_ebp);CPU_Push32(reg_esi);CPU_Push32(reg_edi);
-	CPU_Push16(SegValue(ds)); CPU_Push16(SegValue(es)); 
+#ifdef IPX_DEBUGMSG 
+	LOG_MSG("ESRhandler entered" );
+#endif
+	while(ESRList!=NULL) {
+#ifdef IPX_DEBUGMSG 
+		LOG_MSG("ECB: SN%7d notified.", ESRList->SerialNumber);
+#endif
+		
+		// setup registers
+		SegSet16(es, RealSeg(ESRList->ECBAddr));
+		reg_si = RealOff(ESRList->ECBAddr);
+		reg_al = 0xff;
+		
+		CALLBACK_RunRealFar(RealSeg(ESRList->getESRAddr()), RealOff(ESRList->getESRAddr()));
+		
+		delete ESRList;
+	}	// while
 
-	SegSet16(es, RealSeg(processedECB));
-	reg_si = RealOff(processedECB);
-	reg_al = 0xff;
-	//LOG_MSG("ESR Callback 1");
-
+//	PIC_DeActivateIRQ(11);
+	IO_WriteB(0xa0,0x63);	//EOI11
+	IO_WriteB(0x20,0x62);	//EOI2
+//	IO_WriteB(0xa0,0x20);	//EOI
+	//IO_WriteB(0x20,0x20);	//EOI
+	
+#ifdef IPX_DEBUGMSG 
+	LOG_MSG("ESR loop done.");
+#endif
+	
 	return CBRET_NONE;
 }
 
-Bitu IPX_ESRHandler2(void) {
-	SegSet16(es, CPU_Pop16()); SegSet16(ds, CPU_Pop16());
-	reg_edi=CPU_Pop32();reg_esi=CPU_Pop32();reg_ebp=CPU_Pop32();
-	reg_ebx=CPU_Pop32();reg_edx=CPU_Pop32();reg_ecx=CPU_Pop32();reg_eax=CPU_Pop32();
-	reg_flags=CPU_Pop32();
+void VFILE_Remove(const char *name);
 
-	//LOG_MSG("Leaving ESR");
-	inESR = false;
+class IPX: public Module_base {
+private:
+	CALLBACK_HandlerObject callback_ipx;
+	CALLBACK_HandlerObject callback_esr;
+	CALLBACK_HandlerObject callback_ipxint;
+	RealPt old_73_vector;
+	static Bit16u dospage;
+public:
+	IPX(Section* configuration):Module_base(configuration) {
+		Section_prop * section = static_cast<Section_prop *>(configuration);
+		if(!section->Get_bool("ipx")) return;
+		if(!SDLNetInited) {
+			if(SDLNet_Init() == -1){
+				LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
+				return;
+			}
+			SDLNetInited = true;
+		}
 
-	return CBRET_NONE;
-}
+		ECBList = NULL;
+		ESRList = NULL;
+		isIpxServer = false;
+		isIpxConnected = false;
+		IPX_NetworkInit();
 
-bool IPX_ESRSetupHook(Bitu callback1, CallBack_Handler handler1, Bitu callback2, CallBack_Handler handler2, RealPt *ptrAddr) {
-	PhysPt phyDospage;
-	phyDospage = PhysMake(dospage,0);
+		DOS_AddMultiplexHandler(IPX_Multiplex);
 
-	// Inital callback routine (should save registers, etc.)
-	phys_writeb(phyDospage+0,(Bit8u)0xFA);	//CLI
-	phys_writeb(phyDospage+1,(Bit8u)0xFE);	//GRP 4
-	phys_writeb(phyDospage+2,(Bit8u)0x38);	//Extra Callback instruction
-	phys_writew(phyDospage+3,callback1);		//The immediate word
-	phys_writeb(phyDospage+5,(Bit8u)0x9a);	//CALL Ap
-	// 0x6, 0x7, 0x8, 0x9 = address of called routine
-	*ptrAddr = RealMake(dospage, 6);
-	phys_writed(phyDospage+6,(Bit32u)0x00000000); // Called address
-	phys_writeb(phyDospage+0xa,(Bit8u)0xFE);	//GRP 4
-	phys_writeb(phyDospage+0xb,(Bit8u)0x38);	//Extra Callback instruction
-	phys_writew(phyDospage+0xc,callback2);	//The immediate word
-	phys_writeb(phyDospage+0xe,(Bit8u)0xFB);	//STI
-	phys_writeb(phyDospage+0xf,(Bit8u)0xCB);	//A RETF Instruction
+		callback_ipx.Install(&IPX_Handler,CB_RETF,"IPX Handler");
+		ipx_callback = callback_ipx.Get_RealPointer();
 
-	CallBack_Handlers[callback1]=handler1;
-	CallBack_Handlers[callback2]=handler2;
-	return true;
+		callback_ipxint.Install(&IPX_IntHandler,CB_IRET,"IPX (int 7a)");
+		callback_ipxint.Set_RealVec(0x7a);
+
+		callback_esr.Allocate(&IPX_ESRHandler1,"IPX_ESR");
+		Bit16u call_ipxesr1 = callback_esr.Get_callback();
+
+		if(!dospage) dospage = DOS_GetMemory(2); // can not be freed yet
+
+		PhysPt phyDospage = PhysMake(dospage,0);
+
+#ifdef IPX_DEBUGMSG
+		LOG_MSG("IPX INT address: %x", ipx_intcallback);
+		LOG_MSG("ESR callback address: %x, HandlerID %d", phyDospage,call_ipxesr1);
+#endif
+		//save registers
+		phys_writeb(phyDospage+0,(Bit8u)0xFA);  // CLI
+		phys_writeb(phyDospage+1,(Bit8u)0x60);  // PUSHA
+		phys_writeb(phyDospage+2,(Bit8u)0x1E);  // PUSH DS
+		phys_writeb(phyDospage+3,(Bit8u)0x06);  // PUSH ES
+		phys_writeb(phyDospage+4,(Bit8u)0x0F);  // PUSH..
+		phys_writeb(phyDospage+5,(Bit8u)0xA0);  // FS
+		phys_writeb(phyDospage+6,(Bit8u)0x0F);  // PUSH..
+		phys_writeb(phyDospage+7,(Bit8u)0xA8);  // GS
+ 
+		// callback
+		phys_writeb(phyDospage+8,(Bit8u)0xFE);  // GRP 4
+		phys_writeb(phyDospage+9,(Bit8u)0x38);  // Extra Callback instruction
+		phys_writew(phyDospage+10,call_ipxesr1);        // Callback identifier
+ 
+		// register recreation
+		phys_writeb(phyDospage+12,(Bit8u)0x0F);// POP..
+		phys_writeb(phyDospage+13,(Bit8u)0xA9); // GS
+		phys_writeb(phyDospage+14,(Bit8u)0x0F);// POP..
+		phys_writeb(phyDospage+15,(Bit8u)0xA1); // FS
+		phys_writeb(phyDospage+16,(Bit8u)0x07); // POP ES
+		phys_writeb(phyDospage+17,(Bit8u)0x1F); // POP DS
+		phys_writeb(phyDospage+18,(Bit8u)0x61); //POPA
+		phys_writeb(phyDospage+19,(Bit8u)0xCF); //IRET: restores flags, CS, IP
+ 
+		// IPX version 2.12
+		//phys_writeb(phyDospage+27,(Bit8u)0x2);
+		//phys_writeb(phyDospage+28,(Bit8u)0x12);
+		//IPXVERpointer = RealMake(dospage,27);
+
+		RealPt ESRRoutineBase = RealMake(dospage, 0);
+
+		// Interrupt enabling
+		RealSetVec(0x73,ESRRoutineBase,old_73_vector);        // IRQ11
+		Bit8u irqmask=IO_ReadB(0xa1);
+		irqmask &= ~8;  // enable IRQ11
+		IO_WriteB(0xa1,irqmask);
+
+		PROGRAMS_MakeFile("IPXNET.COM",IPXNET_ProgramStart);
+	}
+
+	~IPX() {
+		Section_prop * section = static_cast<Section_prop *>(m_configuration);
+		if(!section->Get_bool("ipx")) return;
+
+		if(isIpxServer) {
+			isIpxServer = false;
+			DisconnectFromServer();
+			IPX_StopServer();
+		}
+		disconnectServer(false);
+
+		DOS_DelMultiplexHandler(IPX_Multiplex);
+		RealSetVec(0x73,old_73_vector);
+		Bit8u irqmask=IO_ReadB(0xa1);
+		irqmask |= 8;  // disable IRQ11
+		IO_WriteB(0xa1,irqmask);
+   
+		PhysPt phyDospage = PhysMake(dospage,0);
+		for(Bitu i = 0;i < 32;i++)
+			phys_writeb(phyDospage+i,(Bit8u)0x00);
+
+		VFILE_Remove("IPXNET.COM");
+	}
+};
+
+static IPX* test;
+
+void IPX_ShutDown(Section* sec) {
+	delete test;    
 }
 
 void IPX_Init(Section* sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-
-	if(!section->Get_bool("ipx")) return;
-
-	if(!SDLNetInited) {
-		if(SDLNet_Init()==-1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
-
-	ECBList = NULL;
-
-	isIpxServer = false;
-	isIpxConnected = false;
-
-	IPX_NetworkInit();
-
-	inESR = false;
-
-	DOS_AddMultiplexHandler(IPX_Multiplex);
-	call_ipx=CALLBACK_Allocate();
-	CALLBACK_Setup(call_ipx,&IPX_Handler,CB_RETF);
-	ipx_callback=CALLBACK_RealPointer(call_ipx);
-
-	call_ipxint=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_ipxint,&IPX_IntHandler,CB_IRET);
-	ipx_intcallback=CALLBACK_RealPointer(call_ipxint);
-
-	call_ipxesr1=CALLBACK_Allocate();	
-	call_ipxesr2=CALLBACK_Allocate();	
-	//CALLBACK_SetupFarCall(call_ipxesr1, &IPX_ESRHandler1, call_ipxesr2, &IPX_ESRHandler2, &ipx_esrptraddr);
-	dospage = DOS_GetMemory(1);
-	IPX_ESRSetupHook(call_ipxesr1, &IPX_ESRHandler1, call_ipxesr2, &IPX_ESRHandler2, &ipx_esrptraddr);
-	// Allocate 16 bytes of memory from the DOS system area at 0xd000
-	ipx_esrcallback=RealMake(dospage,0);
-	//CALLBACK_RealPointer(call_ipxesr1);
-
-	RealSetVec(0x7a,ipx_intcallback);
-	PROGRAMS_MakeFile("IPXNET.COM",IPXNET_ProgramStart);
-
-	//if(isIpxServer) {
-		// Auto-connect to server
-	//	ConnectToServer("localhost");
-	//}
-
+	test = new IPX(sec);
+	sec->AddDestroyFunction(&IPX_ShutDown,true);
 }
+
+//Initialize static members;
+Bit16u IPX::dospage = 0;
 
 #endif

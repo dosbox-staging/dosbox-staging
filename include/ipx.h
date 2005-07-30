@@ -16,8 +16,20 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: ipx.h,v 1.6 2005-07-30 10:02:39 qbix79 Exp $ */
+
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
+
+// Uncomment this for a lot of debug messages:
+//#define IPX_DEBUGMSG 
+
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
+#ifndef DOSBOX_MEM_H
+#include "mem.h"
+#endif
 
 // In Use Flag codes
 #define USEFLAG_AVAILABLE  0x00
@@ -30,7 +42,6 @@
 #define USEFLAG_AESCOUNT   0xfd
 #define USEFLAG_LISTENING  0xfe
 #define USEFLAG_SENDING    0xff
-
 
 // Completion codes
 #define COMP_SUCCESS          0x00
@@ -51,7 +62,6 @@
 
 // For Uint8 type
 #include "SDL_net.h"
-
 
 struct PackedIP {
 	Uint32 host;
@@ -77,6 +87,45 @@ struct IPXHeader {
 		Uint8 socket[2];
 	} dest, src;
 } GCC_ATTRIBUTE(packed);
+
+struct fragmentDescriptor {
+	Bit16u offset;
+	Bit16u segment;
+	Bit16u size;
+};
+
+class ECBClass {
+public:
+	RealPt ECBAddr;
+	bool isInESRList;
+   	ECBClass *prevECB; 
+	ECBClass *nextECB;
+	Bit8u iuflag;
+
+	#ifdef IPX_DEBUGMSG 
+	Bitu SerialNumber;
+	#endif
+
+	ECBClass::ECBClass(Bit16u segment, Bit16u offset);
+	Bit16u getSocket(void);
+
+	Bit8u getInUseFlag(void);
+
+	void setInUseFlag(Bit8u flagval);
+
+	void setCompletionFlag(Bit8u flagval);
+
+	Bit16u getFragCount(void);
+
+	void getFragDesc(Bit16u descNum, fragmentDescriptor *fragDesc);
+	RealPt getESRAddr(void);
+
+	void NotifyESR(void);
+
+	void setImmAddress(Bit8u *immAddr);
+
+	~ECBClass();
+};
 
 // The following routines may not be needed on all systems.  On my build of SDL the IPaddress structure is 8 octects 
 // and therefore screws up my IPXheader structure since it needs to be packed.
