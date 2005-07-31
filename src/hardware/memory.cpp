@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.38 2005-07-30 10:11:40 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.39 2005-07-31 13:59:02 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -24,6 +24,8 @@
 #include "setup.h"
 #include "paging.h"
 #include "regs.h"
+
+#include <string.h>
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define MAX_MEMORY	64
@@ -490,6 +492,9 @@ public:
 		}
 		MemBase = new Bit8u[memsize*1024*1024];
 		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
+		/* Clear the memory, as new doesn't always give zeroed memory
+		 * (Visual C debug mode). We want zeroed memory though. */
+		memset((void*)MemBase,0,memsize*1024*1024);
 		memory.pages = (memsize*1024*1024)/4096;
 		/* Allocate the data for the different page information blocks */
 		memory.phandlers=new  PageHandler * [memory.pages];
@@ -531,12 +536,4 @@ void MEM_Init(Section * sec) {
 	/* shutdown function */
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);
-
-	// initialize interrupt handlers to 0
-	// this makes availible interrupts detectable even in compiler debug mode
-	// tyrian network helper app is suffering from this
-	// 
-	// DISABLED IT BY DEFAULT. (qbix79). But the code is there in case 
-	// somebody needs it
-	//for(Bitu icntr = 0; icntr <0xFF; icntr++) RealSetVec(icntr,0);
 }
