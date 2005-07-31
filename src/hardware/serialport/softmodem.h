@@ -16,12 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.1 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.2 2005-07-31 12:08:58 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
 
 #include "dosbox.h"
+#if C_MODEM
 #include "SDL_net.h"
 #include "serialport.h"
 
@@ -239,5 +240,5 @@ protected:
 		char str[256];
 	} dial;
 };
-
+#endif
 #endif 
