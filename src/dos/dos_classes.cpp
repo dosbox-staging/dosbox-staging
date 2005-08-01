@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.43 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.44 2005-08-01 09:30:45 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -58,11 +58,10 @@ void DOS_ParamBlock::SaveData(void) {
 }
 
 
-void DOS_InfoBlock::SetLocation(Bit16u segment)
-{
+void DOS_InfoBlock::SetLocation(Bit16u segment) {
 	seg = segment;
 	pt=PhysMake(seg,0);
-/* Clear the initual Block */
+	/* Clear the initial Block */
 	for(Bitu i=0;i<sizeof(sDIB);i++) mem_writeb(pt+i,0xff);
 
 	sSave(sDIB,regCXfrom5e,(Bit16u)0);
@@ -74,6 +73,7 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	sSave(sDIB,joindedDrives,(Bit8u)0);
 	sSave(sDIB,lastdrive,(Bit8u)0x01);//increase this if you add drives to cds-chain
 
+	sSave(sDIB,diskInfoBuffer,RealMake(segment,0x5f));
 	sSave(sDIB,setverPtr,(Bit32u)0);
 
 	sSave(sDIB,a20FixOfs,(Bit16u)0);
@@ -86,6 +86,17 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 
 	sSave(sDIB,sharingCount,(Bit16u)0);
 	sSave(sDIB,sharingDelay,(Bit16u)0);
+
+	sSave(sDIB,dirtyDiskBuffers,(Bit16u)0);
+	sSave(sDIB,lookaheadBufPt,(Bit32u)0);
+	sSave(sDIB,lookaheadBufNumber,(Bit16u)0);
+	sSave(sDIB,bufferLocation,(Bit8u)0);		// buffer in base memory, no workspace
+	sSave(sDIB,workspaceBuffer,(Bit32u)0);
+
+	sSave(sDIB,minMemForExec,(Bit16u)0);
+	sSave(sDIB,memAllocScanStart,(Bit16u)DOS_MEM_START);
+	sSave(sDIB,startOfUMBChain,(Bit16u)0xffff);
+	sSave(sDIB,chainingUMB,(Bit8u)0);
 
 	sSave(sDIB,nulNextDriver,(Bit32u)0xffffffff);
 	sSave(sDIB,nulAttributes,(Bit16u)0x8004);
@@ -100,43 +111,36 @@ void DOS_InfoBlock::SetLocation(Bit16u segment)
 	sSave(sDIB,nulString[7],(Bit8u)0x20);
 }
 
-void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb)
-{
+void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb) {
 	sSave(sDIB,firstMCB,_firstmcb); //c2woody
 }
 
-void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table){
+void DOS_InfoBlock::SetfirstFileTable(RealPt _first_table) {
 	sSave(sDIB,firstFileTable,_first_table);
 }
 
 void DOS_InfoBlock::SetBuffers(Bit16u x,Bit16u y) {
 	sSave(sDIB,buffers_x,x);
 	sSave(sDIB,buffers_y,y);
-
 }
 
-void DOS_InfoBlock::SetCurDirStruct(Bit32u _curdirstruct)
-{
+void DOS_InfoBlock::SetCurDirStruct(Bit32u _curdirstruct) {
 	sSave(sDIB,curDirStructure,_curdirstruct);
 }
 
-void DOS_InfoBlock::SetFCBTable(Bit32u _fcbtable)
-{
+void DOS_InfoBlock::SetFCBTable(Bit32u _fcbtable) {
 	sSave(sDIB,fcbTable,_fcbtable);
 }
 
-void DOS_InfoBlock::SetDeviceChainStart(Bit32u _devchain)
-{
+void DOS_InfoBlock::SetDeviceChainStart(Bit32u _devchain) {
 	sSave(sDIB,nulNextDriver,_devchain);
 }
 
-void DOS_InfoBlock::SetDiskInfoBuffer(Bit32u _dinfobuf)
-{
-	sSave(sDIB,diskInfoBuffer,_dinfobuf);
+void DOS_InfoBlock::SetDiskBufferHeadPt(Bit32u _dbheadpt) {
+	sSave(sDIB,diskBufferHeadPt,_dbheadpt);
 }
 
-RealPt DOS_InfoBlock::GetPointer(void)
-{
+RealPt DOS_InfoBlock::GetPointer(void) {
 	return RealMake(seg,offsetof(sDIB,firstDPB));
 }
 

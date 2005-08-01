@@ -20,10 +20,6 @@
 #include "mem.h"
 #include "dos_inc.h"
 
-
-#define MEM_START 0x68					//First Segment that DOS can use
-//#define MEM_START 4000					//First Segment that DOS can use
-
 static Bit16u memAllocStrategy = 0x00;
 
 static void DOS_CompressMemory(void) {
@@ -134,7 +130,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 
 
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
-	if (segment < MEM_START+1) {
+	if (segment < DOS_MEM_START+1) {
 		LOG(LOG_DOSMISC,LOG_ERROR)("Program resizes %X, take care",segment);
 	}
       
@@ -197,7 +193,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 
 bool DOS_FreeMemory(Bit16u segment) {
 //TODO Check if allowed to free this segment
-	if (segment < MEM_START+1) {
+	if (segment < DOS_MEM_START+1) {
 		LOG(LOG_DOSMISC,LOG_ERROR)("Program tried to free %X ---ERROR",segment);
 		DOS_SetError(DOSERR_MB_ADDRESS_INVALID);
 		return false;
@@ -218,22 +214,22 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 void DOS_SetupMemory(void) {
 	// Create a dummy device MCB with PSPSeg=0x0008
-	DOS_MCB mcb_devicedummy((Bit16u)MEM_START);
+	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
 	mcb_devicedummy.SetPSPSeg(0x0008);	// Devices
 	mcb_devicedummy.SetSize(1);
 	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
 
 	// BioMenace (segment of int2<0x8000)
-	mem_writeb((MEM_START+1)<<4,0xcf);// iret
-	RealSetVec(0x02,(MEM_START+1)<<16);
+	mem_writeb((DOS_MEM_START+1)<<4,0xcf);// iret
+	RealSetVec(0x02,(DOS_MEM_START+1)<<16);
 
-	DOS_MCB mcb((Bit16u)MEM_START+2);
+	DOS_MCB mcb((Bit16u)DOS_MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
 	if (machine==MCH_TANDY) {
-		mcb.SetSize(0x97FE - MEM_START - 2);
-	} else mcb.SetSize(0x9FFE - MEM_START - 2);
+		mcb.SetSize(0x97FE - DOS_MEM_START - 2);
+	} else mcb.SetSize(0x9FFE - DOS_MEM_START - 2);
 	mcb.SetType(0x5a);								//Last Block
 
-	dos.firstMCB=MEM_START;
-	dos_infoblock.SetFirstMCB(MEM_START);
+	dos.firstMCB=DOS_MEM_START;
+	dos_infoblock.SetFirstMCB(DOS_MEM_START);
 }

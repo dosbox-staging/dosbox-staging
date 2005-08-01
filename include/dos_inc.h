@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.53 2005-03-24 10:18:45 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.54 2005-08-01 09:30:44 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -75,6 +75,15 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_FILES 127
 #define DOS_DRIVES 26
 #define DOS_DEVICES 10
+
+#define DOS_INFOBLOCK_SEG 0x50
+#define DOS_SDA_SEG 0x5a
+#define DOS_SDA_OFS 0
+#define DOS_CONSTRING_SEG 0x5d
+#define DOS_CONDRV_SEG 0x60
+#define DOS_SFT_SEG 0x62
+#define DOS_CDS_SEG 0x64
+#define DOS_MEM_START 0x102					//First Segment that DOS can use
 
 /* internal Dos Tables */
 
@@ -350,7 +359,7 @@ public:
 	void SetCurDirStruct(Bit32u _curdirstruct);
 	void SetFCBTable(Bit32u _fcbtable);
 	void SetDeviceChainStart(Bit32u _devchain);
-	void SetDiskInfoBuffer(Bit32u _dinfobuf);
+	void SetDiskBufferHeadPt(Bit32u _dbheadpt);
 	RealPt GetPointer (void);
 
 	#ifdef _MSC_VER
@@ -391,7 +400,17 @@ public:
 		Bit8u	bootDrive;		//  0x43 boot drive
 		Bit8u	useDwordMov;		//  0x44 use dword moves
 		Bit16u	extendedSize;		//  0x45 size of extended memory
-		// some more stuff, hopefully never used.
+		Bit32u	diskBufferHeadPt;	//  0x47 pointer to least-recently used buffer header
+		Bit16u	dirtyDiskBuffers;	//  0x4b number of dirty disk buffers
+		Bit32u	lookaheadBufPt;		//  0x4d pointer to lookahead buffer
+		Bit16u	lookaheadBufNumber;		//  0x51 number of lookahead buffers
+		Bit8u	bufferLocation;			//  0x53 workspace buffer location
+		Bit32u	workspaceBuffer;		//  0x54 pointer to workspace buffer
+		Bit8u	unknown2[11];			//  0x58
+		Bit8u	chainingUMB;			//  0x63 bit0: UMB chain linked to MCB chain
+		Bit16u	minMemForExec;			//  0x64 minimum paragraphs needed for current program
+		Bit16u	startOfUMBChain;		//  0x66 segment of first UMB-MCB
+		Bit16u	memAllocScanStart;		//  0x68 start paragraph for memory allocation
 	} GCC_ATTRIBUTE(packed);
 	#ifdef _MSC_VER
 	#pragma pack ()
@@ -509,11 +528,6 @@ private:
 	#pragma pack ()
 	#endif
 };
-
-extern Bit16u sdaseg;
-#define DOS_SDA_SEG sdaseg
-#define DOS_SDA_OFS 0
-
 
 class DOS_SDA : public MemStruct {
 public:
