@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipxserver.cpp,v 1.5 2005-07-30 10:02:39 qbix79 Exp $ */
+/* $Id: ipxserver.cpp,v 1.6 2005-08-08 20:29:55 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -87,7 +87,7 @@ static void sendIPXPacket(Bit8u *buffer, Bit16s bufSize) {
 	if(desthost == 0xffffffff) {
 		// Broadcast
 		for(i=0;i<SOCKETTABLESIZE;i++) {
-			if(connBuffer[i].connected && (ipconn[i].host != srchost) ) {
+			if(connBuffer[i].connected && ((ipconn[i].host != srchost)||(ipconn[i].port!=srcport))) {
 				outPacket.address = ipconn[i];
 				result = SDLNet_UDP_Send(ipxServerSocket,-1,&outPacket);
 				if(result == 0) {
