@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.38 2005-07-20 11:35:53 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.39 2005-08-08 13:33:45 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -207,9 +207,40 @@ public:
 	void Run(void) {
 		/* Show conventional Memory */
 		WriteOut("\n");
+
+		Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+		Bit8u umb_flag=dos_infoblock.GetUMBChainState();
+		Bit8u old_memstrat=DOS_GetMemAllocStrategy()&0xff;
+		if (umb_start!=0xffff) {
+			if ((umb_flag&1)==1) DOS_LinkUMBsToMemChain(0);
+			DOS_SetMemAllocStrategy(0);
+		}
+
 		Bit16u seg,blocks;blocks=0xffff;
 		DOS_AllocateMemory(&seg,&blocks);
 		WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
+
+		if (umb_start!=0xffff) {
+			DOS_LinkUMBsToMemChain(1);
+			DOS_SetMemAllocStrategy(0x40);	// search in UMBs only
+
+			Bit16u largest_block=0,total_blocks=0,block_count=0;
+			for (;; block_count++) {
+				blocks=0xffff;
+				DOS_AllocateMemory(&seg,&blocks);
+				if (blocks==0) break;
+				total_blocks+=blocks;
+				if (blocks>largest_block) largest_block=blocks;
+				DOS_AllocateMemory(&seg,&blocks);
+			}
+
+			Bit8u current_umb_flag=dos_infoblock.GetUMBChainState();
+			if ((current_umb_flag&1)!=(umb_flag&1)) DOS_LinkUMBsToMemChain(umb_flag);
+			DOS_SetMemAllocStrategy(old_memstrat);	// restore strategy
+
+			if (block_count>0) WriteOut(MSG_Get("PROGRAM_MEM_UPPER"),total_blocks*16/1024,block_count,largest_block*16/1024);
+		}
+
 		/* Test for and show free XMS */
 		reg_ax=0x4300;CALLBACK_RunRealInt(0x2f);
 		if (reg_al==0x80) {
@@ -695,6 +726,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
+	MSG_Add("PROGRAM_MEM_UPPER","%10d Kb free upper memory in %d blocks (largest UMB %d Kb)\n");
 
 	MSG_Add("PROGRAM_LOADFIX_ALLOC","%d kb allocated.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOC","%d kb freed.\n");

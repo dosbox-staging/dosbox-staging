@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.84 2005-04-29 13:32:31 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.85 2005-08-08 13:33:44 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -716,12 +716,15 @@ static Bitu DOS_21Handler(void) {
 			DOS_SetMemAllocStrategy(reg_bx);
 			break;
 		case 2:					/* Get UMB Link Status */
-			reg_ax=1;	// no UMB support 
-			CALLBACK_SCF(true);
+			reg_al=dos_infoblock.GetUMBChainState()&1;
+			CALLBACK_SCF(false);
 			break;
 		case 3:					/* Set UMB Link Status */
-			reg_ax=1;	// failure, no support
-			CALLBACK_SCF(true);
+			if (DOS_LinkUMBsToMemChain(reg_bx)) CALLBACK_SCF(false);
+			else {
+				reg_ax=1;
+				CALLBACK_SCF(true);
+			}
 			break;
 		default:
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:58:Not Supported Set//Get memory allocation call %X",reg_al);

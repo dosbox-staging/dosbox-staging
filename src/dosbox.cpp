@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.86 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.87 2005-08-08 13:33:46 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -379,9 +379,11 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init,true);//done
 	secprop->Add_bool("ems",true);
+	secprop->Add_string("umb","true");
 	MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
 		"ems -- Enable EMS support.\n"
+		"umb -- Enable UMB support (false,true,max).\n"
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);

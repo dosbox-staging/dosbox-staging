@@ -20,6 +20,8 @@
 #include "mem.h"
 #include "dos_inc.h"
 
+#define UMB_START_SEG 0x9fff
+
 static Bit16u memAllocStrategy = 0x00;
 
 static void DOS_CompressMemory(void) {
@@ -50,6 +52,20 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 		mcb_segment+=mcb.GetSize()+1;
 		mcb.SetPt(mcb_segment);
 	}
+
+	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+	if (umb_start==UMB_START_SEG) {
+		DOS_MCB umb_mcb(umb_start);
+		while (true) {
+			if (umb_mcb.GetPSPSeg()==pspseg) {
+				umb_mcb.SetPSPSeg(MCB_FREE);
+			}
+			if (umb_mcb.GetType()!=0x4d) break;
+			umb_start+=umb_mcb.GetSize()+1;
+			umb_mcb.SetPt(umb_start);
+		}
+	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
+
 	DOS_CompressMemory();
 };
 
@@ -65,7 +81,15 @@ void DOS_SetMemAllocStrategy(Bit16u strat)
 
 bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	DOS_CompressMemory();
-	Bit16u bigsize=0;Bit16u mcb_segment=dos.firstMCB;
+	Bit16u bigsize=0;
+	Bit16u mem_strat=memAllocStrategy;
+	Bit16u mcb_segment=dos.firstMCB;
+
+	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+	if (umb_start==UMB_START_SEG) {
+		if (mem_strat&0xc0) mcb_segment=umb_start;
+	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
+
 	DOS_MCB mcb(0);
 	DOS_MCB mcb_next(0);
 	DOS_MCB psp_mcb(dos.psp()-1);
@@ -88,7 +112,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 			} else {
 				// TODO: Strategy "1": Best matching block
 				/* If so allocate it */
-				if ((memAllocStrategy & 0x03)==0) {	
+				if ((mem_strat & 0x03)==0) {	
 					mcb_next.SetPt((Bit16u)(mcb_segment+*blocks+1));
 					mcb_next.SetPSPSeg(MCB_FREE);
 					mcb_next.SetType(mcb.GetType());
@@ -119,11 +143,15 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 		}
 		/* Onward to the next MCB if there is one */
 		if (mcb.GetType()==0x5a) {
-			*blocks=bigsize;
-			DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
-			return false;
-		}
-		mcb_segment+=mcb.GetSize()+1;
+			if ((mem_strat&0x80) && (umb_start==UMB_START_SEG)) {
+				mcb_segment=dos.firstMCB;
+				mem_strat&=(~0xc0);
+			} else {
+				*blocks=bigsize;
+				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
+				return false;
+			}
+		} else mcb_segment+=mcb.GetSize()+1;
 	}
 	return false;
 }
@@ -210,6 +238,109 @@ bool DOS_FreeMemory(Bit16u segment) {
 }
 
 
+void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
+	if (strcmp(use_umbs,"false")!=0) {
+		Bit16u first_umb_seg=0xca00;
+		Bit16u first_umb_size=0x600;
+
+		if (strcmp(use_umbs,"max")==0) {
+			first_umb_seg-=0x100;
+			first_umb_size+=0x100;
+		}
+
+		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
+		dos_infoblock.SetUMBChainState(0);		// UMBs not linked yet
+
+		DOS_MCB umb_mcb(first_umb_seg);
+		umb_mcb.SetPSPSeg(0);		// currently free
+		umb_mcb.SetSize(first_umb_size-1);
+		umb_mcb.SetType(0x5a);
+
+		/* Scan MCB-chain for last block */
+		Bit16u mcb_segment=dos.firstMCB;
+		DOS_MCB mcb(mcb_segment);
+		while (mcb.GetType()!=0x5a) {
+			mcb_segment+=mcb.GetSize()+1;
+			mcb.SetPt(mcb_segment);
+		}
+
+		/* A system MCB has to cover the space between the
+		   regular MCB-chain and the UMBs */
+		Bit16u cover_mcb=(Bit16u)(mcb_segment+mcb.GetSize()+1);
+		mcb.SetPt(cover_mcb);
+		mcb.SetType(0x4d);
+		mcb.SetPSPSeg(0x0008);
+		mcb.SetSize(first_umb_seg-cover_mcb-1);
+		mcb.SetFileName("SC      ");
+
+		if (!ems_active && (strcmp(use_umbs,"max")==0)) {
+			Bit16u ems_umb_seg=0xe000;
+			Bit16u ems_umb_size=0x1000;
+
+			/* Continue UMB-chain */
+			umb_mcb.SetSize(first_umb_size-2);
+			umb_mcb.SetType(0x4d);
+
+			DOS_MCB umb2_mcb(ems_umb_seg);
+			umb2_mcb.SetPSPSeg(0);		// currently free
+			umb2_mcb.SetSize(ems_umb_size-1);
+			umb2_mcb.SetType(0x5a);
+
+			/* A system MCB has to take out the space between the previous and this UMB */
+			cover_mcb=(Bit16u)(first_umb_seg+umb_mcb.GetSize()+1);
+			mcb.SetPt(cover_mcb);
+			mcb.SetType(0x4d);
+			mcb.SetPSPSeg(0x0008);
+			mcb.SetSize(ems_umb_seg-cover_mcb-1);
+			mcb.SetFileName("SC      ");
+		}
+	} else {
+		dos_infoblock.SetStartOfUMBChain(0xffff);
+		dos_infoblock.SetUMBChainState(0);
+	}
+}
+
+bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
+	/* Get start of UMB-chain */
+	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+	if (umb_start!=UMB_START_SEG) {
+		if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
+		return true;
+	}
+
+	if ((linkstate&1)==(dos_infoblock.GetUMBChainState()&1)) return true;
+	
+	/* Scan MCB-chain for last block before UMB-chain */
+	Bit16u mcb_segment=dos.firstMCB;
+	Bit16u prev_mcb_segment;
+	DOS_MCB mcb(mcb_segment);
+	while ((mcb_segment!=umb_start) && (mcb.GetType()!=0x5a)) {
+		prev_mcb_segment=mcb_segment;
+		mcb_segment+=mcb.GetSize()+1;
+		mcb.SetPt(mcb_segment);
+	}
+	DOS_MCB prev_mcb(prev_mcb_segment);
+
+	switch (linkstate) {
+		case 0x0000:	// unlink
+			if ((prev_mcb.GetType()==0x4d) && (mcb_segment==umb_start)) {
+				prev_mcb.SetType(0x5a);
+			}
+			dos_infoblock.SetUMBChainState(0);
+			break;
+		case 0x0001:	// link
+			if (mcb.GetType()==0x5a) {
+				mcb.SetType(0x4d);
+				dos_infoblock.SetUMBChainState(1);
+			}
+			break;
+		default:
+			LOG_MSG("Invalid link state %x when reconfiguring MCB chain",linkstate);
+			return false;
+	}
+
+	return true;
+}
 
 
 void DOS_SetupMemory(void) {
@@ -218,6 +349,7 @@ void DOS_SetupMemory(void) {
 	mcb_devicedummy.SetPSPSeg(0x0008);	// Devices
 	mcb_devicedummy.SetSize(1);
 	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
+//	mcb_devicedummy.SetFileName("SD      ");
 
 	// BioMenace (segment of int2<0x8000)
 	mem_writeb((DOS_MEM_START+1)<<4,0xcf);// iret

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.13 2005-07-30 09:49:28 qbix79 Exp $ */
+/* $Id: callback.h,v 1.14 2005-08-08 13:33:43 c2woody Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -30,7 +30,7 @@ extern CallBack_Handler CallBack_Handlers[];
 
 enum { CB_RETF,CB_IRET,CB_IRET_STI };
 
-#define CB_MAX 1024
+#define CB_MAX 144
 #define CB_SEG 0xC800
 #define CB_BASE (CB_SEG << 4)
 

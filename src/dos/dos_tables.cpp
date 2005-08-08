@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.19 2005-08-01 09:30:45 c2woody Exp $ */
+/* $Id: dos_tables.cpp,v 1.20 2005-08-08 13:33:46 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -99,15 +99,6 @@ void DOS_SetupTables(void) {
   	real_writed(seg,0x0a,0x204e4f43);	// driver name
   	real_writed(seg,0x0e,0x20202020);	// driver name
 	dos_infoblock.SetDeviceChainStart(RealMake(seg,0));
-   
-	/* Create a fake SFT, so programs think there are 100 file handles */
-	seg=DOS_SFT_SEG;
-	seg2=DOS_SFT_SEG+1;
-	real_writed(seg,0,seg2<<16);		//Next File Table
-	real_writew(seg,4,100);				//File Table supports 100 files
-	real_writed(seg2,0,0xffffffff);		//Last File Table
-	real_writew(seg2,4,100);			//File Table supports 100 files
-	dos_infoblock.SetfirstFileTable(RealMake(seg,0));
    
 	/* Create a fake Current Directory Structure */
 	seg=DOS_CDS_SEG;
