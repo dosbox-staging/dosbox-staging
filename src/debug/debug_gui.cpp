@@ -127,6 +127,8 @@ static void Draw_RegisterLayout(void) {
 	mvwaddstr(dbg.win_reg,1,28,"CS=");
 	mvwaddstr(dbg.win_reg,1,38,"EIP=");
 
+	mvwaddstr(dbg.win_reg,2,75,"CPL");
+	mvwaddstr(dbg.win_reg,2,68,"IOPL");
 
 	mvwaddstr(dbg.win_reg,1,52,"C  Z  S  O  A  P  D  I  T ");
 }

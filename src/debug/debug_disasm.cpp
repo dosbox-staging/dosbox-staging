@@ -260,7 +260,7 @@ static char *op386map1[256] = {
   "call %Jv",         "jmp %Jv",         "jmp %Ap",        "jmp %Ks%Jb",
   "in al,dx",         "in %eax,dx",      "out dx,al",      "out dx,%eax",
 /* f */
-  "lock %p ",         0,                 "repne %p ",      "repe %p ",
+  "lock %p ",         "icebp",           "repne %p ",      "repe %p ",
   "hlt",              "cmc",             "%g2",            "%g2",
   "clc",              "stc",             "cli",            "sti",
   "cld",              "std",             "%g3",            "%g4"
@@ -269,8 +269,8 @@ static char *op386map1[256] = {
 static char *second[] = {
 /* 0 */
   "%g5",              "%g6",             "lar %Gv,%Ew",    "lsl %Gv,%Ew",
-  0,                  "loadall",         "clts",           "loadall",
-  "invd",             "wbinvd",          0,                0,
+  0,                  "[loadall]",       "clts",           "[loadall]",
+  "invd",             "wbinvd",          0,                "UD2",
   0,                  0,                 0,                0,
 /* 1 */
   "mov %Eb,%Gb",      "mov %Ev,%Gv",     "mov %Gb,%Eb",    "mov %Gv,%Ev",
@@ -308,7 +308,7 @@ static char *second[] = {
   "sets %Eb",         "setns %Eb",       "setp %Eb",       "setnp %Eb",
   "setl %Eb",         "setge %Eb",       "setle %Eb",      "setg %Eb",
 /* a */
-  "push fs",          "pop fs",          0,                "bt %Ev,%Gv",
+  "push fs",          "pop fs",          "cpuid",          "bt %Ev,%Gv",
   "shld %Ev,%Gv,%Ib", "shld %Ev,%Gv,cl", 0,                0,
   "push gs",          "pop gs",          0,                "bts %Ev,%Gv",
   "shrd %Ev,%Gv,%Ib", "shrd %Ev,%Gv,cl", 0,                "imul %Gv,%Ev",
@@ -354,7 +354,7 @@ static char *groups[][8] = {   /* group 0 is group 3 for %Ev set */
     "verr %Ew",       "verw %Ew",        0,                0               },
 /* 6 */
   { "sgdt %Ms",       "sidt %Ms",        "lgdt %Ms",       "lidt %Ms",
-    "smsw %Ew",       0,                 "lmsw %Ew",       0               },
+    "smsw %Ew",       0,                 "lmsw %Ew",       "invlpg"        },
 /* 7 */
   { 0,                0,                 0,                0,
     "bt",             "bts",             "btr",            "btc"           }
@@ -363,8 +363,10 @@ static char *groups[][8] = {   /* group 0 is group 3 for %Ev set */
 /* zero here means invalid.  If first entry starts with '*', use st(i) */
 /* no assumed %EFs here.  Indexed by RM(modrm())                       */
 static char *f0[]     = { 0, 0, 0, 0, 0, 0, 0, 0};
+static char *fop_8[]  = { "*fld st,%GF" };
 static char *fop_9[]  = { "*fxch st,%GF" };
 static char *fop_10[] = { "fnop", 0, 0, 0, 0, 0, 0, 0 };
+static char *fop_11[]  = { "*fst st,%GF" };
 static char *fop_12[] = { "fchs", "fabs", 0, 0, "ftst", "fxam", 0, 0 };
 static char *fop_13[] = { "fld1", "fldl2t", "fldl2e", "fldpi",
                    "fldlg2", "fldln2", "fldz", 0 };
@@ -373,20 +375,24 @@ static char *fop_14[] = { "f2xm1", "fyl2x", "fptan", "fpatan",
 static char *fop_15[] = { "fprem", "fyl2xp1", "fsqrt", "fsincos",
                    "frndint", "fscale", "fsin", "fcos" };
 static char *fop_21[] = { 0, "fucompp", 0, 0, 0, 0, 0, 0 };
-static char *fop_28[] = { 0, 0, "fclex", "finit", 0, 0, 0, 0 };
+static char *fop_28[] = { "[fneni]", "[fndis]", "fclex", "finit", "[fnsetpm]", "[frstpm]", 0, 0 };
 static char *fop_32[] = { "*fadd %GF,st" };
 static char *fop_33[] = { "*fmul %GF,st" };
+static char *fop_34[] = { "*fcom %GF,st" };
+static char *fop_35[] = { "*fcomp %GF,st" };
 static char *fop_36[] = { "*fsubr %GF,st" };
 static char *fop_37[] = { "*fsub %GF,st" };
 static char *fop_38[] = { "*fdivr %GF,st" };
 static char *fop_39[] = { "*fdiv %GF,st" };
 static char *fop_40[] = { "*ffree %GF" };
+static char *fop_41[] = { "*fxch %GF" };
 static char *fop_42[] = { "*fst %GF" };
 static char *fop_43[] = { "*fstp %GF" };
 static char *fop_44[] = { "*fucom %GF" };
 static char *fop_45[] = { "*fucomp %GF" };
 static char *fop_48[] = { "*faddp %GF,st" };
 static char *fop_49[] = { "*fmulp %GF,st" };
+static char *fop_50[] = { "*fcomp %GF,st" };
 static char *fop_51[] = { 0, "fcompp", 0, 0, 0, 0, 0, 0 };
 static char *fop_52[] = { "*fsubrp %GF,st" };
 static char *fop_53[] = { "*fsubp %GF,st" };
@@ -396,12 +402,12 @@ static char *fop_60[] = { "fstsw ax", 0, 0, 0, 0, 0, 0, 0 };
 
 static char **fspecial[] = { /* 0=use st(i), 1=undefined 0 in fop_* means undefined */
   0, 0, 0, 0, 0, 0, 0, 0,
-  0, fop_9, fop_10, 0, fop_12, fop_13, fop_14, fop_15,
+  fop_8, fop_9, fop_10, fop_11, fop_12, fop_13, fop_14, fop_15,
   f0, f0, f0, f0, f0, fop_21, f0, f0,
   f0, f0, f0, f0, fop_28, f0, f0, f0,
-  fop_32, fop_33, f0, f0, fop_36, fop_37, fop_38, fop_39,
-  fop_40, f0, fop_42, fop_43, fop_44, fop_45, f0, f0,
-  fop_48, fop_49, f0, fop_51, fop_52, fop_53, fop_54, fop_55,
+  fop_32, fop_33, fop_34, fop_35, fop_36, fop_37, fop_38, fop_39,
+  fop_40, fop_41, fop_42, fop_43, fop_44, fop_45, f0, f0,
+  fop_48, fop_49, fop_50, fop_51, fop_52, fop_53, fop_54, fop_55,
   f0, f0, f0, f0, fop_60, f0, f0, f0,
 };
 

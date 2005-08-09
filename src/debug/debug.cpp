@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.65 2005-07-30 10:13:24 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.66 2005-08-09 09:49:06 c2woody Exp $ */
 
 #include <string.h>
 #include <list>
@@ -40,6 +40,7 @@
 #include "shell.h"
 #include "programs.h"
 #include "debug_inc.h"
+#include "../cpu/lazyflags.h"
 
 #ifdef WIN32
 void WIN32_Console();
@@ -58,6 +59,8 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
 static void LogGDT(void);
 static void LogLDT(void);
 static void LogIDT(void);
+static void LogPages(char* selname);
+static void LogCPUInfo(void);
 static void OutputVecTable(char* filename);
 static void DrawVariables(void);
 
@@ -78,6 +81,7 @@ bool	logHeavy	= false;
 static FILE*	cpuLogFile		= 0;
 static bool		cpuLog			= false;
 static int		cpuLogCounter	= 0;
+static int		cpuLogType		= 1;	// log detail
 #endif
 
 
@@ -89,7 +93,7 @@ static struct  {
 static char curSelectorName[3] = { 0,0,0 };
 
 static Segment oldsegs[6];
-static Bitu oldflags;
+static Bitu oldflags,oldcpucpl;
 DBGBlock dbg;
 static Bitu input_count;
 Bitu cycle_count;
@@ -135,7 +139,7 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
 	if (seg==SegValue(cs)) return SegPhys(cs)+offset;
-	if (cpu.pmode) {
+	if (cpu.pmode && !(reg_flags & FLAG_VM)) {
 		Descriptor desc;
 		if (cpu.gdt.GetDescriptor(seg,desc)) return PhysMakeProt(seg,offset);
 	}
@@ -148,15 +152,43 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	Bitu sel;
 	Descriptor desc;
 
-	if (strstr(selname,"cs") || strstr(selname,"CS")) sel = SegValue(cs); else
-	if (strstr(selname,"ds") || strstr(selname,"DS")) sel = SegValue(ds); else 
-	if (strstr(selname,"es") || strstr(selname,"ES")) sel = SegValue(es); else
-	if (strstr(selname,"fs") || strstr(selname,"FS")) sel = SegValue(fs); else
-	if (strstr(selname,"gs") || strstr(selname,"GS")) sel = SegValue(gs); else
-	if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss); else
-	sel = GetHexValue(selname,selname);
-	// FIXME: Call Gate Descriptors
+	if (strstr(selname,"cs") || strstr(selname,"CS")) sel = SegValue(cs);
+	else if (strstr(selname,"ds") || strstr(selname,"DS")) sel = SegValue(ds);
+	else if (strstr(selname,"es") || strstr(selname,"ES")) sel = SegValue(es);
+	else if (strstr(selname,"fs") || strstr(selname,"FS")) sel = SegValue(fs);
+	else if (strstr(selname,"gs") || strstr(selname,"GS")) sel = SegValue(gs);
+	else if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss);
+	else {
+		sel = GetHexValue(selname,selname);
+		if (*selname==0) selname="  ";
+	}
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
+		switch (desc.Type()) {
+			case DESC_TASK_GATE:
+				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out2,"    TaskGate   dpl : %01X %1X",desc.saved.gate.dpl,desc.saved.gate.p);
+				return true;
+			case DESC_LDT:
+			case DESC_286_TSS_A:
+			case DESC_286_TSS_B:
+			case DESC_386_TSS_A:
+			case DESC_386_TSS_B:
+				sprintf(out1,"%s: b:%08X type:%02X pag",selname,desc.GetBase(),desc.saved.seg.type);
+				sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.g);
+				return true;
+			case DESC_286_CALL_GATE:
+			case DESC_386_CALL_GATE:
+				sprintf(out1,"%s: s:%08X type:%02X p params: %02X",selname,desc.GetSelector(),desc.saved.gate.type,desc.saved.gate.paramcount);
+				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				return true;
+			case DESC_286_INT_GATE:
+			case DESC_286_TRAP_GATE:
+			case DESC_386_INT_GATE:
+			case DESC_386_TRAP_GATE:
+				sprintf(out1,"%s: s:%08X type:%02X p",selname,desc.GetSelector(),desc.saved.gate.type);
+				sprintf(out2,"    o:%08X dpl : %01X %1X",desc.GetOffset(),desc.saved.gate.dpl,desc.saved.gate.p);
+				return true;
+		}
 		sprintf(out1,"%s: b:%08X type:%02X parbg",selname,desc.GetBase(),desc.saved.seg.type);
 		sprintf(out2,"    l:%08X dpl : %01X %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
 		return true;
@@ -164,7 +196,6 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 		strcpy(out1,"                                     ");
 		strcpy(out2,"                                     ");
 	}
-	//out1[0] = out2[0] = 0;
 	return false;
 };
 
@@ -607,15 +638,16 @@ static void DrawData(void) {
 	/* Data win */	
 	for (int y=0; y<8; y++) {
 		// Adress
-		mvwprintw (dbg.win_data,1+y,0,"%04X:%04X ",dataSeg,add);
+		if (add<0x10000) mvwprintw (dbg.win_data,1+y,0,"%04X:%04X     ",dataSeg,add);
+		else mvwprintw (dbg.win_data,1+y,0,"%04X:%08X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
 			if (!(paging.tlb.handler[address >> 12]->flags & PFLAG_INIT)) {
 				ch = mem_readb(address);
 			} else ch = 0;
-			mvwprintw (dbg.win_data,1+y,11+3*x,"%02X",ch);
+			mvwprintw (dbg.win_data,1+y,14+3*x,"%02X",ch);
 			if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
-			mvwprintw (dbg.win_data,1+y,60+x,"%c",ch);
+			mvwprintw (dbg.win_data,1+y,63+x,"%c",ch);
 			add++;
 		};
 	}	
@@ -665,7 +697,13 @@ static void DrawRegisters(void) {
 	SetColor((reg_flags ^ oldflags)&FLAG_TF);
 	mvwprintw (dbg.win_reg,1,77,"%01X",GETFLAG(TF) ? 1:0);
 
+	SetColor((reg_flags ^ oldflags)&FLAG_IOPL);
+	mvwprintw (dbg.win_reg,2,72,"%01X",GETFLAG(IOPL)>>12);
 	oldflags=reg_flags;
+
+	SetColor(cpu.cpl ^ oldcpucpl);
+	mvwprintw (dbg.win_reg,2,78,"%01X",cpu.cpl);
+	oldcpucpl=cpu.cpl;
 
 	if (cpu.pmode) {
 		if (reg_flags & FLAG_VM) mvwprintw(dbg.win_reg,0,76,"VM86");
@@ -847,12 +885,13 @@ bool ChangeRegister(char* str)
 	if (strstr(hex,"SS")==hex) { hex+=2; SegSet16(ss,(Bit16u)GetHexValue(hex,hex)); } else
 	if (strstr(hex,"AF")==hex) { hex+=2; SETFLAGBIT(AF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"CF")==hex) { hex+=2; SETFLAGBIT(CF,GetHexValue(hex,hex)); } else
-	if (strstr(hex,"DF")==hex) { hex+=2; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
+	if (strstr(hex,"DF")==hex) { hex+=2; SETFLAGBIT(DF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"IF")==hex) { hex+=2; SETFLAGBIT(IF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"OF")==hex) { hex+=3; SETFLAGBIT(OF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"ZF")==hex) { hex+=3; SETFLAGBIT(ZF,GetHexValue(hex,hex)); } else
 	if (strstr(hex,"PF")==hex) { hex+=3; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
-								{ return false; };
+	if (strstr(hex,"SF")==hex) { hex+=3; SETFLAGBIT(SF,GetHexValue(hex,hex)); } else
+	{ return false; };
 	return true;
 };
 
@@ -1046,10 +1085,51 @@ bool ParseCommand(char* str)
 //		DEBUG_Log_Loop(GetHexValue(found,found));
 		cpuLogFile = fopen("LOGCPU.TXT","wt");
 		if (!cpuLogFile) {
-			DEBUG_ShowMsg("DEBUG: Logfile couldnt be created.\n");
+			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
 			return false;
 		}
 		cpuLog = true;
+		cpuLogType = 1;
+		cpuLogCounter = GetHexValue(found,found);
+
+		debugging=false;
+		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);						
+		ignoreAddressOnce = SegPhys(cs)+reg_eip;
+		DOSBOX_SetNormalLoop();	
+		return true;
+	}
+
+	found = strstr(str,"LOGS ");
+	if (found) { // Create Cpu log file
+		found+=4;
+		DEBUG_ShowMsg("DEBUG: Starting log\n");
+		cpuLogFile = fopen("LOGCPU.TXT","wt");
+		if (!cpuLogFile) {
+			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
+			return false;
+		}
+		cpuLog = true;
+		cpuLogType = 0;
+		cpuLogCounter = GetHexValue(found,found);
+
+		debugging=false;
+		CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);						
+		ignoreAddressOnce = SegPhys(cs)+reg_eip;
+		DOSBOX_SetNormalLoop();	
+		return true;
+	}
+
+	found = strstr(str,"LOGL ");
+	if (found) { // Create Cpu log file
+		found+=4;
+		DEBUG_ShowMsg("DEBUG: Starting log\n");
+		cpuLogFile = fopen("LOGCPU.TXT","wt");
+		if (!cpuLogFile) {
+			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
+			return false;
+		}
+		cpuLog = true;
+		cpuLogType = 2;
 		cpuLogCounter = GetHexValue(found,found);
 
 		debugging=false;
@@ -1107,6 +1187,18 @@ bool ParseCommand(char* str)
 		LogIDT();
 	}
 
+	found = strstr(str,"PAGING");
+	if (found) {
+		found += 6;
+		while (found[0]==' ') found++;
+		LogPages(found);
+	}
+
+	found = strstr(str,"CPU");
+	if (found) {
+		LogCPUInfo();
+	}
+
 	found = strstr(str,"INTVEC ");
 	if (found)
 	{
@@ -1130,15 +1222,6 @@ bool ParseCommand(char* str)
 			return true;
 		}
 	}
-
-	/*	found = strstr(str,"EXCEPTION ");
-	if (found) {
-		found += 9;
-		Bit8u num = GetHexValue(found,found);		
-		DPMI_CreateException(num,0xDD);
-		DEBUG_ShowMsg("Exception %04X\n",num);
-	};
-*/	
 
 #if C_HEAVY_DEBUG
 	found = strstr(str,"HEAVYLOG");
@@ -1176,6 +1259,7 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("INT [nr] / INTT [nr]      - Execute / Trace into interrupt.\n");
 #if C_HEAVY_DEBUG
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
+		DEBUG_ShowMsg("LOGS/LOGL [num]           - Write short/long cpu log file.\n");
 		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu when dosbox exits.\n");
 #endif
 		DEBUG_ShowMsg("SR [reg] [value]          - Set register value.\n");
@@ -1190,6 +1274,12 @@ bool ParseCommand(char* str)
 
 		DEBUG_ShowMsg("INTVEC [filename]         - Writes interrupt vector table to file.\n");
 		DEBUG_ShowMsg("INTHAND [intNum]          - Set code view to interrupt handler.\n");
+
+		DEBUG_ShowMsg("CPU                       - Display CPU status information.\n");
+		DEBUG_ShowMsg("GDT                       - Lists descriptors of the GDT.\n");
+		DEBUG_ShowMsg("LDT                       - Lists descriptors of the LDT.\n");
+		DEBUG_ShowMsg("IDT                       - Lists descriptors of the IDT.\n");
+		DEBUG_ShowMsg("PAGING [page]             - Display content of page table.\n");
 
 		DEBUG_ShowMsg("H                         - Help\n");
 		
@@ -1295,65 +1385,65 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 	// Must be a jump
 	if (instu[0] == 'J')
 	{
-		bool jmp = 0;
+		bool jmp = false;
 		switch (instu[1]) {
-		case 'A' :	{	jmp = !GETFLAGBOOL(CF) && !GETFLAGBOOL(ZF); // JA
+		case 'A' :	{	jmp = (get_CF()?false:true) && (get_ZF()?false:true); // JA
 					}	break;
 		case 'B' :	{	if (instu[2] == 'E') {
-							jmp = GETFLAGBOOL(CF) && GETFLAGBOOL(ZF); // JBE
+							jmp = (get_CF()?true:false) && (get_ZF()?true:false); // JBE
 						} else {
-							jmp = GETFLAGBOOL(CF); // JB
+							jmp = get_CF()?true:false; // JB
 						}
 					}	break;
 		case 'C' :	{	if (instu[2] == 'X') {
 							jmp = reg_cx == 0; // JCXZ
 						} else {
-							jmp = GETFLAGBOOL(CF); // JC
+							jmp = get_CF()?true:false; // JC
 						}
 					}	break;
-		case 'E' :	{	jmp = GETFLAGBOOL(ZF); // JE
+		case 'E' :	{	jmp = get_ZF()?true:false; // JE
 					}	break;
 		case 'G' :	{	if (instu[2] == 'E') {
-							jmp = !GETFLAGBOOL(SF); // JGE
+							jmp = get_SF()?false:true; // JGE
 						} else {
-							jmp = !GETFLAGBOOL(SF) && !GETFLAGBOOL(ZF); // JG
+							jmp = (get_SF()?false:true) && (get_ZF()?false:true); // JG
 						}
 					}	break;
 		case 'L' :	{	if (instu[2] == 'E') {
-							jmp = GETFLAGBOOL(SF) || GETFLAGBOOL(ZF); // JLE
+							jmp = (get_SF()?true:false) || (get_ZF()?true:false) ; // JLE
 						} else {
-							jmp = GETFLAGBOOL(SF); // JL
+							jmp = get_SF()?true:false; // JL
 						}
 					}	break;
 		case 'M' :	{	jmp = true; // JMP
 					}	break;
 		case 'N' :	{	switch (instu[2]) {
 						case 'B' :	
-						case 'C' :	{	jmp = !GETFLAGBOOL(CF);	// JNB / JNC
+						case 'C' :	{	jmp = get_CF()?false:true;	// JNB / JNC
 									}	break;
-						case 'E' :	{	jmp = !GETFLAGBOOL(ZF);	// JNE
+						case 'E' :	{	jmp = get_ZF()?false:true;	// JNE
 									}	break;
-						case 'O' :	{	jmp = !GETFLAGBOOL(OF);	// JNO
+						case 'O' :	{	jmp = get_OF()?false:true;	// JNO
 									}	break;
-						case 'P' :	{	jmp = !GETFLAGBOOL(PF);	// JNP
+						case 'P' :	{	jmp = get_PF()?false:true;	// JNP
 									}	break;
-						case 'S' :	{	jmp = !GETFLAGBOOL(SF);	// JNS
+						case 'S' :	{	jmp = get_SF()?false:true;	// JNS
 									}	break;
-						case 'Z' :	{	jmp = !GETFLAGBOOL(ZF);	// JNZ
+						case 'Z' :	{	jmp = get_ZF()?false:true;	// JNZ
 									}	break;
 						}
 					}	break;
-		case 'O' :	{	jmp = GETFLAGBOOL(OF); // JMP
+		case 'O' :	{	jmp = get_OF()?true:false; // JMP
 					}	break;
 		case 'P' :	{	if (instu[2] == 'O') {
-							jmp = !GETFLAGBOOL(PF); // JPO
+							jmp = get_PF()?false:true; // JPO
 						} else {
-							jmp = GETFLAGBOOL(SF); // JP / JPE
+							jmp = get_SF()?true:false; // JP / JPE
 						}
 					}	break;
-		case 'S' :	{	jmp = GETFLAGBOOL(SF); // JS
+		case 'S' :	{	jmp = get_SF()?true:false; // JS
 					}	break;
-		case 'Z' :	{	jmp = GETFLAGBOOL(ZF); // JZ
+		case 'Z' :	{	jmp = get_ZF()?true:false; // JZ
 					}	break;
 		}
 		if (jmp) {
@@ -1426,19 +1516,24 @@ Bit32u DEBUG_CheckKeys(void) {
 			ret=(*cpudecoder)();
 			break;
 		case 'D':	dataSeg = SegValue(ds);
-					dataOfs = reg_si;
+					if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_esi;
+					else dataOfs = reg_si;
 					break;
 		case 'E':	dataSeg = SegValue(es);
-					dataOfs = reg_di;
+					if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_edi;
+					else dataOfs = reg_di;
 					break;
 		case 'X':	dataSeg = SegValue(ds);
-					dataOfs = reg_dx;
+					if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_edx;
+					else dataOfs = reg_dx;
 					break;
 		case 'B':	dataSeg = SegValue(es);
-					dataOfs = reg_bx;
+					if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_ebx;
+					else dataOfs = reg_bx;
 					break;
 		case 'S':	dataSeg	= SegValue(ss);
-					dataOfs	= reg_sp;
+					if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_esp;
+					else dataOfs = reg_sp;
 					break;
 
 		case 'R' :	dataOfs -= 16;	break;
@@ -1611,6 +1706,68 @@ static void LogIDT(void)
 	};
 };
 
+void LogPages(char* selname)
+{
+	char out1[512];
+	if (paging.enabled) {
+		Bitu sel = GetHexValue(selname,selname);
+		if ((sel==0x00) && ((*selname==0) || (*selname=='*'))) {
+			for (int i=0; i<0xfffff; i++) {
+				Bitu table_addr=(paging.base.page<<12)+(i >> 10)*4;
+				X86PageEntry table;
+				table.load=phys_readd(table_addr);
+				if (table.block.p) {
+					X86PageEntry entry;
+					Bitu entry_addr=(table.block.base<<12)+(i & 0x3ff)*4;
+					entry.load=phys_readd(entry_addr);
+					if (entry.block.p) {
+						sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x",i,entry.block.base,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+						LOG(LOG_MISC,LOG_ERROR)(out1);
+					}
+				}
+			}
+		} else {
+			Bitu table_addr=(paging.base.page<<12)+(sel >> 10)*4;
+			X86PageEntry table;
+			table.load=phys_readd(table_addr);
+			if (table.block.p) {
+				X86PageEntry entry;
+				Bitu entry_addr=(table.block.base<<12)+(sel & 0x3ff)*4;
+				entry.load=phys_readd(entry_addr);
+				sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",sel,entry.block.base,entry.block.p,table.block.p,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+				LOG(LOG_MISC,LOG_ERROR)(out1);
+			} else {
+				sprintf(out1,"pagetable %03X not present, flags [puw] %x::%x::%x",(sel >> 10),table.block.p,table.block.us,table.block.wr);
+				LOG(LOG_MISC,LOG_ERROR)(out1);
+			}
+		}
+	}
+};
+
+static void LogCPUInfo(void)
+{
+	char out1[512];
+	sprintf(out1,"cr0:%08X cr2:%08X cr3:%08X  cpl=%x",cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+	sprintf(out1,"eflags:%08X [vm=%x iopl=%x nt=%x]",reg_flags,GETFLAG(VM)>>17,GETFLAG(IOPL)>>12,GETFLAG(NT)>>14);
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+	sprintf(out1,"GDT base=%08X limit=%08X",cpu.gdt.GetBase(),cpu.gdt.GetLimit());
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+	sprintf(out1,"IDT base=%08X limit=%08X",cpu.idt.GetBase(),cpu.idt.GetLimit());
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+
+	Bitu sel;
+	Descriptor desc;
+	CPU_STR(sel);
+	cpu.gdt.GetDescriptor(sel,desc);
+	sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+	sel=cpu.gdt.SLDT();
+	cpu.gdt.GetDescriptor(sel,desc);
+	sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+	LOG(LOG_MISC,LOG_ERROR)(out1);
+};
+
 static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer) 
 {
 	static char empty[15] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
@@ -1622,13 +1779,28 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 	char* res = empty;
 	if (showExtend) {
 		res = AnalyzeInstruction(dline,false);
-		if (!res || (strlen(res)==0)) res = empty;
+		len = strlen(dline);
+		if (cpuLogType>=2) {
+			Bitu reslen=strlen(res);
+			if (reslen<24) for (Bitu i=0; i<24-reslen; i++) strcat(res," ");
+		} else if (!res || (strlen(res)==0)) res = empty;
 	};
 	
-	if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");	
 	// Get register values
-	sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
-		GETFLAGBOOL(CF),GETFLAGBOOL(ZF),GETFLAGBOOL(SF),GETFLAGBOOL(OF),GETFLAGBOOL(AF),GETFLAGBOOL(PF),GETFLAGBOOL(IF));
+	if (cpuLogType==1) {
+		if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");
+		sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF));
+	} else if (cpuLogType==0) {
+		if (len<27) for (Bitu i=0; i<27-len; i++) strcat(dline," ");
+		sprintf(buffer,"%04X:%04X %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X SS:%04X C%01X Z%01X S%01X O%01X I%01X\n",segValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(ss),
+			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,GETFLAGBOOL(IF));
+	} else {
+		if (len<34) for (Bitu i=0; i<34-len; i++) strcat(dline," ");
+		res[0]='x';
+		sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF),GETFLAGBOOL(TF),GETFLAGBOOL(VM),reg_flags,cpu.cr0);
+	}
 };
 
 static bool DEBUG_Log_Loop(int count) {
