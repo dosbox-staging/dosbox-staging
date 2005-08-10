@@ -118,7 +118,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 			}
 		}
 		vga.dac.write_index++;
-		vga.dac.read_index = vga.dac.write_index - 1;
+//		vga.dac.read_index = vga.dac.write_index - 1;//disabled as it breaks Wari
 		vga.dac.pel_index=0;
 		break;
 	default:
@@ -141,7 +141,7 @@ static Bitu read_p3c9(Bitu port,Bitu iolen) {
 		ret=vga.dac.rgb[vga.dac.read_index].blue;
 		vga.dac.read_index++;
 		vga.dac.pel_index=0;
-		vga.dac.write_index=vga.dac.read_index+1;
+//		vga.dac.write_index=vga.dac.read_index+1;//disabled as it breaks wari
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
