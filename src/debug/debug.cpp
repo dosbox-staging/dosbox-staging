@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.66 2005-08-09 09:49:06 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.67 2005-08-10 12:22:25 c2woody Exp $ */
 
 #include <string.h>
 #include <list>
@@ -1780,27 +1780,40 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 	if (showExtend) {
 		res = AnalyzeInstruction(dline,false);
 		len = strlen(dline);
+#if C_HEAVY_DEBUG
 		if (cpuLogType>=2) {
 			Bitu reslen=strlen(res);
 			if (reslen<24) for (Bitu i=0; i<24-reslen; i++) strcat(res," ");
-		} else if (!res || (strlen(res)==0)) res = empty;
+		} else
+#endif
+		if (!res || (strlen(res)==0)) res = empty;
 	};
-	
+
 	// Get register values
+#if C_HEAVY_DEBUG
 	if (cpuLogType==1) {
+#endif
 		if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");
 		sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF));
+#if C_HEAVY_DEBUG
 	} else if (cpuLogType==0) {
 		if (len<27) for (Bitu i=0; i<27-len; i++) strcat(dline," ");
 		sprintf(buffer,"%04X:%04X %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X SS:%04X C%01X Z%01X S%01X O%01X I%01X\n",segValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,GETFLAGBOOL(IF));
 	} else {
 		if (len<34) for (Bitu i=0; i<34-len; i++) strcat(dline," ");
-		res[0]='x';
-		sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+		char ibytes[200]="";	char tmpc[200];
+		for (Bitu i=0; i<size; i++) {
+			sprintf(tmpc,"%02X ",mem_readb(start+i));
+			strcat(ibytes,tmpc);
+		}
+		len=strlen(ibytes);
+		if (len<21) for (Bitu i=0; i<21-len; i++) strcat(ibytes," ");
+		sprintf(buffer,"%04X:%08X   %s   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,ibytes,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF),GETFLAGBOOL(TF),GETFLAGBOOL(VM),reg_flags,cpu.cr0);
 	}
+#endif
 };
 
 static bool DEBUG_Log_Loop(int count) {
