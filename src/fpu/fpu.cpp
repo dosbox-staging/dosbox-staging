@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.25 2005-02-22 13:06:05 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.26 2005-08-10 20:36:36 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -43,7 +43,7 @@ typedef PhysPt EAPoint;
 
 #include "fpu_types.h"
 
-struct {
+static struct {
 	FPU_Reg		regs[9];
 	FPU_P_Reg	p_regs[9];
 	FPU_Tag		tags[9];

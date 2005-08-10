@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.17 2005-03-25 11:52:32 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.18 2005-08-10 20:36:36 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -142,7 +142,7 @@ struct IOF_Entry {
 };
 
 #define IOF_QUEUESIZE 16
-struct {
+static struct {
 	Bitu used;
 	IOF_Entry entries[IOF_QUEUESIZE];
 } iof_queue;

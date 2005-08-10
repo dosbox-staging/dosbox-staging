@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.13 2005-07-19 19:45:31 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.14 2005-08-10 20:36:36 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -967,7 +967,7 @@ protected:
 };
 
 
-struct {
+static struct {
 	CCaptionButton *  event_title;
 	CCaptionButton *  bind_title;
 	CCaptionButton *  selected;
