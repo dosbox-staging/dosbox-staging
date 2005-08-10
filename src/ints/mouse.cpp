@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.50 2005-06-02 17:27:27 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.51 2005-08-10 15:35:54 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -526,6 +526,8 @@ void Mouse_NewVideoMode(void)
 	default:
 		mouse.max_y=199;
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
+		// Hide mouse cursor on non supported modi.
+		mouse.shown=-1;
 		break;
 	} 
 	mouse.max_x = 639;
