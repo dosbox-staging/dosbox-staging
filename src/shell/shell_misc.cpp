@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.38 2005-04-21 21:17:46 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.39 2005-08-10 19:53:11 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -226,8 +226,14 @@ void DOS_Shell::InputCommand(char * line) {
 					char mask[DOS_PATHLENGTH];
 					if (completion_start) {
 						strcpy(mask, completion_start);
+						char* dot_pos=strrchr(mask,'.');
+						char* bs_pos=strrchr(mask,'\\');
+						char* fs_pos=strrchr(mask,'/');
+						char* cl_pos=strrchr(mask,':');
 						// not perfect when line already contains wildcards, but works
-						strcat(mask, "*.*");
+						if ((dot_pos-bs_pos>0) && (dot_pos-fs_pos>0) && (dot_pos-cl_pos>0))
+							strcat(mask, "*");
+						else strcat(mask, "*.*");
 					} else {
 						strcpy(mask, "*.*");
 					}

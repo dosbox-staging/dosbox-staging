@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.55 2005-07-20 15:27:20 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.56 2005-08-10 19:53:09 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -712,7 +712,17 @@ void DOS_Shell::CMD_SUBST (char * args) {
 }
 
 void DOS_Shell::CMD_LOADHIGH(char *args){
-	this->ParseLine(args);
+	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
+	Bit8u umb_flag=dos_infoblock.GetUMBChainState();
+	Bit8u old_memstrat=DOS_GetMemAllocStrategy()&0xff;
+	if (umb_start==0x9fff) {
+		if ((umb_flag&1)==0) DOS_LinkUMBsToMemChain(1);
+		DOS_SetMemAllocStrategy(0x80);	// search in UMBs first
+		this->ParseLine(args);
+		Bit8u current_umb_flag=dos_infoblock.GetUMBChainState();
+		if ((current_umb_flag&1)!=(umb_flag&1)) DOS_LinkUMBsToMemChain(umb_flag);
+		DOS_SetMemAllocStrategy(old_memstrat);	// restore strategy
+	} else this->ParseLine(args);
 }
 
 void DOS_Shell::CMD_CHOICE(char * args){
