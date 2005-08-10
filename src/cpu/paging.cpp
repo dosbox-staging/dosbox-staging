@@ -79,7 +79,7 @@ struct PF_Entry {
 };
 
 #define PF_QUEUESIZE 16
-struct {
+static struct {
 	Bitu used;
 	PF_Entry entries[PF_QUEUESIZE];
 } pf_queue;
