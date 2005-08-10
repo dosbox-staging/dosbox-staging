@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.63 2005-05-31 18:38:54 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.64 2005-08-10 16:46:15 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -404,21 +404,20 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 
+	DOS_PSP psp(dos.psp());
 	Bit16u attr = 0;
-	if(DOS_GetFileAttr(name,&attr)){ //DON'T ALLOW directories to be openened
+	Bit8u devnum = DOS_FindDevice((char *)name);
+	bool device = (devnum != DOS_DEVICES);
+	if(!device && DOS_GetFileAttr(name,&attr)) {
+	//DON'T ALLOW directories to be openened.(skip test if file is device).
 		if((attr & DOS_ATTR_DIRECTORY) || (attr & DOS_ATTR_VOLUME)){
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			return false;
 		}
 	}
-      
-	DOS_PSP psp(dos.psp());
-	Bit8u devnum=DOS_DEVICES;
-	devnum=DOS_FindDevice((char *)name);
-	bool device=(devnum!=DOS_DEVICES);
+
 	char fullname[DOS_PATHLENGTH];Bit8u drive;Bit8u i;
-	
-		/* First check if the name is correct */
+	/* First check if the name is correct */
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
 	Bit8u handle=255;		
 	/* Check for a free file handle */
