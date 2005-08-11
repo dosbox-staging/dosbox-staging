@@ -61,6 +61,7 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 	switch (vga.config.write_mode) {
 	case 0x00:
 		// Write Mode 0: In this mode, the host data is first rotated as per the Rotate Count field, then the Enable Set/Reset mechanism selects data from this or the Set/Reset field. Then the selected Logical Operation is performed on the resulting data and the data in the latch register. Then the Bit Mask field is used to select which bits come from the resulting data and which come from the latch register. Finally, only the bit planes enabled by the Memory Plane Write Enable field are written to memory. 
+		val=((val >> vga.config.data_rotate) | (val << (8-vga.config.data_rotate)));
 		full=ExpandTable[val];
 		full=(full & vga.config.full_not_enable_set_reset) | vga.config.full_enable_and_set_reset; 
 		full=RasterOp(full,vga.config.full_bit_mask);
@@ -84,7 +85,6 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 }
 
 static void VGA_GFX_16_WriteHandler(PhysPt start,Bit8u val) {
-	val=((val >> vga.config.data_rotate) | (val << (8-vga.config.data_rotate)));
 	Bit32u data=ModeOperation(val);
 	/* Update video memory and the pixel buffer */
 	VGA_Latch pixels;
