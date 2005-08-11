@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.20 2005-07-20 12:00:45 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.21 2005-08-11 18:56:57 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -51,7 +51,7 @@ static Bit8u exe_block[]={
 static std::vector<PROGRAMS_Main*> internal_progs;
 
 void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main) {
-	Bit8u * comdata=(Bit8u *)malloc(128);
+	Bit8u * comdata=(Bit8u *)malloc(32); //MEM LEAK
 	memcpy(comdata,&exe_block,sizeof(exe_block));
 	comdata[CB_POS]=call_program&0xff;
 	comdata[CB_POS+1]=(call_program>>8)&0xff;
