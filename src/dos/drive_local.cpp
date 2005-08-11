@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.59 2005-07-15 15:23:22 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.60 2005-08-11 18:57:48 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -175,20 +175,17 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
 	if (sAttr == DOS_ATTR_VOLUME) {
 		if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
-			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
-			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
-			return true;
+//			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+//			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
+//			return true;
+			DOS_SetError(DOSERR_NO_MORE_FILES);
+			return false;
 		}
 		dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 		return true;
 	} else if ((sAttr & DOS_ATTR_VOLUME)  && (*_dir == 0) && !fcb_findfirst) { 
 	//should check for a valid leading directory instead of 0
 	//exists==true if the volume label matches the searchmask and the path is valid
-		if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
-			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
-			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
-			return true;
-		}
 		if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
 			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 			return true;

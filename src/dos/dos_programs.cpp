@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.39 2005-08-08 13:33:45 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.40 2005-08-11 18:57:48 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -191,6 +191,16 @@ public:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		/* check if volume label is given and don't allow it to updated in the future */
 		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),false);
+		/* For hard drives set the label to DRIVELETTER_Drive.
+		 * For floppy drives set the label to DRIVELETTER_Floppy.
+		 * This way every drive except cdroms should get a label.*/
+		else if(type == "dir") { 
+			label = drive; label += "_DRIVE";
+			newdrive->dirCache.SetLabel(label.c_str(),true);
+		} else if(type == "floppy") {
+			label = drive; label += "_FLOPPY";
+			newdrive->dirCache.SetLabel(label.c_str(),true);
+		}
 		return;
 showusage:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"));

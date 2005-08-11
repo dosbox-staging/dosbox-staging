@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.8 2005-07-19 19:45:31 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.9 2005-08-11 18:57:48 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -265,11 +265,23 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst)
 	Bit8u attr;
 	char pattern[ISO_MAXPATHNAME];
 	dta.GetSearchParams(attr, pattern);
-	if ((attr & DOS_ATTR_VOLUME) && ((*dir == 0) || fcb_findfirst)) {
-		// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir
-		dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
-		return true;
+   
+	if (attr == DOS_ATTR_VOLUME) {
+		if (strlen(discLabel) != 0) {
+			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+			return true;
+		} else {
+			DOS_SetError(DOSERR_NO_MORE_FILES);		
+			return false;
+		}
+	} else if ((attr & DOS_ATTR_VOLUME) && (*dir == 0) && !fcb_findfirst) {
+		if (WildFileCmp(discLabel,pattern)) {
+			// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir and if it matches the searchstring
+			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+			return true;
+		}
 	}
+
 	return FindNext(dta);
 }
 
