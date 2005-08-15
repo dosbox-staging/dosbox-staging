@@ -331,8 +331,8 @@
 				case 0x05:					/* MOV Ew,GS */
 					val=SegValue(gs);break;
 				default:
-					val=0;
-					E_Exit("CPU:8c:Illegal RM Byte");
+					LOG(LOG_CPU,LOG_ERROR)("CPU:8c:Illegal RM Byte");
+					goto illegal_opcode;
 				}
 				if (rm >= 0xc0 ) {GetEArd;*eard=val;}
 				else {GetEAa;SaveMw(eaa,val);}
@@ -389,6 +389,12 @@
 			Bit32u newip=Fetchd();Bit16u newcs=Fetchw();
 			FillFlags();
 			CPU_CALL(true,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Trap_Run;
+				return CBRET_NONE;
+			}
+#endif
 			continue;
 		}
 	CASE_D(0x9c)												/* PUSHFD */
@@ -581,6 +587,12 @@
 			Bit16u newcs=Fetchw();
 			FillFlags();
 			CPU_JMP(true,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Trap_Run;
+				return CBRET_NONE;
+			}
+#endif
 			continue;
 		}
 	CASE_D(0xeb)												/* JMP Jb */
@@ -657,11 +669,18 @@
 				continue;
 			case 0x03:											/* CALL FAR Ed */
 				{
+					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
 					FillFlags();
 					CPU_CALL(true,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+					if (GETFLAG(TF)) {	
+						cpudecoder=CPU_Core_Normal_Trap_Run;
+						return CBRET_NONE;
+					}
+#endif
 					continue;
 				}
 			case 0x04:											/* JMP NEAR Ed */	
@@ -670,11 +689,18 @@
 				continue;
 			case 0x05:											/* JMP FAR Ed */	
 				{
+					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
 					Bit32u newip=LoadMd(eaa);
 					Bit16u newcs=LoadMw(eaa+4);
 					FillFlags();
 					CPU_JMP(true,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+					if (GETFLAG(TF)) {	
+						cpudecoder=CPU_Core_Normal_Trap_Run;
+						return CBRET_NONE;
+					}
+#endif
 					continue;
 				}
 				break;

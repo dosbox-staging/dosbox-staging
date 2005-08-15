@@ -45,7 +45,7 @@ enum {
 	D_SAHF,D_LAHF,
 	D_CPUID,
 	D_HLT,D_CLTS,
-	D_LOCK,
+	D_LOCK,D_ICEBP,
 	L_ERROR,
 };
 

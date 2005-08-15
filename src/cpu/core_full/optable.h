@@ -171,7 +171,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGw		,O_OUTb		,0		,REGI_DX},{L_REGw	,O_OUTw		,0		,REGI_DX},
 
 /* 0xf0 - 0xf7 */
-{D_LOCK		,0			,0		,0		},{0		,0			,0		,0		},
+{D_LOCK		,0			,0		,0		},{D_ICEBP	,0			,0		,0		},
 {L_PREREPNE	,0			,0		,0		},{L_PREREP	,0			,0		,0		},
 {D_HLT		,0			,0		,0		},{D_CMC	,0			,0		,0		},
 {L_MODRM	,8			,0		,M_GRP	},{L_MODRM	,9			,0		,M_GRP	},
@@ -526,7 +526,7 @@ static OpCode OpCodeTable[1024]={
 {L_REGw		,O_OUTb		,0		,REGI_DX},{L_REGw	,O_OUTd		,0		,REGI_DX},
 
 /* 0x2f0 - 0x2f7 */
-{D_LOCK			,0			,0		,0		},{0		,0			,0		,0		},
+{D_LOCK		,0			,0		,0		},{D_ICEBP	,0			,0		,0		},
 {L_PREREPNE	,0			,0		,0		},{L_PREREP	,0			,0		,0		},
 {0			,0			,0		,0		},{D_CMC	,0			,0		,0		},
 {L_MODRM	,8			,0		,M_GRP	},{L_MODRM	,0xa		,0		,M_GRP	},

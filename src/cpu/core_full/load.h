@@ -472,12 +472,18 @@ l_M_Ed:
 		CPU_CPUID();
 		goto nextopcode;
 	case D_HLT:
+		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 		FillFlags();
 		CPU_HLT(GetIP());
 		return CBRET_NONE;
 	case D_CLTS:
-		//TODO Really clear it sometime
+		if (cpu.pmode && cpu.cpl) goto illegalopcode;
+		cpu.cr0&=(~CR0_TASKSWITCH);
 		goto nextopcode;
+	case D_ICEBP:
+		FillFlags();
+		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
+		continue;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		goto illegalopcode;

@@ -18,6 +18,7 @@
 
 	CASE_0F_W(0x00)												/* GRP 6 Exxx */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			GetRM;Bitu which=(rm>>3)&7;
 			switch (which) {
 			case 0x00:	/* SLDT */
@@ -37,10 +38,20 @@
 					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
 					else {GetEAa;loadval=LoadMw(eaa);}
 					switch (which) {
-					case 0x02:CPU_LLDT(loadval);break;
-					case 0x03:CPU_LTR(loadval);break;
-					case 0x04:CPU_VERR(loadval);break;
-					case 0x05:CPU_VERW(loadval);break;
+					case 0x02:
+						if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+						if (CPU_LLDT(loadval)) RUNEXCEPTION();
+						break;
+					case 0x03:
+						if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+						if (CPU_LTR(loadval)) RUNEXCEPTION();
+						break;
+					case 0x04:
+						CPU_VERR(loadval);
+						break;
+					case 0x05:
+						CPU_VERW(loadval);
+						break;
 					}
 				}
 				break;
@@ -66,9 +77,11 @@
 					SaveMd(eaa+2,base);
 					break;
 				case 0x02:										/* LGDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					CPU_LGDT(LoadMw(eaa),LoadMd(eaa+2) & 0xFFFFFF);
 					break;
 				case 0x03:										/* LIDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2) & 0xFFFFFF);
 					break;
 				case 0x04:										/* SMSW */
@@ -83,6 +96,12 @@
 			} else {
 				GetEArw;Bitu limit;
 				switch (which) {
+				case 0x02:										/* LGDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+					goto illegal_opcode;
+				case 0x03:										/* LIDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+					goto illegal_opcode;
 				case 0x04:										/* SMSW */
 					CPU_SMSW(limit);
 					*earw=limit;
@@ -98,6 +117,7 @@
 		break;
 	CASE_0F_W(0x02)												/* LAR Gw,Ew */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;Bitu ar=*rmrw;
 			if (rm >= 0xc0) {
@@ -110,6 +130,7 @@
 		break;
 	CASE_0F_W(0x03)												/* LSL Gw,Ew */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;Bitu limit=*rmrw;
 			if (rm >= 0xc0) {
@@ -121,54 +142,59 @@
 		}
 		break;
 	CASE_0F_B(0x06)												/* CLTS */
+		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+		cpu.cr0&=(~CR0_TASKSWITCH);
 		break;
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			if (rm >= 0xc0 ) {
-				GetEArd;
-				Bit32u crx_value;
-				if (CPU_READ_CRX(which,crx_value)) RUNEXCEPTION();
-				*eard=crx_value;
-			} else {
-				GetEAa;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
 				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR%d with non-register",which);
 			}
+			GetEArd;
+			Bit32u crx_value;
+			if (CPU_READ_CRX(which,crx_value)) RUNEXCEPTION();
+			*eard=crx_value;
 		}
 		break;
 	CASE_0F_B(0x21)												/* MOV Rd,DRx */
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			if (rm >= 0xc0 ) {
-				GetEArd;
-			} else {
-				GetEAa;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
 				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,DR% with non-register",which);
 			}
+			GetEArd;
+			Bit32u drx_value;
+			if (CPU_READ_DRX(which,drx_value)) RUNEXCEPTION();
+			*eard=drx_value;
 		}
 		break;
 	CASE_0F_B(0x22)												/* MOV CRx,Rd */
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			if (rm >= 0xc0 ) {
-				GetEArd;
-				if (CPU_WRITE_CRX(which,*eard)) RUNEXCEPTION();
-			} else 	goto illegal_opcode;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,CR% with non-register",which);
+			}
+			GetEArd;
+			if (CPU_WRITE_CRX(which,*eard)) RUNEXCEPTION();
 		}
 		break;
 	CASE_0F_B(0x23)												/* MOV DRx,Rd */
 		{
 			GetRM;
 			Bitu which=(rm >> 3) & 7;
-			if (rm >= 0xc0 ) {
-				GetEArd;
-			} else {
-				GetEAa;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
 				LOG(LOG_CPU,LOG_ERROR)("MOV DR%,XXX with non-register",which);
 			}
+			GetEArd;
+			if (CPU_WRITE_DRX(which,*eard)) RUNEXCEPTION();
 		}
 		break;
 	CASE_0F_W(0x80)												/* JO */

@@ -472,8 +472,8 @@
 			case 0x05:					/* MOV Ew,GS */
 				val=SegValue(gs);break;
 			default:
-				val=0;
-				E_Exit("CPU:8c:Illegal RM Byte");
+				LOG(LOG_CPU,LOG_ERROR)("CPU:8c:Illegal RM Byte");
+				goto illegal_opcode;
 			}
 			if (rm >= 0xc0 ) {GetEArw;*earw=val;}
 			else {GetEAa;SaveMw(eaa,val);}
@@ -551,6 +551,12 @@
 			FillFlags();
 			Bit16u newip=Fetchw();Bit16u newcs=Fetchw();
 			CPU_CALL(false,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Trap_Run;
+				return CBRET_NONE;
+			}
+#endif
 			continue;
 		}
 	CASE_B(0x9b)												/* WAIT */
@@ -727,7 +733,7 @@
 		if (DEBUG_Breakpoint())
 			return debugCallback;
 #endif			
-		CPU_SW_Interrupt(3,GETIP);
+		CPU_SW_Interrupt_NoIOPLCheck(3,GETIP);
 #if CPU_TRAP_CHECK
 		core.trap.skip=true;
 #endif
@@ -761,14 +767,14 @@
 		{
 			FillFlags();
 			CPU_IRET(false,GETIP);
-#if CPU_PIC_CHECK
-			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
-#endif
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
 				cpudecoder=CPU_Core_Normal_Trap_Run;
 				return CBRET_NONE;
 			}
+#endif
+#if CPU_PIC_CHECK
+			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
 #endif
 			continue;
 		}
@@ -900,6 +906,12 @@
 			Bit16u newcs=Fetchw();
 			FillFlags();
 			CPU_JMP(false,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+			if (GETFLAG(TF)) {	
+				cpudecoder=CPU_Core_Normal_Trap_Run;
+				return CBRET_NONE;
+			}
+#endif
 			continue;
 		}
 	CASE_W(0xeb)												/* JMP Jb */
@@ -928,6 +940,13 @@
 	CASE_B(0xf0)												/* LOCK */
 		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK"); /* FIXME: see case D_LOCK in core_full/load.h */
 		break;
+	CASE_B(0xf1)												/* ICEBP */
+		FillFlags();
+		CPU_SW_Interrupt_NoIOPLCheck(1,GETIP);
+#if CPU_TRAP_CHECK
+		core.trap.skip=true;
+#endif
+		continue;
 	CASE_B(0xf2)												/* REPNZ */
 		DO_PREFIX_REP(false);	
 		break;		
@@ -935,6 +954,7 @@
 		DO_PREFIX_REP(true);	
 		break;		
 	CASE_B(0xf4)												/* HLT */
+		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 		FillFlags();
 		CPU_HLT(GETIP);
 		return CBRET_NONE;		//Needs to return for hlt cpu core
@@ -1094,11 +1114,18 @@
 				continue;
 			case 0x03:										/* CALL Ep */
 				{
+					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
 					FillFlags();
 					CPU_CALL(false,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+					if (GETFLAG(TF)) {	
+						cpudecoder=CPU_Core_Normal_Trap_Run;
+						return CBRET_NONE;
+					}
+#endif
 					continue;
 				}
 				break;
@@ -1108,11 +1135,18 @@
 				continue;
 			case 0x05:										/* JMP Ep */	
 				{
+					if (rm >= 0xc0) goto illegal_opcode;
 					GetEAa;
 					Bit16u newip=LoadMw(eaa);
 					Bit16u newcs=LoadMw(eaa+2);
 					FillFlags();
 					CPU_JMP(false,newcs,newip,GETIP);
+#if CPU_TRAP_CHECK
+					if (GETFLAG(TF)) {	
+						cpudecoder=CPU_Core_Normal_Trap_Run;
+						return CBRET_NONE;
+					}
+#endif
 					continue;
 				}
 				break;

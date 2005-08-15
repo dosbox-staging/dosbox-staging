@@ -15,8 +15,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 	CASE_0F_D(0x00)												/* GRP 6 Exxx */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			GetRM;Bitu which=(rm>>3)&7;
 			switch (which) {
 			case 0x00:	/* SLDT */
@@ -37,15 +39,26 @@
 					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
 					else {GetEAa;loadval=LoadMw(eaa);}
 					switch (which) {
-					case 0x02:CPU_LLDT(loadval);break;
-					case 0x03:CPU_LTR(loadval);break;
-					case 0x04:CPU_VERR(loadval);break;
-					case 0x05:CPU_VERW(loadval);break;
+					case 0x02:
+						if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+						if (CPU_LLDT(loadval)) RUNEXCEPTION();
+						break;
+					case 0x03:
+						if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+						if (CPU_LTR(loadval)) RUNEXCEPTION();
+						break;
+					case 0x04:
+						CPU_VERR(loadval);
+						break;
+					case 0x05:
+						CPU_VERW(loadval);
+						break;
 					}
 				}
 				break;
 			default:
 				LOG(LOG_CPU,LOG_ERROR)("GRP6:Illegal call %2X",which);
+				goto illegal_opcode;
 			}
 		}
 		break;
@@ -66,9 +79,11 @@
 					SaveMd(eaa+2,(Bit32u)base);
 					break;
 				case 0x02:										/* LGDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					CPU_LGDT(LoadMw(eaa),LoadMd(eaa+2));
 					break;
 				case 0x03:										/* LIDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2));
 					break;
 				case 0x04:										/* SMSW */
@@ -77,21 +92,28 @@
 					break;
 				case 0x06:										/* LMSW */
 					limit=LoadMw(eaa);
-					if (!CPU_LMSW((Bit16u)limit)) goto decode_end;
+					if (CPU_LMSW((Bit16u)limit)) RUNEXCEPTION();
 					break;
 				}
 			} else {
 				GetEArd;Bitu limit;
 				switch (which) {
+				case 0x02:										/* LGDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+					goto illegal_opcode;
+				case 0x03:										/* LIDT */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+					goto illegal_opcode;
 				case 0x04:										/* SMSW */
 					CPU_SMSW(limit);
 					*eard=(Bit32u)limit;
 					break;
 				case 0x06:										/* LMSW */
-					if (!CPU_LMSW(*eard)) goto decode_end;
+					if (CPU_LMSW(*eard)) RUNEXCEPTION();
 					break;
 				default:
 					LOG(LOG_CPU,LOG_ERROR)("Illegal group 7 RM subfunction %d",which);
+					goto illegal_opcode;
 					break;
 				}
 
@@ -100,6 +122,7 @@
 		break;
 	CASE_0F_D(0x02)												/* LAR Gd,Ed */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrd;Bitu ar=*rmrd;
 			if (rm >= 0xc0) {
@@ -112,6 +135,7 @@
 		break;
 	CASE_0F_D(0x03)												/* LSL Gd,Ew */
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
 			FillFlags();
 			GetRMrd;Bitu limit=*rmrd;
 			/* Just load 16-bit values for selectors */

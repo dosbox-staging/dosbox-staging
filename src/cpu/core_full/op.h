@@ -376,6 +376,7 @@ switch (inst.code.op) {
 		return inst.op1.d;
 	case O_GRP6w:
 	case O_GRP6d:
+		if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 		switch (inst.rm_index) {
 		case 0x00:	/* SLDT */
 			{
@@ -392,10 +393,12 @@ switch (inst.code.op) {
 			}
 			break;
 		case 0x02:	/* LLDT */
-			CPU_LLDT(inst.op1.d);
+			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+			if (CPU_LLDT(inst.op1.d)) RunException();
 			goto nextopcode;		/* Else value will saved */
 		case 0x03:	/* LTR */
-			CPU_LTR(inst.op1.d);
+			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
+			if (CPU_LTR(inst.op1.d)) RunException();
 			goto nextopcode;		/* Else value will saved */
 		case 0x04:	/* VERR */
 			FillFlags();
@@ -407,6 +410,7 @@ switch (inst.code.op) {
 			goto nextopcode;		/* Else value will saved */
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 6 Illegal subfunction %X",inst.rm_index);
+			goto illegalopcode;
 		}
 		break;
 	case O_GRP7w:
@@ -429,9 +433,11 @@ switch (inst.code.op) {
 				goto nextopcode;
 			}
 		case 2:		/* LGDT */
+			if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 			CPU_LGDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
 			goto nextopcode;
 		case 3:		/* LIDT */
+			if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 			CPU_LIDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
 			goto nextopcode;
 		case 4:		/* SMSW */
@@ -446,6 +452,7 @@ switch (inst.code.op) {
 			goto nextopcode;
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
+			goto illegalopcode;
 		}
 		break;
 	case O_M_CRx_Rd:
@@ -455,14 +462,14 @@ switch (inst.code.op) {
 		if (CPU_READ_CRX(inst.rm_index,inst.op1.d)) RunException();
 		break;
 	case O_M_DRx_Rd:
-//		LOG(LOG_CPU,LOG_NORMAL)("MOV DR%d,%X",inst.rm_index,inst.op1.d);
+		if (CPU_WRITE_DRX(inst.rm_index,inst.op1.d)) RunException();
 		break;
 	case O_M_Rd_DRx:
-		inst.op1.d=0;
-//		LOG(LOG_CPU,LOG_NORMAL)("MOV %X,DR%d",inst.op1.d,inst.rm_index);
+		if (CPU_READ_DRX(inst.rm_index,inst.op1.d)) RunException();
 		break;
 	case O_LAR:
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 			FillFlags();
 			Bitu ar=inst.op2.d;
 			CPU_LAR(inst.op1.w,ar);
@@ -471,6 +478,7 @@ switch (inst.code.op) {
 		break;
 	case O_LSL:
 		{
+			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 			FillFlags();
 			Bitu limit=inst.op2.d;
 			CPU_LSL(inst.op1.w,limit);

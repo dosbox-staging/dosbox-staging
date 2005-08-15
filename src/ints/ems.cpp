@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.41 2005-07-07 19:53:02 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.42 2005-08-15 13:43:44 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -729,8 +729,8 @@ static Bitu INT67_Handler(void) {
 				/* Load tables and initialize segment registers */
 				CPU_LGDT(new_gdt_limit, new_gdt_base);
 				CPU_LIDT(new_idt_limit, new_idt_base);
-				CPU_LLDT(new_ldt);
-				CPU_LTR(new_tr);
+				if (CPU_LLDT(new_ldt)) LOG_MSG("VCPI:Could not load LDT with %x",new_ldt);
+				if (CPU_LTR(new_tr)) LOG_MSG("VCPI:Could not load TR with %x",new_tr);
 
 				CPU_SetSegGeneral(ds,0);
 				CPU_SetSegGeneral(es,0);
@@ -796,8 +796,8 @@ static Bitu VCPI_PM_Handler() {
 		/* Load descriptor table registers */
 		CPU_LGDT(0xff, vcpi.private_area+0x0000);
 		CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
-		CPU_LLDT(0x08);
-		CPU_LTR(0x10);
+		if (CPU_LLDT(0x08)) LOG_MSG("VCPI:Could not load LDT");
+		if (CPU_LTR(0x10)) LOG_MSG("VCPI:Could not load TR");
 
 		reg_flags&=(~FLAG_NT);
 		reg_esp+=8;		// skip interrupt return information
@@ -1107,8 +1107,8 @@ public:
 			CPU_SET_CRX(0, 1);
 			CPU_LGDT(0xff, vcpi.private_area+0x0000);
 			CPU_LIDT(0x7ff, vcpi.private_area+0x2000);
-			CPU_LLDT(0x08);
-			CPU_LTR(0x10);
+			if (CPU_LLDT(0x08)) LOG_MSG("VCPI:Could not load LDT");
+			if (CPU_LTR(0x10)) LOG_MSG("VCPI:Could not load TR");
 
 			CPU_Push32(SegValue(gs));
 			CPU_Push32(SegValue(fs));
