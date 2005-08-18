@@ -26,6 +26,15 @@
 #include <string.h>
 #include <stddef.h>
 
+#if (C_HAVE_MPROTECT)
+#include <sys/mman.h>
+
+#include <limits.h>
+#ifndef PAGESIZE
+#define PAGESIZE 4096
+#endif
+#endif /* C_HAVE_MPROTECT */
+
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"

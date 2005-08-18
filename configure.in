@@ -244,6 +244,13 @@ else
   AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
 fi
 
+dnl Check for mprotect. Needed for 64 bits linux 
+AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
+AC_CHECK_HEADER([sys/mman.h], [
+AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
+])
+
+dnl Setpriority
 AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
 AC_MSG_CHECKING(for setpriority support)
 AC_LINK_IFELSE([

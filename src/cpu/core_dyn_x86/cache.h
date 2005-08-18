@@ -42,10 +42,17 @@ static struct {
 	CodePageHandler * last_page;
 } cache;
 
+#if (C_HAVE_MPROTECT)
+static Bit8u cache_code_link_blocks[2][16] GCC_ATTRIBUTE(aligned(PAGESIZE));
+static Bit8u cache_code[CACHE_TOTAL+CACHE_MAXSIZE] GCC_ATTRIBUTE(aligned(PAGESIZE));
+#else
 static Bit8u cache_code_link_blocks[2][16];
 static Bit8u cache_code[CACHE_TOTAL+CACHE_MAXSIZE];
+#endif
+
 static CacheBlock cache_blocks[CACHE_BLOCKS];
 static CacheBlock link_blocks[2];
+
 class CodePageHandler :public PageHandler {
 public:
 	CodePageHandler() {}
@@ -338,6 +345,10 @@ static void gen_return(BlockReturn retcode);
 static void cache_init(void) {
 	Bits i;
 	memset(&cache_blocks,0,sizeof(cache_blocks));
+#if (C_HAVE_MPROTECT)
+	mprotect(cache_code,sizeof(cache_code),PROT_WRITE|PROT_READ|PROT_EXEC);
+	mprotect(cache_code_link_blocks,sizeof(cache_code_link_blocks),PROT_WRITE|PROT_READ|PROT_EXEC);
+#endif
 	cache.block.free=&cache_blocks[0];
 	for (i=0;i<CACHE_BLOCKS-1;i++) {
 		cache_blocks[i].link[0].to=(CacheBlock *)1;
