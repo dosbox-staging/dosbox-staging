@@ -215,7 +215,9 @@ static void VGA_DrawPart(Bitu lines) {
 			vga.draw.address+=vga.draw.address_add;
 		}
 		if (vga.draw.split_line==vga.draw.lines_done) {
-			vga.draw.address=0;vga.draw.panning=0;
+			vga.draw.address=0;
+			if(vga.attr.mode_control&0x20)
+				vga.draw.panning=0;
 			vga.draw.address_line=0;
 		}
 	}
