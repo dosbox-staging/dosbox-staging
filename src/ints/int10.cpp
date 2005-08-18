@@ -232,7 +232,6 @@ graphics_chars:
 					RealPt int_1f=RealGetVec(0x1f);
 					SegSet16(es,RealSeg(int_1f));
 					reg_bp=RealOff(int_1f);
-					reg_cx=8;
 				}
 				break;
 			case 0x01:	/* interupt 0x43 vector */
@@ -240,33 +239,28 @@ graphics_chars:
 					RealPt int_43=RealGetVec(0x43);
 					SegSet16(es,RealSeg(int_43));
 					reg_bp=RealOff(int_43);
-					reg_cx=8;
 				}
 				break;
 			case 0x02:	/* font 8x14 */
 				SegSet16(es,RealSeg(int10.rom.font_14));
 				reg_bp=RealOff(int10.rom.font_14);
-				reg_cx=14;
 				break;
 			case 0x03:	/* font 8x8 first 128 */
 				SegSet16(es,RealSeg(int10.rom.font_8_first));
 				reg_bp=RealOff(int10.rom.font_8_first);
-				reg_cx=8;
 				break;
 			case 0x04:	/* font 8x8 second 128 */
 				SegSet16(es,RealSeg(int10.rom.font_8_second));
 				reg_bp=RealOff(int10.rom.font_8_second);
-				reg_cx=8;
 				break;
 			case 0x06:	/* font 8x16 */
 				SegSet16(es,RealSeg(int10.rom.font_16));
 				reg_bp=RealOff(int10.rom.font_16);
-				reg_cx=16;
 				break;
 			default:
-				reg_cx=16;
-				LOG(LOG_INT10,LOG_ERROR)("Fucntion 11:30 Request for font %2X",reg_bh);	
+				LOG(LOG_INT10,LOG_ERROR)("Function 11:30 Request for font %2X",reg_bh);	
 			}
+			reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 			reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 			break;
 		default:
