@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.60 2005-08-11 18:57:48 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.61 2005-08-19 07:13:34 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -205,7 +205,6 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 	Bit8u find_attr;
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
-	
 	Bitu id = dta.GetDirID();
 
 again:
@@ -279,8 +278,8 @@ bool localDrive::MakeDir(char * dir) {
 	int temp=mkdir(dirCache.GetExpandName(newdir),0700);
 #endif
 	if (temp==0) dirCache.CacheOut(newdir,true);
-	// if dir already exists, return success too.
-	return (temp==0) || ((temp!=0) && (errno==EEXIST));
+
+	return (temp==0);// || ((temp!=0) && (errno==EEXIST));
 }
 
 bool localDrive::RemoveDir(char * dir) {
@@ -300,8 +299,8 @@ bool localDrive::TestDir(char * dir) {
 	CROSS_FILENAME(newdir);
 	dirCache.ExpandName(newdir);
 	// Skip directory test, if "\"
-	Bit16u len = strlen(newdir);
-	if ((len>0) && (newdir[len-1]!='\\')) {
+	size_t len = strlen(newdir);
+	if (len && (newdir[len-1]!='\\')) {
 		// It has to be a directory !
 		struct stat test;
 		if (stat(newdir,&test)==-1)			return false;

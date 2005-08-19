@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.64 2005-08-10 16:46:15 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.65 2005-08-19 07:13:34 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -198,8 +198,20 @@ bool DOS_ChangeDir(char * dir) {
 
 bool DOS_MakeDir(char * dir) {
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
+	size_t len = strlen(dir);
+	if(!len || dir[len-1] == '\\') {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	return Drives[drive]->MakeDir(fulldir);
+	if(Drives[drive]->MakeDir(fulldir)) return true;
+
+	/* Determine reason for failing */
+	if(Drives[drive]->TestDir(fulldir)) 
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+	else
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+	return false;
 }
 
 bool DOS_RemoveDir(char * dir) {
@@ -245,6 +257,12 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 	DOS_DTA dta(dos.dta());
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
 	char dir[DOS_PATHLENGTH];char pattern[DOS_PATHLENGTH];
+	size_t len = strlen(search);
+	if(len && search[len - 1] == '\\') { 
+		//Dark Forces installer
+		DOS_SetError(DOSERR_NO_MORE_FILES);
+		return false;
+	}
 	if (!DOS_MakeName(search,fullsearch,&drive)) return false;
 	/* Split the search in dir and pattern */
 	char * find_last;
@@ -510,7 +528,7 @@ bool DOS_SetFileAttr(char * name,Bit16u attr)
 	Bit16u attrTemp;
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;	
-	if (strcmp(Drives[drive]->GetInfo(),"CDRom.")==0) {
+	if (strcmp(Drives[drive]->GetInfo(),"CDRom.")==0 || strcmp(Drives[drive]->GetInfo(),"isoDrive")==0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
