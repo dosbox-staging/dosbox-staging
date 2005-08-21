@@ -209,8 +209,10 @@ static Bitu INT10_Handler(void) {
 			RealSetVec(0x43,int10.rom.font_14);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,14);
 			goto graphics_chars;
-//		case 0x23:			/* Rom 8x8 double dot set */
-			//TODO
+		case 0x23:			/* Rom 8x8 double dot set */
+			RealSetVec(0x43,int10.rom.font_8_first);
+			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,8);
+			goto graphics_chars;
 		case 0x24:			/* Rom 8x16 set */
 			RealSetVec(0x43,int10.rom.font_16);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,16);
