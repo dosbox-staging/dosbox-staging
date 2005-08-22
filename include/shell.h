@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.12 2005-04-21 21:17:45 qbix79 Exp $ */
+/* $Id: shell.h,v 1.13 2005-08-22 19:31:26 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -36,6 +36,9 @@
 #define CMD_MAXCMDS 20
 #define CMD_OLDSIZE 4096
 extern Bitu call_shellstop;
+/* first_shell is used to add and delete stuff from the shell env 
+ * by "external" programs. (config) */
+extern Program * first_shell;
 class DOS_Shell;
 
 

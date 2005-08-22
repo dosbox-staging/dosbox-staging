@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.21 2005-08-11 18:56:57 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.22 2005-08-22 19:31:27 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -30,6 +30,7 @@
 #include "support.h"
 #include "cross.h"
 #include "setup.h"
+#include "shell.h"
 
 Bitu call_program;
 
@@ -226,6 +227,35 @@ void CONFIG::Run(void) {
 		return;
 	}
 
+	/* Code for getting the current configuration.           *
+	 * Official format: config -get "section property"       *
+	 * As a bonus it will set %CONFIG% to this value as well */
+	if(cmd->FindString("-get",temp_line,true)) {
+		std::string temp2 = "";
+		cmd->GetStringRemain(temp2);//So -get n1 n2= can be used without quotes
+		if(temp2 != "") temp_line = temp_line + " " + temp2;
+
+		std::string::size_type space = temp_line.find(" ");
+		if(space == std::string::npos) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
+			return;
+		}
+		//Copy the found property to a new string and erase from templine (mind the space)
+		std::string prop = temp_line.substr(space+1); temp_line.erase(space);
+
+		Section* sec = control->GetSection(temp_line.c_str());
+		if(!sec) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"),temp_line.c_str());
+			return;
+		}
+		char* val = sec->GetPropValue(prop.c_str());
+		WriteOut("%s",val);
+		first_shell->SetEnv("CONFIG",val);
+		return;
+	}
+
+
+
 	/* Code for the configuration changes                                  *
 	 * Official format: config -set "section property=value"               *
 	 * Accepted: without quotes and/or without -set and/or without section *
@@ -305,4 +335,5 @@ void PROGRAMS_Init(Section* sec) {
 	MSG_Add("PROGRAM_CONFIG_USAGE","Config tool:\nUse -writeconf filename to write the current config.\nUse -writelang filename to write the current language strings.\n");
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR","Section %s doesn't exist.\n");
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","Property %s doesn't have a section.\n");
+	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\"");
 }

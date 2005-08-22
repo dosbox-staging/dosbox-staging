@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.61 2005-05-31 20:19:13 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.62 2005-08-22 19:31:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -31,7 +31,7 @@
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
-Program * new_program = 0; 
+Program * first_shell = 0; 
 
 static Bitu shellstop_handler(void) {
 	return CBRET_STOP;
@@ -84,7 +84,7 @@ AutoexecObject::~AutoexecObject(){
 				if(!test) continue;
 				*test = 0;
 				//If the shell is running/exists update the environment
-				if(new_program) new_program->SetEnv(after_set,"");
+				if(first_shell) first_shell->SetEnv(after_set,"");
 			}
 		} else it++;
 	}
@@ -511,8 +511,8 @@ void SHELL_Init() {
 	dos.psp(psp_seg);
 
 	
-	SHELL_ProgramStart(&new_program);
-	new_program->Run();
-	delete new_program;
-	new_program = 0;//Make clear that it shouldn't be used anymore
+	SHELL_ProgramStart(&first_shell);
+	first_shell->Run();
+	delete first_shell;
+	first_shell = 0;//Make clear that it shouldn't be used anymore
 }
