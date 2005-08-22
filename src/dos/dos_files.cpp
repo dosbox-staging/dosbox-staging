@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.65 2005-08-19 07:13:34 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.66 2005-08-22 19:49:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -258,8 +258,8 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 	Bit8u drive;char fullsearch[DOS_PATHLENGTH];
 	char dir[DOS_PATHLENGTH];char pattern[DOS_PATHLENGTH];
 	size_t len = strlen(search);
-	if(len && search[len - 1] == '\\') { 
-		//Dark Forces installer
+	if(len && search[len - 1] == '\\' && !( (len > 2) && (search[len - 2] == ':') && (attr == DOS_ATTR_VOLUME) )) { 
+		//Dark Forces installer, but c:\ is allright for volume labels(exclusively set)
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
