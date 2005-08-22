@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.35 2005-07-08 13:48:58 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.36 2005-08-22 17:52:57 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -506,9 +506,6 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 }
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
-	//TODO Check if this page thing is correct
-	if (CurMode->type!=M_TEXT) page=0xff;
-	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
 	BIOS_NCOLS;BIOS_NROWS;
@@ -575,10 +572,6 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
 }
 
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page) {
-	//TODO Check if this page thing is correct
-	if (CurMode->type!=M_TEXT) page=0xff;
-
-	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
