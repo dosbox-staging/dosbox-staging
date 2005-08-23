@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.66 2005-08-22 19:49:07 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.67 2005-08-23 14:21:15 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -467,7 +467,11 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
-		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		//Test if file exists, but opened in read-write mode (and writeprotected)
+		if(((flags&3) != OPEN_READ) && Drives[drive]->FileExists(fullname))
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+		else
+			DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 }
