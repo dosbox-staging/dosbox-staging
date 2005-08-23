@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.85 2005-08-08 13:33:44 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.86 2005-08-23 13:58:03 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -252,7 +252,7 @@ static Bitu DOS_21Handler(void) {
 		{   
 			Bit8u difference;
 			char string[1024];
-			MEM_StrCopy(SegPhys(ds)+reg_si,string,1024);
+			MEM_StrCopy(SegPhys(ds)+reg_si,string,1023); // 1024 toasts the stack
 			reg_al=FCB_Parsename(SegValue(es),reg_di,reg_al ,string, &difference);
 			reg_si+=difference;
 		}
