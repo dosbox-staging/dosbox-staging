@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.40 2005-08-11 18:57:48 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.41 2005-08-24 21:12:24 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +32,9 @@
 #include "dos_inc.h"
 #include "bios.h"
 
+#if C_DEBUG
+Bitu DEBUG_EnableDebugger(void);
+#endif
 
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
@@ -281,7 +284,6 @@ static void MEM_ProgramStart(Program * * make) {
 extern Bit32u floppytype;
 
 
-
 class BOOT : public Program {
 private:
 	FILE *getFSFile(Bit8u * filename, Bit32u *ksize, Bit32u *bsize) {
@@ -392,7 +394,16 @@ public:
 
 		SegSet16(cs, 0);
 		reg_ip = 0x7c00;
-
+		SegSet16(ds, 0);
+		SegSet16(ss, 0);//Buckrogers Booter
+		reg_esp = 0x400;
+		SegSet16(es, 0);
+		reg_esi = 0;
+		reg_ecx = 1;
+		reg_ebp = 0;
+		reg_eax = 0;
+		reg_ebx= 0x7c00; //Real code is probably uses bx to load the image
+		//DEBUG_EnableDebugger();
 				
 
 		/* Most likely a PCJr ROM */
