@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.31 2005-03-25 11:55:20 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.32 2005-08-24 16:06:18 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -329,6 +329,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_insert:extend=true;ret=82;break;
 	case KBD_delete:extend=true;ret=83;break;
 	case KBD_pause:
+		KEYBOARD_AddBuffer(0xe1);
+		KEYBOARD_AddBuffer(29|(pressed?0:0x80));
+		KEYBOARD_AddBuffer(69|(pressed?0:0x80));
+		return;
 	case KBD_printscreen:
 		/* Not handled yet. But usuable in mapper for special events */
 		return;

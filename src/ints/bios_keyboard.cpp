@@ -123,6 +123,7 @@ static struct {
       };
 
 static void add_key(Bit16u code) {
+	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return;
 	Bit16u start,end,head,tail,ttail;
 	start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
 	end	 =mem_readw(BIOS_KEYBOARD_BUFFER_END);
@@ -230,20 +231,24 @@ static Bitu IRQ1_Handler(void) {
 	case 0xfa:	/* ack. Do nothing for now */
 		break;
 	case 0xe1:	/* Extended key special. Only pause uses this */
-		LOG(LOG_KEYBOARD,LOG_ERROR)("someone is putting the pause key in the keyboard buffer");
+		flags3 |=0x01;
 		break;
 	case 0xe0:						/* Extended key */
 		flags3 |=0x02;
 		break;
 	case 0x1d:						/* Ctrl Pressed */
-		flags1 |=0x04;
-		if (flags3 &0x02) flags3 |=0x04;
-		else flags2 |=0x01;
+		if (!(flags3 &0x01)) {
+			flags1 |=0x04;
+			if (flags3 &0x02) flags3 |=0x04;
+			else flags2 |=0x01;
+		}
 		break;
 	case 0x9d:						/* Ctrl Released */
-		if (flags3 &0x02) flags3 &=~0x04;
-		else flags2 &=~0x01;
-		if( !( (flags3 &0x04) || (flags2 &0x01) ) ) flags1 &=~0x04;
+		if (!(flags3 &0x01)) {
+			if (flags3 &0x02) flags3 &=~0x04;
+			else flags2 &=~0x01;
+			if( !( (flags3 &0x04) || (flags2 &0x01) ) ) flags1 &=~0x04;
+		}
 		break;
 	case 0x2a:						/* Left Shift Pressed */
 		flags1 |=0x02;
@@ -278,8 +283,31 @@ static Bitu IRQ1_Handler(void) {
 
 	case 0x3a:flags2 |=0x40;flags1 |=0x40;leds |=0x04;break; //SDL gives only the state instead of the toggle					/* Caps Lock */
 	case 0xba:flags1 &=~0x40;leds &=~0x04;break;
-	case 0x45:flags2 |=0x20;flags1 |=0x20;leds |=0x02;break;					/* Num Lock */
-	case 0xc5:flags1 &=~0x20;leds &=~0x02;break;
+	case 0x45:
+		if (flags3 &0x01) {
+			flags3 &=0x01;
+			if ((flags2&8)==0) {
+				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
+				mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
+				IO_Write(0x20,0x20);
+				while (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) CALLBACK_Idle();	// pause loop
+				reg_ip+=4;	// skip out 20,20
+				return CBRET_NONE;
+			}
+		} else {
+			flags2 |=0x20;
+			flags1 |=0x20;
+			leds |=0x02;
+		}
+		break;					/* Num Lock */
+	case 0xc5:
+		if (flags3 &0x01) {
+			flags3 &=0x01;
+		} else {
+			flags1 &=~0x20;
+			leds &=~0x02;
+		}
+		break;
 	case 0x46:flags2 |=0x10;break;				/* Scroll Lock SDL Seems to do this one fine (so break and make codes) */
 	case 0xc6:flags1 ^=0x10;flags2 &=~0x10;leds ^=0x01;break;
 //	case 0x52:flags2|=128;break;//See numpad					/* Insert */
@@ -361,6 +389,7 @@ static Bitu IRQ1_Handler(void) {
 irq1_end:
 	if(scancode !=0xe0) flags3 &=~0x02;									//Reset 0xE0 Flag
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flags1);
+	if ((scancode&0x80)==0) flags2&=0xf7;
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
 	mem_writeb(BIOS_KEYBOARD_LEDS,leds);
