@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.19 2005-08-23 13:19:38 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.20 2005-08-28 09:48:42 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -197,7 +197,7 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 		}
 		if(!founddisk) {
 			active = false;
-		}
+		} else mem_writeb(BIOS_CONFIGURATION,mem_readb(BIOS_CONFIGURATION)|1);
 	}
 }
 
@@ -394,9 +394,15 @@ static Bitu INT13_DiskHandler(void) {
 		reg_cl = (((tmpcyl >> 2) & 0xc0) | (tmpsect & 0x3f)); 
 		reg_dh = tmpheads-1;
 		last_status = 0x00;
-		reg_dl = 0;
-		if(imageDiskList[2] != NULL) reg_dl++;
-		if(imageDiskList[3] != NULL) reg_dl++;
+		if (reg_dl&0x80) {	// harddisks
+			reg_dl = 0;
+			if(imageDiskList[2] != NULL) reg_dl++;
+			if(imageDiskList[3] != NULL) reg_dl++;
+		} else {		// floppy disks
+			reg_dl = 0;
+			if(imageDiskList[0] != NULL) reg_dl++;
+			if(imageDiskList[1] != NULL) reg_dl++;
+		}
 		CALLBACK_SCF(false);
 		break;
 	case 0x11: /* Recalibrate drive */
