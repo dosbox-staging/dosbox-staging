@@ -323,11 +323,11 @@ public:
 		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
 	
 		tandy.enabled=false;
-	
+
 		Bitu i;
 		struct SN76496 *R = &sn;
 		R->SampleRate = sample_rate;
-		SN76496_set_clock(2386360);
+		SN76496_set_clock(3579545);
 		for (i = 0;i < 4;i++) R->Volume[i] = 0;
 		R->LastRegister = 0;
 		for (i = 0;i < 8;i+=2)
