@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.67 2005-08-10 12:22:25 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.68 2005-08-31 13:00:14 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -56,6 +56,7 @@ static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
 static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
+static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32s num);
 static void LogGDT(void);
 static void LogLDT(void);
 static void LogIDT(void);
@@ -912,6 +913,15 @@ bool ParseCommand(char* str)
 		SaveMemory(seg,ofs,num);
 		return true;
 	};
+	found = strstr(str,"MEMDUMPBIN ");
+	if (found) { // Insert variable
+		found+=11;
+		Bit16u seg = (Bit16u)GetHexValue(found,found); found++;
+		Bit32u ofs = GetHexValue(found,found); found++;
+		Bit32u num = GetHexValue(found,found); found++;
+		SaveMemoryBin(seg,ofs,num);
+		return true;
+	};
 
 	found = strstr(str,"IV ");
 	if (found) { // Insert variable
@@ -1270,6 +1280,7 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("LV [seg]:[off] [name]     - Load var list from file.\n");
 
 		DEBUG_ShowMsg("MEMDUMP [seg]:[off] [len] - Write memory to file memdump.txt.\n");
+		DEBUG_ShowMsg("MEMDUMPBIN [s]:[o] [len]  - Write memory to file memdump.bin.\n");
 		DEBUG_ShowMsg("SELINFO [segName]         - Show selector info.\n");
 
 		DEBUG_ShowMsg("INTVEC [filename]         - Writes interrupt vector table to file.\n");
@@ -2076,6 +2087,21 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 	};
 	fclose(f);
 	DEBUG_ShowMsg("DEBUG: Memory dump success.\n");
+};
+
+static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32s num) {
+	FILE* f = fopen("MEMDUMP.BIN","wt");
+	if (!f) {
+		DEBUG_ShowMsg("DEBUG: Memory binary dump failed.\n");
+		return;
+	}
+
+	for(Bitu x=0; x <num;x++) {
+		fprintf(f,"%c",mem_readb(GetAddress(seg,ofs1+x)));
+	};
+
+	fclose(f);
+	DEBUG_ShowMsg("DEBUG: Memory dump binary success.\n");
 };
 
 static void OutputVecTable(char* filename)
