@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.36 2005-08-22 17:52:57 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.37 2005-09-01 14:31:40 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -280,7 +280,7 @@ void INT10_SetActivePage(Bit8u page) {
 	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
-	if (CurMode->mode<0x8) mem_address>>=1;
+	if (machine==MCH_VGA && CurMode->mode<0x8) mem_address>>=1;
 	/* Write the new start address in vgahardware */
 	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 	IO_Write(base,0x0c);
