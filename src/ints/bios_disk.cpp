@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.20 2005-08-28 09:48:42 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.21 2005-09-01 17:34:39 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -197,7 +197,17 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 		}
 		if(!founddisk) {
 			active = false;
-		} else mem_writeb(BIOS_CONFIGURATION,mem_readb(BIOS_CONFIGURATION)|1);
+		} else {
+			Bit16u equipment=mem_readw(BIOS_CONFIGURATION);
+			if(equipment&1) {
+				Bitu numofdisks = (equipment>>5)&3;
+				numofdisks++;
+				if(numofdisks > 1) numofdisks=1;//max 2 floppies at the moment
+				equipment&=~0x00C0;
+				equipment|=(numofdisks<<5);
+			} else equipment|=1;
+			mem_writew(BIOS_CONFIGURATION,equipment);
+		}
 	}
 }
 
@@ -374,8 +384,9 @@ static Bitu INT13_DiskHandler(void) {
 			}
 		}*/
 		reg_ah = 0x00;
+		//Qbix: The following codes don't match my specs. al should be number of sector verified
 		//reg_al = 0x10; /* CRC verify failed */
-		reg_al = 0x00; /* CRC verify succeeded */
+		//reg_al = 0x00; /* CRC verify succeeded */
 		CALLBACK_SCF(false);
           
 		break;
