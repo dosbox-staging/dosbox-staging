@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.31 2005-02-10 10:21:07 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.32 2005-09-01 19:48:37 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -97,8 +97,12 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	png_bytep * row_pointers;
 	png_color palette[256];
 	Bitu i;
+	Bitu fix_double_scale = 1;//variable to compensate for only doubleheight
 
-/* Find a filename to open */
+	/* Remove this if we save rendered screens. instead of pre-rendered */
+	if(render.src.dblh && !render.src.dblw) fix_double_scale = 2;
+
+
 	/* Open the actual file */
 	FILE * fp=OpenCaptureFile("Screenshot",".png");
 	if (!fp) return;
@@ -106,10 +110,10 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
 	if (!png_ptr) return;
 	info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
+	if (!info_ptr) {
 		png_destroy_write_struct(&png_ptr,(png_infopp)NULL);
 		return;
-    }
+	}
 
 	/* Finalize the initing of png library */
 	png_init_io(png_ptr, fp);
@@ -123,7 +127,7 @@ static void TakeScreenShot(Bit8u * bitmap) {
 	png_set_compression_buffer_size(png_ptr, 8192);
 
 	if (render.shot.bpp==8) {
-		png_set_IHDR(png_ptr, info_ptr, render.shot.width, render.shot.height,
+		png_set_IHDR(png_ptr, info_ptr, render.shot.width, (render.shot.height*fix_double_scale),
 			8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		for (i=0;i<256;i++) {
@@ -133,15 +137,18 @@ static void TakeScreenShot(Bit8u * bitmap) {
 		}
 		png_set_PLTE(png_ptr, info_ptr, palette,256);
 	} else {
-		png_set_IHDR(png_ptr, info_ptr, render.shot.width, render.shot.height,
+		png_set_IHDR(png_ptr, info_ptr, render.shot.width, (render.shot.height*fix_double_scale),
 			render.shot.bpp, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 	}
+
 	/*Allocate an array of scanline pointers*/
-	row_pointers=(png_bytep*)malloc(render.shot.height*sizeof(png_bytep));
-	for (i=0;i<render.shot.height;i++) {
-		row_pointers[i]=(bitmap+i*render.shot.rowlen);
+	row_pointers=(png_bytep*)malloc(render.shot.height*fix_double_scale*sizeof(png_bytep));	
+	for (i = 0;i < render.shot.height;i++) {
+		row_pointers[fix_double_scale*i] = (bitmap+i*render.shot.rowlen);
+		if(fix_double_scale == 2) row_pointers[fix_double_scale*i+1] = (bitmap+i*render.shot.rowlen);
 	}
+   
 	/*tell the png library what to encode.*/
 	png_set_rows(png_ptr, info_ptr, row_pointers);
 	
