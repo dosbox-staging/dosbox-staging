@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.67 2005-08-23 14:21:15 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.68 2005-09-02 19:56:18 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -650,8 +650,7 @@ static bool isvalid(const char in){
 #define PARSE_RET_WILD          1
 #define PARSE_RET_BADDRIVE      0xff
 
-Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change){
-    
+Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change) {
 	char * string_begin=string;Bit8u ret=0;
     DOS_FCB fcb(seg,offset);
 	bool hasdrive,hasname,hasext;
@@ -673,7 +672,9 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 #pragma pack()
 #endif
 	/* Get the old information from the previous fcb */
-	fcb.GetName(fcb_name.full);fcb_name.part.drive[1]=0;fcb_name.part.name[8]=0;fcb_name.part.ext[3]=0;
+	fcb.GetName(fcb_name.full);
+	fcb_name.part.drive[0]-='A'-1;fcb_name.part.drive[1]=0;
+	fcb_name.part.name[8]=0;fcb_name.part.ext[3]=0;
 	/* Strip of the leading sepetaror */
 	if((parser & PARSE_SEP_STOP) && *string)  {       //ignore leading seperator
 		char sep[] = FCB_SEP;char a[2];
