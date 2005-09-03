@@ -194,12 +194,23 @@ static void dyn_loadstate(DynState * state) {
 	}
 }
 
-
 static void dyn_synchstate(DynState * state) {
 	for (Bitu i=0;i<G_MAX;i++) {
 		gen_synchreg(&DynRegs[i],&state->regs[i]);
 	}
 }
+
+static void dyn_saveregister(DynReg * src_reg, DynReg * dst_reg) {
+	dst_reg->flags=src_reg->flags;
+	dst_reg->genreg=src_reg->genreg;
+}
+
+static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
+	dst_reg->flags=src_reg->flags;
+	dst_reg->genreg=src_reg->genreg;
+	dst_reg->genreg->dynreg=dst_reg;	// necessary when register has been released
+}
+
 #include "core_dyn_x86/decoder.h"
 
 Bits CPU_Core_Dyn_X86_Run(void) {
