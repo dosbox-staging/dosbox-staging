@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.42 2005-08-15 13:43:44 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.43 2005-09-03 11:38:18 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -613,17 +613,17 @@ static Bitu INT67_Handler(void) {
 				break;
 			case 0x01:		/* VCPI Get Protected Mode Interface */
 				/* Set up page table buffer */
-				for (Bitu ct=0; ct<0xff; ct++) {
+				for (Bit16u ct=0; ct<0xff; ct++) {
 					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
-					real_writew(SegValue(es),reg_di+ct*4+0x01,ct*0x10);	// mapping
+					real_writew(SegValue(es),reg_di+ct*4+0x01,ct*0x10);		// mapping
 					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
 				}
-				for (Bitu ct=0xff; ct<0x100; ct++) {
+				for (Bit16u ct=0xff; ct<0x100; ct++) {
 					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
 					real_writew(SegValue(es),reg_di+ct*4+0x01,(ct-0xff)*0x10+0x1100);	// mapping
 					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
 				}
-				reg_di+=0x800;		// advance pointer by 0x200*4
+				reg_di+=0x400;		// advance pointer by 0x100*4
 				
 				/* Set up three descriptor table entries */
 				real_writed(SegValue(ds),reg_si+0x00,0x8000ffff);	// descriptor 1 (code segment)
@@ -991,7 +991,7 @@ static void SetupVCPI() {
 	mem_writed(vcpi.private_area+0x1014,ds_desc_part);	// descriptor 2
 
 	/* IDT setup */
-	for (Bitu int_ct=0; int_ct<0x100; int_ct++) {
+	for (Bit16u int_ct=0; int_ct<0x100; int_ct++) {
 		/* build a CALL NEAR V86MON, the value of IP pushed by the
 			CALL is used to identify the interrupt number */
 		mem_writeb(vcpi.private_area+0x2800+int_ct*4+0,0xe8);	// call

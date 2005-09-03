@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.16 2005-03-25 11:41:26 qbix79 Exp $ */
+/* $Id: paging.h,v 1.17 2005-09-03 11:38:18 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -130,6 +130,14 @@ extern PagingBlock paging;
 /* Some support functions */
 
 PageHandler * MEM_GetPageHandler(Bitu phys_page);
+
+/* Use this helper function to access linear addresses in readX/writeX functions */
+INLINE PhysPt PAGING_GetLinearAddress(PhysPt addr) {
+	if (paging.enabled)
+		return (paging.tlb.phys_page[addr>>12]<<12)|(addr&0xfff);
+	else
+		return addr;
+}
 
 /* Unaligned address handlers */
 Bit16u mem_unalignedreadw(PhysPt address);

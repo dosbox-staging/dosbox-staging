@@ -138,17 +138,17 @@ static struct {
 class VGARead_PageHandler : public PageHandler {
 public:
 	Bitu readb(PhysPt addr) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		return VGA_NormalReadHandler(addr);
 	}
 	Bitu readw(PhysPt addr) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		return 
 			(VGA_NormalReadHandler(addr+0) << 0) |
 			(VGA_NormalReadHandler(addr+1) << 8);
 	}
 	Bitu readd(PhysPt addr) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		return 
 			(VGA_NormalReadHandler(addr+0) << 0)  |
 			(VGA_NormalReadHandler(addr+1) << 8)  |
@@ -163,16 +163,16 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_16_WriteHandler(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_16_WriteHandler(addr+0,(Bit8u)(val >> 0));
 		VGA_GFX_16_WriteHandler(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_16_WriteHandler(addr+0,(Bit8u)(val >> 0));
 		VGA_GFX_16_WriteHandler(addr+1,(Bit8u)(val >> 8));
 		VGA_GFX_16_WriteHandler(addr+2,(Bit8u)(val >> 16));
@@ -186,16 +186,16 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_256U_WriteHandler(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_256U_WriteHandler(addr+0,(Bit8u)(val >> 0));
 		VGA_GFX_256U_WriteHandler(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
-		addr&=0xffff;
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
 		VGA_GFX_256U_WriteHandler(addr+0,(Bit8u)(val >> 0));
 		VGA_GFX_256U_WriteHandler(addr+1,(Bit8u)(val >> 8));
 		VGA_GFX_256U_WriteHandler(addr+2,(Bit8u)(val >> 16));
@@ -209,11 +209,11 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
-		addr&=vgapages.mask;
+		addr = PAGING_GetLinearAddress(addr) & vgapages.mask;
 		return vga.draw.font[addr];
 	}
 	void writeb(PhysPt addr,Bitu val){
-		addr&=vgapages.mask;
+		addr = PAGING_GetLinearAddress(addr) & vgapages.mask;
 		if (vga.seq.map_mask & 0x4) {
 			vga.draw.font[addr]=(Bit8u)val;
 		}
@@ -240,7 +240,7 @@ public:
 		//memset(&regmem[0], 0, sizeof(regmem));
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		Bitu port = addr & 0xffff;
+		Bitu port = PAGING_GetLinearAddress(addr) & 0xffff;
 		if(port >= 0x82E8) IO_WriteB(port, val);
 		if(port <= 0x4000) {
 			if(port == 0x0000) {
@@ -252,7 +252,7 @@ public:
 		//LOG_MSG("MMIO: Write byte to %x with %x", addr, val);
 	}
 	void writew(PhysPt addr,Bitu val) {
-		Bitu port = addr & 0xffff;
+		Bitu port = PAGING_GetLinearAddress(addr) & 0xffff;
 		if(port >= 0x82E8) IO_WriteW(port, val);
 		if(port == 0x8118) IO_WriteW(0x9ae8, val);
 		if(port <= 0x4000) {
@@ -265,7 +265,7 @@ public:
 		//LOG_MSG("MMIO: Write word to %x with %x", addr, val);	
 	}
 	void writed(PhysPt addr,Bitu val) {
-		Bitu port = addr & 0xffff;
+		Bitu port = PAGING_GetLinearAddress(addr) & 0xffff;
 		if(port >= 0x82E8) IO_WriteD(port, val);
 		if(port == 0x8100) {
 			IO_WriteW(0x86e8, (val >> 16));
@@ -294,7 +294,7 @@ public:
 		return 0x00;
 	}
 	Bitu readw(PhysPt addr) {
-		Bitu port = addr & 0xffff;
+		Bitu port = PAGING_GetLinearAddress(addr) & 0xffff;
 		if(port >= 0x82E8) return IO_ReadW(port);
 		//LOG_MSG("MMIO: Read word from %x", addr);
 		return 0x00;
