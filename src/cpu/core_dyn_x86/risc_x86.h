@@ -49,7 +49,7 @@ public:
 	bool notusable;
 	void Load(DynReg * _dynreg,bool stale=false) {
 		if (!_dynreg) return;
-		if (GCC_UNLIKELY(dynreg)) Clear();
+		if (GCC_UNLIKELY((Bitu)dynreg)) Clear();
 		dynreg=_dynreg;
 		last_used=x86gen.last_used;
 		dynreg->flags&=~DYNFLG_CHANGED;
@@ -61,13 +61,13 @@ public:
 		dynreg->flags|=DYNFLG_ACTIVE;
 	}
 	void Save(void) {
-		if (GCC_UNLIKELY(!dynreg)) IllegalOption();
+		if (GCC_UNLIKELY(!((Bitu)dynreg))) IllegalOption();
 		dynreg->flags&=~DYNFLG_CHANGED;
 		cache_addw(0x0589+(index << (8+3)));		//Mov [data],reg
 		cache_addd((Bit32u)dynreg->data);
 	}
 	void Release(void) {
-		if (GCC_UNLIKELY(!dynreg)) return;
+		if (GCC_UNLIKELY(!((Bitu)dynreg))) return;
 		if (dynreg->flags&DYNFLG_CHANGED && dynreg->flags&DYNFLG_SAVE) {
 			Save();
 		}

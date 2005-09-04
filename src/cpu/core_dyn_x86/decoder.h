@@ -905,7 +905,7 @@ static void dyn_leave(void) {
 }
 
 static void dyn_segprefix(SegNames seg) {
-	if (GCC_UNLIKELY(decode.segprefix)) IllegalOption();
+	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption();
 	decode.segprefix=&DynRegs[G_ES+seg];
 }
 
