@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.9 2005-08-11 18:57:48 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.10 2005-09-07 19:15:09 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -58,7 +58,7 @@ isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u
 	fileEnd = fileBegin + size;
 	cachedSector = -1;
 	open = true;
-	info = info;
+	this->info = info;
 	this->name = NULL;
 	SetName(name);
 }
@@ -435,6 +435,12 @@ bool isoDrive :: lookupSingle(isoDirEntry *de, const char *name, Bit32u start, B
 {
 	Bit32u end = start + length / ISO_FRAMESIZE;
 	if (length % ISO_FRAMESIZE != 0) end++;
+
+	// copy filename and if it has no extension remove the trailing dot
+	char newname[38];
+	safe_strncpy(newname, name, 38);
+	int name_len = strlen(newname);
+	if (name_len > 0 && newname[name_len - 1] == '.') newname[name_len - 1] = 0;
 	
 	for(Bit32u i = start; i < end; i++) {
 		Bit8u sector[ISO_FRAMESIZE];
@@ -445,7 +451,7 @@ bool isoDrive :: lookupSingle(isoDirEntry *de, const char *name, Bit32u start, B
 			int deLength = readDirEntry(de, &sector[pos]);
 			if (deLength < 1) return false;
 			pos += deLength;
-			int tmp = strncasecmp((char*)de->ident, name, 38);
+			int tmp = strncasecmp((char*)de->ident, newname, 38);
 			if (tmp == 0) return true;
 		}
 	}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.28 2005-03-25 08:39:05 qbix79 Exp $ */
+/* $Id: drives.h,v 1.29 2005-09-07 19:15:09 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -264,7 +264,7 @@ struct isoDirEntry {
 #pragma pack ()
 #endif
 
-#if defined (WORD_BIGENDIAN)
+#if defined (WORDS_BIGENDIAN)
 #define EXTENT_LOCATION(de)	((de).extentLocationM)
 #define DATA_LENGTH(de)		((de).dataLengthM)
 #else
