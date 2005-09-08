@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.27 2005-07-30 09:49:29 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.28 2005-09-08 13:09:47 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -217,6 +217,7 @@ CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
 	} else if(m_type == CALLBACK_HandlerObject::NONE){
 		//Do nothing. Merely DeAllocate the callback
 	} else E_Exit("what kind of callback is this!");
+	if(CallBack_Description[m_callback]) delete [] CallBack_Description[m_callback];
 	CallBack_Description[m_callback] = 0;
 	CALLBACK_DeAllocate(m_callback);
 }
@@ -271,6 +272,7 @@ void CALLBACK_Init(Section* sec) {
 	/* Setup all Interrupt to point to the default handler */
 	call_default=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET,"default");
+   
 	/* Only setup default handler for first half of interrupt table */
 	for (i=0;i<0x40;i++) {
 		real_writed(0,i*4,CALLBACK_RealPointer(call_default));
