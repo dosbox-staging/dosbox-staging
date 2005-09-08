@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.43 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.44 2005-09-08 13:08:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -595,7 +595,8 @@ private:
 public:
 	BIOS(Section* configuration):Module_base(configuration){
 		/* Clear the Bios Data Area */
-		for (Bit16u i=0;i<1024;i++) real_writeb(0x40,i,0);
+		/* till where does this bios Area run ? Some dos stuff is at 0x70 */
+		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
 		/* Setup all the interrupt handlers the bios controls */
 		/* INT 8 Clock IRQ Handler */
 		//TODO Maybe give this a special callback that will also call int 8 instead of starting 
@@ -707,7 +708,7 @@ public:
 	// look http://www.bioscentral.com/misc/bda.htm
 	
 	//Bitu config=0x4400;	//1 Floppy, 2 serial and 1 parrallel 
-	Bitu config = 0;
+	Bitu config = 0x0;
 	
 	// set number of parallel ports
 	// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
