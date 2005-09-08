@@ -19,6 +19,7 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "dos_inc.h"
+#include "callback.h"
 
 #define UMB_START_SEG 0x9fff
 
@@ -343,6 +344,12 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 }
 
 
+static Bitu DOS_default_handler(void) {
+	LOG(LOG_CPU,LOG_ERROR)("DOS rerouted Interrupt Called %X",lastint);
+	return CBRET_NONE;
+};
+
+static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {
 	// Create a dummy device MCB with PSPSeg=0x0008
 	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
@@ -351,9 +358,23 @@ void DOS_SetupMemory(void) {
 	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
 //	mcb_devicedummy.SetFileName("SD      ");
 
+	/* Let dos claim a few bios interrupts. Makes DOSBox more compatible with 
+	 * buggy games, which compare against the interrupt table. (probably a 
+	 * broken linked list implementation) */
 	// BioMenace (segment of int2<0x8000)
 	mem_writeb((DOS_MEM_START+1)<<4,0xcf);// iret
 	RealSetVec(0x02,(DOS_MEM_START+1)<<16);
+	callbackhandler.Allocate(&DOS_default_handler,"DOS default int");
+	//Shadow president wants int 4 to point to this.
+	real_writeb(0x70,0,(Bit8u)0xFE);   //GRP 4
+	real_writeb(0x70,1,(Bit8u)0x38);   //Extra Callback instruction
+	real_writew(0x70,2,callbackhandler.Get_callback());  //The immediate word
+	real_writeb(0x70,4,(Bit8u)0xCF);   //An IRET Instruction
+	real_writed(0,0x04*4,0x700000);
+	//claim some more ints to this location
+	real_writed(0,0x01*4,0x700000);
+	real_writed(0,0x03*4,0x700000);
+//	real_writed(0,0x0f*4,0x700000); //Always a tricky one (soundblaster irq)
 
 	DOS_MCB mcb((Bit16u)DOS_MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
