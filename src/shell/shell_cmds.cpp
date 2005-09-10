@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.56 2005-08-10 19:53:09 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.57 2005-09-10 14:15:37 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -531,12 +531,33 @@ void DOS_Shell::CMD_SET(char * args) {
 		WriteOut("%s\n",line.c_str());
 	} else {
 		*p++=0;
-		if (!SetEnv(args,p)) {
+		/* parse p for envirionment variables */
+		char parsed[CMD_MAXLINE];
+		char* p_parsed = parsed;
+		while(*p) {
+			if(*p != '%') *p_parsed++ = *p++; //Just add it (most likely path)
+			else if( *(p+1) == '%') {
+				*p_parsed++ = '%'; p += 2; //%% => % 
+			} else {
+				char * second = strchr(++p,'%');
+				if(!second) continue; *second++ = 0;
+				std::string temp;
+				if (GetEnvStr(p,temp)) {
+					std::string::size_type equals = temp.find('=');
+					if (equals == std::string::npos) continue;
+					strcpy(p_parsed,temp.substr(equals+1).c_str());
+					p_parsed += strlen(p_parsed);
+				}
+				p = second;
+			}
+		}
+		*p_parsed = 0;
+		/* Try setting the variable */
+		if (!SetEnv(args,parsed)) {
 			WriteOut(MSG_Get("SHELL_CMD_SET_OUT_OF_SPACE"));
 		}
 	}
 }
-
 
 void DOS_Shell::CMD_IF(char * args) {
 	StripSpaces(args);
