@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.51 2005-08-10 15:35:54 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.52 2005-09-11 20:56:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -619,14 +619,16 @@ static Bitu INT33_Handler(void) {
 		reg_dx=POS_Y;
 		break;
 	case 0x04:	/* Position Mouse */
-		if(reg_cx > mouse.max_x) mouse.x = static_cast<float>(mouse.max_x); 
-		else if (mouse.min_x > reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
-		else mouse.x = static_cast<float>(reg_cx);
+		/* If position isn't different from current position
+		 * don't change it then. (as position is rounded so numbers get
+		 * lost when the rounded number is set) (arena/simulation Wolf) */
+		if(reg_cx >= mouse.max_x) mouse.x = static_cast<float>(mouse.max_x);
+		else if (mouse.min_x >= reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
+		else if (reg_cx != POS_X) mouse.x = static_cast<float>(reg_cx);
 
-		if(reg_dx > mouse.max_y) mouse.y = static_cast<float>(mouse.max_y);
-		else if (mouse.min_y > reg_dx) mouse.y = static_cast<float>(mouse.min_y); 
-		else mouse.y = static_cast<float>(reg_dx);
-
+		if(reg_dx >= mouse.max_y) mouse.y = static_cast<float>(mouse.max_y);
+		else if (mouse.min_y >= reg_dx) mouse.y = static_cast<float>(mouse.min_y); 
+		else if (reg_dx != POS_Y) mouse.y = static_cast<float>(reg_dx);
 		DrawCursor();
 		break;
 	case 0x05:	/* Return Button Press Data */
