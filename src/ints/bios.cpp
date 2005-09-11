@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.44 2005-09-08 13:08:52 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.45 2005-09-11 13:06:00 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -36,6 +36,7 @@
  * counter using the BIOS_ZeroExtendedSize call */
 static Bit16u size_extended;
 static Bits other_memsystems=0;
+void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 static Bitu INT70_Handler(void) {
 	/* Acknowledge irq with cmos */
@@ -737,6 +738,7 @@ public:
 		// PS2 mouse
 		config |= 0x04;
 		mem_writew(BIOS_CONFIGURATION,config);
+		CMOS_SetRegister(0x14,config); //Should be updated on changes
 		/* Setup extended memory size */
 		IO_Write(0x70,0x30);
 		size_extended=IO_Read(0x71);
@@ -772,6 +774,7 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	equipmentword &= (~0x0E00);
 	equipmentword |= (portcount << 9);
 	mem_writew(BIOS_CONFIGURATION,equipmentword);
+	CMOS_SetRegister(0x14,equipmentword); //Should be updated on changes
 }
 
 

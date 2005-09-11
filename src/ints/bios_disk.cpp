@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.21 2005-09-01 17:34:39 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.22 2005-09-11 13:06:00 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -51,6 +51,8 @@ Bit16u imgDTASeg;
 RealPt imgDTAPtr;
 DOS_DTA *imgDTA;
 bool killRead;
+
+void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 /* 2 floppys and 2 harddrives, max */
 imageDisk *imageDiskList[MAX_DISK_IMAGES];
@@ -207,6 +209,7 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 				equipment|=(numofdisks<<5);
 			} else equipment|=1;
 			mem_writew(BIOS_CONFIGURATION,equipment);
+			CMOS_SetRegister(0x14, equipment);
 		}
 	}
 }
