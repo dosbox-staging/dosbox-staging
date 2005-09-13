@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.52 2005-09-11 20:56:48 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.53 2005-09-13 18:44:45 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -590,7 +590,7 @@ static void mouse_reset(void) {
 
 static Bitu INT33_Handler(void) {
 
-//	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X",reg_ax);
+//	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %d %d",reg_ax,POS_X,POS_Y);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		mouse_reset_hardware(); /* fallthrough */
@@ -664,6 +664,11 @@ static Bitu INT33_Handler(void) {
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
 			mouse.min_x=min;
 			mouse.max_x=max;
+			/* Battlechess wants this */
+			if(mouse.x > mouse.max_x) mouse.x = mouse.max_x;
+			if(mouse.x < mouse.min_x) mouse.x = mouse.min_x;
+			/* Or alternatively this: 
+			mouse.x = (mouse.max_x - mouse.min_x + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Hortizontal range min:%d max:%d",min,max);
 		}
 		break;
@@ -676,6 +681,11 @@ static Bitu INT33_Handler(void) {
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
 			mouse.min_y=min;
 			mouse.max_y=max;
+			/* Battlechess wants this */
+			if(mouse.y > mouse.max_y) mouse.y = mouse.max_y;
+			if(mouse.y < mouse.min_y) mouse.y = mouse.min_y;
+			/* Or alternatively this: 
+			mouse.y = (mouse.max_y - mouse.min_y + 1)/2;*/
 			LOG(LOG_MOUSE,LOG_NORMAL)("Define Vertical range min:%d max:%d",min,max);
 		}
 		break;
