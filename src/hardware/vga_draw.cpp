@@ -441,7 +441,7 @@ void VGA_SetupDrawing(Bitu val) {
 	case M_CGA2:
 		doubleheight=true;
 		vga.draw.blocks=2*width;
-		width<<=4;
+		width<<=3;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:

@@ -34,24 +34,25 @@
 
 VideoModeBlock ModeList_VGA[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
-{ 0x000  ,M_TEXT   ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
-{ 0x001  ,M_TEXT   ,320 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
-{ 0x002  ,M_TEXT   ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
-{ 0x003  ,M_TEXT   ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
-{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
-{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
-{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK | _EGA_LINE_DOUBLE	},
-{ 0x007  ,M_TEXT   ,640 ,400 ,80 ,25 ,9 ,16 ,4 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
+{ 0x000  ,M_TEXT   ,360 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT   ,360 ,400 ,40 ,25 ,9 ,16 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	},
+{ 0x002  ,M_TEXT   ,720 ,400 ,80 ,25 ,9 ,16 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
+{ 0x003  ,M_TEXT   ,720 ,400 ,80 ,25 ,9 ,16 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
+{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,2 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,2 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,2 ,0xB8000 ,0x0800 ,100 ,449 ,80 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x007  ,M_TEXT   ,720 ,400 ,80 ,25 ,9 ,16 ,8 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,400 ,0	},
 
 { 0x00D  ,M_EGA16  ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
 { 0x00E  ,M_EGA16  ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,_EGA_LINE_DOUBLE },
-{ 0x00F  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,400 ,0	},/*was EGA_2*/
-{ 0x010  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x00F  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},/*was EGA_2*/
+{ 0x010  ,M_EGA16  ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
 { 0x011  ,M_EGA16  ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,0	},/*was EGA_2 */
 { 0x012  ,M_EGA16  ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0xA000 ,100 ,525 ,80 ,480 ,0	},
 { 0x013  ,M_VGA    ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xA0000 ,0x0000 ,100 ,449 ,80 ,400 ,0   },
-{ 0x054  ,M_TEXT   ,1056 ,688, 132,43, 8, 8,  1 ,0xB8000 ,0x4000, 192, 800, 132, 688, 0 },
-{ 0x055  ,M_TEXT   ,1056 ,400, 132,25, 8, 16, 1 ,0xB8000 ,0x2000, 192, 449, 132, 400, 0 },
+
+{ 0x054  ,M_TEXT   ,1056,688, 132,43, 8, 8,  1 ,0xB8000 ,0x4000, 192, 800, 132,688, 0   },
+{ 0x055  ,M_TEXT   ,1056,400, 132,25, 8, 16, 1 ,0xB8000 ,0x2000, 192, 449, 132,400, 0   },
 { 0x100  ,M_LIN8   ,640 ,400 ,80 ,25 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,449 ,80 ,400 ,0   },
 { 0x101  ,M_LIN8   ,640 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,100 ,525 ,80 ,480 ,0	},
 { 0x103  ,M_LIN8   ,800 ,600 ,100,37 ,8 ,16 ,1 ,0xA0000 ,0x10000,128 ,663 ,100,600 ,0	},
@@ -351,6 +352,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 	if (machine!=MCH_VGA) return INT10_SetVideoMode_OTHER(mode,clearmem);
 	Bit8u modeset_ctl,video_ctl,vga_switches;
+
 	if (!SetCurMode(ModeList_VGA,mode)){
 		LOG(LOG_INT10,LOG_ERROR)("Trying to set illegal mode %X",mode);
 		return false;
@@ -364,18 +366,31 @@ bool INT10_SetVideoMode(Bitu mode) {
 	/* Setup the VGA to the correct mode */
 
 	Bit16u crtc_base;
-	bool mono_mode=(mode == 7);
+	bool mono_mode=(mode == 7) || (mode==0xf);  
 	if (mono_mode) crtc_base=0x3b4;
 	else crtc_base=0x3d4;
+
 	/* Setup MISC Output Register */
 	Bit8u misc_output=0x2 | (mono_mode ? 0x0 : 0x1);
+
+	switch (CurMode->vdispend) {
+	case 400: misc_output|=0x60;
+		    if (CurMode->type==M_TEXT) // && (CurMode->pstart==0xB8000))
+			    misc_output|=0x4;
+			break;
+	case 480: misc_output|=0xe0;
+			break;
+	case 350: misc_output|=0xa0;
+			break;
+	default: misc_output|=0x60;
+	}
 	IO_Write(0x3c2,misc_output);		//Setup for 3b4 or 3d4
+	
 	/* Program Sequencer */
 	Bit8u seq_data[SEQ_REGS];
 	memset(seq_data,0,SEQ_REGS);
-	seq_data[1]|=1;		//8 dot fonts by default
-	seq_data[1]|=		//Check for half clock
-		(CurMode->special & _EGA_HALF_CLOCK) ? 0x08 : 0x00;
+	if (CurMode->twidth==8) seq_data[1]|=1;	//8 dot fonts by default
+	if (CurMode->special & _EGA_HALF_CLOCK) seq_data[1]|=0x08; //Check for half clock
 	seq_data[4]|=0x02;	//More than 64kb
 	switch (CurMode->type) {
 	case M_TEXT:
@@ -415,41 +430,59 @@ bool INT10_SetVideoMode(Bitu mode) {
 	IO_Write(crtc_base,0x02);IO_Write(crtc_base+1,CurMode->hdispend);
 	hor_overflow|=((CurMode->hdispend) & 0x100) >> 6;
 	/* End horizontal Blanking */
-	Bitu blank_end;
-	if (CurMode->special & _EGA_HALF_CLOCK) {
-		blank_end = (CurMode->htotal-1) & 0x7f;
-	} else {
-		blank_end = (CurMode->htotal-2) & 0x7f;
-	}
+	Bitu blank_end=(CurMode->htotal-2) & 0x7f;
 	IO_Write(crtc_base,0x03);IO_Write(crtc_base+1,0x80|(blank_end & 0x1f));
+
 	/* Start Horizontal Retrace */
 	Bitu ret_start;
-	if (CurMode->special & _EGA_HALF_CLOCK) ret_start = (CurMode->hdispend+2);
+	if ((CurMode->special & _EGA_HALF_CLOCK) && (CurMode->type!=M_CGA2)) ret_start = (CurMode->hdispend+3);
+	else if (CurMode->type==M_TEXT) ret_start = (CurMode->hdispend+5);
 	else ret_start = (CurMode->hdispend+4);
 	IO_Write(crtc_base,0x04);IO_Write(crtc_base+1,ret_start);
 	hor_overflow|=(ret_start & 0x100) >> 4;
+
 	/* End Horizontal Retrace */
 	Bitu ret_end;
-	if (CurMode->special & _EGA_HALF_CLOCK) ret_end = (CurMode->htotal-2) & 0x3f;
-	else ret_end = (CurMode->htotal-4) & 0x3f;
-	IO_Write(crtc_base,0x05);IO_Write(crtc_base+1,(ret_end & 0x1f) | (blank_end & 0x20) << 2);
+	if (CurMode->special & _EGA_HALF_CLOCK) {
+		if (CurMode->type==M_CGA2) ret_end=0;	// mode 6
+		else if (CurMode->special & _EGA_LINE_DOUBLE) ret_end = (CurMode->htotal-18) & 0x1f;
+		else ret_end = ((CurMode->htotal-18) & 0x1f) | 0x20; // mode 0&1 have 1 char sync delay
+	} else if (CurMode->type==M_TEXT) ret_end = (CurMode->htotal-3) & 0x1f;
+	else ret_end = (CurMode->htotal-4) & 0x1f;
+	
+	IO_Write(crtc_base,0x05);IO_Write(crtc_base+1,ret_end | (blank_end & 0x20) << 2);
+
 	/* Vertical Total */
 	IO_Write(crtc_base,0x06);IO_Write(crtc_base+1,(CurMode->vtotal-2));
 	overflow|=((CurMode->vtotal-2) & 0x100) >> 8;
 	overflow|=((CurMode->vtotal-2) & 0x200) >> 4;
 	ver_overflow|=((CurMode->vtotal-2) & 0x400) >> 10;
+
 /*
 	These aren't exactly accurate i think, 
 	Should be more like a certain percentage based on vertical total
 	So you get same sized borders, but okay :)
  */
+
+	Bitu vretrace;
+	switch (CurMode->vdispend) {
+	case 400: vretrace=CurMode->vdispend+12;
+			break;
+	case 480: vretrace=CurMode->vdispend+10;
+			break;
+	case 350: vretrace=CurMode->vdispend+37;
+			break;
+	default: vretrace=CurMode->vdispend+12;
+	}
+
 	/* Vertical Retrace Start */
-	IO_Write(crtc_base,0x10);IO_Write(crtc_base+1,(CurMode->vdispend+12));
-	overflow|=((CurMode->vdispend+12) & 0x100) >> 6;
-	overflow|=((CurMode->vdispend+12) & 0x200) >> 2;
-	ver_overflow|=((CurMode->vdispend+12) & 0x400) >> 6;
+	IO_Write(crtc_base,0x10);IO_Write(crtc_base+1,vretrace);
+	overflow|=(vretrace & 0x100) >> 6;
+	overflow|=(vretrace & 0x200) >> 2;
+	ver_overflow|=(vretrace & 0x400) >> 6;
+
 	/* Vertical Retrace End */
-	IO_Write(crtc_base,0x11);IO_Write(crtc_base+1,(CurMode->vdispend+14) & 0xF);
+	IO_Write(crtc_base,0x11);IO_Write(crtc_base+1,(vretrace+2) & 0xF);
 
 	/* Vertical Display End */
 	IO_Write(crtc_base,0x12);IO_Write(crtc_base+1,(CurMode->vdispend-1));
@@ -457,13 +490,26 @@ bool INT10_SetVideoMode(Bitu mode) {
 	overflow|=((CurMode->vdispend-1) & 0x200) >> 3;
 	ver_overflow|=((CurMode->vdispend-1) & 0x400) >> 9;
 	
+	Bitu vblank_trim;
+	switch (CurMode->vdispend) {
+	case 400: vblank_trim=6;
+			break;
+	case 480: vblank_trim=7;
+			break;
+	case 350: vblank_trim=5;
+			break;
+	default: vblank_trim=8;
+	}
+
 	/* Vertical Blank Start */
-	IO_Write(crtc_base,0x15);IO_Write(crtc_base+1,(CurMode->vdispend+8));
-	overflow|=((CurMode->vdispend+8) & 0x100) >> 5;
-	max_scanline|=((CurMode->vdispend+8) & 0x200) >> 4;
-	ver_overflow|=((CurMode->vdispend+8) & 0x400) >> 8;
-	/* Vertical Retrace End */
-	IO_Write(crtc_base,0x16);IO_Write(crtc_base+1,(CurMode->vtotal-8));
+	IO_Write(crtc_base,0x15);IO_Write(crtc_base+1,(CurMode->vdispend+vblank_trim));
+	overflow|=((CurMode->vdispend+vblank_trim) & 0x100) >> 5;
+	max_scanline|=((CurMode->vdispend+vblank_trim) & 0x200) >> 4;
+	ver_overflow|=((CurMode->vdispend+vblank_trim) & 0x400) >> 8;
+
+	/* Vertical Blank End */
+	IO_Write(crtc_base,0x16);IO_Write(crtc_base+1,(CurMode->vtotal-vblank_trim-2));
+
 	/* Line Compare */
 	Bitu line_compare=(CurMode->vtotal < 1024) ? 1023 : 2047;
 	IO_Write(crtc_base,0x18);IO_Write(crtc_base+1,line_compare&0xff);
@@ -476,7 +522,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 	switch (CurMode->type) {
 	case M_TEXT:
 		max_scanline|=CurMode->cheight-1;
-		underline=0x1f;
+		underline=mono_mode ? 0x0f : 0x1f; // mode 7 uses a diff underline position
 		break;
 	case M_VGA:
 		underline=0x40;
@@ -490,6 +536,8 @@ bool INT10_SetVideoMode(Bitu mode) {
 		max_scanline|=1;
 		break;
 	}
+	if (CurMode->vdispend==350) underline=0x0f;
+
 	IO_Write(crtc_base,0x09);IO_Write(crtc_base+1,max_scanline);
 	IO_Write(crtc_base,0x14);IO_Write(crtc_base+1,underline);
 
@@ -510,12 +558,18 @@ bool INT10_SetVideoMode(Bitu mode) {
 	}
 	/* Mode Control */
 	Bit8u mode_control=0;
+
 	switch (CurMode->type) {
-	case M_CGA4:
 	case M_CGA2:
+		mode_control=0xc2; // 0x06 sets address wrap.
+		break;
+	case M_CGA4:
 		mode_control=0xa2;
 		break;
 	case M_EGA16:
+		if (CurMode->mode==0x11) // 0x11 also sets address wrap.  thought maybe all 2 color modes did but 0x0f doesn't.
+			mode_control=0xc3; // so.. 0x11 or 0x0f a one off?
+		else
 		mode_control=0xe3;
 		break;
 	case M_TEXT:
@@ -526,6 +580,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 		mode_control=0xab;
 		break;
 	}
+
 	IO_Write(crtc_base,0x17);IO_Write(crtc_base+1,mode_control);
 	/* Renable write protection */
 	IO_Write(crtc_base,0x11);
