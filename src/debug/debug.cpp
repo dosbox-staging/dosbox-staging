@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.68 2005-08-31 13:00:14 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.69 2005-09-18 19:50:03 c2woody Exp $ */
 
 #include <string.h>
 #include <list>
@@ -41,6 +41,7 @@
 #include "programs.h"
 #include "debug_inc.h"
 #include "../cpu/lazyflags.h"
+#include "keyboard.h"
 
 #ifdef WIN32
 void WIN32_Console();
@@ -1651,6 +1652,7 @@ void DEBUG_Enable(void) {
 		showhelp=true;
 		DEBUG_ShowMsg("***| PRESS \"H\" TO SHOW ALL COMMANDS. PRESS \"RETURN\" TO ENTER COMMANDMODE. |***\n");
 	}
+	KEYBOARD_ClrBuffer();
 }
 
 void DEBUG_DrawScreen(void) {

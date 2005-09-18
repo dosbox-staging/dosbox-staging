@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.32 2005-08-24 16:06:18 c2woody Exp $ */
+/* $Id: keyboard.cpp,v 1.33 2005-09-18 19:50:03 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -72,7 +72,7 @@ static void KEYBOARD_TransferBuffer(Bitu val) {
 }
 
 
-static void KEYBOARD_ClrBuffer(void) {
+void KEYBOARD_ClrBuffer(void) {
 	keyb.used=0;
 	keyb.pos=0;
 	PIC_RemoveEvents(KEYBOARD_TransferBuffer);
@@ -309,6 +309,7 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	case KBD_kp0:ret=82;break;
 	case KBD_kpperiod:ret=83;break;
 
+	case KBD_extra_lt_gt:ret=86;break;
 	case KBD_f11:ret=87;break;
 	case KBD_f12:ret=88;break;
 

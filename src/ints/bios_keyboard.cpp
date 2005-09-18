@@ -29,7 +29,7 @@ static Bitu call_int16,call_irq1;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
-#define MAX_SCAN_CODE 0x53
+#define MAX_SCAN_CODE 0x58
 static struct {
   Bit16u normal;
   Bit16u shift;
@@ -112,14 +112,19 @@ static struct {
       { 0x4900, 0x4939, 0x8400, 0x0009 }, /* 9 PgUp */
       { 0x4a2d, 0x4a2d,   none,   none }, /* - */
       { 0x4b00, 0x4b34, 0x7300, 0x0004 }, /* 4 Left */
-      { 0x4c00, 0x4c35,   none, 0x0005 }, /* 5 */
+      { 0x4cf0, 0x4c35,   none, 0x0005 }, /* 5 */
       { 0x4d00, 0x4d36, 0x7400, 0x0006 }, /* 6 Right */
       { 0x4e2b, 0x4e2b,   none,   none }, /* + */
       { 0x4f00, 0x4f31, 0x7500, 0x0001 }, /* 1 End */
       { 0x5000, 0x5032,   none, 0x0002 }, /* 2 Down */
       { 0x5100, 0x5133, 0x7600, 0x0003 }, /* 3 PgDn */
       { 0x5200, 0x5230,   none, 0x0000 }, /* 0 Ins */
-      { 0x5300, 0x532e,   none,   none }  /* Del */
+      { 0x5300, 0x532e,   none,   none }, /* Del */
+      {   none,   none,   none,   none },
+      {   none,   none,   none,   none },
+      { 0x565c, 0x567c,   none,   none }, /* (102-key) */
+      { 0x8500, 0x8700, 0x8900, 0x8b00 }, /* F11 */
+      { 0x8600, 0x8800, 0x8a00, 0x8c00 }  /* F12 */
       };
 
 static void add_key(Bit16u code) {
@@ -285,10 +290,10 @@ static Bitu IRQ1_Handler(void) {
 	case 0xba:flags1 &=~0x40;leds &=~0x04;break;
 	case 0x45:
 		if (flags3 &0x01) {
-			flags3 &=0x01;
+			flags3 &=~0x01;
+			mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
 			if ((flags2&8)==0) {
 				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
-				mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
 				IO_Write(0x20,0x20);
 				while (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) CALLBACK_Idle();	// pause loop
 				reg_ip+=4;	// skip out 20,20
@@ -302,7 +307,7 @@ static Bitu IRQ1_Handler(void) {
 		break;					/* Num Lock */
 	case 0xc5:
 		if (flags3 &0x01) {
-			flags3 &=0x01;
+			flags3 &=~0x01;
 		} else {
 			flags1 &=~0x20;
 			leds &=~0x02;

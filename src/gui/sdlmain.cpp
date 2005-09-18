@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.87 2005-07-28 19:53:42 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.88 2005-09-18 19:50:03 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -41,6 +41,7 @@
 #include "debug.h"
 #include "mapper.h"
 #include "vga.h"
+#include "keyboard.h"
 
 //#define DISABLE_JOYSTICK
 
@@ -214,6 +215,7 @@ void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 static void PauseDOSBox(void) {
 	GFX_SetTitle(-1,-1,true);
 	bool paused = true;
+	KEYBOARD_ClrBuffer();
 	SDL_Delay(500);
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
