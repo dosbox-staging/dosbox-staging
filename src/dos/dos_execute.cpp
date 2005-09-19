@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.48 2005-07-22 10:03:20 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.49 2005-09-19 08:25:38 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -395,8 +395,10 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		   should not modify the flags (e.g. IOPL in v86 mode) */
 		mem_writew(SegPhys(ss)+reg_sp+4,reg_flags&(~FLAG_CF));
 		/* Setup the rest of the registers */
-		reg_ax=0;reg_si=0x100;
-		reg_cx=reg_dx=reg_bx=reg_di=0;
+		reg_ax=reg_bx=0;reg_cx=0xff;
+		reg_dx=pspseg;
+		reg_si=RealOff(csip);
+		reg_di=RealOff(sssp);
 		reg_bp=0x91c;	/* DOS internal stack begin relict */
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
 #if C_DEBUG		
