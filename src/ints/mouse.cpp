@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.53 2005-09-13 18:44:45 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.54 2005-09-21 11:37:35 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -36,7 +36,7 @@
 
 static Bitu call_int33,call_int74;
 static Bit16u ps2cbseg,ps2cbofs;
-static bool useps2callback;
+static bool useps2callback,ps2callbackinit;
 static Bit16u call_ps2;
 static RealPt ps2_callback;
 static Bit16s oldmouseX, oldmouseY;
@@ -121,19 +121,28 @@ static struct {
 	Bit16s oldshown;
 } mouse;
 
-void Mouse_SetPS2State(bool use) {
-	if ((SegValue(es)!=0) && (reg_bx!=0)) useps2callback = use;
-	else useps2callback = false;
+bool Mouse_SetPS2State(bool use) {
+	if (use && (!ps2callbackinit)) {
+		useps2callback = false;
+		PIC_SetIRQMask(MOUSE_IRQ,true);
+		return false;
+	}
+	useps2callback = use;
 	Mouse_AutoLock(useps2callback);
 	PIC_SetIRQMask(MOUSE_IRQ,!useps2callback);
+	return true;
 }
 
 void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
-	if ((pseg==0) && (pofs==0)) useps2callback = false;
-	else useps2callback = true;
-	ps2cbseg = pseg;
-	ps2cbofs = pofs;
-	Mouse_AutoLock(useps2callback);
+	if ((pseg==0) && (pofs==0)) {
+		ps2callbackinit = false;
+		Mouse_AutoLock(false);
+	} else {
+		ps2callbackinit = true;
+		ps2cbseg = pseg;
+		ps2cbofs = pofs;
+	}
+	Mouse_AutoLock(ps2callbackinit);
 }
 
 void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
@@ -247,8 +256,8 @@ void SaveVgaRegisters()
 		gfxReg[i] = IO_Read(0x3CF);
 	}
 	/* Setup some default values in GFX regs that should work */
-	IO_Write	(0x3CE,3);IO_Write(0x3Cf,0);		//disable rotate and operation
-	IO_Write	(0x3CE,5);IO_Write(0x3Cf,0);		//Force read/write mode 0
+	IO_Write(0x3CE,3); IO_Write(0x3Cf,0);				//disable rotate and operation
+	IO_Write(0x3CE,5); IO_Write(0x3Cf,gfxReg[5]&0xf0);	//Force read/write mode 0
 }
 
 void RestoreVgaRegisters()
@@ -398,6 +407,7 @@ void Mouse_CursorMoved(float x,float y) {
 
 	if((fabs(x) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
 	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
+	if (useps2callback) dy *= 2;	
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
@@ -916,7 +926,7 @@ void MOUSE_Init(Section* sec) {
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-	useps2callback = false;
+	useps2callback = false; ps2callbackinit = false;
  	call_ps2=CALLBACK_Allocate();
 	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
 	ps2_callback=CALLBACK_RealPointer(call_ps2);

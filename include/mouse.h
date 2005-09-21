@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.h,v 1.9 2005-03-24 10:32:09 qbix79 Exp $ */
+/* $Id: mouse.h,v 1.10 2005-09-21 11:37:35 c2woody Exp $ */
 
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H
@@ -24,7 +24,7 @@
 void Mouse_ShowCursor(void);
 void Mouse_HideCursor(void);
 
-void Mouse_SetPS2State(bool use);
+bool Mouse_SetPS2State(bool use);
 void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs);
 
 void Mouse_CursorMoved(float x,float y);

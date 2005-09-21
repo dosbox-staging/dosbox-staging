@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.45 2005-09-11 13:06:00 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.46 2005-09-21 11:37:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -520,20 +520,27 @@ static Bitu INT15_Handler(void) {
 				reg_ah=0;
 				CALLBACK_SCF(false);
 			} else if (reg_bh==0x01) {	//enable
-				Mouse_SetPS2State(true);
+				if (!Mouse_SetPS2State(true)) {
+					reg_ah=5;
+					CALLBACK_SCF(true);
+					break;
+				}
 				reg_ah=0;
 				CALLBACK_SCF(false);
-			} else CALLBACK_SCF(true);
+			} else {
+				CALLBACK_SCF(true);
+				reg_ah=1;
+			}
 			break;
 		case 0x01:		// reset
-			Mouse_SetPS2State(false);
 			reg_bx=0x00aa;	// mouse
-			CALLBACK_SCF(false);
-			break;
-		case 0x02:		// set sampling rate
+			// fall through
+		case 0x05:		// initialize
+			Mouse_SetPS2State(false);
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
+		case 0x02:		// set sampling rate
 		case 0x03:		// set resolution
 			CALLBACK_SCF(false);
 			reg_ah=0;
@@ -543,20 +550,23 @@ static Bitu INT15_Handler(void) {
 			CALLBACK_SCF(false);
 			reg_ah=0;
 			break;
-		case 0x05:		// initialize
-			CALLBACK_SCF(false);
-			reg_ah=0;
-			break;
 		case 0x06:		// extended commands
-			if ((reg_bh==0x01) || (reg_bh==0x02)) { CALLBACK_SCF(false); reg_ah=0;}
-			else CALLBACK_SCF(true);
+			if ((reg_bh==0x01) || (reg_bh==0x02)) {
+				CALLBACK_SCF(false); 
+				reg_ah=0;
+			} else {
+				CALLBACK_SCF(true);
+				reg_ah=1;
+			}
 			break;
 		case 0x07:		// set callback
 			Mouse_ChangePS2Callback(SegValue(es),reg_bx);
 			CALLBACK_SCF(false);
+			reg_ah=0;
 			break;
 		default:
 			CALLBACK_SCF(true);
+			reg_ah=1;
 			break;
 		}
 		break;
