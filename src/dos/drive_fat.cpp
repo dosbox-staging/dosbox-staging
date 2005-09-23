@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.8 2005-02-10 10:20:51 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.9 2005-09-23 11:42:29 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -723,21 +723,25 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	char pathName[11];
 
 	/* Check if file already exists */
-	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+		/* Truncate file */
+		fileEntry.entrysize=0;
+		directoryChange(dirClust, &fileEntry, subEntry);
+	} else {
+		/* Can we even get the name of the file itself? */
+		if(!getEntryName(name, &dirName[0])) return false;
+		convToDirFile(&dirName[0], &pathName[0]);
 
-	/* Can we even get the name of the file itself? */
-	if(!getEntryName(name, &dirName[0])) return false;
-	convToDirFile(&dirName[0], &pathName[0]);
+		/* Can we find the base directory? */
+		if(!getDirClustNum(name, &dirClust, true)) return false;
+		memset(&fileEntry, 0, sizeof(direntry));
+		memcpy(&fileEntry.entryname, &pathName[0], 11);
+		fileEntry.attrib = attributes;
+		addDirectoryEntry(dirClust, fileEntry);
 
-	/* Can we find the base directory? */
-	if(!getDirClustNum(name, &dirClust, true)) return false;
-	memset(&fileEntry, 0, sizeof(direntry));
-	memcpy(&fileEntry.entryname, &pathName[0], 11);
-	fileEntry.attrib = attributes;
-	addDirectoryEntry(dirClust, fileEntry);
-
-	/* Check if file exists now */
-	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+		/* Check if file exists now */
+		if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+	}
 
 	/* Empty file created, now lets open it */
 	/* TODO: check for read-only flag and requested write access */
@@ -881,8 +885,11 @@ bool fatDrive::FindNext(DOS_DTA &dta) {
 }
 
 bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
-	/* TODO: Stub */
-	return false;
+	direntry fileEntry;
+	Bit32u dirClust, subEntry;
+	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+	*attr=fileEntry.attrib;
+	return true;
 }
 
 bool fatDrive::directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum) {
