@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
+#include "render.h"
 
 static void write_crtc_index_other(Bitu port,Bitu val,Bitu iolen) {
 	vga.other.index=val;
@@ -123,6 +124,65 @@ static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
 	return (Bitu)-1;
 }
 
+static void cga16_color_select(Bit8u val) {
+// Algorithm provided by NewRisingSun
+// His/Her algorithm is more complex and gives better results than the one below
+// However that algorithm doesn't fit in our vga pallette.
+// Therefore a simple variant is used, but the colours are bit lighter.
+
+// It uses an avarage over the bits to give smooth transitions from colour to colour
+// This is represented by the j variable. The i variable gives the 16 colours
+// The draw handler calculates the needed avarage and combines this with the colour
+// to match an entry that is generated here.
+
+	int baseR=0, baseG=0, baseB=0;
+	double sinhue,coshue;
+	double I,Q,Y,pixelI,pixelQ,R,G,B;
+	Bitu colorBit1,colorBit2,colorBit3,colorBit4,index;
+
+	if (val & 0x01) baseB += 0xa8;
+	if (val & 0x02) baseG += 0xa8;
+	if (val & 0x04) baseR += 0xa8;
+	if (val & 0x08) { baseR += 0x57; baseG += 0x57; baseB += 0x57; }
+	if (val & 0x20) {
+		//Hue = 33.0 + hueoffset (0)
+		sinhue=0.54463904; //sin(hue*PI/180);
+    		coshue=0.83867057; //sin(hue*PI/180);
+	} else {
+		//Hue = 55.0 + hueoffset (0)
+		sinhue=0.81915204; //sin(hue*PI/180);
+    		coshue=0.57357644; //cos(hue*PI/180);
+	}
+	for(Bitu i = 0; i < 16;i++) {
+		for(Bitu j = 0;j < 5;j++) {
+			index = 0x80|(j << 4)|i; //use upperpart of vga pallette
+			colorBit4 = (i&1)>>0;
+			colorBit3 = (i&2)>>1;
+			colorBit2 = (i&4)>>2;
+			colorBit1 = (i&8)>>3;
+
+			//calculate lookup table
+			I = 0; Q = 0;
+			I += (double) colorBit1;
+			Q += (double) colorBit2;
+			I -= (double) colorBit3;
+			Q -= (double) colorBit4;
+			Y  = (double) j / 4.0; //calculated avarage is over 4 bits
+
+			pixelI = I * 1.0 / 3.0; //I* tvSaturnation / 3.0
+			pixelQ = Q * 1.0 / 3.0; //Q* tvSaturnation / 3.0
+			I = pixelI*coshue + pixelQ*sinhue;
+			Q = pixelQ*coshue - pixelI*sinhue;
+
+			R = Y + 0.956*I + 0.621*Q; if (R < 0.0) R = 0.0; if (R > 1.0) R = 1.0;
+			G = Y - 0.272*I - 0.647*Q; if (G < 0.0) G = 0.0; if (G > 1.0) G = 1.0;
+			B = Y - 1.105*I + 1.702*Q; if (B < 0.0) B = 0.0; if (B > 1.0) B = 1.0;
+
+			RENDER_SetPal(index,static_cast<Bit8u>(R*baseR),static_cast<Bit8u>(G*baseG),static_cast<Bit8u>(B*baseB));
+		}
+	}
+}
+
 static void write_color_select(Bit8u val) {
 	vga.tandy.color_select=val;
 	switch (vga.mode) {
@@ -145,6 +205,9 @@ static void write_color_select(Bit8u val) {
 				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base);
 			}
 		}
+		break;
+	case M_CGA16:
+		cga16_color_select(val);
 		break;
 	case M_TEXT:
 	case M_TANDY16:

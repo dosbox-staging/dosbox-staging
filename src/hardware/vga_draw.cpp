@@ -52,22 +52,43 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	return TempLine;
 }
 
-static Bit8u convert16[16]={
-	0x0,0x2,0x1,0x3,0x5,0x7,0x4,0x9,
-	0x6,0xa,0x8,0xb,0xd,0xe,0xc,0xf
-};
+static Bitu temp[643]={0};
 
 static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
+	//Generate a temporary bitline to calculate the avarage
+	//over bit-2  bit-1  bit  bit+1.
+	//Combine this number with the current colour to get 
+	//an unigue index in the pallete. Or it with bit 7 as they are stored 
+	//in the upperpart to keep them from interfering the regular cga stuff
+
+	for(Bitu x = 0; x < 640; x++)
+		temp[x+2] = (( reader[(x>>3)] >> (7-(x&7)) )&1) << 4;
+		//shift 4 as that is for the index.
+	Bitu i = 0,temp1,temp2,temp3,temp4;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1=*reader++;
-		Bitu val2=convert16[val1&0xf];
-		val1=convert16[val1 >> 4];
-		*draw++=(val1 <<  0)  |
-				(val1 <<  8)  |
-				(val2 << 16)  |
-				(val2 << 24);
+		Bitu val1 = *reader++;
+		Bitu val2 = val1&0xf;
+		val1 >>= 4;
+
+		temp1 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp2 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp3 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp4 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+
+		*draw++ = 0x80808080|(temp1|val1) |
+		          ((temp2|val1) << 8) |
+		          ((temp3|val1) <<16) |
+		          ((temp4|val1) <<24);
+		temp1 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp2 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp3 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		temp4 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
+		*draw++ = 0x80808080|(temp1|val2) |
+		          ((temp2|val2) << 8) |
+		          ((temp3|val2) <<16) |
+		          ((temp4|val2) <<24);
 	}
 	return TempLine;
 }
@@ -426,10 +447,9 @@ void VGA_SetupDrawing(Bitu val) {
 		VGA_DrawLine=VGA_Draw_EGA_Line;
 		break;
 	case M_CGA16:
-		doublewidth=true;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
-		width<<=3;
+		width<<=4;
 		VGA_DrawLine=VGA_Draw_CGA16_Line;
 		break;
 	case M_CGA4:
@@ -482,6 +502,7 @@ void VGA_SetupDrawing(Bitu val) {
 		VGA_DrawLine=VGA_Draw_4BPP_Line;
 		break;
 	case M_TANDY_TEXT:
+		   LOG_MSG("tandy text");
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;
 	case M_HERC_TEXT:
 		aspect_ratio=1;
