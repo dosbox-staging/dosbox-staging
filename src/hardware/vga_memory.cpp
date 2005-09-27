@@ -40,6 +40,10 @@ static Bitu VGA_NormalReadHandler(PhysPt start) {
 	return 0;
 }
 
+static Bitu VGA_Chain4ReadHandler(PhysPt start) {
+	return vga.mem.linear[start];
+}
+
 //Nice one from DosEmu
 
 INLINE static Bit32u RasterOp(Bit32u input,Bit32u mask) {
@@ -114,6 +118,33 @@ static void VGA_GFX_16_WriteHandler(PhysPt start,Bit8u val) {
 
 }
 
+static void VGA_GFX_16Chain4_WriteHandler(PhysPt start,Bit8u val) {
+	Bit32u data=ModeOperation(val);
+	/* Update video memory and the pixel buffer */
+	VGA_Latch pixels;
+	vga.mem.linear[start] = val;
+	start >>= 2;
+	pixels.d=vga.mem.latched[start].d;
+
+	Bit8u * write_pixels=&vga.mem.linear[512*1024+(start<<3)];
+
+	Bit32u colors0_3, colors4_7;
+	VGA_Latch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
+		colors0_3 = 
+		Expand16Table[0][temp.b[0]] |
+		Expand16Table[1][temp.b[1]] |
+		Expand16Table[2][temp.b[2]] |
+		Expand16Table[3][temp.b[3]];
+	*(Bit32u *)write_pixels=colors0_3;
+	temp.d=pixels.d & 0x0f0f0f0f;
+	colors4_7 = 
+		Expand16Table[0][temp.b[0]] |
+		Expand16Table[1][temp.b[1]] |
+		Expand16Table[2][temp.b[2]] |
+		Expand16Table[3][temp.b[3]];
+	*(Bit32u *)(write_pixels+4)=colors4_7;
+}
+
 static void VGA_GFX_256U_WriteHandler(PhysPt start,Bit8u val) {
 	Bit32u data=ModeOperation(val);
 	VGA_Latch pixels;
@@ -157,6 +188,28 @@ public:
 	}
 };
 
+class VGAReadChain4_PageHandler : public PageHandler {
+public:
+	Bitu readb(PhysPt addr) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		return VGA_Chain4ReadHandler(addr);
+	}
+	Bitu readw(PhysPt addr) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		return 
+			(VGA_Chain4ReadHandler(addr+0) << 0) |
+			(VGA_Chain4ReadHandler(addr+1) << 8);
+	}
+	Bitu readd(PhysPt addr) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		return 
+			(VGA_Chain4ReadHandler(addr+0) << 0)  |
+			(VGA_Chain4ReadHandler(addr+1) << 8)  |
+			(VGA_Chain4ReadHandler(addr+2) << 16) |
+			(VGA_Chain4ReadHandler(addr+3) << 24);
+	}
+};
+
 class VGA_16_PageHandler : public VGARead_PageHandler {
 public:	
 	VGA_16_PageHandler()  {
@@ -177,6 +230,29 @@ public:
 		VGA_GFX_16_WriteHandler(addr+1,(Bit8u)(val >> 8));
 		VGA_GFX_16_WriteHandler(addr+2,(Bit8u)(val >> 16));
 		VGA_GFX_16_WriteHandler(addr+3,(Bit8u)(val >> 24));
+	}
+};
+
+class VGA_16Chain4_PageHandler : public VGAReadChain4_PageHandler {
+public:	
+	VGA_16Chain4_PageHandler()  {
+		flags=PFLAG_NOCODE;
+	}
+	void writeb(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_GFX_16Chain4_WriteHandler(addr+0,(Bit8u)(val >> 0));
+	}
+	void writew(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_GFX_16Chain4_WriteHandler(addr+0,(Bit8u)(val >> 0));
+		VGA_GFX_16Chain4_WriteHandler(addr+1,(Bit8u)(val >> 8));
+	}
+	void writed(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_GFX_16Chain4_WriteHandler(addr+0,(Bit8u)(val >> 0));
+		VGA_GFX_16Chain4_WriteHandler(addr+1,(Bit8u)(val >> 8));
+		VGA_GFX_16Chain4_WriteHandler(addr+2,(Bit8u)(val >> 16));
+		VGA_GFX_16Chain4_WriteHandler(addr+3,(Bit8u)(val >> 24));
 	}
 };
 
@@ -330,6 +406,7 @@ static struct vg {
 	VGA_TANDY_PageHandler htandy;
 	VGA_256_PageHandler h256;
 	VGA_16_PageHandler h16;
+	VGA_16Chain4_PageHandler h16c4;
 	VGA_MMIO_PageHandler mmio;
 } vgaph;
 
@@ -363,7 +440,8 @@ void VGA_SetupHandlers(void) {
 		}
 		break;
 	case M_EGA16:
-		range_handler=&vgaph.h16;
+		if (vga.config.chained) range_handler=&vgaph.h16c4;
+		else range_handler=&vgaph.h16;
 		break;	
 	case M_TEXT:
 		/* Check if we're not in odd/even mode */
