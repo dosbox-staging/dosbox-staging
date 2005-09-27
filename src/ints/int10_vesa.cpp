@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.16 2005-04-27 18:58:08 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.17 2005-09-27 11:05:44 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -158,7 +158,7 @@ foundit:
 
 
 Bit8u VESA_SetSVGAMode(Bit16u mode) {
-	if (INT10_SetVideoMode(mode & 0xfff)) return 0x00;
+	if (INT10_SetVideoMode(mode)) return 0x00;
 	return 0x01;
 };
 

@@ -23,6 +23,10 @@
 
 #define ACTL_MAX_REG   0x14
 
+static INLINE void ResetACTL(void) {
+	IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+}
+
 void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 	switch (machine) {
 	case MCH_TANDY:
@@ -32,7 +36,7 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 		break;
 	case MCH_VGA:
 		if(reg<=ACTL_MAX_REG) {
-			IO_Read(VGAREG_ACTL_RESET);
+			ResetACTL();
 			IO_Write(VGAREG_ACTL_ADDRESS,reg);
 			IO_Write(VGAREG_ACTL_WRITE_DATA,val);
 		}
@@ -43,7 +47,7 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 
 
 void INT10_SetOverscanBorderColor(Bit8u val) {
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,val);
 	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
@@ -64,7 +68,7 @@ void INT10_SetAllPaletteRegisters(PhysPt data) {
 		IO_Write(VGAREG_TDY_DATA,mem_readb(data));
 		break;
 	case MCH_VGA:
-		IO_Read(VGAREG_ACTL_RESET);
+		ResetACTL();
 		// First the colors
 		for(Bit8u i=0;i<0x10;i++) {
 			IO_Write(VGAREG_ACTL_ADDRESS,i);
@@ -82,14 +86,14 @@ void INT10_SetAllPaletteRegisters(PhysPt data) {
 void INT10_ToggleBlinkingBit(Bit8u state) {
 	Bit8u value;
 	state&=0x01;
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	value=IO_Read(VGAREG_ACTL_READ_DATA);
 	value&=0xf7;
 	value|=state<<3;
 
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,value);
 	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
@@ -97,7 +101,7 @@ void INT10_ToggleBlinkingBit(Bit8u state) {
 
 void INT10_GetSinglePaletteRegister(Bit8u reg,Bit8u * val) {
 	if(reg<=ACTL_MAX_REG) {
-		IO_Read(VGAREG_ACTL_RESET);
+		ResetACTL();
 		IO_Write(VGAREG_ACTL_ADDRESS,reg+32);
 		*val=IO_Read(VGAREG_ACTL_READ_DATA);
 		IO_Write(VGAREG_ACTL_WRITE_DATA,*val);
@@ -105,25 +109,25 @@ void INT10_GetSinglePaletteRegister(Bit8u reg,Bit8u * val) {
 }
 
 void INT10_GetOverscanBorderColor(Bit8u * val) {
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	*val=IO_Read(VGAREG_ACTL_READ_DATA);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,*val);
 }
 
 void INT10_GetAllPaletteRegisters(PhysPt data) {
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	// First the colors
 	for(Bit8u i=0;i<0x10;i++) {
 		IO_Write(VGAREG_ACTL_ADDRESS,i);
 		mem_writeb(data,IO_Read(VGAREG_ACTL_READ_DATA));
-		IO_Read(VGAREG_ACTL_RESET);
+		ResetACTL();
 		data++;
 	}
 	// Then the border
 	IO_Write(VGAREG_ACTL_ADDRESS,0x11+32);
 	mem_writeb(data,IO_Read(VGAREG_ACTL_READ_DATA));
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 }
 
 void INT10_SetSingleDacRegister(Bit8u index,Bit8u red,Bit8u green,Bit8u blue) {
@@ -159,7 +163,7 @@ void INT10_GetDACBlock(Bit16u index,Bit16u count,PhysPt data) {
 }
 
 void INT10_SelectDACPage(Bit8u function,Bit8u mode) {
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	Bit8u old10=IO_Read(VGAREG_ACTL_READ_DATA);
 	if (!function) {		//Select paging mode
@@ -178,7 +182,7 @@ void INT10_SelectDACPage(Bit8u function,Bit8u mode) {
 }
 
 void INT10_GetDACPage(Bit8u* mode,Bit8u* page) {
-	IO_Read(VGAREG_ACTL_RESET);
+	ResetACTL();
 	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
 	Bit8u reg10=IO_Read(VGAREG_ACTL_READ_DATA);
 	IO_Write(VGAREG_ACTL_WRITE_DATA,reg10);

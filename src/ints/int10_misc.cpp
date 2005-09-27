@@ -92,13 +92,13 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	Bit16u col_count=0;
 	switch (CurMode->type) {
 	case M_TEXT:
-		col_count=16;break;
+		if (CurMode->mode==0x7) col_count=1; else col_count=16;break; 
 	case M_CGA2:
 		col_count=2;break;
 	case M_CGA4:
 		col_count=4;break;
 	case M_EGA16:
-		col_count=16;break;
+		if (CurMode->mode==0x11 || CurMode->mode==0x0f) col_count=2; else col_count=16;break; 
 	case M_VGA:
 		col_count=256;break;
 	default:
@@ -119,7 +119,9 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	case 480:
 		mem_writeb(save+0x2a,3);break;
 	};
-	//TODO Maybe misc flags 
+	/* misc flags */
+	if (CurMode->type==M_TEXT) mem_writeb(save+0x2d,0x21);
+	else mem_writeb(save+0x2d,0x01);
 	/* Video Memory available */
 	mem_writeb(save+0x31,3);
 }
