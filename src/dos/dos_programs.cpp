@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.41 2005-08-24 21:12:24 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.42 2005-09-27 12:50:54 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -141,12 +141,25 @@ public:
 
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
+			struct stat test;
+			//Win32 : strip tailing backslashes
+			//rest: substiture ~ for home
 #if defined (WIN32)
 			/* Removing trailing backslash if not root dir so stat will succeed */
 			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
-#endif
-			struct stat test;
 			if (stat(temp_line.c_str(),&test)) {
+#else
+			bool failed = false;
+			if (stat(temp_line.c_str(),&test)) {
+				failed = true;
+				if(temp_line.size() && temp_line[0] == '~') {
+					char * home = getenv("HOME");
+					if(home) temp_line.replace(0,1,std::string(home));
+					if(!stat(temp_line.c_str(),&test)) failed = false;
+				}
+			}
+			if(failed) {
+#endif
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_1"),temp_line.c_str());
 				return;
 			}
