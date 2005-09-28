@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.42 2005-09-27 12:50:54 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.43 2005-09-28 12:52:36 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -415,6 +415,7 @@ public:
 		reg_ecx = 1;
 		reg_ebp = 0;
 		reg_eax = 0;
+		reg_edx = 0; //Head 0 drive 0
 		reg_ebx= 0x7c00; //Real code is probably uses bx to load the image
 		//DEBUG_EnableDebugger();
 				
