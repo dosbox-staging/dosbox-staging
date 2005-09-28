@@ -35,7 +35,9 @@ static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
 		Bitu val=vga.mem.linear[vidstart+line];
-		vidstart=(vidstart+1)&0x1dfff;
+		vidstart++;
+		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
+			vidstart &= 0x1dfff;
 		*draw++=CGA_2_Table[val >> 4];
 		*draw++=CGA_2_Table[val & 0xf];
 	}
@@ -46,7 +48,9 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val=vga.mem.linear[vidstart+line];
-		vidstart=(vidstart+1)&0x1dfff;
+		vidstart++;
+		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
+			vidstart &= 0x1dfff;
 		*draw++=CGA_4_Table[val];
 	}
 	return TempLine;
