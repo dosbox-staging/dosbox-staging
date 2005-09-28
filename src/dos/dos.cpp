@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.86 2005-08-23 13:58:03 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.87 2005-09-28 19:13:21 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -756,7 +756,7 @@ static Bitu DOS_21Handler(void) {
 			Bit16u handle;
 			if (DOS_OpenFile(name1,0,&handle)) {
 				DOS_CloseFile(handle);
-				DOS_SetError(DOSERR_ACCESS_DENIED);
+				DOS_SetError(DOSERR_FILE_ALREADY_EXISTS);
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 				break;
