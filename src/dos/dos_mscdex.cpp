@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.31 2005-07-10 20:29:14 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.32 2005-09-28 11:21:50 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -582,7 +582,13 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	MEM_StrCopy(pathname+1,searchName,mem_readb(pathname));
 	upcase(searchName);
 	char* searchPos = searchName;
-//	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Find : %s",searchName);
+
+	//strip of tailing . (XCOM APOCALIPSE)
+	int searchlen = strlen(searchName);
+	if(searchlen > 1 && strcmp(searchName,".."))
+		if(searchName[searchlen-1] =='.')  searchName[searchlen-1] = 0;
+
+	//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Find : %s",searchName);
 	// read vtoc
 	PhysPt defBuffer = GetDefaultBuffer();
 	if (!ReadSectors(GetSubUnit(drive),false,16,1,defBuffer)) return false;
@@ -613,9 +619,21 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 			nameLength  = mem_readb(defBuffer+index+32);
 			MEM_StrCopy(defBuffer+index+33,entryName,nameLength);
 			if (strcmp(entryName,useName)==0) {
-//				LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Found : %s",useName);
+				//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Found : %s",useName);
 				foundName = true;
 				break;
+			}
+			/* Xcom Apocalipse searches for MUSIC. and expects to find MUSIC;1
+			 * All Files on the CDROM are of the kind blah;1
+			 */
+			char* longername = strchr(entryName,';');
+			if(longername) {
+				*longername = 0;
+				if (strcmp(entryName,useName)==0) {
+					//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Found : %s",useName);
+					foundName = true;
+					break;
+				}
 			}
 			index += entryLength;
 		} while (index+33<=2048);
@@ -725,8 +743,7 @@ Bit16u CMscdex::GetStatusWord(Bit8u subUnit)
 	return status;
 };
 
-void CMscdex::InitNewMedia(Bit8u subUnit)
-{
+void CMscdex::InitNewMedia(Bit8u subUnit) {
 	if (subUnit<numDrives) {
 		// Reopen new media
 		cdrom[subUnit]->InitNewMedia();
@@ -735,16 +752,12 @@ void CMscdex::InitNewMedia(Bit8u subUnit)
 
 static CMscdex* mscdex = 0;
 
-static Bitu MSCDEX_Strategy_Handler(void) 
-{
-//	LOG("MSCDEX: Device Strategy Routine called.");
+static Bitu MSCDEX_Strategy_Handler(void) {
+//	MSCDEX_LOG("MSCDEX: Device Strategy Routine called.");
 	return CBRET_NONE;
 }
 
-static Bitu MSCDEX_Interrupt_Handler(void) 
-{
-//	LOG("MSCDEX: Device Interrupt Routine called.");
-	
+static Bitu MSCDEX_Interrupt_Handler(void) {
 	Bit8u	subFuncNr	= 0xFF;
 	PhysPt	data		= PhysMake(SegValue(es),reg_bx);
 	Bit8u	subUnit		= mem_readb(data+1);
