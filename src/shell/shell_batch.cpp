@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.17 2005-05-18 17:29:09 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.18 2005-09-28 08:14:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -133,9 +133,10 @@ again:
 		}
 	} while (c!='\n' && n);
 	*cmd_write++=0;
-	if (cmd[0]==':') {
-		char *nospace = trim(cmd+1);   
-		if (strcasecmp(nospace,where)==0) return true;
+	char *nospace = trim(cmd);
+	if (nospace[0] == ':') {
+		char* nonospace = trim(nospace+1);
+		if (strcasecmp(nonospace,where)==0) return true;
 	}
 	if (!n) {
 		delete this;
