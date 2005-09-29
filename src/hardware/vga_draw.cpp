@@ -506,7 +506,6 @@ void VGA_SetupDrawing(Bitu val) {
 		VGA_DrawLine=VGA_Draw_4BPP_Line;
 		break;
 	case M_TANDY_TEXT:
-		   LOG_MSG("tandy text");
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;
 	case M_HERC_TEXT:
 		aspect_ratio=1;
