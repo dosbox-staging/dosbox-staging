@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.57 2005-09-10 14:15:37 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.58 2005-09-29 08:48:39 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -213,6 +213,8 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 		char dir[DOS_PATHLENGTH];
 		DOS_GetCurrentDir(0,dir);
 		WriteOut("%c:\\%s\n",drive,dir);
+	} else if(strlen(args) == 2 && args[1]==':') {
+		WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT"),toupper(*reinterpret_cast<unsigned char*>(&args[0])));
 	} else 	if (!DOS_ChangeDir(args)) {
 		WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
 	}

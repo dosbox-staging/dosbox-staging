@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.62 2005-08-22 19:31:27 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.63 2005-09-29 08:48:39 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -369,6 +369,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT","To change to different drive type \033[31m%c:\033[0m\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
@@ -385,7 +386,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_DIR_INTRO","Directory of %s.\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%5d File(s) %17s Bytes.\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE","%5d Dir(s)  %17s Bytes free.\n");
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND","Drive %c does not exist!\nYou must \033[31mmount\033[0m it first. Type \033[1;33mintro\033[0m or \033[1;33mintro mount\033[0m for more information.\n");
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND","Illegal command: %s.\n");
 	MSG_Add("SHELL_CMD_PAUSE","Press any key to continue.\n");
 	MSG_Add("SHELL_CMD_PAUSE_HELP","Waits for 1 keystroke to continue.\n");

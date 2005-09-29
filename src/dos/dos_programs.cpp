@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.43 2005-09-28 12:52:36 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.44 2005-09-29 08:48:39 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -536,12 +536,41 @@ static void RESCAN_ProgramStart(Program * * make) {
 
 class INTRO : public Program {
 public:
+	void DisplayMount(void) {
+		/* Basic mounting has a version for each operating system.
+		 * This is done this way so both messages appear in the language file*/
+		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_START"));
+#if (WIN32)
+		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_WINDOWS"));
+#else			
+		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_OTHER"));
+#endif
+		WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_END"));
+	}
+
 	void Run(void) {
 		if(cmd->FindExist("cdrom",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));		
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
 			return;
 		}
+		if(cmd->FindExist("mount",false)) {
+			WriteOut("\033[2J");//Clear screen before printing
+			DisplayMount();
+			return;
+		}
+		if(cmd->FindExist("special",false)) {
+			WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
+			return;
+		}
+		/* Default action is to show all pages */
 		WriteOut(MSG_Get("PROGRAM_INTRO"));
+		Bit8u c;Bit16u n=1;
+		DOS_ReadFile (STDIN,&c,&n);
+		DisplayMount();
+		DOS_ReadFile (STDIN,&c,&n);
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+		DOS_ReadFile (STDIN,&c,&n);
+		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
 	}
 };
 
@@ -779,27 +808,52 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
 
 	MSG_Add("PROGRAM_INTRO",
-		"\033[2J\033[33;1mWelcome to DOSBox\033[0m, an x86 emulator with sound and graphics.\n"
+		"\033[2J\033[32;1mWelcome to DOSBox\033[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
-		"\n"	    
-		"Here are some commands to get you started:\n"
+		"\n"
+		"For information about basic mount type \033[34;1mintro mount\033[0m\n"
+		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
+		"For information about special keys type \033[34;1mintro special\033[0m\n"
+		"For more information about DOSBox, go to \033[34;1mhttp://dosbox.sourceforge.net/wiki\033[0m\n"
+		"\n"
+		"\033[31;1mDOSBox will stop/exit without a warning if an error occured!\033[0m\n"
+		"\n"
+		"\n"
+		);
+	MSG_Add("PROGRAM_INTRO_MOUNT_START",
+		"\033[32;1mHere are some commands to get you started:\033[0m\n"
 		"Before you can use the files located on your own filesystem,\n"
 		"You have to mount the directory containing the files.\n"
-		"For \033[1mWindows\033[0m:\n"
-		"\033[34;1mmount c c:\\dosprog\033[0m will create a C drive in DOSBox with c:\\dosprog as contents.\n"
 		"\n"
-		"For \033[1mother platforms\033[0m:\n"
-		"\033[34;1mmount c /home/user/dosprog\033[0m will do the same.\n"
-		"\n"
+		);
+	MSG_Add("PROGRAM_INTRO_MOUNT_WINDOWS",
+		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
+		"\xBA \033[32mmount c c:\\dosprog\\\033[37m will create a C drive with c:\\dosprog as contents. \xBA\n"
+		"\xBA                                                                        \xBA\n"
+		"\xBA \033[32mc:\\dosprog\\\033[37m is an example. Replace it with your own games directory.  \033[37m \xBA\n"
+		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
+		);
+	MSG_Add("PROGRAM_INTRO_MOUNT_OTHER",
+		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
+		"\xBA \033[32mmount c ~/dosprog\033[37m will create a C drive with ~/dosprog as contents. \xBA\n"
+		"\xBA                                                                     \xBA\n"
+		"\xBA \033[32m~/dosprog\033[37m is an example. Replace it with your own games directory. \033[37m \xBA\n"
+		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
+		);
+	MSG_Add("PROGRAM_INTRO_MOUNT_END",
 		"When the mount has succesfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
 		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
 		" \033[34;1mcd\033[0m will allow you to\n"
-		"enter a directory (recognised by the \033[1m[]\033[0m in a directory listing).\n"
+		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"
 		"You can run programs/files which end with \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
-		"\n"
-		"For information about CD-ROM support type \033[34;1mintro cdrom\033[0m\n"
-		"\n"
-		"\033[32;1mDOSBox will stop/exit without a warning if an error occured!\033[0m\n"
 		);
 	MSG_Add("PROGRAM_INTRO_CDROM",
 		"\033[2J\033[32;1mHow to mount a Real/Virtual CD-ROM Drive in DOSBox:\033[0m\n"
@@ -825,6 +879,26 @@ void DOS_SetupPrograms(void) {
 		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
 		"\033[34;1mmount -cd\033[0m\n"
+		);
+	MSG_Add("PROGRAM_INTRO_SPECIAL",
+		"\033[2J\033[32;1mSpecial keys:\033[0m\n"
+		"These are the default keybindings.\n"
+		"They can be changed in the \033[33mkeymapper\033[0m.\n"
+		"\n"
+		"\033[33;1mALT-ENTER\033[0m   : Go full screen and back.\n"
+		"\033[33;1mPAUSE\033[0m       : Pause DOSBox.\n"
+		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
+		"\033[33;1mCTRL-F4\033[0m     : Update directory cache for all drives! Swap mounted disk-image.\n"
+		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
+		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
+		"\033[33;1mCTRL-ALT-F7\033[0m : Start/Stop recording of OPL commands.\n"
+		"\033[33;1mCTRL-ALT-F8\033[0m : Start/Stop the recording of raw MIDI commands.\n"
+		"\033[33;1mCTRL-F7\033[0m     : Decrease frameskip.\n"
+		"\033[33;1mCTRL-F8\033[0m     : Increase frameskip.\n"
+		"\033[33;1mCTRL-F9\033[0m     : Kill DOSBox.\n"
+		"\033[33;1mCTRL-F10\033[0m    : Capture/Release the mouse.\n"
+		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation (Decrease DOSBox Cycles).\n"
+		"\033[33;1mCTRL-F12\033[0m    : Speed up emulation (Increase DOSBox Cycles).\n"
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
