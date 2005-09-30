@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.54 2005-09-21 11:37:35 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.55 2005-09-30 10:14:27 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -247,25 +247,33 @@ void DrawCursorText()
 // Mouse cursor - graphic mode
 // ***************************************************************************
 
-static Bit8u gfxReg[9];
-
+static Bit8u gfxReg3CE[9];
+static Bit8u index3C4,gfxReg3C5;
 void SaveVgaRegisters()
 {
 	for (int i=0; i<9; i++) {
 		IO_Write	(0x3CE,i);
-		gfxReg[i] = IO_Read(0x3CF);
+		gfxReg3CE[i] = IO_Read(0x3CF);
 	}
 	/* Setup some default values in GFX regs that should work */
 	IO_Write(0x3CE,3); IO_Write(0x3Cf,0);				//disable rotate and operation
-	IO_Write(0x3CE,5); IO_Write(0x3Cf,gfxReg[5]&0xf0);	//Force read/write mode 0
+	IO_Write(0x3CE,5); IO_Write(0x3Cf,gfxReg3CE[5]&0xf0);	//Force read/write mode 0
+
+	//Set Map to all planes. Celtic Tales
+	index3C4 = IO_Read(0x3c4);  IO_Write(0x3C4,2);
+	gfxReg3C5 = IO_Read(0x3C5); IO_Write(0x3C5,0xF); 
 }
 
 void RestoreVgaRegisters()
 {
 	for (int i=0; i<9; i++) {
 		IO_Write(0x3CE,i);
-		IO_Write(0x3CF,gfxReg[i]);
+		IO_Write(0x3CF,gfxReg3CE[i]);
 	}
+
+	IO_Write(0x3C4,2);
+	IO_Write(0x3C5,gfxReg3C5);
+	IO_Write(0x3C4,index3C4);
 }
 
 void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx1, Bit16u& addx2, Bit16u& addy)
@@ -472,7 +480,6 @@ void Mouse_ButtonReleased(Bit8u button) {
 }
 
 static void SetMickeyPixelRate(Bit16s px, Bit16s py){
-
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
 		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
@@ -536,8 +543,8 @@ void Mouse_NewVideoMode(void)
 	default:
 		mouse.max_y=199;
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
-		// Hide mouse cursor on non supported modi.
-		mouse.shown=-1;
+		// Hide mouse cursor on non supported modi. Pirates Gold
+		mouse.shown = -1;
 		break;
 	} 
 	mouse.max_x = 639;
@@ -600,7 +607,7 @@ static void mouse_reset(void) {
 
 static Bitu INT33_Handler(void) {
 
-//	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %d %d",reg_ax,POS_X,POS_Y);
+//	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		mouse_reset_hardware(); /* fallthrough */
