@@ -745,10 +745,10 @@ static void dyn_grp3_eb(void) {
 	case 0x7:	/* idiv Eb */
 		/* EAX could be used, so precache it */
 		if (decode.modrm.mod==3)
-			gen_dop_byte(DOP_MOV,src,0,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
+			gen_dop_byte(DOP_MOV,DREG(TMPB),0,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
 		gen_releasereg(DREG(EAX));
 		gen_call_function((decode.modrm.reg==6) ? (void *)&dyn_helper_divb : (void *)&dyn_helper_idivb,
-			"%Rd%Dd",DREG(TMPB),src);
+			"%Rd%Dd",DREG(TMPB),DREG(TMPB));
 		dyn_check_bool_exception(DREG(TMPB));
 		goto skipsave;
 	}
@@ -785,12 +785,12 @@ static void dyn_grp3_ev(void) {
 	case 0x7:	/* idiv Eb */
 		/* EAX could be used, so precache it */
 		if (decode.modrm.mod==3)
-			gen_dop_word(DOP_MOV,decode.big_op,src,&DynRegs[decode.modrm.rm]);
+			gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPW),&DynRegs[decode.modrm.rm]);
 		gen_releasereg(DREG(EAX));gen_releasereg(DREG(EDX));
 		void * func=(decode.modrm.reg==6) ?
 			(decode.big_op ? (void *)&dyn_helper_divd : (void *)&dyn_helper_divw) :
 			(decode.big_op ? (void *)&dyn_helper_idivd : (void *)&dyn_helper_idivw);
-		gen_call_function(func,"%Rd%Dd",DREG(TMPB),src);
+		gen_call_function(func,"%Rd%Dd",DREG(TMPB),DREG(TMPW));
 		dyn_check_bool_exception(DREG(TMPB));
 		gen_releasereg(DREG(TMPB));
 		goto skipsave;
