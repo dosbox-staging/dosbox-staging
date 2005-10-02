@@ -94,10 +94,29 @@ static Bitu read_p3cc(Bitu port,Bitu iolen) {
 	return vga.misc_output;
 }
 
+/*
 
+Test 13:  Hardware: General Registers
+  Mode 00h, General -- Feat Ctrl: IBM=00h   Current=FFh
+  Mode 00h, General -- Input Status 0: IBM=70h   Current=FFh
+  .. & modes 1,2,3,4,5,6,d,e,10,11,12,13
+
+following read handlers silence the above vgatest errors.
+
+*/
+
+static Bitu read_p3ca(Bitu port,Bitu iolen) {
+	return 0;
+}
+
+static Bitu read_p3c2(Bitu port,Bitu iolen) {
+	return 0x70; 
+}
 
 void VGA_SetupMisc(void) {
 	if (machine==MCH_VGA) {
+		IO_RegisterReadHandler(0x3ca,read_p3ca,IO_MB);
+		IO_RegisterReadHandler(0x3c2,read_p3c2,IO_MB);
 		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
 		IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
 	} else if (machine==MCH_CGA || machine==MCH_TANDY) {
@@ -105,7 +124,6 @@ void VGA_SetupMisc(void) {
 	} else if (machine==MCH_HERC) {
 		IO_RegisterReadHandler(0x3ba,read_p3da,IO_MB);
 	}
-
 }
 
 

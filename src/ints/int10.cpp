@@ -46,6 +46,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	}
 #endif
+
 	switch (reg_ah) {
 	case 0x00:								/* Set VideoMode */
 		INT10_SetVideoMode(reg_al);
@@ -279,6 +280,14 @@ graphics_chars:
 				reg_cx=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
 				break;
 			}
+		case 0x34: /* ALTERNATE FUNCTION SELECT (VGA) - CURSOR EMULATION */
+			{   
+				// bit 0: 0=enable, 1=disable
+				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0xfe;
+				real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,temp|reg_al);
+				reg_al=0x12;
+				break;	
+			}		
 		case 0x36:							/* VGA Refresh control */
 			/* 
 				Call disables/enables the vga from outputting video,

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.37 2005-09-01 14:31:40 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.38 2005-10-02 10:12:31 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -309,11 +309,12 @@ void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 			goto dowrite;
 		}
 		/* Check if we need to convert CGA Bios cursor values */
-		if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x1)) {
+		if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x1)) { // set by int10 fun12 sub34
 //			if (CurMode->mode>0x3) goto dowrite;	//Only mode 0-3 are text modes on cga
 			if ((first & 0xe0) || (last & 0xe0)) goto dowrite;
 			Bit8u cheight=real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT)-1;
 			/* Creative routine i based of the original ibmvga bios */
+
 			if (last<first) {
 				if (!last) goto dowrite;
 				first=last;
@@ -331,8 +332,9 @@ void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 				} else {
 					first=(first-last)+cheight;
 					last=cheight;
-					if (cheight>0xc) {
-						first--;
+
+					if (cheight>0xc) { // vgatest sets 15 15 2x where only one should be decremented to 14 14
+						first--;     // implementing int10 fun12 sub34 fixed this.
 						last--;
 					}
 				}
@@ -537,7 +539,7 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 		cur_col=0;
 		break;
 	case '\n':
-		cur_col=0;
+//		cur_col=0; //Seems to break an old chess game
 		cur_row++;
 		break;
 	case '\t':

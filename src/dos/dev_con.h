@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.20 2005-02-10 10:20:50 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.21 2005-10-02 10:12:29 qbix79 Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -34,7 +34,8 @@ public:
 	void ClearAnsi(void);
 	Bit16u GetInformation(void);
 private:
-	Bit8u cache;
+	Bit8u readcache;
+	Bit8u lastwrite;
 	struct ansi { /* should create a constructor which fills them with the appriorate values */
 		bool esc;
 		bool sci;
@@ -53,10 +54,10 @@ private:
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
 	Bit16u count=0;
-	if ((cache) && (*size)) {
-		data[count++]=cache;
-		if(dos.echo) INT10_TeletypeOutput(cache,7);
-		cache=0;
+	if ((readcache) && (*size)) {
+		data[count++]=readcache;
+		if(dos.echo) INT10_TeletypeOutput(readcache,7);
+		readcache=0;
 	}
 	while (*size>count) {
 		reg_ah=0;
@@ -89,7 +90,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		case 0:
 			data[count++]=reg_al;
 			if (*size>count) data[count++]=reg_ah;
-			else cache=reg_ah;
+			else readcache=reg_ah;
 			break;
 		}
 		if(dos.echo) { //what to do if *size==1 and character is BS ?????
@@ -117,9 +118,11 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				count++;
 				continue;
 			} else { 
+				/* Some sort of "hack" now that \n doesn't set col to 0 (int10_char.cpp old chessgame) */
+				if((data[count] == '\n') && (lastwrite != '\r')) INT10_TeletypeOutputAttr('\r',ansi.attr,ansi.enabled);
 				/* pass attribute only if ansi is enabled */
 				INT10_TeletypeOutputAttr(data[count],ansi.attr,ansi.enabled);
-				count++;
+				lastwrite = data[count++];
 				continue;
 		}
 	}
@@ -130,7 +133,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 		case '[': 
 			ansi.sci=true;
 			break;
-		case '7': /* save cursor pos +attr */
+		case '7': /* save cursor pos + attr */
 		case '8': /* restore this  (Wonder if this is actually used) */
 		case 'D':/* scrolling DOWN*/
 		case 'M':/* scrolling UP*/ 
@@ -298,16 +301,15 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			break;
 		case 'J': /*erase screen and move cursor home*/
 			if(ansi.data[0]==0) ansi.data[0]=2;
-			if(ansi.data[0]!=2) {/* only number 2 (the standard one supported) */ 
-				LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: esc[%dJ called : not supported",ansi.data[0]);
-				break;
+			if(ansi.data[0]!=2) {/* every version behaves like type 2 */
+				LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: esc[%dJ called : not supported handling as 2",ansi.data[0]);
 			}
-			for(i=0;i<(Bitu)ansi.ncols*ansi.nrows;i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
+			INT10_ScrollWindow(0,0,999,999,0,ansi.attr,0xFF);
 			ClearAnsi();
 			INT10_SetCursorPos(0,0,0);
 			break;
-		case 'h': /* set MODE (if code =7 enable linewrap) */
-		case 'I': /*RESET MODE */
+		case 'h': /* SET   MODE (if code =7 enable linewrap) */
+		case 'I': /* RESET MODE */
 			LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: set/reset mode called(not supported)");
 			ClearAnsi();
 			break;
@@ -320,9 +322,13 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			ansi.saverow=CURSOR_POS_ROW(0);
 			ClearAnsi();
 			break;
-		case 'K':/* erase till end of line */ 
-			for(i = CURSOR_POS_COL(0);i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
-			ClearAnsi(); /* maybe set cursor back to starting place ???? */
+		case 'K':/* erase till end of line (don't touch cursor) */
+			col = CURSOR_POS_COL(0);
+			row = CURSOR_POS_ROW(0);
+			INT10_WriteChar(' ',ansi.attr,0,ansi.ncols-col,true); //Use this one to prevent scrolling when end of screen is reached
+			//for(i = col;i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
+			INT10_SetCursorPos(row,col,0);
+			ClearAnsi();
 			break;
 		case 'l':/* (if code =7) disable linewrap */
 		case 'p':/* reassign keys (needs strings) */
@@ -352,17 +358,18 @@ Bit16u device_CON::GetInformation(void) {
 	Bit16u head=mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	Bit16u tail=mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 	
-	if ((head==tail) && !cache) return 0x80D3; /* No Key Available */
+	if ((head==tail) && !readcache) return 0x80D3; /* No Key Available */
 	return 0x8093;		/* Key Available */
 };
 
 device_CON::device_CON() {
 	SetName("CON");
-	cache=0;
+	readcache=0;
+	lastwrite=0;
 	ansi.enabled=false;
 	ansi.attr=0x7;
 	ansi.ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS); //should be updated once set/reset mode is implemented
-	ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
+	ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 	ansi.saverow=0;
 	ansi.savecol=0;
 	ClearAnsi();
