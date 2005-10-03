@@ -437,8 +437,29 @@ graphics_chars:
 			reg_al=0x0;
 		}
 		break;
+	case 0xf0:
+		INT10_EGA_RIL_ReadRegister(reg_bl, reg_dx);
+		break;
 	case 0xf1:
-		INT10_EGA_RIL_F1(reg_bl, reg_bh, reg_dx);
+		INT10_EGA_RIL_WriteRegister(reg_bl, reg_bh, reg_dx);
+		break;
+	case 0xf2:
+		INT10_EGA_RIL_ReadRegisterRange(reg_bl, reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
+		break;
+	case 0xf3:
+		INT10_EGA_RIL_WriteRegisterRange(reg_bl, reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
+		break;
+	case 0xf4:
+		INT10_EGA_RIL_ReadRegisterSet(reg_cx, SegPhys(es)+reg_bx);
+		break;
+	case 0xf5:
+		INT10_EGA_RIL_WriteRegisterSet(reg_cx, SegPhys(es)+reg_bx);
+		break;
+	case 0xfa: {
+		RealPt pt=INT10_EGA_RIL_GetVersionPt();
+		SegSet16(es,RealSeg(pt));
+		reg_bx=RealOff(pt);
+		}
 		break;
 	case 0xff:
 		if (!warned_ff) LOG(LOG_INT10,LOG_NORMAL)("INT10:FF:Weird NC call");

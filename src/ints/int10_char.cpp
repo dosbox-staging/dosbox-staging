@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.38 2005-10-02 10:12:31 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.39 2005-10-03 19:22:13 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -522,9 +522,7 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 	}
 }
 
-void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
-	//TODO Check if this page thing is correct
-	Bit8u page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+static INLINE void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u page) {
 	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
@@ -544,7 +542,7 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 		break;
 	case '\t':
 		do {
-			INT10_TeletypeOutputAttr(' ',attr,useattr);
+			INT10_TeletypeOutputAttr(' ',attr,useattr,page);
 			cur_row=CURSOR_POS_ROW(page);
 			cur_col=CURSOR_POS_COL(page);
 		} while(cur_col%8);
@@ -569,6 +567,10 @@ void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
 	INT10_SetCursorPos(cur_row,cur_col,page);
 }
 
+void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr) {
+	INT10_TeletypeOutputAttr(chr,attr,useattr,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE));
+}
+
 void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
 	INT10_TeletypeOutputAttr(chr,attr,CurMode->type!=M_TEXT);
 }
@@ -591,7 +593,7 @@ void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,B
 			attr=mem_readb(string);
 			string++;
 		};
-		INT10_TeletypeOutputAttr(chr,attr,true);
+		INT10_TeletypeOutputAttr(chr,attr,true,page);
 		count--;
 	}
 	if (!(flag&1)) {

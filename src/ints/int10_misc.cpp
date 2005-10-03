@@ -127,6 +127,12 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	mem_writeb(save+0x31,3);
 }
 
+RealPt INT10_EGA_RIL_GetVersionPt(void) {
+	/* points to a graphics ROM location at the moment
+	   as checks test for bx!=0 only */
+	return RealMake(0xc000,0x30);
+}
+
 static void EGA_RIL(Bit16u dx, Bitu& port, Bitu& regs) {
 	port = 0;
 	regs = 0; //if nul is returned it's a single register port
@@ -165,16 +171,120 @@ static void EGA_RIL(Bit16u dx, Bitu& port, Bitu& regs) {
 	}
 }
 
-void INT10_EGA_RIL_F1(Bit8u & bl, Bit8u bh, Bit16u dx) {
+void INT10_EGA_RIL_ReadRegister(Bit8u & bl, Bit16u dx) {
 	Bitu port = 0;
 	Bitu regs = 0;
 	EGA_RIL(dx,port,regs);
 	if(regs == 0) {
-		IO_Write(port,bl);
+		if(port) bl = IO_Read(port);
 	} else {
+		if(port == 0x3c0) IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
 		IO_Write(port,bl);
-		IO_Write(port+1,bh);
+		bl = IO_Read(port+1);
+		if(port == 0x3c0) IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+		LOG(LOG_INT10,LOG_NORMAL)("EGA RIL read used with multi-reg");
+	}
+}
+
+void INT10_EGA_RIL_WriteRegister(Bit8u & bl, Bit8u bh, Bit16u dx) {
+	Bitu port = 0;
+	Bitu regs = 0;
+	EGA_RIL(dx,port,regs);
+	if(regs == 0) {
+		if(port) IO_Write(port,bl);
+	} else {
+		if(port == 0x3c0) {
+			IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+			IO_Write(port,bl);
+			IO_Write(port,bh);
+		} else {
+			IO_Write(port,bl);
+			IO_Write(port+1,bh);
+		}
 		bl = bh;//Not sure
-		LOG(LOG_INT10,LOG_NORMAL)("EGA RIL used with multi-reg");
+		LOG(LOG_INT10,LOG_NORMAL)("EGA RIL write used with multi-reg");
+	}
+}
+
+void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst) {
+	Bitu port = 0;
+	Bitu regs = 0;
+	EGA_RIL(dx,port,regs);
+	if(regs == 0) {
+		LOG(LOG_INT10,LOG_ERROR)("EGA RIL range read with port %x called",port);
+	} else {
+		if(ch<regs) {
+			if (ch+cl>regs) cl=regs-ch;
+			for (Bitu i=0; i<cl; i++) {
+				if(port == 0x3c0) IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+				IO_Write(port,ch+i);
+				mem_writeb(dst++,IO_Read(port+1));
+			}
+			if(port == 0x3c0) IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+		} else LOG(LOG_INT10,LOG_ERROR)("EGA RIL range read from %x for invalid register %x",port,ch);
+	}
+}
+
+void INT10_EGA_RIL_WriteRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt src) {
+	Bitu port = 0;
+	Bitu regs = 0;
+	EGA_RIL(dx,port,regs);
+	if(regs == 0) {
+		LOG(LOG_INT10,LOG_ERROR)("EGA RIL range write called with port %x",port);
+	} else {
+		if(ch<regs) {
+			if (ch+cl>regs) cl=regs-ch;
+			if(port == 0x3c0) {
+				IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+				for (Bitu i=0; i<cl; i++) {
+					IO_Write(port,ch+i);
+					IO_Write(port,mem_readb(src++));
+				}
+			} else {
+				for (Bitu i=0; i<cl; i++) {
+					IO_Write(port,ch+i);
+					IO_Write(port+1,mem_readb(src++));
+				}
+			}
+		} else LOG(LOG_INT10,LOG_ERROR)("EGA RIL range write to %x with invalid register %x",port,ch);
+	}
+}
+
+/* register sets are of the form
+   offset 0 (word): group index
+   offset 2 (byte): register number (0 for single registers, ignored)
+   offset 3 (byte): register value (return value when reading)
+*/
+void INT10_EGA_RIL_ReadRegisterSet(Bit16u cx, PhysPt tbl) {
+	/* read cx register sets */
+	for (Bitu i=0; i<cx; i++) {
+		Bit8u vl=mem_readb(tbl+2);
+		INT10_EGA_RIL_ReadRegister(vl, mem_readw(tbl));
+		mem_writeb(tbl+3, vl);
+		tbl+=4;
+	}
+}
+
+void INT10_EGA_RIL_WriteRegisterSet(Bit16u cx, PhysPt tbl) {
+	/* write cx register sets */
+	Bitu port = 0;
+	Bitu regs = 0;
+	for (Bitu i=0; i<cx; i++) {
+		EGA_RIL(mem_readw(tbl),port,regs);
+		Bit8u vl=mem_readb(tbl+3);
+		if(regs == 0) {
+			if(port) IO_Write(port,vl);
+		} else {
+			Bit8u idx=mem_readb(tbl+2);
+			if(port == 0x3c0) {
+				IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
+				IO_Write(port,idx);
+				IO_Write(port,vl);
+			} else {
+				IO_Write(port,idx);
+				IO_Write(port+1,vl);
+			}
+		}
+		tbl+=4;
 	}
 }

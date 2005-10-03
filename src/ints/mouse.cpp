@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.55 2005-09-30 10:14:27 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.56 2005-10-03 19:22:13 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -321,7 +321,7 @@ void RestoreCursorBackground()
 		for (y=y1; y<=y2; y++) {
 			dataPos += addx1;
 			for (x=x1; x<=x2; x++) {
-				INT10_PutPixel(x,y,0,mouse.backData[dataPos++]);
+				INT10_PutPixel(x,y,mouse.page,mouse.backData[dataPos++]);
 			};
 			dataPos += addx2;
 		};
@@ -378,7 +378,7 @@ void DrawCursor() {
 	for (y=y1; y<=y2; y++) {
 		dataPos += addx1;
 		for (x=x1; x<=x2; x++) {
-			INT10_GetPixel(x,y,0,&mouse.backData[dataPos++]);
+			INT10_GetPixel(x,y,mouse.page,&mouse.backData[dataPos++]);
 		};
 		dataPos += addx2;
 	};
@@ -401,7 +401,7 @@ void DrawCursor() {
 			if (cuMask & HIGHESTBIT) pixel = pixel ^ 0x0F;
 			cuMask<<=1;
 			// Set Pixel
-			INT10_PutPixel(x,y,0,pixel);
+			INT10_PutPixel(x,y,mouse.page,pixel);
 			dataPos++;
 		};
 		dataPos += addx2;
