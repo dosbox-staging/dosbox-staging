@@ -66,7 +66,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		IO_Write(base+1,(IO_Read(base+1) & 0xe0)|(height-1));
 		//Vertical display end bios says, but should stay the same?
 		//Rows setting in bios segment
-		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height));
+		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,height);
 		//TODO Reprogram cursor size?
 	}

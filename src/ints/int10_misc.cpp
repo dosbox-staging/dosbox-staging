@@ -82,7 +82,8 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 		mem_writeb(save+0x4+i,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE+i));
 	}
 	/* Second area */
-	for (i=0;i<3;i++) {
+	mem_writeb(save+0x22,real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1);
+	for (i=1;i<3;i++) {
 		mem_writeb(save+0x22+i,real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS+i));
 	}
 	/* Zero out rest of block */

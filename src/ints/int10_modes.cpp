@@ -223,7 +223,7 @@ static void FinishSetMode(bool clearmem) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_NB_COLS,CurMode->twidth);
 	real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,CurMode->plength);
 	real_writew(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS,((CurMode->mode==7 )|| (CurMode->mode==0x0f)) ? 0x3b4 : 0x3d4);
-	real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,CurMode->theight);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,CurMode->theight-1);
 	real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,CurMode->cheight);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem?0:0x80)));
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
