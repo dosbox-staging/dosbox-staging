@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.36 2005-08-08 13:33:46 c2woody Exp $ */
+/* $Id: xms.cpp,v 1.37 2005-10-04 12:59:12 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +54,7 @@
 #define	XMS_DEALLOCATE_UMB					0x11
 #define XMS_QUERY_ANY_FREE_MEMORY			0x88
 #define XMS_ALLOCATE_ANY_MEMORY				0x89
+#define	XMS_GET_EMB_HANDLE_INFORMATION_EXT	0x8e
 
 #define	XMS_FUNCTION_NOT_IMPLEMENTED		0x80
 #define	HIGH_MEMORY_NOT_EXIST				0x90
@@ -318,10 +319,11 @@ Bitu XMS_Handler(void) {
 		reg_bl = XMS_UnlockMemory(reg_dx);
 		reg_ax = (reg_bl==0);
 		break;
-	case XMS_GET_EMB_HANDLE_INFORMATION:						/* 0e */
-		reg_bl = XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx);
-		reg_ax = (reg_bl==0);
-		break;
+	case XMS_GET_EMB_HANDLE_INFORMATION: {						/* 0e */
+		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx);
+		if (result != 0) reg_bl = result;
+		reg_ax = (result==0);
+		}; break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		reg_bl = XMS_ResizeMemory(reg_dx, reg_bx);
 		reg_ax = (reg_bl==0);
@@ -380,10 +382,15 @@ Bitu XMS_Handler(void) {
 		break;
 	case XMS_QUERY_ANY_FREE_MEMORY:								/* 88 */
 		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
-        reg_eax &= 0xffff;
-        reg_edx &= 0xffff;
-        reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
+		reg_eax &= 0xffff;
+		reg_edx &= 0xffff;
+		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
 		break;
+	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {
+		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx);
+		if (result != 0) reg_bl = result; else reg_edx &= 0xFFFF;
+		reg_ax = (result==0);
+		} break;
 	default:
 		LOG(LOG_MISC,LOG_ERROR)("XMS: unknown function %02X",reg_ah);
 		reg_ax=0;
