@@ -225,6 +225,14 @@ bool Virtual_Drive::FindNext(DOS_DTA & dta) {
 }
 
 bool Virtual_Drive::GetFileAttr(char * name,Bit16u * attr) {
+	VFILE_Block * cur_file=first_file;
+	while (cur_file) {
+		if (strcasecmp(name,cur_file->name)==0) { 
+			*attr = DOS_ATTR_ARCHIVE;	//Maybe readonly ?
+			return true;
+		}
+		cur_file=cur_file->next;
+	}
 	return false;
 }
 
