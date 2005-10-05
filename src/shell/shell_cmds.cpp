@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.58 2005-09-29 08:48:39 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.59 2005-10-05 08:58:24 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -176,7 +176,32 @@ void DOS_Shell::CMD_RENAME(char * args){
 	if(!*args) {SyntaxError();return;}
 	if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
 	char * arg1=StripWord(args);
-	DOS_Rename(arg1,args);
+	char* slash = strrchr(arg1,'\\');
+	if(slash) { 
+		slash++;
+		//If directory specified (crystal caves installer)
+		// rename from c:\X : rename c:\abc.exe abc.shr. File must appear in C:\ 
+		
+		char dir_source[DOS_PATHLENGTH]={0};
+		//Copy first and then modify, makes GCC happy
+		strcpy(dir_source,arg1);
+		char* dummy = strrchr(dir_source,'\\');
+		*dummy=0;
+
+		if((strlen(dir_source) == 2) && (dir_source[1] == ':')) 
+			strcat(dir_source,"\\"); //X: add slash
+
+		char dir_current[DOS_PATHLENGTH];
+		DOS_GetCurrentDir(0,dir_current);
+		if(!DOS_ChangeDir(dir_source)) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+			return;
+		}
+		DOS_Rename(slash,args);
+		DOS_ChangeDir(dir_current);
+	} else {
+		DOS_Rename(arg1,args);
+	}
 }
 
 void DOS_Shell::CMD_ECHO(char * args){
