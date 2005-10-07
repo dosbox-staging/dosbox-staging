@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.20 2005-08-08 13:33:46 c2woody Exp $ */
+/* $Id: dos_tables.cpp,v 1.21 2005-10-07 15:16:58 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -75,10 +75,10 @@ static Bit8u country_info[0x22] = {
 void DOS_SetupTables(void) {
 	dos_memseg=0xd000;
 	Bit16u seg,seg2;Bitu i;
-	dos.tables.mediaid=RealMake(DOS_GetMemory(2),0);
+	dos.tables.mediaid=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta_fcbdelete=RealMake(DOS_GetMemory(4),0);
-	for (i=0;i<DOS_DRIVES;i++) mem_writeb(Real2Phys(dos.tables.mediaid)+i,0);
+	for (i=0;i<DOS_DRIVES;i++) mem_writew(Real2Phys(dos.tables.mediaid)+i*2,0);
 	/* Create the DOS Info Block */
 	dos_infoblock.SetLocation(DOS_INFOBLOCK_SEG); //c2woody
    

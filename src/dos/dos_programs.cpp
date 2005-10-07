@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.44 2005-09-29 08:48:39 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.45 2005-10-07 15:16:58 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -203,7 +203,7 @@ public:
 		if (!newdrive) E_Exit("DOS:Can't create drive");
 		Drives[drive-'A']=newdrive;
 		/* Set the correct media byte in the table */
-		mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',newdrive->GetMediaByte());
+		mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,newdrive->GetMediaByte());
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		/* check if volume label is given and don't allow it to updated in the future */
 		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),false);
@@ -725,7 +725,7 @@ public:
 			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 			Drives[drive-'A']=newdrive;
 			// Set the correct media byte in the table 
-			mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',mediaid);
+			mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
 			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
 			if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
 				if(imageDiskList[2] == NULL) {
@@ -751,7 +751,7 @@ public:
 			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 			Drives[drive-'A']=newdrive;
 			// Set the correct media byte in the table 
-			mem_writeb(Real2Phys(dos.tables.mediaid)+drive-'A',mediaid);
+			mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
 			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
 		} else if (fstype=="none") {
 			if(imageDiskList[drive] != NULL) delete imageDiskList[drive];

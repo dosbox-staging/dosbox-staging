@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.49 2005-09-19 08:25:38 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.50 2005-10-07 15:16:58 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -185,8 +185,11 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 bool DOS_NewPSP(Bit16u segment, Bit16u size) {
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
-	DOS_PSP psp_parent(psp.GetParent());
+	Bit16u parent_psp_seg=psp.GetParent();
+	DOS_PSP psp_parent(parent_psp_seg);
 	psp.CopyFileTable(&psp_parent,false);
+	// copy command line as well (Kings Quest AGI -cga switch)
+	psp.SetCommandTail(RealMake(parent_psp_seg,0x80));
 	return true;
 };
 

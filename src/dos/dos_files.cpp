@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.69 2005-09-11 13:09:45 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.70 2005-10-07 15:16:58 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1014,7 +1014,7 @@ bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_c
 	Bit16u _free_clusters;
 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
 	SegSet16(ds,RealSeg(dos.tables.mediaid));
-	reg_bx=RealOff(dos.tables.mediaid+drive);
+	reg_bx=RealOff(dos.tables.mediaid+drive*2);
 	return true;
 }
 
