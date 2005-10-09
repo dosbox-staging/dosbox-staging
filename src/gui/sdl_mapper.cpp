@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.14 2005-08-10 20:36:36 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.15 2005-10-09 15:17:01 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -962,8 +962,9 @@ public:
 protected:
 	MapKeys defkey;
 	Bitu defmod;
-	char * buttonname;
 	MAPPER_Handler * handler;
+public:
+	char * buttonname;
 };
 
 
@@ -1326,6 +1327,10 @@ static void CreateDefaultBinds(void) {
 }
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char * eventname,char * buttonname) {
+	//Check if it allready exists=> if so return.
+	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
+		if(strcmp((*it)->buttonname,buttonname) == 0) return;
+
 	char tempname[17];
 	strcpy(tempname,"hand_");
 	strcat(tempname,eventname);
