@@ -312,37 +312,61 @@ static void OPL_SaveRawEvent(void) {
 	}
 }
 
-static void OPL_Stop(Section* sec) {
-	if (opl.raw.handle) OPL_SaveRawEvent();
-}
+class OPL: public Module_base {
+private:
+	IO_ReadHandleObject ReadHandler[3];
+	IO_WriteHandleObject WriteHandler[3];
+	MixerObject MixerChan;
+public:
+	static OPL_Mode oplmode;
 
-void OPL_Init(Section* sec,Bitu base,OPL_Mode oplmode,Bitu rate) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	if (OPL2::YM3812Init(2,OPL2_INTERNAL_FREQ,rate)) {
-		E_Exit("Can't create OPL2 Emulator");	
-	};
-	OPL2::YM3812SetTimerHandler(0,OPL2::TimerHandler,0);
-	OPL2::YM3812SetTimerHandler(1,OPL2::TimerHandler,256);
-	if (THEOPL3::YMF262Init(1,OPL3_INTERNAL_FREQ,rate)) {
-		E_Exit("Can't create OPL3 Emulator");	
-	};
-	THEOPL3::YMF262SetTimerHandler(0,THEOPL3::TimerHandler,0);
-	IO_RegisterWriteHandler(0x388,OPL_Write,IO_MB,4);
-	IO_RegisterReadHandler(0x388,OPL_Read,IO_MB,4);
-	if (oplmode>=OPL_dualopl2) {
-		IO_RegisterWriteHandler(base,OPL_Write,IO_MB,4);
-		IO_RegisterReadHandler(base,OPL_Read,IO_MB,4);
+	OPL(Section* configuration):Module_base(configuration) {
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		Bitu base = section->Get_hex("base");
+		Bitu rate = section->Get_int("oplrate");
+		if (OPL2::YM3812Init(2,OPL2_INTERNAL_FREQ,rate)) {
+			E_Exit("Can't create OPL2 Emulator");	
+		};
+		OPL2::YM3812SetTimerHandler(0,OPL2::TimerHandler,0);
+		OPL2::YM3812SetTimerHandler(1,OPL2::TimerHandler,256);
+		if (THEOPL3::YMF262Init(1,OPL3_INTERNAL_FREQ,rate)) {
+			E_Exit("Can't create OPL3 Emulator");	
+		};
+		THEOPL3::YMF262SetTimerHandler(0,THEOPL3::TimerHandler,0);
+		WriteHandler[0].Install(0x388,OPL_Write,IO_MB,4);
+		ReadHandler[0].Install(0x388,OPL_Read,IO_MB,4);
+		if (oplmode>=OPL_dualopl2) {
+			WriteHandler[1].Install(base,OPL_Write,IO_MB,4);
+			ReadHandler[1].Install(base,OPL_Read,IO_MB,4);
+		}
+
+		WriteHandler[2].Install(base+8,OPL_Write,IO_MB,2);
+		ReadHandler[2].Install(base+8,OPL_Read,IO_MB,2);
+
+		opl.active=false;
+		opl.last_used=0;
+		opl.mode=oplmode;
+		memset(&opl.raw,0,sizeof(opl.raw));
+		opl.chan=MixerChan.Install(OPL_CallBack,rate,"FM");
+		MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 	}
-
-	IO_RegisterWriteHandler(base+8,OPL_Write,IO_MB,2);
-	IO_RegisterReadHandler(base+8,OPL_Read,IO_MB,2);
-
-	opl.active=false;
-	opl.last_used=0;
-	opl.mode=oplmode;
-	memset(&opl.raw,0,sizeof(opl.raw));
-	opl.chan=MIXER_AddChannel(OPL_CallBack,rate,"FM");
-	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
-	sec->AddDestroyFunction(&OPL_Stop);
+	~OPL() {
+		if (opl.raw.handle) OPL_SaveRawEvent();
+		OPL2::YM3812Shutdown();
+		THEOPL3::YMF262Shutdown();
+	}
 };
 
+static OPL* test;
+
+//Initialize static members
+OPL_Mode OPL::oplmode=OPL_none;
+
+void OPL_Init(Section* sec,OPL_Mode oplmode) {
+	OPL::oplmode = oplmode;
+	test = new OPL(sec);
+}
+
+void OPL_ShutDown(Section* sec){
+	delete test;
+}

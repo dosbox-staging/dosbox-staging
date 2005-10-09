@@ -420,20 +420,39 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
- void CMS_Init(Section* sec,Bitu base,Bitu rate) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	sample_rate=rate;
+class CMS:public Module_base {
+private:
+	IO_WriteHandleObject WriteHandler;
+	MixerObject MixerChan;
 
-	IO_RegisterWriteHandler(base,write_cms,IO_MB,4);
+public:
+	CMS(Section* configuration):Module_base(configuration) {
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+		Bitu sample_rate = section->Get_int("oplrate");
+		Bitu base = section->Get_hex("base");
+		WriteHandler.Install(base,write_cms,IO_MB,4);
 	
-/* Register the Mixer CallBack */
-
-	cms_chan=MIXER_AddChannel(CMS_CallBack,rate,"CMS");
-	last_command=PIC_Ticks;
+		/* Register the Mixer CallBack */
+		cms_chan = MixerChan.Install(CMS_CallBack,sample_rate,"CMS");
 	
-	for (int s=0;s<2;s++) {
-		struct SAA1099 *saa = &saa1099[s];
-		memset(saa, 0, sizeof(struct SAA1099));
+		last_command=PIC_Ticks;
+	
+		for (int s=0;s<2;s++) {
+			struct SAA1099 *saa = &saa1099[s];
+			memset(saa, 0, sizeof(struct SAA1099));
+		}
 	}
-}
+	~CMS() {
+		cms_chan->Enable(false);
+	}
+};
 
+
+static CMS* test;
+   
+void CMS_Init(Section* sec) {
+	test = new CMS(sec);
+}
+void CMS_ShutDown(Section* sec) {
+	delete test;	       
+}

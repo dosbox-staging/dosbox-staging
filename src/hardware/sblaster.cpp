@@ -1132,13 +1132,13 @@ public:
 			break;
 		case OPL_cms:
 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
-			CMS_Init(section,sb.hw.base,oplrate);
+			CMS_Init(section);
 			break;
 		case OPL_opl2:
-			CMS_Init(section,sb.hw.base,oplrate);
+			CMS_Init(section);
 		case OPL_dualopl2:
 		case OPL_opl3:
-			OPL_Init(section,sb.hw.base,opl_mode,oplrate);
+			OPL_Init(section,opl_mode);
 			break;
 		}
 		if (sb.type==SBT_NONE) return;
@@ -1174,13 +1174,13 @@ public:
 			break;
 		case OPL_cms:
 
-//TODO		CMS_Init(section,sb.hw.base,oplrate);
+		CMS_ShutDown(m_configuration);
 			break;
 		case OPL_opl2:
-//TODO		CMS_Init(section,sb.hw.base,oplrate);
+		CMS_ShutDown(m_configuration);
 		case OPL_dualopl2:
 		case OPL_opl3:
-//TODO		OPL_Init(section,sb.hw.base,opl_mode,oplrate);
+		OPL_ShutDown(m_configuration);
 			break;
 		}
 
@@ -1188,8 +1188,6 @@ public:
 		DSP_Reset();//Stop everything	
 	}	
 }; //End of SBLASTER class
-
-
 
 
 static SBLASTER* test;
