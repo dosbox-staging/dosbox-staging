@@ -240,8 +240,7 @@ public:
 		const char * conf=section->Get_string("config");
 		/* If device = "default" go for first handler that works */
 		MidiHandler * handler;
-		//TODO!!!!!!!!!!!!!!!
-//		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
 		midi.status=0x00;
 		midi.cmd_pos=0;
 		midi.cmd_len=0;
