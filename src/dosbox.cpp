@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.87 2005-08-08 13:33:46 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.88 2005-10-09 15:50:09 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -220,7 +220,7 @@ void DOSBOX_Init(void) {
 		"captures -- Directory where things like wave,midi,screenshot get captured.\n"
 	);
 
-	secprop=control->AddSection_prop("render",&RENDER_Init);
+	secprop=control->AddSection_prop("render",&RENDER_Init,true);
 	secprop->Add_int("frameskip",0);
 	secprop->Add_bool("aspect",false);
 	secprop->Add_string("scaler","normal2x");

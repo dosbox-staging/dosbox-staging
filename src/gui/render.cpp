@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.32 2005-09-01 19:48:37 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.33 2005-10-09 15:50:09 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -383,15 +383,16 @@ static void DecreaseFrameSkip(void) {
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
+	//For restarting the renderer.
+	static bool running = false;
+	bool aspect = render.aspect;
+	RENDER_Operation type = render.op.want_type;
+
 	render.pal.first=256;
 	render.pal.last=0;
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
-	render.updating=true;
-#if (C_SSHOT)
-	MAPPER_AddHandler(EnableScreenShot,MK_f5,MMOD1,"scrshot","Screenshot");
-#endif
 	const char * scaler;std::string cline;
 	if (control->cmdline->FindString("-scaler",cline,false)) {
 		scaler=cline.c_str();
@@ -409,6 +410,18 @@ void RENDER_Init(Section * sec) {
 		render.op.want_type=OP_Normal;
 		LOG_MSG("Illegal scaler type %s,falling back to normal.",scaler);
 	}
+
+	//If something changed that needs a ReInit
+	if(running && (render.aspect != aspect || render.op.want_type != type))
+		RENDER_ReInit();
+	if(!running) render.updating=true;
+	running = true;
+	
+
+
+#if (C_SSHOT)
+	MAPPER_AddHandler(EnableScreenShot,MK_f5,MMOD1,"scrshot","Screenshot");
+#endif
 	MAPPER_AddHandler(DecreaseFrameSkip,MK_f7,MMOD1,"decfskip","Dec Fskip");
 	MAPPER_AddHandler(IncreaseFrameSkip,MK_f8,MMOD1,"incfskip","Inc Fskip");
 	GFX_SetTitle(-1,render.frameskip.max,false);
