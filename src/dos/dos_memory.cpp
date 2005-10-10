@@ -188,6 +188,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 
 		mcb_new_next.SetSize(total-*blocks-1);
 		mcb_new_next.SetPSPSeg(MCB_FREE);
+		mcb.SetPSPSeg(dos.psp());
 		return true;
 	}
 	if (mcb.GetType()!=0x5a) {
@@ -205,6 +206,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_next.SetType(mcb.GetType());
 		mcb_next.SetPSPSeg(MCB_FREE);
 		mcb.SetType(0x4d);
+		mcb.SetPSPSeg(dos.psp());
 		return true;
 	}
 	if (*blocks==total) {
@@ -212,6 +214,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 			mcb.SetType(mcb_next.GetType());
 		}
 		mcb.SetSize(*blocks);
+		mcb.SetPSPSeg(dos.psp());
 		return true;
 	}
 	*blocks=total;
