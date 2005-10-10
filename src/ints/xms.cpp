@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.37 2005-10-04 12:59:12 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.38 2005-10-10 10:16:42 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -386,9 +386,14 @@ Bitu XMS_Handler(void) {
 		reg_edx &= 0xffff;
 		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
 		break;
-	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {
-		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx);
-		if (result != 0) reg_bl = result; else reg_edx &= 0xFFFF;
+	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
+		Bit8u free_handles; 
+		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_dx);
+		if (result != 0) reg_bl = result;
+		else {
+			reg_edx &= 0xffff;
+			reg_cx = free_handles;
+		}
 		reg_ax = (result==0);
 		} break;
 	default:
