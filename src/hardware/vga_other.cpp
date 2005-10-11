@@ -267,7 +267,7 @@ static void write_cga(Bitu port,Bitu val,Bitu iolen) {
 		vga.tandy.mode_control=val;
 		if (vga.tandy.mode_control & 0x2) {
 			if (vga.tandy.mode_control & 0x10) {
-				if (val & 0x8 && machine==MCH_CGA) {
+				if (!(val & 0x4) && machine==MCH_CGA) {
 					VGA_SetMode(M_CGA16);		//Video burst 16 160x200 color mode
 				} else {
 					VGA_SetMode(M_TANDY2);
