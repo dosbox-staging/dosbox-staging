@@ -191,6 +191,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb.SetPSPSeg(dos.psp());
 		return true;
 	}
+	/* MCB will grow, try to join with following MCB */
 	if (mcb.GetType()!=0x5a) {
 		if (mcb_next.GetPSPSeg()==MCB_FREE) {
 			total+=mcb_next.GetSize()+1;
@@ -198,6 +199,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	}
 	if (*blocks<total) {
 		if (mcb.GetType()!=0x5a) {
+			/* save type of following MCB */
 			mcb.SetType(mcb_next.GetType());
 		}
 		mcb.SetSize(*blocks);
@@ -209,15 +211,19 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb.SetPSPSeg(dos.psp());
 		return true;
 	}
-	if (*blocks==total) {
-		if (mcb.GetType()!=0x5a) {
-			mcb.SetType(mcb_next.GetType());
-		}
-		mcb.SetSize(*blocks);
-		mcb.SetPSPSeg(dos.psp());
-		return true;
+
+	/* at this point: *blocks==total (fits) or *blocks>total,
+	   in the second case resize block to maximum */
+
+	if (mcb.GetType()!=0x5a) {
+		/* adjust type of joined MCB */
+		mcb.SetType(mcb_next.GetType());
 	}
-	*blocks=total;
+	mcb.SetSize(total);
+	mcb.SetPSPSeg(dos.psp());
+	if (*blocks==total) return true;	/* block fit exactly */
+
+	*blocks=total;	/* return maximum */
 	DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 	return false;
 }
