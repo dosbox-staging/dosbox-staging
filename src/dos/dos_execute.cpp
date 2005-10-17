@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.50 2005-10-07 15:16:58 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.51 2005-10-17 20:17:08 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -131,7 +131,9 @@ bool DOS_Terminate(bool tsr) {
 	/* Set the CS:IP stored in int 0x22 back on the stack */
 	mem_writew(SegPhys(ss)+reg_sp+0,RealOff(old22));
 	mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(old22));
-	mem_writew(SegPhys(ss)+reg_sp+4,reg_flags&(~FLAG_CF));
+	/* set IOPL=3 (Strike Commander), nested task set,
+	   interrupts enabled, test flags cleared */
+	mem_writew(SegPhys(ss)+reg_sp+4,0x7202);
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(mempsp);
 	DOS_UpdatePSPName();
@@ -395,8 +397,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		mem_writew(SegPhys(ss)+reg_sp+0,RealOff(csip));
 		mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(csip));
 		/* DOS starts programs with a RETF, so our IRET
-		   should not modify the flags (e.g. IOPL in v86 mode) */
-		mem_writew(SegPhys(ss)+reg_sp+4,reg_flags&(~FLAG_CF));
+		   should not modify critical flags (IOPL in v86 mode);
+		   interrupt flag is set explicitly, test flags cleared */
+		mem_writew(SegPhys(ss)+reg_sp+4,(reg_flags&(~FMASK_TEST))|FLAG_IF);
 		/* Setup the rest of the registers */
 		reg_ax=reg_bx=0;reg_cx=0xff;
 		reg_dx=pspseg;
