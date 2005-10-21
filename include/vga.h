@@ -62,6 +62,7 @@ typedef struct {
 /* Some other screen related variables */
 	Bitu line_compare;
 	bool chained;					/* Enable or Disabled Chain 4 Mode */
+	bool compatible_chain4;
 
 	/* Pixel Scrolling */
 	Bit8u pel_panning;				/* Amount of pixels to skip when starting horizontal line */

@@ -439,6 +439,8 @@ bool INT10_SetVideoMode(Bitu mode) {
 		IO_Write(0x3c4,i);
 		IO_Write(0x3c5,seq_data[i]);
 	}
+	vga.config.compatible_chain4 = true; // this may be changed by SVGA chipset emulation
+
 	/* Program CRTC */
 	/* First disable write protection */
 	IO_Write(crtc_base,0x11);
@@ -822,7 +824,8 @@ dac_text16:
 	IO_Write(crtc_base+1,(Bit8u)(S3_LFB_BASE >> 16));
 
 	/* Setup some remaining S3 registers */
-	IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,0x9);	//Enable banked memory and 256k+ access
+//	IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,0x9);	//Enable banked memory and 256k+ access
+	IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,CurMode->mode<=0x13?0x1:0x9);	//Enable banked memory and 256k+ access for SVGA modes only
 	IO_Write(crtc_base,0x58);IO_Write(crtc_base+1,0x3);	//Enable 8 mb of linear addressing
 	IO_Write(crtc_base,0x38);IO_Write(crtc_base+1,0x48);	//Register lock 1
 	IO_Write(crtc_base,0x39);IO_Write(crtc_base+1,0xa5);	//Register lock 2

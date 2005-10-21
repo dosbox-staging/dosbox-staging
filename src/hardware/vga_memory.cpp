@@ -41,7 +41,14 @@ static Bitu VGA_NormalReadHandler(PhysPt start) {
 }
 
 static Bitu VGA_Chain4ReadHandler(PhysPt start) {
+	if(vga.mode == M_VGA)
+		return vga.mem.linear[((start&~3)<<2)|(start&3)];
 	return vga.mem.linear[start];
+}
+
+static void VGA_Chain4WriteHandler(PhysPt start, Bit8u val) {
+	// No need to check for compatible chains here, this one is only enabled if that bit is set
+	vga.mem.linear[((start&~3)<<2)|(start&3)] = val;
 }
 
 //Nice one from DosEmu
@@ -279,6 +286,29 @@ public:
 	}
 };
 
+class VGA_256Chain4_PageHandler : public VGAReadChain4_PageHandler {
+public:	
+	VGA_256Chain4_PageHandler()  {
+		flags=PFLAG_NOCODE;
+	}
+	void writeb(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_Chain4WriteHandler(addr+0,(Bit8u)(val >> 0));
+	}
+	void writew(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_Chain4WriteHandler(addr+0,(Bit8u)(val >> 0));
+		VGA_Chain4WriteHandler(addr+1,(Bit8u)(val >> 8));
+	}
+	void writed(PhysPt addr,Bitu val) {
+		addr = PAGING_GetLinearAddress(addr) & 0xffff;
+		VGA_Chain4WriteHandler(addr+0,(Bit8u)(val >> 0));
+		VGA_Chain4WriteHandler(addr+1,(Bit8u)(val >> 8));
+		VGA_Chain4WriteHandler(addr+2,(Bit8u)(val >> 16));
+		VGA_Chain4WriteHandler(addr+3,(Bit8u)(val >> 24));
+	}
+};
+
 class VGA_TEXT_PageHandler : public PageHandler {
 public:
 	VGA_TEXT_PageHandler() {
@@ -405,6 +435,7 @@ static struct vg {
 	VGA_TEXT_PageHandler htext;
 	VGA_TANDY_PageHandler htandy;
 	VGA_256_PageHandler h256;
+	VGA_256Chain4_PageHandler h256c4;
 	VGA_16_PageHandler h16;
 	VGA_16Chain4_PageHandler h16c4;
 	VGA_MMIO_PageHandler mmio;
@@ -434,7 +465,10 @@ void VGA_SetupHandlers(void) {
 		break;
 	case M_VGA:
 		if (vga.config.chained) {
-			range_handler=&vgaph.hmap;
+			if(vga.config.compatible_chain4)
+				range_handler = &vgaph.h256c4;
+			else
+				range_handler=&vgaph.hmap;
 		} else {
 			range_handler=&vgaph.h256;
 		}

@@ -293,6 +293,8 @@ void write_p3d5_vga(Bitu port,Bitu val,Bitu iolen) {
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO Base address
 		vga.s3.reg_31=val;	
+		vga.config.compatible_chain4 = !(val&0x08);
+		VGA_SetupHandlers();
 		break;
 		/*
 			0	Enable Base Address Offset (CPUA BASE). Enables bank operation if

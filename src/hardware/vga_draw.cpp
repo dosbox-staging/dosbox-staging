@@ -131,6 +131,22 @@ static Bit8u * VGA_Draw_VGA_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	return &vga.mem.linear[vidstart*4+panning];
 }
 
+static Bit8u * VGA_Draw_VGAChained_Line(Bitu vidstart,Bitu panning,Bitu line) {
+	if(vga.config.compatible_chain4) {
+		if(vga.crtc.underline_location & 0x40) {
+			Bitu readindex = vidstart*4+panning;
+			Bit32u* draw = (Bit32u*)TempLine;
+			for(Bitu x=0;x<vga.draw.blocks*4;x++) {
+				*draw = vga.mem.latched[readindex&0xfffc].d;
+				draw ++;
+				readindex += 4;
+			}
+			return TempLine;
+		}
+	}
+	return &vga.mem.linear[vidstart*4+panning];
+}
+
 static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
 		Bitu lineat = vidstart / ((160 * vga.draw.height) / 480);
@@ -438,7 +454,7 @@ void VGA_SetupDrawing(Bitu val) {
 	case M_VGA:
 		doublewidth=true;
 		width<<=2;
-		VGA_DrawLine=VGA_Draw_VGA_Line;
+		VGA_DrawLine=VGA_Draw_VGAChained_Line;
 		break;
 	case M_LIN8:
 		width<<=3;
