@@ -65,7 +65,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			Bitu ind = 1-(x & 0x1);
 
 			if (color & 0x80) {
-	 			p[ind]^=color;
+	 			p[ind]^=(color & 0x7f);
 			} else {
 				p[ind]=color;
 			}
