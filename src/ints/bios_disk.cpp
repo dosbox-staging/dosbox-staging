@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.22 2005-09-11 13:06:00 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.23 2005-10-22 10:28:57 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -202,11 +202,11 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 		} else {
 			Bit16u equipment=mem_readw(BIOS_CONFIGURATION);
 			if(equipment&1) {
-				Bitu numofdisks = (equipment>>5)&3;
+				Bitu numofdisks = (equipment>>6)&3;
 				numofdisks++;
 				if(numofdisks > 1) numofdisks=1;//max 2 floppies at the moment
 				equipment&=~0x00C0;
-				equipment|=(numofdisks<<5);
+				equipment|=(numofdisks<<6);
 			} else equipment|=1;
 			mem_writew(BIOS_CONFIGURATION,equipment);
 			CMOS_SetRegister(0x14, equipment);

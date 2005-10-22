@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.46 2005-09-21 11:37:35 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.47 2005-10-22 10:28:57 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -735,7 +735,8 @@ public:
 			//Startup monochrome
 			config|=0x30;
 			break;
-		case MCH_CGA:	
+		case MCH_VGA:
+		case MCH_CGA:
 		case MCH_TANDY:
 			//Startup 80x25 color
 			config|=0x20;
