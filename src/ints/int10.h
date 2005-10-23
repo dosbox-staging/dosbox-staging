@@ -179,7 +179,7 @@ void INT10_SelectDACPage(Bit8u function,Bit8u mode);
 void INT10_GetDACPage(Bit8u* mode,Bit8u* page);
 void INT10_SetPelMask(Bit8u mask);
 void INT10_GetPelMask(Bit8u & mask);
-
+void INT10_PerformGrayScaleSumming(Bit16u start_reg,Bit16u count);
 
 
 /* Vesa Group */

@@ -781,6 +781,12 @@ dac_text16:
 		}
 		break;
 	}
+	if (machine==MCH_VGA) {
+		/* check if gray scale summing is enabled */
+		if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
+			INT10_PerformGrayScaleSumming(0,256);
+		}
+	}
 	/* Setup some special stuff for different modes */
 	Bit8u feature=real_readb(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE);
 	switch (CurMode->type) {

@@ -176,6 +176,9 @@ static Bitu INT10_Handler(void) {
 		case 0x1A:							/* GET VIDEO DAC COLOR PAGE */
 			INT10_GetDACPage(&reg_bl,&reg_bh);
 			break;
+		case 0x1B:							/* PERFORM GRAY-SCALE SUMMING */
+			INT10_PerformGrayScaleSumming(reg_bx,reg_cx);
+			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
 		}
@@ -274,12 +277,18 @@ graphics_chars:
 		if (machine<MCH_VGA) break;
 		switch (reg_bl) {
 		case 0x10:							/* Get EGA Information */
-			{
-				reg_bh=(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)==0x3B4);	
-				reg_bl=3;	//256 kb
-				reg_cx=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
-				break;
-			}
+			reg_bh=(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)==0x3B4);	
+			reg_bl=3;	//256 kb
+			reg_cx=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
+			break;
+		case 0x33: /* SWITCH GRAY-SCALE SUMMING */
+			{   
+				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
+				if (!(reg_al&1)) temp|=2;		// enable if al=0
+				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
+				reg_al=0x12;
+				break;	
+			}		
 		case 0x34: /* ALTERNATE FUNCTION SELECT (VGA) - CURSOR EMULATION */
 			{   
 				// bit 0: 0=enable, 1=disable
