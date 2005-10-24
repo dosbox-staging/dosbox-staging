@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.15 2005-10-09 15:17:01 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.16 2005-10-24 17:27:37 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -209,6 +209,74 @@ protected:
 
 };
 
+
+#define MAX_SDLKEYS 323
+#define MAX_SCANCODES 212
+
+static bool usescancodes;
+Bit8u scancode_map[MAX_SDLKEYS];
+
+#define Z SDLK_UNKNOWN
+
+SDLKey sdlkey_map[MAX_SCANCODES]={SDLK_UNKNOWN,SDLK_ESCAPE,
+	SDLK_1,SDLK_2,SDLK_3,SDLK_4,SDLK_5,SDLK_6,SDLK_7,SDLK_8,SDLK_9,SDLK_0,
+	/* 0x0c: */
+	SDLK_MINUS,SDLK_EQUALS,SDLK_BACKSPACE,SDLK_TAB,
+	SDLK_q,SDLK_w,SDLK_e,SDLK_r,SDLK_t,SDLK_y,SDLK_u,SDLK_i,SDLK_o,SDLK_p,
+	SDLK_LEFTBRACKET,SDLK_RIGHTBRACKET,SDLK_RETURN,SDLK_LCTRL,
+	SDLK_a,SDLK_s,SDLK_d,SDLK_f,SDLK_g,SDLK_h,SDLK_j,SDLK_k,SDLK_l,
+	SDLK_SEMICOLON,SDLK_QUOTE,SDLK_BACKQUOTE,SDLK_LSHIFT,SDLK_BACKSLASH,
+	SDLK_z,SDLK_x,SDLK_c,SDLK_v,SDLK_b,SDLK_n,SDLK_m,
+	/* 0x33: */
+	SDLK_COMMA,SDLK_PERIOD,SDLK_SLASH,SDLK_RSHIFT,SDLK_KP_MULTIPLY,
+	SDLK_LALT,SDLK_SPACE,SDLK_CAPSLOCK,
+	SDLK_F1,SDLK_F2,SDLK_F3,SDLK_F4,SDLK_F5,SDLK_F6,SDLK_F7,SDLK_F8,SDLK_F9,SDLK_F10,
+	/* 0x45: */
+	SDLK_NUMLOCK,SDLK_SCROLLOCK,
+	SDLK_KP7,SDLK_KP8,SDLK_KP9,SDLK_KP_MINUS,SDLK_KP4,SDLK_KP5,SDLK_KP6,SDLK_KP_PLUS,
+	SDLK_KP1,SDLK_KP2,SDLK_KP3,SDLK_KP0,SDLK_KP_PERIOD,
+	SDLK_UNKNOWN,SDLK_UNKNOWN,
+	SDLK_LESS,SDLK_F11,SDLK_F12,
+	Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,
+	Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,
+	Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,
+	/* 0xb7: */
+	Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z
+	/* 0xd4: ... */
+};
+
+#undef Z
+
+
+SDLKey MapSDLCode(Bitu skey) {
+	if (usescancodes) {
+		if (skey<MAX_SCANCODES) return sdlkey_map[skey];
+		else return SDLK_UNKNOWN;
+	} else return (SDLKey)skey;
+}
+
+Bitu GetKeyCode(SDL_keysym keysym) {
+	if (usescancodes) {
+		Bitu key=(Bitu)keysym.scancode;
+		if (key==0) {
+			/* try to retrieve key from symbolic key as scancode is zero */
+			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
+		} 
+#if !defined (WIN32)
+		/* Linux adds 8 to all scancodes */
+		else key-=8;
+#endif
+		return key;
+	} else {
+#if defined (WIN32)
+		/* special handling of 102-key under windows */
+		if ((keysym.sym==SDLK_BACKSLASH) && (keysym.scancode==0x56)) return (Bitu)SDLK_LESS;
+#endif
+		return (Bitu)keysym.sym;
+	}
+}
+
+
 class CKeyBind;
 class CKeyBindGroup;
 
@@ -218,10 +286,10 @@ public:
 		key = _key;
 	}
 	void BindName(char * buf) {
-		sprintf(buf,"Key %s%",SDL_GetKeyName(key));
+		sprintf(buf,"Key %s",SDL_GetKeyName(MapSDLCode((Bitu)key)));
 	}
 	void ConfigName(char * buf) {
-		sprintf(buf,"key %d",key);
+		sprintf(buf,"key %d",MapSDLCode((Bitu)key));
 	}
 public:
 	SDLKey key;
@@ -239,23 +307,29 @@ public:
 	CBind * CreateConfigBind(char *& buf) {
 		if (strncasecmp(buf,configname,strlen(configname))) return 0;
 		StripWord(buf);char * num=StripWord(buf);
-		CBind * bind=CreateKeyBind((SDLKey)ConvDecWord(num));
+		Bitu code=ConvDecWord(num);
+		if (usescancodes) {
+			if (code<MAX_SDLKEYS) code=scancode_map[code];
+			else code=0;
+		}
+		CBind * bind=CreateKeyBind((SDLKey)code);
 		return bind;
 	}
 	CBind * CreateEventBind(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN) return 0;
-		return CreateKeyBind(event->key.keysym.sym);
+		return CreateKeyBind((SDLKey)GetKeyCode(event->key.keysym));
 	};
 	bool CheckEvent(SDL_Event * event) {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
-		Bitu key=(Bitu)event->key.keysym.sym;
-		assert(key<keys);
+		Bitu key=GetKeyCode(event->key.keysym);
+		LOG_MSG("key type %i is %x [%x %x]",event->type,key,event->key.keysym.sym,event->key.keysym.scancode);
+		assert(Bitu(event->key.keysym.sym)<keys);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff);
 		else DeactivateBindList(&lists[key]);
 		return 0;
 	}
 	CBind * CreateKeyBind(SDLKey _key) {
-		assert((Bitu)_key<keys);
+		if (!usescancodes) assert((Bitu)_key<keys);
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
 private:
@@ -1100,7 +1174,8 @@ static KeyBlock combo_3[12]={
 	{"\\","backslash",KBD_backslash},	
 };
 
-static KeyBlock combo_4[10]={
+static KeyBlock combo_4[11]={
+	{"<","lessthan",KBD_extra_lt_gt},
 	{"z","z",KBD_z},			{"x","x",KBD_x},	{"c","c",KBD_c},
 	{"v","v",KBD_v},			{"b","b",KBD_b},	{"n","n",KBD_n},
 	{"m","m",KBD_m},			{",","comma",KBD_comma},
@@ -1128,8 +1203,8 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
 
-	AddKeyButtonEvent(PX(0),PY(4),BW*3,BH,"SHIFT","lshift",KBD_leftshift);
-	for (i=0;i<10;i++) AddKeyButtonEvent(PX(3+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
+	AddKeyButtonEvent(PX(0),PY(4),BW*2,BH,"SHIFT","lshift",KBD_leftshift);
+	for (i=0;i<11;i++) AddKeyButtonEvent(PX(2+i),PY(4),BW,BH,combo_4[i].title,combo_4[i].entry,combo_4[i].key);
 	AddKeyButtonEvent(PX(13),PY(4),BW*3,BH,"SHIFT","rshift",KBD_rightshift);
 
 	/* Last Row */
@@ -1299,7 +1374,7 @@ static struct {
 	{"kp_8",SDLK_KP8},	{"kp_9",SDLK_KP9},	{"numlock",SDLK_NUMLOCK},
 	{"kp_divide",SDLK_KP_DIVIDE},	{"kp_multiply",SDLK_KP_MULTIPLY},
 	{"kp_minus",SDLK_KP_MINUS},		{"kp_plus",SDLK_KP_PLUS},
-	{"kp_period",SDLK_KP_PERIOD},	{"kp_enter",SDLK_KP_ENTER},
+	{"kp_period",SDLK_KP_PERIOD},	{"kp_enter",SDLK_KP_ENTER},		{"lessthan",SDLK_LESS},
 	{0,0}
 };
 
@@ -1477,6 +1552,56 @@ void MAPPER_Init(void) {
 
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+	usescancodes=false;
+
+	if (section->Get_bool("usescancodes")) {
+		usescancodes=true;
+
+		/* Note: table has to be tested/updated for various OSs */
+#if !defined (WIN32)
+		sdlkey_map[0x5a]=SDLK_UP;
+		sdlkey_map[0x60]=SDLK_DOWN;
+		sdlkey_map[0x5c]=SDLK_LEFT;
+		sdlkey_map[0x5e]=SDLK_RIGHT;
+		sdlkey_map[0x59]=SDLK_HOME;
+		sdlkey_map[0x5f]=SDLK_END;
+		sdlkey_map[0x5b]=SDLK_PAGEUP;
+		sdlkey_map[0x61]=SDLK_PAGEDOWN;
+		sdlkey_map[0x62]=SDLK_INSERT;
+		sdlkey_map[0x63]=SDLK_DELETE;
+		sdlkey_map[0x68]=SDLK_KP_DIVIDE;
+		sdlkey_map[0x64]=SDLK_KP_ENTER;
+		sdlkey_map[0x65]=SDLK_RCTRL;
+		sdlkey_map[0x66]=SDLK_PAUSE;
+		sdlkey_map[0x67]=SDLK_PRINT;
+		sdlkey_map[0x69]=SDLK_RALT;
+#else
+		sdlkey_map[0xc8]=SDLK_UP;
+		sdlkey_map[0xd0]=SDLK_DOWN;
+		sdlkey_map[0xcb]=SDLK_LEFT;
+		sdlkey_map[0xcd]=SDLK_RIGHT;
+		sdlkey_map[0xc7]=SDLK_HOME;
+		sdlkey_map[0xcf]=SDLK_END;
+		sdlkey_map[0xc9]=SDLK_PAGEUP;
+		sdlkey_map[0xd1]=SDLK_PAGEDOWN;
+		sdlkey_map[0xd2]=SDLK_INSERT;
+		sdlkey_map[0xd3]=SDLK_DELETE;
+		sdlkey_map[0xb5]=SDLK_KP_DIVIDE;
+		sdlkey_map[0x9c]=SDLK_KP_ENTER;
+		sdlkey_map[0x9d]=SDLK_RCTRL;
+		sdlkey_map[0xc5]=SDLK_PAUSE;
+		sdlkey_map[0xb7]=SDLK_PRINT;
+		sdlkey_map[0xb8]=SDLK_RALT;
+#endif
+
+		Bitu i;
+		for (i=0; i<MAX_SDLKEYS; i++) scancode_map[i]=0;
+		for (i=0; i<MAX_SCANCODES; i++) {
+			SDLKey key=sdlkey_map[i];
+			if (key<MAX_SDLKEYS) scancode_map[key]=i;
+		}
+	}
+
 	mapper.filename=section->Get_string("mapperfile");
 	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }

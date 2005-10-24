@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.88 2005-09-18 19:50:03 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.89 2005-10-24 17:27:37 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1095,6 +1095,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("waitonerror",true);
 		sdl_sec->Add_string("priority","higher,normal");
 		sdl_sec->Add_string("mapperfile","mapper.txt");
+		sdl_sec->Add_bool("usescancodes",false);
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
@@ -1116,6 +1117,7 @@ int main(int argc, char* argv[]) {
 			"priority -- Priority levels for dosbox: lower,normal,higher,highest.\n"
 			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 			"mapperfile -- File used to load/save the key/event mappings from.\n"
+			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
 			);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
