@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.33 2005-10-09 15:50:09 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.34 2005-10-24 14:43:53 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -220,46 +220,45 @@ static void RENDER_EmptyLineHandler(const Bit8u * src) {
 }
 
 bool RENDER_StartUpdate(void) {
-	if (render.updating) return false;
-	if (render.frameskip.count<render.frameskip.max) {
-		render.frameskip.count++;
-		return false;
-	}
-	render.frameskip.count=0;
-	if (render.src.bpp==8) Check_Palette();
-	Scaler_Line=0;
-	Scaler_Index=Scaler_Data;
-	if (!GFX_StartUpdate(Scaler_DstWrite,Scaler_DstPitch)) return false;
-	RENDER_DrawLine=render.op.line_handler;
+	if (!render.updating) {
+		if (render.frameskip.count>render.frameskip.max) {			
+			if (render.src.bpp==8) Check_Palette();
+			render.frameskip.count=0;
+			Scaler_Line=0;
+			Scaler_Index=Scaler_Data;
+			if (GFX_StartUpdate(Scaler_DstWrite,Scaler_DstPitch)) {
+				RENDER_DrawLine=render.op.line_handler;
 #if (C_SSHOT)
-	if (render.shot.take) {
-		render.shot.take=false;
-		if (render.shot.buffer) {
-			free(render.shot.buffer);
-		}
-		render.shot.width=render.src.width;
-		render.shot.height=render.src.height;
-		render.shot.bpp=render.src.bpp;
-		switch (render.shot.bpp) {
-		case 8:render.shot.rowlen=render.shot.width;break;
-		case 15:
-		case 16:render.shot.rowlen=render.shot.width*2;break;
-		case 32:render.shot.rowlen=render.shot.width*4;break;
-		}
-		render.shot.buffer=(Bit8u*)malloc(render.shot.rowlen*render.shot.height);
-		render.shot.draw=render.shot.buffer;
-		RENDER_DrawLine=RENDER_ShotDraw;
-		render.shot.taking=true;
-	}
+				if (GCC_UNLIKELY(render.shot.take)) {
+					render.shot.take=false;
+					if (render.shot.buffer) free(render.shot.buffer);
+					render.shot.width=render.src.width;
+					render.shot.height=render.src.height;
+					render.shot.bpp=render.src.bpp;
+					switch (render.shot.bpp) {
+					case 8:render.shot.rowlen=render.shot.width;break;
+					case 15:
+					case 16:render.shot.rowlen=render.shot.width*2;break;
+					case 32:render.shot.rowlen=render.shot.width*4;break;
+					}
+					render.shot.buffer=(Bit8u*)malloc(render.shot.rowlen*render.shot.height);
+					render.shot.draw=render.shot.buffer;
+					RENDER_DrawLine=RENDER_ShotDraw;
+					render.shot.taking=true;
+				}
 #endif
-	render.updating=true;
-	return true;
+				render.updating=true;
+				return true;
+			}
+		} else render.frameskip.count++;
+	} 
+	return false;
 }
 
 void RENDER_EndUpdate(void) {
-	if (!render.updating) return;
+	if (render.updating) {
 #if (C_SSHOT)
-	if (render.shot.taking) {
+	if (GCC_UNLIKELY(render.shot.taking)) {
 		render.shot.taking=false;
 		TakeScreenShot(render.shot.buffer);
 		free(render.shot.buffer);
@@ -268,9 +267,9 @@ void RENDER_EndUpdate(void) {
 #endif	/* If Things are added to please check the define */   
 	GFX_EndUpdate();
 	RENDER_DrawLine=RENDER_EmptyLineHandler;
- 	render.updating=false;
+	render.updating=false;
+	}
 }
-
 
 static Bitu MakeAspectTable(Bitu height,double scaley,Bitu miny) {
 	double lines=0;
