@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.34 2005-10-24 14:43:53 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.35 2005-10-25 14:02:11 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -221,7 +221,7 @@ static void RENDER_EmptyLineHandler(const Bit8u * src) {
 
 bool RENDER_StartUpdate(void) {
 	if (!render.updating) {
-		if (render.frameskip.count>render.frameskip.max) {			
+		if (render.frameskip.count>=render.frameskip.max) {			
 			if (render.src.bpp==8) Check_Palette();
 			render.frameskip.count=0;
 			Scaler_Line=0;
