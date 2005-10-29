@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.17 2005-09-27 11:05:44 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.18 2005-10-29 09:32:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -295,7 +295,7 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y) {
 	switch (CurMode->type) {
 	case M_LIN8:
 		y=times;
-		x=rem*4+pan;
+		x=rem+pan;
 		break;
 	default:
 		return 0x1;
