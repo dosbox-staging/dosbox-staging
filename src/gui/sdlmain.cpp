@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.89 2005-10-24 17:27:37 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.90 2005-10-31 10:21:45 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -630,6 +630,7 @@ void GFX_EndUpdate(void) {
 			break;
 		case DDERR_SURFACELOST:
 			IDirectDrawSurface3_Restore(sdl.blit.surface->hwdata->dd_surface);
+			IDirectDrawSurface3_Restore(sdl.surface->hwdata->dd_surface);
 			break;
 		default:
 			LOG_MSG("DDRAW:Failed to blit, error %X",ret);
