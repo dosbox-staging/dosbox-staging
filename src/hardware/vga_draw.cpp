@@ -27,8 +27,10 @@
 #define VGA_PARTS 4
 
 typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart,Bitu panning,Bitu line);
+typedef void (* VGA_FrameStart_Handler)();
 
 static VGA_Line_Handler VGA_DrawLine;
+static VGA_FrameStart_Handler VGA_FrameStart;
 static Bit8u TempLine[1280];
 
 static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
@@ -132,19 +134,14 @@ static Bit8u * VGA_Draw_VGA_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_VGAChained_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	if(vga.config.compatible_chain4) {
-		if(vga.crtc.underline_location & 0x40) {
-			Bitu readindex = vidstart*4+panning;
-			Bit32u* draw = (Bit32u*)TempLine;
-			for(Bitu x=0;x<vga.draw.blocks*4;x++) {
-				*draw = vga.mem.latched[readindex&0xfffc].d;
-				draw ++;
-				readindex += 4;
-			}
-			return TempLine;
-		}
-	}
-	return &vga.mem.linear[vidstart*4+panning];
+	return &vga.mem.linear[512*1024+((vidstart*4+panning)&0xffff)];
+}
+
+static void VGA_StartFrame_VGA() {
+	if(vga.config.compatible_chain4 && (vga.crtc.underline_location & 0x40))
+		VGA_DrawLine=VGA_Draw_VGAChained_Line;
+	else
+		VGA_DrawLine = VGA_Draw_VGA_Line;
 }
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
@@ -286,6 +283,8 @@ void VGA_SetBlinking(Bitu enabled) {
 }
 
 static void VGA_VerticalTimer(Bitu val) {
+	if (VGA_FrameStart)
+		VGA_FrameStart();
 	vga.config.retrace=false;
 	PIC_AddEvent(VGA_VerticalTimer,vga.draw.delay.vtotal);
 	PIC_AddEvent(VGA_VerticalDisplayEnd,vga.draw.delay.vend);
@@ -450,11 +449,14 @@ void VGA_SetupDrawing(Bitu val) {
 	Bitu height=vdispend;
 	bool doubleheight=false;
 	bool doublewidth=false;
+	VGA_FrameStart = NULL;
 	switch (vga.mode) {
 	case M_VGA:
 		doublewidth=true;
 		width<<=2;
-		VGA_DrawLine=VGA_Draw_VGAChained_Line;
+// Proper line handler is selected at the beginning of the frame
+//		VGA_DrawLine=VGA_Draw_VGAChained_Line;
+		VGA_FrameStart=VGA_StartFrame_VGA;
 		break;
 	case M_LIN8:
 		width<<=3;

@@ -49,6 +49,11 @@ static Bitu VGA_Chain4ReadHandler(PhysPt start) {
 static void VGA_Chain4WriteHandler(PhysPt start, Bit8u val) {
 	// No need to check for compatible chains here, this one is only enabled if that bit is set
 	vga.mem.linear[((start&~3)<<2)|(start&3)] = val;
+	// Linearized version for faster rendering
+	vga.mem.linear[512*1024+start] = val;
+	// And replicate the first line
+	if (start < 320)
+		vga.mem.linear[512*1024+start+64*1024] = val;
 }
 
 //Nice one from DosEmu
