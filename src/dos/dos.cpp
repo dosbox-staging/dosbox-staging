@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.87 2005-09-28 19:13:21 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.88 2005-10-31 18:12:56 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -144,6 +144,13 @@ static Bitu DOS_21Handler(void) {
 	case 0x0c:		/* Flush Buffer and read STDIN call */
 		{
 			switch (reg_al) {
+			case 0x0:
+				/* flush STDIN-buffer */
+				Bit8u c;Bit16u n;
+				while (DOS_GetSTDINStatus()) {
+					n=1;	DOS_ReadFile(STDIN,&c,&n);
+				}
+				break;
 			case 0x1:
 			case 0x6:
 			case 0x7:
