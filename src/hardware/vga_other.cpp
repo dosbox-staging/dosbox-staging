@@ -198,8 +198,10 @@ static void write_color_select(Bit8u val) {
 			Bit8u base=(val & 0x10) ? 0x08 : 0;
 			/* Check for BW Mode */
 			if (vga.tandy.mode_control & 0x4) {
+				VGA_SetCGA4Table(val & 0xf,3+base,4+base,7+base);
+				/* old code:
 				if (val & 0x20) VGA_SetCGA4Table(val & 0xf,3+base,4+base,7+base);
-				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base);
+				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base); */
 			} else {
 				if (val & 0x20) VGA_SetCGA4Table(val & 0xf,3+base,5+base,7+base);
 				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base);
