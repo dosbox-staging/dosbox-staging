@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.9 2005-07-19 19:45:16 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.10 2005-11-01 11:09:14 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -391,7 +391,7 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file, int sectorSize, bool mod
 }
 
 #if defined(WIN32)
-static string dirname(const char * file) {
+static string dirname(char * file) {
 	char * sep = strrchr(file, '\\');
 	if (sep == NULL)
 		sep = strrchr(file, '/');

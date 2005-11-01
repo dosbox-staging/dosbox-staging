@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.90 2005-10-31 10:21:45 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.91 2005-11-01 11:09:14 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -95,7 +95,7 @@ extern char** environ;
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-#if defined(HAVE_DDRAW_H)
+#if (HAVE_DDRAW_H)
 #include <ddraw.h>
 struct private_hwdata {
 	LPDIRECTDRAWSURFACE3 dd_surface;
@@ -168,7 +168,7 @@ struct SDL_Block {
 #endif
 	} opengl;
 #endif
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	struct {
 		SDL_Surface * surface;
 		RECT rect;
@@ -387,7 +387,7 @@ dosurface:
 				break;
 		}
 		break;
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
 		if (flags & CAN_16) bpp=16;
 		if (flags & CAN_32) bpp=32;
@@ -579,7 +579,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		pixels+=sdl.clip.x*sdl.surface->format->BytesPerPixel;
 		pitch=sdl.surface->pitch;
 		return true;
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
 		if (SDL_LockSurface(sdl.blit.surface)) {
 //			LOG_MSG("SDL Lock failed");
@@ -616,7 +616,7 @@ void GFX_EndUpdate(void) {
 		}
 		SDL_Flip(sdl.surface);
 		break;
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
 		if (SDL_MUSTLOCK(sdl.blit.surface)) {
 			SDL_UnlockSurface(sdl.blit.surface);
@@ -847,7 +847,7 @@ static void GUI_StartUp(Section * sec) {
 	const char * output=section->Get_string("output");
 	if (!strcasecmp(output,"surface")) {
 		sdl.desktop.want_type=SCREEN_SURFACE;
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	} else if (!strcasecmp(output,"ddraw")) {
 		sdl.desktop.want_type=SCREEN_SURFACE_DDRAW;
 #endif
@@ -1107,7 +1107,7 @@ int main(int argc, char* argv[]) {
 #if C_OPENGL
 			",opengl,openglnb"
 #endif
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 			",ddraw"
 #endif
 			".\n"
