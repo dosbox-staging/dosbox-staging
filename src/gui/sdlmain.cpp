@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.91 2005-11-01 11:09:14 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.92 2005-11-01 15:53:39 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -265,7 +265,7 @@ check_gotbpp:
 		}
 		/* Not a valid display depth found? Let's just hope sdl provides conversions */
 		break;
-#if defined(HAVE_DDRAW_H) && defined(WIN32)
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
 		if (!(flags&CAN_32|CAN_16)) goto check_surface;
 		if (flags & LOVE_16) testbpp=16;
