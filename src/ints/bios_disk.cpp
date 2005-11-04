@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.23 2005-10-22 10:28:57 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.24 2005-11-04 21:22:06 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -318,6 +318,11 @@ static Bitu INT13_DiskHandler(void) {
 		}
 		break;
 	case 0x2: /* Read sectors */
+		if (reg_al==0) {
+			reg_ah = 0x01;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
 		if(driveInactive(drivenum)) {
 			reg_ah = 0xff;
 			CALLBACK_SCF(true);
@@ -368,6 +373,11 @@ static Bitu INT13_DiskHandler(void) {
 		CALLBACK_SCF(false);
         break;
 	case 0x04: /* Verify sectors */
+		if (reg_al==0) {
+			reg_ah = 0x01;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
 		if(driveInactive(drivenum)) return CBRET_NONE;
 
 		/* TODO: Finish coding this section */
