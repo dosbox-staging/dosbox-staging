@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.1 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.2 2005-11-04 08:53:07 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -52,6 +52,7 @@ CSerialModem::CSerialModem(
 		baseAddr, initIrq, initBps, bytesize, parity, stopbits) {
 	socket=0;
 	incomingsocket=0;
+	InstallTimerHandler(th);
 
 	if(!SDLNetInited) {
         if(SDLNet_Init()==-1) {
@@ -145,7 +146,7 @@ void CSerialModem::SendNumber(Bitu val) {
 }
 
 void CSerialModem::SendRes(ResTypes response) {
-	char * string;Bitu /*char **/ code;
+	char * string;Bitu code;
 	switch (response)
 	{
 		case ResNONE:		return;
@@ -160,19 +161,9 @@ void CSerialModem::SendRes(ResTypes response) {
 	if(doresponse!=1) {
 		if(doresponse==2 && (response==ResRING || 
 			response == ResCONNECT || response==ResNOCARRIER)) return;
-		if(numericresponse)
-		//{	
-			SendNumber(code);
-		//	rqueue->addb(*code+'0');
-		//	rqueue->addb(0xd);rqueue->addb(0xa);
-		//}
-		else
-		//{
-			SendLine(string);
-			//rqueue->addb(0xd);rqueue->addb(0xa);
-			//rqueue->adds((Bit8u *)string,strlen(string));
-			//rqueue->addb(0xd);rqueue->addb(0xa);
-		//}
+		if(numericresponse) SendNumber(code);
+		else SendLine(string);
+
 		//if(CSerial::CanReceiveByte())	// very fast response
 		//	if(rqueue->inuse() && CSerial::getRTS())
 		//	{ Bit8u rbyte =rqueue->getb();
@@ -191,21 +182,9 @@ void CSerialModem::openConnection(void) {
 		SDLNet_TCP_Close(socket);
 	}
 	socket = SDLNet_TCP_Open(&openip);
-	//if (!socket)
- 
 }
 
 bool CSerialModem::Dial(char * host) {
-	char* helper;
-	// scan for and remove spaces; weird bug: with leading spaces in the string,
-	// SDLNet_ResolveHost will return no error but not work anyway (win)
-	while(host[0]==' ') host++;
-	helper=host;
-	helper+=strlen(host);
-	while(helper[0]==' ') {
-		helper[0]=0;
-		helper--;
-	}
 
 	/* Scan host for port */
 	Bit16u port;
@@ -257,7 +236,6 @@ void CSerialModem::Reset(){
 
 	plusinc = 0;
 	incomingsocket = 0;
-	//answermode = false;		// no autoanswer
 	memset(&reg,0,sizeof(reg));
 	reg[MREG_AUTOANSWER_COUNT]=0;	// no autoanswer
 	reg[MREG_RING_COUNT] = 1;
@@ -326,8 +304,7 @@ void CSerialModem::DoCommand() {
 		/* Check for empty line, stops dialing and autoanswer */
 		if (!cmdbuf[0]) {
 			reg[0]=0;	// autoanswer off
-			//answermode = false;
-			return;//goto ret_none;
+			return;
 		//	} 
 		//else {
 				//MIXER_Enable(mhd.chan,false);
@@ -363,6 +340,17 @@ void CSerialModem::DoCommand() {
 				SendRes(ResERROR);//goto ret_error;
 				return;
 			}
+			char* helper;
+			// scan for and remove spaces; weird bug: with leading spaces in the string,
+			// SDLNet_ResolveHost will return no error but not work anyway (win)
+			while(foundstr[0]==' ') foundstr++;
+			helper=foundstr;
+			helper+=strlen(foundstr);
+			while(helper[0]==' ') {
+				helper[0]=0;
+				helper--;
+			}
+
 			if (strlen(foundstr) >= 12) {
 					// Check if supplied parameter only consists of digits
 					bool isNum = true;
@@ -388,7 +376,7 @@ void CSerialModem::DoCommand() {
 					}
 				}
 			Dial(foundstr);
-			return;//goto ret_none;
+			return;
 		}
 		char * scanbuf;
 		scanbuf=&cmdbuf[2];

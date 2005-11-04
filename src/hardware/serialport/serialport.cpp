@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.1 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: serialport.cpp,v 1.2 2005-11-04 08:53:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -802,13 +802,14 @@ void CSerial::Init_Registers (Bit32u initbps, Bit8u bytesize,
 	Write_LCR (lcrresult);
 }
 
-CSerial::CSerial(IO_ReadHandler * rh, IO_WriteHandler * wh, TIMER_TickHandler th,
+CSerial::CSerial(IO_ReadHandler * rh, IO_WriteHandler * wh, TIMER_TickHandler,
                  Bit16u initbase, Bit8u initirq, Bit32u initbps, Bit8u bytesize, 
                  const char *parity, Bit8u stopbits) {
 	base = initbase;
 	irq = initirq;
-	TimerHnd = th;				// for destructor
-	TIMER_AddTickHandler(TimerHnd);
+	TimerHnd = NULL;
+	//TimerHnd = th;				// for destructor
+	//TIMER_AddTickHandler(TimerHnd);
 
 	for (Bitu i = 0; i <= 7; i++) {
 		WriteHandler[i].Install (i + base, wh, IO_MB);
@@ -817,8 +818,17 @@ CSerial::CSerial(IO_ReadHandler * rh, IO_WriteHandler * wh, TIMER_TickHandler th
 };
 
 CSerial::~CSerial(void) {
-	TIMER_DelTickHandler(TimerHnd);
+	
+	if(TimerHnd) TIMER_DelTickHandler(TimerHnd);
 };
+
+void CSerial::InstallTimerHandler(TIMER_TickHandler th)
+{
+	if(TimerHnd==NULL) {
+		TimerHnd=th;	
+		TIMER_AddTickHandler(th);
+	}
+}
 
 bool getParameter(char *input, char *buffer, const char *parametername,
                   Bitu buffersize) {

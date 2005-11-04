@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.cpp,v 1.1 2005-07-30 14:41:31 qbix79 Exp $ */
+/* $Id: directserial_win32.cpp,v 1.2 2005-11-04 08:53:07 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -41,6 +41,7 @@ CDirectSerial::CDirectSerial (IO_ReadHandler * rh, IO_WriteHandler * wh,
                               :CSerial (rh, wh, th,baseAddr,initIrq, initBps,
                               bytesize, parity,stopbits) {
 	InstallationSuccessful = false;
+	InstallTimerHandler(th);
 	lastChance = 0;
 	LOG_MSG ("Serial port at %x: Opening %s", base, realPort);
 	hCom = CreateFile (realPort, GENERIC_READ | GENERIC_WRITE, 0,	// must be opened with exclusive-access
@@ -221,7 +222,7 @@ void CDirectSerial::updateMSR () {
 
 	if (!GetCommModemStatus (hCom, &dptr)) {
 #ifdef SERIALPORT_DEBUGMSG
-		LOG_MSG ("Serial port at %x: GetCommModemStatus failed!", base);
+//		LOG_MSG ("Serial port at %x: GetCommModemStatus failed!", base);
 #endif
 		//return;
 	}

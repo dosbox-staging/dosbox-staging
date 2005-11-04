@@ -16,13 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.h,v 1.9 2005-07-30 14:41:30 qbix79 Exp $ */
+/* $Id: serialport.h,v 1.10 2005-11-04 08:53:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALPORT_H
 #define DOSBOX_SERIALPORT_H
 
 // Uncomment this for a lot of debug messages:
-//#define SERIALPORT_DEBUGMSG 
+// #define SERIALPORT_DEBUGMSG 
 
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
@@ -48,6 +48,7 @@ public:
 	
 	TIMER_TickHandler TimerHnd;
 	virtual ~CSerial();
+	void InstallTimerHandler(TIMER_TickHandler);
 	
 	IO_ReadHandleObject ReadHandler[8];
 	IO_WriteHandleObject WriteHandler[8];

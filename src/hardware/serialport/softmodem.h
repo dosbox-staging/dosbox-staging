@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.2 2005-07-31 12:08:58 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.3 2005-11-04 08:53:07 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -187,7 +187,6 @@ public:
 protected:
 	char cmdbuf[255];
 	bool commandmode;		// true: interpret input as commands
-	//bool answermode;
 	bool echo;				// local echo on or off
 
 	bool oldDTRstate;
