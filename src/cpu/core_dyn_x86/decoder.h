@@ -832,14 +832,14 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 		dyn_load_seg(seg,DREG(TMPW));gen_releasereg(DREG(TMPW));
 		dyn_read_word_release(DREG(EA),&DynRegs[decode.modrm.reg],decode.big_op);
 	} else {
-		IllegalOption();
+		IllegalOption("dyn_load_seg_off_ea");
 	}
 }
 
 static void dyn_mov_seg_ev(void) {
 	dyn_get_modrm();
 	SegNames seg=(SegNames)decode.modrm.reg;
-	if (GCC_UNLIKELY(seg==cs)) IllegalOption();
+	if (GCC_UNLIKELY(seg==cs)) IllegalOption("dyn_mov_seg_ev");
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		dyn_read_word(DREG(EA),DREG(EA),false);
@@ -905,7 +905,7 @@ static void dyn_leave(void) {
 }
 
 static void dyn_segprefix(SegNames seg) {
-	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption();
+	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
 	decode.segprefix=&DynRegs[G_ES+seg];
 }
 
@@ -1645,7 +1645,7 @@ restart_prefix:
 				dyn_push(src);
 				break;
 			default:
-				IllegalOption();
+				IllegalOption("opcode 0xff");
 			}}
 			break;
 		default:

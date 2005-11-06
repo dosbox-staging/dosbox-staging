@@ -51,7 +51,7 @@ static void dyn_string(STRING_OP op) {
 	case STR_INSB:	case STR_INSW:	case STR_INSD:
 		tmp_reg=DREG(TMPB);usesi=false;usedi=true;break;
 	default:
-		IllegalOption();
+		IllegalOption("dyn_string op");
 	}
 	gen_load_host(&cpu.direction,DREG(TMPW),4);
 	switch (op & 3) {
@@ -59,7 +59,7 @@ static void dyn_string(STRING_OP op) {
 	case 1:gen_shift_word_imm(SHIFT_SHL,true,DREG(TMPW),1);break;
 	case 2:gen_shift_word_imm(SHIFT_SHL,true,DREG(TMPW),2);break;
 	default:
-		IllegalOption();
+		IllegalOption("dyn_string shift");
 
 	}
 	if (usesi) {
@@ -139,7 +139,7 @@ static void dyn_string(STRING_OP op) {
 			dyn_write_word(DREG(EA),tmp_reg,true);
 			break;
 		default:
-			IllegalOption();
+			IllegalOption("dyn_string op");
 		}
 	}
 	gen_releasereg(DREG(EA));gen_releasereg(DREG(TMPB));

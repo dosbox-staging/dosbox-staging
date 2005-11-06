@@ -147,8 +147,8 @@ static struct {
 	Bitu ea,tmpb,tmpd,stack,shift;
 } extra_regs;
 
-static void IllegalOption(void) {
-	E_Exit("Illegal option");
+static void IllegalOption(const char* msg) {
+	E_Exit("DynCore: illegal option in %s",msg);
 }
 
 #include "core_dyn_x86/cache.h" 

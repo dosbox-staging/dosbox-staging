@@ -61,7 +61,7 @@ public:
 		dynreg->flags|=DYNFLG_ACTIVE;
 	}
 	void Save(void) {
-		if (GCC_UNLIKELY(!((Bitu)dynreg))) IllegalOption();
+		if (GCC_UNLIKELY(!((Bitu)dynreg))) IllegalOption("GenReg->Save");
 		dynreg->flags&=~DYNFLG_CHANGED;
 		cache_addw(0x0589+(index << (8+3)));		//Mov [data],reg
 		cache_addd((Bit32u)dynreg->data);
@@ -283,7 +283,7 @@ static void gen_dop_byte(DualOps op,DynReg * dr1,Bit8u di1,DynReg * dr2,Bit8u di
 	case DOP_MOV:	if ((dr1==dr2) && (di1==di2)) return; tmp=0x8a; break;
 	case DOP_XCHG:	tmp=0x86; dr2->flags|=DYNFLG_CHANGED; break;
 	default:
-		IllegalOption();
+		IllegalOption("gen_dop_byte");
 	}
 	dr1->flags|=DYNFLG_CHANGED;
 nochange:
@@ -307,7 +307,7 @@ static void gen_dop_byte_imm(DualOps op,DynReg * dr1,Bit8u di1,Bitu imm) {
 					dr1->flags|=DYNFLG_CHANGED;
 					goto finish;
 	default:
-		IllegalOption();
+		IllegalOption("gen_dop_byte_imm");
 	}
 	dr1->flags|=DYNFLG_CHANGED;
 nochange:
@@ -325,7 +325,7 @@ static void gen_sop_byte(SingleOps op,DynReg * dr1,Bit8u di1) {
 	case SOP_NOT: tmp=0xd0f6; break;
 	case SOP_NEG: tmp=0xd8f6; break;
 	default:
-		IllegalOption();
+		IllegalOption("gen_sop_byte");
 	}
 	cache_addw(tmp + ((gr1->index+di1)<<8));
 	dr1->flags|=DYNFLG_CHANGED;
@@ -423,7 +423,7 @@ static void gen_dop_word(DualOps op,bool dword,DynReg * dr1,DynReg * dr2) {
 		tmp=0x87;
 		break;
 	default:
-		IllegalOption();
+		IllegalOption("gen_dop_word");
 	}
 	dr1->flags|=DYNFLG_CHANGED;
 nochange:
@@ -447,7 +447,7 @@ static void gen_dop_word_imm(DualOps op,bool dword,DynReg * dr1,Bits imm) {
 	case DOP_TEST:	tmp=0xc0f7; goto nochange;	//Doesn't change
 	case DOP_MOV:	cache_addb(0xb8+(gr1->index)); dr1->flags|=DYNFLG_CHANGED; goto finish;
 	default:
-		IllegalOption();
+		IllegalOption("gen_dop_word_imm");
 	}
 	dr1->flags|=DYNFLG_CHANGED;
 nochange:
@@ -494,7 +494,7 @@ static void gen_sop_word(SingleOps op,bool dword,DynReg * dr1) {
 	case SOP_NOT:cache_addw(0xd0f7+(gr1->index<<8));break;
 	case SOP_NEG:cache_addw(0xd8f7+(gr1->index<<8));break;
 	default:
-		IllegalOption();
+		IllegalOption("gen_sop_word");
 	}
 	dr1->flags|=DYNFLG_CHANGED;
 }
@@ -654,7 +654,7 @@ static void gen_call_function(void * func,char * ops,...) {
 						release=true;
 						goto scanagain;
 					default:
-						IllegalOption();
+						IllegalOption("gen_call_function param:DREG");
 					}
 					if (release) gen_releasereg(dynreg);
 				}
@@ -664,7 +664,7 @@ static void gen_call_function(void * func,char * ops,...) {
 				pinfo[pindex].line=scan;
 				break;
 			default:
-				IllegalOption();
+				IllegalOption("gen_call_function unknown param");
 			}
 		}
 	}
@@ -725,7 +725,7 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 		case 1: cache_addd((Bit32u)mem_writeb - (Bit32u)cache.pos-4); break;
 		case 2: cache_addd((Bit32u)mem_writew_dyncorex86 - (Bit32u)cache.pos-4); break;
 		case 4: cache_addd((Bit32u)mem_writed_dyncorex86 - (Bit32u)cache.pos-4); break;
-		default: IllegalOption();
+		default: IllegalOption("gen_call_write");
 	}
 
 	cache_addw(0xc483);		//ADD ESP,8
@@ -777,7 +777,7 @@ static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 }
 
 static void gen_save_flags(DynReg * dynreg) {
-	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption();
+	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption("gen_save_flags");
 	GenReg * genreg=FindDynReg(dynreg);
 	cache_addb(0x8b);					//MOV REG,[esp]
 	cache_addw(0x2404+(genreg->index << 3));
@@ -785,7 +785,7 @@ static void gen_save_flags(DynReg * dynreg) {
 }
 
 static void gen_load_flags(DynReg * dynreg) {
-	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption();
+	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption("gen_load_flags");
 	cache_addw(0xc483);				//ADD ESP,4
 	cache_addb(0x4);
 	GenReg * genreg=FindDynReg(dynreg);
@@ -805,7 +805,7 @@ static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
 	case 2:cache_addw(0xb70f);break;	//movzx word
 	case 4:cache_addb(0x8b);break;	//mov
 	default:
-		IllegalOption();
+		IllegalOption("gen_load_host");
 	}
 	cache_addb(0x5+(gr1->index<<3));
 	cache_addd((Bit32u)data);
