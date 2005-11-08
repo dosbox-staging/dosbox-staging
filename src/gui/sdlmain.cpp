@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.92 2005-11-01 15:53:39 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.93 2005-11-08 19:41:04 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -267,7 +267,7 @@ check_gotbpp:
 		break;
 #if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
-		if (!(flags&CAN_32|CAN_16)) goto check_surface;
+		if (!(flags&(CAN_32|CAN_16))) goto check_surface;
 		if (flags & LOVE_16) testbpp=16;
 		else if (flags & LOVE_32) testbpp=32;
 		else testbpp=0;
@@ -277,13 +277,13 @@ check_gotbpp:
 	case SCREEN_OVERLAY:
 		if (flags & NEED_RGB || !(flags&CAN_32)) goto check_surface;
 		flags|=HAVE_SCALING;
-		flags&=~(CAN_8,CAN_16);
+		flags&=~(CAN_8|CAN_16);
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		if (flags & NEED_RGB || !(flags&CAN_32)) goto check_surface;
 		flags|=HAVE_SCALING;
-		flags&=~(CAN_8,CAN_16);
+		flags&=~(CAN_8|CAN_16);
 		break;
 #endif
 	}
