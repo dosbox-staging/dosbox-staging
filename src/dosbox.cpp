@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.88 2005-10-09 15:50:09 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.89 2005-11-10 18:05:10 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -288,6 +288,7 @@ void DOSBOX_Init(void) {
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
+
 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
 	secprop->Add_string("type","sb16");
 	secprop->Add_hex("base",0x220);
@@ -332,6 +333,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("pcspeaker",true);
 	secprop->Add_int("pcrate",22050);
 	secprop->AddInitFunction(&TANDYSOUND_Init,true);//done
+	secprop->Add_string("tandy","auto");
 	secprop->Add_int("tandyrate",22050);
 	secprop->AddInitFunction(&DISNEY_Init,true);//done
 	secprop->Add_bool("disney",true);
@@ -339,10 +341,12 @@ void DOSBOX_Init(void) {
 	MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
+		"tandy -- Enable Tandy Sound System emulation (false,true,auto).\n"
+		"         For auto Tandysound emulation is present only if machine is set to tandy.\n"
 		"tandyrate -- Sample rate of the Tandy 3-Voice generation.\n"
-		"             Tandysound emulation is present if machine is set to tandy.\n"
 		"disney -- Enable Disney Sound Source emulation.\n"
 	);
+
 	secprop=control->AddSection_prop("bios",&BIOS_Init,false);//done
 	MSG_Add("BIOS_CONFIGFILE_HELP",
 	        "joysticktype -- Type of joystick to emulate: none, 2axis, 4axis,\n"

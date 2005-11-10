@@ -312,17 +312,29 @@ private:
 	MixerObject MixerChan;
 public:
 	TANDYSOUND(Section* configuration):Module_base(configuration){
-		if (machine!=MCH_TANDY) return;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
+
+		real_writeb(0x40,0xd4,0x00);
+		if (machine==MCH_TANDY) {
+			/* enable tandy sound if tandy=true/auto */
+			if ((strcmp(section->Get_string("tandy"),"true")!=0) &&
+				(strcmp(section->Get_string("tandy"),"auto")!=0)) return;
+		} else {
+			/* only enable tandy sound if tandy=true */
+			if (strcmp(section->Get_string("tandy"),"true")!=0) return;
+		}
 	
-		WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
-		WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
+		if (machine==MCH_TANDY) {
+			WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
+			WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
+		} else WriteHandler[0].Install(0x1e0,SN76496Write,IO_MB,2);
 	
 	
 		Bit32u sample_rate = section->Get_int("tandyrate");
 		tandy.chan=MixerChan.Install(&SN76496Update,sample_rate,"TANDY");
 	
 		tandy.enabled=false;
+		real_writeb(0x40,0xd4,0xff);	/* tandy DAC initialization value */
 
 		Bitu i;
 		struct SN76496 *R = &sn;

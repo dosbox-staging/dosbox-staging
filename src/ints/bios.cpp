@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.48 2005-11-06 15:26:06 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.49 2005-11-10 18:05:12 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -115,11 +115,12 @@ static bool Tandy_InitializeSB() {
 
 /* check if Tandy DAC is still playing */
 static bool Tandy_TransferInProgress(void) {
-	if (real_readw(0x40,0xd0)) return true;		/* not yet done */
-	if (real_readb(0x40,0xd4)) return false;	/* still in init-state */
+	if (real_readw(0x40,0xd0)) return true;			/* not yet done */
+	if (real_readb(0x40,0xd4)==0xff) return false;	/* still in init-state */
 
 	IO_Write(0x0c,0x00);
-	if (IO_ReadW(tandy_sb.dma*2+1)==0xffff) return false;	/* no DMA transfer */
+	Bit16u datalen=IO_ReadB(tandy_sb.dma*2+1)|(IO_ReadB(tandy_sb.dma*2+1)<<8);
+	if (datalen==0xffff) return false;	/* no DMA transfer */
 	return true;
 }
 
@@ -220,20 +221,14 @@ static Bitu IRQ_TandyDAC(void) {
 }
 
 static void TandyDAC_Handler(Bit8u tfunction) {
-	if (machine!=MCH_TANDY) return;
+	if (!tandy_sb.port) return;
 	switch (tfunction) {
 	case 0x81:	/* Tandy sound system check */
-		if (tandy_sb.port) {
-			reg_ax=0xc4;
-			CALLBACK_SCF(Tandy_TransferInProgress());
-		}
+		reg_ax=0xc4;
+		CALLBACK_SCF(Tandy_TransferInProgress());
 		break;
 	case 0x82:	/* Tandy sound system start recording */
 	case 0x83:	/* Tandy sound system start playback */
-		if (!tandy_sb.port) {
-			CALLBACK_SCF(true);
-			break;
-		}
 		if (Tandy_TransferInProgress()) {
 			/* cannot play yet as the last transfer isn't finished yet */
 			reg_ah=0x00;
@@ -249,16 +244,12 @@ static void TandyDAC_Handler(Bit8u tfunction) {
 		CALLBACK_SCF(false);
 		break;
 	case 0x84:	/* Tandy sound system stop playing */
-		if (!tandy_sb.port) {
-			CALLBACK_SCF(true);
-			break;
-		}
 		reg_ah=0x00;
 
-		/* setup for a small buffer with zeros (silence) */
+		/* setup for a small buffer with silence */
 		real_writew(0x40,0xd0,0x0a);
 		real_writew(0x40,0xd2,0x1c);
-		Tandy_SetupTransfer(PhysMake(0xf000,0xa084),false);
+		Tandy_SetupTransfer(PhysMake(0xf000,0xa084),true);
 		CALLBACK_SCF(false);
 		break;
 	case 0x85:	/* Tandy sound system reset */
@@ -802,6 +793,8 @@ private:
 	CALLBACK_HandlerObject callback[9];
 public:
 	BIOS(Section* configuration):Module_base(configuration){
+		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
+		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
 		/* Setup all the interrupt handlers the bios controls */
@@ -863,22 +856,23 @@ public:
 		callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
 		callback[8].Set_RealVec(0x70);
 
-		if (machine==MCH_TANDY) {
-			phys_writeb(0xffffe,0xfc);	/* Tandy model */
-			phys_writeb(0xfc000,0x21);	/* Tandy bios identificator */
+		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff);	/* Tandy model */
+		else phys_writeb(0xffffe,0xfc);	/* PC */
+
+		if (use_tandyDAC) {
+			/* tandy DAC sound requested, see if soundblaster device is available */
 			if (Tandy_InitializeSB()) {
 				real_writew(0x40,0xd0,0x0000);
 				real_writew(0x40,0xd2,0x0000);
-				real_writeb(0x40,0xd4,0xff);		/* initial value */
+				real_writeb(0x40,0xd4,0xff);	/* tandy DAC init value */
 				real_writed(0x40,0xd6,0x00000000);
 				/* install the DAC callback handler */
 				tandy_DAC_callback=new CALLBACK_HandlerObject();
 				tandy_DAC_callback->Install(&IRQ_TandyDAC,CB_IRET,"Tandy DAC IRQ");
 				RealPt current_irq=RealGetVec(tandy_sb.irq+8);
 				real_writed(0x40,0xd6,current_irq);
-			}
-		} else {
-			phys_writeb(0xffffe,0xfc);	/* PC */
+				for (Bitu i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
+			} else real_writeb(0x40,0xd4,0x00);
 		}
 	
 		/* Setup some stuff in 0x40 bios segment */
@@ -968,22 +962,21 @@ public:
 		size_extended|=(IO_Read(0x71) << 8);		
 	}
 	~BIOS(){
-		if (machine==MCH_TANDY) {
-			/* abort DAC playing */
-			if (tandy_sb.port) {
-				IO_Write(tandy_sb.port+0xc,0xd3);
-				IO_Write(tandy_sb.port+0xc,0xd0);
+		/* abort DAC playing */
+		if (tandy_sb.port) {
+			IO_Write(tandy_sb.port+0xc,0xd3);
+			IO_Write(tandy_sb.port+0xc,0xd0);
+		}
+		real_writeb(0x40,0xd4,0x00);
+		if (tandy_DAC_callback) {
+			Bit32u orig_vector=real_readd(0x40,0xd6);
+			if (orig_vector==tandy_DAC_callback->Get_RealPointer()) {
+				/* set IRQ vector to old value */
+				RealSetVec(tandy_sb.irq+8,real_readd(0x40,0xd6));
+				real_writed(0x40,0xd6,0x00000000);
 			}
-			if (tandy_DAC_callback) {
-				Bit32u orig_vector=real_readd(0x40,0xd6);
-				if (orig_vector==tandy_DAC_callback->Get_RealPointer()) {
-					/* set IRQ vector to old value */
-					RealSetVec(tandy_sb.irq+8,real_readd(0x40,0xd6));
-					real_writed(0x40,0xd6,0x00000000);
-				}
-				delete tandy_DAC_callback;
-				tandy_DAC_callback=NULL;
-			}
+			delete tandy_DAC_callback;
+			tandy_DAC_callback=NULL;
 		}
 	}
 };
