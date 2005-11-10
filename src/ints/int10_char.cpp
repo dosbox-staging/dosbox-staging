@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.39 2005-10-03 19:22:13 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.40 2005-11-10 20:24:55 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -493,6 +493,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	x=8*col;
 	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
 	//TODO Check for out of bounds
+	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);	/* enable all planes */
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
 		Bit8u bitline=mem_readb(fontdata++);
