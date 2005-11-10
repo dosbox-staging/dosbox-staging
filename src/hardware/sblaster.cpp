@@ -126,6 +126,7 @@ struct SB_INFO {
 		bool stereo;
 		bool enabled;
 		bool filtered;
+		Bit8u unhandled[0x48];
 	} mixer;
 	struct {
 		Bit8u reference;
@@ -195,6 +196,7 @@ static void GenerateDMASound(Bitu size);
 static void DSP_SetSpeaker(bool how) {
 	if (sb.speaker==how) return;
 	sb.speaker=how;
+	if (sb.type==SBT_16) return;
 	sb.chan->Enable(how);
 	if (sb.speaker) {
 		PIC_RemoveEvents(DMA_Silent_Event);
@@ -494,7 +496,7 @@ static void END_DMA_Event(Bitu val) {
 
 static void CheckDMAEnd(void) {
 	if (!sb.dma.left) return;
-	if (!sb.speaker) {
+	if (!sb.speaker && sb.type!=SBT_16) {
 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
 		float delay=(bigger*1000.0f)/sb.dma.rate;
 		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
@@ -628,7 +630,7 @@ static void DSP_Reset(void) {
 	sb.irq.pending_8bit=false;
 	sb.irq.pending_16bit=false;
 	sb.chan->SetFreq(22050);
-	DSP_SetSpeaker(false);
+//	DSP_SetSpeaker(false);
 	PIC_RemoveEvents(END_DMA_Event);
 }
 
@@ -729,7 +731,7 @@ static void DSP_DoCommand(void) {
 	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
     case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:
 		/* Generic 8/16 bit DMA */
-		DSP_SetSpeaker(true);		//SB16 always has speaker enabled
+//		DSP_SetSpeaker(true);		//SB16 always has speaker enabled
 		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
 		DSP_PrepareDMA_New((sb.dsp.cmd & 0x10) ? DSP_DMA_16 : DSP_DMA_8,
 			1+sb.dsp.in.data[1]+(sb.dsp.in.data[2] << 8),
@@ -749,6 +751,11 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0xd3:	/* Disable Speaker */
 		DSP_SetSpeaker(false);
+		break;
+	case 0xd8:  /* Speaker status */
+		DSP_FlushData();
+		if (sb.speaker) DSP_AddData(0xff);
+		else DSP_AddData(0x00);
 		break;
 	case 0xd4:	/* Continue DMA 8-bit*/
 	case 0xd6:	/* Continue DMA 16-bit */
@@ -926,6 +933,10 @@ static void CTMIXER_Write(Bit8u val) {
 		LOG(LOG_SB,LOG_NORMAL)("Mixer select dma8:%x dma16:%x",sb.hw.dma8,sb.hw.dma16);
 		break;
 	default:
+		if ((sb.type == SBT_2 && sb.mixer.index==0x08) ||  /* CD volume on SB2 */
+			((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+			(sb.type == SBT_16 && sb.mixer.index >= 0x30 && sb.mixer.index <= 0x47)) /* New SB16 registers */
+			sb.mixer.unhandled[sb.mixer.index] = val;
 		LOG(LOG_SB,LOG_WARN)("MIXER:Write %X to unhandled index %X",val,sb.mixer.index);
 	}
 }
@@ -979,8 +990,13 @@ static Bit8u CTMIXER_Read(void) {
 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
 				(sb.irq.pending_16bit ? 0x2 : 0);
 	default:		/* IRQ Status */
+		if ((sb.type == SBT_2 && sb.mixer.index==0x08) ||  /* CD volume on SB2 */
+			((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+			(sb.type == SBT_16 && sb.mixer.index >= 0x30 && sb.mixer.index <= 0x47)) /* New SB16 registers */
+			ret = sb.mixer.unhandled[sb.mixer.index];
+		else
+			ret=0xa;
 		LOG(LOG_SB,LOG_WARN)("MIXER:Read from unhandled index %X",sb.mixer.index);
-		ret=0xa;
 	}
 	return ret;
 }
@@ -1155,6 +1171,13 @@ public:
 		}
 		DSP_Reset();
 		CTMIXER_Reset();
+		// The documentation does not specify if SB gets initialized with the speaker enabled
+		// or disabled. Real SBPro2 has it disabled. 
+		sb.speaker=false;
+		// On SB16 the speaker flag does not affect actual speaker state.
+		if (sb.type == SBT_16) sb.chan->Enable(true);
+		else sb.chan->Enable(false);
+
 		char hdma[8]="";
 		if (sb.type==SBT_16) {
 			sprintf(hdma,"H%d ",sb.hw.dma16);
