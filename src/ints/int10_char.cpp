@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.40 2005-11-10 20:24:55 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.41 2005-11-12 14:17:36 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -493,7 +493,12 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	x=8*col;
 	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
 	//TODO Check for out of bounds
-	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);	/* enable all planes */
+	if (CurMode->type==M_EGA16) {
+		/* enable all planes for EGA modes (Ultima 1 colour bug) */
+		/* might be put into INT10_PutPixel but different vga bios
+		   implementations have different opinions about this */
+		IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);
+	}
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
 		Bit8u bitline=mem_readb(fontdata++);
