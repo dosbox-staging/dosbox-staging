@@ -215,7 +215,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	/* at this point: *blocks==total (fits) or *blocks>total,
 	   in the second case resize block to maximum */
 
-	if (mcb.GetType()!=0x5a) {
+	if ((mcb_next.GetPSPSeg()==MCB_FREE) && (mcb.GetType()!=0x5a)) {
 		/* adjust type of joined MCB */
 		mcb.SetType(mcb_next.GetType());
 	}
