@@ -518,7 +518,7 @@ static void DSP_RaiseIRQEvent(Bitu val) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-static void DSP_DoDMATranfser(DMA_MODES mode,Bitu freq,bool stereo) {
+static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool stereo) {
 	char * type;
 	sb.mode=MODE_DMA_MASKED;
 	sb.chan->FillUp();
@@ -576,8 +576,8 @@ static void DSP_DoDMATranfser(DMA_MODES mode,Bitu freq,bool stereo) {
 static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
 	sb.dma.autoinit=autoinit;
 	if (!autoinit) sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-	sb.dma.chan=DmaChannels[sb.hw.dma8];
-	DSP_DoDMATranfser(mode,sb.freq / (sb.mixer.stereo ? 2 : 1),sb.mixer.stereo);
+	sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+	DSP_DoDMATransfer(mode,sb.freq / (sb.mixer.stereo ? 2 : 1),sb.mixer.stereo);
 }
 
 static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool stereo) {
@@ -585,14 +585,14 @@ static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool ste
 	sb.dma.total=length;
 	sb.dma.autoinit=autoinit;
 	if (mode==DSP_DMA_16) {
-		if (sb.hw.dma16!=0xff) sb.dma.chan=DmaChannels[sb.hw.dma16];
+		if (sb.hw.dma16!=0xff) sb.dma.chan=GetDMAChannel(sb.hw.dma16);
 		else {
-			sb.dma.chan=DmaChannels[sb.hw.dma8];
+			sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 			mode=DSP_DMA_16_ALIASED;
 			freq/=2;
 		}
-	} else sb.dma.chan=DmaChannels[sb.hw.dma8];
-	DSP_DoDMATranfser(mode,freq,stereo);
+	} else sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+	DSP_DoDMATransfer(mode,freq,stereo);
 }
 
 
@@ -650,19 +650,21 @@ static void DSP_DoReset(Bit8u val) {
 static void DSP_E2_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event==DMA_UNMASKED) {
 		Bit8u val=sb.e2.value;
-		DmaChannels[sb.hw.dma8]->Register_Callback(0);
-		DmaChannels[sb.hw.dma8]->Write(1,&val);
+		DmaChannel * chan=GetDMAChannel(sb.hw.dma8);
+		chan->Register_Callback(0);
+		chan->Write(1,&val);
 	}
 }
 
 static void DSP_ADC_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
 	Bit8u val=128;
+	DmaChannel * ch=GetDMAChannel(sb.hw.dma8);
     while (sb.dma.left--) {
-		DmaChannels[sb.hw.dma8]->Write(1,&val);
+		ch->Write(1,&val);
 	}
 	SB_RaiseIRQ(SB_IRQ_8);
-	DmaChannels[sb.hw.dma8]->Register_Callback(0);
+	ch->Register_Callback(0);
 }
 
 Bitu DEBUG_EnableDebugger(void);
@@ -684,7 +686,7 @@ static void DSP_DoCommand(void) {
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 		sb.dma.left=sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		LOG(LOG_SB,LOG_ERROR)("DSP:Faked ADC for %d bytes",sb.dma.total);
-		DmaChannels[sb.hw.dma8]->Register_Callback(DSP_ADC_CallBack);
+		GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_ADC_CallBack);
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
@@ -794,7 +796,7 @@ static void DSP_DoCommand(void) {
 				if ((sb.dsp.in.data[0] >> i) & 0x01) sb.e2.value += E2_incr_table[sb.e2.count % 4][i];
 			 sb.e2.value += E2_incr_table[sb.e2.count % 4][8];
 			 sb.e2.count++;
-			 DmaChannels[sb.hw.dma8]->Register_Callback(DSP_E2_DMA_CallBack);
+			 GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_E2_DMA_CallBack);
 		}
 		break;
 	case 0xe3:	/* DSP Copyright */
@@ -1105,12 +1107,14 @@ private:
 		else if (!strcasecmp(sbtype,"sb16")) type=SBT_16;
 		else if (!strcasecmp(sbtype,"none")) type=SBT_NONE;
 		else type=SBT_16;
-		
-		if (machine!=MCH_VGA && type==SBT_16) type=SBT_PRO2;
-	
+
+		if (type==SBT_16) {
+			if ((machine!=MCH_VGA) || !SecondDMAControllerAvailable()) type=SBT_PRO2;
+		}
+			
 		/* OPL/CMS Init */
 		const char * omode=config->Get_string("oplmode");
-			if (!strcasecmp(omode,"none")) opl_mode=OPL_none;	
+		if (!strcasecmp(omode,"none")) opl_mode=OPL_none;	
 		else if (!strcasecmp(omode,"cms")) opl_mode=OPL_cms;
 		else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
 		else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
@@ -1186,7 +1190,6 @@ public:
 	}	
 	
 	~SBLASTER() {
-	Bitu i;
 	Section_prop * section=static_cast<Section_prop *>(m_configuration);
 		OPL_Mode opl_mode;
 		Find_Type_And_Opl(section,sb.type,opl_mode);

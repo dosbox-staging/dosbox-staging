@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.89 2005-11-10 18:05:10 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.90 2005-11-16 20:27:39 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -341,7 +341,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("SPEAKER_CONFIGFILE_HELP",
 		"pcspeaker -- Enable PC-Speaker emulation.\n"
 		"pcrate -- Sample rate of the PC-Speaker sound generation.\n"
-		"tandy -- Enable Tandy Sound System emulation (false,true,auto).\n"
+		"tandy -- Enable Tandy Sound System emulation (off,on,auto).\n"
 		"         For auto Tandysound emulation is present only if machine is set to tandy.\n"
 		"tandyrate -- Sample rate of the Tandy 3-Voice generation.\n"
 		"disney -- Enable Disney Sound Source emulation.\n"

@@ -83,8 +83,8 @@ struct GFGus {
 	} timers[2];
 	Bit32u rate;
 	Bit16u portbase;
-	Bit16u dma1;
-	Bit16u dma2;
+	Bit8u dma1;
+	Bit8u dma2;
 
 	Bit16u irq1;
 	Bit16u irq2;
@@ -568,7 +568,7 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x41:  // Dma control register
 		myGUS.DMAControl = (Bit8u)(myGUS.gRegData>>8);
-		DmaChannels[myGUS.dma1]->Register_Callback(
+		GetDMAChannel(myGUS.dma1)->Register_Callback(
 			(myGUS.DMAControl & 0x1) ? GUS_DMA_Callback : 0);
 		break;
 	case 0x42:  // Gravis DRAM DMA address register
@@ -597,7 +597,7 @@ static void ExecuteGlobRegister(void) {
 		break;
 	case 0x49:  // DMA sampling control register
 		myGUS.SampControl = (Bit8u)(myGUS.gRegData>>8);
-		DmaChannels[myGUS.dma1]->Register_Callback(
+		GetDMAChannel(myGUS.dma1)->Register_Callback(
 			(myGUS.SampControl & 0x1)  ? GUS_DMA_Callback : 0);
 		break;
 	case 0x4c:  // GUS reset register

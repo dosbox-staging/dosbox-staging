@@ -27,6 +27,7 @@
 #include "mem.h"
 #include "setup.h"
 #include "pic.h"
+#include "dma.h"
 
 #define DAC_CLOCK 3570000
 #define MAX_OUTPUT 0x7fff
@@ -308,7 +309,7 @@ static void SN76496_set_gain(int gain)
 
 class TANDYSOUND: public Module_base {
 private:
-	IO_WriteHandleObject WriteHandler[2];
+	IO_WriteHandleObject WriteHandler[3];
 	MixerObject MixerChan;
 public:
 	TANDYSOUND(Section* configuration):Module_base(configuration){
@@ -318,16 +319,21 @@ public:
 		if (machine==MCH_TANDY) {
 			/* enable tandy sound if tandy=true/auto */
 			if ((strcmp(section->Get_string("tandy"),"true")!=0) &&
+				(strcmp(section->Get_string("tandy"),"on")!=0) &&
 				(strcmp(section->Get_string("tandy"),"auto")!=0)) return;
 		} else {
 			/* only enable tandy sound if tandy=true */
-			if (strcmp(section->Get_string("tandy"),"true")!=0) return;
+			if ((strcmp(section->Get_string("tandy"),"true")!=0) &&
+				(strcmp(section->Get_string("tandy"),"on")!=0)) return;
+
+			/* ports from second DMA controller conflict with tandy ports */
+			CloseSecondDMAController();
+
+			WriteHandler[2].Install(0x1e0,SN76496Write,IO_MB,2);
 		}
 	
-		if (machine==MCH_TANDY) {
-			WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
-			WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
-		} else WriteHandler[0].Install(0x1e0,SN76496Write,IO_MB,2);
+		WriteHandler[0].Install(0xc0,SN76496Write,IO_MB,2);
+		WriteHandler[1].Install(0xc4,TandyDACWrite,IO_MB,4);
 	
 	
 		Bit32u sample_rate = section->Get_int("tandyrate");
