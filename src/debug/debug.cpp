@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.69 2005-09-18 19:50:03 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.70 2005-11-17 07:59:02 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -1278,7 +1278,7 @@ bool ParseCommand(char* str)
 	
 		DEBUG_ShowMsg("IV [seg]:[off] [name]     - Create var name for memory address.\n");
 		DEBUG_ShowMsg("SV [filename]             - Save var list in file.\n");
-		DEBUG_ShowMsg("LV [seg]:[off] [name]     - Load var list from file.\n");
+		DEBUG_ShowMsg("LV [filename]             - Load var list from file.\n");
 
 		DEBUG_ShowMsg("MEMDUMP [seg]:[off] [len] - Write memory to file memdump.txt.\n");
 		DEBUG_ShowMsg("MEMDUMPBIN [s]:[o] [len]  - Write memory to file memdump.bin.\n");
