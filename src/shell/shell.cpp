@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.64 2005-11-20 20:15:16 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.65 2005-11-21 07:21:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -119,7 +119,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 	bool quote = false;
 
 	while ( (ch=*lr++) ) {
-		if(quote) { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
+		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
 			*lw++ = ch;
 			continue;
 		}
