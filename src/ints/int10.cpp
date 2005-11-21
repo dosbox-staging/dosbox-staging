@@ -113,6 +113,9 @@ static Bitu INT10_Handler(void) {
 		case 0x01:		//Set color Select
 			INT10_SetColorSelect(reg_bl);
 			break;
+		default:
+			if(machine == MCH_CGA) INT10_SetColorSelect(reg_bl);
+			break;
 		}
 		break;
 	case 0x0C:								/* Write Graphics Pixel */
