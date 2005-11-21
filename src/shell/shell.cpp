@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.65 2005-11-21 07:21:28 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.66 2005-11-21 18:32:38 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -474,6 +474,9 @@ void SHELL_Init() {
 	real_writeb(psp_seg+16+1,0,0xea);		/* far jmp */
 	real_writed(psp_seg+16+1,1,real_readd(0,0x24*4));
 	real_writed(0,0x24*4,((Bit32u)psp_seg<<16) | ((16+1)<<4));
+
+	/* Set up int 23 to "int 20" in the psp. Fixes what.exe */
+	real_writed(0,0x23*4,((Bit32u)psp_seg<<16));
 
 	/* Setup MCB and the environment */
 	DOS_MCB envmcb((Bit16u)(env_seg-1));
