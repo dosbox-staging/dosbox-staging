@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.13 2005-03-24 10:18:45 qbix79 Exp $ */
+/* $Id: cross.h,v 1.14 2005-11-24 17:53:08 qbix79 Exp $ */
 
 #ifndef DOSBOX_CROSS_H
 #define DOSBOX_CROSS_H
@@ -40,7 +40,7 @@
 #define CROSS_LEN 512						/* Maximum filename size */
 
 
-#if defined (WIN32)							/* Win 32 */
+#if defined (WIN32) || defined (OS2)				/* Win 32 */
 #define CROSS_FILENAME(blah) 
 #define CROSS_FILESPLIT '\\'
 #define F_OK 0
