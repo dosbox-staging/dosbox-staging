@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.45 2005-10-07 15:16:58 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.46 2005-11-24 18:09:47 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +31,12 @@
 #include "dos_system.h"
 #include "dos_inc.h"
 #include "bios.h"
+
+#if defined(OS2)
+#define INCL DOSFILEMGR
+#define INCL_DOSERRORS
+#include "os2.h"
+#endif
 
 #if C_DEBUG
 Bitu DEBUG_EnableDebugger(void);
@@ -143,13 +149,35 @@ public:
 			if (!temp_line.size()) goto showusage;
 			struct stat test;
 			//Win32 : strip tailing backslashes
+			//os2: some special drive check
 			//rest: substiture ~ for home
-#if defined (WIN32)
+			bool failed = false;
+#if defined (WIN32) || defined(OS2)
 			/* Removing trailing backslash if not root dir so stat will succeed */
 			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
 			if (stat(temp_line.c_str(),&test)) {
+#endif
+#if defined(WIN32)
+// Nothing to do here.
+#elif defined (OS2)
+				if (temp_line.size() <= 2) // Seems to be a drive.
+				{
+					failed = true;
+					HFILE cdrom_fd = 0;
+					ULONG ulAction = 0;
+
+					APIRET rc = DosOpen((unsigned char*)temp_line.c_str(), &cdrom_fd, &ulAction, 0L, FILE_NORMAL, OPEN_ACTION_OPEN_IF_EXISTS,
+						OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
+					if (rc != NO_ERROR && rc != ERROR_NOT_READY)
+					{
+						failed = true;
+					} else {
+						failed = false;
+					}
+				}
+			}
+			if (failed) {
 #else
-			bool failed = false;
 			if (stat(temp_line.c_str(),&test)) {
 				failed = true;
 				if(temp_line.size() && temp_line[0] == '~') {
