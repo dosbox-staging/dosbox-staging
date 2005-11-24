@@ -166,7 +166,7 @@ int CDROM_GetMountType(char* path, int forceCD)
 	const char* cdName;
 	char buffer[512];
 	strcpy(buffer,path);
-#if defined (WIN32)
+#if defined (WIN32) || defined(OS2)
 	upcase(buffer);
 #endif
 
