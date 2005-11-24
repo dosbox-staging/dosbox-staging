@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.49 2005-11-10 18:05:12 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.50 2005-11-24 18:25:20 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -323,7 +323,7 @@ static Bitu INT8_Handler(void) {
 	mem_writed(BIOS_TIMER,mem_readd(BIOS_TIMER)+1);
 	/* decrease floppy motor timer */
 	Bit8u val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
-	if (val>0) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
+	if (val) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
 	/* and running drive */
 	mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
 	// Save ds,dx,ax
@@ -641,8 +641,6 @@ static Bitu INT15_Handler(void) {
 		break;
 	case 0x86:	/* BIOS - WAIT (AT,PS) */
 		{
-			//TODO Perhaps really wait :)
-			Bit32u micro=(reg_cx<<16)|reg_dx;
 			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
 				reg_ah=0x83;
 				CALLBACK_SCF(true);
