@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.59 2005-10-05 08:58:24 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.60 2005-11-24 18:16:15 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -518,7 +518,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 				
 				if (DOS_CreateFile(nameTarget,0,&targetHandle)) {
 					// Copy 
-					Bit8u	buffer[0x8000];
+					static Bit8u buffer[0x8000]; // static, otherwise stack overflow possible.
 					bool	failed = false;
 					Bit16u	toread = 0x8000;
 					do {
