@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.50 2005-11-24 18:25:20 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.51 2005-11-24 21:11:45 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -134,7 +134,6 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	RealPt current_irq=RealGetVec(tandy_sb.irq+8);
 	if (current_irq!=tandy_DAC_callback->Get_RealPointer()) {
 		real_writed(0x40,0xd6,current_irq);
-		real_writed(0x40,0xd6,current_irq);
 		RealSetVec(tandy_sb.irq+8,tandy_DAC_callback->Get_RealPointer());
 	}
 
@@ -155,18 +154,19 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 		case 3: IO_Write(0x82,bufpage); break;
 	}
 	real_writeb(0x40,0xd4,bufpage);
+
 	/* calculate transfer size (respects segment boundaries) */
 	Bit32u tlength=length;
 	if (tlength+(bufpt&0xffff)>0x10000) tlength=0x10000-(bufpt&0xffff);
+	real_writew(0x40,0xd0,(Bit16u)(length-tlength));	/* remaining buffer length */
+	tlength--;
+
 	/* set transfer size */
 	IO_Write(tandy_sb.dma*2+1,(Bit8u)(tlength&0xff));
 	IO_Write(tandy_sb.dma*2+1,(Bit8u)((tlength>>8)&0xff));
 	IO_Write(0x0a,tandy_sb.dma);	/* enable DMA channel */
 
-	real_writew(0x40,0xd0,(Bit16u)(length-tlength));	/* remaining buffer length */
-
 	Bitu delay=real_readw(0x40,0xd2)&0xfff;
-
 	/* set frequency */
 	IO_Write(tandy_sb.port+0xc,0x40);
 	IO_Write(tandy_sb.port+0xc,256-delay*100/358);
