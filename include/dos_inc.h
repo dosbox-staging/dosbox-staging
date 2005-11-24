@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.57 2005-11-07 21:08:11 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.58 2005-11-24 17:05:19 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -156,7 +156,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks);
 bool DOS_FreeMemory(Bit16u segment);
 void DOS_FreeProcessMemory(Bit16u pspseg);
 Bit16u DOS_GetMemory(Bit16u pages);
-void DOS_SetMemAllocStrategy(Bit16u strat);
+bool DOS_SetMemAllocStrategy(Bit16u strat);
 Bit16u DOS_GetMemAllocStrategy(void);
 void DOS_BuildUMBChain(const char* use_umbs,bool ems_active);
 bool DOS_LinkUMBsToMemChain(Bit16u linkstate);

@@ -68,17 +68,20 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
 
 	DOS_CompressMemory();
-};
+}
 
-Bit16u DOS_GetMemAllocStrategy()
-{
+Bit16u DOS_GetMemAllocStrategy() {
 	return memAllocStrategy;
-};
+}
 
-void DOS_SetMemAllocStrategy(Bit16u strat)
-{
-	memAllocStrategy = strat;
-};
+bool DOS_SetMemAllocStrategy(Bit16u strat) {
+	if ((strat&0x3f)<3) {
+		memAllocStrategy = strat;
+		return true;
+	}
+	/* otherwise an invalid allocation strategy was specified */
+	return false;
+}
 
 bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	DOS_CompressMemory();

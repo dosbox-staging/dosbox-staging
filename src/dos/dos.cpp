@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.89 2005-11-17 13:16:34 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.90 2005-11-24 17:05:22 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -720,7 +720,11 @@ static Bitu DOS_21Handler(void) {
 			reg_ax=DOS_GetMemAllocStrategy();
 			break;
 		case 1:					/* Set Strategy */
-			DOS_SetMemAllocStrategy(reg_bx);
+			if (DOS_SetMemAllocStrategy(reg_bx)) CALLBACK_SCF(false);
+			else {
+				reg_ax=1;
+				CALLBACK_SCF(true);
+			}
 			break;
 		case 2:					/* Get UMB Link Status */
 			reg_al=dos_infoblock.GetUMBChainState()&1;
