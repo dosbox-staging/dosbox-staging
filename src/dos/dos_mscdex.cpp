@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.32 2005-09-28 11:21:50 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.33 2005-11-25 19:15:12 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -264,8 +264,8 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 									break;
 								}
 							#endif
-							#if defined (LINUX)
-								// Always use IOCTL in Linux
+							#if defined (LINUX) || defined(OS2)
+								// Always use IOCTL in Linux or OS/2
 //								if (useCdromInterface==CDROM_USE_IOCTL) {
 									cdrom[numDrives] = new CDROM_Interface_Ioctl();
 									LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
