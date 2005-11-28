@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.2 2005-11-04 08:53:07 qbix79 Exp $ */
+/* $Id: serialport.cpp,v 1.3 2005-11-28 16:18:35 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -31,6 +31,7 @@
 
 #include "serialport.h"
 #include "directserial_win32.h"
+#include "directserial_os2.h"
 #include "serialdummy.h"
 #include "softmodem.h"
 
