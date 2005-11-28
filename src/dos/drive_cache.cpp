@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.44 2005-07-19 19:45:31 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.45 2005-11-28 16:12:31 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -32,6 +32,12 @@
 #if defined (WIN32)   /* Win 32 */
 #define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
 #include <windows.h>
+#endif
+
+#if defined (OS2)
+#define INCL_DOSERRORS
+#define INCL_DOSFILEMGR
+#include <os2.h>
 #endif
 
 int fileInfoCounter = 0;
@@ -155,11 +161,21 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 		ReadDir(id,result);
 	};
 	// Get Volume Label
-#if defined (WIN32)
+#if defined (WIN32) || defined (OS2)
 	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
+#if defined (WIN32)
 	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+#else // OS2
+	FSINFO fsinfo;
+	ULONG drivenumber = drive[0];
+	if (drivenumber > 26) { // drive letter was lowercase
+		drivenumber = drive[0] - 'a' + 1;
+	}
+	APIRET rc = DosQueryFSInfo(drivenumber, FSIL_VOLSER, &fsinfo, sizeof(FSINFO));
+	if (rc == NO_ERROR) {
+#endif
 		/* Set label and allow being updated */
 		SetLabel(labellocal,true);
 	}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.46 2005-11-24 18:09:47 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.47 2005-11-28 16:12:30 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -168,6 +168,7 @@ public:
 
 					APIRET rc = DosOpen((unsigned char*)temp_line.c_str(), &cdrom_fd, &ulAction, 0L, FILE_NORMAL, OPEN_ACTION_OPEN_IF_EXISTS,
 						OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
+					DosClose(cdrom_fd);
 					if (rc != NO_ERROR && rc != ERROR_NOT_READY)
 					{
 						failed = true;
@@ -193,9 +194,23 @@ public:
 			}
 			/* Not a switch so a normal directory/file */
 			if (!(test.st_mode & S_IFDIR)) {
+#ifdef OS2
+				HFILE cdrom_fd = 0;
+				ULONG ulAction = 0;
+
+				APIRET rc = DosOpen((unsigned char*)temp_line.c_str(), &cdrom_fd, &ulAction, 0L, FILE_NORMAL, OPEN_ACTION_OPEN_IF_EXISTS,
+					OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
+				DosClose(cdrom_fd);
+				if (rc != NO_ERROR && rc != ERROR_NOT_READY) {
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 				return;
 			}
+#else
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
+				return;
+#endif
+			}
+
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
 			Bit8u bit8size=(Bit8u) sizes[1];
 			if (type=="cdrom") {
@@ -914,7 +929,7 @@ void DOS_SetupPrograms(void) {
 		"They can be changed in the \033[33mkeymapper\033[0m.\n"
 		"\n"
 		"\033[33;1mALT-ENTER\033[0m   : Go full screen and back.\n"
-		"\033[33;1mPAUSE\033[0m       : Pause DOSBox.\n"
+		"\033[33;1mCTRL-PAUSE\033[0m  : Pause DOSBox.\n"
 		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
 		"\033[33;1mCTRL-F4\033[0m     : Update directory cache for all drives! Swap mounted disk-image.\n"
 		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
