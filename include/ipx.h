@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.h,v 1.6 2005-07-30 10:02:39 qbix79 Exp $ */
+/* $Id: ipx.h,v 1.7 2005-11-29 07:25:30 qbix79 Exp $ */
 
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
@@ -106,7 +106,7 @@ public:
 	Bitu SerialNumber;
 	#endif
 
-	ECBClass::ECBClass(Bit16u segment, Bit16u offset);
+	ECBClass(Bit16u segment, Bit16u offset);
 	Bit16u getSocket(void);
 
 	Bit8u getInUseFlag(void);

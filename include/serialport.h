@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.h,v 1.10 2005-11-04 08:53:06 qbix79 Exp $ */
+/* $Id: serialport.h,v 1.11 2005-11-29 07:25:30 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALPORT_H
 #define DOSBOX_SERIALPORT_H
@@ -59,50 +59,50 @@ public:
 	Bitu base;
 	Bitu irq;
 	
-	bool CSerial::getDTR();
-	bool CSerial::getRTS();
+	bool getDTR();
+	bool getRTS();
 
-	bool CSerial::getRI();
-	bool CSerial::getCD();
-	bool CSerial::getDSR();
-	bool CSerial::getCTS();
+	bool getRI();
+	bool getCD();
+	bool getDSR();
+	bool getCTS();
 
-	void CSerial::setRI(bool value);
-	void CSerial::setDSR(bool value);
-	void CSerial::setCD(bool value);
-	void CSerial::setCTS(bool value);
+	void setRI(bool value);
+	void setDSR(bool value);
+	void setCD(bool value);
+	void setCTS(bool value);
 
-	void CSerial::Write_THR(Bit8u data);
-	Bitu CSerial::Read_RHR();
-	Bitu CSerial::Read_IER();
-	void CSerial::Write_IER(Bit8u data);
-	Bitu CSerial::Read_ISR();
-	Bitu CSerial::Read_LCR();
-	void CSerial::Write_LCR(Bit8u data);
-	Bitu CSerial::Read_MCR();
-	void CSerial::Write_MCR(Bit8u data);
-	Bitu CSerial::Read_LSR();
+	void Write_THR(Bit8u data);
+	Bitu Read_RHR();
+	Bitu Read_IER();
+	void Write_IER(Bit8u data);
+	Bitu Read_ISR();
+	Bitu Read_LCR();
+	void Write_LCR(Bit8u data);
+	Bitu Read_MCR();
+	void Write_MCR(Bit8u data);
+	Bitu Read_LSR();
 	
 	// Really old hardware seems to have the delta part of this register writable
-	void CSerial::Write_MSR(Bit8u data);
+	void Write_MSR(Bit8u data);
 
-	Bitu CSerial::Read_MSR();
-	Bitu CSerial::Read_SPR();
-	void CSerial::Write_SPR(Bit8u data);
-	void CSerial::Write_reserved(Bit8u data, Bit8u address);
+	Bitu Read_MSR();
+	Bitu Read_SPR();
+	void Write_SPR(Bit8u data);
+	void Write_reserved(Bit8u data, Bit8u address);
 	
 	// If a byte comes from wherever(loopback or real port or maybe
 	// that softmodem thingy), put it in here.
-	void CSerial::receiveByte(Bit8u data);
+	void receiveByte(Bit8u data);
 
 	// If an error was received, put it here (in LSR register format)
-	void CSerial::receiveError(Bit8u errorword);
+	void receiveError(Bit8u errorword);
 
 	// connected device checks, if port can receive data:
-	bool CSerial::CanReceiveByte();
+	bool CanReceiveByte();
 	
 	// When done sending, notify here
-	void CSerial::ByteTransmitted();
+	void ByteTransmitted();
 
 	// Virtual app has read the received data
 	virtual void RXBufferEmpty()=0;
@@ -124,24 +124,24 @@ public:
 
 	// after update request, or some "real" changes, 
 	// modify MSR here
-	void CSerial::changeMSR(Bit8u data);	// make public
+	void changeMSR(Bit8u data);	// make public
 
-	void CSerial::Init_Registers(Bit32u initbps,
+	void Init_Registers(Bit32u initbps,
 	                             Bit8u bytesize, const char* parity, Bit8u stopbits);
 
 private:
 
 	// I used this spec: http://www.exar.com/products/st16c450v420.pdf
 
-	void CSerial::changeMSR_Loopback(Bit8u data);
+	void changeMSR_Loopback(Bit8u data);
 	
-	void CSerial::WriteRealIER(Bit8u data);
+	void WriteRealIER(Bit8u data);
 	// reason for an interrupt has occured - functions triggers interrupt
 	// if it is enabled and no higher-priority irq pending
-	void CSerial::rise(Bit8u priority);
+	void rise(Bit8u priority);
 
 	// clears the pending interrupt
-	void CSerial::clear(Bit8u priority);
+	void clear(Bit8u priority);
 	
 	#define ERROR_PRIORITY 4	// overrun, parity error, frame error, break
 	#define RX_PRIORITY 1		// a byte has been received
