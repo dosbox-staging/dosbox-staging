@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.93 2005-11-08 19:41:04 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.94 2005-12-02 10:02:03 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -115,6 +115,12 @@ struct private_hwdata {
 #if C_SET_PRIORITY
 #include <sys/resource.h>
 #define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
+#endif
+
+#ifdef OS2
+#define INCL_DOS
+#define INCL_WIN
+#include <os2.h>
 #endif
 
 enum SCREEN_TYPES	{ 
@@ -335,6 +341,15 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags,Bit32u bpp) {
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*sdl.desktop.hwscale);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*sdl.desktop.hwscale);
 		sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_HWSURFACE);
+#ifdef WIN32
+		if (sdl.surface == NULL) {
+			LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with windib enabled.");
+			SDL_QuitSubSystem(SDL_INIT_VIDEO);
+			putenv("SDL_VIDEODRIVER=windib");
+			SDL_InitSubSystem(SDL_INIT_VIDEO);
+			sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags|SDL_HWSURFACE);
+		}
+#endif
 		if (sdl.surface == NULL) E_Exit("Could not set windowed video mode %ix%i-%i: %s",sdl.clip.w,sdl.clip.h,bpp,SDL_GetError());
 		return sdl.surface;
 	}
@@ -375,7 +390,16 @@ dosurface:
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
-			sdl.surface=SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+			sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+#ifdef WIN32
+			if (sdl.surface == NULL) {
+				LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with windib enabled.");
+				SDL_QuitSubSystem(SDL_INIT_VIDEO);
+				putenv("SDL_VIDEODRIVER=windib");
+				SDL_InitSubSystem(SDL_INIT_VIDEO);
+				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+			}
+#endif
 			if (sdl.surface == NULL) E_Exit("Could not set windowed video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
 		}
 		if (sdl.surface) switch (sdl.surface->format->BitsPerPixel) {
@@ -913,7 +937,7 @@ static void GUI_StartUp(Section * sec) {
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(PauseDOSBox,MK_pause,0,"pause","Pause");
+	MAPPER_AddHandler(PauseDOSBox,MK_pause,MMOD1,"pause","Pause");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
@@ -1077,6 +1101,16 @@ int main(int argc, char* argv[]) {
 #if C_DEBUG
 		DEBUG_SetupConsole();
 #endif
+
+#ifdef OS2
+        PPIB pib;
+        PTIB tib;
+        DosGetInfoBlocks(&tib, &pib);
+        if (pib->pib_ultype == 2) pib->pib_ultype = 3;
+        setbuf(stdout, NULL);
+        setbuf(stderr, NULL);
+#endif
+
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 #ifndef DISABLE_JOYSTICK
 		|SDL_INIT_JOYSTICK
