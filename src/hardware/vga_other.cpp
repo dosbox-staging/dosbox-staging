@@ -191,7 +191,7 @@ static void write_color_select(Bit8u val) {
 		break;
 	case M_TANDY4:
 		{
-			if (machine == MCH_TANDY && (vga.tandy.gfx_control & 0x8)) {
+			if (IS_TANDY_ARCH && (vga.tandy.gfx_control & 0x8)) {
 				VGA_SetCGA4Table(0,1,2,3);
 				return;
 			}
@@ -342,7 +342,7 @@ static Bitu read_hercules(Bitu port,Bitu iolen) {
 
 void VGA_SetupOther(void) {
 	Bitu i;
-	if (machine==MCH_CGA || machine==MCH_TANDY) {
+	if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		extern Bit8u int10_font_08[256 * 8];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_08[i*8],8);
 		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
@@ -362,14 +362,14 @@ void VGA_SetupOther(void) {
 		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
 		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
 	}
-	if (machine==MCH_TANDY) {
+	if (IS_TANDY_ARCH) {
 		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
 	}
-	if (machine==MCH_CGA || machine==MCH_HERC || machine==MCH_TANDY) {
+	if (machine==MCH_CGA || machine==MCH_HERC || IS_TANDY_ARCH) {
 		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;
 		IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
 		IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);

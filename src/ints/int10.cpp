@@ -68,7 +68,7 @@ static Bitu INT10_Handler(void) {
 		reg_ah=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80 && machine==MCH_TANDY) {
+		if (reg_al & 0x80 && IS_TANDY_ARCH) {
 			Bit8u crtcpu=real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE);		
 			switch (reg_al) {
 			case 0x80:
@@ -519,16 +519,17 @@ static void SetupTandyBios(void) {
 		0x41, 0x73, 0x73, 0x6f, 0x63, 0x69, 0x61, 0x74, 0x65, 0x73, 0x20, 0x4c, 0x74,
 		0x64, 0x2e, 0x0d, 0x0a, 0x61, 0x6e, 0x64, 0x20, 0x54, 0x61, 0x6e, 0x64, 0x79
 	};
-	Bitu i;
-	phys_writeb(0xffffe,0xff);
-	for(i=0;i<130;i++) {
-		phys_writeb(0xf0000+i+0xc000, TandyConfig[i]);
+	if (machine==MCH_TANDY) {
+		Bitu i;
+		for(i=0;i<130;i++) {
+			phys_writeb(0xf0000+i+0xc000, TandyConfig[i]);
+		}
 	}
 }
 
 void INT10_Init(Section* sec) {
 	INT10_InitVGA();
-	if (machine==MCH_TANDY) SetupTandyBios();
+	if (IS_TANDY_ARCH) SetupTandyBios();
 	/* Setup the INT 10 vector */
 	call_10=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET,"Int 10 video");

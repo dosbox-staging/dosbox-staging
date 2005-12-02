@@ -43,11 +43,15 @@ enum MachineType {
 	MCH_HERC,
 	MCH_CGA,
 	MCH_TANDY,
+	MCH_PCJR,
 	MCH_VGA
 };
 
 extern MachineType machine;
 extern bool SDLNetInited;
+
+#define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
+#define TANDY_ARCH_CASE MCH_TANDY: case MCH_PCJR
 
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"

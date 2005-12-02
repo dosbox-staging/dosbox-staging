@@ -27,12 +27,17 @@ static INLINE void ResetACTL(void) {
 	IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
 }
 
+static INLINE void WriteTandyACTL(Bit8u creg,Bit8u val) {
+	IO_Write(VGAREG_TDY_ADDRESS,creg);
+	if (machine==MCH_TANDY) IO_Write(VGAREG_TDY_DATA,val);
+	else IO_Write(VGAREG_PCJR_DATA,val);
+}
+
 void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 	switch (machine) {
-	case MCH_TANDY:
+	case TANDY_ARCH_CASE:
 		IO_Read(VGAREG_TDY_RESET);
-		IO_Write(VGAREG_TDY_ADDRESS,reg+0x10);
-		IO_Write(VGAREG_TDY_DATA,val);
+		WriteTandyACTL(reg+0x10,val);
 		break;
 	case MCH_VGA:
 		if(reg<=ACTL_MAX_REG) {
@@ -55,17 +60,15 @@ void INT10_SetOverscanBorderColor(Bit8u val) {
 
 void INT10_SetAllPaletteRegisters(PhysPt data) {
 	switch (machine) {
-	case MCH_TANDY:
+	case TANDY_ARCH_CASE:
 		IO_Read(VGAREG_TDY_RESET);
 		// First the colors
 		for(Bit8u i=0;i<0x10;i++) {
-			IO_Write(VGAREG_TDY_ADDRESS,i+0x10);
-			IO_Write(VGAREG_TDY_DATA,mem_readb(data));
+			WriteTandyACTL(i+0x10,mem_readb(data));
 			data++;
 		}
 		// Then the border
-		IO_Write(VGAREG_TDY_ADDRESS,0x02);
-		IO_Write(VGAREG_TDY_DATA,mem_readb(data));
+		WriteTandyACTL(0x02,mem_readb(data));
 		break;
 	case MCH_VGA:
 		ResetACTL();
@@ -210,7 +213,7 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xe0) | (val & 0x1f);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
-	if (machine == MCH_CGA || machine == MCH_TANDY)
+	if (machine == MCH_CGA || IS_TANDY_ARCH)
 		IO_Write(0x3d9,temp);
 	else if (machine == MCH_VGA) {
 		val = ((val << 1) & 0x10) | (val & 0x7);
@@ -228,7 +231,7 @@ void INT10_SetColorSelect(Bit8u val) {
 	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xdf) | ((val & 1) ? 0x20 : 0x0);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
-	if (machine == MCH_CGA || machine == MCH_TANDY)
+	if (machine == MCH_CGA || IS_TANDY_ARCH)
 		IO_Write(0x3d9,temp);
 	else if (machine == MCH_VGA) {
 		val = (temp & 0x10) | 2 | val;

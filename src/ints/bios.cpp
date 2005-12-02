@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.51 2005-11-24 21:11:45 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.52 2005-12-02 13:10:18 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -560,8 +560,14 @@ static Bitu INT15_Handler(void) {
 			if (biosConfigSeg==0) biosConfigSeg = DOS_GetMemory(1); //We have 16 bytes
 			PhysPt data	= PhysMake(biosConfigSeg,0);
 			mem_writew(data,8);						// 8 Bytes following
-			if (machine==MCH_TANDY) {
-				mem_writeb(data+2,0xFF);					// Model ID (Tandy)
+			if (IS_TANDY_ARCH) {
+				if (machine==MCH_TANDY) {
+					// Model ID (Tandy)
+					mem_writeb(data+2,0xFF);
+				} else {
+					// Model ID (PCJR)
+					mem_writeb(data+2,0xFD);
+				}
 				mem_writeb(data+3,0x0A);					// Submodel ID
 				mem_writeb(data+4,0x10);					// Bios Revision
 				/* Tandy doesn't have a 2nd PIC, left as is for now */
@@ -854,7 +860,8 @@ public:
 		callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
 		callback[8].Set_RealVec(0x70);
 
-		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff);	/* Tandy model */
+		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
+		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
 		else phys_writeb(0xffffe,0xfc);	/* PC */
 
 		if (use_tandyDAC) {
@@ -940,7 +947,7 @@ public:
 			break;
 		case MCH_VGA:
 		case MCH_CGA:
-		case MCH_TANDY:
+		case TANDY_ARCH_CASE:
 			//Startup 80x25 color
 			config|=0x20;
 			break;

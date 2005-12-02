@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.41 2005-11-12 14:17:36 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.42 2005-12-02 13:10:18 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -299,7 +299,7 @@ void INT10_SetActivePage(Bit8u page) {
 void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURSOR_TYPE,last|(first<<8));
 	if (machine==MCH_CGA) goto dowrite;
-	if (machine==MCH_TANDY) goto dowrite;
+	if (IS_TANDY_ARCH) goto dowrite;
 	/* Skip CGA cursor emulation if EGA/VGA system is active */
 	if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x8)) {
 		/* Check for CGA type 01, invisible */

@@ -457,7 +457,7 @@ void VGA_SetupHandlers(void) {
 		range_handler=&vgaph.hmap;
 		if (vga.herc.mode_control&0x80) goto range_b800;
 		else goto range_b000;
-	case MCH_TANDY:
+	case TANDY_ARCH_CASE:
 		range_handler=&vgaph.htandy;
 		MEM_SetPageHandler(0x80,32,range_handler);
 		goto range_b800;

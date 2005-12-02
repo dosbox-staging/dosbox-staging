@@ -257,7 +257,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 	switch (machine) {
 	case MCH_CGA:
 		if (mode>6) return false;
-	case MCH_TANDY:
+	case TANDY_ARCH_CASE:
 		if (mode>0xa) return false;
 		if (!SetCurMode(ModeList_OTHER,mode)) {
 			LOG(LOG_INT10,LOG_ERROR)("Trying to set illegal mode %X",mode);
@@ -336,7 +336,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 		break;
-	case MCH_TANDY:
+	case TANDY_ARCH_CASE:
 		/* Init some registers */
 		IO_WriteB(0x3da,0x1);IO_WriteB(0x3de,0xf);		//Palette mask always 0xf
 		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//block border

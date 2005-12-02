@@ -313,7 +313,7 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address=(vga.draw.address*2)&0x1fff;
 		break;
 	}
-	if (machine==MCH_TANDY) {
+	if (IS_TANDY_ARCH) {
 		vga.draw.address+=vga.tandy.disp_bank << 14;
 		vga.draw.cursor.address+=vga.tandy.disp_bank << 14;
 	}
@@ -418,7 +418,7 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.double_scan=false;
 		switch (machine) {
 		case MCH_CGA:
-		case MCH_TANDY:
+		case TANDY_ARCH_CASE:
 			clock=((vga.tandy.mode_control & 1) ? 14318180 : (14318180/2))/8;
 			break;
 		case MCH_HERC:

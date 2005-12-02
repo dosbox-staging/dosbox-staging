@@ -316,7 +316,7 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 
 		real_writeb(0x40,0xd4,0x00);
-		if (machine==MCH_TANDY) {
+		if (IS_TANDY_ARCH) {
 			/* enable tandy sound if tandy=true/auto */
 			if ((strcmp(section->Get_string("tandy"),"true")!=0) &&
 				(strcmp(section->Get_string("tandy"),"on")!=0) &&

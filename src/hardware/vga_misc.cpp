@@ -119,7 +119,7 @@ void VGA_SetupMisc(void) {
 		IO_RegisterReadHandler(0x3c2,read_p3c2,IO_MB);
 		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
 		IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
-	} else if (machine==MCH_CGA || machine==MCH_TANDY) {
+	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		IO_RegisterReadHandler(0x3da,read_p3da,IO_MB);
 	} else if (machine==MCH_HERC) {
 		IO_RegisterReadHandler(0x3ba,read_p3da,IO_MB);
