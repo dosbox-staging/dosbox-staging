@@ -300,9 +300,11 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		break;
 	case M_CGA2:
 		scanline=2;
+		break;
 	case M_CGA4:
 		if (CurMode->mode!=0xa) scanline=2;
 		else scanline=4;
+		break;
 	case M_TANDY16:
 		if (CurMode->mode!=0x9) scanline=2;
 		else scanline=4;
@@ -318,6 +320,11 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		0x2c,0x28,0x2d,0x29,	//0-3
 		0x2a,0x2e,0x1e,0x29,	//4-7		
 		0x2a,0x2b,0x3b			//8-a
+	};
+	Bit8u mode_control_list_pcjr[0xa+1]={
+		0x0c,0x08,0x0d,0x09,	//0-3
+		0x0a,0x0e,0x0e,0x09,	//4-7		
+		0x1a,0x1b,0x0b			//8-a
 	};
 	Bit8u mode_control,color_select;
 	switch (machine) {
@@ -336,10 +343,10 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 		break;
-	case TANDY_ARCH_CASE:
+	case MCH_TANDY:
 		/* Init some registers */
 		IO_WriteB(0x3da,0x1);IO_WriteB(0x3de,0xf);		//Palette mask always 0xf
-		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//block border
+		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//black border
 		IO_WriteB(0x3da,0x3);							//Tandy color overrides?
 		switch (CurMode->mode) {
 		case 0x8:	
@@ -360,6 +367,32 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		IO_WriteB(0x3d8,mode_control);
 		IO_WriteB(0x3d9,color_select);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
+		break;
+	case MCH_PCJR:
+		/* Init some registers */
+		IO_ReadB(0x3da);
+		IO_WriteB(0x3da,0x1);IO_WriteB(0x3da,0xf);		//Palette mask always 0xf
+		IO_WriteB(0x3da,0x2);IO_WriteB(0x3da,0x0);		//black border
+		IO_WriteB(0x3da,0x3);
+		if (CurMode->mode<=0x04) IO_WriteB(0x3da,0x02);
+		else if (CurMode->mode==0x06) IO_WriteB(0x3da,0x08);
+		else IO_WriteB(0x3da,0x00);
+
+		/* set CRT/Processor page register */
+		if (CurMode->mode<0x04) crtpage=0x3f;
+		else if (CurMode->mode>=0x09) crtpage=0xf6;
+		else crtpage=0x7f;
+		IO_WriteB(0x3df,crtpage);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CRTCPU_PAGE,crtpage);
+
+		mode_control=mode_control_list_pcjr[CurMode->mode];
+		IO_WriteB(0x3da,0x0);IO_WriteB(0x3da,mode_control);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
+
+		if (CurMode->mode == 0x6 || CurMode->mode==0xa) color_select=0x3f;
+		else color_select=0x30;
+		IO_WriteB(0x3d9,color_select);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 		break;
 	}

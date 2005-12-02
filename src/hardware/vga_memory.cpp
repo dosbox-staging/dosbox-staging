@@ -428,7 +428,7 @@ public:
 			phys_page-=0xb8;
 			return &vga.mem.linear[(vga.tandy.mem_bank << 14)+(phys_page * 4096)];
 		} else {
-			phys_page-=0x80;
+			if (machine==MCH_TANDY) phys_page-=0x80;
 			return &vga.mem.linear[phys_page * 4096];
 		}
 	}
@@ -457,9 +457,13 @@ void VGA_SetupHandlers(void) {
 		range_handler=&vgaph.hmap;
 		if (vga.herc.mode_control&0x80) goto range_b800;
 		else goto range_b000;
-	case TANDY_ARCH_CASE:
+	case MCH_TANDY:
 		range_handler=&vgaph.htandy;
 		MEM_SetPageHandler(0x80,32,range_handler);
+		goto range_b800;
+	case MCH_PCJR:
+		range_handler=&vgaph.htandy;
+		MEM_SetPageHandler(vga.tandy.mem_bank<<2,vga.tandy.is_32k_mode ? 0x08 : 0x04,range_handler);
 		goto range_b800;
 	}
 	switch (vga.mode) {

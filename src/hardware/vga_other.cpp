@@ -199,9 +199,6 @@ static void write_color_select(Bit8u val) {
 			/* Check for BW Mode */
 			if (vga.tandy.mode_control & 0x4) {
 				VGA_SetCGA4Table(val & 0xf,3+base,4+base,7+base);
-				/* old code:
-				if (val & 0x20) VGA_SetCGA4Table(val & 0xf,3+base,4+base,7+base);
-				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base); */
 			} else {
 				if (val & 0x20) VGA_SetCGA4Table(val & 0xf,3+base,5+base,7+base);
 				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base);
@@ -242,14 +239,39 @@ static void TANDY_FindMode(void) {
 	}
 }
 
+static void PCJr_FindMode(void) {
+	if (vga.tandy.mode_control & 0x2) {
+		if (vga.tandy.mode_control & 0x10) {
+			/* bit4 of mode control 1 signals 16 colour graphics mode */
+			VGA_SetMode(M_TANDY16);
+		} else if (vga.tandy.gfx_control & 0x08) {
+			/* bit3 of mode control 2 signals 2 colour graphics mode */
+			VGA_SetMode(M_TANDY2);
+		} else {
+			/* otherwise some 4-colour graphics mode */
+			VGA_SetMode(M_TANDY4);
+		}
+		write_color_select(vga.tandy.color_select);
+	} else {
+		VGA_SetMode(M_TANDY_TEXT);
+	}
+}
+
 static void write_tandy_reg(Bit8u val) {
 	switch (vga.tandy.reg_index) {
+	case 0x0:
+		if (machine==MCH_PCJR) {
+			vga.tandy.mode_control=val;
+			VGA_SetBlinking(val & 0x20);
+			PCJr_FindMode();
+		} else LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
 	case 0x2:	/* Border color */
 		vga.tandy.border_color=val;
 		break;
 	case 0x3:	/* More control */
 		vga.tandy.gfx_control=val;
-		TANDY_FindMode();
+		if (machine==MCH_TANDY) TANDY_FindMode();
+		else PCJr_FindMode();
 		break;
 	/* palette colors */
 	case 0x10: case 0x11: case 0x12: case 0x13:
@@ -311,6 +333,25 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
+static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
+	switch (port) {
+	case 0x3d9:
+		write_color_select(val);
+		break;
+	case 0x3da:
+		if (vga.tandy.pcjr_flipflop) write_tandy_reg(val);
+		else vga.tandy.reg_index=val;
+		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
+		break;
+	case 0x3df:
+		vga.tandy.is_32k_mode=(val & 0x80)==0x80;
+		vga.tandy.disp_bank=val & (vga.tandy.is_32k_mode ? 0x6 : 0x7);
+		vga.tandy.mem_bank=(val >> 3) & (vga.tandy.is_32k_mode ? 0x6 : 0x7);
+		VGA_SetupHandlers();
+		break;
+	}
+}
+
 static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
 	case 0x3b8:
@@ -362,12 +403,19 @@ void VGA_SetupOther(void) {
 		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
 		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
 	}
-	if (IS_TANDY_ARCH) {
+	if (machine==MCH_TANDY) {
 		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
+	}
+	if (machine==MCH_PCJR) {
+		vga.tandy.mem_bank=7;vga.tandy.disp_bank=7;
+		vga.tandy.is_32k_mode=false;vga.tandy.pcjr_flipflop=false;
+		IO_RegisterWriteHandler(0x3d9,write_pcjr,IO_MB);
+		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
+		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
 	}
 	if (machine==MCH_CGA || machine==MCH_HERC || IS_TANDY_ARCH) {
 		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;

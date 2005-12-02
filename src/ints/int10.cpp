@@ -85,6 +85,11 @@ static Bitu INT10_Handler(void) {
 				crtcpu=(crtcpu & 0xc0) | (reg_bh & 7) | ((reg_bl & 7) << 3);
 				break;
 			}
+			if (machine==MCH_PCJR) {
+				/* always return graphics mapping, even for invalid values of AL */
+				reg_bh=crtcpu & 7;
+				reg_bl=(crtcpu >> 3) & 0x7;
+			}
 			IO_WriteB(0x3df,crtcpu);
 			real_writeb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE,crtcpu);
 		}
@@ -114,7 +119,10 @@ static Bitu INT10_Handler(void) {
 			INT10_SetColorSelect(reg_bl);
 			break;
 		default:
-			if(machine == MCH_CGA) INT10_SetColorSelect(reg_bl);
+			if ((machine==MCH_CGA) || (machine==MCH_PCJR)) {
+				/* those BIOSes check for !=0 */
+				INT10_SetColorSelect(reg_bl);
+			}
 			break;
 		}
 		break;

@@ -196,6 +196,8 @@ typedef struct {
 	Bit8u gfx_control;
 	Bit8u palette_mask;
 	Bit8u border_color;
+	bool is_32k_mode;
+	bool pcjr_flipflop;
 } VGA_TANDY;
 
 typedef struct {

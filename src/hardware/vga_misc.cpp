@@ -30,6 +30,7 @@ Bitu read_p3d5_vga(Bitu port,Bitu iolen);
 
 static Bitu read_p3da(Bitu port,Bitu iolen) {
 	vga.internal.attrindex=false;
+	vga.tandy.pcjr_flipflop=false;
 	if (vga.config.retrace) {
 		switch (machine) {
 		case MCH_HERC:
