@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.51 2005-10-17 20:17:08 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.52 2005-12-03 10:43:22 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -274,6 +274,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			if (imagesize+headersize<512) imagesize = 512-headersize;
 		}
 	}
+	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
 	if (flags!=OVERLAY) {
 		/* Create an environment block */
 		envseg=block.exec.envseg;
@@ -285,6 +286,14 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		Bit16u minsize,maxsize;Bit16u maxfree=0xffff;DOS_AllocateMemory(&pspseg,&maxfree);
 		if (iscom) {
 			minsize=0x1000;maxsize=0xffff;
+			if (machine==MCH_PCJR) {
+				/* try to load file into memory below 96k */ 
+				pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
+				Bit16u dataread=0x1800;
+				DOS_ReadFile(fhandle,loadbuf,&dataread);
+				if (dataread<0x1800) maxsize=dataread;
+				if (minsize>maxsize) minsize=maxsize;
+			}
 		} else {	/* Exe size calculated from header */
 			minsize=long2para(imagesize+(head.minmemory<<4)+256);
 			if (head.maxmemory!=0) maxsize=long2para(imagesize+(head.maxmemory<<4)+256);
@@ -298,6 +307,11 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		if (maxfree<maxsize) memsize=maxfree;
 		else memsize=maxsize;
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
+		if (iscom && (machine==MCH_PCJR) && (pspseg<0x2000)) {
+			maxsize=0xffff;
+			/* resize to full extent of memory block */
+			DOS_ResizeMemory(pspseg,&maxsize);
+		}
 		loadseg=pspseg+16;
 		if (!iscom) {
 			/* Check if requested to load program into upper part of allocated memory */
@@ -306,7 +320,6 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
-	Bit8u * loadbuf=(Bit8u *)new Bit8u[0x10000];
 	loadaddress=PhysMake(loadseg,0);
 
 	if (iscom) {	/* COM Load 64k - 256 bytes max */

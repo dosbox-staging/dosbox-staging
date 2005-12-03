@@ -252,7 +252,7 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 
 void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
-	if (strcmp(use_umbs,"false")!=0) {
+	if ((strcmp(use_umbs,"false")!=0) && (machine!=MCH_TANDY)) {
 		Bit16u first_umb_seg=0xca00;
 		Bit16u first_umb_size=0x600;
 
@@ -365,7 +365,7 @@ static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {
 	// Create a dummy device MCB with PSPSeg=0x0008
 	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
-	mcb_devicedummy.SetPSPSeg(0x0008);	// Devices
+	mcb_devicedummy.SetPSPSeg(MCB_DOS);	// Devices
 	mcb_devicedummy.SetSize(1);
 	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
 //	mcb_devicedummy.SetFileName("SD      ");
@@ -388,10 +388,31 @@ void DOS_SetupMemory(void) {
 
 	DOS_MCB mcb((Bit16u)DOS_MEM_START+2);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
-	if (machine==MCH_TANDY) {
-		mcb.SetSize(0x97FE - DOS_MEM_START - 2);
-	} else mcb.SetSize(0x9FFE - DOS_MEM_START - 2);
 	mcb.SetType(0x5a);								//Last Block
+	if (machine==MCH_TANDY) {
+		/* memory up to 608k available, the rest (to 640k) is used by
+			the tandy graphics system's variable mapping of 0xb800 */
+		mcb.SetSize(0x97FE - DOS_MEM_START - 2);
+	} else if (machine==MCH_PCJR) {
+		/* memory from 128k to 640k is available */
+		mcb_devicedummy.SetPt((Bit16u)0x2000);
+		mcb_devicedummy.SetPSPSeg(MCB_FREE);
+		mcb_devicedummy.SetSize(0x9FFE - 0x2000);
+		mcb_devicedummy.SetType(0x5a);
+
+		/* exclude PCJr graphics region */
+		mcb_devicedummy.SetPt((Bit16u)0x17ff);
+		mcb_devicedummy.SetPSPSeg(MCB_DOS);
+		mcb_devicedummy.SetSize(0x800);
+		mcb_devicedummy.SetType(0x4d);
+
+		/* memory below 96k */
+		mcb.SetSize(0x1800 - DOS_MEM_START - 4);
+		mcb.SetType(0x4d);
+	} else {
+		/* complete memory up to 640k available */
+		mcb.SetSize(0x9FFE - DOS_MEM_START - 2);
+	}
 
 	dos.firstMCB=DOS_MEM_START;
 	dos_infoblock.SetFirstMCB(DOS_MEM_START);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.39 2005-07-31 13:59:02 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.40 2005-12-03 10:43:22 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -507,9 +507,15 @@ public:
 		for (i=0xc0;i<0xc8;i++) {
 			memory.phandlers[i] = &rom_page_handler;
 		}
-		/* Setup rom at 0xf0000-0x0x100000 */
+		/* Setup rom at 0xf0000-0x100000 */
 		for (i=0xf0;i<0x100;i++) {
 			memory.phandlers[i] = &rom_page_handler;
+		}
+		if (machine==MCH_PCJR) {
+			/* Setup cartridge rom at 0xe0000-0xf0000 */
+			for (i=0xe0;i<0xf0;i++) {
+				memory.phandlers[i] = &rom_page_handler;
+			}
 		}
 		/* Reset some links */
 		memory.links.used = 0;

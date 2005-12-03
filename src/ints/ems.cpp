@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.43 2005-09-03 11:38:18 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.44 2005-12-03 10:43:22 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1048,6 +1048,10 @@ public:
 		
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("ems")) return;
+		if (machine==MCH_PCJR) {
+			LOG_MSG("EMS disabled for PCJr machine");
+			return;
+		}
 		BIOS_ZeroExtendedSize(true);
 		int67.Install(&INT67_Handler,CB_IRET,"Int 67 ems");
 		Bit16u call_int67=int67.Get_callback();
