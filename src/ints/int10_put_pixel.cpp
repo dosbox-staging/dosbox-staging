@@ -28,16 +28,32 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	switch (CurMode->type) {
 	case M_CGA4:
 		{
-				Bit16u off=(y>>1)*80+(x>>2);
-				if (y&1) off+=8*1024;
-				Bit8u old=real_readb(0xb800,off);
-				if (color & 0x80) {
-					color&=3;
-					old^=color << (2*(3-(x&3)));
+				IO_Write(0x3d4,0x09);
+				if (IO_Read(0x3d5)==1) {
+					Bit16u off=(y>>1)*80+(x>>2);
+					if (y&1) off+=8*1024;
+
+					Bit8u old=real_readb(0xb800,off);
+					if (color & 0x80) {
+						color&=3;
+						old^=color << (2*(3-(x&3)));
+					} else {
+						old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+					}
+					real_writeb(0xb800,off,old);
 				} else {
-					old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+					Bit16u off=(y>>2)*160+((x>>2)&(~1));
+					off+=(8*1024) * (y & 3);
+
+					Bit16u old=real_readw(0xb800,off);
+					if (color & 0x80) {
+						old^=(color&1) << (7-(x&7));
+						old^=((color&2)>>1) << ((7-(x&7))+8);
+					} else {
+						old=old&(~(0x101<<(7-(x&7)))) | ((color&1) << (7-(x&7))) | (((color&2)>>1) << ((7-(x&7))+8));
+					}
+					real_writew(0xb800,off,old);
 				}
-				real_writeb(0xb800,off,old);
 		}
 		break;
 	case M_CGA2:
@@ -56,8 +72,10 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 		break;
 	case M_TANDY16:
 		{
-			Bit16u off=(y>>2)*160+(x>>1);
-			off+=(8*1024) * (y & 3);
+			IO_Write(0x3d4,0x09);
+			Bit8u scanlines_m1=IO_Read(0x3d5);
+			Bit16u off=(y>>((scanlines_m1==1)?1:2))*(CurMode->swidth>>1)+(x>>1);
+			off+=(8*1024) * (y & scanlines_m1);
 			Bit8u old=real_readb(0xb800,off);
 			Bit8u p[2];
 			p[1] = (old >> 4) & 0xf;

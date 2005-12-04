@@ -191,7 +191,8 @@ static void write_color_select(Bit8u val) {
 		break;
 	case M_TANDY4:
 		{
-			if (IS_TANDY_ARCH && (vga.tandy.gfx_control & 0x8)) {
+			if ((machine==MCH_TANDY && (vga.tandy.gfx_control & 0x8)) ||
+				(machine==MCH_PCJR && (vga.tandy.mode_control==0x0b))) {
 				VGA_SetCGA4Table(0,1,2,3);
 				return;
 			}

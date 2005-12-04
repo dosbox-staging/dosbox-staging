@@ -26,6 +26,7 @@ VGA_Type vga;
 
 Bit32u CGA_2_Table[16];
 Bit32u CGA_4_Table[256];
+Bit32u CGA_4_HiRes_Table[256];
 Bit32u CGA_16_Table[256];
 Bit32u TXT_Font_Table[16];
 Bit32u TXT_FG_Table[16];
@@ -133,8 +134,17 @@ void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3) {
 			(total[(i >> 6) & 3] << 0  ) | (total[(i >> 4) & 3] << 8  ) |
 			(total[(i >> 2) & 3] << 16 ) | (total[(i >> 0) & 3] << 24 );
 #endif
+		CGA_4_HiRes_Table[i]=
+#ifdef WORDS_BIGENDIAN
+			(total[((i >> 0) & 1) | ((i >> 3) & 2)] << 0  ) | (total[((i >> 1) & 1) | ((i >> 4) & 2)] << 8  ) |
+			(total[((i >> 2) & 1) | ((i >> 5) & 2)] << 16 ) | (total[((i >> 3) & 1) | ((i >> 6) & 2)] << 24 );
+#else
+			(total[((i >> 3) & 1) | ((i >> 6) & 2)] << 0  ) | (total[((i >> 2) & 1) | ((i >> 5) & 2)] << 8  ) |
+			(total[((i >> 1) & 1) | ((i >> 4) & 2)] << 16 ) | (total[((i >> 0) & 1) | ((i >> 3) & 2)] << 24 );
+#endif
 	}	
 }
+
 void VGA_Init(Section* sec) {
 	vga.draw.resizing=false;
 	vga.mode=M_ERROR;			//For first init

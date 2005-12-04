@@ -356,6 +356,7 @@ extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];
 extern Bit32u CGA_2_Table[16];
 extern Bit32u CGA_4_Table[256];
+extern Bit32u CGA_4_HiRes_Table[256];
 extern Bit32u CGA_16_Table[256];
 extern Bit32u TXT_Font_Table[16];
 extern Bit32u TXT_FG_Table[16];
