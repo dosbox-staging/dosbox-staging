@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.31 2005-04-21 21:06:27 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.32 2005-12-04 21:17:29 c2woody Exp $ */
 
 #include <list>
 
@@ -47,6 +47,7 @@ struct PIC_Controller {
 	bool special;
 	bool auto_eoi;
 	bool rotate_on_auto_eoi;
+	bool single;
 	bool request_issr;
 	Bit8u vector_base;
 };
@@ -79,11 +80,11 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	static Bit16u IRQ_priority_table[16] = 
 		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
-		if (val&0x02) E_Exit("PIC: single mode not handled");	// (would have to skip ICW3)
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
 		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
-		pic->icw_index=1;			// next is ICW3
+		pic->single=val&0x02;
+		pic->icw_index=1;			// next is ICW2
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
 	} else if (GCC_UNLIKELY(val&0x08)) {	// OCW3 issued
 		if (val&0x04) E_Exit("PIC: poll command not handled");
@@ -160,6 +161,10 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 				else PIC_IRQCheck&=~(1 << (i+irq_base));
 			}
 		}
+		if (machine==MCH_PCJR) {
+			/* irq6 cannot be disabled as it serves as pseudo-NMI */
+			irqs[6].masked=false;
+		}
 		if(irqs[2].masked != old_irq2_mask) {
 		/* Irq 2 mask has changed recheck second pic */
 			for(i=8;i<=15;i++) {
@@ -178,6 +183,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 			irqs[i+irq_base].vector=(val&0xf8)+i;
 		};
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
+		else if(pic->single) pic->icw_index=3;		/* skip ICW3 in single mode */
 		break;
 	case 2:							/* icw 3 */
 		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 3 %X",port==0x21 ? 0 : 1,val);
@@ -525,6 +531,7 @@ public:
 			pics[i].rotate_on_auto_eoi=false;
 			pics[i].request_issr=false;
 			pics[i].special=false;
+			pics[i].single=false;
 			pics[i].icw_index=0;
 			pics[i].icw_words=0;
 		}
@@ -542,6 +549,10 @@ public:
 		irqs[1].masked=false;					/* Enable Keyboard IRQ */
 		irqs[2].masked=false;					/* Enable second pic */
 		irqs[8].masked=false;					/* Enable RTC IRQ */
+		if (machine==MCH_PCJR) {
+			/* Enable IRQ6 (replacement for the NMI for PCJr) */
+			irqs[6].masked=false;
+		}
 		ReadHandler[0].Install(0x20,read_command,IO_MB);
 		ReadHandler[1].Install(0x21,read_data,IO_MB);
 		WriteHandler[0].Install(0x20,write_command,IO_MB);

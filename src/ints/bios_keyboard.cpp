@@ -25,7 +25,7 @@
 #include "inout.h"
 
 
-static Bitu call_int16,call_irq1;
+static Bitu call_int16,call_irq1,call_irq6;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
@@ -438,6 +438,21 @@ irq1_return:
 	return CBRET_NONE;
 }
 
+static bool pcjr_extended_key=false;
+
+static Bitu IRQ6_Handler(void) {
+	Bit8u scancode=IO_Read(0x60);
+	Bit16u old_ax=reg_ax;
+	if (pcjr_extended_key) reg_ax=scancode<<8;
+	else reg_al=scancode;
+	pcjr_extended_key=(scancode==0xe0);
+	/* call the real keyboard IRQ now, with the scancode in AL */
+	CALLBACK_RunRealInt(0x09);
+	reg_ax=old_ax;
+	IO_Write(0x20,0x20);
+	return CBRET_NONE;
+}
+
 /* check whether key combination is enhanced or not,
    translate key if necessary */
 static bool IsEnhancedKey(Bit16u &key) {
@@ -592,6 +607,11 @@ void BIOS_SetupKeyboard(void) {
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
 	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRET,"keyboard irq");
 	RealSetVec(0x9,CALLBACK_RealPointer(call_irq1));
+	if (machine==MCH_PCJR) {
+		call_irq6=CALLBACK_Allocate();
+		CALLBACK_Setup(call_irq6,&IRQ6_Handler,CB_IRET,"PCJr kb irq");
+		RealSetVec(0x0e,CALLBACK_RealPointer(call_irq6));
+	}
 
 	/* bring the all port operations outside the callback */
 	phys_writeb(CB_BASE+(call_irq1<<4)+0x00,(Bit8u)0x50);		// push ax

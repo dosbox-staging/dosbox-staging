@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.52 2005-12-02 13:10:18 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.53 2005-12-04 21:17:29 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -789,6 +789,13 @@ void BIOS_ZeroExtendedSize(bool in) {
 	if(other_memsystems < 0) other_memsystems=0;
 }
 
+#define RAM_REFRESH_DELAY 16.7f
+
+static void RAMRefresh_Event(Bitu val) {
+	PIC_ActivateIRQ(5);
+	PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
+}
+
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
@@ -964,7 +971,8 @@ public:
 		IO_Write(0x70,0x30);
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
-		size_extended|=(IO_Read(0x71) << 8);		
+		size_extended|=(IO_Read(0x71) << 8);
+		if (machine==MCH_PCJR) PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
 	}
 	~BIOS(){
 		/* abort DAC playing */

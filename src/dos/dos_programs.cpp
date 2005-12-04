@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.47 2005-11-28 16:12:30 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.48 2005-12-04 21:17:28 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -440,49 +440,53 @@ public:
 			return;
 		}
 
-		WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
-		
 		bootSector bootarea;
 		imageDiskList[drive-65]->Read_Sector(0,0,1,(Bit8u *)&bootarea);
-		for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
+		if ((bootarea.rawdata[0]==0x50) && (bootarea.rawdata[1]==0x43) && (bootarea.rawdata[2]==0x6a) && (bootarea.rawdata[3]==0x72)) {
+			if (machine!=MCH_PCJR) WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
+			else {
+				Bit8u rombuf[65536];
+				fseek(usefile,0x200L, SEEK_SET);
+				fread(rombuf, 1, rombytesize-0x200, usefile);
+				fclose(usefile);
 
-		
+				/* write cartridge data into ROM */
+				Bit16u romseg=0xe000;
+				if ((rombuf[7]==0x42) && (rombuf[8]==0x41) && (rombuf[9]==0x53) && (rombuf[10]==0x49)) {
+					/* BASIC rom, doesn't work though */
+					romseg=0xf600;
+				}
+				for(i=0;i<rombytesize;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
 
-		SegSet16(cs, 0);
-		reg_ip = 0x7c00;
-		SegSet16(ds, 0);
-		SegSet16(ss, 0);//Buckrogers Booter
-		reg_esp = 0x400;
-		SegSet16(es, 0);
-		reg_esi = 0;
-		reg_ecx = 1;
-		reg_ebp = 0;
-		reg_eax = 0;
-		reg_edx = 0; //Head 0 drive 0
-		reg_ebx= 0x7c00; //Real code is probably uses bx to load the image
-		//DEBUG_EnableDebugger();
-				
+				/* run cartridge setup */
+				SegSet16(ds,romseg);
+				SegSet16(es,romseg);
+				SegSet16(ss,0x8000);
+				reg_esp=0xfffe;
+				CALLBACK_RunRealFar(romseg,0x0003);
 
-		/* Most likely a PCJr ROM */
-		/* Write it to E000:0000 */
-		/* Code inoperable at the moment */
+				/* boot cartridge (int18) */
+				SegSet16(cs,mem_readw(0x62));
+				reg_ip = mem_readw(0x60);
+			}
+		} else {
+			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
+			for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
-		/*
-		Bit8u rombuff[65536];
-		fseek(tmpfile,512L, SEEK_SET);
-		rombytesize-=512;
-		fread(rombuff, 1, rombytesize, tmpfile);
-		fclose(tmpfile);
-		for(i=0;i<rombytesize;i++) real_writeb(0xe000,i,rombuff[i]);
-		SegSet16(cs,0xe000);
-		SegSet16(ds,0x0060);
-		SegSet16(es,0x0060);
-		SegSet16(ss,0x0060);
-		reg_ip = 0x0;
-		reg_sp = 0x0;
-		reg_cx = 0xffff;
-		DEBUG_EnableDebugger();
-		*/
+			SegSet16(cs, 0);
+			reg_ip = 0x7c00;
+			SegSet16(ds, 0);
+			SegSet16(ss, 0);//Buckrogers Booter
+			reg_esp = 0x400;
+			SegSet16(es, 0);
+			reg_esi = 0;
+			reg_ecx = 1;
+			reg_ebp = 0;
+			reg_eax = 0;
+			reg_edx = 0; //Head 0 drive 0
+			reg_ebx= 0x7c00; //Real code probably uses bx to load the image
+			//DEBUG_EnableDebugger();
+		}
 	}
 };
 
@@ -959,6 +963,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
+	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCJr cartridge found, but machine is not PCJr");
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");

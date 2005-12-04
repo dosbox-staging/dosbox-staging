@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.33 2005-09-18 19:50:03 c2woody Exp $ */
+/* $Id: keyboard.cpp,v 1.34 2005-12-04 21:17:29 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -56,7 +56,8 @@ static struct {
 static void KEYBOARD_SetPort60(Bit8u val) {
 	keyb.p60changed=true;
 	keyb.p60data=val;
-	PIC_ActivateIRQ(1);
+	if (machine==MCH_PCJR) PIC_ActivateIRQ(6);
+	else PIC_ActivateIRQ(1);
 }
 
 static void KEYBOARD_TransferBuffer(Bitu val) {
