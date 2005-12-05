@@ -9,8 +9,8 @@ While we are hoping that one day, DOSBox will run all programs
 ever made for the PC,we are not there yet. At present, DOSBox run on a high-
 end machine will roughly be the equivalent of a 486 PC. The 0.60
 release has added support for "protected mode" allowing for more complex and
-recent programs, but note that this support is still in an early in stage of 
-development and unlike the support the 386 real-mode games (or earlier) hasn't
+recent programs, but note that this support is still in an early stage of 
+development and unlike the support for 386 real-mode games (or earlier) hasn't
 been completed yet. Also note that "protected mode" games need substantially 
 more resources and may require a much faster processor for you to run them
 properly in DOSBox.
@@ -574,6 +574,7 @@ For more information use the /? command line switch with the programs.
 ================
 
 ALT-ENTER     Switch to full screen and back.
+CTRL-PAUSE    Pause emulation.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
 CTRL-F5       Save a screenshot.(png)
