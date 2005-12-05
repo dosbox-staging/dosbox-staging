@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.66 2005-11-21 18:32:38 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.67 2005-12-05 12:07:55 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -266,7 +266,12 @@ void DOS_Shell::Run(void) {
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
-	WriteOut(MSG_Get("SHELL_STARTUP"));
+	WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"));
+#if C_DEBUG
+	WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
+#endif
+	if(machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+	WriteOut(MSG_Get("SHELL_STARTUP_END"));
 	if (cmd->FindString("/INIT",line,true)) {
 		strcpy(input_line,line.c_str());
 		line.erase();
@@ -404,7 +409,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Removing drive not supported. Doing nothing.\n");
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives");
 
-	MSG_Add("SHELL_STARTUP",
+	MSG_Add("SHELL_STARTUP_BEGIN",
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
@@ -417,18 +422,23 @@ void SHELL_Init() {
 		"\xBA To activate the keymapper \033[31mctrl-F1\033[37m.                                 \xBA\n"
 		"\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
-#if C_DEBUG
-		"\xBA Press \033[31mPause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m.     \xBA\n"
-		"\xBA                                                                    \xBA\n"
-#endif
-		"\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
-		"\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
-		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
-		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
-		//"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
-
+	MSG_Add("SHELL_STARTUP_CGA","\xBA DOSBox supports Composite CGA mode.                                \xBA\n"
+	        "\xBA Use \033[31m(ctrl-)F11\033[37m to change the colours when in this mode.            \xBA\n"
+	        "\xBA                                                                    \xBA\n"
+	);
+	MSG_Add("SHELL_STARTUP_DEBUG",
+	        "\xBA Press \033[31mctrl-Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m.\xBA\n"
+	        "\xBA                                                                    \xBA\n"
+	);
+	MSG_Add("SHELL_STARTUP_END",
+	        "\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
+	        "\xBA \033[32mThe DOSBox Team\033[37m                                                    \xBA\n"
+	        "\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
+	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
+	        //"\n" //Breaks the startup message if you type a mount and a drive change.
+	);
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
