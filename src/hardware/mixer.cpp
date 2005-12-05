@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.34 2005-07-19 19:45:32 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.35 2005-12-05 12:04:40 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -198,6 +198,7 @@ INLINE void MixerChannel::AddSamples(Bitu len,void * data) {
 	Bitu mixpos=mixer.pos+done;
 	freq_index&=MIXER_REMAIN;
 	Bitu pos=0;Bitu new_pos;
+
 	goto thestart;
 	while (1) {
 		new_pos=freq_index >> MIXER_SHIFT;
@@ -347,9 +348,9 @@ static void MIXER_Mix_NoSound(void) {
 static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	if (need>mixer.done) {
-//		LOG_MSG("Buffer underrun");
+		//LOG_MSG("%d Buffer underrun %d done  and %d needed",count++,mixer.done,need);
 		return;
-	}
+	}//else 		LOG_MSG("%d Buffer regular run %d done  and %d needed",count++,mixer.done,need);
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
 		if (chan->done>need) chan->done-=need;
@@ -357,12 +358,12 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	}
 	mixer.done-=need;
 	mixer.needed-=need;
-	if (mixer.done>mixer.min_needed) {
+	if (mixer.done > mixer.min_needed) {
 		Bitu diff=mixer.done-mixer.min_needed;
-		mixer.tick_add=((mixer.freq-(diff>>2)) << MIXER_SHIFT)/1000;
+		mixer.tick_add = ((mixer.freq-(diff/5)) << MIXER_SHIFT)/1000;
 	} else {
-		Bitu diff=mixer.needed-mixer.done;
-		mixer.tick_add=((mixer.freq+diff*3) << MIXER_SHIFT)/1000;
+		Bitu diff = ((mixer.min_needed>mixer.needed)?mixer.min_needed:mixer.needed) - mixer.done;
+		mixer.tick_add = ((mixer.freq+(diff*3)) << MIXER_SHIFT)/1000;
 	}
 	Bit16s * output=(Bit16s *)stream;
 	Bits sample;
