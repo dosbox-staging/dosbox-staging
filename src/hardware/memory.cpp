@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.40 2005-12-03 10:43:22 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.41 2005-12-05 21:25:56 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -471,6 +471,8 @@ static void write_p92(Bitu port,Bitu val,Bitu iolen) {
 static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
 }
+
+HostPt GetMemBase(void) { return MemBase; }
 
 class MEMORY:public Module_base{
 private:

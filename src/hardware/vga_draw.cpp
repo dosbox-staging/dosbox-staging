@@ -36,7 +36,7 @@ static Bit8u TempLine[1280];
 static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=vga.draw.blocks;x>0;x--) {
-		Bitu val=vga.mem.linear[vidstart+line];
+		Bitu val=vga.gfxmem_start[vidstart+line];
 		vidstart++;
 		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
 			vidstart &= 0x1dfff;
@@ -49,7 +49,7 @@ static Bit8u * VGA_Draw_1BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val=vga.mem.linear[vidstart+line];
+		Bitu val=vga.gfxmem_start[vidstart+line];
 		vidstart++;
 		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
 			vidstart &= 0x1dfff;
@@ -61,8 +61,8 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<(vga.draw.blocks>>1);x++) {
-		Bitu val1=vga.mem.linear[vidstart+line];
-		Bitu val2=vga.mem.linear[vidstart+1+line];
+		Bitu val1=vga.gfxmem_start[vidstart+line];
+		Bitu val2=vga.gfxmem_start[vidstart+1+line];
 		vidstart+=2;
 		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
 			vidstart &= 0x1dfff;
@@ -114,7 +114,7 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
+	Bit8u * reader=&vga.gfxmem_start[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=*reader++;Bitu val2=*reader++;
@@ -127,7 +127,7 @@ static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.mem.linear[vidstart + (line * 8 * 1024)];
+	Bit8u * reader=&vga.gfxmem_start[vidstart + (line * 8 * 1024)];
 	Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=*reader++;Bitu val2=*reader++;
@@ -222,7 +222,7 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	Bit32u * draw=(Bit32u *)TempLine;
-	Bit8u * vidmem=&vga.mem.linear[vidstart];
+	Bit8u * vidmem=&vga.gfxmem_start[vidstart];
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
 		Bitu col=vidmem[cx*2+1];
@@ -240,7 +240,7 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
 		draw=(Bit32u *)&TempLine[font_addr*8];
-		Bit32u att=TXT_FG_Table[vga.mem.linear[vga.draw.cursor.address+1]&0xf];
+		Bit32u att=TXT_FG_Table[vga.gfxmem_start[vga.draw.cursor.address+1]&0xf];
 		*draw++=att;*draw++=att;
 	}
 skip_cursor:

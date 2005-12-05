@@ -32,6 +32,7 @@ typedef Bit32s MemHandle;
 #define MEM_PAGESIZE 4096
 
 extern HostPt MemBase;
+HostPt GetMemBase(void);
 
 bool MEM_A20_Enabled(void);
 void MEM_A20_Enable(bool enable);

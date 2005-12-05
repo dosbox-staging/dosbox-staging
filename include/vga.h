@@ -311,6 +311,7 @@ typedef struct {
 	VGA_TANDY tandy;
 	VGA_OTHER other;
 	VGA_Memory mem;
+	Bit8u * gfxmem_start;
 } VGA_Type;
 
 

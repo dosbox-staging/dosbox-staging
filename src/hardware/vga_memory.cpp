@@ -434,11 +434,24 @@ public:
 	}
 };
 
+class VGA_PCJR_PageHandler : public PageHandler {
+public:
+	VGA_PCJR_PageHandler() {
+		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
+	}
+	HostPt GetHostPt(Bitu phys_page) {
+		phys_page-=0xb8;
+		if (!vga.tandy.is_32k_mode) phys_page&=0x03;
+		return MemBase+(vga.tandy.mem_bank << 14)+(phys_page * 4096);
+	}
+};
+
 
 static struct vg {
 	VGA_MAP_PageHandler hmap;
 	VGA_TEXT_PageHandler htext;
 	VGA_TANDY_PageHandler htandy;
+	VGA_PCJR_PageHandler hpcjr;
 	VGA_256_PageHandler h256;
 	VGA_256Chain4_PageHandler h256c4;
 	VGA_16_PageHandler h16;
@@ -462,8 +475,8 @@ void VGA_SetupHandlers(void) {
 		MEM_SetPageHandler(0x80,32,range_handler);
 		goto range_b800;
 	case MCH_PCJR:
-		range_handler=&vgaph.htandy;
-		MEM_SetPageHandler(vga.tandy.mem_bank<<2,vga.tandy.is_32k_mode ? 0x08 : 0x04,range_handler);
+		range_handler=&vgaph.hpcjr;
+//		MEM_SetPageHandler(vga.tandy.mem_bank<<2,vga.tandy.is_32k_mode ? 0x08 : 0x04,range_handler);
 		goto range_b800;
 	}
 	switch (vga.mode) {
@@ -557,4 +570,9 @@ void VGA_UnmapMMIO(void) {
 
 void VGA_SetupMemory() {
 	memset((void *)&vga.mem,0,512*1024*4);
+	if (machine==MCH_PCJR) {
+		/* PCJr does not have dedicated graphics memory but uses
+		   conventional memory below 128k */
+		vga.gfxmem_start=GetMemBase();
+	} else vga.gfxmem_start=&vga.mem.linear[0];
 }
