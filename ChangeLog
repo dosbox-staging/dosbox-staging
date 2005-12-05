@@ -2,7 +2,7 @@
   - Fixed FAT writing.
   - Added some more missing DOS functions.
   - Improved PIC so that it actually honours irq 2/9.
-  - Improved intelligent MPU 401 mode so that more games work with it.
+  - Improved intelligent MPU-401 mode so that more games work with it.
   - Some mouse fixes.
   - Changed DMA transfers a bit so they bypass the paging tables.
   - Added S3 XGA functionality.
@@ -14,13 +14,42 @@
   - Fix crashes/segfaults related to the disabling of the pcspeaker.
   - Added some more FILES=XX detection tricks.
   - Fixed some vga detection schemes.
-  - Lot's of small bug fixes.
   - Fixed screenshot corruption when using -noconsole in a read-only directory.
-  - Addes some hidden file functions when using diskimages. (helps with cdrom 
+  - Fix wrong scaled screenshots.
+  - Added some hidden file functions when using diskimages. (helps with cdrom 
     detection schemes)
   - Fixed a bug in the mixer code, that muted the music in certain games.
+  - Added an assembly fpu core.
+  - Made the shell more flexible for batch files.
+  - Check for unaligned memory acces fixes hangups on ARM processors
+  - Some 64 bit fixes.
+  - Added code to change configuration at runtime.
+  - Improved ADPCM emulation.
+  - Fixed a few cpu instructions.
+  - Always report vesa 2.0 and fix some colour issues with vesa games.
+  - Fix video mode 6.
+  - Improvements to the joystick emulation. 4 buttons are supported as well.
+  - Add VCPI emulation. No more ems=false with Origin games.
+  - Fixed a lot of things in the boot code. Most booters work now.
+  - Lots of improvements to the IPX emulation.
+  - Rewritten modem emulation. Should work with more games.
+  - Improvements to the dos memory managment routines.
+  - Add UMB (upper memory blocks) support.
+  - Emulate the pause key.
+  - Improve Composite CGA mode emulation.
+  - Lots of vga compatibility changes.
+  - Improved support for chained video modes.
+  - Improved mode and palete handling in cga modes.
+  - Mount accepts ~ now.
+  - Added a few of the EGA RIL functions.
+  - Added TandyDAC emulation.
+  - OS/2 support.
+  - Improved and speed up the dynamic cpu core.
+  - Fix some errors in the CD-ROM emulation layer.
+  - Added an automatic work-around for some graphics chipsets.
+  - Lots of bugfixes.
+  - Even more bugfixes.
   
-
 0.63
   - Fixed crash with keymapper (ctrl-f1) and output=surface.
   - Added unmounting.
