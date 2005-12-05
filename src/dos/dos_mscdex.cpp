@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.33 2005-11-25 19:15:12 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.34 2005-12-05 19:23:10 harekiet Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -149,7 +149,7 @@ private:
 		Bit32u	volumeSize;		// for media change
 	} TDriveInfo;
 
-	PhysPt				defaultBuffer;
+	Bit16u				defaultBufSeg;
 	TDriveInfo			dinfo[MSCDEX_MAX_DRIVES];
 	CDROM_Interface*	cdrom[MSCDEX_MAX_DRIVES];
 	
@@ -161,7 +161,7 @@ CMscdex::CMscdex(void)
 {
 	numDrives			= 0;
 	rootDriverHeaderSeg	= 0;
-	defaultBuffer		= 0;
+	defaultBufSeg		= 0;
 
 	memset(dinfo,0,sizeof(dinfo));
 	for (Bit32u i=0; i<MSCDEX_MAX_DRIVES; i++) cdrom[i] = 0;
@@ -169,9 +169,9 @@ CMscdex::CMscdex(void)
 
 CMscdex::~CMscdex(void)
 {
-	if (defaultBuffer!=0) {
-		DOS_FreeMemory(RealSeg(defaultBuffer));
-		defaultBuffer = 0;
+	if (defaultBufSeg!=0) {
+		DOS_FreeMemory(defaultBufSeg);
+		defaultBufSeg = 0;
 	}
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
 		delete (cdrom)[i];
@@ -305,11 +305,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 
 PhysPt CMscdex::GetDefaultBuffer(void)
 {
-	if (defaultBuffer==0) {
+	if (defaultBufSeg==0) {
 		Bit16u size = 128; //Size in block is size in pages ?
-		defaultBuffer = DOS_GetMemory(size);
+		defaultBufSeg = DOS_GetMemory(size);
 	};
-	return PhysMake(defaultBuffer,0);
+	return PhysMake(defaultBufSeg,0);
 };
 
 void CMscdex::GetDriverInfo	(PhysPt data)
@@ -641,9 +641,29 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 		if (foundName) {
 			// TO DO : name gefunden, Daten in den Buffer kopieren
 			if (foundComplete) {
-				if (copyFlag) LOG(LOG_MISC,LOG_ERROR)("MSCDEX: GetDirEntry: Unsupported copyflag. (result structure should be different");
-				// Direct copy
-				MEM_BlockCopy(buffer,defBuffer+index,entryLength);
+				if (copyFlag) {
+					LOG(LOG_MISC,LOG_WARN)("MSCDEX: GetDirEntry: Copyflag structure not entirely accurate maybe");
+					Bit8u readBuf[256];
+					Bit8u writeBuf[256];
+					if (entryLength > 256)
+						return false;
+					MEM_BlockRead( defBuffer+index, readBuf, entryLength );
+					writeBuf[0] = readBuf[1];						// 00h	BYTE	length of XAR in Logical Block Numbers
+					memcpy( &writeBuf[1], &readBuf[0x2], 4);		// 01h	DWORD	Logical Block Number of file start
+					writeBuf[5] = 0;writeBuf[6] = 8;				// 05h	WORD	size of disk in logical blocks
+					memcpy( &writeBuf[7], &readBuf[0xa], 4);		// 07h	DWORD	file length in bytes
+					memcpy( &writeBuf[0xb], &readBuf[0x12], 7);		// 0bh	DWORD	date and time
+					writeBuf[0x12] = readBuf[0x19];					// 12h	BYTE	bit flags
+					writeBuf[0x13] = readBuf[0x1a];					// 13h	BYTE	interleave size
+					writeBuf[0x14] = readBuf[0x1b];					// 14h	BYTE	interleave skip factor
+					memcpy( &writeBuf[0x15], &readBuf[0x1c], 2);	// 15h	WORD	volume set sequence number
+					writeBuf[0x17] = readBuf[0x20];
+					memcpy( &writeBuf[0x18], &readBuf[21], readBuf[0x20] <= 38 ? readBuf[0x20] : 38 );
+					MEM_BlockWrite( buffer, writeBuf, 0x18 + 40 );
+				} else {
+					// Direct copy
+					MEM_BlockCopy(buffer,defBuffer+index,entryLength);
+				}
 				error = iso ? 1:0;
 				return true;
 			}
@@ -765,7 +785,7 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 
 	MSCDEX_LOG("MSCDEX: Driver Function %02X",funcNr);
 
-	switch (funcNr) {
+ 	switch (funcNr) {
 	
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer	= PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
