@@ -16,11 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_other.cpp,v 1.14 2005-12-05 12:18:12 qbix79 Exp $ */
+
 #include <string.h>
+#include <math.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
 #include "render.h"
+#include "mapper.h"
 
 static void write_crtc_index_other(Bitu port,Bitu val,Bitu iolen) {
 	vga.other.index=val;
@@ -124,7 +128,16 @@ static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
 	return (Bitu)-1;
 }
 
+static double hue_offset = 0.0;
+static Bit8u cga16_val = 0;
+static void update_cga16_color(void);
+
 static void cga16_color_select(Bit8u val) {
+	cga16_val = val;
+	update_cga16_color();
+}
+
+static void update_cga16_color(void) {
 // Algorithm provided by NewRisingSun
 // His/Her algorithm is more complex and gives better results than the one below
 // However that algorithm doesn't fit in our vga pallette.
@@ -136,23 +149,20 @@ static void cga16_color_select(Bit8u val) {
 // to match an entry that is generated here.
 
 	int baseR=0, baseG=0, baseB=0;
-	double sinhue,coshue;
+	double sinhue,coshue,hue,basehue = 50.0;
 	double I,Q,Y,pixelI,pixelQ,R,G,B;
 	Bitu colorBit1,colorBit2,colorBit3,colorBit4,index;
 
-	if (val & 0x01) baseB += 0xa8;
-	if (val & 0x02) baseG += 0xa8;
-	if (val & 0x04) baseR += 0xa8;
-	if (val & 0x08) { baseR += 0x57; baseG += 0x57; baseB += 0x57; }
-	if (val & 0x20) {
-		//Hue = 33.0 + hueoffset (0)
-		sinhue=0.54463904; //sin(hue*PI/180);
-    		coshue=0.83867057; //sin(hue*PI/180);
-	} else {
-		//Hue = 55.0 + hueoffset (0)
-		sinhue=0.81915204; //sin(hue*PI/180);
-    		coshue=0.57357644; //cos(hue*PI/180);
-	}
+	if (cga16_val & 0x01) baseB += 0xa8;
+	if (cga16_val & 0x02) baseG += 0xa8;
+	if (cga16_val & 0x04) baseR += 0xa8;
+	if (cga16_val & 0x08) { baseR += 0x57; baseG += 0x57; baseB += 0x57; }
+	if (cga16_val & 0x20) basehue = 35.0;
+
+	hue = (basehue + hue_offset)*0.017453239;
+	sinhue = sin(hue);
+	coshue = cos(hue);
+
 	for(Bitu i = 0; i < 16;i++) {
 		for(Bitu j = 0;j < 5;j++) {
 			index = 0x80|(j << 4)|i; //use upperpart of vga pallette
@@ -181,6 +191,18 @@ static void cga16_color_select(Bit8u val) {
 			RENDER_SetPal(index,static_cast<Bit8u>(R*baseR),static_cast<Bit8u>(G*baseG),static_cast<Bit8u>(B*baseB));
 		}
 	}
+}
+
+static void IncreaseHue(void) { 
+	hue_offset += 5.0;
+	update_cga16_color();
+	LOG_MSG("Hue at %f",hue_offset); 
+}
+
+static void DecreaseHue(void) { 
+	hue_offset -= 5.0;
+	update_cga16_color();
+	LOG_MSG("Hue at %f",hue_offset); 
 }
 
 static void write_color_select(Bit8u val) {
@@ -397,6 +419,8 @@ void VGA_SetupOther(void) {
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
+		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD1,"inchue","Inc Hue");
+		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 	}
 	if (machine==MCH_HERC) {
 		vga.herc.enable_bits=0;
