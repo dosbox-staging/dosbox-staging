@@ -60,7 +60,7 @@ static Bit8u * VGA_Draw_2BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 
 static Bit8u * VGA_Draw_2BPPHiRes_Line(Bitu vidstart,Bitu panning,Bitu line) {
 	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
-	for (Bitu x=0;x<(vga.draw.blocks>>1);x++) {
+	for (Bitu x=0;x<vga.draw.blocks;x++) {
 		Bitu val1=vga.gfxmem_start[vidstart+line];
 		Bitu val2=vga.gfxmem_start[vidstart+1+line];
 		vidstart+=2;
@@ -114,10 +114,16 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.gfxmem_start[vidstart + (line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)TempLine;
+	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1=*reader++;Bitu val2=*reader++;
+		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
+			vidstart &= 0x19fff;
+		Bitu val1=vga.gfxmem_start[vidstart+line];
+		vidstart++;
+		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
+			vidstart &= 0x19fff;
+		Bitu val2=vga.gfxmem_start[vidstart+line];
+		vidstart++;
 		*draw++=(val1 & 0x0f) << 8  |
 				(val1 & 0xf0) >> 4  |
 				(val2 & 0x0f) << 24 |
@@ -127,14 +133,16 @@ static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart,Bitu panning,Bitu line) {
 }
 
 static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart,Bitu panning,Bitu line) {
-	Bit8u * reader=&vga.gfxmem_start[vidstart + (line * 8 * 1024)];
-	Bit32u * draw=(Bit32u *)TempLine;
+	line*=8*1024;Bit32u * draw=(Bit32u *)TempLine;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1=*reader++;Bitu val2=*reader++;
-		*draw++=(val1 & 0x0f) << 8  |
-				(val1 & 0xf0) >> 4  |
-				(val2 & 0x0f) << 24 |
-				(val2 & 0xf0) << 12;
+		if((vga.crtc.mode_control & 0x01) == 0) // CGA compatible addressing
+			vidstart &= 0x1dfff;
+		Bitu val=vga.gfxmem_start[vidstart+line];
+		vidstart++;
+		*draw++=(val & 0xf0) >> 4  |
+				(val & 0xf0) << 4  |
+				(val & 0x0f) << 16 |
+				(val & 0x0f) << 24;
 	}
 	return TempLine;
 }
@@ -352,7 +360,7 @@ void VGA_CheckScanLength(void) {
 		vga.draw.address_add=vga.draw.blocks/4;
 		break;
 	case M_TANDY4:
-		vga.draw.address_add=vga.draw.blocks/2;
+		vga.draw.address_add=vga.draw.blocks;
 		break;
 	case M_TANDY16:
 		vga.draw.address_add=vga.draw.blocks;
@@ -527,9 +535,8 @@ void VGA_SetupDrawing(Bitu val) {
 		doubleheight=true;
 		if (machine==MCH_TANDY) doublewidth=(vga.tandy.mode_control & 0x10)==0;
 		else doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
-//		vga.draw.blocks=width * (doublewidth ? 4:8);
-		vga.draw.blocks=width * 4;
-		width=vga.draw.blocks*2;
+		vga.draw.blocks=width * 2;
+		width=vga.draw.blocks*4;
 		if ((machine==MCH_TANDY && (vga.tandy.gfx_control & 0x8)) ||
 			(machine==MCH_PCJR && (vga.tandy.mode_control==0x0b))) VGA_DrawLine=VGA_Draw_2BPPHiRes_Line;
 		else VGA_DrawLine=VGA_Draw_2BPP_Line;
@@ -537,11 +544,15 @@ void VGA_SetupDrawing(Bitu val) {
 	case M_TANDY16:
 		aspect_ratio=1.2;
 		doubleheight=true;
-		if (machine==MCH_TANDY) doublewidth=(vga.tandy.mode_control & 0x10)==0;
-		else doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
-		vga.draw.blocks=width * (doublewidth ? 2:4);
-		width=vga.draw.blocks*2;
-		VGA_DrawLine=VGA_Draw_4BPP_Line;
+		doublewidth=true;
+		vga.draw.blocks=width*2;
+		if (vga.tandy.mode_control & 0x1) {
+			width=vga.draw.blocks*2;
+			VGA_DrawLine=VGA_Draw_4BPP_Line;
+		} else {
+			width=vga.draw.blocks*4;
+			VGA_DrawLine=VGA_Draw_4BPP_Line_Double;
+		}
 		break;
 	case M_TANDY_TEXT:
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;

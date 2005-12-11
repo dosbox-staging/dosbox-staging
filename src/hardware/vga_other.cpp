@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.14 2005-12-05 12:18:12 qbix79 Exp $ */
+/* $Id: vga_other.cpp,v 1.15 2005-12-11 15:09:50 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -349,6 +349,7 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 		write_tandy_reg(val);
 		break;
 	case 0x3df:
+		vga.tandy.is_32k_mode=(val & 0x80)==0x80;
 		vga.tandy.disp_bank=val & ((val & 0x80) ? 0x6 : 0x7);
 		vga.tandy.mem_bank=(val >> 3) & ((val & 0x80) ? 0x6 : 0x7);
 		VGA_SetupHandlers();
@@ -369,7 +370,7 @@ static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
 	case 0x3df:
 		vga.tandy.is_32k_mode=(val & 0x80)==0x80;
 		vga.tandy.disp_bank=val & (vga.tandy.is_32k_mode ? 0x6 : 0x7);
-		vga.tandy.mem_bank=(val >> 3) & (vga.tandy.is_32k_mode ? 0x6 : 0x7);
+		vga.tandy.mem_bank=(val >> 3) & 0x7;
 		VGA_SetupHandlers();
 		break;
 	}
@@ -429,6 +430,7 @@ void VGA_SetupOther(void) {
 		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
 	}
 	if (machine==MCH_TANDY) {
+		vga.tandy.is_32k_mode=false;
 		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
