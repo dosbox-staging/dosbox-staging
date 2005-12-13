@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.56 2005-10-03 19:22:13 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.57 2005-12-13 11:15:50 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -505,7 +505,7 @@ static void mouse_reset_hardware(void){
 
 void Mouse_NewVideoMode(void)
 { //Does way to much. Many of this stuff should be moved to mouse_reset one day
-	WriteMouseIntVector();
+//	WriteMouseIntVector();//Disabled. Big Red Adventure, Rac Racing
    
 	if(MOUSE_IRQ > 7) {
 		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
