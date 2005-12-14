@@ -91,6 +91,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 
 	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
 	if (umb_start==UMB_START_SEG) {
+		/* start with UMBs if requested (bits 7 or 6 set) */
 		if (mem_strat&0xc0) mcb_segment=umb_start;
 	} else if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
 
@@ -99,58 +100,99 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	DOS_MCB psp_mcb(dos.psp()-1);
 	char psp_name[9];
 	psp_mcb.GetFileName(psp_name);
-	bool stop=false;
-	while(!stop) {
+	Bit16u found_seg=0,found_seg_size=0;
+	for (;;) {
 		mcb.SetPt(mcb_segment);
 		if (mcb.GetPSPSeg()==0) {
 			/* Check for enough free memory in current block */
 			Bit16u block_size=mcb.GetSize();			
 			if (block_size<(*blocks)) {
 				if (bigsize<block_size) {
+					/* current block is largest block that was found,
+					   but still not as big as requested */
 					bigsize=block_size;
 				}
-			} else if (block_size==*blocks) {
+			} else if ((block_size==*blocks) && ((mem_strat & 0x3f)<2)) {
+				/* MCB fits precisely, use it if search strategy is firstfit or bestfit */
 				mcb.SetPSPSeg(dos.psp());
 				*segment=mcb_segment+1;
 				return true;
 			} else {
-				// TODO: Strategy "1": Best matching block
-				/* If so allocate it */
-				if ((mem_strat & 0x03)==0) {	
-					mcb_next.SetPt((Bit16u)(mcb_segment+*blocks+1));
-					mcb_next.SetPSPSeg(MCB_FREE);
-					mcb_next.SetType(mcb.GetType());
-					mcb_next.SetSize(block_size-*blocks-1);
-					mcb.SetSize(*blocks);
-					mcb.SetType(0x4d);		
-					mcb.SetPSPSeg(dos.psp());
-					mcb.SetFileName(psp_name);
-					//TODO Filename
-					*segment=mcb_segment+1;
-					return true;
-				} else {
-					// * Last Block *
-					// New created block
-					*segment = mcb_segment+1+block_size - *blocks;
-					mcb_next.SetPt((Bit16u)(*segment-1));
-					mcb_next.SetSize(*blocks);
-					mcb_next.SetType(mcb.GetType());
-					mcb_next.SetPSPSeg(dos.psp());
-					mcb_next.SetFileName(psp_name);
-					// Old Block
-					mcb.SetSize(block_size-*blocks-1);
-					mcb.SetPSPSeg(MCB_FREE);
-					mcb.SetType(0x4D);
-					return true;
-				};
+				switch (mem_strat & 0x3f) {
+					case 0: /* firstfit */
+						mcb_next.SetPt((Bit16u)(mcb_segment+*blocks+1));
+						mcb_next.SetPSPSeg(MCB_FREE);
+						mcb_next.SetType(mcb.GetType());
+						mcb_next.SetSize(block_size-*blocks-1);
+						mcb.SetSize(*blocks);
+						mcb.SetType(0x4d);		
+						mcb.SetPSPSeg(dos.psp());
+						mcb.SetFileName(psp_name);
+						//TODO Filename
+						*segment=mcb_segment+1;
+						return true;
+					case 1: /* bestfit */
+						if ((found_seg_size==0) || (block_size<found_seg_size)) {
+							/* first fitting MCB, or smaller than the last that was found */
+							found_seg=mcb_segment;
+							found_seg_size=block_size;
+						}
+						break;
+					default: /* everything else is handled as lastfit by dos */
+						/* MCB is large enough, note it down */
+						found_seg=mcb_segment;
+						found_seg_size=block_size;
+						break;
+				}
 			}
 		}
 		/* Onward to the next MCB if there is one */
 		if (mcb.GetType()==0x5a) {
 			if ((mem_strat&0x80) && (umb_start==UMB_START_SEG)) {
+				/* bit 7 set: try high memory first, then low */
 				mcb_segment=dos.firstMCB;
 				mem_strat&=(~0xc0);
 			} else {
+				/* finished searching all requested MCB chains */
+				if (found_seg) {
+					/* a matching MCB was found (cannot occur for firstfit) */
+					if ((mem_strat & 0x3f)==0x01) {
+						/* bestfit, allocate block at the beginning of the MCB */
+						mcb.SetPt(found_seg);
+
+						mcb_next.SetPt((Bit16u)(found_seg+*blocks+1));
+						mcb_next.SetPSPSeg(MCB_FREE);
+						mcb_next.SetType(mcb.GetType());
+						mcb_next.SetSize(found_seg_size-*blocks-1);
+
+						mcb.SetSize(*blocks);
+						mcb.SetType(0x4d);		
+						mcb.SetPSPSeg(dos.psp());
+						mcb.SetFileName(psp_name);
+						//TODO Filename
+						*segment=found_seg+1;
+					} else {
+						/* lastfit, allocate block at the end of the MCB */
+						mcb.SetPt(found_seg);
+						if (found_seg_size==*blocks) {
+							/* use the whole block */
+							mcb.SetPSPSeg(dos.psp());
+							*segment=found_seg+1;
+						}
+						*segment = found_seg+1+found_seg_size - *blocks;
+						mcb_next.SetPt((Bit16u)(*segment-1));
+						mcb_next.SetSize(*blocks);
+						mcb_next.SetType(mcb.GetType());
+						mcb_next.SetPSPSeg(dos.psp());
+						mcb_next.SetFileName(psp_name);
+						// Old Block
+						mcb.SetSize(found_seg_size-*blocks-1);
+						mcb.SetPSPSeg(MCB_FREE);
+						mcb.SetType(0x4D);
+					}
+					return true;
+				}
+				/* no fitting MCB found, return size of largest block */
 				*blocks=bigsize;
 				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 				return false;
@@ -286,7 +328,7 @@ void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
 		mcb.SetSize(first_umb_seg-cover_mcb-1);
 		mcb.SetFileName("SC      ");
 
-		if (!ems_active && (strcmp(use_umbs,"max")==0)) {
+		if (!ems_active && (strcmp(use_umbs,"max")==0) && (machine!=MCH_PCJR)) {
 			Bit16u ems_umb_seg=0xe000;
 			Bit16u ems_umb_size=0x1000;
 
