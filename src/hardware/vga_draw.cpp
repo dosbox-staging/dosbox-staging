@@ -524,8 +524,8 @@ void VGA_SetupDrawing(Bitu val) {
 	case M_TANDY2:
 		aspect_ratio=1.2;
 		doubleheight=true;
-		if (machine==MCH_TANDY) doublewidth=(vga.tandy.mode_control & 0x10)==0;
-		else doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
+		if (machine==MCH_PCJR) doublewidth=(vga.tandy.gfx_control & 0x8)==0x00;
+		else doublewidth=(vga.tandy.mode_control & 0x10)==0;
 		vga.draw.blocks=width * (doublewidth ? 4:8);
 		width=vga.draw.blocks*2;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;

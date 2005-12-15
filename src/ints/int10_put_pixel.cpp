@@ -28,8 +28,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	switch (CurMode->type) {
 	case M_CGA4:
 		{
-				IO_Write(0x3d4,0x09);
-				if (IO_Read(0x3d5)==1) {
+				if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE)<=5) {
 					Bit16u off=(y>>1)*80+(x>>2);
 					if (y&1) off+=8*1024;
 
