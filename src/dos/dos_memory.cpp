@@ -405,13 +405,6 @@ static Bitu DOS_default_handler(void) {
 
 static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {
-	// Create a dummy device MCB with PSPSeg=0x0008
-	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
-	mcb_devicedummy.SetPSPSeg(MCB_DOS);	// Devices
-	mcb_devicedummy.SetSize(1);
-	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
-//	mcb_devicedummy.SetFileName("SD      ");
-
 	/* Let dos claim a few bios interrupts. Makes DOSBox more compatible with 
 	 * buggy games, which compare against the interrupt table. (probably a 
 	 * broken linked list implementation) */
@@ -428,13 +421,35 @@ void DOS_SetupMemory(void) {
 	real_writed(0,0x04*4,0x700000); //Shadow President
 //	real_writed(0,0x0f*4,0x700000); //Always a tricky one (soundblaster irq)
 
-	DOS_MCB mcb((Bit16u)DOS_MEM_START+2);
+	// Create a dummy device MCB with PSPSeg=0x0008
+	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
+	mcb_devicedummy.SetPSPSeg(MCB_DOS);	// Devices
+	mcb_devicedummy.SetSize(1);
+	mcb_devicedummy.SetType(0x4d);		// More blocks will follow
+//	mcb_devicedummy.SetFileName("SD      ");
+
+	Bit16u mcb_sizes=2;
+	// Create a small empty MCB (result from a growing environment block)
+	DOS_MCB tempmcb((Bit16u)DOS_MEM_START+mcb_sizes);
+	tempmcb.SetPSPSeg(MCB_FREE);
+	tempmcb.SetSize(4);
+	mcb_sizes+=5;
+	tempmcb.SetType(0x4d);
+
+	// Lock the previous empty MCB
+	DOS_MCB tempmcb2((Bit16u)DOS_MEM_START+mcb_sizes);
+	tempmcb2.SetPSPSeg(0x40);	// can be removed by loadfix
+	tempmcb2.SetSize(16);
+	mcb_sizes+=17;
+	tempmcb2.SetType(0x4d);
+
+	DOS_MCB mcb((Bit16u)DOS_MEM_START+mcb_sizes);
 	mcb.SetPSPSeg(MCB_FREE);						//Free
 	mcb.SetType(0x5a);								//Last Block
 	if (machine==MCH_TANDY) {
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
-		mcb.SetSize(0x97FE - DOS_MEM_START - 2);
+		mcb.SetSize(0x97FE - DOS_MEM_START - mcb_sizes);
 	} else if (machine==MCH_PCJR) {
 		/* memory from 128k to 640k is available */
 		mcb_devicedummy.SetPt((Bit16u)0x2000);
@@ -449,11 +464,11 @@ void DOS_SetupMemory(void) {
 		mcb_devicedummy.SetType(0x4d);
 
 		/* memory below 96k */
-		mcb.SetSize(0x1800 - DOS_MEM_START - 4);
+		mcb.SetSize(0x1800 - DOS_MEM_START - (2+mcb_sizes));
 		mcb.SetType(0x4d);
 	} else {
 		/* complete memory up to 640k available */
-		mcb.SetSize(0x9FFE - DOS_MEM_START - 2);
+		mcb.SetSize(0x9FFE - DOS_MEM_START - mcb_sizes);
 	}
 
 	dos.firstMCB=DOS_MEM_START;
