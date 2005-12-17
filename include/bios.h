@@ -30,6 +30,7 @@
 #define BIOS_CONFIGURATION              0x410
 /* 0x412 is reserved */
 #define BIOS_MEMORY_SIZE                0x413
+#define BIOS_TRUE_MEMORY_SIZE           0x415
 /* #define bios_expansion_memory_size      (*(unsigned int   *) 0x415) */
 #define BIOS_KEYBOARD_STATE             0x417
 #define BIOS_KEYBOARD_FLAGS1            BIOS_KEYBOARD_STATE

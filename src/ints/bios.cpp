@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.53 2005-12-04 21:17:29 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.54 2005-12-17 16:28:18 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -835,7 +835,13 @@ public:
 		/* INT 12 Memory Size default at 640 kb */
 		callback[2].Install(&INT12_Handler,CB_IRET,"Int 12 Memory");
 		callback[2].Set_RealVec(0x12);
-		mem_writew(BIOS_MEMORY_SIZE,640);
+		if (IS_TANDY_ARCH) {
+			/* reduce reported memory size for the Tandy (32k graphics memory
+			   at the end of the conventional 640k) */
+			if (machine==MCH_TANDY) mem_writew(BIOS_MEMORY_SIZE,608);
+			else mem_writew(BIOS_MEMORY_SIZE,640);
+			mem_writew(BIOS_TRUE_MEMORY_SIZE,640);
+		} else mem_writew(BIOS_MEMORY_SIZE,640);
 		
 		/* INT 13 Bios Disk Support */
 		BIOS_SetupDisks();
