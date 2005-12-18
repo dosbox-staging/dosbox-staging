@@ -438,20 +438,22 @@ irq1_return:
 	return CBRET_NONE;
 }
 
-static bool pcjr_extended_key=false;
-
 static Bitu IRQ6_Handler(void) {
 	Bit8u scancode=IO_Read(0x60);
-	Bit16u old_ax=reg_ax;
-	if (pcjr_extended_key) reg_ax=scancode<<8;
-	else reg_al=scancode;
-	pcjr_extended_key=(scancode==0xe0);
-	/* call the real keyboard IRQ now, with the scancode in AL */
-	CALLBACK_RunRealInt(0x09);
-	reg_ax=old_ax;
+	/* skip extended keys, all of them should map quite nicely
+	   onto corresponding non-extended keys */
+	if (scancode!=0xe0) {
+		Bit16u old_ax=reg_ax;
+		reg_al=scancode;
+		/* call the real keyboard IRQ now, with the scancode in AL */
+		CALLBACK_RunRealInt(0x09);
+		reg_ax=old_ax;
+	}
+
 	IO_Write(0x20,0x20);
 	return CBRET_NONE;
 }
+
 
 /* check whether key combination is enhanced or not,
    translate key if necessary */
