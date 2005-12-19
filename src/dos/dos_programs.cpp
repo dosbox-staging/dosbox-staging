@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.48 2005-12-04 21:17:28 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.49 2005-12-19 20:39:51 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -287,7 +287,9 @@ public:
 
 		Bit16u seg,blocks;blocks=0xffff;
 		DOS_AllocateMemory(&seg,&blocks);
-		WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
+		if ((machine==MCH_PCJR) && (real_readb(0x2000,0)==0x5a) && (real_readw(0x2000,1)==0) && (real_readw(0x2000,3)==0x7ffe)) {
+			WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),0x7ffe*16/1024);
+		} else WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
 
 		if (umb_start!=0xffff) {
 			DOS_LinkUMBsToMemChain(1);
@@ -451,11 +453,7 @@ public:
 				fclose(usefile);
 
 				/* write cartridge data into ROM */
-				Bit16u romseg=0xe000;
-				if ((rombuf[7]==0x42) && (rombuf[8]==0x41) && (rombuf[9]==0x53) && (rombuf[10]==0x49)) {
-					/* BASIC rom, doesn't work though */
-					romseg=0xf600;
-				}
+				Bit16u romseg=host_readw(&bootarea.rawdata[0x1ce]);
 				for(i=0;i<rombytesize;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
 
 				/* run cartridge setup */

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.52 2005-12-03 10:43:22 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.53 2005-12-19 20:39:51 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -311,6 +311,14 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			maxsize=0xffff;
 			/* resize to full extent of memory block */
 			DOS_ResizeMemory(pspseg,&maxsize);
+			/* now try to lock out memory above segment 0x2000 */
+			if ((real_readb(0x2000,0)==0x5a) && (real_readw(0x2000,1)==0) && (real_readw(0x2000,3)==0x7ffe)) {
+				/* MCB after PCJr graphics memory region is still free */
+				if (pspseg+maxsize==0x17ff) {
+					DOS_MCB cmcb((Bit16u)(pspseg-1));
+					cmcb.SetType(0x5a);		// last block
+				}
+			}
 		}
 		loadseg=pspseg+16;
 		if (!iscom) {
