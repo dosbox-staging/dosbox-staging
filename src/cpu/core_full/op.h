@@ -1,223 +1,223 @@
 /* Do the actual opcode */
 switch (inst.code.op) {
 	case t_ADDb:	case t_ADDw:	case t_ADDd:
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d + lf_var2d;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d + lf_var2d;
 		lflags.type=inst.code.op;
 		break;
 	case t_CMPb:	case t_CMPw:	case t_CMPd:
 	case t_SUBb:	case t_SUBw:	case t_SUBd:
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d - lf_var2d;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d - lf_var2d;
 		lflags.type=inst.code.op;
 		break;
 	case t_ORb:		case t_ORw:		case t_ORd:
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d | lf_var2d;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d | lf_var2d;
 		lflags.type=inst.code.op;
 		break;
 	case t_XORb:	case t_XORw:	case t_XORd:
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d ^ lf_var2d;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d ^ lf_var2d;
 		lflags.type=inst.code.op;
 		break;
 	case t_TESTb:	case t_TESTw:	case t_TESTd:
 	case t_ANDb:	case t_ANDw:	case t_ANDd:
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d & lf_var2d;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d & lf_var2d;
 		lflags.type=inst.code.op;
 		break;
 	case t_ADCb:	case t_ADCw:	case t_ADCd:
 		lflags.oldcf=(get_CF()!=0);
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d + lf_var2d + lflags.oldcf;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d + lf_var2d + lflags.oldcf;
 		lflags.type=inst.code.op;
 		break;
 	case t_SBBb:	case t_SBBw:	case t_SBBd:
 		lflags.oldcf=(get_CF()!=0);
-		lf_var1d=inst.op1.d;
-		lf_var2d=inst.op2.d;
-		inst.op1.d=lf_resd=lf_var1d - lf_var2d - lflags.oldcf;
+		lf_var1d=inst_op1_d;
+		lf_var2d=inst_op2_d;
+		inst_op1_d=lf_resd=lf_var1d - lf_var2d - lflags.oldcf;
 		lflags.type=inst.code.op;
 		break;
 	case t_INCb:	case t_INCw:	case t_INCd:
 		LoadCF;
-		lf_var1d=inst.op1.d;
-		inst.op1.d=lf_resd=inst.op1.d+1;
+		lf_var1d=inst_op1_d;
+		inst_op1_d=lf_resd=inst_op1_d+1;
 		lflags.type=inst.code.op;
 		break;
 	case t_DECb:	case t_DECw:	case t_DECd:
 		LoadCF;
-		lf_var1d=inst.op1.d;
-		inst.op1.d=lf_resd=inst.op1.d-1;
+		lf_var1d=inst_op1_d;
+		inst_op1_d=lf_resd=inst_op1_d-1;
 		lflags.type=inst.code.op;
 		break;
 /* Using the instructions.h defines */
 	case t_ROLb:
-		ROLB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		ROLB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_ROLw:
-		ROLW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		ROLW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_ROLd:
-		ROLD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		ROLD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_RORb:
-		RORB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		RORB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RORw:
-		RORW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		RORW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RORd:
-		RORD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		RORD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_RCLb:
-		RCLB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		RCLB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RCLw:
-		RCLW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		RCLW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RCLd:
-		RCLD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		RCLD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_RCRb:
-		RCRB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		RCRB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RCRw:
-		RCRW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		RCRW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_RCRd:
-		RCRD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		RCRD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_SHLb:
-		SHLB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		SHLB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SHLw:
-		SHLW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		SHLW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SHLd:
-		SHLD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		SHLD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_SHRb:
-		SHRB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		SHRB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SHRw:
-		SHRW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		SHRW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SHRd:
-		SHRD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		SHRD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case t_SARb:
-		SARB(inst.op1.b,inst.op2.b,LoadD,SaveD);
+		SARB(inst_op1_b,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SARw:
-		SARW(inst.op1.w,inst.op2.b,LoadD,SaveD);
+		SARW(inst_op1_w,inst_op2_b,LoadD,SaveD);
 		break;
 	case t_SARd:
-		SARD(inst.op1.d,inst.op2.b,LoadD,SaveD);
+		SARD(inst_op1_d,inst_op2_b,LoadD,SaveD);
 		break;
 
 	case O_DSHLw:
 		{
-			DSHLW(inst.op1.w,inst.op2.w,inst.imm.b,LoadD,SaveD);
+			DSHLW(inst_op1_w,inst_op2_w,inst_imm_b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHRw:
 		{
-			DSHRW(inst.op1.w,inst.op2.w,inst.imm.b,LoadD,SaveD);
+			DSHRW(inst_op1_w,inst_op2_w,inst_imm_b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHLd:
 		{
-			DSHLD(inst.op1.d,inst.op2.d,inst.imm.b,LoadD,SaveD);
+			DSHLD(inst_op1_d,inst_op2_d,inst_imm_b,LoadD,SaveD);
 			break;
 		}
 	case O_DSHRd:
 		{
-			DSHRD(inst.op1.d,inst.op2.d,inst.imm.b,LoadD,SaveD);
+			DSHRD(inst_op1_d,inst_op2_d,inst_imm_b,LoadD,SaveD);
 			break;
 		}
 
 	case t_NEGb:
-		lf_var1b=inst.op1.b;
-		inst.op1.b=lf_resb=0-inst.op1.b;
+		lf_var1b=inst_op1_b;
+		inst_op1_b=lf_resb=0-inst_op1_b;
 		lflags.type=t_NEGb;
 		break;
 	case t_NEGw:
-		lf_var1w=inst.op1.w;
-		inst.op1.w=lf_resw=0-inst.op1.w;
+		lf_var1w=inst_op1_w;
+		inst_op1_w=lf_resw=0-inst_op1_w;
 		lflags.type=t_NEGw;
 		break;
 	case t_NEGd:
-		lf_var1d=inst.op1.d;
-		inst.op1.d=lf_resd=0-inst.op1.d;
+		lf_var1d=inst_op1_d;
+		inst_op1_d=lf_resd=0-inst_op1_d;
 		lflags.type=t_NEGd;
 		break;
 	
 	case O_NOT:
-		inst.op1.d=~inst.op1.d;
+		inst_op1_d=~inst_op1_d;
 		break;	
 		
 	/* Special instructions */
 	case O_IMULRw:
-		DIMULW(inst.op1.ws,inst.op1.ws,inst.op2.ws,LoadD,SaveD);
+		DIMULW(inst_op1_ws,inst_op1_ws,inst_op2_ws,LoadD,SaveD);
 		break;
 	case O_IMULRd:
-		DIMULD(inst.op1.ds,inst.op1.ds,inst.op2.ds,LoadD,SaveD);
+		DIMULD(inst_op1_ds,inst_op1_ds,inst_op2_ds,LoadD,SaveD);
 		break;
 	case O_MULb:
-		MULB(inst.op1.b,LoadD,0);
+		MULB(inst_op1_b,LoadD,0);
 		goto nextopcode;
 	case O_MULw:
-		MULW(inst.op1.w,LoadD,0);
+		MULW(inst_op1_w,LoadD,0);
 		goto nextopcode;
 	case O_MULd:
-		MULD(inst.op1.d,LoadD,0);
+		MULD(inst_op1_d,LoadD,0);
 		goto nextopcode;
 	case O_IMULb:
-		IMULB(inst.op1.b,LoadD,0);
+		IMULB(inst_op1_b,LoadD,0);
 		goto nextopcode;
 	case O_IMULw:
-		IMULW(inst.op1.w,LoadD,0);
+		IMULW(inst_op1_w,LoadD,0);
 		goto nextopcode;
 	case O_IMULd:
-		IMULD(inst.op1.d,LoadD,0);
+		IMULD(inst_op1_d,LoadD,0);
 		goto nextopcode;
 	case O_DIVb:
-		DIVB(inst.op1.b,LoadD,0);
+		DIVB(inst_op1_b,LoadD,0);
 		goto nextopcode;
 	case O_DIVw:
-		DIVW(inst.op1.w,LoadD,0);
+		DIVW(inst_op1_w,LoadD,0);
 		goto nextopcode;
 	case O_DIVd:
-		DIVD(inst.op1.d,LoadD,0);
+		DIVD(inst_op1_d,LoadD,0);
 		goto nextopcode;
 	case O_IDIVb:
-		IDIVB(inst.op1.b,LoadD,0);
+		IDIVB(inst_op1_b,LoadD,0);
 		goto nextopcode;
 	case O_IDIVw:
-		IDIVW(inst.op1.w,LoadD,0);
+		IDIVW(inst_op1_w,LoadD,0);
 		goto nextopcode;
 	case O_IDIVd:
-		IDIVD(inst.op1.d,LoadD,0);
+		IDIVD(inst_op1_d,LoadD,0);
 		goto nextopcode;
 	case O_AAM:
-		AAM(inst.op1.b);
+		AAM(inst_op1_b);
 		goto nextopcode;
 	case O_AAD:
-		AAD(inst.op1.b);
+		AAD(inst_op1_b);
 		goto nextopcode;
 
 	case O_C_O:		inst.cond=TFLG_O;	break;
@@ -302,15 +302,15 @@ switch (inst.code.op) {
 	case O_XCHG_AX:
 		{
 			Bit16u temp=reg_ax;
-			reg_ax=inst.op1.w;
-			inst.op1.w=temp;
+			reg_ax=inst_op1_w;
+			inst_op1_w=temp;
 			break;
 		}
 	case O_XCHG_EAX:
 		{
 			Bit32u temp=reg_eax;
-			reg_eax=inst.op1.d;
-			inst.op1.d=temp;
+			reg_eax=inst_op1_d;
+			inst_op1_d=temp;
 			break;
 		}
 	case O_CALLNw:
@@ -323,57 +323,57 @@ switch (inst.code.op) {
 		break;
 	case O_CALLFw:
 		FillFlags();
-		CPU_CALL(false,inst.op2.d,inst.op1.d,GetIP());
+		CPU_CALL(false,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_CALLFd:
 		FillFlags();
-		CPU_CALL(true,inst.op2.d,inst.op1.d,GetIP());
+		CPU_CALL(true,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_JMPFw:
 		FillFlags();
-		CPU_JMP(false,inst.op2.d,inst.op1.d,GetIP());
+		CPU_JMP(false,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_JMPFd:
 		FillFlags();
-		CPU_JMP(true,inst.op2.d,inst.op1.d,GetIP());
+		CPU_JMP(true,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_INT:
 		FillFlags();
 #if C_DEBUG
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) 
 			return debugCallback;
-		else if (DEBUG_IntBreakpoint(inst.op1.b)) 
+		else if (DEBUG_IntBreakpoint(inst_op1_b)) 
 			return debugCallback;
 #endif
-		CPU_SW_Interrupt(inst.op1.b,GetIP());
+		CPU_SW_Interrupt(inst_op1_b,GetIP());
 		continue;
 	case O_INb:
-		if (CPU_IO_Exception(inst.op1.d,1)) RunException();
-		reg_al=IO_ReadB(inst.op1.d);
+		if (CPU_IO_Exception(inst_op1_d,1)) RunException();
+		reg_al=IO_ReadB(inst_op1_d);
 		goto nextopcode;
 	case O_INw:
-		if (CPU_IO_Exception(inst.op1.d,2)) RunException();
-		reg_ax=IO_ReadW(inst.op1.d);
+		if (CPU_IO_Exception(inst_op1_d,2)) RunException();
+		reg_ax=IO_ReadW(inst_op1_d);
 		goto nextopcode;
 	case O_INd:
-		if (CPU_IO_Exception(inst.op1.d,4)) RunException();
-		reg_eax=IO_ReadD(inst.op1.d);
+		if (CPU_IO_Exception(inst_op1_d,4)) RunException();
+		reg_eax=IO_ReadD(inst_op1_d);
 		goto nextopcode;
 	case O_OUTb:
-		if (CPU_IO_Exception(inst.op1.d,1)) RunException();
-		IO_WriteB(inst.op1.d,reg_al);
+		if (CPU_IO_Exception(inst_op1_d,1)) RunException();
+		IO_WriteB(inst_op1_d,reg_al);
 		goto nextopcode;
 	case O_OUTw:
-		if (CPU_IO_Exception(inst.op1.d,2)) RunException();
-		IO_WriteW(inst.op1.d,reg_ax);
+		if (CPU_IO_Exception(inst_op1_d,2)) RunException();
+		IO_WriteW(inst_op1_d,reg_ax);
 		goto nextopcode;
 	case O_OUTd:
-		if (CPU_IO_Exception(inst.op1.d,4)) RunException();
-		IO_WriteD(inst.op1.d,reg_eax);
+		if (CPU_IO_Exception(inst_op1_d,4)) RunException();
+		IO_WriteD(inst_op1_d,reg_eax);
 		goto nextopcode;
 	case O_CBACK:
 		FillFlags();SaveIP();
-		return inst.op1.d;
+		return inst_op1_d;
 	case O_GRP6w:
 	case O_GRP6d:
 		if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
@@ -382,31 +382,31 @@ switch (inst.code.op) {
 			{
 				Bitu selector;
 				CPU_SLDT(selector);
-				inst.op1.d=(Bit32u)selector;
+				inst_op1_d=(Bit32u)selector;
 			}
 			break;
 		case 0x01:	/* STR */
 			{
 				Bitu selector;
 				CPU_STR(selector);
-				inst.op1.d=(Bit32u)selector;
+				inst_op1_d=(Bit32u)selector;
 			}
 			break;
 		case 0x02:	/* LLDT */
 			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
-			if (CPU_LLDT(inst.op1.d)) RunException();
+			if (CPU_LLDT(inst_op1_d)) RunException();
 			goto nextopcode;		/* Else value will saved */
 		case 0x03:	/* LTR */
 			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
-			if (CPU_LTR(inst.op1.d)) RunException();
+			if (CPU_LTR(inst_op1_d)) RunException();
 			goto nextopcode;		/* Else value will saved */
 		case 0x04:	/* VERR */
 			FillFlags();
-			CPU_VERR(inst.op1.d);
+			CPU_VERR(inst_op1_d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x05:	/* VERW */
 			FillFlags();
-			CPU_VERW(inst.op1.d);
+			CPU_VERW(inst_op1_d);
 			goto nextopcode;		/* Else value will saved */
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 6 Illegal subfunction %X",inst.rm_index);
@@ -443,12 +443,12 @@ switch (inst.code.op) {
 		case 4:		/* SMSW */
 			{
 				Bitu word;CPU_SMSW(word);
-				inst.op1.d=word;
+				inst_op1_d=word;
 				break;
 			}
 		case 6:		/* LMSW */
 			FillFlags();
-			if (CPU_LMSW(inst.op1.w)) RunException();
+			if (CPU_LMSW(inst_op1_w)) RunException();
 			goto nextopcode;
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
@@ -456,57 +456,57 @@ switch (inst.code.op) {
 		}
 		break;
 	case O_M_CRx_Rd:
-		if (CPU_WRITE_CRX(inst.rm_index,inst.op1.d)) RunException();
+		if (CPU_WRITE_CRX(inst.rm_index,inst_op1_d)) RunException();
 		break;
 	case O_M_Rd_CRx:
-		if (CPU_READ_CRX(inst.rm_index,inst.op1.d)) RunException();
+		if (CPU_READ_CRX(inst.rm_index,inst_op1_d)) RunException();
 		break;
 	case O_M_DRx_Rd:
-		if (CPU_WRITE_DRX(inst.rm_index,inst.op1.d)) RunException();
+		if (CPU_WRITE_DRX(inst.rm_index,inst_op1_d)) RunException();
 		break;
 	case O_M_Rd_DRx:
-		if (CPU_READ_DRX(inst.rm_index,inst.op1.d)) RunException();
+		if (CPU_READ_DRX(inst.rm_index,inst_op1_d)) RunException();
 		break;
 	case O_LAR:
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 			FillFlags();
-			Bitu ar=inst.op2.d;
-			CPU_LAR(inst.op1.w,ar);
-			inst.op1.d=(Bit32u)ar;
+			Bitu ar=inst_op2_d;
+			CPU_LAR(inst_op1_w,ar);
+			inst_op1_d=(Bit32u)ar;
 		}
 		break;
 	case O_LSL:
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 			FillFlags();
-			Bitu limit=inst.op2.d;
-			CPU_LSL(inst.op1.w,limit);
-			inst.op1.d=(Bit32u)limit;
+			Bitu limit=inst_op2_d;
+			CPU_LSL(inst_op1_w,limit);
+			inst_op1_d=(Bit32u)limit;
 		}
 		break;
 	case O_ARPL:
 		{
 			if ((reg_flags & FLAG_VM) || !cpu.pmode) goto illegalopcode;
 			FillFlags();
-			Bitu new_sel=inst.op1.d;
-			CPU_ARPL(new_sel,inst.op2.d);
-			inst.op1.d=(Bit32u)new_sel;
+			Bitu new_sel=inst_op1_d;
+			CPU_ARPL(new_sel,inst_op2_d);
+			inst_op1_d=(Bit32u)new_sel;
 		}
 		break;
 	case O_BSFw:
 		{
 			FillFlags();
-			if (!inst.op1.w) {
+			if (!inst_op1_w) {
 				SETFLAGBIT(ZF,true);
 				goto nextopcode;
 			} else {
 				Bitu count=0;
 				while (1) {
-					if (inst.op1.w & 0x1) break;
-					count++;inst.op1.w>>=1;
+					if (inst_op1_w & 0x1) break;
+					count++;inst_op1_w>>=1;
 				}
-				inst.op1.d=count;
+				inst_op1_d=count;
 				SETFLAGBIT(ZF,false);
 			}
 		}
@@ -514,16 +514,16 @@ switch (inst.code.op) {
 	case O_BSFd:
 		{
 			FillFlags();
-			if (!inst.op1.d) {
+			if (!inst_op1_d) {
 				SETFLAGBIT(ZF,true);
 				goto nextopcode;
 			} else {
 				Bitu count=0;
 				while (1) {
-					if (inst.op1.d & 0x1) break;
-					count++;inst.op1.d>>=1;
+					if (inst_op1_d & 0x1) break;
+					count++;inst_op1_d>>=1;
 				}
-				inst.op1.d=count;
+				inst_op1_d=count;
 				SETFLAGBIT(ZF,false);
 			}
 		}
@@ -531,16 +531,16 @@ switch (inst.code.op) {
 	case O_BSRw:
 		{
 			FillFlags();
-			if (!inst.op1.w) {
+			if (!inst_op1_w) {
 				SETFLAGBIT(ZF,true);
 				goto nextopcode;
 			} else {
 				Bitu count=15;
 				while (1) {
-					if (inst.op1.w & 0x8000) break;
-					count--;inst.op1.w<<=1;
+					if (inst_op1_w & 0x8000) break;
+					count--;inst_op1_w<<=1;
 				}
-				inst.op1.d=count;
+				inst_op1_d=count;
 				SETFLAGBIT(ZF,false);
 			}
 		}
@@ -548,60 +548,60 @@ switch (inst.code.op) {
 	case O_BSRd:
 		{
 			FillFlags();
-			if (!inst.op1.d) {
+			if (!inst_op1_d) {
 				SETFLAGBIT(ZF,true);
 				goto nextopcode;
 			} else {
 				Bitu count=31;
 				while (1) {
-					if (inst.op1.d & 0x80000000) break;
-					count--;inst.op1.d<<=1;
+					if (inst_op1_d & 0x80000000) break;
+					count--;inst_op1_d<<=1;
 				}
-				inst.op1.d=count;
+				inst_op1_d=count;
 				SETFLAGBIT(ZF,false);
 			}
 		}
 		break;
 	case O_BTw:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 15))));
 		break;
 	case O_BTSw:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
-		inst.op1.d|=(1 << (inst.op2.d & 15));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 15))));
+		inst_op1_d|=(1 << (inst_op2_d & 15));
 		break;
 	case O_BTCw:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
-		inst.op1.d^=(1 << (inst.op2.d & 15));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 15))));
+		inst_op1_d^=(1 << (inst_op2_d & 15));
 		break;
 	case O_BTRw:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 15))));
-		inst.op1.d&=~(1 << (inst.op2.d & 15));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 15))));
+		inst_op1_d&=~(1 << (inst_op2_d & 15));
 		break;
 	case O_BTd:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 31))));
 		break;
 	case O_BTSd:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
-		inst.op1.d|=(1 << (inst.op2.d & 31));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 31))));
+		inst_op1_d|=(1 << (inst_op2_d & 31));
 		break;
 	case O_BTCd:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
-		inst.op1.d^=(1 << (inst.op2.d & 31));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 31))));
+		inst_op1_d^=(1 << (inst_op2_d & 31));
 		break;
 	case O_BTRd:
 		FillFlags();
-		SETFLAGBIT(CF,(inst.op1.d & (1 << (inst.op2.d & 31))));
-		inst.op1.d&=~(1 << (inst.op2.d & 31));
+		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 31))));
+		inst_op1_d&=~(1 << (inst_op2_d & 31));
 		break;
 	case O_BSWAP:
-		BSWAP(inst.op1.d);
+		BSWAP(inst_op1_d);
 		break;
 	case O_FPU:
 #if C_FPU
@@ -634,7 +634,7 @@ switch (inst.code.op) {
 			Bit16s bound_min, bound_max;
 			bound_min=LoadMw(inst.rm_eaa);
 			bound_max=LoadMw(inst.rm_eaa+2);
-			if ( (((Bit16s)inst.op1.w) < bound_min) || (((Bit16s)inst.op1.w) > bound_max) ) {
+			if ( (((Bit16s)inst_op1_w) < bound_min) || (((Bit16s)inst_op1_w) > bound_max) ) {
 				EXCEPTION(5);
 			}
 		}

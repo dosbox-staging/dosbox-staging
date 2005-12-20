@@ -1,10 +1,10 @@
 switch (inst.code.load) {
 /* General loading */
 	case L_POPwRM:
-		inst.op1.w = Pop_16();
+		inst_op1_w = Pop_16();
 		goto case_L_MODRM;
 	case L_POPdRM:
-		inst.op1.d = Pop_32();
+		inst_op1_d = Pop_32();
 		goto case_L_MODRM;
 case_L_MODRM:
 	case L_MODRM:
@@ -21,160 +21,160 @@ l_MODRMswitch:
 		switch (inst.code.extra) {	
 /* Byte */
 		case M_Ib:
-			inst.op1.d=Fetchb();
+			inst_op1_d=Fetchb();
 			break;
 		case M_Ebx:
-			if (inst.rm<0xc0) inst.op1.ds=(Bit8s)LoadMb(inst.rm_eaa);
-			else inst.op1.ds=(Bit8s)reg_8(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_ds=(Bit8s)LoadMb(inst.rm_eaa);
+			else inst_op1_ds=(Bit8s)reg_8(inst.rm_eai);
 			break;
 		case M_EbIb:
-			inst.op2.d=Fetchb();
+			inst_op2_d=Fetchb();
 		case M_Eb:
-			if (inst.rm<0xc0) inst.op1.d=LoadMb(inst.rm_eaa);
-			else inst.op1.d=reg_8(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
+			else inst_op1_d=reg_8(inst.rm_eai);
 			break;
 		case M_EbGb:
-			if (inst.rm<0xc0) inst.op1.d=LoadMb(inst.rm_eaa);
-			else inst.op1.d=reg_8(inst.rm_eai);
-			inst.op2.d=reg_8(inst.rm_index);
+			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
+			else inst_op1_d=reg_8(inst.rm_eai);
+			inst_op2_d=reg_8(inst.rm_index);
 			break;
 		case M_GbEb:
-			if (inst.rm<0xc0) inst.op2.d=LoadMb(inst.rm_eaa);
-			else inst.op2.d=reg_8(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op2_d=LoadMb(inst.rm_eaa);
+			else inst_op2_d=reg_8(inst.rm_eai);
 		case M_Gb:
-			inst.op1.d=reg_8(inst.rm_index);;
+			inst_op1_d=reg_8(inst.rm_index);;
 			break;
 /* Word */
 		case M_Iw:
-			inst.op1.d=Fetchw();
+			inst_op1_d=Fetchw();
 			break;
 		case M_EwxGwx:
-			inst.op2.ds=(Bit16s)reg_16(inst.rm_index);
+			inst_op2_ds=(Bit16s)reg_16(inst.rm_index);
 			goto l_M_Ewx;
 		case M_EwxIbx:
-			inst.op2.ds=Fetchbs();
+			inst_op2_ds=Fetchbs();
 			goto l_M_Ewx;
 		case M_EwxIwx:
-			inst.op2.ds=Fetchws();
+			inst_op2_ds=Fetchws();
 l_M_Ewx:		
 		case M_Ewx:
-			if (inst.rm<0xc0) inst.op1.ds=(Bit16s)LoadMw(inst.rm_eaa);
-			else inst.op1.ds=(Bit16s)reg_16(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_ds=(Bit16s)LoadMw(inst.rm_eaa);
+			else inst_op1_ds=(Bit16s)reg_16(inst.rm_eai);
 			break;
 		case M_EwIb:
-			inst.op2.d=Fetchb();
+			inst_op2_d=Fetchb();
 			goto l_M_Ew;
 		case M_EwIbx:
-			inst.op2.ds=Fetchbs();
+			inst_op2_ds=Fetchbs();
 			goto l_M_Ew;		
 		case M_EwIw:
-			inst.op2.d=Fetchw();
+			inst_op2_d=Fetchw();
 			goto l_M_Ew;
 		case M_EwGwCL:
-			inst.imm.d=reg_cl;
+			inst_imm_d=reg_cl;
 			goto l_M_EwGw;
 		case M_EwGwIb:
-			inst.imm.d=Fetchb();
+			inst_imm_d=Fetchb();
 			goto l_M_EwGw;
 		case M_EwGwt:
-			inst.op2.d=reg_16(inst.rm_index);
-			inst.rm_eaa+=((Bit16s)inst.op2.d >> 4) * 2;
+			inst_op2_d=reg_16(inst.rm_index);
+			inst.rm_eaa+=((Bit16s)inst_op2_d >> 4) * 2;
 			goto l_M_Ew;
 l_M_EwGw:			
 		case M_EwGw:
-			inst.op2.d=reg_16(inst.rm_index);
+			inst_op2_d=reg_16(inst.rm_index);
 l_M_Ew:
 		case M_Ew:
-			if (inst.rm<0xc0) inst.op1.d=LoadMw(inst.rm_eaa);
-			else inst.op1.d=reg_16(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_d=LoadMw(inst.rm_eaa);
+			else inst_op1_d=reg_16(inst.rm_eai);
 			break;
 		case M_GwEw:
-			if (inst.rm<0xc0) inst.op2.d=LoadMw(inst.rm_eaa);
-			else inst.op2.d=reg_16(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op2_d=LoadMw(inst.rm_eaa);
+			else inst_op2_d=reg_16(inst.rm_eai);
 		case M_Gw:
-			inst.op1.d=reg_16(inst.rm_index);;
+			inst_op1_d=reg_16(inst.rm_index);;
 			break;
 /* DWord */
 		case M_Id:
-			inst.op1.d=Fetchd();
+			inst_op1_d=Fetchd();
 			break;
 		case M_EdxGdx:
-			inst.op2.ds=(Bit32s)reg_32(inst.rm_index);
+			inst_op2_ds=(Bit32s)reg_32(inst.rm_index);
 		case M_Edx:
-			if (inst.rm<0xc0) inst.op1.d=(Bit32s)LoadMd(inst.rm_eaa);
-			else inst.op1.d=(Bit32s)reg_32(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_d=(Bit32s)LoadMd(inst.rm_eaa);
+			else inst_op1_d=(Bit32s)reg_32(inst.rm_eai);
 			break;
 		case M_EdIb:
-			inst.op2.d=Fetchb();
+			inst_op2_d=Fetchb();
 			goto l_M_Ed;
 		case M_EdIbx:
-			inst.op2.ds=Fetchbs();
+			inst_op2_ds=Fetchbs();
 			goto l_M_Ed;
 		case M_EdId:
-			inst.op2.d=Fetchd();
+			inst_op2_d=Fetchd();
 			goto l_M_Ed;			
 		case M_EdGdCL:
-			inst.imm.d=reg_cl;
+			inst_imm_d=reg_cl;
 			goto l_M_EdGd;
 		case M_EdGdt:
-			inst.op2.d=reg_32(inst.rm_index);
-			inst.rm_eaa+=((Bit32s)inst.op2.d >> 5) * 4;
+			inst_op2_d=reg_32(inst.rm_index);
+			inst.rm_eaa+=((Bit32s)inst_op2_d >> 5) * 4;
 			goto l_M_Ed;
 		case M_EdGdIb:
-			inst.imm.d=Fetchb();
+			inst_imm_d=Fetchb();
 			goto l_M_EdGd;
 l_M_EdGd:
 		case M_EdGd:
-			inst.op2.d=reg_32(inst.rm_index);
+			inst_op2_d=reg_32(inst.rm_index);
 l_M_Ed:
 		case M_Ed:
-			if (inst.rm<0xc0) inst.op1.d=LoadMd(inst.rm_eaa);
-			else inst.op1.d=reg_32(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_d=LoadMd(inst.rm_eaa);
+			else inst_op1_d=reg_32(inst.rm_eai);
 			break;
 		case M_GdEd:
-			if (inst.rm<0xc0) inst.op2.d=LoadMd(inst.rm_eaa);
-			else inst.op2.d=reg_32(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op2_d=LoadMd(inst.rm_eaa);
+			else inst_op2_d=reg_32(inst.rm_eai);
 		case M_Gd:
-			inst.op1.d=reg_32(inst.rm_index);
+			inst_op1_d=reg_32(inst.rm_index);
 			break;
 /* Others */		
 
 		case M_SEG:
 			//TODO Check for limit
-			inst.op1.d=SegValue((SegNames)inst.rm_index);
+			inst_op1_d=SegValue((SegNames)inst.rm_index);
 			break;
 		case M_Efw:
 			if (inst.rm>=0xc0) goto illegalopcode;
-			inst.op1.d=LoadMw(inst.rm_eaa);
-			inst.op2.d=LoadMw(inst.rm_eaa+2);
+			inst_op1_d=LoadMw(inst.rm_eaa);
+			inst_op2_d=LoadMw(inst.rm_eaa+2);
 			break;
 		case M_Efd:
 			if (inst.rm>=0xc0) goto illegalopcode;
-			inst.op1.d=LoadMd(inst.rm_eaa);
-			inst.op2.d=LoadMw(inst.rm_eaa+4);
+			inst_op1_d=LoadMd(inst.rm_eaa);
+			inst_op2_d=LoadMw(inst.rm_eaa+4);
 			break;
 		case M_EA:
-			inst.op1.d=inst.rm_off;
+			inst_op1_d=inst.rm_off;
 			break;
 		case M_POPw:
-			inst.op1.d = Pop_16();
+			inst_op1_d = Pop_16();
 			break;
 		case M_POPd:
-			inst.op1.d = Pop_32();
+			inst_op1_d = Pop_32();
 			break;
 		case M_GRP:
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
 		case M_GRP_Ib:
-			inst.op2.d=Fetchb();
+			inst_op2_d=Fetchb();
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
 		case M_GRP_CL:
-			inst.op2.d=reg_cl;
+			inst_op2_d=reg_cl;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
 		case M_GRP_1:
-			inst.op2.d=1;
+			inst_op2_d=1;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
 		case 0:
@@ -185,61 +185,61 @@ l_M_Ed:
 		}
 		break;
 	case L_POPw:
-		inst.op1.d = Pop_16();
+		inst_op1_d = Pop_16();
 		break;
 	case L_POPd:
-		inst.op1.d = Pop_32();
+		inst_op1_d = Pop_32();
 		break;
 	case L_POPfw:
-		inst.op1.d = Pop_16();
-		inst.op2.d = Pop_16();
+		inst_op1_d = Pop_16();
+		inst_op2_d = Pop_16();
 		break;
 	case L_POPfd:
-		inst.op1.d = Pop_32();
-		inst.op2.d = Pop_16();
+		inst_op1_d = Pop_32();
+		inst_op2_d = Pop_16();
 		break;
 	case L_Ib:
-		inst.op1.d=Fetchb();
+		inst_op1_d=Fetchb();
 		break;
 	case L_Ibx:
-		inst.op1.ds=Fetchbs();
+		inst_op1_ds=Fetchbs();
 		break;
 	case L_Iw:
-		inst.op1.d=Fetchw();
+		inst_op1_d=Fetchw();
 		break;
 	case L_Iwx:
-		inst.op1.ds=Fetchws();
+		inst_op1_ds=Fetchws();
 		break;
 	case L_Idx:
 	case L_Id:
-		inst.op1.d=Fetchd();
+		inst_op1_d=Fetchd();
 		break;
 	case L_Ifw:
-		inst.op1.d=Fetchw();
-		inst.op2.d=Fetchw();
+		inst_op1_d=Fetchw();
+		inst_op2_d=Fetchw();
 		break;
 	case L_Ifd:
-		inst.op1.d=Fetchd();
-		inst.op2.d=Fetchw();
+		inst_op1_d=Fetchd();
+		inst_op2_d=Fetchw();
 		break;
 /* Direct load of registers */
 	case L_REGbIb:
-		inst.op2.d=Fetchb();
+		inst_op2_d=Fetchb();
 	case L_REGb:
-		inst.op1.d=reg_8(inst.code.extra);
+		inst_op1_d=reg_8(inst.code.extra);
 		break;
 	case L_REGwIw:
-		inst.op2.d=Fetchw();
+		inst_op2_d=Fetchw();
 	case L_REGw:
-		inst.op1.d=reg_16(inst.code.extra);
+		inst_op1_d=reg_16(inst.code.extra);
 		break;
 	case L_REGdId:
-		inst.op2.d=Fetchd();
+		inst_op2_d=Fetchd();
 	case L_REGd:
-		inst.op1.d=reg_32(inst.code.extra);
+		inst_op1_d=reg_32(inst.code.extra);
 		break;
 	case L_SEG:
-		inst.op1.d=SegValue((SegNames)inst.code.extra);
+		inst_op1_d=SegValue((SegNames)inst.code.extra);
 		break;
 /* Depending on addressize */
 	case L_OP:
@@ -277,11 +277,11 @@ l_M_Ed:
 		inst.prefix=(inst.prefix & ~1) | (cpu.code.big ^ 1);
 		goto restartopcode;
 	case L_VAL:
-		inst.op1.d=inst.code.extra;
+		inst_op1_d=inst.code.extra;
 		break;
 	case L_INTO:
 		if (!get_OF()) goto nextopcode;
-		inst.op1.d=4;
+		inst_op1_d=4;
 		break;
 	case D_IRETw:
 		FillFlags();
