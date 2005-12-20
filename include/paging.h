@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.18 2005-09-03 19:20:08 c2woody Exp $ */
+/* $Id: paging.h,v 1.19 2005-12-20 08:42:40 qbix79 Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -82,6 +82,19 @@ void MEM_ResetPageHandler(Bitu phys_page, Bitu pages);
 #pragma pack (1)
 #endif
 struct X86_PageEntryBlock{
+#ifdef WORDS_BIGENDIAN
+	Bit32u		base:20;
+	Bit32u		avl:3;
+	Bit32u		g:1;
+	Bit32u		pat:1;
+	Bit32u		d:1;
+	Bit32u		a:1;
+	Bit32u		pcd:1;
+	Bit32u		pwt:1;
+	Bit32u		us:1;
+	Bit32u		wr:1;
+	Bit32u		p:1;
+#else
 	Bit32u		p:1;
 	Bit32u		wr:1;
 	Bit32u		us:1;
@@ -93,6 +106,7 @@ struct X86_PageEntryBlock{
 	Bit32u		g:1;
 	Bit32u		avl:3;
 	Bit32u		base:20;
+#endif
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #pragma pack ()
