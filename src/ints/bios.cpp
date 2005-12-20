@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.54 2005-12-17 16:28:18 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.55 2005-12-20 21:33:02 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -119,8 +119,13 @@ static bool Tandy_TransferInProgress(void) {
 	if (real_readb(0x40,0xd4)==0xff) return false;	/* still in init-state */
 
 	IO_Write(0x0c,0x00);
-	Bit16u datalen=IO_ReadB(tandy_sb.dma*2+1)|(IO_ReadB(tandy_sb.dma*2+1)<<8);
+	Bit16u datalen=IO_ReadB(tandy_sb.dma*2+1);
+	datalen|=(IO_ReadB(tandy_sb.dma*2+1)<<8);
 	if (datalen==0xffff) return false;	/* no DMA transfer */
+	else if ((datalen<0x10) && (real_readb(0x40,0xd4)==0x0f) && (real_readw(0x40,0xd2)==0x1c)) {
+		/* stop already requested */
+		return false;
+	}
 	return true;
 }
 
@@ -137,6 +142,7 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 		RealSetVec(tandy_sb.irq+8,tandy_DAC_callback->Get_RealPointer());
 	}
 
+	IO_Write(tandy_sb.port+0xc,0xd0);	/* stop DMA transfer */
 	IO_Write(0x21,IO_Read(0x21)&(~(1<<tandy_sb.irq)));		/* unmask IRQ */
 	IO_Write(tandy_sb.port+0xc,0xd1);	/* turn speaker on */
 	IO_Write(0x0a,0x04|tandy_sb.dma);	/* mask DMA channel */
