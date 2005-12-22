@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.90 2005-11-16 20:27:39 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.91 2005-12-22 20:37:20 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -179,6 +179,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	else mtype=section->Get_string("machine");
 	if (strcasecmp(mtype,"cga")==0) machine=MCH_CGA;
 	else if (strcasecmp(mtype,"tandy")==0) machine=MCH_TANDY;
+	else if (strcasecmp(mtype,"pcjr")==0) machine=MCH_PCJR;
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
 	else if (strcasecmp(mtype,"vga")==0) machine=MCH_VGA;
 	else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
@@ -216,7 +217,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
 		"memsize -- Amount of memory dosbox has in megabytes.\n"
-		"machine -- The type of machine tries to emulate:hercules,cga,tandy,vga.\n"
+		"machine -- The type of machine tries to emulate:hercules,cga,tandy,pcjr,vga.\n"
 		"captures -- Directory where things like wave,midi,screenshot get captured.\n"
 	);
 

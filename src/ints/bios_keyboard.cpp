@@ -130,8 +130,14 @@ static struct {
 static bool add_key_forced(Bit16u code) {
 	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return true;
 	Bit16u start,end,head,tail,ttail;
-	start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
-	end	 =mem_readw(BIOS_KEYBOARD_BUFFER_END);
+	if (machine==MCH_PCJR) {
+		/* should be done for cga and others as well, to be tested */
+		start=0x1e;
+		end=0x3e;
+	} else {
+		start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
+		end	 =mem_readw(BIOS_KEYBOARD_BUFFER_END);
+	}
 	head =mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	tail =mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 	ttail=tail+2;
@@ -152,8 +158,14 @@ static void add_key(Bit16u code) {
 
 static bool get_key(Bit16u &code) {
 	Bit16u start,end,head,tail,thead;
-	start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
-	end =mem_readw(BIOS_KEYBOARD_BUFFER_END);
+	if (machine==MCH_PCJR) {
+		/* should be done for cga and others as well, to be tested */
+		start=0x1e;
+		end=0x3e;
+	} else {
+		start=mem_readw(BIOS_KEYBOARD_BUFFER_START);
+		end	 =mem_readw(BIOS_KEYBOARD_BUFFER_END);
+	}
 	head =mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	tail =mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 
