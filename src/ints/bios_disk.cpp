@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.24 2005-11-04 21:22:06 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.25 2005-12-26 20:28:08 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -285,7 +285,6 @@ static Bitu INT13_DiskHandler(void) {
 	Bit16u segat, bufptr;
 	Bit8u sectbuf[512];
 	Bitu  drivenum;
-	Bits  readcnt;
 	int i,t;
 	last_drive = reg_dl;
 	drivenum = GetDosDriveNumber(reg_dl);
@@ -302,7 +301,17 @@ static Bitu INT13_DiskHandler(void) {
 			 * always succeed on reset disk. If there are diskimages then and only then
 			 * do real checks
 			 */
-			if(any_images && driveInactive(drivenum)) return CBRET_NONE;
+			if (any_images && driveInactive(drivenum)) {
+				/* driveInactive sets carry flag if the specified drive is not available */
+				if ((machine==MCH_CGA) || (machine==MCH_PCJR)) {
+					/* those bioses call floppy drive reset for invalid drive values */
+					if (((imageDiskList[0]) && (imageDiskList[0]->active)) || ((imageDiskList[1]) && (imageDiskList[1]->active))) {
+						last_status = 0x00;
+						CALLBACK_SCF(false);
+					}
+				}
+				return CBRET_NONE;
+			}
 			last_status = 0x00;
 			CALLBACK_SCF(false);
 		}
@@ -346,7 +355,7 @@ static Bitu INT13_DiskHandler(void) {
 			}
 		}
 		reg_ah = 0x00;
-            CALLBACK_SCF(false);
+        CALLBACK_SCF(false);
 		break;
 	case 0x3: /* Write sectors */
 		
