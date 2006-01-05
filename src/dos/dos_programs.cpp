@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.49 2005-12-19 20:39:51 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.50 2006-01-05 14:14:52 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -471,12 +471,17 @@ public:
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 			for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
+			/* revector some dos-allocated interrupts */
+			real_writed(0,0x01*4,0xf000ff53);
+			real_writed(0,0x03*4,0xf000ff53);
+
 			SegSet16(cs, 0);
 			reg_ip = 0x7c00;
 			SegSet16(ds, 0);
-			SegSet16(ss, 0);//Buckrogers Booter
-			reg_esp = 0x400;
 			SegSet16(es, 0);
+			/* set up stack at a safe place */
+			SegSet16(ss, 0x7000);
+			reg_esp = 0xfffe;
 			reg_esi = 0;
 			reg_ecx = 1;
 			reg_ebp = 0;

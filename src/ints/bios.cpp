@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.55 2005-12-20 21:33:02 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.56 2006-01-05 14:14:53 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -984,6 +984,11 @@ public:
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		size_extended|=(IO_Read(0x71) << 8);
+
+		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
+		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
+		phys_writed(0xfe988,RealGetVec(0x09));
+
 		if (machine==MCH_PCJR) PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
 	}
 	~BIOS(){
