@@ -100,41 +100,6 @@ static Bit32u decode_fetchd(void) {
 	return mem_readd(decode.code-4);
 }
 
-static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
-	if (high) gen_call_function((void *)&mem_readb,"%Dd%Rh",addr,dst);
-	else gen_call_function((void *)&mem_readb,"%Dd%Rl",addr,dst);
-}
-static void dyn_write_byte(DynReg * addr,DynReg * val,Bitu high) {
-	if (high) gen_call_function((void *)&mem_writeb,"%Dd%Dh",addr,val);
-	else gen_call_function((void *)&mem_writeb,"%Dd%Dd",addr,val);
-}
-static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
-	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Dd%Rd",addr,dst);
-	else gen_call_function((void *)&mem_readw_dyncorex86,"%Dd%Rw",addr,dst);
-}
-static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
-	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Dd%Dd",addr,val);
-	else gen_call_function((void *)&mem_writew_dyncorex86,"%Dd%Dd",addr,val);
-}
-
-
-static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
-	if (high) gen_call_function((void *)&mem_readb,"%Drd%Rh",addr,dst);
-	else gen_call_function((void *)&mem_readb,"%Drd%Rl",addr,dst);
-}
-static void dyn_write_byte_release(DynReg * addr,DynReg * val,Bitu high) {
-	if (high) gen_call_function((void *)&mem_writeb,"%Drd%Dh",addr,val);
-	else gen_call_function((void *)&mem_writeb,"%Drd%Dd",addr,val);
-}
-static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
-	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Drd%Rd",addr,dst);
-	else gen_call_function((void *)&mem_readw_dyncorex86,"%Drd%Rw",addr,dst);
-}
-static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
-	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Drd%Dd",addr,val);
-	else gen_call_function((void *)&mem_writew_dyncorex86,"%Drd%Dd",addr,val);
-}
-
 
 static void dyn_reduce_cycles(void) {
 	gen_protectflags();
@@ -166,15 +131,138 @@ static void dyn_set_eip_last_end(DynReg * endreg) {
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
 }
 
- static INLINE void dyn_set_eip_end(void) {
- 	gen_protectflags();
+static INLINE void dyn_set_eip_end(void) {
+	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.code-decode.code_start);
- }
+}
  
- static INLINE void dyn_set_eip_last(void) {
- 	gen_protectflags();
+static INLINE void dyn_set_eip_last(void) {
+	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(EIP),decode.op_start-decode.code_start);
 }
+
+
+static void DynRunException(void) {
+	CPU_Exception(cpu.exception.which,cpu.exception.error);
+}
+
+static void dyn_check_bool_exception(DynReg * check) {
+	Bit8u * branch;DynState state;
+	gen_dop_byte(DOP_OR,check,0,check,0);
+	branch=gen_create_branch(BR_Z);
+	dyn_savestate(&state);
+	dyn_flags_gen_to_host();
+	dyn_reduce_cycles();
+	dyn_set_eip_last();
+	dyn_save_critical_regs();
+	gen_call_function((void *)&DynRunException,"");
+	dyn_flags_host_to_gen();
+	gen_return(BR_Normal);
+	dyn_loadstate(&state);
+	gen_fill_branch(branch);
+}
+
+static void dyn_check_bool_exception_al(void) {
+	Bit8u * branch;DynState state;
+	cache_addw(0xc00a);		// or al, al
+	branch=gen_create_branch(BR_Z);
+	dyn_savestate(&state);
+	dyn_flags_gen_to_host();
+	dyn_reduce_cycles();
+	dyn_set_eip_last();
+	dyn_save_critical_regs();
+	gen_call_function((void *)&DynRunException,"");
+	dyn_flags_host_to_gen();
+	gen_return(BR_Normal);
+	dyn_loadstate(&state);
+	gen_fill_branch(branch);
+}
+
+#ifdef CHECKED_MEMORY_ACCESS
+static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
+	gen_protectflags();
+	gen_call_function((void *)&mem_readb_checked_x86,"%Dd%Id",addr,&core_dyn.readdata);
+	dyn_check_bool_exception_al();
+	gen_mov_host(&core_dyn.readdata,dst,1,high);
+}
+static void dyn_write_byte(DynReg * addr,DynReg * val,Bitu high) {
+	gen_protectflags();
+	if (high) gen_call_function((void *)&mem_writeb_checked_x86,"%Dd%Dh",addr,val);
+	else gen_call_function((void *)&mem_writeb_checked_x86,"%Dd%Dd",addr,val);
+	dyn_check_bool_exception_al();
+}
+static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
+	gen_protectflags();
+	if (dword) gen_call_function((void *)&mem_readd_checked_x86,"%Dd%Id",addr,&core_dyn.readdata);
+	else gen_call_function((void *)&mem_readw_checked_x86,"%Dd%Id",addr,&core_dyn.readdata);
+	dyn_check_bool_exception_al();
+	gen_mov_host(&core_dyn.readdata,dst,dword?4:2);
+}
+static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
+	gen_protectflags();
+	if (dword) gen_call_function((void *)&mem_writed_checked_x86,"%Dd%Dd",addr,val);
+	else gen_call_function((void *)&mem_writew_checked_x86,"%Dd%Dd",addr,val);
+	dyn_check_bool_exception_al();
+}
+static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
+	gen_protectflags();
+	gen_call_function((void *)&mem_readb_checked_x86,"%Ddr%Id",addr,&core_dyn.readdata);
+	dyn_check_bool_exception_al();
+	gen_mov_host(&core_dyn.readdata,dst,1,high);
+}
+ static void dyn_write_byte_release(DynReg * addr,DynReg * val,Bitu high) {
+	gen_protectflags();
+	if (high) gen_call_function((void *)&mem_writeb_checked_x86,"%Ddr%Dh",addr,val);
+	else gen_call_function((void *)&mem_writeb_checked_x86,"%Ddr%Dd",addr,val);
+	dyn_check_bool_exception_al();
+}
+static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
+	gen_protectflags();
+	if (dword) gen_call_function((void *)&mem_readd_checked_x86,"%Ddr%Id",addr,&core_dyn.readdata);
+	else gen_call_function((void *)&mem_readw_checked_x86,"%Ddr%Id",addr,&core_dyn.readdata);
+	dyn_check_bool_exception_al();
+	gen_mov_host(&core_dyn.readdata,dst,dword?4:2);
+}
+static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
+	gen_protectflags();
+	if (dword) gen_call_function((void *)&mem_writed_checked_x86,"%Ddr%Dd",addr,val);
+	else gen_call_function((void *)&mem_writew_checked_x86,"%Ddr%Dd",addr,val);
+	dyn_check_bool_exception_al();
+}
+#else
+static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
+	if (high) gen_call_function((void *)&mem_readb,"%Dd%Rh",addr,dst);
+	else gen_call_function((void *)&mem_readb,"%Dd%Rl",addr,dst);
+}
+static void dyn_write_byte(DynReg * addr,DynReg * val,Bitu high) {
+	if (high) gen_call_function((void *)&mem_writeb,"%Dd%Dh",addr,val);
+	else gen_call_function((void *)&mem_writeb,"%Dd%Dd",addr,val);
+}
+static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
+	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Dd%Rd",addr,dst);
+	else gen_call_function((void *)&mem_readw_dyncorex86,"%Dd%Rw",addr,dst);
+}
+static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
+	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Dd%Dd",addr,val);
+	else gen_call_function((void *)&mem_writew_dyncorex86,"%Dd%Dd",addr,val);
+}
+static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
+	if (high) gen_call_function((void *)&mem_readb,"%Ddr%Rh",addr,dst);
+	else gen_call_function((void *)&mem_readb,"%Ddr%Rl",addr,dst);
+}
+static void dyn_write_byte_release(DynReg * addr,DynReg * val,Bitu high) {
+	if (high) gen_call_function((void *)&mem_writeb,"%Ddr%Dh",addr,val);
+	else gen_call_function((void *)&mem_writeb,"%Ddr%Dd",addr,val);
+}
+static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
+	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Ddr%Rd",addr,dst);
+	else gen_call_function((void *)&mem_readw_dyncorex86,"%Ddr%Rw",addr,dst);
+}
+static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
+	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Ddr%Dd",addr,val);
+	else gen_call_function((void *)&mem_writew_dyncorex86,"%Ddr%Dd",addr,val);
+}
+#endif
 
 static void dyn_push(DynReg * dynreg) {
 	gen_protectflags();
@@ -345,26 +433,6 @@ skip_extend_word:
 #include "helpers.h"
 #include "string.h"
 
-static void DynRunException(void) {
-	CPU_Exception(cpu.exception.which,cpu.exception.error);
-}
-
-static void dyn_check_bool_exception(DynReg * check) {
-	Bit8u * branch;DynState state;
-	gen_dop_byte(DOP_OR,check,0,check,0);
-	branch=gen_create_branch(BR_Z);
-	dyn_savestate(&state);
-	dyn_flags_gen_to_host();
-	dyn_reduce_cycles();
-	dyn_set_eip_last();
-	dyn_save_critical_regs();
-	gen_call_function((void *)&DynRunException,"");
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
-	dyn_loadstate(&state);
-	gen_fill_branch(branch);
-}
-
 
 static void dyn_dop_ebgb(DualOps op) {
 	dyn_get_modrm();DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];
@@ -416,6 +484,9 @@ static void dyn_mov_ebib(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		gen_call_write(DREG(EA),decode_fetchb(),1);
+#ifdef CHECKED_MEMORY_ACCESS
+		dyn_check_bool_exception_al();
+#endif
 	} else {
 		gen_dop_byte_imm(DOP_MOV,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,decode_fetchb());
 	}
@@ -534,6 +605,9 @@ static void dyn_mov_eviv(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		gen_call_write(DREG(EA),decode.big_op ? decode_fetchd() : decode_fetchw(),decode.big_op?4:2);
+#ifdef CHECKED_MEMORY_ACCESS
+		dyn_check_bool_exception_al();
+#endif
 	} else {
 		gen_dop_word_imm(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],decode.big_op ? decode_fetchd() : decode_fetchw());
 	}
@@ -597,7 +671,7 @@ static void dyn_grp1_eb_ib(void) {
 			if (op==DOP_ADC || op==DOP_SBB) gen_needcarry();
 			else set_skipflags(false);
 		}
-		gen_dop_byte_imm(grp1_table[decode.modrm.reg],DREG(TMPB),0,decode_fetchb());
+		gen_dop_byte_imm(op,DREG(TMPB),0,decode_fetchb());
 		if (op!=DOP_CMP) dyn_write_byte_release(DREG(EA),DREG(TMPB),false);
 		else gen_releasereg(DREG(EA));
 		gen_releasereg(DREG(TMPB));
@@ -606,7 +680,7 @@ static void dyn_grp1_eb_ib(void) {
 			if (op==DOP_ADC || op==DOP_SBB) gen_needcarry();
 			else gen_discardflags();
 		}
-		gen_dop_byte_imm(grp1_table[decode.modrm.reg],&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,decode_fetchb());
+		gen_dop_byte_imm(op,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,decode_fetchb());
 	}
 }
 
@@ -622,7 +696,7 @@ static void dyn_grp1_ev_ivx(bool withbyte) {
 			if (op==DOP_ADC || op==DOP_SBB) gen_needcarry();
 			else set_skipflags(false);
 		}
-		gen_dop_word_imm(grp1_table[decode.modrm.reg],decode.big_op,DREG(TMPW),imm);
+		gen_dop_word_imm(op,decode.big_op,DREG(TMPW),imm);
 		if (op!=DOP_CMP) dyn_write_word_release(DREG(EA),DREG(TMPW),decode.big_op);
 		else gen_releasereg(DREG(EA));
 		gen_releasereg(DREG(TMPW));
@@ -632,7 +706,7 @@ static void dyn_grp1_ev_ivx(bool withbyte) {
 			if (op==DOP_ADC || op==DOP_SBB) gen_needcarry();
 			else gen_discardflags();
 		}
-		gen_dop_word_imm(grp1_table[decode.modrm.reg],decode.big_op,&DynRegs[decode.modrm.rm],imm);
+		gen_dop_word_imm(op,decode.big_op,&DynRegs[decode.modrm.rm],imm);
 	}
 }
 
@@ -1604,9 +1678,9 @@ restart_prefix:
 			{
             dyn_get_modrm();DynReg * src;
 			if (decode.modrm.mod<3) {
-					dyn_fill_ea();
-					dyn_read_word(DREG(EA),DREG(TMPW),decode.big_op);
-					src=DREG(TMPW);
+				dyn_fill_ea();
+				dyn_read_word(DREG(EA),DREG(TMPW),decode.big_op);
+				src=DREG(TMPW);
 			} else src=&DynRegs[decode.modrm.rm];
 			switch (decode.modrm.reg) {
 			case 0x0://INC Ev

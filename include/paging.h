@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.19 2005-12-20 08:42:40 qbix79 Exp $ */
+/* $Id: paging.h,v 1.20 2006-01-07 14:17:53 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -54,6 +54,12 @@ public:
 	virtual void writeb(PhysPt addr,Bitu val);
 	virtual void writew(PhysPt addr,Bitu val);
 	virtual void writed(PhysPt addr,Bitu val);
+	virtual bool readb_checked(PhysPt addr, Bitu * val);
+	virtual bool readw_checked(PhysPt addr, Bitu * val);
+	virtual bool readd_checked(PhysPt addr, Bitu * val);
+	virtual bool writeb_checked(PhysPt addr,Bitu val);
+	virtual bool writew_checked(PhysPt addr,Bitu val);
+	virtual bool writed_checked(PhysPt addr,Bitu val);
 	virtual HostPt GetHostPt(Bitu phys_page);
 	Bitu flags;
 };
@@ -159,6 +165,11 @@ Bit32u mem_unalignedreadd(PhysPt address);
 void mem_unalignedwritew(PhysPt address,Bit16u val);
 void mem_unalignedwrited(PhysPt address,Bit32u val);
 
+bool mem_unalignedreadw_checked_x86(PhysPt address,Bit16u * val);
+bool mem_unalignedreadd_checked_x86(PhysPt address,Bit32u * val);
+bool mem_unalignedwritew_checked_x86(PhysPt address,Bit16u val);
+bool mem_unalignedwrited_checked_x86(PhysPt address,Bit32u val);
+
 /* Special inlined memory reading/writing */
 
 INLINE Bit8u mem_readb_inline(PhysPt address) {
@@ -246,5 +257,82 @@ INLINE void mem_writed_dyncorex86(PhysPt address,Bit32u val) {
 		else paging.tlb.handler[index]->writed(address,val);
 	} else mem_unalignedwrited(address,val);
 }
+
+
+INLINE bool mem_readb_checked_x86(PhysPt address, Bit8u * val) {
+	Bitu index=(address>>12);
+	if (paging.tlb.read[index]) {
+		*val=host_readb(paging.tlb.read[index]+address);
+		return false;
+	} else {
+		Bitu uval;
+		bool retval;
+		retval=paging.tlb.handler[index]->readb_checked(address, &uval);
+		*val=(Bit8u)uval;
+		return retval;
+	}
+}
+
+INLINE bool mem_readw_checked_x86(PhysPt address, Bit16u * val) {
+	if ((address & 0xfff)<0xfff) {
+		Bitu index=(address>>12);
+		if (paging.tlb.read[index]) {
+			*val=host_readw(paging.tlb.read[index]+address);
+			return false;
+		} else {
+			Bitu uval;
+			bool retval;
+			retval=paging.tlb.handler[index]->readw_checked(address, &uval);
+			*val=(Bit16u)uval;
+			return retval;
+		}
+	} else return mem_unalignedreadw_checked_x86(address, val);
+}
+
+
+INLINE bool mem_readd_checked_x86(PhysPt address, Bit32u * val) {
+	if ((address & 0xfff)<0xffd) {
+		Bitu index=(address>>12);
+		if (paging.tlb.read[index]) {
+			*val=host_readd(paging.tlb.read[index]+address);
+			return false;
+		} else {
+			Bitu uval;
+			bool retval;
+			retval=paging.tlb.handler[index]->readd_checked(address, &uval);
+			*val=(Bit32u)uval;
+			return retval;
+		}
+	} else return mem_unalignedreadd_checked_x86(address, val);
+}
+
+INLINE bool mem_writeb_checked_x86(PhysPt address,Bit8u val) {
+	Bitu index=(address>>12);
+	if (paging.tlb.write[index]) {
+		host_writeb(paging.tlb.write[index]+address,val);
+		return false;
+	} else return paging.tlb.handler[index]->writeb_checked(address,val);
+}
+
+INLINE bool mem_writew_checked_x86(PhysPt address,Bit16u val) {
+	if ((address & 0xfff)<0xfff) {
+		Bitu index=(address>>12);
+		if (paging.tlb.write[index]) {
+			host_writew(paging.tlb.write[index]+address,val);
+			return false;
+		} else return paging.tlb.handler[index]->writew_checked(address,val);
+	} else return mem_unalignedwritew_checked_x86(address,val);
+}
+
+INLINE bool mem_writed_checked_x86(PhysPt address,Bit32u val) {
+	if ((address & 0xfff)<0xffd) {
+		Bitu index=(address>>12);
+		if (paging.tlb.write[index]) {
+			host_writed(paging.tlb.write[index]+address,val);
+			return false;
+		} else return paging.tlb.handler[index]->writed_checked(address,val);
+	} else return mem_unalignedwrited_checked_x86(address,val);
+}
+
 
 #endif

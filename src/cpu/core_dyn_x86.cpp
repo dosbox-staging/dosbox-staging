@@ -20,6 +20,8 @@
 
 #if (C_DYNAMIC_X86)
 
+#define CHECKED_MEMORY_ACCESS
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,8 +45,13 @@
 #include "paging.h"
 #include "inout.h"
 
+#ifdef CHECKED_MEMORY_ACCESS
+#define CACHE_TOTAL		(1024*1024)
+#define CACHE_MAXSIZE	(4096*3)
+#else
 #define CACHE_TOTAL		(512*1024)
 #define CACHE_MAXSIZE	(4096)
+#endif
 #define CACHE_BLOCKS	(32*1024)
 #define CACHE_ALIGN		(16)
 #define CACHE_PAGES		(128)
@@ -154,7 +161,7 @@ static void IllegalOption(const char* msg) {
 #include "core_dyn_x86/cache.h" 
 
 static struct {
-	Bitu callback;
+	Bitu callback,readdata;
 } core_dyn;
 
 

@@ -721,12 +721,21 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	x86gen.regs[X86_REG_EDX]->Clear();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
+#ifdef CHECKED_MEMORY_ACCESS
+	switch (write_size) {
+		case 1: cache_addd((Bit32u)mem_writeb_checked_x86 - (Bit32u)cache.pos-4); break;
+		case 2: cache_addd((Bit32u)mem_writew_checked_x86 - (Bit32u)cache.pos-4); break;
+		case 4: cache_addd((Bit32u)mem_writed_checked_x86 - (Bit32u)cache.pos-4); break;
+		default: IllegalOption("gen_call_write");
+	}
+#else
 	switch (write_size) {
 		case 1: cache_addd((Bit32u)mem_writeb - (Bit32u)cache.pos-4); break;
 		case 2: cache_addd((Bit32u)mem_writew_dyncorex86 - (Bit32u)cache.pos-4); break;
 		case 4: cache_addd((Bit32u)mem_writed_dyncorex86 - (Bit32u)cache.pos-4); break;
 		default: IllegalOption("gen_call_write");
 	}
+#endif
 
 	cache_addw(0xc483);		//ADD ESP,8
 	cache_addb(2*4);
@@ -808,6 +817,20 @@ static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
 		IllegalOption("gen_load_host");
 	}
 	cache_addb(0x5+(gr1->index<<3));
+	cache_addd((Bit32u)data);
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
+	GenReg * gr1=FindDynReg(dr1);
+	switch (size) {
+	case 1:cache_addb(0x8a);break;	//mov byte
+	case 2:cache_addb(0x66);		//mov word
+	case 4:cache_addb(0x8b);break;	//mov
+	default:
+		IllegalOption("gen_load_host");
+	}
+	cache_addb(0x5+((gr1->index+(di1?4:0))<<3));
 	cache_addd((Bit32u)data);
 	dr1->flags|=DYNFLG_CHANGED;
 }

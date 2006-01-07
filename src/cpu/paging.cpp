@@ -67,6 +67,25 @@ void PageHandler::writed(PhysPt addr,Bitu val) {
 	writeb(addr+3,(Bit8u) (val >> 24));
 };
 
+bool PageHandler::readb_checked(PhysPt addr, Bitu * val) {
+	*val=readb(addr);	return false;
+}
+bool PageHandler::readw_checked(PhysPt addr, Bitu * val) {
+	*val=readw(addr);	return false;
+}
+bool PageHandler::readd_checked(PhysPt addr, Bitu * val) {
+	*val=readd(addr);	return false;
+}
+bool PageHandler::writeb_checked(PhysPt addr,Bitu val) {
+	writeb(addr,val);	return false;
+}
+bool PageHandler::writew_checked(PhysPt addr,Bitu val) {
+	writew(addr,val);	return false;
+}
+bool PageHandler::writed_checked(PhysPt addr,Bitu val) {
+	writed(addr,val);	return false;
+}
+
 HostPt PageHandler::GetHostPt(Bitu phys_page) {
 	return 0;
 }
@@ -161,7 +180,43 @@ public:
 		InitPage(addr,true);
 		mem_writed(addr,val);
 	}
-	void InitPage(Bitu lin_addr,bool writing) {
+	bool readb_checked(PhysPt addr, Bitu * val) {
+		if (InitPage(addr,false,true)) {
+			*val=mem_readb(addr);
+			return false;
+		} else return true;
+	}
+	bool readw_checked(PhysPt addr, Bitu * val) {
+		if (InitPage(addr,false,true)){
+			*val=mem_readw(addr);
+			return false;
+		} else return true;
+	}
+	bool readd_checked(PhysPt addr, Bitu * val) {
+		if (InitPage(addr,false,true)) {
+			*val=mem_readd(addr);
+			return false;
+		} else return true;
+	}
+	bool writeb_checked(PhysPt addr,Bitu val) {
+		if (InitPage(addr,true,true)) {
+			mem_writeb(addr,val);
+			return false;
+		} else return true;
+	}
+	bool writew_checked(PhysPt addr,Bitu val) {
+		if (InitPage(addr,true,true)) {
+			mem_writew(addr,val);
+			return false;
+		} else return true;
+	}
+	bool writed_checked(PhysPt addr,Bitu val) {
+		if (InitPage(addr,true,true)) {
+			mem_writed(addr,val);
+			return false;
+		} else return true;
+	}
+	bool InitPage(Bitu lin_addr,bool writing,bool check_only=false) {
 		Bitu lin_page=lin_addr >> 12;
 		Bitu phys_page;
 		if (paging.enabled) {
@@ -171,6 +226,12 @@ public:
 			X86PageEntry table;
 			table.load=phys_readd(table_addr);
 			if (!table.block.p) {
+				if (check_only) {
+					paging.cr2=lin_addr;
+					cpu.exception.which=14;
+					cpu.exception.error=writing?0x02:0x00;
+					return false;
+				}
 				LOG(LOG_PAGING,LOG_NORMAL)("NP Table");
 				PAGING_PageFault(lin_addr,table_addr,false,writing?0x02:0x00);
 				table.load=phys_readd(table_addr);
@@ -185,6 +246,12 @@ public:
 			Bitu entry_addr=(table.block.base<<12)+t_index*4;
 			entry.load=phys_readd(entry_addr);
 			if (!entry.block.p) {
+				if (check_only) {
+					paging.cr2=lin_addr;
+					cpu.exception.which=14;
+					cpu.exception.error=writing?0x02:0x00;
+					return false;
+				}
 //				LOG(LOG_PAGING,LOG_NORMAL)("NP Page");
 				PAGING_PageFault(lin_addr,entry_addr,false,writing?0x02:0x00);
 				entry.load=phys_readd(entry_addr);
@@ -194,9 +261,16 @@ public:
 			if (cpu.cpl==3) {
 				if ((entry.block.us==0) || (table.block.us==0) && (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
 					LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+					if (check_only) {
+						paging.cr2=lin_addr;
+						cpu.exception.which=14;
+						cpu.exception.error=0x05 | (writing?0x02:0x00);
+						return false;
+					}
 					PAGING_PageFault(lin_addr,entry_addr,writing,0x05 | (writing?0x02:0x00));
 				}
 			}
+			if (check_only) return true;
 			if ((!entry.block.a) || (!entry.block.d)) {
 				entry.block.a=1;		//Set access
 				entry.block.d=1;		//Set dirty
@@ -208,6 +282,7 @@ public:
 			else phys_page=lin_page;
 		}
 		PAGING_LinkPage(lin_page,phys_page);
+		return true;
 	}
 };
 

@@ -80,13 +80,12 @@ static void dyn_string(STRING_OP op) {
 	dyn_savestate(&rep_state);
 	Bit8u * rep_start=cache.pos;
 	Bit8u * rep_ecx_jmp;
-	/* Check if ECX!=zero and decrease it */
+	/* Check if ECX!=zero */
 	if (decode.rep) {
 		gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
 		Bit8u * branch_ecx=gen_create_branch(BR_NZ);
 		rep_ecx_jmp=gen_create_jump();
 		gen_fill_branch(branch_ecx);
-		gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
 	}
 	if (usesi) {
 		if (!decode.big_addr) {
@@ -95,7 +94,6 @@ static void dyn_string(STRING_OP op) {
 		} else {
 			gen_lea(DREG(EA),si_base,DREG(ESI),0,0);
 		}
-		gen_dop_word(DOP_ADD,decode.big_addr,DREG(ESI),DREG(TMPW));
 		switch (op&3) {
 		case 0:dyn_read_byte(DREG(EA),tmp_reg,false);break;
 		case 1:dyn_read_word(DREG(EA),tmp_reg,false);break;
@@ -117,7 +115,6 @@ static void dyn_string(STRING_OP op) {
 		} else {
 			gen_lea(DREG(EA),di_base,DREG(EDI),0,0);
 		}
-		gen_dop_word(DOP_ADD,decode.big_addr,DREG(EDI),DREG(TMPW));
 		/* Maybe something special to be done to fill the value */
 		switch (op) {
 		case STR_INSB:
@@ -143,8 +140,14 @@ static void dyn_string(STRING_OP op) {
 		}
 	}
 	gen_releasereg(DREG(EA));gen_releasereg(DREG(TMPB));
+
+	/* update registers */
+	if (usesi) gen_dop_word(DOP_ADD,decode.big_addr,DREG(ESI),DREG(TMPW));
+	if (usedi) gen_dop_word(DOP_ADD,decode.big_addr,DREG(EDI),DREG(TMPW));
+
 	if (decode.rep) {
 		DynState cycle_state;
+		gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
 		gen_sop_word(SOP_DEC,true,DREG(CYCLES));
 		gen_releasereg(DREG(CYCLES));
 		dyn_savestate(&cycle_state);
