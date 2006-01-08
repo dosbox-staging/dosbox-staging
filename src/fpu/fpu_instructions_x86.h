@@ -16,11 +16,31 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions_x86.h,v 1.1 2005-02-22 13:06:06 qbix79 Exp $ */
+/* $Id: fpu_instructions_x86.h,v 1.2 2006-01-08 18:05:06 c2woody Exp $ */
+
+
+#define WEAK_EXCEPTIONS
 
 
 #if defined (_MSC_VER)
 
+#ifdef WEAK_EXCEPTIONS
+#define clx
+#else
+#define clx fclex
+#endif
+
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_LOAD(op,szI,szA)			\
+		__asm {							\
+		__asm	mov		eax, 8			\
+		__asm	shl		eax, 4			\
+		__asm	mov		ebx, store_to	\
+		__asm	shl		ebx, 4			\
+		__asm	op		szI PTR fpu.p_regs[eax].m1		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
+		}
+#else
 #define FPUD_LOAD(op,szI,szA)			\
 		Bit16u new_sw;					\
 		__asm {							\
@@ -34,6 +54,7 @@
 		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
 		}								\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
 
 #define FPUD_STORE(op,szI,szA)				\
 		Bit16u new_sw,save_cw;				\
@@ -45,12 +66,12 @@
 		__asm	mov		ebx, 8				\
 		__asm	shl		ebx, 4				\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex						\
+		__asm	clx							\
 		__asm	op		szI PTR fpu.p_regs[ebx].m1		\
 		__asm	fnstsw	new_sw				\
 		__asm	fldcw	save_cw				\
 		}									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fsin,fcos,f2xm1,fchs,fabs
 #define FPUD_TRIG(op)				\
@@ -59,15 +80,15 @@
 		__asm	mov		eax, TOP	\
 		__asm	shl		eax, 4		\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex				\
+		__asm	clx					\
 		__asm	op					\
 		__asm	fnstsw	new_sw		\
 		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	\
 		}							\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fsincos
-#define FPUD_SINCOS						\
+#define FPUD_SINCOS()				\
 		Bit16u new_sw;					\
 		__asm {							\
 		__asm	mov		eax, TOP		\
@@ -77,7 +98,7 @@
 		__asm	shl		eax, 4			\
 		__asm	shl		ebx, 4			\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex					\
+		__asm	clx						\
 		__asm	fsincos					\
 		__asm	fnstsw	new_sw			\
 		__asm	mov		cx, new_sw		\
@@ -90,11 +111,11 @@
 		__asm	fstp	st(0)			\
 		__asm	end_sincos:				\
 		}												\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);			\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);		\
 		if ((new_sw&0x0400)==0) FPU_PREP_PUSH();
 
 // handles fptan
-#define FPUD_PTAN						\
+#define FPUD_PTAN()					\
 		Bit16u new_sw;					\
 		__asm {							\
 		__asm	mov		eax, TOP		\
@@ -104,7 +125,7 @@
 		__asm	shl		eax, 4			\
 		__asm	shl		ebx, 4			\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex					\
+		__asm	clx					\
 		__asm	fptan					\
 		__asm	fnstsw	new_sw			\
 		__asm	mov		cx, new_sw		\
@@ -117,10 +138,26 @@
 		__asm	fstp	st(0)			\
 		__asm	end_ptan:				\
 		}												\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);			\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);		\
 		if ((new_sw&0x0400)==0) FPU_PREP_PUSH();
 
 // handles fxtract
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_XTRACT						\
+		__asm {							\
+		__asm	mov		eax, TOP		\
+		__asm	mov		ebx, eax		\
+		__asm	dec     ebx				\
+		__asm	and     ebx, 7			\
+		__asm	shl		eax, 4			\
+		__asm	shl		ebx, 4			\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fxtract					\
+		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	\
+		}												\
+		FPU_PREP_PUSH();
+#else
 #define FPUD_XTRACT						\
 		Bit16u new_sw;					\
 		__asm {							\
@@ -139,9 +176,47 @@
 		}												\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);			\
 		FPU_PREP_PUSH();
+#endif
 
-// handles fadd,fmul,fsub,fsubr,fdiv,fdivr
+// handles fadd,fmul,fsub,fsubr
 #define FPUD_ARITH1(op)						\
+		Bit16u new_sw,save_cw;				\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	mov		eax, op1			\
+		__asm	shl		eax, 4				\
+		__asm	mov		ebx, op2			\
+		__asm	shl		ebx, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	clx							\
+		__asm	op		st(1), st(0)		\
+		__asm	fnstsw	new_sw				\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+// handles fsqrt,frndint
+#define FPUD_ARITH2(op)						\
+		Bit16u new_sw,save_cw;				\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	mov		eax, TOP			\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	clx							\
+		__asm	op							\
+		__asm	fnstsw	new_sw				\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+// handles fdiv,fdivr
+#define FPUD_ARITH3(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm {								\
 		__asm	fnstcw	save_cw				\
@@ -154,23 +229,6 @@
 		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
 		__asm	fclex						\
 		__asm	op		st(1), st(0)		\
-		__asm	fnstsw	new_sw				\
-		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
-		__asm	fldcw	save_cw				\
-		}									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
-
-// handles fsqrt,frndint
-#define FPUD_ARITH2(op)						\
-		Bit16u new_sw,save_cw;				\
-		__asm {								\
-		__asm	fnstcw	save_cw				\
-		__asm	fldcw	fpu.cw_mask_all		\
-		__asm	mov		eax, TOP			\
-		__asm	shl		eax, 4				\
-		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex						\
-		__asm	op							\
 		__asm	fnstsw	new_sw				\
 		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
 		__asm	fldcw	save_cw				\
@@ -207,11 +265,11 @@
 		__asm	shl		eax, 4		\
 		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex				\
+		__asm	clx					\
 		__asm	op					\
 		__asm	fnstsw	new_sw		\
 		}							\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fxam,ftst
 #define FPUD_EXAMINE(op)			\
@@ -220,15 +278,52 @@
 		__asm	mov		eax, TOP	\
 		__asm	shl		eax, 4		\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
-		__asm	fclex				\
+		__asm	clx					\
 		__asm	op					\
 		__asm	fnstsw	new_sw		\
 		__asm	fstp	st(0)		\
 		}							\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
-// handles fpatan,fyl2x,fyl2xp1
+// handles fpatan,fyl2xp1
+#ifdef WEAK_EXCEPTIONS
 #define FPUD_WITH_POP(op)			\
+		__asm {						\
+		__asm	mov		eax, TOP	\
+		__asm	mov		ebx, eax	\
+		__asm	inc     ebx			\
+		__asm	and     ebx, 7		\
+		__asm	shl		ebx, 4		\
+		__asm	shl		eax, 4		\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	op					\
+		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
+		}							\
+		FPU_FPOP();
+#else
+#define FPUD_WITH_POP(op)			\
+		Bit16u new_sw;				\
+		__asm {						\
+		__asm	mov		eax, TOP	\
+		__asm	mov		ebx, eax	\
+		__asm	inc     ebx			\
+		__asm	and     ebx, 7		\
+		__asm	shl		ebx, 4		\
+		__asm	shl		eax, 4		\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fclex				\
+		__asm	op					\
+		__asm	fnstsw	new_sw		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
+		}								\
+		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);	\
+		FPU_FPOP();
+#endif
+
+// handles fyl2x
+#define FPUD_FYL2X(op)				\
 		Bit16u new_sw;				\
 		__asm {						\
 		__asm	mov		eax, TOP	\
@@ -248,21 +343,37 @@
 		FPU_FPOP();
 
 // load math constants
-#define FPUD_LOAD_CONST(op)			\
-		Bit16u new_sw;				\
+#define FPUD_LOAD_CONST(op)		\
 		FPU_PREP_PUSH();			\
 		__asm {						\
 		__asm	mov		eax, TOP	\
 		__asm	shl		eax, 4		\
-		__asm	fclex				\
+		__asm	clx					\
 		__asm	op					\
-		__asm	fnstsw	new_sw		\
 		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	\
 		}							\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
 
 #else
 
+#ifdef WEAK_EXCEPTIONS
+#define clx
+#else
+#define clx "fclex"
+#endif
+
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_LOAD(op,szI,szA)				\
+		__asm__ volatile (					\
+			"movl		$8, %%eax		\n"	\
+			"shl		$4, %%eax		\n"	\
+			"shl		$4, %0			\n"	\
+			#op #szA "	(%1, %%eax)		\n"	\
+			"fstpt		(%1, %0)		"	\
+			:								\
+			:	"r" (store_to), "r" (fpu.p_regs)	\
+			:	"eax", "memory"						\
+		);
+#else
 #define FPUD_LOAD(op,szI,szA)				\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
@@ -278,6 +389,7 @@
 			:	"eax", "memory"						\
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
 
 #define FPUD_STORE(op,szI,szA)				\
 		Bit16u new_sw,save_cw;				\
@@ -288,7 +400,7 @@
 			"movl		$8, %%eax		\n"	\
 			"shl		$4, %%eax		\n"	\
 			"fldt		(%3, %2)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			#op #szA "	(%3, %%eax)		\n"	\
 			"fnstsw		%0				\n"	\
 			"fldcw		%1				"	\
@@ -296,7 +408,7 @@
 			:	"r" (TOP), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
 			:	"eax", "memory"						\
 		);										\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fsin,fcos,f2xm1,fchs,fabs
 #define FPUD_TRIG(op)						\
@@ -304,7 +416,7 @@
 		__asm__ volatile (					\
 			"shll		$4, %1			\n"	\
 			"fldt		(%2, %1)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			#op" 						\n"	\
 			"fnstsw		%0				\n"	\
 			"fstpt		(%2, %1)		"	\
@@ -312,10 +424,10 @@
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"memory"				\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fsincos
-#define FPUD_SINCOS							\
+#define FPUD_SINCOS()					\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
 			"movl		%1, %%eax		\n"	\
@@ -324,7 +436,7 @@
 			"andl		$7, %%eax		\n"	\
 			"shll		$4, %%eax		\n"	\
 			"fldt		(%2, %1)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			"fsincos					\n"	\
 			"fnstsw		%0				\n"	\
 			"fstpt		(%2, %%eax)		\n"	\
@@ -337,11 +449,11 @@
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"eax", "cc", "memory"		\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);		\
 		if ((new_sw&0x0400)==0) FPU_PREP_PUSH();
 
 // handles fptan
-#define FPUD_PTAN							\
+#define FPUD_PTAN()						\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
 			"movl		%1, %%eax		\n"	\
@@ -350,7 +462,7 @@
 			"andl		$7, %%eax		\n"	\
 			"shll		$4, %%eax		\n"	\
 			"fldt		(%2, %1)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			"fptan 						\n"	\
 			"fnstsw		%0				\n"	\
 			"fstpt		(%2, %%eax)		\n"	\
@@ -363,10 +475,28 @@
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"eax", "cc", "memory"		\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);		\
 		if ((new_sw&0x0400)==0) FPU_PREP_PUSH();
 
 // handles fxtract
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_XTRACT						\
+		__asm__ volatile (					\
+			"movl		%0, %%eax		\n"	\
+			"shll		$4, %0			\n"	\
+			"decl		%%eax			\n"	\
+			"andl		$7, %%eax		\n"	\
+			"shll		$4, %%eax		\n"	\
+			"fldt		(%1, %0)		\n"	\
+			"fxtract					\n"	\
+			"fstpt		(%1, %%eax)		\n"	\
+			"fstpt		(%1, %0)		"	\
+			:								\
+			:	"r" (TOP), "r" (fpu.p_regs)	\
+			:	"eax", "memory"				\
+		);									\
+		FPU_PREP_PUSH();
+#else
 #define FPUD_XTRACT						\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
@@ -387,9 +517,50 @@
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
 		FPU_PREP_PUSH();
+#endif
 
-// handles fadd,fmul,fsub,fsubr,fdiv,fdivr
+// handles fadd,fmul,fsub,fsubr
 #define FPUD_ARITH1(op)						\
+		Bit16u new_sw,save_cw;				\
+		__asm__ volatile (					\
+			"fnstcw		%1				\n"	\
+			"fldcw		%5				\n"	\
+			"shll		$4, %3			\n"	\
+			"shll		$4, %2			\n"	\
+			"fldt		(%4, %3)		\n"	\
+			"fldt		(%4, %2)		\n"	\
+			clx" 						\n"	\
+			#op"						\n"	\
+			"fnstsw		%0				\n"	\
+			"fstpt		(%4, %2)		\n"	\
+			"fldcw		%1				"	\
+			:	"=m" (new_sw), "=m" (save_cw)		\
+			:	"r" (op1), "r" (op2), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+// handles fsqrt,frndint
+#define FPUD_ARITH2(op)						\
+		Bit16u new_sw,save_cw;				\
+		__asm__ volatile (					\
+			"fnstcw		%1				\n"	\
+			"fldcw		%4				\n"	\
+			"shll		$4, %2			\n"	\
+			"fldt		(%3, %2)		\n"	\
+			clx" 						\n"	\
+			#op" 						\n"	\
+			"fnstsw		%0				\n"	\
+			"fstpt		(%3, %2)		\n"	\
+			"fldcw		%1				"	\
+			:	"=m" (new_sw), "=m" (save_cw)	\
+			:	"r" (TOP), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);										\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+// handles fdiv,fdivr
+#define FPUD_ARITH3(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm__ volatile (					\
 			"fnstcw		%1				\n"	\
@@ -405,27 +576,8 @@
 			"fldcw		%1				"	\
 			:	"=m" (new_sw), "=m" (save_cw)		\
 			:	"r" (op1), "r" (op2), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
-			:	"memory"				\
+			:	"memory"					\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
-
-// handles fsqrt,frndint
-#define FPUD_ARITH2(op)						\
-		Bit16u new_sw,save_cw;				\
-		__asm__ volatile (					\
-			"fnstcw		%1				\n"	\
-			"fldcw		%4				\n"	\
-			"shll		$4, %2			\n"	\
-			"fldt		(%3, %2)		\n"	\
-			"fclex						\n"	\
-			#op" 						\n"	\
-			"fnstsw		%0				\n"	\
-			"fstpt		(%3, %2)		\n"	\
-			"fldcw		%1				"	\
-			:	"=m" (new_sw), "=m" (save_cw)	\
-			:	"r" (TOP), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
-			:	"memory"				\
-		);										\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
 
 // handles fprem,fprem1,fscale
@@ -458,14 +610,14 @@
 			"shll		$4, %1			\n"	\
 			"fldt		(%3, %2)		\n"	\
 			"fldt		(%3, %1)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			#op" 						\n"	\
 			"fnstsw		%0				"	\
 			:	"=m" (new_sw)				\
 			:	"r" (op1), "r" (op2), "r" (fpu.p_regs) 		\
 			:	"memory"				\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
 // handles fxam,ftst
 #define FPUD_EXAMINE(op)					\
@@ -473,7 +625,7 @@
 		__asm__ volatile (					\
 			"shll		$4, %1			\n"	\
 			"fldt		(%2, %1)		\n"	\
-			"fclex						\n"	\
+			clx" 						\n"	\
 			#op" 						\n"	\
 			"fnstsw		%0				\n"	\
 			"fstp		%%st(0)			"	\
@@ -481,9 +633,27 @@
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"memory"				\
 		);									\
-		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
-// handles fpatan,fyl2x,fyl2xp1
+// handles fpatan,fyl2xp1
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_WITH_POP(op)					\
+		__asm__ volatile (					\
+			"movl		%0, %%eax		\n"	\
+			"incl		%%eax			\n"	\
+			"andl		$7, %%eax		\n"	\
+			"shll		$4, %%eax		\n"	\
+			"shll		$4, %0			\n"	\
+			"fldt		(%1, %%eax)		\n"	\
+			"fldt		(%1, %0)		\n"	\
+			#op" 						\n"	\
+			"fstpt		(%1, %%eax)		\n"	\
+			:								\
+			:	"r" (TOP), "r" (fpu.p_regs)	\
+			:	"eax", "memory"				\
+		);									\
+		FPU_FPOP();
+#else
 #define FPUD_WITH_POP(op)					\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
@@ -504,23 +674,49 @@
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
 		FPU_FPOP();
+#endif
 
-// load math constants
-#define FPUD_LOAD_CONST(op)					\
+// handles fyl2x
+#define FPUD_FYL2X(op)						\
 		Bit16u new_sw;						\
-		FPU_PREP_PUSH();					\
 		__asm__ volatile (					\
+			"movl		%1, %%eax		\n"	\
+			"incl		%%eax			\n"	\
+			"andl		$7, %%eax		\n"	\
+			"shll		$4, %%eax		\n"	\
 			"shll		$4, %1			\n"	\
+			"fldt		(%2, %%eax)		\n"	\
+			"fldt		(%2, %1)		\n"	\
 			"fclex						\n"	\
 			#op" 						\n"	\
 			"fnstsw		%0				\n"	\
-			"fstpt		(%2, %1)		\n"	\
+			"fstpt		(%2, %%eax)		\n"	\
 			:	"=m" (new_sw)				\
 			:	"r" (TOP), "r" (fpu.p_regs)	\
-			:	"memory"				\
+			:	"eax", "memory"				\
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
+		FPU_FPOP();
 
+// load math constants
+#define FPUD_LOAD_CONST(op)				\
+		FPU_PREP_PUSH();					\
+		__asm__ volatile (					\
+			"shll		$4, %0			\n"	\
+			clx" 						\n"	\
+			#op" 						\n"	\
+			"fstpt		(%1, %0)		\n"	\
+			:								\
+			:	"r" (TOP), "r" (fpu.p_regs)	\
+			:	"memory"					\
+		);
+
+#endif
+
+#ifdef WEAK_EXCEPTIONS
+const Bit16u exc_mask=0x7f00;
+#else
+const Bit16u exc_mask=0xffbf;
 #endif
 
 static void FPU_FINIT(void) {
@@ -643,7 +839,7 @@ static void FPU_FSIN(void){
 }
 
 static void FPU_FSINCOS(void){
-	FPUD_SINCOS
+	FPUD_SINCOS()
 }
 
 static void FPU_FCOS(void){
@@ -659,7 +855,7 @@ static void FPU_FPATAN(void){
 }
 
 static void FPU_FPTAN(void){
-	FPUD_PTAN
+	FPUD_PTAN()
 }
 
 
@@ -668,11 +864,11 @@ static void FPU_FADD(Bitu op1, Bitu op2){
 }
 
 static void FPU_FDIV(Bitu op1, Bitu op2){
-	FPUD_ARITH1(fdivp)
+	FPUD_ARITH3(fdivp)
 }
 
 static void FPU_FDIVR(Bitu op1, Bitu op2){
-	FPUD_ARITH1(fdivrp)
+	FPUD_ARITH3(fdivrp)
 }
 
 static void FPU_FMUL(Bitu op1, Bitu op2){
@@ -750,7 +946,7 @@ static void FPU_F2XM1(void){
 }
 
 static void FPU_FYL2X(void){
-	FPUD_WITH_POP(fyl2x)
+	FPUD_FYL2X(fyl2x)
 }
 
 static void FPU_FYL2XP1(void){
