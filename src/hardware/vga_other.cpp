@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.15 2005-12-11 15:09:50 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.16 2006-01-11 09:32:12 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -420,7 +420,7 @@ void VGA_SetupOther(void) {
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
-		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD1,"inchue","Inc Hue");
+		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
 		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 	}
 	if (machine==MCH_HERC) {
