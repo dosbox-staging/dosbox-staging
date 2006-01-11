@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.67 2005-12-05 12:07:55 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.68 2006-01-11 09:25:38 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -46,6 +46,8 @@ static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
 static std::vector<std::string> autoexec_strings;
 typedef std::vector<std::string>::iterator auto_it;
 
+void VFILE_Remove(const char *name);
+
 void AutoexecObject::Install(char* line,...) {
 	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf);
 	installed = true;
@@ -54,16 +56,38 @@ void AutoexecObject::Install(char* line,...) {
 	va_start(msg,line);
 	vsprintf(buf,line,msg);
 	va_end(msg);
-
-	size_t auto_len=strlen(autoexec_data);
-	if ((auto_len+strlen(line)+3)>AUTOEXEC_SIZE) {
-		E_Exit("SYSTEM:Autoexec.bat file overflow");
-	}
-	sprintf((autoexec_data+auto_len),"%s\r\n",buf);
 	autoexec_strings.push_back(std::string(buf));
+
+	if(first_shell)	VFILE_Remove("AUTOEXEC.BAT");
+	//Create a new autoexec.bat
+	autoexec_data[0] = 0;
+	size_t auto_len;
+	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
+		auto_len = strlen(autoexec_data);
+		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
+			E_Exit("SYSTEM:Autoexec.bat file overflow");
+		}
+		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
+	}
+
+	//autoexec.bat is normally created AUTOEXEC_Init.
+	//But if we are allready running (first_shell) then create it here.
+	//And update the envirionment to display changes
+
+	if(first_shell)	{
+		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+		char buf2[256]; strcpy(buf2,buf);//used in shell.h
+		if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
+			char* after_set = buf2 + 4;//move to variable that is being set
+			char* test = strpbrk(after_set,"=");
+			if(!test) {first_shell->SetEnv(after_set,"");return;}
+			*test++ = 0;
+			//If the shell is running/exists update the environment
+			first_shell->SetEnv(after_set,test);
+		}
+	}
 }
 
-void VFILE_Remove(const char *name);
 
 AutoexecObject::~AutoexecObject(){
 	if(!installed) return;
@@ -424,7 +448,7 @@ void SHELL_Init() {
 		"\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_CGA","\xBA DOSBox supports Composite CGA mode.                                \xBA\n"
-	        "\xBA Use \033[31m(ctrl-)F11\033[37m to change the colours when in this mode.            \xBA\n"
+	        "\xBA Use \033[31m(alt-)F11\033[37m to change the colours when in this mode.             \xBA\n"
 	        "\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_DEBUG",
