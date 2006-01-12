@@ -53,8 +53,9 @@ void VFILE_Remove(const char *name) {
 	VFILE_Block * chan=first_file;
 	VFILE_Block * * where=&first_file;
 	while (chan) {
-		if (strcmp(name,chan->name)==0) {
-			*where=chan->next;
+		if (strcmp(name,chan->name) == 0) {
+			*where = chan->next;
+			if(chan == first_file) first_file = chan->next;
 			delete chan;
 			return;
 		}

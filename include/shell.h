@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.13 2005-08-22 19:31:26 qbix79 Exp $ */
+/* $Id: shell.h,v 1.14 2006-01-12 10:20:20 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -155,7 +155,10 @@ private:
 public:
 	AutoexecObject():installed(false){};
 	void Install(char * line,...);
+	void InstallBefore(char* line, ...);
 	~AutoexecObject();
+private:
+	void CreateAutoexec(void);
 };
 
 #endif

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.68 2006-01-11 09:25:38 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.69 2006-01-12 10:20:20 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -43,8 +43,8 @@ static void SHELL_ProgramStart(Program * * make) {
 
 #define AUTOEXEC_SIZE 4096
 static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
-static std::vector<std::string> autoexec_strings;
-typedef std::vector<std::string>::iterator auto_it;
+static std::list<std::string> autoexec_strings;
+typedef std::list<std::string>::iterator auto_it;
 
 void VFILE_Remove(const char *name);
 
@@ -58,24 +58,13 @@ void AutoexecObject::Install(char* line,...) {
 	va_end(msg);
 	autoexec_strings.push_back(std::string(buf));
 
-	if(first_shell)	VFILE_Remove("AUTOEXEC.BAT");
-	//Create a new autoexec.bat
-	autoexec_data[0] = 0;
-	size_t auto_len;
-	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
-		auto_len = strlen(autoexec_data);
-		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
-			E_Exit("SYSTEM:Autoexec.bat file overflow");
-		}
-		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
-	}
+	this->CreateAutoexec();
 
 	//autoexec.bat is normally created AUTOEXEC_Init.
-	//But if we are allready running (first_shell) then create it here.
-	//And update the envirionment to display changes
+	//But if we are allready running (first_shell)
+	//we have to update the envirionment to display changes
 
 	if(first_shell)	{
-		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
 		char buf2[256]; strcpy(buf2,buf);//used in shell.h
 		if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
 			char* after_set = buf2 + 4;//move to variable that is being set
@@ -88,16 +77,39 @@ void AutoexecObject::Install(char* line,...) {
 	}
 }
 
+void AutoexecObject::InstallBefore(char* line,...) {
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf);
+	installed = true;
+	va_list msg;
+	
+	va_start(msg,line);
+	vsprintf(buf,line,msg);
+	va_end(msg);
+	autoexec_strings.push_front(std::string(buf));
+	this->CreateAutoexec();
+}
+
+void AutoexecObject::CreateAutoexec(void) {
+	/* Remove old autoexec.bat if the shell exists */
+	if(first_shell)	VFILE_Remove("AUTOEXEC.BAT");
+
+	//Create a new autoexec.bat
+	autoexec_data[0] = 0;
+	size_t auto_len;
+	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
+		auto_len = strlen(autoexec_data);
+		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
+			E_Exit("SYSTEM:Autoexec.bat file overflow");
+		}
+		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
+	}
+	if(first_shell) VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+}
 
 AutoexecObject::~AutoexecObject(){
 	if(!installed) return;
 
-	// On destruction of the object the autoexec.bat is updated 
-	// so that the line isn't present anymore 
-	// First remove the current autoexec.bat
-	VFILE_Remove("AUTOEXEC.BAT");
-
-	// Remove the line from the autoexecbuffer
+	// Remove the line from the autoexecbuffer and update environment
 	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
 		if((*it) == buf) {
 			it = autoexec_strings.erase(it);
@@ -112,17 +124,7 @@ AutoexecObject::~AutoexecObject(){
 			}
 		} else it++;
 	}
-	//Create a new autoexec.bat
-	autoexec_data[0] = 0;
-	size_t auto_len;
-	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
-		auto_len = strlen(autoexec_data);
-		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
-			E_Exit("SYSTEM:Autoexec.bat file overflow");
-		}
-		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
-	}
-	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+	this->CreateAutoexec();
 }
 
 DOS_Shell::DOS_Shell():Program(){
@@ -327,16 +329,29 @@ void DOS_Shell::SyntaxError(void) {
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
 
-namespace{
+namespace {
 	AutoexecObject autoexec[16];
+	AutoexecObject autoexec_echo;
 }
 
 void AUTOEXEC_Init(Section * sec) {
 	/* Register a virtual AUOEXEC.BAT file */
 	std::string line;
 	Section_line * section=static_cast<Section_line *>(sec);
-	char * extra=(char *)section->data.c_str();
-	if (extra) autoexec[0].Install("%s",extra);
+
+	/* add stuff from the configfile unless -noautexec is specified. */
+	char * extra=const_cast<char*>(section->data.c_str());
+	if (extra && !control->cmdline->FindExist("-noautoexec",true)) {
+		/* detect if "echo off" is the first line */
+		bool echo_off  = !strncasecmp(extra,"echo off",8);
+		if (!echo_off) echo_off = !strncasecmp(extra,"@echo off",9);
+
+		/* if "echo off" add it to the front of autoexec.bat */
+		if(echo_off) autoexec_echo.InstallBefore("@echo off");
+
+		/* Install the stuff from the configfile */
+		autoexec[0].Install("%s",extra);
+	}
 
 	/* Check to see for extra command line options to be added (before the command specified on commandline) */
 	/* Maximum of extra commands: 10 */
