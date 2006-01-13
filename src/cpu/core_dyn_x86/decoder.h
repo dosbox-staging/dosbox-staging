@@ -142,7 +142,10 @@ static INLINE void dyn_set_eip_last(void) {
 }
 
 
-static void DynRunException(void) {
+static void DynRunException(Bit32u eip_add,Bit32u cycle_sub,Bit32u dflags) {
+	reg_flags=(dflags&FMASK_TEST) | (reg_flags&(~FMASK_TEST));
+	reg_eip+=eip_add;
+	CPU_Cycles-=cycle_sub;
 	CPU_Exception(cpu.exception.which,cpu.exception.error);
 }
 
@@ -151,13 +154,11 @@ static void dyn_check_bool_exception(DynReg * check) {
 	gen_dop_byte(DOP_OR,check,0,check,0);
 	branch=gen_create_branch(BR_Z);
 	dyn_savestate(&state);
-	dyn_flags_gen_to_host();
-	dyn_reduce_cycles();
-	dyn_set_eip_last();
+	if (!decode.cycles) decode.cycles++;
 	dyn_save_critical_regs();
-	gen_call_function((void *)&DynRunException,"");
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	if (cpu.code.big) gen_call_function((void *)&DynRunException,"%Id%Id%F",decode.op_start-decode.code_start,decode.cycles);
+	else gen_call_function((void *)&DynRunException,"%Iw%Id%F",(decode.op_start-decode.code_start)&0xffff,decode.cycles);
+	gen_return_fast(BR_Normal,false);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
 }
@@ -167,13 +168,11 @@ static void dyn_check_bool_exception_al(void) {
 	cache_addw(0xc00a);		// or al, al
 	branch=gen_create_branch(BR_Z);
 	dyn_savestate(&state);
-	dyn_flags_gen_to_host();
-	dyn_reduce_cycles();
-	dyn_set_eip_last();
+	if (!decode.cycles) decode.cycles++;
 	dyn_save_critical_regs();
-	gen_call_function((void *)&DynRunException,"");
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	if (cpu.code.big) gen_call_function((void *)&DynRunException,"%Id%Id%F",decode.op_start-decode.code_start,decode.cycles);
+	else gen_call_function((void *)&DynRunException,"%Iw%Id%F",(decode.op_start-decode.code_start)&0xffff,decode.cycles);
+	gen_return_fast(BR_Normal,false);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
 }
@@ -1122,8 +1121,7 @@ static void dyn_ret_far(Bitu bytes) {
 	dyn_flags_gen_to_host();
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_RET,"%Id%Id%Drd",decode.big_op,bytes,DREG(TMPW));
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	gen_return_fast(BR_Normal);
 	dyn_closeblock();
 }
 
@@ -1136,8 +1134,7 @@ static void dyn_call_far_imm(void) {
 	dyn_flags_gen_to_host();
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_CALL,"%Id%Id%Id%Drd",decode.big_op,sel,off,DREG(TMPW));
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	gen_return_fast(BR_Normal);
 	dyn_closeblock();
 }
 
@@ -1151,8 +1148,7 @@ static void dyn_jmp_far_imm(void) {
 	dyn_flags_gen_to_host();
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_JMP,"%Id%Id%Id%Drd",decode.big_op,sel,off,DREG(TMPW));
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	gen_return_fast(BR_Normal);
 	dyn_closeblock();
 }
 
@@ -1163,8 +1159,7 @@ static void dyn_iret(void) {
 	dyn_set_eip_last_end(DREG(TMPW));
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_IRET,"%Id%Drd",decode.big_op,DREG(TMPW));
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	gen_return_fast(BR_Normal);
 	dyn_closeblock();
 }
 
@@ -1175,8 +1170,7 @@ static void dyn_interrupt(Bitu num) {
 	dyn_set_eip_last_end(DREG(TMPW));
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_Interrupt,"%Id%Id%Drd",num,CPU_INT_SOFTWARE,DREG(TMPW));
-	dyn_flags_host_to_gen();
-	gen_return(BR_Normal);
+	gen_return_fast(BR_Normal);
 	dyn_closeblock();
 }
 

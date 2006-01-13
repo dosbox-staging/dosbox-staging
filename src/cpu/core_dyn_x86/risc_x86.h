@@ -591,6 +591,7 @@ static void gen_dshift_cl(bool dword,bool left,DynReg * dr1,DynReg * dr2,DynReg 
 
 static void gen_call_function(void * func,char * ops,...) {
 	Bits paramcount=0;
+	bool release_flags=false;
 	struct ParamInfo {
 		char * line;
 		Bitu value;
@@ -663,6 +664,9 @@ static void gen_call_function(void * func,char * ops,...) {
 				retparam =&pinfo[pindex];
 				pinfo[pindex].line=scan;
 				break;
+			case 'F':				/* Release flags from stack */
+				release_flags=true;
+				break;
 			default:
 				IllegalOption("gen_call_function unknown param");
 			}
@@ -677,7 +681,10 @@ static void gen_call_function(void * func,char * ops,...) {
 	/* Restore the params of the stack */
 	if (paramcount) {
 		cache_addw(0xc483);				//add ESP,imm byte
-		cache_addb(paramcount*4);
+		cache_addb(paramcount*4+(release_flags?4:0));
+	} else if (release_flags) {
+		cache_addw(0xc483);				//add ESP,imm byte
+		cache_addb(4);
 	}
 	/* Save the return value in correct register */
 	if (retparam) {
@@ -838,8 +845,27 @@ static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
 static void gen_return(BlockReturn retcode) {
 	gen_protectflags();
 	cache_addb(0x59);			//POP ECX, the flags
-	cache_addb(0xb8);			//MOV EAX, retcode
-	cache_addd(retcode);
+	if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
+	else {
+		cache_addb(0xb8);		//MOV EAX, retcode
+		cache_addd(retcode);
+	}
+	cache_addb(0xc3);			//RET
+}
+
+static void gen_return_fast(BlockReturn retcode,bool popflags=true) {
+	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption("gen_return_fast");
+	cache_addw(0x0d8b);			//MOV ECX, the flags
+	cache_addd((Bit32u)&cpu_regs.flags);
+	if (popflags) {
+		cache_addw(0xc483);			//ADD ESP,4
+		cache_addb(0x4);
+	}
+	if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
+	else {
+		cache_addb(0xb8);		//MOV EAX, retcode
+		cache_addd(retcode);
+	}
 	cache_addb(0xc3);			//RET
 }
 
