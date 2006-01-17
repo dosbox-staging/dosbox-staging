@@ -853,18 +853,18 @@ static void gen_return(BlockReturn retcode) {
 	cache_addb(0xc3);			//RET
 }
 
-static void gen_return_fast(BlockReturn retcode,bool popflags=true) {
+static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
 	if (GCC_UNLIKELY(x86gen.flagsactive)) IllegalOption("gen_return_fast");
 	cache_addw(0x0d8b);			//MOV ECX, the flags
 	cache_addd((Bit32u)&cpu_regs.flags);
-	if (popflags) {
+	if (!ret_exception) {
 		cache_addw(0xc483);			//ADD ESP,4
 		cache_addb(0x4);
-	}
-	if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
-	else {
-		cache_addb(0xb8);		//MOV EAX, retcode
-		cache_addd(retcode);
+		if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
+		else {
+			cache_addb(0xb8);		//MOV EAX, retcode
+			cache_addd(retcode);
+		}
 	}
 	cache_addb(0xc3);			//RET
 }

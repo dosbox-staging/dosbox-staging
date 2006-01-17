@@ -66,21 +66,27 @@ public:
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
 	}
-	void InvalidateRange(Bitu start,Bitu end) {
+	bool InvalidateRange(Bitu start,Bitu end) {
 		Bits index=1+(start>>DYN_HASH_SHIFT);
+		bool is_current_block=false;
+		Bit32u ip_point=SegPhys(cs)+reg_eip;
+		ip_point=((paging.tlb.phys_page[ip_point>>12]-phys_page)<<12)+(ip_point&0xfff);
 		while (index>=0) {
 			Bitu map=0;
 			for (Bitu count=start;count<=end;count++) map+=write_map[count];
-			if (!map) return;
+			if (!map) return is_current_block;
 			CacheBlock * block=hash_map[index];
 			while (block) {
 				CacheBlock * nextblock=block->hash.next;
-				if (start<=block->page.end && end>=block->page.start) 
+				if (start<=block->page.end && end>=block->page.start) {
+					if (ip_point<=block->page.end && ip_point>=block->page.start) is_current_block=true;
 					block->Clear();
+				}
 				block=nextblock;
 			}
 			index--;
 		}
+		return is_current_block;
 	}
 	void writeb(PhysPt addr,Bitu val){
 		addr&=4095;
@@ -108,6 +114,45 @@ public:
 			active_count--;
 			if (!active_count) Release();
 		} else InvalidateRange(addr,addr+3);
+	}
+	bool writeb_checked(PhysPt addr,Bitu val) {
+		addr&=4095;
+		host_writeb(hostmem+addr,val);
+		if (!*(Bit8u*)&write_map[addr]) {
+			if (active_blocks) return false;
+			active_count--;
+			if (!active_count) Release();
+		} else if (InvalidateRange(addr,addr)) {
+			cpu.exception.which=SMC_CURRENT_BLOCK;
+			return true;
+		}
+		return false;
+	}
+	bool writew_checked(PhysPt addr,Bitu val) {
+		addr&=4095;
+		host_writew(hostmem+addr,val);
+		if (!*(Bit16u*)&write_map[addr]) {
+			if (active_blocks) return false;
+			active_count--;
+			if (!active_count) Release();
+		} else if (InvalidateRange(addr,addr+1)) {
+			cpu.exception.which=SMC_CURRENT_BLOCK;
+			return true;
+		}
+		return false;
+	}
+	bool writed_checked(PhysPt addr,Bitu val) {
+		addr&=4095;
+		host_writed(hostmem+addr,val);
+		if (!*(Bit32u*)&write_map[addr]) {
+			if (active_blocks) return false;
+			active_count--;
+			if (!active_count) Release();
+		} else if (InvalidateRange(addr,addr+3)) {
+			cpu.exception.which=SMC_CURRENT_BLOCK;
+			return true;
+		}
+		return false;
 	}
     void AddCacheBlock(CacheBlock * block) {
 		Bitu index=1+(block->page.start>>DYN_HASH_SHIFT);

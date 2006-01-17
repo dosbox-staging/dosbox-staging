@@ -46,15 +46,15 @@
 #include "inout.h"
 
 #ifdef CHECKED_MEMORY_ACCESS
-#define CACHE_TOTAL		(1024*1024)
-#define CACHE_MAXSIZE	(4096*3)
+#define CACHE_PAGES		(128*2)
+#define CACHE_MAXSIZE	(4096*2)
 #else
-#define CACHE_TOTAL		(512*1024)
+#define CACHE_PAGES		(128)
 #define CACHE_MAXSIZE	(4096)
 #endif
+#define CACHE_TOTAL		(CACHE_PAGES*4096)
 #define CACHE_BLOCKS	(32*1024)
 #define CACHE_ALIGN		(16)
-#define CACHE_PAGES		(128)
 #define DYN_HASH_SHIFT	(4)
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
@@ -119,7 +119,11 @@ enum BlockReturn {
 	BR_OpcodeFull,
 #endif
 	BR_CallBack,
+	BR_SMCBlock
 };
+
+#define SMC_CURRENT_BLOCK	0xffff
+
 
 #define DYNFLG_HAS16		0x1		//Would like 8-bit host reg support
 #define DYNFLG_HAS8			0x2		//Would like 16-bit host reg support
@@ -252,6 +256,10 @@ run_block:
 		return CBRET_NONE;
 	case BR_CallBack:
 		return core_dyn.callback;
+	case BR_SMCBlock:
+//		LOG_MSG("selfmodification of running block at %x:%x",SegValue(cs),reg_eip);
+		cpu.exception.which=0;
+		// fallthrough, let the normal core handle the block-modifying instruction
 	case BR_Opcode:
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=1;

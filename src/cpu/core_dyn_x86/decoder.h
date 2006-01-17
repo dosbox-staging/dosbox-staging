@@ -142,11 +142,13 @@ static INLINE void dyn_set_eip_last(void) {
 }
 
 
-static void DynRunException(Bit32u eip_add,Bit32u cycle_sub,Bit32u dflags) {
+static BlockReturn DynRunException(Bit32u eip_add,Bit32u cycle_sub,Bit32u dflags) {
 	reg_flags=(dflags&FMASK_TEST) | (reg_flags&(~FMASK_TEST));
 	reg_eip+=eip_add;
 	CPU_Cycles-=cycle_sub;
+	if (cpu.exception.which==SMC_CURRENT_BLOCK) return BR_SMCBlock;
 	CPU_Exception(cpu.exception.which,cpu.exception.error);
+	return BR_Normal;
 }
 
 static void dyn_check_bool_exception(DynReg * check) {
@@ -158,7 +160,7 @@ static void dyn_check_bool_exception(DynReg * check) {
 	dyn_save_critical_regs();
 	if (cpu.code.big) gen_call_function((void *)&DynRunException,"%Id%Id%F",decode.op_start-decode.code_start,decode.cycles);
 	else gen_call_function((void *)&DynRunException,"%Iw%Id%F",(decode.op_start-decode.code_start)&0xffff,decode.cycles);
-	gen_return_fast(BR_Normal,false);
+	gen_return_fast(BR_Normal,true);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
 }
@@ -172,7 +174,7 @@ static void dyn_check_bool_exception_al(void) {
 	dyn_save_critical_regs();
 	if (cpu.code.big) gen_call_function((void *)&DynRunException,"%Id%Id%F",decode.op_start-decode.code_start,decode.cycles);
 	else gen_call_function((void *)&DynRunException,"%Iw%Id%F",(decode.op_start-decode.code_start)&0xffff,decode.cycles);
-	gen_return_fast(BR_Normal,false);
+	gen_return_fast(BR_Normal,true);
 	dyn_loadstate(&state);
 	gen_fill_branch(branch);
 }
