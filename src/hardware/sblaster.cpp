@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: sblaster.cpp,v 1.51 2006-01-19 14:42:19 qbix79 Exp $ */
+
 #include <string.h>
 #include <math.h> 
 #include "dosbox.h"
@@ -27,6 +29,9 @@
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
+
+void MIDI_RawOutByte(Bit8u data);
+bool MIDI_Available(void);
 
 #define SB_PIC_EVENTS 0
 
@@ -94,6 +99,7 @@ struct SB_INFO {
 		Bitu remain_size;
 	} dma;
 	bool speaker;
+	bool midi;
 	Bit8u time_constant;
 	DSP_MODES mode;
 	SB_TYPES type;
@@ -155,7 +161,7 @@ static Bit8u DSP_cmd_len[256] = {
   0,0,0,0, 0,2,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
   1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
   0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
-  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x30
+  0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
 
   1,2,2,0, 0,0,0,0, 2,0,0,0, 0,0,0,0,  // 0x40
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x50
@@ -344,7 +350,7 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 }
 
 static void GenerateDMASound(Bitu size) {
-	Bitu read;Bitu done=0;Bitu i=0;
+	Bitu read=0;Bitu done=0;Bitu i=0;
 	if (sb.dma.left<=sb.dma.min) {
 		size=sb.dma.left;
 	}
@@ -669,6 +675,9 @@ static void DSP_ADC_CallBack(DmaChannel * chan, DMAEvent event) {
 
 Bitu DEBUG_EnableDebugger(void);
 
+#define DSP_SB16_ONLY if (sb.type != SBT_16) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB16",sb.dsp.cmd); break; }
+#define DSP_SB2_ABOVE if (sb.type <= SBT_1) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB2 or above",sb.dsp.cmd); break; } 
+
 static void DSP_DoCommand(void) {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
@@ -690,11 +699,16 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
+		/* Note: 0x91 is documented only for DSP ver.2.x and 3.x, not 4.x */
 		DSP_PrepareDMA_Old(DSP_DMA_8,false);
 		break;
 	case 0x90:	/* Auto Init 8-bit DMA High Speed */
 	case 0x1c:	/* Auto Init 8-bit DMA */
+		DSP_SB2_ABOVE; /* Note: 0x90 is documented only for DSP ver.2.x and 3.x, not 4.x */
 		DSP_PrepareDMA_Old(DSP_DMA_8,true);
+		break;
+	case 0x38:  /* Write to SB MIDI Output */
+		if (sb.midi == true) MIDI_RawOutByte(sb.dsp.in.data[0]);
 		break;
 	case 0x40:	/* Set Timeconstant */
 		sb.freq=(1000000 / (256 - sb.dsp.in.data[0]));
@@ -705,15 +719,17 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x41:	/* Set Output Samplerate */
 	case 0x42:	/* Set Input Samplerate */
+		DSP_SB16_ONLY;
 		sb.freq=(sb.dsp.in.data[0] << 8)  | sb.dsp.in.data[1];
 		break;
 	case 0x48:	/* Set DMA Block Size */
+		DSP_SB2_ABOVE;
 		//TODO Maybe check limit for new irq?
 		sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 		break;
-    case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
+	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.haveref=true;
-    case 0x74:  /* 074h : Single Cycle 4-bit ADPCM */	
+	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */	
 		DSP_PrepareDMA_Old(DSP_DMA_4,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
@@ -730,8 +746,11 @@ static void DSP_DoCommand(void) {
 		PIC_AddEvent(&DSP_RaiseIRQEvent,
 			(1000.0f*(1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8))/sb.freq));
 		break;
-	case 0xb0:	case 0xb2:	case 0xb4:	case 0xb6:
-    case 0xc0:	case 0xc2:	case 0xc4:	case 0xc6:
+	case 0xb0:	case 0xb1:	case 0xb2:	case 0xb3:  case 0xb4:	case 0xb5:	case 0xb6:	case 0xb7:
+	case 0xb8:	case 0xb9:	case 0xba:	case 0xbb:  case 0xbc:	case 0xbd:	case 0xbe:	case 0xbf:
+	case 0xc0:	case 0xc1:	case 0xc2:	case 0xc3:  case 0xc4:	case 0xc5:	case 0xc6:	case 0xc7:
+	case 0xc8:	case 0xc9:	case 0xca:	case 0xcb:  case 0xcc:	case 0xcd:	case 0xce:	case 0xcf:
+		DSP_SB16_ONLY;
 		/* Generic 8/16 bit DMA */
 //		DSP_SetSpeaker(true);		//SB16 always has speaker enabled
 		sb.dma.sign=(sb.dsp.in.data[0] & 0x10) > 0;
@@ -741,8 +760,9 @@ static void DSP_DoCommand(void) {
 			(sb.dsp.in.data[0] & 0x20) > 0
 		);
 		break;
-	case 0xd0:	/* Halt 8-bit DMA */
 	case 0xd5:	/* Halt 16-bit DMA */
+		DSP_SB16_ONLY;
+	case 0xd0:	/* Halt 8-bit DMA */
 //		DSP_ChangeMode(MODE_NONE);
 //		Games sometimes already program a new dma before stopping, gives noise
 		sb.mode=MODE_DMA_PAUSE;
@@ -755,18 +775,23 @@ static void DSP_DoCommand(void) {
 		DSP_SetSpeaker(false);
 		break;
 	case 0xd8:  /* Speaker status */
+		DSP_SB2_ABOVE;
 		DSP_FlushData();
 		if (sb.speaker) DSP_AddData(0xff);
 		else DSP_AddData(0x00);
 		break;
-	case 0xd4:	/* Continue DMA 8-bit*/
 	case 0xd6:	/* Continue DMA 16-bit */
+		DSP_SB16_ONLY;
+	case 0xd4:	/* Continue DMA 8-bit*/
 		if (sb.mode==MODE_DMA_PAUSE) {
 			sb.mode=MODE_DMA_MASKED;
 			sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 		}
 		break;
+	case 0xd9:  /* Exit Autoinitialize 16-bit */
+		DSP_SB16_ONLY;
 	case 0xda:	/* Exit Autoinitialize 8-bit */
+		DSP_SB2_ABOVE;
 		/* Set mode to single transfer so it ends with current block */
 		sb.dma.autoinit=false;		//Should stop itself
 		break;
@@ -817,8 +842,29 @@ static void DSP_DoCommand(void) {
 	case 0xf2:	/* Trigger 8bit IRQ */
 		SB_RaiseIRQ(SB_IRQ_8);
 		break;
+	case 0xf8:  /* Undocumented, pre-SB16 only */
+		DSP_FlushData();
+		DSP_AddData(0);
+		break;
+	case 0x30: case 0x31:
+		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented MIDI I/O command %2X",sb.dsp.cmd);
+		break;
+	case 0x34: case 0x35: case 0x36: case 0x37:
+		DSP_SB2_ABOVE;
+		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented MIDI UART command %2X",sb.dsp.cmd);
+		break;
+	case 0x7d: case 0x7f: case 0x1f:
+		DSP_SB2_ABOVE;
+		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented auto-init DMA ADPCM command %2X",sb.dsp.cmd);
+		break;
+	case 0x20:
+	case 0x2c:
+	case 0x98: case 0x99: /* Documented only for DSP 2.x and 3.x */
+	case 0xa0: case 0xa8: /* Documented only for DSP 3.x */
+		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented input command %2X",sb.dsp.cmd);
+		break;
 	default:
-		LOG(LOG_SB,LOG_ERROR)("DSP:Unhandled command %2X",sb.dsp.cmd);
+		LOG(LOG_SB,LOG_ERROR)("DSP:Unhandled (undocumented) command %2X",sb.dsp.cmd);
 		break;
 	}
 	sb.dsp.cmd=DSP_NO_COMMAND;
@@ -1162,7 +1208,6 @@ public:
 			break;
 		}
 		if (sb.type==SBT_NONE) return;
-
 		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
 		sb.dsp.state=DSP_S_NORMAL;
 
@@ -1187,6 +1232,10 @@ public:
 			sprintf(hdma,"H%d ",sb.hw.dma16);
 		}
 		autoexecline.Install("SET BLASTER=A%3X I%d D%d %sT%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,hdma,sb.type);
+
+		/* Soundblaster midi interface */
+		if (!MIDI_Available()) sb.midi = false;
+		else sb.midi = true;
 	}	
 	
 	~SBLASTER() {
