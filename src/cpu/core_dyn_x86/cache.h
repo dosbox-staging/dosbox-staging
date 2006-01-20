@@ -117,41 +117,44 @@ public:
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
-		host_writeb(hostmem+addr,val);
 		if (!*(Bit8u*)&write_map[addr]) {
-			if (active_blocks) return false;
-			active_count--;
-			if (!active_count) Release();
+			if (!active_blocks) {
+				active_count--;
+				if (!active_count) Release();
+			}
 		} else if (InvalidateRange(addr,addr)) {
 			cpu.exception.which=SMC_CURRENT_BLOCK;
 			return true;
 		}
+		host_writeb(hostmem+addr,val);
 		return false;
 	}
 	bool writew_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
-		host_writew(hostmem+addr,val);
 		if (!*(Bit16u*)&write_map[addr]) {
-			if (active_blocks) return false;
-			active_count--;
-			if (!active_count) Release();
+			if (!active_blocks) {
+				active_count--;
+				if (!active_count) Release();
+			}
 		} else if (InvalidateRange(addr,addr+1)) {
 			cpu.exception.which=SMC_CURRENT_BLOCK;
 			return true;
 		}
+		host_writew(hostmem+addr,val);
 		return false;
 	}
 	bool writed_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
-		host_writed(hostmem+addr,val);
 		if (!*(Bit32u*)&write_map[addr]) {
-			if (active_blocks) return false;
-			active_count--;
-			if (!active_count) Release();
+			if (!active_blocks) {
+				active_count--;
+				if (!active_count) Release();
+			}
 		} else if (InvalidateRange(addr,addr+3)) {
 			cpu.exception.which=SMC_CURRENT_BLOCK;
 			return true;
 		}
+		host_writed(hostmem+addr,val);
 		return false;
 	}
     void AddCacheBlock(CacheBlock * block) {

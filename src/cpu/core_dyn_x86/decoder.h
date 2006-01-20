@@ -272,8 +272,8 @@ static void dyn_push(DynReg * dynreg) {
 	} else {
 		gen_dop_word_imm(DOP_SUB,true,DREG(ESP),2);
 	}
+	gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
 	gen_dop_word(DOP_MOV,true,DREG(STACK),DREG(ESP));
-	gen_dop_word(DOP_AND,true,DREG(STACK),DREG(SMASK));
 	gen_dop_word(DOP_ADD,true,DREG(STACK),DREG(SS));
 	if (decode.big_op) {
 		gen_call_function((void *)&mem_writed,"%Drd%Dd",DREG(STACK),dynreg);
@@ -299,6 +299,7 @@ static void dyn_pop(DynReg * dynreg) {
 		} else {
 			gen_dop_word_imm(DOP_ADD,true,DREG(ESP),2);
 		}
+		gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
 	}
 }
 
@@ -904,8 +905,8 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 		dyn_fill_ea();
 		gen_lea(DREG(TMPW),DREG(EA),0,0,decode.big_op ? 4:2);
 		dyn_read_word(DREG(TMPW),DREG(TMPW),false);
-		dyn_load_seg(seg,DREG(TMPW));gen_releasereg(DREG(TMPW));
 		dyn_read_word_release(DREG(EA),&DynRegs[decode.modrm.reg],decode.big_op);
+		dyn_load_seg(seg,DREG(TMPW));gen_releasereg(DREG(TMPW));
 	} else {
 		IllegalOption("dyn_load_seg_off_ea");
 	}
@@ -1701,8 +1702,8 @@ restart_prefix:
 				gen_protectflags();
 				dyn_flags_gen_to_host();
 				gen_lea(DREG(EA),DREG(EA),0,0,decode.big_op ? 4: 2);
-				dyn_set_eip_last_end(DREG(TMPB));
 				dyn_read_word(DREG(EA),DREG(EA),false);
+				dyn_set_eip_last_end(DREG(TMPB));
 				dyn_save_critical_regs();
 				gen_call_function(
 					decode.modrm.reg == 3 ? (void*)&CPU_CALL : (void*)&CPU_JMP,
