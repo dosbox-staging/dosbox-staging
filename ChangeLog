@@ -47,6 +47,16 @@
   - Improved and speed up the dynamic cpu core.
   - Fix some errors in the CD-ROM emulation layer.
   - Added an automatic work-around for some graphics chipsets.
+  - Add PCjr support.
+  - Allow mousedriver to be replaced. Fixes a few games with come with their
+    own (internal) driver.
+  - Improved dynamic cpu core so it can handle pagefaults and some obscure 
+    types of self-modifying code.
+  - Added -noautoexec switch to skip the contents of [autoexec] in the
+    configuration file.
+  - Made core_full endian safe.
+  - Made pagefaults endian safe.
+  - Compilation fixes for various platforms.
   - Lots of bugfixes.
   - Even more bugfixes.
   
