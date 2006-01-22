@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.69 2006-01-12 10:20:20 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.70 2006-01-22 14:13:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -467,7 +467,7 @@ void SHELL_Init() {
 	        "\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_DEBUG",
-	        "\xBA Press \033[31mctrl-Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m.\xBA\n"
+	        "\xBA Press \033[31malt-Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m. \xBA\n"
 	        "\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_END",

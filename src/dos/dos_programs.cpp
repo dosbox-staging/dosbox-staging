@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.50 2006-01-05 14:14:52 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.51 2006-01-22 14:13:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -936,7 +936,7 @@ void DOS_SetupPrograms(void) {
 		"They can be changed in the \033[33mkeymapper\033[0m.\n"
 		"\n"
 		"\033[33;1mALT-ENTER\033[0m   : Go full screen and back.\n"
-		"\033[33;1mCTRL-PAUSE\033[0m  : Pause DOSBox.\n"
+		"\033[33;1mALT-PAUSE\033[0m   : Pause DOSBox.\n"
 		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
 		"\033[33;1mCTRL-F4\033[0m     : Update directory cache for all drives! Swap mounted disk-image.\n"
 		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"

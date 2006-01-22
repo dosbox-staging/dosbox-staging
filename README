@@ -574,7 +574,7 @@ For more information use the /? command line switch with the programs.
 ================
 
 ALT-ENTER     Switch to full screen and back.
-CTRL-PAUSE    Pause emulation.
+ALT-PAUSE     Pause emulation.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
 CTRL-F5       Save a screenshot.(png)

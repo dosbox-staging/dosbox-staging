@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.94 2005-12-02 10:02:03 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.95 2006-01-22 14:13:00 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -937,7 +937,7 @@ static void GUI_StartUp(Section * sec) {
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(PauseDOSBox,MK_pause,MMOD1,"pause","Pause");
+	MAPPER_AddHandler(PauseDOSBox,MK_pause,MMOD2,"pause","Pause");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
