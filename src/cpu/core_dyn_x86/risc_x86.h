@@ -765,6 +765,16 @@ static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
 	*data=(from-data-1);
 }
 
+static Bit8u * gen_create_branch_long(BranchTypes type) {
+	cache_addw(0x800f+(type<<8));
+	cache_addd(0);
+	return (cache.pos-4);
+}
+
+static void gen_fill_branch_long(Bit8u * data,Bit8u * from=cache.pos) {
+	*(Bit32u*)data=(from-data-4);
+}
+
 static Bit8u * gen_create_jump(Bit8u * to=0) {
 	/* First free all registers */
 	cache_addb(0xe9);

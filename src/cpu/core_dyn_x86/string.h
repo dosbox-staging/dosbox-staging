@@ -83,9 +83,7 @@ static void dyn_string(STRING_OP op) {
 	/* Check if ECX!=zero */
 	if (decode.rep) {
 		gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
-		Bit8u * branch_ecx=gen_create_branch(BR_NZ);
-		rep_ecx_jmp=gen_create_jump();
-		gen_fill_branch(branch_ecx);
+		rep_ecx_jmp=gen_create_branch_long(BR_Z);
 	}
 	if (usesi) {
 		if (!decode.big_addr) {
@@ -146,21 +144,21 @@ static void dyn_string(STRING_OP op) {
 	if (usedi) gen_dop_word(DOP_ADD,decode.big_addr,DREG(EDI),DREG(TMPW));
 
 	if (decode.rep) {
-		DynState cycle_state;
 		gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
 		gen_sop_word(SOP_DEC,true,DREG(CYCLES));
 		gen_releasereg(DREG(CYCLES));
-		dyn_savestate(&cycle_state);
-		Bit8u * cycle_branch=gen_create_branch(BR_NLE);
-		gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),decode.op_start-decode.code_start);
-		dyn_save_critical_regs();
-		gen_return(BR_Cycles);
-		gen_fill_branch(cycle_branch);
-		dyn_loadstate(&cycle_state);
-		dyn_synchstate(&rep_state);
+		dyn_savestate(&save_info[used_save_info].state);
+		save_info[used_save_info].branch_pos=gen_create_branch_long(BR_LE);
+		save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
+		save_info[used_save_info].type=normal;
+		used_save_info++;
+
 		/* Jump back to start of ECX check */
+		dyn_synchstate(&rep_state);
 		gen_create_jump(rep_start);
-		gen_fill_jump(rep_ecx_jmp);
+
+		dyn_loadstate(&rep_state);
+		gen_fill_branch_long(rep_ecx_jmp);
 	}
 	gen_releasereg(DREG(TMPW));
 }
