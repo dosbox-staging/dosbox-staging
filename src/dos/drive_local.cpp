@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.61 2005-08-19 07:13:34 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.62 2006-01-27 10:44:55 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -303,7 +303,7 @@ bool localDrive::TestDir(char * dir) {
 	if (len && (newdir[len-1]!='\\')) {
 		// It has to be a directory !
 		struct stat test;
-		if (stat(newdir,&test)==-1)			return false;
+		if (stat(newdir,&test))			return false;
 		if ((test.st_mode & S_IFDIR)==0)	return false;
 	};
 	int temp=access(newdir,F_OK);
