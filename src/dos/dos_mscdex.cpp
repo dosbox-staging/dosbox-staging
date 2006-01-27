@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.34 2005-12-05 19:23:10 harekiet Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.35 2006-01-27 07:54:51 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -34,7 +34,7 @@
 
 #define MSCDEX_VERSION_HIGH	2
 #define MSCDEX_VERSION_LOW	23
-#define MSCDEX_MAX_DRIVES	5
+#define MSCDEX_MAX_DRIVES	8
 
 // Error Codes
 #define MSCDEX_ERROR_BAD_FORMAT			11
