@@ -19,51 +19,98 @@
 #ifndef _RENDER_SCALERS_H
 #define _RENDER_SCALERS_H
 
-#include "render.h"
+//#include "render.h"
 #include "video.h"
+#include <xmmintrin.h>
 
-#define SCALER_MAXWIDTH 1280
-#define SCALER_MAXHEIGHT 1024
+#define SCALER_MAXWIDTH		1024
+#define SCALER_MAXHEIGHT	768
+#define SCALER_BLOCKSIZE	16
 
-extern Bitu Scaler_Line;
-extern Bitu Scaler_SrcWidth;
-extern Bitu Scaler_SrcHeight;
-extern Bitu Scaler_DstPitch;
-extern Bit8u * Scaler_DstWrite;
-extern Bit8u Scaler_Data[];
-extern Bit8u * Scaler_Index;
+typedef enum {
+	scalerMode8, scalerMode15, scalerMode16, scalerMode32
+} scalerMode_t;
 
-union PaletteLut {
-	Bit16u b16[256];
-	Bit32u b32[256];
-};
+typedef enum {
+	scalerOpNormal,
+	scalerOpAdvMame,
+	scalerOpAdvInterp,
+	scalerOpTV,
+	scalerOpRGB,
+	scalerOpScan,
+} scalerOperation_t;
 
-extern PaletteLut Scaler_PaletteLut;
+typedef void (*ScalerCacheHandler_t)(const void *src);
+typedef void (*ScalerLineHandler_t)(void);
 
-enum RENDER_Operation {
-	OP_Normal,
-	OP_Normal2x,
-	OP_AdvMame2x,
-	OP_AdvMame3x,
-	OP_AdvInterp2x,
-	OP_Interp2x,
-	OP_TV2x,
-};
+extern Bit8u Scaler_Aspect[];
+extern Bit8u diff_table[];
+extern Bitu Scaler_ChangedLineIndex;
+extern Bit16u Scaler_ChangedLines[];
+extern Bit8u scalerChangeCache [SCALER_MAXHEIGHT][SCALER_MAXWIDTH / SCALER_BLOCKSIZE];
+typedef union {
+	Bit32u b32	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
+	Bit16u b16	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
+	Bit8u b8	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
+} scalerFrameCache_t;
+typedef union {
+	Bit32u b32	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
+	Bit16u b16	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
+	Bit8u b8	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
+} scalerSourceCache_t;
 
-struct ScalerBlock {
-	Bitu flags;
-	Bitu xscale,yscale,miny;
-	RENDER_Line_Handler	handlers[4];
-};
+extern scalerFrameCache_t scalerFrameCache;
+extern scalerSourceCache_t scalerSourceCache;
 
-extern ScalerBlock Normal_8;
-extern ScalerBlock NormalDbl_8;
-extern ScalerBlock Normal2x_8;
-extern ScalerBlock AdvMame2x_8;
-extern ScalerBlock AdvMame3x_8;
-extern ScalerBlock AdvInterp2x_8;
-extern ScalerBlock Interp2x_8;
-extern ScalerBlock TV2x_8;
+#define ScaleFlagSimple		0x001
 
+typedef struct {
+	Bitu gfxFlags;
+	Bitu scaleFlags;
+	Bitu xscale,yscale;
+	ScalerLineHandler_t Linear[4];
+	ScalerLineHandler_t Random[4];
+} ScalerLineBlock_t;
+
+typedef struct {
+	Bitu gfxFlags;
+	Bitu scaleFlags;
+	Bitu xscale,yscale;
+	ScalerLineHandler_t Linear[4][4];
+	ScalerLineHandler_t Random[4][4];
+} ScalerFullLineBlock_t;
+
+
+typedef struct {
+	ScalerCacheHandler_t simple[4];
+	ScalerCacheHandler_t complex[4];
+} ScalerCacheBlock_t;
+
+extern ScalerLineBlock_t ScaleNormal;
+extern ScalerLineBlock_t ScaleNormalDw;
+extern ScalerLineBlock_t ScaleNormalDh;
+
+#define SCALE_LEFT	0x1
+#define SCALE_RIGHT	0x2
+#define SCALE_FULL	0x4
+
+extern ScalerLineBlock_t ScaleNormal2x;
+extern ScalerLineBlock_t ScaleNormal3x;
+extern ScalerLineBlock_t ScaleAdvMame2x;
+extern ScalerLineBlock_t ScaleAdvMame3x;
+extern ScalerLineBlock_t ScaleAdvInterp2x;
+
+extern ScalerLineBlock_t ScaleTV2x;
+extern ScalerLineBlock_t ScaleTV3x;
+extern ScalerLineBlock_t ScaleRGB2x;
+extern ScalerLineBlock_t ScaleRGB3x;
+extern ScalerLineBlock_t ScaleScan2x;
+extern ScalerLineBlock_t ScaleScan3x;
+
+extern ScalerCacheBlock_t	ScalerCache_8;
+extern ScalerCacheBlock_t	ScalerCache_8Pal;
+extern ScalerCacheBlock_t	ScalerCache_15;
+extern ScalerCacheBlock_t	ScalerCache_16;
+extern ScalerCacheBlock_t	ScalerCache_32;
 
 #endif

@@ -19,294 +19,502 @@
 #if DBPP == 8
 #define PSIZE 1
 #define PTYPE Bit8u
-#define WC write_cache.b8
-#define LC line_cache.b8
-#define	redblueMask 0
-#define	greenMask 0
+#define WC scalerWriteCache.b8
+#define FC scalerFrameCache.b8
+#define redMask		0
+#define	greenMask	0
+#define blueMask	0
 #elif DBPP == 15 || DBPP == 16
 #define PSIZE 2
 #define PTYPE Bit16u
-#define WC write_cache.b16
-#define LC line_cache.b16
+#define WC scalerWriteCache.b16
+#define FC scalerFrameCache.b16
 #if DBPP == 15
-#define	redblueMask 0x7C1F
-#define	greenMask 0x03E0
+#define	redMask		0x7C00
+#define	greenMask	0x03E0
+#define	blueMask	0x001F
 #elif DBPP == 16
-#define redblueMask 0xF81F
-#define greenMask 0x07E0
+#define redMask		0xF800
+#define greenMask	0x07E0
+#define blueMask	0x001F
 #endif
 #elif DBPP == 32
 #define PSIZE 4
 #define PTYPE Bit32u
-#define WC write_cache.b32
-#define LC line_cache.b32
-#define redblueMask 0xff00ff
-#define greenMask 0xff00
+#define WC scalerWriteCache.b32
+#define FC scalerFrameCache.b32
+#define redMask		0xff0000
+#define greenMask	0x00ff00
+#define blueMask	0x0000ff
 #endif
+
+#define redblueMask (redMask | blueMask)
+
 
 #if SBPP == 8
+#define SC scalerSourceCache.b8
 #if DBPP == 8
-#define PMAKE(_VAL) _VAL
+#define PMAKE(_VAL) (_VAL)
 #elif DBPP == 15
-#define PMAKE(_VAL) Scaler_PaletteLut.b16[_VAL]
+#define PMAKE(_VAL) render.pal.lut.b16[_VAL]
 #elif DBPP == 16
-#define PMAKE(_VAL) Scaler_PaletteLut.b16[_VAL]
+#define PMAKE(_VAL) render.pal.lut.b16[_VAL]
 #elif DBPP == 32
-#define PMAKE(_VAL) Scaler_PaletteLut.b32[_VAL]
+#define PMAKE(_VAL) render.pal.lut.b32[_VAL]
 #endif
+#define SRCTYPE Bit8u
 #endif
 
-#define C0 LC[0][x-1]
-#define C1 LC[0][x+0]
-#define C2 LC[0][x+1]
-#define C3 LC[1][x-1]
-#define C4 LC[1][x+0]
-#define C5 LC[1][x+1]
-#define C6 LC[2][x-1]
-#define C7 LC[2][x+0]
-#define C8 LC[2][x+1]
+#if SBPP == 15
+#define SC scalerSourceCache.b16
+#if DBPP == 15
+#define PMAKE(_VAL) (_VAL)
+#elif DBPP == 16
+#define PMAKE(_VAL) (((_VAL) & 31) | ((_VAL) & ~31) << 1)
+#elif DBPP == 32
+#define PMAKE(_VAL)  (((_VAL&(31<<10))<<9)|((_VAL&(31<<5))<<6)|((_VAL&31)<<3))
+#endif
+#define SRCTYPE Bit16u
+#endif
 
-static void conc3d(Normal,SBPP,DBPP) (const Bit8u * src) {
-	const Bit8u * line;
-#if SBPP == DBPP
-	line=src;
-	BituMove(Scaler_DstWrite,line,Scaler_SrcWidth*PSIZE);
+#if SBPP == 16
+#define SC scalerSourceCache.b16
+#if DBPP == 15
+#define PMAKE(_VAL) (((_VAL&~31)>>1)|(_VAL&31))
+#elif DBPP == 16
+#define PMAKE(_VAL) (_VAL)
+#elif DBPP == 32
+#define PMAKE(_VAL)  (((_VAL&(31<<11))<<8)|((_VAL&(63<<5))<<5)|((_VAL&31)<<3))
+#endif
+#define SRCTYPE Bit16u
+#endif
+
+#if SBPP == 32
+#define SC scalerSourceCache.b32
+#if DBPP == 15
+#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>9)|((_VAL&(31<<11))>>6)|((_VAL&(31<<3))>>3))
+#elif DBPP == 16
+#define PMAKE(_VAL) (PTYPE)(((_VAL&(31<<19))>>8)|((_VAL&(63<<10))>>4)|((_VAL&(31<<3))>>3))
+#elif DBPP == 32
+#define PMAKE(_VAL) (_VAL)
+#endif
+#define SRCTYPE Bit32u
+#endif
+
+#define C0 fc[-1 - SCALER_MAXWIDTH -2]
+#define C1 fc[+0 - SCALER_MAXWIDTH -2]
+#define C2 fc[+1 - SCALER_MAXWIDTH -2]
+#define C3 fc[-1 ]
+#define C4 fc[+0 ]
+#define C5 fc[+1 ]
+#define C6 fc[-1 + SCALER_MAXWIDTH +2]
+#define C7 fc[+0 + SCALER_MAXWIDTH +2]
+#define C8 fc[+1 + SCALER_MAXWIDTH +2]
+
+#if defined (CACHEWITHPAL)
+static void conc3d(CacheComplexPal,SBPP,DBPP) (const void * s) {
 #else
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	line=line_cache.b8[0];
-	for (Bitu x=0;x<Scaler_SrcWidth;x++) {
-		PTYPE pixel=PMAKE(src[x]);
-		dst[x]=pixel;LC[0][x]=pixel;
-	}
+static void conc3d(CacheComplex,SBPP,DBPP) (const void * s) {
 #endif
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines;lines--) {
-		BituMove(Scaler_DstWrite,line,Scaler_SrcWidth*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
+	const SRCTYPE * src = (SRCTYPE*)s;
+	PTYPE *fc= &FC[render.scale.inLine+1][1];
+	SRCTYPE *sc= &SC[render.scale.inLine][0];
+	Bitu b;
+	bool hadChange = false;
+	/* This should also copy the surrounding pixels but it looks nice enough without */
+	for (b=0;b<render.scale.blocks;b++) {
+#if defined (CACHEWITHPAL)
+		for (Bitu x=0;x<SCALER_BLOCKSIZE;x++) {
+			PTYPE pixel = PMAKE(src[x]);
+			if (pixel != fc[x]) {
+#else 
+		for (Bitu x=0;x<SCALER_BLOCKSIZE;x+=sizeof(Bitu)/sizeof(SRCTYPE)) {
+			if (*(Bitu*)&src[x] != *(Bitu*)&sc[x]) {
+#endif
+				do {
+					fc[x] = PMAKE(src[x]);
+					sc[x] = src[x];
+					x++;
+				} while (x<SCALER_BLOCKSIZE);
+				hadChange = true;
+				/* Change the surrounding blocks */
+				CC[render.scale.inLine+0][1+b-1] |= SCALE_RIGHT;
+				CC[render.scale.inLine+0][1+b+0] |= SCALE_FULL;
+				CC[render.scale.inLine+0][1+b+1] |= SCALE_LEFT;
+				CC[render.scale.inLine+1][1+b-1] |= SCALE_RIGHT;
+				CC[render.scale.inLine+1][1+b+0] |= SCALE_FULL;
+				CC[render.scale.inLine+1][1+b+1] |= SCALE_LEFT;
+				CC[render.scale.inLine+2][1+b-1] |= SCALE_RIGHT;
+				CC[render.scale.inLine+2][1+b+0] |= SCALE_FULL;
+				CC[render.scale.inLine+2][1+b+1] |= SCALE_LEFT;
+				continue;
+			}
+		}
+		fc += SCALER_BLOCKSIZE;
+		sc += SCALER_BLOCKSIZE;
+		src += SCALER_BLOCKSIZE;
 	}
+	if (hadChange) {
+		CC[render.scale.inLine+0][0] = 1;
+		CC[render.scale.inLine+1][0] = 1;
+		CC[render.scale.inLine+2][0] = 1;
+	}
+	render.scale.inLine ++;
 }
 
-static void conc3d(Normal2x,SBPP,DBPP) (const Bit8u * src) {
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	for (Bitu x=0;x<Scaler_SrcWidth;x++) {
-		Bitu pixel=PMAKE(src[x]);
-		dst[x*2+0]=dst[x*2+1]=pixel;
-		LC[0][x*2+0]=LC[0][x*2+1]=pixel;
+
+#if defined (CACHEWITHPAL)
+static void conc3d(CacheSimplePal,SBPP,DBPP) (const void * s) {
+#else
+static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
+#endif
+	const SRCTYPE * src = (SRCTYPE*)s;
+	PTYPE *fc= &FC[render.scale.inLine+1][1];
+	SRCTYPE *sc= &SC[render.scale.inLine][0];
+	Bitu b;
+	/* This should also copy the surrounding pixels but it looks nice enough without */
+	for (b=0;b<render.scale.blocks;b++) {
+#if defined (CACHEWITHPAL)
+		for (Bitu x=0;x<SCALER_BLOCKSIZE;x++) {
+			PTYPE pixel = PMAKE(src[x]);
+			if (pixel != fc[x]) {
+#else 
+		for (Bitu x=0;x<SCALER_BLOCKSIZE;x+=sizeof(Bitu)/sizeof(SRCTYPE)) {
+			if (*(Bitu*)&src[x] != *(Bitu*)&sc[x]) {
+#endif
+				do {
+					fc[x] = PMAKE(src[x]);
+					sc[x] = src[x];
+					x++;
+				} while (x<SCALER_BLOCKSIZE);
+				CC[render.scale.inLine+1][0] = 1;
+				CC[render.scale.inLine+1][1+b] = 1;
+				continue;
+			}
+		}
+		fc += SCALER_BLOCKSIZE;
+		sc += SCALER_BLOCKSIZE;
+		src += SCALER_BLOCKSIZE;
 	}
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines;lines--) {
-		BituMove(Scaler_DstWrite,LC[0],Scaler_SrcWidth*2*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
+	render.scale.inLine ++;
 }
+
+
+/* Add all the specific scalers */
+
+#if (SBPP == DBPP) && !defined (CACHEWITHPAL)
+
+#define SCALERSIMPLE		1
+#define SCALERNAME			Normal
+#define SCALERWIDTH			1
+#define SCALERHEIGHT		1
+#define SCALERFUNC								\
+	line0[0] = C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		NormalDw
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	1
+#define SCALERFUNC								\
+	line0[0] = C4;								\
+	line0[1] = C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		NormalDh
+#define SCALERWIDTH		1
+#define SCALERHEIGHT	2
+#define SCALERFUNC								\
+	line0[0] = C4;								\
+	line1[1] = C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		Normal2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC								\
+	line0[0] = C4;								\
+	line0[1] = C4;								\
+	line1[0] = C4;								\
+	line1[1] = C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		Normal3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC							\
+	line0[0] = C4;							\
+	line0[1] = C4;							\
+	line0[2] = C4;							\
+	line1[0] = C4;							\
+	line1[1] = C4;							\
+	line1[2] = C4;							\
+	line2[0] = C4;							\
+	line2[1] = C4;							\
+	line2[2] = C4;	
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
 
 #if (DBPP > 8)
-static void conc3d(TV2x,SBPP,DBPP) (const Bit8u * src) {
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	for (Bitu x=0;x<Scaler_SrcWidth;x++) {
-		Bitu pixel=PMAKE(src[x]);
-		Bitu halfpixel=(((pixel & redblueMask) * 7) >> 3) & redblueMask;
-		halfpixel|=(((pixel & greenMask) * 7) >> 3) & greenMask;
-		dst[x*2+0]=dst[x*2+1]=halfpixel;
-		LC[0][x*2+0]=LC[0][x*2+1]=pixel;
-	}
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines;lines--) {
-		BituMove(Scaler_DstWrite,LC[0],Scaler_SrcWidth*2*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
-}
 
-static void conc3d(Interp2x,SBPP,DBPP) (const Bit8u * src) {
-	if (!Scaler_Line) {
-		Scaler_Line++;	
-		for (Bitu tempx=Scaler_SrcWidth;tempx>0;tempx--) {
-			LC[1][tempx] = LC[2][tempx] = PMAKE(src[tempx]);
-		}
-		return;
-	}
-lastagain:
-	Bitu x=0;
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	C1=C4;C4=C7;C7=PMAKE(src[x]);
-	C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-	dst[0]   = interp_w2(C4,C1,3,1);
-	dst[1]   = interp_w4(C4,C1,C2,C5,5,1,1,1);
-	WC[1][0] = interp_w2(C4,C7,3,1);
-	WC[1][1] = interp_w4(C4,C5,C8,C7,5,1,1,1);
-	for (x=1;x<Scaler_SrcWidth-1;x++) {
-		C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-		dst[x*2+0]   = interp_w4(C4,C3,C0,C1,5,1,1,1);
-		dst[x*2+1]   = interp_w4(C4,C1,C2,C5,5,1,1,1);
-		WC[1][x*2+0] = interp_w4(C4,C7,C6,C3,5,1,1,1);
-		WC[1][x*2+1] = interp_w4(C4,C5,C8,C7,5,1,1,1);
-	}
-	dst[x*2]     = interp_w4(C4,C3,C0,C1,5,1,1,1);
-	dst[x*2+1]   = interp_w2(C4,C1,3,1);
-	WC[1][x*2+0] = interp_w4(C4,C7,C6,C3,5,1,1,1);
-	WC[1][x*2+1] = interp_w2(C4,C7,3,1);
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines;lines--) {
-		BituMove(Scaler_DstWrite,&WC[1],Scaler_SrcWidth*2*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
-	if (++Scaler_Line==Scaler_SrcHeight) goto lastagain;
+#define SCALERSIMPLE	1
+#define SCALERNAME		TV2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC									\
+{													\
+	Bitu halfpixel=(((C4 & redblueMask) * 5) >> 3) & redblueMask;	\
+	halfpixel|=(((C4 & greenMask) * 5) >> 3) & greenMask;			\
+	line0[0]=C4;							\
+	line0[1]=C4;							\
+	line1[0]=halfpixel;						\
+	line1[1]=halfpixel;						\
 }
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
 
-static void conc3d(AdvInterp2x,SBPP,DBPP) (const Bit8u * src) {
-	if (!Scaler_Line) {
-		Scaler_Line++;	
-		for (Bitu tempx=Scaler_SrcWidth;tempx>0;tempx--) {
-			LC[1][tempx]=LC[2][tempx]=PMAKE(src[tempx]);
-		}
-		return;
-	}
-lastagain:
-	Bitu x=0;
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	C1=C4;C4=C7;C7=PMAKE(src[x]);
-	C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-	dst[0]=C4;
-	WC[1][0]=C4;
-	dst[1]	= C5 == C1 && C7 != C1 ? C2 : C4;
-	WC[1][1]= C5 == C7 && C1 != C7 ? C7 : C4;
-	for (x=1;x<Scaler_SrcWidth-1;x++) {
-		C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-		if (C1 != C7 && C3 != C5) {
-			dst[x*2+0]   = C3 == C1 ? interp_w2(C3,C4,5,3) : C4;
-			dst[x*2+1]   = C1 == C5 ? interp_w2(C5,C4,5,3) : C4;
-			WC[1][x*2+0] = C3 == C7 ? interp_w2(C3,C4,5,3) : C4;
-			WC[1][x*2+1] = C7 == C5 ? interp_w2(C5,C4,5,3) : C4;
-		} else {
-			dst[x*2+0]   = dst[x*2+1] =
-			WC[1][x*2+0] = WC[1][x*2+1]= C4;
-		}
-	}
-	x=Scaler_SrcWidth-1;
-	dst[x*2]     = (C3 == C1 && C7 != C1) ? C1 : C4;
-	WC[1][x*2+0] = (C3 == C7 && C1 != C7) ? C7 : C4;
-	dst[x*2+1]   = C4;
-	WC[1][x*2+1] = C4;
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines>0;lines--) {
-		BituMove(Scaler_DstWrite,&WC[1],2*Scaler_SrcWidth*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
-	if (++Scaler_Line==Scaler_SrcHeight) goto lastagain;
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		TV3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC									\
+{													\
+	Bitu halfpixel=(((C4 & redblueMask) * 5) >> 3) & redblueMask;	\
+	halfpixel|=(((C4 & greenMask) * 5) >> 3) & greenMask;			\
+	line0[0]=C4;							\
+	line0[1]=C4;							\
+	line0[2]=C4;							\
+	line1[0]=halfpixel;						\
+	line1[1]=halfpixel;						\
+	line1[2]=halfpixel;						\
+	halfpixel=(((C4 & redblueMask) * 5) >> 4) & redblueMask;	\
+	halfpixel|=(((C4 & greenMask) * 5) >> 4) & greenMask;			\
+	line2[0]=halfpixel;						\
+	line2[1]=halfpixel;						\
+	line2[2]=halfpixel;						\
 }
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		RGB2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC						\
+	line0[0]=C4 & redMask;				\
+	line0[1]=C4 & greenMask;			\
+	line1[0]=C4 & blueMask;				\
+	line1[1]=C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		RGB3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC						\
+	line0[0]=C4;						\
+	line0[1]=C4 & greenMask;			\
+	line0[2]=C4 & blueMask;				\
+	line1[0]=C4 & blueMask;				\
+	line1[1]=C4;						\
+	line1[2]=C4 & redMask;				\
+	line2[0]=C4 & redMask;				\
+	line2[1]=C4 & greenMask;			\
+	line2[2]=C4;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		Scan2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC						\
+	line0[0]=C4;						\
+	line0[1]=C4;						\
+	line1[0]=0;							\
+	line1[1]=0;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+
+#define SCALERSIMPLE	1
+#define SCALERNAME		Scan3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC			\
+	line0[0]=C4;			\
+	line0[1]=C4;			\
+	line0[2]=C4;			\
+	line1[0]=0;				\
+	line1[1]=0;				\
+	line1[2]=0;				\
+	line2[0]=0;				\
+	line2[1]=0;				\
+	line2[2]=0;
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+#undef SCALERSIMPLE
+
+
+
+#define SCALERNAME		AdvInterp2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC												\
+	if (C1 != C7 && C3 != C5) {									\
+		line0[0] = C3 == C1 ? interp_w2(C3,C4,5,3) : C4;		\
+		line0[1] = C1 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
+		line1[0] = C3 == C7 ? interp_w2(C3,C4,5,3) : C4;		\
+		line1[1] = C7 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
+	} else {													\
+		line0[0] = line0[1] = C4;								\
+		line1[0] = line1[1] = C4;								\
+	}
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#define SCALERNAME		AdvInterp3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC												\
+	if (C1 != C7 && C3 != C5) {									\
+		line0[0] = C3 == C1 ? interp_w2(C3,C4,5,3) : C4;		\
+		line0[1] = C1 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
+		line1[0] = C3 == C7 ? interp_w2(C3,C4,5,3) : C4;		\
+		line1[1] = C7 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
+	} else {													\
+		line0[0] = line0[1] = C4;								\
+		line1[0] = line1[1] = C4;								\
+	}
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
 
 #endif		//DBPP > 8
 
-static void conc3d(AdvMame2x,SBPP,DBPP) (const Bit8u * src) {
-	if (!Scaler_Line) {
-		Scaler_Line++;	
-		for (Bitu tempx=Scaler_SrcWidth;tempx>0;tempx--) {
-			LC[1][tempx]=LC[2][tempx]=PMAKE(src[tempx]);
-		}
-		return;
+#define SCALERNAME		AdvMame2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC												\
+	if (C1 != C7 && C3 != C5) {									\
+		line0[0] = C3 == C1 ? C3 : C4;							\
+		line0[1] = C1 == C5 ? C5 : C4;							\
+		line1[0] = C3 == C7 ? C3 : C4;							\
+		line1[1] = C7 == C5 ? C5 : C4;							\
+	} else {													\
+		line0[0] = line0[1] = C4;								\
+		line1[0] = line1[1] = C4;								\
 	}
-lastagain:
-	Bitu x=0;
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	C1=C4;C4=C7;C7=PMAKE(src[x]);
-	C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-	dst[0]=C4;
-	WC[1][0]=C4;
-	dst[1]	= C5 == C1 && C7 != C1 ? C2 : C4;
-	WC[1][1]= C5 == C7 && C1 != C7 ? C7 : C4;
-	for (x=1;x<Scaler_SrcWidth-1;x++) {
-		C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-		if (C1 != C7 && C3 != C5) {
-			dst[x*2+0]   = C3 == C1 ? C3 : C4;
-			dst[x*2+1]   = C1 == C5 ? C5 : C4;
-			WC[1][x*2+0] = C3 == C7 ? C3 : C4;
-			WC[1][x*2+1] = C7 == C5 ? C5 : C4;
-		} else {
-			dst[x*2+0]   = dst[x*2+1] =
-			WC[1][x*2+0] = WC[1][x*2+1]= C4;
-		}
-	}
-	x=Scaler_SrcWidth-1;
-	dst[x*2]     = (C3 == C1 && C7 != C1) ? C1 : C4;
-	WC[1][x*2+0] = (C3 == C7 && C1 != C7) ? C7 : C4;
-	dst[x*2+1]   = C4;
-	WC[1][x*2+1] = C4;
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines>0;lines--) {
-		BituMove(Scaler_DstWrite,&WC[1],2*Scaler_SrcWidth*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
-	if (++Scaler_Line==Scaler_SrcHeight) goto lastagain;
-}
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
 
-static void conc3d(AdvMame3x,SBPP,DBPP) (const Bit8u * src) {
-	if (!Scaler_Line) {
-		Scaler_Line++;	
-		for (Bitu tempx=Scaler_SrcWidth;tempx>0;tempx--) {
-			LC[1][tempx]=LC[2][tempx]=PMAKE(src[tempx]);
-		}
-		return;
+#define SCALERNAME		AdvMame3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#define SCALERFUNC																	\
+	if ((C1 != C7) && (C3 != C5)) {													\
+		line0[0] = C3 == C1 ?  C3 : C4;												\
+		line0[1] = (C3 == C1 && C4 != C2) || (C5 == C1 && C4 != C0) ? C1 : C4;		\
+		line0[2] = C5 == C1 ?  C5 : C4;												\
+		line1[0] = (C3 == C1 && C4 != C6) || (C3 == C7 && C4 != C0) ? C3 : C4;		\
+		line1[1] = C4;																\
+		line1[2] = (C5 == C1 && C4 != C8) || (C5 == C7 && C4 != C2) ? C5 : C4;		\
+		line2[0] = C3 == C7 ?  C3 : C4;												\
+		line2[1] = (C3 == C7 && C4 != C8) || (C5 == C7 && C4 != C6) ? C7 : C4;		\
+		line2[2] = C5 == C7 ?  C5 : C4;												\
+	} else {																		\
+		line0[0] = line0[1] = line0[2] = C4;										\
+		line1[0] = line1[1] = line1[2] = C4;										\
+		line2[0] = line2[1] = line2[2] = C4;										\
 	}
-lastagain:
-	PTYPE * dst=(PTYPE *)Scaler_DstWrite;
-	LC[0][0]=LC[1][0];LC[1][0]=LC[2][0];LC[2][0]=PMAKE(src[0]);
-	LC[0][1]=LC[1][1];LC[1][1]=LC[2][1];LC[2][1]=PMAKE(src[1]);
-	/* first pixel */
-	dst[0]   = LC[1][0];
-	dst[1]   = LC[1][0];
-	dst[2]   = (LC[1][1] == LC[0][0] && LC[2][0] != LC[0][0]) ? LC[0][0] : LC[1][0];
-	WC[1][0] = LC[1][0];
-	WC[1][1] = LC[1][0];
-	WC[1][2] = (LC[0][0] != LC[2][0]) ? (((LC[1][1] == LC[0][0] && LC[1][0] != LC[2][1]) || (LC[1][1] == LC[2][0] && LC[1][0] != LC[0][1])) ? LC[1][1] : LC[1][0]) : LC[1][0];
-	WC[2][0] = LC[1][0];
-	WC[2][1] = LC[1][0];
-	WC[2][2] = (LC[1][1] == LC[2][0] && LC[0][0] != LC[2][0]) ? LC[2][0] : LC[1][0];
-	Bitu x;
-	for (x=1;x<Scaler_SrcWidth-1;x++) {
-		C2=C5;C5=C8;C8=PMAKE(src[x+1]);
-		if ((C1 != C7) && (C3 != C5)) {
-			dst[x*3+0]   = C3 == C1 ?  C3 : C4;
-			dst[x*3+1]   = (C3 == C1 && C4 != C2) || (C5 == C1 && C4 != C0) ? C1 : C4;
-			dst[x*3+2]   = C5 == C1 ?  C5 : C4;
-			WC[1][x*3+0] = (C3 == C1 && C4 != C6) || (C3 == C7 && C4 != C0) ? C3 : C4;
-			WC[1][x*3+1] = C4;
-			WC[1][x*3+2] = (C5 == C1 && C4 != C8) || (C5 == C7 && C4 != C2) ? C5 : C4;
-			WC[2][x*3+0] = C3 == C7 ?  C3 : C4;
-			WC[2][x*3+1] = (C3 == C7 && C4 != C8) || (C5 == C7 && C4 != C6) ? C7 : C4;
-			WC[2][x*3+2] = C5 == C7 ?  C5 : C4;
-		} else {
-			dst[x*3+0]   = dst[x*3+1]   = dst[x*3+2]   =
-			WC[1][x*3+0] = WC[1][x*3+1] = WC[1][x*3+2] = 
-			WC[2][x*3+0] = WC[2][x*3+1] = WC[2][x*3+2] = LC[1][x];
-		}
-	}
-	x=Scaler_SrcWidth-1;
-	/* last pixel */
-	dst[x*3+0]   = (C3 == C1 && C7 != C1) ? C1 : C4;
-	dst[x*3+1]   = C4;
-	dst[x*3+2]   = C4;
-	WC[1][x*3+0] = (C1 != C7) ? ((C3 == C1 && C4 != C6) || (C3 == C7 && C4 != C0) ? C3 : C4) : C4;
-	WC[1][x*3+1] = C4;
-	WC[1][x*3+2] = C4;
-	WC[2][x*3+0] = (C3 == C7 && C1 != C7) ? C7 : C4;
-	WC[2][x*3+1] = C4;
-	WC[2][x*3+2] = C4;
-	Scaler_DstWrite+=Scaler_DstPitch;
-	BituMove(Scaler_DstWrite,&WC[1],3*Scaler_SrcWidth*PSIZE);
-	Scaler_DstWrite+=Scaler_DstPitch;
-	for (Bitu lines=*Scaler_Index++;lines>0;lines--) {
-		BituMove(Scaler_DstWrite,&WC[2],3*Scaler_SrcWidth*PSIZE);
-		Scaler_DstWrite+=Scaler_DstPitch;
-	}
-	if (++Scaler_Line==Scaler_SrcHeight) goto lastagain;
-}
+
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+
+#endif // (SBPP == DBPP) && !defined (CACHEWITHPAL)
 
 #undef PSIZE
 #undef PTYPE
 #undef PMAKE
 #undef WC
 #undef LC
+#undef FC
+#undef SC
+#undef redMask
 #undef greenMask
+#undef blueMask
 #undef redblueMask
+#undef SRCTYPE
 
-
+#if (SBPP == 8) && (DBPP > 8) && !defined (CACHEWITHPAL)
+#define CACHEWITHPAL 1
+#include "render_templates.h"
+#undef CACHEWITHPAL
+#endif
