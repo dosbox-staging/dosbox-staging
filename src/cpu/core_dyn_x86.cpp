@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #if (C_HAVE_MPROTECT)
 #include <sys/mman.h>
@@ -46,14 +47,13 @@
 #include "inout.h"
 
 #ifdef CHECKED_MEMORY_ACCESS
-#define CACHE_PAGES		(128*2)
 #define CACHE_MAXSIZE	(4096*2)
 #else
-#define CACHE_PAGES		(128)
 #define CACHE_MAXSIZE	(4096)
 #endif
+#define CACHE_PAGES		(128*8)
 #define CACHE_TOTAL		(CACHE_PAGES*4096)
-#define CACHE_BLOCKS	(32*1024)
+#define CACHE_BLOCKS	(64*1024)
 #define CACHE_ALIGN		(16)
 #define DYN_HASH_SHIFT	(4)
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
@@ -346,11 +346,14 @@ void CPU_Core_Dyn_X86_Init(void) {
 	DynRegs[G_SHIFT].flags=DYNFLG_HAS8|DYNFLG_HAS16;
 	DynRegs[G_EXIT].data=0;
 	DynRegs[G_EXIT].flags=DYNFLG_HAS16;
-	/* Initialize code cache and dynamic blocks */
-	cache_init();
 	/* Init the generator */
 	gen_init();
 	return;
+}
+
+void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache) {
+	/* Initialize code cache and dynamic blocks */
+	cache_init(enable_cache);
 }
 
 #endif

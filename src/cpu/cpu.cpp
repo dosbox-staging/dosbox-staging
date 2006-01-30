@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.74 2005-08-15 14:17:20 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.75 2006-01-30 14:01:52 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -50,6 +50,7 @@ void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
 void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
+void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 
 
 /* In debug mode exceptions are tested and dosbox exits when 
@@ -1977,6 +1978,10 @@ public:
 		else {
 			LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
 		}
+
+#if (C_DYNAMIC_X86)
+		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic"));
+#endif
 	
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 2500;
 		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;

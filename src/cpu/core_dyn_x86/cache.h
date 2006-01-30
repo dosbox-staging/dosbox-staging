@@ -44,13 +44,10 @@ static struct {
 
 #if (C_HAVE_MPROTECT)
 static Bit8u cache_code_link_blocks[2][16] GCC_ATTRIBUTE(aligned(PAGESIZE));
-static Bit8u cache_code[CACHE_TOTAL+CACHE_MAXSIZE] GCC_ATTRIBUTE(aligned(PAGESIZE));
 #else
 static Bit8u cache_code_link_blocks[2][16];
-static Bit8u cache_code[CACHE_TOTAL+CACHE_MAXSIZE];
 #endif
 
-static CacheBlock cache_blocks[CACHE_BLOCKS];
 static CacheBlock link_blocks[2];
 
 class CodePageHandler :public PageHandler {
@@ -393,38 +390,68 @@ static INLINE void cache_addd(Bit32u val) {
 
 static void gen_return(BlockReturn retcode);
 
-static void cache_init(void) {
-	Bits i;
-	memset(&cache_blocks,0,sizeof(cache_blocks));
+static Bit8u * cache_code=NULL;
+static CacheBlock * cache_blocks=NULL;
+
+/* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
-	mprotect(cache_code,sizeof(cache_code),PROT_WRITE|PROT_READ|PROT_EXEC);
-	mprotect(cache_code_link_blocks,sizeof(cache_code_link_blocks),PROT_WRITE|PROT_READ|PROT_EXEC);
+#define PAGESIZE_TEMP PAGESIZE
+#else 
+#define PAGESIZE_TEMP 1
 #endif
-	cache.block.free=&cache_blocks[0];
-	for (i=0;i<CACHE_BLOCKS-1;i++) {
-		cache_blocks[i].link[0].to=(CacheBlock *)1;
-		cache_blocks[i].link[1].to=(CacheBlock *)1;
-		cache_blocks[i].cache.next=&cache_blocks[i+1];
-	}
-	CacheBlock * block=cache_getblock();
-	cache.block.first=block;
-	cache.block.active=block;
-	block->cache.start=&cache_code[0];
-	block->cache.size=CACHE_TOTAL;
-	block->cache.next=0;								//Last block in the list
-	cache.pos=&cache_code_link_blocks[0][0];
-	link_blocks[0].cache.start=cache.pos;
-	gen_return(BR_Link1);
-	cache.pos=&cache_code_link_blocks[1][0];
-	link_blocks[1].cache.start=cache.pos;
-	gen_return(BR_Link2);
-	cache.free_pages=0;
-	cache.last_page=0;
-	cache.used_pages=0;
-	/* Setup the code pages */
-	for (i=0;i<CACHE_PAGES-1;i++) {
-		CodePageHandler * newpage=new CodePageHandler();
-		newpage->next=cache.free_pages;
-		cache.free_pages=newpage;
+
+
+static void cache_init(bool enable) {
+	static bool cache_initialized = false;
+	Bits i;
+	if (enable) {
+		if (cache_initialized) return;
+		cache_initialized = true;
+		if (cache_blocks == NULL) {
+			cache_blocks=(CacheBlock*)malloc(CACHE_BLOCKS*sizeof(CacheBlock));
+			if(!cache_blocks) E_Exit("Allocating cache_blocks has failed");
+			memset(cache_blocks,0,sizeof(CacheBlock)*CACHE_BLOCKS);
+			cache.block.free=&cache_blocks[0];
+			for (i=0;i<CACHE_BLOCKS-1;i++) {
+				cache_blocks[i].link[0].to=(CacheBlock *)1;
+				cache_blocks[i].link[1].to=(CacheBlock *)1;
+				cache_blocks[i].cache.next=&cache_blocks[i+1];
+			}
+		}
+#if (C_HAVE_MPROTECT)
+		if(mprotect(cache_code_link_blocks,sizeof(cache_code_link_blocks),PROT_WRITE|PROT_READ|PROT_EXEC))
+			LOG_MSG("Setting excute permission on cache code link blocks has failed");
+#endif
+		if (cache_code==NULL) {
+			cache_code=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1);
+			if(!cache_code) E_Exit("Allocating dynamic cache failed");
+#if (C_HAVE_MPROTECT)
+			cache_code=(Bit8u*)(((int)cache_code + PAGESIZE-1) & ~(PAGESIZE-1)); //MEM LEAK. store old pointer if you want to free it.
+			if(mprotect(cache_code,CACHE_TOTAL+CACHE_MAXSIZE,PROT_WRITE|PROT_READ|PROT_EXEC))
+				LOG_MSG("Setting excute permission on the code cache has failed!");
+#endif
+			CacheBlock * block=cache_getblock();
+			cache.block.first=block;
+			cache.block.active=block;
+			block->cache.start=&cache_code[0];
+			block->cache.size=CACHE_TOTAL;
+			block->cache.next=0;								//Last block in the list
+		}
+		/* Setup the default blocks for block linkage returns */
+		cache.pos=&cache_code_link_blocks[0][0];
+		link_blocks[0].cache.start=cache.pos;
+		gen_return(BR_Link1);
+		cache.pos=&cache_code_link_blocks[1][0];
+		link_blocks[1].cache.start=cache.pos;
+		gen_return(BR_Link2);
+		cache.free_pages=0;
+		cache.last_page=0;
+		cache.used_pages=0;
+		/* Setup the code pages */
+		for (i=0;i<CACHE_PAGES-1;i++) {
+			CodePageHandler * newpage=new CodePageHandler();
+			newpage->next=cache.free_pages;
+			cache.free_pages=newpage;
+		}
 	}
 }
