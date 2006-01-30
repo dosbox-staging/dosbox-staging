@@ -23,16 +23,18 @@
 #include "dosbox.h"
 #endif
 
+class PageHandler;
+
 enum VGAModes {
-	M_CGA2,M_CGA4,
-	M_EGA16,
-	M_VGA,
-	M_LIN8,
+	M_CGA2, M_CGA4,
+	M_EGA, M_VGA,
+	M_LIN4, M_LIN8, M_LIN15, M_LIN16, M_LIN32,
 	M_TEXT,
-	M_HERC_GFX,M_HERC_TEXT,
-	M_CGA16,M_TANDY2,M_TANDY4,M_TANDY16,M_TANDY_TEXT,
+	M_HERC_GFX, M_HERC_TEXT,
+	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
 	M_ERROR,
 };
+
 
 #define CLK_25 25175
 #define CLK_28 28322
@@ -86,7 +88,6 @@ typedef struct {
 	Bit32u full_not_enable_set_reset;
 	Bit32u full_enable_set_reset;
 	Bit32u full_enable_and_set_reset;
-
 } VGA_Config;
 
 typedef struct {
@@ -291,10 +292,20 @@ union VGA_Memory {
 	Bit8u linear[512*1024*4];
 	Bit8u paged[512*1024][4];
 	VGA_Latch latched[512*1024];
-};	
+};
 
 typedef struct {
+	Bit32u page;
+	Bit32u addr;
+	Bit32u mask;
+	PageHandler *handler;
+} VGA_LFB;
+
+#define VGA_CHANGE_SHIFT	9
+typedef Bit8u VGA_Changed[(2*1024*1024) >> VGA_CHANGE_SHIFT];
+typedef struct {
 	VGAModes mode;								/* The mode the vga system is in */
+	VGAModes lastmode;
 	Bit8u misc_output;
 	VGA_Draw draw;
 	VGA_Config config;
@@ -311,6 +322,8 @@ typedef struct {
 	VGA_TANDY tandy;
 	VGA_OTHER other;
 	VGA_Memory mem;
+	VGA_LFB lfb;
+	VGA_Changed changed;
 	Bit8u * gfxmem_start;
 } VGA_Type;
 
@@ -350,6 +363,13 @@ void VGA_SetCGA2Table(Bit8u val0,Bit8u val1);
 void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
+
+/* S3 Functions */
+Bitu SVGA_S3_GetClock(void);
+void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen);
+Bitu SVGA_S3_ReadCRTC(Bitu reg,Bitu iolen);
+void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen);
+Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen);
 
 extern VGA_Type vga;
 

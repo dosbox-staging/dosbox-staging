@@ -25,13 +25,26 @@ class Section;
 enum OPL_Mode {
 	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3
 };
+#define CAPTURE_WAVE	0x01
+#define CAPTURE_OPL		0x02
+#define CAPTURE_MIDI	0x04
+#define CAPTURE_IMAGE	0x08
+#define CAPTURE_VIDEO	0x10
+
+extern Bitu CaptureState;
 
 void OPL_Init(Section* sec,OPL_Mode mode);
 void CMS_Init(Section* sec);
 void OPL_ShutDown(Section* sec);
 void CMS_ShutDown(Section* sec);
+
 extern Bit8u adlib_commandreg;
 FILE * OpenCaptureFile(const char * type,const char * ext);
 
+void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data);
+#define CAPTURE_FLAG_DBLW	0x1
+#define CAPTURE_FLAG_DBLH	0x2
+void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal);
+void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data);
 
 #endif
