@@ -237,6 +237,7 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
+	Bitu font_addr;
 	Bit32u * draw=(Bit32u *)TempLine;
 	Bit8u * vidmem=&vga.gfxmem_start[vidstart];
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
@@ -251,7 +252,7 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart,Bitu panning,Bitu line) {
 		*draw++=fg&mask2 | bg&~mask2;
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
-	Bitu font_addr=(vga.draw.cursor.address-vidstart) >> 1;
+	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
 	if (font_addr>=0 && font_addr<vga.draw.blocks) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;

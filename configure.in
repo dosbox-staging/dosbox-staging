@@ -296,6 +296,8 @@ src/gui/Makefile
 src/hardware/Makefile
 src/hardware/serialport/Makefile
 src/ints/Makefile
+src/libs/Makefile
+src/libs/zmbv/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile

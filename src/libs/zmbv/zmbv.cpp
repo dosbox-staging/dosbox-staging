@@ -18,6 +18,7 @@
 
 #include <zlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -396,10 +397,10 @@ void VideoCodec::UnXorFrame(void) {
 	workPos=(workPos + blockcount*2 + 3) & ~3;
 	for (int b=0;b<blockcount;b++) {
 		FrameBlock * block=&blocks[b];
-		int xor = vectors[b*2+0] & 1;
+		int delta = vectors[b*2+0] & 1;
 		int vx = vectors[b*2+0] >> 1;
 		int vy = vectors[b*2+1] >> 1;
-		if (xor) UnXorBlock<P>(vx,vy,block);
+		if (delta) UnXorBlock<P>(vx,vy,block);
 		else CopyBlock<P>(vx,vy,block);
 	}
 }
