@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.42 2006-01-07 14:17:53 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.43 2006-01-30 10:04:46 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -47,7 +47,7 @@ static struct MemoryBlock {
 		Bitu		start_page;
 		Bitu		end_page;
 		Bitu		pages;
-		HostPt		address;
+		PageHandler *handler;
 	} lfb;
 	struct {
 		bool enabled;
@@ -69,9 +69,6 @@ public:
 	void writeb(PhysPt addr,Bitu val) {
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 	}
-	HostPt GetHostPt(Bitu phys_page) {
-		return 0;
-	}
 };
 
 class RAMPageHandler : public PageHandler {
@@ -79,7 +76,10 @@ public:
 	RAMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
-	HostPt GetHostPt(Bitu phys_page) {
+	HostPt GetHostReadPt(Bitu phys_page) {
+		return MemBase+phys_page*MEM_PAGESIZE;
+	}
+	HostPt GetHostWritePt(Bitu phys_page) {
 		return MemBase+phys_page*MEM_PAGESIZE;
 	}
 };
@@ -100,24 +100,14 @@ public:
 	}
 };
 
-class LFBPageHandler : public RAMPageHandler {
-public:
-	LFBPageHandler() {
-		flags=PFLAG_READABLE|PFLAG_WRITEABLE|PFLAG_NOCODE;
-	}
-	HostPt GetHostPt(Bitu phys_page) {
-		return memory.lfb.address+(phys_page-memory.lfb.start_page)*4096;
-	}
-};
 
 
 static IllegalPageHandler illegal_page_handler;
 static RAMPageHandler ram_page_handler;
 static ROMPageHandler rom_page_handler;
-static LFBPageHandler lfb_page_handler;
 
-void MEM_SetLFB(Bitu page,Bitu pages,HostPt pt) {
-	memory.lfb.address=pt;
+void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler) {
+	memory.lfb.handler=handler;
 	memory.lfb.start_page=page;
 	memory.lfb.end_page=page+pages;
 	memory.lfb.pages=pages;
@@ -128,7 +118,7 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	if (phys_page<memory.pages) {
 		return memory.phandlers[phys_page];
 	} else if ((phys_page>=memory.lfb.start_page) && (phys_page<memory.lfb.end_page)) {
-		return &lfb_page_handler;
+		return memory.lfb.handler;
 	}
 	return &illegal_page_handler;
 }
