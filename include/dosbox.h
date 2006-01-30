@@ -47,6 +47,12 @@ enum MachineType {
 	MCH_VGA
 };
 
+enum SVGACards {
+	SVGA_None,
+	SVGA_S3Trio
+}; 
+
+extern SVGACards svgaCard;
 extern MachineType machine;
 extern bool SDLNetInited;
 
