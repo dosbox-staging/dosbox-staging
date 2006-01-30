@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.72 2006-01-22 14:13:00 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.73 2006-01-30 09:48:03 harekiet Exp $ */
 
 #include <string.h>
 #include <list>
@@ -56,8 +56,8 @@ int old_cursor_state;
 static void DrawCode(void);
 static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
-static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num);
-static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32s num);
+static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num);
+static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num);
 static void LogGDT(void);
 static void LogLDT(void);
 static void LogIDT(void);
@@ -69,6 +69,24 @@ static void DrawVariables(void);
 char* AnalyzeInstruction(char* inst, bool saveSelector);
 Bit32u GetHexValue(char* str, char*& hex);
 
+class DebugPageHandler : public PageHandler {
+public:
+	Bitu readb(PhysPt addr) {
+	}
+	Bitu readw(PhysPt addr) {
+	}
+	Bitu readd(PhysPt addr) {
+	}
+	void writeb(PhysPt addr,Bitu val) {
+	}
+	void writew(PhysPt addr,Bitu val) {
+	}
+	void writed(PhysPt addr,Bitu val) {
+	}
+
+
+
+};
 
 
 class DEBUG;
@@ -2064,7 +2082,7 @@ bool CDebugVar::LoadVars(char* name)
 	return true;
 };
 
-static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
+static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num)
 {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
@@ -2091,7 +2109,7 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32s num)
 	DEBUG_ShowMsg("DEBUG: Memory dump success.\n");
 };
 
-static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32s num) {
+static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
 	FILE* f = fopen("MEMDUMP.BIN","wt");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory binary dump failed.\n");
