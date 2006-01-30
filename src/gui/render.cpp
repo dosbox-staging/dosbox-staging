@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.37 2006-01-30 15:02:33 harekiet Exp $ */
+/* $Id: render.cpp,v 1.38 2006-01-30 19:05:05 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -100,6 +100,30 @@ static void RENDER_EmptyLineHandler(void) {
 }
 
 
+static void RENDER_ClearCacheHandler(const void * src) {
+	Bitu x, width;
+	Bit32u *srcLine, *cacheLine;
+	srcLine = (Bit32u *)src;
+	switch (render.scale.inMode) {
+	case scalerMode8:
+		width = render.src.width / 4;
+		cacheLine = (Bit32u*)scalerSourceCache.b8[render.scale.inLine];
+		break;
+	case scalerMode15:
+	case scalerMode16:
+		width = render.src.width / 2;
+		cacheLine = (Bit32u*)scalerSourceCache.b16[render.scale.inLine];
+		break;
+	case scalerMode32:
+		width = render.src.width;
+		cacheLine = (Bit32u*)scalerSourceCache.b32[render.scale.inLine];
+		break;
+	}
+	for (x=0;x<width;x++)
+		cacheLine[x] = ~srcLine[x];
+	render.scale.clearCacheHandler( src );
+}
+
 bool RENDER_StartUpdate(void) {
 	if (GCC_UNLIKELY(render.updating))
 		return false;
@@ -119,36 +143,35 @@ bool RENDER_StartUpdate(void) {
 	render.scale.outLine = 0;
 	Scaler_ChangedLines[0] = 0;
 	Scaler_ChangedLineIndex = 0;
-/*
+
+	ScalerCacheBlock_t *cacheBlock;
+	switch (render.scale.inMode) {
+	case scalerMode8:
+		cacheBlock = !render.pal.changed  ? &ScalerCache_8 : &ScalerCache_8Pal;
+		break;
+	case scalerMode15:
+		cacheBlock = &ScalerCache_15;
+		break;
+	case scalerMode16:
+		cacheBlock = &ScalerCache_16;
+		break;
+	case scalerMode32:
+		cacheBlock = &ScalerCache_32;
+		break;
+	default:
+		return false;
+	}
+	if (render.scale.lineFlags & ScaleFlagSimple) {
+		render.scale.cacheHandler = cacheBlock->simple[render.scale.outMode];
+	} else {
+		render.scale.cacheHandler = cacheBlock->complex[render.scale.outMode];
+	}
+	/* Clearing the cache will first process the line to make sure it's never the same */
 	if (GCC_UNLIKELY( render.scale.clearCache) ) {
-		LOG_MSG("Clearing cache");
+//		LOG_MSG("Clearing cache");
 		render.scale.clearCache = false;
-		render.scale.cacheHandler = RENDER_EmptyCacheHandler;
-        memset( scalerChangeCache, SCALE_FULL, sizeof( scalerChangeCache ) );
-	} else */
-	{
-		ScalerCacheBlock_t *cacheBlock;
-		switch (render.scale.inMode) {
-		case scalerMode8:
-			cacheBlock = !render.pal.changed  ? &ScalerCache_8 : &ScalerCache_8Pal;
-			break;
-		case scalerMode15:
-			cacheBlock = &ScalerCache_15;
-			break;
-		case scalerMode16:
-			cacheBlock = &ScalerCache_16;
-			break;
-		case scalerMode32:
-			cacheBlock = &ScalerCache_32;
-			break;
-		default:
-			return false;
-		}
-		if (render.scale.lineFlags & ScaleFlagSimple) {
-			render.scale.cacheHandler = cacheBlock->simple[render.scale.outMode];
-		} else {
-			render.scale.cacheHandler = cacheBlock->complex[render.scale.outMode];
-		}
+		render.scale.clearCacheHandler = render.scale.cacheHandler;
+		render.scale.cacheHandler = RENDER_ClearCacheHandler;
 	}
 	render.scale.lineHandler = render.scale.currentHandler;
 	render.updating=true;
@@ -346,29 +369,7 @@ forcenormal:
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight = render.src.height;
 	RENDER_ResetPal();
-	/* Not exactltly the best way to clean the cache, but seems to do the trick */
-	for (Bitu y=0;y<render.src.height;y++) {
-		Bit32u *cacheLine;
-		Bitu x;
-		switch (render.scale.inMode) {
-		case scalerMode8:
-			cacheLine = (Bit32u *)scalerSourceCache.b8[y];
-			x = render.src.width / 4;
-			break;
-		case scalerMode15:
-		case scalerMode16:
-			cacheLine = (Bit32u *)scalerSourceCache.b16[y];
-			x = render.src.width / 2;
-			break;
-		case scalerMode32:
-			cacheLine = (Bit32u *)scalerSourceCache.b32[y];
-			x = render.src.width / 1;
-			break;
-		}
-		for (;x>0;x--)
-			cacheLine[x] = ~cacheLine[x];
-	}
-	//Maybe do it again through a special passthrough cache check handler
+	/* Signal the next frame to first reinit the cache */
 	render.scale.clearCache = true;
 	render.active=true;
 }

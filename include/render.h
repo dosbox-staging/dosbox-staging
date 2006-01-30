@@ -59,7 +59,7 @@ typedef struct {
 		ScalerLineHandler_t currentHandler;
 		Bitu lineFlags;
 		bool clearCache;
-
+		ScalerCacheHandler_t clearCacheHandler;
 		ScalerLineHandler_t lineHandler;
 		ScalerCacheHandler_t cacheHandler;
 		Bitu blocks, lastBlock;
