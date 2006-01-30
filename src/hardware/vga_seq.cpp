@@ -98,33 +98,16 @@ void write_p3c5(Bitu port,Bitu val,Bitu iolen) {
 		else vga.config.chained=false;
 		VGA_SetupHandlers();
 		break;
-/* S3 specific group */
-	case 0x08:
-		vga.s3.pll.lock=val;
-		break;
-	case 0x10:		/* Memory PLL Data Low */
-		vga.s3.mclk.n=val & 0x1f;
-		vga.s3.mclk.r=val >> 5;
-		break;
-	case 0x11:		/* Memory PLL Data High */
-		vga.s3.mclk.m=val & 0x7f;
-		break;
-	case 0x12:		/* Video PLL Data Low */
-		vga.s3.clk[3].n=val & 0x1f;
-		vga.s3.clk[3].r=val >> 5;
-		break;
-	case 0x13:		/* Video PLL Data High */
-		vga.s3.clk[3].m=val & 0x7f;
-		break;
-	case 0x15:
-		vga.s3.pll.cmd=val;
-		VGA_StartResize();
-		break;
-
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Write to illegal index %2X",seq(index));
-	};
-};
+		switch (svgaCard) {
+		case SVGA_S3Trio:
+			SVGA_S3_WriteSEQ( seq(index), val, iolen );
+			break;
+		default:
+			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Write to illegal index %2X",seq(index));
+		}
+	}
+}
 
 
 Bitu read_p3c5(Bitu port,Bitu iolen) {
@@ -145,25 +128,14 @@ Bitu read_p3c5(Bitu port,Bitu iolen) {
 		break;
 	case 4:			/* Memory Mode */
 		return seq(memory_mode);
-	/* S3 specific group */
-	case 0x08:		/* PLL Unlock */
-		return vga.s3.pll.lock;
-	case 0x10:		/* Memory PLL Data Low */
-		return vga.s3.mclk.n || (vga.s3.mclk.r << 5);
-	case 0x11:		/* Memory PLL Data High */
-		return vga.s3.mclk.m;
-	case 0x12:		/* Video PLL Data Low */
-		return vga.s3.clk[3].n || (vga.s3.clk[3].r << 5);
-	case 0x13:		/* Video Data High */
-		return vga.s3.clk[3].m;
-	case 0x15:
-		return vga.s3.pll.cmd;
-
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Read from illegal index %2X",seq(index));
-	};
+		switch (svgaCard) {
+		case SVGA_S3Trio:
+			return SVGA_S3_ReadSEQ( seq(index), iolen );
+		}
+	}
 	return 0;
-};
+}
 
 
 void VGA_SetupSEQ(void) {

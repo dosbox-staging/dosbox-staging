@@ -35,8 +35,8 @@ struct XGAStatus {
 	Bit32u readmask;
 	Bit32u writemask;
 
-	Bit32u forecolor;
-	Bit32u backcolor;
+	Bit8u forecolor;
+	Bit8u backcolor;
 
 	Bitu curcommand;
 
@@ -189,7 +189,7 @@ void XGA_DrawLineVector(Bitu val) {
 	Bit8u dstdata;
 	Bits i;
 
-	Bits dx, sx, dy, sy, e;
+	Bits dx, sx, sy;
 
 	dx = xga.MAPcount; 
 	xat = xga.curx;
@@ -487,7 +487,7 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 			switch(mixmode) {
 				case 0x00: /* FOREMIX always used */
 					mixmode = xga.foremix;
-					int t;
+					Bitu t;
 					for(t=0;t<len;t++) {
 						tmpval = (val >> (8 * t)) & 0xff;
 						switch((mixmode >> 5) & 0x03) {
@@ -616,7 +616,7 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 
 void XGA_BlitRect(Bitu val) {
 	Bit32u xat, yat;
-	Bit32u xmass, xmod, xdist, memrec;
+//	Bit32u xmass, xmod, xdist, memrec;
 	//Bit8u *srcptr;
 	//Bit8u *destptr;
 	//Bit8u *destline;

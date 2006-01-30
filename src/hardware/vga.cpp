@@ -50,20 +50,22 @@ void VGA_DetermineMode(void) {
 	if (vga.s3.misc_control_2 & 0xf0) {
 		switch (vga.s3.misc_control_2 >> 4) {
 		case 1:VGA_SetMode(M_LIN8);break;
+		case 3:VGA_SetMode(M_LIN15);break;
+		case 5:VGA_SetMode(M_LIN16);break;
+		case 13:VGA_SetMode(M_LIN32);break;
 		}
 	/* Test for graphics or alphanumeric mode */
 	} else if (vga.attr.mode_control & 1) {
 		if (vga.gfx.mode & 0x40) VGA_SetMode(M_VGA);
 		else if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
 		else if ((vga.gfx.miscellaneous & 0x0c)==0x0c) VGA_SetMode(M_CGA2);
-		else VGA_SetMode(M_EGA16);
-		/* old mode detection:
-		if (!(vga.crtc.mode_control & 0x1)) {
-			if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
-			else VGA_SetMode(M_CGA2);
-		} else if (vga.attr.mode_control & 0x40) {
-			VGA_SetMode(M_VGA);
-		} else VGA_SetMode(M_EGA16); */
+		else {
+			if (vga.s3.reg_31 & 0x8) 
+				VGA_SetMode(M_LIN4);
+			else
+				VGA_SetMode(M_EGA);
+			
+		}
 	} else {
 		VGA_SetMode(M_TEXT);
 	}

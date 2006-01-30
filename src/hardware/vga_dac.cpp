@@ -100,6 +100,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 		switch (vga.mode) {
 		case M_VGA:
 		case M_LIN8:
+		case M_LIN16:
 				RENDER_SetPal(vga.dac.write_index,
 					vga.dac.rgb[vga.dac.write_index].red << 2,
 					vga.dac.rgb[vga.dac.write_index].green << 2,
@@ -155,6 +156,7 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	switch (vga.mode) {
 	case M_VGA:
 	case M_LIN8:
+	case M_LIN16:
 		break;
 	default:
 		RENDER_SetPal(attr,
@@ -172,6 +174,7 @@ void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue) {
 	switch (vga.mode) {
 	case M_VGA:
 	case M_LIN8:
+	case M_LIN16:
 		return;
 	}
 	for (Bitu i=0;i<16;i++) 
