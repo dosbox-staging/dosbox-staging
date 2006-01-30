@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.31 2005-07-24 19:04:11 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.32 2006-01-30 19:37:49 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -229,6 +229,15 @@ Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Se
 	return blah;
 }
 
+Section_prop::~Section_prop() {
+//ExecuteDestroy should be here else the destroy functions use destroyed properties
+	ExecuteDestroy(true);
+	/* Delete properties themself (properties stores the pointer of a prop */
+	for(it prop = properties.begin(); prop != properties.end(); prop++)
+		delete (*prop);
+}
+
+
 Section_line* Config::AddSection_line(const char* _name,void (*_initfunction)(Section*)){
 	Section_line* blah = new Section_line(_name);
 	blah->AddInitFunction(_initfunction);
@@ -341,10 +350,14 @@ void Config::ParseEnv(char ** envp) {
 		if(strncasecmp(copy,"DOSBOX_",7))
 			continue;
 		char* sec_name = &copy[7];
+		if(!(*sec_name))
+			continue;
 		char* prop_name = strrchr(sec_name,'_');
+		if(!prop_name || !(*prop_name))
+			continue;
 		*prop_name++=0;
 		Section* sect = GetSection(sec_name);
-		if(!sect) 
+		if(!sect)
 			continue;
 		sect->HandleInputline(prop_name);
 	}

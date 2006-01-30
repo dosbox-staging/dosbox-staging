@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.20 2005-04-21 19:53:40 qbix79 Exp $ */
+/* $Id: setup.h,v 1.21 2006-01-30 19:37:48 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -139,7 +139,7 @@ private:
 	std::list<Function_wrapper> destroyfunctions;
 	std::string sectionname;
 public:
-	Section(const char* _sectionname) { sectionname=_sectionname; }
+	Section(const char* _sectionname):sectionname(_sectionname) {  }
 
 	void AddInitFunction(SectionFunction func,bool canchange=false) {initfunctions.push_back(Function_wrapper(func,canchange));}
 	void AddDestroyFunction(SectionFunction func,bool canchange=false) {destroyfunctions.push_front(Function_wrapper(func,canchange));}
@@ -148,9 +148,9 @@ public:
 	const char* GetName() {return sectionname.c_str();}
 
 	virtual char* GetPropValue(const char* _property)=0;
-	virtual void HandleInputline(char * _line){}
-	virtual void PrintData(FILE* outfile) {}
-	virtual ~Section(){ExecuteDestroy(true); }
+	virtual void HandleInputline(char * _line)=0;
+	virtual void PrintData(FILE* outfile)=0;
+	virtual ~Section() { /*Children must call executedestroy ! */}
 };
 
 
@@ -175,7 +175,7 @@ public:
 	void PrintData(FILE* outfile);
 	virtual char* GetPropValue(const char* _property);
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
-	virtual ~Section_prop(){ExecuteDestroy(true);}
+	virtual ~Section_prop();
 };
 
 class Section_line: public Section{
