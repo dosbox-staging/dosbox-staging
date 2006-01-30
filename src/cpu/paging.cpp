@@ -67,6 +67,14 @@ void PageHandler::writed(PhysPt addr,Bitu val) {
 	writeb(addr+3,(Bit8u) (val >> 24));
 };
 
+HostPt PageHandler::GetHostReadPt(Bitu phys_page) {
+	return 0;
+}
+
+HostPt PageHandler::GetHostWritePt(Bitu phys_page) {
+	return 0;
+}
+
 bool PageHandler::readb_checked(PhysPt addr, Bitu * val) {
 	*val=readb(addr);	return false;
 }
@@ -86,9 +94,6 @@ bool PageHandler::writed_checked(PhysPt addr,Bitu val) {
 	writed(addr,val);	return false;
 }
 
-HostPt PageHandler::GetHostPt(Bitu phys_page) {
-	return 0;
-}
 
 
 struct PF_Entry {
@@ -350,11 +355,10 @@ void PAGING_LinkPage(Bitu lin_page,Bitu phys_page) {
 		PAGING_ClearTLB();
 	}
 
-	HostPt host_mem=handler->GetHostPt(phys_page);
 	paging.tlb.phys_page[lin_page]=phys_page;
-	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=host_mem-lin_base;
+	if (handler->flags & PFLAG_READABLE) paging.tlb.read[lin_page]=handler->GetHostReadPt(phys_page)-lin_base;
 	else paging.tlb.read[lin_page]=0;
-	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=host_mem-lin_base;
+	if (handler->flags & PFLAG_WRITEABLE) paging.tlb.write[lin_page]=handler->GetHostWritePt(phys_page)-lin_base;
 	else paging.tlb.write[lin_page]=0;
 
 	paging.links.entries[paging.links.used++]=lin_page;
