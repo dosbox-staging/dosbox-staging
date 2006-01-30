@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.18 2005-08-10 20:36:36 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.19 2006-01-30 10:00:44 harekiet Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -30,7 +30,7 @@ IO_WriteHandler * io_writehandlers[3][IO_MAX];
 IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
 static Bitu IO_ReadBlocked(Bitu port,Bitu iolen) {
-	return (Bitu)-1;
+	return ~0;
 }
 static void IO_WriteBlocked(Bitu port,Bitu val,Bitu iolen) {
 }
