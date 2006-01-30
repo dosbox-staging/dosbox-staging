@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.20 2006-01-07 14:17:53 c2woody Exp $ */
+/* $Id: paging.h,v 1.21 2006-01-30 09:46:01 harekiet Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -54,13 +54,14 @@ public:
 	virtual void writeb(PhysPt addr,Bitu val);
 	virtual void writew(PhysPt addr,Bitu val);
 	virtual void writed(PhysPt addr,Bitu val);
+	virtual HostPt GetHostReadPt(Bitu phys_page);
+	virtual HostPt GetHostWritePt(Bitu phys_page);
 	virtual bool readb_checked(PhysPt addr, Bitu * val);
 	virtual bool readw_checked(PhysPt addr, Bitu * val);
 	virtual bool readd_checked(PhysPt addr, Bitu * val);
 	virtual bool writeb_checked(PhysPt addr,Bitu val);
 	virtual bool writew_checked(PhysPt addr,Bitu val);
 	virtual bool writed_checked(PhysPt addr,Bitu val);
-	virtual HostPt GetHostPt(Bitu phys_page);
 	Bitu flags;
 };
 
@@ -79,8 +80,8 @@ void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
 bool PAGING_MakePhysPage(Bitu & page);
 
-void MEM_SetLFB(Bitu _page,Bitu _pages,HostPt _pt);
-void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler);
+void MEM_SetLFB( Bitu page, Bitu pages, PageHandler *handler);
+void MEM_SetPageHandler(Bitu phys_page, Bitu pages, PageHandler * handler);
 void MEM_ResetPageHandler(Bitu phys_page, Bitu pages);
 
 
@@ -152,12 +153,14 @@ extern PagingBlock paging;
 PageHandler * MEM_GetPageHandler(Bitu phys_page);
 
 /* Use this helper function to access linear addresses in readX/writeX functions */
-INLINE PhysPt PAGING_GetLinearAddress(PhysPt addr) {
-	if (paging.enabled)
-		return (paging.tlb.phys_page[addr>>12]<<12)|(addr&0xfff);
-	else
-		return addr;
+INLINE PhysPt PAGING_GetPhysicalPage(PhysPt linePage) {
+	return (paging.tlb.phys_page[linePage>>12]<<12);
 }
+
+INLINE PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
+	return (paging.tlb.phys_page[linAddr>>12]<<12)|(linAddr&0xfff);
+}
+
 
 /* Unaligned address handlers */
 Bit16u mem_unalignedreadw(PhysPt address);
