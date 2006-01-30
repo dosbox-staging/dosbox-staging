@@ -237,7 +237,7 @@ static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
 #define SCALERHEIGHT	2
 #define SCALERFUNC								\
 	line0[0] = C4;								\
-	line1[1] = C4;
+	line1[0] = C4;
 #include "render_loops.h"
 #undef SCALERNAME
 #undef SCALERWIDTH

@@ -173,7 +173,7 @@ ScalerLineBlock_t ScaleNormalDw = {
 ScalerLineBlock_t ScaleNormalDh = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32|GFX_LOVE_8,
 	ScaleFlagSimple,
-	2,1,
+	1,2,
 	NormalDh_8_L,NormalDh_16_L,NormalDh_16_L,NormalDh_32_L,
 	NormalDh_8_R,NormalDh_16_R,NormalDh_16_R,NormalDh_32_R
 };
