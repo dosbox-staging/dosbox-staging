@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.57 2005-12-13 11:15:50 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.58 2006-01-30 10:06:36 harekiet Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -113,12 +113,13 @@ static struct {
 	float	senv_y;
 	Bit16u  updateRegion_x[2];
 	Bit16u  updateRegion_y[2];
-	Bit16u  page;
 	Bit16u  doubleSpeedThreshold;
 	Bit16u  language;
 	Bit16u  cursorType;
+	Bit16s	oldshown;
+	Bit8u  page;
 	bool enabled;
-	Bit16s oldshown;
+
 } mouse;
 
 bool Mouse_SetPS2State(bool use) {
@@ -505,8 +506,6 @@ static void mouse_reset_hardware(void){
 
 void Mouse_NewVideoMode(void)
 { //Does way to much. Many of this stuff should be moved to mouse_reset one day
-//	WriteMouseIntVector();//Disabled. Big Red Adventure, Rac Racing
-   
 	if(MOUSE_IRQ > 7) {
 		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
 	} else {
@@ -577,14 +576,8 @@ void Mouse_NewVideoMode(void)
 
 	SetMickeyPixelRate(8,16);
 	oldmouseX = static_cast<Bit16s>(mouse.x);
-
 	oldmouseY = static_cast<Bit16s>(mouse.y);
-
-   
-
 }
-
-
 
 static void mouse_reset(void) {
 //Much to empty Mouse_NewVideoMode contains stuff that should be in here
@@ -804,7 +797,7 @@ static Bitu INT33_Handler(void) {
 		/* Can't really set a rate this is host determined */
 		break;
 	case 0x1d:      /* Set display page number */
-		mouse.page=reg_bx;
+		mouse.page=reg_bl;
 		break;
 	case 0x1e:      /* Get display page number */
 		reg_bx=mouse.page;
