@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.91 2005-12-22 20:37:20 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.92 2006-01-30 10:11:18 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -41,6 +41,7 @@
 
 Config * control;
 MachineType machine;
+SVGACards svgaCard;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
@@ -50,7 +51,7 @@ void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
-void CREDITS_Init(Section*);
+//void CREDITS_Init(Section*);
 void RENDER_Init(Section*);
 void VGA_Init(Section*);
 
@@ -128,11 +129,11 @@ static Bitu Normal_Loop(void) {
 			if (RemainTicks>0) {
 				TIMER_AddTick();
 				RemainTicks--;
-				GFX_Events();
 			} else goto increaseticks;
 		}
 	}
 increaseticks:
+	GFX_Events();
 	NewTicks=GetTicks();
 	if (NewTicks>LastTicks) {
 		RemainTicks=NewTicks-LastTicks;
@@ -173,6 +174,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 
+	svgaCard = SVGA_S3Trio; 
 	machine=MCH_VGA;std::string cmd_machine;
 	const char * mtype;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)) mtype=cmd_machine.c_str();
@@ -227,9 +229,9 @@ void DOSBOX_Init(void) {
 	secprop->Add_string("scaler","normal2x");
 	MSG_Add("RENDER_CONFIGFILE_HELP",
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
-		"aspect -- Do aspect correction.\n"
+		"aspect -- Do aspect correction, if your output method doesn't support scaling this can slow things down!.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
-		"          Supported are none,normal2x,advmame2x,advmame3x,advinterp2x,interp2x,tv2x.\n"
+		"          Supported are none,normal2x,normal3x,advmame2x,advmame3x,advinterp2x,interp2x,tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.\n"
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
@@ -399,6 +401,8 @@ void DOSBOX_Init(void) {
 		"ipx -- Enable ipx over UDP/IP emulation.\n"
 	);
 #endif
+//	secprop->AddInitFunction(&CREDITS_Init);
+
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
