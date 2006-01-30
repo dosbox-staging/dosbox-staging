@@ -30,8 +30,7 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char * eve
 void MAPPER_Init(void);
 void MAPPER_StartUp(Section * sec);
 void MAPPER_Run(void);
-
-
+void MAPPER_LosingFocus(void);
 
 
 #define MMOD1 0x1
