@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.17 2005-10-24 17:39:00 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.18 2006-01-30 09:57:18 harekiet Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -1509,6 +1509,12 @@ static void CreateBindGroups(void) {
 	}
 }
 
+void MAPPER_LosingFocus(void) {
+	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
+		(*evit)->DeActivateAll();
+	}
+}
+
 void MAPPER_Run(void) {
 	/* Deactive all running binds */
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
@@ -1522,7 +1528,7 @@ void MAPPER_Run(void) {
 	}
 
 	/* Be sure that there is no update in progress */
-	GFX_EndUpdate();
+	GFX_EndUpdate( 0 );
 	mapper.surface=SDL_SetVideoMode(640,480,8,0);
 	if (mapper.surface == NULL) E_Exit("Could not initialize video mode for mapper: %s",SDL_GetError());
 
