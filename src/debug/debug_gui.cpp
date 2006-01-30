@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+/* $Id: debug_gui.cpp,v 1.26 2006-01-30 10:45:49 qbix79 Exp $ */
 
 #include "dosbox.h"
+
 #if C_DEBUG
 #include "setup.h"
 #include <stdlib.h>
@@ -36,11 +37,16 @@ struct _LogGroup {
 	char * front;
 	bool enabled;
 };
+#include <list>
+#include <string>
+using namespace std;
+
+#define MAX_LOG_BUFFER 500
+static list<string> logBuff;
+static list<string>::iterator logBuffPos = logBuff.end();
 
 static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
 static FILE* debuglog;
-static std::list<char*> logBuff;
-static std::list<char*>::iterator logBuffPos = logBuff.end();
 
 extern int old_cursor_state;
 
@@ -60,19 +66,15 @@ void DEBUG_ShowMsg(char * format,...) {
 
 	if(debuglog) fprintf(debuglog,"%s",buf);
 
-	char* newLine = new char[strlen(buf) + 1];
-	strcpy(newLine, buf);
 	if (logBuffPos!=logBuff.end()) {
 		logBuffPos=logBuff.end();
 		DEBUG_RefreshPage(0);
 		mvwprintw(dbg.win_out,dbg.win_out->_maxy-1, 0, "");
 	}
-	logBuff.push_back(newLine);
-	if (logBuff.size()>500) {
-		char * firstline = logBuff.front();
-		delete firstline;
+	logBuff.push_back(buf);
+	if (logBuff.size() > MAX_LOG_BUFFER)
 		logBuff.pop_front();
-	}
+
 	logBuffPos = logBuff.end();
 	wprintw(dbg.win_out,"%s",buf);
 	wrefresh(dbg.win_out);
@@ -82,14 +84,14 @@ void DEBUG_RefreshPage(char scroll) {
 	if (scroll==-1 && logBuffPos!=logBuff.begin()) logBuffPos--;
 	else if (scroll==1 && logBuffPos!=logBuff.end()) logBuffPos++;
 
-	std::list<char*>::iterator i = logBuffPos;
+	list<string>::iterator i = logBuffPos;
 	int rem_lines = dbg.win_out->_maxy;
 
 	wclear(dbg.win_out);
 
 	while (rem_lines > 0 && i!=logBuff.begin()) {
-		rem_lines -= (int) (strlen(*--i) / dbg.win_out->_maxx) + 1; 
-		mvwprintw(dbg.win_out,rem_lines-1, 0, *i);
+		rem_lines -= (int) ((*--i).size() / dbg.win_out->_maxx) + 1; 
+		mvwprintw(dbg.win_out,rem_lines-1, 0, (*i).c_str());
 	}
 	wrefresh(dbg.win_out);
 }
