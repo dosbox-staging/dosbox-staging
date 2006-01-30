@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.96 2006-01-30 09:58:07 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.97 2006-01-30 15:02:33 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -686,6 +686,11 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					rect->y = sdl.clip.y + y;
 					rect->w = (Bit16u)sdl.draw.width;
 					rect->h = changedLines[index];
+#if 0
+					if (rect->h + rect->y > sdl.surface->h) {
+						LOG_MSG("WTF");
+					}
+#endif
 					y += changedLines[index];
 				}
 				index++;

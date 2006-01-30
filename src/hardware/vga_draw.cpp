@@ -294,7 +294,7 @@ static void VGA_DrawPart(Bitu lines) {
 		PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts,
 			 (vga.draw.parts_left!=1) ? vga.draw.parts_lines  : (vga.draw.lines_total - vga.draw.lines_done));
 	} else {
-		RENDER_EndUpdate();
+		RENDER_EndUpdate( true );
 	}
 }
 

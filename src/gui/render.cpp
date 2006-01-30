@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.36 2006-01-30 09:58:07 harekiet Exp $ */
+/* $Id: render.cpp,v 1.37 2006-01-30 15:02:33 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -155,7 +155,7 @@ bool RENDER_StartUpdate(void) {
 	return true;
 }
 
-void RENDER_EndUpdate(void) {
+void RENDER_EndUpdate( bool fullUpdate ) {
 	if (!render.updating)
 		return;
 	render.scale.cacheHandler = RENDER_EmptyCacheHandler;
@@ -182,7 +182,7 @@ void RENDER_EndUpdate(void) {
 		CAPTURE_AddImage( render.src.width, render.src.height, render.src.bpp, pitch,
 			flags, render.src.fps, scalerSourceCache.b8[0], (Bit8u*)&render.pal.rgb );
 	}
-	GFX_EndUpdate( Scaler_ChangedLines );
+	GFX_EndUpdate( fullUpdate ? Scaler_ChangedLines : 0);
 	render.updating=false;
 }
 
@@ -207,8 +207,10 @@ static Bitu MakeAspectTable(Bitu height,double scaley,Bitu miny) {
 }
 
 void RENDER_ReInit( bool stopIt ) {
-	if (render.updating) 
-		RENDER_EndUpdate();
+	if (render.updating) {
+		/* Still updating the current screen, shut it down correctly */
+		RENDER_EndUpdate( false );
+	}
 
 	if (stopIt)
 		return;
@@ -376,7 +378,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 		render.active=false;
 		return;	
 	}
-	RENDER_EndUpdate();
+	RENDER_EndUpdate( false );
 	render.src.width=width;
 	render.src.height=height;
 	render.src.bpp=bpp;

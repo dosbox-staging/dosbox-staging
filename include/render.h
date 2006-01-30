@@ -77,7 +77,7 @@ extern Render_t render;
 void RENDER_DrawLine( const void *src );
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
 bool RENDER_StartUpdate(void);
-void RENDER_EndUpdate(void);
+void RENDER_EndUpdate( bool fullUpdate );
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
 
 
