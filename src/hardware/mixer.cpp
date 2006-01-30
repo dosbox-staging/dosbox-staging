@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.35 2005-12-05 12:04:40 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.36 2006-01-30 10:04:20 harekiet Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -53,7 +53,6 @@
 #define MIXER_SSIZE 4
 #define MIXER_SHIFT 14
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
-#define MIXER_WAVESIZE MIXER_BUFSIZE
 #define MIXER_VOLSHIFT 13
 
 static inline Bit16s MIXER_CLIP(Bits SAMP) {
@@ -78,15 +77,6 @@ struct MIXER_Channel {
 	MIXER_Channel * next;
 };
 
-static Bit8u wavheader[]={
-	'R','I','F','F',	0x0,0x0,0x0,0x0,		/* Bit32u Riff Chunk ID /  Bit32u riff size */
-	'W','A','V','E',	'f','m','t',' ',		/* Bit32u Riff Format  / Bit32u fmt chunk id */
-	0x10,0x0,0x0,0x0,	0x1,0x0,0x2,0x0,		/* Bit32u fmt size / Bit16u encoding/ Bit16u channels */
-	0x0,0x0,0x0,0x0,	0x0,0x0,0x0,0x0,		/* Bit32u freq / Bit32u byterate */
-	0x4,0x0,0x10,0x0,	'd','a','t','a',		/* Bit16u byte-block / Bit16u bits / Bit16u data chunk id */
-	0x0,0x0,0x0,0x0,							/* Bit32u data size */
-};
-
 static struct {
 	Bit32s work[MIXER_BUFSIZE][2];
 	Bitu pos,done;
@@ -94,15 +84,9 @@ static struct {
 	float mastervol[2];
 	MixerChannel * channels;
 	bool nosound;
-	Bitu freq;
-	Bitu blocksize;
-	Bitu tick_add,tick_remain;
-	struct {
-		FILE * handle;
-		Bit16s buf[MIXER_WAVESIZE][2];
-		Bitu used;
-		Bit32u length;
-	} wave; 
+	Bit32u freq;
+	Bit32u blocksize;
+	Bit32u tick_add,tick_remain;
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -289,29 +273,27 @@ void MixerChannel::FillUp(void) {
 
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
-
 	MixerChannel * chan=mixer.channels;
 	while (chan) {
 		chan->Mix(needed);
 		chan=chan->next;
 	}
-	if (mixer.wave.handle) {
+	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
+		Bit16s convert[1024][2];
 		Bitu added=needed-mixer.done;
+		if (added>1024) 
+			added=1024;
 		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
-
-		Bits sample;
-		while (added--) {
-			sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
-			mixer.wave.buf[mixer.wave.used][0]=MIXER_CLIP(sample);
+		for (Bitu i=0;i<added;i++) {
+			Bits sample=mixer.work[readpos][0] >> MIXER_VOLSHIFT;
+			convert[i][0]=MIXER_CLIP(sample);
 			sample=mixer.work[readpos][1] >> MIXER_VOLSHIFT;
-			mixer.wave.buf[mixer.wave.used][1]=MIXER_CLIP(sample);
+			convert[i][1]=MIXER_CLIP(sample);
 			readpos=(readpos+1)&MIXER_BUFMASK;
-			if (++mixer.wave.used==MIXER_WAVESIZE) {
-				mixer.wave.length+=MIXER_WAVESIZE*MIXER_SSIZE;
-				mixer.wave.used=0;
-				fwrite(mixer.wave.buf,MIXER_WAVESIZE*MIXER_SSIZE,1,mixer.wave.handle);
-			}
 		}
+		CAPTURE_AddWave( mixer.freq, added, (Bit16s*)convert );
+		//Reset the the tick_add for constant speed
+		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 	}
 	mixer.done=needed;
 }
@@ -378,34 +360,7 @@ static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	}
 }
 
-static void MIXER_WaveEvent(void) {
-	/* Check for previously opened wave file */
-	if (mixer.wave.handle) {
-		LOG_MSG("Stopped capturing wave output.");
-		/* Write last piece of audio in buffer */
-		fwrite(mixer.wave.buf,1,mixer.wave.used*MIXER_SSIZE,mixer.wave.handle);
-		mixer.wave.length+=mixer.wave.used*MIXER_SSIZE;
-		/* Fill in the header with useful information */
-		host_writed(&wavheader[0x04],mixer.wave.length+sizeof(wavheader)-8);
-		host_writed(&wavheader[0x18],mixer.freq);
-		host_writed(&wavheader[0x1C],mixer.freq*4);
-		host_writed(&wavheader[0x28],mixer.wave.length);
-		
-		fseek(mixer.wave.handle,0,0);
-		fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
-		fclose(mixer.wave.handle);
-		mixer.wave.handle=0;
-	} else {
-		mixer.wave.handle=OpenCaptureFile("Wave Output",".wav");
-		if (!mixer.wave.handle) return;
-		mixer.wave.length=0;
-		mixer.wave.used=0;
-		fwrite(wavheader,1,sizeof(wavheader),mixer.wave.handle);
-	}
-}
-
 static void MIXER_Stop(Section* sec) {
-	if (mixer.wave.handle) MIXER_WaveEvent();
 }
 
 class MIXER : public Program {
@@ -504,6 +459,7 @@ MixerObject::~MixerObject(){
 
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
+
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Read out config section */
 	mixer.freq=section->Get_int("rate");
@@ -515,8 +471,6 @@ void MIXER_Init(Section* sec) {
 	mixer.pos=0;
 	mixer.done=0;
 	memset(mixer.work,0,sizeof(mixer.work));
-	mixer.wave.handle=0;
-	mixer.wave.used=0;
 	mixer.mastervol[0]=1.0f;
 	mixer.mastervol[1]=1.0f;
 
@@ -537,6 +491,7 @@ void MIXER_Init(Section* sec) {
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
+		mixer.nosound = true;
 		LOG_MSG("MIXER:Can't open audio: %s , running in nosound mode.",SDL_GetError());
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
@@ -551,6 +506,5 @@ void MIXER_Init(Section* sec) {
 	if (mixer.min_needed>100) mixer.min_needed=100;
 	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
 	mixer.needed=mixer.min_needed+1;
-	MAPPER_AddHandler(MIXER_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
