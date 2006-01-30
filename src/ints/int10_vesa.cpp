@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.18 2005-10-29 09:32:52 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.19 2006-01-30 10:07:19 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -87,7 +87,8 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	PhysPt buffer=PhysMake(seg,off);
 	Bitu i;
 	bool vbe2=false;Bit16u vbe2_pos=256+off;
-	if (mem_readd(buffer)==0x32454256) vbe2=true;
+	Bitu id=mem_readd(buffer);
+	if ((id==0x56424532)||(id==0x32454256)) vbe2=true;
 	if (vbe2) {
 		for (i=0;i<0x200;i++) mem_writeb(buffer+i,0);		
 	} else {
@@ -119,8 +120,9 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
 	PhysPt buf=PhysMake(seg,off);
-	
+	Bitu pageSize;
 	Bitu i=0;
+
 	if (mode<0x100) return 0x01;
 	while (ModeList_VGA[i].mode!=0xffff) {
 		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
@@ -129,23 +131,77 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 foundit:
 	VideoModeBlock * mblock=&ModeList_VGA[i];
 	switch (mblock->type) {
-	case M_LIN8:		//Linear 8-bit
-		var_write(&minfo.ModeAttributes,0x9b);
-		var_write(&minfo.WinAAttributes,0x7);	//Exists/readable/writable
-		var_write(&minfo.WinGranularity,64);
-		var_write(&minfo.WinSize,64);
-		var_write(&minfo.WinASegment,0xa000);
-//		var_write(&minfo.WinBSegment,0xa000);
-		var_write(&minfo.WinFuncPtr,CALLBACK_RealPointer(callback.setwindow));
-		var_write(&minfo.BytesPerScanLine,mblock->swidth);
-		var_write(&minfo.NumberOfPlanes,0x1);
-		var_write(&minfo.BitsPerPixel,0x08);
-		var_write(&minfo.NumberOfBanks,0x1);
-		var_write(&minfo.MemoryModel,0x04);	//packed pixel
-		var_write(&minfo.NumberOfImagePages,0x05);
-		var_write(&minfo.Reserved_page,0x1);
+	case M_LIN4:
+		pageSize = mblock->sheight * mblock->swidth/2;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(512*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
+		var_write(&minfo.BitsPerPixel,4);
+		var_write(&minfo.MemoryModel,3);	//ega planar mode
 		break;
+	case M_LIN8:
+		pageSize = mblock->sheight * mblock->swidth;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth);
+		var_write(&minfo.BitsPerPixel,8);
+		var_write(&minfo.MemoryModel,4);	//packed pixel
+		break;
+	case M_LIN15:
+		pageSize = mblock->sheight * mblock->swidth*2;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
+		var_write(&minfo.BitsPerPixel,15);
+		var_write(&minfo.MemoryModel,6);	//HiColour
+		var_write(&minfo.RedMaskSize,5);
+		var_write(&minfo.RedMaskPos,10);
+		var_write(&minfo.GreenMaskSize,5);
+		var_write(&minfo.GreenMaskPos,5);
+		var_write(&minfo.BlueMaskSize,5);
+		var_write(&minfo.BlueMaskPos,0);
+		break;
+	case M_LIN16:
+		pageSize = mblock->sheight * mblock->swidth*2;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
+		var_write(&minfo.BitsPerPixel,16);
+		var_write(&minfo.MemoryModel,6);	//HiColour
+		var_write(&minfo.RedMaskSize,5);
+		var_write(&minfo.RedMaskPos,11);
+		var_write(&minfo.GreenMaskSize,6);
+		var_write(&minfo.GreenMaskPos,5);
+		var_write(&minfo.BlueMaskSize,5);
+		var_write(&minfo.BlueMaskPos,0);
+		break;
+	case M_LIN32:
+		pageSize = mblock->sheight * mblock->swidth*4;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
+		var_write(&minfo.BitsPerPixel,32);
+		var_write(&minfo.MemoryModel,6);	//HiColour
+		var_write(&minfo.RedMaskSize,5);
+		var_write(&minfo.RedMaskPos,11);
+		var_write(&minfo.GreenMaskSize,6);
+		var_write(&minfo.GreenMaskPos,5);
+		var_write(&minfo.BlueMaskSize,5);
+		var_write(&minfo.BlueMaskPos,0);
+		break;
+	default:
+		return 0x1;
 	}
+
+	var_write(&minfo.ModeAttributes,0x9b);
+	var_write(&minfo.WinAAttributes,0x7);	//Exists/readable/writable
+	var_write(&minfo.WinGranularity,64);
+	var_write(&minfo.WinSize,64);
+	var_write(&minfo.WinASegment,0xa000);
+	var_write(&minfo.WinFuncPtr,CALLBACK_RealPointer(callback.setwindow));
+	var_write(&minfo.NumberOfPlanes,0x1);
+	var_write(&minfo.NumberOfBanks,0x1);
+	var_write(&minfo.Reserved_page,0x1);
 	var_write(&minfo.XResolution,mblock->swidth);
 	var_write(&minfo.YResolution,mblock->sheight);
 	var_write(&minfo.XCharSize,mblock->cwidth);
@@ -275,12 +331,28 @@ Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y) {
 	//TODO Maybe do things differently with lowres double line modes?	
 	Bitu start;
 	switch (CurMode->type) {
+	case M_LIN4:
+		start=vga.config.scan_len*8*y+x;
+		vga.config.display_start=start/8;
+		IO_Read(0x3da);
+		IO_Write(0x3c0,0x13+32);
+		IO_Write(0x3c0,start % 8);
+		break;
 	case M_LIN8:
 		start=vga.config.scan_len*8*y+x;
 		vga.config.display_start=start/4;
 		IO_Read(0x3da);
 		IO_Write(0x3c0,0x13+32);
 		IO_Write(0x3c0,(start % 4)*2);
+		break;
+	case M_LIN16:
+	case M_LIN15:
+		start=vga.config.scan_len*4*y+x;
+		vga.config.display_start=start/4;
+		break;
+	case M_LIN32:
+		start=vga.config.scan_len*4*y+x;
+		vga.config.display_start=start/4;
 		break;
 	default:
 		return 0x1;
@@ -333,6 +405,9 @@ void INT10_SetupVESA(void) {
 	/* Copy the pmode interface block */
 	int10.rom.pmode_interface=RealMake(0xc000,int10.rom.used);
 	int10.rom.pmode_interface_size=sizeof(PmodeInterface);
+	switch (svgaCard) {
+
+	}
 	for (i=0;i<sizeof(PmodeInterface);i++) {
 		phys_writeb(0xc0000+int10.rom.used++,PmodeInterface[i]);
 	}

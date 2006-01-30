@@ -90,7 +90,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			real_writeb(0xb800,off,old);
 		}
 		break;
-	case M_EGA16:
+	case M_EGA:
 		{
 			/* Set the correct bitmask for the pixel position */
 			IO_Write(0x3ce,0x8);Bit8u mask=128>>(x&7);IO_Write(0x3cf,mask);
@@ -117,6 +117,11 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 	case M_VGA:
 		mem_writeb(PhysMake(0xa000,y*320+x),color);
 		break;
+	case M_LIN8: {
+			PhysPt off=S3_LFB_BASE+y*CurMode->swidth+x;
+			mem_writeb(off,color);
+			break;
+		}
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
 		break;
@@ -141,7 +146,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			*color=(val>>(((7-x&7)))) & 1 ;
 		}
 		break;
-	case M_EGA16:
+	case M_EGA:
 		{
 			/* Calculate where the pixel is in video memory */
 			PhysPt off=0xa0000+CurMode->plength*page+((y*CurMode->swidth+x)>>3);
@@ -161,6 +166,11 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 	case M_VGA:
 		*color=mem_readb(PhysMake(0xa000,320*y+x));
 		break;
+	case M_LIN8: {
+			PhysPt off=S3_LFB_BASE+y*CurMode->swidth+x;
+			*color = mem_readb(off);
+			break;
+		}
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("GetPixel unhandled mode type %d",CurMode->type);
 		break;

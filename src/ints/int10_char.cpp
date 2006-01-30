@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.42 2005-12-02 13:10:18 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.43 2006-01-30 10:07:19 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -235,7 +235,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 			CGA4_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_TANDY16:
 			TANDY16_CopyRow(cul,clr,start,start+nlines,base);break;
-		case M_EGA16:		
+		case M_EGA:		
 			EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_VGA:		
 			VGA_CopyRow(cul,clr,start,start+nlines,base);break;
@@ -261,7 +261,7 @@ filling:
 			CGA4_FillRow(cul,clr,start,base,attr);break;
 		case M_TANDY16:		
 			TANDY16_FillRow(cul,clr,start,base,attr);break;
-		case M_EGA16:		
+		case M_EGA:		
 			EGA16_FillRow(cul,clr,start,base,attr);break;
 		case M_VGA:		
 			VGA_FillRow(cul,clr,start,base,attr);break;
@@ -483,7 +483,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 			attr = 0x1;
 			break;
 		case M_TANDY16:
-		case M_EGA16:
+		case M_EGA:
 		default:
 			attr = 0xf;
 			break;
@@ -493,7 +493,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	x=8*col;
 	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
 	//TODO Check for out of bounds
-	if (CurMode->type==M_EGA16) {
+	if (CurMode->type==M_EGA) {
 		/* enable all planes for EGA modes (Ultima 1 colour bug) */
 		/* might be put into INT10_PutPixel but different vga bios
 		   implementations have different opinions about this */

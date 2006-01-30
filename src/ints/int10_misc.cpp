@@ -98,8 +98,12 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 		col_count=2;break;
 	case M_CGA4:
 		col_count=4;break;
-	case M_EGA16:
-		if (CurMode->mode==0x11 || CurMode->mode==0x0f) col_count=2; else col_count=16;break; 
+	case M_EGA:
+		if (CurMode->mode==0x11 || CurMode->mode==0x0f) 
+			col_count=2; 
+		else 
+			col_count=16;
+		break; 
 	case M_VGA:
 		col_count=256;break;
 	default:
