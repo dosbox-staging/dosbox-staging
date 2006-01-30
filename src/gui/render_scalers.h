@@ -21,7 +21,6 @@
 
 //#include "render.h"
 #include "video.h"
-#include <xmmintrin.h>
 
 #define SCALER_MAXWIDTH		1024
 #define SCALER_MAXHEIGHT	768
