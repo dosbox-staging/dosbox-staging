@@ -15,6 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: hardware.cpp,v 1.10 2006-01-30 16:10:13 qbix79 Exp $ */
+
 #include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
@@ -58,6 +61,7 @@ static struct {
 	struct {
 		Bitu rowlen;
 	} image;
+#if (C_SSHOT)
 	struct {
 		FILE		*handle;
 		Bitu		frames;
@@ -74,6 +78,7 @@ static struct {
 		Bit8u		*index;
 		Bitu		indexsize, indexused;
 	} video;
+#endif
 } capture;
 
 FILE * OpenCaptureFile(const char * type,const char * ext) {
@@ -143,6 +148,7 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 #endif
 
 static void CAPTURE_VideoEvent(void) {
+#if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 	/* Close the video */
 		CaptureState &= ~CAPTURE_VIDEO;
@@ -273,6 +279,7 @@ static void CAPTURE_VideoEvent(void) {
 	} else {
 		CaptureState |= CAPTURE_VIDEO;
 	}
+#endif
 }
 
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal) {
@@ -518,6 +525,7 @@ static Bit8u wavheader[]={
 };
 
 void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
+#if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		Bitu left = WAVE_BUF - capture.video.audioused;
 		if (left > len)
@@ -526,6 +534,7 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
 		capture.video.audioused += left;
 		capture.video.audiorate = freq;
 	}
+#endif
 	if (CaptureState & CAPTURE_WAVE) {
 		if (!capture.wave.handle) {
 			capture.wave.handle=OpenCaptureFile("Wave Output",".wav");
