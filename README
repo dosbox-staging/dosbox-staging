@@ -196,7 +196,7 @@ description:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
-       [-startmapper]
+       [-startmapper] [-noautoexec]
        
 dosbox -version
 
@@ -236,6 +236,9 @@ dosbox -version
   -startmapper
         Enter the keymapper directly on startup. Useful for people with 
         keyboard problems.
+
+  -noautoexec
+        Skips the [autoexec] section of the loaded configuration file.
 
   -version
         output version information and exit. Useful for frontends.
