@@ -476,6 +476,9 @@
 					<File
 						RelativePath="..\src\hardware\vga_xga.cpp">
 					</File>
+					<File
+						RelativePath="..\src\hardware\vga_s3.cpp">
+					</File>
 				</Filter>
 				<Filter
 					Name="sound"
