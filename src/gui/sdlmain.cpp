@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.97 2006-01-30 15:02:33 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.98 2006-01-31 09:26:44 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -588,6 +588,7 @@ dosurface:
 	}//CASE
 	if (retFlags) 
 		GFX_Start();
+	if (!sdl.mouse.autoenable) SDL_ShowCursor(sdl.mouse.autolock?SDL_DISABLE:SDL_ENABLE);
 	return retFlags;
 }
 
@@ -599,7 +600,7 @@ static void CaptureMouse(void) {
 		SDL_ShowCursor(SDL_DISABLE);
 	} else {
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
-		SDL_ShowCursor(SDL_ENABLE);
+		if (sdl.mouse.autoenable || !sdl.mouse.autolock) SDL_ShowCursor(SDL_ENABLE);
 	}
         mouselocked=sdl.mouse.locked;
 }
@@ -966,6 +967,7 @@ static void GUI_StartUp(Section * sec) {
 #endif
 	}
 	sdl.mouse.autoenable=section->Get_bool("autolock");
+	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	const char * output=section->Get_string("output");
@@ -1048,13 +1050,16 @@ static void GUI_StartUp(Section * sec) {
 
 void Mouse_AutoLock(bool enable) {
 	sdl.mouse.autolock=enable;
-	if (enable && sdl.mouse.autoenable) sdl.mouse.requestlock=true;
-	else sdl.mouse.requestlock=false;
+	if (sdl.mouse.autoenable) sdl.mouse.requestlock=enable;
+	else {
+		SDL_ShowCursor(enable?SDL_DISABLE:SDL_ENABLE);
+		sdl.mouse.requestlock=false;
+	}
 }
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
-	if (sdl.mouse.locked) 
-		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100,(float)motion->yrel*sdl.mouse.sensitivity/100);
+	if (sdl.mouse.locked || !sdl.mouse.autoenable) 
+		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100,(float)motion->yrel*sdl.mouse.sensitivity/100,(float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.sensitivity/100,(float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.sensitivity/100.0,sdl.mouse.locked);
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -1063,6 +1068,10 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 		if (sdl.mouse.requestlock && !sdl.mouse.locked) {
 			CaptureMouse();
 			// Dont pass klick to mouse handler
+			break;
+		}
+		if (!sdl.mouse.autoenable && sdl.mouse.autolock && button->button == SDL_BUTTON_MIDDLE) {
+			CaptureMouse();
 			break;
 		}
 		switch (button->button) {

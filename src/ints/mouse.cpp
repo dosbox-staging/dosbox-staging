@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.58 2006-01-30 10:06:36 harekiet Exp $ */
+/* $Id: mouse.cpp,v 1.59 2006-01-31 09:26:45 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -410,9 +410,9 @@ void DrawCursor() {
 	RestoreVgaRegisters();
 }
 
-void Mouse_CursorMoved(float x,float y) {
-	float dx = x * mouse.pixelPerMickey_x;
-	float dy = y * mouse.pixelPerMickey_y;
+void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
+	float dx = xrel * mouse.pixelPerMickey_x;
+	float dy = yrel * mouse.pixelPerMickey_y;
 
 	if((fabs(x) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
 	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
@@ -420,8 +420,22 @@ void Mouse_CursorMoved(float x,float y) {
 
 	mouse.mickey_x += dx;
 	mouse.mickey_y += dy;
-	mouse.x += dx;
-	mouse.y += dy;
+	if (emulate) {
+		mouse.x += dx;
+		mouse.y += dy;
+	} else {
+		if (CurMode->type == M_TEXT) {
+			mouse.x = x*CurMode->swidth;
+			mouse.y = y*CurMode->sheight * 8 / CurMode->cheight;
+		} else if (mouse.max_x < 2048 || mouse.max_y < 2048 || mouse.max_x != mouse.max_y) {
+			mouse.x = x*mouse.max_x;
+			mouse.y = y*mouse.max_y;
+		} else { // Games faking relative movement through absolute coordinates. Quite surprising that this actually works..
+			mouse.x += xrel;
+			mouse.y += yrel;
+		}
+	}
+
 	/* ignore constraints if using PS2 mouse callback in the bios */
 
 	if (!useps2callback) {		
