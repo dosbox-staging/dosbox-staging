@@ -36,8 +36,7 @@ union {
 } scalerWriteCache;
 scalerFrameCache_t scalerFrameCache;
 scalerSourceCache_t scalerSourceCache;
-
-Bit8u scalerChangeCache [SCALER_MAXHEIGHT][SCALER_MAXWIDTH / SCALER_BLOCKSIZE];
+scalerChangeCache_t scalerChangeCache;
 
 #define _conc2(A,B) A ## B
 #define _conc3(A,B,C) A ## B ## C
@@ -218,6 +217,14 @@ ScalerLineBlock_t ScaleAdvInterp2x = {
 	2,2,
 	0,AdvInterp2x_15_L,AdvInterp2x_16_L,AdvInterp2x_32_L,
 	0,AdvInterp2x_15_R,AdvInterp2x_16_R,AdvInterp2x_32_R
+};
+
+ScalerLineBlock_t ScaleAdvInterp3x = {
+	GFX_CAN_15|GFX_CAN_16|GFX_CAN_32|GFX_LOVE_32|GFX_RGBONLY,
+	0,
+	3,3,
+	0,AdvInterp3x_15_L,AdvInterp3x_16_L,AdvInterp3x_32_L,
+	0,AdvInterp3x_15_R,AdvInterp3x_16_R,AdvInterp3x_32_R
 };
 
 ScalerLineBlock_t ScaleTV2x = {

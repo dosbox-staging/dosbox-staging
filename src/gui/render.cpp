@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.38 2006-01-30 19:05:05 harekiet Exp $ */
+/* $Id: render.cpp,v 1.39 2006-02-01 07:22:45 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -274,6 +274,8 @@ void RENDER_ReInit( bool stopIt ) {
 		case scalerOpAdvInterp:
 			if (render.scale.size == 2)
 				lineBlock = &ScaleAdvInterp2x;
+			else if (render.scale.size == 3)
+				lineBlock = &ScaleAdvInterp3x;
 			break;
 		case scalerOpAdvMame:
 			if (render.scale.size == 2)
@@ -375,7 +377,7 @@ forcenormal:
 }
 
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
-	if (!width || !height) { 
+	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
 		render.active=false;
 		return;	
 	}
@@ -429,6 +431,7 @@ void RENDER_Init(Section * sec) {
 	else if (!strcasecmp(scaler,"advmame2x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"advmame3x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"advinterp2x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 2; }
+	else if (!strcasecmp(scaler,"advinterp3x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"tv2x")) { render.scale.op = scalerOpTV;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"tv3x")) { render.scale.op = scalerOpTV;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"rgb2x")){ render.scale.op = scalerOpRGB;render.scale.size = 2; }

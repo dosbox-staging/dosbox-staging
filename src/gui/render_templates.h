@@ -417,10 +417,10 @@ static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
 #define SCALERHEIGHT	2
 #define SCALERFUNC												\
 	if (C1 != C7 && C3 != C5) {									\
-		line0[0] = C3 == C1 ? interp_w2(C3,C4,5,3) : C4;		\
-		line0[1] = C1 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
-		line1[0] = C3 == C7 ? interp_w2(C3,C4,5,3) : C4;		\
-		line1[1] = C7 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
+		line0[0] = C3 == C1 ? interp_w2(C3,C4,5U,3U) : C4;		\
+		line0[1] = C1 == C5 ? interp_w2(C5,C4,5U,3U) : C4;		\
+		line1[0] = C3 == C7 ? interp_w2(C3,C4,5U,3U) : C4;		\
+		line1[1] = C7 == C5 ? interp_w2(C5,C4,5U,3U) : C4;		\
 	} else {													\
 		line0[0] = line0[1] = C4;								\
 		line1[0] = line1[1] = C4;								\
@@ -431,18 +431,25 @@ static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
+//TODO, come up with something better for this one
 #define SCALERNAME		AdvInterp3x
 #define SCALERWIDTH		3
 #define SCALERHEIGHT	3
 #define SCALERFUNC												\
-	if (C1 != C7 && C3 != C5) {									\
-		line0[0] = C3 == C1 ? interp_w2(C3,C4,5,3) : C4;		\
-		line0[1] = C1 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
-		line1[0] = C3 == C7 ? interp_w2(C3,C4,5,3) : C4;		\
-		line1[1] = C7 == C5 ? interp_w2(C5,C4,5,3) : C4;		\
-	} else {													\
-		line0[0] = line0[1] = C4;								\
-		line1[0] = line1[1] = C4;								\
+	if ((C1 != C7) && (C3 != C5)) {													\
+		line0[0] = C3 == C1 ?  interp_w2(C3,C4,5U,3U) : C4;												\
+		line0[1] = (C3 == C1 && C4 != C2) || (C5 == C1 && C4 != C0) ? C1 : C4;		\
+		line0[2] = C5 == C1 ?  interp_w2(C5,C4,5U,3U) : C4;												\
+		line1[0] = (C3 == C1 && C4 != C6) || (C3 == C7 && C4 != C0) ? C3 : C4;		\
+		line1[1] = C4;																\
+		line1[2] = (C5 == C1 && C4 != C8) || (C5 == C7 && C4 != C2) ? C5 : C4;		\
+		line2[0] = C3 == C7 ?  interp_w2(C3,C4,5U,3U) : C4;												\
+		line2[1] = (C3 == C7 && C4 != C8) || (C5 == C7 && C4 != C6) ? C7 : C4;		\
+		line2[2] = C5 == C7 ?  interp_w2(C5,C4,5U,3U) : C4;												\
+	} else {																		\
+		line0[0] = line0[1] = line0[2] = C4;										\
+		line1[0] = line1[1] = line1[2] = C4;										\
+		line2[0] = line2[1] = line2[2] = C4;										\
 	}
 #include "render_loops.h"
 #undef SCALERNAME

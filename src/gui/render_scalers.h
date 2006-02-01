@@ -46,7 +46,8 @@ extern Bit8u Scaler_Aspect[];
 extern Bit8u diff_table[];
 extern Bitu Scaler_ChangedLineIndex;
 extern Bit16u Scaler_ChangedLines[];
-extern Bit8u scalerChangeCache [SCALER_MAXHEIGHT][SCALER_MAXWIDTH / SCALER_BLOCKSIZE];
+/* Not entirely happy about those +2's since they make a non power of 2, with muls instead of shift */
+typedef Bit8u scalerChangeCache_t [SCALER_MAXHEIGHT+2][2+(SCALER_MAXWIDTH / SCALER_BLOCKSIZE)] ;
 typedef union {
 	Bit32u b32	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
 	Bit16u b16	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
@@ -60,6 +61,7 @@ typedef union {
 
 extern scalerFrameCache_t scalerFrameCache;
 extern scalerSourceCache_t scalerSourceCache;
+extern scalerChangeCache_t scalerChangeCache;
 
 #define ScaleFlagSimple		0x001
 
@@ -98,6 +100,7 @@ extern ScalerLineBlock_t ScaleNormal3x;
 extern ScalerLineBlock_t ScaleAdvMame2x;
 extern ScalerLineBlock_t ScaleAdvMame3x;
 extern ScalerLineBlock_t ScaleAdvInterp2x;
+extern ScalerLineBlock_t ScaleAdvInterp3x;
 
 extern ScalerLineBlock_t ScaleTV2x;
 extern ScalerLineBlock_t ScaleTV3x;
