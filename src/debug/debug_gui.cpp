@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.26 2006-01-30 10:45:49 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.27 2006-02-01 07:59:54 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -90,8 +90,9 @@ void DEBUG_RefreshPage(char scroll) {
 	wclear(dbg.win_out);
 
 	while (rem_lines > 0 && i!=logBuff.begin()) {
-		rem_lines -= (int) ((*--i).size() / dbg.win_out->_maxx) + 1; 
-		mvwprintw(dbg.win_out,rem_lines-1, 0, (*i).c_str());
+		rem_lines -= (int) ((*--i).size() / dbg.win_out->_maxx) + 1;
+		/* Const cast is needed for pdcurses which has no const char in mvwprintw (bug maybe) */
+		mvwprintw(dbg.win_out,rem_lines-1, 0, const_cast<char*>((*i).c_str()));
 	}
 	wrefresh(dbg.win_out);
 }
