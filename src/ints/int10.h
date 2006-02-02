@@ -126,6 +126,9 @@ typedef struct {
 		RealPt vesa_modes;
 		RealPt pmode_interface;
 		Bit16u pmode_interface_size;
+		Bit16u pmode_interface_start;
+		Bit16u pmode_interface_window;
+		Bit16u pmode_interface_palette;
 		Bitu used;
 	} rom;
 } Int10Data;
@@ -190,7 +193,7 @@ Bit8u VESA_SetSVGAMode(Bit16u mode);
 Bit8u VESA_GetSVGAMode(Bit16u & mode);
 Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address);
 Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address);
-Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u & bytes,Bit16u & pixels,Bit16u & lines);
+Bit8u VESA_ScanLineLength(Bit8u subcall, Bit16u val, Bit16u & bytes,Bit16u & pixels,Bit16u & lines);
 Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y);
 Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y);
 Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count);

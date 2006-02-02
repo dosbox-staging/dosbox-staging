@@ -384,7 +384,7 @@ graphics_chars:
 			break;
 		case 0x06:
 			reg_al=0x4f;
-			reg_ah=VESA_ScanLineLength(reg_bl,reg_bx,reg_cx,reg_dx);
+			reg_ah=VESA_ScanLineLength(reg_bl,reg_cx,reg_bx,reg_cx,reg_dx);
 			break;
 		case 0x07:
 			switch (reg_bl) {
@@ -428,22 +428,22 @@ graphics_chars:
 				reg_cx=int10.rom.pmode_interface_size;
 				reg_ax=0x004f;
 				break;
-			case 0x01:						/* Get code for "set bank" */
-				reg_edi=RealOff(int10.rom.pmode_interface)+0x08;
+			case 0x01:						/* Get code for "set window" */
+				reg_edi=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_window;
 				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_cx=0x0b;
+				reg_cx=0x10;		//0x10 should be enough for the callbacks
 				reg_ax=0x004f;
 				break;
 			case 0x02:						/* Get code for "set display start" */
-				reg_edi=RealOff(int10.rom.pmode_interface)+0x19;
+				reg_edi=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_start;
 				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_cx=0x3e;
+				reg_cx=0x10;		//0x10 should be enough for the callbacks
 				reg_ax=0x004f;
 				break;
-			case 0x03:						/* Get code for "set pallete" */
-				reg_edi=RealOff(int10.rom.pmode_interface)+0x57;
+			case 0x03:						/* Get code for "set palette" */
+				reg_edi=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_palette;
 				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_cx=0x37;
+				reg_cx=0x10;		//0x10 should be enough for the callbacks
 				reg_ax=0x004f;
 				break;
 			default:
