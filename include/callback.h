@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.14 2005-08-08 13:33:43 c2woody Exp $ */
+/* $Id: callback.h,v 1.15 2006-02-03 17:07:41 harekiet Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -28,7 +28,7 @@
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
 
-enum { CB_RETF,CB_IRET,CB_IRET_STI };
+enum { CB_RETN, CB_RETF,CB_IRET,CB_IRET_STI };
 
 #define CB_MAX 144
 #define CB_SEG 0xC800
@@ -52,7 +52,8 @@ void CALLBACK_RunRealInt(Bit8u intnum);
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off);
 
 bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* description=0);
-bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress, const char* description=0);
+/* Returns with the size of the extra callback */
+Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress);
 
 const char* CALLBACK_GetDescription(Bitu callback);
 bool CALLBACK_Free(Bitu callback);

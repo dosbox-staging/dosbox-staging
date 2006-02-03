@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.28 2005-09-08 13:09:47 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.29 2006-02-03 17:07:41 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -154,10 +154,8 @@ bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char*
 		phys_writew(CB_BASE+(callback<<4)+3,callback);		//The immediate word
 		phys_writeb(CB_BASE+(callback<<4)+5,(Bit8u)0xCF);	//An IRET Instruction
 		break;
-
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
-
 	}
 	CallBack_Handlers[callback]=handler;
 	CALLBACK_SetDescription(callback,descr);
@@ -170,35 +168,39 @@ void CALLBACK_RemoveSetup(Bitu callback) {
 	}
 }
 
-
-bool CALLBACK_SetupAt(Bitu callback,CallBack_Handler handler,Bitu type,Bitu linearAddress,const char* descr) {
-	if (callback>=CB_MAX) return false;
+Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress) {
+	if (callback>=CB_MAX) 
+		return 0;
 	switch (type) {
+	case CB_RETN:
+		phys_writeb(physAddress+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+2, callback);	//The immediate word
+		phys_writeb(physAddress+4,(Bit8u)0xC3);	//A RETN Instruction
+		return 5;
 	case CB_RETF:
-		mem_writeb(linearAddress+0,(Bit8u)0xFE);	//GRP 4
-		mem_writeb(linearAddress+1,(Bit8u)0x38);	//Extra Callback instruction
-		mem_writew(linearAddress+2, callback);		//The immediate word
-		mem_writeb(linearAddress+4,(Bit8u)0xCB);	//A RETF Instruction
-		break;
+		phys_writeb(physAddress+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+2, callback);	//The immediate word
+		phys_writeb(physAddress+4,(Bit8u)0xCB);	//A RETF Instruction
+		return 5;
 	case CB_IRET:
-		mem_writeb(linearAddress+0,(Bit8u)0xFE);	//GRP 4
-		mem_writeb(linearAddress+1,(Bit8u)0x38);	//Extra Callback instruction
-		mem_writew(linearAddress+2,callback);		//The immediate word
-		mem_writeb(linearAddress+4,(Bit8u)0xCF);	//An IRET Instruction
-		break;
+		phys_writeb(physAddress+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+2,callback);	//The immediate word
+		phys_writeb(physAddress+4,(Bit8u)0xCF);	//An IRET Instruction
+		return 5;
 	case CB_IRET_STI:
-		mem_writeb(linearAddress+0,(Bit8u)0xFB);	//STI
-		mem_writeb(linearAddress+1,(Bit8u)0xFE);	//GRP 4
-		mem_writeb(linearAddress+2,(Bit8u)0x38);	//Extra Callback instruction
-		mem_writew(linearAddress+3, callback);		//The immediate word
-		mem_writeb(linearAddress+5,(Bit8u)0xCF);	//An IRET Instruction
-		break;
+		phys_writeb(physAddress+0,(Bit8u)0xFB);	//STI
+		phys_writeb(physAddress+1,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+2,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+3, callback);	//The immediate word
+		phys_writeb(physAddress+5,(Bit8u)0xCF);	//An IRET Instruction
+		return 6;
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}
-	CallBack_Handlers[callback]=handler;
-	CALLBACK_SetDescription(callback,descr);
-	return true;
+	return 0;
 }
 
 CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
