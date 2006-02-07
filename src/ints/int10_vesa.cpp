@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.20 2006-02-02 17:57:08 harekiet Exp $ */
+/* $Id: int10_vesa.cpp,v 1.21 2006-02-07 20:12:27 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -127,6 +127,7 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	Bitu i=0;
 
 	if (mode<0x100) return 0x01;
+	mode&=0xfff;
 	while (ModeList_VGA[i].mode!=0xffff) {
 		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
 	}
@@ -319,10 +320,12 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	default:
 		return 0x1;			//Illegal call
 	}
-	/* Write the scan line to video card the simple way */
-	if (vga.config.scan_len & 7)
-		vga.config.scan_len += 8;
-	vga.config.scan_len /= 8;
+	if (subcall!=0x01) {
+		/* Write the scan line to video card the simple way */
+		if (vga.config.scan_len & 7)
+			vga.config.scan_len += 8;
+		vga.config.scan_len /= 8;
+	}
 	pixels=(vga.config.scan_len*8)/bpp;
 	bytes=vga.config.scan_len*8;
 	lines = 2*1024*1024 / bytes;
