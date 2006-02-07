@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.43 2006-01-30 10:07:19 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.44 2006-02-07 20:25:47 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -489,6 +489,10 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 			break;
 		}
 	}
+
+	//Some weird behavior of mode 6 (and 11) 
+	if ((CurMode->mode == 0x6)/* || (CurMode->mode==0x11)*/) attr = (attr&0x80)|1;
+	//(same fix for 11 fixes vgatest2, but it's not entirely correct according to wd)
 
 	x=8*col;
 	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
