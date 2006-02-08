@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.10 2006-01-30 16:10:13 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.11 2006-02-08 07:16:15 harekiet Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -385,13 +385,13 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 					rowPointer=(data+(i >> 0)*pitch);
 			}
 			png_write_row(png_ptr, (png_bytep)rowPointer);
-			png_write_flush( png_ptr );
 		}
-		/*close file*/
-		fclose(fp);
-
+		/* Finish writing */
+		png_write_end(png_ptr, 0);
 		/*Destroy PNG structs*/
 		png_destroy_write_struct(&png_ptr, &info_ptr);
+		/*close file*/
+		fclose(fp);
 	}
 skip_shot:
 	if (CaptureState & CAPTURE_VIDEO) {
