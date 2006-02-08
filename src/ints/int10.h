@@ -201,6 +201,7 @@ Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count);
 
 /* Sup Groups */
 void INT10_SetupRomMemory(void);
+void INT10_SetupRomMemoryChecksum(void);
 void INT10_SetupVESA(void);
 
 /* EGA RIL */

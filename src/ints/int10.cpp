@@ -546,5 +546,6 @@ void INT10_Init(Section* sec) {
 	INT10_SetupRomMemory();
 	INT10_Seg40Init();
 	INT10_SetupVESA();
+	INT10_SetupRomMemoryChecksum();//SetupVesa modifies the rom as well.
 	INT10_SetVideoMode(machine==MCH_HERC ? 0x7 : 0x3);
 };

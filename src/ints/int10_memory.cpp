@@ -72,6 +72,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 	}
 }
 
+static Bitu checksumlocation = 0; //Same type as int10.rom.used
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
 	PhysPt rom_base=PhysMake(0xc000,0);
@@ -113,16 +114,22 @@ void INT10_SetupRomMemory(void) {
 	RealSetVec(0x1F,int10.rom.font_8_second);
 
 	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
-		/* Sum of all bytes in rom module 256 should be 0 */
-		Bit8u sum = 0;
-		for (i = 0;i < 32 * 1024;i++) //32 KB romsize
-			sum += phys_readb(rom_base + i); //OVERFLOW IS OKAY
-		sum = 256 - sum;
-		phys_writeb(rom_base+int10.rom.used++,sum);
+		//Reserve checksum location
+		checksumlocation = int10.rom.used++;
 	}
 };
 
-
+void INT10_SetupRomMemoryChecksum(void) {
+	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
+		/* Sum of all bytes in rom module 256 should be 0 */
+		Bit8u sum = 0;
+		PhysPt rom_base = PhysMake(0xc000,0);
+		for (Bitu i = 0;i < 32 * 1024;i++) //32 KB romsize
+			sum += phys_readb(rom_base + i); //OVERFLOW IS OKAY
+		sum = 256 - sum;
+		phys_writeb(rom_base + checksumlocation,sum);
+	}
+}
 
 
 Bit8u int10_font_08[256 * 8] = {
