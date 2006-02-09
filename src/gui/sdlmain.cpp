@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.98 2006-01-31 09:26:44 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.99 2006-02-09 08:42:42 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -868,11 +868,24 @@ static void SetPriority(PRIORITY_LEVELS level) {
 	}
 }
 
+static unsigned char logo[32*32*4]= {
+#include "dosbox_logo.h"
+};
+
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.updating=false;
+
+	/* Set Icon (must be done before any sdl_setvideomode call) */
+#if WORDS_BIGENDIAN
+	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
+#else
+	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
+#endif
+	SDL_WM_SetIcon(logos,NULL);
+
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 	const char * priority=section->Get_string("priority");
