@@ -368,10 +368,10 @@ static Bitu IRQ1_Handler(void) {
 			if(scancode == 0x52) flags2 |=0x80; /* press insert */		   
 			if(flags1 &0x08) {
 				add_key(scan_to_scanascii[scancode].normal+0x5000);
-			} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) {
-				add_key((scan_to_scanascii[scancode].shift&0xff00)|0xe0);
 			} else if (flags1 &0x04) {
 				add_key((scan_to_scanascii[scancode].control&0xff00)|0xe0);
+			} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) {
+				add_key((scan_to_scanascii[scancode].shift&0xff00)|0xe0);
 			} else add_key((scan_to_scanascii[scancode].normal&0xff00)|0xe0);
 			break;
 		}
@@ -381,7 +381,7 @@ static Bitu IRQ1_Handler(void) {
 			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
-		} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) {
+		} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) {
 			add_key(scan_to_scanascii[scancode].shift);
 		} else add_key(scan_to_scanascii[scancode].normal);
 		break;
