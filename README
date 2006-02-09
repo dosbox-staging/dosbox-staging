@@ -580,6 +580,7 @@ ALT-ENTER     Switch to full screen and back.
 ALT-PAUSE     Pause emulation.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
+CTRL-ALT-F5   Start/Stop creating a movie of the screen.
 CTRL-F5       Save a screenshot.(png)
 CTRL-F6       Start/Stop recording sound output to a wave file.
 CTRL-ALT-F7   Start/Stop recording of OPL commands.

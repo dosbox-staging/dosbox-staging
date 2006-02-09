@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.51 2006-01-22 14:13:00 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.52 2006-02-09 08:49:52 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -939,6 +939,7 @@ void DOS_SetupPrograms(void) {
 		"\033[33;1mALT-PAUSE\033[0m   : Pause DOSBox.\n"
 		"\033[33;1mCTRL-F1\033[0m     : Start the \033[33mkeymapper\033[0m.\n"
 		"\033[33;1mCTRL-F4\033[0m     : Update directory cache for all drives! Swap mounted disk-image.\n"
+		"\033[33;1mCTRL-ALT-F5\033[0m : Start/Stop creating a movie of the screen.\n"
 		"\033[33;1mCTRL-F5\033[0m     : Save a screenshot.\n"
 		"\033[33;1mCTRL-F6\033[0m     : Start/Stop recording sound output to a wave file.\n"
 		"\033[33;1mCTRL-ALT-F7\033[0m : Start/Stop recording of OPL commands.\n"

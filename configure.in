@@ -281,6 +281,19 @@ case "$target" in
        ;;
 esac
 
+dnl Some stuff for the icon.
+case "$target" in
+    *-*-cygwin* | *-*-mingw32*)
+       dnl Some stuff for the ico
+       AC_CHECK_TOOL(WINDRES, windres, :)
+    ;;
+    *)
+       WINDRES=":"
+    ;;
+esac
+       AM_CONDITIONAL(HAVE_WINDRES, test "x$WINDRES" != "x:")
+       AC_SUBST(WINDRES)
+
 
 AC_OUTPUT([ 
 Makefile
