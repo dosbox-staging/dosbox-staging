@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2005  The DOSBox Team
+ *  Copyright (C) 2002-2006  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_win32.h,v 1.11 2005-02-10 10:21:07 qbix79 Exp $ */
+/* $Id: midi_win32.h,v 1.12 2006-02-09 11:47:48 qbix79 Exp $ */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

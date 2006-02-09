@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2005  The DOSBox Team
+ *  Copyright (C) 2002-2006  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.h,v 1.11 2006-01-31 09:26:43 qbix79 Exp $ */
+/* $Id: mouse.h,v 1.12 2006-02-09 11:47:48 qbix79 Exp $ */
 
 #ifndef DOSBOX_MOUSE_H
 #define DOSBOX_MOUSE_H

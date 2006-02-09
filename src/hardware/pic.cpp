@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2005  The DOSBox Team
+ *  Copyright (C) 2002-2006  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.32 2005-12-04 21:17:29 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.33 2006-02-09 11:47:49 qbix79 Exp $ */
 
 #include <list>
 

@@ -305,7 +305,7 @@ AC_SUBST(ALSA_LIBS)
 
 AH_TOP([
 /*
- *  Copyright (C) 2002-2005  The DOSBox Team
+ *  Copyright (C) 2002-2006  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2005  The DOSBox Team
+ *  Copyright (C) 2002-2006  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.35 2006-01-27 07:54:51 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.36 2006-02-09 11:47:48 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
