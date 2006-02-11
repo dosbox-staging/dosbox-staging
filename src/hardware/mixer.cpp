@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.37 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.38 2006-02-11 09:37:16 harekiet Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -80,13 +80,13 @@ struct MIXER_Channel {
 static struct {
 	Bit32s work[MIXER_BUFSIZE][2];
 	Bitu pos,done;
-	Bitu needed,min_needed;
+	Bitu needed, min_needed, max_needed;
+	Bit32u tick_add,tick_remain;
 	float mastervol[2];
 	MixerChannel * channels;
 	bool nosound;
 	Bit32u freq;
 	Bit32u blocksize;
-	Bit32u tick_add,tick_remain;
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -292,8 +292,6 @@ static void MIXER_MixData(Bitu needed) {
 			readpos=(readpos+1)&MIXER_BUFMASK;
 		}
 		CAPTURE_AddWave( mixer.freq, added, (Bit16s*)convert );
-		//Reset the the tick_add for constant speed
-		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 	}
 	mixer.done=needed;
 }
@@ -329,34 +327,62 @@ static void MIXER_Mix_NoSound(void) {
 
 static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	Bitu need=(Bitu)len/MIXER_SSIZE;
-	if (need>mixer.done) {
-		//LOG_MSG("%d Buffer underrun %d done  and %d needed",count++,mixer.done,need);
-		return;
-	}//else 		LOG_MSG("%d Buffer regular run %d done  and %d needed",count++,mixer.done,need);
+	Bit16s * output=(Bit16s *)stream;
+	Bitu reduce;
+	Bitu pos, index, index_add;
+	Bits sample;
+	/* Enough room in the buffer ? */
+	if (mixer.done < need) {
+//		LOG_MSG("Full underrun need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
+		reduce = mixer.done;
+		index_add = (reduce << MIXER_SHIFT) / need;
+	} else if (mixer.done < mixer.max_needed) {
+		Bitu left = mixer.done - need;
+		if (left < mixer.min_needed) {
+			left = (mixer.min_needed - left);
+			left = 1 + (2*left) / mixer.min_needed;
+//			left = 1;
+//			left = 1 + (left / 128);
+//			LOG_MSG("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
+			reduce = need - left;
+			index_add = (reduce << MIXER_SHIFT) / need;
+		} else {
+			reduce = need;
+			index_add = (1 << MIXER_SHIFT);
+		}
+	} else {
+		/* There is way too much data in the buffer */
+		if (mixer.done > MIXER_BUFSIZE)
+			index_add = MIXER_BUFSIZE - mixer.min_needed;
+		else 
+			index_add = mixer.done - mixer.min_needed;
+		index_add = (index_add << MIXER_SHIFT) / need;
+		reduce = mixer.done - mixer.min_needed;
+	}
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
-		if (chan->done>need) chan->done-=need;
+		if (chan->done>need) chan->done-=reduce;
 		else chan->done=0;
 	}
-	mixer.done-=need;
-	mixer.needed-=need;
-	if (mixer.done > mixer.min_needed) {
-		Bitu diff=mixer.done-mixer.min_needed;
-		mixer.tick_add = ((mixer.freq-(diff/5)) << MIXER_SHIFT)/1000;
-	} else {
-		Bitu diff = ((mixer.min_needed>mixer.needed)?mixer.min_needed:mixer.needed) - mixer.done;
-		mixer.tick_add = ((mixer.freq+(diff*3)) << MIXER_SHIFT)/1000;
-	}
-	Bit16s * output=(Bit16s *)stream;
-	Bits sample;
+	mixer.done -= reduce;
+	mixer.needed -= reduce;
+	pos = mixer.pos;
+	mixer.pos = (mixer.pos + reduce) & MIXER_BUFMASK;
+	index = 0;
 	while (need--) {
-		sample=mixer.work[mixer.pos][0]>>MIXER_VOLSHIFT;
+		Bitu i = (pos + (index >> MIXER_SHIFT )) & MIXER_BUFMASK;
+		index += index_add;
+		sample=mixer.work[i][0]>>MIXER_VOLSHIFT;
 		*output++=MIXER_CLIP(sample);
-		mixer.work[mixer.pos][0]=0;
-		sample=mixer.work[mixer.pos][1]>>MIXER_VOLSHIFT;
+		sample=mixer.work[i][1]>>MIXER_VOLSHIFT;
 		*output++=MIXER_CLIP(sample);
-		mixer.work[mixer.pos][1]=0;
-		mixer.pos=(mixer.pos+1)&MIXER_BUFMASK;
+	}
+	/* Clean the used buffer */
+	while (reduce--) {
+		pos &= MIXER_BUFMASK;
+		mixer.work[pos][0]=0;
+		mixer.work[pos][1]=0;
+		pos++;
 	}
 }
 
@@ -505,6 +531,7 @@ void MIXER_Init(Section* sec) {
 	mixer.min_needed=section->Get_int("prebuffer");
 	if (mixer.min_needed>100) mixer.min_needed=100;
 	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
+	mixer.max_needed=mixer.blocksize * 2 + mixer.min_needed;
 	mixer.needed=mixer.min_needed+1;
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
