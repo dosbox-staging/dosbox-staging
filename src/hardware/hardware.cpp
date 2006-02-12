@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.12 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.13 2006-02-12 23:25:46 harekiet Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -147,7 +147,9 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 }
 #endif
 
-static void CAPTURE_VideoEvent(void) {
+static void CAPTURE_VideoEvent(bool pressed) {
+	if (!pressed)
+		return;
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 	/* Close the video */
@@ -285,7 +287,8 @@ static void CAPTURE_VideoEvent(void) {
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal) {
 	Bitu i;
 #if (C_SSHOT)
-	Bit32u doubleRow[SCALER_MAXWIDTH];
+	Bit8u doubleRow[SCALER_MAXWIDTH*4];
+	Bitu countWidth = width;
 
 	if (flags & CAPTURE_FLAG_DBLH)
 		height *= 2;
@@ -337,52 +340,81 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 			}
 			png_set_PLTE(png_ptr, info_ptr, palette,256);
 		} else {
-			png_set_swap(png_ptr);
-			if (bpp == 32) {
-				png_set_IHDR(png_ptr, info_ptr, width, height,
-					8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-					PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-			} else {
-				png_set_IHDR(png_ptr, info_ptr, width, height,
-					16, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-					PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-			}
+			png_set_bgr( png_ptr );
+			png_set_IHDR(png_ptr, info_ptr, width, height,
+				8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+				PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		}
 		png_write_info(png_ptr, info_ptr);
 		for (i=0;i<height;i++) {
-			void * rowPointer;
-			if (flags & CAPTURE_FLAG_DBLW) {
-				void *srcLine;
-				Bitu x;
-				Bitu countWidth = width >> 1;
-				if (flags & CAPTURE_FLAG_DBLH)
-					srcLine=(data+(i >> 1)*pitch);
-				else
-					srcLine=(data+(i >> 0)*pitch);
-				switch ( bpp) {
-				case 8:
-					for (x=0;x<countWidth;x++)
-						((Bit8u *)doubleRow)[x*2+0] =
-						((Bit8u *)doubleRow)[x*2+1] = ((Bit8u *)srcLine)[x];
-					break;
-				case 15:
-				case 16:
-					for (x=0;x<countWidth;x++)
-						((Bit16u *)doubleRow)[x*2+0] =
-						((Bit16u *)doubleRow)[x*2+1] = ((Bit16u *)srcLine)[x];
-					break;
-				case 32:
-					for (x=0;x<countWidth;x++)
-						((Bit32u *)doubleRow)[x*2+0] =
-						((Bit32u *)doubleRow)[x*2+1] = ((Bit32u *)srcLine)[x];
-					break;
+			void *rowPointer;
+			void *srcLine;
+			if (flags & CAPTURE_FLAG_DBLH)
+				srcLine=(data+(i >> 1)*pitch);
+			else
+				srcLine=(data+(i >> 0)*pitch);
+			rowPointer=srcLine;
+			switch (bpp) {
+			case 8:
+				if (flags & CAPTURE_FLAG_DBLW) {
+   					for (Bitu x=0;x<countWidth;x++)
+						doubleRow[x*2+0] =
+						doubleRow[x*2+1] = ((Bit8u *)srcLine)[x];
+					rowPointer = doubleRow;
 				}
-                rowPointer=doubleRow;
-			} else {
-				if (flags & CAPTURE_FLAG_DBLH)
-					rowPointer=(data+(i >> 1)*pitch);
-				else
-					rowPointer=(data+(i >> 0)*pitch);
+				break;
+			case 15:
+				if (flags & CAPTURE_FLAG_DBLW) {
+					for (Bitu x=0;x<countWidth;x++) {
+						Bitu pixel = ((Bit16u *)srcLine)[x];
+						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >>  2;
+						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x03e0) * 0x21) >>  7;
+						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0x7c00) * 0x21) >>  12;
+					}
+				} else {
+					for (Bitu x=0;x<countWidth;x++) {
+						Bitu pixel = ((Bit16u *)srcLine)[x];
+						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
+						doubleRow[x*3+1] = ((pixel& 0x03e0) * 0x21) >>  7;
+						doubleRow[x*3+2] = ((pixel& 0x7c00) * 0x21) >>  12;
+					}
+				}
+				rowPointer = doubleRow;
+				break;
+			case 16:
+				if (flags & CAPTURE_FLAG_DBLW) {
+					for (Bitu x=0;x<countWidth;x++) {
+						Bitu pixel = ((Bit16u *)srcLine)[x];
+						doubleRow[x*6+0] = doubleRow[x*6+3] = ((pixel& 0x001f) * 0x21) >> 2;
+						doubleRow[x*6+1] = doubleRow[x*6+4] = ((pixel& 0x07e0) * 0x41) >> 9;
+						doubleRow[x*6+2] = doubleRow[x*6+5] = ((pixel& 0xf800) * 0x21) >> 13;
+					}
+				} else {
+					for (Bitu x=0;x<countWidth;x++) {
+						Bitu pixel = ((Bit16u *)srcLine)[x];
+						doubleRow[x*3+0] = ((pixel& 0x001f) * 0x21) >>  2;
+						doubleRow[x*3+1] = ((pixel& 0x07e0) * 0x41) >>  9;
+						doubleRow[x*3+2] = ((pixel& 0xf800) * 0x21) >>  13;
+					}
+				}
+				rowPointer = doubleRow;
+				break;
+			case 32:
+				if (flags & CAPTURE_FLAG_DBLW) {
+					for (Bitu x=0;x<countWidth;x++) {
+						doubleRow[x*6+0] = doubleRow[x*6+3] = ((Bit8u *)srcLine)[x*4+0];
+						doubleRow[x*6+1] = doubleRow[x*6+4] = ((Bit8u *)srcLine)[x*4+1];
+						doubleRow[x*6+2] = doubleRow[x*6+5] = ((Bit8u *)srcLine)[x*4+2];
+					}
+				} else {
+					for (Bitu x=0;x<countWidth;x++) {
+						doubleRow[x*3+0] = ((Bit8u *)srcLine)[x*4+0];
+						doubleRow[x*3+1] = ((Bit8u *)srcLine)[x*4+1];
+						doubleRow[x*3+2] = ((Bit8u *)srcLine)[x*4+2];
+					}
+				}
+				rowPointer = doubleRow;
+				break;
 			}
 			png_write_row(png_ptr, (png_bytep)rowPointer);
 		}
@@ -403,7 +435,7 @@ skip_shot:
 			capture.video.bpp != bpp ||
 			capture.video.fps != fps)) 
 		{
-			CAPTURE_VideoEvent();
+			CAPTURE_VideoEvent(true);
 		}
 		CaptureState &= ~CAPTURE_VIDEO;
 		switch (bpp) {
@@ -509,7 +541,9 @@ skip_video:
 }
 
 
-static void CAPTURE_ScreenShotEvent(void) {
+static void CAPTURE_ScreenShotEvent(bool pressed) {
+	if (!pressed)
+		return;
 	CaptureState |= CAPTURE_IMAGE;
 }
 
@@ -565,7 +599,9 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
 		}
 	}
 }
-static void CAPTURE_WaveEvent(void) {
+static void CAPTURE_WaveEvent(bool pressed) {
+	if (!pressed)
+		return;
 	/* Check for previously opened wave file */
 	if (capture.wave.handle) {
 		LOG_MSG("Stopped capturing wave output.");
@@ -637,7 +673,9 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
 		RawMidiAdd(data[i]);
 }
 
-static void CAPTURE_MidiEvent(void) {
+static void CAPTURE_MidiEvent(bool pressed) {
+	if (!pressed)
+		return;
 	/* Check for previously opened wave file */
 	if (capture.midi.handle) {
 		LOG_MSG("Stopping raw midi saving and finalizing file.");
@@ -687,8 +725,8 @@ public:
 #endif
 	}
 	~HARDWARE(){
-		if (capture.wave.handle) CAPTURE_WaveEvent();
-		if (capture.midi.handle) CAPTURE_MidiEvent();
+		if (capture.wave.handle) CAPTURE_WaveEvent(true);
+		if (capture.midi.handle) CAPTURE_MidiEvent(true);
 	}
 };
 

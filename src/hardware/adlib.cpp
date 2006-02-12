@@ -283,7 +283,9 @@ static void OPL_RawAdd(Bitu index,Bitu val) {
 	if (opl.raw.used>=RAW_SIZE) OPL_RawEmptyBuffer();
 }
 
-static void OPL_SaveRawEvent(void) {
+static void OPL_SaveRawEvent(bool pressed) {
+	if (!pressed)
+		return;
 	/* Check for previously opened wave file */
 	if (opl.raw.handle) {
 		OPL_RawEmptyBuffer();
@@ -351,7 +353,7 @@ public:
 		MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 	}
 	~OPL() {
-		if (opl.raw.handle) OPL_SaveRawEvent();
+		if (opl.raw.handle) OPL_SaveRawEvent(true);
 		OPL2::YM3812Shutdown();
 		THEOPL3::YMF262Shutdown();
 	}
