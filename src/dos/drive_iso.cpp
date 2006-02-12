@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.11 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.12 2006-02-12 13:32:30 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -145,13 +145,16 @@ bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
 {
+	nextFreeDirIterator = 0;
+	memset(dirIterators, 0, sizeof(dirIterators));
+	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
+	memset(&rootEntry, 0, sizeof(isoDirEntry));
+	
 	error = MSCDEX_AddDrive(driveLetter, fileName, subUnit);
 
 	if (!error) {
 		if (loadImage()) {
 			strcpy(info, "isoDrive");
-			searchCache.clear();
-			dirIter = searchCache.end();
 			this->mediaid = mediaid;
 			char buffer[32] = { 0 };
 			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
@@ -242,25 +245,8 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst)
 		return false;
 	}
 	
-	Bit32u sectorStart = EXTENT_LOCATION(de);
-	Bit32u sectorEnd = sectorStart + DATA_LENGTH(de) / ISO_FRAMESIZE;
-	if (DATA_LENGTH(de) % ISO_FRAMESIZE != 0) sectorEnd++;
-	searchCache.clear();
-	
-	for(Bit32u sector = sectorStart; sector < sectorEnd; sector++) {
-		Bit8u block[ISO_FRAMESIZE];
-		readSector(block, sector);
-		
-		Bit32u pos = 0;
-		while (pos < ISO_FRAMESIZE && block[pos] != 0 && (pos + block[pos]) <= ISO_FRAMESIZE) {
-			isoDirEntry tmp;
-			int length = readDirEntry(&tmp, &block[pos]);
-			if (length < 0) return false;
-			searchCache.push_back(tmp);
-			pos += length;
-		}
-	}
-	dirIter = searchCache.begin();
+	// get a directory iterator and save its id in the dta
+	dta.SetDirID(GetDirIterator(&de));
 
 	Bit8u attr;
 	char pattern[ISO_MAXPATHNAME];
@@ -291,8 +277,10 @@ bool isoDrive::FindNext(DOS_DTA &dta)
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 	
-	while (dirIter != searchCache.end()) {
-		isoDirEntry &de = *dirIter;
+	int dirIterator = dta.GetDirID();
+	
+	isoDirEntry de;
+	while (GetNextDirEntry(dirIterator, &de)) {
 		Bit8u findAttr = 0;
 		if (IS_DIR(de.fileFlags)) findAttr |= DOS_ATTR_DIRECTORY;
 		else findAttr |= DOS_ATTR_ARCHIVE;
@@ -303,6 +291,7 @@ bool isoDrive::FindNext(DOS_DTA &dta)
 			
 			/* file is okay, setup everything to be copied in DTA Block */
 			char findName[DOS_NAMELENGTH_ASCII];		
+			findName[0] = 0;
 			if(strlen((char*)de.ident) < DOS_NAMELENGTH_ASCII) {
 				strcpy(findName, (char*)de.ident);
 				upcase(findName);
@@ -311,12 +300,11 @@ bool isoDrive::FindNext(DOS_DTA &dta)
 			Bit16u findDate = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 			Bit16u findTime = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 			dta.SetResult(findName, findSize, findDate, findTime, findAttr);
-			
-			dirIter++;		
 			return true;
 		}
-		dirIter++;
 	}
+	// after searching the directory, free the iterator
+	FreeDirIterator(dirIterator);
 	
 	DOS_SetError(DOSERR_NO_MORE_FILES);
 	return false;
@@ -386,6 +374,88 @@ bool isoDrive::isRemovable(void)
 	return true;
 }
 
+int isoDrive::GetDirIterator(const isoDirEntry* de)
+{
+	int dirIterator = nextFreeDirIterator;
+	
+	// get start and end sector of the directory entry (pad end sector if necessary)
+	dirIterators[dirIterator].currentSector = EXTENT_LOCATION(*de);
+	dirIterators[dirIterator].endSector =
+		EXTENT_LOCATION(*de) + DATA_LENGTH(*de) / ISO_FRAMESIZE - 1;
+	if (DATA_LENGTH(*de) % ISO_FRAMESIZE != 0)
+		dirIterators[dirIterator].endSector++;
+	
+	// reset position and mark as valid
+	dirIterators[dirIterator].pos = 0;
+	dirIterators[dirIterator].valid = true;
+
+	// advance to next directory iterator (wrap around if necessary)
+	nextFreeDirIterator = (nextFreeDirIterator + 1) % MAX_OPENDIRS;
+	
+	return dirIterator;
+}
+
+bool isoDrive::GetNextDirEntry(const int dirIteratorHandle, isoDirEntry* de)
+{
+	bool result = false;
+	Bit8u* buffer = NULL;
+	DirIterator& dirIterator = dirIterators[dirIteratorHandle];
+	
+	// check if the directory entry is valid
+	if (dirIterator.valid && ReadCachedSector(&buffer, dirIterator.currentSector)) {
+		// check if the next sector has to be read
+		if ((dirIterator.pos >= ISO_FRAMESIZE)
+		 || (buffer[dirIterator.pos] == 0)
+		 || (dirIterator.pos + buffer[dirIterator.pos] > ISO_FRAMESIZE)) {
+		 	
+			// check if there is another sector available
+		 	if (dirIterator.currentSector < dirIterator.endSector) {
+			 	dirIterator.pos = 0;
+			 	dirIterator.currentSector++;
+			 	if (!ReadCachedSector(&buffer, dirIterator.currentSector)) {
+			 		return false;
+			 	}
+		 	} else {
+		 		return false;
+		 	}
+		 }
+		 // read sector and advance sector pointer
+		 int length = readDirEntry(de, &buffer[dirIterator.pos]);
+		 result = length >= 0;
+		 dirIterator.pos += length;
+	}
+	return result;
+}
+
+void isoDrive::FreeDirIterator(const int dirIterator)
+{
+	dirIterators[dirIterator].valid = false;
+	
+	// if this was the last aquired iterator decrement nextFreeIterator
+	if ((dirIterator + 1) % MAX_OPENDIRS == nextFreeDirIterator) {
+		nextFreeDirIterator--;
+	}
+}
+
+bool isoDrive::ReadCachedSector(Bit8u** buffer, const Bit32u sector)
+{
+	// get hash table entry
+	int pos = sector % ISO_MAX_HASH_TABLE_SIZE;
+	SectorHashEntry& he = sectorHashEntries[pos];
+	
+	// check if the entry is valid and contains the correct sector
+	if (!he.valid || he.sector != sector) {
+		if (!CDROM_Interface_Image::images[subUnit]->ReadSector(he.data, false, sector)) {
+			return false;
+		}
+		he.valid = true;
+		he.sector = sector;
+	}
+	
+	*buffer = he.data;
+	return true;
+}
+
 inline bool isoDrive :: readSector(Bit8u *buffer, Bit32u sector)
 {
 	return CDROM_Interface_Image::images[subUnit]->ReadSector(buffer, false, sector);
@@ -431,33 +501,6 @@ bool isoDrive :: loadImage()
 	return (readDirEntry(&this->rootEntry, pvd.rootEntry));
 }
 
-bool isoDrive :: lookupSingle(isoDirEntry *de, const char *name, Bit32u start, Bit32u length)
-{
-	Bit32u end = start + length / ISO_FRAMESIZE;
-	if (length % ISO_FRAMESIZE != 0) end++;
-
-	// copy filename and if it has no extension remove the trailing dot
-	char newname[38];
-	safe_strncpy(newname, name, 38);
-	int name_len = strlen(newname);
-	if (name_len > 0 && newname[name_len - 1] == '.') newname[name_len - 1] = 0;
-	
-	for(Bit32u i = start; i < end; i++) {
-		Bit8u sector[ISO_FRAMESIZE];
-		if (!readSector(sector, i)) return false;
-		
-		int pos = 0;
-		while (pos < ISO_FRAMESIZE && sector[pos] != 0 && (pos + sector[pos]) <= ISO_FRAMESIZE) {
-			int deLength = readDirEntry(de, &sector[pos]);
-			if (deLength < 1) return false;
-			pos += deLength;
-			int tmp = strncasecmp((char*)de->ident, newname, 38);
-			if (tmp == 0) return true;
-		}
-	}
-	return false;	
-}
-
 bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 {
 	*de = this->rootEntry;
@@ -467,19 +510,27 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 	safe_strncpy(isoPath, path, ISO_MAXPATHNAME);
 	strreplace(isoPath, '\\', '/');
 	
-	int beginPos = 0;
-	int pos = 0;
-	while (isoPath[pos] != 0) {
-		if (isoPath[pos] == '/') {
-			char name[38];
-			if (pos - beginPos >= 38) return false;
-			if (beginPos >= ISO_MAXPATHNAME) return false;
-			safe_strncpy(name, &isoPath[beginPos], pos - beginPos + 1);
-			beginPos = pos + 1;
-			if (!IS_DIR(de->fileFlags)) return false;
-			if (!lookupSingle(de, name, EXTENT_LOCATION(*de), DATA_LENGTH(*de))) return false;
+	// iterate over all path elements (name), and search each of them in the current de
+	for(char* name = strtok(isoPath, "/"); NULL != name; name = strtok(NULL, "/")) {
+
+		bool found = false;	
+		// current entry must be a directory, abort otherwise
+		if (IS_DIR(de->fileFlags)) {
+			
+			// remove the trailing dot if present
+			int nameLength = strlen(name);
+			if (nameLength > 0 && name[nameLength - 1] == '.') name[nameLength - 1] = 0;
+			
+			// look for the current path element
+			int dirIterator = GetDirIterator(de);
+			while (!found && GetNextDirEntry(dirIterator, de)) {
+				if (0 == strncasecmp((char*) de->ident, name, ISO_MAX_FILENAME_LENGTH)) {
+					found = true;
+				}
+			}
+			FreeDirIterator(dirIterator);
 		}
-		pos++;
+		if (!found) return false;
 	}
-	return lookupSingle(de, &isoPath[beginPos], EXTENT_LOCATION(*de), DATA_LENGTH(*de));
+	return true;
 }

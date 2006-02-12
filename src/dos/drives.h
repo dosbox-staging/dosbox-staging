@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.30 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: drives.h,v 1.31 2006-02-12 13:32:30 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -275,10 +275,12 @@ struct isoDirEntry {
 #define ISO_FRAMESIZE		2048
 #define ISO_DIRECTORY		2
 #define ISO_HIDDEN		1
+#define ISO_MAX_FILENAME_LENGTH 37
 #define ISO_MAXPATHNAME		256
 #define ISO_FIRST_VD		16
 #define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
 #define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
+#define ISO_MAX_HASH_TABLE_SIZE 	100
 
 class isoDrive : public DOS_Drive {
 public:
@@ -308,9 +310,27 @@ private:
 	bool loadImage();
 	bool lookupSingle(isoDirEntry *de, const char *name, Bit32u sectorStart, Bit32u length);
 	bool lookup(isoDirEntry *de, const char *path);
+	
+	int  GetDirIterator(const isoDirEntry* de);
+	bool GetNextDirEntry(const int dirIterator, isoDirEntry* de);
+	void FreeDirIterator(const int dirIterator);
+	bool ReadCachedSector(Bit8u** buffer, const Bit32u sector);
+	
+	struct DirIterator {
+		bool valid;
+		Bit32u currentSector;
+		Bit32u endSector;
+		Bit32u pos;
+	} dirIterators[MAX_OPENDIRS];
+	
+	int nextFreeDirIterator;
+	
+	struct SectorHashEntry {
+		bool valid;
+		Bit32u sector;
+		Bit8u data[ISO_FRAMESIZE];
+	} sectorHashEntries[ISO_MAX_HASH_TABLE_SIZE];
 
-	std::vector<isoDirEntry> searchCache;
-	std::vector<isoDirEntry>::iterator dirIter;
 	isoDirEntry rootEntry;
 	Bit8u mediaid;
 	Bit8u subUnit;
