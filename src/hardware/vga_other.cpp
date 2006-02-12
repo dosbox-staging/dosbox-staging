@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.17 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: vga_other.cpp,v 1.18 2006-02-12 23:55:53 harekiet Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -193,13 +193,17 @@ static void update_cga16_color(void) {
 	}
 }
 
-static void IncreaseHue(void) { 
+static void IncreaseHue(bool pressed) {
+	if (!pressed)
+		return;
 	hue_offset += 5.0;
 	update_cga16_color();
 	LOG_MSG("Hue at %f",hue_offset); 
 }
 
-static void DecreaseHue(void) { 
+static void DecreaseHue(bool pressed) {
+	if (!pressed)
+		return;
 	hue_offset -= 5.0;
 	update_cga16_color();
 	LOG_MSG("Hue at %f",hue_offset); 
