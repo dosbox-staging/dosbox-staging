@@ -33,6 +33,7 @@
 extern Bits CPU_Cycles;
 extern Bits CPU_CycleLeft;
 extern Bits CPU_CycleMax;
+extern bool CPU_CycleAuto;
 
 /* Some common Defines */
 /* A CPU Handler */

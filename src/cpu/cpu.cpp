@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.76 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.77 2006-02-12 23:28:21 harekiet Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -45,13 +45,13 @@ Bits CPU_CycleMax = 2500;
 Bits CPU_CycleUp = 0;
 Bits CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
+bool CPU_CycleAuto;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
 void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
-
 
 /* In debug mode exceptions are tested and dosbox exits when 
  * a unhandled exception state is detected. 
@@ -1876,7 +1876,9 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 }
 
 extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
-static void CPU_CycleIncrease(void) {
+static void CPU_CycleIncrease(bool pressed) {
+	if (!pressed)
+		return;
 	Bits old_cycles=CPU_CycleMax;
 	if(CPU_CycleUp < 100){
 		CPU_CycleMax = (Bits)(CPU_CycleMax * (1 + (float)CPU_CycleUp / 100.0));
@@ -1890,7 +1892,9 @@ static void CPU_CycleIncrease(void) {
 	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
-static void CPU_CycleDecrease(void) {
+static void CPU_CycleDecrease(bool pressed) {
+	if (!pressed)
+		return;
 	if(CPU_CycleDown < 100){
 		CPU_CycleMax = (Bits)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
 	} else {
@@ -1958,7 +1962,14 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(newconfig);
 		CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
-		CPU_CycleMax=section->Get_int("cycles");;
+		const char *cyclesLine = section->Get_string("cycles");
+		if (!strcasecmp(cyclesLine,"auto")) {
+            CPU_CycleMax=0;
+			CPU_CycleAuto=true;
+		} else {
+            CPU_CycleMax=atoi(cyclesLine);
+			CPU_CycleAuto=false;
+		}
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
 		const char * core=section->Get_string("core");

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.93 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.94 2006-02-12 23:28:21 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -38,6 +38,7 @@
 #include "cross.h"
 #include "programs.h"
 #include "support.h"
+#include "mapper.h"
 
 Config * control;
 MachineType machine;
@@ -109,11 +110,15 @@ static LoopHandler * loop;
 
 bool SDLNetInited;
 
-Bits RemainTicks;
-Bits LastTicks;
+static Bit32u ticksRemain;
+static Bit32u ticksLast;
+static Bit32u ticksAdded;
+static Bit32u ticksDone;
+static Bit32u ticksScheduled;
+static bool ticksLocked;
 
 static Bitu Normal_Loop(void) {
-	Bits ret,NewTicks;
+	Bits ret;
 	while (1) {
 		if (PIC_RunQueue()) {
 			ret=(*cpudecoder)();
@@ -126,27 +131,51 @@ static Bitu Normal_Loop(void) {
 			if (DEBUG_ExitLoop()) return 0;
 #endif
 		} else {
-			if (RemainTicks>0) {
+			GFX_Events();
+			if (ticksRemain>0) {
 				TIMER_AddTick();
-				RemainTicks--;
+				ticksRemain--;
 			} else goto increaseticks;
 		}
 	}
 increaseticks:
-	GFX_Events();
-	NewTicks=GetTicks();
-	if (NewTicks>LastTicks) {
-		RemainTicks=NewTicks-LastTicks;
-		if (RemainTicks>20) {
-//			LOG_MSG("Ticks to handle overflow %d",RemainTicks);
-			RemainTicks=20;
+	if (GCC_UNLIKELY(ticksLocked)) {
+		ticksRemain=5;
+		/* Reset any auto cycle guessing for this frame */
+		ticksLast = GetTicks();
+		ticksAdded = 0;
+		ticksDone = 0;
+		ticksScheduled = 0;
+	} else {
+		Bit32u ticksNew;
+        ticksNew=GetTicks();
+		ticksScheduled += ticksAdded;
+		if (ticksNew > ticksLast) {
+			ticksRemain = ticksNew-ticksLast;
+			ticksLast = ticksNew;
+			ticksDone += ticksRemain;
+			if ( ticksRemain > 20 ) {
+				ticksRemain = 20;
+			}
+			ticksAdded = ticksRemain;
+			if (CPU_CycleAuto && (ticksScheduled >= 1000 || ticksDone >= 1000) ) {
+				/* ratio we are aiming for is around 90% usage*/
+				Bits ratio = (ticksScheduled * (90*1024/100)) / ticksDone ;
+//				LOG_MSG("Done %d schedulded %d ratio %d cycles %d", ticksDone, ticksScheduled, ratio, CPU_CycleMax);
+				if (ratio <= 1024) 
+					CPU_CycleMax = (CPU_CycleMax * ratio) / 1024;
+				else 
+					CPU_CycleMax = 1 + (CPU_CycleMax >> 1) + (CPU_CycleMax * ratio) / 2048;
+				ticksDone = 0;
+				ticksScheduled = 0;
+			}
+		} else {
+			ticksAdded = 0;
+			SDL_Delay(1);
+			ticksDone -= GetTicks() - ticksNew;
+			if (ticksDone < 0)
+				ticksDone = 0;
 		}
-		LastTicks=NewTicks;
-	}
-	//TODO Make this selectable in the config file, since it gives some lag */
-	if (RemainTicks<=0) {
-		SDL_Delay(1);
-		return 0;
 	}
 	return 0;
 }
@@ -166,16 +195,27 @@ void DOSBOX_RunMachine(void){
 	} while (!ret);
 }
 
+static void DOSBOX_UnlockSpeed( bool pressed ) {
+	if (pressed)
+		ticksLocked = true;
+	else 
+		ticksLocked = false;
+}
+
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
 
-	RemainTicks=0;LastTicks=GetTicks();
+	ticksRemain=0;
+	ticksLast=GetTicks();
+	ticksLocked = false;
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 
+	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 	svgaCard = SVGA_S3Trio; 
-	machine=MCH_VGA;std::string cmd_machine;
+	machine=MCH_VGA;
+	std::string cmd_machine;
 	const char * mtype;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)) mtype=cmd_machine.c_str();
 	else mtype=section->Get_string("machine");
@@ -236,7 +276,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	secprop->Add_string("core","normal");
-	secprop->Add_int("cycles",3000);
+	secprop->Add_string("cycles","3000");
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",

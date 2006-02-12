@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.30 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.31 2006-02-12 23:28:21 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +30,6 @@
    And they are 16 bytes each and you can define them to behave in certain ways like a
    far return or and IRET
 */
-
 
 CallBack_Handler CallBack_Handlers[CB_MAX];
 char* CallBack_Description[CB_MAX];
@@ -58,6 +57,7 @@ void CALLBACK_DeAllocate(Bitu in) {
 	CallBack_Handlers[in]=&illegal_handler;
 }
 
+	
 void CALLBACK_Idle(void) {
 /* this makes the cpu execute instructions to handle irq's and then come back */
 	Bitu oldIF=GETFLAG(IF);
@@ -70,7 +70,8 @@ void CALLBACK_Idle(void) {
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
 	SETFLAGBIT(IF,oldIF);
-	if (CPU_Cycles>0) CPU_Cycles=0;
+	if (!CPU_CycleAuto && CPU_Cycles>0) 
+		CPU_Cycles=0;
 }
 
 static Bitu default_handler(void) {
