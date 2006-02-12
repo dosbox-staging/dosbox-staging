@@ -857,7 +857,7 @@ att_text16:
 		IO_Write(0x3c0,i);
 		IO_Write(0x3c0,att_data[i]);
 	}
-	IO_Write(0x3c0,0x20);			//Disable palette access
+	IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
 	/* Setup the DAC */
 	IO_Write(0x3c8,0);
 	switch (CurMode->type) {
