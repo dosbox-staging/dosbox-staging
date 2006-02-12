@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.100 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.101 2006-02-12 13:19:58 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -131,6 +131,7 @@ enum SCREEN_TYPES	{
 };
 
 enum PRIORITY_LEVELS {
+	PRIORITY_LEVEL_LOWEST,
 	PRIORITY_LEVEL_LOWER,
 	PRIORITY_LEVEL_NORMAL,
 	PRIORITY_LEVEL_HIGHER,
@@ -836,6 +837,9 @@ static void SetPriority(PRIORITY_LEVELS level) {
 #endif
 	switch (level) {
 #ifdef WIN32
+	case PRIORITY_LEVEL_LOWEST:
+		SetPriorityClass(GetCurrentProcess(),IDLE_PRIORITY_CLASS);
+		break;
 	case PRIORITY_LEVEL_LOWER:
 		SetPriorityClass(GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
 		break;
@@ -850,6 +854,9 @@ static void SetPriority(PRIORITY_LEVELS level) {
 		break;
 #elif C_SET_PRIORITY
 /* Linux use group as dosbox has mulitple threads under linux */
+	case PRIORITY_LEVEL_LOWEST:
+		setpriority (PRIO_PGRP, 0,PRIO_MAX);
+		break;
 	case PRIORITY_LEVEL_LOWER:
 		setpriority (PRIO_PGRP, 0,PRIO_MAX-(PRIO_TOTAL/3));
 		break;
@@ -891,7 +898,9 @@ static void GUI_StartUp(Section * sec) {
 	const char * priority=section->Get_string("priority");
 	if (priority && priority[0]) {
 		Bitu next;
-		if (!strncasecmp(priority,"lower",5)) {
+		if (!strncasecmp(priority,"lowest",6)) {
+			sdl.priority.focus=PRIORITY_LEVEL_LOWEST;next=6;
+		} else if (!strncasecmp(priority,"lower",5)) {
 			sdl.priority.focus=PRIORITY_LEVEL_LOWER;next=5;
 		} else if (!strncasecmp(priority,"normal",6)) {
 			sdl.priority.focus=PRIORITY_LEVEL_NORMAL;next=6;
@@ -905,7 +914,9 @@ static void GUI_StartUp(Section * sec) {
 		priority=&priority[next];
 		if (next && priority[0]==',' && priority[1]) {
 			priority++;
-			if (!strncasecmp(priority,"lower",5)) {
+			if (!strncasecmp(priority,"lowest",6)) {
+				sdl.priority.nofocus=PRIORITY_LEVEL_LOWEST;
+			} else if (!strncasecmp(priority,"lower",5)) {
 				sdl.priority.nofocus=PRIORITY_LEVEL_LOWER;
 			} else if (!strncasecmp(priority,"normal",6)) {
 				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
@@ -1273,7 +1284,7 @@ int main(int argc, char* argv[]) {
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
-			"priority -- Priority levels for dosbox: lower,normal,higher,highest.\n"
+			"priority -- Priority levels for dosbox: lowest,lower,normal,higher,highest.\n"
 			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 			"mapperfile -- File used to load/save the key/event mappings from.\n"
 			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
