@@ -20,7 +20,8 @@
 #define PSIZE 1
 #define PTYPE Bit8u
 #define WC scalerWriteCache.b8
-#define FC scalerFrameCache.b8
+//#define FC scalerFrameCache.b8
+#define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b8
 #define redMask		0
 #define	greenMask	0
 #define blueMask	0
@@ -28,7 +29,8 @@
 #define PSIZE 2
 #define PTYPE Bit16u
 #define WC scalerWriteCache.b16
-#define FC scalerFrameCache.b16
+//#define FC scalerFrameCache.b16
+#define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b16
 #if DBPP == 15
 #define	redMask		0x7C00
 #define	greenMask	0x03E0
@@ -42,7 +44,8 @@
 #define PSIZE 4
 #define PTYPE Bit32u
 #define WC scalerWriteCache.b32
-#define FC scalerFrameCache.b32
+//#define FC scalerFrameCache.b32
+#define FC (*(scalerFrameCache_t*)(&scalerSourceCache.b32[400][0])).b32
 #define redMask		0xff0000
 #define greenMask	0x00ff00
 #define blueMask	0x0000ff
@@ -51,7 +54,7 @@
 #define redblueMask (redMask | blueMask)
 
 
-#if SBPP == 8
+#if SBPP == 8 || SBPP == 9
 #define SC scalerSourceCache.b8
 #if DBPP == 8
 #define PMAKE(_VAL) (_VAL)
@@ -101,29 +104,26 @@
 #define SRCTYPE Bit32u
 #endif
 
-#define C0 fc[-1 - SCALER_MAXWIDTH -2]
-#define C1 fc[+0 - SCALER_MAXWIDTH -2]
-#define C2 fc[+1 - SCALER_MAXWIDTH -2]
+#define C0 fc[-1 - SCALER_COMPLEXWIDTH]
+#define C1 fc[+0 - SCALER_COMPLEXWIDTH]
+#define C2 fc[+1 - SCALER_COMPLEXWIDTH]
 #define C3 fc[-1 ]
 #define C4 fc[+0 ]
 #define C5 fc[+1 ]
-#define C6 fc[-1 + SCALER_MAXWIDTH +2]
-#define C7 fc[+0 + SCALER_MAXWIDTH +2]
-#define C8 fc[+1 + SCALER_MAXWIDTH +2]
+#define C6 fc[-1 + SCALER_COMPLEXWIDTH]
+#define C7 fc[+0 + SCALER_COMPLEXWIDTH]
+#define C8 fc[+1 + SCALER_COMPLEXWIDTH]
 
-#if defined (CACHEWITHPAL)
-static void conc3d(CacheComplexPal,SBPP,DBPP) (const void * s) {
-#else
-static void conc3d(CacheComplex,SBPP,DBPP) (const void * s) {
-#endif
+static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 	const SRCTYPE * src = (SRCTYPE*)s;
 	PTYPE *fc= &FC[render.scale.inLine+1][1];
-	SRCTYPE *sc= &SC[render.scale.inLine][0];
+	SRCTYPE *sc = (SRCTYPE*)(render.scale.cacheRead);
+	render.scale.cacheRead += render.scale.cachePitch;
 	Bitu b;
 	bool hadChange = false;
 	/* This should also copy the surrounding pixels but it looks nice enough without */
 	for (b=0;b<render.scale.blocks;b++) {
-#if defined (CACHEWITHPAL)
+#if (SBPP == 9)
 		for (Bitu x=0;x<SCALER_BLOCKSIZE;x++) {
 			PTYPE pixel = PMAKE(src[x]);
 			if (pixel != fc[x]) {
@@ -159,258 +159,198 @@ static void conc3d(CacheComplex,SBPP,DBPP) (const void * s) {
 		CC[render.scale.inLine+1][0] = 1;
 		CC[render.scale.inLine+2][0] = 1;
 	}
-	render.scale.inLine ++;
+	render.scale.inLine++;
+	render.scale.complexHandler();
 }
 
 
-#if defined (CACHEWITHPAL)
-static void conc3d(CacheSimplePal,SBPP,DBPP) (const void * s) {
-#else
-static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
-#endif
-	const SRCTYPE * src = (SRCTYPE*)s;
-	PTYPE *fc= &FC[render.scale.inLine+1][1];
-	SRCTYPE *sc= &SC[render.scale.inLine][0];
-	Bitu b;
-	/* This should also copy the surrounding pixels but it looks nice enough without */
-	for (b=0;b<render.scale.blocks;b++) {
-#if defined (CACHEWITHPAL)
-		for (Bitu x=0;x<SCALER_BLOCKSIZE;x++) {
-			PTYPE pixel = PMAKE(src[x]);
-			if (pixel != fc[x]) {
-#else 
-		for (Bitu x=0;x<SCALER_BLOCKSIZE;x+=sizeof(Bitu)/sizeof(SRCTYPE)) {
-			if (*(Bitu*)&src[x] != *(Bitu*)&sc[x]) {
-#endif
-				do {
-					fc[x] = PMAKE(src[x]);
-					sc[x] = src[x];
-					x++;
-				} while (x<SCALER_BLOCKSIZE);
-				CC[render.scale.inLine+1][0] = 1;
-				CC[render.scale.inLine+1][1+b] = 1;
-				continue;
-			}
-		}
-		fc += SCALER_BLOCKSIZE;
-		sc += SCALER_BLOCKSIZE;
-		src += SCALER_BLOCKSIZE;
-	}
-	render.scale.inLine ++;
-}
-
-
-/* Add all the specific scalers */
-
-#if (SBPP == DBPP) && !defined (CACHEWITHPAL)
-
-#define SCALERSIMPLE		1
-#define SCALERNAME			Normal
-#define SCALERWIDTH			1
-#define SCALERHEIGHT		1
-#define SCALERFUNC								\
-	line0[0] = C4;
-#include "render_loops.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-#undef SCALERSIMPLE
-
-#define SCALERSIMPLE	1
-#define SCALERNAME		NormalDw
-#define SCALERWIDTH		2
+/* Simple scalers */
+#define SCALERNAME		Normal1x
+#define SCALERWIDTH		1
 #define SCALERHEIGHT	1
 #define SCALERFUNC								\
-	line0[0] = C4;								\
-	line0[1] = C4;
-#include "render_loops.h"
+	line0[0] = P;
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-#define SCALERSIMPLE	1
-#define SCALERNAME		NormalDh
-#define SCALERWIDTH		1
-#define SCALERHEIGHT	2
-#define SCALERFUNC								\
-	line0[0] = C4;								\
-	line1[0] = C4;
-#include "render_loops.h"
-#undef SCALERNAME
-#undef SCALERWIDTH
-#undef SCALERHEIGHT
-#undef SCALERFUNC
-#undef SCALERSIMPLE
-
-
-#define SCALERSIMPLE	1
 #define SCALERNAME		Normal2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
 #define SCALERFUNC								\
-	line0[0] = C4;								\
-	line0[1] = C4;								\
-	line1[0] = C4;								\
-	line1[1] = C4;
-#include "render_loops.h"
+	line0[0] = P;								\
+	line0[1] = P;								\
+	line1[0] = P;								\
+	line1[1] = P;
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-#define SCALERSIMPLE	1
 #define SCALERNAME		Normal3x
 #define SCALERWIDTH		3
 #define SCALERHEIGHT	3
-#define SCALERFUNC							\
-	line0[0] = C4;							\
-	line0[1] = C4;							\
-	line0[2] = C4;							\
-	line1[0] = C4;							\
-	line1[1] = C4;							\
-	line1[2] = C4;							\
-	line2[0] = C4;							\
-	line2[1] = C4;							\
-	line2[2] = C4;	
-#include "render_loops.h"
+#define SCALERFUNC								\
+	line0[0] = P;								\
+	line0[1] = P;								\
+	line0[2] = P;								\
+	line1[0] = P;								\
+	line1[1] = P;								\
+	line1[2] = P;								\
+	line2[0] = P;								\
+	line2[1] = P;								\
+	line2[2] = P;
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
+
+#define SCALERNAME		NormalDw
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	1
+#define SCALERFUNC								\
+	line0[0] = P;								\
+	line0[1] = P;
+#include "render_simple.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#define SCALERNAME		NormalDh
+#define SCALERWIDTH		1
+#define SCALERHEIGHT	2
+#define SCALERFUNC								\
+	line0[0] = P;								\
+	line1[0] = P;
+#include "render_simple.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
 
 #if (DBPP > 8)
 
-#define SCALERSIMPLE	1
 #define SCALERNAME		TV2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
 #define SCALERFUNC									\
 {													\
-	Bitu halfpixel=(((C4 & redblueMask) * 5) >> 3) & redblueMask;	\
-	halfpixel|=(((C4 & greenMask) * 5) >> 3) & greenMask;			\
-	line0[0]=C4;							\
-	line0[1]=C4;							\
+	Bitu halfpixel=(((P & redblueMask) * 5) >> 3) & redblueMask;	\
+	halfpixel|=(((P & greenMask) * 5) >> 3) & greenMask;			\
+	line0[0]=P;							\
+	line0[1]=P;							\
 	line1[0]=halfpixel;						\
 	line1[1]=halfpixel;						\
 }
-#include "render_loops.h"
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-
-#define SCALERSIMPLE	1
 #define SCALERNAME		TV3x
 #define SCALERWIDTH		3
 #define SCALERHEIGHT	3
-#define SCALERFUNC									\
-{													\
-	Bitu halfpixel=(((C4 & redblueMask) * 5) >> 3) & redblueMask;	\
-	halfpixel|=(((C4 & greenMask) * 5) >> 3) & greenMask;			\
-	line0[0]=C4;							\
-	line0[1]=C4;							\
-	line0[2]=C4;							\
+#define SCALERFUNC							\
+{											\
+	Bitu halfpixel=(((P & redblueMask) * 5) >> 3) & redblueMask;	\
+	halfpixel|=(((P & greenMask) * 5) >> 3) & greenMask;			\
+	line0[0]=P;								\
+	line0[1]=P;								\
+	line0[2]=P;								\
 	line1[0]=halfpixel;						\
 	line1[1]=halfpixel;						\
 	line1[2]=halfpixel;						\
-	halfpixel=(((C4 & redblueMask) * 5) >> 4) & redblueMask;	\
-	halfpixel|=(((C4 & greenMask) * 5) >> 4) & greenMask;			\
+	halfpixel=(((P & redblueMask) * 5) >> 4) & redblueMask;	\
+	halfpixel|=(((P & greenMask) * 5) >> 4) & greenMask;			\
 	line2[0]=halfpixel;						\
 	line2[1]=halfpixel;						\
 	line2[2]=halfpixel;						\
 }
-#include "render_loops.h"
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-#define SCALERSIMPLE	1
 #define SCALERNAME		RGB2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
 #define SCALERFUNC						\
-	line0[0]=C4 & redMask;				\
-	line0[1]=C4 & greenMask;			\
-	line1[0]=C4 & blueMask;				\
-	line1[1]=C4;
-#include "render_loops.h"
+	line0[0]=P & redMask;				\
+	line0[1]=P & greenMask;			\
+	line1[0]=P & blueMask;				\
+	line1[1]=P;
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-
-#define SCALERSIMPLE	1
 #define SCALERNAME		RGB3x
 #define SCALERWIDTH		3
 #define SCALERHEIGHT	3
 #define SCALERFUNC						\
-	line0[0]=C4;						\
-	line0[1]=C4 & greenMask;			\
-	line0[2]=C4 & blueMask;				\
-	line1[0]=C4 & blueMask;				\
-	line1[1]=C4;						\
-	line1[2]=C4 & redMask;				\
-	line2[0]=C4 & redMask;				\
-	line2[1]=C4 & greenMask;			\
-	line2[2]=C4;
-#include "render_loops.h"
+	line0[0]=P;							\
+	line0[1]=P & greenMask;				\
+	line0[2]=P & blueMask;				\
+	line1[0]=P & blueMask;				\
+	line1[1]=P;							\
+	line1[2]=P & redMask;				\
+	line2[0]=P & redMask;				\
+	line2[1]=P & greenMask;				\
+	line2[2]=P;
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-
-#define SCALERSIMPLE	1
 #define SCALERNAME		Scan2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
 #define SCALERFUNC						\
-	line0[0]=C4;						\
-	line0[1]=C4;						\
+	line0[0]=P;							\
+	line0[1]=P;							\
 	line1[0]=0;							\
 	line1[1]=0;
-#include "render_loops.h"
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
 
-
-#define SCALERSIMPLE	1
 #define SCALERNAME		Scan3x
 #define SCALERWIDTH		3
 #define SCALERHEIGHT	3
 #define SCALERFUNC			\
-	line0[0]=C4;			\
-	line0[1]=C4;			\
-	line0[2]=C4;			\
+	line0[0]=P;				\
+	line0[1]=P;				\
+	line0[2]=P;				\
 	line1[0]=0;				\
 	line1[1]=0;				\
 	line1[2]=0;				\
 	line2[0]=0;				\
 	line2[1]=0;				\
 	line2[2]=0;
-#include "render_loops.h"
+#include "render_simple.h"
 #undef SCALERNAME
 #undef SCALERWIDTH
 #undef SCALERHEIGHT
 #undef SCALERFUNC
-#undef SCALERSIMPLE
+
+#endif		//#if (DBPP > 8)
+
+/* Complex scalers */
+#if (SBPP == DBPP) 
 
 
+#if (DBPP > 8)
 
 #define SCALERNAME		AdvInterp2x
 #define SCALERWIDTH		2
@@ -457,7 +397,7 @@ static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
-#endif		//DBPP > 8
+#endif // #if (DBPP > 8)
 
 #define SCALERNAME		AdvMame2x
 #define SCALERWIDTH		2
@@ -520,8 +460,3 @@ static void conc3d(CacheSimple,SBPP,DBPP) (const void * s) {
 #undef redblueMask
 #undef SRCTYPE
 
-#if (SBPP == 8) && (DBPP > 8) && !defined (CACHEWITHPAL)
-#define CACHEWITHPAL 1
-#include "render_templates.h"
-#undef CACHEWITHPAL
-#endif

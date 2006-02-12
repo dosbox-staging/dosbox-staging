@@ -32,10 +32,10 @@ typedef struct {
 		Bit16u b16[256];
 		Bit32u b32[256];
 	} lut;
-	bool modified[256];
+	bool changed;
+	Bit8u modified[256];
 	Bitu first;
 	Bitu last;
-	bool changed;
 } RenderPal_t;
 
 typedef struct {
@@ -56,15 +56,15 @@ typedef struct {
 		scalerMode_t inMode;
 		scalerMode_t outMode;
 		scalerOperation_t op;
-		ScalerLineHandler_t currentHandler;
-		Bitu lineFlags;
 		bool clearCache;
-		ScalerCacheHandler_t clearCacheHandler;
 		ScalerLineHandler_t lineHandler;
-		ScalerCacheHandler_t cacheHandler;
+		ScalerLineHandler_t linePalHandler;
+		ScalerComplexHandler_t complexHandler;
 		Bitu blocks, lastBlock;
 		Bitu outPitch;
 		Bit8u *outWrite;
+		Bitu cachePitch;
+		Bit8u *cacheRead;
 		Bitu inHeight, inLine, outLine;
 	} scale;
 	RenderPal_t pal;
@@ -74,7 +74,7 @@ typedef struct {
 } Render_t;
 
 extern Render_t render;
-void RENDER_DrawLine( const void *src );
+extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate( bool fullUpdate );

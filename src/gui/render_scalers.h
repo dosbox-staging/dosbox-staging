@@ -24,6 +24,9 @@
 
 #define SCALER_MAXWIDTH		1024
 #define SCALER_MAXHEIGHT	768
+
+#define SCALER_COMPLEXWIDTH		512
+#define SCALER_COMPLEXHEIGHT	400
 #define SCALER_BLOCKSIZE	16
 
 typedef enum {
@@ -39,80 +42,64 @@ typedef enum {
 	scalerOpScan,
 } scalerOperation_t;
 
-typedef void (*ScalerCacheHandler_t)(const void *src);
-typedef void (*ScalerLineHandler_t)(void);
+typedef void (*ScalerLineHandler_t)(const void *src);
+typedef void (*ScalerComplexHandler_t)(void);
 
 extern Bit8u Scaler_Aspect[];
 extern Bit8u diff_table[];
 extern Bitu Scaler_ChangedLineIndex;
 extern Bit16u Scaler_ChangedLines[];
 /* Not entirely happy about those +2's since they make a non power of 2, with muls instead of shift */
-typedef Bit8u scalerChangeCache_t [SCALER_MAXHEIGHT+2][2+(SCALER_MAXWIDTH / SCALER_BLOCKSIZE)] ;
+typedef Bit8u scalerChangeCache_t [SCALER_COMPLEXHEIGHT][SCALER_COMPLEXWIDTH / SCALER_BLOCKSIZE] ;
 typedef union {
-	Bit32u b32	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
-	Bit16u b16	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
-	Bit8u b8	[(SCALER_MAXHEIGHT+2)] [(SCALER_MAXWIDTH+2)];
+	Bit32u b32	[SCALER_COMPLEXHEIGHT] [SCALER_COMPLEXWIDTH];
+	Bit16u b16	[SCALER_COMPLEXHEIGHT] [SCALER_COMPLEXWIDTH];
+	Bit8u b8	[SCALER_COMPLEXHEIGHT] [SCALER_COMPLEXWIDTH];
 } scalerFrameCache_t;
 typedef union {
 	Bit32u b32	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
 	Bit16u b16	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
 	Bit8u b8	[SCALER_MAXHEIGHT] [SCALER_MAXWIDTH];
 } scalerSourceCache_t;
-
-extern scalerFrameCache_t scalerFrameCache;
 extern scalerSourceCache_t scalerSourceCache;
 extern scalerChangeCache_t scalerChangeCache;
-
-#define ScaleFlagSimple		0x001
-
-typedef struct {
-	Bitu gfxFlags;
-	Bitu scaleFlags;
-	Bitu xscale,yscale;
-	ScalerLineHandler_t Linear[4];
-	ScalerLineHandler_t Random[4];
-} ScalerLineBlock_t;
+typedef ScalerLineHandler_t ScalerLineBlock_t[5][4];
 
 typedef struct {
 	Bitu gfxFlags;
-	Bitu scaleFlags;
 	Bitu xscale,yscale;
-	ScalerLineHandler_t Linear[4][4];
-	ScalerLineHandler_t Random[4][4];
-} ScalerFullLineBlock_t;
-
+	ScalerComplexHandler_t Linear[4];
+	ScalerComplexHandler_t Random[4];
+} ScalerComplexBlock_t;
 
 typedef struct {
-	ScalerCacheHandler_t simple[4];
-	ScalerCacheHandler_t complex[4];
-} ScalerCacheBlock_t;
+	Bitu gfxFlags;
+	Bitu xscale,yscale;
+	ScalerLineBlock_t	Linear;
+	ScalerLineBlock_t	Random;
+} ScalerSimpleBlock_t;
 
-extern ScalerLineBlock_t ScaleNormal;
-extern ScalerLineBlock_t ScaleNormalDw;
-extern ScalerLineBlock_t ScaleNormalDh;
 
 #define SCALE_LEFT	0x1
 #define SCALE_RIGHT	0x2
 #define SCALE_FULL	0x4
 
-extern ScalerLineBlock_t ScaleNormal2x;
-extern ScalerLineBlock_t ScaleNormal3x;
-extern ScalerLineBlock_t ScaleAdvMame2x;
-extern ScalerLineBlock_t ScaleAdvMame3x;
-extern ScalerLineBlock_t ScaleAdvInterp2x;
-extern ScalerLineBlock_t ScaleAdvInterp3x;
-
-extern ScalerLineBlock_t ScaleTV2x;
-extern ScalerLineBlock_t ScaleTV3x;
-extern ScalerLineBlock_t ScaleRGB2x;
-extern ScalerLineBlock_t ScaleRGB3x;
-extern ScalerLineBlock_t ScaleScan2x;
-extern ScalerLineBlock_t ScaleScan3x;
-
-extern ScalerCacheBlock_t	ScalerCache_8;
-extern ScalerCacheBlock_t	ScalerCache_8Pal;
-extern ScalerCacheBlock_t	ScalerCache_15;
-extern ScalerCacheBlock_t	ScalerCache_16;
-extern ScalerCacheBlock_t	ScalerCache_32;
-
+/* Simple scalers */
+extern ScalerSimpleBlock_t ScaleNormal1x;
+extern ScalerSimpleBlock_t ScaleNormalDw;
+extern ScalerSimpleBlock_t ScaleNormalDh;
+extern ScalerSimpleBlock_t ScaleNormal2x;
+extern ScalerSimpleBlock_t ScaleNormal3x;
+extern ScalerSimpleBlock_t ScaleTV2x;
+extern ScalerSimpleBlock_t ScaleTV3x;
+extern ScalerSimpleBlock_t ScaleRGB2x;
+extern ScalerSimpleBlock_t ScaleRGB3x;
+extern ScalerSimpleBlock_t ScaleScan2x;
+extern ScalerSimpleBlock_t ScaleScan3x;
+/* Complex scalers */
+extern ScalerComplexBlock_t ScaleAdvMame2x;
+extern ScalerComplexBlock_t ScaleAdvMame3x;
+extern ScalerComplexBlock_t ScaleAdvInterp2x;
+extern ScalerComplexBlock_t ScaleAdvInterp3x;
+extern ScalerLineBlock_t ScalerCache;
 #endif

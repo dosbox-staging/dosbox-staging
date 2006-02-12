@@ -17,9 +17,9 @@
  */
 
 #if defined (SCALERLINEAR)
-void conc3d(SCALERNAME,SBPP,L)(void) {
+static void conc3d(SCALERNAME,SBPP,L)(void) {
 #else
-void conc3d(SCALERNAME,SBPP,R)(void) {
+static void conc3d(SCALERNAME,SBPP,R)(void) {
 #endif
 	if (!render.scale.outLine) {
 		render.scale.outLine++;
@@ -55,15 +55,10 @@ lastagain:
 #if (SCALERHEIGHT > 2) 
 		PTYPE * line2;
 #endif
-
-#if defined ( SCALERSIMPLE  )
-		if (!changed[b]) {
-			line0 += SCALERWIDTH * SCALER_BLOCKSIZE;
-			fc += SCALER_BLOCKSIZE;
-			continue;
-		}
-#else 
-		switch (changed[b]) {
+		/* Clear this block being dirty marker */
+		const Bitu changeType = changed[b];
+		changed[b] = 0;
+		switch (changeType) {
 		case 0:
 			line0 += SCALERWIDTH * SCALER_BLOCKSIZE;
 			fc += SCALER_BLOCKSIZE;
@@ -107,8 +102,6 @@ lastagain:
 			fc++;
 			break;
 		default:
-#endif //SCALERSIMPLE
-
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1) 
 			line1 = WC[0];
@@ -143,12 +136,8 @@ lastagain:
 			BituMove((Bit8u*)(&line0[-SCALER_BLOCKSIZE*SCALERWIDTH])+render.scale.outPitch*2,WC[1], SCALER_BLOCKSIZE *SCALERWIDTH*PSIZE);
 #endif
 #endif //defined(SCALERLINEAR)
-#if !defined (SCALERSIMPLE)
 			break;
 		}
-#endif
-		/* Clear this block being dirty marker */
-		changed[b] = 0;
 	}
 #if defined(SCALERLINEAR) 
 	Bitu scaleLines = SCALERHEIGHT;
