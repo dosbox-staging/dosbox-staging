@@ -160,7 +160,7 @@ DWORD CodecInst::GetInfo(ICINFO* icinfo, DWORD dwSize) {
   icinfo->dwSize            = sizeof(ICINFO);
   icinfo->fccType           = ICTYPE_VIDEO;
   memcpy(&icinfo->fccHandler,CODEC_4CC, 4);
-  icinfo->dwFlags           = VIDCF_FASTTEMPORALC | VIDCF_FASTTEMPORALD | VIDCF_TEMPORAL | VIDCF_QUALITY;
+  icinfo->dwFlags           = VIDCF_FASTTEMPORALC | VIDCF_FASTTEMPORALD | VIDCF_TEMPORAL;
 
   icinfo->dwVersion         = VERSION;
   icinfo->dwVersionICM      = ICVERSION;
@@ -173,36 +173,82 @@ DWORD CodecInst::GetInfo(ICINFO* icinfo, DWORD dwSize) {
 /********************************************************************
 ****************************************************************/
 
-static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
+static int GetInputBitDepth(const BITMAPINFOHEADER *lpbiIn) {
+	if (lpbiIn->biCompression == BI_RGB) {
+		if (lpbiIn->biPlanes != 1)
+			return -1;
+
+		switch(lpbiIn->biBitCount) {
+			case 8:
+				return 8;
+			case 16:
+				return 15;		// Standard Windows 16-bit RGB is 1555.
+			case 32:
+				return 32;
+		}
+
+	} else if (lpbiIn->biCompression == BI_BITFIELDS) {
+		// BI_BITFIELDS RGB masks lie right after the BITMAPINFOHEADER structure,
+		// at (ptr+40). This is true even for a BITMAPV4HEADER or BITMAPV5HEADER.
+		const DWORD *masks = (const DWORD *)(lpbiIn + 1);
+
+		if (lpbiIn->biBitCount == 16) {
+			// Test for 16 (555)
+			if (masks[0] == 0x7C00 && masks[1] == 0x03E0 && masks[2] == 0x001F)
+				return 15;
+
+			// Test for 16 (565)
+			if (masks[0] == 0xF800 && masks[1] == 0x07E0 && masks[2] == 0x001F)
+				return 16;
+		} else if (lpbiIn->biBitCount == 32) {
+			if (masks[0] == 0xFF0000 && masks[1] == 0x00FF00 && masks[2] == 0x0000FF)
+				return 32;
+		}
+	}
+
+	return -1;
+}
+
+static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut, bool requireOutput) {
 	if (lpbiIn) {
-		if (lpbiIn->biCompression) return false;
-		if (lpbiIn->biBitCount==24) return false;
+		if (GetInputBitDepth(lpbiIn) < 0)
+			return false;
 	} else return false;
 	if (lpbiOut) {
 		if (memcmp(&lpbiOut->biCompression,CODEC_4CC, 4))
 			return false;
-	} else return false;
+	} else return !requireOutput;
 	return true;
 }
+
 /********************************************************************
 ****************************************************************/
 
 DWORD CodecInst::CompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
-	if (CanCompress(lpbiIn,lpbiOut)) return ICERR_OK;
+	if (CanCompress(lpbiIn,lpbiOut,false)) return ICERR_OK;
 	return ICERR_BADFORMAT;
 }
 
 DWORD CodecInst::CompressGetFormat(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
 	if (!lpbiOut)
 		return sizeof(BITMAPINFOHEADER);
-	if (!CanCompress(lpbiIn,lpbiOut)) 
-		return ICERR_BADFORMAT;
+	lpbiOut->biSize			= sizeof(BITMAPINFOHEADER);
+	lpbiOut->biWidth		= lpbiIn->biWidth;
+	lpbiOut->biHeight		= lpbiIn->biHeight;
+	lpbiOut->biPlanes		= 1;
+	lpbiOut->biCompression	= *(const DWORD *)CODEC_4CC;
+	lpbiOut->biBitCount		= lpbiIn->biBitCount;
+	lpbiOut->biSizeImage	= lpbiIn->biWidth * lpbiIn->biHeight * lpbiIn->biBitCount/8 + 1024;
+	lpbiOut->biXPelsPerMeter = lpbiIn->biXPelsPerMeter;
+	lpbiOut->biYPelsPerMeter = lpbiIn->biYPelsPerMeter;
+	lpbiOut->biClrUsed		= 0;
+	lpbiOut->biClrImportant	= 0;
 	return ICERR_OK;
 }
 
 DWORD CodecInst::CompressBegin(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
 	CompressEnd();  // free resources if necessary
-	if (!CanCompress(lpbiIn, lpbiOut))
+	if (!CanCompress(lpbiIn, lpbiOut, true))
 		return ICERR_BADFORMAT;
 	codec = new VideoCodec();
 	if (!codec)
@@ -213,7 +259,7 @@ DWORD CodecInst::CompressBegin(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpb
 }
 
 DWORD CodecInst::CompressGetSize(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
-	if (!CanCompress(lpbiIn, lpbiOut))
+	if (!CanCompress(lpbiIn, lpbiOut, true))
 		return ICERR_BADFORMAT;
 	return lpbiIn->biWidth * lpbiIn->biHeight * lpbiIn->biBitCount/8 + 1024;
 }
@@ -223,11 +269,11 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 	zmbv_format_t format;
 	LPBITMAPINFOHEADER lpbiIn=icinfo->lpbiInput;
 	LPBITMAPINFOHEADER lpbiOut=icinfo->lpbiOutput;
-	if (!CanCompress(lpbiIn, lpbiOut))
+	if (!CanCompress(lpbiIn, lpbiOut, true))
 		return ICERR_BADFORMAT;
 	if (!icinfo->lpInput || !icinfo->lpOutput)
 		return ICERR_ABORT;
-	switch (lpbiIn->biBitCount) {
+	switch (GetInputBitDepth(lpbiIn)) {
 	case 8:
 		format = ZMBV_FORMAT_8BPP;
 		pitch = lpbiIn->biWidth;
@@ -245,13 +291,28 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 		pitch = lpbiIn->biWidth * 4;
 		break;
 	}
-	codec->PrepareCompressFrame( 0, format, 0, icinfo->lpOutput, 99999999);
-	char *readPt = (char *)icinfo->lpbiInput;
+
+	// DIB scanlines for RGB formats are always aligned to DWORD.
+	pitch = (pitch + 3) & ~3;
+
+	// force a key frame if requested by the client
+	int flags = 0;
+	if (icinfo->dwFlags & ICCOMPRESS_KEYFRAME)
+		flags |= 1;
+
+	codec->PrepareCompressFrame( flags, format, 0, icinfo->lpOutput, 99999999);
+	char *readPt = (char *)icinfo->lpInput + pitch*(lpbiIn->biHeight - 1);
 	for(i = 0;i<lpbiIn->biHeight;i++) {
 		codec->CompressLines(1, (void **)&readPt );
-		readPt += pitch;
+		readPt -= pitch;
 	}
 	lpbiOut->biSizeImage = codec->FinishCompressFrame();
+
+	if (flags & 1)
+		*icinfo->lpdwFlags = AVIIF_KEYFRAME;
+	else
+		*icinfo->lpdwFlags = 0;
+
 	return ICERR_OK;
 }
 
@@ -291,10 +352,13 @@ DWORD CodecInst::DecompressGetFormat(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEAD
 		 return ICERR_BADFORMAT;
 	if (!lpbiOut) return sizeof(BITMAPINFOHEADER);
 	*lpbiOut = *lpbiIn;
-	lpbiOut->biPlanes = 1;
-	lpbiOut->biSize=sizeof(BITMAPINFOHEADER);
-	lpbiOut->biBitCount=24;
-	lpbiOut->biCompression=0;
+	lpbiOut->biPlanes		= 1;
+	lpbiOut->biSize			= sizeof(BITMAPINFOHEADER);
+	lpbiOut->biBitCount		= 24;
+	lpbiOut->biSizeImage	= ((lpbiOut->biWidth*3 + 3) & ~3) * lpbiOut->biHeight;
+	lpbiOut->biCompression	= BI_RGB;
+	lpbiOut->biClrUsed		= 0;
+	lpbiOut->biClrImportant	= 0;
 	return ICERR_OK;
 }
 
@@ -315,7 +379,6 @@ DWORD CodecInst::Decompress(ICDECOMPRESS* icinfo, DWORD dwSize) {
 		return ICERR_ABORT;
 	if (codec->DecompressFrame( icinfo->lpInput, icinfo->lpbiInput->biSizeImage)) {
 		codec->Output_UpsideDown_24(icinfo->lpOutput);
-		icinfo->lpbiOutput->biSizeImage=icinfo->lpbiOutput->biWidth*icinfo->lpbiOutput->biHeight*icinfo->lpbiOutput->biBitCount/8;
 	} else return ICERR_DONTDRAW;
 	return ICERR_OK;
 }

@@ -480,14 +480,46 @@ void VideoCodec::Output_UpsideDown_24(void *output) {
 	int i;
 	unsigned char *r;
 	unsigned char *w = (unsigned char *)output;
+	int pad = width & 3;
+
 	for (i=height-1;i>=0;i--) {
-		r = newframe + pixelsize*(MAX_VECTOR+(i+MAX_VECTOR)*pitch);	
-		for (int j=0;j<width;j++) {
-			int c=r[j];
-			*w++=palette[c*4+2];
-			*w++=palette[c*4+1];
-			*w++=palette[c*4+0];
+		r = newframe + pixelsize*(MAX_VECTOR+(i+MAX_VECTOR)*pitch);
+		switch (format) {
+		case ZMBV_FORMAT_8BPP:
+			for (int j=0;j<width;j++) {
+				int c=r[j];
+				*w++=palette[c*4+2];
+				*w++=palette[c*4+1];
+				*w++=palette[c*4+0];
+			}
+			break;
+		case ZMBV_FORMAT_15BPP:
+			for (int j=0;j<width;j++) {
+				unsigned short c = *(unsigned short *)&r[j*2];
+				*w++ = (unsigned char)(((c & 0x001f) * 0x21) >>  2);
+				*w++ = (unsigned char)(((c & 0x03e0) * 0x21) >>  7);
+				*w++ = (unsigned char)(((c & 0x7c00) * 0x21) >> 12);
+			}
+			break;
+		case ZMBV_FORMAT_16BPP:
+			for (int j=0;j<width;j++) {
+				unsigned short c = *(unsigned short *)&r[j*2];
+				*w++ = (unsigned char)(((c & 0x001f) * 0x21) >>  2);
+				*w++ = (unsigned char)(((c & 0x07e0) * 0x41) >>  9);
+				*w++ = (unsigned char)(((c & 0xf800) * 0x21) >> 13);
+			}
+			break;
+		case ZMBV_FORMAT_32BPP:
+			for (int j=0;j<width;j++) {
+				*w++ = r[j*4+0];
+				*w++ = r[j*4+1];
+				*w++ = r[j*4+2];
+			}
+			break;
 		}
+
+		// Maintain 32-bit alignment for scanlines.
+		w += pad;
 	}
 }
 
