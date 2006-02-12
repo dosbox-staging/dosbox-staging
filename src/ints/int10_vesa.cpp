@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.22 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.23 2006-02-12 23:06:15 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -142,6 +142,7 @@ foundit:
 		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
 		var_write(&minfo.BitsPerPixel,4);
 		var_write(&minfo.MemoryModel,3);	//ega planar mode
+		var_write(&minfo.ModeAttributes,0x1b);	//Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
@@ -149,7 +150,8 @@ foundit:
 		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth);
 		var_write(&minfo.BitsPerPixel,8);
-		var_write(&minfo.MemoryModel,4);	//packed pixel
+		var_write(&minfo.MemoryModel,4);		//packed pixel
+		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
@@ -164,6 +166,7 @@ foundit:
 		var_write(&minfo.GreenMaskPos,5);
 		var_write(&minfo.BlueMaskSize,5);
 		var_write(&minfo.BlueMaskPos,0);
+		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
@@ -178,6 +181,7 @@ foundit:
 		var_write(&minfo.GreenMaskPos,5);
 		var_write(&minfo.BlueMaskSize,5);
 		var_write(&minfo.BlueMaskPos,0);
+		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
@@ -194,12 +198,11 @@ foundit:
 		var_write(&minfo.BlueMaskPos,0x0);
 		var_write(&minfo.ReservedMaskSize,0x8);
 		var_write(&minfo.ReservedMaskPos,0x18);
+		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
 	default:
 		return 0x1;
 	}
-
-	var_write(&minfo.ModeAttributes,0x9b);
 	var_write(&minfo.WinAAttributes,0x7);	//Exists/readable/writable
 	var_write(&minfo.WinGranularity,64);
 	var_write(&minfo.WinSize,64);
