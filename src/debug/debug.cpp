@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.74 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.75 2006-02-12 23:23:52 harekiet Exp $ */
 
 #include <string.h>
 #include <list>
@@ -1660,7 +1660,9 @@ Bitu DEBUG_Loop(void) {
 	return DEBUG_CheckKeys();
 }
 
-void DEBUG_Enable(void) {
+void DEBUG_Enable(bool pressed) {
+	if (!pressed)
+		return;
 	static bool showhelp=false;
 	debugging=true;
 	SetCodeWinStart();
@@ -1947,7 +1949,7 @@ void DEBUG_CheckExecuteBreakpoint(Bit16u seg, Bit32u off)
 Bitu DEBUG_EnableDebugger(void)
 {
 	exitLoop = true;
-	DEBUG_Enable();
+	DEBUG_Enable(true);
 	CPU_Cycles=CPU_CycleLeft=0;
 	return 0;
 };

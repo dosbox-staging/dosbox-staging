@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.19 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.20 2006-02-12 23:23:52 harekiet Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -996,7 +996,7 @@ public:
 		handlergroup.push_back(this);
 	}
 	void Active(bool yesno) {
-		if (yesno) (*handler)();
+		(*handler)(yesno);
 	};
 	char * ButtonName(void) {
 		return buttonname;
@@ -1502,8 +1502,8 @@ static void CreateBindGroups(void) {
 		case JOY_2AXIS:
 		default:
 			new CStickBindGroup(joyno);
-			if((joyno+1) < numsticks)
-				new CStickBindGroup(joyno+1);
+			if((joyno+1U) < numsticks)
+				new CStickBindGroup(joyno+1U);
 			break;
 		}
 	}
@@ -1515,7 +1515,9 @@ void MAPPER_LosingFocus(void) {
 	}
 }
 
-void MAPPER_Run(void) {
+void MAPPER_Run(bool pressed) {
+	if (!pressed)
+		return;
 	/* Deactive all running binds */
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
 		(*evit)->DeActivateAll();

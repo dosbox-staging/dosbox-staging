@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.26 2006-02-09 11:47:56 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.27 2006-02-12 23:23:52 harekiet Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -112,7 +112,9 @@ void swapInDisks(void) {
 	}
 }
 
-void swapInNextDisk(void) {
+void swapInNextDisk(bool pressed) {
+	if (!pressed)
+		return;
 	/* Hack/feature: rescan all disks as well */
 	for(Bitu i=0;i<DOS_DRIVES;i++) {
 		if (Drives[i]) Drives[i]->EmptyCache();
