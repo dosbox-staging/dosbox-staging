@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.102 2006-02-12 23:39:37 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.103 2006-02-12 23:53:50 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -223,7 +223,9 @@ void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 	SDL_WM_SetCaption(title,VERSION);
 }
 
-static void PauseDOSBox(void) {
+static void PauseDOSBox(bool pressed) {
+	if (!pressed)
+		return;
 	GFX_SetTitle(-1,-1,true);
 	bool paused = true;
 	KEYBOARD_ClrBuffer();
