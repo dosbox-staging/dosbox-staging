@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.60 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.61 2006-02-13 07:48:25 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -735,6 +735,7 @@ static Bitu INT33_Handler(void) {
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
 		mouse.sub_ofs=reg_dx;
+		Mouse_AutoLock(true); //Some games don't seem to reset the mouse before using
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
 		SetMickeyPixelRate(reg_cx,reg_dx);
