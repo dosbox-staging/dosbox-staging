@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.41 2006-02-12 23:43:54 harekiet Exp $ */
+/* $Id: render.cpp,v 1.42 2006-02-13 08:22:17 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -278,8 +278,26 @@ forcenormal:
 		xscale = simpleBlock->xscale;	
 		yscale = simpleBlock->yscale;
 	}
-	if (render.src.bpp != 8)
-        gfx_flags |= GFX_RGBONLY;
+	switch (render.src.bpp) {
+	case 8:
+		if (gfx_flags & GFX_CAN_8)
+			gfx_flags |= GFX_LOVE_8;
+		else
+			gfx_flags |= GFX_LOVE_32;
+			break;
+	case 15:
+			gfx_flags |= GFX_LOVE_15;
+			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+			break;
+	case 16:
+			gfx_flags |= GFX_LOVE_16;
+			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+			break;
+	case 32:
+			gfx_flags |= GFX_LOVE_32;
+			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
+			break;
+	}
 	gfx_flags=GFX_GetBestMode(gfx_flags);
 	if (!gfx_flags) {
 		if (!complexBlock && simpleBlock == &ScaleNormal1x) 
@@ -287,7 +305,6 @@ forcenormal:
 		else 
 			goto forcenormal;
 	}
-	/* Special test for normal2x to switch to normal with hardware scaling */
 	width *= xscale;
 	if (gfx_flags & GFX_SCALING) {
 		height = MakeAspectTable(render.src.height, yscale, yscale );
