@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.103 2006-02-12 23:53:50 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.104 2006-02-13 09:26:01 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -142,6 +142,7 @@ enum PRIORITY_LEVELS {
 struct SDL_Block {
 	bool active;							//If this isn't set don't draw
 	bool updating;
+	bool exposeEvent;
 	struct {
 		Bit32u width;
 		Bit32u height;
@@ -700,7 +701,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				SDL_UnlockSurface(sdl.surface);
 			}
 			SDL_Flip(sdl.surface);
-		} else if (changedLines) {
+		} else if (changedLines && !sdl.exposeEvent) {
 			Bitu y = 0, index = 0, rectCount = 0;
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
@@ -723,6 +724,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			if (rectCount)
 				SDL_UpdateRects( sdl.surface, rectCount, sdl.updateRects );
 		} else {
+			sdl.exposeEvent = false;
 			SDL_Flip(sdl.surface);
 		}
 		break;
@@ -1194,6 +1196,9 @@ void GFX_Events() {
 		case SDL_QUIT:
 			throw(0);
 			break;
+		case SDL_VIDEOEXPOSE:
+			sdl.exposeEvent = true;
+			break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -1203,7 +1208,6 @@ void GFX_Events() {
 			if (((event.key.keysym.sym==SDLK_TAB)) &&
 				((laltstate==SDL_KEYDOWN) || (raltstate==SDL_KEYDOWN))) break;
 #endif
-
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
