@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.77 2006-02-12 23:28:21 harekiet Exp $ */
+/* $Id: cpu.cpp,v 1.78 2006-02-14 13:04:01 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1877,7 +1877,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 
 extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
 static void CPU_CycleIncrease(bool pressed) {
-	if (!pressed)
+	if (!pressed || CPU_CycleAuto)
 		return;
 	Bits old_cycles=CPU_CycleMax;
 	if(CPU_CycleUp < 100){
@@ -1893,7 +1893,7 @@ static void CPU_CycleIncrease(bool pressed) {
 }
 
 static void CPU_CycleDecrease(bool pressed) {
-	if (!pressed)
+	if (!pressed || CPU_CycleAuto)
 		return;
 	if(CPU_CycleDown < 100){
 		CPU_CycleMax = (Bits)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
@@ -1964,10 +1964,10 @@ public:
 		CPU_Cycles=0;
 		const char *cyclesLine = section->Get_string("cycles");
 		if (!strcasecmp(cyclesLine,"auto")) {
-            CPU_CycleMax=0;
+			CPU_CycleMax=0;
 			CPU_CycleAuto=true;
 		} else {
-            CPU_CycleMax=atoi(cyclesLine);
+			CPU_CycleMax=atoi(cyclesLine);
 			CPU_CycleAuto=false;
 		}
 		CPU_CycleUp=section->Get_int("cycleup");

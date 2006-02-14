@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.105 2006-02-14 08:49:30 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.106 2006-02-14 13:04:02 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -208,6 +208,7 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 extern char * RunningProgram;
+extern bool CPU_CycleAuto;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
@@ -217,10 +218,12 @@ void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 	static Bits internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
-	if(paused)
-		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s PAUSED",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+	if(CPU_CycleAuto)
+		sprintf(title,"DOSBox %s,Cpu Cycles:     auto, Frameskip %2d, Program: %8s",VERSION,internal_frameskip,RunningProgram);
 	else
-		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);     
+		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+
+	if(paused) strcat(title," PAUSED");
 	SDL_WM_SetCaption(title,VERSION);
 }
 
