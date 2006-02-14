@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.13 2006-02-12 23:25:46 harekiet Exp $ */
+/* $Id: hardware.cpp,v 1.14 2006-02-14 12:46:43 qbix79 Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -203,7 +203,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTd(0);                         /* Start */
 		AVIOUTd(capture.video.frames);      /* Length */
 		AVIOUTd(0);                  /* SuggestedBufferSize */
-		AVIOUTd(-1);                 /* Quality */
+		AVIOUTd(~0);                 /* Quality */
 		AVIOUTd(0);                  /* SampleSize */
 		AVIOUTd(0);                  /* Frame */
 		AVIOUTd(0);                  /* Frame */
@@ -241,7 +241,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 			capture.video.audiorate = 1;
 		AVIOUTd(capture.video.audiowritten/4);   /* Length */
 		AVIOUTd(0);             /* SuggestedBufferSize */
-		AVIOUTd(-1);            /* Quality */
+		AVIOUTd(~0);            /* Quality */
 		AVIOUTd(4);				/* SampleSize */
 		AVIOUTd(0);             /* Frame */
 		AVIOUTd(0);             /* Frame */
