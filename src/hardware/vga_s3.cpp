@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_s3.cpp,v 1.3 2006-02-14 12:44:38 qbix79 Exp $ */
+
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
@@ -430,3 +432,4 @@ Bitu SVGA_S3_GetClock(void) {
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
 	return clock;
 }
+
