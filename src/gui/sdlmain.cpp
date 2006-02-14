@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.104 2006-02-13 09:26:01 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.105 2006-02-14 08:49:30 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1253,6 +1253,7 @@ int main(int argc, char* argv[]) {
 			setbuf(stderr, NULL);					/* No buffering */
 		} else {
 			if (AllocConsole()) {
+				SetConsoleTitle("DOSBox Status Window");
 				fclose(stdin);
 				fclose(stdout);
 				fclose(stderr);
