@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.94 2006-02-12 23:28:21 harekiet Exp $ */
+/* $Id: dosbox.cpp,v 1.95 2006-02-14 09:53:24 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -113,7 +113,7 @@ bool SDLNetInited;
 static Bit32u ticksRemain;
 static Bit32u ticksLast;
 static Bit32u ticksAdded;
-static Bit32u ticksDone;
+static Bit32s ticksDone;
 static Bit32u ticksScheduled;
 static bool ticksLocked;
 
@@ -148,7 +148,7 @@ increaseticks:
 		ticksScheduled = 0;
 	} else {
 		Bit32u ticksNew;
-        ticksNew=GetTicks();
+        	ticksNew=GetTicks();
 		ticksScheduled += ticksAdded;
 		if (ticksNew > ticksLast) {
 			ticksRemain = ticksNew-ticksLast;
