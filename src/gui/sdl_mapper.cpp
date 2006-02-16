@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.20 2006-02-12 23:23:52 harekiet Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.21 2006-02-16 20:18:59 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -211,14 +211,70 @@ protected:
 
 
 #define MAX_SDLKEYS 323
-#define MAX_SCANCODES 212
 
 static bool usescancodes;
-Bit8u scancode_map[MAX_SDLKEYS];
+static Bit8u scancode_map[MAX_SDLKEYS];
 
 #define Z SDLK_UNKNOWN
 
-SDLKey sdlkey_map[MAX_SCANCODES]={SDLK_UNKNOWN,SDLK_ESCAPE,
+#if defined (MACOSX)
+static SDLKey sdlkey_map[]={
+	/* Main block printables */
+	/*00-05*/ SDLK_a, SDLK_s, SDLK_d, SDLK_f, SDLK_h, SDLK_g,
+	/*06-0B*/ SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_WORLD_0, SDLK_b,
+	/*0C-11*/ SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_y, SDLK_t, 
+	/*12-17*/ SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_6, SDLK_5, 
+	/*18-1D*/ SDLK_EQUALS, SDLK_9, SDLK_7, SDLK_MINUS, SDLK_8, SDLK_0, 
+	/*1E-21*/ SDLK_RIGHTBRACKET, SDLK_o, SDLK_u, SDLK_LEFTBRACKET, 
+	/*22-23*/ SDLK_i, SDLK_p,
+	/*24-29*/ SDLK_RETURN, SDLK_l, SDLK_j, SDLK_QUOTE, SDLK_k, SDLK_SEMICOLON, 
+	/*2A-29*/ SDLK_BACKSLASH, SDLK_COMMA, SDLK_SLASH, SDLK_n, SDLK_m, 
+	/*2F-2F*/ SDLK_PERIOD,
+
+	/* Spaces, controls, modifiers (dosbox uses LMETA only for
+	 * hotkeys, it's not really mapped to an emulated key) */
+	/*30-33*/ SDLK_TAB, SDLK_SPACE, SDLK_BACKQUOTE, SDLK_BACKSPACE,
+	/*34-37*/ Z, SDLK_ESCAPE, Z, SDLK_LMETA,
+	/*38-3B*/ SDLK_LSHIFT, SDLK_CAPSLOCK, SDLK_LALT, SDLK_LCTRL,
+
+	/*3C-40*/ Z, Z, Z, Z, Z,
+
+	/* Keypad (KP_EQUALS not supported, NUMLOCK used on what is CLEAR
+	 * in Mac OS X) */
+	/*41-46*/ SDLK_KP_PERIOD, Z, SDLK_KP_MULTIPLY, Z, SDLK_PLUS, Z,
+	/*47-4A*/ SDLK_NUMLOCK /*==SDLK_CLEAR*/, Z, Z, Z,
+	/*4B-4D*/ SDLK_KP_DIVIDE, SDLK_KP_ENTER, Z,
+	/*4E-51*/ SDLK_KP_MINUS, Z, Z, SDLK_KP_EQUALS,
+	/*52-57*/ SDLK_KP0, SDLK_KP1, SDLK_KP2, SDLK_KP3, SDLK_KP4, SDLK_KP5, 
+	/*58-5C*/ SDLK_KP6, SDLK_KP7, Z, SDLK_KP8, SDLK_KP9, 
+
+	/*5D-5F*/ Z, Z, Z,
+	
+	/* Function keys and cursor blocks (F13-F16 not supported, INSERT
+	 * used on what is HELP in Mac OS X) */
+	/*60-64*/ SDLK_F5, SDLK_F6, SDLK_F7, SDLK_F3, SDLK_F8,
+	/*65-6A*/ SDLK_F9, Z, SDLK_F11, Z, SDLK_F13, (SDLKey)(SDLK_F15+1),
+	/*6B-71*/ SDLK_F14, Z, SDLK_F10, Z, SDLK_F12, Z, SDLK_F15, 
+	/*72-74*/ SDLK_INSERT /*==SDLK_HELP*/, SDLK_HOME, SDLK_PAGEUP,
+	/*75-79*/ SDLK_DELETE, SDLK_F4, SDLK_END, SDLK_F2, SDLK_PAGEDOWN,
+	/*7A-7E*/ SDLK_F1, SDLK_LEFT, SDLK_RIGHT, SDLK_DOWN, SDLK_UP,
+
+	/*7F-7F*/ Z,
+
+	/* 4 extra keys that don't really exist, but are needed for
+	 * round-trip mapping (dosbox uses RMETA only for hotkeys, it's
+	 * not really mapped to an emulated key) */
+	SDLK_RMETA, SDLK_RSHIFT, SDLK_RALT, SDLK_RCTRL,
+};
+#define MAX_SCANCODES (0x80+4)
+/* Make sure that the table above has the expected size.  This
+   expression will raise a compiler error if the condition is false.  */
+typedef char assert_right_size [MAX_SCANCODES == (sizeof(sdlkey_map)/sizeof(sdlkey_map[0]))	? 1 : -1];
+
+#else // !MACOSX
+
+#define MAX_SCANCODES 212
+static SDLKey sdlkey_map[MAX_SCANCODES]={SDLK_UNKNOWN,SDLK_ESCAPE,
 	SDLK_1,SDLK_2,SDLK_3,SDLK_4,SDLK_5,SDLK_6,SDLK_7,SDLK_8,SDLK_9,SDLK_0,
 	/* 0x0c: */
 	SDLK_MINUS,SDLK_EQUALS,SDLK_BACKSPACE,SDLK_TAB,
@@ -244,6 +300,7 @@ SDLKey sdlkey_map[MAX_SCANCODES]={SDLK_UNKNOWN,SDLK_ESCAPE,
 	Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z,Z
 	/* 0xd4: ... */
 };
+#endif
 
 #undef Z
 
@@ -258,11 +315,18 @@ SDLKey MapSDLCode(Bitu skey) {
 Bitu GetKeyCode(SDL_keysym keysym) {
 	if (usescancodes) {
 		Bitu key=(Bitu)keysym.scancode;
-		if (key==0) {
+		if (key==0
+#if defined (MACOSX)
+		    /* On Mac on US keyboards, scancode 0 is actually the 'a'
+		     * key.  For good measure exclude all printables from this
+		     * condition. */
+		    && (keysym.sym < SDLK_SPACE || keysym.sym > SDLK_WORLD_95)
+#endif
+			) {
 			/* try to retrieve key from symbolic key as scancode is zero */
 			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
 		} 
-#if !defined (WIN32)
+#if !defined (WIN32) && !defined (MACOSX)
 		/* Linux adds 8 to all scancodes */
 		else key-=8;
 #endif
@@ -1374,7 +1438,15 @@ static struct {
 	{"kp_8",SDLK_KP8},	{"kp_9",SDLK_KP9},	{"numlock",SDLK_NUMLOCK},
 	{"kp_divide",SDLK_KP_DIVIDE},	{"kp_multiply",SDLK_KP_MULTIPLY},
 	{"kp_minus",SDLK_KP_MINUS},		{"kp_plus",SDLK_KP_PLUS},
-	{"kp_period",SDLK_KP_PERIOD},	{"kp_enter",SDLK_KP_ENTER},		{"lessthan",SDLK_LESS},
+	{"kp_period",SDLK_KP_PERIOD},	{"kp_enter",SDLK_KP_ENTER},
+
+#if defined (MACOSX)
+	/* Intl Mac keyboards in US layout actually put U+00A7 SECTION SIGN here */
+	{"lessthan",SDLK_WORLD_0},
+#else
+	{"lessthan",SDLK_LESS},
+#endif
+
 	{0,0}
 };
 
@@ -1566,7 +1638,9 @@ void MAPPER_StartUp(Section * sec) {
 		usescancodes=true;
 
 		/* Note: table has to be tested/updated for various OSs */
-#if !defined (WIN32)
+#if defined (MACOSX)
+		/* nothing */
+#elif !defined (WIN32) /* => Linux */
 		sdlkey_map[0x5a]=SDLK_UP;
 		sdlkey_map[0x60]=SDLK_DOWN;
 		sdlkey_map[0x5c]=SDLK_LEFT;
