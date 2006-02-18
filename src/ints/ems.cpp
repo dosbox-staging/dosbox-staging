@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.45 2006-02-09 11:47:56 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.46 2006-02-18 14:45:12 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -611,17 +611,30 @@ static Bitu INT67_Handler(void) {
 				reg_ah=EMM_NO_ERROR;
 				reg_bx=0x100;
 				break;
-			case 0x01:		/* VCPI Get Protected Mode Interface */
+			case 0x01: {	/* VCPI Get Protected Mode Interface */
+				Bit16u ct;
 				/* Set up page table buffer */
-				for (Bit16u ct=0; ct<0xff; ct++) {
+				for (ct=0; ct<0xff; ct++) {
 					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
 					real_writew(SegValue(es),reg_di+ct*4+0x01,ct*0x10);		// mapping
 					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
 				}
-				for (Bit16u ct=0xff; ct<0x100; ct++) {
+				for (ct=0xff; ct<0x100; ct++) {
 					real_writeb(SegValue(es),reg_di+ct*4+0x00,0x67);		// access bits
 					real_writew(SegValue(es),reg_di+ct*4+0x01,(ct-0xff)*0x10+0x1100);	// mapping
 					real_writeb(SegValue(es),reg_di+ct*4+0x03,0x00);
+				}
+				/* adjust paging entries for page frame (if mapped) */
+				for (ct=0; ct<4; ct++) { 
+					Bit16u handle=emm_mappings[ct].handle;
+					if (handle!=0xffff) {
+						Bit16u memh=(Bit16u)MEM_NextHandleAt(emm_handles[handle].mem,emm_mappings[ct].page*4);
+						Bit16u entry_addr=reg_di+(EMM_PAGEFRAME>>6)+(ct*0x10);
+						real_writew(SegValue(es),entry_addr+0x00+0x01,(memh+0)*0x10);		// mapping of 1/4 of page
+						real_writew(SegValue(es),entry_addr+0x04+0x01,(memh+1)*0x10);		// mapping of 2/4 of page
+						real_writew(SegValue(es),entry_addr+0x08+0x01,(memh+2)*0x10);		// mapping of 3/4 of page
+						real_writew(SegValue(es),entry_addr+0x0c+0x01,(memh+3)*0x10);		// mapping of 4/4 of page
+					}
 				}
 				reg_di+=0x400;		// advance pointer by 0x100*4
 				
@@ -636,6 +649,7 @@ static Bitu INT67_Handler(void) {
 				reg_ebx=(vcpi.pm_interface&0xffff);
 				reg_ah=EMM_NO_ERROR;
 				break;
+				}
 			case 0x02:		/* VCPI Maximum Physical Address */
 				reg_edx=((MEM_TotalPages()*MEM_PAGESIZE)-1)&0xfffff000;
 				reg_ah=EMM_NO_ERROR;
@@ -737,6 +751,8 @@ static Bitu INT67_Handler(void) {
 				CPU_SetSegGeneral(fs,0);
 				CPU_SetSegGeneral(gs,0);
 
+//				MEM_A20_Enable(true);
+
 				/* Switch to protected mode */
 				reg_flags&=(~(FLAG_VM|FLAG_NT));
 				reg_flags|=0x3000;
@@ -801,6 +817,7 @@ static Bitu VCPI_PM_Handler() {
 
 		reg_flags&=(~FLAG_NT);
 		reg_esp+=8;		// skip interrupt return information
+//		MEM_A20_Enable(false);
 
 		/* Switch to v86-task */
 		CPU_IRET(true,0);
