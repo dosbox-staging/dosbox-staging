@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.11 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.12 2006-02-20 08:59:52 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -389,6 +389,13 @@ bool fatDrive::getFileDirEntry(char * filename, direntry * useEntry, Bit32u * di
 			
 			findFile = findDir;
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) break;
+			else {
+				//Found something. See if it's a directory (findfirst always finds regular files)
+				char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
+			}
+
 			currentClust = foundEntry.loFirstClust;
 			findDir = strtok(NULL,"\\");
 		}
@@ -400,7 +407,7 @@ bool fatDrive::getFileDirEntry(char * filename, direntry * useEntry, Bit32u * di
 	imgDTA->SetupSearch(0,0x5,findFile);
 	imgDTA->SetDirID(0);
 	if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
-	
+
 	memcpy(useEntry, &foundEntry, sizeof(direntry));
 	*dirClust = (Bit32u)currentClust;
 	*subEntry = ((Bit32u)imgDTA->GetDirID()-1);
@@ -423,14 +430,17 @@ bool fatDrive::getDirClustNum(char *dir, Bit32u *clustNum, bool parDir) {
 			imgDTA->SetupSearch(0,DOS_ATTR_DIRECTORY,findDir);
 			imgDTA->SetDirID(0);
 			findDir = strtok(NULL,"\\");
-			if(!parDir) {
-			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
+			if(parDir && (findDir == NULL)) break;
+
+			char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;Bit8u find_attr;
+			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) {
+				return false;
 			} else {
-				if(findDir == NULL) break;
-				if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) return false;
+				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
+				if(!(find_attr &DOS_ATTR_DIRECTORY)) return false;
 			}
 			currentClust = foundEntry.loFirstClust;
-			
+
 		}
 		*clustNum = currentClust;
 		return true;
@@ -865,7 +875,11 @@ nextfile:
 		strcat(find_name, extension);
 	}
 
-	if((attrs & (sectbuf[entryoffset].attrib | 0x21)) == 0)  goto nextfile;
+	/* Ignore files with volume label. FindFirst should search for those. (return the first one found) */
+	if(sectbuf[entryoffset].attrib & 0x8) goto nextfile;
+   
+	/* Always find ARCHIVES even if bit is not set  Perhaps test is not the best test */
+	if(~attrs & sectbuf[entryoffset].attrib & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM) )  goto nextfile;
 	if(!WildFileCmp(find_name,srch_pattern)) goto nextfile;
 
 	dta.SetResult(find_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].crtDate, sectbuf[entryoffset].crtTime, sectbuf[entryoffset].attrib);
