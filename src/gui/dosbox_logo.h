@@ -16,7 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox_logo.h,v 1.1 2006-02-09 08:42:42 qbix79 Exp $ */
+/* $Id: dosbox_logo.h,v 1.2 2006-02-20 14:40:37 qbix79 Exp $ */
+
+/* DOSBox icon designed by Ido Beeri */
 
 /* Select only one logo at the time */
 #define LOGO_1 1
