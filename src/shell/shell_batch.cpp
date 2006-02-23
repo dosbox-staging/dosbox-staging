@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.19 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.20 2006-02-23 08:13:14 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +51,11 @@ emptyline:
 		n=1;
 		DOS_ReadFile(file_handle,&c,&n);
 		if (n>0) {
-			if (c>31 || c==0x1b || c=='\t')
+			/* Why are we filtering this ?
+			 * Exclusion list: tab for batch files 
+			 * escape for ansi
+			 * backspace for alien odyssey */
+			if (c>31 || c==0x1b || c=='\t' || c==8)
 				*cmd_write++=c;
 		}
 	} while (c!='\n' && n);
