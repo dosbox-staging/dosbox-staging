@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.61 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.62 2006-02-24 11:50:11 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -270,12 +270,18 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 };
 
 static void FormatNumber(Bitu num,char * buf) {
-	Bitu numm,numk,numb;
+	Bitu numm,numk,numb,numg;
 	numb=num % 1000;
 	num/=1000;
 	numk=num % 1000;
 	num/=1000;
-	numm=num;
+	numm=num % 1000;
+	num/=1000;
+	numg=num;
+	if (numg) {
+		sprintf(buf,"%d,%03d,%03d,%03d",numg,numm,numk,numb);
+		return;
+	};
 	if (numm) {
 		sprintf(buf,"%d,%03d,%03d",numm,numk,numb);
 		return;
