@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.45 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.46 2006-02-24 20:42:15 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -179,8 +179,6 @@ static INLINE void VGA_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bi
 		for (Bitu x=0;x<rowsize;x++) mem_writeb(dest+x,attr);
 		dest+=nextline;
 	}
-	IO_Write(0x3cf,0);
-
 }
 
 static INLINE void TEXT_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
