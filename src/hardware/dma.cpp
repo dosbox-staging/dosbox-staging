@@ -27,13 +27,26 @@
 
 DmaController *DmaControllers[2];
 
+#define EMM_PAGEFRAME4K	((0xE000*16)/4096)
+Bit32u ems_board_mapping[LINK_START];
+
+static void UpdateEMSMapping(void) {
+	/* if EMS is not present, this will result in a 1:1 mapping */
+	Bitu i;
+	for (i=0;i<0x10;i++) {
+		ems_board_mapping[EMM_PAGEFRAME4K+i]=paging.firstmb[EMM_PAGEFRAME4K+i];
+	}
+}
+
 /* read a block from physical memory */
 static void DMA_BlockRead(PhysPt pt,void * data,Bitu size) {
 	Bit8u * write=(Bit8u *) data;
 	for ( ; size ; size--, pt++) {
 		Bitu page = pt >> 12;
-		if (page < LINK_START)		/* cares for EMS pageframe etc. */
-			page = paging.firstmb[page];
+		/* care for EMS pageframe etc. */
+		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
+		else if (page < LINK_START) page = paging.firstmb[page];
 		*write++=phys_readb(page*4096 + (pt & 4095));
 	}
 }
@@ -43,8 +56,10 @@ static void DMA_BlockWrite(PhysPt pt,void * data,Bitu size) {
 	Bit8u * read=(Bit8u *) data;
 	for ( ; size ; size--, pt++) {
 		Bitu page = pt >> 12;
-		if (page < LINK_START)		/* cares for EMS pageframe etc. */
-			page = paging.firstmb[page];
+		/* care for EMS pageframe etc. */
+		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
+		else if (page < LINK_START) page = paging.firstmb[page];
 		phys_writeb(page*4096 + (pt & 4095), *read++);
 	}
 }
@@ -81,14 +96,17 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu iolen) {
 	} else if (port>=0xc0 && port <=0xdf) {
 		/* write to the second DMA controller (channels 4-7) */
 		DmaControllers[1]->WriteControllerReg((port-0xc0) >> 1,val,1);
-	} else switch (port) {
-		/* write DMA page register */
-		case 0x81:GetDMAChannel(2)->SetPage(val);break;
-		case 0x82:GetDMAChannel(3)->SetPage(val);break;
-		case 0x83:GetDMAChannel(1)->SetPage(val);break;
-		case 0x89:GetDMAChannel(6)->SetPage(val);break;
-		case 0x8a:GetDMAChannel(7)->SetPage(val);break;
-		case 0x8b:GetDMAChannel(5)->SetPage(val);break;
+	} else {
+		UpdateEMSMapping();
+		switch (port) {
+			/* write DMA page register */
+			case 0x81:GetDMAChannel(2)->SetPage(val);break;
+			case 0x82:GetDMAChannel(3)->SetPage(val);break;
+			case 0x83:GetDMAChannel(1)->SetPage(val);break;
+			case 0x89:GetDMAChannel(6)->SetPage(val);break;
+			case 0x8a:GetDMAChannel(7)->SetPage(val);break;
+			case 0x8b:GetDMAChannel(5)->SetPage(val);break;
+		}
 	}
 }
 
@@ -116,6 +134,7 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 	switch (reg) {
 	/* set base address of DMA transfer (1st byte low part, 2nd byte high part) */
 	case 0x0:case 0x2:case 0x4:case 0x6:
+		UpdateEMSMapping();
 		chan=GetChannel(reg >> 1);
 		flipflop=!flipflop;
 		if (flipflop) {
@@ -128,6 +147,7 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 		break;
 	/* set DMA transfer count (1st byte low part, 2nd byte high part) */
 	case 0x1:case 0x3:case 0x5:case 0x7:
+		UpdateEMSMapping();
 		chan=GetChannel(reg >> 1);
 		flipflop=!flipflop;
 		if (flipflop) {
@@ -144,10 +164,12 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 		//TODO Warning?
 		break;
 	case 0xa:		/* Mask Register */
+		if ((val & 0x4)==0) UpdateEMSMapping();
 		chan=GetChannel(val & 3);
 		chan->SetMask((val & 0x4)>0);
 		break;
 	case 0xb:		/* Mode Register */
+		UpdateEMSMapping();
 		chan=GetChannel(val & 3);
 		chan->autoinit=(val & 0x10) > 0;
 		chan->increment=(val & 0x20) > 0;
@@ -165,12 +187,14 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 		flipflop=false;
 		break;
 	case 0xe:		/* Clear Mask register */		
+		UpdateEMSMapping();
 		for (i=0;i<4;i++) {
 			chan=GetChannel(i);
 			chan->SetMask(false);
 		}
 		break;
 	case 0xf:		/* Multiple Mask register */
+		UpdateEMSMapping();
 		for (i=0;i<4;i++) {
 			chan=GetChannel(i);
 			chan->SetMask(val & 1);
@@ -253,10 +277,12 @@ again:
 			currcnt=basecnt;
 			curraddr=baseaddr;
 			if (want) goto again;
+			UpdateEMSMapping();
 		} else {
 			curraddr+=left;
 			currcnt=0xffff;
 			masked=true;
+			UpdateEMSMapping();
 			DoCallBack(DMA_TRANSFEREND);
 		}
 	}
@@ -282,10 +308,12 @@ again:
 			currcnt=basecnt;
 			curraddr=baseaddr;
 			if (want) goto again;
+			UpdateEMSMapping();
 		} else {
 			curraddr+=left;
 			currcnt=0xffff;
 			masked=true;
+			UpdateEMSMapping();
 			DoCallBack(DMA_TRANSFEREND);
 		}
 	}
@@ -341,4 +369,8 @@ void DMA_Destroy(Section* sec){
 void DMA_Init(Section* sec) {
 	test = new DMA(sec);
 	sec->AddDestroyFunction(&DMA_Destroy);
+	Bitu i;
+	for (i=0;i<LINK_START;i++) {
+		ems_board_mapping[i]=i;
+	}
 }
