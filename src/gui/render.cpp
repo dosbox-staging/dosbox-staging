@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.42 2006-02-13 08:22:17 harekiet Exp $ */
+/* $Id: render.cpp,v 1.43 2006-02-26 16:04:35 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -183,14 +183,20 @@ static Bitu MakeAspectTable(Bitu height,double scaley,Bitu miny) {
 	return linesadded;
 }
 
-void RENDER_ReInit( bool stopIt ) {
+void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	if (render.updating) {
 		/* Still updating the current screen, shut it down correctly */
 		RENDER_EndUpdate( false );
 	}
 
-	if (stopIt)
+	if (function == GFX_CallBackStop)
 		return;
+	
+	if (function == GFX_CallBackRedraw) {
+		//LOG_MSG("redraw");
+		render.scale.clearCache = true;
+		return;
+	}
 
 	Bitu width=render.src.width;
 	Bitu height=render.src.height;
@@ -318,7 +324,7 @@ forcenormal:
 		}
 	}
 /* Setup the scaler variables */
-	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_ReInit);;
+	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack);
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
 	else if (gfx_flags & GFX_CAN_15)
@@ -397,7 +403,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	render.src.dblh=dblh;
 	render.src.fps=fps;
 	render.src.ratio=ratio;
-	RENDER_ReInit( false );
+	RENDER_CallBack( GFX_CallBackReset );
 }
 
 extern void GFX_SetTitle(Bits cycles, Bits frameskip,bool paused);
@@ -457,7 +463,7 @@ void RENDER_Init(Section * sec) {
 
 	//If something changed that needs a ReInit
 	if(running && (render.aspect != aspect || render.scale.op != scaleOp))
-		RENDER_ReInit( false );
+		RENDER_CallBack( GFX_CallBackReset );
 	if(!running) render.updating=true;
 	running = true;
 

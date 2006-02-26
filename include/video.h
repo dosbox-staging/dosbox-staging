@@ -19,7 +19,13 @@
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
 
-typedef void (* GFX_ResetCallBack)( bool stopIt );
+typedef enum {
+	GFX_CallBackReset,
+	GFX_CallBackStop,
+	GFX_CallBackRedraw,
+} GFX_CallBackFunctions_t;
+
+typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
 
 struct GFX_PalEntry {
 	Bit8u r;
@@ -49,7 +55,7 @@ void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_ResetCallBack cb_reset);
+Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb);
 
 void GFX_ResetScreen(void);
 void GFX_Start(void);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.107 2006-02-15 14:48:41 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.108 2006-02-26 16:04:35 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -142,14 +142,13 @@ enum PRIORITY_LEVELS {
 struct SDL_Block {
 	bool active;							//If this isn't set don't draw
 	bool updating;
-	bool exposeEvent;
 	struct {
 		Bit32u width;
 		Bit32u height;
 		Bit32u bpp;
 		Bitu flags;
 		double scalex,scaley;
-		GFX_ResetCallBack reset;
+		GFX_CallBack_t callback;
 	} draw;
 	bool wait_on_error;
 	struct {
@@ -314,7 +313,7 @@ check_gotbpp:
 
 void GFX_ResetScreen(void) {
 	GFX_Stop();
-	if (sdl.draw.reset) (sdl.draw.reset)( false );
+	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackReset );
 	GFX_Start();
 }
 
@@ -370,13 +369,13 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 	}
 }
 
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_ResetCallBack reset) {
+Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating) 
 		GFX_EndUpdate( 0 );
 
 	sdl.draw.width=width;
 	sdl.draw.height=height;
-	sdl.draw.reset=reset;
+	sdl.draw.callback=callback;
 	sdl.draw.scalex=scalex;
 	sdl.draw.scaley=scaley;
 
@@ -704,7 +703,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				SDL_UnlockSurface(sdl.surface);
 			}
 			SDL_Flip(sdl.surface);
-		} else if (changedLines && !sdl.exposeEvent) {
+		} else if (changedLines) {
 			Bitu y = 0, index = 0, rectCount = 0;
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
@@ -727,7 +726,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			if (rectCount)
 				SDL_UpdateRects( sdl.surface, rectCount, sdl.updateRects );
 		} else {
-			sdl.exposeEvent = false;
 			SDL_Flip(sdl.surface);
 		}
 		break;
@@ -844,7 +842,7 @@ void GFX_Start() {
 
 static void GUI_ShutDown(Section * sec) {
 	GFX_Stop();
-	if (sdl.draw.reset) (sdl.draw.reset)( true );
+	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.mouse.locked) GFX_CaptureMouse();
 	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
 }
@@ -1159,7 +1157,6 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 static Bit8u laltstate = SDL_KEYUP;
 static Bit8u raltstate = SDL_KEYUP;
 
-
 void GFX_Events() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -1200,7 +1197,7 @@ void GFX_Events() {
 			throw(0);
 			break;
 		case SDL_VIDEOEXPOSE:
-			sdl.exposeEvent = true;
+			if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
 			break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
