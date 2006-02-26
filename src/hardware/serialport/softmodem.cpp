@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.3 2006-02-09 11:47:55 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.4 2006-02-26 13:48:06 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -64,17 +64,6 @@ CSerialModem::CSerialModem(
 	rqueue=new CFifo(MODEM_BUFFER_QUEUE_SIZE);
 	tqueue=new CFifo(MODEM_BUFFER_QUEUE_SIZE);
 	
-	//cmdpos = 0;
-	
-	//plusinc = 0;
-	//incomingsocket = 0;
-//	answermode = false;
-	//memset(&reg,0,sizeof(reg));
-	//cmdpause = 0;
-	//echo = true;
-	//doresponse = true;
-	//numericresponse = false;
-
 	/* Default to direct null modem connection.  Telnet mode interprets IAC codes */
 	telnetmode = false;
 
@@ -233,7 +222,7 @@ void CSerialModem::Reset(){
 	cmdpos = 0;
 	cmdbuf[0]=0;
 	oldDTRstate = getDTR();
-
+	flowcontrol = 0;
 	plusinc = 0;
 	incomingsocket = 0;
 	memset(&reg,0,sizeof(reg));
@@ -256,8 +245,7 @@ void CSerialModem::Reset(){
 void CSerialModem::EnterIdleState(void){
 	connected=false;
 	ringing=false;
-	txbufferfull=false;
-
+	
 	if(socket) {	// clear current socket
 		SDLNet_TCP_DelSocket(socketset,socket);
 		SDLNet_TCP_Close(socket);
@@ -277,6 +265,8 @@ void CSerialModem::EnterIdleState(void){
 	commandmode = true;
 	CSerial::setCD(false);
 	CSerial::setRI(false);
+	CSerial::setDSR(true);
+	CSerial::setCTS(true);
 	tqueue->clear();
 }
 
@@ -487,41 +477,39 @@ void CSerialModem::DoCommand() {
 			{
 				if(scanbuf[0]!=0) {
 					char ch = scanbuf[0];
-					//switch(scanbuf[0])		Maybe You want to implement it?
 					scanbuf++;
-					LOG_MSG("Modem: Unhandled command: &%c%d",ch,ScanNumber(scanbuf));
+					switch(ch) {
+						case 'K':
+						{
+							Bitu val = ScanNumber(scanbuf);
+							if(val<5) flowcontrol=val;
+							else {
+								SendRes(ResERROR);
+								return;
+							}
+							break;
+						}
+						default:
+						{
+							scanbuf++;
+							LOG_MSG("Modem: Unhandled command: &%c%d",ch,ScanNumber(scanbuf));
+							break;
+						}
+					}	
 				} else {
 					SendRes(ResERROR);
 					return;
 				}
 			}
-			break;
+		break;
 
 			default:
 				LOG_MSG("Modem: Unhandled command: %c%d",chr,ScanNumber(scanbuf));
 				}
 			}
 		
-/*
-		}
-
-			if (strstr(mhd.cmdbuf,"NET0"))
-			{
-				telnetmode = false;
-			}
-			if (strstr(mhd.cmdbuf,"NET1"))
-			{
-				telnetmode = true;
-			}
-	#endif*/
-	//ret_ok:
 		SendRes(ResOK);
 		return;
-	//ret_error:
-		//SendRes(ResERROR);
-	//ret_none:
-	//	return;
-
 	}
 
 void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
@@ -639,7 +627,7 @@ void CSerialModem::Timer2(void) {
 
 	// check for bytes to be sent to port
 	if(CSerial::CanReceiveByte())
-		if(rqueue->inuse() && CSerial::getRTS()) {
+		if(rqueue->inuse() && (CSerial::getRTS()||(flowcontrol!=3))) {
 			Bit8u rbyte = rqueue->getb();
 			//LOG_MSG("Modem: sending byte %2x back to UART3",rbyte);
 			CSerial::receiveByte(rbyte);
@@ -757,12 +745,10 @@ void CSerialModem::Timer2(void) {
 //TODO
 void CSerialModem::RXBufferEmpty() {
 	// see if rqueue has some more bytes
-	if(rqueue->inuse() && CSerial::getRTS()){
+	if(rqueue->inuse() && (CSerial::getRTS()||(flowcontrol!=3))){
 		Bit8u rbyte = rqueue->getb();
 		//LOG_MSG("Modem: sending byte %2x back to UART1",rbyte);
 		CSerial::receiveByte(rbyte);
-		
-		//CSerial::receiveByte(rqueue->getb());
 	}
 }
 
@@ -770,9 +756,8 @@ void CSerialModem::transmitByte(Bit8u val) {
 	//LOG_MSG("MODEM: Byte %x to be transmitted",val);
 	if(tqueue->left()) {
 		tqueue->addb(val);
-		if(!tqueue->left()) {
+		if(tqueue->left() < 2) {
 			CSerial::setCTS(false);
-			txbufferfull=true;
 		}
 	} else LOG_MSG("MODEM: TX Buffer overflow!");
 	CSerial::ByteTransmitted();	
@@ -790,12 +775,10 @@ void CSerialModem::setBreak(bool) {
 	// TODO: handle this
 }
 
-void CSerialModem::updateModemControlLines(/*Bit8u mcr*/) {
-	//if(!txbufferfull)
-	//{
-	//	if(CSerial::getRTS()) CSerial::setCTS(true);
-	//	else CSerial::setCTS(false);
-	//}
+void CSerialModem::updateModemControlLines() {
+	//bool txrdy=tqueue->left();
+	//if(CSerial::getRTS() && txrdy) CSerial::setCTS(true);
+	//else CSerial::setCTS(tqueue->left());
 	
 	// If DTR goes low, hang up.
 	if(connected)

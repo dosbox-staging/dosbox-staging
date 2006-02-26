@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.4 2006-02-09 11:47:55 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.5 2006-02-26 13:48:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -197,7 +197,6 @@ protected:
 	bool telnetmode;		// true: process IAC commands.
 	
 	bool connected;
-	bool txbufferfull;
 	Bitu doresponse;
 
 	
@@ -207,7 +206,7 @@ protected:
 	Bits ringcount;
 	Bitu plusinc;
 	Bitu cmdpos;
-
+	Bitu flowcontrol;
 
 	//Bit8u mctrl;
 	Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
