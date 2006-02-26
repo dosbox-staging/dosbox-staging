@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.23 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.24 2006-02-26 16:05:13 qbix79 Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -60,7 +60,7 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		readcache=0;
 	}
 	while (*size>count) {
-		reg_ah=0;
+		reg_ah=(machine==MCH_VGA)?0x10:0x0;
 		CALLBACK_RunRealInt(0x16);
 		switch(reg_al) {
 		case 13:
@@ -84,13 +84,22 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 				continue;                       //no data read yet so restart whileloop.
 			}
 			break;
-		default:
-			data[count++]=reg_al;
+		case 0xe0: /* Extended keys in the  int 16 0x10 case */
+			if(!reg_ah) { /*extended key if reg_ah isn't 0 */
+				data[count++] = reg_al;
+			} else {
+				data[count++] = 0;
+				if (*size>count) data[count++] = reg_ah;
+				else readcache = reg_ah;
+			}
 			break;
-		case 0:
+		case 0: /* Extended keys in the int 16 0x0 case */
 			data[count++]=reg_al;
 			if (*size>count) data[count++]=reg_ah;
 			else readcache=reg_ah;
+			break;
+		default:
+			data[count++]=reg_al;
 			break;
 		}
 		if(dos.echo) { //what to do if *size==1 and character is BS ?????
@@ -357,7 +366,7 @@ bool device_CON::Close() {
 Bit16u device_CON::GetInformation(void) {
 	Bit16u head=mem_readw(BIOS_KEYBOARD_BUFFER_HEAD);
 	Bit16u tail=mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
-	
+
 	if ((head==tail) && !readcache) return 0x80D3; /* No Key Available */
 	return 0x8093;		/* Key Available */
 };
