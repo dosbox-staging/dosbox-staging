@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.53 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.54 2006-02-26 16:07:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -642,16 +642,17 @@ public:
 		std::string fstype="fat";
 		cmd->FindString("-t",type,true);
 		cmd->FindString("-fs",fstype,true);
+		if(type == "cdrom") type = "iso"; //Tiny hack for people who like to type -t cdrom
 		Bit8u mediaid;
 		if (type=="floppy" || type=="hdd" || type=="iso") {
 			Bit16u sizes[4];
 			
 			std::string str_size;
-			mediaid=0xF8;		
+			mediaid=0xF8;
 
 			if (type=="floppy") {
 				mediaid=0xF0;		
-			} else if (type=="cdrom" || type=="iso") {
+			} else if (type=="iso") {
 				str_size="650,127,16513,1700";
 				mediaid=0xF8;		
 				fstype = "iso";
@@ -676,8 +677,7 @@ public:
 		
 			if(fstype=="fat" || fstype=="iso") {
 				// get the drive letter
-				cmd->FindCommand(1,temp_line);
-				if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
+				if (!cmd->FindCommand(1,temp_line) || (temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
@@ -765,7 +765,11 @@ public:
 				newImage = new imageDisk(newDisk, (Bit8u *)temp_line.c_str(), imagesize, (imagesize > 2880));
 				if(imagesize>2880) newImage->Set_Geometry(sizes[2],sizes[3],sizes[1],sizes[0]);
 			}
+		} else {
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED"),type.c_str());
+			return;
 		}
+
 		if(fstype=="fat") {
 			if (Drives[drive-'A']) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED"));
@@ -976,6 +980,7 @@ void DOS_SetupPrograms(void) {
 		"\n"
 		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
 		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
 	MSG_Add("PROGRAM_IMGMOUNG_FILE_NOT_FOUND","Image file not found.\n");
