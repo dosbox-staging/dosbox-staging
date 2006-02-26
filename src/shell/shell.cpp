@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.71 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.72 2006-02-26 15:58:49 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -329,84 +329,91 @@ void DOS_Shell::SyntaxError(void) {
 	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
 }
 
-namespace {
+class AUTOEXEC:public Module_base {
+private:
 	AutoexecObject autoexec[16];
 	AutoexecObject autoexec_echo;
-}
+public:
+	AUTOEXEC(Section* configuration):Module_base(configuration) {
+		/* Register a virtual AUOEXEC.BAT file */
+		std::string line;
+		Section_line * section=static_cast<Section_line *>(configuration);
 
-void AUTOEXEC_Init(Section * sec) {
-	/* Register a virtual AUOEXEC.BAT file */
-	std::string line;
-	Section_line * section=static_cast<Section_line *>(sec);
+		/* add stuff from the configfile unless -noautexec is specified. */
+		char * extra=const_cast<char*>(section->data.c_str());
+		if (extra && !control->cmdline->FindExist("-noautoexec",true)) {
+			/* detect if "echo off" is the first line */
+			bool echo_off  = !strncasecmp(extra,"echo off",8);
+			if (!echo_off) echo_off = !strncasecmp(extra,"@echo off",9);
 
-	/* add stuff from the configfile unless -noautexec is specified. */
-	char * extra=const_cast<char*>(section->data.c_str());
-	if (extra && !control->cmdline->FindExist("-noautoexec",true)) {
-		/* detect if "echo off" is the first line */
-		bool echo_off  = !strncasecmp(extra,"echo off",8);
-		if (!echo_off) echo_off = !strncasecmp(extra,"@echo off",9);
+			/* if "echo off" add it to the front of autoexec.bat */
+			if(echo_off) autoexec_echo.InstallBefore("@echo off");
 
-		/* if "echo off" add it to the front of autoexec.bat */
-		if(echo_off) autoexec_echo.InstallBefore("@echo off");
-
-		/* Install the stuff from the configfile */
-		autoexec[0].Install("%s",extra);
-	}
-
-	/* Check to see for extra command line options to be added (before the command specified on commandline) */
-	/* Maximum of extra commands: 10 */
-	Bitu i = 1;
-	while (control->cmdline->FindString("-c",line,true) && (i <= 11))
-		autoexec[i++].Install((char *)line.c_str());
-	
-	/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
-	bool addexit = control->cmdline->FindExist("-exit",true);
-
-	/* Check for first command being a directory or file */
-	char buffer[CROSS_LEN];
-	char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
-	if (control->cmdline->FindCommand(1,line)) {
-		struct stat test;
-		strcpy(buffer,line.c_str());
-		if (stat(buffer,&test)){
-			getcwd(buffer,CROSS_LEN);
-			strcat(buffer,cross_filesplit);
-			strcat(buffer,line.c_str());
-			if (stat(buffer,&test)) goto nomount;
+			/* Install the stuff from the configfile */
+			autoexec[0].Install("%s",extra);
 		}
-		if (test.st_mode & S_IFDIR) { 
-			autoexec[12].Install("MOUNT C \"%s\"",buffer);
-			autoexec[13].Install("C:");
-		} else {
-			char* name = strrchr(buffer,CROSS_FILESPLIT);
-			if (!name) { //Only a filename 
-				line = buffer;
+
+		/* Check to see for extra command line options to be added (before the command specified on commandline) */
+		/* Maximum of extra commands: 10 */
+		Bitu i = 1;
+		while (control->cmdline->FindString("-c",line,true) && (i <= 11))
+			autoexec[i++].Install((char *)line.c_str());
+	
+		/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
+		bool addexit = control->cmdline->FindExist("-exit",true);
+
+		/* Check for first command being a directory or file */
+		char buffer[CROSS_LEN];
+		char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
+		if (control->cmdline->FindCommand(1,line)) {
+			struct stat test;
+			strcpy(buffer,line.c_str());
+			if (stat(buffer,&test)){
 				getcwd(buffer,CROSS_LEN);
 				strcat(buffer,cross_filesplit);
 				strcat(buffer,line.c_str());
-				if(stat(buffer,&test)) goto nomount;
-				name = strrchr(buffer,CROSS_FILESPLIT);
-				if(!name) goto nomount;
+				if (stat(buffer,&test)) goto nomount;
 			}
-			*name++ = 0;
-			if (access(buffer,F_OK)) goto nomount;
-			autoexec[12].Install("MOUNT C \"%s\"",buffer);
-			autoexec[13].Install("C:");
-			upcase(name);
-			if(strstr(name,".BAT") == 0) {
-				autoexec[14].Install(name);
+			if (test.st_mode & S_IFDIR) { 
+				autoexec[12].Install("MOUNT C \"%s\"",buffer);
+				autoexec[13].Install("C:");
 			} else {
-			/* BATch files are called else exit will not work */
-				char call[CROSS_LEN] = { 0 };
-				strcpy(call,"CALL ");
-				strcat(call,name);
-				autoexec[14].Install(call);
+				char* name = strrchr(buffer,CROSS_FILESPLIT);
+				if (!name) { //Only a filename 
+					line = buffer;
+					getcwd(buffer,CROSS_LEN);
+					strcat(buffer,cross_filesplit);
+					strcat(buffer,line.c_str());
+					if(stat(buffer,&test)) goto nomount;
+					name = strrchr(buffer,CROSS_FILESPLIT);
+					if(!name) goto nomount;
+				}
+				*name++ = 0;
+				if (access(buffer,F_OK)) goto nomount;
+				autoexec[12].Install("MOUNT C \"%s\"",buffer);
+				autoexec[13].Install("C:");
+				upcase(name);
+				if(strstr(name,".BAT") == 0) {
+					autoexec[14].Install(name);
+				} else {
+				/* BATch files are called else exit will not work */
+					char call[CROSS_LEN] = { 0 };
+					strcpy(call,"CALL ");
+					strcat(call,name);
+					autoexec[14].Install(call);
+				}
+				if(addexit) autoexec[15].Install("exit");
 			}
-			if(addexit) autoexec[15].Install("exit");
 		}
-	}
 nomount:
-	VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+	}
+};
+
+static AUTOEXEC* test;
+
+void AUTOEXEC_Init(Section * sec) {
+	test = new AUTOEXEC(sec);
 }
 
 static char * path_string="PATH=Z:\\";
