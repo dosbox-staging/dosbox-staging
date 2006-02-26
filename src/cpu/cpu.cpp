@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.78 2006-02-14 13:04:01 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.79 2006-02-26 16:11:00 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1987,7 +1987,7 @@ public:
 		} 
 #endif
 		else {
-			LOG_MSG("CPU:Unknown core type %s, switcing back to normal.",core);
+			LOG_MSG("CPU:Unknown core type %s, switching back to normal.",core);
 		}
 
 #if (C_DYNAMIC_X86)
