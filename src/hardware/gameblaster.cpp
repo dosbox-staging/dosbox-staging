@@ -364,7 +364,7 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 
 
 static void write_cms(Bitu port,Bitu val,Bitu iolen) {
-	if (last_command + 1000 < PIC_Ticks) cms_chan->Enable(true); 
+	if (last_command + 1000 < PIC_Ticks) if(cms_chan) cms_chan->Enable(true); 
 	last_command = PIC_Ticks;
 	switch (port) {
 	case 0x0220:
@@ -415,8 +415,8 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 		else *stream=(Bit16s)right;
 		stream++;
 	}
-	cms_chan->AddSamples_s16(len,(Bit16s *)MixTemp);
-	if (last_command + 10000 < PIC_Ticks) cms_chan->Enable(false);
+	if(cms_chan) cms_chan->AddSamples_s16(len,(Bit16s *)MixTemp);
+	if (last_command + 10000 < PIC_Ticks) if(cms_chan) cms_chan->Enable(false);
 }
 
 
@@ -427,15 +427,16 @@ private:
 
 public:
 	CMS(Section* configuration):Module_base(configuration) {
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		Bitu sample_rate = section->Get_int("oplrate");
+		Section_prop * section = static_cast<Section_prop *>(configuration);
+		Bitu sample_rate_temp = section->Get_int("oplrate");
+		sample_rate = static_cast<double>(sample_rate_temp);
 		Bitu base = section->Get_hex("base");
 		WriteHandler.Install(base,write_cms,IO_MB,4);
-	
+
 		/* Register the Mixer CallBack */
-		cms_chan = MixerChan.Install(CMS_CallBack,sample_rate,"CMS");
+		cms_chan = MixerChan.Install(CMS_CallBack,sample_rate_temp,"CMS");
 	
-		last_command=PIC_Ticks;
+		last_command = PIC_Ticks;
 	
 		for (int s=0;s<2;s++) {
 			struct SAA1099 *saa = &saa1099[s];
@@ -443,7 +444,7 @@ public:
 		}
 	}
 	~CMS() {
-		cms_chan->Enable(false);
+		cms_chan = 0;
 	}
 };
 
