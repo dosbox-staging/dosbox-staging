@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.cpp,v 1.9 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: ipx.cpp,v 1.10 2006-02-26 13:46:31 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -199,7 +199,12 @@ void ECBClass::NotifyESR(void) {
 
 void ECBClass::setImmAddress(Bit8u *immAddr) {
 	for(Bitu i=0;i<6;i++)
-		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr)+28, immAddr[i]);
+		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr)+28+i, immAddr[i]);
+}
+
+void ECBClass::getImmAddress(Bit8u* immAddr) {
+	for(Bitu i=0;i<6;i++)
+		immAddr[i] = real_readb(RealSeg(ECBAddr), RealOff(ECBAddr)+28+i);
 }
 
 ECBClass::~ECBClass() {
@@ -325,7 +330,14 @@ static void handleIpxRequest(void) {
 			CloseSocket();
 			break;
 		case 0x0002:	// get local target
-			reg_al=0xfa;	// fail
+			// es:si
+			// Currently no support for multiple networks
+
+			for(Bitu i = 0; i < 6; i++) 
+				real_writeb(SegValue(es),reg_di+i,real_readb(SegValue(es),reg_si+i+4));
+
+			reg_cx=1;	// time ticks expected
+			reg_al=0x00;//success
 			break;
 
 		case 0x0003:  // Send packet
@@ -401,9 +413,19 @@ static void handleIpxRequest(void) {
 		case 0x000a:  // Relinquish control
 			// Idle thingy
 			break;
+		case 0x000b:	// Disconnect from Target
+					// We don't even connect
+		break;
+
 		case 0x0010:  // SPX install check
 			{
 				reg_al=0;	// SPX not installed
+				break;
+			}
+		case 0x001a:	// get driver maximum packet size
+			{
+				reg_cx=0;	// retry count
+				reg_ax=IPXBUFFERSIZE;		// max packet size
 				break;
 			}
 		default:
@@ -552,13 +574,9 @@ static void IPX_ClientLoop(void) {
 	inPacket.maxlen = IPXBUFFERSIZE;
 	inPacket.channel = UDPChannel;
 
-	//do
-	//{
-		// Its amazing how much simpler UDP is than TCP
-		numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
-		if(numrecv) receivePacket(inPacket.data, inPacket.len);
-
-	//}while(numrecv>0);
+	// Its amazing how much simpler UDP is than TCP
+	numrecv = SDLNet_UDP_Recv(ipxClientSocket, &inPacket);
+	if(numrecv) receivePacket(inPacket.data, inPacket.len);
 }
 
 
@@ -620,15 +638,10 @@ static void sendPacket(ECBClass* sendecb) {
 	// Source socket
 	wordptr[14] = swapByte(sendecb->getSocket());
 
+	Bit8u immedAddr[6];
+	sendecb->getImmAddress(immedAddr);
 	// filter out broadcasts and local loopbacks
-	// ok, the situation is:
-	// Warcraft1 is allergic to having broadcast packets looped back.
-	// C&C1 is allergic to not having broadcast packets looped back.
-	// Warcraft1 broadcasts to 00 00 00 00 : FF FF FF FF FF FF
-	// C&C1 broadcasts to      FF FF FF FF : FF FF FF FF FF FF
-	// Some other games don't care.
-	// I assume FF... does local loopback, 00... doesn't.
-	// Let's hope the bug isn't somewhere else..
+	// Real implementation uses the ImmedAddr to check wether this is a broadcast
 
 	bool islocalbroadcast=true;
 	bool isloopback=true;
@@ -638,12 +651,11 @@ static void sendPacket(ECBClass* sendecb) {
 	addrptr = (Bit8u *)&localIpxAddr.netnum;
 	for(Bitu m=0;m<4;m++) {
 		if(addrptr[m]!=outbuffer[m+0x6])isloopback=false;
-		if(outbuffer[m+0x6]!=0xff) islocalbroadcast=false;
 	}
 	addrptr = (Bit8u *)&localIpxAddr.netnode;
 	for(Bitu m=0;m<6;m++) {
 		if(addrptr[m]!=outbuffer[m+0xa])isloopback=false;
-		if(outbuffer[m+0xa]!=0xff) islocalbroadcast=false;
+		if(immedAddr[m]!=0xff) islocalbroadcast=false;
 	}
 
 	if(!isloopback) {

@@ -33,7 +33,6 @@ struct packetBuffer {
 };
 
 #define SOCKETTABLESIZE 16
-#define IPXBUFFERSIZE 1024
 #define CONVIP(hostvar) hostvar & 0xff, (hostvar >> 8) & 0xff, (hostvar >> 16) & 0xff, (hostvar >> 24) & 0xff
 #define CONVIPX(hostvar) hostvar[0], hostvar[1], hostvar[2], hostvar[3], hostvar[4], hostvar[5]
 

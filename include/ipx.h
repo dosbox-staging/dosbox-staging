@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.h,v 1.8 2006-02-09 11:47:47 qbix79 Exp $ */
+/* $Id: ipx.h,v 1.9 2006-02-26 13:46:31 qbix79 Exp $ */
 
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
@@ -94,6 +94,8 @@ struct fragmentDescriptor {
 	Bit16u size;
 };
 
+#define IPXBUFFERSIZE 1424
+
 class ECBClass {
 public:
 	RealPt ECBAddr;
@@ -123,6 +125,7 @@ public:
 	void NotifyESR(void);
 
 	void setImmAddress(Bit8u *immAddr);
+	void getImmAddress(Bit8u* immAddr);
 
 	~ECBClass();
 };
