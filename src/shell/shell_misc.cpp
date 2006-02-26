@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.40 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.41 2006-02-26 15:57:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -83,6 +83,7 @@ void DOS_Shell::InputCommand(char * line) {
 						}
 						str_len = str_index = it_history->length();
 						size = CMD_MAXLINE - str_index - 2;
+						line[str_len] = 0;
 					}
 					break;
 
