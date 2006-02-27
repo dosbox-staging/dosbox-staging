@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.108 2006-02-26 16:04:35 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.109 2006-02-27 21:00:27 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -218,9 +218,9 @@ void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused){
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAuto)
-		sprintf(title,"DOSBox %s,Cpu Cycles:     auto, Frameskip %2d, Program: %8s",VERSION,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu Cycles:     auto, Frameskip %2d, Program: %8s",VERSION,internal_frameskip,RunningProgram);
 	else
-		sprintf(title,"DOSBox %s,Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 
 	if(paused) strcat(title," PAUSED");
 	SDL_WM_SetCaption(title,VERSION);
@@ -1310,7 +1310,7 @@ int main(int argc, char* argv[]) {
 			",ddraw"
 #endif
 			".\n"
-			"hwscale -- Extra scaling of window if the output device supports hardware scaling.\n"
+			"windowresolution -- Scale the window to this size IF the output device supports hardware scaling.\n"
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
