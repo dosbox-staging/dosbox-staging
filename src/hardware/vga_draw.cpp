@@ -351,7 +351,8 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.cursor.address+=vga.tandy.disp_bank << 14;
 	}
 	if (bDoDraw)
-		VGA_DrawPart(vga.draw.parts_lines);
+//		VGA_DrawPart(vga.draw.parts_lines);
+		PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts/2,vga.draw.parts_lines); //Else tearline in Tyrian and second reality
 }
 
 void VGA_CheckScanLength(void) {
