@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.34 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.35 2006-02-27 20:16:49 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -224,7 +224,12 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 			pit[latch].read_state  = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
 			Bit8u mode             = (val >> 1) & 0x07;
+			if (mode > 5)
+				mode -= 4; //6,7 become 2 and 3
+
 			/* Don't set it directly so counter_output uses the old mode */
+			/* That's theory. It breaks panic. So set it here again */
+			if(!pit[latch].mode) pit[latch].mode     = mode;
 
 			/* If the line goes from low to up => generate irq. 
 			 *      ( BUT needs to stay up until acknowlegded by the cpu!!! therefore: )
@@ -234,8 +239,6 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 			 * counter_output tells if the current counter is high or low 
 			 * So actually a mode 2 timer enables and disables irq al the time. (not handled) */
 
-			if (mode > 5)
-				mode -= 4; //6,7 become 2 and 3
 			if (latch == 0) {
 				PIC_RemoveEvents(PIT0_Event);
 				if (!counter_output(0) && mode)
