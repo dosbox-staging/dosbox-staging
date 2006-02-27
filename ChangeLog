@@ -27,7 +27,7 @@
   - Improved ADPCM emulation.
   - Fixed a few cpu instructions.
   - Always report vesa 2.0 and fix some colour issues with vesa games.
-  - Fix video mode 6.
+  - Fix video mode 0x06 and 0x0a.
   - Improvements to the joystick emulation. 4 buttons are supported as well.
   - Add VCPI emulation. No more ems=false with Origin games.
   - Fixed a lot of things in the boot code. Most booters work now.
@@ -39,7 +39,7 @@
   - Improve Composite CGA mode emulation.
   - Lots of vga compatibility changes.
   - Improved support for chained video modes.
-  - Improved mode and palete handling in cga modes.
+  - Improved mode and palette handling in cga modes.
   - Mount accepts ~ now.
   - Added a few of the EGA RIL functions.
   - Added TandyDAC emulation.
@@ -48,12 +48,16 @@
   - Fix some errors in the CD-ROM emulation layer.
   - Added an automatic work-around for some graphics chipsets.
   - Add PCjr support.
-  - Allow mousedriver to be replaced. Fixes a few games with come with their
+  - Allow mousedriver to be replaced. Fixes a few games that come with their
     own (internal) driver.
   - Improved dynamic cpu core so it can handle pagefaults and some obscure 
     types of self-modifying code.
   - Added -noautoexec switch to skip the contents of [autoexec] in the
     configuration file.
+  - Improved v86 mode emulation (mainly for Strike Commander).
+  - Improved timer behavior.
+  - Improved extended keyboard support.
+  - Enhanced and added several DOS tables.
   - Made core_full endian safe.
   - Made pagefaults endian safe.
   - Compilation fixes for various platforms.

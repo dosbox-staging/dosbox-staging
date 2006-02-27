@@ -354,21 +354,49 @@ MEM
   Program to display the amount of free memory.
 
 CONFIG [-writeconf] [-writelang] localfile
-  Write the current configuration or language settings to file.
-  "localfile" is located on the local drive, not a mounted drive in DOSBox.
+CONFIG -set "section property=value"
+CONFIG -get "section property"
 
-  The configuration file controls various settings of DOSBox: the amount
-  of emulated memory, the emulated soundcards and many more things. It
-  allows access to AUTOEXEC.BAT as well.
-  See section 9 (The Config File) for more information.
+  CONFIG can be used to change or query various settings of DOSBox 
+  during runtime. It can save the current settings and language strings to
+  disk. Information about all possible sections and properties can 
+  be found in section 9 (The Config File).
 
-  The language file controls all visible ouput of the internal commands
-  and the internal dos.
+  -writeconf localfile
+       Write the current configuration settings to file. "localfile" is 
+       located on the local drive, not a mounted drive in DOSBox. 
+       The configuration file controls various settings of DOSBox: 
+       the amount of emulated memory, the emulated soundcards and many more 
+       things. It allows access to AUTOEXEC.BAT as well.
+       See section 9 (The Config File) for more information.
 
-  Example:
-  To create a configfile in your current directory:
-    config -writeconf dosbox.conf
+  -writelang localfile
+       Write the current language settings to file. "localfile" is 
+       located on the local drive, not a mounted drive in DOSBox.
+       The language file controls all visible ouput of the internal commands
+       and the internal dos.
 
+  -set "section property=value"
+       CONFIG will attempt to set the property to new value. At this moment
+       CONFIG can not report whether the command succeeded or not.
+
+  -get "section property"
+       The current value of the property is reported and stored in the 
+       environment variable %CONFIG%. This can be used to store the value 
+       when using batch files.
+
+  Both "-set" and "-get" work from batch files and can be used to set up your
+  own preferences for each game.
+  
+  Examples:
+  1. To create a configfile in your current directory:
+      config -writeconf dosbox.conf
+  2. To set the cpu cycles to 10000:
+      config -set "cpu cycles=1000"
+  3. To turn ems memory emulation off:
+      config -set "dos ems=false"
+  4. To check which cpu core is being used.
+      config -get "cpu core"
 
 LOADFIX [-size] [program] [program-parameters]
 LOADFIX -f
