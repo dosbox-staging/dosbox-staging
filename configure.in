@@ -82,7 +82,9 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
    AC_CHECK_LIB(curses, initscr, have_curses_lib=yes, , )
    AC_CHECK_LIB(pdcurses, initscr, have_pdcurses_lib=yes, , )
 
-   if test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
+   if test x$enable_debug = xno; then
+     AC_MSG_RESULT([Debugger not enabled])
+   elif test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
      LIBS="$LIBS -lcurses"
      AC_DEFINE(C_DEBUG,1)
      if test x$enable_debug = xheavy ; then 
