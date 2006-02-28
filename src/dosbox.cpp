@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.95 2006-02-14 09:53:24 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.96 2006-02-28 20:11:49 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -287,6 +287,8 @@ void DOSBOX_Init(void) {
 		".\n"
 		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"
 		"          Setting this higher than your machine can handle is bad!\n"
+		"          You can also let DOSBox guess the correct value by setting it to auto.\n"
+		"          Please note that this guessing feature is still experimental.\n"
 		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
 		"cycledown    Setting it lower than 100 will be a percentage.\n"
 	);
