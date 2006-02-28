@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.54 2006-02-26 16:07:27 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.55 2006-02-28 15:13:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -232,6 +232,12 @@ public:
 					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
 				};
 			} else {
+				/* Give a warning when mount c:\ or the / */
+#if defined (WIN32) || defined(OS2)
+				if( (temp_line == "c:\\") || (temp_line == "C:\\"))	WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
+#else
+				if(temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
+#endif
 				newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 			}
 		} else {
@@ -840,7 +846,9 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCES","Drive %c has succesfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
-   
+	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
+	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
+
 	MSG_Add("PROGRAM_MEM_CONVEN","%10d Kb free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND","%10d Kb free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND","%10d Kb free expanded memory\n");
@@ -954,6 +962,7 @@ void DOS_SetupPrograms(void) {
 		"\033[33;1mCTRL-F10\033[0m    : Capture/Release the mouse.\n"
 		"\033[33;1mCTRL-F11\033[0m    : Slow down emulation (Decrease DOSBox Cycles).\n"
 		"\033[33;1mCTRL-F12\033[0m    : Speed up emulation (Increase DOSBox Cycles).\n"
+		"\033[33;1mALT-F12\033[0m     : Unlock speed (turbo button).\n"
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");

@@ -1,4 +1,4 @@
-DOSBox v0.63
+DOSBox v0.65
 
 
 =====
@@ -6,8 +6,8 @@ NOTE:
 =====
 
 While we are hoping that one day, DOSBox will run all programs
-ever made for the PC,we are not there yet. At present, DOSBox run on a high-
-end machine will roughly be the equivalent of a 486 PC. The 0.60
+ever made for the PC, we are not there yet. At present, DOSBox running on a 
+high-end machine will roughly be the equivalent of a 486 PC. The 0.60
 release has added support for "protected mode" allowing for more complex and
 recent programs, but note that this support is still in an early stage of 
 development and unlike the support for 386 real-mode games (or earlier) hasn't
@@ -51,7 +51,7 @@ Some Frequently Asked Questions:
 Q: I've got a Z instead of a C at the prompt.
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
-Q: The sound stutters.
+Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
 Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
@@ -66,9 +66,9 @@ Q: Great README, but I still don't get it.
 
 Q: I've got a Z instead of a C at the prompt.
 A: You have to make your directories available as drives in DOSBox by using
-   the "mount" command. For example, in Windows "mount C D:\" will give
-   you a C in DOSBox which points to your Windows D:\ drive.
-   In Linux, "mount c /home/username" will give you a C in DOSBox
+   the "mount" command. For example, in Windows "mount C D:\GAMES" will give
+   you a C drive in DOSBox which points to your Windows D:\GAMES directory.
+   In Linux, "mount c /home/username" will give you a C drive in DOSBox
    which points to /home/username in Linux.
 
 
@@ -97,7 +97,7 @@ A: Usually, DOSBox detects when a game uses mouse control. When you click on
    you will have to lock the mouse manually by pressing CTRL-F10.
 
 
-Q: The sound stutters.
+Q: The sound stutters or sounds stretched/weird.
 A: You're using too much cpu power to keep DOSBox running at the current speed.
    You can  lower the cycles, skip frames or get a faster machine.
    You can also increase the prebuffer in the configfile.
@@ -108,12 +108,13 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
    Some possible fixes:
      1. Switch your keyboard layout.
      2. Use / instead.
-     3. Add the commands you want to execute to the "configfile".
-     4. Start the keymapper (CTRL-F1 or add -startmapper switch to DOSBox).
-     5. Use ALT-58 for : and ALT-92 for \.
-     6. for \ try the keys around "enter". For ":" try shift and the keys 
+     3. Open dosbox.conf and change usescancodes=false to usescancodes=true.
+     4. Add the commands you want to execute to the "configfile".
+     5. Start the keymapper (CTRL-F1 or add -startmapper switch to DOSBox).
+     6. Use ALT-58 for : and ALT-92 for \.
+     7. for \ try the keys around "enter". For ":" try shift and the keys 
         between "enter" and "l" (US keyboard layout).
-     7. Use keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
+     8. Use keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
 
 
 Q: The game/application can't find its CD-ROM.
@@ -188,7 +189,7 @@ http://dosbox.sourceforge.net
 3. Usage:
 =========
 
-An overview of the commandline options you can give to DOSBox.
+An overview of the command line options you can give to DOSBox.
 Windows Users must open cmd.exe or command.com or edit the shortcut to 
 DOSBox.exe for this.
 The options are valid for all operating systems unless noted in the option
@@ -201,8 +202,8 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
 dosbox -version
 
   name   
-        If "name" is a directory it'll mount that as the C: drive.
-        If "name" is an executable it'll mount the directory of "name" 
+        If "name" is a directory it will mount that as the C: drive.
+        If "name" is an executable it will mount the directory of "name" 
         as the C: drive and execute "name".
     
   -exit  
@@ -250,7 +251,7 @@ Note: If a name/command/configfile/languagefile contains a space, put
 For example:
 
 dosbox c:\atlantis\atlantis.exe -c "MOUNT D C:\SAVES"
-  This mounts c:\atlantis as c:\ and run atlantis.exe.
+  This mounts c:\atlantis as c:\ and runs atlantis.exe.
   Before it does that it would first mount C:\SAVES as the D drive.
 
 In Windows, you can also drag directories/files onto the DOSBox executable.
@@ -303,15 +304,15 @@ MOUNT -u "Emulated Drive letter"
         is mounted. It will not be updated !!
 
   -aspi
-        Forces to use the aspi layer. Only valid if mounting a cdrom under 
+        Forces use of the aspi layer. Only valid if mounting a cdrom under 
         Windows systems with an ASPI-Layer.
 
   -ioctl   
-        Forces to use ioctl commands. Only valid if mounting a cdrom under 
+        Forces use of ioctl commands. Only valid if mounting a cdrom under 
         a Windows OS which support them (Win2000/XP/NT).
 
   -usecd number
-        Forces to use SDL cdrom support for drive number.
+        Forces  use of SDL cdrom support for drive number.
         Number can be found by -cd. Valid on all systems.
 
   -cd
@@ -324,9 +325,9 @@ MOUNT -u "Emulated Drive letter"
         Hardware support is then missing.
 
   Basically, MOUNT allows you to connect real hardware to DOSBox's "emulated"
-  PC. So MOUNT C C:\ tells DOSBox to use your real C: drive as drive C: in
-  DOSBox. It also allows you to change the drive's letter identification for
-  programs that demand specific drive letters.
+  PC. So MOUNT C C:\GAMES tells DOSBox to use your C:\GAMES directory as drive 
+  C: in DOSBox. It also allows you to change the drive's letter identification
+  for programs that demand specific drive letters.
   
   For example: Touche: Adventures of The Fifth Musketeer must be run on your C:
   drive. Using DOSBox and its mount command, you can trick the game into
@@ -334,6 +335,10 @@ MOUNT -u "Emulated Drive letter"
   want it. For example, if the game is in D:\TOUCHE, the command MOUNT C D:\
   will allow you to run Touche from the D drive.
 
+  Mounting your entire C drive with MOUNT C C:\ is NOT recommended!
+  If you or DOSBox makes a mistake you may loose all your files.
+  It's recommended to put all your applications/games in a subdirectory and 
+  mount that.
 
   General MOUNT Examples:
   1. To mount c:\DirX as a floppy : 
@@ -392,9 +397,9 @@ CONFIG -get "section property"
   1. To create a configfile in your current directory:
       config -writeconf dosbox.conf
   2. To set the cpu cycles to 10000:
-      config -set "cpu cycles=1000"
+      config -set "cpu cycles=10000"
   3. To turn ems memory emulation off:
-      config -set "dos ems=false"
+      config -set "dos ems=off"
   4. To check which cpu core is being used.
       config -get "cpu core"
 
@@ -508,8 +513,8 @@ BOOT
   diskimgN.img 
      This can be any number of floppy disk images one wants mounted after 
      DOSBox boots the specified drive letter.
-     To swap between images, hit CTRL+F4 to change from the current disk 
-     and to the next disk in the list. The list will loop back from the last 
+     To swap between images, hit CTRL-F4 to change from the current disk 
+     to the next disk in the list. The list will loop back from the last 
      disk image to the beginning.
 
   [-l driveletter]
@@ -619,6 +624,7 @@ CTRL-F9       Kill dosbox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles).
+ALT-F12       Unlock speed (turbo button).
 
 These are the default keybindings. They can be changed in the keymapper.
 
@@ -639,7 +645,7 @@ This maximum will vary from computer to computer; there is no standard.
 =============
 
 When you start the keymapper (either with CTRL-F1 or -startmapper as a
-commandline argument to the DOSBox executable) you are presented with 
+command line argument to the DOSBox executable) you are presented with 
 a virtual keyboard.
 
 This virtual keyboard corresponds to the keys DOSBox will report to its
@@ -802,4 +808,4 @@ The Beta Testers.
 
 See the site: 
 http://dosbox.sourceforge.net
-for an emailaddress (The Crew-page).
+for an email address (The Crew-page).
