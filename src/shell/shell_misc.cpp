@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.42 2006-02-28 17:07:27 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.43 2006-02-28 19:41:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -506,27 +506,36 @@ char * DOS_Shell::Which(char * name) {
 	pathenv=strchr(pathenv,'=');
 	if (!pathenv) return 0;
 	pathenv++;
-	char * path_write=path;
+	Bitu i_path = 0;
 	while (*pathenv) {
 		/* remove ; and ;; at the beginning. (and from the second entry etc) */
 		while(*pathenv && (*pathenv ==';'))
 			pathenv++;
 
-		/* Clear old path */
-		for(Bitu dummy = 0;dummy < DOS_PATHLENGTH; dummy++)
-			path[dummy] = 0;	//OVERKILL could be strlen(path). but run no risks
-
 		/* get next entry */
-		while(*pathenv && (*pathenv !=';'))
-			*path_write++=*pathenv++;
+		i_path = 0; /* reset writer */
+		while(*pathenv && (*pathenv !=';') && (i_path < DOS_PATHLENGTH) )
+			path[i_path++] = *pathenv++;
 
-		path[DOS_PATHLENGTH-1] = 0;
+		if(i_path == DOS_PATHLENGTH) {
+			/* If max size. move till next ; and terminate path */
+			while(*pathenv != ';') 
+				pathenv++;
+			path[DOS_PATHLENGTH - 1] = 0;
+		} else path[i_path] = 0;
+
+
 		/* check entry */
-		if(size_t len=strlen(path)){
-			if(path[len-1]!='\\') {strcat(path,"\\"); len++;}
+		if(size_t len = strlen(path)){
+			if(len >= (DOS_PATHLENGTH - 2)) continue;
+
+			if(path[len - 1] != '\\') {
+				strcat(path,"\\"); 
+				len++;
+			}
 
 			//If name too long =>next
-			if((name_len + len +1) >= DOS_PATHLENGTH) continue;
+			if((name_len + len + 1) >= DOS_PATHLENGTH) continue;
 			strcat(path,name);
 
 			strcpy(which_ret,path);
@@ -541,8 +550,6 @@ char * DOS_Shell::Which(char * name) {
 			strcat(which_ret,bat_ext);
 			if (DOS_FileExists(which_ret)) return which_ret;
 		}
-		path_write=path;	/* reset it */
-			
 	}
 	return 0;
 }
