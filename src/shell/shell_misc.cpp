@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.41 2006-02-26 15:57:28 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.42 2006-02-28 17:07:27 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -342,11 +342,12 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	if(strlen(args)!= 0){
 		if(*args != ' '){ //put a space in front
 			line[0]=' ';line[1]=0;
-			strcat(line,args);
+			strncat(line,args,CMD_MAXLINE-2);
+			line[CMD_MAXLINE-1]=0;
 		}
 		else
 		{
-			strcpy(line,args);
+			safe_strncpy(line,args,CMD_MAXLINE);
 		}
 	}else{
 		line[0]=0;
@@ -370,7 +371,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	/*only internal commands can be run this way and they never get in this handler */
 	if(extension == 0)
 	{
-		char temp_name[256],* temp_fullname;
+		char temp_name[DOS_PATHLENGTH+4],* temp_fullname;
 		//try to add .com, .exe and .bat extensions to filename
 		
 		strcpy(temp_name,fullname);
@@ -478,7 +479,8 @@ static char * exe_ext=".EXE";
 static char which_ret[DOS_PATHLENGTH+4];
 
 char * DOS_Shell::Which(char * name) {
-	if(strlen(name) >= DOS_PATHLENGTH) return 0;
+	size_t name_len = strlen(name);
+	if(name_len >= DOS_PATHLENGTH) return 0;
 
 	/* Parse through the Path to find the correct entry */
 	/* Check if name is already ok but just misses an extension */
@@ -517,13 +519,15 @@ char * DOS_Shell::Which(char * name) {
 		/* get next entry */
 		while(*pathenv && (*pathenv !=';'))
 			*path_write++=*pathenv++;
-		
+
+		path[DOS_PATHLENGTH-1] = 0;
 		/* check entry */
-		if(Bitu len=strlen(path)){
-			if(path[strlen(path)-1]!='\\')	strcat(path,"\\");
-			strcat(path,name);
+		if(size_t len=strlen(path)){
+			if(path[len-1]!='\\') {strcat(path,"\\"); len++;}
+
 			//If name too long =>next
-			if(strlen(path) >= DOS_PATHLENGTH) continue;
+			if((name_len + len +1) >= DOS_PATHLENGTH) continue;
+			strcat(path,name);
 
 			strcpy(which_ret,path);
 			if (DOS_FileExists(which_ret)) return which_ret;
