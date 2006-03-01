@@ -217,6 +217,11 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 		IO_Write(0x3d9,temp);
 	else if (machine == MCH_VGA) {
 		val = ((val << 1) & 0x10) | (val & 0x7);
+		/* Aways set the overscan color */
+		INT10_SetSinglePaletteRegister( 0x11, val );
+		/* Don't set any extra colors when in text mode */
+		if (CurMode->mode <= 3)
+			return;
 		INT10_SetSinglePaletteRegister( 0, val );
 		val = (temp & 0x10) | 2 | ((temp & 0x20) >> 5);
 		INT10_SetSinglePaletteRegister( 1, val );
