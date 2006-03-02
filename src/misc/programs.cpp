@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.23 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.24 2006-03-02 14:12:49 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -249,6 +249,10 @@ void CONFIG::Run(void) {
 			return;
 		}
 		char* val = sec->GetPropValue(prop.c_str());
+		if(!val) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),prop.c_str(),temp_line.c_str());   
+			return;
+		}
 		WriteOut("%s",val);
 		first_shell->SetEnv("CONFIG",val);
 		return;
@@ -334,6 +338,7 @@ void PROGRAMS_Init(Section* sec) {
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","Can't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_USAGE","Config tool:\nUse -writeconf filename to write the current config.\nUse -writelang filename to write the current language strings.\n");
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR","Section %s doesn't exist.\n");
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","Property %s doesn't have a section.\n");
-	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\"");
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","No such section or property.\n");
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY","There is no property %s in section %s.\n");
+	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\".\n");
 }
