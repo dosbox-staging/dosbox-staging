@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.91 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.92 2006-03-07 12:06:11 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -126,8 +126,22 @@ static Bitu DOS_21Handler(void) {
 			Bit8u free=mem_readb(data);
 			Bit8u read=0;Bit8u c;Bit16u n=1;
 			if (!free) break;
-			while (read<free) {
+			for(;;) {
 				DOS_ReadFile(STDIN,&c,&n);
+				if (c == 8) {			// Backspace
+					if (!read) 	//Nothing to backspace.
+						continue;
+					// STDOUT treats backspace as non-destructive.
+					         DOS_WriteFile(STDOUT,&c,&n);
+					c = ' '; DOS_WriteFile(STDOUT,&c,&n);
+					c = 8;   DOS_WriteFile(STDOUT,&c,&n);
+					--read;
+				}
+				if (read >= free) {		// Keyboard buffer full
+					Bit8u bell = 7;
+					DOS_WriteFile(STDOUT, &bell, &n);
+					continue;
+				}
 				DOS_WriteFile(STDOUT,&c,&n);
 				mem_writeb(data+read+2,c);
 				if (c==13) 
