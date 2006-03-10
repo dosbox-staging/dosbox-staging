@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.71 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.72 2006-03-10 09:38:24 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -89,10 +89,11 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
 		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-		case '\'':	case '+':	case '^':	case 246:
+		case '\'':	case '+':	case '^':	case 246:	case 255:	case 0xa0:
 			upname[w++]=c;
 			break;
 		default:
+			LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X !",c,c);
 			DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
 			break;
 		}
