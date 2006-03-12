@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.55 2006-02-28 15:13:00 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.56 2006-03-12 21:12:20 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -389,9 +389,21 @@ private:
 		WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"));
 	}
 
+	void disable_umb_ems_xms(void) {
+		Section* dos_sec = control->GetSection("dos");
+		dos_sec->ExecuteDestroy(false);
+		char test[20];
+		strcpy(test,"umb=false");
+		dos_sec->HandleInputline(test);
+		strcpy(test,"xms=false");
+		dos_sec->HandleInputline(test);
+		strcpy(test,"ems=false");
+		dos_sec->HandleInputline(test);
+		dos_sec->ExecuteInit(false);
+     }
 
 public:
-
+   
 	void Run(void) {
 		FILE *usefile;
 		Bitu i; 
@@ -453,6 +465,7 @@ public:
 		if ((bootarea.rawdata[0]==0x50) && (bootarea.rawdata[1]==0x43) && (bootarea.rawdata[2]==0x6a) && (bootarea.rawdata[3]==0x72)) {
 			if (machine!=MCH_PCJR) WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
 			else {
+				disable_umb_ems_xms();
 				Bit8u rombuf[65536];
 				fseek(usefile,0x200L, SEEK_SET);
 				fread(rombuf, 1, rombytesize-0x200, usefile);
@@ -474,6 +487,7 @@ public:
 				reg_ip = mem_readw(0x60);
 			}
 		} else {
+			disable_umb_ems_xms();
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 			for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
