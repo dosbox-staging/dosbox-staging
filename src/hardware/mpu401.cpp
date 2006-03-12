@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.16 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.17 2006-03-12 21:16:23 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -551,9 +551,9 @@ static Bitu MPU401_INT71_Handler() {
 		mpu.queue_used=1;
 		mpu.state.reset=0;
 	}
-	CALLBACK_RunRealInt(0xa);
 	IO_Write(0xa0,0x61);
-	IO_Write(0x20,0x62);
+	CALLBACK_RunRealInt(0xa);
+//	IO_Write(0x20,0x62); //0xA default handler does this.
 
 	if (signr) if (mpu.queue_used==1) ClrQueue();
 	return CBRET_NONE;
