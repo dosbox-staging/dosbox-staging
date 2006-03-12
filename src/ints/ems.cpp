@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.46 2006-02-18 14:45:12 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.47 2006-03-12 20:31:49 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -608,8 +608,13 @@ static Bitu INT67_Handler(void) {
 		} else {
 			switch (reg_al) {
 			case 0x00:		/* VCPI Installation Check */
-				reg_ah=EMM_NO_ERROR;
-				reg_bx=0x100;
+				if (((reg_cx==0) && (reg_di=0x0012)) || (cpu.pmode && (reg_flags & FLAG_VM))) {
+					/* JEMM detected or already in v86 mode */
+					reg_ah=EMM_NO_ERROR;
+					reg_bx=0x100;
+				} else {
+					reg_ah=EMM_FUNC_NOSUP;
+				}
 				break;
 			case 0x01: {	/* VCPI Get Protected Mode Interface */
 				Bit16u ct;
