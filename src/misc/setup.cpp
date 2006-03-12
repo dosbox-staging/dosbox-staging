@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.33 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.34 2006-03-12 21:26:22 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -148,7 +148,8 @@ int Section_prop::Get_hex(const char* _propname){
 
 void Section_prop::HandleInputline(char *gegevens){
 	char * rest=strrchr(gegevens,'=');
-	*rest=0;
+	if(!rest) return;
+	*rest = 0;
 	gegevens=trim(gegevens);
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if(!strcasecmp((*tel)->propname.c_str(),gegevens)){
