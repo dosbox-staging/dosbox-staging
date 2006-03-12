@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.33 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.34 2006-03-12 21:14:45 qbix79 Exp $ */
 
 #include <list>
 
@@ -320,6 +320,7 @@ void PIC_runIRQs(void) {
 }
 
 void PIC_SetIRQMask(Bitu irq, bool masked) {
+	if(irqs[irq].masked == masked) return;	/* Do nothing if mask doesn't change */
 	bool old_irq2_mask = irqs[2].masked;
 	irqs[irq].masked=masked;
 	if(irq < 8) {
@@ -453,11 +454,17 @@ bool PIC_RunQueue(void) {
 
 //Irq 9-2 calling code
 static Bitu INT71_Handler() {
-	CALLBACK_RunRealInt(0xa);
 	IO_Write(0xa0,0x61);
+	CALLBACK_RunRealInt(0xa);
+	return CBRET_NONE;
+}
+
+static Bitu INT0A_Handler() {
 	IO_Write(0x20,0x62);
 	return CBRET_NONE;
 }
+
+   
 
 /* The TIMER Part */
 struct TickerBlock {
@@ -515,7 +522,7 @@ class PIC:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];
-	CALLBACK_HandlerObject callback;
+	CALLBACK_HandlerObject callback[2];
 public:
 	PIC(Section* configuration):Module_base(configuration){
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
@@ -570,8 +577,10 @@ public:
 		pic.next_entry=0;
 		/* Irq 9 and 2 thingie 
 		 * Should be done by bios but then it overwrites the mpu handler */
-		callback.Install(&INT71_Handler,CB_IRET,"irq 9 bios");
-		callback.Set_RealVec(0x71);
+		callback[0].Install(&INT71_Handler,CB_IRET,"irq 9 bios");
+		callback[0].Set_RealVec(0x71);
+		callback[1].Install(&INT0A_Handler,CB_IRET,"irq 2 bios");
+		callback[1].Set_RealVec(0xA);
 	}
 	~PIC(){
 	}
