@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.63 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.64 2006-03-13 19:58:09 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@
 #include "drives.h"
 #include "support.h"
 #include "cross.h"
-
+#include "inout.h"
 
 class localFile : public DOS_File {
 public:
@@ -400,6 +400,11 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 	if (last_action==WRITE) fseek(fhandle,ftell(fhandle),SEEK_SET);
 	last_action=READ;
 	*size=fread(data,1,*size,fhandle);
+	/* Fake harddrive motion. Inspector Gadget with soundblaster compatible */
+	/* Same for Igor */
+	/* hardrive motion => unmask irq 2. Only do it when it's masked as unmasking is realitively heavy to emulate */
+	Bit8u mask = IO_Read(0x21);
+	if(mask & 0x4 ) IO_Write(0x21,mask&0xfb);
 	return true;
 };
 
