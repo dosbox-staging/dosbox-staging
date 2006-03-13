@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.52 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.53 2006-03-13 20:01:55 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -1145,7 +1145,7 @@ private:
 
 	/* Support Functions */
 	void Find_Type_And_Opl(Section_prop* config,SB_TYPES& type, OPL_Mode& opl_mode){
-		const char * sbtype=config->Get_string("type");
+		const char * sbtype=config->Get_string("sbtype");
 		if (!strcasecmp(sbtype,"sb1")) type=SBT_1;
 		else if (!strcasecmp(sbtype,"sb2")) type=SBT_2;
 		else if (!strcasecmp(sbtype,"sbpro1")) type=SBT_PRO1;
@@ -1182,7 +1182,7 @@ public:
 	SBLASTER(Section* configuration):Module_base(configuration) {
 		Bitu i;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		sb.hw.base=section->Get_hex("base");
+		sb.hw.base=section->Get_hex("sbbase");
 		sb.hw.irq=section->Get_int("irq");
 		sb.hw.dma8=section->Get_int("dma");
 		sb.hw.dma16=section->Get_int("hdma");

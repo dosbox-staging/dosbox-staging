@@ -324,7 +324,7 @@ public:
 
 	OPL(Section* configuration):Module_base(configuration) {
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		Bitu base = section->Get_hex("base");
+		Bitu base = section->Get_hex("sbbase");
 		Bitu rate = section->Get_int("oplrate");
 		if (OPL2::YM3812Init(2,OPL2_INTERNAL_FREQ,rate)) {
 			E_Exit("Can't create OPL2 Emulator");	

@@ -430,7 +430,7 @@ public:
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		Bitu sample_rate_temp = section->Get_int("oplrate");
 		sample_rate = static_cast<double>(sample_rate_temp);
-		Bitu base = section->Get_hex("base");
+		Bitu base = section->Get_hex("sbbase");
 		WriteHandler.Install(base,write_cms,IO_MB,4);
 
 		/* Register the Mixer CallBack */

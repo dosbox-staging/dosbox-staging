@@ -806,9 +806,9 @@ public:
 		memset(&myGUS,0,sizeof(myGUS));
 		memset(GUSRam,0,1024*1024);
 	
-		myGUS.rate=section->Get_int("rate");
+		myGUS.rate=section->Get_int("gusrate");
 	
-		myGUS.portbase = section->Get_hex("base") - 0x200;
+		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
 		myGUS.dma1 = section->Get_int("dma1");
 		myGUS.dma2 = section->Get_int("dma2");
 		myGUS.irq1 = section->Get_int("irq1");
