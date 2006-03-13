@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.96 2006-02-28 20:11:49 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.97 2006-03-13 20:00:41 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -316,14 +316,12 @@ void DOSBOX_Init(void) {
 	
 	secprop=control->AddSection_prop("midi",&MIDI_Init,true);//done
 	secprop->AddInitFunction(&MPU401_Init,true);//done
-	secprop->Add_bool("mpu401",true);
-	secprop->Add_bool("intelligent",true);   
+	secprop->Add_string("mpu401","intelligent");
 	secprop->Add_string("device","default");
 	secprop->Add_string("config","");
 	
 	MSG_Add("MIDI_CONFIGFILE_HELP",
-		"mpu401      -- Enable MPU-401 Emulation.\n"
-		"intelligent -- Operate in Intelligent mode.\n"
+		"mpu401      -- Type of MPU-401 to emulate: none, uart or intelligent.\n"
 		"device      -- Device that will receive the MIDI data from MPU-401.\n"
 		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
 		"config      -- Special configuration options for the device. In Windows put\n" 
@@ -335,8 +333,8 @@ void DOSBOX_Init(void) {
 #endif
 
 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
-	secprop->Add_string("type","sb16");
-	secprop->Add_hex("base",0x220);
+	secprop->Add_string("sbtype","sb16");
+	secprop->Add_hex("sbbase",0x220);
 	secprop->Add_int("irq",7);
 	secprop->Add_int("dma",1);
 	secprop->Add_int("hdma",5);
@@ -345,8 +343,8 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("oplrate",22050);
 
 	MSG_Add("SBLASTER_CONFIGFILE_HELP",
-		"type -- Type of sblaster to emulate:none,sb1,sb2,sbpro1,sbpro2,sb16.\n"
-		"base,irq,dma,hdma -- The IO/IRQ/DMA/High DMA address of the soundblaster.\n"
+		"sbtype -- Type of sblaster to emulate:none,sb1,sb2,sbpro1,sbpro2,sb16.\n"
+		"sbbase,irq,dma,hdma -- The IO/IRQ/DMA/High DMA address of the soundblaster.\n"
 		"mixer -- Allow the soundblaster mixer to modify the dosbox mixer.\n"
 		"oplmode -- Type of OPL emulation: auto,cms,opl2,dualopl2,opl3.\n"
 		"           On auto the mode is determined by sblaster type.\n"
@@ -355,8 +353,8 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	secprop->Add_bool("gus",true); 	
-	secprop->Add_int("rate",22050);
-	secprop->Add_hex("base",0x240);
+	secprop->Add_int("gusrate",22050);
+	secprop->Add_hex("gusbase",0x240);
 	secprop->Add_int("irq1",5);
 	secprop->Add_int("irq2",5);
 	secprop->Add_int("dma1",3);
@@ -365,9 +363,9 @@ void DOSBOX_Init(void) {
 
 	MSG_Add("GUS_CONFIGFILE_HELP",
 		"gus -- Enable the Gravis Ultrasound emulation.\n"
-		"base,irq1,irq2,dma1,dma2 -- The IO/IRQ/DMA addresses of the \n"
+		"gusbase,irq1,irq2,dma1,dma2 -- The IO/IRQ/DMA addresses of the \n"
 		"           Gravis Ultrasound. (Same IRQ's and DMA's are OK.)\n"
-		"rate -- Sample rate of Ultrasound emulation.\n"
+		"gusrate -- Sample rate of Ultrasound emulation.\n"
 		"ultradir -- Path to Ultrasound directory.  In this directory\n"
 		"            there should be a MIDI directory that contains\n"
 		"            the patch files for GUS playback.  Patch sets used\n"
