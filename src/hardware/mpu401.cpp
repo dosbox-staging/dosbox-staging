@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.18 2006-03-18 12:28:30 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.19 2006-03-18 12:29:14 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -631,7 +631,7 @@ public:
 	~MPU401(){
 		if(!installed) return;
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		if(strcasecmp(section->Get_string("mpu401"),"intelligent") return;
+		if(strcasecmp(section->Get_string("mpu401"),"intelligent")) return;
 		PIC_SetIRQMask(mpu.irq,true);
 		}
 };
