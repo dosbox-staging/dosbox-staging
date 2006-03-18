@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.17 2006-03-12 21:16:23 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.18 2006-03-18 12:28:30 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -25,7 +25,7 @@
 #include "setup.h"
 #include "cpu.h"
 #include "callback.h"
-
+#include "support.h"
 
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
@@ -599,7 +599,10 @@ public:
 	MPU401(Section* configuration):Module_base(configuration){
 		installed = false;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if(!section->Get_bool("mpu401")) return;
+		const char* s_mpu = section->Get_string("mpu401");
+		if(strcasecmp(s_mpu,"none") == 0) return;
+		if(strcasecmp(s_mpu,"off") == 0) return;
+		if(strcasecmp(s_mpu,"false") == 0) return;
 		if (!MIDI_Available()) return;
 		/*Enabled and there is a Midi */
 		installed = true;
@@ -616,17 +619,19 @@ public:
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
 		mpu.mode=M_UART;
-	
-		if (!(mpu.intelligent=section->Get_bool("intelligent"))) return;
+		mpu.irq=9;	/* Princess Maker 2 wants it on irq 9 */
+
+		mpu.intelligent = true;	//Default is on
+		if(strcasecmp(s_mpu,"uart") == 0) mpu.intelligent = false;
+		if (!mpu.intelligent) return;
 		/*Set IRQ and unmask it(for timequest/princess maker 2) */
-		mpu.irq=9;
 		PIC_SetIRQMask(mpu.irq,false);
 		MPU401_Reset();
 	}
 	~MPU401(){
 		if(!installed) return;
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		if(!section->Get_bool("intelligent")) return;
+		if(strcasecmp(section->Get_string("mpu401"),"intelligent") return;
 		PIC_SetIRQMask(mpu.irq,true);
 		}
 };
