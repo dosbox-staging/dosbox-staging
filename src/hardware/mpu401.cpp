@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.19 2006-03-18 12:29:14 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.20 2006-03-19 10:24:59 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -24,7 +24,6 @@
 #include "pic.h"
 #include "setup.h"
 #include "cpu.h"
-#include "callback.h"
 #include "support.h"
 
 void MIDI_RawOutByte(Bit8u data);
@@ -259,6 +258,8 @@ static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 		mpu.queue_pos++;mpu.queue_used--;
 	}
 	if (!mpu.intelligent) return ret;
+
+	if (mpu.queue_used == 0) PIC_DeActivateIRQ(mpu.irq);
 
 	if (ret>=0xf0 && ret<=0xf7) { /* MIDI data request */
 		mpu.state.channel=ret&7;
@@ -542,23 +543,6 @@ static void MPU401_EOIHandler(void) {
 	} while ((i++)<16);
 }
 
-static Bitu MPU401_INT71_Handler() {
-	bool signr=0;
-	if  (mpu.state.reset) if (!mpu.queue_used) { // hack for "It came to desert"
-		signr=1;
-		mpu.queue_pos=0;
-		mpu.queue[0]=0xfe;
-		mpu.queue_used=1;
-		mpu.state.reset=0;
-	}
-	IO_Write(0xa0,0x61);
-	CALLBACK_RunRealInt(0xa);
-//	IO_Write(0x20,0x62); //0xA default handler does this.
-
-	if (signr) if (mpu.queue_used==1) ClrQueue();
-	return CBRET_NONE;
-}
-
 static void MPU401_Reset(void) {
 	PIC_DeActivateIRQ(mpu.irq);
 	mpu.mode=(mpu.intelligent ? M_INTELLIGENT : M_UART);
@@ -593,7 +577,6 @@ class MPU401:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];
-	CALLBACK_HandlerObject callbackhandler;
 	bool installed; /*as it can fail to install by 2 ways (config and no midi)*/
 public:
 	MPU401(Section* configuration):Module_base(configuration){
@@ -607,10 +590,6 @@ public:
 		/*Enabled and there is a Midi */
 		installed = true;
 		
-		/* Install a new irq 9 handler that is more suited for the mpu401 */
-		callbackhandler.Install(&MPU401_INT71_Handler,CB_IRET,"irq 9 mpu");
-		callbackhandler.Set_RealVec(0x71);
-
 		WriteHandler[0].Install(0x330,&MPU401_WriteData,IO_MB);
 		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
 		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
