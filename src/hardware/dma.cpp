@@ -235,7 +235,7 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu len) {
 		}
 		return ret;
 	default:
-		LOG_MSG("Trying to read undefined DMA port %x",reg);
+		LOG(LOG_DMA,LOG_NORMAL)("Trying to read undefined DMA port %x",reg);
 		break;
 	}
 	return 0xffffffff;
