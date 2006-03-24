@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.4 2006-02-26 13:48:06 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.5 2006-03-24 17:11:35 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -256,9 +256,11 @@ void CSerialModem::EnterIdleState(void){
 		SDLNet_TCP_Close(incomingsocket);
 	}
 	// get rid of everything
-	while(incomingsocket=SDLNet_TCP_Accept(listensocket)) {
-		SDLNet_TCP_DelSocket(socketset,incomingsocket);
-		SDLNet_TCP_Close(incomingsocket);
+	if(listensocket) {
+		while(incomingsocket=SDLNet_TCP_Accept(listensocket)) {
+			SDLNet_TCP_DelSocket(socketset,incomingsocket);
+			SDLNet_TCP_Close(incomingsocket);
+		}
 	}
 	incomingsocket=0;
 	
