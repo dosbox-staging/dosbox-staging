@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.36 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.37 2006-03-26 11:54:44 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -970,7 +970,7 @@ static bool MSCDEX_Handler(void) {
 	if (reg_ah!=0x15) return false;
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
-	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_bx);
+	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_cx);
 	switch (reg_ax) {
 	
 		case 0x1500:	/* Install check */
