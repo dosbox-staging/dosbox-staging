@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.75 2006-02-12 23:23:52 harekiet Exp $ */
+/* $Id: debug.cpp,v 1.76 2006-03-26 11:11:56 qbix79 Exp $ */
 
 #include <string.h>
 #include <list>
@@ -2112,14 +2112,15 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num)
 };
 
 static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
-	FILE* f = fopen("MEMDUMP.BIN","wt");
+	FILE* f = fopen("MEMDUMP.BIN","wb");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory binary dump failed.\n");
 		return;
 	}
 
-	for(Bitu x=0; x <num;x++) {
-		fprintf(f,"%c",mem_readb(GetAddress(seg,ofs1+x)));
+	for(Bitu x = 0; x < num;x++) {
+		Bit8u val = mem_readb(GetAddress(seg,ofs1+x));
+		fwrite(&val,1,1,f);
 	};
 
 	fclose(f);
