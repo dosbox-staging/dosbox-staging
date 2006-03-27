@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.46 2006-02-24 20:42:15 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.47 2006-03-27 19:31:54 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -516,6 +516,18 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 }
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
+	if (CurMode->type!=M_TEXT) {
+		switch (machine) {
+			case MCH_VGA:
+				page%=CurMode->ptotal;
+				break;
+			case MCH_CGA:
+			case MCH_PCJR:
+				page=0;
+				break;
+		}
+	}
+
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
 	BIOS_NCOLS;BIOS_NROWS;
