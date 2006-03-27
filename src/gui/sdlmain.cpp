@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.109 2006-02-27 21:00:27 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.110 2006-03-27 19:40:25 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -964,21 +964,23 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
-	sdl.desktop.full.fixed=section->Get_bool("fullfixed");
+	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
 	if(fullresolution && *fullresolution) {
 		char res[100];
 		strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
-
-		char* height = const_cast<char*>(strchr(fullresolution,'x'));
-		if(height && * height) {
-			*height = 0;
-			sdl.desktop.full.height = atoi(height+1);
-			sdl.desktop.full.width  = atoi(res);
-		} else {
-			sdl.desktop.full.width  = 0;
-			sdl.desktop.full.height = 0;
+		if(strcasecmp(fullresolution,"original")) {
+			sdl.desktop.full.fixed = true;
+			char* height = const_cast<char*>(strchr(fullresolution,'x'));
+			if(height && * height) {
+				*height = 0;
+				sdl.desktop.full.height = atoi(height+1);
+				sdl.desktop.full.width  = atoi(res);
+			} else {
+				sdl.desktop.full.width  = 0;
+				sdl.desktop.full.height = 0;
+			}
 		}
 	} else {
 		sdl.desktop.full.width  = 0;
@@ -1286,8 +1288,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->AddInitFunction(&MAPPER_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("fulldouble",false);
-		sdl_sec->Add_bool("fullfixed",false);
-		sdl_sec->Add_string("fullresolution","1024x768");
+		sdl_sec->Add_string("fullresolution","original");
 		sdl_sec->Add_string("windowresolution","0x0");
 		sdl_sec->Add_string("output","surface");
 		sdl_sec->Add_bool("autolock",true);
@@ -1295,13 +1296,13 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("waitonerror",true);
 		sdl_sec->Add_string("priority","higher,normal");
 		sdl_sec->Add_string("mapperfile","mapper.txt");
-		sdl_sec->Add_bool("usescancodes",false);
+		sdl_sec->Add_bool("usescancodes",true);
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
 			"fulldouble -- Use double buffering in fullscreen.\n"
-			"fullfixed -- Don't resize the screen when in fullscreen.\n"
-			"fullresolution -- What resolution to use for fullscreen, use together with fullfixed.\n"
+			"fullresolution -- What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).\n"
+			"windowresolution -- Scale the window to this size IF the output device supports hardware scaling.\n"
 			"output -- What to use for output: surface,overlay"
 #if C_OPENGL
 			",opengl,openglnb"
@@ -1310,7 +1311,6 @@ int main(int argc, char* argv[]) {
 			",ddraw"
 #endif
 			".\n"
-			"windowresolution -- Scale the window to this size IF the output device supports hardware scaling.\n"
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
