@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.97 2006-03-13 20:00:41 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.98 2006-03-27 19:41:55 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -115,7 +115,7 @@ static Bit32u ticksLast;
 static Bit32u ticksAdded;
 static Bit32s ticksDone;
 static Bit32u ticksScheduled;
-static bool ticksLocked;
+bool ticksLocked;
 
 static Bitu Normal_Loop(void) {
 	Bits ret;
@@ -348,6 +348,7 @@ void DOSBOX_Init(void) {
 		"mixer -- Allow the soundblaster mixer to modify the dosbox mixer.\n"
 		"oplmode -- Type of OPL emulation: auto,cms,opl2,dualopl2,opl3.\n"
 		"           On auto the mode is determined by sblaster type.\n"
+		"           All OPL modes are 'Adlib', except for CMS.\n"
 		"oplrate -- Sample rate of OPL music emulation.\n"
 		);
 
@@ -417,6 +418,7 @@ void DOSBOX_Init(void) {
 	        "             stopbits, parity (all optional).\n"
 	        "             for directserial: realport (required).\n"
 	        "             for modem: listenport (optional).\n"
+	        "             Example: serial1=modem listenport:5000\n"
 	);
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
