@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.14 2006-02-14 12:46:43 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.15 2006-03-27 19:18:00 qbix79 Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -33,7 +33,7 @@
 
 #if (C_SSHOT)
 #include <png.h>
-#include "../libs/zmbv/zmbv.h"
+#include "../libs/zmbv/zmbv.cpp"
 #endif
 
 static char * capturedir;
