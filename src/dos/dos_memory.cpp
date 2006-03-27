@@ -52,7 +52,7 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 		if (mcb.GetType()==0x5a) {
 			/* check if currently last block reaches up to the PCJr graphics memory */
 			if ((machine==MCH_PCJR) && (mcb_segment+mcb.GetSize()==0x17fe) &&
-                (real_readb(0x17ff,0)==0x4d) && (real_readw(0x17ff,1)==8)) {
+			   (real_readb(0x17ff,0)==0x4d) && (real_readw(0x17ff,1)==8)) {
 				/* re-enable the memory past segment 0x2000 */
 				mcb.SetType(0x4d);
 			} else break;
@@ -184,7 +184,10 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 						if (found_seg_size==*blocks) {
 							/* use the whole block */
 							mcb.SetPSPSeg(dos.psp());
-							*segment=found_seg+1;
+							//Not consistent with line 124. But how many application will use this information ?
+							mcb.SetFileName(psp_name);
+							*segment = found_seg+1;
+							return true;
 						}
 						*segment = found_seg+1+found_seg_size - *blocks;
 						mcb_next.SetPt((Bit16u)(*segment-1));
