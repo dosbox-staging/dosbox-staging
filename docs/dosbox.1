@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Nov 18, 2004"
+.TH DOSBOX 1 "Mar 28, 2005"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -7,6 +7,7 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B dosbox
 .B [\-fullscreen]
 .B [\-startmapper]
+.B [\-noautoexec]
 .BI "[\-conf " configfile ]
 .BI "[\-lang " langfile ]
 .B [file]
@@ -34,6 +35,9 @@ A summary of options is included below.
 .TP
 .B \-startmapper
 .RB "Start the internal keymapper on startup of " dosbox ". You can use it to change the keys " dosbox " uses."
+.TP
+.B \-noautoexec
+Skips the [autoexec] section of the loaded configuration file.
 .TP
 .BI \-c  " command" 
 .RI "Runs the specified " command " before running " 
@@ -214,8 +218,12 @@ automatically loaded, else ~/.dosboxrc (if present)  will be loaded.
 .TP 12m
 .IP ALT\-ENTER
 Go full screen and back.
+.IP ALT\-PAUSE
+Pause emulation.
 .IP CTRL\-F1
 Start the keymapper.
+.IP CTRL\-ALT\-F5
+Start/Stop creating a movie of the screen.
 .IP CTRL\-F4
 Swap mounted disk-image (Only used with imgmount). Update directory cache
 for all drives!
@@ -239,6 +247,8 @@ Capture/Release the mouse.
 Slow down emulation (Increase dosbox Cycles).
 .IP CTRL\-F12
 Speed up emulation (Decrease dosbox Cycles).
+.IP ALT\-F12
+Unlock speed (turbo button).
 .PP
 These are the default keybindings. They can be changed in the keymapper.
 .PP
