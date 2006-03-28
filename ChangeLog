@@ -65,6 +65,8 @@
   - Add some more VESA modi (4 bit).
   - Add 1024x768 output.
   - Changed screenrendering so it only draws changes to the screen.
+  - Allow remapping of the EMS page when the dma transfer was started from 
+    the page frame
   - Made EMS and DMA work together when playing from a mapped memory page.
   - Renamed several configuration options, so that they are unique.
   - Merged mpu and intelligent into one option.
@@ -77,7 +79,6 @@
   - Reintroduce the lockfree mouse. (autolock=false)
   - Add a larger cache for the dynamic cpu core.
   - Improved soundblaster DSP, so it gets detected by creative tools.
-  - Implemented the Tandy-DAC.
   - Lots of bugfixes.
   - Even more bugfixes.
   
