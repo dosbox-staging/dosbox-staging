@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.110 2006-03-27 19:40:25 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.111 2006-03-28 06:44:09 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -966,44 +966,38 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.requestlock=false;
 	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
+	sdl.desktop.full.width  = 0;
+	sdl.desktop.full.height = 0;
 	if(fullresolution && *fullresolution) {
 		char res[100];
 		strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
-		if(strcasecmp(fullresolution,"original")) {
+		if(strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
 			char* height = const_cast<char*>(strchr(fullresolution,'x'));
 			if(height && * height) {
 				*height = 0;
 				sdl.desktop.full.height = atoi(height+1);
 				sdl.desktop.full.width  = atoi(res);
-			} else {
-				sdl.desktop.full.width  = 0;
-				sdl.desktop.full.height = 0;
 			}
 		}
-	} else {
-		sdl.desktop.full.width  = 0;
-		sdl.desktop.full.height = 0;
 	}
+
+	sdl.desktop.window.width  = 0;
+	sdl.desktop.window.height = 0;
 	const char* windowresolution=section->Get_string("windowresolution");
 	if(windowresolution && *windowresolution) {
 		char res[100];
 		strncpy( res,windowresolution, sizeof( res ));
 		windowresolution = lowcase (res);//so x and X are allowed
-
-		char* height = const_cast<char*>(strchr(windowresolution,'x'));
-		if(height && *height) {
-			*height = 0;
-			sdl.desktop.window.height = atoi(height+1);
-			sdl.desktop.window.width  = atoi(res);
-		} else {
-			sdl.desktop.window.width  = 0;
-			sdl.desktop.window.height = 0;
+		if(strcmp(windowresolution,"original")) {
+			char* height = const_cast<char*>(strchr(windowresolution,'x'));
+			if(height && *height) {
+				*height = 0;
+				sdl.desktop.window.height = atoi(height+1);
+				sdl.desktop.window.width  = atoi(res);
+			}
 		}
-	} else {
-		sdl.desktop.window.width  = 0;
-		sdl.desktop.window.height = 0;
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
 	if (!sdl.desktop.full.width) {
@@ -1289,7 +1283,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_bool("fullscreen",false);
 		sdl_sec->Add_bool("fulldouble",false);
 		sdl_sec->Add_string("fullresolution","original");
-		sdl_sec->Add_string("windowresolution","0x0");
+		sdl_sec->Add_string("windowresolution","original");
 		sdl_sec->Add_string("output","surface");
 		sdl_sec->Add_bool("autolock",true);
 		sdl_sec->Add_int("sensitivity",100);
