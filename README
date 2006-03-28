@@ -231,8 +231,8 @@ dosbox -version
 	
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
-        hercules, cga, tandy, vga (default). The machinetype affects both the 
-	videocard and the available soundcards.
+        hercules, cga, pcjr, tandy, vga (default). The machinetype affects 
+        both the videocard and the available soundcards.
 
   -startmapper
         Enter the keymapper directly on startup. Useful for people with 
@@ -720,7 +720,7 @@ it up somewhat.
 ===================================
 
 DOSBox emulates the CPU, the sound and graphic cards, and some other
-stuff, all at the same time. You can overclock DOSBox by using CTRL+F12, but
+stuff, all at the same time. You can overclock DOSBox by using CTRL-F12, but
 you'll be limited by the power of your actual CPU. You can see how much free
 time your true CPU has by looking at the Task Manager in Windows 2000/XP and
 the System Monitor in Windows 95/98/ME. Once 100% of your real CPU time is
@@ -736,7 +736,7 @@ check)
 
 Since VGA emulation is the most demanding part of DOSBox in terms of actual
 CPU usage, we'll start there. Increase the number of frames skipped (in
-increments of one) by pressing CRTL+F8. Your CPU usage should decrease.
+increments of one) by pressing CTRL-F8. Your CPU usage should decrease.
 Go back one step and repeat this until the game runs fast enough for you.
 Please note that this is a trade-off: you lose in fluidity of video what you
 gain in speed 
