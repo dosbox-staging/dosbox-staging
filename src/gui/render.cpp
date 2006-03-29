@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.43 2006-02-26 16:04:35 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.44 2006-03-29 12:28:42 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -82,11 +82,6 @@ static void Check_Palette(void) {
 	/* Setup pal index to startup values */
 	render.pal.first=256;
 	render.pal.last=0;
-}
-
-static void RENDER_ResetPal(void) {
-	render.pal.first=0;
-	render.pal.last=255;
 }
 
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue) {
@@ -384,7 +379,11 @@ forcenormal:
 	render.scale.blocks = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight = render.src.height;
-	RENDER_ResetPal();
+	/* Reset the palette change detection to it's initial value */
+	render.pal.first= 0;
+	render.pal.last = 255;
+	render.pal.changed = false;
+	memset(render.pal.modified, 0, sizeof(render.pal.modified));
 	/* Signal the next frame to first reinit the cache */
 	render.scale.clearCache = true;
 	render.active=true;
