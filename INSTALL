@@ -60,6 +60,8 @@ In step 1 you could add the following switches:
 
 Check the src subdir for the binary.
 
+NOTE: If capslock and numlock appear to be broken. open
+src/ints/bios_keyboard.cpp and go to line 30 and read there how to fix it.
 
 
 Build instructions for VC++6 

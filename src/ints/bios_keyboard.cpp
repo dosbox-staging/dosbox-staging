@@ -24,6 +24,10 @@
 #include "regs.h"
 #include "inout.h"
 
+/* SDL by default treats numlock and scrolllock different from all other keys.
+ * Some linux distros disable this bad behaviour. (for example debian) 
+ * Define the following if this is the case */
+//#define CAN_USE_LOCK 1
 
 static Bitu call_int16,call_irq1,call_irq6;
 
@@ -249,7 +253,11 @@ static Bitu IRQ1_Handler(void) {
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
 	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
 	leds  =mem_readb(BIOS_KEYBOARD_LEDS); 
+#ifdef CAN_USE_LOCK
+	/* No hack anymore! */
+#else
 	flags2&=~(0x40+0x20);//remove numlock/capslock pressed (hack for sdl only reporting states)
+#endif
 	switch (scancode) {
 	/* First the hard ones  */
 	case 0xfa:	/* ack. Do nothing for now */
@@ -304,9 +312,13 @@ static Bitu IRQ1_Handler(void) {
 		}
 		break;
 
-
+#ifdef CAN_USE_LOCK
+	case 0x3a:flags2 |=0x40;break;//CAPSLOCK
+	case 0xba:flags1 ^=0x40;flags2 &=~0x40;leds ^=0x04;break;
+#else
 	case 0x3a:flags2 |=0x40;flags1 |=0x40;leds |=0x04;break; //SDL gives only the state instead of the toggle					/* Caps Lock */
 	case 0xba:flags1 &=~0x40;leds &=~0x04;break;
+#endif
 	case 0x45:
 		if (flags3 &0x01) {
 			/* last scancode of pause received; first remove 0xe1-prefix */
@@ -327,9 +339,13 @@ static Bitu IRQ1_Handler(void) {
 			}
 		} else {
 			/* Num Lock */
+#ifdef CAN_USE_LOCK
+			flags2 |=0x20;
+#else
 			flags2 |=0x20;
 			flags1 |=0x20;
 			leds |=0x02;
+#endif
 		}
 		break;
 	case 0xc5:
@@ -337,9 +353,15 @@ static Bitu IRQ1_Handler(void) {
 			/* pause released */
 			flags3 &=~0x01;
 		} else {
+#ifdef CAN_USE_LOCK
+			flags1^=0x20;
+			leds^=0x02;
+			flags2&=~0x20;
+#else
 			/* Num Lock released */
 			flags1 &=~0x20;
 			leds &=~0x02;
+#endif
 		}
 		break;
 	case 0x46:flags2 |=0x10;break;				/* Scroll Lock SDL Seems to do this one fine (so break and make codes) */
