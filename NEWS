@@ -1,3 +1,87 @@
+0.65
+  - Fixed FAT writing.
+  - Added some more missing DOS functions.
+  - Improved PIC so that it actually honours irq 2/9.
+  - Improved intelligent MPU-401 mode so that more games work with it.
+  - Some mouse fixes.
+  - Changed DMA transfers a bit so they bypass the paging tables.
+  - Added S3 XGA functionality.
+  - Improved paging so that read and write faults are handled differently.
+  - Rewrote exception handling a bit (no exception 0x0B with dos4gw anymore).
+  - Added IO exceptions in all but the dynamic core.
+  - Some ems improvements.
+  - Added midi-device selection code for the windows hosts.
+  - Fix crashes/segfaults related to the disabling of the pcspeaker.
+  - Added some more FILES=XX detection tricks.
+  - Fixed some vga detection schemes.
+  - Fixed screenshot corruption when using -noconsole in a read-only directory.
+  - Fix wrong scaled screenshots.
+  - Added some hidden file functions when using diskimages. (helps with cdrom 
+    detection schemes)
+  - Fixed a bug in the mixer code, that muted the music in certain games.
+  - Added an assembly fpu core.
+  - Made the shell more flexible for batch files.
+  - Check for unaligned memory acces fixes hangups on ARM processors.
+  - Some 64 bit fixes.
+  - Added code to change configuration at runtime.
+  - Improved ADPCM emulation.
+  - Fixed a few cpu instructions.
+  - Always report vesa 2.0 and fix some colour issues with vesa games.
+  - Fix video mode 0x06 and 0x0a.
+  - Improvements to the joystick emulation. 4 buttons are supported as well.
+  - Add VCPI emulation for Origin games.
+  - Fixed a lot of things in the boot code. Most booters work now.
+  - Lots of improvements to the IPX emulation.
+  - Rewritten modem emulation. Should work with more games.
+  - Improvements to the dos memory managment routines.
+  - Add UMB (upper memory blocks) support.
+  - Emulate the pause key.
+  - Improve Composite CGA mode emulation.
+  - Lots of vga compatibility changes.
+  - Improved support for chained video modes.
+  - Improved mode and palette handling in cga modes.
+  - Mount accepts ~ now.
+  - Added a few of the EGA RIL functions.
+  - Added TandyDAC emulation.
+  - OS/2 support.
+  - Improved and speed up the dynamic cpu core.
+  - Fix some errors in the CD-ROM emulation layer.
+  - Added an automatic work-around for some graphics chipsets.
+  - Add PCjr support.
+  - Allow mousedriver to be replaced. Fixes a few games that come with their
+    own (internal) driver.
+  - Improved dynamic cpu core so it can handle pagefaults and some obscure 
+    types of self-modifying code.
+  - Added -noautoexec switch to skip the contents of [autoexec] in the
+    configuration file.
+  - Improved v86 mode emulation (mainly for Strike Commander).
+  - Improved timer behavior.
+  - Improved extended keyboard support.
+  - Enhanced and added several DOS tables.
+  - Made core_full endian safe.
+  - Made pagefaults endian safe.
+  - Add support for moviecapturing
+  - Add support for 15/16/32 bit videomodes.
+  - Add some more VESA modi (4 bit).
+  - Add 1024x768 output.
+  - Changed screenrendering so it only draws changes to the screen.
+  - Allow remapping of the EMS page when the dma transfer was started from 
+    the page frame
+  - Made EMS and DMA work together when playing from a mapped memory page.
+  - Renamed several configuration options, so that they are unique.
+  - Merged mpu and intelligent into one option.
+  - Merged fullfixed and fullresolution.
+  - Extended keys should be handled better.
+  - F11 and F12 work.
+  - Compilation fixes for various platforms.
+  - Fix a few crashes when giving bad input.
+  - Removed interp2x and added few new scalers.
+  - Reintroduce the lockfree mouse. (autolock=false)
+  - Add a larger cache for the dynamic cpu core.
+  - Improved soundblaster DSP, so it gets detected by creative tools.
+  - Lots of bugfixes.
+  - Even more bugfixes.
+
 0.63
   - Fixed crash with keymapper (ctrl-f1) and output=surface.
   - Added unmounting.
