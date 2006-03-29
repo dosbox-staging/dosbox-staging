@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.15 2006-03-27 19:18:00 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.16 2006-03-29 13:51:58 harekiet Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -152,8 +152,10 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		return;
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
-	/* Close the video */
+		/* Close the video */
 		CaptureState &= ~CAPTURE_VIDEO;
+		LOG_MSG("Stopped capturing video.");	
+
 		Bit8u avi_header[AVI_HEADER_SIZE];
 		Bitu main_list;
 		Bitu header_pos=0;
@@ -256,7 +258,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTw(16);            /* BitsPerSample */
 		int nmain = header_pos - main_list - 4;
 		/* Finish stream list, i.e. put number of bytes in the list to proper pos */
-		LOG_MSG("Wrote a total of %d", header_pos );
+
 		int njunk = AVI_HEADER_SIZE - 8 - 12 - header_pos;
 		AVIOUT4("JUNK");
 		AVIOUTd(njunk);
@@ -525,7 +527,7 @@ skip_shot:
 			goto skip_video;
 		CAPTURE_AddAviChunk( "00dc", written, capture.video.buf, codecFlags & 1 ? 0x10 : 0x0);
 		capture.video.frames++;
-		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
+//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
 		if ( capture.video.audioused ) {
 			CAPTURE_AddAviChunk( "01wb", capture.video.audioused * 4, capture.video.audiobuf, 0);
 			capture.video.audiowritten = capture.video.audioused*4;
