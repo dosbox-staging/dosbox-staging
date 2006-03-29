@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.112 2006-03-28 10:18:13 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.113 2006-03-29 12:26:07 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -698,7 +698,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (sdl.blit.surface) {
 				SDL_UnlockSurface(sdl.blit.surface);
-				LOG(LOG_MISC,LOG_WARN)("Bit %d",SDL_BlitSurface( sdl.blit.surface, 0, sdl.surface, &sdl.clip ));
+				int Blit = SDL_BlitSurface( sdl.blit.surface, 0, sdl.surface, &sdl.clip );
+				LOG(LOG_MISC,LOG_WARN)("BlitSurface returned %d",Blit);
 			} else {
 				SDL_UnlockSurface(sdl.surface);
 			}
