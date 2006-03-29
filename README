@@ -49,6 +49,7 @@ Type INTRO in DOSBox. That's it.
 Some Frequently Asked Questions:
 
 Q: I've got a Z instead of a C at the prompt.
+Q: My game crashes when using opengl/nb or is much slower.
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
 Q: The sound stutters or sounds stretched/weird.
@@ -70,6 +71,11 @@ A: You have to make your directories available as drives in DOSBox by using
    you a C drive in DOSBox which points to your Windows D:\GAMES directory.
    In Linux, "mount c /home/username" will give you a C drive in DOSBox
    which points to /home/username in Linux.
+
+
+Q: My game crashes when using opengl/nb or is much slower.
+A: Somehow our opengl code isn't entirely stable on some platforms. 
+   Use surface instead.
 
 
 Q: My CD-ROM doesn't work.
