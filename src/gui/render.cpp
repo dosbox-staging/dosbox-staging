@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.44 2006-03-29 12:28:42 harekiet Exp $ */
+/* $Id: render.cpp,v 1.45 2006-03-29 14:17:27 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -435,7 +435,6 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
-	render.active=false;
 	const char * scaler;std::string cline;
 	if (control->cmdline->FindString("-scaler",cline,false)) {
 		scaler=cline.c_str();
