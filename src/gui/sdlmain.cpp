@@ -202,6 +202,8 @@ struct SDL_Block {
 		Bitu sensitivity;
 	} mouse;
 	SDL_Rect updateRects[1024];
+ 	Bitu overscan_color;
+ 	Bitu overscan_width;
 };
 
 static SDL_Block sdl;
@@ -396,6 +398,7 @@ dosurface:
 		sdl.desktop.type=SCREEN_SURFACE;
 		sdl.clip.w=width;
 		sdl.clip.h=height;
+ 		sdl.overscan_color = 0;
 		if (sdl.desktop.fullscreen) {
 			if (sdl.desktop.full.fixed) {
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
@@ -413,8 +416,8 @@ dosurface:
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
 			}
 		} else {
-			sdl.clip.x=0;sdl.clip.y=0;
-			sdl.surface=SDL_SetVideoMode(width,height,bpp,(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
+ 			sdl.clip.x=sdl.overscan_width;sdl.clip.y=sdl.overscan_width;
+ 			sdl.surface=SDL_SetVideoMode(width+2*sdl.overscan_width,height+2*sdl.overscan_width,bpp,(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
 #ifdef WIN32
 			if (sdl.surface == NULL) {
 				LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with windib enabled.");
@@ -657,6 +660,47 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 			pixels+=sdl.clip.y*sdl.surface->pitch;
 			pixels+=sdl.clip.x*sdl.surface->format->BytesPerPixel;
 			pitch=sdl.surface->pitch;
+		}
+ 
+		if (sdl.overscan_width) {
+ 			Bitu border_color =  GFX_GetRGB(vga.dac.rgb[vga.attr.overscan_color].red<<2,
+ 				vga.dac.rgb[vga.attr.overscan_color].green<<2, vga.dac.rgb[vga.attr.overscan_color].blue<<2);
+ 			if (border_color != sdl.overscan_color) {
+ 				sdl.overscan_color = border_color;
+	 
+ 			// Find four rectangles forming the border
+ 				SDL_Rect *rect = &sdl.updateRects[0];
+ 				rect->x = 0; rect->y = 0; rect->w = sdl.draw.width+2*sdl.clip.x; rect->h = sdl.clip.y; // top
+ 				if (rect->h > sdl.overscan_width) { rect->y += (rect->h-sdl.overscan_width); rect->h = sdl.overscan_width; }
+ 				if (sdl.clip.x > sdl.overscan_width) { rect->x += (sdl.clip.x-sdl.overscan_width); rect->w -= 2*(sdl.clip.x-sdl.overscan_width); }
+ 				rect = &sdl.updateRects[1];
+ 				rect->x = 0; rect->y = sdl.clip.y; rect->w = sdl.clip.x; rect->h = sdl.draw.height; // left
+ 				if (rect->w > sdl.overscan_width) { rect->x += (rect->w-sdl.overscan_width); rect->w = sdl.overscan_width; }
+ 				rect = &sdl.updateRects[2];
+ 				rect->x = sdl.clip.x+sdl.draw.width; rect->y = sdl.clip.y; rect->w = sdl.clip.x; rect->h = sdl.draw.height; // right
+ 				if (rect->w > sdl.overscan_width) { rect->w = sdl.overscan_width; }
+ 				rect = &sdl.updateRects[3];
+ 				rect->x = 0; rect->y = sdl.clip.y+sdl.draw.height; rect->w = sdl.draw.width+2*sdl.clip.x; rect->h = sdl.clip.y; // bottom
+ 				if (rect->h > sdl.overscan_width) { rect->h = sdl.overscan_width; }
+ 				if (sdl.clip.x > sdl.overscan_width) { rect->x += (sdl.clip.x-sdl.overscan_width); rect->w -= 2*(sdl.clip.x-sdl.overscan_width); }
+	 
+ 				if (sdl.surface->format->BitsPerPixel == 8) { // SDL_FillRect seems to have some issues with palettized hw surfaces
+ 					Bit8u* pixelptr = (Bit8u*)sdl.surface->pixels;
+ 					Bitu linepitch = sdl.surface->pitch;
+ 					for (Bits i=0; i<4; i++) {
+ 						rect = &sdl.updateRects[i];
+ 						Bit8u* start = pixelptr + rect->y*linepitch + rect->x;
+ 						for (Bits j=0; j<rect->h; j++) {
+ 							memset(start, vga.attr.overscan_color, rect->w);
+ 							start += linepitch;
+ 						}
+ 					}
+ 				} else {
+ 					for (Bits i=0; i<4; i++)
+ 						SDL_FillRect(sdl.surface, &sdl.updateRects[i], border_color);
+ 					SDL_UpdateRects(sdl.surface, 4, sdl.updateRects);
+ 				}
+ 			}
 		}
 		sdl.updating=true;
 		return true;
@@ -1039,6 +1083,7 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("SDL:Unsupported output device %s, switching back to surface",output);
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	}
+	sdl.overscan_width=section->Get_int("overscan");
 
 	sdl.overlay=0;
 #if C_OPENGL
@@ -1291,6 +1336,7 @@ int main(int argc, char* argv[]) {
 		sdl_sec->Add_string("priority","higher,normal");
 		sdl_sec->Add_string("mapperfile","mapper.txt");
 		sdl_sec->Add_bool("usescancodes",true);
+		sdl_sec->Add_int("overscan",0);
 
 		MSG_Add("SDL_CONFIGFILE_HELP",
 			"fullscreen -- Start dosbox directly in fullscreen.\n"
@@ -1312,6 +1358,7 @@ int main(int argc, char* argv[]) {
 			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 			"mapperfile -- File used to load/save the key/event mappings from.\n"
 			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
+			"overscan -- Width of overscan border.\n"
 			);
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
