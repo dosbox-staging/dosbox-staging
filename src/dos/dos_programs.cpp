@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.56 2006-03-12 21:12:20 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.57 2006-04-07 15:15:45 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -619,6 +619,8 @@ public:
 	}
 
 	void Run(void) {
+		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
+		if(DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
 		if(cmd->FindExist("cdrom",false)) {
 			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
 			return;
