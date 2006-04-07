@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.24 2006-02-26 16:05:13 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.25 2006-04-07 16:34:07 c2woody Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -33,6 +33,8 @@ public:
 	bool Close();
 	void ClearAnsi(void);
 	Bit16u GetInformation(void);
+	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 private:
 	Bit8u readcache;
 	Bit8u lastwrite;
@@ -313,7 +315,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			if(ansi.data[0]!=2) {/* every version behaves like type 2 */
 				LOG(LOG_IOCTL,LOG_NORMAL)("ANSI: esc[%dJ called : not supported handling as 2",ansi.data[0]);
 			}
-			INT10_ScrollWindow(0,0,999,999,0,ansi.attr,0xFF);
+			INT10_ScrollWindow(0,0,255,255,0,ansi.attr,0xFF);
 			ClearAnsi();
 			INT10_SetCursorPos(0,0,0);
 			break;

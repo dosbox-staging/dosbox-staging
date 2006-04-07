@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.37 2006-03-26 11:54:44 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.38 2006-04-07 16:34:07 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -1065,7 +1065,9 @@ public:
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}
 	bool Close(){return false;}
-	Bit16u GetInformation(void){return 0x8093;}
+	Bit16u GetInformation(void){return 0xc880;}
+	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return true;}
+	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return true;}
 private:
 	Bit8u cache;
 };

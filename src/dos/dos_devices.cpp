@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.11 2006-02-09 11:47:48 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.12 2006-04-07 16:34:07 c2woody Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -53,6 +53,8 @@ public:
 	}
 	bool Close() { return true; }
 	Bit16u GetInformation(void) { return 0x8084; }
+	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 };
 
 bool DOS_Device::Read(Bit8u * data,Bit16u * size) {
@@ -73,6 +75,14 @@ bool DOS_Device::Close() {
 
 Bit16u DOS_Device::GetInformation(void) { 
 	return Devices[devnum]->GetInformation();
+}
+
+bool DOS_Device::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode) { 
+	return Devices[devnum]->ReadFromControlChannel(bufptr,size,retcode);
+}
+
+bool DOS_Device::WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode) { 
+	return Devices[devnum]->WriteToControlChannel(bufptr,size,retcode);
 }
 
 DOS_File::DOS_File(const DOS_File& orig) {

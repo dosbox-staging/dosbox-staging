@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.26 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.27 2006-04-07 16:34:07 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -46,9 +46,38 @@ bool DOS_IOCTL(void) {
 	}
 	switch(reg_al) {
 	case 0x00:		/* Get Device Information */
-		reg_dx=Files[handle]->GetInformation();
+		if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
+			reg_dx=Files[handle]->GetInformation();
+		} else {
+			/* return drive number in lower 5 bits for block devices */
+			reg_dx=(Files[handle]->GetInformation()&0xffe0)|drive;
+		}
 		reg_ax=reg_dx; //Destroyed officially
 		return true;
+	case 0x02:		/* Read from Device Control Channel */
+		if (Files[handle]->GetInformation() & 0xc000) {
+			/* is character device with IOCTL support */
+			PhysPt bufptr=PhysMake(SegValue(ds),reg_dx);
+			Bit16u retcode=0;
+			if (((DOS_Device*)(Files[handle]))->ReadFromControlChannel(bufptr,reg_cx,&retcode)) {
+				reg_ax=retcode;
+				return true;
+			}
+		}
+		DOS_SetError(0x0001);	// invalid function
+		return false;
+	case 0x03:		/* Write to Device Control Channel */
+		if (Files[handle]->GetInformation() & 0xc000) {
+			/* is character device with IOCTL support */
+			PhysPt bufptr=PhysMake(SegValue(ds),reg_dx);
+			Bit16u retcode=0;
+			if (((DOS_Device*)(Files[handle]))->WriteToControlChannel(bufptr,reg_cx,&retcode)) {
+				reg_ax=retcode;
+				return true;
+			}
+		}
+		DOS_SetError(0x0001);	// invalid function
+		return false;
 	case 0x06:      /* Get Input Status */
 		if (Files[handle]->GetInformation() & 0x8000) {		//Check for device
 			reg_al=(Files[handle]->GetInformation() & 0x40) ? 0x0 : 0xff;
@@ -59,12 +88,11 @@ bool DOS_IOCTL(void) {
 			Files[handle]->Seek(&endlocation, DOS_SEEK_END);
 			if(oldlocation < endlocation){//Still data available
 				reg_al=0xff;
-			} else
-			{
+			} else {
 				reg_al=0x0; //EOF or beyond
 			}
 			Files[handle]->Seek(&oldlocation, DOS_SEEK_SET); //restore filelocation
-			LOG(LOG_IOCTL,LOG_NORMAL)("06:Used Get Input Status on regualar file with handle %d",handle);
+			LOG(LOG_IOCTL,LOG_NORMAL)("06:Used Get Input Status on regular file with handle %d",handle);
 		}
 		return true;
 	case 0x07:		/* Get Output Status */

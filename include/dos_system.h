@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.31 2006-02-09 11:47:47 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.32 2006-04-07 16:34:07 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -29,6 +29,8 @@
 #ifndef DOSBOX_CROSS_H
 #include "cross.h"
 #endif
+
+#include "mem.h"
 
 #define DOS_NAMELENGTH 12
 #define DOS_NAMELENGTH_ASCII (DOS_NAMELENGTH+1)
@@ -99,6 +101,8 @@ public:
 	virtual bool	Seek(Bit32u * pos,Bit32u type);
 	virtual bool	Close();
 	virtual Bit16u	GetInformation(void);   
+	virtual bool	ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
+	virtual bool	WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 	void SetDeviceNumber(Bitu num) { devnum=num;}
 private:
 	Bitu devnum;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.47 2006-03-12 20:31:49 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.48 2006-04-07 16:34:07 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,7 +79,9 @@ public:
 	}
 	bool Seek(Bit32u * pos,Bit32u type){return false;}
 	bool Close(){return false;}
-	Bit16u GetInformation(void){return 0x8093;}
+	Bit16u GetInformation(void){return 0xc080;}
+	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return true;}
+	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return true;}
 private:
 	Bit8u cache;
 };
@@ -608,7 +610,7 @@ static Bitu INT67_Handler(void) {
 		} else {
 			switch (reg_al) {
 			case 0x00:		/* VCPI Installation Check */
-				if (((reg_cx==0) && (reg_di=0x0012)) || (cpu.pmode && (reg_flags & FLAG_VM))) {
+				if (((reg_cx==0) && (reg_di==0x0012)) || (cpu.pmode && (reg_flags & FLAG_VM))) {
 					/* JEMM detected or already in v86 mode */
 					reg_ah=EMM_NO_ERROR;
 					reg_bx=0x100;
