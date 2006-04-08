@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.21 2006-02-16 20:18:59 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.22 2006-04-08 19:31:48 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -241,7 +241,7 @@ static SDLKey sdlkey_map[]={
 
 	/* Keypad (KP_EQUALS not supported, NUMLOCK used on what is CLEAR
 	 * in Mac OS X) */
-	/*41-46*/ SDLK_KP_PERIOD, Z, SDLK_KP_MULTIPLY, Z, SDLK_PLUS, Z,
+	/*41-46*/ SDLK_KP_PERIOD, Z, SDLK_KP_MULTIPLY, Z, SDLK_KP_PLUS, Z,
 	/*47-4A*/ SDLK_NUMLOCK /*==SDLK_CLEAR*/, Z, Z, Z,
 	/*4B-4D*/ SDLK_KP_DIVIDE, SDLK_KP_ENTER, Z,
 	/*4E-51*/ SDLK_KP_MINUS, Z, Z, SDLK_KP_EQUALS,
@@ -250,14 +250,15 @@ static SDLKey sdlkey_map[]={
 
 	/*5D-5F*/ Z, Z, Z,
 	
-	/* Function keys and cursor blocks (F13-F16 not supported, INSERT
-	 * used on what is HELP in Mac OS X) */
+	/* Function keys and cursor blocks (F13 not supported, F14 =>
+	 * PRINT[SCREEN], F15 => SCROLLOCK, F16 => PAUSE, HELP => INSERT) */
 	/*60-64*/ SDLK_F5, SDLK_F6, SDLK_F7, SDLK_F3, SDLK_F8,
-	/*65-6A*/ SDLK_F9, Z, SDLK_F11, Z, SDLK_F13, (SDLKey)(SDLK_F15+1),
-	/*6B-71*/ SDLK_F14, Z, SDLK_F10, Z, SDLK_F12, Z, SDLK_F15, 
-	/*72-74*/ SDLK_INSERT /*==SDLK_HELP*/, SDLK_HOME, SDLK_PAGEUP,
-	/*75-79*/ SDLK_DELETE, SDLK_F4, SDLK_END, SDLK_F2, SDLK_PAGEDOWN,
-	/*7A-7E*/ SDLK_F1, SDLK_LEFT, SDLK_RIGHT, SDLK_DOWN, SDLK_UP,
+	/*65-6A*/ SDLK_F9, Z, SDLK_F11, Z, SDLK_F13, SDLK_PAUSE /*==SDLK_F16*/,
+	/*6B-70*/ SDLK_PRINT /*==SDLK_F14*/, Z, SDLK_F10, Z, SDLK_F12, Z,
+	/*71-72*/ SDLK_SCROLLOCK /*==SDLK_F15*/, SDLK_INSERT /*==SDLK_HELP*/, 
+	/*73-77*/ SDLK_HOME, SDLK_PAGEUP, SDLK_DELETE, SDLK_F4, SDLK_END,
+	/*78-7C*/ SDLK_F2, SDLK_PAGEDOWN, SDLK_F1, SDLK_LEFT, SDLK_RIGHT,
+	/*7D-7E*/ SDLK_DOWN, SDLK_UP,
 
 	/*7F-7F*/ Z,
 
