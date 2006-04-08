@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.54 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.55 2006-04-08 11:25:41 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -27,7 +27,7 @@
 #include "callback.h"
 #include "debug.h"
 
-char * RunningProgram="DOSBOX";
+const char * RunningProgram="DOSBOX";
 
 #ifdef _MSC_VER
 #pragma pack(1)
@@ -233,12 +233,12 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	Bit16u fhandle;Bit16u len;Bit32u pos;
 	Bit16u pspseg,envseg,loadseg,memsize,readsize;
 	PhysPt loadaddress;RealPt relocpt;
-	Bitu headersize,imagesize;
+	Bitu headersize=0,imagesize=0;
 	DOS_ParamBlock block(block_pt);
 
 	block.LoadData();
 	if (flags!=LOADNGO && flags!=OVERLAY && flags!=LOAD) {
-		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name); 	
+		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name);
 	}
 	/* Check for EXE or COM File */
 	bool iscom=false;
@@ -433,7 +433,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
 #endif
 		/* Add the filename to PSP and environment MCB's */
-		char stripname[8];Bitu index=0;
+		char stripname[8]= { 0 };Bitu index=0;
 		while (char chr=*name++) {
 			switch (chr) {
 			case ':':case '\\':case '/':index=0;break;
