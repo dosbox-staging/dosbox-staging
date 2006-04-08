@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.22 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: setup.h,v 1.23 2006-04-08 19:41:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -222,8 +222,8 @@ protected:
 public:
 	Module_base(Section* configuration){m_configuration=configuration;};
 //	Module_base(Section* configuration, SaveState* state) {};
-	~Module_base(){/*LOG_MSG("executed")*/;};//Destructors are required
+	virtual ~Module_base(){/*LOG_MSG("executed")*/;};//Destructors are required
 	/* Returns true if succesful.*/
-	virtual bool Change_Config(Section* newconfig) {return false;} ;
+	virtual bool Change_Config(Section* /*newconfig*/) {return false;} ;
 };
 #endif

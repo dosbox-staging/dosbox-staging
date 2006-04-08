@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.22 2006-04-08 19:31:48 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.23 2006-04-08 19:41:49 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -47,8 +47,8 @@ enum {
 };
 
 enum BB_Types {
-	BB_Next,BB_Prev,BB_Add,BB_Del,
-	BB_Save,BB_Reset,BB_Exit
+	BB_Next,BB_Add,BB_Del,
+	BB_Save,BB_Exit
 };
 
 enum BC_Types {
@@ -94,7 +94,7 @@ static CBindList holdlist;
 
 class CEvent {
 public:
-	CEvent(char * _entry) {
+	CEvent(char const * const _entry) {
 		safe_strncpy(entry,_entry,16);
 		events.push_back(this);
 		bindlist.clear();
@@ -112,7 +112,7 @@ public:
 		if (!activity) Active(false);
 	}
 	void DeActivateAll(void);
-	void SetValue(Bits value){
+	void SetValue(Bits /*value*/){
 	};
 	char * GetName(void) { return entry;}
 	CBindList bindlist;
@@ -149,8 +149,8 @@ public:
 			if (!strcasecmp(word,"hold")) flags|=BFLG_Hold;
 		}
 	}
-	void Activate(Bits value) {
-		event->SetValue(value);
+	void Activate(Bits _value) {
+		event->SetValue(_value);
 		if (active) return;
 		event->Activate();
 		active=true;
@@ -172,6 +172,7 @@ public:
 	}
 	virtual void ConfigName(char * buf)=0;
 	virtual void BindName(char * buf)=0;
+   
 	Bitu mods,flags;
 	Bit16s value;
 	CEvent * event;
@@ -203,8 +204,10 @@ public:
 	virtual CBind * CreateEventBind(SDL_Event * event)=0;
 
 	virtual bool CheckEvent(SDL_Event * event)=0;
-	virtual char * ConfigStart(void)=0;
-	virtual char * BindStart(void)=0;
+	virtual const char * ConfigStart(void)=0;
+	virtual const char * BindStart(void)=0;
+	virtual ~CBindGroup (void) { }
+
 protected:
 
 };
@@ -398,14 +401,14 @@ public:
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
 private:
-	char * ConfigStart(void) {
+	const char * ConfigStart(void) {
 		return configname;
 	}
-	char * BindStart(void) {
+	const char * BindStart(void) {
 		return "Key";
 	}
 protected:
-	char * configname;
+	const char * configname;
 	CBindList * lists;
 	Bitu keys;
 };
@@ -558,11 +561,11 @@ private:
 		assert(button<buttons);
 		return new CJButtonBind(&button_lists[button],this,button);
 	}
-	char * ConfigStart(void) {
+	const char * ConfigStart(void) {
 		return configname;
 	}
-	char * BindStart(void) {
-		return (char *)SDL_JoystickName(stick);
+	const char * BindStart(void) {
+		return SDL_JoystickName(stick);
 	}
 protected:
 	CBindList * pos_axis_lists;
@@ -801,7 +804,6 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value) {
 }
 
 void CBindGroup::DeactivateBindList(CBindList * list) {
-	Bitu validmod=0;
 	CBindList_it it;
 	for (it=list->begin();it!=list->end();it++) {
 		(*it)->DeActivate();
@@ -892,13 +894,8 @@ public:
 	CCaptionButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy) : CButton(_x,_y,_dx,_dy){
 		caption[0]=0;
 	}
-	void Change(char * format,...) {
-		va_list msg;
-		va_start(msg,format);
-		vsprintf(caption,format,msg);
-		va_end(msg);
-		mapper.redraw=true;
-	}		
+	void Change(const char * format,...) GCC_ATTRIBUTE(__format__(__printf__,2,3));
+
 	void Draw(void) {
 		if (!enabled) return;
 		DrawText(x+2,y+2,caption,color);
@@ -906,6 +903,14 @@ public:
 protected:
 	char caption[128];
 };
+
+void CCaptionButton::Change(const char * format,...) {
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(caption,format,msg);
+	va_end(msg);
+	mapper.redraw=true;
+}		
 
 static void MAPPER_SaveBinds(void);
 class CBindButton : public CTextButton {
@@ -1004,7 +1009,7 @@ protected:
 
 class CKeyEvent : public CEvent {
 public:
-	CKeyEvent(char * _entry,KBD_KEYS _key) : CEvent(_entry) {
+	CKeyEvent(char const * const _entry,KBD_KEYS _key) : CEvent(_entry) {
 		key=_key;
 	}
 	void Active(bool yesno) {
@@ -1015,12 +1020,12 @@ public:
 
 class CJAxisEvent : public CEvent {
 public:
-	CJAxisEvent(char * _entry,Bitu _stick,bool _yaxis,bool _positive) : CEvent(_entry) {
+	CJAxisEvent(char const * const _entry,Bitu _stick,bool _yaxis,bool _positive) : CEvent(_entry) {
 		stick=_stick;
 		yaxis=_yaxis;
 		positive=_positive;
 	}
-	void Active(bool yesno) {
+	void Active(bool /*yesno*/) {
 	};
 	Bitu stick;
 	bool yaxis,positive;
@@ -1028,11 +1033,11 @@ public:
 
 class CJButtonEvent : public CEvent {
 public:
-	CJButtonEvent(char * _entry,Bitu _stick,Bitu _button) : CEvent(_entry) {
+	CJButtonEvent(char const * const _entry,Bitu _stick,Bitu _button) : CEvent(_entry) {
 		stick=_stick;
 		button=_button;
 	}
-	void Active(bool yesno) {
+	void Active(bool /*yesno*/) {
 	};
 	Bitu stick,button;
 };
@@ -1040,7 +1045,7 @@ public:
 
 class CModEvent : public CEvent {
 public:
-	CModEvent(char * _entry,Bitu _wmod) : CEvent(_entry) {
+	CModEvent(char const * const _entry,Bitu _wmod) : CEvent(_entry) {
 		wmod=_wmod;
 	}
 	void Active(bool yesno) {
@@ -1053,7 +1058,7 @@ protected:
 
 class CHandlerEvent : public CEvent {
 public:
-	CHandlerEvent(char * _entry,MAPPER_Handler * _handler,MapKeys _key,Bitu _mod,char * _buttonname) : CEvent(_entry) {
+	CHandlerEvent(char const * const _entry,MAPPER_Handler * _handler,MapKeys _key,Bitu _mod,char const * const _buttonname) : CEvent(_entry) {
 		handler=_handler;
 		defmod=_mod;
 		defkey=_key;
@@ -1063,7 +1068,7 @@ public:
 	void Active(bool yesno) {
 		(*handler)(yesno);
 	};
-	char * ButtonName(void) {
+	const char * ButtonName(void) {
 		return buttonname;
 	}
 	void MakeDefaultBind(char * buf) {
@@ -1103,7 +1108,7 @@ protected:
 	Bitu defmod;
 	MAPPER_Handler * handler;
 public:
-	char * buttonname;
+	const char * buttonname;
 };
 
 
@@ -1117,7 +1122,6 @@ static struct {
 	CBindButton * add;
 	CBindButton * del;
 	CBindButton * next;
-	CBindButton * prev;
 	CCheckButton * mod1,* mod2,* mod3,* hold;
 } bind_but;
 
@@ -1136,7 +1140,6 @@ static void SetActiveBind(CBind * _bind) {
 	} else {
 		bind_but.bind_title->Enable(false);
 		bind_but.del->Enable(false);
-		bind_but.prev->Enable(false);
 		bind_but.next->Enable(false);
 		bind_but.mod1->Enable(false);
 		bind_but.mod2->Enable(false);
@@ -1173,34 +1176,34 @@ static void DrawButtons(void) {
 	SDL_Flip(mapper.surface);
 }
 
-static void AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,const char * title,const char * entry,KBD_KEYS key) {
+static void AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
 	char buf[64];
 	strcpy(buf,"key_");
 	strcat(buf,entry);
 	CKeyEvent * event=new CKeyEvent(buf,key);
-	CButton * button=new CEventButton(x,y,dx,dy,title,event);
+	new CEventButton(x,y,dx,dy,title,event);
 }
-
-static void AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,const char * title,Bitu stick,bool yaxis,bool positive) {
+#if 0 //unused code
+static void AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,bool yaxis,bool positive) {
 	char buf[64];
 	sprintf(buf,"jaxis_%d%s%s",stick,yaxis ? "Y":"X",positive ? "+" : "-");
 	CJAxisEvent	* event=new CJAxisEvent(buf,stick,yaxis,positive);
-	CButton * button=new CEventButton(x,y,dx,dy,title,event);
+	new CEventButton(x,y,dx,dy,title,event);
 }
 
-static void AddJButtonButton(Bitu x,Bitu y,Bitu dx,Bitu dy,const char * title,Bitu _stick,Bitu _button) {
+static void AddJButtonButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu _stick,Bitu _button) {
 	char buf[64];
 	sprintf(buf,"jbutton_%d_%d",_stick,_button);
 	CJButtonEvent * event=new CJButtonEvent(buf,_stick,_button);
-	CButton * button=new CEventButton(x,y,dx,dy,title,event);
+	new CEventButton(x,y,dx,dy,title,event);
 }
+#endif
 
-
-static void AddModButton(Bitu x,Bitu y,Bitu dx,Bitu dy,const char * title,Bitu _mod) {
+static void AddModButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu _mod) {
 	char buf[64];
 	sprintf(buf,"mod_%d",_mod);
 	CModEvent * event=new CModEvent(buf,_mod);
-	CButton * button=new CEventButton(x,y,dx,dy,title,event);
+	new CEventButton(x,y,dx,dy,title,event);
 }
 
 struct KeyBlock {
@@ -1359,7 +1362,6 @@ static void CreateLayout(void) {
 	bind_but.mod3=new CCheckButton(20,454,60,20, "mod3",BC_Mod3);
 	bind_but.hold=new CCheckButton(100,410,60,20,"hold",BC_Hold);
 
-	bind_but.prev=new CBindButton(200,400,50,20,"Prev",BB_Prev);
 	bind_but.next=new CBindButton(250,400,50,20,"Next",BB_Next);
 
 	bind_but.add=new CBindButton(250,380,50,20,"Add",BB_Add);
@@ -1404,7 +1406,7 @@ foundevent:
 }
 
 static struct {
-	char * eventend;
+	const char * eventend;
 	Bitu key;
 } DefaultKeys[]={
 	{"f1",SDLK_F1},		{"f2",SDLK_F2},		{"f3",SDLK_F3},		{"f4",SDLK_F4},
@@ -1474,7 +1476,7 @@ static void CreateDefaultBinds(void) {
    
 }
 
-void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char * eventname,char * buttonname) {
+void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const * const eventname,char const * const buttonname) {
 	//Check if it allready exists=> if so return.
 	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
 		if(strcmp((*it)->buttonname,buttonname) == 0) return;
