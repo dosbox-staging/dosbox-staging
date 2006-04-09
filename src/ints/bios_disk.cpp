@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.27 2006-02-12 23:23:52 harekiet Exp $ */
+/* $Id: bios_disk.cpp,v 1.28 2006-04-09 13:03:24 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -51,6 +51,7 @@ Bit16u imgDTASeg;
 RealPt imgDTAPtr;
 DOS_DTA *imgDTA;
 bool killRead;
+static bool swapping_requested;
 
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
@@ -112,6 +113,12 @@ void swapInDisks(void) {
 	}
 }
 
+bool getSwapRequest(void) {
+	bool sreq=swapping_requested;
+	swapping_requested = false;
+	return sreq;
+}
+
 void swapInNextDisk(bool pressed) {
 	if (!pressed)
 		return;
@@ -122,6 +129,7 @@ void swapInNextDisk(bool pressed) {
 	swapPosition++;
 	if(diskSwap[swapPosition] == NULL) swapPosition = 0;
 	swapInDisks();
+	swapping_requested = true;
 }
 
 
@@ -492,4 +500,5 @@ void BIOS_SetupDisks(void) {
 
 	MAPPER_AddHandler(swapInNextDisk,MK_f4,MMOD1,"swapimg","Swap Image");
 	killRead = false;
+	swapping_requested = false;
 }

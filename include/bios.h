@@ -159,6 +159,7 @@ extern DOS_DTA *imgDTA;
 
 void swapInDisks(void);
 void swapInNextDisk(void);
+bool getSwapRequest(void);
 
 void BIOS_ZeroExtendedSize(bool in);
 void char_out(Bit8u chr,Bit32u att,Bit8u page);
