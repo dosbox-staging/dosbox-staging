@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.24 2006-03-02 14:12:49 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.25 2006-04-10 12:06:07 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -248,7 +248,7 @@ void CONFIG::Run(void) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"),temp_line.c_str());
 			return;
 		}
-		char* val = sec->GetPropValue(prop.c_str());
+		char const* val = sec->GetPropValue(prop.c_str());
 		if(!val) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),prop.c_str(),temp_line.c_str());   
 			return;

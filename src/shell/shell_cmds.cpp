@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.62 2006-02-24 11:50:11 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.63 2006-04-10 12:06:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -64,7 +64,7 @@ bool DOS_Shell::CheckConfig(char* cmd,char*line) {
 	Section* test = control->GetSectionFromProperty(cmd);
 	if(!test) return false;
 	if(line && !line[0]) {
-		char* val = test->GetPropValue(cmd);
+		char const* val = test->GetPropValue(cmd);
 		if(val) WriteOut("%s\n",val);
 		return true;
 	}

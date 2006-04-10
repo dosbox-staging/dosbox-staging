@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.34 2006-03-12 21:26:22 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.35 2006-04-10 12:06:07 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -79,7 +79,7 @@ void Prop_hex::GetValuestring(char* str){
         sprintf(str,"%X",value._hex);
 }
 
-void Section_prop::Add_float(const char* _propname, float _value) {
+void Section_prop::Add_float(char const * const _propname, float _value) {
 	Property* test=new Prop_float(_propname,_value);
 	properties.push_back(test);
 }
@@ -90,12 +90,12 @@ void Section_prop::Add_int(const char* _propname, int _value) {
 	properties.push_back(test);
 }
 
-void Section_prop::Add_string(const char* _propname, char* _value) {
+void Section_prop::Add_string(char const * const _propname, char const * const _value) {
 	Property* test=new Prop_string(_propname,_value);
 	properties.push_back(test);
 }
 
-void Section_prop::Add_bool(const char* _propname, bool _value) {
+void Section_prop::Add_bool(char const * const _propname, bool _value) {
 	Property* test=new Prop_bool(_propname,_value);
 	properties.push_back(test);
 }
@@ -103,7 +103,7 @@ void Section_prop::Add_hex(const char* _propname, int _value) {
 	Property* test=new Prop_hex(_propname,_value);
 	properties.push_back(test);
 }
-int Section_prop::Get_int(const char* _propname){
+int Section_prop::Get_int(char const * const _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._int;
@@ -112,7 +112,7 @@ int Section_prop::Get_int(const char* _propname){
 	return 0;
 }
 
-bool Section_prop::Get_bool(const char* _propname){
+bool Section_prop::Get_bool(char const * const _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._bool;
@@ -120,7 +120,7 @@ bool Section_prop::Get_bool(const char* _propname){
 	}
 	return false;
 }
-float Section_prop::Get_float(const char* _propname){
+float Section_prop::Get_float(char const * const _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._float;
@@ -129,7 +129,7 @@ float Section_prop::Get_float(const char* _propname){
 	return false;
 }
 
-const char* Section_prop::Get_string(const char* _propname){
+const char* Section_prop::Get_string(char const * const _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._string->c_str();
@@ -137,7 +137,7 @@ const char* Section_prop::Get_string(const char* _propname){
 	}
 	return "";
 }
-int Section_prop::Get_hex(const char* _propname){
+int Section_prop::Get_hex(char const * const _propname){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._hex;
@@ -170,7 +170,7 @@ void Section_prop::PrintData(FILE* outfile){
 }
 
 static char buffer[1024];
-char* Section_prop::GetPropValue(const char* _property) {
+char const * Section_prop::GetPropValue(char const * const _property) {
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if(!strcasecmp((*tel)->propname.c_str(),_property)){
 			(*tel)->GetValuestring(buffer);
@@ -189,11 +189,11 @@ void Section_line::PrintData(FILE* outfile) {
 	fprintf(outfile,"%s",data.c_str());
 }
 
-char* Section_line::GetPropValue(const char* _property) {
+char const* Section_line::GetPropValue(char const * const /* _property*/) {
 	return NULL;
 }
 
-void Config::PrintConfig(const char* configfilename){
+void Config::PrintConfig(char const * const configfilename){
 	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
@@ -223,7 +223,7 @@ void Config::PrintConfig(const char* configfilename){
 }
    
 
-Section_prop* Config::AddSection_prop(const char* _name,void (*_initfunction)(Section*),bool canchange){
+Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange){
 	Section_prop* blah = new Section_prop(_name);
 	blah->AddInitFunction(_initfunction,canchange);
 	sectionlist.push_back(blah);
@@ -239,7 +239,7 @@ Section_prop::~Section_prop() {
 }
 
 
-Section_line* Config::AddSection_line(const char* _name,void (*_initfunction)(Section*)){
+Section_line* Config::AddSection_line(char const * const _name,void (*_initfunction)(Section*)){
 	Section_line* blah = new Section_line(_name);
 	blah->AddInitFunction(_initfunction);
 	sectionlist.push_back(blah);
@@ -278,21 +278,20 @@ Config::~Config() {
 	}
 }
 
-Section* Config::GetSection(const char* _sectionname){
+Section* Config::GetSection(char const * const _sectionname){
 	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		if (!strcasecmp((*tel)->GetName(),_sectionname)) return (*tel);
 	}
 	return NULL;
 }
 
-Section* Config::GetSectionFromProperty(const char* prop)
-{
+Section* Config::GetSectionFromProperty(char const * const prop){
    	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		if ((*tel)->GetPropValue(prop)) return (*tel);
 	}
 	return NULL;
 }
-bool Config::ParseConfigFile(const char* configfilename){
+bool Config::ParseConfigFile(char const * const configfilename){
 	ifstream in(configfilename);
 	if (!in) return false;
 	LOG_MSG("CONFIG:Loading settings from config file %s", configfilename);
@@ -373,14 +372,14 @@ void Config::StartUp(void) {
 	(*_start_function)();
 }
 
-bool CommandLine::FindExist(char * name,bool remove) {
+bool CommandLine::FindExist(char const * const name,bool remove) {
 	cmd_it it;
 	if (!(FindEntry(name,it,false))) return false;
 	if (remove) cmds.erase(it);
 	return true;
 }
 
-bool CommandLine::FindHex(char * name,int & value,bool remove) {
+bool CommandLine::FindHex(char const * const name,int & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
@@ -389,7 +388,7 @@ bool CommandLine::FindHex(char * name,int & value,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindInt(char * name,int & value,bool remove) {
+bool CommandLine::FindInt(char const * const name,int & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
@@ -398,7 +397,7 @@ bool CommandLine::FindInt(char * name,int & value,bool remove) {
 	return true;
 }
 
-bool CommandLine::FindString(char * name,std::string & value,bool remove) {
+bool CommandLine::FindString(char const * const name,std::string & value,bool remove) {
 	cmd_it it,it_next;
 	if (!(FindEntry(name,it,true))) return false;
 	it_next=it;it_next++;
@@ -416,7 +415,7 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 	return true;
 }
 
-bool CommandLine::FindEntry(char * name,cmd_it & it,bool neednext) {
+bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 	for (it=cmds.begin();it!=cmds.end();it++) {
 		if (!strcasecmp((*it).c_str(),name)) {
 			cmd_it itnext=it;itnext++;
@@ -427,11 +426,11 @@ bool CommandLine::FindEntry(char * name,cmd_it & it,bool neednext) {
 	return false;
 }
 
-bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove) {
-	cmd_it it;
-	for (it=cmds.begin();it!=cmds.end();it++) {
-		if (strncmp(begin,(*it).c_str(),strlen(begin))==0) {
-			value=((*it).c_str()+strlen(begin));
+bool CommandLine::FindStringBegin(char const* const begin,std::string & value, bool remove) {
+	size_t len = strlen(begin);
+	for (cmd_it it=cmds.begin();it!=cmds.end();it++) {
+		if (strncmp(begin,(*it).c_str(),len)==0) {
+			value=((*it).c_str() + len);
 			if (remove) cmds.erase(it);
 			return true;
 		}
@@ -439,7 +438,7 @@ bool CommandLine::FindStringBegin(char * begin,std::string & value, bool remove)
 	return false;
 }
 
-bool CommandLine::FindStringRemain(char * name,std::string & value) {
+bool CommandLine::FindStringRemain(char const * const name,std::string & value) {
 	cmd_it it;value="";
 	if (!FindEntry(name,it)) return false;
 	it++;
@@ -466,7 +465,7 @@ unsigned int CommandLine::GetCount(void) {
 	return cmds.size();
 }
 
-CommandLine::CommandLine(int argc,char * argv[]) {
+CommandLine::CommandLine(int argc,char const * const argv[]) {
 	if (argc>0) {
 		file_name=argv[0];
 	}
@@ -478,13 +477,14 @@ CommandLine::CommandLine(int argc,char * argv[]) {
 }
 
 
-CommandLine::CommandLine(char * name,char * cmdline) {
+CommandLine::CommandLine(char const * const name,char const * const cmdline) {
 	if (name) file_name=name;
 	/* Parse the cmds and put them in the list */
 	bool inword,inquote;char c;
 	inword=false;inquote=false;
 	std::string str;
-	while ((c=*cmdline)!=0) {
+	const char * c_cmdline=cmdline;
+	while ((c=*c_cmdline)!=0) {
 		if (inquote) {
 			if (c!='"') str+=c;
 			else {
@@ -502,7 +502,7 @@ CommandLine::CommandLine(char * name,char * cmdline) {
 		} 
 		else if (c=='"') { inquote=true;}
 		else if (c!=' ') { str+=c;inword=true;}
-		cmdline++;
+		c_cmdline++;
 	}
 	if (inword || inquote) cmds.push_back(str);
 }
