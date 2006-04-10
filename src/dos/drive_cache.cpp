@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.46 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.47 2006-04-10 12:52:47 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -741,46 +741,6 @@ bool DOS_Drive_Cache::FindNext(Bitu id, char* &result)
 	if (!SetResult(dirFindFirst[id], result, dirFindFirst[id]->nextEntry)) {
 		// free slot
 		delete dirFindFirst[id]; dirFindFirst[id] = 0;
-		return false;
-	}
-	return true;
-};
-
-// ****************************************************************************
-// No Dir Cache, 
-// ****************************************************************************
-
-static DIR*	srch_opendir = 0;
-
-DOS_No_Drive_Cache::DOS_No_Drive_Cache(const char* path)
-{
-	SetBaseDir(path);
-};
-
-void DOS_No_Drive_Cache::SetBaseDir(const char* path)
-{
-	strcpy(basePath,path);
-}
-
-bool DOS_No_Drive_Cache::OpenDir(const char* path, Bit16u& id)
-{
-	id = 0;
-	strcpy(dirPath,path);
-	if((srch_opendir=opendir(dirPath))==NULL) return false;
-	return true;
-};
-
-bool DOS_No_Drive_Cache::ReadDir(Bit16u id, char* &result)
-{
-	static char res[CROSS_LEN] = { 0 };
-	dirent * ent;		
-
-	if (!srch_opendir) return false;
-	if ((ent=readdir(srch_opendir))==NULL) {
-		strcpy(res,ent->d_name);
-		result=res;
-		closedir(srch_opendir);
-		srch_opendir=NULL;
 		return false;
 	}
 	return true;

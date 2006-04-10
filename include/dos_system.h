@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.32 2006-04-07 16:34:07 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.33 2006-04-10 12:52:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -108,8 +108,12 @@ private:
 	Bitu devnum;
 };
 
+/* The following variable can be lowered to free up some memory. 
+ * The negative side effect: The stored searches will be turned over faster.
+ * Should not have impact on systems with few directory entries. */
 #define MAX_OPENDIRS 2048
 //Can be high as it's only storage (16 bit variable)
+
 class DOS_Drive_Cache {
 public:
 	DOS_Drive_Cache					(void);
@@ -196,40 +200,6 @@ private:
 	bool		updatelabel;
 };
 
-class DOS_No_Drive_Cache {
-public:
-	DOS_No_Drive_Cache				(void) {};
-	DOS_No_Drive_Cache				(const char* path);
-	~DOS_No_Drive_Cache				(void) {};
-
-	typedef enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
-
-	void		SetBaseDir			(const char* path);
-	void		SetDirSort			(TDirSort sort) {};
-	bool		OpenDir				(const char* path, Bit16u& id);
-	bool		ReadDir				(Bit16u id, char * &result);
-
-	void		ExpandName			(char* path) {};
-	char*		GetExpandName		(const char* path) { return (char*)path; };
-	bool		GetShortName		(const char* fullname, char* shortname) { return false; };
-	
-	void		CacheOut			(const char* path, bool ignoreLastDir = false) {};
-	void		AddEntry			(const char* path, bool checkExists = false) {};
-	void		DeleteEntry			(const char* path, bool ignoreLastDir = false) {};
-
-	void		SetCurrentEntry		(Bit16u entry) {};
-	Bit16u		GetCurrentEntry		(void) { return 0; };
-
-	void		EmptyCache			(void) {};
-	
-	void		SetLabel			(const char* name)	{};
-	char*		GetLabel			(void)				{return "";};
-
-public:
-	char		basePath			[CROSS_LEN];
-	char		dirPath				[CROSS_LEN];
-};
-
 class DOS_Drive {
 public:
 	DOS_Drive();
@@ -257,6 +227,7 @@ public:
 	char info[256];
 	/* Can be overridden for example in iso images */
 	virtual char const * GetLabel(){return dirCache.GetLabel();};
+
 	DOS_Drive_Cache dirCache;
 };
 
