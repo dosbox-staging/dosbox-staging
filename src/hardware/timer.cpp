@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.35 2006-02-27 20:16:49 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.36 2006-04-11 12:02:09 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -53,11 +53,17 @@ struct PIT_Block {
 	bool bcd;
 	bool go_read_latch;
 	bool new_mode;
+	bool counterstatus_set;
 };
 
 static PIT_Block pit[3];
 
-static void PIT0_Event(Bitu val) {
+static Bit8u latched_timerstatus;
+// the timer status can not be overwritten until it is read or the timer was 
+// reprogrammed.
+static bool latched_timerstatus_locked;
+
+static void PIT0_Event(Bitu /*val*/) {
 	PIC_ActivateIRQ(0);
 	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].delay);
 }
@@ -84,7 +90,31 @@ static bool counter_output(Bitu counter) {
 		return true;
 	}
 }
-
+static void status_latch(Bitu counter) {
+	// the timer status can not be overwritten until it is read or the timer was 
+	// reprogrammed.
+	if(!latched_timerstatus_locked)	{
+		PIT_Block * p=&pit[counter];
+		latched_timerstatus=0;
+		// Timer Status Word
+		// 0: BCD 
+		// 1-3: Timer mode
+		// 4-5: read/load mode
+		// 6: "NULL" - this is 0 if "the counter value is in the counter" ;)
+		// should rarely be 1 (i.e. on exotic modes)
+		// 7: OUT - the logic level on the Timer output pin
+		if(p->bcd)latched_timerstatus|=0x1;
+		latched_timerstatus|=((p->mode&7)<<1);
+		if((p->read_state==0)||(p->read_state==3)) latched_timerstatus|=0x30;
+		else if(p->read_state==1) latched_timerstatus|=0x10;
+		else if(p->read_state==2) latched_timerstatus|=0x20;
+		if(counter_output(counter)) latched_timerstatus|=0x80;
+		// The first thing that is being read from this counter now is the
+		// counter status.
+		p->counterstatus_set=true;
+		latched_timerstatus_locked=true;
+	}
+}
 static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
@@ -120,7 +150,7 @@ static void counter_latch(Bitu counter) {
 }
 
 
-static void write_latch(Bitu port,Bitu val,Bitu iolen) {
+static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port %X write:%X state:%X",port,val,pit[port-0x40].write_state);
 	Bitu counter=port-0x40;
 	PIT_Block * p=&pit[counter];
@@ -168,44 +198,55 @@ static void write_latch(Bitu port,Bitu val,Bitu iolen) {
     }
 }
 
-static Bitu read_latch(Bitu port,Bitu iolen) {
+static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port read %X",port);
 	Bit32u counter=port-0x40;
-	if (pit[counter].go_read_latch == true) 
-		counter_latch(counter);
-	Bit8u ret;
-	if( pit[counter].bcd == true) BIN2BCD(pit[counter].read_latch);
-   
-	switch (pit[counter].read_state) {
-    case 0: /* read MSB & return to state 3 */
-      ret=(pit[counter].read_latch >> 8) & 0xff;
-      pit[counter].read_state = 3;
-      pit[counter].go_read_latch = true;
-      break;
-    case 3: /* read LSB followed by MSB */
-      ret = (pit[counter].read_latch & 0xff);
-      if (pit[counter].mode & 0x80) pit[counter].mode &= 7;	/* moved here */
-        else
-      pit[counter].read_state = 0;
-      break;
-    case 1: /* read LSB */
-      ret = (pit[counter].read_latch & 0xff);
-      pit[counter].go_read_latch = true;
-      break;
-    case 2: /* read MSB */
-      ret = (pit[counter].read_latch >> 8) & 0xff;
-      pit[counter].go_read_latch = true;
-      break;
-	 default:
-	   ret=0;
-	   E_Exit("Timer.cpp: error in readlatch");
-	   break;
+	Bit8u ret=0;
+	if(GCC_UNLIKELY(pit[counter].counterstatus_set)){
+		pit[counter].counterstatus_set = false;
+		latched_timerstatus_locked = false;
+		ret = latched_timerstatus;
+	} else {
+		if (pit[counter].go_read_latch == true) 
+			counter_latch(counter);
+
+		if( pit[counter].bcd == true) BIN2BCD(pit[counter].read_latch);
+
+		switch (pit[counter].read_state) {
+		case 0: /* read MSB & return to state 3 */
+			ret=(pit[counter].read_latch >> 8) & 0xff;
+			pit[counter].read_state = 3;
+			pit[counter].go_read_latch = true;
+			break;
+		case 3: /* read LSB followed by MSB */
+			// In mode 3 it never returns odd numbers LSB (if odd number is written 1 will be
+			// subtracted on first clock and then always 2)
+			// fixes "Corncob 3D"
+			if((pit[counter].mode&0x7) == 3)  ret = (pit[counter].read_latch & 0xfe); 
+			else ret = (pit[counter].read_latch & 0xff);
+
+			if (pit[counter].mode & 0x80) pit[counter].mode &= 7;
+			else pit[counter].read_state = 0;
+			break;
+		case 1: /* read LSB */
+			if((pit[counter].mode&0x7) == 3)  ret = (pit[counter].read_latch & 0xfe);
+			else ret = (pit[counter].read_latch & 0xff);
+			pit[counter].go_read_latch = true;
+			break;
+		case 2: /* read MSB */
+			ret = (pit[counter].read_latch >> 8) & 0xff;
+			pit[counter].go_read_latch = true;
+			break;
+		default:
+			E_Exit("Timer.cpp: error in readlatch");
+			break;
+		}
+		if( pit[counter].bcd == true) BCD2BIN(pit[counter].read_latch);
 	}
-	if( pit[counter].bcd == true) BCD2BIN(pit[counter].read_latch);
 	return ret;
 }
 
-static void write_p43(Bitu port,Bitu val,Bitu iolen) {
+static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 //LOG(LOG_PIT,LOG_ERROR)("port 43 %X",val);
 	Bitu latch=(val >> 6) & 0x03;
 	switch (latch) {
@@ -221,6 +262,12 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 			/* Counter latch command */
 			counter_latch(latch);
 		} else {
+			// Timer is being reprogrammed, unlock the status
+			if(pit[latch].counterstatus_set) {
+				pit[latch].counterstatus_set=false;
+				latched_timerstatus_locked=false;
+			}
+
 			pit[latch].read_state  = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
 			Bit8u mode             = (val >> 1) & 0x07;
@@ -255,9 +302,14 @@ static void write_p43(Bitu port,Bitu val,Bitu iolen) {
 			if (val & 0x02) counter_latch(0);
 			if (val & 0x04) counter_latch(1);
 			if (val & 0x08) counter_latch(2);
-		} else if ((val & 0x10)==0) {	/* Latch status words */
-			LOG(LOG_PIT,LOG_ERROR)("Unsupported Latch status word call");
-		} else LOG(LOG_PIT,LOG_ERROR)("Unhandled command:%X",val);
+		}
+		// status and values can be latched simultaneously
+		if ((val & 0x10)==0) {	/* Latch status words */
+			// but only 1 status can be latched simultaneously
+			if (val & 0x02) status_latch(0);
+			else if (val & 0x04) status_latch(1);
+			else if (val & 0x08) status_latch(2);
+		}
 		break;
 	}
 }
@@ -285,6 +337,7 @@ public:
 		pit[0].mode=3;
 		pit[0].bcd = false;
 		pit[0].go_read_latch = true;
+		pit[0].counterstatus_set = false;
 	
 		pit[1].bcd = false;
 		pit[1].write_state = 1;
@@ -292,7 +345,8 @@ public:
 		pit[1].go_read_latch = true;
 		pit[1].cntr = 18;
 		pit[1].mode = 2;
-		pit[1].write_state = 3;   
+		pit[1].write_state = 3;
+		pit[1].counterstatus_set = false;
 	
 		pit[2].read_latch=0;	/* MadTv1 */
 		pit[2].write_state = 3; /* Chuck Yeager */
@@ -301,11 +355,13 @@ public:
 		pit[2].bcd=false;   
 		pit[2].cntr=1320;
 		pit[2].go_read_latch=true;
+		pit[2].counterstatus_set = false;
 	
 		pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 		pit[1].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[1].cntr));
 		pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
-	
+
+		latched_timerstatus_locked=false;
 		PIC_AddEvent(PIT0_Event,pit[0].delay);
 	}
 	~TIMER(){
@@ -314,7 +370,7 @@ public:
 };
 static TIMER* test;
 
-void TIMER_Destroy(Section* sec){
+void TIMER_Destroy(Section*){
 	delete test;
 }
 void TIMER_Init(Section* sec) {
