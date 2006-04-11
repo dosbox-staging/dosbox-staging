@@ -29,7 +29,7 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 	Bitu hadChange = 0;
 #if (SBPP == 9)
 	for (Bits x=render.src.width;x>0;) {
-		if (*(Bit32u*)src == *(Bit32u*)cache && !(
+		if (*(Bit32u const*)src == *(Bit32u*)cache && !(
 			render.pal.modified[src[0]] | 
 			render.pal.modified[src[1]] | 
 			render.pal.modified[src[2]] | 
@@ -40,7 +40,7 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 			line0+=4*SCALERWIDTH;
 #else 
 	for (Bits x=render.src.width;x>0;) {
-		if (*(Bitu*)src == *(Bitu*)cache) {
+		if (*(Bitu const*)src == *(Bitu*)cache) {
 			x-=(sizeof(Bitu)/sizeof(SRCTYPE));
 			src+=(sizeof(Bitu)/sizeof(SRCTYPE));
 			cache+=(sizeof(Bitu)/sizeof(SRCTYPE));

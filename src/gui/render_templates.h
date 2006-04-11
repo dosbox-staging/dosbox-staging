@@ -129,7 +129,7 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 			if (pixel != fc[x]) {
 #else 
 		for (Bitu x=0;x<SCALER_BLOCKSIZE;x+=sizeof(Bitu)/sizeof(SRCTYPE)) {
-			if (*(Bitu*)&src[x] != *(Bitu*)&sc[x]) {
+			if (*(Bitu const*)&src[x] != *(Bitu*)&sc[x]) {
 #endif
 				do {
 					fc[x] = PMAKE(src[x]);

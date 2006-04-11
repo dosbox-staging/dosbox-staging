@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.113 2006-03-29 12:26:07 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.114 2006-04-11 19:02:33 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1216,7 +1216,7 @@ void GFX_Events() {
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
 
-void GFX_ShowMsg(char * format,...) {
+void GFX_ShowMsg(char const* format,...) {
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);

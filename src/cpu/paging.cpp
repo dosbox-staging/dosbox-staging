@@ -52,7 +52,7 @@ Bitu PageHandler::readd(PhysPt addr) {
 		(readb(addr+3) << 24);
 }
 
-void PageHandler::writeb(PhysPt addr,Bitu val) {
+void PageHandler::writeb(PhysPt addr,Bitu /*val*/) {
 	E_Exit("No byte handler for write to %d",addr);	
 };
 
@@ -67,11 +67,11 @@ void PageHandler::writed(PhysPt addr,Bitu val) {
 	writeb(addr+3,(Bit8u) (val >> 24));
 };
 
-HostPt PageHandler::GetHostReadPt(Bitu phys_page) {
+HostPt PageHandler::GetHostReadPt(Bitu /*phys_page*/) {
 	return 0;
 }
 
-HostPt PageHandler::GetHostWritePt(Bitu phys_page) {
+HostPt PageHandler::GetHostWritePt(Bitu /*phys_page*/) {
 	return 0;
 }
 
@@ -111,7 +111,7 @@ static struct {
 static Bits PageFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
-	Bitu ret=CPU_Core_Full_Run();
+	Bits ret=CPU_Core_Full_Run();
 	CPU_CycleLeft+=CPU_Cycles;
 	if (ret<0) E_Exit("Got a dosbox close machine in pagefault core?");
 	if (ret) 

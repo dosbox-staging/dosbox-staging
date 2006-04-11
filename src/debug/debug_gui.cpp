@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.28 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.29 2006-04-11 19:02:33 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -34,7 +34,7 @@
 #include "debug_inc.h"
 
 struct _LogGroup {
-	char * front;
+	char const* front;
 	bool enabled;
 };
 #include <list>
@@ -52,7 +52,7 @@ extern int old_cursor_state;
 
 
 
-void DEBUG_ShowMsg(char * format,...) {
+void DEBUG_ShowMsg(char const* format,...) {
 	
 	char buf[512];
 	va_list msg;
@@ -97,7 +97,7 @@ void DEBUG_RefreshPage(char scroll) {
 	wrefresh(dbg.win_out);
 }
 
-void LOG::operator() (char* format, ...){
+void LOG::operator() (char const* format, ...){
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
@@ -188,8 +188,7 @@ static void MakePairs(void) {
 	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
 	init_pair(PAIR_GREY_RED, COLOR_WHITE/*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
-static void LOG_Destroy(Section* sec) {
-	
+static void LOG_Destroy(Section*) {
 	if(debuglog) fclose(debuglog);
 }
 

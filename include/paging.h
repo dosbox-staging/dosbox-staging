@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.22 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: paging.h,v 1.23 2006-04-11 19:02:33 qbix79 Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -48,6 +48,7 @@ class PageDirectory;
 
 class PageHandler {
 public:
+	virtual ~PageHandler(void) { }
 	virtual Bitu readb(PhysPt addr);
 	virtual Bitu readw(PhysPt addr);
 	virtual Bitu readd(PhysPt addr);

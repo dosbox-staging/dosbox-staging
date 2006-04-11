@@ -50,6 +50,6 @@ public:
 };
 
 typedef void (PROGRAMS_Main)(Program * * make);
-void PROGRAMS_MakeFile(char * name,PROGRAMS_Main * main);
+void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main);
 
 #endif

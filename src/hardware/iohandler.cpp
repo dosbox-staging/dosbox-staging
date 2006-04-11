@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.20 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.21 2006-04-11 19:02:33 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -29,10 +29,10 @@
 IO_WriteHandler * io_writehandlers[3][IO_MAX];
 IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
-static Bitu IO_ReadBlocked(Bitu port,Bitu iolen) {
+static Bitu IO_ReadBlocked(Bitu /*port*/,Bitu /*iolen*/) {
 	return ~0;
 }
-static void IO_WriteBlocked(Bitu port,Bitu val,Bitu iolen) {
+static void IO_WriteBlocked(Bitu /*port*/,Bitu /*val*/,Bitu /*iolen*/) {
 }
 
 static Bitu IO_ReadDefault(Bitu port,Bitu iolen) {
@@ -150,7 +150,7 @@ static struct {
 static Bits IOFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
-	Bitu ret=CPU_Core_Full_Run();
+	Bits ret=CPU_Core_Full_Run();
 	CPU_CycleLeft+=CPU_Cycles;
 	if (ret<0) E_Exit("Got a dosbox close machine in IO-fault core?");
 	if (ret) 
@@ -377,7 +377,7 @@ public:
 
 static IO* test;
 
-void IO_Destroy(Section* sec) {
+void IO_Destroy(Section*) {
 	delete test;
 }
 

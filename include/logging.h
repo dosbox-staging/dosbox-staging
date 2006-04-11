@@ -14,50 +14,50 @@ enum LOG_TYPES {
 
 enum LOG_SEVERITIES {
 	LOG_NORMAL,
-    LOG_WARN,
+	LOG_WARN,
 	LOG_ERROR,
 };
 
 #if C_DEBUG
 class LOG 
 { 
-	LOG_TYPES		d_type;
-	LOG_SEVERITIES	d_severity;
+	LOG_TYPES       d_type;
+	LOG_SEVERITIES  d_severity;
 public:
 
 	LOG (LOG_TYPES type , LOG_SEVERITIES severity):
 		d_type(type),
 		d_severity(severity)
 		{}
-	void operator() (char* buf, ...);  //../src/debug/debug_gui.cpp
+	void operator() (char const* buf, ...) GCC_ATTRIBUTE(__format__(__printf__, 2, 3));  //../src/debug/debug_gui.cpp
 
 };
 
-void DEBUG_ShowMsg(char * format,...);
+void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 #define LOG_MSG DEBUG_ShowMsg
 
 #else  //C_DEBUG
 
 struct LOG
 {
-	LOG(LOG_TYPES type, LOG_SEVERITIES severity)										{ return;}
-	void operator()(char const* buf)													{ return;}
-	void operator()(char const* buf, double f1)											{ return;}
-	void operator()(char const* buf, double f1, double f2)								{ return;}
-	void operator()(char const* buf, double f1, double f2, double f3)					{ return;}
-	void operator()(char const* buf, double f1, double f2, double f3, double f4)					{ return;}
-	void operator()(char const* buf, double f1, double f2, double f3, double f4, double f5)					{ return;}
+	LOG(LOG_TYPES , LOG_SEVERITIES )										{ }
+	void operator()(char const* )													{ }
+	void operator()(char const* , double )											{ }
+	void operator()(char const* , double , double )								{ }
+	void operator()(char const* , double , double , double )					{ }
+	void operator()(char const* , double , double , double , double )					{ }
+	void operator()(char const* , double , double , double , double , double )					{ }
 
-	void operator()(char const* buf, char const* s1)									{ return;}
-	void operator()(char const* buf, char const* s1, double f1)							{ return;}
-	void operator()(char const* buf, char const* s1, double f1,double f2)				{ return;}
-	void operator()(char const* buf, double  f1, char const* s1)						{ return;}
+	void operator()(char const* , char const* )									{ }
+	void operator()(char const* , char const* , double )							{ }
+	void operator()(char const* , char const* , double ,double )				{ }
+	void operator()(char const* , double , char const* )						{ }
 
 
 
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
-void GFX_ShowMsg(char * format,...);
+void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 #define LOG_MSG GFX_ShowMsg
 
 #endif //C_DEBUG
