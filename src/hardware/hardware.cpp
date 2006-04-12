@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.16 2006-03-29 13:51:58 harekiet Exp $ */
+/* $Id: hardware.cpp,v 1.17 2006-04-12 18:52:50 qbix79 Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -37,7 +37,7 @@
 #endif
 
 static char * capturedir;
-extern char * RunningProgram;
+extern const char* RunningProgram;
 Bitu CaptureState;
 
 #define WAVE_BUF 16*1024

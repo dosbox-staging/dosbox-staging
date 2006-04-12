@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.114 2006-04-11 19:02:33 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.115 2006-04-12 18:52:50 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -206,7 +206,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
-extern char * RunningProgram;
+extern const char* RunningProgram;
 extern bool CPU_CycleAuto;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
