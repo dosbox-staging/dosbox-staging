@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.39 2006-04-09 12:46:03 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.40 2006-04-14 07:19:37 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -124,7 +124,7 @@ public:
 	bool		GetCDInfo			(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut);
 	Bit32u		GetVolumeSize		(Bit8u subUnit);
 	bool		GetTrackInfo		(Bit8u subUnit, Bit8u track, Bit8u& attr, TMSF& start);
-	Bit16u		GetStatusWord		(Bit8u subUnit);
+	Bit16u		GetStatusWord		(Bit8u subUnit,Bit16u status);
 	bool		GetCurrentPos		(Bit8u subUnit, TMSF& pos);
 	Bit32u		GetDeviceStatus		(Bit8u subUnit);
 	bool		GetMediaStatus		(Bit8u subUnit, Bit8u& status);
@@ -317,7 +317,7 @@ PhysPt CMscdex::GetDefaultBuffer(void)
 void CMscdex::GetDriverInfo	(PhysPt data)
 {
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
-		mem_writeb(data  ,i);	// subunit
+		mem_writeb(data  ,(Bit8u)i);	// subunit
 		mem_writed(data+1,RealMake(rootDriverHeaderSeg,0));
 		data+=5;
 	};
@@ -734,7 +734,7 @@ bool CMscdex::LoadUnloadMedia(Bit8u subUnit, bool unload)
 bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 {
 	Bit8u subUnit = GetSubUnit(drive);
-	if (subUnit>=numDrives) return false;	
+	if (subUnit>=numDrives) return false;
 	// Get SubUnit
 	mem_writeb(data+1,subUnit);
 	// Call Strategy / Interrupt
@@ -743,13 +743,12 @@ bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 	return true;
 };
 
-Bit16u CMscdex::GetStatusWord(Bit8u subUnit)
+Bit16u CMscdex::GetStatusWord(Bit8u subUnit,Bit16u status)
 {
-	if (subUnit>=numDrives) return 0x02; // error : Drive not ready
+	if (subUnit>=numDrives) return REQUEST_STATUS_ERROR | 0x02; // error : Drive not ready
 
-	Bit16u status ;
-	if (dinfo[subUnit].lastResult)	status = REQUEST_STATUS_DONE;				// ok
-	else							status = REQUEST_STATUS_ERROR; 
+	if (dinfo[subUnit].lastResult)	status |= REQUEST_STATUS_DONE;				// ok
+	else							status |= REQUEST_STATUS_ERROR; 
 
 	if (dinfo[subUnit].audioPlay) {
 		// Check if audio is still playing....
@@ -793,14 +792,18 @@ static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 						mem_writeb(buffer+3,pos.sec);
 						mem_writeb(buffer+4,pos.min);
 						mem_writeb(buffer+5,0x00);
-					} else LOG_MSG("MSCDEX: Get position: invalid address mode %x",addr_mode);
+					} else {
+						LOG_MSG("MSCDEX: Get position: invalid address mode %x",addr_mode);
+						return false;
+					}
 				   }break;
 		case 0x06 : /* Get Device status */
 					mem_writed(buffer+1,mscdex->GetDeviceStatus(drive_unit)); 
 					break;
 		case 0x07 : /* Get sector size */
-					if (mem_readb(buffer+1)==0x01)	mem_writed(buffer+2,2352);
-					else							mem_writed(buffer+2,2048);
+					if (mem_readb(buffer+1)==0) mem_writed(buffer+2,2048);
+					else if (mem_readb(buffer+1)==1) mem_writed(buffer+2,2352);
+					else return false;
 					break;
 		case 0x08 : /* Get size of current volume */
 					mem_writed(buffer+1,mscdex->GetVolumeSize(drive_unit));
@@ -877,27 +880,26 @@ static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 	return true;	// success
 }
 
-static bool MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
+static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 	Bitu ioctl_fct = mem_readb(buffer);
 //	MSCDEX_LOG("MSCDEX: IOCTL OUTPUT Subfunction %02X",ioctl_fct);
 	switch (ioctl_fct) {
 		case 0x00 :	// Unload /eject media
-					mscdex->LoadUnloadMedia(drive_unit,true);
+					if (!mscdex->LoadUnloadMedia(drive_unit,true)) return 0x02;
 					break;
 		case 0x01 : // (un)Lock door 
 					// do nothing -> report as success
 					break;
 		case 0x02 : // Reset Drive
 					LOG(LOG_MISC,LOG_WARN)("cdromDrive reset");
-					mscdex->StopAudio(drive_unit);
+					if (!mscdex->StopAudio(drive_unit))  return 0x02;
 					break;
 		case 0x05 :	// load media
-					mscdex->LoadUnloadMedia(drive_unit,false);
-					break;
+					if (!mscdex->LoadUnloadMedia(drive_unit,false)) return 0x02;
 		default	:	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported IOCTL OUTPUT Subfunction %02X",ioctl_fct);
-					return false;
+					return 0x03;	// invalid function
 	}
-	return true;	// success
+	return 0x00;	// success
 }
 
 static Bitu MSCDEX_Strategy_Handler(void) {
@@ -909,18 +911,22 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 	PhysPt	data		= PhysMake(SegValue(es),reg_bx);
 	Bit8u	subUnit		= mem_readb(data+1);
 	Bit8u	funcNr		= mem_readb(data+2);
+	Bit16u	errcode		= 0;
 
 	MSCDEX_LOG("MSCDEX: Driver Function %02X",funcNr);
 
  	switch (funcNr) {
 		case 0x03	: {	/* IOCTL INPUT */
 						PhysPt buffer = PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
-						MSCDEX_IOCTL_Input(buffer,subUnit);
+						if (!MSCDEX_IOCTL_Input(buffer,subUnit)) {
+							errcode = 0x03;		//unknown command
+						}
 						break;
 					  };
 		case 0x0C	: {	/* IOCTL OUTPUT */
 						PhysPt buffer = PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
-						MSCDEX_IOCTL_Optput(buffer,subUnit);
+						Bit16u error=MSCDEX_IOCTL_Optput(buffer,subUnit);
+						if (error) errcode = error;
 						break;
 					  };
 		case 0x0D	:	// device open
@@ -961,7 +967,7 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 	};
 	
 	// Set Statusword
-	mem_writew(data+3,mscdex->GetStatusWord(subUnit));
+	mem_writew(data+3,mscdex->GetStatusWord(subUnit,errcode));
 	MSCDEX_LOG("MSCDEX: Status : %04X",mem_readw(data+3));						
 	return CBRET_NONE;
 }
@@ -1057,7 +1063,12 @@ static bool MSCDEX_Handler(void) {
 						CALLBACK_SCF(!success);
 					 };	return true;
 		case 0x1510:	/* Device driver request */
-						mscdex->SendDriverRequest(reg_cx,data);
+						if (mscdex->SendDriverRequest(reg_cx,data)) {
+							CALLBACK_SCF(false);
+						} else {
+							reg_ax = 0x0f;	// invalid drive
+							CALLBACK_SCF(true);
+						}
 						return true;
 		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 						return true;
@@ -1069,18 +1080,18 @@ static bool MSCDEX_Handler(void) {
 class device_MSCDEX : public DOS_Device {
 public:
 	device_MSCDEX() { SetName("MSCD001"); }
-	bool Read (Bit8u * data,Bit16u * size) { return false;}
-	bool Write(Bit8u * data,Bit16u * size) { 
+	bool Read (Bit8u * /*data*/,Bit16u * /*size*/) { return false;}
+	bool Write(Bit8u * /*data*/,Bit16u * /*size*/) { 
 		LOG(LOG_ALL,LOG_NORMAL)("Write to mscdex device");	
 		return false;
 	}
-	bool Seek(Bit32u * pos,Bit32u type){return false;}
+	bool Seek(Bit32u * /*pos*/,Bit32u /*type*/){return false;}
 	bool Close(){return false;}
 	Bit16u GetInformation(void){return 0xc880;}
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 private:
-	Bit8u cache;
+//	Bit8u cache;
 };
 
 bool device_MSCDEX::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode) { 
