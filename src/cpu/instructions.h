@@ -228,7 +228,14 @@
 
 
 #define ROLB(op1,op2,load,save)						\
-	if (!(op2&0x7)) break;							\
+	if (!(op2&0x7)) {								\
+		if (op2&0x18) {								\
+			FillFlags();							\
+			SETFLAGBIT(CF,op1 & 1);					\
+			SETFLAGBIT(OF,(op1 & 1) ^ (op1 >> 7));	\
+		}											\
+		break;										\
+	}												\
 	FillFlags();									\
 	lf_var1b=load(op1);								\
 	lf_var2b=op2&0x07;								\
@@ -239,7 +246,13 @@
 	SETFLAGBIT(OF,(lf_resb & 1) ^ (lf_resb >> 7));
 
 #define ROLW(op1,op2,load,save)						\
-	if (!(op2&0xf)) break;						\
+	if (!(op2&0xf)) {								\
+		if (op2&0x10) {								\
+			FillFlags();							\
+			SETFLAGBIT(CF,op1 & 1);					\
+		}											\
+		break;										\
+	}												\
 	FillFlags();									\
 	lf_var1w=load(op1);								\
 	lf_var2b=op2&0xf;								\
@@ -262,7 +275,14 @@
 
 
 #define RORB(op1,op2,load,save)						\
-	if (!(op2&0x7)) break;							\
+	if (!(op2&0x7)) {								\
+		if (op2&0x10) {								\
+			FillFlags();							\
+			SETFLAGBIT(CF,op1>>7);					\
+			SETFLAGBIT(OF,(op1>>7) ^ ((op1>>6) & 1));			\
+		}											\
+		break;										\
+	}												\
 	FillFlags();									\
 	lf_var1b=load(op1);								\
 	lf_var2b=op2&0x07;								\
@@ -273,7 +293,13 @@
 	if (lf_var2b == 1) SETFLAGBIT(OF,(lf_resb ^ lf_var1b) & 0x80);
 
 #define RORW(op1,op2,load,save)					\
-	if (!(op2&0xf)) break;						\
+	if (!(op2&0xf)) {							\
+		if (op2&0x10) {							\
+			FillFlags();						\
+			SETFLAGBIT(CF,op1>>15);				\
+		}										\
+		break;									\
+	}											\
 	FillFlags();								\
 	lf_var1w=load(op1);							\
 	lf_var2b=op2&0xf;							\
@@ -470,43 +496,58 @@
 
 #define DAA()												\
 	if (((reg_al & 0x0F)>0x09) || get_AF()) {				\
+		if ((reg_al > 0x99) || get_CF()) {					\
+			reg_al+=0x60;									\
+			SETFLAGBIT(CF,true);							\
+		} else {											\
+			SETFLAGBIT(CF,false);							\
+		}													\
 		reg_al+=0x06;										\
 		SETFLAGBIT(AF,true);								\
 	} else {												\
+		if ((reg_al > 0x99) || get_CF()) {					\
+			reg_al+=0x60;									\
+			SETFLAGBIT(CF,true);							\
+		} else {											\
+			SETFLAGBIT(CF,false);							\
+		}													\
 		SETFLAGBIT(AF,false);								\
-	}														\
-	if ((reg_al > 0x9F) || get_CF()) {						\
-		reg_al+=0x60;										\
-		SETFLAGBIT(CF,true);								\
-	} else {												\
-		SETFLAGBIT(CF,false);								\
 	}														\
 	SETFLAGBIT(SF,(reg_al&0x80));							\
 	SETFLAGBIT(ZF,(reg_al==0));								\
+	SETFLAGBIT(PF,parity_lookup[reg_al]);					\
 	lflags.type=t_UNKNOWN;
 
 
 #define DAS()												\
 	if (((reg_al & 0x0f) > 9) || get_AF()) {				\
+		if ((reg_al>0x99) || get_CF()) {					\
+			reg_al-=0x60;									\
+			SETFLAGBIT(CF,true);							\
+		} else {											\
+			SETFLAGBIT(CF,false);							\
+		}													\
 		reg_al-=6;											\
 		SETFLAGBIT(AF,true);								\
 	} else {												\
+		if ((reg_al>0x99) || get_CF()) {					\
+			reg_al-=0x60;									\
+			SETFLAGBIT(CF,true);							\
+		} else {											\
+			SETFLAGBIT(CF,false);							\
+		}													\
 		SETFLAGBIT(AF,false);								\
 	}														\
-	if ((reg_al>0x9f) || get_CF()) {						\
-		reg_al-=0x60;										\
-		SETFLAGBIT(CF,true);								\
-	} else {												\
-		SETFLAGBIT(CF,false);								\
-	}														\
+	SETFLAGBIT(SF,(reg_al&0x80));							\
+	SETFLAGBIT(ZF,(reg_al==0));								\
+	SETFLAGBIT(PF,parity_lookup[reg_al]);					\
 	lflags.type=t_UNKNOWN;
 
 
 #define AAA()												\
 	if (get_AF() || ((reg_al & 0xf) > 9))					\
 	{														\
-		reg_al += 6;										\
-		reg_ah += 1;										\
+		reg_ax += 0x106;									\
 		SETFLAGBIT(AF,true);								\
 		SETFLAGBIT(CF,true);								\
 	} else {												\
@@ -514,13 +555,15 @@
 		SETFLAGBIT(CF,false);								\
 	}														\
 	reg_al &= 0x0F;											\
-	lflags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;									\
+	SETFLAGBIT(SF,0);										\
+	SETFLAGBIT(OF,0);										\
+	SETFLAGBIT(ZF,(reg_al == 0));							\
+	SETFLAGBIT(PF,parity_lookup[reg_al]);
 
 #define AAS()												\
 	if (((reg_al & 0x0f)>9) || get_AF()) {					\
-		reg_ah--;											\
-		if (reg_al < 6) reg_ah--;							\
-		reg_al=(reg_al-6) & 0xF;							\
+		reg_ax -= 0x106;									\
 		SETFLAGBIT(AF,true);								\
 		SETFLAGBIT(CF,true);								\
 	} else {												\
@@ -528,17 +571,24 @@
 		SETFLAGBIT(CF,false);								\
 	}														\
 	reg_al &= 0x0F;											\
-	lflags.type=t_UNKNOWN;
+	lflags.type=t_UNKNOWN;									\
+	SETFLAGBIT(SF,0);										\
+	SETFLAGBIT(OF,0);										\
+	SETFLAGBIT(ZF,(reg_al == 0));							\
+	SETFLAGBIT(PF,parity_lookup[reg_al]);
 
 #define AAM(op1)											\
 	{														\
 		Bit8u BLAH=op1;										\
 		reg_ah=reg_al / BLAH;								\
 		reg_al=reg_al % BLAH;								\
-		lflags.type=t_UNKNOWN;								\
 		SETFLAGBIT(SF,(reg_al & 0x80));						\
 		SETFLAGBIT(ZF,(reg_al == 0));						\
 		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
+		SETFLAGBIT(CF,0);									\
+		SETFLAGBIT(OF,0);									\
+		SETFLAGBIT(AF,0);									\
+		lflags.type=t_UNKNOWN;								\
 	}
 
 
@@ -550,9 +600,9 @@
 		Bit8u old_al = reg_al;								\
 		reg_al = (Bit8u) ax2;								\
 		reg_ah = 0;											\
-		SETFLAGBIT(AF,(ax1 & 0x08) != (ax2 & 0x08));		\
-		SETFLAGBIT(CF,ax2 > 0xff);							\
-		SETFLAGBIT(OF,(reg_al & 0x80) != (old_al & 0x80));	\
+		SETFLAGBIT(CF,0);									\
+		SETFLAGBIT(OF,0);									\
+		SETFLAGBIT(AF,0);									\
 		SETFLAGBIT(SF,reg_al >= 0x80);						\
 		SETFLAGBIT(ZF,reg_al == 0);							\
 		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
@@ -562,6 +612,7 @@
 #define MULB(op1,load,save)									\
 	FillFlags();											\
 	reg_ax=reg_al*load(op1);								\
+	SETFLAGBIT(ZF,reg_al == 0);								\
 	if (reg_ax & 0xff00) {									\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -574,6 +625,7 @@
 	Bitu tempu=(Bitu)reg_ax*(Bitu)(load(op1));				\
 	reg_ax=(Bit16u)(tempu);									\
 	reg_dx=(Bit16u)(tempu >> 16);							\
+	SETFLAGBIT(ZF,reg_ax == 0);								\
 	if (reg_dx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
@@ -587,6 +639,7 @@
 	Bit64u tempu=(Bit64u)reg_eax*(Bit64u)(load(op1));		\
 	reg_eax=(Bit32u)(tempu);								\
 	reg_edx=(Bit32u)(tempu >> 32);							\
+	SETFLAGBIT(ZF,reg_eax == 0);							\
 	if (reg_edx) {											\
 		SETFLAGBIT(CF,true);SETFLAGBIT(OF,true);			\
 	} else {												\
