@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.39 2006-02-09 11:47:57 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.40 2006-04-14 13:53:58 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -252,9 +252,15 @@ static bool multiplex_xms(void) {
 	return false;
 
 };
+#define SET_RESULT(caller) { \
+res = caller; \
+if(res) reg_bl = res; \
+reg_ax = (res==0); \
+}
 
 Bitu XMS_Handler(void) {
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
+	Bitu res = 0;
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */
@@ -273,13 +279,11 @@ Bitu XMS_Handler(void) {
 		
 	case XMS_GLOBAL_ENABLE_A20:									/* 03 */
 	case XMS_LOCAL_ENABLE_A20:									/* 05 */
-		reg_bl = XMS_EnableA20(true);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_EnableA20(true));
 		break;
 	case XMS_GLOBAL_DISABLE_A20:								/* 04 */
 	case XMS_LOCAL_DISABLE_A20:									/* 06 */
-		reg_bl = XMS_EnableA20(false);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_EnableA20(false));
 		break;	
 	case XMS_QUERY_A20:											/* 07 */
 		reg_ax = XMS_GetEnabledA20();
@@ -294,39 +298,33 @@ Bitu XMS_Handler(void) {
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
 		Bit16u handle = 0;
-		reg_bl = XMS_AllocateMemory(reg_dx,handle);
+		SET_RESULT(XMS_AllocateMemory(reg_dx,handle));
 		reg_dx = handle;
-		reg_ax = (reg_bl==0);		// set ax to success/failure
 		}; break;
 	case XMS_FREE_EXTENDED_MEMORY:								/* 0a */
-		reg_bl = XMS_FreeMemory(reg_dx);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_FreeMemory(reg_dx));
 		break;
 	case XMS_MOVE_EXTENDED_MEMORY_BLOCK:						/* 0b */
-		reg_bl = XMS_MoveMemory(SegPhys(ds)+reg_si);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_MoveMemory(SegPhys(ds)+reg_si));
 		break;
 	case XMS_LOCK_EXTENDED_MEMORY_BLOCK: {						/* 0c */
 		Bit32u address;
-		reg_bl = XMS_LockMemory(reg_dx, address);
-		reg_ax = (reg_bl==0);
-		if (reg_bl==0) { // success
+		res = XMS_LockMemory(reg_dx, address);
+		if(res) reg_bl = res;
+		reg_ax = (res==0);
+		if (res==0) { // success
 			reg_bx=(Bit16u)(address & 0xFFFF);
 			reg_dx=(Bit16u)(address >> 16);
 		};
 		}; break;
 	case XMS_UNLOCK_EXTENDED_MEMORY_BLOCK:						/* 0d */
-		reg_bl = XMS_UnlockMemory(reg_dx);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_UnlockMemory(reg_dx));
 		break;
-	case XMS_GET_EMB_HANDLE_INFORMATION: {						/* 0e */
-		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx);
-		if (result != 0) reg_bl = result;
-		reg_ax = (result==0);
-		}; break;
+	case XMS_GET_EMB_HANDLE_INFORMATION:  						/* 0e */
+		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx));
+		break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
-		reg_bl = XMS_ResizeMemory(reg_dx, reg_bx);
-		reg_ax = (reg_bl==0);
+		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
 		break;
 	case XMS_ALLOCATE_UMB: {									/* 10 */
 		if (!umb_available) {
@@ -387,7 +385,7 @@ Bitu XMS_Handler(void) {
 		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
-		Bit8u free_handles; 
+		Bit8u free_handles;
 		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_dx);
 		if (result != 0) reg_bl = result;
 		else {
@@ -468,7 +466,7 @@ public:
 };
 static XMS* test;
 
-void XMS_ShutDown(Section* sec) {
+void XMS_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
