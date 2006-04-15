@@ -16,11 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.33 2006-04-10 12:52:46 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.34 2006-04-15 15:53:37 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
-
 
 #include <vector>
 #ifndef DOSBOX_DOSBOX_H
@@ -29,8 +28,12 @@
 #ifndef DOSBOX_CROSS_H
 #include "cross.h"
 #endif
-
+#ifndef DOSBOX_SUPPORT_H
+#include "support.h"
+#endif
+#ifndef DOSBOX_MEM_H
 #include "mem.h"
+#endif
 
 #define DOS_NAMELENGTH 12
 #define DOS_NAMELENGTH_ASCII (DOS_NAMELENGTH+1)
@@ -71,7 +74,7 @@ public:
 	virtual void	SetName(const char* _name)	{ if (name) delete[] name; name = new char[strlen(_name)+1]; strcpy(name,_name); }
 	virtual char*	GetName(void)				{ return name; };
 	virtual bool	IsOpen()					{ return open; };
-	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcmp(name,_name)==0; };
+	virtual bool	IsName(const char* _name)	{ if (!name) return false; return strcasecmp(name,_name)==0; };
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
