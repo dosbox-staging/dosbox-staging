@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.12 2006-04-07 16:34:07 c2woody Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.13 2006-04-16 14:02:39 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -37,24 +37,30 @@ DOS_Device * Devices[DOS_DEVICES];
 class device_NUL : public DOS_Device {
 public:
 	device_NUL() { SetName("NUL"); };
-	bool Read(Bit8u * data,Bit16u * size) {
+	virtual bool Read(Bit8u * data,Bit16u * size) {
 		for(Bitu i = 0; i < *size;i++) 
 			data[i]=0; 
-		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:READ");	   
+		LOG(LOG_IOCTL,LOG_NORMAL)("%s:READ",GetName());
 		return true;
 	}
-	bool Write(Bit8u * data,Bit16u * size) {
-		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:WRITE");
+	virtual bool Write(Bit8u * data,Bit16u * size) {
+		LOG(LOG_IOCTL,LOG_NORMAL)("%s:WRITE",GetName());
 		return true;
 	}
-	bool Seek(Bit32u * pos,Bit32u type) {
-		LOG(LOG_IOCTL,LOG_NORMAL)("NUL:SEEK");
+	virtual bool Seek(Bit32u * pos,Bit32u type) {
+		LOG(LOG_IOCTL,LOG_NORMAL)("%s:SEEK",GetName());
 		return true;
 	}
-	bool Close() { return true; }
-	Bit16u GetInformation(void) { return 0x8084; }
-	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
-	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+	virtual bool Close() { return true; }
+	virtual Bit16u GetInformation(void) { return 0x8084; }
+	virtual bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+	virtual bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+};
+
+class device_LPT1 : public device_NUL {
+public:
+   	device_LPT1() { SetName("LPT1");}
+	Bit16u GetInformation(void) { return 0x80A0; }
 };
 
 bool DOS_Device::Read(Bit8u * data,Bit16u * size) {
@@ -168,4 +174,7 @@ void DOS_SetupDevices(void) {
 	DOS_Device * newdev2;
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
+	DOS_Device * newdev3;
+	newdev3=new device_LPT1();
+	DOS_AddDevice(newdev3);
 }
