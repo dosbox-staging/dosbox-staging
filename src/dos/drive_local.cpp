@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.64 2006-03-13 19:58:09 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.65 2006-04-16 14:04:03 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,7 +78,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 };
 
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
-	char * type;
+	const char* type;
 	switch (flags &3) {
 	case OPEN_READ:type="rb"; break;
 	case OPEN_WRITE:type="rb+"; break;
@@ -107,7 +107,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		}
 		return false;
 	}
-   
+
 	*file=new localFile(name,hand,0x202);
 	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
@@ -135,17 +135,45 @@ bool localDrive::GetSystemFilename(char *sysName, char *dosName) {
 }
 
 bool localDrive::FileUnlink(char * name) {
+
 	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
-	if (!unlink(dirCache.GetExpandName(newname))) {
+	char *fullname = dirCache.GetExpandName(newname);
+	if (unlink(fullname)) {
+		//Unlink failed for some reason try finding it.
+		struct stat buffer;
+		if(stat(fullname,&buffer)) return false; // File not found.
+
+		FILE* file_writable = fopen(fullname,"rb+");
+		if(!file_writable) return false; //No acces ? ERROR MESSAGE NOT SET. FIXME ?
+		fclose(file_writable);
+
+		//File exists and can technically be deleted, nevertheless it failed.
+		//This means that the file is probably open by some process.
+		//See if We have it open.
+		DOS_File* found_file = 0;
+		for(Bitu i = 0;i < DOS_FILES;i++){
+			if(Files[i] && Files[i]->IsName(name))
+				if(!found_file) found_file=Files[i];
+				else return false;
+		}
+		if(!found_file) return false;
+		Bitu max = DOS_FILES;
+		while(found_file->IsOpen() && max--)
+			found_file->Close();
+		if (!unlink(fullname)) {
+			dirCache.DeleteEntry(newname);
+			return true;
+		}
+		return false;
+	} else {
 		dirCache.DeleteEntry(newname);
 		return true;
-	};
+	}
 	return false;
-};
-
+}
 
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 
@@ -450,7 +478,7 @@ bool localFile::Seek(Bit32u * pos,Bit32u type) {
 bool localFile::Close() {
 	// only close if one reference left
 	if (refCtr==1) {
-		fclose(fhandle);
+		if(fhandle) fclose(fhandle);
 		fhandle = 0;
 		open = false;
 	};
