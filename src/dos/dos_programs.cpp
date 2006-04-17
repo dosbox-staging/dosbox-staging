@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.57 2006-04-07 15:15:45 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.58 2006-04-17 10:45:32 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,22 +54,22 @@ public:
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
 			umount[0] = toupper(umount[0]);
-			int drive = umount[0]-'A';
-				if(drive < DOS_DRIVES && Drives[drive]) {
-					if(drive == DOS_GetDefaultDrive()) {
+			int i_drive = umount[0]-'A';
+				if(i_drive < DOS_DRIVES && Drives[i_drive]) {
+					if(i_drive == DOS_GetDefaultDrive()) {
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_CURRENT"));
 						return;
 					}
 					try { /* Check if virtualdrive */
-						if( dynamic_cast<localDrive*>(Drives[drive]) == 0 ) throw 0;
+						if( dynamic_cast<localDrive*>(Drives[i_drive]) == 0 ) throw 0;
 					}
 					catch(...) {
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
 						return;
 					}
 					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
-					delete Drives[drive];
-					Drives[drive] = 0;
+					delete Drives[i_drive];
+					Drives[i_drive] = 0;
 				} else {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
 				}
@@ -331,7 +331,8 @@ public:
 		}	
 		/* Test for and show free EMS */
 		Bit16u handle;
-		if (DOS_OpenFile("EMMXXXX0",0,&handle)) {
+		char emm[9] = { 'E','M','M','X','X','X','X','0',0 };
+		if (DOS_OpenFile(emm,0,&handle)) {
 			DOS_CloseFile(handle);
 			reg_ah=0x42;
 			CALLBACK_RunRealInt(0x67);
@@ -714,8 +715,8 @@ public:
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
-				drive=temp_line[0]-'0';
-				if(drive>3) {
+				drive=temp_line[0];
+				if((drive-'0')>3) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
@@ -739,13 +740,13 @@ public:
 				char tmp[CROSS_LEN];
 				safe_strncpy(tmp, temp_line.c_str(), CROSS_LEN);
 				
-				Bit8u drive;
-				if (!DOS_MakeName(tmp, fullname, &drive) || strncmp(Drives[drive]->GetInfo(),"local directory",15)) {
+				Bit8u dummy;
+				if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
 					return;
 				}
 				
-				localDrive *ldp = (localDrive*)Drives[drive];
+				localDrive *ldp = (localDrive*)Drives[dummy];
 				ldp->GetSystemFilename(tmp, fullname);
 				temp_line = tmp;
 				
@@ -762,6 +763,10 @@ public:
 
 			if(fstype=="fat") {
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
+				if(!(dynamic_cast<fatDrive*>(newdrive))->created_succesfully) {
+					delete newdrive;
+					newdrive = 0;
+				}
 			} else if (fstype=="iso") {
 				int error;
 				MSCDEX_SetCDInterface(CDROM_USE_SDL, -1); 
@@ -798,7 +803,7 @@ public:
 				if (newdrive) delete newdrive;
 				return;
 			}
-			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
+			if (!newdrive) {WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));return;}
 			Drives[drive-'A']=newdrive;
 			// Set the correct media byte in the table 
 			mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
@@ -830,10 +835,10 @@ public:
 			mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
 			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
 		} else if (fstype=="none") {
-			if(imageDiskList[drive] != NULL) delete imageDiskList[drive];
-			imageDiskList[drive] = newImage;
+			if(imageDiskList[drive-'0'] != NULL) delete imageDiskList[drive-'0'];
+			imageDiskList[drive-'0'] = newImage;
 			updateDPT();
-			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive,temp_line.c_str());
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive-'0',temp_line.c_str());
 		}
 
 		// check if volume label is given

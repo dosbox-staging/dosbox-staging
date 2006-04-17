@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.31 2006-02-12 13:32:30 qbix79 Exp $ */
+/* $Id: drives.h,v 1.32 2006-04-17 10:45:32 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -33,8 +33,8 @@ class localDrive : public DOS_Drive {
 public:
 	localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
 	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual FILE *GetSystemFilePtr(char * name, char * type);
-	virtual bool GetSystemFilename(char *sysName, char *dosName);
+	virtual FILE *GetSystemFilePtr(char const * const name, char const * const type);
+	virtual bool GetSystemFilename(char* sysName, char const * const dosName);
 	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
 	virtual bool FileUnlink(char * name);
 	virtual bool RemoveDir(char * dir);
@@ -153,6 +153,7 @@ public:
 	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	imageDisk *loadedDisk;
+	bool created_succesfully;
 private:
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);

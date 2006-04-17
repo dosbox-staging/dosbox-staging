@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.12 2006-02-20 08:59:52 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.13 2006-04-17 10:45:32 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -582,6 +582,7 @@ bool fatDrive::allocateCluster(Bit32u useCluster, Bit32u prevCluster) {
 }
 
 fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector) {
+	created_succesfully = true;
 	FILE *diskfile;
 	Bit32u filesize;
 	struct partTable mbrData;
@@ -593,14 +594,14 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 	}
 
 	diskfile = fopen(sysFilename, "rb+");
-	if(!diskfile) return;
+	if(!diskfile) {created_succesfully = false;return;}
 	fseek(diskfile, 0L, SEEK_END);
 	filesize = (Bit32u)ftell(diskfile) / 1024L;
 
-    /* Load disk image */
+	/* Load disk image */
 	loadedDisk = new imageDisk(diskfile, (Bit8u *)sysFilename, filesize, (filesize > 2880));
 	if(!loadedDisk) {
-		delete this;
+		created_succesfully = false;
 		return;
 	}
 
@@ -629,13 +630,12 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 	loadedDisk->Read_AbsoluteSector(0+partSectOff,&bootbuffer);
 	if ((bootbuffer.magic1 != 0x55) || (bootbuffer.magic2 != 0xaa)) {
 		/* Not a FAT filesystem */
-		delete this;
-		return;
+		LOG_MSG("Loaded image has no valid magicnumbers at the end!");
 	}
 
 	if(!bootbuffer.sectorsperfat) {
 		/* FAT32 not implemented yet */
-		delete this;
+		created_succesfully = false;
 		return;
 	}
 
@@ -673,7 +673,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 	cwdDirCluster = 0;
 
 	memset(fatSectBuffer,0,1024);
-    curFatSect = 0xffffffff;
+	curFatSect = 0xffffffff;
 }
 
 bool fatDrive::AllocationInfo(Bit16u *_bytes_sector, Bit8u *_sectors_cluster, Bit16u *_total_clusters, Bit16u *_free_clusters) {
