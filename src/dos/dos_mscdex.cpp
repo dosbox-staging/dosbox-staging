@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.40 2006-04-14 07:19:37 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.41 2006-04-17 20:06:39 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -114,7 +114,7 @@ public:
 	bool		GetCopyrightName	(Bit16u drive, PhysPt data);
 	bool		GetAbstractName		(Bit16u drive, PhysPt data);
 	bool		GetDocumentationName(Bit16u drive, PhysPt data);
-	bool		GetDirectoryEntry	(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bitu& error);
+	bool		GetDirectoryEntry	(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error);
 	bool		ReadVTOC			(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error);
 	bool		ReadSectors			(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data);
 	bool		ReadSectors			(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data);
@@ -570,14 +570,14 @@ bool CMscdex::ReadSectors(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data)
 	return ReadSectors(GetSubUnit(drive),false,sector,num,data);
 };
 
-bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bitu& error)
+bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error)
 {
 	char	volumeID[6] = {0};
 	char	searchName[256];
 	char	entryName[256];
 	bool	foundComplete = false;
 	bool	foundName;
-	char*	useName;
+	char*	useName = 0;
 	Bitu	entryLength,nameLength;
 	// clear error
 	error = 0;
@@ -773,8 +773,9 @@ void CMscdex::InitNewMedia(Bit8u subUnit) {
 };
 
 static CMscdex* mscdex = 0;
+static PhysPt curReqheaderPtr = 0;
 
-static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
+static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 	Bitu ioctl_fct = mem_readb(buffer);
 	MSCDEX_LOG("MSCDEX: IOCTL INPUT Subfunction %02X",ioctl_fct);
 	switch (ioctl_fct) {
@@ -794,7 +795,7 @@ static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 						mem_writeb(buffer+5,0x00);
 					} else {
 						LOG_MSG("MSCDEX: Get position: invalid address mode %x",addr_mode);
-						return false;
+						return 0x03;		// invalid function
 					}
 				   }break;
 		case 0x06 : /* Get Device status */
@@ -803,7 +804,7 @@ static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 		case 0x07 : /* Get sector size */
 					if (mem_readb(buffer+1)==0) mem_writed(buffer+2,2048);
 					else if (mem_readb(buffer+1)==1) mem_writed(buffer+2,2352);
-					else return false;
+					else return 0x03;		// invalid function
 					break;
 		case 0x08 : /* Get size of current volume */
 					mem_writed(buffer+1,mscdex->GetVolumeSize(drive_unit));
@@ -875,9 +876,9 @@ static bool MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					break;
 				   };
 		default :	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported IOCTL INPUT Subfunction %02X",ioctl_fct);
-					return false;
+					return 0x03;	// invalid function
 	}
-	return true;	// success
+	return 0x00;	// success
 }
 
 static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
@@ -903,28 +904,34 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 }
 
 static Bitu MSCDEX_Strategy_Handler(void) {
-//	MSCDEX_LOG("MSCDEX: Device Strategy Routine called.");
+	curReqheaderPtr = PhysMake(SegValue(es),reg_bx);
+//	MSCDEX_LOG("MSCDEX: Device Strategy Routine called, request header at %x",curReqheaderPtr);
 	return CBRET_NONE;
 }
 
 static Bitu MSCDEX_Interrupt_Handler(void) {
-	PhysPt	data		= PhysMake(SegValue(es),reg_bx);
-	Bit8u	subUnit		= mem_readb(data+1);
-	Bit8u	funcNr		= mem_readb(data+2);
+	if (curReqheaderPtr==0) {
+		MSCDEX_LOG("MSCDEX: invalid call to interrupt handler");						
+		return CBRET_NONE;
+	}
+	Bit8u	subUnit		= mem_readb(curReqheaderPtr+1);
+	Bit8u	funcNr		= mem_readb(curReqheaderPtr+2);
 	Bit16u	errcode		= 0;
+	PhysPt	buffer		= 0;
 
 	MSCDEX_LOG("MSCDEX: Driver Function %02X",funcNr);
 
+	if ((funcNr==0x03) || (funcNr==0x0c) || (funcNr==0x80) || (funcNr==0x82)) {
+		buffer = PhysMake(mem_readw(curReqheaderPtr+0x10),mem_readw(curReqheaderPtr+0x0E));
+	}
+
  	switch (funcNr) {
 		case 0x03	: {	/* IOCTL INPUT */
-						PhysPt buffer = PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
-						if (!MSCDEX_IOCTL_Input(buffer,subUnit)) {
-							errcode = 0x03;		//unknown command
-						}
+						Bit16u error=MSCDEX_IOCTL_Input(buffer,subUnit);
+						if (error) errcode = error;
 						break;
 					  };
 		case 0x0C	: {	/* IOCTL OUTPUT */
-						PhysPt buffer = PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
 						Bit16u error=MSCDEX_IOCTL_Optput(buffer,subUnit);
 						if (error) errcode = error;
 						break;
@@ -934,22 +941,21 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 						break;
 		case 0x80	:	// Read long
 		case 0x82	: { // Read long prefetch -> both the same here :)
-						PhysPt buff  = PhysMake(mem_readw(data+0x10),mem_readw(data+0x0E));
-						Bit32u start = mem_readd(data+0x14);
-						Bit16u len	 = mem_readw(data+0x12);
-						bool raw	 = (mem_readb(data+0x18)==1);
-						if (mem_readb(data+0x0D)==0x00) // HSG
-							mscdex->ReadSectors(subUnit,raw,start,len,buff);
+						Bit32u start = mem_readd(curReqheaderPtr+0x14);
+						Bit16u len	 = mem_readw(curReqheaderPtr+0x12);
+						bool raw	 = (mem_readb(curReqheaderPtr+0x18)==1);
+						if (mem_readb(curReqheaderPtr+0x0D)==0x00) // HSG
+							mscdex->ReadSectors(subUnit,raw,start,len,buffer);
 						else 
-							mscdex->ReadSectorsMSF(subUnit,raw,start,len,buff);
+							mscdex->ReadSectorsMSF(subUnit,raw,start,len,buffer);
 						break;
 					  };
 		case 0x83	:	// Seek - dont care :)
 						break;
 		case 0x84	: {	/* Play Audio Sectors */
-						Bit32u start = mem_readd(data+0x0E);
-						Bit32u len	 = mem_readd(data+0x12);
-						if (mem_readb(data+0x0D)==0x00) // HSG
+						Bit32u start = mem_readd(curReqheaderPtr+0x0E);
+						Bit32u len	 = mem_readd(curReqheaderPtr+0x12);
+						if (mem_readb(curReqheaderPtr+0x0D)==0x00) // HSG
 							mscdex->PlayAudioSector(subUnit,start,len);
 						else // RED BOOK
 							mscdex->PlayAudioMSF(subUnit,start,len);
@@ -967,8 +973,8 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 	};
 	
 	// Set Statusword
-	mem_writew(data+3,mscdex->GetStatusWord(subUnit,errcode));
-	MSCDEX_LOG("MSCDEX: Status : %04X",mem_readw(data+3));						
+	mem_writew(curReqheaderPtr+3,mscdex->GetStatusWord(subUnit,errcode));
+	MSCDEX_LOG("MSCDEX: Status : %04X",mem_readw(curReqheaderPtr+3));						
 	return CBRET_NONE;
 }
 
@@ -985,7 +991,7 @@ static bool MSCDEX_Handler(void) {
 		}
 	}
 
-	if (reg_ah!=0x15) return false;
+	if (reg_ah!=0x15) return false;		// not handled here, continue chain
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
 	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_cx);
@@ -1057,7 +1063,7 @@ static bool MSCDEX_Handler(void) {
 						mscdex->GetDrives(data);
 						return true;
 		case 0x150F: {	// Get directory entry
-						Bitu error;
+						Bit16u error;
 						bool success = mscdex->GetDirectoryEntry(reg_cl,reg_ch&1,data,PhysMake(reg_si,reg_di),error);
 						reg_ax = error;
 						CALLBACK_SCF(!success);
@@ -1070,11 +1076,9 @@ static bool MSCDEX_Handler(void) {
 							CALLBACK_SCF(true);
 						}
 						return true;
-		default	:		LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
-						return true;
-
 	};
-	return false;
+	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
+	return true;
 };
 
 class device_MSCDEX : public DOS_Device {
@@ -1095,7 +1099,7 @@ private:
 };
 
 bool device_MSCDEX::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode) { 
-	if (MSCDEX_IOCTL_Input(bufptr,0)) {
+	if (MSCDEX_IOCTL_Input(bufptr,0)==0) {
 		*retcode=size;
 		return true;
 	}
@@ -1103,7 +1107,7 @@ bool device_MSCDEX::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * re
 }
 
 bool device_MSCDEX::WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode) { 
-	if (MSCDEX_IOCTL_Optput(bufptr,0)) {
+	if (MSCDEX_IOCTL_Optput(bufptr,0)==0) {
 		*retcode=size;
 		return true;
 	}
@@ -1153,7 +1157,9 @@ void MSCDEX_SetCDInterface(int intNr, int numCD)
 
 void MSCDEX_ShutDown(Section* sec)
 {
-	delete mscdex; mscdex = 0;
+	delete mscdex;
+	mscdex = 0;
+	curReqheaderPtr = 0;
 };
 
 void MSCDEX_Init(Section* sec) 
@@ -1163,6 +1169,7 @@ void MSCDEX_Init(Section* sec)
 	/* Register the mscdex device */
 	DOS_Device * newdev = new device_MSCDEX();
 	DOS_AddDevice(newdev);
+	curReqheaderPtr = 0;
 	/* Add Multiplexer */
 	DOS_AddMultiplexHandler(MSCDEX_Handler);
 	/* Create MSCDEX */
