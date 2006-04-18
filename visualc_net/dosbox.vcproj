@@ -299,21 +299,6 @@
 				Name="dos"
 				Filter="">
 				<File
-					RelativePath="..\src\dos\cdrom.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\cdrom.h">
-				</File>
-				<File
-					RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\cdrom_image.cpp">
-				</File>
-				<File
 					RelativePath="..\src\dos\dev_con.h">
 				</File>
 				<File
@@ -349,24 +334,6 @@
 				<File
 					RelativePath="..\src\dos\dos_tables.cpp">
 				</File>
-				<File
-					RelativePath="..\src\dos\drive_cache.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\drive_fat.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\drive_local.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\drive_virtual.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\drive_iso.cpp">
-				</File>
-				<File
-					RelativePath="..\src\dos\drives.cpp">
-				</File>
 				<Filter
 					Name="win32headers"
 					Filter="">
@@ -392,10 +359,43 @@
 				<Filter
 					Name="cdrom"
 					Filter="">
-				</Filter>
+					<File
+						RelativePath="..\src\dos\cdrom.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom.h">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\cdrom_image.cpp">
+					</File>
+					</Filter>
 				<Filter
 					Name="drives"
 					Filter="">
+					<File
+						RelativePath="..\src\dos\drive_cache.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_fat.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_local.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_virtual.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drive_iso.cpp">
+					</File>
+					<File
+						RelativePath="..\src\dos\drives.cpp">
+					</File>
 				</Filter>
 			</Filter>
 			<Filter
