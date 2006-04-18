@@ -457,6 +457,29 @@ finish:
 	else cache_addw(imm);
 }
 
+static void gen_dop_word_var(DualOps op,bool dword,DynReg * dr1,void* drd) {
+	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
+	Bit8u tmp;
+	switch (op) {
+	case DOP_ADD:	tmp=0x03; break;
+	case DOP_ADC:	tmp=0x13; break;
+	case DOP_SUB:	tmp=0x2b; break;
+	case DOP_SBB:	tmp=0x1b; break;
+	case DOP_CMP:	tmp=0x3b; break;
+	case DOP_XOR:	tmp=0x33; break;
+	case DOP_AND:	tmp=0x23; break;
+	case DOP_OR:	tmp=0x0b; break;
+	case DOP_TEST:	tmp=0x85; break;
+	case DOP_MOV:	tmp=0x8b; break;
+	case DOP_XCHG:	tmp=0x87; break;
+	default:
+		IllegalOption("gen_dop_word_var");
+	}
+	if (!dword) cache_addb(0x66);
+	cache_addw(tmp|(0x05+((gr1->index)<<3))<<8);
+	cache_addd((Bit32u)drd);
+}
+
 static void gen_imul_word(bool dword,DynReg * dr1,DynReg * dr2) {
 	GenReg * gr1=FindDynReg(dr1);GenReg * gr2=FindDynReg(dr2);
 	dr1->flags|=DYNFLG_CHANGED;
@@ -728,21 +751,12 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	x86gen.regs[X86_REG_EDX]->Clear();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
-#ifdef CHECKED_MEMORY_ACCESS
 	switch (write_size) {
 		case 1: cache_addd((Bit32u)mem_writeb_checked_x86 - (Bit32u)cache.pos-4); break;
 		case 2: cache_addd((Bit32u)mem_writew_checked_x86 - (Bit32u)cache.pos-4); break;
 		case 4: cache_addd((Bit32u)mem_writed_checked_x86 - (Bit32u)cache.pos-4); break;
 		default: IllegalOption("gen_call_write");
 	}
-#else
-	switch (write_size) {
-		case 1: cache_addd((Bit32u)mem_writeb - (Bit32u)cache.pos-4); break;
-		case 2: cache_addd((Bit32u)mem_writew_dyncorex86 - (Bit32u)cache.pos-4); break;
-		case 4: cache_addd((Bit32u)mem_writed_dyncorex86 - (Bit32u)cache.pos-4); break;
-		default: IllegalOption("gen_call_write");
-	}
-#endif
 
 	cache_addw(0xc483);		//ADD ESP,8
 	cache_addb(2*4);

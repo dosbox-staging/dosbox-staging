@@ -20,8 +20,6 @@
 
 #if (C_DYNAMIC_X86)
 
-#define CHECKED_MEMORY_ACCESS
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -46,11 +44,7 @@
 #include "paging.h"
 #include "inout.h"
 
-#ifdef CHECKED_MEMORY_ACCESS
 #define CACHE_MAXSIZE	(4096*2)
-#else
-#define CACHE_MAXSIZE	(4096)
-#endif
 #define CACHE_PAGES		(128*8)
 #define CACHE_TOTAL		(CACHE_PAGES*4096)
 #define CACHE_BLOCKS	(64*1024)
@@ -73,7 +67,7 @@ enum {
 	G_EAX,G_ECX,G_EDX,G_EBX,
 	G_ESP,G_EBP,G_ESI,G_EDI,
 	G_ES,G_CS,G_SS,G_DS,G_FS,G_GS,
-	G_FLAGS,G_SMASK,G_EIP,
+	G_FLAGS,G_NEWESP,G_EIP,
 	G_EA,G_STACK,G_CYCLES,
 	G_TMPB,G_TMPW,G_SHIFT,
 	G_EXIT,
@@ -155,7 +149,7 @@ static DynReg DynRegs[G_MAX];
 #define DREG(_WHICH_) &DynRegs[G_ ## _WHICH_ ]
 
 static struct {
-	Bitu ea,tmpb,tmpd,stack,shift;
+	Bitu ea,tmpb,tmpd,stack,shift,newesp;
 } extra_regs;
 
 static void IllegalOption(const char* msg) {
@@ -326,8 +320,8 @@ void CPU_Core_Dyn_X86_Init(void) {
 	DynRegs[G_FLAGS].data=&reg_flags;
 	DynRegs[G_FLAGS].flags=DYNFLG_LOAD|DYNFLG_SAVE;
 
-	DynRegs[G_SMASK].data=&cpu.stack.mask;
-	DynRegs[G_SMASK].flags=DYNFLG_LOAD|DYNFLG_SAVE;
+	DynRegs[G_NEWESP].data=&extra_regs.newesp;
+	DynRegs[G_NEWESP].flags=0;
 
 	DynRegs[G_EIP].data=&reg_eip;
 	DynRegs[G_EIP].flags=DYNFLG_LOAD|DYNFLG_SAVE;

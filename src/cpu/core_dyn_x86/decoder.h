@@ -220,7 +220,6 @@ static void dyn_fill_blocks(void) {
 	used_save_info=0;
 }
 
-#ifdef CHECKED_MEMORY_ACCESS
 static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
 	gen_protectflags();
 	gen_call_function((void *)&mem_readb_checked_x86,"%Dd%Id",addr,&core_dyn.readdata);
@@ -271,50 +270,13 @@ static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
 	else gen_call_function((void *)&mem_writew_checked_x86,"%Ddr%Dd",addr,val);
 	dyn_check_bool_exception_al();
 }
-#else
-static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
-	if (high) gen_call_function((void *)&mem_readb,"%Dd%Rh",addr,dst);
-	else gen_call_function((void *)&mem_readb,"%Dd%Rl",addr,dst);
-}
-static void dyn_write_byte(DynReg * addr,DynReg * val,Bitu high) {
-	if (high) gen_call_function((void *)&mem_writeb,"%Dd%Dh",addr,val);
-	else gen_call_function((void *)&mem_writeb,"%Dd%Dd",addr,val);
-}
-static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
-	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Dd%Rd",addr,dst);
-	else gen_call_function((void *)&mem_readw_dyncorex86,"%Dd%Rw",addr,dst);
-}
-static void dyn_write_word(DynReg * addr,DynReg * val,bool dword) {
-	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Dd%Dd",addr,val);
-	else gen_call_function((void *)&mem_writew_dyncorex86,"%Dd%Dd",addr,val);
-}
-static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
-	if (high) gen_call_function((void *)&mem_readb,"%Ddr%Rh",addr,dst);
-	else gen_call_function((void *)&mem_readb,"%Ddr%Rl",addr,dst);
-}
-static void dyn_write_byte_release(DynReg * addr,DynReg * val,Bitu high) {
-	if (high) gen_call_function((void *)&mem_writeb,"%Ddr%Dh",addr,val);
-	else gen_call_function((void *)&mem_writeb,"%Ddr%Dd",addr,val);
-}
-static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
-	if (dword) gen_call_function((void *)&mem_readd_dyncorex86,"%Ddr%Rd",addr,dst);
-	else gen_call_function((void *)&mem_readw_dyncorex86,"%Ddr%Rw",addr,dst);
-}
-static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
-	if (dword) gen_call_function((void *)&mem_writed_dyncorex86,"%Ddr%Dd",addr,val);
-	else gen_call_function((void *)&mem_writew_dyncorex86,"%Ddr%Dd",addr,val);
-}
-#endif
 
 static void dyn_push_unchecked(DynReg * dynreg) {
 	gen_protectflags();
-	if (decode.big_op) {
-		gen_dop_word_imm(DOP_SUB,true,DREG(ESP),4);
-	} else {
-		gen_dop_word_imm(DOP_SUB,true,DREG(ESP),2);
-	}
-	gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
-	gen_dop_word(DOP_MOV,true,DREG(STACK),DREG(ESP));
+	gen_lea(DREG(STACK),DREG(ESP),0,0,decode.big_op?(-4):(-2));
+	gen_dop_word_var(DOP_AND,true,DREG(STACK),&cpu.stack.mask);
+	gen_dop_word_var(DOP_AND,true,DREG(ESP),&cpu.stack.notmask);
+	gen_dop_word(DOP_OR,true,DREG(ESP),DREG(STACK));
 	gen_dop_word(DOP_ADD,true,DREG(STACK),DREG(SS));
 	if (decode.big_op) {
 		gen_call_function((void *)&mem_writed,"%Drd%Dd",DREG(STACK),dynreg);
@@ -326,13 +288,11 @@ static void dyn_push_unchecked(DynReg * dynreg) {
 
 static void dyn_push(DynReg * dynreg) {
 	gen_protectflags();
-	gen_dop_word(DOP_MOV,true,DREG(STACK),DREG(ESP));
-	if (decode.big_op) {
-		gen_dop_word_imm(DOP_SUB,true,DREG(STACK),4);
-	} else {
-		gen_dop_word_imm(DOP_SUB,true,DREG(STACK),2);
-	}
-	gen_dop_word(DOP_AND,true,DREG(STACK),DREG(SMASK));
+	gen_lea(DREG(STACK),DREG(ESP),0,0,decode.big_op?(-4):(-2));
+	gen_dop_word(DOP_MOV,true,DREG(NEWESP),DREG(ESP));
+	gen_dop_word_var(DOP_AND,true,DREG(STACK),&cpu.stack.mask);
+	gen_dop_word_var(DOP_AND,true,DREG(NEWESP),&cpu.stack.notmask);
+	gen_dop_word(DOP_OR,true,DREG(NEWESP),DREG(STACK));
 	gen_dop_word(DOP_ADD,true,DREG(STACK),DREG(SS));
 	if (decode.big_op) {
 		gen_call_function((void *)&mem_writed_checked_x86,"%Drd%Dd",DREG(STACK),dynreg);
@@ -341,54 +301,36 @@ static void dyn_push(DynReg * dynreg) {
 		gen_call_function((void *)&mem_writew_checked_x86,"%Drd%Dd",DREG(STACK),dynreg);
 	}
 	dyn_check_bool_exception_al();
-	/* everything was ok, change registers now */
-	if (decode.big_op) {
-		gen_dop_word_imm(DOP_SUB,true,DREG(ESP),4);
-	} else {
-		gen_dop_word_imm(DOP_SUB,true,DREG(ESP),2);
-	}
-	gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
+	/* everything was ok, change register now */
+	gen_dop_word(DOP_MOV,true,DREG(ESP),DREG(NEWESP));
+	gen_releasereg(DREG(NEWESP));
 }
 
-static void dyn_pop_unchecked(DynReg * dynreg) {
+static void dyn_pop(DynReg * dynreg,bool checked=true) {
 	gen_protectflags();
 	gen_dop_word(DOP_MOV,true,DREG(STACK),DREG(ESP));
-	gen_dop_word(DOP_AND,true,DREG(STACK),DREG(SMASK));
+	gen_dop_word_var(DOP_AND,true,DREG(STACK),&cpu.stack.mask);
 	gen_dop_word(DOP_ADD,true,DREG(STACK),DREG(SS));
-	if (decode.big_op) {
-		gen_call_function((void *)&mem_readd,"%Rd%Drd",dynreg,DREG(STACK));
+	if (checked) {
+		if (decode.big_op) {
+			gen_call_function((void *)&mem_readd_checked_x86,"%Drd%Id",DREG(STACK),&core_dyn.readdata);
+		} else {
+			gen_call_function((void *)&mem_readw_checked_x86,"%Drd%Id",DREG(STACK),&core_dyn.readdata);
+		}
+		dyn_check_bool_exception_al();
+		gen_mov_host(&core_dyn.readdata,dynreg,decode.big_op?4:2);
 	} else {
-		gen_call_function((void *)&mem_readw,"%Rw%Drd",dynreg,DREG(STACK));
+		if (decode.big_op) {
+			gen_call_function((void *)&mem_readd,"%Rd%Drd",dynreg,DREG(STACK));
+		} else {
+			gen_call_function((void *)&mem_readw,"%Rw%Drd",dynreg,DREG(STACK));
+		}
 	}
 	if (dynreg!=DREG(ESP)) {
-		if (decode.big_op) {
-			gen_dop_word_imm(DOP_ADD,true,DREG(ESP),4);
-		} else {
-			gen_dop_word_imm(DOP_ADD,true,DREG(ESP),2);
-		}
-		gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
-	}
-}
-
-static void dyn_pop(DynReg * dynreg) {
-	gen_protectflags();
-	gen_dop_word(DOP_MOV,true,DREG(STACK),DREG(ESP));
-	gen_dop_word(DOP_AND,true,DREG(STACK),DREG(SMASK));
-	gen_dop_word(DOP_ADD,true,DREG(STACK),DREG(SS));
-	if (decode.big_op) {
-		gen_call_function((void *)&mem_readd_checked_x86,"%Drd%Id",DREG(STACK),&core_dyn.readdata);
-	} else {
-		gen_call_function((void *)&mem_readw_checked_x86,"%Drd%Id",DREG(STACK),&core_dyn.readdata);
-	}
-	dyn_check_bool_exception_al();
-	gen_mov_host(&core_dyn.readdata,dynreg,decode.big_op?4:2);
-	if (dynreg!=DREG(ESP)) {
-		if (decode.big_op) {
-			gen_dop_word_imm(DOP_ADD,true,DREG(ESP),4);
-		} else {
-			gen_dop_word_imm(DOP_ADD,true,DREG(ESP),2);
-		}
-		gen_dop_word(DOP_AND,true,DREG(ESP),DREG(SMASK));
+		gen_lea(DREG(STACK),DREG(ESP),0,0,decode.big_op?4:2);
+		gen_dop_word_var(DOP_AND,true,DREG(STACK),&cpu.stack.mask);
+		gen_dop_word_var(DOP_AND,true,DREG(ESP),&cpu.stack.notmask);
+		gen_dop_word(DOP_OR,true,DREG(ESP),DREG(STACK));
 	}
 }
 
@@ -575,9 +517,7 @@ static void dyn_mov_ebib(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		gen_call_write(DREG(EA),decode_fetchb(),1);
-#ifdef CHECKED_MEMORY_ACCESS
 		dyn_check_bool_exception_al();
-#endif
 	} else {
 		gen_dop_byte_imm(DOP_MOV,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,decode_fetchb());
 	}
@@ -696,9 +636,7 @@ static void dyn_mov_eviv(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		gen_call_write(DREG(EA),decode.big_op ? decode_fetchd() : decode_fetchw(),decode.big_op?4:2);
-#ifdef CHECKED_MEMORY_ACCESS
 		dyn_check_bool_exception_al();
-#endif
 	} else {
 		gen_dop_word_imm(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],decode.big_op ? decode_fetchd() : decode_fetchw());
 	}
@@ -985,7 +923,6 @@ static void dyn_load_seg(SegNames seg,DynReg * src) {
 		gen_releasereg(DREG(TMPB));
 	} else gen_call_function((void *)CPU_SetSegGeneral,"%Id%Drw",seg,src);
 	gen_releasereg(&DynRegs[G_ES+seg]);
-	if (seg==ss) gen_releasereg(DREG(SMASK));
 }
 
 static void dyn_load_seg_off_ea(SegNames seg) {
@@ -1034,7 +971,6 @@ static void dyn_pop_seg(SegNames seg) {
 		gen_releasereg(DREG(TMPB));
 		gen_releasereg(&DynRegs[G_ES+seg]);
 		gen_releasereg(DREG(ESP));
-		if (seg==ss) gen_releasereg(DREG(SMASK));
 	}
 }
 
@@ -1062,13 +998,13 @@ static void dyn_enter(void) {
 
 static void dyn_leave(void) {
 	gen_protectflags();
-	gen_dop_word(DOP_MOV,true,DREG(TMPW),DREG(SMASK));
+	gen_dop_word_var(DOP_MOV,true,DREG(TMPW),&cpu.stack.mask);
 	gen_sop_word(SOP_NOT,true,DREG(TMPW));
 	gen_dop_word(DOP_AND,true,DREG(ESP),DREG(TMPW));
 	gen_dop_word(DOP_MOV,true,DREG(TMPW),DREG(EBP));
-	gen_dop_word(DOP_AND,true,DREG(TMPW),DREG(SMASK));
+	gen_dop_word_var(DOP_AND,true,DREG(TMPW),&cpu.stack.mask);
 	gen_dop_word(DOP_OR,true,DREG(ESP),DREG(TMPW));
-	dyn_pop_unchecked(DREG(EBP));
+	dyn_pop(DREG(EBP),false);
 	gen_releasereg(DREG(TMPW));
 }
 
@@ -1444,7 +1380,7 @@ restart_prefix:
 			break;
 		case 0x61:		/* POPA */
 			for (i=G_EDI;i>=G_EAX;i--) {
-				dyn_pop_unchecked((i!=G_ESP) ? &DynRegs[i] : DREG(TMPW));
+				dyn_pop((i!=G_ESP) ? &DynRegs[i] : DREG(TMPW),false);
 			}
 			gen_releasereg(DREG(TMPW));
 			break;
@@ -1453,7 +1389,7 @@ restart_prefix:
 		case 0x65:dyn_segprefix(gs);goto restart_prefix;
 		//Push immediates
 		//Operand size		
-		case 0x66:decode.big_op=!cpu.code.big;;goto restart_prefix;
+		case 0x66:decode.big_op=!cpu.code.big;goto restart_prefix;
 		//Address size		
 		case 0x67:decode.big_addr=!cpu.code.big;goto restart_prefix;
 		case 0x68:		/* PUSH Iv */

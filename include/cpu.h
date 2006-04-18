@@ -418,7 +418,7 @@ struct CPUBlock {
 	GDTDescriptorTable gdt;
 	DescriptorTable idt;
 	struct {
-		Bitu mask;
+		Bitu mask,notmask;
 		bool big;
 	} stack;
 	struct {

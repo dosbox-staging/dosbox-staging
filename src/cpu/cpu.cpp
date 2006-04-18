@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.79 2006-02-26 16:11:00 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.80 2006-04-18 17:44:25 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -90,26 +90,26 @@ void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 
 
 void CPU_Push16(Bitu value) {
-	Bit32u new_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-2)&cpu.stack.mask);
+	Bit32u new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-2)&cpu.stack.mask);
 	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
 	reg_esp=new_esp;
 }
 
 void CPU_Push32(Bitu value) {
-	Bit32u new_esp=(reg_esp&~cpu.stack.mask)|((reg_esp-4)&cpu.stack.mask);
+	Bit32u new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-4)&cpu.stack.mask);
 	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
 	reg_esp=new_esp;
 }
 
 Bitu CPU_Pop16(void) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp+2)&cpu.stack.mask);
+	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
 	return val;
 }
 
 Bitu CPU_Pop32(void) {
 	Bitu val=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp+4)&cpu.stack.mask);
+	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
 	return val;
 }
 
@@ -409,11 +409,11 @@ doconforming:
 bool CPU_IO_Exception(Bitu port,Bitu size) {
 	if (cpu.pmode && ((GETFLAG_IOPL<cpu.cpl) || GETFLAG(VM))) {
 		if (!cpu_tss.is386) goto doexception;
-		PhysPt where=cpu_tss.base+0x66;
-		Bitu ofs=mem_readw(where);
+		PhysPt bwhere=cpu_tss.base+0x66;
+		Bitu ofs=mem_readw(bwhere);
 		if (ofs>cpu_tss.limit) goto doexception;
-		where=cpu_tss.base+ofs+(port/8);
-		Bitu map=mem_readw(where);
+		bwhere=cpu_tss.base+ofs+(port/8);
+		Bitu map=mem_readw(bwhere);
 		Bitu mask=(0xffff>>(16-size)) << (port&7);
 		if (map & mask) goto doexception;
 	}
@@ -552,10 +552,12 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 						if (n_ss_desc.Big()) {
 							cpu.stack.big=true;
 							cpu.stack.mask=0xffffffff;
+							cpu.stack.notmask=0;
 							reg_esp=n_esp;
 						} else {
 							cpu.stack.big=false;
 							cpu.stack.mask=0xffff;
+							cpu.stack.notmask=0xffff0000;
 							reg_sp=n_esp & 0xffff;
 						}
 
@@ -814,10 +816,12 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			if (n_ss_desc.Big()) {
 				cpu.stack.big=true;
 				cpu.stack.mask=0xffffffff;
+				cpu.stack.notmask=0;
 				reg_esp=n_esp;
 			} else {
 				cpu.stack.big=false;
 				cpu.stack.mask=0xffff;
+				cpu.stack.notmask=0xffff0000;
 				reg_sp=n_esp & 0xffff;
 			}
 
@@ -1070,10 +1074,12 @@ call_code:
 						if (n_ss_desc.Big()) {
 							cpu.stack.big=true;
 							cpu.stack.mask=0xffffffff;
+							cpu.stack.notmask=0;
 							reg_esp=n_esp;
 						} else {
 							cpu.stack.big=false;
 							cpu.stack.mask=0xffff;
+							cpu.stack.notmask=0xffff0000;
 							reg_sp=n_esp & 0xffff;
 						}
 
@@ -1303,10 +1309,12 @@ RET_same_level:
 			if (n_ss_desc.Big()) {
 				cpu.stack.big=true;
 				cpu.stack.mask=0xffffffff;
+				cpu.stack.notmask=0;
 				reg_esp=n_esp+bytes;
 			} else {
 				cpu.stack.big=false;
 				cpu.stack.mask=0xffff;
+				cpu.stack.notmask=0xffff0000;
 				reg_sp=(n_esp & 0xffff)+bytes;
 			}
 
@@ -1712,6 +1720,7 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 		if (seg==ss) {
 			cpu.stack.big=false;
 			cpu.stack.mask=0xffff;
+			cpu.stack.notmask=0xffff0000;
 		}
 		return false;
 	} else {
@@ -1750,9 +1759,11 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 			if (desc.Big()) {
 				cpu.stack.big=true;
 				cpu.stack.mask=0xffffffff;
+				cpu.stack.notmask=0;
 			} else {
 				cpu.stack.big=false;
 				cpu.stack.mask=0xffff;
+				cpu.stack.notmask=0xffff0000;
 			}
 		} else {
 			if ((value & 0xfffc)==0) {
@@ -1799,7 +1810,7 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
 	if (CPU_SetSegGeneral(seg,val)) return true;
 	Bitu addsp=use32?0x04:0x02;
-	reg_esp=(reg_esp&~cpu.stack.mask)|((reg_esp+addsp)&cpu.stack.mask);
+	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+addsp)&cpu.stack.mask);
 	return false;
 }
 
@@ -1872,7 +1883,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 		}
 	}
 	sp_index-=bytes;
-	reg_esp=(reg_esp&~cpu.stack.mask)|((sp_index)&cpu.stack.mask);
+	reg_esp=(reg_esp&cpu.stack.notmask)|((sp_index)&cpu.stack.mask);
 }
 
 extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
@@ -1938,6 +1949,7 @@ public:
 		CPU_SET_CRX(0,0);						//Initialize
 		cpu.code.big=false;
 		cpu.stack.mask=0xffff;
+		cpu.stack.notmask=0xffff0000;
 		cpu.stack.big=false;
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
