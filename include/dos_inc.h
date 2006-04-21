@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.59 2006-02-09 11:47:47 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.60 2006-04-21 08:50:30 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -367,6 +367,7 @@ public:
 	Bit16u	GetStartOfUMBChain(void);
 	Bit8u	GetUMBChainState(void);
 	RealPt	GetPointer(void);
+	Bit32u GetDeviceChain(void);
 
 	#ifdef _MSC_VER
 	#pragma pack(1)

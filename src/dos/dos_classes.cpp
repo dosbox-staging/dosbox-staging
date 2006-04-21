@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.47 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.48 2006-04-21 08:50:30 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -168,13 +168,16 @@ RealPt DOS_InfoBlock::GetPointer(void) {
 	return RealMake(seg,offsetof(sDIB,firstDPB));
 }
 
+Bit32u DOS_InfoBlock::GetDeviceChain(void) {
+	return sGet(sDIB,nulNextDriver);
+}
+
 
 /* program Segment prefix */
 
 Bit16u DOS_PSP::rootpsp = 0;
 
-void DOS_PSP::MakeNew(Bit16u mem_size) 
-{
+void DOS_PSP::MakeNew(Bit16u mem_size) {
 	/* get previous */
 	DOS_PSP prevpsp(dos.psp());
 	/* Clear it first */
