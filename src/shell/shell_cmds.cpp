@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.64 2006-04-21 08:18:51 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.65 2006-04-21 13:21:09 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -780,7 +780,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 }
 
 void DOS_Shell::CMD_CHOICE(char * args){
-	static char defchoice[3] = {'Y','N',0};
+	static char defchoice[3] = {'y','n',0};
 	char *rem = NULL, *ptr;
 	bool optN = ScanCMDBool(args,"N");
 	bool optS = ScanCMDBool(args,"S"); //Case-sensitive matching
