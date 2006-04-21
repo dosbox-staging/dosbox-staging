@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.41 2006-04-17 20:06:39 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.42 2006-04-21 08:35:31 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -208,9 +208,21 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		Bit16u seg = DOS_GetMemory(driverSize/16+((driverSize%16)>0));
 		DOS_DeviceHeader devHeader(PhysMake(seg,0));
 		devHeader.SetNextDeviceHeader	(0xFFFFFFFF);
+		devHeader.SetAttribute(0xc800);
 		devHeader.SetDriveLetter		(_drive+1);
 		devHeader.SetNumSubUnits		(1);
 		devHeader.SetName				("MSCD001 ");
+
+		//Link it in the device chain
+		Bit32u start = dos_infoblock.GetDeviceChain();
+		Bit16u segm  = start>>16;
+		Bit16u offm  = start&0xFFFF;
+		while(start != 0xFFFFFFFF) {
+			segm  = start>>16;
+			offm  = start&0xFFFF;
+			start = real_readd(segm,offm);
+		}
+		real_writed(segm,offm,seg<<16);
 
 		// Create Callback Strategy
 		Bit16u off = sizeof(DOS_DeviceHeader::sDeviceHeader);
@@ -888,6 +900,8 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 		case 0x00 :	// Unload /eject media
 					if (!mscdex->LoadUnloadMedia(drive_unit,true)) return 0x02;
 					break;
+		case 0x03: //Audio Channel control
+					MSCDEX_LOG("MSCDEX: Audio Channel Control used. Not handled. Faking succes!");
 		case 0x01 : // (un)Lock door 
 					// do nothing -> report as success
 					break;
