@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.93 2006-03-08 15:57:23 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.94 2006-04-21 08:23:40 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +40,18 @@ Bit8u dos_copybuf[DOS_COPYBUFSIZE];
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
+
+#define DATA_TRANSFERS_TAKE_CYCLES 1
+#ifdef DATA_TRANSFERS_TAKE_CYCLES
+#include "cpu.h"
+static inline void modify_cycles(Bitu value) {
+	if((4*value+5) < CPU_Cycles) CPU_Cycles -= 4*value; else CPU_Cycles = 5;
+}
+#else
+static inline void modify_cycles(Bitu /* value */) {
+	return;
+}
+#endif
 
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
@@ -499,6 +511,7 @@ static Bitu DOS_21Handler(void) {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}
+			modify_cycles(reg_ax);
 			dos.echo=false;
 			break;
 		}
@@ -513,6 +526,7 @@ static Bitu DOS_21Handler(void) {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
 			}
+			modify_cycles(reg_ax);
 			break;
 		};
 	case 0x41:					/* UNLINK Delete file */
