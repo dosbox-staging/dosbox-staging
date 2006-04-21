@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.63 2006-04-10 12:06:07 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.64 2006-04-21 08:18:51 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -212,7 +212,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 	}
 	char buffer[512];
 	char* pbuffer = buffer;
-	strcpy(buffer,args);
+	safe_strncpy(buffer,args,512);
 	StripSpaces(pbuffer);
 	if (strcasecmp(pbuffer,"OFF")==0) {
 		echo=false;		
@@ -780,38 +780,54 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 }
 
 void DOS_Shell::CMD_CHOICE(char * args){
-	static char defargs[] = "[YN]";
-	static char defchoice[] = "yn";
+	static char defchoice[3] = {'Y','N',0};
 	char *rem = NULL, *ptr;
-	bool optN = false;
+	bool optN = ScanCMDBool(args,"N");
+	bool optS = ScanCMDBool(args,"S"); //Case-sensitive matching
+	ScanCMDBool(args,"T"); //Default Choice after timeout
 	if (args) {
 		char *last = strchr(args,0);
 		StripSpaces(args);
-		optN=ScanCMDBool(args,"N");
-		rem=ScanCMDRemain(args);
-		if (rem && *rem && (tolower(rem[1]) != 'c' || rem[2] != ':')) {
+		rem = ScanCMDRemain(args);
+		if (rem && *rem && (tolower(rem[1]) != 'c')) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 			return;
 		}
 		if (args == rem) args = strchr(rem,0)+1;
-		if (rem) rem += 3;
+		if (rem) rem += 2;
+		if(rem && rem[0]==':') rem++; /* optional : after /c */
 		if (args > last) args = NULL;
 	}
-	if (!args || !*args) args = defargs;
-	if (!rem || !*rem) rem = defchoice;
+	if (!rem || !*rem) rem = defchoice; /* No choices specified use YN */
 	ptr = rem;
 	Bit8u c;
-	while ((c = *ptr)) *ptr++ = tolower(c);
+	if(!optS) while ((c = *ptr)) *ptr++ = toupper(c); /* When in no case-sensitive mode. make everything upcase */
+	if(args && *args ) {
+		StripSpaces(args);
+		size_t argslen = strlen(args);
+		if(argslen>1 && args[0] == '"' && args[argslen-1] =='"') {
+			args[argslen-1] = 0; //Remove quotes
+			args++;
+		}
+		WriteOut(args);
+	}
+	/* Show question prompt of the form [a,b]? where a b are the choice values */
+	if (!optN) {
+		if(args && *args) WriteOut(" ");
+		WriteOut("[");
+		size_t len = strlen(rem);
+		for(size_t t = 1; t < len; t++) {
+			WriteOut("%c,",rem[t-1]);
+		}
+		WriteOut("%c]?",rem[len-1]);
+	}
 
-	WriteOut(args);
-	if (!optN) WriteOut("\r\n");
 	Bit16u n=1;
 	do {
 		DOS_ReadFile (STDIN,&c,&n);
-	} while (!c || !(ptr = strchr(rem,tolower(c))));
-	if (optN) {
+	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
+	if (!optN) { //Echo typed value ? not sure actually perhaps depend on echo
 		DOS_WriteFile (STDOUT,&c, &n);
-		WriteOut("\r\n");
 	}
 	dos.return_code = ptr-rem+1;
 }
