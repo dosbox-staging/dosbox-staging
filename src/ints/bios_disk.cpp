@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.28 2006-04-09 13:03:24 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.29 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -63,24 +63,26 @@ Bits swapPosition;
 void updateDPT(void) {
 	Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
 	if(imageDiskList[2] != NULL) {
+		PhysPt dp0physaddr=CALLBACK_PhysPointer(diskparm0);
 		imageDiskList[2]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0)),tmpcyl);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+2,tmpheads);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x3,0);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x5,(Bit16u)-1);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x7,0);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x8,(0xc0 | (((imageDiskList[2]->heads) > 8) << 3)));
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0x9,0);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xa,0);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xb,0);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xc,tmpcyl);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+0xe,tmpsect);
+		phys_writew(dp0physaddr,tmpcyl);
+		phys_writeb(dp0physaddr+0x2,tmpheads);
+		phys_writew(dp0physaddr+0x3,0);
+		phys_writew(dp0physaddr+0x5,(Bit16u)-1);
+		phys_writeb(dp0physaddr+0x7,0);
+		phys_writeb(dp0physaddr+0x8,(0xc0 | (((imageDiskList[2]->heads) > 8) << 3)));
+		phys_writeb(dp0physaddr+0x9,0);
+		phys_writeb(dp0physaddr+0xa,0);
+		phys_writeb(dp0physaddr+0xb,0);
+		phys_writew(dp0physaddr+0xc,tmpcyl);
+		phys_writeb(dp0physaddr+0xe,tmpsect);
 	}
 	if(imageDiskList[3] != NULL) {
+		PhysPt dp1physaddr=CALLBACK_PhysPointer(diskparm1);
 		imageDiskList[3]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
-		real_writew(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1)),tmpcyl);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1))+2,tmpheads);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1))+0xe,tmpsect);
+		phys_writew(dp1physaddr,tmpcyl);
+		phys_writeb(dp1physaddr+0x2,tmpheads);
+		phys_writeb(dp1physaddr+0xe,tmpsect);
 	}
 }
 
@@ -488,9 +490,11 @@ void BIOS_SetupDisks(void) {
 	RealSetVec(0x41,CALLBACK_RealPointer(diskparm0));
 	RealSetVec(0x46,CALLBACK_RealPointer(diskparm1));
 
+	PhysPt dp0physaddr=CALLBACK_PhysPointer(diskparm0);
+	PhysPt dp1physaddr=CALLBACK_PhysPointer(diskparm1);
 	for(i=0;i<16;i++) {
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm0)),RealOff(CALLBACK_RealPointer(diskparm0))+i,0);
-		real_writeb(RealSeg(CALLBACK_RealPointer(diskparm1)),RealOff(CALLBACK_RealPointer(diskparm1))+i,0);
+		phys_writeb(dp0physaddr+i,0);
+		phys_writeb(dp1physaddr+i,0);
 	}
 
 	imgDTASeg = 0;

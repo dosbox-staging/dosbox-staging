@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.57 2006-02-09 11:47:55 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.58 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -818,19 +818,8 @@ public:
 		/* INT 8 Clock IRQ Handler */
 		//TODO Maybe give this a special callback that will also call int 8 instead of starting 
 		//a new system
-		callback[0].Install(INT8_Handler,CB_IRET,"Int 8 Clock");
+		callback[0].Install(INT8_Handler,CB_IRET_EOI_PIC1,"Int 8 Clock");
 		callback[0].Set_RealVec(0x8);
-		Bit16u call_int8=callback[0].Get_callback();
-		phys_writeb(CB_BASE+(call_int8<<4)+0,(Bit8u)0xFE);		//GRP 4
-		phys_writeb(CB_BASE+(call_int8<<4)+1,(Bit8u)0x38);		//Extra Callback instruction
-		phys_writew(CB_BASE+(call_int8<<4)+2,call_int8);		//The immediate word          
-		phys_writeb(CB_BASE+(call_int8<<4)+4,(Bit8u)0x50);		// push ax
-		phys_writeb(CB_BASE+(call_int8<<4)+5,(Bit8u)0xb0);		// mov al, 0x20
-		phys_writeb(CB_BASE+(call_int8<<4)+6,(Bit8u)0x20);
-		phys_writeb(CB_BASE+(call_int8<<4)+7,(Bit8u)0xe6);		// out 0x20, al
-		phys_writeb(CB_BASE+(call_int8<<4)+8,(Bit8u)0x20);
-		phys_writeb(CB_BASE+(call_int8<<4)+9,(Bit8u)0x58);		// pop ax
-		phys_writeb(CB_BASE+(call_int8<<4)+10,(Bit8u)0xcf);		// iret
 
 		mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 

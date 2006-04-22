@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.61 2006-02-13 07:48:25 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.62 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -905,46 +905,26 @@ static Bitu INT74_Handler(void) {
 	return CBRET_NONE;
 }
 
-void WriteMouseIntVector(void)
-{
-	// Create a mouse vector with weird address 
-	// for strange mouse detection routines in Sim City & Wasteland
-	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33<<4)-0x10+1));	// +1 = Skip NOP 
-};
-
-void CreateMouseCallback(void)
-{
-	// Create callback
-	call_int33=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
-
-	// Create a mouse vector with weird address 
-	// for strange mouse detection routines in Sim City & Wasteland
-	Bit16u ofs = call_int33<<4;
-	phys_writeb(CB_BASE+ofs+0,(Bit8u)0x90);	//NOP
-	phys_writeb(CB_BASE+ofs+1,(Bit8u)0xFE);	//GRP 4
-	phys_writeb(CB_BASE+ofs+2,(Bit8u)0x38);	//Extra Callback instruction
-	phys_writew(CB_BASE+ofs+3,call_int33);	//The immediate word
-	phys_writeb(CB_BASE+ofs+5,(Bit8u)0xCF);	//An IRET Instruction
-	// Write weird vector
-	WriteMouseIntVector();
-};
-
 void MOUSE_Init(Section* sec) {
 
-	// Callback 0x33
-	CreateMouseCallback();
+	// Callback for mouse interrupt 0x33
+	call_int33=CALLBACK_Allocate();
+	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
+	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
+	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33<<4)-0x10));
+
+	// Callback for ps2 irq
 	call_int74=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET,"int 74");
-	if(MOUSE_IRQ > 7) {
-		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
-	} else {
-		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
-	}
+	Bit8u hwvec=(MOUSE_IRQ>7)?(0x70+MOUSE_IRQ-8):(0x8+MOUSE_IRQ);
+	RealSetVec(hwvec,CALLBACK_RealPointer(call_int74));
+
+	// Callback for ps2 user callback handling
 	useps2callback = false; ps2callbackinit = false;
  	call_ps2=CALLBACK_Allocate();
 	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
 	ps2_callback=CALLBACK_RealPointer(call_ps2);
+
 	memset(&mouse,0,sizeof(mouse));
 	mouse.shown=-1; //Hide mouse on startup
 	mouse_reset_hardware();

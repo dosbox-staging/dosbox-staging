@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.23 2006-02-12 23:06:15 harekiet Exp $ */
+/* $Id: int10_vesa.cpp,v 1.24 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -443,20 +443,17 @@ void INT10_SetupVESA(void) {
 	int10.rom.pmode_interface_window = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 0, int10.rom.pmode_interface_window );
 	callback.pmWindow=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.pmWindow, VESA_PMSetWindow, CB_RETF, "VESA PM Set Window");
-	int10.rom.used += CALLBACK_SetupExtra( callback.pmWindow, CB_RETN, PhysMake(0xc000,int10.rom.used));
+	int10.rom.used += CALLBACK_Setup(callback.pmWindow, VESA_PMSetWindow, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Window");
 	/* PM Set start call */
 	int10.rom.pmode_interface_start = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 2, int10.rom.pmode_interface_start);
 	callback.pmStart=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_RETF, "VESA PM Set Start");
-	int10.rom.used += CALLBACK_SetupExtra( callback.pmStart, CB_RETN, PhysMake(0xc000,int10.rom.used));
+	int10.rom.used += CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Start");
 	/* PM Set Palette call */
 	int10.rom.pmode_interface_palette = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);
 	callback.pmPalette=CALLBACK_Allocate();
-	CALLBACK_Setup(callback.pmPalette, VESA_PMSetPalette, CB_RETF, "VESA PM Set Palette");
-	int10.rom.used += CALLBACK_SetupExtra( callback.pmPalette, CB_RETN, PhysMake(0xc000,int10.rom.used));
+	int10.rom.used += CALLBACK_Setup(callback.pmPalette, VESA_PMSetPalette, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Palette");
 	/* Finalize the size and clear the required ports pointer */
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 6, 0);
 	int10.rom.pmode_interface_size=int10.rom.used - RealOff( int10.rom.pmode_interface );

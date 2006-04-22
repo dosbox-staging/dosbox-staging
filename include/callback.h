@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.16 2006-02-09 11:47:47 qbix79 Exp $ */
+/* $Id: callback.h,v 1.17 2006-04-22 15:25:44 c2woody Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -28,10 +28,10 @@
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
 
-enum { CB_RETN, CB_RETF,CB_IRET,CB_IRET_STI };
+enum { CB_RETN,CB_RETF,CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,CB_HOOKABLE };
 
 #define CB_MAX 144
-#define CB_SEG 0xC800
+#define CB_SEG 0xF100
 #define CB_BASE (CB_SEG << 4)
 
 enum {	
@@ -41,6 +41,9 @@ enum {
 extern Bit8u lastint;
 INLINE RealPt CALLBACK_RealPointer(Bitu callback) {
 	return RealMake(CB_SEG,callback << 4);
+}
+INLINE PhysPt CALLBACK_PhysPointer(Bitu callback) {
+	return PhysMake(CB_SEG,callback << 4);
 }
 
 Bitu CALLBACK_Allocate();
@@ -52,8 +55,7 @@ void CALLBACK_RunRealInt(Bit8u intnum);
 void CALLBACK_RunRealFar(Bit16u seg,Bit16u off);
 
 bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* description=0);
-/* Returns with the size of the extra callback */
-Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress);
+Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr);
 
 const char* CALLBACK_GetDescription(Bitu callback);
 bool CALLBACK_Free(Bitu callback);
@@ -78,7 +80,8 @@ public:
 	CALLBACK_HandlerObject():installed(false),m_type(NONE){vectorhandler.installed=false;}
 	~CALLBACK_HandlerObject();
 	//Install and allocate a callback.
-	void Install(CallBack_Handler handler,Bitu type,const char* description=0);
+	void Install(CallBack_Handler handler,Bitu type,const char* description);
+	void Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description);
 	//Only allocate a callback number
 	void Allocate(CallBack_Handler handler,const char* description=0);
 	Bit16u Get_callback(){return m_callback;}

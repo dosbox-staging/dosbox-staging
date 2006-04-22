@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.40 2006-04-14 13:53:58 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.41 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -413,20 +413,9 @@ public:
 		Bitu i;
 		BIOS_ZeroExtendedSize(true);
 		DOS_AddMultiplexHandler(multiplex_xms);
-		callbackhandler.Install(&XMS_Handler,CB_RETF, "XMS Handler");
-		xms_callback=callbackhandler.Get_RealPointer();
-		Bit16u call_xms=callbackhandler.Get_callback();
-	   
-		/* Override the callback with one that can be hooked */
-		phys_writeb(CB_BASE+(call_xms<<4)+0,(Bit8u)0xeb);       //jump near
-		phys_writeb(CB_BASE+(call_xms<<4)+1,(Bit8u)0x03);       //offset
-		phys_writeb(CB_BASE+(call_xms<<4)+2,(Bit8u)0x90);       //NOP
-		phys_writeb(CB_BASE+(call_xms<<4)+3,(Bit8u)0x90);       //NOP
-		phys_writeb(CB_BASE+(call_xms<<4)+4,(Bit8u)0x90);       //NOP
-		phys_writeb(CB_BASE+(call_xms<<4)+5,(Bit8u)0xFE);       //GRP 4
-		phys_writeb(CB_BASE+(call_xms<<4)+6,(Bit8u)0x38);       //Extra Callback instruction
-		phys_writew(CB_BASE+(call_xms<<4)+7,call_xms);		//The immediate word          
-		phys_writeb(CB_BASE+(call_xms<<4)+9,(Bit8u)0xCB);       //A RETF Instruction
+		/* place hookable callback in writable memory area */
+		xms_callback=RealMake(DOS_GetMemory(0x1),0);
+		callbackhandler.Install(&XMS_Handler,CB_HOOKABLE,Real2Phys(xms_callback),"XMS Handler");
 	   
 		for (i=0;i<XMS_HANDLES;i++) {
 			xms_handles[i].free=true;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.50 2006-04-18 13:52:24 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.51 2006-04-22 15:25:45 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -721,12 +721,17 @@ static Bitu INT67_Handler(void) {
 				reg_di+=0x400;		// advance pointer by 0x100*4
 				
 				/* Set up three descriptor table entries */
-				real_writed(SegValue(ds),reg_si+0x00,0x8000ffff);	// descriptor 1 (code segment)
-				real_writed(SegValue(ds),reg_si+0x04,0x00009a0c);	// descriptor 1
-				real_writed(SegValue(ds),reg_si+0x08,0x0000ffff);	// descriptor 2 (data segment)
-				real_writed(SegValue(ds),reg_si+0x0c,0x00009200);	// descriptor 2
-				real_writed(SegValue(ds),reg_si+0x10,0x0000ffff);	// descriptor 3
-				real_writed(SegValue(ds),reg_si+0x14,0x00009200);	// descriptor 3
+				Bit32u cbseg_low=(CB_BASE&0xffff)<<16;
+				Bit32u cbseg_high=(CB_BASE&0x1f0000)>>16;
+				/* Descriptor 1 (code segment, callback segment) */
+				real_writed(SegValue(ds),reg_si+0x00,0x0000ffff|cbseg_low);
+				real_writed(SegValue(ds),reg_si+0x04,0x00009a00|cbseg_high);
+				/* Descriptor 2 (data segment, full access) */
+				real_writed(SegValue(ds),reg_si+0x08,0x0000ffff);
+				real_writed(SegValue(ds),reg_si+0x0c,0x00009200);
+				/* Descriptor 3 (full access) */
+				real_writed(SegValue(ds),reg_si+0x10,0x0000ffff);
+				real_writed(SegValue(ds),reg_si+0x14,0x00009200);
 
 				reg_ebx=(vcpi.pm_interface&0xffff);
 				reg_ah=EMM_NO_ERROR;
@@ -1185,12 +1190,8 @@ public:
 		if (!ENABLE_VCPI) return;
 
 		/* Install a callback that handles VCPI-requests in protected mode requests */
-		call_vcpi.Install(&VCPI_PM_Handler,CB_RETF,"VCPI PM");
+		call_vcpi.Install(&VCPI_PM_Handler,CB_IRETD,"VCPI PM");
 		vcpi.pm_interface=(call_vcpi.Get_callback())<<4;
-
-		/* Use IRETD instead of IRET for this protected mode callback */
-		mem_writeb(CB_BASE+vcpi.pm_interface+4,(Bit8u)0x66);
-		mem_writeb(CB_BASE+vcpi.pm_interface+5,(Bit8u)0xCB);       //A IRETD Instruction
 
 		/* Initialize private data area and set up descriptor tables */
 		SetupVCPI();

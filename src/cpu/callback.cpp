@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.31 2006-02-12 23:28:21 harekiet Exp $ */
+/* $Id: callback.cpp,v 1.32 2006-04-22 15:25:44 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -133,42 +133,6 @@ const char* CALLBACK_GetDescription(Bitu nr) {
 	return CallBack_Description[nr];
 };
 
-bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr) {
-	if (callback>=CB_MAX) return false;
-	switch (type) {
-	case CB_RETF:
-		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
-		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
-		phys_writew(CB_BASE+(callback<<4)+2,callback);		//The immediate word
-		phys_writeb(CB_BASE+(callback<<4)+4,(Bit8u)0xCB);	//A RETF Instruction
-		break;
-	case CB_IRET:
-		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFE);	//GRP 4
-		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0x38);	//Extra Callback instruction
-		phys_writew(CB_BASE+(callback<<4)+2,callback);		//The immediate word
-		phys_writeb(CB_BASE+(callback<<4)+4,(Bit8u)0xCF);	//An IRET Instruction
-		break;
-	case CB_IRET_STI:
-		phys_writeb(CB_BASE+(callback<<4)+0,(Bit8u)0xFB);	//STI
-		phys_writeb(CB_BASE+(callback<<4)+1,(Bit8u)0xFE);	//GRP 4
-		phys_writeb(CB_BASE+(callback<<4)+2,(Bit8u)0x38);	//Extra Callback instruction
-		phys_writew(CB_BASE+(callback<<4)+3,callback);		//The immediate word
-		phys_writeb(CB_BASE+(callback<<4)+5,(Bit8u)0xCF);	//An IRET Instruction
-		break;
-	default:
-		E_Exit("CALLBACK:Setup:Illegal type %d",type);
-	}
-	CallBack_Handlers[callback]=handler;
-	CALLBACK_SetDescription(callback,descr);
-	return true;
-}
-
-void CALLBACK_RemoveSetup(Bitu callback) {
-	for (Bitu i = 0;i < 16;i++) {
-		phys_writeb(CB_BASE+(callback<<4)+i ,(Bit8u) 0x00);
-	}
-}
-
 Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress) {
 	if (callback>=CB_MAX) 
 		return 0;
@@ -191,6 +155,13 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress) {
 		phys_writew(physAddress+2,callback);	//The immediate word
 		phys_writeb(physAddress+4,(Bit8u)0xCF);	//An IRET Instruction
 		return 5;
+	case CB_IRETD:
+		phys_writeb(physAddress+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+2,callback);	//The immediate word
+		phys_writeb(physAddress+4,(Bit8u)0x66);	//An IRETD Instruction
+		phys_writeb(physAddress+5,(Bit8u)0xCF);
+		return 6;
 	case CB_IRET_STI:
 		phys_writeb(physAddress+0,(Bit8u)0xFB);	//STI
 		phys_writeb(physAddress+1,(Bit8u)0xFE);	//GRP 4
@@ -198,10 +169,57 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress) {
 		phys_writew(physAddress+3, callback);	//The immediate word
 		phys_writeb(physAddress+5,(Bit8u)0xCF);	//An IRET Instruction
 		return 6;
+	case CB_IRET_EOI_PIC1:
+		phys_writeb(physAddress+0,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+1,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+2,callback);	//The immediate word          
+		phys_writeb(physAddress+4,(Bit8u)0x50);	// push ax
+		phys_writeb(physAddress+5,(Bit8u)0xb0);	// mov al, 0x20
+		phys_writeb(physAddress+6,(Bit8u)0x20);
+		phys_writeb(physAddress+7,(Bit8u)0xe6);	// out 0x20, al
+		phys_writeb(physAddress+8,(Bit8u)0x20);
+		phys_writeb(physAddress+9,(Bit8u)0x58);	// pop ax
+		phys_writeb(physAddress+10,(Bit8u)0xcf);//An IRET Instruction
+		return 11;
+	case CB_HOOKABLE:
+		phys_writeb(physAddress+0,(Bit8u)0xEB);	//jump near
+		phys_writeb(physAddress+1,(Bit8u)0x03);	//offset
+		phys_writeb(physAddress+2,(Bit8u)0x90);	//NOP
+		phys_writeb(physAddress+3,(Bit8u)0x90);	//NOP
+		phys_writeb(physAddress+4,(Bit8u)0x90);	//NOP
+		phys_writeb(physAddress+5,(Bit8u)0xFE);	//GRP 4
+		phys_writeb(physAddress+6,(Bit8u)0x38);	//Extra Callback instruction
+		phys_writew(physAddress+7,callback);	//The immediate word
+		phys_writeb(physAddress+9,(Bit8u)0xCB);	//A RETF Instruction
+		return 10;
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}
 	return 0;
+}
+
+bool CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,const char* descr) {
+	if (callback>=CB_MAX) return false;
+	CALLBACK_SetupExtra(callback,type,CB_BASE+(callback<<4)+0);
+	CallBack_Handlers[callback]=handler;
+	CALLBACK_SetDescription(callback,descr);
+	return true;
+}
+
+Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr,const char* descr) {
+	if (callback>=CB_MAX) return 0;
+	Bitu csize=CALLBACK_SetupExtra(callback,type,addr);
+	if (csize>0) {
+		CallBack_Handlers[callback]=handler;
+		CALLBACK_SetDescription(callback,descr);
+	}
+	return csize;
+}
+
+void CALLBACK_RemoveSetup(Bitu callback) {
+	for (Bitu i = 0;i < 16;i++) {
+		phys_writeb(CB_BASE+(callback<<4)+i ,(Bit8u) 0x00);
+	}
 }
 
 CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
@@ -231,6 +249,14 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const ch
 		m_type=SETUP;
 		m_callback=CALLBACK_Allocate();
 		CALLBACK_Setup(m_callback,handler,type,description);
+	} else E_Exit("Allready installed");
+}
+void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description){
+	if(!installed) {
+		installed=true;
+		m_type=SETUP;
+		m_callback=CALLBACK_Allocate();
+		CALLBACK_Setup(m_callback,handler,type,addr,description);
 	} else E_Exit("Allready installed");
 }
 void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* description) {
@@ -291,7 +317,9 @@ void CALLBACK_Init(Section* sec) {
 		rint_base+=6;
 
 	}
+	// setup a few interrupt handlers that point to bios IRETs by default
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
+	real_writed(0,0x68*4,CALLBACK_RealPointer(call_default));
 	real_writed(0,0x5c*4,CALLBACK_RealPointer(call_default)); //Network stuff
 	//real_writed(0,0xf*4,0); some games don't like it
 
