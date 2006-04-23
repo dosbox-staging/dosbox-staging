@@ -129,7 +129,7 @@ bool Virtual_File::Close(){
 
 
 Bit16u Virtual_File::GetInformation(void) {
-	return 0;
+	return 0x40;	// read-only drive
 }
 
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.34 2006-04-15 15:53:37 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.35 2006-04-23 14:20:57 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -62,7 +62,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File():flags(0)		{ name=0; refCtr = 0; };
+	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; };
 	DOS_File(const DOS_File& orig);
 	DOS_File & operator= (const DOS_File & orig);
 	virtual	~DOS_File(){if(name) delete [] name;};
@@ -78,6 +78,8 @@ public:
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
+	void SetDrive(Bit8u drv) { hdrive=drv;}
+	Bit8u GetDrive(void) { return hdrive;}
 	Bit8u type;
 	Bit32u flags;
 	Bit16u time;
@@ -88,6 +90,8 @@ public:
 	bool open;
 	char* name;
 /* Some Device Specific Stuff */
+private:
+	Bit8u hdrive;
 };
 
 class DOS_Device : public DOS_File {

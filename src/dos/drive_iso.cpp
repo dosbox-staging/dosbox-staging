@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.12 2006-02-12 13:32:30 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.13 2006-04-23 14:20:58 c2woody Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -30,7 +30,7 @@ using namespace std;
 
 class isoFile : public DOS_File {
 public:
-	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset, Bit16u info);
+	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset);
 	bool Read(Bit8u *data, Bit16u *size);
 	bool Write(Bit8u *data, Bit16u *size);
 	bool Seek(Bit32u *pos, Bit32u type);
@@ -46,7 +46,7 @@ private:
 	Bit16u info;
 };
 
-isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset, Bit16u info)
+isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u offset)
 {
 	this->drive = drive;
 	time = stat->time;
@@ -58,7 +58,6 @@ isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u
 	fileEnd = fileBegin + size;
 	cachedSector = -1;
 	open = true;
-	this->info = info;
 	this->name = NULL;
 	SetName(name);
 }
@@ -136,7 +135,7 @@ bool isoFile::Close()
 
 Bit16u isoFile::GetInformation(void)
 {
-	return info;
+	return 0x40;		// read-only drive
 }
 
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
@@ -201,7 +200,7 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 		file_stat.attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
 		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE, 0x202);
+		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
 		(*file)->flags = flags;
 	}
 	return success;

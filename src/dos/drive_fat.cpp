@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.13 2006-04-17 10:45:32 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.14 2006-04-23 14:20:58 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -232,7 +232,7 @@ bool fatFile::Close() {
 }
 
 Bit16u fatFile::GetInformation(void) {
-	return 0x202;
+	return 0;
 }
 
 bool fatFile::UpdateDateTimeFromHost(void) {

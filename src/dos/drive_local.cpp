@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.66 2006-04-17 10:45:30 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.67 2006-04-23 14:20:58 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,17 +33,18 @@
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, FILE * handle,Bit16u devinfo);
+	localFile(const char* name, FILE * handle);
 	bool Read(Bit8u * data,Bit16u * size);
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
 	bool UpdateDateTimeFromHost(void);   
+	void FlagReadOnlyMedium(void);
 private:
 	FILE * fhandle;
+	bool read_only_medium;
 	enum { NONE,READ,WRITE } last_action;
-	Bit16u info;
 };
 
 
@@ -72,7 +73,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
    
 	if(!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
-	*file=new localFile(name,hand,0x202);
+	*file=new localFile(name,hand);
 
 	return true;
 };
@@ -108,7 +109,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		return false;
 	}
 
-	*file=new localFile(name,hand,0x202);
+	*file=new localFile(name,hand);
 	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
 	return true;
@@ -486,13 +487,12 @@ bool localFile::Close() {
 }
 
 Bit16u localFile::GetInformation(void) {
-	return info;
+	return read_only_medium?0x40:0;
 }
 	
 
-localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
+localFile::localFile(const char* _name, FILE * handle) {
 	fhandle=handle;
-	info=devinfo;
 	struct stat temp_stat;
 	fstat(fileno(handle),&temp_stat);
 	struct tm * ltime;
@@ -505,10 +505,15 @@ localFile::localFile(const char* _name, FILE * handle,Bit16u devinfo) {
 	size=(Bit32u)temp_stat.st_size;
 	attr=DOS_ATTR_ARCHIVE;
 	last_action=NONE;
+	read_only_medium=false;
 
 	open=true;
 	name=0;
 	SetName(_name);
+}
+
+void localFile::FlagReadOnlyMedium(void) {
+	read_only_medium = true;
 }
 
 bool localFile::UpdateDateTimeFromHost(void) {
@@ -554,7 +559,9 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	return localDrive::FileOpen(file,name,flags);
+	bool retcode = localDrive::FileOpen(file,name,flags);
+	((localFile*)(*file))->FlagReadOnlyMedium();
+	return retcode;
 };
 
 bool cdromDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes)

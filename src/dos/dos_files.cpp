@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.72 2006-03-10 09:38:24 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.73 2006-04-23 14:20:57 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -410,6 +410,7 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	}
 	bool foundit=Drives[drive]->FileCreate(&Files[handle],fullname,attributes);
 	if (foundit) { 
+		Files[handle]->SetDrive(drive);
 		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
 		return true;
@@ -462,6 +463,7 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		Files[handle]=new DOS_Device(*Devices[devnum]);
 	} else {
 		exists=Drives[drive]->FileOpen(&Files[handle],fullname,flags);
+		if (exists) Files[handle]->SetDrive(drive);
 	}
 	if (exists || device ) { 
 		Files[handle]->AddRef();

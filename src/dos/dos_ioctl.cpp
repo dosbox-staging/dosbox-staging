@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.27 2006-04-07 16:34:07 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.28 2006-04-23 14:20:57 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -49,8 +49,13 @@ bool DOS_IOCTL(void) {
 		if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
 			reg_dx=Files[handle]->GetInformation();
 		} else {
+			Bit8u hdrive=Files[handle]->GetDrive();
+			if (hdrive==0xff) {
+				LOG(LOG_IOCTL,LOG_NORMAL)("00:No drive set");
+				hdrive=2;	// defaulting to C:
+			}
 			/* return drive number in lower 5 bits for block devices */
-			reg_dx=(Files[handle]->GetInformation()&0xffe0)|drive;
+			reg_dx=(Files[handle]->GetInformation()&0xffe0)|hdrive;
 		}
 		reg_ax=reg_dx; //Destroyed officially
 		return true;
