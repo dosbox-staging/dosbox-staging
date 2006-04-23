@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.65 2006-04-21 13:21:09 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.66 2006-04-23 15:17:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -826,9 +826,8 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	do {
 		DOS_ReadFile (STDIN,&c,&n);
 	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
-	if (!optN) { //Echo typed value ? not sure actually perhaps depend on echo
-		DOS_WriteFile (STDOUT,&c, &n);
-	}
+	c = optS?c:toupper(c);
+	DOS_WriteFile (STDOUT,&c, &n);
 	dos.return_code = ptr-rem+1;
 }
 
