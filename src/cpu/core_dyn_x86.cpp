@@ -226,7 +226,11 @@ restart_core:
 	#if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 	#endif
-	CodePageHandler * chandler=MakeCodePage(ip_page);
+	CodePageHandler * chandler=0;
+	if (GCC_UNLIKELY(MakeCodePage(ip_page,chandler))) {
+		CPU_Exception(cpu.exception.which,cpu.exception.error);
+		goto restart_core;
+	}
 	if (!chandler) return CPU_Core_Normal_Run();
 	/* Find correct Dynamic Block to run */
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);

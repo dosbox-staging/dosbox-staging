@@ -61,7 +61,9 @@ static Bit8u decode_fetchb(void) {
 	if (decode.page.index>=4096) {
         /* Advance to the next page */
 		decode.active_block->page.end=4095;
-		decode.page.code=MakeCodePage(++decode.page.first);
+		/* trigger possible page fault here */
+		mem_readb((++decode.page.first) << 12);
+		MakeCodePage(decode.page.first,decode.page.code);
 		CacheBlock * newblock=cache_getblock();
 		decode.active_block->crossblock=newblock;
 		newblock->crossblock=decode.active_block;

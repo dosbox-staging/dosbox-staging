@@ -233,18 +233,23 @@ private:
 };
 
 
-static CodePageHandler * MakeCodePage(Bitu lin_page) {
-	mem_readb(lin_page << 12);		//Ensure page contains memory
+static bool MakeCodePage(Bitu lin_page,CodePageHandler * &cph) {
+	Bit8u rdval;
+	//Ensure page contains memory:
+	if (GCC_UNLIKELY(mem_readb_checked_x86(lin_page << 12,&rdval))) return true;
 	PageHandler * handler=paging.tlb.handler[lin_page];
-	if (handler->flags & PFLAG_HASCODE) return ( CodePageHandler *)handler;
+	if (handler->flags & PFLAG_HASCODE) {
+		cph=( CodePageHandler *)handler;
+		return false;
+	}
 	if (handler->flags & PFLAG_NOCODE) {
 		LOG_MSG("DYNX86:Can't run code in this page");
-		return 0;
+		cph=0;		return false;
 	} 
 	Bitu phys_page=lin_page;
 	if (!PAGING_MakePhysPage(phys_page)) {
 		LOG_MSG("DYNX86:Can't find physpage");
-		return 0;
+		cph=0;		return false;
 	}
 	/* Find a free CodePage */
 	if (!cache.free_pages) {
@@ -260,7 +265,8 @@ static CodePageHandler * MakeCodePage(Bitu lin_page) {
 	cpagehandler->SetupAt(phys_page,handler);
 	MEM_SetPageHandler(phys_page,1,cpagehandler);
 	PAGING_UnlinkPages(lin_page,1);
-	return cpagehandler;
+	cph=cpagehandler;
+	return false;
 }
 
 static INLINE void cache_addunsedblock(CacheBlock * block) {
