@@ -92,6 +92,10 @@
 					limit=LoadMw(eaa);
 					if (CPU_LMSW(limit)) RUNEXCEPTION();
 					break;
+				case 0x07:										/* INVLPG */
+					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+					PAGING_ClearTLB();
+					break;
 				}
 			} else {
 				GetEArw;Bitu limit;

@@ -26,6 +26,7 @@
 #include "callback.h"
 #include "pic.h"
 #include "fpu.h"
+#include "paging.h"
 
 #if C_DEBUG
 #include "debug.h"

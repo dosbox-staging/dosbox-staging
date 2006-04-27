@@ -712,7 +712,7 @@
 		}
 		break;
 	CASE_W(0xc9)												/* LEAVE */
-		reg_esp&=~cpu.stack.mask;
+		reg_esp&=cpu.stack.notmask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_bp=Pop_16();
 		break;

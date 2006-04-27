@@ -450,6 +450,11 @@ switch (inst.code.op) {
 			FillFlags();
 			if (CPU_LMSW(inst_op1_w)) RunException();
 			goto nextopcode;
+		case 7:		/* INVLPG */
+			if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+			FillFlags();
+			PAGING_ClearTLB();
+			goto nextopcode;
 		default:
 			LOG(LOG_CPU,LOG_ERROR)("Group 7 Illegal subfunction %X",inst.rm_index);
 			goto illegalopcode;

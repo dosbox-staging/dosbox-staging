@@ -492,7 +492,7 @@
 		}
 		break;
 	CASE_D(0xc9)												/* LEAVE */
-		reg_esp&=~cpu.stack.mask;
+		reg_esp&=cpu.stack.notmask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_ebp=Pop_32();
 		break;

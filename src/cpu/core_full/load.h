@@ -447,12 +447,12 @@ l_M_Ed:
 			goto nextopcode;
 		}
 	case D_LEAVEw:
-		reg_esp&=~cpu.stack.mask;
+		reg_esp&=cpu.stack.notmask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_bp=Pop_16();
 		goto nextopcode;
 	case D_LEAVEd:
-		reg_esp&=~cpu.stack.mask;
+		reg_esp&=cpu.stack.notmask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_ebp=Pop_32();
 		goto nextopcode;

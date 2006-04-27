@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.80 2006-04-18 17:44:25 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.81 2006-04-27 13:22:27 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1147,9 +1147,12 @@ call_code:
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
 			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
 			break;
+		case DESC_INVALID:
+			// used by some installers
+			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
+			return;
 		default:
 			E_Exit("CALL:Descriptor type %x unsupported",call.Type());
-
 		}
 	}
 	assert(1);
