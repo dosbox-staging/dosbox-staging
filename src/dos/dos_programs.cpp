@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.58 2006-04-17 10:45:32 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.59 2006-04-28 16:38:09 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -502,14 +502,13 @@ public:
 			SegSet16(es, 0);
 			/* set up stack at a safe place */
 			SegSet16(ss, 0x7000);
-			reg_esp = 0xfffe;
+			reg_esp = 0x400;
 			reg_esi = 0;
 			reg_ecx = 1;
 			reg_ebp = 0;
 			reg_eax = 0;
 			reg_edx = 0; //Head 0 drive 0
 			reg_ebx= 0x7c00; //Real code probably uses bx to load the image
-			//DEBUG_EnableDebugger();
 		}
 	}
 };
