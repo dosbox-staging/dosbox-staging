@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.21 2006-04-11 19:02:33 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.22 2006-05-01 19:34:41 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -162,10 +162,8 @@ static Bits IOFaultCore(void) {
 	return 0;
 }
 
-Bitu DEBUG_EnableDebugger();
-
 void IO_WriteB(Bitu port,Bitu val) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,1))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
@@ -198,7 +196,7 @@ void IO_WriteB(Bitu port,Bitu val) {
 };
 
 void IO_WriteW(Bitu port,Bitu val) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,2))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
@@ -231,7 +229,7 @@ void IO_WriteW(Bitu port,Bitu val) {
 };
 
 void IO_WriteD(Bitu port,Bitu val) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,4))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
@@ -264,7 +262,7 @@ void IO_WriteD(Bitu port,Bitu val) {
 };
 
 Bitu IO_ReadB(Bitu port) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,1))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
@@ -297,7 +295,7 @@ Bitu IO_ReadB(Bitu port) {
 };
 
 Bitu IO_ReadW(Bitu port) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,2))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
@@ -330,7 +328,7 @@ Bitu IO_ReadW(Bitu port) {
 };
 
 Bitu IO_ReadD(Bitu port) {
-	if (GETFLAG(VM) && (CPU_IO_Exception(port,4))) {
+	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
 		CPU_Decoder * old_cpudecoder;
