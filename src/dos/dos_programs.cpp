@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.59 2006-04-28 16:38:09 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.60 2006-05-01 14:56:35 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -56,10 +56,6 @@ public:
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
 				if(i_drive < DOS_DRIVES && Drives[i_drive]) {
-					if(i_drive == DOS_GetDefaultDrive()) {
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_CURRENT"));
-						return;
-					}
 					try { /* Check if virtualdrive */
 						if( dynamic_cast<localDrive*>(Drives[i_drive]) == 0 ) throw 0;
 					}
@@ -67,9 +63,11 @@ public:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
 						return;
 					}
-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+					if(i_drive == DOS_GetDefaultDrive()) 
+						DOS_SetDrive(toupper('Z') - 'A');
 					delete Drives[i_drive];
 					Drives[i_drive] = 0;
+					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
 				} else {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
 				}
@@ -862,7 +860,6 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
-	MSG_Add("PROGRAM_MOUNT_UMOUNT_CURRENT","You can not unMOUNT the active drive.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCES","Drive %c has succesfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
