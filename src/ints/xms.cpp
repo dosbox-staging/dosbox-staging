@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.41 2006-04-22 15:25:45 c2woody Exp $ */
+/* $Id: xms.cpp,v 1.42 2006-05-07 20:00:05 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -55,6 +55,7 @@
 #define XMS_QUERY_ANY_FREE_MEMORY			0x88
 #define XMS_ALLOCATE_ANY_MEMORY				0x89
 #define	XMS_GET_EMB_HANDLE_INFORMATION_EXT	0x8e
+#define XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK 0x8f
 
 #define	XMS_FUNCTION_NOT_IMPLEMENTED		0x80
 #define	HIGH_MEMORY_NOT_EXIST				0x90
@@ -151,8 +152,7 @@ Bitu XMS_FreeMemory(Bitu handle)
 	return 0;
 };
 
-Bitu XMS_MoveMemory(PhysPt bpt)
-{
+Bitu XMS_MoveMemory(PhysPt bpt) {
 	/* Read the block with mem_read's */
 	Bitu length=mem_readd(bpt+offsetof(XMS_MemMove,length));
 	Bitu src_handle=mem_readw(bpt+offsetof(XMS_MemMove,src_handle));
@@ -180,10 +180,10 @@ Bitu XMS_MoveMemory(PhysPt bpt)
 	}
 	if (dest_handle) {
 		if (InvalidHandle(dest_handle)) {
-			return 0xa3;	/* Dest Handle invalid */
+			return 0xa5;	/* Dest Handle invalid */
 		}
 		if (dest.offset>=(xms_handles[dest_handle].size*1024U)) {
-			return 0xa4;	/* Dest Offset invalid */
+			return 0xa6;	/* Dest Offset invalid */
 		}
 		if (length>xms_handles[dest_handle].size*1024U-dest.offset) {
 			return 0xa7;	/* Length invalid */
@@ -235,6 +235,7 @@ Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
 	if (xms_handles[handle].locked>0) return XMS_BLOCK_LOCKED;
 	Bitu pages=newSize/4 + ((newSize & 3) ? 1 : 0);
 	if (MEM_ReAllocatePages(xms_handles[handle].mem,pages,true)) {
+		xms_handles[handle].size = newSize;
 		return 0;
 	} else return XMS_OUT_OF_SPACE;
 }
@@ -323,6 +324,9 @@ Bitu XMS_Handler(void) {
 	case XMS_GET_EMB_HANDLE_INFORMATION:  						/* 0e */
 		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx));
 		break;
+	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
+		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
+		//fall through
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
 		break;
