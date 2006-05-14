@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.67 2006-04-23 14:20:58 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.68 2006-05-14 19:57:24 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -560,7 +560,7 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
 		return false;
 	}
 	bool retcode = localDrive::FileOpen(file,name,flags);
-	((localFile*)(*file))->FlagReadOnlyMedium();
+	if(retcode) (dynamic_cast<localFile*>(*file))->FlagReadOnlyMedium();
 	return retcode;
 };
 
