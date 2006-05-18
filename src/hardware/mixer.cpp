@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.39 2006-03-27 19:41:55 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.40 2006-05-18 11:32:09 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -54,6 +54,10 @@
 #define MIXER_SHIFT 14
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_VOLSHIFT 13
+
+#if defined(__sun) || defined(__sun__)
+static inline float powf (float x, float y) { return pow (x,y); }
+#endif                                                                        
 
 static inline Bit16s MIXER_CLIP(Bits SAMP) {
 	if (SAMP < MAX_AUDIO) {
