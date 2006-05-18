@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.36 2006-04-11 12:02:09 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.37 2006-05-18 11:25:46 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -126,8 +126,13 @@ static void counter_latch(Bitu counter) {
 		/* Counter keeps on counting after passing terminal count */
 		if (index>p->delay) {
 			index-=p->delay;
-			index=fmod(index,(1000.0/PIT_TICK_RATE)*0x1000);
-			p->read_latch=(Bit16u)(0xffff-index*0xffff);
+			if(p->bcd) {
+				index = fmod(index,(1000.0/PIT_TICK_RATE)*10000.0);
+				p->read_latch = (Bit16u)(9999-index*(PIT_TICK_RATE/1000.0));
+			} else {
+				index = fmod(index,(1000.0/PIT_TICK_RATE)*(double)0x10000);
+				p->read_latch = (Bit16u)(0xffff-index*(PIT_TICK_RATE/1000.0));
+			}
 		} else {
 			p->read_latch=(Bit16u)(p->cntr-index*(PIT_TICK_RATE/1000.0));
 		}
