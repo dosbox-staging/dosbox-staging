@@ -16,14 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.76 2006-03-26 11:11:56 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.77 2006-05-18 11:42:02 qbix79 Exp $ */
+
+#include "dosbox.h"
+#if C_DEBUG
 
 #include <string.h>
 #include <list>
 #include <ctype.h>
+#include <fstream>
+#include <iomanip>
+using namespace std;
 
-#include "dosbox.h"
-#if C_DEBUG
 #include "debug.h"
 #include "cross.h" //snprintf
 #include "cpu.h"
@@ -598,9 +602,9 @@ void CBreakpoint::ShowList(void)
 bool DEBUG_Breakpoint(void)
 {
 	/* First get the phyiscal address and check for a set Breakpoint */
-	PhysPt where=GetAddress(SegValue(cs),reg_eip);
 	if (!CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) return false;
 	// Found. Breakpoint is valid
+	PhysPt where=GetAddress(SegValue(cs),reg_eip);
 	CBreakpoint::ActivateBreakpoints(where,false);	// Deactivate all breakpoints
 	return true;
 };
@@ -1056,9 +1060,10 @@ bool ParseCommand(char* str)
 	found = strstr(str,"BPINT");
 	if (found) { // Add Interrupt Breakpoint
 		found+=5;
-		Bit8u intNr	= (Bit8u)GetHexValue(found,found); found++;
+		Bit8u intNr	= (Bit8u)GetHexValue(found,found);
+		bool all = !(*found);found++;
 		Bit8u valAH	= (Bit8u)GetHexValue(found,found);
-		if ((valAH==0x00) && (*found=='*')) {
+		if ((valAH==0x00) && (*found=='*' || all)) {
 			CBreakpoint::AddIntBreakpoint(intNr,BPINT_ALL,false);
 			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X\n",intNr);
 		} else {
@@ -1803,39 +1808,34 @@ static void LogCPUInfo(void)
 
 static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer) 
 {
-	static char empty[15] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
+	static char empty[23] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
 
 	PhysPt start = GetAddress(segValue,eipValue);
 	char dline[200];Bitu size;
 	size = DasmI386(dline, start, reg_eip, cpu.code.big);
-	Bitu len = strlen(dline);
 	char* res = empty;
 	if (showExtend) {
 		res = AnalyzeInstruction(dline,false);
-		len = strlen(dline);
-#if C_HEAVY_DEBUG
-		if (cpuLogType>=2) {
-			Bitu reslen=strlen(res);
-			if (reslen<24) for (Bitu i=0; i<24-reslen; i++) strcat(res," ");
-		} else
-#endif
-		if (!res || (strlen(res)==0)) res = empty;
+		if (!res || !(*res)) res = empty;
+		Bitu reslen = strlen(res);
+		if (reslen<22) for (Bitu i=0; i<22-reslen; i++) res[reslen+i] = ' '; res[22] = 0;
 	};
+	Bitu len = strlen(dline);
 
 	// Get register values
 #if C_HEAVY_DEBUG
 	if (cpuLogType==1) {
 #endif
-		if (len<30) for (Bitu i=0; i<30-len; i++) strcat(dline," ");
-		sprintf(buffer,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+		if (len<30) for (Bitu i=0; i<30-len; i++) dline[len + i] = ' '; dline[30] = 0;
+		sprintf(buffer,"%04X:%08X   %s  %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF));
 #if C_HEAVY_DEBUG
 	} else if (cpuLogType==0) {
-		if (len<27) for (Bitu i=0; i<27-len; i++) strcat(dline," ");
+		if (len<27) for (Bitu i=0; i<27-len; i++) dline[len+i] = ' '; dline[27] = 0;
 		sprintf(buffer,"%04X:%04X %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X SS:%04X C%01X Z%01X S%01X O%01X I%01X\n",segValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,GETFLAGBOOL(IF));
 	} else {
-		if (len<34) for (Bitu i=0; i<34-len; i++) strcat(dline," ");
+		if (len<34) for (Bitu i=0; i<34-len; i++) dline[len+i] = ' '; dline[34] = 0;
 		char ibytes[200]="";	char tmpc[200];
 		for (Bitu i=0; i<size; i++) {
 			sprintf(tmpc,"%02X ",mem_readb(start+i));
@@ -1843,7 +1843,7 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer)
 		}
 		len=strlen(ibytes);
 		if (len<21) for (Bitu i=0; i<21-len; i++) strcat(ibytes," ");
-		sprintf(buffer,"%04X:%08X   %s   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,ibytes,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
+		sprintf(buffer,"%04X:%08X   %s   %s  %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,ibytes,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
 			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF),GETFLAGBOOL(TF),GETFLAGBOOL(VM),reg_flags,cpu.cr0);
 	}
 #endif
@@ -2170,7 +2170,7 @@ static void DrawVariables(void)
 	}
 
 	wrefresh(dbg.win_var);
-}
+};
 #undef DEBUG_VAR_BUF_LEN
 // HEAVY DEBUGGING STUFF
 
@@ -2182,48 +2182,124 @@ static Bit16u logCpuCS [LOGCPUMAX];
 static Bit32u logCpuEIP[LOGCPUMAX];
 static Bit32u logCount = 0;
 
-typedef struct SLogInst {
-	char buffer[512];
-} TLogInst;
+struct TLogInst {
+	Bit16u s_cs;
+	Bit32u eip;
+	Bit32u eax;
+	Bit32u ebx;
+	Bit32u ecx;
+	Bit32u edx;
+	Bit32u esi;
+	Bit32u edi;
+	Bit32u ebp;
+	Bit32u esp;
+	Bit16u s_ds;
+	Bit16u s_es;
+	Bit16u s_fs;
+	Bit16u s_gs;
+	Bit16u s_ss;
+	bool c;
+	bool z;
+	bool s;
+	bool o;
+	bool a;
+	bool p;
+	bool i;
+	char dline[31];
+	char res[23];
+};
 
 TLogInst logInst[LOGCPUMAX];
 
-void DEBUG_HeavyLogInstruction(void)
-{
-	LogInstruction(SegValue(cs),reg_eip,logInst[logCount++].buffer);
-	if (logCount>=LOGCPUMAX) {
-		logCount = 0;
+void DEBUG_HeavyLogInstruction(void) {
+
+	static char empty[23] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
+
+	PhysPt start = GetAddress(SegValue(cs),reg_eip);
+	char dline[200];
+	Bitu size = DasmI386(dline, start, reg_eip, cpu.code.big);
+	char* res = empty;
+	if (showExtend) {
+		res = AnalyzeInstruction(dline,false);
+		if (!res || !(*res)) res = empty;
+		Bitu reslen = strlen(res);
+		if (reslen<22) for (Bitu i=0; i<22-reslen; i++) res[reslen+i] = ' '; res[22] = 0;
 	};
+
+	Bitu len = strlen(dline);
+	if (len < 30) for (Bitu i=0; i < 30-len; i++) dline[len+i] = ' ';
+	dline[30] = 0;
+
+	TLogInst & inst = logInst[logCount];
+	strcpy(inst.dline,dline);
+	inst.s_cs = SegValue(cs);
+	inst.eip  = reg_eip;
+	strcpy(inst.res,res);
+	inst.eax  = reg_eax;
+	inst.ebx  = reg_ebx;
+	inst.ecx  = reg_ecx;
+	inst.edx  = reg_edx;
+	inst.esi  = reg_esi;
+	inst.edi  = reg_edi;
+	inst.ebp  = reg_ebp;
+	inst.esp  = reg_esp;
+	inst.s_ds = SegValue(ds);
+	inst.s_es = SegValue(es);
+	inst.s_fs = SegValue(fs);
+	inst.s_gs = SegValue(gs);
+	inst.s_ss = SegValue(ss);
+	inst.c    = get_CF();
+	inst.z    = get_ZF();
+	inst.s    = get_SF();
+	inst.o    = get_OF();
+	inst.a    = get_AF();
+	inst.p    = get_PF();
+	inst.i    = GETFLAGBOOL(IF);
+
+	if (++logCount >= LOGCPUMAX) logCount = 0;
 };
 
-void DEBUG_HeavyWriteLogInstruction(void)
-{
+void DEBUG_HeavyWriteLogInstruction(void) {
 	if (!logHeavy) return;
-
 	logHeavy = false;
 	
 	DEBUG_ShowMsg("DEBUG: Creating cpu log LOGCPU_INT_CD.TXT\n");
 
-	FILE* f = fopen("LOGCPU_INT_CD.TXT","wt");
-	if (!f) {
+	ofstream out("LOGCPU_INT_CD.TXT");
+	if (!out.is_open()) {
 		DEBUG_ShowMsg("DEBUG: Failed.\n");	
 		return;
 	}
-
+	out << hex << noshowbase << setfill('0') << uppercase;
 	Bit32u startLog = logCount;
 	do {
 		// Write Intructions
-		fprintf(f,"%s",logInst[startLog++].buffer);
-		if (startLog>=LOGCPUMAX) startLog = 0;
-	} while (startLog!=logCount);
-	
-	fclose(f);
+		TLogInst & inst = logInst[startLog];
+		out << setw(4) << inst.s_cs << ":" << setw(8) << inst.eip << "   " 
+		    << inst.dline << "  " << inst.res << " EAX:" << setw(8)<< inst.eax
+		    << " EBX:" << setw(8) << inst.ebx << " ECX:" << setw(8) << inst.ecx
+		    << " EDX:" << setw(8) << inst.edx << " ESI:" << setw(8) << inst.esi
+		    << " EDI:" << setw(8) << inst.edi << " EBP:" << setw(8) << inst.ebp
+		    << " ESP:" << setw(8) << inst.esp << " DS:"  << setw(4) << inst.s_ds
+		    << " ES:"  << setw(4) << inst.s_ds<< " FS:"  << setw(4) << inst.s_fs
+		    << " GS:"  << setw(4) << inst.s_gs<< " SS:"  << setw(4) << inst.s_ss
+		    << " CF:"  << inst.c  << " ZF:"   << inst.z  << " SF:"  << inst.s
+		    << " OF:"  << inst.o  << " AF:"   << inst.a  << " PF:"  << inst.p
+		    << " IF:"  << inst.i  << endl;
 
+/*		fprintf(f,"%04X:%08X   %s  %s  EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",
+			logInst[startLog].s_cs,logInst[startLog].eip,logInst[startLog].dline,logInst[startLog].res,logInst[startLog].eax,logInst[startLog].ebx,logInst[startLog].ecx,logInst[startLog].edx,logInst[startLog].esi,logInst[startLog].edi,logInst[startLog].ebp,logInst[startLog].esp,
+		        logInst[startLog].s_ds,logInst[startLog].s_es,logInst[startLog].s_fs,logInst[startLog].s_gs,logInst[startLog].s_ss,
+		        logInst[startLog].c,logInst[startLog].z,logInst[startLog].s,logInst[startLog].o,logInst[startLog].a,logInst[startLog].p,logInst[startLog].i);*/
+		if (++startLog >= LOGCPUMAX) startLog = 0;
+	} while (startLog != logCount);
+	
+	out.close();
 	DEBUG_ShowMsg("DEBUG: Done.\n");	
 };
 
-bool DEBUG_HeavyIsBreakpoint(void)
-{
+bool DEBUG_HeavyIsBreakpoint(void) {
+	static Bitu zero_count = 0;
 	if (cpuLog) {
 		if (cpuLogCounter>0) {
 			static char buffer[4096];
@@ -2241,6 +2317,8 @@ bool DEBUG_HeavyIsBreakpoint(void)
 	}
 	// LogInstruction
 	if (logHeavy) DEBUG_HeavyLogInstruction();
+	if(mem_readd(SegPhys(cs) + reg_eip) == 0) zero_count++; else zero_count = 0;
+	if(zero_count == 10) E_Exit("running zeroed code");
 
 	if (skipFirstInstruction) {
 		skipFirstInstruction = false;
