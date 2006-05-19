@@ -51,11 +51,13 @@ AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
 AC_MSG_CHECKING(if environ can be included)
-AC_TRY_LINK([#include <unistd.h>
-#include <stdlib.h>],[*environ;],
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <unistd.h>
+#include <stdlib.h>]],[[*environ;]])],
 [AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_INCLUDED,1,[environ can be included])],AC_MSG_RESULT(no))
+
 AC_MSG_CHECKING(if environ can be linked)
-AC_TRY_LINK([extern char ** environ;],[*environ;],
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char ** environ;]],[[*environ;]])],
 [AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
 
 dnl Checks for libraries.
@@ -63,19 +65,20 @@ dnl Checks for libraries.
 #Check if the compiler support attributes
 AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
 AC_MSG_CHECKING(if compiler allows __attribute__)
-AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;], 
-    [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+typedef struct { } __attribute__((packed)) junk;]],
+[[ ]])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_ATTRIBUTE)],AC_MSG_RESULT(no))
 
 #Check if the compiler supports __builtin_expect
+#Switch language to c++
+AC_LANG_PUSH(C++)
 AH_TEMPLATE([C_HAS_BUILTIN_EXPECT],[Determines if the compilers supports __builtin_expect for branch prediction.])
 AC_MSG_CHECKING(if compiler allows __builtin_expect)
-AC_TRY_COMPILE([],[
-int main(int argc,char* argv[]){ 
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[
 int x=10;if( __builtin_expect ((x==1),0) ) ;
-return 0; 
-}
-], [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_BUILTIN_EXPECT)],AC_MSG_RESULT(no))
-
+]])], [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_BUILTIN_EXPECT)],AC_MSG_RESULT(no))
+#switch language back
+AC_LANG_POP(C++)
 
 AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
 
@@ -217,12 +220,9 @@ if test x$target = xi386-pc-os2-emx ; then
   AC_MSG_CHECKING(for SDLNet_Init in SDL_net);
   LIBS_BACKUP=$LIBS;
   LIBS="$LIBS -lSDL_Net";
-  AC_LINK_IFELSE([
-    #include <SDL_Net.h>
-    int main(int argc,char * argv[]) {
-	return SDLNet_Init ();
-  };
-  ], [AC_MSG_RESULT(yes); have_sdl_net_lib=yes], AC_MSG_RESULT(no))
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Net.h>]],[[
+	SDLNet_Init ();
+  ]])], [AC_MSG_RESULT(yes); have_sdl_net_lib=yes], AC_MSG_RESULT(no))
   LIBS=$LIBS_BACKUP
 else
 AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
@@ -323,7 +323,7 @@ esac
        AC_SUBST(WINDRES)
 
 
-AC_OUTPUT([ 
+AC_CONFIG_FILES([ 
 Makefile
 src/Makefile
 src/cpu/Makefile
@@ -348,3 +348,4 @@ visualc_net/Makefile
 include/Makefile
 docs/Makefile
 ])
+AC_OUTPUT
