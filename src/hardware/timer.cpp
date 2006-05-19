@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.37 2006-05-18 11:25:46 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.38 2006-05-19 10:34:02 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -65,7 +65,10 @@ static bool latched_timerstatus_locked;
 
 static void PIT0_Event(Bitu /*val*/) {
 	PIC_ActivateIRQ(0);
-	if (pit[0].mode!=0) PIC_AddEvent(PIT0_Event,pit[0].delay);
+	if (pit[0].mode != 0) {
+		pit[0].start = PIC_FullIndex()-pit[0].delay; // resynchronize
+		PIC_AddEvent(PIT0_Event,pit[0].delay);
+	}
 }
 
 static bool counter_output(Bitu counter) {
@@ -146,6 +149,10 @@ static void counter_latch(Bitu counter) {
 		index*=2;
 		if (index>p->delay) index-=p->delay;
 		p->read_latch=(Bit16u)(p->cntr - (index/p->delay)*p->cntr);
+		// In mode 3 it never returns odd numbers LSB (if odd number is written 1 will be
+		// subtracted on first clock and then always 2)
+		// fixes "Corncob 3D"
+		p->read_latch&=0xfffe;
 		break;
 	default:
 		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading counter %d",p->mode,counter);
@@ -224,18 +231,13 @@ static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
 			pit[counter].go_read_latch = true;
 			break;
 		case 3: /* read LSB followed by MSB */
-			// In mode 3 it never returns odd numbers LSB (if odd number is written 1 will be
-			// subtracted on first clock and then always 2)
-			// fixes "Corncob 3D"
-			if((pit[counter].mode&0x7) == 3)  ret = (pit[counter].read_latch & 0xfe); 
-			else ret = (pit[counter].read_latch & 0xff);
+			ret = pit[counter].read_latch & 0xff;
 
 			if (pit[counter].mode & 0x80) pit[counter].mode &= 7;
 			else pit[counter].read_state = 0;
 			break;
 		case 1: /* read LSB */
-			if((pit[counter].mode&0x7) == 3)  ret = (pit[counter].read_latch & 0xfe);
-			else ret = (pit[counter].read_latch & 0xff);
+			ret = pit[counter].read_latch & 0xff;
 			pit[counter].go_read_latch = true;
 			break;
 		case 2: /* read MSB */
