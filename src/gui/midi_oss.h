@@ -25,7 +25,7 @@ private:
 	Bit8u device_num;
 	bool isOpen;
 public:
-	MidiHandler_oss() : isOpen(false),MidiHandler() {};
+	MidiHandler_oss() : MidiHandler(),isOpen(false) {};
 	char * GetName(void) { return "oss";};
 	bool Open(const char * conf) {
 		char devname[512];

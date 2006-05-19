@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.13 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.14 2006-05-19 19:53:22 qbix79 Exp $ */
 
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
@@ -76,7 +76,6 @@ public:
 	}
 
 	void PlayMsg(Bit8u * msg) {
-		unsigned int midiCmd[4];
 		ev.type = SND_SEQ_EVENT_OSS;
 
 		ev.data.raw32.d[0] = msg[0];
