@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.77 2006-05-18 11:42:02 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.78 2006-05-19 13:35:32 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -58,7 +58,6 @@ int old_cursor_state;
 
 // Forwards
 static void DrawCode(void);
-static bool DEBUG_Log_Loop(int count);
 static void DEBUG_RaiseTimerIrq(void);
 static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num);
 static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num);
@@ -102,7 +101,7 @@ bool	logHeavy	= false;
 
 // Heavy Debugging Vars for logging
 #if C_HEAVY_DEBUG
-static FILE*	cpuLogFile		= 0;
+static ofstream 	cpuLogFile;
 static bool		cpuLog			= false;
 static int		cpuLogCounter	= 0;
 static int		cpuLogType		= 1;	// log detail
@@ -1116,12 +1115,12 @@ bool ParseCommand(char* str)
 	if (found) { // Create Cpu log file
 		found+=4;
 		DEBUG_ShowMsg("DEBUG: Starting log\n");
-//		DEBUG_Log_Loop(GetHexValue(found,found));
-		cpuLogFile = fopen("LOGCPU.TXT","wt");
-		if (!cpuLogFile) {
+		cpuLogFile.open("LOGCPU.TXT");
+		if (!cpuLogFile.is_open()) {
 			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
 			return false;
 		}
+		cpuLogFile << hex << noshowbase << setfill('0') << uppercase;
 		cpuLog = true;
 		cpuLogType = 1;
 		cpuLogCounter = GetHexValue(found,found);
@@ -1137,11 +1136,12 @@ bool ParseCommand(char* str)
 	if (found) { // Create Cpu log file
 		found+=4;
 		DEBUG_ShowMsg("DEBUG: Starting log\n");
-		cpuLogFile = fopen("LOGCPU.TXT","wt");
-		if (!cpuLogFile) {
+		cpuLogFile.open("LOGCPU.TXT");
+		if (!cpuLogFile.is_open()) {
 			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
 			return false;
 		}
+		cpuLogFile << hex << noshowbase << setfill('0') << uppercase;
 		cpuLog = true;
 		cpuLogType = 0;
 		cpuLogCounter = GetHexValue(found,found);
@@ -1157,11 +1157,12 @@ bool ParseCommand(char* str)
 	if (found) { // Create Cpu log file
 		found+=4;
 		DEBUG_ShowMsg("DEBUG: Starting log\n");
-		cpuLogFile = fopen("LOGCPU.TXT","wt");
-		if (!cpuLogFile) {
+		cpuLogFile.open("LOGCPU.TXT");
+		if (!cpuLogFile.is_open()) {
 			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
 			return false;
 		}
+		cpuLogFile << hex << noshowbase << setfill('0') << uppercase;
 		cpuLog = true;
 		cpuLogType = 2;
 		cpuLogCounter = GetHexValue(found,found);
@@ -1806,82 +1807,63 @@ static void LogCPUInfo(void)
 	LOG(LOG_MISC,LOG_ERROR)(out1);
 };
 
-static void LogInstruction(Bit16u segValue, Bit32u eipValue, char* buffer) 
-{
+#if C_HEAVY_DEBUG
+static void LogInstruction(Bit16u segValue, Bit32u eipValue,  ofstream& out) {
 	static char empty[23] = { 32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0 };
 
 	PhysPt start = GetAddress(segValue,eipValue);
 	char dline[200];Bitu size;
 	size = DasmI386(dline, start, reg_eip, cpu.code.big);
 	char* res = empty;
-	if (showExtend) {
+	if (showExtend && (cpuLogType > 0) ) {
 		res = AnalyzeInstruction(dline,false);
 		if (!res || !(*res)) res = empty;
 		Bitu reslen = strlen(res);
 		if (reslen<22) for (Bitu i=0; i<22-reslen; i++) res[reslen+i] = ' '; res[22] = 0;
 	};
 	Bitu len = strlen(dline);
+	if (len<30) for (Bitu i=0; i<30-len; i++) dline[len + i] = ' '; dline[30] = 0;
 
 	// Get register values
-#if C_HEAVY_DEBUG
-	if (cpuLogType==1) {
-#endif
-		if (len<30) for (Bitu i=0; i<30-len; i++) dline[len + i] = ' '; dline[30] = 0;
-		sprintf(buffer,"%04X:%08X   %s  %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X\n",segValue,eipValue,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
-			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF));
-#if C_HEAVY_DEBUG
-	} else if (cpuLogType==0) {
-		if (len<27) for (Bitu i=0; i<27-len; i++) dline[len+i] = ' '; dline[27] = 0;
-		sprintf(buffer,"%04X:%04X %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X SS:%04X C%01X Z%01X S%01X O%01X I%01X\n",segValue,eipValue,dline,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(ss),
-			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,GETFLAGBOOL(IF));
-	} else {
-		if (len<34) for (Bitu i=0; i<34-len; i++) dline[len+i] = ' '; dline[34] = 0;
+
+	if(cpuLogType == 0) {
+		out << setw(4) << SegValue(cs) << ":" << setw(4) << reg_eip << "  " << dline;
+	} else if (cpuLogType == 1) {
+		out << setw(4) << SegValue(cs) << ":" << setw(8) << reg_eip << "  " << dline << "  " << res;
+	} else if (cpuLogType == 2) {
 		char ibytes[200]="";	char tmpc[200];
 		for (Bitu i=0; i<size; i++) {
 			sprintf(tmpc,"%02X ",mem_readb(start+i));
 			strcat(ibytes,tmpc);
 		}
-		len=strlen(ibytes);
-		if (len<21) for (Bitu i=0; i<21-len; i++) strcat(ibytes," ");
-		sprintf(buffer,"%04X:%08X   %s   %s  %s EAX:%08X EBX:%08X ECX:%08X EDX:%08X ESI:%08X EDI:%08X EBP:%08X ESP:%08X DS:%04X ES:%04X FS:%04X GS:%04X SS:%04X CF:%01X ZF:%01X SF:%01X OF:%01X AF:%01X PF:%01X IF:%01X TF:%01X VM:%01X FLG:%08X CR0:%08X\n",segValue,eipValue,ibytes,dline,res,reg_eax,reg_ebx,reg_ecx,reg_edx,reg_esi,reg_edi,reg_ebp,reg_esp,SegValue(ds),SegValue(es),SegValue(fs),SegValue(gs),SegValue(ss),
-			get_CF()?1:0,get_ZF()?1:0,get_SF()?1:0,get_OF()?1:0,get_AF()?1:0,get_PF()?1:0,GETFLAGBOOL(IF),GETFLAGBOOL(TF),GETFLAGBOOL(VM),reg_flags,cpu.cr0);
+		len = strlen(ibytes);
+		if (len<21) { for (Bitu i=0; i<21-len; i++) ibytes[len + i] =' '; ibytes[21]=0;} //NOTE THE BRACKETS
+		out << setw(4) << SegValue(cs) << ":" << setw(8) << reg_eip << "  " << dline << "  " << res << "  " << ibytes;
 	}
-#endif
+   
+	out << " EAX:" << setw(8) << reg_eax << " EBX:" << setw(8) << reg_ebx 
+	    << " ECX:" << setw(8) << reg_ecx << " EDX:" << setw(8) << reg_edx
+	    << " ESI:" << setw(8) << reg_esi << " EDI:" << setw(8) << reg_edi 
+	    << " EBP:" << setw(8) << reg_ebp << " ESP:" << setw(8) << reg_esp 
+	    << " DS:"  << setw(4) << SegValue(ds)<< " ES:"  << setw(4) << SegValue(es);
+
+	if(cpuLogType == 0) {
+		out << " SS:"  << setw(4) << SegValue(ss) << " C"  << get_CF()  << " Z"   << get_ZF()  
+		    << " S" << get_SF() << " O"  << get_OF() << " I"  << GETFLAGBOOL(IF);
+	} else {
+		out << " FS:"  << setw(4) << SegValue(fs) << " GS:"  << setw(4) << SegValue(gs)
+		    << " SS:"  << setw(4) << SegValue(ss)
+		    << " CF:"  << get_CF()  << " ZF:"   << get_ZF()  << " SF:"  << get_SF()
+		    << " OF:"  << get_OF()  << " AF:"   << get_AF()  << " PF:"  << get_PF()
+		    << " IF:"  << GETFLAGBOOL(IF);
+	}
+	if(cpuLogType == 2) {
+		out << " TF:" << GETFLAGBOOL(TF) << " VM:" << GETFLAGBOOL(VM) <<" FLG:" << setw(8) << reg_flags 
+		    << " CR0:" << setw(8) << cpu.cr0;	
+	}
+	out << endl;
 };
-
-static bool DEBUG_Log_Loop(int count) {
-
-	char buffer[512];	
-	
-	FILE* f = fopen("LOGCPU.TXT","wt");
-	if (!f) return false;
-
-	do {
-//		PIC_runIRQs();
-				
-		Bitu ret;
-		do {
-			// Get disasm
-			Bit16u csValue	= SegValue(cs);
-			Bit32u eipValue = reg_eip;
-			
-			LogInstruction(csValue,eipValue,buffer);
-			fprintf(f,"%s",buffer);
-						
-			CPU_Cycles = 1;
-			ret=(*cpudecoder)();
-			if (ret>0) ret=(*CallBack_Handlers[ret])();
-
-			count--;
-			if (count==0) break;
-
-		} while (!ret);
-		if (ret) break;
-	} while (count>0);
-	
-	fclose(f);
-	return true;
-}
+#endif
 
 // DEBUG.COM stuff
 
@@ -2275,13 +2257,13 @@ void DEBUG_HeavyWriteLogInstruction(void) {
 	do {
 		// Write Intructions
 		TLogInst & inst = logInst[startLog];
-		out << setw(4) << inst.s_cs << ":" << setw(8) << inst.eip << "   " 
+		out << setw(4) << inst.s_cs << ":" << setw(8) << inst.eip << "  " 
 		    << inst.dline << "  " << inst.res << " EAX:" << setw(8)<< inst.eax
 		    << " EBX:" << setw(8) << inst.ebx << " ECX:" << setw(8) << inst.ecx
 		    << " EDX:" << setw(8) << inst.edx << " ESI:" << setw(8) << inst.esi
 		    << " EDI:" << setw(8) << inst.edi << " EBP:" << setw(8) << inst.ebp
 		    << " ESP:" << setw(8) << inst.esp << " DS:"  << setw(4) << inst.s_ds
-		    << " ES:"  << setw(4) << inst.s_ds<< " FS:"  << setw(4) << inst.s_fs
+		    << " ES:"  << setw(4) << inst.s_es<< " FS:"  << setw(4) << inst.s_fs
 		    << " GS:"  << setw(4) << inst.s_gs<< " SS:"  << setw(4) << inst.s_ss
 		    << " CF:"  << inst.c  << " ZF:"   << inst.z  << " SF:"  << inst.s
 		    << " OF:"  << inst.o  << " AF:"   << inst.a  << " PF:"  << inst.p
@@ -2302,13 +2284,11 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 	static Bitu zero_count = 0;
 	if (cpuLog) {
 		if (cpuLogCounter>0) {
-			static char buffer[4096];
-			LogInstruction(SegValue(cs),reg_eip,buffer);
-			fprintf(cpuLogFile,"%s",buffer);
+			LogInstruction(SegValue(cs),reg_eip,cpuLogFile);
 			cpuLogCounter--;
 		}
 		if (cpuLogCounter<=0) {
-			fclose(cpuLogFile);
+			cpuLogFile.close();
 			DEBUG_ShowMsg("DEBUG: cpu log LOGCPU.TXT created\n");
 			cpuLog = false;
 			DEBUG_EnableDebugger();
