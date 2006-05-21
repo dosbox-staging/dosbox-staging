@@ -414,15 +414,17 @@ void DOS_SetupMemory(void) {
 	 * buggy games, which compare against the interrupt table. (probably a 
 	 * broken linked list implementation) */
 	callbackhandler.Allocate(&DOS_default_handler,"DOS default int");
-	real_writeb(0x70,4,(Bit8u)0xFE);   //GRP 4
-	real_writeb(0x70,5,(Bit8u)0x38);   //Extra Callback instruction
-	real_writew(0x70,6,callbackhandler.Get_callback());  //The immediate word
-	real_writeb(0x70,8,(Bit8u)0xCF);   //An IRET Instruction
-	real_writed(0,0x01*4,0x700004);
-	real_writed(0,0x02*4,0x700004); //BioMenace (segment<0x8000)
-	real_writed(0,0x03*4,0x700004); //Alien Incident (offset!=0)
-	real_writed(0,0x04*4,0x700004); //Shadow President (lower byte of segment!=0)
-//	real_writed(0,0x0f*4,0x700004); //Always a tricky one (soundblaster irq)
+	Bitu ihseg = 0x70;
+	Bitu ihofs = 0x08;
+	real_writeb(ihseg,ihofs+0x00,(Bit8u)0xFE);	//GRP 4
+	real_writeb(ihseg,ihofs+0x01,(Bit8u)0x38);	//Extra Callback instruction
+	real_writew(ihseg,ihofs+0x02,callbackhandler.Get_callback());  //The immediate word
+	real_writeb(ihseg,ihofs+0x04,(Bit8u)0xCF);	//An IRET Instruction
+	RealSetVec(0x01,RealMake(ihseg,ihofs));		//BioMenace (offset!=4)
+	RealSetVec(0x02,RealMake(ihseg,ihofs));		//BioMenace (segment<0x8000)
+	RealSetVec(0x03,RealMake(ihseg,ihofs));		//Alien Incident (offset!=0)
+	RealSetVec(0x04,RealMake(ihseg,ihofs));		//Shadow President (lower byte of segment!=0)
+//	RealSetVec(0x0f,RealMake(ihseg,ihofs));		//Always a tricky one (soundblaster irq)
 
 	// Create a dummy device MCB with PSPSeg=0x0008
 	DOS_MCB mcb_devicedummy((Bit16u)DOS_MEM_START);
