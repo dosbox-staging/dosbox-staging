@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.58 2006-04-22 15:25:45 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.59 2006-05-22 15:46:13 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -599,7 +599,13 @@ static Bitu INT15_Handler(void) {
 		break;
 	case 0x83:	/* BIOS - SET EVENT WAIT INTERVAL */
 		{
-			if(reg_al == 0x01) LOG(LOG_BIOS,LOG_WARN)("Bios set event interval cancelled: not handled");   
+			if(reg_al == 0x01) { /* Cancel it */
+				mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
+				IO_Write(0x70,0xb);
+				IO_Write(0x71,IO_Read(0x71)&~0x40);
+				CALLBACK_SCF(false);
+				break;
+			}
 			if (mem_readb(BIOS_WAIT_FLAG_ACTIVE)) {
 				reg_ah=0x80;
 				CALLBACK_SCF(true);
@@ -861,7 +867,7 @@ public:
 		callback[6].Set_RealVec(0x1A);
 
 		/* INT 1C System Timer tick called from INT 8 */
-		callback[7].Install(&INT1C_Handler,CB_IRET,"Int 1c Timer tick");
+		callback[7].Install(&INT1C_Handler,CB_IRET,"Int 1c Timer");
 		callback[7].Set_RealVec(0x1C);
 		
 		/* IRQ 8 RTC Handler */
