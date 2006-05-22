@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.78 2006-05-19 13:35:32 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.79 2006-05-22 20:29:50 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -96,7 +96,6 @@ class DEBUG;
 
 DEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
-bool	logHeavy	= false;
 
 
 // Heavy Debugging Vars for logging
@@ -105,6 +104,8 @@ static ofstream 	cpuLogFile;
 static bool		cpuLog			= false;
 static int		cpuLogCounter	= 0;
 static int		cpuLogType		= 1;	// log detail
+static bool zeroProtect = false;
+bool	logHeavy	= false;
 #endif
 
 
@@ -1266,6 +1267,13 @@ bool ParseCommand(char* str)
 		else			DEBUG_ShowMsg("DEBUG: Heavy cpu logging off.\n");
 		return true;
 	}
+	found = strstr(str,"ZEROPROTECT");
+	if (found) { //toggle zero protection
+		zeroProtect = !zeroProtect;
+		if (zeroProtect)	DEBUG_ShowMsg("DEBUG: Zero code execution protection on.\n");
+		else			DEBUG_ShowMsg("DEBUG: Zero code execution protection off.\n");
+		return true;
+	}
 #endif
 	if ((*str=='H') || (*str=='?')) {
 		DEBUG_ShowMsg("Debugger keys:\n");
@@ -1296,6 +1304,7 @@ bool ParseCommand(char* str)
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
 		DEBUG_ShowMsg("LOGS/LOGL [num]           - Write short/long cpu log file.\n");
 		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu when dosbox exits.\n");
+		DEBUG_ShowMsg("ZEROPROTECT               - Enable/Disable zero code execution detecion.\n");
 #endif
 		DEBUG_ShowMsg("SR [reg] [value]          - Set register value.\n");
 		DEBUG_ShowMsg("SM [seg]:[off] [val] [.]..- Set memory with following values.\n");	
@@ -2297,8 +2306,8 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 	}
 	// LogInstruction
 	if (logHeavy) DEBUG_HeavyLogInstruction();
-	if(mem_readd(SegPhys(cs) + reg_eip) == 0) zero_count++; else zero_count = 0;
-	if(zero_count == 10) E_Exit("running zeroed code");
+	if(zeroProtect && mem_readd(SegPhys(cs) + reg_eip) == 0) zero_count++; else zero_count = 0;
+	if(zeroProtect && GCC_UNLIKELY(zero_count == 10)) E_Exit("running zeroed code");
 
 	if (skipFirstInstruction) {
 		skipFirstInstruction = false;
