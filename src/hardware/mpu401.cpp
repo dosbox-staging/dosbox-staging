@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.20 2006-03-19 10:24:59 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.21 2006-05-23 10:30:29 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -238,6 +238,10 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 		case 0xff:	/* Reset MPU-401 */
 			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Reset %X",val);
 			mpu.state.reset=1;
+			if (CPU_Cycles > 5) { //It came from the desert wants a fast irq
+				CPU_CycleLeft += CPU_Cycles;
+				CPU_Cycles = 5;
+			}
 			MPU401_Reset();
 			break;
 		case 0x3f:	/* UART mode */
