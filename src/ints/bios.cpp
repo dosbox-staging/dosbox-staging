@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.59 2006-05-22 15:46:13 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.60 2006-05-23 10:30:02 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -60,6 +60,12 @@ static Bitu INT70_Handler(void) {
 	IO_Write(0xa0,0x20);
 	IO_Write(0x20,0x20);
 	return 0;
+}
+// Irq 9 calls irq 2
+static Bitu INT71_Handler() {
+	IO_Write(0xa0,0x61);
+	CALLBACK_RunRealInt(0xa);
+	return CBRET_NONE;
 }
 
 CALLBACK_HandlerObject* tandy_DAC_callback;
@@ -813,7 +819,7 @@ void BIOS_SetupDisks(void);
 
 class BIOS:public Module_base{
 private:
-	CALLBACK_HandlerObject callback[9];
+	CALLBACK_HandlerObject callback[10];
 public:
 	BIOS(Section* configuration):Module_base(configuration){
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
@@ -873,6 +879,16 @@ public:
 		/* IRQ 8 RTC Handler */
 		callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
 		callback[8].Set_RealVec(0x70);
+
+		/* Irq 9 routed to irq 2 (which is an iret at f000:ff53) */
+		callback[9].Install(&INT71_Handler,CB_IRET,"irq 9 bios");
+		callback[9].Set_RealVec(0x71);
+
+		/* Some hardcoded vectors */
+		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
+		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
+		phys_writed(0xfe988,RealGetVec(0x09));
+		RealSetVec(0xA,0xf000ff53);	/* Ghost busters 2 mt32 mode */
 
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
 		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
@@ -979,10 +995,6 @@ public:
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		size_extended|=(IO_Read(0x71) << 8);
-
-		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
-		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
-		phys_writed(0xfe988,RealGetVec(0x09));
 
 		if (machine==MCH_PCJR) PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
 	}
