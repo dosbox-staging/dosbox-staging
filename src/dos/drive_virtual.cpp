@@ -203,9 +203,14 @@ bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	search_file=first_file;
 	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
-	if(attr & DOS_ATTR_VOLUME) {
+	if (attr == DOS_ATTR_VOLUME) {
 		dta.SetResult("DOSBOX",0,0,0,DOS_ATTR_VOLUME);
 		return true;
+	} else if ((attr & DOS_ATTR_VOLUME) && !fcb_findfirst) {
+		if (WildFileCmp("DOSBOX",pattern)) {
+			dta.SetResult("DOSBOX",0,0,0,DOS_ATTR_VOLUME);
+			return true;
+		}
 	}
 	return FindNext(dta);
 }
