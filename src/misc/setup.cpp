@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.35 2006-04-10 12:06:07 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.36 2006-05-25 15:07:33 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -59,23 +59,23 @@ void Prop_hex::SetValue(char* input){
 	if(!sscanf(input,"%X",&(value._hex))) value._hex=0;
 }
 
-void Prop_int::GetValuestring(char* str){
+void Prop_int::GetValuestring(char* str) const{
         sprintf(str,"%d",value._int);
 }
 
-void Prop_string::GetValuestring(char* str){
+void Prop_string::GetValuestring(char* str) const{
         sprintf(str,"%s",value._string->c_str());
 }
 
-void Prop_bool::GetValuestring(char* str){
+void Prop_bool::GetValuestring(char* str) const{
         sprintf(str,"%s",value._bool?"true":"false");
 }
 
-void Prop_float::GetValuestring(char* str){
+void Prop_float::GetValuestring(char* str) const {
 	sprintf(str,"%1.2f",value._float);
 }
 
-void Prop_hex::GetValuestring(char* str){
+void Prop_hex::GetValuestring(char* str) const {
         sprintf(str,"%X",value._hex);
 }
 
@@ -103,8 +103,8 @@ void Section_prop::Add_hex(const char* _propname, int _value) {
 	Property* test=new Prop_hex(_propname,_value);
 	properties.push_back(test);
 }
-int Section_prop::Get_int(char const * const _propname){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+int Section_prop::Get_int(char const * const _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._int;
 		}
@@ -112,16 +112,16 @@ int Section_prop::Get_int(char const * const _propname){
 	return 0;
 }
 
-bool Section_prop::Get_bool(char const * const _propname){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+bool Section_prop::Get_bool(char const * const _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._bool;
 		}
 	}
 	return false;
 }
-float Section_prop::Get_float(char const * const _propname){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+float Section_prop::Get_float(char const * const _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._float;
 		}
@@ -129,16 +129,16 @@ float Section_prop::Get_float(char const * const _propname){
 	return false;
 }
 
-const char* Section_prop::Get_string(char const * const _propname){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+const char* Section_prop::Get_string(char const * const _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._string->c_str();
 		}
 	}
 	return "";
 }
-int Section_prop::Get_hex(char const * const _propname){
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+int Section_prop::Get_hex(char const * const _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
 			return ((*tel)->GetValue())._hex;
 		}
@@ -160,18 +160,18 @@ void Section_prop::HandleInputline(char *gegevens){
 }
 
 
-void Section_prop::PrintData(FILE* outfile){
+void Section_prop::PrintData(FILE* outfile) const {
 	char temp[1000];		/* Should be enough for the properties */
 	/* Now print out the individual section entries */
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		(*tel)->GetValuestring(temp);
 		fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),temp);
 	}
 }
 
 static char buffer[1024];
-char const * Section_prop::GetPropValue(char const * const _property) {
-	for(it tel=properties.begin();tel!=properties.end();tel++){
+char const * Section_prop::GetPropValue(char const * const _property) const{
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if(!strcasecmp((*tel)->propname.c_str(),_property)){
 			(*tel)->GetValuestring(buffer);
 			return buffer;
@@ -185,19 +185,19 @@ void Section_line::HandleInputline(char* line){
 	data+="\n";
 }
 
-void Section_line::PrintData(FILE* outfile) {
+void Section_line::PrintData(FILE* outfile) const {
 	fprintf(outfile,"%s",data.c_str());
 }
 
-char const* Section_line::GetPropValue(char const * const /* _property*/) {
+char const* Section_line::GetPropValue(char const * const /* _property*/) const {
 	return NULL;
 }
 
-void Config::PrintConfig(char const * const configfilename){
+void Config::PrintConfig(char const * const configfilename) const {
 	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
-	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */
 		strcpy(temp,(*tel)->GetName());
 		lowcase(temp);
@@ -247,8 +247,8 @@ Section_line* Config::AddSection_line(char const * const _name,void (*_initfunct
 }
 
 
-void Config::Init(){
-	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){ 
+void Config::Init() {
+	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){ 
 		(*tel)->ExecuteInit();
 	}
 }
@@ -278,15 +278,15 @@ Config::~Config() {
 	}
 }
 
-Section* Config::GetSection(char const * const _sectionname){
-	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+Section* Config::GetSection(char const * const _sectionname) const{
+	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		if (!strcasecmp((*tel)->GetName(),_sectionname)) return (*tel);
 	}
 	return NULL;
 }
 
-Section* Config::GetSectionFromProperty(char const * const prop){
-   	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+Section* Config::GetSectionFromProperty(char const * const prop) const{
+   	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		if ((*tel)->GetPropValue(prop)) return (*tel);
 	}
 	return NULL;
@@ -505,4 +505,11 @@ CommandLine::CommandLine(char const * const name,char const * const cmdline) {
 		c_cmdline++;
 	}
 	if (inword || inquote) cmds.push_back(str);
+}
+
+void CommandLine::Shift(unsigned int amount) {
+	while(amount--) {
+		file_name = cmds.size()?(*(cmds.begin())):"";
+		if(cmds.size()) cmds.erase(cmds.begin());
+	}
 }

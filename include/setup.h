@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.24 2006-04-10 12:06:25 qbix79 Exp $ */
+/* $Id: setup.h,v 1.25 2006-05-25 15:07:32 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -46,6 +46,7 @@ public:
 	bool FindStringRemain(char const * const name,std::string & value);
 	bool GetStringRemain(std::string & value);
 	unsigned int GetCount(void);
+	void Shift(unsigned int amount=1);
 private:
 	typedef std::list<std::string>::iterator cmd_it;
 	std::list<std::string> cmds;
@@ -65,8 +66,8 @@ class Property {
 public:
 	Property(char const * const _propname):propname(_propname) { }
 	virtual void SetValue(char* input)=0;
-	virtual void GetValuestring(char* str)=0;
-	Value GetValue() { return value;}
+	virtual void GetValuestring(char* str) const=0;
+	Value GetValue() const { return value;}
 	virtual ~Property(){ }
 	std::string propname;
 	Value value;
@@ -78,7 +79,7 @@ public:
 		value._int=_value;
 	}
 	void SetValue(char* input);
-        void GetValuestring(char* str);
+        void GetValuestring(char* str) const;
 	~Prop_int(){ }
 };
 class Prop_float:public Property {
@@ -87,7 +88,7 @@ public:
 		value._float=_value;
 	}
 	void SetValue(char* input);
-	void GetValuestring(char* str);
+	void GetValuestring(char* str) const;
 	~Prop_float(){ }
 };
 
@@ -97,7 +98,7 @@ public:
 		value._bool=_value;
 	}
 	void SetValue(char* input);
-        void GetValuestring(char* str);
+        void GetValuestring(char* str) const;
 	~Prop_bool(){ }
 };
 
@@ -110,7 +111,7 @@ public:
 		delete value._string;
 	}
 	void SetValue(char* input);
-        void GetValuestring(char* str);
+        void GetValuestring(char* str) const;
 };
 class Prop_hex:public Property {
 public:
@@ -119,7 +120,7 @@ public:
 	}
 	void SetValue(char* input);
 	~Prop_hex(){ }
-	void GetValuestring(char* str);
+	void GetValuestring(char* str) const;
 };
 
 class Section {
@@ -145,11 +146,11 @@ public:
 	void AddDestroyFunction(SectionFunction func,bool canchange=false) {destroyfunctions.push_front(Function_wrapper(func,canchange));}
 	void ExecuteInit(bool initall=true);
 	void ExecuteDestroy(bool destroyall=true);
-	const char* GetName() {return sectionname.c_str();}
+	const char* GetName() const {return sectionname.c_str();}
 
-	virtual char const * GetPropValue(char const * const _property)=0;
+	virtual char const * GetPropValue(char const * const _property) const =0;
 	virtual void HandleInputline(char * _line)=0;
-	virtual void PrintData(FILE* outfile)=0;
+	virtual void PrintData(FILE* outfile) const =0;
 	virtual ~Section() { /*Children must call executedestroy ! */}
 };
 
@@ -158,6 +159,7 @@ class Section_prop:public Section {
 private:
 	std::list<Property*> properties;
 	typedef std::list<Property*>::iterator it;
+	typedef std::list<Property*>::const_iterator const_it;
 public:
 	Section_prop(char const * const  _sectionname):Section(_sectionname){}
 	void Add_int(char const *  const _propname, int _value=0);
@@ -166,14 +168,14 @@ public:
 	void Add_hex(char const * const _propname, int _value=0);
 	void Add_float(char const * const _propname, float _value=0.0);   
 
-	int Get_int(char const * const _propname);
-	const char* Get_string(char const * const _propname);
-	bool Get_bool(char const * const _propname);
-	int Get_hex(char const * const _propname);
-	float Get_float(char const * const _propname);
+	int Get_int(char const * const _propname) const;
+	const char* Get_string(char const * const _propname) const;
+	bool Get_bool(char const * const _propname) const;
+	int Get_hex(char const * const _propname) const;
+	float Get_float(char const * const _propname) const;
 	void HandleInputline(char *gegevens);
-	void PrintData(FILE* outfile);
-	virtual char const * GetPropValue(char const * const _property);
+	void PrintData(FILE* outfile) const;
+	virtual char const * GetPropValue(char const * const _property) const;
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	virtual ~Section_prop();
 };
@@ -183,8 +185,8 @@ public:
 	Section_line(char const * const _sectionname):Section(_sectionname){}
 	~Section_line(){ExecuteDestroy(true);}
 	void HandleInputline(char* gegevens);
-	void PrintData(FILE* outfile);
-	virtual const char* GetPropValue(char const * const _property);
+	void PrintData(FILE* outfile) const;
+	virtual const char* GetPropValue(char const * const _property) const;
 	std::string data;
 };
 
@@ -195,6 +197,8 @@ private:
 	std::list<Section*> sectionlist;
 	typedef std::list<Section*>::iterator it;
 	typedef std::list<Section*>::reverse_iterator reverse_it;
+	typedef std::list<Section*>::const_iterator const_it;
+	typedef std::list<Section*>::const_reverse_iterator const_reverse_it;
 	void (* _start_function)(void);
 public:
 	Config(CommandLine * cmd):cmdline(cmd){}
@@ -203,14 +207,14 @@ public:
 	Section_line * AddSection_line(char const * const _name,void (*_initfunction)(Section*));
 	Section_prop * AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange=false);
 	
-	Section* GetSection(char const* const _sectionname);
-	Section* GetSectionFromProperty(char const * const prop);
+	Section* GetSection(char const* const _sectionname) const;
+	Section* GetSectionFromProperty(char const * const prop) const;
 
 	void SetStartUp(void (*_function)(void));
 	void Init();
 	void ShutDown();
 	void StartUp();
-	void PrintConfig(char const * const configfilename);
+	void PrintConfig(char const * const configfilename) const;
 	bool ParseConfigFile(char const * const configfilename);
 	void ParseEnv(char ** envp);
 };
