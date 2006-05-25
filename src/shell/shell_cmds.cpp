@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.66 2006-04-23 15:17:07 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.67 2006-05-25 15:08:40 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -46,6 +46,7 @@ static SHELL_Cmd cmd_list[]={
 {	"SET",		0,			&DOS_Shell::CMD_SET,		"SHELL_CMD_SET_HELP"},
 {	"IF",		0,			&DOS_Shell::CMD_IF,			"SHELL_CMD_IF_HELP"},
 {	"GOTO",		0,			&DOS_Shell::CMD_GOTO,		"SHELL_CMD_GOTO_HELP"},
+{	"SHIFT",	0,			&DOS_Shell::CMD_SHIFT,		"SHELL_CMD_SHIFT_HELP"},
 {	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP"},
 {	"REM",		0,			&DOS_Shell::CMD_REM,		"SHELL_CMD_REM_HELP"},
 {	"RENAME",	0,			&DOS_Shell::CMD_RENAME,		"SHELL_CMD_RENAME_HELP"},
@@ -670,6 +671,9 @@ void DOS_Shell::CMD_GOTO(char * args) {
 	}
 }
 
+void DOS_Shell::CMD_SHIFT(char * /*args*/ ) {
+	if(bf) bf->Shift();
+}
 
 void DOS_Shell::CMD_TYPE(char * args) {
 	StripSpaces(args);

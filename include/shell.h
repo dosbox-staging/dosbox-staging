@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.15 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: shell.h,v 1.16 2006-05-25 15:08:40 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -48,6 +48,7 @@ public:
 	~BatchFile();
 	bool ReadLine(char * line);
 	bool Goto(char * where);
+	void Shift(void);
 	Bit16u file_handle;
 	bool echo;
 	DOS_Shell * shell;
@@ -104,6 +105,7 @@ public:
 	void CMD_CHOICE(char * args);
 	void CMD_ATTRIB(char * args);
 	void CMD_PATH(char * args);
+	void CMD_SHIFT(char * /*args*/);
 	/* The shell's variables */
 	Bit16u input_handle;
 	BatchFile * bf;
@@ -113,10 +115,10 @@ public:
 };
 
 struct SHELL_Cmd {
-    const char * name;								/* Command name*/
+	const char * name;								/* Command name*/
 	Bit32u flags;									/* Flags about the command */
-    void (DOS_Shell::*handler)(char * args);		/* Handler for this command */
-    const char * help;								/* String with command help */
+	void (DOS_Shell::*handler)(char * args);		/* Handler for this command */
+	const char * help;								/* String with command help */
 };
 
 static inline void StripSpaces(char*&args) {

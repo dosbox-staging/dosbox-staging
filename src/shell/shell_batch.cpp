@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.20 2006-02-23 08:13:14 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.21 2006-05-25 15:08:40 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -149,3 +149,6 @@ again:
 	goto again;
 	return false;
 };
+void BatchFile::Shift(void) {
+	cmd->Shift(1);
+}

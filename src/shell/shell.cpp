@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.73 2006-04-29 10:05:55 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.74 2006-05-25 15:08:40 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -320,7 +320,7 @@ void DOS_Shell::Run(void) {
 			if (echo) ShowPrompt();
 			InputCommand(input_line);
 			ParseLine(input_line);
-			if (echo) WriteOut("\n");
+			if (echo && !bf) WriteOut("\n");
 		}
 	} while (!exit);
 }
@@ -496,6 +496,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
+	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
 	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
