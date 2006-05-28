@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.60 2006-05-23 10:30:02 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.61 2006-05-28 09:40:42 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -988,6 +988,8 @@ public:
 		}
 		// PS2 mouse
 		config |= 0x04;
+		// Gameport
+		config |= 0x1000;
 		mem_writew(BIOS_CONFIGURATION,config);
 		CMOS_SetRegister(0x14,config); //Should be updated on changes
 		/* Setup extended memory size */
