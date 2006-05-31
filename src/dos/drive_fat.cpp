@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.14 2006-04-23 14:20:58 c2woody Exp $ */
+/* $Id: drive_fat.cpp,v 1.15 2006-05-31 14:22:00 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -738,7 +738,9 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
-	
+	/* Maybe modTime and date should be used ? (crt matches findnext) */
+	((fatFile *)(*file))->time = fileEntry.crtTime;
+	((fatFile *)(*file))->date = fileEntry.crtDate;
 	return true;
 }
 
@@ -757,7 +759,9 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, Bit32u flags) {
 	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
-	
+	/* Maybe modTime and date should be used ? (crt matches findnext) */
+	((fatFile *)(*file))->time = fileEntry.crtTime;
+	((fatFile *)(*file))->date = fileEntry.crtDate;
 	return true;
 }
 
