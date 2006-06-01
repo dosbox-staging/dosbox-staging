@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.60 2006-05-01 14:56:35 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.61 2006-06-01 06:44:22 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -243,7 +243,7 @@ public:
 			return;
 		}
 		if (Drives[drive-'A']) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_ALLREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
+			WriteOut(MSG_Get("PROGRAM_MOUNT_ALREADY_MOUNTED"),drive,Drives[drive-'A']->GetInfo());
 			if (newdrive) delete newdrive;
 			return;
 		}
@@ -739,7 +739,7 @@ public:
 				
 				Bit8u dummy;
 				if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 					return;
 				}
 				
@@ -748,13 +748,13 @@ public:
 				temp_line = tmp;
 				
 				if (stat(temp_line.c_str(),&test)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 					return;
 				}
 			}
 			
 			if ((test.st_mode & S_IFDIR)) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNG_MOUNT"));
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
 				return;
 			}
 
@@ -796,7 +796,7 @@ public:
 
 		if(fstype=="fat") {
 			if (Drives[drive-'A']) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED"));
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				if (newdrive) delete newdrive;
 				return;
 			}
@@ -822,7 +822,7 @@ public:
 			}
 		} else if (fstype=="iso") {
 			if (Drives[drive-'A']) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED"));
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 				if (newdrive) delete newdrive;
 				return;
 			}
@@ -858,7 +858,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
-	MSG_Add("PROGRAM_MOUNT_ALLREADY_MOUNTED","Drive %c already mounted with %s\n");
+	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCES","Drive %c has succesfully been removed.\n");
@@ -1009,9 +1009,9 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
-	MSG_Add("PROGRAM_IMGMOUNG_FILE_NOT_FOUND","Image file not found.\n");
-	MSG_Add("PROGRAM_IMGMOUNG_MOUNT","To mount directories, use the \033[34;1mMOUNT\033[0m command, not the \033[34;1mIMGMOUNT\033[0m command.\n");
-	MSG_Add("PROGRAM_IMGMOUNT_ALLREADY_MOUNTED","Drive already mounted at that letter.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND","Image file not found.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MOUNT","To mount directories, use the \033[34;1mMOUNT\033[0m command, not the \033[34;1mIMGMOUNT\033[0m command.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED","Drive already mounted at that letter.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
 
