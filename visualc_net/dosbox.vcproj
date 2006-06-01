@@ -263,6 +263,9 @@
 						RelativePath="..\src\cpu\core_dyn_x86\decoder.h">
 					</File>
 					<File
+						RelativePath="..\src\cpu\core_dyn_x86\dyn_fpu.h">
+					</File>
+					<File
 						RelativePath="..\src\cpu\core_dyn_x86\helpers.h">
 					</File>
 					<File
@@ -369,12 +372,12 @@
 						RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
 					</File>
 					<File
-						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
-					</File>
-					<File
 						RelativePath="..\src\dos\cdrom_image.cpp">
 					</File>
-					</Filter>
+					<File
+						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
+					</File>
+				</Filter>
 				<Filter
 					Name="drives"
 					Filter="">
@@ -385,13 +388,13 @@
 						RelativePath="..\src\dos\drive_fat.cpp">
 					</File>
 					<File
+						RelativePath="..\src\dos\drive_iso.cpp">
+					</File>
+					<File
 						RelativePath="..\src\dos\drive_local.cpp">
 					</File>
 					<File
 						RelativePath="..\src\dos\drive_virtual.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\drive_iso.cpp">
 					</File>
 					<File
 						RelativePath="..\src\dos\drives.cpp">
@@ -471,13 +474,13 @@
 						RelativePath="..\src\hardware\vga_other.cpp">
 					</File>
 					<File
+						RelativePath="..\src\hardware\vga_s3.cpp">
+					</File>
+					<File
 						RelativePath="..\src\hardware\vga_seq.cpp">
 					</File>
 					<File
 						RelativePath="..\src\hardware\vga_xga.cpp">
-					</File>
-					<File
-						RelativePath="..\src\hardware\vga_s3.cpp">
 					</File>
 				</Filter>
 				<Filter
@@ -677,9 +680,6 @@
 				</File>
 				<File
 					RelativePath="..\src\fpu\fpu_instructions_x86.h">
-				</File>
-				<File
-					RelativePath="..\src\fpu\fpu_types.h">
 				</File>
 			</Filter>
 		</Filter>

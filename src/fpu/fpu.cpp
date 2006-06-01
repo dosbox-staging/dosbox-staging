@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu.cpp,v 1.27 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: fpu.cpp,v 1.28 2006-06-01 08:33:52 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -28,72 +28,18 @@
 #include "fpu.h"
 #include "cpu.h"
 
-typedef PhysPt EAPoint;
+FPU_rec fpu;
 
-#define TOP fpu.top
-#define STV(i)  ( (fpu.top+ (i) ) & 7 )
-
-#define LoadMb(off) mem_readb(off)
-#define LoadMw(off) mem_readw(off)
-#define LoadMd(off) mem_readd(off)
-
-#define SaveMb(off,val)	mem_writeb(off,val)
-#define SaveMw(off,val)	mem_writew(off,val)
-#define SaveMd(off,val)	mem_writed(off,val)
-
-#include "fpu_types.h"
-
-static struct {
-	FPU_Reg		regs[9];
-	FPU_P_Reg	p_regs[9];
-	FPU_Tag		tags[9];
-	Bit16u		cw,cw_mask_all;
-	Bit16u		sw;
-	Bitu		top;
-	FPU_Round	round;
-} fpu;
-
-INLINE void FPU_SetCW(Bitu word){
-	fpu.cw = word;
-	fpu.cw_mask_all = word | 0x3f;
-	fpu.round = (FPU_Round)((word >> 10) & 3);
+void FPU_FLDCW(PhysPt addr){
+	Bit16u temp = mem_readw(addr);
+	FPU_SetCW(temp);
 }
-	
-static Bit16u FPU_GetTag(void){
+
+Bit16u FPU_GetTag(void){
 	Bit16u tag=0;
 	for(Bitu i=0;i<8;i++)
 		tag |= ( (fpu.tags[i]&3) <<(2*i));
 	return tag;
-}
-
-static void FPU_SetTag(Bit16u tag){
-	for(Bitu i=0;i<8;i++)
-		fpu.tags[i]= static_cast<FPU_Tag>((tag >>(2*i))&3);
-}
-
-INLINE Bitu FPU_GET_TOP(void){
-	return (fpu.sw & 0x3800)>>11;
-}
-INLINE void FPU_SET_TOP(Bitu val){
-	fpu.sw &= ~0x3800;
-	fpu.sw |= (val&7)<<11;
-}
-
-INLINE void FPU_SET_C0(Bitu C){
-	fpu.sw &= ~0x0100;
-	if(C) fpu.sw |=  0x0100;
-}
-INLINE void FPU_SET_C1(Bitu C){
-	fpu.sw &= ~0x0200;
-	if(C) fpu.sw |=  0x0200;
-}
-INLINE void FPU_SET_C2(Bitu C){
-	fpu.sw &= ~0x0400;
-	if(C) fpu.sw |=  0x0400;
-}
-INLINE void FPU_SET_C3(Bitu C){
-	fpu.sw &= ~0x4000;
-	if(C) fpu.sw |= 0x4000;
 }
 
 #if C_FPU_X86
@@ -109,32 +55,31 @@ INLINE void FPU_SET_C3(Bitu C){
 
 static void EATREE(Bitu _rm){
 	Bitu group=(_rm >> 3) & 7;
-	/* data will allready be put in register 8 by caller */
 	switch(group){
 		case 0x00:	/* FADD */
-			FPU_FADD(TOP, 8);
+			FPU_FADD_EA(TOP);
 			break;
 		case 0x01:	/* FMUL  */
-			FPU_FMUL(TOP, 8);
+			FPU_FMUL_EA(TOP);
 			break;
 		case 0x02:	/* FCOM */
-			FPU_FCOM(TOP,8);
+			FPU_FCOM_EA(TOP);
 			break;
 		case 0x03:	/* FCOMP */
-			FPU_FCOM(TOP,8);
+			FPU_FCOM_EA(TOP);
 			FPU_FPOP();
 			break;
 		case 0x04:	/* FSUB */
-			FPU_FSUB(TOP,8);
+			FPU_FSUB_EA(TOP);
 			break;
 		case 0x05:	/* FSUBR */
-			FPU_FSUBR(TOP,8);
+			FPU_FSUBR_EA(TOP);
 			break;
 		case 0x06:	/* FDIV */
-			FPU_FDIV(TOP, 8);
+			FPU_FDIV_EA(TOP);
 			break;
 		case 0x07:	/* FDIVR */
-			FPU_FDIVR(TOP,8);
+			FPU_FDIVR_EA(TOP);
 			break;
 		default:
 			break;
@@ -143,7 +88,7 @@ static void EATREE(Bitu _rm){
 
 void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
 	/* REGULAR TREE WITH 32 BITS REALS */
-	FPU_FLD_F32(addr,8);
+	FPU_FLD_F32_EA(addr);
 	EATREE(rm);
 }
 
@@ -204,10 +149,7 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 		FPU_FLDENV(addr);
 		break;
 	case 0x05: /* FLDCW */
-		{
-			Bit16u temp = mem_readw(addr);
-			FPU_SetCW(temp);
-		}
+		FPU_FLDCW(addr);
 		break;
 	case 0x06: /* FSTENV */
 		FPU_FSTENV(addr);
@@ -364,7 +306,7 @@ void FPU_ESC1_Normal(Bitu rm) {
 
 void FPU_ESC2_EA(Bitu rm,PhysPt addr) {
 	/* 32 bits integer operants */
-	FPU_FLD_I32(addr,8);
+	FPU_FLD_I32_EA(addr);
 	EATREE(rm);
 }
 
@@ -457,7 +399,7 @@ void FPU_ESC3_Normal(Bitu rm) {
 
 void FPU_ESC4_EA(Bitu rm,PhysPt addr) {
 	/* REGULAR TREE WITH 64 BITS REALS */
-	FPU_FLD_F64(addr,8);
+	FPU_FLD_F64_EA(addr);
 	EATREE(rm);
 }
 
@@ -560,10 +502,9 @@ void FPU_ESC5_Normal(Bitu rm) {
 	}
 }
 
-
 void FPU_ESC6_EA(Bitu rm,PhysPt addr) {
 	/* 16 bit (word integer) operants */
-	FPU_FLD_I16(addr,8);
+	FPU_FLD_I16_EA(addr);
 	EATREE(rm);
 }
 

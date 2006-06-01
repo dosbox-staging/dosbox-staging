@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define X86_DYNFPU
+
 #include "fpu.h"
 #define DYN_FPU_ESC(code) {					\
 	dyn_get_modrm(); \
@@ -1223,6 +1225,10 @@ static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
 	}
 }
 
+#ifdef X86_DYNFPU
+#include "dyn_fpu.h"
+#endif
+
 static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bitu max_opcodes) {
 	Bits i;
 /* Init a load of variables */
@@ -1568,6 +1574,32 @@ restart_prefix:
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
 		//FPU
 #ifdef CPU_FPU
+#ifdef X86_DYNFPU
+		case 0xd8:
+			dyn_fpu_esc0();
+			break;
+		case 0xd9:
+			dyn_fpu_esc1();
+			break;
+		case 0xda:
+			dyn_fpu_esc2();
+			break;
+		case 0xdb:
+			dyn_fpu_esc3();
+			break;
+		case 0xdc:
+			dyn_fpu_esc4();
+			break;
+		case 0xdd:
+			dyn_fpu_esc5();
+			break;
+		case 0xde:
+			dyn_fpu_esc6();
+			break;
+		case 0xdf:
+			dyn_fpu_esc7();
+			break;
+#else
 		case 0xd8:
 			DYN_FPU_ESC(0);
 			break;
@@ -1600,6 +1632,7 @@ restart_prefix:
 				gen_releasereg(DREG(EA));
 			}
 			break;
+#endif
 #endif
 		//Loop's 
 		case 0xe2:dyn_loop(LOOP_NONE);goto finish_block;

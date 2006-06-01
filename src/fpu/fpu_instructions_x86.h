@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions_x86.h,v 1.3 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: fpu_instructions_x86.h,v 1.4 2006-06-01 08:33:52 c2woody Exp $ */
 
 
 #define WEAK_EXCEPTIONS
@@ -33,11 +33,9 @@
 #ifdef WEAK_EXCEPTIONS
 #define FPUD_LOAD(op,szI,szA)			\
 		__asm {							\
-		__asm	mov		eax, 8			\
-		__asm	shl		eax, 4			\
 		__asm	mov		ebx, store_to	\
 		__asm	shl		ebx, 4			\
-		__asm	op		szI PTR fpu.p_regs[eax].m1		\
+		__asm	op		szI PTR fpu.p_regs[128].m1		\
 		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
 		}
 #else
@@ -56,6 +54,37 @@
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
 #endif
 
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_LOAD_EA(op,szI,szA)		\
+		__asm {							\
+		__asm	op		szI PTR fpu.p_regs[128].m1		\
+		}
+#else
+#define FPUD_LOAD_EA(op,szI,szA)		\
+		Bit16u new_sw;					\
+		__asm {							\
+		__asm	mov		eax, 8			\
+		__asm	shl		eax, 4			\
+		__asm	fclex					\
+		__asm	op		szI PTR fpu.p_regs[eax].m1		\
+		__asm	fnstsw	new_sw			\
+		}								\
+		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
+
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_STORE(op,szI,szA)				\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, TOP			\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	op		szI PTR fpu.p_regs[128].m1		\
+		__asm	fldcw	save_cw				\
+		}
+#else
 #define FPUD_STORE(op,szI,szA)				\
 		Bit16u new_sw,save_cw;				\
 		__asm {								\
@@ -72,6 +101,7 @@
 		__asm	fldcw	save_cw				\
 		}									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fsin,fcos,f2xm1,fchs,fabs
 #define FPUD_TRIG(op)				\
@@ -179,6 +209,23 @@
 #endif
 
 // handles fadd,fmul,fsub,fsubr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH1(op)						\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, op1			\
+		__asm	shl		eax, 4				\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	mov		ebx, op2			\
+		__asm	shl		ebx, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	op		st(1), st(0)		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}
+#else
 #define FPUD_ARITH1(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm {								\
@@ -197,8 +244,57 @@
 		__asm	fldcw	save_cw				\
 		}									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
+
+// handles fadd,fmul,fsub,fsubr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH1_EA(op)					\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, op1			\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fxch	\
+		__asm	op		st(1), st(0)		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}
+#else
+#define FPUD_ARITH1_EA(op)					\
+		Bit16u new_sw,save_cw;				\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	mov		eax, op1			\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fxch	\
+		__asm	clx							\
+		__asm	op		st(1), st(0)		\
+		__asm	fnstsw	new_sw				\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fsqrt,frndint
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH2(op)						\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, TOP			\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	op							\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}
+#else
 #define FPUD_ARITH2(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm {								\
@@ -214,8 +310,26 @@
 		__asm	fldcw	save_cw				\
 		}									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fdiv,fdivr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH3(op)						\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, op1			\
+		__asm	shl		eax, 4				\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	mov		ebx, op2			\
+		__asm	shl		ebx, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	op		st(1), st(0)		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}
+#else
 #define FPUD_ARITH3(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm {								\
@@ -234,6 +348,41 @@
 		__asm	fldcw	save_cw				\
 		}									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
+
+// handles fdiv,fdivr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH3_EA(op)					\
+		Bit16u save_cw;						\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, op1			\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fxch	\
+		__asm	op		st(1), st(0)		\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}
+#else
+#define FPUD_ARITH3_EA(op)					\
+		Bit16u new_sw,save_cw;				\
+		__asm {								\
+		__asm	fnstcw	save_cw				\
+		__asm	mov		eax, op1			\
+		__asm	fldcw	fpu.cw_mask_all		\
+		__asm	shl		eax, 4				\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	fxch	\
+		__asm	fclex						\
+		__asm	op		st(1), st(0)		\
+		__asm	fnstsw	new_sw				\
+		__asm	fstp	TBYTE PTR fpu.p_regs[eax].m1	 \
+		__asm	fldcw	save_cw				\
+		}									\
+		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
 
 // handles fprem,fprem1,fscale
 #define FPUD_REMINDER(op)			\
@@ -260,10 +409,22 @@
 		Bit16u new_sw;				\
 		__asm {						\
 		__asm	mov		ebx, op2	\
-		__asm	shl		ebx, 4		\
 		__asm	mov		eax, op1	\
+		__asm	shl		ebx, 4		\
 		__asm	shl		eax, 4		\
 		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	clx					\
+		__asm	op					\
+		__asm	fnstsw	new_sw		\
+		}							\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+#define FPUD_COMPARE_EA(op)			\
+		Bit16u new_sw;				\
+		__asm {						\
+		__asm	mov		eax, op1	\
+		__asm	shl		eax, 4		\
 		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
 		__asm	clx					\
 		__asm	op					\
@@ -323,6 +484,22 @@
 #endif
 
 // handles fyl2x
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_FYL2X(op)				\
+		__asm {						\
+		__asm	mov		eax, TOP	\
+		__asm	mov		ebx, eax	\
+		__asm	inc     ebx			\
+		__asm	and     ebx, 7		\
+		__asm	shl		ebx, 4		\
+		__asm	shl		eax, 4		\
+		__asm	fld		TBYTE PTR fpu.p_regs[ebx].m1	\
+		__asm	fld		TBYTE PTR fpu.p_regs[eax].m1	\
+		__asm	op					\
+		__asm	fstp	TBYTE PTR fpu.p_regs[ebx].m1	\
+		}								\
+		FPU_FPOP();
+#else
 #define FPUD_FYL2X(op)				\
 		Bit16u new_sw;				\
 		__asm {						\
@@ -341,6 +518,7 @@
 		}								\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);	\
 		FPU_FPOP();
+#endif
 
 // load math constants
 #define FPUD_LOAD_CONST(op)		\
@@ -364,8 +542,7 @@
 #ifdef WEAK_EXCEPTIONS
 #define FPUD_LOAD(op,szI,szA)				\
 		__asm__ volatile (					\
-			"movl		$8, %%eax		\n"	\
-			"shl		$4, %%eax		\n"	\
+			"movl		$128, %%eax		\n"	\
 			"shl		$4, %0			\n"	\
 			#op #szA "	(%1, %%eax)		\n"	\
 			"fstpt		(%1, %0)		"	\
@@ -391,6 +568,47 @@
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
 #endif
 
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_LOAD_EA(op,szI,szA)			\
+		__asm__ volatile (					\
+			"movl		$128, %%eax		\n"	\
+			#op #szA "	(%0, %%eax)		\n"	\
+			:								\
+			:	"r" (fpu.p_regs)			\
+			:	"eax", "memory"				\
+		);
+#else
+#define FPUD_LOAD_EA(op,szI,szA)			\
+		Bit16u new_sw;						\
+		__asm__ volatile (					\
+			"movl		$8, %%eax		\n"	\
+			"shl		$4, %%eax		\n"	\
+			"fclex						\n"	\
+			#op #szA "	(%1, %%eax)		\n"	\
+			"fnstsw		%0				\n"	\
+			:	"=m" (new_sw)				\
+			:	"r" (fpu.p_regs)			\
+			:	"eax", "memory"				\
+		);									\
+		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
+
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_STORE(op,szI,szA)				\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"shll		$4, %1			\n"	\
+			"fldcw		%3				\n"	\
+			"movl		$128, %%eax		\n"	\
+			"fldt		(%2, %1)		\n"	\
+			#op #szA "	(%2, %%eax)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)				\
+			:	"r" (TOP), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"eax", "memory"						\
+		);
+#else
 #define FPUD_STORE(op,szI,szA)				\
 		Bit16u new_sw,save_cw;				\
 		__asm__ volatile (					\
@@ -409,6 +627,7 @@
 			:	"eax", "memory"						\
 		);										\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fsin,fcos,f2xm1,fchs,fabs
 #define FPUD_TRIG(op)						\
@@ -422,7 +641,7 @@
 			"fstpt		(%2, %1)		"	\
 			:	"=m" (new_sw)				\
 			:	"r" (TOP), "r" (fpu.p_regs)	\
-			:	"memory"				\
+			:	"memory"					\
 		);									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
@@ -520,6 +739,24 @@
 #endif
 
 // handles fadd,fmul,fsub,fsubr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH1(op)						\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"fldcw		%4				\n"	\
+			"shll		$4, %2			\n"	\
+			"shll		$4, %1			\n"	\
+			"fldt		(%3, %2)		\n"	\
+			"fldt		(%3, %1)		\n"	\
+			#op"						\n"	\
+			"fstpt		(%3, %1)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)		\
+			:	"r" (op1), "r" (op2), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);
+#else
 #define FPUD_ARITH1(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm__ volatile (					\
@@ -539,8 +776,61 @@
 			:	"memory"				\
 		);									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
+
+// handles fadd,fmul,fsub,fsubr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH1_EA(op)					\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"fldcw		%3				\n"	\
+			"shll		$4, %1			\n"	\
+			"fldt		(%2, %1)		\n"	\
+			#op"						\n"	\
+			"fstpt		(%2, %1)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)		\
+			:	"r" (op1), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);
+#else
+#define FPUD_ARITH1_EA(op)					\
+		Bit16u new_sw,save_cw;				\
+		__asm__ volatile (					\
+			"fnstcw		%1				\n"	\
+			"fldcw		%4				\n"	\
+			"shll		$4, %2			\n"	\
+			"fldt		(%3, %2)		\n"	\
+			clx" 						\n"	\
+			#op"						\n"	\
+			"fnstsw		%0				\n"	\
+			"fstpt		(%3, %2)		\n"	\
+			"fldcw		%1				"	\
+			:	"=m" (new_sw), "=m" (save_cw)		\
+			:	"r" (op1), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fsqrt,frndint
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH2(op)						\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"fldcw		%3				\n"	\
+			"shll		$4, %1			\n"	\
+			"fldt		(%2, %1)		\n"	\
+			#op" 						\n"	\
+			"fstpt		(%2, %1)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)				\
+			:	"r" (TOP), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"				\
+		);
+#else
 #define FPUD_ARITH2(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm__ volatile (					\
@@ -558,8 +848,27 @@
 			:	"memory"				\
 		);										\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+#endif
 
 // handles fdiv,fdivr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH3(op)						\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"fldcw		%4				\n"	\
+			"shll		$4, %2			\n"	\
+			"shll		$4, %1			\n"	\
+			"fldt		(%3, %2)		\n"	\
+			"fldt		(%3, %1)		\n"	\
+			#op"						\n"	\
+			"fstpt		(%3, %1)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)				\
+			:	"r" (op1), "r" (op2), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"					\
+		);
+#else
 #define FPUD_ARITH3(op)						\
 		Bit16u new_sw,save_cw;				\
 		__asm__ volatile (					\
@@ -579,6 +888,43 @@
 			:	"memory"					\
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
+
+// handles fdiv,fdivr
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_ARITH3_EA(op)					\
+		Bit16u save_cw;						\
+		__asm__ volatile (					\
+			"fnstcw		%0				\n"	\
+			"fldcw		%3				\n"	\
+			"shll		$4, %1			\n"	\
+			"fldt		(%2, %1)		\n"	\
+			#op"						\n"	\
+			"fstpt		(%2, %1)		\n"	\
+			"fldcw		%0				"	\
+			:	"=m" (save_cw)				\
+			:	"r" (op1), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"					\
+		);
+#else
+#define FPUD_ARITH3_EA(op)					\
+		Bit16u new_sw,save_cw;				\
+		__asm__ volatile (					\
+			"fnstcw		%1				\n"	\
+			"fldcw		%4				\n"	\
+			"shll		$4, %2			\n"	\
+			"fldt		(%3, %2)		\n"	\
+			"fclex						\n"	\
+			#op"						\n"	\
+			"fnstsw		%0				\n"	\
+			"fstpt		(%3, %2)		\n"	\
+			"fldcw		%1				"	\
+			:	"=m" (new_sw), "=m" (save_cw)		\
+			:	"r" (op1), "r" (fpu.p_regs), "m" (fpu.cw_mask_all)		\
+			:	"memory"					\
+		);									\
+		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);
+#endif
 
 // handles fprem,fprem1,fscale
 #define FPUD_REMINDER(op)					\
@@ -615,7 +961,22 @@
 			"fnstsw		%0				"	\
 			:	"=m" (new_sw)				\
 			:	"r" (op1), "r" (op2), "r" (fpu.p_regs) 		\
-			:	"memory"				\
+			:	"memory"					\
+		);									\
+		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
+
+// handles fcom,fucom
+#define FPUD_COMPARE_EA(op)					\
+		Bit16u new_sw;						\
+		__asm__ volatile (					\
+			"shll		$4, %1			\n"	\
+			"fldt		(%2, %1)		\n"	\
+			clx" 						\n"	\
+			#op" 						\n"	\
+			"fnstsw		%0				"	\
+			:	"=m" (new_sw)				\
+			:	"r" (op1), "r" (fpu.p_regs) 		\
+			:	"memory"					\
 		);									\
 		fpu.sw=(new_sw&exc_mask)|(fpu.sw&0x80ff);
 
@@ -677,6 +1038,24 @@
 #endif
 
 // handles fyl2x
+#ifdef WEAK_EXCEPTIONS
+#define FPUD_FYL2X(op)						\
+		__asm__ volatile (					\
+			"movl		%0, %%eax		\n"	\
+			"incl		%%eax			\n"	\
+			"andl		$7, %%eax		\n"	\
+			"shll		$4, %%eax		\n"	\
+			"shll		$4, %0			\n"	\
+			"fldt		(%1, %%eax)		\n"	\
+			"fldt		(%1, %0)		\n"	\
+			#op" 						\n"	\
+			"fstpt		(%1, %%eax)		\n"	\
+			:								\
+			:	"r" (TOP), "r" (fpu.p_regs)	\
+			:	"eax", "memory"				\
+		);									\
+		FPU_FPOP();
+#else
 #define FPUD_FYL2X(op)						\
 		Bit16u new_sw;						\
 		__asm__ volatile (					\
@@ -697,6 +1076,7 @@
 		);									\
 		fpu.sw=(new_sw&0xffbf)|(fpu.sw&0x80ff);		\
 		FPU_FPOP();
+#endif
 
 // load math constants
 #define FPUD_LOAD_CONST(op)				\
@@ -756,10 +1136,21 @@ static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
 	FPUD_LOAD(fld,DWORD,s)
 }
 
+static void FPU_FLD_F32_EA(PhysPt addr) {
+	fpu.p_regs[8].m1 = mem_readd(addr);
+	FPUD_LOAD_EA(fld,DWORD,s)
+}
+
 static void FPU_FLD_F64(PhysPt addr,Bitu store_to) {
 	fpu.p_regs[8].m1 = mem_readd(addr);
 	fpu.p_regs[8].m2 = mem_readd(addr+4);
 	FPUD_LOAD(fld,QWORD,l)
+}
+
+static void FPU_FLD_F64_EA(PhysPt addr) {
+	fpu.p_regs[8].m1 = mem_readd(addr);
+	fpu.p_regs[8].m2 = mem_readd(addr+4);
+	FPUD_LOAD_EA(fld,QWORD,l)
 }
 
 static void FPU_FLD_F80(PhysPt addr) {
@@ -774,9 +1165,19 @@ static void FPU_FLD_I16(PhysPt addr,Bitu store_to) {
 	FPUD_LOAD(fild,WORD,)
 }
 
+static void FPU_FLD_I16_EA(PhysPt addr) {
+	fpu.p_regs[8].m1 = (Bit32u)mem_readw(addr);
+	FPUD_LOAD_EA(fild,WORD,)
+}
+
 static void FPU_FLD_I32(PhysPt addr,Bitu store_to) {
 	fpu.p_regs[8].m1 = mem_readd(addr);
 	FPUD_LOAD(fild,DWORD,l)
+}
+
+static void FPU_FLD_I32_EA(PhysPt addr) {
+	fpu.p_regs[8].m1 = mem_readd(addr);
+	FPUD_LOAD_EA(fild,DWORD,l)
 }
 
 static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
@@ -863,24 +1264,48 @@ static void FPU_FADD(Bitu op1, Bitu op2){
 	FPUD_ARITH1(faddp)
 }
 
+static void FPU_FADD_EA(Bitu op1){
+	FPUD_ARITH1_EA(faddp)
+}
+
 static void FPU_FDIV(Bitu op1, Bitu op2){
 	FPUD_ARITH3(fdivp)
+}
+
+static void FPU_FDIV_EA(Bitu op1){
+	FPUD_ARITH3_EA(fdivp)
 }
 
 static void FPU_FDIVR(Bitu op1, Bitu op2){
 	FPUD_ARITH3(fdivrp)
 }
 
+static void FPU_FDIVR_EA(Bitu op1){
+	FPUD_ARITH3_EA(fdivrp)
+}
+
 static void FPU_FMUL(Bitu op1, Bitu op2){
 	FPUD_ARITH1(fmulp)
+}
+
+static void FPU_FMUL_EA(Bitu op1){
+	FPUD_ARITH1_EA(fmulp)
 }
 
 static void FPU_FSUB(Bitu op1, Bitu op2){
 	FPUD_ARITH1(fsubp)
 }
 
+static void FPU_FSUB_EA(Bitu op1){
+	FPUD_ARITH1_EA(fsubp)
+}
+
 static void FPU_FSUBR(Bitu op1, Bitu op2){
 	FPUD_ARITH1(fsubrp)
+}
+
+static void FPU_FSUBR_EA(Bitu op1){
+	FPUD_ARITH1_EA(fsubrp)
 }
 
 static void FPU_FXCH(Bitu stv, Bitu other){
@@ -914,6 +1339,10 @@ static void FPU_FST(Bitu stv, Bitu other){
 
 static void FPU_FCOM(Bitu op1, Bitu op2){
 	FPUD_COMPARE(fcompp)
+}
+
+static void FPU_FCOM_EA(Bitu op1){
+	FPUD_COMPARE_EA(fcompp)
 }
 
 static void FPU_FUCOM(Bitu op1, Bitu op2){
