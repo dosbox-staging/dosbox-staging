@@ -597,6 +597,7 @@ Bitu FillFlags(void) {
 
 	case t_ORb:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		SET_FLAG(OF,false);
@@ -604,6 +605,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_ORw:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		SET_FLAG(OF,false);
@@ -611,6 +613,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_ORd:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		SET_FLAG(OF,false);
@@ -621,6 +624,7 @@ Bitu FillFlags(void) {
 	case t_TESTb:
 	case t_ANDb:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		SET_FLAG(OF,false);
@@ -629,6 +633,7 @@ Bitu FillFlags(void) {
 	case t_TESTw:
 	case t_ANDw:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		SET_FLAG(OF,false);
@@ -637,6 +642,7 @@ Bitu FillFlags(void) {
 	case t_TESTd:
 	case t_ANDd:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		SET_FLAG(OF,false);
@@ -646,6 +652,7 @@ Bitu FillFlags(void) {
 	
 	case t_XORb:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		SET_FLAG(OF,false);
@@ -653,6 +660,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_XORw:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		SET_FLAG(OF,false);
@@ -660,6 +668,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_XORd:
 		SET_FLAG(CF,false);
+		SET_FLAG(AF,false);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		SET_FLAG(OF,false);
@@ -792,21 +801,21 @@ Bitu FillFlags(void) {
 		break;
 
 	case t_DECb:
-		SET_FLAG(AF,(lf_resb & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resb & 0x0f) == 0x0f);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		SET_FLAG(OF,(lf_resb == 0x7f));
 		DOFLAG_PF;
 		break;
 	case t_DECw:
-		SET_FLAG(AF,(lf_resw & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resw & 0x0f) == 0x0f);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		SET_FLAG(OF,(lf_resw == 0x7fff));
 		DOFLAG_PF;
 		break;
 	case t_DECd:
-		SET_FLAG(AF,(lf_resd & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resd & 0x0f) == 0x0f);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		SET_FLAG(OF,(lf_resd == 0x7fffffff));
@@ -815,7 +824,7 @@ Bitu FillFlags(void) {
 
 	case t_NEGb:
 		SET_FLAG(CF,(lf_var1b!=0));
-		SET_FLAG(AF,(lf_resb & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resb & 0x0f) != 0);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
 		SET_FLAG(OF,(lf_var1b == 0x80));
@@ -823,7 +832,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_NEGw:
 		SET_FLAG(CF,(lf_var1w!=0));
-		SET_FLAG(AF,(lf_resw & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resw & 0x0f) != 0);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
 		SET_FLAG(OF,(lf_var1w == 0x8000));
@@ -831,7 +840,7 @@ Bitu FillFlags(void) {
 		break;
 	case t_NEGd:
 		SET_FLAG(CF,(lf_var1d!=0));
-		SET_FLAG(AF,(lf_resd & 0x0f) == 0);
+		SET_FLAG(AF,(lf_resd & 0x0f) != 0);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
 		SET_FLAG(OF,(lf_var1d == 0x80000000));
