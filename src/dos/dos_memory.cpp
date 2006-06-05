@@ -306,7 +306,7 @@ bool DOS_FreeMemory(Bit16u segment) {
 void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
 	if ((strcmp(use_umbs,"false")!=0) && (machine!=MCH_TANDY)) {
 		Bit16u first_umb_seg=0xc800;
-		Bit16u first_umb_size=0x800;
+		Bit16u first_umb_size=0x1000;
 
 		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
 		dos_infoblock.SetUMBChainState(0);		// UMBs not linked yet
