@@ -1723,11 +1723,13 @@ restart_prefix:
 		case 0xf7:dyn_grp3_ev();break;
 		/* Change interrupt flag */
 		case 0xfa:		//CLI
+			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_CLI,"%Rd",DREG(TMPB));
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
 			break;
 		case 0xfb:		//STI
+			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_STI,"%Rd",DREG(TMPB));
 			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
