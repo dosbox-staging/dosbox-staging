@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.23 2006-04-08 19:41:49 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.24 2006-06-12 08:04:48 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -486,6 +486,7 @@ public:
 		neg_axis_lists=new CBindList[axes];
 		button_lists=new CBindList[buttons];
 		hat_lists=new CBindList[hats];
+		emulated_buttons = 2;
 #if OLD_JOYSTICK
 		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(stick),axes,buttons);
 		//if the first stick is set, we must be the second
@@ -528,6 +529,7 @@ public:
 #if OLD_JOYSTICK
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
+		Bitu but = 0;
 
 	switch(event->type) {
 		case SDL_JOYAXISMOTION:
@@ -543,8 +545,9 @@ public:
 			jbutton = &event->jbutton;
 			bool state;
 			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			if ((jbutton->which == stick) && (jbutton->button<2)) {
-				JOYSTICK_Button(emustick,jbutton->button,state);
+			but = jbutton->button % emulated_buttons;
+			if (jbutton->which == stick) {
+				JOYSTICK_Button(emustick,but,state);
 			}
 			break;
 	}
@@ -572,7 +575,7 @@ protected:
 	CBindList * neg_axis_lists;
 	CBindList * button_lists;
 	CBindList * hat_lists;
-	Bitu stick,emustick,axes,buttons,hats;
+	Bitu stick,emustick,axes,buttons,hats,emulated_buttons;
 	SDL_Joystick * sdl_joystick;
 	char configname[10];
 };
@@ -580,6 +583,7 @@ protected:
 class C4AxisBindGroup : public  CStickBindGroup {
 public:
 	C4AxisBindGroup(Bitu _stick) : CStickBindGroup (_stick){
+		emulated_buttons = 4;
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
 #endif	   
@@ -588,6 +592,7 @@ public:
 #if OLD_JOYSTICK
 	        SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
+		Bitu but = 0;
 
 	switch(event->type) {
 		case SDL_JOYAXISMOTION:
@@ -603,9 +608,9 @@ public:
 			jbutton = &event->jbutton;
 			bool state;
 			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			if ((jbutton->which == stick) && (jbutton->button<4)) {
-			        JOYSTICK_Button((jbutton->button >> 1),
-						(jbutton->button & 1),state);
+			but = jbutton->button % emulated_buttons;
+			if (jbutton->which == stick) {
+				JOYSTICK_Button((but >> 1),(but & 1),state);
 			}
 			break;
 	}
@@ -617,6 +622,7 @@ public:
 class CFCSBindGroup : public  CStickBindGroup {
 public:
 	CFCSBindGroup(Bitu _stick) : CStickBindGroup (_stick){
+		emulated_buttons = 4;
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
@@ -627,6 +633,7 @@ public:
 	        SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
+		Bitu but = 0;
 
 	switch(event->type) {
 		case SDL_JOYAXISMOTION:
@@ -690,9 +697,9 @@ public:
 			jbutton = &event->jbutton;
 			bool state;
 			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			if ((jbutton->which == stick) && (jbutton->button<4)) {
-			        JOYSTICK_Button((jbutton->button >> 1),
-						(jbutton->button & 1),state);
+			but = jbutton->button % emulated_buttons;
+			if (jbutton->which == stick) {
+			        JOYSTICK_Button((but >> 1),(but & 1),state);
 			}
 			break;
 	}
@@ -704,6 +711,7 @@ public:
 class CCHBindGroup : public  CStickBindGroup {
 public:
 	CCHBindGroup(Bitu _stick) : CStickBindGroup (_stick){
+		emulated_buttons = 6;
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
 		button_state=0;
@@ -714,6 +722,7 @@ public:
 	        SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
+		Bitu but = 0;
 		static unsigned const button_magic[6]={0x02,0x04,0x10,0x100,0x20,0x200};
 		static unsigned const hat_magic[2][5]={{0x8888,0x8000,0x800,0x80,0x08},
 						       {0x5440,0x4000,0x400,0x40,0x1000}};
@@ -743,13 +752,15 @@ public:
 			break;
 		case SDL_JOYBUTTONDOWN:
 			jbutton = &event->jbutton;
-			if ((jbutton->which == stick) && (jbutton->button<6))
-					button_state|=button_magic[jbutton->button];
+			but = jbutton->button % emulated_buttons;
+			if (jbutton->which == stick)
+					button_state|=button_magic[but];
 			break;
 		case SDL_JOYBUTTONUP:
 			jbutton = &event->jbutton;
-			if ((jbutton->which == stick) && (jbutton->button<6))
-				button_state&=~button_magic[jbutton->button];
+			but = jbutton->button % emulated_buttons;
+			if (jbutton->which == stick)
+				button_state&=~button_magic[but];
 			break;
 	}
 		unsigned i;
