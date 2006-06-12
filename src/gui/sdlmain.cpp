@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.116 2006-06-12 08:24:28 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.117 2006-06-12 19:11:14 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1365,7 +1365,7 @@ int main(int argc, char* argv[]) {
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
-			"priority -- Priority levels for dosbox: pause,lowest,lower,normal,higher,highest.\n"
+			"priority -- Priority levels for dosbox: lowest,lower,normal,higher,highest,pause (when not focussed).\n"
 			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 			"mapperfile -- File used to load/save the key/event mappings from.\n"
 			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
