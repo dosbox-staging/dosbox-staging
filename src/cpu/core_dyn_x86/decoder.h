@@ -154,7 +154,8 @@ static INLINE void dyn_set_eip_last(void) {
 
 enum save_info_type {exception, cycle_check, normal};
 
-struct {
+
+static struct {
 	save_info_type type;
 	DynState state;
 	Bit8u * branch_pos;
