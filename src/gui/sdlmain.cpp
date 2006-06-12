@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.115 2006-04-12 18:52:50 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.116 2006-06-12 08:24:28 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -131,6 +131,7 @@ enum SCREEN_TYPES	{
 };
 
 enum PRIORITY_LEVELS {
+	PRIORITY_LEVEL_PAUSE,
 	PRIORITY_LEVEL_LOWEST,
 	PRIORITY_LEVEL_LOWER,
 	PRIORITY_LEVEL_NORMAL,
@@ -240,6 +241,7 @@ static void PauseDOSBox(bool pressed) {
 	while (paused) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
+		case SDL_QUIT: throw(0); break;
 		case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 		case SDL_KEYUP:
 			if(event.key.keysym.sym==SDLK_PAUSE){
@@ -250,7 +252,7 @@ static void PauseDOSBox(bool pressed) {
 		}
 	}
 }
- 
+
 
 /* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags) {
@@ -866,6 +868,7 @@ static void SetPriority(PRIORITY_LEVELS level) {
 #endif
 	switch (level) {
 #ifdef WIN32
+	case PRIORITY_LEVEL_PAUSE:	// if DOSBox is paused, assume idle priority
 	case PRIORITY_LEVEL_LOWEST:
 		SetPriorityClass(GetCurrentProcess(),IDLE_PRIORITY_CLASS);
 		break;
@@ -883,6 +886,7 @@ static void SetPriority(PRIORITY_LEVELS level) {
 		break;
 #elif C_SET_PRIORITY
 /* Linux use group as dosbox has mulitple threads under linux */
+	case PRIORITY_LEVEL_PAUSE:	// if DOSBox is paused, assume idle priority
 	case PRIORITY_LEVEL_LOWEST:
 		setpriority (PRIO_PGRP, 0,PRIO_MAX);
 		break;
@@ -953,6 +957,11 @@ static void GUI_StartUp(Section * sec) {
 				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHER;
 			} else if (!strncasecmp(priority,"highest",7)) {
 				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHEST;
+			} else if (!strncasecmp(priority,"pause",5)) {
+				/* we only check for pause here, because it makes no sense
+				 * for DOSBox to be paused while it has focus
+				 */
+				sdl.priority.nofocus=PRIORITY_LEVEL_PAUSE;
 			} else {
 				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
 			}
@@ -1162,7 +1171,7 @@ void GFX_Events() {
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
 					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
-						GFX_CaptureMouse();	
+						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
 				} else {
 					if (sdl.mouse.locked) {
@@ -1177,6 +1186,53 @@ void GFX_Events() {
 					}
 					SetPriority(sdl.priority.nofocus);
 					MAPPER_LosingFocus();
+				}
+			}
+
+			/* Non-focus priority is set to pause; check to see if we've lost window or input focus
+			 * i.e. has the window been minimised or made inactive?
+			 */
+			if (sdl.priority.nofocus == PRIORITY_LEVEL_PAUSE) {
+				if ((event.active.state & (SDL_APPINPUTFOCUS | SDL_APPACTIVE)) && (!event.active.gain)) {
+					/* Window has lost focus, pause the emulator.
+					 * This is similar to what PauseDOSBox() does, but the exit criteria is different.
+					 * Instead of waiting for the user to hit Alt-Break, we wait for the window to
+					 * regain window or input focus.
+					 */
+					bool paused = true;
+					SDL_Event ev;
+
+					GFX_SetTitle(-1,-1,true);
+					KEYBOARD_ClrBuffer();
+					SDL_Delay(500);
+					while (SDL_PollEvent(&ev)) {
+						// flush event queue.
+					}
+
+					while (paused) {
+						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
+						SDL_WaitEvent(&ev);
+
+						switch (ev.type) {
+						case SDL_QUIT: throw(0); break; // a bit redundant at linux at least as the active events gets before the quit event. 
+						case SDL_ACTIVEEVENT:     // wait until we get window focus back
+							if (ev.active.state & (SDL_APPINPUTFOCUS | SDL_APPACTIVE)) {
+								// We've got focus back, so unpause and break out of the loop
+								if (ev.active.gain) {
+									paused = false;
+									GFX_SetTitle(-1,-1,false);
+								}
+
+								/* Now poke a "release ALT" command into the keyboard buffer
+								 * we have to do this, otherwise ALT will 'stick' and cause
+								 * problems with the app running in the DOSBox.
+								 */
+								KEYBOARD_AddKey(KBD_leftalt, false);
+								KEYBOARD_AddKey(KBD_rightalt, false);
+							}
+							break;
+						}
+					}
 				}
 			}
 			break;
@@ -1309,7 +1365,7 @@ int main(int argc, char* argv[]) {
 			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
 			"sensitiviy -- Mouse sensitivity.\n"
 			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
-			"priority -- Priority levels for dosbox: lowest,lower,normal,higher,highest.\n"
+			"priority -- Priority levels for dosbox: pause,lowest,lower,normal,higher,highest.\n"
 			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
 			"mapperfile -- File used to load/save the key/event mappings from.\n"
 			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
