@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.29 2006-04-11 19:02:33 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.30 2006-06-16 14:51:31 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -144,13 +144,13 @@ static void DrawBars(void) {
 	/* Show the Register bar */
 	mvaddstr(dbg.win_reg->_begy-1,0, "---(Register Overview                   )---");
 	/* Show the Data Overview bar perhaps with more special stuff in the end */
-	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview      Scroll: r/f      )---");
+	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview   Scroll: page up/down)---");
 	/* Show the Code Overview perhaps with special stuff in bar too */
-	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview      Scroll: up/down  )---");
+	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview   Scroll: up/down     )---");
 	/* Show the Variable Overview bar */
 	mvaddstr(dbg.win_var->_begy-1,0, "---(Variable Overview                   )---");
 	/* Show the Output OverView */
-	mvaddstr(dbg.win_out->_begy-1,0, "---(OutPut/Input       Scroll: home/end )---");
+	mvaddstr(dbg.win_out->_begy-1,0, "---(OutPut/Input    Scroll: home/end    )---");
 	attrset(0);
 }
 
@@ -199,7 +199,7 @@ static void LOG_Init(Section * sec) {
 	}else{
 		debuglog=0;
 	}
-	sect->AddDestroyFunction(LOG_Destroy);
+	sect->AddDestroyFunction(&LOG_Destroy);
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
