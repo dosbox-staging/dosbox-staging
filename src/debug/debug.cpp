@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.80 2006-06-16 14:51:31 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.81 2006-06-17 08:42:38 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -956,7 +956,7 @@ bool ParseCommand(char* str) {
 	stream >> command;
 	string::size_type next = s_found.find_first_not_of(' ',command.size());
 	if(next == string::npos) next = command.size();
-	s_found.erase(0,next);
+	(s_found.erase)(0,next);
 	found = const_cast<char*>(s_found.c_str());
 
 	if (command == "MEMDUMP") { // Dump memory to file
