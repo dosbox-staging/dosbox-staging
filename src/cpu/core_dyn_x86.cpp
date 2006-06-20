@@ -112,6 +112,7 @@ enum BlockReturn {
 #if (C_DEBUG)
 	BR_OpcodeFull,
 #endif
+	BR_Iret,
 	BR_CallBack,
 	BR_SMCBlock
 };
@@ -241,6 +242,13 @@ run_block:
 	cache.block.running=0;
 	BlockReturn ret=gen_runcode(block->cache.start);
 	switch (ret) {
+	case BR_Iret:
+#if C_HEAVY_DEBUG
+		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
+#endif
+		if (!GETFLAG(TF)) goto restart_core;
+		cpudecoder=CPU_Core_Dyn_X86_Trap_Run;
+		return CBRET_NONE;
 	case BR_Normal:
 		/* Maybe check if we staying in the same page? */
 #if C_HEAVY_DEBUG
@@ -283,7 +291,19 @@ run_block:
 		}
 		goto restart_core;
 	}
-return 0;
+	return CBRET_NONE;
+}
+
+Bits CPU_Core_Dyn_X86_Trap_Run(void) {
+	Bits oldCycles = CPU_Cycles;
+	CPU_Cycles = 1;
+
+	Bits ret=CPU_Core_Normal_Run();
+	if (GETFLAG(TF)) CPU_HW_Interrupt(1);
+	CPU_Cycles = oldCycles-1;
+	cpudecoder = &CPU_Core_Dyn_X86_Run;
+
+	return ret;
 }
 
 void CPU_Core_Dyn_X86_Init(void) {

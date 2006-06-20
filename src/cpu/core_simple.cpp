@@ -185,10 +185,9 @@ Bits CPU_Core_Simple_Trap_Run(void) {
 
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
-	core.trap.skip=false;
 
 	Bits ret=CPU_Core_Normal_Run();
-	if (!core.trap.skip) CPU_SW_Interrupt(1,reg_eip);
+	if (GETFLAG(TF)) CPU_SW_Interrupt(1,reg_eip);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Normal_Run;
 

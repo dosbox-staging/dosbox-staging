@@ -1197,7 +1197,7 @@ static void dyn_iret(void) {
 	dyn_set_eip_last_end(DREG(TMPW));
 	dyn_save_critical_regs();
 	gen_call_function((void*)&CPU_IRET,"%Id%Drd",decode.big_op,DREG(TMPW));
-	gen_return_fast(BR_Normal);
+	gen_return_fast(BR_Iret);
 	dyn_closeblock();
 }
 
