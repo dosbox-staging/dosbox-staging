@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.13 2006-04-23 14:20:58 c2woody Exp $ */
+/* $Id: drive_iso.cpp,v 1.14 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -138,6 +138,7 @@ Bit16u isoFile::GetInformation(void)
 	return 0x40;		// read-only drive
 }
 
+int  MSCDEX_RemoveDrive(char driveLetter);
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
 bool MSCDEX_HasMediaChanged(Bit8u subUnit);
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
@@ -153,7 +154,9 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 
 	if (!error) {
 		if (loadImage()) {
-			strcpy(info, "isoDrive");
+			strcpy(info, "isoDrive ");
+			strcat(info, fileName);
+			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
 			char buffer[32] = { 0 };
 			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
@@ -371,6 +374,14 @@ bool isoDrive::isRemote(void)
 bool isoDrive::isRemovable(void)
 {
 	return true;
+}
+
+Bits isoDrive::UnMount(void) {
+	if(MSCDEX_RemoveDrive(driveLetter)) {
+		delete this;
+		return 0;
+	}
+	return 2;
 }
 
 int isoDrive::GetDirIterator(const isoDirEntry* de)

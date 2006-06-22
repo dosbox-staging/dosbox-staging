@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.32 2006-04-17 10:45:32 qbix79 Exp $ */
+/* $Id: drives.h,v 1.33 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -50,6 +50,7 @@ public:
 	virtual Bit8u GetMediaByte(void);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
+	virtual Bits UnMount(void);
 private:
 	char basedir[CROSS_LEN];
 	friend void DOS_Shell::CMD_SUBST(char* args); 	
@@ -142,6 +143,7 @@ public:
 	virtual Bit8u GetMediaByte(void);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
+	virtual Bits UnMount(void);
 public:
 	Bit32u getAbsoluteSectFromBytePos(Bit32u startClustNum, Bit32u bytePos);
 	Bit32u getSectorSize(void);
@@ -204,8 +206,10 @@ public:
 	virtual void SetDir(const char* path);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
+	virtual Bits UnMount(void);
 private:
 	Bit8u subUnit;
+	char driveLetter;
 };
 
 #ifdef _MSC_VER
@@ -304,6 +308,7 @@ public:
 	virtual void EmptyCache(void){}
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
+	virtual Bits UnMount(void);
 	bool readSector(Bit8u *buffer, Bit32u sector);
 	virtual char const* GetLabel(void) {return discLabel;};
 private:
@@ -335,6 +340,7 @@ private:
 	isoDirEntry rootEntry;
 	Bit8u mediaid;
 	Bit8u subUnit;
+	char driveLetter;
 	char discLabel[32];
 };
 
@@ -360,6 +366,7 @@ public:
 	void EmptyCache(void){}
 	bool isRemote(void);
 	virtual bool isRemovable(void);
+	virtual Bits UnMount(void);
 private:
 	VFILE_Block * search_file;
 };

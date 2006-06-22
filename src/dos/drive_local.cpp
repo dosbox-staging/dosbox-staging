@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.68 2006-05-14 19:57:24 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.69 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -411,6 +411,11 @@ bool localDrive::isRemovable(void) {
 	return false;
 }
 
+Bits localDrive::UnMount(void) { 
+	delete this;
+	return 0; 
+}
+
 localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid) {
 	strcpy(basedir,startdir);
 	sprintf(info,"local directory %s",startdir);
@@ -535,6 +540,7 @@ bool localFile::UpdateDateTimeFromHost(void) {
 // CDROM DRIVE
 // ********************************************
 
+int  MSCDEX_RemoveDrive(char driveLetter);
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
 bool MSCDEX_HasMediaChanged(Bit8u subUnit);
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
@@ -545,7 +551,9 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 {
 	// Init mscdex
 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
-	strcpy(info,"CDRom.");
+	strcpy(info, "CDRom ");
+	strcat(info, startdir);
+	this->driveLetter = driveLetter;
 	// Get Volume Label
 	char name[32];
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
@@ -631,4 +639,12 @@ bool cdromDrive::isRemote(void) {
 
 bool cdromDrive::isRemovable(void) {
 	return true;
+}
+
+Bits cdromDrive::UnMount(void) {
+	if(MSCDEX_RemoveDrive(driveLetter)) {
+		delete this;
+		return 0;
+	}
+	return 2;
 }

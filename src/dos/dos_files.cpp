@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.74 2006-05-28 09:40:42 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.75 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -535,7 +535,7 @@ bool DOS_SetFileAttr(char * name,Bit16u attr)
 	Bit16u attrTemp;
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;	
-	if (strcmp(Drives[drive]->GetInfo(),"CDRom.")==0 || strcmp(Drives[drive]->GetInfo(),"isoDrive")==0) {
+	if (strncmp(Drives[drive]->GetInfo(),"CDRom ",6)==0 || strncmp(Drives[drive]->GetInfo(),"isoDrive ",9)==0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}

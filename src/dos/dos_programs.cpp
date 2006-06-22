@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.61 2006-06-01 06:44:22 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.62 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,23 +51,26 @@ public:
 		DOS_Drive * newdrive;char drive;
 		std::string label;
 		std::string umount;
+
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
 				if(i_drive < DOS_DRIVES && Drives[i_drive]) {
-					try { /* Check if virtualdrive */
-						if( dynamic_cast<localDrive*>(Drives[i_drive]) == 0 ) throw 0;
-					}
-					catch(...) {
+					switch (Drives[i_drive]->UnMount()) {
+					case 0:
+						Drives[i_drive] = 0;
+						if(i_drive == DOS_GetDefaultDrive()) 
+							DOS_SetDrive(toupper('Z') - 'A');
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+						break;
+					case 1:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
-						return;
+						break;
+					case 2:
+						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
+						break;
 					}
-					if(i_drive == DOS_GetDefaultDrive()) 
-						DOS_SetDrive(toupper('Z') - 'A');
-					delete Drives[i_drive];
-					Drives[i_drive] = 0;
-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
 				} else {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
 				}
@@ -229,6 +232,10 @@ public:
 					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
 					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
 				};
+				if (error && error!=5) {
+					delete newdrive;
+					return;
+				}
 			} else {
 				/* Give a warning when mount c:\ or the / */
 #if defined (WIN32) || defined(OS2)
@@ -657,6 +664,32 @@ public:
 		Bit32u imagesize;
 		char drive;
 		std::string label;
+		std::string umount;
+		/* Check for unmounting */
+		if (cmd->FindString("-u",umount,false)) {
+			umount[0] = toupper(umount[0]);
+			int i_drive = umount[0]-'A';
+				if (i_drive < DOS_DRIVES && Drives[i_drive]) {
+					switch (Drives[i_drive]->UnMount()) {
+					case 0:
+						Drives[i_drive] = 0;
+						if (i_drive == DOS_GetDefaultDrive()) 
+							DOS_SetDrive(toupper('Z') - 'A');
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+						break;
+					case 1:
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
+						break;
+					case 2:
+						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
+						break;
+					}
+				} else {
+					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
+				}
+			return;
+		}
+
 
 		std::string type="hdd";
 		std::string fstype="fat";
@@ -777,7 +810,7 @@ public:
 					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
 					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));		break;
 				};
-				if (error) {
+				if (error && error!=5) {
 					delete newdrive;
 					return;
 				}

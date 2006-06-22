@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.35 2006-04-23 14:20:57 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.36 2006-06-22 13:15:07 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -229,6 +229,8 @@ public:
 	virtual void EmptyCache(void) { dirCache.EmptyCache(); };
 	virtual bool isRemote(void)=0;
 	virtual bool isRemovable(void)=0;
+	virtual Bits UnMount(void)=0;
+
 	char * GetInfo(void);
 	char curdir[DOS_PATHLENGTH];
 	char info[256];

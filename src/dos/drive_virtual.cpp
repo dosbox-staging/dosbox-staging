@@ -176,7 +176,7 @@ bool Virtual_Drive::TestDir(char * dir) {
 }
 
 bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block){
-    VFILE_Block * cur_file=first_file;
+	VFILE_Block * cur_file=first_file;
 	while (cur_file) {
 		if (strcasecmp(name,cur_file->name)==0) {
 			stat_block->attr=DOS_ATTR_ARCHIVE;
@@ -267,3 +267,8 @@ bool Virtual_Drive::isRemote(void) {
 bool Virtual_Drive::isRemovable(void) {
 	return false;
 }
+
+Bits Virtual_Drive::UnMount(void) {
+	return 1;
+}
+
