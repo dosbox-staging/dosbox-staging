@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.81 2006-06-17 08:42:38 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.82 2006-06-22 08:34:38 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -834,7 +834,7 @@ static void DrawCode(void)
 		mvwprintw(dbg.win_code,10,0,"(Running)",codeViewData.inputStr);
 	} else { 
 		if(!*codeViewData.inputStr) { //Clear old commands
-			mvwprintw(dbg.win_code,10,0,"                                ");
+			mvwprintw(dbg.win_code,10,0,"                                                                            ");
 		}
 		mvwprintw(dbg.win_code,10,0,"-> %s_  ",codeViewData.inputStr);
 	}
@@ -1248,6 +1248,8 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("F5                        - Run.\n");
 		DEBUG_ShowMsg("F9                        - Set/Remove breakpoint.\n");
 		DEBUG_ShowMsg("F10/F11                   - Step over / trace into instruction.\n");
+		DEBUG_ShowMsg("ALT + D/E/S/X/B           - Set data view to DS:SI/ES:DI/SS:SP/DS:DX/ES:BX.\n");
+		DEBUG_ShowMsg("Escape                    - clear input line.");
 		DEBUG_ShowMsg("Up/Down                   - Move code view cursor.\n");
 		DEBUG_ShowMsg("Page Up/Down              - Scroll data view.\n");
 		DEBUG_ShowMsg("BP     [segment]:[offset] - Set breakpoint.\n");
@@ -1475,6 +1477,43 @@ Bit32u DEBUG_CheckKeys(void) {
 	int key=getch();
 	if (key>0) {
 		switch (toupper(key)) {
+		case 27:	// escape (a bit slow): Clears line. and processes alt commands.
+			key=getch();
+			if(key < 0) { //Purely escape Clear line
+				codeViewData.inputStr[0] = 0; 
+				break;
+			}
+
+			switch(toupper(key)) {
+			case 'D' : // ALT - D: DS:SI
+				dataSeg = SegValue(ds);
+				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_esi;
+				else dataOfs = reg_si;
+				break;
+			case 'E' : //ALT - E: es:di
+				dataSeg = SegValue(es);
+				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_edi;
+				else dataOfs = reg_di;
+				break;
+			case 'X': //ALT - X: ds:dx
+				dataSeg = SegValue(ds);
+				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_edx;
+				else dataOfs = reg_dx;
+				break;
+			case 'B' : //ALT -B: es:bx
+				dataSeg = SegValue(es);
+				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_ebx;
+				else dataOfs = reg_bx;
+				break;
+			case 'S': //ALT - S: ss:sp
+				dataSeg = SegValue(ss);
+				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_esp;
+				else dataOfs = reg_sp;
+				break;
+			default:
+				break;
+			}
+			break;
 		case KEY_PPAGE :	dataOfs -= 16;	break;
 		case KEY_NPAGE :	dataOfs += 16;	break;
 
