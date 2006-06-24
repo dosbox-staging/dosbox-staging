@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.24 2006-06-12 08:04:48 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.25 2006-06-24 17:29:39 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -1654,6 +1654,25 @@ void MAPPER_StartUp(Section * sec) {
 		/* Note: table has to be tested/updated for various OSs */
 #if defined (MACOSX)
 		/* nothing */
+#elif defined(OS2)
+		sdlkey_map[0x61]=SDLK_UP;
+		sdlkey_map[0x66]=SDLK_DOWN;
+		sdlkey_map[0x63]=SDLK_LEFT;
+		sdlkey_map[0x64]=SDLK_RIGHT;
+		sdlkey_map[0x60]=SDLK_HOME;
+		sdlkey_map[0x65]=SDLK_END;
+		sdlkey_map[0x62]=SDLK_PAGEUP;
+		sdlkey_map[0x67]=SDLK_PAGEDOWN;
+		sdlkey_map[0x68]=SDLK_INSERT;
+		sdlkey_map[0x69]=SDLK_DELETE;
+		sdlkey_map[0x5C]=SDLK_KP_DIVIDE;
+		sdlkey_map[0x5A]=SDLK_KP_ENTER;
+		sdlkey_map[0x5B]=SDLK_RCTRL;
+		sdlkey_map[0x5F]=SDLK_PAUSE;
+//		sdlkey_map[0x00]=SDLK_PRINT;
+		sdlkey_map[0x5E]=SDLK_RALT;
+		sdlkey_map[0x40]=SDLK_KP5;
+		sdlkey_map[0x41]=SDLK_KP6;
 #elif !defined (WIN32) /* => Linux */
 		sdlkey_map[0x5a]=SDLK_UP;
 		sdlkey_map[0x60]=SDLK_DOWN;
