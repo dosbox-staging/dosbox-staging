@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.99 2006-03-28 10:17:34 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.100 2006-06-25 18:49:32 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -158,7 +158,7 @@ increaseticks:
 				ticksRemain = 20;
 			}
 			ticksAdded = ticksRemain;
-			if (CPU_CycleAuto && (ticksScheduled >= 1000 || ticksDone >= 1000) ) {
+			if (CPU_CycleAutoAdjust && (ticksAdded > 15 || ticksScheduled >= 250 || ticksDone >= 250) ) {
 				/* ratio we are aiming for is around 90% usage*/
 				Bits ratio = (ticksScheduled * (90*1024/100)) / ticksDone ;
 //				LOG_MSG("Done %d schedulded %d ratio %d cycles %d", ticksDone, ticksScheduled, ratio, CPU_CycleMax);
@@ -276,7 +276,7 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
 	secprop->Add_string("core","normal");
-	secprop->Add_string("cycles","3000");
+	secprop->Add_string("cycles","auto");
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
@@ -287,8 +287,8 @@ void DOSBOX_Init(void) {
 		".\n"
 		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"
 		"          Setting this higher than your machine can handle is bad!\n"
-		"          You can also let DOSBox guess the correct value by setting it to auto.\n"
-		"          Please note that this guessing feature is still experimental.\n"
+		"          You can also let DOSBox guess the correct value by setting it to max.\n"
+		"          The default setting (auto) switches to max if appropriate.\n"
 		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
 		"cycledown    Setting it lower than 100 will be a percentage.\n"
 	);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.81 2006-04-27 13:22:27 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.82 2006-06-25 18:49:32 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -29,6 +29,7 @@
 #include "support.h"
 
 Bitu DEBUG_EnableDebugger(void);
+extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
 
 #if 1
 #undef LOG
@@ -45,7 +46,8 @@ Bits CPU_CycleMax = 2500;
 Bits CPU_CycleUp = 0;
 Bits CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
-bool CPU_CycleAuto;
+bool CPU_CycleAutoAdjust;
+bool CPU_AutoDetermineMode;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
@@ -1431,13 +1433,26 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 	switch (cr) {
 	case 0:
 		{
-			Bitu changed=cpu.cr0 ^ value;		
+			Bitu changed=cpu.cr0 ^ value;
 			if (!changed) return;
 			cpu.cr0=value;
 			if (value & CR0_PROTECTION) {
 				cpu.pmode=true;
 				LOG(LOG_CPU,LOG_NORMAL)("Protected mode");
 				PAGING_Enable((value & CR0_PAGING)>0);
+
+				if (!CPU_AutoDetermineMode) break;
+
+				CPU_AutoDetermineMode=false;
+				CPU_CycleAutoAdjust=true;
+				CPU_CycleLeft=0;
+				CPU_Cycles=0;
+				CPU_CycleMax=0;
+/* #if (C_DYNAMIC_X86)
+				CPU_Core_Dyn_X86_Cache_Init(true);
+				cpudecoder=&CPU_Core_Dyn_X86_Run;
+#endif */
+				GFX_SetTitle(-1,-1,false);
 			} else {
 				cpu.pmode=false;
 				if (value & CR0_PAGING) LOG_MSG("Paging requested without PE=1");
@@ -1889,9 +1904,8 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 	reg_esp=(reg_esp&cpu.stack.notmask)|((sp_index)&cpu.stack.mask);
 }
 
-extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
 static void CPU_CycleIncrease(bool pressed) {
-	if (!pressed || CPU_CycleAuto)
+	if (!pressed || CPU_CycleAutoAdjust)
 		return;
 	Bits old_cycles=CPU_CycleMax;
 	if(CPU_CycleUp < 100){
@@ -1907,7 +1921,7 @@ static void CPU_CycleIncrease(bool pressed) {
 }
 
 static void CPU_CycleDecrease(bool pressed) {
-	if (!pressed || CPU_CycleAuto)
+	if (!pressed || CPU_CycleAutoAdjust)
 		return;
 	if(CPU_CycleDown < 100){
 		CPU_CycleMax = (Bits)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
@@ -1978,12 +1992,14 @@ public:
 		CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
 		const char *cyclesLine = section->Get_string("cycles");
-		if (!strcasecmp(cyclesLine,"auto")) {
+		CPU_AutoDetermineMode=false;
+		if (!strcasecmp(cyclesLine,"max")) {
 			CPU_CycleMax=0;
-			CPU_CycleAuto=true;
+			CPU_CycleAutoAdjust=true;
 		} else {
+			if (!strcasecmp(cyclesLine,"auto")) CPU_AutoDetermineMode=true;
 			CPU_CycleMax=atoi(cyclesLine);
-			CPU_CycleAuto=false;
+			CPU_CycleAutoAdjust=false;
 		}
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");

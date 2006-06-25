@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.32 2006-04-22 15:25:44 c2woody Exp $ */
+/* $Id: callback.cpp,v 1.33 2006-06-25 18:49:32 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -70,7 +70,7 @@ void CALLBACK_Idle(void) {
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
 	SETFLAGBIT(IF,oldIF);
-	if (!CPU_CycleAuto && CPU_Cycles>0) 
+	if (!CPU_CycleAutoAdjust && CPU_Cycles>0) 
 		CPU_Cycles=0;
 }
 
