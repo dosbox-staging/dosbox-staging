@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.82 2006-06-22 08:34:38 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.83 2006-06-27 07:00:56 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -1027,7 +1027,8 @@ bool ParseCommand(char* str) {
 		while (*found) {
 			while (*found==' ') found++;
 			if (*found) {
-				Bit8u value = (Bit8u)GetHexValue(found,found); found++;
+				Bit8u value = (Bit8u)GetHexValue(found,found);
+				if(*found) found++;
 				mem_writeb(GetAddress(seg,ofs+count),value);
 				count++;
 			}
