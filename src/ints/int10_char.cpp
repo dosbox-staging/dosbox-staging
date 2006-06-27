@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.47 2006-03-27 19:31:54 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.48 2006-06-27 07:32:42 harekiet Exp $ */
 
 /* Character displaying moving functions */
 
@@ -438,7 +438,7 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 }
 void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	/* Externally used by the mouse routine */
-	PhysPt fontdata;
+	RealPt fontdata;
 	Bitu x,y;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
@@ -458,14 +458,17 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	case M_CGA4:
 	case M_CGA2:
 	case M_TANDY16:
-		if (chr<128) fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight;
+		if (chr<128) 
+			fontdata=RealGetVec(0x43);
 		else {
 			chr-=128;
-			fontdata=Real2Phys(RealGetVec(0x1F))+(chr)*cheight;
+			fontdata=RealGetVec(0x1f);
 		}
+		fontdata=RealMake(RealSeg(fontdata), RealOff(fontdata) + chr*cheight);
 		break;
 	default:
-		fontdata=Real2Phys(RealGetVec(0x43))+chr*cheight;
+		fontdata=RealGetVec(0x43);
+		fontdata=RealMake(RealSeg(fontdata), RealOff(fontdata) + chr*cheight);
 		break;
 	}
 
@@ -503,7 +506,8 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	}
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline=mem_readb(fontdata++);
+		Bit8u bitline = mem_readb(Real2Phys( fontdata ));
+		fontdata = RealMake( RealSeg( fontdata ), RealOff( fontdata ) + 1);
 		Bit16u tx=x;
 		while (bitsel) {
 			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);
