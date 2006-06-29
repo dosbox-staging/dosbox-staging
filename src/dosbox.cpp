@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.100 2006-06-25 18:49:32 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.101 2006-06-29 09:10:10 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -282,7 +282,8 @@ void DOSBOX_Init(void) {
 	MSG_Add("CPU_CONFIGFILE_HELP",
 		"core -- CPU Core used in emulation: simple,normal,full"
 #if (C_DYNAMIC_X86)
-		",dynamic"
+		",dynamic,auto.\n"
+		"        auto switches from normal to dynamic if appropriate"
 #endif
 		".\n"
 		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"

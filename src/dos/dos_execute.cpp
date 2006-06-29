@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.55 2006-04-08 11:25:41 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.56 2006-06-29 09:10:09 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -26,6 +26,7 @@
 #include "regs.h"
 #include "callback.h"
 #include "debug.h"
+#include "cpu.h"
 
 const char * RunningProgram="DOSBOX";
 
@@ -137,6 +138,25 @@ bool DOS_Terminate(bool tsr) {
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(mempsp);
 	DOS_UpdatePSPName();
+
+	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return true;
+
+	CPU_AutoDetermineMode>>=CPU_AUTODETERMINE_SHIFT;
+	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
+		CPU_CycleAutoAdjust=false;
+		CPU_CycleLeft=0;
+		CPU_Cycles=0;
+		CPU_CycleMax=3000;
+	}
+ #if (C_DYNAMIC_X86)
+	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
+		cpudecoder=&CPU_Core_Normal_Run;
+		CPU_CycleLeft=0;
+		CPU_Cycles=0;
+	}
+#endif
+	GFX_SetTitle(-1,-1,false);
+
 	return true;
 }
 

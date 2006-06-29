@@ -29,12 +29,19 @@
 #include "mem.h"
 #endif
 
+#define CPU_AUTODETERMINE_NONE		0x00
+#define CPU_AUTODETERMINE_CORE		0x01
+#define CPU_AUTODETERMINE_CYCLES	0x02
+
+#define CPU_AUTODETERMINE_SHIFT		0x02
+#define CPU_AUTODETERMINE_MASK		0x03
+
 /* CPU Cycle Timing */
 extern Bits CPU_Cycles;
 extern Bits CPU_CycleLeft;
 extern Bits CPU_CycleMax;
 extern bool CPU_CycleAutoAdjust;
-extern bool CPU_AutoDetermineMode;
+extern Bitu CPU_AutoDetermineMode;
 
 /* Some common Defines */
 /* A CPU Handler */
