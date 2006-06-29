@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.53 2006-03-13 20:01:55 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.54 2006-06-29 19:05:54 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -1189,7 +1189,7 @@ public:
 		sb.mixer.enabled=section->Get_bool("mixer");
 		Bitu oplrate=section->Get_int("oplrate");
 		sb.mixer.stereo=false;
-		OPL_Mode opl_mode;
+		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,opl_mode);
 	
 		switch (opl_mode) {
@@ -1240,7 +1240,7 @@ public:
 	
 	~SBLASTER() {
 	Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		OPL_Mode opl_mode;
+		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,opl_mode);
 	
 		switch (opl_mode) {

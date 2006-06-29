@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.118 2006-06-25 18:49:32 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.119 2006-06-29 19:05:54 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -382,7 +382,7 @@ Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,G
 	sdl.draw.scaley=scaley;
 
 	Bitu bpp;
-	Bitu retFlags;
+	Bitu retFlags = 0;
 	
 	if (sdl.blit.surface) {
 		SDL_FreeSurface(sdl.blit.surface);
