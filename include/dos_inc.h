@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.60 2006-04-21 08:50:30 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.61 2006-06-30 12:47:06 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -439,8 +439,10 @@ public:
 	void GetSearchParams(Bit8u & _sattr,char * _spattern);
 	void GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr);
 
-	void	SetDirID(Bit16u entry)		{ sSave(sDTA,dirID,entry); };
+	void	SetDirID(Bit16u entry)			{ sSave(sDTA,dirID,entry); };
+	void	SetDirIDCluster(Bit16u entry)	{ sSave(sDTA,dirCluster,entry); };
 	Bit16u	GetDirID(void)				{ return sGet(sDTA,dirID); };
+	Bit16u	GetDirIDCluster(void)		{ return sGet(sDTA,dirCluster); };
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)
@@ -451,7 +453,8 @@ private:
 		Bit8u sext[3];						/* The Search pattern for the extenstion */
 		Bit8u sattr;						/* The Attributes that need to be found */
 		Bit16u dirID;						/* custom: dir-search ID for multiple searches at the same time */
-		Bit8u fill[6];
+		Bit16u dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
+		Bit8u fill[4];
 		Bit8u attr;
 		Bit16u time;
 		Bit16u date;

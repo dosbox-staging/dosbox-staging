@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.16 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.17 2006-06-30 12:47:07 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -186,6 +186,7 @@ bool fatFile::Write(Bit8u * data, Bit16u *size) {
 		--sizedec;
 		sizecount++;
 	}
+	if(curSectOff>0 && loadedSector) myDrive->loadedDisk->Write_AbsoluteSector(currentSector, sectorBuffer);
 
 finalizeWrite:
 	myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
@@ -610,6 +611,9 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 		loadedDisk->Set_Geometry(headscyl, cylinders,cylsector, bytesector);
 
 		loadedDisk->Read_Sector(0,0,1,&mbrData);
+
+		if(mbrData.magic1!= 0x55 ||	mbrData.magic2!= 0xaa) LOG_MSG("Possibly invalid partition table in disk image.");
+
 		startSector = 63;
 		int m;
 		for(m=0;m<4;m++) {
@@ -620,6 +624,8 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 				break;
 			}
 		}
+
+		if(m==4) LOG_MSG("No good partiton found in image.");
 
 		partSectOff = startSector;
 	} else {
@@ -808,6 +814,7 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool fcb_findfirst) {
 		return false;
 	}
 	dta.SetDirID(0);
+	dta.SetDirIDCluster((Bit16u)(cwdDirCluster&0xffff));
 	return FindNextInternal(cwdDirCluster, dta, &dummyClust);
 }
 
@@ -879,7 +886,7 @@ nextfile:
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
 	trimString(&find_name[0]);
 	trimString(&extension[0]);
-	if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY)) { 
+	if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY) || extension[0]!=0) { 
 		strcat(find_name, ".");
 		strcat(find_name, extension);
 	}
@@ -900,7 +907,7 @@ nextfile:
 bool fatDrive::FindNext(DOS_DTA &dta) {
 	direntry dummyClust;
 
-	return FindNextInternal(cwdDirCluster, dta, &dummyClust);
+	return FindNextInternal(dta.GetDirIDCluster(), dta, &dummyClust);
 }
 
 bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
@@ -919,6 +926,7 @@ bool fatDrive::GetFileAttr(char *name, Bit16u *attr) {
 
 		/* Find directory entry in parent directory */
 		Bit32s fileidx = 2;
+		if (dirClust==0) fileidx = 0;	// root directory
 		while(directoryBrowse(dirClust, &fileEntry, fileidx)) {
 			if(memcmp(&fileEntry.entryname, &pathName[0], 11) == 0) {
 				*attr=fileEntry.attrib;
@@ -1143,6 +1151,7 @@ bool fatDrive::RemoveDir(char *dir) {
 	Bit32u filecount = 0;
 	/* Set to 2 to skip first 2 entries, [.] and [..] */
 	Bit32s fileidx = 2;
+	if (dirClust==0) fileidx = 0;	// root directory
 	while(directoryBrowse(dummyClust, &tmpentry, fileidx)) {
 		/* Check for non-deleted files */
 		if(tmpentry.entryname[0] != 0xe5) filecount++;
