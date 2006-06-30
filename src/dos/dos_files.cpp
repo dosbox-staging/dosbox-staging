@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.75 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.76 2006-06-30 20:04:21 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -655,10 +655,10 @@ static bool isvalid(const char in){
 
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change) {
 	char * string_begin=string;Bit8u ret=0;
-    DOS_FCB fcb(seg,offset);
-	bool hasdrive,hasname,hasext;
-	hasdrive=hasname=hasext=false;
-	Bitu index;bool finished;Bit8u fill;
+	DOS_FCB fcb(seg,offset);
+	bool hasdrive,hasname,hasext,finished;
+	hasdrive=hasname=hasext=finished=false;
+	Bitu index=0;Bit8u fill=' ';
 /* First get the old data from the fcb */
 #ifdef _MSC_VER
 #pragma pack (1)

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.74 2006-05-25 15:08:40 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.75 2006-06-30 20:04:21 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -263,7 +263,7 @@ void DOS_Shell::ParseLine(char * line) {
 
 void DOS_Shell::RunInternal(void)
 {
-	char input_line[CMD_MAXLINE];
+	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	while(bf && bf->ReadLine(input_line)) 
 	{
@@ -281,7 +281,7 @@ void DOS_Shell::RunInternal(void)
 
 
 void DOS_Shell::Run(void) {
-	char input_line[CMD_MAXLINE];
+	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemain("/C",line)) {
 		strcpy(input_line,line.c_str());

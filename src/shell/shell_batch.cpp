@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.21 2006-05-25 15:08:40 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.22 2006-06-30 20:04:21 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +43,7 @@ BatchFile::~BatchFile() {
 }
 
 bool BatchFile::ReadLine(char * line) {
-	Bit8u c;Bit16u n;
+	Bit8u c=0;Bit16u n=1;
 	char temp[CMD_MAXLINE];
 emptyline:
 	char * cmd_write=temp;
