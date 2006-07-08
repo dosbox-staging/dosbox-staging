@@ -83,6 +83,7 @@ static struct {
 class VGA_UnchainedRead_Handler : public PageHandler {
 public:
 	Bitu readHandler(PhysPt start) {
+		start += vga.s3.svga_bank.fullbank;
 		vga.latch.d=vga.mem.latched[start].d;
 		switch (vga.config.read_mode) {
 		case 0:
@@ -253,10 +254,10 @@ public:
 		vga.mem.linear[((addr&~3)<<2)|(addr&3)] = val;
 		// Linearized version for faster rendering
 		vga.mem.linear[512*1024+addr] = val;
+		if (addr >= 320) return;
 		// And replicate the first line
-		if (addr < 320)
-			vga.mem.linear[512*1024+addr+64*1024] = val;
-		}
+		vga.mem.linear[512*1024+addr+64*1024] = val;
+	}
 public:	
 	VGA_ChainedVGA_Handler()  {
 		flags=PFLAG_NOCODE;
@@ -282,13 +283,13 @@ public:
 class VGA_UnchainedVGA_Handler : public VGA_UnchainedRead_Handler {
 public:
 	void writeHandler( PhysPt addr, Bit8u val ) {
+		addr += vga.s3.svga_bank.fullbank;
 		Bit32u data=ModeOperation(val);
 		VGA_Latch pixels;
 		pixels.d=vga.mem.latched[addr].d;
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
 		vga.mem.latched[addr].d=pixels.d;
-		vga.mem.latched[addr+64*1024].d=pixels.d;
 	}
 public:
 	VGA_UnchainedVGA_Handler()  {
@@ -336,11 +337,11 @@ public:
 	}
 	HostPt GetHostReadPt(Bitu phys_page) {
  		phys_page-=vgapages.base;
-		return &vga.mem.linear[vga.s3.bank*64*1024+phys_page*4096];
+		return &vga.mem.linear[vga.s3.svga_bank.fullbank+phys_page*4096];
 	}
 	HostPt GetHostWritePt(Bitu phys_page) {
  		phys_page-=vgapages.base;
-		return &vga.mem.linear[vga.s3.bank*64*1024+phys_page*4096];
+		return &vga.mem.linear[vga.s3.svga_bank.fullbank+phys_page*4096];
 	}
 };
 
@@ -392,18 +393,18 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
@@ -411,19 +412,19 @@ public:
 		writeHandler(addr+3,(Bit8u)(val >> 24));
 	}
 	Bitu readb(PhysPt addr) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		return readHandler(addr);
 	}
 	Bitu readw(PhysPt addr) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		return 
 			(readHandler(addr+0) << 0) |
 			(readHandler(addr+1) << 8);
 	}
 	Bitu readd(PhysPt addr) {
-		addr = vga.s3.bank*64*1024 + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (512*1024-1);
 		return 
 			(readHandler(addr+0) << 0)  |
@@ -634,12 +635,12 @@ void VGA_SetupHandlers(void) {
 	case M_LIN4:
 		range_handler=&vgaph.l4banked;
 		break;	
-	case M_LIN8:
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN32:
 		range_handler=&vgaph.map;
 		break;
+	case M_LIN8:
 	case M_VGA:
 		if (vga.config.chained) {
 			if(vga.config.compatible_chain4)
@@ -727,6 +728,7 @@ void VGA_UnmapMMIO(void) {
 
 void VGA_SetupMemory() {
 	memset((void *)&vga.mem,0,512*1024*4);
+	vga.s3.svga_bank.fullbank=0;
 	if (machine==MCH_PCJR) {
 		/* PCJr does not have dedicated graphics memory but uses
 		   conventional memory below 128k */

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.3 2006-02-14 12:44:38 qbix79 Exp $ */
+/* $Id: vga_s3.cpp,v 1.4 2006-07-08 16:32:26 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -26,7 +26,8 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	switch (reg) {
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO Base address
-		vga.s3.reg_31 = val;	
+		vga.s3.reg_31 = val;
+		vga.config.compatible_chain4 = !(val&0x08);
 		VGA_DetermineMode();
 		break;
 		/*
@@ -46,9 +47,9 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x35:	/* CR35 CRT Register Lock */
 		if (vga.s3.reg_lock1 != 0x48) return;	//Needed for uvconfig detection
 		vga.s3.reg_35=val & 0xf0;
-		if ((vga.s3.bank & 0xf) ^ (val & 0xf)) {
-			vga.s3.bank&=0xf0;
-			vga.s3.bank|=val & 0xf;
+		if ((vga.s3.svga_bank.b.bank & 0xf) ^ (val & 0xf)) {
+			vga.s3.svga_bank.b.bank&=0xf0;
+			vga.s3.svga_bank.b.bank|=val & 0xf;
 			VGA_SetupHandlers();
 		}
 		break;
@@ -128,9 +129,9 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		//TODO Display start
 		vga.config.display_start&=0xFCFFFF;
 		vga.config.display_start|=(val & 3) << 16;
-		if ((vga.s3.bank&0xcf) ^ ((val&0xc)<<2)) {
-			vga.s3.bank&=0xcf;
-			vga.s3.bank|=(val&0xc)<<2;
+		if ((vga.s3.svga_bank.b.bank&0xcf) ^ ((val&0xc)<<2)) {
+			vga.s3.svga_bank.b.bank&=0xcf;
+			vga.s3.svga_bank.b.bank|=(val&0xc)<<2;
 			VGA_SetupHandlers();
 		}
 		if (((val & 0x30) ^ (vga.config.scan_len >> 4)) & 0x30) {
@@ -297,7 +298,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		}
 		break;
 	case 0x6a:	/* Extended System Control 4 */
-		vga.s3.bank=val & 0x3f;
+		vga.s3.svga_bank.b.bank=val & 0x3f;
 		VGA_SetupHandlers();
 		break;
 	default:
@@ -323,7 +324,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 //TODO mix in bits from baseaddress;
 		return 	vga.s3.reg_31;	
 	case 0x35:	/* CR35 CRT Register Lock */
-		return vga.s3.reg_35|(vga.s3.bank & 0xf);
+		return vga.s3.reg_35|(vga.s3.svga_bank.b.bank & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
 		//return 0x8f;
 		return 0x8e; /* PCI version */
@@ -344,7 +345,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return vga.s3.hgc.curmode;
 	case 0x51:	/* Extended System Control 2 */
 		return ((vga.config.display_start >> 16) & 3 ) |
-				((vga.s3.bank & 0x30) >> 2) |
+				((vga.s3.svga_bank.b.bank & 0x30) >> 2) |
 				((vga.config.scan_len & 0x300) >> 4) |
 				vga.s3.reg_51;
 	case 0x53:
@@ -366,7 +367,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x69:	/* Extended System Control 3 */
 		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16); 
 	case 0x6a:	/* Extended System Control 4 */
-		return (Bit8u)(vga.s3.bank & 0x3f);
+		return (Bit8u)(vga.s3.svga_bank.b.bank & 0x3f);
 	default:
 		return 0x00;
 	}

@@ -140,8 +140,23 @@ typedef struct {
 	Bit8u mc[64][64];
 } VGA_HWCURSOR;
 
+typedef union {
+	Bit32u fullbank;
+#ifndef WORDS_BIGENDIAN
+	struct {
+		Bit16u lowerbank;
+		Bit16u bank;
+	} b;
+#else
+	struct {
+		Bit16u bank;
+		Bit16u lowerbank;
+	} b;
+#endif
+} VGA_S3_BANK;
+
 typedef struct {
-	Bit8u bank;
+	VGA_S3_BANK svga_bank;
 	Bit8u reg_lock1;
 	Bit8u reg_lock2;
 	Bit8u reg_31;
