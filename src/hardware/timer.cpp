@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.38 2006-05-19 10:34:02 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.39 2006-07-10 09:27:37 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -295,8 +295,11 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 
 			if (latch == 0) {
 				PIC_RemoveEvents(PIT0_Event);
-				if (!counter_output(0) && mode)
+				if (!counter_output(0) && mode) {
 					PIC_ActivateIRQ(0);
+					//Don't raise instantaniously. (Origamo)
+					if(CPU_Cycles < 25) CPU_Cycles = 25;
+				}
 				if(!mode)
 					PIC_DeActivateIRQ(0);
 			}
