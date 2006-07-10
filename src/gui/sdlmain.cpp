@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.119 2006-06-29 19:05:54 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.120 2006-07-10 19:32:15 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -203,6 +203,9 @@ struct SDL_Block {
 		Bitu sensitivity;
 	} mouse;
 	SDL_Rect updateRects[1024];
+#if defined (WIN32)
+	bool using_windib;
+#endif
 };
 
 static SDL_Block sdl;
@@ -253,6 +256,11 @@ static void PauseDOSBox(bool pressed) {
 	}
 }
 
+#if defined (WIN32)
+bool GFX_SDLUsingWinDIB(void) {
+	return sdl.using_windib;
+}
+#endif
 
 /* Reset the screen with current values in the sdl structure */
 Bitu GFX_GetBestMode(Bitu flags) {
@@ -423,6 +431,7 @@ dosurface:
 				SDL_QuitSubSystem(SDL_INIT_VIDEO);
 				putenv("SDL_VIDEODRIVER=windib");
 				SDL_InitSubSystem(SDL_INIT_VIDEO);
+				sdl.using_windib=true;
 				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
 			}
 #endif
@@ -525,6 +534,9 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+#if defined (WIN32) && SDL_VERSION_ATLEAST(1, 2, 11)
+		SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, 0 );
+#endif
 		GFX_SetupSurfaceScaled(SDL_OPENGL,0);
 		if (!sdl.surface || sdl.surface->format->BitsPerPixel<15) {
 			LOG_MSG("SDL:OPENGL:Can't open drawing surface, are you running in 16bpp(or higher) mode?");
@@ -1335,6 +1347,31 @@ int main(int argc, char* argv[]) {
 		|SDL_INIT_JOYSTICK
 #endif
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+#if defined (WIN32)
+#if SDL_VERSION_ATLEAST(1, 2, 10)
+		sdl.using_windib=true;
+#else
+		sdl.using_windib=false;
+#endif
+		char sdl_drv_name[128];
+		if (getenv("SDL_VIDEODRIVER")==NULL) {
+			if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
+				if (strcmp(sdl_drv_name,"directx")!=0) {
+					SDL_QuitSubSystem(SDL_INIT_VIDEO);
+					putenv("SDL_VIDEODRIVER=directx");
+					SDL_InitSubSystem(SDL_INIT_VIDEO);
+				}
+				sdl.using_windib=false;
+			}
+		} else {
+			char* sdl_videodrv = getenv("SDL_VIDEODRIVER");
+			if (strcmp(sdl_videodrv,"directx")==0) sdl.using_windib = false;
+			else if (strcmp(sdl_videodrv,"windib")==0) sdl.using_windib = true;
+		}
+		if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
+			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
+		}
+#endif
 		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 		sdl_sec->AddInitFunction(&MAPPER_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);

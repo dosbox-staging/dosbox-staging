@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.25 2006-06-24 17:29:39 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.26 2006-07-10 19:32:15 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -333,6 +333,25 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 #if !defined (WIN32) && !defined (MACOSX)
 		/* Linux adds 8 to all scancodes */
 		else key-=8;
+#endif
+#if defined (WIN32)
+		switch (key) {
+			case 0x1c:	// ENTER
+			case 0x35:	// SLASH
+			case 0x45:	// PAUSE
+			case 0x47:	// HOME
+			case 0x48:	// cursor UP
+			case 0x49:	// PAGE UP
+			case 0x4b:	// cursor LEFT
+			case 0x4d:	// cursor RIGHT
+			case 0x4f:	// END
+			case 0x50:	// cursor DOWN
+			case 0x51:	// PAGE DOWN
+			case 0x52:	// INSERT
+			case 0x53:	// DELETE
+				if (GFX_SDLUsingWinDIB()) key=scancode_map[(Bitu)keysym.sym];
+				break;
+		}
 #endif
 		return key;
 	} else {
