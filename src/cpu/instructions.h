@@ -18,7 +18,7 @@
 
 /* Jumps */
 
-/* All Byte genereal instructions */
+/* All Byte general instructions */
 #define ADDB(op1,op2,load,save)								\
 	lf_var1b=load(op1);lf_var2b=op2;					\
 	lf_resb=lf_var1b+lf_var2b;					\
@@ -578,7 +578,7 @@
 	SETFLAGBIT(PF,parity_lookup[reg_al]);
 
 #define AAM(op1)											\
-	{														\
+	if ((Bit8u)op1!=0) {									\
 		Bit8u BLAH=op1;										\
 		reg_ah=reg_al / BLAH;								\
 		reg_al=reg_al % BLAH;								\
@@ -589,7 +589,7 @@
 		SETFLAGBIT(OF,0);									\
 		SETFLAGBIT(AF,0);									\
 		lflags.type=t_UNKNOWN;								\
-	}
+	} else EXCEPTION(0);
 
 
 //Took this from bochs, i seriously hate these weird bcd opcodes
