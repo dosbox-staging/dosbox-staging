@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.76 2006-06-30 20:04:21 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.77 2006-07-18 15:31:29 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -49,7 +49,7 @@ Bit8u DOS_GetDefaultDrive(void) {
 }
 
 void DOS_SetDefaultDrive(Bit8u drive) {
-	if (drive<=DOS_DRIVES && Drives[drive]) dos.current_drive = drive;
+	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) dos.current_drive = drive;
 }
 
 bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
