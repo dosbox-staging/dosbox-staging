@@ -578,10 +578,11 @@
 	SETFLAGBIT(PF,parity_lookup[reg_al]);
 
 #define AAM(op1)											\
-	if ((Bit8u)op1!=0) {									\
-		Bit8u BLAH=op1;										\
-		reg_ah=reg_al / BLAH;								\
-		reg_al=reg_al % BLAH;								\
+{															\
+	Bit8u dv=op1;											\
+	if (dv!=0) {											\
+		reg_ah=reg_al / dv;									\
+		reg_al=reg_al % dv;									\
 		SETFLAGBIT(SF,(reg_al & 0x80));						\
 		SETFLAGBIT(ZF,(reg_al == 0));						\
 		SETFLAGBIT(PF,parity_lookup[reg_al]);				\
@@ -589,7 +590,8 @@
 		SETFLAGBIT(OF,0);									\
 		SETFLAGBIT(AF,0);									\
 		lflags.type=t_UNKNOWN;								\
-	} else EXCEPTION(0);
+	} else EXCEPTION(0);									\
+}
 
 
 //Took this from bochs, i seriously hate these weird bcd opcodes
