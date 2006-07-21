@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.75 2006-06-30 20:04:21 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.76 2006-07-21 09:40:10 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -509,6 +509,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
+	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
+	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%d.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();

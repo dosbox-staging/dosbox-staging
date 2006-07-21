@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.67 2006-05-25 15:08:40 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.68 2006-07-21 09:40:10 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -59,6 +59,7 @@ static SHELL_Cmd cmd_list[]={
 {	"CHOICE",	0,			&DOS_Shell::CMD_CHOICE,		"SHELL_CMD_CHOICE_HELP"},
 {	"ATTRIB",	0,			&DOS_Shell::CMD_ATTRIB,		"SHELL_CMD_ATTRIB_HELP"},
 {	"PATH",		1,			&DOS_Shell::CMD_PATH,		"SHELL_CMD_PATH_HELP"},
+{	"VER",		0,			&DOS_Shell::CMD_VER,		"SHELL_CMD_VER_HELP"},
 {0,0,0,0}
 };
 bool DOS_Shell::CheckConfig(char* cmd,char*line) {
@@ -500,7 +501,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 	bool ret=DOS_FindFirst(source,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),source);
 		dos.dta(save_dta);
 		return;
 	}
@@ -856,4 +857,14 @@ void DOS_Shell::CMD_PATH(char *args){
 			WriteOut("PATH=(null)");
 		}
 	}
+}
+
+void DOS_Shell::CMD_VER(char *args) {
+	if(args && *args) {
+		char* word = StripWord(args);
+		if(strcasecmp(word,"set")) return;
+		word = StripWord(args);
+		dos.version.major = atoi(word);
+		dos.version.minor = atoi(args);
+	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
 }
