@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.26 2006-07-10 19:32:15 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.27 2006-07-22 18:32:29 c2woody Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -491,6 +491,8 @@ protected:
 	Bitu mask;
 };
 
+static bool autofire=false;
+
 class CStickBindGroup : public  CBindGroup {
 public:
 	CStickBindGroup(Bitu _stick) : CBindGroup (){
@@ -506,12 +508,13 @@ public:
 		button_lists=new CBindList[buttons];
 		hat_lists=new CBindList[hats];
 		emulated_buttons = 2;
+		for (Bitu i=0; i<emulated_buttons; i++) button_autofire[i]=0;
 #if OLD_JOYSTICK
 		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(stick),axes,buttons);
 		//if the first stick is set, we must be the second
 		emustick=JOYSTICK_IsEnabled(0);
 		JOYSTICK_Enable(emustick,true);
-#endif	   
+#endif
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -520,6 +523,7 @@ public:
 		delete[] button_lists;
 		delete[] hat_lists;
 	}
+
 	CBind * CreateConfigBind(char *& buf) {
 		if (strncasecmp(configname,buf,strlen(configname))) return 0;
 		StripWord(buf);char * type=StripWord(buf);
@@ -536,43 +540,67 @@ public:
 	}
 	CBind * CreateEventBind(SDL_Event * event) {
 		if (event->type==SDL_JOYAXISMOTION) {
-			if (event->jaxis .which!=stick) return 0;
+			if (event->jaxis.which!=stick) return 0;
 			if (abs(event->jaxis.value)<25000) return 0;
 			return CreateAxisBind(event->jaxis.axis,event->jaxis.value>0);
 		} else if (event->type==SDL_JOYBUTTONDOWN) {
-			if (event->jaxis .which!=stick) return 0;
+			if (event->jaxis.which!=stick) return 0;
 			return CreateButtonBind(event->jbutton.button);
 		} else return 0;
 	}
+
 	virtual bool CheckEvent(SDL_Event * event) {
 #if OLD_JOYSTICK
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		Bitu but = 0;
 
-	switch(event->type) {
-		case SDL_JOYAXISMOTION:
-			jaxis = &event->jaxis;
-			if(jaxis->which == stick)
-			        if(jaxis->axis == 0)
-					JOYSTICK_Move_X(emustick,(float)(jaxis->value/32768.0));
-				else if(jaxis->axis == 1)
-					JOYSTICK_Move_Y(emustick,(float)(jaxis->value/32768.0));
-			break;
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			jbutton = &event->jbutton;
-			bool state;
-			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			but = jbutton->button % emulated_buttons;
-			if (jbutton->which == stick) {
-				JOYSTICK_Button(emustick,but,state);
-			}
-			break;
-	}
+		switch(event->type) {
+			case SDL_JOYAXISMOTION:
+				jaxis = &event->jaxis;
+				if(jaxis->which == stick) {
+					if(jaxis->axis == 0)
+						JOYSTICK_Move_X(emustick,(float)(jaxis->value/32768.0));
+					else if(jaxis->axis == 1)
+						JOYSTICK_Move_Y(emustick,(float)(jaxis->value/32768.0));
+				}
+				break;
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				jbutton = &event->jbutton;
+				bool state;
+				state=jbutton->type==SDL_JOYBUTTONDOWN;
+				but = jbutton->button % emulated_buttons;
+				if (jbutton->which == stick) {
+					JOYSTICK_Button(emustick,but,state);
+				}
+				break;
+		}
 #endif
 		return false;
 	}
+
+	virtual void UpdateJoystick() {
+		Sint16 axis_pos=SDL_JoystickGetAxis(sdl_joystick,0);
+		JOYSTICK_Move_X(emustick,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,1);
+		JOYSTICK_Move_Y(emustick,(float)(axis_pos/32768.0));
+
+		bool button_pressed[16];
+		Bitu i;
+		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<buttons; i++) {
+			if (SDL_JoystickGetButton(sdl_joystick,i)==SDL_PRESSED)
+				button_pressed[i % emulated_buttons]=true;
+		}
+		for (i=0; i<emulated_buttons; i++) {
+			if (autofire && (button_pressed[i]))
+				JOYSTICK_Button(emustick,i,(++button_autofire[i])&1);
+			else
+				JOYSTICK_Button(emustick,i,button_pressed[i]);
+		}
+	}
+
 private:
 	CBind * CreateAxisBind(Bitu axis,bool positive) {
 		assert(axis<axes);
@@ -589,6 +617,7 @@ private:
 	const char * BindStart(void) {
 		return SDL_JoystickName(stick);
 	}
+
 protected:
 	CBindList * pos_axis_lists;
 	CBindList * neg_axis_lists;
@@ -597,44 +626,74 @@ protected:
 	Bitu stick,emustick,axes,buttons,hats,emulated_buttons;
 	SDL_Joystick * sdl_joystick;
 	char configname[10];
+	Bitu button_autofire[16];
 };
 
 class C4AxisBindGroup : public  CStickBindGroup {
 public:
 	C4AxisBindGroup(Bitu _stick) : CStickBindGroup (_stick){
 		emulated_buttons = 4;
+		for (Bitu i=0; i<emulated_buttons; i++) button_autofire[i]=0;
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
-#endif	   
+#endif
 	}
-        bool CheckEvent(SDL_Event * event) {
+
+	bool CheckEvent(SDL_Event * event) {
 #if OLD_JOYSTICK
-	        SDL_JoyAxisEvent * jaxis = NULL;
+		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		Bitu but = 0;
 
-	switch(event->type) {
-		case SDL_JOYAXISMOTION:
-			jaxis = &event->jaxis;
-			if(jaxis->which == stick && jaxis->axis < 4)
-			        if(jaxis->axis & 1)
-					JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
-				else
-					JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
-			break;
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			jbutton = &event->jbutton;
-			bool state;
-			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			but = jbutton->button % emulated_buttons;
-			if (jbutton->which == stick) {
-				JOYSTICK_Button((but >> 1),(but & 1),state);
-			}
-			break;
-	}
+		switch(event->type) {
+			case SDL_JOYAXISMOTION:
+				jaxis = &event->jaxis;
+				if(jaxis->which == stick && jaxis->axis < 4) {
+					if(jaxis->axis & 1)
+						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+					else
+						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+				}
+				break;
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				jbutton = &event->jbutton;
+				bool state;
+				state=jbutton->type==SDL_JOYBUTTONDOWN;
+				but = jbutton->button % emulated_buttons;
+				if (jbutton->which == stick) {
+					JOYSTICK_Button((but >> 1),(but & 1),state);
+				}
+				break;
+		}
 #endif
 		return false;
+	}
+
+	virtual void UpdateJoystick() {
+		Sint16 axis_pos=SDL_JoystickGetAxis(sdl_joystick,0);
+		JOYSTICK_Move_X(0,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,1);
+		JOYSTICK_Move_Y(0,(float)(axis_pos/32768.0));
+
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,2);
+		JOYSTICK_Move_X(1,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,3);
+		JOYSTICK_Move_Y(1,(float)(axis_pos/32768.0));
+
+		bool button_pressed[16];
+		Bitu i;
+		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<buttons; i++) {
+			if (SDL_JoystickGetButton(sdl_joystick,i)==SDL_PRESSED)
+				button_pressed[i % emulated_buttons]=true;
+		}
+		for (i=0; i<emulated_buttons; i++) {
+			if (autofire && (button_pressed[i]))
+				JOYSTICK_Button(i >> 1,(i & 1),(++button_autofire[i])&1);
+			else
+				JOYSTICK_Button(i >> 1,(i & 1),button_pressed[i]);
+		}
 	}
 };
 
@@ -642,88 +701,127 @@ class CFCSBindGroup : public  CStickBindGroup {
 public:
 	CFCSBindGroup(Bitu _stick) : CStickBindGroup (_stick){
 		emulated_buttons = 4;
+		old_hat_position=0;
+		for (Bitu i=0; i<emulated_buttons; i++) button_autofire[i]=0;
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
-#endif	   
+#endif
 	}
-        bool CheckEvent(SDL_Event * event) {
+
+	bool CheckEvent(SDL_Event * event) {
 #if OLD_JOYSTICK
-	        SDL_JoyAxisEvent * jaxis = NULL;
+		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
 		Bitu but = 0;
 
-	switch(event->type) {
-		case SDL_JOYAXISMOTION:
-			jaxis = &event->jaxis;
-			if(jaxis->which == stick)
-			        if(jaxis->axis == 0)
-					JOYSTICK_Move_X(0,(float)(jaxis->value/32768.0));
-				else if(jaxis->axis == 1)
-					JOYSTICK_Move_Y(0,(float)(jaxis->value/32768.0));
-				else if(jaxis->axis == 2)
-					JOYSTICK_Move_X(1,(float)(jaxis->value/32768.0));
-			break;
-		case SDL_JOYHATMOTION:
-			jhat = &event->jhat;
-			if(jhat->which == stick) {
-				switch(jhat->value) {
-					case SDL_HAT_CENTERED:
-						JOYSTICK_Move_Y(1,1.0);
-						break;
-					case SDL_HAT_UP:
-						JOYSTICK_Move_Y(1,-1.0);
-						break;
-					case SDL_HAT_RIGHT:
-						JOYSTICK_Move_Y(1,-0.5);
-						break;
-					case SDL_HAT_DOWN:
-						JOYSTICK_Move_Y(1,0.0);
-						break;
-					case SDL_HAT_LEFT:
-						JOYSTICK_Move_Y(1,0.5);
-						break;
-					case SDL_HAT_LEFTUP:
-						if(JOYSTICK_GetMove_Y(1) < 0)
-							JOYSTICK_Move_Y(1,0.5);
-						else
-							JOYSTICK_Move_Y(1,-1.0);
-						break;
-					case SDL_HAT_RIGHTUP:
-						if(JOYSTICK_GetMove_Y(1) < -0.7)
-							JOYSTICK_Move_Y(1,-0.5);
-						else
-							JOYSTICK_Move_Y(1,-1.0);
-						break;
-					case SDL_HAT_RIGHTDOWN:
-						if(JOYSTICK_GetMove_Y(1) < -0.2)
-							JOYSTICK_Move_Y(1,0.0);
-						else
-							JOYSTICK_Move_Y(1,-0.5);
-						break;
-					case SDL_HAT_LEFTDOWN:
-						if(JOYSTICK_GetMove_Y(1) > 0.2)
-							JOYSTICK_Move_Y(1,0.0);
-						else
-							JOYSTICK_Move_Y(1,0.5);
-						break;
+		switch(event->type) {
+			case SDL_JOYAXISMOTION:
+				jaxis = &event->jaxis;
+				if(jaxis->which == stick) {
+					if(jaxis->axis == 0)
+						JOYSTICK_Move_X(0,(float)(jaxis->value/32768.0));
+					else if(jaxis->axis == 1)
+						JOYSTICK_Move_Y(0,(float)(jaxis->value/32768.0));
+					else if(jaxis->axis == 2)
+						JOYSTICK_Move_X(1,(float)(jaxis->value/32768.0));
 				}
-			}
-			
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-			jbutton = &event->jbutton;
-			bool state;
-			state=jbutton->type==SDL_JOYBUTTONDOWN;
-			but = jbutton->button % emulated_buttons;
-			if (jbutton->which == stick) {
-			        JOYSTICK_Button((but >> 1),(but & 1),state);
-			}
-			break;
-	}
+				break;
+			case SDL_JOYHATMOTION:
+				jhat = &event->jhat;
+				if(jhat->which == stick) DecodeHatPosition(jhat->value);
+				break;
+			case SDL_JOYBUTTONDOWN:
+			case SDL_JOYBUTTONUP:
+				jbutton = &event->jbutton;
+				bool state;
+				state=jbutton->type==SDL_JOYBUTTONDOWN;
+				but = jbutton->button % emulated_buttons;
+				if (jbutton->which == stick) {
+						JOYSTICK_Button((but >> 1),(but & 1),state);
+				}
+				break;
+		}
 #endif
 		return false;
+	}
+
+	void UpdateJoystick() {
+		Sint16 axis_pos=SDL_JoystickGetAxis(sdl_joystick,0);
+		JOYSTICK_Move_X(emustick,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,1);
+		JOYSTICK_Move_Y(emustick,(float)(axis_pos/32768.0));
+
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,2);
+		JOYSTICK_Move_X(1,(float)(axis_pos/32768.0));
+
+		Uint8 hat_position=SDL_JoystickGetHat(sdl_joystick,0);
+		if (hat_position!=old_hat_position) {
+			DecodeHatPosition(hat_position);
+			old_hat_position=hat_position;
+		}
+
+		bool button_pressed[16];
+		Bitu i;
+		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<buttons; i++) {
+			if (SDL_JoystickGetButton(sdl_joystick,i)==SDL_PRESSED)
+				button_pressed[i % emulated_buttons]=true;
+		}
+		for (i=0; i<emulated_buttons; i++) {
+			if (autofire && (button_pressed[i]))
+				JOYSTICK_Button(i >> 1,(i & 1),(++button_autofire[i])&1);
+			else
+				JOYSTICK_Button(i >> 1,(i & 1),button_pressed[i]);
+		}
+	}
+
+private:
+	Uint8 old_hat_position;
+
+	void DecodeHatPosition(Uint8 hat_pos) {
+		switch(hat_pos) {
+			case SDL_HAT_CENTERED:
+				JOYSTICK_Move_Y(1,1.0);
+				break;
+			case SDL_HAT_UP:
+				JOYSTICK_Move_Y(1,-1.0);
+				break;
+			case SDL_HAT_RIGHT:
+				JOYSTICK_Move_Y(1,-0.5);
+				break;
+			case SDL_HAT_DOWN:
+				JOYSTICK_Move_Y(1,0.0);
+				break;
+			case SDL_HAT_LEFT:
+				JOYSTICK_Move_Y(1,0.5);
+				break;
+			case SDL_HAT_LEFTUP:
+				if(JOYSTICK_GetMove_Y(1) < 0)
+					JOYSTICK_Move_Y(1,0.5);
+				else
+					JOYSTICK_Move_Y(1,-1.0);
+				break;
+			case SDL_HAT_RIGHTUP:
+				if(JOYSTICK_GetMove_Y(1) < -0.7)
+					JOYSTICK_Move_Y(1,-0.5);
+				else
+					JOYSTICK_Move_Y(1,-1.0);
+				break;
+			case SDL_HAT_RIGHTDOWN:
+				if(JOYSTICK_GetMove_Y(1) < -0.2)
+					JOYSTICK_Move_Y(1,0.0);
+				else
+					JOYSTICK_Move_Y(1,-0.5);
+				break;
+			case SDL_HAT_LEFTDOWN:
+				if(JOYSTICK_GetMove_Y(1) > 0.2)
+					JOYSTICK_Move_Y(1,0.0);
+				else
+					JOYSTICK_Move_Y(1,0.5);
+				break;
+		}
 	}
 };
 
@@ -734,54 +832,58 @@ public:
 #if OLD_JOYSTICK
 		JOYSTICK_Enable(1,true);
 		button_state=0;
-#endif	   
+#endif
 	}
-        bool CheckEvent(SDL_Event * event) {
+
+
+	bool CheckEvent(SDL_Event * event) {
 #if OLD_JOYSTICK
-	        SDL_JoyAxisEvent * jaxis = NULL;
+		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
 		Bitu but = 0;
 		static unsigned const button_magic[6]={0x02,0x04,0x10,0x100,0x20,0x200};
 		static unsigned const hat_magic[2][5]={{0x8888,0x8000,0x800,0x80,0x08},
-						       {0x5440,0x4000,0x400,0x40,0x1000}};
-	switch(event->type) {
-		case SDL_JOYAXISMOTION:
-			jaxis = &event->jaxis;
-			if(jaxis->which == stick && jaxis->axis < 4)
-			        if(jaxis->axis & 1)
-					JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
-				else
-					JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
-			break;
-		case SDL_JOYHATMOTION:
-			jhat = &event->jhat;
-			if(jhat->which == stick && jhat->hat < 2) {
-				if(jhat->value == SDL_HAT_CENTERED)
-					button_state&=~hat_magic[jhat->hat][0];
-				if(jhat->value & SDL_HAT_UP)
-					button_state|=hat_magic[jhat->hat][1];
-				if(jhat->value & SDL_HAT_RIGHT)
-					button_state|=hat_magic[jhat->hat][2];
-				if(jhat->value & SDL_HAT_DOWN)
-					button_state|=hat_magic[jhat->hat][3];
-				if(jhat->value & SDL_HAT_LEFT)
-					button_state|=hat_magic[jhat->hat][4];
-			}
-			break;
-		case SDL_JOYBUTTONDOWN:
-			jbutton = &event->jbutton;
-			but = jbutton->button % emulated_buttons;
-			if (jbutton->which == stick)
-					button_state|=button_magic[but];
-			break;
-		case SDL_JOYBUTTONUP:
-			jbutton = &event->jbutton;
-			but = jbutton->button % emulated_buttons;
-			if (jbutton->which == stick)
-				button_state&=~button_magic[but];
-			break;
-	}
+							   {0x5440,0x4000,0x400,0x40,0x1000}};
+		switch(event->type) {
+			case SDL_JOYAXISMOTION:
+				jaxis = &event->jaxis;
+				if(jaxis->which == stick && jaxis->axis < 4) {
+					if(jaxis->axis & 1)
+						JOYSTICK_Move_Y(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+					else
+						JOYSTICK_Move_X(jaxis->axis>>1 & 1,(float)(jaxis->value/32768.0));
+				}
+				break;
+			case SDL_JOYHATMOTION:
+				jhat = &event->jhat;
+				if(jhat->which == stick && jhat->hat < 2) {
+					if(jhat->value == SDL_HAT_CENTERED)
+						button_state&=~hat_magic[jhat->hat][0];
+					if(jhat->value & SDL_HAT_UP)
+						button_state|=hat_magic[jhat->hat][1];
+					if(jhat->value & SDL_HAT_RIGHT)
+						button_state|=hat_magic[jhat->hat][2];
+					if(jhat->value & SDL_HAT_DOWN)
+						button_state|=hat_magic[jhat->hat][3];
+					if(jhat->value & SDL_HAT_LEFT)
+						button_state|=hat_magic[jhat->hat][4];
+				}
+				break;
+			case SDL_JOYBUTTONDOWN:
+				jbutton = &event->jbutton;
+				but = jbutton->button % emulated_buttons;
+				if (jbutton->which == stick)
+						button_state|=button_magic[but];
+				break;
+			case SDL_JOYBUTTONUP:
+				jbutton = &event->jbutton;
+				but = jbutton->button % emulated_buttons;
+				if (jbutton->which == stick)
+					button_state&=~button_magic[but];
+				break;
+		}
+
 		unsigned i;
 		Bit16u j;
 		j=button_state;
@@ -791,9 +893,56 @@ public:
 		JOYSTICK_Button(1,0,i>>2&0x01);
 		JOYSTICK_Button(1,1,i>>3&0x01);
 #endif
-		
 		return false;
 	}
+
+	void UpdateJoystick() {
+		static unsigned const button_priority[6]={7,11,13,14,5,6};
+		static unsigned const hat_priority[2][4]={{0,1,2,3},{8,9,10,12}};
+
+		Sint16 axis_pos=SDL_JoystickGetAxis(sdl_joystick,0);
+		JOYSTICK_Move_X(0,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,1);
+		JOYSTICK_Move_Y(0,(float)(axis_pos/32768.0));
+
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,2);
+		JOYSTICK_Move_X(1,(float)(axis_pos/32768.0));
+		axis_pos=SDL_JoystickGetAxis(sdl_joystick,3);
+		JOYSTICK_Move_Y(1,(float)(axis_pos/32768.0));
+
+		Bitu bt_state=15;
+
+		Bitu i;
+		for (i=0; i<(hats<2?hats:2); i++) {
+			Uint8 hat_position=SDL_JoystickGetHat(sdl_joystick,i);
+			if (hat_position & SDL_HAT_UP)
+				if (bt_state>hat_priority[i][0]) bt_state=hat_priority[i][0];
+			if (hat_position & SDL_HAT_DOWN)
+				if (bt_state>hat_priority[i][1]) bt_state=hat_priority[i][1];
+			if (hat_position & SDL_HAT_RIGHT)
+				if (bt_state>hat_priority[i][2]) bt_state=hat_priority[i][2];
+			if (hat_position & SDL_HAT_LEFT)
+				if (bt_state>hat_priority[i][3]) bt_state=hat_priority[i][3];
+		}
+
+		bool button_pressed[6];
+		for (i=0; i<6; i++) button_pressed[i]=false;
+		for (i=0; i<buttons; i++) {
+			if (SDL_JoystickGetButton(sdl_joystick,i)==SDL_PRESSED)
+				button_pressed[i % emulated_buttons]=true;
+		}
+		for (i=0; i<6; i++) {
+			if (button_pressed[i])
+				if (bt_state>button_priority[i]) bt_state=button_priority[i];
+		}
+
+		if (bt_state>15) bt_state=15;
+		JOYSTICK_Button(0,0,(bt_state&8)==0);
+		JOYSTICK_Button(0,1,(bt_state&4)==0);
+		JOYSTICK_Button(1,0,(bt_state&2)==0);
+		JOYSTICK_Button(1,1,(bt_state&1)==0);
+	}
+
 protected:
 	Bit16u button_state;
 };
@@ -809,12 +958,8 @@ static struct {
 	bool addbind;
 	Bitu mods;
 	struct {
-		CKeyBindGroup * keys;
-		CStickBindGroup * stick[MAXSTICKS];
-	} grp;
-	struct {
 		Bitu num;
-		SDL_Joystick * opened[MAXSTICKS];
+		CStickBindGroup * stick[MAXSTICKS];
 	} sticks;
 	const char * filename;
 } mapper;
@@ -992,7 +1137,7 @@ public:
 	}
 	void Draw(void) {
 		if (!enabled) return;
-		bool checked;
+		bool checked=false;
 		switch (type) {
 		case BC_Mod1:
 			checked=(mapper.abind->mods&BMOD_Mod1)>0;
@@ -1587,32 +1732,47 @@ void BIND_MappingEvents(void) {
 static void CreateBindGroups(void) {
 	bindgroups.clear();
 	new CKeyBindGroup(SDLK_LAST);
+	mapper.sticks.num=0;
 	if (joytype != JOY_NONE) {
 		Bitu numsticks=SDL_NumJoysticks();
+#if defined (REDUCE_JOYSTICK_POLLING)
+		// direct access to the SDL joystick, thus removed from the event handling
+		if (numsticks) SDL_JoystickEventState(SDL_DISABLE);
+#else
+		// enable joystick event handling
 		if (numsticks) SDL_JoystickEventState(SDL_ENABLE);
+#endif
 #if OLD_JOYSTICK
 		else return;
 #endif
 		Bit8u joyno=0;
 		switch (joytype) {
 		case JOY_4AXIS:
-			new C4AxisBindGroup(joyno);
+			mapper.sticks.stick[mapper.sticks.num++]=new C4AxisBindGroup(joyno);
 			break;
 		case JOY_FCS:
-			new CFCSBindGroup(joyno);
+			mapper.sticks.stick[mapper.sticks.num++]=new CFCSBindGroup(joyno);
 			break;
 		case JOY_CH:
-			new CCHBindGroup(joyno);
+			mapper.sticks.stick[mapper.sticks.num++]=new CCHBindGroup(joyno);
 			break;
 		case JOY_2AXIS:
 		default:
-			new CStickBindGroup(joyno);
+			mapper.sticks.stick[mapper.sticks.num++]=new CStickBindGroup(joyno);
 			if((joyno+1U) < numsticks)
-				new CStickBindGroup(joyno+1U);
+				mapper.sticks.stick[mapper.sticks.num++]=new CStickBindGroup(joyno+1U);
 			break;
 		}
 	}
 }
+
+#if defined (REDUCE_JOYSTICK_POLLING)
+void MAPPER_UpdateJoysticks(void) {
+	for (Bitu i=0; i<mapper.sticks.num; i++) {
+		mapper.sticks.stick[i]->UpdateJoystick();
+	}
+}
+#endif
 
 void MAPPER_LosingFocus(void) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
@@ -1665,6 +1825,7 @@ void MAPPER_Init(void) {
 
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+	mapper.sticks.num=0;
 	usescancodes=false;
 
 	if (section->Get_bool("usescancodes")) {

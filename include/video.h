@@ -19,6 +19,8 @@
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
 
+#define REDUCE_JOYSTICK_POLLING
+
 typedef enum {
 	GFX_CallBackReset,
 	GFX_CallBackStop,
@@ -66,6 +68,10 @@ void GFX_EndUpdate( const Bit16u *changedLines );
 
 #if defined (WIN32)
 bool GFX_SDLUsingWinDIB(void);
+#endif
+
+#if defined (REDUCE_JOYSTICK_POLLING)
+void MAPPER_UpdateJoysticks(void);
 #endif
 
 /* Mouse related */

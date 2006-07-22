@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.120 2006-07-10 19:32:15 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.121 2006-07-22 18:32:29 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -203,6 +203,7 @@ struct SDL_Block {
 		Bitu sensitivity;
 	} mouse;
 	SDL_Rect updateRects[1024];
+	Bitu num_joysticks;
 #if defined (WIN32)
 	bool using_windib;
 #endif
@@ -1177,8 +1178,19 @@ static Bit8u raltstate = SDL_KEYUP;
 
 void GFX_Events() {
 	SDL_Event event;
+#if defined (REDUCE_JOYSTICK_POLLING)
+	if (sdl.num_joysticks>0) {
+		static int poll_delay=0;
+		int time=SDL_GetTicks();
+		if (time-poll_delay>20) {
+			poll_delay=time;
+			SDL_JoystickUpdate();
+			MAPPER_UpdateJoysticks();
+		}
+	}
+#endif
 	while (SDL_PollEvent(&event)) {
-	    switch (event.type) {
+		switch (event.type) {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
@@ -1277,7 +1289,7 @@ void GFX_Events() {
 			void MAPPER_CheckEvent(SDL_Event * event);
 			MAPPER_CheckEvent(&event);
 		}
-    }
+	}
 }
 
 /* static variable to show wether there is not a valid stdout.
@@ -1372,6 +1384,7 @@ int main(int argc, char* argv[]) {
 			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
 		}
 #endif
+		sdl.num_joysticks=SDL_NumJoysticks();
 		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 		sdl_sec->AddInitFunction(&MAPPER_StartUp);
 		sdl_sec->Add_bool("fullscreen",false);
