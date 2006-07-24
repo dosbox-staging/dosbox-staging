@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.42 2006-05-07 20:00:05 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.43 2006-07-24 19:06:55 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -64,6 +64,11 @@
 #define XMS_OUT_OF_SPACE					0xa0
 #define XMS_OUT_OF_HANDLES					0xa1
 #define XMS_INVALID_HANDLE					0xa2
+#define XMS_INVALID_SOURCE_HANDLE			0xa3
+#define XMS_INVALID_SOURCE_OFFSET			0xa4
+#define XMS_INVALID_DEST_HANDLE				0xa5
+#define XMS_INVALID_DEST_OFFSET				0xa6
+#define XMS_INVALID_LENGTH					0xa7
 #define XMS_BLOCK_NOT_LOCKED				0xaa
 #define XMS_BLOCK_LOCKED					0xab
 #define	UMB_ONLY_SMALLER_BLOCK				0xb0
@@ -123,9 +128,7 @@ Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	return 0;
 };
 
-Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
-// size = kb
-{
+Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle) {	// size = kb
 	/* Find free handle */
 	Bit16u index=1;
 	while (!xms_handles[index].free) {
@@ -142,8 +145,7 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle)
 	return 0;
 };
 
-Bitu XMS_FreeMemory(Bitu handle)
-{
+Bitu XMS_FreeMemory(Bitu handle) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	MEM_ReleasePages(xms_handles[handle].mem);
 	xms_handles[handle].mem=-1;
@@ -166,13 +168,13 @@ Bitu XMS_MoveMemory(PhysPt bpt) {
 	PhysPt srcpt,destpt;
 	if (src_handle) {
 		if (InvalidHandle(src_handle)) {
-			return 0xa3;	/* Src Handle invalid */
+			return XMS_INVALID_SOURCE_HANDLE;
 		}
 		if (src.offset>=(xms_handles[src_handle].size*1024U)) {
-			return 0xa4;	/* Src Offset invalid */
+			return XMS_INVALID_SOURCE_OFFSET;
 		}
 		if (length>xms_handles[src_handle].size*1024U-src.offset) {
-			return 0xa7;	/* Length invalid */
+			return XMS_INVALID_LENGTH;
 		}
 		srcpt=(xms_handles[src_handle].mem*4096)+src.offset;
 	} else {
@@ -180,13 +182,13 @@ Bitu XMS_MoveMemory(PhysPt bpt) {
 	}
 	if (dest_handle) {
 		if (InvalidHandle(dest_handle)) {
-			return 0xa5;	/* Dest Handle invalid */
+			return XMS_INVALID_DEST_HANDLE;
 		}
 		if (dest.offset>=(xms_handles[dest_handle].size*1024U)) {
-			return 0xa6;	/* Dest Offset invalid */
+			return XMS_INVALID_DEST_OFFSET;
 		}
 		if (length>xms_handles[dest_handle].size*1024U-dest.offset) {
-			return 0xa7;	/* Length invalid */
+			return XMS_INVALID_LENGTH;
 		}
 		destpt=(xms_handles[dest_handle].mem*4096)+dest.offset;
 	} else {
@@ -197,16 +199,14 @@ Bitu XMS_MoveMemory(PhysPt bpt) {
 	return 0;
 }
 
-Bitu XMS_LockMemory(Bitu handle, Bit32u& address)
-{
+Bitu XMS_LockMemory(Bitu handle, Bit32u& address) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	if (xms_handles[handle].locked<255) xms_handles[handle].locked++;
 	address = xms_handles[handle].mem*4096;
 	return 0;
 };
 
-Bitu XMS_UnlockMemory(Bitu handle)
-{
+Bitu XMS_UnlockMemory(Bitu handle) {
  	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	if (xms_handles[handle].locked) {
 		xms_handles[handle].locked--;
@@ -215,8 +215,7 @@ Bitu XMS_UnlockMemory(Bitu handle)
 	return XMS_BLOCK_NOT_LOCKED;
 };
 
-Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size)
-{
+Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	lockCount = xms_handles[handle].locked;
 	/* Find available blocks */
@@ -228,8 +227,7 @@ Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit
 	return 0;
 };
 
-Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize)
-{
+Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;	
 	// Block has to be unlocked
 	if (xms_handles[handle].locked>0) return XMS_BLOCK_LOCKED;
@@ -417,9 +415,16 @@ public:
 		Bitu i;
 		BIOS_ZeroExtendedSize(true);
 		DOS_AddMultiplexHandler(multiplex_xms);
+
 		/* place hookable callback in writable memory area */
 		xms_callback=RealMake(DOS_GetMemory(0x1),0);
 		callbackhandler.Install(&XMS_Handler,CB_HOOKABLE,Real2Phys(xms_callback),"XMS Handler");
+		// pseudocode for CB_HOOKABLE:
+		//	jump near skip
+		//	nop,nop,nop
+		//	label skip:
+		//	callback XMS_Handler
+		//	retf
 	   
 		for (i=0;i<XMS_HANDLES;i++) {
 			xms_handles[i].free=true;

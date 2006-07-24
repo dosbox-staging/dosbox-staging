@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.61 2006-05-28 09:40:42 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.62 2006-07-24 19:06:55 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -61,14 +61,8 @@ static Bitu INT70_Handler(void) {
 	IO_Write(0x20,0x20);
 	return 0;
 }
-// Irq 9 calls irq 2
-static Bitu INT71_Handler() {
-	IO_Write(0xa0,0x61);
-	CALLBACK_RunRealInt(0xa);
-	return CBRET_NONE;
-}
 
-CALLBACK_HandlerObject* tandy_DAC_callback;
+CALLBACK_HandlerObject* tandy_DAC_callback[2];
 static struct {
 	Bit16u port;
 	Bit8u irq;
@@ -143,9 +137,9 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 
 	/* revector IRQ-handler if necessary */
 	RealPt current_irq=RealGetVec(tandy_sb.irq+8);
-	if (current_irq!=tandy_DAC_callback->Get_RealPointer()) {
+	if (current_irq!=tandy_DAC_callback[0]->Get_RealPointer()) {
 		real_writed(0x40,0xd6,current_irq);
-		RealSetVec(tandy_sb.irq+8,tandy_DAC_callback->Get_RealPointer());
+		RealSetVec(tandy_sb.irq+8,tandy_DAC_callback[0]->Get_RealPointer());
 	}
 
 	IO_Write(tandy_sb.port+0xc,0xd0);	/* stop DMA transfer */
@@ -222,12 +216,8 @@ static Bitu IRQ_TandyDAC(void) {
 		IO_Read(tandy_sb.port+0xe);
 
 		/* issue BIOS tandy sound device busy callout */
-		Bit16u oldax=reg_ax;
-		reg_ax=0x91fb;
-		CALLBACK_RunRealInt(0x15);
-		reg_ax = oldax;
-
-		IO_Write(0x20,0x20);
+		SegSet16(cs, RealSeg(tandy_DAC_callback[1]->Get_RealPointer()));
+		reg_ip = RealOff(tandy_DAC_callback[1]->Get_RealPointer());
 	}
 	return CBRET_NONE;
 }
@@ -338,16 +328,6 @@ static Bitu INT8_Handler(void) {
 	if (val) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
 	/* and running drive */
 	mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
-	// Save ds,dx,ax
-	Bit16u oldds = SegValue(ds);
-	Bit16u olddx = reg_dx;
-	Bit16u oldax = reg_ax;
-	// run int 1c	
-	CALLBACK_RunRealInt(0x1c);
-	// restore old values
-	SegSet16(ds,oldds);
-	reg_dx = olddx;
-	reg_ax = oldax;
 	return CBRET_NONE;
 };
 
@@ -824,14 +804,24 @@ public:
 	BIOS(Section* configuration):Module_base(configuration){
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
 		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
+
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
+
 		/* Setup all the interrupt handlers the bios controls */
 		/* INT 8 Clock IRQ Handler */
-		//TODO Maybe give this a special callback that will also call int 8 instead of starting 
-		//a new system
-		callback[0].Install(INT8_Handler,CB_IRET_EOI_PIC1,"Int 8 Clock");
+		callback[0].Install(INT8_Handler,CB_IRQ0,"Int 8 Clock");
 		callback[0].Set_RealVec(0x8);
+		// pseudocode for CB_IRQ0:
+		//	callback INT8_Handler
+		//	push ax,dx,ds
+		//	int 0x1c
+		//	cli
+		//	pop ds,dx
+		//	mov al, 0x20
+		//	out 0x20, al
+		//	pop ax
+		//	iret
 
 		mem_writed(BIOS_TIMER,0);			//Calculate the correct time
 
@@ -880,15 +870,20 @@ public:
 		callback[8].Install(&INT70_Handler,CB_IRET,"Int 70 RTC");
 		callback[8].Set_RealVec(0x70);
 
-		/* Irq 9 routed to irq 2 (which is an iret at f000:ff53) */
-		callback[9].Install(&INT71_Handler,CB_IRET,"irq 9 bios");
+		/* Irq 9 rerouted to irq 2 */
+		callback[9].Install(NULL,CB_IRQ9,"irq 9 bios");
 		callback[9].Set_RealVec(0x71);
+
+		/* Irq 2 */
+		RealPt irq2pt=RealMake(0xf000,0xff55);	/* Ghost busters 2 mt32 mode */
+		Bitu call_irq2=CALLBACK_Allocate();	
+		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(irq2pt),"irq 2 bios");
+		RealSetVec(0x0a,irq2pt);
 
 		/* Some hardcoded vectors */
 		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
 		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
 		phys_writed(0xfe988,RealGetVec(0x09));
-		RealSetVec(0xA,0xf000ff53);	/* Ghost busters 2 mt32 mode */
 
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
 		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
@@ -902,8 +897,20 @@ public:
 				real_writeb(0x40,0xd4,0xff);	/* tandy DAC init value */
 				real_writed(0x40,0xd6,0x00000000);
 				/* install the DAC callback handler */
-				tandy_DAC_callback=new CALLBACK_HandlerObject();
-				tandy_DAC_callback->Install(&IRQ_TandyDAC,CB_IRET,"Tandy DAC IRQ");
+				tandy_DAC_callback[0]=new CALLBACK_HandlerObject();
+				tandy_DAC_callback[1]=new CALLBACK_HandlerObject();
+				tandy_DAC_callback[0]->Install(&IRQ_TandyDAC,CB_IRET,"Tandy DAC IRQ");
+				tandy_DAC_callback[1]->Install(NULL,CB_TDE_IRET,"Tandy DAC end transfer");
+				// pseudocode for CB_TDE_IRET:
+				//	push ax
+				//	mov ax, 0x91fb
+				//	int 15
+				//	cli
+				//	mov al, 0x20
+				//	out 0x20, al
+				//	pop ax
+				//	iret
+
 				RealPt current_irq=RealGetVec(tandy_sb.irq+8);
 				real_writed(0x40,0xd6,current_irq);
 				for (Bitu i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
@@ -912,60 +919,59 @@ public:
 	
 		/* Setup some stuff in 0x40 bios segment */
 		/* detect parallel ports */
-	Bit8u DEFAULTPORTTIMEOUT = 10;	// 10 whatevers
-	Bitu ppindex=0; // number of lpt ports
-	if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
-		// this is our LPT1
-		mem_writew(BIOS_ADDRESS_LPT1,0x378);
-		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
-		ppindex++;
-		if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-			// this is our LPT2
-			mem_writew(BIOS_ADDRESS_LPT2,0x278);
-			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+		Bit8u DEFAULTPORTTIMEOUT = 10;	// 10 whatevers
+		Bitu ppindex=0; // number of lpt ports
+		if ((IO_Read(0x378)!=0xff)|(IO_Read(0x379)!=0xff)) {
+			// this is our LPT1
+			mem_writew(BIOS_ADDRESS_LPT1,0x378);
+			mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
 			ppindex++;
-			if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-				// this is our LPT3
-				mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
-				mem_writeb(BIOS_LPT3_TIMEOUT,DEFAULTPORTTIMEOUT);
+			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+				// this is our LPT2
+				mem_writew(BIOS_ADDRESS_LPT2,0x278);
+				mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+				ppindex++;
+				if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+					// this is our LPT3
+					mem_writew(BIOS_ADDRESS_LPT3,0x3bc);
+					mem_writeb(BIOS_LPT3_TIMEOUT,DEFAULTPORTTIMEOUT);
+					ppindex++;
+				}
+			} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
+				// this is our LPT2
+				mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
+				mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
 				ppindex++;
 			}
 		} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-			// this is our LPT2
-			mem_writew(BIOS_ADDRESS_LPT2,0x3bc);
-			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+			// this is our LPT1
+			mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
+			mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
+			ppindex++;
+			if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+				// this is our LPT2
+				mem_writew(BIOS_ADDRESS_LPT2,0x278);
+				mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
+				ppindex++;
+			}
+		} else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
+			// this is our LPT1
+			mem_writew(BIOS_ADDRESS_LPT1,0x278);
+			mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
 			ppindex++;
 		}
-	} else if((IO_Read(0x3bc)!=0xff)|(IO_Read(0x3be)!=0xff)) {
-		// this is our LPT1
-		mem_writew(BIOS_ADDRESS_LPT1,0x3bc);
-		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
-		ppindex++;
-		if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-			// this is our LPT2
-			mem_writew(BIOS_ADDRESS_LPT2,0x278);
-			mem_writeb(BIOS_LPT2_TIMEOUT,DEFAULTPORTTIMEOUT);
-			ppindex++;
-		}
-	}
-	else if((IO_Read(0x278)!=0xff)|(IO_Read(0x279)!=0xff)) {
-		// this is our LPT1
-		mem_writew(BIOS_ADDRESS_LPT1,0x278);
-		mem_writeb(BIOS_LPT1_TIMEOUT,DEFAULTPORTTIMEOUT);
-		ppindex++;
-	}
 
-	/* Setup equipment list */
-	// look http://www.bioscentral.com/misc/bda.htm
-	
-	//Bitu config=0x4400;	//1 Floppy, 2 serial and 1 parrallel 
-	Bitu config = 0x0;
-	
-	// set number of parallel ports
-	// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
-	//else if(ppindex == 1) config |= 0x0000;
-	if(ppindex == 2) config |= 0x4000;
-	else config |= 0xc000;	// 3 ports
+		/* Setup equipment list */
+		// look http://www.bioscentral.com/misc/bda.htm
+		
+		//Bitu config=0x4400;	//1 Floppy, 2 serial and 1 parrallel 
+		Bitu config = 0x0;
+		
+		// set number of parallel ports
+		// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
+		//else if(ppindex == 1) config |= 0x0000;
+		if(ppindex == 2) config |= 0x4000;
+		else config |= 0xc000;	// 3 ports
 #if (C_FPU)
 		//FPU
 		config|=0x2;
@@ -1007,15 +1013,17 @@ public:
 			IO_Write(tandy_sb.port+0xc,0xd0);
 		}
 		real_writeb(0x40,0xd4,0x00);
-		if (tandy_DAC_callback) {
+		if (tandy_DAC_callback[0]) {
 			Bit32u orig_vector=real_readd(0x40,0xd6);
-			if (orig_vector==tandy_DAC_callback->Get_RealPointer()) {
+			if (orig_vector==tandy_DAC_callback[0]->Get_RealPointer()) {
 				/* set IRQ vector to old value */
 				RealSetVec(tandy_sb.irq+8,real_readd(0x40,0xd6));
 				real_writed(0x40,0xd6,0x00000000);
 			}
-			delete tandy_DAC_callback;
-			tandy_DAC_callback=NULL;
+			delete tandy_DAC_callback[0];
+			delete tandy_DAC_callback[1];
+			tandy_DAC_callback[0]=NULL;
+			tandy_DAC_callback[1]=NULL;
 		}
 	}
 };

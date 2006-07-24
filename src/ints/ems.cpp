@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.51 2006-04-22 15:25:45 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.52 2006-07-24 19:06:55 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -721,8 +721,8 @@ static Bitu INT67_Handler(void) {
 				reg_di+=0x400;		// advance pointer by 0x100*4
 				
 				/* Set up three descriptor table entries */
-				Bit32u cbseg_low=(CB_BASE&0xffff)<<16;
-				Bit32u cbseg_high=(CB_BASE&0x1f0000)>>16;
+				Bit32u cbseg_low=(CALLBACK_GetBase()&0xffff)<<16;
+				Bit32u cbseg_high=(CALLBACK_GetBase()&0x1f0000)>>16;
 				/* Descriptor 1 (code segment, callback segment) */
 				real_writed(SegValue(ds),reg_si+0x00,0x0000ffff|cbseg_low);
 				real_writed(SegValue(ds),reg_si+0x04,0x00009a00|cbseg_high);
@@ -1161,21 +1161,23 @@ public:
 		int67.Install(&INT67_Handler,CB_IRET,"Int 67 ems");
 		Bit16u call_int67=int67.Get_callback();
 
-	/* Register the ems device */
+		/* Register the ems device */
 		//TODO MAYBE put it in the class.
 		DOS_Device * newdev = new device_EMM();
 		DOS_AddDevice(newdev);
 	
-	/* Add a little hack so it appears that there is an actual ems device installed */
+		/* Add a little hack so it appears that there is an actual ems device installed */
 		char * emsname="EMMXXXX0";
 		if(!emsnameseg) emsnameseg=DOS_GetMemory(2);	//We have 32 bytes
 		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,strlen(emsname)+1);
-	/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
+
+		/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
 		char buf[16];
-		MEM_BlockRead(PhysMake(CB_SEG,call_int67<<4),buf,0xa);
+		MEM_BlockRead(CALLBACK_PhysPointer(call_int67),buf,0xa);
 		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,0xa);
 		RealSetVec(0x67,RealMake(emsnameseg,0),old67_pointer);
-	/* Clear handle and page tables */
+
+		/* Clear handle and page tables */
 		Bitu i;
 		for (i=0;i<EMM_MAX_HANDLES;i++) {
 			emm_handles[i].mem=0;

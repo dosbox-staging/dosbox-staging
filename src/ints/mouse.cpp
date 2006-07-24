@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.62 2006-04-22 15:25:45 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.63 2006-07-24 19:06:55 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -34,7 +34,7 @@
 #include "bios.h"
 
 
-static Bitu call_int33,call_int74;
+static Bitu call_int33,call_int74,int74_ret_callback;
 static Bit16u ps2cbseg,ps2cbofs;
 static bool useps2callback,ps2callbackinit;
 static Bit16u call_ps2;
@@ -870,35 +870,32 @@ static Bitu INT74_Handler(void) {
 		mouse.events--;
 		/* Check for an active Interrupt Handler that will get called */
 		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
-			/* Save lot's of registers */
-			Bit32u oldeax,oldebx,oldecx,oldedx,oldesi,oldedi,oldebp,oldesp;
-			Bit16u oldds,oldes,oldss;
-			oldeax=reg_eax;oldebx=reg_ebx;oldecx=reg_ecx;oldedx=reg_edx;
-			oldesi=reg_esi;oldedi=reg_edi;oldebp=reg_ebp;oldesp=reg_esp;
-			oldds=SegValue(ds); oldes=SegValue(es);	oldss=SegValue(ss); // Save segments
 			reg_ax=mouse.event_queue[mouse.events].type;
 			reg_bx=mouse.event_queue[mouse.events].buttons;
 			reg_cx=POS_X;
 			reg_dx=POS_Y;
 			reg_si=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
 			reg_di=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
-			// Hmm... this look ok, but moonbase wont work with it
-			/*if (mouse.event_queue[mouse.events].type==MOUSE_MOVED) {
-				mouse.mickey_x=0;
-				mouse.mickey_y=0;
-			}*/
-			CALLBACK_RunRealFar(mouse.sub_seg,mouse.sub_ofs);
-			reg_eax=oldeax;reg_ebx=oldebx;reg_ecx=oldecx;reg_edx=oldedx;
-			reg_esi=oldesi;reg_edi=oldedi;reg_ebp=oldebp;reg_esp=oldesp;
-			SegSet16(ds,oldds); SegSet16(es,oldes); SegSet16(ss,oldss); // Save segments
-
+			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
+			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
+			SegSet16(cs, mouse.sub_seg);
+			reg_ip = mouse.sub_ofs;
+		} else if (useps2callback) {
+			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
+			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
+			DoPS2Callback(mouse.event_queue[mouse.events].buttons, POS_X, POS_Y);
+		} else {
+			SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
+			reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
 		}
-		DoPS2Callback(mouse.event_queue[mouse.events].buttons, POS_X, POS_Y);
-
+	} else {
+		SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
+		reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
 	}
-	IO_Write(0xa0,0x20);
-	IO_Write(0x20,0x20);
-	/* Check for more Events if so reactivate IRQ */
+	return CBRET_NONE;
+}
+
+Bitu MOUSE_UserInt_CB_Handler(void) {
 	if (mouse.events) {
 		PIC_ActivateIRQ(MOUSE_IRQ);
 	}
@@ -911,18 +908,40 @@ void MOUSE_Init(Section* sec) {
 	call_int33=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
-	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33<<4)-0x10));
+	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10));
 
 	// Callback for ps2 irq
 	call_int74=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRET,"int 74");
+	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRQ12,"int 74");
+	// pseudocode for CB_IRQ12:
+	//	push ds
+	//	push es
+	//	pushad
+	//	sti
+	//	callback INT74_Handler
+	//		doesn't return here, but rather to CB_IRQ12_RET
+	//		(ps2 callback/user callback inbetween if requested)
+
+	int74_ret_callback=CALLBACK_Allocate();
+	CALLBACK_Setup(int74_ret_callback,&MOUSE_UserInt_CB_Handler,CB_IRQ12_RET,"int 74 ret");
+	// pseudocode for CB_IRQ12_RET:
+	//	callback MOUSE_UserInt_CB_Handler
+	//	cli
+	//	mov al, 0x20
+	//	out 0xa0, al
+	//	out 0x20, al
+	//	popad
+	//	pop es
+	//	pop ds
+	//	iret
+
 	Bit8u hwvec=(MOUSE_IRQ>7)?(0x70+MOUSE_IRQ-8):(0x8+MOUSE_IRQ);
 	RealSetVec(hwvec,CALLBACK_RealPointer(call_int74));
 
 	// Callback for ps2 user callback handling
 	useps2callback = false; ps2callbackinit = false;
  	call_ps2=CALLBACK_Allocate();
-	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_IRET,"ps2 bios callback");
+	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_RETF,"ps2 bios callback");
 	ps2_callback=CALLBACK_RealPointer(call_ps2);
 
 	memset(&mouse,0,sizeof(mouse));

@@ -223,32 +223,14 @@ static bool check_key(Bit16u &code) {
 	*/
 
 
-
+/* the scancode is in reg_al */
 static Bitu IRQ1_Handler(void) {
-/* handling of the locks key is difficult as sdl only gives states for
- * numlock capslock. 
+/* handling of the locks key is difficult as sdl only gives
+ * states for numlock capslock. 
  */
-/* in reg_al is the scancode */
+	Bitu scancode=reg_al;	/* Read the code */
 
-	/* Read the code */
-	Bitu scancode; //,ascii,mod;
-#if 1
-	scancode=reg_al;    //IO_Read(0x60); moved out of handler
-
-
-#else
-	/* Old code capable of unicode keys. Dropped Readkey disabled in keyboard.cpp */   
-	KEYBOARD_ReadKey(scancode,ascii,mod);
-	LOG_MSG("Got code %X ascii %C mod %X",scancode,ascii,mod);
-#endif	
-	Bit16u old_ax=reg_ax;
-	reg_flags|=1;
-	reg_ah=0x4f;reg_al=scancode;
-	CALLBACK_RunRealInt(0x15);
-	reg_ax=old_ax;Bit8u flags1,flags2,flags3,leds;
-	if (!(reg_flags&1)) goto irq1_return;
-
-
+	Bit8u flags1,flags2,flags3,leds;
 	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
 	flags3=mem_readb(BIOS_KEYBOARD_FLAGS3);
@@ -334,7 +316,7 @@ static Bitu IRQ1_Handler(void) {
 				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
 				IO_Write(0x20,0x20);
 				while (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) CALLBACK_Idle();	// pause loop
-				reg_ip+=4;	// skip out 20,20
+				reg_ip+=5;	// skip out 20,20
 				return CBRET_NONE;
 			}
 		} else {
@@ -460,7 +442,6 @@ irq1_end:
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
 	mem_writeb(BIOS_KEYBOARD_LEDS,leds);
-irq1_return:
 /*	IO_Write(0x20,0x20); moved out of handler to be virtualizable */
 #if 0
 /* Signal the keyboard for next code */
@@ -469,22 +450,6 @@ irq1_return:
 	IO_Write(0x61,old61 | 128);
 	IO_Write(0x64,0xae);
 #endif
-	return CBRET_NONE;
-}
-
-static Bitu IRQ6_Handler(void) {
-	Bit8u scancode=IO_Read(0x60);
-	/* skip extended keys, all of them should map quite nicely
-	   onto corresponding non-extended keys */
-	if (scancode!=0xe0) {
-		Bit16u old_ax=reg_ax;
-		reg_al=scancode;
-		/* call the real keyboard IRQ now, with the scancode in AL */
-		CALLBACK_RunRealInt(0x09);
-		reg_ax=old_ax;
-	}
-
-	IO_Write(0x20,0x20);
 	return CBRET_NONE;
 }
 
@@ -519,30 +484,25 @@ static Bitu INT16_Handler(void) {
 	Bit16u temp=0;
 	switch (reg_ah) {
 	case 0x00: /* GET KEYSTROKE */
-		for (;;) {
-			if (get_key(temp)) {
-				if (!IsEnhancedKey(temp)) {
-					/* normal key, exit scanning for keys */
-					break;
-				}
-			}
-			CALLBACK_Idle();
+		if ((get_key(temp)) && (!IsEnhancedKey(temp))) {
+			/* normal key found, return translated key in ax */
+			reg_ax=temp;
+		} else {
+			/* enter small idle loop to allow for irqs to happen */
+			reg_ip+=1;
 		}
-		/* normal key found, return translated key in ax */
-		reg_ax=temp;
 		break;
 	case 0x10: /* GET KEYSTROKE (enhanced keyboards only) */
-		for (;;) {
-			if (get_key(temp)) {
-				if (((temp&0xff)==0xf0) && (temp>>8)) {
-					/* special enhanced key, clear low part before returning key */
-					temp&=0xff00;
-				}
-				break;
+		if (get_key(temp)) {
+			if (((temp&0xff)==0xf0) && (temp>>8)) {
+				/* special enhanced key, clear low part before returning key */
+				temp&=0xff00;
 			}
-			CALLBACK_Idle();
+			reg_ax=temp;
+		} else {
+			/* enter small idle loop to allow for irqs to happen */
+			reg_ip+=1;
 		}
-		reg_ax=temp;
 		break;
 	case 0x01: /* CHECK FOR KEYSTROKE */
 		for (;;) {
@@ -561,7 +521,7 @@ static Bitu INT16_Handler(void) {
 				CALLBACK_SZF(true);
 				break;
 			}
-			CALLBACK_Idle();
+//			CALLBACK_Idle();
 		}
 		break;
 	case 0x11: /* CHECK FOR KEYSTROKE (enhanced keyboards only) */
@@ -630,37 +590,51 @@ static void InitBiosSegment(void) {
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
 	mem_writeb(BIOS_KEYBOARD_TOKEN,0);
 	mem_writeb(BIOS_KEYBOARD_LEDS,leds);
-
 }
 
 void BIOS_SetupKeyboard(void) {
 	/* Init the variables */
 	InitBiosSegment();
-	/* Allocate a callback for int 0x16 and for standard IRQ 1 handler */
+
+	/* Allocate/setup a callback for int 0x16 and for standard IRQ 1 handler */
 	call_int16=CALLBACK_Allocate();	
-	call_irq1=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int16,&INT16_Handler,CB_IRET_STI,"keyboard");
+	CALLBACK_Setup(call_int16,&INT16_Handler,CB_INT16,"keyboard");
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
-	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRET,"keyboard irq");
+
+	call_irq1=CALLBACK_Allocate();	
+	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,"keyboard irq");
 	RealSetVec(0x9,CALLBACK_RealPointer(call_irq1));
+	// pseudocode for CB_IRQ1:
+	//	push ax
+	//	in al, 0x60
+	//	mov ah, 0x4f
+	//	stc
+	//	int 15
+	//	jc skip
+	//	callback IRQ1_Handler
+	//	label skip:
+	//	cli
+	//	mov al, 0x20
+	//	out 0x20, al
+	//	pop ax
+	//	iret
+
 	if (machine==MCH_PCJR) {
 		call_irq6=CALLBACK_Allocate();
-		CALLBACK_Setup(call_irq6,&IRQ6_Handler,CB_IRET,"PCJr kb irq");
+		CALLBACK_Setup(call_irq6,NULL,CB_IRQ6_PCJR,"PCJr kb irq");
 		RealSetVec(0x0e,CALLBACK_RealPointer(call_irq6));
+		// pseudocode for CB_IRQ6_PCJR:
+		//	push ax
+		//	in al, 0x60
+		//	cmp al, 0xe0
+		//	je skip
+		//	int 0x09
+		//	label skip:
+		//	cli
+		//	mov al, 0x20
+		//	out 0x20, al
+		//	pop ax
+		//	iret
 	}
-
-	/* bring the all port operations outside the callback */
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x00,(Bit8u)0x50);		// push ax
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x01,(Bit8u)0xe4);		// in al, 0x60
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x02,(Bit8u)0x60);
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x03,(Bit8u)0xFE);		//GRP 4
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x04,(Bit8u)0x38);		//Extra Callback instruction
-	phys_writew(CB_BASE+(call_irq1<<4)+0x05,call_irq1);		//The immediate word
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x07,(Bit8u)0xb0);		// mov al, 0x20
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x08,(Bit8u)0x20);
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x09,(Bit8u)0xe6);		// out 0x20, al
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x0a,(Bit8u)0x20);
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x0b,(Bit8u)0x58);		// pop ax
-	phys_writeb(CB_BASE+(call_irq1<<4)+0x0c,(Bit8u)0xcf);		// iret
 }
 

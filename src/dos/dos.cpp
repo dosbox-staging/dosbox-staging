@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.94 2006-04-21 08:23:40 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.95 2006-07-24 19:06:55 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -981,21 +981,19 @@ static Bitu DOS_21Handler(void) {
 };
 
 
-
 static Bitu DOS_20Handler(void) {
-
 	reg_ax=0x4c00;
 	DOS_21Handler();
 	return CBRET_NONE;
 }
 
-static Bitu DOS_27Handler(void) 
-{
+static Bitu DOS_27Handler(void) {
 	// Terminate & stay resident
 	Bit16u para = (reg_dx/16)+((reg_dx % 16)>0);
 	if (DOS_ResizeMemory(dos.psp(),&para)) DOS_Terminate(true);
 	return CBRET_NONE;
 }
+
 static Bitu DOS_25Handler(void) {
 	if(Drives[reg_al]==0){
 		reg_ax=0x8002;
@@ -1020,20 +1018,6 @@ static Bitu DOS_26Handler(void) {
 	}
     return CBRET_NONE;
 }
-static Bitu DOS_28Handler(void) {
-    return CBRET_NONE;
-}
-
-static Bitu DOS_29Handler(void) {
-	static bool int29warn=false;
-	if(!int29warn) { 
-		LOG(LOG_DOSMISC,LOG_WARN)("Int 29 called. Redirecting to int 10:0x0e");
-		int29warn=true;
-	}
-	reg_ah=0x0e;
-	CALLBACK_RunRealInt(0x10);
-	return CBRET_NONE;
-}
 
 
 class DOS:public Module_base{
@@ -1056,11 +1040,17 @@ public:
 		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");
 		callback[4].Set_RealVec(0x27);
 
-		callback[5].Install(DOS_28Handler,CB_IRET,"DOS Int 28");
+		callback[5].Install(NULL,CB_IRET,"DOS Int 28");
 		callback[5].Set_RealVec(0x28);
 
-		callback[6].Install(DOS_29Handler,CB_IRET,"CON Output Int 29");
+		callback[6].Install(NULL,CB_INT29,"CON Output Int 29");
 		callback[6].Set_RealVec(0x29);
+		// pseudocode for CB_INT29:
+		//	push ax
+		//	mov ah, 0x0e
+		//	int 0x10
+		//	pop ax
+		//	iret
 
 		DOS_SetupFiles();								/* Setup system File tables */
 		DOS_SetupDevices();							/* Setup dos devices */
