@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.76 2006-07-21 09:40:10 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.77 2006-07-26 11:36:30 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -485,28 +485,49 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        //"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
-	MSG_Add("SHELL_CMD_CHDIR_HELP","Change Directory.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"
+	        "CHDIR [..]\n"
+	        "CD [drive:][path]\n"
+	        "CD [..]\n\n"
+	        "  ..   Specifies that you want to change to the parent directory.\n\n"
+	        "Type CD drive: to display the current directory in the specified drive.\n"
+	        "Type CD without parameters to display the current drive and directory.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP","Clear screen.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP","Directory View.\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP","Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP","Exit from the shell.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP","Show help.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP","Make Directory.\n");
+	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG","MKDIR [drive:][path]\n"
+	        "MD [drive:][path]\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP","Remove Directory.\n");
+	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG","RMDIR [drive:][path]\n"
+	        "RD [drive:][path]\n");
 	MSG_Add("SHELL_CMD_SET_HELP","Change environment variables.\n");
 	MSG_Add("SHELL_CMD_IF_HELP","Performs conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP","Jump to a labeled line in a batch script.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP","Leftshift commandline parameters in a batch script.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP","Display the contents of a text-file.\n");
+	MSG_Add("SHELL_CMD_TYPE_HELP_LONG","TYPE [drive:][path][filename]\n");
 	MSG_Add("SHELL_CMD_REM_HELP","Add comments in a batch file.\n");
+	MSG_Add("SHELL_CMD_REM_HELP_LONG","REM [comment]\n");
 	MSG_Add("SHELL_CMD_NO_WILD","This is a simple version of the command, no wildcards allowed!\n");
-	MSG_Add("SHELL_CMD_RENAME_HELP","Renames files.\n");
-	MSG_Add("SHELL_CMD_DELETE_HELP","Removes files.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP","Renames one or more files.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP_LONG","RENAME [drive:][path]filename1 filename2.\n"
+	        "REN [drive:][path]filename1 filename2.\n\n"
+	        "Note that you can not specify a new drive or path for your destination file.\n");
+	MSG_Add("SHELL_CMD_DELETE_HELP","Removes one or more files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP","Copy files.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP","Start a batch file from within another batch file.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP","Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP","Loads a program into upper memory (requires xms=true,umb=true).\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP","Waits for a keypress and sets ERRORLEVEL.\n");
+	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG","CHOICE [/C:choices] [/N] [/S] text\n"
+	        "  /C[:]choices  -  Specifies allowable keys.  Default is: yn.\n"
+	        "  /N  -  Do not display the choices at end of prompt.\n"
+	        "  /S  -  Enables case-sensitive choices to be selected.\n"
+	        "  text  -  The text to display as a prompt.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP","Does nothing. Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");

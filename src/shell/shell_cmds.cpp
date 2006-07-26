@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.68 2006-07-21 09:40:10 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.69 2006-07-26 11:36:30 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -117,13 +117,24 @@ void DOS_Shell::DoCommand(char * line) {
 	WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),cmd);
 }
 
+#define HELP(command) \
+	if (ScanCMDBool(args,"?")) { \
+		WriteOut(MSG_Get("SHELL_CMD_" command "_HELP")); \
+		const char* long_m = MSG_Get("SHELL_CMD_" command "_HELP_LONG"); \
+		WriteOut("\n"); \
+		if(strcmp("Message not Found!\n",long_m)) WriteOut(long_m); \
+		else WriteOut(command "\n"); \
+		return; \
+	}
 
 void DOS_Shell::CMD_CLS(char * args) {
+	HELP("CLS");
 	reg_ax=0x0003;
 	CALLBACK_RunRealInt(0x10);
 };
 
 void DOS_Shell::CMD_DELETE(char * args) {
+	HELP("DELETE");
 	/* Command uses dta so set it to our internal dta */
 	RealPt save_dta=dos.dta();
 	dos.dta(dos.tables.tempdta);
@@ -163,6 +174,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 }
 
 void DOS_Shell::CMD_HELP(char * args){
+	HELP("HELP");
 	/* Print the help */
 	WriteOut(MSG_Get("SHELL_CMD_HELP"));
         Bit32u cmd_index=0;
@@ -174,6 +186,7 @@ void DOS_Shell::CMD_HELP(char * args){
 }
 
 void DOS_Shell::CMD_RENAME(char * args){
+	HELP("RENAME");
 	StripSpaces(args);
 	if(!*args) {SyntaxError();return;}
 	if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
@@ -207,6 +220,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 }
 
 void DOS_Shell::CMD_ECHO(char * args){
+	HELP("ECHO");
 	if (!*args) {
 		if (echo) { WriteOut(MSG_Get("SHELL_CMD_ECHO_ON"));}
 		else { WriteOut(MSG_Get("SHELL_CMD_ECHO_OFF"));}
@@ -230,10 +244,12 @@ void DOS_Shell::CMD_ECHO(char * args){
 
 
 void DOS_Shell::CMD_EXIT(char * args) {
-	exit=true;
+	HELP("EXIT");
+	exit = true;
 };
 
 void DOS_Shell::CMD_CHDIR(char * args) {
+	HELP("CHDIR");
 	StripSpaces(args);
 	if (!*args) {
 		Bit8u drive=DOS_GetDefaultDrive()+'A';
@@ -248,6 +264,7 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 };
 
 void DOS_Shell::CMD_MKDIR(char * args) {
+	HELP("MKDIR");
 	StripSpaces(args);
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -260,6 +277,7 @@ void DOS_Shell::CMD_MKDIR(char * args) {
 };
 
 void DOS_Shell::CMD_RMDIR(char * args) {
+	HELP("RMDIR");
 	StripSpaces(args);
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -296,6 +314,7 @@ static void FormatNumber(Bitu num,char * buf) {
 }	
 
 void DOS_Shell::CMD_DIR(char * args) {
+	HELP("DIR");
 	char numformat[16];
 	char path[DOS_PATHLENGTH];
 
@@ -437,6 +456,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 }
 
 void DOS_Shell::CMD_COPY(char * args) {
+	HELP("COPY");
 	static char defaulttarget[] = ".";
 	StripSpaces(args);
 	/* Command uses dta so set it to our internal dta */
@@ -550,6 +570,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 }
 
 void DOS_Shell::CMD_SET(char * args) {
+	HELP("SET");
 	StripSpaces(args);
 	std::string line;
 	if (!*args) {
@@ -595,6 +616,7 @@ void DOS_Shell::CMD_SET(char * args) {
 }
 
 void DOS_Shell::CMD_IF(char * args) {
+	HELP("IF");
 	StripSpaces(args);
 	bool has_not=false;
 	char * comp=strchr(args,'=');
@@ -659,6 +681,7 @@ void DOS_Shell::CMD_IF(char * args) {
 }
 
 void DOS_Shell::CMD_GOTO(char * args) {
+	HELP("GOTO");
 	StripSpaces(args);
 	if (!bf) return;
 	if (*args &&(*args==':')) args++;
@@ -672,11 +695,13 @@ void DOS_Shell::CMD_GOTO(char * args) {
 	}
 }
 
-void DOS_Shell::CMD_SHIFT(char * /*args*/ ) {
+void DOS_Shell::CMD_SHIFT(char * args ) {
+	HELP("SHIFT");
 	if(bf) bf->Shift();
 }
 
 void DOS_Shell::CMD_TYPE(char * args) {
+	HELP("TYPE");
 	StripSpaces(args);
 	if (!*args) {
 		WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
@@ -701,15 +726,18 @@ nextfile:
 }
 
 void DOS_Shell::CMD_REM(char * args) {
+	HELP("REM");
 }
 
 void DOS_Shell::CMD_PAUSE(char * args){
+	HELP("PAUSE");
 	WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
 	Bit8u c;Bit16u n=1;
 	DOS_ReadFile (STDIN,&c,&n);
 }
 
 void DOS_Shell::CMD_CALL(char * args){
+	HELP("CALL");
 	this->call=true; /* else the old batchfile will be closed first */
 	this->ParseLine(args);
 	this->call=false;
@@ -719,6 +747,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 /* If more that one type can be substed think of something else 
  * E.g. make basedir member dos_drive instead of localdrive
  */
+	HELP("SUBST");
 	localDrive* ldp=0;
 	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
@@ -771,6 +800,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 }
 
 void DOS_Shell::CMD_LOADHIGH(char *args){
+	HELP("LOADHIGH");
 	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
 	Bit8u umb_flag=dos_infoblock.GetUMBChainState();
 	Bit8u old_memstrat=DOS_GetMemAllocStrategy()&0xff;
@@ -785,6 +815,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 }
 
 void DOS_Shell::CMD_CHOICE(char * args){
+	HELP("CHOICE");
 	static char defchoice[3] = {'y','n',0};
 	char *rem = NULL, *ptr;
 	bool optN = ScanCMDBool(args,"N");
@@ -837,10 +868,12 @@ void DOS_Shell::CMD_CHOICE(char * args){
 }
 
 void DOS_Shell::CMD_ATTRIB(char *args){
+	HELP("ATTRIB");
 	// No-Op for now.
 }
 
 void DOS_Shell::CMD_PATH(char *args){
+	HELP("PATH");
 	if(args && *args && strlen(args)){
 		char pathstring[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
 		strcpy(pathstring,"set PATH=");
@@ -860,6 +893,7 @@ void DOS_Shell::CMD_PATH(char *args){
 }
 
 void DOS_Shell::CMD_VER(char *args) {
+	HELP("VER");
 	if(args && *args) {
 		char* word = StripWord(args);
 		if(strcasecmp(word,"set")) return;

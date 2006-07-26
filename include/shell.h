@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.17 2006-07-21 09:40:10 qbix79 Exp $ */
+/* $Id: shell.h,v 1.18 2006-07-26 11:36:30 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -105,7 +105,7 @@ public:
 	void CMD_CHOICE(char * args);
 	void CMD_ATTRIB(char * args);
 	void CMD_PATH(char * args);
-	void CMD_SHIFT(char * /*args*/);
+	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);
 	/* The shell's variables */
 	Bit16u input_handle;
