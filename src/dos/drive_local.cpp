@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.69 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.70 2006-08-01 20:57:28 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -154,16 +154,22 @@ bool localDrive::FileUnlink(char * name) {
 		//File exists and can technically be deleted, nevertheless it failed.
 		//This means that the file is probably open by some process.
 		//See if We have it open.
-		DOS_File* found_file = 0;
+		bool found_file = false;
 		for(Bitu i = 0;i < DOS_FILES;i++){
-			if(Files[i] && Files[i]->IsName(name))
-				if(!found_file) found_file=Files[i];
-				else return false;
+			if(Files[i] && Files[i]->IsName(name)) {
+				Bitu max = DOS_FILES;
+				while(Files[i]->IsOpen() && max--) {
+					Files[i]->Close();
+					if (Files[i]->RemoveRef()<=0) {
+						delete Files[i];
+						Files[i]=0;
+						break;
+					}
+				}
+				found_file=true;
+			}
 		}
 		if(!found_file) return false;
-		Bitu max = DOS_FILES;
-		while(found_file->IsOpen() && max--)
-			found_file->Close();
 		if (!unlink(fullname)) {
 			dirCache.DeleteEntry(newname);
 			return true;
