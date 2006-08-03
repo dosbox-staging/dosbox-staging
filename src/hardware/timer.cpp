@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.39 2006-07-10 09:27:37 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.40 2006-08-03 19:36:12 c2woody Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -195,7 +195,6 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			if (p->new_mode || p->mode == 0 ) {
-				p->new_mode=false;
 				PIC_AddEvent(PIT0_Event,p->delay);
 			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
 			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.2f Hz mode %d",1000.0/p->delay,p->mode);
@@ -207,6 +206,7 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 		default:
 			LOG(LOG_PIT,LOG_ERROR)("PIT:Illegal timer selected for writing");
 		}
+		p->new_mode=false;
     }
 }
 
