@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.52 2006-07-24 19:06:55 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.53 2006-08-04 17:30:46 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1193,7 +1193,7 @@ public:
 
 		/* Install a callback that handles VCPI-requests in protected mode requests */
 		call_vcpi.Install(&VCPI_PM_Handler,CB_IRETD,"VCPI PM");
-		vcpi.pm_interface=(call_vcpi.Get_callback())<<4;
+		vcpi.pm_interface=(call_vcpi.Get_callback())*CB_SIZE;
 
 		/* Initialize private data area and set up descriptor tables */
 		SetupVCPI();
