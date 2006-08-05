@@ -33,13 +33,18 @@ typedef enum {
 	scalerMode8, scalerMode15, scalerMode16, scalerMode32
 } scalerMode_t;
 
-typedef enum {
+typedef enum scalerOperation {
 	scalerOpNormal,
 	scalerOpAdvMame,
 	scalerOpAdvInterp,
+	scalerOpHQ,
+	scalerOpSaI,
+	scalerOpSuperSaI,
+	scalerOpSuperEagle,
 	scalerOpTV,
 	scalerOpRGB,
 	scalerOpScan,
+	scalerLast,
 } scalerOperation_t;
 
 typedef void (*ScalerLineHandler_t)(const void *src);
@@ -66,6 +71,7 @@ extern scalerChangeCache_t scalerChangeCache;
 typedef ScalerLineHandler_t ScalerLineBlock_t[5][4];
 
 typedef struct {
+	char *name;
 	Bitu gfxFlags;
 	Bitu xscale,yscale;
 	ScalerComplexHandler_t Linear[4];
@@ -73,6 +79,7 @@ typedef struct {
 } ScalerComplexBlock_t;
 
 typedef struct {
+	char *name;
 	Bitu gfxFlags;
 	Bitu xscale,yscale;
 	ScalerLineBlock_t	Linear;
@@ -97,6 +104,11 @@ extern ScalerSimpleBlock_t ScaleRGB3x;
 extern ScalerSimpleBlock_t ScaleScan2x;
 extern ScalerSimpleBlock_t ScaleScan3x;
 /* Complex scalers */
+extern ScalerComplexBlock_t ScaleHQ2x;
+extern ScalerComplexBlock_t ScaleHQ3x;
+extern ScalerComplexBlock_t Scale2xSaI;
+extern ScalerComplexBlock_t ScaleSuper2xSaI;
+extern ScalerComplexBlock_t ScaleSuperEagle;
 extern ScalerComplexBlock_t ScaleAdvMame2x;
 extern ScalerComplexBlock_t ScaleAdvMame3x;
 extern ScalerComplexBlock_t ScaleAdvInterp2x;

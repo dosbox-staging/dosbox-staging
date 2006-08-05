@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.46 2006-05-27 07:01:33 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.47 2006-08-05 09:06:44 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -238,6 +238,24 @@ void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 			else if (render.scale.size == 3)
 				complexBlock = &ScaleAdvMame3x;
 			break;
+		case scalerOpHQ:
+			if (render.scale.size == 2)
+				complexBlock = &ScaleHQ2x;
+			else if (render.scale.size == 3)
+				complexBlock = &ScaleHQ3x;
+			break;
+		case scalerOpSuperSaI:
+			if (render.scale.size == 2)
+				complexBlock = &ScaleSuper2xSaI;
+			break;
+		case scalerOpSuperEagle:
+			if (render.scale.size == 2)
+				complexBlock = &ScaleSuperEagle;
+			break;
+		case scalerOpSaI:
+			if (render.scale.size == 2)
+				complexBlock = &Scale2xSaI;
+			break;
 		case scalerOpTV:
 			if (render.scale.size == 2)
 				simpleBlock = &ScaleTV2x;
@@ -274,10 +292,12 @@ forcenormal:
 		gfx_flags = complexBlock->gfxFlags;
 		xscale = complexBlock->xscale;	
 		yscale = complexBlock->yscale;
+//		LOG_MSG("Scaler:%s",complexBlock->name);
 	} else {
 		gfx_flags = simpleBlock->gfxFlags;
 		xscale = simpleBlock->xscale;	
 		yscale = simpleBlock->yscale;
+//		LOG_MSG("Scaler:%s",simpleBlock->name);
 	}
 	switch (render.src.bpp) {
 	case 8:
@@ -421,6 +441,18 @@ static void DecreaseFrameSkip(bool pressed) {
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
 	GFX_SetTitle(-1,render.frameskip.max,false);
 }
+/* Disabled as I don't want to waste a keybind for that. Might be used in the future (Qbix)
+static void ChangeScaler(bool pressed) {
+	if (!pressed)
+		return;
+	render.scale.op = (scalerOperation)((int)render.scale.op+1);
+	if((render.scale.op) >= scalerLast || render.scale.size == 1) {
+		render.scale.op = (scalerOperation)0;
+		if(++render.scale.size > 3)
+			render.scale.size = 1;
+	}
+	RENDER_CallBack( GFX_CallBackReset );
+} */
 
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -448,6 +480,11 @@ void RENDER_Init(Section * sec) {
 	else if (!strcasecmp(scaler,"advmame3x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"advinterp2x")) { render.scale.op = scalerOpAdvInterp;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"advinterp3x")) { render.scale.op = scalerOpAdvInterp;render.scale.size = 3; }
+	else if (!strcasecmp(scaler,"hq2x")) { render.scale.op = scalerOpHQ;render.scale.size = 2; }
+	else if (!strcasecmp(scaler,"hq3x")) { render.scale.op = scalerOpHQ;render.scale.size = 3; }
+	else if (!strcasecmp(scaler,"2xsai")) { render.scale.op = scalerOpSaI;render.scale.size = 2; }
+	else if (!strcasecmp(scaler,"super2xsai")) { render.scale.op = scalerOpSuperSaI;render.scale.size = 2; }
+	else if (!strcasecmp(scaler,"supereagle")) { render.scale.op = scalerOpSuperEagle;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"tv2x")) { render.scale.op = scalerOpTV;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"tv3x")) { render.scale.op = scalerOpTV;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"rgb2x")){ render.scale.op = scalerOpRGB;render.scale.size = 2; }

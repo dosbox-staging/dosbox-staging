@@ -25,6 +25,12 @@
 #define redMask		0
 #define	greenMask	0
 #define blueMask	0
+#define redBits		0
+#define greenBits	0
+#define blueBits	0
+#define redShift	0
+#define greenShift	0
+#define blueShift	0
 #elif DBPP == 15 || DBPP == 16
 #define PSIZE 2
 #define PTYPE Bit16u
@@ -35,10 +41,22 @@
 #define	redMask		0x7C00
 #define	greenMask	0x03E0
 #define	blueMask	0x001F
+#define redBits		5
+#define greenBits	5
+#define blueBits	5
+#define redShift	10
+#define greenShift	5
+#define blueShift	0
 #elif DBPP == 16
 #define redMask		0xF800
 #define greenMask	0x07E0
 #define blueMask	0x001F
+#define redBits		5
+#define greenBits	6
+#define blueBits	5
+#define redShift	11
+#define greenShift	5
+#define blueShift	0
 #endif
 #elif DBPP == 32
 #define PSIZE 4
@@ -49,6 +67,12 @@
 #define redMask		0xff0000
 #define greenMask	0x00ff00
 #define blueMask	0x0000ff
+#define redBits		8
+#define greenBits	8
+#define blueBits	8
+#define redShift	16
+#define greenShift	8
+#define blueShift	0
 #endif
 
 #define redblueMask (redMask | blueMask)
@@ -104,6 +128,11 @@
 #define SRCTYPE Bit32u
 #endif
 
+//  C0 C1 C2 D3
+//  C3 C4 C5 D4
+//  C6 C7 C8 D5
+//  D0 D1 D2 D6
+
 #define C0 fc[-1 - SCALER_COMPLEXWIDTH]
 #define C1 fc[+0 - SCALER_COMPLEXWIDTH]
 #define C2 fc[+1 - SCALER_COMPLEXWIDTH]
@@ -113,6 +142,15 @@
 #define C6 fc[-1 + SCALER_COMPLEXWIDTH]
 #define C7 fc[+0 + SCALER_COMPLEXWIDTH]
 #define C8 fc[+1 + SCALER_COMPLEXWIDTH]
+
+#define D0 fc[-1 + 2*SCALER_COMPLEXWIDTH]
+#define D1 fc[+0 + 2*SCALER_COMPLEXWIDTH]
+#define D2 fc[+1 + 2*SCALER_COMPLEXWIDTH]
+#define D3 fc[+2 - SCALER_COMPLEXWIDTH]
+#define D4 fc[+2]
+#define D5 fc[+2 + SCALER_COMPLEXWIDTH]
+#define D6 fc[+2 + 2*SCALER_COMPLEXWIDTH]
+
 
 static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 	const SRCTYPE * src = (SRCTYPE*)s;
@@ -352,6 +390,62 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 
 #if (DBPP > 8)
 
+#include "render_templates_hq.h"
+
+#define SCALERNAME		HQ2x
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#include "render_templates_hq2x.h"
+#define SCALERFUNC		conc2d(Hq2x,SBPP)(line0, line1, fc)
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#define SCALERNAME		HQ3x
+#define SCALERWIDTH		3
+#define SCALERHEIGHT	3
+#include "render_templates_hq3x.h"
+#define SCALERFUNC		conc2d(Hq3x,SBPP)(line0, line1, line2, fc)
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#include "render_templates_sai.h"
+
+#define SCALERNAME		Super2xSaI
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC		conc2d(Super2xSaI,SBPP)(line0, line1, fc)
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#define SCALERNAME		SuperEagle
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC		conc2d(SuperEagle,SBPP)(line0, line1, fc)
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
+#define SCALERNAME		_2xSaI
+#define SCALERWIDTH		2
+#define SCALERHEIGHT	2
+#define SCALERFUNC		conc2d(_2xSaI,SBPP)(line0, line1, fc)
+#include "render_loops.h"
+#undef SCALERNAME
+#undef SCALERWIDTH
+#undef SCALERHEIGHT
+#undef SCALERFUNC
+
 #define SCALERNAME		AdvInterp2x
 #define SCALERWIDTH		2
 #define SCALERHEIGHT	2
@@ -458,5 +552,10 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef greenMask
 #undef blueMask
 #undef redblueMask
+#undef redBits
+#undef greenBits
+#undef blueBits
+#undef redShift
+#undef greenShift
+#undef blueShift
 #undef SRCTYPE
-

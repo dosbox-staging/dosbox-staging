@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.101 2006-06-29 09:10:10 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.102 2006-08-05 09:06:44 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -271,7 +271,9 @@ void DOSBOX_Init(void) {
 		"frameskip -- How many frames dosbox skips before drawing one.\n"
 		"aspect -- Do aspect correction, if your output method doesn't support scaling this can slow things down!.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
-		"          Supported are none,normal2x,normal3x,advmame2x,advmame3x,advinterp2x,advinterp3x,tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.\n"
+		"          Supported are none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,\n"
+		"                        2xsai,super2xsai,supereagle,advinterp2x,advinterp3x,\n"
+		"                        tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.\n"
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
