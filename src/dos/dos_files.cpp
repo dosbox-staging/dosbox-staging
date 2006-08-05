@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.77 2006-07-18 15:31:29 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.78 2006-08-05 10:39:44 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -122,7 +122,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 				continue;
 			}
 
-			Bit32u iDown, cDots;
+			Bit32s iDown, cDots;
 			bool dots = true;
 			Bit32u templen =strlen(tempdir);
 			for(iDown=0;(iDown < templen) && dots;iDown++)
