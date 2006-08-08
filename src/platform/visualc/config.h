@@ -54,6 +54,10 @@
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1400) 
+#pragma warning(disable : 4996) 
+#endif
+
 typedef         double		Real64;
 /* The internal types */
 typedef  unsigned char		Bit8u;
