@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.54 2006-06-29 19:05:54 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.55 2006-08-16 16:08:24 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -591,8 +591,14 @@ static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool ste
 	sb.dma.total=length;
 	sb.dma.autoinit=autoinit;
 	if (mode==DSP_DMA_16) {
-		if (sb.hw.dma16!=0xff) sb.dma.chan=GetDMAChannel(sb.hw.dma16);
-		else {
+		if (sb.hw.dma16!=0xff) {
+			sb.dma.chan=GetDMAChannel(sb.hw.dma16);
+			if (sb.dma.chan==NULL) {
+				sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+				mode=DSP_DMA_16_ALIASED;
+				freq/=2;
+			}
+		} else {
 			sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 			mode=DSP_DMA_16_ALIASED;
 			freq/=2;
