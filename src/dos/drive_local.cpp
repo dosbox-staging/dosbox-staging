@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.70 2006-08-01 20:57:28 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.71 2006-08-17 12:07:22 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,22 +208,30 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	Bit8u sAttr;
 	dta.GetSearchParams(sAttr,tempDir);
 
-	if (sAttr == DOS_ATTR_VOLUME) {
-		if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
-//			LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
-//			dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
-//			return true;
-			DOS_SetError(DOSERR_NO_MORE_FILES);
-			return false;
-		}
-		dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
-		return true;
-	} else if ((sAttr & DOS_ATTR_VOLUME)  && (*_dir == 0) && !fcb_findfirst) { 
-	//should check for a valid leading directory instead of 0
-	//exists==true if the volume label matches the searchmask and the path is valid
-		if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
+	if (this->isRemote() && this->isRemovable()) {
+		// cdroms behave a bit different than regular drives
+		if (sAttr == DOS_ATTR_VOLUME) {
 			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
 			return true;
+		}
+	} else {
+		if (sAttr == DOS_ATTR_VOLUME) {
+			if ( strcmp(dirCache.GetLabel(), "") == 0 ) {
+//				LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+//				dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
+//				return true;
+				DOS_SetError(DOSERR_NO_MORE_FILES);
+				return false;
+			}
+			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			return true;
+		} else if ((sAttr & DOS_ATTR_VOLUME)  && (*_dir == 0) && !fcb_findfirst) { 
+		//should check for a valid leading directory instead of 0
+		//exists==true if the volume label matches the searchmask and the path is valid
+			if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
+				dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+				return true;
+			}
 		}
 	}
 	return FindNext(dta);
