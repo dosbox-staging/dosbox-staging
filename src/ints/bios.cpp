@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.62 2006-07-24 19:06:55 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.63 2006-08-18 18:23:02 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -707,10 +707,6 @@ static Bitu INT15_Handler(void) {
 		CALLBACK_SCF(false);
 		reg_ah=0;
 		break;
-	case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
-		reg_ah=0x86;
-		CALLBACK_SCF(true);
-		break;
 	case 0xc2:	/* BIOS PS2 Pointing Device Support */
 		switch (reg_al) {
 		case 0x00:		// enable/disable
@@ -769,6 +765,10 @@ static Bitu INT15_Handler(void) {
 			break;
 		}
 		break;
+	case 0xc3:      /* set carry flag so BorlandRTM doesn't assume a VECTRA/PS2 */
+		reg_ah=0x86;
+		CALLBACK_SCF(true);
+		break;
 	case 0xc4:	/* BIOS POS Programm option Select */
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15:Function %X called, bios mouse not supported",reg_ah);
 		CALLBACK_SCF(true);
@@ -776,7 +776,11 @@ static Bitu INT15_Handler(void) {
 	default:
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
-		CALLBACK_SCF(false);
+		CALLBACK_SCF(true);
+		if ((machine==MCH_VGA) || (machine==MCH_CGA)) {
+			/* relict from comparisons, as int15 exits with a retf2 instead of an iret */
+			CALLBACK_SZF(false);
+		}
 	}
 	return CBRET_NONE;
 }
