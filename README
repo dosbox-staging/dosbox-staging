@@ -88,7 +88,7 @@ A: To mount your CD-ROM in DOSBox you have to specify some additional options
    To enable low-level ioctl-support(win2k/xp/linux):
      - mount d f:\ -t cdrom -usecd 0 -ioctl
    To enable low-level aspi-support (win98 with aspi-layer installed):
-     - mount d f:\ -t cdrom -usecd 0 -apsi
+     - mount d f:\ -t cdrom -usecd 0 -aspi
    
    In the commands: - d   driveletter you will get in DOSBox
                     - f:\ location of cdrom on your PC.
@@ -513,8 +513,11 @@ BOOT
   Boot will start floppy images or hard disk images independent of the 
   operating system emulation offered by DOSBox.  This will allow you to play 
   booter floppies or boot to other operating systems inside DOSBox.
+  If the target emulated system is PCJr (machine=pcjr) the boot-command
+  can be used to load PCJr cartridges (.jrc). 
 
   BOOT [diskimg1.img diskimg2.img .. diskimgN.img] [-l driveletter]
+  BOOT [cart.jrc]  (PCJr only)
 
   diskimgN.img 
      This can be any number of floppy disk images one wants mounted after 
@@ -619,8 +622,8 @@ ALT-ENTER     Switch to full screen and back.
 ALT-PAUSE     Pause emulation.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
-CTRL-ALT-F5   Start/Stop creating a movie of the screen.
-CTRL-F5       Save a screenshot.(png)
+CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
+CTRL-F5       Save a screenshot. (png)
 CTRL-F6       Start/Stop recording sound output to a wave file.
 CTRL-ALT-F7   Start/Stop recording of OPL commands.
 CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
