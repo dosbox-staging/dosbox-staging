@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.40 2006-05-18 11:32:09 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.41 2006-08-21 20:08:26 c2woody Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -178,11 +178,12 @@ void MixerChannel::AddSilence(void) {
 	}
 }
 
-template<bool _8bits,bool stereo>
+template<bool _8bits,bool stereo,bool signeddata>
 INLINE void MixerChannel::AddSamples(Bitu len,void * data) {
 	Bits diff[2];
 	Bit8u * data8=(Bit8u*)data;
 	Bit16s * data16=(Bit16s*)data;
+	Bit16u * data16u=(Bit16u*)data;
 	Bitu mixpos=mixer.pos+done;
 	freq_index&=MIXER_REMAIN;
 	Bitu pos=0;Bitu new_pos;
@@ -204,11 +205,20 @@ thestart:
 					diff[0]=(((Bit8s)(data8[pos] ^ 0x80)) << 8)-last[0];
 				}
 			} else {
-				if (stereo) {
-					diff[0]=data16[pos*2+0]-last[0];
-					diff[1]=data16[pos*2+1]-last[1];
+				if (signeddata) {
+					if (stereo) {
+						diff[0]=data16[pos*2+0]-last[0];
+						diff[1]=data16[pos*2+1]-last[1];
+					} else {
+						diff[0]=data16[pos]-last[0];
+					}
 				} else {
-					diff[0]=data16[pos]-last[0];
+					if (stereo) {
+						diff[0]=data16u[pos*2+0]-last[0];
+						diff[1]=data16u[pos*2+1]-last[1];
+					} else {
+						diff[0]=data16u[pos]-last[0];
+					}
 				}
 			}
 		}
@@ -252,16 +262,22 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 };
 
 void MixerChannel::AddSamples_m8(Bitu len,Bit8u * data) {
-	AddSamples<true,false>(len,data);
+	AddSamples<true,false,false>(len,data);
 }
 void MixerChannel::AddSamples_s8(Bitu len,Bit8u * data) {
-	AddSamples<true,true>(len,data);
+	AddSamples<true,true,false>(len,data);
 }
 void MixerChannel::AddSamples_m16(Bitu len,Bit16s * data) {
-	AddSamples<false,false>(len,data);
+	AddSamples<false,false,true>(len,data);
 }
 void MixerChannel::AddSamples_s16(Bitu len,Bit16s * data) {
-	AddSamples<false,true>(len,data);
+	AddSamples<false,true,true>(len,data);
+}
+void MixerChannel::AddSamples_m16u(Bitu len,Bit16u * data) {
+	AddSamples<false,false,false>(len,data);
+}
+void MixerChannel::AddSamples_s16u(Bitu len,Bit16u * data) {
+	AddSamples<false,true,false>(len,data);
 }
 
 void MixerChannel::FillUp(void) {

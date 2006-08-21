@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.55 2006-08-16 16:08:24 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.56 2006-08-21 20:08:26 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -418,7 +418,8 @@ static void GenerateDMASound(Bitu size) {
 		if (sb.dma.stereo) {
 			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size]);
 			Bitu total=read+sb.dma.remain_size;
-			sb.chan->AddSamples_s16(total>>1,sb.dma.buf.b16);
+			if (sb.dma.sign) sb.chan->AddSamples_s16(total>>1,sb.dma.buf.b16);
+			else sb.chan->AddSamples_s16u(total>>1,(Bit16u *)sb.dma.buf.b16);
 			if (total&1) {
 				sb.dma.remain_size=1;
 				sb.dma.buf.b16[0]=sb.dma.buf.b16[total-1];
