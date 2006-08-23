@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.47 2006-04-10 12:52:47 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.48 2006-08-23 20:09:52 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -690,10 +690,12 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bit16u entryNr)
 bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id)
 {
 	Bit16u	dirID;
-	Bitu	dirFindFirstID = this->nextFreeFindFirst++; //increase it for the next search
+	Bitu	dirFindFirstID = this->nextFreeFindFirst;
 
 	// Cache directory in 
 	if (!OpenDir(path,dirID)) return false;
+
+	this->nextFreeFindFirst++; //increase it for the next search
 
 	if (dirFindFirstID == MAX_OPENDIRS) {
 		// no free slot found...
