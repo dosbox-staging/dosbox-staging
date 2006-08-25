@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.56 2006-08-21 20:08:26 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.57 2006-08-25 09:40:19 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -404,19 +404,26 @@ static void GenerateDMASound(Bitu size) {
 		if (sb.dma.stereo) {
 			read=sb.dma.chan->Read(size,&sb.dma.buf.b8[sb.dma.remain_size]);
 			Bitu total=read+sb.dma.remain_size;
-			sb.chan->AddSamples_s8(total>>1,sb.dma.buf.b8);
+            if (!sb.dma.sign)  sb.chan->AddSamples_s8(total>>1,sb.dma.buf.b8);
+            else sb.chan->AddSamples_s8s(total>>1,(Bit8s*)sb.dma.buf.b8); 
 			if (total&1) {
 				sb.dma.remain_size=1;
 				sb.dma.buf.b8[0]=sb.dma.buf.b8[total-1];
 			} else sb.dma.remain_size=0;
 		} else {
 			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-			sb.chan->AddSamples_m8(read,sb.dma.buf.b8);
+			if (!sb.dma.sign) sb.chan->AddSamples_m8(read,sb.dma.buf.b8);
+			else sb.chan->AddSamples_m8s(read,(Bit8s *)sb.dma.buf.b8);
 		}
 		break;
 	case DSP_DMA_16:
+	case DSP_DMA_16_ALIASED:
 		if (sb.dma.stereo) {
-			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size]);
+			/* In DSP_DMA_16_ALIASED mode temporarily divide by 2 to get number of 16-bit
+			   samples, because 8-bit DMA Read returns byte size, while in DSP_DMA_16 mode
+			   16-bit DMA Read returns word size */
+			read=sb.dma.chan->Read(size,(Bit8u *)&sb.dma.buf.b16[sb.dma.remain_size]) 
+				>> (sb.dma.mode==DSP_DMA_16_ALIASED ? 1:0);
 			Bitu total=read+sb.dma.remain_size;
 			if (sb.dma.sign) sb.chan->AddSamples_s16(total>>1,sb.dma.buf.b16);
 			else sb.chan->AddSamples_s16u(total>>1,(Bit16u *)sb.dma.buf.b16);
@@ -425,16 +432,13 @@ static void GenerateDMASound(Bitu size) {
 				sb.dma.buf.b16[0]=sb.dma.buf.b16[total-1];
 			} else sb.dma.remain_size=0;
 		} else {
-			read=sb.dma.chan->Read(size,sb.dma.buf.b8);
-			sb.chan->AddSamples_m16(read,sb.dma.buf.b16);
+			read=sb.dma.chan->Read(size,(Bit8u *)sb.dma.buf.b16) 
+				>> (sb.dma.mode==DSP_DMA_16_ALIASED ? 1:0);
+			if (sb.dma.sign) sb.chan->AddSamples_m16(read,sb.dma.buf.b16);
+			else sb.chan->AddSamples_m16u(read,(Bit16u *)sb.dma.buf.b16);
 		}
-		break;
-	case DSP_DMA_16_ALIASED:
-		if (sb.dma.stereo) {
-			sb.chan->AddSamples_s16(read>>2,sb.dma.buf.b16);
-		} else {
-			sb.chan->AddSamples_m16(read>>1,sb.dma.buf.b16);
-		}
+		//restore buffer length value to byte size in aliased mode
+		if (sb.dma.mode==DSP_DMA_16_ALIASED) read=read<<1;
 		break;
 	default:
 		LOG_MSG("Unhandled dma mode %d",sb.dma.mode);
@@ -589,6 +593,7 @@ static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
 
 static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool stereo) {
 	Bitu freq=sb.freq;
+	//equal length if data format and dma channel are both 16-bit or 8-bit
 	sb.dma.total=length;
 	sb.dma.autoinit=autoinit;
 	if (mode==DSP_DMA_16) {
@@ -597,12 +602,15 @@ static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool ste
 			if (sb.dma.chan==NULL) {
 				sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 				mode=DSP_DMA_16_ALIASED;
-				freq/=2;
+				sb.dma.total<<=1;
 			}
 		} else {
 			sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 			mode=DSP_DMA_16_ALIASED;
-			freq/=2;
+			//UNDOCUMENTED:
+			//In aliased mode sample length is written to DSP as number of
+			//16-bit samples so we need double 8-bit DMA buffer length
+			sb.dma.total<<=1;
 		}
 	} else sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 	DSP_DoDMATransfer(mode,freq,stereo);
@@ -631,6 +639,7 @@ static void DSP_Reset(void) {
 	sb.dma.left=0;
 	sb.dma.total=0;
 	sb.dma.stereo=false;
+	sb.dma.sign=false;
 	sb.dma.autoinit=false;
 	sb.dma.mode=DSP_DMA_NONE;
 	sb.dma.remain_size=0;

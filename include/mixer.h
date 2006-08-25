@@ -54,6 +54,8 @@ public:
 	void AddSamples(Bitu len,void * data);
 	void AddSamples_m8(Bitu len,Bit8u * data);
 	void AddSamples_s8(Bitu len,Bit8u * data);
+	void AddSamples_m8s(Bitu len,Bit8s * data);
+	void AddSamples_s8s(Bitu len,Bit8s * data);
 	void AddSamples_m16(Bitu len,Bit16s * data);
 	void AddSamples_s16(Bitu len,Bit16s * data);
 	void AddSamples_m16u(Bitu len,Bit16u * data);
