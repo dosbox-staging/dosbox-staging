@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.57 2006-08-25 09:40:19 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.58 2006-08-28 17:02:31 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -920,10 +920,13 @@ static Bit8u DSP_ReadData(void) {
 static void CTMIXER_UpdateVolumes(void) {
 	if (!sb.mixer.enabled) return;
 	MixerChannel * chan;
+	//adjust to get linear master volume slider in trackers
 	chan=MIXER_FindChannel("SB");
-	if (chan) chan->SetVolume(CALCVOL(sb.mixer.dac[0]),CALCVOL(sb.mixer.dac[1]));
+	if (chan) chan->SetVolume(float(sb.mixer.master[0])/31.0f*CALCVOL(sb.mixer.dac[0]),
+							  float(sb.mixer.master[1])/31.0f*CALCVOL(sb.mixer.dac[1]));
 	chan=MIXER_FindChannel("FM");
-	if (chan) chan->SetVolume(CALCVOL(sb.mixer.fm[0]),CALCVOL(sb.mixer.fm[1]));
+	if (chan) chan->SetVolume(float(sb.mixer.master[0])/31.0f*CALCVOL(sb.mixer.fm[0]),
+							  float(sb.mixer.master[1])/31.0f*CALCVOL(sb.mixer.fm[1]));
 }
 
 static void CTMIXER_Reset(void) {
@@ -931,12 +934,32 @@ static void CTMIXER_Reset(void) {
 	sb.mixer.fm[1]=
 	sb.mixer.dac[0]=
 	sb.mixer.dac[1]=31;
+	sb.mixer.master[0]=
+	sb.mixer.master[1]=31;
 	CTMIXER_UpdateVolumes();
 }
 
-#define SETPROVOL(_WHICH_,_VAL_)				\
-	_WHICH_[0]= 0x1 | ((_VAL_ & 0xf0) >> 3);	\
-	_WHICH_[1]= 0x1 | ((_VAL_ & 0x0f) << 1);
+#define SETPROVOL(_WHICH_,_VAL_)															\
+	_WHICH_[0]= ((sb.type==SBT_16) ? ((_VAL_) & 0x1) :0x1)      | (((_VAL_) & 0xf0) >> 3);	\
+	_WHICH_[1]= ((sb.type==SBT_16) ? (((_VAL_) >> 4) & 0x1) :0x1) | (((_VAL_) & 0x0f) << 1);	\
+
+#define MAKEPROVOL(_WHICH_)			\
+	(((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1))
+
+static void DSP_ChangeStereo(bool stereo) {
+	if (!sb.dma.stereo && stereo) {
+		sb.chan->SetFreq(sb.freq/2);
+		sb.dma.mul*=2;
+		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
+		sb.dma.min=(sb.dma.rate*3)/1000;
+	} else if (sb.dma.stereo && !stereo) {
+		sb.chan->SetFreq(sb.freq);
+		sb.dma.mul/=2;
+		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
+		sb.dma.min=(sb.dma.rate*3)/1000;
+	} 
+	sb.dma.stereo=stereo;
+}
 
 static void CTMIXER_Write(Bit8u val) {
 	switch (sb.mixer.index) {
@@ -947,6 +970,7 @@ static void CTMIXER_Write(Bit8u val) {
 	case 0x02:		/* Master Voulme (SBPRO) Obsolete? */
 	case 0x22:		/* Master Volume (SBPRO) */
 		SETPROVOL(sb.mixer.master,val);
+		CTMIXER_UpdateVolumes();
 		break;
 	case 0x04:		/* DAC Volume (SBPRO) */
 		SETPROVOL(sb.mixer.dac,val);
@@ -966,6 +990,7 @@ static void CTMIXER_Write(Bit8u val) {
 	case 0x0e:		/* Output/Stereo Select */
 		sb.mixer.stereo=(val & 0x2) > 0;
 		sb.mixer.filtered=(val & 0x20) > 0;
+		DSP_ChangeStereo(sb.mixer.stereo);
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;
 	case 0x26:		/* FM Volume (SBPRO) */
@@ -977,6 +1002,32 @@ static void CTMIXER_Write(Bit8u val) {
 		break;
 	case 0x2e:		/* Line-IN Volume (SBPRO) */
 		SETPROVOL(sb.mixer.lin,val);
+		break;
+	//case 0x20:		/* Master Volume Left (SBPRO) ? */
+	case 0x30:		/* Master Volume Left (SB16) */
+		if (sb.type>=SBT_PRO2) {
+			SETPROVOL(sb.mixer.master,(val&0xf0)|(MAKEPROVOL(sb.mixer.master)&0x0f));
+			CTMIXER_UpdateVolumes();
+		}
+		break;
+	//case 0x21:		/* Master Volume Right (SBPRO) ? */
+	case 0x31:		/* Master Volume Right (S16) */
+		if (sb.type>=SBT_PRO2) {
+			SETPROVOL(sb.mixer.master,((val>>4)&0x0f)|(MAKEPROVOL(sb.mixer.master)&0xf0));
+			CTMIXER_UpdateVolumes();
+		}
+		break;
+	case 0x32:		/* DAC Volume Left (S16) */
+		if (sb.type>=SBT_PRO2) {
+			SETPROVOL(sb.mixer.dac,(val&0xf0)|(MAKEPROVOL(sb.mixer.dac)&0x0f));
+			CTMIXER_UpdateVolumes();
+		}
+		break;
+	case 0x33:		/* DAC Volume Right (S16) */
+		if (sb.type>=SBT_PRO2) {
+			SETPROVOL(sb.mixer.dac,((val>>4)&0x0f)|(MAKEPROVOL(sb.mixer.dac)&0xf0));
+			CTMIXER_UpdateVolumes();
+		}
 		break;
 	case 0x80:		/* IRQ Select */
 		sb.hw.irq=0xff;
@@ -1004,9 +1055,6 @@ static void CTMIXER_Write(Bit8u val) {
 		LOG(LOG_SB,LOG_WARN)("MIXER:Write %X to unhandled index %X",val,sb.mixer.index);
 	}
 }
-
-#define MAKEPROVOL(_WHICH_)			\
-	(((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1))
 	
 static Bit8u CTMIXER_Read(void) {
 	Bit8u ret;
@@ -1030,6 +1078,22 @@ static Bit8u CTMIXER_Read(void) {
 		return MAKEPROVOL(sb.mixer.cda);
 	case 0x2e:		/* Line-IN Volume (SBPRO) */
 		return MAKEPROVOL(sb.mixer.lin);
+	case 0x30:		/* Master Volume Left (SB16) */
+		if (sb.type>=SBT_PRO2) return sb.mixer.master[0]<<3;
+		ret=0xa;
+		break;
+	case 0x31:		/* Master Volume Right (S16) */
+		if (sb.type>=SBT_PRO2) return sb.mixer.master[1]<<3;
+		ret=0xa;
+		break;
+	case 0x32:		/* DAC Volume Left (S16) */
+		if (sb.type>=SBT_PRO2) return sb.mixer.dac[0]<<3;
+		ret=0xa;
+		break;
+	case 0x33:		/* DAC Volume Right (S16) */
+		if (sb.type>=SBT_PRO2) return sb.mixer.dac[1]<<3;
+		ret=0xa;
+		break;
 	case 0x80:		/* IRQ Select */
 		switch (sb.hw.irq) {
 		case 2:  return 0x1;
