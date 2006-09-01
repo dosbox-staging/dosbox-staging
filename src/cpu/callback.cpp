@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.34 2006-07-24 19:06:55 c2woody Exp $ */
+/* $Id: callback.cpp,v 1.35 2006-09-01 17:34:36 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -320,8 +320,8 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			physAddress+=4;
 		}
 		phys_writeb(physAddress+0x00,(Bit8u)0x50);		// push ax
-		phys_writew(physAddress+0x01,(Bit8u)0x0eb4);	// mov ah, 0x0e
-		phys_writew(physAddress+0x03,(Bit8u)0x10cd);	// int 10
+		phys_writew(physAddress+0x01,(Bit16u)0x0eb4);	// mov ah, 0x0e
+		phys_writew(physAddress+0x03,(Bit16u)0x10cd);	// int 10
 		phys_writeb(physAddress+0x05,(Bit8u)0x58);		// pop ax
 		phys_writeb(physAddress+0x06,(Bit8u)0xcf);		//An IRET Instruction
 		return (use_cb?0x0b:0x07);
