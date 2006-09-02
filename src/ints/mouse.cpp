@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.63 2006-07-24 19:06:55 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.64 2006-09-02 17:03:43 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -604,12 +604,9 @@ static void mouse_reset(void) {
 	Mouse_NewVideoMode();
 
    	mouse.sub_mask=0;
-	mouse.sub_seg=0;
-	mouse.sub_ofs=0;
+
 	mouse.senv_x=1.0;
-
 	mouse.senv_y=1.0;
-
 }
 
 static Bitu INT33_Handler(void) {
@@ -946,6 +943,11 @@ void MOUSE_Init(Section* sec) {
 
 	memset(&mouse,0,sizeof(mouse));
 	mouse.shown=-1; //Hide mouse on startup
+
+   	mouse.sub_mask=0;
+	mouse.sub_seg=0x6362;	// magic value
+	mouse.sub_ofs=0;
+
 	mouse_reset_hardware();
 	mouse_reset();
 }
