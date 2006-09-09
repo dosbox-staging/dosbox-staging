@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.4 2006-07-08 16:32:26 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.5 2006-09-09 16:06:31 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -29,6 +29,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.s3.reg_31 = val;
 		vga.config.compatible_chain4 = !(val&0x08);
 		VGA_DetermineMode();
+		VGA_SetupHandlers();
 		break;
 		/*
 			0	Enable Base Address Offset (CPUA BASE). Enables bank operation if

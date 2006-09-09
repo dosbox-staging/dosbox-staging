@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.44 2006-04-07 19:56:45 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.45 2006-09-09 16:06:32 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -368,7 +368,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	};
 
 	/* check for a drive change */
-	if ((strcmp(name + 1, ":") == 0) && isalpha(*name))
+	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
 	{
 		if (!DOS_SetDrive(toupper(name[0])-'A')) {
 			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0]));
