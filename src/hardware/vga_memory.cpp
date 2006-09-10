@@ -290,6 +290,8 @@ public:
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
 		vga.mem.latched[addr].d=pixels.d;
+		if(vga.config.compatible_chain4)
+			vga.mem.latched[addr+64*1024].d=pixels.d; 
 	}
 public:
 	VGA_UnchainedVGA_Handler()  {
