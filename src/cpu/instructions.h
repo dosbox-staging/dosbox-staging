@@ -599,7 +599,6 @@
 	{														\
 		Bit16u ax1 = reg_ah * op1;							\
 		Bit16u ax2 = ax1 + reg_al;							\
-		Bit8u old_al = reg_al;								\
 		reg_al = (Bit8u) ax2;								\
 		reg_ah = 0;											\
 		SETFLAGBIT(CF,0);									\
@@ -666,7 +665,7 @@
 {															\
 	Bitu val=load(op1);										\
 	if (val==0)	EXCEPTION(0);								\
-	Bitu num=(reg_dx<<16)|reg_ax;							\
+	Bitu num=((Bit32u)reg_dx<<16)|reg_ax;							\
 	Bitu quo=num/val;										\
 	Bit16u rem=(Bit16u)(num % val);							\
 	Bit16u quo16=(Bit16u)(quo&0xffff);						\
@@ -678,7 +677,7 @@
 #define DIVD(op1,load,save)									\
 {															\
 	Bitu val=load(op1);										\
-	if (!val) EXCEPTION(0);									\
+	if (val==0) EXCEPTION(0);									\
 	Bit64u num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
 	Bit64u quo=num/val;										\
 	Bit32u rem=(Bit32u)(num % val);							\
@@ -705,7 +704,7 @@
 #define IDIVW(op1,load,save)								\
 {															\
 	Bits val=(Bit16s)(load(op1));							\
-	if (!val) EXCEPTION(0);									\
+	if (val==0) EXCEPTION(0);									\
 	Bits num=(Bit32s)((reg_dx<<16)|reg_ax);					\
 	Bits quo=num/val;										\
 	Bit16s rem=(Bit16s)(num % val);							\
@@ -718,7 +717,7 @@
 #define IDIVD(op1,load,save)								\
 {															\
 	Bits val=(Bit32s)(load(op1));							\
-	if (!val) EXCEPTION(0);									\
+	if (val==0) EXCEPTION(0);									\
 	Bit64s num=(((Bit64u)reg_edx)<<32)|reg_eax;				\
 	Bit64s quo=num/val;										\
 	Bit32s rem=(Bit32s)(num % val);							\
