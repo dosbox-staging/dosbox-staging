@@ -201,6 +201,32 @@
 			if (CPU_WRITE_DRX(which,*eard)) RUNEXCEPTION();
 		}
 		break;
+	CASE_0F_B(0x24)												/* MOV Rd,TRx */
+		{
+			GetRM;
+			Bitu which=(rm >> 3) & 7;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
+				LOG(LOG_CPU,LOG_ERROR)("MOV XXX,TR% with non-register",which);
+			}
+			GetEArd;
+			Bit32u trx_value;
+			if (CPU_READ_TRX(which,trx_value)) RUNEXCEPTION();
+			*eard=trx_value;
+		}
+		break;
+	CASE_0F_B(0x26)												/* MOV TRx,Rd */
+		{
+			GetRM;
+			Bitu which=(rm >> 3) & 7;
+			if (rm < 0xc0 ) {
+				rm |= 0xc0;
+				LOG(LOG_CPU,LOG_ERROR)("MOV TR%,XXX with non-register",which);
+			}
+			GetEArd;
+			if (CPU_WRITE_TRX(which,*eard)) RUNEXCEPTION();
+		}
+		break;
 	CASE_0F_W(0x80)												/* JO */
 		JumpCond16_w(TFLG_O);break;
 	CASE_0F_W(0x81)												/* JNO */

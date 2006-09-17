@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.84 2006-09-14 18:46:48 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.85 2006-09-17 13:38:30 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1561,6 +1561,38 @@ bool CPU_READ_DRX(Bitu dr,Bit32u & retvalue) {
 	return false;
 }
 
+bool CPU_WRITE_TRX(Bitu tr,Bitu value) {
+	/* Check if privileged to access control registers */
+	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
+	switch (tr) {
+//	case 3:
+	case 6:
+	case 7:
+		cpu.trx[tr]=value;
+		return false;
+	default:
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV TR%d,%X",tr,value);
+		break;
+	}
+	return CPU_PrepareException(EXCEPTION_UD,0);
+}
+
+bool CPU_READ_TRX(Bitu tr,Bit32u & retvalue) {
+	/* Check if privileged to access control registers */
+	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
+	switch (tr) {
+//	case 3:
+	case 6:
+	case 7:
+		retvalue=cpu.trx[tr];
+		return false;
+	default:
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV XXX, TR%d",tr);
+		break;
+	}
+	return CPU_PrepareException(EXCEPTION_UD,0);
+}
+
 
 void CPU_SMSW(Bitu & word) {
 	word=cpu.cr0;
@@ -1976,7 +2008,10 @@ public:
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 
-		for (Bitu i=0; i<7; i++) cpu.drx[i]=0;
+		for (Bitu i=0; i<7; i++) {
+			cpu.drx[i]=0;
+			cpu.trx[i]=0;
+		}
 		cpu.drx[6]=0xffff1ff0;
 		cpu.drx[7]=0x00000400;
 

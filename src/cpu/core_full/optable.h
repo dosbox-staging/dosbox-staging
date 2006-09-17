@@ -206,8 +206,8 @@ static OpCode OpCodeTable[1024]={
 /* 0x120 - 0x127 */
 {L_MODRM	,O_M_Rd_CRx	,S_Ed	,0		},{L_MODRM	,O_M_Rd_DRx	,S_Ed	,0		},
 {L_MODRM	,O_M_CRx_Rd	,0		,M_Ed	},{L_MODRM	,O_M_DRx_Rd	,0		,M_Ed	},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Rd_TRx	,S_Ed	,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_TRx_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
 
 /* 0x128 - 0x12f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
@@ -562,8 +562,8 @@ static OpCode OpCodeTable[1024]={
 /* 0x320 - 0x327 */
 {L_MODRM	,O_M_Rd_CRx	,S_Ed	,0		},{L_MODRM	,O_M_Rd_DRx	,S_Ed	,0		},
 {L_MODRM	,O_M_CRx_Rd	,0		,M_Ed	},{L_MODRM	,O_M_DRx_Rd	,0		,M_Ed	},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
-{0			,0			,0		,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_Rd_TRx	,S_Ed	,0		},{0		,0			,0		,0		},
+{L_MODRM	,O_M_TRx_Rd	,0		,M_Ed	},{0		,0			,0		,0		},
 
 /* 0x328 - 0x32f */
 {0			,0			,0		,0		},{0		,0			,0		,0		},

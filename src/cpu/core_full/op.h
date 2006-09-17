@@ -472,6 +472,12 @@ switch (inst.code.op) {
 	case O_M_Rd_DRx:
 		if (CPU_READ_DRX(inst.rm_index,inst_op1_d)) RunException();
 		break;
+	case O_M_TRx_Rd:
+		if (CPU_WRITE_TRX(inst.rm_index,inst_op1_d)) RunException();
+		break;
+	case O_M_Rd_TRx:
+		if (CPU_READ_TRX(inst.rm_index,inst_op1_d)) RunException();
+		break;
 	case O_LAR:
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
