@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu.h,v 1.1 2006-06-01 15:45:37 c2woody Exp $ */
+/* $Id: dyn_fpu.h,v 1.2 2006-09-19 16:27:58 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -559,6 +559,7 @@ static void dyn_fpu_esc6(){
 			}
 			gen_load_host(&TOP,DREG(EA),4); 
 			gen_dop_word_imm(DOP_ADD,true,DREG(EA),1);
+			gen_dop_word_imm(DOP_AND,true,DREG(EA),7);
 			gen_call_function((void*)&FPU_FCOM,"%Ddr%Ddr",DREG(TMPB),DREG(EA));
 			gen_call_function((void*)&FPU_FPOP,""); /* extra pop at the bottom*/
 			break;
@@ -607,7 +608,7 @@ static void dyn_fpu_esc7(){
 				case 0x00:     /* FNSTSW AX*/
 					gen_load_host(&TOP,DREG(TMPB),4);
 					gen_call_function((void*)&FPU_SET_TOP,"%Ddr",DREG(TMPB)); 
-					gen_load_host(&fpu.sw,DREG(EAX),2);
+					gen_mov_host(&fpu.sw,DREG(EAX),2);
 					break;
 				default:
 					LOG(LOG_FPU,LOG_WARN)("ESC 7:Unhandled group %d subfunction %d",group,sub);
