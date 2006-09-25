@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.11 2006-02-09 11:47:48 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.12 2006-09-25 08:47:37 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -348,7 +348,7 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 		return false;
 	}
 	track.number = 1;
-	track.attr = 4;
+	track.attr = 0x40;//data
 	
 	// try to detect iso type
 	if (CanReadPVD(track.file, COOKED_SECTOR_SIZE, false)) {
@@ -452,19 +452,19 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 				track.mode2 = false;
 			} else if (type == "MODE1/2048") {
 				track.sectorSize = COOKED_SECTOR_SIZE;
-				track.attr = 4;
+				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE1/2352") {
 				track.sectorSize = RAW_SECTOR_SIZE;
-				track.attr = 4;
+				track.attr = 0x40;
 				track.mode2 = false;
 			} else if (type == "MODE2/2336") {
 				track.sectorSize = 2336;
-				track.attr = 4;
+				track.attr = 0x40;
 				track.mode2 = true;
 			} else if (type == "MODE2/2352") {
 				track.sectorSize = RAW_SECTOR_SIZE;
-				track.attr = 4;
+				track.attr = 0x40;
 				track.mode2 = true;
 			} else success = false;
 			
@@ -522,6 +522,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	
 	// add leadout track
 	track.number++;
+	track.attr = 0;//sync with load iso
 	track.start = 0;
 	track.length = 0;
 	track.file = NULL;
