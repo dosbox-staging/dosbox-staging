@@ -44,17 +44,15 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 		disney.data=val;
+		if (disney.used<DISNEY_SIZE) {
+				disney.buffer[disney.used++]=disney.data;
+			}
 		break;
 	case 1:		/* Status Port */		
 		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Status write %x",val);
 		break;
 	case 2:		/* Control Port */
 //		LOG_WARN("DISNEY:Control write %x",val);
-		if (val&0x8) {
-			if (disney.used<DISNEY_SIZE) {
-				disney.buffer[disney.used++]=disney.data;
-			}
-		}
 		if (val&0x10) LOG(LOG_MISC,LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
 		disney.control=val;
 		break;
