@@ -374,4 +374,8 @@ void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache) {
 	cache_init(enable_cache);
 }
 
+void CPU_Core_Dyn_X86_Cache_Close(void) {
+	cache_close();
+}
+
 #endif

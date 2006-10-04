@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.85 2006-09-17 13:38:30 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.86 2006-10-04 19:24:52 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -55,6 +55,7 @@ void CPU_Core_Normal_Init(void);
 void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
+void CPU_Core_Dyn_X86_Cache_Close(void);
 
 /* In debug mode exceptions are tested and dosbox exits when 
  * a unhandled exception state is detected. 
@@ -2084,6 +2085,9 @@ public:
 static CPU * test;
 
 void CPU_ShutDown(Section* sec) {
+#if (C_DYNAMIC_X86)
+	CPU_Core_Dyn_X86_Cache_Close();
+#endif
 	delete test;
 }
 

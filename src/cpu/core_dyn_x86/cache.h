@@ -42,12 +42,6 @@ static struct {
 	CodePageHandler * last_page;
 } cache;
 
-#if (C_HAVE_MPROTECT)
-static Bit8u cache_code_link_blocks[2][16] GCC_ATTRIBUTE(aligned(PAGESIZE));
-#else
-static Bit8u cache_code_link_blocks[2][16];
-#endif
-
 static CacheBlock link_blocks[2];
 
 class CodePageHandler :public PageHandler {
@@ -396,19 +390,21 @@ static INLINE void cache_addd(Bit32u val) {
 
 static void gen_return(BlockReturn retcode);
 
+static Bit8u * cache_code_start_ptr=NULL;
 static Bit8u * cache_code=NULL;
+static Bit8u * cache_code_link_blocks=NULL;
 static CacheBlock * cache_blocks=NULL;
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE
 #else 
-#define PAGESIZE_TEMP 1
+#define PAGESIZE_TEMP 4096
 #endif
 
+static bool cache_initialized = false;
 
 static void cache_init(bool enable) {
-	static bool cache_initialized = false;
 	Bits i;
 	if (enable) {
 		if (cache_initialized) return;
@@ -424,16 +420,17 @@ static void cache_init(bool enable) {
 				cache_blocks[i].cache.next=&cache_blocks[i+1];
 			}
 		}
+		if (cache_code_start_ptr==NULL) {
+			cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+			if(!cache_code_start_ptr) E_Exit("Allocating dynamic cache failed");
+
+			cache_code=(Bit8u*)(((int)cache_code_start_ptr + PAGESIZE_TEMP-1) & ~(PAGESIZE_TEMP-1)); //MEM LEAK. store old pointer if you want to free it.
+
+			cache_code_link_blocks=cache_code;
+			cache_code+=PAGESIZE_TEMP;
+
 #if (C_HAVE_MPROTECT)
-		if(mprotect(cache_code_link_blocks,sizeof(cache_code_link_blocks),PROT_WRITE|PROT_READ|PROT_EXEC))
-			LOG_MSG("Setting excute permission on cache code link blocks has failed");
-#endif
-		if (cache_code==NULL) {
-			cache_code=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1);
-			if(!cache_code) E_Exit("Allocating dynamic cache failed");
-#if (C_HAVE_MPROTECT)
-			cache_code=(Bit8u*)(((int)cache_code + PAGESIZE-1) & ~(PAGESIZE-1)); //MEM LEAK. store old pointer if you want to free it.
-			if(mprotect(cache_code,CACHE_TOTAL+CACHE_MAXSIZE,PROT_WRITE|PROT_READ|PROT_EXEC))
+			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
 				LOG_MSG("Setting excute permission on the code cache has failed!");
 #endif
 			CacheBlock * block=cache_getblock();
@@ -444,10 +441,10 @@ static void cache_init(bool enable) {
 			block->cache.next=0;								//Last block in the list
 		}
 		/* Setup the default blocks for block linkage returns */
-		cache.pos=&cache_code_link_blocks[0][0];
+		cache.pos=&cache_code_link_blocks[0];
 		link_blocks[0].cache.start=cache.pos;
 		gen_return(BR_Link1);
-		cache.pos=&cache_code_link_blocks[1][0];
+		cache.pos=&cache_code_link_blocks[32];
 		link_blocks[1].cache.start=cache.pos;
 		gen_return(BR_Link2);
 		cache.free_pages=0;
@@ -460,4 +457,18 @@ static void cache_init(bool enable) {
 			cache.free_pages=newpage;
 		}
 	}
+}
+
+static void cache_close(void) {
+/*	if (cache_blocks != NULL) {
+		free(cache_blocks);
+		cache_blocks = NULL;
+	}
+	if (cache_code_start_ptr != NULL) {
+		free(cache_code_start_ptr);
+		cache_code_start_ptr = NULL;
+	}
+	cache_code = NULL;
+	cache_code_link_blocks = NULL;
+	cache_initialized = false; */
 }

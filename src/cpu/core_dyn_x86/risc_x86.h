@@ -110,6 +110,22 @@ return_address:
 		pop		ebx
 		mov		[retval],eax
 	}
+#elif defined (MACOSX)
+	register Bit32u tempflags=reg_flags & FMASK_TEST;
+	__asm__ volatile (
+		"pushl %%ebx						\n"
+		"pushl %%ebp						\n"
+		"pushl $(run_return_adress)			\n"
+		"pushl  %2							\n"
+		"jmp  *%3							\n"
+		"run_return_adress:					\n"
+		"popl %%ebp							\n"
+		"popl %%ebx							\n"
+		:"=a" (retval), "=c" (tempflags)
+		:"r" (tempflags),"r" (code)
+		:"%edx","%edi","%esi","cc","memory"
+	);
+	reg_flags=(reg_flags & ~FMASK_TEST) | (tempflags & FMASK_TEST);
 #else
 	register Bit32u tempflags=reg_flags & FMASK_TEST;
 	__asm__ volatile (
@@ -629,15 +645,42 @@ static void gen_call_function(void * func,char * ops,...) {
 	if (ops) {
 		va_list params;
 		va_start(params,ops);
+		Bitu stack_used=0;
+		bool free_flags=false;
 		Bits pindex=0;
 		while (*ops) {
 			if (*ops=='%') {
                 pinfo[pindex].line=ops+1;
 				pinfo[pindex].value=va_arg(params,Bitu);
+#if defined (MACOSX)
+				char * scan=pinfo[pindex].line;
+				if ((*scan=='I') || (*scan=='D')) stack_used+=4;
+				else if (*scan=='F') free_flags=true;
+#endif
 				pindex++;
 			}
 			ops++;
 		}
+
+#if defined (MACOSX)
+		/* align stack */
+		stack_used+=4;			// saving esp on stack as well
+
+		cache_addw(0xc48b);		// mov eax,esp
+		cache_addb(0x2d);		// sub eax,stack_used
+		cache_addd(stack_used);
+		cache_addw(0xe083);		// and eax,0xfffffff0
+		cache_addb(0xf0);
+		cache_addb(0x05);		// sub eax,stack_used
+		cache_addd(stack_used);
+		cache_addb(0x94);		// xchg eax,esp
+		if (free_flags) {
+			cache_addw(0xc083);	// add eax,4
+			cache_addb(0x04);
+		}
+		cache_addb(0x50);		// push eax (==old esp)
+#endif
+
 		paramcount=0;
 		while (pindex) {
 			pindex--;
@@ -694,7 +737,24 @@ static void gen_call_function(void * func,char * ops,...) {
 				IllegalOption("gen_call_function unknown param");
 			}
 		}
+#if defined (MACOSX)
+		if (free_flags) release_flags=false;
+	} else {
+		/* align stack */
+		Bit32u stack_used=8;	// saving esp and return address on the stack
+
+		cache_addw(0xc48b);		// mov eax,esp
+		cache_addb(0x2d);		// sub eax,stack_used
+		cache_addd(stack_used);
+		cache_addw(0xe083);		// and eax,0xfffffff0
+		cache_addb(0xf0);
+		cache_addb(0x05);		// sub eax,stack_used
+		cache_addd(stack_used);
+		cache_addb(0x94);		// xchg eax,esp
+		cache_addb(0x50);		// push esp (==old esp)
+#endif
 	}
+
 	/* Clear some unprotected registers */
 	x86gen.regs[X86_REG_ECX]->Clear();
 	x86gen.regs[X86_REG_EDX]->Clear();
@@ -733,6 +793,11 @@ static void gen_call_function(void * func,char * ops,...) {
 	}
 	/* Restore EAX registers to be used again */
 	x86gen.regs[X86_REG_EAX]->notusable=false;
+
+#if defined (MACOSX)
+	/* restore stack */
+	cache_addb(0x5c);	// pop esp
+#endif
 }
 
 static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
@@ -740,6 +805,21 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	x86gen.regs[X86_REG_EAX]->Clear();
 	x86gen.regs[X86_REG_EAX]->notusable=true;
 	gen_protectflags();
+
+#if defined (MACOSX)
+	/* align stack */
+	Bitu stack_used=12;
+
+	cache_addw(0xc48b);		// mov eax,esp
+	cache_addb(0x2d);		// sub eax,stack_used
+	cache_addd(stack_used);
+	cache_addw(0xe083);		// and eax,0xfffffff0
+	cache_addb(0xf0);
+	cache_addb(0x05);		// sub eax,stack_used
+	cache_addd(stack_used);
+	cache_addb(0x94);		// xchg eax,esp
+	cache_addb(0x50);		// push eax (==old esp)
+#endif
 
 	cache_addb(0x68);	//PUSH val
 	cache_addd(val);
@@ -762,6 +842,11 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	cache_addb(2*4);
 	x86gen.regs[X86_REG_EAX]->notusable=false;
 	gen_releasereg(dr);
+
+#if defined (MACOSX)
+	/* restore stack */
+	cache_addb(0x5c);	// pop esp
+#endif
 }
 
 static Bit8u * gen_create_branch(BranchTypes type) {
@@ -774,7 +859,7 @@ static void gen_fill_branch(Bit8u * data,Bit8u * from=cache.pos) {
 #if C_DEBUG
 	Bits len=from-data;
 	if (len<0) len=-len;
-	if (len>126) LOG_MSG("BIg jump %d",len);
+	if (len>126) LOG_MSG("Big jump %d",len);
 #endif
 	*data=(from-data-1);
 }
