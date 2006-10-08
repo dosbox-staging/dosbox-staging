@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.121 2006-07-22 18:32:29 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.122 2006-10-08 19:26:04 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1423,24 +1423,22 @@ int main(int argc, char* argv[]) {
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;
-		if (control->cmdline->FindString("-conf",config_file,true)) {
-			
-		} else {
-			config_file="dosbox.conf";
+		bool parsed_anyconfigfile = false;
+		// First parse the configfile in the $HOME directory
+		if ((getenv("HOME") != NULL)) {
+			config_file = (std::string)getenv("HOME") + 
+				      (std::string)DEFAULT_CONFIG_FILE;
+			if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
 		}
-		/* Parse the config file
-		 * try open config file in $HOME if can't open dosbox.conf or specified file
-		 */
-		if (control->ParseConfigFile(config_file.c_str()) == false)  {
-			if ((getenv("HOME") != NULL)) {
-				config_file = (std::string)getenv("HOME") + 
-					      (std::string)DEFAULT_CONFIG_FILE;
-				if (control->ParseConfigFile(config_file.c_str()) == false) {
-					LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
-				}
-			   
-			}
-		}
+		// Add extra settings from dosbox.conf in the local directory if there is no configfile specified at the commandline
+		if (!control->cmdline->FindString("-conf",config_file,true)) config_file="dosbox.conf";
+		if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
+		// Add extra settings from additional configfiles at the commandline
+		while(control->cmdline->FindString("-conf",config_file,true))
+			if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
+		// Give a message if no configfile whatsoever was found.
+		if(!parsed_anyconfigfile) LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+	
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
 #endif

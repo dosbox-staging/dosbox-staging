@@ -226,6 +226,7 @@ dosbox -version
 
   -conf configfile
         Start DOSBox with the options specified in "configfile".
+        Multiple -conf options may be present.
         See Chapter 9 for more details.
 
   -lang languagefile
@@ -770,9 +771,11 @@ Some sections have options you can set.
 The generated configfile contains the current settings. You can alter them and
 start DOSBox with the -conf switch to load the file and use these settings.
 
-If no configfile is specified with the -conf switch, DOSBox will look in the
-current directory for dosbox.conf. Then it will look for ~/.dosboxrc (Linux),
-~\dosbox.conf (Win32) or "~/Library/Preferences/DOSBox Preferences" (MACOSX).
+DOSBox will first parse the settings in ~/.dosboxrc (Linux),
+~\dosbox.conf (Win32) or "~/Library/Preferences/DOSBox Preferences"
+(MACOSX). Afterwards DOSBox will parse all configfiles specified with the 
+-conf switch. If no configfile is specified with the -conf switch, DOSBox will 
+look in the current directory for dosbox.conf.
 
 
 

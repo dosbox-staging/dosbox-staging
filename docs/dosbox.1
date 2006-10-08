@@ -49,7 +49,8 @@ an Internal Program, a DOS command or an executable on a mounted drive.
 .BI \-conf " configfile
 .RB "Start " dosbox " with the options specified in "
 .IR configfile ". This file has a section in which you can put commands you "
-wish to execute on startup.
+wish to execute on startup. Multiple 
+.IR configfiles " can be present at the commandline."
 .TP
 .BI \-lang " langfile
 .RB "Start " dosbox " with the language specified in "
@@ -211,9 +212,12 @@ Boot will start floppy images or hard disk images independent of the
 .RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
 .SH FILES
-Configuration and language files use a format similar to Windows .ini files. If a file named
-.BR dosbox.conf " is found in the current directory, it will be"
-automatically loaded, else ~/.dosboxrc (if present)  will be loaded.
+Configuration and language files use a format similar to Windows .ini files. 
+First ~/.dosboxrc (if present)  will be loaded. If no
+configfile is specified at the commandline, a file named
+.BR dosbox.conf " (if present in the current directory) will be"
+loaded automatically afterwards. If a configfile is specified at the commandline
+that one will be used instead.
 .SH "SPECIAL KEYS"
 .TP 12m
 .IP ALT\-ENTER

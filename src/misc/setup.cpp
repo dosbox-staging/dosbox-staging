@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.36 2006-05-25 15:07:33 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.37 2006-10-08 19:26:04 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -291,10 +291,14 @@ Section* Config::GetSectionFromProperty(char const * const prop) const{
 	}
 	return NULL;
 }
+
 bool Config::ParseConfigFile(char const * const configfilename){
+	static bool first_configfile = true;
 	ifstream in(configfilename);
 	if (!in) return false;
-	LOG_MSG("CONFIG:Loading settings from config file %s", configfilename);
+	const char * settings_type = first_configfile?"primary":"additional";
+	first_configfile = false;
+	LOG_MSG("CONFIG:Loading %s settings from config file %s", settings_type,configfilename);
 	char gegevens[1024];
 	Section* currentsection = NULL;
 	Section* testsec = NULL;
