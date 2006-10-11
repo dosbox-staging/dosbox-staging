@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.29 2006-06-01 08:33:52 c2woody Exp $ */
+/* $Id: fpu_instructions.h,v 1.30 2006-10-11 08:01:11 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -593,3 +593,4 @@ static INLINE void FPU_FDIVR_EA(Bitu op1){
 static INLINE void FPU_FCOM_EA(Bitu op1){
 	FPU_FCOM(op1,8);
 }
+
