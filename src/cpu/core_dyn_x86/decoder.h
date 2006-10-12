@@ -16,19 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define X86_DYNFPU
-
-#include "fpu.h"
-#define DYN_FPU_ESC(code) {					\
-	dyn_get_modrm(); \
-	if (decode.modrm.val >= 0xc0) { \
-		gen_call_function((void*)&FPU_ESC ## code ## _Normal,"%Id",decode.modrm.val); \
-	} else { \
-		dyn_fill_ea(); \
-		gen_call_function((void*)&FPU_ESC ## code ## _EA,"%Id%Dd",decode.modrm.val,DREG(EA)); \
-		gen_releasereg(DREG(EA)); \
-	} \
-}
+#define X86_DYNFPU_DH_ENABLED
 
 enum REP_Type {
 	REP_NONE=0,REP_NZ,REP_Z
@@ -152,7 +140,7 @@ static INLINE void dyn_set_eip_last(void) {
 }
 
 
-enum save_info_type {exception, cycle_check, normal};
+enum save_info_type {exception, cycle_check, normal, fpu_restore};
 
 
 static struct {
@@ -161,6 +149,7 @@ static struct {
 	Bit8u * branch_pos;
 	Bit32u eip_change;
 	Bitu cycles;
+	Bit8u * return_pos;
 } save_info[512];
 
 Bitu used_save_info=0;
@@ -219,6 +208,21 @@ static void dyn_fill_blocks(void) {
 				gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),save_info[sct].eip_change);
 				dyn_save_critical_regs();
 				gen_return(BR_Cycles);
+				break;
+			case fpu_restore:
+				dyn_loadstate(&save_info[sct].state);
+				gen_load_host(&dyn_dh_fpu.state_used,DREG(TMPB),4);
+				gen_sop_word(SOP_INC,true,DREG(TMPB));
+				GenReg * gr1=FindDynReg(DREG(TMPB));
+				cache_addb(0xdd);	// FRSTOR fpu.state (fpu_restore)
+				cache_addb(0x25);
+				cache_addd((Bit32u)(&(dyn_dh_fpu.state[0])));
+				cache_addb(0x89);	// mov fpu.state_used,1
+				cache_addb(0x05|(gr1->index<<3));
+				cache_addd((Bit32u)(&(dyn_dh_fpu.state_used)));
+				gen_releasereg(DREG(TMPB));
+				dyn_synchstate(&save_info[sct].state);
+				gen_create_jump(save_info[sct].return_pos);
 				break;
 		}
 	}
@@ -1226,9 +1230,22 @@ static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
 	}
 }
 
-#ifdef X86_DYNFPU
-#include "dyn_fpu.h"
+#ifdef X86_DYNFPU_DH_ENABLED
+#include "dyn_fpu_dh.h"
+#define dh_fpu_startup() {		\
+	fpu_used=true;				\
+	gen_protectflags();			\
+	gen_load_host(&dyn_dh_fpu.state_used,DREG(TMPB),4);	\
+	gen_dop_word_imm(DOP_CMP,true,DREG(TMPB),0);		\
+	gen_releasereg(DREG(TMPB));							\
+	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_Z);		\
+	dyn_savestate(&save_info[used_save_info].state);	\
+	save_info[used_save_info].return_pos=cache.pos;		\
+	save_info[used_save_info].type=fpu_restore;			\
+	used_save_info++;									\
+}
 #endif
+#include "dyn_fpu.h"
 
 static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bitu max_opcodes) {
 	Bits i;
@@ -1258,6 +1275,9 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 	used_save_info++;
 	gen_releasereg(DREG(CYCLES));
 	decode.cycles=0;
+#ifdef X86_DYNFPU_DH_ENABLED
+	bool fpu_used=false;
+#endif
 	while (max_opcodes--) {
 /* Init prefixes */
 		decode.big_addr=cpu.code.big;
@@ -1467,8 +1487,8 @@ restart_prefix:
 		case 0x8e:dyn_mov_seg_ev();break;
 		/* POP Ev */
 		case 0x8f:dyn_pop_ev();break;
-		//NOP
-		case 0x90:
+		case 0x90:	//NOP
+		case 0x9b:	//WAIT/FWAIT
 			break;
 		//XCHG ax,reg
 		case 0x91:case 0x92:case 0x93:case 0x94:case 0x95:case 0x96:case 0x97:	
@@ -1575,67 +1595,104 @@ restart_prefix:
 		case 0xd3:dyn_grp2_ev(grp2_cl);break;
 		//FPU
 #ifdef CPU_FPU
-#ifdef X86_DYNFPU
 		case 0xd8:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc0();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc0();
+				}
+			} else
+#endif
 			dyn_fpu_esc0();
 			break;
 		case 0xd9:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc1();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc1();
+				}
+			} else
+#endif
 			dyn_fpu_esc1();
 			break;
 		case 0xda:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc2();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc2();
+				}
+			} else
+#endif
 			dyn_fpu_esc2();
 			break;
 		case 0xdb:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc3();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc3();
+				}
+			} else
+#endif
 			dyn_fpu_esc3();
 			break;
 		case 0xdc:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc4();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc4();
+				}
+			} else
+#endif
 			dyn_fpu_esc4();
 			break;
 		case 0xdd:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc5();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc5();
+				}
+			} else
+#endif
 			dyn_fpu_esc5();
 			break;
 		case 0xde:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc6();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc6();
+				}
+			} else
+#endif
 			dyn_fpu_esc6();
 			break;
 		case 0xdf:
+#ifdef X86_DYNFPU_DH_ENABLED
+			if (dyn_dh_fpu.dh_fpu_enabled) {
+				if (fpu_used) dh_fpu_esc7();
+				else {
+					dh_fpu_startup();
+					dh_fpu_esc7();
+				}
+			} else
+#endif
 			dyn_fpu_esc7();
 			break;
-#else
-		case 0xd8:
-			DYN_FPU_ESC(0);
-			break;
-		case 0xd9:
-			DYN_FPU_ESC(1);
-			break;
-		case 0xda:
-			DYN_FPU_ESC(2);
-			break;
-		case 0xdb:
-			DYN_FPU_ESC(3);
-			break;
-		case 0xdc:
-			DYN_FPU_ESC(4);
-			break;
-		case 0xdd:
-			DYN_FPU_ESC(5);
-			break;
-		case 0xde:
-			DYN_FPU_ESC(6);
-			break;
-		case 0xdf:
-			dyn_get_modrm();
-			if (decode.modrm.val >= 0xc0) {
-				if (decode.modrm.val == 0xe0) gen_releasereg(DREG(EAX)); /* FSTSW */
-				gen_call_function((void*)&FPU_ESC7_Normal,"%Id",decode.modrm.val);
-			} else {
-				dyn_fill_ea();
-				gen_call_function((void*)&FPU_ESC7_EA,"%Id%Dd",decode.modrm.val,DREG(EA));
-				gen_releasereg(DREG(EA));
-			}
-			break;
 #endif
-#endif
-		//Loop's 
+		//Loops 
 		case 0xe2:dyn_loop(LOOP_NONE);goto finish_block;
 		case 0xe3:dyn_loop(LOOP_JCXZ);goto finish_block;
 		//IN AL/AX,imm

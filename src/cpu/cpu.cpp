@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.86 2006-10-04 19:24:52 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.87 2006-10-12 15:18:31 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -56,6 +56,7 @@ void CPU_Core_Simple_Init(void);
 void CPU_Core_Dyn_X86_Init(void);
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 void CPU_Core_Dyn_X86_Cache_Close(void);
+void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
 
 /* In debug mode exceptions are tested and dosbox exits when 
  * a unhandled exception state is detected. 
@@ -2060,6 +2061,10 @@ public:
 #if (C_DYNAMIC_X86)
 		else if (!strcasecmp(core,"dynamic")) {
 			cpudecoder=&CPU_Core_Dyn_X86_Run;
+			CPU_Core_Dyn_X86_SetFPUMode(true);
+		} else if (!strcasecmp(core,"dynamic_nodhfpu")) {
+			cpudecoder=&CPU_Core_Dyn_X86_Run;
+			CPU_Core_Dyn_X86_SetFPUMode(false);
 		} else if (!strcasecmp(core,"auto")) {
 			cpudecoder=&CPU_Core_Normal_Run;
 			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
@@ -2070,7 +2075,7 @@ public:
 		}
 
 #if (C_DYNAMIC_X86)
-		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic"));
+		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic") || !strcasecmp(core,"dynamic_nodhfpu"));
 #endif
 	
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 2500;

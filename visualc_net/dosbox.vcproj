@@ -266,6 +266,9 @@
 						RelativePath="..\src\cpu\core_dyn_x86\dyn_fpu.h">
 					</File>
 					<File
+						RelativePath="..\src\cpu\core_dyn_x86\dyn_fpu_dh.h">
+					</File>
+					<File
 						RelativePath="..\src\cpu\core_dyn_x86\helpers.h">
 					</File>
 					<File
