@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.13 2006-04-16 14:02:39 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.14 2006-10-27 12:03:22 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -131,6 +131,15 @@ Bit8u DOS_FindDevice(char * name) {
 	strcpy(temp,name);
 	char* dot= strrchr(temp,'.');
 	if(dot && *dot) *dot=0; //no ext checking
+
+	char* leading = strrchr(temp,'\\');
+	if(leading) {
+		*leading = 0;
+		Bit8u drive;char fulldir[DOS_PATHLENGTH];
+		if (!DOS_MakeName(temp,fulldir,&drive)) return DOS_DEVICES;
+		if(!Drives[drive]->TestDir(fulldir)) return DOS_DEVICES;
+		*leading='\\';
+	}
 
 	/* loop through devices */
 	for(Bit8u index = 0;index < DOS_DEVICES;index++) {
