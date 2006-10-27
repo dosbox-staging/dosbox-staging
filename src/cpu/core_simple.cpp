@@ -63,6 +63,7 @@ extern Bitu cycle_count;
 #define DO_PREFIX_SEG(_SEG)					\
 	BaseDS=SegBase(_SEG);					\
 	BaseSS=SegBase(_SEG);					\
+	core.base_val_ds=_SEG;					\
 	goto restart_opcode;
 
 #define DO_PREFIX_ADDR()								\
@@ -84,6 +85,7 @@ static struct {
 	Bitu opcode_index;
 	HostPt cseip;
 	PhysPt base_ds,base_ss;
+	SegNames base_val_ds;
 	bool rep_zero;
 	Bitu prefixes;
 	GetEAHandler * ea_table;
@@ -137,6 +139,7 @@ Bits CPU_Core_Simple_Run(void) {
 		core.ea_table=&EATable[cpu.code.big*256];
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
+		core.base_val_ds=ds;
 #if C_DEBUG
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
