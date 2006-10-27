@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.64 2006-09-02 17:03:43 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.65 2006-10-27 12:07:41 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -86,7 +86,7 @@ static struct {
 	Bit16u last_released_y[MOUSE_BUTTONS];
 	Bit16u last_pressed_x[MOUSE_BUTTONS];
 	Bit16u last_pressed_y[MOUSE_BUTTONS];
-	Bit16s shown;
+	Bit16u shown;
 	float add_x,add_y;
 	Bit16u min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
@@ -116,7 +116,7 @@ static struct {
 	Bit16u  doubleSpeedThreshold;
 	Bit16u  language;
 	Bit16u  cursorType;
-	Bit16s	oldshown;
+	Bit16u	oldshown;
 	Bit8u  page;
 	bool enabled;
 
@@ -216,7 +216,7 @@ extern void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result);
 
 void RestoreCursorBackgroundText()
 {
-	if (mouse.shown<0) return;
+	if (mouse.shown) return;
 
 	if (mouse.background) {
 		WriteChar(mouse.backposx,mouse.backposy,0,mouse.backData[0],mouse.backData[1],true);
@@ -303,7 +303,7 @@ void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx
 
 void RestoreCursorBackground()
 {
-	if (mouse.shown<0) return;
+	if (mouse.shown) return;
 
 	SaveVgaRegisters();
 	if (mouse.background) {
@@ -332,7 +332,7 @@ void RestoreCursorBackground()
 };
 
 void DrawCursor() {
-	if (mouse.shown<0) return;
+	if (mouse.shown) return;
 // Check video page
 	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
 // Check if cursor in update region
@@ -525,7 +525,8 @@ void Mouse_NewVideoMode(void)
 	} else {
 		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
 	}
-//	mouse.shown=-1;//Disabled as ida doesn't have mousecursor anymore
+	mouse.shown = 1;//Disabled as ida doesn't have mousecursor anymore
+	//enabled again as it seems to be a bug in ida4
 	/* Get the correct resolution from the current video mode */
 	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
 	switch (mode) {
@@ -557,7 +558,7 @@ void Mouse_NewVideoMode(void)
 		mouse.max_y=199;
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
 		// Hide mouse cursor on non supported modi. Pirates Gold
-		mouse.shown = -1;
+		mouse.shown = 1;
 		break;
 	} 
 	mouse.max_x = 639;
@@ -586,7 +587,7 @@ void Mouse_NewVideoMode(void)
 	mouse.updateRegion_y[1] = 1;
 	mouse.cursorType = 0;
 	mouse.enabled=true;
-	mouse.oldshown=-1;
+	mouse.oldshown=1;
 
 	SetMickeyPixelRate(8,16);
 	oldmouseX = static_cast<Bit16s>(mouse.x);
@@ -599,7 +600,7 @@ static void mouse_reset(void) {
 	/* Remove drawn mouse Legends of Valor */
 	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 	else RestoreCursorBackgroundText();
-	mouse.shown = -1;
+	mouse.shown = 1;
 
 	Mouse_NewVideoMode();
 
@@ -622,16 +623,15 @@ static Bitu INT33_Handler(void) {
 		Mouse_AutoLock(true);
 		break;
 	case 0x01:	/* Show Mouse */
-		mouse.shown++;
+		if(mouse.shown) mouse.shown--;
 		Mouse_AutoLock(true);
-		if (mouse.shown>0) mouse.shown=0;
 		DrawCursor();
 		break;
 	case 0x02:	/* Hide Mouse */
 		{
 			if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 			else RestoreCursorBackgroundText();
-			mouse.shown--;
+			mouse.shown++;
 		}
 		break;
 	case 0x03:	/* Return position and Button Status */
@@ -820,7 +820,7 @@ static Bitu INT33_Handler(void) {
 		SegSet16(es,0);	   
 		mouse.enabled=false; /* Just for reporting not doing a thing with it */
 		mouse.oldshown=mouse.shown;
-		mouse.shown=-1;
+		mouse.shown=1;
 		break;
 	case 0x20:	/* Enable Mousedriver */
 		mouse.enabled=true;
@@ -900,7 +900,6 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 }
 
 void MOUSE_Init(Section* sec) {
-
 	// Callback for mouse interrupt 0x33
 	call_int33=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
@@ -942,7 +941,7 @@ void MOUSE_Init(Section* sec) {
 	ps2_callback=CALLBACK_RealPointer(call_ps2);
 
 	memset(&mouse,0,sizeof(mouse));
-	mouse.shown=-1; //Hide mouse on startup
+	mouse.shown = 1; //Hide mouse on startup
 
    	mouse.sub_mask=0;
 	mouse.sub_seg=0x6362;	// magic value
