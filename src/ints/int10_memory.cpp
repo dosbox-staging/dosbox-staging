@@ -117,7 +117,29 @@ void INT10_SetupRomMemory(void) {
 		//Reserve checksum location
 		checksumlocation = int10.rom.used++;
 	}
-};
+}
+
+void INT10_ReloadRomFonts(void) {
+	// 16x8 font
+	PhysPt font16pt=Real2Phys(int10.rom.font_16);
+	for (Bitu i=0;i<256*16;i++) {
+		phys_writeb(font16pt+i,int10_font_16[i]);
+	}
+	// 14x8 font
+	PhysPt font14pt=Real2Phys(int10.rom.font_14);
+	for (Bitu i=0;i<256*14;i++) {
+		phys_writeb(font14pt+i,int10_font_14[i]);
+	}
+	// 8x8 fonts
+	PhysPt font8pt=Real2Phys(int10.rom.font_8_first);
+	for (Bitu i=0;i<128*8;i++) {
+		phys_writeb(font8pt+i,int10_font_08[i]);
+	}
+	font8pt=Real2Phys(int10.rom.font_8_second);
+	for (Bitu i=0;i<128*8;i++) {
+		phys_writeb(font8pt+i,int10_font_08[i+128*8]);
+	}
+}
 
 void INT10_SetupRomMemoryChecksum(void) {
 	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe

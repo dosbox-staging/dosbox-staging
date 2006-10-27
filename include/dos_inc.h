@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.61 2006-06-30 12:47:06 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.62 2006-10-27 13:37:13 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -186,6 +186,20 @@ void DOS_SetupTables(void);
 
 /* Internal DOS Setup Programs */
 void DOS_SetupPrograms(void);
+
+/* Initialize Keyboard Layout */
+void DOS_KeyboardLayout_Init(Section* sec);
+
+bool DOS_LayoutKey(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3);
+
+enum {
+	KEYB_NOERROR=0,
+	KEYB_FILENOTFOUND,
+	KEYB_INVALIDFILE,
+	KEYB_LAYOUTNOTFOUND,
+	KEYB_INVALIDCPFILE
+};
+
 
 INLINE Bit16u long2para(Bit32u size) {
 	if (size>0xFFFF0) return 0xffff;
@@ -605,6 +619,7 @@ struct DOS_Block {
 		RealPt dcbs;
 		Bit8u* country;//Will be copied to dos memory. resides in real mem
 	} tables;
+	Bit16u loaded_codepage;
 };
 
 extern DOS_Block dos;

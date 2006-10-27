@@ -33,7 +33,6 @@ static Bitu call_int16,call_irq1,call_irq6;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
-#define MAX_SCAN_CODE 0x58
 static struct {
   Bit16u normal;
   Bit16u shift;
@@ -131,7 +130,7 @@ static struct {
       { 0x8600, 0x8800, 0x8a00, 0x8c00 }  /* F12 */
       };
 
-static bool add_key_forced(Bit16u code) {
+bool BIOS_AddKeyToBuffer(Bit16u code) {
 	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return true;
 	Bit16u start,end,head,tail,ttail;
 	if (machine==MCH_PCJR) {
@@ -157,7 +156,7 @@ static bool add_key_forced(Bit16u code) {
 }
 
 static void add_key(Bit16u code) {
-	if (code!=0) add_key_forced(code);
+	if (code!=0) BIOS_AddKeyToBuffer(code);
 }
 
 static bool get_key(Bit16u &code) {
@@ -240,6 +239,7 @@ static Bitu IRQ1_Handler(void) {
 #else
 	flags2&=~(0x40+0x20);//remove numlock/capslock pressed (hack for sdl only reporting states)
 #endif
+	if (DOS_LayoutKey(scancode,flags1,flags2,flags3)) return CBRET_NONE;
 	switch (scancode) {
 	/* First the hard ones  */
 	case 0xfa:	/* ack. Do nothing for now */
@@ -551,7 +551,7 @@ static Bitu INT16_Handler(void) {
 		}
 		break;
 	case 0x05:	/* STORE KEYSTROKE IN KEYBOARD BUFFER */
-		if (add_key_forced(reg_cx)) reg_al=0;
+		if (BIOS_AddKeyToBuffer(reg_cx)) reg_al=0;
 		else reg_al=1;
 		break;
 	case 0x12: /* GET EXTENDED SHIFT STATES */

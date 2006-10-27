@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.95 2006-07-24 19:06:55 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.96 2006-10-27 13:37:13 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -862,7 +862,7 @@ static Bitu DOS_21Handler(void) {
 				mem_writeb(data + 0x00,reg_al);
 				mem_writew(data + 0x01,0x26);
 				mem_writew(data + 0x03,1);
-				if(reg_cx > 0x06 ) mem_writew(data+0x05,0x01b5);
+				if(reg_cx > 0x06 ) mem_writew(data+0x05,dos.loaded_codepage);
 				if(reg_cx > 0x08 ) {
 					Bitu amount = (reg_cx>=0x29)?0x22:(reg_cx-7);
 					MEM_BlockWrite(data + 0x07,dos.tables.country,amount);
@@ -914,7 +914,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x66:					/* Get/Set global code page table  */
 		if (reg_al==1) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("Getting global code page table");
-			reg_bx=reg_dx=437;
+			reg_bx=reg_dx=dos.loaded_codepage;
 			CALLBACK_SCF(false);
 			break;
 		}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.62 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.63 2006-10-27 13:37:14 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -882,6 +882,70 @@ void IMGMOUNT_ProgramStart(Program * * make) {
 }
 
 
+Bitu DOS_SwitchKeyboardLayout(const char* new_layout);
+Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
+
+class KEYB : public Program {
+public:
+	void Run(void);
+};
+
+void KEYB::Run(void) {
+	if (cmd->FindCommand(1,temp_line)) {
+		if (cmd->FindString("?",temp_line,false)) {
+			WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
+		} else {
+			/* first parameter is layout ID */
+			Bitu keyb_error=0;
+			std::string cp_string;
+			if (cmd->FindCommand(2,cp_string)) {
+				/* second parameter is codepage number */
+				Bit32s par_cp=atoi(cp_string.c_str());
+				char cp_file_name[256];
+				if (cmd->FindCommand(3,cp_string)) {
+					/* third parameter is codepage file */
+					strcpy(cp_file_name, cp_string.c_str());
+				} else {
+					/* no codepage file specified, use automatic selection */
+					strcpy(cp_file_name, "auto");
+				}
+
+				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), par_cp, cp_file_name);
+			} else keyb_error=DOS_SwitchKeyboardLayout(temp_line.c_str());
+			switch (keyb_error) {
+				case KEYB_NOERROR:
+					WriteOut(MSG_Get("PROGRAM_KEYB_NOERROR"),temp_line.c_str(),dos.loaded_codepage);
+					break;
+				case KEYB_FILENOTFOUND:
+					WriteOut(MSG_Get("PROGRAM_KEYB_FILENOTFOUND"),temp_line.c_str());
+					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
+					break;
+				case KEYB_INVALIDFILE:
+					WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"),temp_line.c_str());
+					break;
+				case KEYB_LAYOUTNOTFOUND:
+					WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"),temp_line.c_str(),dos.loaded_codepage);
+					break;
+				case KEYB_INVALIDCPFILE:
+					WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"),temp_line.c_str());
+					WriteOut(MSG_Get("PROGRAM_KEYB_SHOWHELP"));
+					break;
+				default:
+					LOG(LOG_DOSMISC,LOG_ERROR)("KEYB:Invalid returncode %x",keyb_error);
+					break;
+			}
+		}
+	} else {
+		/* no parameter in the command line, just output codepage info */
+		WriteOut(MSG_Get("PROGRAM_KEYB_INFO"),dos.loaded_codepage);
+	}
+};
+
+static void KEYB_ProgramStart(Program * * make) {
+	*make=new KEYB;
+}
+
+
 void DOS_SetupPrograms(void) {
 	/*Add Messages */
 
@@ -1048,6 +1112,20 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
 
+	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
+	MSG_Add("PROGRAM_KEYB_SHOWHELP",
+		"\033[32;1mKEYB\033[0m [keyboard layout ID[ codepage number[ codepage file]]]\n\n"
+		"Some examples:\n"
+		"  \033[32;1mKEYB\033[0m: Display currently loaded codepage.\n"
+		"  \033[32;1mKEYB\033[0m sp: Load the spanish (SP) layout, use an appropriate codepage.\n"
+		"  \033[32;1mKEYB\033[0m sp 850: Load the spanish (SP) layout, use codepage 850.\n"
+		"  \033[32;1mKEYB\033[0m sp 850 mycp.cpi: Same as above, but use file mycp.cpi.\n");
+	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i\n");
+	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n\n");
+	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid\n");
+	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
+	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n\n");
+
 	/*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM",MEM_ProgramStart);
@@ -1056,4 +1134,5 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
 	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
+	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 }

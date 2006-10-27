@@ -326,6 +326,9 @@
 					RelativePath="..\src\dos\dos_ioctl.cpp">
 				</File>
 				<File
+					RelativePath="..\src\dos\dos_keyboard_layout.cpp">
+				</File>
+				<File
 					RelativePath="..\src\dos\dos_memory.cpp">
 				</File>
 				<File

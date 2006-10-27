@@ -101,6 +101,9 @@
 
 #define BIOS_VIDEO_SAVEPTR              0x4a8
 
+/* maximum of scancodes handled by keyboard bios routines */
+#define MAX_SCAN_CODE 0x58
+
 /* The Section handling Bios Disk Access */
 #define BIOS_MAX_DISK 10
 
@@ -169,5 +172,9 @@ void INT2A_StartUp(void);
 void INT2F_StartUp(void);
 void INT33_StartUp(void);
 void INT13_StartUp(void);
+
+bool BIOS_AddKeyToBuffer(Bit16u code);
+
+void INT10_ReloadRomFonts();
 
 #endif
