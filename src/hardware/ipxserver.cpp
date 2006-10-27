@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipxserver.cpp,v 1.7 2006-02-09 11:47:49 qbix79 Exp $ */
+/* $Id: ipxserver.cpp,v 1.8 2006-10-27 12:00:29 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -135,7 +135,7 @@ static void ackClient(IPaddress clientAddr) {
 	PackIP(clientAddr, &regHeader.dest.addr.byIP);
 	SDLNet_Write16(0x2, regHeader.dest.socket);
 
-	SDLNet_Write32(0, regHeader.src.network);
+	SDLNet_Write32(1, regHeader.src.network);
 	PackIP(ipxServerIp, &regHeader.src.addr.byIP);
 	SDLNet_Write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;

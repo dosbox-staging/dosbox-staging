@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.35 2006-05-23 10:30:02 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.36 2006-10-27 12:00:29 qbix79 Exp $ */
 
 #include <list>
 
@@ -393,6 +393,30 @@ void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
 	AddEntry(entry);
 }
 
+void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
+	PICEntry * entry=pic.next_entry;
+	PICEntry * prev_entry;
+	prev_entry = 0;
+	while (entry) {
+		if ((entry->event == handler) && (entry->value == val)) {
+			if (prev_entry) {
+				prev_entry->next=entry->next;
+				entry->next=pic.free_entry;
+				pic.free_entry=entry;
+				entry=prev_entry->next;
+				continue;
+			} else {
+				pic.next_entry=entry->next;
+				entry->next=pic.free_entry;
+				pic.free_entry=entry;
+				entry=pic.next_entry;
+				continue;
+			}
+		}
+		prev_entry=entry;
+		entry=entry->next;
+	}	
+}
 
 void PIC_RemoveEvents(PIC_EventHandler handler) {
 	PICEntry * entry=pic.next_entry;

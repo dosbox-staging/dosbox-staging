@@ -57,6 +57,7 @@ bool PIC_RunQueue(void);
 //Delay in milliseconds
 void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val=0);
 void PIC_RemoveEvents(PIC_EventHandler handler);
+void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val);
 
 void PIC_SetIRQMask(Bitu irq, bool masked);
 #endif
