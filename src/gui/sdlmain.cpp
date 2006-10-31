@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.122 2006-10-08 19:26:04 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.123 2006-10-31 17:29:32 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1355,10 +1355,14 @@ int main(int argc, char* argv[]) {
 
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
-#ifndef DISABLE_JOYSTICK
-		|SDL_INIT_JOYSTICK
-#endif
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+
+#ifndef DISABLE_JOYSTICK
+	//Initialise Joystick seperately. This way we can warn when it fails instead
+	//of exiting the application
+	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
+#endif
+
 #if defined (WIN32)
 #if SDL_VERSION_ATLEAST(1, 2, 10)
 		sdl.using_windib=true;
