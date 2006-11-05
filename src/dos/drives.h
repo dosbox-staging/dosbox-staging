@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.33 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: drives.h,v 1.34 2006-11-05 17:30:54 c2woody Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -262,7 +262,7 @@ struct isoDirEntry {
 	Bit16u VolumeSeqNumberL;
 	Bit16u VolumeSeqNumberM;
 	Bit8u fileIdentLength;
-	Bit8u ident[100];
+	Bit8u ident[222];
 } GCC_ATTRIBUTE(packed);
 
 #ifdef _MSC_VER
