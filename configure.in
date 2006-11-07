@@ -60,6 +60,8 @@ AC_MSG_CHECKING(if environ can be linked)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char ** environ;]],[[*environ;]])],
 [AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
 
+AC_CHECK_LIB([m],[powf],,[AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
+
 dnl Checks for libraries.
 
 #Check if the compiler support attributes
