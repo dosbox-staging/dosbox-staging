@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.45 2006-09-09 16:06:32 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.46 2006-11-08 20:20:09 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -441,6 +441,8 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
 		/* Fill the command line */
 		CommandTail cmdtail;
+		cmdtail.count = 0;
+		memset(&cmdtail.buffer,0,126); //Else some part of the string is unitialized (valgrind)
 		if (strlen(line)>126) line[126]=0;
 		cmdtail.count=strlen(line);
 		memcpy(cmdtail.buffer,line,strlen(line));
