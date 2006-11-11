@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu_dh.h,v 1.1 2006-10-13 17:42:48 c2woody Exp $ */
+/* $Id: dyn_fpu_dh.h,v 1.2 2006-11-11 14:42:38 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -195,7 +195,6 @@ static void dh_fpu_esc1(){
 			gen_call_function((void*)&FPU_FST_32,"%Ddr",DREG(EA));
 			break;
 		case 0x04: /* FLDENV */
-//			LOG_MSG("fldenv");
 			gen_call_function((void*)&FPU_FLDENV_DH,"%Ddr",DREG(EA));
 			cache_addb(0xd9);
 			cache_addb(0x05|(decode.modrm.reg<<3));
@@ -208,7 +207,6 @@ static void dh_fpu_esc1(){
 			cache_addd((Bit32u)(&(dyn_dh_fpu.temp.m1)));
 			break;
 		case 0x06: /* FSTENV */
-//			LOG_MSG("fstenv");
 			cache_addb(0xd9);
 			cache_addb(0x05|(decode.modrm.reg<<3));
 			cache_addd((Bit32u)(&(dyn_dh_fpu.temp.m1)));
@@ -363,14 +361,12 @@ static void dh_fpu_esc5(){
 			gen_call_function((void*)&FPU_FST_64,"%Ddr",DREG(EA));
 			break;
 		case 0x04:	/* FRSTOR */
-			LOG_MSG("frstor");
 			gen_call_function((void*)&FPU_FRSTOR_DH,"%Ddr",DREG(EA));
 			cache_addb(0xdd);
 			cache_addb(0x05|(decode.modrm.reg<<3));
 			cache_addd((Bit32u)(&(dyn_dh_fpu.temp_state[0])));
 			break;
 		case 0x06:	/* FSAVE */
-			LOG_MSG("fsave");
 			cache_addb(0xdd);
 			cache_addb(0x05|(decode.modrm.reg<<3));
 			cache_addd((Bit32u)(&(dyn_dh_fpu.temp_state[0])));
