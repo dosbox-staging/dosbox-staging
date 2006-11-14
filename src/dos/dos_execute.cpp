@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.56 2006-06-29 09:10:09 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.57 2006-11-14 14:11:59 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -27,6 +27,7 @@
 #include "callback.h"
 #include "debug.h"
 #include "cpu.h"
+#include "paging.h"
 
 const char * RunningProgram="DOSBOX";
 
@@ -94,7 +95,7 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
-extern void GFX_SetTitle(Bits cycles,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused);
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
@@ -146,16 +147,19 @@ bool DOS_Terminate(bool tsr) {
 		CPU_CycleAutoAdjust=false;
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
-		CPU_CycleMax=3000;
+		CPU_CycleMax=CPU_OldCycleMax;
+		GFX_SetTitle(CPU_OldCycleMax,-1,false);
+	} else {
+		GFX_SetTitle(-1,-1,false);
 	}
- #if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-		cpudecoder=&CPU_Core_Normal_Run;
+		if (PAGING_Enabled()) cpudecoder=&CPU_Core_Normal_Run;
+		else cpudecoder=&CPU_Core_Simple_Run;
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
 	}
 #endif
-	GFX_SetTitle(-1,-1,false);
 
 	return true;
 }

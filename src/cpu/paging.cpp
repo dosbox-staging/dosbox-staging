@@ -395,7 +395,7 @@ void PAGING_Enable(bool enabled) {
 //		LOG(LOG_PAGING,LOG_NORMAL)("Disabled");
 	} else {
 		if (cpudecoder==CPU_Core_Simple_Run) {
-			LOG_MSG("CPU core simple won't run this game,switching to normal");
+//			LOG_MSG("CPU core simple won't run this game,switching to normal");
 			cpudecoder=CPU_Core_Normal_Run;
 			CPU_CycleLeft+=CPU_Cycles;
 			CPU_Cycles=0;

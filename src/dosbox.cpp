@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.103 2006-10-27 13:37:14 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.104 2006-11-14 14:11:59 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -101,6 +101,8 @@ void MSCDEX_Init(Section*);
 void EMS_Init(Section*);
 void XMS_Init(Section*);
 
+void DOS_KeyboardLayout_Init(Section*);
+
 void AUTOEXEC_Init(Section*);
 void SHELL_Init(void);
 
@@ -148,7 +150,7 @@ increaseticks:
 		ticksScheduled = 0;
 	} else {
 		Bit32u ticksNew;
-        	ticksNew=GetTicks();
+		ticksNew=GetTicks();
 		ticksScheduled += ticksAdded;
 		if (ticksNew > ticksLast) {
 			ticksRemain = ticksNew-ticksLast;
@@ -160,7 +162,7 @@ increaseticks:
 			ticksAdded = ticksRemain;
 			if (CPU_CycleAutoAdjust && (ticksAdded > 15 || ticksScheduled >= 250 || ticksDone >= 250) ) {
 				/* ratio we are aiming for is around 90% usage*/
-				Bits ratio = (ticksScheduled * (90*1024/100)) / ticksDone ;
+				Bits ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
 //				LOG_MSG("Done %d schedulded %d ratio %d cycles %d", ticksDone, ticksScheduled, ratio, CPU_CycleMax);
 				if (ratio <= 1024) 
 					CPU_CycleMax = (CPU_CycleMax * ratio) / 1024;
@@ -277,12 +279,16 @@ void DOSBOX_Init(void) {
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
+#if (C_DYNAMIC_X86)
+	secprop->Add_string("core","auto");
+#else
 	secprop->Add_string("core","normal");
+#endif
 	secprop->Add_string("cycles","auto");
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
-		"core -- CPU Core used in emulation: simple,normal,full"
+		"core -- CPU Core used in emulation: normal"
 #if (C_DYNAMIC_X86)
 		",dynamic,auto.\n"
 		"        auto switches from normal to dynamic if appropriate"

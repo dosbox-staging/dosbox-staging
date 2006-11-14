@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.87 2006-10-12 15:18:31 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.88 2006-11-14 14:11:59 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -29,7 +29,7 @@
 #include "support.h"
 
 Bitu DEBUG_EnableDebugger(void);
-extern void GFX_SetTitle(Bits cycles ,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles ,Bits frameskip,bool paused);
 
 #if 1
 #undef LOG
@@ -41,11 +41,13 @@ CPU_Regs cpu_regs;
 CPUBlock cpu;
 Segments Segs;
 
-Bits CPU_Cycles = 0;
-Bits CPU_CycleLeft = 0;
-Bits CPU_CycleMax = 2500;
-Bits CPU_CycleUp = 0;
-Bits CPU_CycleDown = 0;
+Bit32s CPU_Cycles = 0;
+Bit32s CPU_CycleLeft = 0;
+Bit32s CPU_CycleMax = 2500;
+Bit32s CPU_OldCycleMax = 2500;
+Bit32s CPU_CyclePercUsed = 100;
+Bit32s CPU_CycleUp = 0;
+Bit32s CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust;
 Bitu CPU_AutoDetermineMode;
@@ -1450,7 +1452,11 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					CPU_CycleAutoAdjust=true;
 					CPU_CycleLeft=0;
 					CPU_Cycles=0;
+					CPU_OldCycleMax=CPU_CycleMax;
 					CPU_CycleMax=0;
+					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
+				} else {
+					GFX_SetTitle(-1,-1,false);
 				}
  #if (C_DYNAMIC_X86)
 				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
@@ -1459,7 +1465,6 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 				}
 #endif
 				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
-				GFX_SetTitle(-1,-1,false);
 			} else {
 				cpu.pmode=false;
 				if (value & CR0_PAGING) LOG_MSG("Paging requested without PE=1");
@@ -1944,33 +1949,45 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 }
 
 static void CPU_CycleIncrease(bool pressed) {
-	if (!pressed || CPU_CycleAutoAdjust)
-		return;
-	Bits old_cycles=CPU_CycleMax;
-	if(CPU_CycleUp < 100){
-		CPU_CycleMax = (Bits)(CPU_CycleMax * (1 + (float)CPU_CycleUp / 100.0));
+	if (!pressed) return;
+	if (CPU_CycleAutoAdjust) {
+		CPU_CyclePercUsed+=5;
+		if (CPU_CyclePercUsed>100) CPU_CyclePercUsed=100;
+		LOG_MSG("CPU:%d percent",CPU_CyclePercUsed);
+		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
-		CPU_CycleMax = (Bits)(CPU_CycleMax + CPU_CycleUp);
+		Bit32s old_cycles=CPU_CycleMax;
+		if (CPU_CycleUp < 100) {
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax * (1 + (float)CPU_CycleUp / 100.0));
+		} else {
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax + CPU_CycleUp);
+		}
+	    
+		CPU_CycleLeft=0;CPU_Cycles=0;
+		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
+		LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
-    
-	CPU_CycleLeft=0;CPU_Cycles=0;
-	if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
-	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
-	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
 static void CPU_CycleDecrease(bool pressed) {
-	if (!pressed || CPU_CycleAutoAdjust)
-		return;
-	if(CPU_CycleDown < 100){
-		CPU_CycleMax = (Bits)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
+	if (!pressed) return;
+	if (CPU_CycleAutoAdjust) {
+		CPU_CyclePercUsed-=5;
+		if (CPU_CyclePercUsed<=0) CPU_CyclePercUsed=1;
+		LOG_MSG("CPU:%d percent",CPU_CyclePercUsed);
+		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
-		CPU_CycleMax = (Bits)(CPU_CycleMax - CPU_CycleDown);
+		if (CPU_CycleDown < 100) {
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax / (1 + (float)CPU_CycleDown / 100.0));
+		} else {
+			CPU_CycleMax = (Bit32s)(CPU_CycleMax - CPU_CycleDown);
+		}
+		CPU_CycleLeft=0;CPU_Cycles=0;
+		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
+		LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
-	CPU_CycleLeft=0;CPU_Cycles=0;
-	if (CPU_CycleMax <= 0) CPU_CycleMax=1;
-	LOG_MSG("CPU:%d cycles",CPU_CycleMax);
-	GFX_SetTitle(CPU_CycleMax,-1,false);
 }
 
 class CPU: public Module_base {
@@ -2037,11 +2054,14 @@ public:
 		const char *cyclesLine = section->Get_string("cycles");
 		if (!strcasecmp(cyclesLine,"max")) {
 			CPU_CycleMax=0;
+			CPU_CyclePercUsed=100;
 			CPU_CycleAutoAdjust=true;
 		} else {
 			if (!strcasecmp(cyclesLine,"auto")) {
 				CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CYCLES;
 				CPU_CycleMax=3000;
+				CPU_OldCycleMax=3000;
+				CPU_CyclePercUsed=100;
 			} else {
 				CPU_CycleMax=atoi(cyclesLine);
 			}
@@ -2050,11 +2070,11 @@ public:
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
 		const char * core=section->Get_string("core");
-		cpudecoder=&CPU_Core_Normal_Run;
+		cpudecoder=&CPU_Core_Simple_Run;
 		if (!strcasecmp(core,"normal")) {
-			cpudecoder=&CPU_Core_Normal_Run;
-		} else if (!strcasecmp(core,"simple")) {
 			cpudecoder=&CPU_Core_Simple_Run;
+		} else if (!strcasecmp(core,"force_normal")) {
+			cpudecoder=&CPU_Core_Normal_Run;
 		} else if (!strcasecmp(core,"full")) {
 			cpudecoder=&CPU_Core_Full_Run;
 		} 
@@ -2066,7 +2086,7 @@ public:
 			cpudecoder=&CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
 		} else if (!strcasecmp(core,"auto")) {
-			cpudecoder=&CPU_Core_Normal_Run;
+			cpudecoder=&CPU_Core_Simple_Run;
 			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
 		} 
 #endif
@@ -2081,7 +2101,8 @@ public:
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 2500;
 		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
 		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
-		GFX_SetTitle(CPU_CycleMax,-1,false);
+		if (CPU_CycleAutoAdjust) GFX_SetTitle(CPU_CyclePercUsed,-1,false);
+		else GFX_SetTitle(CPU_CycleMax,-1,false);
 		return true;
 	}
 	~CPU(){ /* empty */};

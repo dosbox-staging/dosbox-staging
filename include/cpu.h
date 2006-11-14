@@ -37,9 +37,11 @@
 #define CPU_AUTODETERMINE_MASK		0x03
 
 /* CPU Cycle Timing */
-extern Bits CPU_Cycles;
-extern Bits CPU_CycleLeft;
-extern Bits CPU_CycleMax;
+extern Bit32s CPU_Cycles;
+extern Bit32s CPU_CycleLeft;
+extern Bit32s CPU_CycleMax;
+extern Bit32s CPU_OldCycleMax;
+extern Bit32s CPU_CyclePercUsed;
 extern bool CPU_CycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 

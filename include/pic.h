@@ -21,9 +21,9 @@
 
 
 /* CPU Cycle Timing */
-extern Bits CPU_Cycles;
-extern Bits CPU_CycleLeft;
-extern Bits CPU_CycleMax;
+extern Bit32s CPU_Cycles;
+extern Bit32s CPU_CycleLeft;
+extern Bit32s CPU_CycleMax;
 
 typedef void (PIC_EOIHandler) (void);
 typedef void (* PIC_EventHandler)(Bitu val);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.47 2006-08-05 09:06:44 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.48 2006-11-14 14:12:00 c2woody Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -425,7 +425,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	RENDER_CallBack( GFX_CallBackReset );
 }
 
-extern void GFX_SetTitle(Bits cycles, Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles, Bits frameskip,bool paused);
 static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;

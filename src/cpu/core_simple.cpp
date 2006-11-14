@@ -83,7 +83,11 @@ static const Bit32u AddrMaskTable[2]={0x0000ffff,0xffffffff};
 
 static struct {
 	Bitu opcode_index;
+#if defined (_MSC_VER)
+	volatile HostPt cseip;
+#else
 	HostPt cseip;
+#endif
 	PhysPt base_ds,base_ss;
 	SegNames base_val_ds;
 	bool rep_zero;
