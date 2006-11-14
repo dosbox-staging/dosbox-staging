@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.36 2006-06-22 13:15:07 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.37 2006-11-14 20:01:42 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -96,10 +96,14 @@ private:
 
 class DOS_Device : public DOS_File {
 public:
-	DOS_Device(const DOS_Device& orig):DOS_File(orig) {devnum=orig.devnum; }
+	DOS_Device(const DOS_Device& orig):DOS_File(orig) {
+		devnum=orig.devnum;
+		open=true;
+	}
 	DOS_Device & operator= (const DOS_Device & orig) {
 		DOS_File::operator=(orig);
 		devnum=orig.devnum;
+		open=true;
 		return *this;
 	}
 	DOS_Device():DOS_File(),devnum(0){};   

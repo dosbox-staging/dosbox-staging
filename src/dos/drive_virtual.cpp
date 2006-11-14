@@ -85,6 +85,7 @@ Virtual_File::Virtual_File(Bit8u * in_data,Bit32u in_size) {
 	file_pos=0;
 	date=DOS_PackDate(2002,10,1);
 	time=DOS_PackTime(12,34,56);
+	open=true;
 }
 
 bool Virtual_File::Read(Bit8u * data,Bit16u * size) {

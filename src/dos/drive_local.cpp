@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.71 2006-08-17 12:07:22 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.72 2006-11-14 20:01:42 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -160,11 +160,7 @@ bool localDrive::FileUnlink(char * name) {
 				Bitu max = DOS_FILES;
 				while(Files[i]->IsOpen() && max--) {
 					Files[i]->Close();
-					if (Files[i]->RemoveRef()<=0) {
-						delete Files[i];
-						Files[i]=0;
-						break;
-					}
+					if (Files[i]->RemoveRef()<=0) break;
 				}
 				found_file=true;
 			}

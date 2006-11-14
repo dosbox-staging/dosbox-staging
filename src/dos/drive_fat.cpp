@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.18 2006-07-05 21:18:14 c2woody Exp $ */
+/* $Id: drive_fat.cpp,v 1.19 2006-11-14 20:01:42 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +91,7 @@ fatFile::fatFile(const char* /*name*/, Bit32u startCluster, Bit32u fileLen, fatD
 	firstCluster = startCluster;
 	myDrive = useDrive;
 	filelength = fileLen;
+	open = true;
 	loadedSector = false;
 	curSectOff = 0;
 	seekpos = 0;
