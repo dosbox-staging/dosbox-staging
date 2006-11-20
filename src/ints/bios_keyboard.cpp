@@ -505,6 +505,8 @@ static Bitu INT16_Handler(void) {
 		}
 		break;
 	case 0x01: /* CHECK FOR KEYSTROKE */
+		// enable interrupt-flag after IRET of this int16
+		mem_writew(SegPhys(ss)+reg_sp+4,(mem_readw(SegPhys(ss)+reg_sp+4) | FLAG_IF));
 		for (;;) {
 			if (check_key(temp)) {
 				if (!IsEnhancedKey(temp)) {
