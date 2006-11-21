@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.58 2006-08-28 17:02:31 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.59 2006-11-21 15:12:39 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h> 
@@ -158,7 +158,8 @@ static SB_INFO sb;
 static char * copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
 
 static Bit8u DSP_cmd_len[256] = {
-  0,0,0,0, 0,2,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
+//  0,0,0,0, 1,2,0,0, 0,0,0,0, 0,0,2,1,  // 0x00 for SB16. but breaks sbpro
+  0,0,0,0, 0,2,0,0, 0,0,0,0, 0,0,2,1,  // 0x00
   1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
   0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
   0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
@@ -682,7 +683,7 @@ static void DSP_ADC_CallBack(DmaChannel * chan, DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
 	Bit8u val=128;
 	DmaChannel * ch=GetDMAChannel(sb.hw.dma8);
-    while (sb.dma.left--) {
+	while (sb.dma.left--) {
 		ch->Write(1,&val);
 	}
 	SB_RaiseIRQ(SB_IRQ_8);
@@ -697,7 +698,7 @@ Bitu DEBUG_EnableDebugger(void);
 static void DSP_DoCommand(void) {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
-	case 0x04:	/* DSP Status SB 2.0/pro version */
+	case 0x04:	/* DSP Status SB 2.0/pro version. NOT SB16. */
 		DSP_FlushData();
 		DSP_AddData(0xff);			//Everthing enabled
 		break;
@@ -878,6 +879,12 @@ static void DSP_DoCommand(void) {
 	case 0x98: case 0x99: /* Documented only for DSP 2.x and 3.x */
 	case 0xa0: case 0xa8: /* Documented only for DSP 3.x */
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented input command %2X",sb.dsp.cmd);
+		break;
+	case 0x0f:	/* SB16 ASP get register */
+		DSP_AddData(0xff); //Fall through
+	case 0x0e:	/* SB16 ASP Command ? */
+	case 0x05:	/* SB16 ASP set register */
+		LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X",sb.dsp.cmd);
 		break;
 	default:
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unhandled (undocumented) command %2X",sb.dsp.cmd);
