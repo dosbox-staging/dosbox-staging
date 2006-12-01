@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.88 2006-11-14 14:11:59 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.89 2006-12-01 20:48:53 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -408,7 +408,8 @@ doconforming:
 	CPU_SetSegGeneral(fs,new_fs);
 	CPU_SetSegGeneral(gs,new_gs);
 	if (!cpu_tss.SetSelector(new_tss_selector)) LOG(LOG_CPU,LOG_NORMAL)("TaskSwitch: set tss selector %X failed",new_tss_selector);
-	cpu_tss.desc.SetBusy(true);
+//	cpu_tss.desc.SetBusy(true);
+//	cpu_tss.SaveSelector();
 //	LOG_MSG("Task CPL %X CS:%X IP:%X SS:%X SP:%X eflags %x",cpu.cpl,SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);
 	return true;
 }
@@ -1403,6 +1404,7 @@ bool CPU_LTR(Bitu selector) {
 		}
 		if (!cpu_tss.SetSelector(selector)) E_Exit("LTR failed, selector=%X",selector);
 		cpu_tss.desc.SetBusy(true);
+		cpu_tss.SaveSelector();
 	} else {
 		/* Descriptor was no available TSS descriptor */ 
 		LOG(LOG_CPU,LOG_NORMAL)("LTR failed, selector=%X (type=%X)",selector,desc.Type());
