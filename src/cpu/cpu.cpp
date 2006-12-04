@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.89 2006-12-01 20:48:53 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.90 2006-12-04 15:49:01 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1455,7 +1455,6 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					CPU_CycleLeft=0;
 					CPU_Cycles=0;
 					CPU_OldCycleMax=CPU_CycleMax;
-					CPU_CycleMax=0;
 					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 				} else {
 					GFX_SetTitle(-1,-1,false);
