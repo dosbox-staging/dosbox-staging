@@ -21,8 +21,8 @@
 #include "inout.h"
 #include "int10.h"
 
-static Bit8u cga_masks[4]={~192,~48,~12,~3};
-static Bit8u cga_masks2[8]={~128,~64,~32,~16,~8,~4,~2,~1};
+static Bit8u cga_masks[4]={~192U,~48U,~12U,~3U};
+static Bit8u cga_masks2[8]={~128U,~64U,~32U,~16U,~8U,~4U,~2U,~1U};
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 
 	switch (CurMode->type) {
