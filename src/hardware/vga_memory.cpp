@@ -542,8 +542,9 @@ public:
 	}
 
 	Bitu readb(PhysPt addr) {
+		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		if(port >= 0x82E8) return IO_ReadB(port);
 		//LOG_MSG("MMIO: Read byte from %x", addr);
-
 		return 0x00;
 	}
 	Bitu readw(PhysPt addr) {
@@ -553,6 +554,8 @@ public:
 		return 0x00;
 	}
 	Bitu readd(PhysPt addr) {
+		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		if(port >= 0x82E8) return IO_ReadD(port);
 		//LOG_MSG("MMIO: Read dword from %x", addr);
 		return 0x00;
 	}
@@ -699,7 +702,7 @@ range_b800:
 		break;
 	}
 
-	if(((vga.s3.ext_mem_ctrl & 0x10) != 0x00) && (vga.mode == M_LIN8))
+	if(((vga.s3.ext_mem_ctrl & 0x10) != 0x00) /*&& (vga.mode == M_LIN8)*/)
 		MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
 
 	PAGING_ClearTLB();

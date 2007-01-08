@@ -177,7 +177,7 @@ static void VGA_StartFrame_VGA() {
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = vidstart / ((160 * vga.draw.height) / 480);
+		Bitu lineat = 4 * vidstart / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return VGA_Draw_VGA_Line(vidstart, panning, line);
 		} else {
@@ -232,6 +232,138 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line)
 	} else {
 		/* HW Mouse not enabled, use the tried and true call */
 		return VGA_Draw_VGA_Line(vidstart, panning, line);
+	}
+}
+
+static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
+	if(vga.s3.hgc.curmode & 0x1) {
+		Bitu lineat = 2 * vidstart / vga.draw.width;
+		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
+			return VGA_Draw_LIN16_Line(vidstart, panning, line);
+		} else {
+			memcpy(TempLine, VGA_Draw_LIN16_Line(vidstart, panning, line), 2*vga.draw.width);
+			/* Draw mouse cursor */
+			Bits moff = ((Bits)lineat - (Bits)vga.s3.hgc.originy) + (Bits)vga.s3.hgc.posy;
+			if(moff>63) return VGA_Draw_LIN16_Line(vidstart, panning, line);
+			if(moff<0) moff+=64;
+			Bitu xat = 2*vga.s3.hgc.originx;
+			Bitu m, mapat;
+			Bits r, z;
+			mapat = 0;
+
+			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
+			mouseaddr+=(moff * 16);
+
+			Bit16u bitsA, bitsB;
+			Bit8u mappoint;
+			for(m=0;m<4;m++) {
+				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				z = 7;
+				for(r=15;r>=0;--r) {
+					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
+					if(mapat >= vga.s3.hgc.posx) {
+						switch(mappoint) {
+					case 0:
+						TempLine[xat]   = vga.s3.hgc.backstack[0];
+						TempLine[xat+1] = vga.s3.hgc.backstack[1];
+						break;
+					case 1:
+						TempLine[xat]   = vga.s3.hgc.forestack[0];
+						TempLine[xat+1] = vga.s3.hgc.forestack[1];
+						break;
+					case 2:
+						//Transparent
+						break;
+					case 3:
+						// Invert screen data
+						TempLine[xat]   = ~TempLine[xat];
+						TempLine[xat+1] = ~TempLine[xat+1];
+						break;
+				}
+				xat+=2;
+					}
+					mapat++;
+					--z;
+					if(z<0) z=15;
+				}
+			}
+			return TempLine;
+		}
+	} else {
+		/* HW Mouse not enabled, use the tried and true call */
+		return VGA_Draw_LIN16_Line(vidstart, panning, line);
+	}
+}
+
+static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu panning, Bitu line) {
+	if(vga.s3.hgc.curmode & 0x1) {
+		Bitu lineat = vidstart / vga.draw.width;
+		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
+			return VGA_Draw_LIN32_Line(vidstart, panning, line);
+		} else {
+			memcpy(TempLine, VGA_Draw_LIN32_Line(vidstart, panning, line), 4*vga.draw.width);
+			/* Draw mouse cursor */
+			Bits moff = ((Bits)lineat - (Bits)vga.s3.hgc.originy) + (Bits)vga.s3.hgc.posy;
+			if(moff>63) return VGA_Draw_LIN32_Line(vidstart, panning, line);
+			if(moff<0) moff+=64;
+			Bitu xat = 4*vga.s3.hgc.originx;
+			Bitu m, mapat;
+			Bits r, z;
+			mapat = 0;
+
+			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
+			mouseaddr+=(moff * 16);
+
+			Bit16u bitsA, bitsB;
+			Bit8u mappoint;
+			for(m=0;m<4;m++) {
+				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
+				mouseaddr+=2;
+				z = 7;
+				for(r=15;r>=0;--r) {
+					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
+					if(mapat >= vga.s3.hgc.posx) {
+						switch(mappoint) {
+					case 0:
+						TempLine[xat]   = vga.s3.hgc.backstack[0];
+						TempLine[xat+1] = vga.s3.hgc.backstack[1];
+						TempLine[xat+2] = vga.s3.hgc.backstack[2];
+						TempLine[xat+3] = 255;
+						break;
+					case 1:
+						TempLine[xat]   = vga.s3.hgc.forestack[0];
+						TempLine[xat+1] = vga.s3.hgc.forestack[1];
+						TempLine[xat+2] = vga.s3.hgc.forestack[2];
+						TempLine[xat+3] = 255;
+						break;
+					case 2:
+						//Transparent
+						break;
+					case 3:
+						// Invert screen data
+						TempLine[xat]   = ~TempLine[xat];
+						TempLine[xat+1] = ~TempLine[xat+1];
+						TempLine[xat+2] = ~TempLine[xat+2];
+						TempLine[xat+2] = ~TempLine[xat+3];
+						break;
+				}
+				xat+=4;
+					}
+					mapat++;
+					--z;
+					if(z<0) z=15;
+				}
+			}
+			return TempLine;
+		}
+	} else {
+		/* HW Mouse not enabled, use the tried and true call */
+		return VGA_Draw_LIN32_Line(vidstart, panning, line);
 	}
 }
 
@@ -397,9 +529,29 @@ void VGA_CheckScanLength(void) {
 
 void VGA_ActivateHardwareCursor(void) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		VGA_DrawLine=VGA_Draw_VGA_Line_HWMouse;
+		switch(vga.mode) {
+		case M_LIN32:
+			VGA_DrawLine=VGA_Draw_LIN32_Line_HWMouse;
+			break;
+		case M_LIN15:
+		case M_LIN16:
+			VGA_DrawLine=VGA_Draw_LIN16_Line_HWMouse;
+			break;
+		default:
+			VGA_DrawLine=VGA_Draw_VGA_Line_HWMouse;
+		}
 	} else {
-		VGA_DrawLine=VGA_Draw_VGA_Line;
+		switch(vga.mode) {
+		case M_LIN32:
+			VGA_DrawLine=VGA_Draw_LIN32_Line;
+			break;
+		case M_LIN15:
+		case M_LIN16:
+			VGA_DrawLine=VGA_Draw_LIN16_Line;
+			break;
+		default:
+			VGA_DrawLine=VGA_Draw_VGA_Line;
+		}
 	}
 }
 
@@ -523,7 +675,8 @@ void VGA_SetupDrawing(Bitu val) {
 			doublewidth = true;
 			width >>= 1;
 		}
-		VGA_DrawLine=VGA_Draw_LIN16_Line;
+		/* Use HW mouse cursor drawer if enabled */
+		VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN16:
 		bpp = 16;
@@ -532,7 +685,8 @@ void VGA_SetupDrawing(Bitu val) {
 			doublewidth = true;
 			width >>= 1;
 		}
-		VGA_DrawLine=VGA_Draw_LIN16_Line;
+		/* Use HW mouse cursor drawer if enabled */
+		VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN32:
 		bpp = 32;
@@ -541,7 +695,8 @@ void VGA_SetupDrawing(Bitu val) {
 			doublewidth = true;
 			width >>= 1;
 		}
-		VGA_DrawLine=VGA_Draw_LIN32_Line;
+		/* Use HW mouse cursor drawer if enabled */
+		VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN4:
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
