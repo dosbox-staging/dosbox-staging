@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.54 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.55 2007-01-08 22:04:20 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -176,6 +176,7 @@ struct EMM_Handle {
 
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
+static EMM_Mapping emm_segmentmappings[0x40];
 
 static struct {
 	bool enabled;
@@ -274,6 +275,56 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 	}
 }
 
+static Bit8u EMM_MapSegment(Bitu segment,Bit16u handle,Bit16u log_page) {
+//	LOG_MSG("EMS MapSegment handle %d segment %d log %d",handle,segment,log_page);
+
+	if (((segment>=0xa000) && (segment<0xb000)) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME+0x1000))) {
+		Bit32s tphysPage = ((Bit32s)segment-EMM_PAGEFRAME)/(0x1000/EMM_MAX_PHYS);
+
+		/* unmapping doesn't need valid handle (as handle isn't used) */
+		if (log_page==NULL_PAGE) {
+			/* Unmapping */
+			if ((tphysPage>=0) && (tphysPage<EMM_MAX_PHYS)) {
+				emm_mappings[tphysPage].handle=NULL_HANDLE;
+				emm_mappings[tphysPage].page=NULL_PAGE;
+			} else {
+				emm_segmentmappings[segment>>10].handle=NULL_HANDLE;
+				emm_segmentmappings[segment>>10].page=NULL_PAGE;
+			}
+			for (Bitu i=0;i<4;i++) 
+				PAGING_MapPage(segment*16/4096+i,segment*16/4096+i);
+			PAGING_ClearTLB();
+			return EMM_NO_ERROR;
+		}
+		/* Check for valid handle */
+		if (!ValidHandle(handle)) return EMM_INVALID_HANDLE;
+		
+		if (log_page<emm_handles[handle].pages) {
+			/* Mapping it is */
+			if ((tphysPage>=0) && (tphysPage<EMM_MAX_PHYS)) {
+				emm_mappings[tphysPage].handle=handle;
+				emm_mappings[tphysPage].page=log_page;
+			} else {
+				emm_segmentmappings[segment>>10].handle=handle;
+				emm_segmentmappings[segment>>10].page=log_page;
+			}
+			
+			MemHandle memh=MEM_NextHandleAt(emm_handles[handle].mem,log_page*4);;
+			for (Bitu i=0;i<4;i++) {
+				PAGING_MapPage(segment*16/4096+i,memh);
+				memh=MEM_NextHandle(memh);
+			}
+			PAGING_ClearTLB();
+			return EMM_NO_ERROR;
+		} else  {
+			/* Illegal logical page it is */
+			return EMM_LOG_OUT_RANGE;
+		}
+	}
+
+	return EMM_ILL_PHYS;
+}
+
 static Bit8u EMM_ReleaseMemory(Bit16u handle) {
 	/* Check for valid handle */
 	if (!ValidHandle(handle)) return EMM_INVALID_HANDLE;
@@ -305,6 +356,11 @@ static Bit8u EMM_SavePageMap(Bit16u handle) {
 static Bit8u EMM_RestoreMappingTable(void) {
 	Bit8u result;
 	/* Move through the mappings table and setup mapping accordingly */
+	for (Bitu i=0;i<0x40;i++) {
+		/* Skip the pageframe */
+		if ((i>=EMM_PAGEFRAME/0x400) && (i<(EMM_PAGEFRAME/0x400)+EMM_MAX_PHYS)) continue;
+		result=EMM_MapSegment(i<<10,emm_segmentmappings[i].handle,emm_segmentmappings[i].page);
+	}
 	for (Bitu i=0;i<EMM_MAX_PHYS;i++) {
 		result=EMM_MapPage(i,emm_mappings[i].handle,emm_mappings[i].page);
 	}
@@ -348,21 +404,34 @@ static Bit8u EMM_PartialPageMapping(void) {
 		count=mem_readw(list);list+=2;
 		mem_writew(data,count);data+=2;
 		for (;count>0;count--) {
-			Bit16u page=mem_readw(list);list+=2;
-			if ((page<EMM_PAGEFRAME) || (page>=EMM_PAGEFRAME+0x1000)) return EMM_ILL_PHYS;
-			page = (page-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
-			mem_writew(data,page);data+=2;
-			MEM_BlockWrite(data,&emm_mappings[page],sizeof(EMM_Mapping));
-			data+=sizeof(EMM_Mapping);
+			Bit16u segment=mem_readw(list);list+=2;
+			if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
+				Bit16u page = (segment-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
+				mem_writew(data,segment);data+=2;
+				MEM_BlockWrite(data,&emm_mappings[page],sizeof(EMM_Mapping));
+				data+=sizeof(EMM_Mapping);
+			} else if (((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
+				mem_writew(data,segment);data+=2;
+				MEM_BlockWrite(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
+				data+=sizeof(EMM_Mapping);
+			} else {
+				return EMM_ILL_PHYS;
+			}
 		}
 		break;
 	case 0x01:	/* Restore Partial Page Map */
 		data = SegPhys(ds)+reg_si;
 		count= mem_readw(data);data+=2;
 		for (;count>0;count--) {
-			Bit16u page=mem_readw(data);data+=2;
-			if (page>=EMM_MAX_PHYS) return EMM_ILL_PHYS;
-			MEM_BlockRead(data,&emm_mappings[page],sizeof(EMM_Mapping));
+			Bit16u segment=mem_readw(data);data+=2;
+			if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
+				Bit16u page = (segment-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
+				MEM_BlockRead(data,&emm_mappings[page],sizeof(EMM_Mapping));
+			} else if (((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
+				MEM_BlockRead(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
+			} else {
+				return EMM_ILL_PHYS;
+			}
 			data+=sizeof(EMM_Mapping);
 		}
 		return EMM_RestoreMappingTable();
@@ -636,8 +705,7 @@ static Bitu INT67_Handler(void) {
 				{	PhysPt data = SegPhys(ds)+reg_si;
 					for (int i=0; i<reg_cx; i++) {
 						Bit16u logPage	= mem_readw(data); data+=2;
-						Bit16u physPage = (mem_readw(data)-EMM_PAGEFRAME)/(0x1000/EMM_MAX_PHYS); data+=2;
-						reg_ah = EMM_MapPage(physPage,reg_dx,logPage);
+						reg_ah = EMM_MapSegment(mem_readw(data),reg_dx,logPage); data+=2;
 						if (reg_ah!=EMM_NO_ERROR) break;
 					};
 				}
@@ -1187,6 +1255,10 @@ public:
 		for (i=0;i<EMM_MAX_PHYS;i++) {
 			emm_mappings[i].page=NULL_PAGE;
 			emm_mappings[i].handle=NULL_HANDLE;
+		}
+		for (i=0;i<0x40;i++) {
+			emm_segmentmappings[i].page=NULL_PAGE;
+			emm_segmentmappings[i].handle=NULL_HANDLE;
 		}
 
 		if (!ENABLE_VCPI) return;
