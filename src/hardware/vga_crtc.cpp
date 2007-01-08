@@ -16,12 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
 #include "debug.h"
 #include "cpu.h"
 #include "video.h"
+#include "pic.h"
 
 #define crtc(blah) vga.crtc.blah
 
@@ -215,6 +217,10 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x12:	/* Vertical Display End Register */
 		if (val!=crtc(vertical_display_end)) {
+			if (abs((Bits)val-(Bits)crtc(vertical_display_end))<3) {
+				PIC_RemoveEvents(VGA_SetupDrawing);
+				vga.draw.resizing=false;
+			}
 			crtc(vertical_display_end)=val;
 			VGA_StartResize();
 		}
