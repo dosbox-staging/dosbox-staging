@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.28 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.29 2007-01-08 21:07:39 qbix79 Exp $ */
 
 #define OLD_JOYSTICK 1
 
@@ -330,7 +330,7 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 			/* try to retrieve key from symbolic key as scancode is zero */
 			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
 		} 
-#if !defined (WIN32) && !defined (MACOSX)
+#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
 		/* Linux adds 8 to all scancodes */
 		else key-=8;
 #endif
