@@ -16,8 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.60 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.61 2007-01-08 19:59:06 qbix79 Exp $ */
 
+#include <iomanip>
+#include <sstream>
 #include <string.h>
 #include <math.h> 
 #include "dosbox.h"
@@ -29,6 +31,7 @@
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
+using namespace std;
 
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
@@ -141,8 +144,8 @@ struct SB_INFO {
 	} adpcm;
 	struct {
 		Bitu base;
-		Bit8u irq;
-		Bit8u dma8,dma16;
+		Bitu irq;
+		Bitu dma8,dma16;
 	} hw;
 	struct {
 		Bits value;
@@ -1314,11 +1317,14 @@ public:
 		if (sb.type == SBT_16) sb.chan->Enable(true);
 		else sb.chan->Enable(false);
 
-		char hdma[8]="";
-		if (sb.type==SBT_16) {
-			sprintf(hdma,"H%d ",sb.hw.dma16);
-		}
-		autoexecline.Install("SET BLASTER=A%3X I%d D%d %sT%d",sb.hw.base,sb.hw.irq,sb.hw.dma8,hdma,sb.type);
+		// Create set blaster line
+		ostringstream temp;
+		temp << "SET BLASTER=A" << setw(3)<< hex << sb.hw.base
+		     << " I" << dec << sb.hw.irq << " D"<< sb.hw.dma8;
+		if (sb.type==SBT_16) temp << " H" << sb.hw.dma16;
+		temp << " T" << static_cast<unsigned int>(sb.type) << ends;
+
+		autoexecline.Install(temp.str());
 
 		/* Soundblaster midi interface */
 		if (!MIDI_Available()) sb.midi = false;

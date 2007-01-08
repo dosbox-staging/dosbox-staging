@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.78 2007-01-08 19:45:42 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.79 2007-01-08 19:59:06 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -48,16 +48,11 @@ typedef std::list<std::string>::iterator auto_it;
 
 void VFILE_Remove(const char *name);
 
-void AutoexecObject::Install(char* line,...) {
-	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf);
+void AutoexecObject::Install(const std::string &in) {
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf.c_str());
 	installed = true;
-	va_list msg;
-	
-	va_start(msg,line);
-	vsprintf(buf,line,msg);
-	va_end(msg);
-	autoexec_strings.push_back(std::string(buf));
-
+	buf = in;
+	autoexec_strings.push_back(buf);
 	this->CreateAutoexec();
 
 	//autoexec.bat is normally created AUTOEXEC_Init.
@@ -65,7 +60,10 @@ void AutoexecObject::Install(char* line,...) {
 	//we have to update the envirionment to display changes
 
 	if(first_shell)	{
-		char buf2[256]; strcpy(buf2,buf);//used in shell.h
+		//create a copy as the string will be modified
+		std::string::size_type n = buf.size();
+		char* buf2 = new char[n + 1];
+		safe_strncpy(buf2, buf.c_str(), n + 1);
 		if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
 			char* after_set = buf2 + 4;//move to variable that is being set
 			char* test = strpbrk(after_set,"=");
@@ -74,18 +72,15 @@ void AutoexecObject::Install(char* line,...) {
 			//If the shell is running/exists update the environment
 			first_shell->SetEnv(after_set,test);
 		}
+		delete [] buf2;
 	}
 }
 
-void AutoexecObject::InstallBefore(char* line,...) {
-	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf);
+void AutoexecObject::InstallBefore(const std::string &in) {
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf.c_str());
 	installed = true;
-	va_list msg;
-	
-	va_start(msg,line);
-	vsprintf(buf,line,msg);
-	va_end(msg);
-	autoexec_strings.push_front(std::string(buf));
+	buf = in;
+	autoexec_strings.push_front(buf);
 	this->CreateAutoexec();
 }
 
@@ -98,7 +93,7 @@ void AutoexecObject::CreateAutoexec(void) {
 	size_t auto_len;
 	for(auto_it it=  autoexec_strings.begin(); it != autoexec_strings.end(); it++) {
 		auto_len = strlen(autoexec_data);
-		if ((auto_len+strlen((*it).c_str())+3)>AUTOEXEC_SIZE) {
+		if ((auto_len+(*it).length()+3)>AUTOEXEC_SIZE) {
 			E_Exit("SYSTEM:Autoexec.bat file overflow");
 		}
 		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
@@ -113,15 +108,19 @@ AutoexecObject::~AutoexecObject(){
 	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
 		if((*it) == buf) {
 			it = autoexec_strings.erase(it);
+			std::string::size_type n = buf.size();
+			char* buf2 = new char[n + 1];
+			safe_strncpy(buf2, buf.c_str(), n + 1);
 			// If it's a environment variable remove it from there as well
-			if((strncasecmp(buf,"set ",4) == 0) && (strlen(buf) > 4)){
-				char* after_set = buf + 4;//move to variable that is being set
+			if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
+				char* after_set = buf2 + 4;//move to variable that is being set
 				char* test = strpbrk(after_set,"=");
 				if(!test) continue;
 				*test = 0;
 				//If the shell is running/exists update the environment
 				if(first_shell) first_shell->SetEnv(after_set,"");
 			}
+			delete [] buf2;
 		} else it++;
 	}
 	this->CreateAutoexec();
@@ -350,14 +349,14 @@ public:
 			if(echo_off) autoexec_echo.InstallBefore("@echo off");
 
 			/* Install the stuff from the configfile */
-			autoexec[0].Install("%s",extra);
+			autoexec[0].Install(section->data);
 		}
 
 		/* Check to see for extra command line options to be added (before the command specified on commandline) */
 		/* Maximum of extra commands: 10 */
 		Bitu i = 1;
 		while (control->cmdline->FindString("-c",line,true) && (i <= 11))
-			autoexec[i++].Install((char *)line.c_str());
+			autoexec[i++].Install(line);
 	
 		/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
 		bool addexit = control->cmdline->FindExist("-exit",true);
@@ -375,7 +374,7 @@ public:
 				if (stat(buffer,&test)) goto nomount;
 			}
 			if (test.st_mode & S_IFDIR) { 
-				autoexec[12].Install("MOUNT C \"%s\"",buffer);
+				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 			} else {
 				char* name = strrchr(buffer,CROSS_FILESPLIT);
@@ -390,17 +389,14 @@ public:
 				}
 				*name++ = 0;
 				if (access(buffer,F_OK)) goto nomount;
-				autoexec[12].Install("MOUNT C \"%s\"",buffer);
+				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 				upcase(name);
 				if(strstr(name,".BAT") == 0) {
 					autoexec[14].Install(name);
 				} else {
-				/* BATch files are called else exit will not work */
-					char call[CROSS_LEN] = { 0 };
-					strcpy(call,"CALL ");
-					strcat(call,name);
-					autoexec[14].Install(call);
+					/* BATch files are called else exit will not work */
+					autoexec[14].Install(std::string("CALL ") + name);
 				}
 				if(addexit) autoexec[15].Install("exit");
 			}

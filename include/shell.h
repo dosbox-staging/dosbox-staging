@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.19 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: shell.h,v 1.20 2007-01-08 19:59:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -154,11 +154,11 @@ static inline char* ExpandDot(char*args, char* buffer) {
 class AutoexecObject{
 private:
 	bool installed;
-	char buf[256];
+	std::string buf;
 public:
-	AutoexecObject():installed(false){};
-	void Install(char * line,...);
-	void InstallBefore(char* line, ...);
+	AutoexecObject():installed(false){ };
+	void Install(std::string const &in);
+	void InstallBefore(std::string const &in);
 	~AutoexecObject();
 private:
 	void CreateAutoexec(void);
