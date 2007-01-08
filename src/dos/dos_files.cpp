@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.80 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.81 2007-01-08 21:20:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -382,6 +382,20 @@ bool DOS_CloseFile(Bit16u entry) {
 	return true;
 }
 
+static bool PathExists(char* name) {
+	char* leading = strrchr(name,'\\');
+	if(!leading) return true;
+	char temp[CROSS_LEN];
+	strcpy(temp,name);
+	leading = strrchr(temp,'\\');
+	*leading = 0;
+	Bit8u drive;char fulldir[DOS_PATHLENGTH];
+	if (!DOS_MakeName(temp,fulldir,&drive)) return false;
+	if(!Drives[drive]->TestDir(fulldir)) return false;
+	return true;
+}
+
+
 bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 	// Creation of a device is the same as opening it
 	// Tc201 installer
@@ -417,6 +431,8 @@ bool DOS_CreateFile(char * name,Bit16u attributes,Bit16u * entry) {
 		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
+		if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND); 
+		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 }
@@ -475,8 +491,10 @@ bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry) {
 		//Test if file exists, but opened in read-write mode (and writeprotected)
 		if(((flags&3) != OPEN_READ) && Drives[drive]->FileExists(fullname))
 			DOS_SetError(DOSERR_ACCESS_DENIED);
-		else
-			DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		else {
+			if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND); 
+			else DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		}
 		return false;
 	}
 }
