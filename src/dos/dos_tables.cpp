@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.24 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.25 2007-01-08 20:10:34 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -43,7 +43,7 @@ static Bitu call_casemap;
 static Bit16u dos_memseg;
 
 Bit16u DOS_GetMemory(Bit16u pages) {
-	if (pages+dos_memseg>=0xe000) {
+	if (pages+dos_memseg>=0xd000) {
 		E_Exit("DOS:Not enough memory for internal tables");
 	}
 	Bit16u page=dos_memseg;
@@ -73,7 +73,7 @@ static Bit8u country_info[0x22] = {
 };
 
 void DOS_SetupTables(void) {
-	dos_memseg=0xd800;
+	dos_memseg=0xc800;
 	Bit16u seg,seg2;Bitu i;
 	dos.tables.mediaid=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);

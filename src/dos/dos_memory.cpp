@@ -303,10 +303,11 @@ bool DOS_FreeMemory(Bit16u segment) {
 }
 
 
-void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
-	if ((strcmp(use_umbs,"false")!=0) && (machine!=MCH_TANDY)) {
-		Bit16u first_umb_seg=0xc800;
-		Bit16u first_umb_size=0x1000;
+void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
+	if (umb_active  && (machine!=MCH_TANDY)) {
+		Bit16u first_umb_seg = 0xd000;
+		Bit16u first_umb_size = 0x2000;
+		if(ems_active || (machine == MCH_PCJR)) first_umb_size = 0x1000;
 
 		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
 		dos_infoblock.SetUMBChainState(0);		// UMBs not linked yet
@@ -333,27 +334,6 @@ void DOS_BuildUMBChain(const char* use_umbs,bool ems_active) {
 		mcb.SetSize(first_umb_seg-cover_mcb-1);
 		mcb.SetFileName("SC      ");
 
-		if (!ems_active && (strcmp(use_umbs,"max")==0) && (machine!=MCH_PCJR)) {
-			Bit16u ems_umb_seg=0xe000;
-			Bit16u ems_umb_size=0x1000;
-
-			/* Continue UMB-chain */
-			umb_mcb.SetSize(first_umb_size-2);
-			umb_mcb.SetType(0x4d);
-
-			DOS_MCB umb2_mcb(ems_umb_seg);
-			umb2_mcb.SetPSPSeg(0);		// currently free
-			umb2_mcb.SetSize(ems_umb_size-1);
-			umb2_mcb.SetType(0x5a);
-
-			/* A system MCB has to take out the space between the previous and this UMB */
-			cover_mcb=(Bit16u)(first_umb_seg+umb_mcb.GetSize()+1);
-			mcb.SetPt(cover_mcb);
-			mcb.SetType(0x4d);
-			mcb.SetPSPSeg(0x0008);
-			mcb.SetSize(ems_umb_seg-cover_mcb-1);
-			mcb.SetFileName("SC      ");
-		}
 	} else {
 		dos_infoblock.SetStartOfUMBChain(0xffff);
 		dos_infoblock.SetUMBChainState(0);

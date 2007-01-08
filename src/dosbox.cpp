@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.105 2007-01-08 19:45:38 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.106 2007-01-08 20:10:34 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -437,13 +437,13 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init,true);//done
 	secprop->Add_bool("ems",true);
-	secprop->Add_string("umb","true");
+	secprop->Add_bool("umb","true");
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	secprop->Add_string("keyboardlayout", "none");
 	MSG_Add("DOS_CONFIGFILE_HELP",
 		"xms -- Enable XMS support.\n"
 		"ems -- Enable EMS support.\n"
-		"umb -- Enable UMB support (false,true,max).\n"
+		"umb -- Enable UMB support.\n"
 		"keyboardlayout -- Language code of the keyboard layout (or none).\n"
 	);
 	// Mscdex

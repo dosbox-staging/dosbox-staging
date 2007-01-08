@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.44 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.45 2007-01-08 20:10:34 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -436,8 +436,8 @@ public:
 		xms_handles[0].free	= false;
 
 		/* Set up UMB chain */
-		umb_available=strcmp(section->Get_string("umb"),"false")!=0;
-		DOS_BuildUMBChain(section->Get_string("umb"),section->Get_bool("ems"));
+		umb_available=section->Get_bool("umb");
+		DOS_BuildUMBChain(section->Get_bool("umb"),section->Get_bool("ems"));
 	}
 
 	~XMS(){
