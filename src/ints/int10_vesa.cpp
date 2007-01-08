@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2006  The DOSBox Team
+ *  Copyright (C) 2002-2007  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.24 2006-04-22 15:25:45 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.25 2007-01-08 19:45:41 qbix79 Exp $ */
 
 #include <string.h>
 #include <stddef.h>

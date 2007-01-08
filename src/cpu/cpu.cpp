@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2006  The DOSBox Team
+ *  Copyright (C) 2002-2007  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.90 2006-12-04 15:49:01 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.91 2007-01-08 19:45:38 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"

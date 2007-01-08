@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2006  The DOSBox Team
+ *  Copyright (C) 2002-2007  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.5 2006-09-09 16:06:31 qbix79 Exp $ */
+/* $Id: vga_s3.cpp,v 1.6 2007-01-08 19:45:40 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
