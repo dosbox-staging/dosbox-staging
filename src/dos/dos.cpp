@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.97 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.98 2007-01-08 20:36:53 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -838,8 +838,8 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
 		if(reg_al == 0) {
-			SegSet16(ds,RealSeg(dos.tables.dcbs));
-			reg_si=RealOff(dos.tables.dcbs);		
+			SegSet16(ds,RealSeg(dos.tables.dbcs));
+			reg_si=RealOff(dos.tables.dbcs);		
 			reg_al = 0;
 			CALLBACK_SCF(false); //undocumented
 		} else reg_al = 0xff; //Doesn't officially touch carry flag
@@ -870,14 +870,24 @@ static Bitu DOS_21Handler(void) {
 				}
 				CALLBACK_SCF(false);
 				break;
+			case 0x05: // Get pointer to filename terminator table
+				mem_writeb(data + 0x00, reg_al);
+				mem_writed(data + 0x01, dos.tables.filenamechar);
+				reg_cx = 5;
+				CALLBACK_SCF(false);
+				break;
+			case 0x06: // Get pointer to collating sequence table
+				mem_writeb(data + 0x00, reg_al);
+				mem_writed(data + 0x01, dos.tables.collatingseq);
+				reg_cx = 5;
+				CALLBACK_SCF(false);
+				break;
 			case 0x02: // Get pointer to uppercase table
 			case 0x03: // Get pointer to lowercase table
 			case 0x04: // Get pointer to filename uppercase table
-			case 0x05: // Get pointer to filename terminator table
-			case 0x06: // Get pointer to collating sequence table
 			case 0x07: // Get pointer to double byte char set table
 				mem_writeb(data + 0x00, reg_al);
-				mem_writed(data + 0x01, dos.tables.dcbs); //used to be 0
+				mem_writed(data + 0x01, dos.tables.dbcs); //used to be 0
 				reg_cx = 5;
 				CALLBACK_SCF(false);
 				break;

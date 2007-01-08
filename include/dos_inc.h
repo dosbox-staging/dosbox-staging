@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.64 2007-01-08 20:10:34 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.65 2007-01-08 20:36:53 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -616,7 +616,9 @@ struct DOS_Block {
 		RealPt mediaid;
 		RealPt tempdta;
 		RealPt tempdta_fcbdelete;
-		RealPt dcbs;
+		RealPt dbcs;
+		RealPt filenamechar;
+		RealPt collatingseq;
 		Bit8u* country;//Will be copied to dos memory. resides in real mem
 	} tables;
 	Bit16u loaded_codepage;
