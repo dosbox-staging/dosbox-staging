@@ -681,6 +681,9 @@ bool INT10_SetVideoMode(Bitu mode) {
 	/* This register actually has more bits but only use the extended offset ones */
 	IO_Write(crtc_base,0x51);
 	IO_Write(crtc_base + 1,(offset & 0x300) >> 4);
+	/* Clear remaining bits of the display start */
+	IO_Write(crtc_base,0x69);
+	IO_Write(crtc_base + 1,0);
 	/* Extended Vertical Overflow */
 	IO_Write(crtc_base,0x5e);IO_Write(crtc_base+1,ver_overflow);
 
