@@ -44,6 +44,7 @@ Bitu MEM_FreeLargest(void);			//Largest free 4 kb pages block
 Bitu MEM_TotalPages(void);			//Total amount of 4 kb pages
 Bitu MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
 MemHandle MEM_AllocatePages(Bitu pages,bool sequence);
+MemHandle MEM_GetNextFreePage(void);
 PhysPt MEM_AllocatePage(void);
 void MEM_ReleasePages(MemHandle handle);
 bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence);

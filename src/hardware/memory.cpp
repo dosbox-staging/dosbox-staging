@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.46 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.47 2007-01-08 21:40:15 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -289,6 +289,10 @@ MemHandle MEM_AllocatePages(Bitu pages,bool sequence) {
 		}
 	}
 	return ret;
+}
+
+MemHandle MEM_GetNextFreePage(void) {
+	return (MemHandle)BestMatch(1);
 }
 
 void MEM_ReleasePages(MemHandle handle) {

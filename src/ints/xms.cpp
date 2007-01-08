@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.45 2007-01-08 20:10:34 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.46 2007-01-08 21:40:15 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -134,9 +134,15 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle) {	// size = kb
 	while (!xms_handles[index].free) {
 		if (++index>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
 	}
-	Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
-	MemHandle mem=MEM_AllocatePages(pages,true);
-	if ((!mem) && (size != 0)) return XMS_OUT_OF_SPACE;
+	MemHandle mem;
+	if (size!=0) {
+		Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
+		mem=MEM_AllocatePages(pages,true);
+		if (!mem) return XMS_OUT_OF_SPACE;
+	} else {
+		mem=MEM_GetNextFreePage();
+		if (mem==0) LOG(LOG_MISC,LOG_ERROR)("XMS:Allocate zero pages with no memory left");
+	}
 	xms_handles[index].free=false;
 	xms_handles[index].mem=mem;
 	xms_handles[index].locked=0;
