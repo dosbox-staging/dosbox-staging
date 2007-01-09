@@ -191,9 +191,10 @@ decode_end:
 Bits CPU_Core_Normal_Trap_Run(void) {
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
+	cpu.trap_skip = false;
 
 	Bits ret=CPU_Core_Normal_Run();
-	if (GETFLAG(TF)) CPU_HW_Interrupt(1);
+	if (!cpu.trap_skip) CPU_HW_Interrupt(1);
 	CPU_Cycles = oldCycles-1;
 	cpudecoder = &CPU_Core_Normal_Run;
 

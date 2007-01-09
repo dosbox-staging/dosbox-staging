@@ -746,6 +746,9 @@
 			return debugCallback;
 #endif			
 		CPU_SW_Interrupt_NoIOPLCheck(3,GETIP);
+#if CPU_TRAP_CHECK
+		cpu.trap_skip=true;
+#endif
 		continue;
 	CASE_B(0xcd)												/* INT Ib */	
 		{
@@ -757,12 +760,18 @@
 			}
 #endif
 			CPU_SW_Interrupt(num,GETIP);
+#if CPU_TRAP_CHECK
+			cpu.trap_skip=true;
+#endif
 			continue;
 		}
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
 			FillFlags();
 			CPU_SW_Interrupt(4,GETIP);
+#if CPU_TRAP_CHECK
+			cpu.trap_skip=true;
+#endif
 			continue;
 		}
 		break;
@@ -946,6 +955,9 @@
 	CASE_B(0xf1)												/* ICEBP */
 		FillFlags();
 		CPU_SW_Interrupt_NoIOPLCheck(1,GETIP);
+#if CPU_TRAP_CHECK
+		cpu.trap_skip=true;
+#endif
 		continue;
 	CASE_B(0xf2)												/* REPNZ */
 		DO_PREFIX_REP(false);	

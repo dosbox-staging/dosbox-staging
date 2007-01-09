@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.37 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: pic.cpp,v 1.38 2007-01-09 17:18:52 c2woody Exp $ */
 
 #include <list>
 
@@ -282,6 +282,7 @@ static inline bool PIC_startIRQ(Bitu i) {
 void PIC_runIRQs(void) {
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) return;
+	if (cpudecoder==CPU_Core_Normal_Trap_Run) return;
 
 	static Bitu IRQ_priority_order[16] = 
 		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };

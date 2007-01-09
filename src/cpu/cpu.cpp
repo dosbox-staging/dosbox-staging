@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.91 2007-01-08 19:45:38 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.92 2007-01-09 17:18:52 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -2025,6 +2025,7 @@ public:
 		cpu.stack.mask=0xffff;
 		cpu.stack.notmask=0xffff0000;
 		cpu.stack.big=false;
+		cpu.trap_skip=false;
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 

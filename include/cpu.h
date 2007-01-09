@@ -446,6 +446,7 @@ struct CPUBlock {
 		Bitu which,error;
 	} exception;
 	Bits direction;
+	bool trap_skip;
 	Bit32u drx[8];
 	Bit32u trx[8];
 };

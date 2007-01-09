@@ -93,9 +93,6 @@ static struct {
 	bool rep_zero;
 	Bitu prefixes;
 	GetEAHandler * ea_table;
-	struct {
-		bool skip;
-	} trap;
 } core;
 
 #define GETIP		(core.cseip-SegBase(cs)-MemBase)
@@ -188,15 +185,16 @@ decode_end:
 	return CBRET_NONE;
 }
 
+// not really used
 Bits CPU_Core_Simple_Trap_Run(void) {
-
 	Bits oldCycles = CPU_Cycles;
 	CPU_Cycles = 1;
+	cpu.trap_skip = false;
 
 	Bits ret=CPU_Core_Normal_Run();
-	if (GETFLAG(TF)) CPU_SW_Interrupt(1,reg_eip);
+	if (!cpu.trap_skip) CPU_HW_Interrupt(1);
 	CPU_Cycles = oldCycles-1;
-	cpudecoder = &CPU_Core_Normal_Run;
+	cpudecoder = &CPU_Core_Simple_Run;
 
 	return ret;
 }
