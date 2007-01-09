@@ -35,6 +35,7 @@ static struct {
 		bool enabled;
 		Bit8u div;
 		float delay;
+		bool acknowledged;
 	} timer;
 	struct {
 		double timer;
@@ -45,7 +46,10 @@ static struct {
 } cmos;
 
 static void cmos_timerevent(Bitu val) {
-	PIC_ActivateIRQ(8); 
+	if (cmos.timer.acknowledged) {
+		cmos.timer.acknowledged=false;
+		PIC_ActivateIRQ(8);
+	}
 	if (cmos.timer.enabled) {
 		PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 		cmos.regs[0xc] = 0xC0;//Contraption Zack (music)
@@ -155,6 +159,7 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 			return (cmos.regs[0x0a]&0x7f);
 		}
 	case 0x0c:		/* Status register C */
+		cmos.timer.acknowledged=true;
 		if (cmos.timer.enabled) {
 			/* In periodic interrupt mode only care for those flags */
 			Bit8u val=cmos.regs[0xc];
@@ -286,6 +291,7 @@ public:
 		WriteHandler[1].Install(0x71,cmos_writereg,IO_MB);
 		ReadHandler[0].Install(0x71,cmos_readreg,IO_MB);
 		cmos.timer.enabled=false;
+		cmos.timer.acknowledged=true;
 		cmos.reg=0xa;
 		cmos_writereg(0x71,0x26,1);
 		cmos.reg=0xb;
