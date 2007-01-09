@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.73 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.74 2007-01-09 17:44:20 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -571,9 +571,9 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 
 bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
 {
-	if (flags==OPEN_READWRITE) {
-		flags = OPEN_READ;
-	} else if (flags==OPEN_WRITE) {
+	if ((flags&3)==OPEN_READWRITE) {
+		flags &= ~OPEN_READWRITE;
+	} else if ((flags&3)==OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
