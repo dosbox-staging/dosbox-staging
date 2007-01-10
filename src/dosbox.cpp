@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.106 2007-01-08 20:10:34 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.107 2007-01-10 15:00:38 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -400,18 +400,19 @@ void DOSBOX_Init(void) {
 		"disney -- Enable Disney Sound Source emulation.\n"
 	);
 
-	secprop=control->AddSection_prop("bios",&BIOS_Init,false);//done
-	MSG_Add("BIOS_CONFIGFILE_HELP",
-	        "joysticktype -- Type of joystick to emulate: none, 2axis, 4axis,\n"
-	        "                fcs (Thrustmaster) ,ch (CH Flightstick).\n"
+	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
+	MSG_Add("JOYSTICK_CONFIGFILE_HELP",
+			"joysticktype -- Type of joystick to emulate: auto (default), none,\n"
+			"                2axis (supports two joysticks), 4axis,\n"
+	        "                fcs (Thrustmaster), ch (CH Flightstick).\n"
 	        "                none disables joystick emulation.\n"
-	        "                2axis is the default and supports two joysticks.\n"
+	        "                auto chooses emulation depending on real joystick(s).\n"
 	);
 
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init);
-	secprop->Add_string("joysticktype","2axis");
+	secprop->Add_string("joysticktype","auto");
 
 	// had to rename these to serial due to conflicts in config
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);

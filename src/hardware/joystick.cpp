@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.15 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: joystick.cpp,v 1.16 2007-01-10 15:01:15 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -146,11 +146,13 @@ public:
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		const char * type=section->Get_string("joysticktype");
 		if (!strcasecmp(type,"none")) joytype=JOY_NONE;
+		else if (!strcasecmp(type,"false")) joytype=JOY_NONE;
+		else if (!strcasecmp(type,"auto")) joytype=JOY_AUTO;
 		else if (!strcasecmp(type,"2axis")) joytype=JOY_2AXIS;
 		else if (!strcasecmp(type,"4axis")) joytype=JOY_4AXIS;
 		else if (!strcasecmp(type,"fcs")) joytype=JOY_FCS;
 		else if (!strcasecmp(type,"ch")) joytype=JOY_CH;
-		else joytype=JOY_2AXIS;
+		else joytype=JOY_AUTO;
 		ReadHandler.Install(0x201,read_p201,IO_MB);
 		WriteHandler.Install(0x201,write_p201,IO_MB);
 		stick[0].enabled=false;

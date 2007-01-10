@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.125 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.126 2007-01-10 15:01:15 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1183,14 +1183,12 @@ static Bit8u raltstate = SDL_KEYUP;
 void GFX_Events() {
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	if (sdl.num_joysticks>0) {
-		static int poll_delay=0;
-		int time=SDL_GetTicks();
-		if (time-poll_delay>20) {
-			poll_delay=time;
-			SDL_JoystickUpdate();
-			MAPPER_UpdateJoysticks();
-		}
+	static int poll_delay=0;
+	int time=SDL_GetTicks();
+	if (time-poll_delay>20) {
+		poll_delay=time;
+		if (sdl.num_joysticks>0) SDL_JoystickUpdate();
+		MAPPER_UpdateJoysticks();
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
