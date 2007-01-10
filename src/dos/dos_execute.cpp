@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.58 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.59 2007-01-10 12:04:35 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -261,12 +261,20 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	DOS_ParamBlock block(block_pt);
 
 	block.LoadData();
+	//Remove the loadhigh flag for the moment!
+	if(flags&0x80) LOG(LOG_EXEC,LOG_ERROR)("using loadhigh flag!!!!!. dropping it");
+	flags &= 0x7f;
 	if (flags!=LOADNGO && flags!=OVERLAY && flags!=LOAD) {
-		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name);
+		DOS_SetError(DOSERR_FORMAT_INVALID);
+		return false;
+//		E_Exit("DOS:Not supported execute mode %d for file %s",flags,name);
 	}
 	/* Check for EXE or COM File */
 	bool iscom=false;
-	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) return false;
+	if (!DOS_OpenFile(name,OPEN_READ,&fhandle)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
 	len=sizeof(EXE_Header);
 	if (!DOS_ReadFile(fhandle,(Bit8u *)&head,&len)) {
 		DOS_CloseFile(fhandle);
