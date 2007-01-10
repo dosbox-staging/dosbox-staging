@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.15 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.16 2007-01-10 10:47:08 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -474,8 +474,8 @@ inline bool isoDrive :: readSector(Bit8u *buffer, Bit32u sector)
 int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 {	
 	// copy data into isoDirEntry struct, data[0] = length of DirEntry
-	if (data[0] > sizeof(isoDirEntry)) return -1;
-	memcpy(de, data, data[0]);
+//	if (data[0] > sizeof(isoDirEntry)) return -1;//check disabled as isoDirentry is currently 258 bytes large. So it always fits
+	memcpy(de, data, data[0]);//Perharps care about a zero at the end.
 	
 	// xa not supported
 	if (de->extAttrLength != 0) return -1;
