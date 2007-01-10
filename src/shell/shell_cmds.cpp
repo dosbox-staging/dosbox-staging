@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.70 2007-01-08 19:45:42 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.71 2007-01-10 09:04:33 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
-
+#include <vector>
+#include <string>
 #include "shell.h"
 #include "callback.h"
 #include "regs.h"
@@ -97,7 +98,7 @@ void DOS_Shell::DoCommand(char * line) {
 				}
 				cmd_index++;
 			}
-      		}
+		}
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;
@@ -454,6 +455,14 @@ void DOS_Shell::CMD_DIR(char * args) {
 	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
 	dos.dta(save_dta);
 }
+struct copysource {
+	std::string filename;
+	bool concat;
+	copysource(std::string filein,bool concatin):
+		filename(filein),concat(concatin){ };
+	copysource():filename(""),concat(false){ };
+};
+
 
 void DOS_Shell::CMD_COPY(char * args) {
 	HELP("COPY");
@@ -465,10 +474,13 @@ void DOS_Shell::CMD_COPY(char * args) {
 	DOS_DTA dta(dos.dta());
 	Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
 	char name[DOS_NAMELENGTH_ASCII];
-
+	std::vector<copysource> sources;
 	// ignore /b and /t switches: always copy binary
-	ScanCMDBool(args,"B");
-	ScanCMDBool(args,"T");
+	while(ScanCMDBool(args,"B")) ;
+	while(ScanCMDBool(args,"T")) ; //Shouldn't this be A ?
+	while(ScanCMDBool(args,"A")) ;
+	ScanCMDBool(args,"Y");
+	ScanCMDBool(args,"-Y");
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -476,95 +488,137 @@ void DOS_Shell::CMD_COPY(char * args) {
 		dos.dta(save_dta);
 		return;
 	}
-	// source/target
-	char* source = StripWord(args);
-	char* target = NULL;
-	if (args && *args) target = StripWord(args);
-	if (!target || !*target) target = defaulttarget;
-	
-	// Target and Source have to be there
-	if (!source || !strlen(source)) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+	// Gather all sources (extension to copy more then 1 file specified at commandline)
+	// Concatating files go as follows: All parts except for the last bear the concat flag.
+	// This construction allows them to be counted (only the non concat set)
+	char* source_p = NULL;
+	while ( (source_p = StripWord(args)) && *source_p ) {
+		do {
+			char* plus = strchr(source_p,'+');
+			if(plus) *plus++ = 0;
+			sources.push_back(copysource(source_p,(plus)?true:false));
+			source_p = plus;
+		} while(source_p && *source_p);
+	}
+	// At least one source has to be there
+	if (!sources.size() || !sources[0].filename.size()) {
+		WriteOut(MSG_Get("SHELL_MISSING_PARAMETER"));
 		dos.dta(save_dta);
-		return;	
+		return;
 	};
 
-	/* Make a full path in the args */
-	char pathSource[DOS_PATHLENGTH];
-	char pathTarget[DOS_PATHLENGTH];
-
-	if (!DOS_Canonicalize(source,pathSource)) {
-		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
-		dos.dta(save_dta);
-		return;
+	copysource target;
+	// If more then one object exists and last target is not part of a 
+	// concat sequence then make it the target.
+	if(sources.size()>1 && !sources[sources.size()-2].concat){
+		target = sources.back();
+		sources.pop_back();
 	}
-	// cut search pattern
-	char* pos = strrchr(pathSource,'\\');
-	if (pos) *(pos+1) = 0;
+	//If no target => default target with concat flag true to detect a+b+c
+	if(target.filename.size() == 0) target = copysource(defaulttarget,true);
 
-	if (!DOS_Canonicalize(target,pathTarget)) {
-		WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
-		dos.dta(save_dta);
-		return;
-	}
-	char* temp = strstr(pathTarget,"*.*");
-	if(temp) *temp = 0;//strip off *.* from target
-	
-	// add '\\' if target is a directoy	
-	if (pathTarget[strlen(pathTarget)-1]!='\\') {
-		if (DOS_FindFirst(pathTarget,0xffff & ~DOS_ATTR_VOLUME)) {
-			dta.GetResult(name,size,date,time,attr);
-			if (attr & DOS_ATTR_DIRECTORY)	
-				strcat(pathTarget,"\\");
-		}
-	};
-
-	bool ret=DOS_FindFirst(source,0xffff & ~DOS_ATTR_VOLUME);
-	if (!ret) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),source);
-		dos.dta(save_dta);
-		return;
-	}
-
+	copysource oldsource;
+	copysource source;
 	Bit32u count = 0;
+	while(sources.size()) {
+		/* Get next source item and keep track of old source for concat start end */
+		oldsource = source;
+		source = sources[0];
+		sources.erase(sources.begin());
 
-	Bit16u sourceHandle,targetHandle;
-	char nameTarget[DOS_PATHLENGTH];
-	char nameSource[DOS_PATHLENGTH];
+		//Skip first file if doing a+b+c. Set target to first file
+		if(!oldsource.concat && source.concat && target.concat) {
+			target = source;
+			continue;
+		}
 
-	while (ret) {
-		dta.GetResult(name,size,date,time,attr);
+		/* Make a full path in the args */
+		char pathSource[DOS_PATHLENGTH];
+		char pathTarget[DOS_PATHLENGTH];
 
-		if ((attr & DOS_ATTR_DIRECTORY)==0) {
-			strcpy(nameSource,pathSource);
-			strcat(nameSource,name);
-			// Open Source
-			if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
-				// Create Target
-				strcpy(nameTarget,pathTarget);
-				if (nameTarget[strlen(nameTarget)-1]=='\\') strcat(nameTarget,name);
-				
-				if (DOS_CreateFile(nameTarget,0,&targetHandle)) {
-					// Copy 
-					static Bit8u buffer[0x8000]; // static, otherwise stack overflow possible.
-					bool	failed = false;
-					Bit16u	toread = 0x8000;
-					do {
-						failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
-						failed |= DOS_WriteFile(targetHandle,buffer,&toread);
-					} while (toread==0x8000);
-					failed |= DOS_CloseFile(sourceHandle);
-					failed |= DOS_CloseFile(targetHandle);
-					WriteOut(" %s\n",name);
-					count++;
-				} else {
-					DOS_CloseFile(sourceHandle);
-					WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),target);
-				}
-			} else WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),source);
+		if (!DOS_Canonicalize(const_cast<char*>(source.filename.c_str()),pathSource)) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+			dos.dta(save_dta);
+			return;
+		}
+		// cut search pattern
+		char* pos = strrchr(pathSource,'\\');
+		if (pos) *(pos+1) = 0;
+
+		if (!DOS_Canonicalize(const_cast<char*>(target.filename.c_str()),pathTarget)) {
+			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+			dos.dta(save_dta);
+			return;
+		}
+		char* temp = strstr(pathTarget,"*.*");
+		if(temp) *temp = 0;//strip off *.* from target
+	
+		// add '\\' if target is a directoy
+		if (pathTarget[strlen(pathTarget)-1]!='\\') {
+			if (DOS_FindFirst(pathTarget,0xffff & ~DOS_ATTR_VOLUME)) {
+				dta.GetResult(name,size,date,time,attr);
+				if (attr & DOS_ATTR_DIRECTORY)	
+					strcat(pathTarget,"\\");
+			}
 		};
-		ret=DOS_FindNext();
-	};
+
+		//Find first sourcefile
+		bool ret = DOS_FindFirst(const_cast<char*>(source.filename.c_str()),0xffff & ~DOS_ATTR_VOLUME);
+		if (!ret) {
+			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
+			dos.dta(save_dta);
+			return;
+		}
+
+		Bit16u sourceHandle,targetHandle;
+		char nameTarget[DOS_PATHLENGTH];
+		char nameSource[DOS_PATHLENGTH];
+
+		while (ret) {
+			dta.GetResult(name,size,date,time,attr);
+
+			if ((attr & DOS_ATTR_DIRECTORY)==0) {
+				strcpy(nameSource,pathSource);
+				strcat(nameSource,name);
+				// Open Source
+				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
+					// Create Target or open it if in concat mode
+					strcpy(nameTarget,pathTarget);
+					if (nameTarget[strlen(nameTarget)-1]=='\\') strcat(nameTarget,name);
+
+					//Don't create a newfile when in concat mode
+					if (oldsource.concat || DOS_CreateFile(nameTarget,0,&targetHandle)) {
+						Bit32u dummy=0;
+						//In concat mode. Open the target and seek to the eof
+						if (!oldsource.concat || (DOS_OpenFile(nameTarget,OPEN_READWRITE,&targetHandle) && 
+					        	                  DOS_SeekFile(targetHandle,&dummy,DOS_SEEK_END))) {
+							// Copy 
+							static Bit8u buffer[0x8000]; // static, otherwise stack overflow possible.
+							bool	failed = false;
+							Bit16u	toread = 0x8000;
+							do {
+								failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
+								failed |= DOS_WriteFile(targetHandle,buffer,&toread);
+							} while (toread==0x8000);
+							failed |= DOS_CloseFile(sourceHandle);
+							failed |= DOS_CloseFile(targetHandle);
+							WriteOut(" %s\n",name);
+							if(!source.concat) count++; //Only count concat files once
+						} else {
+							DOS_CloseFile(sourceHandle);
+							WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(target.filename.c_str()));
+						}
+					} else {
+						DOS_CloseFile(sourceHandle);
+						WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(target.filename.c_str()));
+					}
+				} else WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(source.filename.c_str()));
+			};
+			//On the next file
+			ret = DOS_FindNext();
+		};
+	}
+
 	WriteOut(MSG_Get("SHELL_CMD_COPY_SUCCESS"),count);
 	dos.dta(save_dta);
 }

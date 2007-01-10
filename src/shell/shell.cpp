@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.79 2007-01-08 19:59:06 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.80 2007-01-10 09:04:33 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -424,6 +424,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
+	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT","To change to different drive type \033[31m%c:\033[0m\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
