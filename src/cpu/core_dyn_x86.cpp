@@ -242,7 +242,7 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 #define DH_FPU_SAVE_REINIT				\
 {										\
 	__asm__ volatile (					\
-		"fnsave		(%0)		\n"		\
+		"fnsave		%0			\n"		\
 		:								\
 		:	"m" (dyn_dh_fpu.state[0])	\
 		:	"memory"					\
@@ -430,8 +430,8 @@ void CPU_Core_Dyn_X86_Init(void) {
 #else
 	__asm__ volatile (
 		"finit					\n"
-		"fsave		(%0)		\n"
-		"fstcw		(%1)		\n"
+		"fsave		%0			\n"
+		"fstcw		%1			\n"
 		:
 		:	"m" (dyn_dh_fpu.state[0]), "m" (dyn_dh_fpu.host_cw)
 		:	"memory"
