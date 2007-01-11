@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.109 2007-01-11 16:25:21 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.110 2007-01-11 16:47:10 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -444,7 +444,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("xms",true);
 	secprop->AddInitFunction(&EMS_Init,true);//done
 	secprop->Add_bool("ems",true);
-	secprop->Add_bool("umb","true");
+	secprop->Add_bool("umb",true);
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init,true);
 	secprop->Add_string("keyboardlayout", "none");
 	MSG_Add("DOS_CONFIGFILE_HELP",
