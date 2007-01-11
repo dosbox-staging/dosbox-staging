@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.108 2007-01-11 09:51:37 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.109 2007-01-11 16:25:21 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -416,9 +416,9 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init);
 	secprop->Add_string("joysticktype","auto");
-	secprop->Add_bool("timed","true");
-	secprop->Add_bool("autofire","false");
-	secprop->Add_bool("swap34","false");
+	secprop->Add_bool("timed",true);
+	secprop->Add_bool("autofire",false);
+	secprop->Add_bool("swap34",false);
 
 	// had to rename these to serial due to conflicts in config
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
