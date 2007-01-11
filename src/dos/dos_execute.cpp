@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.59 2007-01-10 12:04:35 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.60 2007-01-11 16:31:10 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -27,7 +27,6 @@
 #include "callback.h"
 #include "debug.h"
 #include "cpu.h"
-#include "paging.h"
 
 const char * RunningProgram="DOSBOX";
 
@@ -154,8 +153,7 @@ bool DOS_Terminate(bool tsr) {
 	}
 #if (C_DYNAMIC_X86)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-		if (PAGING_Enabled()) cpudecoder=&CPU_Core_Normal_Run;
-		else cpudecoder=&CPU_Core_Simple_Run;
+		cpudecoder=&CPU_Core_Normal_Run;
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
 	}

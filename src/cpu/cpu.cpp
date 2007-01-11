@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.92 2007-01-09 17:18:52 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.93 2007-01-11 16:31:10 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -1813,8 +1813,8 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 			}
 
 			if (!desc.saved.seg.p) {
-				E_Exit("CPU_SetSegGeneral: Stack segment not present");	// or #SS(sel)
-//				return CPU_PrepareException(EXCEPTION_SS,value & 0xfffc);
+//				E_Exit("CPU_SetSegGeneral: Stack segment not present");	// or #SS(sel)
+				return CPU_PrepareException(EXCEPTION_SS,value & 0xfffc);
 			}
 
 			Segs.val[seg]=value;
@@ -2072,11 +2072,11 @@ public:
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
 		const char * core=section->Get_string("core");
-		cpudecoder=&CPU_Core_Simple_Run;
+		cpudecoder=&CPU_Core_Normal_Run;
 		if (!strcasecmp(core,"normal")) {
-			cpudecoder=&CPU_Core_Simple_Run;
-		} else if (!strcasecmp(core,"force_normal")) {
 			cpudecoder=&CPU_Core_Normal_Run;
+		} else if (!strcasecmp(core,"simple")) {
+			cpudecoder=&CPU_Core_Simple_Run;
 		} else if (!strcasecmp(core,"full")) {
 			cpudecoder=&CPU_Core_Full_Run;
 		} 
@@ -2088,7 +2088,7 @@ public:
 			cpudecoder=&CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
 		} else if (!strcasecmp(core,"auto")) {
-			cpudecoder=&CPU_Core_Simple_Run;
+			cpudecoder=&CPU_Core_Normal_Run;
 			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
 		} 
 #endif
