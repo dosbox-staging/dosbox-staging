@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.30 2007-01-10 15:01:15 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.31 2007-01-11 09:51:37 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -102,8 +102,8 @@ public:
 	void AddBind(CBind * bind);
 	virtual ~CEvent() {}
 	virtual void Active(bool yesno)=0;
-	virtual INLINE void Activate(bool ev_trigger)=0;
-	virtual INLINE void DeActivate(bool ev_trigger)=0;
+	virtual void Activate(bool ev_trigger)=0;
+	virtual void DeActivate(bool ev_trigger)=0;
 	void DeActivateAll(void);
 	void SetValue(Bits value){
 		current_value=value;
@@ -127,7 +127,7 @@ public:
 	virtual bool IsTrigger(void) {
 		return true;
 	}
-	INLINE void Activate(bool ev_trigger) {
+	void Activate(bool ev_trigger) {
 		if (current_value>25000) {
 			/* value exceeds boundary, trigger event if not active */
 			if (!activity) Active(true);
@@ -140,7 +140,7 @@ public:
 			}
 		}
 	}
-	INLINE void DeActivate(bool /*ev_trigger*/) {
+	void DeActivate(bool /*ev_trigger*/) {
 		activity--;
 		if (!activity) Active(false);
 	}
@@ -153,7 +153,7 @@ public:
 	virtual bool IsTrigger(void) {
 		return false;
 	}
-	INLINE void Activate(bool ev_trigger) {
+	void Activate(bool ev_trigger) {
 		if (ev_trigger) {
 			activity++;
 			Active(true);
@@ -163,7 +163,7 @@ public:
 			if (!GetActivityCount()) Active(true);
 		}
 	}
-	INLINE void DeActivate(bool ev_trigger) {
+	void DeActivate(bool ev_trigger) {
 		if (ev_trigger) {
 			if (activity>0) activity--;
 			if (activity==0) {
@@ -515,11 +515,12 @@ protected:
 
 #define MAX_VJOY_BUTTONS 8
 
-struct {
+static struct {
 	bool button_pressed[MAX_VJOY_BUTTONS];
 	Bit16s axis_pos[8];
 	bool hat_pressed[16];
 } virtual_joysticks[2];
+
 
 class CJAxisBind;
 class CJButtonBind;
@@ -588,7 +589,7 @@ protected:
 	Bit8u dir;
 };
 
-static bool autofire=false;
+bool autofire = false;
 
 class CStickBindGroup : public  CBindGroup {
 public:

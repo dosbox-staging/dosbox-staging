@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.107 2007-01-10 15:00:38 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.108 2007-01-11 09:51:37 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -402,17 +402,23 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 	MSG_Add("JOYSTICK_CONFIGFILE_HELP",
-			"joysticktype -- Type of joystick to emulate: auto (default), none,\n"
-			"                2axis (supports two joysticks), 4axis,\n"
+	        "joysticktype -- Type of joystick to emulate: auto (default), none,\n"
+	        "                2axis (supports two joysticks), 4axis,\n"
 	        "                fcs (Thrustmaster), ch (CH Flightstick).\n"
 	        "                none disables joystick emulation.\n"
 	        "                auto chooses emulation depending on real joystick(s).\n"
+	        "timed -- enable timed intervals for axis. (false is old style behaviour).\n"
+	        "autofire -- continuously fires as long as you keep the button pressed.\n"
+	        "swap34 -- swap the 3rd and the 4th axis. can be useful for certain joysticks.\n"
 	);
 
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); //Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init);
 	secprop->Add_string("joysticktype","auto");
+	secprop->Add_bool("timed","true");
+	secprop->Add_bool("autofire","false");
+	secprop->Add_bool("swap34","false");
 
 	// had to rename these to serial due to conflicts in config
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);

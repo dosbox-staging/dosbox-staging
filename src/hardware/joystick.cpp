@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.16 2007-01-10 15:01:15 c2woody Exp $ */
+/* $Id: joystick.cpp,v 1.17 2007-01-11 09:51:37 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -29,9 +29,14 @@
 #define RANGE 64
 #define TIMEOUT 10
 
+#define OHMS 120000/2
+#define JOY_S_CONSTANT 0.0000242
+#define S_PER_OHM 0.000000011
+
 struct JoyStick {
 	bool enabled;
 	float xpos,ypos;
+	double xtick,ytick;
 	Bitu xcount,ycount;
 	bool button[2];
 };
@@ -41,6 +46,9 @@ static JoyStick stick[2];
 
 static Bit32u last_write = 0;
 static bool write_active = false;
+static bool swap34 = false;
+
+extern bool autofire; //sdl_mapper.cpp
 
 static Bitu read_p201(Bitu port,Bitu iolen) {
 	/* Reset Joystick to 0 after TIMEOUT ms */
@@ -78,6 +86,29 @@ static Bitu read_p201(Bitu port,Bitu iolen) {
 	return ret;
 }
 
+static Bitu read_p201_timed(Bitu port,Bitu iolen) {
+	Bit8u ret=0xff;
+	double currentTick = PIC_FullIndex();
+	if( stick[0].enabled ){
+		if( stick[0].xtick < currentTick ) ret &=~1;
+		if( stick[0].ytick < currentTick ) ret &=~2;
+	}
+	if( stick[1].enabled ){
+		if( stick[1].xtick < currentTick ) ret &=~4;
+		if( stick[1].ytick < currentTick ) ret &=~8;
+	}
+
+	if (stick[0].enabled) {
+		if (stick[0].button[0]) ret&=~16;
+		if (stick[0].button[1]) ret&=~32;
+	}
+	if (stick[1].enabled) {
+		if (stick[1].button[0]) ret&=~64;
+		if (stick[1].button[1]) ret&=~128;
+	}
+	return ret;
+}
+
 static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 	/* Store writetime index */
 	write_active = true;
@@ -87,10 +118,29 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 		stick[0].ycount=(Bitu)((stick[0].ypos*RANGE)+RANGE);
 	}
 	if (stick[1].enabled) {
-		stick[1].xcount=(Bitu)((stick[1].xpos*RANGE)+RANGE);
-		stick[1].ycount=(Bitu)((stick[1].ypos*RANGE)+RANGE);
+		stick[1].xcount=(Bitu)(((swap34? stick[1].ypos : stick[1].xpos)*RANGE)+RANGE);
+		stick[1].ycount=(Bitu)(((swap34? stick[1].xpos : stick[1].ypos)*RANGE)+RANGE);
 	}
 
+}
+static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
+	// Store writetime index
+	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance )
+	// to reset to 0
+	// Precalculate the time at which each axis hits 0 here
+	double currentTick = PIC_FullIndex();
+	if (stick[0].enabled) {
+		stick[0].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
+	                         (double)(((stick[0].xpos+1.0)* OHMS)) );
+		stick[0].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
+		                 (double)(((stick[0].ypos+1.0)* OHMS)) );
+	}
+	if (stick[1].enabled) {
+		stick[1].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
+		                 (double)((swap34? stick[1].ypos : stick[1].xpos)+1.0) * OHMS);
+		stick[1].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
+		                 (double)((swap34? stick[1].xpos : stick[1].ypos)+1.0) * OHMS);
+	}
 }
 
 void JOYSTICK_Enable(Bitu which,bool enabled) {
@@ -145,18 +195,29 @@ public:
 	JOYSTICK(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		const char * type=section->Get_string("joysticktype");
-		if (!strcasecmp(type,"none")) joytype=JOY_NONE;
-		else if (!strcasecmp(type,"false")) joytype=JOY_NONE;
-		else if (!strcasecmp(type,"auto")) joytype=JOY_AUTO;
-		else if (!strcasecmp(type,"2axis")) joytype=JOY_2AXIS;
-		else if (!strcasecmp(type,"4axis")) joytype=JOY_4AXIS;
-		else if (!strcasecmp(type,"fcs")) joytype=JOY_FCS;
-		else if (!strcasecmp(type,"ch")) joytype=JOY_CH;
-		else joytype=JOY_AUTO;
-		ReadHandler.Install(0x201,read_p201,IO_MB);
-		WriteHandler.Install(0x201,write_p201,IO_MB);
-		stick[0].enabled=false;
-		stick[1].enabled=false;	
+		if (!strcasecmp(type,"none"))       joytype = JOY_NONE;
+		else if (!strcasecmp(type,"false")) joytype = JOY_NONE;
+		else if (!strcasecmp(type,"auto"))  joytype = JOY_AUTO;
+		else if (!strcasecmp(type,"2axis")) joytype = JOY_2AXIS;
+		else if (!strcasecmp(type,"4axis")) joytype = JOY_4AXIS;
+		else if (!strcasecmp(type,"fcs"))   joytype = JOY_FCS;
+		else if (!strcasecmp(type,"ch"))    joytype = JOY_CH;
+		else joytype = JOY_AUTO;
+
+		bool timed = section->Get_bool("timed");
+		if(timed) {
+			ReadHandler.Install(0x201,read_p201_timed,IO_MB);
+			WriteHandler.Install(0x201,write_p201_timed,IO_MB);
+		} else {
+			ReadHandler.Install(0x201,read_p201,IO_MB);
+			WriteHandler.Install(0x201,write_p201,IO_MB);
+		}
+		autofire = section->Get_bool("autofire");
+		swap34 = section->Get_bool("swap34");
+		stick[0].enabled = false;
+		stick[1].enabled = false;
+		stick[0].xtick = stick[0].ytick = stick[1].xtick =
+		                 stick[1].ytick = PIC_FullIndex();
 	}
 };
 static JOYSTICK* test;
