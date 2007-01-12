@@ -609,10 +609,10 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
 	} else {
 		vga.draw.address_line_total=vga.other.max_scanline+1;
-		htotal=vga.other.htotal;
+		htotal=vga.other.htotal+1;
 		hdispend=vga.other.hdend;
 		hrstart=vga.other.hsyncp;
-		vtotal=vga.draw.address_line_total*vga.other.vtotal+vga.other.vadjust;
+		vtotal=vga.draw.address_line_total*(vga.other.vtotal+1)+vga.other.vadjust;
 		vdispend=vga.draw.address_line_total*vga.other.vdend;
 		vrstart=vga.draw.address_line_total*vga.other.vsyncp;
 		vga.draw.double_scan=false;
