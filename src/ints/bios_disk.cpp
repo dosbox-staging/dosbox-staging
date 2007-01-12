@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.30 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.31 2007-01-12 20:59:04 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -253,7 +253,7 @@ Bit32u imageDisk::getSectSize(void) {
 
 static Bitu GetDosDriveNumber(Bitu biosNum) {
 	switch(biosNum) {
-    case 0x0:
+		case 0x0:
 			return 0x0;
 		case 0x1:
 			return 0x1;
@@ -300,15 +300,16 @@ static Bitu INT13_DiskHandler(void) {
 	int i,t;
 	last_drive = reg_dl;
 	drivenum = GetDosDriveNumber(reg_dl);
+	bool any_images = false;
+	for(Bitu i = 0;i < MAX_DISK_IMAGES;i++) {
+		if(imageDiskList[i]) any_images=true;
+	}
+
 	//drivenum = 0;
 	//LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
 	switch(reg_ah) {
 	case 0x0: /* Reset disk */
 		{
-			bool any_images = false;
-			for(Bitu i = 0;i < MAX_DISK_IMAGES;i++) {
-				if(imageDiskList[i]) any_images=true;
-			}
 			/* if there aren't any diskimages (so only localdrives and virtual drives)
 			 * always succeed on reset disk. If there are diskimages then and only then
 			 * do real checks
@@ -344,6 +345,11 @@ static Bitu INT13_DiskHandler(void) {
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
 		}
+		if(!any_images && (reg_dh == 0)) { // Inherit the Earth cdrom (uses it as disk test)
+			reg_ah = 0;
+			CALLBACK_SCF(false);
+			return CBRET_NONE;
+		}
 		if(driveInactive(drivenum)) {
 			reg_ah = 0xff;
 			CALLBACK_SCF(true);
@@ -367,7 +373,7 @@ static Bitu INT13_DiskHandler(void) {
 			}
 		}
 		reg_ah = 0x00;
-        CALLBACK_SCF(false);
+		CALLBACK_SCF(false);
 		break;
 	case 0x3: /* Write sectors */
 		
