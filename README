@@ -1,19 +1,15 @@
-DOSBox v0.65
+DOSBox v0.66
 
 
 =====
 NOTE: 
 =====
 
-While we are hoping that one day, DOSBox will run all programs
-ever made for the PC, we are not there yet. At present, DOSBox running on a 
-high-end machine will roughly be the equivalent of a 486 PC. The 0.60
-release has added support for "protected mode" allowing for more complex and
-recent programs, but note that this support is still in an early stage of 
-development and unlike the support for 386 real-mode games (or earlier) hasn't
-been completed yet. Also note that "protected mode" games need substantially 
-more resources and may require a much faster processor for you to run them
-properly in DOSBox.
+While we are hoping that one day DOSBox will run all programs ever
+made for the PC, we are not there yet. At present, DOSBox running
+on a high-end machine will roughly be the equivalent of a 486 PC.
+DOSBox can be configured to run a wide range of DOS games, from
+CGA/Tandy/PCjr classics up to games from the Quake era.
 
 
 
@@ -25,14 +21,15 @@ INDEX:
 3. Usage
 4. Internal Programs
 5. Special Keys
-6. Keymapper
-7. System Requirements
-8. To run resource-demanding games
-9. The config file
-10. The language file
-11. Building your own version of DOSBox
-12. Special thanks
-13. Contact
+6. Mapper
+7. Keyboard Layout
+8. Serial Multiplayer feature
+9. To run resource-demanding games
+10. The config file
+11. The language file
+12. Building your own version of DOSBox
+13. Special thanks
+14. Contact
 
 
 ==============
@@ -49,13 +46,13 @@ Type INTRO in DOSBox. That's it.
 Some Frequently Asked Questions:
 
 Q: I've got a Z instead of a C at the prompt.
-Q: My game crashes when using opengl/nb or is much slower.
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
 Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
 Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
+Q: Can DOSBox harm my computer?
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 Q: What sound hardware does DOSBox presently emulate?
 Q: DOSBox crashes on startup and I'm running arts
@@ -71,11 +68,8 @@ A: You have to make your directories available as drives in DOSBox by using
    you a C drive in DOSBox which points to your Windows D:\GAMES directory.
    In Linux, "mount c /home/username" will give you a C drive in DOSBox
    which points to /home/username in Linux.
-
-
-Q: My game crashes when using opengl/nb or is much slower.
-A: Somehow our opengl code isn't entirely stable on some platforms. 
-   Use surface instead.
+   To change to the drive mounted like above, type "C:". If everything went
+   fine, DOSBox will display the prompt "C:\>".
 
 
 Q: My CD-ROM doesn't work.
@@ -112,34 +106,42 @@ A: You're using too much cpu power to keep DOSBox running at the current speed.
 Q: I can't type \ or : in DOSBox.
 A: This is a known problem. It only occurs if your keyboard layout isn't US.
    Some possible fixes:
-     1. Switch your keyboard layout.
+     1. Switch the keyboard layout of your operating system.
      2. Use / instead.
      3. Open dosbox.conf and change usescancodes=false to usescancodes=true.
      4. Add the commands you want to execute to the "configfile".
-     5. Start the keymapper (CTRL-F1 or add -startmapper switch to DOSBox).
+     5. Change the dos keyboard layout (see Section 7 Keyboard Layout).
      6. Use ALT-58 for : and ALT-92 for \.
      7. for \ try the keys around "enter". For ":" try shift and the keys 
         between "enter" and "l" (US keyboard layout).
-     8. Use keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
+     8. Try keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
 
 
 Q: The game/application can't find its CD-ROM.
-A: Be sure to mount the CD-ROM with -t cdrom switch. Also try adding the
-   correct label (-label LABEL). To enable more low-level CD-ROM support, add
-   the following switch to mount: -usecd #, where # is the number of your 
-   CD-ROM drive reported by mount -cd. If you run Win32 you can specify -ioctl
-   or -aspi. Look at the description elsewhere in this document for their 
-   meaning.
+A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
+   MSCDEX interface required by DOS games to interface with CD-ROMs.
+   Also try adding the correct label (-label LABEL). To enable lower-level
+   CD-ROM support, add the following switch to mount: -usecd #, where # is
+   the number of your CD-ROM drive reported by mount -cd. Under Windows you
+   can specify -ioctl or -aspi. Look at the description elsewhere in this
+   document for their meaning.
 
 
 Q: The game/application runs much too slow!
 A: Look at the section "To run resource-demanding games" for more information.
 
 
+Q: Can DOSBox harm my computer?
+A: DOSBox can not harm your computer more than any other resource demanding
+   program. Increasing the cycles does not overclock your real CPU.
+   Setting the cycles too high has a negative performance effect on the
+   software running inside DOSBox.
+
+
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
-A: This is possible! Just create a config file: config -writeconf configfile .
-   Start your favourite editor and look at all the settings present. To
-   start DOSBox with your new settings: dosbox -conf configfile
+A: This is possible! Just create a config file: config -writeconf configfile.
+   Start your favourite editor and look through the settings. To start DOSBox
+   with your new settings: dosbox -conf configfile
 
 
 Q: What sound hardware does DOSBox presently emulate?
@@ -155,6 +157,10 @@ A: DOSBox emulates several legacy sound devices:
      The emulation of this sound hardware is complete with the exception of 
      the noise channel. The noise channel is not very well documented and as 
      such is only a best guess as to the sound's accuracy.
+   - Tandy DAC
+     Emulation of the Tandy DAC utilizes the soundblaster emulation, thus
+     be sure the soundblaster is not disabled in the DOSBox configuration
+     file. The Tandy DAC is only emulated at the BIOS level.
    - Adlib
      Borrowed from MAME, this emulation is almost perfect and includes the 
      Adlib's ability to almost play digitized sound.
@@ -172,15 +178,16 @@ A: DOSBox emulates several legacy sound devices:
      A MIDI passthrough interface is also emulated.  This method of sound 
      output will only work when used with a General Midi or MT-32 device.
 
+
 Q: DOSBox crashes on startup and I'm running arts.
 A: This isn't really a DOSBox problem, but the solution is to set the 
    environment variable SDL_AUDIODRIVER to alsa or oss.
 
+
 Q: Great README, but I still don't get it.
-A: While unlikely, this seems to happen. A look at "The Newbie's 
-   pictorial guide to DOSBox" located at 
+A: A look at "The Newbie's pictorial guide to DOSBox" located at 
    http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
-   You could also try the wiki of dosbox:
+   Also try the wiki of dosbox:
    http://dosbox.sourceforge.net/wiki/
 
 
@@ -283,21 +290,19 @@ MOUNT -u "Emulated Drive letter"
   "Emulated Drive letter"
         The driveletter inside dosbox (eg. C).
 
-  "Real Drive letter or Directory"
-        The local directory you want to have inside dosbox.
-        (Under Win32 usually the same as "Emulated Drive letter".
-	For Example: mount c c:\ )
+  "Real Drive letter (usually for CD-ROMs in Windows) or Directory"
+        The local directory you want accessible inside dosbox.
 
   -t type
-        Type of the mounted directory. Supported are: dir (standard),
+        Type of the mounted directory. Supported are: dir (default),
         floppy, cdrom.
 
   -size drivesize
         Sets the size of the drive.
 
   -freesize size_in_mb
-        Sets the amount of free space available on a drive in MB's. This
-        is a simpler version of -size.	
+        Sets the amount of free space available on a drive in megabytes.
+        This is a simpler version of -size.	
 
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some 
@@ -331,21 +336,23 @@ MOUNT -u "Emulated Drive letter"
   Note: It's possible to mount a local directory as cdrom drive. 
         Hardware support is then missing.
 
-  Basically, MOUNT allows you to connect real hardware to DOSBox's "emulated"
-  PC. So MOUNT C C:\GAMES tells DOSBox to use your C:\GAMES directory as drive 
-  C: in DOSBox. It also allows you to change the drive's letter identification
+  Basically MOUNT allows you to connect real hardware to DOSBox's emulated PC.
+  So MOUNT C C:\GAMES tells DOSBox to use your C:\GAMES directory as drive C:
+  in DOSBox. It also allows you to change the drive's letter identification
   for programs that demand specific drive letters.
   
   For example: Touche: Adventures of The Fifth Musketeer must be run on your C:
   drive. Using DOSBox and its mount command, you can trick the game into
   believing it is on the C drive, while you can still place it where you
-  want it. For example, if the game is in D:\TOUCHE, the command MOUNT C D:\
-  will allow you to run Touche from the D drive.
+  like. For example, if the game is in D:\OLDGAMES\TOUCHE, the command
+  MOUNT C D:\OLDGAMES will allow you to run Touche from the D drive.
 
-  Mounting your entire C drive with MOUNT C C:\ is NOT recommended!
-  If you or DOSBox makes a mistake you may loose all your files.
-  It's recommended to put all your applications/games in a subdirectory and 
-  mount that.
+  Mounting your entire C drive with MOUNT C C:\ is NOT recommended! The same
+  is true for mounting the root of any other drive, except for CD-ROMs (due to
+  their read-only nature). Otherwise if you or DOSBox make a mistakes you may
+  loose all your files.
+  It is recommended to put all your applications/games into a subdirectory
+  and mount that.
 
   General MOUNT Examples:
   1. To mount c:\DirX as a floppy : 
@@ -362,8 +369,10 @@ MOUNT -u "Emulated Drive letter"
   6. To mount /home/user/dirY as drive C in DOSBox:
        mount c /home/user/dirY
 
+
 MEM
   Program to display the amount of free memory.
+
 
 CONFIG [-writeconf] [-writelang] localfile
 CONFIG -set "section property=value"
@@ -372,7 +381,7 @@ CONFIG -get "section property"
   CONFIG can be used to change or query various settings of DOSBox 
   during runtime. It can save the current settings and language strings to
   disk. Information about all possible sections and properties can 
-  be found in section 9 (The Config File).
+  be found in section 10 (The Config File).
 
   -writeconf localfile
        Write the current configuration settings to file. "localfile" is 
@@ -380,7 +389,7 @@ CONFIG -get "section property"
        The configuration file controls various settings of DOSBox: 
        the amount of emulated memory, the emulated soundcards and many more 
        things. It allows access to AUTOEXEC.BAT as well.
-       See section 9 (The Config File) for more information.
+       See section 10 (The Config File) for more information.
 
   -writelang localfile
        Write the current language settings to file. "localfile" is 
@@ -410,13 +419,14 @@ CONFIG -get "section property"
   4. To check which cpu core is being used.
       config -get "cpu core"
 
+
 LOADFIX [-size] [program] [program-parameters]
 LOADFIX -f
   Program to reduce the amount of memory available. Useful for old programs 
   which don't expect much memory to be free. 
 
   -size	        
-        number of kb to "eat up", default = 64kb
+        number of kilobytes to "eat up", default = 64kb
   
   -f
         frees all previously allocated memory
@@ -503,7 +513,7 @@ IMGMOUNT
      The Cylinders, Heads and Sectors specification of the drive.
      Required to mount hard drive images.
      
-  An example of CD-ROM images:
+  An example how to mount CD-ROM images:
     1a. mount c /tmp
     1b. imgmount d c:\myiso.iso -t iso
   or (which also works):
@@ -512,9 +522,9 @@ IMGMOUNT
 
 BOOT
   Boot will start floppy images or hard disk images independent of the 
-  operating system emulation offered by DOSBox.  This will allow you to play 
-  booter floppies or boot to other operating systems inside DOSBox.
-  If the target emulated system is PCJr (machine=pcjr) the boot-command
+  operating system emulation offered by DOSBox. This will allow you to
+  play booter floppies or boot other operating systems inside DOSBox.
+  If the target emulated system is PCJr (machine=pcjr) the boot command
   can be used to load PCJr cartridges (.jrc). 
 
   BOOT [diskimg1.img diskimg2.img .. diskimgN.img] [-l driveletter]
@@ -532,6 +542,10 @@ BOOT
      The default is the A drive, the floppy drive.  You can also boot  
      a hard drive image mounted as master by specifying "-l C" 
      without the quotes, or the drive as slave by specifying "-l D"
+     
+   cart.jrc (PCJr only)
+     When emulation of a PCJr is enabled, cartridges can be loaded with
+     the BOOT command. Support is still limited.
 
 
 IPX
@@ -552,6 +566,10 @@ IPX
   For example, if your server is at bob.dosbox.com, 
   you would type "IPXNET CONNECT bob.dosbox.com" on every non-server system. 
   
+  To play games that need Netbios a file named NETBIOS.EXE from Novell is 
+  needed. Establish the IPX connection as explained above, then run 
+  "netbios.exe". 
+
   The following is an IPXNET command reference: 
 
   IPXNET CONNECT 
@@ -582,6 +600,12 @@ IPX
      The syntax for IPXNET STARTSERVER is:
      IPXNET STARTSERVER <port>
 
+     If the server is behind a router, UDP port <port> needs to be forwarded
+     to that computer.
+
+     On Linux/Unix-based systems port numbers smaller than 1023 can only be
+     used with root privileges. Use ports greater than 1023 on those systems.
+
   IPXNET STOPSERVER
 
      IPXNET STOPSERVER stops the IPX tunnelling server running on this DOSBox
@@ -607,8 +631,42 @@ IPX
      IPX tunnelling network. For a list of all computers connected to the 
      network use the IPXNET PING command. 
 
-The syntax for IPXNET STATUS is: 
-IPXNET STATUS 
+     The syntax for IPXNET STATUS is: 
+     IPXNET STATUS 
+
+
+KEYB [languagecode [codepage [codepagefile]]]
+  Change the keyboard layout. For detailed information about keyboard
+  layouts please see Section 7.
+
+  [languagecode] is a string consisting of two (in special cases more)
+     characters, examples are GK (Greece) or IT (Italy). It specifies
+     the keyboard layout to be used.
+
+  [codepage] is the number of the codepage to be used. The keyboard layout
+     has to provide support for the specified codepage, otherwise the layout
+     loading will fail.
+     If no codepage is specified, an appropriate codepage for the requested
+     layout is chosen automatically.
+
+  [codepagefile] can be used to load codepages that are yet not compiled
+     into DOSBox. This is only needed when DOSBox does not find the codepage.
+
+
+  Examples:
+  1) To load the german keyboard layout (automatically uses codepage 858):
+       keyb gr
+  2) To load the russian keyboard layout with codepage 866:
+       keyb ru 866
+     In order to type russian characters press ALT+RIGHT-SHIFT.
+  3) To load the french keyboard layout with codepage 850 (where the
+     codepage is defined in EGACPI.DAT):
+       keyb fr 850 EGACPI.DAT
+  4) To load codepage 858 (without a keyboard layout):
+       keyb none 858
+     This can be used to change the codepage for the freedos keyb2 utility.
+
+
 
 For more information use the /? command line switch with the programs.
 
@@ -646,21 +704,22 @@ gets saved/recorded !
 
 NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
-This maximum will vary from computer to computer; there is no standard.
+This maximum will vary from computer to computer.
 
 
 
 =============
-6. Keymapper:
+6. Mapper:
 =============
 
-When you start the keymapper (either with CTRL-F1 or -startmapper as a
-command line argument to the DOSBox executable) you are presented with 
-a virtual keyboard.
+When you start the DOSBox mapper (either with CTRL-F1 or -startmapper as
+a command line argument to the DOSBox executable) you are presented with 
+a virtual keyboard and a virtual joystick.
 
-This virtual keyboard corresponds to the keys DOSBox will report to its
-applications. If you click on a key with your mouse, you can see in the
-lower left corner which key on your keyboard corresponds to it.
+These virtual devices correspond to the keys DOSBox will report to the
+DOS applications. If you click on a key with your mouse, you can see in
+the lower left corner with which event it is associated (EVENT) and to
+what events it is currently bound.
 
 Event: EVENT
 BIND: BIND
@@ -671,22 +730,24 @@ mod3
 
 
 EVENT
-    The key DOSBox will report to the applications being emulated.
+    The key or joystick axis/button/hat DOSBox will report to DOS applications.
 BIND
-    The key on your keyboard (as reported by SDL) which is connected to the
-    EVENT.
+    The key on your real keyboard or the axis/button/hat on your real
+    joystick(s) (as reported by SDL) which is connected to the EVENT.
 mod1,2,3 
-    Modfiers. These are keys you need to have pressed as well, while pressing 
-    BIND. mod1 = CTRL and mod2 = ALT. These are generally only used when you 
+    Modfiers. These are keys you need to have to be pressed while pressing
+    BIND. mod1 = CTRL and mod2 = ALT. These are generally only used when you
     want to change the special keys of DOSBox.
 Add 
-    Add a new BIND to this EVENT. Basically add a key from your keyboard which
-    will produce the key EVENT in DOSBox.
+    Add a new BIND to this EVENT. Basically add a key from your keyboard or an
+    event from the joystick (button press, axis/hat movement) which will 
+    produce the EVENT in DOSBox.
 Del 
-    Delete the BIND to this EVENT. If an EVENT has no BINDS, then it's not
-    possible to type this key in DOSBox.
+    Delete the BIND to this EVENT. If an EVENT has no BINDS, then it is not
+    possible to trigger this event in DOSBox (that is there's no way to type
+    the key or use the respective action of the joystick).
 Next
-    Go through the list of keys(BINDS) which map to this EVENT.
+    Go through the list of bindings which map to this EVENT.
 
 
 Example:
@@ -706,59 +767,195 @@ Q3. If you try it out in DOSBox, you will notice that pressing X makes ZX
         mapped key X. Click "Del".
 
 
-If you change the default mapping, you can save your changes by pressing
+Examples about remapping the joystick:
+  You have a joystick attached, it is working fine under DOSBox and you
+  want to play some keyboard-only game with the joystick (it is assumed
+  that the game is controlled by the arrows on the keyboard):
+    1) Start the mapper, then klick on one of the arrows in the middle
+       of the left part of the screen (right above the Mod1/Mod2 buttons).
+       EVENT should be key_left. Now klick on Add and move your joystick
+       in the respective direction, this should add an event to the BIND.
+    2) Repeat the above for the missing three directions, additionally
+       the buttons of the joystick can be remapped as well (fire/jump).
+    3) Click on Save, then on Exit and test it with some game.
+
+  You want to swap the y-axis of the joystick because some flightsim uses
+  the up/down joystick movement in a way you don't like, and it is not
+  configurable in the game itself:
+    1) Start the mapper and klick on Y- in the upper joystick field (this
+       is for the first joystick if you have two joysticks attached) or the
+       lower joystick field (second joystick or, if you have only one
+       joystick attached, the second axes cross).
+       EVENT should be jaxis_0_1- (or jaxis_1_1-).
+    2) Click on Del to remove the current binding, then klick Add and move
+       your joystick downwards. A new bind should be created.
+    3) Repeat this for Y+, save the layout and finally test it with some game.
+
+
+
+If you change the default mapping, you can save your changes by clicking on
 "Save". DOSBox will save the mapping to a location specified in the configfile
-(mapperfile=mapper.txt). At startup, DOSBox will load your mapperfile, if it's
-present in the configfile.
+(mapperfile=mapper.txt). At startup, DOSBox will load your mapperfile, if it
+is present in the configfile.
 
 
 
-=======================
-7. System requirements:
-=======================
+====================
+7. Keyboard Layout:
+====================
 
-Fast machine. My guess would be pentium-2 400+ to get decent emulation
-of games written for an 286 machine.
-For protected mode games a 1 Ghz machine is recommended - don't expect
-them to run fast, though! Be sure to read the next section on how to speed
-it up somewhat.
+To switch to a different keyboard layout, either the entry "keyboardlayout"
+in the [dos]-section in dosbox.conf can be used, or the internal DOSBox
+program keyb.com. Both accept dos-conform language codes (see below), but
+only by using keyb.com a custom codepage can be specified.
+
+Layout switching
+  DOSBox supports a number of keyboard layouts and codepages by default,
+  in this case just the layout identifier needs to be specified (like
+  keyboardlayout=sv in the DOSBox config file, or using "keyb sv" at
+  the DOSBox command prompt).
+  
+  Internally supported keyboard layouts:
+  BG (Bulgaria), CZ243 (Czech Republic), FR (France), GK (Greece),
+  GR (Germany), HR (Croatia), HU (Hungary), IT (Italy), NL (Netherlands),
+  NO (Norway), PL (Poland), RU (Russian Federation), SK (Slovakia), SP (Spain),
+  SU (Finland), SV (Sweden)
+
+  When a keyboard layout is loaded, it is possible to switch between the
+  foreign layout and the US-layout by pressing CTRL+ALT+F2.
+  Some keyboard layouts (for example layout GK codepage 869 and layout RU
+  codepage 808) have support for dual-layouts that can be activated by
+  pressing LEFT-ALT+RIGHT-SHIFT and deactivated by LEFT-ALT+LEFT-SHIFT.
+
+Supported external files
+  The freedos .kl files are supported (freedos keyb2 keyboard layoutfiles) as
+  well as the freedos keyboard.sys/keybrd2.sys/keybrd3.sys libraries which
+  consist of all available .kl files.
+  See http://projects.freedos.net/keyb/ for precompiled keyboard layouts.
+
+  Both .CPI (MSDOS/compatible codepage files) and .CPX (freedos UPX-compressed
+  codepage files) can be used. Some codepages are compiled into DOSBox so it
+  is mostly not needed to care about external codepage files. If you need
+  a different (or custom) codepage file, copy it into the directory of the
+  DOSBox configuration file so it is accessible for DOSBox.
+
+  Additional layouts can be added by copying the corresponding .kl-file into
+  the directory of dosbox.conf and using the first part of the filename as
+  language code.
+  Example: For the file UZ.KL (keyboard layout for Uzbekistan) specify
+           "keyboardlayout=uz" in dosbox.conf.
+
+
+Note that the keyboard layout allows foreign characters to be entered, but
+there is NO support for them in filenames. Try to avoid them both inside
+DOSBox as well as in files on your host operating system that are accessible
+by DOSBox.
+
+
+
+==============================
+8. Serial Multiplayer feature:
+==============================
+ 
+DOSBox can emulate a serial nullmodem cable over network and internet.
+It can be configured through the [serialports] section in the DOSBox
+configuration file.
+
+To create a nullmodem connection, one side needs to act as the server and
+one as the client.
+
+The server needs to be set up in the DOSBox configuration file like this:
+   serial1=nullmodem
+
+The client:
+   serial1=nullmodem server:<IP or name of the server>
+
+Now start your game and choose nullmodem / serial cable / already connected
+as multiplayer method on COM1. Set the same baudrate on both computers.
+
+Furthermore, additional parameters can be specified to control the behavior
+of the nullmodem connection. These are all parameters:
+
+ * port:         - TCP port number. Default: 23
+ * rxdelay:      - how long (milliseconds) to delay received data if the
+                   interface is not ready. Increase this value if you encounter
+                   overrun errors in the DOSBox Status Window. Default: 100
+ * txdelay:      - how long to gather data before sending a packet. Default: 12
+                   (reduces Network overhead)
+ * server:       - This nullmodem will be a client connecting to the specified
+                   server. (No server argument: be a server.)
+ * transparent:1 - Only send the serial data, no RTS/DTR handshake. Use this
+                   when connecting to anyting other than a nullmodem.
+ * telnet:1      - Interpret Telnet data from the remote site. Automatically
+                   sets transparent.
+ * usedtr:1      - The connection will not be established until DTR is switched
+                   on by the DOS program. Useful for modem terminals.
+                   Automatically sets transparent.
+ * inhsocket:1   - Use a socket passed to DOSBox by command line. Automatically
+                   sets transparent. (Socket Inheritance: It is used for
+                   playing old DOS door games on new BBS software.)
+
+Example: Be a server listening on TCP port 5000.
+   serial1=nullmodem server:<IP or name of the server> port:5000 rxdelay:1000
 
 
 
 ===================================
-8. To run resource-demanding games: 
+9. To run resource-demanding games: 
 ===================================
 
-DOSBox emulates the CPU, the sound and graphic cards, and some other
-stuff, all at the same time. You can overclock DOSBox by using CTRL-F12, but
-you'll be limited by the power of your actual CPU. You can see how much free
-time your true CPU has by looking at the Task Manager in Windows 2000/XP and
-the System Monitor in Windows 95/98/ME. Once 100% of your real CPU time is
-used there is no further way to speed up DOSBox unless you reduce the load
-generated by the non-CPU parts of DOSBox. 
+DOSBox emulates the CPU, the sound and graphic cards, and other peripherals
+of a PC, all at the same time. The speed of an emulated DOS application
+depends on how many instructions can be emulated, which is adjustable
+(number of cycles).
 
-So: 
+CPU Cycles
+  By default (cycles=auto) DOSBox tries to detect whether a game needs to
+  be run with as many instructions emulated per time interval as possible.
+  You can force this behaviour by setting cycles=max in the DOSBox
+  configuration file. The DOSBox window will display a line "Cpu Cyles: max"
+  at the top then. In this mode you can reduce the amount of cycles on a
+  percentage-basis (hit CTRL-F11) or raise it again (CTRL-F12).
+  
+  Sometimes customly setting the number of cycles achieves better results,
+  in the DOSBox configuration file specify for example cycles=30000. When
+  running some DOS application you can raise the cycles with CTRL-F12 even
+  more, but you will be limited by the power of your actual CPU. You can see
+  how much free time your true CPU has by looking at the Task Manager in
+  Windows 2000/XP and the System Monitor in Windows 95/98/ME. Once 100% of
+  your real CPU time is used there is no further way to speed up DOSBox
+  unless you reduce the load generated by the non-CPU parts of DOSBox. 
 
-Close every program but DOSBox 
+CPU Cores
+  On x86 architectures you can try to force the usage of a dynamically
+  recompiling core (set core=dynamic in the DOSBox configuration file).
+  This usually gives better results if the auto detection (core=auto) fails.
+  It is best accompanied by cycles=max. Note that there might be games
+  that work worse with the dynamic core, or do not work at all!
 
-Overclock DOSBox until 100% of your CPU is used (use the utilities above to
-check) 
+Graphics emulation
+  VGA emulation is a very demanding part of DOSBox in terms of actual CPU
+  usage. Increase the number of frames skipped (in increments of one) by
+  pressing CTRL-F8. Your CPU usage should decrease when using a fixed
+  cycle setting.
+  Go back one step and repeat this until the game runs fast enough for you.
+  Please note that this is a trade-off: you lose in fluidity of video what
+  you gain in speed.
 
-Since VGA emulation is the most demanding part of DOSBox in terms of actual
-CPU usage, we'll start there. Increase the number of frames skipped (in
-increments of one) by pressing CTRL-F8. Your CPU usage should decrease.
-Go back one step and repeat this until the game runs fast enough for you.
-Please note that this is a trade-off: you lose in fluidity of video what you
-gain in speed 
+Sound emulation
+  You can also try to disable the sound through the setup utility of the game
+  to reduce load on your CPU further. Setting nosound=true does NOT disable
+  the emulation of sound devices, just the sound output will be disabled.
 
-You can also try to disable the sound through the setup utility of the game
-to reduce load on your CPU further. 
+Also try to close every program but DOSBox to reserve as much resources
+as possible for DOSBox.
 
 
 
-===================
-9. The Config File:
-===================
+
+====================
+10. The Config File:
+====================
 
 A config file can be generated by CONFIG.COM, which can be found on the 
 internal dosbox Z: drive when you start up dosbox. Look in the internal 
@@ -780,7 +977,7 @@ look in the current directory for dosbox.conf.
 
 
 ======================
-10. The Language File:
+11. The Language File:
 ======================
 
 A language file can be generated by CONFIG.COM. 
@@ -792,7 +989,7 @@ section. There's a language= entry that can be changed with the filename.
 
 
 ========================================
-11. Building your own version of DOSBox:
+12. Building your own version of DOSBox:
 ========================================
 
 Download the source.
@@ -801,7 +998,7 @@ Check the INSTALL in the source distribution.
 
 
 ===================
-12. Special Thanks:
+13. Special Thanks:
 ===================
 
 Vlad R. of the VDMSound project for excellent SoundBlaster info.
@@ -815,7 +1012,7 @@ The Beta Testers.
 
 
 ============
-13. Contact:
+14. Contact:
 ============
 
 See the site: 
