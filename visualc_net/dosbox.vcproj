@@ -113,7 +113,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib winmm.lib zlib.lib libpng.lib sdl_net.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="opengl32.lib winmm.lib zlib.lib libpng.lib sdl_net.lib sdlmain.lib sdl.lib curses.lib odbc32.lib odbccp32.lib ws2_32.lib"
 				OutputFile=".\Release/dosbox.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -521,10 +521,40 @@
 					Name="serialport"
 					Filter="">
 					<File
+						RelativePath="..\src\hardware\serialport\directserial_os2.cpp">
+						<FileConfiguration
+							Name="Release|Win32"
+							ExcludedFromBuild="TRUE">
+							<Tool
+								Name="VCCLCompilerTool"/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\directserial_os2.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\directserial_posix.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\directserial_posix.h">
+					</File>
+					<File
 						RelativePath="..\src\hardware\serialport\directserial_win32.cpp">
 					</File>
 					<File
 						RelativePath="..\src\hardware\serialport\directserial_win32.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\misc_util.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\misc_util.h">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\nullmodem.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\serialport\nullmodem.h">
 					</File>
 					<File
 						RelativePath="..\src\hardware\serialport\serialdummy.cpp">

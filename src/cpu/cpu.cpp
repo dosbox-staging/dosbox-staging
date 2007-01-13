@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.93 2007-01-11 16:31:10 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.94 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -33,8 +33,12 @@ extern void GFX_SetTitle(Bit32s cycles ,Bits frameskip,bool paused);
 
 #if 1
 #undef LOG
+#if defined (_MSC_VER)
+#define LOG(X,Y)
+#else
 #define LOG(X,Y) CPU_LOG
 #define CPU_LOG(...)
+#endif
 #endif
 
 CPU_Regs cpu_regs;

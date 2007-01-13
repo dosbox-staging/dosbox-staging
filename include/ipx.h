@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.h,v 1.11 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: ipx.h,v 1.12 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_IPX_H
 #define DOSBOX_IPX_H
@@ -27,7 +27,11 @@
 #ifdef IPX_DEBUGMSG
 #define LOG_IPX LOG_MSG
 #else
+#if defined (_MSC_VER)
+#define LOG_IPX
+#else
 #define LOG_IPX(...)
+#endif
 #endif
 
 #ifndef DOSBOX_DOSBOX_H

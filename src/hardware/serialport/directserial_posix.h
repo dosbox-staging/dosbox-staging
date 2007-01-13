@@ -16,30 +16,31 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.h,v 1.4 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: directserial_posix.h,v 1.1 2007-01-13 08:35:49 qbix79 Exp $ */
 
 // include guard
-#ifndef DOSBOX_DIRECTSERIAL_WIN32_H
-#define DOSBOX_DIRECTSERIAL_WIN32_H
+#ifndef DOSBOX_DIRECTSERIAL_POSIX_H
+#define DOSBOX_DIRECTSERIAL_POSIX_H
 
 #include "dosbox.h"
 
 #if C_DIRECTSERIAL
-#ifdef WIN32
+#ifdef LINUX
 
 
 
 #define DIRECTSERIAL_AVAILIBLE
 #include "serialport.h"
-#include <windows.h>
+#include <termios.h>
+#include <unistd.h>
 
 class CDirectSerial : public CSerial {
 public:
-	HANDLE hCom;
-	DCB dcb;
-	BOOL fSuccess;
+	termios termInfo;
+	termios backup;
+	int fileHandle;
 
-	CDirectSerial(Bitu id, CommandLine* cmd/*const char* configstring*/);
+	CDirectSerial(Bitu id, CommandLine* cmd);
 	~CDirectSerial();
 	bool receiveblock;		// It's not a block of data it rather blocks
 
@@ -48,7 +49,7 @@ public:
 	Bitu rx_retry_max;	// how many POLL_EVENTS to wait before causing
 						// a overrun error.
 
-
+	void ReadCharacter();
 	void CheckErrors();
 	
 	void updatePortConfig(Bit16u divider, Bit8u lcr);

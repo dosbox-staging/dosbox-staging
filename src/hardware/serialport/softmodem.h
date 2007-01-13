@@ -16,15 +16,16 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.6 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.7 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
 
 #include "dosbox.h"
 #if C_MODEM
-#include "SDL_net.h"
 #include "serialport.h"
+
+#include "misc_util.h"
 
 #define MODEMSPD 57600
 #define SREGS 100
@@ -33,6 +34,12 @@
 #define MODEM_BUFFER_QUEUE_SIZE 1024
 
 #define MODEM_DEFAULT_PORT 23
+
+#define MODEM_TX_EVENT SERIAL_BASE_EVENT_COUNT + 1
+#define MODEM_RX_POLLING SERIAL_BASE_EVENT_COUNT + 2
+#define MODEM_RING_EVENT SERIAL_BASE_EVENT_COUNT + 3
+#define SERIAL_MODEM_EVENT_COUNT SERIAL_BASE_EVENT_COUNT+3
+
 
 enum ResTypes {
 	ResNONE,
@@ -118,9 +125,6 @@ public:
 private:
 	Bit8u * data;
 	Bitu size,pos,used;
-	//Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
-	
-	
 };
 #define MREG_AUTOANSWER_COUNT 0
 #define MREG_RING_COUNT 1
@@ -136,20 +140,7 @@ public:
 	CFifo *rqueue;
 	CFifo *tqueue;
 
-	CSerialModem(
-		IO_ReadHandler* rh,
-		IO_WriteHandler* wh,
-		TIMER_TickHandler th,
-		Bit16u baseAddr,
-		Bit8u initIrq,
-		Bit32u initBps,
-		Bit8u bytesize,
-		const char* parity,
-		Bit8u stopbits,
-
-		const char *remotestr = NULL,
-		Bit16u lport = 23);
-
+	CSerialModem(Bitu id, CommandLine* cmd);
 	~CSerialModem();
 
 	void Reset();
@@ -172,17 +163,21 @@ public:
 
 	void TelnetEmulation(Bit8u * data, Bitu size);
 
+	//TODO
 	void Timer2(void);
+	void handleUpperEvent(Bit16u type);
 
 	void RXBufferEmpty();
 
-	void transmitByte(Bit8u val);
-	void updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr);
+	void transmitByte(Bit8u val, bool first);
+	void updatePortConfig(Bit16u divider, Bit8u lcr);
 	void updateMSR();
 
 	void setBreak(bool);
 
-	void updateModemControlLines(/*Bit8u mcr*/);
+	void setRTSDTR(bool rts, bool dtr);
+	void setRTS(bool val);
+	void setDTR(bool val);
 
 protected:
 	char cmdbuf[255];
@@ -199,7 +194,7 @@ protected:
 	bool connected;
 	Bitu doresponse;
 
-	
+	Bit8u waiting_tx_character;
 
 	Bitu cmdpause;
 	Bits ringtimer;
@@ -208,18 +203,15 @@ protected:
 	Bitu cmdpos;
 	Bitu flowcontrol;
 
-	//Bit8u mctrl;
 	Bit8u tmpbuf[MODEM_BUFFER_QUEUE_SIZE];
 
 	Bitu listenport;
 	Bit8u reg[SREGS];
-	IPaddress openip;
-	TCPsocket incomingsocket;
-	TCPsocket socket;
 	
-	TCPsocket listensocket;
-	SDLNet_SocketSet socketset;
-	SDLNet_SocketSet listensocketset;
+	
+	TCPServerSocket* serversocket;
+	TCPClientSocket* clientsocket;
+	TCPClientSocket* waitingclientsocket;
 
 	struct {
 		bool binary[2];

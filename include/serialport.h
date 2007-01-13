@@ -16,13 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.h,v 1.13 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: serialport.h,v 1.14 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALPORT_H
 #define DOSBOX_SERIALPORT_H
 
+#define SERIAL_DEBUG 0
+
 // Uncomment this for a lot of debug messages:
-// #define SERIALPORT_DEBUGMSG 
+//#define LOG_UART
 
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
@@ -34,31 +36,70 @@
 #include "timer.h"
 #endif
 
+#include "dos_inc.h"
+#include "setup.h"
 
-// Serial port interface //
+#if SERIAL_DEBUG
+#include "hardware.h"
+#endif
+
+// Serial port interface 
 
 class CSerial {
 public:
 
-	// Constructor takes base port (0x3f8, 0x2f8, 0x2e8, etc.), IRQ, and initial bps //
-	CSerial(IO_ReadHandler* rh, IO_WriteHandler* wh,
-			TIMER_TickHandler TimerHandler, 
-			Bit16u initbase, Bit8u initirq, Bit32u initbps,
-			Bit8u bytesize, const char* parity, Bit8u stopbits);
+#if SERIAL_DEBUG
+	FILE * debugfp;
+	bool dbg_modemcontrol; // RTS,CTS,DTR,DSR,RI,CD
+	bool dbg_serialtraffic;
+	bool dbg_register;
+	bool dbg_interrupt;
+	bool dbg_aux;
+
+#endif
+
+	static bool getBituSubstring(const char* name,Bitu* data, CommandLine* cmd);
+
+	bool InstallationSuccessful;// check after constructing. If
+								// something was wrong, delete it right away.
+
+	// Constructor takes com port number (0-3)
+	CSerial(Bitu id, CommandLine* cmd);
 	
-	TIMER_TickHandler TimerHnd;
 	virtual ~CSerial();
-	void InstallTimerHandler(TIMER_TickHandler);
-	
+		
 	IO_ReadHandleObject ReadHandler[8];
 	IO_WriteHandleObject WriteHandler[8];
 
-	void Timer(void);
-	virtual void Timer2(void)=0;
+	float bytetime; // how long a byte takes to transmit/receive in milliseconds
+	void changeLineProperties();
+	Bitu idnumber;
+
+	void setEvent(Bit16u type, float duration);
+	void removeEvent(Bit16u type);
+	void handleEvent(Bit16u type);
+	virtual void handleUpperEvent(Bit16u type)=0;
 	
-	Bitu base;
+	// defines for event type
+#define SERIAL_TX_LOOPBACK_EVENT 0
+#define SERIAL_THR_LOOPBACK_EVENT 1
+#define SERIAL_ERRMSG_EVENT 2
+
+#define SERIAL_TX_EVENT 3
+#define SERIAL_RX_EVENT 4
+#define SERIAL_POLLING_EVENT 5
+#define SERIAL_THR_EVENT 6
+
+#define	SERIAL_BASE_EVENT_COUNT 6
+
+#define COMNUMBER idnumber+1
+
 	Bitu irq;
 	
+	// CSerial requests an update of the input lines
+	virtual void updateMSR()=0;
+
+	// Control lines from prepherial to serial port
 	bool getDTR();
 	bool getRTS();
 
@@ -72,75 +113,75 @@ public:
 	void setCD(bool value);
 	void setCTS(bool value);
 
+	// From serial port to prepherial
+	// set output lines
+	virtual void setRTSDTR(bool rts, bool dtr)=0;
+	virtual void setRTS(bool val)=0;
+	virtual void setDTR(bool val)=0;
+
+	// Register access
 	void Write_THR(Bit8u data);
-	Bitu Read_RHR();
-	Bitu Read_IER();
 	void Write_IER(Bit8u data);
-	Bitu Read_ISR();
-	Bitu Read_LCR();
+	void Write_FCR(Bit8u data);
 	void Write_LCR(Bit8u data);
-	Bitu Read_MCR();
 	void Write_MCR(Bit8u data);
-	Bitu Read_LSR();
-	
 	// Really old hardware seems to have the delta part of this register writable
 	void Write_MSR(Bit8u data);
-
-	Bitu Read_MSR();
-	Bitu Read_SPR();
 	void Write_SPR(Bit8u data);
 	void Write_reserved(Bit8u data, Bit8u address);
+
+	Bitu Read_RHR();
+	Bitu Read_IER();
+	Bitu Read_ISR();
+	Bitu Read_LCR();
+	Bitu Read_MCR();
+	Bitu Read_LSR();
+	Bitu Read_MSR();
+	Bitu Read_SPR();
 	
-	// If a byte comes from wherever(loopback or real port or maybe
-	// that softmodem thingy), put it in here.
+	// If a byte comes from loopback or prepherial, put it in here.
 	void receiveByte(Bit8u data);
 
 	// If an error was received, put it here (in LSR register format)
 	void receiveError(Bit8u errorword);
 
+	// depratched
 	// connected device checks, if port can receive data:
 	bool CanReceiveByte();
+	
+	// when THR was shifted to TX
+	void ByteTransmitting();
 	
 	// When done sending, notify here
 	void ByteTransmitted();
 
-	// Virtual app has read the received data
-	virtual void RXBufferEmpty()=0;
-
-	// real transmit
-	virtual void transmitByte(Bit8u val)=0;
+	// Transmit byte to prepherial
+	virtual void transmitByte(Bit8u val, bool first)=0;
 
 	// switch break state to the passed value
 	virtual void setBreak(bool value)=0;
 	
-	// set output lines
-	virtual void updateModemControlLines(/*Bit8u mcr*/)=0;
-	
 	// change baudrate, number of bits, parity, word length al at once
-	virtual void updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr)=0;
+	virtual void updatePortConfig(Bit16u divider, Bit8u lcr)=0;
 	
-	// CSerial requests an update of the input lines
-	virtual void updateMSR()=0;
+	void Init_Registers();
+	
+	bool Putchar(Bit8u data, bool wait_dtr, bool wait_rts, Bitu timeout);
+	bool Getchar(Bit8u* data, bool wait_dsr, Bitu timeout);
 
-	// after update request, or some "real" changes, 
-	// modify MSR here
-	void changeMSR(Bit8u data);	// make public
-
-	void Init_Registers(Bit32u initbps,
-	                             Bit8u bytesize, const char* parity, Bit8u stopbits);
 
 private:
 
+	DOS_Device* mydosdevice;
+
 	// I used this spec: http://www.exar.com/products/st16c450v420.pdf
 
-	void changeMSR_Loopback(Bit8u data);
+	void ComputeInterrupts();
 	
-	void WriteRealIER(Bit8u data);
-	// reason for an interrupt has occured - functions triggers interrupt
-	// if it is enabled and no higher-priority irq pending
+	// a sub-interrupt is triggered
 	void rise(Bit8u priority);
 
-	// clears the pending interrupt
+	// clears the pending sub-interrupt
 	void clear(Bit8u priority);
 	
 	#define ERROR_PRIORITY 4	// overrun, parity error, frame error, break
@@ -149,18 +190,12 @@ private:
 	#define MSR_PRIORITY 8		// CRS, DSR, RI, DCD change 
 	#define NONE_PRIORITY 0
 
-
-	Bit8u pending_interrupts;	// stores triggered interupts
-	Bit8u current_priority;
 	Bit8u waiting_interrupts;	// these are on, but maybe not enabled
 	
 	// 16C450 (no FIFO)
 	//				read/write		name
 
-	
-	Bit8u DLL;	//	r				Baudrate divider low byte
-	Bit8u DLM;	//	r				"" high byte
-
+	Bit16u baud_divider;
 	Bit8u RHR;	//	r				Receive Holding Register, also LSB of Divisor Latch (r/w)
 	#define RHR_OFFSET 0
 				// Data: whole byte
@@ -169,13 +204,10 @@ private:
 	#define THR_OFFSET 0
 				// Data: whole byte
 
-	Bit8u IER;	//	r/w				Interrupt Enable Register, also MSB of Divisor Latch (r/w)
+	Bit8u IER;	//	r/w				Interrupt Enable Register, also MSB of Divisor Latch
 	#define IER_OFFSET 1
-				// Data:
-				// bit0				receive holding register
-				// bit1				transmit holding register
-				// bit2				receive line status interrupt
-				// bit3				modem status interrupt
+
+	bool irq_active;
 				
 	#define RHR_INT_Enable_MASK				0x1
 	#define THR_INT_Enable_MASK				0x2
@@ -222,23 +254,24 @@ private:
 	#define LCR_STOPBITS_1		0x0
 	#define LCR_STOPBITS_MORE_THAN_1 0x4
 
-	Bit8u MCR;	//	r/w				Modem Control Register
+	// Modem Control Register
+	// r/w				
 	#define MCR_OFFSET 4
-						// bit0: DTR
-						// bit1: RTS
-						// bit2: OP1
-						// bit3: OP2
-						// bit4: loop back enable
+	bool dtr;			// bit0: DTR
+	bool rts;			// bit1: RTS
+	bool op1;			// bit2: OP1
+	bool op2;			// bit3: OP2
+	bool loopback;		// bit4: loop back enable
 
-	#define MCR_LOOPBACK_Enable_MASK 0x10					
-	#define MCR_LEVELS_MASK 0xf	
-	
 	#define MCR_DTR_MASK 0x1
 	#define MCR_RTS_MASK 0x2	
 	#define MCR_OP1_MASK 0x4	
-	#define MCR_OP2_MASK 0x8	
-
+	#define MCR_OP2_MASK 0x8
+	#define MCR_LOOPBACK_Enable_MASK 0x10
+public:	
 	Bit8u LSR;	//	r				Line Status Register
+private:
+
 	#define LSR_OFFSET 5
 
 	#define LSR_RX_DATA_READY_MASK 0x1
@@ -251,17 +284,26 @@ private:
 
 	#define LSR_ERROR_MASK 0x1e
 
+	// error printing
+	bool errormsg_pending;
+	Bitu framingErrors;
+	Bitu parityErrors;
+	Bitu overrunErrors;
+	Bitu overrunIF0;
+	Bitu breakErrors;
 
-	Bit8u MSR;	//	r				Modem Status Register
+
+	// Modem Status Register
+	//	r
 	#define MSR_OFFSET 6
-						// bit0: deltaCTS
-						// bit1: deltaDSR
-						// bit2: deltaRI
-						// bit3: deltaCD
-						// bit4: CTS
-						// bit5: DSR
-						// bit6: RI
-						// bit7: CD
+	bool d_cts;			// bit0: deltaCTS
+	bool d_dsr;			// bit1: deltaDSR
+	bool d_ri;			// bit2: deltaRI
+	bool d_cd;			// bit3: deltaCD
+	bool cts;			// bit4: CTS
+	bool dsr;			// bit5: DSR
+	bool ri;			// bit6: RI
+	bool cd;			// bit7: CD
 	
 	#define MSR_delta_MASK 0xf
 	#define MSR_LINE_MASK 0xf0
@@ -280,20 +322,37 @@ private:
 
 
 	// For loopback purposes...
-	bool loopback_pending;
 	Bit8u loopback_data;
-	void transmitLoopbackByte(Bit8u val);
+	void transmitLoopbackByte(Bit8u val, bool value);
 
 	// 16C550 (FIFO)
 	// TODO
+	#define FCR_OFFSET 2
+	bool fifo_warn;
 	//Bit8u FCR;	// FIFO Control Register
 	
 };
 
-#define COM1_BASE 0x3f8
-#define COM2_BASE 0x2f8
-#define COM3_BASE 0x3e8
-#define COM4_BASE 0x2e8
+extern CSerial* serialports[];
+const Bit8u serial_defaultirq[4] = { 4, 3, 4, 3 };
+const Bit16u serial_baseaddr[4] = {0x3f8,0x2f8,0x3e8,0x2e8};
+const char* const serial_comname[]={"COM1","COM2","COM3","COM4"};
+
+// the COM devices
+
+class device_COM : public DOS_Device {
+public:
+	// Creates a COM device that communicates with the num-th parallel port, i.e. is LPTnum
+	device_COM(class CSerial* sc);
+	~device_COM();
+	bool Read(Bit8u * data,Bit16u * size);
+	bool Write(Bit8u * data,Bit16u * size);
+	bool Seek(Bit32u * pos,Bit32u type);
+	bool Close();
+	Bit16u GetInformation(void);
+private:
+	CSerial* sclass;
+};
 
 #endif
 

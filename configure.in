@@ -60,7 +60,18 @@ AC_MSG_CHECKING(if environ can be linked)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char ** environ;]],[[*environ;]])],
 [AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
 
+dnl Check for powf
+if test x$target = xi386-pc-os2-emx ; then
+  AC_MSG_CHECKING(for powf in libm);
+  LIBS_BACKUP=$LIBS;
+  LIBS="$LIBS -lm";
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
+        powf(1.0f, 1.0f);
+  ]])], [AC_MSG_RESULT(yes)], [AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
+  LIBS=$LIBS_BACKUP
+else
 AC_CHECK_LIB([m],[powf],,[AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
+fi
 
 dnl Checks for libraries.
 
@@ -230,7 +241,7 @@ else
 AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 fi
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-  LIBS="$LIBS -lSDL_net"
+   LIBS="$LIBS -lSDL_net"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
@@ -239,20 +250,31 @@ fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
-AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
-AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
-AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_MSG_CHECKING(whether opengl display output will be enabled) 
-if test x$enable_opengl = xyes -a x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
-  AC_MSG_RESULT(yes)
-  LIBS="$LIBS -lGL"
-  AC_DEFINE(C_OPENGL,1)
-elif test x$enable_opengl = xyes -a x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
-  AC_MSG_RESULT(yes)
-  LIBS="$LIBS -lopengl32"
-  AC_DEFINE(C_OPENGL,1)
-else
-  AC_MSG_RESULT(no)
+if test x$enable_opengl = xyes; then
+case "$target" in
+    *-*-darwin*)
+       AC_MSG_RESULT(yes)
+       LIBS="$LIBS -framework OpenGL"
+       AC_DEFINE(C_OPENGL,1)
+       ;;
+    *)
+       AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
+       AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
+       AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
+         AC_MSG_RESULT(yes)
+         LIBS="$LIBS -lGL"
+         AC_DEFINE(C_OPENGL,1)
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
+         AC_MSG_RESULT(yes)
+         LIBS="$LIBS -lopengl32"
+         AC_DEFINE(C_OPENGL,1)
+       else
+         AC_MSG_RESULT(no)
+       fi
+       ;;
+esac
 fi
 
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
@@ -292,7 +314,10 @@ case "$target" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
        AC_CHECK_HEADERS(ddraw.h)
-       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and OS/2 only).])
+       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
+       if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
+         LIBS="$LIBS -lws2_32"
+       fi
        ;;
     *-*-darwin*)
        dnl We have a problem here: both MacOS X and Darwin report 
@@ -304,10 +329,11 @@ case "$target" in
        ;;
     *-*-linux-gnu*)
        AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
+       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-os2-emx*)
        AC_DEFINE(OS2, 1, [Compiling on OS/2 EMX])
-       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32 and OS/2 only).])
+       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
 esac
 

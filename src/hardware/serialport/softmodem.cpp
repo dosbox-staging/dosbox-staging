@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.6 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.7 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -26,90 +26,88 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "SDL_net.h"
-
 #include "support.h"
-#include "timer.h"
 #include "serialport.h"
 #include "softmodem.h"
+#include "misc_util.h"
 
 //#include "mixer.h"
 
 
-CSerialModem::CSerialModem(
-		IO_ReadHandler* rh,
-		IO_WriteHandler* wh,
-		TIMER_TickHandler th,		   
-		Bit16u baseAddr,
-		Bit8u initIrq,
-		Bit32u initBps,
-		Bit8u bytesize,
-		const char* parity,
-		Bit8u stopbits,
-		const char *remotestr,
-		Bit16u lport)
-		: CSerial(rh, wh, th, 
-		baseAddr, initIrq, initBps, bytesize, parity, stopbits) {
-	socket=0;
-	incomingsocket=0;
-	InstallTimerHandler(th);
+CSerialModem::CSerialModem(Bitu id, CommandLine* cmd):CSerial(id, cmd) {
+	InstallationSuccessful=false;
+	connected=false;
 
-	if(!SDLNetInited) {
-        if(SDLNet_Init()==-1) {
-			LOG_MSG("SDLNet_Init failed: %s\n", SDLNet_GetError());
-			return;
-		}
-		SDLNetInited = true;
-	}
 	rqueue=new CFifo(MODEM_BUFFER_QUEUE_SIZE);
 	tqueue=new CFifo(MODEM_BUFFER_QUEUE_SIZE);
 	
-	/* Default to direct null modem connection.  Telnet mode interprets IAC codes */
+	// Default to direct null modem connection.  Telnet mode interprets IAC codes
 	telnetmode = false;
 
-	/* Initialize the sockets and setup the listening port */
-	socketset = SDLNet_AllocSocketSet(1);
-	listensocketset = SDLNet_AllocSocketSet(1);
-	if (!socketset || !listensocketset) {
-		LOG_MSG("MODEM:Can't open socketset:%s",SDLNet_GetError());
-		//TODO Should probably just exit
-		return;
-	}
-		socket=0;
-		listenport=lport;
-		if (listenport) 	{
-			IPaddress listen_ip;
-			SDLNet_ResolveHost(&listen_ip, NULL, listenport);
-			listensocket=SDLNet_TCP_Open(&listen_ip);
-			if (!listensocket) LOG_MSG("MODEM:Can't open listen port: %s",SDLNet_GetError());
-			
-			else LOG_MSG("MODEM: Port listener installed at port %d",listenport);
-			
-		}
-		else listensocket=0;
-
-		// TODO: Fix dialtones if requested
-		//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_CallBack,8000,"MODEM");
-		//MIXER_Enable(mhd.chan,false);
-		//MIXER_SetMode(mhd.chan,MIXER_16MONO);
+	// Initialize the sockets and setup the listening port
+	listenport = 23;
+	waitingclientsocket=0;
+	clientsocket = 0;
+	serversocket = 0;
+	getBituSubstring("listenport:", &listenport, cmd);
+	
+	// TODO: Fix dialtones if requested
+	//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_CallBack,8000,"MODEM");
+	//MIXER_Enable(mhd.chan,false);
+	//MIXER_SetMode(mhd.chan,MIXER_16MONO);
 		
-		Reset();
-		//EnterIdleState();
-		CSerial::Init_Registers(initBps,bytesize,parity,stopbits);
-	}
+	CSerial::Init_Registers();
+	Reset(); // reset calls EnterIdleState
+		
+	setEvent(SERIAL_POLLING_EVENT,1);
+	InstallationSuccessful=true;
+}
 
-	CSerialModem::~CSerialModem() {
-		if(socket) {
-			SDLNet_TCP_DelSocket(socketset,socket);
-			SDLNet_TCP_Close(socket);
+CSerialModem::~CSerialModem() {
+	if(serversocket) delete serversocket;
+	if(clientsocket) delete clientsocket;
+	if(waitingclientsocket) delete waitingclientsocket;
+
+	delete rqueue;
+	delete tqueue;
+
+	// remove events
+	for(Bitu i = SERIAL_BASE_EVENT_COUNT+1;	i <= SERIAL_MODEM_EVENT_COUNT; i++)
+		removeEvent(i);
+}
+
+void CSerialModem::handleUpperEvent(Bit16u type) {
+	switch(type)
+	{
+	case SERIAL_RX_EVENT:
+		{
+			break;
+		}
+	case MODEM_TX_EVENT:
+		{
+			if(tqueue->left()) {
+				tqueue->addb(waiting_tx_character);
+				if(tqueue->left() < 2) {
+					CSerial::setCTS(false);
+				}
+			} else LOG_MSG("MODEM: TX Buffer overflow!");
+			ByteTransmitted();
+			
+			break;
+		}
+	case SERIAL_POLLING_EVENT:
+		{
+			Timer2();
+			setEvent(SERIAL_POLLING_EVENT,1);
+			break;
 		}
 
-		if(listensocket) SDLNet_TCP_Close(listensocket);
-		if(socketset) SDLNet_FreeSocketSet(socketset);
-
-		delete rqueue;
-		delete tqueue;
+	case MODEM_RING_EVENT:
+		{
+			break;
+		}
 	}
+}
 
 void CSerialModem::SendLine(const char *line) {
 	rqueue->addb(0xd);
@@ -164,18 +162,9 @@ void CSerialModem::SendRes(ResTypes response) {
 	}
 }
 
-void CSerialModem::openConnection(void) {
-	if (socket) {
-		LOG_MSG("Huh? already connected");
-		SDLNet_TCP_DelSocket(socketset,socket);
-		SDLNet_TCP_Close(socket);
-	}
-	socket = SDLNet_TCP_Open(&openip);
-}
-
 bool CSerialModem::Dial(char * host) {
 
-	/* Scan host for port */
+	// Scan host for port
 	Bit16u port;
 	char * hasport=strrchr(host,':');
 	if (hasport) {
@@ -183,26 +172,30 @@ bool CSerialModem::Dial(char * host) {
 		port=(Bit16u)atoi(hasport);
 	}
 	else port=MODEM_DEFAULT_PORT;
-	/* Resolve host we're gonna dial */
+	// Resolve host we're gonna dial
 	LOG_MSG("Connecting to host %s port %d",host,port);
-	if (!SDLNet_ResolveHost(&openip,host,port)) {
-		openConnection();
-		EnterConnectedState();
-		return true;
-	} else {
-		LOG_MSG("Failed to resolve host %s: %s",host,SDLNet_GetError());
-		SendRes(ResNODIALTONE);
+	clientsocket = new TCPClientSocket(host, port);
+	if(!clientsocket->isopen) {
+		delete clientsocket;
+		clientsocket=0;
+		LOG_MSG("Failed to connect.");
+		SendRes(ResNOCARRIER);
 		EnterIdleState();
 		return false;
+	} else {
+		EnterConnectedState();
+		return true;
 	}
 }
 
 void CSerialModem::AcceptIncomingCall(void) {
-//	assert(!socket);
-	socket=incomingsocket;
-	SDLNet_TCP_AddSocket(socketset,socket);
-	incomingsocket = 0;
-	EnterConnectedState();
+	if(waitingclientsocket) {
+		clientsocket=waitingclientsocket;
+		waitingclientsocket=0;
+		EnterConnectedState();
+	} else {
+		EnterIdleState();
+	}
 }
 
 Bitu CSerialModem::ScanNumber(char * & scan) {
@@ -224,7 +217,10 @@ void CSerialModem::Reset(){
 	oldDTRstate = getDTR();
 	flowcontrol = 0;
 	plusinc = 0;
-	incomingsocket = 0;
+	if(clientsocket) {
+		delete clientsocket;
+		clientsocket=0;
+	}
 	memset(&reg,0,sizeof(reg));
 	reg[MREG_AUTOANSWER_COUNT]=0;	// no autoanswer
 	reg[MREG_RING_COUNT] = 1;
@@ -246,23 +242,29 @@ void CSerialModem::EnterIdleState(void){
 	connected=false;
 	ringing=false;
 	
-	if(socket) {	// clear current socket
-		SDLNet_TCP_DelSocket(socketset,socket);
-		SDLNet_TCP_Close(socket);
-		socket=0;
+	if(clientsocket) {
+		delete clientsocket;
+		clientsocket=0;
 	}
-	if(incomingsocket) {	// clear current incoming socket
-		SDLNet_TCP_DelSocket(socketset,incomingsocket);
-		SDLNet_TCP_Close(incomingsocket);
+
+	if(waitingclientsocket) {	// clear current incoming socket
+		delete waitingclientsocket;
+		waitingclientsocket=0;
 	}
 	// get rid of everything
-	if(listensocket) {
-		while(incomingsocket=SDLNet_TCP_Accept(listensocket)) {
-			SDLNet_TCP_DelSocket(socketset,incomingsocket);
-			SDLNet_TCP_Close(incomingsocket);
-		}
+	if(serversocket) {
+		while(waitingclientsocket=serversocket->Accept())
+			delete waitingclientsocket;
+	} else if (listenport) {
+		
+		serversocket=new TCPServerSocket(listenport);	
+		if(!serversocket->isopen) {
+			LOG_MSG("Serial%d: Modem could not open TCP port %d.",COMNUMBER,listenport);
+			delete serversocket;
+			serversocket=0;
+		} else LOG_MSG("Serial%d: Modem listening on port %d...",COMNUMBER,listenport);
 	}
-	incomingsocket=0;
+	waitingclientsocket=0;
 	
 	commandmode = true;
 	CSerial::setCD(false);
@@ -273,19 +275,18 @@ void CSerialModem::EnterIdleState(void){
 }
 
 void CSerialModem::EnterConnectedState(void) {
-	if(socket) {
-		SDLNet_TCP_AddSocket(socketset,socket);
-		SendRes(ResCONNECT);
-		commandmode = false;
-		memset(&telClient, 0, sizeof(telClient));
-		connected = true;
-		ringing = false;
-		CSerial::setCD(true);
-		CSerial::setRI(false);
-	} else {
-		SendRes(ResNOCARRIER);
-		EnterIdleState();
+	if(serversocket) {
+		// we don't accept further calls
+		delete serversocket;
+		serversocket=0;
 	}
+	SendRes(ResCONNECT);
+	commandmode = false;
+	memset(&telClient, 0, sizeof(telClient));
+	connected = true;
+	ringing = false;
+	CSerial::setCD(true);
+	CSerial::setRI(false);
 }
 
 void CSerialModem::DoCommand() {
@@ -309,7 +310,7 @@ void CSerialModem::DoCommand() {
 
 		if ((cmdbuf[0] != 'A') || (cmdbuf[1] != 'T')) {
 			SendRes(ResERROR);
-			return;//goto ret_error;
+			return;
 		}
 		
 		if (strstr(cmdbuf,"NET0")) {
@@ -329,7 +330,7 @@ void CSerialModem::DoCommand() {
 			if (*foundstr=='T' || *foundstr=='P') foundstr++;
 			/* Small protection against empty line */
 			if (!foundstr[0]) {
-				SendRes(ResERROR);//goto ret_error;
+				SendRes(ResERROR);
 				return;
 			}
 			char* helper;
@@ -397,7 +398,7 @@ void CSerialModem::DoCommand() {
 					if (connected) {
 						SendRes(ResNOCARRIER);
 						EnterIdleState();
-						return;//goto ret_none;
+						return;
 		}
 					//Else return ok
 				};break;
@@ -405,12 +406,12 @@ void CSerialModem::DoCommand() {
 				switch (num=ScanNumber(scanbuf))
 				{
 				case 0:
-					if (socket) {
+					if (clientsocket) {
 						commandmode = false;
-						return;//goto ret_none;
+						return;
 					} else {
 						SendRes(ResERROR);
-						return;//goto ret_none;
+						return;
 					}
 				};break;
 			case 'T':	//Tone Dial
@@ -421,18 +422,18 @@ void CSerialModem::DoCommand() {
 				ScanNumber(scanbuf);
 				break;
 			case 'A':	//Answer call
-				if (incomingsocket) {
+				if (waitingclientsocket) {
 					AcceptIncomingCall();
 				} else {
 					SendRes(ResERROR);
-					return;//goto ret_none;
+					return;
 				}
-				return;//goto ret_none;
+				return;
 			case 'Z':	//Reset and load profiles
 			{
 				// scan the number away, if any
 				ScanNumber(scanbuf);
-				if (socket) SendRes(ResNOCARRIER);
+				if (clientsocket/*socket*/) SendRes(ResNOCARRIER);
 				Reset();
 				break;
 			}
@@ -525,107 +526,103 @@ void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 					LOG_MSG("MODEM: Unrecognized option %d", c);
 					if(telClient.command>250) {
 						/* Reject anything we don't recognize */
+						tqueue->addb(0xff);
+						tqueue->addb(252);
+						tqueue->addb(c); /* We won't do crap! */
+					}
+			}
+			switch(telClient.command) {
+				case 251: /* Will */
+					if(c == 0) telClient.binary[TEL_SERVER] = true;
+					if(c == 1) telClient.echo[TEL_SERVER] = true;
+					if(c == 3) telClient.supressGA[TEL_SERVER] = true;
+					break;
+				case 252: /* Won't */
+					if(c == 0) telClient.binary[TEL_SERVER] = false;
+					if(c == 1) telClient.echo[TEL_SERVER] = false;
+					if(c == 3) telClient.supressGA[TEL_SERVER] = false;
+					break;
+				case 253: /* Do */
+					if(c == 0) {
+						telClient.binary[TEL_CLIENT] = true;
+							tqueue->addb(0xff);
+							tqueue->addb(251);
+							tqueue->addb(0); /* Will do binary transfer */
+					}
+					if(c == 1) {
+						telClient.echo[TEL_CLIENT] = false;
 							tqueue->addb(0xff);
 							tqueue->addb(252);
-							tqueue->addb(c); /* We won't do crap! */
+							tqueue->addb(1); /* Won't echo (too lazy) */
 					}
-				}
-				switch(telClient.command) {
-					case 251: /* Will */
-						if(c == 0) telClient.binary[TEL_SERVER] = true;
-						if(c == 1) telClient.echo[TEL_SERVER] = true;
-						if(c == 3) telClient.supressGA[TEL_SERVER] = true;
-						break;
-					case 252: /* Won't */
-						if(c == 0) telClient.binary[TEL_SERVER] = false;
-						if(c == 1) telClient.echo[TEL_SERVER] = false;
-						if(c == 3) telClient.supressGA[TEL_SERVER] = false;
-						break;
-					case 253: /* Do */
-						if(c == 0) {
-							telClient.binary[TEL_CLIENT] = true;
-								tqueue->addb(0xff);
-								tqueue->addb(251);
-								tqueue->addb(0); /* Will do binary transfer */
-						}
-						if(c == 1) {
-							telClient.echo[TEL_CLIENT] = false;
-								tqueue->addb(0xff);
-								tqueue->addb(252);
-								tqueue->addb(1); /* Won't echo (too lazy) */
-						}
-						if(c == 3) {
-							telClient.supressGA[TEL_CLIENT] = true;
-								tqueue->addb(0xff);
-								tqueue->addb(251);
-								tqueue->addb(3); /* Will Suppress GA */
-						}
-						break;
-					case 254: /* Don't */
-						if(c == 0) {
-							telClient.binary[TEL_CLIENT] = false;
-								tqueue->addb(0xff);
-								tqueue->addb(252);
-								tqueue->addb(0); /* Won't do binary transfer */
-						}
-						if(c == 1) {
-							telClient.echo[TEL_CLIENT] = false;
-								tqueue->addb(0xff);
-								tqueue->addb(252);
-								tqueue->addb(1); /* Won't echo (fine by me) */
-						}
-						if(c == 3) {
-							telClient.supressGA[TEL_CLIENT] = true;
-								tqueue->addb(0xff);
-								tqueue->addb(251);
-								tqueue->addb(3); /* Will Suppress GA (too lazy) */
-						}
-						break;
-					default:
-						LOG_MSG("MODEM: Telnet client sent IAC %d", telClient.command);
-						break;
-				}
-
+					if(c == 3) {
+						telClient.supressGA[TEL_CLIENT] = true;
+							tqueue->addb(0xff);
+							tqueue->addb(251);
+							tqueue->addb(3); /* Will Suppress GA */
+					}
+					break;
+				case 254: /* Don't */
+					if(c == 0) {
+						telClient.binary[TEL_CLIENT] = false;
+							tqueue->addb(0xff);
+							tqueue->addb(252);
+							tqueue->addb(0); /* Won't do binary transfer */
+					}
+					if(c == 1) {
+						telClient.echo[TEL_CLIENT] = false;
+							tqueue->addb(0xff);
+							tqueue->addb(252);
+							tqueue->addb(1); /* Won't echo (fine by me) */
+					}
+					if(c == 3) {
+						telClient.supressGA[TEL_CLIENT] = true;
+							tqueue->addb(0xff);
+							tqueue->addb(251);
+							tqueue->addb(3); /* Will Suppress GA (too lazy) */
+					}
+					break;
+				default:
+					LOG_MSG("MODEM: Telnet client sent IAC %d", telClient.command);
+					break;
+			}
+			telClient.inIAC = false;
+			telClient.recCommand = false;
+			continue;
+		} else {
+			if(c==249) {
+				/* Go Ahead received */
+				telClient.inIAC = false;
+				continue;
+			}
+			telClient.command = c;
+			telClient.recCommand = true;
+			
+			if((telClient.binary[TEL_SERVER]) && (c == 0xff)) {
+				/* Binary data with value of 255 */
 				telClient.inIAC = false;
 				telClient.recCommand = false;
+					rqueue->addb(0xff);
 				continue;
-
-			} else {
-				if(c==249) {
-					/* Go Ahead received */
-					telClient.inIAC = false;
-					continue;
-				}
-				telClient.command = c;
-				telClient.recCommand = true;
-				
-				if((telClient.binary[TEL_SERVER]) && (c == 0xff)) {
-					/* Binary data with value of 255 */
-					telClient.inIAC = false;
-					telClient.recCommand = false;
-						rqueue->addb(0xff);
-					continue;
-				}
-
-			}
-		} else {
-			if(c == 0xff) {
-				telClient.inIAC = true;
-				continue;
-			}
-				rqueue->addb(c);
 			}
 		}
+	} else {
+		if(c == 0xff) {
+			telClient.inIAC = true;
+			continue;
+		}
+			rqueue->addb(c);
+		}
 	}
+}
 
 void CSerialModem::Timer2(void) {
-	int result =0;
+
 	unsigned long args = 1;
 	bool sendbyte = true;
 	Bitu usesize;
 	Bit8u txval;
 	Bitu txbuffersize =0;
-	Bitu testres = 0;
 
 	// check for bytes to be sent to port
 	if(CSerial::CanReceiveByte())
@@ -634,13 +631,11 @@ void CSerialModem::Timer2(void) {
 			//LOG_MSG("Modem: sending byte %2x back to UART3",rbyte);
 			CSerial::receiveByte(rbyte);
 		}
-	/* Check for eventual break command */
+	// Check for eventual break command
 	if (!commandmode) cmdpause++;
-	/* Handle incoming data from serial port, read as much as available */
-	//Bitu tx_size=tqueue->inuse();
-	//Bitu tx_first = tx_size;	// TODO:comment out
+	// Handle incoming data from serial port, read as much as available
 	CSerial::setCTS(true);	// buffer will get 'emptier', new data can be received 
-	while (/*tx_size--*/tqueue->inuse()) {
+	while (tqueue->inuse()) {
 		txval = tqueue->getb();
 		if (commandmode) {
 			if (echo) {
@@ -658,9 +653,9 @@ void CSerialModem::Timer2(void) {
 			}
 		}
 		else {// + character
-			/* 1000 ticks have passed, can check for pause command */
+			// 1000 ticks have passed, can check for pause command
 			if (cmdpause > 1000) {
-				if(txval ==/* '+')*/reg[MREG_ESCAPE_CHAR])
+				if(txval ==reg[MREG_ESCAPE_CHAR]) // +
 				{
 					plusinc++;
 					if(plusinc>=3) {
@@ -673,46 +668,37 @@ void CSerialModem::Timer2(void) {
 				} else {
 					plusinc=0;
 				}
-	//If not a special pause command, should go for bigger blocks to send 
+	// If not a special pause command, should go for bigger blocks to send 
 			}
 			tmpbuf[txbuffersize] = txval;
 			txbuffersize++;
 		}
 	} // while loop
 	
-	if (socket && sendbyte && txbuffersize) {
+	if (clientsocket && sendbyte && txbuffersize) {
 		// down here it saves a lot of network traffic
-		SDLNet_TCP_Send(socket, tmpbuf,txbuffersize);
+		clientsocket->SendArray(tmpbuf,txbuffersize);
 		//TODO error testing
 	}
-	SDLNet_CheckSockets(socketset,0);
-	/* Handle incoming to the serial port */
-	if(!commandmode && socket) {
-		if(rqueue->left() && SDLNet_SocketReady(socket) /*&& CSerial::getRTS()*/)
-		{
-			usesize = rqueue->left();
-			if (usesize>16) usesize=16;
-			result = SDLNet_TCP_Recv(socket, tmpbuf, usesize);
-			if (result>0) {
-				if(telnetmode) {
-					/* Filter telnet commands */
-					TelnetEmulation(tmpbuf, result);
-				} else {
-					rqueue->adds(tmpbuf,result);
-				}
-				cmdpause = 0;
-			} else {
-				SendRes(ResNOCARRIER);
-				EnterIdleState();
-			}
-		}
+	// Handle incoming to the serial port
+	if(!commandmode && clientsocket && rqueue->left()) {
+		usesize = rqueue->left();
+		if (usesize>16) usesize=16;
+		if(!clientsocket->ReceiveArray(tmpbuf, &usesize)) {
+			SendRes(ResNOCARRIER);
+			EnterIdleState();
+		} else if(usesize) {
+			// LOG_MSG("rcv:%d", result);
+			// Filter telnet commands 
+			if(telnetmode) TelnetEmulation(tmpbuf, usesize);
+			else rqueue->adds(tmpbuf,usesize);
+			cmdpause = 0;
+		} 
 	}
-	/* Check for incoming calls */
-	if (!connected && !incomingsocket && listensocket) {
-			incomingsocket = SDLNet_TCP_Accept(listensocket);
-		if (incomingsocket) {
-			SDLNet_TCP_AddSocket(listensocketset, incomingsocket);
-				
+	// Check for incoming calls
+	if (!connected && !waitingclientsocket && serversocket) {
+		waitingclientsocket=serversocket->Accept();
+		if(waitingclientsocket) {	
 			if(!CSerial::getDTR()) {
 				// accept no calls with DTR off; TODO: AT &Dn
 				EnterIdleState();
@@ -754,18 +740,14 @@ void CSerialModem::RXBufferEmpty() {
 	}
 }
 
-void CSerialModem::transmitByte(Bit8u val) {
+void CSerialModem::transmitByte(Bit8u val, bool first) {
+	waiting_tx_character=val;
+	setEvent(MODEM_TX_EVENT, bytetime); // TX event
+	if(first) ByteTransmitting();
 	//LOG_MSG("MODEM: Byte %x to be transmitted",val);
-	if(tqueue->left()) {
-		tqueue->addb(val);
-		if(tqueue->left() < 2) {
-			CSerial::setCTS(false);
-		}
-	} else LOG_MSG("MODEM: TX Buffer overflow!");
-	CSerial::ByteTransmitted();	
 }
 
-void CSerialModem::updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr) { 
+void CSerialModem::updatePortConfig(Bit16u, Bit8u lcr) { 
 // nothing to do here right?
 }
 
@@ -777,6 +759,21 @@ void CSerialModem::setBreak(bool) {
 	// TODO: handle this
 }
 
+void CSerialModem::setRTSDTR(bool rts, bool dtr) {
+	setDTR(dtr);
+}
+void CSerialModem::setRTS(bool val) {
+	
+}
+void CSerialModem::setDTR(bool val) {
+	if(!val && connected) {
+		// If DTR goes low, hang up.
+		SendRes(ResNOCARRIER);
+		EnterIdleState();
+		LOG_MSG("Modem: Hang up due to dropped DTR.");
+	}	
+}
+/*
 void CSerialModem::updateModemControlLines() {
 	//bool txrdy=tqueue->left();
 	//if(CSerial::getRTS() && txrdy) CSerial::setCTS(true);
@@ -793,7 +790,7 @@ void CSerialModem::updateModemControlLines() {
 
 	oldDTRstate = getDTR();
 }
-
+*/
 
 #endif
 

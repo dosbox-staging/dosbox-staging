@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.98 2007-01-08 20:36:53 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.99 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +30,7 @@
 #include "dos_inc.h"
 #include "setup.h"
 #include "support.h"
+#include "serialport.h"
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
@@ -79,7 +80,27 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x03:		/* Read character from STDAUX */
+		{
+			Bit16u port = real_readw(0x40,0);
+			if(port!=0 && serialports[0]) {
+				// RTS/DTR on
+				IO_WriteB(port+4,0x3);
+				serialports[0]->Getchar(&reg_al,true, 0xFFFFFFFF);
+			}
+		}
+		break;
 	case 0x04:		/* Write Character to STDAUX */
+		{
+			Bit16u port = real_readw(0x40,0);
+			if(port!=0 && serialports[0]) {
+				// RTS/DTR on
+				IO_WriteB(port+4,0x3);
+				serialports[0]->Putchar(reg_dl,true,true, 0xFFFFFFFF);
+				// RTS off
+				IO_WriteB(port+4,0x1);
+			}
+		}
+		break;
 	case 0x05:		/* Write Character to PRINTER */
 		E_Exit("DOS:Unhandled call %02X",reg_ah);
 		break;

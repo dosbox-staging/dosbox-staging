@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.cpp,v 1.4 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: directserial_win32.cpp,v 1.5 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -27,6 +27,8 @@
 
 #include "serialport.h"
 #include "directserial_win32.h"
+#include "misc_util.h"
+#include "pic.h"
 
 // Win32 related headers
 #include <windows.h>
@@ -34,17 +36,41 @@
 /* This is a serial passthrough class.  Its amazingly simple to */
 /* write now that the serial ports themselves were abstracted out */
 
-CDirectSerial::CDirectSerial (IO_ReadHandler * rh, IO_WriteHandler * wh,
-                              TIMER_TickHandler th, Bit16u baseAddr, Bit8u initIrq,
-                              Bit32u initBps, Bit8u bytesize, const char *parity,
-                              Bit8u stopbits,const char *realPort)
-                              :CSerial (rh, wh, th,baseAddr,initIrq, initBps,
-                              bytesize, parity,stopbits) {
+CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
+					:CSerial (id, cmd) {
 	InstallationSuccessful = false;
-	InstallTimerHandler(th);
-	lastChance = 0;
-	LOG_MSG ("Serial port at %x: Opening %s", base, realPort);
-	hCom = CreateFile (realPort, GENERIC_READ | GENERIC_WRITE, 0,	// must be opened with exclusive-access
+
+	rx_retry = 0;
+    rx_retry_max = 0;
+
+	// open the port in NT object space (recommended by Microsoft)
+	// allows the user to open COM10+ and custom port names.
+	std::string prefix="\\\\.\\";
+	std::string tmpstring;
+	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
+
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,"%12.3f Port type directserial realport %s\r\n",
+				PIC_FullIndex(),tmpstring.c_str());
+#endif
+
+	prefix.append(tmpstring);
+
+	// rxdelay: How many milliseconds to wait before causing an
+	// overflow when the application is unresponsive.
+	if(getBituSubstring("rxdelay:", &rx_retry_max, cmd)) {
+		if(!(rx_retry_max<=10000)) {
+			rx_retry_max=0;
+		}
+	}
+
+	const char* tmpchar=prefix.c_str();
+
+	LOG_MSG ("Serial%d: Opening %s", COMNUMBER, tmpstring.c_str());
+	hCom = CreateFile (tmpchar,
+					   GENERIC_READ | GENERIC_WRITE, 0,
+									  // must be opened with exclusive-access
 	                   NULL,          // no security attributes
 	                   OPEN_EXISTING, // must use OPEN_EXISTING
 	                   0,             // non overlapped I/O
@@ -53,7 +79,8 @@ CDirectSerial::CDirectSerial (IO_ReadHandler * rh, IO_WriteHandler * wh,
 
 	if (hCom == INVALID_HANDLE_VALUE) {
 		int error = GetLastError ();
-		LOG_MSG ("Serial port \"%s\" could not be opened.", realPort);
+		LOG_MSG ("Serial%d: Serial Port \"%s\" could not be opened.",
+			COMNUMBER, tmpstring.c_str());
 		if (error == 2) {
 			LOG_MSG ("The specified port does not exist.");
 		} else if (error == 5) {
@@ -61,19 +88,48 @@ CDirectSerial::CDirectSerial (IO_ReadHandler * rh, IO_WriteHandler * wh,
 		} else {
 			LOG_MSG ("Windows error %d occurred.", error);
 		}
-
-		hCom = 0;
 		return;
 	}
 
+	dcb.DCBlength=sizeof(dcb);
 	fSuccess = GetCommState (hCom, &dcb);
 
 	if (!fSuccess) {
 		// Handle the error.
 		LOG_MSG ("GetCommState failed with error %d.\n", GetLastError ());
-		hCom = 0;
+		hCom = INVALID_HANDLE_VALUE;
 		return;
 	}
+
+	// initialize the port
+	dcb.BaudRate=CBR_9600;
+	dcb.fBinary=true;
+	dcb.fParity=true;
+	dcb.fOutxCtsFlow=false;
+	dcb.fOutxDsrFlow=false;
+	dcb.fDtrControl=DTR_CONTROL_DISABLE;
+	dcb.fDsrSensitivity=false;
+	
+	dcb.fOutX=false;
+	dcb.fInX=false;
+	dcb.fErrorChar=0;
+	dcb.fNull=false;
+	dcb.fRtsControl=RTS_CONTROL_DISABLE;
+	dcb.fAbortOnError=false;
+
+	dcb.ByteSize=8;
+	dcb.Parity=NOPARITY;
+	dcb.StopBits=ONESTOPBIT;
+
+	fSuccess = SetCommState (hCom, &dcb);
+
+	if (!fSuccess) {
+		// Handle the error.
+		LOG_MSG ("SetCommState failed with error %d.\n", GetLastError ());
+		hCom = INVALID_HANDLE_VALUE;
+		return;
+	}
+
 	// Configure timeouts to effectively use polling
 	COMMTIMEOUTS ct;
 	ct.ReadIntervalTimeout = MAXDWORD;
@@ -83,50 +139,103 @@ CDirectSerial::CDirectSerial (IO_ReadHandler * rh, IO_WriteHandler * wh,
 	ct.WriteTotalTimeoutMultiplier = 0;
 	SetCommTimeouts (hCom, &ct);
 
-	CSerial::Init_Registers (initBps, bytesize, parity, stopbits);
+	CSerial::Init_Registers();
 	InstallationSuccessful = true;
-	//LOG_MSG("InstSuccess");
+	receiveblock=false;
+
+	ClearCommBreak (hCom);
+	setEvent(SERIAL_POLLING_EVENT, 1); // millisecond tick
 }
 
 CDirectSerial::~CDirectSerial () {
-	if (hCom != INVALID_HANDLE_VALUE)
-		CloseHandle (hCom);
+	if (hCom != INVALID_HANDLE_VALUE) CloseHandle (hCom);
+	// We do not use own events so we don't have to clear them.
 }
 
-Bitu lastChance;
-
-void CDirectSerial::RXBufferEmpty () {
-	DWORD dwRead;
-	DWORD errors;
-	Bit8u chRead;
-	if (lastChance > 0) {
-		receiveByte (ChanceChar);
-		lastChance = 0;
-	} else {
-		// update RX
-		if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
-			if (dwRead != 0) {
-				//LOG_MSG("UART 0x%x: RX 0x%x", base,chRead);
-				receiveByte (chRead);
+void CDirectSerial::handleUpperEvent(Bit16u type) {
+	
+	switch(type) {
+		case SERIAL_POLLING_EVENT: {
+			DWORD dwRead = 0;
+			DWORD errors = 0;
+			Bit8u chRead = 0;
+			
+			setEvent(SERIAL_POLLING_EVENT, 1);
+			if(!receiveblock) {
+				if(((!(LSR&LSR_RX_DATA_READY_MASK)) || rx_retry>=rx_retry_max ))
+				{
+					rx_retry=0;
+					if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
+						if (dwRead) {
+							receiveByte (chRead);
+							setEvent(40, bytetime-0.03f); // receive timing
+							receiveblock=true;
+						}
+					}
+				} else rx_retry++;
 			}
+			// check for errors
+			CheckErrors();
+			// update Modem input line states
+			updateMSR ();
+			break;
+		}
+		case 40: {
+		// receive time is up
+			DWORD dwRead = 0;
+			Bit8u chRead = 0;
+			receiveblock=false;
+			// check if there is something to receive
+			if(((!(LSR&LSR_RX_DATA_READY_MASK)) || rx_retry>=rx_retry_max ))
+			{
+				rx_retry=0;
+				if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
+					if (dwRead) {
+						receiveByte (chRead);
+						setEvent(40, bytetime-0.03f); // receive timing
+						receiveblock=true;
+					}
+				}
+			} else rx_retry++;
+			break;
+		}
+		case SERIAL_TX_EVENT: {
+			DWORD dwRead = 0;
+			Bit8u chRead = 0;
+			if(!receiveblock) {
+				if(((!(LSR&LSR_RX_DATA_READY_MASK)) || rx_retry>=rx_retry_max ))
+				{
+					rx_retry=0;
+					if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
+						if (dwRead) {
+							receiveByte (chRead);
+							setEvent(40, bytetime-0.03f); // receive timing
+							receiveblock=true;
+						}
+					}
+				} else rx_retry++;
+			}
+			ByteTransmitted();
+			break;
+		}
+		case SERIAL_THR_EVENT: {
+			ByteTransmitting();
+			setEvent(SERIAL_TX_EVENT,bytetime+0.03f);
+			break;				   
 		}
 	}
+}
+
+void CDirectSerial::CheckErrors() {
+	
+	DWORD errors=0;
 	// check for errors
 	if (ClearCommError (hCom, &errors, NULL))
 		if (errors & (CE_BREAK | CE_FRAME | CE_RXPARITY)) {
 			Bit8u errreg = 0;
-			if (errors & CE_BREAK) {
-				LOG_MSG ("Serial port at 0x%x: line error: break received.", base);
-				errreg |= LSR_RX_BREAK_MASK;
-			}
-			if (errors & CE_FRAME) {
-				LOG_MSG ("Serial port at 0x%x: line error: framing error.", base);
-				errreg |= LSR_FRAMING_ERROR_MASK;
-			}
-			if (errors & CE_RXPARITY) {
-				LOG_MSG ("Serial port at 0x%x: line error: parity error.", base);
-				errreg |= LSR_PARITY_ERROR_MASK;
-			}
+			if (errors & CE_BREAK) errreg |= LSR_RX_BREAK_MASK;
+			if (errors & CE_FRAME) errreg |= LSR_FRAMING_ERROR_MASK;
+			if (errors & CE_RXPARITY) errreg |= LSR_PARITY_ERROR_MASK;
 			receiveError (errreg);
 		}
 }
@@ -135,45 +244,37 @@ void CDirectSerial::RXBufferEmpty () {
 /* updatePortConfig is called when emulated app changes the serial port     **/
 /* parameters baudrate, stopbits, number of databits, parity.               **/
 /*****************************************************************************/
-void CDirectSerial::updatePortConfig (Bit8u dll, Bit8u dlm, Bit8u lcr) {
+void CDirectSerial::updatePortConfig (Bit16u divider, Bit8u lcr) {
 	Bit8u parity = 0;
 	Bit8u bytelength = 0;
-	Bit16u baudrate = 0;
 
 	// baud
-	baudrate = dlm;
-	baudrate = baudrate << 8;
-	baudrate |= dll;
-	if (baudrate <= 0x1)
+	if (divider == 0x1)
 		dcb.BaudRate = CBR_115200;
-	else if (baudrate <= 0x2)
+	else if (divider == 0x2)
 		dcb.BaudRate = CBR_57600;
-	else if (baudrate <= 0x3)
+	else if (divider == 0x3)
 		dcb.BaudRate = CBR_38400;
-	else if (baudrate <= 0x6)
+	else if (divider == 0x6)
 		dcb.BaudRate = CBR_19200;
-	else if (baudrate <= 0xc)
+	else if (divider == 0xc)
 		dcb.BaudRate = CBR_9600;
-	else if (baudrate <= 0x18)
+	else if (divider == 0x18)
 		dcb.BaudRate = CBR_4800;
-	else if (baudrate <= 0x30)
+	else if (divider == 0x30)
 		dcb.BaudRate = CBR_2400;
-	else if (baudrate <= 0x60)
+	else if (divider == 0x60)
 		dcb.BaudRate = CBR_1200;
-	else if (baudrate <= 0xc0)
+	else if (divider == 0xc0)
 		dcb.BaudRate = CBR_600;
-	else if (baudrate <= 0x180)
+	else if (divider == 0x180)
 		dcb.BaudRate = CBR_300;
-	else if (baudrate <= 0x417)
+	else if (divider == 0x417)
 		dcb.BaudRate = CBR_110;
 
 	// I read that windows can handle nonstandard baudrates:
 	else
-		dcb.BaudRate = 115200 / baudrate;
-
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_MSG ("Serial port at %x: new baud rate: %d", base, dcb.BaudRate);
-#endif
+		dcb.BaudRate = 115200 / divider;
 
 	// byte length
 	bytelength = lcr & 0x3;
@@ -211,9 +312,25 @@ void CDirectSerial::updatePortConfig (Bit8u dll, Bit8u dlm, Bit8u lcr) {
 		dcb.StopBits = ONESTOPBIT;
 	}
 
-	if (!SetCommState (hCom, &dcb))
-		LOG_MSG ("Serial port at 0x%x: API did not like the new values.", base);
-	//LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud", base,dcb.BaudRate);
+#ifdef SERIALPORT_DEBUGMSG
+	LOG_MSG ("__________________________");
+	LOG_MSG ("Serial%d: new baud rate: %d", COMNUMBER, dcb.BaudRate);
+	LOG_MSG ("Serial%d: new bytelen: %d", COMNUMBER, dcb.ByteSize);
+	LOG_MSG ("Serial%d: new parity: %d", COMNUMBER, dcb.Parity);
+	LOG_MSG ("Serial%d: new stopbits: %d", COMNUMBER, dcb.StopBits);
+#endif
+
+	if (!SetCommState (hCom, &dcb)) {
+
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,"%12.3f serial mode not supported: rate=%d,LCR=%x.\r\n",
+			PIC_FullIndex(),dcb.BaudRate,lcr);
+#endif
+
+		LOG_MSG ("Serial%d: Desired serial mode not supported (%d,%d,%d,%d",
+			dcb.BaudRate,dcb.ByteSize,dcb.Parity,dcb.StopBits, COMNUMBER);
+	}
 }
 
 void CDirectSerial::updateMSR () {
@@ -226,153 +343,53 @@ void CDirectSerial::updateMSR () {
 #endif
 		//return;
 	}
-	if (dptr & MS_CTS_ON)
-		newmsr |= MSR_CTS_MASK;
-	if (dptr & MS_DSR_ON)
-		newmsr |= MSR_DSR_MASK;
-	if (dptr & MS_RING_ON)
-		newmsr |= MSR_RI_MASK;
-	if (dptr & MS_RLSD_ON)
-		newmsr |= MSR_CD_MASK;
-	changeMSR (newmsr);
+	setCTS((dptr & MS_CTS_ON)!=0);
+	setDSR((dptr & MS_DSR_ON)!=0);
+	setRI ((dptr & MS_RING_ON)!=0);
+	setCD((dptr & MS_RLSD_ON)!=0);
 }
 
-void CDirectSerial::transmitByte (Bit8u val) {
+void CDirectSerial::transmitByte (Bit8u val, bool first) {
 	// mean bug: with break = 1, WriteFile will never return.
 	if((LCR&LCR_BREAK_MASK) == 0) {
-    
 		DWORD bytesWritten = 0;
 		WriteFile (hCom, &val, 1, &bytesWritten, NULL);
-		if (bytesWritten > 0) {
-			ByteTransmitted ();
-			//LOG_MSG("UART 0x%x: TX 0x%x", base,val);
-		} else {
-			LOG_MSG ("UART 0x%x: NO BYTE WRITTEN! PORT HANGS NOW!", base);
-		}
-	} else {
-		// have a delay here, it's the only sense of sending
-		// data with break=1
-		Bitu ticks;
-		Bitu elapsed = 0;
-		ticks = GetTicks();
-
-		while(elapsed < 10) {
-			elapsed = GetTicks() - ticks;
-		}
-		ByteTransmitted();
+		if (bytesWritten != 1)
+			LOG_MSG ("Serial%d: COM port error: write failed!", idnumber);
 	}
+	if(first) setEvent(SERIAL_THR_EVENT, bytetime/8);
+	else setEvent(SERIAL_TX_EVENT, bytetime);
 }
 
 /*****************************************************************************/
 /* setBreak(val) switches break on or off                                   **/
 /*****************************************************************************/
-
 void CDirectSerial::setBreak (bool value) {
-	//#ifdef SERIALPORT_DEBUGMSG
-	//LOG_MSG("UART 0x%x: Break toggeled: %d", base, value);
-	//#endif
-	if (value)
-		SetCommBreak (hCom);
-	else
-		ClearCommBreak (hCom);
+	if (value) SetCommBreak (hCom);
+	else ClearCommBreak (hCom);
 }
 
 /*****************************************************************************/
 /* updateModemControlLines(mcr) sets DTR and RTS.                           **/
 /*****************************************************************************/
-void CDirectSerial::updateModemControlLines ( /*Bit8u mcr */ ) {
-	bool change = false;
+void CDirectSerial::setRTSDTR(bool rts, bool dtr) {
+	if(rts) dcb.fRtsControl = RTS_CONTROL_ENABLE;
+	else dcb.fRtsControl = RTS_CONTROL_DISABLE;
+	if(dtr) dcb.fDtrControl = DTR_CONTROL_ENABLE;
+	else dcb.fDtrControl = DTR_CONTROL_DISABLE;
+	SetCommState (hCom, &dcb);
 
-		/*** DTR ***/
-	if (CSerial::getDTR ()) {			// DTR on
-		if (dcb.fDtrControl == DTR_CONTROL_DISABLE) {
-			dcb.fDtrControl = DTR_CONTROL_ENABLE;
-			change = true;
-		}
-	} else {
-		if (dcb.fDtrControl == DTR_CONTROL_ENABLE) {
-			dcb.fDtrControl = DTR_CONTROL_DISABLE;
-			change = true;
-		}
-	}
-		/*** RTS ***/
-	if (CSerial::getRTS ()) {			// RTS on
-		if (dcb.fRtsControl == RTS_CONTROL_DISABLE) {
-			dcb.fRtsControl = RTS_CONTROL_ENABLE;
-			change = true;
-		}
-	} else {
-		if (dcb.fRtsControl == RTS_CONTROL_ENABLE) {
-			dcb.fRtsControl = RTS_CONTROL_DISABLE;
-			change = true;
-		}
-	}
-	if (change)
-		SetCommState (hCom, &dcb);
 }
-
-void CDirectSerial::Timer2(void) {
-	DWORD dwRead = 0;
-	DWORD errors = 0;
-	Bit8u chRead = 0;
-
-
-	if (lastChance == 0) {		// lastChance = 0
-		if (CanReceiveByte ()) {
-			if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
-				if (dwRead)
-					receiveByte (chRead);
-			}
-		} else {
-			if (ReadFile (hCom, &chRead, 1, &dwRead, NULL)) {
-				if (dwRead) {
-					ChanceChar = chRead;
-					lastChance++;
-				}
-			}
-		}
-	} else if (lastChance > 10) {
-		receiveByte (0);						// this causes RX Overrun now
-		lastChance = 0;
-		// empty serial buffer
-		dwRead = 1;
-		while (dwRead > 0) {				// throw away bytes in buffer
-			ReadFile (hCom, &chRead, 1, &dwRead, NULL);
-		}
-	} else {			// lastChance>0    // already one waiting
-		if (CanReceiveByte ()) {		// chance used
-			receiveByte (ChanceChar);
-			lastChance = 0;
-		} else
-			lastChance++;
-	}
-
-	// check for errors
-	if (ClearCommError (hCom, &errors, NULL))
-		if (errors & (CE_BREAK | CE_FRAME | CE_RXPARITY)) {
-			Bit8u errreg = 0;
-
-			if (errors & CE_BREAK) {
-				LOG_MSG ("Serial port at 0x%x: line error: break received.", base);
-				errreg |= LSR_RX_BREAK_MASK;
-			}
-			if (errors & CE_FRAME) {
-				LOG_MSG ("Serial port at 0x%x: line error: framing error.", base);
-				errreg |= LSR_FRAMING_ERROR_MASK;
-			}
-			if (errors & CE_RXPARITY) {
-				LOG_MSG ("Serial port at 0x%x: line error: parity error.", base);
-				errreg |= LSR_PARITY_ERROR_MASK;
-			}
-
-			receiveError (errreg);
-		}
-	// update Modem input line states
-	updateMSR ();
+void CDirectSerial::setRTS(bool val) {
+	if(val) dcb.fRtsControl = RTS_CONTROL_ENABLE;
+	else dcb.fRtsControl = RTS_CONTROL_DISABLE;
+	SetCommState (hCom, &dcb);
 }
-
-
-#else	/*linux and others oneday maybe */
+void CDirectSerial::setDTR(bool val) {
+	if(val) dcb.fDtrControl = DTR_CONTROL_ENABLE;
+	else dcb.fDtrControl = DTR_CONTROL_DISABLE;
+	SetCommState (hCom, &dcb);
+}
 
 #endif
 #endif

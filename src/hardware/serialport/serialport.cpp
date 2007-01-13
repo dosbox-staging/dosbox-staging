@@ -16,270 +16,312 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.5 2007-01-08 19:45:41 qbix79 Exp $ */
-
+/* $Id: serialport.cpp,v 1.6 2007-01-13 08:35:49 qbix79 Exp $ */
 #include <string.h>
 #include <ctype.h>
 
 #include "dosbox.h"
 
-#include "support.h"
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
-#include "timer.h"
+#include "bios.h"					// SetComPorts(..)
+#include "callback.h"				// CALLBACK_Idle
 
 #include "serialport.h"
 #include "directserial_win32.h"
+#include "directserial_posix.h"
 #include "directserial_os2.h"
 #include "serialdummy.h"
 #include "softmodem.h"
+#include "nullmodem.h"
 
-#define LOG_UART LOG_MSG
+#include "cpu.h"
+
+
+bool device_COM::Read(Bit8u * data,Bit16u * size) {
+	// DTR + RTS on
+	sclass->Write_MCR(0x03);
+	for (Bit16u i=0; i<*size; i++)
+	{
+		if(!(sclass->Getchar(&data[i],true,1000))) {
+			*size=i;
+			return true;
+		}
+	}
+	return true;
+}
+
+
+bool device_COM::Write(Bit8u * data,Bit16u * size) {
+	// DTR + RTS on
+	sclass->Write_MCR(0x03);
+	for (Bit16u i=0; i<*size; i++)
+	{
+		if(!(sclass->Putchar(data[i],true,true,1000))) {
+			*size=i;
+			sclass->Write_MCR(0x01);
+			return false;
+		}
+	}
+	// RTS off
+	sclass->Write_MCR(0x01);
+	return true;
+}
+
+bool device_COM::Seek(Bit32u * pos,Bit32u type) {
+	*pos = 0;
+	return true;
+}
+
+bool device_COM::Close() {
+	return false;
+}
+
+Bit16u device_COM::GetInformation(void) {
+	return 0x80A0;
+};
+
+device_COM::device_COM(class CSerial* sc) {
+	sclass = sc;
+	SetName(serial_comname[sclass->idnumber]);
+}
+
+device_COM::~device_COM() {
+}
+
 
 
 // COM1 - COM4 objects
-static CSerial *serial1 = 0;
-static CSerial *serial2 = 0;
-static CSerial *serial3 = 0;
-static CSerial *serial4 = 0;
-//static CSerial** serialPortObjects[] = {NULL, &serial1,&serial2,&serial3,&serial4};
+CSerial* serialports[4] ={0,0,0,0};
 
-Bit8u serialGetComnumberByBaseAddress (Bit16u base) {
-	if (base == COM1_BASE)
-		return 1;
-	else if (base == COM2_BASE)
-		return 2;
-	else if (base == COM3_BASE)
-		return 3;
-	else if (base == COM4_BASE)
-		return 4;
-	else
-		return 255;	// send thispointer to nirwana ;)
-}
+static Bitu SERIAL_Read (Bitu port, Bitu iolen) {
+	for(Bitu i = 0; i < 4; i++) {
+		if(serial_baseaddr[i]==(port&0xfff8) && (serialports[i]!=0)) {
+			Bitu retval=0xff;
+			switch (port & 0x7) {
+				case RHR_OFFSET:
+					retval = serialports[i]->Read_RHR();
+					break;
+				case IER_OFFSET:
+					retval = serialports[i]->Read_IER();
+					break;
+				case ISR_OFFSET:
+					retval = serialports[i]->Read_ISR();
+					break;
+				case LCR_OFFSET:
+					retval = serialports[i]->Read_LCR();
+					break;
+				case MCR_OFFSET:
+					retval = serialports[i]->Read_MCR();
+					break;
+				case LSR_OFFSET:
+					retval = serialports[i]->Read_LSR();
+					break;
+				case MSR_OFFSET:
+					retval = serialports[i]->Read_MSR();
+					break;
+				case SPR_OFFSET:
+					retval = serialports[i]->Read_SPR();
+					break;
+			}
 
-// Usage of FastDelegates (http://www.codeproject.com/cpp/FastDelegate.asp)
-// as I/O-Array would make many of these unneccessary. (member function pointer)
-
-//Some defines for repeated functions
-
-#define SERIAL_UPDATE(number) \
-void SERIAL##number##_Update(void) {	\
-	serial##number->Timer ();	\
-}
-
-#define SERIAL_WRITE_TREE(number) \
-static void SERIAL##number##_Write (Bitu port, Bitu val, Bitu iolen) {	\
-	switch (port & 0x7) {	\
-	case THR_OFFSET:	\
-		serial##number ->Write_THR (val);	\
-		return;	\
-	case IER_OFFSET:	\
-		serial##number ->Write_IER (val);	\
-		return;	\
-	case LCR_OFFSET:	\
-		serial##number ->Write_LCR (val);	\
-		return;	\
-	case MCR_OFFSET:	\
-		serial##number ->Write_MCR (val);	\
-		return;	\
-	case MSR_OFFSET:	\
-		serial##number ->Write_MSR (val);	\
-		return;	\
-	case SPR_OFFSET:	\
-		serial##number ->Write_SPR (val);	\
-		return;	\
-	default:	\
-		serial##number ->Write_reserved (val, port & 0x7);	\
-	}	\
-}
-
-#define SERIAL_READ_TREE(number) \
-static Bitu SERIAL##number##_Read (Bitu port, Bitu iolen) {	\
-	switch (port & 0x7) {	\
-	case RHR_OFFSET:	\
-		return serial##number ->Read_RHR ();	\
-	case IER_OFFSET:	\
-		return serial##number ->Read_IER ();	\
-	case ISR_OFFSET:	\
-		return serial##number ->Read_ISR ();	\
-	case LCR_OFFSET:	\
-		return serial##number ->Read_LCR ();	\
-	case MCR_OFFSET:	\
-		return serial##number ->Read_MCR ();	\
-	case LSR_OFFSET:	\
-		return serial##number ->Read_LSR ();	\
-	case MSR_OFFSET:	\
-		return serial##number ->Read_MSR ();	\
-	case SPR_OFFSET:	\
-		return serial##number ->Read_SPR ();	\
-	}	\
-	return 0;	\
-}
-
-//The Functions
-
-SERIAL_UPDATE(1);
-SERIAL_UPDATE(2);
-SERIAL_UPDATE(3);
-SERIAL_UPDATE(4);
-
-SERIAL_WRITE_TREE(1);
-SERIAL_WRITE_TREE(2);
-SERIAL_WRITE_TREE(3);
-SERIAL_WRITE_TREE(4);
-
-SERIAL_READ_TREE(1);
-SERIAL_READ_TREE(2);
-SERIAL_READ_TREE(3);
-SERIAL_READ_TREE(4);
-
-#undef SERIAL_UPDATE
-#undef SERIAL_WRITE_TREE
-#undef SERIAL_READ_TREE
-
-void CSerial::Timer (void) {
-	//LOG_UART("Serial port at %x: Timer", base);
-	if (loopback_pending) {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Loopback sent back", base);
+#if SERIAL_DEBUG
+			const char* const dbgtext[]=
+				{"RHR","IER","ISR","LCR","MCR","LSR","MSR","SPR"};
+			if(serialports[i]->dbg_register)
+				fprintf(serialports[i]->debugfp,"%12.3f read 0x%x from %s.\r\n",
+					PIC_FullIndex(),retval,dbgtext[port&0x7]);
 #endif
-		loopback_pending = false;
-		receiveByte (loopback_data);
-		ByteTransmitted ();
+
+			return retval;	
+		}
 	}
-	Timer2 ();
+	return 0xff;
+}
+static void SERIAL_Write (Bitu port, Bitu val, Bitu) {
+	
+	for(Bitu i = 0; i < 4; i++) {
+		if(serial_baseaddr[i]==(port&0xfff8) && serialports[i]) {
+
+#if SERIAL_DEBUG
+		const char* const dbgtext[]={"THR","IER","FCR","LCR","MCR","!LSR","MSR","SPR"};
+		if(serialports[i]->dbg_register)
+			fprintf(serialports[i]->debugfp,"%12.3f write 0x%x to %s.\r\n",
+				PIC_FullIndex(),val,dbgtext[port&0x7]);
+#endif
+
+			switch (port & 0x7) {
+				case THR_OFFSET:
+					serialports[i]->Write_THR (val);
+					return;
+				case IER_OFFSET:
+					serialports[i]->Write_IER (val);
+					return;
+				case FCR_OFFSET:
+					serialports[i]->Write_FCR (val);
+					return;
+				case LCR_OFFSET:
+					serialports[i]->Write_LCR (val);
+					return;
+				case MCR_OFFSET:
+					serialports[i]->Write_MCR (val);
+					return;
+				case MSR_OFFSET:
+					serialports[i]->Write_MSR (val);
+					return;
+				case SPR_OFFSET:
+					serialports[i]->Write_SPR (val);
+					return;
+				default:
+					serialports[i]->Write_reserved (val, port & 0x7);
+			}
+		}
+	}
+}
+
+void CSerial::changeLineProperties() {
+	// update the event wait time
+
+	float bitlen = (1000.0f/115200.0f)*(float)baud_divider;
+	bytetime=bitlen*(float)(1+5+1);		// startbit + minimum length + stopbit
+	bytetime+= bitlen*(float)(LCR&0x3); // databits
+	if(LCR&0x4) bytetime+=bitlen;		// stopbit
+	updatePortConfig (baud_divider, LCR);
+}
+
+static void Serial_EventHandler(Bitu val) {
+	Bitu serclassid=val&0x3;
+	if(serialports[serclassid]!=0)
+		serialports[serclassid]->handleEvent(val>>2);
+}
+
+void CSerial::setEvent(Bit16u type, float duration) {
+    PIC_AddEvent(Serial_EventHandler,duration,(type<<2)|idnumber);
+}
+
+void CSerial::removeEvent(Bit16u type) {
+    // TODO
+	PIC_RemoveSpecificEvents(Serial_EventHandler,(type<<2)|idnumber);
+}
+
+void CSerial::handleEvent(Bit16u type) {
+	switch(type) {
+		case SERIAL_TX_LOOPBACK_EVENT: {
+
+#if SERIAL_DEBUG
+			if(dbg_serialtraffic)
+				fprintf(debugfp,loopback_data<0x10? "%12.3f tx 0x%02x (%u) (loopback)\r\n":
+												    "%12.3f tx 0x%02x (%c) (loopback)\r\n",
+					PIC_FullIndex(),loopback_data,
+					loopback_data);
+#endif
+
+			receiveByte (loopback_data);
+			ByteTransmitted ();
+			break;
+		}
+		case SERIAL_THR_LOOPBACK_EVENT: {
+			ByteTransmitting();
+			loopback_data=THR;
+			setEvent(SERIAL_TX_LOOPBACK_EVENT,bytetime);	
+			break;
+		}
+		case SERIAL_ERRMSG_EVENT: {
+			LOG_MSG("Serial%d: Errors occured: "\
+				"Framing %d, Parity %d, Overrun %d (IF0:%d), Break %d", COMNUMBER,
+				framingErrors, parityErrors, overrunErrors, overrunIF0, breakErrors);
+			errormsg_pending=false;
+			framingErrors=0;
+			parityErrors=0;
+			overrunErrors=0;
+			overrunIF0=0;
+			breakErrors=0;
+			break;					  
+		}
+		default: handleUpperEvent(type);
+	}
 }
 
 /*****************************************************************************/
 /* Interrupt control routines                                               **/
 /*****************************************************************************/
 void CSerial::rise (Bit8u priority) {
-	//LOG_UART("Serial port at %x: Rise priority 0x%x", base, priority);
+#if SERIAL_DEBUG
+	if(dbg_interrupt)
+	{
+		if(priority&TX_PRIORITY && !(waiting_interrupts&TX_PRIORITY))
+			fprintf(debugfp,"%12.3f tx interrupt on.\r\n",PIC_FullIndex());
+
+		if(priority&RX_PRIORITY && !(waiting_interrupts&RX_PRIORITY))
+			fprintf(debugfp,"%12.3f rx interrupt on.\r\n",PIC_FullIndex());
+
+		if(priority&MSR_PRIORITY && !(waiting_interrupts&MSR_PRIORITY))
+			fprintf(debugfp,"%12.3f msr interrupt on.\r\n",PIC_FullIndex());
+
+		if(priority&ERROR_PRIORITY && !(waiting_interrupts&ERROR_PRIORITY))
+			fprintf(debugfp,"%12.3f error interrupt on.\r\n",PIC_FullIndex());
+	}
+#endif
+	
 	waiting_interrupts |= priority;
-	WriteRealIER (IER);
+	ComputeInterrupts();
 }
 
 // clears the pending interrupt, triggers other waiting interrupt
 void CSerial::clear (Bit8u priority) {
-	//LOG_UART("Serial port at %x: cleared priority 0x%x", base, priority);
+	
+#if SERIAL_DEBUG
+	if(dbg_interrupt)
+	{
+		if(priority&TX_PRIORITY && (waiting_interrupts&TX_PRIORITY))
+			fprintf(debugfp,"%12.3f tx interrupt off.\r\n",PIC_FullIndex());
+
+		if(priority&RX_PRIORITY && (waiting_interrupts&RX_PRIORITY))
+			fprintf(debugfp,"%12.3f rx interrupt off.\r\n",PIC_FullIndex());
+
+		if(priority&MSR_PRIORITY && (waiting_interrupts&MSR_PRIORITY))
+			fprintf(debugfp,"%12.3f msr interrupt off.\r\n",PIC_FullIndex());
+
+		if(priority&ERROR_PRIORITY && (waiting_interrupts&ERROR_PRIORITY))
+			fprintf(debugfp,"%12.3f error interrupt off.\r\n",PIC_FullIndex());
+	}
+#endif
+	
+	
 	waiting_interrupts &= (~priority);
-	WriteRealIER (IER);
+	ComputeInterrupts();
 }
 
-void CSerial::WriteRealIER (Bit8u data) {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: write IER, value 0x%x", base, data);
+void CSerial::ComputeInterrupts () {
+
+	Bitu val = IER & waiting_interrupts;
+
+	if (val & ERROR_PRIORITY)	 ISR = ISR_ERROR_VAL;
+	else if (val & RX_PRIORITY)	 ISR = ISR_RX_VAL;
+	else if (val & TX_PRIORITY)	 ISR = ISR_TX_VAL;
+	else if (val & MSR_PRIORITY) ISR = ISR_MSR_VAL;
+	else ISR = ISR_CLEAR_VAL;
+
+	if(val && !irq_active) {
+		irq_active=true;
+		PIC_ActivateIRQ(irq);
+
+#if SERIAL_DEBUG
+		if(dbg_interrupt)
+			fprintf(debugfp,"%12.3f IRQ%d on.\r\n",PIC_FullIndex(),irq);
 #endif
-	data = data & 0xF;						// THE UPPER ONES ALWAYS READ 0! NOTHIN' ELSE!
-	Bit8u old_pending_interrupts = pending_interrupts;
-	Bit8u difference_pending_interrupts;
+	}
 
-	// rise TX AGAIN when present and is being enabled
-	if ((data & TX_PRIORITY) && (!(IER & TX_PRIORITY)))
-		if (LSR & LSR_TX_HOLDING_EMPTY_MASK)
-			waiting_interrupts |= TX_PRIORITY;
+	if(!val && irq_active) {
+		irq_active=false;
+		PIC_DeActivateIRQ(irq);
 
-	pending_interrupts = waiting_interrupts & data;
-	if ((difference_pending_interrupts = (pending_interrupts ^ old_pending_interrupts))) {	// something in pending interrupts has changed
-		if (difference_pending_interrupts & pending_interrupts) {	// some new bits were set
-			if (!current_priority) {	// activate interrupt..
-				if (pending_interrupts & ERROR_PRIORITY) {
-					current_priority = ERROR_PRIORITY;
-					ISR = ISR_ERROR_VAL;
-				} else if (pending_interrupts & RX_PRIORITY) {
-					current_priority = RX_PRIORITY;
-					ISR = ISR_RX_VAL;
-				} else if (pending_interrupts & TX_PRIORITY) {
-					current_priority = TX_PRIORITY;
-					ISR = ISR_TX_VAL;
-				} else if (pending_interrupts & MSR_PRIORITY) {
-					current_priority = MSR_PRIORITY;
-					ISR = ISR_MSR_VAL;
-				}
-#ifdef SERIALPORT_DEBUGMSG
-				LOG_UART ("Serial port at %x: Interrupt activated: priority %d", base, current_priority);
+#if SERIAL_DEBUG
+		if(dbg_interrupt)
+			fprintf(debugfp,"%12.3f IRQ%d off.\r\n",PIC_FullIndex(),irq);
 #endif
-				PIC_ActivateIRQ (irq);
-			}// else the new interrupts were already
-			// written into pending_interrupts
-		}// else no new bits were set
-
-		if (difference_pending_interrupts & (~pending_interrupts)) {	// some bits were reset
-			if (pending_interrupts) {	// some more are waiting
-				if (!(current_priority & pending_interrupts)) {	// the current interrupt has been cleared
-					// choose the next one
-					if (pending_interrupts & ERROR_PRIORITY) {
-						current_priority = ERROR_PRIORITY;
-						ISR = ISR_ERROR_VAL;
-					} else if (pending_interrupts & RX_PRIORITY) {
-						current_priority = RX_PRIORITY;
-						ISR = ISR_RX_VAL;
-					} else if (pending_interrupts & TX_PRIORITY) {
-						current_priority = TX_PRIORITY;
-						ISR = ISR_TX_VAL;
-					} else if (pending_interrupts & MSR_PRIORITY) {
-						current_priority = MSR_PRIORITY;
-						ISR = ISR_MSR_VAL;
-					}
-				}
-			} else {
-				current_priority = NONE_PRIORITY;
-				ISR = ISR_CLEAR_VAL;
-				PIC_DeActivateIRQ (irq);
-#ifdef SERIALPORT_DEBUGMSG
-				LOG_UART ("Serial port at %x: Interrupt deactivated.", base);
-#endif
-			}
-		}
 	}
-	IER = data;
-}
-
-
-
-/*****************************************************************************/
-/* Internal register modification                                           **/
-/*****************************************************************************/
-void CSerial::changeMSR (Bit8u data) {
-	if (!(MCR & MCR_LOOPBACK_Enable_MASK)) {
-		// see if something changed
-		if ((MSR & MSR_LINE_MASK) != data) {
-			Bit8u change = (MSR & MSR_LINE_MASK) ^ data;
-			// set new deltas
-			MSR |= (change >> 4);
-			// set new line states
-			MSR &= MSR_delta_MASK;
-			MSR |= data;
-			rise (MSR_PRIORITY);
-		}
-	}
-}
-
-void CSerial::changeMSR_Loopback (Bit8u data) {
-	// see if something changed
-	if ((MSR & MSR_LINE_MASK) != data) {
-		Bit8u change = (MSR & MSR_LINE_MASK) ^ data;
-		// set new deltas
-		MSR |= (change >> 4);
-		// set new line states
-		MSR &= MSR_delta_MASK;
-		MSR |= data;
-		rise (MSR_PRIORITY);
-	}
-
-/*
-	Bit8u temp=MSR;
-	// look for signal changes
-	if(temp|=((data&MSR_LINE_MASK)^(MSR&MSR_LINE_MASK))>>4)
-	{	// some signals changed
-		temp&=MSR_delta_MASK;// clear line states
-		temp|=(data&MSR_LINE_MASK);	// set new line states
-		
-		MSR=temp;
-		rise(MSR_PRIORITY);
-	}
-	// else nothing happened*/
 }
 
 /*****************************************************************************/
@@ -293,12 +335,29 @@ bool CSerial::CanReceiveByte() {
 /* A byte was received                                                      **/
 /*****************************************************************************/
 void CSerial::receiveByte (Bit8u data) {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: byte received: %d", base, data);
+
+#if SERIAL_DEBUG
+	if(dbg_serialtraffic)
+		fprintf(debugfp,loopback_data<0x10? "%12.3f rx 0x%02x (%u)\r\n":
+											"%12.3f rx 0x%02x (%c)\r\n",
+			PIC_FullIndex(), data, data);
 #endif
 
 	if (LSR & LSR_RX_DATA_READY_MASK) {	// Overrun error ;o
-		LOG_UART ("Serial port at %x: RX Overrun!", base, data);
+		if(!errormsg_pending) {
+			errormsg_pending=true;
+			setEvent(SERIAL_ERRMSG_EVENT,1000);
+		}
+		overrunErrors++;
+		Bitu iflag= GETFLAG(IF);
+		if(!iflag)overrunIF0++;
+
+#if SERIAL_DEBUG
+		if(dbg_serialtraffic)
+			fprintf(debugfp, "%12.3f rx overrun (IF=%d)\r\n",
+				PIC_FullIndex(), iflag);
+#endif
+
 		LSR |= LSR_OVERRUN_ERROR_MASK;
 		rise (ERROR_PRIORITY);
 	} else {
@@ -312,67 +371,166 @@ void CSerial::receiveByte (Bit8u data) {
 /* A line error was received                                                **/
 /*****************************************************************************/
 void CSerial::receiveError (Bit8u errorword) {
+	
+	if(!errormsg_pending) {
+			errormsg_pending=true;
+			setEvent(SERIAL_ERRMSG_EVENT,1000);
+	}
+	if(errorword&LSR_PARITY_ERROR_MASK) {
+		parityErrors++;
+
+#if SERIAL_DEBUG
+		if(dbg_serialtraffic)
+			fprintf(debugfp, "%12.3f parity error\r\n",
+				PIC_FullIndex());
+#endif
+
+	}
+	if(errorword&LSR_FRAMING_ERROR_MASK) {
+		framingErrors++;
+
+#if SERIAL_DEBUG
+		if(dbg_serialtraffic)
+			fprintf(debugfp, "%12.3f framing error\r\n",
+				PIC_FullIndex());
+#endif
+
+	}
+	if(errorword&LSR_RX_BREAK_MASK) {
+		breakErrors++;
+
+#if SERIAL_DEBUG
+		if(dbg_serialtraffic)
+			fprintf(debugfp, "%12.3f break received\r\n",
+				PIC_FullIndex());
+#endif
+
+	}
 	LSR |= errorword;
 
 	rise (ERROR_PRIORITY);
 }
 
 /*****************************************************************************/
+/* ByteTransmitting: Byte has made it from THR to TX.                       **/
+/*****************************************************************************/
+void CSerial::ByteTransmitting() {
+	switch(LSR&(LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK))
+	{
+		case LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK:
+			// bad case there must have been one
+		case LSR_TX_HOLDING_EMPTY_MASK:
+		case LSR_TX_EMPTY_MASK: // holding full but workreg empty impossible
+			LOG_MSG("Internal error in serial port(1)(0x%x).",LSR);
+			break;
+		case 0: // THR is empty now.
+			LSR |= LSR_TX_HOLDING_EMPTY_MASK;
+			
+			// trigger interrupt
+			rise (TX_PRIORITY);
+			break;
+	}
+}
+
+
+/*****************************************************************************/
 /* ByteTransmitted: When a byte was sent, notify here.                      **/
 /*****************************************************************************/
 void CSerial::ByteTransmitted () {
-	if (LSR & LSR_TX_HOLDING_EMPTY_MASK) {  // one space was empty
-		// now both are
-		LSR |= LSR_TX_EMPTY_MASK;
-	} else {  // both were full, now 1 is empty
-		if (MCR & MCR_LOOPBACK_Enable_MASK) {  // loopback mode
-			transmitLoopbackByte (THR);
-		} else {  // direct "real" mode
-			transmitByte (THR);
-		}
-		LSR |= LSR_TX_HOLDING_EMPTY_MASK;
+	switch(LSR&(LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK))
+	{
+		case LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK:
+			// bad case there must have been one
+		case LSR_TX_EMPTY_MASK: // holding full but workreg empty impossible
+			LOG_MSG("Internal error in serial port(2).");
+			break;
+		
+		case LSR_TX_HOLDING_EMPTY_MASK: // now both are empty
+			LSR |= LSR_TX_EMPTY_MASK;
+			break;
+
+		case 0: // now one is empty, send the other one
+			LSR |= LSR_TX_HOLDING_EMPTY_MASK;
+			if (loopback) {
+				loopback_data=THR;
+				setEvent(SERIAL_TX_LOOPBACK_EVENT, bytetime);
+			}
+			else {
+
+		#if SERIAL_DEBUG
+				if(dbg_serialtraffic)
+					fprintf(debugfp,THR<0x10? "%12.3f tx 0x%02x (%u) (from THR)\r\n":
+														"%12.3f tx 0x%02x (%c) (from THR)\r\n",
+						PIC_FullIndex(),THR,
+						THR);
+		#endif
+
+				transmitByte(THR,false);
+			}
+			// It's ok here.
+			rise (TX_PRIORITY);
+			break;
 	}
-	rise (TX_PRIORITY);
 }
 
 /*****************************************************************************/
 /* Transmit Holding Register, also LSB of Divisor Latch (r/w)               **/
 /*****************************************************************************/
 void CSerial::Write_THR (Bit8u data) {
+	// 0-7 transmit data
+	
 	if ((LCR & LCR_DIVISOR_Enable_MASK)) {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Write to DLL value 0x%x", base, data);
-#endif
 		// write to DLL
-		DLL = data;
-		updatePortConfig (DLL, DLM, LCR);
+		baud_divider&=0xFF00;
+		baud_divider |= data;
+		changeLineProperties();
 	} else {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Write to THR value 0x%x", base, data);
-#endif
-
 		// write to THR
 		clear (TX_PRIORITY);
 
-		if (LSR & LSR_TX_HOLDING_EMPTY_MASK) {	// one is empty 
-			if (LSR & LSR_TX_EMPTY_MASK) {	// both are empty
-				LSR &= (~LSR_TX_EMPTY_MASK);
-
-				if (MCR & MCR_LOOPBACK_Enable_MASK) {	// loopback mode
-					transmitLoopbackByte (data);
-				} else {  // direct "real" mode
-					transmitByte (data);
-				}
-				rise (TX_PRIORITY);
-			} else {  // only THR is empty; add byte and clear holding bit
+		switch(LSR&(LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK))
+		{
+			case 0: // both full - overflow
+#if SERIAL_DEBUG
+				if(dbg_serialtraffic) fprintf(debugfp, "%12.3f tx overflow\r\n",
+					PIC_FullIndex());
+#endif
+				// overwrite THR
+				THR = data;
+				break;
+		
+			case LSR_TX_EMPTY_MASK: // holding full but workreg empty impossible
+				LOG_MSG("Internal error in serial port(3).");
+				break;
+		
+			case LSR_TX_HOLDING_EMPTY_MASK: // now both are full
 				LSR &= (~LSR_TX_HOLDING_EMPTY_MASK);
 				THR = data;
-			}
-		} else {
-#ifdef SERIALPORT_DEBUGMSG
-			LOG_UART ("Serial port at %x: TX Overflow!", base);
-#endif
-			// TX overflow; how does real hardware respond to that... I do nothing
+				break;
+
+			case LSR_TX_HOLDING_EMPTY_MASK|LSR_TX_EMPTY_MASK:
+				// both are full until the first delay has passed
+				THR=data;
+				LSR &= (~LSR_TX_EMPTY_MASK);
+				LSR &= (~LSR_TX_HOLDING_EMPTY_MASK);
+				if(loopback) setEvent(SERIAL_THR_LOOPBACK_EVENT, bytetime/10);
+				else {
+			
+#if SERIAL_DEBUG
+					if(dbg_serialtraffic)
+						fprintf(debugfp,data<0x10? "%12.3f tx 0x%02x (%u)\r\n":
+												   "%12.3f tx 0x%02x (%c)\r\n",
+							PIC_FullIndex(),data,
+							data);
+#endif	
+							
+					transmitByte (data,true);
+				}
+				
+				// triggered
+				// when holding gets empty
+				// rise (TX_PRIORITY);
+				break;
 		}
 	}
 }
@@ -382,23 +540,12 @@ void CSerial::Write_THR (Bit8u data) {
 /* Receive Holding Register, also LSB of Divisor Latch (r/w)                **/
 /*****************************************************************************/
 Bitu CSerial::Read_RHR () {
-	Bit8u retval;
-	if ((LCR & LCR_DIVISOR_Enable_MASK)) {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Read from DLL value 0x%x", base, DLL);
-#endif
-		return DLL;
-	} else {
+	// 0-7 received data
+	if ((LCR & LCR_DIVISOR_Enable_MASK)) return baud_divider&0xff;
+	else {
 		clear (RX_PRIORITY);
 		LSR &= (~LSR_RX_DATA_READY_MASK);
-		retval = RHR;
-		RXBufferEmpty ();						// <--- this one changes RHR
-
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Read from RHR value 0x%x", base, retval);
-#endif
-
-		return retval;
+		return RHR;
 	}
 }
 
@@ -408,32 +555,28 @@ Bitu CSerial::Read_RHR () {
 // Modified by:
 // - writing to it.
 Bitu CSerial::Read_IER () {
-	if ((LCR & LCR_DIVISOR_Enable_MASK)) {	// IER or MSB?
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Read from DLM value 0x%x", base, DLM);
-#endif
-		return DLM;
-	} else {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Read from IER value 0x%x", base, IER);
-#endif
-		return IER;
-	}
+	// 0	receive holding register (byte received)
+	// 1	transmit holding register (byte sent)
+	// 2	receive line status (overrun, parity error, frame error, break)
+	// 3	modem status 
+	// 4-7	0
+
+	if (LCR & LCR_DIVISOR_Enable_MASK) return baud_divider>>8;
+	else return IER;
 }
 
 void CSerial::Write_IER (Bit8u data) {
 	if ((LCR & LCR_DIVISOR_Enable_MASK)) {	// write to DLM
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Write to DLM value 0x%x", base, data);
-#endif
-
-		DLM = data;
-		updatePortConfig (DLL, DLM, LCR);
+		baud_divider&=0xff;
+		baud_divider |= ((Bit16u)data)<<8;
+		changeLineProperties();
 	} else {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: Write to IER value 0x%x", base, data);
-#endif
-		WriteRealIER (data);
+
+		IER = data&0xF;
+		if ((LSR & LSR_TX_HOLDING_EMPTY_MASK) && (IER&TX_PRIORITY))
+			waiting_interrupts |= TX_PRIORITY;
+		
+		ComputeInterrupts();
 	}
 }
 
@@ -444,14 +587,27 @@ void CSerial::Write_IER (Bit8u data) {
 // - incoming interrupts
 // - loopback mode
 Bitu CSerial::Read_ISR () {
+	// 0	0:interrupt pending 1: no interrupt
+	// 1-3	identification
+	//      011 LSR
+	//		010 RXRDY
+	//		001 TXRDY
+	//		000 MSR
+	// 4-7	0
+
+	if(IER&Modem_Status_INT_Enable_MASK) updateMSR();
 	Bit8u retval = ISR;
 
 	// clear changes ISR!! mean..
-	clear (TX_PRIORITY);
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from ISR value 0x%x", base, retval);
-#endif
+	if(ISR==ISR_TX_VAL) clear (TX_PRIORITY);
 	return retval;
+}
+
+void CSerial::Write_FCR (Bit8u data) {
+	if((!fifo_warn) && (data&0x1)) {
+		fifo_warn=true;
+		LOG_MSG("Serial%d: Warning: Tried to activate FIFO.",COMNUMBER);
+	}
 }
 
 /*****************************************************************************/
@@ -464,39 +620,31 @@ Bitu CSerial::Read_ISR () {
 // Modified by:
 // - writing to it.
 Bitu CSerial::Read_LCR () {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from LCR value 0x%x", base, LCR);
-#endif
+	// 0-1	word length
+	// 2	stop bits
+	// 3	parity enable
+	// 4-5	parity type
+	// 6	set break
+	// 7	divisor latch enable
 	return LCR;
 }
 
 void CSerial::Write_LCR (Bit8u data) {
 	Bit8u lcr_old = LCR;
 	LCR = data;
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Write to LCR value 0x%x", base, data);
-
-	// for debug output
-	if (((data ^ lcr_old) & LCR_DIVISOR_Enable_MASK) != 0) {
-		if ((data & LCR_DIVISOR_Enable_MASK) != 0)
-			LOG_UART ("Serial port at %x: Divisor-mode entered", base);
-
-		else
-			LOG_UART ("Serial port at %x: Divisor-mode exited", base);
-	}
-#endif
 	if (((data ^ lcr_old) & LCR_PORTCONFIG_MASK) != 0) {
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: comm parameters changed", base);
-#endif
-		updatePortConfig (DLL, DLM, LCR);
+		changeLineProperties();
 	}
 	if (((data ^ lcr_old) & LCR_BREAK_MASK) != 0) {
-		setBreak ((LCR & LCR_BREAK_MASK) != 0);
-
-#ifdef SERIALPORT_DEBUGMSG
-		LOG_UART ("Serial port at %x: break toggled: %d", base,
-							(LCR & LCR_BREAK_MASK) != 0);
+		if(!loopback) setBreak ((LCR & LCR_BREAK_MASK)!=0);
+		else {
+			// TODO: set loopback break event to reveiveError after
+		}
+#if SERIAL_DEBUG
+		if(dbg_serialtraffic)
+			fprintf(debugfp,((LCR & LCR_BREAK_MASK)!=0)?
+						"%12.3f break on.\r\n":
+						"%12.3f break off.\r\n", PIC_FullIndex());
 #endif
 	}
 }
@@ -508,66 +656,99 @@ void CSerial::Write_LCR (Bit8u data) {
 // Modified by: 
 // - writing to it.
 Bitu CSerial::Read_MCR () {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from MCR value 0x%x", base, MCR);
-#endif
-	return MCR;
+	// 0	-DTR
+	// 1	-RTS
+	// 2	-OP1
+	// 3	-OP2
+	// 4	loopback enable
+	// 5-7	0
+	Bit8u retval=0;
+	if(dtr) retval|=MCR_DTR_MASK;
+	if(rts) retval|=MCR_RTS_MASK;
+	if(op1) retval|=MCR_OP1_MASK;
+	if(op2) retval|=MCR_OP2_MASK;
+	if(loopback) retval|=MCR_LOOPBACK_Enable_MASK;
+	return retval;
 }
 
 void CSerial::Write_MCR (Bit8u data) {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Write to MCR value 0x%x", base, data);
-#endif
-	data &= 0x1F;					// UPPER BITS ALWAYS 0!!!
+	// WARNING: At the time setRTSDTR is called rts and dsr members are still wrong.
 
-	if (MCR & MCR_LOOPBACK_Enable_MASK)
-		if (data & MCR_LOOPBACK_Enable_MASK) {	// was on, is now on
-			Bit8u param = 0;
+	bool temp_dtr = data & MCR_DTR_MASK? true:false;
+	bool temp_rts = data & MCR_RTS_MASK? true:false;
+	bool temp_op1 = data & MCR_OP1_MASK? true:false;
+	bool temp_op2 = data & MCR_OP2_MASK? true:false;
+	bool temp_loopback = data & MCR_LOOPBACK_Enable_MASK? true:false;
+	if(loopback!=temp_loopback) {
+		if(temp_loopback) setRTSDTR(false,false);
+		else setRTSDTR(temp_rts,temp_dtr);
+	}
 
-			// RTS->CD
-			// DTR->RI
-			// OP1->DSR
-			// OP2->CTS
-
-			if (data & MCR_RTS_MASK)
-				param |= MSR_CD_MASK;
-			if (data & MCR_DTR_MASK)
-				param |= MSR_RI_MASK;
-			if (data & MCR_OP1_MASK)
-				param |= MSR_DSR_MASK;
-			if (data & MCR_OP2_MASK)
-				param |= MSR_CTS_MASK;
-
-			changeMSR_Loopback (param);
-
-		} else {
-			MCR = data;
-			updateModemControlLines ();
-			// is switched off now
+	if (temp_loopback) {	// is on:
+		// DTR->DSR
+		// RTS->CTS
+		// OP1->RI
+		// OP2->CD
+		if(temp_dtr!=dtr && !d_dsr) {
+			d_dsr=true;
+			rise (MSR_PRIORITY);
+		}
+		if(temp_rts!=rts && !d_cts) {
+			d_cts=true;
+			rise (MSR_PRIORITY);
+		}
+		if(temp_op1!=op1 && !d_ri) {
+			// interrupt only at trailing edge
+			if(!temp_op1) {
+				d_ri=true;
+				rise (MSR_PRIORITY);
+			}
+		}
+		if(temp_op2!=op2 && !d_cd) {
+			d_cd=true;
+			rise (MSR_PRIORITY);
+		}
 	} else {
-		if (data & MCR_LOOPBACK_Enable_MASK) {	// is switched on:
-			Bit8u par = 0;
-			if (data & MCR_RTS_MASK)
-				par |= MSR_CD_MASK;
-			if (data & MCR_DTR_MASK)
-				par |= MSR_RI_MASK;
-			if (data & MCR_OP1_MASK)
-				par |= MSR_DSR_MASK;
-			if (data & MCR_OP2_MASK)
-				par |= MSR_CTS_MASK;
+		// loopback is off
+		if(temp_rts!=rts) {
+			// RTS difference
+			if(temp_dtr!=dtr) {
+				// both difference
 
-			changeMSR_Loopback (par);
+#if SERIAL_DEBUG
+			if(dbg_modemcontrol)
+			{
+				fprintf(debugfp,temp_rts?"%12.3f RTS on.\r\n":
+									"%12.3f RTS off.\r\n", PIC_FullIndex());
+				fprintf(debugfp,temp_dtr?"%12.3f DTR on.\r\n":
+									"%12.3f DTR off.\r\n", PIC_FullIndex());
+			}
+#endif
+				setRTSDTR(temp_rts, temp_dtr);
+			} else {
+				// only RTS
 
-			// go back to empty state
-			LSR &= (LSR_TX_EMPTY_MASK | LSR_TX_HOLDING_EMPTY_MASK);
+#if SERIAL_DEBUG
+			if(dbg_modemcontrol)
+				fprintf(debugfp,temp_rts?"%12.3f RTS on.\r\n":"%12.3f RTS off.\r\n", PIC_FullIndex());
+#endif
 
-		} else {
-			MCR = data;
-			updateModemControlLines ();
-			// loopback is off
+				setRTS(temp_rts);
+			}
+		} else if(temp_dtr!=dtr) {
+			// only DTR
+#if SERIAL_DEBUG
+			if(dbg_modemcontrol)
+				fprintf(debugfp,temp_dtr?"%12.3f DTR on.\r\n":"%12.3f DTR off.\r\n", PIC_FullIndex());
+#endif
+			setDTR(temp_dtr);
 		}
 	}
-	MCR = data;
+	dtr=temp_dtr;
+	rts=temp_rts;
+	op1=temp_op1;
+	op2=temp_op2;
+	loopback=temp_loopback;
 }
 
 /*****************************************************************************/
@@ -581,19 +762,14 @@ Bitu CSerial::Read_LSR () {
 	Bitu retval = LSR;
 	LSR &= (~LSR_ERROR_MASK);			// clear error bits on read
 	clear (ERROR_PRIORITY);
-
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from LSR value 0x%x", base, retval);
-#endif
 	return retval;
 }
 
 void CSerial::Write_MSR (Bit8u val) {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Write to MSR, value 0x%x", base, val);
-#endif
-	MSR &= MSR_LINE_MASK;
-	MSR |= val & MSR_delta_MASK;
+	d_cts = (val&MSR_dCTS_MASK)?true:false;
+	d_dsr = (val&MSR_dDSR_MASK)?true:false;
+	d_cd = (val&MSR_dCD_MASK)?true:false;
+	d_ri = (val&MSR_dRI_MASK)?true:false;
 }
 
 /*****************************************************************************/
@@ -605,17 +781,36 @@ void CSerial::Write_MSR (Bit8u val) {
 // - real values
 // - write operation to MCR in loopback mode
 Bitu CSerial::Read_MSR () {
-	Bit8u retval;
-	if (!(MCR & MCR_LOOPBACK_Enable_MASK)) {
-		updateMSR ();
+	Bit8u retval=0;
+	
+	if (loopback) {
+		
+		if (rts) retval |= MSR_CTS_MASK;
+		if (dtr) retval |= MSR_DSR_MASK;
+		if (op1) retval |= MSR_RI_MASK;
+		if (op2) retval |= MSR_CD_MASK;
+	
+	} else {
+
+		updateMSR();
+		if (cd) retval |= MSR_CD_MASK;
+		if (ri) retval |= MSR_RI_MASK;
+		if (dsr) retval |= MSR_DSR_MASK;
+		if (cts) retval |= MSR_CTS_MASK;
+	
 	}
-	retval = MSR;
+	// new delta flags
+	if(d_cd) retval|=MSR_dCD_MASK;
+	if(d_ri) retval|=MSR_dRI_MASK;
+	if(d_cts) retval|=MSR_dCTS_MASK;
+	if(d_dsr) retval|=MSR_dDSR_MASK;
+	
+	d_cd = false;
+	d_ri = false;
+	d_cts = false;
+	d_dsr = false;
+	
 	clear (MSR_PRIORITY);
-	// clear deltas
-	MSR &= MSR_LINE_MASK;
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from MSR value 0x%x", base, retval);
-#endif
 	return retval;
 }
 
@@ -624,16 +819,10 @@ Bitu CSerial::Read_MSR () {
 /*****************************************************************************/
 // Just a memory register. Not much to do here.
 Bitu CSerial::Read_SPR () {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Read from SPR value 0x%x", base, SPR);
-#endif
 	return SPR;
 }
 
 void CSerial::Write_SPR (Bit8u data) {
-#ifdef SERIALPORT_DEBUGMSG
-	LOG_UART ("Serial port at %x: Write to SPR value 0x%x", base, data);
-#endif
 	SPR = data;
 }
 
@@ -641,96 +830,100 @@ void CSerial::Write_SPR (Bit8u data) {
 /* Write_reserved                                                           **/
 /*****************************************************************************/
 void CSerial::Write_reserved (Bit8u data, Bit8u address) {
-	LOG_UART("Serial port at %x: Write to reserved register, value 0x%x, register %x", base, data, address);
-}
-
-/*****************************************************************************/
-/* Loopback: add byte to loopback buffer; it is received next time Timer    **/
-/* function is invoked; (time needed is not emulated correctly, but I don't **/
-/* think this is sooooo important....)                                      **/
-/*****************************************************************************/
-void CSerial::transmitLoopbackByte (Bit8u val) {
-	//LOG_MSG("Serial port at %x: Loopback requested", base);
-	loopback_pending = true;
-	loopback_data = val;
+	/*LOG_UART("Serial%d: Write to reserved register, value 0x%x, register %x",
+		COMNUMBER, data, address);*/
 }
 
 /*****************************************************************************/
 /* MCR Access: returns cirquit state as boolean.                            **/
 /*****************************************************************************/
 bool CSerial::getDTR () {
-	return (MCR & MCR_DTR_MASK) != 0;
+	if(loopback) return false;
+	else return dtr;
 }
 
 bool CSerial::getRTS () {
-	return (MCR & MCR_RTS_MASK) != 0;
+	if(loopback) return false;
+	else return rts;
 }
 
 /*****************************************************************************/
 /* MSR Access                                                               **/
 /*****************************************************************************/
 bool CSerial::getRI () {
-	return (MSR & MSR_RI_MASK) != 0;
+	return ri;
 }
 
 bool CSerial::getCD () {
-	return (MSR & MSR_CD_MASK) != 0;
+	return cd;
 }
 
 bool CSerial::getDSR () {
-	return (MSR & MSR_DSR_MASK) != 0;
+	return dsr;
 }
 
 bool CSerial::getCTS () {
-	return (MSR & MSR_CTS_MASK) != 0;
+	return cts;
 }
 
-// these give errors if invoked while loopback mode... but who cares.
 void CSerial::setRI (bool value) {
-	bool compare = ((MSR & MSR_RI_MASK) != 0);
-	if (value != compare) {
-		if (value)
-			MSR |= MSR_RI_MASK;
-		else
-			MSR &= (~MSR_RI_MASK);
-		MSR |= MSR_dRI_MASK;
-		rise (MSR_PRIORITY);
+	if (value != ri) {
+
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,value?"%12.3f RI  on.\r\n":"%12.3f RI  off.\r\n", PIC_FullIndex());
+#endif
+		// don't change delta when in loopback mode
+		ri=value;
+		if(!loopback) {
+            if(value==false) d_ri=true;
+			rise (MSR_PRIORITY);
+		}
 	}
 	//else no change
 }
 void CSerial::setDSR (bool value) {
-	bool compare = ((MSR & MSR_DSR_MASK) != 0);
-	if (value != compare) {
-		if (value)
-			MSR |= MSR_DSR_MASK;
-		else
-			MSR &= (~MSR_DSR_MASK);
-		MSR |= MSR_dDSR_MASK;
-		rise (MSR_PRIORITY);
+	if (value != dsr) {
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,value?"%12.3f DSR on.\r\n":"%12.3f DSR off.\r\n", PIC_FullIndex());
+#endif
+		// don't change delta when in loopback mode
+		dsr=value;
+		if(!loopback) {
+            d_dsr=true;
+			rise (MSR_PRIORITY);
+		}
 	}
 	//else no change
 }
 void CSerial::setCD (bool value) {
-	bool compare = ((MSR & MSR_CD_MASK) != 0);
-	if (value != compare) {
-		if (value)
-			MSR |= MSR_CD_MASK;
-		else
-			MSR &= (~MSR_CD_MASK);
-		MSR |= MSR_dCD_MASK;
-		rise (MSR_PRIORITY);
+	if (value != cd) {
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,value?"%12.3f CD  on.\r\n":"%12.3f CD  off.\r\n", PIC_FullIndex());
+#endif
+		// don't change delta when in loopback mode
+		cd=value;
+		if(!loopback) {
+            d_cd=true;
+			rise (MSR_PRIORITY);
+		}
 	}
 	//else no change
 }
 void CSerial::setCTS (bool value) {
-	bool compare = ((MSR & MSR_CTS_MASK) != 0);
-	if (value != compare) {
-		if (value)
-			MSR |= MSR_CTS_MASK;
-		else
-			MSR &= (~MSR_CTS_MASK);
-		MSR |= MSR_dCTS_MASK;
-		rise (MSR_PRIORITY);
+	if (value != cts) {
+#if SERIAL_DEBUG
+		if(dbg_modemcontrol)
+			fprintf(debugfp,value?"%12.3f CTS on.\r\n":"%12.3f CTS off.\r\n", PIC_FullIndex());
+#endif
+		// don't change delta when in loopback mode
+		cts=value;
+		if(!loopback) {
+            d_cts=true;
+			rise (MSR_PRIORITY);
+		}
 	}
 	//else no change
 }
@@ -738,8 +931,16 @@ void CSerial::setCTS (bool value) {
 /*****************************************************************************/
 /* Initialisation                                                           **/
 /*****************************************************************************/
-void CSerial::Init_Registers (Bit32u initbps, Bit8u bytesize, 
-                              const char *parity, Bit8u stopbits) {
+void CSerial::Init_Registers () {
+	// The "power on" settings
+	irq_active=false;
+	waiting_interrupts = 0x0;
+
+	Bit32u initbps = 9600;
+	Bit8u bytesize = 8;
+    char parity = 'N';
+	Bit8u stopbits = 1;
+							  
 	Bit8u lcrresult = 0;
 	Bit16u baudresult = 0;
 
@@ -748,20 +949,27 @@ void CSerial::Init_Registers (Bit32u initbps, Bit8u bytesize,
 	IER = 0;
 	ISR = 0x1;
 	LCR = 0;
-	MCR = 0;
+	//MCR = 0xff;
+	loopback;
+	dtr=true;
+	rts=true;
+	op1=true;
+	op2=true;
+
+
 	LSR = 0x60;
-	MSR = 0;
+	d_cts = true;	
+	d_dsr = true;	
+	d_ri = true;
+	d_cd = true;	
+	cts = true;	
+	dsr = true;	
+	ri = true;	
+	cd = true;	
 
 	SPR = 0xFF;
 
-	DLL = 0x0;
-	DLM = 0x0;
-
-	pending_interrupts = 0x0;
-	current_priority = 0x0;
-	waiting_interrupts = 0x0;
-	loopback_pending = false;
-
+	baud_divider=0x0;
 
 	// make lcr: byte size, parity, stopbits, baudrate
 
@@ -774,313 +982,259 @@ void CSerial::Init_Registers (Bit32u initbps, Bit8u bytesize,
 	else
 		lcrresult |= LCR_DATABITS_8;
 
-	if (parity[0] == 'O' || parity[0] == 'o')
-		lcrresult |= LCR_PARITY_ODD;
-	else if (parity[0] == 'E' || parity[0] == 'e')
-		lcrresult |= LCR_PARITY_EVEN;
-	else if (parity[0] == 'M' || parity[0] == 'm')
-		lcrresult |= LCR_PARITY_MARK;
-	else if (parity[0] == 'S' || parity[0] == 's')
-		lcrresult |= LCR_PARITY_SPACE;
-	else
+	switch(parity)
+	{
+	case 'N':
+	case 'n':
 		lcrresult |= LCR_PARITY_NONE;
-
-	if (stopbits == 2)
-		lcrresult |= LCR_STOPBITS_MORE_THAN_1;
-	else
-		lcrresult |= LCR_STOPBITS_1;
+		break;
+	case 'O':
+	case 'o':
+		lcrresult |= LCR_PARITY_ODD;
+		break;
+	case 'E':
+	case 'e':
+		lcrresult |= LCR_PARITY_EVEN;
+		break;
+	case 'M':
+	case 'm':
+		lcrresult |= LCR_PARITY_MARK;
+		break;
+	case 'S':
+	case 's':
+		lcrresult |= LCR_PARITY_SPACE;
+		break;
+	}
 
 	// baudrate
-
 	if (initbps > 0)
 		baudresult = (Bit16u) (115200 / initbps);
 	else
 		baudresult = 12;			// = 9600 baud
 
+	Write_MCR (0);
 	Write_LCR (LCR_DIVISOR_Enable_MASK);
 	Write_THR ((Bit8u) baudresult & 0xff);
 	Write_IER ((Bit8u) (baudresult >> 8));
 	Write_LCR (lcrresult);
+	updateMSR();
+	Read_MSR();
 }
 
-CSerial::CSerial(IO_ReadHandler * rh, IO_WriteHandler * wh, TIMER_TickHandler,
-                 Bit16u initbase, Bit8u initirq, Bit32u initbps, Bit8u bytesize, 
-                 const char *parity, Bit8u stopbits) {
-	base = initbase;
-	irq = initirq;
-	TimerHnd = NULL;
-	//TimerHnd = th;				// for destructor
-	//TIMER_AddTickHandler(TimerHnd);
+CSerial::CSerial(Bitu id, CommandLine* cmd) {
+
+#if SERIAL_DEBUG
+	dbg_serialtraffic = cmd->FindExist("dbgtr", false);
+	dbg_modemcontrol  = cmd->FindExist("dbgmd", false);
+	dbg_register      = cmd->FindExist("dbgreg", false);
+	dbg_interrupt     = cmd->FindExist("dbgirq", false);
+	dbg_aux			  = cmd->FindExist("dbgaux", false);
+
+
+	if(dbg_serialtraffic|dbg_modemcontrol|dbg_register|dbg_interrupt|dbg_aux)
+		debugfp=OpenCaptureFile("serlog",".serlog.txt");
+	else debugfp=0;
+
+#endif
+
+
+
+	idnumber=id;
+	mydosdevice=new device_COM(this);
+	DOS_AddDevice(mydosdevice);
+	Bit16u base = serial_baseaddr[id];
+	fifo_warn=false;
+
+	errormsg_pending=false;
+	framingErrors=0;
+	parityErrors=0;
+	overrunErrors=0;
+	overrunIF0=0;
+	breakErrors=0;
+	
+	// find the IRQ
+	irq = serial_defaultirq[id];
+	getBituSubstring("irq:",&irq, cmd);
+	if (irq < 2 || irq > 15) irq = serial_defaultirq[id];
+
 
 	for (Bitu i = 0; i <= 7; i++) {
-		WriteHandler[i].Install (i + base, wh, IO_MB);
-		ReadHandler[i].Install (i + base, rh, IO_MB);
+		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
+		ReadHandler[i].Install (i + base, SERIAL_Read, IO_MB);
 	}
+
+#if SERIAL_DEBUG
+	if(debugfp) fprintf(debugfp,"COM%d: BASE %3x, IRQ %d\r\n\r\n",
+		COMNUMBER,base,irq);
+#endif
 };
+
+bool CSerial::getBituSubstring(const char* name,Bitu* data, CommandLine* cmd) {
+	std::string tmpstring;
+	if(!(cmd->FindStringBegin(name,tmpstring,false))) return false;
+	const char* tmpchar=tmpstring.c_str();
+	if(sscanf(tmpchar,"%u",data)!=1) return false;
+	return true;
+}
 
 CSerial::~CSerial(void) {
-	
-	if(TimerHnd) TIMER_DelTickHandler(TimerHnd);
+	DOS_DelDevice(mydosdevice);
+	for(Bitu i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
+		removeEvent(i);
 };
-
-void CSerial::InstallTimerHandler(TIMER_TickHandler th)
-{
-	if(TimerHnd==NULL) {
-		TimerHnd=th;	
-		TIMER_AddTickHandler(th);
-	}
-}
-
-bool getParameter(char *input, char *buffer, const char *parametername,
-                  Bitu buffersize) {
-	Bitu outputPos = 0;
-	Bitu currentState = 0;				// 0 = before '=' 1 = after '=' 2 = in word
-	Bitu startInputPos;
-	Bitu inputPos;
-	char *res1 = strstr(input, parametername);
-	if (res1 == 0)
-		return false;
-	inputPos = res1 - input;
-	inputPos += strlen (parametername);
-	startInputPos = inputPos;
-	while (input[inputPos] != 0 && outputPos + 2 < buffersize) {
-		if (currentState == 0) {
-			if (input[inputPos] == ' ')
-				inputPos++;
-			else if (input[inputPos] == ':') {
-				currentState = 1;
-				inputPos++;
-			} else
-				return false;
-		} else if (currentState == 1) {
-			if (input[inputPos] == ' ')
-				inputPos++;
-			else {
-				currentState = 2;
-				buffer[outputPos] = input[inputPos];
-				outputPos++;
-				inputPos++;
-			}
-
-		} else {
-			if (input[inputPos] == ' ') {
-				buffer[outputPos] = 0;
-				return true;
-			} else {
-				buffer[outputPos] = input[inputPos];
-				outputPos++;
-				inputPos++;
-			}
-		}
-	}
-	buffer[outputPos] = 0;
-	if (inputPos == startInputPos)
-		return false;
-	return true;
-}
-
-// functions for parsing the config line
-bool scanNumber (char *scan, Bitu * retval) {
-	*retval = 0;
-
-	while (char c = *scan) {
-		if (c >= '0' && c <= '9') {
-			*retval *= 10;
-			*retval += c - '0';
-			scan++;
-		} else
+bool CSerial::Getchar(Bit8u* data, bool wait_dsr, Bitu timeout) {
+	
+	double starttime=PIC_FullIndex();
+	// wait for it to become empty
+	// wait for DSR on
+	if(wait_dsr) {
+		while((!(Read_MSR()&0x20))&&(starttime>PIC_FullIndex()-timeout))
+			CALLBACK_Idle();
+		if(!(starttime>PIC_FullIndex()-timeout)) {
+			#if SERIAL_DEBUG
+if(dbg_aux)
+		fprintf(debugfp,"%12.3f API read timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
+#endif
 			return false;
+		}
 	}
+	// wait for a byte to arrive
+	while((!(Read_LSR()&0x1))&&(starttime>PIC_FullIndex()-timeout))
+		CALLBACK_Idle();
+	
+	if(!(starttime>PIC_FullIndex()-timeout)) {
+		#if SERIAL_DEBUG
+if(dbg_aux)
+		fprintf(debugfp,"%12.3f API read timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
+#endif
+		return false;
+	}
+
+
+	*data=Read_RHR();
+
+#if SERIAL_DEBUG
+	if(dbg_aux)
+		fprintf(debugfp,"%12.3f API read success: 0x%x\r\n", PIC_FullIndex(),*data);
+#endif
+
 	return true;
 }
 
-bool getFirstWord (char *input, char *buffer, Bitu buffersize) {
-	Bitu outputPointer = 0;
-	Bitu currentState = 0;				// 0 = scanning spaces 1 = in word
-	Bitu currentPos = 0;
-	while (input[currentPos] != 0 && outputPointer + 2 < buffersize) {
-		if (currentState == 0) {
-			if (input[currentPos] != ' ') {
-				currentState = 1;
-				buffer[outputPointer] = input[currentPos];
-				outputPointer++;
-			}
-		} else {
-			if (input[currentPos] == ' ') {
-				buffer[outputPointer] = 0;
-				return true;
-			} else {
-				buffer[outputPointer] = input[currentPos];
-				outputPointer++;
-			}
-		}
-		currentPos++;
-	}
-	buffer[outputPointer] = 0;		// end of string
-	if (currentState == 0)
-		return false;
-	else
-		return true;
-}
 
-void BIOS_SetComPorts (Bit16u baseaddr[]);
+bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
+	
+	double starttime=PIC_FullIndex();
+	//Bit16u starttime=
+	// wait for it to become empty
+	while(!(LSR&0x20)) {
+		CALLBACK_Idle();
+	}
+	// wait for DSR+CTS on
+	if(wait_dsr||wait_cts) {
+		if(wait_dsr||wait_cts) {
+			while(((Read_MSR()&0x30)!=0x30)&&(starttime>PIC_FullIndex()-timeout))
+				CALLBACK_Idle();
+		} else if(wait_dsr) {
+			while(!(Read_MSR()&0x20)&&(starttime>PIC_FullIndex()-timeout))
+				CALLBACK_Idle();
+		} else if(wait_cts) {
+			while(!(Read_MSR()&0x10)&&(starttime>PIC_FullIndex()-timeout))
+				CALLBACK_Idle();
+
+		} 
+		if(!(starttime>PIC_FullIndex()-timeout)) {
+#if SERIAL_DEBUG
+			if(dbg_aux)
+				fprintf(debugfp,"%12.3f API write timeout: MSR 0x%x\r\n",
+					PIC_FullIndex(),Read_MSR());
+#endif
+			return false;
+		}
+	}
+	Write_THR(data);
+
+#if SERIAL_DEBUG
+	if(dbg_aux)
+		fprintf(debugfp,"%12.3f API write success: 0x%x\r\n", PIC_FullIndex(),data);
+#endif
+
+	return true;
+}
 
 class SERIALPORTS:public Module_base {
 public:
-	CSerial ** serialPortObjects[4];
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
-		// put handlers into arrays
-		IO_ReadHandler *serialReadHandlers[] = {
-			&SERIAL1_Read, &SERIAL2_Read, &SERIAL3_Read, &SERIAL4_Read
-		};
-		IO_WriteHandler *serialWriteHandlers[] = {
-			&SERIAL1_Write, &SERIAL2_Write, &SERIAL3_Write, &SERIAL4_Write
-		};
-		TIMER_TickHandler serialTimerHandlers[] = {
-			&SERIAL1_Update, &SERIAL2_Update, &SERIAL3_Update, &SERIAL4_Update
-		};
-
-		// default ports & interrupts
-		Bit16u addresses[] = { COM1_BASE, COM2_BASE, COM3_BASE, COM4_BASE };
-		Bit8u defaultirq[] = { 4, 3, 4, 3 };
+		
 		Bit16u biosParameter[4] = { 0, 0, 0, 0 };
 		Section_prop *section = static_cast <Section_prop*>(configuration);
-		char tmpbuffer[15];
 
-		const char *configstringsconst[4] = {
+		const char *configstrings[4] = {
 			section->Get_string ("serial1"),
 			section->Get_string ("serial2"),
 			section->Get_string ("serial3"),
 			section->Get_string ("serial4")
 		};
-		/* Create copies so they can be modified */
-		char *configstrings[4] = { 0 };
-		for(Bitu i = 0;i < 4;i++) {
-			size_t len = strlen(configstringsconst[i]);
-			configstrings[i] = new char[len+1];
-			strcpy(configstrings[i],configstringsconst[i]);
-			configstrings[i] = upcase(configstrings[i]);
-		}
-	
-		serialPortObjects[0] = &serial1;
-		serialPortObjects[1] = &serial2;
-		serialPortObjects[2] = &serial3;
-		serialPortObjects[3] = &serial4;
-
 		// iterate through all 4 com ports
 		for (Bitu i = 0; i < 4; i++) {
-			Bit16u baseAddress = addresses[i];
-			Bitu irq = defaultirq[i];
-			Bitu bps = 9600;
-			Bitu bytesize = 8;
-			Bitu stopbits = 1;
-			char parity = 'N';
-			biosParameter[i] = baseAddress;
+			biosParameter[i] = serial_baseaddr[i];
 
-			// parameter: irq
-			if (getParameter(configstrings[i], tmpbuffer, "IRQ", sizeof (tmpbuffer))) {
-				if (scanNumber (tmpbuffer, &irq)) {
-					if (irq < 0 || irq == 2 || irq > 15)
-						irq = defaultirq[i];
-				} else
-					irq = defaultirq[i];
+			CommandLine* cmd;
+			std::string str;
+			cmd=new CommandLine(0,configstrings[i]);
+			cmd->FindCommand(1,str);
+			
+			if(!str.compare("dummy")) {
+				serialports[i] = new CSerialDummy (i, cmd);
 			}
-			// parameter: bps
-			if (getParameter(configstrings[i], tmpbuffer, "STARTBPS", sizeof (tmpbuffer))) {
-				if (scanNumber (tmpbuffer, &bps)) {
-					if (bps <= 0)
-						bps = 9600;
-				} else
-					bps = 9600;
-			}
-			// parameter: bytesize
-			if (getParameter(configstrings[i], tmpbuffer, "BYTESIZE", sizeof (tmpbuffer))) {
-				if (scanNumber (tmpbuffer, &bytesize)) {
-					if (bytesize < 5 || bytesize > 8)
-						bytesize = 8;
-				} else
-					bytesize = 8;
-			}
-			// parameter: stopbits
-			if (getParameter(configstrings[i], tmpbuffer, "STOPBITS", sizeof (tmpbuffer))) {
-				if (scanNumber (tmpbuffer, &stopbits)) {
-					if (stopbits < 1 || stopbits > 2)
-						stopbits = 1;
-				} else
-					stopbits = 1;
-			}
-			// parameter: parity
-			if (getParameter(configstrings[i], tmpbuffer, "PARITY", sizeof (tmpbuffer))) {
-				if (!(tmpbuffer[0] == 'N' || tmpbuffer[0] == 'O' || tmpbuffer[0] == 'E'
-				    || tmpbuffer[0] == 'M' || tmpbuffer[0] == 'S'))
-					tmpbuffer[0] = 'N';
-				parity = tmpbuffer[0];
-			}
-			//LOG_MSG("COM%d: %s",i+1,configstrings[i]);
-			if (getFirstWord (configstrings[i], tmpbuffer, sizeof (tmpbuffer))) {
-				//LOG_MSG("COM%d: %s",i+1,tmpbuffer);
-				if (!strcmp (tmpbuffer, "DUMMY")) {
-					*serialPortObjects[i] = new CSerialDummy (serialReadHandlers[i], serialWriteHandlers[i],serialTimerHandlers[i], baseAddress, irq, bps,bytesize, &parity, stopbits);
-				}
 #ifdef DIRECTSERIAL_AVAILIBLE
-				else if (!strcmp (tmpbuffer, "DIRECTSERIAL")) {
-					// parameter: realport
-					if (getParameter (configstrings[i], tmpbuffer, "REALPORT", sizeof (tmpbuffer))) {	// realport is required
-						CDirectSerial *cdstemp = new CDirectSerial (serialReadHandlers[i], serialWriteHandlers[i], serialTimerHandlers[i], baseAddress, irq, bps,bytesize, &parity,stopbits,tmpbuffer);
-
-						if (cdstemp->InstallationSuccessful) {
-							*serialPortObjects[i] = cdstemp;
-						} else {	// serial port name was wrong or already in use
-							delete cdstemp;
-							*serialPortObjects[i] = NULL;
-							biosParameter[i] = 0;
-						}
-
-					} else {
-						*serialPortObjects[i] = NULL;
-						biosParameter[i] = 0;
-					}
+			else if(!str.compare("directserial")) {
+				serialports[i] = new CDirectSerial (i, cmd);
+				if (!serialports[i]->InstallationSuccessful)  {
+					// serial port name was wrong or already in use
+					delete serialports[i];
+					serialports[i] = NULL;
+					biosParameter[i] = 0;
 				}
+			}
 #endif
+
 #if C_MODEM
-				else if (!strcmp (tmpbuffer, "MODEM")) {
-					Bitu listenport = 23;
-					// parameter: listenport
-					if (getParameter(configstrings[i], tmpbuffer, "LISTENPORT", sizeof (tmpbuffer))) {
-						if (scanNumber (tmpbuffer, &listenport)) {
-							if (listenport <= 0 || listenport > 65535)
-								listenport = 23;
-						} else
-							listenport = 23;
-					}
-
-					*serialPortObjects[i] = new CSerialModem (serialReadHandlers[i], serialWriteHandlers[i], serialTimerHandlers[i], baseAddress, irq, bps,bytesize, &parity, stopbits, 0, listenport);
+			else if(!str.compare("modem")) {
+				serialports[i] = new CSerialModem (i, cmd);
+				if (!serialports[i]->InstallationSuccessful)  {
+					delete serialports[i];
+					serialports[i] = NULL;
+					biosParameter[i] = 0;
 				}
+			}
+			else if(!str.compare("nullmodem")) {
+				serialports[i] = new CNullModem (i, cmd);
+				if (!serialports[i]->InstallationSuccessful)  {
+					delete serialports[i];
+					serialports[i] = NULL;
+					biosParameter[i] = 0;
+				}
+			}
 #endif
-				else if (!strcmp (tmpbuffer, "DISABLED")) {
-					*serialPortObjects[i] = NULL;
-					biosParameter[i] = 0;
-				} else {
-					LOG_MSG ("Invalid type for COM%d.", i + 1);
-					*serialPortObjects[i] = NULL;
-					biosParameter[i] = 0;
-				}
+			else if(!str.compare("disabled")) {
+				serialports[i] = NULL;
+				biosParameter[i] = 0;
 			} else {
-				*serialPortObjects[i] = NULL;
+				LOG_MSG ("Invalid type for COM%d.", i + 1);
+				serialports[i] = NULL;
 				biosParameter[i] = 0;
 			}
-		}
-
-		delete [] configstrings[0];delete [] configstrings[1];
-		delete [] configstrings[2];delete [] configstrings[3];
+			delete cmd;
+		} // for
 		BIOS_SetComPorts (biosParameter);
 	}
 
 	~SERIALPORTS () {
 		for (Bitu i = 0; i < 4; i++)
-			if (*serialPortObjects[i]) {
-				delete *(serialPortObjects[i]);
-				*(serialPortObjects[i]) = 0;
+			if (serialports[i]) {
+				delete serialports[i];
+				serialports[i] = 0;
 			}
 	}
 };

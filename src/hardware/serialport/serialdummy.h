@@ -16,39 +16,34 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialdummy.h,v 1.3 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: serialdummy.h,v 1.4 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #ifndef INCLUDEGUARD_SERIALDUMMY_H
 #define INCLUDEGUARD_SERIALDUMMY_H
 
 #include "serialport.h"
 
+//#define CHECKIT_TESTPLUG
+
 class CSerialDummy : public CSerial {
 public:
-	
-	CSerialDummy(
-		IO_ReadHandler* rh,
-		IO_WriteHandler* wh,
-		TIMER_TickHandler th,
-		Bit16u baseAddr,
-		Bit8u initIrq,
-		Bit32u initBps,
-		Bit8u bytesize,
-		const char* parity,
-		Bit8u stopbits
-		);
-
-
+	CSerialDummy(Bitu id, CommandLine* cmd);
 	~CSerialDummy();
-	bool CanRecv(void);
-	bool CanSend(void);
-	void RXBufferEmpty();
-	void updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr);
+
+	void setRTSDTR(bool rts, bool dtr);
+	void setRTS(bool val);
+	void setDTR(bool val);
+
+	void updatePortConfig(Bit16u, Bit8u lcr);
 	void updateMSR();
-	void transmitByte(Bit8u val);
+	void transmitByte(Bit8u val, bool first);
 	void setBreak(bool value);
-	void updateModemControlLines(/*Bit8u mcr*/);
-	void Timer2(void);
+	void handleUpperEvent(Bit16u type);
+
+#ifdef CHECKIT_TESTPLUG
+	Bit8u loopbackdata;
+#endif
+
 };
 
 #endif // INCLUDEGUARD

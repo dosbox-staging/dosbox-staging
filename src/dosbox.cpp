@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.110 2007-01-11 16:47:10 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.111 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -428,12 +428,13 @@ void DOSBOX_Init(void) {
 	secprop->Add_string("serial4","disabled");
 	MSG_Add("SERIAL_CONFIGFILE_HELP",
 	        "serial1-4 -- set type of device connected to com port.\n"
-	        "             Can be disabled, dummy, modem, directserial.\n"
+	        "             Can be disabled, dummy, modem, nullmodem, directserial.\n"
 	        "             Additional parameters must be in the same line in the form of\n"
-	        "             parameter:value. Parameters for all types are irq, startbps, bytesize,\n"
-	        "             stopbits, parity (all optional).\n"
-	        "             for directserial: realport (required).\n"
+	        "             parameter:value. Parameter for all types is irq.\n"
+	        "             for directserial: realport (required), rxdelay (optional).\n"
 	        "             for modem: listenport (optional).\n"
+	        "             for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
+	        "                            transparent, port, inhsocket (all optional).\n"
 	        "             Example: serial1=modem listenport:5000\n"
 	);
 

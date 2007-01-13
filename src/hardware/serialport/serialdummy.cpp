@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialdummy.cpp,v 1.3 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: serialdummy.cpp,v 1.4 2007-01-13 08:35:49 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -24,46 +24,54 @@
 #include "serialdummy.h"
 #include "serialport.h"
 
-	
-CSerialDummy::CSerialDummy(
-					IO_ReadHandler* rh,
-					IO_WriteHandler* wh,
-					TIMER_TickHandler th, 
-					Bit16u baseAddr,
-					Bit8u initIrq,
-					Bit32u initBps,
-					Bit8u bytesize,
-					const char* parity,
-					Bit8u stopbits
-		) : CSerial(
-				rh, wh, th,
-				baseAddr,initIrq,initBps,bytesize,parity,stopbits)
-	{
-		CSerial::Init_Registers(initBps,bytesize,parity,stopbits);
-	}
-
-CSerialDummy::~CSerialDummy() {
+CSerialDummy::CSerialDummy(Bitu id,	CommandLine* cmd):CSerial(id, cmd) {
+	CSerial::Init_Registers();
+	setRI(false);
+	setDSR(false);
+	setCD(false);
+	setCTS(false);
+	InstallationSuccessful=true;
 }
 
-void CSerialDummy::RXBufferEmpty() {
-// no external buffer, not used here
+CSerialDummy::~CSerialDummy() {
+	// clear events
+	removeEvent(SERIAL_TX_EVENT);
+}
+
+void CSerialDummy::handleUpperEvent(Bit16u type) {
+	if(type==SERIAL_TX_EVENT) {
+	//LOG_MSG("SERIAL_TX_EVENT");
+#ifdef CHECKIT_TESTPLUG
+		receiveByte(loopbackdata);
+#endif
+		ByteTransmitted(); // tx timeout
+	}
+	else if(type==SERIAL_THR_EVENT){
+		//LOG_MSG("SERIAL_THR_EVENT");
+		ByteTransmitting();
+		setEvent(SERIAL_TX_EVENT,bytetime);
+	}
+
 }
 
 /*****************************************************************************/
 /* updatePortConfig is called when emulated app changes the serial port     **/
 /* parameters baudrate, stopbits, number of databits, parity.               **/
 /*****************************************************************************/
-void CSerialDummy::updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr) {
+void CSerialDummy::updatePortConfig(Bit16u divider, Bit8u lcr) {
 	//LOG_MSG("Serial port at 0x%x: Port params changed: %d Baud", base,dcb.BaudRate);
 }
 
 void CSerialDummy::updateMSR() {
-	changeMSR(0);
 }
+void CSerialDummy::transmitByte(Bit8u val, bool first) {
 
-void CSerialDummy::transmitByte(Bit8u val) {
-	ByteTransmitted();
-	//LOG_MSG("UART 0x%x: TX 0x%x", base,val);
+	if(first) setEvent(SERIAL_THR_EVENT, bytetime/10); 
+	else setEvent(SERIAL_TX_EVENT, bytetime);
+
+#ifdef CHECKIT_TESTPLUG
+	loopbackdata=val;
+#endif
 }
 
 /*****************************************************************************/
@@ -75,11 +83,21 @@ void CSerialDummy::setBreak(bool value) {
 }
 
 /*****************************************************************************/
-/* updateModemControlLines(mcr) sets DTR and RTS.                           **/
+/* setRTSDTR sets the modem control lines                                   **/
 /*****************************************************************************/
-void CSerialDummy::updateModemControlLines(/*Bit8u mcr*/) {
+void CSerialDummy::setRTSDTR(bool rts, bool dtr) {
+	setRTS(rts);
+	setDTR(dtr);
 }
-	
-void CSerialDummy::Timer2(void) {	
-}	
-
+void CSerialDummy::setRTS(bool val) {
+#ifdef CHECKIT_TESTPLUG
+	setCTS(val);
+#endif
+}
+void CSerialDummy::setDTR(bool val) {
+#ifdef CHECKIT_TESTPLUG
+	setDSR(val);
+	setRI(val);
+	setCD(val);
+#endif
+}
