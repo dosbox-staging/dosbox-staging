@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.23 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.24 2007-01-13 10:43:40 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -162,6 +162,34 @@ static Bits IOFaultCore(void) {
 	return 0;
 }
 
+
+/* Some code to make io operations take some virtual time. Helps certain
+ * games with their timing of certain operations
+ */
+
+extern Bit32s CPU_CycleMax;
+
+#define IODELAY_READ_MICROS 1.0
+#define IODELAY_WRITE_MICROS 0.75
+
+inline void IO_USEC_read_delay() {
+	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
+		// this could be calculated whenever CPU_CycleMax changes
+		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
+		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
+		else CPU_Cycles = 0;
+	}
+}
+
+inline void IO_USEC_write_delay() {
+	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
+		// this could be calculated whenever CPU_CycleMax changes
+		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS); 
+		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
+		else CPU_Cycles = 0;
+	}
+}
+
 void IO_WriteB(Bitu port,Bitu val) {
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
@@ -192,7 +220,10 @@ void IO_WriteB(Bitu port,Bitu val) {
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	}
-	else io_writehandlers[0][port](port,val,1);
+	else {
+		IO_USEC_write_delay();
+		io_writehandlers[0][port](port,val,1);
+	}
 };
 
 void IO_WriteW(Bitu port,Bitu val) {
@@ -225,7 +256,10 @@ void IO_WriteW(Bitu port,Bitu val) {
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	}
-	else io_writehandlers[1][port](port,val,2);
+	else {
+		IO_USEC_write_delay();
+		io_writehandlers[1][port](port,val,2);
+	}
 };
 
 void IO_WriteD(Bitu port,Bitu val) {
@@ -291,7 +325,10 @@ Bitu IO_ReadB(Bitu port) {
 		cpudecoder=old_cpudecoder;
 		return retval;
 	}
-	else return io_readhandlers[0][port](port,1);
+	else {
+		IO_USEC_read_delay();
+		return io_readhandlers[0][port](port,1);
+	}
 };
 
 Bitu IO_ReadW(Bitu port) {
@@ -324,7 +361,10 @@ Bitu IO_ReadW(Bitu port) {
 		cpudecoder=old_cpudecoder;
 		return retval;
 	}
-	else return io_readhandlers[1][port](port,2);
+	else {
+		IO_USEC_read_delay();
+		return io_readhandlers[1][port](port,2);
+	}
 };
 
 Bitu IO_ReadD(Bitu port) {
