@@ -1,7 +1,5 @@
 #include "config.h"
 
-#include "misc_util.h"
-
 #if C_MODEM
 
 /*****************************************************************************/
@@ -23,6 +21,9 @@ typedef int	socklen_t;
 #else
 #define CAPWORD NETWRAPPER_TCP
 #endif
+
+#include "misc_util.h"
+
 
 struct _TCPsocketX {
 	int ready;

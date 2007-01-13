@@ -27,7 +27,7 @@ class TCPClientSocket {
 	TCPClientSocket(TCPsocket source);
 	TCPClientSocket(const char* destination, Bit16u port);
 #ifdef NATIVESOCKETS
-	void* nativetcpstruct;
+	Bit8u* nativetcpstruct;
 	TCPClientSocket(int platformsocket);
 #endif
 	~TCPClientSocket();
