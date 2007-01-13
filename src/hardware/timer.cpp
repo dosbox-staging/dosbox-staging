@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.41 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.42 2007-01-13 09:57:25 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -66,8 +66,9 @@ static bool latched_timerstatus_locked;
 static void PIT0_Event(Bitu /*val*/) {
 	PIC_ActivateIRQ(0);
 	if (pit[0].mode != 0) {
-		pit[0].start = PIC_FullIndex()-pit[0].delay; // resynchronize
-		PIC_AddEvent(PIT0_Event,pit[0].delay);
+		pit[0].start += pit[0].delay;
+		double error = 	pit[0].start - PIC_FullIndex();
+		PIC_AddEvent(PIT0_Event,pit[0].delay + error);
 	}
 }
 
@@ -112,6 +113,7 @@ static void status_latch(Bitu counter) {
 		else if(p->read_state==1) latched_timerstatus|=0x10;
 		else if(p->read_state==2) latched_timerstatus|=0x20;
 		if(counter_output(counter)) latched_timerstatus|=0x80;
+		if(p->new_mode) latched_timerstatus|=0x40;
 		// The first thing that is being read from this counter now is the
 		// counter status.
 		p->counterstatus_set=true;
