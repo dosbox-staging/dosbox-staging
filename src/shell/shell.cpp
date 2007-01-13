@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.80 2007-01-10 09:04:33 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.81 2007-01-13 09:58:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -456,10 +456,11 @@ void SHELL_Init() {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mDOSBox Shell v" VERSION "\033[37m                                                 \xBA\n"
-		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
+		"\xBA \033[32mWelcome to DOSBox v" VERSION "\033[37m                                            \xBA\n"
+		"\xBA                                                                    \xBA\n"
+//		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
+		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
 		"\xBA For supported shell commands type: \033[33mHELP\033[37m                            \xBA\n"
-		"\xBA For a short introduction type: \033[33mINTRO\033[37m                               \xBA\n"
 		"\xBA                                                                    \xBA\n"
 		"\xBA If you want more speed, try \033[31mctrl-F8\033[37m and \033[31mctrl-F12\033[37m.                  \xBA\n"
 		"\xBA To activate the keymapper \033[31mctrl-F1\033[37m.                                 \xBA\n"
