@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.31 2007-01-12 20:59:04 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.32 2007-01-14 18:44:01 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -26,7 +26,6 @@
 #include "dos_inc.h" /* for Drives[] */
 #include "mapper.h"
 
-#define MAX_SWAPPABLE_DISKS 20
 #define MAX_DISK_IMAGES 4
 
 diskGeo DiskGeometryList[] = {

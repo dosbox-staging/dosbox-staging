@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.64 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.65 2007-01-14 18:44:01 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -356,7 +356,7 @@ extern Bit32u floppytype;
 
 class BOOT : public Program {
 private:
-	FILE *getFSFile(Bit8u * filename, Bit32u *ksize, Bit32u *bsize) {
+	FILE *getFSFile(Bit8u * filename, Bit32u *ksize, Bit32u *bsize,bool tryload=false) {
 		Bit8u drive;
 		FILE *tmpfile;
 		char fullname[DOS_PATHLENGTH];
@@ -370,13 +370,13 @@ private:
 
 			tmpfile = ldp->GetSystemFilePtr(fullname, "r");
 			if(tmpfile == NULL) {
-				WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
+				if (!tryload) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
 				return NULL;
 			}
 			fclose(tmpfile);
 			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
 			if(tmpfile == NULL) {
-				WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+				if (!tryload) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
 				return NULL;
 			}
 
@@ -411,10 +411,14 @@ private:
 public:
    
 	void Run(void) {
-		FILE *usefile;
+		FILE *usefile_1=NULL;
+		FILE *usefile_2=NULL;
 		Bitu i; 
-		Bit32u floppysize, rombytesize;
+		Bit32u floppysize;
+		Bit32u rombytesize_1=0;
+		Bit32u rombytesize_2=0;
 		Bit8u drive;
+		std::string cart_cmd="";
 
 		if(!cmd->GetCount()) {
 			printError();
@@ -442,12 +446,33 @@ public:
 					continue;
 				}
 
+				if((temp_line == "-e") || (temp_line == "-E")) {
+					/* Command mode for PCJr cartridges */
+					i++;
+					if(cmd->FindCommand(i+1, temp_line)) {
+						for(size_t i=0;i<temp_line.size();i++) temp_line[i]=toupper(temp_line[i]);
+						cart_cmd=temp_line;
+					} else {
+						printError();
+						return;
+					}
+					i++;
+					continue;
+				}
+
 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"), temp_line.c_str());
-				usefile = getFSFile((Bit8u *)temp_line.c_str(), &floppysize, &rombytesize);
+				Bit32u rombytesize;
+				FILE *usefile = getFSFile((Bit8u *)temp_line.c_str(), &floppysize, &rombytesize);
 				if(usefile != NULL) {
 					if(diskSwap[i] != NULL) delete diskSwap[i];
 					diskSwap[i] = new imageDisk(usefile, (Bit8u *)temp_line.c_str(), floppysize, false);
-
+					if (usefile_1==NULL) {
+						usefile_1=usefile;
+						rombytesize_1=rombytesize;
+					} else {
+						usefile_2=usefile;
+						rombytesize_2=rombytesize;
+					}
 				} else {
 					WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_NOT_OPEN"), temp_line.c_str());
 					return;
@@ -471,26 +496,159 @@ public:
 		if ((bootarea.rawdata[0]==0x50) && (bootarea.rawdata[1]==0x43) && (bootarea.rawdata[2]==0x6a) && (bootarea.rawdata[3]==0x72)) {
 			if (machine!=MCH_PCJR) WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
 			else {
-				disable_umb_ems_xms();
 				Bit8u rombuf[65536];
-				fseek(usefile,0x200L, SEEK_SET);
-				fread(rombuf, 1, rombytesize-0x200, usefile);
-				fclose(usefile);
+				Bits cfound_at=-1;
+				if (cart_cmd!="") {
+					/* read cartridge data into buffer */
+					fseek(usefile_1,0x200L, SEEK_SET);
+					fread(rombuf, 1, rombytesize_1-0x200, usefile_1);
+
+					char cmdlist[1024];
+					cmdlist[0]=0;
+					Bitu ct=6;
+					Bits clen=rombuf[ct];
+					char buf[257];
+					if (cart_cmd=="?") {
+						while (clen!=0) {
+							strncpy(buf,(char*)&rombuf[ct+1],clen);
+							buf[clen]=0;
+							upcase(buf);
+							strcat(cmdlist," ");
+							strcat(cmdlist,buf);
+							ct+=1+clen+3;
+							if (ct>0x1000) break;
+							clen=rombuf[ct];
+						}
+						if (ct>6) {
+							WriteOut(MSG_Get("PROGRAM_BOOT_CART_LIST_CMDS"),cmdlist);
+						} else {
+							WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
+						}
+						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
+							if(diskSwap[dct]!=NULL) {
+								delete diskSwap[dct];
+								diskSwap[dct]=NULL;
+							}
+						}
+						fclose(usefile_1);
+						return;
+					} else {
+						while (clen!=0) {
+							strncpy(buf,(char*)&rombuf[ct+1],clen);
+							buf[clen]=0;
+							upcase(buf);
+							strcat(cmdlist," ");
+							strcat(cmdlist,buf);
+							ct+=1+clen;
+
+							if (cart_cmd==buf) {
+								cfound_at=ct;
+								break;
+							}
+
+							ct+=3;
+							if (ct>0x1000) break;
+							clen=rombuf[ct];
+						}
+						if (cfound_at<=0) {
+							if (ct>6) {
+								WriteOut(MSG_Get("PROGRAM_BOOT_CART_LIST_CMDS"),cmdlist);
+							} else {
+								WriteOut(MSG_Get("PROGRAM_BOOT_CART_NO_CMDS"));
+							}
+							for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
+								if(diskSwap[dct]!=NULL) {
+									delete diskSwap[dct];
+									diskSwap[dct]=NULL;
+								}
+							}
+							fclose(usefile_1);
+							return;
+						}
+					}
+				}
+
+				disable_umb_ems_xms();
+				void PreparePCJRCartRom(void);
+				PreparePCJRCartRom();
+
+				if (usefile_1==NULL) return;
+
+				Bit32u sz1,sz2;
+				FILE *tfile = getFSFile((Bit8u *)"system.rom", &sz1, &sz2, true);
+				if (tfile!=NULL) {
+					fseek(tfile, 0x3000L, SEEK_SET);
+					Bit32u drd=fread(rombuf, 1, 0xb000, tfile);
+					if (drd==0xb000) {
+						for(i=0;i<0xb000;i++) phys_writeb(0xfb000+i,rombuf[i]);
+					}
+					fclose(tfile);
+				}
+
+				if (usefile_2!=NULL) {
+					fseek(usefile_2, 0x0L, SEEK_SET);
+					fread(rombuf, 1, 0x200, usefile_2);
+					PhysPt romseg_pt=host_readw(&rombuf[0x1ce])<<4;
+
+					/* read cartridge data into buffer */
+					fseek(usefile_2, 0x200L, SEEK_SET);
+					fread(rombuf, 1, rombytesize_2-0x200, usefile_2);
+					fclose(usefile_2);
+
+					/* write cartridge data into ROM */
+					for(i=0;i<rombytesize_2-0x200;i++) phys_writeb(romseg_pt+i,rombuf[i]);
+				}
+
+				fseek(usefile_1, 0x0L, SEEK_SET);
+				fread(rombuf, 1, 0x200, usefile_1);
+				Bit16u romseg=host_readw(&rombuf[0x1ce]);
+
+				/* read cartridge data into buffer */
+				fseek(usefile_1,0x200L, SEEK_SET);
+				fread(rombuf, 1, rombytesize_1-0x200, usefile_1);
+				fclose(usefile_1);
 
 				/* write cartridge data into ROM */
-				Bit16u romseg=host_readw(&bootarea.rawdata[0x1ce]);
-				for(i=0;i<rombytesize;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
+				for(i=0;i<rombytesize_1-0x200;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
 
-				/* run cartridge setup */
-				SegSet16(ds,romseg);
-				SegSet16(es,romseg);
-				SegSet16(ss,0x8000);
-				reg_esp=0xfffe;
-				CALLBACK_RunRealFar(romseg,0x0003);
 
-				/* boot cartridge (int18) */
-				SegSet16(cs,mem_readw(0x62));
-				reg_ip = mem_readw(0x60);
+				if (cart_cmd=="") {
+					Bit32u old_int18=mem_readd(0x60);
+					/* run cartridge setup */
+					SegSet16(ds,romseg);
+					SegSet16(es,romseg);
+					SegSet16(ss,0x8000);
+					reg_esp=0xfffe;
+					CALLBACK_RunRealFar(romseg,0x0003);
+
+					Bit32u new_int18=mem_readd(0x60);
+					if (old_int18!=new_int18) {
+						/* boot cartridge (int18) */
+						SegSet16(cs,RealSeg(new_int18));
+						reg_ip = RealOff(new_int18);
+					} else {
+						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
+							if(diskSwap[dct]!=NULL) {
+								delete diskSwap[dct];
+								diskSwap[dct]=NULL;
+							}
+						}
+					}
+				} else {
+					if (cfound_at>0) {
+						/* run cartridge setup */
+						SegSet16(ds,dos.psp());
+						SegSet16(es,dos.psp());
+						CALLBACK_RunRealFar(romseg,cfound_at);
+					} else {
+						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
+							if(diskSwap[dct]!=NULL) {
+								delete diskSwap[dct];
+								diskSwap[dct]=NULL;
+							}
+						}
+					}
+				}
 			}
 		} else {
 			disable_umb_ems_xms();
@@ -1095,6 +1253,8 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
 	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCJr cartridge found, but machine is not PCJr");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS","Available PCJr cartridge commandos:%s");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS","No PCJr cartridge commandos found");
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");

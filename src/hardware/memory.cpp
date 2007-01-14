@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.47 2007-01-08 21:40:15 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.48 2007-01-14 18:44:01 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -496,6 +496,13 @@ static void write_p92(Bitu port,Bitu val,Bitu iolen) {
 
 static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
+}
+
+void PreparePCJRCartRom(void) {
+	/* Setup rom at 0xd0000-0xe0000 */
+	for (Bitu ct=0xd0;ct<0xe0;ct++) {
+		memory.phandlers[ct] = &rom_page_handler;
+	}
 }
 
 HostPt GetMemBase(void) { return MemBase; }

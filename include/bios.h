@@ -107,6 +107,8 @@
 /* The Section handling Bios Disk Access */
 #define BIOS_MAX_DISK 10
 
+#define MAX_SWAPPABLE_DISKS 20
+
 struct diskGeo {
 	Bit32u ksize;  /* Size in kilobytes */
 	Bit16u secttrack; /* Sectors per track */
