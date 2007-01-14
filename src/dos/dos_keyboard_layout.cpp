@@ -799,7 +799,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 		cpi_buf[found_at_pos]=0xcb;
 
 		Bit16u seg=0;
-		Bit16u size=0x2000;
+		Bit16u size=0x1500;
 		if (!DOS_AllocateMemory(&seg,&size)) E_Exit("Not enough free low memory to unpack data");
 		MEM_BlockWrite((seg<<4)+0x100,cpi_buf,size_of_cpxdata);
 
