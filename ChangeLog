@@ -12,7 +12,7 @@
   - Move some interrupt handlers to XT Bios locations.
   - Add a dynamic fpu on x86.
   - Improve fpu on non-x86.
-  - Fix a rarely used character functions.
+  - Fix a few rarely used character functions.
   - Improve auto cycle guessing code.
   - Improve and extend the joystick support.
   - Add autofire support.
@@ -24,12 +24,12 @@
   - Improve MSCDEX.
   - Improve dynamic core support under intel macs.
   - Add basic support for clipper programs.
-  - Add support for different keyboard layouts
+  - Add support for different keyboard layouts.
   - Add auto core guessing.
   - Fix a few small cpu bugs.
   - Improve soundblaster detection rate by various programs.
   - Improve EMS emulation. (allow mapping of non standard regions)
-  - Improve keyboard input codes on various OS-eses.
+  - Improve keyboard input codes on various OS-es.
   - Fix problems with filenames having stackdata in them.
   - Changed a few basic operations in DOSBox so they take emulated time.
   - Improve dos ioctl functions.
@@ -38,7 +38,7 @@
   - Improve DOS functions when dealing with virtual drive.
   - Improve FAT drives.
   - Try to reduce the impact of using an analog joystick.
-  - Make dynamic core handle certain types of self modifying code.
+  - Make dynamic core handle more types of self modifying code.
   - A few small mouse improvements. (some games are using things they
     shouldn't)
   - Add nullmodem emulation.(h-a-l-9000)
@@ -47,7 +47,8 @@
     multiple configuration files.
   - Make dynamic core capable of running some win32s programs.
   - Make soundblaster installation under windows much easier.
-  - Add device control channel handling. (GEMMIS support (ems under windows))
+  - Add device control channel handling. 
+  - GEMMIS support (ems under windows)
   - Support more colours in win 3.
   - Don't show unmounted drives in windows filemanager.
   - Many timer improvements. 
