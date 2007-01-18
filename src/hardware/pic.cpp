@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.38 2007-01-09 17:18:52 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.39 2007-01-18 14:57:59 c2woody Exp $ */
 
 #include <list>
 
@@ -453,8 +453,8 @@ bool PIC_RunQueue(void) {
 		return false;
 	}
 	/* Check the queue for an entry */
-	double index=PIC_TickIndex();
-	while (pic.next_entry && pic.next_entry->index<=index) {
+	Bits index_nd=PIC_TickIndexND();
+	while (pic.next_entry && (pic.next_entry->index*CPU_CycleMax<=index_nd)) {
 		PICEntry * entry=pic.next_entry;
 		pic.next_entry=entry->next;
 		(entry->event)(entry->value);
@@ -464,7 +464,7 @@ bool PIC_RunQueue(void) {
 	}
 	/* Check when to set the new cycle end */
 	if (pic.next_entry) {
-		Bits cycles=PIC_MakeCycles(pic.next_entry->index-index);
+		Bits cycles=(Bits)(pic.next_entry->index*CPU_CycleMax-index_nd);
 		if (!cycles) cycles=1;
 		if (cycles<CPU_CycleLeft) {
 			CPU_Cycles=cycles;

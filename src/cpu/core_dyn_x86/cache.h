@@ -28,7 +28,6 @@ public:
 	CacheBlock * crossblock;
 };
 
-class CacheBlock;
 static struct {
 	struct {
 		CacheBlock * first;
@@ -44,9 +43,11 @@ static struct {
 
 static CacheBlock link_blocks[2];
 
-class CodePageHandler :public PageHandler {
+class CodePageHandler : public PageHandler {
 public:
-	CodePageHandler() {}
+	CodePageHandler() {
+		invalidation_map=NULL;
+	}
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		phys_page=_phys_page;
 		old_pagehandler=_old_pagehandler;
@@ -56,6 +57,10 @@ public:
 		active_count=16;
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
+		if (invalidation_map!=NULL) {
+			free(invalidation_map);
+			invalidation_map=NULL;
+		}
 	}
 	bool InvalidateRange(Bitu start,Bitu end) {
 		Bits index=1+(start>>DYN_HASH_SHIFT);
@@ -81,69 +86,114 @@ public:
 	}
 	void writeb(PhysPt addr,Bitu val){
 		addr&=4095;
+		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
 		if (!*(Bit8u*)&write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
-		} else InvalidateRange(addr,addr);
+			return;
+		} else if (!invalidation_map) {
+			invalidation_map=(Bit8u*)malloc(4096);
+			memset(invalidation_map,0,4096);
+		}
+		invalidation_map[addr]++;
+		InvalidateRange(addr,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
 		addr&=4095;
+		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
 		if (!*(Bit16u*)&write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
-		} else InvalidateRange(addr,addr+1);
+			return;
+		} else if (!invalidation_map) {
+			invalidation_map=(Bit8u*)malloc(4096);
+			memset(invalidation_map,0,4096);
+		}
+		(*(Bit16u*)&invalidation_map[addr])+=0x101;
+		InvalidateRange(addr,addr+1);
 	}
 	void writed(PhysPt addr,Bitu val){
 		addr&=4095;
+		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
 		if (!*(Bit32u*)&write_map[addr]) {
 			if (active_blocks) return;
 			active_count--;
 			if (!active_count) Release();
-		} else InvalidateRange(addr,addr+3);
+			return;
+		} else if (!invalidation_map) {
+			invalidation_map=(Bit8u*)malloc(4096);
+			memset(invalidation_map,0,4096);
+		}
+		(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+		InvalidateRange(addr,addr+3);
 	}
 	bool writeb_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
+		if (host_readb(hostmem+addr)==(Bit8u)val) return false;
 		if (!*(Bit8u*)&write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
-		} else if (InvalidateRange(addr,addr)) {
-			cpu.exception.which=SMC_CURRENT_BLOCK;
-			return true;
+		} else {
+			if (!invalidation_map) {
+				invalidation_map=(Bit8u*)malloc(4096);
+				memset(invalidation_map,0,4096);
+			}
+			invalidation_map[addr]++;
+			if (InvalidateRange(addr,addr)) {
+				cpu.exception.which=SMC_CURRENT_BLOCK;
+				return true;
+			}
 		}
 		host_writeb(hostmem+addr,val);
 		return false;
 	}
 	bool writew_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
+		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		if (!*(Bit16u*)&write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
-		} else if (InvalidateRange(addr,addr+1)) {
-			cpu.exception.which=SMC_CURRENT_BLOCK;
-			return true;
+		} else {
+			if (!invalidation_map) {
+				invalidation_map=(Bit8u*)malloc(4096);
+				memset(invalidation_map,0,4096);
+			}
+			(*(Bit16u*)&invalidation_map[addr])+=0x101;
+			if (InvalidateRange(addr,addr+1)) {
+				cpu.exception.which=SMC_CURRENT_BLOCK;
+				return true;
+			}
 		}
 		host_writew(hostmem+addr,val);
 		return false;
 	}
 	bool writed_checked(PhysPt addr,Bitu val) {
 		addr&=4095;
+		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		if (!*(Bit32u*)&write_map[addr]) {
 			if (!active_blocks) {
 				active_count--;
 				if (!active_count) Release();
 			}
-		} else if (InvalidateRange(addr,addr+3)) {
-			cpu.exception.which=SMC_CURRENT_BLOCK;
-			return true;
+		} else {
+			if (!invalidation_map) {
+				invalidation_map=(Bit8u*)malloc(4096);
+				memset(invalidation_map,0,4096);
+			}
+			(*(Bit32u*)&invalidation_map[addr])+=0x1010101;
+			if (InvalidateRange(addr,addr+3)) {
+				cpu.exception.which=SMC_CURRENT_BLOCK;
+				return true;
+			}
 		}
 		host_writed(hostmem+addr,val);
 		return false;
@@ -216,6 +266,7 @@ public:
 	}
 public:
 	Bit8u write_map[4096];
+	Bit8u * invalidation_map;
 	CodePageHandler * next, * prev;
 private:
 	PageHandler * old_pagehandler;
@@ -460,7 +511,16 @@ static void cache_init(bool enable) {
 }
 
 static void cache_close(void) {
-/*	if (cache_blocks != NULL) {
+/*	for (;;) {
+		if (cache.used_pages) {
+			CodePageHandler * cpage=cache.used_pages;
+			CodePageHandler * npage=cache.used_pages->next;
+			cpage->ClearRelease();
+			delete cpage;
+			cache.used_pages=npage;
+		} else break;
+	}
+	if (cache_blocks != NULL) {
 		free(cache_blocks);
 		cache_blocks = NULL;
 	}

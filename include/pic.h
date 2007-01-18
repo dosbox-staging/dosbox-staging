@@ -40,6 +40,10 @@ INLINE float PIC_TickIndex(void) {
 	return (CPU_CycleMax-CPU_CycleLeft-CPU_Cycles)/(float)CPU_CycleMax;
 }
 
+INLINE Bits PIC_TickIndexND(void) {
+	return CPU_CycleMax-CPU_CycleLeft-CPU_Cycles;
+}
+
 INLINE Bits PIC_MakeCycles(double amount) {
 	return (Bits)(CPU_CycleMax*amount);
 }

@@ -283,6 +283,36 @@ static void gen_reinit(void) {
 	}
 }
 
+
+static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
+	GenReg * gr1=FindDynReg(dr1,true);
+	switch (size) {
+	case 1:cache_addw(0xb60f);break;	//movzx byte
+	case 2:cache_addw(0xb70f);break;	//movzx word
+	case 4:cache_addb(0x8b);break;	//mov
+	default:
+		IllegalOption("gen_load_host");
+	}
+	cache_addb(0x5+(gr1->index<<3));
+	cache_addd((Bit32u)data);
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
+	GenReg * gr1=FindDynReg(dr1,(size==4));
+	switch (size) {
+	case 1:cache_addb(0x8a);break;	//mov byte
+	case 2:cache_addb(0x66);		//mov word
+	case 4:cache_addb(0x8b);break;	//mov
+	default:
+		IllegalOption("gen_load_host");
+	}
+	cache_addb(0x5+((gr1->index+(di1?4:0))<<3));
+	cache_addd((Bit32u)data);
+	dr1->flags|=DYNFLG_CHANGED;
+}
+
+
 static void gen_dop_byte(DualOps op,DynReg * dr1,Bit8u di1,DynReg * dr2,Bit8u di2) {
 	GenReg * gr1=FindDynReg(dr1);GenReg * gr2=FindDynReg(dr2);
 	Bit8u tmp;
@@ -330,6 +360,29 @@ nochange:
 	cache_addw(tmp+((gr1->index+di1)<<8));
 finish:
 	cache_addb(imm);
+}
+
+static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
+	GenReg * gr1=FindDynReg(dr1);
+	Bit16u tmp;
+	switch (op) {
+	case DOP_ADD:	tmp=0x0502; break;
+	case DOP_ADC:	tmp=0x0512; break;
+	case DOP_SUB:	tmp=0x052a; break;
+	case DOP_SBB:	tmp=0x051a; break;
+	case DOP_CMP:	tmp=0x053a; goto nochange;	//Doesn't change
+	case DOP_XOR:	tmp=0x0532; break;
+	case DOP_AND:	tmp=0x0522; break;
+	case DOP_OR:	tmp=0x050a; break;
+	case DOP_TEST:	tmp=0x0584; goto nochange;	//Doesn't change
+	case DOP_MOV:	tmp=0x0585; break;
+	default:
+		IllegalOption("gen_dop_byte_imm_mem");
+	}
+	dr1->flags|=DYNFLG_CHANGED;
+nochange:
+	cache_addw(tmp+((gr1->index+di1)<<11));
+	cache_addd((Bit32u)data);
 }
 
 static void gen_sop_byte(SingleOps op,DynReg * dr1,Bit8u di1) {
@@ -413,6 +466,19 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm
 	ddr->flags|=DYNFLG_CHANGED;
 }
 
+static void gen_lea_imm_mem(DynReg * ddr,DynReg * dsr,void* data) {
+	GenReg * gdr=FindDynReg(ddr);
+	Bit8u rm_base=(gdr->index << 3);
+	cache_addw(0x058b+(rm_base<<8));
+	cache_addd((Bit32u)data);
+	GenReg * gsr=FindDynReg(dsr);
+	cache_addb(0x8d);		//LEA
+	cache_addb(rm_base+0x44);
+	cache_addb(rm_base+gsr->index);
+	cache_addb(0x00);
+	ddr->flags|=DYNFLG_CHANGED;
+}
+
 static void gen_dop_word(DualOps op,bool dword,DynReg * dr1,DynReg * dr2) {
 	GenReg * gr2=FindDynReg(dr2);
 	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
@@ -471,6 +537,33 @@ nochange:
 finish:
 	if (dword) cache_addd(imm);
 	else cache_addw(imm);
+}
+
+static void gen_dop_word_imm_mem(DualOps op,bool dword,DynReg * dr1,void* data) {
+	GenReg * gr1=FindDynReg(dr1,dword && op==DOP_MOV);
+	Bit16u tmp;
+	switch (op) {
+	case DOP_ADD:	tmp=0x0503; break; 
+	case DOP_ADC:	tmp=0x0513; break;
+	case DOP_SUB:	tmp=0x052b; break;
+	case DOP_SBB:	tmp=0x051b; break;
+	case DOP_CMP:	tmp=0x053b; goto nochange;	//Doesn't change
+	case DOP_XOR:	tmp=0x0533; break;
+	case DOP_AND:	tmp=0x0523; break;
+	case DOP_OR:	tmp=0x050b; break;
+	case DOP_TEST:	tmp=0x0585; goto nochange;	//Doesn't change
+	case DOP_MOV:
+		gen_mov_host(data,dr1,dword?4:2);
+		dr1->flags|=DYNFLG_CHANGED;
+		return;
+	default:
+		IllegalOption("gen_dop_word_imm_mem");
+	}
+	dr1->flags|=DYNFLG_CHANGED;
+nochange:
+	if (!dword) cache_addb(0x66);
+	cache_addw(tmp+(gr1->index<<11));
+	cache_addd((Bit32u)data);
 }
 
 static void gen_dop_word_var(DualOps op,bool dword,DynReg * dr1,void* drd) {
@@ -921,34 +1014,6 @@ static void gen_save_host_direct(void * data,Bits imm) {
 	cache_addw(0x05c7);		//MOV [],dword
 	cache_addd((Bit32u)data);
 	cache_addd(imm);
-}
-
-static void gen_load_host(void * data,DynReg * dr1,Bitu size) {
-	GenReg * gr1=FindDynReg(dr1);
-	switch (size) {
-	case 1:cache_addw(0xb60f);break;	//movzx byte
-	case 2:cache_addw(0xb70f);break;	//movzx word
-	case 4:cache_addb(0x8b);break;	//mov
-	default:
-		IllegalOption("gen_load_host");
-	}
-	cache_addb(0x5+(gr1->index<<3));
-	cache_addd((Bit32u)data);
-	dr1->flags|=DYNFLG_CHANGED;
-}
-
-static void gen_mov_host(void * data,DynReg * dr1,Bitu size,Bit8u di1=0) {
-	GenReg * gr1=FindDynReg(dr1);
-	switch (size) {
-	case 1:cache_addb(0x8a);break;	//mov byte
-	case 2:cache_addb(0x66);		//mov word
-	case 4:cache_addb(0x8b);break;	//mov
-	default:
-		IllegalOption("gen_load_host");
-	}
-	cache_addb(0x5+((gr1->index+(di1?4:0))<<3));
-	cache_addd((Bit32u)data);
-	dr1->flags|=DYNFLG_CHANGED;
 }
 
 static void gen_return(BlockReturn retcode) {

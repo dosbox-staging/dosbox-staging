@@ -46,8 +46,8 @@
 #include "fpu.h"
 
 #define CACHE_MAXSIZE	(4096*2)
-#define CACHE_PAGES		(128*8)
-#define CACHE_TOTAL		(CACHE_PAGES*4096)
+#define CACHE_TOTAL		(1024*1024*8)
+#define CACHE_PAGES		(512)
 #define CACHE_BLOCKS	(64*1024)
 #define CACHE_ALIGN		(16)
 #define DYN_HASH_SHIFT	(4)
@@ -161,7 +161,8 @@ static void IllegalOption(const char* msg) {
 #include "core_dyn_x86/cache.h" 
 
 static struct {
-	Bitu callback,readdata;
+	Bitu callback;
+	Bit32u readdata;
 } core_dyn;
 
 struct {
@@ -273,7 +274,20 @@ restart_core:
 	/* Find correct Dynamic Block to run */
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
 	if (!block) {
-		block=CreateCacheBlock(chandler,ip_point,32);
+		if (!chandler->invalidation_map || (chandler->invalidation_map[ip_point&4095]<4)) {
+			block=CreateCacheBlock(chandler,ip_point,32);
+		} else {
+			Bitu old_cycles=CPU_Cycles;
+			CPU_Cycles=1;
+			Bits nc_retcode=CPU_Core_Normal_Run();
+			if (dyn_dh_fpu.state_used) DH_FPU_SAVE_REINIT
+			if (!nc_retcode) {
+				CPU_Cycles=old_cycles-1;
+				goto restart_core;
+			}
+			CPU_CycleLeft+=old_cycles;
+			return nc_retcode; 
+		}
 	}
 run_block:
 	cache.block.running=0;
