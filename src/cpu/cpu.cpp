@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.94 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.95 2007-01-18 14:29:48 c2woody Exp $ */
 
 #include <assert.h>
 #include "dosbox.h"
@@ -450,8 +450,9 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 #if C_HEAVY_DEBUG
  		LOG(LOG_CPU,LOG_ERROR)("Call to interrupt 0xCD this is BAD");
 		DEBUG_HeavyWriteLogInstruction();
-#endif
 		E_Exit("Call to interrupt 0xCD this is BAD");
+#endif
+		break;
 	case 0x03:
 		if (DEBUG_Breakpoint()) {
 			CPU_Cycles=0;
