@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.23 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.24 2007-01-19 18:48:31 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -66,7 +66,7 @@ static struct {
 		MpuDataType type;
 	} playbuf[8],condbuf;
 	struct {
-		bool conductor,cond_req,cond_set;
+		bool conductor,cond_req,cond_set, block_ack;
 		bool playing,reset;
 		bool wsd,wsm,wsd_start;
 		bool run_irq,irq_pending;
@@ -90,6 +90,7 @@ static struct {
 
 
 static void QueueByte(Bit8u data) {
+	if (mpu.state.block_ack) {mpu.state.block_ack=false;return;}
 	if (mpu.queue_used==0 && mpu.intelligent) {
 		mpu.state.irq_pending=true;
 		PIC_ActivateIRQ(mpu.irq);
@@ -116,7 +117,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	mpu.state.reset=0;
-	if (val && val<=0x2f) {
+	if (val<=0x2f) {
 		switch (val&3) { /* MIDI stop, start, continue */
 			case 1: {MIDI_RawOutByte(0xfc);break;}
 			case 2: {MIDI_RawOutByte(0xfa);break;}
@@ -269,10 +270,13 @@ static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 		mpu.state.channel=ret&7;
 		mpu.state.data_onoff=0;
 		mpu.state.cond_req=false;
+		mpu.state.command_byte=0;
 	}
 	if (ret==MSG_MPU_COMMAND_REQ) {
 		mpu.state.data_onoff=0;
 		mpu.state.cond_req=true;
+		mpu.state.wsd=mpu.state.wsm=false;
+		mpu.state.command_byte=0;
 	}
 	if (ret==MSG_MPU_END || ret==MSG_MPU_CLOCK || ret==MSG_MPU_ACK) {
 		mpu.state.data_onoff=-1;
@@ -292,7 +296,8 @@ static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
 			return;
 		case 0xe1:	/* Set relative tempo */
 			mpu.state.command_byte=0;
-			LOG(LOG_MISC,LOG_ERROR)("MPU-401:Relative tempo not implemented");
+			if (val!=0x40) //default value
+				LOG(LOG_MISC,LOG_ERROR)("MPU-401:Relative tempo change not implemented");
 			return;
 		case 0xe7:	/* Set internal clock to host interval */
 			mpu.state.command_byte=0;
@@ -492,6 +497,7 @@ static void UpdateTrack(Bit8u chan) {
 
 static void UpdateConductor(void) {
 	if (mpu.condbuf.type!=T_OVERFLOW) {
+		mpu.state.block_ack=true;
 		MPU401_WriteCommand(0x331,mpu.condbuf.value[0],1);
 		if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1],1);
 	}
@@ -563,6 +569,7 @@ static void MPU401_Reset(void) {
 	mpu.state.midi_mask=0xffff;
 	mpu.state.data_onoff=0;
 	mpu.state.command_byte=0;
+	mpu.state.block_ack=false;
 	mpu.clock.tempo=mpu.clock.old_tempo=100;
 	mpu.clock.timebase=mpu.clock.old_timebase=120;
 	mpu.clock.tempo_rel=mpu.clock.old_tempo_rel=40;
