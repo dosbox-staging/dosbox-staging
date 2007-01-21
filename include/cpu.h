@@ -42,6 +42,7 @@ extern Bit32s CPU_CycleLeft;
 extern Bit32s CPU_CycleMax;
 extern Bit32s CPU_OldCycleMax;
 extern Bit32s CPU_CyclePercUsed;
+extern Bit32s CPU_CycleLimit;
 extern bool CPU_CycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 

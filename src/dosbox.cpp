@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.112 2007-01-21 16:21:22 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.113 2007-01-21 18:14:40 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -170,6 +170,9 @@ increaseticks:
 					CPU_CycleMax = (CPU_CycleMax * ratio) / 1024;
 				else 
 					CPU_CycleMax = 1 + (CPU_CycleMax >> 1) + (CPU_CycleMax * ratio) / 2048;
+				if (CPU_CycleLimit>0) {
+					if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax=CPU_CycleLimit;
+				}
 				ticksDone = 0;
 				ticksScheduled = 0;
 			}

@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.95 2007-01-18 14:29:48 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.96 2007-01-21 18:14:52 c2woody Exp $ */
 
 #include <assert.h>
+#include <sstream>
 #include "dosbox.h"
 #include "cpu.h"
 #include "memory.h"
@@ -47,9 +48,10 @@ Segments Segs;
 
 Bit32s CPU_Cycles = 0;
 Bit32s CPU_CycleLeft = 0;
-Bit32s CPU_CycleMax = 2500;
-Bit32s CPU_OldCycleMax = 2500;
+Bit32s CPU_CycleMax = 3000;
+Bit32s CPU_OldCycleMax = 3000;
 Bit32s CPU_CyclePercUsed = 100;
+Bit32s CPU_CycleLimit = -1;
 Bit32s CPU_CycleUp = 0;
 Bit32s CPU_CycleDown = 0;
 CPU_Decoder * cpudecoder;
@@ -2058,19 +2060,73 @@ public:
 		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
 		CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
-		const char *cyclesLine = section->Get_string("cycles");
-		if (!strcasecmp(cyclesLine,"max")) {
+
+		std::string str;
+		CommandLine* cmd = new CommandLine(0,section->Get_string("cycles"));
+		cmd->FindCommand(1,str);
+
+		if (str=="max") {
 			CPU_CycleMax=0;
 			CPU_CyclePercUsed=100;
 			CPU_CycleAutoAdjust=true;
+			CPU_CycleLimit=-1;
+			for (Bitu cmdnum=2; cmdnum<=cmd->GetCount(); cmdnum++) {
+				if (cmd->FindCommand(cmdnum,str)) {
+					if (str.find('%')==str.length()-1) {
+						str.erase(str.find('%'));
+						int percval=0;
+						std::istringstream stream(str);
+						stream >> percval;
+						if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
+					} else if (str=="limit") {
+						cmdnum++;
+						if (cmd->FindCommand(cmdnum,str)) {
+							int cyclimit=0;
+							std::istringstream stream(str);
+							stream >> cyclimit;
+							if (cyclimit>0) CPU_CycleLimit=cyclimit;
+						}
+					}
+				}
+			}
 		} else {
-			if (!strcasecmp(cyclesLine,"auto")) {
+			if (str=="auto") {
 				CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CYCLES;
 				CPU_CycleMax=3000;
 				CPU_OldCycleMax=3000;
 				CPU_CyclePercUsed=100;
+				for (Bitu cmdnum=2; cmdnum<=cmd->GetCount(); cmdnum++) {
+					if (cmd->FindCommand(cmdnum,str)) {
+						if (str.find('%')==str.length()-1) {
+							str.erase(str.find('%'));
+							int percval=0;
+							std::istringstream stream(str);
+							stream >> percval;
+							if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
+						} else if (str=="limit") {
+							cmdnum++;
+							if (cmd->FindCommand(cmdnum,str)) {
+								int cyclimit=0;
+								std::istringstream stream(str);
+								stream >> cyclimit;
+								if (cyclimit>0) CPU_CycleLimit=cyclimit;
+							}
+						} else {
+							int rmdval=0;
+							std::istringstream stream(str);
+							stream >> rmdval;
+							if (rmdval>0) {
+								CPU_CycleMax=(Bit32s)rmdval;
+								CPU_OldCycleMax=(Bit32s)rmdval;
+							}
+						}
+					}
+				}
 			} else {
-				CPU_CycleMax=atoi(cyclesLine);
+				int rmdval=0;
+				std::istringstream stream(str);
+				stream >> rmdval;
+				CPU_CycleMax=(Bit32s)rmdval;
 			}
 			CPU_CycleAutoAdjust=false;
 		}
@@ -2105,7 +2161,7 @@ public:
 		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic") || !strcasecmp(core,"dynamic_nodhfpu"));
 #endif
 	
-		if(CPU_CycleMax <= 0) CPU_CycleMax = 2500;
+		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
 		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
 		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
 		if (CPU_CycleAutoAdjust) GFX_SetTitle(CPU_CyclePercUsed,-1,false);
