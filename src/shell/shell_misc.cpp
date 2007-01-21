@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.47 2007-01-08 19:45:42 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.48 2007-01-21 14:12:02 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -215,6 +215,8 @@ void DOS_Shell::InputCommand(char * line) {
 					if (it_completion == l_completion.end()) it_completion = l_completion.begin();
 				} else {
 					// build new completion list
+					// Lines starting with CD will only get directories in the list
+					bool dir_only = (strncasecmp(line,"CD ",3)==0);
 
 					// get completion mask
 					char *p_completion_start = strrchr(line, ' ');
@@ -266,14 +268,17 @@ void DOS_Shell::InputCommand(char * line) {
 
 						char *ext;	// file extension
 						if (strcmp(name, ".") && strcmp(name, "..")) {
-							ext = strrchr(name, '.');
-							if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
-								// we add executables to the a seperate list and place that list infront of the normal files
-								executable.push_front(name);
-							else
-								l_completion.push_back(name);
+							if (dir_only) { //Handle the dir only case different (line starts with cd)
+								if(att & DOS_ATTR_DIRECTORY) l_completion.push_back(name);
+							} else {
+								ext = strrchr(name, '.');
+								if (ext && (strcmp(ext, ".BAT") == 0 || strcmp(ext, ".COM") == 0 || strcmp(ext, ".EXE") == 0))
+									// we add executables to the a seperate list and place that list infront of the normal files
+									executable.push_front(name);
+								else
+									l_completion.push_back(name);
+							}
 						}
-
 						res=DOS_FindNext();
 					}
 					/* Add excutable list to front of completion list. */
