@@ -165,7 +165,7 @@ static struct {
 	Bit32u readdata;
 } core_dyn;
 
-struct {
+static struct {
 	Bit32u		state[32];
 	FPU_P_Reg	temp,temp2;
 	Bit32u		dh_fpu_enabled;
