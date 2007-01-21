@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.81 2007-01-13 09:58:26 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.82 2007-01-21 14:13:21 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -420,7 +420,7 @@ static char * init_line="/INIT AUTOEXEC.BAT";
 void SHELL_Init() {
 	/* Add messages */
 	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path.\n");
-	MSG_Add("SHELL_CMD_HELP","supported commands are:\n");
+	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type \033[33;1mhelp /all\033[0m .\nA short list of the most often used commands:\n");
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF","ECHO is off.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
