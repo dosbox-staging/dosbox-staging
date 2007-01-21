@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.16 2007-01-10 10:47:08 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.17 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -140,7 +140,8 @@ Bit16u isoFile::GetInformation(void)
 
 int  MSCDEX_RemoveDrive(char driveLetter);
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
-bool MSCDEX_HasMediaChanged(Bit8u subUnit);
+void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit);
+bool MSCDEX_HasDrive(char driveLetter);
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
@@ -150,7 +151,8 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
 	memset(&rootEntry, 0, sizeof(isoDirEntry));
 	
-	error = MSCDEX_AddDrive(driveLetter, fileName, subUnit);
+	safe_strncpy(this->fileName, fileName, CROSS_LEN);
+	error = UpdateMscdex(driveLetter, fileName, subUnit);
 
 	if (!error) {
 		if (loadImage()) {
@@ -186,6 +188,28 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 }
 
 isoDrive::~isoDrive() { }
+
+int isoDrive::UpdateMscdex(char driveLetter, const char* path, Bit8u& subUnit) {
+	if (MSCDEX_HasDrive(driveLetter)) {
+		CDROM_Interface_Image* oldCdrom = CDROM_Interface_Image::images[subUnit];
+		CDROM_Interface* cdrom = new CDROM_Interface_Image(subUnit);
+		char pathCopy[CROSS_LEN];
+		safe_strncpy(pathCopy, path, CROSS_LEN);
+		if (!cdrom->SetDevice(pathCopy, 0)) {
+			CDROM_Interface_Image::images[subUnit] = oldCdrom;
+			delete cdrom;
+			return 3;
+		}
+		MSCDEX_ReplaceDrive(cdrom, subUnit);
+		return 0;
+	} else {
+		return MSCDEX_AddDrive(driveLetter, path, subUnit);
+	}
+}
+
+void isoDrive::Activate(void) {
+	UpdateMscdex(driveLetter, fileName, subUnit);
+}
 
 bool isoDrive::FileOpen(DOS_File **file, char *name, Bit32u flags)
 {

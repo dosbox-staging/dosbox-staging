@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.13 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.14 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -136,9 +136,6 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
 {
 	images[subUnit] = this;
 	if (refCount == 0) {
-#if defined(C_SDL_SOUND)
-		Sound_Init();
-#endif
 		player.mutex = SDL_CreateMutex();
 		if (!player.channel) {
 			player.channel = MIXER_AddChannel(&CDAudioCallBack, 44100, "CDAUDIO");
@@ -154,9 +151,6 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	if (player.cd == this) player.cd = NULL;
 	ClearTracks();
 	if (refCount == 0) {
-#if defined(C_SDL_SOUND)
-		Sound_Quit();
-#endif
 		SDL_DestroyMutex(player.mutex);
 		player.channel->Enable(false);
 	}
@@ -662,4 +656,17 @@ void CDROM_Interface_Image::ClearTracks()
 		i++;
 	}
 	tracks.clear();
+}
+
+void CDROM_Image_Destroy(Section*) {
+#if defined(C_SDL_SOUND)
+	Sound_Quit();
+#endif
+}
+
+void CDROM_Image_Init(Section* section) {
+#if defined(C_SDL_SOUND)
+	Sound_Init();
+	section->AddDestroyFunction(CDROM_Image_Destroy, false);
+#endif
 }

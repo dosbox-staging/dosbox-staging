@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.35 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: drives.h,v 1.36 2007-01-21 16:21:22 c2woody Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -28,6 +28,25 @@
 #include "bios.h"  /* for fatDrive */
 
 bool WildFileCmp(const char * file, const char * wild);
+
+class DriveManager {
+public:
+	static void AppendDisk(int drive, DOS_Drive* disk);
+	static void InitializeDrive(int drive);
+	static int UnmountDrive(int drive);
+//	static void CycleDrive(bool pressed);
+//	static void CycleDisk(bool pressed);
+	static void CycleAllDisks(void);
+	static void Init(Section* sec);
+	
+private:
+	static struct DriveInfo {
+		std::vector<DOS_Drive*> disks;
+		Bit32u currentDisk;
+	} driveInfos[DOS_DRIVES];
+	
+	static int currentDrive;
+};
 
 class localDrive : public DOS_Drive {
 public:
@@ -311,12 +330,13 @@ public:
 	virtual Bits UnMount(void);
 	bool readSector(Bit8u *buffer, Bit32u sector);
 	virtual char const* GetLabel(void) {return discLabel;};
+	virtual void Activate(void);
 private:
 	int  readDirEntry(isoDirEntry *de, Bit8u *data);
 	bool loadImage();
 	bool lookupSingle(isoDirEntry *de, const char *name, Bit32u sectorStart, Bit32u length);
 	bool lookup(isoDirEntry *de, const char *path);
-	
+	int  UpdateMscdex(char driveLetter, const char* physicalPath, Bit8u& subUnit);
 	int  GetDirIterator(const isoDirEntry* de);
 	bool GetNextDirEntry(const int dirIterator, isoDirEntry* de);
 	void FreeDirIterator(const int dirIterator);
@@ -339,6 +359,7 @@ private:
 
 	isoDirEntry rootEntry;
 	Bit8u mediaid;
+	char fileName[CROSS_LEN];
 	Bit8u subUnit;
 	char driveLetter;
 	char discLabel[32];

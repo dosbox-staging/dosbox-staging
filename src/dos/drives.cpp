@@ -19,6 +19,7 @@
 #include "dosbox.h"
 #include "dos_system.h"
 #include "drives.h"
+#include "mapper.h"
 #include "support.h"
 
 bool WildFileCmp(const char * file, const char * wild) 
@@ -81,4 +82,114 @@ DOS_Drive::DOS_Drive() {
 
 char * DOS_Drive::GetInfo(void) {
 	return info;
+}
+
+// static members variables
+int DriveManager::currentDrive;
+DriveManager::DriveInfo DriveManager::driveInfos[26];
+
+void DriveManager::AppendDisk(int drive, DOS_Drive* disk) {
+	driveInfos[drive].disks.push_back(disk);
+}
+
+void DriveManager::InitializeDrive(int drive) {
+	currentDrive = drive;
+	DriveInfo& driveInfo = driveInfos[currentDrive];
+	if (driveInfo.disks.size() > 0) {
+		driveInfo.currentDisk = 0;
+		DOS_Drive* disk = driveInfo.disks[driveInfo.currentDisk];
+		Drives[currentDrive] = disk;
+		disk->Activate();
+	}
+}
+
+/*
+void DriveManager::CycleDrive(bool pressed) {
+	if (!pressed) return;
+		
+	// do one round through all drives or stop at the next drive with multiple disks
+	int oldDrive = currentDrive;
+	do {
+		currentDrive = (currentDrive + 1) % DOS_DRIVES;
+		int numDisks = driveInfos[currentDrive].disks.size();
+		if (numDisks > 1) break;
+	} while (currentDrive != oldDrive);
+}
+
+void DriveManager::CycleDisk(bool pressed) {
+	if (!pressed) return;
+	
+	int numDisks = driveInfos[currentDrive].disks.size();
+	if (numDisks > 1) {
+		// cycle disk
+		int currentDisk = driveInfos[currentDrive].currentDisk;
+		DOS_Drive* oldDisk = driveInfos[currentDrive].disks[currentDisk];
+		currentDisk = (currentDisk + 1) % numDisks;		
+		DOS_Drive* newDisk = driveInfos[currentDrive].disks[currentDisk];
+		driveInfos[currentDrive].currentDisk = currentDisk;
+		
+		// copy working directory, acquire system resources and finally switch to next drive		
+		strcpy(newDisk->curdir, oldDisk->curdir);
+		newDisk->Activate();
+		Drives[currentDrive] = newDisk;
+	}
+}
+*/
+
+void DriveManager::CycleAllDisks(void) {
+	for (int idrive=0; idrive<DOS_DRIVES; idrive++) {
+		int numDisks = (int)driveInfos[idrive].disks.size();
+		if (numDisks > 1) {
+			// cycle disk
+			int currentDisk = driveInfos[idrive].currentDisk;
+			DOS_Drive* oldDisk = driveInfos[idrive].disks[currentDisk];
+			currentDisk = (currentDisk + 1) % numDisks;		
+			DOS_Drive* newDisk = driveInfos[idrive].disks[currentDisk];
+			driveInfos[idrive].currentDisk = currentDisk;
+			
+			// copy working directory, acquire system resources and finally switch to next drive		
+			strcpy(newDisk->curdir, oldDisk->curdir);
+			newDisk->Activate();
+			Drives[idrive] = newDisk;
+			LOG_MSG("Drive %c: disk %d of %d now active", 'A'+idrive, currentDisk+1, numDisks);
+		}
+	}
+}
+
+int DriveManager::UnmountDrive(int drive) {
+	int result = 0;
+	// unmanaged drive
+	if (driveInfos[drive].disks.size() == 0) {
+		result = Drives[drive]->UnMount();
+	} else {
+		// managed drive
+		int currentDisk = driveInfos[drive].currentDisk;
+		result = driveInfos[drive].disks[currentDisk]->UnMount();
+		// only delete on success, current disk set to NULL because of UnMount
+		if (result == 0) {
+			driveInfos[drive].disks[currentDisk] = NULL;
+			for (int i = 0; i < (int)driveInfos[drive].disks.size(); i++) {
+				delete driveInfos[drive].disks[i];
+			}
+			driveInfos[drive].disks.clear();
+		}
+	}
+	
+	return result;
+}
+
+void DriveManager::Init(Section* /* sec */) {
+	
+	// setup driveInfos structure
+	currentDrive = 0;
+	for(int i = 0; i < DOS_DRIVES; i++) {
+		driveInfos[i].currentDisk = 0;
+	}
+	
+//	MAPPER_AddHandler(&CycleDisk, MK_f3, MMOD1, "cycledisk", "Cycle Disk");
+//	MAPPER_AddHandler(&CycleDrive, MK_f3, MMOD2, "cycledrive", "Cycle Drv");
+}
+
+void DRIVES_Init(Section* sec) {
+	DriveManager::Init(sec);
 }

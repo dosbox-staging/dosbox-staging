@@ -72,6 +72,7 @@ A: You have to make your directories available as drives in DOSBox by using
    To change to the drive mounted like above, type "C:". If everything went
    fine, DOSBox will display the prompt "C:\>".
 
+
 Q: How do I change to fullscreen ?
 A: Press alt-enter. Alternatively: Edit the configuration file of DOSBox and 
    change the option fullscreen=false to fullscreen=true. If fullscreen looks 
@@ -486,9 +487,11 @@ IMGMOUNT
             -size [sectorsbytesize, sectorsperhead, heads, cylinders]
 
   imagefile
-      Location of the image files to mount in DOSBox.  The location is on a 
-      mounted drive inside DOSBox. CD-ROM images can be mounted
-      directly as well. They don't have to be on a mounted drive.
+      Location of the image files to mount in DOSBox. The location can
+      be on a mounted drive inside DOSBox, or on your real disk. It is
+      possible to mount CD-ROM images (ISOs or CUE/BIN) as well, if you
+      need CD swapping capabilities specify all images in succession.
+      The CDs can be swapped with CTRL-F4 at any time.
    
   -t 
       The following are valid image types:
@@ -532,11 +535,11 @@ BOOT
   Boot will start floppy images or hard disk images independent of the 
   operating system emulation offered by DOSBox. This will allow you to
   play booter floppies or boot other operating systems inside DOSBox.
-  If the target emulated system is PCJr (machine=pcjr) the boot command
-  can be used to load PCJr cartridges (.jrc). 
+  If the target emulated system is PCjr (machine=pcjr) the boot command
+  can be used to load PCjr cartridges (.jrc). 
 
   BOOT [diskimg1.img diskimg2.img .. diskimgN.img] [-l driveletter]
-  BOOT [cart.jrc]  (PCJr only)
+  BOOT [cart.jrc]  (PCjr only)
 
   diskimgN.img 
      This can be any number of floppy disk images one wants mounted after 
@@ -551,8 +554,8 @@ BOOT
      a hard drive image mounted as master by specifying "-l C" 
      without the quotes, or the drive as slave by specifying "-l D"
      
-   cart.jrc (PCJr only)
-     When emulation of a PCJr is enabled, cartridges can be loaded with
+   cart.jrc (PCjr only)
+     When emulation of a PCjr is enabled, cartridges can be loaded with
      the BOOT command. Support is still limited.
 
 

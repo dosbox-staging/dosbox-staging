@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.32 2007-01-14 18:44:01 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.33 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -24,6 +24,7 @@
 #include "regs.h"
 #include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
+#include "../dos/drives.h"
 #include "mapper.h"
 
 #define MAX_DISK_IMAGES 4
@@ -124,6 +125,7 @@ void swapInNextDisk(bool pressed) {
 	if (!pressed)
 		return;
 	/* Hack/feature: rescan all disks as well */
+	DriveManager::CycleAllDisks();
 	for(Bitu i=0;i<DOS_DRIVES;i++) {
 		if (Drives[i]) Drives[i]->EmptyCache();
 	}
@@ -396,6 +398,7 @@ static Bitu INT13_DiskHandler(void) {
 				return CBRET_NONE;
 			}
         }
+		reg_ah = 0x00;
 		CALLBACK_SCF(false);
         break;
 	case 0x04: /* Verify sectors */

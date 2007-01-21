@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.38 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.39 2007-01-21 16:21:22 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -242,6 +242,9 @@ public:
 	virtual char const * GetLabel(){return dirCache.GetLabel();};
 
 	DOS_Drive_Cache dirCache;
+	
+	// disk cycling functionality (request resources)
+	virtual void Activate(void) {};
 };
 
 enum { OPEN_READ=0,OPEN_WRITE=1,OPEN_READWRITE=2, DOS_NOT_INHERIT=128};

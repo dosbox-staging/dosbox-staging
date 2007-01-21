@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.44 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.45 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -109,6 +109,8 @@ public:
 
 	int			RemoveDrive			(Bit16u _drive);
 	int			AddDrive			(Bit16u _drive, char* physicalPath, Bit8u& subUnit);
+	bool 		HasDrive			(Bit16u drive);
+	void		ReplaceDrive		(CDROM_Interface* newCdrom, Bit8u subUnit);
 	void		GetDrives			(PhysPt data);
 	void		GetDriverInfo		(PhysPt data);
 	bool		GetVolumeName		(Bit8u subUnit, char* name);
@@ -381,6 +383,16 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	StopAudio(subUnit);
 	return result;
 };
+
+bool CMscdex::HasDrive(Bit16u drive) {
+	return (GetSubUnit(drive) != 0xff);
+}
+
+void CMscdex::ReplaceDrive(CDROM_Interface* newCdrom, Bit8u subUnit) {
+	delete cdrom[subUnit];
+	cdrom[subUnit] = newCdrom;
+	StopAudio(subUnit);
+}
 
 PhysPt CMscdex::GetDefaultBuffer(void)
 {
@@ -1203,6 +1215,16 @@ int MSCDEX_RemoveDrive(char driveLetter)
 {
 	if(!mscdex) return 0;
 	return mscdex->RemoveDrive(driveLetter-'A');
+};
+
+bool MSCDEX_HasDrive(char driveLetter)
+{
+	return mscdex->HasDrive(driveLetter-'A');
+};
+
+void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit)
+{
+	mscdex->ReplaceDrive(cdrom, subUnit);
 };
 
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)

@@ -16,11 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.65 2007-01-14 18:44:01 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.66 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <string>
+#include <vector>
 #include "programs.h"
 #include "support.h"
 #include "drives.h"
@@ -57,7 +59,7 @@ public:
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
 				if(i_drive < DOS_DRIVES && Drives[i_drive]) {
-					switch (Drives[i_drive]->UnMount()) {
+					switch (DriveManager::UnmountDrive(i_drive)) {
 					case 0:
 						Drives[i_drive] = 0;
 						if(i_drive == DOS_GetDefaultDrive()) 
@@ -822,13 +824,14 @@ public:
 		Bit32u imagesize;
 		char drive;
 		std::string label;
+		std::vector<std::string> paths;
 		std::string umount;
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
 				if (i_drive < DOS_DRIVES && Drives[i_drive]) {
-					switch (Drives[i_drive]->UnMount()) {
+					switch (DriveManager::UnmountDrive(i_drive)) {
 					case 0:
 						Drives[i_drive] = 0;
 						if (i_drive == DOS_GetDefaultDrive()) 
@@ -912,40 +915,47 @@ public:
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"));
 				return;
 			}
-
-			if (!cmd->FindCommand(2,temp_line)) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
-				return;
-			}
-			if (!temp_line.size()) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
-				return;
-			}
-			struct stat test;
-			if (stat(temp_line.c_str(),&test)) {
-				// convert dosbox filename to system filename
-				char fullname[CROSS_LEN];
-				char tmp[CROSS_LEN];
-				safe_strncpy(tmp, temp_line.c_str(), CROSS_LEN);
-				
-				Bit8u dummy;
-				if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
-					return;
-				}
-				
-				localDrive *ldp = (localDrive*)Drives[dummy];
-				ldp->GetSystemFilename(tmp, fullname);
-				temp_line = tmp;
-				
-				if (stat(temp_line.c_str(),&test)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
-					return;
-				}
-			}
 			
-			if ((test.st_mode & S_IFDIR)) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
+			// find all file parameters, assuming that all option parameters have been removed
+			while(cmd->FindCommand(paths.size() + 2, temp_line) && temp_line.size()) {
+				
+				struct stat test;
+				if (stat(temp_line.c_str(),&test)) {
+					// convert dosbox filename to system filename
+					char fullname[CROSS_LEN];
+					char tmp[CROSS_LEN];
+					safe_strncpy(tmp, temp_line.c_str(), CROSS_LEN);
+					
+					Bit8u dummy;
+					if (!DOS_MakeName(tmp, fullname, &dummy) || strncmp(Drives[dummy]->GetInfo(),"local directory",15)) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
+						return;
+					}
+					
+					localDrive *ldp = (localDrive*)Drives[dummy];
+					ldp->GetSystemFilename(tmp, fullname);
+					temp_line = tmp;
+					
+					if (stat(temp_line.c_str(),&test)) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
+						return;
+					}
+					
+					if ((test.st_mode & S_IFDIR)) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNG_MOUNT"));
+						return;
+					}
+				}
+				paths.push_back(temp_line);
+			}
+			if (paths.size() == 0) {
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
+				return;	
+			}
+			if (paths.size() == 1)
+				temp_line = paths[0];
+			if (paths.size() > 1 && fstype != "iso") {
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES"));
 				return;
 			}
 
@@ -956,22 +966,6 @@ public:
 					newdrive = 0;
 				}
 			} else if (fstype=="iso") {
-				int error;
-				MSCDEX_SetCDInterface(CDROM_USE_SDL, -1); 
-				newdrive = new isoDrive(drive, temp_line.c_str(), mediaid, error);
-				switch (error) {
-					case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));			break;
-					case 1  :	WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));	break;
-					case 2  :	WriteOut(MSG_Get("MSCDEX_ERROR_NOT_SUPPORTED"));	break;
-					case 3  :	WriteOut(MSG_Get("MSCDEX_ERROR_PATH"));			break;
-					case 4  :	WriteOut(MSG_Get("MSCDEX_TOO_MANY_DRIVES"));		break;
-					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
-					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));		break;
-				};
-				if (error && error!=5) {
-					delete newdrive;
-					return;
-				}
 			} else {
 				FILE *newDisk = fopen(temp_line.c_str(), "rb+");
 				fseek(newDisk,0L, SEEK_END);
@@ -1014,14 +1008,50 @@ public:
 		} else if (fstype=="iso") {
 			if (Drives[drive-'A']) {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
-				if (newdrive) delete newdrive;
 				return;
 			}
-			if (!newdrive) WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
-			Drives[drive-'A']=newdrive;
+			MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
+			// create new drives for all images
+			std::vector<DOS_Drive*> isoDisks;
+			for (int i = 0; i < paths.size(); i++) {
+				int error = -1;
+				DOS_Drive* newDrive = new isoDrive(drive, paths[i].c_str(), mediaid, error);
+				isoDisks.push_back(newDrive);
+				switch (error) {
+					case 0  :	break;
+					case 1  :	WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));	break;
+					case 2  :	WriteOut(MSG_Get("MSCDEX_ERROR_NOT_SUPPORTED"));	break;
+					case 3  :	WriteOut(MSG_Get("MSCDEX_ERROR_PATH"));				break;
+					case 4  :	WriteOut(MSG_Get("MSCDEX_TOO_MANY_DRIVES"));		break;
+					case 5  :	WriteOut(MSG_Get("MSCDEX_LIMITED_SUPPORT"));		break;
+					case 6  :	WriteOut(MSG_Get("MSCDEX_INVALID_FILEFORMAT"));		break;
+					default :	WriteOut(MSG_Get("MSCDEX_UNKNOWN_ERROR"));			break;
+				}
+				// error: clean up and leave
+				if (error) {
+					for(int i = 0; i < isoDisks.size(); i++) {
+						delete isoDisks[i];
+					}
+					return;
+				}
+			}
+			// Update DriveManager
+			for(int i = 0; i < isoDisks.size(); i++) {
+				DriveManager::AppendDisk(drive - 'A', isoDisks[i]);
+			}
+			DriveManager::InitializeDrive(drive - 'A');
+			
 			// Set the correct media byte in the table 
-			mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
-			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,temp_line.c_str());
+			mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 2, mediaid);
+			
+			// Print status message (success)
+			WriteOut(MSG_Get("MSCDEX_SUCCESS"));
+			std::string tmp(paths[0]);
+			for (int i = 1; i < paths.size(); i++) {
+				tmp += "; " + paths[i];
+			}
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
+			
 		} else if (fstype=="none") {
 			if(imageDiskList[drive-'0'] != NULL) delete imageDiskList[drive-'0'];
 			imageDiskList[drive-'0'] = newImage;
@@ -1137,6 +1167,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("MSCDEX_ERROR_PATH","MSCDEX: Failure: Path not valid.\n");
 	MSG_Add("MSCDEX_TOO_MANY_DRIVES","MSCDEX: Failure: Too many CDRom-drives (max: 5). MSCDEX Installation failed.\n");
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
+	MSG_Add("MSCDEX_INVALID_FILEFORMAT","MSCDEX: Failure: File is either no iso/cue image or contains errors.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
 
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
@@ -1238,7 +1269,7 @@ void DOS_SetupPrograms(void) {
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
-	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DosBox from either a floppy or hard disk image.\n\n"
+	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DOSBox from either a floppy or hard disk image.\n\n"
 		"For this command, one can specify a succession of floppy disks swappable\n"
 		"by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If\n"
 		"no drive letter is specified, this defaults to booting from the A drive.\n"
@@ -1252,17 +1283,18 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
-	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCJr cartridge found, but machine is not PCJr");
-	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS","Available PCJr cartridge commandos:%s");
-	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS","No PCJr cartridge commandos found");
+	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS","Available PCjr cartridge commandos:%s");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS","No PCjr cartridge commandos found");
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE","Must specify drive letter to mount image at.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2","Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
-		"For \033[33mCD-ROM\033[0m images:   \033[34;1mimgmount Drive-Letter location-of-image -t iso\033[0m\n"
+		"For \033[33mCD-ROM\033[0m images:   \033[34;1mIMGMOUNT drive-letter location-of-image -t iso\033[0m\n"
 		"\n"
 		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
-		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n");
+		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
+		"\033[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl\033[0m\n");
 	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
@@ -1271,6 +1303,8 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED","Drive already mounted at that letter.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE","Can't create drive from file.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER","Drive number %d mounted as %s\n");
+	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE", "The image must be on a host or local drive.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
 
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
 	MSG_Add("PROGRAM_KEYB_SHOWHELP",

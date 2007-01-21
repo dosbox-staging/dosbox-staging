@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.111 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.112 2007-01-21 16:21:22 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -96,6 +96,8 @@ void DEBUG_Init(Section*);
 void CMOS_Init(Section*);
 
 void MSCDEX_Init(Section*);
+void DRIVES_Init(Section*);
+void CDROM_Image_Init(Section*);
 
 /* Dos Internal mostly */
 void EMS_Init(Section*);
@@ -456,6 +458,8 @@ void DOSBOX_Init(void) {
 	);
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
+	secprop->AddInitFunction(&DRIVES_Init);
+	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
 	secprop->Add_bool("ipx", false);
