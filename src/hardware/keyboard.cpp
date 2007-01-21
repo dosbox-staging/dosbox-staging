@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.36 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: keyboard.cpp,v 1.37 2007-01-21 11:01:54 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -150,6 +150,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 		return;
 	case CMD_SETOUTPORT:
 		MEM_A20_Enable((val & 2)>0);
+		keyb.command = CMD_NONE;
 		break;
 	case CMD_SETTYPERATE: 
 		{
