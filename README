@@ -46,6 +46,7 @@ Type INTRO in DOSBox. That's it.
 Some Frequently Asked Questions:
 
 Q: I've got a Z instead of a C at the prompt.
+Q: How do I change to fullscreen ?
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
 Q: The sound stutters or sounds stretched/weird.
@@ -70,6 +71,13 @@ A: You have to make your directories available as drives in DOSBox by using
    which points to /home/username in Linux.
    To change to the drive mounted like above, type "C:". If everything went
    fine, DOSBox will display the prompt "C:\>".
+
+Q: How do I change to fullscreen ?
+A: Press alt-enter. Alternatively: Edit the configuration file of DOSBox and 
+   change the option fullscreen=false to fullscreen=true. If fullscreen looks 
+   wrong in your opinion: Play with the option fullresolution in the 
+   configuration file of DOSBox. To get back from fullscreen mode:
+   Press alt-enter again.
 
 
 Q: My CD-ROM doesn't work.
