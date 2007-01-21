@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.72 2007-01-21 14:13:21 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.73 2007-01-21 16:18:12 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -179,9 +179,12 @@ void DOS_Shell::CMD_HELP(char * args){
 	bool optall=ScanCMDBool(args,"ALL");
 	/* Print the help */
 	if(!optall) WriteOut(MSG_Get("SHELL_CMD_HELP"));
-        Bit32u cmd_index=0;
+	Bit32u cmd_index=0,write_count=0;
 	while (cmd_list[cmd_index].name) {
-		if (optall || !cmd_list[cmd_index].flags) WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
+		if (optall || !cmd_list[cmd_index].flags) {
+			WriteOut("<\033[34;1m%-8s\033[0m> %s",cmd_list[cmd_index].name,MSG_Get(cmd_list[cmd_index].help));
+			if(!(++write_count%22)) CMD_PAUSE("");
+		}
 		cmd_index++;
 	}
 }
@@ -432,7 +435,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		}
 		if(optP) {
 			if(!(++p_count%(22*w_size))) {
-				CMD_PAUSE(args);
+				CMD_PAUSE("");
 			}
 		}
 	} while ( (ret=DOS_FindNext()) );
