@@ -64,7 +64,6 @@ void VGA_DetermineMode(void) {
 				VGA_SetMode(M_LIN4);
 			else
 				VGA_SetMode(M_EGA);
-			
 		}
 	} else {
 		VGA_SetMode(M_TEXT);

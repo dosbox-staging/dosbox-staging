@@ -195,6 +195,8 @@ static Bitu INT10_Handler(void) {
 		}
 		break;
 	case 0x11:								/* Character generator functions */
+		if (machine<MCH_VGA) 
+			break;
 		switch (reg_al) {
 /* Textmode calls */
 		case 0x00:			/* Load user font */
@@ -289,7 +291,8 @@ graphics_chars:
 		}
 		break;
 	case 0x12:								/* alternate function select */
-		if (machine<MCH_VGA) break;
+		if (machine<MCH_VGA) 
+			break;
 		switch (reg_bl) {
 		case 0x10:							/* Get EGA Information */
 			reg_bh=(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)==0x3B4);	

@@ -21,6 +21,10 @@
 
 #include "../src/gui/render_scalers.h"
 
+#define RENDER_SKIP_CACHE	16
+//Enable this for scalers to support 0 input for empty lines
+//#define RENDER_NULL_INPUT
+
 typedef struct {
 	struct { 
 		Bit8u red;
@@ -40,7 +44,7 @@ typedef struct {
 
 typedef struct {
 	struct {
-		Bitu width;
+		Bitu width, start;
 		Bitu height;
 		Bitu bpp;
 		bool dblw,dblh;
@@ -50,6 +54,8 @@ typedef struct {
 	struct {
 		Bitu count;
 		Bitu max;
+		Bitu index;
+		Bit8u hadSkip[RENDER_SKIP_CACHE];
 	} frameskip;
 	struct {
 		Bitu size;
@@ -71,13 +77,14 @@ typedef struct {
 	bool updating;
 	bool active;
 	bool aspect;
+	bool fullFrame;
 } Render_t;
 
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh);
 bool RENDER_StartUpdate(void);
-void RENDER_EndUpdate( bool fullUpdate );
+void RENDER_EndUpdate( );
 void RENDER_SetPal(Bit8u entry,Bit8u red,Bit8u green,Bit8u blue);
 
 

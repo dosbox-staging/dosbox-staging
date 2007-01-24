@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.126 2007-01-10 15:01:15 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.127 2007-01-24 16:29:09 harekiet Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -328,7 +328,8 @@ check_gotbpp:
 
 void GFX_ResetScreen(void) {
 	GFX_Stop();
-	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackReset );
+	if (sdl.draw.callback)
+		(sdl.draw.callback)( GFX_CallBackReset );
 	GFX_Start();
 }
 
@@ -661,7 +662,8 @@ static void SwitchFullScreen(bool pressed) {
 
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
-	if (!sdl.active || sdl.updating) return false;
+	if (!sdl.active || sdl.updating) 
+		return false;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 		if (sdl.blit.surface) {
@@ -710,7 +712,8 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
 	int ret;
-	if (!sdl.updating) return;
+	if (!sdl.updating) 
+		return;
 	sdl.updating=false;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
@@ -745,15 +748,11 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			}
 			if (rectCount)
 				SDL_UpdateRects( sdl.surface, rectCount, sdl.updateRects );
-		} else {
-			SDL_Flip(sdl.surface);
 		}
 		break;
 #if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
-		if (SDL_MUSTLOCK(sdl.blit.surface)) {
-			SDL_UnlockSurface(sdl.blit.surface);
-		}
+		SDL_UnlockSurface(sdl.blit.surface);
 		ret=IDirectDrawSurface3_Blt(
 			sdl.surface->hwdata->dd_writebuf,&sdl.blit.rect,
 			sdl.blit.surface->hwdata->dd_surface,0,

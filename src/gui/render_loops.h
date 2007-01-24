@@ -21,6 +21,7 @@ static void conc3d(SCALERNAME,SBPP,L)(void) {
 #else
 static void conc3d(SCALERNAME,SBPP,R)(void) {
 #endif
+//Skip the first one for multiline input scalers
 	if (!render.scale.outLine) {
 		render.scale.outLine++;
 		return;
@@ -30,14 +31,9 @@ lastagain:
 #if defined(SCALERLINEAR) 
 		Bitu scaleLines = SCALERHEIGHT;
 #else
-		Bitu scaleLines = SCALERHEIGHT + Scaler_Aspect[ render.scale.outLine ];
+		Bitu scaleLines = Scaler_Aspect[ render.scale.outLine ];
 #endif
-		render.scale.outWrite += render.scale.outPitch * scaleLines;
-		if (!(Scaler_ChangedLineIndex & 1)) {
-			Scaler_ChangedLines[Scaler_ChangedLineIndex] += scaleLines;
-		} else {
-			Scaler_ChangedLines[++Scaler_ChangedLineIndex] = scaleLines;
-		}
+		ScalerAddLines( 0, scaleLines );
 		if (++render.scale.outLine == render.scale.inHeight)
 			goto lastagain;
 		return;
@@ -141,25 +137,15 @@ lastagain:
 	}
 #if defined(SCALERLINEAR) 
 	Bitu scaleLines = SCALERHEIGHT;
-	render.scale.outWrite += render.scale.outPitch * scaleLines;
 #else
-	Bitu scaleLines = SCALERHEIGHT;
-	if ( Scaler_Aspect[ render.scale.outLine ] ) {
-		scaleLines++;
+	Bitu scaleLines = Scaler_Aspect[ render.scale.outLine ];
+	if ( ((Bits)(scaleLines - SCALERHEIGHT)) > 0 ) {
 		BituMove( render.scale.outWrite + render.scale.outPitch * SCALERHEIGHT,
 			render.scale.outWrite + render.scale.outPitch * (SCALERHEIGHT-1),
 			render.src.width * SCALERWIDTH * PSIZE);
-		render.scale.outWrite += render.scale.outPitch * (SCALERHEIGHT + 1);
-	} else {
-		render.scale.outWrite += render.scale.outPitch * SCALERHEIGHT;
 	}
 #endif
- 	/* Keep track of changed lines */
-	if (Scaler_ChangedLineIndex & 1) {
-		Scaler_ChangedLines[Scaler_ChangedLineIndex] += scaleLines;
-	} else {
-		Scaler_ChangedLines[++Scaler_ChangedLineIndex] = scaleLines;
-	}
+	ScalerAddLines( 1, scaleLines );
 	if (++render.scale.outLine == render.scale.inHeight)
 		goto lastagain;
 }

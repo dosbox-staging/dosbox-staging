@@ -59,6 +59,16 @@ static INLINE void BituMove( void *_dst, const void * _src, Bitu size) {
 		dst[x] = src[x];
 }
 
+static INLINE void ScalerAddLines( Bitu changed, Bitu count ) {
+	if ((Scaler_ChangedLineIndex & 1) == changed ) {
+		Scaler_ChangedLines[Scaler_ChangedLineIndex] += count;
+	} else {
+		Scaler_ChangedLines[++Scaler_ChangedLineIndex] = count;
+	}
+	render.scale.outWrite += render.scale.outPitch * count;
+}
+
+
 #define BituMove2(_DST,_SRC,_SIZE)			\
 {											\
 	Bitu bsize=(_SIZE)/sizeof(Bitu);		\

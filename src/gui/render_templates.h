@@ -153,6 +153,14 @@
 
 
 static void conc3d(Cache,SBPP,DBPP) (const void * s) {
+#ifdef RENDER_NULL_INPUT
+	if (!s) {
+		render.scale.cacheRead += render.scale.cachePitch;
+		render.scale.inLine++;
+		render.scale.complexHandler();
+		return;
+	}
+#endif
 	const SRCTYPE * src = (SRCTYPE*)s;
 	PTYPE *fc= &FC[render.scale.inLine+1][1];
 	SRCTYPE *sc = (SRCTYPE*)(render.scale.cacheRead);

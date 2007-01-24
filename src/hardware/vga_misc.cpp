@@ -20,6 +20,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "vga.h"
+#include <math.h>
 
 static Bit8u flip=0;
 
@@ -31,24 +32,45 @@ Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 static Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 	vga.internal.attrindex=false;
 	vga.tandy.pcjr_flipflop=false;
-	if (vga.config.retrace) {
-		switch (machine) {
-		case MCH_HERC:
-			 return 0x81;
-		default:
-			return 9;
-		}
-	}
-	flip++;
-	if (flip>20) flip=0;
-	if (flip>10) return 1;
-	return 0;
-	/*
-		0	Either Vertical or Horizontal Retrace active if set
-		3	Vertical Retrace in progress if set
-	*/
-}
+	Bit8u retval=0;
+	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
 
+ 	vga.internal.attrindex=false;
+ 	vga.tandy.pcjr_flipflop=false;
+
+	double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
+		
+	switch (machine) {
+	case MCH_HERC:
+		// 3BAh (R):  Status Register
+		// bit   0  Horizontal sync
+		//       3  Video signal
+		//       7  Vertical sync
+		if(timeInFrame >= vga.draw.delay.vrstart &&
+			timeInFrame <= vga.draw.delay.vrend)
+			retval |= 0x80;
+		if(timeInLine >= vga.draw.delay.hrstart &&
+			timeInLine <= vga.draw.delay.hrend)
+			retval |= 1;
+		retval |= 0x10;		//Hercules ident
+		break;
+	default:
+		// 3DAh (R):  Status Register
+		// bit   0  Horizontal or Vertical blanking
+		//       3  Vertical sync
+
+		if(timeInFrame >= vga.draw.delay.vrstart &&
+			timeInFrame <= vga.draw.delay.vrend)
+			retval |= 8;
+		if(timeInFrame >= vga.draw.delay.vblkstart &&
+			timeInFrame <= vga.draw.delay.vblkend)
+			retval |= 1;
+		else if(timeInLine >= vga.draw.delay.hblkstart &&
+			timeInLine <= vga.draw.delay.hblkend)
+			retval |= 1;
+	}
+	return retval;
+}
 
 static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
 	vga.misc_output=val;
