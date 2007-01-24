@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.25 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: int10_vesa.cpp,v 1.26 2007-01-24 16:29:53 harekiet Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -292,6 +292,7 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	Bit8u bpp;
 	switch (CurMode->type) {
 	case M_LIN4:
+		bpp = 1;
 		break;
 	case M_LIN8:
 		bpp=1;
@@ -356,11 +357,11 @@ Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y) {
 		break;
 	case M_LIN16:
 	case M_LIN15:
-		start=vga.config.scan_len*8*y+x;
+		start=vga.config.scan_len*8*y+x*2;
 		vga.config.display_start=start/4;
 		break;
 	case M_LIN32:
-		start=vga.config.scan_len*8*y+x;
+		start=vga.config.scan_len*8*y+x*4;
 		vga.config.display_start=start/4;
 		break;
 	default:
