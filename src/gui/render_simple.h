@@ -34,7 +34,7 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 	}
 #endif
 	/* Clear the complete line marker */
-	Bitu hadChange;
+	Bitu hadChange = 0;
 	const SRCTYPE *src = (SRCTYPE*)s;
 	SRCTYPE *cache = (SRCTYPE*)(render.scale.cacheRead);
 	render.scale.cacheRead += render.scale.cachePitch;
