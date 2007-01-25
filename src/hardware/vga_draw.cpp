@@ -162,6 +162,7 @@ static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu line) {
 	return &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
 }
 
+//Test version, might as well keep it
 static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 	Bitu i = 0;
 	for ( i = 0; i < vga.draw.width;i++ ) {
@@ -170,7 +171,6 @@ static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 	}
 	return TempLine;
 }
-
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
@@ -525,11 +525,9 @@ static void VGA_VerticalTimer(Bitu val) {
 		if(vga.config.compatible_chain4 && (vga.crtc.underline_location & 0x40)) {
 			vga.draw.linear_base = vga.mem.linear + VGA_CACHE_OFFSET;
 			vga.draw.linear_mask = 0xffff;
-			VGA_DrawLine = VGA_Draw_Chain_Line;
 		} else {
 			vga.draw.linear_base = vga.mem.linear;
 			vga.draw.linear_mask = VGA_MEMORY - 1;
-			VGA_DrawLine = VGA_Draw_Linear_Line;
 		}
 	case M_LIN8:
 	case M_LIN15:
