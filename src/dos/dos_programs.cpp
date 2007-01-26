@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.66 2007-01-21 16:21:22 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.67 2007-01-26 16:22:43 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -937,12 +937,12 @@ public:
 					temp_line = tmp;
 					
 					if (stat(temp_line.c_str(),&test)) {
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNG_FILE_NOT_FOUND"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 						return;
 					}
 					
 					if ((test.st_mode & S_IFDIR)) {
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNG_MOUNT"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
 						return;
 					}
 				}
