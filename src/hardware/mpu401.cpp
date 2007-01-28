@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.24 2007-01-19 18:48:31 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.25 2007-01-28 20:08:52 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -258,8 +258,8 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 	Bit8u ret=MSG_MPU_ACK;
 	if (mpu.queue_used) {
-		ret=mpu.queue[mpu.queue_pos];
 		if (mpu.queue_pos>=MPU401_QUEUE) mpu.queue_pos-=MPU401_QUEUE;
+		ret=mpu.queue[mpu.queue_pos];
 		mpu.queue_pos++;mpu.queue_used--;
 	}
 	if (!mpu.intelligent) return ret;
