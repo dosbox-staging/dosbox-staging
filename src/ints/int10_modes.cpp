@@ -802,8 +802,8 @@ bool INT10_SetVideoMode(Bitu mode) {
 	att_data[0x12]=0xf;				//Always have all color planes enabled
 	/* Program Attribute Controller */
 	switch (CurMode->type) {
-	case M_LIN4:
 	case M_EGA:
+	case M_LIN4:
 		att_data[0x10]=0x01;		//Color Graphics
 		switch (CurMode->mode) {
 		case 0x0f:
@@ -820,6 +820,8 @@ bool INT10_SetVideoMode(Bitu mode) {
 		case 0x10:
 		case 0x12: goto att_text16;
 		default:
+			if ( CurMode->type == M_LIN4 )
+				goto att_text16;
 			for (i=0;i<8;i++) {
 				att_data[i]=i;
 				att_data[i+8]=i+0x10;
