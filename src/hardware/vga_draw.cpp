@@ -515,6 +515,7 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.split_line=(vga.config.line_compare/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
+	case M_LIN4:
 		vga.draw.address *= 8;
 		vga.draw.address += vga.config.pel_panning;
 #ifdef VGA_KEEP_CHANGES
