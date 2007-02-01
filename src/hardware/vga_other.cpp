@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.20 2007-01-24 16:29:09 harekiet Exp $ */
+/* $Id: vga_other.cpp,v 1.21 2007-02-01 16:24:03 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -400,8 +400,8 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x3df:
 		vga.tandy.line_mask = val >> 6;
-		vga.tandy.draw_bank = val & 0x7;
-		vga.tandy.mem_bank = (val >> 3) & 0x7;
+		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
+		vga.tandy.mem_bank = (val >> 3) & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		TandyCheckLineMask();
 		VGA_SetupHandlers();
 		break;
@@ -420,8 +420,8 @@ static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x3df:
 		vga.tandy.line_mask = val >> 6;
-		vga.tandy.draw_bank = val & 0x7;
-		vga.tandy.mem_bank = (val >> 3) & 0x7;
+		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
+		vga.tandy.mem_bank = (val >> 3) & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.draw_base = &MemBase[vga.tandy.draw_bank * 16 * 1024];
 		vga.tandy.mem_base = &MemBase[vga.tandy.mem_bank * 16 * 1024];
 		TandyCheckLineMask();

@@ -901,7 +901,7 @@ void VGA_SetupDrawing(Bitu val) {
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		if (vga.tandy.mode_control & 0x1) {
-			if ( vga.tandy.mode_control & 0x10 ) {
+			if (( machine==MCH_TANDY ) && ( vga.tandy.mode_control & 0x10 )) {
 				doublewidth = false;
 				vga.draw.blocks*=2;
 				width=vga.draw.blocks*2;
