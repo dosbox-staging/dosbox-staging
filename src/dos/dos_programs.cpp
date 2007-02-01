@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.67 2007-01-26 16:22:43 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.68 2007-02-01 15:32:19 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -582,7 +582,7 @@ public:
 					fseek(tfile, 0x3000L, SEEK_SET);
 					Bit32u drd=fread(rombuf, 1, 0xb000, tfile);
 					if (drd==0xb000) {
-						for(i=0;i<0xb000;i++) phys_writeb(0xfb000+i,rombuf[i]);
+						for(i=0;i<0xb000;i++) phys_writeb(0xf3000+i,rombuf[i]);
 					}
 					fclose(tfile);
 				}
