@@ -278,42 +278,6 @@ private:
 };
 
 
-static bool MakeCodePage(Bitu lin_page,CodePageHandler * &cph) {
-	Bit8u rdval;
-	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked_x86(lin_page << 12,&rdval))) return true;
-	PageHandler * handler=paging.tlb.handler[lin_page];
-	if (handler->flags & PFLAG_HASCODE) {
-		cph=( CodePageHandler *)handler;
-		return false;
-	}
-	if (handler->flags & PFLAG_NOCODE) {
-		LOG_MSG("DYNX86:Can't run code in this page");
-		cph=0;		return false;
-	} 
-	Bitu phys_page=lin_page;
-	if (!PAGING_MakePhysPage(phys_page)) {
-		LOG_MSG("DYNX86:Can't find physpage");
-		cph=0;		return false;
-	}
-	/* Find a free CodePage */
-	if (!cache.free_pages) {
-		cache.used_pages->ClearRelease();
-	}
-	CodePageHandler * cpagehandler=cache.free_pages;
-	cache.free_pages=cache.free_pages->next;
-	cpagehandler->prev=cache.last_page;
-	cpagehandler->next=0;
-	if (cache.last_page) cache.last_page->next=cpagehandler;
-	cache.last_page=cpagehandler;
-	if (!cache.used_pages) cache.used_pages=cpagehandler;
-	cpagehandler->SetupAt(phys_page,handler);
-	MEM_SetPageHandler(phys_page,1,cpagehandler);
-	PAGING_UnlinkPages(lin_page,1);
-	cph=cpagehandler;
-	return false;
-}
-
 static INLINE void cache_addunsedblock(CacheBlock * block) {
 	block->cache.next=cache.block.free;
 	cache.block.free=block;
@@ -502,7 +466,7 @@ static void cache_init(bool enable) {
 		cache.last_page=0;
 		cache.used_pages=0;
 		/* Setup the code pages */
-		for (i=0;i<CACHE_PAGES-1;i++) {
+		for (i=0;i<CACHE_PAGES;i++) {
 			CodePageHandler * newpage=new CodePageHandler();
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
