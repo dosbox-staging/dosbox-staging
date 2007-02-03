@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.50 2007-01-24 16:29:09 harekiet Exp $ */
+/* $Id: render.cpp,v 1.51 2007-02-03 13:00:16 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -120,6 +120,19 @@ static void RENDER_StartLineHandler(const void * s) {
 	render.scale.inLine++;
 	render.scale.outLine++;
 }
+
+static void RENDER_FinishLineHandler(const void * s) {
+	if (s) {
+		const Bitu *src = (Bitu*)s;
+		Bitu *cache = (Bitu*)(render.scale.cacheRead);
+		for (Bits x=render.src.start;x>0;) {
+			cache[0] = src[0];
+			x--; src++; cache++;
+		}
+	}
+	render.scale.cacheRead += render.scale.cachePitch;
+}
+
 
 static void RENDER_ClearCacheHandler(const void * src) {
 	Bitu x, width;
@@ -462,6 +475,9 @@ forcenormal:
 	render.pal.last = 255;
 	render.pal.changed = false;
 	memset(render.pal.modified, 0, sizeof(render.pal.modified));
+	//Finish this frame using a copy only handler
+	RENDER_DrawLine = RENDER_FinishLineHandler;
+	render.scale.outWrite = 0;
 	/* Signal the next frame to first reinit the cache */
 	render.scale.clearCache = true;
 	render.active=true;
