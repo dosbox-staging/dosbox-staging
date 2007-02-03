@@ -501,8 +501,10 @@ static void VGA_VerticalTimer(Bitu val) {
 //		 LOG_MSG("vgaerror: %f",error);
 	PIC_AddEvent(VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
 	if ( GCC_UNLIKELY( vga.draw.parts_left )) {
-		LOG_MSG( "parts left: %d", vga.draw.parts_left );
+		LOG(LOG_VGAMISC,LOG_NORMAL)( "Parts left: %d", vga.draw.parts_left );
 		PIC_RemoveEvents( &VGA_DrawPart );
+		RENDER_EndUpdate();
+		vga.draw.parts_left = 0;
 	}
 	//Check if we can actually render, else skip the rest
 	if (!RENDER_StartUpdate())
