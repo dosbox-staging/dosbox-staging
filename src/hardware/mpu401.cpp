@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mpu401.cpp,v 1.25 2007-01-28 20:08:52 qbix79 Exp $ */
+/* $Id: mpu401.cpp,v 1.26 2007-02-03 14:11:38 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -40,6 +40,8 @@ static void MPU401_EOIHandler(void);
 
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
+
+static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen);
 
 /* Messages sent to MPU-401 from host */
 #define MSG_EOX	                        0xf7
@@ -270,13 +272,16 @@ static Bitu MPU401_ReadData(Bitu port,Bitu iolen) {
 		mpu.state.channel=ret&7;
 		mpu.state.data_onoff=0;
 		mpu.state.cond_req=false;
-		mpu.state.command_byte=0;
 	}
 	if (ret==MSG_MPU_COMMAND_REQ) {
 		mpu.state.data_onoff=0;
 		mpu.state.cond_req=true;
-		mpu.state.wsd=mpu.state.wsm=false;
-		mpu.state.command_byte=0;
+		if (mpu.condbuf.type!=T_OVERFLOW) {
+			mpu.state.block_ack=true;
+			MPU401_WriteCommand(0x331,mpu.condbuf.value[0],1);
+			if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1],1);
+		}
+	mpu.condbuf.type=T_OVERFLOW;
 	}
 	if (ret==MSG_MPU_END || ret==MSG_MPU_CLOCK || ret==MSG_MPU_ACK) {
 		mpu.state.data_onoff=-1;
@@ -496,13 +501,7 @@ static void UpdateTrack(Bit8u chan) {
 }
 
 static void UpdateConductor(void) {
-	if (mpu.condbuf.type!=T_OVERFLOW) {
-		mpu.state.block_ack=true;
-		MPU401_WriteCommand(0x331,mpu.condbuf.value[0],1);
-		if (mpu.state.command_byte) MPU401_WriteData(0x330,mpu.condbuf.value[1],1);
-	}
 	mpu.condbuf.vlength=0;
-	mpu.condbuf.type=T_OVERFLOW;
 	mpu.condbuf.counter=0xf0;
 	mpu.state.req_mask|=(1<<9);
 }
