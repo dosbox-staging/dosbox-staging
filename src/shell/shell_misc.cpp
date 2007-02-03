@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.48 2007-01-21 14:12:02 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.49 2007-02-03 14:04:23 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -356,7 +356,8 @@ void DOS_Shell::InputCommand(char * line) {
 bool DOS_Shell::Execute(char * name,char * args) {
 /* return true  => don't check for hardware changes in do_command 
  * return false =>       check for hardware changes in do_command */
-	char * fullname;
+	char fullname[DOS_PATHLENGTH+4]; //stores results from Which
+	char* p_fullname;
 	char line[CMD_MAXLINE];
 	if(strlen(args)!= 0){
 		if(*args != ' '){ //put a space in front
@@ -381,15 +382,17 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		return true;
 	}
 	/* Check for a full name */
-	fullname=Which(name);
-	if (!fullname) return false;
-	
-	const char* extension =strrchr(fullname,'.');
+	p_fullname = Which(name);
+	if (!p_fullname) return false;
+	strcpy(fullname,p_fullname);
+	const char* extension = strrchr(fullname,'.');
 	
 	/*always disallow files without extension from being executed. */
 	/*only internal commands can be run this way and they never get in this handler */
 	if(extension == 0)
 	{
+		//Check if the result will fit in the parameters. Else abort
+		if(strlen(fullname) >( DOS_PATHLENGTH - 1) ) return false;
 		char temp_name[DOS_PATHLENGTH+4],* temp_fullname;
 		//try to add .com, .exe and .bat extensions to filename
 		
