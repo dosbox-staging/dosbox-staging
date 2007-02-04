@@ -563,7 +563,8 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address *= 2;
 		break;
 	}
-	VGA_DrawPart( vga.draw.parts_lines );
+	//VGA_DrawPart( vga.draw.parts_lines );
+	PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts,vga.draw.parts_lines);
 //	PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts/2,vga.draw.parts_lines); //Else tearline in Tyrian and second reality
 }
 
@@ -782,7 +783,7 @@ void VGA_SetupDrawing(Bitu val) {
 	vga.draw.parts_total=VGA_PARTS;
 	double correct_ratio=(100.0/525.0);
 	double aspect_ratio=((double)htotal/((double)vtotal)/correct_ratio);
-
+	vga.draw.delay.parts = vga.draw.delay.vdend/vga.draw.parts_total;
 	vga.draw.resizing=false;
 
 	//Check to prevent useless black areas
