@@ -1,5 +1,5 @@
 !define VER_MAYOR 0
-!define VER_MINOR 65
+!define VER_MINOR 66rc1
 
 ; The name of the installer
 Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
@@ -38,20 +38,30 @@ Section "ThisNameIsIgnoredSoWhyBother?"
   File /oname=zmbv\zmbv.dll zmbv.dll
   File /oname=zmbv\zmbv.inf zmbv.inf
   File /oname=zmbv\README.txt README.video
-;  File libpng12.dll
-;  File libogg-0.dll
-;  File libvorbis-0.dll
-;  File libvorbisfile-3.dll
   
   CreateDirectory "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}"
   CreateDirectory "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk" "$INSTDIR\DOSBox.exe" "-conf $\"$INSTDIR\dosbox.conf$\""
+  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk" "$INSTDIR\DOSBox.exe" "-conf $\"$INSTDIR\dosbox.conf$\"" "$INSTDIR\DOSBox.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\README.lnk" "$INSTDIR\README.txt"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.conf.lnk" "notepad.exe" "$INSTDIR\dosbox.conf"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Capture folder.lnk" "$INSTDIR\capture"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Video instructions.lnk" "$INSTDIR\zmbv\README.txt"
-  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Install movie codec.lnk" "rundll32" "syssetup,SetupInfObjectInstallAction DefaultInstall 128 $INSTDIR\zmbv\zmbv.inf"
+;change outpath so the working directory gets set to zmbv
+SetOutPath "$INSTDIR\zmbv"
+  ; Shortcut creation depends on wether we are 9x of NT
+  ClearErrors
+  ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+  IfErrors we_9x we_nt
+we_nt:
+  ;shortcut for win NT
+  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Install movie codec.lnk" "rundll32" "setupapi,InstallHinfSection DefaultInstall 128 $INSTDIR\zmbv\zmbv.inf"
+  goto end
+we_9x:
+  ;shortcut for we_9x
+  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Install movie codec.lnk" "rundll" "setupx.dll,InstallHinfSection DefaultInstall 128 $INSTDIR\zmbv\zmbv.inf"
+end:
+SetOutPath $INSTDIR
 WriteUninstaller "uninstall.exe"
 
 SectionEnd ; end the section
@@ -74,10 +84,6 @@ Section "Uninstall"
   Delete $INSTDIR\zmbv\zmbv.dll
   Delete $INSTDIR\zmbv\zmbv.inf
   Delete $INSTDIR\zmbv\README.txt
-;  Delete $INSTDIR\libpng12.dll
-;  Delete $INSTDIR\libogg-0.dll
-;  Delete $INSTDIR\libvorbis-0.dll
-;  Delete $INSTDIR\libvorbisfile-3.dll
   ;Files left by sdl taking over the console
   Delete $INSTDIR\stdout.txt
   Delete $INSTDIR\stderr.txt
