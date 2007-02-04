@@ -1,21 +1,24 @@
-;
-; Zip Motion Block Video AVI codec
-;
-; Copyright (c) 2000 Ben Rudiak-Gould
-;
-; This Windows 9x Installation INF File by Rainbow Software
-;
 [version]
 signature="$CHICAGO$"
 
 [DefaultInstall]
 CopyFiles=ZMBV.Files.Inf,ZMBV.Files.Dll
-AddReg=ZMBV.Reg
+AddReg=ZMBV.Reg9x
+UpdateInis=ZMBV.INIs
+
+[DefaultInstall.ntx86]
+CopyFiles=ZMBV.Files.Inf,ZMBV.Files.Dll
+AddReg=ZMBV.RegNT
 UpdateInis=ZMBV.INIs
 
 [DefaultUnInstall]
 DelFiles=ZMBV.Files.Dll,ZMBV.Files.Inf,ZMBV.Files.Ini
-DelReg=ZMBV.Reg
+DelReg=ZMBV.Reg9x
+UpdateInis=ZMBV.INIs.Del
+
+[DefaultUnInstall.ntx86]
+DelFiles=ZMBV.Files.Dll,ZMBV.Files.Inf,ZMBV.Files.Ini
+DelReg=ZMBV.RegNT
 UpdateInis=ZMBV.INIs.Del
 
 [SourceDisksNames]
@@ -38,7 +41,7 @@ zmbv.dll
 [ZMBV.Files.Ini]
 zmbv.ini
 
-[ZMBV.Reg]
+[ZMBV.Reg9x]
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.ZMBV,Description,,"Zip Motion Block Video [ZMBV]"
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.ZMBV,Driver,,"zmbv.dll"
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.ZMBV,FriendlyName,,"Zip Motion Block Video [ZMBV]"
@@ -46,6 +49,14 @@ HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\VIDC.ZMBV,FriendlyName,
 HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV
 HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV,DisplayName,,"Zip Motion Block Video codec (Remove Only)"
 HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV,UninstallString,,"rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\ZMBV.INF"
+
+[ZMBV.RegNT]
+HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc,zmbv.dll,,"Zip Motion Block Video [ZMBV]"
+HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers32,VIDC.ZMBV,,zmbv.dll
+
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV,DisplayName,,"Zip Motion Block Video codec (Remove Only)"
+HKLM,Software\Microsoft\Windows\CurrentVersion\Uninstall\ZMBV,UninstallString,,"rundll32.exe setupapi,InstallHinfSection DefaultUninstall 132 %17%\ZMBV.INF"
 
 [ZMBV.INIs]
 system.ini, drivers32,, "VIDC.ZMBV=zmbv.dll"
