@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.113 2007-01-21 18:14:40 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.114 2007-02-04 11:10:22 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -162,19 +162,37 @@ increaseticks:
 				ticksRemain = 20;
 			}
 			ticksAdded = ticksRemain;
-			if (CPU_CycleAutoAdjust && (ticksAdded > 15 || ticksScheduled >= 250 || ticksDone >= 250) ) {
-				/* ratio we are aiming for is around 90% usage*/
-				Bits ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
-//				LOG_MSG("Done %d schedulded %d ratio %d cycles %d", ticksDone, ticksScheduled, ratio, CPU_CycleMax);
-				if (ratio <= 1024) 
-					CPU_CycleMax = (CPU_CycleMax * ratio) / 1024;
-				else 
-					CPU_CycleMax = 1 + (CPU_CycleMax >> 1) + (CPU_CycleMax * ratio) / 2048;
-				if (CPU_CycleLimit>0) {
-					if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax=CPU_CycleLimit;
+			if (CPU_CycleAutoAdjust) {
+				if(ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+					/* ratio we are aiming for is around 90% usage*/
+					Bits ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+					Bit32s new_cmax = CPU_CycleMax;
+					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
+					if(cproc > 0) {
+						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
+						if(ratioremoved < 1.0) {
+							ratio = (Bits)((double)ratio * (1 - ratioremoved));
+							if (ratio <= 1024) 
+								new_cmax = (CPU_CycleMax * ratio) / 1024;
+							else 
+								new_cmax = 1 + (CPU_CycleMax >> 1) + (CPU_CycleMax * ratio) / 2048;
+						}
+					}
+
+					// maybe care about not going negative
+					if (new_cmax > 0) 
+						CPU_CycleMax = new_cmax;
+					if (CPU_CycleLimit > 0) {
+						if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
+					}
+					CPU_IODelayRemoved = 0;
+					ticksDone = 0;
+					ticksScheduled = 0;
+				} else if (ticksAdded > 15) {
+					CPU_CycleMax /= 3;
+					if (CPU_CycleMax < 100)
+					CPU_CycleMax = 100;
 				}
-				ticksDone = 0;
-				ticksScheduled = 0;
 			}
 		} else {
 			ticksAdded = 0;

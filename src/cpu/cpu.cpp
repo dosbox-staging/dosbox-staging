@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.96 2007-01-21 18:14:52 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.97 2007-02-04 11:10:22 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -54,6 +54,7 @@ Bit32s CPU_CyclePercUsed = 100;
 Bit32s CPU_CycleLimit = -1;
 Bit32s CPU_CycleUp = 0;
 Bit32s CPU_CycleDown = 0;
+Bit64s CPU_IODelayRemoved = 0;
 CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust;
 Bitu CPU_AutoDetermineMode;

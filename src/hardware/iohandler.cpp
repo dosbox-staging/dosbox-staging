@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.24 2007-01-13 10:43:40 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.25 2007-02-04 11:10:22 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -167,12 +167,11 @@ static Bits IOFaultCore(void) {
  * games with their timing of certain operations
  */
 
-extern Bit32s CPU_CycleMax;
 
 #define IODELAY_READ_MICROS 1.0
 #define IODELAY_WRITE_MICROS 0.75
 
-inline void IO_USEC_read_delay() {
+inline void IO_USEC_read_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
 		// this could be calculated whenever CPU_CycleMax changes
 		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
@@ -181,7 +180,7 @@ inline void IO_USEC_read_delay() {
 	}
 }
 
-inline void IO_USEC_write_delay() {
+inline void IO_USEC_write_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
 		// this could be calculated whenever CPU_CycleMax changes
 		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS); 
@@ -189,6 +188,27 @@ inline void IO_USEC_write_delay() {
 		else CPU_Cycles = 0;
 	}
 }
+
+
+#define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
+#define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
+
+inline void IO_USEC_read_delay() {
+	Bitu delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
+	if(CPU_Cycles > delaycyc) {
+		CPU_Cycles -= delaycyc;
+		CPU_IODelayRemoved += delaycyc;
+	} else CPU_Cycles = 0;
+}
+
+inline void IO_USEC_write_delay() {
+	Bitu delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk; 
+	if(CPU_Cycles > delaycyc) {
+		CPU_Cycles -= delaycyc;
+		CPU_IODelayRemoved += delaycyc;
+	} else CPU_Cycles = 0;
+}
+
 
 void IO_WriteB(Bitu port,Bitu val) {
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
