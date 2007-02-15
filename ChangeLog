@@ -8,10 +8,14 @@
   - Improve compatibility of dynamic core by making it handle certain
     pagefaults earlier.
   - Move internal dos tables around so we have more umb memory.
+  - Add some dos tables.
   - Dynamic core supports io exceptions.
   - Move some interrupt handlers to XT Bios locations.
   - Add a dynamic fpu on x86.
   - Improve fpu on non-x86.
+  - Trapflag gets strickt priority over hardware IRQs.
+  - Trapflag support for the dynamic core.
+  - Add dummy TRx handling.
   - Fix a few rarely used character functions.
   - Improve auto cycle guessing code.
   - Improve and extend the joystick support.
@@ -26,6 +30,7 @@
   - Add basic support for clipper programs.
   - Add support for different keyboard layouts.
   - Add auto core guessing.
+  - Fix a few flags bugs.
   - Fix a few small cpu bugs.
   - Improve soundblaster detection rate by various programs.
   - Improve EMS emulation. (allow mapping of non standard regions)
@@ -37,20 +42,29 @@
     more exception types.
   - Improve DOS functions when dealing with virtual drive.
   - Improve FAT drives.
+  - Better handling of volume-labels in file functions.
+  - Image disk cycling capability. (prompt)
   - Try to reduce the impact of using an analog joystick.
-  - Make dynamic core handle more types of self modifying code.
+  - Several measures to avoid code invalidation on certain types
+    of self modification in the dynamic core.
+  - Add dynamic core memory function inlining.
   - A few small mouse improvements. (some games are using things they
     shouldn't)
   - Add nullmodem emulation.(h-a-l-9000)
   - Some small cga and hercules fixes.
+  - Add more scalers (hq2x/hq3x/sai). (Kronuz)
   - Change configuration file loading support. It now supports
     multiple configuration files.
   - Make dynamic core capable of running some win32s programs.
+  - Fix and add some rare soundblaster modes. (Srecko)
+  - Better soundblaster mixer controls. (Srecko)
   - Make soundblaster installation under windows much easier.
   - Add device control channel handling. 
-  - GEMMIS support (ems under windows)
-  - Support more colours in win 3.
+  - GEMMIS support (ems under windows).
+  - Support more colours in win 3. (vasyl)
   - Don't show unmounted drives in windows filemanager.
+  - Fix some bugs in the int13 handler.
+  - Simulate some side-effects of bios interrupt handlers on flags.
   - Many timer improvements. 
   - Some pcjr fixes.
   - Some booter fixes.
