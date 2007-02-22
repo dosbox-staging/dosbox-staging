@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.61 2007-01-08 19:59:06 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.62 2007-02-22 08:39:06 qbix79 Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -949,12 +949,12 @@ static void CTMIXER_Reset(void) {
 	CTMIXER_UpdateVolumes();
 }
 
-#define SETPROVOL(_WHICH_,_VAL_)															\
-	_WHICH_[0]= ((sb.type==SBT_16) ? ((_VAL_) & 0x1) :0x1)      | (((_VAL_) & 0xf0) >> 3);	\
-	_WHICH_[1]= ((sb.type==SBT_16) ? (((_VAL_) >> 4) & 0x1) :0x1) | (((_VAL_) & 0x0f) << 1);	\
+#define SETPROVOL(_WHICH_,_VAL_)										\
+	_WHICH_[0]=   ((((_VAL_) & 0xf0) >> 3)|(sb.type==SBT_16 ? 1:3));	\
+	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(sb.type==SBT_16 ? 1:3));	\
 
 #define MAKEPROVOL(_WHICH_)			\
-	(((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1))
+	(((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1) & (sb.type==SBT_16 ? 0xff:0xee))
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
@@ -967,7 +967,7 @@ static void DSP_ChangeStereo(bool stereo) {
 		sb.dma.mul/=2;
 		sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 		sb.dma.min=(sb.dma.rate*3)/1000;
-	} 
+	}
 	sb.dma.stereo=stereo;
 }
 
@@ -977,25 +977,27 @@ static void CTMIXER_Write(Bit8u val) {
 		CTMIXER_Reset();
 		LOG(LOG_SB,LOG_WARN)("Mixer reset value %x",val);
 		break;
-	case 0x02:		/* Master Voulme (SBPRO) Obsolete? */
-	case 0x22:		/* Master Volume (SBPRO) */
-		SETPROVOL(sb.mixer.master,val);
+	case 0x02:		/* Master Volume (SB2 Only) */
+		SETPROVOL(sb.mixer.master,(val&0xf)|(val<<4));
 		CTMIXER_UpdateVolumes();
 		break;
 	case 0x04:		/* DAC Volume (SBPRO) */
 		SETPROVOL(sb.mixer.dac,val);
 		CTMIXER_UpdateVolumes();
 		break;
-	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro */
-		//SETPROVOL(sb.mixer.fm,val);
+	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only) */
 		//volume controls both channels
-		sb.mixer.fm[0]=sb.mixer.fm[1] = 0x1| ((val&0x0f)<<1);
+		SETPROVOL(sb.mixer.fm,(val&0xf)|(val<<4));
 		CTMIXER_UpdateVolumes();
 		if(val&0x60) LOG(LOG_SB,LOG_WARN)("Turned FM one channel off. not implemented %X",val);
 		//TODO Change FM Mode if only 1 fm channel is selected
 		break;
-	case 0x0a:		/* Mic Level */
-		sb.mixer.mic=(val & 0xf) << 1;
+	case 0x08:		/* CDA Volume (SB2 Only) */
+		SETPROVOL(sb.mixer.cda,(val&0xf)|(val<<4));
+		break;
+	case 0x0a:		/* Mic Level (SBPRO) or DAC Volume (SB2): 2-bit, 3-bit on SB16 */
+		if (sb.type==SBT_2) sb.mixer.dac[0]=sb.mixer.dac[1]=((val & 0x6) << 2)|3;
+		else sb.mixer.mic=((val & 0x7) << 2)|(sb.type==SBT_16?1:3);
 		break;
 	case 0x0e:		/* Output/Stereo Select */
 		sb.mixer.stereo=(val & 0x2) > 0;
@@ -1003,41 +1005,72 @@ static void CTMIXER_Write(Bit8u val) {
 		DSP_ChangeStereo(sb.mixer.stereo);
 		LOG(LOG_SB,LOG_WARN)("Mixer set to %s",sb.dma.stereo ? "STEREO" : "MONO");
 		break;
+	case 0x22:		/* Master Volume (SBPRO) */
+		SETPROVOL(sb.mixer.master,val);
+		CTMIXER_UpdateVolumes();
+		break;
 	case 0x26:		/* FM Volume (SBPRO) */
 		SETPROVOL(sb.mixer.fm,val);
-		CTMIXER_UpdateVolumes();	
+		CTMIXER_UpdateVolumes();
 		break;
 	case 0x28:		/* CD Audio Volume (SBPRO) */
 		SETPROVOL(sb.mixer.cda,val);
 		break;
-	case 0x2e:		/* Line-IN Volume (SBPRO) */
+	case 0x2e:		/* Line-in Volume (SBPRO) */
 		SETPROVOL(sb.mixer.lin,val);
 		break;
 	//case 0x20:		/* Master Volume Left (SBPRO) ? */
 	case 0x30:		/* Master Volume Left (SB16) */
-		if (sb.type>=SBT_PRO2) {
-			SETPROVOL(sb.mixer.master,(val&0xf0)|(MAKEPROVOL(sb.mixer.master)&0x0f));
+		if (sb.type==SBT_16) {
+			sb.mixer.master[0]=val>>3;
 			CTMIXER_UpdateVolumes();
 		}
 		break;
 	//case 0x21:		/* Master Volume Right (SBPRO) ? */
-	case 0x31:		/* Master Volume Right (S16) */
-		if (sb.type>=SBT_PRO2) {
-			SETPROVOL(sb.mixer.master,((val>>4)&0x0f)|(MAKEPROVOL(sb.mixer.master)&0xf0));
+	case 0x31:		/* Master Volume Right (SB16) */
+		if (sb.type==SBT_16) {
+			sb.mixer.master[1]=val>>3;
 			CTMIXER_UpdateVolumes();
 		}
 		break;
-	case 0x32:		/* DAC Volume Left (S16) */
-		if (sb.type>=SBT_PRO2) {
-			SETPROVOL(sb.mixer.dac,(val&0xf0)|(MAKEPROVOL(sb.mixer.dac)&0x0f));
+	case 0x32:		/* DAC Volume Left (SB16) */
+		if (sb.type==SBT_16) {
+			sb.mixer.dac[0]=val>>3;
 			CTMIXER_UpdateVolumes();
 		}
 		break;
-	case 0x33:		/* DAC Volume Right (S16) */
-		if (sb.type>=SBT_PRO2) {
-			SETPROVOL(sb.mixer.dac,((val>>4)&0x0f)|(MAKEPROVOL(sb.mixer.dac)&0xf0));
+	case 0x33:		/* DAC Volume Right (SB16) */
+		if (sb.type==SBT_16) {
+			sb.mixer.dac[1]=val>>3;
 			CTMIXER_UpdateVolumes();
 		}
+		break;
+	case 0x34:		/* FM Volume Left (SB16) */
+		if (sb.type==SBT_16) {
+			sb.mixer.fm[0]=val>>3;
+			CTMIXER_UpdateVolumes();
+		}
+                break;
+	case 0x35:		/* FM Volume Right (SB16) */
+		if (sb.type==SBT_16) {
+			sb.mixer.fm[1]=val>>3;
+			CTMIXER_UpdateVolumes();
+		}
+		break;
+	case 0x36:		/* CD Volume Left (SB16) */
+		if (sb.type==SBT_16) sb.mixer.cda[0]=val>>3;
+		break;
+	case 0x37:		/* CD Volume Right (SB16) */
+		if (sb.type==SBT_16) sb.mixer.cda[1]=val>>3;
+		break;
+	case 0x38:		/* Line-in Volume Left (SB16) */
+		if (sb.type==SBT_16) sb.mixer.lin[0]=val>>3;
+		break;
+	case 0x39:		/* Line-in Volume Right (SB16) */
+		if (sb.type==SBT_16) sb.mixer.lin[1]=val>>3;
+		break;
+	case 0x3a:
+		if (sb.type==SBT_16) sb.mixer.mic=val>>3;
 		break;
 	case 0x80:		/* IRQ Select */
 		sb.hw.irq=0xff;
@@ -1058,28 +1091,33 @@ static void CTMIXER_Write(Bit8u val) {
 		LOG(LOG_SB,LOG_NORMAL)("Mixer select dma8:%x dma16:%x",sb.hw.dma8,sb.hw.dma16);
 		break;
 	default:
-		if ((sb.type == SBT_2 && sb.mixer.index==0x08) ||  /* CD volume on SB2 */
-			((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
-			(sb.type == SBT_16 && sb.mixer.index >= 0x30 && sb.mixer.index <= 0x47)) /* New SB16 registers */
+
+		if(	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+			 (sb.type == SBT_16 && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
 			sb.mixer.unhandled[sb.mixer.index] = val;
 		LOG(LOG_SB,LOG_WARN)("MIXER:Write %X to unhandled index %X",val,sb.mixer.index);
 	}
 }
-	
+
 static Bit8u CTMIXER_Read(void) {
 	Bit8u ret;
 //	if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 	switch (sb.mixer.index) {
 	case 0x00:		/* RESET */
 		return 0x00;
-	case 0x02:		/* Master Voulme (SBPRO) Obsolete? */
+	case 0x02:		/* Master Volume (SB2 Only) */
+		return ((sb.mixer.master[1]>>1) & 0xe);
 	case 0x22:		/* Master Volume (SBPRO) */
 		return	MAKEPROVOL(sb.mixer.master);
 	case 0x04:		/* DAC Volume (SBPRO) */
 		return MAKEPROVOL(sb.mixer.dac);
-//	case 0x06:		/* FM output selection, Somewhat obsolete with dual OPL SBpro */
-	case 0x0a:		/* Mic Level (SBPRO) */
-		return (sb.mixer.mic >> 1);
+	case 0x06:		/* FM Volume (SB2 Only) + FM output selection */
+		return ((sb.mixer.fm[1]>>1) & 0xe);
+	case 0x08:		/* CD Volume (SB2 Only) */
+		return ((sb.mixer.cda[1]>>1) & 0xe);
+	case 0x0a:		/* Mic Level (SBPRO) or Voice (SB2 Only) */
+		if (sb.type==SBT_2) return (sb.mixer.dac[0]>>2);
+		else return ((sb.mixer.mic >> 2) & (sb.type==SBT_16 ? 7:6));
 	case 0x0e:		/* Output/Stereo Select */
 		return 0x11|(sb.mixer.stereo ? 0x02 : 0x00)|(sb.mixer.filtered ? 0x20 : 0x00);
 	case 0x26:		/* FM Volume (SBPRO) */
@@ -1089,19 +1127,47 @@ static Bit8u CTMIXER_Read(void) {
 	case 0x2e:		/* Line-IN Volume (SBPRO) */
 		return MAKEPROVOL(sb.mixer.lin);
 	case 0x30:		/* Master Volume Left (SB16) */
-		if (sb.type>=SBT_PRO2) return sb.mixer.master[0]<<3;
+		if (sb.type==SBT_16) return sb.mixer.master[0]<<3;
 		ret=0xa;
 		break;
 	case 0x31:		/* Master Volume Right (S16) */
-		if (sb.type>=SBT_PRO2) return sb.mixer.master[1]<<3;
+		if (sb.type==SBT_16) return sb.mixer.master[1]<<3;
 		ret=0xa;
 		break;
-	case 0x32:		/* DAC Volume Left (S16) */
-		if (sb.type>=SBT_PRO2) return sb.mixer.dac[0]<<3;
+	case 0x32:		/* DAC Volume Left (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.dac[0]<<3;
 		ret=0xa;
 		break;
-	case 0x33:		/* DAC Volume Right (S16) */
-		if (sb.type>=SBT_PRO2) return sb.mixer.dac[1]<<3;
+	case 0x33:		/* DAC Volume Right (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.dac[1]<<3;
+		ret=0xa;
+		break;
+	case 0x34:		/* FM Volume Left (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.fm[0]<<3;
+		ret=0xa;
+		break;
+	case 0x35:		/* FM Volume Right (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.fm[1]<<3;
+		ret=0xa;
+		break;
+	case 0x36:		/* CD Volume Left (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.cda[0]<<3;
+		ret=0xa;
+		break;
+	case 0x37:		/* CD Volume Right (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.cda[1]<<3;
+		ret=0xa;
+		break;
+	case 0x38:		/* Line-in Volume Left (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.lin[0]<<3;
+		ret=0xa;
+		break;
+	case 0x39:		/* Line-in Volume Right (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.lin[1]<<3;
+		ret=0xa;
+		break;
+	case 0x3a:		/* Mic Volume (SB16) */
+		if (sb.type==SBT_16) return sb.mixer.mic<<3;
 		ret=0xa;
 		break;
 	case 0x80:		/* IRQ Select */
@@ -1124,13 +1190,12 @@ static Bit8u CTMIXER_Read(void) {
 		case 7:ret|=0x80;break;
 		}
 		return ret;
-	case 0x82:
+	case 0x82:		/* IRQ Status */
 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
 				(sb.irq.pending_16bit ? 0x2 : 0);
-	default:		/* IRQ Status */
-		if ((sb.type == SBT_2 && sb.mixer.index==0x08) ||  /* CD volume on SB2 */
-			((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
-			(sb.type == SBT_16 && sb.mixer.index >= 0x30 && sb.mixer.index <= 0x47)) /* New SB16 registers */
+	default:
+		if (	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+			(sb.type == SBT_16 && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
 			ret = sb.mixer.unhandled[sb.mixer.index];
 		else
 			ret=0xa;
