@@ -741,7 +741,7 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 				for(i=dmaaddr;i<(dmaaddr+read);i++) GUSRam[i] ^= 0x80;
 			} else {
 				// 16-bit data
-				for(i=dmaaddr+1;i<(dmaaddr+read-1);i+=2) GUSRam[i] ^= 0x80;
+				for(i=dmaaddr+1;i<(dmaaddr+read);i+=2) GUSRam[i] ^= 0x80;
 			}
 		}
 	} else {
