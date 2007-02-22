@@ -24,7 +24,7 @@ INDEX:
 6. Mapper
 7. Keyboard Layout
 8. Serial Multiplayer feature
-9. To run resource-demanding games
+9. How to run resource-demanding games
 10. The config file
 11. The language file
 12. Building your own version of DOSBox
@@ -49,6 +49,7 @@ Q: I've got a Z instead of a C at the prompt.
 Q: How do I change to fullscreen ?
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
+Q: There is no sound.
 Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
 Q: The game/application can't find its CD-ROM.
@@ -106,10 +107,26 @@ A: Usually, DOSBox detects when a game uses mouse control. When you click on
    you will have to lock the mouse manually by pressing CTRL-F10.
 
 
+Q: There is no sound.
+A: Be sure that the sound is correctly configured in the game. This might be
+   done during the installation or with a setup/setsound utility that 
+   accompanies the game. First see if an autodetection option is provided. If 
+   there is none try selecting soundblaster or soundblaster16 with the default
+   settings being "address=220 irq=7 dma=1". You might also want to select 
+   midi at address 330 as music device.
+   The parameters of the emulated soundcards can be changed in the DOSBox
+   configuration file.
+   If you still don't get any sound set the core to normal and use some lower
+   fixed cycles value (like cycles=2000). Also assure that your host operating
+   sound does provide sound.
+
+
 Q: The sound stutters or sounds stretched/weird.
 A: You're using too much cpu power to keep DOSBox running at the current speed.
    You can  lower the cycles, skip frames or get a faster machine.
    You can also increase the prebuffer in the configfile.
+   If you are using cycles=max or =auto, then make sure that there no
+   background processes interfering! (especially if they acces the harddisk)
 
 
 Q: I can't type \ or : in DOSBox.
@@ -124,6 +141,8 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      7. for \ try the keys around "enter". For ":" try shift and the keys 
         between "enter" and "l" (US keyboard layout).
      8. Try keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
+        Look for keyb2.0 pre4 as older and newer versions are known to
+        have a bug in the loader routines.
 
 
 Q: The game/application can't find its CD-ROM.
@@ -137,7 +156,8 @@ A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
 
 
 Q: The game/application runs much too slow!
-A: Look at the section "To run resource-demanding games" for more information.
+A: Look at the section "How to run resource-demanding games" for more 
+   information.
 
 
 Q: Can DOSBox harm my computer?
@@ -243,14 +263,14 @@ dosbox -version
   -conf configfile
         Start DOSBox with the options specified in "configfile".
         Multiple -conf options may be present.
-        See Chapter 9 for more details.
+        See Chapter 10 for more details.
 
   -lang languagefile
         Start DOSBox using the language specified in "languagefile".
 
   -noconsole (Windows Only)
         Start DOSBox without showing the console window. Output will
-	be redirected to stdout.txt and stderr.txt
+        be redirected to stdout.txt and stderr.txt
 	
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
@@ -269,7 +289,13 @@ dosbox -version
 
 Note: If a name/command/configfile/languagefile contains a space, put
       the whole name/command/configfile/languagefile between quotes
-      ("command or file name").
+      ("command or file name"). If you need to use quotes within quotes
+      (most likely with -c and mount).
+      Windows and OS/2 users can use single quotes inside the double quotes. 
+      Other people should be able to use escaped double quotes inside the 
+      double quotes.
+      win -c "mount c 'c:\program files\'" 
+      linux -c "mount c \"/tmp/name with space\""
 
 For example:
 
@@ -911,9 +937,9 @@ Example: Be a server listening on TCP port 5000.
 
 
 
-===================================
-9. To run resource-demanding games: 
-===================================
+=======================================
+9. How to run resource-demanding games: 
+=======================================
 
 DOSBox emulates the CPU, the sound and graphic cards, and other peripherals
 of a PC, all at the same time. The speed of an emulated DOS application
@@ -961,6 +987,17 @@ Sound emulation
 Also try to close every program but DOSBox to reserve as much resources
 as possible for DOSBox.
 
+
+Advanced cycles configuration:
+The cycles=auto and cycles=max settings can be parametrized to have
+different startup defaults. The syntax is
+  cycles= auto ["realmode default"] ["protected mode default"%] 
+               [limit "cycle limit"]
+  cycles=max ["protected mode default"%] [limit "cycle limit"]
+Example:
+  cycles=auto 1000 80% limit 20000
+  will use cycles=1000 for real mode games, 80% cpu throttling for 
+  protected mode games along with a hard cycles limit of 20000
 
 
 
