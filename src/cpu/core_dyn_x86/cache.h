@@ -15,6 +15,9 @@ public:
 		Bit8u * start;					//Where in the cache are we
 		Bitu size;
 		CacheBlock * next;
+		Bit8u * wmapmask;
+		Bit16u maskstart;
+		Bit16u masklen;
 	} cache;
 	struct {
 		Bitu index;
@@ -222,8 +225,22 @@ public:
 			//Will crash if a block isn't found, which should never happen.
 		}
 		*where=block->hash.next;
-		for (Bitu i=block->page.start;i<=block->page.end;i++) {
-			if (write_map[i]) write_map[i]--;
+		if (GCC_UNLIKELY(block->cache.wmapmask!=NULL)) {
+			for (Bitu i=block->page.start;i<block->cache.maskstart;i++) {
+				if (write_map[i]) write_map[i]--;
+			}
+			Bitu maskct=0;
+			for (Bitu i=block->cache.maskstart;i<=block->page.end;i++,maskct++) {
+				if (write_map[i]) {
+					if ((maskct>=block->cache.masklen) || (!block->cache.wmapmask[maskct])) write_map[i]--;
+				}
+			}
+			free(block->cache.wmapmask);
+			block->cache.wmapmask=NULL;
+		} else {
+			for (Bitu i=block->page.start;i<=block->page.end;i++) {
+				if (write_map[i]) write_map[i]--;
+			}
 		}
 	}
 	void Release(void) {
@@ -323,6 +340,10 @@ void CacheBlock::Clear(void) {
 	if (page.handler) {
 		page.handler->DelCacheBlock(this);
 		page.handler=0;
+	}
+	if (cache.wmapmask){
+		free(cache.wmapmask);
+		cache.wmapmask=NULL;
 	}
 }
 

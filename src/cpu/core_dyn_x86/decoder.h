@@ -140,11 +140,43 @@ static Bit32u decode_fetchd(void) {
 	return mem_readd(decode.code-4);
 }
 
+#define START_WMMEM 64
+
+static void INLINE decode_increase_wmapmask(Bitu size) {
+	Bitu mapidx;
+	CacheBlock* activecb=decode.active_block; 
+	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
+		activecb->cache.wmapmask=(Bit8u*)malloc(START_WMMEM);
+		memset(activecb->cache.wmapmask,0,START_WMMEM);
+		activecb->cache.maskstart=decode.page.index;
+		activecb->cache.masklen=START_WMMEM;
+		mapidx=0;
+	} else {
+		mapidx=decode.page.index-activecb->cache.maskstart;
+		if (GCC_UNLIKELY(mapidx+size>=activecb->cache.masklen)) {
+			Bitu newmasklen=activecb->cache.masklen*4;
+			if (newmasklen<mapidx+size) newmasklen=((mapidx+size)&~3)*2;
+			Bit8u* tempmem=(Bit8u*)malloc(newmasklen);
+			memset(tempmem,0,newmasklen);
+			memcpy(tempmem,activecb->cache.wmapmask,activecb->cache.masklen);
+			free(activecb->cache.wmapmask);
+			activecb->cache.wmapmask=tempmem;
+			activecb->cache.masklen=newmasklen;
+		}
+	}
+	switch (size) {
+		case 1 : activecb->cache.wmapmask[mapidx]+=0x01; break;
+		case 2 : (*(Bit16u*)&activecb->cache.wmapmask[mapidx])+=0x0101; break;
+		case 4 : (*(Bit32u*)&activecb->cache.wmapmask[mapidx])+=0x01010101; break;
+	}
+}
+
 static bool decode_fetchb_imm(Bitu & val) {
 	if (decode.page.index<4096) {
 		Bitu index=(decode.code>>12);
 		if (paging.tlb.read[index]) {
 			val=(Bitu)(paging.tlb.read[index]+decode.code);
+			decode_increase_wmapmask(1);
 			decode.code++;
 			decode.page.index++;
 			return true;
@@ -158,6 +190,7 @@ static bool decode_fetchw_imm(Bitu & val) {
 		Bitu index=(decode.code>>12);
 		if (paging.tlb.read[index]) {
 			val=(Bitu)(paging.tlb.read[index]+decode.code);
+			decode_increase_wmapmask(2);
 			decode.code+=2;
 			decode.page.index+=2;
 			return true;
@@ -171,6 +204,7 @@ static bool decode_fetchd_imm(Bitu & val) {
 		Bitu index=(decode.code>>12);
 		if (paging.tlb.read[index]) {
 			val=(Bitu)(paging.tlb.read[index]+decode.code);
+			decode_increase_wmapmask(4);
 			decode.code+=4;
 			decode.page.index+=4;
 			return true;
@@ -1919,7 +1953,10 @@ restart_prefix:
 		if (!decode.page.invmap) opcode=decode_fetchb();
 		else {
 			if (decode.page.index<4096) {
-				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) goto illegalopcode;
+				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) {
+					decode.page.index++;
+					goto illegalopcode;
+				}
 				opcode=decode_fetchb();
 			} else {
 				opcode=decode_fetchb();
