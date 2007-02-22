@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.83 2007-01-21 16:36:38 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.84 2007-02-22 08:34:10 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -291,12 +291,15 @@ void DOS_Shell::Run(void) {
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
-	WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),VERSION);
+	if(machine != MCH_HERC) { //Hide it for hercules as that looks too weird
+		WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),VERSION);
 #if C_DEBUG
-	WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
+		WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
-	if(machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
-	WriteOut(MSG_Get("SHELL_STARTUP_END"));
+		if(machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+		WriteOut(MSG_Get("SHELL_STARTUP_END"));
+	}
+
 	if (cmd->FindString("/INIT",line,true)) {
 		strcpy(input_line,line.c_str());
 		line.erase();
@@ -355,9 +358,14 @@ public:
 		/* Check to see for extra command line options to be added (before the command specified on commandline) */
 		/* Maximum of extra commands: 10 */
 		Bitu i = 1;
-		while (control->cmdline->FindString("-c",line,true) && (i <= 11))
+		while (control->cmdline->FindString("-c",line,true) && (i <= 11)) {
+#if defined (WIN32) || defined (OS2)
+			//replace single with double quotes so that mount commands can contain spaces
+			for(Bitu temp = 0;temp < line.size();++temp) if(line[temp] == '\'') line[temp]='\"';
+#endif //Linux users can simply use \" in their shell
 			autoexec[i++].Install(line);
-	
+		}
+
 		/* Check for the -exit switch which causes dosbox to when the command on the commandline has finished */
 		bool addexit = control->cmdline->FindExist("-exit",true);
 
