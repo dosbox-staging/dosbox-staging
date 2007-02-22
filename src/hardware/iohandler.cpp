@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.25 2007-02-04 11:10:22 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.26 2007-02-22 08:32:21 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -195,18 +195,16 @@ inline void IO_USEC_write_delay_old() {
 
 inline void IO_USEC_read_delay() {
 	Bitu delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
-	if(CPU_Cycles > delaycyc) {
-		CPU_Cycles -= delaycyc;
-		CPU_IODelayRemoved += delaycyc;
-	} else CPU_Cycles = 0;
+	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc = 0; //Else port acces will set cycles to 0. which might trigger problem with games which read 16 bit values
+	CPU_Cycles -= delaycyc;
+	CPU_IODelayRemoved += delaycyc;
 }
 
 inline void IO_USEC_write_delay() {
 	Bitu delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk; 
-	if(CPU_Cycles > delaycyc) {
-		CPU_Cycles -= delaycyc;
-		CPU_IODelayRemoved += delaycyc;
-	} else CPU_Cycles = 0;
+	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc=0;
+	CPU_Cycles -= delaycyc;
+	CPU_IODelayRemoved += delaycyc;
 }
 
 
