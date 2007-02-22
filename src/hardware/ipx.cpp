@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.cpp,v 1.12 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: ipx.cpp,v 1.13 2007-02-22 08:30:47 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -520,7 +520,7 @@ static void pingAck(IPaddress retAddr) {
 	SDLNet_Write16(0x2, regHeader.dest.socket);
 
 	SDLNet_Write32(0, regHeader.src.network);
-	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(localIpxAddr));
+	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(regHeader.src.addr.byNode.node));
 	SDLNet_Write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	regHeader.pType = 0x0;
@@ -547,7 +547,7 @@ static void pingSend(void) {
 	SDLNet_Write16(0x2, regHeader.dest.socket);
 
 	SDLNet_Write32(0, regHeader.src.network);
-	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(localIpxAddr));
+	memcpy(regHeader.src.addr.byNode.node, localIpxAddr.netnode, sizeof(regHeader.src.addr.byNode.node));
 	SDLNet_Write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	regHeader.pType = 0x0;
