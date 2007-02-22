@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.68 2007-02-01 15:32:19 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.69 2007-02-22 08:37:12 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -358,13 +358,17 @@ extern Bit32u floppytype;
 
 class BOOT : public Program {
 private:
-	FILE *getFSFile(Bit8u * filename, Bit32u *ksize, Bit32u *bsize,bool tryload=false) {
+   
+	FILE *getFSFile_mounted(char const* filename, Bit32u *ksize, Bit32u *bsize, Bit8u *error) {
+		//if return NULL then put in error the errormessage code if an error was requested
+		bool tryload = (*error)?true:false;
+		*error = 0;
 		Bit8u drive;
 		FILE *tmpfile;
 		char fullname[DOS_PATHLENGTH];
 
 		localDrive* ldp=0;
-		if (!DOS_MakeName((char *)filename,fullname,&drive)) return NULL;
+		if (!DOS_MakeName(const_cast<char*>(filename),fullname,&drive)) return NULL;
 
 		try {		
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
@@ -372,13 +376,13 @@ private:
 
 			tmpfile = ldp->GetSystemFilePtr(fullname, "r");
 			if(tmpfile == NULL) {
-				if (!tryload) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
+				if (!tryload) *error=1;
 				return NULL;
 			}
 			fclose(tmpfile);
 			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
 			if(tmpfile == NULL) {
-				if (!tryload) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+				if (!tryload) *error=2;
 				return NULL;
 			}
 
@@ -390,7 +394,29 @@ private:
 		catch(...) {
 			return NULL;
 		}
-
+	}
+   
+	FILE *getFSFile(char const * filename, Bit32u *ksize, Bit32u *bsize,bool tryload=false) {
+		Bit8u error = tryload?1:0;
+		FILE* tmpfile = getFSFile_mounted(filename,ksize,bsize,&error);
+		if(tmpfile) return tmpfile;
+		//File not found on mounted filesystem. Try regular filesystem
+		tmpfile = fopen(filename,"rb+");
+		if(!tmpfile) {
+			if( (tmpfile = fopen(filename,"r")) ) {
+				//File exists; So can't be opened in correct mode => error 2
+				fclose(tmpfile);
+				if(tryload) error = 2;
+			}
+			// Give the delayed errormessages from the mounted variant (or from above)
+			if(error == 1) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
+			if(error == 2) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
+			return NULL;
+		}
+		fseek(tmpfile,0L, SEEK_END);
+		*ksize = (ftell(tmpfile) / 1024);
+		*bsize = ftell(tmpfile);
+		return tmpfile;
 	}
 
 	void printError(void) {
@@ -464,7 +490,7 @@ public:
 
 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"), temp_line.c_str());
 				Bit32u rombytesize;
-				FILE *usefile = getFSFile((Bit8u *)temp_line.c_str(), &floppysize, &rombytesize);
+				FILE *usefile = getFSFile(temp_line.c_str(), &floppysize, &rombytesize);
 				if(usefile != NULL) {
 					if(diskSwap[i] != NULL) delete diskSwap[i];
 					diskSwap[i] = new imageDisk(usefile, (Bit8u *)temp_line.c_str(), floppysize, false);
@@ -577,7 +603,7 @@ public:
 				if (usefile_1==NULL) return;
 
 				Bit32u sz1,sz2;
-				FILE *tfile = getFSFile((Bit8u *)"system.rom", &sz1, &sz2, true);
+				FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
 				if (tfile!=NULL) {
 					fseek(tfile, 0x3000L, SEEK_SET);
 					Bit32u drd=fread(rombuf, 1, 0xb000, tfile);
