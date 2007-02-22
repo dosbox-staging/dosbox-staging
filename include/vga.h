@@ -106,13 +106,11 @@ typedef struct {
 	Bitu width;
 	Bitu height;
 	Bitu blocks;
-	Bitu panning;
 	Bitu address;
 	Bit8u *linear_base;
 	Bitu linear_mask;
-	Bitu address_mask;
-	Bitu address_last;
 	Bitu address_add;
+	Bitu line_length;
 	Bitu address_line_total;
 	Bitu address_line;
 	Bitu lines_total;
@@ -316,6 +314,7 @@ typedef struct {
 	Bit8u write_index;
 	Bit8u read_index;
 	Bitu first_changed;
+	Bit8u combine[16];
 	RGBEntry rgb[0x100];
 } VGA_Dac;
 
@@ -338,7 +337,6 @@ typedef struct {
 	Bit8u	map[(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32];
 	Bit8u	checkMask, frame, writeMask;
 	bool	active;
-	Bit32u	lineWidth;
 	Bit32u  clearMask;
 	Bit32u	start, last;
 	Bit32u	lastAddress;
