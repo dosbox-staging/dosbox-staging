@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.65 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.66 2007-02-22 08:33:15 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -816,6 +816,7 @@ public:
 		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
 		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
 		phys_writed(0xfe988,RealGetVec(0x09));
+		phys_writew(Real2Phys(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
 
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
 		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
