@@ -145,10 +145,17 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 	Bitu checkMask = vga.changes.checkMask;
 	Bit8u *map = vga.changes.map;
 	Bitu start = (vidstart >> VGA_CHANGE_SHIFT);
-	Bitu end = ((vidstart + vga.changes.lineWidth ) >> VGA_CHANGE_SHIFT);
+	Bitu end = ((vidstart + vga.draw.line_length ) >> VGA_CHANGE_SHIFT);
 	for (; start <= end;start++) {
 		if ( map[start] & checkMask ) {
-			return &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+			Bit8u *ret = &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+#if !defined(C_UNALIGNED_MEMORY)
+			if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
+				memcpy( TempLine, ret, vga.draw.line_length );
+				return TempLine;
+			}
+#endif
+			return ret;
 		}
 	}
 //	memset( TempLine, 0x30, vga.changes.lineWidth );
@@ -159,7 +166,14 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 #endif
 
 static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu line) {
-	return &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+	Bit8u *ret = &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+#if !defined(C_UNALIGNED_MEMORY)
+	if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
+		memcpy( TempLine, ret, vga.draw.line_length );
+		return TempLine;
+	}
+#endif
+	return ret;
 }
 
 //Test version, might as well keep it
@@ -436,7 +450,7 @@ static void VGA_DrawPart(Bitu lines) {
 #endif
 			vga.draw.address=0;
 			if(!(vga.attr.mode_control&0x20))
-				vga.draw.address += vga.draw.panning;
+				vga.draw.address += vga.config.pel_panning;
 			vga.draw.address_line=0;
 #ifdef VGA_KEEP_CHANGES
 			vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
@@ -499,7 +513,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	error = vga.draw.delay.framestart - error - vga.draw.delay.vtotal;
 //	 if (abs(error) > 0.001 ) 
 //		 LOG_MSG("vgaerror: %f",error);
-	PIC_AddEvent(VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
+	PIC_AddEvent( VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
+	PIC_AddEvent( VGA_VerticalDisplayEnd, (float)vga.draw.delay.vrstart );
 	if ( GCC_UNLIKELY( vga.draw.parts_left )) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)( "Parts left: %d", vga.draw.parts_left );
 		PIC_RemoveEvents( &VGA_DrawPart );
@@ -510,11 +525,12 @@ static void VGA_VerticalTimer(Bitu val) {
 	if (!RENDER_StartUpdate())
 		return;
 	//TODO Maybe check for an active frame on parts_left and clear that first?
-	vga.draw.parts_left=vga.draw.parts_total;
-	vga.draw.lines_done=0;
-	vga.draw.address=vga.config.display_start;
-	vga.draw.address_line=vga.config.hlines_skip;
-	vga.draw.split_line=(vga.config.line_compare/vga.draw.lines_scaled);
+	vga.draw.parts_left = vga.draw.parts_total;
+	vga.draw.lines_done = 0;
+//	vga.draw.address=vga.config.display_start;
+	vga.draw.address = vga.config.real_start;
+	vga.draw.address_line = vga.config.hlines_skip;
+	vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
 	case M_LIN4:
@@ -543,8 +559,7 @@ static void VGA_VerticalTimer(Bitu val) {
 #endif
 		break;
 	case M_TEXT:
-		vga.draw.address *= 2;
-		vga.draw.panning = vga.config.pel_panning;
+		vga.draw.address = vga.config.display_start * 2;
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
 		vga.draw.cursor.address=vga.config.cursor_start*2;
@@ -944,10 +959,9 @@ void VGA_SetupDrawing(Bitu val) {
 	}
 	vga.draw.lines_total=height;
 	vga.draw.parts_lines=vga.draw.lines_total/vga.draw.parts_total;
-	
+	vga.draw.line_length = width * ((bpp + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active = false;
-	vga.changes.lineWidth = width * ((bpp + 1) / 8);
 	vga.changes.frame = 0;
 	vga.changes.writeMask = 1;
 #endif

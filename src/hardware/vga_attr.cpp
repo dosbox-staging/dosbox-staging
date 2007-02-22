@@ -23,10 +23,13 @@
 #define attr(blah) vga.attr.blah
 
 void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
-	if (vga.attr.mode_control & 0x80) val=(val&0xf) | (vga.attr.color_select << 4);
-	else val=(val & 63) | (vga.attr.color_select & 0xc) << 4;
+	vga.attr.palette[index] = val;
+	if (vga.attr.mode_control & 0x80) val = (val&0xf) | (vga.attr.color_select << 4);
+	val &= 63;
+	val |= (vga.attr.color_select & 0xc) << 4;
 	VGA_DAC_CombineColor(index,val);
 }
+
 Bitu read_p3c0(Bitu port,Bitu iolen) {
 //Wcharts
 	return 0x0;

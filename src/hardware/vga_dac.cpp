@@ -125,7 +125,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 		default:
 			/* Check for attributes and DAC entry link */
 			for (Bitu i=0;i<16;i++) {
-				if (vga.attr.palette[i]==vga.dac.write_index) {
+				if (vga.dac.combine[i]==vga.dac.write_index) {
 					RENDER_SetPal(i,
 					vga.dac.rgb[vga.dac.write_index].red << 2,
 					vga.dac.rgb[vga.dac.write_index].green << 2,
@@ -167,11 +167,10 @@ static Bitu read_p3c9(Bitu port,Bitu iolen) {
 
 void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	/* Check if this is a new color */
-	vga.attr.palette[attr]=pal;
+	vga.dac.combine[attr]=pal;
 	switch (vga.mode) {
 	case M_VGA:
 	case M_LIN8:
-	case M_LIN16:
 		break;
 	default:
 		RENDER_SetPal(attr,
@@ -188,7 +187,7 @@ void VGA_DAC_SetEntry(Bitu entry,Bit8u red,Bit8u green,Bit8u blue) {
 	vga.dac.rgb[entry].green=green;
 	vga.dac.rgb[entry].blue=blue;
 	for (Bitu i=0;i<16;i++) 
-		if (vga.attr.palette[i]==entry)
+		if (vga.dac.combine[i]==entry)
 			RENDER_SetPal(i,red << 2,green << 2,blue << 2);
 }
 
