@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.97 2007-02-04 11:10:22 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.98 2007-02-22 08:35:34 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -2063,16 +2063,16 @@ public:
 		CPU_Cycles=0;
 
 		std::string str;
-		CommandLine* cmd = new CommandLine(0,section->Get_string("cycles"));
-		cmd->FindCommand(1,str);
+		CommandLine cmd(0,section->Get_string("cycles"));
+		cmd.FindCommand(1,str);
 
 		if (str=="max") {
 			CPU_CycleMax=0;
 			CPU_CyclePercUsed=100;
 			CPU_CycleAutoAdjust=true;
 			CPU_CycleLimit=-1;
-			for (Bitu cmdnum=2; cmdnum<=cmd->GetCount(); cmdnum++) {
-				if (cmd->FindCommand(cmdnum,str)) {
+			for (Bitu cmdnum=2; cmdnum<=cmd.GetCount(); cmdnum++) {
+				if (cmd.FindCommand(cmdnum,str)) {
 					if (str.find('%')==str.length()-1) {
 						str.erase(str.find('%'));
 						int percval=0;
@@ -2081,7 +2081,7 @@ public:
 						if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
 					} else if (str=="limit") {
 						cmdnum++;
-						if (cmd->FindCommand(cmdnum,str)) {
+						if (cmd.FindCommand(cmdnum,str)) {
 							int cyclimit=0;
 							std::istringstream stream(str);
 							stream >> cyclimit;
@@ -2096,8 +2096,8 @@ public:
 				CPU_CycleMax=3000;
 				CPU_OldCycleMax=3000;
 				CPU_CyclePercUsed=100;
-				for (Bitu cmdnum=2; cmdnum<=cmd->GetCount(); cmdnum++) {
-					if (cmd->FindCommand(cmdnum,str)) {
+				for (Bitu cmdnum=2; cmdnum<=cmd.GetCount(); cmdnum++) {
+					if (cmd.FindCommand(cmdnum,str)) {
 						if (str.find('%')==str.length()-1) {
 							str.erase(str.find('%'));
 							int percval=0;
@@ -2106,7 +2106,7 @@ public:
 							if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
 						} else if (str=="limit") {
 							cmdnum++;
-							if (cmd->FindCommand(cmdnum,str)) {
+							if (cmd.FindCommand(cmdnum,str)) {
 								int cyclimit=0;
 								std::istringstream stream(str);
 								stream >> cyclimit;
