@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_os2.h,v 1.3 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: directserial_os2.h,v 1.4 2007-02-22 08:41:16 qbix79 Exp $ */
 
 // include guard
 #ifndef DOSBOX_DIRECTSERIAL_OS2_H
@@ -40,42 +40,38 @@ public:
 	HFILE hCom;
 	BOOL fSuccess;
 
-	CDirectSerial(
-			IO_ReadHandler* rh,
-			IO_WriteHandler* wh,
-			TIMER_TickHandler th,
-			Bit16u baseAddr,
-			Bit8u initIrq,
-			Bit32u initBps,
-			Bit8u bytesize,
-			const char *parity,
-			Bit8u stopbits,
-			const char * realPort
-		);
-	
-
+	CDirectSerial(Bitu id, CommandLine* cmd);
 	~CDirectSerial();
 	
 	
-	Bitu lastChance;		// If there is no space for new
+	//Bitu lastChance;		// If there is no space for new
 							// received data, it gets a little chance
-	Bit8u ChanceChar;
+	//Bit8u ChanceChar;
 
-	bool CanRecv(void);
-	bool CanSend(void);
+	//bool CanRecv(void);
+	//bool CanSend(void);
 
-	bool InstallationSuccessful;	// check after constructing. If
-									// something was wrong, delete it right away.
 
-	void RXBufferEmpty();
+	//void RXBufferEmpty();
+	bool receiveblock;
+	Bitu rx_retry;
+	Bitu rx_retry_max;
 
+	void CheckErrors();
 	
-	void updatePortConfig(Bit8u dll, Bit8u dlm, Bit8u lcr);
+	void updatePortConfig(Bit16u divider, Bit8u lcr);
 	void updateMSR();
-	void transmitByte(Bit8u val);
+	void transmitByte(Bit8u val, bool first);
 	void setBreak(bool value);
-	void updateModemControlLines(/*Bit8u mcr*/);
-	void Timer2(void);
+
+	void setRTSDTR(bool rts, bool dtr);
+	void setRTS(bool val);
+	void setDTR(bool val);
+	void handleUpperEvent(Bit16u type);
+
+
+	//void updateModemControlLines(/*Bit8u mcr*/);
+	//void Timer2(void);
 	
 		
 };

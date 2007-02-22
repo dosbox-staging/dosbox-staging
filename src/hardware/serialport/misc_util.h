@@ -6,7 +6,7 @@
 #include "SDL_net.h"
 #include "support.h"
 
-#ifdef LINUX
+#if defined LINUX || defined OS2
 #define NATIVESOCKETS
 
 #elif defined WIN32 

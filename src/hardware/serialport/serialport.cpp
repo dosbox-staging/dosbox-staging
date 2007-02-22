@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.6 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: serialport.cpp,v 1.7 2007-02-22 08:41:16 qbix79 Exp $ */
 #include <string.h>
 #include <ctype.h>
 
@@ -950,7 +950,7 @@ void CSerial::Init_Registers () {
 	ISR = 0x1;
 	LCR = 0;
 	//MCR = 0xff;
-	loopback;
+	loopback = true;
 	dtr=true;
 	rts=true;
 	op1=true;

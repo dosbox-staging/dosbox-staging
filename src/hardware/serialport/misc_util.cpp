@@ -6,8 +6,11 @@
 // C++ SDLnet wrapper
 
 // Socket inheritance
-#ifdef LINUX
+#if defined LINUX || defined OS2
 #define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
+#ifdef OS2
+typedef int     socklen_t;
+#endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,6 +20,13 @@
 #define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
 #include <winsock.h>
 typedef int	socklen_t;
+
+#elif defined __APPLE__
+#define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#define SOCKET socklen_t
 
 #else
 #define CAPWORD NETWRAPPER_TCP

@@ -34,7 +34,7 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	clientport = 0;
 
 	rx_retry = 0;
-    rx_retry_max = 100;
+	rx_retry_max = 100;
 
 	tx_gather = 12;
 	
@@ -99,7 +99,7 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 					// custom connect
 					Bit8u peernamebuf[16];
 					LOG_MSG("inheritance port: %d",sock);
-					clientsocket = new TCPClientSocket(sock); 
+					clientsocket = new TCPClientSocket(sock);
 					if(!clientsocket->isopen) {
 						LOG_MSG("Serial%d: Connection failed.",COMNUMBER);
 						delete clientsocket;
