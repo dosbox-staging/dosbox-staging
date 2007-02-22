@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.114 2007-02-04 11:10:22 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.115 2007-02-22 08:44:06 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -311,14 +311,14 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("cycleup",500);
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
-		"core -- CPU Core used in emulation: normal"
+		"core -- CPU Core used in emulation: normal,simple"
 #if (C_DYNAMIC_X86)
 		",dynamic,auto.\n"
 		"        auto switches from normal to dynamic if appropriate"
 #endif
 		".\n"
 		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"
-		"          Setting this higher than your machine can handle is bad!\n"
+		"          Setting this value too high results in sound dropouts and lags.\n"
 		"          You can also let DOSBox guess the correct value by setting it to max.\n"
 		"          The default setting (auto) switches to max if appropriate.\n"
 		"cycleup   -- Amount of cycles to increase/decrease with keycombo.\n"
@@ -433,6 +433,7 @@ void DOSBOX_Init(void) {
 	        "timed -- enable timed intervals for axis. (false is old style behaviour).\n"
 	        "autofire -- continuously fires as long as you keep the button pressed.\n"
 	        "swap34 -- swap the 3rd and the 4th axis. can be useful for certain joysticks.\n"
+	        "buttonwrap -- enable button wrapping at the number of emulated buttons.\n"
 	);
 
 	secprop->AddInitFunction(&INT10_Init);
@@ -442,6 +443,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("timed",true);
 	secprop->Add_bool("autofire",false);
 	secprop->Add_bool("swap34",false);
+	secprop->Add_bool("buttonwrap",true);
 
 	// had to rename these to serial due to conflicts in config
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.h,v 1.10 2007-01-10 15:00:38 c2woody Exp $ */
+/* $Id: joystick.h,v 1.11 2007-02-22 08:44:06 qbix79 Exp $ */
 #ifndef DOSBOX_JOYSTICK_H
 #define DOSBOX_JOYSTICK_H
 void JOYSTICK_Enable(Bitu which,bool enabled);
@@ -45,4 +45,5 @@ enum JoystickType {
 };
 
 extern JoystickType joytype;
+extern bool button_wrapping_enabled;
 #endif

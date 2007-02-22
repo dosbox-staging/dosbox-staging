@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.31 2007-01-11 09:51:37 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.32 2007-02-22 08:44:07 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -608,7 +608,7 @@ public:
 		emulated_buttons=2;
 		pos_axis_lists=new CBindList[4];
 		neg_axis_lists=new CBindList[4];
-		button_lists=new CBindList[6];
+		button_lists=new CBindList[16];
 		hat_lists=new CBindList[4];
 		Bitu i;
 		for (i=0; i<16; i++) {
@@ -634,6 +634,9 @@ public:
 		axes=SDL_JoystickNumAxes(sdl_joystick);
 		buttons=SDL_JoystickNumButtons(sdl_joystick);
 		hats=SDL_JoystickNumHats(sdl_joystick);
+		button_wrap=buttons;
+		if (button_wrapping_enabled) button_wrap=emulated_buttons;
+		if (button_wrap>16) button_wrap=16;
 		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(stick),axes,buttons);
 	}
 	~CStickBindGroup() {
@@ -673,7 +676,7 @@ public:
 		} else if (event->type==SDL_JOYBUTTONDOWN) {
 			if (event->button.which!=stick) return 0;
 #if defined (REDUCE_JOYSTICK_POLLING)
-			return CreateButtonBind(event->jbutton.button%emulated_buttons);
+			return CreateButtonBind(event->jbutton.button%button_wrap);
 #else
 			return CreateButtonBind(event->jbutton.button);
 #endif
@@ -724,7 +727,7 @@ public:
 		for (i=0; i<16; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[emustick].button_pressed[i])
-				button_pressed[i % emulated_buttons]=true;
+				button_pressed[i % button_wrap]=true;
 		}
 		for (i=0; i<emulated_buttons; i++) {
 			if (autofire && (button_pressed[i]))
@@ -747,9 +750,9 @@ public:
 		/* read button states */
 		for (i=0; i<buttons; i++) {
 			if (SDL_JoystickGetButton(sdl_joystick,i))
-				button_pressed[i % emulated_buttons]=true;
+				button_pressed[i % button_wrap]=true;
 		}
-		for (i=0; i<emulated_buttons; i++) {
+		for (i=0; i<button_wrap; i++) {
 			/* activate binding if button state has changed */
 			if (button_pressed[i]!=old_button_state[i]) {
 				if (button_pressed[i]) ActivateBindList(&button_lists[i],32767,true);
@@ -802,7 +805,7 @@ private:
 		return NULL;
 	}
 	CBind * CreateButtonBind(Bitu button) {
-		if (button<emulated_buttons) 
+		if (button<button_wrap) 
 			return new CJButtonBind(&button_lists[button],this,button);
 		return NULL;
 	}
@@ -828,7 +831,7 @@ protected:
 	CBindList * neg_axis_lists;
 	CBindList * button_lists;
 	CBindList * hat_lists;
-	Bitu stick,emustick,axes,buttons,hats,emulated_axes,emulated_buttons;
+	Bitu stick,emustick,axes,buttons,hats,emulated_axes,emulated_buttons,button_wrap;
 	SDL_Joystick * sdl_joystick;
 	char configname[10];
 	Bitu button_autofire[16];
@@ -844,6 +847,7 @@ public:
 	C4AxisBindGroup(Bitu _stick) : CStickBindGroup (_stick){
 		emulated_axes=4;
 		emulated_buttons=4;
+		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
 	}
 
@@ -885,7 +889,7 @@ public:
 		for (i=0; i<16; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
-				button_pressed[i % emulated_buttons]=true;
+				button_pressed[i % button_wrap]=true;
 			
 		}
 		for (i=0; i<emulated_buttons; i++) {
@@ -908,6 +912,7 @@ public:
 		emulated_axes=4;
 		emulated_buttons=4;
 		old_hat_position=0;
+		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
 	}
@@ -957,7 +962,7 @@ public:
 		for (i=0; i<16; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
-				button_pressed[i % emulated_buttons]=true;
+				button_pressed[i % button_wrap]=true;
 			
 		}
 		for (i=0; i<emulated_buttons; i++) {
@@ -1036,6 +1041,7 @@ public:
 	CCHBindGroup(Bitu _stick) : CStickBindGroup (_stick){
 		emulated_axes=4;
 		emulated_buttons=6;
+		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
 		button_state=0;
 	}
@@ -1134,7 +1140,7 @@ public:
 		for (i=0; i<6; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
-				button_pressed[i % emulated_buttons]=true;
+				button_pressed[i % button_wrap]=true;
 			
 		}
 		for (i=0; i<6; i++) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.17 2007-01-11 09:51:37 qbix79 Exp $ */
+/* $Id: joystick.cpp,v 1.18 2007-02-22 08:44:07 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -47,6 +47,7 @@ static JoyStick stick[2];
 static Bit32u last_write = 0;
 static bool write_active = false;
 static bool swap34 = false;
+bool button_wrapping_enabled = true;
 
 extern bool autofire; //sdl_mapper.cpp
 
@@ -214,6 +215,7 @@ public:
 		}
 		autofire = section->Get_bool("autofire");
 		swap34 = section->Get_bool("swap34");
+		button_wrapping_enabled = section->Get_bool("buttonwrap");
 		stick[0].enabled = false;
 		stick[1].enabled = false;
 		stick[0].xtick = stick[0].ytick = stick[1].xtick =
