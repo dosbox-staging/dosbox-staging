@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.62 2007-02-22 08:39:06 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.63 2007-02-24 21:07:22 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -954,7 +954,7 @@ static void CTMIXER_Reset(void) {
 	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(sb.type==SBT_16 ? 1:3));	\
 
 #define MAKEPROVOL(_WHICH_)			\
-	(((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1) & (sb.type==SBT_16 ? 0xff:0xee))
+	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) & (sb.type==SBT_16 ? 0xff:0xee))
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
