@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.84 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.85 2007-02-25 18:38:00 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -1402,7 +1402,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 		case 'A' :	{	jmp = (get_CF()?false:true) && (get_ZF()?false:true); // JA
 					}	break;
 		case 'B' :	{	if (instu[2] == 'E') {
-							jmp = (get_CF()?true:false) && (get_ZF()?true:false); // JBE
+							jmp = (get_CF()?true:false) || (get_ZF()?true:false); // JBE
 						} else {
 							jmp = get_CF()?true:false; // JB
 						}
@@ -1416,15 +1416,15 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 		case 'E' :	{	jmp = get_ZF()?true:false; // JE
 					}	break;
 		case 'G' :	{	if (instu[2] == 'E') {
-							jmp = get_SF()?false:true; // JGE
+							jmp = (get_SF()?true:false)==(get_OF()?true:false); // JGE
 						} else {
-							jmp = (get_SF()?false:true) && (get_ZF()?false:true); // JG
+							jmp = (get_ZF()?false:true) && ((get_SF()?true:false)==(get_OF()?true:false)); // JG
 						}
 					}	break;
 		case 'L' :	{	if (instu[2] == 'E') {
-							jmp = (get_SF()?true:false) || (get_ZF()?true:false) ; // JLE
+							jmp = (get_ZF()?true:false) || ((get_SF()?true:false)!=(get_OF()?true:false)); // JLE
 						} else {
-							jmp = get_SF()?true:false; // JL
+							jmp = (get_SF()?true:false)!=(get_OF()?true:false); // JL
 						}
 					}	break;
 		case 'M' :	{	jmp = true; // JMP
@@ -1445,7 +1445,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 									}	break;
 						}
 					}	break;
-		case 'O' :	{	jmp = get_OF()?true:false; // JMP
+		case 'O' :	{	jmp = get_OF()?true:false; // JO
 					}	break;
 		case 'P' :	{	if (instu[2] == 'O') {
 							jmp = get_PF()?false:true; // JPO
@@ -1477,6 +1477,25 @@ Bit32u DEBUG_CheckKeys(void) {
 	Bits ret=0;
 	int key=getch();
 	if (key>0) {
+#if defined(WIN32) && defined(__PDCURSES__)
+		switch (key) {
+		case ALT_D:
+			if (ungetch('D') != ERR) key=27;
+			break;
+		case ALT_E:
+			if (ungetch('E') != ERR) key=27;
+			break;
+		case ALT_X:
+			if (ungetch('X') != ERR) key=27;
+			break;
+		case ALT_B:
+			if (ungetch('B') != ERR) key=27;
+			break;
+		case ALT_S:
+			if (ungetch('S') != ERR) key=27;
+			break;
+		}
+#endif
 		switch (toupper(key)) {
 		case 27:	// escape (a bit slow): Clears line. and processes alt commands.
 			key=getch();
@@ -1846,11 +1865,10 @@ public:
 		Bit16u i	=2;
 		bool ok		= false; 
 		args[0]		= 0;
-		do {
-			ok = cmd->FindCommand(i++,temp_line);
+		for (;cmd->FindCommand(i++,temp_line)==true;) {
 			strncat(args,temp_line.c_str(),256);
 			strncat(args," ",256);
-		} while (ok);
+		}
 		// Start new shell and execute prog		
 		active = true;
 		// Save cpu state....
