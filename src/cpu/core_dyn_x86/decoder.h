@@ -1953,10 +1953,7 @@ restart_prefix:
 		if (!decode.page.invmap) opcode=decode_fetchb();
 		else {
 			if (decode.page.index<4096) {
-				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) {
-					decode.page.index++;
-					goto illegalopcode;
-				}
+				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) goto illegalopcode;
 				opcode=decode_fetchb();
 			} else {
 				opcode=decode_fetchb();
