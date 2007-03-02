@@ -1,5 +1,83 @@
-0.66rc3
-  - todo
+0.70
+  - Improve register handling and support with XMS.
+  - Fix some issues with deleting open files.(windows only issue)
+  - Add dummpy LPT1 class. (windows only issue)
+  - Improve some of the internal dos commands. (choice, copy and shift)
+  - Improve ROM area. (for games that use it for random numbers or 
+    overwrite it as some sort of detection thing)
+  - Improve compatibility of dynamic core by making it handle certain
+    pagefaults earlier.
+  - Move internal dos tables around so we have more umb memory.
+  - Add some dos tables.
+  - Dynamic core supports io exceptions.
+  - Move some interrupt handlers to XT Bios locations.
+  - Add a dynamic fpu on x86.
+  - Improve fpu on non-x86.
+  - Trapflag gets strickt priority over hardware IRQs.
+  - Trapflag support for the dynamic core.
+  - Add dummy TRx handling.
+  - Fix a few rarely used character functions.
+  - Improve auto cycle guessing code.
+  - Improve and extend the joystick support.
+  - Add autofire support.
+  - Improve the mapper so you can map keys to the joystick and vice versa.
+  - A few game specific video card fixes.
+  - Fix some 64 bit cpu bugs.
+  - Add support for certain cdrom detection schemes.
+  - Improve HSG/Red Book support.
+  - Improve MSCDEX.
+  - Improve dynamic core support under intel macs.
+  - Add basic support for clipper programs.
+  - Add support for different keyboard layouts.
+  - Add auto core guessing.
+  - Fix a few flags bugs.
+  - Fix a few small cpu bugs.
+  - Improve soundblaster detection rate by various programs.
+  - Improve EMS emulation. (allow mapping of non standard regions)
+  - Improve keyboard input codes on various OS-es.
+  - Fix problems with filenames having stackdata in them.
+  - Changed a few basic operations in DOSBox so they take emulated time.
+  - Improve dos ioctl functions.
+  - Extend cpu core so they are capable of detecting and raising a few
+    more exception types.
+  - Improve DOS functions when dealing with virtual drive.
+  - Improve FAT drives.
+  - Better handling of volume-labels in file functions.
+  - Image disk cycling capability. (prompt)
+  - Try to reduce the impact of using an analog joystick.
+  - Several measures to avoid code invalidation on certain types
+    of self modification in the dynamic core.
+  - Add dynamic core memory function inlining.
+  - A few small mouse improvements. (some games are using things they
+    shouldn't)
+  - Add nullmodem emulation.(h-a-l-9000)
+  - Some small cga and hercules fixes.
+  - Add more scalers (hq2x/hq3x/sai). (Kronuz)
+  - Change configuration file loading support. It now supports
+    multiple configuration files.
+  - Make dynamic core capable of running some win32s programs.
+  - Fix and add some rare soundblaster modes. (Srecko)
+  - Better soundblaster mixer controls. (Srecko)
+  - Make soundblaster installation under windows much easier.
+  - Add device control channel handling. 
+  - GEMMIS support (ems under windows).
+  - Support more colours in win 3. (vasyl)
+  - Don't show unmounted drives in windows filemanager.
+  - Fix some bugs in the int13 handler.
+  - Simulate some side-effects of bios interrupt handlers on flags.
+  - Add IPX functions needed by netbios.
+  - Make ports take emulated time.
+  - Tabcompletion is now aware of the CD command.
+  - Add suppport for the dac pel mask.
+  - Fixes to hercules emulation, better detection and bank switching.
+  - Fixes to tandy emulation, 640x200x16 mode and different sizes bank.  
+  - EGA/VGA memory changes detection for faster rendering.
+  - Gus 16 bit fixes.
+  - Many timer improvements. 
+  - Some pcjr fixes.
+  - Some booter fixes.
+  - Many small fixes.
+
 0.65
   - Fixed FAT writing.
   - Added some more missing DOS functions.

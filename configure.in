@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,0.66rc3)
+AC_INIT(dosbox,0.70)
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
@@ -371,7 +371,6 @@ src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
 src/platform/visualc/Makefile
-visualc/Makefile
 visualc_net/Makefile
 include/Makefile
 docs/Makefile

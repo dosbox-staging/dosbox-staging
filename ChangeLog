@@ -1,10 +1,10 @@
-0.66
+0.70
   - Improve register handling and support with XMS.
   - Fix some issues with deleting open files.(windows only issue)
   - Add dummpy LPT1 class. (windows only issue)
   - Improve some of the internal dos commands. (choice, copy and shift)
   - Improve ROM area. (for games that use it for random numbers or 
-    overwrite as some sort of detection thing)
+    overwrite it as some sort of detection thing)
   - Improve compatibility of dynamic core by making it handle certain
     pagefaults earlier.
   - Move internal dos tables around so we have more umb memory.
@@ -65,6 +65,14 @@
   - Don't show unmounted drives in windows filemanager.
   - Fix some bugs in the int13 handler.
   - Simulate some side-effects of bios interrupt handlers on flags.
+  - Add IPX functions needed by netbios.
+  - Make ports take emulated time.
+  - Tabcompletion is now aware of the CD command.
+  - Add suppport for the dac pel mask.
+  - Fixes to hercules emulation, better detection and bank switching.
+  - Fixes to tandy emulation, 640x200x16 mode and different sizes bank.  
+  - EGA/VGA memory changes detection for faster rendering.
+  - Gus 16 bit fixes.
   - Many timer improvements. 
   - Some pcjr fixes.
   - Some booter fixes.

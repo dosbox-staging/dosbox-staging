@@ -1,6 +1,6 @@
 #define INLINE __forceinline
 
-#define VERSION "0.65"
+#define VERSION "0.70"
 
 
 /* Define to 1 to enable internal debugger, requires libcurses */
