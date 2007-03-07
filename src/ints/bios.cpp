@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.66 2007-02-22 08:33:15 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.67 2007-03-07 10:47:12 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -364,7 +364,7 @@ static Bitu INT14_Handler(void)
 {
 	if(reg_ah > 0x3 || reg_dx > 0x3) {	// 0-3 serial port functions
 										// and no more than 4 serial ports
-		LOG_MSG("BIOS INT14: Unhandled call AH=%2X DX=%4x",reg_dx);
+		LOG_MSG("BIOS INT14: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
 		return CBRET_NONE;
 	}
 	
