@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.81 2007-01-08 21:20:23 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.82 2007-03-23 08:27:39 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -878,10 +878,9 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	Bit16u toread=rec_size;
 	if (!DOS_ReadFile(fhandle,dos_copybuf,&toread)) return FCB_READ_NODATA;
 	if (toread==0) return FCB_READ_NODATA;
-	if (toread<rec_size) {
-		PhysPt fill=Real2Phys(dos.dta())+toread;
-		Bitu i=rec_size-toread;
-		for (;i>0;i--) mem_writeb(fill++,0);
+	if (toread < rec_size) { //Zero pad copybuffer to rec_size
+		Bitu i = toread;
+		while(i < rec_size) dos_copybuf[i++] = 0;
 	}
 	MEM_BlockWrite(Real2Phys(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }
@@ -927,6 +926,10 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
  * random read updates old block and old record to reflect the random data
  * before the read!!!!!!!!! and the random data is not updated! (user must do this)
  * Random block read updates these fields to reflect the state after the read!
+ */
+
+/* BUG: numRec should return the amount of records read! 
+ * Not implemented yet as I'm unsure how to count on error states (partial/failed) 
  */
 
 	DOS_FCB fcb(seg,offset);
