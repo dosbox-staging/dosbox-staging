@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.98 2007-02-22 08:35:34 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.99 2007-04-14 11:16:29 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -1163,8 +1163,8 @@ call_code:
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
 			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
 			break;
-		case DESC_INVALID:
-			// used by some installers
+		case DESC_DATA_EU_RW_NA:	// vbdos
+		case DESC_INVALID:			// used by some installers
 			CPU_Exception(EXCEPTION_GP,selector & 0xfffc);
 			return;
 		default:
