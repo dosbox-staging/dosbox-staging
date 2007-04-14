@@ -50,10 +50,11 @@ static struct DynDecode {
 	DynReg * segprefix;
 } decode;
 
-static bool MakeCodePage(Bitu lin_page,CodePageHandler * &cph) {
+static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	Bit8u rdval;
 	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked_x86(lin_page << 12,&rdval))) return true;
+	if (GCC_UNLIKELY(mem_readb_checked_x86(lin_addr,&rdval))) return true;
+	Bitu lin_page=lin_addr >> 12;
 	PageHandler * handler=paging.tlb.handler[lin_page];
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
@@ -99,8 +100,10 @@ static Bit8u decode_fetchb(void) {
         /* Advance to the next page */
 		decode.active_block->page.end=4095;
 		/* trigger possible page fault here */
-		mem_readb((++decode.page.first) << 12);
-		MakeCodePage(decode.page.first,decode.page.code);
+		decode.page.first++;
+		Bitu fetchaddr=decode.page.first << 12;
+		mem_readb(fetchaddr);
+		MakeCodePage(fetchaddr,decode.page.code);
 		CacheBlock * newblock=cache_getblock();
 		decode.active_block->crossblock=newblock;
 		newblock->crossblock=decode.active_block;
@@ -252,7 +255,8 @@ static INLINE void dyn_set_eip_end(void) {
 
 static INLINE void dyn_set_eip_end(DynReg * endreg) {
 	gen_protectflags();
-	gen_dop_word(DOP_MOV,cpu.code.big,DREG(TMPW),DREG(EIP));
+	if (cpu.code.big) gen_dop_word(DOP_MOV,true,DREG(TMPW),DREG(EIP));
+	else gen_extend_word(false,DREG(TMPW),DREG(EIP));
 	gen_dop_word_imm(DOP_ADD,cpu.code.big,DREG(TMPW),decode.code-decode.code_start);
 }
 
@@ -1810,7 +1814,8 @@ static void dyn_call_near_imm(void) {
 	dyn_set_eip_end(DREG(TMPW));
 	dyn_push(DREG(TMPW));
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(TMPW),imm);
-	gen_dop_word(DOP_MOV,decode.big_op,DREG(EIP),DREG(TMPW));
+	if (cpu.code.big) gen_dop_word(DOP_MOV,true,DREG(EIP),DREG(TMPW));
+	else gen_extend_word(false,DREG(EIP),DREG(TMPW));
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();
 	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));

@@ -258,12 +258,11 @@ Bits CPU_Core_Dyn_X86_Run(void) {
 	/* Determine the linear address of CS:EIP */
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
-	Bitu ip_page=ip_point>>12;
 	#if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 	#endif
 	CodePageHandler * chandler=0;
-	if (GCC_UNLIKELY(MakeCodePage(ip_page,chandler))) {
+	if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 		goto restart_core;
 	}
