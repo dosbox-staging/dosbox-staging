@@ -66,7 +66,7 @@ public:
 		}
 	}
 	bool InvalidateRange(Bitu start,Bitu end) {
-		Bits index=1+(start>>DYN_HASH_SHIFT);
+		Bits index=1+(end>>DYN_HASH_SHIFT);
 		bool is_current_block=false;
 		Bit32u ip_point=SegPhys(cs)+reg_eip;
 		ip_point=((paging.tlb.phys_page[ip_point>>12]-phys_page)<<12)+(ip_point&0xfff);
