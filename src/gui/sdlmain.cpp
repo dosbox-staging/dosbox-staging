@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.127 2007-01-24 16:29:09 harekiet Exp $ */
+/* $Id: sdlmain.cpp,v 1.128 2007-04-15 10:34:02 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -433,11 +433,17 @@ dosurface:
 			sdl.surface=SDL_SetVideoMode(width,height,bpp,(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
 #ifdef WIN32
 			if (sdl.surface == NULL) {
-				LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with windib enabled.");
 				SDL_QuitSubSystem(SDL_INIT_VIDEO);
-				putenv("SDL_VIDEODRIVER=windib");
+				if (!sdl.using_windib) {
+					LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with windib enabled.");
+					putenv("SDL_VIDEODRIVER=windib");
+					sdl.using_windib=true;
+				} else {
+					LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with directx enabled.");
+					putenv("SDL_VIDEODRIVER=directx");
+					sdl.using_windib=true;
+				}
 				SDL_InitSubSystem(SDL_INIT_VIDEO);
-				sdl.using_windib=true;
 				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
 			}
 #endif
@@ -490,6 +496,10 @@ dosurface:
 				sdl.surface->format->Bmask,
 				0);
 		if (!sdl.blit.surface || (!sdl.blit.surface->flags&SDL_HWSURFACE)) {
+			if (sdl.blit.surface) {
+				SDL_FreeSurface(sdl.blit.surface);
+				sdl.blit.surface=0;
+			}
 			LOG_MSG("Failed to create ddraw surface, back to normal surface.");
 			goto dosurface;
 		}
@@ -1373,12 +1383,16 @@ int main(int argc, char* argv[]) {
 		char sdl_drv_name[128];
 		if (getenv("SDL_VIDEODRIVER")==NULL) {
 			if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
+				sdl.using_windib=false;
 				if (strcmp(sdl_drv_name,"directx")!=0) {
 					SDL_QuitSubSystem(SDL_INIT_VIDEO);
 					putenv("SDL_VIDEODRIVER=directx");
-					SDL_InitSubSystem(SDL_INIT_VIDEO);
+					if (SDL_InitSubSystem(SDL_INIT_VIDEO)<0) {
+						putenv("SDL_VIDEODRIVER=windib");
+						if (SDL_InitSubSystem(SDL_INIT_VIDEO)<0) E_Exit("Can't init SDL Video %s",SDL_GetError());
+						sdl.using_windib=true;
+					}
 				}
-				sdl.using_windib=false;
 			}
 		} else {
 			char* sdl_videodrv = getenv("SDL_VIDEODRIVER");
