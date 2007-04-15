@@ -85,7 +85,7 @@ bool CDROM_Interface_SDL::GetAudioTracks	(int& stTrack, int& end, TMSF& leadOut)
 bool CDROM_Interface_SDL::GetAudioTrackInfo (int track, TMSF& start, unsigned char& attr)
 {
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
-		FRAMES_TO_MSF(cd->track[track-1].offset+150,&start.min,&start.sec,&start.fr);
+		FRAMES_TO_MSF(cd->track[track-1].offset,&start.min,&start.sec,&start.fr);
 		attr	= cd->track[track-1].type<<4;//sdl uses 0 for audio and 4 for data. instead of 0x00 and 0x40
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));	
