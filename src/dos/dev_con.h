@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.28 2007-01-11 18:08:54 c2woody Exp $ */
+/* $Id: dev_con.h,v 1.29 2007-04-16 12:23:23 c2woody Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -370,7 +370,7 @@ Bit16u device_CON::GetInformation(void) {
 	Bit16u tail=mem_readw(BIOS_KEYBOARD_BUFFER_TAIL);
 
 	if ((head==tail) && !readcache) return 0x80D3;	/* No Key Available */
-	if (real_readw(0x40,head)) return 0x8093;		/* Key Available */
+	if (readcache || real_readw(0x40,head)) return 0x8093;		/* Key Available */
 
 	/* remove the zero from keyboard buffer */
 	Bit16u start=mem_readw(BIOS_KEYBOARD_BUFFER_START);

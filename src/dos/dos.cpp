@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.99 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.100 2007-04-16 12:23:23 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -191,14 +191,12 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x0c:		/* Flush Buffer and read STDIN call */
 		{
+			/* flush STDIN-buffer */
+			Bit8u c;Bit16u n;
+			while (DOS_GetSTDINStatus()) {
+				n=1;	DOS_ReadFile(STDIN,&c,&n);
+			}
 			switch (reg_al) {
-			case 0x0:
-				/* flush STDIN-buffer */
-				Bit8u c;Bit16u n;
-				while (DOS_GetSTDINStatus()) {
-					n=1;	DOS_ReadFile(STDIN,&c,&n);
-				}
-				break;
 			case 0x1:
 			case 0x6:
 			case 0x7:
@@ -213,6 +211,7 @@ static Bitu DOS_21Handler(void) {
 				break;
 			default:
 //				LOG_ERROR("DOS:0C:Illegal Flush STDIN Buffer call %d",reg_al);
+				reg_al=0;
 				break;
 			}
 		}
