@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.39 2007-01-18 14:57:59 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.40 2007-04-16 13:25:06 c2woody Exp $ */
 
 #include <list>
 
@@ -203,7 +203,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 
 		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
-		if ((val&0x10)!=0) E_Exit("PIC:ICW4: %x, special fully-nested mode not handled",val);
+		if ((val&0x10)!=0) LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled",val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
