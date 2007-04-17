@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.69 2007-02-22 08:37:12 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.70 2007-04-17 15:48:53 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -886,6 +886,7 @@ public:
 		Bit8u mediaid;
 		if (type=="floppy" || type=="hdd" || type=="iso") {
 			Bit16u sizes[4];
+			bool autosizedetect=false;
 			
 			std::string str_size;
 			mediaid=0xF8;
@@ -899,21 +900,26 @@ public:
 			} 
 			cmd->FindString("-size",str_size,true);
 			if ((type=="hdd") && (str_size.size()==0)) {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
-				return;
+				if (!cmd->FindExist("-autosize",true)) {
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+					return;
+				} else {
+					autosizedetect=true;
+				}
+			} else {
+				char number[20];
+				const char * scan=str_size.c_str();
+				Bitu index=0;Bitu count=0;
+				
+				while (*scan) {
+					if (*scan==',') {
+						number[index]=0;sizes[count++]=atoi(number);
+						index=0;
+					} else number[index++]=*scan;
+					scan++;
+				}
+				number[index]=0;sizes[count++]=atoi(number);
 			}
-			char number[20];
-			const char * scan=str_size.c_str();
-			Bitu index=0;Bitu count=0;
-			
-			while (*scan) {
-				if (*scan==',') {
-					number[index]=0;sizes[count++]=atoi(number);
-					index=0;
-				} else number[index++]=*scan;
-				scan++;
-			}
-			number[index]=0;sizes[count++]=atoi(number);
 		
 			if(fstype=="fat" || fstype=="iso") {
 				// get the drive letter
@@ -986,6 +992,35 @@ public:
 			}
 
 			if(fstype=="fat") {
+				if (autosizedetect) {
+					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
+					if(!diskfile) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						return;
+					}
+					fseek(diskfile, 0L, SEEK_END);
+					Bit32u fcsize = (Bit32u)(ftell(diskfile) / 512L);
+					Bit8u buf[512];
+					fseek(diskfile, 0L, SEEK_SET);
+					if (fread(buf,sizeof(Bit8u),512,diskfile)<512) {
+						fclose(diskfile);
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						return;
+					}
+					fclose(diskfile);
+					if ((buf[510]!=0x55) || (buf[511]!=0xaa)) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						return;
+					}
+					Bitu sectors=(Bitu)(fcsize/(16*63));
+					if (sectors*16*63!=fcsize) {
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						return;
+					}
+					sizes[0]=512;	sizes[1]=63;	sizes[2]=16;	sizes[3]=sectors;
+					LOG_MSG("autosized image file: %d:%d:%d:%d",sizes[0],sizes[1],sizes[2],sizes[3]);
+				}
+
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
 				if(!(dynamic_cast<fatDrive*>(newdrive))->created_succesfully) {
 					delete newdrive;
