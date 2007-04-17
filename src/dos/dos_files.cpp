@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.82 2007-03-23 08:27:39 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.83 2007-04-17 18:48:41 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -639,9 +639,9 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 
 bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 	/* First add random crap to the end of the name and try to open */
-	/* Todo maybe check for euhm existence of the path name */
 	char * tempname;
 	tempname=name+strlen(name);
+	dos.errorcode=0;
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {
@@ -652,7 +652,8 @@ bool DOS_CreateTempFile(char * name,Bit16u * entry) {
 			tempname[i]=(rand()%26)+'A';
 		}
 		tempname[12]=0;
-	} while (!DOS_CreateFile(name,0,entry));
+	} while ((!DOS_CreateFile(name,0,entry)) && (dos.errorcode==DOSERR_FILE_ALREADY_EXISTS));
+	if (dos.errorcode) return false;
 	return true;
 }
 
