@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.33 2007-02-22 15:12:48 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.34 2007-04-18 16:40:48 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -765,11 +765,32 @@ public:
 		for (i=0; i<emulated_axes; i++) {
 			Sint16 caxis_pos=SDL_JoystickGetAxis(sdl_joystick,i);
 			/* activate bindings for joystick position */
-			if (caxis_pos>0) ActivateBindList(&pos_axis_lists[i],caxis_pos,false);
-			else if (caxis_pos<0) {
+			if (caxis_pos>1) {
+				if (old_neg_axis_state[i]) {
+					DeactivateBindList(&neg_axis_lists[i],false);
+					old_neg_axis_state[i] = false;
+				}
+				ActivateBindList(&pos_axis_lists[i],caxis_pos,false);
+				old_pos_axis_state[i] = true;
+			} else if (caxis_pos<-1) {
+				if (old_pos_axis_state[i]) {
+					DeactivateBindList(&pos_axis_lists[i],false);
+					old_pos_axis_state[i] = false;
+				}
 				if (caxis_pos!=-32768) caxis_pos=(Sint16)abs(caxis_pos);
 				else caxis_pos=32767;
 				ActivateBindList(&neg_axis_lists[i],caxis_pos,false);
+				old_neg_axis_state[i] = true;
+			} else {
+				/* center */
+				if (old_pos_axis_state[i]) {
+					DeactivateBindList(&pos_axis_lists[i],false);
+					old_pos_axis_state[i] = false;
+				}
+				if (old_neg_axis_state[i]) {
+					DeactivateBindList(&neg_axis_lists[i],false);
+					old_neg_axis_state[i] = false;
+				}
 			}
 		}
 
@@ -2066,13 +2087,23 @@ void BIND_MappingEvents(void) {
 	}
 }
 
-static void CreateBindGroups(void) {
-	bindgroups.clear();
-	new CKeyBindGroup(SDLK_LAST);
+static void InitializeJoysticks(void) {
 	mapper.sticks.num=0;
 	mapper.sticks.num_groups=0;
 	if (joytype != JOY_NONE) {
 		mapper.sticks.num=SDL_NumJoysticks();
+		if (joytype==JOY_AUTO) {
+			if (mapper.sticks.num>1) joytype=JOY_2AXIS;
+			else if (mapper.sticks.num) joytype=JOY_4AXIS;
+			else joytype=JOY_NONE;
+		}
+	}
+}
+
+static void CreateBindGroups(void) {
+	bindgroups.clear();
+	new CKeyBindGroup(SDLK_LAST);
+	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
 		if (mapper.sticks.num) SDL_JoystickEventState(SDL_DISABLE);
@@ -2082,11 +2113,6 @@ static void CreateBindGroups(void) {
 		else return;
 #endif
 		Bit8u joyno=0;
-		if (joytype==JOY_AUTO) {
-			if (mapper.sticks.num>1) joytype=JOY_2AXIS;
-			else if (mapper.sticks.num) joytype=JOY_4AXIS;
-			else joytype=JOY_NONE;
-		}
 		switch (joytype) {
 		case JOY_NONE:
 			break;
@@ -2170,6 +2196,7 @@ void MAPPER_Run(bool pressed) {
 }
 
 void MAPPER_Init(void) {
+	InitializeJoysticks();
 	CreateLayout();
 	CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
