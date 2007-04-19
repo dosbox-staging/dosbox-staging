@@ -21,8 +21,8 @@
 
 //#include "render.h"
 #include "video.h"
-
-#define SCALER_MAXWIDTH		1024
+//MAXWIDTH: increased it for the large text modi
+#define SCALER_MAXWIDTH		1280 
 #define SCALER_MAXHEIGHT	768
 
 #define SCALER_COMPLEXWIDTH		512
