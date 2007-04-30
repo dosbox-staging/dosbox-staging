@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.29 2007-04-16 12:23:23 c2woody Exp $ */
+/* $Id: dev_con.h,v 1.30 2007-04-30 18:35:34 c2woody Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -333,12 +333,18 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			ansi.saverow=CURSOR_POS_ROW(page);
 			ClearAnsi();
 			break;
-		case 'K':/* erase till end of line (don't touch cursor) */
+		case 'K': /* erase till end of line (don't touch cursor) */
 			col = CURSOR_POS_COL(page);
 			row = CURSOR_POS_ROW(page);
 			INT10_WriteChar(' ',ansi.attr,page,ansi.ncols-col,true); //Use this one to prevent scrolling when end of screen is reached
 			//for(i = col;i<(Bitu) ansi.ncols; i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
 			INT10_SetCursorPos(row,col,page);
+			ClearAnsi();
+			break;
+		case 'M': /* delete line (NANSI) */
+			col = CURSOR_POS_COL(page);
+			row = CURSOR_POS_ROW(page);
+			INT10_ScrollWindow(row,0,ansi.nrows-1,ansi.ncols-1,ansi.data[0]? -ansi.data[0] : -1,ansi.attr,0xFF);
 			ClearAnsi();
 			break;
 		case 'l':/* (if code =7) disable linewrap */
