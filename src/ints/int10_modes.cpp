@@ -880,6 +880,7 @@ att_text16:
 	IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
 	/* Setup the DAC */
 	IO_Write(0x3c8,0);
+	IO_Write(0x3c6,0xff); //Reset Pelmask
 	switch (CurMode->type) {
 	case M_EGA:
 		if (CurMode->mode>0xf) goto dac_text16;
