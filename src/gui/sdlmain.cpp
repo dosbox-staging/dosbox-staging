@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.128 2007-04-15 10:34:02 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.129 2007-05-01 20:00:45 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -441,7 +441,7 @@ dosurface:
 				} else {
 					LOG_MSG("Failed to create hardware surface.\nRestarting video subsystem with directx enabled.");
 					putenv("SDL_VIDEODRIVER=directx");
-					sdl.using_windib=true;
+					sdl.using_windib=false;
 				}
 				SDL_InitSubSystem(SDL_INIT_VIDEO);
 				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
