@@ -2187,14 +2187,14 @@ restart_prefix:
 			gen_releasereg(DREG(ESP));
 			dyn_flags_gen_to_host();
 			gen_call_function((void *)&CPU_PUSHF,"%Rd%Id",DREG(TMPB),decode.big_op);
-			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
+			dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
 			break;
 		case 0x9d:		//POPF
 			gen_releasereg(DREG(ESP));
 			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_POPF,"%Rd%Id",DREG(TMPB),decode.big_op);
-			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
+			dyn_check_bool_exception(DREG(TMPB));
 			dyn_flags_host_to_gen();
 			gen_releasereg(DREG(TMPB));
 			break;
