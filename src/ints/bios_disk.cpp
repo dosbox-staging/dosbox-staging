@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.33 2007-01-21 16:21:22 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.34 2007-05-02 18:56:15 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -436,16 +436,20 @@ static Bitu INT13_DiskHandler(void) {
 		if(driveInactive(drivenum)) {
 			last_status = 0x07;
 			reg_ah = last_status;
-		CALLBACK_SCF(true);
+			CALLBACK_SCF(true);
 			return CBRET_NONE;
 		}
 		reg_ax = 0x00;
 		reg_bl = imageDiskList[drivenum]->GetBiosType();
 		Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
 		imageDiskList[drivenum]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
+		if (tmpcyl==0) LOG(LOG_BIOS,LOG_ERROR)("INT13 DrivParm: cylinder count zero!");
+		else tmpcyl--;		// cylinder count -> max cylinder
+		if (tmpheads==0) LOG(LOG_BIOS,LOG_ERROR)("INT13 DrivParm: head count zero!");
+		else tmpheads--;	// head count -> max head
 		reg_ch = tmpcyl & 0xff;
 		reg_cl = (((tmpcyl >> 2) & 0xc0) | (tmpsect & 0x3f)); 
-		reg_dh = tmpheads-1;
+		reg_dh = tmpheads;
 		last_status = 0x00;
 		if (reg_dl&0x80) {	// harddisks
 			reg_dl = 0;
