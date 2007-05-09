@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.31 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.32 2007-05-09 14:35:51 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -106,7 +106,7 @@ void LOG::operator() (char const* format, ...){
 
 	if (d_type>=LOG_MAX) return;
 	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
-	DEBUG_ShowMsg("%10d: %s:%s\n",cycle_count,loggrp[d_type].front,buf);
+	DEBUG_ShowMsg("%10u: %s:%s\n",cycle_count,loggrp[d_type].front,buf);
 }
 
 
@@ -250,6 +250,7 @@ void LOG_StartUp(void) {
 		lowcase(buf);
 		sect->Add_bool(buf,true);
 	}
+	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
 
 

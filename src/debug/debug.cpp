@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.85 2007-02-25 18:38:00 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.86 2007-05-09 14:35:51 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -755,7 +755,7 @@ static void DrawRegisters(void) {
 	}
 
 	wattrset(dbg.win_reg,0);
-	mvwprintw(dbg.win_reg,3,60,"%d       ",cycle_count);
+	mvwprintw(dbg.win_reg,3,60,"%u       ",cycle_count);
 	wrefresh(dbg.win_reg);
 };
 
@@ -805,7 +805,7 @@ static void DrawCode(void)
 			line20[20 - drawsize*2] = ' ';
 		} else waddstr(dbg.win_code,line20);
 
-		char* res = 0;
+		char* res = "";
 		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		// Spacepad it up to 28 characters
 		size_t dline_len = strlen(dline);
