@@ -1,7 +1,7 @@
 0.70
   - Improve register handling and support with XMS.
   - Fix some issues with deleting open files.(windows only issue)
-  - Add dummpy LPT1 class. (windows only issue)
+  - Add dummy LPT1 class. (windows only issue)
   - Improve some of the internal dos commands. (choice, copy and shift)
   - Improve ROM area. (for games that use it for random numbers or 
     overwrite it as some sort of detection thing)
@@ -13,7 +13,7 @@
   - Move some interrupt handlers to XT Bios locations.
   - Add a dynamic fpu on x86.
   - Improve fpu on non-x86.
-  - Trapflag gets strickt priority over hardware IRQs.
+  - Trapflag gets strict priority over hardware IRQs.
   - Trapflag support for the dynamic core.
   - Add dummy TRx handling.
   - Fix a few rarely used character functions.

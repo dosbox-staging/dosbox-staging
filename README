@@ -137,7 +137,7 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      2. Use / instead.
      3. Open dosbox.conf and change usescancodes=false to usescancodes=true.
      4. Add the commands you want to execute to the "configfile".
-     5. Change the dos keyboard layout (see Section 7 Keyboard Layout).
+     5. Change the DOS keyboard layout (see Section 7 Keyboard Layout).
      6. Use ALT-58 for : and ALT-92 for \.
      7. for \ try the keys around "enter". For ":" try shift and the keys 
         between "enter" and "l" (US keyboard layout).
@@ -217,7 +217,7 @@ A: This isn't really a DOSBox problem, but the solution is to set the
 Q: Great README, but I still don't get it.
 A: A look at "The Newbie's pictorial guide to DOSBox" located at 
    http://vogons.zetafleet.com/viewforum.php?f=39 might help you.
-   Also try the wiki of dosbox:
+   Also try the wiki of DOSBox:
    http://dosbox.sourceforge.net/wiki/
 
 
@@ -326,10 +326,10 @@ MOUNT -u "Emulated Drive letter"
   Program to mount local directories as drives inside DOSBox.
 
   "Emulated Drive letter"
-        The driveletter inside dosbox (eg. C).
+        The driveletter inside DOSBox (eg. C).
 
   "Real Drive letter (usually for CD-ROMs in Windows) or Directory"
-        The local directory you want accessible inside dosbox.
+        The local directory you want accessible inside DOSBox.
 
   -t type
         Type of the mounted directory. Supported are: dir (default),
@@ -398,7 +398,7 @@ MOUNT -u "Emulated Drive letter"
   2. To mount system cdrom drive E as cdrom drive D in DOSBox:
        mount d e:\ -t cdrom
   3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
-     in dosbox:
+     in DOSBox:
        mount d /media/cdrom -t cdrom -usecd 0
   4. To mount a drive with 870 mb free diskspace (simple version):
        mount c d:\ -freesize 870
@@ -433,7 +433,7 @@ CONFIG -get "section property"
        Write the current language settings to file. "localfile" is 
        located on the local drive, not a mounted drive in DOSBox.
        The language file controls all visible ouput of the internal commands
-       and the internal dos.
+       and the internal DOS.
 
   -set "section property=value"
        CONFIG will attempt to set the property to new value. At this moment
@@ -632,7 +632,7 @@ IPX
 
   IPXNET STARTSERVER 
 
-     IPXNET STARTSERVER starts and IPX tunneling server on this DOSBox 
+     IPXNET STARTSERVER starts an IPX tunneling server on this DOSBox 
      session. By default, the server will accept connections on UDP port 
      213, though this can be changed. Once the server is started, DOSBox 
      will automatically start a client connection to the IPX tunnelling server.
@@ -728,7 +728,7 @@ CTRL-ALT-F7   Start/Stop recording of OPL commands.
 CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
 CTRL-F7       Decrease frameskip.
 CTRL-F8       Increase frameskip.
-CTRL-F9       Kill dosbox.
+CTRL-F9       Kill DOSBox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles).
@@ -845,8 +845,8 @@ is present in the configfile.
 ===================
 
 To switch to a different keyboard layout, either the entry "keyboardlayout"
-in the [dos]-section in dosbox.conf can be used, or the internal DOSBox
-program keyb.com. Both accept dos-conform language codes (see below), but
+in the [dos] section in dosbox.conf can be used, or the internal DOSBox
+program keyb.com. Both accept DOS conforming language codes (see below), but
 only by using keyb.com a custom codepage can be specified.
 
 Layout switching
@@ -861,10 +861,8 @@ Layout switching
   NO (Norway), PL (Poland), RU (Russian Federation), SK (Slovakia), SP (Spain),
   SU (Finland), SV (Sweden)
 
-  When a keyboard layout is loaded, it is possible to switch between the
-  foreign layout and the US-layout by pressing CTRL+ALT+F2.
   Some keyboard layouts (for example layout GK codepage 869 and layout RU
-  codepage 808) have support for dual-layouts that can be activated by
+  codepage 808) have support for dual layouts that can be activated by
   pressing LEFT-ALT+RIGHT-SHIFT and deactivated by LEFT-ALT+LEFT-SHIFT.
 
 Supported external files
@@ -874,12 +872,12 @@ Supported external files
   See http://projects.freedos.net/keyb/ for precompiled keyboard layouts.
 
   Both .CPI (MSDOS/compatible codepage files) and .CPX (freedos UPX-compressed
-  codepage files) can be used. Some codepages are compiled into DOSBox so it
+  codepage files) can be used. Some codepages are compiled into DOSBox, so it
   is mostly not needed to care about external codepage files. If you need
   a different (or custom) codepage file, copy it into the directory of the
   DOSBox configuration file so it is accessible for DOSBox.
 
-  Additional layouts can be added by copying the corresponding .kl-file into
+  Additional layouts can be added by copying the corresponding .kl file into
   the directory of dosbox.conf and using the first part of the filename as
   language code.
   Example: For the file UZ.KL (keyboard layout for Uzbekistan) specify
@@ -1034,17 +1032,18 @@ The game exits to the DOSBox prompt with some error message:
     for example if you used "mount d d:\oldgames\game" try
     "mount c d:\oldgames\game" and "mount c d:\oldgames"
   - if the game requires a cdrom be sure you used "-t cdrom" when
-    mounting and try different additional parameters
+    mounting and try different additional parameters (the ioctl,
+    usecd and label switches, see the appropriate section)
   - check the file permissions of the game files (remove read-only
     attributes, add write permissions etc.)
-  - try reinstalling the game within dosbox
+  - try reinstalling the game within DOSBox
 
 ====================
 11. The Config File:
 ====================
 
 A config file can be generated by CONFIG.COM, which can be found on the 
-internal dosbox Z: drive when you start up dosbox. Look in the internal 
+internal DOSBox Z: drive when you start up DOSBox. Look in the internal 
 programs section of the readme for usage of CONFIG.COM.
 You can edit the generated configfile to customize DOSBox.
 
