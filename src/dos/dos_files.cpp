@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.83 2007-04-17 18:48:41 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.84 2007-05-10 20:27:48 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -388,6 +388,7 @@ static bool PathExists(char* name) {
 	char temp[CROSS_LEN];
 	strcpy(temp,name);
 	leading = strrchr(temp,'\\');
+	if (leading == temp) return true;
 	*leading = 0;
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(temp,fulldir,&drive)) return false;
