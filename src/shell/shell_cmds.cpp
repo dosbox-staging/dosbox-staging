@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.73 2007-01-21 16:18:12 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.74 2007-05-15 18:55:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -742,6 +742,13 @@ void DOS_Shell::CMD_GOTO(char * args) {
 	StripSpaces(args);
 	if (!bf) return;
 	if (*args &&(*args==':')) args++;
+	//label ends at the first space
+	char* non_space = args;
+	while (*non_space) {
+		if((*non_space == ' ') || (*non_space == '\t')) 
+			*non_space = 0; 
+		else non_space++;
+	}
 	if (!*args) {
 		WriteOut(MSG_Get("SHELL_CMD_GOTO_MISSING_LABEL"));
 		return;
