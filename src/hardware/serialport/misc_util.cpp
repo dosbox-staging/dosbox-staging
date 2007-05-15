@@ -5,39 +5,13 @@
 /*****************************************************************************/
 // C++ SDLnet wrapper
 
-// Socket inheritance
-#if defined LINUX || defined OS2
-#define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
-#ifdef OS2
-typedef int     socklen_t;
-#endif
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#define SOCKET int
-
-#elif defined WIN32 
-#define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
-#include <winsock.h>
-typedef int	socklen_t;
-
-#elif defined __APPLE__
-#define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#define SOCKET socklen_t
-
-#else
-#define CAPWORD NETWRAPPER_TCP
-#endif
-
 #include "misc_util.h"
-
 
 struct _TCPsocketX {
 	int ready;
+#ifdef NATIVESOCKETS
 	SOCKET channel;
+#endif
 	IPaddress remoteAddress;
 	IPaddress localAddress;
 	int sflag;
@@ -67,7 +41,7 @@ TCPClientSocket::TCPClientSocket(int platformsocket) {
 	// fill the SDL socket manually
 	((struct _TCPsocketX*)nativetcpstruct)->ready=0;
 	((struct _TCPsocketX*)nativetcpstruct)->sflag=0;
-	((struct _TCPsocketX*)nativetcpstruct)->channel=platformsocket;
+	((struct _TCPsocketX*)nativetcpstruct)->channel=(SOCKET) platformsocket;
 	sockaddr_in		sa;
 	socklen_t		sz;
 	sz=sizeof(sa);
@@ -146,7 +120,8 @@ TCPClientSocket::TCPClientSocket(const char* destination, Bit16u port) {
 	listensocketset=0;
 	
 	IPaddress openip;
-	if (!SDLNet_ResolveHost(&openip,destination,port)) {
+	//Ancient versions of SDL_net had this as char*. People still appear to be using this one.
+	if (!SDLNet_ResolveHost(&openip,const_cast<char*>(destination),port)) {
 		listensocketset = SDLNet_AllocSocketSet(1);
 		if(!listensocketset) return;
 		mysock = SDLNet_TCP_Open(&openip);

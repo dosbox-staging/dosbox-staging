@@ -50,6 +50,42 @@ AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
+dnl some semi complex check for sys/socket so it works on darwin as well
+AC_CHECK_HEADERS([stdlib.h sys/types.h])
+AC_CHECK_HEADERS([sys/socket.h  netinet/in.h], [], [],
+[#include <stdio.h>
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+])
+
+dnl check for the socklen_t (darwin doesn't always have it)
+AC_COMPILE_IFELSE([
+#include <stdio.h>
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+],[],[AC_DEFINE([socklen_t],[int],[Define to `int` if you don't have socklen_t])])
+
 AC_MSG_CHECKING(if environ can be included)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <unistd.h>
@@ -93,7 +129,18 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 #switch language back
 AC_LANG_POP(C++)
 
-AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
+dnl enable disable alsa and pass it's cflags to CXXFLAGS
+AC_ARG_ENABLE(alsa-midi,
+AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
+[ case "${enableval}" in
+ yes) alsa_midi=true;;
+ no)  alsa_midi=false;;
+esac],
+[alsa_midi=true])
+if test x$alsa_midi = xtrue ; then 
+  AM_PATH_ALSA(0.9.0, AC_DEFINE(HAVE_ALSA,1,[Define to 1 to use ALSA for MIDI]) , : )
+  CXXFLAGS="$CXXFLAGS $ALSA_CFLAGS"
+fi
 
 #Check for big endian machine, should #define WORDS_BIGENDIAN if so
 AC_C_BIGENDIAN
@@ -327,8 +374,8 @@ case "$target" in
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
        LIBS="$LIBS -framework AudioUnit"
        ;;
-    *-*-linux-gnu*)
-       AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
+    *-*-freebsd* | *-*-linux*)
+       AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux or *BSD])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-os2-emx*)

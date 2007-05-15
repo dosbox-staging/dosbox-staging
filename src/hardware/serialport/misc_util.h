@@ -1,23 +1,47 @@
 #ifndef SDLNETWRAPPER_H
 #define SDLNETWRAPPER_H
 
+#ifndef DOSBOX_DOSBOX_H
+#include "dosbox.h"
+#endif
+
 #if C_MODEM
 
-#include "SDL_net.h"
+# ifndef DOSBOX_SUPPORT_H
 #include "support.h"
-
-#if defined LINUX || defined OS2
-#define NATIVESOCKETS
-
-#elif defined WIN32 
-#define NATIVESOCKETS
-
-#else
 #endif
 
 // Netwrapper Capabilities
 #define NETWRAPPER_TCP 1
 #define NETWRAPPER_TCP_NATIVESOCKET 2
+
+#if defined WIN32
+ #define NATIVESOCKETS
+ #include <winsock2.h>
+ #include <ws2tcpip.h> //for socklen_t
+ //typedef int  socklen_t;
+
+//Tests for BSD/OS2/LINUX
+#elif defined HAVE_STDLIB_H && defined HAVE_SYS_TYPES_H && defined HAVE_SYS_SOCKET_H && defined HAVE_NETINET_IN_H
+ #define NATIVESOCKETS
+ #define SOCKET int
+ #include <stdio.h> //darwin
+ #include <stdlib.h> //darwin
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>
+ //socklen_t should be handled by configure
+#endif
+
+#ifdef NATIVESOCKETS
+ #define CAPWORD (NETWRAPPER_TCP|NETWRAPPER_TCP_NATIVESOCKET)
+#else
+ #define CAPWORD NETWRAPPER_TCP
+#endif
+
+#include "SDL_net.h"
+
+
 
 Bit32u Netwrapper_GetCapabilities();
 
@@ -74,6 +98,6 @@ class TCPServerSocket {
 };
 
 
-#endif
+#endif //C_MODEM
 
-#endif //#if C_MODEM
+#endif //# SDLNETWRAPPER_H

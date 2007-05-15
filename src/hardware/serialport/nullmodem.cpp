@@ -90,6 +90,7 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	}
 	// socket inheritance
 	if(getBituSubstring("inhsocket:", &bool_temp, cmd)) {
+#ifdef NATIVESOCKETS
 		if(Netwrapper_GetCapabilities()&NETWRAPPER_TCP_NATIVESOCKET) {
 			if(bool_temp==1) {
 				int sock;
@@ -128,6 +129,7 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 				}
 			}
 		} else {
+#endif
 			LOG_MSG("Serial%d: socket inheritance not supported on this platform.",
 				COMNUMBER);
 			return;
