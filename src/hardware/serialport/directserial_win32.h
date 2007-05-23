@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.h,v 1.4 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: directserial_win32.h,v 1.5 2007-05-23 08:05:22 qbix79 Exp $ */
 
 // include guard
 #ifndef DOSBOX_DIRECTSERIAL_WIN32_H
@@ -31,6 +31,7 @@
 
 #define DIRECTSERIAL_AVAILIBLE
 #include "serialport.h"
+#include <winsock2.h> //To prevent compilation problems with windows.h including winsock.h
 #include <windows.h>
 
 class CDirectSerial : public CSerial {
