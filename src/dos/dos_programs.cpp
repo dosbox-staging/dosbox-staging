@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.70 2007-04-17 15:48:53 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.71 2007-05-26 19:42:09 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -886,7 +886,7 @@ public:
 		Bit8u mediaid;
 		if (type=="floppy" || type=="hdd" || type=="iso") {
 			Bit16u sizes[4];
-			bool autosizedetect=false;
+			bool imgsizedetect=false;
 			
 			std::string str_size;
 			mediaid=0xF8;
@@ -900,12 +900,7 @@ public:
 			} 
 			cmd->FindString("-size",str_size,true);
 			if ((type=="hdd") && (str_size.size()==0)) {
-				if (!cmd->FindExist("-autosize",true)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
-					return;
-				} else {
-					autosizedetect=true;
-				}
+				imgsizedetect=true;
 			} else {
 				char number[20];
 				const char * scan=str_size.c_str();
@@ -992,10 +987,10 @@ public:
 			}
 
 			if(fstype=="fat") {
-				if (autosizedetect) {
+				if (imgsizedetect) {
 					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
 					if(!diskfile) {
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 						return;
 					}
 					fseek(diskfile, 0L, SEEK_END);
@@ -1004,17 +999,17 @@ public:
 					fseek(diskfile, 0L, SEEK_SET);
 					if (fread(buf,sizeof(Bit8u),512,diskfile)<512) {
 						fclose(diskfile);
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 						return;
 					}
 					fclose(diskfile);
 					if ((buf[510]!=0x55) || (buf[511]!=0xaa)) {
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 						return;
 					}
 					Bitu sectors=(Bitu)(fcsize/(16*63));
 					if (sectors*16*63!=fcsize) {
-						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
+						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_GEOMETRY"));
 						return;
 					}
 					sizes[0]=512;	sizes[1]=63;	sizes[2]=16;	sizes[3]=sectors;
@@ -1356,6 +1351,10 @@ void DOS_SetupPrograms(void) {
 		"For \033[33mhardrive\033[0m images: Must specify drive geometry for hard drives:\n"
 		"bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
 		"\033[34;1mIMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl\033[0m\n");
+	MSG_Add("PROGRAM_IMGMOUNT_INVALID_IMAGE","Could not load image file.\n"
+		"Check that the path is correct and the image is accessible.\n");
+	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY","Could not extract drive geometry from image.\n"
+		"Use parameter -size bps,spc,hpc,cyl to specify the geometry.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED","Type \"%s\" is unsupported. Specify \"hdd\" or \"floppy\" or\"iso\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED","Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE","Must specify file-image to mount.\n");
