@@ -53,6 +53,7 @@ Q: The mouse doesn't work.
 Q: There is no sound.
 Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
+Q: The keyboard lags.
 Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
 Q: Can DOSBox harm my computer?
@@ -86,10 +87,10 @@ A: Press alt-enter. Alternatively: Edit the configuration file of DOSBox and
 Q: My CD-ROM doesn't work.
 A: To mount your CD-ROM in DOSBox you have to specify some additional options 
    when mounting the CD-ROM. 
-   To enable the most basic CD-ROM support:
+   To enable CD-ROM support:
      - mount d f:\ -t cdrom
    To enable low-level SDL-support:
-     - mount d f:\ -t cdrom -usecd 0
+     - mount d f:\ -t cdrom -usecd 0 -noioctl
    To enable low-level ioctl-support(win2k/xp/linux):
      - mount d f:\ -t cdrom -usecd 0 -ioctl
    To enable low-level aspi-support (win98 with aspi-layer installed):
@@ -144,6 +145,12 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      8. Try keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
         Look for keyb2.0 pre4 as older and newer versions are known to
         have a bug in the loader routines.
+
+
+Q: The keyboard lags.
+A: Lower the priority setting in the DOSBox configuration file
+   like set "priority=normal,normal". You might also want to
+   try lowering the cycles.
 
 
 Q: The game/application can't find its CD-ROM.
@@ -318,7 +325,7 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available: 
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory" 
-      [-t type] [-aspi] [-ioctl] [-usecd number] [-size drivesize] 
+      [-t type] [-aspi] [-ioctl] [-noioctl] [-usecd number] [-size drivesize] 
       [-label drivelabel] [-freesize size_in_mb]
 MOUNT -cd
 MOUNT -u "Emulated Drive letter"
@@ -346,7 +353,8 @@ MOUNT -u "Emulated Drive letter"
         Sets the name of the drive to "drivelabel". Needed on some 
         systems if the cd label isn't read correctly. Useful when a 
         program can't find its cdrom. If you don't specify a label and no
-        lowlevel support is selected (-usecd # and/or -ioctl/aspi): 
+        lowlevel support is selected (that is omitting the -usecd # and/or
+        -aspi parameters or specifying -noioctl): 
           For win32: label is extracted from "Real Drive".
           For Linux: label is set to NO_LABEL.
 
@@ -360,6 +368,9 @@ MOUNT -u "Emulated Drive letter"
   -ioctl   
         Forces use of ioctl commands. Only valid if mounting a cdrom under 
         a Windows OS which support them (Win2000/XP/NT).
+
+  -noioctl   
+        Forces use of the SDL cdrom layer. Valid on all systems.
 
   -usecd number
         Forces  use of SDL cdrom support for drive number.
