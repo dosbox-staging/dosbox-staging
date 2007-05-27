@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.71 2007-05-26 19:42:09 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.72 2007-05-27 16:11:35 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -220,9 +220,15 @@ public:
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
 				int error;
-				if (cmd->FindExist("-aspi",false))	MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);	else
-				if (cmd->FindExist("-ioctl",false)) MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
-				else								MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
+				if (cmd->FindExist("-aspi",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
+				} else if (cmd->FindExist("-ioctl",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
+				} else if (cmd->FindExist("-noioctl",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
+				} else {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
+				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
 				switch (error) {
