@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.6 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: vga_s3.cpp,v 1.7 2007-05-28 16:29:11 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -375,6 +375,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 }
 
 void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
+	if (reg>0x8 && vga.s3.pll.lock!=0x6) return;
 	switch (reg) {
 	case 0x08:
 		vga.s3.pll.lock=val;
@@ -405,6 +406,10 @@ void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen) {
 
 Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen) {
 	/* S3 specific group */
+	if (reg>0x8 && vga.s3.pll.lock!=0x6) {
+		if (reg<0x1b) return 0;
+		else return reg;
+	}
 	switch (reg) {
 	case 0x08:		/* PLL Unlock */
 		return vga.s3.pll.lock;
