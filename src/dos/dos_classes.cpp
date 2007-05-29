@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.49 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.50 2007-05-29 13:36:45 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -461,7 +461,7 @@ void DOS_FCB::FileOpen(Bit8u _fhandle) {
 	sSave(sFCB,file_handle,_fhandle);
 	sSave(sFCB,cur_block,0);
 	sSave(sFCB,rec_size,128);
-	sSave(sFCB,rndm,0);
+//	sSave(sFCB,rndm,0); // breaks Jewels of darkness. 
 	Bit8u temp=RealHandle(_fhandle);
 	sSave(sFCB,filesize,Files[temp]->size);
 	sSave(sFCB,time,Files[temp]->time);
