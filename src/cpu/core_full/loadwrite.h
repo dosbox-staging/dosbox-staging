@@ -3,7 +3,6 @@
 #define GetIP()	(inst.cseip-SegBase(cs))
 
 #define RunException() {										\
-	FillFlags();												\
 	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
 	continue;													\
 }

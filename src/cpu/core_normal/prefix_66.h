@@ -170,7 +170,6 @@
 	CASE_D(0x63)												/* ARPL Ed,Rd */
 		{
 			if (((cpu.pmode) && (reg_flags & FLAG_VM)) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
 				GetEArd;Bitu new_sel=(Bit16u)*eard;
@@ -398,12 +397,10 @@
 			continue;
 		}
 	CASE_D(0x9c)												/* PUSHFD */
-		FillFlags();
 		if (CPU_PUSHF(true)) RUNEXCEPTION();
 		break;
 	CASE_D(0x9d)												/* POPFD */
 		if (CPU_POPF(true)) RUNEXCEPTION();
-		lflags.type=t_UNKNOWN;
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
 			cpudecoder=CPU_Core_Normal_Trap_Run;
@@ -511,7 +508,6 @@
 		}
 	CASE_D(0xcf)												/* IRET */
 		{
-			FillFlags();
 			CPU_IRET(true,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	

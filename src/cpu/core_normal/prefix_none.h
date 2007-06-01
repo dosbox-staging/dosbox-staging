@@ -239,7 +239,6 @@
 	CASE_W(0x63)												/* ARPL Ew,Rw */
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
 				GetEArw;Bitu new_sel=*earw;
@@ -574,12 +573,10 @@
 	CASE_B(0x9b)												/* WAIT */
 		break; /* No waiting here */
 	CASE_W(0x9c)												/* PUSHF */
-		FillFlags();
 		if (CPU_PUSHF(false)) RUNEXCEPTION();
 		break;
 	CASE_W(0x9d)												/* POPF */
 		if (CPU_POPF(false)) RUNEXCEPTION();
-		lflags.type=t_UNKNOWN;
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
 			cpudecoder=CPU_Core_Normal_Trap_Run;
@@ -740,8 +737,8 @@
 		CPU_RET(false,0,GETIP);
 		continue;
 	CASE_B(0xcc)												/* INT3 */
-		FillFlags();
 #if C_DEBUG	
+		FillFlags();
 		if (DEBUG_Breakpoint())
 			return debugCallback;
 #endif			
@@ -753,8 +750,8 @@
 	CASE_B(0xcd)												/* INT Ib */	
 		{
 			Bit8u num=Fetchb();
-			FillFlags();
 #if C_DEBUG
+			FillFlags();
 			if (DEBUG_IntBreakpoint(num)) {
 				return debugCallback;
 			}
@@ -767,7 +764,6 @@
 		}
 	CASE_B(0xce)												/* INTO */
 		if (get_OF()) {
-			FillFlags();
 			CPU_SW_Interrupt(4,GETIP);
 #if CPU_TRAP_CHECK
 			cpu.trap_skip=true;
@@ -777,7 +773,6 @@
 		break;
 	CASE_W(0xcf)												/* IRET */
 		{
-			FillFlags();
 			CPU_IRET(false,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
@@ -953,7 +948,6 @@
 		LOG(LOG_CPU,LOG_NORMAL)("CPU:LOCK"); /* FIXME: see case D_LOCK in core_full/load.h */
 		break;
 	CASE_B(0xf1)												/* ICEBP */
-		FillFlags();
 		CPU_SW_Interrupt_NoIOPLCheck(1,GETIP);
 #if CPU_TRAP_CHECK
 		cpu.trap_skip=true;

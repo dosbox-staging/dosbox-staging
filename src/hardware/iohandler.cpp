@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.26 2007-02-22 08:32:21 qbix79 Exp $ */
+/* $Id: iohandler.cpp,v 1.27 2007-06-01 16:40:40 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -227,7 +227,6 @@ void IO_WriteB(Bitu port,Bitu val) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x08;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -263,7 +262,6 @@ void IO_WriteW(Bitu port,Bitu val) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x0a;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -299,7 +297,6 @@ void IO_WriteD(Bitu port,Bitu val) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x0c;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -330,7 +327,6 @@ Bitu IO_ReadB(Bitu port) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x00;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -366,7 +362,6 @@ Bitu IO_ReadW(Bitu port) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x02;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -402,7 +397,6 @@ Bitu IO_ReadD(Bitu port) {
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
 		reg_eip = RealOff(icb)+0x04;
-		FillFlags();
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();

@@ -338,8 +338,8 @@ switch (inst.code.op) {
 		CPU_JMP(true,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_INT:
-		FillFlags();
 #if C_DEBUG
+		FillFlags();
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) 
 			return debugCallback;
 		else if (DEBUG_IntBreakpoint(inst_op1_b)) 
@@ -379,18 +379,10 @@ switch (inst.code.op) {
 		if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
 		switch (inst.rm_index) {
 		case 0x00:	/* SLDT */
-			{
-				Bitu selector;
-				CPU_SLDT(selector);
-				inst_op1_d=(Bit32u)selector;
-			}
+			inst_op1_d=(Bit32u)CPU_SLDT();
 			break;
 		case 0x01:	/* STR */
-			{
-				Bitu selector;
-				CPU_STR(selector);
-				inst_op1_d=(Bit32u)selector;
-			}
+			inst_op1_d=(Bit32u)CPU_STR();
 			break;
 		case 0x02:	/* LLDT */
 			if (cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -401,11 +393,9 @@ switch (inst.code.op) {
 			if (CPU_LTR(inst_op1_d)) RunException();
 			goto nextopcode;		/* Else value will saved */
 		case 0x04:	/* VERR */
-			FillFlags();
 			CPU_VERR(inst_op1_d);
 			goto nextopcode;		/* Else value will saved */
 		case 0x05:	/* VERW */
-			FillFlags();
 			CPU_VERW(inst_op1_d);
 			goto nextopcode;		/* Else value will saved */
 		default:
@@ -417,21 +407,13 @@ switch (inst.code.op) {
 	case O_GRP7d:
 		switch (inst.rm_index) {
 		case 0:		/* SGDT */
-			{
-				Bitu limit,base;
-				CPU_SGDT(limit,base);
-				SaveMw(inst.rm_eaa,limit);
-				SaveMd(inst.rm_eaa+2,base);
-				goto nextopcode;
-			}
+			SaveMw(inst.rm_eaa,CPU_SGDT_limit());
+			SaveMd(inst.rm_eaa+2,CPU_SGDT_base());
+			goto nextopcode;
 		case 1:		/* SIDT */
-			{
-				Bitu limit,base;
-				CPU_SIDT(limit,base);
-				SaveMw(inst.rm_eaa,limit);
-				SaveMd(inst.rm_eaa+2,base);
-				goto nextopcode;
-			}
+			SaveMw(inst.rm_eaa,CPU_SIDT_limit());
+			SaveMd(inst.rm_eaa+2,CPU_SIDT_base());
+			goto nextopcode;
 		case 2:		/* LGDT */
 			if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 			CPU_LGDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
@@ -441,11 +423,8 @@ switch (inst.code.op) {
 			CPU_LIDT(LoadMw(inst.rm_eaa),LoadMd(inst.rm_eaa+2)&((inst.code.op == O_GRP7w) ? 0xFFFFFF : 0xFFFFFFFF));
 			goto nextopcode;
 		case 4:		/* SMSW */
-			{
-				Bitu word;CPU_SMSW(word);
-				inst_op1_d=word;
-				break;
-			}
+			inst_op1_d=CPU_SMSW();
+			break;
 		case 6:		/* LMSW */
 			FillFlags();
 			if (CPU_LMSW(inst_op1_w)) RunException();
@@ -481,7 +460,6 @@ switch (inst.code.op) {
 	case O_LAR:
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
-			FillFlags();
 			Bitu ar=inst_op2_d;
 			CPU_LAR(inst_op1_w,ar);
 			inst_op1_d=(Bit32u)ar;
@@ -490,7 +468,6 @@ switch (inst.code.op) {
 	case O_LSL:
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
-			FillFlags();
 			Bitu limit=inst_op2_d;
 			CPU_LSL(inst_op1_w,limit);
 			inst_op1_d=(Bit32u)limit;
@@ -499,7 +476,6 @@ switch (inst.code.op) {
 	case O_ARPL:
 		{
 			if ((reg_flags & FLAG_VM) || !cpu.pmode) goto illegalopcode;
-			FillFlags();
 			Bitu new_sel=inst_op1_d;
 			CPU_ARPL(new_sel,inst_op2_d);
 			inst_op1_d=(Bit32u)new_sel;

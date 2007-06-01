@@ -31,7 +31,7 @@ LazyFlags lflags;
 /* CF     Carry Flag -- Set on high-order bit carry or borrow; cleared
           otherwise.
 */
-Bitu get_CF(void) {
+Bit32u get_CF(void) {
 
 	switch (lflags.type) {
 	case t_UNKNOWN:
@@ -43,7 +43,6 @@ Bitu get_CF(void) {
 	case t_DECd:
 	case t_MUL:
 		return GETFLAG(CF);
-		break;
 	case t_ADDb:	
 		return (lf_resb<lf_var1b);
 	case t_ADDw:	
@@ -129,7 +128,7 @@ Bitu get_CF(void) {
             four bits of   AL; cleared otherwise. Used for decimal
             arithmetic.
 */
-Bitu get_AF(void) {
+Bit32u get_AF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
@@ -207,7 +206,7 @@ Bitu get_AF(void) {
 /* ZF     Zero Flag -- Set if result is zero; cleared otherwise.
 */
 
-Bitu get_ZF(void) {
+Bit32u get_ZF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
@@ -275,7 +274,7 @@ Bitu get_ZF(void) {
 /* SF     Sign Flag -- Set equal to high-order bit of result (0 is
             positive, 1 if negative).
 */
-Bitu get_SF(void) {
+Bit32u get_SF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
@@ -341,7 +340,7 @@ Bitu get_SF(void) {
 	return false;
 
 }
-Bitu get_OF(void) {
+Bit32u get_OF(void) {
 	Bitu type=lflags.type;
 	switch (type) {
 	case t_UNKNOWN:
@@ -442,14 +441,14 @@ Bit16u parity_lookup[256] = {
   FLAG_PF, 0, 0, FLAG_PF, 0, FLAG_PF, FLAG_PF, 0, 0, FLAG_PF, FLAG_PF, 0, FLAG_PF, 0, 0, FLAG_PF
   };
 
-Bitu get_PF(void) {
+Bit32u get_PF(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
 		return GETFLAG(PF);
 	default:
-		return	(parity_lookup[lf_resb]);;
+		return	(parity_lookup[lf_resb]);
 	};
-	return false;
+	return 0;
 }
 
 
@@ -858,6 +857,10 @@ Bitu FillFlags(void) {
 	}
 	lflags.type=t_UNKNOWN;
 	return reg_flags;
+}
+
+void DestroyConditionFlags(void) {
+	lflags.type=t_UNKNOWN;
 }
 
 #endif

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.86 2007-05-09 14:35:51 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.87 2007-06-01 16:40:40 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -1776,13 +1776,12 @@ static void LogCPUInfo(void)
 	sprintf(out1,"IDT base=%08X limit=%08X",cpu.idt.GetBase(),cpu.idt.GetLimit());
 	LOG(LOG_MISC,LOG_ERROR)(out1);
 
-	Bitu sel;
+	Bitu sel=CPU_STR();
 	Descriptor desc;
-	CPU_STR(sel);
 	cpu.gdt.GetDescriptor(sel,desc);
 	sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 	LOG(LOG_MISC,LOG_ERROR)(out1);
-	sel=cpu.gdt.SLDT();
+	sel=CPU_SLDT();
 	cpu.gdt.GetDescriptor(sel,desc);
 	sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
 	LOG(LOG_MISC,LOG_ERROR)(out1);

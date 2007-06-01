@@ -284,14 +284,12 @@ l_M_Ed:
 		inst_op1_d=4;
 		break;
 	case D_IRETw:
-		FillFlags();
 		CPU_IRET(false,GetIP());
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			return CBRET_NONE;
 		}
 		continue;
 	case D_IRETd:
-		FillFlags();
 		CPU_IRET(true,GetIP());
 		if (GETFLAG(IF) && PIC_IRQCheck) 
 			return CBRET_NONE;
@@ -407,12 +405,10 @@ l_M_Ed:
 		cpu.direction=-1;
 		goto nextopcode;
 	case D_PUSHF:
-		FillFlags();
 		if (CPU_PUSHF(inst.code.extra)) RunException();
 		goto nextopcode;
 	case D_POPF:
 		if (CPU_POPF(inst.code.extra)) RunException();
-		lflags.type=t_UNKNOWN;
 		if (GETFLAG(IF) && PIC_IRQCheck) {
 			SaveIP();
 			return CBRET_NONE;
@@ -481,7 +477,6 @@ l_M_Ed:
 		cpu.cr0&=(~CR0_TASKSWITCH);
 		goto nextopcode;
 	case D_ICEBP:
-		FillFlags();
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	default:

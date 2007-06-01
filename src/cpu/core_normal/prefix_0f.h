@@ -25,15 +25,14 @@
 			case 0x01:	/* STR */
 				{
 					Bitu saveval;
-					if (!which) CPU_SLDT(saveval);
-					else CPU_STR(saveval);
+					if (!which) saveval=CPU_SLDT();
+					else saveval=CPU_STR();
 					if (rm >= 0xc0) {GetEArw;*earw=saveval;}
 					else {GetEAa;SaveMw(eaa,saveval);}
 				}
 				break;
 			case 0x02:case 0x03:case 0x04:case 0x05:
 				{
-					FillFlags();
 					Bitu loadval;
 					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
 					else {GetEAa;loadval=LoadMw(eaa);}
@@ -64,17 +63,15 @@
 		{
 			GetRM;Bitu which=(rm>>3)&7;
 			if (rm < 0xc0)	{ //First ones all use EA
-				GetEAa;Bitu limit,base;
+				GetEAa;Bitu limit;
 				switch (which) {
 				case 0x00:										/* SGDT */
-					CPU_SGDT(limit,base);
-					SaveMw(eaa,limit);
-					SaveMd(eaa+2,base);
+					SaveMw(eaa,CPU_SGDT_limit());
+					SaveMd(eaa+2,CPU_SGDT_base());
 					break;
 				case 0x01:										/* SIDT */
-					CPU_SIDT(limit,base);
-					SaveMw(eaa,limit);
-					SaveMd(eaa+2,base);
+					SaveMw(eaa,CPU_SIDT_limit());
+					SaveMd(eaa+2,CPU_SIDT_base());
 					break;
 				case 0x02:										/* LGDT */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -85,8 +82,7 @@
 					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2) & 0xFFFFFF);
 					break;
 				case 0x04:										/* SMSW */
-					CPU_SMSW(limit);
-					SaveMw(eaa,limit);
+					SaveMw(eaa,CPU_SMSW());
 					break;
 				case 0x06:										/* LMSW */
 					limit=LoadMw(eaa);
@@ -98,7 +94,7 @@
 					break;
 				}
 			} else {
-				GetEArw;Bitu limit;
+				GetEArw;
 				switch (which) {
 				case 0x02:										/* LGDT */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -107,8 +103,7 @@
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					goto illegal_opcode;
 				case 0x04:										/* SMSW */
-					CPU_SMSW(limit);
-					*earw=limit;
+					*earw=CPU_SMSW();
 					break;
 				case 0x06:										/* LMSW */
 					if (CPU_LMSW(*earw)) RUNEXCEPTION();
@@ -122,7 +117,6 @@
 	CASE_0F_W(0x02)												/* LAR Gw,Ew */
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrw;Bitu ar=*rmrw;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LAR(*earw,ar);
@@ -135,7 +129,6 @@
 	CASE_0F_W(0x03)												/* LSL Gw,Ew */
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrw;Bitu limit=*rmrw;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LSL(*earw,limit);

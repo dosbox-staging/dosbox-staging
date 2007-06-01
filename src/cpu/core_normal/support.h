@@ -42,7 +42,6 @@ static INLINE Bit32s Fetchds() {
 
 
 #define RUNEXCEPTION() {										\
-	FillFlags();												\
 	CPU_Exception(cpu.exception.which,cpu.exception.error);		\
 	continue;													\
 }

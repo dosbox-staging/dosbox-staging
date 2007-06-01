@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.99 2007-04-14 11:16:29 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.100 2007-06-01 16:40:40 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -27,6 +27,7 @@
 #include "mapper.h"
 #include "setup.h"
 #include "paging.h"
+#include "lazyflags.h"
 #include "support.h"
 
 Bitu DEBUG_EnableDebugger(void);
@@ -62,10 +63,12 @@ Bitu CPU_AutoDetermineMode;
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
 void CPU_Core_Simple_Init(void);
+#if (C_DYNAMIC_X86)
 void CPU_Core_Dyn_X86_Init(void);
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 void CPU_Core_Dyn_X86_Cache_Close(void);
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
+#endif
 
 /* In debug mode exceptions are tested and dosbox exits when 
  * a unhandled exception state is detected. 
@@ -178,6 +181,7 @@ bool CPU_POPF(Bitu use32) {
 	if (use32)
 		CPU_SetFlags(CPU_Pop32(),mask);
 	else CPU_SetFlags(CPU_Pop16(),mask & 0xffff);
+	DestroyConditionFlags();
 	return false;
 }
 
@@ -186,6 +190,7 @@ bool CPU_PUSHF(Bitu use32) {
 		/* Not enough privileges to execute PUSHF */
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	}
+	FillFlags();
 	if (use32) 
 		CPU_Push32(reg_flags & 0xfcffff);
 	else CPU_Push16(reg_flags);
@@ -258,6 +263,7 @@ enum TSwitchType {
 };
 
 bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
+	FillFlags();
 	TaskStateSegment new_tss;
 	if (!new_tss.SetSelector(new_tss_selector)) 
 		E_Exit("Illegal TSS for switch, selector=%x, switchtype=%x",new_tss_selector,tstype);
@@ -447,6 +453,7 @@ void CPU_Exception(Bitu which,Bitu error ) {
 Bit8u lastint;
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	lastint=num;
+	FillFlags();
 #if C_DEBUG
 	switch (num) {
 	case 0xcd:
@@ -666,6 +673,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			CPU_SetFlags(CPU_Pop16(),FMASK_ALL & 0xffff);
 		}
 		cpu.code.big=false;
+		DestroyConditionFlags();
 		return;
 	} else {	/* Protected mode IRET */
 		if (reg_flags & FLAG_VM) {
@@ -686,6 +694,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 					CPU_SetFlags(CPU_Pop16(),FMASK_NORMAL|FLAG_NT);
 				}
 				cpu.code.big=false;
+				DestroyConditionFlags();
 				return;
 			}
 		}
@@ -717,6 +726,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				n_gs=CPU_Pop32() & 0xffff;
 
 				CPU_SetFlags(n_flags,FMASK_ALL | FLAG_VM);
+				DestroyConditionFlags();
 				cpu.cpl=3;
 
 				CPU_SetSegGeneral(ss,n_ss);
@@ -779,6 +789,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			Bitu mask=cpu.cpl ? (FMASK_NORMAL | FLAG_NT) : FMASK_ALL;
 			if (GETFLAG_IOPL<cpu.cpl) mask &= (~FLAG_IF);
 			CPU_SetFlags(n_flags,mask);
+			DestroyConditionFlags();
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Same level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		} else {
 			/* Return to outer level */
@@ -823,6 +834,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			Bitu mask=cpu.cpl ? (FMASK_NORMAL | FLAG_NT) : FMASK_ALL;
 			if (GETFLAG_IOPL<cpu.cpl) mask &= (~FLAG_IF);
 			CPU_SetFlags(n_flags,mask);
+			DestroyConditionFlags();
 
 			cpu.cpl=n_cs_rpl;
 			reg_eip=n_eip;
@@ -1377,8 +1389,8 @@ RET_same_level:
 }
 
 
-void CPU_SLDT(Bitu & selector) {
-	selector=cpu.gdt.SLDT();
+Bitu CPU_SLDT(void) {
+	return cpu.gdt.SLDT();
 }
 
 bool CPU_LLDT(Bitu selector) {
@@ -1390,8 +1402,8 @@ bool CPU_LLDT(Bitu selector) {
 	return false;
 }
 
-void CPU_STR(Bitu & selector) {
-	selector=cpu_tss.selector;
+Bitu CPU_STR(void) {
+	return cpu_tss.selector;
 }
 
 bool CPU_LTR(Bitu selector) {
@@ -1433,14 +1445,18 @@ void CPU_LIDT(Bitu limit,Bitu base) {
 	cpu.idt.SetBase(base);
 }
 
-void CPU_SGDT(Bitu & limit,Bitu & base) {
-	limit=cpu.gdt.GetLimit();
-	base=cpu.gdt.GetBase();
+Bitu CPU_SGDT_base(void) {
+	return cpu.gdt.GetBase();
+}
+Bitu CPU_SGDT_limit(void) {
+	return cpu.gdt.GetLimit();
 }
 
-void CPU_SIDT(Bitu & limit,Bitu & base) {
-	limit=cpu.idt.GetLimit();
-	base=cpu.idt.GetBase();
+Bitu CPU_SIDT_base(void) {
+	return cpu.idt.GetBase();
+}
+Bitu CPU_SIDT_limit(void) {
+	return cpu.idt.GetLimit();
 }
 
 
@@ -1610,11 +1626,11 @@ bool CPU_READ_TRX(Bitu tr,Bit32u & retvalue) {
 }
 
 
-void CPU_SMSW(Bitu & word) {
-	word=cpu.cr0;
+Bitu CPU_SMSW(void) {
+	return cpu.cr0;
 }
 
-Bitu CPU_LMSW(Bitu word) {
+bool CPU_LMSW(Bitu word) {
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	word&=0xf;
 	if (cpu.cr0 & 1) word|=1; 
@@ -1624,6 +1640,7 @@ Bitu CPU_LMSW(Bitu word) {
 }
 
 void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
+	FillFlags();
 	if ((dest_sel & 3) < (src_sel & 3)) {
 		dest_sel=(dest_sel & 0xfffc) + (src_sel & 3);
 //		dest_sel|=0xff3f0000;
@@ -1634,6 +1651,7 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 }
 	
 void CPU_LAR(Bitu selector,Bitu & ar) {
+	FillFlags();
 	if (selector == 0) {
 		SETFLAGBIT(ZF,false);
 		return;
@@ -1685,6 +1703,7 @@ void CPU_LAR(Bitu selector,Bitu & ar) {
 }
 
 void CPU_LSL(Bitu selector,Bitu & limit) {
+	FillFlags();
 	if (selector == 0) {
 		SETFLAGBIT(ZF,false);
 		return;
@@ -1727,6 +1746,7 @@ void CPU_LSL(Bitu selector,Bitu & limit) {
 }
 
 void CPU_VERR(Bitu selector) {
+	FillFlags();
 	if (selector == 0) {
 		SETFLAGBIT(ZF,false);
 		return;
@@ -1759,6 +1779,7 @@ void CPU_VERR(Bitu selector) {
 }
 
 void CPU_VERW(Bitu selector) {
+	FillFlags();
 	if (selector == 0) {
 		SETFLAGBIT(ZF,false);
 		return;

@@ -68,10 +68,12 @@ bool CPU_LTR(Bitu selector);
 void CPU_LIDT(Bitu limit,Bitu base);
 void CPU_LGDT(Bitu limit,Bitu base);
 
-void CPU_STR(Bitu & selector);
-void CPU_SLDT(Bitu & selector);
-void CPU_SIDT(Bitu & limit,Bitu & base);
-void CPU_SGDT(Bitu & limit,Bitu & base);
+Bitu CPU_STR(void);
+Bitu CPU_SLDT(void);
+Bitu CPU_SIDT_base(void);
+Bitu CPU_SIDT_limit(void);
+Bitu CPU_SGDT_base(void);
+Bitu CPU_SGDT_limit(void);
 
 void CPU_ARPL(Bitu & dest_sel,Bitu src_sel);
 void CPU_LAR(Bitu selector,Bitu & ar);
@@ -88,8 +90,8 @@ bool CPU_READ_DRX(Bitu dr,Bit32u & retvalue);
 bool CPU_WRITE_TRX(Bitu dr,Bitu value);
 bool CPU_READ_TRX(Bitu dr,Bit32u & retvalue);
 
-void CPU_SMSW(Bitu & word);
-Bitu CPU_LMSW(Bitu word);
+Bitu CPU_SMSW(void);
+bool CPU_LMSW(Bitu word);
 
 void CPU_VERR(Bitu selector);
 void CPU_VERW(Bitu selector);

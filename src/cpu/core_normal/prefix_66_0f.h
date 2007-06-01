@@ -25,8 +25,8 @@
 			case 0x01:	/* STR */
 				{
 					Bitu saveval;
-					if (!which) CPU_SLDT(saveval);
-					else CPU_STR(saveval);
+					if (!which) saveval=CPU_SLDT();
+					else saveval=CPU_STR();
 					if (rm >= 0xc0) {GetEArw;*earw=(Bit16u)saveval;}
 					else {GetEAa;SaveMw(eaa,saveval);}
 				}
@@ -34,7 +34,6 @@
 			case 0x02:case 0x03:case 0x04:case 0x05:
 				{
 					/* Just use 16-bit loads since were only using selectors */
-					FillFlags();
 					Bitu loadval;
 					if (rm >= 0xc0 ) {GetEArw;loadval=*earw;}
 					else {GetEAa;loadval=LoadMw(eaa);}
@@ -66,17 +65,15 @@
 		{
 			GetRM;Bitu which=(rm>>3)&7;
 			if (rm < 0xc0)	{ //First ones all use EA
-				GetEAa;Bitu limit,base;
+				GetEAa;Bitu limit;
 				switch (which) {
 				case 0x00:										/* SGDT */
-					CPU_SGDT(limit,base);
-					SaveMw(eaa,(Bit16u)limit);
-					SaveMd(eaa+2,(Bit32u)base);
+					SaveMw(eaa,(Bit16u)CPU_SGDT_limit());
+					SaveMd(eaa+2,(Bit32u)CPU_SGDT_base());
 					break;
 				case 0x01:										/* SIDT */
-					CPU_SIDT(limit,base);
-					SaveMw(eaa,(Bit16u)limit);
-					SaveMd(eaa+2,(Bit32u)base);
+					SaveMw(eaa,(Bit16u)CPU_SIDT_limit());
+					SaveMd(eaa+2,(Bit32u)CPU_SIDT_base());
 					break;
 				case 0x02:										/* LGDT */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -87,8 +84,7 @@
 					CPU_LIDT(LoadMw(eaa),LoadMd(eaa+2));
 					break;
 				case 0x04:										/* SMSW */
-					CPU_SMSW(limit);
-					SaveMw(eaa,(Bit16u)limit);
+					SaveMw(eaa,(Bit16u)CPU_SMSW());
 					break;
 				case 0x06:										/* LMSW */
 					limit=LoadMw(eaa);
@@ -100,7 +96,7 @@
 					break;
 				}
 			} else {
-				GetEArd;Bitu limit;
+				GetEArd;
 				switch (which) {
 				case 0x02:										/* LGDT */
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
@@ -109,8 +105,7 @@
 					if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 					goto illegal_opcode;
 				case 0x04:										/* SMSW */
-					CPU_SMSW(limit);
-					*eard=(Bit32u)limit;
+					*eard=(Bit32u)CPU_SMSW();
 					break;
 				case 0x06:										/* LMSW */
 					if (CPU_LMSW(*eard)) RUNEXCEPTION();
@@ -127,7 +122,6 @@
 	CASE_0F_D(0x02)												/* LAR Gd,Ed */
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrd;Bitu ar=*rmrd;
 			if (rm >= 0xc0) {
 				GetEArw;CPU_LAR(*earw,ar);
@@ -140,7 +134,6 @@
 	CASE_0F_D(0x03)												/* LSL Gd,Ew */
 		{
 			if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegal_opcode;
-			FillFlags();
 			GetRMrd;Bitu limit=*rmrd;
 			/* Just load 16-bit values for selectors */
 			if (rm >= 0xc0) {

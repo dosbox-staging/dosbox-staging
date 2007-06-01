@@ -20,14 +20,15 @@
 #define __LAZYFLAG_H
 
 //Flag Handling
-Bitu get_CF(void);
-Bitu get_AF(void);
-Bitu get_ZF(void);
-Bitu get_SF(void);
-Bitu get_OF(void);
-Bitu get_PF(void);
+Bit32u get_CF(void);
+Bit32u get_AF(void);
+Bit32u get_ZF(void);
+Bit32u get_SF(void);
+Bit32u get_OF(void);
+Bit32u get_PF(void);
 
 Bitu FillFlags(void);
+void DestroyConditionFlags(void);
 
 #include "regs.h"
 
