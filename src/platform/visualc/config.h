@@ -4,7 +4,7 @@
 
 
 /* Define to 1 to enable internal debugger, requires libcurses */
-#define C_DEBUG 1
+#define C_DEBUG 0
 
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
@@ -22,10 +22,14 @@
 #define C_HEAVY_DEBUG 0
 
 /* The type of cpu this host has */
-#define C_HOSTCPU X86
+#define C_TARGETCPU X86
+//#define C_TARGETCPU X86_64
 
 /* Define to 1 to use x86 dynamic cpu core */
 #define C_DYNAMIC_X86 1
+
+/* Define to 1 to use recompiling cpu core. Can not be used together with the dynamic-x86 core */
+#define C_DYNREC 0
 
 /* Enable memory function inlining in */
 #define C_CORE_INLINE 0
