@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.100 2007-06-01 16:40:40 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.101 2007-06-02 11:47:05 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -68,6 +68,10 @@ void CPU_Core_Dyn_X86_Init(void);
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 void CPU_Core_Dyn_X86_Cache_Close(void);
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
+#elif (C_DYNREC)
+void CPU_Core_Dynrec_Init(void);
+void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
+void CPU_Core_Dynrec_Cache_Close(void);
 #endif
 
 /* In debug mode exceptions are tested and dosbox exits when 
@@ -2071,6 +2075,8 @@ public:
 		CPU_Core_Full_Init();
 #if (C_DYNAMIC_X86)
 		CPU_Core_Dyn_X86_Init();
+#elif (C_DYNREC)
+		CPU_Core_Dynrec_Init();
 #endif
 		MAPPER_AddHandler(CPU_CycleDecrease,MK_f11,MMOD1,"cycledown","Dec Cycles");
 		MAPPER_AddHandler(CPU_CycleIncrease,MK_f12,MMOD1,"cycleup"  ,"Inc Cycles");
@@ -2174,6 +2180,10 @@ public:
 			cpudecoder=&CPU_Core_Normal_Run;
 			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
 		} 
+#elif (C_DYNREC)
+		else if (!strcasecmp(core,"dynamic")) {
+			cpudecoder=&CPU_Core_Dynrec_Run;
+		} 
 #endif
 		else {
 			LOG_MSG("CPU:Unknown core type %s, switching back to normal.",core);
@@ -2181,6 +2191,8 @@ public:
 
 #if (C_DYNAMIC_X86)
 		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic") || !strcasecmp(core,"dynamic_nodhfpu"));
+#elif (C_DYNREC)
+		CPU_Core_Dynrec_Cache_Init(!strcasecmp(core,"dynamic"));
 #endif
 	
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
@@ -2198,6 +2210,8 @@ static CPU * test;
 void CPU_ShutDown(Section* sec) {
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Cache_Close();
+#elif (C_DYNREC)
+	CPU_Core_Dynrec_Cache_Close();
 #endif
 	delete test;
 }

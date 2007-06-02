@@ -58,6 +58,8 @@ Bits CPU_Core_Simple_Run(void);
 Bits CPU_Core_Full_Run(void);
 Bits CPU_Core_Dyn_X86_Run(void);
 Bits CPU_Core_Dyn_X86_Trap_Run(void);
+Bits CPU_Core_Dynrec_Run(void);
+Bits CPU_Core_Dynrec_Trap_Run(void);
 
 //CPU Stuff
 
