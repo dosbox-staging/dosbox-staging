@@ -563,6 +563,7 @@ static void dyn_check_exception(HostReg reg) {
 
 
 
+bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 	Bitu index=(address>>12);
 	if (paging.tlb.read[index]) {
@@ -577,6 +578,7 @@ bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 	}
 }
 
+bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) DRC_FC;
 bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
 	Bitu index=(address>>12);
 	if (paging.tlb.write[index]) {
@@ -585,6 +587,7 @@ bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
 	} else return paging.tlb.handler[index]->writeb_checked(address,val);
 }
 
+bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 #if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 	if (!(address & 1)) {
@@ -605,6 +608,7 @@ bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 	} else return mem_unalignedreadw_checked_x86(address, ((Bit16u*)(&core_dynrec.readdata)));
 }
 
+bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 #if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 	if (!(address & 3)) {
@@ -625,6 +629,7 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 	} else return mem_unalignedreadd_checked_x86(address, ((Bit32u*)(&core_dynrec.readdata)));
 }
 
+bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) DRC_FC;
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) {
 #if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 	if (!(address & 1)) {
@@ -639,6 +644,7 @@ bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) {
 	} else return mem_unalignedwritew_checked_x86(address,val);
 }
 
+bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) DRC_FC;
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) {
 #if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 	if (!(address & 3)) {
