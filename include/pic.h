@@ -49,7 +49,7 @@ INLINE Bits PIC_MakeCycles(double amount) {
 }
 
 INLINE double PIC_FullIndex(void) {
-	return PIC_Ticks+PIC_TickIndex();
+	return PIC_Ticks+(double)PIC_TickIndex();
 }
 
 void PIC_ActivateIRQ(Bitu irq);
