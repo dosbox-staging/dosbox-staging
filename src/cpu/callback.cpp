@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.36 2007-01-08 19:45:38 qbix79 Exp $ */
+/* $Id: callback.cpp,v 1.37 2007-06-03 16:46:33 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -155,6 +155,16 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		}
 		phys_writeb(physAddress+0x00,(Bit8u)0xCB);		//A RETF Instruction
 		return (use_cb?5:1);
+	case CB_RETF8:
+		if (use_cb) {
+			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x01,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x02, callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x00,(Bit8u)0xCA);		//A RETF 8 Instruction
+		phys_writew(physAddress+0x01,(Bit16u)0x0008);
+		return (use_cb?7:3);
 	case CB_IRET:
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -300,6 +310,18 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0e,(Bit8u)0x58);			// pop ax
 		phys_writeb(physAddress+0x0f,(Bit8u)0xcf);			//An IRET Instruction
 		return (use_cb?0x14:0x10);
+	case CB_MOUSE:
+		phys_writew(physAddress+0x00,(Bit16u)0x07eb);		// jmp i33hd
+		physAddress+=9;
+		// jump here to (i33hd):
+		if (use_cb) {
+			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x01,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x02,callback);		//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x00,(Bit8u)0xCF);		//An IRET Instruction
+		return (use_cb?0x0e:0x0a);
 	case CB_INT16:
 		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
 		if (use_cb) {

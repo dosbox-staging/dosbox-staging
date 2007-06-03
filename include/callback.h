@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.19 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: callback.h,v 1.20 2007-06-03 16:46:33 c2woody Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -28,8 +28,8 @@
 typedef Bitu (*CallBack_Handler)(void);
 extern CallBack_Handler CallBack_Handlers[];
 
-enum { CB_RETN,CB_RETF,CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,
-		CB_IRQ0,CB_IRQ1,CB_IRQ9,CB_IRQ12,CB_IRQ12_RET,CB_IRQ6_PCJR,
+enum { CB_RETN,CB_RETF,CB_RETF8,CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,
+		CB_IRQ0,CB_IRQ1,CB_IRQ9,CB_IRQ12,CB_IRQ12_RET,CB_IRQ6_PCJR,CB_MOUSE,
 		CB_INT29,CB_INT16,CB_HOOKABLE,CB_TDE_IRET,CB_IPXESR,CB_IPXESR_RET };
 
 #define CB_MAX 128

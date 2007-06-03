@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.66 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.67 2007-06-03 16:46:33 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -34,7 +34,7 @@
 #include "bios.h"
 
 
-static Bitu call_int33,call_int74,int74_ret_callback;
+static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static Bit16u ps2cbseg,ps2cbofs;
 static bool useps2callback,ps2callbackinit;
 static Bit16u call_ps2;
@@ -862,6 +862,65 @@ static Bitu INT33_Handler(void) {
 	return CBRET_NONE;
 }
 
+static Bitu MOUSE_BD_Handler(void) {
+	// the stack contains offsets to register values
+	Bit16u raxpt=real_readw(SegValue(ss),reg_sp+0x0a);
+	Bit16u rbxpt=real_readw(SegValue(ss),reg_sp+0x08);
+	Bit16u rcxpt=real_readw(SegValue(ss),reg_sp+0x06);
+	Bit16u rdxpt=real_readw(SegValue(ss),reg_sp+0x04);
+
+	// read out the actual values, registers ARE overwritten
+	Bit16u rax=real_readw(SegValue(ds),raxpt);
+	reg_ax=rax;
+	reg_bx=real_readw(SegValue(ds),rbxpt);
+	reg_cx=real_readw(SegValue(ds),rcxpt);
+	reg_dx=real_readw(SegValue(ds),rdxpt);
+//	LOG_MSG("MOUSE BD: %04X %X %X %X %d %d",reg_ax,reg_bx,reg_cx,reg_dx,POS_X,POS_Y);
+	
+	// some functions are treated in a special way (additional registers)
+	switch (rax) {
+		case 0x09:	/* Define GFX Cursor */
+		case 0x16:	/* Save driver state */
+		case 0x17:	/* load driver state */
+			SegSet16(es,SegValue(ds));
+			break;
+		case 0x0c:	/* Define interrupt subroutine parameters */
+		case 0x14:	/* Exchange event-handler */ 
+			if (reg_bx!=0) SegSet16(es,reg_bx);
+			else SegSet16(es,SegValue(ds));
+			break;
+		case 0x10:	/* Define screen region for updating */
+			reg_cx=real_readw(SegValue(ds),rdxpt);
+			reg_dx=real_readw(SegValue(ds),rdxpt+2);
+			reg_si=real_readw(SegValue(ds),rdxpt+4);
+			reg_di=real_readw(SegValue(ds),rdxpt+6);
+			break;
+		default:
+			break;
+	}
+
+	INT33_Handler();
+
+	// save back the registers, too
+	real_writew(SegValue(ds),raxpt,reg_ax);
+	real_writew(SegValue(ds),rbxpt,reg_bx);
+	real_writew(SegValue(ds),rcxpt,reg_cx);
+	real_writew(SegValue(ds),rdxpt,reg_dx);
+	switch (rax) {
+		case 0x1f:	/* Disable Mousedriver */
+			real_writew(SegValue(ds),rbxpt,SegValue(es));
+			break;
+		case 0x14: /* Exchange event-handler */ 
+			real_writew(SegValue(ds),rcxpt,SegValue(es));
+			break;
+		default:
+			break;
+	}
+
+	reg_ax=rax;
+	return CBRET_NONE;
+}
+
 static Bitu INT74_Handler(void) {
 	if (mouse.events>0) {
 		mouse.events--;
@@ -902,9 +961,23 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 void MOUSE_Init(Section* sec) {
 	// Callback for mouse interrupt 0x33
 	call_int33=CALLBACK_Allocate();
-	CALLBACK_Setup(call_int33,&INT33_Handler,CB_IRET,"Mouse");
+	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
+//	RealPt i33loc=RealMake(DOS_GetMemory(0x1)-1,0x10);	// need another location
+	CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
-	real_writed(0,0x33<<2,RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10));
+	real_writed(0,0x33<<2,i33loc);
+
+	call_mouse_bd=CALLBACK_Allocate();
+	CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
+		PhysMake(RealSeg(i33loc),RealOff(i33loc)+2),"MouseBD");
+	// pseudocode for CB_MOUSE (including the special backdoor entry point):
+	//	jump near i33hd
+	//	callback MOUSE_BD_Handler
+	//	retf 8
+	//  label i33hd:
+	//	callback INT33_Handler
+	//	iret
+
 
 	// Callback for ps2 irq
 	call_int74=CALLBACK_Allocate();
