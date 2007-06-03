@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.129 2007-05-01 20:00:45 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.130 2007-06-03 10:59:46 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -28,6 +28,9 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#ifdef WIN32
+#include <signal.h>
+#endif
 
 #include "SDL.h"
 
@@ -1303,6 +1306,23 @@ void GFX_Events() {
 	}
 }
 
+#if defined (WIN32)
+static BOOL WINAPI ConsoleEventHandler(DWORD event) {
+	switch (event) {
+	case CTRL_SHUTDOWN_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_CLOSE_EVENT:
+	case CTRL_BREAK_EVENT:
+		raise(SIGTERM);
+		return TRUE;
+	case CTRL_C_EVENT:
+	default: //pass to the next handler
+		return FALSE;
+	}
+}
+#endif
+
+
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
@@ -1353,6 +1373,10 @@ int main(int argc, char* argv[]) {
 #endif  //defined(WIN32) && !(C_DEBUG)
 #if C_DEBUG
 		DEBUG_SetupConsole();
+#endif
+
+#if defined(WIN32)
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
 #ifdef OS2
