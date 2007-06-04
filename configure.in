@@ -52,7 +52,7 @@ AC_CHECK_SIZEOF(int *)
 
 dnl some semi complex check for sys/socket so it works on darwin as well
 AC_CHECK_HEADERS([stdlib.h sys/types.h])
-AC_CHECK_HEADERS([sys/socket.h  netinet/in.h], [], [],
+AC_CHECK_HEADERS([sys/socket.h  netinet/in.h pwd.h], [], [],
 [#include <stdio.h>
 #ifdef STDC_HEADERS
 # include <stdlib.h>
@@ -221,7 +221,7 @@ AC_ARG_ENABLE(dynamic-core,AC_HELP_STRING([--disable-dynamic-core],[Disable all 
 AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86 dynamic cpu core])
 AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86 dynamic cpu core]),,enable_dynamic_x86=yes)
 AC_MSG_CHECKING(whether x86 dynamic cpu core will be enabled) 
-if test x$enable_dynamic_x86 = xno || test x$enable_dynamic_core=xno; then 
+if test x$enable_dynamic_x86 = xno -o x$enable_dynamic_core = xno; then 
    AC_MSG_RESULT(no)
 else
   if test x$c_targetcpu = xx86 ; then
@@ -235,7 +235,7 @@ fi
 AH_TEMPLATE(C_DYNREC,[Define to 1 to use recompiling cpu core. Can not be used together with the dynamic-x86 core])
 AC_ARG_ENABLE(dynrec,AC_HELP_STRING([--disable-dynrec],[Disable recompiling cpu core]),,enable_dynrec=yes)
 AC_MSG_CHECKING(whether recompiling cpu core will be enabled) 
-if test x$enable_dynrec = xno || test x$enable_dynamic_core = xno; then 
+if test x$enable_dynrec = xno -o x$enable_dynamic_core = xno; then 
    AC_MSG_RESULT(no)
 else
 dnl x86 only enable it if dynamic-x86 is disabled.
