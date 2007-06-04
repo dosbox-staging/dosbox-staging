@@ -27,7 +27,8 @@
 #define DRC_PTR_SIZE_IM Bit64u
 
 // calling convention modifier
-#define DRC_CALL_CONV 
+#define DRC_CALL_CONV	/* nothing */
+#define DRC_FC			/* nothing */
 
 
 // register mapping
