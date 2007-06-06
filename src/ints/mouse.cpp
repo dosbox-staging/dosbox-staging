@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.67 2007-06-03 16:46:33 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.68 2007-06-06 15:44:40 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -961,8 +961,8 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 void MOUSE_Init(Section* sec) {
 	// Callback for mouse interrupt 0x33
 	call_int33=CALLBACK_Allocate();
-	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
-//	RealPt i33loc=RealMake(DOS_GetMemory(0x1)-1,0x10);	// need another location
+//	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
+	RealPt i33loc=RealMake(DOS_GetMemory(0x1)-1,0x10);
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0,0x33<<2,i33loc);
