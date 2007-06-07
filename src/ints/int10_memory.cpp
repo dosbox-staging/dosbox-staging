@@ -113,6 +113,9 @@ void INT10_SetupRomMemory(void) {
 	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
 
+	if (IS_TANDY_ARCH) {
+		RealSetVec(0x44,int10.rom.font_8_first);
+	}
 	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
 		//Reserve checksum location
 		checksumlocation = int10.rom.used++;
