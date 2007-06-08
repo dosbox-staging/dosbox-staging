@@ -38,10 +38,9 @@ static Bitu vga_read_p3da(Bitu port,Bitu iolen) {
  	vga.internal.attrindex=false;
  	vga.tandy.pcjr_flipflop=false;
 
-	double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
-		
 	switch (machine) {
 	case MCH_HERC:
+	{
 		// 3BAh (R):  Status Register
 		// bit   0  Horizontal sync
 		//       3  Video signal
@@ -49,11 +48,13 @@ static Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 		if(timeInFrame >= vga.draw.delay.vrstart &&
 			timeInFrame <= vga.draw.delay.vrend)
 			retval |= 0x80;
+		double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
 		if(timeInLine >= vga.draw.delay.hrstart &&
 			timeInLine <= vga.draw.delay.hrend)
 			retval |= 1;
 		retval |= 0x10;		//Hercules ident
 		break;
+	}
 	default:
 		// 3DAh (R):  Status Register
 		// bit   0  Horizontal or Vertical blanking
@@ -62,12 +63,15 @@ static Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 		if(timeInFrame >= vga.draw.delay.vrstart &&
 			timeInFrame <= vga.draw.delay.vrend)
 			retval |= 8;
-		if(timeInFrame >= vga.draw.delay.vblkstart &&
-			timeInFrame <= vga.draw.delay.vblkend)
+		if(timeInFrame >= vga.draw.delay.vdend)
 			retval |= 1;
-		else if(timeInLine >= vga.draw.delay.hblkstart &&
-			timeInLine <= vga.draw.delay.hblkend)
-			retval |= 1;
+		else {
+			double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
+			if(timeInLine >= (vga.draw.delay.hblkstart) && 
+					timeInLine <= vga.draw.delay.hblkend){
+				retval |= 1;
+			}
+		}
 	}
 	return retval;
 }
