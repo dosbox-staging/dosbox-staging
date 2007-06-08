@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.42 2007-01-13 09:57:25 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.43 2007-06-08 08:21:45 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -57,6 +57,7 @@ struct PIT_Block {
 };
 
 static PIT_Block pit[3];
+static bool gate2;
 
 static Bit8u latched_timerstatus;
 // the timer status can not be overwritten until it is read or the timer was 
@@ -124,6 +125,10 @@ static void counter_latch(Bitu counter) {
 	/* Fill the read_latch of the selected counter with current count */
 	PIT_Block * p=&pit[counter];
 	p->go_read_latch=false;
+
+	//If gate2 is disabled don't update the read_latch
+	if(counter == 2 && !gate2) return;
+
 	double index=PIC_FullIndex()-p->start;
 	switch (p->mode) {
 	case 4:		/* Software Triggered Strobe */
@@ -197,6 +202,7 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			if (p->new_mode || p->mode == 0 ) {
+				if(p->mode==0) PIC_RemoveEvents(PIT0_Event); // DoWhackaDo demo
 				PIC_AddEvent(PIT0_Event,p->delay);
 			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
 			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.2f Hz mode %d",1000.0/p->delay,p->mode);
@@ -262,15 +268,15 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	case 0:
 	case 1:
 	case 2:
-		pit[latch].bcd = (val&1)>0;   
-		if (val & 1) {
-			if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
-		}
-
 		if ((val & 0x30) == 0) {
 			/* Counter latch command */
 			counter_latch(latch);
 		} else {
+			pit[latch].bcd = (val&1)>0;   
+			if (val & 1) {
+				if(pit[latch].cntr>=9999) pit[latch].cntr=9999;
+			}
+
 			// Timer is being reprogrammed, unlock the status
 			if(pit[latch].counterstatus_set) {
 				pit[latch].counterstatus_set=false;
@@ -326,6 +332,33 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	}
 }
 
+void TIMER_SetGate2(bool in) {
+	//No changes if gate doesn't change
+	if(gate2 == in) return;
+	Bit8u & mode=pit[2].mode;
+	switch(mode) {
+	case 0:
+		if(in) pit[2].start = PIC_FullIndex();
+		else {
+			//Fill readlatch and store it.
+			counter_latch(2);
+			pit[2].cntr = pit[2].read_latch;
+		}
+		break;
+	case 2:
+	case 3:
+		//If gate is enabled restart counting. If disable store the current read_latch
+		if(in) pit[2].start = PIC_FullIndex();
+		else counter_latch(2);
+		break;
+	case 1:
+	case 4:
+	case 5:
+		LOG(LOG_MISC,LOG_WARN)("unsupported gate 2 mode %x",mode);
+		break;
+	}
+	gate2 = in; //Set it here so the counter_latch above works
+}
 
 class TIMER:public Module_base{
 private:
@@ -374,6 +407,7 @@ public:
 		pit[2].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[2].cntr));
 
 		latched_timerstatus_locked=false;
+		gate2 = true;
 		PIC_AddEvent(PIT0_Event,pit[0].delay);
 	}
 	~TIMER(){
