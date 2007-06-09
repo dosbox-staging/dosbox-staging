@@ -27,6 +27,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#if defined (_MSC_VER)
+#include <windows.h>
+#include <winbase.h>
+#endif
+
 #if (C_HAVE_MPROTECT)
 #include <sys/mman.h>
 

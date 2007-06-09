@@ -562,7 +562,14 @@ static void cache_init(bool enable) {
 		}
 		if (cache_code_start_ptr==NULL) {
 			// allocate the code cache memory
+#if defined (_MSC_VER)
+			cache_code_start_ptr=(Bit8u*)VirtualAlloc(0,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP,
+				MEM_COMMIT,PAGE_EXECUTE_READWRITE);
+			if (!cache_code_start_ptr)
+				cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+#else
 			cache_code_start_ptr=(Bit8u*)malloc(CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP);
+#endif
 			if(!cache_code_start_ptr) E_Exit("Allocating dynamic cache failed");
 
 			// align the cache at a page boundary
@@ -624,6 +631,8 @@ static void cache_close(void) {
 		cache_blocks = NULL;
 	}
 	if (cache_code_start_ptr != NULL) {
+		### care: under windows VirtualFree() has to be used if
+		###       VirtualAlloc was used for memory allocation
 		free(cache_code_start_ptr);
 		cache_code_start_ptr = NULL;
 	}
