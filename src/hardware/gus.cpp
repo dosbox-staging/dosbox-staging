@@ -45,7 +45,7 @@ using namespace std;
 
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
-#define LOG_GUS
+#define LOG_GUS 0
 
 Bit8u adlib_commandreg;
 static MixerChannel * gus_chan;
@@ -58,7 +58,6 @@ static Bit16u vol16bit[4096];
 #endif
 static Bit32u pantable[16];
 
-static Bitu show_test=0;
 class GUSChannels;
 static void CheckVoiceIrq(void);
 
@@ -239,26 +238,6 @@ public:
 		double realadd = (frameadd*(double)myGUS.basefreq/(double)GUS_RATE) * (double)(1 << RAMP_FRACT);
 		RampAdd = (Bit32u)realadd;
 	}
-	void ShowWave(void) {
-		LOG_GUS("Wave %2d Ctrl %02x Current %d Start %d End %d Add %3.3f ",
-			channum, 
-			ReadWaveCtrl(),
-			WaveAddr>>WAVE_FRACT,
-			WaveStart>>WAVE_FRACT, 
-			WaveEnd>>WAVE_FRACT, 
-			(float)WaveAdd/(float)(1 << WAVE_FRACT)
-		);
-	}
-	void ShowRamp(void) {
-		LOG_GUS("Ramp %2d Ctrl %02X Current %d Start %d End %d Add %d",
-			channum, 
-			ReadRampCtrl(),
-			RampVol   >> RAMP_FRACT,
-			RampStart >> RAMP_FRACT, 
-			RampEnd   >> RAMP_FRACT, 
-			RampAdd   >> RAMP_FRACT
-		);
-	}
 	INLINE void WaveUpdate(void) {
 		if (WaveCtrl & 0x3) return;
 		Bit32s WaveLeft;
@@ -334,12 +313,7 @@ public:
 		bool eightbit;
 		if (RampCtrl & WaveCtrl & 3) return;
 		eightbit = ((WaveCtrl & 0x4) == 0);
-#if 0
-		if (!(show_test & 1023)) {
-			ShowWave();
-			ShowRamp();
-		}
-#endif
+
 		for(i=0;i<(int)len;i++) {
 			// Get sample
 			tmpsamp = GetSample(WaveAdd, WaveAddr, eightbit);
@@ -463,7 +437,9 @@ static Bit16u ExecuteReadRegister(void) {
 		CheckVoiceIrq();
 		return (Bit16u)(tmpreg << 8);
 	default:
-		LOG_GUS("Read Register num 0x%x", myGUS.gRegSelect);
+#if LOG_GUS
+		LOG_MSG("Read Register num 0x%x", myGUS.gRegSelect);
+#endif
 		return myGUS.gRegData;
 	}
 }
@@ -564,7 +540,9 @@ static void ExecuteGlobRegister(void) {
 		myGUS.ActiveMask=0xffffffffU >> (32-myGUS.ActiveChannels);
 		gus_chan->Enable(true);
 		myGUS.basefreq = (Bit32u)((float)1000000/(1.619695497*(float)(myGUS.ActiveChannels)));
-		LOG_GUS("GUS set to %d channels", myGUS.ActiveChannels);
+#if LOG_GUS
+		LOG_MSG("GUS set to %d channels", myGUS.ActiveChannels);
+#endif
 		for (i=0;i<myGUS.ActiveChannels;i++) guschan[i]->UpdateWaveRamp();
 		break;
 	case 0x10:  // Undocumented register used in Fast Tracker 2
@@ -607,7 +585,10 @@ static void ExecuteGlobRegister(void) {
 		GUSReset();
 		break;
 	default:
-		LOG_GUS("Unimplemented global register %x -- %x", myGUS.gRegSelect, myGUS.gRegData);
+#if LOG_GUS
+		LOG_MSG("Unimplemented global register %x -- %x", myGUS.gRegSelect, myGUS.gRegData);
+#endif
+		break;
 	}
 	return;
 }
@@ -645,7 +626,9 @@ static Bitu read_gus(Bitu port,Bitu iolen) {
 			return 0;
 		}
 	default:
-		LOG_GUS("Read GUS at port 0x%x", port);
+#if LOG_GUS
+		LOG_MSG("Read GUS at port 0x%x", port);
+#endif
 		break;
 	}
 
@@ -692,11 +675,15 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		if (myGUS.mixControl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
 			if (irqtable[val & 0x7]) myGUS.irq1=irqtable[val & 0x7];
-			LOG_GUS("Assigned GUS to IRQ %d", myGUS.irq1);
+#if LOG_GUS
+			LOG_MSG("Assigned GUS to IRQ %d", myGUS.irq1);
+#endif
 		} else {
 			// DMA configuration, only use low bits for dma 1
 			if (dmatable[val & 0x7]) myGUS.dma1=dmatable[val & 0x7];
-			LOG_GUS("Assigned GUS to DMA %d", myGUS.dma1);
+#if LOG_GUS
+			LOG_MSG("Assigned GUS to DMA %d", myGUS.dma1);
+#endif
 		}
 		break;
 	case 0x302:
@@ -721,7 +708,9 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = val;
 		break;
 	default:
-		LOG_GUS("Write GUS at port 0x%x with %x", port, val);
+#if LOG_GUS
+		LOG_MSG("Write GUS at port 0x%x with %x", port, val);
+#endif
 		break;
 	}
 }
