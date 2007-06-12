@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.48 2007-01-14 18:44:01 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.49 2007-06-12 19:17:43 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -143,12 +143,12 @@ Bitu mem_strlen(PhysPt pt) {
 		if (!mem_readb_inline(pt+x)) return x;
 		x++;
 	}
-	return 0;		//Hope this doesn't happend
+	return 0;		//Hope this doesn't happen
 }
 
 void mem_strcpy(PhysPt dest,PhysPt src) {
 	Bit8u r;
-	while (r=mem_readb(src++)) mem_writeb_inline(dest++,r);
+	while ( (r = mem_readb(src++)) ) mem_writeb_inline(dest++,r);
 	mem_writeb_inline(dest,0);
 }
 
