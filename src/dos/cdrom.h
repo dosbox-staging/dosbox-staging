@@ -112,6 +112,7 @@ private:
 	public:
 		virtual bool read(Bit8u *buffer, int seek, int count) = 0;
 		virtual int getLength() = 0;
+		virtual ~TrackFile() = 0;
 	};
 	
 	class BinaryFile : public TrackFile {
