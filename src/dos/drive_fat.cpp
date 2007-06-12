@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.20 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.21 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -408,6 +408,7 @@ bool fatDrive::getFileDirEntry(char * filename, direntry * useEntry, Bit32u * di
 	char * findDir;
 	char * findFile;
 	strcpy(dirtoken,filename);
+	findFile=dirtoken;
 
 	/* Skip if testing in root directory */
 	if ((len>0) && (filename[len-1]!='\\')) {

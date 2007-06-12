@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.24 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: paging.h,v 1.25 2007-06-12 20:22:07 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -179,7 +179,7 @@ bool mem_unalignedwrited_checked_x86(PhysPt address,Bit32u val);
 INLINE Bit8u mem_readb_inline(PhysPt address) {
 	Bitu index=(address>>12);
 	if (paging.tlb.read[index]) return host_readb(paging.tlb.read[index]+address);
-	else return paging.tlb.handler[index]->readb(address);
+	else return (Bit8u)paging.tlb.handler[index]->readb(address);
 }
 
 INLINE Bit16u mem_readw_inline(PhysPt address) {
@@ -187,7 +187,7 @@ INLINE Bit16u mem_readw_inline(PhysPt address) {
 		Bitu index=(address>>12);
 
 		if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
-		else return paging.tlb.handler[index]->readw(address);
+		else return (Bit16u) paging.tlb.handler[index]->readw(address);
 	} else return mem_unalignedreadw(address);
 }
 
@@ -231,7 +231,7 @@ INLINE Bit16u mem_readw_dyncorex86(PhysPt address) {
 		Bitu index=(address>>12);
 
 		if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
-		else return paging.tlb.handler[index]->readw(address);
+		else return (Bit16u)paging.tlb.handler[index]->readw(address);
 	} else return mem_unalignedreadw(address);
 }
 

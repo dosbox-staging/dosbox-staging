@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.84 2007-05-10 20:27:48 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.85 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -124,7 +124,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 
 			Bit32s iDown, cDots;
 			bool dots = true;
-			Bit32u templen =strlen(tempdir);
+			Bit32s templen=(Bit32s)strlen(tempdir);
 			for(iDown=0;(iDown < templen) && dots;iDown++)
 				if(tempdir[iDown] != '.')
 					dots = false;
@@ -133,7 +133,7 @@ bool DOS_MakeName(char * name,char * fullname,Bit8u * drive) {
 			cDots = templen - 1;
 			if(dots && (cDots > 0))
 			{
-				for(iDown=strlen(fullname)-1;iDown>=0;iDown--)
+				for(iDown=(Bit32s)strlen(fullname)-1;iDown>=0;iDown--)
 				{
 					if(fullname[iDown]=='\\' || iDown==0)
 					{
@@ -935,7 +935,8 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
  */
 
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
+	Bit32u random;Bit16u old_block;Bit8u old_rec;
+	Bit8u error=0;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
@@ -957,7 +958,8 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 /* see FCB_RandomRead */
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;Bit16u old_block;Bit8u old_rec;Bit8u error;
+	Bit32u random;Bit16u old_block;Bit8u old_rec;
+	Bit8u error=0;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);

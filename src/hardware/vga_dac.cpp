@@ -139,6 +139,7 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	default:
 		LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
+		break;
 	};
 }
 
@@ -161,6 +162,8 @@ static Bitu read_p3c9(Bitu port,Bitu iolen) {
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
+		ret=0;
+		break;
 	}
 	return ret;
 }

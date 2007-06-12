@@ -22,7 +22,6 @@
 #include "vga.h"
 #include <math.h>
 
-static Bit8u flip=0;
 
 void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d4(Bitu port,Bitu iolen);

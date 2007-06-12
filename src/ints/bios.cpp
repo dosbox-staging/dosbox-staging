@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.67 2007-03-07 10:47:12 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.68 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -981,7 +981,7 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	equipmentword &= (~0x0E00);
 	equipmentword |= (portcount << 9);
 	mem_writew(BIOS_CONFIGURATION,equipmentword);
-	CMOS_SetRegister(0x14,equipmentword); //Should be updated on changes
+	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
 }
 
 

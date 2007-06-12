@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: iohandler.cpp,v 1.27 2007-06-01 16:40:40 c2woody Exp $ */
+/* $Id: iohandler.cpp,v 1.28 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -174,7 +174,7 @@ static Bits IOFaultCore(void) {
 inline void IO_USEC_read_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
 		// this could be calculated whenever CPU_CycleMax changes
-		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
+		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
 		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
 		else CPU_Cycles = 0;
 	}
@@ -183,7 +183,7 @@ inline void IO_USEC_read_delay_old() {
 inline void IO_USEC_write_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
 		// this could be calculated whenever CPU_CycleMax changes
-		Bitu delaycyc = static_cast<Bitu>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS); 
+		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS); 
 		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
 		else CPU_Cycles = 0;
 	}
@@ -194,14 +194,14 @@ inline void IO_USEC_write_delay_old() {
 #define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
 
 inline void IO_USEC_read_delay() {
-	Bitu delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
+	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
 	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc = 0; //Else port acces will set cycles to 0. which might trigger problem with games which read 16 bit values
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 }
 
 inline void IO_USEC_write_delay() {
-	Bitu delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk; 
+	Bits delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk; 
 	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc=0;
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;

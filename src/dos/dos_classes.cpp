@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.50 2007-05-29 13:36:45 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.51 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -179,7 +179,7 @@ Bit16u DOS_PSP::rootpsp = 0;
 
 void DOS_PSP::MakeNew(Bit16u mem_size) {
 	/* get previous */
-	DOS_PSP prevpsp(dos.psp());
+//	DOS_PSP prevpsp(dos.psp());
 	/* Clear it first */
 	Bitu i;
 	for (i=0;i<sizeof(sPSP);i++) mem_writeb(pt+i,0);

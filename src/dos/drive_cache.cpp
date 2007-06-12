@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.49 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.50 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -242,7 +242,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists)
 			Bit32u i;
 			// Check if there are any open search dir that are affected by this...
 			if (dir) for (i=0; i<MAX_OPENDIRS; i++) {
-				if ((dirSearch[i]==dir) && (index<=dirSearch[i]->nextEntry)) 
+				if ((dirSearch[i]==dir) && ((Bit32u)index<=dirSearch[i]->nextEntry)) 
 					dirSearch[i]->nextEntry++;
 			}	
 		};
@@ -378,7 +378,7 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 			do {	
 				foundNr = curDir->longNameList[mid]->shortNr;
 				mid++;
-			} while(mid<curDir->longNameList.size() && (CompareShortname(name,curDir->longNameList[mid]->shortname)==0));
+			} while((Bitu)mid<curDir->longNameList.size() && (CompareShortname(name,curDir->longNameList[mid]->shortname)==0));
 			break;
 		};
 	}

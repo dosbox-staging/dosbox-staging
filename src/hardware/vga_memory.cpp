@@ -96,6 +96,8 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:Unsupported write mode %d",vga.config.write_mode);
+		full=0;
+		break;
 	}
 	return full;
 }

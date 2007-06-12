@@ -98,7 +98,7 @@ INLINE PhysPt SegPhys(SegNames index) {
 }
 
 INLINE Bit16u SegValue(SegNames index) {
-	return Segs.val[index];
+	return (Bit16u)Segs.val[index];
 }
 	
 INLINE RealPt RealMakeSeg(SegNames index,Bit16u off) {

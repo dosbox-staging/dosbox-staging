@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.49 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.50 2007-06-12 20:22:08 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -534,7 +534,7 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
-	BIOS_NCOLS;BIOS_NROWS;
+	BIOS_NCOLS;
 	while (count>0) {
 		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
 		count--;
@@ -600,7 +600,6 @@ void INT10_TeletypeOutput(Bit8u chr,Bit8u attr) {
 }
 
 void INT10_WriteString(Bit8u row,Bit8u col,Bit8u flag,Bit8u attr,PhysPt string,Bit16u count,Bit8u page) {
-	BIOS_NCOLS;BIOS_NROWS;
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
 	

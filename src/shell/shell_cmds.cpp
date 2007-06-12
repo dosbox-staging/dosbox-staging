@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.74 2007-05-15 18:55:23 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.75 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -405,11 +405,11 @@ void DOS_Shell::CMD_DIR(char * args) {
 			if (!ext) ext = "";
 			else *ext++ = '\0';
 		}
-		Bit8u day	= date & 0x001f;
-		Bit8u month	= (date >> 5) & 0x000f;
-		Bit16u year = (date >> 9) + 1980;
-		Bit8u hour	= (time >> 5 ) >> 6;
-		Bit8u minute = (time >> 5) & 0x003f;
+		Bit8u day	= (Bit8u)(date & 0x001f);
+		Bit8u month	= (Bit8u)((date >> 5) & 0x000f);
+		Bit16u year = (Bit16u)((date >> 9) + 1980);
+		Bit8u hour	= (Bit8u)((time >> 5 ) >> 6);
+		Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
 
 		/* output the file */
 		if (attr & DOS_ATTR_DIRECTORY) {
@@ -867,7 +867,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 	HELP("LOADHIGH");
 	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
 	Bit8u umb_flag=dos_infoblock.GetUMBChainState();
-	Bit8u old_memstrat=DOS_GetMemAllocStrategy()&0xff;
+	Bit8u old_memstrat=(Bit8u)(DOS_GetMemAllocStrategy()&0xff);
 	if (umb_start==0x9fff) {
 		if ((umb_flag&1)==0) DOS_LinkUMBsToMemChain(1);
 		DOS_SetMemAllocStrategy(0x80);	// search in UMBs first
@@ -962,7 +962,7 @@ void DOS_Shell::CMD_VER(char *args) {
 		char* word = StripWord(args);
 		if(strcasecmp(word,"set")) return;
 		word = StripWord(args);
-		dos.version.major = atoi(word);
-		dos.version.minor = atoi(args);
+		dos.version.major = (Bit8u)(atoi(word));
+		dos.version.minor = (Bit8u)(atoi(args));
 	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
 }

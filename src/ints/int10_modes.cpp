@@ -340,6 +340,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 	IO_WriteW(crtc_base,0x07 | (CurMode->vdispend+1) << 8);
 	//Maximum scanline
 	Bit8u scanline,crtpage;
+	scanline=8;
 	switch(CurMode->type) {
 	case M_TEXT:
 		if (machine==MCH_HERC) scanline=14;

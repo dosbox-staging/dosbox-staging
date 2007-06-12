@@ -218,7 +218,7 @@ void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, 
 		LOG(LOG_INT10,LOG_ERROR)("EGA RIL range read with port %x called",port);
 	} else {
 		if(ch<regs) {
-			if (ch+cl>regs) cl=regs-ch;
+			if ((Bitu)ch+cl>regs) cl=(Bit8u)(regs-ch);
 			for (Bitu i=0; i<cl; i++) {
 				if(port == 0x3c0) IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
 				IO_Write(port,ch+i);
@@ -237,7 +237,7 @@ void INT10_EGA_RIL_WriteRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx,
 		LOG(LOG_INT10,LOG_ERROR)("EGA RIL range write called with port %x",port);
 	} else {
 		if(ch<regs) {
-			if (ch+cl>regs) cl=regs-ch;
+			if ((Bitu)ch+cl>regs) cl=(Bit8u)(regs-ch);
 			if(port == 0x3c0) {
 				IO_Read(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS) + 6);
 				for (Bitu i=0; i<cl; i++) {

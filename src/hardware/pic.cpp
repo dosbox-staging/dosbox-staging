@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.40 2007-04-16 13:25:06 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.41 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <list>
 
@@ -83,7 +83,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
 		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
-		pic->single=val&0x02;
+		pic->single=(val&0x02)==0x02;
 		pic->icw_index=1;			// next is ICW2
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
 	} else if (GCC_UNLIKELY(val&0x08)) {	// OCW3 issued
@@ -118,7 +118,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 						}
 					}
 				}
-				if (val&0x80);	// perform rotation
+//				if (val&0x80);	// perform rotation
 			} else {		// nonspecific EOI
 				if (PIC_IRQActive<(irq_base+8)) {
 					irqs[PIC_IRQActive].inservice=false;
@@ -130,7 +130,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 						}
 					}
 				}
-				if (val&0x80);	// perform rotation
+//				if (val&0x80);	// perform rotation
 			}
 		} else {
 			if ((val&0x40)==0) {		// rotate in auto EOI mode
@@ -232,7 +232,6 @@ static Bitu read_command(Bitu port,Bitu iolen) {
 }
 
 static Bitu read_data(Bitu port,Bitu iolen) {
-	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
 	Bitu irq_base=(port==0x21) ? 0 : 8;
 	Bitu i;Bit8u ret=0;Bit8u b=1;
 	for (i=irq_base;i<=irq_base+7;i++) {
@@ -387,7 +386,7 @@ void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
 		return;
 	}
 	PICEntry * entry=pic.free_entry;
-	entry->index=delay+PIC_TickIndex();;
+	entry->index=delay+PIC_TickIndex();
 	entry->event=handler;
 	entry->value=val;
 	pic.free_entry=pic.free_entry->next;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.45 2007-05-01 18:57:19 c2woody Exp $ */
+/* $Id: mixer.cpp,v 1.46 2007-06-12 20:22:08 c2woody Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -595,7 +595,7 @@ void MIXER_Init(Section* sec) {
 	spec.channels=2;
 	spec.callback=MIXER_CallBack;
 	spec.userdata=NULL;
-	spec.samples=mixer.blocksize;
+	spec.samples=(Uint16)mixer.blocksize;
 
 	mixer.tick_remain=0;
 	if (mixer.nosound) {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.101 2007-06-02 11:47:05 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.102 2007-06-12 20:22:07 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -94,7 +94,7 @@ void CPU_Core_Dynrec_Cache_Close(void);
 
 #if defined(CPU_CHECK_IGNORE)
 #define CPU_CHECK_COND(cond,msg,exc,sel) {	\
-	cond;					\
+	if (cond) do {} while (0);				\
 }
 #elif defined(CPU_CHECK_EXCEPT)
 #define CPU_CHECK_COND(cond,msg,exc,sel) {	\

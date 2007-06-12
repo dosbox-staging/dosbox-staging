@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.15 2007-02-22 08:36:25 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.16 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -190,7 +190,7 @@ bool CDROM_Interface_Image::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut
 
 bool CDROM_Interface_Image::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr)
 {
-	if (track < 1 || track > tracks.size()) return false;
+	if (track < 1 || track > (int)tracks.size()) return false;
 	FRAMES_TO_MSF(tracks[track - 1].start + 150, &start.min, &start.sec, &start.fr);
 	attr = tracks[track - 1].attr;
 	return true;
@@ -254,7 +254,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	Bit8u* buf = new Bit8u[buflen];
 	
 	bool success = true; //Gobliiins reads 0 sectors
-	for(int i = 0; i < num; i++) {
+	for(unsigned long i = 0; i < num; i++) {
 		success = ReadSector(&buf[i * sectorSize], raw, sector + i);
 		if (!success) break;
 	}
@@ -308,7 +308,7 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 	}
 	
 	SDL_mutexP(player.mutex);
-	while (player.bufLen < len) {
+	while (player.bufLen < (Bits)len) {
 		bool success;
 		if (player.targetFrame > player.currFrame)
 			success = player.cd->ReadSector(&player.buffer[player.bufLen], true, player.currFrame);
@@ -607,7 +607,7 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 bool CDROM_Interface_Image::GetCueKeyword(string &keyword, istream &in)
 {
 	in >> keyword;
-	for(int i = 0; i < keyword.size(); i++) keyword[i] = toupper(keyword[i]);
+	for(Bitu i = 0; i < keyword.size(); i++) keyword[i] = toupper(keyword[i]);
 	
 	return true;
 }

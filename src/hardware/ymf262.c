@@ -280,51 +280,51 @@ static const int slot_array[32]=
 /* key scale level */
 /* table is 3dB/octave , DV converts this into 6dB/octave */
 /* 0.1875 is bit 0 weight of the envelope counter (volume) expressed in the 'decibel' scale */
-#define DV (0.1875/2.0)
+#define SC(x) ((UINT32)((x)/(0.1875/2.0)))
 static const UINT32 ksl_tab[8*16]=
 {
 	/* OCT 0 */
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
 	/* OCT 1 */
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 0.750/DV, 1.125/DV, 1.500/DV,
-	 1.875/DV, 2.250/DV, 2.625/DV, 3.000/DV,
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(0.750), SC(1.125), SC(1.500),
+	 SC(1.875), SC(2.250), SC(2.625), SC(3.000),
 	/* OCT 2 */
-	 0.000/DV, 0.000/DV, 0.000/DV, 0.000/DV,
-	 0.000/DV, 1.125/DV, 1.875/DV, 2.625/DV,
-	 3.000/DV, 3.750/DV, 4.125/DV, 4.500/DV,
-	 4.875/DV, 5.250/DV, 5.625/DV, 6.000/DV,
+	 SC(0.000), SC(0.000), SC(0.000), SC(0.000),
+	 SC(0.000), SC(1.125), SC(1.875), SC(2.625),
+	 SC(3.000), SC(3.750), SC(4.125), SC(4.500),
+	 SC(4.875), SC(5.250), SC(5.625), SC(6.000),
 	/* OCT 3 */
-	 0.000/DV, 0.000/DV, 0.000/DV, 1.875/DV,
-	 3.000/DV, 4.125/DV, 4.875/DV, 5.625/DV,
-	 6.000/DV, 6.750/DV, 7.125/DV, 7.500/DV,
-	 7.875/DV, 8.250/DV, 8.625/DV, 9.000/DV,
+	 SC(0.000), SC(0.000), SC(0.000), SC(1.875),
+	 SC(3.000), SC(4.125), SC(4.875), SC(5.625),
+	 SC(6.000), SC(6.750), SC(7.125), SC(7.500),
+	 SC(7.875), SC(8.250), SC(8.625), SC(9.000),
 	/* OCT 4 */
-	 0.000/DV, 0.000/DV, 3.000/DV, 4.875/DV,
-	 6.000/DV, 7.125/DV, 7.875/DV, 8.625/DV,
-	 9.000/DV, 9.750/DV,10.125/DV,10.500/DV,
-	10.875/DV,11.250/DV,11.625/DV,12.000/DV,
+	 SC(0.000), SC(0.000), SC(3.000), SC(4.875),
+	 SC(6.000), SC(7.125), SC(7.875), SC(8.625),
+	 SC(9.000), SC(9.750),SC(10.125),SC(10.500),
+	SC(10.875),SC(11.250),SC(11.625),SC(12.000),
 	/* OCT 5 */
-	 0.000/DV, 3.000/DV, 6.000/DV, 7.875/DV,
-	 9.000/DV,10.125/DV,10.875/DV,11.625/DV,
-	12.000/DV,12.750/DV,13.125/DV,13.500/DV,
-	13.875/DV,14.250/DV,14.625/DV,15.000/DV,
+	 SC(0.000), SC(3.000), SC(6.000), SC(7.875),
+	 SC(9.000),SC(10.125),SC(10.875),SC(11.625),
+	SC(12.000),SC(12.750),SC(13.125),SC(13.500),
+	SC(13.875),SC(14.250),SC(14.625),SC(15.000),
 	/* OCT 6 */
-	 0.000/DV, 6.000/DV, 9.000/DV,10.875/DV,
-	12.000/DV,13.125/DV,13.875/DV,14.625/DV,
-	15.000/DV,15.750/DV,16.125/DV,16.500/DV,
-	16.875/DV,17.250/DV,17.625/DV,18.000/DV,
+	 SC(0.000), SC(6.000), SC(9.000),SC(10.875),
+	SC(12.000),SC(13.125),SC(13.875),SC(14.625),
+	SC(15.000),SC(15.750),SC(16.125),SC(16.500),
+	SC(16.875),SC(17.250),SC(17.625),SC(18.000),
 	/* OCT 7 */
-	 0.000/DV, 9.000/DV,12.000/DV,13.875/DV,
-	15.000/DV,16.125/DV,16.875/DV,17.625/DV,
-	18.000/DV,18.750/DV,19.125/DV,19.500/DV,
-	19.875/DV,20.250/DV,20.625/DV,21.000/DV
+	 SC(0.000), SC(9.000),SC(12.000),SC(13.875),
+	SC(15.000),SC(16.125),SC(16.875),SC(17.625),
+	SC(18.000),SC(18.750),SC(19.125),SC(19.500),
+	SC(19.875),SC(20.250),SC(20.625),SC(21.000)
 };
-#undef DV
+#undef SC
 
 /* sustain level table (3dB per step) */
 /* 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)*/
@@ -444,13 +444,13 @@ O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),O( 0),
 
 
 /* multiple table */
-#define ML 2
+#define SC(x) ((UINT32)((x)*2))
 static const UINT8 mul_tab[16]= {
 /* 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15 */
-   0.50*ML, 1.00*ML, 2.00*ML, 3.00*ML, 4.00*ML, 5.00*ML, 6.00*ML, 7.00*ML,
-   8.00*ML, 9.00*ML,10.00*ML,10.00*ML,12.00*ML,12.00*ML,15.00*ML,15.00*ML
+   SC(0.50), SC(1.00), SC(2.00), SC(3.00), SC(4.00), SC(5.00), SC(6.00), SC(7.00),
+   SC(8.00), SC(9.00),SC(10.00),SC(10.00),SC(12.00),SC(12.00),SC(15.00),SC(15.00)
 };
-#undef ML
+#undef SC
 
 /*	TL_TAB_LEN is calculated as:
 
@@ -1344,17 +1344,17 @@ static void OPL3_initalize(OPL3 *chip)
 
 	/* Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples */
 	/* One entry from LFO_AM_TABLE lasts for 64 samples */
-	chip->lfo_am_inc = (1.0 / 64.0 ) * (1<<LFO_SH) * chip->freqbase;
+	chip->lfo_am_inc = (UINT32)((1.0 / 64.0 ) * (1<<LFO_SH) * chip->freqbase);
 
 	/* Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples */
-	chip->lfo_pm_inc = (1.0 / 1024.0) * (1<<LFO_SH) * chip->freqbase;
+	chip->lfo_pm_inc = (UINT32)((1.0 / 1024.0) * (1<<LFO_SH) * chip->freqbase);
 
 	/*logerror ("chip->lfo_am_inc = %8x ; chip->lfo_pm_inc = %8x\n", chip->lfo_am_inc, chip->lfo_pm_inc);*/
 
 	/* Noise generator: a step takes 1 sample */
-	chip->noise_f = (1.0 / 1.0) * (1<<FREQ_SH) * chip->freqbase;
+	chip->noise_f = (UINT32)((1.0 / 1.0) * (1<<FREQ_SH) * chip->freqbase);
 
-	chip->eg_timer_add  = (1<<EG_SH)  * chip->freqbase;
+	chip->eg_timer_add  = (UINT32)((1<<EG_SH)  * chip->freqbase);
 	chip->eg_timer_overflow = ( 1 ) * (1<<EG_SH);
 	/*logerror("YMF262init eg_timer_add=%8x eg_timer_overflow=%8x\n", chip->eg_timer_add, chip->eg_timer_overflow);*/
 

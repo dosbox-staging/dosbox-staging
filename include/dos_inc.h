@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.66 2007-06-06 15:44:40 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.67 2007-06-12 20:22:07 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -260,9 +260,9 @@ public:
 	}
 	INLINE void SaveIt(Bitu size,PhysPt addr,Bitu val) {
 		switch (size) {
-		case 1:mem_writeb(pt+addr,val);break;
-		case 2:mem_writew(pt+addr,val);break;
-		case 4:mem_writed(pt+addr,val);break;
+		case 1:mem_writeb(pt+addr,(Bit8u)val);break;
+		case 2:mem_writew(pt+addr,(Bit16u)val);break;
+		case 4:mem_writed(pt+addr,(Bit32u)val);break;
 		}
 	}
 	INLINE void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
@@ -283,14 +283,14 @@ public:
 	void	SaveVectors			(void);
 	void	RestoreVectors		(void);
 	void	SetSize				(Bit16u size)			{ sSave(sPSP,next_seg,size);		};
-	Bit16u	GetSize				(void)					{ return sGet(sPSP,next_seg);		};
+	Bit16u	GetSize				(void)					{ return (Bit16u)sGet(sPSP,next_seg);		};
 	void	SetEnvironment		(Bit16u envseg)			{ sSave(sPSP,environment,envseg);	};
-	Bit16u	GetEnvironment		(void)					{ return sGet(sPSP,environment);	};
+	Bit16u	GetEnvironment		(void)					{ return (Bit16u)sGet(sPSP,environment);	};
 	Bit16u	GetSegment			(void)					{ return seg;						};
 	void	SetFileHandle		(Bit16u index, Bit8u handle);
 	Bit8u	GetFileHandle		(Bit16u index);
 	void	SetParent			(Bit16u parent)			{ sSave(sPSP,psp_parent,parent);	};
-	Bit16u	GetParent			(void)					{ return sGet(sPSP,psp_parent);		};
+	Bit16u	GetParent			(void)					{ return (Bit16u)sGet(sPSP,psp_parent);		};
 	void	SetStack			(RealPt stackpt)		{ sSave(sPSP,stack,stackpt);		};
 	RealPt	GetStack			(void)					{ return sGet(sPSP,stack);			};
 	void	SetInt22			(RealPt int22pt)		{ sSave(sPSP,int_22,int22pt);		};
@@ -458,8 +458,8 @@ public:
 
 	void	SetDirID(Bit16u entry)			{ sSave(sDTA,dirID,entry); };
 	void	SetDirIDCluster(Bit16u entry)	{ sSave(sDTA,dirCluster,entry); };
-	Bit16u	GetDirID(void)				{ return sGet(sDTA,dirID); };
-	Bit16u	GetDirIDCluster(void)		{ return sGet(sDTA,dirCluster); };
+	Bit16u	GetDirID(void)				{ return (Bit16u)sGet(sDTA,dirID); };
+	Bit16u	GetDirIDCluster(void)		{ return (Bit16u)sGet(sDTA,dirCluster); };
 private:
 	#ifdef _MSC_VER
 	#pragma pack(1)
@@ -540,9 +540,9 @@ public:
 	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
 	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
 	void SetPSPSeg(Bit16u _pspseg) { sSave(sMCB,psp_segment,_pspseg);}
-	Bit8u GetType(void) { return sGet(sMCB,type);}
-	Bit16u GetSize(void) { return sGet(sMCB,size);}
-	Bit16u GetPSPSeg(void) { return sGet(sMCB,psp_segment);}
+	Bit8u GetType(void) { return (Bit8u)sGet(sMCB,type);}
+	Bit16u GetSize(void) { return (Bit16u)sGet(sMCB,size);}
+	Bit16u GetPSPSeg(void) { return (Bit16u)sGet(sMCB,psp_segment);}
 private:
 	#ifdef _MSC_VER
 	#pragma pack (1)
@@ -566,9 +566,9 @@ public:
 	void SetDrive(Bit8u _drive) { sSave(sSDA,current_drive, _drive); }
 	void SetDTA(Bit32u _dta) { sSave(sSDA,current_dta, _dta); }
 	void SetPSP(Bit16u _psp) { sSave(sSDA,current_psp, _psp); }
-	Bit8u GetDrive(void) { return sGet(sSDA,current_drive); }
-	Bit16u GetPSP(void) { return sGet(sSDA,current_psp); }
-	Bit32u GetDTA(void) { return sGet(sSDA,current_dta); }
+	Bit8u GetDrive(void) { return (Bit8u)sGet(sSDA,current_drive); }
+	Bit16u GetPSP(void) { return (Bit16u)sGet(sSDA,current_psp); }
+	Bit32u GetDTA(void) { return (Bit32u)sGet(sSDA,current_dta); }
 	
 	
 private:

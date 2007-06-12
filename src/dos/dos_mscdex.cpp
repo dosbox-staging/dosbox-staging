@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.46 2007-04-15 11:39:33 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.47 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -321,11 +321,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 
 		//Link it in the device chain
 		Bit32u start = dos_infoblock.GetDeviceChain();
-		Bit16u segm  = start>>16;
-		Bit16u offm  = start&0xFFFF;
+		Bit16u segm  = (Bit16u)(start>>16);
+		Bit16u offm  = (Bit16u)(start&0xFFFF);
 		while(start != 0xFFFFFFFF) {
-			segm  = start>>16;
-			offm  = start&0xFFFF;
+			segm  = (Bit16u)(start>>16);
+			offm  = (Bit16u)(start&0xFFFF);
 			start = real_readd(segm,offm);
 		}
 		real_writed(segm,offm,seg<<16);

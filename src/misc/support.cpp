@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.31 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.32 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -91,7 +91,6 @@ char * ScanCMDRemain(char * cmd) {
 }
 
 char * StripWord(char *&line) {
-	bool quoted=false;
 	char * scan=line;
 	scan=ltrim(scan);
 	if (*scan=='"') {

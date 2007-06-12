@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: inout.h,v 1.10 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: inout.h,v 1.11 2007-06-12 20:22:07 c2woody Exp $ */
 
 #ifndef DOSBOX_INOUT_H
 #define DOSBOX_INOUT_H
@@ -72,7 +72,7 @@ INLINE void IO_Write(Bitu port,Bit8u val) {
 	IO_WriteB(port,val);
 }
 INLINE Bit8u IO_Read(Bitu port){
-	return IO_ReadB(port);
+	return (Bit8u)IO_ReadB(port);
 }
 
 #endif

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.26 2007-01-24 16:29:53 harekiet Exp $ */
+/* $Id: int10_vesa.cpp,v 1.27 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -228,7 +228,7 @@ Bit8u VESA_SetSVGAMode(Bit16u mode) {
 };
 
 Bit8u VESA_GetSVGAMode(Bit16u & mode) {
-	mode=CurMode->mode;
+	mode=(Bit16u)(CurMode->mode);
 	return 0x00;
 }
 

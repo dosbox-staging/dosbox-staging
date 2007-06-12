@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu_dh.h,v 1.2 2006-11-11 14:42:38 c2woody Exp $ */
+/* $Id: dyn_fpu_dh.h,v 1.3 2007-06-12 20:22:07 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -65,7 +65,7 @@ static void FPU_FLDCW_DH(PhysPt addr){
 }
 
 static void FPU_FNSTCW_DH(PhysPt addr){
-	mem_writew(addr,dyn_dh_fpu.cw);
+	mem_writew(addr,(Bit16u)(dyn_dh_fpu.cw&0xffff));
 }
 
 static void FPU_FNINIT_DH(void){

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.87 2007-06-01 16:40:40 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.88 2007-06-12 20:22:07 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -2209,12 +2209,12 @@ void DEBUG_HeavyLogInstruction(void) {
 	inst.s_fs = SegValue(fs);
 	inst.s_gs = SegValue(gs);
 	inst.s_ss = SegValue(ss);
-	inst.c    = get_CF();
-	inst.z    = get_ZF();
-	inst.s    = get_SF();
-	inst.o    = get_OF();
-	inst.a    = get_AF();
-	inst.p    = get_PF();
+	inst.c    = get_CF()>0;
+	inst.z    = get_ZF()>0;
+	inst.s    = get_SF()>0;
+	inst.o    = get_OF()>0;
+	inst.a    = get_AF()>0;
+	inst.p    = get_PF()>0;
 	inst.i    = GETFLAGBOOL(IF);
 
 	if (++logCount >= LOGCPUMAX) logCount = 0;

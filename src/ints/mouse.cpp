@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.68 2007-06-06 15:44:40 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.69 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -236,12 +236,12 @@ void DrawCursorText()
 
 	Bit16u result;
 	ReadCharAttr(mouse.backposx,mouse.backposy,0,&result);
-	mouse.backData[0]	= result & 0xFF;
-	mouse.backData[1]	= result>>8;
+	mouse.backData[0]	= (Bit8u)(result & 0xFF);
+	mouse.backData[1]	= (Bit8u)(result>>8);
 	mouse.background	= true;
 	// Write Cursor
 	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
-	WriteChar(mouse.backposx,mouse.backposy,0,result&0xFF,result>>8,true);
+	WriteChar(mouse.backposx,mouse.backposy,0,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
 };
 
 // ***************************************************************************
@@ -508,8 +508,8 @@ static void SetSensitivity(Bit16s px, Bit16s py){
 	if ((px!=0) && (py!=0)) {
 		px--;  //Inspired by cutemouse 
 		py--;  //Although their cursor update routine is far more complex then ours
-		mouse.senv_x=(static_cast<float>(px)*px)/3600.0 +1.0/3.0;
-		mouse.senv_y=(static_cast<float>(py)*py)/3600.0 +1.0/3.0;
+		mouse.senv_x=(static_cast<float>(px)*px)/3600.0f +1.0f/3.0f;
+		mouse.senv_y=(static_cast<float>(py)*py)/3600.0f +1.0f/3.0f;
      }
 };
 

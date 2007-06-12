@@ -84,7 +84,8 @@ void VGA_SetClock(Bitu which,Bitu target) {
 		Bits err;
 	} best;
 	best.err=target;
-	Bitu n,m,r;
+	Bitu n,r;
+	Bits m;
 
 	for (r = 0; r <= 3; r++) {
 		Bitu f_vco = target * (1 << r);

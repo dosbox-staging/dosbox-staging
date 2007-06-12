@@ -380,7 +380,7 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
 
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
-	Bitu font_addr;
+	Bits font_addr;
 	Bit32u * draw=(Bit32u *)TempLine;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
@@ -396,7 +396,7 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
-	if (font_addr>=0 && font_addr<vga.draw.blocks) {
+	if (font_addr>=0 && font_addr<(Bits)vga.draw.blocks) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
 		draw=(Bit32u *)&TempLine[font_addr*8];
@@ -579,8 +579,8 @@ static void VGA_VerticalTimer(Bitu val) {
 		break;
 	}
 	//VGA_DrawPart( vga.draw.parts_lines );
-	PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts,vga.draw.parts_lines);
-//	PIC_AddEvent(VGA_DrawPart,vga.draw.delay.parts/2,vga.draw.parts_lines); //Else tearline in Tyrian and second reality
+	PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
+//	PIC_AddEvent(VGA_DrawPart,(float)(vga.draw.delay.parts/2),vga.draw.parts_lines); //Else tearline in Tyrian and second reality
 }
 
 void VGA_CheckScanLength(void) {
@@ -983,7 +983,7 @@ void VGA_SetupDrawing(Bitu val) {
 #endif
 		RENDER_SetSize(width,height,bpp,fps,aspect_ratio,doublewidth,doubleheight);
 		vga.draw.delay.framestart = PIC_FullIndex();
-		PIC_AddEvent( VGA_VerticalTimer , vga.draw.delay.vtotal );
+		PIC_AddEvent( VGA_VerticalTimer , (float)vga.draw.delay.vtotal );
 	}
 };
 

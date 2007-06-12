@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_aspi_win32.cpp,v 1.17 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: cdrom_aspi_win32.cpp,v 1.18 2007-06-12 20:22:07 c2woody Exp $ */
 
 #if defined (WIN32)
 
@@ -148,7 +148,6 @@ bool CDROM_Interface_Aspi::ScanRegistryFindKey(HKEY& hKeyBase)
 	ULONG		result,newKeyResult;
 	char		subKey[256];
 	char		buffer[256];
-	ULONG		bufferSize = 256;
 	ULONG		subKeySize = 256;
 	HKEY		hNewKey;
 	
@@ -596,7 +595,6 @@ bool CDROM_Interface_Aspi::GetUPC(unsigned char& attr, char* upcdata)
 
 //	attr = (upc.ADR<<4) | upc.Control;
 	attr	= 0;
-	int pos	= 0;
 	// Convert to mscdex format
 	for (int i=0; i<7; i++) upcdata[i] = upc.MediaCatalog[i];
     for (int i=0; i<7; i++) upcdata[i] = (upc.MediaCatalog[i*2] << 4) | (upc.MediaCatalog[i*2+1] & 0x0F);

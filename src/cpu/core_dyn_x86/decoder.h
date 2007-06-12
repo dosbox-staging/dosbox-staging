@@ -145,7 +145,7 @@ static Bit32u decode_fetchd(void) {
 
 #define START_WMMEM 64
 
-static void INLINE decode_increase_wmapmask(Bitu size) {
+static INLINE void decode_increase_wmapmask(Bitu size) {
 	Bitu mapidx;
 	CacheBlock* activecb=decode.active_block; 
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
@@ -927,7 +927,7 @@ static void dyn_pop(DynReg * dynreg,bool checked=true) {
 	}
 }
 
-static void INLINE dyn_get_modrm(void) {
+static INLINE void dyn_get_modrm(void) {
 	decode.modrm.val=decode_fetchb();
 	decode.modrm.mod=(decode.modrm.val >> 6) & 3;
 	decode.modrm.reg=(decode.modrm.val >> 3) & 7;
@@ -1187,7 +1187,7 @@ static void dyn_mov_ebgb(void) {
 	DynReg * rm_reg=&DynRegs[decode.modrm.reg&3];Bitu rm_regi=decode.modrm.reg&4;
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
-		dyn_write_byte_release(DREG(EA),rm_reg,rm_regi);
+		dyn_write_byte_release(DREG(EA),rm_reg,rm_regi==4);
 	} else {
 		gen_dop_byte(DOP_MOV,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4,rm_reg,rm_regi);
 	}
@@ -2594,7 +2594,6 @@ illegalopcode:
 	dyn_closeblock();
 	goto finish_block;
 #if (C_DEBUG)
-illegalopcodefull:
 	dyn_set_eip_last();
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();

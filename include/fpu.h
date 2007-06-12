@@ -114,8 +114,8 @@ INLINE void FPU_SetTag(Bit16u tag){
 }
 
 INLINE void FPU_SetCW(Bitu word){
-	fpu.cw = word;
-	fpu.cw_mask_all = word | 0x3f;
+	fpu.cw = (Bit16u)word;
+	fpu.cw_mask_all = (Bit16u)(word | 0x3f);
 	fpu.round = (FPU_Round)((word >> 10) & 3);
 }
 

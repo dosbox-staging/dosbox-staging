@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.43 2007-06-08 08:21:45 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.44 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -69,7 +69,7 @@ static void PIT0_Event(Bitu /*val*/) {
 	if (pit[0].mode != 0) {
 		pit[0].start += pit[0].delay;
 		double error = 	pit[0].start - PIC_FullIndex();
-		PIC_AddEvent(PIT0_Event,pit[0].delay + error);
+		PIC_AddEvent(PIT0_Event,(float)(pit[0].delay + error));
 	}
 }
 

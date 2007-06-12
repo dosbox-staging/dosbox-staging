@@ -233,7 +233,7 @@ bool TCPClientSocket::SendArrayBuffered(Bit8u* data, Bitu bufsize) {
 	while(
 	
 	// first case, buffer already full
-	/*if(sendbufferindex==(sendbuffersize-1)) {
+	if(sendbufferindex==(sendbuffersize-1)) {
 		// buffer is full, get rid of it
 		sendbuffer[sendbufferindex]=data;
 		sendbufferindex=0;
@@ -242,9 +242,9 @@ bool TCPClientSocket::SendArrayBuffered(Bit8u* data, Bitu bufsize) {
 			isopen=false;
 			return false;
 		}
-	}*/
-//}
-
+	}
+}
+*/
 void TCPClientSocket::FlushBuffer() {
 	if(sendbufferindex) {
 		if(SDLNet_TCP_Send(mysock, sendbuffer,

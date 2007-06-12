@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.130 2007-06-03 10:59:46 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.131 2007-06-12 20:22:08 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -281,6 +281,7 @@ check_surface:
 		else if (flags & GFX_LOVE_15) testbpp=15;
 		else if (flags & GFX_LOVE_16) testbpp=16;
 		else if (flags & GFX_LOVE_32) testbpp=32;
+		else testbpp=0;
 check_gotbpp:
 		if (sdl.desktop.fullscreen) gotbpp=SDL_VideoModeOK(640,480,testbpp,SDL_FULLSCREEN|SDL_HWSURFACE|SDL_HWPALETTE);
 		else gotbpp=sdl.desktop.bpp;
@@ -398,7 +399,7 @@ Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,G
 	sdl.draw.scalex=scalex;
 	sdl.draw.scaley=scaley;
 
-	Bitu bpp;
+	Bitu bpp=0;
 	Bitu retFlags = 0;
 	
 	if (sdl.blit.surface) {
@@ -1146,7 +1147,11 @@ void Mouse_AutoLock(bool enable) {
 
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 	if (sdl.mouse.locked || !sdl.mouse.autoenable) 
-		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100,(float)motion->yrel*sdl.mouse.sensitivity/100,(float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.sensitivity/100,(float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.sensitivity/100.0,sdl.mouse.locked);
+		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100.0f,
+						  (float)motion->yrel*sdl.mouse.sensitivity/100.0f,
+						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.sensitivity/100.0f,
+						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.sensitivity/100.0f,
+						  sdl.mouse.locked);
 }
 
 static void HandleMouseButton(SDL_MouseButtonEvent * button) {
@@ -1196,7 +1201,7 @@ void GFX_Events() {
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
 	static int poll_delay=0;
-	int time=SDL_GetTicks();
+	int time=GetTicks();
 	if (time-poll_delay>20) {
 		poll_delay=time;
 		if (sdl.num_joysticks>0) SDL_JoystickUpdate();

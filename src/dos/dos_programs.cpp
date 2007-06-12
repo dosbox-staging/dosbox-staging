@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.73 2007-06-04 18:09:27 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.74 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -1105,7 +1105,9 @@ public:
 			MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
 			// create new drives for all images
 			std::vector<DOS_Drive*> isoDisks;
-			for (int i = 0; i < paths.size(); i++) {
+			std::vector<std::string>::size_type i;
+			std::vector<DOS_Drive*>::size_type ct;
+			for (i = 0; i < paths.size(); i++) {
 				int error = -1;
 				DOS_Drive* newDrive = new isoDrive(drive, paths[i].c_str(), mediaid, error);
 				isoDisks.push_back(newDrive);
@@ -1121,15 +1123,15 @@ public:
 				}
 				// error: clean up and leave
 				if (error) {
-					for(int i = 0; i < isoDisks.size(); i++) {
-						delete isoDisks[i];
+					for(ct = 0; ct < isoDisks.size(); ct++) {
+						delete isoDisks[ct];
 					}
 					return;
 				}
 			}
 			// Update DriveManager
-			for(int i = 0; i < isoDisks.size(); i++) {
-				DriveManager::AppendDisk(drive - 'A', isoDisks[i]);
+			for(ct = 0; ct < isoDisks.size(); ct++) {
+				DriveManager::AppendDisk(drive - 'A', isoDisks[ct]);
 			}
 			DriveManager::InitializeDrive(drive - 'A');
 			
@@ -1139,7 +1141,7 @@ public:
 			// Print status message (success)
 			WriteOut(MSG_Get("MSCDEX_SUCCESS"));
 			std::string tmp(paths[0]);
-			for (int i = 1; i < paths.size(); i++) {
+			for (i = 1; i < paths.size(); i++) {
 				tmp += "; " + paths[i];
 			}
 			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());

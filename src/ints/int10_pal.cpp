@@ -210,7 +210,7 @@ void INT10_GetPelMask(Bit8u & mask) {
 }	
 
 void INT10_SetBackgroundBorder(Bit8u val) {
-	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
+	Bit8u temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xe0) | (val & 0x1f);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
 	if (machine == MCH_CGA || IS_TANDY_ARCH)
@@ -233,7 +233,7 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 }
 
 void INT10_SetColorSelect(Bit8u val) {
-	Bitu temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
+	Bit8u temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xdf) | ((val & 1) ? 0x20 : 0x0);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
 	if (machine == MCH_CGA || IS_TANDY_ARCH)

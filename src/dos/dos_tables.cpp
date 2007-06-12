@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.27 2007-06-06 15:44:40 c2woody Exp $ */
+/* $Id: dos_tables.cpp,v 1.28 2007-06-12 20:22:08 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -73,7 +73,7 @@ static Bit8u country_info[0x22] = {
 };
 
 void DOS_SetupTables(void) {
-	Bit16u seg,seg2;Bitu i;
+	Bit16u seg;Bitu i;
 	dos.tables.mediaid=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta=RealMake(DOS_GetMemory(4),0);
 	dos.tables.tempdta_fcbdelete=RealMake(DOS_GetMemory(4),0);

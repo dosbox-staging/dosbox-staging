@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.27 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.28 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -54,11 +54,12 @@ static std::vector<PROGRAMS_Main*> internal_progs;
 void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
 	Bit8u * comdata=(Bit8u *)malloc(32); //MEM LEAK
 	memcpy(comdata,&exe_block,sizeof(exe_block));
-	comdata[CB_POS]=call_program&0xff;
-	comdata[CB_POS+1]=(call_program>>8)&0xff;
+	comdata[CB_POS]=(Bit8u)(call_program&0xff);
+	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
 
 	/* Copy save the pointer in the vector and save it's index */
-	Bit8u index = internal_progs.size();
+	if (internal_progs.size()>255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",internal_progs.size());
+	Bit8u index = (Bit8u)internal_progs.size();
 	internal_progs.push_back(main);
 
 	memcpy(&comdata[sizeof(exe_block)],&index,sizeof(index));
@@ -329,7 +330,7 @@ static void CONFIG_ProgramStart(Program * * make) {
 }
 
 
-void PROGRAMS_Init(Section* sec) {
+void PROGRAMS_Init(Section* /*sec*/) {
 	/* Setup a special callback to start virtual programs */
 	call_program=CALLBACK_Allocate();
 	CALLBACK_Setup(call_program,&PROGRAMS_Handler,CB_RETF,"internal program");

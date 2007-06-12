@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.46 2007-01-08 21:40:15 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.47 2007-06-12 20:22:09 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -229,7 +229,7 @@ Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit
 	for (Bitu i=1;i<XMS_HANDLES;i++) {
 		if (xms_handles[i].free) numFree++;
 	}
-	size=xms_handles[handle].size;
+	size=(Bit16u)(xms_handles[handle].size);
 	return 0;
 };
 
@@ -259,7 +259,7 @@ static bool multiplex_xms(void) {
 };
 #define SET_RESULT(caller) { \
 res = caller; \
-if(res) reg_bl = res; \
+if(res) reg_bl = (Bit8u)res; \
 reg_ax = (res==0); \
 }
 

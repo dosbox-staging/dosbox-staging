@@ -163,7 +163,7 @@ static GenReg * FindDynReg(DynReg * dynreg,bool stale=false) {
 				genreg->Load(dynreg,stale);
 				return genreg;
 			}
-			if (genreg->last_used<first_used) {
+			if (genreg->last_used<(Bitu)first_used) {
 				first_used=genreg->last_used;
 				first_index=i;
 			}
@@ -176,7 +176,7 @@ static GenReg * FindDynReg(DynReg * dynreg,bool stale=false) {
 				genreg->Load(dynreg,stale);
 				return genreg;
 			}
-			if (genreg->last_used<first_used) {
+			if (genreg->last_used<(Bitu)first_used) {
 				first_used=genreg->last_used;
 				first_index=i;
 			}
