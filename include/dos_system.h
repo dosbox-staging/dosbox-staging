@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.39 2007-01-21 16:21:22 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.40 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -80,12 +80,10 @@ public:
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
 	void SetDrive(Bit8u drv) { hdrive=drv;}
 	Bit8u GetDrive(void) { return hdrive;}
-	Bit8u type;
 	Bit32u flags;
 	Bit16u time;
 	Bit16u date;
 	Bit16u attr;
-	Bit32u size;
 	Bits refCtr;
 	bool open;
 	char* name;

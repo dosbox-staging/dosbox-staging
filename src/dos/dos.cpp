@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.101 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.102 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -288,7 +288,7 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x22 FCB-Random write used, result:al=%d",reg_al);
 		break;
 	case 0x23:		/* Get file size for FCB */
-		if (DOS_FCBGetFileSize(SegValue(ds),reg_dx,reg_cx)) reg_al = 0x00;
+		if (DOS_FCBGetFileSize(SegValue(ds),reg_dx)) reg_al = 0x00;
 		else reg_al = 0xFF;
 		break;
 	case 0x24:		/* Set Random Record number for FCB */

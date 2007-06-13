@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.18 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: drive_iso.cpp,v 1.19 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -52,10 +52,9 @@ isoFile::isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, Bit32u
 	time = stat->time;
 	date = stat->date;
 	attr = stat->attr;
-	size = stat->size;
 	fileBegin = offset;
 	filePos = fileBegin;
-	fileEnd = fileBegin + size;
+	fileEnd = fileBegin + stat->size;
 	cachedSector = -1;
 	open = true;
 	this->name = NULL;

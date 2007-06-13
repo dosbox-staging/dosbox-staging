@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.74 2007-01-09 17:44:20 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.75 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -517,7 +517,6 @@ localFile::localFile(const char* _name, FILE * handle) {
 	} else {
 		time=1;date=1;
 	}
-	size=(Bit32u)temp_stat.st_size;
 	attr=DOS_ATTR_ARCHIVE;
 	last_action=NONE;
 	read_only_medium=false;

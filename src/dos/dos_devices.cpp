@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.16 2007-01-13 08:35:49 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.17 2007-06-13 07:25:14 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -92,12 +92,10 @@ bool DOS_Device::WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcod
 }
 
 DOS_File::DOS_File(const DOS_File& orig) {
-	type=orig.type;
 	flags=orig.flags;
 	time=orig.time;
 	date=orig.date;
 	attr=orig.attr;
-	size=orig.size;
 	refCtr=orig.refCtr;
 	open=orig.open;
 	name=0;
@@ -107,12 +105,10 @@ DOS_File::DOS_File(const DOS_File& orig) {
 }
 
 DOS_File & DOS_File::operator= (const DOS_File & orig) {
-	type=orig.type;
 	flags=orig.flags;
 	time=orig.time;
 	date=orig.date;
 	attr=orig.attr;
-	size=orig.size;
 	refCtr=orig.refCtr;
 	open=orig.open;
 	if(name) {

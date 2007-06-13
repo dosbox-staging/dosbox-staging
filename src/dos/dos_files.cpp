@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.85 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.86 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -978,13 +978,14 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	return error;
 }
 
-bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec) {
+bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset) {
 	char shortname[DOS_PATHLENGTH];Bit16u entry;Bit8u handle;Bit16u rec_size;
 	DOS_FCB fcb(seg,offset);
 	fcb.GetName(shortname);
 	if (!DOS_OpenFile(shortname,0,&entry)) return false;
-	handle=RealHandle(entry);
-	Bit32u size=Files[handle]->size;
+	handle = RealHandle(entry);
+	Bit32u size = 0;
+	Files[handle]->Seek(&size,DOS_SEEK_END);
 	DOS_CloseFile(entry);fcb.GetSeqData(handle,rec_size);
 	Bit32u random=(size/rec_size);
 	if (size % rec_size) random++;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.67 2007-06-12 20:22:07 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.68 2007-06-13 07:25:14 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -174,7 +174,7 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset, Bit16u numBlocks);
 Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u numBlocks);
 Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore);
 Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore);
-bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset,Bit16u numRec);
+bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset);
 bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset);
 bool DOS_FCBRenameFile(Bit16u seg, Bit16u offset);
 void DOS_FCBSetRandomRecord(Bit16u seg, Bit16u offset);
