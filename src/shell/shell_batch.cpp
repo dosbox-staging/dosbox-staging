@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.23 2007-01-08 19:45:42 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.24 2007-06-13 07:22:17 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -100,9 +100,9 @@ emptyline:
 				/* Not a command line number has to be an environment */
 				char * first=strchr(cmd_read,'%');
 				if (!first) continue; *first++=0;
-				std::string temp;
-				if (shell->GetEnvStr(cmd_read,temp)) {
-					const char * equals=strchr(temp.c_str(),'=');
+				std::string env;
+				if (shell->GetEnvStr(cmd_read,env)) {
+					const char * equals=strchr(env.c_str(),'=');
 					if (!equals) continue;
 					equals++;
 					strcpy(cmd_write,equals);
@@ -120,14 +120,14 @@ emptyline:
 
 bool BatchFile::Goto(char * where) {
 	Bit32u pos=0;
-	char cmd[CMD_MAXLINE];
+	char cmd_buffer[CMD_MAXLINE];
 	char * cmd_write;
 	DOS_SeekFile(file_handle,&pos,DOS_SEEK_SET);
 
 	/* Scan till we have a match or return false */
 	Bit8u c;Bit16u n;
 again:
-	cmd_write=cmd;
+	cmd_write=cmd_buffer;
 	do {
 		n=1;
 		DOS_ReadFile(file_handle,&c,&n);
@@ -137,7 +137,7 @@ again:
 		}
 	} while (c!='\n' && n);
 	*cmd_write++=0;
-	char *nospace = trim(cmd);
+	char *nospace = trim(cmd_buffer);
 	if (nospace[0] == ':') {
 		char* nonospace = trim(nospace+1);
 		if (strcasecmp(nonospace,where)==0) return true;
