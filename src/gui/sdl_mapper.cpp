@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.34 2007-04-18 16:40:48 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.35 2007-06-14 18:47:27 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -630,6 +630,7 @@ public:
 		sdl_joystick=SDL_JoystickOpen(_stick);
 		if (sdl_joystick==NULL) {
 			axes=0;	buttons=0;	hats=0;
+			button_wrap=0;
 			return;
 		}
 		axes=SDL_JoystickNumAxes(sdl_joystick);
