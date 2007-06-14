@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2006  The DOSBox Team
+ *  Copyright (C) 2002-2007  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src) {
 }
 
 // move a 32bit (dword==true) or 16bit (dword==false) value from memory into dest_reg
-// 16bit moves must preserve the upper 16bit of the destination register
+// 16bit moves may destroy the upper 16bit of the destination register
 static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword) {
 	if (!dword) cache_addb(0x66);
 	cache_addw(0x058b+(dest_reg<<11));	// mov reg,[data]
@@ -87,7 +87,7 @@ static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword) {
 }
 
 // move a 16bit constant value into dest_reg
-// the upper 16bit of the destination register must be preserved
+// the upper 16bit of the destination register may be destroyed
 static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
 	cache_addb(0x66);
 	cache_addb(0xb8+dest_reg);			// mov reg,imm
@@ -108,16 +108,18 @@ static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword) {
 }
 
 // move an 8bit value from memory into dest_reg
-// the upper 16bit of the destination register must be preserved
+// the upper 24bit of the destination register can be destroyed
+// this function does not use FC_OP1/FC_OP2 as dest_reg as these
+// registers might not be directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data) {
 	cache_addw(0x058a+(dest_reg<<11));	// mov reg,[data]
 	cache_addd((Bit32u)data);
 }
 
 // move an 8bit value from memory into dest_reg
-// the upper 16bit of the destination register must be preserved
-// this function is allowed to load 16bit from memory as well if the host architecture
-// does not provide 8bit register access for function parameter operands (FC_OP1/FC_OP2)
+// the upper 24bit of the destination register can be destroyed
+// this function can use FC_OP1/FC_OP2 as dest_reg which are
+// not directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 	cache_addb(0x66);
 	cache_addw(0x058b+(dest_reg<<11));	// mov reg,[data]
@@ -125,16 +127,18 @@ static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 }
 
 // move an 8bit constant value into dest_reg
-// the upper 16bit of the destination register must be preserved
+// the upper 24bit of the destination register can be destroyed
+// this function does not use FC_OP1/FC_OP2 as dest_reg as these
+// registers might not be directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
 	cache_addb(0xb0+dest_reg);			// mov reg,imm
 	cache_addb(imm);
 }
 
 // move an 8bit constant value into dest_reg
-// the upper 16bit of the destination register must be preserved
-// this function is allowed to load 16bit from memory as well if the host architecture
-// does not provide 8bit register access for function parameter operands (FC_OP1/FC_OP2)
+// the upper 24bit of the destination register can be destroyed
+// this function can use FC_OP1/FC_OP2 as dest_reg which are
+// not directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
 	cache_addb(0x66);
 	cache_addb(0xb8+dest_reg);			// mov reg,imm
@@ -363,17 +367,6 @@ static Bit32u gen_create_branch_on_zero(HostReg reg,bool dword) {
 static Bit32u gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 	if (!dword) cache_addb(0x66);
 	cache_addb(0x0b);					// or reg,reg
-	cache_addb(0xc0+reg+(reg<<3));
-
-	cache_addw(0x0075);					// jnz addr
-	return ((Bit32u)cache.pos-1);
-}
-
-// short conditional jump (+-127 bytes) if register
-// (as set by a boolean operation) is nonzero
-// the destination is set by gen_fill_branch() later
-static Bit32u gen_create_branch_on_nonzero_bool(HostReg reg) {
-	cache_addb(0x0a);					// or reg,reg
 	cache_addb(0xc0+reg+(reg<<3));
 
 	cache_addw(0x0075);					// jnz addr
