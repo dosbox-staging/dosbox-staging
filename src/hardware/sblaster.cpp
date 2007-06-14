@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.64 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.65 2007-06-14 18:06:59 qbix79 Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -355,9 +355,11 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 
 static void GenerateDMASound(Bitu size) {
 	Bitu read=0;Bitu done=0;Bitu i=0;
-	if (sb.dma.left<=sb.dma.min) {
-		size=sb.dma.left;
-	}
+
+	if(sb.dma.autoinit) {
+		if (sb.dma.left <= size) size = sb.dma.left;
+	} else if (sb.dma.left <= sb.dma.min) size = sb.dma.left;
+
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
 		read=sb.dma.chan->Read(size,sb.dma.buf.b8);
