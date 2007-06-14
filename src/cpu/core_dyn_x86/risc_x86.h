@@ -721,11 +721,11 @@ static void gen_dshift_cl(bool dword,bool left,DynReg * dr1,DynReg * dr2,DynReg 
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_call_function(void * func,char * ops,...) {
+static void gen_call_function(void * func,char const* ops,...) {
 	Bits paramcount=0;
 	bool release_flags=false;
 	struct ParamInfo {
-		char * line;
+		const char * line;
 		Bitu value;
 	} pinfo[32];
 	ParamInfo * retparam=0;
@@ -743,10 +743,10 @@ static void gen_call_function(void * func,char * ops,...) {
 		Bits pindex=0;
 		while (*ops) {
 			if (*ops=='%') {
-                pinfo[pindex].line=ops+1;
+				pinfo[pindex].line=ops+1;
 				pinfo[pindex].value=va_arg(params,Bitu);
 #if defined (MACOSX)
-				char * scan=pinfo[pindex].line;
+				const char * scan=pinfo[pindex].line;
 				if ((*scan=='I') || (*scan=='D')) stack_used+=4;
 				else if (*scan=='F') free_flags=true;
 #endif
@@ -777,7 +777,7 @@ static void gen_call_function(void * func,char * ops,...) {
 		paramcount=0;
 		while (pindex) {
 			pindex--;
-			char * scan=pinfo[pindex].line;
+			const char * scan=pinfo[pindex].line;
 			switch (*scan++) {
 			case 'I':				/* immediate value */
 				paramcount++;

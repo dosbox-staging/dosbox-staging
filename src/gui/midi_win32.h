@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_win32.h,v 1.13 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: midi_win32.h,v 1.14 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -34,7 +34,7 @@ private:
 	bool isOpen;
 public:
 	MidiHandler_win32() : isOpen(false),MidiHandler() {};
-	char * GetName(void) { return "win32";};
+	const char * GetName(void) { return "win32";};
 	bool Open(const char * conf) {
 		if (isOpen) return false;
 		m_event = CreateEvent (NULL, true, true, NULL);

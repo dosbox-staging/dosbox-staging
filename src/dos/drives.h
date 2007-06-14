@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.36 2007-01-21 16:21:22 c2woody Exp $ */
+/* $Id: drives.h,v 1.37 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -181,7 +181,7 @@ private:
 	Bit32u getClustFirstSect(Bit32u clustNum);
 	bool FindNextInternal(Bit32u dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
 	bool getDirClustNum(char * dir, Bit32u * clustNum, bool parDir);
-	bool getFileDirEntry(char * filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry);
+	bool getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry);
 	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry);
 	void zeroOutCluster(Bit32u clustNumber);
 	bool getEntryName(char *fullname, char *entname);

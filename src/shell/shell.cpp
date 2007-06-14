@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.84 2007-02-22 08:34:10 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.85 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -420,10 +420,10 @@ void AUTOEXEC_Init(Section * sec) {
 	test = new AUTOEXEC(sec);
 }
 
-static char * path_string="PATH=Z:\\";
-static char * comspec_string="COMSPEC=Z:\\COMMAND.COM";
-static char * full_name="Z:\\COMMAND.COM";
-static char * init_line="/INIT AUTOEXEC.BAT";
+static char const * const path_string="PATH=Z:\\";
+static char const * const comspec_string="COMSPEC=Z:\\COMMAND.COM";
+static char const * const full_name="Z:\\COMMAND.COM";
+static char const * const init_line="/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
 	/* Add messages */

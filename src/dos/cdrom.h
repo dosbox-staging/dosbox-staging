@@ -76,7 +76,7 @@ public:
 	virtual bool	PlayAudioSector		(unsigned long start,unsigned long len);
 	virtual bool	PauseAudio			(bool resume);
 	virtual bool	StopAudio			(void);
-	virtual bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return false; };
+	virtual bool	ReadSectors			(PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return false; };
 	virtual bool	LoadUnloadMedia		(bool unload);
 
 private:
@@ -91,18 +91,18 @@ private:
 class CDROM_Interface_Fake : public CDROM_Interface
 {
 public:
-	bool	SetDevice			(char* path, int forceCD) { return true; };
+	bool	SetDevice			(char* /*path*/, int /*forceCD*/) { return true; };
 	bool	GetUPC				(unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; };
 	bool	GetAudioTracks		(int& stTrack, int& end, TMSF& leadOut);
 	bool	GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr);
 	bool	GetAudioSub			(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
 	bool	GetAudioStatus		(bool& playing, bool& pause);
 	bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector		(unsigned long start,unsigned long len) { return true; };
-	bool	PauseAudio			(bool resume) { return true; };
+	bool	PlayAudioSector		(unsigned long /*start*/,unsigned long /*len*/) { return true; };
+	bool	PauseAudio			(bool /*resume*/) { return true; };
 	bool	StopAudio			(void) { return true; };
-	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) { return true; };
-	bool	LoadUnloadMedia		(bool unload) { return true; };
+	bool	ReadSectors			(PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return true; };
+	bool	LoadUnloadMedia		(bool /*unload*/) { return true; };
 };	
 
 class CDROM_Interface_Image : public CDROM_Interface

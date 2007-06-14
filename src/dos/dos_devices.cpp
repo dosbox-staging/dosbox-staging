@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.17 2007-06-13 07:25:14 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.18 2007-06-14 08:23:46 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -120,7 +120,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	return *this;
 }
 
-Bit8u DOS_FindDevice(char * name) {
+Bit8u DOS_FindDevice(char const * name) {
 	/* should only check for the names before the dot and spacepadded */
 	// STDAUX is alias for COM1
 	// A bit of a hack, but no application will probably use stdaux to determine wether a directory exists

@@ -352,7 +352,7 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 	
 	/* Scan MCB-chain for last block before UMB-chain */
 	Bit16u mcb_segment=dos.firstMCB;
-	Bit16u prev_mcb_segment;
+	Bit16u prev_mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
 	while ((mcb_segment!=umb_start) && (mcb.GetType()!=0x5a)) {
 		prev_mcb_segment=mcb_segment;

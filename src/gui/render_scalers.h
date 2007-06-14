@@ -71,7 +71,7 @@ extern scalerChangeCache_t scalerChangeCache;
 typedef ScalerLineHandler_t ScalerLineBlock_t[5][4];
 
 typedef struct {
-	char *name;
+	const char *name;
 	Bitu gfxFlags;
 	Bitu xscale,yscale;
 	ScalerComplexHandler_t Linear[4];
@@ -79,7 +79,7 @@ typedef struct {
 } ScalerComplexBlock_t;
 
 typedef struct {
-	char *name;
+	const char *name;
 	Bitu gfxFlags;
 	Bitu xscale,yscale;
 	ScalerLineBlock_t	Linear;

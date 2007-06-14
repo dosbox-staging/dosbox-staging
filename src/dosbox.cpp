@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.115 2007-02-22 08:44:06 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.116 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -420,7 +420,7 @@ void DOSBOX_Init(void) {
 		"tandy -- Enable Tandy Sound System emulation (off,on,auto).\n"
 		"         For auto Tandysound emulation is present only if machine is set to tandy.\n"
 		"tandyrate -- Sample rate of the Tandy 3-Voice generation.\n"
-		"disney -- Enable Disney Sound Source emulation.\n"
+		"disney -- Enable Disney Sound Source emulation. Covox Voice Master and Speech Thing compatible.\n"
 	);
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done

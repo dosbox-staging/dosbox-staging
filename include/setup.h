@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.26 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: setup.h,v 1.27 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -142,8 +142,8 @@ private:
 public:
 	Section(char const * const _sectionname):sectionname(_sectionname) {  }
 
-	void AddInitFunction(SectionFunction func,bool canchange=false) {initfunctions.push_back(Function_wrapper(func,canchange));}
-	void AddDestroyFunction(SectionFunction func,bool canchange=false) {destroyfunctions.push_front(Function_wrapper(func,canchange));}
+	void AddInitFunction(SectionFunction func,bool canchange=false);
+	void AddDestroyFunction(SectionFunction func,bool canchange=false);
 	void ExecuteInit(bool initall=true);
 	void ExecuteDestroy(bool destroyall=true);
 	const char* GetName() const {return sectionname.c_str();}

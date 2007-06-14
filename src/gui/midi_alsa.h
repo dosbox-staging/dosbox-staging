@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_alsa.h,v 1.15 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: midi_alsa.h,v 1.16 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #define ALSA_PCM_OLD_HW_PARAMS_API
 #define ALSA_PCM_OLD_SW_PARAMS_API
@@ -50,7 +50,7 @@ private:
 			snd_seq_flush_output(seq_handle);
 	}
 
-	int parse_addr(char *arg, int *client, int *port) {
+	int parse_addr(const char *arg, int *client, int *port) {
 		char *p;
 
 		if (isdigit(*arg)) {
@@ -69,7 +69,7 @@ private:
 	}
 public:
 	MidiHandler_alsa() : MidiHandler() {};
-	char* GetName(void) { return "alsa"; }
+	const char* GetName(void) { return "alsa"; }
 	void PlaySysex(Bit8u * sysex,Bitu len) {
 		snd_seq_ev_set_sysex(&ev, len, sysex);
 		send_event(1);

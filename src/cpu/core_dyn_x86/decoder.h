@@ -2561,7 +2561,7 @@ restart_prefix:
 				dyn_save_critical_regs();
 				gen_call_function(
 					decode.modrm.reg == 3 ? (void*)&CPU_CALL : (void*)&CPU_JMP,
-					decode.big_op ? (char *)"%Id%Drw%Drd%Drd" : (char *)"%Id%Drw%Drw%Drd",
+					decode.big_op ? "%Id%Drw%Drd%Drd" : "%Id%Drw%Drw%Drd",
 					decode.big_op,DREG(EA),DREG(TMPW),DREG(TMPB));
 				dyn_flags_host_to_gen();
 				goto core_close_block;

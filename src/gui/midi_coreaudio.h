@@ -24,7 +24,7 @@ private:
 	AudioUnit m_outputUnit;
 public:
 	MidiHandler_coreaudio() : m_musicDevice(0), m_outputUnit(0) {}
-	char * GetName(void) { return "coreaudio"; }
+	const char * GetName(void) { return "coreaudio"; }
 	bool Open(const char * conf) {
 		int err;
 		AudioUnitConnection auconnect;

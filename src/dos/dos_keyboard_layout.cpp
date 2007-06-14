@@ -37,7 +37,7 @@ static FILE* OpenDosboxFile(const char* name) {
 
 	localDrive* ldp=0;
 	// try to build dos name
-	if (DOS_MakeName((char*)name,fullname,&drive)) {
+	if (DOS_MakeName(name,fullname,&drive)) {
 		try {
 			// try to open file on mounted drive first
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);

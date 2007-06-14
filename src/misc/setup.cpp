@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.38 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.39 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -252,6 +252,14 @@ void Config::Init() {
 		(*tel)->ExecuteInit();
 	}
 }
+void Section::AddInitFunction(SectionFunction func,bool canchange) {
+	initfunctions.push_back(Function_wrapper(func,canchange));
+}
+
+void Section::AddDestroyFunction(SectionFunction func,bool canchange) {
+	destroyfunctions.push_front(Function_wrapper(func,canchange));
+}
+
 
 void Section::ExecuteInit(bool initall) {
 	typedef std::list<Function_wrapper>::iterator func_it;

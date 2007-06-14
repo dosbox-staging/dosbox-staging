@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.49 2007-06-12 19:17:43 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.50 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -157,14 +157,14 @@ void mem_memcpy(PhysPt dest,PhysPt src,Bitu size) {
 }
 
 void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
-	Bit8u * write=(Bit8u *) data;
+	Bit8u * write=reinterpret_cast<Bit8u *>(data);
 	while (size--) {
 		*write++=mem_readb_inline(pt++);
 	}
 }
 
-void MEM_BlockWrite(PhysPt pt,void * data,Bitu size) {
-	Bit8u * read=(Bit8u *) data;
+void MEM_BlockWrite(PhysPt pt,void const * const data,Bitu size) {
+	Bit8u const * read = reinterpret_cast<Bit8u const * const>(data);
 	while (size--) {
 		mem_writeb_inline(pt++,*read++);
 	}

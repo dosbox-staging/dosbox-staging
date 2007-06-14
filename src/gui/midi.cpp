@@ -64,11 +64,12 @@ public:
 		next=handler_list;
 		handler_list=this;
 	};
-	virtual bool Open(const char * conf) { return true; };
+	virtual bool Open(const char * /*conf*/) { return true; };
 	virtual void Close(void) {};
-	virtual void PlayMsg(Bit8u * msg) {};
-	virtual void PlaySysex(Bit8u * sysex,Bitu len) {};
-	virtual char * GetName(void) { return "none"; };
+	virtual void PlayMsg(Bit8u * /*msg*/) {};
+	virtual void PlaySysex(Bit8u * /*sysex*/,Bitu /*len*/) {};
+	virtual const char * GetName(void) { return "none"; };
+	virtual ~MidiHandler() { };
 	MidiHandler * next;
 };
 
@@ -199,7 +200,7 @@ getdefault:
 
 
 static MIDI* test;
-void MIDI_Destroy(Section* sec){
+void MIDI_Destroy(Section* /*sec*/){
 	delete test;
 }
 void MIDI_Init(Section * sec) {

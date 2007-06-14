@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.68 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.69 2007-06-14 08:23:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -115,35 +115,35 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
 
 /* Routines for Drive Class */
-bool DOS_OpenFile(char * name,Bit8u flags,Bit16u * entry);
-bool DOS_OpenFileExtended(char *name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
-bool DOS_CreateFile(char * name,Bit16u attribute,Bit16u * entry);
-bool DOS_UnlinkFile(char * name);
+bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry);
+bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status);
+bool DOS_CreateFile(char const * name,Bit16u attribute,Bit16u * entry);
+bool DOS_UnlinkFile(char const * const name);
 bool DOS_FindFirst(char *search,Bit16u attr,bool fcb_findfirst=false);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(char * name,char * big);
-bool DOS_CreateTempFile(char * name,Bit16u * entry);
-bool DOS_FileExists(char * name);
+bool DOS_Canonicalize(char const * const name,char * const big);
+bool DOS_CreateTempFile(char * const name,Bit16u * entry);
+bool DOS_FileExists(char const * const name);
 
 /* Helper Functions */
-bool DOS_MakeName(char * name,char * fullname,Bit8u * drive);
+bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive);
 /* Drive Handing Routines */
 Bit8u DOS_GetDefaultDrive(void);
 void DOS_SetDefaultDrive(Bit8u drive);
 bool DOS_SetDrive(Bit8u drive);
-bool DOS_GetCurrentDir(Bit8u drive,char * bugger);
-bool DOS_ChangeDir(char * dir);
-bool DOS_MakeDir(char * dir);
-bool DOS_RemoveDir(char * dir);
-bool DOS_Rename(char * oldname,char * newname);
+bool DOS_GetCurrentDir(Bit8u drive,char * const buffer);
+bool DOS_ChangeDir(char const * const dir);
+bool DOS_MakeDir(char const * const dir);
+bool DOS_RemoveDir(char const * const dir);
+bool DOS_Rename(char const * const oldname,char const * const newname);
 bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * clusters,Bit16u * free);
-bool DOS_GetFileAttr(char * name,Bit16u * attr);
-bool DOS_SetFileAttr(char * name,Bit16u attr);
+bool DOS_GetFileAttr(char const * const name,Bit16u * attr);
+bool DOS_SetFileAttr(char const * const name,Bit16u attr);
 
 /* IOCTL Stuff */
 bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
-Bit8u DOS_FindDevice(char * name);
+Bit8u DOS_FindDevice(char const * name);
 void DOS_SetupDevices(void);
 
 /* Execute and new process creation */
@@ -535,8 +535,8 @@ private:
 class DOS_MCB : public MemStruct{
 public:
 	DOS_MCB(Bit16u seg) { SetPt(seg); }
-	void SetFileName(char * _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
-	void GetFileName(char * _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
+	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
+	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
 	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
 	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
 	void SetPSPSeg(Bit16u _pspseg) { sSave(sMCB,psp_segment,_pspseg);}
