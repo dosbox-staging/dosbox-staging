@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.19 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.20 2007-06-15 19:05:48 c2woody Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -348,6 +348,7 @@ bool isoDrive::GetFileAttr(char *name, Bit16u *attr)
 	bool success = lookup(&de, name);
 	if (success) {
 		*attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
+		if (IS_HIDDEN(de.fileFlags)) *attr |= DOS_ATTR_HIDDEN;
 		if (IS_DIR(de.fileFlags)) *attr |= DOS_ATTR_DIRECTORY;
 	}
 	return success;
