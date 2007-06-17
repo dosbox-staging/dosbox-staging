@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.35 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.36 2007-06-17 12:26:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -173,9 +173,9 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 
 	fseek(diskimg,bytenum,SEEK_SET);
-	fwrite(data, sector_size, 1, diskimg);
+	size_t ret=fwrite(data, sector_size, 1, diskimg);
 
-	return 0x00;
+	return ((ret>0)?0x00:0x05);
 
 }
 

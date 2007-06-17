@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.74 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.75 2007-06-17 12:26:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -403,21 +403,30 @@ private:
 			ldp=dynamic_cast<localDrive*>(Drives[drive]);
 			if(!ldp) return NULL;
 
-			tmpfile = ldp->GetSystemFilePtr(fullname, "r");
+			tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
 			if(tmpfile == NULL) {
 				if (!tryload) *error=1;
 				return NULL;
 			}
-			fclose(tmpfile);
-			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
-			if(tmpfile == NULL) {
-				if (!tryload) *error=2;
-				return NULL;
-			}
 
+			// get file size
 			fseek(tmpfile,0L, SEEK_END);
 			*ksize = (ftell(tmpfile) / 1024);
 			*bsize = ftell(tmpfile);
+			fclose(tmpfile);
+
+			tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
+			if(tmpfile == NULL) {
+//				if (!tryload) *error=2;
+//				return NULL;
+				WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
+				tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+				if(tmpfile == NULL) {
+					if (!tryload) *error=1;
+					return NULL;
+				}
+			}
+
 			return tmpfile;
 		}
 		catch(...) {
@@ -430,12 +439,19 @@ private:
 		FILE* tmpfile = getFSFile_mounted(filename,ksize,bsize,&error);
 		if(tmpfile) return tmpfile;
 		//File not found on mounted filesystem. Try regular filesystem
-		tmpfile = fopen(filename,"rb+");
+		std::string filename_s(filename);
+		ResolveHomedir(filename_s);
+		tmpfile = fopen(filename_s.c_str(),"rb+");
 		if(!tmpfile) {
-			if( (tmpfile = fopen(filename,"r")) ) {
+			if( (tmpfile = fopen(filename_s.c_str(),"rb")) ) {
 				//File exists; So can't be opened in correct mode => error 2
-				fclose(tmpfile);
-				if(tryload) error = 2;
+//				fclose(tmpfile);
+//				if(tryload) error = 2;
+				WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
+				fseek(tmpfile,0L, SEEK_END);
+				*ksize = (ftell(tmpfile) / 1024);
+				*bsize = ftell(tmpfile);
+				return tmpfile;
 			}
 			// Give the delayed errormessages from the mounted variant (or from above)
 			if(error == 1) WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
@@ -1363,6 +1379,7 @@ void DOS_SetupPrograms(void) {
 		);
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
+	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR","This command boots DOSBox from either a floppy or hard disk image.\n\n"
 		"For this command, one can specify a succession of floppy disks swappable\n"
 		"by pressing Ctrl-F4, and -l specifies the mounted drive to boot from.  If\n"
