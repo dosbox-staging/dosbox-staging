@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.47 2007-06-12 20:22:09 c2woody Exp $ */
+/* $Id: xms.cpp,v 1.48 2007-06-25 11:28:25 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -81,7 +81,9 @@ struct XMS_Block {
 	bool	free;
 };
 
-#pragma pack (push,1)
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
 struct XMS_MemMove{
 	Bit32u length;
 	Bit16u src_handle;
@@ -96,7 +98,10 @@ struct XMS_MemMove{
 	} dest;
 
 } GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
 #pragma pack (pop)
+#endif
+
 
 Bitu XMS_EnableA20(bool enable)
 {
