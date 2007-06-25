@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.48 2007-06-25 11:28:25 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.49 2007-06-25 18:45:48 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -99,7 +99,7 @@ struct XMS_MemMove{
 
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
-#pragma pack (pop)
+#pragma pack ()
 #endif
 
 
