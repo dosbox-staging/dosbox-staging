@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.30 2007-04-30 18:35:34 c2woody Exp $ */
+/* $Id: dev_con.h,v 1.31 2007-06-27 19:15:31 qbix79 Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -49,6 +49,7 @@ private:
 		Bit16u ncols;
 		Bit8s savecol;
 		Bit8s saverow;
+		bool warned;
 	} ansi;
 };
 
@@ -265,12 +266,18 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			break;
 		case 'f':
 		case 'H':/* Cursor Pos*/
-			if(ansi.data[0]==0) ansi.data[0]=1;
-			if(ansi.data[1]==0) ansi.data[1]=1;
+			if(!ansi.warned) { //Inform the debugger that ansi is used.
+				ansi.warned = true;
+				LOG(LOG_IOCTL,LOG_WARN)("ANSI SEQUENCES USED");
+			}
+			/* Turn them into positions that are on the screen */
+			if(ansi.data[0] == 0) ansi.data[0] = 1;
+			if(ansi.data[1] == 0) ansi.data[1] = 1;
+			if(ansi.data[0] > ansi.nrows) ansi.data[0] = ansi.nrows;
+			if(ansi.data[1] > ansi.ncols) ansi.data[1] = ansi.ncols;
 			INT10_SetCursorPos(--(ansi.data[0]),--(ansi.data[1]),page); /*ansi=1 based, int10 is 0 based */
 			ClearAnsi();
 			break;
-
 			/* cursor up down and forward and backward only change the row or the col not both */
 		case 'A': /* cursor up*/
 			col=CURSOR_POS_COL(page) ;
@@ -397,6 +404,7 @@ device_CON::device_CON() {
 	ansi.nrows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1;
 	ansi.saverow=0;
 	ansi.savecol=0;
+	ansi.warned=false;
 	ClearAnsi();
 }
 
