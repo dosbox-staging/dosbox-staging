@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.39 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.40 2007-06-27 14:51:30 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -197,6 +197,10 @@ void Config::PrintConfig(char const * const configfilename) const {
 	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return;
+
+	/* Print start of configfile and add an return to improve readibility. */
+	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"),VERSION);
+	fprintf(outfile,"\n");
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */
 		strcpy(temp,(*tel)->GetName());

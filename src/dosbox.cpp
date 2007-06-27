@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.116 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.117 2007-06-27 14:51:30 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -236,6 +236,10 @@ static void DOSBOX_RealInit(Section * sec) {
 	ticksLocked = false;
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
+	MSG_Add("CONFIGFILE_INTRO",
+	        "# This is the configurationfile for DOSBox %s.\n"
+	        "# Lines starting with a # are commentlines.\n"
+	        "# They are used to (briefly) document the effect of each option.\n");
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 	svgaCard = SVGA_S3Trio; 
