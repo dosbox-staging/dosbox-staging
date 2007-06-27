@@ -562,7 +562,7 @@ static void cache_init(bool enable) {
 		}
 		if (cache_code_start_ptr==NULL) {
 			// allocate the code cache memory
-#if defined (_MSC_VER)
+#if defined (WIN32)
 			cache_code_start_ptr=(Bit8u*)VirtualAlloc(0,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP-1+PAGESIZE_TEMP,
 				MEM_COMMIT,PAGE_EXECUTE_READWRITE);
 			if (!cache_code_start_ptr)
