@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.87 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.88 2007-06-27 19:14:59 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -690,7 +690,7 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 			char drive[2];
 			char name[9];
 			char ext[4];
-		} part GCC_ATTRIBUTE (packed) ;
+		} GCC_ATTRIBUTE (packed) part;
 		char full[DOS_FCBNAME];
 	} fcb_name;
 #ifdef _MSC_VER

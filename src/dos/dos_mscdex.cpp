@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.47 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.48 2007-06-27 19:14:59 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -64,7 +64,7 @@ public:
 	void	SetDriveLetter		(Bit8u letter)	{ sSave(sDeviceHeader,driveLetter,letter);		};
 	void	SetNumSubUnits		(Bit8u num)		{ sSave(sDeviceHeader,numSubUnits,num);			};
 	Bit8u	GetNumSubUnits		(void)			{ return sGet(sDeviceHeader,numSubUnits);		};
-	void	SetName				(char* _name)	{ MEM_BlockWrite(pt+offsetof(sDeviceHeader,name),_name,8); };
+	void	SetName				(char const* _name)	{ MEM_BlockWrite(pt+offsetof(sDeviceHeader,name),_name,8); };
 	void	SetInterrupt		(Bit16u ofs)	{ sSave(sDeviceHeader,interrupt,ofs);			};
 	void	SetStrategy			(Bit16u ofs)	{ sSave(sDeviceHeader,strategy,ofs);			};
 
@@ -81,7 +81,7 @@ public:
 		Bit16u  wReserved;
 		Bit8u	driveLetter;
 		Bit8u	numSubUnits;
-	} TDeviceHeader;
+	} GCC_ATTRIBUTE(packed) TDeviceHeader;
 	#ifdef _MSC_VER
 	#pragma pack()
 	#endif
