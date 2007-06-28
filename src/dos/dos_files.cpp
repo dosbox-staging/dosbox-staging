@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.88 2007-06-27 19:14:59 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.89 2007-06-28 19:43:32 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1041,7 +1041,7 @@ bool DOS_FileExists(char const * const name) {
 bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters) {
 	if (!drive) drive=dos.current_drive;
 	else drive--;
-	if (!Drives[drive]) return false;
+	if (drive >= DOS_DRIVES || !Drives[drive]) return false;
 	Bit16u _free_clusters;
 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
 	SegSet16(ds,RealSeg(dos.tables.mediaid));
