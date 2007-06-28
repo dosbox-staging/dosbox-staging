@@ -299,6 +299,21 @@ graphics_chars:
 			reg_bl=3;	//256 kb
 			reg_cx=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
 			break;
+		case 0x20:							/* Set alternate printscreen */
+			break;
+		case 0x30:							/* Select vertical resolution */
+		case 0x32:							/* Video adressing */
+			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
+			reg_al=0x12;			//fake a success call
+			break;
+		case 0x31:							/* Palette loading on modeset */
+			{   
+				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xf7;
+				if (reg_al&1) temp|=8;		// enable if al=0
+				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
+				reg_al=0x12;
+				break;	
+			}		
 		case 0x33: /* SWITCH GRAY-SCALE SUMMING */
 			{   
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
@@ -324,7 +339,8 @@ graphics_chars:
 			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
-			reg_al=0x12;			//Always fake a success call
+			reg_al=0x12;	// wrong!?
+			break;
 		}
 		break;
 	case 0x13:								/* Write String */

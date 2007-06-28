@@ -874,65 +874,69 @@ att_text16:
 		break;
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
-	for (i=0;i<ATT_REGS;i++) {
-		IO_Write(0x3c0,i);
-		IO_Write(0x3c0,att_data[i]);
-	}
-	IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
-	/* Setup the DAC */
-	IO_Write(0x3c8,0);
-	IO_Write(0x3c6,0xff); //Reset Pelmask
-	switch (CurMode->type) {
-	case M_EGA:
-		if (CurMode->mode>0xf) goto dac_text16;
-		else if (CurMode->mode==0xf) goto dac_mtext16;
-		for (i=0;i<64;i++) {
-			IO_Write(0x3c9,ega_palette[i][0]);
-			IO_Write(0x3c9,ega_palette[i][1]);
-			IO_Write(0x3c9,ega_palette[i][2]);
+	if ((modeset_ctl & 8)==0) {
+		for (i=0;i<ATT_REGS;i++) {
+			IO_Write(0x3c0,i);
+			IO_Write(0x3c0,att_data[i]);
 		}
-		break;
-	case M_CGA2:
-	case M_CGA4:
-	case M_TANDY16:
-		for (i=0;i<64;i++) {
-			IO_Write(0x3c9,cga_palette_2[i][0]);
-			IO_Write(0x3c9,cga_palette_2[i][1]);
-			IO_Write(0x3c9,cga_palette_2[i][2]);
-		}
-		break;
-	case M_TEXT:
-		if (CurMode->mode==7) {
-dac_mtext16:
+		IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
+		IO_Write(0x3c6,0xff); //Reset Pelmask
+		/* Setup the DAC */
+		IO_Write(0x3c8,0);
+		switch (CurMode->type) {
+		case M_EGA:
+			if (CurMode->mode>0xf) goto dac_text16;
+			else if (CurMode->mode==0xf) goto dac_mtext16;
 			for (i=0;i<64;i++) {
-				IO_Write(0x3c9,mtext_palette[i][0]);
-				IO_Write(0x3c9,mtext_palette[i][1]);
-				IO_Write(0x3c9,mtext_palette[i][2]);
+				IO_Write(0x3c9,ega_palette[i][0]);
+				IO_Write(0x3c9,ega_palette[i][1]);
+				IO_Write(0x3c9,ega_palette[i][2]);
+			}
+			break;
+		case M_CGA2:
+		case M_CGA4:
+		case M_TANDY16:
+			for (i=0;i<64;i++) {
+				IO_Write(0x3c9,cga_palette_2[i][0]);
+				IO_Write(0x3c9,cga_palette_2[i][1]);
+				IO_Write(0x3c9,cga_palette_2[i][2]);
+			}
+			break;
+		case M_TEXT:
+			if (CurMode->mode==7) {
+dac_mtext16:
+				for (i=0;i<64;i++) {
+					IO_Write(0x3c9,mtext_palette[i][0]);
+					IO_Write(0x3c9,mtext_palette[i][1]);
+					IO_Write(0x3c9,mtext_palette[i][2]);
+				}
+				break;
+			}
+dac_text16:
+			for (i=0;i<64;i++) {
+				IO_Write(0x3c9,text_palette[i][0]);
+				IO_Write(0x3c9,text_palette[i][1]);
+				IO_Write(0x3c9,text_palette[i][2]);
+			}
+			break;
+		case M_VGA:
+		case M_LIN8:
+		case M_LIN16:
+			for (i=0;i<256;i++) {
+				IO_Write(0x3c9,vga_palette[i][0]);
+				IO_Write(0x3c9,vga_palette[i][1]);
+				IO_Write(0x3c9,vga_palette[i][2]);
 			}
 			break;
 		}
-dac_text16:
-		for (i=0;i<64;i++) {
-			IO_Write(0x3c9,text_palette[i][0]);
-			IO_Write(0x3c9,text_palette[i][1]);
-			IO_Write(0x3c9,text_palette[i][2]);
+		if (machine==MCH_VGA) {
+			/* check if gray scale summing is enabled */
+			if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
+				INT10_PerformGrayScaleSumming(0,256);
+			}
 		}
-		break;
-	case M_VGA:
-	case M_LIN8:
-	case M_LIN16:
-		for (i=0;i<256;i++) {
-			IO_Write(0x3c9,vga_palette[i][0]);
-			IO_Write(0x3c9,vga_palette[i][1]);
-			IO_Write(0x3c9,vga_palette[i][2]);
-		}
-		break;
-	}
-	if (machine==MCH_VGA) {
-		/* check if gray scale summing is enabled */
-		if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
-			INT10_PerformGrayScaleSumming(0,256);
-		}
+	} else {
+		IO_Write(0x3c0,0x20); //Disable palette access
 	}
 	/* Setup some special stuff for different modes */
 	Bit8u feature=real_readb(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE);
