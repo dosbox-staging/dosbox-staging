@@ -28,6 +28,7 @@ Bit32u get_OF(void);
 Bit32u get_PF(void);
 
 Bitu FillFlags(void);
+void FillFlagsNoCFOF(void);
 void DestroyConditionFlags(void);
 
 #include "regs.h"

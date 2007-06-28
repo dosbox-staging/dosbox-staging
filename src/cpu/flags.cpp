@@ -169,6 +169,18 @@ Bit32u get_AF(void) {
 		return lf_var1w & 0x0f;
 	case t_NEGd:
 		return lf_var1d & 0x0f;
+	case t_SHLb:
+	case t_SHRb:
+	case t_SARb:
+		return lf_var2b & 0x1f;
+	case t_SHLw:
+	case t_SHRw:
+	case t_SARw:
+		return lf_var2w & 0x1f;
+	case t_SHLd:
+	case t_SHRd:
+	case t_SARd:
+		return lf_var2d & 0x1f;
 	case t_ORb:
 	case t_ORw:
 	case t_ORd:
@@ -181,15 +193,6 @@ Bit32u get_AF(void) {
 	case t_TESTb:
 	case t_TESTw:
 	case t_TESTd:
-	case t_SHLb:
-	case t_SHLw:
-	case t_SHLd:
-	case t_SHRb:
-	case t_SHRw:
-	case t_SHRd:
-	case t_SARb:
-	case t_SARw:
-	case t_SARd:
 	case t_DSHLw:
 	case t_DSHLd:
 	case t_DSHRw:
@@ -386,18 +389,24 @@ Bit32u get_OF(void) {
 	case t_NEGd:
 		return (lf_var1d == 0x80000000);
 	case t_SHLb:
-	case t_SHRb:
 		return (lf_resb ^ lf_var1b) & 0x80;
 	case t_SHLw:
-	case t_SHRw:
 	case t_DSHRw:
 	case t_DSHLw:
 		return (lf_resw ^ lf_var1w) & 0x8000;
 	case t_SHLd:
-	case t_SHRd:
 	case t_DSHRd:
 	case t_DSHLd:
 		return (lf_resd ^ lf_var1d) & 0x80000000;
+	case t_SHRb:
+		if ((lf_var2b&0x1f)==1) return (lf_var1b > 0x80);
+		else return false;
+	case t_SHRw:
+		if ((lf_var2b&0x1f)==1) return (lf_var1w > 0x8000);
+		else return false;
+	case t_SHRd:
+		if ((lf_var2b&0x1f)==1) return (lf_var1d > 0x80000000);
+		else return false;
 	case t_ORb:
 	case t_ORw:
 	case t_ORd:
@@ -485,6 +494,7 @@ Bitu FillFlags(void) {
 #define SETCF(NEWBIT) reg_flags=(reg_flags & ~FLAG_CF)|(NEWBIT);
 
 #define SET_FLAG SETFLAGBIT
+
 Bitu FillFlags(void) {
 	switch (lflags.type) {
 	case t_UNKNOWN:
@@ -682,6 +692,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFb;
 		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
 		break;
 	case t_SHLw:
 		if (lf_var2b>16) SET_FLAG(CF,false);
@@ -690,6 +701,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFw;
 		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
 		break;
 	case t_SHLd:
 		SET_FLAG(CF,(lf_var1d >> (32 - lf_var2b)) & 1);
@@ -697,6 +709,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFd;
 		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
 		break;
 
 
@@ -720,22 +733,28 @@ Bitu FillFlags(void) {
 		SET_FLAG(CF,(lf_var1b >> (lf_var2b - 1)) & 1);
 		DOFLAG_ZFb;
 		DOFLAG_SFb;
-		SET_FLAG(OF,(lf_resb ^ lf_var1b) & 0x80);
+		if ((lf_var2b&0x1f)==1) SET_FLAG(OF,(lf_var1b >= 0x80));
+		else SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
 		break;
 	case t_SHRw:
 		SET_FLAG(CF,(lf_var1w >> (lf_var2b - 1)) & 1);
 		DOFLAG_ZFw;
 		DOFLAG_SFw;
-		SET_FLAG(OF,(lf_resw ^ lf_var1w) & 0x8000);
+		if ((lf_var2w&0x1f)==1) SET_FLAG(OF,(lf_var1w >= 0x8000));
+		else SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
 		break;
 	case t_SHRd:
 		SET_FLAG(CF,(lf_var1d >> (lf_var2b - 1)) & 1);
 		DOFLAG_ZFd;
 		DOFLAG_SFd;
-		SET_FLAG(OF,(lf_resd ^ lf_var1d) & 0x80000000);
+		if ((lf_var2d&0x1f)==1) SET_FLAG(OF,(lf_var1d >= 0x80000000));
+		else SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
 		break;
 
 	
@@ -761,6 +780,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFb;
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
 		break;
 	case t_SARw:
 		SET_FLAG(CF,(((Bit16s) lf_var1w) >> (lf_var2b - 1)) & 1);
@@ -768,6 +788,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFw;
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
 		break;
 	case t_SARd:
 		SET_FLAG(CF,(((Bit32s) lf_var1d) >> (lf_var2b - 1)) & 1);
@@ -775,6 +796,7 @@ Bitu FillFlags(void) {
 		DOFLAG_SFd;
 		SET_FLAG(OF,false);
 		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
 		break;
 
 	case t_INCb:
@@ -857,6 +879,306 @@ Bitu FillFlags(void) {
 	}
 	lflags.type=t_UNKNOWN;
 	return reg_flags;
+}
+
+void FillFlagsNoCFOF(void) {
+	switch (lflags.type) {
+	case t_UNKNOWN:
+		return;
+	case t_ADDb:	
+		DOFLAG_AF;
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_ADDw:	
+		DOFLAG_AF;
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_ADDd:
+		DOFLAG_AF;
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+	case t_ADCb:
+		DOFLAG_AF;
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_ADCw:
+		DOFLAG_AF;
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_ADCd:
+		DOFLAG_AF;
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+
+	case t_SBBb:
+		DOFLAG_AF;
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_SBBw:
+		DOFLAG_AF;
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_SBBd:
+		DOFLAG_AF;
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+	
+
+	case t_SUBb:
+	case t_CMPb:
+		DOFLAG_AF;
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_SUBw:
+	case t_CMPw:
+		DOFLAG_AF;
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_SUBd:
+	case t_CMPd:
+		DOFLAG_AF;
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+
+	case t_ORb:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_ORw:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_ORd:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+	
+	
+	case t_TESTb:
+	case t_ANDb:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_TESTw:
+	case t_ANDw:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_TESTd:
+	case t_ANDd:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+	
+	case t_XORb:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_XORw:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_XORd:
+		SET_FLAG(AF,false);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+
+	case t_SHLb:
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
+		break;
+	case t_SHLw:
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
+		break;
+	case t_SHLd:
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
+		break;
+
+
+	case t_DSHLw:
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_DSHLd:
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+
+	case t_SHRb:
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
+		break;
+	case t_SHRw:
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
+		break;
+	case t_SHRd:
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
+		break;
+
+	
+	case t_DSHRw:	/* Hmm this is not correct for shift higher than 16 */
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_DSHRd:
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+
+	case t_SARb:
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2b&0x1f));
+		break;
+	case t_SARw:
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2w&0x1f));
+		break;
+	case t_SARd:
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		SET_FLAG(AF,(lf_var2d&0x1f));
+		break;
+
+	case t_INCb:
+		SET_FLAG(AF,(lf_resb & 0x0f) == 0);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_INCw:
+		SET_FLAG(AF,(lf_resw & 0x0f) == 0);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_INCd:
+		SET_FLAG(AF,(lf_resd & 0x0f) == 0);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+	case t_DECb:
+		SET_FLAG(AF,(lf_resb & 0x0f) == 0x0f);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_DECw:
+		SET_FLAG(AF,(lf_resw & 0x0f) == 0x0f);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_DECd:
+		SET_FLAG(AF,(lf_resd & 0x0f) == 0x0f);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+	case t_NEGb:
+		SET_FLAG(AF,(lf_resb & 0x0f) != 0);
+		DOFLAG_ZFb;
+		DOFLAG_SFb;
+		DOFLAG_PF;
+		break;
+	case t_NEGw:
+		SET_FLAG(AF,(lf_resw & 0x0f) != 0);
+		DOFLAG_ZFw;
+		DOFLAG_SFw;
+		DOFLAG_PF;
+		break;
+	case t_NEGd:
+		SET_FLAG(AF,(lf_resd & 0x0f) != 0);
+		DOFLAG_ZFd;
+		DOFLAG_SFd;
+		DOFLAG_PF;
+		break;
+
+	
+	case t_DIV:
+	case t_MUL:
+		break;
+
+	default:
+		LOG(LOG_CPU,LOG_ERROR)("Unhandled flag type %d",lflags.type);
+		break;
+	}
+	lflags.type=t_UNKNOWN;
 }
 
 void DestroyConditionFlags(void) {
