@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.7 2007-05-28 16:29:11 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.8 2007-06-28 16:02:27 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -303,7 +303,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		VGA_SetupHandlers();
 		break;
 	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:SEQ:Write to illegal index %2X", reg );
+		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:CRTC:Write to illegal index %2X", reg );
 		break;
 	}
 }
