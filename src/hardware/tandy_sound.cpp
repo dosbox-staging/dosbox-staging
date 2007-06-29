@@ -106,7 +106,7 @@ static void SN76496Write(Bitu port,Bitu data,Bitu iolen) {
 			case 2:	/* tone 1 : frequency */
 			case 4:	/* tone 2 : frequency */
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
@@ -129,8 +129,8 @@ static void SN76496Write(Bitu port,Bitu data,Bitu iolen) {
 					R->Period[3] = (n == 3) ? 2 * R->Period[2] : (R->UpdateStep << (5+n));
 
 					/* reset noise shifter */
-					R->RNG = NG_PRESET;
-					R->Output[3] = R->RNG & 1;
+//					R->RNG = NG_PRESET;
+//					R->Output[3] = R->RNG & 1;
 				}
 				break;
 		}
@@ -147,7 +147,7 @@ static void SN76496Write(Bitu port,Bitu data,Bitu iolen) {
 			case 4:	/* tone 2 : frequency */
 				R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep;
+				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
