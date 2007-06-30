@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.31 2007-06-27 19:15:31 qbix79 Exp $ */
+/* $Id: dev_con.h,v 1.32 2007-06-30 19:33:45 c2woody Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -273,8 +273,8 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			/* Turn them into positions that are on the screen */
 			if(ansi.data[0] == 0) ansi.data[0] = 1;
 			if(ansi.data[1] == 0) ansi.data[1] = 1;
-			if(ansi.data[0] > ansi.nrows) ansi.data[0] = ansi.nrows;
-			if(ansi.data[1] > ansi.ncols) ansi.data[1] = ansi.ncols;
+			if(ansi.data[0] > ansi.nrows) ansi.data[0] = (Bit8u)ansi.nrows;
+			if(ansi.data[1] > ansi.ncols) ansi.data[1] = (Bit8u)ansi.ncols;
 			INT10_SetCursorPos(--(ansi.data[0]),--(ansi.data[1]),page); /*ansi=1 based, int10 is 0 based */
 			ClearAnsi();
 			break;
