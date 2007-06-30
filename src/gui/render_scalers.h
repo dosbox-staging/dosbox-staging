@@ -23,10 +23,10 @@
 #include "video.h"
 //MAXWIDTH: increased it for the large text modi
 #define SCALER_MAXWIDTH		1280 
-#define SCALER_MAXHEIGHT	768
+#define SCALER_MAXHEIGHT	1024
 
-#define SCALER_COMPLEXWIDTH		512
-#define SCALER_COMPLEXHEIGHT	400
+#define SCALER_COMPLEXWIDTH		800
+#define SCALER_COMPLEXHEIGHT	600
 #define SCALER_BLOCKSIZE	16
 
 typedef enum {

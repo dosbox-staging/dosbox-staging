@@ -63,6 +63,7 @@ typedef struct {
 		scalerMode_t outMode;
 		scalerOperation_t op;
 		bool clearCache;
+		bool forced;
 		ScalerLineHandler_t lineHandler;
 		ScalerLineHandler_t linePalHandler;
 		ScalerComplexHandler_t complexHandler;

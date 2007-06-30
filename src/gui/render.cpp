@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.51 2007-02-03 13:00:16 harekiet Exp $ */
+/* $Id: render.cpp,v 1.52 2007-06-30 19:53:41 c2woody Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -282,7 +282,7 @@ static void RENDER_Reset( void ) {
 		gfx_scalew = 1;
 		gfx_scaleh = 1;
 	}
-	if (dblh && dblw) {
+	if (dblh && dblw || (render.scale.forced && !dblh && !dblw)) {
 		/* Initialize always working defaults */
 		if (render.scale.size == 2)
 			simpleBlock = &ScaleNormal2x;
@@ -555,11 +555,26 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
-	const char * scaler;std::string cline;
+	const char * scaler;
+	std::string cline;
+	std::string scaler_str;
 	if (control->cmdline->FindString("-scaler",cline,false)) {
 		scaler=cline.c_str();
+		render.scale.forced=false;
+	} else if (control->cmdline->FindString("-forcescaler",cline,false)) {
+		scaler=cline.c_str();
+		render.scale.forced=true;
 	} else {
-		scaler=section->Get_string("scaler");
+		CommandLine cmd(0,section->Get_string("scaler"));
+		cmd.FindCommand(1,scaler_str);
+		scaler=scaler_str.c_str();
+		render.scale.forced=false;
+		if (cmd.GetCount()>1) {
+			std::string str;
+			if (cmd.FindCommand(2,str)) {
+				if (str=="forced") render.scale.forced=true;
+			}
+		}
 	}
 	if (!strcasecmp(scaler,"none")) { render.scale.op = scalerOpNormal;render.scale.size = 1; }
 	else if (!strcasecmp(scaler,"normal2x")) { render.scale.op = scalerOpNormal;render.scale.size = 2; }
