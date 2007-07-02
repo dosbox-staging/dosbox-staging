@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.52 2007-06-30 19:53:41 c2woody Exp $ */
+/* $Id: render.cpp,v 1.53 2007-07-02 20:06:59 c2woody Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -548,6 +548,8 @@ void RENDER_Init(Section * sec) {
 	//For restarting the renderer.
 	static bool running = false;
 	bool aspect = render.aspect;
+	Bitu scalersize = render.scale.size;
+	bool scalerforced = render.scale.forced;
 	scalerOperation_t scaleOp = render.scale.op;
 
 	render.pal.first=256;
@@ -600,7 +602,9 @@ void RENDER_Init(Section * sec) {
 	}
 
 	//If something changed that needs a ReInit
-	if(running && (render.aspect != aspect || render.scale.op != scaleOp))
+	if(running &&((render.aspect != aspect) || (render.scale.op != scaleOp) || 
+				  (render.scale.size != scalersize) || (render.scale.forced != scalerforced) ||
+				   render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );
 
 	if(!running) render.updating=true;

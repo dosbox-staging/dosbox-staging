@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.117 2007-06-27 14:51:30 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.118 2007-07-02 20:06:59 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -303,6 +303,8 @@ void DOSBOX_Init(void) {
 		"          Supported are none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,\n"
 		"                        2xsai,super2xsai,supereagle,advinterp2x,advinterp3x,\n"
 		"                        tv2x,tv3x,rgb2x,rgb3x,scan2x,scan3x.\n"
+		"          If forced is appended (like scaler=hq2x forced), the scaler will be used\n"
+		"          even if the result might not be desired.\n"
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
