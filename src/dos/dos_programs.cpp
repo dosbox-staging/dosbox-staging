@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.75 2007-06-17 12:26:35 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.76 2007-07-02 14:10:27 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -133,24 +133,30 @@ public:
 			Bit8u mediaid;
 			std::string str_size;
 			if (type=="floppy") {
-				str_size="512,1,2847,2847";/* All space free */
+				str_size="512,1,2880,2880";/* All space free */
 				mediaid=0xF0;		/* Floppy 1.44 media */
 			} else if (type=="dir") {
+				// 512*127*16513==~1GB total size
+				// 512*127*1700==~100MB total free size
 				str_size="512,127,16513,1700";
 				mediaid=0xF8;		/* Hard Disk */
 			} else if (type=="cdrom") {
-				str_size="650,127,16513,1700";
+				str_size="2048,1,65535,0";
 				mediaid=0xF8;		/* Hard Disk */
 			} else {
 				WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
 				return;
 			}
-			/* Parse the free space in mb's */
+			/* Parse the free space in mb's (kb's for floppies) */
 			std::string mb_size;
 			if(cmd->FindString("-freesize",mb_size,true)) {
 				char teststr[1024];
 				Bit16u sizemb = static_cast<Bit16u>(atoi(mb_size.c_str()));
-				sprintf(teststr,"512,127,16513,%d",sizemb*1024*1024/(512*127));
+				if (type=="floppy") {
+					sprintf(teststr,"512,1,2880,%d",sizemb*1024/(512*1));
+				} else {
+					sprintf(teststr,"512,127,16513,%d",sizemb*1024*1024/(512*127));
+				}
 				str_size=teststr;
 			}
 		   
