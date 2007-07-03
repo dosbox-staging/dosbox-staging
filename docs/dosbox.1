@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Mar 28, 2006"
+.TH DOSBOX 1 "Jul 01, 2007"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -8,6 +8,8 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B [\-fullscreen]
 .B [\-startmapper]
 .B [\-noautoexec]
+.BI "[\-scaler " scaler ] 
+.BI "[\-forcescaler " scaler ]
 .BI "[\-conf " configfile ]
 .BI "[\-lang " langfile ]
 .B [file]
@@ -38,6 +40,14 @@ A summary of options is included below.
 .TP
 .B \-noautoexec
 Skips the [autoexec] section of the loaded configuration file.
+.TP
+.BI \-scaler " scaler"
+.RI "Uses the graphical scaler specified by " scaler ". See the configuration"
+file for the available scalers
+.TP
+.BI \-forcescaler " scaler"
+.RB "Similar to the " \-scaler " parameter, but tries to force usage of"
+the specified scaler even if it might not fit.
 .TP
 .BI \-c  " command" 
 .RI "Runs the specified " command " before running " 
@@ -74,7 +84,7 @@ following extra commands are available:
 .HP
 .BI "MOUNT [\-t " type "] [\-size " size ]
 .I driveletter sourcedirectory 
-.B [\-aspi] [\-ioctl]
+.B [\-ioctl]
 .BI "[\-usecd " number "] [\-label " drivelabel "] [\-freesize " freesize ] 
 .LP
 .B MOUNT \-cd
@@ -115,18 +125,13 @@ If you do specify a label this label will be kept as long as the drive
 is mounted. It will not be updated !!
 .RE
 .TP
-.B \-aspi
-Forces to use the aspi layer. Only valid if mounting a cdrom under 
-Windows systems with an ASPI-Layer.
-.TP
 .B \-ioctl   
-Forces to use ioctl commands. Only valid if mounting a cdrom under 
-windows which support them (Win2000/XP/NT).
+Forces to use ioctl commands.
 .TP
 .BI \-usecd " number"
 Forces to use SDL cdrom support for drive number.
 .IR Number " can be found by "
-.BR \-cd ". Valid on all systems."
+.BR \-cd ".
 .TP
 .B \-cd
 .RB "Displays all detected cdrom drives and their numbers. Use with " \-usecd "."
@@ -208,6 +213,13 @@ Boot will start floppy images or hard disk images independent of the
 .RB "All of the IPX networking is managed through the internal " dosbox " program
 .BR IPXNET ". For help on the IPX networking from inside " dosbox ", type"
 .BR "IPXNET HELP" " and the program will list out the commands and relevant documentation."
+.TP
+.RB "Read the " README " of " dosbox " for the full and correct syntax."
+.RE
+.TP
+.B KEYB
+.LP
+Keyb can change the keyboardlayout and the codepage used inside dosbox.
 .TP
 .RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
