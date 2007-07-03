@@ -33,11 +33,18 @@ INDEX:
 15. Contact
 
 
+
 ==============
 1. Quickstart:
 ==============
 
-Type INTRO in DOSBox. That's it. 
+Type INTRO in DOSBox for a quick tour.
+It is essential that you get familiar with the idea of mounting,
+DOSBox does not automatically make any drive (or parts of it)
+accessible to the emulation.
+See the FAQ entry "I've got a Z instead of a C at the prompt" as
+well as the description of the MOUNT command (section 4).
+
 
 
 =======
@@ -47,7 +54,8 @@ Type INTRO in DOSBox. That's it.
 Some Frequently Asked Questions:
 
 Q: I've got a Z instead of a C at the prompt.
-Q: How do I change to fullscreen ?
+Q: Do I always have to type these commands? Automation?
+Q: How do I change to fullscreen?
 Q: My CD-ROM doesn't work.
 Q: The mouse doesn't work.
 Q: There is no sound.
@@ -59,9 +67,8 @@ Q: The game/application runs much too slow!
 Q: Can DOSBox harm my computer?
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 Q: What sound hardware does DOSBox presently emulate?
-Q: DOSBox crashes on startup and I'm running arts
+Q: DOSBox crashes on startup and I'm running arts.
 Q: Great README, but I still don't get it.
-
 
 
 
@@ -76,7 +83,13 @@ A: You have to make your directories available as drives in DOSBox by using
    fine, DOSBox will display the prompt "C:\>".
 
 
-Q: How do I change to fullscreen ?
+Q: Do I always have to type these commands? Automation?
+A: In the DOSBox configuration file is an [autoexec] section. The commands
+   present there are run when DOSBox starts, so you can use this section
+   for the mounting.
+
+
+Q: How do I change to fullscreen?
 A: Press alt-enter. Alternatively: Edit the configuration file of DOSBox and 
    change the option fullscreen=false to fullscreen=true. If fullscreen looks 
    wrong in your opinion: Play with the option fullresolution in the 
@@ -87,17 +100,17 @@ A: Press alt-enter. Alternatively: Edit the configuration file of DOSBox and
 Q: My CD-ROM doesn't work.
 A: To mount your CD-ROM in DOSBox you have to specify some additional options 
    when mounting the CD-ROM. 
-   To enable CD-ROM support:
+   To enable CD-ROM support (includes MSCDEX):
      - mount d f:\ -t cdrom
+   To enable low-level CD-ROM-support (uses ioctl if possible):
+     - mount d f:\ -t cdrom -usecd 0
    To enable low-level SDL-support:
      - mount d f:\ -t cdrom -usecd 0 -noioctl
-   To enable low-level ioctl-support(win2k/xp/linux):
-     - mount d f:\ -t cdrom -usecd 0 -ioctl
    To enable low-level aspi-support (win98 with aspi-layer installed):
      - mount d f:\ -t cdrom -usecd 0 -aspi
    
    In the commands: - d   driveletter you will get in DOSBox
-                    - f:\ location of cdrom on your PC.
+                    - f:\ location of CD-ROM on your PC.
                     - 0   The number of the CD-ROM drive, reported by mount -cd
    See also the question: The game/application can't find its CD-ROM.
 
@@ -124,11 +137,11 @@ A: Be sure that the sound is correctly configured in the game. This might be
 
 
 Q: The sound stutters or sounds stretched/weird.
-A: You're using too much cpu power to keep DOSBox running at the current speed.
+A: You're using too much CPU power to keep DOSBox running at the current speed.
    You can  lower the cycles, skip frames or get a faster machine.
    You can also increase the prebuffer in the configfile.
    If you are using cycles=max or =auto, then make sure that there no
-   background processes interfering! (especially if they acces the harddisk)
+   background processes interfering! (especially if they access the harddisk)
 
 
 Q: I can't type \ or : in DOSBox.
@@ -159,8 +172,11 @@ A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
    Also try adding the correct label (-label LABEL). To enable lower-level
    CD-ROM support, add the following switch to mount: -usecd #, where # is
    the number of your CD-ROM drive reported by mount -cd. Under Windows you
-   can specify -ioctl or -aspi. Look at the description elsewhere in this
-   document for their meaning.
+   can specify -ioctl, -aspi or -noioctl. Look at the description elsewhere
+   in this document for their meaning.
+   Try creating a CD-ROM image (preferably CUE/BIN pair) and use the
+   DOSBox-internal IMGMOUNT tool to mount the image. This enables very
+   good low-level CD-ROM support on any operating system.
 
 
 Q: The game/application runs much too slow!
@@ -234,7 +250,6 @@ http://dosbox.sourceforge.net
 
 
 
-
 =========
 3. Usage:
 =========
@@ -247,7 +262,7 @@ description:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
-       [-startmapper] [-noautoexec]
+       [-startmapper] [-noautoexec] [-scaler scaler | -forcescaler scaler]
        
 dosbox -version
 
@@ -276,21 +291,29 @@ dosbox -version
   -lang languagefile
         Start DOSBox using the language specified in "languagefile".
 
-  -noconsole (Windows Only)
-        Start DOSBox without showing the console window. Output will
-        be redirected to stdout.txt and stderr.txt
-	
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
         hercules, cga, pcjr, tandy, vga (default). The machinetype affects 
         both the videocard and the available soundcards.
 
+  -noconsole (Windows Only)
+        Start DOSBox without showing the console window. Output will
+        be redirected to stdout.txt and stderr.txt
+	
   -startmapper
         Enter the keymapper directly on startup. Useful for people with 
         keyboard problems.
 
   -noautoexec
         Skips the [autoexec] section of the loaded configuration file.
+
+  -scaler scaler
+        Uses the scaler specified by "scaler". See the DOSBox configuration
+        file for the available scalers.
+
+  -forcescaler scaler
+        Similar to the -scaler parameter, but tries to force usage of
+        the specified scaler even if it might not fit.
 
   -version
         output version information and exit. Useful for frontends.
@@ -327,6 +350,7 @@ In addition, the following commands are available:
 MOUNT "Emulated Drive letter" "Real Drive or Directory" 
       [-t type] [-aspi] [-ioctl] [-noioctl] [-usecd number] [-size drivesize] 
       [-label drivelabel] [-freesize size_in_mb]
+      [-freesize size_in_kb (floppies)]
 MOUNT -cd
 MOUNT -u "Emulated Drive letter"
 
@@ -343,16 +367,23 @@ MOUNT -u "Emulated Drive letter"
         floppy, cdrom.
 
   -size drivesize
-        Sets the size of the drive.
+        Sets the size of the drive, where drivesize is of the form
+        "bps,spc,tcl,fcl":
+           bps: bytes per sector, by default 512 for regular drives and
+                2048 for CD-ROM drives
+           spc: sectors per cluster, usually between 1 and 127
+           tcl: total clusters, between 1 and 65534
+           fcl: total free clusters, between 1 and tcl
 
-  -freesize size_in_mb
-        Sets the amount of free space available on a drive in megabytes.
+  -freesize size_in_mb | size_in_kb
+        Sets the amount of free space available on a drive in megabytes
+        (regular drives) or kilobytes (floppy drives).
         This is a simpler version of -size.	
 
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some 
         systems if the cd label isn't read correctly. Useful when a 
-        program can't find its cdrom. If you don't specify a label and no
+        program can't find its CD-ROM. If you don't specify a label and no
         lowlevel support is selected (that is omitting the -usecd # and/or
         -aspi parameters or specifying -noioctl): 
           For win32: label is extracted from "Real Drive".
@@ -362,27 +393,27 @@ MOUNT -u "Emulated Drive letter"
         is mounted. It will not be updated !!
 
   -aspi
-        Forces use of the aspi layer. Only valid if mounting a cdrom under 
+        Forces use of the aspi layer. Only valid if mounting a CD-ROM under 
         Windows systems with an ASPI-Layer.
 
   -ioctl   
-        Forces use of ioctl commands. Only valid if mounting a cdrom under 
+        Forces use of ioctl commands. Only valid if mounting a CD-ROM under 
         a Windows OS which support them (Win2000/XP/NT).
 
   -noioctl   
-        Forces use of the SDL cdrom layer. Valid on all systems.
+        Forces use of the SDL CD-ROM layer. Valid on all systems.
 
   -usecd number
-        Forces  use of SDL cdrom support for drive number.
+        Forces use of SDL CD-ROM support for drive number.
         Number can be found by -cd. Valid on all systems.
 
   -cd
-        Displays all detected cdrom drives and their numbers. Use with -usecd.
+        Displays all detected CD-ROM drives and their numbers. Use with -usecd.
 
   -u
         Removes the mount. Doesn't work for Z:\.
 
-  Note: It's possible to mount a local directory as cdrom drive. 
+  Note: It's possible to mount a local directory as CD-ROM drive. 
         Hardware support is then missing.
 
   Basically MOUNT allows you to connect real hardware to DOSBox's emulated PC.
@@ -398,7 +429,7 @@ MOUNT -u "Emulated Drive letter"
 
   Mounting your entire C drive with MOUNT C C:\ is NOT recommended! The same
   is true for mounting the root of any other drive, except for CD-ROMs (due to
-  their read-only nature). Otherwise if you or DOSBox make a mistakes you may
+  their read-only nature). Otherwise if you or DOSBox make a mistake you may
   loose all your files.
   It is recommended to put all your applications/games into a subdirectory
   and mount that.
@@ -406,15 +437,15 @@ MOUNT -u "Emulated Drive letter"
   General MOUNT Examples:
   1. To mount c:\DirX as a floppy : 
        mount a c:\DirX -t floppy
-  2. To mount system cdrom drive E as cdrom drive D in DOSBox:
+  2. To mount system CD-ROM drive E as CD-ROM drive D in DOSBox:
        mount d e:\ -t cdrom
-  3. To mount system cdrom drive at mountpoint /media/cdrom as cdrom drive D 
+  3. To mount system CD-ROM drive at mountpoint /media/cdrom as CD-ROM drive D 
      in DOSBox:
        mount d /media/cdrom -t cdrom -usecd 0
-  4. To mount a drive with 870 mb free diskspace (simple version):
+  4. To mount a drive with ~870 mb free diskspace (simple version):
        mount c d:\ -freesize 870
-  5. To mount a drive with 870 mb free diskspace (experts only, full control):
-       mount c d:\ -size 4025,127,16513,1700
+  5. To mount a drive with ~870 mb free diskspace (experts only, full control):
+       mount c d:\ -size 512,127,16513,13500
   6. To mount /home/user/dirY as drive C in DOSBox:
        mount c /home/user/dirY
 
@@ -423,7 +454,8 @@ MEM
   Program to display the amount of free memory.
 
 
-CONFIG [-writeconf] [-writelang] localfile
+CONFIG -writeconf localfile
+CONFIG -writelang localfile
 CONFIG -set "section property=value"
 CONFIG -get "section property"
 
@@ -443,7 +475,7 @@ CONFIG -get "section property"
   -writelang localfile
        Write the current language settings to file. "localfile" is 
        located on the local drive, not a mounted drive in DOSBox.
-       The language file controls all visible ouput of the internal commands
+       The language file controls all visible output of the internal commands
        and the internal DOS.
 
   -set "section property=value"
@@ -480,7 +512,6 @@ LOADFIX -f
   -f
         frees all previously allocated memory
   
-
 Examples:
   1. To start mm2.exe and allocate 64kb memory 
      (mm2 will have 64 kb less available) :
@@ -507,14 +538,14 @@ MIXER
   
   left:right
       The volume levels in percentages. If you put a D in front it will be
-      in deciBell (example mixer gus d-10).
+      in decibel (example mixer gus d-10).
   
   /NOSHOW
       Prevents DOSBox from showing the result if you set one
       of the volume levels.
 
   /LISTMIDI
-      Lists the available midi devices on your pc (Windows). To select a 
+      Lists the available midi devices on your PC (Windows). To select a 
       device other than the Windows default midi-mapper, add a line 
       'config=id' to the [midi] section in the configuration file, where
       'id' is the number for the device as listed by LISTMIDI.
@@ -643,7 +674,7 @@ IPX
 
   IPXNET STARTSERVER 
 
-     IPXNET STARTSERVER starts an IPX tunneling server on this DOSBox 
+     IPXNET STARTSERVER starts an IPX tunnelling server on this DOSBox 
      session. By default, the server will accept connections on UDP port 
      213, though this can be changed. Once the server is started, DOSBox 
      will automatically start a client connection to the IPX tunnelling server.
@@ -720,7 +751,6 @@ KEYB [languagecode [codepage [codepagefile]]]
 
 
 For more information use the /? command line switch with the programs.
-
 
 
 
@@ -822,9 +852,9 @@ Examples about remapping the joystick:
   You have a joystick attached, it is working fine under DOSBox and you
   want to play some keyboard-only game with the joystick (it is assumed
   that the game is controlled by the arrows on the keyboard):
-    1) Start the mapper, then klick on one of the arrows in the middle
+    1) Start the mapper, then click on one of the arrows in the middle
        of the left part of the screen (right above the Mod1/Mod2 buttons).
-       EVENT should be key_left. Now klick on Add and move your joystick
+       EVENT should be key_left. Now click on Add and move your joystick
        in the respective direction, this should add an event to the BIND.
     2) Repeat the above for the missing three directions, additionally
        the buttons of the joystick can be remapped as well (fire/jump).
@@ -833,12 +863,12 @@ Examples about remapping the joystick:
   You want to swap the y-axis of the joystick because some flightsim uses
   the up/down joystick movement in a way you don't like, and it is not
   configurable in the game itself:
-    1) Start the mapper and klick on Y- in the upper joystick field (this
+    1) Start the mapper and click on Y- in the upper joystick field (this
        is for the first joystick if you have two joysticks attached) or the
        lower joystick field (second joystick or, if you have only one
        joystick attached, the second axes cross).
        EVENT should be jaxis_0_1- (or jaxis_1_1-).
-    2) Click on Del to remove the current binding, then klick Add and move
+    2) Click on Del to remove the current binding, then click Add and move
        your joystick downwards. A new bind should be created.
     3) Repeat this for Y+, save the layout and finally test it with some game.
 
@@ -934,7 +964,7 @@ of the nullmodem connection. These are all parameters:
  * server:       - This nullmodem will be a client connecting to the specified
                    server. (No server argument: be a server.)
  * transparent:1 - Only send the serial data, no RTS/DTR handshake. Use this
-                   when connecting to anyting other than a nullmodem.
+                   when connecting to anything other than a nullmodem.
  * telnet:1      - Interpret Telnet data from the remote site. Automatically
                    sets transparent.
  * usedtr:1      - The connection will not be established until DTR is switched
@@ -966,7 +996,7 @@ CPU Cycles
   at the top then. In this mode you can reduce the amount of cycles on a
   percentage-basis (hit CTRL-F11) or raise it again (CTRL-F12).
   
-  Sometimes customly setting the number of cycles achieves better results,
+  Sometimes manually setting the number of cycles achieves better results,
   in the DOSBox configuration file specify for example cycles=30000. When
   running some DOS application you can raise the cycles with CTRL-F12 even
   more, but you will be limited by the power of your actual CPU. You can see
@@ -1001,14 +1031,14 @@ as possible for DOSBox.
 
 
 Advanced cycles configuration:
-The cycles=auto and cycles=max settings can be parametrized to have
+The cycles=auto and cycles=max settings can be parameterized to have
 different startup defaults. The syntax is
   cycles=auto ["realmode default"] ["protected mode default"%] 
               [limit "cycle limit"]
   cycles=max ["protected mode default"%] [limit "cycle limit"]
 Example:
   cycles=auto 1000 80% limit 20000
-  will use cycles=1000 for real mode games, 80% cpu throttling for 
+  will use cycles=1000 for real mode games, 80% CPU throttling for 
   protected mode games along with a hard cycle limit of 20000
 
 
@@ -1027,7 +1057,7 @@ Running a certain game closes DOSBox, crashes with some message or hangs:
     (unmodified configuration file)
   - try it with sound disabled (use the sound configuration
     program that comes with the game, additionally you can
-    use sbtype=none and gus=false)
+    set sbtype=none and gus=false in the DOSBox configuration file)
   - change some entries of the DOSBox configuration file, especially try:
       core=normal
       fixed cycles (for example cycles=10000)
@@ -1042,12 +1072,14 @@ The game exits to the DOSBox prompt with some error message:
   - mount differently as some games are picky about the locations,
     for example if you used "mount d d:\oldgames\game" try
     "mount c d:\oldgames\game" and "mount c d:\oldgames"
-  - if the game requires a cdrom be sure you used "-t cdrom" when
+  - if the game requires a CD-ROM be sure you used "-t cdrom" when
     mounting and try different additional parameters (the ioctl,
     usecd and label switches, see the appropriate section)
   - check the file permissions of the game files (remove read-only
     attributes, add write permissions etc.)
   - try reinstalling the game within DOSBox
+
+
 
 ====================
 11. The Config File:
@@ -1076,7 +1108,7 @@ look in the current directory for dosbox.conf.
 12. The Language File:
 ======================
 
-A language file can be generated by CONFIG.COM. 
+A language file can be generated by CONFIG.COM (CONFIG -writelang langfile).
 Read it, and you will hopefully understand how to change it. 
 Start DOSBox with the -lang switch to use your new language file.
 Alternatively, you can setup the filename in the config file in the [dosbox]
