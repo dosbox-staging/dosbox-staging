@@ -36,7 +36,9 @@ static union {
 } scalerWriteCache;
 //scalerFrameCache_t scalerFrameCache;
 scalerSourceCache_t scalerSourceCache;
+#if RENDER_USE_ADVANCED_SCALERS>1
 scalerChangeCache_t scalerChangeCache;
+#endif
 
 #define _conc2(A,B) A ## B
 #define _conc3(A,B,C) A ## B ## C
@@ -159,6 +161,7 @@ static INLINE void ScalerAddLines( Bitu changed, Bitu count ) {
 #undef DBPP
 
 
+#if RENDER_USE_ADVANCED_SCALERS>1
 ScalerLineBlock_t ScalerCache = {
 {	Cache_8_8,	Cache_8_15 ,	Cache_8_16 ,	Cache_8_32 },
 {	        0,	Cache_15_15,	Cache_15_16,	Cache_15_32},
@@ -166,6 +169,7 @@ ScalerLineBlock_t ScalerCache = {
 {	        0,	Cache_32_15,	Cache_32_16,	Cache_32_32},
 {	Cache_8_8,	Cache_9_15 ,	Cache_9_16 ,	Cache_9_32 }
 };
+#endif
 
 ScalerSimpleBlock_t ScaleNormal1x = {
 	"Normal",
@@ -252,6 +256,7 @@ ScalerSimpleBlock_t ScaleNormal3x = {
 {	Normal3x_8_8_R,		Normal3x_9_15_R ,	Normal3x_9_16_R ,	Normal3x_9_32_R }
 }};
 
+#if RENDER_USE_ADVANCED_SCALERS>0
 ScalerSimpleBlock_t ScaleTV2x = {
 	"TV2x",
 	GFX_CAN_15|GFX_CAN_16|GFX_CAN_32|GFX_RGBONLY,
@@ -353,10 +358,12 @@ ScalerSimpleBlock_t ScaleRGB3x = {
 {	0,		RGB3x_32_15_R,	RGB3x_32_16_R,	RGB3x_32_32_R},
 {	0,		RGB3x_9_15_R ,	RGB3x_9_16_R ,	RGB3x_9_32_R }
 }};
+#endif
 
 
 /* Complex scalers */
 
+#if RENDER_USE_ADVANCED_SCALERS>2
 ScalerComplexBlock_t ScaleAdvMame2x ={
 	"AdvMame2x",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
@@ -430,4 +437,4 @@ ScalerComplexBlock_t ScaleAdvInterp3x = {
 {	0,AdvInterp3x_15_R,AdvInterp3x_16_R,AdvInterp3x_32_R}
 };
 
-
+#endif

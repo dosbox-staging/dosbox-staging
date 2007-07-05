@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.53 2007-07-02 20:06:59 c2woody Exp $ */
+/* $Id: render.cpp,v 1.54 2007-07-05 16:03:49 c2woody Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -291,7 +291,9 @@ static void RENDER_Reset( void ) {
 		else
 			simpleBlock = &ScaleNormal1x;
 		/* Maybe override them */
+#if RENDER_USE_ADVANCED_SCALERS>0
 		switch (render.scale.op) {
+#if RENDER_USE_ADVANCED_SCALERS>2
 		case scalerOpAdvInterp:
 			if (render.scale.size == 2)
 				complexBlock = &ScaleAdvInterp2x;
@@ -322,6 +324,7 @@ static void RENDER_Reset( void ) {
 			if (render.scale.size == 2)
 				complexBlock = &Scale2xSaI;
 			break;
+#endif
 		case scalerOpTV:
 			if (render.scale.size == 2)
 				simpleBlock = &ScaleTV2x;
@@ -341,6 +344,7 @@ static void RENDER_Reset( void ) {
 				simpleBlock = &ScaleScan3x;
 			break;
 		}
+#endif
 	} else if (dblw) {
 		simpleBlock = &ScaleNormalDw;
 	} else if (dblh) {
@@ -351,10 +355,14 @@ forcenormal:
 		simpleBlock = &ScaleNormal1x;
 	}
 	if (complexBlock) {
+#if RENDER_USE_ADVANCED_SCALERS>1
 		if ((width >= SCALER_COMPLEXWIDTH - 16) || height >= SCALER_COMPLEXHEIGHT - 16) {
 			LOG_MSG("Scaler can't handle this resolution, going back to normal");
 			goto forcenormal;
 		}
+#else
+		goto forcenormal;
+#endif
 		gfx_flags = complexBlock->gfxFlags;
 		xscale = complexBlock->xscale;	
 		yscale = complexBlock->yscale;
@@ -423,18 +431,24 @@ forcenormal:
 		E_Exit("Failed to create a rendering output");
 	ScalerLineBlock_t *lineBlock;
 	if (gfx_flags & GFX_HARDWARE) {
+#if RENDER_USE_ADVANCED_SCALERS>1
 		if (complexBlock) {
 			lineBlock = &ScalerCache;
 			render.scale.complexHandler = complexBlock->Linear[ render.scale.outMode ];
-		} else {
+		} else
+#endif
+		{
 			render.scale.complexHandler = 0;
 			lineBlock = &simpleBlock->Linear;
 		}
 	} else {
+#if RENDER_USE_ADVANCED_SCALERS>1
 		if (complexBlock) {
 			lineBlock = &ScalerCache;
 			render.scale.complexHandler = complexBlock->Random[ render.scale.outMode ];
-		} else {
+		} else
+#endif
+		{
 			render.scale.complexHandler = 0;
 			lineBlock = &simpleBlock->Random;
 		}
@@ -581,6 +595,7 @@ void RENDER_Init(Section * sec) {
 	if (!strcasecmp(scaler,"none")) { render.scale.op = scalerOpNormal;render.scale.size = 1; }
 	else if (!strcasecmp(scaler,"normal2x")) { render.scale.op = scalerOpNormal;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"normal3x")) { render.scale.op = scalerOpNormal;render.scale.size = 3; }
+#if RENDER_USE_ADVANCED_SCALERS>2
 	else if (!strcasecmp(scaler,"advmame2x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"advmame3x")) { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"advinterp2x")) { render.scale.op = scalerOpAdvInterp;render.scale.size = 2; }
@@ -590,12 +605,15 @@ void RENDER_Init(Section * sec) {
 	else if (!strcasecmp(scaler,"2xsai")) { render.scale.op = scalerOpSaI;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"super2xsai")) { render.scale.op = scalerOpSuperSaI;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"supereagle")) { render.scale.op = scalerOpSuperEagle;render.scale.size = 2; }
+#endif
+#if RENDER_USE_ADVANCED_SCALERS>0
 	else if (!strcasecmp(scaler,"tv2x")) { render.scale.op = scalerOpTV;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"tv3x")) { render.scale.op = scalerOpTV;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"rgb2x")){ render.scale.op = scalerOpRGB;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"rgb3x")){ render.scale.op = scalerOpRGB;render.scale.size = 3; }
 	else if (!strcasecmp(scaler,"scan2x")){ render.scale.op = scalerOpScan;render.scale.size = 2; }
 	else if (!strcasecmp(scaler,"scan3x")){ render.scale.op = scalerOpScan;render.scale.size = 3; }
+#endif
 	else {
 		render.scale.op = scalerOpNormal;render.scale.size = 1; 
 		LOG_MSG("Illegal scaler type %s,falling back to normal.",scaler);

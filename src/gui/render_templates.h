@@ -152,6 +152,7 @@
 #define D6 fc[+2 + 2*SCALER_COMPLEXWIDTH]
 
 
+#if RENDER_USE_ADVANCED_SCALERS>1
 static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #ifdef RENDER_NULL_INPUT
 	if (!s) {
@@ -208,6 +209,7 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 	render.scale.inLine++;
 	render.scale.complexHandler();
 }
+#endif
 
 
 /* Simple scalers */
@@ -280,6 +282,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERFUNC
 
 #if (DBPP > 8)
+
+#if RENDER_USE_ADVANCED_SCALERS>0
 
 #define SCALERNAME		TV2x
 #define SCALERWIDTH		2
@@ -390,9 +394,14 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 #undef SCALERHEIGHT
 #undef SCALERFUNC
 
+#endif		//#if RENDER_USE_ADVANCED_SCALERS>0
+
 #endif		//#if (DBPP > 8)
 
 /* Complex scalers */
+
+#if RENDER_USE_ADVANCED_SCALERS>2
+
 #if (SBPP == DBPP) 
 
 
@@ -548,6 +557,8 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
 
 
 #endif // (SBPP == DBPP) && !defined (CACHEWITHPAL)
+
+#endif // #if RENDER_USE_ADVANCED_SCALERS>2
 
 #undef PSIZE
 #undef PTYPE
