@@ -995,6 +995,7 @@ dac_text16:
 	}
 	IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,reg_31);	//Enable banked memory and 256k+ access
 	IO_Write(crtc_base,0x58);IO_Write(crtc_base+1,0x3);		//Enable 8 mb of linear addressing
+	IO_Write(crtc_base,0x53);IO_Write(crtc_base+1,0x0);		//Disable MMIO
 
 	IO_Write(crtc_base,0x38);IO_Write(crtc_base+1,0x48);	//Register lock 1
 	IO_Write(crtc_base,0x39);IO_Write(crtc_base+1,0xa5);	//Register lock 2
