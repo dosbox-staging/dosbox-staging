@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.36 2007-07-05 17:49:40 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.37 2007-07-05 19:26:33 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -651,7 +651,7 @@ public:
 		axes_cap=emulated_axes;
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
-		if (hats_cap>axes) hats_cap=hats;
+		if (hats_cap>hats) hats_cap=hats;
 		LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",SDL_JoystickName(stick),axes,buttons,hats);
 	}
 	~CStickBindGroup() {
@@ -889,7 +889,7 @@ public:
 		axes_cap=emulated_axes;
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
-		if (hats_cap>axes) hats_cap=hats;
+		if (hats_cap>hats) hats_cap=hats;
 
 		JOYSTICK_Enable(1,true);
 	}
@@ -961,7 +961,7 @@ public:
 		axes_cap=emulated_axes;
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
-		if (hats_cap>axes) hats_cap=hats;
+		if (hats_cap>hats) hats_cap=hats;
 
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
@@ -1097,7 +1097,7 @@ public:
 		axes_cap=emulated_axes;
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
-		if (hats_cap>axes) hats_cap=hats;
+		if (hats_cap>hats) hats_cap=hats;
 
 		JOYSTICK_Enable(1,true);
 		button_state=0;
