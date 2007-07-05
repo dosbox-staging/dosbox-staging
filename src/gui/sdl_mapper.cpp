@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.35 2007-06-14 18:47:27 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.36 2007-07-05 17:49:40 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -64,6 +64,8 @@ enum BC_Types {
 
 #define MAXSTICKS 8
 #define MAXACTIVE 16
+#define MAXBUTTON 32
+#define MAXBUTTON_CAP 16
 
 class CEvent;
 class CHandlerEvent;
@@ -600,23 +602,25 @@ public:
 		if (_dummy) {
 			sdl_joystick=NULL;
 			axes=0;	buttons=0;	hats=0;
-			button_wrap=16;
+			button_wrap=0;
+			button_cap=0; axes_cap=0; hats_cap=0;
 			return;
 		}
 
 		// initialize emulated joystick state
 		emulated_axes=2;
 		emulated_buttons=2;
+		emulated_hats=0;
 		pos_axis_lists=new CBindList[4];
 		neg_axis_lists=new CBindList[4];
-		button_lists=new CBindList[16];
+		button_lists=new CBindList[MAXBUTTON];
 		hat_lists=new CBindList[4];
 		Bitu i;
-		for (i=0; i<16; i++) {
+		for (i=0; i<MAXBUTTON; i++) {
 			button_autofire[i]=0;
 			old_button_state[i]=0;
-			old_hat_state[i]=0;
 		}
+		for(i=0;i<16;i++) old_hat_state[i]=0;
 		for (i=0; i<4; i++) {
 			old_pos_axis_state[i]=false;
 			old_neg_axis_state[i]=false;
@@ -631,15 +635,24 @@ public:
 		if (sdl_joystick==NULL) {
 			axes=0;	buttons=0;	hats=0;
 			button_wrap=0;
+			button_cap=0; axes_cap=0; hats_cap=0;
 			return;
 		}
 		axes=SDL_JoystickNumAxes(sdl_joystick);
 		buttons=SDL_JoystickNumButtons(sdl_joystick);
 		hats=SDL_JoystickNumHats(sdl_joystick);
 		button_wrap=buttons;
-		if (button_wrapping_enabled) button_wrap=emulated_buttons;
-		if (button_wrap>16) button_wrap=16;
-		LOG_MSG("Using joystick %s with %d axes and %d buttons",SDL_JoystickName(stick),axes,buttons);
+		button_cap=buttons;
+		if (button_wrapping_enabled) {
+			button_wrap=emulated_buttons;
+			if (buttons>MAXBUTTON_CAP) button_cap = MAXBUTTON_CAP;
+		}
+		if (button_wrap > MAXBUTTON) button_wrap = MAXBUTTON;
+		axes_cap=emulated_axes;
+		if (axes_cap>axes) axes_cap=axes;
+		hats_cap=emulated_hats;
+		if (hats_cap>axes) hats_cap=hats;
+		LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",SDL_JoystickName(stick),axes,buttons,hats);
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -724,9 +737,9 @@ public:
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
-		bool button_pressed[16];
+		bool button_pressed[MAXBUTTON];
 		Bitu i;
-		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<MAXBUTTON; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[emustick].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
@@ -747,10 +760,10 @@ public:
 
 		Bitu i;
 
-		bool button_pressed[16];
-		for (i=0; i<16; i++) button_pressed[i]=false;
+		bool button_pressed[MAXBUTTON];
+		for (i=0; i<MAXBUTTON; i++) button_pressed[i]=false;
 		/* read button states */
-		for (i=0; i<buttons; i++) {
+		for (i=0; i<button_cap; i++) {
 			if (SDL_JoystickGetButton(sdl_joystick,i))
 				button_pressed[i % button_wrap]=true;
 		}
@@ -763,7 +776,7 @@ public:
 			}
 		}
 
-		for (i=0; i<emulated_axes; i++) {
+		for (i=0; i<axes_cap; i++) {
 			Sint16 caxis_pos=SDL_JoystickGetAxis(sdl_joystick,i);
 			/* activate bindings for joystick position */
 			if (caxis_pos>1) {
@@ -795,7 +808,7 @@ public:
 			}
 		}
 
-		for (i=0; i<hats; i++) {
+		for (i=0; i<hats_cap; i++) {
 			Uint8 chat_state=SDL_JoystickGetHat(sdl_joystick,i);
 
 			/* activate binding if hat state has changed */
@@ -854,11 +867,12 @@ protected:
 	CBindList * neg_axis_lists;
 	CBindList * button_lists;
 	CBindList * hat_lists;
-	Bitu stick,emustick,axes,buttons,hats,emulated_axes,emulated_buttons,button_wrap;
+	Bitu stick,emustick,axes,buttons,hats,emulated_axes,emulated_buttons,emulated_hats;
+	Bitu button_wrap,button_cap,axes_cap,hats_cap;
 	SDL_Joystick * sdl_joystick;
 	char configname[10];
-	Bitu button_autofire[16];
-	bool old_button_state[16];
+	Bitu button_autofire[MAXBUTTON];
+	bool old_button_state[MAXBUTTON];
 	bool old_pos_axis_state[16];
 	bool old_neg_axis_state[16];
 	Uint8 old_hat_state[16];
@@ -871,6 +885,12 @@ public:
 		emulated_axes=4;
 		emulated_buttons=4;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
+
+		axes_cap=emulated_axes;
+		if (axes_cap>axes) axes_cap=axes;
+		hats_cap=emulated_hats;
+		if (hats_cap>axes) hats_cap=hats;
+
 		JOYSTICK_Enable(1,true);
 	}
 
@@ -907,9 +927,9 @@ public:
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
-		bool button_pressed[16];
+		bool button_pressed[MAXBUTTON];
 		Bitu i;
-		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<MAXBUTTON; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
@@ -935,7 +955,14 @@ public:
 		emulated_axes=4;
 		emulated_buttons=4;
 		old_hat_position=0;
+		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
+
+		axes_cap=emulated_axes;
+		if (axes_cap>axes) axes_cap=axes;
+		hats_cap=emulated_hats;
+		if (hats_cap>axes) hats_cap=hats;
+
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1,1.0);
 	}
@@ -980,9 +1007,9 @@ public:
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
-		bool button_pressed[16];
+		bool button_pressed[MAXBUTTON];
 		Bitu i;
-		for (i=0; i<16; i++) button_pressed[i]=false;
+		for (i=0; i<MAXBUTTON; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
@@ -1064,7 +1091,14 @@ public:
 	CCHBindGroup(Bitu _stick) : CStickBindGroup (_stick){
 		emulated_axes=4;
 		emulated_buttons=6;
+		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
+
+		axes_cap=emulated_axes;
+		if (axes_cap>axes) axes_cap=axes;
+		hats_cap=emulated_hats;
+		if (hats_cap>axes) hats_cap=hats;
+
 		JOYSTICK_Enable(1,true);
 		button_state=0;
 	}
@@ -1159,8 +1193,8 @@ public:
 				if (bt_state>hat_priority[i][3]) bt_state=hat_priority[i][3];
 		}
 
-		bool button_pressed[6];
-		for (i=0; i<6; i++) button_pressed[i]=false;
+		bool button_pressed[MAXBUTTON];
+		for (i=0; i<MAXBUTTON; i++) button_pressed[i]=false;
 		for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 			if (virtual_joysticks[0].button_pressed[i])
 				button_pressed[i % button_wrap]=true;
@@ -2132,8 +2166,11 @@ static void CreateBindGroups(void) {
 		case JOY_2AXIS:
 		default:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno);
-			if((joyno+1U) < mapper.sticks.num)
+			if((joyno+1U) < mapper.sticks.num) {
 				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U);
+			} else {
+				new CStickBindGroup(joyno+1U);
+			}
 			break;
 		}
 	}
