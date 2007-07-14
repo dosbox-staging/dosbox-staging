@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.36 2007-06-17 12:26:35 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.37 2007-07-14 16:42:38 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -199,7 +199,10 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 		Bitu i=0;
 		bool founddisk = false;
 		while (DiskGeometryList[i].ksize!=0x0) {
-			if (DiskGeometryList[i].ksize==imgSizeK) {
+			if ((DiskGeometryList[i].ksize==imgSizeK) ||
+				(DiskGeometryList[i].ksize+1==imgSizeK)) {
+				if (DiskGeometryList[i].ksize!=imgSizeK)
+					LOG_MSG("ImageLoader: image file with additional data, might not load!");
 				founddisk = true;
 				active = true;
 				floppytype = i;
