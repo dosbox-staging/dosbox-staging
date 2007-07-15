@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
- /* $Id: pcspeaker.cpp,v 1.23 2007-01-08 19:45:40 qbix79 Exp $ */
+ /* $Id: pcspeaker.cpp,v 1.24 2007-07-15 16:36:27 c2woody Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -57,6 +57,7 @@ static struct {
 	float volwant,volcur;
 	Bitu last_ticks;
 	float last_index;
+	Bitu min_tr;
 	DelayEntry entries[SPKR_ENTRIES];
 	Bitu used;
 } spkr;
@@ -134,6 +135,9 @@ static void ForwardPIT(float newindex) {
 					spkr.pit_last=-SPKR_VOLUME;
 					if (spkr.mode==SPKR_PIT_ON) AddDelayEntry(delay_base,spkr.pit_last);
 					spkr.pit_index=spkr.pit_half;
+					/* Load the new count */
+					spkr.pit_half=spkr.pit_new_half;
+					spkr.pit_max=spkr.pit_new_max;
 				} else {
 					spkr.pit_index+=passed;
 					return;
@@ -189,8 +193,8 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
 		break;
 	case 3:		/* Square wave generator */
-		if (cntr<=40) {
-			/* Makes DIGGER sound better */
+		if (cntr<spkr.min_tr) {
+			/* skip frequencies that can't be represented */
 			spkr.pit_last=0;
 			spkr.pit_mode=0;
 			return;
@@ -328,6 +332,7 @@ public:
 		spkr.pit_new_max=spkr.pit_max;
 		spkr.pit_new_half=spkr.pit_half;
 		spkr.pit_index=0;
+		spkr.min_tr=(PIT_TICK_RATE+spkr.rate/2-1)/(spkr.rate/2);
 		spkr.used=0;
 		/* Register the sound channel */
 		spkr.chan=MixerChan.Install(&PCSPEAKER_CallBack,spkr.rate,"SPKR");
