@@ -62,6 +62,7 @@ Q: There is no sound.
 Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
 Q: The keyboard lags.
+Q: The cursor always moves into one direction!
 Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
 Q: Can DOSBox harm my computer?
@@ -138,8 +139,9 @@ A: Be sure that the sound is correctly configured in the game. This might be
 
 Q: The sound stutters or sounds stretched/weird.
 A: You're using too much CPU power to keep DOSBox running at the current speed.
-   You can  lower the cycles, skip frames or get a faster machine.
-   You can also increase the prebuffer in the configfile.
+   You can lower the cycles, skip frames, reduce the sampling rate of
+   the respective sound device (see the DOSBox configuration file) or
+   the mixer device. You can also increase the prebuffer in the configfile.
    If you are using cycles=max or =auto, then make sure that there no
    background processes interfering! (especially if they access the harddisk)
 
@@ -165,6 +167,15 @@ A: Lower the priority setting in the DOSBox configuration file
    like set "priority=normal,normal". You might also want to
    try lowering the cycles.
 
+
+Q: The cursor always moves into one direction!
+A: See if it still happens if you disable the joystick emulation,
+   set joysticktype=none in the [joystick] section of your DOSBox
+   configuration file. Maybe also try unplugging any joystick.
+   If you want to use the joystick in the game, try setting timed=false
+   and be sure to calibrate the joystick (both in your OS as well as
+   in the game or the game's setup).
+   
 
 Q: The game/application can't find its CD-ROM.
 A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
@@ -448,6 +459,8 @@ MOUNT -u "Emulated Drive letter"
        mount c d:\ -size 512,127,16513,13500
   6. To mount /home/user/dirY as drive C in DOSBox:
        mount c /home/user/dirY
+  7. To mount the directory where DOSBox was started as D in DOSBox:
+       mount d .
 
 
 MEM
