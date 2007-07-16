@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.37 2007-07-05 19:26:33 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.38 2007-07-16 11:02:32 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2153,15 +2153,15 @@ static void CreateBindGroups(void) {
 			break;
 		case JOY_4AXIS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new C4AxisBindGroup(joyno);
-			new CStickBindGroup(joyno+1U);
+			new CStickBindGroup(joyno+1U,true);
 			break;
 		case JOY_FCS:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CFCSBindGroup(joyno);
-			new CStickBindGroup(joyno+1U);
+			new CStickBindGroup(joyno+1U,true);
 			break;
 		case JOY_CH:
 			mapper.sticks.stick[mapper.sticks.num_groups++]=new CCHBindGroup(joyno);
-			new CStickBindGroup(joyno+1U);
+			new CStickBindGroup(joyno+1U,true);
 			break;
 		case JOY_2AXIS:
 		default:
@@ -2169,7 +2169,7 @@ static void CreateBindGroups(void) {
 			if((joyno+1U) < mapper.sticks.num) {
 				mapper.sticks.stick[mapper.sticks.num_groups++]=new CStickBindGroup(joyno+1U);
 			} else {
-				new CStickBindGroup(joyno+1U);
+				new CStickBindGroup(joyno+1U,true);
 			}
 			break;
 		}
