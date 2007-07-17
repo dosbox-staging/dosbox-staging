@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.38 2007-07-16 11:02:32 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.39 2007-07-17 13:50:27 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -42,6 +42,8 @@ enum {
 	CLR_BLACK=0,
 	CLR_WHITE=1,
 	CLR_RED=2,
+	CLR_BLUE=3,
+	CLR_GREEN=4
 };
 
 enum BB_Types {
@@ -1320,6 +1322,9 @@ protected:
 	const char * text;
 };
 
+class CEventButton;
+static CEventButton * last_clicked = NULL;
+
 class CEventButton : public CTextButton {
 public:
 	CEventButton(Bitu _x,Bitu _y,Bitu _dx,Bitu _dy,const char * _text,CEvent * _event) 
@@ -1327,7 +1332,10 @@ public:
 		event=_event;	
 	}
 	void Click(void) {
+		if (last_clicked) last_clicked->SetColor(CLR_WHITE);
+		this->SetColor(CLR_GREEN);
 		SetActiveEvent(event);
+		last_clicked=this;
 	}
 protected:
 	CEvent * event;
@@ -1356,6 +1364,8 @@ void CCaptionButton::Change(const char * format,...) {
 	mapper.redraw=true;
 }		
 
+static void change_action_text(const char* text,Bit8u col);
+
 static void MAPPER_SaveBinds(void);
 class CBindButton : public CTextButton {
 public:	
@@ -1368,6 +1378,7 @@ public:
 		case BB_Add: 
 			mapper.addbind=true;
 			SetActiveBind(0);
+			change_action_text("Press a key/joystick button or move the joystick.",CLR_RED);
 			break;
 		case BB_Del:
 			if (mapper.abindit!=mapper.aevent->bindlist.end())  {
@@ -1602,6 +1613,13 @@ static struct {
 	CCheckButton * mod1,* mod2,* mod3,* hold;
 } bind_but;
 
+
+static void change_action_text(const char* text,Bit8u col) {
+	bind_but.action->Change(text);
+	bind_but.action->SetColor(col);
+}
+
+
 static void SetActiveBind(CBind * _bind) {
 	mapper.abind=_bind;
 	if (_bind) {
@@ -1631,10 +1649,11 @@ static void SetActiveEvent(CEvent * event) {
 	mapper.addbind=false;
 	bind_but.event_title->Change("EVENT:%s",event ? event->GetName(): "none");
 	if (!event) {
-		bind_but.action->Change("Select an event to change");
+		change_action_text("Select an event to change.",CLR_WHITE);
 		bind_but.add->Enable(false);
 		SetActiveBind(0);
 	} else {
+		change_action_text("Select a different event or hit the Add/Del/Next buttons.",CLR_WHITE);
 		mapper.abindit=event->bindlist.begin();
 		if (mapper.abindit!=event->bindlist.end()) {
 			SetActiveBind(*(mapper.abindit));
@@ -1891,7 +1910,7 @@ static void CreateLayout(void) {
 	new CTextButton(PX(6),00,124,20,"Keyboard Layout");
 	new CTextButton(PX(17),00,124,20,"Joystick Layout");
 
-	bind_but.action=new CCaptionButton(200,330,0,0);
+	bind_but.action=new CCaptionButton(185,330,0,0);
 
 	bind_but.event_title=new CCaptionButton(0,350,0,0);
 	bind_but.bind_title=new CCaptionButton(00,365,0,0);
@@ -1914,10 +1933,12 @@ static void CreateLayout(void) {
 	bind_but.bind_title->Change("Bind Title");
 }
 
-static SDL_Color map_pal[4]={
+static SDL_Color map_pal[5]={
 	{0x00,0x00,0x00,0x00},			//0=black
 	{0xff,0xff,0xff,0x00},			//1=white
 	{0xff,0x00,0x00,0x00},			//2=red
+	{0x10,0x30,0xff,0x00},			//3=blue
+	{0x00,0xff,0x20,0x00}			//4=green
 };
 
 static void CreateStringBind(char * line) {
@@ -2210,7 +2231,8 @@ void MAPPER_Run(bool pressed) {
 	if (mapper.surface == NULL) E_Exit("Could not initialize video mode for mapper: %s",SDL_GetError());
 
 	/* Set some palette entries */
-	SDL_SetPalette(mapper.surface, SDL_LOGPAL|SDL_PHYSPAL, map_pal, 0, 4);
+	SDL_SetPalette(mapper.surface, SDL_LOGPAL|SDL_PHYSPAL, map_pal, 0, 5);
+	last_clicked=NULL;
 	/* Go in the event loop */
 	mapper.exit=false;	
 	mapper.redraw=true;
