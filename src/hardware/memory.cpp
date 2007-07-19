@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.50 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: memory.cpp,v 1.51 2007-07-19 18:58:39 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -63,11 +63,27 @@ public:
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
 	Bitu readb(PhysPt addr) {
+#if C_DEBUG
 		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+#else
+		static Bits lcount=0;
+		if (lcount<1000) {
+			lcount++;
+			LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+		}
+#endif
 		return 0;
 	} 
 	void writeb(PhysPt addr,Bitu val) {
+#if C_DEBUG
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+#else
+		static Bits lcount=0;
+		if (lcount<1000) {
+			lcount++;
+			LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+		}
+#endif
 	}
 };
 

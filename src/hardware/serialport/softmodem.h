@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.7 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.8 2007-07-19 18:58:39 c2woody Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -73,7 +73,11 @@ public:
 
 	void addb(Bit8u _val) {
 		if(used>=size) {
-			LOG_MSG("FIFO Overflow!");
+			static Bits lcount=0;
+			if (lcount<1000) {
+				lcount++;
+				LOG_MSG("MODEM: FIFO Overflow! (addb)");
+			}
 			return;
 		}
 		//assert(used<size);
@@ -85,7 +89,11 @@ public:
 	}
 	void adds(Bit8u * _str,Bitu _len) {
 		if((used+_len)>size) {
-			LOG_MSG("FIFO Overflow!");
+			static Bits lcount=0;
+			if (lcount<1000) {
+				lcount++;
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %d)",_len);
+			}
 			return;
 		}
 		
@@ -100,7 +108,11 @@ public:
 	}
 	Bit8u getb(void) {
 		if (!used) {
-			LOG_MSG("MODEM: FIFO UNDERFLOW!");
+			static Bits lcount=0;
+			if (lcount<1000) {
+				lcount++;
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (getb)");
+			}
 			return data[pos];
 		}
 			Bitu where=pos;
@@ -111,7 +123,11 @@ public:
 	}
 	void gets(Bit8u * _str,Bitu _len) {
 		if (!used) {
-			LOG_MSG("MODEM: FIFO UNDERFLOW!");
+			static Bits lcount=0;
+			if (lcount<1000) {
+				lcount++;
+				LOG_MSG("MODEM: FIFO UNDERFLOW! (gets len %d)",_len);
+			}
 			return;
 		}
 			//assert(used>=_len);

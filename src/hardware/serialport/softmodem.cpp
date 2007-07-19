@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.7 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.8 2007-07-19 18:58:39 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -90,7 +90,13 @@ void CSerialModem::handleUpperEvent(Bit16u type) {
 				if(tqueue->left() < 2) {
 					CSerial::setCTS(false);
 				}
-			} else LOG_MSG("MODEM: TX Buffer overflow!");
+			} else {
+				static Bits lcount=0;
+				if (lcount<1000) {
+					lcount++;
+					LOG_MSG("MODEM: TX Buffer overflow!");
+				}
+			}
 			ByteTransmitted();
 			
 			break;

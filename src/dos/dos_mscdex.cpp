@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.48 2007-06-27 19:14:59 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.49 2007-07-19 18:58:39 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -877,7 +877,7 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					Bit8u addr_mode = mem_readb(buffer+1);
 					if (addr_mode==0) {			// HSG
 						Bit32u frames=MSF_TO_FRAMES(pos.min, pos.sec, pos.fr);
-						if (frames<150) LOG_MSG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
+						if (frames<150) MSCDEX_LOG("MSCDEX: Get position: invalid position %d:%d:%d", pos.min, pos.sec, pos.fr);
 						else frames-=150;
 						mem_writed(buffer+2,frames);
 					} else if (addr_mode==1) {	// Red book
@@ -886,7 +886,7 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 						mem_writeb(buffer+4,pos.min);
 						mem_writeb(buffer+5,0x00);
 					} else {
-						LOG_MSG("MSCDEX: Get position: invalid address mode %x",addr_mode);
+						MSCDEX_LOG("MSCDEX: Get position: invalid address mode %x",addr_mode);
 						return 0x03;		// invalid function
 					}
 				   }break;
