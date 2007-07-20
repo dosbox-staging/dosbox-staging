@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.28 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: dos_tables.cpp,v 1.29 2007-07-20 18:53:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -144,6 +144,10 @@ void DOS_SetupTables(void) {
 	real_writed(seg,0,0xffffffff);		//Last File Table
 	real_writew(seg,4,100);				//File Table supports 100 files
 	dos_infoblock.SetFCBTable(RealMake(seg,0));
+
+	/* Create a fake DPB */
+	dos.tables.dpb=DOS_GetMemory(2);
+	for(Bitu d=0;d<26;d++) real_writeb(dos.tables.dpb,d,d);
 
 	/* Create a fake disk buffer head */
 	seg=DOS_GetMemory(6);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.102 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.103 2007-07-20 18:53:52 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -385,12 +385,15 @@ static Bitu DOS_21Handler(void) {
 		dos.return_code=reg_al; //Officially a field in the SDA
 		dos.return_mode=RETURN_TSR;
 		break;
-        case 0x32: /* Get drive parameter block for specific drive */
+	case 0x1f: /* Get drive parameter block for default drive */
+	case 0x32: /* Get drive parameter block for specific drive */
 		{	/* Officially a dpb should be returned as well. The disk detection part is implemented */
-			Bitu drive=reg_dl;if(!drive) drive=dos.current_drive;else drive--;
+			Bitu drive=reg_dl;if(!drive || reg_ah==0x1f) drive=dos.current_drive;else drive--;
 			if(Drives[drive]) {
-				reg_al=0x00;
-				LOG(LOG_DOSMISC,LOG_ERROR)("Get drive parameter block.");   
+				reg_al = 0x00;
+				SegSet16(ds,dos.tables.dpb);
+				reg_bx = drive;//Faking only the first entry (that is the driveletter)
+				LOG(LOG_DOSMISC,LOG_ERROR)("Get drive parameter block.");
 			} else {
 				reg_al=0xff;
 			}
@@ -987,23 +990,21 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_DOSMISC,LOG_NORMAL)("DOS:Windows long file name support call %2X",reg_al);
 		break;
 
-    case 0x68:                  /* FFLUSH Commit file */
-        CALLBACK_SCF(false);    //mirek
-    case 0xE0:
-    case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-    case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-    case 0x1e:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-    case 0x20:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
-    case 0x6b:		            /* NULL Function */
-    case 0x61:		            /* UNUSED */
-    case 0xEF:                  /* Used in Ancient Art Of War CGA */
-	case 0x1f:					/* Get drive parameter block for default drive */
-
+	case 0x68:                  /* FFLUSH Commit file */
+		CALLBACK_SCF(false);    //mirek
+	case 0xE0:
+	case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x1e:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x20:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
+	case 0x6b:		            /* NULL Function */
+	case 0x61:		            /* UNUSED */
+	case 0xEF:                  /* Used in Ancient Art Of War CGA */
 	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
-    default:
-        LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
-        reg_al=0x00; /* default value */
+	default:
+		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
+		reg_al=0x00; /* default value */
 		break;
 	};
 	return CBRET_NONE;

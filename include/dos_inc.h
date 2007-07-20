@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.69 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.70 2007-07-20 18:53:52 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -623,6 +623,7 @@ struct DOS_Block {
 		RealPt filenamechar;
 		RealPt collatingseq;
 		Bit8u* country;//Will be copied to dos memory. resides in real mem
+		Bit16u dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
 	} tables;
 	Bit16u loaded_codepage;
 };
