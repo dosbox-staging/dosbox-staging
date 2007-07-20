@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.49 2007-07-19 18:58:39 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.50 2007-07-20 18:22:28 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -190,12 +190,14 @@ void CMscdex::GetDrives(PhysPt data)
 
 bool CMscdex::IsValidDrive(Bit16u _drive)
 {
+	_drive &= 0xff; //Only lowerpart (Ultimate domain)
 	for (Bit16u i=0; i<GetNumDrives(); i++) if (dinfo[i].drive==_drive) return true;
 	return false;
 };
 
 Bit8u CMscdex::GetSubUnit(Bit16u _drive)
 {
+	_drive &= 0xff; //Only lowerpart (Ultimate domain)
 	for (Bit16u i=0; i<GetNumDrives(); i++) if (dinfo[i].drive==_drive) return (Bit8u)i;
 	return 0xff;
 };
