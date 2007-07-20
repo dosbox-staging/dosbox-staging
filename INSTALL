@@ -41,23 +41,38 @@ In step 1 you could add the following switches:
 --enable-debug 
         enables the internal debugger. --enable-debug=heavy enables even more 
         debug options. Dosbox should then be run from a xterm and when the sdl-
-        window is active press pause to enter the debugger.
-
---disable-fpu
-        Will disable the emulated fpu. Although the fpu emulation code isn't 
-        finished and isn't entirely accurate it's advised to leave it on. 
+        window is active press alt-pause to enter the debugger.
 
 --enable-core-inline
         enables some memory increasing inlines. This greatly increases 
         compiletime for maybe a increase in speed.
 
---disable-dynamic-x86
-        disables the dynamic cpu core. Although it's unstable it can greatly
-        improve the speed of dosbox on x86 hosts.
+--disable-fpu
+        disables the emulated fpu. Although the fpu emulation code isn't 
+        finished and isn't entirely accurate it's advised to leave it on. 
 
 --disable-fpu-x86
         disables the assembly fpu core. Although relatively new the x86 fpu 
 	core has more accuracy then the regular fpu core. 
+
+--disable-dynamic-x86
+        disables the dynamic x86 specific cpu core. Although it might be 
+        be a bit unstable, it can greatly improve the speed of dosbox on x86 
+        hosts.
+        Please note that this option on x86 will result in a different
+        dynamic/recompiling cpu core being compiled then the default.
+        For more information see the option --disable-dynrec
+
+--disable-dynrec
+        disables the recompiling cpu core. Currently x86 and x86_64 only.
+	You can activate this core on x86 by disabling the dynamic-x86 core.
+
+--disable-dynamic-core
+        disables all dynamic cores. (same effect as 
+	--disable-dynamic-x86 --disable-dynrec)
+
+--disable-unaligned-memory
+        disables unaligned memory access.
 
 Check the src subdir for the binary.
 
