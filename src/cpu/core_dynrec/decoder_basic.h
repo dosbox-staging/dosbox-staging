@@ -1000,12 +1000,16 @@ static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
 
 // save back the address register
 static void gen_protect_addr_reg(void) {
+#ifdef DRC_PROTECT_ADDR_REG
 	gen_mov_word_from_reg(FC_ADDR,&core_dynrec.protected_regs[FC_ADDR],true);
+#endif
 }
 
 // restore the address register
 static void gen_restore_addr_reg(void) {
+#ifdef DRC_PROTECT_ADDR_REG
 	gen_mov_word_to_reg(FC_ADDR,&core_dynrec.protected_regs[FC_ADDR],true);
+#endif
 }
 
 // save back an arbitrary register

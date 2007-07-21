@@ -20,6 +20,9 @@
 // some configuring defines that specify the capabilities of this architecture
 // or aspects of the recompiling
 
+// protect FC_ADDR over function calls if necessaray
+// #define DRC_PROTECT_ADDR_REG
+
 // try to use non-flags generating functions if possible
 #define DRC_FLAGS_INVALIDATION
 
@@ -52,7 +55,9 @@ enum HostReg {
 // register that holds function return values
 #define FC_RETOP HOST_EAX
 
-// register used for address calculations,
+// register used for address calculations, if the ABI does not
+// state that this register is preserved across function calls
+// then define DRC_PROTECT_ADDR_REG above
 #define FC_ADDR HOST_EBX
 
 // register that holds the first parameter

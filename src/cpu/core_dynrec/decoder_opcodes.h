@@ -814,7 +814,7 @@ static bool dyn_grp4_ev(void) {
 	dyn_get_modrm();
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
-		if (decode.modrm.reg<2) gen_protect_addr_reg();
+		if ((decode.modrm.reg<2) || (decode.modrm.reg==3) || (decode.modrm.reg==5))  gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
 		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
@@ -847,6 +847,7 @@ static bool dyn_grp4_ev(void) {
 	case 0x3:	// CALL Ep
 	case 0x5:	// JMP Ep
 		if (!decode.big_op) gen_extend_word(false,FC_OP1);
+		if (decode.modrm.mod<3) gen_restore_addr_reg();
 		gen_protect_reg(FC_OP1);
 		gen_add_imm(FC_ADDR,decode.big_op?4:2);
 		dyn_read_word(FC_ADDR,FC_OP2,decode.big_op);

@@ -149,8 +149,10 @@ static void dyn_fpu_esc1(){
 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 			gen_add_imm(FC_OP1,decode.modrm.rm);
 			gen_and_imm(FC_OP1,7);
+			gen_protect_reg(FC_OP1);
 			gen_call_function_raw((void*)&FPU_PREP_PUSH); 
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
+			gen_restore_reg(FC_OP1);
 			gen_call_function_RR((void*)&FPU_FST,FC_OP1,FC_OP2);
 			break;
 		case 0x01: /* FXCH STi */
