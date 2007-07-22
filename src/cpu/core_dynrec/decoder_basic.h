@@ -1029,16 +1029,15 @@ static void gen_restore_reg(HostReg reg,HostReg dest_reg) {
 
 
 
-#include "lazyflags.h"
-
 // flags optimization functions
 // they try to find out if a function can be replaced by another
 // one that does not generate any flags at all
 
 static Bitu mf_functions_num=0;
 static struct {
-	DRC_PTR_SIZE_IM pos;
-	Bit32u fct_ptr;
+	Bit8u* pos;
+	void* fct_ptr;
+	Bitu ftype;
 } mf_functions[64];
 
 static void InitFlagsOptimization(void) {
@@ -1051,7 +1050,7 @@ static void InitFlagsOptimization(void) {
 static void InvalidateFlags(void) {
 #ifdef DRC_FLAGS_INVALIDATION
 	for (Bitu ct=0; ct<mf_functions_num; ct++) {
-		*(Bit32u*)(mf_functions[ct].pos)=(Bit32u)(mf_functions[ct].fct_ptr);
+		gen_fill_function_ptr(mf_functions[ct].pos,mf_functions[ct].fct_ptr,mf_functions[ct].ftype);
 	}
 	mf_functions_num=0;
 #endif
@@ -1060,24 +1059,26 @@ static void InvalidateFlags(void) {
 // replace all queued functions with their simpler variants
 // because the current instruction destroys all condition flags and
 // the flags are not required before
-static void InvalidateFlags(void* current_simple_function) {
+static void InvalidateFlags(void* current_simple_function,Bitu flags_type) {
 #ifdef DRC_FLAGS_INVALIDATION
 	for (Bitu ct=0; ct<mf_functions_num; ct++) {
-		*(Bit32u*)(mf_functions[ct].pos)=(Bit32u)(mf_functions[ct].fct_ptr);
+		gen_fill_function_ptr(mf_functions[ct].pos,mf_functions[ct].fct_ptr,mf_functions[ct].ftype);
 	}
 	mf_functions_num=1;
-	mf_functions[0].pos=(DRC_PTR_SIZE_IM)cache.pos+1;
-	mf_functions[0].fct_ptr=(Bit32u)current_simple_function - (Bit32u)mf_functions[0].pos-4;
+	mf_functions[0].pos=cache.pos;
+	mf_functions[0].fct_ptr=current_simple_function;
+	mf_functions[0].ftype=flags_type;
 #endif
 }
 
 // enqueue this instruction, if later an instruction is encountered that
 // destroys all condition flags and the flags weren't needed in-between
 // this function can be replaced by a simpler one as well
-static void InvalidateFlagsPartially(void* current_simple_function) {
+static void InvalidateFlagsPartially(void* current_simple_function,Bitu flags_type) {
 #ifdef DRC_FLAGS_INVALIDATION
-	mf_functions[mf_functions_num].pos=(DRC_PTR_SIZE_IM)cache.pos+1;
-	mf_functions[mf_functions_num].fct_ptr=(Bit32u)current_simple_function - (Bit32u)mf_functions[mf_functions_num].pos-4;
+	mf_functions[mf_functions_num].pos=cache.pos;
+	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
+	mf_functions[mf_functions_num].ftype=flags_type;
 	mf_functions_num++;
 #endif
 }
@@ -1085,10 +1086,11 @@ static void InvalidateFlagsPartially(void* current_simple_function) {
 // enqueue this instruction, if later an instruction is encountered that
 // destroys all condition flags and the flags weren't needed in-between
 // this function can be replaced by a simpler one as well
-static void InvalidateFlagsPartially(void* current_simple_function,DRC_PTR_SIZE_IM cpos) {
+static void InvalidateFlagsPartially(void* current_simple_function,DRC_PTR_SIZE_IM cpos,Bitu flags_type) {
 #ifdef DRC_FLAGS_INVALIDATION
-	mf_functions[mf_functions_num].pos=cpos;
-	mf_functions[mf_functions_num].fct_ptr=(Bit32u)current_simple_function - (Bit32u)mf_functions[mf_functions_num].pos-4;
+	mf_functions[mf_functions_num].pos=(Bit8u*)cpos;
+	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
+	mf_functions[mf_functions_num].ftype=flags_type;
 	mf_functions_num++;
 #endif
 }

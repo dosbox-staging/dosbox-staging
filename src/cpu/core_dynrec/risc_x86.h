@@ -25,6 +25,8 @@
 
 // try to use non-flags generating functions if possible
 #define DRC_FLAGS_INVALIDATION
+// try to replace _simple functions by code
+#define DRC_FLAGS_INVALIDATION_DCODE
 
 // type with the same size as a pointer
 #define DRC_PTR_SIZE_IM Bit32u
@@ -301,9 +303,9 @@ static void INLINE gen_call_function_raw(void * func) {
 // note: the parameters are loaded in the architecture specific way
 // using the gen_load_param_ functions below
 static Bit32u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+	Bit32u proc_addr=(Bit32u)cache.pos;
 	// Do the actual call to the procedure
 	cache_addb(0xe8);
-	Bit32u proc_addr=(Bit32u)cache.pos;
 	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
 
 	// Restore the params of the stack
@@ -429,3 +431,77 @@ static void gen_run_code(void) {
 static void gen_return_function(void) {
 	cache_addb(0xc3);		// ret
 }
+
+#ifdef DRC_FLAGS_INVALIDATION
+// called when a call to a function can be replaced by a
+// call to a simpler function
+static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+#ifdef DRC_FLAGS_INVALIDATION_DCODE
+	// try to avoid function calls but rather directly fill in code
+	switch (flags_type) {
+		case t_ADDb:
+		case t_ADDw:
+		case t_ADDd:
+			*(Bit32u*)pos=0xc203c18b;
+			*(pos+4)=0x90;
+			break;
+		case t_ORb:
+		case t_ORw:
+		case t_ORd:
+			*(Bit32u*)pos=0xc20bc18b;
+			*(pos+4)=0x90;
+			break;
+		case t_ANDb:
+		case t_ANDw:
+		case t_ANDd:
+			*(Bit32u*)pos=0xc223c18b;
+			*(pos+4)=0x90;
+			break;
+		case t_SUBb:
+		case t_SUBw:
+		case t_SUBd:
+			*(Bit32u*)pos=0xc22bc18b;
+			*(pos+4)=0x90;
+			break;
+		case t_XORb:
+		case t_XORw:
+		case t_XORd:
+			*(Bit32u*)pos=0xc233c18b;
+			*(pos+4)=0x90;
+			break;
+		case t_CMPb:
+		case t_CMPw:
+		case t_CMPd:
+		case t_TESTb:
+		case t_TESTw:
+		case t_TESTd:
+			*(Bit32u*)pos=0x909003eb;
+			*(pos+4)=0x90;
+			break;
+		case t_INCb:
+		case t_INCw:
+		case t_INCd:
+			*(Bit32u*)pos=0x9040c18b;
+			*(pos+4)=0x90;
+			break;
+		case t_DECb:
+		case t_DECw:
+		case t_DECd:
+			*(Bit32u*)pos=0x9048c18b;
+			*(pos+4)=0x90;
+			break;
+		case t_NEGb:
+		case t_NEGw:
+		case t_NEGd:
+			*(Bit32u*)pos=0xd8f7c18b;
+			*(pos+4)=0x90;
+			break;
+		default:
+			*(Bit32u*)(pos+1)=(Bit32u)((Bit8u*)fct_ptr - (pos+1+4));
+			break;
+	}
+#else
+	*(Bit32u*)(pos+1)=(Bit32u)((Bit8u*)fct_ptr - (pos+1+4));
+#endif
+}
+#endif

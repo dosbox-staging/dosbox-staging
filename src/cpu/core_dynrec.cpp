@@ -48,6 +48,7 @@
 #include "debug.h"
 #include "paging.h"
 #include "inout.h"
+#include "lazyflags.h"
 
 #define CACHE_MAXSIZE	(4096)
 #define CACHE_TOTAL		(1024*1024*8)

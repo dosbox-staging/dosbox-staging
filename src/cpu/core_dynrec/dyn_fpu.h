@@ -505,8 +505,8 @@ static void dyn_fpu_esc5(){
 		switch(decode.modrm.reg){
 		case 0x00:  /* FLD double real*/
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
-			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			dyn_fill_ea(FC_OP1); 
+			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			gen_call_function_RR((void*)&FPU_FLD_F64,FC_OP1,FC_OP2);
 			break;
 		case 0x01:  /* FISTTP longint*/

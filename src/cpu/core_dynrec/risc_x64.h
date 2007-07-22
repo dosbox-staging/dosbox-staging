@@ -25,6 +25,8 @@
 
 // try to use non-flags generating functions if possible
 // #define DRC_FLAGS_INVALIDATION
+// try to replace _simple functions by code
+// #define DRC_FLAGS_INVALIDATION_DCODE
 
 // type with the same size as a pointer
 #define DRC_PTR_SIZE_IM Bit64u
@@ -586,3 +588,11 @@ static void gen_run_code(void) {
 static void gen_return_function(void) {
 	cache_addb(0xc3);		// ret
 }
+
+#ifdef DRC_FLAGS_INVALIDATION
+// called when a call to a function can be replaced by a
+// call to a simpler function
+static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+	*(Bit64u*)(pos+2)=(Bit64u)fct_ptr;
+}
+#endif
