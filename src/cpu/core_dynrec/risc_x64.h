@@ -24,7 +24,7 @@
 // #define DRC_PROTECT_ADDR_REG
 
 // try to use non-flags generating functions if possible
-// #define DRC_FLAGS_INVALIDATION
+#define DRC_FLAGS_INVALIDATION
 // try to replace _simple functions by code
 // #define DRC_FLAGS_INVALIDATION_DCODE
 

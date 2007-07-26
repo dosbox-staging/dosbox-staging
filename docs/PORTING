@@ -24,14 +24,16 @@ If memory is a constraint:
       #define MAX_OPENDIRS 256
     drawback: some apps might not work whith large directory trees
     gain: ~1mb per mounted drive
-  - in vga.h reduce the size of the emulated graphics memory:
-      #define VGA_MEMORY (1*1024*1024)
-    drawback: some graphics modes won't work then
-    gain: reduces memory requirements about 1mb
-    TODO: remove the respective svga modes, adapt some svga registers
   - remove the GUS emulation (gus.cpp, especially GUSRam[1024*1024] )
     drawback: no gravis ultrasound
     gain: reduces memory requirements about 1mb
+  - in vga.h reduce the size of the emulated graphics memory:
+      #define VGA_MEMORY (1*1024*1024)
+    drawback: some graphics modes won't work then
+              [EDIT: many modes won't work due to pixel caches]
+    gain: reduces memory requirements about 1mb
+    TODO: get this to actually work;
+          remove the respective svga modes, adapt some svga registers
 
 If speed is a constraint:
   - see if the simple core is faster, possibly remove the normal core
