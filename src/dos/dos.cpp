@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.103 2007-07-20 18:53:52 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.104 2007-07-27 19:17:23 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -359,7 +359,10 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x2d:		/* Set System Time */
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
-		reg_al=0;	/* Noone is changing system time */
+		//Check input parameters nonetheless
+		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
+			reg_al = 0xff; 
+		else reg_al = 0;
 		break;
 	case 0x2e:		/* Set Verify flag */
 		dos.verify=(reg_al==1);
