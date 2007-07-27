@@ -1,6 +1,7 @@
 0.71
   - Add a new recompiling cpu core, which should be easier to port.
-  - Add 64 bit version of the recompiling core
+  - Add 64 bit version of the recompiling core.
+  - Add mipsel 32 bit version of the recompiling core.
   - Fix a few small problems with FCBs. (fixes Jewels of darkness and
     cyrus chess)
   - Raise some more exceptions. (fixes vbdos)
@@ -8,21 +9,25 @@
     Archmimedean Dynasty and others)
   - Improve/Fix fallback code for certain graphics cards.
   - Fix a few cd audio related bugs.
+  - Add an undocumented MSCDEX feature. (Fixes Ultimate Domain)
   - Fix some pcspeaker mode. (fixes Test Drive and similar games)
   - Improve dos keyinput handling. (fixes Wing Commander 3 exit dialog)
   - Remove Exit condition on fully nested mode. (fixes some demo)
   - Add image file size detection.
   - Add/Fix some ansi codes. (fixes PC Larn and certain versions of
     infocom games)
-  - Several general DOS fixes. (fixes nba95 and others)
-  - Fix digital joystick centering problem
+  - Several general DOS fixes. (fixes nba95, hexit and various other games)
+  - Add some valid input checks. (fixes 3d body adventure and similar
+    games)
+  - Fix digital joystick centering problem.
   - Reenable textmode 54 and 55.
   - Fix a pelmask problem with univbe 5.0 lite. (fixes Panzer General)
   - Fix minor mixer underflow.
   - Some general image and bios disk emulation fixes.
   - Hopefully fix compilation on BSD and darwin.
-  - Try using ioctl cdrom access by default if possible
-  - Fix some svga detection routine. (fixes Grandest Fleet 2)
+  - Try using ioctl cdrom access by default if possible.
+  - Fix some svga detection routine. (fixes Grandest Fleet 2 and Bobby Fischer
+    Teaches Chess)
   - You can now close DOSBox using the status window in win32.
   - Add support for NX enabled systems.
   - Fix a casting error which only showed with certain compilers. (fixes
