@@ -1,4 +1,4 @@
-DOSBox v0.70
+DOSBox v0.71
 
 
 =====
@@ -1142,17 +1142,7 @@ Check the INSTALL in the source distribution.
 14. Special thanks:
 ===================
 
-Vlad R. of the VDMSound project for excellent SoundBlaster info.
-Tatsuyuki Satoh of the Mame Team for making an excellent FM emulator.
-The Bochs and DOSemu projects, which I used for information.
-Freedos for ideas in making my shell.
-Pierre-Yves Gérardy for hosting the old Beta Board.
-Colin Snover for hosting our forum.
-Jantien for the version management.
-Shawn and Johannes for creating the MAC OS X PPC version.
-Ido Beeri for the icon.
-The Beta Testers.
-
+See the THANKS file.
 
 
 ============
