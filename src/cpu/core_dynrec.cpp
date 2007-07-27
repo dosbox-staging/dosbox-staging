@@ -133,13 +133,16 @@ static struct {
 
 #include "core_dynrec/cache.h"
 
-#define X86		0x01
-#define X86_64	0x02
+#define X86			0x01
+#define X86_64		0x02
+#define MIPSEL32	0x03
 
 #if C_TARGETCPU == X86_64
 #include "core_dynrec/risc_x64.h"
 #elif C_TARGETCPU == X86
 #include "core_dynrec/risc_x86.h"
+#elif C_TARGETCPU == MIPSEL32
+#include "core_dynrec/risc_mipsel32.h"
 #endif
 
 #include "core_dynrec/decoder.h"
