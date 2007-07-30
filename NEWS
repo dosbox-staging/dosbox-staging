@@ -47,6 +47,7 @@
     WW2 Battles of the South pacific)
   - Add ability to force scaler usage.
   - Speed up flag generation and make it more 386-like.
+  - Some colourful feedback in the mapper.
   - General code cleanup.
 
 0.70
