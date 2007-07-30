@@ -1,5 +1,5 @@
 !define VER_MAYOR 0
-!define VER_MINOR 70
+!define VER_MINOR 71
 
 ; The name of the installer
 Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
@@ -12,15 +12,21 @@ InstallDir "$PROGRAMFILES\DOSBox-${VER_MAYOR}.${VER_MINOR}"
 
 ; The text to prompt the user to enter a directory
 DirText "This will install DOSBox v${VER_MAYOR}.${VER_MINOR} on your computer. Choose a directory"
-SetCompressor bzip2
+SetCompressor /solid lzma
+
 
 LicenseData COPYING
 LicenseText "DOSBox v${VER_MAYOR}.${VER_MINOR} License" "Next >"
 
+; Else vista enables compatibility mode
+RequestExecutionLevel admin
+
+ComponentText "Select components for DOSBox"
 ; The stuff to install
-Section "ThisNameIsIgnoredSoWhyBother?"
+Section "!Core files" Core
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
+  SectionIn RO
 
   ; Put file there
   CreateDirectory "$INSTDIR\capture"
@@ -43,6 +49,7 @@ Section "ThisNameIsIgnoredSoWhyBother?"
   CreateDirectory "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk" "$INSTDIR\DOSBox.exe" "-conf $\"$INSTDIR\dosbox.conf$\"" "$INSTDIR\DOSBox.exe" 0
+  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox (noconsole).lnk" "$INSTDIR\DOSBox.exe" "-noconsole -conf $\"$INSTDIR\dosbox.conf$\"" "$INSTDIR\DOSBox.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\README.lnk" "$INSTDIR\README.txt"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.conf.lnk" "notepad.exe" "$INSTDIR\dosbox.conf"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Capture folder.lnk" "$INSTDIR\capture"
@@ -66,9 +73,17 @@ WriteUninstaller "uninstall.exe"
 
 SectionEnd ; end the section
 
+Section "Desktop Shortcut" SecDesktop
+
+CreateShortCut "$DESKTOP\DOSBox ${VER_MAYOR}.${VER_MINOR}.lnk" "$INSTDIR\DOSBox.exe" "-conf $\"$INSTDIR\dosbox.conf$\"" "$INSTDIR\DOSBox.exe" 0
+
+ SectionEnd ; end the section 
+
+
 UninstallText "This will uninstall DOSBox  v${VER_MAYOR}.${VER_MINOR}. Hit next to continue."
 
 Section "Uninstall"
+  Delete "$DESKTOP\DOSBox ${VER_MAYOR}.${VER_MINOR}.lnk"
   ; remove registry keys
   ; remove files
   Delete $INSTDIR\README.txt
@@ -95,6 +110,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Uninstall.lnk"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\README.lnk"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk"
+  Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox (noconsole).lnk"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.conf.lnk"
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Capture folder.lnk"  
   Delete "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Install movie codec.lnk"
