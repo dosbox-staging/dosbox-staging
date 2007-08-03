@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.49 2007-02-03 14:04:23 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.50 2007-08-03 18:22:45 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -223,7 +223,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 					if (p_completion_start) {
 						p_completion_start ++;
-						completion_index = str_index - strlen(p_completion_start);
+						completion_index = str_len - strlen(p_completion_start);
 					} else {
 						p_completion_start = line;
 						completion_index = 0;
