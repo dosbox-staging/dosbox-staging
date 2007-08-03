@@ -593,6 +593,81 @@ static void gen_return_function(void) {
 // called when a call to a function can be replaced by a
 // call to a simpler function
 static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+#ifdef DRC_FLAGS_INVALIDATION_DCODE
+	// try to avoid function calls but rather directly fill in code
+	switch (flags_type) {
+		case t_ADDb:
+		case t_ADDw:
+		case t_ADDd:
+			*(Bit32u*)(pos+0)=0xd001c889;	// mov eax,ecx; add eax,edx
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_ORb:
+		case t_ORw:
+		case t_ORd:
+			*(Bit32u*)(pos+0)=0xd009c889;	// mov eax,ecx; or eax,edx
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_ANDb:
+		case t_ANDw:
+		case t_ANDd:
+			*(Bit32u*)(pos+0)=0xd021c889;	// mov eax,ecx; and eax,edx
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_SUBb:
+		case t_SUBw:
+		case t_SUBd:
+			*(Bit32u*)(pos+0)=0xd029c889;	// mov eax,ecx; sub eax,edx
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_XORb:
+		case t_XORw:
+		case t_XORd:
+			*(Bit32u*)(pos+0)=0xd031c889;	// mov eax,ecx; xor eax,edx
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_CMPb:
+		case t_CMPw:
+		case t_CMPd:
+		case t_TESTb:
+		case t_TESTw:
+		case t_TESTd:
+			*(Bit32u*)(pos+0)=0x90900aeb;	// skip
+			*(Bit32u*)(pos+4)=0x90909090;
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_INCb:
+		case t_INCw:
+		case t_INCd:
+			*(Bit32u*)(pos+0)=0xffc0c889;	// mov eax,ecx; inc eax
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_DECb:
+		case t_DECw:
+		case t_DECd:
+			*(Bit32u*)(pos+0)=0xffc8c889;	// mov eax,ecx; dec eax
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		case t_NEGb:
+		case t_NEGw:
+		case t_NEGd:
+			*(Bit32u*)(pos+0)=0xd8f7c889;	// mov eax,ecx; neg eax
+			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+			*(Bit32u*)(pos+8)=0x90909090;
+			break;
+		default:
+			*(Bit64u*)(pos+2)=(Bit64u)fct_ptr;		// fill function pointer
+			break;
+	}
+#else
 	*(Bit64u*)(pos+2)=(Bit64u)fct_ptr;
+#endif
 }
 #endif
