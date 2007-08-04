@@ -386,9 +386,9 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 					if (addmap>additional_planes+2) break;
 					Bitu charptr=read_buf_pos+addmap*((read_buf[read_buf_pos-2]&0x80)?2:1);
 					Bit16u kchar=read_buf[charptr];
-					if (read_buf[read_buf_pos-2]&0x80) kchar|=read_buf[charptr+1]<<8;	// scancode/char pair
 
 					if (kchar!=0) {		// key remapped
+						if (read_buf[read_buf_pos-2]&0x80) kchar|=read_buf[charptr+1]<<8;	// scancode/char pair
 						// overwrite mapping
 						current_layout[scan*layout_pages+addmap]=kchar;
 						// clear command bit
