@@ -936,6 +936,11 @@ dac_text16:
 			}
 		}
 	} else {
+		for (i=0x10;i<ATT_REGS;i++) {
+			if (i==0x11) continue;	// skip overscan register
+			IO_Write(0x3c0,i);
+			IO_Write(0x3c0,att_data[i]);
+		}
 		IO_Write(0x3c0,0x20); //Disable palette access
 	}
 	/* Setup some special stuff for different modes */
