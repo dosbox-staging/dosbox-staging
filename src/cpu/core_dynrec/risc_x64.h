@@ -599,35 +599,35 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_ADDb:
 		case t_ADDw:
 		case t_ADDd:
-			*(Bit32u*)(pos+0)=0xd001c889;	// mov eax,ecx; add eax,edx
+			*(Bit32u*)(pos+0)=0xf001f889;	// mov eax,edi; add eax,esi
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
-			*(Bit32u*)(pos+0)=0xd009c889;	// mov eax,ecx; or eax,edx
+			*(Bit32u*)(pos+0)=0xf009f889;	// mov eax,edi; or eax,esi
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
-			*(Bit32u*)(pos+0)=0xd021c889;	// mov eax,ecx; and eax,edx
+			*(Bit32u*)(pos+0)=0xf021f889;	// mov eax,edi; and eax,esi
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
-			*(Bit32u*)(pos+0)=0xd029c889;	// mov eax,ecx; sub eax,edx
+			*(Bit32u*)(pos+0)=0xf029f889;	// mov eax,edi; sub eax,esi
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_XORb:
 		case t_XORw:
 		case t_XORd:
-			*(Bit32u*)(pos+0)=0xd031c889;	// mov eax,ecx; xor eax,edx
+			*(Bit32u*)(pos+0)=0xf031f889;	// mov eax,edi; xor eax,esi
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
@@ -644,21 +644,21 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)(pos+0)=0xffc0c889;	// mov eax,ecx; inc eax
+			*(Bit32u*)(pos+0)=0xc0ffc889;	// mov eax,edi; inc eax
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
-			*(Bit32u*)(pos+0)=0xffc8c889;	// mov eax,ecx; dec eax
+			*(Bit32u*)(pos+0)=0xc8fff889;	// mov eax,edi; dec eax
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
-			*(Bit32u*)(pos+0)=0xd8f7c889;	// mov eax,ecx; neg eax
+			*(Bit32u*)(pos+0)=0xd8f7f889;	// mov eax,edi; neg eax
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
