@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.118 2007-07-02 20:06:59 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.119 2007-08-07 21:01:08 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -221,10 +221,22 @@ void DOSBOX_RunMachine(void){
 }
 
 static void DOSBOX_UnlockSpeed( bool pressed ) {
-	if (pressed)
+	static bool autoadjust = false;
+	if (pressed) {
 		ticksLocked = true;
-	else 
+		if (CPU_CycleAutoAdjust) {
+			autoadjust = true;
+			CPU_CycleAutoAdjust = false;
+			CPU_CycleMax /= 3;
+			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
+		}
+	} else { 
 		ticksLocked = false;
+		if (autoadjust) {
+			autoadjust = false;
+			CPU_CycleAutoAdjust = true;
+		}
+	}
 }
 
 static void DOSBOX_RealInit(Section * sec) {
