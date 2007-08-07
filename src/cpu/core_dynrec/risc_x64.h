@@ -26,7 +26,7 @@
 // try to use non-flags generating functions if possible
 #define DRC_FLAGS_INVALIDATION
 // try to replace _simple functions by code
-// #define DRC_FLAGS_INVALIDATION_DCODE
+#define DRC_FLAGS_INVALIDATION_DCODE
 
 // type with the same size as a pointer
 #define DRC_PTR_SIZE_IM Bit64u
@@ -644,7 +644,7 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
-			*(Bit32u*)(pos+0)=0xc0ffc889;	// mov eax,edi; inc eax
+			*(Bit32u*)(pos+0)=0xc0fff889;	// mov eax,edi; inc eax
 			*(Bit32u*)(pos+4)=0x909006eb;	// skip
 			*(Bit32u*)(pos+8)=0x90909090;
 			break;
