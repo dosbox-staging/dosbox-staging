@@ -1,3 +1,15 @@
+0.71.1
+  - Fixed unitialized variable in joystick. (Fixes crashes on Vista and
+    Mac OS X)
+  - Some bugfixes and speedups to the 64 bit recompiling core.
+  - Fixed sign flag on soundblaster dma transfers (Space Quest 6 intro)
+  - Fixed a bug in keyboard layout processing code.
+  - Fixed Dreamweb.
+  - Improved speed unlocking when running cycles=max.
+  - Fixed a crash related to the tab completion in the shell.
+  - Improved aspect correction code. Should now be like how a real monitor
+    handles it.
+
 0.71
   - Add a new recompiling cpu core, which should be easier to port.
   - Add 64 bit version of the recompiling core.
