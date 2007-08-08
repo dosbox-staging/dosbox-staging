@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.65 2007-06-14 18:06:59 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.66 2007-08-08 08:03:48 qbix79 Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -590,8 +590,9 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool stereo) {
 #endif
 }
 
-static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit) {
+static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit,bool sign) {
 	sb.dma.autoinit=autoinit;
+	sb.dma.sign=sign;
 	if (!autoinit) sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 	sb.dma.chan=GetDMAChannel(sb.hw.dma8);
 	DSP_DoDMATransfer(mode,sb.freq / (sb.mixer.stereo ? 2 : 1),sb.mixer.stereo);
@@ -716,18 +717,19 @@ static void DSP_DoCommand(void) {
 		break;
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 		sb.dma.left=sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
+		sb.dma.sign=false;
 		LOG(LOG_SB,LOG_ERROR)("DSP:Faked ADC for %d bytes",sb.dma.total);
 		GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_ADC_CallBack);
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
 		/* Note: 0x91 is documented only for DSP ver.2.x and 3.x, not 4.x */
-		DSP_PrepareDMA_Old(DSP_DMA_8,false);
+		DSP_PrepareDMA_Old(DSP_DMA_8,false,false);
 		break;
 	case 0x90:	/* Auto Init 8-bit DMA High Speed */
 	case 0x1c:	/* Auto Init 8-bit DMA */
 		DSP_SB2_ABOVE; /* Note: 0x90 is documented only for DSP ver.2.x and 3.x, not 4.x */
-		DSP_PrepareDMA_Old(DSP_DMA_8,true);
+		DSP_PrepareDMA_Old(DSP_DMA_8,true,false);
 		break;
 	case 0x38:  /* Write to SB MIDI Output */
 		if (sb.midi == true) MIDI_RawOutByte(sb.dsp.in.data[0]);
@@ -736,7 +738,7 @@ static void DSP_DoCommand(void) {
 		sb.freq=(1000000 / (256 - sb.dsp.in.data[0]));
 		/* Nasty kind of hack to allow runtime changing of frequency */
 		if (sb.dma.mode != DSP_DMA_NONE && sb.dma.autoinit) {
-			DSP_PrepareDMA_Old(sb.dma.mode,sb.dma.autoinit);
+			DSP_PrepareDMA_Old(sb.dma.mode,sb.dma.autoinit,sb.dma.sign);
 		}
 		break;
 	case 0x41:	/* Set Output Samplerate */
@@ -752,17 +754,17 @@ static void DSP_DoCommand(void) {
 	case 0x75:	/* 075h : Single Cycle 4-bit ADPCM Reference */
 		sb.adpcm.haveref=true;
 	case 0x74:	/* 074h : Single Cycle 4-bit ADPCM */	
-		DSP_PrepareDMA_Old(DSP_DMA_4,false);
+		DSP_PrepareDMA_Old(DSP_DMA_4,false,false);
 		break;
 	case 0x77:	/* 077h : Single Cycle 3-bit(2.6bit) ADPCM Reference*/
 		sb.adpcm.haveref=true;
 	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
-		DSP_PrepareDMA_Old(DSP_DMA_3,false);
+		DSP_PrepareDMA_Old(DSP_DMA_3,false,false);
 		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.haveref=true;
 	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
-		DSP_PrepareDMA_Old(DSP_DMA_2,false);
+		DSP_PrepareDMA_Old(DSP_DMA_2,false,false);
 		break;
 	case 0x80:	/* Silence DAC */
 		PIC_AddEvent(&DSP_RaiseIRQEvent,
