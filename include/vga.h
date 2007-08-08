@@ -130,6 +130,7 @@ typedef struct {
 		double hdend, htotal;
 		double parts;
 	} delay;
+	double aspect_ratio;
 	bool double_scan;
 	bool doublewidth,doubleheight;
 	Bit8u font[64*1024];

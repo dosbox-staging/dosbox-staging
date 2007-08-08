@@ -650,7 +650,7 @@ void VGA_SetupDrawing(Bitu val) {
 		return;
 	}
 	/* Calculate the FPS for this screen */
-	float fps;Bitu clock;
+	float fps; Bitu clock;
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
 	if (machine==MCH_VGA) {
@@ -710,6 +710,7 @@ void VGA_SetupDrawing(Bitu val) {
 			}
 			break;
 		}
+
 		/* Check for 8 for 9 character clock mode */
 		if (vga.seq.clocking_mode & 1 ) clock/=8; else clock/=9;
 		/* Check for pixel doubling, master clock/2 */
@@ -796,8 +797,44 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.delay.vend);
     */
 	vga.draw.parts_total=VGA_PARTS;
-	double correct_ratio=(100.0/525.0);
-	double aspect_ratio=((double)htotal/((double)vtotal)/correct_ratio);
+	/*
+      6  Horizontal Sync Polarity. Negative if set
+      7  Vertical Sync Polarity. Negative if set
+         Bit 6-7 indicates the number of lines on the display:
+            1:  400, 2: 350, 3: 480
+	*/
+	//Try to determine the pixel size, aspect correct is based around square pixels
+
+	//Base pixel width around 100 clocks horizontal
+	//For 9 pixel text modes this should be changed, but we don't support that anyway :)
+	//Seems regular vga only listens to the 9 char pixel mode with character mode enabled
+	double pwidth = 100.0 / htotal;
+	//Base pixel height around vertical totals of modes that have 100 clocks horizontal
+	//Different sync values gives different scaling of the whole vertical range
+	//VGA monitor just seems to thighten or widen the whole vertical range
+	double pheight;
+	Bitu sync = vga.misc_output >> 6;
+	switch ( sync ) {
+	case 0:		// This is not defined in vga specs,
+				// Kiet, seems to be slightly less than 350 on my monitor
+		//340 line mode, filled with 449 total
+		pheight = (480.0 / 340.0) * ( 449.0 / vtotal );
+		break;
+	case 1:		//400 line mode, filled with 449 total
+		pheight = (480.0 / 400.0) * ( 449.0 / vtotal );
+		break;
+	case 2:		//350 line mode, filled with 449 total
+		//This mode seems to get regular 640x400 timing and goes for a loong retrace
+		//Depends on the monitor to stretch the screen
+		pheight = (480.0 / 350.0) * ( 449.0 / vtotal );
+		break;
+	case 3:		//480 line mode, filled with 525 total
+		pheight = (480.0 / 480.0) * ( 525.0 / vtotal );
+		break;
+	}
+
+	double aspect_ratio = pheight / pwidth;
+
 	vga.draw.delay.parts = vga.draw.delay.vdend/vga.draw.parts_total;
 	vga.draw.resizing=false;
 
@@ -965,15 +1002,26 @@ void VGA_SetupDrawing(Bitu val) {
 	vga.changes.frame = 0;
 	vga.changes.writeMask = 1;
 #endif
-	if (( width != vga.draw.width) || (height != vga.draw.height) || (vga.mode != vga.lastmode)) {
+    /* 
+	   Cheap hack to just make all > 640x480 modes have 4:3 aspect ratio
+	*/
+	if ( width >= 640 && height >= 480 ) {
+		aspect_ratio = ((float)width / (float)height) * ( 3.0 / 4.0);
+	}
+//	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
+
+	if (( width != vga.draw.width) || (height != vga.draw.height) ||
+		(aspect_ratio != vga.draw.aspect_ratio) || 
+		(vga.mode != vga.lastmode)) {
 		vga.lastmode = vga.mode;
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
 		PIC_RemoveEvents(VGA_DrawPart);
-		vga.draw.width=width;
-		vga.draw.height=height;
-		vga.draw.doublewidth=doublewidth;
-		vga.draw.doubleheight=doubleheight;
+		vga.draw.width = width;
+		vga.draw.height = height;
+		vga.draw.doublewidth = doublewidth;
+		vga.draw.doubleheight = doubleheight;
+		vga.draw.aspect_ratio = aspect_ratio;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
 #if C_DEBUG
