@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.102 2007-06-12 20:22:07 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.103 2007-08-09 19:52:32 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -1487,10 +1487,15 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 				} else {
 					GFX_SetTitle(-1,-1,false);
 				}
- #if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86)
 				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
 					CPU_Core_Dyn_X86_Cache_Init(true);
 					cpudecoder=&CPU_Core_Dyn_X86_Run;
+				}
+#elif (C_DYNREC)
+				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
+					CPU_Core_Dynrec_Cache_Init(true);
+					cpudecoder=&CPU_Core_Dynrec_Run;
 				}
 #endif
 				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
@@ -2183,6 +2188,9 @@ public:
 #elif (C_DYNREC)
 		else if (!strcasecmp(core,"dynamic")) {
 			cpudecoder=&CPU_Core_Dynrec_Run;
+		} else if (!strcasecmp(core,"auto")) {
+			cpudecoder=&CPU_Core_Normal_Run;
+			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
 		} 
 #endif
 		else {

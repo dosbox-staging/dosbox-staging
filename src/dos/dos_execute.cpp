@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.60 2007-01-11 16:31:10 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.61 2007-08-09 19:52:33 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -151,7 +151,7 @@ bool DOS_Terminate(bool tsr) {
 	} else {
 		GFX_SetTitle(-1,-1,false);
 	}
-#if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
 		cpudecoder=&CPU_Core_Normal_Run;
 		CPU_CycleLeft=0;

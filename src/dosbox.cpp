@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.119 2007-08-07 21:01:08 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.120 2007-08-09 19:52:33 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -299,7 +299,7 @@ void DOSBOX_Init(void) {
 		
 	MSG_Add("DOSBOX_CONFIGFILE_HELP",
 		"language -- Select another language file.\n"
-		"memsize -- Amount of memory dosbox has in megabytes.\n"
+		"memsize -- Amount of memory DOSBox has in megabytes.\n"
 		"machine -- The type of machine tries to emulate:hercules,cga,tandy,pcjr,vga.\n"
 		"captures -- Directory where things like wave,midi,screenshot get captured.\n"
 	);
@@ -309,7 +309,7 @@ void DOSBOX_Init(void) {
 	secprop->Add_bool("aspect",false);
 	secprop->Add_string("scaler","normal2x");
 	MSG_Add("RENDER_CONFIGFILE_HELP",
-		"frameskip -- How many frames dosbox skips before drawing one.\n"
+		"frameskip -- How many frames DOSBox skips before drawing one.\n"
 		"aspect -- Do aspect correction, if your output method doesn't support scaling this can slow things down!.\n"
 		"scaler -- Scaler used to enlarge/enhance low resolution modes.\n"
 		"          Supported are none,normal2x,normal3x,advmame2x,advmame3x,hq2x,hq3x,\n"
@@ -320,7 +320,7 @@ void DOSBOX_Init(void) {
 	);
 
 	secprop=control->AddSection_prop("cpu",&CPU_Init,true);//done
-#if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86) || (C_DYNREC)
 	secprop->Add_string("core","auto");
 #else
 	secprop->Add_string("core","normal");
@@ -330,12 +330,12 @@ void DOSBOX_Init(void) {
 	secprop->Add_int("cycledown",20);
 	MSG_Add("CPU_CONFIGFILE_HELP",
 		"core -- CPU Core used in emulation: normal,simple"
-#if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86) || (C_DYNREC)
 		",dynamic,auto.\n"
 		"        auto switches from normal to dynamic if appropriate"
 #endif
 		".\n"
-		"cycles -- Amount of instructions dosbox tries to emulate each millisecond.\n"
+		"cycles -- Amount of instructions DOSBox tries to emulate each millisecond.\n"
 		"          Setting this value too high results in sound dropouts and lags.\n"
 		"          You can also let DOSBox guess the correct value by setting it to max.\n"
 		"          The default setting (auto) switches to max if appropriate.\n"
@@ -395,7 +395,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("SBLASTER_CONFIGFILE_HELP",
 		"sbtype -- Type of sblaster to emulate:none,sb1,sb2,sbpro1,sbpro2,sb16.\n"
 		"sbbase,irq,dma,hdma -- The IO/IRQ/DMA/High DMA address of the soundblaster.\n"
-		"mixer -- Allow the soundblaster mixer to modify the dosbox mixer.\n"
+		"mixer -- Allow the soundblaster mixer to modify the DOSBox mixer.\n"
 		"oplmode -- Type of OPL emulation: auto,cms,opl2,dualopl2,opl3.\n"
 		"           On auto the mode is determined by sblaster type.\n"
 		"           All OPL modes are 'Adlib', except for CMS.\n"
