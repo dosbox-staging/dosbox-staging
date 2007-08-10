@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.40 2007-08-04 09:43:13 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.41 2007-08-10 18:18:29 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -1908,13 +1908,13 @@ static void CreateLayout(void) {
 		}
 	}
 	/* Create some text buttons */
-	new CTextButton(PX(6),00,124,20,"Keyboard Layout");
-	new CTextButton(PX(17),00,124,20,"Joystick Layout");
+	new CTextButton(PX(6),0,124,20,"Keyboard Layout");
+	new CTextButton(PX(17),0,124,20,"Joystick Layout");
 
-	bind_but.action=new CCaptionButton(185,330,0,0);
+	bind_but.action=new CCaptionButton(180,330,0,0);
 
 	bind_but.event_title=new CCaptionButton(0,350,0,0);
-	bind_but.bind_title=new CCaptionButton(00,365,0,0);
+	bind_but.bind_title=new CCaptionButton(0,365,0,0);
 
 	/* Create binding support buttons */
 	
@@ -2233,7 +2233,10 @@ void MAPPER_Run(bool pressed) {
 
 	/* Set some palette entries */
 	SDL_SetPalette(mapper.surface, SDL_LOGPAL|SDL_PHYSPAL, map_pal, 0, 5);
-	last_clicked=NULL;
+	if (last_clicked) {
+		last_clicked->SetColor(CLR_WHITE);
+		last_clicked=NULL;
+	}
 	/* Go in the event loop */
 	mapper.exit=false;	
 	mapper.redraw=true;
