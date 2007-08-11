@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.54 2007-07-05 16:03:49 c2woody Exp $ */
+/* $Id: render.cpp,v 1.55 2007-08-11 12:19:00 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -620,7 +620,8 @@ void RENDER_Init(Section * sec) {
 	}
 
 	//If something changed that needs a ReInit
-	if(running &&((render.aspect != aspect) || (render.scale.op != scaleOp) || 
+	// Only ReInit when there is a src.bpp (fixes crashes on startup and directly changing the scaler without a screen specified yet)
+	if(running && render.src.bpp && ((render.aspect != aspect) || (render.scale.op != scaleOp) || 
 				  (render.scale.size != scalersize) || (render.scale.forced != scalerforced) ||
 				   render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );
