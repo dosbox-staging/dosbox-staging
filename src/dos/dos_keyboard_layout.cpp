@@ -188,6 +188,45 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id) {
 	return 0;
 }
 
+static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* layout_id) {
+	// check ID-bytes
+	if ((kcl_data[0]!=0x4b) || (kcl_data[1]!=0x43) || (kcl_data[2]!=0x46)) {
+		return 0;
+	}
+
+	Bit32u dpos=7+kcl_data[6];
+
+	for (;;) {
+		if (dpos+5>kcl_data_size) break;
+		Bit32u cur_pos=dpos;
+		Bit16u len=host_readw(&kcl_data[dpos]);
+		Bit8u data_len=kcl_data[dpos+2];
+		dpos+=5;
+
+		char lng_codes[256];
+		// get all language codes for this layout
+		for (Bitu i=0; i<data_len;) {
+			i+=2;
+			Bitu lcpos=0;
+			for (;i<data_len;) {
+				if (dpos+1>kcl_data_size) break;
+				char lc=(char)kcl_data[dpos];
+				dpos++;
+				i++;
+				if (lc==',') break;
+				lng_codes[lcpos++]=lc;
+			}
+			lng_codes[lcpos]=0;
+			if (strcasecmp(lng_codes, layout_id)==0) {
+				// language ID found, return position
+				return cur_pos;
+			}
+		}
+		dpos=cur_pos+3+len;
+	}
+	return 0;
+}
+
 Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s specific_layout, Bit32s requested_codepage) {
 	this->reset();
 
@@ -202,72 +241,36 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
-		// see if build-in keyboard layout is available, then copy it
-		if (!strncasecmp(keyboard_file_name,"BG",2)) {
-			read_buf_size=687;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_BG[i];
-		} else if (!strncasecmp(keyboard_file_name,"CZ243",5)) {
-			read_buf_size=1003;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_CZ243[i];
-		} else if (!strncasecmp(keyboard_file_name,"FR",2)) {
-			read_buf_size=581;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_FR[i];
-		} else if (!strncasecmp(keyboard_file_name,"GK",2)) {
-			read_buf_size=1117;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_GK[i];
-		} else if (!strncasecmp(keyboard_file_name,"GR",2)) {
-			read_buf_size=596;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_GR[i];
-		} else if (!strncasecmp(keyboard_file_name,"HR",2)) {
-			read_buf_size=993;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_HR[i];
-		} else if (!strncasecmp(keyboard_file_name,"HU",2)) {
-			read_buf_size=964;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_HU[i];
-		} else if (!strncasecmp(keyboard_file_name,"IT",2)) {
-			read_buf_size=236;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_IT[i];
-		} else if (!strncasecmp(keyboard_file_name,"NL",2)) {
-			read_buf_size=552;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_NL[i];
-		} else if (!strncasecmp(keyboard_file_name,"NO",2)) {
-			read_buf_size=477;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_NO[i];
-		} else if (!strncasecmp(keyboard_file_name,"PL",2)) {
-			read_buf_size=261;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_PL[i];
-		} else if (!strncasecmp(keyboard_file_name,"RU",2)) {
-			read_buf_size=1130;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_RU[i];
-		} else if (!strncasecmp(keyboard_file_name,"SK",2)) {
-			read_buf_size=993;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_SK[i];
-		} else if (!strncasecmp(keyboard_file_name,"SP",2)) {
-			read_buf_size=471;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_SP[i];
-		} else if (!strncasecmp(keyboard_file_name,"SU",2)) {
-			read_buf_size=683;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_SU[i];
-		} else if (!strncasecmp(keyboard_file_name,"SV",2)) {
-			read_buf_size=683;
-			for (Bitu i=0; i<read_buf_size; i++) read_buf[i]=layout_SV[i];
-		} else {
-			// neither a matching .kl-file found, nor is the layout available internally
-			// try keyboard layout libraries next
-			if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name))==0) {
-				if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name))==0) {
-					if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name))==0) {
-						LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
-						return KEYB_FILENOTFOUND;
-					} else tempfile = OpenDosboxFile("keybrd3.sys");
-				} else tempfile = OpenDosboxFile("keybrd2.sys");
-			} else tempfile = OpenDosboxFile("keyboard.sys");
-
+		// try keyboard layout libraries next
+		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keyboard.sys");
 			fseek(tempfile, start_pos+2, SEEK_SET);
 			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
 			fclose(tempfile);
-			start_pos=0;
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keybrd2.sys");
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keybrd3.sys");
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
+		} else {
+			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
+			return KEYB_FILENOTFOUND;
 		}
+		start_pos=0;
 	} else {
 		// check ID-bytes of file
 		Bit32u dr=(Bit32u)fread(read_buf, sizeof(Bit8u), 4, tempfile);
@@ -572,53 +575,41 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
-		// see if build-in keyboard layout is available, then copy it
-		if (!strncasecmp(keyboard_file_name,"BG",2)) {
-			for (Bitu i=0; i<687; i++) read_buf[i]=layout_BG[i];
-		} else if (!strncasecmp(keyboard_file_name,"CZ243",5)) {
-			for (Bitu i=0; i<1003; i++) read_buf[i]=layout_CZ243[i];
-		} else if (!strncasecmp(keyboard_file_name,"FR",2)) {
-			for (Bitu i=0; i<581; i++) read_buf[i]=layout_FR[i];
-		} else if (!strncasecmp(keyboard_file_name,"GK",2)) {
-			for (Bitu i=0; i<1117; i++) read_buf[i]=layout_GK[i];
-		} else if (!strncasecmp(keyboard_file_name,"GR",2)) {
-			for (Bitu i=0; i<596; i++) read_buf[i]=layout_GR[i];
-		} else if (!strncasecmp(keyboard_file_name,"HR",2)) {
-			for (Bitu i=0; i<993; i++) read_buf[i]=layout_HR[i];
-		} else if (!strncasecmp(keyboard_file_name,"HU",2)) {
-			for (Bitu i=0; i<964; i++) read_buf[i]=layout_HU[i];
-		} else if (!strncasecmp(keyboard_file_name,"IT",2)) {
-			for (Bitu i=0; i<236; i++) read_buf[i]=layout_IT[i];
-		} else if (!strncasecmp(keyboard_file_name,"NL",2)) {
-			for (Bitu i=0; i<552; i++) read_buf[i]=layout_NL[i];
-		} else if (!strncasecmp(keyboard_file_name,"NO",2)) {
-			for (Bitu i=0; i<477; i++) read_buf[i]=layout_NO[i];
-		} else if (!strncasecmp(keyboard_file_name,"PL",2)) {
-			for (Bitu i=0; i<261; i++) read_buf[i]=layout_PL[i];
-		} else if (!strncasecmp(keyboard_file_name,"RU",2)) {
-			for (Bitu i=0; i<1130; i++) read_buf[i]=layout_RU[i];
-		} else if (!strncasecmp(keyboard_file_name,"SK",2)) {
-			for (Bitu i=0; i<993; i++) read_buf[i]=layout_SK[i];
-		} else if (!strncasecmp(keyboard_file_name,"SP",2)) {
-			for (Bitu i=0; i<471; i++) read_buf[i]=layout_SP[i];
-		} else if (!strncasecmp(keyboard_file_name,"SU",2)) {
-			for (Bitu i=0; i<683; i++) read_buf[i]=layout_SU[i];
-		} else if (!strncasecmp(keyboard_file_name,"SV",2)) {
-			for (Bitu i=0; i<683; i++) read_buf[i]=layout_SV[i];
-		} else {
-			if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name))==0) {
-				if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name))==0) {
-					if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name))==0) {
-						LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
-						return 437;
-					} else tempfile = OpenDosboxFile("keybrd3.sys");
-				} else tempfile = OpenDosboxFile("keybrd2.sys");
-			} else tempfile = OpenDosboxFile("keyboard.sys");
-
+		// try keyboard layout libraries next
+		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keyboard.sys");
 			fseek(tempfile, start_pos+2, SEEK_SET);
 			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
 			fclose(tempfile);
 			start_pos=0;
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keybrd2.sys");
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
+			start_pos=0;
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name)) {
+			tempfile = OpenDosboxFile("keybrd3.sys");
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
+			start_pos=0;
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
+			start_pos=0;
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
+			start_pos=0;
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
+			start_pos=0;
+		} else {
+			start_pos=0;
+			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
+			return 437;
 		}
 	} else {
 		// check ID-bytes of file
