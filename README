@@ -909,12 +909,6 @@ Layout switching
   keyboardlayout=sv in the DOSBox config file, or using "keyb sv" at
   the DOSBox command prompt).
   
-  Internally supported keyboard layouts:
-  BG (Bulgaria), CZ243 (Czech Republic), FR (France), GK (Greece),
-  GR (Germany), HR (Croatia), HU (Hungary), IT (Italy), NL (Netherlands),
-  NO (Norway), PL (Poland), RU (Russian Federation), SK (Slovakia), SP (Spain),
-  SU (Finland), SV (Sweden)
-
   Some keyboard layouts (for example layout GK codepage 869 and layout RU
   codepage 808) have support for dual layouts that can be activated by
   pressing LEFT-ALT+RIGHT-SHIFT and deactivated by LEFT-ALT+LEFT-SHIFT.
@@ -923,7 +917,9 @@ Supported external files
   The freedos .kl files are supported (freedos keyb2 keyboard layoutfiles) as
   well as the freedos keyboard.sys/keybrd2.sys/keybrd3.sys libraries which
   consist of all available .kl files.
-  See http://projects.freedos.net/keyb/ for precompiled keyboard layouts.
+  See http://projects.freedos.net/keyb/ for precompiled keyboard layouts if
+  the DOSBox-integrated layouts don't work for some reason, or updated or
+  new layouts become available.
 
   Both .CPI (MSDOS/compatible codepage files) and .CPX (freedos UPX-compressed
   codepage files) can be used. Some codepages are compiled into DOSBox, so it
@@ -936,6 +932,7 @@ Supported external files
   language code.
   Example: For the file UZ.KL (keyboard layout for Uzbekistan) specify
            "keyboardlayout=uz" in dosbox.conf.
+  The integration of keyboard layout packages (like keybrd2.sys) works similar.
 
 
 Note that the keyboard layout allows foreign characters to be entered, but
