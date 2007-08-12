@@ -69,12 +69,12 @@ public:
 	Bitu freq_add,freq_index;
 	Bitu done,needed;
 	Bits last[2];
-	char * name;
+	const char * name;
 	bool enabled;
 	MixerChannel * next;
 };
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,char * name);
+MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name);
 MixerChannel * MIXER_FindChannel(const char * name);
 /* Find the device you want to delete with findchannel "delchan gets deleted" */
 void MIXER_DelChannel(MixerChannel* delchan); 
@@ -87,7 +87,7 @@ private:
 	char m_name[32];
 public:
 	MixerObject():installed(false){};
-	MixerChannel* Install(MIXER_Handler handler,Bitu freq,char * name);
+	MixerChannel* Install(MIXER_Handler handler,Bitu freq,const char * name);
 	~MixerObject();
 };
 

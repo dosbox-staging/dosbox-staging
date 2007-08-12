@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.46 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: mixer.cpp,v 1.47 2007-08-12 19:16:01 c2woody Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -91,7 +91,7 @@ static struct {
 
 Bit8u MixTemp[MIXER_BUFSIZE];
 
-MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,char * name) {
+MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name) {
 	MixerChannel * chan=new MixerChannel();
 	chan->handler=handler;
 	chan->name=name;
@@ -526,7 +526,7 @@ public:
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
 private:
-	void ShowVolume(char * name,float vol0,float vol1) {
+	void ShowVolume(const char * name,float vol0,float vol1) {
 		WriteOut("%-8s %3.0f:%-3.0f  %+3.2f:%-+3.2f \n",name,
 			vol0*100,vol1*100,
 			20*log(vol0)/log(10.0f),20*log(vol1)/log(10.0f)
@@ -551,7 +551,7 @@ static void MIXER_ProgramStart(Program * * make) {
 	*make=new MIXER;
 }
 
-MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,char * name){
+MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,const char * name){
 	if(!installed) {
 		if(strlen(name) > 31) E_Exit("Too long mixer channel name");
 		safe_strncpy(m_name,name,32);
