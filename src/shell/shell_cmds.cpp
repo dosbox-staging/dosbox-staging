@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.76 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.77 2007-08-12 19:16:09 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -268,7 +268,24 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 	} else if(strlen(args) == 2 && args[1]==':') {
 		WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT"),toupper(*reinterpret_cast<unsigned char*>(&args[0])));
 	} else 	if (!DOS_ChangeDir(args)) {
-		WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
+		/* Changedir failed. Check if the filename is longer then 8 and/or contains spaces */
+		char temp[DOS_PATHLENGTH];
+		safe_strncpy(temp,args,DOS_PATHLENGTH);
+		char* dot = strrchr(temp,'.');
+		if(dot) *dot = 0;
+		dot = strrchr(temp,' ');
+		if(dot) { /* Contains spaces */
+			*dot = 0;
+			if(strlen(temp) > 6) temp[6] = 0;
+			strcat(temp,"~1");
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+		} else if(strlen(temp) >8) {
+			temp[6] = 0;
+			strcat(temp,"~1");
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+		} else {
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
+		}
 	}
 };
 
