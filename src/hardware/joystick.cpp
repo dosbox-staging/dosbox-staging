@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.18 2007-02-22 08:44:07 qbix79 Exp $ */
+/* $Id: joystick.cpp,v 1.19 2007-08-12 10:23:36 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -201,6 +201,7 @@ public:
 		else if (!strcasecmp(type,"auto"))  joytype = JOY_AUTO;
 		else if (!strcasecmp(type,"2axis")) joytype = JOY_2AXIS;
 		else if (!strcasecmp(type,"4axis")) joytype = JOY_4AXIS;
+		else if (!strcasecmp(type,"4axis_2")) joytype = JOY_4AXIS_2;
 		else if (!strcasecmp(type,"fcs"))   joytype = JOY_FCS;
 		else if (!strcasecmp(type,"ch"))    joytype = JOY_CH;
 		else joytype = JOY_AUTO;

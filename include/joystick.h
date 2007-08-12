@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.h,v 1.11 2007-02-22 08:44:06 qbix79 Exp $ */
+/* $Id: joystick.h,v 1.12 2007-08-12 10:23:35 c2woody Exp $ */
 #ifndef DOSBOX_JOYSTICK_H
 #define DOSBOX_JOYSTICK_H
 void JOYSTICK_Enable(Bitu which,bool enabled);
@@ -40,6 +40,7 @@ enum JoystickType {
 	JOY_AUTO,
 	JOY_2AXIS,
 	JOY_4AXIS,
+	JOY_4AXIS_2,
 	JOY_FCS,
 	JOY_CH
 };
