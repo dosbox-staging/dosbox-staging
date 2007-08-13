@@ -80,7 +80,7 @@
 #endif
 
 #if SBPP == 32
-#define RGBtoYUV(c) _RGBtoYUV[((c & 0xf80000) >> 8) | ((c & 0x00fc00) >> 12) | ((c & 0x0000f8) >> 3)]
+#define RGBtoYUV(c) _RGBtoYUV[((c & 0xf80000) >> 8) | ((c & 0x00fc00) >> 5) | ((c & 0x0000f8) >> 3)]
 #else
 #define RGBtoYUV(c) _RGBtoYUV[c]
 #endif
