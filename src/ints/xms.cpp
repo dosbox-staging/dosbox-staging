@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.49 2007-06-25 18:45:48 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.50 2007-08-15 19:09:25 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -262,15 +262,13 @@ static bool multiplex_xms(void) {
 	return false;
 
 };
-#define SET_RESULT(caller) { \
-res = caller; \
-if(res) reg_bl = (Bit8u)res; \
-reg_ax = (res==0); \
+INLINE void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
+	if(touch_bl_on_succes || res) reg_bl = (Bit8u)res;
+	reg_ax = (res==0);
 }
 
 Bitu XMS_Handler(void) {
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
-	Bitu res = 0;
 	switch (reg_ah) {
 
 	case XMS_GET_VERSION:										/* 00 */
@@ -315,12 +313,12 @@ Bitu XMS_Handler(void) {
 		SET_RESULT(XMS_FreeMemory(reg_dx));
 		break;
 	case XMS_MOVE_EXTENDED_MEMORY_BLOCK:						/* 0b */
-		SET_RESULT(XMS_MoveMemory(SegPhys(ds)+reg_si));
+		SET_RESULT(XMS_MoveMemory(SegPhys(ds)+reg_si),false);
 		break;
 	case XMS_LOCK_EXTENDED_MEMORY_BLOCK: {						/* 0c */
 		Bit32u address;
-		res = XMS_LockMemory(reg_dx, address);
-		if(res) reg_bl = res;
+		Bitu res = XMS_LockMemory(reg_dx, address);
+		if(res) reg_bl = (Bit8u)res;
 		reg_ax = (res==0);
 		if (res==0) { // success
 			reg_bx=(Bit16u)(address & 0xFFFF);
