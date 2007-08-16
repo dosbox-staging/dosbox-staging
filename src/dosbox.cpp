@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.120 2007-08-09 19:52:33 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.121 2007-08-16 07:50:31 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -400,7 +400,7 @@ void DOSBOX_Init(void) {
 		"           On auto the mode is determined by sblaster type.\n"
 		"           All OPL modes are 'Adlib', except for CMS.\n"
 		"oplrate -- Sample rate of OPL music emulation.\n"
-		);
+	);
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
 	secprop->Add_bool("gus",true); 	
@@ -443,15 +443,17 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("joystick",&BIOS_Init,false);//done
 	MSG_Add("JOYSTICK_CONFIGFILE_HELP",
-	        "joysticktype -- Type of joystick to emulate: auto (default), none,\n"
-	        "                2axis (supports two joysticks), 4axis,\n"
-	        "                fcs (Thrustmaster), ch (CH Flightstick).\n"
-	        "                none disables joystick emulation.\n"
-	        "                auto chooses emulation depending on real joystick(s).\n"
-	        "timed -- enable timed intervals for axis. (false is old style behaviour).\n"
-	        "autofire -- continuously fires as long as you keep the button pressed.\n"
-	        "swap34 -- swap the 3rd and the 4th axis. can be useful for certain joysticks.\n"
-	        "buttonwrap -- enable button wrapping at the number of emulated buttons.\n"
+		"joysticktype -- Type of joystick to emulate: auto (default), none,\n"
+		"                2axis (supports two joysticks,\n"
+		"                4axis (supports one joystick, first joystick used),\n"
+		"                4axis_2 (supports one joystick, second joystick used),\n"
+		"                fcs (Thrustmaster), ch (CH Flightstick).\n"
+		"                none disables joystick emulation.\n"
+		"                auto chooses emulation depending on real joystick(s).\n"
+		"timed -- enable timed intervals for axis. (false is old style behaviour).\n"
+		"autofire -- continuously fires as long as you keep the button pressed.\n"
+		"swap34 -- swap the 3rd and the 4th axis. can be useful for certain joysticks.\n"
+		"buttonwrap -- enable button wrapping at the number of emulated buttons.\n"
 	);
 
 	secprop->AddInitFunction(&INT10_Init);
@@ -470,15 +472,15 @@ void DOSBOX_Init(void) {
 	secprop->Add_string("serial3","disabled");
 	secprop->Add_string("serial4","disabled");
 	MSG_Add("SERIAL_CONFIGFILE_HELP",
-	        "serial1-4 -- set type of device connected to com port.\n"
-	        "             Can be disabled, dummy, modem, nullmodem, directserial.\n"
-	        "             Additional parameters must be in the same line in the form of\n"
-	        "             parameter:value. Parameter for all types is irq.\n"
-	        "             for directserial: realport (required), rxdelay (optional).\n"
-	        "             for modem: listenport (optional).\n"
-	        "             for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
-	        "                            transparent, port, inhsocket (all optional).\n"
-	        "             Example: serial1=modem listenport:5000\n"
+		"serial1-4 -- set type of device connected to com port.\n"
+		"             Can be disabled, dummy, modem, nullmodem, directserial.\n"
+		"             Additional parameters must be in the same line in the form of\n"
+		"             parameter:value. Parameter for all types is irq.\n"
+		"             for directserial: realport (required), rxdelay (optional).\n"
+		"             for modem: listenport (optional).\n"
+		"             for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
+		"                            transparent, port, inhsocket (all optional).\n"
+		"             Example: serial1=modem listenport:5000\n"
 	);
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
