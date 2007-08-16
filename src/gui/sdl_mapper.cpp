@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.42 2007-08-12 10:23:36 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.43 2007-08-16 13:00:08 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -2095,6 +2095,7 @@ static void MAPPER_SaveBinds(void) {
 		fprintf(savefile,"\n");
 	}
 	fclose(savefile);
+	change_action_text("Mapper file saved.",CLR_WHITE);
 }
 
 static bool MAPPER_LoadBinds(void) {
