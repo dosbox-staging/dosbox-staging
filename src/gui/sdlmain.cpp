@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.131 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.132 2007-08-17 18:00:09 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1349,7 +1349,11 @@ int main(int argc, char* argv[]) {
 		control=&myconf;
 		if (control->cmdline->FindExist("-version") || 
 		    control->cmdline->FindExist("--version") ) {
-			printf(VERSION "\n");
+			printf("\nDOSBox version %s, Copyright 2002-2007 DOSBox Team.\n\n",VERSION);
+			printf("DOSBox is written by the DOSBox Team (See AUTHORS(.txt))\n");
+			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
+			printf("and you are welcome to redistribute it under certain conditions;\n");
+			printf("please read 'COPYING(.txt)' thoroughly before doing so.\n\n");
 			return 0;
 		}
 	   
@@ -1369,7 +1373,7 @@ int main(int argc, char* argv[]) {
 				fclose(stdin);
 				fclose(stdout);
 				fclose(stderr);
-				freopen("CONIN$","w",stdin);
+				freopen("CONIN$","r",stdin);
 				freopen("CONOUT$","w",stdout);
 				freopen("CONOUT$","w",stderr);
 			}
@@ -1393,6 +1397,12 @@ int main(int argc, char* argv[]) {
         setbuf(stderr, NULL);
 #endif
 
+	/* Display Welcometext in the console */
+	LOG_MSG("DOSBox version %s",VERSION);
+	LOG_MSG("Copyright 2002-2007 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("---");
+
+	/* Init SDL */
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
