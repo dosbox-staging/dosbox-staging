@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.43 2007-08-16 13:00:08 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.44 2007-08-17 18:49:56 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2106,6 +2106,7 @@ static bool MAPPER_LoadBinds(void) {
 		CreateStringBind(linein);
 	}
 	fclose(loadfile);
+	LOG_MSG("MAPPER: Loading mapper settings from %s", mapper.filename);
 	return true;
 }
 
