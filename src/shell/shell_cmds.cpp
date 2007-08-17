@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.77 2007-08-12 19:16:09 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.78 2007-08-17 17:58:46 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -284,7 +284,12 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 			strcat(temp,"~1");
 			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
 		} else {
-			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
+			Bit8u drive=DOS_GetDefaultDrive()+'A';
+			if (drive=='Z') {
+				WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_3"));
+			} else {
+				WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
+			}
 		}
 	}
 };
