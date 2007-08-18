@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.132 2007-08-17 18:00:09 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.133 2007-08-18 16:32:04 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1347,16 +1347,6 @@ int main(int argc, char* argv[]) {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
-		if (control->cmdline->FindExist("-version") || 
-		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, Copyright 2002-2007 DOSBox Team.\n\n",VERSION);
-			printf("DOSBox is written by the DOSBox Team (See AUTHORS(.txt))\n");
-			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
-			printf("and you are welcome to redistribute it under certain conditions;\n");
-			printf("please read 'COPYING(.txt)' thoroughly before doing so.\n\n");
-			return 0;
-		}
-	   
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
@@ -1380,6 +1370,16 @@ int main(int argc, char* argv[]) {
 			SetConsoleTitle("DOSBox Status Window");
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
+		if (control->cmdline->FindExist("-version") || 
+		    control->cmdline->FindExist("--version") ) {
+			printf("\nDOSBox version %s, copyright 2002-2007 DOSBox Team.\n\n",VERSION);
+			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
+			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
+			printf("and you are welcome to redistribute it under certain conditions;\n");
+			printf("please read the COPYING file thoroughly before doing so.\n\n");
+			return 0;
+		}
+
 #if C_DEBUG
 		DEBUG_SetupConsole();
 #endif
