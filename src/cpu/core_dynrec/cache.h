@@ -70,7 +70,15 @@ static struct {
 	CodePageHandlerDynRec * last_page;		// the last used page
 } cache;
 
+
+// cache memory pointers, to be malloc'd later
+static Bit8u * cache_code_start_ptr=NULL;
+static Bit8u * cache_code=NULL;
+static Bit8u * cache_code_link_blocks=NULL;
+
+static CacheBlockDynRec * cache_blocks=NULL;
 static CacheBlockDynRec link_blocks[2];		// default linking (specially marked)
+
 
 // the CodePageHandlerDynRec class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
@@ -440,7 +448,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 		block->Clear();
 	// block size must be at least CACHE_MAXSIZE
 	while (size<CACHE_MAXSIZE) {
-		if (!nextblock) 
+		if (!nextblock)
 			goto skipresize;
 		// merge blocks
 		size+=nextblock->cache.size;
@@ -490,7 +498,7 @@ static void cache_closeblock(void) {
 		}
 	}
 	// advance the active block pointer
-	if (!block->cache.next) {
+	if (!block->cache.next || (block->cache.next->cache.start>(cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE))) {
 //		LOG_MSG("Cache full restarting");
 		cache.block.active=cache.block.first;
 	} else {
@@ -526,11 +534,6 @@ static INLINE void cache_addq(Bit64u val) {
 static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);
 
-// cache memory pointers, to be malloc'd later
-static Bit8u * cache_code_start_ptr=NULL;
-static Bit8u * cache_code=NULL;
-static Bit8u * cache_code_link_blocks=NULL;
-static CacheBlockDynRec * cache_blocks=NULL;
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
