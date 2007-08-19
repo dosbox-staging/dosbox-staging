@@ -221,6 +221,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 				// language ID found, return position
 				return cur_pos;
 			}
+			dpos+=2;
 		}
 		dpos=cur_pos+3+len;
 	}
