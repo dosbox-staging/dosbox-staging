@@ -52,6 +52,7 @@ struct LOG
 	void operator()(char const* , char const* , double )							{ }
 	void operator()(char const* , char const* , double ,double )				{ }
 	void operator()(char const* , double , char const* )						{ }
+	void operator()(char const* , double , double, char const* )						{ }
 
 
 
