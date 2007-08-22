@@ -50,7 +50,7 @@
 #include "inout.h"
 #include "lazyflags.h"
 
-#define CACHE_MAXSIZE	(4096)
+#define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
 #define CACHE_PAGES		(512)
 #define CACHE_BLOCKS	(128*1024)
@@ -135,13 +135,13 @@ static struct {
 
 #define X86			0x01
 #define X86_64		0x02
-#define MIPSEL32	0x03
+#define MIPSEL		0x03
 
 #if C_TARGETCPU == X86_64
 #include "core_dynrec/risc_x64.h"
 #elif C_TARGETCPU == X86
 #include "core_dynrec/risc_x86.h"
-#elif C_TARGETCPU == MIPSEL32
+#elif C_TARGETCPU == MIPSEL
 #include "core_dynrec/risc_mipsel32.h"
 #endif
 
