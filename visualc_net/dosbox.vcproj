@@ -158,6 +158,9 @@
 			<File
 				RelativePath="..\src\dosbox.cpp">
 			</File>
+			<File
+				RelativePath="..\src\dosbox.rc">
+			</File>
 			<Filter
 				Name="cpu"
 				Filter="">
@@ -847,6 +850,9 @@
 				RelativePath="..\include\video.h">
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\src\dosbox.ico">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
