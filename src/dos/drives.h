@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.37 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: drives.h,v 1.38 2007-08-22 11:54:35 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -357,6 +357,7 @@ private:
 		Bit8u data[ISO_FRAMESIZE];
 	} sectorHashEntries[ISO_MAX_HASH_TABLE_SIZE];
 
+	bool dataCD;
 	isoDirEntry rootEntry;
 	Bit8u mediaid;
 	char fileName[CROSS_LEN];

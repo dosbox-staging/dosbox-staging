@@ -169,6 +169,7 @@ public:
 	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
 	bool	LoadUnloadMedia		(bool unload);
 	bool	ReadSector		(Bit8u *buffer, bool raw, unsigned long sector);
+	bool	HasDataTrack		(void);
 	
 static	CDROM_Interface_Image* images[26];
 
@@ -202,6 +203,7 @@ static  struct imagePlayer {
 
 static	int	refCount;
 	std::vector<Track>	tracks;
+typedef	std::vector<Track>::iterator	track_it;
 	std::string	mcn;
 	Bit8u	subUnit;
 };

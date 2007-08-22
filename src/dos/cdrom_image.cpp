@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.16 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: cdrom_image.cpp,v 1.17 2007-08-22 11:54:35 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -261,7 +261,7 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 
 	MEM_BlockWrite(buffer, buf, buflen);
 	delete[] buf;
-	
+
 	return success;
 }
 
@@ -294,7 +294,7 @@ bool CDROM_Interface_Image::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 	if (tracks[track].sectorSize != RAW_SECTOR_SIZE && raw) return false;
 	if (tracks[track].sectorSize == RAW_SECTOR_SIZE && !tracks[track].mode2 && !raw) seek += 16;
 	if (tracks[track].mode2 && !raw) seek += 24;
-	
+
 	return tracks[track].file->read(buffer, seek, length);
 }
 
@@ -521,7 +521,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 	track.length = 0;
 	track.file = NULL;
 	if(!AddTrack(track, shift, 0, totalPregap, 0)) return false;
-	
+
 	return true;
 }
 
@@ -574,6 +574,16 @@ bool CDROM_Interface_Image::AddTrack(Track &curr, int &shift, int prestart, int 
 	tracks.push_back(curr);
 	return true;
 }
+
+bool CDROM_Interface_Image::HasDataTrack(void)
+{
+	//Data track has attribute 0x40
+	for(track_it it = tracks.begin(); it != tracks.end(); it++) {
+		if ((*it).attr == 0x40) return true;
+	}
+	return false;
+}
+
 
 bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 {

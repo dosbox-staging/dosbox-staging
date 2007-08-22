@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.20 2007-06-15 19:05:48 c2woody Exp $ */
+/* $Id: drive_iso.cpp,v 1.21 2007-08-22 11:54:35 qbix79 Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -182,7 +182,36 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
 			//Remove trailing dot.
 			if((labelPos > 0) && (discLabel[labelPos - 1] == '.'))
 				discLabel[labelPos - 1] = 0;
-		} else error = 6;
+		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
+			strcpy(info, "isoDrive ");
+			strcat(info, fileName);
+			this->driveLetter = driveLetter;
+			this->mediaid = mediaid;
+			char buffer[32] = { 0 };
+			strcpy(buffer, "Audio CD");
+
+			//Code Copied from drive_cache. (convert mscdex label to a dos 8.3 file)
+			Bitu togo	= 8;
+			Bitu bufPos	= 0;
+			Bitu labelPos	= 0;
+			bool point	= false;
+			while (togo>0) {
+				if (buffer[bufPos]==0) break;
+				if (!point && (buffer[bufPos]=='.')) { togo=4; point=true; }
+				discLabel[labelPos] = toupper(buffer[bufPos]);
+				labelPos++; bufPos++;
+				togo--;
+				if ((togo==0) && !point) {
+					if (buffer[bufPos]=='.') bufPos++;
+					discLabel[labelPos]='.'; labelPos++; point=true; togo=3;
+				}
+			};
+			discLabel[labelPos]=0;
+			//Remove trailing dot.
+			if((labelPos > 0) && (discLabel[labelPos - 1] == '.'))
+				discLabel[labelPos - 1] = 0;
+
+		} else error = 6; //Corrupt image
 	}
 }
 
@@ -530,13 +559,19 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 bool isoDrive :: loadImage()
 {
 	isoPVD pvd;
+	dataCD = false;
 	readSector((Bit8u*)(&pvd), ISO_FIRST_VD);
 	if (pvd.type != 1 || strncmp((char*)pvd.standardIdent, "CD001", 5) || pvd.version != 1) return false;
-	return (readDirEntry(&this->rootEntry, pvd.rootEntry)>0);
+	if (readDirEntry(&this->rootEntry, pvd.rootEntry)>0) {
+		dataCD = true;
+		return true;
+	}
+	return false;
 }
 
 bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 {
+	if (!dataCD) return false;
 	*de = this->rootEntry;
 	if (!strcmp(path, "")) return true;
 	
