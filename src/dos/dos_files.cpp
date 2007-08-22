@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.90 2007-06-29 10:24:43 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.91 2007-08-22 07:34:57 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -94,7 +94,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			upname[w++]=c;
 			break;
 		default:
-			LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X !",c,c);
+			LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X in %s!",c,c,name);
 			DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
 			break;
 		}
@@ -768,9 +768,9 @@ checkext:
 		index++;
 	}
 savefcb:
-	if (!hasdrive & !(parser & PARSE_DFLT_DRIVE)) fcb_name.part.drive[0]=dos.current_drive+1; 
+	if (!hasdrive & !(parser & PARSE_DFLT_DRIVE)) fcb_name.part.drive[0] = 0;
 	if (!hasname & !(parser & PARSE_BLNK_FNAME)) strcpy(fcb_name.part.name,"        ");
-	if (!hasext & !(parser & PARSE_BLNK_FEXT)) strcpy(fcb_name.part.ext,"   ");		
+	if (!hasext & !(parser & PARSE_BLNK_FEXT)) strcpy(fcb_name.part.ext,"   ");
 	fcb.SetName(fcb_name.part.drive[0],fcb_name.part.name,fcb_name.part.ext);
 	*change=(Bit8u)(string-string_begin);
 	return ret;
