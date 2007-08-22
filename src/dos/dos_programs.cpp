@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.76 2007-07-02 14:10:27 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.77 2007-08-22 11:54:54 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -528,9 +528,9 @@ public:
 				if((temp_line == "-e") || (temp_line == "-E")) {
 					/* Command mode for PCJr cartridges */
 					i++;
-					if(cmd->FindCommand(i+1, temp_line)) {
-						for(size_t i=0;i<temp_line.size();i++) temp_line[i]=toupper(temp_line[i]);
-						cart_cmd=temp_line;
+					if(cmd->FindCommand(i + 1, temp_line)) {
+						for(size_t ct = 0;ct < temp_line.size();ct++) temp_line[ct] = toupper(temp_line[ct]);
+						cart_cmd = temp_line;
 					} else {
 						printError();
 						return;
