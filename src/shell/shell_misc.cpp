@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.50 2007-08-03 18:22:45 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.51 2007-08-22 11:21:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +30,7 @@
 void DOS_Shell::ShowPrompt(void) {
 	Bit8u drive=DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
+	dir[0] = 0; //DOS_GetCurrentDir doesn't always return something. (if drive is messed up)
 	DOS_GetCurrentDir(0,dir);
 	WriteOut("%c:\\%s>",drive,dir);
 }
