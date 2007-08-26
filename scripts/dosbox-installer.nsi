@@ -1,5 +1,5 @@
 !define VER_MAYOR 0
-!define VER_MINOR 71
+!define VER_MINOR 72
 
 ; The name of the installer
 Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
