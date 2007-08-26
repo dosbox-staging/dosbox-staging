@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_posix.h,v 1.1 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: directserial_posix.h,v 1.2 2007-08-26 17:19:46 qbix79 Exp $ */
 
 // include guard
 #ifndef DOSBOX_DIRECTSERIAL_POSIX_H
@@ -25,7 +25,7 @@
 #include "dosbox.h"
 
 #if C_DIRECTSERIAL
-#ifdef LINUX
+#if defined (LINUX) || defined (MACOSX)
 
 
 

@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_posix.cpp,v 1.1 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: directserial_posix.cpp,v 1.2 2007-08-26 17:19:46 qbix79 Exp $ */
 
 #include "dosbox.h"
 
 #if C_DIRECTSERIAL
 
 // Posix version
-#if defined (LINUX)
+#if defined (LINUX) || defined (MACOSX)
 
 #include "serialport.h"
 #include "directserial_posix.h"
@@ -44,7 +44,7 @@ CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
 	InstallationSuccessful = false;
 
 	rx_retry = 0;
-    rx_retry_max = 0;
+	rx_retry_max = 0;
 
 	std::string prefix="/dev/";
 	std::string tmpstring;
