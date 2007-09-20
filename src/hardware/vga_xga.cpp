@@ -1073,7 +1073,7 @@ Bitu XGA_Read(Bitu port, Bitu len) {
 }
 
 void VGA_SetupXGA(void) {
-	if (machine!=MCH_VGA) return;
+	if (!IS_VGA_ARCH) return;
 
 	memset(&xga, 0, sizeof(XGAStatus));
 
@@ -1165,8 +1165,4 @@ void VGA_SetupXGA(void) {
 
 	IO_RegisterWriteHandler(0xe2ea,&XGA_Write,IO_MB | IO_MW | IO_MD);
 	IO_RegisterReadHandler(0xe2ea,&XGA_Read,IO_MB | IO_MW | IO_MD);
-
-
-
 }
-

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.66 2007-08-08 08:03:48 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.67 2007-09-20 16:42:43 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -1314,7 +1314,7 @@ private:
 		else type=SBT_16;
 
 		if (type==SBT_16) {
-			if ((machine!=MCH_VGA) || !SecondDMAControllerAvailable()) type=SBT_PRO2;
+			if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable()) type=SBT_PRO2;
 		}
 			
 		/* OPL/CMS Init */

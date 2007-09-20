@@ -56,7 +56,7 @@ void VGA_DetermineMode(void) {
 		}
 	/* Test for graphics or alphanumeric mode */
 	} else if (vga.attr.mode_control & 1) {
-		if (vga.gfx.mode & 0x40) VGA_SetMode(M_VGA);
+		if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) VGA_SetMode(M_VGA);
 		else if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
 		else if ((vga.gfx.miscellaneous & 0x0c)==0x0c) VGA_SetMode(M_CGA2);
 		else {

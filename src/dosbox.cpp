@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.121 2007-08-16 07:50:31 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.122 2007-09-20 16:42:43 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -254,7 +254,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	        "# They are used to (briefly) document the effect of each option.\n");
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
-	svgaCard = SVGA_S3Trio; 
+	svgaCard=SVGA_None; 
 	machine=MCH_VGA;
 	std::string cmd_machine;
 	const char * mtype;
@@ -264,8 +264,11 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (strcasecmp(mtype,"tandy")==0) machine=MCH_TANDY;
 	else if (strcasecmp(mtype,"pcjr")==0) machine=MCH_PCJR;
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
-	else if (strcasecmp(mtype,"vga")==0) machine=MCH_VGA;
-	else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
+	else if (strcasecmp(mtype,"ega")==0) machine=MCH_EGA;
+	else if (strcasecmp(mtype,"vga")==0) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_S3Trio;
+	} else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
 }
 
 

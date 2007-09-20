@@ -325,7 +325,8 @@ public:
 	DMA(Section* configuration):Module_base(configuration){
 		Bitu i;
 		DmaControllers[0] = new DmaController(0);
-		if (machine==MCH_VGA) DmaControllers[1] = new DmaController(1);
+		if (IS_EGAVGA_ARCH) DmaControllers[1] = new DmaController(1);
+		else DmaControllers[1] = NULL;
 	
 		for (i=0;i<0x10;i++) {
 			Bitu mask=IO_MB;
@@ -333,7 +334,7 @@ public:
 			/* install handler for first DMA controller ports */
 			DmaControllers[0]->DMA_WriteHandler[i].Install(i,DMA_Write_Port,mask);
 			DmaControllers[0]->DMA_ReadHandler[i].Install(i,DMA_Read_Port,mask);
-			if (machine==MCH_VGA) {
+			if (IS_EGAVGA_ARCH) {
 				/* install handler for second DMA controller ports */
 				DmaControllers[1]->DMA_WriteHandler[i].Install(0xc0+i*2,DMA_Write_Port,mask);
 				DmaControllers[1]->DMA_ReadHandler[i].Install(0xc0+i*2,DMA_Read_Port,mask);
@@ -343,7 +344,7 @@ public:
 		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81,DMA_Write_Port,IO_MB,3);
 		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81,DMA_Read_Port,IO_MB,3);
 
-		if (machine==MCH_VGA) {
+		if (IS_EGAVGA_ARCH) {
 			/* install handlers for ports 0x81-0x83 (on the second DMA controller) */
 			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89,DMA_Write_Port,IO_MB,3);
 			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89,DMA_Read_Port,IO_MB,3);

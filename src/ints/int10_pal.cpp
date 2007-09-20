@@ -39,7 +39,8 @@ void INT10_SetSinglePaletteRegister(Bit8u reg,Bit8u val) {
 		IO_Read(VGAREG_TDY_RESET);
 		WriteTandyACTL(reg+0x10,val);
 		break;
-	case MCH_VGA:
+	case EGAVGA_ARCH_CASE:
+		if (!IS_VGA_ARCH) reg&=0x1f;
 		if(reg<=ACTL_MAX_REG) {
 			ResetACTL();
 			IO_Write(VGAREG_ACTL_ADDRESS,reg);
@@ -70,7 +71,7 @@ void INT10_SetAllPaletteRegisters(PhysPt data) {
 		// Then the border
 		WriteTandyACTL(0x02,mem_readb(data));
 		break;
-	case MCH_VGA:
+	case EGAVGA_ARCH_CASE:
 		ResetACTL();
 		// First the colors
 		for(Bit8u i=0;i<0x10;i++) {
@@ -215,7 +216,7 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
 	if (machine == MCH_CGA || IS_TANDY_ARCH)
 		IO_Write(0x3d9,temp);
-	else if (machine == MCH_VGA) {
+	else if (IS_EGAVGA_ARCH) {
 		val = ((val << 1) & 0x10) | (val & 0x7);
 		/* Aways set the overscan color */
 		INT10_SetSinglePaletteRegister( 0x11, val );
@@ -238,7 +239,7 @@ void INT10_SetColorSelect(Bit8u val) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
 	if (machine == MCH_CGA || IS_TANDY_ARCH)
 		IO_Write(0x3d9,temp);
-	else if (machine == MCH_VGA) {
+	else if (IS_EGAVGA_ARCH) {
 		if (CurMode->mode <= 3) //Maybe even skip the total function!
 			return;
 		val = (temp & 0x10) | 2 | val;

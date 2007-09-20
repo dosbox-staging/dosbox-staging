@@ -887,7 +887,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 			dos.loaded_codepage=(Bit16u)(codepage_id&0xffff);
 
 			// update font if necessary
-			if (font_changed && (CurMode->type==M_TEXT) && (machine==MCH_VGA)) {
+			if (font_changed && (CurMode->type==M_TEXT) && (IS_EGAVGA_ARCH)) {
 				INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
 			}
 			INT10_SetupRomMemoryChecksum();

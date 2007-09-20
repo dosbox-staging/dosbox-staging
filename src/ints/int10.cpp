@@ -140,7 +140,9 @@ static Bitu INT10_Handler(void) {
 		reg_al=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE)|(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL)&0x80);
 		reg_ah=(Bit8u)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 		break;					
-	case 0x10:								/* EGA/VGA Palette functions */
+	case 0x10:								/* Palette functions */
+		if ((machine==MCH_CGA) || ((!IS_VGA_ARCH) && (reg_al>0x02))) break;
+		//TODO: subfunction 0x03 for ega
 		switch (reg_al) {
 		case 0x00:							/* SET SINGLE PALETTE REGISTER */
 			INT10_SetSinglePaletteRegister(reg_bl,reg_bh);
@@ -195,7 +197,7 @@ static Bitu INT10_Handler(void) {
 		}
 		break;
 	case 0x11:								/* Character generator functions */
-		if (machine<MCH_VGA) 
+		if (!IS_EGAVGA_ARCH) 
 			break;
 		switch (reg_al) {
 /* Textmode calls */
@@ -216,6 +218,7 @@ static Bitu INT10_Handler(void) {
 			break;
 		case 0x04:			/* Load 8x16 font */
 		case 0x14:
+			if (!IS_VGA_ARCH) break;
 			INT10_LoadFont(Real2Phys(int10.rom.font_16),reg_al==0x14,256,0,0,16);
 			break;
 /* Graphics mode calls */
@@ -235,6 +238,7 @@ static Bitu INT10_Handler(void) {
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,8);
 			goto graphics_chars;
 		case 0x24:			/* Rom 8x16 set */
+			if (!IS_VGA_ARCH) break;
 			RealSetVec(0x43,int10.rom.font_16);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,16);
 			goto graphics_chars;
@@ -277,6 +281,7 @@ graphics_chars:
 				reg_bp=RealOff(int10.rom.font_8_second);
 				break;
 			case 0x06:	/* font 8x16 */
+				if (!IS_VGA_ARCH) break;
 				SegSet16(es,RealSeg(int10.rom.font_16));
 				reg_bp=RealOff(int10.rom.font_16);
 				break;
@@ -291,7 +296,7 @@ graphics_chars:
 		}
 		break;
 	case 0x12:								/* alternate function select */
-		if (machine<MCH_VGA) 
+		if (!IS_EGAVGA_ARCH) 
 			break;
 		switch (reg_bl) {
 		case 0x10:							/* Get EGA Information */
@@ -302,20 +307,27 @@ graphics_chars:
 		case 0x20:							/* Set alternate printscreen */
 			break;
 		case 0x30:							/* Select vertical resolution */
-		case 0x32:							/* Video adressing */
+			if (!IS_VGA_ARCH) break;
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			reg_al=0x12;			//fake a success call
 			break;
 		case 0x31:							/* Palette loading on modeset */
 			{   
+				if (!IS_VGA_ARCH) break;
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xf7;
 				if (reg_al&1) temp|=8;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
 				reg_al=0x12;
 				break;	
 			}		
+		case 0x32:							/* Video adressing */
+			if (!IS_VGA_ARCH) break;
+			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
+			reg_al=0x12;			//fake a success call
+			break;
 		case 0x33: /* SWITCH GRAY-SCALE SUMMING */
 			{   
+				if (!IS_VGA_ARCH) break;
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
 				if (!(reg_al&1)) temp|=2;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
@@ -325,12 +337,19 @@ graphics_chars:
 		case 0x34: /* ALTERNATE FUNCTION SELECT (VGA) - CURSOR EMULATION */
 			{   
 				// bit 0: 0=enable, 1=disable
+				if (!IS_VGA_ARCH) break;
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0xfe;
 				real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,temp|reg_al);
 				reg_al=0x12;
 				break;	
 			}		
+		case 0x35:
+			if (!IS_VGA_ARCH) break;
+			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
+			reg_al=0x12;
+			break;
 		case 0x36:							/* VGA Refresh control */
+			if (!IS_VGA_ARCH) break;
 			/* 
 				Call disables/enables the vga from outputting video,
 				don't support it, but fake a success return 
@@ -347,7 +366,7 @@ graphics_chars:
 		INT10_WriteString(reg_dh,reg_dl,reg_al,reg_bl,SegPhys(es)+reg_bp,reg_cx,reg_bh);
 		break;
 	case 0x1A:								/* Display Combination */
-		if (machine<MCH_VGA) break;
+		if (!IS_VGA_ARCH) break;
 		if (reg_al==0) {
 			reg_bx=real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX);
 			reg_al=0x1A;
@@ -360,7 +379,7 @@ graphics_chars:
 		}
 		break;
 	case 0x1B:								/* functionality State Information */
-		if (machine<MCH_VGA) break;
+		if (!IS_VGA_ARCH) break;
 		switch (reg_bx) {
 		case 0x0000:
 			INT10_GetFuncStateInformation(SegPhys(es)+reg_di);
@@ -371,11 +390,12 @@ graphics_chars:
 		}
 		break;
 	case 0x1C:	/* Video Save Area */
-		if (machine<MCH_VGA) break;
+		if (IS_VGA_ARCH) break;
 		if (reg_al==0) reg_bx = 0;
 		reg_al = 0x1C;	
 		break;
 	case 0x4f:								/* VESA Calls */
+		if ((!IS_VGA_ARCH) || (svgaCard==SVGA_None)) break;
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
 			reg_al=0x4f;

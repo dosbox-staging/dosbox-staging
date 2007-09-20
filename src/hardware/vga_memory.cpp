@@ -799,7 +799,7 @@ void VGA_SetupHandlers(void) {
 		}
 		goto range_done;
 //		MEM_SetPageHandler(vga.tandy.mem_bank<<2,vga.tandy.is_32k_mode ? 0x08 : 0x04,range_handler);
-	case MCH_VGA:
+	case EGAVGA_ARCH_CASE:
 		break;
 	default:
 		LOG_MSG("Illegal machine type %d", machine );

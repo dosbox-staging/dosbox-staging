@@ -202,15 +202,29 @@ void VGA_SetupDAC(void) {
 	vga.dac.state=DAC_READ;
 	vga.dac.read_index=0;
 	vga.dac.write_index=0;
-	if (machine==MCH_VGA) {
+	if (IS_VGA_ARCH) {
 		/* Setup the DAC IO port Handlers */
 		IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);
 		IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
 		IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
 		IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
-		IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
 		IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
+		IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
 		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
 		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
+	} else if (machine==MCH_EGA) {
+		for (Bitu i=0;i<64;i++) {
+			if ((i&4)>0) vga.dac.rgb[i].red=0x2a;
+			else vga.dac.rgb[i].red=0;
+			if ((i&32)>0) vga.dac.rgb[i].red+=0x15;
+
+			if ((i&2)>0) vga.dac.rgb[i].green=0x2a;
+			else vga.dac.rgb[i].green=0;
+			if ((i&16)>0) vga.dac.rgb[i].green+=0x15;
+
+			if ((i&1)>0) vga.dac.rgb[i].blue=0x2a;
+			else vga.dac.rgb[i].blue=0;
+			if ((i&8)>0) vga.dac.rgb[i].blue+=0x15;
+		}
 	}
 };

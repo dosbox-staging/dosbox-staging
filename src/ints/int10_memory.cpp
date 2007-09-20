@@ -78,14 +78,16 @@ void INT10_SetupRomMemory(void) {
 	PhysPt rom_base=PhysMake(0xc000,0);
 	Bitu i;
 	int10.rom.used=3;
-	if (machine==MCH_VGA) {
+	if (IS_EGAVGA_ARCH) {
 		// set up the start of the ROM
 		phys_writew(rom_base+0,0xaa55);
 		phys_writeb(rom_base+2,0x40);		// Size of ROM: 64 512-blocks = 32KB
-		phys_writeb(rom_base+0x1e,0x49);	// IBM string
-		phys_writeb(rom_base+0x1f,0x42);
-		phys_writeb(rom_base+0x20,0x4d);
-		phys_writeb(rom_base+0x21,0x00);
+		if (IS_VGA_ARCH) {
+			phys_writeb(rom_base+0x1e,0x49);	// IBM string
+			phys_writeb(rom_base+0x1f,0x42);
+			phys_writeb(rom_base+0x20,0x4d);
+			phys_writeb(rom_base+0x21,0x00);
+		}
 		int10.rom.used=0x100;
 	}
 	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
@@ -116,7 +118,7 @@ void INT10_SetupRomMemory(void) {
 	if (IS_TANDY_ARCH) {
 		RealSetVec(0x44,int10.rom.font_8_first);
 	}
-	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
+	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
 		//Reserve checksum location
 		checksumlocation = int10.rom.used++;
 	}
@@ -145,7 +147,7 @@ void INT10_ReloadRomFonts(void) {
 }
 
 void INT10_SetupRomMemoryChecksum(void) {
-	if (machine == MCH_VGA) { //EGA/VGA. Just to be safe
+	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
 		/* Sum of all bytes in rom module 256 should be 0 */
 		Bit8u sum = 0;
 		PhysPt rom_base = PhysMake(0xc000,0);

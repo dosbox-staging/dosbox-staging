@@ -272,7 +272,7 @@ static void FinishSetMode(bool clearmem) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
 	// FIXME We nearly have the good tables. to be reworked
-	if (machine==MCH_VGA) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x08);    // 8 is VGA should be ok for now
+	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x08);    // 8 is VGA should be ok for now
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER,0x00);
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER+2,0x00);
 
@@ -468,7 +468,11 @@ bool INT10_SetVideoMode(Bitu mode) {
 		mode-=0x80;
 	}
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
-	if (machine!=MCH_VGA) return INT10_SetVideoMode_OTHER(mode,clearmem);
+	if (!IS_EGAVGA_ARCH) return INT10_SetVideoMode_OTHER(mode,clearmem);
+	if ((machine==MCH_EGA) && (mode>0x10)) {
+		LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);
+		return false;
+	}
 	Bit8u modeset_ctl,video_ctl,vga_switches;
 
 	if (!SetCurMode(ModeList_VGA,mode)){
@@ -643,7 +647,10 @@ bool INT10_SetVideoMode(Bitu mode) {
 	ver_overflow|=(line_compare & 0x400) >> 4;
 	Bit8u underline=0;
 	/* Maximum scanline / Underline Location */
-	if (CurMode->special & _EGA_LINE_DOUBLE) max_scanline|=0x80;
+	if (CurMode->special & _EGA_LINE_DOUBLE) {
+		if (machine==MCH_EGA) max_scanline=1;
+		else max_scanline|=0x80;
+	}
 	switch (CurMode->type) {
 	case M_TEXT:
 		max_scanline|=CurMode->cheight-1;
@@ -661,7 +668,8 @@ bool INT10_SetVideoMode(Bitu mode) {
 		break;
 	case M_CGA2:
 	case M_CGA4:
-		max_scanline|=1;
+		if (machine==MCH_EGA) max_scanline|=2;
+		else max_scanline|=1;
 		break;
 	}
 	if (CurMode->vdispend==350) underline=0x0f;
@@ -819,13 +827,23 @@ bool INT10_SetVideoMode(Bitu mode) {
 			for (i=1;i<16;i++) att_data[i]=0x3f;
 			break;
 		case 0x10:
-		case 0x12: goto att_text16;
+		case 0x12: 
+			if (IS_VGA_ARCH)
+				goto att_text16;
+			// ega fallthrough
 		default:
 			if ( CurMode->type == M_LIN4 )
 				goto att_text16;
-			for (i=0;i<8;i++) {
-				att_data[i]=i;
-				att_data[i+8]=i+0x10;
+			if (!IS_VGA_ARCH) {
+				for (i=0;i<8;i++) {
+					att_data[i]=i;
+					att_data[i+8]=i+0x38;
+				}
+			} else {
+				for (i=0;i<8;i++) {
+					att_data[i]=i;
+					att_data[i+8]=i+0x10;
+				}
 			}
 			break;
 		}
@@ -929,7 +947,7 @@ dac_text16:
 			}
 			break;
 		}
-		if (machine==MCH_VGA) {
+		if (IS_VGA_ARCH) {
 			/* check if gray scale summing is enabled */
 			if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
 				INT10_PerformGrayScaleSumming(0,256);

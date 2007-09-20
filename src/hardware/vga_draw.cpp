@@ -531,6 +531,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.address = vga.config.real_start;
 	vga.draw.address_line = vga.config.hlines_skip;
 	vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
+	// go figure...
+//	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
 	case M_LIN4:
@@ -653,12 +655,13 @@ void VGA_SetupDrawing(Bitu val) {
 	float fps; Bitu clock;
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
-	if (machine==MCH_VGA) {
-		htotal = 5 + vga.crtc.horizontal_total;
+	if (IS_EGAVGA_ARCH) {
+		htotal = 2 + vga.crtc.horizontal_total;
+		if (IS_VGA_ARCH) htotal += 3;
 		hdend = 1 + vga.crtc.horizontal_display_end;
 		hbstart = vga.crtc.start_horizontal_blanking;
-		hbend = vga.crtc.end_horizontal_blanking&0x1F |
-				((vga.crtc.end_horizontal_retrace&0x80)>>2);
+		hbend = vga.crtc.end_horizontal_blanking&0x1F;
+		if (IS_VGA_ARCH) hbend |= (vga.crtc.end_horizontal_retrace&0x80)>>2;
 		hbend = hbstart + ((hbend - hbstart) & 0x3F);
 		hrstart = vga.crtc.start_horizontal_retrace;
 		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
@@ -668,15 +671,17 @@ void VGA_SetupDrawing(Bitu val) {
 		else 
 			hrend = hrstart + hrend;
 
-		vtotal=2 + vga.crtc.vertical_total | 
-			((vga.crtc.overflow & 1) << 8) | ((vga.crtc.overflow & 0x20) << 4);
-		vdend = 1 + (vga.crtc.vertical_display_end | 
-			((vga.crtc.overflow & 2)<<7) |
-			((vga.crtc.overflow & 0x40) << 3) | 
-			((vga.s3.ex_ver_overflow & 0x2) << 9));
-		vrstart = vga.crtc.vertical_retrace_start +
-			((vga.crtc.overflow & 0x04) << 6) |
-			((vga.crtc.overflow & 0x80) << 2);
+		vtotal= 2 + vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
+		vdend = 1 + vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
+		vrstart = vga.crtc.vertical_retrace_start + ((vga.crtc.overflow & 0x04) << 6);
+		if (IS_VGA_ARCH) {
+			// additional bits only present on vga cards
+			vtotal |= (vga.crtc.overflow & 0x20) << 4;
+			vdend |= ((vga.crtc.overflow & 0x40) << 3) | 
+					((vga.s3.ex_ver_overflow & 0x2) << 9);
+			vrstart |= ((vga.crtc.overflow & 0x80) << 2);
+		}
+
 		vrend = vga.crtc.vertical_retrace_end & 0xF;
 		vrend = ( vrend - vrstart)&0xF;
 		if ( !vrend)
@@ -684,10 +689,13 @@ void VGA_SetupDrawing(Bitu val) {
 		else 
 			vrend = vrstart + vrend;
 		
-		vbstart = vga.crtc.start_vertical_blanking |
-				((vga.crtc.overflow & 0x08) << 5) |
-				((vga.crtc.maximum_scan_line & 0x20) << 4);
-		vbend = vga.crtc.end_vertical_blanking & 0x3f;
+		vbstart = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
+		if (IS_VGA_ARCH) {
+			vbstart |= ((vga.crtc.maximum_scan_line & 0x20) << 4);
+			vbend = vga.crtc.end_vertical_blanking & 0x3f;
+		} else {
+			vbend = vga.crtc.end_vertical_blanking & 0xf;
+		}
 		vbend = (vbend - vbstart) & 0x3f;
 		if ( !vbend)
 			vbend = vbstart + 0x3f + 1;
@@ -720,7 +728,9 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0xf)+1;
 		/* Check for dual transfer whatever thing,master clock/2 */
 		if (vga.s3.pll.cmd & 0x10) clock/=2;
-		vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
+
+		if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
+		else vga.draw.double_scan=false;	// might actually be a special implementation of double scanning for ega
 	} else {
 		htotal = vga.other.htotal + 1;
 		hdend = vga.other.hdend;
@@ -988,7 +998,7 @@ void VGA_SetupDrawing(Bitu val) {
 		height/=2;
 		doubleheight=true;
 	}
-	//Only check for exra double heigh in vga modes
+	//Only check for extra double height in vga modes
 	if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
 		vga.draw.address_line_total/=2;
 		doubleheight=true;

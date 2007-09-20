@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.50 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.51 2007-09-20 16:42:43 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -271,14 +271,13 @@ filling:
 }
 
 void INT10_SetActivePage(Bit8u page) {
-
 	Bit16u mem_address;
 	
 	if (page>7) return;
 	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
-	if (machine==MCH_VGA && CurMode->mode<0x8) mem_address>>=1;
+	if (IS_EGAVGA_ARCH && CurMode->mode<0x8) mem_address>>=1;
 	/* Write the new start address in vgahardware */
 	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 	IO_Write(base,0x0c);
@@ -522,7 +521,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
 	if (CurMode->type!=M_TEXT) {
 		switch (machine) {
-			case MCH_VGA:
+			case EGAVGA_ARCH_CASE:
 				page%=CurMode->ptotal;
 				break;
 			case MCH_CGA:

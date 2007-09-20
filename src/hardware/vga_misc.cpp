@@ -143,11 +143,13 @@ static Bitu read_p3c2(Bitu port,Bitu iolen) {
 }
 
 void VGA_SetupMisc(void) {
-	if (machine==MCH_VGA) {
-		IO_RegisterReadHandler(0x3ca,read_p3ca,IO_MB);
+	if (IS_EGAVGA_ARCH) {
 		IO_RegisterReadHandler(0x3c2,read_p3c2,IO_MB);
 		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
-		IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
+		if (IS_VGA_ARCH) {
+			IO_RegisterReadHandler(0x3ca,read_p3ca,IO_MB);
+			IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
+		}
 	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		IO_RegisterReadHandler(0x3da,vga_read_p3da,IO_MB);
 	} else if (machine==MCH_HERC) {

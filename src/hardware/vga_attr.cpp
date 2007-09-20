@@ -27,6 +27,15 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	if (vga.attr.mode_control & 0x80) val = (val&0xf) | (vga.attr.color_select << 4);
 	val &= 63;
 	val |= (vga.attr.color_select & 0xc) << 4;
+	if (GCC_UNLIKELY(!IS_VGA_ARCH)) {
+		if ((vga.misc_output&0xc4)==0x40) {
+			if (val&0x10) val|=0x38;
+			else {
+				val&=0x7;
+				if (val==6) val=0x14;
+			}
+		}
+	}
 	VGA_DAC_CombineColor(index,val);
 }
 
@@ -61,6 +70,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			*/
 			break;
 		case 0x10: /* Mode Control Register */
+			if (!IS_VGA_ARCH) val&=0x1f;	// not really correct, but should do it
 			if ((attr(mode_control) ^ val) & 0x80) {
 				attr(mode_control)^=0x80;
 				for (Bitu i=0;i<0x10;i++) {
@@ -143,6 +153,10 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			*/
 			break;
 		case 0x14:	/* Color Select Register */
+			if (!IS_VGA_ARCH) {
+				attr(color_select)=0;
+				break;
+			}
 			if (attr(color_select) ^ val) {
 				attr(color_select)=val;
 				for (Bitu i=0;i<0x10;i++) {
@@ -190,16 +204,12 @@ Bitu read_p3c1(Bitu port,Bitu iolen) {
 };
 
 
-
-
-
-
 void VGA_SetupAttr(void) {
-	if (machine==MCH_VGA) {
-		IO_RegisterReadHandler(0x3c0,read_p3c0,IO_MB);
+	if (IS_EGAVGA_ARCH) {
 		IO_RegisterWriteHandler(0x3c0,write_p3c0,IO_MB);
-		IO_RegisterReadHandler(0x3c1,read_p3c1,IO_MB);
+		if (IS_VGA_ARCH) {
+			IO_RegisterReadHandler(0x3c0,read_p3c0,IO_MB);
+			IO_RegisterReadHandler(0x3c1,read_p3c1,IO_MB);
+		}
 	}
 }
-
-

@@ -124,7 +124,8 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	case 0x08:	/* Preset Row Scan Register */
 		crtc(preset_row_scan)=val;
 		vga.config.hlines_skip=val&31;
-		vga.config.bytes_skip=(val>>5)&3;
+		if (IS_VGA_ARCH) vga.config.bytes_skip=(val>>5)&3;
+		else vga.config.bytes_skip=0;
 //		LOG_DEBUG("Skip lines %d bytes %d",vga.config.hlines_skip,vga.config.bytes_skip);
 		/*
 			0-4	Number of lines we have scrolled down in the first character row.
@@ -135,7 +136,8 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	case 0x09: /* Maximum Scan Line Register */
-		vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
+		if (IS_VGA_ARCH)
+			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
 		if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
 			crtc(maximum_scan_line)=val;
 			VGA_StartResize();
@@ -154,7 +156,8 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	case 0x0A:	/* Cursor Start Register */
 		crtc(cursor_start)=val;
 		vga.draw.cursor.sline=val&0x1f;
-		vga.draw.cursor.enabled=!(val&0x20);
+		if (IS_VGA_ARCH) vga.draw.cursor.enabled=!(val&0x20);
+		else vga.draw.cursor.enabled=true;
 		/*
 			0-4	First scanline of cursor within character.
 			5	Turns Cursor off if set
@@ -203,7 +206,8 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x11:	/* Vertical Retrace End Register */
 		crtc(vertical_retrace_end)=val;
-		crtc(read_only)=(val & 128)>0;
+		if (IS_VGA_ARCH) crtc(read_only)=(val & 128)>0;
+		else crtc(read_only)=false;
 		/*
 			0-3	Vertical Retrace ends when the last 4 bits of the line counter equals
 				this value.
@@ -242,13 +246,17 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x14:	/* Underline Location Register */
 		crtc(underline_location)=val;
-		//Byte,word,dword mode
-		if ( crtc(underline_location) & 0x20 )
-			vga.config.addr_shift = 2;
-		else if ( crtc( mode_control) & 0x40 )
-			vga.config.addr_shift = 0;
-		else
+		if (IS_VGA_ARCH) {
+			//Byte,word,dword mode
+			if ( crtc(underline_location) & 0x20 )
+				vga.config.addr_shift = 2;
+			else if ( crtc( mode_control) & 0x40 )
+				vga.config.addr_shift = 0;
+			else
+				vga.config.addr_shift = 1;
+		} else {
 			vga.config.addr_shift = 1;
+		}
 		/*
 			0-4	Position of underline within Character cell.
 			5	If set memory address is only changed every fourth character clock.
@@ -291,8 +299,8 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 			vga.tandy.addr_mask = ~0;
 			vga.tandy.line_shift = 0;
 		}
-		VGA_DetermineMode();
 		//Should we really need to do a determinemode here?
+//		VGA_DetermineMode();
 		/*
 			0	If clear use CGA compatible memory addressing system
 				by substituting character row scan counter bit 0 for address bit 13,

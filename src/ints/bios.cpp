@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.68 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.69 2007-09-20 16:42:43 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -705,7 +705,7 @@ static Bitu INT15_Handler(void) {
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
 		CALLBACK_SCF(true);
-		if ((machine==MCH_VGA) || (machine==MCH_CGA)) {
+		if ((IS_EGAVGA_ARCH) || (machine==MCH_CGA)) {
 			/* relict from comparisons, as int15 exits with a retf2 instead of an iret */
 			CALLBACK_SZF(false);
 		}
@@ -917,7 +917,7 @@ public:
 			//Startup monochrome
 			config|=0x30;
 			break;
-		case MCH_VGA:
+		case EGAVGA_ARCH_CASE:
 		case MCH_CGA:
 		case TANDY_ARCH_CASE:
 			//Startup 80x25 color
