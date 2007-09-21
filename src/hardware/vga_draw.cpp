@@ -443,8 +443,8 @@ static void VGA_DrawPart(Bitu lines) {
 			vga.draw.address_line=0;
 			vga.draw.address+=vga.draw.address_add;
 		}
-		vga.draw.lines_done++;
-		if (vga.draw.split_line==vga.draw.lines_done) {
+//		vga.draw.lines_done++;
+		if (vga.draw.split_line==vga.draw.lines_done++) {
 #ifdef VGA_KEEP_CHANGES
 			VGA_ChangesEnd( );
 #endif
