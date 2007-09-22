@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.27 2007-06-12 20:22:09 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.28 2007-09-22 17:01:17 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -126,7 +126,7 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	Bitu pageSize;
 	Bitu i=0;
 
-	if (mode<0x100) return 0x01;
+	if ((mode&0x7fff)<0x100) return 0x01;
 	mode&=0xfff;
 	while (ModeList_VGA[i].mode!=0xffff) {
 		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
@@ -140,6 +140,7 @@ foundit:
 		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.NumberOfImagePages,(512*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
+		var_write(&minfo.NumberOfPlanes,0x4);
 		var_write(&minfo.BitsPerPixel,4);
 		var_write(&minfo.MemoryModel,3);	//ega planar mode
 		var_write(&minfo.ModeAttributes,0x1b);	//Color, graphics, no linear buffer
@@ -149,6 +150,7 @@ foundit:
 		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth);
+		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,8);
 		var_write(&minfo.MemoryModel,4);		//packed pixel
 		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
@@ -158,6 +160,7 @@ foundit:
 		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
+		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,15);
 		var_write(&minfo.MemoryModel,6);	//HiColour
 		var_write(&minfo.RedMaskSize,5);
@@ -166,6 +169,8 @@ foundit:
 		var_write(&minfo.GreenMaskPos,5);
 		var_write(&minfo.BlueMaskSize,5);
 		var_write(&minfo.BlueMaskPos,0);
+		var_write(&minfo.ReservedMaskSize,0x01);
+		var_write(&minfo.ReservedMaskPos,0x0f);
 		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
 	case M_LIN16:
@@ -173,6 +178,7 @@ foundit:
 		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
+		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,16);
 		var_write(&minfo.MemoryModel,6);	//HiColour
 		var_write(&minfo.RedMaskSize,5);
@@ -188,6 +194,7 @@ foundit:
 		pageSize = (pageSize | 15) & ~ 15;
 		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*4);
+		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,32);
 		var_write(&minfo.MemoryModel,6);	//HiColour
 		var_write(&minfo.RedMaskSize,8);
@@ -200,19 +207,36 @@ foundit:
 		var_write(&minfo.ReservedMaskPos,0x18);
 		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
 		break;
+/*	case M_TEXT:
+		pageSize = mblock->sheight/8 * mblock->swidth*2/8;
+		pageSize = (pageSize | 15) & ~ 15;
+		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
+		var_write(&minfo.BytesPerScanLine,mblock->swidth*2/8);
+		var_write(&minfo.NumberOfPlanes,0x4);
+		var_write(&minfo.BitsPerPixel,4);
+		var_write(&minfo.MemoryModel,0);	//Text
+		var_write(&minfo.ModeAttributes,0x0f);	//Color, text, bios output
+		break; */
 	default:
 		return 0x1;
 	}
 	var_write(&minfo.WinAAttributes,0x7);	//Exists/readable/writable
-	var_write(&minfo.WinGranularity,64);
-	var_write(&minfo.WinSize,64);
-	var_write(&minfo.WinASegment,0xa000);
+	if (mblock->type==M_TEXT) {
+		var_write(&minfo.WinGranularity,32);
+		var_write(&minfo.WinSize,32);
+		var_write(&minfo.WinASegment,0xb800);
+		var_write(&minfo.XResolution,mblock->swidth/8);
+		var_write(&minfo.YResolution,mblock->sheight/8);
+	} else {
+		var_write(&minfo.WinGranularity,64);
+		var_write(&minfo.WinSize,64);
+		var_write(&minfo.WinASegment,0xa000);
+		var_write(&minfo.XResolution,mblock->swidth);
+		var_write(&minfo.YResolution,mblock->sheight);
+	}
 	var_write(&minfo.WinFuncPtr,CALLBACK_RealPointer(callback.setwindow));
-	var_write(&minfo.NumberOfPlanes,0x1);
 	var_write(&minfo.NumberOfBanks,0x1);
 	var_write(&minfo.Reserved_page,0x1);
-	var_write(&minfo.XResolution,mblock->swidth);
-	var_write(&minfo.YResolution,mblock->sheight);
 	var_write(&minfo.XCharSize,mblock->cwidth);
 	var_write(&minfo.YCharSize,mblock->cheight);
 	var_write(&minfo.PhysBasePtr,S3_LFB_BASE);
