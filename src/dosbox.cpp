@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.122 2007-09-20 16:42:43 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.123 2007-09-24 20:50:40 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -265,9 +265,16 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (strcasecmp(mtype,"pcjr")==0) machine=MCH_PCJR;
 	else if (strcasecmp(mtype,"hercules")==0) machine=MCH_HERC;
 	else if (strcasecmp(mtype,"ega")==0) machine=MCH_EGA;
-	else if (strcasecmp(mtype,"vga")==0) {
+	else if ((strcasecmp(mtype,"vga")==0) || (strcasecmp(mtype,"vga_s3")==0) ||
+			(strcasecmp(mtype,"svga")==0) || (strcasecmp(mtype,"svga_s3")==0)) {
 		machine=MCH_VGA;
 		svgaCard=SVGA_S3Trio;
+/*	} else if ((strcasecmp(mtype,"vga_et4000")==0) || (strcasecmp(mtype,"svga_et4000")==0)) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_TsengET4K; */
+	} else if (strcasecmp(mtype,"vgaonly")==0) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_None;
 	} else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
 }
 

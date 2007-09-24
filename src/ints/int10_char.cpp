@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.51 2007-09-20 16:42:43 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.52 2007-09-24 20:50:40 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -273,7 +273,7 @@ filling:
 void INT10_SetActivePage(Bit8u page) {
 	Bit16u mem_address;
 	
-	if (page>7) return;
+	if (page>7) E_Exit("INT10_SetActivePage page %d",page);
 	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
@@ -348,7 +348,7 @@ dowrite:
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	Bit16u address;
 
-	if(page>7) return;
+	if (page>7) E_Exit("INT10_SetCursorPos page %d");
 	// Bios cursor pos
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2,col);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1,row);
@@ -358,7 +358,8 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 		// Get the dimensions
 		BIOS_NCOLS;
 		// Calculate the address knowing nbcols nbrows and page num
-		address=(ncols*row)+col+real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START);
+		// NOTE: BIOSMEM_CURRENT_START counts in colour/flag pairs
+		address=(ncols*row)+col+real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START)/2;
 		// CRTC regs 0x0e and 0x0f
 		Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 		IO_Write(base,0x0e);

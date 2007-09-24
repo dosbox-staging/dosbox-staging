@@ -50,7 +50,8 @@ enum MachineType {
 
 enum SVGACards {
 	SVGA_None,
-	SVGA_S3Trio
+	SVGA_S3Trio,
+	SVGA_TsengET4K
 }; 
 
 extern SVGACards svgaCard;

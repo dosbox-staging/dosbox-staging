@@ -58,17 +58,17 @@ static Bitu INT10_Handler(void) {
 		INT10_SetCursorPos(reg_dh,reg_dl,reg_bh);
 		break;
 	case 0x03:								/* get Cursor Pos and Cursor Shape*/
-		reg_ah=0;
+//		reg_ah=0;
 		reg_dl=CURSOR_POS_COL(reg_bh);
 		reg_dh=CURSOR_POS_ROW(reg_bh);
 		reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CURSOR_TYPE);
 		break;
 	case 0x04:								/* read light pen pos YEAH RIGHT */
 		/* Light pen is not supported */
-		reg_ah=0;
+		reg_ax=0;
 		break;
 	case 0x05:								/* Set Active Page */
-		if (reg_al & 0x80 && IS_TANDY_ARCH) {
+		if ((reg_al & 0x80) && IS_TANDY_ARCH) {
 			Bit8u crtcpu=real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE);		
 			switch (reg_al) {
 			case 0x80:
@@ -116,13 +116,8 @@ static Bitu INT10_Handler(void) {
 			INT10_SetBackgroundBorder(reg_bl);
 			break;
 		case 0x01:		//Set color Select
-			INT10_SetColorSelect(reg_bl);
-			break;
 		default:
-			if ((machine==MCH_CGA) || (machine==MCH_PCJR)) {
-				/* those BIOSes check for !=0 */
-				INT10_SetColorSelect(reg_bl);
-			}
+			INT10_SetColorSelect(reg_bl);
 			break;
 		}
 		break;
@@ -185,6 +180,7 @@ static Bitu INT10_Handler(void) {
 			break;
 		case 0x19:							/* undocumented - GET PEL MASK */
 			INT10_GetPelMask(reg_bl);
+			reg_bh=0;	// bx for get mask
 			break;
 		case 0x1A:							/* GET VIDEO DAC COLOR PAGE */
 			INT10_GetDACPage(&reg_bl,&reg_bh);
@@ -192,8 +188,12 @@ static Bitu INT10_Handler(void) {
 		case 0x1B:							/* PERFORM GRAY-SCALE SUMMING */
 			INT10_PerformGrayScaleSumming(reg_bx,reg_cx);
 			break;
+		case 0xF0:							/* ET4000: SET HiColor GRAPHICS MODE */
+		case 0xF1:							/* ET4000: GET DAC TYPE */
+		case 0xF2:							/* ET4000: CHECK/SET HiColor MODE */
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
+			break;
 		}
 		break;
 	case 0x11:								/* Character generator functions */
@@ -287,12 +287,21 @@ graphics_chars:
 				break;
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Function 11:30 Request for font %2X",reg_bh);	
+				break;
 			}
-			reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
-			reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+			if ((reg_bh<=7) || (svgaCard==SVGA_TsengET4K)) {
+				if (machine==MCH_EGA) {
+					reg_cx=0x0e;
+					reg_dl=0x18;
+				} else {
+					reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+					reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+				}
+			}
 			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 11:Unsupported character generator call %2X",reg_al);
+			break;
 		}
 		break;
 	case 0x12:								/* alternate function select */
@@ -302,18 +311,25 @@ graphics_chars:
 		case 0x10:							/* Get EGA Information */
 			reg_bh=(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)==0x3B4);	
 			reg_bl=3;	//256 kb
-			reg_cx=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
+			reg_cl=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
+			reg_ch=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) >> 4;
 			break;
 		case 0x20:							/* Set alternate printscreen */
 			break;
 		case 0x30:							/* Select vertical resolution */
 			if (!IS_VGA_ARCH) break;
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
-			reg_al=0x12;			//fake a success call
+			if (reg_al>2) reg_al=0;		//invalid subfunction
+			else reg_al=0x12;			//fake a success call
 			break;
 		case 0x31:							/* Palette loading on modeset */
 			{   
 				if (!IS_VGA_ARCH) break;
+				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
+				if (reg_al>1) {
+					reg_al=0;		//invalid subfunction
+					break;
+				}
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xf7;
 				if (reg_al&1) temp|=8;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
@@ -323,11 +339,18 @@ graphics_chars:
 		case 0x32:							/* Video adressing */
 			if (!IS_VGA_ARCH) break;
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
-			reg_al=0x12;			//fake a success call
+			if (svgaCard==SVGA_TsengET4K) reg_al&=1;
+			if (reg_al>1) reg_al=0;		//invalid subfunction
+			else reg_al=0x12;			//fake a success call
 			break;
 		case 0x33: /* SWITCH GRAY-SCALE SUMMING */
 			{   
 				if (!IS_VGA_ARCH) break;
+				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
+				if (reg_al>1) {
+					reg_al=0;
+					break;
+				}
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 0xfd;
 				if (!(reg_al&1)) temp|=2;		// enable if al=0
 				real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,temp);
@@ -338,6 +361,11 @@ graphics_chars:
 			{   
 				// bit 0: 0=enable, 1=disable
 				if (!IS_VGA_ARCH) break;
+				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
+				if (reg_al>1) {
+					reg_al=0;
+					break;
+				}
 				Bit8u temp = real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0xfe;
 				real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,temp|reg_al);
 				reg_al=0x12;
@@ -350,6 +378,10 @@ graphics_chars:
 			break;
 		case 0x36:							/* VGA Refresh control */
 			if (!IS_VGA_ARCH) break;
+			if ((svgaCard==SVGA_S3Trio) && (reg_al>1)) {
+				reg_al=0;
+				break;
+			}
 			/* 
 				Call disables/enables the vga from outputting video,
 				don't support it, but fake a success return 
@@ -358,7 +390,7 @@ graphics_chars:
 			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
-			reg_al=0x12;	// wrong!?
+			if (machine!=MCH_EGA) reg_al=0;
 			break;
 		}
 		break;
@@ -387,6 +419,8 @@ graphics_chars:
 			break;
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("1B:Unhandled call BX %2X",reg_bx);
+			reg_al=0;
+			break;
 		}
 		break;
 	case 0x1C:	/* Video Save Area */
@@ -438,12 +472,13 @@ graphics_chars:
 				break;
 			case 0x01:
 				reg_al=0x4f;
-				reg_bh=0x00;				//Weird?
+				reg_bh=0x00;				//reserved
 				reg_ah=VESA_GetDisplayStart(reg_cx,reg_dx);
 				break;
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bl);
 				reg_ah=0x1;
+				break;
 			}
 			break;
 		case 0x09:
@@ -461,6 +496,7 @@ graphics_chars:
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bl);
 				reg_ah=0x01;
+				break;
 			}
 			break;
 		case 0x0a:							/* Get Pmode Interface */
@@ -498,6 +534,7 @@ graphics_chars:
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X",reg_al);
 			reg_al=0x0;
+			break;
 		}
 		break;
 	case 0xf0:
@@ -531,6 +568,7 @@ graphics_chars:
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("Function %2X not supported",reg_ah);
 		reg_al=0x00;		//Successfull
+		break;
 	};
 	return CBRET_NONE;
 }

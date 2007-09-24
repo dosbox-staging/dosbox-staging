@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.28 2007-09-22 17:01:17 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.29 2007-09-24 20:50:40 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -126,8 +126,8 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	Bitu pageSize;
 	Bitu i=0;
 
-	if ((mode&0x7fff)<0x100) return 0x01;
-	mode&=0xfff;
+	mode&=0x3fff;	// vbe2 compatible, ignore lfb and keep screen content bits
+	if (mode<0x100) return 0x01;
 	while (ModeList_VGA[i].mode!=0xffff) {
 		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
 	}

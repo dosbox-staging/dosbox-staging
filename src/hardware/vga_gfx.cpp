@@ -139,7 +139,10 @@ static void write_p3cf(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	case 6: /* Miscellaneous Register */
-		gfx(miscellaneous)=val;
+		if ((gfx(miscellaneous) ^ val) & 0x0c) {
+			gfx(miscellaneous)=val;
+			VGA_DetermineMode();
+		} else gfx(miscellaneous)=val;
 		VGA_SetupHandlers();
 		/*
 			0	Indicates Graphics Mode if set, Alphanumeric mode else.
