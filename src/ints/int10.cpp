@@ -424,9 +424,29 @@ graphics_chars:
 		}
 		break;
 	case 0x1C:	/* Video Save Area */
-		if (IS_VGA_ARCH) break;
-		if (reg_al==0) reg_bx = 0;
-		reg_al = 0x1C;	
+		if (!IS_VGA_ARCH) break;
+		switch (reg_al) {
+			case 0: {
+				Bitu ret=INT10_VideoState_GetSize(reg_cx);
+				if (ret) {
+					reg_al=0x1c;
+					reg_bx=ret;
+				} else reg_al=0;
+				}
+				break;
+			case 1:
+				if (INT10_VideoState_Save(reg_cx,RealMake(SegValue(es),reg_bx))) reg_al=0x1c;
+				else reg_al=0;
+				break;
+			case 2:
+				if (INT10_VideoState_Restore(reg_cx,RealMake(SegValue(es),reg_bx))) reg_al=0x1c;
+				else reg_al=0;
+				break;
+			default:
+				if (svgaCard==SVGA_TsengET4K) reg_ax=0;
+				else reg_al=0;
+				break;
+		}
 		break;
 	case 0x4f:								/* VESA Calls */
 		if ((!IS_VGA_ARCH) || (svgaCard==SVGA_None)) break;
@@ -446,6 +466,30 @@ graphics_chars:
 		case 0x03:							/* Get videomode */
 			reg_al=0x4f;
 			reg_ah=VESA_GetSVGAMode(reg_bx);
+			break;
+		case 0x04:							/* Save/restore state */
+			reg_al=0x4f;
+			switch (reg_dl) {
+				case 0: {
+					Bitu ret=INT10_VideoState_GetSize(reg_cx);
+					if (ret) {
+						reg_ah=0;
+						reg_bx=ret;
+					} else reg_ah=1;
+					}
+					break;
+				case 1:
+					if (INT10_VideoState_Save(reg_cx,RealMake(SegValue(es),reg_bx))) reg_ah=0;
+					else reg_ah=1;
+					break;
+				case 2:
+					if (INT10_VideoState_Restore(reg_cx,RealMake(SegValue(es),reg_bx))) reg_ah=0;
+					else reg_ah=1;
+					break;
+				default:
+					reg_ah=1;
+					break;
+			}
 			break;
 		case 0x05:							
 			if (reg_bh==0) {				/* Set CPU Window */

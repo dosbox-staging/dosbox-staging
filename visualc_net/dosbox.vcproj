@@ -689,6 +689,9 @@
 					<File
 						RelativePath="..\src\ints\int10_vesa.cpp">
 					</File>
+					<File
+						RelativePath="..\src\ints\int10_video_state.cpp">
+					</File>
 				</Filter>
 			</Filter>
 			<Filter

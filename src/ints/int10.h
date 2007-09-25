@@ -212,3 +212,8 @@ void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, 
 void INT10_EGA_RIL_WriteRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst);
 void INT10_EGA_RIL_ReadRegisterSet(Bit16u cx, PhysPt tbl);
 void INT10_EGA_RIL_WriteRegisterSet(Bit16u cx, PhysPt tbl);
+
+/* Video State */
+Bitu INT10_VideoState_GetSize(Bitu state);
+bool INT10_VideoState_Save(Bitu state,RealPt buffer);
+bool INT10_VideoState_Restore(Bitu state,RealPt buffer);
