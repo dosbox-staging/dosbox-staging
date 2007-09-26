@@ -271,10 +271,10 @@ static void FinishSetMode(bool clearmem) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
-	// FIXME We nearly have the good tables. to be reworked
 	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x08);    // 8 is VGA should be ok for now
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER,0x00);
 	real_writew(BIOSMEM_SEG,BIOSMEM_VS_POINTER+2,0x00);
+	real_writed(BIOSMEM_SEG,BIOSMEM_VS_POINTER,int10.rom.video_save_pointers);
 
 	// Set cursor shape
 	if(CurMode->type==M_TEXT) {

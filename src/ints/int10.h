@@ -122,6 +122,10 @@ typedef struct {
 		RealPt font_14;
 		RealPt font_16;
 		RealPt static_state;
+		RealPt video_save_pointers;
+		RealPt video_parameter_table;
+		RealPt video_save_pointer_table;
+		RealPt video_dcc_table;
 		RealPt oemstring;
 		RealPt vesa_modes;
 		RealPt pmode_interface;
