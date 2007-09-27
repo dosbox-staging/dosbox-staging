@@ -888,7 +888,8 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 
 			// update font if necessary
 			if (font_changed && (CurMode->type==M_TEXT) && (IS_EGAVGA_ARCH)) {
-				INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
+				if (IS_VGA_ARCH) INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
+				else INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
 			}
 			INT10_SetupRomMemoryChecksum();
 

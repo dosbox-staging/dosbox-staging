@@ -104,6 +104,25 @@ VideoModeBlock ModeList_VGA[]={
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
 
+VideoModeBlock ModeList_EGA[]={
+/* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
+{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,100 ,449 ,80 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x007  ,M_TEXT   ,720 ,350 ,80 ,25 ,9 ,14 ,8 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+
+{ 0x00D  ,M_EGA    ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
+{ 0x00E  ,M_EGA    ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,_EGA_LINE_DOUBLE },
+{ 0x00F  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},/*was EGA_2*/
+{ 0x010  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
+
+{0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
+};
+
 VideoModeBlock ModeList_OTHER[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde ,special flags */
 { 0x000  ,M_TEXT   ,320 ,400 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x0800 ,56  ,31  ,40 ,25  ,0   },
@@ -469,15 +488,18 @@ bool INT10_SetVideoMode(Bitu mode) {
 	}
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 	if (!IS_EGAVGA_ARCH) return INT10_SetVideoMode_OTHER(mode,clearmem);
-	if ((machine==MCH_EGA) && (mode>0x10)) {
-		LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);
-		return false;
-	}
 	Bit8u modeset_ctl,video_ctl,vga_switches;
 
-	if (!SetCurMode(ModeList_VGA,mode)){
-		LOG(LOG_INT10,LOG_ERROR)("Trying to set illegal mode %X",mode);
-		return false;
+	if (IS_VGA_ARCH) {
+		if (!SetCurMode(ModeList_VGA,mode)){
+			LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
+			return false;
+		}
+	} else {
+		if (!SetCurMode(ModeList_EGA,mode)){
+			LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);
+			return false;
+		}
 	}
 
 	/* First read mode setup settings from bios area */
@@ -1026,7 +1048,8 @@ dac_text16:
 	FinishSetMode(clearmem);
 	/* Load text mode font */
 	if (CurMode->type==M_TEXT) {
-		INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
+		if (IS_VGA_ARCH) INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
+		else INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
 	}
 	return true;
 }
