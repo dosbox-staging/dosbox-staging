@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.18 2007-06-14 08:23:46 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.19 2007-09-27 19:34:43 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -129,22 +129,23 @@ Bit8u DOS_FindDevice(char const * name) {
 	char temp[CROSS_LEN];//TODO
 	if(!name || !(*name)) return DOS_DEVICES;
 	strcpy(temp,name);
-	char* dot= strrchr(temp,'.');
-	if(dot && *dot) *dot=0; //no ext checking
 
-	char* leading = strrchr(temp,'\\');
-	if(leading) {
-		*leading = 0;
+	char* name_start = strrchr(temp,'\\');
+	if(name_start) {
+		//Directory found in front of the filename. Check it's path
+		*name_start++ = 0;
 		Bit8u drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(temp,fulldir,&drive)) return DOS_DEVICES;
 		if(!Drives[drive]->TestDir(fulldir)) return DOS_DEVICES;
-		*leading='\\';
-	}
+	} else name_start = temp;
+
+	char* dot = strrchr(name_start,'.');
+	if(dot) *dot = 0; //no ext checking
 
 	/* loop through devices */
 	for(Bit8u index = 0;index < DOS_DEVICES;index++) {
 		if (Devices[index]) {
-			if (WildFileCmp(temp,Devices[index]->name)) return index;
+			if (WildFileCmp(name_start,Devices[index]->name)) return index;
 		}
 	}
 	return DOS_DEVICES;
