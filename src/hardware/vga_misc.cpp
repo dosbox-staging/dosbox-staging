@@ -139,11 +139,17 @@ static Bitu read_p3ca(Bitu port,Bitu iolen) {
 }
 
 static Bitu read_p3c2(Bitu port,Bitu iolen) {
-	return 0x70; 
+	Bitu retcode=0x70;
+	if (GCC_UNLIKELY(machine==MCH_EGA)) {
+		retcode |= (vga.draw.vret_triggered ? 0x80 : 0x00);
+		vga.draw.vret_triggered=false;
+	}
+	return retcode;
 }
 
 void VGA_SetupMisc(void) {
 	if (IS_EGAVGA_ARCH) {
+		vga.draw.vret_triggered=false;
 		IO_RegisterReadHandler(0x3c2,read_p3c2,IO_MB);
 		IO_RegisterWriteHandler(0x3c2,write_p3c2,IO_MB);
 		if (IS_VGA_ARCH) {
@@ -156,5 +162,3 @@ void VGA_SetupMisc(void) {
 		IO_RegisterReadHandler(0x3ba,vga_read_p3da,IO_MB);
 	}
 }
-
-

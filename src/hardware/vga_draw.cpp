@@ -617,6 +617,10 @@ static void VGA_VerticalTimer(Bitu val) {
 	//VGA_DrawPart( vga.draw.parts_lines );
 	PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
 //	PIC_AddEvent(VGA_DrawPart,(float)(vga.draw.delay.parts/2),vga.draw.parts_lines); //Else tearline in Tyrian and second reality
+	if (GCC_UNLIKELY(machine==MCH_EGA)) {
+		PIC_ActivateIRQ(2);
+		vga.draw.vret_triggered=true;
+	}
 }
 
 void VGA_CheckScanLength(void) {
