@@ -407,6 +407,40 @@ skip_cursor:
 	return TempLine;
 }
 
+static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
+	Bits font_addr;
+	Bit8u * draw=(Bit8u *)TempLine;
+	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	Bitu bitpos=0;
+	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
+		Bit8u chr=vidmem[cx*2];
+		Bit8u col=vidmem[cx*2+1];
+		Bit8u font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
+		Bit8u fg=col&0xf;
+		Bit8u bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
+		if (FontMask[col>>7]==0) font=0;
+		*draw++=(font&0x80)?fg:bg;		*draw++=(font&0x40)?fg:bg;
+		*draw++=(font&0x20)?fg:bg;		*draw++=(font&0x10)?fg:bg;
+		*draw++=(font&0x08)?fg:bg;		*draw++=(font&0x04)?fg:bg;
+		*draw++=(font&0x02)?fg:bg;
+		Bit8u last=(font&0x01)?fg:bg;
+		*draw++=last;
+		*draw++=((chr<0xc0) || (chr>0xdf)) ? bg : last;
+	}
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
+	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
+	if (font_addr>=0 && font_addr<(Bits)vga.draw.blocks) {
+		if (line<vga.draw.cursor.sline) goto skip_cursor;
+		if (line>vga.draw.cursor.eline) goto skip_cursor;
+		draw=&TempLine[font_addr*9];
+		Bit8u fg=vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf;
+		*draw++=fg;		*draw++=fg;		*draw++=fg;		*draw++=fg;
+		*draw++=fg;		*draw++=fg;		*draw++=fg;		*draw++=fg;
+	}
+skip_cursor:
+	return TempLine;
+}
+
 static void VGA_VerticalDisplayEnd(Bitu val) {
 //	vga.config.retrace=true;
 	vga.config.real_start=vga.config.display_start & ((2*1024*1024)-1);
@@ -931,8 +965,13 @@ void VGA_SetupDrawing(Bitu val) {
 		aspect_ratio=1.0;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
-		width<<=3;				/* 8 bit wide text font */
-		VGA_DrawLine=VGA_TEXT_Draw_Line;
+		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
+			width*=9;				/* 9 bit wide text font */
+			VGA_DrawLine=VGA_TEXT_Draw_Line_9;
+		} else {
+			width<<=3;				/* 8 bit wide text font */
+			VGA_DrawLine=VGA_TEXT_Draw_Line;
+		}
 		break;
 	case M_HERC_GFX:
 		aspect_ratio=1.5;
