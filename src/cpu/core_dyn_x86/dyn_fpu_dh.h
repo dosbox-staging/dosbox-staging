@@ -16,47 +16,47 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu_dh.h,v 1.4 2007-06-14 17:47:24 c2woody Exp $ */
+/* $Id: dyn_fpu_dh.h,v 1.5 2007-09-29 13:23:59 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
 
 static void FPU_FLD_16(PhysPt addr) {
-	dyn_dh_fpu.temp.m1 = (Bit32u)mem_readw_dyncorex86(addr);
+	dyn_dh_fpu.temp.m1 = (Bit32u)mem_readw(addr);
 }
 
 static void FPU_FST_16(PhysPt addr) {
-	mem_writew_dyncorex86(addr,(Bit16u)dyn_dh_fpu.temp.m1);
+	mem_writew(addr,(Bit16u)dyn_dh_fpu.temp.m1);
 }
 
 static void FPU_FLD_32(PhysPt addr) {
-	dyn_dh_fpu.temp.m1 = mem_readd_dyncorex86(addr);
+	dyn_dh_fpu.temp.m1 = mem_readd(addr);
 }
 
 static void FPU_FST_32(PhysPt addr) {
-	mem_writed_dyncorex86(addr,dyn_dh_fpu.temp.m1);
+	mem_writed(addr,dyn_dh_fpu.temp.m1);
 }
 
 static void FPU_FLD_64(PhysPt addr) {
-	dyn_dh_fpu.temp.m1 = mem_readd_dyncorex86(addr);
-	dyn_dh_fpu.temp.m2 = mem_readd_dyncorex86(addr+4);
+	dyn_dh_fpu.temp.m1 = mem_readd(addr);
+	dyn_dh_fpu.temp.m2 = mem_readd(addr+4);
 }
 
 static void FPU_FST_64(PhysPt addr) {
-	mem_writed_dyncorex86(addr,dyn_dh_fpu.temp.m1);
-	mem_writed_dyncorex86(addr+4,dyn_dh_fpu.temp.m2);
+	mem_writed(addr,dyn_dh_fpu.temp.m1);
+	mem_writed(addr+4,dyn_dh_fpu.temp.m2);
 }
 
 static void FPU_FLD_80(PhysPt addr) {
-	dyn_dh_fpu.temp.m1 = mem_readd_dyncorex86(addr);
-	dyn_dh_fpu.temp.m2 = mem_readd_dyncorex86(addr+4);
-	dyn_dh_fpu.temp.m3 = mem_readw_dyncorex86(addr+8);
+	dyn_dh_fpu.temp.m1 = mem_readd(addr);
+	dyn_dh_fpu.temp.m2 = mem_readd(addr+4);
+	dyn_dh_fpu.temp.m3 = mem_readw(addr+8);
 }
 
 static void FPU_FST_80(PhysPt addr) {
-	mem_writed_dyncorex86(addr,dyn_dh_fpu.temp.m1);
-	mem_writed_dyncorex86(addr+4,dyn_dh_fpu.temp.m2);
-	mem_writew_dyncorex86(addr+8,dyn_dh_fpu.temp.m3);
+	mem_writed(addr,dyn_dh_fpu.temp.m1);
+	mem_writed(addr+4,dyn_dh_fpu.temp.m2);
+	mem_writew(addr+8,dyn_dh_fpu.temp.m3);
 }
 
 static void FPU_FLDCW_DH(PhysPt addr){
@@ -74,35 +74,35 @@ static void FPU_FNINIT_DH(void){
 
 static void FPU_FSTENV_DH(PhysPt addr){
 	if(!cpu.code.big) {
-		mem_writew_dyncorex86(addr+0,(Bit16u)dyn_dh_fpu.cw);
-		mem_writew_dyncorex86(addr+2,(Bit16u)dyn_dh_fpu.temp.m2);
-		mem_writew_dyncorex86(addr+4,dyn_dh_fpu.temp.m3);
+		mem_writew(addr+0,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr+2,(Bit16u)dyn_dh_fpu.temp.m2);
+		mem_writew(addr+4,dyn_dh_fpu.temp.m3);
 	} else { 
-		mem_writed_dyncorex86(addr+0,dyn_dh_fpu.temp.m1);
-		mem_writew_dyncorex86(addr+0,(Bit16u)dyn_dh_fpu.cw);
-		mem_writed_dyncorex86(addr+4,dyn_dh_fpu.temp.m2);
-		mem_writed_dyncorex86(addr+8,dyn_dh_fpu.temp.m3);
+		mem_writed(addr+0,dyn_dh_fpu.temp.m1);
+		mem_writew(addr+0,(Bit16u)dyn_dh_fpu.cw);
+		mem_writed(addr+4,dyn_dh_fpu.temp.m2);
+		mem_writed(addr+8,dyn_dh_fpu.temp.m3);
 	}
 }
 
 static void FPU_FLDENV_DH(PhysPt addr){
 	if(!cpu.code.big) {
-		dyn_dh_fpu.cw = (Bit32u)mem_readw_dyncorex86(addr);
+		dyn_dh_fpu.cw = (Bit32u)mem_readw(addr);
 		dyn_dh_fpu.temp.m1 = dyn_dh_fpu.cw|0x3f;
-		dyn_dh_fpu.temp.m2 = (Bit32u)mem_readw_dyncorex86(addr+2);
-		dyn_dh_fpu.temp.m3 = mem_readw_dyncorex86(addr+4);
+		dyn_dh_fpu.temp.m2 = (Bit32u)mem_readw(addr+2);
+		dyn_dh_fpu.temp.m3 = mem_readw(addr+4);
 	} else { 
-		dyn_dh_fpu.cw = (Bit32u)mem_readw_dyncorex86(addr);
-		dyn_dh_fpu.temp.m1 = mem_readd_dyncorex86(addr)|0x3f;
-		dyn_dh_fpu.temp.m2 = mem_readd_dyncorex86(addr+4);
-		dyn_dh_fpu.temp.m3 = mem_readw_dyncorex86(addr+8);
-		dyn_dh_fpu.temp.d1 = mem_readw_dyncorex86(addr+10);
+		dyn_dh_fpu.cw = (Bit32u)mem_readw(addr);
+		dyn_dh_fpu.temp.m1 = mem_readd(addr)|0x3f;
+		dyn_dh_fpu.temp.m2 = mem_readd(addr+4);
+		dyn_dh_fpu.temp.m3 = mem_readw(addr+8);
+		dyn_dh_fpu.temp.d1 = mem_readw(addr+10);
 	}
 }
 
 static void FPU_FSAVE_DH(PhysPt addr){
 	if (!cpu.code.big) {
-		mem_writew_dyncorex86(addr,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr,(Bit16u)dyn_dh_fpu.cw);
 		addr+=2;
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x04]);
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x05]);
@@ -118,7 +118,7 @@ static void FPU_FSAVE_DH(PhysPt addr){
 		mem_writeb(addr++,dyn_dh_fpu.temp_state[0x19]);
 		for(Bitu i=28;i<108;i++) mem_writeb(addr++,dyn_dh_fpu.temp_state[i]);
 	} else {
-		mem_writew_dyncorex86(addr,(Bit16u)dyn_dh_fpu.cw);
+		mem_writew(addr,(Bit16u)dyn_dh_fpu.cw);
 		addr+=2;
 		for(Bitu i=2;i<108;i++) mem_writeb(addr++,dyn_dh_fpu.temp_state[i]);
 	}
@@ -126,7 +126,7 @@ static void FPU_FSAVE_DH(PhysPt addr){
 
 static void FPU_FRSTOR_DH(PhysPt addr){
 	if (!cpu.code.big) {
-		dyn_dh_fpu.cw = (Bit32u)mem_readw_dyncorex86(addr);
+		dyn_dh_fpu.cw = (Bit32u)mem_readw(addr);
 		dyn_dh_fpu.temp_state[0x00] = mem_readb(addr++)|0x3f;
 		dyn_dh_fpu.temp_state[0x01] = mem_readb(addr++);
 		dyn_dh_fpu.temp_state[0x04] = mem_readb(addr++);
@@ -143,7 +143,7 @@ static void FPU_FRSTOR_DH(PhysPt addr){
 		dyn_dh_fpu.temp_state[0x19] = mem_readb(addr++);
 		for(Bitu i=28;i<108;i++) dyn_dh_fpu.temp_state[i] = mem_readb(addr++);
 	} else {
-		dyn_dh_fpu.cw = (Bit32u)mem_readw_dyncorex86(addr);
+		dyn_dh_fpu.cw = (Bit32u)mem_readw(addr);
 		for(Bitu i=0;i<108;i++) dyn_dh_fpu.temp_state[i] = mem_readb(addr++);
 		dyn_dh_fpu.temp_state[0]|=0x3f;
 	}

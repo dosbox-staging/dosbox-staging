@@ -925,9 +925,9 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
 	switch (write_size) {
-		case 1: cache_addd((Bit32u)mem_writeb_checked_x86 - (Bit32u)cache.pos-4); break;
-		case 2: cache_addd((Bit32u)mem_writew_checked_x86 - (Bit32u)cache.pos-4); break;
-		case 4: cache_addd((Bit32u)mem_writed_checked_x86 - (Bit32u)cache.pos-4); break;
+		case 1: cache_addd((Bit32u)mem_writeb_checked - (Bit32u)cache.pos-4); break;
+		case 2: cache_addd((Bit32u)mem_writew_checked - (Bit32u)cache.pos-4); break;
+		case 4: cache_addd((Bit32u)mem_writed_checked - (Bit32u)cache.pos-4); break;
 		default: IllegalOption("gen_call_write");
 	}
 

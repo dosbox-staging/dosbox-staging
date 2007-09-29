@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.51 2007-07-19 18:58:39 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.52 2007-09-29 13:23:59 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -447,35 +447,35 @@ void mem_unalignedwrited(PhysPt address,Bit32u val) {
 }
 
 
-bool mem_unalignedreadw_checked_x86(PhysPt address, Bit16u * val) {
+bool mem_unalignedreadw_checked(PhysPt address, Bit16u * val) {
 	Bit8u rval1,rval2;
-	if (mem_readb_checked_x86(address+0, &rval1)) return true;
-	if (mem_readb_checked_x86(address+1, &rval2)) return true;
+	if (mem_readb_checked(address+0, &rval1)) return true;
+	if (mem_readb_checked(address+1, &rval2)) return true;
 	*val=(Bit16u)(((Bit8u)rval1) | (((Bit8u)rval2) << 8));
 	return false;
 }
 
-bool mem_unalignedreadd_checked_x86(PhysPt address, Bit32u * val) {
+bool mem_unalignedreadd_checked(PhysPt address, Bit32u * val) {
 	Bit8u rval1,rval2,rval3,rval4;
-	if (mem_readb_checked_x86(address+0, &rval1)) return true;
-	if (mem_readb_checked_x86(address+1, &rval2)) return true;
-	if (mem_readb_checked_x86(address+2, &rval3)) return true;
-	if (mem_readb_checked_x86(address+3, &rval4)) return true;
+	if (mem_readb_checked(address+0, &rval1)) return true;
+	if (mem_readb_checked(address+1, &rval2)) return true;
+	if (mem_readb_checked(address+2, &rval3)) return true;
+	if (mem_readb_checked(address+3, &rval4)) return true;
 	*val=(Bit32u)(((Bit8u)rval1) | (((Bit8u)rval2) << 8) | (((Bit8u)rval3) << 16) | (((Bit8u)rval4) << 24));
 	return false;
 }
 
-bool mem_unalignedwritew_checked_x86(PhysPt address,Bit16u val) {
-	if (mem_writeb_checked_x86(address,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked_x86(address+1,(Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwritew_checked(PhysPt address,Bit16u val) {
+	if (mem_writeb_checked(address,(Bit8u)(val & 0xff))) return true;val>>=8;
+	if (mem_writeb_checked(address+1,(Bit8u)(val & 0xff))) return true;
 	return false;
 }
 
-bool mem_unalignedwrited_checked_x86(PhysPt address,Bit32u val) {
-	if (mem_writeb_checked_x86(address,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked_x86(address+1,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked_x86(address+2,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked_x86(address+3,(Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwrited_checked(PhysPt address,Bit32u val) {
+	if (mem_writeb_checked(address,(Bit8u)(val & 0xff))) return true;val>>=8;
+	if (mem_writeb_checked(address+1,(Bit8u)(val & 0xff))) return true;val>>=8;
+	if (mem_writeb_checked(address+2,(Bit8u)(val & 0xff))) return true;val>>=8;
+	if (mem_writeb_checked(address+3,(Bit8u)(val & 0xff))) return true;
 	return false;
 }
 

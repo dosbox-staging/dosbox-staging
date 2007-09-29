@@ -130,7 +130,7 @@ static struct DynDecode {
 static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 	Bit8u rdval;
 	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked_x86(lin_addr,&rdval))) return true;
+	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 
 	Bitu lin_page=lin_addr >> 12;
 
@@ -589,12 +589,8 @@ bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
 
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-	if (!(address & 1)) {
-#else
 	if ((address & 0xfff)<0xfff) {
-#endif
-			Bitu index=(address>>12);
+		Bitu index=(address>>12);
 		if (paging.tlb.read[index]) {
 			*((Bit16u*)(&core_dynrec.readdata))=host_readw(paging.tlb.read[index]+address);
 			return false;
@@ -605,16 +601,12 @@ bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 			*((Bit16u*)(&core_dynrec.readdata))=(Bit16u)uval;
 			return retval;
 		}
-	} else return mem_unalignedreadw_checked_x86(address, ((Bit16u*)(&core_dynrec.readdata)));
+	} else return mem_unalignedreadw_checked(address, ((Bit16u*)(&core_dynrec.readdata)));
 }
 
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-	if (!(address & 3)) {
-#else
 	if ((address & 0xfff)<0xffd) {
-#endif
 		Bitu index=(address>>12);
 		if (paging.tlb.read[index]) {
 			*((Bit32u*)(&core_dynrec.readdata))=host_readd(paging.tlb.read[index]+address);
@@ -626,37 +618,29 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 			*((Bit32u*)(&core_dynrec.readdata))=(Bit32u)uval;
 			return retval;
 		}
-	} else return mem_unalignedreadd_checked_x86(address, ((Bit32u*)(&core_dynrec.readdata)));
+	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
 }
 
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) DRC_FC;
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) {
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-	if (!(address & 1)) {
-#else
 	if ((address & 0xfff)<0xfff) {
-#endif
 		Bitu index=(address>>12);
 		if (paging.tlb.write[index]) {
 			host_writew(paging.tlb.write[index]+address,val);
 			return false;
 		} else return paging.tlb.handler[index]->writew_checked(address,val);
-	} else return mem_unalignedwritew_checked_x86(address,val);
+	} else return mem_unalignedwritew_checked(address,val);
 }
 
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) DRC_FC;
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) {
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
-	if (!(address & 3)) {
-#else
 	if ((address & 0xfff)<0xffd) {
-#endif
 		Bitu index=(address>>12);
 		if (paging.tlb.write[index]) {
 			host_writed(paging.tlb.write[index]+address,val);
 			return false;
 		} else return paging.tlb.handler[index]->writed_checked(address,val);
-	} else return mem_unalignedwrited_checked_x86(address,val);
+	} else return mem_unalignedwrited_checked(address,val);
 }
 
 

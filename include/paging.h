@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.25 2007-06-12 20:22:07 c2woody Exp $ */
+/* $Id: paging.h,v 1.26 2007-09-29 13:23:59 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -169,10 +169,10 @@ Bit32u mem_unalignedreadd(PhysPt address);
 void mem_unalignedwritew(PhysPt address,Bit16u val);
 void mem_unalignedwrited(PhysPt address,Bit32u val);
 
-bool mem_unalignedreadw_checked_x86(PhysPt address,Bit16u * val);
-bool mem_unalignedreadd_checked_x86(PhysPt address,Bit32u * val);
-bool mem_unalignedwritew_checked_x86(PhysPt address,Bit16u val);
-bool mem_unalignedwrited_checked_x86(PhysPt address,Bit32u val);
+bool mem_unalignedreadw_checked(PhysPt address,Bit16u * val);
+bool mem_unalignedreadd_checked(PhysPt address,Bit32u * val);
+bool mem_unalignedwritew_checked(PhysPt address,Bit16u val);
+bool mem_unalignedwrited_checked(PhysPt address,Bit32u val);
 
 /* Special inlined memory reading/writing */
 
@@ -183,7 +183,7 @@ INLINE Bit8u mem_readb_inline(PhysPt address) {
 }
 
 INLINE Bit16u mem_readw_inline(PhysPt address) {
-	if (!(address & 1)) {
+	if ((address & 0xfff)<0xfff) {
 		Bitu index=(address>>12);
 
 		if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
@@ -192,7 +192,7 @@ INLINE Bit16u mem_readw_inline(PhysPt address) {
 }
 
 INLINE Bit32u mem_readd_inline(PhysPt address) {
-	if (!(address & 3)) {
+	if ((address & 0xfff)<0xffd) {
 		Bitu index=(address>>12);
 
 		if (paging.tlb.read[index]) return host_readd(paging.tlb.read[index]+address);
@@ -208,7 +208,7 @@ INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
 }
 
 INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
-	if (!(address & 1)) {
+	if ((address & 0xfff)<0xfff) {
 		Bitu index=(address>>12);
 
 		if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
@@ -217,43 +217,6 @@ INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
 }
 
 INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
-	if (!(address & 3)) {
-		Bitu index=(address>>12);
-
-		if (paging.tlb.write[index]) host_writed(paging.tlb.write[index]+address,val);
-		else paging.tlb.handler[index]->writed(address,val);
-	} else mem_unalignedwrited(address,val);
-}
-
-
-INLINE Bit16u mem_readw_dyncorex86(PhysPt address) {
-	if ((address & 0xfff)<0xfff) {
-		Bitu index=(address>>12);
-
-		if (paging.tlb.read[index]) return host_readw(paging.tlb.read[index]+address);
-		else return (Bit16u)paging.tlb.handler[index]->readw(address);
-	} else return mem_unalignedreadw(address);
-}
-
-INLINE Bit32u mem_readd_dyncorex86(PhysPt address) {
-	if ((address & 0xfff)<0xffd) {
-		Bitu index=(address>>12);
-
-		if (paging.tlb.read[index]) return host_readd(paging.tlb.read[index]+address);
-		else return paging.tlb.handler[index]->readd(address);
-	} else return mem_unalignedreadd(address);
-}
-
-INLINE void mem_writew_dyncorex86(PhysPt address,Bit16u val) {
-	if ((address & 0xfff)<0xfff) {
-		Bitu index=(address>>12);
-
-		if (paging.tlb.write[index]) host_writew(paging.tlb.write[index]+address,val);
-		else paging.tlb.handler[index]->writew(address,val);
-	} else mem_unalignedwritew(address,val);
-}
-
-INLINE void mem_writed_dyncorex86(PhysPt address,Bit32u val) {
 	if ((address & 0xfff)<0xffd) {
 		Bitu index=(address>>12);
 
@@ -263,7 +226,7 @@ INLINE void mem_writed_dyncorex86(PhysPt address,Bit32u val) {
 }
 
 
-INLINE bool mem_readb_checked_x86(PhysPt address, Bit8u * val) {
+INLINE bool mem_readb_checked(PhysPt address, Bit8u * val) {
 	Bitu index=(address>>12);
 	if (paging.tlb.read[index]) {
 		*val=host_readb(paging.tlb.read[index]+address);
@@ -277,7 +240,7 @@ INLINE bool mem_readb_checked_x86(PhysPt address, Bit8u * val) {
 	}
 }
 
-INLINE bool mem_readw_checked_x86(PhysPt address, Bit16u * val) {
+INLINE bool mem_readw_checked(PhysPt address, Bit16u * val) {
 	if ((address & 0xfff)<0xfff) {
 		Bitu index=(address>>12);
 		if (paging.tlb.read[index]) {
@@ -290,11 +253,10 @@ INLINE bool mem_readw_checked_x86(PhysPt address, Bit16u * val) {
 			*val=(Bit16u)uval;
 			return retval;
 		}
-	} else return mem_unalignedreadw_checked_x86(address, val);
+	} else return mem_unalignedreadw_checked(address, val);
 }
 
-
-INLINE bool mem_readd_checked_x86(PhysPt address, Bit32u * val) {
+INLINE bool mem_readd_checked(PhysPt address, Bit32u * val) {
 	if ((address & 0xfff)<0xffd) {
 		Bitu index=(address>>12);
 		if (paging.tlb.read[index]) {
@@ -307,10 +269,10 @@ INLINE bool mem_readd_checked_x86(PhysPt address, Bit32u * val) {
 			*val=(Bit32u)uval;
 			return retval;
 		}
-	} else return mem_unalignedreadd_checked_x86(address, val);
+	} else return mem_unalignedreadd_checked(address, val);
 }
 
-INLINE bool mem_writeb_checked_x86(PhysPt address,Bit8u val) {
+INLINE bool mem_writeb_checked(PhysPt address,Bit8u val) {
 	Bitu index=(address>>12);
 	if (paging.tlb.write[index]) {
 		host_writeb(paging.tlb.write[index]+address,val);
@@ -318,24 +280,24 @@ INLINE bool mem_writeb_checked_x86(PhysPt address,Bit8u val) {
 	} else return paging.tlb.handler[index]->writeb_checked(address,val);
 }
 
-INLINE bool mem_writew_checked_x86(PhysPt address,Bit16u val) {
+INLINE bool mem_writew_checked(PhysPt address,Bit16u val) {
 	if ((address & 0xfff)<0xfff) {
 		Bitu index=(address>>12);
 		if (paging.tlb.write[index]) {
 			host_writew(paging.tlb.write[index]+address,val);
 			return false;
 		} else return paging.tlb.handler[index]->writew_checked(address,val);
-	} else return mem_unalignedwritew_checked_x86(address,val);
+	} else return mem_unalignedwritew_checked(address,val);
 }
 
-INLINE bool mem_writed_checked_x86(PhysPt address,Bit32u val) {
+INLINE bool mem_writed_checked(PhysPt address,Bit32u val) {
 	if ((address & 0xfff)<0xffd) {
 		Bitu index=(address>>12);
 		if (paging.tlb.write[index]) {
 			host_writed(paging.tlb.write[index]+address,val);
 			return false;
 		} else return paging.tlb.handler[index]->writed_checked(address,val);
-	} else return mem_unalignedwrited_checked_x86(address,val);
+	} else return mem_unalignedwrited_checked(address,val);
 }
 
 
