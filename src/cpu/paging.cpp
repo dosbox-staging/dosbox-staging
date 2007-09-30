@@ -75,14 +75,14 @@ HostPt PageHandler::GetHostWritePt(Bitu /*phys_page*/) {
 	return 0;
 }
 
-bool PageHandler::readb_checked(PhysPt addr, Bitu * val) {
-	*val=readb(addr);	return false;
+bool PageHandler::readb_checked(PhysPt addr, Bit8u * val) {
+	*val=(Bit8u)readb(addr);	return false;
 }
-bool PageHandler::readw_checked(PhysPt addr, Bitu * val) {
-	*val=readw(addr);	return false;
+bool PageHandler::readw_checked(PhysPt addr, Bit16u * val) {
+	*val=(Bit16u)readw(addr);	return false;
 }
-bool PageHandler::readd_checked(PhysPt addr, Bitu * val) {
-	*val=readd(addr);	return false;
+bool PageHandler::readd_checked(PhysPt addr, Bit32u * val) {
+	*val=(Bit32u)readd(addr);	return false;
 }
 bool PageHandler::writeb_checked(PhysPt addr,Bitu val) {
 	writeb(addr,val);	return false;
@@ -185,19 +185,19 @@ public:
 		InitPage(addr,true);
 		mem_writed(addr,val);
 	}
-	bool readb_checked(PhysPt addr, Bitu * val) {
+	bool readb_checked(PhysPt addr, Bit8u * val) {
 		if (InitPage(addr,false,true)) {
 			*val=mem_readb(addr);
 			return false;
 		} else return true;
 	}
-	bool readw_checked(PhysPt addr, Bitu * val) {
+	bool readw_checked(PhysPt addr, Bit16u * val) {
 		if (InitPage(addr,false,true)){
 			*val=mem_readw(addr);
 			return false;
 		} else return true;
 	}
-	bool readd_checked(PhysPt addr, Bitu * val) {
+	bool readd_checked(PhysPt addr, Bit32u * val) {
 		if (InitPage(addr,false,true)) {
 			*val=mem_readd(addr);
 			return false;

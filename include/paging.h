@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.26 2007-09-29 13:23:59 c2woody Exp $ */
+/* $Id: paging.h,v 1.27 2007-09-30 14:10:04 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -57,9 +57,9 @@ public:
 	virtual void writed(PhysPt addr,Bitu val);
 	virtual HostPt GetHostReadPt(Bitu phys_page);
 	virtual HostPt GetHostWritePt(Bitu phys_page);
-	virtual bool readb_checked(PhysPt addr, Bitu * val);
-	virtual bool readw_checked(PhysPt addr, Bitu * val);
-	virtual bool readd_checked(PhysPt addr, Bitu * val);
+	virtual bool readb_checked(PhysPt addr,Bit8u * val);
+	virtual bool readw_checked(PhysPt addr,Bit16u * val);
+	virtual bool readd_checked(PhysPt addr,Bit32u * val);
 	virtual bool writeb_checked(PhysPt addr,Bitu val);
 	virtual bool writew_checked(PhysPt addr,Bitu val);
 	virtual bool writed_checked(PhysPt addr,Bitu val);
@@ -231,13 +231,7 @@ INLINE bool mem_readb_checked(PhysPt address, Bit8u * val) {
 	if (paging.tlb.read[index]) {
 		*val=host_readb(paging.tlb.read[index]+address);
 		return false;
-	} else {
-		Bitu uval;
-		bool retval;
-		retval=paging.tlb.handler[index]->readb_checked(address, &uval);
-		*val=(Bit8u)uval;
-		return retval;
-	}
+	} else return paging.tlb.handler[index]->readb_checked(address, val);
 }
 
 INLINE bool mem_readw_checked(PhysPt address, Bit16u * val) {
@@ -246,13 +240,7 @@ INLINE bool mem_readw_checked(PhysPt address, Bit16u * val) {
 		if (paging.tlb.read[index]) {
 			*val=host_readw(paging.tlb.read[index]+address);
 			return false;
-		} else {
-			Bitu uval;
-			bool retval;
-			retval=paging.tlb.handler[index]->readw_checked(address, &uval);
-			*val=(Bit16u)uval;
-			return retval;
-		}
+		} else return paging.tlb.handler[index]->readw_checked(address, val);
 	} else return mem_unalignedreadw_checked(address, val);
 }
 
@@ -262,13 +250,7 @@ INLINE bool mem_readd_checked(PhysPt address, Bit32u * val) {
 		if (paging.tlb.read[index]) {
 			*val=host_readd(paging.tlb.read[index]+address);
 			return false;
-		} else {
-			Bitu uval;
-			bool retval;
-			retval=paging.tlb.handler[index]->readd_checked(address, &uval);
-			*val=(Bit32u)uval;
-			return retval;
-		}
+		} else return paging.tlb.handler[index]->readd_checked(address, val);
 	} else return mem_unalignedreadd_checked(address, val);
 }
 

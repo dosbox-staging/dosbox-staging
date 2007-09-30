@@ -461,13 +461,8 @@ static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
 	cache_addw(0xc18b);		// mov eax,ecx
 }
 
-bool mem_readb_checked_x86x(PhysPt address) {
-	Bitu index=(address>>12);
-	Bitu uval;
-	bool retval;
-	retval=paging.tlb.handler[index]->readb_checked(address, &uval);
-	core_dyn.readdata=(Bit8u)uval;
-	return retval;
+bool mem_readb_checked_dcx86(PhysPt address) {
+	return paging.tlb.handler[address>>12]->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
 }
 
 static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
@@ -489,7 +484,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
 	gen_fill_branch(je_loc);
 	cache_addb(0x51);		// push ecx
 	cache_addb(0xe8);
-	cache_addd(((Bit32u)&mem_readb_checked_x86x) - (Bit32u)cache.pos-4);
+	cache_addd(((Bit32u)&mem_readb_checked_dcx86) - (Bit32u)cache.pos-4);
 	cache_addw(0xc483);		// add esp,4
 	cache_addb(0x04);
 	cache_addw(0x012c);		// sub al,1
@@ -527,7 +522,7 @@ static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
 	gen_fill_branch(je_loc);
 	cache_addb(0x51);		// push ecx
 	cache_addb(0xe8);
-	cache_addd(((Bit32u)&mem_readb_checked_x86x) - (Bit32u)cache.pos-4);
+	cache_addd(((Bit32u)&mem_readb_checked_dcx86) - (Bit32u)cache.pos-4);
 	cache_addw(0xc483);		// add esp,4
 	cache_addb(0x04);
 	cache_addw(0x012c);		// sub al,1
@@ -546,18 +541,14 @@ static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
 	dst->flags|=DYNFLG_CHANGED;
 }
 
-bool mem_readd_checked_x86x(PhysPt address) {
+bool mem_readd_checked_dcx86(PhysPt address) {
 	if ((address & 0xfff)<0xffd) {
 		Bitu index=(address>>12);
 		if (paging.tlb.read[index]) {
 			core_dyn.readdata=host_readd(paging.tlb.read[index]+address);
 			return false;
 		} else {
-			Bitu uval;
-			bool retval;
-			retval=paging.tlb.handler[index]->readd_checked(address, &uval);
-			core_dyn.readdata=(Bit32u)uval;
-			return retval;
+			return paging.tlb.handler[index]->readd_checked(address, &core_dyn.readdata);
 		}
 	} else return mem_unalignedreadd_checked(address, &core_dyn.readdata);
 }
@@ -589,7 +580,7 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword) {
 		gen_fill_branch(je_loc);
 		cache_addb(0x51);		// push ecx
 		cache_addb(0xe8);
-		cache_addd(((Bit32u)&mem_readd_checked_x86x) - (Bit32u)cache.pos-4);
+		cache_addd(((Bit32u)&mem_readd_checked_dcx86) - (Bit32u)cache.pos-4);
 		cache_addw(0xc483);		// add esp,4
 		cache_addb(0x04);
 		cache_addw(0x012c);		// sub al,1
@@ -635,7 +626,7 @@ static void dyn_read_word_release(DynReg * addr,DynReg * dst,bool dword) {
 		gen_fill_branch(je_loc);
 		cache_addb(0x51);		// push ecx
 		cache_addb(0xe8);
-		cache_addd(((Bit32u)&mem_readd_checked_x86x) - (Bit32u)cache.pos-4);
+		cache_addd(((Bit32u)&mem_readd_checked_dcx86) - (Bit32u)cache.pos-4);
 		cache_addw(0xc483);		// add esp,4
 		cache_addb(0x04);
 		cache_addw(0x012c);		// sub al,1

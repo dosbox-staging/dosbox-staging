@@ -570,11 +570,7 @@ bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 		*((Bit8u*)(&core_dynrec.readdata))=host_readb(paging.tlb.read[index]+address);
 		return false;
 	} else {
-		Bitu uval;
-		bool retval;
-		retval=paging.tlb.handler[index]->readb_checked(address, &uval);
-		*((Bit8u*)(&core_dynrec.readdata))=(Bit8u)uval;
-		return retval;
+		return paging.tlb.handler[index]->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
 	}
 }
 
@@ -594,13 +590,7 @@ bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 		if (paging.tlb.read[index]) {
 			*((Bit16u*)(&core_dynrec.readdata))=host_readw(paging.tlb.read[index]+address);
 			return false;
-		} else {
-			Bitu uval;
-			bool retval;
-			retval=paging.tlb.handler[index]->readw_checked(address, &uval);
-			*((Bit16u*)(&core_dynrec.readdata))=(Bit16u)uval;
-			return retval;
-		}
+		} else return paging.tlb.handler[index]->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadw_checked(address, ((Bit16u*)(&core_dynrec.readdata)));
 }
 
@@ -611,13 +601,7 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 		if (paging.tlb.read[index]) {
 			*((Bit32u*)(&core_dynrec.readdata))=host_readd(paging.tlb.read[index]+address);
 			return false;
-		} else {
-			Bitu uval;
-			bool retval;
-			retval=paging.tlb.handler[index]->readd_checked(address, &uval);
-			*((Bit32u*)(&core_dynrec.readdata))=(Bit32u)uval;
-			return retval;
-		}
+		} else return paging.tlb.handler[index]->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
 }
 
