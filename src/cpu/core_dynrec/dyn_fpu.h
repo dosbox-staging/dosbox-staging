@@ -289,8 +289,8 @@ static void dyn_fpu_esc1(){
 		switch(decode.modrm.reg){
 		case 0x00: /* FLD float*/
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
-			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			dyn_fill_ea(FC_OP1);
+			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			gen_call_function_RR((void*)&FPU_FLD_F32,FC_OP1,FC_OP2);
 			break;
 		case 0x01: /* UNKNOWN */
@@ -532,8 +532,8 @@ static void dyn_fpu_esc5(){
 		case 0x07:   /*FNSTSW */
 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 			gen_call_function_R((void*)&FPU_SET_TOP,FC_OP1);
-			gen_mov_word_to_reg(FC_OP2,(void*)(&fpu.sw),true);
 			dyn_fill_ea(FC_OP1); 
+			gen_mov_word_to_reg(FC_OP2,(void*)(&fpu.sw),true);
 			gen_call_function_RR((void*)&mem_writew,FC_OP1,FC_OP2);
 			break;
 		default:
@@ -633,8 +633,8 @@ static void dyn_fpu_esc7(){
 		switch(decode.modrm.reg){
 		case 0x00:  /* FILD Bit16s */
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
-			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			dyn_fill_ea(FC_OP1); 
+			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
 			gen_call_function_RR((void*)&FPU_FLD_I16,FC_OP1,FC_OP2);
 			break;
 		case 0x01:
@@ -651,14 +651,14 @@ static void dyn_fpu_esc7(){
 			break;
 		case 0x04:   /* FBLD packed BCD */
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
+			dyn_fill_ea(FC_OP1);
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
-			dyn_fill_ea(FC_OP1); 
 			gen_call_function_RR((void*)&FPU_FBLD,FC_OP1,FC_OP2);
 			break;
 		case 0x05:  /* FILD Bit64s */
 			gen_call_function_raw((void*)&FPU_PREP_PUSH);
+			dyn_fill_ea(FC_OP1);
 			gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
-			dyn_fill_ea(FC_OP1); 
 			gen_call_function_RR((void*)&FPU_FLD_I64,FC_OP1,FC_OP2);
 			break;
 		case 0x06:	/* FBSTP packed BCD */
