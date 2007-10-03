@@ -264,7 +264,8 @@ public:
 					E_Exit("Pagefault didn't correct page");
 			}
 			if (cpu.cpl==3) {
-				if ((entry.block.us==0) || (table.block.us==0) && (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
+//				if (((entry.block.us==0) || (table.block.us==0)) || (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
+				if (((entry.block.us==0) && (table.block.us==0)) || (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
 					LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
 					if (check_only) {
 						paging.cr2=lin_addr;
