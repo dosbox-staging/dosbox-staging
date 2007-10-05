@@ -54,8 +54,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	Bit8u rdval;
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
-	Bitu lin_page=lin_addr >> 12;
-	PageHandler * handler=paging.tlb.handler[lin_page];
+	PageHandler * handler=get_tlb_handler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
 		return false;
@@ -64,6 +63,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		LOG_MSG("DYNX86:Can't run code in this page");
 		cph=0;		return false;
 	} 
+	Bitu lin_page=lin_addr >> 12;
 	Bitu phys_page=lin_page;
 	if (!PAGING_MakePhysPage(phys_page)) {
 		LOG_MSG("DYNX86:Can't find physpage");
@@ -176,9 +176,9 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 
 static bool decode_fetchb_imm(Bitu & val) {
 	if (decode.page.index<4096) {
-		Bitu index=(decode.code>>12);
-		if (paging.tlb.read[index]) {
-			val=(Bitu)(paging.tlb.read[index]+decode.code);
+		HostPt tlb_addr=get_tlb_read(decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
 			decode_increase_wmapmask(1);
 			decode.code++;
 			decode.page.index++;
@@ -190,9 +190,9 @@ static bool decode_fetchb_imm(Bitu & val) {
 }
 static bool decode_fetchw_imm(Bitu & val) {
 	if (decode.page.index<4095) {
-		Bitu index=(decode.code>>12);
-		if (paging.tlb.read[index]) {
-			val=(Bitu)(paging.tlb.read[index]+decode.code);
+		HostPt tlb_addr=get_tlb_read(decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
 			decode_increase_wmapmask(2);
 			decode.code+=2;
 			decode.page.index+=2;
@@ -204,9 +204,9 @@ static bool decode_fetchw_imm(Bitu & val) {
 }
 static bool decode_fetchd_imm(Bitu & val) {
 	if (decode.page.index<4093) {
-		Bitu index=(decode.code>>12);
-		if (paging.tlb.read[index]) {
-			val=(Bitu)(paging.tlb.read[index]+decode.code);
+		HostPt tlb_addr=get_tlb_read(decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
 			decode_increase_wmapmask(4);
 			decode.code+=4;
 			decode.page.index+=4;
@@ -462,7 +462,7 @@ static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
 }
 
 bool mem_readb_checked_dcx86(PhysPt address) {
-	return paging.tlb.handler[address>>12]->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
+	return get_tlb_handler(address)->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
 }
 
 static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
@@ -543,12 +543,12 @@ static void dyn_read_byte_release(DynReg * addr,DynReg * dst,Bitu high) {
 
 bool mem_readd_checked_dcx86(PhysPt address) {
 	if ((address & 0xfff)<0xffd) {
-		Bitu index=(address>>12);
-		if (paging.tlb.read[index]) {
-			core_dyn.readdata=host_readd(paging.tlb.read[index]+address);
+		HostPt tlb_addr=get_tlb_read(address);
+		if (tlb_addr) {
+			core_dyn.readdata=host_readd(tlb_addr+address);
 			return false;
 		} else {
-			return paging.tlb.handler[index]->readd_checked(address, &core_dyn.readdata);
+			return get_tlb_handler(address)->readd_checked(address, &core_dyn.readdata);
 		}
 	} else return mem_unalignedreadd_checked(address, &core_dyn.readdata);
 }

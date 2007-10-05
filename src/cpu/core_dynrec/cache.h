@@ -117,7 +117,7 @@ public:
 		bool is_current_block=false;	// if the current block is modified, it has to be exited as soon as possible
 
 		Bit32u ip_point=SegPhys(cs)+reg_eip;
-		ip_point=((paging.tlb.phys_page[ip_point>>12]-phys_page)<<12)+(ip_point&0xfff);
+		ip_point=(PAGING_GetPhysicalPage(ip_point)-(phys_page<<12))+(ip_point&0xfff);
 		while (index>=0) {
 			Bitu map=0;
 			// see if there is still some code in the range

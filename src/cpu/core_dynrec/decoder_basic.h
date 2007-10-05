@@ -132,9 +132,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 
-	Bitu lin_page=lin_addr >> 12;
-
-	PageHandler * handler=paging.tlb.handler[lin_page];
+	PageHandler * handler=get_tlb_handler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		// this is a codepage handler, and the one that we're looking for
 		cph=(CodePageHandlerDynRec *)handler;
@@ -145,6 +143,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 		cph=0;
 		return false;
 	} 
+	Bitu lin_page=lin_addr>>12;
 	Bitu phys_page=lin_page;
 	// find the physical page that the linear page is mapped to
 	if (!PAGING_MakePhysPage(phys_page)) {
@@ -280,10 +279,10 @@ static bool decode_fetchb_imm(Bitu & val) {
 	if (GCC_UNLIKELY(decode.page.index>=4096)) {
 		decode_advancepage();
 	}
-	Bitu index=(decode.code>>12);
+	HostPt tlb_addr=get_tlb_read(decode.code);
 	// see if position is directly accessible
-	if (paging.tlb.read[index]) {
-		val=(Bitu)(paging.tlb.read[index]+decode.code);
+	if (tlb_addr) {
+		val=(Bitu)(tlb_addr+decode.code);
 		decode_increase_wmapmask(1);
 		decode.code++;
 		decode.page.index++;
@@ -298,10 +297,10 @@ static bool decode_fetchb_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchw_imm(Bitu & val) {
 	if (decode.page.index<4095) {
-		Bitu index=(decode.code>>12);
+		HostPt tlb_addr=get_tlb_read(decode.code);
 		// see if position is directly accessible
-		if (paging.tlb.read[index]) {
-			val=(Bitu)(paging.tlb.read[index]+decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
 			decode_increase_wmapmask(2);
 			decode.code+=2;
 			decode.page.index+=2;
@@ -317,10 +316,10 @@ static bool decode_fetchw_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchd_imm(Bitu & val) {
 	if (decode.page.index<4093) {
-		Bitu index=(decode.code>>12);
+		HostPt tlb_addr=get_tlb_read(decode.code);
 		// see if position is directly accessible
-		if (paging.tlb.read[index]) {
-			val=(Bitu)(paging.tlb.read[index]+decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
 			decode_increase_wmapmask(4);
 			decode.code+=4;
 			decode.page.index+=4;
@@ -565,65 +564,65 @@ static void dyn_check_exception(HostReg reg) {
 
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
-	Bitu index=(address>>12);
-	if (paging.tlb.read[index]) {
-		*((Bit8u*)(&core_dynrec.readdata))=host_readb(paging.tlb.read[index]+address);
+	HostPt tlb_addr=get_tlb_read(address);
+	if (tlb_addr) {
+		*((Bit8u*)(&core_dynrec.readdata))=host_readb(tlb_addr+address);
 		return false;
 	} else {
-		return paging.tlb.handler[index]->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
+		return get_tlb_handler(address)->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
 	}
 }
 
 bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) DRC_FC;
 bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
-	Bitu index=(address>>12);
-	if (paging.tlb.write[index]) {
-		host_writeb(paging.tlb.write[index]+address,val);
+	HostPt tlb_addr=get_tlb_write(address);
+	if (tlb_addr) {
+		host_writeb(tlb_addr+address,val);
 		return false;
-	} else return paging.tlb.handler[index]->writeb_checked(address,val);
+	} else return get_tlb_handler(address)->writeb_checked(address,val);
 }
 
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 	if ((address & 0xfff)<0xfff) {
-		Bitu index=(address>>12);
-		if (paging.tlb.read[index]) {
-			*((Bit16u*)(&core_dynrec.readdata))=host_readw(paging.tlb.read[index]+address);
+		HostPt tlb_addr=get_tlb_read(address);
+		if (tlb_addr) {
+			*((Bit16u*)(&core_dynrec.readdata))=host_readw(tlb_addr+address);
 			return false;
-		} else return paging.tlb.handler[index]->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
+		} else return get_tlb_handler(address)->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadw_checked(address, ((Bit16u*)(&core_dynrec.readdata)));
 }
 
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) DRC_FC;
 bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 	if ((address & 0xfff)<0xffd) {
-		Bitu index=(address>>12);
-		if (paging.tlb.read[index]) {
-			*((Bit32u*)(&core_dynrec.readdata))=host_readd(paging.tlb.read[index]+address);
+		HostPt tlb_addr=get_tlb_read(address);
+		if (tlb_addr) {
+			*((Bit32u*)(&core_dynrec.readdata))=host_readd(tlb_addr+address);
 			return false;
-		} else return paging.tlb.handler[index]->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
+		} else return get_tlb_handler(address)->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
 }
 
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) DRC_FC;
 bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) {
 	if ((address & 0xfff)<0xfff) {
-		Bitu index=(address>>12);
-		if (paging.tlb.write[index]) {
-			host_writew(paging.tlb.write[index]+address,val);
+		HostPt tlb_addr=get_tlb_write(address);
+		if (tlb_addr) {
+			host_writew(tlb_addr+address,val);
 			return false;
-		} else return paging.tlb.handler[index]->writew_checked(address,val);
+		} else return get_tlb_handler(address)->writew_checked(address,val);
 	} else return mem_unalignedwritew_checked(address,val);
 }
 
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) DRC_FC;
 bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) {
 	if ((address & 0xfff)<0xffd) {
-		Bitu index=(address>>12);
-		if (paging.tlb.write[index]) {
-			host_writed(paging.tlb.write[index]+address,val);
+		HostPt tlb_addr=get_tlb_write(address);
+		if (tlb_addr) {
+			host_writed(tlb_addr+address,val);
 			return false;
-		} else return paging.tlb.handler[index]->writed_checked(address,val);
+		} else return get_tlb_handler(address)->writed_checked(address,val);
 	} else return mem_unalignedwrited_checked(address,val);
 }
 
