@@ -309,35 +309,23 @@ public:
 	}
 	Bitu readw(PhysPt addr ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		return readHandler<Bit16u>( addr );
+		if (GCC_UNLIKELY(addr & 1))
+			return
+				(readHandler<Bit8u>( addr+0 ) << 0 ) | 
+				(readHandler<Bit8u>( addr+1 ) << 8 );
+		else
+			return readHandler<Bit16u>( addr );
 	}
 	Bitu readd(PhysPt addr ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		return readHandler<Bit32u>( addr );
-	}
-	bool readw_checked( PhysPt addr,Bitu *val ) {
-		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if ( addr & 1) {
-			*val =
-				(readHandler<Bit8u>( addr+0 ) << 0 ) | 
-				(readHandler<Bit8u>( addr+1 ) << 8 );
-		} else {
-			*val = readHandler<Bit16u>( addr ); 
-		}
-		return false;
-	}
-	bool readd_checked( PhysPt addr,Bitu *val ) {
-		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if ( addr & 3) {
-			*val =
+		if (GCC_UNLIKELY(addr & 3))
+			return
 				(readHandler<Bit8u>( addr+0 ) << 0 ) | 
 				(readHandler<Bit8u>( addr+1 ) << 8 ) | 
 				(readHandler<Bit8u>( addr+2 ) << 16 ) | 
 				(readHandler<Bit8u>( addr+3 ) << 24 );
-		} else {
-			*val = readHandler<Bit32u>( addr ); 
-		}
-		return false;
+		else
+			return readHandler<Bit32u>( addr );
 	}
 	void writeb(PhysPt addr, Bitu val ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
@@ -348,46 +336,28 @@ public:
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		MEM_CHANGED( addr );
-		writeHandler<Bit16u>( addr, val );
+//		MEM_CHANGED( addr + 1);
+		if (GCC_UNLIKELY(addr & 1)) {
+			writeHandler<Bit8u>( addr+0, val >> 0 );
+			writeHandler<Bit8u>( addr+1, val >> 8 );
+		} else {
+			writeHandler<Bit16u>( addr, val );
+		}
 		writeCache<Bit16u>( addr, val );
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
 		MEM_CHANGED( addr );
-		writeHandler<Bit32u>( addr, val );
-		writeCache<Bit32u>( addr, val );
-	}
-	bool writew_checked( PhysPt addr,Bitu val ) {
-		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if ( addr & 1 ) {
-			MEM_CHANGED( addr );
-			MEM_CHANGED( addr + 1);
-			writeHandler<Bit8u>( addr+0, val >> 0 );
-			writeHandler<Bit8u>( addr+1, val >> 8 );
-			writeCache<Bit16u>( addr, val );
-		} else {
-			MEM_CHANGED( addr );
-			writeHandler<Bit16u>( addr, val );
-			writeCache<Bit16u>( addr, val );
-		}
-		return false;
-	}
-	bool writed_checked( PhysPt addr,Bitu val ) {
-		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if ( addr & 3) {
-			MEM_CHANGED( addr );
-			MEM_CHANGED( addr + 3);
+//		MEM_CHANGED( addr + 3);
+		if (GCC_UNLIKELY(addr & 3)) {
 			writeHandler<Bit8u>( addr+0, val >> 0 );
 			writeHandler<Bit8u>( addr+1, val >> 8 );
 			writeHandler<Bit8u>( addr+2, val >> 16 );
 			writeHandler<Bit8u>( addr+3, val >> 24 );
-			writeCache<Bit32u>( addr, val );
 		} else {
-			MEM_CHANGED( addr );
 			writeHandler<Bit32u>( addr, val );
-			writeCache<Bit32u>( addr, val );
 		}
-		return false;
+		writeCache<Bit32u>( addr, val );
 	}
 };
 
@@ -586,13 +556,6 @@ public:
 		hostWrite<Bit32u>( &vga.mem.linear[addr], val );
 		MEM_CHANGED( addr );
 	}
-	bool writed_checked( PhysPt addr,Bitu val ) {
-		addr = PAGING_GetPhysicalAddress(addr) - vga.lfb.addr;
-		hostWrite<Bit32u>( &vga.mem.linear[addr], val );
-		MEM_CHANGED( addr );
-		return false;
-	}
-
 };
 
 class VGA_LFB_Handler : public PageHandler {
