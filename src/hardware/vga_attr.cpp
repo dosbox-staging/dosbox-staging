@@ -87,7 +87,6 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			*/
 			attr(mode_control)=val;
 			VGA_DetermineMode();
-			//TODO 9 bit characters
 			/*
 				0	Graphics mode if set, Alphanumeric mode else.
 				1	Monochrome mode if set, color mode else.
@@ -126,7 +125,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			attr(horizontal_pel_panning)=val & 0xF;
 			switch (vga.mode) {
 			case M_TEXT:
-				if (val==0x7) vga.config.pel_panning=7;
+				if ((val==0x7) && (svgaCard==SVGA_None)) vga.config.pel_panning=7;
 				if (val>0x7) vga.config.pel_panning=0;
 				else vga.config.pel_panning=val+1;
 				break;

@@ -410,14 +410,30 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit8u * draw=(Bit8u *)TempLine;
+	Bit8u pel_pan=vga.config.pel_panning;
+	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
-	Bitu bitpos=0;
-	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
-		Bit8u chr=vidmem[cx*2];
-		Bit8u col=vidmem[cx*2+1];
-		Bit8u font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
-		Bit8u fg=col&0xf;
-		Bit8u bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
+	Bit8u chr=vidmem[0];
+	Bit8u col=vidmem[1];
+	Bit8u font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
+	Bit8u fg=col&0xf;
+	Bit8u bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
+	Bitu draw_blocks=vga.draw.blocks;
+	draw_blocks++;
+	for (Bitu cx=1;cx<draw_blocks;cx++) {
+		if (pel_pan) {
+			chr=vidmem[cx*2];
+			col=vidmem[cx*2+1];
+			font|=vga.draw.font_tables[(col >> 3)&1][chr*32+line]>>(8-pel_pan);
+			fg=col&0xf;
+			bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
+		} else {
+			chr=vidmem[(cx-1)*2];
+			col=vidmem[(cx-1)*2+1];
+			font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
+			fg=col&0xf;
+			bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
+		}
 		if (FontMask[col>>7]==0) font=0;
 		*draw++=(font&0x80)?fg:bg;		*draw++=(font&0x40)?fg:bg;
 		*draw++=(font&0x20)?fg:bg;		*draw++=(font&0x10)?fg:bg;
@@ -426,6 +442,8 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 		Bit8u last=(font&0x01)?fg:bg;
 		*draw++=last;
 		*draw++=((chr<0xc0) || (chr>0xdf)) ? bg : last;
+		if (pel_pan)
+			font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
@@ -595,7 +613,8 @@ static void VGA_VerticalTimer(Bitu val) {
 #endif
 		break;
 	case M_TEXT:
-		vga.draw.address = vga.config.display_start * 2;
+		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.address = vga.config.real_start * 2;
+		else vga.draw.address = vga.config.display_start * 2;
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
 		vga.draw.cursor.address=vga.config.cursor_start*2;
@@ -969,7 +988,7 @@ void VGA_SetupDrawing(Bitu val) {
 		aspect_ratio=1.0;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
+		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None) && (vga.attr.mode_control&0x04)) {
 			width*=9;				/* 9 bit wide text font */
 			VGA_DrawLine=VGA_TEXT_Draw_Line_9;
 		} else {
