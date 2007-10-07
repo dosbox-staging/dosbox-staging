@@ -584,6 +584,7 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.address_line = vga.config.hlines_skip;
 	vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
 	// go figure...
+	if (machine==MCH_EGA) vga.draw.split_line*=2;
 //	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
@@ -637,8 +638,10 @@ static void VGA_VerticalTimer(Bitu val) {
 	PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
 //	PIC_AddEvent(VGA_DrawPart,(float)(vga.draw.delay.parts/2),vga.draw.parts_lines); //Else tearline in Tyrian and second reality
 	if (GCC_UNLIKELY(machine==MCH_EGA)) {
-		PIC_ActivateIRQ(2);
-		vga.draw.vret_triggered=true;
+		if (!(vga.crtc.vertical_retrace_end&0x20)) {
+			PIC_ActivateIRQ(2);
+			vga.draw.vret_triggered=true;
+		}
 	}
 }
 
@@ -787,7 +790,7 @@ void VGA_SetupDrawing(Bitu val) {
 		if (vga.s3.pll.cmd & 0x10) clock/=2;
 
 		if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
-		else vga.draw.double_scan=false;	// might actually be a special implementation of double scanning for ega
+		else vga.draw.double_scan=(vga.seq.clocking_mode&0x08)>0;	// not really correct...
 	} else {
 		htotal = vga.other.htotal + 1;
 		hdend = vga.other.hdend;
@@ -850,7 +853,7 @@ void VGA_SetupDrawing(Bitu val) {
 	/*
 	// just curious
 	LOG_MSG("H total %d, V Total %d",htotal,vtotal);
-	LOG_MSG("H D End %d, V D End %d",hdispend,vdispend);
+	LOG_MSG("H D End %d, V D End %d",hdend,vdend);
 	LOG_MSG("vrstart: %d, vrend: %d\n",vrstart,vrend);
 	LOG_MSG("htotal:    %2.6f, vtotal:  %2.6f,\n"\
 		    "hblkstart: %2.6f, hblkend: %2.6f,\n"\
@@ -861,8 +864,8 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.delay.hblkstart, vga.draw.delay.hblkend,
 		vga.draw.delay.vblkstart, vga.draw.delay.vblkend,
 		vga.draw.delay.vrstart,   vga.draw.delay.vrend,
-		vga.draw.delay.vend);
-    */
+		vga.draw.delay.vdend);
+	*/
 	vga.draw.parts_total=VGA_PARTS;
 	/*
       6  Horizontal Sync Polarity. Negative if set
@@ -904,6 +907,7 @@ void VGA_SetupDrawing(Bitu val) {
 
 	vga.draw.delay.parts = vga.draw.delay.vdend/vga.draw.parts_total;
 	vga.draw.resizing=false;
+	vga.draw.vret_triggered=false;
 
 	//Check to prevent useless black areas
 	if (hbstart<hdend) hdend=hbstart;
@@ -1057,7 +1061,7 @@ void VGA_SetupDrawing(Bitu val) {
 	};
 	VGA_CheckScanLength();
 	if (vga.draw.double_scan) {
-		height/=2;
+		if (IS_VGA_ARCH) height/=2;
 		doubleheight=true;
 	}
 	//Only check for extra double height in vga modes

@@ -28,12 +28,10 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	val &= 63;
 	val |= (vga.attr.color_select & 0xc) << 4;
 	if (GCC_UNLIKELY(!IS_VGA_ARCH)) {
-		if ((vga.misc_output&0xc4)==0x40) {
-			if (val&0x10) val|=0x38;
-			else {
-				val&=0x7;
-				if (val==6) val=0x14;
-			}
+		if (val&0x10) val|=0x38;
+		else {
+			val&=0x7;
+			if (val==6) val=0x14;
 		}
 	}
 	VGA_DAC_CombineColor(index,val);

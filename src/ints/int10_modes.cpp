@@ -106,19 +106,19 @@ VideoModeBlock ModeList_VGA[]={
 
 VideoModeBlock ModeList_EGA[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
-{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
-{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
-{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
-{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
-{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
-{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
-{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,100 ,449 ,80 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
-{ 0x007  ,M_TEXT   ,720 ,350 ,80 ,25 ,9 ,14 ,8 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,60  ,262 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,60  ,262 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,120 ,440 ,80 ,350 ,0	},
+{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,120 ,440 ,80 ,350 ,0	},
+{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
+{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,120 ,262 ,80 ,200 ,_EGA_LINE_DOUBLE},
+{ 0x007  ,M_TEXT   ,720 ,350 ,80 ,25 ,9 ,14 ,8 ,0xB0000 ,0x1000 ,120 ,440 ,80 ,350 ,0	},
 
-{ 0x00D  ,M_EGA    ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
-{ 0x00E  ,M_EGA    ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,100 ,449 ,80 ,400 ,_EGA_LINE_DOUBLE },
-{ 0x00F  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},/*was EGA_2*/
-{ 0x010  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x00D  ,M_EGA    ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
+{ 0x00E  ,M_EGA    ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,120 ,262 ,80 ,200 ,_EGA_LINE_DOUBLE },
+{ 0x00F  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,120 ,440 ,80 ,350 ,0	},/*was EGA_2*/
+{ 0x010  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,96  ,336 ,80 ,350 ,0	},
 
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
@@ -542,14 +542,20 @@ bool INT10_SetVideoMode(Bitu mode) {
 	switch (CurMode->type) {
 	case M_TEXT:
 		seq_data[2]|=0x3;				//Enable plane 0 and 1
-		seq_data[4]|=0x05;				//Alpanumeric and odd/even enabled
+		seq_data[4]|=0x01;				//Alpanumeric
+		if (IS_VGA_ARCH) seq_data[4]|=0x04;				//odd/even enabled
 		break;
 	case M_CGA2:
 		seq_data[2]|=0xf;				//Enable plane 0
+		if (machine==MCH_EGA) seq_data[4]|=0x04;		//odd/even enabled
+		break;
+	case M_CGA4:
+		if (machine==MCH_EGA) seq_data[2]|=0x03;		//Enable plane 0 and 1
 		break;
 	case M_LIN4:
 	case M_EGA:
 		seq_data[2]|=0xf;				//Enable all planes for writing
+		if (machine==MCH_EGA) seq_data[4]|=0x04;		//odd/even enabled
 		break;
 	case M_LIN8:						//Seems to have the same reg layout from testing
 	case M_LIN15:
@@ -669,8 +675,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 	Bit8u underline=0;
 	/* Maximum scanline / Underline Location */
 	if (CurMode->special & _EGA_LINE_DOUBLE) {
-		if (machine==MCH_EGA) max_scanline=1;
-		else max_scanline|=0x80;
+		if (machine!=MCH_EGA) max_scanline|=0x80;
 	}
 	switch (CurMode->type) {
 	case M_TEXT:
@@ -689,8 +694,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 		break;
 	case M_CGA2:
 	case M_CGA4:
-		if (machine==MCH_EGA) max_scanline|=2;
-		else max_scanline|=1;
+		max_scanline|=1;
 		break;
 	}
 	if (CurMode->vdispend==350) underline=0x0f;
@@ -719,6 +723,9 @@ bool INT10_SetVideoMode(Bitu mode) {
 		break;
 	default:
 		offset = CurMode->hdispend/2;
+		if ((machine==MCH_EGA) && (CurMode->type==M_EGA)) {
+			if (!(CurMode->special & _EGA_LINE_DOUBLE))	offset/=2;
+		}
 	}
 	IO_Write(crtc_base,0x13);
 	IO_Write(crtc_base + 1,offset & 0xff);
@@ -746,8 +753,14 @@ bool INT10_SetVideoMode(Bitu mode) {
 	case M_EGA:
 		if (CurMode->mode==0x11) // 0x11 also sets address wrap.  thought maybe all 2 color modes did but 0x0f doesn't.
 			mode_control=0xc3; // so.. 0x11 or 0x0f a one off?
-		else
-		mode_control=0xe3;
+		else {
+			if (machine==MCH_EGA) {
+				if (CurMode->special & _EGA_LINE_DOUBLE) mode_control=0xc3;
+				else mode_control=0x8b;
+			} else {
+				mode_control=0xe3;
+			}
+		}
 		break;
 	case M_TEXT:
 	case M_VGA:
@@ -760,6 +773,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 			mode_control |= 0x08;
 		break;
 	}
+	if (machine==MCH_EGA) mode_control|=0x10;
 
 	IO_Write(crtc_base,0x17);IO_Write(crtc_base+1,mode_control);
 	/* Renable write protection */
@@ -819,8 +833,15 @@ bool INT10_SetVideoMode(Bitu mode) {
 		break;
 	case M_CGA4:
 		gfx_data[0x5]|=0x20;		//CGA mode
-	case M_CGA2:
 		gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
+		if (machine==MCH_EGA) gfx_data[0x5]|=0x10;
+		break;
+	case M_CGA2:
+		if (machine==MCH_EGA) {
+			gfx_data[0x6]|=0x0d;		//graphics mode at at 0xb800=0xbfff
+		} else {
+			gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
+		}
 		break;
 	}
 	for (i=0;i<GFX_REGS;i++) {
@@ -855,16 +876,9 @@ bool INT10_SetVideoMode(Bitu mode) {
 		default:
 			if ( CurMode->type == M_LIN4 )
 				goto att_text16;
-			if (!IS_VGA_ARCH) {
-				for (i=0;i<8;i++) {
-					att_data[i]=i;
-					att_data[i+8]=i+0x38;
-				}
-			} else {
-				for (i=0;i<8;i++) {
-					att_data[i]=i;
-					att_data[i+8]=i+0x10;
-				}
+			for (i=0;i<8;i++) {
+				att_data[i]=i;
+				att_data[i+8]=i+0x10;
 			}
 			break;
 		}
@@ -874,15 +888,27 @@ bool INT10_SetVideoMode(Bitu mode) {
 		for (i=0;i<16;i++) att_data[i]=i;
 		break;
 	case M_TEXT:
-		att_data[0x13]=0x08;		//Pel panning on 8, although we don't have 9 dot text mode
-		att_data[0x10]=0x0C;		//Color Text with blinking
+		if (machine==MCH_EGA) {
+			att_data[0x13]=0x00;
+			att_data[0x10]=0x08;	//8 Bit characters
+		} else {
+			att_data[0x13]=0x08;	//Pel panning on 8, although we don't have 9 dot text mode
+			att_data[0x10]=0x0C;	//Color Text with blinking
+		}
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 att_text16:
-		for (i=0;i<8;i++) {
-			att_data[i]=i;
-			att_data[i+8]=i+0x38;
+		if (machine==MCH_EGA) {
+			for (i=0;i<8;i++) {
+				att_data[i]=i;
+				att_data[i+8]=i+0x10;
+			}
+		} else {
+			for (i=0;i<8;i++) {
+				att_data[i]=i;
+				att_data[i+8]=i+0x38;
+			}
 		}
-		att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
+		if (IS_VGA_ARCH) att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
 		break;
 	case M_CGA2:
 		att_data[0x10]=0x01;		//Color Graphics
