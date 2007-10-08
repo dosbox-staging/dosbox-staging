@@ -692,6 +692,9 @@
 					<File
 						RelativePath="..\src\ints\int10_video_state.cpp">
 					</File>
+					<File
+						RelativePath="..\src\ints\int10_vptable.cpp">
+					</File>
 				</Filter>
 			</Filter>
 			<Filter

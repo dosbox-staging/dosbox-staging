@@ -203,7 +203,7 @@ Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y);
 Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count);
 Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count);
 
-/* Sup Groups */
+/* Sub Groups */
 void INT10_SetupRomMemory(void);
 void INT10_SetupRomMemoryChecksum(void);
 void INT10_SetupVESA(void);
@@ -221,3 +221,6 @@ void INT10_EGA_RIL_WriteRegisterSet(Bit16u cx, PhysPt tbl);
 Bitu INT10_VideoState_GetSize(Bitu state);
 bool INT10_VideoState_Save(Bitu state,RealPt buffer);
 bool INT10_VideoState_Restore(Bitu state,RealPt buffer);
+
+/* Video Parameter Tables */
+Bitu INT10_SetupVideoParameterTable(PhysPt basepos);
