@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.24 2007-06-13 07:22:17 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.25 2007-10-09 18:15:42 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +77,7 @@ emptyline:
 			if (cmd_read[0] == '%') {
 				cmd_read++;
 				*cmd_write++='%';
+				continue;
 			}
 			if (cmd_read[0] == '0') {  /* Handle %0 */
 				const char *file_name = cmd->GetFileName();
