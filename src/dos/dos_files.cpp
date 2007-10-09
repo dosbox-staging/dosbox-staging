@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.91 2007-08-22 07:34:57 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.92 2007-10-09 08:14:13 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -161,8 +161,8 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			if (lastdir!=0) strcat(fullname,"\\");
 			char * ext=strchr(tempdir,'.');
 			if (ext) {
-				ext[4]=0;
-				if (strlen(tempdir)>12) memmove(tempdir+8,ext,5);
+				ext[4] = 0;
+				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 			strcat(fullname,tempdir);
 			tempdir[0]=0;
