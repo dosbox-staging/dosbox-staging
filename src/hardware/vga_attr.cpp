@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_attr.cpp,v 1.26 2007-10-13 16:34:06 c2woody Exp $ */
+
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
@@ -27,11 +29,15 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	if (vga.attr.mode_control & 0x80) val = (val&0xf) | (vga.attr.color_select << 4);
 	val &= 63;
 	val |= (vga.attr.color_select & 0xc) << 4;
-	if (GCC_UNLIKELY(!IS_VGA_ARCH)) {
-		if (val&0x10) val|=0x38;
-		else {
-			val&=0x7;
-			if (val==6) val=0x14;
+	if (GCC_UNLIKELY(machine==MCH_EGA)) {
+		if ((vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8)) == 260) {
+			// check for intensity bit
+			if (val&0x10) val|=0x38;
+			else {
+				val&=0x7;
+				// check for special brown
+				if (val==6) val=0x14;
+			}
 		}
 	}
 	VGA_DAC_CombineColor(index,val);

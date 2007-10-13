@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_draw.cpp,v 1.86 2007-10-13 16:34:06 c2woody Exp $ */
+
 #include <string.h>
 #include <math.h>
 #include "dosbox.h"
@@ -790,7 +792,7 @@ void VGA_SetupDrawing(Bitu val) {
 		if (vga.s3.pll.cmd & 0x10) clock/=2;
 
 		if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
-		else vga.draw.double_scan=(vga.seq.clocking_mode&0x08)>0;	// not really correct...
+		else vga.draw.double_scan=(vtotal==262);
 	} else {
 		htotal = vga.other.htotal + 1;
 		hdend = vga.other.hdend;

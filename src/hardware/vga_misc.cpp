@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_misc.cpp,v 1.35 2007-10-13 16:34:06 c2woody Exp $ */
+
 #include "dosbox.h"
 #include "inout.h"
 #include "pic.h"
@@ -123,28 +125,26 @@ static Bitu read_p3cc(Bitu port,Bitu iolen) {
 	return vga.misc_output;
 }
 
-/*
-
-Test 13:  Hardware: General Registers
-  Mode 00h, General -- Feat Ctrl: IBM=00h   Current=FFh
-  Mode 00h, General -- Input Status 0: IBM=70h   Current=FFh
-  .. & modes 1,2,3,4,5,6,d,e,10,11,12,13
-
-following read handlers silence the above vgatest errors.
-
-*/
-
+// VGA feature control register
 static Bitu read_p3ca(Bitu port,Bitu iolen) {
 	return 0;
 }
 
+static Bitu read_p3c8(Bitu port,Bitu iolen) {
+	return 0x10;
+}
+
 static Bitu read_p3c2(Bitu port,Bitu iolen) {
-	Bitu retcode=0x70;
 	if (GCC_UNLIKELY(machine==MCH_EGA)) {
+		Bitu retcode=0x60;
 		retcode |= (vga.draw.vret_triggered ? 0x80 : 0x00);
 		vga.draw.vret_triggered=false;
+		// ega colour monitor
+		if ((((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) retcode|=0x10;
+		return retcode;
+	} else {
+		return 0x70;
 	}
-	return retcode;
 }
 
 void VGA_SetupMisc(void) {
@@ -155,6 +155,8 @@ void VGA_SetupMisc(void) {
 		if (IS_VGA_ARCH) {
 			IO_RegisterReadHandler(0x3ca,read_p3ca,IO_MB);
 			IO_RegisterReadHandler(0x3cc,read_p3cc,IO_MB);
+		} else {
+			IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
 		}
 	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		IO_RegisterReadHandler(0x3da,vga_read_p3da,IO_MB);

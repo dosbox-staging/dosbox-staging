@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: int10_modes.cpp,v 1.68 2007-10-13 16:34:06 c2woody Exp $ */
+
 #include <string.h>
 
 #include "dosbox.h"
@@ -106,10 +108,10 @@ VideoModeBlock ModeList_VGA[]={
 
 VideoModeBlock ModeList_EGA[]={
 /* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
-{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,60  ,262 ,40 ,350 ,_EGA_HALF_CLOCK	},
-{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,60  ,262 ,40 ,350 ,_EGA_HALF_CLOCK	},
-{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,120 ,440 ,80 ,350 ,0	},
-{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,120 ,440 ,80 ,350 ,0	},
+{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,366 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,366 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,96  ,366 ,80 ,350 ,0	},
+{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,96  ,366 ,80 ,350 ,0	},
 { 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
 { 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE},
 { 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,120 ,262 ,80 ,200 ,_EGA_LINE_DOUBLE},
@@ -117,8 +119,8 @@ VideoModeBlock ModeList_EGA[]={
 
 { 0x00D  ,M_EGA    ,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xA0000 ,0x2000 ,60  ,262 ,40 ,200 ,_EGA_HALF_CLOCK	| _EGA_LINE_DOUBLE	},
 { 0x00E  ,M_EGA    ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xA0000 ,0x4000 ,120 ,262 ,80 ,200 ,_EGA_LINE_DOUBLE },
-{ 0x00F  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,120 ,440 ,80 ,350 ,0	},/*was EGA_2*/
-{ 0x010  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,96  ,336 ,80 ,350 ,0	},
+{ 0x00F  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,96  ,366 ,80 ,350 ,0	},/*was EGA_2*/
+{ 0x010  ,M_EGA    ,640 ,350 ,80 ,25 ,8 ,14 ,2 ,0xA0000 ,0x8000 ,96  ,366 ,80 ,350 ,0	},
 
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
@@ -538,6 +540,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 	memset(seq_data,0,SEQ_REGS);
 	if (CurMode->cwidth==8) seq_data[1]|=1;	//8 dot fonts by default
 	if (CurMode->special & _EGA_HALF_CLOCK) seq_data[1]|=0x08; //Check for half clock
+	if ((machine==MCH_EGA) && (CurMode->special & _EGA_HALF_CLOCK)) seq_data[1]|=0x02;
 	seq_data[4]|=0x02;	//More than 64kb
 	switch (CurMode->type) {
 	case M_TEXT:
@@ -621,14 +624,22 @@ bool INT10_SetVideoMode(Bitu mode) {
 	ver_overflow|=((CurMode->vtotal-2) & 0x400) >> 10;
 
 	Bitu vretrace;
-	switch (CurMode->vdispend) {
-	case 400: vretrace=CurMode->vdispend+12;
-			break;
-	case 480: vretrace=CurMode->vdispend+10;
-			break;
-	case 350: vretrace=CurMode->vdispend+37;
-			break;
-	default: vretrace=CurMode->vdispend+12;
+	if (IS_VGA_ARCH) {
+		switch (CurMode->vdispend) {
+		case 400: vretrace=CurMode->vdispend+12;
+				break;
+		case 480: vretrace=CurMode->vdispend+10;
+				break;
+		case 350: vretrace=CurMode->vdispend+37;
+				break;
+		default: vretrace=CurMode->vdispend+12;
+		}
+	} else {
+		switch (CurMode->vdispend) {
+		case 350: vretrace=CurMode->vdispend;
+				break;
+		default: vretrace=CurMode->vdispend+24;
+		}
 	}
 
 	/* Vertical Retrace Start */
@@ -647,14 +658,22 @@ bool INT10_SetVideoMode(Bitu mode) {
 	ver_overflow|=((CurMode->vdispend-1) & 0x400) >> 9;
 	
 	Bitu vblank_trim;
-	switch (CurMode->vdispend) {
-	case 400: vblank_trim=6;
-			break;
-	case 480: vblank_trim=7;
-			break;
-	case 350: vblank_trim=5;
-			break;
-	default: vblank_trim=8;
+	if (IS_VGA_ARCH) {
+		switch (CurMode->vdispend) {
+		case 400: vblank_trim=6;
+				break;
+		case 480: vblank_trim=7;
+				break;
+		case 350: vblank_trim=5;
+				break;
+		default: vblank_trim=8;
+		}
+	} else {
+		switch (CurMode->vdispend) {
+		case 350: vblank_trim=0;
+				break;
+		default: vblank_trim+23;
+		}
 	}
 
 	/* Vertical Blank Start */
@@ -723,9 +742,6 @@ bool INT10_SetVideoMode(Bitu mode) {
 		break;
 	default:
 		offset = CurMode->hdispend/2;
-		if ((machine==MCH_EGA) && (CurMode->type==M_EGA)) {
-			if (!(CurMode->special & _EGA_LINE_DOUBLE))	offset/=2;
-		}
 	}
 	IO_Write(crtc_base,0x13);
 	IO_Write(crtc_base + 1,offset & 0xff);
@@ -773,7 +789,6 @@ bool INT10_SetVideoMode(Bitu mode) {
 			mode_control |= 0x08;
 		break;
 	}
-	if (machine==MCH_EGA) mode_control|=0x10;
 
 	IO_Write(crtc_base,0x17);IO_Write(crtc_base+1,mode_control);
 	/* Renable write protection */
@@ -870,9 +885,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 			break;
 		case 0x10:
 		case 0x12: 
-			if (IS_VGA_ARCH)
-				goto att_text16;
-			// ega fallthrough
+			goto att_text16;
 		default:
 			if ( CurMode->type == M_LIN4 )
 				goto att_text16;
@@ -897,16 +910,9 @@ bool INT10_SetVideoMode(Bitu mode) {
 		}
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 att_text16:
-		if (machine==MCH_EGA) {
-			for (i=0;i<8;i++) {
-				att_data[i]=i;
-				att_data[i+8]=i+0x10;
-			}
-		} else {
-			for (i=0;i<8;i++) {
-				att_data[i]=i;
-				att_data[i+8]=i+0x38;
-			}
+		for (i=0;i<8;i++) {
+			att_data[i]=i;
+			att_data[i+8]=i+0x38;
 		}
 		if (IS_VGA_ARCH) att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
 		break;
