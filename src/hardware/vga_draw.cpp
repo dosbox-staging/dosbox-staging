@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.86 2007-10-13 16:34:06 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.87 2007-10-14 13:12:19 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -412,12 +412,14 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit8u * draw=(Bit8u *)TempLine;
+	bool underline=(vga.crtc.underline_location&0x1f)==line;
 	Bit8u pel_pan=vga.config.pel_panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	Bit8u chr=vidmem[0];
 	Bit8u col=vidmem[1];
 	Bit8u font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
+	if (underline && ((col&0x07) == 0x01)) font=0xff;
 	Bit8u fg=col&0xf;
 	Bit8u bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
 	Bitu draw_blocks=vga.draw.blocks;
@@ -426,13 +428,15 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 		if (pel_pan) {
 			chr=vidmem[cx*2];
 			col=vidmem[cx*2+1];
-			font|=vga.draw.font_tables[(col >> 3)&1][chr*32+line]>>(8-pel_pan);
+			if (underline && ((col&0x07) == 0x01)) font|=0xff>>(8-pel_pan);
+			else font|=vga.draw.font_tables[(col >> 3)&1][chr*32+line]>>(8-pel_pan);
 			fg=col&0xf;
 			bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
 		} else {
 			chr=vidmem[(cx-1)*2];
 			col=vidmem[(cx-1)*2+1];
-			font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
+			if (underline && ((col&0x07) == 0x01)) font=0xff;
+			else font=vga.draw.font_tables[(col >> 3)&1][chr*32+line];
 			fg=col&0xf;
 			bg=(Bit8u)(TXT_BG_Table[col>>4]&0xff);
 		}
@@ -444,8 +448,10 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 		Bit8u last=(font&0x01)?fg:bg;
 		*draw++=last;
 		*draw++=((chr<0xc0) || (chr>0xdf)) ? bg : last;
-		if (pel_pan)
-			font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
+		if (pel_pan) {
+			if (underline && ((col&0x07) == 0x01)) font=0xff;
+			else font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
+		}
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
