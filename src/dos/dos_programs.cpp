@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.77 2007-08-22 11:54:54 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.78 2007-10-14 17:31:52 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -1016,7 +1016,11 @@ public:
 							return;
 						}
 
-						localDrive *ldp = (localDrive*)Drives[dummy];
+						localDrive *ldp = dynamic_cast<localDrive*>(Drives[dummy]);
+						if (ldp==NULL) {
+							WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
+							return;
+						}
 						ldp->GetSystemFilename(tmp, fullname);
 						temp_line = tmp;
 

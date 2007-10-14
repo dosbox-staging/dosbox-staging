@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.17 2007-08-22 11:54:35 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.18 2007-10-14 17:31:52 c2woody Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -604,11 +604,13 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 	Bit8u drive;
 	if (!DOS_MakeName(tmp, fullname, &drive)) return false;
 	
-	localDrive *ldp = (localDrive*)Drives[drive];
-	ldp->GetSystemFilename(tmp, fullname);
-	if (stat(tmp, &test) == 0) {
-		filename = tmp;
-		return true;
+	localDrive *ldp = dynamic_cast<localDrive*>(Drives[drive]);
+	if (ldp) {
+		ldp->GetSystemFilename(tmp, fullname);
+		if (stat(tmp, &test) == 0) {
+			filename = tmp;
+			return true;
+		}
 	}
 	
 	return false;
