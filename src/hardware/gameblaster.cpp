@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <math.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "mixer.h"
@@ -24,6 +23,9 @@
 #include "hardware.h"
 #include "setup.h"
 #include "pic.h"
+#include <cstring>
+#include <math.h>
+
 
 #define LEFT	0x00
 #define RIGHT	0x01
