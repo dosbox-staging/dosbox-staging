@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.61 2007-08-09 19:52:33 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.62 2007-10-19 19:39:27 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -412,14 +412,18 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 
 	if (flags==LOAD) {
+		SaveRegisters();
 		DOS_PSP callpsp(dos.psp());
 		/* Save the SS:SP on the PSP of calling program */
 		callpsp.SetStack(RealMakeSeg(ss,reg_sp));
+		reg_sp+=18;
 		/* Switch the psp's */
 		dos.psp(pspseg);
 		DOS_PSP newpsp(dos.psp());
 		dos.dta(RealMake(newpsp.GetSegment(),0x80));
-		block.exec.initsssp = sssp;
+		/* First word on the stack is the value ax should contain on startup */
+		real_writew(RealSeg(sssp-2),RealOff(sssp-2),0xffff);
+		block.exec.initsssp = sssp-2;
 		block.exec.initcsip = csip;
 		block.SaveData();
 		return true;
