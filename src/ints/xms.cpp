@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.50 2007-08-15 19:09:25 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.51 2007-10-19 12:15:40 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -329,7 +329,7 @@ Bitu XMS_Handler(void) {
 		SET_RESULT(XMS_UnlockMemory(reg_dx));
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION:  						/* 0e */
-		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx));
+		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx),false);
 		break;
 	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
 		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
