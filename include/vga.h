@@ -331,7 +331,7 @@ typedef union {
 } VGA_Latch;
 
 typedef struct {
-	Bit8u	linear[VGA_MEMORY];
+	Bit8u* linear;
 } VGA_Memory;
 
 typedef struct {

@@ -870,7 +870,10 @@ void VGA_UnmapMMIO(void) {
 
 
 void VGA_SetupMemory() {
-	memset( &vga.mem, 0, VGA_MEMORY );
+	// allocate 16byte-aligned memory
+	vga.mem.linear = new Bit8u[VGA_MEMORY+16];
+	vga.mem.linear=(Bit8u*)(((Bitu)vga.mem.linear + 16-1) & ~(16-1));
+	memset( vga.mem.linear, 0, VGA_MEMORY );
 #ifdef VGA_KEEP_CHANGES
 	memset( &vga.changes, 0, sizeof( vga.changes ));
 #endif

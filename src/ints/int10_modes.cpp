@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.68 2007-10-13 16:34:06 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.69 2007-10-19 20:30:24 c2woody Exp $ */
 
 #include <string.h>
 
@@ -277,7 +277,7 @@ static void FinishSetMode(bool clearmem) {
 		case M_LIN16:
 		case M_LIN32:
 			/* Hack we just acess the memory directly */
-			memset(&vga.mem,0,sizeof(vga.mem));
+			memset(vga.mem.linear,0,VGA_MEMORY);
 		}
 	}
 	/* Setup the BIOS */
@@ -672,7 +672,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 		switch (CurMode->vdispend) {
 		case 350: vblank_trim=0;
 				break;
-		default: vblank_trim+23;
+		default: vblank_trim=23;
 		}
 	}
 
