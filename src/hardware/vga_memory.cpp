@@ -15,7 +15,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-	
+
+/* $Id: vga_memory.cpp,v 1.44 2007-10-20 16:01:40 c2woody Exp $ */
+
 #include <stdlib.h>
 #include <string.h>
 #include "dosbox.h"
@@ -857,7 +859,7 @@ void VGA_StartUpdateLFB(void) {
 #else
 	vga.lfb.handler = &vgaph.lfbchanges;
 #endif
-	MEM_SetLFB(vga.s3.la_window << 4 ,sizeof(vga.mem.linear)/4096, vga.lfb.handler );
+	MEM_SetLFB(vga.s3.la_window << 4 ,VGA_MEMORY/4096, vga.lfb.handler );
 }
 
 void VGA_MapMMIO(void) {
