@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.40 2007-06-27 14:51:30 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.41 2007-10-21 08:43:24 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -127,6 +127,13 @@ float Section_prop::Get_float(char const * const _propname) const {
 		}
 	}
 	return false;
+}
+
+Property* Section_prop::Get_prop(int index){
+	for(it tel=properties.begin();tel!=properties.end();tel++){
+		if(!index--) return (*tel);
+	}
+	return NULL;
 }
 
 const char* Section_prop::Get_string(char const * const _propname) const {
@@ -288,6 +295,13 @@ Config::~Config() {
 		delete (*cnt);
 		cnt++;
 	}
+}
+
+Section* Config::GetSection(int index){
+	for (it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
+		if (!index--) return (*tel);
+	}
+	return NULL;
 }
 
 Section* Config::GetSection(char const * const _sectionname) const{

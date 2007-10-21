@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.27 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: setup.h,v 1.28 2007-10-21 08:43:24 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -168,6 +168,7 @@ public:
 	void Add_hex(char const * const _propname, int _value=0);
 	void Add_float(char const * const _propname, float _value=0.0);   
 
+	Property* Get_prop(int index);
 	int Get_int(char const * const _propname) const;
 	const char* Get_string(char const * const _propname) const;
 	bool Get_bool(char const * const _propname) const;
@@ -207,6 +208,7 @@ public:
 	Section_line * AddSection_line(char const * const _name,void (*_initfunction)(Section*));
 	Section_prop * AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange=false);
 	
+	Section* GetSection(int index);
 	Section* GetSection(char const* const _sectionname) const;
 	Section* GetSectionFromProperty(char const * const prop) const;
 
