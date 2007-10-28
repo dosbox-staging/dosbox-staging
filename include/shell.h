@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.21 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: shell.h,v 1.22 2007-10-28 10:58:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -44,9 +44,9 @@ class DOS_Shell;
 
 class BatchFile {
 public:
-	BatchFile(DOS_Shell * host,char * name, char * cmd_line);
-	~BatchFile();
-	bool ReadLine(char * line);
+	BatchFile(DOS_Shell * host,char const* const name, char const * const cmd_line);
+	virtual ~BatchFile();
+	virtual bool ReadLine(char * line);
 	bool Goto(char * where);
 	void Shift(void);
 	Bit16u file_handle;
@@ -56,8 +56,10 @@ public:
 	CommandLine * cmd;
 };
 
+class AutoexecEditor;
 class DOS_Shell : public Program {
 private:
+	friend class AutoexecEditor;
 	std::list<std::string> l_history, l_completion;
 
 	char *completion_start;

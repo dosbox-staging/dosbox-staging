@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.25 2007-10-09 18:15:42 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.26 2007-10-28 10:58:50 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +24,7 @@
 #include "shell.h"
 #include "support.h"
 
-BatchFile::BatchFile(DOS_Shell * host,char * name, char * cmd_line) {
+BatchFile::BatchFile(DOS_Shell * host,char const * const name, char const * const cmd_line) {
 	prev=host->bf;
 	echo=host->echo;
 	shell=host;
