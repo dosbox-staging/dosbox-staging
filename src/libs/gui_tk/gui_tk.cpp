@@ -19,7 +19,7 @@
 /* TODO:
   - make menu a bufferedwindow with shadow
 */
-/* $Id: gui_tk.cpp,v 1.1 2007-10-28 16:33:02 qbix79 Exp $ */
+/* $Id: gui_tk.cpp,v 1.2 2007-10-28 17:05:28 c2woody Exp $ */
 
 /** \file
  *  \brief Implementation file for gui_tk.
@@ -1423,10 +1423,10 @@ static const Key SDL_to_GUI(const SDL_keysym &key)
 	default: break;
 	}
 	return Key(key.unicode, ksym,
-		key.mod&KMOD_SHIFT,
-		key.mod&KMOD_CTRL,
-		key.mod&KMOD_ALT,
-		key.mod&KMOD_META);
+		(key.mod&KMOD_SHIFT)>0,
+		(key.mod&KMOD_CTRL)>0,
+		(key.mod&KMOD_ALT)>0,
+		(key.mod&KMOD_META)>0);
 }
 
 /** \brief Internal class that handles different screen bit depths and layouts the SDL way */

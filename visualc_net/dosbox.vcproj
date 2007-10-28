@@ -629,10 +629,16 @@
 					RelativePath="..\src\gui\render_templates.h">
 				</File>
 				<File
+					RelativePath="..\src\gui\sdl_gui.cpp">
+				</File>
+				<File
 					RelativePath="..\src\gui\sdl_mapper.cpp">
 				</File>
 				<File
 					RelativePath="..\src\gui\sdlmain.cpp">
+				</File>
+				<File
+					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
 				</File>
 			</Filter>
 			<Filter
