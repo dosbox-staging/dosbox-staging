@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.134 2007-08-26 18:03:25 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.135 2007-10-28 16:36:42 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -236,32 +236,6 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 
 	if(paused) strcat(title," PAUSED");
 	SDL_WM_SetCaption(title,VERSION);
-}
-
-static void PauseDOSBox(bool pressed) {
-	if (!pressed)
-		return;
-	GFX_SetTitle(-1,-1,true);
-	bool paused = true;
-	KEYBOARD_ClrBuffer();
-	SDL_Delay(500);
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		// flush event queue.
-	}
-	while (paused) {
-		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
-		switch (event.type) {
-		case SDL_QUIT: throw(0); break;
-		case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
-		case SDL_KEYUP:
-			if(event.key.keysym.sym==SDLK_PAUSE){
-				paused=false;
-				GFX_SetTitle(-1,-1,false);
-				break;
-			}
-		}
-	}
 }
 
 #if defined (WIN32)
@@ -942,6 +916,7 @@ static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
 
+extern void UI_Run(bool);
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -1131,7 +1106,7 @@ static void GUI_StartUp(Section * sec) {
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(PauseDOSBox,MK_pause,MMOD2,"pause","Pause");
+	MAPPER_AddHandler(&UI_Run, MK_pause, MMOD2, "ui", "UI");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
@@ -1345,6 +1320,8 @@ void GFX_ShowMsg(char const* format,...) {
 	if(!no_stdout) printf(buf);       
 };
 
+extern void UI_Init(void);
+
 int main(int argc, char* argv[]) {
 	try {
 		CommandLine com_line(argc,argv);
@@ -1503,6 +1480,8 @@ int main(int argc, char* argv[]) {
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
 #endif
+		UI_Init();
+		if (control->cmdline->FindExist("-startui")) UI_Run(false);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
@@ -1514,8 +1493,6 @@ int main(int argc, char* argv[]) {
 
 		/* Init the keyMapper */
 		MAPPER_Init();
-		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run(true);
-
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
@@ -1543,3 +1520,9 @@ int main(int argc, char* argv[]) {
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 	return 0;
 };
+
+void GFX_GetSize(int &width, int &height, bool &fullscreen) {
+	width = sdl.draw.width;
+	height = sdl.draw.height;
+	fullscreen = sdl.desktop.fullscreen;
+}

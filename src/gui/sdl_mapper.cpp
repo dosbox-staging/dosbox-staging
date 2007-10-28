@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.44 2007-08-17 18:49:56 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.45 2007-10-28 16:36:41 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2229,7 +2229,9 @@ void MAPPER_Run(bool pressed) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
 		(*evit)->DeActivateAll();
 	}
-		
+
+	int cursor = SDL_ShowCursor(SDL_QUERY);
+	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle=false;
 	if(mouselocked) {
 		mousetoggle=true;
@@ -2266,6 +2268,7 @@ void MAPPER_Run(bool pressed) {
 	SDL_JoystickEventState(SDL_DISABLE);
 #endif
 	if(mousetoggle) GFX_CaptureMouse();
+	SDL_ShowCursor(cursor);
 	GFX_ResetScreen();
 }
 
@@ -2364,6 +2367,5 @@ void MAPPER_StartUp(Section * sec) {
 	}
 
 	mapper.filename=section->Get_string("mapperfile");
-	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
 
