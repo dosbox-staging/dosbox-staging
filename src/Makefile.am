@@ -11,7 +11,7 @@ endif
 
 dosbox_SOURCES = dosbox.cpp
 dosbox_LDADD = cpu/libcpu.a debug/libdebug.a dos/libdos.a fpu/libfpu.a  hardware/libhardware.a gui/libgui.a \
-               ints/libints.a misc/libmisc.a shell/libshell.a hardware/serialport/libserial.a \
+               ints/libints.a misc/libmisc.a shell/libshell.a hardware/serialport/libserial.a libs/gui_tk/libgui_tk.a\
 	       $(ico_stuff)
 
 EXTRA_DIST = dosbox.rc dosbox.ico
