@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.1 2007-10-28 16:36:41 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.2 2007-10-31 11:37:38 qbix79 Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -304,7 +304,7 @@ public:
 
 	bool prepare(std::string &buffer) {
 		if (input->getText() == GUI::String(prop->GetValue()._string)) return false;
-		buffer.append((const std::string&)input->getText());
+		buffer.append(static_cast<const std::string&>(input->getText()));
 		return true;
 	}
 };
