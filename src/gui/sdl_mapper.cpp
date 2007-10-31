@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.45 2007-10-28 16:36:41 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.46 2007-10-31 11:43:06 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -1217,7 +1217,7 @@ protected:
 	Bit16u button_state;
 };
 
-static struct {
+static struct CMapper {
 	SDL_Surface * surface;
 	SDL_Surface * draw_surface;
 	bool exit;
