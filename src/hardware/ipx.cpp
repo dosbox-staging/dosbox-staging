@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.cpp,v 1.13 2007-02-22 08:30:47 qbix79 Exp $ */
+/* $Id: ipx.cpp,v 1.14 2007-11-01 12:11:40 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -748,7 +748,7 @@ static bool pingCheck(IPXHeader * outHeader) {
 	return false;
 }
 
-bool ConnectToServer(char *strAddr) {
+bool ConnectToServer(char const *strAddr) {
 	int numsent;
 	UDPpacket regPacket;
 	IPXHeader regHeader;

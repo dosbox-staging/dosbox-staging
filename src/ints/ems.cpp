@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.55 2007-01-08 22:04:20 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.56 2007-11-01 12:11:40 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1235,7 +1235,7 @@ public:
 		DOS_AddDevice(newdev);
 	
 		/* Add a little hack so it appears that there is an actual ems device installed */
-		char * emsname="EMMXXXX0";
+		char const* emsname="EMMXXXX0";
 		if(!emsnameseg) emsnameseg=DOS_GetMemory(2);	//We have 32 bytes
 		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,strlen(emsname)+1);
 

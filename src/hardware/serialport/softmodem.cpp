@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.8 2007-07-19 18:58:39 c2woody Exp $ */
+/* $Id: softmodem.cpp,v 1.9 2007-11-01 12:11:40 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -139,7 +139,7 @@ void CSerialModem::SendNumber(Bitu val) {
 }
 
 void CSerialModem::SendRes(ResTypes response) {
-	char * string;Bitu code;
+	char const * string;Bitu code;
 	switch (response)
 	{
 		case ResNONE:		return;
