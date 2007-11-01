@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.h,v 1.38 2007-08-22 11:54:35 qbix79 Exp $ */
+/* $Id: drives.h,v 1.39 2007-11-01 12:15:34 qbix79 Exp $ */
 
 #ifndef _DRIVES_H__
 #define _DRIVES_H__
@@ -28,6 +28,7 @@
 #include "bios.h"  /* for fatDrive */
 
 bool WildFileCmp(const char * file, const char * wild);
+void Set_Label(char const * const input, char * const output, bool cdrom);
 
 class DriveManager {
 public:

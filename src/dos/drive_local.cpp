@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.75 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.76 2007-11-01 12:15:34 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -565,7 +565,7 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 	this->driveLetter = driveLetter;
 	// Get Volume Label
 	char name[32];
-	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
+	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 };
 
 bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
@@ -625,7 +625,7 @@ bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst)
 		dirCache.EmptyCache();
 		// Get Volume Label
 		char name[32];
-		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
+		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 	}
 	return localDrive::FindFirst(_dir,dta);
 };
@@ -637,7 +637,7 @@ void cdromDrive::SetDir(const char* path)
 		dirCache.EmptyCache();
 		// Get Volume Label
 		char name[32];
-		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name);
+		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 	}
 	localDrive::SetDir(path);
 };

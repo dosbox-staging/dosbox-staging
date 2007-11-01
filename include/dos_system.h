@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.40 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.41 2007-11-01 12:15:34 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -148,7 +148,7 @@ public:
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	void		EmptyCache			(void);
-	void		SetLabel			(const char* name,bool allowupdate=true);
+	void		SetLabel			(const char* name,bool cdrom,bool allowupdate);
 	char*		GetLabel			(void) { return label; };
 
 	class CFileInfo {

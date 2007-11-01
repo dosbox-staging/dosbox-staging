@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.50 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.51 2007-11-01 12:15:34 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -115,7 +115,7 @@ void DOS_Drive_Cache::EmptyCache(void)
 	SetBaseDir(basePath);
 };
 
-void DOS_Drive_Cache::SetLabel(const char* vname,bool allowupdate)
+void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate)
 {
 /* allowupdate defaults to true. if mount sets a label then allowupdate is 
  * false and will this function return at once after the first call.
@@ -123,25 +123,7 @@ void DOS_Drive_Cache::SetLabel(const char* vname,bool allowupdate)
 
 	if(!this->updatelabel) return;
 	this->updatelabel = allowupdate;
-	Bitu togo		= 8;
-	Bitu vnamePos	= 0;
-	Bitu labelPos	= 0;
-	bool point		= false;
-	while (togo>0) {
-		if (vname[vnamePos]==0) break;
-		if (!point && (vname[vnamePos]=='.')) { togo=4; point=true; }
-		label[labelPos] = toupper(vname[vnamePos]);
-		labelPos++; vnamePos++;
-		togo--;
-		if ((togo==0) && !point) { 
-			if (vname[vnamePos]=='.') vnamePos++;
-			label[labelPos]='.'; labelPos++; point=true; togo=3; 
-		}
-	};
-	label[labelPos]=0;
-	//Remove trailing dot.
-	if((labelPos > 0) && (label[labelPos-1] == '.'))
-		label[labelPos-1]=0;
+	Set_Label(vname,label,cdrom);
 	LOG(LOG_DOSMISC,LOG_NORMAL)("DIRCACHE: Set volume label to %s",label);
 };
 

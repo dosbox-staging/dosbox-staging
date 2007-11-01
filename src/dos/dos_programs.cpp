@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.78 2007-10-14 17:31:52 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.79 2007-11-01 12:15:34 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -128,6 +128,7 @@ public:
 
 		std::string type="dir";
 		cmd->FindString("-t",type,true);
+		bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
 		if (type=="floppy" || type=="dir" || type=="cdrom") {
 			Bit16u sizes[4];
 			Bit8u mediaid;
@@ -297,16 +298,16 @@ public:
 		mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,newdrive->GetMediaByte());
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
 		/* check if volume label is given and don't allow it to updated in the future */
-		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),false);
+		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
 		/* For hard drives set the label to DRIVELETTER_Drive.
 		 * For floppy drives set the label to DRIVELETTER_Floppy.
 		 * This way every drive except cdroms should get a label.*/
 		else if(type == "dir") { 
 			label = drive; label += "_DRIVE";
-			newdrive->dirCache.SetLabel(label.c_str(),true);
+			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
 		} else if(type == "floppy") {
 			label = drive; label += "_FLOPPY";
-			newdrive->dirCache.SetLabel(label.c_str(),true);
+			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
 		}
 		return;
 showusage:
@@ -1179,7 +1180,7 @@ public:
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive-'0',temp_line.c_str());
 		}
 
-		// check if volume label is given
+		// check if volume label is given. becareful for cdrom
 		//if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
 		return;
 	}
