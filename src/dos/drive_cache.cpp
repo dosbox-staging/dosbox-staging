@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.51 2007-11-01 12:15:34 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.52 2007-11-02 07:50:27 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -144,12 +144,16 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	};
 	// Get Volume Label
 #if defined (WIN32) || defined (OS2)
+	bool cdrom = false;
 	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
 #if defined (WIN32)
 	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+	UINT test = GetDriveType(drive);
+	if(test == DRIVE_CDROM) cdrom = true;
 #else // OS2
+	//TODO determine wether cdrom or not!
 	FSINFO fsinfo;
 	ULONG drivenumber = drive[0];
 	if (drivenumber > 26) { // drive letter was lowercase
@@ -159,7 +163,7 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 	if (rc == NO_ERROR) {
 #endif
 		/* Set label and allow being updated */
-		SetLabel(labellocal,true);
+		SetLabel(labellocal,cdrom,true);
 	}
 #endif
 };
