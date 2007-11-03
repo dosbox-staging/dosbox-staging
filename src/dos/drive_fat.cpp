@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.22 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.23 2007-11-03 17:20:29 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -300,7 +300,8 @@ Bit32u fatDrive::getClusterValue(Bit32u clustNum) {
 	if(curFatSect != fatsectnum) {
 		/* Load two sectors at once for FAT12 */
 		loadedDisk->Read_AbsoluteSector(fatsectnum, &fatSectBuffer[0]);
-		loadedDisk->Read_AbsoluteSector(fatsectnum+1, &fatSectBuffer[512]);
+		if (fattype==FAT12)
+			loadedDisk->Read_AbsoluteSector(fatsectnum+1, &fatSectBuffer[512]);
 		curFatSect = fatsectnum;
 	}
 
@@ -346,7 +347,8 @@ void fatDrive::setClusterValue(Bit32u clustNum, Bit32u clustValue) {
 	if(curFatSect != fatsectnum) {
 		/* Load two sectors at once for FAT12 */
 		loadedDisk->Read_AbsoluteSector(fatsectnum, &fatSectBuffer[0]);
-		loadedDisk->Read_AbsoluteSector(fatsectnum+1, &fatSectBuffer[512]);
+		if (fattype==FAT12)
+			loadedDisk->Read_AbsoluteSector(fatsectnum+1, &fatSectBuffer[512]);
 		curFatSect = fatsectnum;
 	}
 
@@ -374,10 +376,12 @@ void fatDrive::setClusterValue(Bit32u clustNum, Bit32u clustValue) {
 			*((Bit32u *)&fatSectBuffer[fatentoff]) = clustValue;
 			break;
 	}
-	int fc;
-	for(fc=0;fc<bootbuffer.fatcopies;fc++) {
+	for(int fc=0;fc<bootbuffer.fatcopies;fc++) {
 		loadedDisk->Write_AbsoluteSector(fatsectnum + (fc * bootbuffer.sectorsperfat), &fatSectBuffer[0]);
-		loadedDisk->Write_AbsoluteSector(fatsectnum+1+(fc * bootbuffer.sectorsperfat), &fatSectBuffer[512]);
+		if (fattype==FAT12) {
+			if (fatentoff>=511)
+				loadedDisk->Write_AbsoluteSector(fatsectnum+1+(fc * bootbuffer.sectorsperfat), &fatSectBuffer[512]);
+		}
 	}
 }
 
@@ -982,9 +986,9 @@ bool fatDrive::directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s
 	Bit32u entryoffset = 0;	/* Index offset within sector */
 	Bit32u tmpsector;
 	Bit16u dirPos = 0;
-	
+
 	while(entNum>=0) {
-		
+
 		logentsector = dirPos / 16;
 		entryoffset = dirPos % 16;
 
@@ -1005,7 +1009,7 @@ bool fatDrive::directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s
 		if (sectbuf[entryoffset].entryname[0] == 0x00) return false;
 		--entNum;
 	}
-	
+
 	memcpy(useEntry, &sectbuf[entryoffset],sizeof(direntry));
 	return true;
 }
@@ -1206,7 +1210,42 @@ bool fatDrive::RemoveDir(char *dir) {
 	return true;
 }
 
-bool fatDrive::Rename(char * /*oldname*/, char * /*newname*/) {
+bool fatDrive::Rename(char * oldname, char * newname) {
+	direntry fileEntry1;
+	Bit32u dirClust1, subEntry1;
+	if(!getFileDirEntry(oldname, &fileEntry1, &dirClust1, &subEntry1)) return false;
+	/* File to be renamed really exists */
+
+	direntry fileEntry2;
+	Bit32u dirClust2, subEntry2;
+
+	/* Check if file already exists */
+	if(!getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2)) {
+		/* Target doesn't exist, can rename */
+
+		char dirName2[DOS_NAMELENGTH_ASCII];
+		char pathName2[11];
+		/* Can we even get the name of the file itself? */
+		if(!getEntryName(newname, &dirName2[0])) return false;
+		convToDirFile(&dirName2[0], &pathName2[0]);
+
+		/* Can we find the base directory? */
+		if(!getDirClustNum(newname, &dirClust2, true)) return false;
+		memcpy(&fileEntry2, &fileEntry1, sizeof(direntry));
+		memcpy(&fileEntry2.entryname, &pathName2[0], 11);
+		addDirectoryEntry(dirClust2, fileEntry2);
+
+		/* Check if file exists now */
+		if(!getFileDirEntry(newname, &fileEntry2, &dirClust2, &subEntry2)) return false;
+
+		/* Remove old entry */
+		fileEntry1.entryname[0] = 0xe5;
+		directoryChange(dirClust1, &fileEntry1, subEntry1);
+
+		return true;
+	}
+
+	/* Target already exists, fail */
 	return false;
 }
 
