@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.104 2007-07-27 19:17:23 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.105 2007-11-04 11:11:34 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -579,9 +579,8 @@ static Bitu DOS_21Handler(void) {
 		}
 	case 0x43:					/* Get/Set file attributes */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		switch (reg_al)
+		switch (reg_al) {
 		case 0x00:				/* Get */
-		{
 			if (DOS_GetFileAttr(name1,&reg_cx)) {
 				reg_ax=reg_cx; /* Undocumented */   
 				CALLBACK_SCF(false);
@@ -601,7 +600,8 @@ static Bitu DOS_21Handler(void) {
 			break;
 		default:
 			LOG(LOG_MISC,LOG_ERROR)("DOS:0x43:Illegal subfunction %2X",reg_al);
-			CALLBACK_SCF(false);
+			reg_ax=1;
+			CALLBACK_SCF(true);
 			break;
 		}
 		break;
