@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.28 2007-06-12 20:22:09 c2woody Exp $ */
+/* $Id: programs.cpp,v 1.29 2007-11-04 19:14:32 c2woody Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -101,7 +101,7 @@ Program::Program() {
 	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
 	if (tail.count<127) tail.buffer[tail.count]=0;
 	else tail.buffer[126]=0;
-	char filename[256];
+	char filename[256+1];
 	MEM_StrCopy(envscan,filename,256);
 	cmd = new CommandLine(filename,tail.buffer);
 }
@@ -122,7 +122,7 @@ void Program::WriteOut(const char * format,...) {
 bool Program::GetEnvStr(const char * entry,std::string & result) {
 	/* Walk through the internal environment and see for a match */
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	char env_string[1024];
+	char env_string[1024+1];
 	result.erase();
 	if (!entry[0]) return false;
 	do 	{
@@ -144,7 +144,7 @@ bool Program::GetEnvStr(const char * entry,std::string & result) {
 };
 
 bool Program::GetEnvNum(Bitu num,std::string & result) {
-	char env_string[1024];
+	char env_string[1024+1];
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
@@ -170,7 +170,7 @@ Bitu Program::GetEnvCount(void) {
 bool Program::SetEnv(const char * entry,const char * new_string) {
 	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
 	PhysPt env_write=env_read;
-	char env_string[1024];
+	char env_string[1024+1];
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
