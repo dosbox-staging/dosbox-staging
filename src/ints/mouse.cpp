@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.69 2007-06-12 20:22:09 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.70 2007-11-05 17:49:17 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -86,7 +86,7 @@ static struct {
 	Bit16u last_released_y[MOUSE_BUTTONS];
 	Bit16u last_pressed_x[MOUSE_BUTTONS];
 	Bit16u last_pressed_y[MOUSE_BUTTONS];
-	Bit16u shown;
+	Bit16u hidden;
 	float add_x,add_y;
 	Bit16u min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
@@ -109,6 +109,9 @@ static struct {
 	float	mickeysPerPixel_y;
 	float	pixelPerMickey_x;
 	float	pixelPerMickey_y;
+	Bit16u	senv_x_val;
+	Bit16u	senv_y_val;
+	Bit16u	dspeed_val;
 	float	senv_x;
 	float	senv_y;
 	Bit16u  updateRegion_x[2];
@@ -116,10 +119,10 @@ static struct {
 	Bit16u  doubleSpeedThreshold;
 	Bit16u  language;
 	Bit16u  cursorType;
-	Bit16u	oldshown;
+	Bit16u	oldhidden;
 	Bit8u  page;
 	bool enabled;
-
+	bool inhibit_draw;
 } mouse;
 
 bool Mouse_SetPS2State(bool use) {
@@ -214,9 +217,8 @@ INLINE void Mouse_AddEvent(Bit16u type) {
 extern void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr);
 extern void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result);
 
-void RestoreCursorBackgroundText()
-{
-	if (mouse.shown) return;
+void RestoreCursorBackgroundText() {
+	if (mouse.hidden || mouse.inhibit_draw) return;
 
 	if (mouse.background) {
 		WriteChar(mouse.backposx,mouse.backposy,0,mouse.backData[0],mouse.backData[1],true);
@@ -224,8 +226,7 @@ void RestoreCursorBackgroundText()
 	}
 };
 
-void DrawCursorText()
-{	
+void DrawCursorText() {	
 	// Restore Background
 	RestoreCursorBackgroundText();
 
@@ -250,8 +251,7 @@ void DrawCursorText()
 
 static Bit8u gfxReg3CE[9];
 static Bit8u index3C4,gfxReg3C5;
-void SaveVgaRegisters()
-{
+void SaveVgaRegisters() {
 	for (int i=0; i<9; i++) {
 		IO_Write	(0x3CE,i);
 		gfxReg3CE[i] = IO_Read(0x3CF);
@@ -265,8 +265,7 @@ void SaveVgaRegisters()
 	gfxReg3C5 = IO_Read(0x3C5); IO_Write(0x3C5,0xF); 
 }
 
-void RestoreVgaRegisters()
-{
+void RestoreVgaRegisters() {
 	for (int i=0; i<9; i++) {
 		IO_Write(0x3CE,i);
 		IO_Write(0x3CF,gfxReg3CE[i]);
@@ -277,8 +276,8 @@ void RestoreVgaRegisters()
 	IO_Write(0x3C4,index3C4);
 }
 
-void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx1, Bit16u& addx2, Bit16u& addy)
-{
+void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2,
+					Bit16u& addx1, Bit16u& addx2, Bit16u& addy) {
 	addx1 = addx2 = addy = 0;
 	// Clip up
 	if (y1<0) {
@@ -301,9 +300,8 @@ void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2, Bit16u& addx
 	};
 };
 
-void RestoreCursorBackground()
-{
-	if (mouse.shown) return;
+void RestoreCursorBackground() {
+	if (mouse.hidden || mouse.inhibit_draw) return;
 
 	SaveVgaRegisters();
 	if (mouse.background) {
@@ -332,7 +330,7 @@ void RestoreCursorBackground()
 };
 
 void DrawCursor() {
-	if (mouse.shown) return;
+	if (mouse.hidden || mouse.inhibit_draw) return;
 // Check video page
 	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
 // Check if cursor in update region
@@ -357,8 +355,11 @@ void DrawCursor() {
 
 	mouse.clipx = CurMode->swidth-1;	/* Get from bios ? */
 	mouse.clipy = CurMode->sheight-1;
-	Bit16s xratio = 640 / CurMode->swidth;/* might be vidmode == 0x13?2:1 */
-	if(xratio==0) xratio = 1;
+
+	/* might be vidmode == 0x13?2:1 */
+	Bit16s xratio = 640;
+	if (CurMode->swidth>0) xratio/=CurMode->swidth;
+	if (xratio==0) xratio = 1;
 	
 	RestoreCursorBackground();
 
@@ -494,7 +495,7 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.last_released_y[button]=POS_Y;
 }
 
-static void SetMickeyPixelRate(Bit16s px, Bit16s py){
+static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
 	if ((px!=0) && (py!=0)) {
 		mouse.mickeysPerPixel_x	 = (float)px/X_MICKEY;
 		mouse.mickeysPerPixel_y  = (float)py/Y_MICKEY;
@@ -502,9 +503,14 @@ static void SetMickeyPixelRate(Bit16s px, Bit16s py){
 		mouse.pixelPerMickey_y 	 = Y_MICKEY/(float)py;	
 	}
 };
-static void SetSensitivity(Bit16s px, Bit16s py){
+static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed){
 	if(px>100) px=100;
 	if(py>100) py=100;
+	if(dspeed>100) dspeed=100;
+	// save values
+	mouse.senv_x_val=px;
+	mouse.senv_y_val=py;
+	mouse.dspeed_val=dspeed;
 	if ((px!=0) && (py!=0)) {
 		px--;  //Inspired by cutemouse 
 		py--;  //Although their cursor update routine is far more complex then ours
@@ -514,19 +520,13 @@ static void SetSensitivity(Bit16s px, Bit16s py){
 };
 
 
-static void mouse_reset_hardware(void){
+static void Mouse_ResetHardware(void){
 	PIC_SetIRQMask(MOUSE_IRQ,false);
 };
 
-void Mouse_NewVideoMode(void)
-{ //Does way to much. Many of this stuff should be moved to mouse_reset one day
-	if(MOUSE_IRQ > 7) {
-		real_writed(0,((0x70+MOUSE_IRQ-8)<<2),CALLBACK_RealPointer(call_int74));
-	} else {
-		real_writed(0,((0x8+MOUSE_IRQ)<<2),CALLBACK_RealPointer(call_int74));
-	}
-	mouse.shown = 1;//Disabled as ida doesn't have mousecursor anymore
-	//enabled again as it seems to be a bug in ida4
+//Does way to much. Many things should be moved to mouse reset one day
+void Mouse_NewVideoMode(void) {
+	mouse.inhibit_draw=false;
 	/* Get the correct resolution from the current video mode */
 	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
 	switch (mode) {
@@ -555,12 +555,11 @@ void Mouse_NewVideoMode(void)
 		mouse.max_y=479;
 		break;
 	default:
-		mouse.max_y=199;
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
-		// Hide mouse cursor on non supported modi. Pirates Gold
-		mouse.shown = 1;
-		break;
-	} 
+		mouse.inhibit_draw=true;
+		return;
+	}
+	mouse.hidden = 1;
 	mouse.max_x = 639;
 	mouse.min_x = 0;
 	mouse.min_y = 0;
@@ -587,43 +586,38 @@ void Mouse_NewVideoMode(void)
 	mouse.updateRegion_y[1] = 1;
 	mouse.cursorType = 0;
 	mouse.enabled=true;
-	mouse.oldshown=1;
+	mouse.oldhidden=1;
 
-	SetMickeyPixelRate(8,16);
 	oldmouseX = static_cast<Bit16s>(mouse.x);
 	oldmouseY = static_cast<Bit16s>(mouse.y);
 }
 
-static void mouse_reset(void) {
-//Much to empty Mouse_NewVideoMode contains stuff that should be in here
-
+//Much too empty, Mouse_NewVideoMode contains stuff that should be in here
+static void Mouse_Reset(void) {
 	/* Remove drawn mouse Legends of Valor */
 	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 	else RestoreCursorBackgroundText();
-	mouse.shown = 1;
+	mouse.hidden = 1;
 
 	Mouse_NewVideoMode();
+	Mouse_SetMickeyPixelRate(8,16);
 
    	mouse.sub_mask=0;
-
-	mouse.senv_x=1.0;
-	mouse.senv_y=1.0;
 }
 
 static Bitu INT33_Handler(void) {
-
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
-		mouse_reset_hardware(); /* fallthrough */
+		Mouse_ResetHardware(); /* fallthrough */
 	case 0x21:	/* Software Reset */
 		reg_ax=0xffff;
 		reg_bx=MOUSE_BUTTONS;
-		mouse_reset();
+		Mouse_Reset();
 		Mouse_AutoLock(true);
 		break;
 	case 0x01:	/* Show Mouse */
-		if(mouse.shown) mouse.shown--;
+		if(mouse.hidden) mouse.hidden--;
 		Mouse_AutoLock(true);
 		DrawCursor();
 		break;
@@ -631,7 +625,7 @@ static Bitu INT33_Handler(void) {
 		{
 			if (CurMode->type!=M_TEXT) RestoreCursorBackground();
 			else RestoreCursorBackgroundText();
-			mouse.shown++;
+			mouse.hidden++;
 		}
 		break;
 	case 0x03:	/* Return position and Button Status */
@@ -728,6 +722,12 @@ static Bitu INT33_Handler(void) {
 		mouse.textAndMask = reg_cx;
 		mouse.textXorMask = reg_dx;
 		break;
+	case 0x0b:	/* Read Motion Data */
+		reg_cx=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
+		reg_dx=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
+		mouse.mickey_x=0;
+		mouse.mickey_y=0;
+		break;
 	case 0x0c:	/* Define interrupt subroutine parameters */
 		mouse.sub_mask=reg_cx;
 		mouse.sub_seg=SegValue(es);
@@ -735,13 +735,7 @@ static Bitu INT33_Handler(void) {
 		Mouse_AutoLock(true); //Some games don't seem to reset the mouse before using
 		break;
 	case 0x0f:	/* Define mickey/pixel rate */
-		SetMickeyPixelRate(reg_cx,reg_dx);
-		break;
-	case 0x0B:	/* Read Motion Data */
-		reg_cx=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
-		reg_dx=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
-		mouse.mickey_x=0;
-		mouse.mickey_y=0;
+		Mouse_SetMickeyPixelRate(reg_cx,reg_dx);
 		break;
 	case 0x10:      /* Define screen region for updating */
 		mouse.updateRegion_x[0]=reg_cx;
@@ -789,21 +783,17 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x1a:	/* Set mouse sensitivity */
-		SetSensitivity(reg_bx,reg_cx);
-
-		LOG(LOG_MOUSE,LOG_WARN)("Set sensitivity used with %d %d",reg_bx,reg_cx);
-
 		// ToDo : double mouse speed value
+		Mouse_SetSensitivity(reg_bx,reg_cx,reg_dx);
+
+		LOG(LOG_MOUSE,LOG_WARN)("Set sensitivity used with %d %d (%d)",reg_bx,reg_cx,reg_dx);
 		break;
 	case 0x1b:	/* Get mouse sensitivity */
-		reg_bx = Bit16s((60.0* sqrt(mouse.senv_x- (1.0/3.0)) ) +1.0);
-
-		reg_cx = Bit16s((60.0* sqrt(mouse.senv_y- (1.0/3.0)) ) +1.0);
+		reg_bx = mouse.senv_x_val;
+		reg_cx = mouse.senv_y_val;
+		reg_dx = mouse.dspeed_val;
 
 		LOG(LOG_MOUSE,LOG_WARN)("Get sensitivity %d %d",reg_bx,reg_cx);
-
-		// ToDo : double mouse speed value
-		reg_dx = 64;
 		break;
 	case 0x1c:	/* Set interrupt rate */
 		/* Can't really set a rate this is host determined */
@@ -819,12 +809,12 @@ static Bitu INT33_Handler(void) {
 		reg_bx=0;
 		SegSet16(es,0);	   
 		mouse.enabled=false; /* Just for reporting not doing a thing with it */
-		mouse.oldshown=mouse.shown;
-		mouse.shown=1;
+		mouse.oldhidden=mouse.hidden;
+		mouse.hidden=1;
 		break;
 	case 0x20:	/* Enable Mousedriver */
 		mouse.enabled=true;
-		mouse.shown=mouse.oldshown;
+		mouse.hidden=mouse.oldhidden;
 		break;
 	case 0x22:      /* Set language for messages */
  			/*
@@ -849,7 +839,7 @@ static Bitu INT33_Handler(void) {
 	case 0x24:	/* Get Software version and mouse type */
 		reg_bx=0x805;	//Version 8.05 woohoo 
 		reg_ch=0x04;	/* PS/2 type */
-		reg_cl=0;//MOUSE_IRQ;		/* Hmm ps2 irq 0!!!! */
+		reg_cl=0;		/* PS/2 (unused) */
 		break;
 	case 0x26: /* Get Maximum virtual coordinates */
 		reg_bx=(mouse.enabled ? 0x0000 : 0xffff);
@@ -1014,12 +1004,13 @@ void MOUSE_Init(Section* sec) {
 	ps2_callback=CALLBACK_RealPointer(call_ps2);
 
 	memset(&mouse,0,sizeof(mouse));
-	mouse.shown = 1; //Hide mouse on startup
+	mouse.hidden = 1; //Hide mouse on startup
 
    	mouse.sub_mask=0;
 	mouse.sub_seg=0x6362;	// magic value
 	mouse.sub_ofs=0;
 
-	mouse_reset_hardware();
-	mouse_reset();
+	Mouse_ResetHardware();
+	Mouse_Reset();
+	Mouse_SetSensitivity(50,50,50);
 }
