@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.69 2007-10-19 20:30:24 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.70 2007-11-05 18:42:56 qbix79 Exp $ */
 
 #include <string.h>
 
@@ -982,7 +982,8 @@ dac_mtext16:
 					IO_Write(0x3c9,mtext_palette[i][2]);
 				}
 				break;
-			}
+			} //FALLTHROUGH!!!!
+		case M_LIN4: //Added for CAD Software
 dac_text16:
 			for (i=0;i<64;i++) {
 				IO_Write(0x3c9,text_palette[i][0]);
