@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.70 2007-11-05 17:49:17 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.71 2007-11-05 21:46:26 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -198,11 +198,15 @@ Bitu PS2_Handler(void) {
 
 INLINE void Mouse_AddEvent(Bit16u type) {
 	if (mouse.events<QUEUE_SIZE) {
-/* Always put the newest element in the front as that the events are 
- * handled backwards (prevents doubleclicks while moving)
- */
-		for(Bitu i = mouse.events ; i ; i--)
-			mouse.event_queue[i] = mouse.event_queue[i-1];
+		if (mouse.events>0) {
+			/* Skip duplicate events */
+			if ((type==MOUSE_MOVED) && (mouse.buttons==0)) return;
+			/* Always put the newest element in the front as that the events are 
+			 * handled backwards (prevents doubleclicks while moving)
+			 */
+			for(Bitu i = mouse.events ; i ; i--)
+				mouse.event_queue[i] = mouse.event_queue[i-1];
+		}
 		mouse.event_queue[0].type=type;
 		mouse.event_queue[0].buttons=mouse.buttons;
 		mouse.events++;
@@ -415,8 +419,8 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	float dx = xrel * mouse.pixelPerMickey_x;
 	float dy = yrel * mouse.pixelPerMickey_y;
 
-	if((fabs(x) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
-	if((fabs(y) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
+	if((fabs(xrel) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
+	if((fabs(yrel) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
 	if (useps2callback) dy *= 2;	
 
 	mouse.mickey_x += dx;
