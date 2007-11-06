@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.2 2007-10-31 11:37:38 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.3 2007-11-06 20:25:36 qbix79 Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -374,7 +374,7 @@ public:
 	HelpWindow(GUI::Screen *parent, int x, int y, Section *section) :
 		MessageBox(parent, x, y, 580, "", "") {
 		std::string title(section->GetName());
-		title[0] = std::toupper(title[0]);
+		title.at(0) = std::toupper(title.at(0));
 		setTitle("Help for "+title);
 		std::string name = section->GetName();
 		std::transform(name.begin(), name.end(), name.begin(), (int(*)(int))std::toupper);
@@ -549,7 +549,7 @@ public:
 
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
 		GUI::String sname = arg;
-		sname[0] = std::tolower(sname[0]);
+		sname.at(0) = std::tolower(sname.at(0));
 		Section *sec;
 		if (arg == "Close" || arg == "Cancel") {
 			running = false;
