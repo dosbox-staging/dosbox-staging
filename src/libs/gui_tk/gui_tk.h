@@ -102,7 +102,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.1 2007-10-28 16:33:02 qbix79 Exp $ */
+/* $Id: gui_tk.h,v 1.2 2007-11-06 20:26:27 qbix79 Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H
@@ -1060,11 +1060,11 @@ public:
 	    backspace, line-feed, tab and ANSI colors are interpreted, and text is word-wrapped at
 	    the window borders. You can optionally pass start and length of a substring
 	    to print */
-	void drawText(const String& text, bool interpret = true, Size start = 0, Size len = -1);
+	void drawText(const String& text, bool interpret = true, Size start = 0, Size len = (Size)-1);
 
 	/// Draw a text string at a fixed position.
 	/** see drawText(const String& text, bool interpret, Size start, Size len) */
-	template <typename STR> void drawText(int x, int y, const STR text, bool interpret, Size start, Size len = -1) { gotoXY(x,y); drawText(String(text), interpret, start, len); };
+	template <typename STR> void drawText(int x, int y, const STR text, bool interpret, Size start, Size len = (Size)-1) { gotoXY(x,y); drawText(String(text), interpret, start, len); };
 	/// Draw a single character.
 	/** see drawText(const STR text, bool interpret), except wrapping is
 	    performed on this character only */
