@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.135 2007-10-28 16:36:42 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.136 2007-11-06 20:08:34 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1317,7 +1317,7 @@ void GFX_ShowMsg(char const* format,...) {
 	vsprintf(buf,format,msg);
         strcat(buf,"\n");
 	va_end(msg);
-	if(!no_stdout) printf(buf);       
+	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
 };
 
 extern void UI_Init(void);
