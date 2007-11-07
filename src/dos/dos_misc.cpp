@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.17 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_misc.cpp,v 1.18 2007-11-07 22:08:03 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -61,10 +61,89 @@ static Bitu INT2A_Handler(void) {
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
 	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
-		/* Should do a lot more. Let's see if we can get away with it */
+		// reg_bx is a system file table entry, should coincide with
+		// the file handle so just use that
 		LOG(LOG_DOSMISC,LOG_ERROR)("Some BAD filetable call used bx=%X",reg_bx);
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
+		if (reg_bx<16) {
+			RealPt sftrealpt=mem_readd(Real2Phys(dos_infoblock.GetPointer())+4);
+			PhysPt sftptr=Real2Phys(sftrealpt);
+			Bitu sftofs=0x06+reg_bx*0x3b;
+
+			if (Files[reg_bx]) mem_writeb(sftptr+sftofs,Files[reg_bx]->refCtr);
+			else mem_writeb(sftptr+sftofs,0);
+
+			if (!Files[reg_bx]) return true;
+
+			Bit32u handle=RealHandle(reg_bx);
+			if (handle>=DOS_FILES) {
+				mem_writew(sftptr+sftofs+0x02,0x02);	// file open mode
+				mem_writeb(sftptr+sftofs+0x04,0x00);	// file attribute
+				mem_writew(sftptr+sftofs+0x05,Files[reg_bx]->GetInformation());	// device info word
+				mem_writed(sftptr+sftofs+0x07,0);		// device driver header
+				mem_writew(sftptr+sftofs+0x0d,0);		// packed time
+				mem_writew(sftptr+sftofs+0x0f,0);		// packed date
+				mem_writew(sftptr+sftofs+0x11,0);		// size
+				mem_writew(sftptr+sftofs+0x15,0);		// current position
+			} else {
+				Bit8u drive=Files[reg_bx]->GetDrive();
+
+				mem_writew(sftptr+sftofs+0x02,Files[reg_bx]->flags&3);			// file open mode
+				mem_writeb(sftptr+sftofs+0x04,(Bit8u)(Files[reg_bx]->attr));	// file attribute
+				mem_writew(sftptr+sftofs+0x05,0x40|drive);						// device info word
+				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive));	// dpb of the drive
+				mem_writew(sftptr+sftofs+0x0d,Files[reg_bx]->time);				// packed file time
+				mem_writew(sftptr+sftofs+0x0f,Files[reg_bx]->date);				// packed file date
+				Bit32u curpos=0;
+				Files[reg_bx]->Seek(&curpos,DOS_SEEK_CUR);
+				Bit32u endpos=0;
+				Files[reg_bx]->Seek(&endpos,DOS_SEEK_END);
+				mem_writed(sftptr+sftofs+0x11,endpos);		// size
+				mem_writed(sftptr+sftofs+0x15,curpos);		// current position
+				Files[reg_bx]->Seek(&curpos,DOS_SEEK_SET);
+			}
+
+			// fill in filename in fcb style
+			// (space-padded name (8 chars)+space-padded extension (3 chars))
+			const char* filename=(const char*)Files[reg_bx]->GetName();
+			if (strrchr(filename,'\\')) filename=strrchr(filename,'\\')+1;
+			if (strrchr(filename,'/')) filename=strrchr(filename,'/')+1;
+			if (!filename) return true;
+			const char* dotpos=strrchr(filename,'.');
+			if (dotpos) {
+				dotpos++;
+				size_t nlen=strlen(filename);
+				size_t extlen=strlen(dotpos);
+				Bits nmelen=(Bits)nlen-(Bits)extlen;
+				nmelen--;
+				if (nmelen<0) return true;
+				nlen-=(extlen+1);
+
+				if (nlen>8) nlen=8;
+				for (Bitu i=0; i<nlen; i++)
+					mem_writeb(sftptr+sftofs+0x20+i,filename[i]);
+				for (Bitu i=nlen; i<8; i++)
+					mem_writeb(sftptr+sftofs+0x20+i,' ');
+				if (extlen>3) extlen=3;
+				for (Bitu i=0; i<extlen; i++)
+					mem_writeb(sftptr+sftofs+0x28+i,dotpos[i]);
+				for (Bitu i=extlen; i<3; i++)
+					mem_writeb(sftptr+sftofs+0x28+i,' ');
+			} else {
+				size_t nlen=strlen(filename);
+				if (nlen>8) nlen=8;
+				for (Bitu i=0; i<nlen; i++)
+					mem_writeb(sftptr+sftofs+0x20+i,filename[i]);
+				for (Bitu i=nlen; i<11; i++)
+					mem_writeb(sftptr+sftofs+0x20+i,' ');
+			}
+
+			SegSet16(es,RealSeg(sftrealpt));
+			reg_di=RealOff(sftrealpt+sftofs);
+			reg_ax=0xc000;
+
+		}
 		return true;
 	case 0x1607:
 		if (reg_bx == 0x15) {

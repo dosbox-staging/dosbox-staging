@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.52 2007-06-13 07:25:14 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.53 2007-11-07 22:08:03 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -117,10 +117,10 @@ void DOS_InfoBlock::SetLocation(Bit16u segment) {
 	/* Create a fake SFT, so programs think there are 100 file handles */
 	Bit16u sftOffset=offsetof(sDIB,firstFileTable)+0xa2;
 	sSave(sDIB,firstFileTable,RealMake(segment,sftOffset));
-	real_writed(segment,sftOffset+0x00,RealMake(segment+0x11,0));	//Next File Table
+	real_writed(segment,sftOffset+0x00,RealMake(segment+0x26,0));	//Next File Table
 	real_writew(segment,sftOffset+0x04,100);		//File Table supports 100 files
-	real_writed(segment+0x11,0x00,0xffffffff);		//Last File Table
-	real_writew(segment+0x11,0x04,100);				//File Table supports 100 files
+	real_writed(segment+0x26,0x00,0xffffffff);		//Last File Table
+	real_writew(segment+0x26,0x04,100);				//File Table supports 100 files
 }
 
 void DOS_InfoBlock::SetFirstMCB(Bit16u _firstmcb) {
