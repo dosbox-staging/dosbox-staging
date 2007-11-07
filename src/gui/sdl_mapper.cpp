@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.46 2007-10-31 11:43:06 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.47 2007-11-07 17:41:32 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -1671,12 +1671,13 @@ static void DrawButtons(void) {
 	SDL_Flip(mapper.surface);
 }
 
-static void AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
+static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
 	char buf[64];
 	strcpy(buf,"key_");
 	strcat(buf,entry);
 	CKeyEvent * event=new CKeyEvent(buf,key);
 	new CEventButton(x,y,dx,dy,title,event);
+	return event;
 }
 
 static CJAxisEvent * AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
@@ -1762,6 +1763,8 @@ static KeyBlock combo_4[11]={
 	{".","period",KBD_period},						{"/","slash",KBD_slash},		
 };
 
+static CKeyEvent * caps_lock_event=NULL;
+static CKeyEvent * num_lock_event=NULL;
 
 static void CreateLayout(void) {
 	Bitu i;
@@ -1780,7 +1783,7 @@ static void CreateLayout(void) {
 
 	AddKeyButtonEvent(PX(14),PY(2),BW*2,BH*2,"ENTER","enter",KBD_enter);
 	
-	AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
+	caps_lock_event=AddKeyButtonEvent(PX(0),PY(3),BW*2,BH,"CLCK","capslock",KBD_capslock);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(3),BW,BH,combo_3[i].title,combo_3[i].entry,combo_3[i].key);
 
 	AddKeyButtonEvent(PX(0),PY(4),BW*2,BH,"SHIFT","lshift",KBD_leftshift);
@@ -1795,7 +1798,6 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(14),PY(5),BW*2,BH,"CTRL","rctrl",KBD_rightctrl);
 
 	/* Arrow Keys */
-   
 	AddKeyButtonEvent(PX(0),PY(7),BW,BH,"PRT","printscreen",KBD_printscreen);
 	AddKeyButtonEvent(PX(1),PY(7),BW,BH,"SCL","scrolllock",KBD_scrolllock);
 	AddKeyButtonEvent(PX(2),PY(7),BW,BH,"PAU","pause",KBD_pause);
@@ -1809,8 +1811,9 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(0),PY(11),BW,BH,"\x1B","left",KBD_left);
 	AddKeyButtonEvent(PX(1),PY(11),BW,BH,"\x19","down",KBD_down);
 	AddKeyButtonEvent(PX(2),PY(11),BW,BH,"\x1A","right",KBD_right);
+
 	/* Numeric KeyPad */
-	AddKeyButtonEvent(PX(4),PY(7),BW,BH,"NUM","numlock",KBD_numlock);
+	num_lock_event=AddKeyButtonEvent(PX(4),PY(7),BW,BH,"NUM","numlock",KBD_numlock);
 	AddKeyButtonEvent(PX(5),PY(7),BW,BH,"/","kp_divide",KBD_kpdivide);
 	AddKeyButtonEvent(PX(6),PY(7),BW,BH,"*","kp_multiply",KBD_kpmultiply);
 	AddKeyButtonEvent(PX(7),PY(7),BW,BH,"-","kp_minus",KBD_kpminus);
@@ -2277,6 +2280,16 @@ void MAPPER_Init(void) {
 	CreateLayout();
 	CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
+	if (SDL_GetModState()&KMOD_CAPS) {
+		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
+			(*bit)->Activate(32767,true);
+		}
+	}
+	if (SDL_GetModState()&KMOD_NUM) {
+		for (CBindList_it bit=num_lock_event->bindlist.begin();bit!=num_lock_event->bindlist.end();bit++) {
+			(*bit)->Activate(32767,true);
+		}
+	}
 }
 
 void MAPPER_StartUp(Section * sec) {
