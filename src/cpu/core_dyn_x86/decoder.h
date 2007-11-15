@@ -1582,11 +1582,9 @@ static void dyn_mov_ev_seg(void) {
 }
 
 static void dyn_load_seg(SegNames seg,DynReg * src) {
-	if (cpu.pmode) {
-		gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPB),seg,src);
-		dyn_check_bool_exception(DREG(TMPB));
-		gen_releasereg(DREG(TMPB));
-	} else gen_call_function((void *)CPU_SetSegGeneral,"%Id%Drw",seg,src);
+	gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPB),seg,src);
+	dyn_check_bool_exception(DREG(TMPB));
+	gen_releasereg(DREG(TMPB));
 	gen_releasereg(&DynRegs[G_ES+seg]);
 }
 
@@ -1625,18 +1623,12 @@ static void dyn_push_seg(SegNames seg) {
 }
 
 static void dyn_pop_seg(SegNames seg) {
-	if (!cpu.pmode) {
-		dyn_pop(DREG(TMPW));
-		dyn_load_seg(seg,DREG(TMPW));
-		gen_releasereg(DREG(TMPW));
-	} else {
-		gen_releasereg(DREG(ESP));
-		gen_call_function((void *)&CPU_PopSeg,"%Rd%Id%Id",DREG(TMPB),seg,decode.big_op);
-		dyn_check_bool_exception(DREG(TMPB));
-		gen_releasereg(DREG(TMPB));
-		gen_releasereg(&DynRegs[G_ES+seg]);
-		gen_releasereg(DREG(ESP));
-	}
+	gen_releasereg(DREG(ESP));
+	gen_call_function((void *)&CPU_PopSeg,"%Rd%Id%Id",DREG(TMPB),seg,decode.big_op);
+	dyn_check_bool_exception(DREG(TMPB));
+	gen_releasereg(DREG(TMPB));
+	gen_releasereg(&DynRegs[G_ES+seg]);
+	gen_releasereg(DREG(ESP));
 }
 
 static void dyn_pop_ev(void) {
@@ -1874,17 +1866,13 @@ static void dyn_interrupt(Bitu num) {
 }
 
 static void dyn_add_iocheck(Bitu access_size) {
-	if (cpu.pmode) {
-		gen_call_function((void *)&CPU_IO_Exception,"%Dw%Id",DREG(EDX),access_size);
-		dyn_check_bool_exception_al();
-	}
+	gen_call_function((void *)&CPU_IO_Exception,"%Dw%Id",DREG(EDX),access_size);
+	dyn_check_bool_exception_al();
 }
 
 static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
-	if (cpu.pmode) {
-		gen_call_function((void *)&CPU_IO_Exception,"%Id%Id",accessed_port,access_size);
-		dyn_check_bool_exception_al();
-	}
+	gen_call_function((void *)&CPU_IO_Exception,"%Id%Id",accessed_port,access_size);
+	dyn_check_bool_exception_al();
 }
 
 #ifdef X86_DYNFPU_DH_ENABLED
@@ -2465,13 +2453,13 @@ restart_prefix:
 		case 0xfa:		//CLI
 			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_CLI,"%Rd",DREG(TMPB));
-			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
+			dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
 			break;
 		case 0xfb:		//STI
 			gen_releasereg(DREG(FLAGS));
 			gen_call_function((void *)&CPU_STI,"%Rd",DREG(TMPB));
-			if (cpu.pmode) dyn_check_bool_exception(DREG(TMPB));
+			dyn_check_bool_exception(DREG(TMPB));
 			gen_releasereg(DREG(TMPB));
 			dyn_check_irqrequest();
 			if (max_opcodes<=0) max_opcodes=1;		//Allow 1 extra opcode

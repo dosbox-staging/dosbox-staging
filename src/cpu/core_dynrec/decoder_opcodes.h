@@ -402,7 +402,7 @@ static void dyn_push_seg(Bit8u seg) {
 
 static void dyn_pop_seg(Bit8u seg) {
 	gen_call_function_II((void *)&CPU_PopSeg,seg,decode.big_op);
-	if (cpu.pmode) dyn_check_exception(FC_RETOP);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_push_reg(Bit8u reg) {
@@ -468,7 +468,7 @@ static void dyn_segprefix(Bit8u seg) {
 		gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
 	}
 	gen_call_function_IR((void *)&CPU_SetSegGeneral,decode.modrm.reg,FC_RETOP);
-	if (cpu.pmode) dyn_check_exception(FC_RETOP);
+	dyn_check_exception(FC_RETOP);
 }
 
 static void dyn_load_seg_off_ea(Bit8u seg) {
@@ -484,7 +484,7 @@ static void dyn_load_seg_off_ea(Bit8u seg) {
 		dyn_read_word(FC_ADDR,FC_RETOP,false);
 
 		gen_call_function_IR((void *)&CPU_SetSegGeneral,seg,FC_RETOP);
-		if (cpu.pmode) dyn_check_exception(FC_RETOP);
+		dyn_check_exception(FC_RETOP);
 
 		gen_restore_reg(FC_OP1);
 		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
@@ -1327,9 +1327,9 @@ static void dyn_write_port_word_direct(Bit8u port) {
 static void dyn_read_port_byte(void) {
 	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
 	gen_extend_word(false,FC_ADDR);
-	if (cpu.pmode) gen_protect_addr_reg();
+	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,1);
-	if (cpu.pmode) gen_restore_addr_reg();
+	gen_restore_addr_reg();
 	gen_call_function_R((void*)&IO_ReadB,FC_ADDR);
 	gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
 }
@@ -1337,9 +1337,9 @@ static void dyn_read_port_byte(void) {
 static void dyn_read_port_word(void) {
 	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
 	gen_extend_word(false,FC_ADDR);
-	if (cpu.pmode) gen_protect_addr_reg();
+	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
-	if (cpu.pmode) gen_restore_addr_reg();
+	gen_restore_addr_reg();
 	gen_call_function_R(decode.big_op?((void*)&IO_ReadD):((void*)&IO_ReadW),FC_ADDR);
 	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,decode.big_op),decode.big_op);
 }
@@ -1347,22 +1347,22 @@ static void dyn_read_port_word(void) {
 static void dyn_write_port_byte(void) {
 	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
 	gen_extend_word(false,FC_ADDR);
-	if (cpu.pmode) gen_protect_addr_reg();
+	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,1);
 	gen_mov_byte_to_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
 	gen_extend_byte(false,FC_RETOP);
-	if (cpu.pmode) gen_restore_addr_reg();
+	gen_restore_addr_reg();
 	gen_call_function_RR((void*)&IO_WriteB,FC_ADDR,FC_RETOP);
 }
 
 static void dyn_write_port_word(void) {
 	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
 	gen_extend_word(false,FC_ADDR);
-	if (cpu.pmode) gen_protect_addr_reg();
+	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
 	gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
 	if (!decode.big_op) gen_extend_word(false,FC_RETOP);
-	if (cpu.pmode) gen_restore_addr_reg();
+	gen_restore_addr_reg();
 	gen_call_function_RR(decode.big_op?((void*)&IO_WriteD):((void*)&IO_WriteW),FC_ADDR,FC_RETOP);
 }
 

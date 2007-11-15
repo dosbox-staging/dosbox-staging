@@ -530,11 +530,11 @@ restart_prefix:
 
 		case 0xfa:		//CLI
 			gen_call_function_raw((void *)&CPU_CLI);
-			if (cpu.pmode) dyn_check_exception(FC_RETOP);
+			dyn_check_exception(FC_RETOP);
 			break;
 		case 0xfb:		//STI
 			gen_call_function_raw((void *)&CPU_STI);
-			if (cpu.pmode) dyn_check_exception(FC_RETOP);
+			dyn_check_exception(FC_RETOP);
 			if (max_opcodes<=0) max_opcodes=1;		//Allow 1 extra opcode
 			break;
 
