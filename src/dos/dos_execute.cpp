@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.62 2007-10-19 19:39:27 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.63 2007-11-18 10:30:12 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -104,9 +104,9 @@ void DOS_UpdatePSPName(void) {
 	GFX_SetTitle(-1,-1,false);
 }
 
-bool DOS_Terminate(bool tsr) {
+bool DOS_Terminate(bool tsr,Bit8u exitcode) {
 
-	dos.return_code=reg_al;
+	dos.return_code=exitcode;
 	dos.return_mode=RETURN_EXIT;
 	
 	Bit16u mempsp = dos.psp();
@@ -330,9 +330,18 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			else maxsize=0xffff;
 		}
 		if (maxfree<minsize) {
-			DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
-			DOS_FreeMemory(envseg);
-			return false;
+			if (iscom) {
+				/* Reduce minimum of needed memory size to filesize */
+				pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
+				Bit16u dataread=0xf800;
+				DOS_ReadFile(fhandle,loadbuf,&dataread);
+				if (dataread<0xf800) minsize=((dataread+0x10)>>4)+0x20;
+			}
+			if (maxfree<minsize) {
+				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
+				DOS_FreeMemory(envseg);
+				return false;
+			}
 		}
 		if (maxfree<maxsize) memsize=maxfree;
 		else memsize=maxsize;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.105 2007-11-04 11:11:34 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.106 2007-11-18 10:30:12 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -384,7 +384,7 @@ static Bitu DOS_21Handler(void) {
 		//TODO First get normal files executing
 		// Important: This service does not set the carry flag!
 		DOS_ResizeMemory(dos.psp(),&reg_dx);
-		DOS_Terminate(true);
+		DOS_Terminate(true,reg_al);
 		dos.return_code=reg_al; //Officially a field in the SDA
 		dos.return_mode=RETURN_TSR;
 		break;
@@ -689,7 +689,7 @@ static Bitu DOS_21Handler(void) {
 		reg_ax=0x4c00;				/* Terminate Program */
 	case 0x4c:					/* EXIT Terminate with return code */
 	        {
-			if (DOS_Terminate(false)) {
+			if (DOS_Terminate(false,reg_al)) {
 				/* This can't ever return false normally */
 			} else {            
 				reg_ax=dos.errorcode;
@@ -1011,7 +1011,6 @@ static Bitu DOS_21Handler(void) {
 		break;
 	};
 	return CBRET_NONE;
-/* That's it now let's get it working */
 };
 
 
@@ -1024,7 +1023,7 @@ static Bitu DOS_20Handler(void) {
 static Bitu DOS_27Handler(void) {
 	// Terminate & stay resident
 	Bit16u para = (reg_dx/16)+((reg_dx % 16)>0);
-	if (DOS_ResizeMemory(dos.psp(),&para)) DOS_Terminate(true);
+	if (DOS_ResizeMemory(dos.psp(),&para)) DOS_Terminate(true,0);
 	return CBRET_NONE;
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.71 2007-11-07 22:08:03 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.72 2007-11-18 10:30:11 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -150,7 +150,7 @@ void DOS_SetupDevices(void);
 bool DOS_NewPSP(Bit16u pspseg,Bit16u size);
 bool DOS_ChildPSP(Bit16u pspseg,Bit16u size);
 bool DOS_Execute(char * name,PhysPt block,Bit8u flags);
-bool DOS_Terminate(bool tsr);
+bool DOS_Terminate(bool tsr,Bit8u exitcode);
 
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
