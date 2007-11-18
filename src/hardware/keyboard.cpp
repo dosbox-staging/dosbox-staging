@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: keyboard.cpp,v 1.39 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: keyboard.cpp,v 1.40 2007-11-18 17:09:15 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "keyboard.h"
@@ -171,7 +171,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static Bit8u port_61_data;
+static Bit8u port_61_data = 0;
 static Bitu read_p61(Bitu port,Bitu iolen) {
 	port_61_data^=0x20;
 	port_61_data^=0x10;
