@@ -132,7 +132,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 
-	PageHandler * handler=get_tlb_handler(lin_addr);
+	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		// this is a codepage handler, and the one that we're looking for
 		cph=(CodePageHandlerDynRec *)handler;
@@ -569,7 +569,7 @@ bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) {
 		*((Bit8u*)(&core_dynrec.readdata))=host_readb(tlb_addr+address);
 		return false;
 	} else {
-		return get_tlb_handler(address)->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
+		return get_tlb_readhandler(address)->readb_checked(address, (Bit8u*)(&core_dynrec.readdata));
 	}
 }
 
@@ -579,7 +579,7 @@ bool DRC_CALL_CONV mem_writeb_checked_drc(PhysPt address,Bit8u val) {
 	if (tlb_addr) {
 		host_writeb(tlb_addr+address,val);
 		return false;
-	} else return get_tlb_handler(address)->writeb_checked(address,val);
+	} else return get_tlb_writehandler(address)->writeb_checked(address,val);
 }
 
 bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) DRC_FC;
@@ -589,7 +589,7 @@ bool DRC_CALL_CONV mem_readw_checked_drc(PhysPt address) {
 		if (tlb_addr) {
 			*((Bit16u*)(&core_dynrec.readdata))=host_readw(tlb_addr+address);
 			return false;
-		} else return get_tlb_handler(address)->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
+		} else return get_tlb_readhandler(address)->readw_checked(address, (Bit16u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadw_checked(address, ((Bit16u*)(&core_dynrec.readdata)));
 }
 
@@ -600,7 +600,7 @@ bool DRC_CALL_CONV mem_readd_checked_drc(PhysPt address) {
 		if (tlb_addr) {
 			*((Bit32u*)(&core_dynrec.readdata))=host_readd(tlb_addr+address);
 			return false;
-		} else return get_tlb_handler(address)->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
+		} else return get_tlb_readhandler(address)->readd_checked(address, (Bit32u*)(&core_dynrec.readdata));
 	} else return mem_unalignedreadd_checked(address, ((Bit32u*)(&core_dynrec.readdata)));
 }
 
@@ -611,7 +611,7 @@ bool DRC_CALL_CONV mem_writew_checked_drc(PhysPt address,Bit16u val) {
 		if (tlb_addr) {
 			host_writew(tlb_addr+address,val);
 			return false;
-		} else return get_tlb_handler(address)->writew_checked(address,val);
+		} else return get_tlb_writehandler(address)->writew_checked(address,val);
 	} else return mem_unalignedwritew_checked(address,val);
 }
 
@@ -622,7 +622,7 @@ bool DRC_CALL_CONV mem_writed_checked_drc(PhysPt address,Bit32u val) {
 		if (tlb_addr) {
 			host_writed(tlb_addr+address,val);
 			return false;
-		} else return get_tlb_handler(address)->writed_checked(address,val);
+		} else return get_tlb_writehandler(address)->writed_checked(address,val);
 	} else return mem_unalignedwrited_checked(address,val);
 }
 

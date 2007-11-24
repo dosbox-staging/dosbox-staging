@@ -54,7 +54,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	Bit8u rdval;
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
-	PageHandler * handler=get_tlb_handler(lin_addr);
+	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
 		return false;
@@ -462,7 +462,7 @@ static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
 }
 
 bool mem_readb_checked_dcx86(PhysPt address) {
-	return get_tlb_handler(address)->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
+	return get_tlb_readhandler(address)->readb_checked(address, (Bit8u*)(&core_dyn.readdata));
 }
 
 static void dyn_read_byte(DynReg * addr,DynReg * dst,Bitu high) {
@@ -548,7 +548,7 @@ bool mem_readd_checked_dcx86(PhysPt address) {
 			core_dyn.readdata=host_readd(tlb_addr+address);
 			return false;
 		} else {
-			return get_tlb_handler(address)->readd_checked(address, &core_dyn.readdata);
+			return get_tlb_readhandler(address)->readd_checked(address, &core_dyn.readdata);
 		}
 	} else return mem_unalignedreadd_checked(address, &core_dyn.readdata);
 }

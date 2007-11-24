@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.89 2007-10-05 17:45:53 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.90 2007-11-24 17:26:48 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -674,7 +674,7 @@ static void DrawData(void) {
 		else mvwprintw (dbg.win_data,1+y,0,"%04X:%08X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
-			if (!(get_tlb_handler(address)->flags & PFLAG_INIT)) {
+			if (!(get_tlb_readhandler(address)->flags & PFLAG_INIT)) {
 				ch = mem_readb(address);
 			} else ch = 0;
 			mvwprintw (dbg.win_data,1+y,14+3*x,"%02X",ch);
@@ -1344,7 +1344,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector)
 				pos++;
 		};
 		Bit32u address = GetAddress(seg,adr);
-		if (!(get_tlb_handler(address)->flags & PFLAG_INIT)) {
+		if (!(get_tlb_readhandler(address)->flags & PFLAG_INIT)) {
 			static char outmask[] = "%s:[%04X]=%02X";
 			
 			if (cpu.pmode) outmask[6] = '8';

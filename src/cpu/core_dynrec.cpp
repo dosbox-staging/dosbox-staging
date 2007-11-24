@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.8 2007-10-05 17:45:52 c2woody Exp $ */
+/* $Id: core_dynrec.cpp,v 1.9 2007-11-24 17:26:48 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -153,7 +153,7 @@ CacheBlockDynRec * LinkBlocks(BlockReturn ret) {
 	CacheBlockDynRec * block=NULL;
 	// the last instruction was a control flow modifying instruction
 	Bitu temp_ip=SegPhys(cs)+reg_eip;
-	CodePageHandlerDynRec * temp_handler=(CodePageHandlerDynRec *)get_tlb_handler(temp_ip);
+	CodePageHandlerDynRec * temp_handler=(CodePageHandlerDynRec *)get_tlb_readhandler(temp_ip);
 	if (temp_handler->flags & PFLAG_HASCODE) {
 		// see if the target is an already translated block
 		block=temp_handler->FindCacheBlock(temp_ip & 4095);

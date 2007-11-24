@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.28 2007-10-05 17:45:52 c2woody Exp $ */
+/* $Id: paging.h,v 1.29 2007-11-24 17:26:48 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -88,6 +88,7 @@ void PAGING_InitTLB(void);
 void PAGING_ClearTLB(void);
 
 void PAGING_LinkPage(Bitu lin_page,Bitu phys_page);
+void PAGING_LinkPage_ReadOnly(Bitu lin_page,Bitu phys_page);
 void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 /* This maps the page directly, only use when paging is disabled */
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
@@ -142,7 +143,8 @@ union X86PageEntry {
 typedef struct {
 	HostPt read;
 	HostPt write;
-	PageHandler * handler;
+	PageHandler * readhandler;
+	PageHandler * writehandler;
 	Bit32u phys_page;
 } tlb_entry;
 #endif
@@ -158,7 +160,8 @@ struct PagingBlock {
 	struct {
 		HostPt read[TLB_SIZE];
 		HostPt write[TLB_SIZE];
-		PageHandler * handler[TLB_SIZE];
+		PageHandler * readhandler[TLB_SIZE];
+		PageHandler * writehandler[TLB_SIZE];
 		Bit32u	phys_page[TLB_SIZE];
 	} tlb;
 #else
@@ -199,8 +202,11 @@ INLINE HostPt get_tlb_read(PhysPt address) {
 INLINE HostPt get_tlb_write(PhysPt address) {
 	return paging.tlb.write[address>>12];
 }
-INLINE PageHandler* get_tlb_handler(PhysPt address) {
-	return paging.tlb.handler[address>>12];
+INLINE PageHandler* get_tlb_readhandler(PhysPt address) {
+	return paging.tlb.readhandler[address>>12];
+}
+INLINE PageHandler* get_tlb_writehandler(PhysPt address) {
+	return paging.tlb.writehandler[address>>12];
 }
 
 /* Use these helper functions to access linear addresses in readX/writeX functions */
@@ -233,8 +239,11 @@ INLINE HostPt get_tlb_read(PhysPt address) {
 INLINE HostPt get_tlb_write(PhysPt address) {
 	return get_tlb_entry(address)->write;
 }
-INLINE PageHandler* get_tlb_handler(PhysPt address) {
-	return get_tlb_entry(address)->handler;
+INLINE PageHandler* get_tlb_readhandler(PhysPt address) {
+	return get_tlb_entry(address)->readhandler;
+}
+INLINE PageHandler* get_tlb_writehandler(PhysPt address) {
+	return get_tlb_entry(address)->writehandler;
 }
 
 /* Use these helper functions to access linear addresses in readX/writeX functions */
@@ -254,14 +263,14 @@ INLINE PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 INLINE Bit8u mem_readb_inline(PhysPt address) {
 	HostPt tlb_addr=get_tlb_read(address);
 	if (tlb_addr) return host_readb(tlb_addr+address);
-	else return (Bit8u)(get_tlb_handler(address))->readb(address);
+	else return (Bit8u)(get_tlb_readhandler(address))->readb(address);
 }
 
 INLINE Bit16u mem_readw_inline(PhysPt address) {
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) return host_readw(tlb_addr+address);
-		else return (Bit16u)(get_tlb_handler(address))->readw(address);
+		else return (Bit16u)(get_tlb_readhandler(address))->readw(address);
 	} else return mem_unalignedreadw(address);
 }
 
@@ -269,21 +278,21 @@ INLINE Bit32u mem_readd_inline(PhysPt address) {
 	if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) return host_readd(tlb_addr+address);
-		else return (get_tlb_handler(address))->readd(address);
+		else return (get_tlb_readhandler(address))->readd(address);
 	} else return mem_unalignedreadd(address);
 }
 
 INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
 	HostPt tlb_addr=get_tlb_write(address);
 	if (tlb_addr) host_writeb(tlb_addr+address,val);
-	else (get_tlb_handler(address))->writeb(address,val);
+	else (get_tlb_writehandler(address))->writeb(address,val);
 }
 
 INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) host_writew(tlb_addr+address,val);
-		else (get_tlb_handler(address))->writew(address,val);
+		else (get_tlb_writehandler(address))->writew(address,val);
 	} else mem_unalignedwritew(address,val);
 }
 
@@ -291,7 +300,7 @@ INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
 	if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) host_writed(tlb_addr+address,val);
-		else (get_tlb_handler(address))->writed(address,val);
+		else (get_tlb_writehandler(address))->writed(address,val);
 	} else mem_unalignedwrited(address,val);
 }
 
@@ -301,7 +310,7 @@ INLINE bool mem_readb_checked(PhysPt address, Bit8u * val) {
 	if (tlb_addr) {
 		*val=host_readb(tlb_addr+address);
 		return false;
-	} else return (get_tlb_handler(address))->readb_checked(address, val);
+	} else return (get_tlb_readhandler(address))->readb_checked(address, val);
 }
 
 INLINE bool mem_readw_checked(PhysPt address, Bit16u * val) {
@@ -310,7 +319,7 @@ INLINE bool mem_readw_checked(PhysPt address, Bit16u * val) {
 		if (tlb_addr) {
 			*val=host_readw(tlb_addr+address);
 			return false;
-		} else return (get_tlb_handler(address))->readw_checked(address, val);
+		} else return (get_tlb_readhandler(address))->readw_checked(address, val);
 	} else return mem_unalignedreadw_checked(address, val);
 }
 
@@ -320,7 +329,7 @@ INLINE bool mem_readd_checked(PhysPt address, Bit32u * val) {
 		if (tlb_addr) {
 			*val=host_readd(tlb_addr+address);
 			return false;
-		} else return (get_tlb_handler(address))->readd_checked(address, val);
+		} else return (get_tlb_readhandler(address))->readd_checked(address, val);
 	} else return mem_unalignedreadd_checked(address, val);
 }
 
@@ -329,7 +338,7 @@ INLINE bool mem_writeb_checked(PhysPt address,Bit8u val) {
 	if (tlb_addr) {
 		host_writeb(tlb_addr+address,val);
 		return false;
-	} else return (get_tlb_handler(address))->writeb_checked(address,val);
+	} else return (get_tlb_writehandler(address))->writeb_checked(address,val);
 }
 
 INLINE bool mem_writew_checked(PhysPt address,Bit16u val) {
@@ -338,7 +347,7 @@ INLINE bool mem_writew_checked(PhysPt address,Bit16u val) {
 		if (tlb_addr) {
 			host_writew(tlb_addr+address,val);
 			return false;
-		} else return (get_tlb_handler(address))->writew_checked(address,val);
+		} else return (get_tlb_writehandler(address))->writew_checked(address,val);
 	} else return mem_unalignedwritew_checked(address,val);
 }
 
@@ -348,7 +357,7 @@ INLINE bool mem_writed_checked(PhysPt address,Bit32u val) {
 		if (tlb_addr) {
 			host_writed(tlb_addr+address,val);
 			return false;
-		} else return (get_tlb_handler(address))->writed_checked(address,val);
+		} else return (get_tlb_writehandler(address))->writed_checked(address,val);
 	} else return mem_unalignedwrited_checked(address,val);
 }
 

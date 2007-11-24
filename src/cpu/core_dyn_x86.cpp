@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dyn_x86.cpp,v 1.33 2007-10-05 17:45:52 c2woody Exp $ */
+/* $Id: core_dyn_x86.cpp,v 1.34 2007-11-24 17:26:48 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -348,7 +348,7 @@ run_block:
 	case BR_Link2:
 		{
 			Bitu temp_ip=SegPhys(cs)+reg_eip;
-			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_handler(temp_ip);
+			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
 			if (temp_handler->flags & PFLAG_HASCODE) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block) goto restart_core;
