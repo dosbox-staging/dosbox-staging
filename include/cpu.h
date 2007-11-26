@@ -150,6 +150,7 @@ void CPU_SetFlags(Bitu word,Bitu mask);
 #define EXCEPTION_NP			11
 #define EXCEPTION_SS			12
 #define EXCEPTION_GP			13
+#define EXCEPTION_PF			14
 
 #define CR0_PROTECTION			0x00000001
 #define CR0_MONITORPROCESSOR	0x00000002
@@ -303,16 +304,9 @@ class Descriptor
 public:
 	Descriptor() { saved.fill[0]=saved.fill[1]=0; }
 
-	void Load(PhysPt address) {
-		Bit32u* data = (Bit32u*)&saved;
-		*data	  = mem_readd(address);
-		*(data+1) = mem_readd(address+4);
-	}
-	void Save(PhysPt address) {
-		Bit32u* data = (Bit32u*)&saved;
-		mem_writed(address,*data);
-		mem_writed(address+4,*(data+1));
-	}
+	void Load(PhysPt address);
+	void Save(PhysPt address);
+
 	PhysPt GetBase (void) { 
 		return (saved.seg.base_24_31<<24) | (saved.seg.base_16_23<<16) | saved.seg.base_0_15; 
 	}
@@ -433,6 +427,7 @@ public:
 
 struct CPUBlock {
 	Bitu cpl;							/* Current Privilege */
+	Bitu mpl;
 	Bitu cr0;
 	bool pmode;							/* Is Protected mode enabled */
 	GDTDescriptorTable gdt;

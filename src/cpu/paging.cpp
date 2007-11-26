@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.29 2007-11-24 17:26:48 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.30 2007-11-26 00:00:58 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -102,6 +102,7 @@ struct PF_Entry {
 	Bitu cs;
 	Bitu eip;
 	Bitu page_addr;
+	Bitu mpl;
 };
 
 #define PF_QUEUESIZE 16
@@ -122,8 +123,10 @@ static Bits PageFaultCore(void) {
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used-1];
 	X86PageEntry pentry;
 	pentry.load=phys_readd(entry->page_addr);
-	if (pentry.block.p && entry->cs == SegValue(cs) && entry->eip==reg_eip)
+	if (pentry.block.p && entry->cs == SegValue(cs) && entry->eip==reg_eip) {
+		cpu.cpl=entry->mpl;
 		return -1;
+	}
 	return 0;
 }
 #if C_DEBUG
@@ -147,8 +150,9 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu faultcode) {
 	entry->cs=SegValue(cs);
 	entry->eip=reg_eip;
 	entry->page_addr=page_addr;
+	entry->mpl=cpu.mpl;
 	//Caused by a write by default?
-	CPU_Exception(14,faultcode);
+	CPU_Exception(EXCEPTION_PF,faultcode);
 #if C_DEBUG
 //	DEBUG_EnableDebugger();
 #endif
@@ -237,7 +241,8 @@ public:
 			table.load=phys_readd(table_addr);
 			if (!table.block.p) {
 				LOG(LOG_PAGING,LOG_NORMAL)("NP Table");
-				PAGING_PageFault(lin_addr,table_addr,(writing?0x02:0x00) | ((cpu.cpl==0)?0x00:0x04));
+				PAGING_PageFault(lin_addr,table_addr,
+					(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04));
 				table.load=phys_readd(table_addr);
 				if (!table.block.p)
 					E_Exit("Pagefault didn't correct table");
@@ -247,7 +252,8 @@ public:
 			entry.load=phys_readd(entry_addr);
 			if (!entry.block.p) {
 //				LOG(LOG_PAGING,LOG_NORMAL)("NP Page");
-				PAGING_PageFault(lin_addr,entry_addr,(writing?0x02:0x00) | ((cpu.cpl==0)?0x00:0x04));
+				PAGING_PageFault(lin_addr,entry_addr,
+					(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04));
 				entry.load=phys_readd(entry_addr);
 				if (!entry.block.p)
 					E_Exit("Pagefault didn't correct page");
@@ -259,15 +265,16 @@ public:
 			Bitu priv_check=0;
 //			if ((entry.block.us==0) || (table.block.us==0)) {
 			if ((entry.block.us==0) && (table.block.us==0)) {
-				if (cpu.cpl==3) priv_check=2;
+				if ((cpu.cpl&cpu.mpl)==3) priv_check=2;
 				else priv_check=1;
 			}
 			if ((entry.block.wr==0) || (table.block.wr==0)) {
 				priv_check=1;
-				if (writing && (cpu.cpl==3)) priv_check=2;
+				if (writing && ((cpu.cpl&cpu.mpl)==3)) priv_check=2;
 			}
 			if (priv_check==2) {
-				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",
+					cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
 				PAGING_PageFault(lin_addr,entry_addr,0x05 | (writing?0x02:0x00));
 			}
 
@@ -307,8 +314,8 @@ public:
 			table.load=phys_readd(table_addr);
 			if (!table.block.p) {
 				paging.cr2=lin_addr;
-				cpu.exception.which=14;
-				cpu.exception.error=(writing?0x02:0x00) | ((cpu.cpl==0)?0x00:0x04);
+				cpu.exception.which=EXCEPTION_PF;
+				cpu.exception.error=(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04);
 				return false;
 			}
 			X86PageEntry entry;
@@ -316,18 +323,19 @@ public:
 			entry.load=phys_readd(entry_addr);
 			if (!entry.block.p) {
 				paging.cr2=lin_addr;
-				cpu.exception.which=14;
-				cpu.exception.error=(writing?0x02:0x00) | ((cpu.cpl==0)?0x00:0x04);
+				cpu.exception.which=EXCEPTION_PF;
+				cpu.exception.error=(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04);
 				return false;
 			}
 
-			if (cpu.cpl!=3) return true;
+			if ((cpu.cpl&cpu.mpl)!=3) return true;
 
 //			if (((entry.block.us==0) || (table.block.us==0)) || (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
 			if (((entry.block.us==0) && (table.block.us==0)) || (((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
-				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",
+					cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
 				paging.cr2=lin_addr;
-				cpu.exception.which=14;
+				cpu.exception.which=EXCEPTION_PF;
 				cpu.exception.error=0x05 | (writing?0x02:0x00);
 				return false;
 			}

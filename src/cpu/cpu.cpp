@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.103 2007-08-09 19:52:32 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.104 2007-11-26 00:00:58 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -108,6 +108,22 @@ void CPU_Core_Dynrec_Cache_Close(void);
 	if (cond) E_Exit(msg);			\
 }
 #endif
+
+
+void Descriptor::Load(PhysPt address) {
+	cpu.mpl=0;
+	Bit32u* data = (Bit32u*)&saved;
+	*data	  = mem_readd(address);
+	*(data+1) = mem_readd(address+4);
+	cpu.mpl=3;
+}
+void Descriptor:: Save(PhysPt address) {
+	cpu.mpl=0;
+	Bit32u* data = (Bit32u*)&saved;
+	mem_writed(address,*data);
+	mem_writed(address+4,*(data+1));
+	cpu.mpl=03;
+}
 
 
 void CPU_Push16(Bitu value) {
@@ -210,12 +226,16 @@ public:
 		return valid;
 	}
 	Bitu Get_back(void) {
-		return mem_readw(base);
+		cpu.mpl=0;
+		Bit16u backlink=mem_readw(base);
+		cpu.mpl=3;
+		return backlink;
 	}
 	void SaveSelector(void) {
 		cpu.gdt.SetDescriptor(selector,desc);
 	}
 	void Get_SSx_ESPx(Bitu level,Bitu & _ss,Bitu & _esp) {
+		cpu.mpl=0;
 		if (is386) {
 			PhysPt where=base+offsetof(TSS_32,esp0)+level*8;
 			_esp=mem_readd(where);
@@ -225,6 +245,7 @@ public:
 			_esp=mem_readw(where);
 			_ss=mem_readw(where+2);
 		}
+		cpu.mpl=3;
 	}
 	bool SetSelector(Bitu new_sel) {
 		valid=false;
@@ -433,6 +454,7 @@ doconforming:
 
 bool CPU_IO_Exception(Bitu port,Bitu size) {
 	if (cpu.pmode && ((GETFLAG_IOPL<cpu.cpl) || GETFLAG(VM))) {
+		cpu.mpl=0;
 		if (!cpu_tss.is386) goto doexception;
 		PhysPt bwhere=cpu_tss.base+0x66;
 		Bitu ofs=mem_readw(bwhere);
@@ -441,9 +463,11 @@ bool CPU_IO_Exception(Bitu port,Bitu size) {
 		Bitu map=mem_readw(bwhere);
 		Bitu mask=(0xffff>>(16-size)) << (port&7);
 		if (map & mask) goto doexception;
+		cpu.mpl=3;
 	}
 	return false;
 doexception:
+	cpu.mpl=3;
 	LOG(LOG_CPU,LOG_NORMAL)("IO Exception port %X",port);
 	return CPU_PrepareException(EXCEPTION_GP,0);
 }
@@ -497,8 +521,8 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 				return;
 			}
 		} 
-		Descriptor gate;
 
+		Descriptor gate;
 		if (!cpu.idt.GetDescriptor(num<<3,gate)) {
 			// zone66
 			CPU_Exception(EXCEPTION_GP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1);
@@ -980,8 +1004,8 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 		CPU_CHECK_COND((selector & 0xfffc)==0,
 			"CALL:CS selector zero",
 			EXCEPTION_GP,0)
-		Descriptor call;
 		Bitu rpl=selector & 3;
+		Descriptor call;
 		CPU_CHECK_COND(!cpu.gdt.GetDescriptor(selector,call),
 			"CALL:CS beyond limits",
 			EXCEPTION_GP,selector & 0xfffc)
@@ -1088,6 +1112,7 @@ call_code:
 						Bitu o_esp		= reg_esp;
 						Bitu o_ss		= SegValue(ss);
 						PhysPt o_stack  = SegPhys(ss)+(reg_esp & cpu.stack.mask);
+
 
 						// catch pagefaults
 						if (call.saved.gate.paramcount&31) {
