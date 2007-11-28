@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.104 2007-11-26 00:00:58 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.105 2007-11-28 23:06:54 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -711,15 +711,29 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				return;
 			} else {
 				if (use32) {
-					reg_eip=CPU_Pop32();
-					SegSet16(cs,CPU_Pop32());
+					Bit32u new_eip=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+					Bit32u tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
+					Bit32u new_cs=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					tempesp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
+					Bit32u new_flags=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					reg_esp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
+
+					reg_eip=new_eip;
+					SegSet16(cs,(Bit16u)(new_cs&0xffff));
 					/* IOPL can not be modified in v86 mode by IRET */
-					CPU_SetFlags(CPU_Pop32(),FMASK_NORMAL|FLAG_NT);
+					CPU_SetFlags(new_flags,FMASK_NORMAL|FLAG_NT);
 				} else {
-					reg_eip=CPU_Pop16();
-					SegSet16(cs,CPU_Pop16());
+					Bit16u new_eip=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+					Bit32u tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
+					Bit16u new_cs=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					tempesp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
+					Bit16u new_flags=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+					reg_esp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
+
+					reg_eip=(Bit32u)new_eip;
+					SegSet16(cs,new_cs);
 					/* IOPL can not be modified in v86 mode by IRET */
-					CPU_SetFlags(CPU_Pop16(),FMASK_NORMAL|FLAG_NT);
+					CPU_SetFlags(new_flags,FMASK_NORMAL|FLAG_NT);
 				}
 				cpu.code.big=false;
 				DestroyConditionFlags();
@@ -738,12 +752,18 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			return;
 		}
 		Bitu n_cs_sel,n_eip,n_flags;
+		Bit32u tempesp;
 		if (use32) {
-			// commit point
-			n_eip=CPU_Pop32();
-			n_cs_sel=CPU_Pop32() & 0xffff;
-			n_flags=CPU_Pop32();
+			n_eip=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+			tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
+			n_cs_sel=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask)) & 0xffff;
+			tempesp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
+			n_flags=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+			tempesp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
+
 			if ((n_flags & FLAG_VM) && (cpu.cpl==0)) {
+				// commit point
+				reg_esp=tempesp;
 				reg_eip=n_eip & 0xffff;
 				Bitu n_ss,n_esp,n_es,n_ds,n_fs,n_gs;
 				n_esp=CPU_Pop32();
@@ -770,9 +790,14 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			}
 			if (n_flags & FLAG_VM) E_Exit("IRET from pmode to v86 with CPL!=0");
 		} else {
-			n_eip=CPU_Pop16();
-			n_cs_sel=CPU_Pop16();
-			n_flags=(reg_flags & 0xffff0000) | CPU_Pop16();
+			n_eip=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+			tempesp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
+			n_cs_sel=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+			tempesp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
+			n_flags=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+			n_flags|=(reg_flags & 0xffff0000);
+			tempesp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
+
 			if (n_flags & FLAG_VM) E_Exit("VM Flag in 16-bit iret");
 		}
 		CPU_CHECK_COND((n_cs_sel & 0xfffc)==0,
@@ -809,6 +834,9 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 
 		if (n_cs_rpl==cpu.cpl) {	
 			/* Return to same level */
+
+			// commit point
+			reg_esp=tempesp;
 			Segs.phys[cs]=n_cs_desc.GetBase();
 			cpu.code.big=n_cs_desc.Big()>0;
 			Segs.val[cs]=n_cs_sel;
@@ -823,11 +851,13 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			/* Return to outer level */
 			Bitu n_ss,n_esp;
 			if (use32) {
-				n_esp=CPU_Pop32();
-				n_ss=CPU_Pop32() & 0xffff;
+				n_esp=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask));
+				tempesp=(tempesp&cpu.stack.notmask)|((tempesp+4)&cpu.stack.mask);
+				n_ss=mem_readd(SegPhys(ss) + (tempesp & cpu.stack.mask)) & 0xffff;
 			} else {
-				n_esp=CPU_Pop16();
-				n_ss=CPU_Pop16();
+				n_esp=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
+				tempesp=(tempesp&cpu.stack.notmask)|((tempesp+2)&cpu.stack.mask);
+				n_ss=mem_readw(SegPhys(ss) + (tempesp & cpu.stack.mask));
 			}
 			CPU_CHECK_COND((n_ss & 0xfffc)==0,
 				"IRET:Outer level:SS selector zero",
@@ -854,6 +884,8 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			CPU_CHECK_COND(!n_ss_desc.saved.seg.p,
 				"IRET:Outer level:Stack segment not present",
 				EXCEPTION_NP,n_ss & 0xfffc)
+
+			// commit point
 
 			Segs.phys[cs]=n_cs_desc.GetBase();
 			cpu.code.big=n_cs_desc.Big()>0;
@@ -883,34 +915,34 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 
 			// borland extender, zrdx
 			Descriptor desc;
-			cpu.gdt.GetDescriptor(SegValue(es),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(ds),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(fs),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(gs),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
-			default: break;	}
+			if (cpu.gdt.GetDescriptor(SegValue(es),desc))
+				switch (desc.Type()) {
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
+				default: break;	}
+			if (cpu.gdt.GetDescriptor(SegValue(ds),desc))
+				switch (desc.Type()) {
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
+				default: break;	}
+			if (cpu.gdt.GetDescriptor(SegValue(fs),desc))
+				switch (desc.Type()) {
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
+				default: break;	}
+			if (cpu.gdt.GetDescriptor(SegValue(gs),desc))
+				switch (desc.Type()) {
+				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
+				default: break;	}
 
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
