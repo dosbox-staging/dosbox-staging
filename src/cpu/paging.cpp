@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.30 2007-11-26 00:00:58 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.31 2007-11-29 21:01:46 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -124,7 +124,7 @@ static Bits PageFaultCore(void) {
 	X86PageEntry pentry;
 	pentry.load=phys_readd(entry->page_addr);
 	if (pentry.block.p && entry->cs == SegValue(cs) && entry->eip==reg_eip) {
-		cpu.cpl=entry->mpl;
+		cpu.mpl=entry->mpl;
 		return -1;
 	}
 	return 0;
@@ -151,7 +151,8 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu faultcode) {
 	entry->eip=reg_eip;
 	entry->page_addr=page_addr;
 	entry->mpl=cpu.mpl;
-	//Caused by a write by default?
+	cpu.mpl=3;
+
 	CPU_Exception(EXCEPTION_PF,faultcode);
 #if C_DEBUG
 //	DEBUG_EnableDebugger();
