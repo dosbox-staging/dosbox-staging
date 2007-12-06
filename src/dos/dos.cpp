@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.106 2007-11-18 10:30:12 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.107 2007-12-06 17:44:19 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -83,9 +83,10 @@ static Bitu DOS_21Handler(void) {
 		{
 			Bit16u port = real_readw(0x40,0);
 			if(port!=0 && serialports[0]) {
+				Bit8u status;
 				// RTS/DTR on
 				IO_WriteB(port+4,0x3);
-				serialports[0]->Getchar(&reg_al,true, 0xFFFFFFFF);
+				serialports[0]->Getchar(&reg_al, &status, true, 0xFFFFFFFF);
 			}
 		}
 		break;

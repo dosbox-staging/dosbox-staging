@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.69 2007-09-20 16:42:43 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.70 2007-12-06 17:44:18 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -431,7 +431,6 @@ static Bitu INT14_Handler(void)
 				// get result
 				reg_ah=IO_ReadB(port+5);
 				if(timeout) reg_ah |= 0x80;
-				reg_al=IO_ReadB(port+6);
 			}
 			CALLBACK_SCF(false);
 		}
@@ -445,7 +444,7 @@ static Bitu INT14_Handler(void)
 				// switch modem lines on
 				IO_WriteB(port+4,0x3);
 				// wait for something
-				timeout = !serialports[reg_dx]->Getchar(&buffer,true, 
+				timeout = !serialports[reg_dx]->Getchar(&buffer,&reg_ah,true, 
 					mem_readb(BIOS_COM1_TIMEOUT+reg_dx)*1000);
 
 				// RTS off

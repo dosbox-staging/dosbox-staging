@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.7 2007-02-22 08:41:16 qbix79 Exp $ */
+/* $Id: serialport.cpp,v 1.8 2007-12-06 17:44:19 qbix79 Exp $ */
 #include <string.h>
 #include <ctype.h>
 
@@ -44,7 +44,8 @@ bool device_COM::Read(Bit8u * data,Bit16u * size) {
 	sclass->Write_MCR(0x03);
 	for (Bit16u i=0; i<*size; i++)
 	{
-		if(!(sclass->Getchar(&data[i],true,1000))) {
+		Bit8u status;
+		if(!(sclass->Getchar(&data[i],&status,true,1000))) {
 			*size=i;
 			return true;
 		}
@@ -1082,7 +1083,7 @@ CSerial::~CSerial(void) {
 	for(Bitu i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
 };
-bool CSerial::Getchar(Bit8u* data, bool wait_dsr, Bitu timeout) {
+bool CSerial::Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout) {
 	
 	double starttime=PIC_FullIndex();
 	// wait for it to become empty
@@ -1093,19 +1094,19 @@ bool CSerial::Getchar(Bit8u* data, bool wait_dsr, Bitu timeout) {
 		if(!(starttime>PIC_FullIndex()-timeout)) {
 			#if SERIAL_DEBUG
 if(dbg_aux)
-		fprintf(debugfp,"%12.3f API read timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
+		fprintf(debugfp,"%12.3f Getchar status timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
 #endif
 			return false;
 		}
 	}
 	// wait for a byte to arrive
-	while((!(Read_LSR()&0x1))&&(starttime>PIC_FullIndex()-timeout))
+	while((!((*lsr=Read_LSR())&0x1))&&(starttime>PIC_FullIndex()-timeout))
 		CALLBACK_Idle();
 	
 	if(!(starttime>PIC_FullIndex()-timeout)) {
 		#if SERIAL_DEBUG
 if(dbg_aux)
-		fprintf(debugfp,"%12.3f API read timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
+		fprintf(debugfp,"%12.3f Getchar data timeout: MSR 0x%x\r\n", PIC_FullIndex(),Read_MSR());
 #endif
 		return false;
 	}
@@ -1146,7 +1147,7 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 		if(!(starttime>PIC_FullIndex()-timeout)) {
 #if SERIAL_DEBUG
 			if(dbg_aux)
-				fprintf(debugfp,"%12.3f API write timeout: MSR 0x%x\r\n",
+				fprintf(debugfp,"%12.3f Putchar timeout: MSR 0x%x\r\n",
 					PIC_FullIndex(),Read_MSR());
 #endif
 			return false;
