@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.105 2007-11-28 23:06:54 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.106 2007-12-07 20:49:19 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -216,6 +216,50 @@ bool CPU_PUSHF(Bitu use32) {
 	else CPU_Push16(reg_flags);
 	return false;
 }
+
+void CPU_CheckSegments(void) {
+	bool needs_invalidation=false;
+	Descriptor desc;
+	if (!cpu.gdt.GetDescriptor(SegValue(es),desc)) needs_invalidation=true;
+	else switch (desc.Type()) {
+		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+			if (cpu.cpl>desc.DPL()) needs_invalidation=true; break;
+		default: break;	}
+	if (needs_invalidation) CPU_SetSegGeneral(es,0);
+
+	needs_invalidation=false;
+	if (!cpu.gdt.GetDescriptor(SegValue(ds),desc)) needs_invalidation=true;
+	else switch (desc.Type()) {
+		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+			if (cpu.cpl>desc.DPL()) needs_invalidation=true; break;
+		default: break;	}
+	if (needs_invalidation) CPU_SetSegGeneral(ds,0);
+
+	needs_invalidation=false;
+	if (!cpu.gdt.GetDescriptor(SegValue(fs),desc)) needs_invalidation=true;
+	else switch (desc.Type()) {
+		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+			if (cpu.cpl>desc.DPL()) needs_invalidation=true; break;
+		default: break;	}
+	if (needs_invalidation) CPU_SetSegGeneral(fs,0);
+
+	needs_invalidation=false;
+	if (!cpu.gdt.GetDescriptor(SegValue(gs),desc)) needs_invalidation=true;
+	else switch (desc.Type()) {
+		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
+		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
+		case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
+			if (cpu.cpl>desc.DPL()) needs_invalidation=true; break;
+		default: break;	}
+	if (needs_invalidation) CPU_SetSegGeneral(gs,0);
+}
+
 
 class TaskStateSegment {
 public:
@@ -914,35 +958,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			}
 
 			// borland extender, zrdx
-			Descriptor desc;
-			if (cpu.gdt.GetDescriptor(SegValue(es),desc))
-				switch (desc.Type()) {
-				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
-				default: break;	}
-			if (cpu.gdt.GetDescriptor(SegValue(ds),desc))
-				switch (desc.Type()) {
-				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
-				default: break;	}
-			if (cpu.gdt.GetDescriptor(SegValue(fs),desc))
-				switch (desc.Type()) {
-				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
-				default: break;	}
-			if (cpu.gdt.GetDescriptor(SegValue(gs),desc))
-				switch (desc.Type()) {
-				case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-				case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-				case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-					if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
-				default: break;	}
+			CPU_CheckSegments();
 
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
@@ -1410,35 +1426,7 @@ RET_same_level:
 				reg_sp=(n_esp & 0xffff)+bytes;
 			}
 
-			Descriptor desc;
-			cpu.gdt.GetDescriptor(SegValue(es),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(es,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(ds),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(ds,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(fs),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(fs,0); break;
-			default: break;	}
-			cpu.gdt.GetDescriptor(SegValue(gs),desc);
-			switch (desc.Type()) {
-			case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
-			case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
-			case DESC_CODE_N_NC_A:	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:	case DESC_CODE_R_NC_NA:
-				if (cpu.cpl>desc.DPL()) CPU_SetSegGeneral(gs,0); break;
-			default: break;	}
+			CPU_CheckSegments();
 
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
@@ -2220,6 +2208,7 @@ public:
 			}
 			CPU_CycleAutoAdjust=false;
 		}
+
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
 		const char * core=section->Get_string("core");
