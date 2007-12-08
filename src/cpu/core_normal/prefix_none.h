@@ -687,14 +687,18 @@
 		continue;
 	CASE_W(0xc4)												/* LES */
 		{	
-			GetRMrw;GetEAa;
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(es,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_W(0xc5)												/* LDS */
 		{	
-			GetRMrw;GetEAa;
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(ds,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;

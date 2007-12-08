@@ -528,7 +528,7 @@ static OpCode OpCodeTable[1024]={
 /* 0x2f0 - 0x2f7 */
 {D_LOCK		,0			,0		,0		},{D_ICEBP	,0			,0		,0		},
 {L_PREREPNE	,0			,0		,0		},{L_PREREP	,0			,0		,0		},
-{0			,0			,0		,0		},{D_CMC	,0			,0		,0		},
+{D_HLT		,0			,0		,0		},{D_CMC	,0			,0		,0		},
 {L_MODRM	,8			,0		,M_GRP	},{L_MODRM	,0xa		,0		,M_GRP	},
 /* 0x2f8 - 0x2ff */
 {D_CLC		,0			,0		,0		},{D_STC	,0			,0		,0		},

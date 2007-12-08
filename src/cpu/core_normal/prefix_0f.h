@@ -344,7 +344,9 @@
 		break;
 	CASE_0F_W(0xb2)												/* LSS Ew */
 		{	
-			GetRMrw;GetEAa;
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(ss,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
@@ -367,14 +369,18 @@
 		}
 	CASE_0F_W(0xb4)												/* LFS Ew */
 		{	
-			GetRMrw;GetEAa;
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(fs,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;
 		}
 	CASE_0F_W(0xb5)												/* LGS Ew */
 		{	
-			GetRMrw;GetEAa;
+			GetRMrw;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(gs,LoadMw(eaa+2))) RUNEXCEPTION();
 			*rmrw=LoadMw(eaa);
 			break;

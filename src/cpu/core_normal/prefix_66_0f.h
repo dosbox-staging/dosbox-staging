@@ -237,7 +237,9 @@
 		}
 	CASE_0F_D(0xb2)												/* LSS Ed */
 		{	
-			GetRMrd;GetEAa;
+			GetRMrd;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(ss,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
@@ -260,14 +262,18 @@
 		}
 	CASE_0F_D(0xb4)												/* LFS Ed */
 		{	
-			GetRMrd;GetEAa;
+			GetRMrd;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(fs,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
 		}
 	CASE_0F_D(0xb5)												/* LGS Ed */
 		{	
-			GetRMrd;GetEAa;
+			GetRMrd;
+			if (rm >= 0xc0) goto illegal_opcode;
+			GetEAa;
 			if (CPU_SetSegGeneral(gs,LoadMw(eaa+4))) RUNEXCEPTION();
 			*rmrd=LoadMd(eaa);
 			break;
