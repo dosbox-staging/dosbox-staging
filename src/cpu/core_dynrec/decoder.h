@@ -218,8 +218,18 @@ restart_prefix:
 
 				case 0xaf:dyn_imul_gvev(0);break;
 
-				case 0xb4:dyn_load_seg_off_ea(DRC_SEG_FS);break;
-				case 0xb5:dyn_load_seg_off_ea(DRC_SEG_GS);break;
+				// lfs
+				case 0xb4:
+					dyn_get_modrm();
+					if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+					dyn_load_seg_off_ea(DRC_SEG_FS);
+					break;
+				// lgs
+				case 0xb5:
+					dyn_get_modrm();
+					if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+					dyn_load_seg_off_ea(DRC_SEG_GS);
+					break;
 
 				// zero-extending moves
 				case 0xb6:dyn_movx_ev_gb(false);break;
@@ -413,8 +423,17 @@ restart_prefix:
 		case 0xc2:dyn_ret_near(decode_fetchw());goto finish_block;
 		case 0xc3:dyn_ret_near(0);goto finish_block;
 
-		case 0xc4:dyn_load_seg_off_ea(DRC_SEG_ES);break;
-		case 0xc5:dyn_load_seg_off_ea(DRC_SEG_DS);break;
+		// les
+		case 0xc4:
+			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			dyn_load_seg_off_ea(DRC_SEG_ES);
+			break;
+		// lds
+		case 0xc5:
+			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			dyn_load_seg_off_ea(DRC_SEG_DS);break;
 
 		// 'mov []/reg8/16/32,imm8/16/32'
 		case 0xc6:dyn_dop_ebib_mov();break;

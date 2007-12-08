@@ -1589,8 +1589,7 @@ static void dyn_load_seg(SegNames seg,DynReg * src) {
 }
 
 static void dyn_load_seg_off_ea(SegNames seg) {
-	dyn_get_modrm();
-	if (GCC_UNLIKELY(decode.modrm.mod<3)) {
+	if (decode.modrm.mod<3) {
 		dyn_fill_ea();
 		gen_lea(DREG(TMPB),DREG(EA),0,0,decode.big_op ? 4:2);
 		dyn_read_word(DREG(TMPB),DREG(TMPB),false);
@@ -1666,7 +1665,7 @@ static void dyn_leave(void) {
 }
 
 static void dyn_segprefix(SegNames seg) {
-	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
+//	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
 	decode.segprefix=&DynRegs[G_ES+seg];
 }
 
@@ -1988,8 +1987,16 @@ restart_prefix:
 			/* Imul Ev,Gv */
 			case 0xaf:dyn_imul_gvev(0);break;
 			/* LFS,LGS */
-			case 0xb4:dyn_load_seg_off_ea(fs);break;
-			case 0xb5:dyn_load_seg_off_ea(gs);break;
+			case 0xb4:
+				dyn_get_modrm();
+				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				dyn_load_seg_off_ea(fs);
+				break;
+			case 0xb5:
+				dyn_get_modrm();
+				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				dyn_load_seg_off_ea(gs);
+				break;
 			/* MOVZX Gv,Eb/Ew */
 			case 0xb6:dyn_mov_ev_gb(false);break;
 			case 0xb7:dyn_mov_ev_gw(false);break;
@@ -2240,9 +2247,18 @@ restart_prefix:
 		//RET near Iw / Ret
 		case 0xc2:dyn_ret_near(decode_fetchw());goto finish_block;
 		case 0xc3:dyn_ret_near(0);goto finish_block;
-		//LES/LDS
-		case 0xc4:dyn_load_seg_off_ea(es);break;
-		case 0xc5:dyn_load_seg_off_ea(ds);break;
+		//LES
+		case 0xc4:
+			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			dyn_load_seg_off_ea(es);
+			break;
+		//LDS
+		case 0xc5:
+			dyn_get_modrm();
+			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			dyn_load_seg_off_ea(ds);
+			break;
 		// MOV Eb/Ev,Ib/Iv
 		case 0xc6:dyn_mov_ebib();break;
 		case 0xc7:dyn_mov_eviv();break;

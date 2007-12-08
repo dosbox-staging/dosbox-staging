@@ -453,7 +453,7 @@ static void dyn_pop_ev(void) {
 
 
 static void dyn_segprefix(Bit8u seg) {
-	if (GCC_UNLIKELY(decode.seg_prefix_used)) IllegalOptionDynrec("dyn_segprefix");
+//	if (GCC_UNLIKELY(decode.seg_prefix_used)) IllegalOptionDynrec("dyn_segprefix");
 	decode.seg_prefix=seg;
 	decode.seg_prefix_used=true;
 }
@@ -472,7 +472,6 @@ static void dyn_segprefix(Bit8u seg) {
 }
 
 static void dyn_load_seg_off_ea(Bit8u seg) {
-	dyn_get_modrm();
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
 		gen_protect_addr_reg();
