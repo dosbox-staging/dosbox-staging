@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.41 2007-06-12 20:22:08 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.42 2007-12-09 17:02:55 c2woody Exp $ */
 
 #include <list>
 
@@ -28,7 +28,7 @@
 #include "timer.h"
 #include "setup.h"
 
-#define PIC_QUEUESIZE 128
+#define PIC_QUEUESIZE 512
 
 struct IRQ_Block {
 	bool masked;

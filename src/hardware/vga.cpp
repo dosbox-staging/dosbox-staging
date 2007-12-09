@@ -18,6 +18,7 @@
 
 
 #include "dosbox.h"
+//#include "setup.h"
 #include "video.h"
 #include "pic.h"
 #include "vga.h"
@@ -148,6 +149,9 @@ void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3) {
 }
 
 void VGA_Init(Section* sec) {
+//	Section_prop * section=static_cast<Section_prop *>(sec);
+//	vga.screenflip = section->Get_int("screenflip");
+	vga.screenflip = 0;
 	vga.draw.resizing=false;
 	vga.mode=M_ERROR;			//For first init
 	VGA_SetupMemory();

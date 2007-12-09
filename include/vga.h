@@ -129,6 +129,7 @@ typedef struct {
 		double vdend, vtotal;
 		double hdend, htotal;
 		double parts;
+		double virtline;
 	} delay;
 	double aspect_ratio;
 	bool double_scan;
@@ -318,6 +319,7 @@ typedef struct {
 	Bitu first_changed;
 	Bit8u combine[16];
 	RGBEntry rgb[0x100];
+	Bit16u xlat16[256];
 } VGA_Dac;
 
 typedef struct {
@@ -354,6 +356,7 @@ typedef struct {
 typedef struct {
 	VGAModes mode;								/* The mode the vga system is in */
 	VGAModes lastmode;
+	Bits screenflip;
 	Bit8u misc_output;
 	VGA_Draw draw;
 	VGA_Config config;

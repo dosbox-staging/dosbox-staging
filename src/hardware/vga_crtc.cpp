@@ -138,7 +138,9 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	case 0x09: /* Maximum Scan Line Register */
 		if (IS_VGA_ARCH)
 			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
-		if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
+
+		// don't call resize on doublescan change (magic.exe by European Technology)
+		if ((vga.crtc.maximum_scan_line ^ val) & ((svgaCard==SVGA_None)?0x3f:0xbf)) {
 			crtc(maximum_scan_line)=val;
 			VGA_StartResize();
 		} else crtc(maximum_scan_line)=val;
