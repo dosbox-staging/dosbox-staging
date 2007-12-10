@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.44 2007-10-20 16:01:40 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.45 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -574,81 +574,39 @@ public:
 	}
 };
 
+extern void XGA_Write(Bitu port, Bitu val, Bitu len);
+extern Bitu XGA_Read(Bitu port, Bitu len);
+
 class VGA_MMIO_Handler : public PageHandler {
 public:
-	Bit16u regmem[16384];
 	VGA_MMIO_Handler() {
 		flags=PFLAG_NOCODE;
-		//memset(&regmem[0], 0, sizeof(regmem));
 	}
 	void writeb(PhysPt addr,Bitu val) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) IO_WriteB(port, val);
-		if(port <= 0x4000) {
-			if(port == 0x0000) {
-				IO_WriteB(0xe2e0, val);
-			} else {
-				IO_WriteB(0xe2e8, val);
-			}
-		}
-		//LOG_MSG("MMIO: Write byte to %x with %x", addr, val);
+		XGA_Write(port, val, 1);
 	}
 	void writew(PhysPt addr,Bitu val) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) IO_WriteW(port, val);
-		if(port == 0x8118) IO_WriteW(0x9ae8, val);
-		if(port <= 0x4000) {
-			if(port == 0x0000) {
-                IO_WriteW(0xe2e0, val);
-			} else {
-			IO_WriteW(0xe2e8, val);
-		}
-		}
-		//LOG_MSG("MMIO: Write word to %x with %x", addr, val);	
+		XGA_Write(port, val, 2);
 	}
 	void writed(PhysPt addr,Bitu val) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) IO_WriteD(port, val);
-		if(port == 0x8100) {
-			IO_WriteW(0x86e8, (val >> 16));
-			IO_WriteW(0x82e8, (val & 0xffff));
-		}
-		if(port == 0x8148) {
-			IO_WriteW(0x96e8, (val >> 16));
-			IO_WriteW(0xbee8, (val & 0xffff));
-		}
-		if(port <= 0x4000) {
-			if(port == 0x0000) {
-				IO_WriteW(0xe2e0, (val & 0xffff));
-				IO_WriteW(0xe2e8, (val >> 16));
-			} else {
-				IO_WriteW(0xe2e8, (val & 0xffff));
-				IO_WriteW(0xe2e8, (val >> 16));
-			}
-		}
-
-		//LOG_MSG("MMIO: Write dword to %x with %x", addr, val);
+		XGA_Write(port, val, 4);
 	}
 
 	Bitu readb(PhysPt addr) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) return IO_ReadB(port);
-		//LOG_MSG("MMIO: Read byte from %x", addr);
-		return 0x00;
+		return XGA_Read(port, 1);
 	}
 	Bitu readw(PhysPt addr) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) return IO_ReadW(port);
-		//LOG_MSG("MMIO: Read word from %x", addr);
-		return 0x00;
+		return XGA_Read(port, 2);
 	}
 	Bitu readd(PhysPt addr) {
 		Bitu port = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		if(port >= 0x82E8) return IO_ReadD(port);
-		//LOG_MSG("MMIO: Read dword from %x", addr);
-		return 0x00;
+		return XGA_Read(port, 4);
 	}
-
 };
 
 class VGA_TANDY_PageHandler : public PageHandler {
@@ -845,7 +803,7 @@ void VGA_SetupHandlers(void) {
 		MEM_ResetPageHandler( VGA_PAGE_B0, 8 );
 		break;
 	}
-	if(((vga.s3.ext_mem_ctrl & 0x10) != 0x00) /*&& (vga.mode == M_LIN8)*/)
+	if(vga.s3.ext_mem_ctrl & 0x10)
 		MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
 range_done:
 	PAGING_ClearTLB();
@@ -859,17 +817,8 @@ void VGA_StartUpdateLFB(void) {
 #else
 	vga.lfb.handler = &vgaph.lfbchanges;
 #endif
-	MEM_SetLFB(vga.s3.la_window << 4 ,VGA_MEMORY/4096, vga.lfb.handler );
+	MEM_SetLFB(vga.s3.la_window << 4 ,VGA_MEMORY/4096, vga.lfb.handler, &vgaph.mmio);
 }
-
-void VGA_MapMMIO(void) {
-	MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
-}
-
-void VGA_UnmapMMIO(void) {
-	//MEM_SetPageHandler(VGA_PAGE_A0, &ram_page_handler);
-}
-
 
 void VGA_SetupMemory() {
 	// allocate 16byte-aligned memory

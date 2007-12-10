@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_misc.cpp,v 1.35 2007-10-13 16:34:06 c2woody Exp $ */
+/* $Id: vga_misc.cpp,v 1.36 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -30,7 +30,7 @@ Bitu vga_read_p3d4(Bitu port,Bitu iolen);
 void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
-static Bitu vga_read_p3da(Bitu port,Bitu iolen) {
+Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 	vga.internal.attrindex=false;
 	vga.tandy.pcjr_flipflop=false;
 	Bit8u retval=0;

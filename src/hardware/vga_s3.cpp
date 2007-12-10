@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.8 2007-06-28 16:02:27 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.9 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -70,8 +70,14 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x39:	/* CR39 Register Lock 2 */
 		vga.s3.reg_lock2=val;
 		break;
+	case 0x3a:
+		vga.s3.reg_3a = val;
+		break;
 	case 0x40:  /* CR40 System Config */
 		vga.s3.reg_40 = val;
+		break;
+	case 0x41:  /* CR41 BIOS flags */
+		vga.s3.reg_41 = val;
 		break;
 	case 0x43:	/* CR43 Extended Mode */
 		vga.s3.reg_43=val & ~0x4;
@@ -114,16 +120,21 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.s3.hgc.bstackpos++;
 		break;
 	case 0x4c:  /* HGC start address high byte*/
-		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | ((val & 0xff) << 8);
+		vga.s3.hgc.startaddr &=0xff;
+		vga.s3.hgc.startaddr |= ((val & 0xf) << 8);
 		break;
 	case 0x4d:  /* HGC start address low byte*/
-		vga.s3.hgc.startaddr = vga.s3.hgc.startaddr | (val & 0xff);
+		vga.s3.hgc.startaddr &=0xff00;
+		vga.s3.hgc.startaddr |= (val & 0xff);
 		break;
 	case 0x4e:  /* HGC pattern start X */
 		vga.s3.hgc.posx = val;
 		break;
-	case 0x4f:  /* HGC pattern start X */
+	case 0x4f:  /* HGC pattern start Y */
 		vga.s3.hgc.posy = val;
+		break;
+	case 0x50:  // Extended System Control 1
+		vga.s3.reg_50 = val;
 		break;
 	case 0x51:	/* Extended System Control 2 */
 		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7
@@ -161,17 +172,17 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 			7	(not 864/964) Enable EPROM Write. If set enables flash memory write
 				control to the BIOS ROM address
 		*/
+	case 0x52:  // Extended System Control 1
+		vga.s3.reg_52 = val;
+		break;
 	case 0x53:
-		if((val & 0x10) != (vga.s3.ext_mem_ctrl & 0x10)) {
-			/* Map or unmap MMIO */
-			if ((val & 0x10) != 0) {
-				//LOG_MSG("VGA: Mapping Memory Mapped I/O to 0xA0000");
-//				VGA_MapMMIO();
-			} else {
-//				VGA_UnmapMMIO();
-			}
+		// Map or unmap MMIO
+		// bit 4 = MMIO at A0000
+		// bit 3 = MMIO at LFB + 16M (should be fine if its always enabled for now)
+		if(vga.s3.ext_mem_ctrl!=val) {
+			vga.s3.ext_mem_ctrl = val;
+			VGA_SetupHandlers();
 		}
-		vga.s3.ext_mem_ctrl = val;
 		break;
 	case 0x55:	/* Extended Video DAC Control */
 		vga.s3.reg_55=val;
@@ -302,6 +313,9 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.s3.svga_bank.b.bank=val & 0x3f;
 		VGA_SetupHandlers();
 		break;
+	case 0x6b:	// BIOS scratchpad: LFB adress
+		vga.s3.reg_6b=(Bit8u)val;
+		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:CRTC:Write to illegal index %2X", reg );
 		break;
@@ -317,38 +331,56 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return 0x11;		
 		//Trio 64 id
 	case 0x2f:	/* Revision */
-		return 0x00;
+		return 0x44;
 	case 0x30:	/* CR30 Chip ID/REV register */
-		return 0xe0;		//Trio+ dual byte
-		// Trio32/64 has 0xe0. extended
+		return 0xe1;		//Trio+ dual byte
+		//return 0xc0;		// 864
+
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO mix in bits from baseaddress;
 		return 	vga.s3.reg_31;	
 	case 0x35:	/* CR35 CRT Register Lock */
 		return vga.s3.reg_35|(vga.s3.svga_bank.b.bank & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
-		//return 0x8f;
-		return 0x8e; /* PCI version */
+		return 0x92; /* PCI version */
 		//2 Mb PCI and some bios settings
 	case 0x37: /* Reset state read 2 */
 		return 0x2b;
 	case 0x38: /* CR38 Register Lock 1 */
 		return vga.s3.reg_lock1;
 	case 0x39: /* CR39 Register Lock 2 */
-		return vga.s3.reg_lock2;
+        return vga.s3.reg_lock2;
+	case 0x3a:
+		return vga.s3.reg_3a;
 	case 0x40: /* CR40 system config */
 		return vga.s3.reg_40;
+	case 0x41: /* CR40 system config */
+		return vga.s3.reg_41;
+	case 0x42: // not interlaced
+		return 0x0d;
 	case 0x43:	/* CR43 Extended Mode */
 		return vga.s3.reg_43|((vga.config.scan_len>>6)&0x4);
 	case 0x45:  /* Hardware cursor mode */
 		vga.s3.hgc.bstackpos = 0;
 		vga.s3.hgc.fstackpos = 0;
-		return vga.s3.hgc.curmode;
+		return vga.s3.hgc.curmode|0xa0;
+	case 0x46:
+		return vga.s3.hgc.originx>>8;
+	case 0x47:  /*  HGC orgX */
+		return vga.s3.hgc.originx&0xff;
+	case 0x48:
+		return vga.s3.hgc.originy>>8;
+	case 0x49:  /*  HGC orgY */
+		return vga.s3.hgc.originy&0xff;
+	case 0x50:	// CR50 Extended System Control 1
+		return vga.s3.reg_50;
 	case 0x51:	/* Extended System Control 2 */
 		return ((vga.config.display_start >> 16) & 3 ) |
 				((vga.s3.svga_bank.b.bank & 0x30) >> 2) |
 				((vga.config.scan_len & 0x300) >> 4) |
 				vga.s3.reg_51;
+	case 0x52:	// CR52 Extended BIOS flags 1
+		return vga.s3.reg_52;
 	case 0x53:
 		return vga.s3.ext_mem_ctrl;
 	case 0x55:	/* Extended Video DAC Control */
@@ -369,6 +401,8 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16); 
 	case 0x6a:	/* Extended System Control 4 */
 		return (Bit8u)(vga.s3.svga_bank.b.bank & 0x3f);
+	case 0x6b:	// BIOS scatchpad: LFB address
+		return vga.s3.reg_6b; 
 	default:
 		return 0x00;
 	}

@@ -178,12 +178,17 @@ typedef struct {
 	Bit8u reg_lock2;
 	Bit8u reg_31;
 	Bit8u reg_35;
+	Bit8u reg_3a; // 4/8/doublepixel bit in there
 	Bit8u reg_40; // 8415/A functionality register
+	Bit8u reg_41; // BIOS flags 
 	Bit8u reg_43;
 	Bit8u reg_45; // Hardware graphics cursor
-	Bit8u reg_58;
+	Bit8u reg_50;
 	Bit8u reg_51;
+	Bit8u reg_52;
 	Bit8u reg_55;
+	Bit8u reg_58;
+	Bit8u reg_6b; // LFB BIOS scratchpad
 	Bit8u ex_hor_overflow;
 	Bit8u ex_ver_overflow;
 	Bit16u la_window;

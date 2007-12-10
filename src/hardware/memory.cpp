@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.52 2007-09-29 13:23:59 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.53 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -48,6 +48,7 @@ static struct MemoryBlock {
 		Bitu		end_page;
 		Bitu		pages;
 		PageHandler *handler;
+		PageHandler *mmiohandler;
 	} lfb;
 	struct {
 		bool enabled;
@@ -122,8 +123,9 @@ static IllegalPageHandler illegal_page_handler;
 static RAMPageHandler ram_page_handler;
 static ROMPageHandler rom_page_handler;
 
-void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler) {
+void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmiohandler) {
 	memory.lfb.handler=handler;
+	memory.lfb.mmiohandler=mmiohandler;
 	memory.lfb.start_page=page;
 	memory.lfb.end_page=page+pages;
 	memory.lfb.pages=pages;
@@ -135,6 +137,9 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 		return memory.phandlers[phys_page];
 	} else if ((phys_page>=memory.lfb.start_page) && (phys_page<memory.lfb.end_page)) {
 		return memory.lfb.handler;
+	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
+				(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
+		return memory.lfb.mmiohandler;
 	}
 	return &illegal_page_handler;
 }

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.29 2007-11-24 17:26:48 c2woody Exp $ */
+/* $Id: paging.h,v 1.30 2007-12-10 22:11:13 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -94,7 +94,7 @@ void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
 bool PAGING_MakePhysPage(Bitu & page);
 
-void MEM_SetLFB( Bitu page, Bitu pages, PageHandler *handler);
+void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmiohandler);
 void MEM_SetPageHandler(Bitu phys_page, Bitu pages, PageHandler * handler);
 void MEM_ResetPageHandler(Bitu phys_page, Bitu pages);
 

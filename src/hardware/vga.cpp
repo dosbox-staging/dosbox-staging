@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga.cpp,v 1.31 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include "dosbox.h"
 //#include "setup.h"
@@ -48,26 +49,29 @@ void VGA_SetMode(VGAModes mode) {
 
 void VGA_DetermineMode(void) {
 	/* Test for VGA output active or direct color modes */
-	if (vga.s3.misc_control_2 & 0xf0) {
-		switch (vga.s3.misc_control_2 >> 4) {
-		case 1:VGA_SetMode(M_LIN8);break;
-		case 3:VGA_SetMode(M_LIN15);break;
-		case 5:VGA_SetMode(M_LIN16);break;
-		case 13:VGA_SetMode(M_LIN32);break;
+	switch (vga.s3.misc_control_2 >> 4) {
+	case 0:
+		if (vga.attr.mode_control & 1) { // graphics mode
+			if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) {
+				// access above 256k?
+				if (vga.s3.reg_31 & 0x8) VGA_SetMode(M_LIN8);
+				else VGA_SetMode(M_VGA);
+			}
+			else if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
+			else if ((vga.gfx.miscellaneous & 0x0c)==0x0c) VGA_SetMode(M_CGA2);
+			else {
+				// access above 256k?
+				if (vga.s3.reg_31 & 0x8) VGA_SetMode(M_LIN4);
+				else VGA_SetMode(M_EGA);
+			}
+		} else {
+			VGA_SetMode(M_TEXT);
 		}
-	/* Test for graphics or alphanumeric mode */
-	} else if (vga.attr.mode_control & 1) {
-		if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) VGA_SetMode(M_VGA);
-		else if (vga.gfx.mode & 0x20) VGA_SetMode(M_CGA4);
-		else if ((vga.gfx.miscellaneous & 0x0c)==0x0c) VGA_SetMode(M_CGA2);
-		else {
-			if (vga.s3.reg_31 & 0x8) 
-				VGA_SetMode(M_LIN4);
-			else
-				VGA_SetMode(M_EGA);
-		}
-	} else {
-		VGA_SetMode(M_TEXT);
+		break;
+	case 1:VGA_SetMode(M_LIN8);break;
+	case 3:VGA_SetMode(M_LIN15);break;
+	case 5:VGA_SetMode(M_LIN16);break;
+	case 13:VGA_SetMode(M_LIN32);break;
 	}
 }
 

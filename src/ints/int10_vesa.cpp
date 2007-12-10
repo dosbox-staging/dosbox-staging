@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.29 2007-09-24 20:50:40 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.30 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -115,7 +115,7 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	}
 	mem_writed(buffer+0x0a,0x0);					//Capabilities and flags
 	mem_writed(buffer+0x0e,int10.rom.vesa_modes);	//VESA Mode list
-	mem_writew(buffer+0x12,32);						//32 64kb blocks for 2 mb memory
+	mem_writew(buffer+0x12,Bit16u(VGA_MEMORY/(64*1024))); // memory size in 64kb blocks
 	return 0x00;
 }
 
@@ -124,6 +124,7 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	memset(&minfo,0,sizeof(minfo));
 	PhysPt buf=PhysMake(seg,off);
 	Bitu pageSize;
+	Bit8u modeAttributes;
 	Bitu i=0;
 
 	mode&=0x3fff;	// vbe2 compatible, ignore lfb and keep screen content bits
@@ -138,27 +139,33 @@ foundit:
 	case M_LIN4:
 		pageSize = mblock->sheight * mblock->swidth/2;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(512*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
 		var_write(&minfo.NumberOfPlanes,0x4);
 		var_write(&minfo.BitsPerPixel,4);
 		var_write(&minfo.MemoryModel,3);	//ega planar mode
-		var_write(&minfo.ModeAttributes,0x1b);	//Color, graphics, no linear buffer
+		modeAttributes = 0x1b;	// Color, graphics, no linear buffer
+
+		if(pageSize > 512*1024) { // this limitation is not on the real card
+			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
+			var_write(&minfo.NumberOfImagePages,0);
+		} else {
+			var_write(&minfo.ModeAttributes, modeAttributes);
+			Bitu pages = (512*1024 / pageSize)-1;
+			var_write(&minfo.NumberOfImagePages,pages);
+		}
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,8);
 		var_write(&minfo.MemoryModel,4);		//packed pixel
-		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
+		modeAttributes = 0x9b;	// Color, graphics, linear buffer
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,15);
@@ -171,12 +178,11 @@ foundit:
 		var_write(&minfo.BlueMaskPos,0);
 		var_write(&minfo.ReservedMaskSize,0x01);
 		var_write(&minfo.ReservedMaskPos,0x0f);
-		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
+		modeAttributes = 0x9b;	// Color, graphics, linear buffer
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,16);
@@ -187,12 +193,11 @@ foundit:
 		var_write(&minfo.GreenMaskPos,5);
 		var_write(&minfo.BlueMaskSize,5);
 		var_write(&minfo.BlueMaskPos,0);
-		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
+		modeAttributes = 0x9b;	// Color, graphics, linear buffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*4);
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,32);
@@ -205,22 +210,33 @@ foundit:
 		var_write(&minfo.BlueMaskPos,0x0);
 		var_write(&minfo.ReservedMaskSize,0x8);
 		var_write(&minfo.ReservedMaskPos,0x18);
-		var_write(&minfo.ModeAttributes,0x9b);	//Color, graphics, linear buffer
+		modeAttributes = 0x9b;	// Color, graphics, linear buffer
 		break;
 /*	case M_TEXT:
 		pageSize = mblock->sheight/8 * mblock->swidth*2/8;
 		pageSize = (pageSize | 15) & ~ 15;
-		var_write(&minfo.NumberOfImagePages,(2*1024*1024 / pageSize)-1);
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2/8);
 		var_write(&minfo.NumberOfPlanes,0x4);
 		var_write(&minfo.BitsPerPixel,4);
 		var_write(&minfo.MemoryModel,0);	//Text
-		var_write(&minfo.ModeAttributes,0x0f);	//Color, text, bios output
+		modeAttributes = 0x0f;	//Color, text, bios output
 		break; */
 	default:
 		return 0x1;
 	}
-	var_write(&minfo.WinAAttributes,0x7);	//Exists/readable/writable
+	var_write(&minfo.WinAAttributes,0x7);	// Exists/readable/writable
+	
+	if(mblock->type != M_LIN4)
+		if(pageSize > VGA_MEMORY) {
+			// Mode not supported by current hardware configuration
+			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
+			var_write(&minfo.NumberOfImagePages,0);
+		} else {
+			var_write(&minfo.ModeAttributes, modeAttributes);
+			Bitu pages = (VGA_MEMORY / pageSize)-1;
+			var_write(&minfo.NumberOfImagePages,pages);
+		}
+
 	if (mblock->type==M_TEXT) {
 		var_write(&minfo.WinGranularity,32);
 		var_write(&minfo.WinSize,32);
@@ -333,15 +349,17 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	}
 	switch (subcall) {
 	case 0x00:	/* Set in pixels */
-		vga.config.scan_len = (val * bpp);
+		if(CurMode->type==M_LIN4) vga.config.scan_len=val/2;
+		else vga.config.scan_len = (val * bpp);
 		break;
 	case 0x02:	/* Set in bytes */
-		vga.config.scan_len = val;
+		if(CurMode->type==M_LIN4) vga.config.scan_len = val*4;
+		else vga.config.scan_len = val;
 		break;
 	case 0x03:	/* Get maximum */
 		bytes=0x400*4;
 		pixels=bytes/bpp;
-		lines = 2*1024*1024 / bytes;
+		lines = VGA_MEMORY / bytes;
 		return 0x00;
 	case 0x01:	/* Get lengths */
 		break;
@@ -354,9 +372,16 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 			vga.config.scan_len += 8;
 		vga.config.scan_len /= 8;
 	}
-	pixels=(vga.config.scan_len*8)/bpp;
-	bytes=vga.config.scan_len*8;
-	lines = 2*1024*1024 / bytes;
+	if(CurMode->type==M_LIN4) {
+		pixels=(vga.config.scan_len*16)/bpp;
+		bytes=vga.config.scan_len*2;
+		lines = Bit16u(VGA_MEMORY /( bytes*4));
+	}
+	else {
+		pixels=(vga.config.scan_len*8)/bpp;
+		bytes=vga.config.scan_len*8;
+		lines = Bit16u(VGA_MEMORY / bytes);
+	}
 	VGA_StartResize();
 	return 0x0;
 }
@@ -366,7 +391,7 @@ Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y) {
 	Bitu start;
 	switch (CurMode->type) {
 	case M_LIN4:
-		start=vga.config.scan_len*8*y+x;
+		start=vga.config.scan_len*16*y+x;
 		vga.config.display_start=start/8;
 		IO_Read(0x3da);
 		IO_Write(0x3c0,0x13+32);

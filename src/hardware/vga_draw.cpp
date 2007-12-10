@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.88 2007-12-09 17:02:55 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.89 2007-12-10 22:11:13 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -207,7 +207,7 @@ static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = vidstart / vga.draw.width;
+		Bitu lineat = (vidstart-(vga.config.real_start<<2)) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
 		} else {
@@ -267,7 +267,7 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 
 static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = (vidstart >> 1) / vga.draw.width;
+		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
 		} else {
@@ -330,7 +330,7 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
 
 static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
 	if(vga.s3.hgc.curmode & 0x1) {
-		Bitu lineat = (vidstart >> 2) / vga.draw.width;
+		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
 		} else {
@@ -379,7 +379,7 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
 						TempLine[xat]   = ~TempLine[xat];
 						TempLine[xat+1] = ~TempLine[xat+1];
 						TempLine[xat+2] = ~TempLine[xat+2];
-						TempLine[xat+2] = ~TempLine[xat+3];
+						TempLine[xat+3] = ~TempLine[xat+3];
 						break;
 				}
 				xat+=4;
@@ -586,7 +586,7 @@ skip_cursor:
 
 static void VGA_VerticalDisplayEnd(Bitu val) {
 //	vga.config.retrace=true;
-	vga.config.real_start=vga.config.display_start & ((2*1024*1024)-1);
+	vga.config.real_start=vga.config.display_start & ((VGA_MEMORY)-1);
 }
 
 static void VGA_HorizontalTimer(void) {
@@ -909,53 +909,60 @@ void VGA_SetupDrawing(Bitu val) {
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
 	if (IS_EGAVGA_ARCH) {
-		htotal = 2 + vga.crtc.horizontal_total;
-		if (IS_VGA_ARCH) htotal += 3;
-		hdend = 1 + vga.crtc.horizontal_display_end;
-		hbstart = vga.crtc.start_horizontal_blanking;
+		htotal = vga.crtc.horizontal_total;
+		hdend = vga.crtc.horizontal_display_end;
 		hbend = vga.crtc.end_horizontal_blanking&0x1F;
-		if (IS_VGA_ARCH) hbend |= (vga.crtc.end_horizontal_retrace&0x80)>>2;
-		hbend = hbstart + ((hbend - hbstart) & 0x3F);
+		hbstart = vga.crtc.start_horizontal_blanking;
 		hrstart = vga.crtc.start_horizontal_retrace;
-		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
-		hrend = (hrend - hrstart) & 0x1f;
-		if ( !hrend )
-			hrend = hrstart + 0x1f + 1;
-		else 
-			hrend = hrstart + hrend;
 
-		vtotal= 2 + vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
-		vdend = 1 + vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
+		vtotal= vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
+		vdend = vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
+		vbstart = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
 		vrstart = vga.crtc.vertical_retrace_start + ((vga.crtc.overflow & 0x04) << 6);
+		
 		if (IS_VGA_ARCH) {
 			// additional bits only present on vga cards
+			htotal |= (vga.s3.ex_hor_overflow & 0x1) << 8;
+			htotal += 3;
+			hdend |= (vga.s3.ex_hor_overflow & 0x2) << 7;
+			hbend |= (vga.crtc.end_horizontal_retrace&0x80) >> 2;
+			hbstart |= (vga.s3.ex_hor_overflow & 0x4) << 6;
+			hrstart |= (vga.s3.ex_hor_overflow & 0x10) << 4;
+			
 			vtotal |= (vga.crtc.overflow & 0x20) << 4;
-			vdend |= ((vga.crtc.overflow & 0x40) << 3) | 
-					((vga.s3.ex_ver_overflow & 0x2) << 9);
+			vtotal |= (vga.s3.ex_ver_overflow & 0x1) << 10;
+			vdend |= (vga.crtc.overflow & 0x40) << 3; 
+			vdend |= (vga.s3.ex_ver_overflow & 0x2) << 9;
+			vbstart |= (vga.crtc.maximum_scan_line & 0x20) << 4;
+			vbstart |= (vga.s3.ex_ver_overflow & 0x4) << 8;
 			vrstart |= ((vga.crtc.overflow & 0x80) << 2);
-		}
-
-		vrend = vga.crtc.vertical_retrace_end & 0xF;
-		vrend = ( vrend - vrstart)&0xF;
-		if ( !vrend)
-			vrend = vrstart + 0xf + 1;
-		else 
-			vrend = vrstart + vrend;
-		
-		vbstart = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
-		if (IS_VGA_ARCH) {
-			vbstart |= ((vga.crtc.maximum_scan_line & 0x20) << 4);
+			vrstart |= (vga.s3.ex_ver_overflow & 0x10) << 6;
 			vbend = vga.crtc.end_vertical_blanking & 0x3f;
 		} else {
 			vbend = vga.crtc.end_vertical_blanking & 0xf;
 		}
-		vbend = (vbend - vbstart) & 0x3f;
-		if ( !vbend)
-			vbend = vbstart + 0x3f + 1;
-		else
-			vbend = vbstart + vbend;
-			
+		htotal += 2;
+		vtotal += 2;
+		hdend += 1;
+		vdend += 1;
 
+		hbend = hbstart + ((hbend - hbstart) & 0x3F);
+		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
+		hrend = (hrend - hrstart) & 0x1f;
+		
+		if ( !hrend ) hrend = hrstart + 0x1f + 1;
+		else hrend = hrstart + hrend;
+
+		vrend = vga.crtc.vertical_retrace_end & 0xF;
+		vrend = ( vrend - vrstart)&0xF;
+		
+		if ( !vrend) vrend = vrstart + 0xf + 1;
+		else vrend = vrstart + vrend;
+
+		vbend = (vbend - vbstart) & 0x3f;
+		if ( !vbend) vbend = vbstart + 0x3f + 1;
+		else vbend = vbstart + vbend;
+			
 		switch (svgaCard) {
 		case SVGA_S3Trio:
 			clock = SVGA_S3_GetClock();
@@ -1141,14 +1148,22 @@ void VGA_SetupDrawing(Bitu val) {
 		} else VGA_DrawLine = VGA_Draw_Linear_Line;
 		break;
 	case M_LIN8:
-	case M_LIN15:
-	case M_LIN16:
-	case M_LIN32:
-		width<<=3;
-		if (vga.crtc.mode_control & 0x8) {
-			doublewidth = true;
-			width >>= 1;
+		if (vga.crtc.mode_control & 0x8)
+			width >>=1;
+		else if(!(vga.s3.reg_3a&0x10)) {
+			doublewidth=true;
+			width >>=1;
 		}
+		// fall-through
+	case M_LIN32:
+		width<<=1;
+		// fall-through
+ 	case M_LIN15:
+ 	case M_LIN16:
+		// 15/16 bpp modes double the horizontal values
+		width<<=2;
+		if (vga.crtc.mode_control & 0x8)
+ 			doublewidth = true;
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
 		break;
@@ -1194,7 +1209,7 @@ void VGA_SetupDrawing(Bitu val) {
 		aspect_ratio=1.0;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None) && (vga.seq.clocking_mode&0x01)) {
+		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None) && !(vga.seq.clocking_mode&0x01)) {
 			width*=9;				/* 9 bit wide text font */
 			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line_9;
 			bpp=16;
