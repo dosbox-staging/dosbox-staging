@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.79 2007-11-01 12:15:34 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.80 2007-12-11 21:25:14 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -756,11 +756,65 @@ public:
 	}
 };
 
-
 static void BOOT_ProgramStart(Program * * make) {
 	*make=new BOOT;
 }
 
+
+#if C_DEBUG
+class LDGFXROM : public Program {
+public:
+	void Run(void) {
+		if (!(cmd->FindCommand(1, temp_line))) return;
+
+		Bit8u drive;
+		char fullname[DOS_PATHLENGTH];
+
+		localDrive* ldp=0;
+		if (!DOS_MakeName((char *)temp_line.c_str(),fullname,&drive)) return;
+
+		try {		
+			ldp=dynamic_cast<localDrive*>(Drives[drive]);
+			if(!ldp) return;
+
+			FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+			if(tmpfile == NULL) {
+				LOG_MSG("BIOS file not accessible.");
+				return;
+			}
+			fseek(tmpfile, 0L, SEEK_END);
+			if (ftell(tmpfile)>0x10000) {
+				LOG_MSG("BIOS file too large.");
+				return;
+			}
+			fseek(tmpfile, 0L, SEEK_SET);
+
+			PhysPt rom_base=PhysMake(0xc000,0);
+
+			Bit8u vga_buffer[0x10000];
+			Bitu data_written=0;
+			Bitu data_read=fread(vga_buffer, 1, 0x10000, tmpfile);
+			for (Bitu ct=0; ct<data_read; ct++) {
+				phys_writeb(rom_base+(data_written++),vga_buffer[ct]);
+			}
+			fclose(tmpfile);
+
+			rom_base=PhysMake(0xf000,0);
+			phys_writeb(rom_base+0xf065,0xcf);
+		}
+		catch(...) {
+			return;
+		}
+
+		reg_flags&=~FLAG_IF;
+		CALLBACK_RunRealFar(0xc000,0x0003);
+	}
+};
+
+static void LDGFXROM_ProgramStart(Program * * make) {
+	*make=new LDGFXROM;
+}
+#endif
 
 
 // LOADFIX
@@ -1453,6 +1507,9 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
 	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
+#if C_DEBUG
+	PROGRAMS_MakeFile("LDGFXROM.COM", LDGFXROM_ProgramStart);
+#endif
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 }
