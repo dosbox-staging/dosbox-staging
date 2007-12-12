@@ -80,6 +80,7 @@ MidiHandler Midi_none;
 #if defined(MACOSX)
 
 #include "midi_coreaudio.h"
+#include "midi_coremidi.h"
 
 #elif defined (WIN32)
 
