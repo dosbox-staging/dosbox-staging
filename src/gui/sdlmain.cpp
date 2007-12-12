@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.136 2007-11-06 20:08:34 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.137 2007-12-12 13:37:38 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1037,6 +1037,10 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	const char * output=section->Get_string("output");
+	
+	/* Setup Mouse correctly if fullscreen */
+	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
+
 	if (!strcasecmp(output,"surface")) {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 #if (HAVE_DDRAW_H) && defined(WIN32)
