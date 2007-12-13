@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.123 2007-09-24 20:50:40 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.124 2007-12-13 12:38:13 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -383,7 +383,7 @@ void DOSBOX_Init(void) {
 	MSG_Add("MIDI_CONFIGFILE_HELP",
 		"mpu401      -- Type of MPU-401 to emulate: none, uart or intelligent.\n"
 		"device      -- Device that will receive the MIDI data from MPU-401.\n"
-		"               This can be default,alsa,oss,win32,coreaudio,none.\n"
+		"               This can be default,alsa,oss,win32,coreaudio,coremidi,none.\n"
 		"config      -- Special configuration options for the device. In Windows put\n" 
 		"               the id of the device you want to use. See README for details.\n"
 	);
