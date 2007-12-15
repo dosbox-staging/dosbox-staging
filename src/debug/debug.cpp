@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.90 2007-11-24 17:26:48 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.91 2007-12-15 16:28:32 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -448,7 +448,8 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 				Bitu address; 
 				if (bp->GetType()==BKPNT_MEMORY_LINEAR) address = bp->GetOffset();
 				else address = GetAddress(bp->GetSegment(),bp->GetOffset());
-				Bit8u value = mem_readb(address);
+				Bit8u value=0;
+				if (mem_readb_checked(address,&value)) return false;
 				if (bp->GetValue() != value) {
 					// Yup, memory value changed
 					DEBUG_ShowMsg("DEBUG: Memory breakpoint %s: %04X:%04X - %02X -> %02X\n",(bp->GetType()==BKPNT_MEMORY_PROT)?"(Prot)":"",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
@@ -674,9 +675,7 @@ static void DrawData(void) {
 		else mvwprintw (dbg.win_data,1+y,0,"%04X:%08X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
-			if (!(get_tlb_readhandler(address)->flags & PFLAG_INIT)) {
-				ch = mem_readb(address);
-			} else ch = 0;
+			if (mem_readb_checked(address,&ch)) ch=0;
 			mvwprintw (dbg.win_data,1+y,14+3*x,"%02X",ch);
 			if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
 			mvwprintw (dbg.win_data,1+y,63+x,"%c",ch);
@@ -759,8 +758,7 @@ static void DrawRegisters(void) {
 	wrefresh(dbg.win_reg);
 };
 
-static void DrawCode(void) 
-{
+static void DrawCode(void) {
 	bool saveSel; 
 	Bit32u disEIP = codeViewData.useEIP;
 	PhysPt start  = GetAddress(codeViewData.useCS,codeViewData.useEIP);
@@ -796,7 +794,11 @@ static void DrawCode(void)
 		mvwprintw(dbg.win_code,i,0,"%04X:%04X  ",codeViewData.useCS,disEIP);
 		
 		if (drawsize>10) { toolarge = true; drawsize = 9; };
-		for (c=0;c<drawsize;c++) wprintw(dbg.win_code,"%02X",mem_readb(start+c));
+		for (c=0;c<drawsize;c++) {
+			Bit8u value;
+			if (mem_readb_checked(start+c,&value)) value=0;
+			wprintw(dbg.win_code,"%02X",value);
+		}
 		if (toolarge) { waddstr(dbg.win_code,".."); drawsize++; };
 		// Spacepad up to 20 characters
 		if(drawsize && (drawsize < 10)) {
@@ -1029,7 +1031,7 @@ bool ParseCommand(char* str) {
 			if (*found) {
 				Bit8u value = (Bit8u)GetHexValue(found,found);
 				if(*found) found++;
-				mem_writeb(GetAddress(seg,ofs+count),value);
+				mem_writeb_checked(GetAddress(seg,ofs+count),value);
 				count++;
 			}
 		};
@@ -1188,6 +1190,7 @@ bool ParseCommand(char* str) {
 		char out1[200],out2[200];
 		GetDescriptorInfo(found,out1,out2);
 		DEBUG_ShowMsg("SelectorInfo %s:\n%s\n%s\n",found,out1,out2);
+		return true;
 	};
 
 	if (command == "GDT") {LogGDT(); return true;}
@@ -1300,8 +1303,7 @@ bool ParseCommand(char* str) {
 	return false;
 };
 
-char* AnalyzeInstruction(char* inst, bool saveSelector)
-{
+char* AnalyzeInstruction(char* inst, bool saveSelector) {
 	static char result[256];
 	
 	char instu[256];
@@ -1692,12 +1694,11 @@ static void LogGDT(void)
 	};
 };
 
-static void LogLDT(void)
-{
+static void LogLDT(void) {
 	char out1[512];
 	Descriptor desc;
 	Bitu ldtSelector = cpu.gdt.SLDT();
-	cpu.gdt.GetDescriptor(ldtSelector,desc);
+	if (!cpu.gdt.GetDescriptor(ldtSelector,desc)) return;
 	Bitu length = desc.GetLimit();
 	PhysPt address = desc.GetBase();
 	PhysPt max	   = address + length;
@@ -1713,21 +1714,20 @@ static void LogLDT(void)
 	};
 };
 
-static void LogIDT(void)
-{
+static void LogIDT(void) {
 	char out1[512];
 	Descriptor desc;
 	Bitu address = 0;
 	while (address<256*8) {
-		cpu.idt.GetDescriptor(address,desc);
-		sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		if (cpu.idt.GetDescriptor(address,desc)) {
+			sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
+			LOG(LOG_MISC,LOG_ERROR)(out1);
+		}
 		address+=8;
 	};
 };
 
-void LogPages(char* selname)
-{
+void LogPages(char* selname) {
 	char out1[512];
 	if (paging.enabled) {
 		Bitu sel = GetHexValue(selname,selname);
@@ -1741,7 +1741,9 @@ void LogPages(char* selname)
 					Bitu entry_addr=(table.block.base<<12)+(i & 0x3ff)*4;
 					entry.load=phys_readd(entry_addr);
 					if (entry.block.p) {
-						sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x",i,entry.block.base,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
+						sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x [d=%x|a=%x]",
+							i,entry.block.base,entry.block.us,table.block.us,
+							entry.block.wr,table.block.wr,entry.block.d,entry.block.a);
 						LOG(LOG_MISC,LOG_ERROR)(out1);
 					}
 				}
@@ -1764,8 +1766,7 @@ void LogPages(char* selname)
 	}
 };
 
-static void LogCPUInfo(void)
-{
+static void LogCPUInfo(void) {
 	char out1[512];
 	sprintf(out1,"cr0:%08X cr2:%08X cr3:%08X  cpl=%x",cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
 	LOG(LOG_MISC,LOG_ERROR)(out1);
@@ -1778,13 +1779,15 @@ static void LogCPUInfo(void)
 
 	Bitu sel=CPU_STR();
 	Descriptor desc;
-	cpu.gdt.GetDescriptor(sel,desc);
-	sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	if (cpu.gdt.GetDescriptor(sel,desc)) {
+		sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+	}
 	sel=CPU_SLDT();
-	cpu.gdt.GetDescriptor(sel,desc);
-	sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	if (cpu.gdt.GetDescriptor(sel,desc)) {
+		sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
+		LOG(LOG_MISC,LOG_ERROR)(out1);
+	}
 };
 
 #if C_HEAVY_DEBUG
@@ -1813,7 +1816,9 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue,  ofstream& out) {
 	} else if (cpuLogType == 2) {
 		char ibytes[200]="";	char tmpc[200];
 		for (Bitu i=0; i<size; i++) {
-			sprintf(tmpc,"%02X ",mem_readb(start+i));
+			Bit8u value;
+			if (mem_readb_checked(start+i,&value)) sprintf(tmpc,"?? ",value);
+			else sprintf(tmpc,"%02X ",value);
 			strcat(ibytes,tmpc);
 		}
 		len = strlen(ibytes);
@@ -2045,8 +2050,7 @@ bool CDebugVar::LoadVars(char* name)
 	return true;
 };
 
-static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num)
-{
+static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num) {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory dump failed.\n");
@@ -2057,11 +2061,12 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num)
 	char temp[16];
 
 	while(num>0) {
-
 		sprintf(buffer,"%04X:%04X   ",seg,ofs1);
 		for (Bit16u x=0; x<16; x++) {
-			sprintf	(temp,"%02X ",mem_readb(GetAddress(seg,ofs1+x)));
-			strcat	(buffer,temp);
+			Bit8u value;
+			if (mem_readb_checked(GetAddress(seg,ofs1+x),&value)) sprintf(temp,"?? ",value);
+			else sprintf(temp,"%02X ",value);
+			strcat(buffer,temp);
 		};
 		ofs1+=16;
 		num-=16;
@@ -2080,7 +2085,8 @@ static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
 	}
 
 	for(Bitu x = 0; x < num;x++) {
-		Bit8u val = mem_readb(GetAddress(seg,ofs1+x));
+		Bit8u val;
+		if (mem_readb_checked(GetAddress(seg,ofs1+x),&val)) val=0;
 		fwrite(&val,1,1,f);
 	};
 
@@ -2088,8 +2094,7 @@ static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
 	DEBUG_ShowMsg("DEBUG: Memory dump binary success.\n");
 };
 
-static void OutputVecTable(char* filename)
-{
+static void OutputVecTable(char* filename) {
 	FILE* f = fopen(filename, "wt");
 	if (!f)
 	{
@@ -2105,8 +2110,9 @@ static void OutputVecTable(char* filename)
 }
 
 #define DEBUG_VAR_BUF_LEN 16
-static void DrawVariables(void)
-{
+static void DrawVariables(void) {
+	if (CDebugVar::varList.size()==0) return;
+
 	std::list<CDebugVar*>::iterator i;
 	CDebugVar *dv;
 	char buffer[DEBUG_VAR_BUF_LEN];
@@ -2121,8 +2127,11 @@ static void DrawVariables(void)
 
 		dv = static_cast<CDebugVar*>(*i);
 
-		Bit16u value = mem_readw(dv->GetAdr());
-		snprintf(buffer,DEBUG_VAR_BUF_LEN, "0x%04x", value);
+		Bit16u value;
+		if (mem_readw_checked(dv->GetAdr(),&value))
+			snprintf(buffer,DEBUG_VAR_BUF_LEN, "??????", value);
+		else
+			snprintf(buffer,DEBUG_VAR_BUF_LEN, "0x%04x", value);
 
 		int y = idx / 3;
 		int x = (idx % 3) * 26;
@@ -2276,8 +2285,14 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 	}
 	// LogInstruction
 	if (logHeavy) DEBUG_HeavyLogInstruction();
-	if(zeroProtect && mem_readd(SegPhys(cs) + reg_eip) == 0) zero_count++; else zero_count = 0;
-	if(zeroProtect && GCC_UNLIKELY(zero_count == 10)) E_Exit("running zeroed code");
+	if (zeroProtect) {
+		Bit32u value=0;
+		if (!mem_readd_checked(SegPhys(cs)+reg_eip,&value)) {
+			if (value == 0) zero_count++;
+			else zero_count = 0;
+		}
+		if (GCC_UNLIKELY(zero_count == 10)) E_Exit("running zeroed code");
+	}
 
 	if (skipFirstInstruction) {
 		skipFirstInstruction = false;

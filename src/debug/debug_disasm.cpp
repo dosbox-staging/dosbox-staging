@@ -878,7 +878,7 @@ static void percent(char type, char subtype)
             vofs |= (UINT32)getbyte() << 8;
             vofs |= (UINT32)getbyte() << 16;
             vofs |= (UINT32)getbyte() << 24;
-			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,1);
+			name = addr_to_hex(vofs+instruction_offset+INSTRUCTION_SIZE,(addrsize == 32)?0:1);
             break;
        }
 	   if (vofs<0)
