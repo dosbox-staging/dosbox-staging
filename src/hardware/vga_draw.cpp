@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.89 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.90 2007-12-19 21:12:22 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -1156,14 +1156,18 @@ void VGA_SetupDrawing(Bitu val) {
 		}
 		// fall-through
 	case M_LIN32:
-		width<<=1;
-		// fall-through
- 	case M_LIN15:
+		width<<=3;
+		if (vga.crtc.mode_control & 0x8)
+ 			doublewidth = true;
+		/* Use HW mouse cursor drawer if enabled */
+		VGA_ActivateHardwareCursor();
+		break;
+	case M_LIN15:
  	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
 		width<<=2;
-		if (vga.crtc.mode_control & 0x8)
- 			doublewidth = true;
+		if ((vga.crtc.mode_control & 0x8) || (vga.s3.pll.cmd & 0x10))
+			doublewidth = true;
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
 		break;

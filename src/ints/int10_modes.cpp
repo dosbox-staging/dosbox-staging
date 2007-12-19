@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.71 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.72 2007-12-19 21:12:22 c2woody Exp $ */
 
 #include <string.h>
 
@@ -1088,6 +1088,9 @@ dac_text16:
 	IO_Write(crtc_base,0x52); // extended BIOS scratchpad
 	IO_Write(crtc_base+1,0x80);
 
+	IO_Write(0x3c4,0x15);
+	IO_Write(0x3c5,0x03);
+
 	// Accellerator setup 
 	Bitu reg_50=0;
 	switch (CurMode->type) {
@@ -1131,7 +1134,7 @@ dac_text16:
 		reg_31 = 9;
 		break;
 	default:
-		reg_31 = 0;
+		reg_31 = 5;
 		break;
 	}
 	IO_Write(crtc_base,0x3a);IO_Write(crtc_base+1,reg_3a);
