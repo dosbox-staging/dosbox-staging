@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_attr.cpp,v 1.26 2007-10-13 16:34:06 c2woody Exp $ */
+/* $Id: vga_attr.cpp,v 1.27 2007-12-23 16:00:53 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -84,13 +84,15 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			if ((attr(mode_control) ^ val) & 0x08) {
 				VGA_SetBlinking(val & 0x8);
 			}
-			/*
-				Special hacks for games programming registers themselves,
-				Doesn't work if they program EGA16 themselves, 
-				but haven't encountered that yet
-			*/
-			attr(mode_control)=val;
-			VGA_DetermineMode();
+			if ((attr(mode_control) ^ val) & 0x04) {
+				attr(mode_control)=val;
+				VGA_DetermineMode();
+				if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) VGA_StartResize();
+			} else {
+				attr(mode_control)=val;
+				VGA_DetermineMode();
+			}
+
 			/*
 				0	Graphics mode if set, Alphanumeric mode else.
 				1	Monochrome mode if set, color mode else.

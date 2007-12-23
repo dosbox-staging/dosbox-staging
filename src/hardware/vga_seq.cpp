@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: vga_seq.cpp,v 1.21 2007-12-23 16:00:53 c2woody Exp $ */
+
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
@@ -38,10 +40,13 @@ void write_p3c5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 1:		/* Clocking Mode */
 		if (val!=seq(clocking_mode)) {
-			seq(clocking_mode)=val;
 			// don't resize if only the screen off bit was changed
-			if ((val&(~0x20))!=(seq(clocking_mode)&(~0x20)))
+			if ((val&(~0x20))!=(seq(clocking_mode)&(~0x20))) {
+				seq(clocking_mode)=val;
 				VGA_StartResize();
+			} else {
+				seq(clocking_mode)=val;
+			}
 		}
 		/* TODO Figure this out :)
 			0	If set character clocks are 8 dots wide, else 9.
