@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.80 2007-12-11 21:25:14 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.81 2007-12-27 15:38:00 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -596,7 +596,7 @@ public:
 							strcat(cmdlist," ");
 							strcat(cmdlist,buf);
 							ct+=1+clen+3;
-							if (ct>0x1000) break;
+							if (ct>sizeof(cmdlist)) break;
 							clen=rombuf[ct];
 						}
 						if (ct>6) {
@@ -610,7 +610,7 @@ public:
 								diskSwap[dct]=NULL;
 							}
 						}
-						fclose(usefile_1);
+						//fclose(usefile_1); //delete diskSwap closes the file
 						return;
 					} else {
 						while (clen!=0) {
@@ -627,7 +627,7 @@ public:
 							}
 
 							ct+=3;
-							if (ct>0x1000) break;
+							if (ct>sizeof(cmdlist)) break;
 							clen=rombuf[ct];
 						}
 						if (cfound_at<=0) {
@@ -642,7 +642,7 @@ public:
 									diskSwap[dct]=NULL;
 								}
 							}
-							fclose(usefile_1);
+							//fclose(usefile_1); //Delete diskSwap closes the file
 							return;
 						}
 					}
@@ -673,7 +673,7 @@ public:
 					/* read cartridge data into buffer */
 					fseek(usefile_2, 0x200L, SEEK_SET);
 					fread(rombuf, 1, rombytesize_2-0x200, usefile_2);
-					fclose(usefile_2);
+					//fclose(usefile_2); //usefile_2 is in diskSwap structure which should be deleted to close the file
 
 					/* write cartridge data into ROM */
 					for(i=0;i<rombytesize_2-0x200;i++) phys_writeb(romseg_pt+i,rombuf[i]);
@@ -686,10 +686,18 @@ public:
 				/* read cartridge data into buffer */
 				fseek(usefile_1,0x200L, SEEK_SET);
 				fread(rombuf, 1, rombytesize_1-0x200, usefile_1);
-				fclose(usefile_1);
+				//fclose(usefile_1); //usefile_1 is in diskSwap structure which should be deleted to close the file
 
 				/* write cartridge data into ROM */
 				for(i=0;i<rombytesize_1-0x200;i++) phys_writeb((romseg<<4)+i,rombuf[i]);
+
+				//Close cardridges
+				for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
+					if(diskSwap[dct]!=NULL) {
+						delete diskSwap[dct];
+						diskSwap[dct]=NULL;
+					}
+				}
 
 
 				if (cart_cmd=="") {
@@ -706,27 +714,13 @@ public:
 						/* boot cartridge (int18) */
 						SegSet16(cs,RealSeg(new_int18));
 						reg_ip = RealOff(new_int18);
-					} else {
-						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-							if(diskSwap[dct]!=NULL) {
-								delete diskSwap[dct];
-								diskSwap[dct]=NULL;
-							}
-						}
-					}
+					} 
 				} else {
 					if (cfound_at>0) {
 						/* run cartridge setup */
 						SegSet16(ds,dos.psp());
 						SegSet16(es,dos.psp());
 						CALLBACK_RunRealFar(romseg,cfound_at);
-					} else {
-						for(Bitu dct=0;dct<MAX_SWAPPABLE_DISKS;dct++) {
-							if(diskSwap[dct]!=NULL) {
-								delete diskSwap[dct];
-								diskSwap[dct]=NULL;
-							}
-						}
 					}
 				}
 			}
@@ -862,8 +856,10 @@ void LOADFIX::Run(void)
 			args[0] = 0;
 			do {
 				ok = cmd->FindCommand(commandNr++,temp_line);
-				strncat(args,temp_line.c_str(),256);
-				strncat(args," ",256);
+				if(sizeof(args)-strlen(args)-1 < temp_line.length()+1)
+					break;
+				strcat(args,temp_line.c_str());
+				strcat(args," ");
 			} while (ok);			
 			// Use shell to start program
 			DOS_Shell shell;
