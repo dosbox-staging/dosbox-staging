@@ -7,5 +7,5 @@ libgui_a_SOURCES = sdlmain.cpp sdl_mapper.cpp dosbox_logo.h \
 	render_templates_sai.h render_templates_hq.h \
 	render_templates_hq2x.h render_templates_hq3x.h \
 	midi.cpp midi_win32.h midi_oss.h midi_coreaudio.h midi_alsa.h \
-	sdl_gui.cpp
+	midi_coremidi.h sdl_gui.cpp
 
