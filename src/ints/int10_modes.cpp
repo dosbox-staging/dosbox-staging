@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.72 2007-12-19 21:12:22 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.73 2007-12-27 10:57:51 c2woody Exp $ */
 
 #include <string.h>
 
@@ -971,6 +971,7 @@ att_text16:
 			IO_Write(0x3c0,i);
 			IO_Write(0x3c0,att_data[i]);
 		}
+		vga.config.pel_panning = 0;
 		IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
 		IO_Write(0x3c6,0xff); //Reset Pelmask
 		/* Setup the DAC */
@@ -1036,6 +1037,7 @@ dac_text16:
 			IO_Write(0x3c0,i);
 			IO_Write(0x3c0,att_data[i]);
 		}
+		vga.config.pel_panning = 0;
 		IO_Write(0x3c0,0x20); //Disable palette access
 	}
 	/* Setup some special stuff for different modes */
