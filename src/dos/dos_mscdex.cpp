@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.50 2007-07-20 18:22:28 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.51 2007-12-30 08:21:35 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -1077,6 +1077,11 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 static bool MSCDEX_Handler(void) {
 	if(reg_ah == 0x11) {
 		if(reg_al == 0x00) { 
+			PhysPt check = PhysMake(SegValue(ss),reg_sp);
+			if(mem_readw(check+6) == 0xDADA) {
+				//MSCDEX sets word on stack to ADAD if it DADA on entry.
+				mem_writew(check+6,0xADAD);
+			}
 			reg_al = 0xff;
 			return true;
 		} else {
