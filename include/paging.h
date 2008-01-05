@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.h,v 1.30 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: paging.h,v 1.31 2008-01-05 21:04:43 c2woody Exp $ */
 
 #ifndef DOSBOX_PAGING_H
 #define DOSBOX_PAGING_H
@@ -93,6 +93,7 @@ void PAGING_UnlinkPages(Bitu lin_page,Bitu pages);
 /* This maps the page directly, only use when paging is disabled */
 void PAGING_MapPage(Bitu lin_page,Bitu phys_page);
 bool PAGING_MakePhysPage(Bitu & page);
+bool PAGING_ForcePageInit(Bitu lin_addr);
 
 void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmiohandler);
 void MEM_SetPageHandler(Bitu phys_page, Bitu pages, PageHandler * handler);

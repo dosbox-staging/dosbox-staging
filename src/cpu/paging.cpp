@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.32 2007-12-29 20:22:22 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.33 2008-01-05 21:05:06 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -391,6 +391,30 @@ public:
 		}
 		return true;
 	}
+	void InitPageForced(Bitu lin_addr) {
+		Bitu lin_page=lin_addr >> 12;
+		Bitu phys_page;
+		if (paging.enabled) {
+			X86PageEntry table;
+			X86PageEntry entry;
+			InitPageCheckPresence(lin_addr,false,table,entry);
+
+			if (!table.block.a) {
+				table.block.a=1;		//Set access
+				phys_writed((paging.base.page<<12)+(lin_page >> 10)*4,table.load);
+			}
+			if (!entry.block.a) {
+				entry.block.a=1;					//Set access
+				phys_writed((table.block.base<<12)+(lin_page & 0x3ff)*4,entry.load);
+			}
+			phys_page=entry.block.base;
+			// maybe use read-only page here if possible
+		} else {
+			if (lin_page<LINK_START) phys_page=paging.firstmb[lin_page];
+			else phys_page=lin_page;
+		}
+		PAGING_LinkPage(lin_page,phys_page);
+	}
 };
 
 class InitPageUserROHandler : public PageHandler {
@@ -500,6 +524,29 @@ public:
 		}
 		return 1;
 	}
+	void InitPageForced(Bitu lin_addr) {
+		Bitu lin_page=lin_addr >> 12;
+		Bitu phys_page;
+		if (paging.enabled) {
+			X86PageEntry table;
+			X86PageEntry entry;
+			InitPageCheckPresence(lin_addr,true,table,entry);
+
+			if (!table.block.a) {
+				table.block.a=1;		//Set access
+				phys_writed((paging.base.page<<12)+(lin_page >> 10)*4,table.load);
+			}
+			if (!entry.block.a) {
+				entry.block.a=1;	//Set access
+				phys_writed((table.block.base<<12)+(lin_page & 0x3ff)*4,entry.load);
+			}
+			phys_page=entry.block.base;
+		} else {
+			if (lin_page<LINK_START) phys_page=paging.firstmb[lin_page];
+			else phys_page=lin_page;
+		}
+		PAGING_LinkPage(lin_page,phys_page);
+	}
 };
 
 
@@ -527,6 +574,19 @@ static InitPageUserROHandler init_page_handler_userro;
 
 Bitu PAGING_GetDirBase(void) {
 	return paging.cr3;
+}
+
+bool PAGING_ForcePageInit(Bitu lin_addr) {
+	PageHandler * handler=get_tlb_readhandler(lin_addr);
+	if (handler==&init_page_handler) {
+		init_page_handler.InitPageForced(lin_addr);
+		return true;
+	} else if (handler==&init_page_handler_userro) {
+		PAGING_UnlinkPages(lin_addr>>12,1);
+		init_page_handler_userro.InitPageForced(lin_addr);
+		return true;
+	}
+	return false;
 }
 
 #if defined(USE_FULL_TLB)

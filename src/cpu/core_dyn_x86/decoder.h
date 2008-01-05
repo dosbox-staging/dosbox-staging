@@ -60,8 +60,17 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		return false;
 	}
 	if (handler->flags & PFLAG_NOCODE) {
-		LOG_MSG("DYNX86:Can't run code in this page");
-		cph=0;		return false;
+		if (PAGING_ForcePageInit(lin_addr)) {
+			handler=get_tlb_readhandler(lin_addr);
+			if (handler->flags & PFLAG_HASCODE) {
+				cph=( CodePageHandler *)handler;
+				return false;
+			}
+		}
+		if (handler->flags & PFLAG_NOCODE) {
+			LOG_MSG("DYNX86:Can't run code in this page!");
+			cph=0;		return false;
+		}
 	} 
 	Bitu lin_page=lin_addr >> 12;
 	Bitu phys_page=lin_page;
