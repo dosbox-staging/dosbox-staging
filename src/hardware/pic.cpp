@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: pic.cpp,v 1.42 2007-12-09 17:02:55 c2woody Exp $ */
+/* $Id: pic.cpp,v 1.43 2008-01-07 22:29:37 c2woody Exp $ */
 
 #include <list>
 
@@ -41,8 +41,6 @@ struct PIC_Controller {
 	Bitu icw_words;
 	Bitu icw_index;
 	Bitu masked;
-	Bitu active;
-	Bitu inservice;
 
 	bool special;
 	bool auto_eoi;
@@ -54,6 +52,7 @@ struct PIC_Controller {
 
 Bitu PIC_Ticks=0;
 Bitu PIC_IRQCheck;
+Bitu PIC_IRQOnSecondPicActive;
 Bitu PIC_IRQActive;
 
 
@@ -63,7 +62,7 @@ static bool PIC_Special_Mode = false; //Saves one compare in the pic_run_irqloop
 struct PICEntry {
 	float index;
 	Bitu value;
-	PIC_EventHandler event;
+	PIC_EventHandler pic_event;
 	PICEntry * next;
 };
 
@@ -71,7 +70,7 @@ static struct {
 	PICEntry entries[PIC_QUEUESIZE];
 	PICEntry * free_entry;
 	PICEntry * next_entry;
-} pic;
+} pic_queue;
 
 static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
@@ -209,6 +208,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	default:
 		LOG(LOG_PIC,LOG_NORMAL)("ICW HUH? %X",val);
+		break;
 	}
 }
 
@@ -227,6 +227,7 @@ static Bitu read_command(Bitu port,Bitu iolen) {
 			if (irqs[i].active)	ret|=b;
 			b <<= 1;
 		}
+		if (irq_base==0 && (PIC_IRQCheck&0xff00)) ret |=4;
 	}
 	return ret;
 }
@@ -250,6 +251,7 @@ void PIC_ActivateIRQ(Bitu irq) {
 		}
 	} else 	if (irq < 16) {
 		irqs[irq].active = true;
+		PIC_IRQOnSecondPicActive|=(1 << irq);
 		if (!irqs[irq].masked && !irqs[2].masked) {
 			PIC_IRQCheck|=(1 << irq);
 		}
@@ -260,6 +262,7 @@ void PIC_DeActivateIRQ(Bitu irq) {
 	if (irq<16) {
 		irqs[irq].active=false;
 		PIC_IRQCheck&=~(1 << irq);
+		PIC_IRQOnSecondPicActive&=~(1 << irq);
 	}
 }
 static inline bool PIC_startIRQ(Bitu i) {
@@ -267,6 +270,7 @@ static inline bool PIC_startIRQ(Bitu i) {
 	if( i > 7 && irqs[2].masked) return false;
 	irqs[i].active = false;
 	PIC_IRQCheck&= ~(1 << i);
+	PIC_IRQOnSecondPicActive&= ~(1 << i);
 	CPU_HW_Interrupt(irqs[i].vector);
 	Bitu pic=(i&8)>>3;
 	if (!pics[pic].auto_eoi) { //irq 0-7 => pic 0 else pic 1 
@@ -350,12 +354,12 @@ void PIC_SetIRQMask(Bitu irq, bool masked) {
 }
 
 static void AddEntry(PICEntry * entry) {
-	PICEntry * find_entry=pic.next_entry;
+	PICEntry * find_entry=pic_queue.next_entry;
 	if (!find_entry) {
 		entry->next=0;
-		pic.next_entry=entry;
+		pic_queue.next_entry=entry;
 	} else if (find_entry->index>entry->index) {
-		pic.next_entry=entry;
+		pic_queue.next_entry=entry;
 		entry->next=find_entry;
 	} else while (find_entry) {
 		if (find_entry->next) {
@@ -373,7 +377,7 @@ static void AddEntry(PICEntry * entry) {
 			break;
 		}
 	}
-	Bits cycles=PIC_MakeCycles(pic.next_entry->index-PIC_TickIndex());
+	Bits cycles=PIC_MakeCycles(pic_queue.next_entry->index-PIC_TickIndex());
 	if (cycles<CPU_Cycles) {
 		CPU_CycleLeft+=CPU_Cycles;
 		CPU_Cycles=0;
@@ -381,35 +385,35 @@ static void AddEntry(PICEntry * entry) {
 }
 
 void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
-	if (!pic.free_entry) {
+	if (!pic_queue.free_entry) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
-	PICEntry * entry=pic.free_entry;
+	PICEntry * entry=pic_queue.free_entry;
 	entry->index=delay+PIC_TickIndex();
-	entry->event=handler;
+	entry->pic_event=handler;
 	entry->value=val;
-	pic.free_entry=pic.free_entry->next;
+	pic_queue.free_entry=pic_queue.free_entry->next;
 	AddEntry(entry);
 }
 
 void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
-	PICEntry * entry=pic.next_entry;
+	PICEntry * entry=pic_queue.next_entry;
 	PICEntry * prev_entry;
 	prev_entry = 0;
 	while (entry) {
-		if ((entry->event == handler) && (entry->value == val)) {
+		if ((entry->pic_event == handler) && (entry->value == val)) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
-				entry->next=pic.free_entry;
-				pic.free_entry=entry;
+				entry->next=pic_queue.free_entry;
+				pic_queue.free_entry=entry;
 				entry=prev_entry->next;
 				continue;
 			} else {
-				pic.next_entry=entry->next;
-				entry->next=pic.free_entry;
-				pic.free_entry=entry;
-				entry=pic.next_entry;
+				pic_queue.next_entry=entry->next;
+				entry->next=pic_queue.free_entry;
+				pic_queue.free_entry=entry;
+				entry=pic_queue.next_entry;
 				continue;
 			}
 		}
@@ -419,22 +423,22 @@ void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
 }
 
 void PIC_RemoveEvents(PIC_EventHandler handler) {
-	PICEntry * entry=pic.next_entry;
+	PICEntry * entry=pic_queue.next_entry;
 	PICEntry * prev_entry;
 	prev_entry=0;
 	while (entry) {
-		if (entry->event==handler) {
+		if (entry->pic_event==handler) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
-				entry->next=pic.free_entry;
-				pic.free_entry=entry;
+				entry->next=pic_queue.free_entry;
+				pic_queue.free_entry=entry;
 				entry=prev_entry->next;
 				continue;
 			} else {
-				pic.next_entry=entry->next;
-				entry->next=pic.free_entry;
-				pic.free_entry=entry;
-				entry=pic.next_entry;
+				pic_queue.next_entry=entry->next;
+				entry->next=pic_queue.free_entry;
+				pic_queue.free_entry=entry;
+				entry=pic_queue.next_entry;
 				continue;
 			}
 		}
@@ -453,17 +457,17 @@ bool PIC_RunQueue(void) {
 	}
 	/* Check the queue for an entry */
 	Bits index_nd=PIC_TickIndexND();
-	while (pic.next_entry && (pic.next_entry->index*CPU_CycleMax<=index_nd)) {
-		PICEntry * entry=pic.next_entry;
-		pic.next_entry=entry->next;
-		(entry->event)(entry->value);
+	while (pic_queue.next_entry && (pic_queue.next_entry->index*CPU_CycleMax<=index_nd)) {
+		PICEntry * entry=pic_queue.next_entry;
+		pic_queue.next_entry=entry->next;
+		(entry->pic_event)(entry->value);
 		/* Put the entry in the free list */
-		entry->next=pic.free_entry;
-		pic.free_entry=entry;
+		entry->next=pic_queue.free_entry;
+		pic_queue.free_entry=entry;
 	}
 	/* Check when to set the new cycle end */
-	if (pic.next_entry) {
-		Bits cycles=(Bits)(pic.next_entry->index*CPU_CycleMax-index_nd);
+	if (pic_queue.next_entry) {
+		Bits cycles=(Bits)(pic_queue.next_entry->index*CPU_CycleMax-index_nd);
 		if (!cycles) cycles=1;
 		if (cycles<CPU_CycleLeft) {
 			CPU_Cycles=cycles;
@@ -487,14 +491,14 @@ static TickerBlock * firstticker=0;
 
 void TIMER_DelTickHandler(TIMER_TickHandler handler) {
 	TickerBlock * ticker=firstticker;
-	TickerBlock * * where=&firstticker;
+	TickerBlock * * tick_where=&firstticker;
 	while (ticker) {
 		if (ticker->handler==handler) {
-			*where=ticker->next;
+			*tick_where=ticker->next;
 			delete ticker;
 			return;
 		}
-		where=&ticker->next;
+		tick_where=&ticker->next;
 		ticker=ticker->next;
 	}
 }
@@ -512,7 +516,7 @@ void TIMER_AddTick(void) {
 	CPU_Cycles=0;
 	PIC_Ticks++;
 	/* Go through the list of scheduled events and lower their index with 1000 */
-	PICEntry * entry=pic.next_entry;
+	PICEntry * entry=pic_queue.next_entry;
 	while (entry) {
 		if (entry->index>=1) entry->index-=1;
 		else entry->index=0;
@@ -541,8 +545,6 @@ public:
 		Bitu i;
 		for (i=0;i<2;i++) {
 			pics[i].masked=0xff;
-			pics[i].active=0;
-			pics[i].inservice=0;
 			pics[i].auto_eoi=false;
 			pics[i].rotate_on_auto_eoi=false;
 			pics[i].request_issr=false;
@@ -579,11 +581,11 @@ public:
 		WriteHandler[3].Install(0xa1,write_data,IO_MB);
 		/* Initialize the pic queue */
 		for (i=0;i<PIC_QUEUESIZE-1;i++) {
-			pic.entries[i].next=&pic.entries[i+1];
+			pic_queue.entries[i].next=&pic_queue.entries[i+1];
 		}
-		pic.entries[PIC_QUEUESIZE-1].next=0;
-		pic.free_entry=&pic.entries[0];
-		pic.next_entry=0;
+		pic_queue.entries[PIC_QUEUESIZE-1].next=0;
+		pic_queue.free_entry=&pic_queue.entries[0];
+		pic_queue.next_entry=0;
 	}
 	~PIC(){
 	}
