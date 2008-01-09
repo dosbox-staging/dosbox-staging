@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: dosbox.h,v 1.31 2008-01-09 20:34:21 c2woody Exp $ */
 
 #ifndef DOSBOX_DOSBOX_H
 #define DOSBOX_DOSBOX_H
@@ -51,7 +53,9 @@ enum MachineType {
 enum SVGACards {
 	SVGA_None,
 	SVGA_S3Trio,
-	SVGA_TsengET4K
+	SVGA_TsengET4K,
+	SVGA_TsengET3K,
+	SVGA_ParadisePVGA1A
 }; 
 
 extern SVGACards svgaCard;

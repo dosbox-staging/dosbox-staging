@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.cpp,v 1.31 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: vga.cpp,v 1.32 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include "dosbox.h"
 //#include "setup.h"
@@ -24,7 +24,10 @@
 #include "pic.h"
 #include "vga.h"
 
+#include <string.h>
+
 VGA_Type vga;
+SVGA_Driver svga;
 
 Bit32u CGA_2_Table[16];
 Bit32u CGA_4_Table[256];
@@ -48,6 +51,10 @@ void VGA_SetMode(VGAModes mode) {
 }
 
 void VGA_DetermineMode(void) {
+	if (svga.determine_mode) {
+		svga.determine_mode();
+		return;
+	}
 	/* Test for VGA output active or direct color modes */
 	switch (vga.s3.misc_control_2 >> 4) {
 	case 0:
@@ -84,6 +91,10 @@ void VGA_StartResize(void) {
 }
 
 void VGA_SetClock(Bitu which,Bitu target) {
+	if (svga.set_clock) {
+		svga.set_clock(which, target);
+		return;
+	}
 	struct{
 		Bitu n,m;
 		Bits err;
@@ -158,6 +169,7 @@ void VGA_Init(Section* sec) {
 	vga.screenflip = 0;
 	vga.draw.resizing=false;
 	vga.mode=M_ERROR;			//For first init
+	SVGA_Setup_Driver();
 	VGA_SetupMemory();
 	VGA_SetupMisc();
 	VGA_SetupDAC();
@@ -218,5 +230,24 @@ void VGA_Init(Section* sec) {
 				((i & 8) ? 1 << j : 0);
 #endif
 		}
+	}
+}
+
+void SVGA_Setup_Driver(void) {
+	memset(&svga, 0, sizeof(SVGA_Driver));
+
+	switch(svgaCard) {
+	case SVGA_S3Trio:
+		SVGA_Setup_S3Trio();
+		break;
+	case SVGA_TsengET4K:
+		SVGA_Setup_TsengET4K();
+		break;
+	case SVGA_TsengET3K:
+		SVGA_Setup_TsengET3K();
+		break;
+	case SVGA_ParadisePVGA1A:
+		SVGA_Setup_ParadisePVGA1A();
+		break;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: int10.cpp,v 1.48 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -480,7 +482,7 @@ graphics_chars:
 		}
 		break;
 	case 0x4f:								/* VESA Calls */
-		if ((!IS_VGA_ARCH) || (svgaCard==SVGA_None)) break;
+		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio)) break;
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
 			reg_al=0x4f;

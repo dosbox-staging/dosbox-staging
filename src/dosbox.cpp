@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.124 2007-12-13 12:38:13 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.125 2008-01-09 20:34:21 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -269,13 +269,22 @@ static void DOSBOX_RealInit(Section * sec) {
 			(strcasecmp(mtype,"svga")==0) || (strcasecmp(mtype,"svga_s3")==0)) {
 		machine=MCH_VGA;
 		svgaCard=SVGA_S3Trio;
-/*	} else if ((strcasecmp(mtype,"vga_et4000")==0) || (strcasecmp(mtype,"svga_et4000")==0)) {
+	} else if ((strcasecmp(mtype,"vga_et4000")==0) || (strcasecmp(mtype,"svga_et4000")==0)) {
 		machine=MCH_VGA;
-		svgaCard=SVGA_TsengET4K; */
+		svgaCard=SVGA_TsengET4K;
+	} else if ((strcasecmp(mtype,"vga_et3000")==0) || (strcasecmp(mtype,"svga_et3000")==0)) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_TsengET3K;
+	} else if ((strcasecmp(mtype,"vga_pvga1a")==0) || (strcasecmp(mtype,"svga_pvga1a")==0) || 
+		(strcasecmp(mtype,"svga_paradise")==0)) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_ParadisePVGA1A;
 	} else if (strcasecmp(mtype,"vgaonly")==0) {
 		machine=MCH_VGA;
 		svgaCard=SVGA_None;
-	} else LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
+	} else {
+		LOG_MSG("DOSBOX:Unknown machine type %s",mtype);
+	}
 }
 
 

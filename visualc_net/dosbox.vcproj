@@ -514,10 +514,16 @@
 						RelativePath="..\src\hardware\vga_other.cpp">
 					</File>
 					<File
+						RelativePath="..\src\hardware\vga_paradise.cpp">
+					</File>
+					<File
 						RelativePath="..\src\hardware\vga_s3.cpp">
 					</File>
 					<File
 						RelativePath="..\src\hardware\vga_seq.cpp">
+					</File>
+					<File
+						RelativePath="..\src\hardware\vga_tseng.cpp">
 					</File>
 					<File
 						RelativePath="..\src\hardware\vga_xga.cpp">

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.45 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.46 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -132,16 +132,19 @@ public:
 public:
 	Bitu readb(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return readHandler(addr);
 	}
 	Bitu readw(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return 
 			(readHandler(addr+0) << 0) |
 			(readHandler(addr+1) << 8);
 	}
 	Bitu readd(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return 
 			(readHandler(addr+0) << 0)  |
 			(readHandler(addr+1) << 8)  |
@@ -187,17 +190,20 @@ public:
 	}
 	void writeb(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
@@ -206,16 +212,19 @@ public:
 	}
 	Bitu readb(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return readHandler(addr);
 	}
 	Bitu readw(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return 
 			(readHandler(addr+0) << 0) |
 			(readHandler(addr+1) << 8);
 	}
 	Bitu readd(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return 
 			(readHandler(addr+0) << 0)  |
 			(readHandler(addr+1) << 8)  |
@@ -263,17 +272,20 @@ public:
 	}
 	void writeb(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler<true>(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler<true>(addr+0,(Bit8u)(val >> 0));
 		writeHandler<true>(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 3);
 		writeHandler<true>(addr+0,(Bit8u)(val >> 0));
 		writeHandler<true>(addr+1,(Bit8u)(val >> 8));
@@ -307,10 +319,12 @@ public:
 	}
 	Bitu readb(PhysPt addr ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		return readHandler<Bit8u>( addr );
 	}
 	Bitu readw(PhysPt addr ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		if (GCC_UNLIKELY(addr & 1))
 			return
 				(readHandler<Bit8u>( addr+0 ) << 0 ) | 
@@ -320,6 +334,7 @@ public:
 	}
 	Bitu readd(PhysPt addr ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_read_full;
 		if (GCC_UNLIKELY(addr & 3))
 			return
 				(readHandler<Bit8u>( addr+0 ) << 0 ) | 
@@ -331,12 +346,14 @@ public:
 	}
 	void writeb(PhysPt addr, Bitu val ) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );
 		writeHandler<Bit8u>( addr, val );
 		writeCache<Bit8u>( addr, val );
 	}
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );
 //		MEM_CHANGED( addr + 1);
 		if (GCC_UNLIKELY(addr & 1)) {
@@ -349,6 +366,7 @@ public:
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );
 //		MEM_CHANGED( addr + 3);
 		if (GCC_UNLIKELY(addr & 3)) {
@@ -381,20 +399,20 @@ public:
 	}
 	void writeb(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 2 );
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 2);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr << 2);
 		writeHandler(addr+0,(Bit8u)(val >> 0));
 		writeHandler(addr+1,(Bit8u)(val >> 8));
@@ -427,11 +445,11 @@ public:
 	}
 	HostPt GetHostReadPt(Bitu phys_page) {
  		phys_page-=vgapages.base;
-		return &vga.mem.linear[vga.s3.svga_bank.fullbank+phys_page*4096];
+		return &vga.mem.linear[vga.svga.bank_read_full+phys_page*4096];
 	}
 	HostPt GetHostWritePt(Bitu phys_page) {
  		phys_page-=vgapages.base;
-		return &vga.mem.linear[vga.s3.svga_bank.fullbank+phys_page*4096];
+		return &vga.mem.linear[vga.svga.bank_write_full+phys_page*4096];
 	}
 };
 
@@ -442,34 +460,34 @@ public:
 	}
 	Bitu readb(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_read_full;
 		return hostRead<Bit8u>( &vga.mem.linear[addr] );
 	}
 	Bitu readw(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_read_full;
 		return hostRead<Bit16u>( &vga.mem.linear[addr] );
 	}
 	Bitu readd(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_read_full;
 		return hostRead<Bit32u>( &vga.mem.linear[addr] );
 	}
 	void writeb(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );
 		hostWrite<Bit8u>( &vga.mem.linear[addr], val );
 	}
 	void writew(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );
 		hostWrite<Bit16u>( &vga.mem.linear[addr], val );
 	}
 	void writed(PhysPt addr,Bitu val) {
 		addr = PAGING_GetPhysicalAddress(addr) & 0xffff;
-		addr += vga.s3.svga_bank.fullbank;
+		addr += vga.svga.bank_write_full;
 		MEM_CHANGED( addr );	
 		hostWrite<Bit32u>( &vga.mem.linear[addr], val );
 	}
@@ -481,20 +499,20 @@ public:
 		flags=PFLAG_NOCODE;
 	}
 	void writeb(PhysPt addr,Bitu val) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		MEM_CHANGED( addr << 3 );
 		writeHandler<false>(addr+0,(Bit8u)(val >> 0));
 	}
 	void writew(PhysPt addr,Bitu val) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		MEM_CHANGED( addr << 3 );
 		writeHandler<false>(addr+0,(Bit8u)(val >> 0));
 		writeHandler<false>(addr+1,(Bit8u)(val >> 8));
 	}
 	void writed(PhysPt addr,Bitu val) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_write_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		MEM_CHANGED( addr << 3 );
 		writeHandler<false>(addr+0,(Bit8u)(val >> 0));
@@ -503,19 +521,19 @@ public:
 		writeHandler<false>(addr+3,(Bit8u)(val >> 24));
 	}
 	Bitu readb(PhysPt addr) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_read_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		return readHandler(addr);
 	}
 	Bitu readw(PhysPt addr) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_read_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		return 
 			(readHandler(addr+0) << 0) |
 			(readHandler(addr+1) << 8);
 	}
 	Bitu readd(PhysPt addr) {
-		addr = vga.s3.svga_bank.fullbank + (PAGING_GetPhysicalAddress(addr) & 0xffff);
+		addr = vga.svga.bank_read_full + (PAGING_GetPhysicalAddress(addr) & 0xffff);
 		addr &= (128*1024-1);
 		return 
 			(readHandler(addr+0) << 0)  |
@@ -687,6 +705,9 @@ void VGA_ChangedBank(void) {
 }
 
 void VGA_SetupHandlers(void) {
+	vga.svga.bank_read_full = vga.svga.bank_read*vga.svga.bank_size;
+	vga.svga.bank_write_full = vga.svga.bank_write*vga.svga.bank_size;
+
 	PageHandler *newHandler;
 	switch (machine) {
 	case MCH_CGA:
@@ -803,7 +824,7 @@ void VGA_SetupHandlers(void) {
 		MEM_ResetPageHandler( VGA_PAGE_B0, 8 );
 		break;
 	}
-	if(vga.s3.ext_mem_ctrl & 0x10)
+	if(svgaCard == SVGA_S3Trio && (vga.s3.ext_mem_ctrl & 0x10))
 		MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
 range_done:
 	PAGING_ClearTLB();
@@ -828,7 +849,10 @@ void VGA_SetupMemory() {
 #ifdef VGA_KEEP_CHANGES
 	memset( &vga.changes, 0, sizeof( vga.changes ));
 #endif
-	vga.s3.svga_bank.fullbank=0;
+	vga.svga.bank_read = vga.svga.bank_write = 0;
+	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
+	vga.svga.bank_size = 0x10000; /* most common bank size is 64K */
+
 	if (machine==MCH_PCJR) {
 		/* PCJr does not have dedicated graphics memory but uses
 		   conventional memory below 128k */

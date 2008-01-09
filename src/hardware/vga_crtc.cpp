@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: vga_crtc.cpp,v 1.30 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include <stdlib.h>
 #include "dosbox.h"
@@ -330,12 +332,10 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	default:
-		switch (svgaCard) {
-		case SVGA_S3Trio:
-			SVGA_S3_WriteCRTC( crtc(index), val, iolen);
-			break;
-		default:
-			break;
+		if (svga.write_p3d5) {
+			svga.write_p3d5(crtc(index), val, iolen);
+		} else {
+			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:CRTC:Write to unknown index %X",crtc(index));
 		}
 		break;
 	}
@@ -395,10 +395,9 @@ Bitu vga_read_p3d5(Bitu port,Bitu iolen) {
 	case 0x18:	/* Line Compare Register */
 		return crtc(line_compare);
 	default:
-		switch (svgaCard) {
-		case SVGA_S3Trio:
-			return SVGA_S3_ReadCRTC( crtc(index), iolen );
-		default:
+		if (svga.read_p3d5) {
+			return svga.read_p3d5(crtc(index), iolen);
+		} else {
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:CRTC:Read from unknown index %X",crtc(index));
 			return 0x0;
 		}

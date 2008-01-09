@@ -1,5 +1,5 @@
  /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: vga.h,v 1.37 2008-01-09 20:34:21 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -157,23 +159,7 @@ typedef struct {
 	Bit8u mc[64][64];
 } VGA_HWCURSOR;
 
-typedef union {
-	Bit32u fullbank;
-#ifndef WORDS_BIGENDIAN
-	struct {
-		Bit16u lowerbank;
-		Bit16u bank;
-	} b;
-#else
-	struct {
-		Bit16u bank;
-		Bit16u lowerbank;
-	} b;
-#endif
-} VGA_S3_BANK;
-
 typedef struct {
-	VGA_S3_BANK svga_bank;
 	Bit8u reg_lock1;
 	Bit8u reg_lock2;
 	Bit8u reg_31;
@@ -330,6 +316,11 @@ typedef struct {
 typedef struct {
 	Bitu	readStart, writeStart;
 	Bitu	bankMask;
+	Bitu	bank_read_full;
+	Bitu	bank_write_full;
+	Bit8u	bank_read;
+	Bit8u	bank_write;
+	Bitu	bank_size;
 } VGA_SVGA;
 
 typedef union {
@@ -423,14 +414,63 @@ void VGA_SetCGA4Table(Bit8u val0,Bit8u val1,Bit8u val2,Bit8u val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
 
-/* S3 Functions */
-Bitu SVGA_S3_GetClock(void);
-void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen);
-Bitu SVGA_S3_ReadCRTC(Bitu reg,Bitu iolen);
-void SVGA_S3_WriteSEQ(Bitu reg,Bitu val,Bitu iolen);
-Bitu SVGA_S3_ReadSEQ(Bitu reg,Bitu iolen);
-
 extern VGA_Type vga;
+
+/* Support for modular SVGA implementation */
+/* Video mode extra data to be passed to FinishSetMode_SVGA().
+   This structure will be in flux until all drivers (including S3)
+   are properly separated. Right now it contains only three overflow
+   fields in S3 format and relies on drivers re-interpreting those.
+   For reference:
+   ver_overflow:X|line_comp10|X|vretrace10|X|vbstart10|vdispend10|vtotal10
+   hor_overflow:X|X|X|hretrace8|X|hblank8|hdispend8|htotal8
+   offset is not currently used by drivers (useful only for S3 itself)
+   It also contains basic int10 mode data - number, vtotal, htotal
+   */
+typedef struct {
+	Bit8u ver_overflow;
+	Bit8u hor_overflow;
+	Bitu offset;
+	Bitu modeNo;
+	Bitu htotal;
+	Bitu vtotal;
+} VGA_ModeExtraData;
+
+// Vector function prototypes
+typedef void (*tWritePort)(Bitu reg,Bitu val,Bitu iolen);
+typedef Bitu (*tReadPort)(Bitu reg,Bitu iolen);
+typedef void (*tFinishSetMode)(Bitu crtc_base, VGA_ModeExtraData* modeData);
+typedef void (*tDetermineMode)();
+typedef void (*tSetClock)(Bitu which,Bitu target);
+typedef Bitu (*tGetClock)();
+typedef bool (*tHWCursorActive)();
+typedef bool (*tAcceptsMode)(Bitu modeNo);
+
+struct SVGA_Driver {
+	tWritePort write_p3d5;
+	tReadPort read_p3d5;
+	tWritePort write_p3c5;
+	tReadPort read_p3c5;
+	tWritePort write_p3c0;
+	tReadPort read_p3c1;
+	tWritePort write_p3cf;
+	tReadPort read_p3cf;
+
+	tFinishSetMode set_video_mode;
+	tDetermineMode determine_mode;
+	tSetClock set_clock;
+	tGetClock get_clock;
+	tHWCursorActive hardware_cursor_active;
+	tAcceptsMode accepts_mode;
+};
+
+extern SVGA_Driver svga;
+
+void SVGA_Setup_S3Trio(void);
+void SVGA_Setup_TsengET4K(void);
+void SVGA_Setup_TsengET3K(void);
+void SVGA_Setup_ParadisePVGA1A(void);
+void SVGA_Setup_Driver(void);
 
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];

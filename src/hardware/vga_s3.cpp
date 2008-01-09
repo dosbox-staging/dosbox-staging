@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.10 2007-12-27 10:57:51 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.11 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -28,6 +28,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 //TODO Base address
 		vga.s3.reg_31 = val;
 		vga.config.compatible_chain4 = !(val&0x08);
+		vga.config.display_start = (vga.config.display_start&~0x30000)|((val&0x30)<<12);
 		VGA_DetermineMode();
 		VGA_SetupHandlers();
 		break;
@@ -48,9 +49,10 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x35:	/* CR35 CRT Register Lock */
 		if (vga.s3.reg_lock1 != 0x48) return;	//Needed for uvconfig detection
 		vga.s3.reg_35=val & 0xf0;
-		if ((vga.s3.svga_bank.b.bank & 0xf) ^ (val & 0xf)) {
-			vga.s3.svga_bank.b.bank&=0xf0;
-			vga.s3.svga_bank.b.bank|=val & 0xf;
+		if ((vga.svga.bank_read & 0xf) ^ (val & 0xf)) {
+			vga.svga.bank_read&=0xf0;
+			vga.svga.bank_read|=val & 0xf;
+			vga.svga.bank_write = vga.svga.bank_read;
 			VGA_SetupHandlers();
 		}
 		break;
@@ -138,12 +140,12 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		break;
 	case 0x51:	/* Extended System Control 2 */
 		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7
-		//TODO Display start
-		vga.config.display_start&=0xFCFFFF;
-		vga.config.display_start|=(val & 3) << 16;
-		if ((vga.s3.svga_bank.b.bank&0xcf) ^ ((val&0xc)<<2)) {
-			vga.s3.svga_bank.b.bank&=0xcf;
-			vga.s3.svga_bank.b.bank|=(val&0xc)<<2;
+		vga.config.display_start&=0xF3FFFF;
+		vga.config.display_start|=(val & 3) << 18;
+		if ((vga.svga.bank_read&0x30) ^ ((val&0xc)<<2)) {
+			vga.svga.bank_read&=0xcf; 
+			vga.svga.bank_read|=(val&0xc)<<2;
+			vga.svga.bank_write = vga.svga.bank_read;
 			VGA_SetupHandlers();
 		}
 		if (((val & 0x30) ^ (vga.config.scan_len >> 4)) & 0x30) {
@@ -310,7 +312,8 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		}
 		break;
 	case 0x6a:	/* Extended System Control 4 */
-		vga.s3.svga_bank.b.bank=val & 0x3f;
+		vga.svga.bank_read=val & 0x3f;
+		vga.svga.bank_write = vga.svga.bank_read;
 		VGA_SetupHandlers();
 		break;
 	case 0x6b:	// BIOS scratchpad: LFB adress
@@ -340,7 +343,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 //TODO mix in bits from baseaddress;
 		return 	vga.s3.reg_31;	
 	case 0x35:	/* CR35 CRT Register Lock */
-		return vga.s3.reg_35|(vga.s3.svga_bank.b.bank & 0xf);
+		return vga.s3.reg_35|(vga.svga.bank_read & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
 		return 0x92; /* PCI version */
 		//2 Mb PCI and some bios settings
@@ -349,7 +352,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x38: /* CR38 Register Lock 1 */
 		return vga.s3.reg_lock1;
 	case 0x39: /* CR39 Register Lock 2 */
-        return vga.s3.reg_lock2;
+		return vga.s3.reg_lock2;
 	case 0x3a:
 		return vga.s3.reg_3a;
 	case 0x40: /* CR40 system config */
@@ -376,7 +379,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return vga.s3.reg_50;
 	case 0x51:	/* Extended System Control 2 */
 		return ((vga.config.display_start >> 16) & 3 ) |
-				((vga.s3.svga_bank.b.bank & 0x30) >> 2) |
+				((vga.svga.bank_read & 0x30) >> 2) |
 				((vga.config.scan_len & 0x300) >> 4) |
 				vga.s3.reg_51;
 	case 0x52:	// CR52 Extended BIOS flags 1
@@ -400,7 +403,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x69:	/* Extended System Control 3 */
 		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16); 
 	case 0x6a:	/* Extended System Control 4 */
-		return (Bit8u)(vga.s3.svga_bank.b.bank & 0x3f);
+		return (Bit8u)(vga.svga.bank_read & 0x3f);
 	case 0x6b:	// BIOS scatchpad: LFB address
 		return vga.s3.reg_6b; 
 	default:
@@ -471,6 +474,27 @@ Bitu SVGA_S3_GetClock(void) {
 		clock = 28322000;
 	else 
 		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
+	/* Check for dual transfer, master clock/2 */
+	if (vga.s3.pll.cmd & 0x10) clock/=2;
 	return clock;
 }
 
+bool SVGA_S3_HWCursorActive(void) {
+	return (vga.s3.hgc.curmode & 0x1) != 0;
+}
+
+void SVGA_Setup_S3Trio(void) {
+	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
+	svga.read_p3d5 = &SVGA_S3_ReadCRTC;
+	svga.write_p3c5 = &SVGA_S3_WriteSEQ;
+	svga.read_p3c5 = &SVGA_S3_ReadSEQ;
+	svga.write_p3c0 = 0; /* no S3-specific functionality */
+	svga.read_p3c1 = 0; /* no S3-specific functionality */
+
+	svga.set_video_mode = 0; /* implemented in core */
+	svga.determine_mode = 0; /* implemented in core */
+	svga.set_clock = 0; /* implemented in core */
+	svga.get_clock = &SVGA_S3_GetClock;
+	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
+	svga.accepts_mode = 0; /* don't filter modes */
+}

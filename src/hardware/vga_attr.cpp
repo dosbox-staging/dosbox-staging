@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_attr.cpp,v 1.27 2007-12-23 16:00:53 c2woody Exp $ */
+/* $Id: vga_attr.cpp,v 1.28 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -177,6 +177,10 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			*/
 			break;
 		default:
+			if (svga.write_p3c0) {
+				svga.write_p3c0(attr(index), val, iolen);
+				break;
+			}
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Write to unkown Index %2X",attr(index));
 			break;
 		}
@@ -203,6 +207,8 @@ Bitu read_p3c1(Bitu port,Bitu iolen) {
 	case 0x14:	/* Color Select Register */
 		return attr(color_select);
 	default:
+		if (svga.read_p3c1)
+			return svga.read_p3c1(attr(index), iolen);
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Read from unkown Index %2X",attr(index));
 	}
 	return 0;

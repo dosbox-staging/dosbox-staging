@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.90 2007-12-19 21:12:22 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.91 2008-01-09 20:34:51 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -206,7 +206,11 @@ static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 }
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
-	if(vga.s3.hgc.curmode & 0x1) {
+	bool hwcursor_active=false;
+	if (svga.hardware_cursor_active) {
+		if (svga.hardware_cursor_active()) hwcursor_active=true;
+	}
+	if (hwcursor_active) {
 		Bitu lineat = (vidstart-(vga.config.real_start<<2)) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
@@ -266,7 +270,11 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 }
 
 static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
-	if(vga.s3.hgc.curmode & 0x1) {
+	bool hwcursor_active=false;
+	if (svga.hardware_cursor_active) {
+		if (svga.hardware_cursor_active()) hwcursor_active=true;
+	}
+	if (hwcursor_active) {
 		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
@@ -329,7 +337,11 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
 }
 
 static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
-	if(vga.s3.hgc.curmode & 0x1) {
+	bool hwcursor_active=false;
+	if (svga.hardware_cursor_active) {
+		if (svga.hardware_cursor_active()) hwcursor_active=true;
+	}
+	if (hwcursor_active) {
 		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
 		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
 			return &vga.mem.linear[ vidstart ];
@@ -881,7 +893,11 @@ void VGA_CheckScanLength(void) {
 }
 
 void VGA_ActivateHardwareCursor(void) {
-	if(vga.s3.hgc.curmode & 0x1) {
+	bool hwcursor_active=false;
+	if (svga.hardware_cursor_active) {
+		if (svga.hardware_cursor_active()) hwcursor_active=true;
+	}
+	if (hwcursor_active) {
 		switch(vga.mode) {
 		case M_LIN32:
 			VGA_DrawLine=VGA_Draw_LIN32_Line_HWMouse;
@@ -963,11 +979,9 @@ void VGA_SetupDrawing(Bitu val) {
 		if ( !vbend) vbend = vbstart + 0x3f + 1;
 		else vbend = vbstart + vbend;
 			
-		switch (svgaCard) {
-		case SVGA_S3Trio:
-			clock = SVGA_S3_GetClock();
-			break;
-		default:
+		if (svga.get_clock) {
+			clock = svga.get_clock();
+		} else {
 			switch ((vga.misc_output >> 2) & 3) {
 			case 0:	
 				clock = 25175000;
@@ -976,7 +990,6 @@ void VGA_SetupDrawing(Bitu val) {
 				clock = 28322000;
 				break;
 			}
-			break;
 		}
 
 		/* Check for 8 for 9 character clock mode */
@@ -986,8 +999,6 @@ void VGA_SetupDrawing(Bitu val) {
 			htotal*=2;
 		}
 		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0xf)+1;
-		/* Check for dual transfer whatever thing,master clock/2 */
-		if (vga.s3.pll.cmd & 0x10) clock/=2;
 
 		if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
 		else vga.draw.double_scan=(vtotal==262);
@@ -1150,7 +1161,7 @@ void VGA_SetupDrawing(Bitu val) {
 	case M_LIN8:
 		if (vga.crtc.mode_control & 0x8)
 			width >>=1;
-		else if(!(vga.s3.reg_3a&0x10)) {
+		else if(svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a&0x10)) {
 			doublewidth=true;
 			width >>=1;
 		}
@@ -1166,7 +1177,7 @@ void VGA_SetupDrawing(Bitu val) {
  	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
 		width<<=2;
-		if ((vga.crtc.mode_control & 0x8) || (vga.s3.pll.cmd & 0x10))
+		if ((vga.crtc.mode_control & 0x8) || (svgaCard == SVGA_S3Trio && (vga.s3.pll.cmd & 0x10)))
 			doublewidth = true;
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
