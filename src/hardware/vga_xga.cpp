@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.10 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.11 2008-01-10 20:36:03 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -581,9 +581,10 @@ void XGA_DrawWait(Bitu val, Bitu len) {
 							XGA_DrawWaitSub(mixmode, val);
 							break;
 						case 0x20 | M_LIN8: // 16 bit 
-							XGA_DrawWaitSub(mixmode, val);
-							if(!xga.waitcmd.newline)
-								XGA_DrawWaitSub(mixmode, val>>8);
+							for(Bitu i = 0; i < len; i++) {
+								XGA_DrawWaitSub(mixmode, (val>>(8*i))&0xff);
+								if(xga.waitcmd.newline) break;
+							}
 							break;
 						case 0x40 | M_LIN8: // 32 bit
                             for(int i = 0; i < 4; i++)
