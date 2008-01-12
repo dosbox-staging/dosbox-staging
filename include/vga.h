@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.37 2008-01-09 20:34:21 c2woody Exp $ */
+/* $Id: vga.h,v 1.38 2008-01-12 17:36:48 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -30,9 +30,6 @@
 //#define VGA_KEEP_CHANGES
 #define VGA_MEMORY (2*1024*1024)
 #define VGA_CHANGE_SHIFT	9
-
-//Offset inside VGA_MEMORY that will be used for certain types of caching
-#define VGA_CACHE_OFFSET	(512*1024)
 
 class PageHandler;
 
@@ -164,6 +161,7 @@ typedef struct {
 	Bit8u reg_lock2;
 	Bit8u reg_31;
 	Bit8u reg_35;
+	Bit8u reg_36; // RAM size
 	Bit8u reg_3a; // 4/8/doublepixel bit in there
 	Bit8u reg_40; // 8415/A functionality register
 	Bit8u reg_41; // BIOS flags 
@@ -330,11 +328,12 @@ typedef union {
 
 typedef struct {
 	Bit8u* linear;
+	Bit8u* linear_orgptr;
 } VGA_Memory;
 
 typedef struct {
 	//Add a few more just to be safe
-	Bit8u	map[(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32];
+	Bit8u*	map; /* allocated dynamically: [(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32] */
 	Bit8u	checkMask, frame, writeMask;
 	bool	active;
 	Bit32u  clearMask;
@@ -370,6 +369,10 @@ typedef struct {
 	VGA_TANDY tandy;
 	VGA_OTHER other;
 	VGA_Memory mem;
+	Bit32u vmemwrap; /* this is assumed to be power of 2 */
+	Bit8u* fastmem;  /* memory for fast (usually 16-color) rendering, always twice as big as vmemsize */
+	Bit8u* fastmem_orgptr;
+	Bit32u vmemsize;
 #ifdef VGA_KEEP_CHANGES
 	VGA_Changes changes;
 #endif
@@ -394,7 +397,7 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val);
 
 /* The VGA Subfunction startups */
 void VGA_SetupAttr(void);
-void VGA_SetupMemory(void);
+void VGA_SetupMemory(Section* sec);
 void VGA_SetupDAC(void);
 void VGA_SetupCRTC(void);
 void VGA_SetupMisc(void);
@@ -471,6 +474,9 @@ void SVGA_Setup_TsengET4K(void);
 void SVGA_Setup_TsengET3K(void);
 void SVGA_Setup_ParadisePVGA1A(void);
 void SVGA_Setup_Driver(void);
+
+// Amount of video memory required for a mode, implemented in int10_modes.cpp
+Bitu VideoModeMemSize(Bitu mode);
 
 extern Bit32u ExpandTable[256];
 extern Bit32u FillTable[16];

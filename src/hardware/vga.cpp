@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.cpp,v 1.32 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga.cpp,v 1.33 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include "dosbox.h"
 //#include "setup.h"
@@ -170,7 +170,7 @@ void VGA_Init(Section* sec) {
 	vga.draw.resizing=false;
 	vga.mode=M_ERROR;			//For first init
 	SVGA_Setup_Driver();
-	VGA_SetupMemory();
+	VGA_SetupMemory(sec);
 	VGA_SetupMisc();
 	VGA_SetupDAC();
 	VGA_SetupGFX();
@@ -248,6 +248,9 @@ void SVGA_Setup_Driver(void) {
 		break;
 	case SVGA_ParadisePVGA1A:
 		SVGA_Setup_ParadisePVGA1A();
+		break;
+	default:
+		vga.vmemsize = vga.vmemwrap = 256*1024;
 		break;
 	}
 }

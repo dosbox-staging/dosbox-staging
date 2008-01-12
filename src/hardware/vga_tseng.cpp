@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_tseng.cpp,v 1.1 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_tseng.cpp,v 1.2 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "setup.h"
@@ -147,6 +147,7 @@ void write_p3d5_et4k(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x37:
 		if (val != et4k.store_3d4_37) {
 			et4k.store_3d4_37 = val;
+			vga.vmemwrap = ((64*1024)<<((val&8)>>2))<<((val&3)-1);
 			VGA_SetupHandlers();
 		}
 		break;
@@ -340,7 +341,7 @@ void FinishSetMode_ET4K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
 	IO_Write(crtc_base,0x33);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x34);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x36);IO_Write(crtc_base+1,0);
-	IO_Write(crtc_base,0x37);IO_Write(crtc_base+1,0x0f); // 1M video ram (0x0e for 512K, 0x0d for 256K)
+	IO_Write(crtc_base,0x37);IO_Write(crtc_base+1,0x0c|(vga.vmemsize==1024*1024?3:vga.vmemsize==512*1024?2:1));
 	// Clear ext SEQ
 	IO_Write(0x3c4,0x06);IO_Write(0x3c5,0);
 	IO_Write(0x3c4,0x07);IO_Write(0x3c5,0);
@@ -368,6 +369,7 @@ void FinishSetMode_ET4K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
 	// Verified (on real hardware and in a few games): Tseng ET4000 used chain4 implementation
 	// different from standard VGA. It was also not limited to 64K in regular mode 13h.
 	vga.config.compatible_chain4 = false;
+	vga.vmemwrap = vga.vmemsize;
 
 	VGA_SetupHandlers();
 }
@@ -396,7 +398,8 @@ Bitu GetClock_ET4K() {
 }
 
 bool AcceptsMode_ET4K(Bitu mode) {
-	return mode != 0x3d;
+	return VideoModeMemSize(mode) < vga.vmemsize;
+//	return mode != 0x3d;
 }
 
 void SVGA_Setup_TsengET4K(void) {
@@ -433,6 +436,17 @@ void SVGA_Setup_TsengET4K(void) {
 
 	IO_RegisterReadHandler(0x3cd,read_p3cd_et4k,IO_MB);
 	IO_RegisterWriteHandler(0x3cd,write_p3cd_et4k,IO_MB);
+
+	// Default to 1M of VRAM
+	if (vga.vmemsize == 0)
+		vga.vmemsize = 1024*1024;
+
+	if (vga.vmemsize < 512*1024)
+		vga.vmemsize = 256*1024;
+	else if (vga.vmemsize < 1024*1024)
+		vga.vmemsize = 512*1024;
+	else
+		vga.vmemsize = 1024*1024;
 
 	// Tseng ROM signature
 	PhysPt rom_base=PhysMake(0xc000,0);
@@ -716,6 +730,7 @@ void FinishSetMode_ET3K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
 	// Verified on functioning (at last!) hardware: Tseng ET3000 is the same as ET4000 when
 	// it comes to chain4 architecture
     vga.config.compatible_chain4 = false;
+	vga.vmemwrap = vga.vmemsize;
 
 	VGA_SetupHandlers();
 }
@@ -744,7 +759,7 @@ Bitu GetClock_ET3K() {
 }
 
 bool AcceptsMode_ET3K(Bitu mode) {
-	return mode <= 0x37 && mode != 0x2f;
+	return mode <= 0x37 && mode != 0x2f && VideoModeMemSize(mode) < vga.vmemsize;
 }
 
 void SVGA_Setup_TsengET3K(void) {
@@ -772,6 +787,8 @@ void SVGA_Setup_TsengET3K(void) {
 
 	IO_RegisterReadHandler(0x3cd,read_p3cd_et3k,IO_MB);
 	IO_RegisterWriteHandler(0x3cd,write_p3cd_et3k,IO_MB);
+
+	vga.vmemsize = 512*1024; // Cannot figure how this was supposed to work on the real card
 
 	// Tseng ROM signature
 	PhysPt rom_base=PhysMake(0xc000,0);

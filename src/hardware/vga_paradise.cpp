@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_paradise.cpp,v 1.1 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_paradise.cpp,v 1.2 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "setup.h"
@@ -162,10 +162,13 @@ void FinishSetMode_PVGA1A(Bitu /*crtc_base*/, VGA_ModeExtraData* modeData) {
 	if (svga.determine_mode)
 		svga.determine_mode();
 
-	if (vga.mode != M_VGA)
-		vga.config.compatible_chain4 = false; // in process of verification
-	else
+	if(vga.mode != M_VGA) {
+		vga.config.compatible_chain4 = false;
+		vga.vmemwrap = vga.vmemsize;
+	} else {
 		vga.config.compatible_chain4 = true;
+		vga.vmemwrap = 256*1024;
+	}
 
 	VGA_SetupHandlers();
 }
@@ -195,6 +198,10 @@ Bitu GetClock_PVGA1A() {
 	return pvga1a.clockFreq[(vga.misc_output >> 2) & 3];
 }
 
+bool AcceptsMode_PVGA1A(Bitu mode) {
+	return VideoModeMemSize(mode) < vga.vmemsize;
+}
+
 void SVGA_Setup_ParadisePVGA1A(void) {
 	svga.write_p3cf = &write_p3cf_pvga1a;
 	svga.read_p3cf = &read_p3cf_pvga1a;
@@ -203,14 +210,26 @@ void SVGA_Setup_ParadisePVGA1A(void) {
 	svga.determine_mode = &DetermineMode_PVGA1A;
 	svga.set_clock = &SetClock_PVGA1A;
 	svga.get_clock = &GetClock_PVGA1A;
+	svga.accepts_mode = &AcceptsMode_PVGA1A;
 
 	VGA_SetClock(0,CLK_25);
 	VGA_SetClock(1,CLK_28);
 	VGA_SetClock(2,32400); // could not find documentation
 	VGA_SetClock(3,35900);
 
-	// Set memory size at 512K (standard for PVGA1A)
-	pvga1a.PR1 = 2<<6;
+	// Adjust memory, default to 512K
+	if (vga.vmemsize == 0)
+		vga.vmemsize = 512*1024;
+
+	if (vga.vmemsize < 512*1024)	{
+		vga.vmemsize = 256*1024;
+		pvga1a.PR1 = 1<<6;
+	} else if (vga.vmemsize > 512*1024) {
+		vga.vmemsize = 1024*1024;
+		pvga1a.PR1 = 3<<6;
+	} else {
+		pvga1a.PR1 = 2<<6;
+	}
 
 	// Paradise ROM signature
 	PhysPt rom_base=PhysMake(0xc000,0);

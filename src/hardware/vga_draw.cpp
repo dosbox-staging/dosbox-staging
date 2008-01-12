@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.91 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.92 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -150,7 +150,10 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 	Bitu end = ((vidstart + vga.draw.line_length ) >> VGA_CHANGE_SHIFT);
 	for (; start <= end;start++) {
 		if ( map[start] & checkMask ) {
-			Bit8u *ret = &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+			Bitu offset = vidstart & vga.draw.linear_mask;
+			if(vga.draw.linear_mask-offset < vga.draw.line_length)
+				memcpy(vga.draw.linear_base+vga.draw.linear_mask+1, vga.draw.linear_base, vga.draw.line_length);
+			Bit8u *ret = &vga.draw.linear_base[ offset ];
 #if !defined(C_UNALIGNED_MEMORY)
 			if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
 				memcpy( TempLine, ret, vga.draw.line_length );
@@ -168,7 +171,12 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 #endif
 
 static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu line) {
-	Bit8u *ret = &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
+// There is guaranteed extra memory past the wrap boundary. So, instead of using temporary
+// storage just copy appropriate chunk from the beginning to the wrap boundary when needed.
+	Bitu offset = vidstart & vga.draw.linear_mask;
+	if (vga.draw.linear_mask-offset < vga.draw.line_length)
+		memcpy(vga.draw.linear_base+vga.draw.linear_mask+1, vga.draw.linear_base, vga.draw.line_length);
+	Bit8u *ret = &vga.draw.linear_base[ offset ];
 #if !defined(C_UNALIGNED_MEMORY)
 	if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
 		memcpy( TempLine, ret, vga.draw.line_length );
@@ -598,7 +606,7 @@ skip_cursor:
 
 static void VGA_VerticalDisplayEnd(Bitu val) {
 //	vga.config.retrace=true;
-	vga.config.real_start=vga.config.display_start & ((VGA_MEMORY)-1);
+	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
 }
 
 static void VGA_HorizontalTimer(void) {
@@ -800,11 +808,11 @@ static void VGA_VerticalTimer(Bitu val) {
 		break;
 	case M_VGA:
 		if(vga.config.compatible_chain4 && (vga.crtc.underline_location & 0x40)) {
-			vga.draw.linear_base = vga.mem.linear + VGA_CACHE_OFFSET;
+			vga.draw.linear_base = vga.fastmem;
 			vga.draw.linear_mask = 0xffff;
 		} else {
 			vga.draw.linear_base = vga.mem.linear;
-			vga.draw.linear_mask = VGA_MEMORY - 1;
+			vga.draw.linear_mask = vga.vmemwrap - 1;
 		}
 	case M_LIN8:
 	case M_LIN15:
@@ -1148,7 +1156,7 @@ void VGA_SetupDrawing(Bitu val) {
 		break;
 	}
 	vga.draw.linear_base = vga.mem.linear;
-	vga.draw.linear_mask = VGA_MEMORY - 1;
+	vga.draw.linear_mask = vga.vmemwrap - 1;
 	switch (vga.mode) {
 	case M_VGA:
 		doublewidth=true;
@@ -1187,8 +1195,8 @@ void VGA_SetupDrawing(Bitu val) {
 		vga.draw.blocks = width;
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_Linear_Line;
-		vga.draw.linear_base = vga.mem.linear + VGA_CACHE_OFFSET;
-		vga.draw.linear_mask = 1024 * 1024 - 1;
+		vga.draw.linear_base = vga.fastmem;
+		vga.draw.linear_mask = (vga.vmemwrap<<1) - 1;
 		break;
 	case M_EGA:
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
@@ -1199,8 +1207,8 @@ void VGA_SetupDrawing(Bitu val) {
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
 		} else VGA_DrawLine=VGA_Draw_Linear_Line;
 
-		vga.draw.linear_base = vga.mem.linear + VGA_CACHE_OFFSET;
-		vga.draw.linear_mask = 512 * 1024 - 1;
+		vga.draw.linear_base = vga.fastmem;
+		vga.draw.linear_mask = (vga.vmemwrap<<1) - 1;
 		break;
 	case M_CGA16:
 		doubleheight=true;

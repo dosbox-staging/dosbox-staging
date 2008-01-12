@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.74 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.75 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include <string.h>
 
@@ -368,7 +368,8 @@ static void FinishSetMode(bool clearmem) {
 		case M_LIN16:
 		case M_LIN32:
 			/* Hack we just acess the memory directly */
-			memset(vga.mem.linear,0,VGA_MEMORY);
+			memset(vga.mem.linear,0,vga.vmemsize);
+			memset(vga.fastmem, 0, vga.vmemsize<<1);
 		}
 	}
 	/* Setup the BIOS */
@@ -1269,4 +1270,51 @@ dac_text16:
 		else INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
 	}
 	return true;
+}
+
+Bitu VideoModeMemSize(Bitu mode) {
+	if (!IS_VGA_ARCH)
+		return 0;
+
+	VideoModeBlock* modelist = NULL;
+
+	switch (svgaCard) {
+	case SVGA_TsengET4K:
+	case SVGA_TsengET3K:
+		modelist = ModeList_VGA_Tseng;
+		break;
+	case SVGA_ParadisePVGA1A:
+		modelist = ModeList_VGA_Paradise;
+		break;
+	default:
+		modelist = ModeList_VGA;
+		break;
+	}
+
+	VideoModeBlock* vmodeBlock = NULL;
+	Bitu i=0;
+	while (modelist[i].mode!=0xffff) {
+		if (modelist[i].mode==mode) {
+			vmodeBlock = &modelist[i];
+			break;
+		}
+		i++;
+	}
+	if (!vmodeBlock)
+        return 0;
+
+	switch(vmodeBlock->type) {
+	case M_LIN4:
+		return vmodeBlock->swidth*vmodeBlock->sheight/2;
+	case M_LIN8:
+		return vmodeBlock->swidth*vmodeBlock->sheight;
+	case M_LIN15: case M_LIN16:
+		return vmodeBlock->swidth*vmodeBlock->sheight*2;
+	case M_LIN32:
+		return vmodeBlock->swidth*vmodeBlock->sheight*4;
+	case M_TEXT:
+		return vmodeBlock->twidth*vmodeBlock->theight*2;
+	}
+	// Return 0 for all other types, those always fit in memory
+	return 0;
 }

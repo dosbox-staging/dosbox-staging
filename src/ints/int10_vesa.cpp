@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.30 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.31 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -115,7 +115,7 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	}
 	mem_writed(buffer+0x0a,0x0);					//Capabilities and flags
 	mem_writed(buffer+0x0e,int10.rom.vesa_modes);	//VESA Mode list
-	mem_writew(buffer+0x12,Bit16u(VGA_MEMORY/(64*1024))); // memory size in 64kb blocks
+	mem_writew(buffer+0x12,(Bit16u)(vga.vmemsize/(64*1024))); // memory size in 64kb blocks
 	return 0x00;
 }
 
@@ -129,6 +129,9 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 
 	mode&=0x3fff;	// vbe2 compatible, ignore lfb and keep screen content bits
 	if (mode<0x100) return 0x01;
+	if (svga.accepts_mode) {
+		if (!svga.accepts_mode(mode)) return 0x01;
+	}
 	while (ModeList_VGA[i].mode!=0xffff) {
 		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
 	}
@@ -145,12 +148,12 @@ foundit:
 		var_write(&minfo.MemoryModel,3);	//ega planar mode
 		modeAttributes = 0x1b;	// Color, graphics, no linear buffer
 
-		if(pageSize > 512*1024) { // this limitation is not on the real card
+		if(pageSize > vga.vmemsize/4) { // this limitation is not on the real card
 			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
 			var_write(&minfo.NumberOfImagePages,0);
 		} else {
 			var_write(&minfo.ModeAttributes, modeAttributes);
-			Bitu pages = (512*1024 / pageSize)-1;
+			Bitu pages = ((vga.vmemsize/4) / pageSize)-1;
 			var_write(&minfo.NumberOfImagePages,pages);
 		}
 		break;
@@ -227,13 +230,13 @@ foundit:
 	var_write(&minfo.WinAAttributes,0x7);	// Exists/readable/writable
 	
 	if(mblock->type != M_LIN4)
-		if(pageSize > VGA_MEMORY) {
+		if(pageSize > vga.vmemsize) {
 			// Mode not supported by current hardware configuration
 			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
 			var_write(&minfo.NumberOfImagePages,0);
 		} else {
 			var_write(&minfo.ModeAttributes, modeAttributes);
-			Bitu pages = (VGA_MEMORY / pageSize)-1;
+			Bitu pages = (vga.vmemsize / pageSize)-1;
 			var_write(&minfo.NumberOfImagePages,pages);
 		}
 
@@ -274,7 +277,7 @@ Bit8u VESA_GetSVGAMode(Bit16u & mode) {
 
 Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address) {
 	if (window) return 0x1;
-	if ((address<32)) {
+	if (((Bit32u)(address)*64*1024<vga.vmemsize)) {
 		IO_Write(0x3d4,0x6a);
 		IO_Write(0x3d5,(Bit8u)address);
 		return 0x0;
@@ -359,7 +362,7 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	case 0x03:	/* Get maximum */
 		bytes=0x400*4;
 		pixels=bytes/bpp;
-		lines = VGA_MEMORY / bytes;
+		lines = (Bit16u)(vga.vmemsize / bytes);
 		return 0x00;
 	case 0x01:	/* Get lengths */
 		break;
@@ -375,12 +378,12 @@ Bit8u VESA_ScanLineLength(Bit8u subcall,Bit16u val, Bit16u & bytes,Bit16u & pixe
 	if(CurMode->type==M_LIN4) {
 		pixels=(vga.config.scan_len*16)/bpp;
 		bytes=vga.config.scan_len*2;
-		lines = Bit16u(VGA_MEMORY /( bytes*4));
+		lines = (Bit16u)(vga.vmemsize /( bytes*4));
 	}
 	else {
 		pixels=(vga.config.scan_len*8)/bpp;
 		bytes=vga.config.scan_len*8;
-		lines = Bit16u(VGA_MEMORY / bytes);
+		lines = (Bit16u)(vga.vmemsize / bytes);
 	}
 	VGA_StartResize();
 	return 0x0;
@@ -465,7 +468,12 @@ void INT10_SetupVESA(void) {
 	int10.rom.vesa_modes=RealMake(0xc000,int10.rom.used);
 //TODO Maybe add normal vga modes too, but only seems to complicate things
 	while (ModeList_VGA[i].mode!=0xffff) {
-		if (ModeList_VGA[i].mode>=0x100){
+		bool canuse_mode=false;
+		if (!svga.accepts_mode) canuse_mode=true;
+		else {
+			if (svga.accepts_mode(ModeList_VGA[i].mode)) canuse_mode=true;
+		}
+		if (ModeList_VGA[i].mode>=0x100 && canuse_mode) {
 			phys_writew(PhysMake(0xc000,int10.rom.used),ModeList_VGA[i].mode);
 			int10.rom.used+=2;
 		}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.11 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.12 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -28,6 +28,8 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 //TODO Base address
 		vga.s3.reg_31 = val;
 		vga.config.compatible_chain4 = !(val&0x08);
+		if (vga.config.compatible_chain4) vga.vmemwrap = 256*1024;
+ 		else vga.vmemwrap = vga.vmemsize;
 		vga.config.display_start = (vga.config.display_start&~0x30000)|((val&0x30)<<12);
 		VGA_DetermineMode();
 		VGA_SetupHandlers();
@@ -312,7 +314,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		}
 		break;
 	case 0x6a:	/* Extended System Control 4 */
-		vga.svga.bank_read=val & 0x3f;
+		vga.svga.bank_read=val & 0x7f;
 		vga.svga.bank_write = vga.svga.bank_read;
 		VGA_SetupHandlers();
 		break;
@@ -345,8 +347,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x35:	/* CR35 CRT Register Lock */
 		return vga.s3.reg_35|(vga.svga.bank_read & 0xf);
 	case 0x36: /* CR36 Reset State Read 1 */
-		return 0x92; /* PCI version */
-		//2 Mb PCI and some bios settings
+		return vga.s3.reg_36;
 	case 0x37: /* Reset state read 2 */
 		return 0x2b;
 	case 0x38: /* CR38 Register Lock 1 */
@@ -403,7 +404,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x69:	/* Extended System Control 3 */
 		return (Bit8u)((vga.config.display_start & 0x1f0000)>>16); 
 	case 0x6a:	/* Extended System Control 4 */
-		return (Bit8u)(vga.svga.bank_read & 0x3f);
+		return (Bit8u)(vga.svga.bank_read & 0x7f);
 	case 0x6b:	// BIOS scatchpad: LFB address
 		return vga.s3.reg_6b; 
 	default:
@@ -483,6 +484,10 @@ bool SVGA_S3_HWCursorActive(void) {
 	return (vga.s3.hgc.curmode & 0x1) != 0;
 }
 
+bool SVGA_S3_AcceptsMode(Bitu mode) {
+	return VideoModeMemSize(mode) < vga.vmemsize;
+}
+
 void SVGA_Setup_S3Trio(void) {
 	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
 	svga.read_p3d5 = &SVGA_S3_ReadCRTC;
@@ -496,5 +501,26 @@ void SVGA_Setup_S3Trio(void) {
 	svga.set_clock = 0; /* implemented in core */
 	svga.get_clock = &SVGA_S3_GetClock;
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
-	svga.accepts_mode = 0; /* don't filter modes */
+	svga.accepts_mode = &SVGA_S3_AcceptsMode;
+
+	if (vga.vmemsize == 0)
+		vga.vmemsize = VGA_MEMORY; // the most common S3 configuration
+
+	// Set CRTC 36 to specify amount of VRAM and PCI
+	if (vga.vmemsize < 1024*1024) {
+		vga.vmemsize = 512*1024;
+		vga.s3.reg_36 = 0xf2;
+	} else if (vga.vmemsize < 2048*1024)	{
+		vga.vmemsize = 1024*1024;
+		vga.s3.reg_36 = 0xd2;
+	} else if (vga.vmemsize < 3072*1024)	{
+		vga.vmemsize = 2048*1024;
+		vga.s3.reg_36 = 0x92;
+	} else if (vga.vmemsize < 4096*1024)	{
+		vga.vmemsize = 3072*1024;
+		vga.s3.reg_36 = 0x52;
+	} else {	// Trio64 supported only up to 4M
+		vga.vmemsize = 4096*1024;
+		vga.s3.reg_36 = 0x12;
+	}
 }

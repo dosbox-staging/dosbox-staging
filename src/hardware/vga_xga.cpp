@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.11 2008-01-10 20:36:03 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.12 2008-01-12 17:37:48 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -152,7 +152,7 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	Bit32u memaddr = (y * XGA_SCREEN_WIDTH) + x;
 
-	if(VGA_MEMORY < memaddr) {
+	if(vga.vmemsize < memaddr) {
 		//LOG_MSG("getpoint mem over: x%d y%d",x,y);
 		return 0;
 	}
