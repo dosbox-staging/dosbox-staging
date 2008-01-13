@@ -16,10 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: support.h,v 1.16 2008-01-13 11:28:41 qbix79 Exp $ */
+
 #ifndef DOSBOX_SUPPORT_H
 #define DOSBOX_SUPPORT_H
 
 #include <string.h>
+#include <string>
 #include <ctype.h>
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
@@ -28,10 +31,6 @@
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #define	strcasecmp(a,b) stricmp(a,b)
 #define strncasecmp(a,b,n) _strnicmp(a,b,n)
-//		if (stricmp(name,devices[index]->name)==0) return index;
-#else
-//if (strcasecmp(name,devices[index]->name)==0) return index;
-//#define	nocasestrcmp(a,b) stricmp(a,b)
 #endif
 
 #define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
@@ -63,5 +62,7 @@ INLINE char * lowcase(char * str) {
 	return str;
 }
 
+void upcase(std::string &str);
+void lowcase(std::string &str);
 
 #endif

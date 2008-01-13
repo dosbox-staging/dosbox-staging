@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.33 2007-10-31 11:45:14 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.34 2008-01-13 11:28:41 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,10 +25,26 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
+#include <cctype>
+#include <string>
+  
 #include "dosbox.h"
 #include "debug.h"
 #include "support.h"
 #include "video.h"
+
+
+void upcase(std::string &str) {
+	int (*tf)(int) = std::toupper;
+	std::transform(str.begin(), str.end(), str.begin(), tf);
+}
+
+void lowcase(std::string &str) {
+	int (*tf)(int) = std::tolower;
+	std::transform(str.begin(), str.end(), str.begin(), tf);
+}
+  
 
 /* 
 	Ripped some source from freedos for this one.
