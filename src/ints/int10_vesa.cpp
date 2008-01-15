@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.31 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.32 2008-01-15 17:46:25 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -445,7 +445,7 @@ static Bitu VESA_SetWindow(void) {
 }
 
 static Bitu VESA_PMSetWindow(void) {
-	VESA_SetCPUWindow(reg_bl,(Bit8u)reg_dx);
+	VESA_SetCPUWindow(0,(Bit8u)reg_dx);
 	return 0;
 }
 static Bitu VESA_PMSetPalette(void) {
