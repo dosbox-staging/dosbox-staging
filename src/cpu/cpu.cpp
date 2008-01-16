@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.106 2007-12-07 20:49:19 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.107 2008-01-16 20:17:15 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -57,8 +57,9 @@ Bit32s CPU_CycleUp = 0;
 Bit32s CPU_CycleDown = 0;
 Bit64s CPU_IODelayRemoved = 0;
 CPU_Decoder * cpudecoder;
-bool CPU_CycleAutoAdjust;
-Bitu CPU_AutoDetermineMode;
+bool CPU_CycleAutoAdjust = false;
+bool CPU_SkipCycleAutoAdjust = false;
+Bitu CPU_AutoDetermineMode = 0;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
@@ -2074,6 +2075,29 @@ static void CPU_CycleDecrease(bool pressed) {
 	}
 }
 
+void CPU_Enable_SkipAutoAdjust(void) {
+	if (CPU_CycleAutoAdjust) {
+		CPU_CycleMax /= 2;
+		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
+			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
+	}
+	CPU_SkipCycleAutoAdjust=true;
+}
+
+void CPU_Disable_SkipAutoAdjust(void) {
+	CPU_SkipCycleAutoAdjust=false;
+}
+
+
+extern Bit32s ticksDone;
+extern Bit32u ticksScheduled;
+
+void CPU_Reset_AutoAdjust(void) {
+	CPU_IODelayRemoved = 0;
+	ticksDone = 0;
+	ticksScheduled = 0;
+}
+
 class CPU: public Module_base {
 private:
 	static bool inited;
@@ -2138,6 +2162,7 @@ public:
 		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
 		CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
+		CPU_SkipCycleAutoAdjust=false;
 
 		std::string str;
 		CommandLine cmd(0,section->Get_string("cycles"));

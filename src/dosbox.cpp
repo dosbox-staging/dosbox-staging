@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.125 2008-01-09 20:34:21 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.126 2008-01-16 20:16:31 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -117,8 +117,8 @@ bool SDLNetInited;
 static Bit32u ticksRemain;
 static Bit32u ticksLast;
 static Bit32u ticksAdded;
-static Bit32s ticksDone;
-static Bit32u ticksScheduled;
+Bit32s ticksDone;
+Bit32u ticksScheduled;
 bool ticksLocked;
 
 static Bitu Normal_Loop(void) {
@@ -162,15 +162,17 @@ increaseticks:
 				ticksRemain = 20;
 			}
 			ticksAdded = ticksRemain;
-			if (CPU_CycleAutoAdjust) {
-				if(ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) {
+				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 					/* ratio we are aiming for is around 90% usage*/
 					Bits ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
 					Bit32s new_cmax = CPU_CycleMax;
 					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
-					if(cproc > 0) {
+					if (cproc > 0) {
+						/* ignore the cycles added due to the io delay code in order
+						   to have smoother auto cycle adjustments */
 						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
-						if(ratioremoved < 1.0) {
+						if (ratioremoved < 1.0) {
 							ratio = (Bits)((double)ratio * (1 - ratioremoved));
 							if (ratio <= 1024) 
 								new_cmax = (CPU_CycleMax * ratio) / 1024;
@@ -179,19 +181,32 @@ increaseticks:
 						}
 					}
 
-					// maybe care about not going negative
-					if (new_cmax > 0) 
-						CPU_CycleMax = new_cmax;
-					if (CPU_CycleLimit > 0) {
-						if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
+					if (new_cmax<CPU_CYCLES_LOWER_LIMIT)
+						new_cmax=CPU_CYCLES_LOWER_LIMIT;
+
+					/* ratios below 1% are considered to be dropouts due to
+					   temporary load imbalance, the cycles adjusting is skipped */
+					if (ratio>10) {
+						/* ratios below 12% along with a large time since the last update
+						   has taken place are most likely caused by heavy load through a
+						   different application, the cycles adjusting is skipped as well */
+						if ((ratio>120) || (ticksDone<700)) {
+							CPU_CycleMax = new_cmax;
+							if (CPU_CycleLimit > 0) {
+								if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
+							}
+						}
 					}
 					CPU_IODelayRemoved = 0;
 					ticksDone = 0;
 					ticksScheduled = 0;
 				} else if (ticksAdded > 15) {
+					/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
+					   but do not reset the scheduled/done ticks to take them into
+					   account during the next auto cycle adjustment */
 					CPU_CycleMax /= 3;
-					if (CPU_CycleMax < 100)
-					CPU_CycleMax = 100;
+					if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
+						CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
 				}
 			}
 		} else {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.137 2007-12-12 13:37:38 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.138 2008-01-16 20:17:15 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -45,6 +45,7 @@
 #include "mapper.h"
 #include "vga.h"
 #include "keyboard.h"
+#include "cpu.h"
 
 //#define DISABLE_JOYSTICK
 
@@ -309,6 +310,7 @@ void GFX_ResetScreen(void) {
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackReset );
 	GFX_Start();
+	CPU_Reset_AutoAdjust();
 }
 
 static int int_log2 (int val) {
@@ -1198,6 +1200,7 @@ void GFX_Events() {
 					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
 						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
+					CPU_Disable_SkipAutoAdjust();
 				} else {
 					if (sdl.mouse.locked) {
 #ifdef WIN32
@@ -1211,6 +1214,7 @@ void GFX_Events() {
 					}
 					SetPriority(sdl.priority.nofocus);
 					MAPPER_LosingFocus();
+					CPU_Enable_SkipAutoAdjust();
 				}
 			}
 

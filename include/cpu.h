@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: cpu.h,v 1.52 2008-01-16 20:16:31 c2woody Exp $ */
+
 #ifndef DOSBOX_CPU_H
 #define DOSBOX_CPU_H
 
@@ -36,6 +38,8 @@
 #define CPU_AUTODETERMINE_SHIFT		0x02
 #define CPU_AUTODETERMINE_MASK		0x03
 
+#define CPU_CYCLES_LOWER_LIMIT		100
+
 /* CPU Cycle Timing */
 extern Bit32s CPU_Cycles;
 extern Bit32s CPU_CycleLeft;
@@ -45,6 +49,7 @@ extern Bit32s CPU_CyclePercUsed;
 extern Bit32s CPU_CycleLimit;
 extern Bit64s CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
+extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 
 /* Some common Defines */
@@ -60,6 +65,11 @@ Bits CPU_Core_Dyn_X86_Run(void);
 Bits CPU_Core_Dyn_X86_Trap_Run(void);
 Bits CPU_Core_Dynrec_Run(void);
 Bits CPU_Core_Dynrec_Trap_Run(void);
+
+void CPU_Enable_SkipAutoAdjust(void);
+void CPU_Disable_SkipAutoAdjust(void);
+void CPU_Reset_AutoAdjust(void);
+
 
 //CPU Stuff
 
