@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: dos_keyboard_layout.cpp,v 1.11 2008-01-17 18:53:18 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -140,7 +142,7 @@ void keyboard_layout::read_keyboard_file(Bit32s specific_layout) {
 		this->read_keyboard_file(current_keyboard_file_name, specific_layout, dos.loaded_codepage);
 }
 
-static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id) {
+static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bool first_id_only) {
 	FILE* tempfile = OpenDosboxFile(kcl_file_name);
 	if (tempfile==0) return 0;
 
@@ -163,7 +165,7 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id) {
 
 		Bit8u data_len=rbuf[2];
 
-		char lng_codes[256];
+		char lng_codes[258];
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
 			i+=2;
@@ -180,6 +182,7 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id) {
 				fclose(tempfile);
 				return cur_pos;
 			}
+			if (first_id_only) break;
 		}
 		fseek(tempfile, cur_pos+3+len, SEEK_SET);
 	}
@@ -188,7 +191,7 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id) {
 	return 0;
 }
 
-static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* layout_id) {
+static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* layout_id, bool first_id_only) {
 	// check ID-bytes
 	if ((kcl_data[0]!=0x4b) || (kcl_data[1]!=0x43) || (kcl_data[2]!=0x46)) {
 		return 0;
@@ -203,7 +206,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 		Bit8u data_len=kcl_data[dpos+2];
 		dpos+=5;
 
-		char lng_codes[256];
+		char lng_codes[258];
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
 			i+=2;
@@ -221,6 +224,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 				// language ID found, return position
 				return cur_pos;
 			}
+			if (first_id_only) break;
 			dpos+=2;
 		}
 		dpos=cur_pos+3+len;
@@ -243,33 +247,44 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
 		// try keyboard layout libraries next
-		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name)) {
+		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name)) {
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name)) {
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name)) {
+		} else if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keyboard.sys");
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keybrd2.sys");
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keybrd3.sys");
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name)) {
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name)) {
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
 		} else {
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return KEYB_FILENOTFOUND;
+		}
+		if (tempfile) {
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
 		}
 		start_pos=0;
 	} else {
@@ -577,41 +592,47 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
 		// try keyboard layout libraries next
-		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name)) {
+		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-			start_pos=0;
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name)) {
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-			start_pos=0;
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name)) {
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-			fseek(tempfile, start_pos+2, SEEK_SET);
-			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
-			fclose(tempfile);
-			start_pos=0;
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name)) {
+		} if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keyboard.sys");
+		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keybrd2.sys");
+		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false)) {
+			tempfile = OpenDosboxFile("keybrd3.sys");
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-			start_pos=0;
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name)) {
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-			start_pos=0;
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name)) {
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true)) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
-			start_pos=0;
+		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
+		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false)) {
+			read_buf_size=0;
+			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
 		} else {
 			start_pos=0;
 			LOG(LOG_BIOS,LOG_ERROR)("Keyboard layout file %s not found",keyboard_file_name);
 			return 437;
 		}
+		if (tempfile) {
+			fseek(tempfile, start_pos+2, SEEK_SET);
+			read_buf_size=(Bit32u)fread(read_buf, sizeof(Bit8u), 65535, tempfile);
+			fclose(tempfile);
+		}
+		start_pos=0;
 	} else {
 		// check ID-bytes of file
 		Bit32u dr=(Bit32u)fread(read_buf, sizeof(Bit8u), 4, tempfile);
