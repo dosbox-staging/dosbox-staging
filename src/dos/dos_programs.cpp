@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.81 2007-12-27 15:38:00 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.82 2008-01-19 11:02:29 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -34,6 +34,7 @@
 #include "dos_system.h"
 #include "dos_inc.h"
 #include "bios.h"
+#include "setup.h"
 
 #if defined HAVE_SYS_TYPES_H && defined HAVE_PWD_H
 #include <sys/types.h>

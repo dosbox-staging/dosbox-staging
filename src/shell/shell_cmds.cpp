@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.79 2007-10-16 07:29:22 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.80 2008-01-19 11:02:29 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -24,6 +24,7 @@
 #include "regs.h"
 #include "../dos/drives.h"
 #include "support.h"
+#include "setup.h"
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
