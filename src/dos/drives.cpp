@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.cpp,v 1.12 2007-11-01 12:15:34 qbix79 Exp $ */
+/* $Id: drives.cpp,v 1.13 2008-01-21 21:25:17 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "dos_system.h"
@@ -88,7 +88,9 @@ void Set_Label(char const * const input, char * const output, bool cdrom) {
 		if (input[vnamePos]==0) break;
 		if (!point && (input[vnamePos]=='.')) {	togo=4; point=true; }
 
-		output[labelPos] = toupper(input[vnamePos]);
+		//another mscdex quirk. Label is not always uppercase. (Daggerfall)
+		output[labelPos] = (cdrom?input[vnamePos]:toupper(input[vnamePos]));
+
 		labelPos++; vnamePos++;
 		togo--;
 		if ((togo==0) && !point) {
