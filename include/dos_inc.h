@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.72 2007-11-18 10:30:11 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.73 2008-01-21 21:26:49 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -502,6 +502,7 @@ public:
 	bool Extended(void);
 	void GetAttr(Bit8u & attr);
 	void SetAttr(Bit8u attr);
+	bool Valid(void);
 private:
 	bool extended;
 	PhysPt real_pt;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.93 2007-10-20 19:13:59 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.94 2008-01-21 21:26:49 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -851,6 +851,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 
 bool DOS_FCBClose(Bit16u seg,Bit16u offset) {
 	DOS_FCB fcb(seg,offset);
+	if(!fcb.Valid()) return false;
 	Bit8u fhandle;
 	fcb.FileClose(fhandle);
 	DOS_CloseFile(fhandle);

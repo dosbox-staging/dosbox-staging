@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.53 2007-11-07 22:08:03 c2woody Exp $ */
+/* $Id: dos_classes.cpp,v 1.54 2008-01-21 21:26:49 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -470,6 +470,12 @@ void DOS_FCB::FileOpen(Bit8u _fhandle) {
 	Files[temp]->Seek(&size,DOS_SEEK_SET);
 	sSave(sFCB,time,Files[temp]->time);
 	sSave(sFCB,date,Files[temp]->date);
+}
+
+bool DOS_FCB::Valid() {
+	//Very simple check for Oubliette
+	if(sGet(sFCB,filename[0]) == 0 && sGet(sFCB,file_handle) == 0) return false;
+	return true;
 }
 
 void DOS_FCB::FileClose(Bit8u & _fhandle) {
