@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.18 2007-10-14 17:31:52 c2woody Exp $ */
+/* $Id: cdrom_image.cpp,v 1.19 2008-01-21 21:22:58 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -30,6 +30,7 @@
 #include "cdrom.h"
 #include "drives.h"
 #include "support.h"
+#include "setup.h"
 
 #if !defined(WIN32)
 #include <libgen.h>
