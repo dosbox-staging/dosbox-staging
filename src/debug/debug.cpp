@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.91 2007-12-15 16:28:32 c2woody Exp $ */
+/* $Id: debug.cpp,v 1.92 2008-01-21 21:20:01 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -48,6 +48,7 @@ using namespace std;
 #include "debug_inc.h"
 #include "../cpu/lazyflags.h"
 #include "keyboard.h"
+#include "setup.h"
 
 #ifdef WIN32
 void WIN32_Console();
