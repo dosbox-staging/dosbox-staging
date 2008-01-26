@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.41 2007-10-21 08:43:24 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.42 2008-01-26 15:50:19 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -30,19 +30,115 @@
 
 using namespace std;
 
-void Prop_float::SetValue(char* input){
+void Value::destroy() {
+	if (type == V_STRING) delete _string;
+}
+
+Value& Value::copy(Value const& in) throw(WrongType) {
+	if (this != &in) { //Selfassigment!
+		if(type != V_NONE && type != in.type) throw WrongType();
+		destroy();
+		plaincopy(in);
+	}
+	return *this;
+}
+
+void Value::plaincopy(Value const& in) {
+	type = in.type;
+	_int = in._int;
+	_double = in._double;
+	_bool = in._bool;
+	_hex = in._hex;
+	if(type == V_STRING) _string = new string(*in._string);
+}
+
+Value::operator bool () throw(WrongType) {
+	if(type != V_BOOL) throw WrongType();
+	return _bool;
+}
+
+Value::operator Hex () throw(WrongType) {
+	if(type != V_HEX) throw WrongType();
+	return _hexn;
+}
+
+Value::operator int () throw(WrongType) {
+	if(type != V_INT) throw WrongType();
+	return _int;
+}
+
+Value::operator double () throw(WrongType) {
+	if(type != V_DOUBLE) throw WrongType();
+	return _double;
+}
+
+Value::operator char const* () throw(WrongType) {
+	if(type != V_STRING) throw WrongType();
+	return _string->c_str();
+}
+
+bool Value::operator==(Value const& other) {
+	if(this == &other) return true;
+	if(type != other.type) return false;
+	switch(type){
+		case V_BOOL: 
+			if(_bool == other._bool) return true;
+			break;
+		case V_INT:
+			if(_int == other._int) return true;
+			break;
+		case V_HEX:
+			if(_hexn == other._hexn) return true;
+			break;
+		case V_DOUBLE:
+			if(_double == other._double) return true;
+			break;
+		case V_STRING:
+			if((*_string) == (*other._string)) return true;
+			break;
+		default:
+			E_Exit("comparing stuff that doesn't make sense");
+			break;
+	}
+	return false;
+}
+
+bool Property::CheckValue(Value const& in, bool warn){
+	if(suggested_values.empty()) return false;
+	for(iter it = suggested_values.begin();it != suggested_values.end();it++) {
+		if ( (*it) == in) { //Match!
+			return true;
+		}
+	}
+	if(warn) LOG_MSG("Value not in suggested values");
+	return false;
+}
+
+bool Prop_int::CheckValue(Value const& in, bool warn) {
+	if(Property::CheckValue(in,warn)) return true;
+	//No >= and <= in Value type and == is ambigious
+	int mi = min;
+	int ma = max;
+	int va = static_cast<int>(Value(in));
+	if(mi == -1 && ma == -1) return true;
+	if (va >= mi && va <= ma) return true;
+	if(warn) LOG_MSG("Value not included in range");
+	return false;
+}
+
+void Prop_double::SetValue(char* input){
 	input=trim(input);
-	value._float= static_cast<float>(atof(input));
+	value = static_cast<double>(atof(input));
 }
 
 void Prop_int::SetValue(char* input){
 	input=trim(input);
-	value._int= atoi(input);
+	value = atoi(input);
 }
 
 void Prop_string::SetValue(char* input){
 	input=trim(input);
-	value._string->assign(input);
+	value=input;
 }
 	
 void Prop_bool::SetValue(char* input){
@@ -71,42 +167,46 @@ void Prop_bool::GetValuestring(char* str) const{
         sprintf(str,"%s",value._bool?"true":"false");
 }
 
-void Prop_float::GetValuestring(char* str) const {
-	sprintf(str,"%1.2f",value._float);
+void Prop_double::GetValuestring(char* str) const {
+	sprintf(str,"%1.2f",value._double);
 }
 
 void Prop_hex::GetValuestring(char* str) const {
         sprintf(str,"%X",value._hex);
 }
 
-void Section_prop::Add_float(char const * const _propname, float _value) {
-	Property* test=new Prop_float(_propname,_value);
+void Section_prop::Add_double(char const * const _propname, double _value) {
+	Property* test=new Prop_double(_propname,_value);
 	properties.push_back(test);
 }
 
 
-void Section_prop::Add_int(const char* _propname, int _value) {
-	Property* test=new Prop_int(_propname,_value);
+Prop_int& Section_prop::Add_int(const char* _propname, int _value) {
+	Prop_int* test=new Prop_int(_propname,_value);
 	properties.push_back(test);
+	return *test;
 }
 
-void Section_prop::Add_string(char const * const _propname, char const * const _value) {
-	Property* test=new Prop_string(_propname,_value);
+Prop_string& Section_prop::Add_string(char const * const _propname, char const * const _value) {
+	Prop_string* test=new Prop_string(_propname,_value);
 	properties.push_back(test);
+	return *test;
 }
 
-void Section_prop::Add_bool(char const * const _propname, bool _value) {
-	Property* test=new Prop_bool(_propname,_value);
+Prop_bool& Section_prop::Add_bool(char const * const _propname, bool _value) {
+	Prop_bool* test=new Prop_bool(_propname,_value);
 	properties.push_back(test);
+	return *test;
 }
-void Section_prop::Add_hex(const char* _propname, int _value) {
-	Property* test=new Prop_hex(_propname,_value);
+Prop_hex& Section_prop::Add_hex(const char* _propname, int _value) {
+	Prop_hex* test=new Prop_hex(_propname,_value);
 	properties.push_back(test);
+	return *test;
 }
 int Section_prop::Get_int(char const * const _propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
-			return ((*tel)->GetValue())._int;
+			return ((*tel)->GetValue());
 		}
 	}
 	return 0;
@@ -115,15 +215,15 @@ int Section_prop::Get_int(char const * const _propname) const {
 bool Section_prop::Get_bool(char const * const _propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
-			return ((*tel)->GetValue())._bool;
+			return ((*tel)->GetValue());
 		}
 	}
 	return false;
 }
-float Section_prop::Get_float(char const * const _propname) const {
+double Section_prop::Get_double(char const * const _propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
-			return ((*tel)->GetValue())._float;
+			return ((*tel)->GetValue());
 		}
 	}
 	return false;
@@ -139,7 +239,7 @@ Property* Section_prop::Get_prop(int index){
 const char* Section_prop::Get_string(char const * const _propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
-			return ((*tel)->GetValue())._string->c_str();
+			return ((*tel)->GetValue());
 		}
 	}
 	return "";

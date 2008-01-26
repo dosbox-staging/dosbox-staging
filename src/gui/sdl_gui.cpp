@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.3 2007-11-06 20:25:36 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.4 2008-01-26 15:50:19 qbix79 Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -317,13 +317,13 @@ public:
 		PropertyEditor(parent, x, y, section, prop) {
 		new GUI::Label(this, 0, 5, prop->propname);
 		input = new GUI::Input(this, 130, 0, 50);
-		input->setText(stringify(prop->GetValue()._float));
+		input->setText(stringify((double)prop->GetValue()));
 	}
 
 	bool prepare(std::string &buffer) {
-		float val;
+		double val;
 		convert(input->getText(), val, false);
-		if (val == prop->GetValue()._float) return false;
+		if (val == (double)prop->GetValue()) return false;
 		buffer.append(stringify(val));
 		return true;
 	}
@@ -403,7 +403,7 @@ public:
 		while ((prop = section->Get_prop(i))) {
 			Prop_bool   *pbool   = dynamic_cast<Prop_bool*>(prop);
 			Prop_int    *pint    = dynamic_cast<Prop_int*>(prop);
-			Prop_float  *pfloat  = dynamic_cast<Prop_float*>(prop);
+			Prop_double  *pdouble  = dynamic_cast<Prop_double*>(prop);
 			Prop_hex    *phex    = dynamic_cast<Prop_hex*>(prop);
 			Prop_string *pstring = dynamic_cast<Prop_string*>(prop);
 
@@ -411,7 +411,7 @@ public:
 			if (pbool) p = new PropertyEditorBool(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else if (phex) p = new PropertyEditorHex(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else if (pint) p = new PropertyEditorInt(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
-			else if (pfloat) p = new PropertyEditorFloat(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
+			else if (pdouble) p = new PropertyEditorFloat(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else if (pstring) p = new PropertyEditorString(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else { i++; continue; }
 			b->addActionHandler(p);
