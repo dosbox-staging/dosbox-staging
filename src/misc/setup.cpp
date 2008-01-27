@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.42 2008-01-26 15:50:19 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.43 2008-01-27 18:31:01 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -52,27 +52,27 @@ void Value::plaincopy(Value const& in) {
 	if(type == V_STRING) _string = new string(*in._string);
 }
 
-Value::operator bool () throw(WrongType) {
+Value::operator bool () const throw(WrongType) {
 	if(type != V_BOOL) throw WrongType();
 	return _bool;
 }
 
-Value::operator Hex () throw(WrongType) {
+Value::operator Hex () const throw(WrongType) {
 	if(type != V_HEX) throw WrongType();
 	return _hexn;
 }
 
-Value::operator int () throw(WrongType) {
+Value::operator int () const throw(WrongType) {
 	if(type != V_INT) throw WrongType();
 	return _int;
 }
 
-Value::operator double () throw(WrongType) {
+Value::operator double () const throw(WrongType) {
 	if(type != V_DOUBLE) throw WrongType();
 	return _double;
 }
 
-Value::operator char const* () throw(WrongType) {
+Value::operator char const* () const throw(WrongType) {
 	if(type != V_STRING) throw WrongType();
 	return _string->c_str();
 }

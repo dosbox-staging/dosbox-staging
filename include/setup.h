@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.30 2008-01-26 15:50:19 qbix79 Exp $ */
+/* $Id: setup.h,v 1.31 2008-01-27 18:31:01 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -46,6 +46,8 @@
 #define CH_STRING
 #include <string>
 #endif
+
+#pragma warning(disable: 4290)
 
 class Hex {
 private:
@@ -89,11 +91,11 @@ public:
 	Value& operator= (Value const& in) throw(WrongType)       { return copy(Value(in));}
 
 	bool operator== (Value const & other);
-	operator bool () throw(WrongType);
-	operator Hex () throw(WrongType);
-	operator int () throw(WrongType);
-	operator double () throw(WrongType);
-	operator char const* () throw(WrongType);
+	operator bool () const throw(WrongType);
+	operator Hex () const throw(WrongType);
+	operator int () const throw(WrongType);
+	operator double () const throw(WrongType);
+	operator char const* () const throw(WrongType);
 
 private:
 	void destroy();
@@ -108,7 +110,7 @@ public:
 	Property(char const * const _propname):propname(_propname) { }
 	virtual void SetValue(char* input)=0;
 	virtual void GetValuestring(char* str) const=0;
-	Value GetValue() const { return value;}
+	Value const& GetValue() const { return value;}
 	virtual ~Property(){ }
 	std::string propname;
 	//CheckValue returns true (and sets value to in) if value is in suggested_values;
@@ -141,7 +143,7 @@ private:
 };
 class Prop_double:public Property {
 public:
-	Prop_double(char const * const _propname, float _value):Property(_propname){
+	Prop_double(char const * const _propname, double _value):Property(_propname){
 		default_value = value = _value;
 	}
 	void SetValue(char* input);
