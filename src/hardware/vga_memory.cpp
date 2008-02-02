@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.47 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.48 2008-02-02 20:47:24 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,16 +29,15 @@
 #include "setup.h"
 
 
-/* #ifndef C_VGARAM_CHECKED
+#ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1
-#endif */
+#endif
 
 #if C_VGARAM_CHECKED
 // Checked linear offset
 #define CHECKED(v) ((v)&(vga.vmemwrap-1))
 // Checked planar offset (latched access)
 #define CHECKED2(v) ((v)&((vga.vmemwrap>>2)-1))
-// Checked planar offset (latched access)
 #else
 #define CHECKED(v) (v)
 #define CHECKED2(v) (v)
@@ -425,8 +424,8 @@ public:
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
 		((Bit32u*)vga.mem.linear)[addr]=pixels.d;
-		if(vga.config.compatible_chain4)
-			((Bit32u*)vga.mem.linear)[CHECKED2(addr+64*1024)]=pixels.d; 
+//		if(vga.config.compatible_chain4)
+//			((Bit32u*)vga.mem.linear)[CHECKED2(addr+64*1024)]=pixels.d; 
 	}
 public:
 	VGA_UnchainedVGA_Handler()  {
