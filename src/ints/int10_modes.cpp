@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.76 2008-02-03 12:19:35 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.77 2008-02-03 20:43:14 c2woody Exp $ */
 
 #include <string.h>
 
@@ -572,6 +572,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 bool INT10_SetVideoMode(Bitu mode) {
 	bool clearmem=true;Bitu i;
 	if (mode>=0x100) {
+		if ((mode & 0x4000) && int10.vesa_nolfb) return false;
 		if (mode & 0x8000) clearmem=false;
 		mode&=0xfff;
 	}

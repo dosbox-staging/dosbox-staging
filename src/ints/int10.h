@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.h,v 1.33 2008-02-03 12:19:35 c2woody Exp $ */
+/* $Id: int10.h,v 1.34 2008-02-03 20:43:14 c2woody Exp $ */
 
 #include "vga.h"
 
@@ -138,6 +138,7 @@ typedef struct {
 		Bitu used;
 	} rom;
 	Bitu vesa_setmode;
+	bool vesa_nolfb;
 } Int10Data;
 
 extern Int10Data int10;

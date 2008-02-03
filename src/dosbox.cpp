@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.126 2008-01-16 20:16:31 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.127 2008-02-03 20:43:13 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -39,6 +39,7 @@
 #include "programs.h"
 #include "support.h"
 #include "mapper.h"
+#include "ints/int10.h"
 
 Config * control;
 MachineType machine;
@@ -271,6 +272,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 	svgaCard=SVGA_None; 
 	machine=MCH_VGA;
+	int10.vesa_nolfb=false;
 	std::string cmd_machine;
 	const char * mtype;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)) mtype=cmd_machine.c_str();
@@ -284,6 +286,10 @@ static void DOSBOX_RealInit(Section * sec) {
 			(strcasecmp(mtype,"svga")==0) || (strcasecmp(mtype,"svga_s3")==0)) {
 		machine=MCH_VGA;
 		svgaCard=SVGA_S3Trio;
+	} else if (strcasecmp(mtype,"vesa_nolfb")==0) {
+		machine=MCH_VGA;
+		svgaCard=SVGA_S3Trio;
+		int10.vesa_nolfb=true;
 	} else if ((strcasecmp(mtype,"vga_et4000")==0) || (strcasecmp(mtype,"svga_et4000")==0)) {
 		machine=MCH_VGA;
 		svgaCard=SVGA_TsengET4K;

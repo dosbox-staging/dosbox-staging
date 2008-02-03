@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.33 2008-02-03 12:19:35 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.34 2008-02-03 20:43:14 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -164,7 +164,8 @@ foundit:
 		var_write(&minfo.NumberOfPlanes,0x1);
 		var_write(&minfo.BitsPerPixel,8);
 		var_write(&minfo.MemoryModel,4);		//packed pixel
-		modeAttributes = 0x9b;	// Color, graphics, linear buffer
+		modeAttributes = 0x1b;	// Color, graphics
+		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_LIN15:
 		pageSize = mblock->sheight * mblock->swidth*2;
@@ -181,7 +182,8 @@ foundit:
 		var_write(&minfo.BlueMaskPos,0);
 		var_write(&minfo.ReservedMaskSize,0x01);
 		var_write(&minfo.ReservedMaskPos,0x0f);
-		modeAttributes = 0x9b;	// Color, graphics, linear buffer
+		modeAttributes = 0x1b;	// Color, graphics
+		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_LIN16:
 		pageSize = mblock->sheight * mblock->swidth*2;
@@ -196,7 +198,8 @@ foundit:
 		var_write(&minfo.GreenMaskPos,5);
 		var_write(&minfo.BlueMaskSize,5);
 		var_write(&minfo.BlueMaskPos,0);
-		modeAttributes = 0x9b;	// Color, graphics, linear buffer
+		modeAttributes = 0x1b;	// Color, graphics
+		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_LIN32:
 		pageSize = mblock->sheight * mblock->swidth*4;
@@ -213,7 +216,8 @@ foundit:
 		var_write(&minfo.BlueMaskPos,0x0);
 		var_write(&minfo.ReservedMaskSize,0x8);
 		var_write(&minfo.ReservedMaskPos,0x18);
-		modeAttributes = 0x9b;	// Color, graphics, linear buffer
+		modeAttributes = 0x1b;	// Color, graphics
+		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 /*	case M_TEXT:
 		pageSize = mblock->sheight/8 * mblock->swidth*2/8;
@@ -258,7 +262,7 @@ foundit:
 	var_write(&minfo.Reserved_page,0x1);
 	var_write(&minfo.XCharSize,mblock->cwidth);
 	var_write(&minfo.YCharSize,mblock->cheight);
-	var_write(&minfo.PhysBasePtr,S3_LFB_BASE);
+	if (!int10.vesa_nolfb) var_write(&minfo.PhysBasePtr,S3_LFB_BASE);
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return 0x00;
