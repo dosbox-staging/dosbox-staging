@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: int10.h,v 1.33 2008-02-03 12:19:35 c2woody Exp $ */
 
 #include "vga.h"
 
@@ -135,6 +137,7 @@ typedef struct {
 		Bit16u pmode_interface_palette;
 		Bitu used;
 	} rom;
+	Bitu vesa_setmode;
 } Int10Data;
 
 extern Int10Data int10;

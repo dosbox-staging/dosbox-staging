@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.75 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.76 2008-02-03 12:19:35 c2woody Exp $ */
 
 #include <string.h>
 
@@ -579,6 +579,7 @@ bool INT10_SetVideoMode(Bitu mode) {
 		clearmem=false;
 		mode-=0x80;
 	}
+	int10.vesa_setmode=0xffff;
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 	if (!IS_EGAVGA_ARCH) return INT10_SetVideoMode_OTHER(mode,clearmem);
 	Bit8u modeset_ctl,video_ctl,vga_switches;
