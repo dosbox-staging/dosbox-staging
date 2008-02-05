@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.48 2008-02-02 20:47:24 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.49 2008-02-05 17:58:14 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -902,10 +902,14 @@ void VGA_SetupMemory(Section* sec) {
 	vga.svga.bank_read = vga.svga.bank_write = 0;
 	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
 
+	Bit32u vga_allocsize=vga.vmemsize;
+	// Keep lower limit at 512k
+	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
 	// We reserve extra 2K for one scan line
-	vga.mem.linear_orgptr = new Bit8u[vga.vmemsize+2048+16];
+	vga_allocsize+=2048+16;
+	vga.mem.linear_orgptr = new Bit8u[vga_allocsize];
 	vga.mem.linear=(Bit8u*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
-	memset(vga.mem.linear,0,vga.vmemsize);
+	memset(vga.mem.linear,0,vga_allocsize);
 
 	vga.fastmem_orgptr = new Bit8u[(vga.vmemsize<<1)+4096+16];
 	vga.fastmem=(Bit8u*)(((Bitu)vga.fastmem_orgptr + 16-1) & ~(16-1));
