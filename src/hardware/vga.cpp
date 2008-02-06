@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.cpp,v 1.33 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga.cpp,v 1.34 2008-02-06 18:23:34 c2woody Exp $ */
 
 #include "dosbox.h"
 //#include "setup.h"
@@ -82,11 +82,11 @@ void VGA_DetermineMode(void) {
 	}
 }
 
-void VGA_StartResize(void) {
+void VGA_StartResize(Bitu delay /*=50*/) {
 	if (!vga.draw.resizing) {
 		vga.draw.resizing=true;
-		/* Start a resize after 50 ms */
-		PIC_AddEvent(VGA_SetupDrawing,50);
+		/* Start a resize after delay (default 50 ms) */
+		PIC_AddEvent(VGA_SetupDrawing,(float)delay);
 	}
 }
 

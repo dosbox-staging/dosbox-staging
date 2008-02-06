@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_crtc.cpp,v 1.30 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_crtc.cpp,v 1.31 2008-02-06 18:23:34 c2woody Exp $ */
 
 #include <stdlib.h>
 #include "dosbox.h"
@@ -226,11 +226,16 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 	case 0x12:	/* Vertical Display End Register */
 		if (val!=crtc(vertical_display_end)) {
 			if (abs((Bits)val-(Bits)crtc(vertical_display_end))<3) {
+				// delay small vde changes a bit to avoid screen resizing
+				// if they are reverted in a short timeframe
 				PIC_RemoveEvents(VGA_SetupDrawing);
 				vga.draw.resizing=false;
+				crtc(vertical_display_end)=val;
+				VGA_StartResize(150);
+			} else {
+				crtc(vertical_display_end)=val;
+				VGA_StartResize();
 			}
-			crtc(vertical_display_end)=val;
-			VGA_StartResize();
 		}
 		/*
 			0-7	Lower 8 bits of Vertical Display End. The display ends when the line

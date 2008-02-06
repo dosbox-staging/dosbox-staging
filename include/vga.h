@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.38 2008-01-12 17:36:48 c2woody Exp $ */
+/* $Id: vga.h,v 1.39 2008-02-06 18:22:27 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -385,7 +385,7 @@ typedef struct {
 void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
-void VGA_StartResize(void);
+void VGA_StartResize(Bitu delay=50);
 void VGA_SetupDrawing(Bitu val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
