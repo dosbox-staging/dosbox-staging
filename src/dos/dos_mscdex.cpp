@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.51 2007-12-30 08:21:35 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.52 2008-02-06 21:56:32 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -138,6 +138,7 @@ public:
 private:
 
 	PhysPt		GetDefaultBuffer	(void);
+	PhysPt		GetTempBuffer		(void);
 
 	Bit16u		numDrives;
 
@@ -161,8 +162,7 @@ public:
 	Bit16u		rootDriverHeaderSeg;
 };
 
-CMscdex::CMscdex(void)
-{
+CMscdex::CMscdex(void) {
 	numDrives			= 0;
 	rootDriverHeaderSeg	= 0;
 	defaultBufSeg		= 0;
@@ -171,12 +171,12 @@ CMscdex::CMscdex(void)
 	for (Bit32u i=0; i<MSCDEX_MAX_DRIVES; i++) cdrom[i] = 0;
 };
 
-CMscdex::~CMscdex(void)
-{
-	if (defaultBufSeg!=0) {
-		DOS_FreeMemory(defaultBufSeg);
+CMscdex::~CMscdex(void) {
+/*	if (defaultBufSeg!=0) {
+		DOS_FreeMemory(defaultBufSeg);	// can't free that
 		defaultBufSeg = 0;
-	}
+	} */
+	defaultBufSeg = 0;
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
 		delete (cdrom)[i];
 		cdrom[i] = 0;
@@ -396,17 +396,23 @@ void CMscdex::ReplaceDrive(CDROM_Interface* newCdrom, Bit8u subUnit) {
 	StopAudio(subUnit);
 }
 
-PhysPt CMscdex::GetDefaultBuffer(void)
-{
+PhysPt CMscdex::GetDefaultBuffer(void) {
 	if (defaultBufSeg==0) {
-		Bit16u size = 128; //Size in block is size in pages ?
+		Bit16u size = (2352*2+15)/16;
+		defaultBufSeg = DOS_GetMemory(size);
+	};
+	return PhysMake(defaultBufSeg,2352);
+};
+
+PhysPt CMscdex::GetTempBuffer(void) {
+	if (defaultBufSeg==0) {
+		Bit16u size = (2352*2+15)/16;
 		defaultBufSeg = DOS_GetMemory(size);
 	};
 	return PhysMake(defaultBufSeg,0);
 };
 
-void CMscdex::GetDriverInfo	(PhysPt data)
-{
+void CMscdex::GetDriverInfo	(PhysPt data) {
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
 		mem_writeb(data  ,(Bit8u)i);	// subunit
 		mem_writed(data+1,RealMake(rootDriverHeaderSeg,0));
@@ -563,71 +569,56 @@ bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)
      return true;
 };
 
-bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) 
-{	
+bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) {	
 	if (subUnit>=numDrives) return false;
 	Bit16u drive = dinfo[subUnit].drive;
 
-	Bit16u error,seg,size = 128;
+	Bit16u error;
 	bool success = false;
-	if (DOS_AllocateMemory(&seg,&size)) {
-		PhysPt ptoc = PhysMake(seg,0);
-		success = ReadVTOC(drive,0x00,ptoc,error);
-		if (success) {
-			MEM_StrCopy(ptoc+40,data,31);
-			data[31] = 0;
-			rtrim(data);
-		};
-		DOS_FreeMemory(seg);
-	} else { LOG(LOG_MISC,LOG_ERROR)("MSCDEX buffer allocation failed."); };
+	PhysPt ptoc = GetTempBuffer();
+	success = ReadVTOC(drive,0x00,ptoc,error);
+	if (success) {
+		MEM_StrCopy(ptoc+40,data,31);
+		data[31] = 0;
+		rtrim(data);
+	};
+
 	return success; 
 };
 
-bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) 
-{	
-	Bit16u error,seg,size = 128;
+bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) {	
+	Bit16u error;
 	bool success = false;
-	if (DOS_AllocateMemory(&seg,&size)) {
-		PhysPt ptoc = PhysMake(seg,0);
-		success = ReadVTOC(drive,0x00,ptoc,error);
-		if (success) {
-			MEM_BlockCopy(data,ptoc+702,37);
-			mem_writeb(data+37,0);
-		};
-		DOS_FreeMemory(seg);
-	} else { LOG(LOG_MISC,LOG_ERROR)("MSCDEX buffer allocation failed."); };
+	PhysPt ptoc = GetTempBuffer();
+	success = ReadVTOC(drive,0x00,ptoc,error);
+	if (success) {
+		MEM_BlockCopy(data,ptoc+702,37);
+		mem_writeb(data+37,0);
+	};
 	return success; 
 };
 
-bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) 
-{ 
-	Bit16u error,seg,size = 128;
+bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) { 
+	Bit16u error;
 	bool success = false;
-	if (DOS_AllocateMemory(&seg,&size)) {
-		PhysPt ptoc = PhysMake(seg,0);
-		success = ReadVTOC(drive,0x00,ptoc,error);
-		if (success) {
-			MEM_BlockCopy(data,ptoc+739,37);
-			mem_writeb(data+37,0);
-		};
-		DOS_FreeMemory(seg);
-	} else { LOG(LOG_MISC,LOG_ERROR)("MSCDEX buffer allocation failed."); };
+	PhysPt ptoc = GetTempBuffer();
+	success = ReadVTOC(drive,0x00,ptoc,error);
+	if (success) {
+		MEM_BlockCopy(data,ptoc+739,37);
+		mem_writeb(data+37,0);
+	};
 	return success; 
 };
 
-bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) 
-{ 
-	Bit16u error,seg,size = 128;
+bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) { 
+	Bit16u error;
 	bool success = false;
-	if (DOS_AllocateMemory(&seg,&size)) {
-		PhysPt ptoc = PhysMake(seg,0);
-		success = ReadVTOC(drive,0x00,ptoc,error);
-		if (success) {
-			MEM_BlockCopy(data,ptoc+776,37);
-			mem_writeb(data+37,0);
-		};
-		DOS_FreeMemory(seg);
-	} else { LOG(LOG_MISC,LOG_ERROR)("MSCDEX buffer allocation failed."); };
+	PhysPt ptoc = GetTempBuffer();
+	success = ReadVTOC(drive,0x00,ptoc,error);
+	if (success) {
+		MEM_BlockCopy(data,ptoc+776,37);
+		mem_writeb(data+37,0);
+	};
 	return success; 
 };
 
