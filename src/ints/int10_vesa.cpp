@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.34 2008-02-03 20:43:14 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.35 2008-02-08 21:25:57 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -147,15 +147,6 @@ foundit:
 		var_write(&minfo.BitsPerPixel,4);
 		var_write(&minfo.MemoryModel,3);	//ega planar mode
 		modeAttributes = 0x1b;	// Color, graphics, no linear buffer
-
-		if(pageSize > vga.vmemsize/4) { // this limitation is not on the real card
-			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
-			var_write(&minfo.NumberOfImagePages,0);
-		} else {
-			var_write(&minfo.ModeAttributes, modeAttributes);
-			Bitu pages = ((vga.vmemsize/4) / pageSize)-1;
-			var_write(&minfo.NumberOfImagePages,pages);
-		}
 		break;
 	case M_LIN8:
 		pageSize = mblock->sheight * mblock->swidth;
@@ -233,16 +224,15 @@ foundit:
 	}
 	var_write(&minfo.WinAAttributes,0x7);	// Exists/readable/writable
 	
-	if(mblock->type != M_LIN4)
-		if(pageSize > vga.vmemsize) {
-			// Mode not supported by current hardware configuration
-			var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
-			var_write(&minfo.NumberOfImagePages,0);
-		} else {
-			var_write(&minfo.ModeAttributes, modeAttributes);
-			Bitu pages = (vga.vmemsize / pageSize)-1;
-			var_write(&minfo.NumberOfImagePages,pages);
-		}
+	if(pageSize > vga.vmemsize) {
+		// Mode not supported by current hardware configuration
+		var_write(&minfo.ModeAttributes, modeAttributes & ~0x1);
+		var_write(&minfo.NumberOfImagePages,0);
+	} else {
+		var_write(&minfo.ModeAttributes, modeAttributes);
+		Bitu pages = (vga.vmemsize / pageSize)-1;
+		var_write(&minfo.NumberOfImagePages,pages);
+	}
 
 	if (mblock->type==M_TEXT) {
 		var_write(&minfo.WinGranularity,32);
