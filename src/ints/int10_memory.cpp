@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_memory.cpp,v 1.24 2007-10-08 20:22:13 c2woody Exp $ */
+/* $Id: int10_memory.cpp,v 1.25 2008-02-09 12:44:16 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -47,17 +47,16 @@ static Bit16u map_offset[8]={
 };
 
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
-	PhysPt where=PhysMake(0xa000,map_offset[map & 0x7]+offset*32);
+	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+offset*32);
 	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0x4);	//Enable plane 2
 	IO_Write(0x3ce,0x6);Bitu old_6=IO_Read(0x3cf);
 	IO_Write(0x3cf,0x0);	//Disable odd/even and a0000 adressing
 	for (Bitu i=0;i<count;i++) {
-		MEM_BlockCopy(where,font,height);
-		where+=32;
+		MEM_BlockCopy(ftwhere,font,height);
+		ftwhere+=32;
 		font+=height;
 	}
-	IO_Write(0x3c4,0x2);
-	IO_Write(0x3c5,0xf);	//Enable all planes
+	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0x3);	//Enable textmode planes (0,1)
 	IO_Write(0x3ce,0x6);
 	if (IS_VGA_ARCH) IO_Write(0x3cf,old_6);	//odd/even and b8000 adressing
 	else IO_Write(0x3cf,0x0e);
