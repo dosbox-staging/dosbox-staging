@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.139 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.140 2008-02-10 18:55:23 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1454,6 +1454,7 @@ int main(int argc, char* argv[]) {
 		Pbool->Set_help("Wait before closing the console if dosbox has an error.");
 
 		Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
+		Pmulti->SetValue("higher,normal");
 		Pmulti->Set_help("priority -- Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
 
 		const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};

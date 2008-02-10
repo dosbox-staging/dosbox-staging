@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.129 2008-02-10 14:31:00 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.130 2008-02-10 18:55:23 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -357,6 +357,7 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!.");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
+	Pmulti->SetValue("normal2x");
 	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,the scaler will be used even if the result might not be desired.");
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
@@ -396,6 +397,7 @@ void DOSBOX_Init(void) {
 
 	const char* cyclest[] = { "auto","fixed","max",0 };
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
+	Pmulti->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
 	Pstring = Pmulti->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
