@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.138 2008-01-16 20:17:15 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.139 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -938,48 +938,29 @@ static void GUI_StartUp(Section * sec) {
 
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
 	sdl.wait_on_error=section->Get_bool("waitonerror");
-	const char * priority=section->Get_string("priority");
-	if (priority && priority[0]) {
-		Bitu next;
-		if (!strncasecmp(priority,"lowest",6)) {
-			sdl.priority.focus=PRIORITY_LEVEL_LOWEST;next=6;
-		} else if (!strncasecmp(priority,"lower",5)) {
-			sdl.priority.focus=PRIORITY_LEVEL_LOWER;next=5;
-		} else if (!strncasecmp(priority,"normal",6)) {
-			sdl.priority.focus=PRIORITY_LEVEL_NORMAL;next=6;
-		} else if (!strncasecmp(priority,"higher",6)) {
-			sdl.priority.focus=PRIORITY_LEVEL_HIGHER;next=6;
-		} else if (!strncasecmp(priority,"highest",7)) {
-			sdl.priority.focus=PRIORITY_LEVEL_HIGHEST;next=7;
-		} else {
-			next=0;sdl.priority.focus=PRIORITY_LEVEL_HIGHER;
-		}
-		priority=&priority[next];
-		if (next && priority[0]==',' && priority[1]) {
-			priority++;
-			if (!strncasecmp(priority,"lowest",6)) {
-				sdl.priority.nofocus=PRIORITY_LEVEL_LOWEST;
-			} else if (!strncasecmp(priority,"lower",5)) {
-				sdl.priority.nofocus=PRIORITY_LEVEL_LOWER;
-			} else if (!strncasecmp(priority,"normal",6)) {
-				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
-			} else if (!strncasecmp(priority,"higher",6)) {
-				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHER;
-			} else if (!strncasecmp(priority,"highest",7)) {
-				sdl.priority.nofocus=PRIORITY_LEVEL_HIGHEST;
-			} else if (!strncasecmp(priority,"pause",5)) {
-				/* we only check for pause here, because it makes no sense
-				 * for DOSBox to be paused while it has focus
-				 */
-				sdl.priority.nofocus=PRIORITY_LEVEL_PAUSE;
-			} else {
-				sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
-			}
-		} else sdl.priority.nofocus=sdl.priority.focus;
-	} else {
-		sdl.priority.focus=PRIORITY_LEVEL_HIGHER;
-		sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;
+   
+	Prop_multival* p=section->Get_multival("priority");
+	std::string focus = p->GetSection()->Get_string("active");
+	std::string notfocus = p->GetSection()->Get_string("inactive");
+
+	if      (focus == "lowest")  { sdl.priority.focus = PRIORITY_LEVEL_LOWEST;  } 
+	else if (focus == "lower")   { sdl.priority.focus = PRIORITY_LEVEL_LOWER;   } 
+	else if (focus == "normal")  { sdl.priority.focus = PRIORITY_LEVEL_NORMAL;  } 
+	else if (focus == "higher")  { sdl.priority.focus = PRIORITY_LEVEL_HIGHER;  } 
+	else if (focus == "highest") { sdl.priority.focus = PRIORITY_LEVEL_HIGHEST; } 
+
+	if      (notfocus == "lowest")  { sdl.priority.nofocus=PRIORITY_LEVEL_LOWEST;  } 
+	else if (notfocus == "lower")   { sdl.priority.nofocus=PRIORITY_LEVEL_LOWER;   } 
+	else if (notfocus == "normal")  { sdl.priority.nofocus=PRIORITY_LEVEL_NORMAL;  } 
+	else if (notfocus == "higher")  { sdl.priority.nofocus=PRIORITY_LEVEL_HIGHER;  } 
+	else if (notfocus == "highest") { sdl.priority.nofocus=PRIORITY_LEVEL_HIGHEST; } 
+	else if (notfocus == "pause")   {
+		/* we only check for pause here, because it makes no sense
+		 * for DOSBox to be paused while it has focus
+		 */
+		sdl.priority.nofocus=PRIORITY_LEVEL_PAUSE;
 	}
+
 	SetPriority(sdl.priority.focus); //Assume focus on startup
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
@@ -1038,30 +1019,30 @@ static void GUI_StartUp(Section * sec) {
 	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
-	const char * output=section->Get_string("output");
+	std::string output=section->Get_string("output");
 	
 	/* Setup Mouse correctly if fullscreen */
 	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
 
-	if (!strcasecmp(output,"surface")) {
+	if (output == "surface") {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 #if (HAVE_DDRAW_H) && defined(WIN32)
-	} else if (!strcasecmp(output,"ddraw")) {
+	} else if (output == "ddraw") {
 		sdl.desktop.want_type=SCREEN_SURFACE_DDRAW;
 #endif
-	} else if (!strcasecmp(output,"overlay")) {
+	} else if (output == "overlay") {
 		sdl.desktop.want_type=SCREEN_OVERLAY;
 #if C_OPENGL
-	} else if (!strcasecmp(output,"opengl")) {
+	} else if (output == "opengl") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
 		sdl.opengl.bilinear=true;
-	} else if (!strcasecmp(output,"openglnb")) {
+	} else if (output == "openglnb") {
 		sdl.desktop.want_type=SCREEN_OPENGL;
 		sdl.opengl.bilinear=false;
 #endif
 	} else {
-		LOG_MSG("SDL:Unsupported output device %s, switching back to surface",output);
-		sdl.desktop.want_type=SCREEN_SURFACE;
+		LOG_MSG("SDL:Unsupported output device %s, switching back to surface",output.c_str());
+		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
 	}
 
 	sdl.overlay=0;
@@ -1233,10 +1214,10 @@ void GFX_Events() {
 
 					GFX_SetTitle(-1,-1,true);
 					KEYBOARD_ClrBuffer();
-					SDL_Delay(500);
-					while (SDL_PollEvent(&ev)) {
+//					SDL_Delay(500);
+//					while (SDL_PollEvent(&ev)) {
 						// flush event queue.
-					}
+//					}
 
 					while (paused) {
 						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
@@ -1433,39 +1414,62 @@ int main(int argc, char* argv[]) {
 		sdl.num_joysticks=SDL_NumJoysticks();
 		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
 		sdl_sec->AddInitFunction(&MAPPER_StartUp);
-		sdl_sec->Add_bool("fullscreen",false);
-		sdl_sec->Add_bool("fulldouble",false);
-		sdl_sec->Add_string("fullresolution","original");
-		sdl_sec->Add_string("windowresolution","original");
-		sdl_sec->Add_string("output","surface");
-		sdl_sec->Add_bool("autolock",true);
-		sdl_sec->Add_int("sensitivity",100);
-		sdl_sec->Add_bool("waitonerror",true);
-		sdl_sec->Add_string("priority","higher,normal");
-		sdl_sec->Add_string("mapperfile","mapper.txt");
-		sdl_sec->Add_bool("usescancodes",true);
+		Prop_bool* Pbool;
+		Prop_string* Pstring;
+		Prop_int* Pint;
+		Prop_multival* Pmulti;
+		Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
+		Pbool->Set_help("Start dosbox directly in fullscreen.");
 
-		MSG_Add("SDL_CONFIGFILE_HELP",
-			"fullscreen -- Start dosbox directly in fullscreen.\n"
-			"fulldouble -- Use double buffering in fullscreen.\n"
-			"fullresolution -- What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).\n"
-			"windowresolution -- Scale the window to this size IF the output device supports hardware scaling.\n"
-			"output -- What to use for output: surface,overlay"
+		Pbool = sdl_sec->Add_bool("fulldouble",Property::Changeable::Always,false);
+		Pbool->Set_help("Use double buffering in fullscreen.");
+
+		Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
+		Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).");
+
+		Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
+		Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.");
+
+		const char* outputs[] = {
+			"surface", "overlay", 
 #if C_OPENGL
-			",opengl,openglnb"
+			"opengl", "openglnb",
 #endif
 #if (HAVE_DDRAW_H) && defined(WIN32)
-			",ddraw"
+			"ddraw",
 #endif
-			".\n"
-			"autolock -- Mouse will automatically lock, if you click on the screen.\n"
-			"sensitiviy -- Mouse sensitivity.\n"
-			"waitonerror -- Wait before closing the console if dosbox has an error.\n"
-			"priority -- Priority levels for dosbox: lowest,lower,normal,higher,highest,pause (when not focussed).\n"
-			"            Second entry behind the comma is for when dosbox is not focused/minimized.\n"
-			"mapperfile -- File used to load/save the key/event mappings from.\n"
-			"usescancodes -- Avoid usage of symkeys, might not work on all operating systems.\n"
-			);
+			0 };
+		Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"surface");
+		Pstring->Set_help("What video system to use for output.");
+		Pstring->Set_values(outputs);
+
+		Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
+		Pbool->Set_help("Mouse will automatically lock, if you click on the screen.");
+
+		Pint = sdl_sec->Add_int("sensitivity",Property::Changeable::Always,100);
+		Pint->SetMinMax(1,1000);
+		Pint->Set_help("Mouse sensitivity.");
+
+		Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
+		Pbool->Set_help("Wait before closing the console if dosbox has an error.");
+
+		Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
+		Pmulti->Set_help("priority -- Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
+
+		const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
+		Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
+		Pstring->Set_values(actt);
+
+		const char* inactt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
+		Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
+		Pstring->Set_values(inactt);
+
+		Pstring = sdl_sec->Add_string("mapperfile",Property::Changeable::Always,"mapper.txt");
+		Pstring->Set_help("File used to load/save the key/event mappings from.");
+
+		Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
+		Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
+
 		/* Init all the dosbox subsystems */
 		DOSBOX_Init();
 		std::string config_file;

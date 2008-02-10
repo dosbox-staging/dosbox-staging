@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.4 2008-01-26 15:50:19 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.5 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -281,11 +281,11 @@ public:
 	PropertyEditorBool(Window *parent, int x, int y, Section_prop *section, Property *prop) :
 		PropertyEditor(parent, x, y, section, prop) {
 		input = new GUI::Checkbox(this, 0, 3, prop->propname.c_str());
-		input->setChecked(prop->GetValue()._bool);
+		input->setChecked(static_cast<bool>(prop->GetValue()));
 	}
 
 	bool prepare(std::string &buffer) {
-		if (input->isChecked() == prop->GetValue()._bool) return false;
+		if (input->isChecked() == static_cast<bool>(prop->GetValue())) return false;
 		buffer.append(input->isChecked()?"true":"false");
 		return true;
 	}
@@ -299,11 +299,13 @@ public:
 		PropertyEditor(parent, x, y, section, prop) {
 		new GUI::Label(this, 0, 5, prop->propname);
 		input = new GUI::Input(this, 130, 0, 110);
-		input->setText(prop->GetValue()._string);
+		std::string temps = prop->GetValue().ToString();
+		input->setText(stringify(temps));
 	}
 
 	bool prepare(std::string &buffer) {
-		if (input->getText() == GUI::String(prop->GetValue()._string)) return false;
+		std::string temps = prop->GetValue().ToString();
+		if (input->getText() == GUI::String(temps)) return false;
 		buffer.append(static_cast<const std::string&>(input->getText()));
 		return true;
 	}
@@ -337,13 +339,14 @@ public:
 		PropertyEditor(parent, x, y, section, prop) {
 		new GUI::Label(this, 0, 5, prop->propname);
 		input = new GUI::Input(this, 130, 0, 50);
-		input->setText(stringify(prop->GetValue()._hex, std::hex));
+		std::string temps = prop->GetValue().ToString();
+		input->setText(temps.c_str());
 	}
 
 	bool prepare(std::string &buffer) {
 		int val;
 		convert(input->getText(), val, false, std::hex);
-		if (val == prop->GetValue()._hex) return false;
+		if ((Hex)val ==  prop->GetValue()) return false;
 		buffer.append(stringify(val, std::hex));
 		return true;
 	}
@@ -357,13 +360,14 @@ public:
 		PropertyEditor(parent, x, y, section, prop) {
 		new GUI::Label(this, 0, 5, prop->propname);
 		input = new GUI::Input(this, 130, 0, 50);
-		input->setText(stringify(prop->GetValue()._int));
+		//Maybe use ToString() of Value
+		input->setText(stringify(static_cast<int>(prop->GetValue())));
 	}
 
 	bool prepare(std::string &buffer) {
 		int val;
 		convert(input->getText(), val, false);
-		if (val == prop->GetValue()._int) return false;
+		if (val == static_cast<int>(prop->GetValue())) return false;
 		buffer.append(stringify(val));
 		return true;
 	}

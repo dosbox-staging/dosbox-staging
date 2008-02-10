@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.80 2008-01-19 11:02:29 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.81 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -74,8 +74,8 @@ bool DOS_Shell::CheckConfig(char* cmd_in,char*line) {
 	Section* test = control->GetSectionFromProperty(cmd_in);
 	if(!test) return false;
 	if(line && !line[0]) {
-		char const* val = test->GetPropValue(cmd_in);
-		if(val) WriteOut("%s\n",val);
+		std::string val = test->GetPropValue(cmd_in);
+		if(val != NO_SUCH_PROPERTY) WriteOut("%s\n",val.c_str());
 		return true;
 	}
 	char newcom[1024]; newcom[0] = 0; strcpy(newcom,"z:\\config ");

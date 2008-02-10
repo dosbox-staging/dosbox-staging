@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: messages.cpp,v 1.19 2007-01-08 19:45:41 qbix79 Exp $ */
+/* $Id: messages.cpp,v 1.20 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,10 +47,11 @@ void MSG_Add(const char * _name, const char* _val) {
 	/* Find the message */
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
 		if((*tel).name==_name) { 
+			LOG_MSG("double entry for %s",_name);
 			return;
 		}
 	}
-	/* Even if the message doesn't exist add it */
+	/* if the message doesn't exist add it */
 	Lang.push_back(MessageBlock(_name,_val));
 }
 

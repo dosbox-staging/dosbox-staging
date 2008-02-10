@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.29 2007-11-04 19:14:32 c2woody Exp $ */
+/* $Id: programs.cpp,v 1.30 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -249,13 +249,13 @@ void CONFIG::Run(void) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"),temp_line.c_str());
 			return;
 		}
-		char const* val = sec->GetPropValue(prop.c_str());
-		if(!val) {
+		std::string val = sec->GetPropValue(prop.c_str());
+		if(val != NO_SUCH_PROPERTY) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),prop.c_str(),temp_line.c_str());   
 			return;
 		}
-		WriteOut("%s",val);
-		first_shell->SetEnv("CONFIG",val);
+		WriteOut("%s",val.c_str());
+		first_shell->SetEnv("CONFIG",val.c_str());
 		return;
 	}
 

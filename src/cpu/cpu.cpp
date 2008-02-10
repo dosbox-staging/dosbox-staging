@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.107 2008-01-16 20:17:15 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.108 2008-02-10 11:14:03 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -2164,16 +2164,16 @@ public:
 		CPU_Cycles=0;
 		CPU_SkipCycleAutoAdjust=false;
 
-		std::string str;
-		CommandLine cmd(0,section->Get_string("cycles"));
-		cmd.FindCommand(1,str);
-
-		if (str=="max") {
+		Prop_multival* p = section->Get_multival("cycles");
+		std::string type = p->GetSection()->Get_string("type");
+		std::string str ;
+		CommandLine cmd(0,p->GetSection()->Get_string("parameters"));
+		if (type=="max") {
 			CPU_CycleMax=0;
 			CPU_CyclePercUsed=100;
 			CPU_CycleAutoAdjust=true;
 			CPU_CycleLimit=-1;
-			for (Bitu cmdnum=2; cmdnum<=cmd.GetCount(); cmdnum++) {
+			for (Bitu cmdnum=1; cmdnum<=cmd.GetCount(); cmdnum++) {
 				if (cmd.FindCommand(cmdnum,str)) {
 					if (str.find('%')==str.length()-1) {
 						str.erase(str.find('%'));
@@ -2193,12 +2193,12 @@ public:
 				}
 			}
 		} else {
-			if (str=="auto") {
+			if (type=="auto") {
 				CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CYCLES;
 				CPU_CycleMax=3000;
 				CPU_OldCycleMax=3000;
 				CPU_CyclePercUsed=100;
-				for (Bitu cmdnum=2; cmdnum<=cmd.GetCount(); cmdnum++) {
+				for (Bitu cmdnum=0; cmdnum<=cmd.GetCount(); cmdnum++) {
 					if (cmd.FindCommand(cmdnum,str)) {
 						if (str.find('%')==str.length()-1) {
 							str.erase(str.find('%'));
@@ -2225,7 +2225,8 @@ public:
 						}
 					}
 				}
-			} else {
+			} else if(type =="fixed") {
+				cmd.FindCommand(1,str);
 				int rmdval=0;
 				std::istringstream stream(str);
 				stream >> rmdval;
