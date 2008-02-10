@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.128 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.129 2008-02-10 14:31:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -394,7 +394,7 @@ void DOSBOX_Init(void) {
 		"                  (Example: fixed 4000)\n"
 		"  'max'           will allocate as much cycles as your computer is able to handle\n");
 
-	const char* cyclest[] = { "auto","fixed","max" };
+	const char* cyclest[] = { "auto","fixed","max",0 };
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
 	Pstring->Set_values(cyclest);
 
