@@ -18,6 +18,13 @@
 
 #include <AudioUnit/AudioUnit.h>
 
+//We seem to using very old interface. This keeps it compiling. Maybe
+//somebody will come up with something better oneday.
+#ifdef MAC_OS_X_VERSION_10_5
+#include <AudioUnit/AudioUnitCarbonView.h>
+#include <AudioUnit/AUNTComponent.h>
+#endif
+
 class MidiHandler_coreaudio : public MidiHandler {
 private:
 	AudioUnit m_musicDevice;
