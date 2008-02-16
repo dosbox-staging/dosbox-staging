@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.47 2007-11-07 17:41:32 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.48 2008-02-16 20:47:41 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2102,7 +2102,7 @@ static void MAPPER_SaveBinds(void) {
 }
 
 static bool MAPPER_LoadBinds(void) {
-	FILE * loadfile=fopen(mapper.filename,"rb+");
+	FILE * loadfile=fopen(mapper.filename,"rb");
 	if (!loadfile) return false;
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
