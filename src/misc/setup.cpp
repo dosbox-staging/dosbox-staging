@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.44 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.45 2008-02-18 20:25:21 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -255,7 +255,12 @@ void Prop_int::SetValue(std::string const& input){;
 }
 
 void Prop_string::SetValue(std::string const& input){
-	Value val(input,Value::V_STRING);
+	//Special version for lowcase stuff
+	std::string temp(input);
+	//suggested values always case insensitive. 
+	//If there are none then it can be paths and such which are case sensitive
+	if(!suggested_values.empty()) lowcase(temp);
+	Value val(temp,Value::V_STRING);
 	SetVal(val,false,true);
 }
 	
