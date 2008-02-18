@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.48 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: int10.cpp,v 1.49 2008-02-18 19:48:22 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -643,8 +643,8 @@ graphics_chars:
 		warned_ff=true;
 		break;
 	default:
-		LOG(LOG_INT10,LOG_ERROR)("Function %2X not supported",reg_ah);
-		reg_al=0x00;		//Successfull
+		LOG(LOG_INT10,LOG_ERROR)("Function %4X not supported",reg_ax);
+//		reg_al=0x00;		//Successfull, breaks marriage
 		break;
 	};
 	return CBRET_NONE;
