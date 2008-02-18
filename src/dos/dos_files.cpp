@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.94 2008-01-21 21:26:49 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.95 2008-02-18 17:45:55 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -424,6 +424,11 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry) {
 	*entry = psp.FindFreeFileEntry();
 	if (*entry==0xff) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
+		return false;
+	}
+	/* Don't allow directories to be created */
+	if (attributes&0x10) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 	bool foundit=Drives[drive]->FileCreate(&Files[handle],fullname,attributes);
