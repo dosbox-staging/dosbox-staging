@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.52 2008-02-06 21:56:32 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.53 2008-02-19 17:45:33 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -27,6 +27,7 @@
 #include "setup.h"
 #include "support.h"
 #include "bios.h"
+#include "cpu.h"
 
 #include "cdrom.h"
 
@@ -628,27 +629,25 @@ bool CMscdex::GetUPC(Bit8u subUnit, Bit8u& attr, char* upc)
 	return dinfo[subUnit].lastResult = cdrom[subUnit]->GetUPC(attr,&upc[0]);
 };
 
-bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data)
-{
+bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data) {
 	if (subUnit>=numDrives) return false;
+	if ((4*num*2048+5) < CPU_Cycles) CPU_Cycles -= 4*num*2048;
+	else CPU_Cycles = 5;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->ReadSectors(data,raw,sector,num);
 	return dinfo[subUnit].lastResult;
 };
 
-bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, PhysPt data)
-{
+bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, PhysPt data) {
 	if (subUnit>=numDrives) return false;
 	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
 	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
 	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
-	// TODO: Check, if num has to be converted too ?!
 	return ReadSectors(subUnit,raw,sector,num,data);
 };
 
-bool CMscdex::ReadSectors(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data)
 // Called from INT 2F
-{
+bool CMscdex::ReadSectors(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data) {
 	return ReadSectors(GetSubUnit(drive),false,sector,num,data);
 };
 
