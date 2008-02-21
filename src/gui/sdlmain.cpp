@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.140 2008-02-10 18:55:23 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.141 2008-02-21 19:25:34 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -211,6 +211,9 @@ struct SDL_Block {
 #if defined (WIN32)
 	bool using_windib;
 #endif
+	// state of alt-keys for certain special handlings
+	Bit8u laltstate;
+	Bit8u raltstate;
 };
 
 static SDL_Block sdl;
@@ -1159,8 +1162,11 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 	}
 }
 
-static Bit8u laltstate = SDL_KEYUP;
-static Bit8u raltstate = SDL_KEYUP;
+void GFX_LosingFocus(void) {
+	sdl.laltstate=SDL_KEYUP;
+	sdl.raltstate=SDL_KEYUP;
+	MAPPER_LosingFocus();
+}
 
 void GFX_Events() {
 	SDL_Event event;
@@ -1194,7 +1200,7 @@ void GFX_Events() {
 						GFX_CaptureMouse();
 					}
 					SetPriority(sdl.priority.nofocus);
-					MAPPER_LosingFocus();
+					GFX_LosingFocus();
 					CPU_Enable_SkipAutoAdjust();
 				}
 			}
@@ -1266,10 +1272,10 @@ void GFX_Events() {
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			// ignore event alt+tab
-			if (event.key.keysym.sym==SDLK_LALT) laltstate = event.key.type;
-			if (event.key.keysym.sym==SDLK_RALT) raltstate = event.key.type;
+			if (event.key.keysym.sym==SDLK_LALT) sdl.laltstate = event.key.type;
+			if (event.key.keysym.sym==SDLK_RALT) sdl.raltstate = event.key.type;
 			if (((event.key.keysym.sym==SDLK_TAB)) &&
-				((laltstate==SDL_KEYDOWN) || (raltstate==SDL_KEYDOWN))) break;
+				((sdl.laltstate==SDL_KEYDOWN) || (sdl.raltstate==SDL_KEYDOWN))) break;
 #endif
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
@@ -1381,6 +1387,9 @@ int main(int argc, char* argv[]) {
 	//of exiting the application
 	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
 #endif
+
+	sdl.laltstate = SDL_KEYUP;
+	sdl.raltstate = SDL_KEYUP;
 
 #if defined (WIN32)
 #if SDL_VERSION_ATLEAST(1, 2, 10)

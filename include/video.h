@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: video.h,v 1.24 2008-02-21 19:25:04 c2woody Exp $ */
 
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
@@ -66,6 +68,7 @@ void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch);
 void GFX_EndUpdate( const Bit16u *changedLines );
 void GFX_GetSize(int &width, int &height, bool &fullscreen);
+void GFX_LosingFocus(void);
 
 #if defined (WIN32)
 bool GFX_SDLUsingWinDIB(void);

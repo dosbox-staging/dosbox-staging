@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.5 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.6 2008-02-21 19:25:34 c2woody Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -95,7 +95,7 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	if(!screen) { //Coming from DOSBox. Clean up the keyboard buffer.
 		KEYBOARD_ClrBuffer();//Clear buffer
 	}
-	MAPPER_LosingFocus();//Release any keys pressed (buffer gets filled again). (could be in above if, but clearing the mapper input when exiting the mapper is sensible as well
+	GFX_LosingFocus();//Release any keys pressed (buffer gets filled again). (could be in above if, but clearing the mapper input when exiting the mapper is sensible as well
 	SDL_Delay(500);
 
 	// Comparable to the code of intro.com, but not the same! (the code of intro.com is called from within a com file)
