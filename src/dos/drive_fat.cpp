@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-20078  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.24 2008-02-22 18:18:03 c2woody Exp $ */
+/* $Id: drive_fat.cpp,v 1.25 2008-02-24 17:38:03 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -394,7 +394,9 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 
 	//LOG_MSG("Testing for filename %s", fullname);
 	findDir = strtok(dirtoken,"\\");
-	if (findDir==NULL) return false;
+	if (findDir==NULL) {
+		return true;	// root always exists
+	}
 	findFile = findDir;
 	while(findDir != NULL) {
 		findFile = findDir;
@@ -765,6 +767,8 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	char dirName[DOS_NAMELENGTH_ASCII];
 	char pathName[11];
 
+	Bitu save_errorcode=dos.errorcode;
+
 	/* Check if file already exists */
 	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
 		/* Truncate file */
@@ -794,6 +798,8 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	/* Maybe modTime and date should be used ? (crt matches findnext) */
 	((fatFile *)(*file))->time = fileEntry.crtTime;
 	((fatFile *)(*file))->date = fileEntry.crtDate;
+
+	dos.errorcode=save_errorcode;
 	return true;
 }
 
