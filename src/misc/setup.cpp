@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.45 2008-02-18 20:25:21 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.46 2008-02-25 06:21:09 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -587,8 +587,7 @@ bool Config::ParseConfigFile(char const * const configfilename){
 	string gegevens;
 	Section* currentsection = NULL;
 	Section* testsec = NULL;
-	while (in) {
-		getline(in,gegevens);
+	while (getline(in,gegevens)) {
 		
 		/* strip leading/trailing whitespace */
 		trim(gegevens);
