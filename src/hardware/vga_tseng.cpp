@@ -16,14 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_tseng.cpp,v 1.2 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_tseng.cpp,v 1.3 2008-02-26 08:55:29 qbix79 Exp $ */
+
 
 #include "dosbox.h"
 #include "setup.h"
 #include "vga.h"
 #include "inout.h"
 #include "mem.h"
-
+#include <cstdlib>
 // Tseng ET4K data
 typedef struct {
 	Bit8u extensionsEnabled;
