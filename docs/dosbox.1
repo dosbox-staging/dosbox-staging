@@ -8,6 +8,7 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B [\-fullscreen]
 .B [\-startmapper]
 .B [\-noautoexec]
+.B [\-securemode]
 .BI "[\-scaler " scaler ] 
 .BI "[\-forcescaler " scaler ]
 .BI "[\-conf " configfile ]
@@ -41,6 +42,13 @@ A summary of options is included below.
 .B \-noautoexec
 Skips the [autoexec] section of the loaded configuration file.
 .TP
+.B \-securemode
+.RB "Same as " \-noautoexec ", but adds " "config.com  \-securemode" 
+at the end of
+.I AUTOEXEC.BAT 
+(which in turn disables any changes to how the drives are mounted 
+.RB "inside " dosbox )
+.TP
 .BI \-scaler " scaler"
 .RI "Uses the graphical scaler specified by " scaler ". See the configuration"
 file for the available scalers
@@ -67,7 +75,7 @@ wish to execute on startup. Multiple
 .IR langfile .
 .TP
 .B \-exit
-.BR dosbox " will close itself when the DOS program specified by " file "ends."
+.BR dosbox " will close itself when the DOS program specified by "file " ends."
 .TP
 .BI \-machine " machinetype
 .RB "Setup " dosbox " to emulate a specific type of machine." 
@@ -153,9 +161,19 @@ Display the amount of free memory
 .TP
 .B CONFIG [\-writeconf] [\-writelang] file
 .LP
+.B CONFIG -securemode
+.LP
 .RB "Write the current configuration or language settings to " file ,
 which is located on the local filesystem. Not a mounted drive in 
 .BR dosbox .
+.TP
+.B \-securemode
+.RB Switches dosbox " to a more secure mode. In this mode the"
+.RI "internal commands " MOUNT ", " IMGMOUNT " and " BOOT " won\'t work."
+It\'s not possible
+either to create a new configfile or languagefile in this mode.
+(Warning you can only undo this mode by restarting
+.BR dosbox .)
 .LP 
 The configuration file controls various settings of 
 .BR dosbox ": The amount of emulated memory,"

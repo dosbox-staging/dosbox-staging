@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.88 2007-08-17 17:58:46 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.89 2008-03-02 11:13:47 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -27,6 +27,7 @@
 #include "shell.h"
 #include "callback.h"
 #include "support.h"
+
 
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
@@ -278,16 +279,22 @@ void DOS_Shell::RunInternal(void)
 	return;
 }
 
+bool command_slashc = false;
 
 void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemain("/C",line)) {
+		//command_slashc indicates that the following commands are run with command /c. Forbid parameters to mount.
+		//command_allready_set prevents against command /c "command /c command"
+		bool command_allready_set = command_slashc;
+		command_slashc = true;
 		strcpy(input_line,line.c_str());
 		DOS_Shell temp;
 		temp.echo = echo;
 		temp.ParseLine(input_line);		//for *.exe *.com  |*.bat creates the bf needed by runinternal;
 		temp.RunInternal();				// exits when no bf is found.
+		if(!command_allready_set) command_slashc = false;
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
@@ -333,7 +340,7 @@ void DOS_Shell::SyntaxError(void) {
 
 class AUTOEXEC:public Module_base {
 private:
-	AutoexecObject autoexec[16];
+	AutoexecObject autoexec[17];
 	AutoexecObject autoexec_echo;
 public:
 	AUTOEXEC(Section* configuration):Module_base(configuration) {
@@ -341,9 +348,12 @@ public:
 		std::string line;
 		Section_line * section=static_cast<Section_line *>(configuration);
 
-		/* add stuff from the configfile unless -noautexec is specified. */
-		char * extra=const_cast<char*>(section->data.c_str());
-		if (extra && !control->cmdline->FindExist("-noautoexec",true)) {
+		/* Check -securemode switch to disable mount/imgmount/boot after running autoexec.bat */
+		bool secure = control->cmdline->FindExist("-securemode",true);
+
+		/* add stuff from the configfile unless -noautexec or -securemode is specified. */
+		char * extra = const_cast<char*>(section->data.c_str());
+		if (extra && !secure && !control->cmdline->FindExist("-noautoexec",true)) {
 			/* detect if "echo off" is the first line */
 			bool echo_off  = !strncasecmp(extra,"echo off",8);
 			if (!echo_off) echo_off = !strncasecmp(extra,"@echo off",9);
@@ -372,7 +382,10 @@ public:
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN];
 		char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
-		if (control->cmdline->FindCommand(1,line)) {
+		/* Combining -securemode and no parameter leaves you with a lovely Z:\. */ 
+		if ( !control->cmdline->FindCommand(1,line) ) { 
+			if ( secure ) autoexec[12].Install("z:\\config.com -securemode");
+		} else {
 			struct stat test;
 			strcpy(buffer,line.c_str());
 			if (stat(buffer,&test)){
@@ -384,6 +397,7 @@ public:
 			if (test.st_mode & S_IFDIR) { 
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
+				if(secure) autoexec[14].Install("z:\\config.com -securemode");
 			} else {
 				char* name = strrchr(buffer,CROSS_FILESPLIT);
 				if (!name) { //Only a filename 
@@ -401,16 +415,19 @@ public:
 				autoexec[13].Install("C:");
 				upcase(name);
 				if(strstr(name,".BAT") != 0) {
+					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */
-					autoexec[14].Install(std::string("CALL ") + name);
+					autoexec[15].Install(std::string("CALL ") + name);
 				} else if((strstr(name,".IMG") != 0) || (strstr(name,".IMA") !=0)) {
+					//No secure mode here as boot is destructive and enabling securemode disables boot
 					/* Boot image files */
-					autoexec[14].Install(std::string("BOOT ") + name);
+					autoexec[15].Install(std::string("BOOT ") + name);
 				} else {
-					autoexec[14].Install(name);
+					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					autoexec[15].Install(name);
 				}
 
-				if(addexit) autoexec[15].Install("exit");
+				if(addexit) autoexec[16].Install("exit");
 			}
 		}
 nomount:

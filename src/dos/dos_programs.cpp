@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.82 2008-01-19 11:02:29 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.83 2008-03-02 11:13:46 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -72,6 +72,7 @@ static void ResolveHomedir(std::string & temp_line) {
 	}
 }
 
+
 class MOUNT : public Program {
 public:
 	void Run(void)
@@ -80,11 +81,32 @@ public:
 		std::string label;
 		std::string umount;
 
+		//Hack To allow long commandlines
+		ChangeToLongCmd();
+		/* Parse the command line */
+		/* if the command line is empty show current mounts */
+		if (!cmd->GetCount()) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
+			for (int d=0;d<DOS_DRIVES;d++) {
+				if (Drives[d]) {
+					WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),d+'A',Drives[d]->GetInfo());
+				}
+			}
+			return;
+		}
+
+		/* In secure mode don't allow people to change mount points. 
+		 * Neither mount nor unmount */
+		if(control->SecureMode()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+			return;
+		}
+
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
-				if(i_drive < DOS_DRIVES && Drives[i_drive]) {
+				if(i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
 					switch (DriveManager::UnmountDrive(i_drive)) {
 					case 0:
 						Drives[i_drive] = 0;
@@ -112,18 +134,6 @@ public:
 			for (int i=0; i<num; i++) {
 				WriteOut("%2d. %s\n",i,SDL_CDName(i));
 			};
-			return;
-		}
-
-		/* Parse the command line */
-		/* if the command line is empty show current mounts */
-		if (!cmd->GetCount()) {
-			WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
-			for (int d=0;d<DOS_DRIVES;d++) {
-				if (Drives[d]) {
-					WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),d+'A',Drives[d]->GetInfo());
-				}
-			}
 			return;
 		}
 
@@ -492,6 +502,15 @@ private:
 public:
    
 	void Run(void) {
+		//Hack To allow long commandlines
+		ChangeToLongCmd();
+		/* In secure mode don't allow people to boot stuff. 
+		 * They might try to corrupt the data on it */
+		if(control->SecureMode()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+			return;
+		}
+
 		FILE *usefile_1=NULL;
 		FILE *usefile_2=NULL;
 		Bitu i; 
@@ -946,8 +965,15 @@ static void INTRO_ProgramStart(Program * * make) {
 
 class IMGMOUNT : public Program {
 public:
-	void Run(void)
-	{
+	void Run(void) {
+		//Hack To allow long commandlines
+		ChangeToLongCmd();
+		/* In secure mode don't allow people to change imgmount points. 
+		 * Neither mount nor unmount */
+		if(control->SecureMode()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+			return;
+		}
 		DOS_Drive * newdrive;
 		imageDisk * newImage;
 		Bit32u imagesize;
@@ -959,7 +985,7 @@ public:
 		if (cmd->FindString("-u",umount,false)) {
 			umount[0] = toupper(umount[0]);
 			int i_drive = umount[0]-'A';
-				if (i_drive < DOS_DRIVES && Drives[i_drive]) {
+				if (i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
 					switch (DriveManager::UnmountDrive(i_drive)) {
 					case 0:
 						Drives[i_drive] = 0;

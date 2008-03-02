@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.32 2008-02-10 11:14:02 qbix79 Exp $ */
+/* $Id: setup.h,v 1.33 2008-03-02 11:13:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -300,8 +300,9 @@ private:
 	typedef std::list<Section*>::const_iterator const_it;
 	typedef std::list<Section*>::const_reverse_iterator const_reverse_it;
 	void (* _start_function)(void);
+	bool secure_mode; //Sandbox mode
 public:
-	Config(CommandLine * cmd):cmdline(cmd){}
+	Config(CommandLine * cmd):cmdline(cmd),secure_mode(false){}
 	~Config();
 
 	Section_line * AddSection_line(char const * const _name,void (*_initfunction)(Section*));
@@ -318,6 +319,8 @@ public:
 	void PrintConfig(char const * const configfilename) const;
 	bool ParseConfigFile(char const * const configfilename);
 	void ParseEnv(char ** envp);
+	bool SecureMode() const { return secure_mode; }
+	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
 };
 
 class Module_base {

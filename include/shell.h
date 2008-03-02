@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.22 2007-10-28 10:58:49 qbix79 Exp $ */
+/* $Id: shell.h,v 1.23 2008-03-02 11:13:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -39,8 +39,11 @@ extern Bitu call_shellstop;
 /* first_shell is used to add and delete stuff from the shell env 
  * by "external" programs. (config) */
 extern Program * first_shell;
-class DOS_Shell;
 
+/* command_slashc indicates that the next commands are being run from command /c. Remove parameters for internal .COM files */
+extern bool command_slashc;
+
+class DOS_Shell;
 
 class BatchFile {
 public:

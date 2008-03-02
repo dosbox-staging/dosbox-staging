@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.h,v 1.15 2008-01-19 11:02:29 qbix79 Exp $ */
+/* $Id: programs.h,v 1.16 2008-03-02 11:13:46 qbix79 Exp $ */
 
 #ifndef DOSBOX_PROGRAMS_H
 #define DOSBOX_PROGRAMS_H
@@ -77,6 +77,7 @@ public:
 	Bitu GetEnvCount(void);
 	bool SetEnv(const char * entry,const char * new_string);
 	void WriteOut(const char * format,...);				/* Write to standard output */
+	void ChangeToLongCmd();
 
 };
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_misc.cpp,v 1.51 2007-08-22 11:21:28 qbix79 Exp $ */
+/* $Id: shell_misc.cpp,v 1.52 2008-03-02 11:13:47 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -354,6 +354,7 @@ void DOS_Shell::InputCommand(char * line) {
 	if (l_completion.size()) l_completion.clear();
 }
 
+std::string full_arguments = "";
 bool DOS_Shell::Execute(char * name,char * args) {
 /* return true  => don't check for hardware changes in do_command 
  * return false =>       check for hardware changes in do_command */
@@ -438,7 +439,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		if(strcasecmp(extension, ".com") !=0) 
 		{
 			if(strcasecmp(extension, ".exe") !=0) return false;
-	  	}
+		}
 		/* Run the .exe or .com file from the shell */
 		/* Allocate some stack space for tables in physical memory */
 		reg_sp-=0x200;
@@ -448,6 +449,10 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		//Add a filename
 		RealPt file_name=RealMakeSeg(ss,reg_sp+0x20);
 		MEM_BlockWrite(Real2Phys(file_name),fullname,strlen(fullname)+1);
+
+		/* HACK: Store full commandline for mount and imgmount */
+		full_arguments.assign(line);
+
 		/* Fill the command line */
 		CommandTail cmdtail;
 		cmdtail.count = 0;

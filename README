@@ -273,7 +273,8 @@ description:
 
 dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile] 
        [-lang languagefile] [-machine machinetype] [-noconsole]
-       [-startmapper] [-noautoexec] [-scaler scaler | -forcescaler scaler]
+       [-startmapper] [-noautoexec] [-securemode] 
+       [-scaler scaler | -forcescaler scaler]
        
 dosbox -version
 
@@ -317,6 +318,11 @@ dosbox -version
 
   -noautoexec
         Skips the [autoexec] section of the loaded configuration file.
+
+  -securemode
+        Same as -noautoexec, but adds config.com -securemode at the 
+        bottom of AUTOEXEC.BAT (which in turn disables any changes to how
+        the drives are mounted inside DOSBox)
 
   -scaler scaler
         Uses the scaler specified by "scaler". See the DOSBox configuration
@@ -469,6 +475,7 @@ MEM
 
 CONFIG -writeconf localfile
 CONFIG -writelang localfile
+CONFIG -securemode
 CONFIG -set "section property=value"
 CONFIG -get "section property"
 
@@ -490,6 +497,12 @@ CONFIG -get "section property"
        located on the local drive, not a mounted drive in DOSBox.
        The language file controls all visible output of the internal commands
        and the internal DOS.
+
+  -securemode
+       Switches DOSBox to a more secure mode. In this mode the internal 
+       commands MOUNT, IMGMOUNT and BOOT won't work. It's not possible either
+       to create a new configfile or languagefile in this mode.
+       (Warning you can only undo this mode by restarting DOSBox.)
 
   -set "section property=value"
        CONFIG will attempt to set the property to new value. At this moment

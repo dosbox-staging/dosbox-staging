@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.30 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.31 2008-03-02 11:13:46 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -104,6 +104,18 @@ Program::Program() {
 	char filename[256+1];
 	MEM_StrCopy(envscan,filename,256);
 	cmd = new CommandLine(filename,tail.buffer);
+}
+
+extern std::string full_arguments;
+
+void Program::ChangeToLongCmd() {
+	CommandLine* temp = 0;
+	//If command_slashc => then don't pass any parameters to the internal .COM files 
+	if(command_slashc) temp = new CommandLine(cmd->GetFileName(),"");
+	else temp = new CommandLine(cmd->GetFileName(),full_arguments.c_str());
+	delete cmd;
+	cmd = temp;
+	full_arguments.assign(""); //Clear so it gets even more save
 }
 
 void Program::WriteOut(const char * format,...) {
@@ -207,6 +219,11 @@ void CONFIG::Run(void) {
 	FILE * f;
 	if (cmd->FindString("-writeconf",temp_line,true) 
 			|| cmd->FindString("-wc",temp_line,true)) {
+		/* In secure mode don't allow a new configfile to be created */
+		if(control->SecureMode()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+			return;
+		}
 		f=fopen(temp_line.c_str(),"wb+");
 		if (!f) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
@@ -218,6 +235,12 @@ void CONFIG::Run(void) {
 	}
 	if (cmd->FindString("-writelang",temp_line,true)
 			||cmd->FindString("-wl",temp_line,true)) {
+		/* In secure mode don't allow a new languagefile to be created
+		 * Who knows which kind of file we would overwriting. */
+		if(control->SecureMode()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
+			return;
+		}
 		f=fopen(temp_line.c_str(),"wb+");
 		if (!f) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),temp_line.c_str());
@@ -228,6 +251,13 @@ void CONFIG::Run(void) {
 		return;
 	}
 
+	/* Code for switching to secure mode */
+	if(cmd->FindExist("-securemode",true)) {
+		control->SwitchToSecureMode();
+		WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_ON"));
+		return;
+	}
+   
 	/* Code for getting the current configuration.           *
 	 * Official format: config -get "section property"       *
 	 * As a bonus it will set %CONFIG% to this value as well */
@@ -250,7 +280,7 @@ void CONFIG::Run(void) {
 			return;
 		}
 		std::string val = sec->GetPropValue(prop.c_str());
-		if(val != NO_SUCH_PROPERTY) {
+		if(val == NO_SUCH_PROPERTY) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),prop.c_str(),temp_line.c_str());   
 			return;
 		}
@@ -338,6 +368,8 @@ void PROGRAMS_Init(Section* /*sec*/) {
 
 	MSG_Add("PROGRAM_CONFIG_FILE_ERROR","Can't open file %s\n");
 	MSG_Add("PROGRAM_CONFIG_USAGE","Config tool:\nUse -writeconf filename to write the current config.\nUse -writelang filename to write the current language strings.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON","Switched to secure mode.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW","This operation is not permitted in secure mode.\n");
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR","Section %s doesn't exist.\n");
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","No such section or property.\n");
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY","There is no property %s in section %s.\n");
