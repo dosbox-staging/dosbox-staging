@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.32 2007-05-09 14:35:51 c2woody Exp $ */
+/* $Id: debug_gui.cpp,v 1.33 2008-03-02 08:53:34 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -243,12 +243,12 @@ void LOG_StartUp(void) {
 	
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	sect->Add_string("logfile","");
+	sect->Add_string("logfile",Property::Changeable::Always,"");
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
 		lowcase(buf);
-		sect->Add_bool(buf,true);
+		sect->Add_bool(buf,Property::Changeable::Always,true);
 	}
 	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
