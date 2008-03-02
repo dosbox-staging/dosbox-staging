@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.107 2007-12-06 17:44:19 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.108 2008-03-02 19:45:41 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -582,17 +582,22 @@ static Bitu DOS_21Handler(void) {
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		switch (reg_al) {
 		case 0x00:				/* Get */
-			if (DOS_GetFileAttr(name1,&reg_cx)) {
-				reg_ax=reg_cx; /* Undocumented */   
-				CALLBACK_SCF(false);
-			} else {
-				CALLBACK_SCF(true);
-				reg_ax=dos.errorcode;
-			}
-			break;
+			{
+				Bit16u attr_val=reg_cx;
+				if (DOS_GetFileAttr(name1,&attr_val)) {
+					reg_cx=attr_val;
+					reg_ax=attr_val; /* Undocumented */   
+					CALLBACK_SCF(false);
+				} else {
+					CALLBACK_SCF(true);
+					reg_ax=dos.errorcode;
+				}
+				break;
+			};
 		case 0x01:				/* Set */
 			LOG(LOG_MISC,LOG_ERROR)("DOS:Set File Attributes for %s not supported",name1);
 			if (DOS_SetFileAttr(name1,reg_cx)) {
+				reg_ax=0x202;	/* ax destroyed */
 				CALLBACK_SCF(false);
 			} else {
 				CALLBACK_SCF(true);
