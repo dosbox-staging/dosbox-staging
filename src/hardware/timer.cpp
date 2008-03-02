@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.45 2007-11-18 17:09:15 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.46 2008-03-02 08:55:04 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -91,6 +91,11 @@ static bool counter_output(Bitu counter) {
 		if (p->new_mode) return true;
 		index=fmod(index,(double)p->delay);
 		return index*2<p->delay;
+	case 4:
+		//Only low on terminal count
+		// if(fmod(index,(double)p->delay) == 0) return false; //Maybe take one rate tick in consideration
+		//Easiest solution is to report always high (Space marines uses this mode)
+		return true;
 	default:
 		LOG(LOG_PIT,LOG_ERROR)("Illegal Mode %d for reading output",p->mode);
 		return true;
