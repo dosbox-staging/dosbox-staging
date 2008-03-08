@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.92 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.93 2008-03-08 12:29:59 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -656,8 +656,10 @@ static void VGA_DrawSingleLine(Bitu blah) {
 	vga.draw.lines_done++;
 	if (vga.draw.split_line==vga.draw.lines_done) {
 		vga.draw.address=0;
-		if(!(vga.attr.mode_control&0x20))
-			vga.draw.address += vga.config.pel_panning;
+		if (!(vga.attr.mode_control&0x20)) {
+			// pel panning enabled
+			if (!(vga.mode==M_TEXT)) vga.draw.address = vga.config.pel_panning;
+		}
 		vga.draw.address_line=0;
 	}
 	if ((vga.draw.lines_done < vga.draw.lines_total) && (!vga.draw.resizing)) {
@@ -680,8 +682,10 @@ static void VGA_DrawPart(Bitu lines) {
 			VGA_ChangesEnd( );
 #endif
 			vga.draw.address=0;
-			if(!(vga.attr.mode_control&0x20))
-				vga.draw.address += vga.config.pel_panning;
+			if (!(vga.attr.mode_control&0x20)) {
+				// pel panning enabled
+				if (!(vga.mode==M_TEXT)) vga.draw.address = vga.config.pel_panning;
+			}
 			vga.draw.address_line=0;
 #ifdef VGA_KEEP_CHANGES
 			vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
