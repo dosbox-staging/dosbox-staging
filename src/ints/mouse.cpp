@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.71 2007-11-05 21:46:26 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.72 2008-03-08 22:05:05 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -537,7 +537,12 @@ void Mouse_NewVideoMode(void) {
 	case 0x00:
 	case 0x01:
 	case 0x02:
-	case 0x03:
+	case 0x03: {
+		Bitu rows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+		if ((rows==0) || (rows>250)) rows=25-1;
+		mouse.max_y=8*(rows+1)-1;
+		break;
+	}
 	case 0x04:
 	case 0x05:
 	case 0x06:
