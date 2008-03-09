@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.83 2008-03-02 11:13:46 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.84 2008-03-09 20:32:22 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -746,6 +746,8 @@ public:
 			}
 		} else {
 			disable_umb_ems_xms();
+			void RemoveEMSPageFrame(void);
+			RemoveEMSPageFrame();
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 			for(i=0;i<512;i++) real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 

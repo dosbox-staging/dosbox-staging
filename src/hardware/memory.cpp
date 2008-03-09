@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.53 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.54 2008-03-09 20:32:23 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -517,6 +517,13 @@ static void write_p92(Bitu port,Bitu val,Bitu iolen) {
 
 static Bitu read_p92(Bitu port,Bitu iolen) {
 	return memory.a20.controlport | (memory.a20.enabled ? 0x02 : 0);
+}
+
+void RemoveEMSPageFrame(void) {
+	/* Setup rom at 0xe0000-0xf0000 */
+	for (Bitu ct=0xe0;ct<0xf0;ct++) {
+		memory.phandlers[ct] = &rom_page_handler;
+	}
 }
 
 void PreparePCJRCartRom(void) {
