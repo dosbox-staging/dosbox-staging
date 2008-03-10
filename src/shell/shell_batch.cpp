@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.26 2007-10-28 10:58:50 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.27 2008-03-10 13:43:37 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -86,14 +86,14 @@ emptyline:
 				cmd_write+=strlen(file_name);
 				continue;
 			}
-			size_t len=strspn(cmd_read,"123456789");
-			if (len) {  /* Handle %1 %2 .. %9 */
-				memcpy(env_name,cmd_read,len);
-				env_name[len]=0;cmd_read+=len;
-				len=atoi(env_name);
-				if (cmd->GetCount()<len) continue;
+			char next = cmd_read[0];
+			if(next > '0' && next <= '9') {  
+				/* Handle %1 %2 .. %9 */
+				cmd_read++; //Progress reader
+				next -= '0';
+				if (cmd->GetCount()<next) continue;
 				std::string word;
-				if (!cmd->FindCommand(len,word)) continue;
+				if (!cmd->FindCommand(next,word)) continue;
 				strcpy(cmd_write,word.c_str());
 				cmd_write+=strlen(word.c_str());
 				continue;
