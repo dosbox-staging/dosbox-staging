@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.84 2008-03-09 20:32:22 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.85 2008-03-11 18:16:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -148,9 +148,9 @@ public:
 				str_size="512,1,2880,2880";/* All space free */
 				mediaid=0xF0;		/* Floppy 1.44 media */
 			} else if (type=="dir") {
-				// 512*127*16513==~1GB total size
-				// 512*127*1700==~100MB total free size
-				str_size="512,127,16513,1700";
+				// 512*127*16383==~1GB total size
+				// 512*127*4031==~250MB total free size
+				str_size="512,127,16383,4031";
 				mediaid=0xF8;		/* Hard Disk */
 			} else if (type=="cdrom") {
 				str_size="2048,1,65535,0";
