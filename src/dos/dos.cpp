@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.108 2008-03-02 19:45:41 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.109 2008-03-12 17:45:39 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -386,7 +386,6 @@ static Bitu DOS_21Handler(void) {
 		// Important: This service does not set the carry flag!
 		DOS_ResizeMemory(dos.psp(),&reg_dx);
 		DOS_Terminate(true,reg_al);
-		dos.return_code=reg_al; //Officially a field in the SDA
 		dos.return_mode=RETURN_TSR;
 		break;
 	case 0x1f: /* Get drive parameter block for default drive */
