@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.52 2007-09-24 20:50:40 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.53 2008-03-13 19:53:23 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -273,7 +273,7 @@ filling:
 void INT10_SetActivePage(Bit8u page) {
 	Bit16u mem_address;
 	
-	if (page>7) E_Exit("INT10_SetActivePage page %d",page);
+	if (page>7) LOG(LOG_INT10,LOG_ERROR)("INT10_SetActivePage page %d",page);
 	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
@@ -348,7 +348,7 @@ dowrite:
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	Bit16u address;
 
-	if (page>7) E_Exit("INT10_SetCursorPos page %d");
+	if (page>7) LOG(LOG_INT10,LOG_ERROR)("INT10_SetCursorPos page %d");
 	// Bios cursor pos
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2,col);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1,row);

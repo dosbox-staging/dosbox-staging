@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_put_pixel.cpp,v 1.19 2008-01-20 09:21:49 c2woody Exp $ */
+/* $Id: int10_put_pixel.cpp,v 1.20 2008-03-13 19:53:23 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -105,9 +105,9 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			//Perhaps also set mode 1 
 			/* Calculate where the pixel is in video memory */
 			if (CurMode->plength!=real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
-				E_Exit("PutPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
+				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
 			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
-				E_Exit("PutPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
+				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=0xa0000+real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE)*page+
 				((y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x)>>3);
 			/* Bitmask and set/reset should do the rest */
@@ -126,7 +126,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 		break;
 	case M_LIN8: {
 			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
-				E_Exit("PutPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
+				LOG(LOG_INT10,LOG_ERROR)("PutPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=S3_LFB_BASE+y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x;
 			mem_writeb(off,color);
 			break;
@@ -159,9 +159,9 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 		{
 			/* Calculate where the pixel is in video memory */
 			if (CurMode->plength!=real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
-				E_Exit("GetPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
+				LOG(LOG_INT10,LOG_ERROR)("GetPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
 			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
-				E_Exit("GetPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
+				LOG(LOG_INT10,LOG_ERROR)("GetPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=0xa0000+real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE)*page+
 				((y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x)>>3);
 			Bitu shift=7-(x & 7);
@@ -182,7 +182,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 		break;
 	case M_LIN8: {
 			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
-				E_Exit("GetPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
+				LOG(LOG_INT10,LOG_ERROR)("GetPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=S3_LFB_BASE+y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x;
 			*color = mem_readb(off);
 			break;
