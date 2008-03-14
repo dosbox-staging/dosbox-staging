@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.12 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.13 2008-03-14 22:00:59 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
+#include "mem.h"
 
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	switch (reg) {
@@ -523,4 +524,16 @@ void SVGA_Setup_S3Trio(void) {
 		vga.vmemsize = 4096*1024;
 		vga.s3.reg_36 = 0x12;
 	}
+
+	// S3 ROM signature
+	PhysPt rom_base=PhysMake(0xc000,0);
+	phys_writeb(rom_base+0x003f,'S');
+	phys_writeb(rom_base+0x0040,'3');
+	phys_writeb(rom_base+0x0041,' ');
+	phys_writeb(rom_base+0x0042,'8');
+	phys_writeb(rom_base+0x0043,'6');
+	phys_writeb(rom_base+0x0044,'C');
+	phys_writeb(rom_base+0x0045,'7');
+	phys_writeb(rom_base+0x0046,'6');
+	phys_writeb(rom_base+0x0047,'5');
 }
