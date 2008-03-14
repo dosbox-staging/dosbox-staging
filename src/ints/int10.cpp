@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.49 2008-02-18 19:48:22 qbix79 Exp $ */
+/* $Id: int10.cpp,v 1.50 2008-03-14 18:16:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -282,10 +282,20 @@ graphics_chars:
 				SegSet16(es,RealSeg(int10.rom.font_8_second));
 				reg_bp=RealOff(int10.rom.font_8_second);
 				break;
+			case 0x05:	/* alpha alternate 9x14 */
+				if (!IS_VGA_ARCH) break;
+				SegSet16(es,RealSeg(int10.rom.font_14_alternate));
+				reg_bp=RealOff(int10.rom.font_14_alternate);
+				break;
 			case 0x06:	/* font 8x16 */
 				if (!IS_VGA_ARCH) break;
 				SegSet16(es,RealSeg(int10.rom.font_16));
 				reg_bp=RealOff(int10.rom.font_16);
+				break;
+			case 0x07:	/* alpha alternate 9x16 */
+				if (!IS_VGA_ARCH) break;
+				SegSet16(es,RealSeg(int10.rom.font_16_alternate));
+				reg_bp=RealOff(int10.rom.font_16_alternate);
 				break;
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Function 11:30 Request for font %2X",reg_bh);	

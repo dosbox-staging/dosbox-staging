@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_memory.cpp,v 1.25 2008-02-09 12:44:16 c2woody Exp $ */
+/* $Id: int10_memory.cpp,v 1.26 2008-03-14 18:16:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -117,6 +117,9 @@ void INT10_SetupRomMemory(void) {
 		phys_writeb(PhysMake(0xf000,0xfa6e)+i,int10_font_08[i]);
 	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
+	int10.rom.font_14_alternate=RealMake(0xC000,int10.rom.used);
+	int10.rom.font_16_alternate=RealMake(0xC000,int10.rom.used);
+	phys_writeb(rom_base+int10.rom.used++,0x00);	// end of table (empty)
 
 	if (IS_EGAVGA_ARCH) {
 		int10.rom.video_parameter_table=RealMake(0xC000,int10.rom.used);

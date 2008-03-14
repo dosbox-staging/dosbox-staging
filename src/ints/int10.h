@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.h,v 1.34 2008-02-03 20:43:14 c2woody Exp $ */
+/* $Id: int10.h,v 1.35 2008-03-14 18:16:34 c2woody Exp $ */
 
 #include "vga.h"
 
@@ -123,6 +123,8 @@ typedef struct {
 		RealPt font_8_second;
 		RealPt font_14;
 		RealPt font_16;
+		RealPt font_14_alternate;
+		RealPt font_16_alternate;
 		RealPt static_state;
 		RealPt video_save_pointers;
 		RealPt video_parameter_table;
