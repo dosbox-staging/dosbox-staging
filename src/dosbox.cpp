@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.130 2008-02-10 18:55:23 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.131 2008-03-18 20:51:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -285,13 +285,13 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (mtype == "pcjr")     { machine = MCH_PCJR; }
 	else if (mtype == "hercules") { machine = MCH_HERC; }
 	else if (mtype == "ega")      { machine = MCH_EGA; }
-	else if (mtype == "vga")          { svgaCard = SVGA_S3Trio; }
-	else if (mtype == "vga_s3")       { svgaCard = SVGA_S3Trio; }
+//	else if (mtype == "vga")          { svgaCard = SVGA_S3Trio; }
+	else if (mtype == "svga_s3")       { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "vesa_nolfb")   { svgaCard = SVGA_S3Trio; int10.vesa_nolfb = true;}
-	else if (mtype == "vga_et4000")   { svgaCard = SVGA_TsengET4K; }
-	else if (mtype == "vga_et3000")   { svgaCard = SVGA_TsengET3K; }
-	else if (mtype == "vga_pvga1a")   { svgaCard = SVGA_ParadisePVGA1A; }
-	else if (mtype == "vga_paradise") { svgaCard = SVGA_ParadisePVGA1A; }
+	else if (mtype == "svga_et4000")   { svgaCard = SVGA_TsengET4K; }
+	else if (mtype == "svga_et3000")   { svgaCard = SVGA_TsengET3K; }
+//	else if (mtype == "vga_pvga1a")   { svgaCard = SVGA_ParadisePVGA1A; }
+	else if (mtype == "svga_paradise") { svgaCard = SVGA_ParadisePVGA1A; }
 	else if (mtype == "vgaonly")      { svgaCard = SVGA_None; }
 	else E_Exit("DOSBOX:Unknown machine type %s",mtype.c_str());
 }
@@ -317,14 +317,14 @@ void DOSBOX_Init(void) {
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {
-		"hercules", "cga"," tandy", "pcjr", "ega", "vga",
-		"vgaonly", "vga_s3", "vga_et3000", "vga_et4000",
-		"vga_pvga1a", "vga_paradise", "vesa_nolfb", 0 };
+		"hercules", "cga"," tandy", "pcjr", "ega",
+		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
+		 "svga_paradise", "vesa_nolfb", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
 	Pstring = secprop->Add_string("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
 
-	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"vga");
+	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"svga_s3");
 	Pstring->Set_values(machines);
 	Pstring->Set_help("The type of machine tries to emulate.");
 
