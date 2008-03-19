@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.33 2008-03-02 08:53:34 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.34 2008-03-19 08:41:45 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -218,7 +218,7 @@ void LOG_StartUp(void) {
 	loggrp[LOG_VGAMISC].front="VGAMISC";
 	loggrp[LOG_INT10].front="INT10";
 	loggrp[LOG_SB].front="SBLASTER";
-	loggrp[LOG_DMA].front="DMA";
+	loggrp[LOG_DMACONTROL].front="DMA_CONTROL";
 	
 	loggrp[LOG_FPU].front="FPU";
 	loggrp[LOG_CPU].front="CPU";
