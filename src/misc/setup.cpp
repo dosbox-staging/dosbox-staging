@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.46 2008-02-25 06:21:09 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.47 2008-03-19 20:35:18 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -300,6 +300,22 @@ void Prop_multival::SetValue(std::string const& input) {
 		p->SetValue(in);
 	}
 }
+const std::vector<Value>& Property::GetValues() const {
+	return suggested_values;
+}
+ const std::vector<Value>& Prop_multival::GetValues() const 
+{
+	Property *p = section->Get_prop(0);
+	//No properties in this section. do nothing
+	if(!p) return suggested_values;
+	int i =0;
+	string::size_type loc = string::npos;
+	while( (p = section->Get_prop(i++)) ) {
+		std::vector<Value> v = p->GetValues();
+		if(!v.empty()) return p->GetValues();
+	}
+	return suggested_values;
+}
 
 /*
 void Section_prop::Add_double(char const * const _propname, double _value) {
@@ -469,22 +485,58 @@ void Config::PrintConfig(char const * const configfilename) const {
 	fprintf(outfile,"\n");
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */
+		Section_prop *sec = dynamic_cast<Section_prop *>(*tel);
 		strcpy(temp,(*tel)->GetName());
 		lowcase(temp);
 		fprintf(outfile,"[%s]\n",temp);
-		upcase(temp);
-		strcat(temp,"_CONFIGFILE_HELP");
-		const char * helpstr=MSG_Get(temp);
-		char * helpwrite=helpline;
-		while (*helpstr) {
-			*helpwrite++=*helpstr;
-			if (*helpstr == '\n') {
-				*helpwrite=0;
-				fprintf(outfile,"# %s",helpline);
-				helpwrite=helpline;
+
+		if (sec) {
+			Property *p;
+			size_t i = 0, maxwidth = 0;
+			while ((p = sec->Get_prop(i++))) {
+				size_t w = strlen(p->propname.c_str());
+				if (w > maxwidth) maxwidth = w;
 			}
-			helpstr++;
+			i=0;
+			char prefix[80];
+			snprintf(prefix,80, "\n# %*s  ", maxwidth, "");
+			while ((p = sec->Get_prop(i++))) {		
+				std::string help = p->Get_help();
+				std::string::size_type pos = std::string::npos;
+				while ((pos = help.find("\n", pos+1)) != std::string::npos) {
+					help.replace(pos, 1, prefix);
+				}
+		     
+				fprintf(outfile, "# %*s: %s", maxwidth, p->propname.c_str(), help.c_str());
+
+				std::vector<Value> values = p->GetValues();
+				if (!values.empty()) {
+					fprintf(outfile, "%s%s:", prefix, MSG_Get("CONFIG_SUGGESTED_VALUES"));
+					std::vector<Value>::iterator it = values.begin();
+					while (it != values.end()) {
+						if (it != values.begin()) fputs(",", outfile);
+						fprintf(outfile, " %s", (*it).ToString().c_str());
+						++it;
+					}
+				}
+			fprintf(outfile, "\n");
+			}
+		} else {
+			upcase(temp);
+			strcat(temp,"_CONFIGFILE_HELP");
+			const char * helpstr=MSG_Get(temp);
+			char * helpwrite=helpline;
+			while (*helpstr) {
+				*helpwrite++=*helpstr;
+				if (*helpstr == '\n') {
+					*helpwrite=0;
+					fprintf(outfile,"# %s",helpline);
+					helpwrite=helpline;
+				}
+				helpstr++;
+			}
 		}
+	   
 		fprintf(outfile,"\n");
 		(*tel)->PrintData(outfile);
 		fprintf(outfile,"\n");		/* Always an empty line between sections */

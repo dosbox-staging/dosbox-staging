@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.141 2008-02-21 19:25:34 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.142 2008-03-19 20:35:17 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1464,7 +1464,7 @@ int main(int argc, char* argv[]) {
 
 		Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
 		Pmulti->SetValue("higher,normal");
-		Pmulti->Set_help("priority -- Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
+		Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
 
 		const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
 		Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");

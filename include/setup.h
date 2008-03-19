@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.33 2008-03-02 11:13:46 qbix79 Exp $ */
+/* $Id: setup.h,v 1.34 2008-03-19 20:35:16 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -136,7 +136,9 @@ public:
 	virtual bool CheckValue(Value const& in, bool warn);
 	//Set interval value to in or default if in is invalid. force always sets the value.
 	void SetVal(Value const& in, bool forced,bool warn=true) {if(forced || CheckValue(in,warn)) value = in; else value = default_value;}
-	virtual ~Property(){ }
+	virtual ~Property(){ } 
+	virtual const std::vector<Value>& GetValues() const;
+
 protected:
 	Value value;
 	std::vector<Value> suggested_values;
@@ -278,7 +280,8 @@ public:
 	Section_prop *GetSection() { return section; }
 	const Section_prop *GetSection() const { return section; }
 	void SetValue(std::string const& input);
-}; //value bevat totalle string. setvalue zet elk van de sub properties en checked die.
+	virtual const std::vector<Value>& GetValues() const;
+}; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
 
 class Section_line: public Section{
 public:

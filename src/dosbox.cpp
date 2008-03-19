@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.131 2008-03-18 20:51:26 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.132 2008-03-19 20:35:17 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -40,6 +40,7 @@
 #include "support.h"
 #include "mapper.h"
 #include "ints/int10.h"
+#include "render.h"
 
 Config * control;
 MachineType machine;
@@ -268,6 +269,7 @@ static void DOSBOX_RealInit(Section * sec) {
 	        "# This is the configurationfile for DOSBox %s.\n"
 	        "# Lines starting with a # are commentlines.\n"
 	        "# They are used to (briefly) document the effect of each option.\n");
+	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 	std::string cmd_machine;
@@ -313,6 +315,8 @@ void DOSBOX_Init(void) {
 	const char *ios[] = { "220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
 	const char *irqs[] = { "3", "5", "7", "9", "10", "11", "12", 0 };
 	const char *dmas[] = { "0", "1", "3", "5", "6", "7", 0 };
+	const char *irqssb[] = { "7", "5", "3", "9", "10", "11", "12", 0 };
+	const char *dmassb[] = { "1", "5", "0", "3", "6", "7", 0 };
 
 
 	/* Setup all the different modules making up DOSBox */
@@ -388,7 +392,7 @@ void DOSBOX_Init(void) {
 
 	Pmulti = secprop->Add_multi("cycles",Property::Changeable::Always," ");
 	Pmulti->Set_help(
-		"Amount of instructions DOSBox tries to emulate each millisecond. Setting this value too high results in sound dropouts and lags. Cycles can be set in 3 ways:"
+		"Amount of instructions DOSBox tries to emulate each millisecond. Setting this value too high results in sound dropouts and lags. Cycles can be set in 3 ways:\n"
 		"  'auto'          tries to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
 		"  'fixed #number' will set a fixed amount of cycles. This is what you usually need if 'auto' fails.\n"
@@ -468,15 +472,15 @@ void DOSBOX_Init(void) {
 	Phex->Set_help("The IO address of the soundblaster.");
 
 	Pint = secprop->Add_int("irq",Property::Changeable::WhenIdle,7);
-	Pint->Set_values(irqs);
+	Pint->Set_values(irqssb);
 	Pint->Set_help("The IRQ number of the soundblaster.");
 
 	Pint = secprop->Add_int("dma",Property::Changeable::WhenIdle,1);
-	Pint->Set_values(dmas);
+	Pint->Set_values(dmassb);
 	Pint->Set_help("The DMA number of the soundblaster.");
 
 	Pint = secprop->Add_int("hdma",Property::Changeable::WhenIdle,5);
-	Pint->Set_values(dmas);
+	Pint->Set_values(dmassb);
 	Pint->Set_help("The High DMA number of the soundblaster.");
 
 	Pbool = secprop->Add_bool("mixer",Property::Changeable::WhenIdle,true);
