@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.29 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.30 2008-03-19 17:55:58 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -27,7 +27,8 @@
 
 bool DOS_IOCTL(void) {
 	Bitu handle=0;Bit8u drive=0;
-	if (reg_al<8) {				/* call 0-7 use a file handle */
+	/* calls 0-7,10,12,16 use a file handle */
+	if ((reg_al<8) || (reg_al==0x0a) || (reg_al==0x0c) || (reg_al==0x10)) {
 		handle=RealHandle(reg_bx);
 		if (handle>=DOS_FILES) {
 			DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -69,7 +70,7 @@ bool DOS_IOCTL(void) {
 				return true;
 			}
 		}
-		DOS_SetError(0x0001);	// invalid function
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 		return false;
 	case 0x03:		/* Write to Device Control Channel */
 		if (Files[handle]->GetInformation() & 0xc000) {
@@ -81,7 +82,7 @@ bool DOS_IOCTL(void) {
 				return true;
 			}
 		}
-		DOS_SetError(0x0001);	// invalid function
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 		return false;
 	case 0x06:      /* Get Input Status */
 		if (Files[handle]->GetInformation() & 0x8000) {		//Check for device
@@ -106,9 +107,12 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x08:		/* Check if block device removable */
 		/* cdrom drives and drive a&b are removable */
-		if (drive < 2  || Drives[drive]->isRemovable())
-			reg_ax=0;
-		else 	reg_ax=1;
+		if (drive < 2) reg_ax=0;
+		else if (!Drives[drive]->isRemovable()) reg_ax=1;
+		else {
+			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			return false;
+		}
 		return true;
 	case 0x09:		/* Check if block device remote */
 		reg_dx=0;
@@ -118,6 +122,10 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x0D:		/* Generic block device request */
 		{
+			if (Drives[drive]->isRemovable()) {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				return false;
+			}
 			PhysPt ptr	= SegPhys(ds)+reg_dx;
 			switch (reg_cl) {
 			case 0x60:		/* Get Device parameters */
@@ -158,15 +166,21 @@ bool DOS_IOCTL(void) {
 				break;
 			default	:	
 				LOG(LOG_IOCTL,LOG_ERROR)("DOS:IOCTL Call 0D:%2X Drive %2X unhandled",reg_cl,drive);
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
 			}
 			return true;
 		}
-	case 0xE:		/* Get Logical Drive Map */
+	case 0x0E:			/* Get Logical Drive Map */
+		if (Drives[drive]->isRemovable()) {
+			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			return false;
+		}
 		reg_al = 0;		/* Only 1 logical drive assigned */
 		return true;
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 		return false;
 	};
 	return false;
