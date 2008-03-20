@@ -2,7 +2,7 @@ enum {
 	L_N=0,
 	L_SKIP,
 	/* Grouped ones using MOD/RM */
-	L_MODRM,L_POPwRM,L_POPdRM,
+	L_MODRM,L_MODRM_NVM,L_POPwRM,L_POPdRM,
 	
 	L_Ib,L_Iw,L_Id,
 	L_Ibx,L_Iwx,L_Idx,				//Sign extend

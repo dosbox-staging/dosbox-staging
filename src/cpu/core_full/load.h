@@ -6,6 +6,9 @@ switch (inst.code.load) {
 	case L_POPdRM:
 		inst_op1_d = Pop_32();
 		goto case_L_MODRM;
+	case L_MODRM_NVM:
+		if ((reg_flags & FLAG_VM) || !cpu.pmode) goto illegalopcode;
+		goto case_L_MODRM;
 case_L_MODRM:
 	case L_MODRM:
 		inst.rm=Fetchb();
