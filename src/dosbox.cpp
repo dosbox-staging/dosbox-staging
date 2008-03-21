@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.132 2008-03-19 20:35:17 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.133 2008-03-21 04:36:20 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -321,7 +321,7 @@ void DOSBOX_Init(void) {
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {
-		"hercules", "cga"," tandy", "pcjr", "ega",
+		"hercules", "cga", "tandy", "pcjr", "ega",
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
 		 "svga_paradise", "vesa_nolfb", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
