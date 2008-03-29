@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.51 2007-10-19 12:15:40 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.52 2008-03-29 16:47:09 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -270,7 +270,6 @@ INLINE void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
 Bitu XMS_Handler(void) {
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
 	switch (reg_ah) {
-
 	case XMS_GET_VERSION:										/* 00 */
 		reg_ax=XMS_VERSION;
 		reg_bx=XMS_DRIVER_VERSION;
@@ -426,7 +425,7 @@ public:
 		DOS_AddMultiplexHandler(multiplex_xms);
 
 		/* place hookable callback in writable memory area */
-		xms_callback=RealMake(DOS_GetMemory(0x1),0);
+		xms_callback=RealMake(DOS_GetMemory(0x1)-1,0x10);
 		callbackhandler.Install(&XMS_Handler,CB_HOOKABLE,Real2Phys(xms_callback),"XMS Handler");
 		// pseudocode for CB_HOOKABLE:
 		//	jump near skip
