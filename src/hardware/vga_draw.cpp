@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.94 2008-03-30 18:02:23 qbix79 Exp $ */
+/* $Id: vga_draw.cpp,v 1.95 2008-03-30 19:59:42 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -671,8 +671,8 @@ static void VGA_DrawPart(Bitu lines) {
 			vga.draw.address_line=0;
 			vga.draw.address+=vga.draw.address_add;
 		}
-//		vga.draw.lines_done++;
-		if (vga.draw.split_line==vga.draw.lines_done++) {
+		vga.draw.lines_done++;
+		if (vga.draw.split_line==vga.draw.lines_done) {
 #ifdef VGA_KEEP_CHANGES
 			VGA_ChangesEnd( );
 #endif
@@ -801,6 +801,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_LIN4:
 		vga.draw.address *= 8;
 		vga.draw.address += vga.config.pel_panning;
+		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
+			vga.draw.address = 0;
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesStart();
 #endif
@@ -819,6 +821,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_LIN32:
 		vga.draw.address *= 4;
 		vga.draw.address += vga.config.pel_panning;
+		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
+			vga.draw.address = 0;
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesStart();
 #endif
@@ -1318,8 +1322,8 @@ void VGA_SetupDrawing(Bitu val) {
 	}
 		
 	if(!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
-		// what is this hack needed for?
 		//Only check for extra double height in vga modes
+		//(line multiplying by address_line_total)
 		if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
 			vga.draw.address_line_total/=2;
 			doubleheight=true;
