@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.93 2008-03-08 12:29:59 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.94 2008-03-30 18:02:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -634,17 +634,12 @@ static INLINE void VGA_ChangesEnd(void ) {
 static void VGA_DrawSingleLine(Bitu blah) {
 	if(vga.attr.enabled || (!(vga.mode==M_VGA || vga.mode==M_EGA))) {
         Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
-		// Magic Circle last part
-		if((vga.crtc.maximum_scan_line & 0x80)&& !vga.draw.doubleheight)
-			RENDER_DrawLine(data);
 		RENDER_DrawLine(data);
 	} else {
 		// else draw overscan color line
 		// TODO: black line should be good enough for now
 		// (DoWhackaDo)
 		memset(TempLine, 0, sizeof(TempLine));
-		if((vga.crtc.maximum_scan_line & 0x80)&& !vga.draw.doubleheight)
-			RENDER_DrawLine(TempLine);
 		RENDER_DrawLine(TempLine);
 	}
 
@@ -662,8 +657,8 @@ static void VGA_DrawSingleLine(Bitu blah) {
 		}
 		vga.draw.address_line=0;
 	}
-	if ((vga.draw.lines_done < vga.draw.lines_total) && (!vga.draw.resizing)) {
-		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.virtline);
+	if (vga.draw.lines_done < vga.draw.lines_total) {
+		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
 	} else RENDER_EndUpdate();
 }
 
@@ -855,7 +850,7 @@ static void VGA_VerticalTimer(Bitu val) {
 			vga.draw.vret_triggered=true;
 		}
 	}
-	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
+	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0));
 	else PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
 	//VGA_DrawPart( vga.draw.parts_lines );
 	//PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
@@ -1010,9 +1005,17 @@ void VGA_SetupDrawing(Bitu val) {
 		if (vga.seq.clocking_mode & 0x8) {
 			htotal*=2;
 		}
-		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0xf)+1;
-
-		if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
+		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0x1f)+1;
+		if(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
+			// vgaonly; can't use with CGA because these use address_line for their
+			// own purposes.
+			// Set the low resolution modes to have as many lines as are scanned - 
+			// Quite a few demos change the max_scanline register at display time
+			// to get SFX: Majic12 show, Magic circle, Copper, GBU, Party91
+			if( vga.crtc.maximum_scan_line&0x80) vga.draw.address_line_total*=2;
+			vga.draw.double_scan=false;
+		}
+		else if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
 		else vga.draw.double_scan=(vtotal==262);
 	} else {
 		htotal = vga.other.htotal + 1;
@@ -1313,11 +1316,15 @@ void VGA_SetupDrawing(Bitu val) {
 		if (IS_VGA_ARCH) height/=2;
 		doubleheight=true;
 	}
-	//Only check for extra double height in vga modes
-	if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
-		vga.draw.address_line_total/=2;
-		doubleheight=true;
-		height/=2;
+		
+	if(!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
+		// what is this hack needed for?
+		//Only check for extra double height in vga modes
+		if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
+			vga.draw.address_line_total/=2;
+			doubleheight=true;
+			height/=2;
+		}
 	}
 	vga.draw.lines_total=height;
 	vga.draw.parts_lines=vga.draw.lines_total/vga.draw.parts_total;
@@ -1356,11 +1363,9 @@ void VGA_SetupDrawing(Bitu val) {
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
 #endif
 		RENDER_SetSize(width,height,bpp,fps,aspect_ratio,doublewidth,doubleheight);
-		if(doubleheight) vga.draw.delay.virtline = vga.draw.delay.htotal * 2.0;
-		// On doubleheight modes we need twice the time to pass to the next scanline
-		else vga.draw.delay.virtline = vga.draw.delay.htotal;
 		vga.draw.delay.framestart = PIC_FullIndex();
 		PIC_AddEvent( VGA_VerticalTimer , (float)vga.draw.delay.vtotal );
+		vga.draw.lines_done = 0;
 	}
 };
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.39 2008-02-06 18:22:27 c2woody Exp $ */
+/* $Id: vga.h,v 1.40 2008-03-30 18:02:23 qbix79 Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -128,7 +128,6 @@ typedef struct {
 		double vdend, vtotal;
 		double hdend, htotal;
 		double parts;
-		double virtline;
 	} delay;
 	double aspect_ratio;
 	bool double_scan;

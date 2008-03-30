@@ -179,9 +179,12 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	/* Check if this is a new color */
 	vga.dac.combine[attr]=pal;
 	switch (vga.mode) {
-	case M_VGA:
 	case M_LIN8:
 		break;
+	case M_VGA:
+		// used by copper demo; almost no video card seems to suport it
+		if(!IS_VGA_ARCH || (svgaCard!=SVGA_None)) break;
+
 	default:
 		vga.dac.xlat16[attr] = ((vga.dac.rgb[pal].blue>>1)&0x1f) |
 		(((vga.dac.rgb[pal].green)&0x3f)<<5)|

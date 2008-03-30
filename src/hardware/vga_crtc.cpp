@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_crtc.cpp,v 1.31 2008-02-06 18:23:34 c2woody Exp $ */
+/* $Id: vga_crtc.cpp,v 1.32 2008-03-30 18:02:23 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include "dosbox.h"
@@ -141,11 +141,21 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		if (IS_VGA_ARCH)
 			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
 
-		// don't call resize on doublescan change (magic.exe by European Technology)
-		if ((vga.crtc.maximum_scan_line ^ val) & ((svgaCard==SVGA_None)?0x3f:0xbf)) {
+		if(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
+			// in vgaonly mode we take special care of line repeats (excluding CGA modes)
+			if ((vga.crtc.maximum_scan_line ^ val) & 0x20) {
+				crtc(maximum_scan_line)=val;
+				VGA_StartResize();
+			}
 			crtc(maximum_scan_line)=val;
-			VGA_StartResize();
-		} else crtc(maximum_scan_line)=val;
+			vga.draw.address_line_total = (val &0x1F) + 1;
+			if(val&0x80) vga.draw.address_line_total*=2;
+		} else {
+			if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
+				crtc(maximum_scan_line)=val;
+				VGA_StartResize();
+			}
+		}
 		/*
 			0-4	Number of scan lines in a character row -1. In graphics modes this is
 				the number of times (-1) the line is displayed before passing on to
