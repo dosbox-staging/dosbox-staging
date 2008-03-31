@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.50 2008-03-14 18:16:34 c2woody Exp $ */
+/* $Id: int10.cpp,v 1.51 2008-03-31 14:43:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -426,7 +426,7 @@ graphics_chars:
 					else reg_bx=dccentry;
 				} else reg_bx=0xffff;
 			} else reg_bx=0xffff;
-			reg_al=0x1A;
+			reg_ax=0x1A;	// high part destroyed or zeroed depending on BIOS
 		} else if (reg_al==1) {	// set dcc
 			Bit8u newidx=0xff;
 			// walk the tables...
@@ -450,7 +450,7 @@ graphics_chars:
 			}
 
 			real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,newidx);
-			reg_al=0x1A;
+			reg_ax=0x1A;	// high part destroyed or zeroed depending on BIOS
 		}
 		break;
 	case 0x1B:								/* functionality State Information */
