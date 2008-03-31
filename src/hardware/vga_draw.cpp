@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.95 2008-03-30 19:59:42 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.96 2008-03-31 19:09:51 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -575,13 +575,15 @@ static Bit8u * VGA_TEXT_Xlat16_Draw_Line_9(Bitu vidstart, Bitu line) {
 		}
 		if (FontMask[col>>7]==0) font=0;
 		Bit8u mask=0x80;
-		for(int i = 0; i < 8; i++) {
-			*draw++= vga.dac.xlat16[font&mask?fg:bg];
+		for (int i = 0; i < 7; i++) {
+			*draw++=vga.dac.xlat16[font&mask?fg:bg];
 			mask>>=1;
 		}
+		Bit16u lastval=vga.dac.xlat16[font&mask?fg:bg];
+		*draw++=lastval;
 		*draw++=(((vga.attr.mode_control&0x04) && ((chr<0xc0) || (chr>0xdf))) && 
 			!(underline && ((col&0x07) == 0x01))) ? 
-			(vga.dac.xlat16[bg]) : draw[-1];
+			(vga.dac.xlat16[bg]) : lastval;
 		if (pel_pan) {
 			if (underline && ((col&0x07) == 0x01)) font=0xff;
 			else font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
