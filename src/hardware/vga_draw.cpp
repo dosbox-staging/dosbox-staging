@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.96 2008-03-31 19:09:51 qbix79 Exp $ */
+/* $Id: vga_draw.cpp,v 1.97 2008-04-01 19:58:34 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -248,21 +248,21 @@ static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
 					if(mapat >= vga.s3.hgc.posx) {
 						switch(mappoint) {
-					case 0:
-						TempLine[xat] = vga.s3.hgc.backstack[0];
-						break;
-					case 1:
-						TempLine[xat] = vga.s3.hgc.forestack[0];
-						break;
-					case 2:
-						//Transparent
-						break;
-					case 3:
-						// Invert screen data
-						TempLine[xat] = ~TempLine[xat];
-						break;
-				}
-				xat++;
+						case 0:
+							TempLine[xat] = vga.s3.hgc.backstack[0];
+							break;
+						case 1:
+							TempLine[xat] = vga.s3.hgc.forestack[0];
+							break;
+						case 2:
+							//Transparent
+							break;
+						case 3:
+							// Invert screen data
+							TempLine[xat] = ~TempLine[xat];
+							break;
+						}
+						xat++;
 					}
 					mapat++;
 					--z;
@@ -312,24 +312,24 @@ static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
 					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
 					if(mapat >= vga.s3.hgc.posx) {
 						switch(mappoint) {
-					case 0:
-						TempLine[xat]   = vga.s3.hgc.backstack[0];
-						TempLine[xat+1] = vga.s3.hgc.backstack[1];
-						break;
-					case 1:
-						TempLine[xat]   = vga.s3.hgc.forestack[0];
-						TempLine[xat+1] = vga.s3.hgc.forestack[1];
-						break;
-					case 2:
-						//Transparent
-						break;
-					case 3:
-						// Invert screen data
-						TempLine[xat]   = ~TempLine[xat];
-						TempLine[xat+1] = ~TempLine[xat+1];
-						break;
-				}
-				xat+=2;
+						case 0:
+							TempLine[xat]   = vga.s3.hgc.backstack[0];
+							TempLine[xat+1] = vga.s3.hgc.backstack[1];
+							break;
+						case 1:
+							TempLine[xat]   = vga.s3.hgc.forestack[0];
+							TempLine[xat+1] = vga.s3.hgc.forestack[1];
+							break;
+						case 2:
+							//Transparent
+							break;
+						case 3:
+							// Invert screen data
+							TempLine[xat]   = ~TempLine[xat];
+							TempLine[xat+1] = ~TempLine[xat+1];
+							break;
+						}
+						xat+=2;
 					}
 					mapat++;
 					--z;
@@ -379,30 +379,30 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
 					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
 					if(mapat >= vga.s3.hgc.posx) {
 						switch(mappoint) {
-					case 0:
-						TempLine[xat]   = vga.s3.hgc.backstack[0];
-						TempLine[xat+1] = vga.s3.hgc.backstack[1];
-						TempLine[xat+2] = vga.s3.hgc.backstack[2];
-						TempLine[xat+3] = 255;
-						break;
-					case 1:
-						TempLine[xat]   = vga.s3.hgc.forestack[0];
-						TempLine[xat+1] = vga.s3.hgc.forestack[1];
-						TempLine[xat+2] = vga.s3.hgc.forestack[2];
-						TempLine[xat+3] = 255;
-						break;
-					case 2:
-						//Transparent
-						break;
-					case 3:
-						// Invert screen data
-						TempLine[xat]   = ~TempLine[xat];
-						TempLine[xat+1] = ~TempLine[xat+1];
-						TempLine[xat+2] = ~TempLine[xat+2];
-						TempLine[xat+3] = ~TempLine[xat+3];
-						break;
-				}
-				xat+=4;
+						case 0:
+							TempLine[xat]   = vga.s3.hgc.backstack[0];
+							TempLine[xat+1] = vga.s3.hgc.backstack[1];
+							TempLine[xat+2] = vga.s3.hgc.backstack[2];
+							TempLine[xat+3] = 255;
+							break;
+						case 1:
+							TempLine[xat]   = vga.s3.hgc.forestack[0];
+							TempLine[xat+1] = vga.s3.hgc.forestack[1];
+							TempLine[xat+2] = vga.s3.hgc.forestack[2];
+							TempLine[xat+3] = 255;
+							break;
+						case 2:
+							//Transparent
+							break;
+						case 3:
+							// Invert screen data
+							TempLine[xat]   = ~TempLine[xat];
+							TempLine[xat+1] = ~TempLine[xat+1];
+							TempLine[xat+2] = ~TempLine[xat+2];
+							TempLine[xat+3] = ~TempLine[xat+3];
+							break;
+						}
+						xat+=4;
 					}
 					mapat++;
 					--z;
@@ -655,7 +655,12 @@ static void VGA_DrawSingleLine(Bitu blah) {
 		vga.draw.address=0;
 		if (!(vga.attr.mode_control&0x20)) {
 			// pel panning enabled
-			if (!(vga.mode==M_TEXT)) vga.draw.address = vga.config.pel_panning;
+			if (!(vga.mode==M_TEXT)) {
+				vga.draw.address = vga.config.pel_panning + 
+					vga.draw.byte_panning_shift*vga.config.bytes_skip;
+			} else {
+				vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
+			}
 		}
 		vga.draw.address_line=0;
 	}
@@ -681,7 +686,12 @@ static void VGA_DrawPart(Bitu lines) {
 			vga.draw.address=0;
 			if (!(vga.attr.mode_control&0x20)) {
 				// pel panning enabled
-				if (!(vga.mode==M_TEXT)) vga.draw.address = vga.config.pel_panning;
+				if (!(vga.mode==M_TEXT)) {
+					vga.draw.address = vga.config.pel_panning + 
+						vga.draw.byte_panning_shift*vga.config.bytes_skip;
+				} else {
+					vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
+				}
 			}
 			vga.draw.address_line=0;
 #ifdef VGA_KEEP_CHANGES
@@ -795,16 +805,19 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
 	if (vga.draw.split_line==0) vga.draw.address = 0;
 	else vga.draw.address = vga.config.real_start;
+	vga.draw.byte_panning_shift = 0;
 	// go figure...
 	if (machine==MCH_EGA) vga.draw.split_line*=2;
 //	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 	switch (vga.mode) {
 	case M_EGA:
 	case M_LIN4:
+		vga.draw.address += vga.config.bytes_skip;
 		vga.draw.address *= 8;
 		vga.draw.address += vga.config.pel_panning;
 		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
 			vga.draw.address = 0;
+		vga.draw.byte_panning_shift = 8;
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesStart();
 #endif
@@ -821,10 +834,12 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN32:
+		vga.draw.address += vga.config.bytes_skip;
 		vga.draw.address *= 4;
 		vga.draw.address += vga.config.pel_panning;
 		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
 			vga.draw.address = 0;
+		vga.draw.byte_panning_shift = 4;
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesStart();
 #endif
@@ -832,6 +847,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_TEXT:
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.address = vga.config.real_start * 2;
 		else vga.draw.address = vga.config.display_start * 2;
+		vga.draw.address += vga.config.bytes_skip*2;
+		vga.draw.byte_panning_shift = 2;
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
 		vga.draw.cursor.address=vga.config.cursor_start*2;

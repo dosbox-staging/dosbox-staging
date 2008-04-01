@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.40 2008-03-30 18:02:23 qbix79 Exp $ */
+/* $Id: vga.h,v 1.41 2008-04-01 19:58:17 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -119,6 +119,7 @@ typedef struct {
 	Bitu parts_total;
 	Bitu parts_lines;
 	Bitu parts_left;
+	Bitu byte_panning_shift;
 	struct {
 		double framestart;
 		double vrstart, vrend;		// V-retrace
