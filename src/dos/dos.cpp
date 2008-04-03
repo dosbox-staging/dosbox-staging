@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.109 2008-03-12 17:45:39 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.110 2008-04-03 18:28:19 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -435,13 +435,22 @@ static Bitu DOS_21Handler(void) {
 		{
 			Bit16u bytes,clusters,free;
 			Bit8u sectors;
-			if(DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
+			if (DOS_GetFreeDiskSpace(reg_dl,&bytes,&sectors,&clusters,&free)) {
 				reg_ax=sectors;
 				reg_bx=free;
 				reg_cx=bytes;
 				reg_dx=clusters;
 			} else {
-				reg_ax=0xffff;
+				Bit8u drive=reg_dl;
+				if (drive==0) drive=DOS_GetDefaultDrive();
+				else drive--;
+				if (drive<2) {
+					// floppy oddity, non-present drives don't fail with the
+					// invalid drive error
+					CALLBACK_SCF(true);
+				} else {
+					reg_ax=0xffff;	// invalid drive specified
+				}
 			}
 		}
 		break;
