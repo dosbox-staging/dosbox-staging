@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.110 2008-04-03 18:28:19 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.111 2008-04-07 19:11:48 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -445,12 +445,11 @@ static Bitu DOS_21Handler(void) {
 				if (drive==0) drive=DOS_GetDefaultDrive();
 				else drive--;
 				if (drive<2) {
-					// floppy oddity, non-present drives don't fail with the
-					// invalid drive error
-					CALLBACK_SCF(true);
-				} else {
-					reg_ax=0xffff;	// invalid drive specified
+					// floppy drive, non-present drivesdisks issue floppy check through int24
+					// (critical error handler); needed for Mixed up Mother Goose (hook)
+//					CALLBACK_RunRealInt(0x24);
 				}
+				reg_ax=0xffff;	// invalid drive specified
 			}
 		}
 		break;
