@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.97 2008-04-01 19:58:34 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.98 2008-04-12 20:32:19 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -633,6 +633,19 @@ static INLINE void VGA_ChangesEnd(void ) {
 #endif
 
 
+static void VGA_ProcessSplit() {
+	// On the EGA the address is always reset to 0.
+	if ((vga.attr.mode_control&0x20) || (machine==MCH_EGA)) {
+		vga.draw.address=0;
+	} else {
+		// In text mode only the characters are shifted by panning, not the address;
+		// this is done in the text line draw function.
+		vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
+		if (!(vga.mode==M_TEXT)) vga.draw.address += vga.config.pel_panning;
+	}
+	vga.draw.address_line=0;
+}
+
 static void VGA_DrawSingleLine(Bitu blah) {
 	if(vga.attr.enabled || (!(vga.mode==M_VGA || vga.mode==M_EGA))) {
         Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
@@ -651,19 +664,7 @@ static void VGA_DrawSingleLine(Bitu blah) {
 		vga.draw.address+=vga.draw.address_add;
 	}
 	vga.draw.lines_done++;
-	if (vga.draw.split_line==vga.draw.lines_done) {
-		vga.draw.address=0;
-		if (!(vga.attr.mode_control&0x20)) {
-			// pel panning enabled
-			if (!(vga.mode==M_TEXT)) {
-				vga.draw.address = vga.config.pel_panning + 
-					vga.draw.byte_panning_shift*vga.config.bytes_skip;
-			} else {
-				vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
-			}
-		}
-		vga.draw.address_line=0;
-	}
+	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
 		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
 	} else RENDER_EndUpdate();
@@ -683,17 +684,7 @@ static void VGA_DrawPart(Bitu lines) {
 #ifdef VGA_KEEP_CHANGES
 			VGA_ChangesEnd( );
 #endif
-			vga.draw.address=0;
-			if (!(vga.attr.mode_control&0x20)) {
-				// pel panning enabled
-				if (!(vga.mode==M_TEXT)) {
-					vga.draw.address = vga.config.pel_panning + 
-						vga.draw.byte_panning_shift*vga.config.bytes_skip;
-				} else {
-					vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
-				}
-			}
-			vga.draw.address_line=0;
+			VGA_ProcessSplit();
 #ifdef VGA_KEEP_CHANGES
 			vga.changes.start = vga.draw.address >> VGA_CHANGE_SHIFT;
 #endif
@@ -750,28 +741,9 @@ static void INLINE VGA_ChangesStart( void ) {
 
 
 static void VGA_VerticalTimer(Bitu val) {
-
-	/*
-	// Panic plasma appears more stable with this variant
-	vga.draw.delay.framestart += vga.draw.delay.vtotal;
-	double error = PIC_FullIndex()-vga.draw.delay.framestart;
-	//vga.draw.delay.framestart = PIC_FullIndex();
-	//error = vga.draw.delay.framestart - error - vga.draw.delay.vtotal;
-	//if (abs(error) > 0.001 ) LOG_MSG("vgaerror: %f",error);
-
-	//PIC_RemoveEvents(VGA_VerticalDisplayEnd);
-	PIC_AddEvent( VGA_VerticalTimer, (float)vga.draw.delay.vtotal - error);
-	double flip_offset = vga.screenflip/1000.0 + vga.draw.delay.vrstart;
-	if(flip_offset > vga.draw.delay.vtotal) {
-		VGA_VerticalDisplayEnd(0);
-	} else PIC_AddEvent( VGA_VerticalDisplayEnd,
-			(float)(flip_offset - error));
-*/
 	double error = vga.draw.delay.framestart;
 	vga.draw.delay.framestart = PIC_FullIndex();
 	error = vga.draw.delay.framestart - error - vga.draw.delay.vtotal;
-//	 if (abs(error) > 0.001 ) 
-//		 LOG_MSG("vgaerror: %f",error);
 	PIC_AddEvent( VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
 	//PIC_AddEvent( VGA_VerticalDisplayEnd, (float)vga.draw.delay.vrstart );
 	double flip_offset = vga.screenflip/1000.0 + vga.draw.delay.vrstart;
@@ -800,26 +772,26 @@ static void VGA_VerticalTimer(Bitu val) {
 	//TODO Maybe check for an active frame on parts_left and clear that first?
 	vga.draw.parts_left = vga.draw.parts_total;
 	vga.draw.lines_done = 0;
-//	vga.draw.address=vga.config.display_start;
 	vga.draw.address_line = vga.config.hlines_skip;
-	vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
-	if (vga.draw.split_line==0) vga.draw.address = 0;
-	else vga.draw.address = vga.config.real_start;
+	if (IS_EGAVGA_ARCH) vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
+	else vga.draw.split_line = 0x10000;	// don't care
+	vga.draw.address = vga.config.real_start;
 	vga.draw.byte_panning_shift = 0;
 	// go figure...
 	if (machine==MCH_EGA) vga.draw.split_line*=2;
 //	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
+#ifdef VGA_KEEP_CHANGES
+	bool startaddr_changed=false;
+#endif
 	switch (vga.mode) {
 	case M_EGA:
 	case M_LIN4:
-		vga.draw.address += vga.config.bytes_skip;
-		vga.draw.address *= 8;
-		vga.draw.address += vga.config.pel_panning;
-		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
-			vga.draw.address = 0;
 		vga.draw.byte_panning_shift = 8;
+		vga.draw.address += vga.config.bytes_skip;
+		vga.draw.address *= vga.draw.byte_panning_shift;
+		vga.draw.address += vga.config.pel_panning;
 #ifdef VGA_KEEP_CHANGES
-		VGA_ChangesStart();
+		startaddr_changed=true;
 #endif
 		break;
 	case M_VGA:
@@ -834,21 +806,20 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN32:
-		vga.draw.address += vga.config.bytes_skip;
-		vga.draw.address *= 4;
-		vga.draw.address += vga.config.pel_panning;
-		if ((vga.draw.split_line==0) && (vga.attr.mode_control&0x20))
-			vga.draw.address = 0;
 		vga.draw.byte_panning_shift = 4;
+		vga.draw.address += vga.config.bytes_skip;
+		vga.draw.address *= vga.draw.byte_panning_shift;
+		vga.draw.address += vga.config.pel_panning;
 #ifdef VGA_KEEP_CHANGES
-		VGA_ChangesStart();
+		startaddr_changed=true;
 #endif
 		break;
 	case M_TEXT:
+		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.byte_panning_shift = 2;
+		else vga.draw.byte_panning_shift = 0;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.address = vga.config.real_start * 2;
 		else vga.draw.address = vga.config.display_start * 2;
-		vga.draw.address += vga.config.bytes_skip*2;
-		vga.draw.byte_panning_shift = 2;
+		vga.draw.address += vga.config.bytes_skip*vga.draw.byte_panning_shift;
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
 		vga.draw.cursor.address=vga.config.cursor_start*2;
@@ -867,6 +838,10 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.address *= 2;
 		break;
 	}
+	if (GCC_UNLIKELY(vga.draw.split_line==0)) VGA_ProcessSplit();
+#ifdef VGA_KEEP_CHANGES
+	if (startaddr_changed) VGA_ChangesStart();
+#endif
 	if (GCC_UNLIKELY(machine==MCH_EGA)) {
 		if (!(vga.crtc.vertical_retrace_end&0x20)) {
 			PIC_ActivateIRQ(2);
@@ -1099,22 +1074,17 @@ void VGA_SetupDrawing(Bitu val) {
 	// Display end
 	vga.draw.delay.vdend = vdend * vga.draw.delay.htotal;
 
-	/*
-	// just curious
-	LOG_MSG("H total %d, V Total %d",htotal,vtotal);
-	LOG_MSG("H D End %d, V D End %d",hdend,vdend);
-	LOG_MSG("vrstart: %d, vrend: %d\n",vrstart,vrend);
-	LOG_MSG("htotal:    %2.6f, vtotal:  %2.6f,\n"\
-		    "hblkstart: %2.6f, hblkend: %2.6f,\n"\
-		    "vblkstart: %2.6f, vblkend: %2.6f,\n"\
-			"vrstart:   %2.6f, vrend:   %2.6f,\n"\
-			"vdispend:  %2.6f",
-		vga.draw.delay.htotal,    vga.draw.delay.vtotal,
-		vga.draw.delay.hblkstart, vga.draw.delay.hblkend,
-		vga.draw.delay.vblkstart, vga.draw.delay.vblkend,
-		vga.draw.delay.vrstart,   vga.draw.delay.vrend,
-		vga.draw.delay.vdend);
-	*/
+#if C_DEBUG
+	LOG(LOG_VGA,LOG_NORMAL)("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+		vga.draw.delay.htotal,(1.0/vga.draw.delay.htotal),
+		vga.draw.delay.hblkstart,vga.draw.delay.hblkend,
+		vga.draw.delay.hrstart,vga.draw.delay.hrend);
+	LOG(LOG_VGA,LOG_NORMAL)("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+		vga.draw.delay.vtotal,(1000.0/vga.draw.delay.vtotal),
+		vga.draw.delay.vblkstart,vga.draw.delay.vblkend,
+		vga.draw.delay.vrstart,vga.draw.delay.vrend);
+#endif
+
 	vga.draw.parts_total=VGA_PARTS;
 	/*
       6  Horizontal Sync Polarity. Negative if set
