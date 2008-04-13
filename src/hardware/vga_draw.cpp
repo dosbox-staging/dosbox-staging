@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.98 2008-04-12 20:32:19 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.99 2008-04-13 19:50:47 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -989,10 +989,10 @@ void VGA_SetupDrawing(Bitu val) {
 		} else {
 			switch ((vga.misc_output >> 2) & 3) {
 			case 0:	
-				clock = 25175000;
+				clock = (machine==MCH_EGA) ? 14318180 : 25175000;
 				break;
 			case 1:
-				clock = 28322000;
+				clock = (machine==MCH_EGA) ? 16257000 : 28322000;
 				break;
 			}
 		}
@@ -1097,25 +1097,26 @@ void VGA_SetupDrawing(Bitu val) {
 	//Base pixel width around 100 clocks horizontal
 	//For 9 pixel text modes this should be changed, but we don't support that anyway :)
 	//Seems regular vga only listens to the 9 char pixel mode with character mode enabled
-	double pwidth = 100.0 / htotal;
+	double pwidth = (machine==MCH_EGA) ? (114.0 / htotal) : (100.0 / htotal);
 	//Base pixel height around vertical totals of modes that have 100 clocks horizontal
 	//Different sync values gives different scaling of the whole vertical range
 	//VGA monitor just seems to thighten or widen the whole vertical range
 	double pheight;
+	double target_total = (machine==MCH_EGA) ? 262.0 : 449.0;
 	Bitu sync = vga.misc_output >> 6;
 	switch ( sync ) {
 	case 0:		// This is not defined in vga specs,
 				// Kiet, seems to be slightly less than 350 on my monitor
 		//340 line mode, filled with 449 total
-		pheight = (480.0 / 340.0) * ( 449.0 / vtotal );
+		pheight = (480.0 / 340.0) * ( target_total / vtotal );
 		break;
 	case 1:		//400 line mode, filled with 449 total
-		pheight = (480.0 / 400.0) * ( 449.0 / vtotal );
+		pheight = (480.0 / 400.0) * ( target_total / vtotal );
 		break;
 	case 2:		//350 line mode, filled with 449 total
 		//This mode seems to get regular 640x400 timing and goes for a loong retrace
 		//Depends on the monitor to stretch the screen
-		pheight = (480.0 / 350.0) * ( 449.0 / vtotal );
+		pheight = (480.0 / 350.0) * ( target_total / vtotal );
 		break;
 	case 3:		//480 line mode, filled with 525 total
 		pheight = (480.0 / 480.0) * ( 525.0 / vtotal );
