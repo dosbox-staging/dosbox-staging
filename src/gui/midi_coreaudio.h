@@ -16,80 +16,90 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <AudioUnit/AudioUnit.h>
+#include <AudioToolbox/AUGraph.h>
 
-//We seem to using very old interface. This keeps it compiling. Maybe
-//somebody will come up with something better oneday.
-#ifdef MAC_OS_X_VERSION_10_5
-#include <AudioUnit/AudioUnitCarbonView.h>
-#include <AudioUnit/AUNTComponent.h>
-#endif
+// A macro to simplify error handling a bit.
+#define RequireNoErr(error)                                         \
+do {                                                                \
+	err = error;                                                    \
+	if (err != noErr)                                               \
+		goto bail;                                                  \
+} while (false)
 
 class MidiHandler_coreaudio : public MidiHandler {
 private:
-	AudioUnit m_musicDevice;
-	AudioUnit m_outputUnit;
+	AUGraph m_auGraph;
+	AudioUnit m_synth;
 public:
-	MidiHandler_coreaudio() : m_musicDevice(0), m_outputUnit(0) {}
+	MidiHandler_coreaudio() : m_auGraph(0), m_synth(0) {}
 	const char * GetName(void) { return "coreaudio"; }
 	bool Open(const char * conf) {
-		int err;
-		AudioUnitConnection auconnect;
-		ComponentDescription compdesc;
-		Component compid;
-	
-		if (m_outputUnit)
+		OSStatus err = 0;
+
+		if (m_auGraph)
 			return false;
-		
-		// Open the Music Device
-		compdesc.componentType = kAudioUnitComponentType;
-		compdesc.componentSubType = kAudioUnitSubType_MusicDevice;
-		compdesc.componentManufacturer = kAudioUnitID_DLSSynth;
-		compdesc.componentFlags = 0;
-		compdesc.componentFlagsMask = 0;
-		compid = FindNextComponent(NULL, &compdesc);
-		m_musicDevice = (AudioUnit) OpenComponent(compid);
-	
-		// open the output unit
-		m_outputUnit = (AudioUnit) OpenDefaultComponent(kAudioUnitComponentType, kAudioUnitSubType_Output);
-	
-		// connect the units
-		auconnect.sourceAudioUnit = m_musicDevice;
-		auconnect.sourceOutputNumber = 0;
-		auconnect.destInputNumber = 0;
-		err =
-			AudioUnitSetProperty(m_outputUnit, kAudioUnitProperty_MakeConnection, kAudioUnitScope_Input, 0,
-													 (void *)&auconnect, sizeof(AudioUnitConnection));
-	
-		// initialize the units
-		AudioUnitInitialize(m_musicDevice);
-		AudioUnitInitialize(m_outputUnit);
-	
-		// start the output
-		AudioOutputUnitStart(m_outputUnit);
-	
+
+		// Open the Music Device.
+		RequireNoErr(NewAUGraph(&m_auGraph));
+
+		AUNode outputNode, synthNode;
+		ComponentDescription desc;
+
+		// The default output device
+		desc.componentType = kAudioUnitType_Output;
+		desc.componentSubType = kAudioUnitSubType_DefaultOutput;
+		desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+		desc.componentFlags = 0;
+		desc.componentFlagsMask = 0;
+		RequireNoErr(AUGraphNewNode(m_auGraph, &desc, 0, NULL, &outputNode));
+
+		// The built-in default (softsynth) music device
+		desc.componentType = kAudioUnitType_MusicDevice;
+		desc.componentSubType = kAudioUnitSubType_DLSSynth;
+		desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+		RequireNoErr(AUGraphNewNode(m_auGraph, &desc, 0, NULL, &synthNode));
+
+		// Connect the softsynth to the default output
+		RequireNoErr(AUGraphConnectNodeInput(m_auGraph, synthNode, 0, outputNode, 0));
+
+		// Open and initialize the whole graph
+		RequireNoErr(AUGraphOpen(m_auGraph));
+		RequireNoErr(AUGraphInitialize(m_auGraph));
+
+		// Get the music device from the graph.
+		RequireNoErr(AUGraphGetNodeInfo(m_auGraph, synthNode, NULL, NULL, NULL, &m_synth));
+
+		// Finally: Start the graph!
+		RequireNoErr(AUGraphStart(m_auGraph));
+
 		return true;
+
+	bail:
+		if (m_auGraph) {
+			AUGraphStop(m_auGraph);
+			DisposeAUGraph(m_auGraph);
+			m_auGraph = 0;
+		}
+		return false;
 	}
-	
+
 	void Close(void) {
-		if (m_outputUnit) {
-			AudioOutputUnitStop(m_outputUnit);
-			CloseComponent(m_outputUnit);
-			m_outputUnit = 0;
-		}
-		if (m_musicDevice) {
-			CloseComponent(m_musicDevice);
-			m_musicDevice = 0;
+		if (m_auGraph) {
+			AUGraphStop(m_auGraph);
+			DisposeAUGraph(m_auGraph);
+			m_auGraph = 0;
 		}
 	}
-	
+
 	void PlayMsg(Bit8u * msg) {
-		MusicDeviceMIDIEvent(m_musicDevice,msg[0],msg[1],msg[2],0);
-	}
-	
+		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
+	}	
+
 	void PlaySysex(Bit8u * sysex, Bitu len) {
-		MusicDeviceSysEx(m_musicDevice, sysex, len);
+		MusicDeviceSysEx(m_synth, sysex, len);
 	}
 };
+
+#undef RequireNoErr
 
 MidiHandler_coreaudio Midi_coreaudio;

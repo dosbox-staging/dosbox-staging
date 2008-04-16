@@ -24,7 +24,7 @@ private:
 	MIDIPacket* m_pCurPacket;
 public:
 	MidiHandler_coremidi()  {m_pCurPacket = 0;}
-	char * GetName(void) { return "coremidi"; }
+	const char * GetName(void) { return "coremidi"; }
 	bool Open(const char * conf) {
 	
 		// Get the MIDIEndPoint
