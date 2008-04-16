@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.41 2007-11-01 12:15:34 qbix79 Exp $ */
+/* $Id: dos_system.h,v 1.42 2008-04-16 19:31:05 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -48,7 +48,8 @@ enum {
 	DOS_ATTR_SYSTEM=	0x04,
 	DOS_ATTR_VOLUME=	0x08,
 	DOS_ATTR_DIRECTORY=	0x10,
-	DOS_ATTR_ARCHIVE=	0x20
+	DOS_ATTR_ARCHIVE=	0x20,
+	DOS_ATTR_DEVICE=	0x40
 };
 
 struct FileStat_Block {
