@@ -16,14 +16,15 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.19 2008-01-21 21:22:58 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.20 2008-04-19 09:25:48 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
-#include <limits.h>
+#include <limits>
+#include <limits.h> //GCC 2.95
 #include <sstream>
 #include <vector>
 #include <sys/stat.h>
