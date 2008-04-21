@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.21 2007-02-01 16:24:03 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.22 2008-04-21 19:55:02 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -509,7 +509,16 @@ void VGA_SetupOther(void) {
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
 	}
-	if (machine==MCH_CGA || machine==MCH_HERC || IS_TANDY_ARCH) {
+	if (machine==MCH_CGA) {
+		Bitu base=0x3d0;
+		for (Bitu port_ct=0; port_ct<4; port_ct++) {
+			IO_RegisterWriteHandler(base+port_ct*2,write_crtc_index_other,IO_MB);
+			IO_RegisterWriteHandler(base+port_ct*2+1,write_crtc_data_other,IO_MB);
+			IO_RegisterReadHandler(base+port_ct*2,read_crtc_index_other,IO_MB);
+			IO_RegisterReadHandler(base+port_ct*2+1,read_crtc_data_other,IO_MB);
+		}
+	}
+	if (machine==MCH_HERC || IS_TANDY_ARCH) {
 		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;
 		IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
 		IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);
