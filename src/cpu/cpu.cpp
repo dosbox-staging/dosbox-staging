@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.108 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.109 2008-04-29 08:22:26 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -2237,42 +2237,39 @@ public:
 
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
-		const char * core=section->Get_string("core");
+	        std::string core(section->Get_string("core"));
 		cpudecoder=&CPU_Core_Normal_Run;
-		if (!strcasecmp(core,"normal")) {
+		if (core == "normal") {
 			cpudecoder=&CPU_Core_Normal_Run;
-		} else if (!strcasecmp(core,"simple")) {
+		} else if (core =="simple") {
 			cpudecoder=&CPU_Core_Simple_Run;
-		} else if (!strcasecmp(core,"full")) {
+		} else if (core == "full") {
 			cpudecoder=&CPU_Core_Full_Run;
-		} 
+		} else if (core == "auto") {
+			cpudecoder=&CPU_Core_Normal_Run;
 #if (C_DYNAMIC_X86)
-		else if (!strcasecmp(core,"dynamic")) {
+			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
+		}
+		else if (core == "dynamic") {
 			cpudecoder=&CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(true);
-		} else if (!strcasecmp(core,"dynamic_nodhfpu")) {
+		} else if (core == "dynamic_nodhfpu") {
 			cpudecoder=&CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
-		} else if (!strcasecmp(core,"auto")) {
-			cpudecoder=&CPU_Core_Normal_Run;
-			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
-		} 
 #elif (C_DYNREC)
-		else if (!strcasecmp(core,"dynamic")) {
-			cpudecoder=&CPU_Core_Dynrec_Run;
-		} else if (!strcasecmp(core,"auto")) {
-			cpudecoder=&CPU_Core_Normal_Run;
 			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
-		} 
-#endif
-		else {
-			LOG_MSG("CPU:Unknown core type %s, switching back to normal.",core);
 		}
+		else if (core == "dynamic") {
+			cpudecoder=&CPU_Core_Dynrec_Run;
+		} 
+#else
+		}
+#endif
 
 #if (C_DYNAMIC_X86)
-		CPU_Core_Dyn_X86_Cache_Init(!strcasecmp(core,"dynamic") || !strcasecmp(core,"dynamic_nodhfpu"));
+		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") || (core == "dynamic_nodhfpu"));
 #elif (C_DYNREC)
-		CPU_Core_Dynrec_Cache_Init(!strcasecmp(core,"dynamic"));
+		CPU_Core_Dynrec_Cache_Init( core == "dynamic" );
 #endif
 	
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
