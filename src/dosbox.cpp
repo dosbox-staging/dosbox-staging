@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.133 2008-03-21 04:36:20 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.134 2008-04-29 08:24:16 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -307,6 +307,7 @@ void DOSBOX_Init(void) {
 	Prop_string* Pstring;
 	Prop_bool* Pbool;
 	Prop_multival* Pmulti;
+	Prop_multival_remain* Pmulti_remain;
 
 	SDLNetInited = false;
 
@@ -390,8 +391,8 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(cores);
 	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and appropriate.");
 
-	Pmulti = secprop->Add_multi("cycles",Property::Changeable::Always," ");
-	Pmulti->Set_help(
+	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
+	Pmulti_remain->Set_help(
 		"Amount of instructions DOSBox tries to emulate each millisecond. Setting this value too high results in sound dropouts and lags. Cycles can be set in 3 ways:\n"
 		"  'auto'          tries to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
@@ -400,11 +401,11 @@ void DOSBOX_Init(void) {
 		"  'max'           will allocate as much cycles as your computer is able to handle\n");
 
 	const char* cyclest[] = { "auto","fixed","max",0 };
-	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
-	Pmulti->SetValue("auto");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
+	Pmulti_remain->SetValue("auto");
 	Pstring->Set_values(cyclest);
 
-	Pstring = Pmulti->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
 	
 	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,500);
 	Pint->SetMinMax(1,1000000);
@@ -584,37 +585,46 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
 	const char* serials[] = { "dummy", "disabled", "modem", "nullmodem",
-#if defined(WIN32) || defined(OS2)
-		"directserial realport:COM1", "directserial realport:COM2",
-#else
-		"directserial realport:ttyS0", "directserial realport:ttyS1",
-#endif
-		0};
-	
-	Pstring = secprop->Add_string("serial1",Property::Changeable::WhenIdle,"dummy");
+	                          "directserial",0 };
+   
+	Pmulti_remain = secprop->Add_multiremain("serial1",Property::Changeable::WhenIdle," ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"dummy");
+	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring->Set_help(
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pmulti_remain->Set_help(
 		"set type of device connected to com port.\n"
 		"Can be disabled, dummy, modem, nullmodem, directserial.\n"
 		"Additional parameters must be in the same line in the form of\n"
 		"parameter:value. Parameter for all types is irq.\n"
 		"for directserial: realport (required), rxdelay (optional).\n"
+		"                 (realport:COM1 realport:ttyS0).\n"
 		"for modem: listenport (optional).\n"
 		"for nullmodem: server, rxdelay, txdelay, telnet, usedtr,\n"
 		"               transparent, port, inhsocket (all optional).\n"
 		"Example: serial1=modem listenport:5000");
-	
-	Pstring = secprop->Add_string("serial2",Property::Changeable::WhenIdle,"dummy");
-	Pstring->Set_values(serials);
-	Pstring->Set_help("see serial1");
 
-	Pstring = secprop->Add_string("serial3",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain = secprop->Add_multiremain("serial2",Property::Changeable::WhenIdle," ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"dummy");
+	Pmulti_remain->SetValue("dummy");
 	Pstring->Set_values(serials);
-	Pstring->Set_help("see serial1");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pmulti_remain->Set_help("see serial1");
 
-	Pstring = secprop->Add_string("serial4",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain = secprop->Add_multiremain("serial3",Property::Changeable::WhenIdle," ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain->SetValue("disabled");
 	Pstring->Set_values(serials);
-	Pstring->Set_help("see serial1");
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pmulti_remain->Set_help("see serial1");
+
+	Pmulti_remain = secprop->Add_multiremain("serial4",Property::Changeable::WhenIdle," ");
+	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::WhenIdle,"disabled");
+	Pmulti_remain->SetValue("disabled");
+	Pstring->Set_values(serials);
+	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
+	Pmulti_remain->Set_help("see serial1");
+
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done
