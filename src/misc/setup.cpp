@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.47 2008-03-19 20:35:18 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.48 2008-04-29 08:23:16 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -274,6 +274,40 @@ void Prop_hex::SetValue(std::string const& input){
 }
 
 //TODO checkvalue stuff
+void Prop_multival_remain::SetValue(std::string const& input) {
+	Value val(input,Value::V_STRING);
+	SetVal(val,false,true);
+
+	std::string local(input);
+	int i = 0,number_of_properties = 0;
+	Property *p = section->Get_prop(0);
+	//No properties in this section. do nothing
+	if(!p) return;
+	
+	while( (section->Get_prop(number_of_properties)) )
+		number_of_properties++;
+	
+	string::size_type loc = string::npos;
+	while( (p = section->Get_prop(i++)) ) {
+		//trim leading seperators
+		loc = local.find_first_not_of(seperator);
+		if(loc != string::npos) local.erase(0,loc);
+		loc = local.find_first_of(seperator);
+		string in = "";//default value
+		/* when i == number_of_properties add the total line. (makes more then 
+		 * one string argument possible for parameters of cpu) */
+		if(loc != string::npos && i < number_of_properties) { //seperator found 
+			in = local.substr(0,loc);
+			local.erase(0,loc+1);
+		} else if(local.size()) { //last argument or last property
+			in = local;
+			local = "";
+		}
+		p->SetValue(in);
+	}
+}
+
+//TODO checkvalue stuff
 void Prop_multival::SetValue(std::string const& input) {
 	Value val(input,Value::V_STRING);
 	SetVal(val,false,true);
@@ -300,6 +334,7 @@ void Prop_multival::SetValue(std::string const& input) {
 		p->SetValue(in);
 	}
 }
+
 const std::vector<Value>& Property::GetValues() const {
 	return suggested_values;
 }
@@ -360,7 +395,11 @@ Prop_multival* Section_prop::Add_multi(std::string const& _propname, Property::C
 	properties.push_back(test);
 	return test;
 }
-
+Prop_multival_remain* Section_prop::Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep) {
+	Prop_multival_remain* test = new Prop_multival_remain(_propname,when,sep);
+	properties.push_back(test);
+	return test;
+}
 
 int Section_prop::Get_int(string const&_propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
@@ -397,6 +436,15 @@ Prop_multival* Section_prop::Get_multival(string const& _propname) const {
 	return NULL;
 }
 
+Prop_multival_remain* Section_prop::Get_multivalremain(string const& _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
+		if((*tel)->propname==_propname){
+			Prop_multival_remain* val = dynamic_cast<Prop_multival_remain*>((*tel));
+			if(val) return val; else return NULL;
+		}
+	}
+	return NULL;
+}
 Property* Section_prop::Get_prop(int index){
 	for(it tel=properties.begin();tel!=properties.end();tel++){
 		if(!index--) return (*tel);

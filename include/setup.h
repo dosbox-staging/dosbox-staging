@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.34 2008-03-19 20:35:16 qbix79 Exp $ */
+/* $Id: setup.h,v 1.35 2008-04-29 08:23:16 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -241,6 +241,7 @@ public:
 };
 
 class Prop_multival;
+class Prop_multival_remain;
 class Section_prop:public Section {
 private:
 	std::list<Property*> properties;
@@ -255,6 +256,7 @@ public:
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
 //	void Add_double(char const * const _propname, double _value=0.0);   P
 	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
+	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 
 	Property* Get_prop(int index);
 	int Get_int(std::string const& _propname) const;
@@ -263,6 +265,7 @@ public:
 	Hex Get_hex(std::string const& _propname) const;
 	double Get_double(std::string const& _propname) const;
 	Prop_multival* Get_multival(std::string const& _propname) const;
+	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
 	void HandleInputline(std::string const& gegevens);
 	void PrintData(FILE* outfile) const;
 	virtual std::string GetPropValue(std::string const& _property) const;
@@ -271,6 +274,7 @@ public:
 };
 
 class Prop_multival:public Property{
+protected:
 	Section_prop* section;
 	std::string seperator;
 public:
@@ -279,10 +283,18 @@ public:
 	}
 	Section_prop *GetSection() { return section; }
 	const Section_prop *GetSection() const { return section; }
-	void SetValue(std::string const& input);
+	virtual void SetValue(std::string const& input);
 	virtual const std::vector<Value>& GetValues() const;
 }; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
 
+class Prop_multival_remain:public Prop_multival{
+public:
+	Prop_multival_remain(std::string const& _propname, Changeable::Value when,std::string const& sep):Prop_multival(_propname,when,sep){ }
+
+	virtual void SetValue(std::string const& input);
+};
+
+   
 class Section_line: public Section{
 public:
 	Section_line(std::string const& _sectionname):Section(_sectionname){}
