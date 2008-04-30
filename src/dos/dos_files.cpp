@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.95 2008-02-18 17:45:55 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.96 2008-04-30 18:26:17 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -266,6 +266,9 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 		return false;
 	}
 	if (!DOS_MakeName(search,fullsearch,&drive)) return false;
+	//Check for devices. FindDevice checks for leading subdir as well
+	bool device = (DOS_FindDevice(search) != DOS_DEVICES);
+
 	/* Split the search in dir and pattern */
 	char * find_last;
 	find_last=strrchr(fullsearch,'\\');
@@ -277,12 +280,18 @@ bool DOS_FindFirst(char * search,Bit16u attr,bool fcb_findfirst) {
 		strcpy(pattern,find_last+1);
 		strcpy(dir,fullsearch);
 	}
-//check for devices. first part of filename before the dot 
-//can be the name of a device. like con.1
-//if(findDevice(pattern) blah blah
-// but leading subdirs must exist....
-//
+
 	dta.SetupSearch(drive,(Bit8u)attr,pattern);
+
+	if(device) {
+		find_last = strrchr(pattern,'.');
+		if(find_last) *find_last = 0;
+		//TODO use current date and time
+		dta.SetResult(pattern,0,0,0,DOS_ATTR_DEVICE);
+		LOG(LOG_DOSMISC,LOG_WARN)("finding device %s",pattern);
+		return true;
+	}
+   
 	if (Drives[drive]->FindFirst(dir,dta,fcb_findfirst)) return true;
 	
 	return false;
