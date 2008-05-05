@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.109 2008-04-29 08:22:26 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.110 2008-05-05 13:29:04 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -2261,10 +2261,10 @@ public:
 		}
 		else if (core == "dynamic") {
 			cpudecoder=&CPU_Core_Dynrec_Run;
-		} 
 #else
-		}
+
 #endif
+		}
 
 #if (C_DYNAMIC_X86)
 		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") || (core == "dynamic_nodhfpu"));
