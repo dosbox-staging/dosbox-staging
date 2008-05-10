@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.77 2008-02-03 20:43:14 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.78 2008-05-10 17:33:28 c2woody Exp $ */
 
 #include <string.h>
 
@@ -330,14 +330,17 @@ VideoModeBlock * CurMode;
 
 static bool SetCurMode(VideoModeBlock modeblock[],Bitu mode) {
 	Bitu i=0;
-	while ( modeblock[i].mode!=0xffff) {
-		if ( modeblock[i].mode==mode) goto foundmode;
-		i++;
+	while (modeblock[i].mode!=0xffff) {
+		if (modeblock[i].mode!=mode) i++;
+		else {
+			if ((!int10.vesa_oldvbe) || (ModeList_VGA[i].mode<0x120)) {
+				CurMode=&modeblock[i];
+				return true;
+			}
+			return false;
+		}
 	}
 	return false;
-foundmode:
-	CurMode=&modeblock[i];
-	return true;
 }
 
 

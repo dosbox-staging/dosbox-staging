@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.51 2008-03-31 14:43:34 c2woody Exp $ */
+/* $Id: int10.cpp,v 1.52 2008-05-10 17:33:28 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -587,6 +587,10 @@ graphics_chars:
 			}
 			break;
 		case 0x0a:							/* Get Pmode Interface */
+			if (int10.vesa_oldvbe) {
+				reg_ax=0x014f;
+				break;
+			}
 			switch (reg_bl) {
 			case 0x00:
 				reg_edi=RealOff(int10.rom.pmode_interface);

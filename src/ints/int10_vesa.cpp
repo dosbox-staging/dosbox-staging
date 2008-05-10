@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.35 2008-02-08 21:25:57 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.36 2008-05-10 17:33:28 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -91,15 +91,16 @@ Bit8u VESA_GetSVGAInformation(Bit16u seg,Bit16u off) {
 	Bitu i;
 	bool vbe2=false;Bit16u vbe2_pos=256+off;
 	Bitu id=mem_readd(buffer);
-	if ((id==0x56424532)||(id==0x32454256)) vbe2=true;
+	if (((id==0x56424532)||(id==0x32454256)) && (!int10.vesa_oldvbe)) vbe2=true;
 	if (vbe2) {
 		for (i=0;i<0x200;i++) mem_writeb(buffer+i,0);		
 	} else {
 		for (i=0;i<0x100;i++) mem_writeb(buffer+i,0);
 	}
 	/* Fill common data */
-	MEM_BlockWrite(buffer,(void *)"VESA",4);			//Identification
-	mem_writew(buffer+0x04,0x200);					//Vesa version 0x200
+	MEM_BlockWrite(buffer,(void *)"VESA",4);				//Identification
+	if (!int10.vesa_oldvbe) mem_writew(buffer+0x04,0x200);	//Vesa version 2.0
+	else mem_writew(buffer+0x04,0x102);						//Vesa version 1.2
 	if (vbe2) {
 		mem_writed(buffer+0x06,RealMake(seg,vbe2_pos));
 		for (i=0;i<sizeof(string_oem);i++) real_writeb(seg,vbe2_pos++,string_oem[i]);
@@ -137,6 +138,7 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 	}
 	return 0x01;
 foundit:
+	if ((int10.vesa_oldvbe) && (ModeList_VGA[i].mode>=0x120)) return 0x01;
 	VideoModeBlock * mblock=&ModeList_VGA[i];
 	switch (mblock->type) {
 	case M_LIN4:
@@ -472,8 +474,10 @@ void INT10_SetupVESA(void) {
 			if (svga.accepts_mode(ModeList_VGA[i].mode)) canuse_mode=true;
 		}
 		if (ModeList_VGA[i].mode>=0x100 && canuse_mode) {
-			phys_writew(PhysMake(0xc000,int10.rom.used),ModeList_VGA[i].mode);
-			int10.rom.used+=2;
+			if ((!int10.vesa_oldvbe) || (ModeList_VGA[i].mode<0x120)) {
+				phys_writew(PhysMake(0xc000,int10.rom.used),ModeList_VGA[i].mode);
+				int10.rom.used+=2;
+			}
 		}
 		i++;
 	}

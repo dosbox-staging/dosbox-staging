@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.134 2008-04-29 08:24:16 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.135 2008-05-10 17:33:27 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -279,9 +279,10 @@ static void DOSBOX_RealInit(Section * sec) {
 	}
 
 	std::string mtype(section->Get_string("machine"));
-	svgaCard = SVGA_S3Trio; 
+	svgaCard = SVGA_None; 
 	machine = MCH_VGA;
 	int10.vesa_nolfb = false;
+	int10.vesa_oldvbe = false;
 	if      (mtype == "cga")      { machine = MCH_CGA; }
 	else if (mtype == "tandy")    { machine = MCH_TANDY; }
 	else if (mtype == "pcjr")     { machine = MCH_PCJR; }
@@ -290,6 +291,7 @@ static void DOSBOX_RealInit(Section * sec) {
 //	else if (mtype == "vga")          { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "svga_s3")       { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "vesa_nolfb")   { svgaCard = SVGA_S3Trio; int10.vesa_nolfb = true;}
+	else if (mtype == "vesa_oldvbe")   { svgaCard = SVGA_S3Trio; int10.vesa_oldvbe = true;}
 	else if (mtype == "svga_et4000")   { svgaCard = SVGA_TsengET4K; }
 	else if (mtype == "svga_et3000")   { svgaCard = SVGA_TsengET3K; }
 //	else if (mtype == "vga_pvga1a")   { svgaCard = SVGA_ParadisePVGA1A; }
@@ -324,7 +326,7 @@ void DOSBOX_Init(void) {
 	const char* machines[] = {
 		"hercules", "cga", "tandy", "pcjr", "ega",
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
-		 "svga_paradise", "vesa_nolfb", 0 };
+		 "svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
 	Pstring = secprop->Add_string("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
