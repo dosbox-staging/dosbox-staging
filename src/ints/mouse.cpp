@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.72 2008-03-08 22:05:05 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.73 2008-05-15 20:12:37 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -256,28 +256,36 @@ void DrawCursorText() {
 static Bit8u gfxReg3CE[9];
 static Bit8u index3C4,gfxReg3C5;
 void SaveVgaRegisters() {
-	for (int i=0; i<9; i++) {
-		IO_Write	(0x3CE,i);
-		gfxReg3CE[i] = IO_Read(0x3CF);
-	}
-	/* Setup some default values in GFX regs that should work */
-	IO_Write(0x3CE,3); IO_Write(0x3Cf,0);				//disable rotate and operation
-	IO_Write(0x3CE,5); IO_Write(0x3Cf,gfxReg3CE[5]&0xf0);	//Force read/write mode 0
+	if (IS_VGA_ARCH) {
+		for (int i=0; i<9; i++) {
+			IO_Write	(0x3CE,i);
+			gfxReg3CE[i] = IO_Read(0x3CF);
+		}
+		/* Setup some default values in GFX regs that should work */
+		IO_Write(0x3CE,3); IO_Write(0x3Cf,0);				//disable rotate and operation
+		IO_Write(0x3CE,5); IO_Write(0x3Cf,gfxReg3CE[5]&0xf0);	//Force read/write mode 0
 
-	//Set Map to all planes. Celtic Tales
-	index3C4 = IO_Read(0x3c4);  IO_Write(0x3C4,2);
-	gfxReg3C5 = IO_Read(0x3C5); IO_Write(0x3C5,0xF); 
+		//Set Map to all planes. Celtic Tales
+		index3C4 = IO_Read(0x3c4);  IO_Write(0x3C4,2);
+		gfxReg3C5 = IO_Read(0x3C5); IO_Write(0x3C5,0xF);
+	} else if (machine==MCH_EGA) {
+		//Set Map to all planes.
+		IO_Write(0x3C4,2);
+		IO_Write(0x3C5,0xF);
+	}
 }
 
 void RestoreVgaRegisters() {
-	for (int i=0; i<9; i++) {
-		IO_Write(0x3CE,i);
-		IO_Write(0x3CF,gfxReg3CE[i]);
-	}
+	if (IS_VGA_ARCH) {
+		for (int i=0; i<9; i++) {
+			IO_Write(0x3CE,i);
+			IO_Write(0x3CF,gfxReg3CE[i]);
+		}
 
-	IO_Write(0x3C4,2);
-	IO_Write(0x3C5,gfxReg3C5);
-	IO_Write(0x3C4,index3C4);
+		IO_Write(0x3C4,2);
+		IO_Write(0x3C5,gfxReg3C5);
+		IO_Write(0x3C4,index3C4);
+	}
 }
 
 void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2,
