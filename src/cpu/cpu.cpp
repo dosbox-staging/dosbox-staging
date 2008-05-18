@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.110 2008-05-05 13:29:04 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.111 2008-05-18 13:11:14 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -60,6 +60,10 @@ CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust = false;
 bool CPU_SkipCycleAutoAdjust = false;
 Bitu CPU_AutoDetermineMode = 0;
+
+Bitu CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
+
+Bitu CPU_flag_id_toggle=0;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
@@ -161,8 +165,10 @@ PhysPt SelBase(Bitu sel) {
 	}
 }
 
+
 void CPU_SetFlags(Bitu word,Bitu mask) {
-	reg_flags=(reg_flags & ~mask)|(word & mask)|2|FLAG_ID;
+	mask|=CPU_flag_id_toggle;	// ID-flag can be toggled on cpuid-supporting CPUs
+	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
 
@@ -1569,6 +1575,9 @@ bool CPU_WRITE_CRX(Bitu cr,Bitu value) {
 	/* Check if privileged to access control registers */
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	if ((cr==1) || (cr>4)) return CPU_PrepareException(EXCEPTION_UD,0);
+	if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) {
+		if (cr==4) return CPU_PrepareException(EXCEPTION_UD,0);
+	}
 	CPU_SET_CRX(cr,value);
 	return false;
 }
@@ -1576,7 +1585,9 @@ bool CPU_WRITE_CRX(Bitu cr,Bitu value) {
 Bitu CPU_GET_CRX(Bitu cr) {
 	switch (cr) {
 	case 0:
-		return cpu.cr0;
+		if (CPU_ArchitectureType>=CPU_ARCHTYPE_PENTIUMSLOW) return cpu.cr0;
+		else if (CPU_ArchitectureType>=CPU_ARCHTYPE_486OLDSLOW) return (cpu.cr0 & 0xe005003f);
+		else return (cpu.cr0 | 0x7ffffff0);
 	case 2:
 		return paging.cr2;
 	case 3:
@@ -1613,7 +1624,11 @@ bool CPU_WRITE_DRX(Bitu dr,Bitu value) {
 		break;
 	case 5:
 	case 7:
-		cpu.drx[7]=(value|0x400) & 0xffff2fff;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) {
+			cpu.drx[7]=(value|0x400) & 0xffff2fff;
+		} else {
+			cpu.drx[7]=(value|0x400);
+		}
 		break;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV DR%d,%X",dr,value);
@@ -1961,7 +1976,8 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 	return false;
 }
 
-void CPU_CPUID(void) {
+bool CPU_CPUID(void) {
+	if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEWSLOW) return false;
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
 		reg_eax=1;  /* Maximum level */ 
@@ -1970,15 +1986,30 @@ void CPU_CPUID(void) {
 		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24); 
 		break;
 	case 1:	/* get processor type/family/model/stepping and feature flags */
-		reg_eax=0x402;		/* intel 486 sx? */
-		reg_ebx=0;			/* Not Supported */
-		reg_ecx=0;			/* No features */
-		reg_edx=1;			/* FPU */
+		if ((CPU_ArchitectureType==CPU_ARCHTYPE_486NEWSLOW) ||
+			(CPU_ArchitectureType==CPU_ARCHTYPE_MIXED)) {
+			reg_eax=0x402;		/* intel 486dx */
+			reg_ebx=0;			/* Not Supported */
+			reg_ecx=0;			/* No features */
+			reg_edx=0x00000001;	/* FPU */
+		} else if (CPU_ArchitectureType==CPU_ARCHTYPE_PENTIUMSLOW) {
+			reg_eax=0x513;		/* intel pentium */
+			reg_ebx=0;			/* Not Supported */
+			reg_ecx=0;			/* No features */
+			reg_edx=0x00000011;	/* FPU+TimeStamp/RDTSC */
+		} else {
+			return false;
+		}
 		break;
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("Unhandled CPUID Function %x",reg_eax);
+		reg_eax=0;
+		reg_ebx=0;
+		reg_ecx=0;
+		reg_edx=0;
 		break;
 	}
+	return true;
 }
 
 static Bits HLT_Decode(void) {
@@ -2140,7 +2171,11 @@ public:
 			cpu.drx[i]=0;
 			cpu.trx[i]=0;
 		}
-		cpu.drx[6]=0xffff1ff0;
+		if (CPU_ArchitectureType==CPU_ARCHTYPE_PENTIUMSLOW) {
+			cpu.drx[6]=0xffff0ff0;
+		} else {
+			cpu.drx[6]=0xffff1ff0;
+		}
 		cpu.drx[7]=0x00000400;
 
 		/* Init the cpu cores */
@@ -2237,7 +2272,7 @@ public:
 
 		CPU_CycleUp=section->Get_int("cycleup");
 		CPU_CycleDown=section->Get_int("cycledown");
-	        std::string core(section->Get_string("core"));
+		std::string core(section->Get_string("core"));
 		cpudecoder=&CPU_Core_Normal_Run;
 		if (core == "normal") {
 			cpudecoder=&CPU_Core_Normal_Run;
@@ -2271,7 +2306,25 @@ public:
 #elif (C_DYNREC)
 		CPU_Core_Dynrec_Cache_Init( core == "dynamic" );
 #endif
-	
+
+		CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
+		std::string cputype(section->Get_string("cputype"));
+		if (cputype == "auto") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
+		} else if (cputype == "386") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_386FAST;
+		} else if (cputype == "386_slow") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_386SLOW;
+		} else if (cputype == "486_slow") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
+		} else if (cputype == "pentium_slow") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_PENTIUMSLOW;
+		}
+
+		if (CPU_ArchitectureType>=CPU_ARCHTYPE_486NEWSLOW) CPU_flag_id_toggle=FLAG_ID;
+		else CPU_flag_id_toggle=0;
+
+
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
 		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
 		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;

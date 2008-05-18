@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: decoder.h,v 1.55 2008-05-18 13:11:14 c2woody Exp $ */
 
 #define X86_DYNFPU_DH_ENABLED
 #define X86_INLINED_MEMACCESS
@@ -1329,6 +1331,68 @@ static void dyn_mov_ev_gw(bool sign) {
 	}
 }
 
+static void dyn_cmpxchg_evgv(void) {
+	dyn_get_modrm();
+	DynReg * rm_reg=&DynRegs[decode.modrm.reg];
+	gen_protectflags();
+	if (decode.modrm.mod<3) {
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(DREG(TMPB));
+		gen_releasereg(rm_reg);
+
+		dyn_fill_ea();
+		dyn_read_word(DREG(EA),DREG(TMPB),decode.big_op);
+		gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),DREG(TMPB));
+		Bit8u * branch=gen_create_branch(BR_NZ);
+
+		// eax==mem -> mem:=rm_reg
+		dyn_write_word_release(DREG(EA),rm_reg,decode.big_op);
+		gen_setzeroflag();
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(DREG(TMPB));
+		gen_releasereg(rm_reg);
+
+		Bit8u * jump=gen_create_jump();
+
+		gen_fill_branch(branch);
+		// eax!=mem -> eax:=mem
+		dyn_write_word_release(DREG(EA),DREG(TMPB),decode.big_op);	// cmpxchg always issues write
+		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),DREG(TMPB));
+		gen_clearzeroflag();
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(DREG(TMPB));
+		gen_releasereg(rm_reg);
+
+		gen_fill_jump(jump);
+	} else {
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(&DynRegs[decode.modrm.rm]);
+		gen_releasereg(rm_reg);
+
+		gen_dop_word(DOP_CMP,decode.big_op,DREG(EAX),&DynRegs[decode.modrm.rm]);
+		Bit8u * branch=gen_create_branch(BR_NZ);
+
+		// eax==rm -> rm:=rm_reg
+		gen_dop_word(DOP_MOV,decode.big_op,&DynRegs[decode.modrm.rm],rm_reg);
+		gen_setzeroflag();
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(&DynRegs[decode.modrm.rm]);
+		gen_releasereg(rm_reg);
+
+		Bit8u * jump=gen_create_jump();
+
+		gen_fill_branch(branch);
+		// eax!=rm -> eax:=rm
+		gen_dop_word(DOP_MOV,decode.big_op,DREG(EAX),&DynRegs[decode.modrm.rm]);
+		gen_clearzeroflag();
+		gen_releasereg(DREG(EAX));
+		gen_releasereg(&DynRegs[decode.modrm.rm]);
+		gen_releasereg(rm_reg);
+
+		gen_fill_jump(jump);
+	}
+}
+
 static void dyn_dshift_ev_gv(bool left,bool immediate) {
 	dyn_get_modrm();
 	DynReg * rm_reg=&DynRegs[decode.modrm.reg];
@@ -1995,6 +2059,8 @@ restart_prefix:
 			case 0xad:dyn_dshift_ev_gv(false,false);break;		
 			/* Imul Ev,Gv */
 			case 0xaf:dyn_imul_gvev(0);break;
+			/* CMPXCHG */
+			case 0xb1:dyn_cmpxchg_evgv();break;
 			/* LFS,LGS */
 			case 0xb4:
 				dyn_get_modrm();

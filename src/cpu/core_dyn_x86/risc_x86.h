@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: risc_x86.h,v 1.30 2008-05-18 13:11:14 c2woody Exp $ */
 
 static void gen_init(void);
 
@@ -266,6 +268,18 @@ static void gen_needcarry(void) {
 		cache_addb(0x24);
 		cache_addd(0x0424648d);		//LEA ESP,[ESP+4]
 	}
+}
+
+static void gen_setzeroflag(void) {
+	if (x86gen.flagsactive) IllegalOption("gen_setzeroflag");
+	cache_addw(0x0c83);			//OR DWORD [ESP],0x40
+	cache_addw(0x4024);
+}
+
+static void gen_clearzeroflag(void) {
+	if (x86gen.flagsactive) IllegalOption("gen_clearzeroflag");
+	cache_addw(0x2483);			//AND DWORD [ESP],~0x40
+	cache_addw(0xbf24);
 }
 
 static bool skip_flags=false;

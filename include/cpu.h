@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.h,v 1.52 2008-01-16 20:16:31 c2woody Exp $ */
+/* $Id: cpu.h,v 1.53 2008-05-18 13:10:42 c2woody Exp $ */
 
 #ifndef DOSBOX_CPU_H
 #define DOSBOX_CPU_H
@@ -40,6 +40,14 @@
 
 #define CPU_CYCLES_LOWER_LIMIT		100
 
+
+#define CPU_ARCHTYPE_MIXED			0xff
+#define CPU_ARCHTYPE_386SLOW		0x30
+#define CPU_ARCHTYPE_386FAST		0x35
+#define CPU_ARCHTYPE_486OLDSLOW		0x40
+#define CPU_ARCHTYPE_486NEWSLOW		0x45
+#define CPU_ARCHTYPE_PENTIUMSLOW	0x50
+
 /* CPU Cycle Timing */
 extern Bit32s CPU_Cycles;
 extern Bit32s CPU_CycleLeft;
@@ -51,6 +59,8 @@ extern Bit64s CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
+
+extern Bitu CPU_ArchitectureType;
 
 /* Some common Defines */
 /* A CPU Handler */
@@ -146,7 +156,7 @@ void CPU_Exception(Bitu which,Bitu error=0);
 bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 bool CPU_PopSeg(SegNames seg,bool use32);
 
-void CPU_CPUID(void);
+bool CPU_CPUID(void);
 Bitu CPU_Pop16(void);
 Bitu CPU_Pop32(void);
 void CPU_Push16(Bitu value);

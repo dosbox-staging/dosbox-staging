@@ -468,7 +468,7 @@ l_M_Ed:
 		AAS();
 		goto nextopcode;
 	case D_CPUID:
-		CPU_CPUID();
+		if (!CPU_CPUID()) goto illegalopcode;
 		goto nextopcode;
 	case D_HLT:
 		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);

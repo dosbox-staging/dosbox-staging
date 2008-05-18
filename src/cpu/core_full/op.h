@@ -585,7 +585,21 @@ switch (inst.code.op) {
 		inst_op1_d&=~(1 << (inst_op2_d & 31));
 		break;
 	case O_BSWAP:
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
 		BSWAP(inst_op1_d);
+		break;
+	case O_CMPXCHG:
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEWSLOW) goto illegalopcode;
+		FillFlags();
+		if (inst_op1_d==reg_eax) {
+			inst_op1_d=reg_32(inst.rm_index);
+			if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);	// early write-pf
+			SETFLAGBIT(ZF,1);
+		} else {
+			if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);	// early write-pf
+			reg_eax=inst_op1_d;
+			SETFLAGBIT(ZF,0);
+		}
 		break;
 	case O_FPU:
 #if C_FPU

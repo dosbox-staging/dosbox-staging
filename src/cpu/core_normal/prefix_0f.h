@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -142,6 +142,11 @@
 		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 		cpu.cr0&=(~CR0_TASKSWITCH);
 		break;
+	CASE_0F_B(0x08)												/* INVD */
+	CASE_0F_B(0x09)												/* WBINVD */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+		break;
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
 		{
 			GetRM;
@@ -220,6 +225,14 @@
 			if (CPU_WRITE_TRX(which,*eard)) RUNEXCEPTION();
 		}
 		break;
+	CASE_0F_B(0x31)												/* RDTSC */
+		{
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegal_opcode;
+			Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)CPU_CycleMax);
+			reg_edx=(Bit32u)(tsc>>32);
+			reg_eax=(Bit32u)(tsc&0xffffffff);
+		}
+		break;
 	CASE_0F_W(0x80)												/* JO */
 		JumpCond16_w(TFLG_O);break;
 	CASE_0F_W(0x81)												/* JNO */
@@ -291,7 +304,8 @@
 		if (CPU_PopSeg(fs,false)) RUNEXCEPTION();
 		break;
 	CASE_0F_B(0xa2)												/* CPUID */
-		CPU_CPUID();break;
+		if (!CPU_CPUID()) goto illegal_opcode;
+		break;
 	CASE_0F_W(0xa3)												/* BT Ew,Gw */
 		{
 			FillFlags();GetRMrw;
@@ -503,6 +517,7 @@
 		}
 	CASE_0F_B(0xc0)												/* XADD Gb,Eb */
 		{
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 			GetRMrb;Bit8u oldrmrb=*rmrb;
 			if (rm >= 0xc0 ) {GetEArb;*rmrb=*earb;*earb+=oldrmrb;}
 			else {GetEAa;*rmrb=LoadMb(eaa);SaveMb(eaa,LoadMb(eaa)+oldrmrb);}
@@ -510,25 +525,34 @@
 		}
 	CASE_0F_W(0xc1)												/* XADD Gw,Ew */
 		{
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 			GetRMrw;Bit16u oldrmrw=*rmrw;
 			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;*earw+=oldrmrw;}
 			else {GetEAa;*rmrw=LoadMw(eaa);SaveMw(eaa,LoadMw(eaa)+oldrmrw);}
 			break;
 		}
 	CASE_0F_B(0xc8)												/* BSWAP EAX */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_eax);break;
 	CASE_0F_B(0xc9)												/* BSWAP ECX */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_ecx);break;
 	CASE_0F_B(0xca)												/* BSWAP EDX */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_edx);break;
 	CASE_0F_B(0xcb)												/* BSWAP EBX */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_ebx);break;
 	CASE_0F_B(0xcc)												/* BSWAP ESP */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_esp);break;
 	CASE_0F_B(0xcd)												/* BSWAP EBP */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_ebp);break;
 	CASE_0F_B(0xce)												/* BSWAP ESI */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_esi);break;
 	CASE_0F_B(0xcf)												/* BSWAP EDI */
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
 		BSWAP(reg_edi);break;
 		

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.135 2008-05-10 17:33:27 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.136 2008-05-18 13:10:42 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -392,6 +392,12 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_string("core",Property::Changeable::WhenIdle,"auto");
 	Pstring->Set_values(cores);
 	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and appropriate.");
+
+	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", 0};
+	Pstring = secprop->Add_string("cputype",Property::Changeable::Always,"auto");
+	Pstring->Set_values(cputype_values);
+	Pstring->Set_help("CPU Type used in emulation. auto is the fastest choice.");
+
 
 	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
 	Pmulti_remain->Set_help(

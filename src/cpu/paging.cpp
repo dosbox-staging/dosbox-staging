@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.33 2008-01-05 21:05:06 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.34 2008-05-18 13:11:14 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -34,7 +34,6 @@
 #define LINK_TOTAL		(64*1024)
 
 #define USERWRITE_PROHIBITED			((cpu.cpl&cpu.mpl)==3)
-#define USERACCESS_PROHIBITED(u1,u2)	(((u1)==0) && ((u2)==0))
 
 
 PagingBlock paging;
@@ -228,6 +227,20 @@ static INLINE bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,
 	return true;
 }
 
+static INLINE bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
+	switch (CPU_ArchitectureType) {
+	case CPU_ARCHTYPE_MIXED:
+	case CPU_ARCHTYPE_386SLOW:
+	case CPU_ARCHTYPE_386FAST:
+	default:
+		return ((u1)==0) && ((u2)==0);
+	case CPU_ARCHTYPE_486OLDSLOW:
+	case CPU_ARCHTYPE_486NEWSLOW:
+	case CPU_ARCHTYPE_PENTIUMSLOW:
+		return ((u1)==0) || ((u2)==0);
+	}
+}
+
 
 class InitPageHandler : public PageHandler {
 public:
@@ -316,12 +329,40 @@ public:
 			// 2: can (but currently does not) fail a write privilege check
 			// 3: fails a privilege check
 			Bitu priv_check=0;
-			if (USERACCESS_PROHIBITED(entry.block.us,table.block.us)) {
+			if (InitPage_CheckUseraccess(entry.block.us,table.block.us)) {
 				if ((cpu.cpl&cpu.mpl)==3) priv_check=3;
-				else priv_check=1;
+				else {
+					switch (CPU_ArchitectureType) {
+					case CPU_ARCHTYPE_MIXED:
+					case CPU_ARCHTYPE_386FAST:
+					default:
+//						priv_check=0;	// default
+						break;
+					case CPU_ARCHTYPE_386SLOW:
+					case CPU_ARCHTYPE_486OLDSLOW:
+					case CPU_ARCHTYPE_486NEWSLOW:
+					case CPU_ARCHTYPE_PENTIUMSLOW:
+						priv_check=1;
+						break;
+					}
+				}
 			}
 			if ((entry.block.wr==0) || (table.block.wr==0)) {
-				if (priv_check==0) priv_check=2;
+				if (priv_check==0) {
+					switch (CPU_ArchitectureType) {
+					case CPU_ARCHTYPE_MIXED:
+					case CPU_ARCHTYPE_386FAST:
+					default:
+//						priv_check=0;	// default
+						break;
+					case CPU_ARCHTYPE_386SLOW:
+					case CPU_ARCHTYPE_486OLDSLOW:
+					case CPU_ARCHTYPE_486NEWSLOW:
+					case CPU_ARCHTYPE_PENTIUMSLOW:
+						priv_check=2;
+						break;
+					}
+				}
 				if (writing && USERWRITE_PROHIBITED) priv_check=3;
 			}
 			if (priv_check==3) {
@@ -374,7 +415,7 @@ public:
 
 			if (!USERWRITE_PROHIBITED) return true;
 
-			if (USERACCESS_PROHIBITED(entry.block.us,table.block.us) ||
+			if (InitPage_CheckUseraccess(entry.block.us,table.block.us) ||
 					(((entry.block.wr==0) || (table.block.wr==0)) && writing)) {
 				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",
 					cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
@@ -507,7 +548,7 @@ public:
 			X86PageEntry entry;
 			if (!InitPageCheckPresence_CheckOnly(lin_addr,true,table,entry)) return 0;
 
-			if (USERACCESS_PROHIBITED(entry.block.us,table.block.us) || (((entry.block.wr==0) || (table.block.wr==0)))) {
+			if (InitPage_CheckUseraccess(entry.block.us,table.block.us) || (((entry.block.wr==0) || (table.block.wr==0)))) {
 				LOG(LOG_PAGING,LOG_NORMAL)("Page access denied: cpl=%i, %x:%x:%x:%x",
 					cpu.cpl,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
 				paging.cr2=lin_addr;
