@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.h,v 1.53 2008-05-18 13:10:42 c2woody Exp $ */
+/* $Id: cpu.h,v 1.54 2008-05-21 21:29:15 c2woody Exp $ */
 
 #ifndef DOSBOX_CPU_H
 #define DOSBOX_CPU_H
@@ -62,6 +62,8 @@ extern Bitu CPU_AutoDetermineMode;
 
 extern Bitu CPU_ArchitectureType;
 
+extern Bitu CPU_PrefetchQueueSize;
+
 /* Some common Defines */
 /* A CPU Handler */
 typedef Bits (CPU_Decoder)(void);
@@ -75,6 +77,8 @@ Bits CPU_Core_Dyn_X86_Run(void);
 Bits CPU_Core_Dyn_X86_Trap_Run(void);
 Bits CPU_Core_Dynrec_Run(void);
 Bits CPU_Core_Dynrec_Trap_Run(void);
+Bits CPU_Core_Prefetch_Run(void);
+Bits CPU_Core_Prefetch_Trap_Run(void);
 
 void CPU_Enable_SkipAutoAdjust(void);
 void CPU_Disable_SkipAutoAdjust(void);

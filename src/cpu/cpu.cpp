@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.111 2008-05-18 13:11:14 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.112 2008-05-21 21:29:32 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -64,6 +64,8 @@ Bitu CPU_AutoDetermineMode = 0;
 Bitu CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
 
 Bitu CPU_flag_id_toggle=0;
+
+Bitu CPU_PrefetchQueueSize=0;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
@@ -2313,10 +2315,34 @@ public:
 			CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
 		} else if (cputype == "386") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386FAST;
+		} else if (cputype == "386_prefetch") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_386FAST;
+			if (core == "normal") {
+				cpudecoder=&CPU_Core_Prefetch_Run;
+				CPU_PrefetchQueueSize = 16;
+			} else if (core == "auto") {
+				cpudecoder=&CPU_Core_Prefetch_Run;
+				CPU_PrefetchQueueSize = 16;
+				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+			} else {
+				E_Exit("prefetch queue emulation requires the normal core setting.");
+			}
 		} else if (cputype == "386_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_386SLOW;
 		} else if (cputype == "486_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
+		} else if (cputype == "486_prefetch") {
+			CPU_ArchitectureType = CPU_ARCHTYPE_486NEWSLOW;
+			if (core == "normal") {
+				cpudecoder=&CPU_Core_Prefetch_Run;
+				CPU_PrefetchQueueSize = 32;
+			} else if (core == "auto") {
+				cpudecoder=&CPU_Core_Prefetch_Run;
+				CPU_PrefetchQueueSize = 32;
+				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+			} else {
+				E_Exit("prefetch queue emulation requires the normal core setting.");
+			}
 		} else if (cputype == "pentium_slow") {
 			CPU_ArchitectureType = CPU_ARCHTYPE_PENTIUMSLOW;
 		}
