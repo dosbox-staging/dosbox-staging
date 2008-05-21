@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.34 2008-03-19 08:41:45 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.35 2008-05-21 08:51:22 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -243,12 +243,14 @@ void LOG_StartUp(void) {
 	
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	sect->Add_string("logfile",Property::Changeable::Always,"");
+	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
+	Pstring->Set_help("file where the log messages will be saved to");
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
 		strcpy(buf,loggrp[i].front);
 		lowcase(buf);
-		sect->Add_bool(buf,Property::Changeable::Always,true);
+		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
+		Pbool->Set_help("Enable/Disable logging of this type.");
 	}
 	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
