@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.92 2008-01-21 21:20:01 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.93 2008-05-21 08:50:59 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -173,6 +173,7 @@ Bit32u GetAddress(Bit16u seg, Bit32u offset)
 	return (seg<<4)+offset;
 }
 
+static char empty_sel[] = { ' ',' ',0 };
 
 bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 {
@@ -187,7 +188,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	else if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss);
 	else {
 		sel = GetHexValue(selname,selname);
-		if (*selname==0) selname="  ";
+		if (*selname==0) selname=empty_sel;
 	}
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		switch (desc.Type()) {
@@ -808,7 +809,8 @@ static void DrawCode(void) {
 			line20[20 - drawsize*2] = ' ';
 		} else waddstr(dbg.win_code,line20);
 
-		char* res = "";
+		char empty_res[] = { 0 };
+		char* res = empty_res;
 		if (showExtend) res = AnalyzeInstruction(dline, saveSel);
 		// Spacepad it up to 28 characters
 		size_t dline_len = strlen(dline);
