@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.30 2008-03-19 17:55:58 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.31 2008-05-22 16:45:57 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -115,10 +115,15 @@ bool DOS_IOCTL(void) {
 		}
 		return true;
 	case 0x09:		/* Check if block device remote */
-		reg_dx=0;
-		if (Drives[drive]->isRemote()) reg_dx|=(1 << 12);
-		//TODO Set bit 9 on drives that don't support direct I/O
-		reg_al=0;
+		if (Drives[drive]->isRemote()) {
+			reg_dx=0x1000;	// device is remote
+			// undocumented bits always clear
+		} else {
+			reg_dx=0x0800;	// Open/Close supported
+			// undocumented bits from device attribute word
+			// TODO Set bit 9 on drives that don't support direct I/O
+		}
+		reg_ax=0x300;
 		return true;
 	case 0x0D:		/* Generic block device request */
 		{
