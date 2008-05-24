@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.22 2007-11-01 12:15:34 qbix79 Exp $ */
+/* $Id: drive_iso.cpp,v 1.23 2008-05-24 18:50:39 c2woody Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -501,11 +501,11 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 		if (de->fileIdentLength == 1 && de->ident[0] == 0) strcpy((char*)de->ident, ".");
 		else if (de->fileIdentLength == 1 && de->ident[0] == 1) strcpy((char*)de->ident, "..");
 		else {
-			if (de->fileIdentLength > 31) return -1;
+			if (de->fileIdentLength > 200) return -1;
 			de->ident[de->fileIdentLength] = 0;
 		}
 	} else {
-		if (de->fileIdentLength > 37) return -1;
+		if (de->fileIdentLength > 200) return -1;
 		de->ident[de->fileIdentLength] = 0;	
 		// remove any file version identifiers as there are some cdroms that don't have them
 		strreplace((char*)de->ident, ';', 0);	
@@ -513,6 +513,13 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 		int tmp = strlen((char*)de->ident);
 		if (tmp > 0 && de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
 	}
+	const char* dotpos = strchr((char*)de->ident, '.');
+	if (dotpos!=NULL) {
+		if (dotpos-(char*)de->ident>8) {
+			strcpy((char*)(&de->ident[8]),dotpos);
+		}
+	}
+	if (strlen((char*)de->ident)>12) de->ident[12]=0;
 	return de->length;
 }
 
