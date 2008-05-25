@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.31 2008-05-22 16:45:57 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.32 2008-05-25 17:24:59 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -119,7 +119,7 @@ bool DOS_IOCTL(void) {
 			reg_dx=0x1000;	// device is remote
 			// undocumented bits always clear
 		} else {
-			reg_dx=0x0800;	// Open/Close supported
+			reg_dx=0x0802;	// Open/Close supported; 32bit access supported (any use? fixes Fable installer)
 			// undocumented bits from device attribute word
 			// TODO Set bit 9 on drives that don't support direct I/O
 		}
