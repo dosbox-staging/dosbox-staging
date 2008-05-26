@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.48 2008-02-16 20:47:41 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.49 2008-05-26 19:13:42 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -2153,12 +2153,50 @@ static void InitializeJoysticks(void) {
 	if (joytype != JOY_NONE) {
 		mapper.sticks.num=SDL_NumJoysticks();
 		if (joytype==JOY_AUTO) {
+			// try to figure out what joystick type to select
+			// depending on the number of physically attached joysticks
 			if (mapper.sticks.num>1) {
-				joytype=JOY_2AXIS;
-				LOG_MSG("Two or more joysticks reported, initializing with 2axis");
+				// more than one joystick present; if all are acceptable use 2axis
+				// to allow emulation of two joysticks
+				bool first_usable=false;
+				SDL_Joystick* tmp_stick1=SDL_JoystickOpen(0);
+				if (tmp_stick1) {
+					if ((SDL_JoystickNumAxes(tmp_stick1)>1) || (SDL_JoystickNumButtons(tmp_stick1)>0)) {
+						first_usable=true;
+					}
+					SDL_JoystickClose(tmp_stick1);
+				}
+				bool second_usable=false;
+				SDL_Joystick* tmp_stick2=SDL_JoystickOpen(1);
+				if (tmp_stick2) {
+					if ((SDL_JoystickNumAxes(tmp_stick2)>1) || (SDL_JoystickNumButtons(tmp_stick2)>0)) {
+						second_usable=true;
+					}
+					SDL_JoystickClose(tmp_stick2);
+				}
+				// choose joystick type now that we know which physical joysticks are usable
+				if (first_usable) {
+					if (second_usable) {
+						joytype=JOY_2AXIS;
+						LOG_MSG("Two or more joysticks reported, initializing with 2axis");
+					} else {
+						joytype=JOY_4AXIS;
+						LOG_MSG("One joystick reported, initializing with 4axis");
+					}
+				} else if (second_usable) {
+					joytype=JOY_4AXIS_2;
+					LOG_MSG("One joystick reported, initializing with 4axis_2");
+				}
 			} else if (mapper.sticks.num) {
-				joytype=JOY_4AXIS;
-				LOG_MSG("One joystick reported, initializing with 4axis");
+				// one joystick present; if it is acceptable use 4axis
+				joytype=JOY_NONE;
+				SDL_Joystick* tmp_stick1=SDL_JoystickOpen(0);
+				if (tmp_stick1) {
+					if ((SDL_JoystickNumAxes(tmp_stick1)>0) || (SDL_JoystickNumButtons(tmp_stick1)>0)) {
+						joytype=JOY_4AXIS;
+						LOG_MSG("One joystick reported, initializing with 4axis");
+					}
+				}
 			} else {
 				joytype=JOY_NONE;
 			}
