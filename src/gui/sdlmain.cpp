@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.142 2008-03-19 20:35:17 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.143 2008-05-28 09:14:06 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -732,7 +732,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					rect->h = changedLines[index];
 #if 0
 					if (rect->h + rect->y > sdl.surface->h) {
-						LOG_MSG("WTF");
+						LOG_MSG("WTF %d +  %d  >%d",rect->h,rect->y,sdl.surface->h);
 					}
 #endif
 					y += changedLines[index];
@@ -1374,10 +1374,11 @@ int main(int argc, char* argv[]) {
 
 	/* Display Welcometext in the console */
 	LOG_MSG("DOSBox version %s",VERSION);
-	LOG_MSG("Copyright 2002-2007 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Copyright 2002-2008 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
 
 	/* Init SDL */
+	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1")); //Workaround debian/ubuntu fixes for SDL.
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
@@ -1537,8 +1538,15 @@ int main(int argc, char* argv[]) {
 		;//nothing pressed killswitch
 	}
 	catch(...){
+		//Force visible mouse to end user. Somehow this sometimes doesn't happen
+		SDL_WM_GrabInput(SDL_GRAB_OFF);
+		SDL_ShowCursor(SDL_ENABLE);
 		throw;//dunno what happened. rethrow for sdl to catch 
 	}
+	//Force visible mouse to end user. Somehow this sometimes doesn't happen
+	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	SDL_ShowCursor(SDL_ENABLE);
+   
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 	return 0;
 };
