@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.111 2008-04-07 19:11:48 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.112 2008-05-28 09:53:31 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -849,6 +849,11 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
+	case 0x5c:			/* FLOCK File region locking */
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		reg_ax = dos.errorcode;
+		CALLBACK_SCF(true);
+		break;
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
@@ -977,6 +982,14 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(false);
 			break;
 		};
+	case 0x68:                  /* FFLUSH Commit file */
+		if(DOS_FlushFile(reg_bl)) {
+			CALLBACK_SCF(false);
+		} else {
+			reg_ax = dos.errorcode;
+			CALLBACK_SCF(true);
+		}
+		break;
 	case 0x69:					/* Get/Set disk serial number */
 		{
 			switch(reg_al)		{
@@ -1000,14 +1013,13 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(true);
 		}
 		break;
+
 	case 0x71:					/* Unknown probably 4dos detection */
 		reg_ax=0x7100;
 		CALLBACK_SCF(true);
 		LOG(LOG_DOSMISC,LOG_NORMAL)("DOS:Windows long file name support call %2X",reg_al);
 		break;
 
-	case 0x68:                  /* FFLUSH Commit file */
-		CALLBACK_SCF(false);    //mirek
 	case 0xE0:
 	case 0x18:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
 	case 0x1d:	            	/* NULL Function for CP/M compatibility or Extended rename FCB */
@@ -1016,7 +1028,6 @@ static Bitu DOS_21Handler(void) {
 	case 0x6b:		            /* NULL Function */
 	case 0x61:		            /* UNUSED */
 	case 0xEF:                  /* Used in Ancient Art Of War CGA */
-	case 0x5c:					/* FLOCK File region locking */
 	case 0x5e:					/* More Network Functions */
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
@@ -1116,7 +1127,7 @@ public:
 		dos.date.day=(Bit8u)loctime->tm_mday;
 		dos.date.month=(Bit8u)loctime->tm_mon+1;
 		dos.date.year=(Bit16u)loctime->tm_year+1900;
-		Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*18.2);
+		Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
 		mem_writed(BIOS_TIMER,ticks);
 	}
 	~DOS(){

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.73 2008-01-21 21:26:49 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.74 2008-05-28 09:53:31 qbix79 Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -110,6 +110,7 @@ bool DOS_ReadFile(Bit16u handle,Bit8u * data,Bit16u * amount);
 bool DOS_WriteFile(Bit16u handle,Bit8u * data,Bit16u * amount);
 bool DOS_SeekFile(Bit16u handle,Bit32u * pos,Bit32u type);
 bool DOS_CloseFile(Bit16u handle);
+bool DOS_FlushFile(Bit16u handle);
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry);
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);

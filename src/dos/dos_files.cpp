@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.96 2008-04-30 18:26:17 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.97 2008-05-28 09:53:31 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -389,6 +389,19 @@ bool DOS_CloseFile(Bit16u entry) {
 		delete Files[handle];
 		Files[handle]=0;
 	}
+	return true;
+}
+bool DOS_FlushFile(Bit16u entry) {
+	Bit32u handle=RealHandle(entry);
+	if (handle>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[handle] || !Files[handle]->IsOpen()) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	LOG(LOG_DOSMISC,LOG_NORMAL)("FFlush used.");
 	return true;
 }
 
