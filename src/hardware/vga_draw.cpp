@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.99 2008-04-13 19:50:47 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.100 2008-05-28 20:43:13 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -488,7 +488,7 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit8u * draw=(Bit8u *)TempLine;
 	bool underline=(vga.crtc.underline_location&0x1f)==line;
-	Bit8u pel_pan=vga.config.pel_panning;
+	Bit8u pel_pan=vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	Bit8u chr=vidmem[0];
@@ -546,7 +546,7 @@ static Bit8u * VGA_TEXT_Xlat16_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit16u * draw=(Bit16u *)TempLine;
 	bool underline=(vga.crtc.underline_location&0x1f)==line;
-	Bit8u pel_pan=vga.config.pel_panning;
+	Bit8u pel_pan=vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	Bit8u chr=vidmem[0];
@@ -606,15 +606,6 @@ skip_cursor:
 	return TempLine;
 }
 
-static void VGA_VerticalDisplayEnd(Bitu val) {
-//	vga.config.retrace=true;
-	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
-}
-
-static void VGA_HorizontalTimer(void) {
-
-}
-
 #ifdef VGA_KEEP_CHANGES
 static INLINE void VGA_ChangesEnd(void ) {
 	if ( vga.changes.active ) {
@@ -641,7 +632,7 @@ static void VGA_ProcessSplit() {
 		// In text mode only the characters are shifted by panning, not the address;
 		// this is done in the text line draw function.
 		vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
-		if (!(vga.mode==M_TEXT)) vga.draw.address += vga.config.pel_panning;
+		if (!(vga.mode==M_TEXT)) vga.draw.address += vga.draw.panning;
 	}
 	vga.draw.address_line=0;
 }
@@ -739,6 +730,13 @@ static void INLINE VGA_ChangesStart( void ) {
 }
 #endif
 
+static void VGA_DisplayStartLatch(Bitu val) {
+	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
+}
+ 
+static void VGA_PanningLatch(Bitu val) {
+	vga.draw.panning = vga.config.pel_panning;
+}
 
 static void VGA_VerticalTimer(Bitu val) {
 	double error = vga.draw.delay.framestart;
@@ -748,8 +746,9 @@ static void VGA_VerticalTimer(Bitu val) {
 	//PIC_AddEvent( VGA_VerticalDisplayEnd, (float)vga.draw.delay.vrstart );
 	double flip_offset = vga.screenflip/1000.0 + vga.draw.delay.vrstart;
 	if(flip_offset > vga.draw.delay.vtotal) {
-		VGA_VerticalDisplayEnd(0);
-	} else PIC_AddEvent( VGA_VerticalDisplayEnd,(float)flip_offset);
+		VGA_DisplayStartLatch(0);
+	} else PIC_AddEvent( VGA_DisplayStartLatch,(float)flip_offset);
+	PIC_AddEvent(VGA_PanningLatch,(float)vga.draw.delay.vrend);
 
 	if ( GCC_UNLIKELY( vga.draw.parts_left)) {
 		if (!IS_VGA_ARCH || (svgaCard!=SVGA_None)) {
@@ -789,7 +788,7 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.byte_panning_shift = 8;
 		vga.draw.address += vga.config.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
-		vga.draw.address += vga.config.pel_panning;
+		vga.draw.address += vga.draw.panning;
 #ifdef VGA_KEEP_CHANGES
 		startaddr_changed=true;
 #endif
@@ -809,7 +808,7 @@ static void VGA_VerticalTimer(Bitu val) {
 		vga.draw.byte_panning_shift = 4;
 		vga.draw.address += vga.config.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
-		vga.draw.address += vga.config.pel_panning;
+		vga.draw.address += vga.draw.panning;
 #ifdef VGA_KEEP_CHANGES
 		startaddr_changed=true;
 #endif
@@ -922,7 +921,8 @@ void VGA_ActivateHardwareCursor(void) {
 void VGA_SetupDrawing(Bitu val) {
 	if (vga.mode==M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
-		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
+		PIC_RemoveEvents(VGA_PanningLatch);
+		PIC_RemoveEvents(VGA_DisplayStartLatch);
 		return;
 	}
 	/* Calculate the FPS for this screen */
@@ -1341,7 +1341,8 @@ void VGA_SetupDrawing(Bitu val) {
 		(vga.mode != vga.lastmode)) {
 		vga.lastmode = vga.mode;
 		PIC_RemoveEvents(VGA_VerticalTimer);
-		PIC_RemoveEvents(VGA_VerticalDisplayEnd);
+		PIC_RemoveEvents(VGA_PanningLatch);
+		PIC_RemoveEvents(VGA_DisplayStartLatch);
 		PIC_RemoveEvents(VGA_DrawPart);
 		PIC_RemoveEvents(VGA_DrawSingleLine);
 		vga.draw.width = width;
