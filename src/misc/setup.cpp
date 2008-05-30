@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.48 2008-04-29 08:23:16 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.49 2008-05-30 12:42:38 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -273,6 +273,23 @@ void Prop_hex::SetValue(std::string const& input){
 	SetVal(val,false,true);
 }
 
+void Prop_multival::make_default_value(){
+	Bitu i = 1;
+	Property *p = section->Get_prop(0);
+	if(!p) return;
+
+	std::string result = p->Get_Default_Value().ToString();
+	while( (p = section->Get_prop(i++)) ) {
+		std::string props = p->Get_Default_Value().ToString();
+		if(props == "") continue;
+		result += seperator; result += props;
+	}
+	Value val(result,Value::V_STRING);
+	SetVal(val,false,true);
+}
+
+   
+
 //TODO checkvalue stuff
 void Prop_multival_remain::SetValue(std::string const& input) {
 	Value val(input,Value::V_STRING);
@@ -303,6 +320,12 @@ void Prop_multival_remain::SetValue(std::string const& input) {
 			in = local;
 			local = "";
 		}
+		//Test Value. If it fails set default
+		Value valtest (in,p->Get_type());
+		if(!p->CheckValue(valtest,true)) {
+			make_default_value();
+			return;
+		}
 		p->SetValue(in);
 	}
 }
@@ -324,21 +347,28 @@ void Prop_multival::SetValue(std::string const& input) {
 		if(loc != string::npos) local.erase(0,loc);
 		loc = local.find_first_of(seperator);
 		string in = "";//default value
-		if(loc != string::npos) { //seperator found 
+		if(loc != string::npos) { //seperator found
 			in = local.substr(0,loc);
 			local.erase(0,loc+1);
 		} else if(local.size()) { //last argument
 			in = local;
 			local = "";
 		}
+		//Test Value. If it fails set default
+		Value valtest (in,p->Get_type());
+		if(!p->CheckValue(valtest,true)) {
+			make_default_value();
+			return;
+		}
 		p->SetValue(in);
+
 	}
 }
 
 const std::vector<Value>& Property::GetValues() const {
 	return suggested_values;
 }
- const std::vector<Value>& Prop_multival::GetValues() const 
+const std::vector<Value>& Prop_multival::GetValues() const 
 {
 	Property *p = section->Get_prop(0);
 	//No properties in this section. do nothing

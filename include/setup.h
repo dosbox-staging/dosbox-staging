@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.35 2008-04-29 08:23:16 qbix79 Exp $ */
+/* $Id: setup.h,v 1.36 2008-05-30 12:42:37 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -130,6 +130,7 @@ public:
 	char const* Get_help();
 	virtual	void SetValue(std::string const& str)=0;
 	Value const& GetValue() const { return value;}
+	Value const& Get_Default_Value() const { return default_value; }
 	//CheckValue returns true  if value is in suggested_values;
 	//Type specific properties are encouraged to override this and check for type
 	//specific features.
@@ -138,6 +139,7 @@ public:
 	void SetVal(Value const& in, bool forced,bool warn=true) {if(forced || CheckValue(in,warn)) value = in; else value = default_value;}
 	virtual ~Property(){ } 
 	virtual const std::vector<Value>& GetValues() const;
+	Value::Etype Get_type(){return default_value.type;}
 
 protected:
 	Value value;
@@ -277,9 +279,10 @@ class Prop_multival:public Property{
 protected:
 	Section_prop* section;
 	std::string seperator;
+	void make_default_value();
 public:
 	Prop_multival(std::string const& _propname, Changeable::Value when,std::string const& sep):Property(_propname,when), section(new Section_prop("")),seperator(sep) {
-		 value = "";
+		default_value = value = "";
 	}
 	Section_prop *GetSection() { return section; }
 	const Section_prop *GetSection() const { return section; }
