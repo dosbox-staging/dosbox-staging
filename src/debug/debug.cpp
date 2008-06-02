@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.93 2008-05-21 08:50:59 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.94 2008-06-02 17:26:59 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -56,8 +56,8 @@ void WIN32_Console();
 #include <termios.h>
 #include <unistd.h>
 static struct termios consolesettings;
-int old_cursor_state;
 #endif
+int old_cursor_state;
 
 // Forwards
 static void DrawCode(void);
@@ -595,18 +595,17 @@ void CBreakpoint::ShowList(void)
 		CBreakpoint* bp = (*i);
 		if (bp->GetType()==BKPNT_PHYSICAL) {
 			DEBUG_ShowMsg("%02X. BP %04X:%04X\n",nr,bp->GetSegment(),bp->GetOffset());
-			nr++;
 		} else if (bp->GetType()==BKPNT_INTERRUPT) {
 			if (bp->GetValue()==BPINT_ALL)	DEBUG_ShowMsg("%02X. BPINT %02X\n",nr,bp->GetIntNr());					
 			else							DEBUG_ShowMsg("%02X. BPINT %02X AH=%02X\n",nr,bp->GetIntNr(),bp->GetValue());
-			nr++;
 		} else if (bp->GetType()==BKPNT_MEMORY) {
 			DEBUG_ShowMsg("%02X. BPMEM %04X:%04X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
-			nr++;
 		} else if (bp->GetType()==BKPNT_MEMORY_PROT) {
 			DEBUG_ShowMsg("%02X. BPPM %04X:%08X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
-			nr++;
+		} else if (bp->GetType()==BKPNT_MEMORY_LINEAR ) {
+			DEBUG_ShowMsg("%02X. BPLM %08X (%02X)\n",nr,bp->GetOffset(),bp->GetValue());
 		};
+		nr++;
 	}
 };
 
@@ -803,7 +802,7 @@ static void DrawCode(void) {
 		}
 		if (toolarge) { waddstr(dbg.win_code,".."); drawsize++; };
 		// Spacepad up to 20 characters
-		if(drawsize && (drawsize < 10)) {
+		if(drawsize && (drawsize < 11)) {
 			line20[20 - drawsize*2] = 0;
 			waddstr(dbg.win_code,line20);
 			line20[20 - drawsize*2] = ' ';
@@ -1016,12 +1015,12 @@ bool ParseCommand(char* str) {
 		};
 		name[12] = 0;
 		if(!name[0]) return false;
-		DEBUG_ShowMsg("DEBUG: Variable list load (%s) : %s.\n",name,(CDebugVar::SaveVars(name)?"ok":"failure"));
+		DEBUG_ShowMsg("DEBUG: Variable list load (%s) : %s.\n",name,(CDebugVar::LoadVars(name)?"ok":"failure"));
 		return true;
 	};
 
 	if (command == "SR") { // Set register value
-		DEBUG_ShowMsg("DEBUG: Set Register success.\n",(ChangeRegister(found)?"success":"failure"));
+		DEBUG_ShowMsg("DEBUG: Set Register %s.\n",(ChangeRegister(found)?"success":"failure"));
 		return true;
 	};
 
@@ -1109,7 +1108,7 @@ bool ParseCommand(char* str) {
 			DEBUG_ShowMsg("DEBUG: Breakpoints deleted.\n");
 		} else {		
 			// delete single breakpoint
-			CBreakpoint::DeleteByIndex(bpNr);
+			DEBUG_ShowMsg("DEBUG: Breakpoint deletion %s.\n",(CBreakpoint::DeleteByIndex(bpNr)?"success":"failure"));
 		}
 		return true;
 	};
@@ -1256,9 +1255,10 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("F9                        - Set/Remove breakpoint.\n");
 		DEBUG_ShowMsg("F10/F11                   - Step over / trace into instruction.\n");
 		DEBUG_ShowMsg("ALT + D/E/S/X/B           - Set data view to DS:SI/ES:DI/SS:SP/DS:DX/ES:BX.\n");
-		DEBUG_ShowMsg("Escape                    - clear input line.");
+		DEBUG_ShowMsg("Escape                    - Clear input line.");
 		DEBUG_ShowMsg("Up/Down                   - Move code view cursor.\n");
 		DEBUG_ShowMsg("Page Up/Down              - Scroll data view.\n");
+		DEBUG_ShowMsg("Home/End                  - Scroll log messages.\n");
 		DEBUG_ShowMsg("BP     [segment]:[offset] - Set breakpoint.\n");
 		DEBUG_ShowMsg("BPINT  [intNr] *          - Set interrupt breakpoint.\n");
 		DEBUG_ShowMsg("BPINT  [intNr] [ah]       - Set interrupt breakpoint with ah.\n");
@@ -1274,7 +1274,7 @@ bool ParseCommand(char* str) {
 #if C_HEAVY_DEBUG
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
 		DEBUG_ShowMsg("LOGS/LOGL [num]           - Write short/long cpu log file.\n");
-		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu when dosbox exits.\n");
+		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu log when dosbox exits.\n");
 		DEBUG_ShowMsg("ZEROPROTECT               - Enable/Disable zero code execution detecion.\n");
 #endif
 		DEBUG_ShowMsg("SR [reg] [value]          - Set register value.\n");
@@ -1464,11 +1464,14 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 					}	break;
 		}
 		if (jmp) {
+			pos = strchr(instu,'$');
+			if (pos) {
 			pos = strchr(instu,'+');
 			if (pos) {
 				strcpy(result,"(down)");
 			} else {
 				strcpy(result,"(up)");
+			}
 			}
 		} else {
 			sprintf(result,"(no jmp)");
@@ -1836,13 +1839,13 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue,  ofstream& out) {
 	    << " DS:"  << setw(4) << SegValue(ds)<< " ES:"  << setw(4) << SegValue(es);
 
 	if(cpuLogType == 0) {
-		out << " SS:"  << setw(4) << SegValue(ss) << " C"  << get_CF()  << " Z"   << get_ZF()  
-		    << " S" << get_SF() << " O"  << get_OF() << " I"  << GETFLAGBOOL(IF);
+		out << " SS:"  << setw(4) << SegValue(ss) << " C"  << (get_CF()>0)  << " Z"   << (get_ZF()>0)  
+		    << " S" << (get_SF()>0) << " O"  << (get_OF()>0) << " I"  << GETFLAGBOOL(IF);
 	} else {
 		out << " FS:"  << setw(4) << SegValue(fs) << " GS:"  << setw(4) << SegValue(gs)
 		    << " SS:"  << setw(4) << SegValue(ss)
-		    << " CF:"  << get_CF()  << " ZF:"   << get_ZF()  << " SF:"  << get_SF()
-		    << " OF:"  << get_OF()  << " AF:"   << get_AF()  << " PF:"  << get_PF()
+		    << " CF:"  << (get_CF()>0)  << " ZF:"   << (get_ZF()>0)  << " SF:"  << (get_SF()>0)
+		    << " OF:"  << (get_OF()>0)  << " AF:"   << (get_AF()>0)  << " PF:"  << (get_PF()>0)
 		    << " IF:"  << GETFLAGBOOL(IF);
 	}
 	if(cpuLogType == 2) {
@@ -1950,8 +1953,8 @@ static void DEBUG_ShutDown(Section * sec)
 {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
-	#ifndef WIN32
 	curs_set(old_cursor_state);
+	#ifndef WIN32
 	tcsetattr(0, TCSANOW,&consolesettings);
 //	printf("\e[0m\e[2J"); //Seems to destroy scrolling
 	printf("\ec");
