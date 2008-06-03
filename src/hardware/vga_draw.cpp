@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.100 2008-05-28 20:43:13 qbix79 Exp $ */
+/* $Id: vga_draw.cpp,v 1.101 2008-06-03 18:35:32 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -730,6 +730,13 @@ static void INLINE VGA_ChangesStart( void ) {
 }
 #endif
 
+static void VGA_VertInterrupt(Bitu val) {
+	if ((!vga.draw.vret_triggered) && ((vga.crtc.vertical_retrace_end&0x30)==0x10)) {
+		vga.draw.vret_triggered=true;
+		if (GCC_UNLIKELY(machine==MCH_EGA)) PIC_ActivateIRQ(9);
+	}
+}
+
 static void VGA_DisplayStartLatch(Bitu val) {
 	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
 }
@@ -749,6 +756,11 @@ static void VGA_VerticalTimer(Bitu val) {
 		VGA_DisplayStartLatch(0);
 	} else PIC_AddEvent( VGA_DisplayStartLatch,(float)flip_offset);
 	PIC_AddEvent(VGA_PanningLatch,(float)vga.draw.delay.vrend);
+
+	// EGA: 82c435 datasheet: interrupt happens at display end
+	// VGA: checked with scope
+	// add a little amount of time to make sure the last drawpart has already fired
+	if (IS_EGAVGA_ARCH) PIC_AddEvent(VGA_VertInterrupt,(float)(vga.draw.delay.vdend + 0.005));
 
 	if ( GCC_UNLIKELY( vga.draw.parts_left)) {
 		if (!IS_VGA_ARCH || (svgaCard!=SVGA_None)) {
@@ -841,12 +853,7 @@ static void VGA_VerticalTimer(Bitu val) {
 #ifdef VGA_KEEP_CHANGES
 	if (startaddr_changed) VGA_ChangesStart();
 #endif
-	if (GCC_UNLIKELY(machine==MCH_EGA)) {
-		if (!(vga.crtc.vertical_retrace_end&0x20)) {
-			PIC_ActivateIRQ(2);
-			vga.draw.vret_triggered=true;
-		}
-	}
+
 	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0));
 	else PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
 	//VGA_DrawPart( vga.draw.parts_lines );

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_crtc.cpp,v 1.32 2008-03-30 18:02:23 qbix79 Exp $ */
+/* $Id: vga_crtc.cpp,v 1.33 2008-06-03 18:35:32 c2woody Exp $ */
 
 #include <stdlib.h>
 #include "dosbox.h"
@@ -220,6 +220,11 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x11:	/* Vertical Retrace End Register */
 		crtc(vertical_retrace_end)=val;
+		
+		if (IS_EGAVGA_ARCH && !(val & 0x10)) {
+			vga.draw.vret_triggered=false;
+			if (GCC_UNLIKELY(machine==MCH_EGA)) PIC_DeActivateIRQ(9);
+		}
 		if (IS_VGA_ARCH) crtc(read_only)=(val & 128)>0;
 		else crtc(read_only)=false;
 		/*

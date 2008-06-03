@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_misc.cpp,v 1.36 2007-12-10 22:11:13 c2woody Exp $ */
+/* $Id: vga_misc.cpp,v 1.37 2008-06-03 18:35:32 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -135,16 +135,28 @@ static Bitu read_p3c8(Bitu port,Bitu iolen) {
 }
 
 static Bitu read_p3c2(Bitu port,Bitu iolen) {
-	if (GCC_UNLIKELY(machine==MCH_EGA)) {
-		Bitu retcode=0x60;
-		retcode |= (vga.draw.vret_triggered ? 0x80 : 0x00);
-		vga.draw.vret_triggered=false;
-		// ega colour monitor
-		if ((((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) retcode|=0x10;
-		return retcode;
-	} else {
-		return 0x70;
+	Bit8u retval=0;
+
+	if (machine==MCH_EGA) retval = 0x0F;
+	else if (IS_VGA_ARCH) retval = 0x60;
+	if ((machine==MCH_VGA) || (((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) {
+		retval |= 0x10;
 	}
+
+	if (vga.draw.vret_triggered) retval |= 0x80;
+	return retval;
+	/*
+		0-3 0xF on EGA, 0x0 on VGA 
+		4	Status of the switch selected by the Miscellaneous Output
+			Register 3C2h bit 2-3. Switch high if set.
+			(apparently always 1 on VGA)
+		5	(EGA) Pin 19 of the Feature Connector (FEAT0) is high if set
+		6	(EGA) Pin 17 of the Feature Connector (FEAT1) is high if set
+			(default differs by card, ET4000 sets them both)
+		7	If set IRQ 2 has happened due to Vertical Retrace.
+			Should be cleared by IRQ 2 interrupt routine by clearing port 3d4h
+			index 11h bit 4.
+	*/
 }
 
 void VGA_SetupMisc(void) {
