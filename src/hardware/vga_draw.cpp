@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.101 2008-06-03 18:35:32 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.102 2008-06-08 18:27:25 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -784,8 +784,12 @@ static void VGA_VerticalTimer(Bitu val) {
 	vga.draw.parts_left = vga.draw.parts_total;
 	vga.draw.lines_done = 0;
 	vga.draw.address_line = vga.config.hlines_skip;
-	if (IS_EGAVGA_ARCH) vga.draw.split_line = (vga.config.line_compare/vga.draw.lines_scaled);
-	else vga.draw.split_line = 0x10000;	// don't care
+	if (IS_EGAVGA_ARCH) {
+		vga.draw.split_line = (Bitu)((vga.config.line_compare+1)/vga.draw.lines_scaled);
+		if ((svgaCard==SVGA_S3Trio) && (vga.config.line_compare==0)) vga.draw.split_line=0;
+	} else {
+		vga.draw.split_line = 0x10000;	// don't care
+	}
 	vga.draw.address = vga.config.real_start;
 	vga.draw.byte_panning_shift = 0;
 	// go figure...
