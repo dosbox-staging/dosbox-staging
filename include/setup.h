@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.36 2008-05-30 12:42:37 qbix79 Exp $ */
+/* $Id: setup.h,v 1.37 2008-06-13 08:55:04 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -256,7 +256,7 @@ public:
 	Prop_string* Add_string(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
-//	void Add_double(char const * const _propname, double _value=0.0);   P
+//	void Add_double(char const * const _propname, double _value=0.0);   
 	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 
@@ -288,6 +288,7 @@ public:
 	const Section_prop *GetSection() const { return section; }
 	virtual void SetValue(std::string const& input);
 	virtual const std::vector<Value>& GetValues() const;
+	~Prop_multival() { delete section; }
 }; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
 
 class Prop_multival_remain:public Prop_multival{
