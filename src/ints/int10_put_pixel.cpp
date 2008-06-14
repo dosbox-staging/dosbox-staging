@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_put_pixel.cpp,v 1.20 2008-03-13 19:53:23 c2woody Exp $ */
+/* $Id: int10_put_pixel.cpp,v 1.21 2008-06-14 19:31:04 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -25,7 +25,9 @@
 
 static Bit8u cga_masks[4]={0x3f,0xcf,0xf3,0xfc};
 static Bit8u cga_masks2[8]={0x7f,0xbf,0xdf,0xef,0xf7,0xfb,0xfd,0xfe};
+
 void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
+	static bool putpixelwarned = false;
 
 	switch (CurMode->type) {
 	case M_CGA4:
@@ -132,7 +134,10 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			break;
 		}
 	default:
-		LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
+		if(GCC_UNLIKELY(!putpixelwarned)) {
+			putpixelwarned = true;		
+			LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
+		}
 		break;
 	}	
 }

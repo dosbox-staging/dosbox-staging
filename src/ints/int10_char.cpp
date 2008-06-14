@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.53 2008-03-13 19:53:23 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.54 2008-06-14 19:31:04 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -475,7 +475,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
 		static bool warned_use = false;
 		if(GCC_UNLIKELY(!warned_use)){ 
-			LOG(LOG_INT10,LOG_ERROR)("writechar used without attribute in non-textmode");
+			LOG(LOG_INT10,LOG_ERROR)("writechar used without attribute in non-textmode %c %X",chr,chr);
 			warned_use = true;
 		}
 		switch(CurMode->type) {
