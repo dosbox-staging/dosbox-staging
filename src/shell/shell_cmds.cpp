@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.81 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.82 2008-06-16 20:01:25 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -281,11 +281,13 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 			*dot = 0;
 			if(strlen(temp) > 6) temp[6] = 0;
 			strcat(temp,"~1");
-			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+//			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
 		} else if(strlen(temp) >8) {
 			temp[6] = 0;
 			strcat(temp,"~1");
-			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+//			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
 		} else {
 			Bit8u drive=DOS_GetDefaultDrive()+'A';
 			if (drive=='Z') {
