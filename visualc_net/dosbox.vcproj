@@ -309,10 +309,10 @@
 						RelativePath="..\src\cpu\core_dynrec\operators.h">
 					</File>
 					<File
-						RelativePath="..\src\cpu\core_dynrec\risc_x86.h">
+						RelativePath="..\src\cpu\core_dynrec\risc_x64.h">
 					</File>
 					<File
-						RelativePath="..\src\cpu\core_dynrec\risc_x64.h">
+						RelativePath="..\src\cpu\core_dynrec\risc_x86.h">
 					</File>
 				</Filter>
 			</Filter>
@@ -481,6 +481,9 @@
 					RelativePath="..\src\hardware\mixer.cpp">
 				</File>
 				<File
+					RelativePath="..\src\hardware\ne2000.cpp">
+				</File>
+				<File
 					RelativePath="..\src\hardware\pic.cpp">
 				</File>
 				<File
@@ -620,6 +623,9 @@
 				Name="gui"
 				Filter="">
 				<File
+					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
+				</File>
+				<File
 					RelativePath="..\src\gui\midi.cpp">
 				</File>
 				<File
@@ -645,9 +651,6 @@
 				</File>
 				<File
 					RelativePath="..\src\gui\sdlmain.cpp">
-				</File>
-				<File
-					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
 				</File>
 			</Filter>
 			<Filter
@@ -833,6 +836,9 @@
 			</File>
 			<File
 				RelativePath="..\include\mouse.h">
+			</File>
+			<File
+				RelativePath="..\include\ne2000.h">
 			</File>
 			<File
 				RelativePath="..\include\paging.h">
