@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.11 2008-01-17 18:53:18 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.12 2008-06-30 20:32:37 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -209,6 +209,7 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 		char lng_codes[258];
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
+			Bit16u lcnum=host_readw(&kcl_data[dpos-2]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
@@ -225,6 +226,11 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 				return cur_pos;
 			}
 			if (first_id_only) break;
+			sprintf(&lng_codes[lcpos],"%d",lcnum);
+			if (strcasecmp(lng_codes, layout_id)==0) {
+				// language ID found, return position
+				return cur_pos;
+			}
 			dpos+=2;
 		}
 		dpos=cur_pos+3+len;
@@ -598,7 +604,7 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
 		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true)) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
+		} else if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
 			tempfile = OpenDosboxFile("keyboard.sys");
 		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false)) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
