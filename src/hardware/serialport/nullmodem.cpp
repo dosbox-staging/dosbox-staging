@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: nullmodem.cpp,v 1.4 2008-07-05 08:54:59 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -139,13 +141,13 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	if(cmd->FindStringBegin("server:",tmpstring,false)) {
 		// we are a client
 		const char* hostnamechar=tmpstring.c_str();
-		Bitu hostlen=strlen(hostnamechar)+1;
+		size_t hostlen=strlen(hostnamechar)+1;
 		if(hostlen>sizeof(hostnamebuffer)) {
 			hostlen=sizeof(hostnamebuffer);
 			hostnamebuffer[sizeof(hostnamebuffer)-1]=0;
 		}
 		memcpy(hostnamebuffer,hostnamechar,hostlen);
-		clientport=temptcpport;
+		clientport=(Bit16u)temptcpport;
 		if(dtrrespect) {
 			// we connect as soon as DTR is switched on
 			setEvent(SERIAL_NULLMODEM_DTR_EVENT, 50);
@@ -176,9 +178,10 @@ CNullModem::~CNullModem () {
 	if(serversocket) delete serversocket;
 	if(clientsocket) delete clientsocket;
 	// remove events
-	for(Bitu i = SERIAL_BASE_EVENT_COUNT+1;
-				i <= SERIAL_NULLMODEM_EVENT_COUNT; i++)
+	for(Bit16u i = SERIAL_BASE_EVENT_COUNT+1;
+			i <= SERIAL_NULLMODEM_EVENT_COUNT; i++) {
 		removeEvent(i);
+	}
 }
 
 void CNullModem::WriteChar(Bit8u data) {
@@ -194,7 +197,7 @@ void CNullModem::WriteChar(Bit8u data) {
 Bits CNullModem::readChar() {
 	
 	Bits rxchar = clientsocket->GetcharNonBlock();
-	if(telnet && rxchar>=0) return TelnetEmulation(rxchar);
+	if(telnet && rxchar>=0) return TelnetEmulation((Bit8u)rxchar);
 	else if(rxchar==0xff && !transparent) {// escape char
 		// get the next char
 		Bits rxchar = clientsocket->GetcharNonBlock();
@@ -300,7 +303,8 @@ void CNullModem::handleUpperEvent(Bit16u type) {
 		case SERIAL_SERVER_POLLING_EVENT: {
 			// As long as nothing is connected to out server poll the
 			// connection.
-			if((clientsocket=serversocket->Accept())) {
+			clientsocket=serversocket->Accept();
+			if(clientsocket) {
 				Bit8u peeripbuf[16];
 				clientsocket->GetRemoteAddressString(peeripbuf);
 				LOG_MSG("Serial%d: A client (%s) has connected.",idnumber+1,peeripbuf);
@@ -338,7 +342,7 @@ void CNullModem::handleUpperEvent(Bit16u type) {
 /* updatePortConfig is called when emulated app changes the serial port     **/
 /* parameters baudrate, stopbits, number of databits, parity.               **/
 /*****************************************************************************/
-void CNullModem::updatePortConfig (Bit16u divider, Bit8u lcr) {
+void CNullModem::updatePortConfig (Bit16u /*divider*/, Bit8u /*lcr*/) {
 	
 }
 
@@ -351,13 +355,12 @@ void CNullModem::transmitByte (Bit8u val, bool first) {
 	// transmit it later in THR_Event
 	if(first) {
 		setEvent(SERIAL_THR_EVENT, bytetime/8);
-	}
-	else {
+	} else {
 		//if(clientsocket) clientsocket->Putchar(val);
 		setEvent(SERIAL_TX_EVENT, bytetime);
 	}
-	/*****************************/
-	if(val==0xff) WriteChar(0xff);
+	// disable 0xff escaping when transparent mode is enabled
+	if (!transparent && (val==0xff)) WriteChar(0xff);
 	
 	WriteChar(val);
 }
@@ -471,7 +474,7 @@ Bits CNullModem::TelnetEmulation(Bit8u data) {
 /* setBreak(val) switches break on or off                                   **/
 /*****************************************************************************/
 
-void CNullModem::setBreak (bool value) {
+void CNullModem::setBreak (bool /*value*/) {
 	CNullModem::setRTSDTR(getRTS(), getDTR());
 }
 
