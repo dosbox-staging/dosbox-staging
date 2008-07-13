@@ -1922,6 +1922,7 @@ static unsigned char OPLRead(FM_OPL *OPL,int a)
 
 		#endif
 		if (OPL->st[0]) {
+			/* Timer A */
 			if (OPL->TC[0]) OPL->TC[0]--;
 			else {
 				OPL->TC[0]=OPL->T[0]*20;
@@ -1929,10 +1930,11 @@ static unsigned char OPLRead(FM_OPL *OPL,int a)
 			}
 		}
 		if (OPL->st[1]) {
+			/* Timer B */
 			if (OPL->TC[1]) OPL->TC[1]--;
 			else {
 				OPL->TC[1]=OPL->T[1]*20;
-				OPL_STATUS_SET(OPL,0x40);
+				OPL_STATUS_SET(OPL,0x20);
 			}
 		}
 		return OPL->status & (OPL->statusmask|0x80);

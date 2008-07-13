@@ -2446,6 +2446,7 @@ static unsigned char OPL3Read(OPL3 *chip,int a)
 	if( a==0 )
 	{
 		if (chip->st[0]) {
+			/* Timer A */
 			if (chip->TC[0]) chip->TC[0]--;
 			else {
 				chip->TC[0]=chip->T[0]*20;
@@ -2453,10 +2454,11 @@ static unsigned char OPL3Read(OPL3 *chip,int a)
 			}
 		}
 		if (chip->st[1]) {
+			/* Timer B */
 			if (chip->TC[1]) chip->TC[1]--;
 			else {
 				chip->TC[1]=chip->T[1]*20;
-				OPL3_STATUS_SET(chip,0x40);
+				OPL3_STATUS_SET(chip,0x20);
 			}
 		}
 		return chip->status;
