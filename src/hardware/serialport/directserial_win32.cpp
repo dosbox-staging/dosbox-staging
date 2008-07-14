@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: directserial_win32.cpp,v 1.5 2007-01-13 08:35:49 qbix79 Exp $ */
+/* $Id: directserial_win32.cpp,v 1.6 2008-07-14 20:06:19 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -39,7 +39,7 @@
 CDirectSerial::CDirectSerial (Bitu id, CommandLine* cmd)
 					:CSerial (id, cmd) {
 	InstallationSuccessful = false;
-
+	hCom = INVALID_HANDLE_VALUE; // else destructor may close an invalid handle
 	rx_retry = 0;
     rx_retry_max = 0;
 
