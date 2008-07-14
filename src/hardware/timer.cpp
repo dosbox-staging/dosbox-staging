@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.46 2008-03-02 08:55:04 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.47 2008-07-14 19:30:29 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -220,7 +220,7 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 				if(p->mode==0) PIC_RemoveEvents(PIT0_Event); // DoWhackaDo demo
 				PIC_AddEvent(PIT0_Event,p->delay);
 			} else LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer set without new control word");
-			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.2f Hz mode %d",1000.0/p->delay,p->mode);
+			LOG(LOG_PIT,LOG_NORMAL)("PIT 0 Timer at %.4f Hz mode %d",1000.0/p->delay,p->mode);
 			break;
 		case 0x02:			/* Timer hooked to PC-Speaker */
 //			LOG(LOG_PIT,"PIT 2 Timer at %.3g Hz mode %d",PIT_TICK_RATE/(double)p->cntr,p->mode);
