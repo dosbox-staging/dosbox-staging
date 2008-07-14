@@ -37,6 +37,255 @@
 
 #define logerror
 
+
+#ifdef _MSC_VER
+#pragma pack (1)
+#endif
+
+#define HW_OPL2 0
+#define HW_DUALOPL2 1
+#define HW_OPL3 2
+
+struct RawHeader {
+	Bit8u id[8];				/* 0x00, "DBRAWOPL" */
+	Bit16u versionHigh;			/* 0x08, size of the data following the m */
+	Bit16u versionLow;			/* 0x0a, size of the data following the m */
+	Bit32u commands;			/* 0x0c, Bit32u amount of command/data pairs */
+	Bit32u milliseconds;		/* 0x10, Bit32u Total milliseconds of data in this chunk */
+	Bit8u hardware;				/* 0x14, Bit8u Hardware Type 0=opl2,1=dual-opl2,2=opl3 */
+	Bit8u format;				/* 0x15, Bit8u Format 0=cmd/data interleaved, 1 maybe all cdms, followed by all data */
+	Bit8u compression;			/* 0x16, Bit8u Compression Type, 0 = No Compression */
+	Bit8u delay256;				/* 0x17, Bit8u Delay 1-256 msec command */
+	Bit8u delayShift8;			/* 0x18, Bit8u (delay + 1)*256 */			
+	Bit8u conversionTableSize;	/* 0x191, Bit8u Raw Conversion Table size */
+} GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
+#pragma pack()
+#endif
+/*
+	The Raw Tables is < 128 and is used to convert raw commands into a full register index 
+	When the high bit of a raw command is set it indicates the cmd/data pair is to be sent to the 2nd port
+	After the conversion table the raw data follows immediatly till the end of the chunk
+*/
+
+typedef Bit8u RawCache[2][256];
+
+
+//Table to map the opl register to one <127 for dro saving
+class RawCapture {
+	//127 entries to go from raw data to registers
+	Bit8u ToReg[127];
+	//How many entries in the ToPort are used
+	Bit8u RawUsed;
+	//256 entries to go from port index to raw data
+	Bit8u ToRaw[256];
+	Bit8u delay256;
+	Bit8u delayShift8;
+	RawHeader header;
+
+	FILE*	handle;				//File used for writing
+	Bit32u	startTicks;			//Start used to check total raw length on end
+	Bit32u	lastTicks;			//Last ticks when last last cmd was added
+	Bit8u	buf[1024];	//16 added for delay commands and what not
+	Bit32u	bufUsed;
+	Bit8u	cmd[2];				//Last cmd's sent to either ports
+	bool	doneOpl3;
+	bool	doneDualOpl2;
+
+	RawCache* cache;
+
+	void MakeEntry( Bit8u reg, Bit8u& raw ) {
+		ToReg[ raw ] = reg;
+		ToRaw[ reg ] = raw;
+		raw++;
+	}
+	void MakeTables( void ) {
+		Bit8u index = 0;
+		memset( ToReg, 0xff, sizeof ( ToReg ) );
+		memset( ToRaw, 0xff, sizeof ( ToRaw ) );
+		//Select the entries that are valid and the index is the mapping to the index entry
+		MakeEntry( 0x01, index );					//0x01: Waveform select
+		MakeEntry( 0x04, index );					//104: Four-Operator Enable
+		MakeEntry( 0x05, index );					//105: OPL3 Mode Enable
+		MakeEntry( 0x08, index );					//08: CSW / NOTE-SEL
+		MakeEntry( 0xbd, index );					//BD: Tremolo Depth / Vibrato Depth / Percussion Mode / BD/SD/TT/CY/HH On
+		//Add the 32 byte range that hold the 18 operators
+		for ( int i = 0 ; i < 24; i++ ) {
+			if ( (i & 7) < 6 ) {
+				MakeEntry(0x20 + i, index );		//20-35: Tremolo / Vibrato / Sustain / KSR / Frequency Multiplication Facto
+				MakeEntry(0x40 + i, index );		//40-55: Key Scale Level / Output Level 
+				MakeEntry(0x60 + i, index );		//60-75: Attack Rate / Decay Rate 
+				MakeEntry(0x80 + i, index );		//80-95: Sustain Level / Release Rate
+				MakeEntry(0xe0 + i, index );		//E0-F5: Waveform Select
+			}
+		}
+		//Add the 9 byte range that hold the 9 channels
+		for ( int i = 0 ; i < 9; i++ ) {
+			MakeEntry(0xa0 + i, index );			//A0-A8: Frequency Number
+			MakeEntry(0xb0 + i, index );			//B0-B8: Key On / Block Number / F-Number(hi bits) 
+			MakeEntry(0xc0 + i, index );			//C0-C8: FeedBack Modulation Factor / Synthesis Type
+		}
+		//Store the amount of bytes the table contains
+		RawUsed = index;
+//		assert( RawUsed <= 127 );
+		delay256 = RawUsed;
+		delayShift8 = RawUsed+1; 
+	}
+
+	void ClearBuf( void ) {
+		fwrite( buf, 1, bufUsed, handle );
+		header.commands += bufUsed / 2;
+		bufUsed = 0;
+	}
+	void AddBuf( Bit8u raw, Bit8u val ) {
+		buf[bufUsed++] = raw;
+		buf[bufUsed++] = val;
+		if ( bufUsed >= sizeof( buf ) ) {
+			ClearBuf();
+		}
+	}
+	void AddWrite( Bit8u index, Bit8u reg, Bit8u val ) {
+		/*
+			Do some special checks if we're doing opl3 or dualopl2 commands
+			Although you could pretty much just stick to always doing opl3 on the player side
+		*/
+		if ( index ) {
+			//opl3 enabling will always override dual opl
+			if ( header.hardware != HW_OPL3 && reg == 4 && val && (*cache)[1][5] ) {
+				header.hardware = HW_OPL3;
+			} 
+			if ( header.hardware == HW_OPL2 && reg >= 0xb0 && reg <=0xb8 && val ) {
+				header.hardware = HW_DUALOPL2;
+			}
+		}
+		Bit8u raw = ToRaw[reg];
+		if ( raw == 0xff )
+			return;
+		if ( index )
+			raw |= 128;
+		AddBuf( raw, val );
+	}
+	void WriteCache( void  ) {
+		Bitu i, val;
+		/* Check the registers to add */
+		for (i=0;i<256;i++) {
+			//Skip the note on entries
+			if (i>=0xb0 && i<=0xb8) 
+				continue;
+			val = (*cache)[0][i];
+			if (val) {
+				AddWrite( 0, i, val );
+			}
+			val = (*cache)[1][i];
+			if (val) {
+				AddWrite( 1, i, val );
+			}
+		}
+	}
+	void InitHeader( void ) {
+		memset( &header, 0, sizeof( header ) );
+		memcpy( header.id, "DBRAWOPL", 8 );
+		header.versionLow = 0;
+		header.versionHigh = 2;
+		header.delay256 = delay256;
+		header.delayShift8 = delayShift8;
+		header.conversionTableSize = RawUsed;
+	}
+	void CloseFile( void ) {
+		if ( handle ) {
+			ClearBuf();
+			/* Endianize the header and write it to beginning of the file */
+			var_write( &header.versionHigh, header.versionHigh );
+			var_write( &header.versionLow, header.versionLow );
+			var_write( &header.commands, header.commands );
+			var_write( &header.milliseconds, header.milliseconds );
+			fseek( handle, 0, SEEK_SET );
+			fwrite( &header, 1, sizeof( header ), handle );
+			fclose( handle );
+			handle = 0;
+		}
+	}
+public:
+	bool DoWrite( Bit8u index, Bit8u reg, Bit8u val ) {
+		//Check the raw index for this register if we actually have to save it
+		if ( handle ) {
+			/*
+				Check if we actually care for this to be logged, else just ignore it
+			*/
+			Bit8u raw = ToRaw[reg];
+			if ( raw == 0xff ) {
+				return true;
+			}
+			/* Check if this command will not just replace the same value 
+			   in a reg that doesn't do anything with it
+			*/
+			if ( (*cache)[index][reg] == val )
+				return true;
+			/* Check how much time has passed */
+			Bitu passed = PIC_Ticks - lastTicks;
+			lastTicks = PIC_Ticks;
+			header.milliseconds += passed;
+
+			//if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
+			
+			// If we passed more than 30 seconds since the last command, we'll restart the the capture
+			if ( passed > 30000 ) {
+				CloseFile();
+				goto skipWrite; 
+			}
+			while (passed > 0) {
+				if (passed < 257) {			//1-256 millisecond delay
+					AddBuf( delay256, passed - 1 );
+					passed = 0;
+				} else {
+					Bitu shift = (passed >> 8);
+					passed -= shift << 8;
+					AddBuf( delayShift8, shift - 1 );
+				}
+			}
+			AddWrite( index, reg, val );
+			return true;
+		}
+skipWrite:
+		//Not yet capturing to a file here
+		//Check for commands that would start capturing, if it's not one of them return
+		if ( !(
+			//note on in any channel 
+			( reg>=0xb0 && reg<=0xb8 && (val&0x020) ) ||
+			//Percussion mode enabled and a note on in any percussion instrument
+			( reg == 0xbd && ( (val&0x3f) > 0x20 ) )
+		)) {
+			return true;
+		}
+	  	handle = OpenCaptureFile("Raw Opl",".dro");
+		if (!handle)
+			return false;
+		InitHeader();
+		//Prepare space at start of the file for the header
+		fwrite( &header, 1, sizeof(header), handle );
+		/* write the Raw To Reg table */
+		fwrite( &ToReg, 1, RawUsed, handle );
+		/* Write the cache of last commands */
+		WriteCache( );
+		/* Write the command that triggered this */
+		AddWrite( index, reg, val );
+		//Init the timing information for the next commands
+		lastTicks = PIC_Ticks;	
+		startTicks = PIC_Ticks;
+		return true;
+	}
+	RawCapture( RawCache* _cache ) {
+		cache = _cache;
+		handle = 0;
+		bufUsed = 0;
+		MakeTables();
+	}
+	~RawCapture() {
+		CloseFile();
+	}
+
+};
+
 #ifdef _MSC_VER
   /* Disable recurring warnings */
 # pragma warning ( disable : 4018 )
@@ -87,22 +336,11 @@ static struct {
 	bool active;
 	OPL_Mode mode;
 	MixerChannel * chan;
-	Bit32u last_used;
-	Bit16s mixbuf[2][128];
-	struct {
-		FILE * handle;
-		bool capturing;
-		Bit32u start;
-		Bit32u last;
-		Bit8u index;
-		Bit8u buffer[RAW_SIZE+8];
-		Bit8u regs[2][256];
-		Bit32u used;
-		Bit32u done;
-		Bit8u cmd[2];
-		bool opl3;
-		bool dualopl2;
-	} raw;
+	Bit32u last_used;				//Ticks when adlib was last used to turn of mixing after a few second
+	Bit16s mixbuf[2][128];			//Mix buffer to mix dual opl2 into final stream
+	Bit8u cmd[2];					//Last cmd written to either index
+	RawCache cache;
+	RawCapture* raw;
 } opl;
 
 static void OPL_CallBack(Bitu len) {
@@ -146,7 +384,6 @@ static Bitu OPL_Read(Bitu port,Bitu iolen) {
 	return 0xff;
 }
 
-static void OPL_RawAdd(Bitu index,Bitu val);
 void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 	opl.last_used=PIC_Ticks;
 	if (!opl.active) {
@@ -154,12 +391,16 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 		opl.chan->Enable(true);
 	}
 	port&=3;
-	if (port&1) {
-		Bitu index=port>>1;
-		opl.raw.regs[index][opl.raw.cmd[index]]=val;
-		if (opl.raw.capturing) OPL_RawAdd(index,val);
-	} else opl.raw.cmd[port>>1]=val;
-	if (!port) adlib_commandreg=val;
+	Bitu index = port>>1;
+	if ( port&1 ) {
+		Bit8u cmd = opl.cmd[index];
+		if ( opl.raw )
+			opl.raw->DoWrite( index, cmd, val );
+		//Write to the cache after, so the raw can check for unchanged values
+		opl.cache[index][cmd]=val;
+	} else {
+		opl.cmd[ index ] = val;
+	}
 	switch (opl.mode) {
 	case OPL_opl2:
 		OPL2::YM3812Write(0,port,val);
@@ -168,149 +409,22 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 		THEOPL3::YMF262Write(0,port,val);
 		break;
 	case OPL_dualopl2:
-		OPL2::YM3812Write(port>>1,port,val);
+		OPL2::YM3812Write( index,port,val);
 		break;
 	}
-}
-
-static Bit8u dro_header[]={
-	'D','B','R','A',		/* 0x00, Bit32u ID */
-	'W','O','P','L',		/* 0x04, Bit32u ID */
-	0x0,0x00,				/* 0x08, Bit16u version low */
-	0x1,0x00,				/* 0x09, Bit16u version high */
-	0x0,0x0,0x0,0x0,		/* 0x0c, Bit32u total milliseconds */
-	0x0,0x0,0x0,0x0,		/* 0x10, Bit32u total data */
-	0x0,0x0,0x0,0x0			/* 0x14, Bit32u Type 0=opl2,1=opl3,2=dual-opl2 */
-};
-/* Commands 
-	0x00 Bit8u, millisecond delay+1
-	0x02 none, Use the low index/data pair
-	0x03 none, Use the high index/data pair
-	0x10 Bit16u, millisecond delay+1
-	0xxx Bit8u, send command and data to current index/data pair
-*/ 
-
-static void OPL_RawEmptyBuffer(void) {
-	fwrite(opl.raw.buffer,1,opl.raw.used,opl.raw.handle);
-	opl.raw.done+=opl.raw.used;
-	opl.raw.used=0;
-}
-
-#define ADDBUF(_VAL_) opl.raw.buffer[opl.raw.used++]=_VAL_;
-static void OPL_RawAdd(Bitu index,Bitu val) {
-	Bit8u cmd=opl.raw.cmd[index];
-	/* check for cmd's we use for special meaning 
-	   These only control timers or are unused
-	*/
-	if (cmd == 2 || cmd == 3 || cmd == 0x10) return;
-	if (cmd == 4 && !index) return;
-	/* Check if we have yet to start */
-	if (!opl.raw.handle) {
-		if (cmd<0xb0 || cmd>0xb8) return;
-		if (!(val&0x20))  return;
-		Bitu i;
-		opl.raw.last=PIC_Ticks;	
-		opl.raw.start=PIC_Ticks;
-		opl.raw.handle=OpenCaptureFile("Raw Opl",".dro");
-		if (!opl.raw.handle) {
-			opl.raw.capturing=false;		
-			return;
-		}
-		memset(opl.raw.buffer,0,sizeof(opl.raw.buffer));
-		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
-		/* Check the registers to add */
-		for (i=0;i<256;i++) {
-			if (!opl.raw.regs[0][i]) continue;
-			if (i>=0xb0 && i<=0xb8) continue;
-			ADDBUF((Bit8u)i);
-			ADDBUF(opl.raw.regs[0][i]);
-		}
-		bool donesecond=false;
-		/* Check if we already have an opl3 enable bit logged */
-		if (opl.raw.regs[1][5] & 1)
-			opl.raw.opl3 = true;
-		for (i=0;i<256;i++) {
-			if (!opl.raw.regs[1][i]) continue;
-			if (i>=0xb0 && i<=0xb8) continue;
-			if (!donesecond) {
-				/* Or already have dual opl2 */
-				opl.raw.dualopl2 = true;
-				donesecond=true;
-				ADDBUF(0x3);
-			}
-			ADDBUF((Bit8u)i);
-			ADDBUF(opl.raw.regs[1][i]);
-		}
-		if (donesecond) ADDBUF(0x2);
-	}
-	/* Check if we enable opl3 or access dual opl2 mode */
-	if (cmd == 5 && index && (val & 1)) {
-		opl.raw.opl3 = true;
-	}
-	if (index && val && cmd>=0xb0 && cmd<=0xb8) {
-		opl.raw.dualopl2 = true;
-	}
-	/* Check how much time has passed, Allow an extra 5 milliseconds? */
-	if (PIC_Ticks>(opl.raw.last+5)) {
-		Bitu passed=PIC_Ticks-opl.raw.last;
-		opl.raw.last=PIC_Ticks;
-		while (passed) {
-			passed-=1;
-			if (passed<256) {
-				ADDBUF(0x00);					//8bit delay
-				ADDBUF((Bit8u)passed);			//8bit delay
-				passed=0;
-			} else if (passed<0x10000) {
-				ADDBUF(0x01);					//16bit delay
-				ADDBUF((Bit8u)(passed & 0xff));	//lo-byte
-				ADDBUF((Bit8u)(passed >> 8));	//hi-byte
-				passed=0;
-			} else {
-				ADDBUF(0x01);					//16bit delay
-				ADDBUF(0xff);					//lo-byte
-				ADDBUF(0xff);					//hi-byte
-				passed-=0xffff;
-			}
-		}
-	}
-	/* Check if we're still sending to the correct index */
-	if (opl.raw.index != index) {
-		opl.raw.index=index;
-		ADDBUF(opl.raw.index ? 0x3 : 0x2);
-	}
-	ADDBUF(cmd);
-	ADDBUF(val);
-	if (opl.raw.used>=RAW_SIZE) OPL_RawEmptyBuffer();
 }
 
 static void OPL_SaveRawEvent(bool pressed) {
 	if (!pressed)
 		return;
 	/* Check for previously opened wave file */
-	if (opl.raw.handle) {
-		OPL_RawEmptyBuffer();
-		/* Fill in the header with useful information */
-		host_writed(&dro_header[0x0c],opl.raw.last-opl.raw.start);
-		host_writed(&dro_header[0x10],opl.raw.done);
-		if (opl.raw.opl3 && opl.raw.dualopl2) host_writed(&dro_header[0x14],0x1);
-		else if (opl.raw.dualopl2) host_writed(&dro_header[0x14],0x2);
-		else host_writed(&dro_header[0x14],0x0);
-		fseek(opl.raw.handle,0,0);
-		fwrite(dro_header,1,sizeof(dro_header),opl.raw.handle);
-		fclose(opl.raw.handle);
-		opl.raw.handle=0;
-	}
-	if (opl.raw.capturing) {
-		opl.raw.capturing=false;
-		LOG_MSG("Stopping Raw OPL capturing.");
+	if ( opl.raw ) {
+		delete opl.raw;
+		opl.raw = 0;
+		LOG_MSG("Stopped Raw OPL capturing.");
 	} else {
 		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
-		opl.raw.capturing=true;
-		opl.raw.index=0;
-		opl.raw.used=0;
-		opl.raw.done=0;
-		opl.raw.start=0;
-		opl.raw.last=0;
+		opl.raw = new RawCapture( &opl.cache );
 	}
 }
 
@@ -345,6 +459,7 @@ public:
 		WriteHandler[2].Install(base+8,OPL_Write,IO_MB,2);
 		ReadHandler[2].Install(base+8,OPL_Read,IO_MB,2);
 
+		opl.raw = 0;
 		opl.active=false;
 		opl.last_used=0;
 		opl.mode=oplmode;
@@ -353,7 +468,8 @@ public:
 		MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 	}
 	~OPL() {
-		if (opl.raw.handle) OPL_SaveRawEvent(true);
+		if (opl.raw) 
+			delete opl.raw;
 		OPL2::YM3812Shutdown();
 		THEOPL3::YMF262Shutdown();
 	}
