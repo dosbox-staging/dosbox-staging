@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.70 2007-12-06 17:44:18 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.71 2008-07-19 13:28:03 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -320,10 +320,38 @@ static Bitu INT11_Handler(void) {
 	reg_ax=mem_readw(BIOS_CONFIGURATION);
 	return CBRET_NONE;
 }
-
+/* 
+ * Define the following define to 1 if you want dosbox to check 
+ * the system time every 5 seconds and adjust 1/2 a second to sync them.
+ */
+#ifndef DOSBOX_CLOCKSYNC
+#define DOSBOX_CLOCKSYNC 0
+#endif
 static Bitu INT8_Handler(void) {
 	/* Increase the bios tick counter */
-	mem_writed(BIOS_TIMER,mem_readd(BIOS_TIMER)+1);
+	Bit32u value = mem_readd(BIOS_TIMER) + 1;
+#if DOSBOX_CLOCKSYNC
+	static bool check = false;
+	if((value %50)==0) {
+		if(((value %100)==0) && check) {
+			check = false;
+			time_t curtime;struct tm *loctime;
+			curtime = time (NULL);loctime = localtime (&curtime);
+			Bit32u ticksnu = (Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
+			Bit32s bios = value;Bit32s tn = ticksnu;
+			Bit32s diff = tn - bios;
+			if(diff>0) {
+				if(diff < 18) { diff  = 0; } else diff = 9;
+			} else {
+				if(diff > -18) { diff = 0; } else diff = -9;
+			}
+	     
+			value += diff;
+		} else if((value%100)==50) check = true;
+	}
+#endif
+	mem_writed(BIOS_TIMER,value);
+
 	/* decrease floppy motor timer */
 	Bit8u val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
 	if (val) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
@@ -331,6 +359,7 @@ static Bitu INT8_Handler(void) {
 	mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
 	return CBRET_NONE;
 };
+#undef DOSBOX_CLOCKSYNC
 
 static Bitu INT1C_Handler(void) {
 	return CBRET_NONE;
