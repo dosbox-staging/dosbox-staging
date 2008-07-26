@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.cpp,v 1.14 2007-11-01 12:11:40 qbix79 Exp $ */
+/* $Id: ipx.cpp,v 1.15 2008-07-26 14:49:38 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -1038,7 +1038,7 @@ public:
 					WriteOut("IPX Tunneling Client not connected.\n");
 					return;
 				}
-
+				TIMER_DelTickHandler(&IPX_ClientLoop);
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
 				ticks = GetTicks();
@@ -1048,6 +1048,7 @@ public:
 						WriteOut("Response from %d.%d.%d.%d, port %d time=%dms\n", CONVIP(pingHead.src.addr.byIP.host), SDLNet_Read16(&pingHead.src.addr.byIP.port), GetTicks() - ticks);
 					}
 				}
+				TIMER_AddTickHandler(&IPX_ClientLoop);
 				return;
 			}
 		}
