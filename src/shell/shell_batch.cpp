@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.27 2008-03-10 13:43:37 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.28 2008-07-27 20:12:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -100,7 +100,9 @@ emptyline:
 			} else {
 				/* Not a command line number has to be an environment */
 				char * first=strchr(cmd_read,'%');
-				if (!first) continue; *first++=0;
+				/* No env afterall.Somewhat of a hack though as %% and % aren't handled consistent in dosbox. Maybe echo needs to parse % and %% as well. */
+				if (!first) {*cmd_write++ = '%';continue;}
+				*first++ = 0;
 				std::string env;
 				if (shell->GetEnvStr(cmd_read,env)) {
 					const char * equals=strchr(env.c_str(),'=');

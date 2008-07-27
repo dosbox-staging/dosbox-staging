@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.89 2008-03-02 11:13:47 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.90 2008-07-27 20:12:28 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -270,8 +270,8 @@ void DOS_Shell::RunInternal(void)
 		if (echo) {
 				if (input_line[0] != '@') {
 					ShowPrompt();
-					WriteOut(input_line);
-					WriteOut("\n");
+					WriteOut_NoParsing(input_line);
+					WriteOut_NoParsing("\n");
 				};
 			};
 		ParseLine(input_line);
@@ -318,8 +318,8 @@ void DOS_Shell::Run(void) {
 				if (echo) {
 					if (input_line[0]!='@') {
 						ShowPrompt();
-						WriteOut(input_line);
-						WriteOut("\n");
+						WriteOut_NoParsing(input_line);
+						WriteOut_NoParsing("\n");
 					};
 				};
 			ParseLine(input_line);
@@ -329,7 +329,7 @@ void DOS_Shell::Run(void) {
 			if (echo) ShowPrompt();
 			InputCommand(input_line);
 			ParseLine(input_line);
-			if (echo && !bf) WriteOut("\n");
+			if (echo && !bf) WriteOut_NoParsing("\n");
 		}
 	} while (!exit);
 }
