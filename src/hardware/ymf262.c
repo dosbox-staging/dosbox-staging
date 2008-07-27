@@ -215,8 +215,7 @@ unsigned char reserved[512-272];//speedup:pump up the struct size to power of 2
 typedef struct {
 	OPL3_CH	P_CH[18];				/* OPL3 chips have 18 channels	*/
 
-	UINT32	pan[18*4];				/* channels output masks (0xffffffff = enable); 4 masks per one channel */
-	UINT32	pan_ctrl_value[18];		/* output control values 1 per one channel (1 value contains 4 masks) */
+	UINT32	pan[18*2];				/* channels output multiplier; 2 per channel */
 
 	UINT32	eg_cnt;					/* global envelope generator counter	*/
 	UINT32	eg_timer;				/* global envelope generator counter works at frequency = chipclock/288 (288=8*36) */
@@ -2069,26 +2068,22 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 
 		if( chip->OPL3_mode & 1 )
 		{
-			int base = ((r&0xf) + ch_offset) * 4;
+			int base = ((r&0xf) + ch_offset) * 2;
 
 			/* OPL3 mode */
-			chip->pan[ base    ] = (v & 0x10) ? ~0 : 0;	/* ch.A */
-			chip->pan[ base +1 ] = (v & 0x20) ? ~0 : 0;	/* ch.B */
-			chip->pan[ base +2 ] = (v & 0x40) ? ~0 : 0;	/* ch.C */
-			chip->pan[ base +3 ] = (v & 0x80) ? ~0 : 0;	/* ch.D */
+			chip->pan[ base    ] = (v & 0x10) ? 1 : 0;	/* ch.A */
+			chip->pan[ base +1 ] = (v & 0x20) ? 1 : 0;	/* ch.B */
+			if (v & 0x40) chip->pan[ base    ] += 1;	/* ch.C->ch.A */
+			if (v & 0x80) chip->pan[ base +1 ] += 1;	/* ch.D->ch.B */
 		}
 		else
 		{
-			int base = ((r&0xf) + ch_offset) * 4;
+			int base = ((r&0xf) + ch_offset) * 2;
 
 			/* OPL2 mode - always enabled */
-			chip->pan[ base    ] = ~0;		/* ch.A */
-			chip->pan[ base +1 ] = ~0;		/* ch.B */
-			chip->pan[ base +2 ] = ~0;		/* ch.C */
-			chip->pan[ base +3 ] = ~0;		/* ch.D */
+			chip->pan[ base    ] = 1;		/* ch.A */
+			chip->pan[ base +1 ] = 1;		/* ch.B */
 		}
-
-		chip->pan_ctrl_value[ (r&0xf) + ch_offset ] = v;	/* store control value for OPL3/OPL2 mode switching on the fly */
 
 		CH->SLOT[SLOT1].FB  = (v>>1)&7 ? ((v>>1)&7) + 7 : 0;
 		CH->SLOT[SLOT1].CON = v&1;
@@ -2590,8 +2585,6 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 #if 0
 	OPL3SAMPLE	*ch_a = buffers[0];
 	OPL3SAMPLE	*ch_b = buffers[1];
-	OPL3SAMPLE	*ch_c = buffers[2];
-	OPL3SAMPLE	*ch_d = buffers[3];
 #endif 
 	int i;
 
@@ -2605,7 +2598,7 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 	}
 	for( i=0; i < length ; i++ )
 	{
-		int a,b,c,d;
+		int a,b;
 
 
 		advance_lfo(chip);
@@ -2615,8 +2608,7 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 
 //profiler_mark(PROFILER_USER1);
 
-#if 1
-	/* register set #1 */
+		/* register set #1 */
 		chan_calc(&chip->P_CH[0]);			/* extended 4op ch#0 part 1 or 2op ch#0 */
 		if (chip->P_CH[0].extended)
 			chan_calc_ext(&chip->P_CH[3]);	/* extended 4op ch#0 part 2 */
@@ -2649,7 +2641,7 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 			chan_calc_rhythm(&chip->P_CH[0], (chip->noise_rng>>0)&1 );
 		}
 
-	/* register set #2 */
+		/* register set #2 */
 		chan_calc(&chip->P_CH[ 9]);
 		if (chip->P_CH[9].extended)
 			chan_calc_ext(&chip->P_CH[12]);
@@ -2675,103 +2667,63 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 		chan_calc(&chip->P_CH[15]);
 		chan_calc(&chip->P_CH[16]);
 		chan_calc(&chip->P_CH[17]);
-#endif
+
 //profiler_mark(PROFILER_END);
 
 
 
 //profiler_mark(PROFILER_USER2);
 		/* accumulator register set #1 */
-		a =  chanout[0] & chip->pan[0];
-		b =  chanout[0] & chip->pan[1];
-		c =  chanout[0] & chip->pan[2];
-		d =  chanout[0] & chip->pan[3];
-#if 1
-		a += chanout[1] & chip->pan[4];
-		b += chanout[1] & chip->pan[5];
-		c += chanout[1] & chip->pan[6];
-		d += chanout[1] & chip->pan[7];
-		a += chanout[2] & chip->pan[8];
-		b += chanout[2] & chip->pan[9];
-		c += chanout[2] & chip->pan[10];
-		d += chanout[2] & chip->pan[11];
+		a =  chanout[0] * chip->pan[0];
+		b =  chanout[0] * chip->pan[1];
 
-		a += chanout[3] & chip->pan[12];
-		b += chanout[3] & chip->pan[13];
-		c += chanout[3] & chip->pan[14];
-		d += chanout[3] & chip->pan[15];
-		a += chanout[4] & chip->pan[16];
-		b += chanout[4] & chip->pan[17];
-		c += chanout[4] & chip->pan[18];
-		d += chanout[4] & chip->pan[19];
-		a += chanout[5] & chip->pan[20];
-		b += chanout[5] & chip->pan[21];
-		c += chanout[5] & chip->pan[22];
-		d += chanout[5] & chip->pan[23];
+		a += chanout[1] * chip->pan[2];
+		b += chanout[1] * chip->pan[3];
+		a += chanout[2] * chip->pan[4];
+		b += chanout[2] * chip->pan[5];
 
-		a += chanout[6] & chip->pan[24];
-		b += chanout[6] & chip->pan[25];
-		c += chanout[6] & chip->pan[26];
-		d += chanout[6] & chip->pan[27];
-		a += chanout[7] & chip->pan[28];
-		b += chanout[7] & chip->pan[29];
-		c += chanout[7] & chip->pan[30];
-		d += chanout[7] & chip->pan[31];
-		a += chanout[8] & chip->pan[32];
-		b += chanout[8] & chip->pan[33];
-		c += chanout[8] & chip->pan[34];
-		d += chanout[8] & chip->pan[35];
+		a += chanout[3] * chip->pan[6];
+		b += chanout[3] * chip->pan[7];
+		a += chanout[4] * chip->pan[8];
+		b += chanout[4] * chip->pan[9];
+		a += chanout[5] * chip->pan[10];
+		b += chanout[5] * chip->pan[11];
+
+		a += chanout[6] * chip->pan[12];
+		b += chanout[6] * chip->pan[13];
+		a += chanout[7] * chip->pan[14];
+		b += chanout[7] * chip->pan[15];
+		a += chanout[8] * chip->pan[16];
+		b += chanout[8] * chip->pan[17];
 
 		/* accumulator register set #2 */
-		a += chanout[9] & chip->pan[36];
-		b += chanout[9] & chip->pan[37];
-		c += chanout[9] & chip->pan[38];
-		d += chanout[9] & chip->pan[39];
-		a += chanout[10] & chip->pan[40];
-		b += chanout[10] & chip->pan[41];
-		c += chanout[10] & chip->pan[42];
-		d += chanout[10] & chip->pan[43];
-		a += chanout[11] & chip->pan[44];
-		b += chanout[11] & chip->pan[45];
-		c += chanout[11] & chip->pan[46];
-		d += chanout[11] & chip->pan[47];
+		a += chanout[9] * chip->pan[18];
+		b += chanout[9] * chip->pan[19];
+		a += chanout[10] * chip->pan[20];
+		b += chanout[10] * chip->pan[21];
+		a += chanout[11] * chip->pan[22];
+		b += chanout[11] * chip->pan[23];
 
-		a += chanout[12] & chip->pan[48];
-		b += chanout[12] & chip->pan[49];
-		c += chanout[12] & chip->pan[50];
-		d += chanout[12] & chip->pan[51];
-		a += chanout[13] & chip->pan[52];
-		b += chanout[13] & chip->pan[53];
-		c += chanout[13] & chip->pan[54];
-		d += chanout[13] & chip->pan[55];
-		a += chanout[14] & chip->pan[56];
-		b += chanout[14] & chip->pan[57];
-		c += chanout[14] & chip->pan[58];
-		d += chanout[14] & chip->pan[59];
+		a += chanout[12] * chip->pan[24];
+		b += chanout[12] * chip->pan[25];
+		a += chanout[13] * chip->pan[26];
+		b += chanout[13] * chip->pan[27];
+		a += chanout[14] * chip->pan[28];
+		b += chanout[14] * chip->pan[29];
 
-		a += chanout[15] & chip->pan[60];
-		b += chanout[15] & chip->pan[61];
-		c += chanout[15] & chip->pan[62];
-		d += chanout[15] & chip->pan[63];
-		a += chanout[16] & chip->pan[64];
-		b += chanout[16] & chip->pan[65];
-		c += chanout[16] & chip->pan[66];
-		d += chanout[16] & chip->pan[67];
-		a += chanout[17] & chip->pan[68];
-		b += chanout[17] & chip->pan[69];
-		c += chanout[17] & chip->pan[70];
-		d += chanout[17] & chip->pan[71];
-#endif
+		a += chanout[15] * chip->pan[30];
+		b += chanout[15] * chip->pan[31];
+		a += chanout[16] * chip->pan[32];
+		b += chanout[16] * chip->pan[33];
+		a += chanout[17] * chip->pan[34];
+		b += chanout[17] * chip->pan[35];
+
 		a >>= FINAL_SH;
 		b >>= FINAL_SH;
-		c >>= FINAL_SH;
-		d >>= FINAL_SH;
 
 		/* limit check */
-		a = limit( a+c , MAXOUT, MINOUT );
-		b = limit( b+d , MAXOUT, MINOUT );
-//		c = limit( c , MAXOUT, MINOUT );
-//		d = limit( d , MAXOUT, MINOUT );
+		a = limit( a , MAXOUT, MINOUT );
+		b = limit( b , MAXOUT, MINOUT );
 
 		#ifdef SAVE_SAMPLE
 		if (which==0)
@@ -2786,8 +2738,6 @@ void YMF262UpdateOne(int which, INT16 *buffer, int length)
 #if 0
 		ch_a[i] = a;
 		ch_b[i] = b;
-		ch_c[i] = c;
-		ch_d[i] = d;
 #endif
 //profiler_mark(PROFILER_END);
 
