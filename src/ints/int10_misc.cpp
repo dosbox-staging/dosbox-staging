@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: int10_misc.cpp,v 1.19 2008-08-01 19:52:02 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -88,8 +90,24 @@ void INT10_GetFuncStateInformation(PhysPt save) {
 	}
 	/* Zero out rest of block */
 	for (i=0x25;i<0x40;i++) mem_writeb(save+i,0);
-	/* DCC Index */
-	mem_writeb(save+0x25,real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX));
+	/* DCC */
+//	mem_writeb(save+0x25,real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX));
+	Bit8u dccode = 0x00;
+	RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
+	RealPt svstable=real_readd(RealSeg(vsavept),RealOff(vsavept)+0x10);
+	if (svstable) {
+		RealPt dcctable=real_readd(RealSeg(svstable),RealOff(svstable)+0x02);
+		Bit8u entries=real_readb(RealSeg(dcctable),RealOff(dcctable)+0x00);
+		Bit8u idx=real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX);
+		// check if index within range
+		if (idx<entries) {
+			Bit16u dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+idx*2);
+			if ((dccentry&0xff)==0) dccode=(Bit8u)((dccentry>>8)&0xff);
+			else dccode=(Bit8u)(dccentry&0xff);
+		}
+	}
+	mem_writeb(save+0x25,dccode);
+
 	Bit16u col_count=0;
 	switch (CurMode->type) {
 	case M_TEXT:
