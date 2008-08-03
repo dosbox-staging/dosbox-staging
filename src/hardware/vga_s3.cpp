@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.13 2008-03-14 22:00:59 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.14 2008-08-03 13:37:49 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -330,18 +330,18 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 
 Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	switch (reg) {
-	case 0x2d:	/* Extended Chip ID. */
+	case 0x24:	/* attribute controller index (read only) */
+	case 0x26:
+		return (vga.attr.enabled?0x20:0x00) | (vga.attr.index&0x1f);
+	case 0x2d:	/* Extended Chip ID (high byte of PCI device ID) */
 		return 0x88;
-		//	Always 88h ?
-	case 0x2e:	/* New Chip ID */
-		return 0x11;		
-		//Trio 64 id
+	case 0x2e:	/* New Chip ID  (low byte of PCI device ID) */
+		return 0x11;	// Trio64	
 	case 0x2f:	/* Revision */
-		return 0x44;
+		return 0x00;	// Trio64 (exact value?)
+//		return 0x44;	// Trio64 V+
 	case 0x30:	/* CR30 Chip ID/REV register */
-		return 0xe1;		//Trio+ dual byte
-		//return 0xc0;		// 864
-
+		return 0xe1;	// Trio+ dual byte
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO mix in bits from baseaddress;
 		return 	vga.s3.reg_31;	
@@ -350,7 +350,8 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x36: /* CR36 Reset State Read 1 */
 		return vga.s3.reg_36;
 	case 0x37: /* Reset state read 2 */
-		return 0x2b;
+		return 0x2f;
+//		return 0x2b;
 	case 0x38: /* CR38 Register Lock 1 */
 		return vga.s3.reg_lock1;
 	case 0x39: /* CR39 Register Lock 2 */
@@ -510,19 +511,19 @@ void SVGA_Setup_S3Trio(void) {
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {
 		vga.vmemsize = 512*1024;
-		vga.s3.reg_36 = 0xf2;
+		vga.s3.reg_36 = 0xf9;		// less than 1mb, video BIOS access enabled, VLB
 	} else if (vga.vmemsize < 2048*1024)	{
 		vga.vmemsize = 1024*1024;
-		vga.s3.reg_36 = 0xd2;
+		vga.s3.reg_36 = 0xd9;		// 1mb, video BIOS access enabled, VLB
 	} else if (vga.vmemsize < 3072*1024)	{
 		vga.vmemsize = 2048*1024;
-		vga.s3.reg_36 = 0x92;
+		vga.s3.reg_36 = 0x99;		// 2mb, video BIOS access enabled, VLB
 	} else if (vga.vmemsize < 4096*1024)	{
 		vga.vmemsize = 3072*1024;
-		vga.s3.reg_36 = 0x52;
+		vga.s3.reg_36 = 0x59;		// 3mb, video BIOS access enabled, VLB
 	} else {	// Trio64 supported only up to 4M
 		vga.vmemsize = 4096*1024;
-		vga.s3.reg_36 = 0x12;
+		vga.s3.reg_36 = 0x19;		// 4mb, video BIOS access enabled, VLB
 	}
 
 	// S3 ROM signature
