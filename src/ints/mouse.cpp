@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.73 2008-05-15 20:12:37 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.74 2008-08-03 15:52:06 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -44,8 +44,8 @@ static Bit16s oldmouseX, oldmouseY;
 void WriteMouseIntVector(void);
 
 struct button_event {
-	Bit16u type;
-	Bit16u buttons;
+	Bit8u type;
+	Bit8u buttons;
 };
 
 #define QUEUE_SIZE 32
@@ -79,7 +79,7 @@ static Bit16u userdefScreenMask[CURSORY];
 static Bit16u userdefCursorMask[CURSORY];
 
 static struct {
-	Bit16u buttons;
+	Bit8u buttons;
 	Bit16u times_pressed[MOUSE_BUTTONS];
 	Bit16u times_released[MOUSE_BUTTONS];
 	Bit16u last_released_x[MOUSE_BUTTONS];
@@ -92,7 +92,7 @@ static struct {
 	float mickey_x,mickey_y;
 	float x,y;
 	button_event event_queue[QUEUE_SIZE];
-	Bit32u events;
+	Bit8u events;//Increase if QUEUE_SIZE >255 (currently 32)
 	Bit16u sub_seg,sub_ofs;
 	Bit16u sub_mask;
 
@@ -196,7 +196,7 @@ Bitu PS2_Handler(void) {
 #define MOUSE_MIDDLE_PRESSED 32
 #define MOUSE_MIDDLE_RELEASED 64
 
-INLINE void Mouse_AddEvent(Bit16u type) {
+INLINE void Mouse_AddEvent(Bit8u type) {
 	if (mouse.events<QUEUE_SIZE) {
 		if (mouse.events>0) {
 			/* Skip duplicate events */
@@ -225,7 +225,7 @@ void RestoreCursorBackgroundText() {
 	if (mouse.hidden || mouse.inhibit_draw) return;
 
 	if (mouse.background) {
-		WriteChar(mouse.backposx,mouse.backposy,0,mouse.backData[0],mouse.backData[1],true);
+		WriteChar(mouse.backposx,mouse.backposy,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE),mouse.backData[0],mouse.backData[1],true);
 		mouse.background = false;
 	}
 };
@@ -239,14 +239,17 @@ void DrawCursorText() {
 	mouse.backposx		= POS_X>>3;
 	mouse.backposy		= POS_Y>>3;
 
+	//use current page (CV program)
+	Bit8u page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	Bit16u result;
-	ReadCharAttr(mouse.backposx,mouse.backposy,0,&result);
+
+	ReadCharAttr(mouse.backposx,mouse.backposy,page,&result);
 	mouse.backData[0]	= (Bit8u)(result & 0xFF);
 	mouse.backData[1]	= (Bit8u)(result>>8);
 	mouse.background	= true;
 	// Write Cursor
 	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
-	WriteChar(mouse.backposx,mouse.backposy,0,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
+	WriteChar(mouse.backposx,mouse.backposy,page,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
 };
 
 // ***************************************************************************
@@ -343,7 +346,14 @@ void RestoreCursorBackground() {
 
 void DrawCursor() {
 	if (mouse.hidden || mouse.inhibit_draw) return;
-// Check video page
+	// In Textmode ?
+	if (CurMode->type==M_TEXT) {
+		DrawCursorText();
+		return;
+	}
+
+	// Check video page. Seems to be ignored for text mode. 
+	// hence the text mode handled above this
 	if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE)!=mouse.page) return;
 // Check if cursor in update region
 /*	if ((POS_X >= mouse.updateRegion_x[0]) && (POS_X <= mouse.updateRegion_x[1]) &&
@@ -359,11 +369,6 @@ void DrawCursor() {
 		 
 	// Get Clipping ranges
 
-	// In Textmode ?
-	if (CurMode->type==M_TEXT) {
-		DrawCursorText();
-		return;
-	}
 
 	mouse.clipx = CurMode->swidth-1;	/* Get from bios ? */
 	mouse.clipy = CurMode->sheight-1;
