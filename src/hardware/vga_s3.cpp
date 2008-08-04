@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.14 2008-08-03 13:37:49 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.15 2008-08-04 17:48:36 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -350,8 +350,7 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 	case 0x36: /* CR36 Reset State Read 1 */
 		return vga.s3.reg_36;
 	case 0x37: /* Reset state read 2 */
-		return 0x2f;
-//		return 0x2b;
+		return 0x2b;
 	case 0x38: /* CR38 Register Lock 1 */
 		return vga.s3.reg_lock1;
 	case 0x39: /* CR39 Register Lock 2 */
@@ -511,19 +510,19 @@ void SVGA_Setup_S3Trio(void) {
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {
 		vga.vmemsize = 512*1024;
-		vga.s3.reg_36 = 0xf9;		// less than 1mb, video BIOS access enabled, VLB
+		vga.s3.reg_36 = 0xfa;		// less than 1mb fast page mode
 	} else if (vga.vmemsize < 2048*1024)	{
 		vga.vmemsize = 1024*1024;
-		vga.s3.reg_36 = 0xd9;		// 1mb, video BIOS access enabled, VLB
+		vga.s3.reg_36 = 0xda;		// 1mb fast page mode
 	} else if (vga.vmemsize < 3072*1024)	{
 		vga.vmemsize = 2048*1024;
-		vga.s3.reg_36 = 0x99;		// 2mb, video BIOS access enabled, VLB
+		vga.s3.reg_36 = 0x9a;		// 2mb fast page mode
 	} else if (vga.vmemsize < 4096*1024)	{
 		vga.vmemsize = 3072*1024;
-		vga.s3.reg_36 = 0x59;		// 3mb, video BIOS access enabled, VLB
+		vga.s3.reg_36 = 0x5a;		// 3mb fast page mode
 	} else {	// Trio64 supported only up to 4M
 		vga.vmemsize = 4096*1024;
-		vga.s3.reg_36 = 0x19;		// 4mb, video BIOS access enabled, VLB
+		vga.s3.reg_36 = 0x1a;		// 4mb fast page mode
 	}
 
 	// S3 ROM signature
@@ -536,5 +535,5 @@ void SVGA_Setup_S3Trio(void) {
 	phys_writeb(rom_base+0x0044,'C');
 	phys_writeb(rom_base+0x0045,'7');
 	phys_writeb(rom_base+0x0046,'6');
-	phys_writeb(rom_base+0x0047,'5');
+	phys_writeb(rom_base+0x0047,'4');
 }
