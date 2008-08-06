@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.12 2008-06-30 20:32:37 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.13 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -249,38 +249,39 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 	Bit32u start_pos=5;
 
 	char nbuf[512];
+	read_buf_size = 0;
 	sprintf(nbuf, "%s.kl", keyboard_file_name);
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
 		// try keyboard layout libraries next
-		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true)) {
+		if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
 		} else {
@@ -598,34 +599,34 @@ Bit16u keyboard_layout::extract_codepage(const char* keyboard_file_name) {
 	FILE* tempfile = OpenDosboxFile(nbuf);
 	if (tempfile==NULL) {
 		// try keyboard layout libraries next
-		if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true)) {
+		if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,true))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if (start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keyboard.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keyboard.sys");
-		} else if (start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keybrd2.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd2.sys");
-		} else if (start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_file("keybrd3.sys",keyboard_file_name,false))) {
 			tempfile = OpenDosboxFile("keybrd3.sys");
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,true))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keyboardsys,33196,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<33196; ct++) read_buf[read_buf_size++]=layout_keyboardsys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd2sys,25431,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<25431; ct++) read_buf[read_buf_size++]=layout_keybrd2sys[ct];
-		} else if (start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false)) {
+		} else if ((start_pos=read_kcl_data(layout_keybrd3sys,27122,keyboard_file_name,false))) {
 			read_buf_size=0;
 			for (Bitu ct=start_pos+2; ct<27122; ct++) read_buf[read_buf_size++]=layout_keybrd3sys[ct];
 		} else {
@@ -992,11 +993,11 @@ void keyboard_layout::switch_foreign_layout() {
 static keyboard_layout* loaded_layout=NULL;
 
 // CTRL-ALT-F2 switches between foreign and US-layout using this function
-static void switch_keyboard_layout(bool pressed) {
+/* static void switch_keyboard_layout(bool pressed) {
 	if (!pressed)
 		return;
 	if (loaded_layout) loaded_layout->switch_foreign_layout();
-}
+} */
 
 // called by int9-handler
 bool DOS_LayoutKey(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3) {

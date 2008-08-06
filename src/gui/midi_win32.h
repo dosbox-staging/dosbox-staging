@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: midi_win32.h,v 1.14 2007-06-14 08:23:46 qbix79 Exp $ */
+/* $Id: midi_win32.h,v 1.15 2008-08-06 18:32:34 c2woody Exp $ */
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -33,12 +33,12 @@ private:
 	HANDLE m_event;
 	bool isOpen;
 public:
-	MidiHandler_win32() : isOpen(false),MidiHandler() {};
+	MidiHandler_win32() : MidiHandler(),isOpen(false) {};
 	const char * GetName(void) { return "win32";};
 	bool Open(const char * conf) {
 		if (isOpen) return false;
 		m_event = CreateEvent (NULL, true, true, NULL);
-		MMRESULT res;
+		MMRESULT res = MMSYSERR_NOERROR;
 		if(conf && *conf) {
 			std::string strconf(conf);
 			std::istringstream configmidi(strconf);

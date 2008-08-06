@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: */
+/* $Id: int10_video_state.cpp,v 1.2 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -178,7 +178,8 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 		Bit16u crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 
 		IO_WriteB(0x3c4,0x08);
-		Bitu seq_8=IO_ReadB(0x3c5);
+//		Bitu seq_8=IO_ReadB(0x3c5);
+		IO_ReadB(0x3c5);
 //		real_writeb(base_seg,base_dest+0x00,IO_ReadB(0x3c5));
 		IO_WriteB(0x3c5,0x06);	// unlock s3-specific registers
 
@@ -332,7 +333,8 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 
 		Bitu seq_idx=IO_ReadB(0x3c4);
 		IO_WriteB(0x3c4,0x08);
-		Bitu seq_8=IO_ReadB(0x3c5);
+//		Bitu seq_8=IO_ReadB(0x3c5);
+		IO_ReadB(0x3c5);
 //		real_writeb(base_seg,base_dest+0x00,IO_ReadB(0x3c5));
 		IO_WriteB(0x3c5,0x06);	// unlock s3-specific registers
 
@@ -342,7 +344,7 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 		}
 		IO_WriteB(0x3c4,seq_idx);
 
-		Bitu crtc_idx=IO_ReadB(0x3d4);
+//		Bitu crtc_idx=IO_ReadB(0x3d4);
 
 		// unlock s3-specific registers
 		IO_WriteW(crt_reg,0x4838);

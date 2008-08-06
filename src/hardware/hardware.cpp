@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.18 2007-01-08 19:45:40 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.19 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -147,10 +147,10 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 }
 #endif
 
+#if (C_SSHOT)
 static void CAPTURE_VideoEvent(bool pressed) {
 	if (!pressed)
 		return;
-#if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		/* Close the video */
 		CaptureState &= ~CAPTURE_VIDEO;
@@ -283,12 +283,12 @@ static void CAPTURE_VideoEvent(bool pressed) {
 	} else {
 		CaptureState |= CAPTURE_VIDEO;
 	}
-#endif
 }
+#endif
 
 void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags, float fps, Bit8u * data, Bit8u * pal) {
-	Bitu i;
 #if (C_SSHOT)
+	Bitu i;
 	Bit8u doubleRow[SCALER_MAXWIDTH*4];
 	Bitu countWidth = width;
 
@@ -543,11 +543,13 @@ skip_video:
 }
 
 
+#if (C_SSHOT)
 static void CAPTURE_ScreenShotEvent(bool pressed) {
 	if (!pressed)
 		return;
 	CaptureState |= CAPTURE_IMAGE;
 }
+#endif
 
 
 /* WAV capturing */

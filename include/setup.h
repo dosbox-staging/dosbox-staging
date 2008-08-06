@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.37 2008-06-13 08:55:04 qbix79 Exp $ */
+/* $Id: setup.h,v 1.38 2008-08-06 18:31:10 c2woody Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -79,16 +79,16 @@ public:
 	enum Etype { V_NONE, V_HEX, V_BOOL, V_INT, V_STRING, V_DOUBLE,V_CURRENT} type;
 	
 	/* Constructors */
-	Value()                      :type(V_NONE),_string(0)                      { };
-	Value(Hex in)                :type(V_HEX),    _hex(in)                     { };
-	Value(int in)                :type(V_INT),    _int(in)                     { };
-	Value(bool in)               :type(V_BOOL),   _bool(in)                    { };
-	Value(double in)             :type(V_DOUBLE), _double(in)                  { };
-	Value(std::string const& in) :type(V_STRING), _string(new std::string(in)) { };
-	Value(char const * const in) :type(V_STRING), _string(new std::string(in)) { };
+	Value()                      :_string(0),   type(V_NONE)                  { };
+	Value(Hex in)                :_hex(in),     type(V_HEX)                   { };
+	Value(int in)                :_int(in),     type(V_INT)                   { };
+	Value(bool in)               :_bool(in),    type(V_BOOL)                  { };
+	Value(double in)             :_double(in),  type(V_DOUBLE)                { };
+	Value(std::string const& in) :_string(new std::string(in)),type(V_STRING) { };
+	Value(char const * const in) :_string(new std::string(in)),type(V_STRING) { };
 	Value(Value const& in):_string(0) {plaincopy(in);}
 	~Value() { destroy();};
-	Value(std::string const& in,Etype _t) :type(V_NONE),_string(0){SetValue(in,_t);}
+	Value(std::string const& in,Etype _t) :_string(0),type(V_NONE) {SetValue(in,_t);}
 	
 	/* Assigment operators */
 	Value& operator= (Hex in) throw(WrongType)                { return copy(Value(in));}

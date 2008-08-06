@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.18 2007-11-07 22:08:03 c2woody Exp $ */
+/* $Id: dos_misc.cpp,v 1.19 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -116,8 +116,7 @@ static bool DOS_MultiplexFunctions(void) {
 				size_t nlen=strlen(filename);
 				size_t extlen=strlen(dotpos);
 				Bits nmelen=(Bits)nlen-(Bits)extlen;
-				nmelen--;
-				if (nmelen<0) return true;
+				if (nmelen<1) return true;
 				nlen-=(extlen+1);
 
 				if (nlen>8) nlen=8;

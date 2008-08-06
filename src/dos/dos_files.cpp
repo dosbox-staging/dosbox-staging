@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.97 2008-05-28 09:53:31 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.98 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -123,7 +123,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 				continue;
 			}
 
-			Bit32s iDown, cDots;
+			Bit32s iDown;
 			bool dots = true;
 			Bit32s templen=(Bit32s)strlen(tempdir);
 			for(iDown=0;(iDown < templen) && dots;iDown++)
@@ -131,13 +131,10 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 					dots = false;
 
 			// only dots?
-			cDots = templen - 1;
-			if(dots && (cDots > 0))
-			{
-				for(iDown=(Bit32s)strlen(fullname)-1;iDown>=0;iDown--)
-				{
-					if(fullname[iDown]=='\\' || iDown==0)
-					{
+			if (dots && (templen > 1)) {
+				Bit32s cDots = templen - 1;
+				for(iDown=(Bit32s)strlen(fullname)-1;iDown>=0;iDown--) {
+					if(fullname[iDown]=='\\' || iDown==0) {
 						lastdir = iDown;
 						cDots--;
 						if(cDots==0)

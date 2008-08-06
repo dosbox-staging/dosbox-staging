@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.9 2008-07-14 20:06:19 qbix79 Exp $ */
+/* $Id: serialport.cpp,v 1.10 2008-08-06 18:33:30 c2woody Exp $ */
+
 #include <string.h>
 #include <ctype.h>
 
@@ -939,8 +940,7 @@ void CSerial::Init_Registers () {
 
 	Bit32u initbps = 9600;
 	Bit8u bytesize = 8;
-    char parity = 'N';
-	Bit8u stopbits = 1;
+	char parity = 'N';
 							  
 	Bit8u lcrresult = 0;
 	Bit16u baudresult = 0;

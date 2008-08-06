@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x86.h,v 1.30 2008-05-18 13:11:14 c2woody Exp $ */
+/* $Id: risc_x86.h,v 1.31 2008-08-06 18:31:26 c2woody Exp $ */
 
 static void gen_init(void);
 
@@ -752,8 +752,10 @@ static void gen_call_function(void * func,char const* ops,...) {
 	if (ops) {
 		va_list params;
 		va_start(params,ops);
+#if defined (MACOSX)
 		Bitu stack_used=0;
 		bool free_flags=false;
+#endif
 		Bits pindex=0;
 		while (*ops) {
 			if (*ops=='%') {

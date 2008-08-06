@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.56 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.57 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -282,7 +282,7 @@ static void RENDER_Reset( void ) {
 		gfx_scalew = 1;
 		gfx_scaleh = 1;
 	}
-	if (dblh && dblw || (render.scale.forced && !dblh && !dblw)) {
+	if ((dblh && dblw) || (render.scale.forced && !dblh && !dblw)) {
 		/* Initialize always working defaults */
 		if (render.scale.size == 2)
 			simpleBlock = &ScaleNormal2x;
@@ -342,6 +342,8 @@ static void RENDER_Reset( void ) {
 				simpleBlock = &ScaleScan2x;
 			else if (render.scale.size == 3)
 				simpleBlock = &ScaleScan3x;
+			break;
+		default:
 			break;
 		}
 #endif

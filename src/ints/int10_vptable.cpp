@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vptable.cpp,v 1.1 2007-10-08 20:22:13 c2woody Exp $ */
+/* $Id: int10_vptable.cpp,v 1.2 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -489,7 +489,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			}
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // sequencer registers",seq_regs[0],seq_regs[1],seq_regs[2],seq_regs[3]);
 			LOG_MSG("  0x%02x, // misc output registers",IO_ReadB(0x3cc));
-			Bitu crtc_regs[4];
+			Bitu crtc_regs[0x19];
 			Bit16u crt_addr=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 			for (ct=0; ct<0x19; ct++) {
 				IO_WriteB(crt_addr,ct);
@@ -504,7 +504,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, // crtc registers 16-24",
 				crtc_regs[0x10],crtc_regs[0x11],crtc_regs[0x12],crtc_regs[0x13],
 				crtc_regs[0x14],crtc_regs[0x15],crtc_regs[0x16],crtc_regs[0x17],crtc_regs[0x18]);
-			Bitu attr_regs[4];
+			Bitu attr_regs[0x14];
 			for (ct=0; ct<0x14; ct++) {
 				IO_ReadB(crt_addr+6);
 				IO_WriteB(0x3c0,ct);
@@ -518,7 +518,7 @@ void INT10_GenerateVideoParameterTable(void) {
 				attr_regs[0x0c],attr_regs[0x0d],attr_regs[0x0e],attr_regs[0x0f]);
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // attr registers 16-19",
 				attr_regs[0x10],attr_regs[0x11],attr_regs[0x12],attr_regs[0x13]);
-			Bitu gfx_regs[4];
+			Bitu gfx_regs[9];
 			for (ct=0; ct<0x09; ct++) {
 				IO_WriteB(0x3ce,ct);
 				gfx_regs[ct]=IO_ReadB(0x3cf);
@@ -547,7 +547,7 @@ void INT10_GenerateVideoParameterTable(void) {
 		}
 		LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // sequencer registers",seq_regs[0],seq_regs[1],seq_regs[2],seq_regs[3]);
 		LOG_MSG("  0x%02x, // misc output registers",IO_ReadB(0x3cc));
-		Bitu crtc_regs[4];
+		Bitu crtc_regs[0x19];
 		Bit16u crt_addr=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 		for (ct=0; ct<0x19; ct++) {
 			IO_WriteB(crt_addr,ct);
@@ -562,7 +562,7 @@ void INT10_GenerateVideoParameterTable(void) {
 		LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, // crtc registers 16-24",
 			crtc_regs[0x10],crtc_regs[0x11],crtc_regs[0x12],crtc_regs[0x13],
 			crtc_regs[0x14],crtc_regs[0x15],crtc_regs[0x16],crtc_regs[0x17],crtc_regs[0x18]);
-		Bitu attr_regs[4];
+		Bitu attr_regs[0x14];
 		for (ct=0; ct<0x14; ct++) {
 			IO_ReadB(crt_addr+6);
 			IO_WriteB(0x3c0,ct);
@@ -576,7 +576,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			attr_regs[0x0c],attr_regs[0x0d],attr_regs[0x0e],attr_regs[0x0f]);
 		LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // attr registers 16-19",
 			attr_regs[0x10],attr_regs[0x11],attr_regs[0x12],attr_regs[0x13]);
-		Bitu gfx_regs[4];
+		Bitu gfx_regs[9];
 		for (ct=0; ct<0x09; ct++) {
 			IO_WriteB(0x3ce,ct);
 			gfx_regs[ct]=IO_ReadB(0x3cf);
@@ -604,7 +604,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			}
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // sequencer registers",seq_regs[0],seq_regs[1],seq_regs[2],seq_regs[3]);
 			LOG_MSG("  0x%02x, // misc output registers",IO_ReadB(0x3cc));
-			Bitu crtc_regs[4];
+			Bitu crtc_regs[0x19];
 			Bit16u crt_addr=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 			for (ct=0; ct<0x19; ct++) {
 				IO_WriteB(crt_addr,ct);
@@ -619,7 +619,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, // crtc registers 16-24",
 				crtc_regs[0x10],crtc_regs[0x11],crtc_regs[0x12],crtc_regs[0x13],
 				crtc_regs[0x14],crtc_regs[0x15],crtc_regs[0x16],crtc_regs[0x17],crtc_regs[0x18]);
-			Bitu attr_regs[4];
+			Bitu attr_regs[0x14];
 			for (ct=0; ct<0x14; ct++) {
 				IO_ReadB(crt_addr+6);
 				IO_WriteB(0x3c0,ct);
@@ -633,7 +633,7 @@ void INT10_GenerateVideoParameterTable(void) {
 				attr_regs[0x0c],attr_regs[0x0d],attr_regs[0x0e],attr_regs[0x0f]);
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // attr registers 16-19",
 				attr_regs[0x10],attr_regs[0x11],attr_regs[0x12],attr_regs[0x13]);
-			Bitu gfx_regs[4];
+			Bitu gfx_regs[9];
 			for (ct=0; ct<0x09; ct++) {
 				IO_WriteB(0x3ce,ct);
 				gfx_regs[ct]=IO_ReadB(0x3cf);
@@ -659,7 +659,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			}
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // sequencer registers",seq_regs[0],seq_regs[1],seq_regs[2],seq_regs[3]);
 			LOG_MSG("  0x%02x, // misc output registers",IO_ReadB(0x3cc));
-			Bitu crtc_regs[4];
+			Bitu crtc_regs[0x19];
 			Bit16u crt_addr=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 			for (ct=0; ct<0x19; ct++) {
 				IO_WriteB(crt_addr,ct);
@@ -674,7 +674,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, // crtc registers 16-24",
 				crtc_regs[0x10],crtc_regs[0x11],crtc_regs[0x12],crtc_regs[0x13],
 				crtc_regs[0x14],crtc_regs[0x15],crtc_regs[0x16],crtc_regs[0x17],crtc_regs[0x18]);
-			Bitu attr_regs[4];
+			Bitu attr_regs[0x14];
 			for (ct=0; ct<0x14; ct++) {
 				IO_ReadB(crt_addr+6);
 				IO_WriteB(0x3c0,ct);
@@ -688,7 +688,7 @@ void INT10_GenerateVideoParameterTable(void) {
 				attr_regs[0x0c],attr_regs[0x0d],attr_regs[0x0e],attr_regs[0x0f]);
 			LOG_MSG("  0x%02x, 0x%02x, 0x%02x, 0x%02x, // attr registers 16-19",
 				attr_regs[0x10],attr_regs[0x11],attr_regs[0x12],attr_regs[0x13]);
-			Bitu gfx_regs[4];
+			Bitu gfx_regs[9];
 			for (ct=0; ct<0x09; ct++) {
 				IO_WriteB(0x3ce,ct);
 				gfx_regs[ct]=IO_ReadB(0x3cf);

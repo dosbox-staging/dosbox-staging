@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_put_pixel.cpp,v 1.21 2008-06-14 19:31:04 qbix79 Exp $ */
+/* $Id: int10_put_pixel.cpp,v 1.22 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -41,7 +41,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 						color&=3;
 						old^=color << (2*(3-(x&3)));
 					} else {
-						old=old&cga_masks[x&3]|((color&3) << (2*(3-(x&3))));
+						old=(old&cga_masks[x&3])|((color&3) << (2*(3-(x&3))));
 					}
 					real_writeb(0xb800,off,old);
 				} else {
@@ -53,7 +53,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 						old^=(color&1) << (7-(x&7));
 						old^=((color&2)>>1) << ((7-(x&7))+8);
 					} else {
-						old=old&(~(0x101<<(7-(x&7)))) | ((color&1) << (7-(x&7))) | (((color&2)>>1) << ((7-(x&7))+8));
+						old=(old&(~(0x101<<(7-(x&7))))) | ((color&1) << (7-(x&7))) | (((color&2)>>1) << ((7-(x&7))+8));
 					}
 					real_writew(0xb800,off,old);
 				}
@@ -68,7 +68,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 					color&=1;
 					old^=color << ((7-(x&7)));
 				} else {
-					old=old&cga_masks2[x&7]|((color&1) << ((7-(x&7))));
+					old=(old&cga_masks2[x&7])|((color&1) << ((7-(x&7))));
 				}
 				real_writeb(0xb800,off,old);
 		}
@@ -106,9 +106,9 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 			if (color & 0x80) { IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x18); }
 			//Perhaps also set mode 1 
 			/* Calculate where the pixel is in video memory */
-			if (CurMode->plength!=real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
+			if (CurMode->plength!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
 				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
-			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
+			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
 				LOG(LOG_INT10,LOG_ERROR)("PutPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=0xa0000+real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE)*page+
 				((y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x)>>3);
@@ -127,7 +127,7 @@ void INT10_PutPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u color) {
 		mem_writeb(PhysMake(0xa000,y*320+x),color);
 		break;
 	case M_LIN8: {
-			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
+			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
 				LOG(LOG_INT10,LOG_ERROR)("PutPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=S3_LFB_BASE+y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x;
 			mem_writeb(off,color);
@@ -149,7 +149,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			Bit16u off=(y>>1)*80+(x>>2);
 			if (y&1) off+=8*1024;
 			Bit8u val=real_readb(0xb800,off);
-			*color=(val>>(((3-x&3))*2)) & 3 ;
+			*color=(val>>(((3-(x&3)))*2)) & 3 ;
 		}
 		break;
 	case M_CGA2:
@@ -157,15 +157,15 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			Bit16u off=(y>>1)*80+(x>>3);
 			if (y&1) off+=8*1024;
 			Bit8u val=real_readb(0xb800,off);
-			*color=(val>>(((7-x&7)))) & 1 ;
+			*color=(val>>(((7-(x&7))))) & 1 ;
 		}
 		break;
 	case M_EGA:
 		{
 			/* Calculate where the pixel is in video memory */
-			if (CurMode->plength!=real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
+			if (CurMode->plength!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE))
 				LOG(LOG_INT10,LOG_ERROR)("GetPixel_EGA_p: %x!=%x",CurMode->plength,real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE));
-			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
+			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
 				LOG(LOG_INT10,LOG_ERROR)("GetPixel_EGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=0xa0000+real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE)*page+
 				((y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x)>>3);
@@ -186,7 +186,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 		*color=mem_readb(PhysMake(0xa000,320*y+x));
 		break;
 	case M_LIN8: {
-			if (CurMode->swidth!=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
+			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
 				LOG(LOG_INT10,LOG_ERROR)("GetPixel_VGA_w: %x!=%x",CurMode->swidth,real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8);
 			PhysPt off=S3_LFB_BASE+y*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8+x;
 			*color = mem_readb(off);

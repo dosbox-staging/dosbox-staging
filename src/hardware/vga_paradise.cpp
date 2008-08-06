@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_paradise.cpp,v 1.2 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_paradise.cpp,v 1.3 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "setup.h"
@@ -39,7 +39,7 @@ typedef struct {
 	Bitu biosMode;
 } SVGA_PVGA1A_DATA;
 
-static SVGA_PVGA1A_DATA pvga1a = { 0, 0, 0, 0, 0, 0, 0 };
+static SVGA_PVGA1A_DATA pvga1a = { 0,0, 0,0,0,0,0, {0,0,0,0}, 0 };
 
 
 static void bank_setup_pvga1a() {

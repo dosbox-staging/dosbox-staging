@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.71 2008-07-19 13:28:03 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.72 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -624,8 +624,8 @@ static Bitu INT15_Handler(void) {
 			MEM_A20_Enable(true);
 			Bitu   bytes	= reg_cx * 2;
 			PhysPt data		= SegPhys(es)+reg_si;
-			PhysPt source	= mem_readd(data+0x12) & 0x00FFFFFF + (mem_readb(data+0x16)<<24);
-			PhysPt dest		= mem_readd(data+0x1A) & 0x00FFFFFF + (mem_readb(data+0x1E)<<24);
+			PhysPt source	= (mem_readd(data+0x12) & 0x00FFFFFF) + (mem_readb(data+0x16)<<24);
+			PhysPt dest		= (mem_readd(data+0x1A) & 0x00FFFFFF) + (mem_readb(data+0x1E)<<24);
 			MEM_BlockCopy(dest,source,bytes);
 			reg_ax = 0x00;
 			MEM_A20_Enable(enabled);

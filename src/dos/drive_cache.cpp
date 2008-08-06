@@ -1,6 +1,5 @@
-
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.52 2007-11-02 07:50:27 qbix79 Exp $ */
+/* $Id: drive_cache.cpp,v 1.53 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -193,7 +192,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 		strcat(work,dir);
 	}
 
-	if(work && *work) {
+	if (*work) {
 		size_t len = strlen(work);
 #if defined (WIN32) 
 		if((work[len-1] == CROSS_FILESPLIT ) && (len >= 2) && (work[len-2] != ':')) {

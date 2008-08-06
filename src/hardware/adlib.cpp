@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: adlib.cpp,v 1.31 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -364,6 +366,8 @@ static void OPL_CallBack(Bitu len) {
 		}
 		opl.chan->AddSamples_s16(len,(Bit16s*)MixTemp);
 		break;
+	default:
+		break;
 	}
 	if ((PIC_Ticks-opl.last_used)>30000) {
 		opl.chan->Enable(false);
@@ -380,6 +384,8 @@ static Bitu OPL_Read(Bitu port,Bitu iolen) {
 		return OPL2::YM3812Read(addr>>1,addr);
 	case OPL_opl3:
 		return THEOPL3::YMF262Read(0,addr);
+	default:
+		break;
 	}
 	return 0xff;
 }
@@ -410,6 +416,8 @@ void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case OPL_dualopl2:
 		OPL2::YM3812Write( index,port,val);
+		break;
+	default:
 		break;
 	}
 }

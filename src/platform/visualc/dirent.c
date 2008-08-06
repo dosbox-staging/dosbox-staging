@@ -9,6 +9,8 @@
 #include "dirent.h"
 #include "io.h"
 
+#define safe_strncpy_dirent(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
+
 #ifdef WIN32
 
 /** open the current directory and return a structure
@@ -23,7 +25,7 @@ DIR * opendir(const char *dirname) {
 	size_t len;
 
     /* Stash the directory name */
-    strcpy(dir.pathName,dirname);
+    safe_strncpy_dirent(dir.pathName,dirname,260);
 
 	len = strlen(dirname);
 	if ((len>0) && (dirname[len-1]=='\\'))	strcat(dir.pathName,"*.*");
@@ -80,7 +82,7 @@ struct dirent *	readdir(DIR *dirp) {
     /* we have a valid FIND_FILE_DATA, copy the filename */
     memset(&d,'\0', sizeof(struct dirent));
 
-    strcpy(d.d_name,dirp->findFileData.cFileName);
+    safe_strncpy_dirent(d.d_name,dirp->findFileData.cFileName,260);
     d.d_namlen = (char)strlen(d.d_name);  
 
     return &d;

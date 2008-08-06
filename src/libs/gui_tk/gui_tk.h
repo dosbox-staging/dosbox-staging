@@ -102,7 +102,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.2 2007-11-06 20:26:27 qbix79 Exp $ */
+/* $Id: gui_tk.h,v 1.3 2008-08-06 18:33:47 c2woody Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H
@@ -1988,7 +1988,7 @@ public:
 		if (selected >= 0 && !menus[selected]->isVisible()) oldselected = -1;
 		if (selected >= 0) menus[selected]->setVisible(false);
 		if (x < 0 || x >= lastx) return true;
-		for (selected = menus.size()-1; menus[selected]->getX() > x; selected--);
+		for (selected = menus.size()-1; menus[selected]->getX() > x; selected--) {};
 		if (oldselected == selected) selected = -1;
 		else menus[selected]->setVisible(true);
 		return true;

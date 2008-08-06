@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.56 2007-11-01 12:11:40 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.57 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -1029,7 +1029,7 @@ static Bitu V86_Monitor() {
 						Bitu which=(rm_val >> 3) & 7;
 						if ((rm_val<0xc0) || (rm_val>=0xe8))
 							E_Exit("Invalid opcode 0x0f 0x22 %x caused a protection fault!",rm_val);
-						Bit32u crx;
+						Bit32u crx=0;
 						switch (rm_val&7) {
 							case 0:	crx=reg_eax;	break;
 							case 1:	crx=reg_ecx;	break;

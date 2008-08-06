@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.34 2008-01-13 11:28:41 qbix79 Exp $ */
+/* $Id: support.cpp,v 1.35 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -71,7 +71,7 @@ char *ltrim(char *str) {
 char *rtrim(char *str) {
 	char *p;
 	p = strchr(str, '\0');
-	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p)));
+	while (--p >= str && isspace(*reinterpret_cast<unsigned char*>(p))) {};
 	p[1] = '\0';
 	return str;
 }

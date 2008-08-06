@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.6 2008-02-21 19:25:34 c2woody Exp $ */
+/* $Id: sdl_gui.cpp,v 1.7 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -52,10 +52,10 @@ void UI_Init(void) {
 	GUI::Font::addFont("default",new GUI::BitmapFont(int10_font_14,14,10));
 }
 
-static void getPixel(Bitu x, Bitu y, int &r, int &g, int &b, int shift)
+static void getPixel(Bits x, Bits y, int &r, int &g, int &b, int shift)
 {
-	if (x >= render.src.width) x = render.src.width-1;
-	if (y >= render.src.height) x = render.src.height-1;
+	if (x >= (Bits)render.src.width) x = (Bits)render.src.width-1;
+	if (y >= (Bits)render.src.height) x = (Bits)render.src.height-1;
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
 
@@ -159,7 +159,7 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL);
 		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
-		while (SDL_PollEvent(&event));
+		while (SDL_PollEvent(&event)) {};
 		SDL_Delay(40);
 	}
 
@@ -187,7 +187,7 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL);
 		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
-		while (SDL_PollEvent(&event));
+		while (SDL_PollEvent(&event)) {};
 		SDL_Delay(40);
 	}
 

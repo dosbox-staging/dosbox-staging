@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.22 2008-04-21 19:55:02 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.23 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -456,10 +456,10 @@ static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static Bitu read_hercules(Bitu port,Bitu iolen) {
+/* static Bitu read_hercules(Bitu port,Bitu iolen) {
 	LOG_MSG("read from Herc port %x",port);
 	return 0;
-}
+} */
 
 
 void VGA_SetupOther(void) {

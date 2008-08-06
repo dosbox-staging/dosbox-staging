@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.28 2008-07-27 20:12:28 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.29 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -91,7 +91,7 @@ emptyline:
 				/* Handle %1 %2 .. %9 */
 				cmd_read++; //Progress reader
 				next -= '0';
-				if (cmd->GetCount()<next) continue;
+				if (cmd->GetCount()<(unsigned int)next) continue;
 				std::string word;
 				if (!cmd->FindCommand(next,word)) continue;
 				strcpy(cmd_write,word.c_str());

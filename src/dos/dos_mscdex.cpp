@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.53 2008-02-19 17:45:33 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.54 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -247,7 +247,7 @@ int CMscdex::RemoveDrive(Bit16u _drive)
 int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 {
 	subUnit = 0;
-	if (GetNumDrives()+1>=MSCDEX_MAX_DRIVES) return 4;
+	if ((Bitu)GetNumDrives()+1>=MSCDEX_MAX_DRIVES) return 4;
 	if (GetNumDrives()) {
 		// Error check, driveletter have to be in a row
 		if (dinfo[0].drive-1!=_drive && dinfo[numDrives-1].drive+1!=_drive) 
@@ -902,7 +902,7 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 					break;
 		case 0x0A : /* Get Audio Disk info */	
 					Bit8u tr1,tr2; TMSF leadOut;
-					mscdex->GetCDInfo(drive_unit,tr1,tr2,leadOut);
+					if (!mscdex->GetCDInfo(drive_unit,tr1,tr2,leadOut)) return 0x05;
 					mem_writeb(buffer+1,tr1);
 					mem_writeb(buffer+2,tr2);
 					mem_writeb(buffer+3,leadOut.fr);

@@ -19,7 +19,7 @@
 /* TODO:
   - make menu a bufferedwindow with shadow
 */
-/* $Id: gui_tk.cpp,v 1.2 2007-10-28 17:05:28 c2woody Exp $ */
+/* $Id: gui_tk.cpp,v 1.3 2008-08-06 18:33:47 c2woody Exp $ */
 
 /** \file
  *  \brief Implementation file for gui_tk.
@@ -146,7 +146,7 @@ void Drawable::drawText(const String& text, bool interpret, Size start, Size len
 							switch (param) {
 							case 0: setColor(Color::Black); break;
 							case 1: setColor(color | 0x00808080); break;
-							case 30: setColor(Color::Black|bright & intensity); break;
+							case 30: setColor((Color::Black|bright) & intensity); break;
 							case 31: setColor(Color::Red & intensity); break;
 							case 32: setColor(Color::Green & intensity); break;
 							case 33: setColor(Color::Yellow & intensity); break;
@@ -426,7 +426,7 @@ void BitmapFont::drawChar(Drawable *d, const Char c) const {
 		ptr = char_position[c];
 		bit = 0;
 	} else {
-		move(character_step*c);
+		move(character_step*((int)c));
 	}
 
 	int rs = row_step;
@@ -1380,7 +1380,7 @@ void ScreenRGB32le::paint(Drawable &d) const
 	test(d);
 }
 
-static const MouseButton SDL_to_GUI(const int button)
+static MouseButton SDL_to_GUI(const int button)
 {
 	switch (button) {
 	case SDL_BUTTON_LEFT:      return GUI::Left;

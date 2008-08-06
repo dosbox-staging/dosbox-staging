@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.50 2008-03-16 18:53:33 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.51 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -182,7 +182,7 @@ public:
 		return vga.mem.linear[addr];
 	}
 	void writeHandler(PhysPt start, Bit8u val) {
-		Bit32u data=ModeOperation(val);
+		ModeOperation(val);
 		/* Update video memory and the pixel buffer */
 		VGA_Latch pixels;
 		vga.mem.linear[start] = val;
@@ -802,6 +802,7 @@ void VGA_SetupHandlers(void) {
 	/* This should be vga only */
 	switch (vga.mode) {
 	case M_ERROR:
+	default:
 		return;
 	case M_LIN4:
 		newHandler = &vgaph.lin4;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_tseng.cpp,v 1.3 2008-02-26 08:55:29 qbix79 Exp $ */
+/* $Id: vga_tseng.cpp,v 1.4 2008-08-06 18:32:35 c2woody Exp $ */
 
 
 #include "dosbox.h"
@@ -50,7 +50,8 @@ typedef struct {
 	Bitu biosMode;
 } SVGA_ET4K_DATA;
 
-static SVGA_ET4K_DATA et4k = { 1, 0, /* the rest are 0s */ };
+static SVGA_ET4K_DATA et4k = { 1,0,0,0,0,0,0,0,0, 0,0, 0,0,
+                             { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 0 };
 
 #define STORE_ET4K(port, index) \
 	case 0x##index: \
@@ -486,7 +487,7 @@ typedef struct {
 	Bitu biosMode;
 } SVGA_ET3K_DATA;
 
-static SVGA_ET3K_DATA et3k = { 0 /* and the rest are 0s as well */ };
+static SVGA_ET3K_DATA et3k = { 0,0,0,0,0,0,0,0,0,0, 0,0, 0,0, {0,0,0,0,0,0,0,0}, 0 };
 
 #define STORE_ET3K(port, index) \
 	case 0x##index: \

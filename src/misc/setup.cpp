@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.49 2008-05-30 12:42:38 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.50 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -374,7 +374,6 @@ const std::vector<Value>& Prop_multival::GetValues() const
 	//No properties in this section. do nothing
 	if(!p) return suggested_values;
 	int i =0;
-	string::size_type loc = string::npos;
 	while( (p = section->Get_prop(i++)) ) {
 		std::vector<Value> v = p->GetValues();
 		if(!v.empty()) return p->GetValues();

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.112 2008-05-21 21:29:32 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.113 2008-08-06 18:31:26 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -379,6 +379,14 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		new_ldt=mem_readw(new_tss.base+offsetof(TSS_32,ldt));
 	} else {
 		E_Exit("286 task switch");
+		new_cr3=0;
+		new_eip=0;
+		new_eflags=0;
+		new_eax=0;	new_ecx=0;	new_edx=0;	new_ebx=0;
+		new_esp=0;	new_ebp=0;	new_edi=0;	new_esi=0;
+
+		new_es=0;	new_cs=0;	new_ss=0;	new_ds=0;	new_fs=0;	new_gs=0;
+		new_ldt=0;
 	}
 
 	/* Check if we need to clear busy bit of old TASK */
@@ -498,7 +506,9 @@ doconforming:
 	CPU_SetSegGeneral(ds,new_ds);
 	CPU_SetSegGeneral(fs,new_fs);
 	CPU_SetSegGeneral(gs,new_gs);
-	if (!cpu_tss.SetSelector(new_tss_selector)) LOG(LOG_CPU,LOG_NORMAL)("TaskSwitch: set tss selector %X failed",new_tss_selector);
+	if (!cpu_tss.SetSelector(new_tss_selector)) {
+		LOG(LOG_CPU,LOG_NORMAL)("TaskSwitch: set tss selector %X failed",new_tss_selector);
+	}
 //	cpu_tss.desc.SetBusy(true);
 //	cpu_tss.SaveSelector();
 //	LOG_MSG("Task CPL %X CS:%X IP:%X SS:%X SP:%X eflags %x",cpu.cpl,SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);
@@ -717,8 +727,9 @@ do_interrupt:
 				cpu.code.big=cs_desc.Big()>0;
 				reg_eip=gate_off;
 
-				if (!(gate.Type()&1))
+				if (!(gate.Type()&1)) {
 					SETFLAGBIT(IF,false);
+				}
 				SETFLAGBIT(TF,false);
 				SETFLAGBIT(NT,false);
 				SETFLAGBIT(VM,false);
@@ -799,7 +810,9 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			CPU_CHECK_COND(!cpu_tss.IsValid(),
 				"TASK Iret without valid TSS",
 				EXCEPTION_TS,cpu_tss.selector & 0xfffc)
-			if (!cpu_tss.desc.IsBusy()) LOG(LOG_CPU,LOG_ERROR)("TASK Iret:TSS not busy");
+			if (!cpu_tss.desc.IsBusy()) {
+				LOG(LOG_CPU,LOG_ERROR)("TASK Iret:TSS not busy");
+			}
 			Bitu back_link=cpu_tss.Get_back();
 			CPU_SwitchTask(back_link,TSwitch_IRET,oldeip);
 			return;
@@ -1129,7 +1142,6 @@ call_code:
 				CPU_CHECK_COND(n_cs_dpl>cpu.cpl,
 					"CALL:Gate:CS DPL>CPL",
 					EXCEPTION_GP,n_cs_sel & 0xfffc)
-				Bitu n_cs_rpl	= n_cs_sel & 3;
 				Bitu n_eip		= call.GetOffset();
 				switch (n_cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
@@ -2140,8 +2152,8 @@ public:
 			Change_Config(configuration);
 			return;
 		}
+//		Section_prop * section=static_cast<Section_prop *>(configuration);
 		inited=true;
-		Section_prop * section=static_cast<Section_prop *>(configuration);
 		reg_eax=0;
 		reg_ebx=0;
 		reg_ecx=0;

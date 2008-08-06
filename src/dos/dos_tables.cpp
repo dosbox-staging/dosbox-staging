@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.29 2007-07-20 18:53:52 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.30 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -43,7 +43,7 @@ static Bitu call_casemap;
 static Bit16u dos_memseg=DOS_PRIVATE_SEGMENT;
 
 Bit16u DOS_GetMemory(Bit16u pages) {
-	if (pages+dos_memseg>=DOS_PRIVATE_SEGMENT_END) {
+	if ((Bitu)pages+(Bitu)dos_memseg>=DOS_PRIVATE_SEGMENT_END) {
 		E_Exit("DOS:Not enough memory for internal tables");
 	}
 	Bit16u page=dos_memseg;

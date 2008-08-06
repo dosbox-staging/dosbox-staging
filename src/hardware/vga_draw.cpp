@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.102 2008-06-08 18:27:25 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.103 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -204,14 +204,14 @@ static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu line) {
 }
 
 //Test version, might as well keep it
-static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
+/* static Bit8u * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
 	Bitu i = 0;
 	for ( i = 0; i < vga.draw.width;i++ ) {
 		Bitu addr = vidstart + i;
 		TempLine[i] = vga.mem.linear[((addr&~3)<<2)+(addr&3)];
 	}
 	return TempLine;
-}
+} */
 
 static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
 	bool hwcursor_active=false;
@@ -430,8 +430,8 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 		Bit32u mask2=TXT_Font_Table[font&0xf] & FontMask[col >> 7];
 		Bit32u fg=TXT_FG_Table[col&0xf];
 		Bit32u bg=TXT_BG_Table[col>>4];
-		*draw++=fg&mask1 | bg&~mask1;
-		*draw++=fg&mask2 | bg&~mask2;
+		*draw++=(fg&mask1) | (bg&~mask1);
+		*draw++=(fg&mask2) | (bg&~mask2);
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
@@ -459,8 +459,8 @@ static Bit8u * VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line) {
 		Bit32u fg=TXT_FG_Table[col&0xf];
 		Bit32u bg=TXT_BG_Table[col>>4];
 		
-		mask1=fg&mask1 | bg&~mask1;
-		mask2=fg&mask2 | bg&~mask2;
+		mask1=(fg&mask1) | (bg&~mask1);
+		mask2=(fg&mask2) | (bg&~mask2);
 
 		for(int i = 0; i < 4; i++) {
 			*draw++ = vga.dac.xlat16[(mask1>>8*i)&0xff];
@@ -484,6 +484,7 @@ skip_cursor:
 	return TempLine;
 }
 
+/*
 static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit8u * draw=(Bit8u *)TempLine;
@@ -541,6 +542,7 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 skip_cursor:
 	return TempLine;
 }
+*/
 
 static Bit8u * VGA_TEXT_Xlat16_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
@@ -852,6 +854,8 @@ static void VGA_VerticalTimer(Bitu val) {
 	case M_TANDY2:case M_TANDY4:case M_TANDY16:
 		vga.draw.address *= 2;
 		break;
+	default:
+		break;
 	}
 	if (GCC_UNLIKELY(vga.draw.split_line==0)) VGA_ProcessSplit();
 #ifdef VGA_KEEP_CHANGES
@@ -903,6 +907,9 @@ void VGA_CheckScanLength(void) {
 		break;
 	case M_HERC_GFX:
 		vga.draw.address_add=vga.draw.blocks;
+		break;
+	default:
+		vga.draw.address_add=vga.draw.blocks*8;
 		break;
 	}
 }
@@ -1003,6 +1010,7 @@ void VGA_SetupDrawing(Bitu val) {
 				clock = (machine==MCH_EGA) ? 14318180 : 25175000;
 				break;
 			case 1:
+			default:
 				clock = (machine==MCH_EGA) ? 16257000 : 28322000;
 				break;
 			}
@@ -1054,6 +1062,9 @@ void VGA_SetupDrawing(Bitu val) {
 		case MCH_HERC:
 			if (vga.herc.mode_control & 0x2) clock=14318180/16;
 			else clock=14318180/8;
+			break;
+		default:
+			clock = 14318180;
 			break;
 		}
 	}
@@ -1130,6 +1141,7 @@ void VGA_SetupDrawing(Bitu val) {
 		pheight = (480.0 / 350.0) * ( target_total / vtotal );
 		break;
 	case 3:		//480 line mode, filled with 525 total
+	default:
 		pheight = (480.0 / 480.0) * ( 525.0 / vtotal );
 		break;
 	}

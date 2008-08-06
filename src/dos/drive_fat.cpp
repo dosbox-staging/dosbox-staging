@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.25 2008-02-24 17:38:03 c2woody Exp $ */
+/* $Id: drive_fat.cpp,v 1.26 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -866,25 +866,22 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	return FindNextInternal(cwdDirCluster, dta, &dummyClust);
 }
 
-char* removeTrailingSpaces(char* str)
-{
-    char* end = str + strlen(str);
-    while(*--end == ' ' && end > str);
-    *++end = '\0';
-    return str;
+char* removeTrailingSpaces(char* str) {
+	char* end = str + strlen(str);
+	while((*--end == ' ') && (end > str)) {};
+	*++end = '\0';
+	return str;
 }
 
-char* removeLeadingSpaces(char* str)
-{
-    size_t len = strlen(str);
-    size_t pos = strspn(str," ");
-    memmove(str,str + pos,len - pos + 1);
-    return str;
+char* removeLeadingSpaces(char* str) {
+	size_t len = strlen(str);
+	size_t pos = strspn(str," ");
+	memmove(str,str + pos,len - pos + 1);
+	return str;
 }
 
-char* trimString(char* str)
-{
-    return removeTrailingSpaces(removeLeadingSpaces(str));
+char* trimString(char* str) {
+	return removeTrailingSpaces(removeLeadingSpaces(str));
 }
 
 bool fatDrive::FindNextInternal(Bit32u dirClustNumber, DOS_DTA &dta, direntry *foundEntry) {

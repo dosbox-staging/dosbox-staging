@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.67 2007-09-20 16:42:43 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.68 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -225,6 +225,8 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 		break;
 	case SB_IRQ_16:
 		sb.irq.pending_16bit=true;
+		break;
+	default:
 		break;
 	}
 }
@@ -470,6 +472,7 @@ static void GenerateDMASound(Bitu size) {
 	}
 }
 
+/* old version...
 static void GenerateDACSound(Bitu len) {
 	if (!sb.dac.used) {
 		sb.mode=MODE_NONE;
@@ -485,6 +488,7 @@ static void GenerateDACSound(Bitu len) {
 	sb.dac.used=0;
 	sb.chan->AddSamples_m16(len,(Bit16s *)MixTemp);
 }
+*/
 
 static void DMA_Silent_Event(Bitu val) {
 	if (sb.dma.left<val) val=sb.dma.left;
@@ -836,6 +840,8 @@ static void DSP_DoCommand(void) {
 			DSP_AddData(0x3);DSP_AddData(0x2);break;
 		case SBT_16:
 			DSP_AddData(0x4);DSP_AddData(0x5);break;
+		default:
+			break;
 		}
 		break;
 	case 0xe2:	/* Weird DMA identification write routine */
@@ -1346,7 +1352,6 @@ public:
 		sb.hw.dma8=section->Get_int("dma");
 		sb.hw.dma16=section->Get_int("hdma");
 		sb.mixer.enabled=section->Get_bool("mixer");
-		Bitu oplrate=section->Get_int("oplrate");
 		sb.mixer.stereo=false;
 		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,opl_mode);

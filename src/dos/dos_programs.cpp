@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.85 2008-03-11 18:16:34 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.86 2008-08-06 18:32:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -976,8 +976,8 @@ public:
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 			return;
 		}
-		DOS_Drive * newdrive;
-		imageDisk * newImage;
+		DOS_Drive * newdrive = NULL;
+		imageDisk * newImage = NULL;
 		Bit32u imagesize;
 		char drive;
 		std::string label;
@@ -1050,27 +1050,27 @@ public:
 			if(fstype=="fat" || fstype=="iso") {
 				// get the drive letter
 				if (!cmd->FindCommand(1,temp_line) || (temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
+					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
 				drive=toupper(temp_line[0]);
 				if (!isalpha(drive)) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
+					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
 			} else if (fstype=="none") {
 				cmd->FindCommand(1,temp_line);
 				if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
 				drive=temp_line[0];
-				if((drive-'0')>3) {
-					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+				if ((drive<'0') || (drive>3+'0')) {
+					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
 			} else {
-				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"));
+				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"));
 				return;
 			}
 			

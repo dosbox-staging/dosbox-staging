@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.143 2008-05-28 09:14:06 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.144 2008-08-06 18:32:34 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -260,7 +260,9 @@ check_surface:
 		else if (flags & GFX_LOVE_16) testbpp=16;
 		else if (flags & GFX_LOVE_32) testbpp=32;
 		else testbpp=0;
+#if (HAVE_DDRAW_H) && defined(WIN32)
 check_gotbpp:
+#endif
 		if (sdl.desktop.fullscreen) gotbpp=SDL_VideoModeOK(640,480,testbpp,SDL_FULLSCREEN|SDL_HWSURFACE|SDL_HWPALETTE);
 		else gotbpp=sdl.desktop.bpp;
 		/* If we can't get our favorite mode check for another working one */
@@ -303,6 +305,9 @@ check_gotbpp:
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
 #endif
+	default:
+		goto check_surface;
+		break;
 	}
 	return flags;
 }
@@ -611,6 +616,9 @@ dosurface:
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
+	default:
+		goto dosurface;
+		break;
 	}//CASE
 	if (retFlags) 
 		GFX_Start();
@@ -698,13 +706,17 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		sdl.updating=true;
 		return true;
 #endif
+	default:
+		break;
 	}
 	return false;
 }
 
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
+#if (HAVE_DDRAW_H) && defined(WIN32)
 	int ret;
+#endif
 	if (!sdl.updating) 
 		return;
 	sdl.updating=false;
@@ -800,7 +812,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		}
 		break;
 #endif
-
+	default:
+		break;
 	}
 }
 

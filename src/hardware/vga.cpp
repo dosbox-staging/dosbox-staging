@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.cpp,v 1.34 2008-02-06 18:23:34 c2woody Exp $ */
+/* $Id: vga.cpp,v 1.35 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include "dosbox.h"
 //#include "setup.h"
@@ -100,6 +100,8 @@ void VGA_SetClock(Bitu which,Bitu target) {
 		Bits err;
 	} best;
 	best.err=target;
+	best.m=1;
+	best.n=1;
 	Bitu n,r;
 	Bits m;
 

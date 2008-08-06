@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.12 2008-01-12 17:37:48 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.13 2008-08-06 18:32:35 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -774,6 +774,7 @@ void XGA_BlitRect(Bitu val) {
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					srcval = 0;
 					break;
 			}
 
@@ -859,6 +860,7 @@ void XGA_DrawPattern(Bitu val) {
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					srcval = 0;
 					break;
 			}
 
