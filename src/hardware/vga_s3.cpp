@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.15 2008-08-04 17:48:36 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.16 2008-08-08 21:57:00 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -140,6 +140,19 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		break;
 	case 0x50:  // Extended System Control 1
 		vga.s3.reg_50 = val;
+		switch (val & S3_XGA_CMASK) {
+			case S3_XGA_32BPP: vga.s3.xga_color_mode = M_LIN32; break;
+			case S3_XGA_16BPP: vga.s3.xga_color_mode = M_LIN16; break;
+			case S3_XGA_8BPP: vga.s3.xga_color_mode = M_LIN8; break;
+		}
+		switch (val & S3_XGA_WMASK) {
+			case S3_XGA_1024: vga.s3.xga_screen_width = 1024; break;
+			case S3_XGA_1152: vga.s3.xga_screen_width = 1152; break;
+			case S3_XGA_640:  vga.s3.xga_screen_width = 640; break;
+			case S3_XGA_800:  vga.s3.xga_screen_width = 800; break;
+			case S3_XGA_1280: vga.s3.xga_screen_width = 1280; break;
+			default:  vga.s3.xga_screen_width = 1024; break;
+		}
 		break;
 	case 0x51:	/* Extended System Control 2 */
 		vga.s3.reg_51=val & 0xc0;		//Only store bits 6,7
@@ -297,6 +310,11 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		/*
 			0	VCLK PHS. VCLK Phase With Respect to DCLK. If clear VLKC is inverted
 				DCLK, if set VCLK = DCLK.
+			2-3 (Trio64V+) streams mode
+					00 disable Streams Processor
+					01 overlay secondary stream on VGA-mode background
+					10 reserved
+					11 full Streams Processor operation
 			4-7	Pixel format.
 					0  Mode  0: 8bit (1 pixel/VCLK)
 					1  Mode  8: 8bit (2 pixels/VCLK)
@@ -377,6 +395,10 @@ Bitu SVGA_S3_ReadCRTC( Bitu reg, Bitu iolen) {
 		return vga.s3.hgc.originy>>8;
 	case 0x49:  /*  HGC orgY */
 		return vga.s3.hgc.originy&0xff;
+	case 0x4A:  /* HGC foreground stack */
+		return vga.s3.hgc.forestack[vga.s3.hgc.fstackpos];
+	case 0x4B:  /* HGC background stack */
+		return vga.s3.hgc.backstack[vga.s3.hgc.bstackpos];
 	case 0x50:	// CR50 Extended System Control 1
 		return vga.s3.reg_50;
 	case 0x51:	/* Extended System Control 2 */

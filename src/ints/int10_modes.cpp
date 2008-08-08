@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.79 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.80 2008-08-08 21:57:00 c2woody Exp $ */
 
 #include <string.h>
 
@@ -1206,18 +1206,20 @@ dac_text16:
 		IO_Write(0x3c5,0x03);
 
 		// Accellerator setup 
-		Bitu reg_50=0;
+		Bitu reg_50=S3_XGA_8BPP;
 		switch (CurMode->type) {
 			case M_LIN15:
-			case M_LIN16: reg_50|=0x10; break;
-			case M_LIN32: reg_50|=0x30; break;
+			case M_LIN16: reg_50|=S3_XGA_16BPP; break;
+			case M_LIN32: reg_50|=S3_XGA_32BPP; break;
+			default: break;
 		}
 		switch(CurMode->swidth) {
-			case 640:  reg_50|=0x40; break;
-			case 800:  reg_50|=0x80; break;
-			case 1024: break;
-			case 1152: reg_50|=0x01; break;
-			case 1280: reg_50|=0xc1; break;
+			case 640:  reg_50|=S3_XGA_640; break;
+			case 800:  reg_50|=S3_XGA_800; break;
+			case 1024: reg_50|=S3_XGA_1024; break;
+			case 1152: reg_50|=S3_XGA_1152; break;
+			case 1280: reg_50|=S3_XGA_1280; break;
+			default: break;
 		}
 		IO_WriteB(crtc_base,0x50); IO_WriteB(crtc_base+1,reg_50);
 

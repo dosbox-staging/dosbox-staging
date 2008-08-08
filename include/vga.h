@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.42 2008-05-28 20:43:13 qbix79 Exp $ */
+/* $Id: vga.h,v 1.43 2008-08-08 21:56:36 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -54,6 +54,18 @@ enum VGAModes {
 #define S3_CLOCK_REF	14318	/* KHz */
 #define S3_CLOCK(_M,_N,_R)	((S3_CLOCK_REF * ((_M) + 2)) / (((_N) + 2) * (1 << (_R))))
 #define S3_MAX_CLOCK	150000	/* KHz */
+
+#define S3_XGA_1024		0x00
+#define S3_XGA_1152		0x01
+#define S3_XGA_640		0x40
+#define S3_XGA_800		0x80
+#define S3_XGA_1280		0xc0
+#define S3_XGA_WMASK	(S3_XGA_640|S3_XGA_800|S3_XGA_1024|S3_XGA_1152|S3_XGA_1280)
+
+#define S3_XGA_8BPP  0x00
+#define S3_XGA_16BPP 0x10
+#define S3_XGA_32BPP 0x30
+#define S3_XGA_CMASK (S3_XGA_8BPP|S3_XGA_16BPP|S3_XGA_32BPP)
 
 typedef struct {
 	bool attrindex;
@@ -179,6 +191,8 @@ typedef struct {
 	Bit16u la_window;
 	Bit8u misc_control_2;
 	Bit8u ext_mem_ctrl;
+	Bitu xga_screen_width;
+	VGAModes xga_color_mode;
 	struct {
 		Bit8u r;
 		Bit8u n;

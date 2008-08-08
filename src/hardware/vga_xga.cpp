@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.13 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.14 2008-08-08 21:57:00 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -27,7 +27,8 @@
 #include "callback.h"
 #include "cpu.h"		// for 0x3da delay
 
-#define XGA_SCREEN_WIDTH vga.draw.width
+#define XGA_SCREEN_WIDTH	vga.s3.xga_screen_width
+#define XGA_COLOR_MODE		vga.s3.xga_color_mode
 
 #define XGA_SHOW_COMMAND_TRACE 0
 
@@ -140,7 +141,7 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	/* Need to zero out all unused bits in modes that have any (15-bit or "32"-bit -- the last
 	   one is actually 24-bit. Without this step there may be some graphics corruption (mainly,
 	   during windows dragging. */
-	switch(vga.mode) {
+	switch(XGA_COLOR_MODE) {
 		case M_LIN8: vga.mem.linear[memaddr] = c; break;
 		case M_LIN15: ((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0x7fff); break;
 		case M_LIN16: ((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0xffff); break;
@@ -156,7 +157,7 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 		//LOG_MSG("getpoint mem over: x%d y%d",x,y);
 		return 0;
 	}
-	switch(vga.mode) {
+	switch(XGA_COLOR_MODE) {
 	case M_LIN8: return vga.mem.linear[memaddr];
 	case M_LIN15:
 	case M_LIN16: return ((Bit16u*)(vga.mem.linear))[memaddr];
@@ -954,40 +955,35 @@ void XGA_DrawCmd(Bitu val, Bitu len) {
 }
 
 void XGA_SetDualReg(Bit32u& reg, Bitu val) {
-	switch(vga.mode) {
+	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
 		reg = (Bit8u)(val&0xff); break;
 	case M_LIN15:
 	case M_LIN16:
 		reg = (Bit16u)(val&0xffff); break;
-	case M_LIN32: {
-			if(xga.control1 & 0x200)
-				reg = val;
-			else if(xga.control1 & 0x10)
-				reg = (reg&0x0000ffff)|(val<<16);
-			else
-				reg = (reg&0xffff0000)|(val&0x0000ffff);
-			xga.control1 ^= 0x10;
-		}
+	case M_LIN32:
+		if (xga.control1 & 0x200)
+			reg = val;
+		else if (xga.control1 & 0x10)
+			reg = (reg&0x0000ffff)|(val<<16);
+		else
+			reg = (reg&0xffff0000)|(val&0x0000ffff);
+		xga.control1 ^= 0x10;
 		break;
 	}
 }
 
 Bitu XGA_GetDualReg(Bit32u reg) {
-	switch(vga.mode) {
+	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
 		return (Bit8u)(reg&0xff);
 	case M_LIN15: case M_LIN16:
 		return (Bit16u)(reg&0xffff);
-	case M_LIN32: {
-			if(xga.control1 & 0x200)
-				return reg;
-			xga.control1 ^= 0x10;
-			if(xga.control1 & 0x10)
-				return reg&0x0000ffff;
-			else
-				return reg>>16;
-		}
+	case M_LIN32:
+		if (xga.control1 & 0x200) return reg;
+		xga.control1 ^= 0x10;
+		if (xga.control1 & 0x10) return reg&0x0000ffff;
+		else return reg>>16;
 	}
 	return 0;
 }
@@ -1027,24 +1023,20 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 			break;
 
 		case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
-			//if(len==4) xga.backcolor = val;
-			//else 
-				XGA_SetDualReg(xga.backcolor, val);
+			if (len==4) xga.backcolor = val;
+			else XGA_SetDualReg(xga.backcolor, val);
 			break;
 		case 0x8124: // packed MMIO: DWORD foreground color (see PORT A6E8h)
-			//if(len==4) xga.forecolor = val; // TODO
-			//else 
-				XGA_SetDualReg(xga.forecolor, val);
+			if (len==4) xga.forecolor = val; // TODO
+			else XGA_SetDualReg(xga.forecolor, val);
 			break;
 		case 0x8128: // DWORD	write mask (see PORT AAE8h)
-			//if(len==4) xga.writemask = val;
-			//else
-				XGA_SetDualReg(xga.writemask, val);
+			if (len==4) xga.writemask = val;
+			else XGA_SetDualReg(xga.writemask, val);
 			break;
 		case 0x812C: // DWORD	read mask (see PORT AEE8h)
-			//if(len==4) xga.readmask = val;
-			//else
-				XGA_SetDualReg(xga.readmask, val);
+			if (len==4) xga.readmask = val;
+			else XGA_SetDualReg(xga.readmask, val);
 			break;
 		case 0x8134: // packed MMIO: DWORD	background mix (low word) and
 					 // foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
