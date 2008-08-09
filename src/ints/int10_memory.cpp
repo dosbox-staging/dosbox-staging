@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_memory.cpp,v 1.26 2008-03-14 18:16:34 c2woody Exp $ */
+/* $Id: int10_memory.cpp,v 1.27 2008-08-09 15:37:15 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -75,7 +75,6 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 }
 
 
-static Bitu checksumlocation = 0; //Same type as int10.rom.used
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
 	PhysPt rom_base=PhysMake(0xc000,0);
@@ -185,10 +184,6 @@ void INT10_SetupRomMemory(void) {
 	if (IS_TANDY_ARCH) {
 		RealSetVec(0x44,int10.rom.font_8_first);
 	}
-	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
-		//Reserve checksum location
-		checksumlocation = int10.rom.used++;
-	}
 }
 
 void INT10_ReloadRomFonts(void) {
@@ -218,10 +213,11 @@ void INT10_SetupRomMemoryChecksum(void) {
 		/* Sum of all bytes in rom module 256 should be 0 */
 		Bit8u sum = 0;
 		PhysPt rom_base = PhysMake(0xc000,0);
-		for (Bitu i = 0;i < 32 * 1024;i++) //32 KB romsize
-			sum += phys_readb(rom_base + i); //OVERFLOW IS OKAY
+		Bitu last_rombyte = 32*1024 - 1;		//32 KB romsize
+		for (Bitu i = 0;i < last_rombyte;i++)
+			sum += phys_readb(rom_base + i);	//OVERFLOW IS OKAY
 		sum = 256 - sum;
-		phys_writeb(rom_base + checksumlocation,sum);
+		phys_writeb(rom_base + last_rombyte,sum);
 	}
 }
 
