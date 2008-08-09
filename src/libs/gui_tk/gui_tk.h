@@ -102,7 +102,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.3 2008-08-06 18:33:47 c2woody Exp $ */
+/* $Id: gui_tk.h,v 1.4 2008-08-09 19:42:26 qbix79 Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H
@@ -1726,8 +1726,8 @@ public:
 
 	virtual void move(int x, int y) { relx = x; rely = y;
 		Window::move(x+realparent->getScreenX(),y+realparent->getScreenY()); }
-	virtual int getX() { return x-realparent->getScreenX(); }
-	virtual int getY() { return y-realparent->getScreenY(); }
+	virtual int getX() const { return x-realparent->getScreenX(); }
+	virtual int getY() const { return y-realparent->getScreenY(); }
 	virtual void setVisible(bool v) { if (v) raise(); Window::setVisible(v); }
 	virtual void windowMoved(Window *src, int x, int y) { move(relx,rely); }
 
