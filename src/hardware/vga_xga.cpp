@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.14 2008-08-08 21:57:00 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.15 2008-08-11 17:51:06 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -1023,20 +1023,16 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 			break;
 
 		case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
-			if (len==4) xga.backcolor = val;
-			else XGA_SetDualReg(xga.backcolor, val);
+			xga.backcolor = val;
 			break;
 		case 0x8124: // packed MMIO: DWORD foreground color (see PORT A6E8h)
-			if (len==4) xga.forecolor = val; // TODO
-			else XGA_SetDualReg(xga.forecolor, val);
+			xga.forecolor = val;
 			break;
 		case 0x8128: // DWORD	write mask (see PORT AAE8h)
-			if (len==4) xga.writemask = val;
-			else XGA_SetDualReg(xga.writemask, val);
+			xga.writemask = val;
 			break;
 		case 0x812C: // DWORD	read mask (see PORT AEE8h)
-			if (len==4) xga.readmask = val;
-			else XGA_SetDualReg(xga.readmask, val);
+			xga.readmask = val;
 			break;
 		case 0x8134: // packed MMIO: DWORD	background mix (low word) and
 					 // foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
