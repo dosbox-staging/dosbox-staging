@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.82 2008-06-16 20:01:25 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.83 2008-08-11 12:54:57 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -67,8 +67,38 @@ static SHELL_Cmd cmd_list[]={
 {0,0,0,0}
 }; 
 
+/* support functions */
 static char empty_char = 0;
 static char* empty_string = &empty_char;
+static void StripSpaces(char*&args) {
+	while(args && *args && isspace(*reinterpret_cast<unsigned char*>(args)))
+		args++;
+}
+
+static void StripSpaces(char*&args,char also) {
+	while(args && *args && (isspace(*reinterpret_cast<unsigned char*>(args)) || (*args == also)))
+		args++;
+}
+
+static char* ExpandDot(char*args, char* buffer) {
+	if(*args == '.') {
+		if(*(args+1) == 0){
+			strcpy(buffer,"*.*");
+			return buffer;
+		}
+		if( (*(args+1) != '.') && (*(args+1) != '\\') ) {
+			buffer[0] = '*';
+			buffer[1] = 0;
+			strcat(buffer,args);
+			return buffer;
+		} else
+			strcpy (buffer, args);
+	}
+	else strcpy(buffer,args);
+	return buffer;
+}
+
+
 
 bool DOS_Shell::CheckConfig(char* cmd_in,char*line) {
 	Section* test = control->GetSectionFromProperty(cmd_in);
@@ -139,7 +169,7 @@ void DOS_Shell::CMD_CLS(char * args) {
 	HELP("CLS");
 	reg_ax=0x0003;
 	CALLBACK_RunRealInt(0x10);
-};
+}
 
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
@@ -251,14 +281,18 @@ void DOS_Shell::CMD_ECHO(char * args){
 		return;
 	}
 	args++;//skip first character. either a slash or dot or space
-	WriteOut("%s\n",args);
-};
+	size_t len = strlen(args); //TODO check input of else ook nodig is.
+	if(len && args[len - 1] == '\r') {
+		LOG(LOG_MISC,LOG_WARN)("Hu ? carriage return allready present. Is this possible?");
+		WriteOut("%s\n",args);
+	} else WriteOut("%s\r\n",args);
+}
 
 
 void DOS_Shell::CMD_EXIT(char * args) {
 	HELP("EXIT");
 	exit = true;
-};
+}
 
 void DOS_Shell::CMD_CHDIR(char * args) {
 	HELP("CHDIR");
@@ -297,7 +331,7 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 			}
 		}
 	}
-};
+}
 
 void DOS_Shell::CMD_MKDIR(char * args) {
 	HELP("MKDIR");
@@ -310,7 +344,7 @@ void DOS_Shell::CMD_MKDIR(char * args) {
 	if (!DOS_MakeDir(args)) {
 		WriteOut(MSG_Get("SHELL_CMD_MKDIR_ERROR"),args);
 	}
-};
+}
 
 void DOS_Shell::CMD_RMDIR(char * args) {
 	HELP("RMDIR");
@@ -323,7 +357,7 @@ void DOS_Shell::CMD_RMDIR(char * args) {
 	if (!DOS_RemoveDir(args)) {
 		WriteOut(MSG_Get("SHELL_CMD_RMDIR_ERROR"),args);
 	}
-};
+}
 
 static void FormatNumber(Bitu num,char * buf) {
 	Bitu numm,numk,numb,numg;
@@ -490,6 +524,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
 	dos.dta(save_dta);
 }
+
 struct copysource {
 	std::string filename;
 	bool concat;
@@ -708,29 +743,41 @@ void DOS_Shell::CMD_IF(char * args) {
 	HELP("IF");
 	StripSpaces(args);
 	bool has_not=false;
-	char * comp=strchr(args,'=');
-	if (comp) {
-		if (comp[1] == '=') {
-			*comp++ = ' ';
-			*comp++ = ' ';
-		} else if(strncasecmp(args,"ERRORLEVEL",10) == 0) {
-			/* this is in general a syntax error except for errorlevel */
-			*comp++ = ' ';
-			while(*comp++ == ' ') 
-				;	/*nothing */
-		} else if(strncasecmp(args," set ",5) !=0) {
-			/* if cond set a=b is allowed as well */
-			SyntaxError();
+	char* word;
+
+	if (strncasecmp(args,"NOT ",4) ==0) {
+		args += 4;	//skip text
+		//skip more spaces
+		StripSpaces(args);
+		has_not = true;
+	}
+
+	if(strncasecmp(args,"ERRORLEVEL",10) == 0) {
+		args += 10;	//skip text
+		//Strip spaces and ==
+		StripSpaces(args,'=');
+		word = StripWord(args);
+		if(!isdigit(*word)) {
+			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"));
 			return;
 		}
-	};
-	char * word=StripWord(args);
-	if (strcasecmp(word,"NOT")==0) {
-		word=StripWord(args);
-		has_not=true;
+
+		Bit8u n = 0;
+		do n = n * 10 + (*word - '0');
+		while (isdigit(*++word));
+		if(*word && !isspace(*word)) {
+			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER"));
+			return;
+		}
+		/* Read the error code from DOS */
+		if ((dos.return_code>=n) ==(!has_not)) DoCommand(args);
+		return;
 	}
-	if (strcasecmp(word,"EXIST")==0) {
-		word=StripWord(args);
+
+	if(strncasecmp(args,"EXIST ",6) == 0) {
+		args += 6; //Skip text
+		StripSpaces(args);
+		word = StripWord(args);
 		if (!*word) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_EXIST_MISSING_FILENAME"));
 			return;
@@ -745,28 +792,24 @@ void DOS_Shell::CMD_IF(char * args) {
 		}
 		return;
 	}
-	if (strcasecmp(word,"ERRORLEVEL")==0) {
-		word=StripWord(args);
-		if(!isdigit(*word)) {
-			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"));
-			return;
-		}
 
-		Bit8u n=0;
-		do n = n * 10 + (*word - '0');
-		while (isdigit(*++word));
-		if(*word && !isspace(*word)) {
-			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER"));
-			return;
-		}
-		/* Read the error code from DOS */
-		if ((dos.return_code>=n) ==(!has_not)) DoCommand(args);
+	/* Normal if string compare */
+	word = args;
+	// Word is until space or =
+	while(*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
+		args++;
+	char* end_word1 = args;
+	StripSpaces(args);
+	//Check for 2 ==
+	if(strlen(args)<2 || args[0] != '=' || args[1] != '=') { 
+		SyntaxError();
 		return;
 	}
-	/* Normal if string compare */
-	if (!*args) { SyntaxError();return;};
-	char * word2=StripWord(args);
-	if ((strcmp(word,word2)==0)==(!has_not)) DoCommand(args);
+	args += 2;
+	StripSpaces(args);
+	char* woord2 = StripWord(args);
+	*end_word1 = 0;
+	if ((strcmp(word,woord2)==0)==(!has_not)) DoCommand(args);
 }
 
 void DOS_Shell::CMD_GOTO(char * args) {

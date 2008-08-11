@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.23 2008-03-02 11:13:46 qbix79 Exp $ */
+/* $Id: shell.h,v 1.24 2008-08-11 12:54:57 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -126,32 +126,6 @@ struct SHELL_Cmd {
 	void (DOS_Shell::*handler)(char * args);		/* Handler for this command */
 	const char * help;								/* String with command help */
 };
-
-static inline void StripSpaces(char*&args) {
-	while(args && *args && isspace(*reinterpret_cast<unsigned char*>(args)))
-		args++;
-}
-
-static inline char* ExpandDot(char*args, char* buffer) {
-	if(*args=='.')
-	{
-		if(*(args+1)==0)
-		{
-			strcpy(buffer,"*.*");
-			return buffer;
-		}
-		if( (*(args+1)!='.') && (*(args+1)!='\\') )
-		{
-			buffer[0]='*';
-			buffer[1]=0;
-			strcat(buffer,args);
-			return buffer;
-		} else 
-			strcpy (buffer, args); 
-	}
-	else strcpy(buffer,args);
-	return buffer;
-}
 
 /* Object to manage lines in the autoexec.bat The lines get removed from
  * the file if the object gets destroyed. The environment is updated
