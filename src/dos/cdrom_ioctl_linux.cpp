@@ -57,7 +57,7 @@ bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	int cdrom_fd = open(device_name, O_RDONLY | O_NONBLOCK);
 	if (cdrom_fd <= 0) return false;
 	
-	Bitu buflen = raw ? num * CD_FRAMESIZE_RAW : num * CD_FRAMESIZE;
+	Bits buflen = raw ? num * CD_FRAMESIZE_RAW : num * CD_FRAMESIZE;
 	Bit8u* buf = new Bit8u[buflen];	
 	int ret;
 	
