@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.29 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: shell_batch.cpp,v 1.30 2008-08-11 07:47:04 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -139,11 +139,21 @@ again:
 				*cmd_write++=c;
 		}
 	} while (c!='\n' && n);
-	*cmd_write++=0;
+	*cmd_write++ = 0;
 	char *nospace = trim(cmd_buffer);
 	if (nospace[0] == ':') {
-		char* nonospace = trim(nospace+1);
-		if (strcasecmp(nonospace,where)==0) return true;
+		nospace++; //Skip :
+		//Strip spaces and = from it.
+		while(*nospace && (isspace(*reinterpret_cast<unsigned char*>(nospace)) || (*nospace == '=')))
+			nospace++;
+
+		//label is until space/=/eol
+		char* const beginlabel = nospace;
+		while(*nospace && !isspace(*reinterpret_cast<unsigned char*>(nospace)) && (*nospace != '=')) 
+			nospace++;
+
+		*nospace = 0;
+		if (strcasecmp(beginlabel,where)==0) return true;
 	}
 	if (!n) {
 		delete this;
