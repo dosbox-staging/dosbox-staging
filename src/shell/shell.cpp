@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.91 2008-08-10 18:33:30 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.92 2008-08-11 12:52:36 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -264,7 +264,6 @@ void DOS_Shell::ParseLine(char * line) {
 void DOS_Shell::RunInternal(void)
 {
 	char input_line[CMD_MAXLINE] = {0};
-	std::string line;
 	while(bf && bf->ReadLine(input_line)) 
 	{
 		if (echo) {
