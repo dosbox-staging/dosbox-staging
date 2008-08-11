@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.19 2007-09-27 19:34:43 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.20 2008-08-11 13:09:44 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -125,6 +125,7 @@ Bit8u DOS_FindDevice(char const * name) {
 	// STDAUX is alias for COM1
 	// A bit of a hack, but no application will probably use stdaux to determine wether a directory exists
 	if (strcasecmp(name, "STDAUX") == 0) name = "COM1";
+	if (strcasecmp(name, "PRN") == 0) name = "LPT1";
 
 	char temp[CROSS_LEN];//TODO
 	if(!name || !(*name)) return DOS_DEVICES;
