@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.54 2008-06-14 19:31:04 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.55 2008-08-11 12:50:26 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -348,7 +348,7 @@ dowrite:
 void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 	Bit16u address;
 
-	if (page>7) LOG(LOG_INT10,LOG_ERROR)("INT10_SetCursorPos page %d");
+	if (page>7) LOG(LOG_INT10,LOG_ERROR)("INT10_SetCursorPos page %d",page);
 	// Bios cursor pos
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2,col);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1,row);
