@@ -1,8 +1,20 @@
 !define VER_MAYOR 0
 !define VER_MINOR 72
+!define APP_NAME "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
+!define COMP_NAME "DOSBox Team"
+!define COPYRIGHT "Copyright © 2002-2008 DOSBox Team"
+!define DESCRIPTION "DOSBox Installer"
+
+VIProductVersion "${VER_MAYOR}.${VER_MINOR}.0.0"
+VIAddVersionKey  "ProductName"  "${APP_NAME}"
+VIAddVersionKey  "CompanyName"  "${COMP_NAME}"
+VIAddVersionKey  "FileDescription"  "${DESCRIPTION}"
+VIAddVersionKey  "FileVersion"  "${VER_MAYOR}.${VER_MINOR}.0.0"
+VIAddVersionKey  "ProductVersion"  "${VER_MAYOR}, ${VER_MINOR}, 0, 0"
+VIAddVersionKey  "LegalCopyright"  "${COPYRIGHT}"
 
 ; The name of the installer
-Name "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
+Name "${APP_NAME}"
 
 ; The file to write
 OutFile "DOSBox${VER_MAYOR}.${VER_MINOR}-win32-installer.exe"
@@ -25,10 +37,13 @@ ComponentText "Select components for DOSBox"
 ; The stuff to install
 Section "!Core files" Core
   ; Set output path to the installation directory.
+  ClearErrors
   SetOutPath $INSTDIR
+  IfErrors error_createdir
   SectionIn RO
 
   ; Put file there
+  
   CreateDirectory "$INSTDIR\capture"
   CreateDirectory "$INSTDIR\zmbv"
   File /oname=README.txt README
@@ -71,6 +86,14 @@ end:
 SetOutPath $INSTDIR
 WriteUninstaller "uninstall.exe"
 
+  goto end_section
+
+error_createdir:
+  MessageBox MB_OK "Can't create DOSBox program directory, aborting."
+  Abort
+  goto end_section
+
+end_section:
 SectionEnd ; end the section
 
 Section "Desktop Shortcut" SecDesktop
