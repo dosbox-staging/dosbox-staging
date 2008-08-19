@@ -277,7 +277,7 @@
 
 #define RORB(op1,op2,load,save)						\
 	if (!(op2&0x7)) {								\
-		if (op2&0x10) {								\
+		if (op2&0x18) {								\
 			FillFlagsNoCFOF();						\
 			SETFLAGBIT(CF,op1>>7);					\
 			SETFLAGBIT(OF,(op1>>7) ^ ((op1>>6) & 1));			\
