@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: decoder_basic.h,v 1.11 2008-08-20 14:13:21 c2woody Exp $ */
 
 
 /*
@@ -554,6 +556,7 @@ static void dyn_closeblock(void) {
 	//Shouldn't create empty block normally but let's do it like this
 	dyn_fill_blocks();
 	cache_closeblock();
+	cache_block_closing(decode.block->cache.start,decode.block->cache.size);
 }
 
 

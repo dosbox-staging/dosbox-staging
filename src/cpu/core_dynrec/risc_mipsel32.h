@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: risc_mipsel32.h,v 1.2 2008-08-20 14:13:21 c2woody Exp $ */
 
 
 /* MIPS32 (little endian) backend by crazyc */
@@ -630,3 +632,15 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 #endif
 }
 #endif
+
+static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
+#ifdef PSP
+// writeback dcache and invalidate icache
+	Bit32u inval_start = ((Bit32u)block_start) & ~63;
+	Bit32u inval_end = (((Bit32u)block_start) + block_size + 64) & ~63;
+	for (;inval_start < inval_end; inval_start+=64) {
+		__builtin_allegrex_cache(0x1a, inval_start);
+		__builtin_allegrex_cache(0x08, inval_start);
+	}
+#endif
+}

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.9 2007-11-24 17:26:48 c2woody Exp $ */
+/* $Id: core_dynrec.cpp,v 1.10 2008-08-20 14:13:21 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -138,6 +138,7 @@ static struct {
 #define X86			0x01
 #define X86_64		0x02
 #define MIPSEL		0x03
+#define ARMV4LE		0x04
 
 #if C_TARGETCPU == X86_64
 #include "core_dynrec/risc_x64.h"
@@ -145,6 +146,8 @@ static struct {
 #include "core_dynrec/risc_x86.h"
 #elif C_TARGETCPU == MIPSEL
 #include "core_dynrec/risc_mipsel32.h"
+#elif C_TARGETCPU == ARMV4LE
+#include "core_dynrec/risc_armv4le.h"
 #endif
 
 #include "core_dynrec/decoder.h"
