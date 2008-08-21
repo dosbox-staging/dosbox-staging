@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_xga.cpp,v 1.15 2008-08-11 17:51:06 c2woody Exp $ */
+/* $Id: vga_xga.cpp,v 1.16 2008-08-21 09:10:31 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -142,10 +142,24 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	   one is actually 24-bit. Without this step there may be some graphics corruption (mainly,
 	   during windows dragging. */
 	switch(XGA_COLOR_MODE) {
-		case M_LIN8: vga.mem.linear[memaddr] = c; break;
-		case M_LIN15: ((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0x7fff); break;
-		case M_LIN16: ((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0xffff); break;
-		case M_LIN32: ((Bit32u*)(vga.mem.linear))[memaddr] = c;
+		case M_LIN8:
+			if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
+			vga.mem.linear[memaddr] = c;
+			break;
+		case M_LIN15:
+			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
+			((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0x7fff);
+			break;
+		case M_LIN16:
+			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
+			((Bit16u*)(vga.mem.linear))[memaddr] = (Bit16u)(c&0xffff);
+			break;
+		case M_LIN32:
+			if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
+			((Bit32u*)(vga.mem.linear))[memaddr] = c;
+			break;
+		default:
+			break;
 	}
 
 }
@@ -153,15 +167,19 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	Bit32u memaddr = (y * XGA_SCREEN_WIDTH) + x;
 
-	if(vga.vmemsize < memaddr) {
-		//LOG_MSG("getpoint mem over: x%d y%d",x,y);
-		return 0;
-	}
 	switch(XGA_COLOR_MODE) {
-	case M_LIN8: return vga.mem.linear[memaddr];
+	case M_LIN8:
+		if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
+		return vga.mem.linear[memaddr];
 	case M_LIN15:
-	case M_LIN16: return ((Bit16u*)(vga.mem.linear))[memaddr];
-	case M_LIN32: return ((Bit32u*)(vga.mem.linear))[memaddr];
+	case M_LIN16:
+		if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
+		return ((Bit16u*)(vga.mem.linear))[memaddr];
+	case M_LIN32:
+		if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
+		return ((Bit32u*)(vga.mem.linear))[memaddr];
+	default:
+		break;
 	}
 	return 0;
 }
@@ -997,7 +1015,7 @@ extern void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 extern Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
 void XGA_Write(Bitu port, Bitu val, Bitu len) {
-	//LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
+//	LOG_MSG("XGA: Write to port %x, val %8x, len %x", port,val, len);
 
 	switch(port) {
 		case 0x8100:// drawing control: row (low word), column (high word)
