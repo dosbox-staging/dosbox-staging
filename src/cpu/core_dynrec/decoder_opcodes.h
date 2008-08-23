@@ -977,6 +977,11 @@ static bool dyn_grp7(void) {
 				dyn_return(BR_Normal);
 				dyn_closeblock();
 				return true;
+			case 0x07:	// INVLPG
+//				if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
+				if (cpu.pmode && cpu.cpl) IllegalOptionDynrec("invlpg nonpriviledged");
+				gen_call_function_raw((void*)PAGING_ClearTLB);
+				break;
 			default: IllegalOptionDynrec("dyn_grp7_1");
 		}
 	} else {
