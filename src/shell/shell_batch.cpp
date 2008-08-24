@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.30 2008-08-11 07:47:04 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.31 2008-08-24 16:48:23 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +33,7 @@ BatchFile::BatchFile(DOS_Shell * host,char const * const name, char const * cons
 		//TODO Come up with something better
 		E_Exit("SHELL:Can't open BatchFile");
 	}
-};
+}
 
 BatchFile::~BatchFile() {
 	delete cmd;
@@ -161,7 +161,8 @@ again:
 	}
 	goto again;
 	return false;
-};
+}
+
 void BatchFile::Shift(void) {
 	cmd->Shift(1);
 }
