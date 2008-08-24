@@ -33,7 +33,7 @@ enum BlahModes {
 
 enum MixerModes {
 	M_8M,M_8S,
-	M_16M,M_16S,
+	M_16M,M_16S
 };
 
 #define MIXER_BUFSIZE (16*1024)

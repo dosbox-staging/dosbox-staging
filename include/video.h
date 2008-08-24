@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: video.h,v 1.24 2008-02-21 19:25:04 c2woody Exp $ */
+/* $Id: video.h,v 1.25 2008-08-24 16:43:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_VIDEO_H
 #define DOSBOX_VIDEO_H
@@ -26,7 +26,7 @@
 typedef enum {
 	GFX_CallBackReset,
 	GFX_CallBackStop,
-	GFX_CallBackRedraw,
+	GFX_CallBackRedraw
 } GFX_CallBackFunctions_t;
 
 typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );

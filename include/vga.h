@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.43 2008-08-08 21:56:36 c2woody Exp $ */
+/* $Id: vga.h,v 1.44 2008-08-24 16:43:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -41,7 +41,7 @@ enum VGAModes {
 	M_TEXT,
 	M_HERC_GFX, M_HERC_TEXT,
 	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
-	M_ERROR,
+	M_ERROR
 };
 
 

@@ -61,47 +61,47 @@ MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 
 INLINE Bit8u host_readb(HostPt off) {
 	return off[0];
-};
+}
 INLINE Bit16u host_readw(HostPt off) {
 	return off[0] | (off[1] << 8);
-};
+}
 INLINE Bit32u host_readd(HostPt off) {
 	return off[0] | (off[1] << 8) | (off[2] << 16) | (off[3] << 24);
-};
+}
 INLINE void host_writeb(HostPt off,Bit8u val) {
 	off[0]=val;
-};
+}
 INLINE void host_writew(HostPt off,Bit16u val) {
 	off[0]=(Bit8u)(val);
 	off[1]=(Bit8u)(val >> 8);
-};
+}
 INLINE void host_writed(HostPt off,Bit32u val) {
 	off[0]=(Bit8u)(val);
 	off[1]=(Bit8u)(val >> 8);
 	off[2]=(Bit8u)(val >> 16);
 	off[3]=(Bit8u)(val >> 24);
-};
+}
 
 #else
 
 INLINE Bit8u host_readb(HostPt off) {
 	return *(Bit8u *)off;
-};
+}
 INLINE Bit16u host_readw(HostPt off) {
 	return *(Bit16u *)off;
-};
+}
 INLINE Bit32u host_readd(HostPt off) {
 	return *(Bit32u *)off;
-};
+}
 INLINE void host_writeb(HostPt off,Bit8u val) {
 	*(Bit8u *)(off)=val;
-};
+}
 INLINE void host_writew(HostPt off,Bit16u val) {
 	*(Bit16u *)(off)=val;
-};
+}
 INLINE void host_writed(HostPt off,Bit32u val) {
 	*(Bit32u *)(off)=val;
-};
+}
 
 #endif
 

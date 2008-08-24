@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.h,v 1.54 2008-05-21 21:29:15 c2woody Exp $ */
+/* $Id: cpu.h,v 1.55 2008-08-24 16:43:06 qbix79 Exp $ */
 
 #ifndef DOSBOX_CPU_H
 #define DOSBOX_CPU_H
@@ -481,12 +481,12 @@ extern CPUBlock cpu;
 INLINE void CPU_SetFlagsd(Bitu word) {
 	Bitu mask=cpu.cpl ? FMASK_NORMAL : FMASK_ALL;
 	CPU_SetFlags(word,mask);
-};
+}
 
 INLINE void CPU_SetFlagsw(Bitu word) {
 	Bitu mask=(cpu.cpl ? FMASK_NORMAL : FMASK_ALL) & 0xffff;
 	CPU_SetFlags(word,mask);
-};
+}
 
 
 #endif
