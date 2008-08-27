@@ -169,7 +169,7 @@ restart_opcode:
 				if (len>16) len=16;
 				char tempcode[16*2+1];char * writecode=tempcode;
 				for (;len>0;len--) {
-					sprintf(writecode,"%X",mem_readb(core.cseip++));
+					sprintf(writecode,"%02X",mem_readb(core.cseip++));
 					writecode+=2;
 				}
 				LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
