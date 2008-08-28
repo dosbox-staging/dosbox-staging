@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.68 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.69 2008-08-28 17:37:23 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -160,9 +160,32 @@ static SB_INFO sb;
 
 static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
 
-static Bit8u DSP_cmd_len[256] = {
-//  0,0,0,0, 1,2,0,0, 0,0,0,0, 0,0,2,1,  // 0x00 for SB16. but breaks sbpro
-  0,0,0,0, 0,2,0,0, 0,0,0,0, 0,0,2,1,  // 0x00
+// number of bytes in input for commands (sb/sbpro)
+static Bit8u DSP_cmd_len_sb[256] = {
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
+  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
+  0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
+  0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
+
+  1,2,2,0, 0,0,0,0, 2,0,0,0, 0,0,0,0,  // 0x40
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x50
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x60
+  0,0,0,0, 2,2,2,2, 0,0,0,0, 0,0,0,0,  // 0x70
+
+  2,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x80
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x90
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xa0
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xb0
+
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xc0
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xd0
+  1,0,1,0, 1,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xe0
+  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0   // 0xf0
+};
+
+// number of bytes in input for commands (sb16)
+static Bit8u DSP_cmd_len_sb16[256] = {
+  0,0,0,0, 1,2,0,0, 1,0,0,0, 0,0,2,1,  // 0x00
   1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
   0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
   0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
@@ -180,8 +203,11 @@ static Bit8u DSP_cmd_len[256] = {
   3,3,3,3, 3,3,3,3, 3,3,3,3, 3,3,3,3,  // 0xc0
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xd0
   1,0,1,0, 1,0,0,0, 0,0,0,0, 0,0,0,0,  // 0xe0
-  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0   // 0xf0
+  0,0,0,0, 0,0,0,0, 0,1,0,0, 0,0,0,0   // 0xf0
 };
+
+static Bit8u ASP_regs[256];
+static bool ASP_init_in_progress = false;
 
 static int E2_incr_table[4][9] = {
   {  0x01, -0x02, -0x04,  0x08, -0x10,  0x20,  0x40, -0x80, -106 },
@@ -708,9 +734,56 @@ Bitu DEBUG_EnableDebugger(void);
 static void DSP_DoCommand(void) {
 //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
-	case 0x04:	/* DSP Status SB 2.0/pro version. NOT SB16. */
-		DSP_FlushData();
-		DSP_AddData(0xff);			//Everthing enabled
+	case 0x04:
+		if (sb.type == SBT_16) {
+			/* SB16 ASP set mode register */
+			if ((sb.dsp.in.data[0]&0xf1)==0xf1) ASP_init_in_progress=true;
+			else ASP_init_in_progress=false;
+			LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set mode register to %X)",sb.dsp.cmd,sb.dsp.in.data[0]);
+		} else {
+			/* DSP Status SB 2.0/pro version. NOT SB16. */
+			DSP_FlushData();
+			if (sb.type == SBT_2) DSP_AddData(0x88);
+			else if ((sb.type == SBT_PRO1) || (sb.type == SBT_PRO2)) DSP_AddData(0x7b);
+			else DSP_AddData(0xff);			//Everything enabled
+		}
+		break;
+	case 0x05:	/* SB16 ASP set codec parameter */
+		LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set codec parameter)",sb.dsp.cmd);
+		break;
+	case 0x08:	/* SB16 ASP get version */
+		LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",sb.dsp.cmd,sb.dsp.in.data[0]);
+		if (sb.type == SBT_16) {
+			switch (sb.dsp.in.data[0]) {
+				case 0x03:
+					DSP_AddData(0x18);	// version ID (??)
+					break;
+				default:
+					LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",sb.dsp.cmd,sb.dsp.in.data[0]);
+					break;
+			}
+		} else {
+			LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",sb.dsp.cmd,sb.dsp.in.data[0]);
+		}
+		break;
+	case 0x0e:	/* SB16 ASP set register */
+		if (sb.type == SBT_16) {
+//			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP set register %X := %X",sb.dsp.in.data[0],sb.dsp.in.data[1]);
+			ASP_regs[sb.dsp.in.data[0]] = sb.dsp.in.data[1];
+		} else {
+			LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X (set register)",sb.dsp.cmd);
+		}
+		break;
+	case 0x0f:	/* SB16 ASP get register */
+		if (sb.type == SBT_16) {
+			if ((ASP_init_in_progress) && (sb.dsp.in.data[0]==0x83)) {
+				ASP_regs[0x83] = ~ASP_regs[0x83];
+			}
+//			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP get register %X == %X",sb.dsp.in.data[0],ASP_regs[sb.dsp.in.data[0]]);
+			DSP_AddData(ASP_regs[sb.dsp.in.data[0]]);
+		} else {
+			LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X (get register)",sb.dsp.cmd);
+		}
 		break;
 	case 0x10:	/* Direct DAC */
 		DSP_ChangeMode(MODE_DAC);
@@ -893,11 +966,45 @@ static void DSP_DoCommand(void) {
 	case 0xa0: case 0xa8: /* Documented only for DSP 3.x */
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented input command %2X",sb.dsp.cmd);
 		break;
-	case 0x0f:	/* SB16 ASP get register */
-		DSP_AddData(0xff); //Fall through
-	case 0x0e:	/* SB16 ASP Command ? */
-	case 0x05:	/* SB16 ASP set register */
-		LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X",sb.dsp.cmd);
+	case 0xf9:	/* SB16 ASP ??? */
+		if (sb.type == SBT_16) {
+			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP unknown function %x",sb.dsp.in.data[0]);
+			// just feed it what it expects
+			switch (sb.dsp.in.data[0]) {
+			case 0x0b:
+				DSP_AddData(0x00);
+				break;
+			case 0x0e:
+				DSP_AddData(0xff);
+				break;
+			case 0x0f:
+				DSP_AddData(0x07);
+				break;
+			case 0x23:
+				DSP_AddData(0x00);
+				break;
+			case 0x24:
+				DSP_AddData(0x00);
+				break;
+			case 0x2b:
+				DSP_AddData(0x00);
+				break;
+			case 0x2c:
+				DSP_AddData(0x00);
+				break;
+			case 0x2d:
+				DSP_AddData(0x00);
+				break;
+			case 0x37:
+				DSP_AddData(0x38);
+				break;
+			default:
+				DSP_AddData(0x00);
+				break;
+			}
+		} else {
+			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP unknown function %X",sb.dsp.cmd);
+		}
 		break;
 	default:
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unhandled (undocumented) command %2X",sb.dsp.cmd);
@@ -912,7 +1019,8 @@ static void DSP_DoWrite(Bit8u val) {
 	switch (sb.dsp.cmd) {
 	case DSP_NO_COMMAND:
 		sb.dsp.cmd=val;
-		sb.dsp.cmd_len=DSP_cmd_len[val];
+		if (sb.type == SBT_16) sb.dsp.cmd_len=DSP_cmd_len_sb16[val];
+		else sb.dsp.cmd_len=DSP_cmd_len_sb[val];
 		sb.dsp.in.pos=0;
 		if (!sb.dsp.cmd_len) DSP_DoCommand();
 		break;
@@ -1382,6 +1490,9 @@ public:
 			ReadHandler[i].Install(sb.hw.base+i,read_sb,IO_MB);
 			WriteHandler[i].Install(sb.hw.base+i,write_sb,IO_MB);
 		}
+		for (i=0;i<256;i++) ASP_regs[i] = 0;
+		ASP_regs[5] = 0x01;
+		ASP_regs[9] = 0xf8;
 		DSP_Reset();
 		CTMIXER_Reset();
 		// The documentation does not specify if SB gets initialized with the speaker enabled
