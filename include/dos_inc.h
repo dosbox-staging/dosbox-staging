@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.74 2008-05-28 09:53:31 qbix79 Exp $ */
+/* $Id: dos_inc.h,v 1.75 2008-08-29 19:27:04 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -77,13 +77,15 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_DEVICES 10
 
 
-#define DOS_INFOBLOCK_SEG 0x80
-#define DOS_CDS_SEG 0xa8
-#define DOS_CONSTRING_SEG 0xb8
-#define DOS_CONDRV_SEG 0xbc
-#define DOS_SDA_SEG 0xca
+// dos swappable area is 0x320 bytes beyond the sysvars table
+// device driver chain is inside sysvars
+#define DOS_INFOBLOCK_SEG 0x80	// sysvars (list of lists)
+#define DOS_CONDRV_SEG 0xa0
+#define DOS_CONSTRING_SEG 0xa8
+#define DOS_SDA_SEG 0xb2		// dos swappable area
 #define DOS_SDA_OFS 0
-#define DOS_MEM_START 0x11a					//First Segment that DOS can use
+#define DOS_CDS_SEG 0x108
+#define DOS_MEM_START 0x118					//First Segment that DOS can use
 
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
