@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.13 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.14 2008-08-31 10:14:31 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -31,6 +31,10 @@
 
 #include "dos_codepages.h"
 #include "dos_keyboard_layout_data.h"
+
+#if defined (WIN32)
+#include <windows.h>
+#endif
 
 
 static FILE* OpenDosboxFile(const char* name) {
@@ -1046,12 +1050,152 @@ public:
 		loaded_layout=new keyboard_layout();
 
 		const char * layoutname=section->Get_string("keyboardlayout");
-		// try to find a good codepage for the requested layout
-		Bitu req_codepage=loaded_layout->extract_codepage(layoutname);
 
-		loaded_layout->read_codepage_file("auto", req_codepage);
-		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage))
-			LOG_MSG("Error loading keyboard layout %s",layoutname);
+		Bits wants_dos_codepage = -1;
+		if (!strncmp(layoutname,"auto",4)) {
+#if defined (WIN32)
+			DWORD cur_kb_layout = MAKELCID(LOWORD(GetKeyboardLayout(0)),SORT_DEFAULT);
+			// try to match emulated keyboard layout with host-keyboardlayout
+			// codepage 437 (standard) is preferred
+			switch (cur_kb_layout) {
+				case 1026:
+					layoutname = "bg241";
+					break;
+				case 1029:
+					layoutname = "cz243";
+					break;
+				case 1030:
+					layoutname = "dk";
+					break;
+				case 1031:
+					layoutname = "gr";
+					wants_dos_codepage = 437;
+					break;
+				case 1032:
+					layoutname = "gk";
+					break;
+				case 1034:
+					layoutname = "sp";
+					wants_dos_codepage = 437;
+					break;
+				case 1035:
+					layoutname = "su";
+					wants_dos_codepage = 437;
+					break;
+				case 1036:
+					layoutname = "fr";
+					wants_dos_codepage = 437;
+					break;
+				case 1038:
+					layoutname = "hu";
+					break;
+				case 1039:
+					layoutname = "is161";
+					break;
+				case 1040:
+					layoutname = "it";
+					wants_dos_codepage = 437;
+					break;
+				case 1043:
+					layoutname = "nl";
+					wants_dos_codepage = 437;
+					break;
+				case 1044:
+					layoutname = "no";
+					break;
+				case 1045:
+					layoutname = "pl214";
+					break;
+				case 1046:
+					layoutname = "br";
+					wants_dos_codepage = 437;
+					break;
+				case 1048:
+					layoutname = "ro446";
+					break;
+				case 1049:
+					layoutname = "ru";
+					wants_dos_codepage = 437;
+					break;
+				case 1050:
+					layoutname = "hr";
+					break;
+				case 1051:
+					layoutname = "sk";
+					break;
+				case 1052:
+					layoutname = "sq448";
+					break;
+				case 1053:
+					layoutname = "sv";
+					wants_dos_codepage = 437;
+					break;
+				case 1055:
+					layoutname = "tr";
+					break;
+				case 1058:
+					layoutname = "ur";
+					wants_dos_codepage = 437;
+					break;
+				case 1059:
+					layoutname = "bl";
+					break;
+				case 1060:
+					layoutname = "si";
+					break;
+				case 1061:
+					layoutname = "et";
+					break;
+/*				case 1062:
+					layoutname = "lv";
+					break; */
+				case 1063:
+					layoutname = "lt221";
+					break;
+/*				case 1064:
+					layoutname = "tj";
+					break;
+				case 1066:
+					layoutname = "vi";
+					break;
+				case 1067:
+					layoutname = "hy";
+					break; */
+				case 2055:
+					layoutname = "sg";
+					wants_dos_codepage = 437;
+					break;
+				case 2070:
+					layoutname = "po";
+					break;
+				case 4108:
+					layoutname = "sf";
+					wants_dos_codepage = 437;
+					break;
+				default:
+					break;
+			}
+#endif
+		}
+
+		bool extract_codepage = true;
+		if (wants_dos_codepage>0) {
+			if ((loaded_layout->read_codepage_file("auto", (Bitu)wants_dos_codepage)) == KEYB_NOERROR) {
+				// preselected codepage was successfully loaded
+				extract_codepage = false;
+			}
+		}
+		if (extract_codepage) {
+			// try to find a good codepage for the requested layout
+			Bitu req_codepage = loaded_layout->extract_codepage(layoutname);
+			loaded_layout->read_codepage_file("auto", req_codepage);
+		}
+
+		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage)) {
+			if (strncmp(layoutname,"auto",4)) {
+				LOG_MSG("Error loading keyboard layout %s",layoutname);
+			}
+		}
 	}
 
 	~DOS_KeyboardLayout(){
