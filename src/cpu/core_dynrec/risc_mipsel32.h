@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_mipsel32.h,v 1.2 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: risc_mipsel32.h,v 1.3 2008-09-02 20:44:41 c2woody Exp $ */
 
 
 /* MIPS32 (little endian) backend by crazyc */
@@ -644,3 +644,5 @@ static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
 	}
 #endif
 }
+
+static void cache_block_before_close(void) { }

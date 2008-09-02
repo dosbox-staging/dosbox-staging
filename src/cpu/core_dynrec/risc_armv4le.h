@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le.h,v 1.1 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: risc_armv4le.h,v 1.2 2008-09-02 20:44:41 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend (switcher) by M-HT */
@@ -24,6 +24,8 @@
 #include "risc_armv4le-common.h"
 
 // choose your destiny:
-#include "risc_armv4le-s3.h"
-//#include "risc_armv4le-o3.h"
+#include "risc_armv4le-thumb-niw.h"
+//#include "risc_armv4le-thumb-iw.h"
 //#include "risc_armv4le-thumb.h"
+//#include "risc_armv4le-s3.h"
+//#include "risc_armv4le-o3.h"

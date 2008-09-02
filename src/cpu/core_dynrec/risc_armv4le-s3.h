@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-s3.h,v 1.1 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: risc_armv4le-s3.h,v 1.2 2008-09-02 20:44:41 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend by M-HT (speed-tweaked arm version) */
@@ -452,7 +452,7 @@ static void gen_jmp_ptr(void * ptr,Bits imm=0) {
 
 // short conditional jump (+-127 bytes) if register is zero
 // the destination is set by gen_fill_branch() later
-static Bit32u INLINE gen_create_branch_on_zero(HostReg reg,bool dword) {
+static Bit32u gen_create_branch_on_zero(HostReg reg,bool dword) {
 	if (dword) {
 		cache_addd(0xe3500000 + (reg << 16));      // cmp reg, #0
 	} else {
@@ -464,7 +464,7 @@ static Bit32u INLINE gen_create_branch_on_zero(HostReg reg,bool dword) {
 
 // short conditional jump (+-127 bytes) if register is nonzero
 // the destination is set by gen_fill_branch() later
-static Bit32u INLINE gen_create_branch_on_nonzero(HostReg reg,bool dword) {
+static Bit32u gen_create_branch_on_nonzero(HostReg reg,bool dword) {
 	if (dword) {
 		cache_addd(0xe3500000 + (reg << 16));      // cmp reg, #0
 	} else {
@@ -502,7 +502,7 @@ static Bit32u gen_create_branch_long_nonzero(HostReg reg,bool isdword) {
 }
 
 // compare 32bit-register against zero and jump if value less/equal than zero
-static Bit32u INLINE gen_create_branch_long_leqzero(HostReg reg) {
+static Bit32u gen_create_branch_long_leqzero(HostReg reg) {
 	cache_addd(0xe3500000 + (reg << 16));      // cmp reg, #0
 	cache_addd(0xca000002);      // bgt nobranch
 	cache_addd(0xe5900000 + (temp1 << 12) + (HOST_pc << 16));      // ldr temp1, [pc, #0]
@@ -692,3 +692,5 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 #endif
 }
 #endif
+
+static void cache_block_before_close(void) { }

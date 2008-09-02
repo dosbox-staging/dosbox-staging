@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x86.h,v 1.7 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: risc_x86.h,v 1.8 2008-09-02 20:44:41 c2woody Exp $ */
 
 
 // some configuring defines that specify the capabilities of this architecture
@@ -509,3 +509,5 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 #endif
 
 static void cache_block_closing(Bit8u* block_start,Bitu block_size) { }
+
+static void cache_block_before_close(void) { }

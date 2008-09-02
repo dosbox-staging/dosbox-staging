@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder_basic.h,v 1.11 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: decoder_basic.h,v 1.12 2008-09-02 20:44:41 c2woody Exp $ */
 
 
 /*
@@ -555,6 +555,7 @@ static void dyn_fill_blocks(void) {
 static void dyn_closeblock(void) {
 	//Shouldn't create empty block normally but let's do it like this
 	dyn_fill_blocks();
+	cache_block_before_close();
 	cache_closeblock();
 	cache_block_closing(decode.block->cache.start,decode.block->cache.size);
 }
