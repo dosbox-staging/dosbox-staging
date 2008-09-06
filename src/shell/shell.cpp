@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.92 2008-08-11 12:52:36 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.93 2008-09-06 14:47:15 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -572,8 +572,8 @@ void SHELL_Init() {
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramStart);
 
 	/* Now call up the shell for the first time */
-	Bit16u psp_seg=DOS_GetMemory(16+3)+1;
-	Bit16u env_seg=DOS_GetMemory(1+(4096/16))+1;
+	Bit16u psp_seg=DOS_FIRST_SHELL;
+	Bit16u env_seg=DOS_FIRST_SHELL+19; //DOS_GetMemory(1+(4096/16))+1;
 	Bit16u stack_seg=DOS_GetMemory(2048/16);
 	SegSet16(ss,stack_seg);
 	reg_sp=2046;
@@ -586,11 +586,17 @@ void SHELL_Init() {
 	/* Set up int 23 to "int 20" in the psp. Fixes what.exe */
 	real_writed(0,0x23*4,((Bit32u)psp_seg<<16));
 
-	/* Setup MCB and the environment */
+	/* Setup MCBs */
+	DOS_MCB pspmcb((Bit16u)(psp_seg-1));
+	pspmcb.SetPSPSeg(psp_seg);	// MCB of the command shell psp
+	pspmcb.SetSize(0x10+2);
+	pspmcb.SetType(0x4d);
 	DOS_MCB envmcb((Bit16u)(env_seg-1));
-	envmcb.SetPSPSeg(psp_seg);
-	envmcb.SetSize(4096/16);
+	envmcb.SetPSPSeg(psp_seg);	// MCB of the command shell environment
+	envmcb.SetSize(0x28);
+	envmcb.SetType(0x4d);
 	
+	/* Setup environment */
 	PhysPt env_write=PhysMake(env_seg,0);
 	MEM_BlockWrite(env_write,path_string,strlen(path_string)+1);
 	env_write+=strlen(path_string)+1;
@@ -626,8 +632,8 @@ void SHELL_Init() {
 	tail.count=strlen(init_line);
 	strcpy(tail.buffer,init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
+	
 	/* Setup internal DOS Variables */
-
 	dos.dta(RealMake(psp_seg,0x80));
 	dos.psp(psp_seg);
 

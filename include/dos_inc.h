@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.75 2008-08-29 19:27:04 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.76 2008-09-06 14:47:02 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -85,7 +85,8 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_SDA_SEG 0xb2		// dos swappable area
 #define DOS_SDA_OFS 0
 #define DOS_CDS_SEG 0x108
-#define DOS_MEM_START 0x118					//First Segment that DOS can use
+#define DOS_FIRST_SHELL 0x118
+#define DOS_MEM_START 0x158		//First Segment that DOS can use
 
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
