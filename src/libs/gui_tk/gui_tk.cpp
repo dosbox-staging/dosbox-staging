@@ -19,7 +19,7 @@
 /* TODO:
   - make menu a bufferedwindow with shadow
 */
-/* $Id: gui_tk.cpp,v 1.3 2008-08-06 18:33:47 c2woody Exp $ */
+/* $Id: gui_tk.cpp,v 1.4 2008-09-07 10:55:15 c2woody Exp $ */
 
 /** \file
  *  \brief Implementation file for gui_tk.
@@ -63,7 +63,7 @@ RGB TitlebarText = 0xffffffff;
 
 void Drawable::drawText(const String& text, bool interpret, Size start, Size len) {
 	if (interpret) {
-		if (len > text.size()-start) len = text.size()-start;
+		if (len > text.size()-start) len = (Size)(text.size()-start);
 		len += start;
 
 		Size wordstart = start;
@@ -859,7 +859,7 @@ bool Input::keyDown(const Key &key)
 					start_sel = end_sel = pos;
 				} else {
 					start_sel = 0;
-					pos = end_sel = text.size();
+					pos = end_sel = (Size)text.size();
 				}
 				break;
 			case 24:
@@ -905,7 +905,7 @@ bool Input::keyDown(const Key &key)
 	case Key::End:
 		if (multi) {
 			while (pos < text.size() && f->toSpecial(text[pos]) != Font::LF) pos++;
-		} else pos = text.size();
+		} else pos = (Size)text.size();
 		break;
 	case Key::Backspace:
 		if (!key.shift && start_sel != end_sel) clearSelection();

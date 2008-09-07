@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.112 2008-05-28 09:53:31 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.113 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -645,7 +645,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x47:					/* CWD Get current directory */
 		if (DOS_GetCurrentDir(reg_dl,name1)) {
-			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,strlen(name1)+1);	
+			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,(Bitu)(strlen(name1)+1));	
 			reg_ax=0x0100;
 			CALLBACK_SCF(false);
 		} else {
@@ -821,7 +821,7 @@ static Bitu DOS_21Handler(void) {
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			if (DOS_CreateTempFile(name1,&handle)) {
 				reg_ax=handle;
-				MEM_BlockWrite(SegPhys(ds)+reg_dx,name1,strlen(name1)+1);
+				MEM_BlockWrite(SegPhys(ds)+reg_dx,name1,(Bitu)(strlen(name1)+1));
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
@@ -870,7 +870,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
-				MEM_BlockWrite(SegPhys(es)+reg_di,name2,strlen(name2)+1);	
+				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));	
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;

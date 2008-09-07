@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.54 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.55 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -666,10 +666,10 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	upcase(searchName);
 	char* searchPos = searchName;
 
-	//strip of tailing . (XCOM APOCALIPSE)
-	int searchlen = strlen(searchName);
-	if(searchlen > 1 && strcmp(searchName,".."))
-		if(searchName[searchlen-1] =='.')  searchName[searchlen-1] = 0;
+	//strip of tailing . (XCOM APOCALYPSE)
+	size_t searchlen = strlen(searchName);
+	if (searchlen > 1 && strcmp(searchName,".."))
+		if (searchName[searchlen-1] =='.')  searchName[searchlen-1] = 0;
 
 	//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Find : %s",searchName);
 	// read vtoc

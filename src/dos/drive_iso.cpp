@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_iso.cpp,v 1.23 2008-05-24 18:50:39 c2woody Exp $ */
+/* $Id: drive_iso.cpp,v 1.24 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <cctype>
 #include <cstring>
@@ -510,8 +510,10 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data)
 		// remove any file version identifiers as there are some cdroms that don't have them
 		strreplace((char*)de->ident, ';', 0);	
 		// if file has no extension remove the trailing dot
-		int tmp = strlen((char*)de->ident);
-		if (tmp > 0 && de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
+		size_t tmp = strlen((char*)de->ident);
+		if (tmp > 0) {
+			if (de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
+		}
 	}
 	const char* dotpos = strchr((char*)de->ident, '.');
 	if (dotpos!=NULL) {
@@ -554,8 +556,10 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path)
 		if (IS_DIR(de->fileFlags)) {
 			
 			// remove the trailing dot if present
-			int nameLength = strlen(name);
-			if (nameLength > 0 && name[nameLength - 1] == '.') name[nameLength - 1] = 0;
+			size_t nameLength = strlen(name);
+			if (nameLength > 0) {
+				if (name[nameLength - 1] == '.') name[nameLength - 1] = 0;
+			}
 			
 			// look for the current path element
 			int dirIterator = GetDirIterator(de);

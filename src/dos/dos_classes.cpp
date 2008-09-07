@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.54 2008-01-21 21:26:49 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.55 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -24,12 +24,6 @@
 #include "mem.h"
 #include "dos_inc.h"
 #include "support.h"
-
-/* 
-	Work in progress, making classes for handling certain internal memory structures in dos
-	This should make it somewhat easier for porting to other endian machines and make
-	dos work a bit easier.
-*/
 
 
 void DOS_ParamBlock::Clear(void) {
@@ -345,12 +339,13 @@ void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
 	char * find_ext;
 	find_ext=strchr(pattern,'.');
 	if (find_ext) {
-		Bitu size=find_ext-pattern;if (size>8) size=8;
+		Bitu size=(Bitu)(find_ext-pattern);
+		if (size>8) size=8;
 		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,size);
 		find_ext++;
-		MEM_BlockWrite(pt+offsetof(sDTA,sext),find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext));
+		MEM_BlockWrite(pt+offsetof(sDTA,sext),find_ext,(strlen(find_ext)>3) ? 3 : (Bitu)strlen(find_ext));
 	} else {
-		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,(strlen(pattern) > 8) ? 8 : strlen(pattern));
+		MEM_BlockWrite(pt+offsetof(sDTA,sname),pattern,(strlen(pattern) > 8) ? 8 : (Bitu)strlen(pattern));
 	}
 }
 

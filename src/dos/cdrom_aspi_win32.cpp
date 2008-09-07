@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_aspi_win32.cpp,v 1.19 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: cdrom_aspi_win32.cpp,v 1.20 2008-09-07 10:55:14 c2woody Exp $ */
 
 #if defined (WIN32)
 
@@ -224,9 +224,9 @@ bool CDROM_Interface_Aspi::GetVendor(BYTE HA_num, BYTE SCSI_Id, BYTE SCSI_Lun, c
 		return false;
 	} else {
 		safe_strncpy(szBuffer,szBuffer+8,26);
-		int len = strlen(szBuffer);
-		for (int i=0; i<len; i++) if (szBuffer[i]<=32) szBuffer[i]='_';
-	};
+		size_t len = strlen(szBuffer);
+		for (size_t i=0; i<len; i++) if (szBuffer[i]<=32) szBuffer[i]='_';
+	}
 	return true;
 }
 

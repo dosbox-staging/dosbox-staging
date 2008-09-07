@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.20 2008-04-19 09:25:48 qbix79 Exp $ */
+/* $Id: cdrom_image.cpp,v 1.21 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -65,7 +65,7 @@ bool CDROM_Interface_Image::BinaryFile::read(Bit8u *buffer, int seek, int count)
 int CDROM_Interface_Image::BinaryFile::getLength()
 {
 	file->seekg(0, ios::end);
-	int length = file->tellg();
+	int length = (int)file->tellg();
 	if (file->fail()) return -1;
 	return length;
 }
@@ -170,7 +170,7 @@ bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
 	// print error message on dosbox console
 	char buf[MAX_LINE_LENGTH];
 	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\n", path);
-	Bit16u size = strlen(buf);
+	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
 	return false;
 }
@@ -185,7 +185,7 @@ bool CDROM_Interface_Image::GetUPC(unsigned char& attr, char* upc)
 bool CDROM_Interface_Image::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut)
 {
 	stTrack = 1;
-	end = tracks.size() - 1;
+	end = (int)(tracks.size() - 1);
 	FRAMES_TO_MSF(tracks[tracks.size() - 1].start + 150, &leadOut.min, &leadOut.sec, &leadOut.fr);
 	return true;
 }
@@ -639,7 +639,7 @@ bool CDROM_Interface_Image::GetCueFrame(int &frames, istream &in)
 
 bool CDROM_Interface_Image::GetCueString(string &str, istream &in)
 {
-	int pos = in.tellg();
+	int pos = (int)in.tellg();
 	in >> str;
 	if (str[0] == '\"') {
 		if (str[str.size() - 1] == '\"') {

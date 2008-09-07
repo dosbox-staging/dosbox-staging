@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.93 2008-09-06 14:47:15 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.94 2008-09-07 10:55:16 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -99,7 +99,7 @@ void AutoexecObject::CreateAutoexec(void) {
 		}
 		sprintf((autoexec_data+auto_len),"%s\r\n",(*it).c_str());
 	}
-	if(first_shell) VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+	if(first_shell) VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
 }
 
 AutoexecObject::~AutoexecObject(){
@@ -430,7 +430,7 @@ public:
 			}
 		}
 nomount:
-		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,strlen(autoexec_data));
+		VFILE_Register("AUTOEXEC.BAT",(Bit8u *)autoexec_data,(Bit32u)strlen(autoexec_data));
 	}
 };
 
@@ -598,14 +598,14 @@ void SHELL_Init() {
 	
 	/* Setup environment */
 	PhysPt env_write=PhysMake(env_seg,0);
-	MEM_BlockWrite(env_write,path_string,strlen(path_string)+1);
-	env_write+=strlen(path_string)+1;
-	MEM_BlockWrite(env_write,comspec_string,strlen(comspec_string)+1);
-	env_write+=strlen(comspec_string)+1;
+	MEM_BlockWrite(env_write,path_string,(Bitu)(strlen(path_string)+1));
+	env_write += (PhysPt)(strlen(path_string)+1);
+	MEM_BlockWrite(env_write,comspec_string,(Bitu)(strlen(comspec_string)+1));
+	env_write += (PhysPt)(strlen(comspec_string)+1);
 	mem_writeb(env_write++,0);
 	mem_writew(env_write,1);
 	env_write+=2;
-	MEM_BlockWrite(env_write,full_name,strlen(full_name)+1);
+	MEM_BlockWrite(env_write,full_name,(Bitu)(strlen(full_name)+1));
 
 	DOS_PSP psp(psp_seg);
 	psp.MakeNew(0);
@@ -629,7 +629,7 @@ void SHELL_Init() {
 	psp.SetEnvironment(env_seg);
 	/* Set the command line for the shell start up */
 	CommandTail tail;
-	tail.count=strlen(init_line);
+	tail.count=(Bit8u)strlen(init_line);
 	strcpy(tail.buffer,init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
 	

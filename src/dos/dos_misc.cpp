@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.19 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: dos_misc.cpp,v 1.20 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -120,22 +120,26 @@ static bool DOS_MultiplexFunctions(void) {
 				nlen-=(extlen+1);
 
 				if (nlen>8) nlen=8;
-				for (Bitu i=0; i<nlen; i++)
-					mem_writeb(sftptr+sftofs+0x20+i,filename[i]);
-				for (Bitu i=nlen; i<8; i++)
-					mem_writeb(sftptr+sftofs+0x20+i,' ');
+				size_t i;
+
+				for (i=0; i<nlen; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x20+i),filename[i]);
+				for (i=nlen; i<8; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x20+i),' ');
+				
 				if (extlen>3) extlen=3;
-				for (Bitu i=0; i<extlen; i++)
-					mem_writeb(sftptr+sftofs+0x28+i,dotpos[i]);
-				for (Bitu i=extlen; i<3; i++)
-					mem_writeb(sftptr+sftofs+0x28+i,' ');
+				for (i=0; i<extlen; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x28+i),dotpos[i]);
+				for (i=extlen; i<3; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x28+i),' ');
 			} else {
+				size_t i;
 				size_t nlen=strlen(filename);
 				if (nlen>8) nlen=8;
-				for (Bitu i=0; i<nlen; i++)
-					mem_writeb(sftptr+sftofs+0x20+i,filename[i]);
-				for (Bitu i=nlen; i<11; i++)
-					mem_writeb(sftptr+sftofs+0x20+i,' ');
+				for (i=0; i<nlen; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x20+i),filename[i]);
+				for (i=nlen; i<11; i++)
+					mem_writeb((PhysPt)(sftptr+sftofs+0x20+i),' ');
 			}
 
 			SegSet16(es,RealSeg(sftrealpt));

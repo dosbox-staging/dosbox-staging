@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.57 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.58 2008-09-07 10:55:15 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -437,7 +437,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 		return EMM_RestoreMappingTable();
 		break;
 	case 0x02:	/* Get Partial Page Map Array Size */
-		reg_al=2+reg_bx*(2+sizeof(EMM_Mapping));
+		reg_al=(Bit8u)(2+reg_bx*(2+sizeof(EMM_Mapping)));
 		break;
 	default:
 		LOG(LOG_MISC,LOG_ERROR)("EMS:Call %2X Subfunction %2X not supported",reg_ah,reg_al);
@@ -1237,7 +1237,7 @@ public:
 		/* Add a little hack so it appears that there is an actual ems device installed */
 		char const* emsname="EMMXXXX0";
 		if(!emsnameseg) emsnameseg=DOS_GetMemory(2);	//We have 32 bytes
-		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,strlen(emsname)+1);
+		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,(Bitu)(strlen(emsname)+1));
 
 		/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
 		char buf[16];

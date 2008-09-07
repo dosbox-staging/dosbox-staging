@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.83 2008-08-11 12:54:57 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.84 2008-09-07 10:55:16 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -413,7 +413,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	char buffer[CROSS_LEN];
 	args = trim(args);
-	Bit32u argLen = strlen(args);
+	size_t argLen = strlen(args);
 	if (argLen == 0) {
 		strcpy(args,"*.*"); //no arguments.
 	} else {
@@ -481,7 +481,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 		if (attr & DOS_ATTR_DIRECTORY) {
 			if (optW) {
 				WriteOut("[%s]",name);
-				for (Bitu i=14-strlen(name);i>0;i--) WriteOut(" ");
+				size_t namelen = strlen(name);
+				if ((namelen>=0) && (namelen<=14)) {
+					for (Bitu i=14-(Bitu)namelen;i>0;i--) WriteOut(" ");
+				}
 			} else {
 				WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);
 			}
@@ -1003,7 +1006,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
 	c = optS?c:toupper(c);
 	DOS_WriteFile (STDOUT,&c, &n);
-	dos.return_code = ptr-rem+1;
+	dos.return_code = (Bit8u)(ptr-rem+1);
 }
 
 void DOS_Shell::CMD_ATTRIB(char *args){

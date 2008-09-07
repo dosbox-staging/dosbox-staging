@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.98 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.99 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -153,7 +153,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			}
 			
 
-			lastdir=strlen(fullname);
+			lastdir=(Bit32u)strlen(fullname);
 
 			if (lastdir!=0) strcat(fullname,"\\");
 			char * ext=strchr(tempdir,'.');
@@ -814,9 +814,11 @@ static void DTAExtendName(char * const name,char * const filename,char * const e
 		*find=0;
 	} else ext[0]=0;
 	strcpy(filename,name);
-	Bitu i;
-	for (i=strlen(name);i<8;i++) filename[i]=' ';filename[8]=0;
-	for (i=strlen(ext);i<3;i++) ext[i]=' ';ext[3]=0;
+	size_t i;
+	for (i=strlen(name);i<8;i++) filename[i]=' ';
+	filename[8]=0;
+	for (i=strlen(ext);i<3;i++) ext[i]=' ';
+	ext[3]=0;
 }
 
 static void SaveFindResult(DOS_FCB & find_fcb) {

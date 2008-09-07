@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.50 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: setup.cpp,v 1.51 2008-09-07 10:55:15 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -872,7 +872,7 @@ bool CommandLine::GetStringRemain(std::string & value) {
 		
 
 unsigned int CommandLine::GetCount(void) {
-	return cmds.size();
+	return (unsigned int)cmds.size();
 }
 
 CommandLine::CommandLine(int argc,char const * const argv[]) {

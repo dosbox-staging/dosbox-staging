@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.32 2008-07-26 19:06:26 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.33 2008-09-07 10:55:15 c2woody Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -126,12 +126,12 @@ void Program::WriteOut(const char * format,...) {
 	vsnprintf(buf,2047,format,msg);
 	va_end(msg);
 
-	Bit16u size = strlen(buf);
+	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT,(Bit8u *)buf,&size);
 }
 
 void Program::WriteOut_NoParsing(const char * format) {
-	Bit16u size = strlen(format);
+	Bit16u size = (Bit16u)strlen(format);
 	DOS_WriteFile(STDOUT,(Bit8u *)format,&size);
 }
 
@@ -145,7 +145,7 @@ bool Program::GetEnvStr(const char * entry,std::string & result) {
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) return false;
-		env_read+=strlen(env_string)+1;
+		env_read += (PhysPt)(strlen(env_string)+1);
 		char* equal = strchr(env_string,'=');
 		if (!equal) continue;
 		/* replace the = with \0 to get the length */
@@ -167,7 +167,7 @@ bool Program::GetEnvNum(Bitu num,std::string & result) {
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
 		if (!num) { result=env_string;return true;}
-		env_read+=strlen(env_string)+1;
+		env_read += (PhysPt)(strlen(env_string)+1);
 		num--;
 	} while (1);
 	return false;
@@ -191,12 +191,12 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
-		env_read+=strlen(env_string)+1;
+		env_read += (PhysPt)(strlen(env_string)+1);
 		if (!strchr(env_string,'=')) continue;		/* Remove corrupt entry? */
 		if ((strncasecmp(entry,env_string,strlen(entry))==0) && 
 			env_string[strlen(entry)]=='=') continue;
-		MEM_BlockWrite(env_write,env_string,strlen(env_string)+1);
-		env_write+=strlen(env_string)+1;
+		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
+		env_write += (PhysPt)(strlen(env_string)+1);
 	} while (1);
 /* TODO Maybe save the program name sometime. not really needed though */
 	/* Save the new entry */
@@ -205,8 +205,8 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
 		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
 //		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
-		MEM_BlockWrite(env_write,env_string,strlen(env_string)+1);
-		env_write+=strlen(env_string)+1;
+		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
+		env_write += (PhysPt)(strlen(env_string)+1);
 	}
 	/* Clear out the final piece of the environment */
 	mem_writed(env_write,0);

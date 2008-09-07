@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vesa.cpp,v 1.36 2008-05-10 17:33:28 c2woody Exp $ */
+/* $Id: int10_vesa.cpp,v 1.37 2008-09-07 10:55:15 c2woody Exp $ */
 
 #include <string.h>
 #include <stddef.h>
@@ -484,7 +484,7 @@ void INT10_SetupVESA(void) {
 	phys_writew(PhysMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
-	Bitu len=strlen(string_oem)+1;
+	Bitu len=(Bitu)(strlen(string_oem)+1);
 	for (i=0;i<len;i++) {
 		phys_writeb(0xc0000+int10.rom.used++,string_oem[i]);
 	}

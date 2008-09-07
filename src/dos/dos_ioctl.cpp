@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.32 2008-05-25 17:24:59 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.33 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -152,7 +152,8 @@ bool DOS_IOCTL(void) {
 
 					char const* find_ext=strchr(bufin,'.');
 					if (find_ext) {
-						Bitu size=find_ext-bufin;if (size>8) size=8;
+						Bitu size=(Bitu)(find_ext-bufin);
+						if (size>8) size=8;
 						memcpy(buffer,bufin,size);
 						find_ext++;
 						memcpy(buffer+size,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext)); 

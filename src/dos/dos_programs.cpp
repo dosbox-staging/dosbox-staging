@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.86 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.87 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -678,7 +678,7 @@ public:
 				FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
 				if (tfile!=NULL) {
 					fseek(tfile, 0x3000L, SEEK_SET);
-					Bit32u drd=fread(rombuf, 1, 0xb000, tfile);
+					Bit32u drd=(Bit32u)fread(rombuf, 1, 0xb000, tfile);
 					if (drd==0xb000) {
 						for(i=0;i<0xb000;i++) phys_writeb(0xf3000+i,rombuf[i]);
 					}
@@ -1075,7 +1075,7 @@ public:
 			}
 			
 			// find all file parameters, assuming that all option parameters have been removed
-			while(cmd->FindCommand(paths.size() + 2, temp_line) && temp_line.size()) {
+			while(cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) && temp_line.size()) {
 				
 				struct stat test;
 				if (stat(temp_line.c_str(),&test)) {

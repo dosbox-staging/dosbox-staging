@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.63 2007-11-18 10:30:12 c2woody Exp $ */
+/* $Id: dos_execute.cpp,v 1.64 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -201,7 +201,7 @@ static bool MakeEnv(char * name,Bit16u * segment) {
 	envwrite+=2;
 	char namebuf[DOS_PATHLENGTH];
 	if (DOS_Canonicalize(name,namebuf)) {
-		MEM_BlockWrite(envwrite,namebuf,strlen(namebuf)+1);
+		MEM_BlockWrite(envwrite,namebuf,(Bitu)(strlen(namebuf)+1));
 		return true;
 	} else return false;
 }

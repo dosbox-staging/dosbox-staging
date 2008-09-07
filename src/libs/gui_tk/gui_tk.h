@@ -102,7 +102,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.4 2008-08-09 19:42:26 qbix79 Exp $ */
+/* $Id: gui_tk.h,v 1.5 2008-09-07 10:55:15 c2woody Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H
@@ -435,7 +435,7 @@ template <typename STR> void NativeString<STR*>::getString(String &dest, const S
 }
 
 template <typename STR> STR* NativeString<STR*>::getNative(const String &src) {
-	Size strlen = src.size();
+	Size strlen = (Size)src.size();
 	STR* dest = new STR[strlen+1];
 	dest[strlen] = 0;
 	for (; strlen > 0; strlen--) dest[strlen-1] = src[strlen-1];
@@ -447,12 +447,12 @@ template <> class NativeString<std::string*> {
 protected:
 	friend class String;
 	static void getString(String &dest, const std::string *src) {
-		Size strlen = src->length();
+		Size strlen = (Size)src->length();
 		dest.resize(strlen);
 		for (Size i = 0; i< strlen; i++) dest[i] = (*src)[i];
 	}
 	static std::string* getNative(const String &src) {
-		Size strlen = src.size();
+		Size strlen = (Size)src.size();
 		std::string* dest = new std::string();
 		for (Size i = 0; i < strlen; i++) dest->append(1,src[i]);
 		src.addNative(new String::NativeObject<std::string>(dest));
@@ -466,12 +466,12 @@ template <> class NativeString<std::string> {
 protected:
 	friend class String;
 	static void getString(String &dest, const std::string &src) {
-		Size strlen = src.length();
+		Size strlen = (Size)src.length();
 		dest.resize(strlen);
 		for (Size i = 0; i< strlen; i++) dest[i] = src[i];
 	}
 	static std::string& getNative(const String &src) {
-		Size strlen = src.size();
+		Size strlen = (Size)src.size();
 		std::string* dest = new std::string();
 		for (Size i = 0; i < strlen; i++) dest->append(1,src[i]);
 		src.addNative(new String::NativeObject<std::string>(dest));
@@ -1133,7 +1133,11 @@ protected:
 
 	/// Draw \p len characters to a drawable at the current position, starting at string position \p start.
 	/** This can be used to provide kerning. */
-	virtual void drawString(Drawable *d, const String &s, Size start, Size len) const { if (len > s.size()-start) len = s.size()-start; len += start; while (start < len) drawChar(d,s[start++]); }
+	virtual void drawString(Drawable *d, const String &s, Size start, Size len) const {
+		if (len > s.size()-start) len = (Size)(s.size()-start);
+		len += start;
+		while (start < len) drawChar(d,s[start++]);
+	}
 
 public:
 	/// Return a font with the given name (case-sensitive).
@@ -1173,7 +1177,7 @@ public:
 	/** Can be used to provide kerning. */
 	virtual int getWidth(const String &s, Size start = 0, Size len = (Size)-1) const {
 		int width = 0;
-		if (start+len > s.size()) len = s.size()-start;
+		if (start+len > s.size()) len = (Size)(s.size()-start);
 		while (len--) width += getWidth(s[start++]);
 		return width;
 	}
@@ -1506,7 +1510,7 @@ public:
 		String c = getClipboard();
 		clearSelection();
 		text.insert(text.begin()+pos,c.begin(),c.end());
-		start_sel = end_sel = pos += c.size();
+		start_sel = end_sel = pos += (Size)c.size();
 	}
 
 	/// get character position corresponding to coordinates
@@ -1852,7 +1856,7 @@ public:
 		else if (key.special == Key::Escape) { setVisible(false); return true; }
 		else return true;
 		if (items[selected].size() == 0 && items.size() > 1) return keyDown(key);
-		if (selected < 0) selected = items.size()-1;
+		if (selected < 0) selected = (int)(items.size()-1);
 		if (selected >= (int)items.size()) selected = 0;
 		return true;
 	}
@@ -1988,7 +1992,7 @@ public:
 		if (selected >= 0 && !menus[selected]->isVisible()) oldselected = -1;
 		if (selected >= 0) menus[selected]->setVisible(false);
 		if (x < 0 || x >= lastx) return true;
-		for (selected = menus.size()-1; menus[selected]->getX() > x; selected--) {};
+		for (selected = (int)(menus.size()-1); menus[selected]->getX() > x; selected--) {};
 		if (oldselected == selected) selected = -1;
 		else menus[selected]->setVisible(true);
 		return true;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drives.cpp,v 1.13 2008-01-21 21:25:17 qbix79 Exp $ */
+/* $Id: drives.cpp,v 1.14 2008-09-07 10:55:14 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "dos_system.h"
@@ -40,7 +40,8 @@ bool WildFileCmp(const char * file, const char * wild)
 
 	find_ext=strrchr(file,'.');
 	if (find_ext) {
-		Bitu size=find_ext-file;if (size>8) size=8;
+		Bitu size=(Bitu)(find_ext-file);
+		if (size>8) size=8;
 		memcpy(file_name,file,size);
 		find_ext++;
 		memcpy(file_ext,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext)); 
@@ -50,7 +51,8 @@ bool WildFileCmp(const char * file, const char * wild)
 	upcase(file_name);upcase(file_ext);
 	find_ext=strrchr(wild,'.');
 	if (find_ext) {
-		Bitu size=find_ext-wild;if (size>8) size=8;
+		Bitu size=(Bitu)(find_ext-wild);
+		if (size>8) size=8;
 		memcpy(wild_name,wild,size);
 		find_ext++;
 		memcpy(wild_ext,find_ext,(strlen(find_ext)>3) ? 3 : strlen(find_ext));
