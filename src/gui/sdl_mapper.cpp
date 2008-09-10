@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.49 2008-05-26 19:13:42 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.50 2008-09-10 16:20:04 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2259,7 +2259,8 @@ void MAPPER_UpdateJoysticks(void) {
 
 void MAPPER_LosingFocus(void) {
 	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
-		(*evit)->DeActivateAll();
+		if(*evit != caps_lock_event && *evit != num_lock_event)
+			(*evit)->DeActivateAll();
 	}
 }
 
