@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: dma.cpp,v 1.39 2008-09-13 20:04:28 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -231,7 +233,8 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu len) {
 			chan=GetChannel(i);
 			if (chan->tcount) ret|=1 << i;
 			chan->tcount=false;
-			if (chan->callback) ret|=1 << (i+4);
+//			if (chan->callback) ret|=1 << (i+4);
+			if (chan->request) ret|=1 << (4+i);
 		}
 		return ret;
 	default:
@@ -256,6 +259,7 @@ DmaChannel::DmaChannel(Bit8u num, bool dma16) {
 	increment = true;
 	autoinit = false;
 	tcount = false;
+	request = false;
 }
 
 Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {

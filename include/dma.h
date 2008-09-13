@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dma.h,v 1.17 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: dma.h,v 1.18 2008-09-13 20:04:28 c2woody Exp $ */
 
 #ifndef DOSBOX_DMA_H
 #define DOSBOX_DMA_H
@@ -46,6 +46,7 @@ public:
 	Bit8u trantype;
 	bool masked;
 	bool tcount;
+	bool request;
 	DMA_CallBack callback;
 
 	DmaChannel(Bit8u num, bool dma16);
@@ -59,6 +60,8 @@ public:
 	void Register_Callback(DMA_CallBack _cb) { 
 		callback = _cb; 
 		SetMask(masked);
+		if (callback) Raise_Request();
+		else Clear_Request();
 	}
 	void ReachedTC(void) {
 		tcount=true;
@@ -67,6 +70,12 @@ public:
 	void SetPage(Bit8u val) {
 		pagenum=val;
 		pagebase=(pagenum >> DMA16) << (16+DMA16);
+	}
+	void Raise_Request(void) {
+		request=true;
+	}
+	void Clear_Request(void) {
+		request=false;
 	}
 	Bitu Read(Bitu size, Bit8u * buffer);
 	Bitu Write(Bitu size, Bit8u * buffer);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.69 2008-08-28 17:37:23 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.70 2008-09-13 20:04:28 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -680,6 +680,7 @@ static void DSP_Reset(void) {
 	sb.dma.autoinit=false;
 	sb.dma.mode=DSP_DMA_NONE;
 	sb.dma.remain_size=0;
+	if (sb.dma.chan) sb.dma.chan->Clear_Request();
 	sb.freq=22050;
 	sb.time_constant=45;
 	sb.dac.used=0;
@@ -1482,6 +1483,7 @@ public:
 		if (sb.type==SBT_NONE) return;
 		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
 		sb.dsp.state=DSP_S_NORMAL;
+		sb.dma.chan=NULL;
 
 		for (i=4;i<=0xf;i++) {
 			if (i==8 || i==9) continue;
