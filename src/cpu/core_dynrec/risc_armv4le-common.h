@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-common.h,v 1.1 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: risc_armv4le-common.h,v 1.2 2008-09-19 16:48:02 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend by M-HT (common data/functions) */
@@ -39,6 +39,11 @@
 // calling convention modifier
 #define DRC_CALL_CONV	/* nothing */
 #define DRC_FC			/* nothing */
+
+// use FC_REGS_ADDR to hold the address of "cpu_regs" and to access it using FC_REGS_ADDR
+#define DRC_USE_REGS_ADDR
+// use FC_SEGS_ADDR to hold the address of "Segs" and to access it using FC_SEGS_ADDR
+#define DRC_USE_SEGS_ADDR
 
 // register mapping
 typedef Bit8u HostReg;
@@ -91,7 +96,7 @@ static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
 	register unsigned long _flg __asm ("a3") = 0;
 	__asm __volatile ("swi 0x9f0002		@ sys_cacheflush"
 		: // no outputs
-		: // no inputs
-		: "a1");
+		: "r" (_beg), "r" (_end), "r" (_flg)
+		);
 // GP2X END
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -618,7 +618,7 @@ static void dyn_fpu_esc7(){
 					gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 					gen_call_function_R((void*)&FPU_SET_TOP,FC_OP1); 
 					gen_mov_word_to_reg(FC_OP1,(void*)(&fpu.sw),false);
-					gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,false),false);
+					MOV_REG_WORD16_FROM_HOST_REG(FC_OP1,DRC_REG_EAX);
 					break;
 				default:
 					LOG(LOG_FPU,LOG_WARN)("ESC 7:Unhandled group %d subfunction %d",decode.modrm.reg,decode.modrm.rm);

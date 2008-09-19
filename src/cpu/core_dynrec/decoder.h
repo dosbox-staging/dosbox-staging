@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: decoder.h,v 1.5 2008-09-19 16:48:02 c2woody Exp $ */
 
 
 #include "decoder_basic.h"
@@ -324,11 +326,7 @@ restart_prefix:
 		case 0x8c:dyn_mov_ev_seg();break;
 
 		// load effective address
-		case 0x8d:
-			dyn_get_modrm();
-			dyn_fill_ea(FC_ADDR,false);
-			gen_mov_word_from_reg(FC_ADDR,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
-			break;
+		case 0x8d:dyn_lea();break;
 
 		// move a value from memory or a 16bit register into a segment register
 		case 0x8e:dyn_mov_seg_ev();break;

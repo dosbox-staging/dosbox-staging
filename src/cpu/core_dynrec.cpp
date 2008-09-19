@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.10 2008-08-20 14:13:21 c2woody Exp $ */
+/* $Id: core_dynrec.cpp,v 1.11 2008-09-19 16:48:02 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -92,7 +92,7 @@
 
 
 // access to a general register
-#define DRCD_REG(reg) (&cpu_regs.regs[reg].dword)
+#define DRCD_REG_VAL(reg) (&cpu_regs.regs[reg].dword)
 // access to a segment register
 #define DRCD_SEG_VAL(seg) (&Segs.val[seg])
 // access to the physical value of a segment register/selector

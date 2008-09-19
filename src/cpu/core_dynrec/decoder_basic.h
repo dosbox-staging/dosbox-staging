@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder_basic.h,v 1.12 2008-09-02 20:44:41 c2woody Exp $ */
+/* $Id: decoder_basic.h,v 1.13 2008-09-19 16:48:02 c2woody Exp $ */
 
 
 /*
@@ -350,6 +350,89 @@ static void INLINE dyn_get_modrm(void) {
 	decode.modrm.reg=(decode.modrm.val >> 3) & 7;
 	decode.modrm.rm=(decode.modrm.val & 7);
 }
+
+
+#ifdef DRC_USE_SEGS_ADDR
+
+#define MOV_SEG_VAL_TO_HOST_REG(host_reg, seg_index) gen_mov_seg16_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_SEG_VAL(seg_index)) - (DRC_PTR_SIZE_IM)(&Segs))
+
+#define MOV_SEG_PHYS_TO_HOST_REG(host_reg, seg_index) gen_mov_seg32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_SEG_PHYS(seg_index)) - (DRC_PTR_SIZE_IM)(&Segs))
+#define ADD_SEG_PHYS_TO_HOST_REG(host_reg, seg_index) gen_add_seg32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_SEG_PHYS(seg_index)) - (DRC_PTR_SIZE_IM)(&Segs))
+
+#else
+
+#define MOV_SEG_VAL_TO_HOST_REG(host_reg, seg_index) gen_mov_word_to_reg(host_reg,DRCD_SEG_VAL(seg_index),false)
+
+#define MOV_SEG_PHYS_TO_HOST_REG(host_reg, seg_index) gen_mov_word_to_reg(host_reg,DRCD_SEG_PHYS(seg_index),true)
+#define ADD_SEG_PHYS_TO_HOST_REG(host_reg, seg_index) gen_add(host_reg,DRCD_SEG_PHYS(seg_index))
+
+#endif
+
+
+#ifdef DRC_USE_REGS_ADDR
+
+#define MOV_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define ADD_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_add_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_VAL(reg_index)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+
+#define MOV_REG_WORD16_TO_HOST_REG(host_reg, reg_index) gen_mov_regval16_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_WORD32_TO_HOST_REG(host_reg, reg_index) gen_mov_regval32_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_WORD_TO_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_to_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&cpu_regs), dword)
+
+#define MOV_REG_WORD16_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval16_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,false)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_WORD32_FROM_HOST_REG(host_reg, reg_index) gen_mov_regval32_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,true)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_WORD_FROM_HOST_REG(host_reg, reg_index, dword) gen_mov_regword_from_reg(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_WORD(reg_index,dword)) - (DRC_PTR_SIZE_IM)(&cpu_regs), dword)
+
+#define MOV_REG_BYTE_TO_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low_canuseword(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+#define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_from_reg_low(host_reg,(DRC_PTR_SIZE_IM)(DRCD_REG_BYTE(reg_index,high_byte)) - (DRC_PTR_SIZE_IM)(&cpu_regs))
+
+#else
+
+#define MOV_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_mov_word_to_reg(host_reg,DRCD_REG_VAL(reg_index),true)
+#define ADD_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_add(host_reg,DRCD_REG_VAL(reg_index))
+
+#define MOV_REG_WORD16_TO_HOST_REG(host_reg, reg_index) gen_mov_word_to_reg(host_reg,DRCD_REG_WORD(reg_index,false),false)
+#define MOV_REG_WORD32_TO_HOST_REG(host_reg, reg_index) gen_mov_word_to_reg(host_reg,DRCD_REG_WORD(reg_index,true),true)
+#define MOV_REG_WORD_TO_HOST_REG(host_reg, reg_index, dword) gen_mov_word_to_reg(host_reg,DRCD_REG_WORD(reg_index,dword),dword)
+
+#define MOV_REG_WORD16_FROM_HOST_REG(host_reg, reg_index) gen_mov_word_from_reg(host_reg,DRCD_REG_WORD(reg_index,false),false)
+#define MOV_REG_WORD32_FROM_HOST_REG(host_reg, reg_index) gen_mov_word_from_reg(host_reg,DRCD_REG_WORD(reg_index,true),true)
+#define MOV_REG_WORD_FROM_HOST_REG(host_reg, reg_index, dword) gen_mov_word_from_reg(host_reg,DRCD_REG_WORD(reg_index,dword),dword)
+
+#define MOV_REG_BYTE_TO_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_byte_to_reg_low(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
+#define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_byte_to_reg_low_canuseword(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
+#define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_byte_from_reg_low(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
+
+#endif
+
+
+#define DYN_LEA_MEM_MEM(ea_reg, op1, op2, scale, imm) dyn_lea_mem_mem(ea_reg,op1,op2,scale,imm)
+
+#if defined(DRC_USE_REGS_ADDR) && defined(DRC_USE_SEGS_ADDR)
+
+#define DYN_LEA_SEG_PHYS_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_segphys_regval(ea_reg,op1_index,op2_index,scale,imm)
+#define DYN_LEA_REG_VAL_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_regval_regval(ea_reg,op1_index,op2_index,scale,imm)
+#define DYN_LEA_MEM_REG_VAL(ea_reg, op1, op2_index, scale, imm) dyn_lea_mem_regval(ea_reg,op1,op2_index,scale,imm)
+
+#elif defined(DRC_USE_REGS_ADDR)
+
+#define DYN_LEA_SEG_PHYS_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_mem_regval(ea_reg,DRCD_SEG_PHYS(op1_index),op2_index,scale,imm)
+#define DYN_LEA_REG_VAL_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_regval_regval(ea_reg,op1_index,op2_index,scale,imm)
+#define DYN_LEA_MEM_REG_VAL(ea_reg, op1, op2_index, scale, imm) dyn_lea_mem_regval(ea_reg,op1,op2_index,scale,imm)
+
+#elif defined(DRC_USE_SEGS_ADDR)
+
+#define DYN_LEA_SEG_PHYS_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_segphys_mem(ea_reg,op1_index,DRCD_REG_VAL(op2_index),scale,imm)
+#define DYN_LEA_REG_VAL_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_mem_mem(ea_reg,DRCD_REG_VAL(op1_index),DRCD_REG_VAL(op2_index),scale,imm)
+#define DYN_LEA_MEM_REG_VAL(ea_reg, op1, op2_index, scale, imm) dyn_lea_mem_mem(ea_reg,op1,DRCD_REG_VAL(op2_index),scale,imm)
+
+#else
+
+#define DYN_LEA_SEG_PHYS_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_mem_mem(ea_reg,DRCD_SEG_PHYS(op1_index),DRCD_REG_VAL(op2_index),scale,imm)
+#define DYN_LEA_REG_VAL_REG_VAL(ea_reg, op1_index, op2_index, scale, imm) dyn_lea_mem_mem(ea_reg,DRCD_REG_VAL(op1_index),DRCD_REG_VAL(op2_index),scale,imm)
+#define DYN_LEA_MEM_REG_VAL(ea_reg, op1, op2_index, scale, imm) dyn_lea_mem_mem(ea_reg,op1,DRCD_REG_VAL(op2_index),scale,imm)
+
+#endif
 
 
 
@@ -689,7 +772,7 @@ static void dyn_write_word(HostReg reg_addr,HostReg reg_val,bool dword) {
 
 // effective address calculation helper, op2 has to be present!
 // loads op1 into ea_reg and adds the scaled op2 and the immediate to it
-static void dyn_lea(HostReg ea_reg,void* op1,void* op2,Bitu scale,Bits imm) {
+static void dyn_lea_mem_mem(HostReg ea_reg,void* op1,void* op2,Bitu scale,Bits imm) {
 	if (scale || imm) {
 		if (op1!=NULL) {
 			gen_mov_word_to_reg(ea_reg,op1,true);
@@ -706,6 +789,79 @@ static void dyn_lea(HostReg ea_reg,void* op1,void* op2,Bitu scale,Bits imm) {
 	}
 }
 
+#ifdef DRC_USE_REGS_ADDR
+// effective address calculation helper
+// loads op1 into ea_reg and adds the scaled op2 and the immediate to it
+// op1 is cpu_regs[op1_index], op2 is cpu_regs[op2_index] 
+static void dyn_lea_regval_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,Bitu scale,Bits imm) {
+	if (scale || imm) {
+		MOV_REG_VAL_TO_HOST_REG(ea_reg,op1_index);
+		MOV_REG_VAL_TO_HOST_REG(TEMP_REG_DRC,op2_index);
+
+		gen_lea(ea_reg,TEMP_REG_DRC,scale,imm);
+	} else {
+		MOV_REG_VAL_TO_HOST_REG(ea_reg,op2_index);
+		ADD_REG_VAL_TO_HOST_REG(ea_reg,op1_index);
+	}
+}
+
+// effective address calculation helper
+// loads op1 into ea_reg and adds the scaled op2 and the immediate to it
+// op2 is cpu_regs[op2_index] 
+static void dyn_lea_mem_regval(HostReg ea_reg,void* op1,Bitu op2_index,Bitu scale,Bits imm) {
+	if (scale || imm) {
+		if (op1!=NULL) {
+			gen_mov_word_to_reg(ea_reg,op1,true);
+			MOV_REG_VAL_TO_HOST_REG(TEMP_REG_DRC,op2_index);
+
+			gen_lea(ea_reg,TEMP_REG_DRC,scale,imm);
+		} else {
+			MOV_REG_VAL_TO_HOST_REG(ea_reg,op2_index);
+			gen_lea(ea_reg,scale,imm);
+		}
+	} else {
+		MOV_REG_VAL_TO_HOST_REG(ea_reg,op2_index);
+		if (op1!=NULL) gen_add(ea_reg,op1);
+	}
+}
+#endif
+
+#ifdef DRC_USE_SEGS_ADDR
+#ifdef DRC_USE_REGS_ADDR
+// effective address calculation helper
+// loads op1 into ea_reg and adds the scaled op2 and the immediate to it
+// op1 is Segs[op1_index], op2 is cpu_regs[op2_index] 
+static void dyn_lea_segphys_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,Bitu scale,Bits imm) {
+	if (scale || imm) {
+		MOV_SEG_PHYS_TO_HOST_REG(ea_reg,op1_index);
+		MOV_REG_VAL_TO_HOST_REG(TEMP_REG_DRC,op2_index);
+
+		gen_lea(ea_reg,TEMP_REG_DRC,scale,imm);
+	} else {
+		MOV_REG_VAL_TO_HOST_REG(ea_reg,op2_index);
+		ADD_SEG_PHYS_TO_HOST_REG(ea_reg,op1_index);
+	}
+}
+
+#else
+
+// effective address calculation helper, op2 has to be present!
+// loads op1 into ea_reg and adds the scaled op2 and the immediate to it
+// op1 is Segs[op1_index] 
+static void dyn_lea_segphys_mem(HostReg ea_reg,Bitu op1_index,void* op2,Bitu scale,Bits imm) {
+	if (scale || imm) {
+		MOV_SEG_PHYS_TO_HOST_REG(ea_reg,op1_index);
+		gen_mov_word_to_reg(TEMP_REG_DRC,op2,true);
+
+		gen_lea(ea_reg,TEMP_REG_DRC,scale,imm);
+	} else {
+		gen_mov_word_to_reg(ea_reg,op2,true);
+		ADD_SEG_PHYS_TO_HOST_REG(ea_reg,op1_index);
+	}
+}
+#endif
+#endif
+
 // calculate the effective address and store it in ea_reg
 static void dyn_fill_ea(HostReg ea_reg,bool addseg=true) {
 	Bit8u seg_base=DRC_SEG_DS;
@@ -718,25 +874,25 @@ static void dyn_fill_ea(HostReg ea_reg,bool addseg=true) {
 		}
 		switch (decode.modrm.rm) {
 		case 0:// BX+SI
-			dyn_lea(ea_reg,DRCD_REG(DRC_REG_EBX),DRCD_REG(DRC_REG_ESI),0,imm);
+			DYN_LEA_REG_VAL_REG_VAL(ea_reg,DRC_REG_EBX,DRC_REG_ESI,0,imm);
 			break;
 		case 1:// BX+DI
-			dyn_lea(ea_reg,DRCD_REG(DRC_REG_EBX),DRCD_REG(DRC_REG_EDI),0,imm);
+			DYN_LEA_REG_VAL_REG_VAL(ea_reg,DRC_REG_EBX,DRC_REG_EDI,0,imm);
 			break;
 		case 2:// BP+SI
-			dyn_lea(ea_reg,DRCD_REG(DRC_REG_EBP),DRCD_REG(DRC_REG_ESI),0,imm);
+			DYN_LEA_REG_VAL_REG_VAL(ea_reg,DRC_REG_EBP,DRC_REG_ESI,0,imm);
 			seg_base=DRC_SEG_SS;
 			break;
 		case 3:// BP+DI
-			dyn_lea(ea_reg,DRCD_REG(DRC_REG_EBP),DRCD_REG(DRC_REG_EDI),0,imm);
+			DYN_LEA_REG_VAL_REG_VAL(ea_reg,DRC_REG_EBP,DRC_REG_EDI,0,imm);
 			seg_base=DRC_SEG_SS;
 			break;
 		case 4:// SI
-			gen_mov_word_to_reg(ea_reg,DRCD_REG(DRC_REG_ESI),true);
+			MOV_REG_VAL_TO_HOST_REG(ea_reg,DRC_REG_ESI);
 			if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 			break;
 		case 5:// DI
-			gen_mov_word_to_reg(ea_reg,DRCD_REG(DRC_REG_EDI),true);
+			MOV_REG_VAL_TO_HOST_REG(ea_reg,DRC_REG_EDI);
 			if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 			break;
 		case 6:// imm/BP
@@ -745,13 +901,13 @@ static void dyn_fill_ea(HostReg ea_reg,bool addseg=true) {
 				gen_mov_dword_to_reg_imm(ea_reg,(Bit32u)imm);
 				goto skip_extend_word;
 			} else {
-				gen_mov_word_to_reg(ea_reg,DRCD_REG(DRC_REG_EBP),true);
+				MOV_REG_VAL_TO_HOST_REG(ea_reg,DRC_REG_EBP);
 				gen_add_imm(ea_reg,(Bit32u)imm);
 				seg_base=DRC_SEG_SS;
 			}
 			break;
 		case 7: // BX
-			gen_mov_word_to_reg(ea_reg,DRCD_REG(DRC_REG_EBX),true);
+			MOV_REG_VAL_TO_HOST_REG(ea_reg,DRC_REG_EBX);
 			if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 			break;
 		}
@@ -760,7 +916,7 @@ static void dyn_fill_ea(HostReg ea_reg,bool addseg=true) {
 skip_extend_word:
 		if (addseg) {
 			// add the physical segment value if requested
-			gen_add(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
+			ADD_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
 		}
 	} else {
 		Bits imm=0;
@@ -804,14 +960,14 @@ skip_extend_word:
 								if (!scaled_reg_used) {
 									gen_mov_word_to_reg(ea_reg,(void*)val,true);
 								} else {
-									dyn_lea(ea_reg,NULL,DRCD_REG(scaled_reg),scale,0);
+									DYN_LEA_MEM_REG_VAL(ea_reg,NULL,scaled_reg,scale,0);
 									gen_add(ea_reg,(void*)val);
 								}
 							} else {
 								if (!scaled_reg_used) {
-									gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
+									MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
 								} else {
-									dyn_lea(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),DRCD_REG(scaled_reg),scale,0);
+									DYN_LEA_SEG_PHYS_REG_VAL(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base),scaled_reg,scale,0);
 								}
 								gen_add(ea_reg,(void*)val);
 							}
@@ -824,14 +980,14 @@ skip_extend_word:
 							if (!scaled_reg_used) {
 								gen_mov_dword_to_reg_imm(ea_reg,(Bit32u)imm);
 							} else {
-								dyn_lea(ea_reg,NULL,DRCD_REG(scaled_reg),scale,imm);
+								DYN_LEA_MEM_REG_VAL(ea_reg,NULL,scaled_reg,scale,imm);
 							}
 						} else {
 							if (!scaled_reg_used) {
-								gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
+								MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
 								if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 							} else {
-								dyn_lea(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),DRCD_REG(scaled_reg),scale,imm);
+								DYN_LEA_SEG_PHYS_REG_VAL(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base),scaled_reg,scale,imm);
 							}
 						}
 
@@ -853,19 +1009,19 @@ skip_extend_word:
 						// succeeded, use the pointer to avoid code invalidation
 						if (!addseg) {
 							if (!scaled_reg_used) {
-								gen_mov_word_to_reg(ea_reg,DRCD_REG(base_reg),true);
+								MOV_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 								gen_add(ea_reg,(void*)val);
 							} else {
-								dyn_lea(ea_reg,DRCD_REG(base_reg),DRCD_REG(scaled_reg),scale,0);
+								DYN_LEA_REG_VAL_REG_VAL(ea_reg,base_reg,scaled_reg,scale,0);
 								gen_add(ea_reg,(void*)val);
 							}
 						} else {
 							if (!scaled_reg_used) {
-								gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
+								MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
 							} else {
-								dyn_lea(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),DRCD_REG(scaled_reg),scale,0);
+								DYN_LEA_SEG_PHYS_REG_VAL(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base),scaled_reg,scale,0);
 							}
-							gen_add(ea_reg,DRCD_REG(base_reg));
+							ADD_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 							gen_add(ea_reg,(void*)val);
 						}
 						return;
@@ -878,19 +1034,19 @@ skip_extend_word:
 
 				if (!addseg) {
 					if (!scaled_reg_used) {
-						gen_mov_word_to_reg(ea_reg,DRCD_REG(base_reg),true);
+						MOV_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 						gen_add_imm(ea_reg,(Bit32u)imm);
 					} else {
-						dyn_lea(ea_reg,DRCD_REG(base_reg),DRCD_REG(scaled_reg),scale,imm);
+						DYN_LEA_REG_VAL_REG_VAL(ea_reg,base_reg,scaled_reg,scale,imm);
 					}
 				} else {
 					if (!scaled_reg_used) {
-						gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
-						gen_add(ea_reg,DRCD_REG(base_reg));
+						MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
+						ADD_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 						if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 					} else {
-						dyn_lea(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),DRCD_REG(scaled_reg),scale,imm);
-						gen_add(ea_reg,DRCD_REG(base_reg));
+						DYN_LEA_SEG_PHYS_REG_VAL(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base),scaled_reg,scale,imm);
+						ADD_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 					}
 				}
 
@@ -907,7 +1063,7 @@ skip_extend_word:
 				if (!addseg) {
 					gen_mov_dword_to_reg_imm(ea_reg,(Bit32u)imm);
 				} else {
-					gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
+					MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
 					if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 				}
 
@@ -930,11 +1086,11 @@ skip_extend_word:
 			if (decode_fetchd_imm(val)) {
 				// succeeded, use the pointer to avoid code invalidation
 				if (!addseg) {
-					gen_mov_word_to_reg(ea_reg,DRCD_REG(base_reg),true);
+					MOV_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 					gen_add(ea_reg,(void*)val);
 				} else {
-					gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
-					gen_add(ea_reg,DRCD_REG(base_reg));
+					MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
+					ADD_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 					gen_add(ea_reg,(void*)val);
 				}
 				return;
@@ -946,11 +1102,11 @@ skip_extend_word:
 		}
 
 		if (!addseg) {
-			gen_mov_word_to_reg(ea_reg,DRCD_REG(base_reg),true);
+			MOV_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 			if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 		} else {
-			gen_mov_word_to_reg(ea_reg,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : seg_base),true);
-			gen_add(ea_reg,DRCD_REG(base_reg));
+			MOV_SEG_PHYS_TO_HOST_REG(ea_reg,(decode.seg_prefix_used ? decode.seg_prefix : seg_base));
+			ADD_REG_VAL_TO_HOST_REG(ea_reg,base_reg);
 			if (imm) gen_add_imm(ea_reg,(Bit32u)imm);
 		}
 	}

@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-thumb-niw.h,v 1.1 2008-09-02 20:44:41 c2woody Exp $ */
+/* $Id: risc_armv4le-thumb-niw.h,v 1.2 2008-09-19 16:48:02 c2woody Exp $ */
 
 
-/* ARMv4 (little endian) backend by M-HT (thumb version) */
+/* ARMv4 (little endian) backend by M-HT (thumb version with data pool) */
 
 
 // temporary "lo" registers
@@ -53,6 +53,16 @@
 // temporary register for LEA
 #define TEMP_REG_DRC HOST_a4
 
+#ifdef DRC_USE_REGS_ADDR
+// used to hold the address of "cpu_regs" - preferably filled in function gen_run_code
+#define FC_REGS_ADDR HOST_v7
+#endif
+
+#ifdef DRC_USE_SEGS_ADDR
+// used to hold the address of "Segs" - preferably filled in function gen_run_code
+#define FC_SEGS_ADDR HOST_v8
+#endif
+
 
 // data pool defines
 #define CACHE_DATA_JUMP	 (2)
@@ -65,7 +75,7 @@ static Bit8u * cache_datapos = NULL;	// position of data pool in the cache block
 static Bit32u cache_datasize = 0;		// total size of data pool
 static Bit32u cache_dataindex = 0;		// used size of data pool = index of free data item (in bytes) in data pool
 
-
+// forwarded function
 static void INLINE gen_create_branch_short(void * func);
 
 // function to check distance to data pool
@@ -753,7 +763,18 @@ static void gen_run_code(void) {
 
 	// thumb state from now on
 	cache_addw(0xb500);      // push {lr}
-	cache_addw(0xb4f0);      // push {v1-v4}
+	cache_addw(0x4640 + HOST_r3 + ((FC_SEGS_ADDR - HOST_r8) << 3));      // mov r3, FC_SEGS_ADDR
+	cache_addw(0x4640 + HOST_r2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov r2, FC_REGS_ADDR
+	cache_addw(0xb4fc);      // push {r2,r3,v1-v4}
+
+	// adr: 16
+	cache_addw(0x4800 + (HOST_r3 << 8) + ((64 - (16 + 4)) >> 2));        // ldr r3, [pc, #(&Segs)]
+	// adr: 18
+	cache_addw(0x4800 + (HOST_r2 << 8) + ((68 - (18 + 2)) >> 2));        // ldr r2, [pc, #(&cpu_regs)]
+	cache_addw(0x4680 + (FC_SEGS_ADDR - HOST_r8) + (HOST_r3 << 3));      // mov FC_SEGS_ADDR, r3
+	cache_addw(0x4680 + (FC_REGS_ADDR - HOST_r8) + (HOST_r2 << 3));      // mov FC_REGS_ADDR, r2
+
+	// align 4
 
 	cache_addw(0xa302);      // add r3, pc, #8
 	cache_addw(0x3001);      // add r0, #1
@@ -762,10 +783,24 @@ static void gen_run_code(void) {
 	cache_addw(0x4700);      // bx r0
 	cache_addw(0x46c0);      // nop
 
-	cache_addw(0xbcf0);      // pop {v1-v4}
+	// align 4
+	cache_addw(0xbcfc);      // pop {r2,r3,v1-v4}
+	cache_addw(0x4680 + (FC_SEGS_ADDR - HOST_r8) + (HOST_r3 << 3));      // mov FC_SEGS_ADDR, r3
+	cache_addw(0x4680 + (FC_REGS_ADDR - HOST_r8) + (HOST_r2 << 3));      // mov FC_REGS_ADDR, r2
 
 	cache_addw(0xbc08);      // pop {r3}
 	cache_addw(0x4718);      // bx r3
+	// fill up to 64 bytes
+	cache_addw(0x46c0);      // nop
+	cache_addd(0x46c046c0);  // nop, nop
+	cache_addd(0x46c046c0);  // nop, nop
+	cache_addd(0x46c046c0);  // nop, nop
+	cache_addd(0x46c046c0);  // nop, nop
+
+	// adr: 64
+	cache_addd((Bit32u)&Segs);      // address of "Segs"
+	// adr: 68
+	cache_addd((Bit32u)&cpu_regs);  // address of "cpu_regs"
 }
 
 // return from a function
@@ -1128,5 +1163,124 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		*(Bit32u*)( ( ((Bit32u) (*pos)) << 2 ) + ((Bit32u)pos + 2) ) = (Bit32u)fct_ptr;		// simple_func
 	}
 #endif
+}
+#endif
+
+#ifdef DRC_USE_SEGS_ADDR
+
+// mov 16bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 2 must be zero)
+// 16bit moves may destroy the upper 16bit of the destination register
+static void gen_mov_seg16_to_reg(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_SEGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_SEGS_ADDR
+	cache_addw(0x8800 + dest_reg + (templo1 << 3) + (index << 5));      // ldrh dest_reg, [templo1, #index]
+}
+
+// mov 32bit value from Segs[index] into dest_reg using FC_SEGS_ADDR (index modulo 4 must be zero)
+static void gen_mov_seg32_to_reg(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_SEGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_SEGS_ADDR
+	cache_addw(0x6800 + dest_reg + (templo1 << 3) + (index << 4));      // ldr dest_reg, [templo1, #index]
+}
+
+// add a 32bit value from Segs[index] to a full register using FC_SEGS_ADDR (index modulo 4 must be zero)
+static void gen_add_seg32_to_reg(HostReg reg,Bitu index) {
+	cache_checkinstr(6);
+	cache_addw(0x4640 + templo1 + ((FC_SEGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_SEGS_ADDR
+	cache_addw(0x6800 + templo2 + (templo1 << 3) + (index << 4));      // ldr templo2, [templo1, #index]
+	cache_addw(0x1800 + reg + (reg << 3) + (templo2 << 6));      // add reg, reg, templo2
+}
+
+#endif
+
+#ifdef DRC_USE_REGS_ADDR
+
+// mov 16bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 2 must be zero)
+// 16bit moves may destroy the upper 16bit of the destination register
+static void gen_mov_regval16_to_reg(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	cache_addw(0x8800 + dest_reg + (templo2 << 3) + (index << 5));      // ldrh dest_reg, [templo2, #index]
+}
+
+// mov 32bit value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (index modulo 4 must be zero)
+static void gen_mov_regval32_to_reg(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	cache_addw(0x6800 + dest_reg + (templo2 << 3) + (index << 4));      // ldr dest_reg, [templo2, #index]
+}
+
+// move a 32bit (dword==true) or 16bit (dword==false) value from cpu_regs[index] into dest_reg using FC_REGS_ADDR (if dword==true index modulo 4 must be zero) (if dword==false index modulo 2 must be zero)
+// 16bit moves may destroy the upper 16bit of the destination register
+static void gen_mov_regword_to_reg(HostReg dest_reg,Bitu index,bool dword) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	if (dword) {
+		cache_addw(0x6800 + dest_reg + (templo2 << 3) + (index << 4));      // ldr dest_reg, [templo2, #index]
+	} else {
+		cache_addw(0x8800 + dest_reg + (templo2 << 3) + (index << 5));      // ldrh dest_reg, [templo2, #index]
+	}
+}
+
+// move an 8bit value from cpu_regs[index]  into dest_reg using FC_REGS_ADDR
+// the upper 24bit of the destination register can be destroyed
+// this function does not use FC_OP1/FC_OP2 as dest_reg as these
+// registers might not be directly byte-accessible on some architectures
+static void gen_mov_regbyte_to_reg_low(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	cache_addw(0x7800 + dest_reg + (templo2 << 3) + (index << 6));      // ldrb dest_reg, [templo2, #index]
+}
+
+// move an 8bit value from cpu_regs[index]  into dest_reg using FC_REGS_ADDR
+// the upper 24bit of the destination register can be destroyed
+// this function can use FC_OP1/FC_OP2 as dest_reg which are
+// not directly byte-accessible on some architectures
+static void INLINE gen_mov_regbyte_to_reg_low_canuseword(HostReg dest_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	cache_addw(0x7800 + dest_reg + (templo2 << 3) + (index << 6));      // ldrb dest_reg, [templo2, #index]
+}
+
+
+// add a 32bit value from cpu_regs[index] to a full register using FC_REGS_ADDR (index modulo 4 must be zero)
+static void gen_add_regval32_to_reg(HostReg reg,Bitu index) {
+	cache_checkinstr(6);
+	cache_addw(0x4640 + templo2 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo2, FC_REGS_ADDR
+	cache_addw(0x6800 + templo1 + (templo2 << 3) + (index << 4));      // ldr templo1, [templo2, #index]
+	cache_addw(0x1800 + reg + (reg << 3) + (templo1 << 6));      // add reg, reg, templo1
+}
+
+
+// move 16bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 2 must be zero)
+static void gen_mov_regval16_from_reg(HostReg src_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_REGS_ADDR
+	cache_addw(0x8000 + src_reg + (templo1 << 3) + (index << 5));      // strh src_reg, [templo1, #index]
+}
+
+// move 32bit of register into cpu_regs[index] using FC_REGS_ADDR (index modulo 4 must be zero)
+static void gen_mov_regval32_from_reg(HostReg src_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_REGS_ADDR
+	cache_addw(0x6000 + src_reg + (templo1 << 3) + (index << 4));      // str src_reg, [templo1, #index]
+}
+
+// move 32bit (dword==true) or 16bit (dword==false) of a register into cpu_regs[index] using FC_REGS_ADDR (if dword==true index modulo 4 must be zero) (if dword==false index modulo 2 must be zero)
+static void gen_mov_regword_from_reg(HostReg src_reg,Bitu index,bool dword) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_REGS_ADDR
+	if (dword) {
+		cache_addw(0x6000 + src_reg + (templo1 << 3) + (index << 4));      // str src_reg, [templo1, #index]
+	} else {
+		cache_addw(0x8000 + src_reg + (templo1 << 3) + (index << 5));      // strh src_reg, [templo1, #index]
+	}
+}
+
+// move the lowest 8bit of a register into cpu_regs[index] using FC_REGS_ADDR
+static void gen_mov_regbyte_from_reg_low(HostReg src_reg,Bitu index) {
+	cache_checkinstr(4);
+	cache_addw(0x4640 + templo1 + ((FC_REGS_ADDR - HOST_r8) << 3));      // mov templo1, FC_REGS_ADDR
+	cache_addw(0x7000 + src_reg + (templo1 << 3) + (index << 6));      // strb src_reg, [templo1, #index]
 }
 #endif

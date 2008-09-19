@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static void dyn_dop_ebgb(DualOps op) {
 		dyn_fill_ea(FC_ADDR);
 		gen_protect_addr_reg();
 		dyn_read_byte_canuseword(FC_ADDR,FC_OP1);
-		gen_mov_byte_to_reg_low_canuseword(FC_OP2,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP2,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		dyn_dop_byte_gencall(op);
 
 		if ((op!=DOP_CMP) && (op!=DOP_TEST)) {
@@ -42,10 +42,10 @@ static void dyn_dop_ebgb(DualOps op) {
 			dyn_write_byte(FC_ADDR,FC_RETOP);
 		}
 	} else {
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
-		gen_mov_byte_to_reg_low_canuseword(FC_OP2,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP2,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		dyn_dop_byte_gencall(op);
-		if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -53,11 +53,11 @@ static void dyn_dop_ebgb_mov(void) {
 	dyn_get_modrm();
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
-		gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		dyn_write_byte(FC_ADDR,FC_TMP_BA1);
 	} else {
-		gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -69,7 +69,7 @@ static void dyn_dop_ebib_mov(void) {
 		dyn_write_byte(FC_ADDR,FC_TMP_BA1);
 	} else {
 		gen_mov_byte_to_reg_low_imm(FC_TMP_BA1,decode_fetchb());
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -79,16 +79,16 @@ static void dyn_dop_ebgb_xchg(void) {
 		dyn_fill_ea(FC_ADDR);
 		gen_protect_addr_reg();
 		dyn_read_byte(FC_ADDR,FC_TMP_BA1);
-		gen_mov_byte_to_reg_low(FC_TMP_BA2,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA2,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		gen_restore_addr_reg();
 		dyn_write_byte(FC_ADDR,FC_TMP_BA2);
 	} else {
-		gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
-		gen_mov_byte_to_reg_low(FC_TMP_BA2,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
-		gen_mov_byte_from_reg_low(FC_TMP_BA2,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA2,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA2,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -97,14 +97,14 @@ static void dyn_dop_gbeb(DualOps op) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_byte_canuseword(FC_ADDR,FC_OP2);
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		dyn_dop_byte_gencall(op);
-		if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 	} else {
-		gen_mov_byte_to_reg_low_canuseword(FC_OP2,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP2,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 		dyn_dop_byte_gencall(op);
-		if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 	}
 }
 
@@ -113,10 +113,10 @@ static void dyn_dop_gbeb_mov(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_byte(FC_ADDR,FC_TMP_BA1);
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 	} else {
-		gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
-		gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.reg&3,(decode.modrm.reg>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.reg&3,(decode.modrm.reg>>2)&1);
 	}
 }
 
@@ -126,17 +126,17 @@ static void dyn_dop_evgv(DualOps op) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 		gen_protect_addr_reg();
-		gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 		dyn_dop_word_gencall(op,decode.big_op);
 		if ((op!=DOP_CMP) && (op!=DOP_TEST)) {
 			gen_restore_addr_reg();
 			dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
 		}
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
-		gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 		dyn_dop_word_gencall(op,decode.big_op);
-		if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -144,11 +144,11 @@ static void dyn_dop_evgv_mov(void) {
 	dyn_get_modrm();
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 		dyn_write_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -162,7 +162,7 @@ static void dyn_dop_eviv_mov(void) {
 	} else {
 		if (decode.big_op) gen_mov_dword_to_reg_imm(FC_OP1,decode_fetchd());
 		else gen_mov_word_to_reg_imm(FC_OP1,decode_fetchw());
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -172,26 +172,26 @@ static void dyn_dop_evgv_xchg(void) {
 		dyn_fill_ea(FC_ADDR);
 		gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
-		gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 
 		gen_protect_reg(FC_OP1);
 		gen_restore_addr_reg();
 		dyn_write_word(FC_ADDR,FC_OP2,decode.big_op);
 		gen_restore_reg(FC_OP1);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
-		gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
-		gen_mov_word_from_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP2,decode.modrm.rm,decode.big_op);
 	}
 }
 
 static void dyn_xchg_ax(Bit8u reg) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
-	gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
-	gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
-	gen_mov_word_from_reg(FC_OP2,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_EAX,decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP2,reg,decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_OP1,reg,decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_OP2,DRC_REG_EAX,decode.big_op);
 }
 
 static void dyn_dop_gvev(DualOps op) {
@@ -200,17 +200,17 @@ static void dyn_dop_gvev(DualOps op) {
 		dyn_fill_ea(FC_ADDR);
 		gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP2,decode.big_op);
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 		dyn_dop_word_gencall(op,decode.big_op);
 		if ((op!=DOP_CMP) && (op!=DOP_TEST)) {
 			gen_restore_addr_reg();
-			gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+			MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.reg,decode.big_op);
 		}
 	} else {
-		gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.rm,decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 		dyn_dop_word_gencall(op,decode.big_op);
-		if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.reg,decode.big_op);
 	}
 }
 
@@ -219,22 +219,22 @@ static void dyn_dop_gvev_mov(void) {
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	}
 }
 
 static void dyn_dop_byte_imm(DualOps op,Bit8u reg,Bit8u idx) {
-	gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(reg,idx));
+	MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,reg,idx);
 	gen_mov_byte_to_reg_low_imm_canuseword(FC_OP2,decode_fetchb());
 	dyn_dop_byte_gencall(op);
-	if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(reg,idx));
+	if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,reg,idx);
 }
 
 static void dyn_dop_byte_imm_mem(DualOps op,Bit8u reg,Bit8u idx) {
-	gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(reg,idx));
+	MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,reg,idx);
 	Bitu val;
 	if (decode_fetchb_imm(val)) {
 		gen_mov_byte_to_reg_low_canuseword(FC_OP2,(void*)val);
@@ -242,7 +242,7 @@ static void dyn_dop_byte_imm_mem(DualOps op,Bit8u reg,Bit8u idx) {
 		gen_mov_byte_to_reg_low_imm_canuseword(FC_OP2,(Bit8u)val);
 	}
 	dyn_dop_byte_gencall(op);
-	if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(reg,idx));
+	if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,reg,idx);
 }
 
 static void dyn_prep_word_imm(Bit8u reg) {
@@ -263,23 +263,23 @@ static void dyn_prep_word_imm(Bit8u reg) {
 }
 
 static void dyn_dop_word_imm(DualOps op,Bit8u reg) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
 	dyn_prep_word_imm(reg);
 	dyn_dop_word_gencall(op,decode.big_op);
-	if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,reg,decode.big_op);
 }
 
 static void dyn_dop_word_imm_old(DualOps op,Bit8u reg,Bitu imm) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
 	if (decode.big_op) gen_mov_dword_to_reg_imm(FC_OP2,(Bit32u)imm);
 	else gen_mov_word_to_reg_imm(FC_OP2,(Bit16u)imm);
 	dyn_dop_word_gencall(op,decode.big_op);
-	if ((op!=DOP_CMP) && (op!=DOP_TEST)) gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	if ((op!=DOP_CMP) && (op!=DOP_TEST)) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,reg,decode.big_op);
 }
 
 static void dyn_mov_byte_imm(Bit8u reg,Bit8u idx,Bit8u imm) {
 	gen_mov_byte_to_reg_low_imm(FC_TMP_BA1,imm);
-	gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(reg,idx));
+	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,reg,idx);
 }
 
 static void dyn_mov_word_imm(Bit8u reg) {
@@ -287,45 +287,45 @@ static void dyn_mov_word_imm(Bit8u reg) {
 	if (decode.big_op) {
 		if (decode_fetchd_imm(val)) {
 			gen_mov_word_to_reg(FC_OP1,(void*)val,true);
-			gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(reg,true),true);
+			MOV_REG_WORD32_FROM_HOST_REG(FC_OP1,reg);
 			return;
 		}
 	} else {
 		if (decode_fetchw_imm(val)) {
 			gen_mov_word_to_reg(FC_OP1,(void*)val,false);
-			gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(reg,false),false);
+			MOV_REG_WORD16_FROM_HOST_REG(FC_OP1,reg);
 			return;
 		}
 	}
 	if (decode.big_op) gen_mov_dword_to_reg_imm(FC_OP1,(Bit32u)val);
 	else gen_mov_word_to_reg_imm(FC_OP1,(Bit16u)val);
-	gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_OP1,reg,decode.big_op);
 }
 
 
 static void dyn_sop_word(SingleOps op,Bit8u reg) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
 	dyn_sop_word_gencall(op,decode.big_op);
-	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,reg,decode.big_op);
 }
 
 
 static void dyn_mov_byte_al_direct(Bitu imm) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS),true);
+	MOV_SEG_PHYS_TO_HOST_REG(FC_ADDR,(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS));
 	gen_add_imm(FC_ADDR,imm);
 	dyn_read_byte(FC_ADDR,FC_TMP_BA1);
-	gen_mov_byte_from_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_TMP_BA1,DRC_REG_EAX,0);
 }
 
 static void dyn_mov_byte_ax_direct(Bitu imm) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS),true);
+	MOV_SEG_PHYS_TO_HOST_REG(FC_ADDR,(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS));
 	gen_add_imm(FC_ADDR,imm);
 	dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
-	gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_OP1,DRC_REG_EAX,decode.big_op);
 }
 
 static void dyn_mov_byte_direct_al() {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS),true);
+	MOV_SEG_PHYS_TO_HOST_REG(FC_ADDR,(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS));
 	if (decode.big_addr) {
 		Bitu val;
 		if (decode_fetchd_imm(val)) {
@@ -336,14 +336,14 @@ static void dyn_mov_byte_direct_al() {
 	} else {
 		gen_add_imm(FC_ADDR,decode_fetchw());
 	}
-	gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,DRC_REG_EAX,0);
 	dyn_write_byte(FC_ADDR,FC_TMP_BA1);
 }
 
 static void dyn_mov_byte_direct_ax(Bitu imm) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_SEG_PHYS(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS),true);
+	MOV_SEG_PHYS_TO_HOST_REG(FC_ADDR,(decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS));
 	gen_add_imm(FC_ADDR,imm);
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_EAX,decode.big_op);
 	dyn_write_word(FC_ADDR,FC_OP1,decode.big_op);
 }
 
@@ -354,11 +354,11 @@ static void dyn_movx_ev_gb(bool sign) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_byte(FC_ADDR,FC_TMP_BA1);
 		gen_extend_byte(sign,FC_TMP_BA1);
-		gen_mov_word_from_reg(FC_TMP_BA1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_TMP_BA1,decode.modrm.reg,decode.big_op);
 	} else {
-		gen_mov_byte_to_reg_low(FC_TMP_BA1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW(FC_TMP_BA1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 		gen_extend_byte(sign,FC_TMP_BA1);
-		gen_mov_word_from_reg(FC_TMP_BA1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_TMP_BA1,decode.modrm.reg,decode.big_op);
 	}
 }
 
@@ -368,30 +368,37 @@ static void dyn_movx_ev_gw(bool sign) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_OP1,false);
 		gen_extend_word(sign,FC_OP1);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,false),false);
+		MOV_REG_WORD16_TO_HOST_REG(FC_OP1,decode.modrm.rm);
 		gen_extend_word(sign,FC_OP1);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	}
 }
 
 
 static void dyn_mov_ev_seg(void) {
 	dyn_get_modrm();
-	gen_mov_word_to_reg(FC_OP1,DRCD_SEG_VAL(decode.modrm.reg),false);
+	MOV_SEG_VAL_TO_HOST_REG(FC_OP1,decode.modrm.reg);
 	if (decode.modrm.mod<3) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_write_word(FC_ADDR,FC_OP1,false);
 	} else {
 		if (decode.big_op) gen_extend_word(false,FC_OP1);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 }
 
 
+static void dyn_lea(void) {
+	dyn_get_modrm();
+	dyn_fill_ea(FC_ADDR,false);
+	MOV_REG_WORD_FROM_HOST_REG(FC_ADDR,decode.modrm.reg,decode.big_op);
+}
+
+
 static void dyn_push_seg(Bit8u seg) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_SEG_VAL(seg),false);
+	MOV_SEG_VAL_TO_HOST_REG(FC_OP1,seg);
 	if (decode.big_op) {
 		gen_extend_word(false,FC_OP1);
 		gen_call_function_raw((void*)&dynrec_push_dword);
@@ -406,7 +413,7 @@ static void dyn_pop_seg(Bit8u seg) {
 }
 
 static void dyn_push_reg(Bit8u reg) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,reg,decode.big_op);
 	if (decode.big_op) gen_call_function_raw((void*)&dynrec_push_dword);
 	else gen_call_function_raw((void*)&dynrec_push_word);
 }
@@ -414,7 +421,7 @@ static void dyn_push_reg(Bit8u reg) {
 static void dyn_pop_reg(Bit8u reg) {
 	if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
 	else gen_call_function_raw((void*)&dynrec_pop_word);
-	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,reg,decode.big_op);
 }
 
 static void dyn_push_byte_imm(Bit8s imm) {
@@ -447,7 +454,7 @@ static void dyn_pop_ev(void) {
 	} else {
 		if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
 		else gen_call_function_raw((void*)&dynrec_pop_word);
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -465,7 +472,7 @@ static void dyn_segprefix(Bit8u seg) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_RETOP,false);
 	} else {
-		gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+		MOV_REG_WORD16_TO_HOST_REG(FC_RETOP,decode.modrm.rm);
 	}
 	gen_call_function_IR((void *)&CPU_SetSegGeneral,decode.modrm.reg,FC_RETOP);
 	dyn_check_exception(FC_RETOP);
@@ -486,7 +493,7 @@ static void dyn_load_seg_off_ea(Bit8u seg) {
 		dyn_check_exception(FC_RETOP);
 
 		gen_restore_reg(FC_OP1);
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,decode.modrm.reg,decode.big_op);
 	} else {
 		IllegalOptionDynrec("dyn_load_seg_off_ea");
 	}
@@ -500,12 +507,12 @@ static void dyn_imul_gvev(Bitu immsize) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 
 	switch (immsize) {
 		case 0:
-			gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+			MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 			break;
 		case 1:
 			if (decode.big_op) gen_mov_dword_to_reg_imm(FC_OP2,(Bit8s)decode_fetchb());
@@ -524,7 +531,7 @@ static void dyn_imul_gvev(Bitu immsize) {
 	if (decode.big_op) gen_call_function_raw((void*)dynrec_dimul_dword);
 	else gen_call_function_raw((void*)dynrec_dimul_word);
 
-	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.reg,decode.big_op);
 }
 
 static void dyn_dshift_ev_gv(bool left,bool immediate) {
@@ -534,11 +541,11 @@ static void dyn_dshift_ev_gv(bool left,bool immediate) {
 		gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
-	gen_mov_word_to_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 	if (immediate) gen_mov_byte_to_reg_low_imm(FC_RETOP,decode_fetchb());
-	else gen_mov_byte_to_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_ECX,0));
+	else MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_ECX,0);
 	if (decode.big_op) dyn_dpshift_dword_gencall(left);
 	else dyn_dpshift_word_gencall(left);
 
@@ -546,7 +553,7 @@ static void dyn_dshift_ev_gv(bool left,bool immediate) {
 		gen_restore_addr_reg();
 		dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
 	} else {
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -610,7 +617,7 @@ static void dyn_grp2_eb(grp2_types type) {
 		gen_protect_addr_reg();
 		dyn_read_byte_canuseword(FC_ADDR,FC_OP1);
 	} else {
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 	switch (type) {
 	case grp2_1:
@@ -626,7 +633,7 @@ static void dyn_grp2_eb(grp2_types type) {
 		}
 		break;
 	case grp2_cl:
-		gen_mov_byte_to_reg_low_canuseword(FC_OP2,DRCD_REG_BYTE(DRC_REG_ECX,0));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP2,DRC_REG_ECX,0);
 		gen_and_imm(FC_OP2,0x1f);
 		dyn_shift_byte_gencall((ShiftOps)decode.modrm.reg);
 		break;
@@ -635,7 +642,7 @@ static void dyn_grp2_eb(grp2_types type) {
 		gen_restore_addr_reg();
 		dyn_write_byte(FC_ADDR,FC_RETOP);
 	} else {
-		gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -646,7 +653,7 @@ static void dyn_grp2_ev(grp2_types type) {
 		gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 	switch (type) {
 	case grp2_1:
@@ -669,7 +676,7 @@ static void dyn_grp2_ev(grp2_types type) {
 		}
 		break;
 	case grp2_cl:
-		gen_mov_byte_to_reg_low_canuseword(FC_OP2,DRCD_REG_BYTE(DRC_REG_ECX,0));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP2,DRC_REG_ECX,0);
 		gen_and_imm(FC_OP2,0x1f);
 		dyn_shift_word_gencall((ShiftOps)decode.modrm.reg,decode.big_op);
 		break;
@@ -678,7 +685,7 @@ static void dyn_grp2_ev(grp2_types type) {
 		gen_restore_addr_reg();
 		dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
 	} else {
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -690,7 +697,7 @@ static void dyn_grp3_eb(void) {
 		if ((decode.modrm.reg==2) || (decode.modrm.reg==3)) gen_protect_addr_reg();
 		dyn_read_byte_canuseword(FC_ADDR,FC_OP1);
 	} else {
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 	switch (decode.modrm.reg) {
 	case 0x0:	// test eb,ib
@@ -723,7 +730,7 @@ static void dyn_grp3_eb(void) {
 		gen_restore_addr_reg();
 		dyn_write_byte(FC_ADDR,FC_RETOP);
 	} else {
-		gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 
@@ -734,7 +741,7 @@ static void dyn_grp3_ev(void) {
 		if ((decode.modrm.reg==2) || (decode.modrm.reg==3)) gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 	switch (decode.modrm.reg) {
 	case 0x0:	// test ev,iv
@@ -772,7 +779,7 @@ static void dyn_grp3_ev(void) {
 		gen_restore_addr_reg();
 		dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
 	} else {
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 	}
 }
 
@@ -790,9 +797,9 @@ static bool dyn_grp4_eb(void) {
 			gen_restore_addr_reg();
 			dyn_write_byte(FC_ADDR,FC_RETOP);
 		} else {
-			gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+			MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 			dyn_sop_byte_gencall(decode.modrm.reg==0 ? SOP_INC : SOP_DEC);
-			gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+			MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 		}
 		break;
 	case 0x7:		//CALBACK Iw
@@ -816,7 +823,7 @@ static bool dyn_grp4_ev(void) {
 		if ((decode.modrm.reg<2) || (decode.modrm.reg==3) || (decode.modrm.reg==5))  gen_protect_addr_reg();
 		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);
 	} else {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 	switch (decode.modrm.reg) {
 	case 0x0://INC Ev
@@ -826,7 +833,7 @@ static bool dyn_grp4_ev(void) {
 			gen_restore_addr_reg();
 			dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
 		} else {
-			gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,decode.big_op),decode.big_op);
+			MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,decode.modrm.rm,decode.big_op);
 		}
 		break;
 	case 0x2:	// CALL Ev
@@ -879,7 +886,7 @@ static bool dyn_grp6(void) {
 				dyn_fill_ea(FC_ADDR);
 				dyn_write_word(FC_ADDR,FC_RETOP,false);
 			} else {
-				gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+				MOV_REG_WORD16_FROM_HOST_REG(FC_RETOP,decode.modrm.rm);
 			}
 			break;
 		case 0x02:	// LLDT
@@ -890,7 +897,7 @@ static bool dyn_grp6(void) {
 				dyn_fill_ea(FC_ADDR);
 				dyn_read_word(FC_ADDR,FC_RETOP,false);
 			} else {
-				gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+				MOV_REG_WORD16_TO_HOST_REG(FC_RETOP,decode.modrm.rm);
 			}
 			gen_extend_word(false,FC_RETOP);
 			switch (decode.modrm.reg) {
@@ -988,10 +995,10 @@ static bool dyn_grp7(void) {
 		switch (decode.modrm.reg) {
 			case 0x04:	// SMSW
 				gen_call_function_raw((void*)CPU_SMSW);
-				gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+				MOV_REG_WORD16_FROM_HOST_REG(FC_RETOP,decode.modrm.rm);
 				break;
 			case 0x06:	// LMSW
-				gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+				MOV_REG_WORD16_TO_HOST_REG(FC_RETOP,decode.modrm.rm);
 				gen_call_function_R((void*)CPU_LMSW,FC_RETOP);
 				dyn_check_exception(FC_RETOP);
 				dyn_set_eip_end();
@@ -1013,14 +1020,14 @@ static void dyn_larlsl(bool is_lar) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_RETOP,false);
 	} else {
-		gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,false),false);
+		MOV_REG_WORD16_TO_HOST_REG(FC_RETOP,decode.modrm.rm);
 	}
 	gen_extend_word(false,FC_RETOP);
 	if (is_lar) gen_call_function((void*)CPU_LAR,"%R%A",FC_RETOP,(DRC_PTR_SIZE_IM)&core_dynrec.readdata);
 	else gen_call_function((void*)CPU_LSL,"%R%A",FC_RETOP,(DRC_PTR_SIZE_IM)&core_dynrec.readdata);
 	DRC_PTR_SIZE_IM brnz=gen_create_branch_on_nonzero(FC_RETOP,true);
 	gen_mov_word_to_reg(FC_OP2,&core_dynrec.readdata,true);
-	gen_mov_word_from_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.reg,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
 	gen_fill_branch(brnz);
 }
 */
@@ -1031,12 +1038,12 @@ static void dyn_mov_from_crx(void) {
 	gen_call_function_IA((void*)CPU_READ_CRX,decode.modrm.reg,(DRC_PTR_SIZE_IM)&core_dynrec.readdata);
 	dyn_check_exception(FC_RETOP);
 	gen_mov_word_to_reg(FC_OP2,&core_dynrec.readdata,true);
-	gen_mov_word_from_reg(FC_OP2,DRCD_REG_WORD(decode.modrm.rm,true),true);
+	MOV_REG_WORD32_FROM_HOST_REG(FC_OP2,decode.modrm.rm);
 }
 
 static void dyn_mov_to_crx(void) {
 	dyn_get_modrm();
-	gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(decode.modrm.rm,true),true);
+	MOV_REG_WORD32_TO_HOST_REG(FC_RETOP,decode.modrm.rm);
 	gen_call_function_IR((void*)CPU_WRITE_CRX,decode.modrm.reg,FC_RETOP);
 	dyn_check_exception(FC_RETOP);
 	dyn_set_eip_end();
@@ -1048,29 +1055,29 @@ static void dyn_mov_to_crx(void) {
 
 static void dyn_cbw(void) {
 	if (decode.big_op) {
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,false),false);
+		MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EAX);
 		gen_call_function_raw((void *)&dynrec_cwde);
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EAX,true),true);
+		MOV_REG_WORD32_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX);
 	} else {
-		gen_mov_byte_to_reg_low_canuseword(FC_OP1,DRCD_REG_BYTE(DRC_REG_EAX,0));
+		MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(FC_OP1,DRC_REG_EAX,0);
 		gen_call_function_raw((void *)&dynrec_cbw);
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EAX,false),false);
+		MOV_REG_WORD16_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX);
 	}
 }
 
 static void dyn_cwd(void) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_EAX,decode.big_op);
 	if (decode.big_op) {
 		gen_call_function_raw((void *)&dynrec_cdq);
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EDX,true),true);
+		MOV_REG_WORD32_FROM_HOST_REG(FC_RETOP,DRC_REG_EDX);
 	} else {
 		gen_call_function_raw((void *)&dynrec_cwd);
-		gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EDX,false),false);
+		MOV_REG_WORD16_FROM_HOST_REG(FC_RETOP,DRC_REG_EDX);
 	}
 }
 
 static void dyn_sahf(void) {
-	gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_EAX,false),false);
+	MOV_REG_WORD16_TO_HOST_REG(FC_OP1,DRC_REG_EAX);
 	gen_call_function_raw((void *)&dynrec_sahf);
 	InvalidateFlags();
 }
@@ -1111,7 +1118,7 @@ static void dyn_set_byte_on_condition(BranchTypes btype) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_write_byte(FC_ADDR,FC_RETOP);
 	} else {
-		gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(decode.modrm.rm&3,(decode.modrm.rm>>2)&1));
+		MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,decode.modrm.rm&3,(decode.modrm.rm>>2)&1);
 	}
 }
 */
@@ -1136,13 +1143,13 @@ static void dyn_loop(LoopTypes type) {
 	case LOOP_E:
 	case LOOP_NE:
 	case LOOP_NONE:
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 		gen_add_imm(FC_OP1,(Bit32u)(-1));
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 		branch2=gen_create_branch_on_zero(FC_OP1,decode.big_addr);
 		break;
 	case LOOP_JCXZ:
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 		branch2=gen_create_branch_on_nonzero(FC_OP1,decode.big_addr);
 		break;
 	}
@@ -1150,9 +1157,9 @@ static void dyn_loop(LoopTypes type) {
 	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
 	if (branch1) {
 		gen_fill_branch(branch1);
-		gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 		gen_add_imm(FC_OP1,(Bit32u)(-1));
-		gen_mov_word_from_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+		MOV_REG_WORD_FROM_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 	}
 	// Branch taken
 	gen_fill_branch(branch2);
@@ -1242,7 +1249,7 @@ static void dyn_interrupt(Bit8u num) {
 
 
 static void dyn_string(StringOps op) {
-	if (decode.rep) gen_mov_word_to_reg(FC_OP1,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+	if (decode.rep) MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 	else gen_mov_dword_to_reg_imm(FC_OP1,1);
 	gen_mov_word_to_reg(FC_OP2,&cpu.direction,true);
 	Bit8u di_base_addr=decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS;
@@ -1287,7 +1294,7 @@ static void dyn_string(StringOps op) {
 			break;
 		default: IllegalOptionDynrec("dyn_string");
 	}
-	if (decode.rep) gen_mov_word_from_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_ECX,decode.big_addr),decode.big_addr);
+	if (decode.rep) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_ECX,decode.big_addr);
 
 	if (op<STR_SCASB) {
 		// those string operations are allowed for premature termination
@@ -1304,67 +1311,67 @@ static void dyn_string(StringOps op) {
 static void dyn_read_port_byte_direct(Bit8u port) {
 	dyn_add_iocheck_var(port,1);
 	gen_call_function_I((void*)&IO_ReadB,port);
-	gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
 }
 
 static void dyn_read_port_word_direct(Bit8u port) {
 	dyn_add_iocheck_var(port,decode.big_op?4:2);
 	gen_call_function_I(decode.big_op?((void*)&IO_ReadD):((void*)&IO_ReadW),port);
-	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
 }
 
 static void dyn_write_port_byte_direct(Bit8u port) {
 	dyn_add_iocheck_var(port,1);
-	gen_mov_byte_to_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
 	gen_extend_byte(false,FC_RETOP);
 	gen_call_function_IR((void*)&IO_WriteB,port,FC_RETOP);
 }
 
 static void dyn_write_port_word_direct(Bit8u port) {
 	dyn_add_iocheck_var(port,decode.big_op?4:2);
-	gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
 	if (!decode.big_op) gen_extend_word(false,FC_RETOP);
 	gen_call_function_IR(decode.big_op?((void*)&IO_WriteD):((void*)&IO_WriteW),port,FC_RETOP);
 }
 
 
 static void dyn_read_port_byte(void) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
+	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
 	gen_extend_word(false,FC_ADDR);
 	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,1);
 	gen_restore_addr_reg();
 	gen_call_function_R((void*)&IO_ReadB,FC_ADDR);
-	gen_mov_byte_from_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_FROM_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
 }
 
 static void dyn_read_port_word(void) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
+	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
 	gen_extend_word(false,FC_ADDR);
 	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
 	gen_restore_addr_reg();
 	gen_call_function_R(decode.big_op?((void*)&IO_ReadD):((void*)&IO_ReadW),FC_ADDR);
-	gen_mov_word_from_reg(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
 }
 
 static void dyn_write_port_byte(void) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
+	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
 	gen_extend_word(false,FC_ADDR);
 	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,1);
-	gen_mov_byte_to_reg_low(FC_RETOP,DRCD_REG_BYTE(DRC_REG_EAX,0));
+	MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_EAX,0);
 	gen_extend_byte(false,FC_RETOP);
 	gen_restore_addr_reg();
 	gen_call_function_RR((void*)&IO_WriteB,FC_ADDR,FC_RETOP);
 }
 
 static void dyn_write_port_word(void) {
-	gen_mov_word_to_reg(FC_ADDR,DRCD_REG_WORD(DRC_REG_EDX,false),false);
+	MOV_REG_WORD16_TO_HOST_REG(FC_ADDR,DRC_REG_EDX);
 	gen_extend_word(false,FC_ADDR);
 	gen_protect_addr_reg();
 	dyn_add_iocheck(FC_ADDR,decode.big_op?4:2);
-	gen_mov_word_to_reg(FC_RETOP,DRCD_REG_WORD(DRC_REG_EAX,decode.big_op),decode.big_op);
+	MOV_REG_WORD_TO_HOST_REG(FC_RETOP,DRC_REG_EAX,decode.big_op);
 	if (!decode.big_op) gen_extend_word(false,FC_RETOP);
 	gen_restore_addr_reg();
 	gen_call_function_RR(decode.big_op?((void*)&IO_WriteD):((void*)&IO_WriteW),FC_ADDR,FC_RETOP);
