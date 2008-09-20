@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.94 2008-09-07 10:55:16 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.95 2008-09-20 14:51:53 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -212,34 +212,34 @@ void DOS_Shell::ParseLine(char * line) {
 	num = GetRedirection(line,&in, &out,&append);
 	if (num>1) LOG_MSG("SHELL:Multiple command on 1 line not supported");
 	if (in || out) {
-			normalstdin  = (psp->GetFileHandle(0) != 0xff); 
-			normalstdout = (psp->GetFileHandle(1) != 0xff); 
+		normalstdin  = (psp->GetFileHandle(0) != 0xff); 
+		normalstdout = (psp->GetFileHandle(1) != 0xff); 
 	}
 	if (in) {
-		if(DOS_OpenFile(in,0,&dummy)) { //Test if file exists
+		if(DOS_OpenFile(in,OPEN_READ,&dummy)) {	//Test if file exists
 			DOS_CloseFile(dummy);
 			LOG_MSG("SHELL:Redirect input from %s",in);
-			if(normalstdin) DOS_CloseFile(0); //Close stdin
-			DOS_OpenFile(in,0,&dummy); //Open new stdin
+			if(normalstdin) DOS_CloseFile(0);	//Close stdin
+			DOS_OpenFile(in,OPEN_READ,&dummy);	//Open new stdin
 		}
 	}
 	if (out){
 		LOG_MSG("SHELL:Redirect output to %s",out);
 		if(normalstdout) DOS_CloseFile(1);
-		if(!normalstdin && !in) DOS_OpenFile("con",2,&dummy);
+		if(!normalstdin && !in) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		bool status = true;
 		/* Create if not exist. Open if exist. Both in read/write mode */
 		if(append) {
-			if( (status = DOS_OpenFile(out,2,&dummy)) ) {
+			if( (status = DOS_OpenFile(out,OPEN_READWRITE,&dummy)) ) {
 				 DOS_SeekFile(1,&bigdummy,DOS_SEEK_END);
 			} else {
-				status = DOS_CreateFile(out,2,&dummy); //Create if not exists.
+				status = DOS_CreateFile(out,DOS_ATTR_ARCHIVE,&dummy);	//Create if not exists.
 			}
+		} else {
+			status = DOS_OpenFileExtended(out,OPEN_READWRITE,DOS_ATTR_ARCHIVE,0x12,&dummy,&dummy2);
 		}
-		else 
-			status = DOS_OpenFileExtended(out,2,2,0x12,&dummy,&dummy2);
 		
-		if(!status && normalstdout) DOS_OpenFile("con",2,&dummy); //Read only file, open con again
+		if(!status && normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy); //Read only file, open con again
 		if(!normalstdin && !in) DOS_CloseFile(0);
 	}
 	/* Run the actual command */
@@ -247,13 +247,13 @@ void DOS_Shell::ParseLine(char * line) {
 	/* Restore handles */
 	if(in) {
 		DOS_CloseFile(0);
-		if(normalstdin) DOS_OpenFile("con",2,&dummy);
+		if(normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		free(in);
 	}
 	if(out) {
 		DOS_CloseFile(1);
-		if(!normalstdin) DOS_OpenFile("con",2,&dummy);
-		if(normalstdout) DOS_OpenFile("con",2,&dummy);
+		if(!normalstdin) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
+		if(normalstdout) DOS_OpenFile("con",OPEN_READWRITE,&dummy);
 		if(!normalstdin) DOS_CloseFile(0);
 		free(out);
 	}
@@ -321,8 +321,8 @@ void DOS_Shell::Run(void) {
 						WriteOut_NoParsing("\n");
 					};
 				};
-			ParseLine(input_line);
-			if (echo) WriteOut("\n");
+				ParseLine(input_line);
+				if (echo) WriteOut("\n");
 			}
 		} else {
 			if (echo) ShowPrompt();
@@ -616,13 +616,13 @@ void SHELL_Init() {
 	 * In order to achieve this: First open 2 files. Close the first and
 	 * duplicate the second (so the entries get 01) */
 	Bit16u dummy=0;
-	DOS_OpenFile("CON",2,&dummy);/* STDIN  */
-	DOS_OpenFile("CON",2,&dummy);/* STDOUT */
-	DOS_CloseFile(0);            /* Close STDIN */
-	DOS_ForceDuplicateEntry(1,0);/* "new" STDIN */
-	DOS_ForceDuplicateEntry(1,2);/* STDERR */
-	DOS_OpenFile("CON",2,&dummy);/* STDAUX */
-	DOS_OpenFile("CON",2,&dummy);/* STDPRN */
+	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDIN  */
+	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDOUT */
+	DOS_CloseFile(0);							/* Close STDIN */
+	DOS_ForceDuplicateEntry(1,0);				/* "new" STDIN */
+	DOS_ForceDuplicateEntry(1,2);				/* STDERR */
+	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDAUX */
+	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDPRN */
 
 	psp.SetParent(psp_seg);
 	/* Set the environment */

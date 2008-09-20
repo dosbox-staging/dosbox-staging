@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.99 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.100 2008-09-20 14:51:52 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -421,7 +421,7 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry) {
 	// Creation of a device is the same as opening it
 	// Tc201 installer
 	if (DOS_FindDevice(name) != DOS_DEVICES)
-		return DOS_OpenFile(name, 0, entry);
+		return DOS_OpenFile(name, OPEN_READ, entry);
 
 	LOG(LOG_FILES,LOG_NORMAL)("file create attributes %X file %s",attributes,name);
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
@@ -446,7 +446,7 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry) {
 		return false;
 	}
 	/* Don't allow directories to be created */
-	if (attributes&0x10) {
+	if (attributes&DOS_ATTR_DIRECTORY) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -529,13 +529,13 @@ bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bi
 // FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error
 {
 	Bit16u result = 0;
-	if (DOS_OpenFile(name, (Bit8u)flags, entry)) {
+	if (DOS_OpenFile(name, (Bit8u)(flags&0xff), entry)) {
 		// File already exists
 		switch (action & 0x0f) {
 			case 0x00 : return false;			// failed
 			case 0x01 :	result = 1; break;		// file open (already done)
 			case 0x02 : DOS_CloseFile(*entry);	// replace
-						if (!DOS_CreateFile(name, flags, entry)) return false;
+						if (!DOS_CreateFile(name, createAttr, entry)) return false;
 						result = 3;
 						break;
 			default	  : E_Exit("DOS: OpenFileExtended: Unknown action.");
@@ -544,7 +544,7 @@ bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bi
 		// File doesnt exist
 		if ((action & 0xf0)==0) return false;
 		// Create File
-		if (!DOS_CreateFile(name, flags, entry)) return false;
+		if (!DOS_CreateFile(name, createAttr, entry)) return false;
 		result = 2;
 	};
 	*status = result;
@@ -840,7 +840,7 @@ bool DOS_FCBCreate(Bit16u seg,Bit16u offset) {
 	DOS_FCB fcb(seg,offset);
 	char shortname[DOS_FCBNAME];Bit16u handle;
 	fcb.GetName(shortname);
-	if (!DOS_CreateFile(shortname,2,&handle)) return false;
+	if (!DOS_CreateFile(shortname,DOS_ATTR_ARCHIVE,&handle)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
 }
@@ -870,7 +870,7 @@ bool DOS_FCBOpen(Bit16u seg,Bit16u offset) {
 		}
 	}
 	
-	if (!DOS_OpenFile(shortname,2,&handle)) return false;
+	if (!DOS_OpenFile(shortname,OPEN_READWRITE,&handle)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
 }
@@ -1017,7 +1017,7 @@ bool DOS_FCBGetFileSize(Bit16u seg,Bit16u offset) {
 	char shortname[DOS_PATHLENGTH];Bit16u entry;Bit8u handle;Bit16u rec_size;
 	DOS_FCB fcb(seg,offset);
 	fcb.GetName(shortname);
-	if (!DOS_OpenFile(shortname,0,&entry)) return false;
+	if (!DOS_OpenFile(shortname,OPEN_READ,&entry)) return false;
 	handle = RealHandle(entry);
 	Bit32u size = 0;
 	Files[handle]->Seek(&size,DOS_SEEK_END);
