@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.100 2008-09-20 14:51:52 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.101 2008-09-21 19:42:47 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -525,31 +525,56 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry) {
 	}
 }
 
-bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status)
-// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error
-{
+bool DOS_OpenFileExtended(char const * name, Bit16u flags, Bit16u createAttr, Bit16u action, Bit16u *entry, Bit16u* status) {
+// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error)
 	Bit16u result = 0;
+	if (action==0) {
+		// always fail setting
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		return false;
+	} else {
+		if (((action & 0x0f)>2) || ((action & 0xf0)>0x10)) {
+			// invalid action parameter
+			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			return false;
+		}
+	}
 	if (DOS_OpenFile(name, (Bit8u)(flags&0xff), entry)) {
 		// File already exists
 		switch (action & 0x0f) {
-			case 0x00 : return false;			// failed
-			case 0x01 :	result = 1; break;		// file open (already done)
-			case 0x02 : DOS_CloseFile(*entry);	// replace
-						if (!DOS_CreateFile(name, createAttr, entry)) return false;
-						result = 3;
-						break;
-			default	  : E_Exit("DOS: OpenFileExtended: Unknown action.");
-		};
+			case 0x00:		// failed
+				DOS_SetError(DOSERR_FILE_ALREADY_EXISTS);
+				return false;
+			case 0x01:		// file open (already done)
+				result = 1;
+				break;
+			case 0x02:		// replace
+				DOS_CloseFile(*entry);
+				if (!DOS_CreateFile(name, createAttr, entry)) return false;
+				result = 3;
+				break;
+			default:
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				E_Exit("DOS: OpenFileExtended: Unknown action.");
+				break;
+		}
 	} else {
-		// File doesnt exist
-		if ((action & 0xf0)==0) return false;
+		// File doesn't exist
+		if ((action & 0xf0)==0) {
+			// uses error code from failed open
+			return false;
+		}
 		// Create File
-		if (!DOS_CreateFile(name, createAttr, entry)) return false;
+		if (!DOS_CreateFile(name, createAttr, entry)) {
+			// uses error code from failed create
+			return false;
+		}
 		result = 2;
-	};
+	}
+	// success
 	*status = result;
 	return true;
-};
+}
 
 bool DOS_UnlinkFile(char const * const name) {
 	char fullname[DOS_PATHLENGTH];Bit8u drive;
