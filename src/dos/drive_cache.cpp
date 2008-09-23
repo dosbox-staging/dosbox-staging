@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.53 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.54 2008-09-23 17:13:18 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -254,14 +254,15 @@ void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir)
 	}
 };
 
-void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
-{
+void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 	char expand[CROSS_LEN] = { 0 };
 	CFileInfo* dir;
 	
 	if (ignoreLastDir) {
 		char tmp[CROSS_LEN] = { 0 };
-		Bit32s len = strrchr(path,CROSS_FILESPLIT) - path;
+		Bit32s len=0;
+		const char* pos = strrchr(path,CROSS_FILESPLIT);
+		if (pos) len = (Bit32s)(pos - path);
 		if (len>0) { 
 			safe_strncpy(tmp,path,len+1); 
 		} else	{
@@ -282,7 +283,7 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir)
 	dir->fileList.clear();
 	dir->longNameList.clear();
 	save_dir = 0;
-};
+}
 
 bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir)
 {
@@ -297,7 +298,7 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname)
 	CFileInfo* curDir = FindDirInfo(fullname,expand);
 
 	Bits low		= 0;
-	Bits high		= curDir->longNameList.size()-1;
+	Bits high		= (Bits)(curDir->longNameList.size()-1);
 	Bits mid, res;
 
 	while (low<=high) {
@@ -349,7 +350,7 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 {
 	Bits foundNr	= 0;	
 	Bits low		= 0;
-	Bits high		= curDir->longNameList.size()-1;
+	Bits high		= (Bits)(curDir->longNameList.size()-1);
 	Bits mid, res;
 
 	while (low<=high) {
@@ -373,7 +374,7 @@ Bit16u DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name)
 bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname)
 // remove trailing '.' if no extension is available (Linux compatibility)
 {
-	Bitu len = strlen(shortname);
+	size_t len = strlen(shortname);
 	if (len && (shortname[len-1]=='.')) {
 		if (len==1) return false;
 		if ((len==2) && (shortname[0]=='.')) return false;
@@ -389,7 +390,7 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 	RemoveTrailingDot(shortName);
 	// Search long name and return array number of element
 	Bits low	= 0;
-	Bits high = curDir->fileList.size()-1;
+	Bits high	= (Bits)(curDir->fileList.size()-1);
 	Bits mid,res;
 	while (low<=high) {
 		mid = (low+high)/2;
@@ -420,7 +421,6 @@ bool DOS_Drive_Cache::RemoveSpaces(char* str)
 void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 {
 	Bits	len			= 0;
-	Bits	lenExt		= 0;
 	bool	createShort = false;
 
 	char tmpNameBuffer[CROSS_LEN];
@@ -435,19 +435,17 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 	// Get Length of filename
 	char* pos = strchr(tmpName,'.');
 	if (pos) {
-		// Get Length of extension
-		lenExt = strlen(pos)-1;
 		// ignore preceding '.' if extension is longer than "3"
-		if (lenExt>3) {
+		if (strlen(pos)>4) {
 			while (*tmpName=='.') tmpName++;
 			createShort = true;
-		};
+		}
 		pos = strchr(tmpName,'.');
-		if (pos)	len = (Bit16u)(pos - tmpName);
-		else		len = strlen(tmpName);
-
-	} else 
-		len = strlen(tmpName);
+		if (pos)	len = (Bits)(pos - tmpName);
+		else		len = (Bits)strlen(tmpName);
+	} else {
+		len = (Bits)strlen(tmpName);
+	}
 
 	// Should shortname version be created ?
 	createShort = createShort || (len>8);
@@ -463,9 +461,10 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info)
 		info->shortNr = CreateShortNameID(curDir,tmpName);
 		sprintf(buffer,"%d",info->shortNr);
 		// Copy first letters
-		Bit16u tocopy = 0;
-		if (len+strlen(buffer)+1>8)	tocopy = 8 - strlen(buffer) - 1;
-		else						tocopy = len;
+		Bits tocopy = 0;
+		size_t buflen = strlen(buffer);
+		if (len+buflen+1>8)	tocopy = (Bits)(8 - buflen - 1);
+		else				tocopy = len;
 		safe_strncpy(info->shortname,tmpName,tocopy+1);
 		// Copy number
 		strcat(info->shortname,"~");
