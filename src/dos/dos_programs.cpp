@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.87 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.88 2008-09-26 17:21:17 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -288,7 +288,9 @@ public:
 			} else {
 				/* Give a warning when mount c:\ or the / */
 #if defined (WIN32) || defined(OS2)
-				if( (temp_line == "c:\\") || (temp_line == "C:\\"))	WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
+				if( (temp_line == "c:\\") || (temp_line == "C:\\") || 
+				    (temp_line == "c:/") || (temp_line == "C:/")    )	
+					WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
 #else
 				if(temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
