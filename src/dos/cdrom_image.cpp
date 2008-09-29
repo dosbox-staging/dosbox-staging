@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.21 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: cdrom_image.cpp,v 1.22 2008-09-29 17:50:18 c2woody Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -200,8 +200,9 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(int track, TMSF& start, unsigned c
 
 bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
 {
-	track = GetTrack(player.currFrame);
-	if (track < 1) return false;
+	int cur_track = GetTrack(player.currFrame);
+	if (cur_track < 1) return false;
+	track = (unsigned char)cur_track;
 	attr = tracks[track - 1].attr;
 	index = 1;
 	FRAMES_TO_MSF(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
