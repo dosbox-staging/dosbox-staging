@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.77 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.78 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,7 +76,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	*file=new localFile(name,hand);
 
 	return true;
-};
+}
 
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	const char* type;
@@ -113,7 +113,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
 	return true;
-};
+}
 
 FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type) {
 
@@ -304,7 +304,7 @@ bool localDrive::GetFileAttr(char * name,Bit16u * attr) {
 	}
 	*attr=0;
 	return false; 
-};
+}
 
 bool localDrive::MakeDir(char * dir) {
 	char newdir[CROSS_LEN];
@@ -364,7 +364,7 @@ bool localDrive::Rename(char * oldname,char * newname) {
 	if (temp==0) dirCache.CacheOut(newnew);
 	return (temp==0);
 
-};
+}
 
 bool localDrive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
 	/* Always report 100 mb free should be enough */
@@ -374,7 +374,7 @@ bool localDrive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,
 	*_total_clusters=allocation.total_clusters;
 	*_free_clusters=allocation.free_clusters;
 	return true;
-};
+}
 
 bool localDrive::FileExists(const char* name) {
 	char newname[CROSS_LEN];
@@ -450,7 +450,7 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 	Bit8u mask = IO_Read(0x21);
 	if(mask & 0x4 ) IO_Write(0x21,mask&0xfb);
 	return true;
-};
+}
 
 bool localFile::Write(Bit8u * data,Bit16u * size) {
 	if (last_action==READ) fseek(fhandle,ftell(fhandle),SEEK_SET);
@@ -464,6 +464,7 @@ bool localFile::Write(Bit8u * data,Bit16u * size) {
 		return true;
     }
 }
+
 bool localFile::Seek(Bit32u * pos,Bit32u type) {
 	int seektype;
 	switch (type) {
@@ -556,8 +557,7 @@ bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
 
 
 cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error)
-		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid)
-{
+		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid) {
 	// Init mscdex
 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
 	strcpy(info, "CDRom ");
@@ -566,10 +566,9 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 	// Get Volume Label
 	char name[32];
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
-};
+}
 
-bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
-{
+bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	if ((flags&3)==OPEN_READWRITE) {
 		flags &= ~OPEN_READWRITE;
 	} else if ((flags&3)==OPEN_WRITE) {
@@ -579,47 +578,40 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags)
 	bool retcode = localDrive::FileOpen(file,name,flags);
 	if(retcode) (dynamic_cast<localFile*>(*file))->FlagReadOnlyMedium();
 	return retcode;
-};
+}
 
-bool cdromDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes)
-{
+bool cdromDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
-};
+}
 
-bool cdromDrive::FileUnlink(char * name)
-{
+bool cdromDrive::FileUnlink(char * name) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
-};
+}
 
-bool cdromDrive::RemoveDir(char * dir)
-{
+bool cdromDrive::RemoveDir(char * dir) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
-};
+}
 
-bool cdromDrive::MakeDir(char * dir)
-{
+bool cdromDrive::MakeDir(char * dir) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
-};
+}
 
-bool cdromDrive::Rename(char * oldname,char * newname)
-{
+bool cdromDrive::Rename(char * oldname,char * newname) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
-};
+}
 
-bool cdromDrive::GetFileAttr(char * name,Bit16u * attr)
-{
+bool cdromDrive::GetFileAttr(char * name,Bit16u * attr) {
 	bool result = localDrive::GetFileAttr(name,attr);
 	if (result) *attr |= DOS_ATTR_READ_ONLY;
 	return result;
-};
+}
 
-bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst)
-{
+bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
 		dirCache.EmptyCache();
@@ -628,10 +620,9 @@ bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst)
 		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 	}
 	return localDrive::FindFirst(_dir,dta);
-};
+}
 
-void cdromDrive::SetDir(const char* path)
-{
+void cdromDrive::SetDir(const char* path) {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
 		dirCache.EmptyCache();
@@ -640,7 +631,7 @@ void cdromDrive::SetDir(const char* path)
 		if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 	}
 	localDrive::SetDir(path);
-};
+}
 
 bool cdromDrive::isRemote(void) {
 	return true;

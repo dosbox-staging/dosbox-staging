@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.47 2007-08-12 19:16:01 c2woody Exp $ */
+/* $Id: mixer.cpp,v 1.48 2008-10-05 14:44:52 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -265,7 +265,7 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		mixer.work[mixpos][1]+=sample*volmul[1];
 		mixpos++;
 	}
-};
+}
 
 void MixerChannel::AddSamples_m8(Bitu len,Bit8u * data) {
 	AddSamples<true,false,false>(len,data);

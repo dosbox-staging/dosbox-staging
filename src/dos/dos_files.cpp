@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.101 2008-09-21 19:42:47 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.102 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -329,7 +329,7 @@ bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 	bool ret=Files[handle]->Read(data,&toread);
 	*amount=toread;
 	return ret;
-};
+}
 
 bool DOS_WriteFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 	Bit32u handle=RealHandle(entry);
@@ -352,7 +352,7 @@ bool DOS_WriteFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 	bool ret=Files[handle]->Write(data,&towrite);
 	*amount=towrite;
 	return ret;
-};
+}
 
 bool DOS_SeekFile(Bit16u entry,Bit32u * pos,Bit32u type) {
 	Bit32u handle=RealHandle(entry);
@@ -365,7 +365,7 @@ bool DOS_SeekFile(Bit16u entry,Bit32u * pos,Bit32u type) {
 		return false;
 	};
 	return Files[handle]->Seek(pos,type);
-};
+}
 
 bool DOS_CloseFile(Bit16u entry) {
 	Bit32u handle=RealHandle(entry);
@@ -388,6 +388,7 @@ bool DOS_CloseFile(Bit16u entry) {
 	}
 	return true;
 }
+
 bool DOS_FlushFile(Bit16u entry) {
 	Bit32u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
@@ -660,7 +661,7 @@ bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry) {
 	Files[handle]->AddRef();	
 	psp.SetFileHandle(*newentry,handle);
 	return true;
-};
+}
 
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 	if(entry == newentry) {
@@ -684,7 +685,7 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 	Files[orig]->AddRef();
 	psp.SetFileHandle(newentry,orig);
 	return true;
-};
+}
 
 
 
@@ -1116,7 +1117,7 @@ bool DOS_SetDrive(Bit8u drive) {
 	} else {
 		return false;
 	}
-};
+}
 
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate) {
 	Bit32u handle=RealHandle(entry);
@@ -1135,7 +1136,7 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate) {
 	*otime = Files[handle]->time;
 	*odate = Files[handle]->date;
 	return true;
-};
+}
 
 void DOS_SetupFiles (void) {
 	/* Setup the File Handles */

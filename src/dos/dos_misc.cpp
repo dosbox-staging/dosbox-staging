@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.20 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_misc.cpp,v 1.21 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -50,13 +50,12 @@ static Bitu INT2F_Handler(void) {
    
 	LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Multiplex Unhandled call %4X",reg_ax);
 	return CBRET_NONE;
-};
+}
 
 
 static Bitu INT2A_Handler(void) {
-
 	return CBRET_NONE;
-};
+}
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
@@ -214,4 +213,4 @@ void DOS_SetupMisc(void) {
 	call_int2a=CALLBACK_Allocate();
 	CALLBACK_Setup(call_int2a,&INT2A_Handler,CB_IRET,"DOS Int 2a");
 	RealSetVec(0x2A,CALLBACK_RealPointer(call_int2a));
-};
+}

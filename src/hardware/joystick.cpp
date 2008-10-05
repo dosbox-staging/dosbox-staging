@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: joystick.cpp,v 1.19 2007-08-12 10:23:36 c2woody Exp $ */
+/* $Id: joystick.cpp,v 1.20 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -164,29 +164,25 @@ void JOYSTICK_Move_Y(Bitu which,float y) {
 	}
 }
 
-bool JOYSTICK_IsEnabled(Bitu which)
-{
+bool JOYSTICK_IsEnabled(Bitu which) {
 	if (which<2) return stick[which].enabled;
 	return false;
-};
+}
 
-bool JOYSTICK_GetButton(Bitu which, Bitu num)
-{
+bool JOYSTICK_GetButton(Bitu which, Bitu num) {
 	if ((which<2) && (num<2)) return stick[which].button[num];
 	return false;
 }
 
-float JOYSTICK_GetMove_X(Bitu which) 
-{
+float JOYSTICK_GetMove_X(Bitu which) {
 	if (which<2) return stick[which].xpos;
 	return 0.0f;
 }
 
-float JOYSTICK_GetMove_Y(Bitu which)
-{	
+float JOYSTICK_GetMove_Y(Bitu which) {
 	if (which<2) return stick[which].ypos;
 	return 0.0f;
-};
+}
 
 class JOYSTICK:public Module_base{
 private:

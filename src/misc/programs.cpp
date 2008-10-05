@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.33 2008-09-07 10:55:15 c2woody Exp $ */
+/* $Id: programs.cpp,v 1.34 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -58,7 +58,7 @@ void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
 	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
 
 	/* Copy save the pointer in the vector and save it's index */
-	if (internal_progs.size()>255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",internal_progs.size());
+	if (internal_progs.size()>255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",static_cast<int>(internal_progs.size()));
 	Bit8u index = (Bit8u)internal_progs.size();
 	internal_progs.push_back(main);
 
@@ -158,7 +158,7 @@ bool Program::GetEnvStr(const char * entry,std::string & result) {
 		return true;
 	} while (1);
 	return false;
-};
+}
 
 bool Program::GetEnvNum(Bitu num,std::string & result) {
 	char env_string[1024+1];

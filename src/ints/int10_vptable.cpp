@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vptable.cpp,v 1.2 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: int10_vptable.cpp,v 1.3 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -461,6 +461,7 @@ Bitu INT10_SetupVideoParameterTable(PhysPt basepos) {
 	}
 }
 
+#if 0
 void INT10_GenerateVideoParameterTable(void) {
 	if (!IS_VGA_ARCH) E_Exit("Be sure that all graphics registers are readable!");
 	Bitu i;
@@ -701,3 +702,4 @@ void INT10_GenerateVideoParameterTable(void) {
 	INT10_SetVideoMode(3);
 	E_Exit("done!");
 }
+#endif 

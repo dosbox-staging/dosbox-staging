@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dev_con.h,v 1.33 2007-09-20 16:42:43 c2woody Exp $ */
+/* $Id: dev_con.h,v 1.34 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include "dos_inc.h"
 #include "../ints/int10.h"
@@ -392,7 +392,7 @@ Bit16u device_CON::GetInformation(void) {
 	if (head>=end) head=start;
 	mem_writew(BIOS_KEYBOARD_BUFFER_HEAD,head);
 	return 0x80D3; /* No Key Available */
-};
+}
 
 device_CON::device_CON() {
 	SetName("CON");

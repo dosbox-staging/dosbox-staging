@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_attr.cpp,v 1.28 2008-01-09 20:34:51 c2woody Exp $ */
+/* $Id: vga_attr.cpp,v 1.29 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -212,7 +212,7 @@ Bitu read_p3c1(Bitu port,Bitu iolen) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Read from unkown Index %2X",attr(index));
 	}
 	return 0;
-};
+}
 
 
 void VGA_SetupAttr(void) {

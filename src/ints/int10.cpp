@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.52 2008-05-10 17:33:28 c2woody Exp $ */
+/* $Id: int10.cpp,v 1.53 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -684,7 +684,7 @@ static void INT10_InitVGA(void) {
 	/* More than 64k */
 	IO_Write(0x3c4,0x04);
 	IO_Write(0x3c5,0x02);
-};
+}
 
 static void SetupTandyBios(void) {
 	static Bit8u TandyConfig[130]= {
@@ -720,4 +720,4 @@ void INT10_Init(Section* sec) {
 	INT10_SetupVESA();
 	INT10_SetupRomMemoryChecksum();//SetupVesa modifies the rom as well.
 	INT10_SetVideoMode(machine==MCH_HERC ? 0x7 : 0x3);
-};
+}

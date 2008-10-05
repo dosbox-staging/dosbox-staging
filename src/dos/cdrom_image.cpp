@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_image.cpp,v 1.22 2008-09-29 17:50:18 c2woody Exp $ */
+/* $Id: cdrom_image.cpp,v 1.23 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <cctype>
 #include <cmath>
@@ -131,7 +131,7 @@ int CDROM_Interface_Image::AudioFile::getLength()
 int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26];
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
-	NULL, NULL, NULL, 0, 0,	0, 0, 0, false,	false };
+	NULL, NULL, NULL, {0}, 0, 0, 0, false, false };
 
 	
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)

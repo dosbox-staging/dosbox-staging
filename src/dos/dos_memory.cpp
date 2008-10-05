@@ -386,7 +386,7 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 static Bitu DOS_default_handler(void) {
 	LOG(LOG_CPU,LOG_ERROR)("DOS rerouted Interrupt Called %X",lastint);
 	return CBRET_NONE;
-};
+}
 
 static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {

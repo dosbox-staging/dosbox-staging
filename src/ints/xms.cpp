@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.52 2008-03-29 16:47:09 c2woody Exp $ */
+/* $Id: xms.cpp,v 1.53 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -103,18 +103,16 @@ struct XMS_MemMove{
 #endif
 
 
-Bitu XMS_EnableA20(bool enable)
-{
+Bitu XMS_EnableA20(bool enable) {
 	Bit8u val = IO_Read	(0x92);
 	if (enable) IO_Write(0x92,val | 2);
 	else		IO_Write(0x92,val & ~2);
 	return 0;
-};
+}
 
-Bitu XMS_GetEnabledA20(void)
-{
+Bitu XMS_GetEnabledA20(void) {
 	return (IO_Read(0x92)&2)>0;
-};
+}
 
 static RealPt xms_callback;
 static bool umb_available;
@@ -131,7 +129,7 @@ Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
 	largestFree=(Bit16u)(MEM_FreeLargest()*4);
 	if (!totalFree) return XMS_OUT_OF_SPACE;
 	return 0;
-};
+}
 
 Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle) {	// size = kb
 	/* Find free handle */
@@ -154,7 +152,7 @@ Bitu XMS_AllocateMemory(Bitu size, Bit16u& handle) {	// size = kb
 	xms_handles[index].size=size;
 	handle=index;
 	return 0;
-};
+}
 
 Bitu XMS_FreeMemory(Bitu handle) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
@@ -163,7 +161,7 @@ Bitu XMS_FreeMemory(Bitu handle) {
 	xms_handles[handle].size=0;
 	xms_handles[handle].free=true;
 	return 0;
-};
+}
 
 Bitu XMS_MoveMemory(PhysPt bpt) {
 	/* Read the block with mem_read's */
@@ -215,7 +213,7 @@ Bitu XMS_LockMemory(Bitu handle, Bit32u& address) {
 	if (xms_handles[handle].locked<255) xms_handles[handle].locked++;
 	address = xms_handles[handle].mem*4096;
 	return 0;
-};
+}
 
 Bitu XMS_UnlockMemory(Bitu handle) {
  	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
@@ -224,7 +222,7 @@ Bitu XMS_UnlockMemory(Bitu handle) {
 		return 0;
 	}
 	return XMS_BLOCK_NOT_LOCKED;
-};
+}
 
 Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
@@ -236,7 +234,7 @@ Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit
 	}
 	size=(Bit16u)(xms_handles[handle].size);
 	return 0;
-};
+}
 
 Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;	
@@ -261,7 +259,8 @@ static bool multiplex_xms(void) {
 	}
 	return false;
 
-};
+}
+
 INLINE void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
 	if(touch_bl_on_succes || res) reg_bl = (Bit8u)res;
 	reg_ax = (res==0);
@@ -412,6 +411,7 @@ Bitu XMS_Handler(void) {
 //	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
 	return CBRET_NONE;
 }
+
 class XMS: public Module_base {
 private:
 	CALLBACK_HandlerObject callbackhandler;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.58 2008-09-07 10:55:15 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.59 2008-10-05 14:44:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -527,9 +527,9 @@ static Bit8u MemoryRegion(void) {
 	}
 	LoadMoveRegion(SegPhys(ds)+reg_si,region);
 	/* Parse the region for information */
-	PhysPt src_mem,dest_mem;
-	MemHandle src_handle,dest_handle;
-	Bitu src_off,dest_off;Bitu src_remain,dest_remain;
+	PhysPt src_mem = 0,dest_mem = 0;
+	MemHandle src_handle = 0,dest_handle = 0;
+	Bitu src_off = 0,dest_off = 0 ;Bitu src_remain = 0,dest_remain = 0;
 	if (!region.src_type) {
 		src_mem=region.src_page_seg*16+region.src_offset;
 	} else {
@@ -1009,7 +1009,7 @@ static Bitu V86_Monitor() {
 						Bitu rm_val=mem_readb((v86_cs<<4)+v86_ip+2);
 						Bitu which=(rm_val >> 3) & 7;
 						if ((rm_val<0xc0) || (rm_val>=0xe8))
-							E_Exit("Invalid opcode 0x0f 0x20 %x caused a protection fault!",rm_val);
+							E_Exit("Invalid opcode 0x0f 0x20 %x caused a protection fault!",static_cast<unsigned int>(rm_val));
 						Bit32u crx=CPU_GET_CRX(which);
 						switch (rm_val&7) {
 							case 0:	reg_eax=crx;	break;
@@ -1028,7 +1028,7 @@ static Bitu V86_Monitor() {
 						Bitu rm_val=mem_readb((v86_cs<<4)+v86_ip+2);
 						Bitu which=(rm_val >> 3) & 7;
 						if ((rm_val<0xc0) || (rm_val>=0xe8))
-							E_Exit("Invalid opcode 0x0f 0x22 %x caused a protection fault!",rm_val);
+							E_Exit("Invalid opcode 0x0f 0x22 %x caused a protection fault!",static_cast<unsigned int>(rm_val));
 						Bit32u crx=0;
 						switch (rm_val&7) {
 							case 0:	crx=reg_eax;	break;
