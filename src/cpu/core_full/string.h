@@ -31,6 +31,7 @@
 			LoadIP();
 		} else {
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
+			if (inst.code.op<R_SCASB) CPU_Cycles-=count;
 			count_left=0;
 		}
 	}

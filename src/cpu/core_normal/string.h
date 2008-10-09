@@ -34,8 +34,9 @@ static void DoString(STRING_OP type) {
 			CPU_Cycles=0;
 			LOADIP;		//RESET IP to the start
 		} else {
-			if ((count<=1) && (CPU_Cycles<=1)) CPU_Cycles--;
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
+			if ((count<=1) && (CPU_Cycles<=1)) CPU_Cycles--;
+			else if (type<R_SCASB) CPU_Cycles-=count;
 			count_left=0;
 		}
 	}
