@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.137 2008-05-21 21:29:16 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.138 2008-10-27 11:02:41 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -68,6 +68,7 @@ void FPU_Init(Section*);
 #endif
 
 void DMA_Init(Section*);
+
 void MIXER_Init(Section*);
 void MIDI_Init(Section*);
 void HARDWARE_Init(Section*);
@@ -348,7 +349,11 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&HARDWARE_Init);//done
 	Pint = secprop->Add_int("memsize", Property::Changeable::WhenIdle,16);
 	Pint->SetMinMax(1,63);
-	Pint->Set_help("Amount of memory DOSBox has in megabytes.");
+	Pint->Set_help(
+		"Amount of memory DOSBox has in megabytes.\n"
+		"  This value is best left at its default to avoid problems with some games,\n"
+		"  though few games might require a higher value.\n"
+		"  There is generally no speed advantage when raising this value.");
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);//done
 	secprop->AddInitFunction(&PROGRAMS_Init);

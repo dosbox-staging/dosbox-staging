@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: memory.cpp,v 1.54 2008-03-09 20:32:23 c2woody Exp $ */
+/* $Id: memory.cpp,v 1.55 2008-10-27 11:02:41 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -28,6 +28,7 @@
 #include <string.h>
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
+#define SAFE_MEMORY	32
 #define MAX_MEMORY	64
 #define MAX_PAGE_ENTRIES (MAX_MEMORY*1024*1024/4096)
 #define LFB_PAGES	512
@@ -552,6 +553,10 @@ public:
 		if (memsize > MAX_MEMORY-1) {
 			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
 			memsize = MAX_MEMORY-1;
+		}
+		if (memsize > SAFE_MEMORY-1) {
+			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
+			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
 		MemBase = new Bit8u[memsize*1024*1024];
 		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
