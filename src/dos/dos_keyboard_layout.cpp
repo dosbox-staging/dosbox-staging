@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.14 2008-08-31 10:14:31 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.15 2008-10-30 22:34:17 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -542,7 +542,7 @@ bool keyboard_layout::map_key(Bitu key, Bit16u layouted_key, bool is_command, bo
 			diacritics_character=key_command;
 			if (diacritics_character-200>=diacritics_entries) diacritics_character=0;
 			return true;
-		} else if ((key_command>=120) && (key_command<129)) {
+		} else if ((key_command>=120) && (key_command<140)) {
 			// switch layout command
 			this->read_keyboard_file(key_command-119);
 			return true;
