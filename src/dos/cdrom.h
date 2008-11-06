@@ -23,7 +23,7 @@
 #define RAW_SECTOR_SIZE		2352
 #define COOKED_SECTOR_SIZE	2048
 
-enum { CDROM_USE_SDL, CDROM_USE_ASPI, CDROM_USE_IOCTL };
+enum { CDROM_USE_SDL, CDROM_USE_ASPI, CDROM_USE_IOCTL_DIO, CDROM_USE_IOCTL_DX, CDROM_USE_IOCTL_MCI };
 
 typedef struct SMSF {
 	unsigned char min;
@@ -265,7 +265,10 @@ private:
 class CDROM_Interface_Ioctl : public CDROM_Interface
 {
 public:
-	CDROM_Interface_Ioctl		(void);
+	enum cdioctl_cdatype { CDIOCTL_CDA_DIO, CDIOCTL_CDA_MCI, CDIOCTL_CDA_DX };
+	cdioctl_cdatype cdioctl_cda_selected;
+
+	CDROM_Interface_Ioctl		(cdioctl_cdatype ioctl_cda);
 	virtual ~CDROM_Interface_Ioctl(void);
 
 	bool	SetDevice			(char* path, int forceCD);
@@ -282,6 +285,7 @@ public:
 	bool	PauseAudio			(bool resume);
 	bool	StopAudio			(void);
 	
+	bool	ReadSector			(Bit8u *buffer, bool raw, unsigned long sector);
 	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
 
 	bool	LoadUnloadMedia		(bool unload);
@@ -291,10 +295,51 @@ private:
 
 	bool	Open				(void);
 	void	Close				(void);
-	
+
 	char	pathname[32];
 	HANDLE	hIOCTL;
 	TMSF	oldLeadOut;
+
+
+	/* track start/length data */
+	bool	track_start_valid;
+	int		track_start_first,track_start_last;
+	int		track_start[128];
+
+	bool	GetAudioTracksAll	(void);
+
+
+	/* mci audio cd interface */
+	bool	use_mciplay;
+	int		mci_devid;
+
+	bool	mci_CDioctl				(UINT msg, DWORD flags, void *arg);
+	bool	mci_CDOpen				(char drive);
+	bool	mci_CDClose				(void);
+	bool	mci_CDPlay				(int start, int length);
+	bool	mci_CDPause				(void);
+	bool	mci_CDResume			(void);
+	bool	mci_CDStop				(void);
+	int		mci_CDStatus			(void);
+	bool	mci_CDPosition			(int *position);
+
+
+	/* digital audio extraction cd interface */
+	static void dx_CDAudioCallBack(Bitu len);
+
+	bool	use_dxplay;
+	static  struct dxPlayer {
+		CDROM_Interface_Ioctl *cd;
+		MixerChannel	*channel;
+		SDL_mutex		*mutex;
+		Bit8u   buffer[8192];
+		int     bufLen;
+		int     currFrame;	
+		int     targetFrame;
+		bool    isPlaying;
+		bool    isPaused;
+	} player;
+
 };
 
 #endif /* WIN 32 */

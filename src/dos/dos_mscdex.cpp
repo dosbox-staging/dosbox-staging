@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.55 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.56 2008-11-06 19:31:21 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -173,10 +173,6 @@ CMscdex::CMscdex(void) {
 };
 
 CMscdex::~CMscdex(void) {
-/*	if (defaultBufSeg!=0) {
-		DOS_FreeMemory(defaultBufSeg);	// can't free that
-		defaultBufSeg = 0;
-	} */
 	defaultBufSeg = 0;
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
 		delete (cdrom)[i];
@@ -266,14 +262,24 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		GetVersionEx(&osi);
 		if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
 			// only WIN NT/200/XP
-			if (useCdromInterface==CDROM_USE_IOCTL) {
-				cdrom[numDrives] = new CDROM_Interface_Ioctl();
+			if (useCdromInterface==CDROM_USE_IOCTL_DIO) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DIO);
 				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
+				break;
+			}
+			if (useCdromInterface==CDROM_USE_IOCTL_DX) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DX);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (digital audio extraction).");
+				break;
+			}
+			if (useCdromInterface==CDROM_USE_IOCTL_MCI) {
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_MCI);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (media control interface).");
 				break;
 			}
 		}
 		if (useCdromInterface==CDROM_USE_ASPI) {
-		// all Wins - ASPI
+			// all Wins - ASPI
 			cdrom[numDrives] = new CDROM_Interface_Aspi();
 			LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
 			break;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.88 2008-09-26 17:21:17 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.89 2008-11-06 19:31:21 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -263,12 +263,32 @@ public:
 				int error;
 				if (cmd->FindExist("-aspi",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
-				} else if (cmd->FindExist("-ioctl",false)) {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
+				} else if (cmd->FindExist("-ioctl_dio",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+				} else if (cmd->FindExist("-ioctl_dx",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+#if defined (WIN32)
+				} else if (cmd->FindExist("-ioctl_mci",false)) {
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_MCI, num);
+#endif
 				} else if (cmd->FindExist("-noioctl",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 				} else {
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL, num);
+#if defined (WIN32)
+/*					// Check OS
+					OSVERSIONINFO osi;
+					osi.dwOSVersionInfoSize = sizeof(osi);
+					GetVersionEx(&osi);
+					if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>5)) {
+						// Vista/above
+						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+					} else {
+						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+					} */
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+#else
+					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
+#endif
 				}
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
@@ -515,19 +535,17 @@ public:
 
 		FILE *usefile_1=NULL;
 		FILE *usefile_2=NULL;
-		Bitu i; 
+		Bitu i=0; 
 		Bit32u floppysize;
 		Bit32u rombytesize_1=0;
 		Bit32u rombytesize_2=0;
-		Bit8u drive;
+		Bit8u drive = 'A';
 		std::string cart_cmd="";
 
 		if(!cmd->GetCount()) {
 			printError();
 			return;
 		}
-		i=0;
-		drive = 'A';
 		while(i<cmd->GetCount()) {
 			if(cmd->FindCommand(i+1, temp_line)) {
 				if((temp_line == "-l") || (temp_line == "-L")) {
