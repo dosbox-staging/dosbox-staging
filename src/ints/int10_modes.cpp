@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.80 2008-08-08 21:57:00 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.81 2008-11-08 12:56:50 c2woody Exp $ */
 
 #include <string.h>
 
@@ -227,7 +227,7 @@ VideoModeBlock ModeList_OTHER[]={
 { 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x0800 ,56  ,127 ,40 ,100 ,0   },
 { 0x008  ,M_TANDY16,160 ,200 ,20 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,56  ,127 ,40 ,100 ,0   },
 { 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
-{ 0x00A  ,M_CGA4   ,640 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
+{ 0x00A  ,M_CGA4   ,640 ,200 ,80 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
 
@@ -632,8 +632,11 @@ bool INT10_SetVideoMode(Bitu mode) {
 	if (mono_mode) crtc_base=0x3b4;
 	else crtc_base=0x3d4;
 
-	// Disable MMIO here so we can read / write memory
-	if (IS_VGA_ARCH && svgaCard == SVGA_S3Trio) IO_Write(crtc_base,0x53);IO_Write(crtc_base+1,0x0);
+	if (IS_VGA_ARCH && (svgaCard == SVGA_S3Trio)) {
+		// Disable MMIO here so we can read / write memory
+		IO_Write(crtc_base,0x53);
+		IO_Write(crtc_base+1,0x0);
+	}
 
 	/* Setup MISC Output Register */
 	Bit8u misc_output=0x2 | (mono_mode ? 0x0 : 0x1);
