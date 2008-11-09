@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.55 2008-08-11 12:50:26 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.56 2008-11-09 11:22:03 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 
@@ -480,6 +480,8 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		}
 		switch(CurMode->type) {
 		case M_CGA4:
+			attr = 0x3;
+			break;
 		case M_CGA2:
 			attr = 0x1;
 			break;
@@ -521,6 +523,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
 	if (CurMode->type!=M_TEXT) {
+		showattr=true; //Use attr in graphics mode always
 		switch (machine) {
 			case EGAVGA_ARCH_CASE:
 				page%=CurMode->ptotal;
