@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.50 2008-09-10 16:20:04 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.51 2008-11-09 10:38:21 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -422,7 +422,10 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 #if defined (WIN32)
 		switch (key) {
 			case 0x1c:	// ENTER
+			case 0x1d:	// CONTROL
 			case 0x35:	// SLASH
+			case 0x37:	// PRINTSCREEN
+			case 0x38:	// ALT
 			case 0x45:	// PAUSE
 			case 0x47:	// HOME
 			case 0x48:	// cursor UP
