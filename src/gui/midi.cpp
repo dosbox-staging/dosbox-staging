@@ -103,6 +103,7 @@ static struct {
 	Bitu cmd_len;
 	Bitu cmd_pos;
 	Bit8u cmd_buf[8];
+	Bit8u rt_buf[8];
 	struct {
 		Bit8u buf[SYSEX_SIZE];
 		Bitu used;
@@ -112,6 +113,12 @@ static struct {
 } midi;
 
 void MIDI_RawOutByte(Bit8u data) {
+	/* Test for a realtime MIDI message */
+	if (data>=0xf8) {
+		midi.rt_buf[0]=data;
+		midi.handler->PlayMsg(midi.rt_buf);
+		return;
+	}	 
 	/* Test for a active sysex tranfer */
 	if (midi.status==0xf0) {
 		if (!(data&0x80)) { 
