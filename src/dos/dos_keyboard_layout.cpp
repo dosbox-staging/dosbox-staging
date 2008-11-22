@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.15 2008-10-30 22:34:17 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.16 2008-11-22 14:24:11 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -81,6 +81,7 @@ public:
 
 	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout);
 	void switch_foreign_layout();
+	const char* get_layout_name();
 
 
 private:
@@ -993,6 +994,16 @@ void keyboard_layout::switch_foreign_layout() {
 	else LOG(LOG_BIOS,LOG_NORMAL)("Switched to US layout");
 }
 
+const char* keyboard_layout::get_layout_name() {
+	// get layout name (language ID or NULL if default layout)
+	if (use_foreign_layout) {
+		if (strcmp(current_keyboard_file_name,"none") != 0) {
+			return (const char*)&current_keyboard_file_name;
+		}
+	}
+	return NULL;
+}
+
 
 static keyboard_layout* loaded_layout=NULL;
 
@@ -1039,6 +1050,14 @@ Bitu DOS_SwitchKeyboardLayout(const char* new_layout) {
 		}
 		return ret_code;
 	} else return 0xff;
+}
+
+// get currently loaded layout name (NULL if no layout is loaded)
+const char* DOS_GetLoadedLayout(void) {
+	if (loaded_layout) {
+		return loaded_layout->get_layout_name();
+	}
+	return NULL;
 }
 
 

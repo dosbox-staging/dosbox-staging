@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.89 2008-11-06 19:31:21 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.90 2008-11-22 14:24:11 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -1292,6 +1292,7 @@ void IMGMOUNT_ProgramStart(Program * * make) {
 
 Bitu DOS_SwitchKeyboardLayout(const char* new_layout);
 Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
+const char* DOS_GetLoadedLayout(void);
 
 class KEYB : public Program {
 public:
@@ -1344,8 +1345,13 @@ void KEYB::Run(void) {
 			}
 		}
 	} else {
-		/* no parameter in the command line, just output codepage info */
-		WriteOut(MSG_Get("PROGRAM_KEYB_INFO"),dos.loaded_codepage);
+		/* no parameter in the command line, just output codepage info and possibly loaded layout ID */
+		const char* layout_name = DOS_GetLoadedLayout();
+		if (layout_name==NULL) {
+			WriteOut(MSG_Get("PROGRAM_KEYB_INFO"),dos.loaded_codepage);
+		} else {
+			WriteOut(MSG_Get("PROGRAM_KEYB_INFO_LAYOUT"),dos.loaded_codepage,layout_name);
+		}
 	}
 };
 
@@ -1532,6 +1538,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES", "Using multiple files is only supported for cue/iso images.\n");
 
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
+	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
 	MSG_Add("PROGRAM_KEYB_SHOWHELP",
 		"\033[32;1mKEYB\033[0m [keyboard layout ID[ codepage number[ codepage file]]]\n\n"
 		"Some examples:\n"
