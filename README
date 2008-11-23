@@ -57,13 +57,13 @@ Q: I've got a Z instead of a C at the prompt.
 Q: Do I always have to type these commands? Automation?
 Q: How do I change to fullscreen?
 Q: My CD-ROM doesn't work.
+Q: The game/application can't find its CD-ROM.
 Q: The mouse doesn't work.
 Q: There is no sound.
 Q: The sound stutters or sounds stretched/weird.
 Q: I can't type \ or : in DOSBox.
 Q: The keyboard lags.
 Q: The cursor always moves into one direction!
-Q: The game/application can't find its CD-ROM.
 Q: The game/application runs much too slow!
 Q: The game/application does not run at all/crashes!
 Q: Can DOSBox harm my computer?
@@ -103,18 +103,43 @@ Q: My CD-ROM doesn't work.
 A: To mount your CD-ROM in DOSBox you have to specify some additional options 
    when mounting the CD-ROM. 
    To enable CD-ROM support (includes MSCDEX):
-     - mount d f:\ -t cdrom
-   To enable low-level CD-ROM-support (uses ioctl if possible):
-     - mount d f:\ -t cdrom -usecd 0
-   To enable low-level SDL-support:
-     - mount d f:\ -t cdrom -usecd 0 -noioctl
-   To enable low-level aspi-support (win98 with aspi-layer installed):
-     - mount d f:\ -t cdrom -usecd 0 -aspi
+     - mount d f:\ -t cdrom (windows)
+     - mount d /media/cdrom -t cdrom (linux)
+
+   In some cases you might want to use a different CD-ROM interface,
+   for example if CD audio does not work:
+     To enable SDL-support (does not include low-level CD access!):
+       - mount d f:\ -t cdrom -usecd 0 -noioctl
+     To enable ioctl access using digital audio extraction for CD audio
+     (windows-only, useful for Vista):
+       - mount d f:\ -t cdrom -ioctl_dx
+     To enable ioctl access using MCI for CD audio (windows-only):
+       - mount d f:\ -t cdrom -ioctl_mci
+     To force ioctl-only access (windows-only):
+       - mount d f:\ -t cdrom -ioctl_dio
+     To enable low-level aspi-support (win98 with aspi-layer installed):
+       - mount d f:\ -t cdrom -aspi
    
    In the commands: - d   driveletter you will get in DOSBox
                     - f:\ location of CD-ROM on your PC.
-                    - 0   The number of the CD-ROM drive, reported by mount -cd
-   See also the question: The game/application can't find its CD-ROM.
+                    - 0   The number of the CD-ROM drive, reported by "mount -cd"
+                          (note that this value is only needed when using SDL
+                           for CD audio, otherwise it is ignored)
+   See also the next question: The game/application can't find its CD-ROM.
+
+
+Q: The game/application can't find its CD-ROM.
+A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
+   MSCDEX interface required by DOS games to interface with CD-ROMs.
+   Also try adding the correct label (-label LABEL) to the mount command,
+   where LABEL is the CD-label (volume ID) of the CD-ROM.
+   Under Windows you can specify -ioctl, -aspi or -noioctl. Look at the
+   description of the mount command in Section 4 for their meaning and the
+   additional audio-CD related options -ioctl_dx, ioctl_mci, ioctl_dio.
+   
+   Try creating a CD-ROM image (preferably CUE/BIN pair) and use the
+   DOSBox-internal IMGMOUNT tool to mount the image (the CUE sheet).
+   This enables very good low-level CD-ROM support on any operating system.
 
 
 Q: The mouse doesn't work.
@@ -160,9 +185,6 @@ A: This is a known problem. It only occurs if your keyboard layout isn't US.
      6. Use ALT-58 for : and ALT-92 for \.
      7. For \ try the keys around "enter". For ":" try shift and the keys 
         between "enter" and "l" (US keyboard layout).
-     8. Try keyb.com from FreeDOS (http://projects.freedos.net/keyb/).
-        Look for keyb2.0 pre4 as older and newer versions are known to
-        have a bug in the loader routines.
 
 
 Q: The keyboard lags.
@@ -178,19 +200,6 @@ A: See if it still happens if you disable the joystick emulation,
    If you want to use the joystick in the game, try setting timed=false
    and be sure to calibrate the joystick (both in your OS as well as
    in the game or the game's setup program).
-   
-
-Q: The game/application can't find its CD-ROM.
-A: Be sure to mount the CD-ROM with -t cdrom switch, this will enable the
-   MSCDEX interface required by DOS games to interface with CD-ROM's.
-   Also try adding the correct label (-label LABEL) to the mount command.
-   To enable lower-level CD-ROM support, add the following switch to mount:
-   -usecd #, where # is the number of your CD-ROM drive reported by mount -cd.
-   Under Windows you can specify -ioctl, -aspi or -noioctl. Look at the
-   description of the mount command in Section 4 for their meaning.
-   Try creating a CD-ROM image (preferably CUE/BIN pair) and use the
-   DOSBox-internal IMGMOUNT tool to mount the image (the CUE sheet).
-   This enables very good low-level CD-ROM support on any operating system.
 
 
 Q: The game/application runs much too slow!
@@ -236,7 +245,7 @@ A: DOSBox emulates several legacy sound devices:
    - Adlib
      Borrowed from MAME, this emulation is almost perfect and includes the 
      Adlib's ability to almost play digitized sound.
-   - SoundBlaster 16/ SoundBlaster Pro I & II /SoundBlaster I & II
+   - SoundBlaster 16 / SoundBlaster Pro I & II / SoundBlaster I & II
      By default DOSBox provides Soundblaster 16 level 16-bit stereo sound. 
      You can select a different SoundBlaster version in the configfile of 
      DOSBox (See Internal Commands: CONFIG).
@@ -385,7 +394,7 @@ MOUNT -u "Emulated Drive letter"
   "Emulated Drive letter"
         The driveletter inside DOSBox (eg. C).
 
-  "Real Drive letter (usually for CD-ROM's in Windows) or Directory"
+  "Real Drive letter (usually for CD-ROMs in Windows) or Directory"
         The local directory you want accessible inside DOSBox.
 
   -t type
@@ -422,19 +431,29 @@ MOUNT -u "Emulated Drive letter"
         Forces use of the aspi layer. Only valid if mounting a CD-ROM under 
         Windows systems with an ASPI-Layer.
 
-  -ioctl   
+  -ioctl (automatic selection of the CD audio interface)
+  -ioctl_dx (digital audio extraction used for CD audio)
+  -ioctl_dio (ioctl calls used for CD audio)
+  -ioctl_mci (MCI used for CD audio)
         Forces use of ioctl commands. Only valid if mounting a CD-ROM under 
         a Windows OS which support them (Win2000/XP/NT).
+        The various choices only differ in the way CD audio is handled,
+        preferrably -ioctl_dio is used (lowest workload), but this might not
+        work on all systems so -ioctl_dx (or -ioctl_mci) can be used.
 
-  -noioctl   
+  -noioctl
         Forces use of the SDL CD-ROM layer. Valid on all systems.
 
   -usecd number
-        Forces use of SDL CD-ROM support for drive number.
-        Number can be found by -cd. Valid on all systems.
+        Valid on all systems, under windows the -noioctl switch has to be
+        present to make use of the -usecd switch.
+        Enables to select the drive that should be used by SDL. Use this if
+        the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
+        interface. "number" can be found by "MOUNT -cd".
 
   -cd
-        Displays all detected CD-ROM drives and their numbers. Use with -usecd.
+        Displays all CD-ROM drives detected by SDL, and their numbers.
+        See the information at the -usecd entry above.
 
   -u
         Removes the mount. Doesn't work for Z:\.
@@ -454,7 +473,7 @@ MOUNT -u "Emulated Drive letter"
   MOUNT C D:\OLDGAMES will allow you to run Touche from the D drive.
 
   Mounting your entire C drive with MOUNT C C:\ is NOT recommended! The same
-  is true for mounting the root of any other drive, except for CD-ROM's (due to
+  is true for mounting the root of any other drive, except for CD-ROMs (due to
   their read-only nature). Otherwise if you or DOSBox make a mistake you may
   lose all your files.
   It is recommended to put all your applications/games into a subdirectory
@@ -579,7 +598,9 @@ MIXER
   mixer channel left:right [/NOSHOW] [/LISTMIDI]
   
   channel
-      Can be one of the following: MASTER, DISNEY, SPKR, GUS, SB, FM.
+      Can be one of the following: MASTER, DISNEY, SPKR, GUS, SB, FM [, CDAUDIO].
+      CDAUDIO is only available if a CD-ROM interface with volume control is
+      enabled (CD image, ioctl_dx).
   
   left:right
       The volume levels in percentages. If you put a D in front it will be
@@ -617,7 +638,7 @@ IMGMOUNT
       Location of the image files to mount in DOSBox. Specifying a number
       of image files is only allowed for CD-ROM images. The CD's can be
       swapped with CTRL-F4 at any time. This is required for games which
-      use multiple CD-ROM's and require the CD to be switched during the
+      use multiple CD-ROMs and require the CD to be switched during the
       gameplay at some point.
    
   -t 
@@ -803,6 +824,8 @@ KEYB [languagecode [codepage [codepagefile]]]
     4. To load codepage 858 (without a keyboard layout):
          keyb none 858
        This can be used to change the codepage for the FreeDOS keyb2 utility.
+    5. To display the current codepage and, if loaded, the keyboard layout:
+         keyb
 
 
 
@@ -819,9 +842,9 @@ ALT-PAUSE     Pause emulation.
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
 CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
-CTRL-F5       Save a screenshot. (png)
+CTRL-F5       Save a screenshot. (PNG format)
 CTRL-F6       Start/Stop recording sound output to a wave file.
-CTRL-ALT-F7   Start/Stop recording of OPL commands.
+CTRL-ALT-F7   Start/Stop recording of OPL commands. (DRO format)
 CTRL-ALT-F8   Start/Stop the recording of raw MIDI commands.
 CTRL-F7       Decrease frameskip.
 CTRL-F8       Increase frameskip.
@@ -946,6 +969,9 @@ To switch to a different keyboard layout, either the entry "keyboardlayout"
 in the [dos] section of the DOSBox configuration file can be used, or the
 internal DOSBox program keyb.com. Both accept DOS conforming language codes
 (see below), but only by using keyb.com a custom codepage can be specified.
+
+The default keyboardlayout=auto currently works under windows only, the
+layout is chosen according to the OS layout.
 
 Layout switching
   DOSBox supports a number of keyboard layouts and codepages by default,
