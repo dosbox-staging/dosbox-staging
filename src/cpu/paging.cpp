@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.34 2008-05-18 13:11:14 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.35 2008-12-04 21:09:32 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -58,7 +58,7 @@ Bitu PageHandler::readd(PhysPt addr) {
 
 void PageHandler::writeb(PhysPt addr,Bitu /*val*/) {
 	E_Exit("No byte handler for write to %d",addr);	
-};
+}
 
 void PageHandler::writew(PhysPt addr,Bitu val) {
 	writeb(addr+0,(Bit8u) (val >> 0));
@@ -69,7 +69,7 @@ void PageHandler::writed(PhysPt addr,Bitu val) {
 	writeb(addr+1,(Bit8u) (val >> 8));
 	writeb(addr+2,(Bit8u) (val >> 16));
 	writeb(addr+3,(Bit8u) (val >> 24));
-};
+}
 
 HostPt PageHandler::GetHostReadPt(Bitu /*phys_page*/) {
 	return 0;
@@ -227,6 +227,7 @@ static INLINE bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,
 	return true;
 }
 
+// check if a user-level memory access would trigger a privilege page fault
 static INLINE bool InitPage_CheckUseraccess(Bitu u1,Bitu u2) {
 	switch (CPU_ArchitectureType) {
 	case CPU_ARCHTYPE_MIXED:
@@ -348,6 +349,7 @@ public:
 				}
 			}
 			if ((entry.block.wr==0) || (table.block.wr==0)) {
+				// page is write-protected for user mode
 				if (priv_check==0) {
 					switch (CPU_ArchitectureType) {
 					case CPU_ARCHTYPE_MIXED:
@@ -363,6 +365,7 @@ public:
 						break;
 					}
 				}
+				// check if actually failing the write-protected check
 				if (writing && USERWRITE_PROHIBITED) priv_check=3;
 			}
 			if (priv_check==3) {
@@ -373,17 +376,28 @@ public:
 			}
 
 			if (!table.block.a) {
-				table.block.a=1;		//Set access
+				table.block.a=1;		// set page table accessed
 				phys_writed((paging.base.page<<12)+(lin_page >> 10)*4,table.load);
 			}
 			if ((!entry.block.a) || (!entry.block.d)) {
-				entry.block.a=1;					//Set access
-				if (writing) entry.block.d=1;		//Set dirty
+				entry.block.a=1;		// set page accessed
+
+				// page is dirty if we're writing to it, or if we're reading but the
+				// page will be fully linked so we can't track later writes
+				if (writing || (priv_check==0)) entry.block.d=1;		// mark page as dirty
+
 				phys_writed((table.block.base<<12)+(lin_page & 0x3ff)*4,entry.load);
 			}
+
 			phys_page=entry.block.base;
-			if (priv_check==0) PAGING_LinkPage(lin_page,phys_page);
-			else {
+			
+			// now see how the page should be linked best, if we need to catch privilege
+			// checks later on it should be linked as read-only page
+			if (priv_check==0) {
+				// if reading we could link the page as read-only to later cacth writes,
+				// will slow down pretty much but allows catching all dirty events
+				PAGING_LinkPage(lin_page,phys_page);
+			} else {
 				if (priv_check==1) {
 					PAGING_LinkPage(lin_page,phys_page);
 					return 1;
@@ -754,12 +768,13 @@ void PAGING_ClearTLB(void) {
 }
 
 void PAGING_UnlinkPages(Bitu lin_page,Bitu pages) {
-	tlb_entry *entry = get_tlb_entry(lin_page<<12);
 	for (;pages>0;pages--) {
+		tlb_entry *entry = get_tlb_entry(lin_page<<12);
 		entry->read=0;
 		entry->write=0;
 		entry->readhandler=&init_page_handler;
 		entry->writehandler=&init_page_handler;
+		lin_page++;
 	}
 }
 
