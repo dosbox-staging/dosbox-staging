@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.20 2008-08-11 13:09:44 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.21 2008-12-11 20:45:43 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"
@@ -122,31 +122,32 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 
 Bit8u DOS_FindDevice(char const * name) {
 	/* should only check for the names before the dot and spacepadded */
-	// STDAUX is alias for COM1
-	// A bit of a hack, but no application will probably use stdaux to determine wether a directory exists
-	if (strcasecmp(name, "STDAUX") == 0) name = "COM1";
-	if (strcasecmp(name, "PRN") == 0) name = "LPT1";
+	char fullname[DOS_PATHLENGTH];Bit8u drive;
+//	if(!name || !(*name)) return DOS_DEVICES; //important, but makename does it
+	if (!DOS_MakeName(name,fullname,&drive)) return DOS_DEVICES;
 
-	char temp[CROSS_LEN];//TODO
-	if(!name || !(*name)) return DOS_DEVICES;
-	strcpy(temp,name);
-
-	char* name_start = strrchr(temp,'\\');
-	if(name_start) {
-		//Directory found in front of the filename. Check it's path
-		*name_start++ = 0;
-		Bit8u drive;char fulldir[DOS_PATHLENGTH];
-		if (!DOS_MakeName(temp,fulldir,&drive)) return DOS_DEVICES;
-		if(!Drives[drive]->TestDir(fulldir)) return DOS_DEVICES;
-	} else name_start = temp;
-
-	char* dot = strrchr(name_start,'.');
+	char* name_part = strrchr(fullname,'\\');
+	if(name_part) {
+		*name_part++ = 0;
+		//Check validity of leading directory.
+		if(!Drives[drive]->TestDir(fullname)) return DOS_DEVICES;
+	} else name_part = fullname;
+   
+	char* dot = strrchr(name_part,'.');
 	if(dot) *dot = 0; //no ext checking
+
+	static char com[5] = { 'C','O','M','1',0 };
+	static char lpt[5] = { 'L','P','T','1',0 };
+	// AUX is alias for COM1 and PRN for LPT1
+	// A bit of a hack. (but less then before).
+	// no need for casecmp as makename returns uppercase
+	if (strcmp(name_part, "AUX") == 0) name_part = com;
+	if (strcmp(name_part, "PRN") == 0) name_part = lpt;
 
 	/* loop through devices */
 	for(Bit8u index = 0;index < DOS_DEVICES;index++) {
 		if (Devices[index]) {
-			if (WildFileCmp(name_start,Devices[index]->name)) return index;
+			if (WildFileCmp(name_part,Devices[index]->name)) return index;
 		}
 	}
 	return DOS_DEVICES;
