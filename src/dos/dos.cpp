@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.113 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.114 2008-12-11 09:16:31 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +46,13 @@ void DOS_SetError(Bit16u code) {
 #ifdef DATA_TRANSFERS_TAKE_CYCLES
 #include "cpu.h"
 static inline void modify_cycles(Bits value) {
-	if((4*value+5) < CPU_Cycles) CPU_Cycles -= 4*value; else CPU_Cycles = 5;
+	if((4*value+5) < CPU_Cycles) {
+		CPU_Cycles -= 4*value;
+		CPU_IODelayRemoved += 4*value;
+	} else {
+		CPU_IODelayRemoved += CPU_Cycles/*-5*/; //don't want to mess with negative
+		CPU_Cycles = 5;
+	}
 }
 #else
 static inline void modify_cycles(Bits /* value */) {
