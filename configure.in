@@ -40,7 +40,7 @@ dnl Check if SDL is 1.2.x (1.3 not supported)
 AC_MSG_CHECKING([SDL version only being 1.2.X])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include "SDL.h"]],[[
 #if SDL_MINOR_VERSION != 2
-#error "Only SDL 1.2 supported
+#error "Only SDL 1.2 supported"
 #endif
 ]])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
