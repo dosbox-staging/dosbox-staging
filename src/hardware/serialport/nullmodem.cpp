@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: nullmodem.cpp,v 1.4 2008-07-05 08:54:59 c2woody Exp $ */
+/* $Id: nullmodem.cpp,v 1.5 2008-12-19 15:20:35 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -233,7 +233,7 @@ void CNullModem::Disconnect() {
 	LOG_MSG("Serial%d: Disconnected.",idnumber+1);
 	delete clientsocket;
 	clientsocket=0;
-	setDTR(false);
+	setDSR(false);
 	setCTS(false);
 	if(serverport) {
 		serversocket = new TCPServerSocket(serverport);
