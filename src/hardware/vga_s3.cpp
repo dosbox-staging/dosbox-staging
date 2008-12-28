@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.16 2008-08-08 21:57:00 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.17 2008-12-28 20:22:12 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -127,16 +127,21 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	case 0x4c:  /* HGC start address high byte*/
 		vga.s3.hgc.startaddr &=0xff;
 		vga.s3.hgc.startaddr |= ((val & 0xf) << 8);
+		if ((((Bitu)vga.s3.hgc.startaddr)<<10)+((64*64*2)/8) > vga.vmemsize) {
+			vga.s3.hgc.startaddr &= 0xff;	// put it back to some sane area;
+											// if read back of this address is ever implemented this needs to change
+			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:CRTC: HGC pattern address beyond video memory" );
+		}
 		break;
 	case 0x4d:  /* HGC start address low byte*/
 		vga.s3.hgc.startaddr &=0xff00;
 		vga.s3.hgc.startaddr |= (val & 0xff);
 		break;
 	case 0x4e:  /* HGC pattern start X */
-		vga.s3.hgc.posx = val;
+		vga.s3.hgc.posx = val & 0x3f;	// bits 0-5
 		break;
 	case 0x4f:  /* HGC pattern start Y */
-		vga.s3.hgc.posy = val;
+		vga.s3.hgc.posy = val & 0x3f;	// bits 0-5
 		break;
 	case 0x50:  // Extended System Control 1
 		vga.s3.reg_50 = val;

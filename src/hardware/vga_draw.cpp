@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.103 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.104 2008-12-28 20:22:12 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -170,7 +170,7 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 
 #endif
 
-static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu line) {
+static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 // There is guaranteed extra memory past the wrap boundary. So, instead of using temporary
 // storage just copy appropriate chunk from the beginning to the wrap boundary when needed.
 	Bitu offset = vidstart & vga.draw.linear_mask;
@@ -186,7 +186,7 @@ static Bit8u * VGA_Draw_Linear_Line(Bitu vidstart, Bitu line) {
 	return ret;
 }
 
-static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu line) {
+static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	Bit8u *ret = &vga.draw.linear_base[ vidstart & vga.draw.linear_mask ];
 	Bit16u* temps = (Bit16u*) TempLine;
 	for(Bitu i = 0; i < vga.draw.line_length; i++) {
@@ -213,207 +213,134 @@ static Bit8u * VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu line) {
 	return TempLine;
 } */
 
-static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu line) {
-	bool hwcursor_active=false;
-	if (svga.hardware_cursor_active) {
-		if (svga.hardware_cursor_active()) hwcursor_active=true;
-	}
-	if (hwcursor_active) {
-		Bitu lineat = (vidstart-(vga.config.real_start<<2)) / vga.draw.width;
-		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
-			return &vga.mem.linear[ vidstart ];
-		} else {
-			memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width);
-			/* Draw mouse cursor */
-			Bits moff = ((Bits)lineat - (Bits)vga.s3.hgc.originy) + (Bits)vga.s3.hgc.posy;
-			if(moff>63) return &vga.mem.linear[ vidstart ];
-			if(moff<0) moff+=64;
-			Bitu xat = vga.s3.hgc.originx;
-			Bitu m, mapat;
-			Bits r, z;
-			mapat = 0;
+static Bit8u * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
+	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
+		// HW Mouse not enabled, use the tried and true call
+		return &vga.mem.linear[vidstart];
 
-			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
-			mouseaddr+=(moff * 16);
-
-			Bit16u bitsA, bitsB;
-			Bit8u mappoint;
-			for(m=0;m<4;m++) {
-				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				z = 7;
-				for(r=15;r>=0;--r) {
-					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
-					if(mapat >= vga.s3.hgc.posx) {
-						switch(mappoint) {
-						case 0:
-							TempLine[xat] = vga.s3.hgc.backstack[0];
-							break;
-						case 1:
-							TempLine[xat] = vga.s3.hgc.forestack[0];
-							break;
-						case 2:
-							//Transparent
-							break;
-						case 3:
-							// Invert screen data
-							TempLine[xat] = ~TempLine[xat];
-							break;
-						}
-						xat++;
-					}
-					mapat++;
-					--z;
-					if(z<0) z=15;
-				}
-			}
-			return TempLine;
-		}
-	} else {
-		/* HW Mouse not enabled, use the tried and true call */
+	Bitu lineat = (vidstart-(vga.config.real_start<<2)) / vga.draw.width;
+	if ((vga.s3.hgc.posx >= vga.draw.width) ||
+		(lineat < vga.s3.hgc.originy) || 
+		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
+		// the mouse cursor *pattern* is not on this line
 		return &vga.mem.linear[ vidstart ];
+	} else {
+		// Draw mouse cursor: cursor is a 64x64 pattern which is shifted (inside the
+		// 64x64 mouse cursor space) to the right by posx pixels and up by posy pixels.
+		// This is used when the mouse cursor partially leaves the screen.
+		// It is arranged as bitmap of 16bits of bitA followed by 16bits of bitB, each
+		// AB bits corresponding to a cursor pixel. The whole map is 8kB in size.
+		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width);
+		// the index of the bit inside the cursor bitmap we start at:
+		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
+		// convert to video memory addr and bit index
+		// start adjusted to the pattern structure (thus shift address by 2 instead of 3)
+		// Need to get rid of the third bit, so "/8 *2" becomes ">> 2 & ~1"
+		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+		Bitu cursorStartBit = sourceStartBit & 0x7;
+		// stay at the right position in the pattern
+		if (cursorMemStart & 0x2) cursorMemStart--;
+		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
+		Bit8u* xat = &TempLine[vga.s3.hgc.originx]; // mouse data start pos. in scanline
+		for (Bitu m = cursorMemStart; m < cursorMemEnd; (m&1)?(m+=3):m++) {
+			// for each byte of cursor data
+			Bit8u bitsA = vga.mem.linear[m];
+			Bit8u bitsB = vga.mem.linear[m+2];
+			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
+				// for each bit
+				cursorStartBit=0; // only the first byte has some bits cut off
+				if (bitsA&bit) {
+					if (bitsB&bit) *xat ^= 0xFF; // Invert screen data
+					//else Transparent
+				} else if (bitsB&bit) {
+					*xat = vga.s3.hgc.forestack[0]; // foreground color
+				} else {
+					*xat = vga.s3.hgc.backstack[0];
+				}
+				xat++;
+			}
+		}
+		return TempLine;
 	}
 }
 
-static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart,   Bitu line) {
-	bool hwcursor_active=false;
-	if (svga.hardware_cursor_active) {
-		if (svga.hardware_cursor_active()) hwcursor_active=true;
-	}
-	if (hwcursor_active) {
-		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
-		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
-			return &vga.mem.linear[ vidstart ];
-		} else {
-			memcpy(TempLine, &vga.mem.linear[ vidstart ], 2*vga.draw.width);
-			/* Draw mouse cursor */
-			Bits moff = ((Bits)lineat - (Bits)vga.s3.hgc.originy) + (Bits)vga.s3.hgc.posy;
-			if(moff>63) return &vga.mem.linear[ vidstart ];
-			if(moff<0) moff+=64;
-			Bitu xat = 2*vga.s3.hgc.originx;
-			Bitu m, mapat;
-			Bits r, z;
-			mapat = 0;
+static Bit8u * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
+	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
+		return &vga.mem.linear[vidstart];
 
-			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
-			mouseaddr+=(moff * 16);
-
-			Bit16u bitsA, bitsB;
-			Bit8u mappoint;
-			for(m=0;m<4;m++) {
-				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				z = 7;
-				for(r=15;r>=0;--r) {
-					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
-					if(mapat >= vga.s3.hgc.posx) {
-						switch(mappoint) {
-						case 0:
-							TempLine[xat]   = vga.s3.hgc.backstack[0];
-							TempLine[xat+1] = vga.s3.hgc.backstack[1];
-							break;
-						case 1:
-							TempLine[xat]   = vga.s3.hgc.forestack[0];
-							TempLine[xat+1] = vga.s3.hgc.forestack[1];
-							break;
-						case 2:
-							//Transparent
-							break;
-						case 3:
-							// Invert screen data
-							TempLine[xat]   = ~TempLine[xat];
-							TempLine[xat+1] = ~TempLine[xat+1];
-							break;
-						}
-						xat+=2;
-					}
-					mapat++;
-					--z;
-					if(z<0) z=15;
-				}
-			}
-			return TempLine;
-		}
+	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
+	if ((vga.s3.hgc.posx >= vga.draw.width) ||
+		(lineat < vga.s3.hgc.originy) || 
+		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
+		return &vga.mem.linear[vidstart];
 	} else {
-		/* HW Mouse not enabled, use the tried and true call */
-		return &vga.mem.linear[ vidstart ];
+		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*2);
+		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
+ 		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+		Bitu cursorStartBit = sourceStartBit & 0x7;
+		if (cursorMemStart & 0x2) cursorMemStart--;
+		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
+		Bit16u* xat = &((Bit16u*)TempLine)[vga.s3.hgc.originx];
+		for (Bitu m = cursorMemStart; m < cursorMemEnd; (m&1)?(m+=3):m++) {
+			// for each byte of cursor data
+			Bit8u bitsA = vga.mem.linear[m];
+			Bit8u bitsB = vga.mem.linear[m+2];
+			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
+				// for each bit
+				cursorStartBit=0;
+				if (bitsA&bit) {
+					// byte order doesn't matter here as all bits get flipped
+					if (bitsB&bit) *xat ^= ~0U;
+					//else Transparent
+				} else if (bitsB&bit) {
+					// Source as well as destination are Bit8u arrays, 
+					// so this should work out endian-wise?
+					*xat = *(Bit16u*)vga.s3.hgc.forestack;
+				} else {
+					*xat = *(Bit16u*)vga.s3.hgc.backstack;
+				}
+				xat++;
+			}
+		}
+		return TempLine;
 	}
 }
 
-static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart,   Bitu line) {
-	bool hwcursor_active=false;
-	if (svga.hardware_cursor_active) {
-		if (svga.hardware_cursor_active()) hwcursor_active=true;
-	}
-	if (hwcursor_active) {
-		Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
-		if((lineat < vga.s3.hgc.originy) || (lineat > (vga.s3.hgc.originy + 63U))) {
-			return &vga.mem.linear[ vidstart ];
-		} else {
-			memcpy(TempLine, &vga.mem.linear[ vidstart ], 4*vga.draw.width);
-			/* Draw mouse cursor */
-			Bits moff = ((Bits)lineat - (Bits)vga.s3.hgc.originy) + (Bits)vga.s3.hgc.posy;
-			if(moff>63) return &vga.mem.linear[ vidstart ];
-			if(moff<0) moff+=64;
-			Bitu xat = 4*vga.s3.hgc.originx;
-			Bitu m, mapat;
-			Bits r, z;
-			mapat = 0;
+static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
+	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
+		return &vga.mem.linear[vidstart];
 
-			Bitu mouseaddr = (Bit32u)vga.s3.hgc.startaddr * (Bit32u)1024;
-			mouseaddr+=(moff * 16);
-
-			Bit16u bitsA, bitsB;
-			Bit8u mappoint;
-			for(m=0;m<4;m++) {
-				bitsA = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				bitsB = *(Bit16u *)&vga.mem.linear[mouseaddr];
-				mouseaddr+=2;
-				z = 7;
-				for(r=15;r>=0;--r) {
-					mappoint = (((bitsA >> z) & 0x1) << 1) | ((bitsB >> z) & 0x1);
-					if(mapat >= vga.s3.hgc.posx) {
-						switch(mappoint) {
-						case 0:
-							TempLine[xat]   = vga.s3.hgc.backstack[0];
-							TempLine[xat+1] = vga.s3.hgc.backstack[1];
-							TempLine[xat+2] = vga.s3.hgc.backstack[2];
-							TempLine[xat+3] = 255;
-							break;
-						case 1:
-							TempLine[xat]   = vga.s3.hgc.forestack[0];
-							TempLine[xat+1] = vga.s3.hgc.forestack[1];
-							TempLine[xat+2] = vga.s3.hgc.forestack[2];
-							TempLine[xat+3] = 255;
-							break;
-						case 2:
-							//Transparent
-							break;
-						case 3:
-							// Invert screen data
-							TempLine[xat]   = ~TempLine[xat];
-							TempLine[xat+1] = ~TempLine[xat+1];
-							TempLine[xat+2] = ~TempLine[xat+2];
-							TempLine[xat+3] = ~TempLine[xat+3];
-							break;
-						}
-						xat+=4;
-					}
-					mapat++;
-					--z;
-					if(z<0) z=15;
-				}
-			}
-			return TempLine;
-		}
-	} else {
-		/* HW Mouse not enabled, use the tried and true call */
+	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
+	if ((vga.s3.hgc.posx >= vga.draw.width) ||
+		(lineat < vga.s3.hgc.originy) || 
+		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
 		return &vga.mem.linear[ vidstart ];
+	} else {
+		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*4);
+		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
+		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((Bit32u)vga.s3.hgc.startaddr) << 10);
+		Bitu cursorStartBit = sourceStartBit & 0x7;
+		if (cursorMemStart & 0x2) cursorMemStart--;
+		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
+		Bit32u* xat = &((Bit32u*)TempLine)[vga.s3.hgc.originx];
+		for (Bitu m = cursorMemStart; m < cursorMemEnd; (m&1)?(m+=3):m++) {
+			// for each byte of cursor data
+			Bit8u bitsA = vga.mem.linear[m];
+			Bit8u bitsB = vga.mem.linear[m+2];
+			for (Bit8u bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) { // for each bit
+				cursorStartBit=0;
+				if (bitsA&bit) {
+					if (bitsB&bit) *xat ^= ~0U;
+					//else Transparent
+				} else if (bitsB&bit) {
+					*xat = *(Bit32u*)vga.s3.hgc.forestack;
+				} else {
+					*xat = *(Bit32u*)vga.s3.hgc.backstack;
+				}
+				xat++;
+			}
+		}
+		return TempLine;
 	}
 }
 
@@ -488,8 +415,8 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit8u * draw=(Bit8u *)TempLine;
-	bool underline=(vga.crtc.underline_location&0x1f)==line;
-	Bit8u pel_pan=vga.draw.panning;
+	bool underline=(Bitu)(vga.crtc.underline_location&0x1f)==line;
+	Bit8u pel_pan=(Bit8u)vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	Bit8u chr=vidmem[0];
@@ -547,8 +474,8 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Xlat16_Draw_Line_9(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit16u * draw=(Bit16u *)TempLine;
-	bool underline=(vga.crtc.underline_location&0x1f)==line;
-	Bit8u pel_pan=vga.draw.panning;
+	bool underline=(Bitu)(vga.crtc.underline_location&0x1f)==line;
+	Bit8u pel_pan=(Bit8u)vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
 	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
 	Bit8u chr=vidmem[0];
@@ -639,7 +566,7 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
-static void VGA_DrawSingleLine(Bitu blah) {
+static void VGA_DrawSingleLine(Bitu /*blah*/) {
 	if(vga.attr.enabled || (!(vga.mode==M_VGA || vga.mode==M_EGA))) {
         Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
 		RENDER_DrawLine(data);
@@ -732,22 +659,22 @@ static void INLINE VGA_ChangesStart( void ) {
 }
 #endif
 
-static void VGA_VertInterrupt(Bitu val) {
+static void VGA_VertInterrupt(Bitu /*val*/) {
 	if ((!vga.draw.vret_triggered) && ((vga.crtc.vertical_retrace_end&0x30)==0x10)) {
 		vga.draw.vret_triggered=true;
 		if (GCC_UNLIKELY(machine==MCH_EGA)) PIC_ActivateIRQ(9);
 	}
 }
 
-static void VGA_DisplayStartLatch(Bitu val) {
+static void VGA_DisplayStartLatch(Bitu /*val*/) {
 	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
 }
  
-static void VGA_PanningLatch(Bitu val) {
+static void VGA_PanningLatch(Bitu /*val*/) {
 	vga.draw.panning = vga.config.pel_panning;
 }
 
-static void VGA_VerticalTimer(Bitu val) {
+static void VGA_VerticalTimer(Bitu /*val*/) {
 	double error = vga.draw.delay.framestart;
 	vga.draw.delay.framestart = PIC_FullIndex();
 	error = vga.draw.delay.framestart - error - vga.draw.delay.vtotal;
@@ -936,7 +863,7 @@ void VGA_ActivateHardwareCursor(void) {
 	}
 }
 
-void VGA_SetupDrawing(Bitu val) {
+void VGA_SetupDrawing(Bitu /*val*/) {
 	if (vga.mode==M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
