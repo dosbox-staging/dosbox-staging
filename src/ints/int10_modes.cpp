@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.81 2008-11-08 12:56:50 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.82 2008-12-29 14:41:05 c2woody Exp $ */
 
 #include <string.h>
 
@@ -1042,11 +1042,20 @@ bool INT10_SetVideoMode(Bitu mode) {
 		}
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 att_text16:
-		for (i=0;i<8;i++) {
-			att_data[i]=i;
-			att_data[i+8]=i+0x38;
+		if (CurMode->mode==7) {
+			att_data[0]=0x00;
+			att_data[8]=0x10;
+			for (i=1; i<8; i++) {
+				att_data[i]=0x08;
+				att_data[i+8]=0x18;
+			}
+		} else {
+			for (i=0;i<8;i++) {
+				att_data[i]=i;
+				att_data[i+8]=i+0x38;
+			}
+			if (IS_VGA_ARCH) att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
 		}
-		if (IS_VGA_ARCH) att_data[0x06]=0x14;		//Odd Color 6 yellow/brown.
 		break;
 	case M_CGA2:
 		att_data[0x10]=0x01;		//Color Graphics
