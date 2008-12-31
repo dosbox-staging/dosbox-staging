@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.51 2008-11-09 10:38:21 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.52 2008-12-31 16:33:46 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -1617,7 +1617,7 @@ static struct {
 
 
 static void change_action_text(const char* text,Bit8u col) {
-	bind_but.action->Change(text);
+	bind_but.action->Change(text,"");
 	bind_but.action->SetColor(col);
 }
 
@@ -2216,7 +2216,7 @@ static void CreateBindGroups(void) {
 		if (mapper.sticks.num) SDL_JoystickEventState(SDL_DISABLE);
 #else
 		// enable joystick event handling
-		if (numsticks) SDL_JoystickEventState(SDL_ENABLE);
+		if (mapper.sticks.num) SDL_JoystickEventState(SDL_ENABLE);
 		else return;
 #endif
 		Bit8u joyno=0;
@@ -2378,22 +2378,43 @@ void MAPPER_StartUp(Section * sec) {
 		sdlkey_map[0x40]=SDLK_KP5;
 		sdlkey_map[0x41]=SDLK_KP6;
 #elif !defined (WIN32) /* => Linux */
-		sdlkey_map[0x5a]=SDLK_UP;
-		sdlkey_map[0x60]=SDLK_DOWN;
-		sdlkey_map[0x5c]=SDLK_LEFT;
-		sdlkey_map[0x5e]=SDLK_RIGHT;
-		sdlkey_map[0x59]=SDLK_HOME;
-		sdlkey_map[0x5f]=SDLK_END;
-		sdlkey_map[0x5b]=SDLK_PAGEUP;
-		sdlkey_map[0x61]=SDLK_PAGEDOWN;
-		sdlkey_map[0x62]=SDLK_INSERT;
-		sdlkey_map[0x63]=SDLK_DELETE;
-		sdlkey_map[0x68]=SDLK_KP_DIVIDE;
-		sdlkey_map[0x64]=SDLK_KP_ENTER;
-		sdlkey_map[0x65]=SDLK_RCTRL;
-		sdlkey_map[0x66]=SDLK_PAUSE;
-		sdlkey_map[0x67]=SDLK_PRINT;
-		sdlkey_map[0x69]=SDLK_RALT;
+		bool evdev_input = false;
+
+		if (evdev_input) {
+			sdlkey_map[0x67]=SDLK_UP;
+			sdlkey_map[0x6c]=SDLK_DOWN;
+			sdlkey_map[0x69]=SDLK_LEFT;
+			sdlkey_map[0x6a]=SDLK_RIGHT;
+			sdlkey_map[0x66]=SDLK_HOME;
+			sdlkey_map[0x6b]=SDLK_END;
+			sdlkey_map[0x68]=SDLK_PAGEUP;
+			sdlkey_map[0x6d]=SDLK_PAGEDOWN;
+			sdlkey_map[0x6e]=SDLK_INSERT;
+			sdlkey_map[0x6f]=SDLK_DELETE;
+			sdlkey_map[0x62]=SDLK_KP_DIVIDE;
+			sdlkey_map[0x60]=SDLK_KP_ENTER;
+			sdlkey_map[0x61]=SDLK_RCTRL;
+			sdlkey_map[0x77]=SDLK_PAUSE;
+			sdlkey_map[0x63]=SDLK_PRINT;
+			sdlkey_map[0x64]=SDLK_RALT;
+		} else {
+			sdlkey_map[0x5a]=SDLK_UP;
+			sdlkey_map[0x60]=SDLK_DOWN;
+			sdlkey_map[0x5c]=SDLK_LEFT;
+			sdlkey_map[0x5e]=SDLK_RIGHT;
+			sdlkey_map[0x59]=SDLK_HOME;
+			sdlkey_map[0x5f]=SDLK_END;
+			sdlkey_map[0x5b]=SDLK_PAGEUP;
+			sdlkey_map[0x61]=SDLK_PAGEDOWN;
+			sdlkey_map[0x62]=SDLK_INSERT;
+			sdlkey_map[0x63]=SDLK_DELETE;
+			sdlkey_map[0x68]=SDLK_KP_DIVIDE;
+			sdlkey_map[0x64]=SDLK_KP_ENTER;
+			sdlkey_map[0x65]=SDLK_RCTRL;
+			sdlkey_map[0x66]=SDLK_PAUSE;
+			sdlkey_map[0x67]=SDLK_PRINT;
+			sdlkey_map[0x69]=SDLK_RALT;
+		}
 #else
 		sdlkey_map[0xc8]=SDLK_UP;
 		sdlkey_map[0xd0]=SDLK_DOWN;
