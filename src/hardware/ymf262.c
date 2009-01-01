@@ -2081,8 +2081,8 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 			int base = ((r&0xf) + ch_offset) * 2;
 
 			/* OPL2 mode - always enabled */
-			chip->pan[ base    ] = 1;		/* ch.A */
-			chip->pan[ base +1 ] = 1;		/* ch.B */
+			chip->pan[ base    ] = 2;		/* ch.A */
+			chip->pan[ base +1 ] = 2;		/* ch.B */
 		}
 
 		CH->SLOT[SLOT1].FB  = (v>>1)&7 ? ((v>>1)&7) + 7 : 0;
