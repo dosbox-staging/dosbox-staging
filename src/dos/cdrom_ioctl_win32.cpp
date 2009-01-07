@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cdrom_ioctl_win32.cpp,v 1.15 2008-11-06 19:31:21 c2woody Exp $ */
+/* $Id: cdrom_ioctl_win32.cpp,v 1.16 2009-01-07 22:39:18 c2woody Exp $ */
 
 #if defined (WIN32)
 
@@ -370,9 +370,11 @@ bool CDROM_Interface_Ioctl::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 		// Open new medium
 		Open();
 
-		// check this (what to do if cd is ejected):
-		use_mciplay = false;
-		if (!mci_CDOpen(pathname[4])) use_mciplay = true;
+		if (cdioctl_cda_selected == CDIOCTL_CDA_MCI) {
+			// check this (what to do if cd is ejected):
+			use_mciplay = false;
+			if (!mci_CDOpen(pathname[4])) use_mciplay = true;
+		}
 		track_start_valid = false;
 	}
 	// Save old values
