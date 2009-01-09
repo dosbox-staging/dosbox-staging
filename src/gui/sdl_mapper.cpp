@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.52 2008-12-31 16:33:46 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.53 2009-01-09 23:10:44 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -106,8 +106,8 @@ public:
 	void AddBind(CBind * bind);
 	virtual ~CEvent() {}
 	virtual void Active(bool yesno)=0;
-	virtual void Activate(bool ev_trigger)=0;
-	virtual void DeActivate(bool ev_trigger)=0;
+	virtual void ActivateEvent(bool ev_trigger,bool skip_action)=0;
+	virtual void DeActivateEvent(bool ev_trigger)=0;
 	void DeActivateAll(void);
 	void SetValue(Bits value){
 		current_value=value;
@@ -131,20 +131,20 @@ public:
 	virtual bool IsTrigger(void) {
 		return true;
 	}
-	void Activate(bool ev_trigger) {
+	void ActivateEvent(bool ev_trigger,bool skip_action) {
 		if (current_value>25000) {
 			/* value exceeds boundary, trigger event if not active */
-			if (!activity) Active(true);
+			if (!activity && !skip_action) Active(true);
 			if (activity<32767) activity++;
 		} else {
 			if (activity>0) {
 				/* untrigger event if it is fully inactive */
-				DeActivate(ev_trigger);
+				DeActivateEvent(ev_trigger);
 				activity=0;
 			}
 		}
 	}
-	void DeActivate(bool /*ev_trigger*/) {
+	void DeActivateEvent(bool /*ev_trigger*/) {
 		activity--;
 		if (!activity) Active(false);
 	}
@@ -157,17 +157,17 @@ public:
 	virtual bool IsTrigger(void) {
 		return false;
 	}
-	void Activate(bool ev_trigger) {
+	void ActivateEvent(bool ev_trigger,bool skip_action) {
 		if (ev_trigger) {
 			activity++;
-			Active(true);
+			if (!skip_action) Active(true);
 		} else {
 			/* test if no trigger-activity is present, this cares especially
 			   about activity of the opposite-direction joystick axis for example */
 			if (!GetActivityCount()) Active(true);
 		}
 	}
-	void DeActivate(bool ev_trigger) {
+	void DeActivateEvent(bool ev_trigger) {
 		if (ev_trigger) {
 			if (activity>0) activity--;
 			if (activity==0) {
@@ -214,27 +214,27 @@ public:
 			if (!strcasecmp(word,"hold")) flags|=BFLG_Hold;
 		}
 	}
-	void Activate(Bits _value,bool ev_trigger) {
+	void ActivateBind(Bits _value,bool ev_trigger,bool skip_action=false) {
 		if (event->IsTrigger()) {
 			/* use value-boundary for on/off events */
 			if (_value>25000) {
 				event->SetValue(_value);
 				if (active) return;
-				event->Activate(ev_trigger);
+				event->ActivateEvent(ev_trigger,skip_action);
 				active=true;
 			} else {
 				if (active) {
-					event->DeActivate(ev_trigger);
+					event->DeActivateEvent(ev_trigger);
 					active=false;
 				}
 			}
 		} else {
 			/* store value for possible later use in the activated event */
 			event->SetValue(_value);
-			event->Activate(ev_trigger);
+			event->ActivateEvent(ev_trigger,false);
 		}
 	}
-	void DeActivate(bool ev_trigger) {
+	void DeActivateBind(bool ev_trigger) {
 		if (event->IsTrigger()) {
 			if (!active) return;
 			active=false;
@@ -248,11 +248,11 @@ public:
 					holding=false;
 				}
 			}
-			event->DeActivate(ev_trigger);
+			event->DeActivateEvent(ev_trigger);
 		} else {
 			/* store value for possible later use in the activated event */
 			event->SetValue(0);
-			event->DeActivate(ev_trigger);
+			event->DeActivateEvent(ev_trigger);
 		}
 	}
 	virtual void ConfigName(char * buf)=0;
@@ -272,7 +272,7 @@ void CEvent::AddBind(CBind * bind) {
 }
 void CEvent::DeActivateAll(void) {
 	for (CBindList_it bit=bindlist.begin();bit!=bindlist.end();bit++) {
-		(*bit)->DeActivate(true);
+		(*bit)->DeActivateBind(true);
 	}
 }
 
@@ -1247,14 +1247,14 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
 	}
 	for (it=list->begin();it!=list->end();it++) {
 	/*BUG:CRASH if keymapper key is removed*/
-		if (validmod==(*it)->mods) (*it)->Activate(value,ev_trigger);
+		if (validmod==(*it)->mods) (*it)->ActivateBind(value,ev_trigger);
 	}
 }
 
 void CBindGroup::DeactivateBindList(CBindList * list,bool ev_trigger) {
 	CBindList_it it;
 	for (it=list->begin();it!=list->end();it++) {
-		(*it)->DeActivate(ev_trigger);
+		(*it)->DeActivateBind(ev_trigger);
 	}
 }
 
@@ -2324,12 +2324,12 @@ void MAPPER_Init(void) {
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
 	if (SDL_GetModState()&KMOD_CAPS) {
 		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
-			(*bit)->Activate(32767,true);
+			(*bit)->ActivateBind(32767,true,true);
 		}
 	}
 	if (SDL_GetModState()&KMOD_NUM) {
 		for (CBindList_it bit=num_lock_event->bindlist.begin();bit!=num_lock_event->bindlist.end();bit++) {
-			(*bit)->Activate(32767,true);
+			(*bit)->ActivateBind(32767,true,true);
 		}
 	}
 }
