@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.84 2008-09-07 10:55:16 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.85 2009-01-11 18:22:59 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -167,7 +167,9 @@ void DOS_Shell::DoCommand(char * line) {
 
 void DOS_Shell::CMD_CLS(char * args) {
 	HELP("CLS");
-	reg_ax=0x0003;
+	// 3 is not good for hercules as it 'forgets' to reset the cursor position
+	if (machine==MCH_HERC) reg_ax=0x0007;
+	else reg_ax=0x0003;
 	CALLBACK_RunRealInt(0x10);
 }
 

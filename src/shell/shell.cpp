@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.95 2008-09-20 14:51:53 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.96 2009-01-11 18:22:59 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -297,14 +297,12 @@ void DOS_Shell::Run(void) {
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
-	if(machine != MCH_HERC) { //Hide it for hercules as that looks too weird
-		WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),VERSION);
+	WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),VERSION);
 #if C_DEBUG
-		WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
+	WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
-		if(machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
-		WriteOut(MSG_Get("SHELL_STARTUP_END"));
-	}
+	if (machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+	WriteOut(MSG_Get("SHELL_STARTUP_END"));
 
 	if (cmd->FindString("/INIT",line,true)) {
 		strcpy(input_line,line.c_str());

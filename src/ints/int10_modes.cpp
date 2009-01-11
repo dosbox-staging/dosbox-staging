@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.83 2009-01-02 19:30:53 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.84 2009-01-11 18:22:59 c2woody Exp $ */
 
 #include <string.h>
 
@@ -368,13 +368,11 @@ static void FinishSetMode(bool clearmem) {
 				real_writew( 0xb800,i*2,0x0000);
 			}
 			break;
-		case M_TEXT:
-			if (CurMode->mode==7) for (i=0;i<16*1024;i++) {
-				real_writew(0xb000,i*2,0x0120);
-			} else for (i=0;i<16*1024;i++) {
-				real_writew(0xb800,i*2,0x0720);
-			}
+		case M_TEXT: {
+			Bit16u seg = (CurMode->mode==7)?0xb000:0xb800;
+			for (i=0;i<16*1024;i++) real_writew(seg,i*2,0x0720);
 			break;
+		}
 		case M_EGA:	
 		case M_VGA:
 		case M_LIN8:
@@ -436,8 +434,7 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 	case MCH_HERC:
 		if (mode!=7) {
 			//Just the text memory, most games seem to use any random mode to clear the screen
-			for (i=0;i<16*1024;i++)
-				real_writew(0xb000,i*2,0x0120);
+			for (i=0;i<16*1024;i++)	real_writew(0xb000,i*2,0x0720);
 			return false;
 		}
 		CurMode=&Hercules_Mode;
@@ -504,12 +501,14 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 	Bit8u mode_control,color_select;
 	switch (machine) {
 	case MCH_HERC:
-		IO_WriteB(0x3bf,0x3);	//Enable changing all bits
-		IO_WriteB(0x3b8,0x8);	//TEXT mode and non-blinking characters
-		IO_WriteB(0x3bf,0x0);
+		IO_WriteB(0x3b8,0x28);	// TEXT mode and blinking characters
+
 		VGA_DAC_CombineColor(0,0);
-		for ( i = 1; i < 15;i++)
-			VGA_DAC_CombineColor(i,0xf);
+		VGA_DAC_CombineColor(8,0);
+		for ( i = 1; i < 8;i++) {
+			VGA_DAC_CombineColor(i,0x7);
+			VGA_DAC_CombineColor(i+8,0xf);
+		}
 		break;
 	case MCH_CGA:
 		mode_control=mode_control_list[CurMode->mode];

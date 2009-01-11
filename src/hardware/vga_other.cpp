@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.23 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.24 2009-01-11 18:22:59 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -432,26 +432,40 @@ static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
 
 static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	switch (port) {
-	case 0x3b8:
-		if (vga.herc.enable_bits & 1 ) {
-			vga.herc.mode_control&=~0x2;
-			vga.herc.mode_control|=(val&0x2);
-			if (val & 0x2) {
-				VGA_SetMode(M_HERC_GFX);
-			} else {
+	case 0x3b8: {
+		// the protected bits can always be cleared but only be set if the 
+		// protection bits are set
+		if (vga.herc.mode_control&0x2) {
+			// already set
+			if (!(val&0x2)) {
+				vga.herc.mode_control &= ~0x2;
 				VGA_SetMode(M_HERC_TEXT);
 			}
+		} else {
+			// not set, can only set if protection bit is set
+			if ((val & 0x2) && (vga.herc.enable_bits & 0x1)) {
+				vga.herc.mode_control |= 0x2;
+				VGA_SetMode(M_HERC_GFX);
+			}
 		}
-		if ((vga.herc.enable_bits & 0x2) && ((vga.herc.mode_control ^ val)&0x80)) {
-			vga.herc.mode_control^=0x80;
+		if (vga.herc.mode_control&0x80) {
+			if (!(val&0x80)) {
+				vga.herc.mode_control &= ~0x80;
+				vga.tandy.draw_base = &vga.mem.linear[0];
+			}
+		} else {
+			if ((val & 0x80) && (vga.herc.enable_bits & 0x2)) {
+				vga.herc.mode_control |= 0x80;
+				vga.tandy.draw_base = &vga.mem.linear[32*1024];
+			}
 		}
-		vga.tandy.draw_base = &vga.mem.linear[(vga.herc.mode_control & 0x80 ) ? 32*1024 : 0];
+		vga.draw.blinking = (val&0x20)!=0;
+		vga.herc.mode_control &= 0x82;
+		vga.herc.mode_control |= val & ~0x82;
 		break;
-	case 0x3bf:
-		if ( vga.herc.enable_bits ^ val) {
-			vga.herc.enable_bits=val;
-			VGA_SetupHandlers();
 		}
+	case 0x3bf:
+		vga.herc.enable_bits=val;
 		break;
 	}
 }
@@ -488,12 +502,6 @@ void VGA_SetupOther(void) {
 		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
 		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 	}
-	if (machine==MCH_HERC) {
-		vga.herc.enable_bits=0;
-		vga.herc.mode_control=0x8;
-		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
-		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
-	}
 	if (machine==MCH_TANDY) {
 		write_tandy( 0x3df, 0x0, 0 );
 		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
@@ -509,6 +517,22 @@ void VGA_SetupOther(void) {
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
 	}
+	if (machine==MCH_HERC) {
+		Bitu base=0x3b0;
+		for (Bitu i = 0; i < 4; i++) {
+			// The registers are repeated as the address is not decoded properly;
+			// The official ports are 3b4, 3b5
+			IO_RegisterWriteHandler(base+i*2,write_crtc_index_other,IO_MB);
+			IO_RegisterWriteHandler(base+i*2+1,write_crtc_data_other,IO_MB);
+			IO_RegisterReadHandler(base+i*2,read_crtc_index_other,IO_MB);
+			IO_RegisterReadHandler(base+i*2+1,read_crtc_data_other,IO_MB);
+		}
+		vga.herc.enable_bits=0;
+		vga.herc.mode_control=0xa; // first mode written will be text mode
+		vga.crtc.underline_location = 13;
+		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
+		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
+	}
 	if (machine==MCH_CGA) {
 		Bitu base=0x3d0;
 		for (Bitu port_ct=0; port_ct<4; port_ct++) {
@@ -518,8 +542,8 @@ void VGA_SetupOther(void) {
 			IO_RegisterReadHandler(base+port_ct*2+1,read_crtc_data_other,IO_MB);
 		}
 	}
-	if (machine==MCH_HERC || IS_TANDY_ARCH) {
-		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;
+	if (IS_TANDY_ARCH) {
+		Bitu base=0x3d4;
 		IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
 		IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);
 		IO_RegisterReadHandler(base,read_crtc_index_other,IO_MB);

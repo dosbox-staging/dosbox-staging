@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.104 2008-12-28 20:22:12 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.105 2009-01-11 18:22:59 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -359,6 +359,55 @@ static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 		Bit32u bg=TXT_BG_Table[col>>4];
 		*draw++=(fg&mask1) | (bg&~mask1);
 		*draw++=(fg&mask2) | (bg&~mask2);
+	}
+	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
+	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
+	if (font_addr>=0 && font_addr<(Bits)vga.draw.blocks) {
+		if (line<vga.draw.cursor.sline) goto skip_cursor;
+		if (line>vga.draw.cursor.eline) goto skip_cursor;
+		draw=(Bit32u *)&TempLine[font_addr*8];
+		Bit32u att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
+		*draw++=att;*draw++=att;
+	}
+skip_cursor:
+	return TempLine;
+}
+
+static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
+	Bits font_addr;
+	Bit32u * draw=(Bit32u *)TempLine;
+	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+
+	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
+		Bitu chr=vidmem[cx*2];
+		Bitu attrib=vidmem[cx*2+1];
+		if (!(attrib&0x77)) {
+			// 00h, 80h, 08h, 88h produce black space
+			*draw++=0;
+			*draw++=0;
+		} else {
+			Bit32u bg, fg;
+			bool underline=false;
+			if ((attrib&0x77)==0x70) {
+				bg = TXT_BG_Table[0x7];
+				if (attrib&0x8) fg = TXT_FG_Table[0xf];
+				else fg = TXT_FG_Table[0x0];
+			} else {
+				if (((Bitu)(vga.crtc.underline_location&0x1f)==line) && ((attrib&0x77)==0x1)) underline=true;
+				bg = TXT_BG_Table[0x0];
+				if (attrib&0x8) fg = TXT_FG_Table[0xf];
+				else fg = TXT_FG_Table[0x7];
+			}
+			Bit32u mask1, mask2;
+			if (GCC_UNLIKELY(underline)) mask1 = mask2 = FontMask[attrib >> 7];
+			else {
+				Bitu font=vga.draw.font_tables[0][chr*32+line];
+				mask1=TXT_Font_Table[font>>4] & FontMask[attrib >> 7]; // blinking
+				mask2=TXT_Font_Table[font&0xf] & FontMask[attrib >> 7];
+			}
+			*draw++=(fg&mask1) | (bg&~mask1);
+			*draw++=(fg&mask2) | (bg&~mask2);
+		}
 	}
 	if (!vga.draw.cursor.enabled || !(vga.draw.cursor.count&0x8)) goto skip_cursor;
 	font_addr = (vga.draw.cursor.address-vidstart) >> 1;
@@ -987,8 +1036,8 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			clock=((vga.tandy.mode_control & 1) ? 14318180 : (14318180/2))/8;
 			break;
 		case MCH_HERC:
-			if (vga.herc.mode_control & 0x2) clock=14318180/16;
-			else clock=14318180/8;
+			if (vga.herc.mode_control & 0x2) clock=16000000/16;
+			else clock=16000000/8;
 			break;
 		default:
 			clock = 14318180;
@@ -1245,16 +1294,22 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		break;
 	case M_TANDY_TEXT:
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;
-	case M_HERC_TEXT:
 		aspect_ratio=1;
-		doubleheight=(vga.mode!=M_HERC_TEXT);
+		doubleheight=true;
 		vga.draw.blocks=width;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
+	case M_HERC_TEXT:
+		aspect_ratio=1;
+		vga.draw.blocks=width;
+		width<<=3;
+		VGA_DrawLine=VGA_TEXT_Herc_Draw_Line;
+		break;
 	default:
 		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA mode %d while checking for resolution",vga.mode);
-	};
+		break;
+	}
 	VGA_CheckScanLength();
 	if (vga.draw.double_scan) {
 		if (IS_VGA_ARCH) height/=2;
