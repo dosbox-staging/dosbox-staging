@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.138 2008-10-27 11:02:41 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.139 2009-01-13 17:32:09 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -168,7 +168,7 @@ increaseticks:
 			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) {
 				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 					/* ratio we are aiming for is around 90% usage*/
-					Bits ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+					Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
 					Bit32s new_cmax = CPU_CycleMax;
 					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
 					if (cproc > 0) {
@@ -176,11 +176,12 @@ increaseticks:
 						   to have smoother auto cycle adjustments */
 						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
 						if (ratioremoved < 1.0) {
-							ratio = (Bits)((double)ratio * (1 - ratioremoved));
+							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
+							ratio = (Bit32s)((double)ratio * (1 - ratioremoved));
 							if (ratio <= 1024) 
-								new_cmax = (CPU_CycleMax * ratio) / 1024;
+								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
 							else 
-								new_cmax = 1 + (CPU_CycleMax >> 1) + (CPU_CycleMax * ratio) / 2048;
+								new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
 						}
 					}
 
