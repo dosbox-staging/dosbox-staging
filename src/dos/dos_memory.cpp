@@ -298,7 +298,7 @@ bool DOS_FreeMemory(Bit16u segment) {
 		return false;
 	}
 	mcb.SetPSPSeg(MCB_FREE);
-	DOS_CompressMemory();
+//	DOS_CompressMemory();
 	return true;
 }
 
