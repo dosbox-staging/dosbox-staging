@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.139 2009-01-13 17:32:09 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.140 2009-01-14 20:50:22 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -318,10 +318,11 @@ void DOSBOX_Init(void) {
 	// Some frequently used option sets
 	const char *rates[] = { "22050", "44100", "48000", "32000", "16000", "11025", "8000", 0 };
 	const char *ios[] = { "220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
-	const char *irqs[] = { "3", "5", "7", "9", "10", "11", "12", 0 };
-	const char *dmas[] = { "0", "1", "3", "5", "6", "7", 0 };
 	const char *irqssb[] = { "7", "5", "3", "9", "10", "11", "12", 0 };
 	const char *dmassb[] = { "1", "5", "0", "3", "6", "7", 0 };
+	const char *iosgus[] = { "240", "220", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
+	const char *irqsgus[] = { "5", "3", "7", "9", "10", "11", "12", 0 };
+	const char *dmasgus[] = { "3", "0", "1", "5", "6", "7", 0 };
 
 
 	/* Setup all the different modules making up DOSBox */
@@ -512,7 +513,7 @@ void DOSBOX_Init(void) {
 
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done
-	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,true); 	
+	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false); 	
 	Pbool->Set_help("Enable the Gravis Ultrasound emulation.");
 
 	Pint = secprop->Add_int("gusrate",Property::Changeable::WhenIdle,22050);
@@ -520,24 +521,16 @@ void DOSBOX_Init(void) {
 	Pint->Set_help("Sample rate of Ultrasound emulation.");
 
 	Phex = secprop->Add_hex("gusbase",Property::Changeable::WhenIdle,0x240);
-	Phex->Set_values(ios);
-	Phex->Set_help("The IO addresses of the Gravis Ultrasound.");
+	Phex->Set_values(iosgus);
+	Phex->Set_help("The IO base address of the Gravis Ultrasound.");
 
-	Pint = secprop->Add_int("irq1",Property::Changeable::WhenIdle,5);
-	Pint->Set_values(irqs);
-	Pint->Set_help("The first IRQ number of the Gravis Ultrasound. (Same IRQs are OK.)");
+	Pint = secprop->Add_int("gusirq",Property::Changeable::WhenIdle,5);
+	Pint->Set_values(irqsgus);
+	Pint->Set_help("The IRQ number of the Gravis Ultrasound.");
 
-	Pint = secprop->Add_int("irq2",Property::Changeable::WhenIdle,5);
-	Pint->Set_values(irqs);
-	Pint->Set_help("The second IRQ number of the Gravis Ultrasound. (Same IRQs are OK.)");
-
-	Pint = secprop->Add_int("dma1",Property::Changeable::WhenIdle,3);
-	Pint->Set_values(dmas);
-	Pint->Set_help("The first DMA addresses of the Gravis Ultrasound. (Same DMAs are OK.)");
-
-	Pint = secprop->Add_int("dma2",Property::Changeable::WhenIdle,3);
-	Pint->Set_values(dmas);
-	Pint->Set_help("The second DMA addresses of the Gravis Ultrasound. (Same DMAs are OK.)");
+	Pint = secprop->Add_int("gusdma",Property::Changeable::WhenIdle,3);
+	Pint->Set_values(dmasgus);
+	Pint->Set_help("The DMA channel of the Gravis Ultrasound.");
 
 	Pstring = secprop->Add_string("ultradir",Property::Changeable::WhenIdle,"C:\\ULTRASND");
 	Pstring->Set_help(

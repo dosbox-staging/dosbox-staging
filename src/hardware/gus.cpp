@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: gus.cpp,v 1.33 2009-01-14 20:50:23 c2woody Exp $ */
 
 #include <string.h>
 #include <iomanip>
@@ -85,11 +87,11 @@ struct GFGus {
 	} timers[2];
 	Bit32u rate;
 	Bitu portbase;
-	Bitu dma1;
-	Bitu dma2;
+	Bit8u dma1;
+	Bit8u dma2;
 
-	Bitu irq1;
-	Bitu irq2;
+	Bit8u irq1;
+	Bit8u irq2;
 
 	char ultradir[512];
 	bool irqenabled;
@@ -376,7 +378,7 @@ static void CheckVoiceIrq(void) {
 	if (myGUS.RampIRQ) myGUS.IRQStatus|=0x40;
 	if (myGUS.WaveIRQ) myGUS.IRQStatus|=0x20;
 	GUS_CheckIRQ();
-	while (1) {
+	for (;;) {
 		Bit32u check=(1 << myGUS.IRQChan);
 		if (totalmask & check) return;
 		myGUS.IRQChan++;
@@ -801,10 +803,15 @@ public:
 		myGUS.rate=section->Get_int("gusrate");
 	
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
-		myGUS.dma1 = section->Get_int("dma1");
-		myGUS.dma2 = section->Get_int("dma2");
-		myGUS.irq1 = section->Get_int("irq1");
-		myGUS.irq2 = section->Get_int("irq2");
+		int dma_val = section->Get_int("gusdma");
+		if ((dma_val<0) || (dma_val>255)) dma_val = 3;	// sensible default
+		int irq_val = section->Get_int("gusirq");
+		if ((irq_val<0) || (irq_val>255)) irq_val = 5;	// sensible default
+		myGUS.dma1 = (Bit8u)dma_val;
+		myGUS.dma2 = (Bit8u)dma_val;
+		myGUS.irq1 = (Bit8u)irq_val;
+		myGUS.irq2 = (Bit8u)irq_val;
+
 		strcpy(&myGUS.ultradir[0], section->Get_string("ultradir"));
 	
 		// We'll leave the MIDI interface to the MPU-401 
@@ -842,9 +849,8 @@ public:
 	
 		MakeTables();
 	
-		int i;
-		for(i=0;i<32;i++) {
-			guschan[i] = new GUSChannels(i);
+		for (Bit8u chan_ct=0; chan_ct<32; chan_ct++) {
+			guschan[chan_ct] = new GUSChannels(chan_ct);
 		}
 		// Register the Mixer CallBack 
 		gus_chan=MixerChan.Install(GUS_CallBack,GUS_RATE,"GUS");
@@ -852,12 +858,14 @@ public:
 		GUSReset();
 		myGUS.gRegData=0x0;
 		int portat = 0x200+GUS_BASE;
+
 		// ULTRASND=Port,DMA1,DMA2,IRQ1,IRQ2
-		// Create autoexec.bat lines
+		// [GUS port], [GUS DMA (recording)], [GUS DMA (playback)], [GUS IRQ (playback)], [GUS IRQ (MIDI)]
 		ostringstream temp;
 		temp << "SET ULTRASND=" << hex << setw(3) << portat << ","
-		     << dec << myGUS.dma1 << "," << myGUS.dma2 << ","
-		     << myGUS.irq1 << "," << myGUS.irq2 << ends;
+		     << dec << (Bitu)myGUS.dma1 << "," << (Bitu)myGUS.dma2 << ","
+		     << (Bitu)myGUS.irq1 << "," << (Bitu)myGUS.irq2 << ends;
+		// Create autoexec.bat lines
 		autoexecline[0].Install(temp.str());
 		autoexecline[1].Install(std::string("SET ULTRADIR=")+ myGUS.ultradir);
 	}
@@ -883,7 +891,7 @@ public:
 
 static GUS* test;
 
-void GUS_ShutDown(Section* sec) {
+void GUS_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
