@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.114 2008-12-11 09:16:31 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.115 2009-01-14 22:16:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -1041,7 +1041,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	};
 	return CBRET_NONE;
-};
+}
 
 
 static Bitu DOS_20Handler(void) {
@@ -1091,8 +1091,13 @@ public:
 		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 
-		callback[1].Install(DOS_21Handler,CB_IRET_STI,"DOS Int 21");
+		callback[1].Install(DOS_21Handler,CB_INT21,"DOS Int 21");
 		callback[1].Set_RealVec(0x21);
+	//Pseudo code for int 21
+	// sti
+	// callback 
+	// iret
+	// retf  <- int 21 4c jumps here to mimic a retf Cyber
 
 		callback[2].Install(DOS_25Handler,CB_RETF,"DOS Int 25");
 		callback[2].Set_RealVec(0x25);

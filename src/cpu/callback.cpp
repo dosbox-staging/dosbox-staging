@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.37 2007-06-03 16:46:33 c2woody Exp $ */
+/* $Id: callback.cpp,v 1.38 2009-01-14 22:16:00 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -403,6 +403,18 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0d,(Bit8u)0x1f);		// pop ds
 		phys_writeb(physAddress+0x0e,(Bit8u)0xcf);		//An IRET Instruction
 		return 0x0f; */
+	case CB_INT21:
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
+		if (use_cb) {
+			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x03, callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x01,(Bit8u)0xCF);		//An IRET Instruction
+		phys_writeb(physAddress+0x02,(Bit8u)0xCB);		//A RETF Instruction
+		return (use_cb?7:3);
+
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}

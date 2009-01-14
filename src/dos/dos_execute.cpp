@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.65 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.66 2009-01-14 22:16:00 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -457,13 +457,16 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Set the stack for new program */
 		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
-		reg_sp-=6;
+		reg_sp-=4;
 		mem_writew(SegPhys(ss)+reg_sp+0,RealOff(csip));
 		mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(csip));
-		/* DOS starts programs with a RETF, so our IRET
-		   should not modify critical flags (IOPL in v86 mode);
-		   interrupt flag is set explicitly, test flags cleared */
-		mem_writew(SegPhys(ss)+reg_sp+4,(reg_flags&(~FMASK_TEST))|FLAG_IF);
+		/* Old info, we now jump to a RETF:
+		 * DOS starts programs with a RETF, so our IRET
+		 * should not modify critical flags (IOPL in v86 mode);
+		 * interrupt flag is set explicitly, test flags cleared */
+		reg_flags=(reg_flags&(~FMASK_TEST))|FLAG_IF;
+		//Jump to retf so that we only need to store cs:ip on the stack
+		reg_ip++;
 		/* Setup the rest of the registers */
 		reg_ax=reg_bx=0;reg_cx=0xff;
 		reg_dx=pspseg;
