@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.9 2007-11-01 12:11:40 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.10 2009-01-14 22:24:39 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -329,60 +329,61 @@ void CSerialModem::DoCommand() {
 			SendRes(ResOK);
 			return;
 		}
-		
-		/* Check for dial command */
-		if(strncmp(cmdbuf,"ATD3",3)==0) {
-			char * foundstr=&cmdbuf[3];
-			if (*foundstr=='T' || *foundstr=='P') foundstr++;
-			/* Small protection against empty line */
-			if (!foundstr[0]) {
-				SendRes(ResERROR);
-				return;
-			}
-			char* helper;
-			// scan for and remove spaces; weird bug: with leading spaces in the string,
-			// SDLNet_ResolveHost will return no error but not work anyway (win)
-			while(foundstr[0]==' ') foundstr++;
-			helper=foundstr;
-			helper+=strlen(foundstr);
-			while(helper[0]==' ') {
-				helper[0]=0;
-				helper--;
-			}
 
-			if (strlen(foundstr) >= 12) {
-					// Check if supplied parameter only consists of digits
-					bool isNum = true;
-				for (Bitu i=0; i<strlen(foundstr); i++)
-						if (foundstr[i] < '0' || foundstr[i] > '9')
-							isNum = false;
-				if (isNum) {
-					// Parameter is a number with at least 12 digits => this cannot be a valid IP/name
-					// Transform by adding dots
-					char buffer[128];
-					Bitu j = 0;
-					for (Bitu i=0; i<strlen(foundstr); i++) {
-							buffer[j++] = foundstr[i];
-							// Add a dot after the third, sixth and ninth number
-							if (i == 2 || i == 5 || i == 8)
-								buffer[j++] = '.';
-							// If the string is longer than 12 digits, interpret the rest as port
-							if (i == 11 && strlen(foundstr)>12)
-								buffer[j++] = ':';
-						}
-						buffer[j] = 0;
-						foundstr = buffer;
-					}
-				}
-			Dial(foundstr);
-			return;
-		}
 		char * scanbuf;
 		scanbuf=&cmdbuf[2];
 		char chr;
 		Bitu num;
 		while (chr=*scanbuf++) {
 			switch (chr) {
+			case 'D':	// Dial
+			{
+				char * foundstr=&scanbuf[0];
+				if (*foundstr=='T' || *foundstr=='P') foundstr++;
+				// Small protection against empty line and long string
+				if ((!foundstr[0]) || (strlen(foundstr)>100)) {
+					SendRes(ResERROR);
+					return;
+				}
+				char* helper;
+				// scan for and remove spaces; weird bug: with leading spaces in the string,
+				// SDLNet_ResolveHost will return no error but not work anyway (win)
+				while(foundstr[0]==' ') foundstr++;
+				helper=foundstr;
+				helper+=strlen(foundstr);
+				while(helper[0]==' ') {
+					helper[0]=0;
+					helper--;
+				}
+				if (strlen(foundstr) >= 12) {
+						// Check if supplied parameter only consists of digits
+						bool isNum = true;
+					for (Bitu i=0; i<strlen(foundstr); i++)
+							if (foundstr[i] < '0' || foundstr[i] > '9')
+								isNum = false;
+					if (isNum) {
+						// Parameter is a number with at least 12 digits => this cannot
+						// be a valid IP/name
+						// Transform by adding dots
+						char buffer[128];
+						Bitu j = 0;
+						for (Bitu i=0; i<strlen(foundstr); i++) {
+								buffer[j++] = foundstr[i];
+								// Add a dot after the third, sixth and ninth number
+								if (i == 2 || i == 5 || i == 8)
+									buffer[j++] = '.';
+								// If the string is longer than 12 digits,
+								// interpret the rest as port
+								if (i == 11 && strlen(foundstr)>12)
+									buffer[j++] = ':';
+							}
+							buffer[j] = 0;
+							foundstr = buffer;
+						}
+					}
+				Dial(foundstr);
+				return;
+			}
 			case 'I':	//Some strings about firmware
 				switch (num=ScanNumber(scanbuf)) {
 				case 3:SendLine("DosBox Emulated Modem Firmware V1.00");break;
