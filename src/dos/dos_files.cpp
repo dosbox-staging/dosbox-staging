@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.102 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.103 2009-01-19 20:24:18 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -53,7 +53,6 @@ void DOS_SetDefaultDrive(Bit8u drive) {
 }
 
 bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
-
 	if(!name || *name == 0 || *name == ' ') {
 		/* Both \0 and space are seperators and
 		 * empty filenames report file not found */
@@ -106,7 +105,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 	else fullname[0]=0;
 	Bit32u lastdir=0;Bit32u t=0;
 	while (fullname[t]!=0) {
-		if ((fullname[t]=='\\') && (fullname[t+1]!=0))lastdir=t;
+		if ((fullname[t]=='\\') && (fullname[t+1]!=0)) lastdir=t;
 		t++;
 	};
 	r=0;w=0;
@@ -144,7 +143,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 				fullname[lastdir]=0;
 				t=0;lastdir=0;
 				while (fullname[t]!=0) {
-					if ((fullname[t]=='\\') && (fullname[t+1]!=0))lastdir=t;
+					if ((fullname[t]=='\\') && (fullname[t+1]!=0)) lastdir=t;
 					t++;
 				}
 				tempdir[0]=0;
@@ -158,6 +157,18 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			if (lastdir!=0) strcat(fullname,"\\");
 			char * ext=strchr(tempdir,'.');
 			if (ext) {
+				if(strchr(ext+1,'.')) { 
+				//another dot in the extension =>file not found
+				//Or path not found depending on wether 
+				//we are still in dir check stage or file stage
+				LOG_MSG("stop = %d",stop);
+					if(stop)
+						DOS_SetError(DOSERR_FILE_NOT_FOUND);
+					else
+						DOS_SetError(DOSERR_PATH_NOT_FOUND);
+					return false;
+				}
+				
 				ext[4] = 0;
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
