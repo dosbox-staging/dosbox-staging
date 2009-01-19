@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.31 2008-08-24 16:48:23 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.32 2009-01-19 19:55:03 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -25,24 +25,35 @@
 #include "support.h"
 
 BatchFile::BatchFile(DOS_Shell * host,char const * const name, char const * const cmd_line) {
+	location = 0;
 	prev=host->bf;
 	echo=host->echo;
 	shell=host;
-	cmd=new CommandLine(name,cmd_line);
-	if (!DOS_OpenFile(name,128,&file_handle)) {
+	char totalname[DOS_PATHLENGTH+4];
+	DOS_Canonicalize(name,totalname); // Get fullname including drive specificiation
+	cmd = new CommandLine(totalname,cmd_line);
+
+	//Test if file is openable
+	if (!DOS_OpenFile(totalname,128,&file_handle)) {
 		//TODO Come up with something better
-		E_Exit("SHELL:Can't open BatchFile");
+		E_Exit("SHELL:Can't open BatchFile %s",totalname);
 	}
+	DOS_CloseFile(file_handle);
 }
 
 BatchFile::~BatchFile() {
 	delete cmd;
-	DOS_CloseFile(file_handle);
 	shell->bf=prev;
 	shell->echo=echo;
 }
 
 bool BatchFile::ReadLine(char * line) {
+	//Open the batchfile and seek to stored postion
+	if (!DOS_OpenFile(cmd->GetFileName(),128,&file_handle)) {
+		E_Exit("SHELL:ReadLine Can't open BatchFile %s",cmd->GetFileName());
+	}
+	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_SET);
+
 	Bit8u c=0;Bit16u n=1;
 	char temp[CMD_MAXLINE];
 emptyline:
@@ -61,12 +72,15 @@ emptyline:
 	} while (c!='\n' && n);
 	*cmd_write=0;
 	if (!n && cmd_write==temp) {
+		//Close file and delete bat file
+		DOS_CloseFile(file_handle);
 		delete this;
 		return false;	
 	}
 	if (!strlen(temp)) goto emptyline;
 	if (temp[0]==':') goto emptyline;
-/* Now parse the line read from the bat file for % stuff */
+
+	/* Now parse the line read from the bat file for % stuff */
 	cmd_write=line;
 	char * cmd_read=temp;
 	char env_name[256];char * env_write;
@@ -118,14 +132,22 @@ emptyline:
 		}
 	}
 	*cmd_write=0;
+	//Store current location and close bat file
+	this->location = 0;
+	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_CUR);
+	DOS_CloseFile(file_handle);
 	return true;	
 }
 
 bool BatchFile::Goto(char * where) {
+	//Open bat file and search for the where string
+	if (!DOS_OpenFile(cmd->GetFileName(),128,&file_handle)) {
+		E_Exit("SHELL:Goto Can't open BatchFile %s",cmd->GetFileName());
+	}
+
 	Bit32u pos=0;
 	char cmd_buffer[CMD_MAXLINE];
 	char * cmd_write;
-	DOS_SeekFile(file_handle,&pos,DOS_SEEK_SET);
 
 	/* Scan till we have a match or return false */
 	Bit8u c;Bit16u n;
@@ -153,9 +175,17 @@ again:
 			nospace++;
 
 		*nospace = 0;
-		if (strcasecmp(beginlabel,where)==0) return true;
+		if (strcasecmp(beginlabel,where)==0) {
+		//Found it! Store location and continue
+			this->location = 0;
+			DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_CUR);
+			DOS_CloseFile(file_handle);
+		   return true;
+		}
+	   
 	}
 	if (!n) {
+		DOS_CloseFile(file_handle);
 		delete this;
 		return false;	
 	}

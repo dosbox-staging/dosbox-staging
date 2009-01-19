@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.24 2008-08-11 12:54:57 qbix79 Exp $ */
+/* $Id: shell.h,v 1.25 2009-01-19 19:55:03 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -53,6 +53,7 @@ public:
 	bool Goto(char * where);
 	void Shift(void);
 	Bit16u file_handle;
+	Bit32u location;
 	bool echo;
 	DOS_Shell * shell;
 	BatchFile * prev;
