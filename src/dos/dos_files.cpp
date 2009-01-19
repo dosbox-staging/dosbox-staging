@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.103 2009-01-19 20:24:18 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.104 2009-01-19 20:26:12 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -161,7 +161,6 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 				//another dot in the extension =>file not found
 				//Or path not found depending on wether 
 				//we are still in dir check stage or file stage
-				LOG_MSG("stop = %d",stop);
 					if(stop)
 						DOS_SetError(DOSERR_FILE_NOT_FOUND);
 					else
