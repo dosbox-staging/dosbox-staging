@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.72 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.73 2009-01-21 21:50:23 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -358,17 +358,17 @@ static Bitu INT8_Handler(void) {
 	/* and running drive */
 	mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
 	return CBRET_NONE;
-};
+}
 #undef DOSBOX_CLOCKSYNC
 
 static Bitu INT1C_Handler(void) {
 	return CBRET_NONE;
-};
+}
 
 static Bitu INT12_Handler(void) {
 	reg_ax=mem_readw(BIOS_MEMORY_SIZE);
 	return CBRET_NONE;
-};
+}
 
 static Bitu INT17_Handler(void) {
 	LOG(LOG_BIOS,LOG_NORMAL)("INT17:Function %X",reg_ah);
@@ -741,6 +741,24 @@ static Bitu INT15_Handler(void) {
 	return CBRET_NONE;
 }
 
+static Bitu Reboot_Handler(void) {
+	// switch to text mode, notify user (let's hope INT10 still works)
+	const char* const text = "\n\n   Reboot requested, quitting now.";
+	reg_ax = 0;
+	CALLBACK_RunRealInt(0x10);
+	reg_ah = 0xe;
+	reg_bx = 0;
+	for(Bitu i = 0; i < strlen(text);i++) {
+		reg_al = text[i];
+		CALLBACK_RunRealInt(0x10);
+	}
+	LOG_MSG(text);
+	double start = PIC_FullIndex();
+	while((PIC_FullIndex()-start)<3000) CALLBACK_Idle();
+	throw 1;
+	return CBRET_NONE;
+}
+
 void BIOS_ZeroExtendedSize(bool in) {
 	if(in) other_memsystems++; 
 	else other_memsystems--;
@@ -759,7 +777,7 @@ void BIOS_SetupDisks(void);
 
 class BIOS:public Module_base{
 private:
-	CALLBACK_HandlerObject callback[10];
+	CALLBACK_HandlerObject callback[11];
 public:
 	BIOS(Section* configuration):Module_base(configuration){
 		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
@@ -815,7 +833,7 @@ public:
 		BIOS_SetupKeyboard();
 
 		/* INT 17 Printer Routines */
-		callback[5].Install(&INT17_Handler,CB_IRET,"Int 17 Printer");
+		callback[5].Install(&INT17_Handler,CB_IRET_STI,"Int 17 Printer");
 		callback[5].Set_RealVec(0x17);
 
 		/* INT 1A TIME and some other functions */
@@ -834,6 +852,16 @@ public:
 		callback[9].Install(NULL,CB_IRQ9,"irq 9 bios");
 		callback[9].Set_RealVec(0x71);
 
+		/* Reboot */
+		callback[10].Install(&Reboot_Handler,CB_IRET,"reboot");
+		callback[10].Set_RealVec(0x18);
+		RealPt rptr = callback[10].Get_RealPointer();
+		RealSetVec(0x19,rptr);
+		// set system BIOS entry point too
+		phys_writeb(0xFFFF0,0xEA);	// FARJMP
+		phys_writew(0xFFFF1,RealOff(rptr));	// offset
+		phys_writew(0xFFFF3,RealSeg(rptr));	// segment
+
 		/* Irq 2 */
 		RealPt irq2pt=RealMake(0xf000,0xff55);	/* Ghost busters 2 mt32 mode */
 		Bitu call_irq2=CALLBACK_Allocate();	
@@ -849,6 +877,21 @@ public:
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
 		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
 		else phys_writeb(0xffffe,0xfc);	/* PC */
+
+		// System BIOS identification
+		const char* const b_type =
+			"IBM COMPATIBLE 486 BIOS COPYRIGHT The DOSBox Team.";
+		for(Bitu i = 0; i < strlen(b_type); i++) phys_writeb(0xfe00e + i,b_type[i]);
+		
+		// System BIOS version
+		const char* const b_vers =
+			"DOSBox FakeBIOS v1.0";
+		for(Bitu i = 0; i < strlen(b_vers); i++) phys_writeb(0xfe061+i,b_vers[i]);
+
+		// write system BIOS date
+		const char* const b_date = "01/01/92";
+		for(Bitu i = 0; i < strlen(b_date); i++) phys_writeb(0xffff5+i,b_date[i]);
+		phys_writeb(0xfffff,0x55); // signature
 
 		if (use_tandyDAC) {
 			/* tandy DAC sound requested, see if soundblaster device is available */
