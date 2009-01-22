@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.53 2009-01-09 23:10:44 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.54 2009-01-22 13:14:33 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2333,7 +2333,11 @@ void MAPPER_Init(void) {
 		}
 	}
 }
-
+//Somehow including them at the top conflicts with something in setup.h
+#ifdef LINUX
+#include "SDL_syswm.h"
+#include <X11/XKBlib.h>
+#endif
 void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	mapper.sticks.num=0;
@@ -2350,7 +2354,7 @@ void MAPPER_StartUp(Section * sec) {
 		virtual_joysticks[0].axis_pos[i]=0;
 	}
 
-	usescancodes=false;
+	usescancodes = false;
 
 	if (section->Get_bool("usescancodes")) {
 		usescancodes=true;
@@ -2377,9 +2381,27 @@ void MAPPER_StartUp(Section * sec) {
 		sdlkey_map[0x5E]=SDLK_RALT;
 		sdlkey_map[0x40]=SDLK_KP5;
 		sdlkey_map[0x41]=SDLK_KP6;
-#elif !defined (WIN32) /* => Linux */
+#elif !defined (WIN32) /* => Linux & BSDs */
 		bool evdev_input = false;
-
+#ifdef LINUX
+		SDL_SysWMinfo info;
+		SDL_VERSION(&info.version);
+		if (SDL_GetWMInfo(&info)) {
+			XkbDescPtr desc = NULL;
+			if((desc = XkbGetMap(info.info.x11.display,XkbAllComponentsMask,XkbUseCoreKbd))) {
+				if(XkbGetNames(info.info.x11.display,XkbAllNamesMask,desc) == 0) {
+					const char* keycodes = XGetAtomName(info.info.x11.display, desc->names->keycodes);
+//					const char* geom = XGetAtomName(info.info.x11.display, desc->names->geometry);
+					if(keycodes) {
+						LOG(LOG_MISC,LOG_NORMAL)("keyboard type %s",keycodes);
+						if (strncmp(keycodes,"evdev",6) == 0) evdev_input = true;
+					}
+					XkbFreeNames(desc,XkbAllNamesMask,True);
+				}
+			XkbFreeClientMap(desc,0,True);
+			}
+		}
+#endif
 		if (evdev_input) {
 			sdlkey_map[0x67]=SDLK_UP;
 			sdlkey_map[0x6c]=SDLK_DOWN;
