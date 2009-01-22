@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.54 2009-01-22 13:14:33 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.55 2009-01-22 21:44:14 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2394,7 +2394,7 @@ void MAPPER_StartUp(Section * sec) {
 //					const char* geom = XGetAtomName(info.info.x11.display, desc->names->geometry);
 					if(keycodes) {
 						LOG(LOG_MISC,LOG_NORMAL)("keyboard type %s",keycodes);
-						if (strncmp(keycodes,"evdev",6) == 0) evdev_input = true;
+						if (strncmp(keycodes,"evdev",5) == 0) evdev_input = true;
 					}
 					XkbFreeNames(desc,XkbAllNamesMask,True);
 				}
