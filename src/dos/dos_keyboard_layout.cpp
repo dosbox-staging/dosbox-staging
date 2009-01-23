@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.16 2008-11-22 14:24:11 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.17 2009-01-23 19:27:53 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -1073,7 +1073,29 @@ public:
 		Bits wants_dos_codepage = -1;
 		if (!strncmp(layoutname,"auto",4)) {
 #if defined (WIN32)
-			DWORD cur_kb_layout = MAKELCID(LOWORD(GetKeyboardLayout(0)),SORT_DEFAULT);
+			WORD cur_kb_layout = LOWORD(GetKeyboardLayout(0));
+			WORD cur_kb_subID  = 0;
+			char layoutID_string[KL_NAMELENGTH];
+			if (GetKeyboardLayoutName(layoutID_string)) {
+				if (strlen(layoutID_string) == 8) {
+					int cur_kb_layout_by_name = ((layoutID_string[4]-'0')<<12) +
+												((layoutID_string[5]-'0')<<8) +
+												((layoutID_string[6]-'0')<<4) +
+												((layoutID_string[7]-'0'));
+					int subID = ((layoutID_string[0]-'0')<<12) +
+								((layoutID_string[1]-'0')<<8) +
+								((layoutID_string[2]-'0')<<4) +
+								((layoutID_string[3]-'0'));
+					if ((cur_kb_layout_by_name>0) && (cur_kb_layout_by_name<65536)) {
+						// use layout ID extracted from the layout string
+						cur_kb_layout = (WORD)cur_kb_layout_by_name;
+					}
+					if ((subID>=0) && (subID<100)) {
+						// use sublanguage ID extracted from the layout string
+						cur_kb_subID  = (WORD)subID;
+					}
+				}
+			}
 			// try to match emulated keyboard layout with host-keyboardlayout
 			// codepage 437 (standard) is preferred
 			switch (cur_kb_layout) {
@@ -1106,7 +1128,8 @@ public:
 					wants_dos_codepage = 437;
 					break;
 				case 1038:
-					layoutname = "hu";
+					if (cur_kb_subID==1) layoutname = "hu";
+					else layoutname = "hu208";
 					break;
 				case 1039:
 					layoutname = "is161";
