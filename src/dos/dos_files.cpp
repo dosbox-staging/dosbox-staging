@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.104 2009-01-19 20:26:12 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.105 2009-01-24 16:22:55 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -609,7 +609,7 @@ bool DOS_GetFileAttr(char const * const name,Bit16u * attr) {
 	}
 }
 
-bool DOS_SetFileAttr(char const * const name,Bit16u attr) 
+bool DOS_SetFileAttr(char const * const name,Bit16u /*attr*/) 
 // this function does not change the file attributs
 // it just does some tests if file is available 
 // returns false when using on cdrom (stonekeep)
@@ -716,11 +716,7 @@ bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
 		for (i=0;i<8;i++) {
 			tempname[i]=(rand()%26)+'A';
 		}
-		tempname[8]='.';
-		for (i=9;i<12;i++) {
-			tempname[i]=(rand()%26)+'A';
-		}
-		tempname[12]=0;
+		tempname[8]=0;
 	} while ((!DOS_CreateFile(name,0,entry)) && (dos.errorcode==DOSERR_FILE_ALREADY_EXISTS));
 	if (dos.errorcode) return false;
 	return true;
@@ -781,7 +777,7 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 		fcb_name.part.drive[0]=0;
 		hasdrive=true;
 		if (isalpha(string[0]) && Drives[toupper(string[0])-'A']) {
-			fcb_name.part.drive[0]=toupper(string[0])-'A'+1;
+			fcb_name.part.drive[0]=(char)(toupper(string[0])-'A'+1);
 		} else ret=0xff;
 		string+=2;
 	}
@@ -809,7 +805,7 @@ Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *
 		if (!finished) {
 			if (string[0]=='*') {fill='?';fcb_name.part.name[index]='?';if (!ret) ret=1;finished=true;}
 			else if (string[0]=='?') {fcb_name.part.name[index]='?';if (!ret) ret=1;}
-			else if (isvalid(string[0])) {fcb_name.part.name[index]=toupper(string[0]);}
+			else if (isvalid(string[0])) {fcb_name.part.name[index]=(char)(toupper(string[0]));}
 			else { finished=true;continue; }
 			string++;
 		} else {
@@ -826,7 +822,7 @@ checkext:
 		if (!finished) {
 			if (string[0]=='*') {fill='?';fcb_name.part.ext[index]='?';finished=true;}
 			else if (string[0]=='?') {fcb_name.part.ext[index]='?';if (!ret) ret=1;}
-			else if (isvalid(string[0])) {fcb_name.part.ext[index]=toupper(string[0]);}
+			else if (isvalid(string[0])) {fcb_name.part.ext[index]=(char)(toupper(string[0]));}
 			else { finished=true;continue; }
 			string++;
 		} else {
@@ -1015,7 +1011,7 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	if (restore) fcb.GetRecord(old_block,old_rec);//store this for after the read.
 	// Read records
 	for (int i=0; i<numRec; i++) {
-		error = DOS_FCBRead(seg,offset,i);
+		error = DOS_FCBRead(seg,offset,(Bit16u)i);
 		if (error!=0x00) break;
 	}
 	Bit16u new_block;Bit8u new_rec;
@@ -1038,7 +1034,7 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	if (restore) fcb.GetRecord(old_block,old_rec);
 	/* Write records */
 	for (int i=0; i<numRec; i++) {
-		error = DOS_FCBWrite(seg,offset,i);// dos_fcbwrite return 0 false when true...
+		error = DOS_FCBWrite(seg,offset,(Bit16u)i);// dos_fcbwrite return 0 false when true...
 		if (error!=0x00) break;
 	}
 	Bit16u new_block;Bit8u new_rec;
