@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.24 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.25 2009-01-25 12:00:51 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -24,6 +24,7 @@
 #include "inout.h"
 #include "vga.h"
 #include "mem.h"
+#include "pic.h"
 #include "render.h"
 #include "mapper.h"
 
@@ -475,6 +476,33 @@ static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	return 0;
 } */
 
+Bitu read_herc_status(Bitu port,Bitu iolen) {
+	// 3BAh (R):  Status Register
+	// bit   0  Horizontal sync
+	//       1  Light pen status (only some cards)
+	//       3  Video signal
+	//     4-6	000: Hercules
+	//			001: Hercules Plus
+	//			101: Hercules InColor
+	//			111: Unknown clone
+	//       7  Vertical sync inverted
+
+	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
+	Bit8u retval=0x72; // Hercules ident; from a working card (Winbond W86855AF)
+					// Another known working card has 0x76 ("KeysoGood", full-length)
+	if (timeInFrame < vga.draw.delay.vrstart ||
+		timeInFrame > vga.draw.delay.vrend) retval |= 0x80;
+
+	double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
+	if (timeInLine >= vga.draw.delay.hrstart &&
+		timeInLine <= vga.draw.delay.hrend) retval |= 0x1;
+
+	// 688 Attack sub checks bit 3 - as a workaround have the bit enabled
+	// if no sync active (corresponds to a completely white screen)
+	if ((retval&0x81)==0x80) retval |= 0x8;
+	return retval;
+}
+
 
 void VGA_SetupOther(void) {
 	Bitu i;
@@ -532,6 +560,7 @@ void VGA_SetupOther(void) {
 		vga.crtc.underline_location = 13;
 		IO_RegisterWriteHandler(0x3b8,write_hercules,IO_MB);
 		IO_RegisterWriteHandler(0x3bf,write_hercules,IO_MB);
+		IO_RegisterReadHandler(0x3ba,read_herc_status,IO_MB);
 	}
 	if (machine==MCH_CGA) {
 		Bitu base=0x3d0;

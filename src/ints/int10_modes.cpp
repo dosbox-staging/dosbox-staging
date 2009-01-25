@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.84 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.85 2009-01-25 12:00:52 c2woody Exp $ */
 
 #include <string.h>
 
@@ -432,11 +432,6 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		}
 		break;
 	case MCH_HERC:
-		if (mode!=7) {
-			//Just the text memory, most games seem to use any random mode to clear the screen
-			for (i=0;i<16*1024;i++)	real_writew(0xb000,i*2,0x0720);
-			return false;
-		}
 		CurMode=&Hercules_Mode;
 		break;
 	}
@@ -504,11 +499,9 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		IO_WriteB(0x3b8,0x28);	// TEXT mode and blinking characters
 
 		VGA_DAC_CombineColor(0,0);
-		VGA_DAC_CombineColor(8,0);
-		for ( i = 1; i < 8;i++) {
-			VGA_DAC_CombineColor(i,0x7);
-			VGA_DAC_CombineColor(i+8,0xf);
-		}
+		VGA_DAC_CombineColor(1,7);
+
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29); // attribute controls blinking
 		break;
 	case MCH_CGA:
 		mode_control=mode_control_list[CurMode->mode];
@@ -1210,7 +1203,8 @@ dac_text16:
 		case 0:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2c);break;
 		case 1:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x28);break;
 		case 2:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2d);break;
-		case 3:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29);break;
+		case 3:
+		case 7:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29);break;
 		}
 		break;
 	case M_LIN4:

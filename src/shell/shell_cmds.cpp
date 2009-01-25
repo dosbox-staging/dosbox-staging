@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.85 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.86 2009-01-25 12:00:52 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -167,9 +167,7 @@ void DOS_Shell::DoCommand(char * line) {
 
 void DOS_Shell::CMD_CLS(char * args) {
 	HELP("CLS");
-	// 3 is not good for hercules as it 'forgets' to reset the cursor position
-	if (machine==MCH_HERC) reg_ax=0x0007;
-	else reg_ax=0x0003;
+	reg_ax=0x0003;
 	CALLBACK_RunRealInt(0x10);
 }
 
@@ -907,7 +905,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
   
 		command.FindCommand(1,arg);
 		if( (arg.size()>1) && arg[1] !=':')  throw(0);
-		temp_str[0]=toupper(args[0]);
+		temp_str[0]=(char)toupper(args[0]);
 		if(Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
 		strcat(mountstring,temp_str);
 		strcat(mountstring," ");
@@ -981,7 +979,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	if (!rem || !*rem) rem = defchoice; /* No choices specified use YN */
 	ptr = rem;
 	Bit8u c;
-	if(!optS) while ((c = *ptr)) *ptr++ = toupper(c); /* When in no case-sensitive mode. make everything upcase */
+	if(!optS) while ((c = *ptr)) *ptr++ = (char)toupper(c); /* When in no case-sensitive mode. make everything upcase */
 	if(args && *args ) {
 		StripSpaces(args);
 		size_t argslen = strlen(args);
@@ -1006,7 +1004,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	do {
 		DOS_ReadFile (STDIN,&c,&n);
 	} while (!c || !(ptr = strchr(rem,(optS?c:toupper(c)))));
-	c = optS?c:toupper(c);
+	c = optS?c:(Bit8u)toupper(c);
 	DOS_WriteFile (STDOUT,&c, &n);
 	dos.return_code = (Bit8u)(ptr-rem+1);
 }

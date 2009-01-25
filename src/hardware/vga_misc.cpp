@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_misc.cpp,v 1.38 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: vga_misc.cpp,v 1.39 2009-01-25 12:00:49 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -31,54 +31,27 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
 Bitu vga_read_p3da(Bitu port,Bitu iolen) {
-	vga.internal.attrindex=false;
-	vga.tandy.pcjr_flipflop=false;
 	Bit8u retval=0;
 	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
 
- 	vga.internal.attrindex=false;
- 	vga.tandy.pcjr_flipflop=false;
+	vga.internal.attrindex=false;
+	vga.tandy.pcjr_flipflop=false;
 
-	if (machine!=MCH_HERC) {
-		// 3DAh (R):  Status Register
-		// bit   0  Horizontal or Vertical blanking
-		//       3  Vertical sync
+	// 3DAh (R):  Status Register
+	// bit   0  Horizontal or Vertical blanking
+	//       3  Vertical sync
 
-		if (timeInFrame >= vga.draw.delay.vrstart &&
-			timeInFrame <= vga.draw.delay.vrend)
-			retval |= 8;
-		if (timeInFrame >= vga.draw.delay.vdend) {
-			retval |= 1;
-		} else {
-			double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
-			if (timeInLine >= vga.draw.delay.hblkstart && 
-				timeInLine <= vga.draw.delay.hblkend) {
-				retval |= 1;
-			}
-		}
+	if (timeInFrame >= vga.draw.delay.vrstart &&
+		timeInFrame <= vga.draw.delay.vrend)
+		retval |= 8;
+	if (timeInFrame >= vga.draw.delay.vdend) {
+		retval |= 1;
 	} else {
-		// 3BAh (R):  Status Register
-		// bit   0  Horizontal sync
-		//       1  Light pen status (only some cards)
-		//       3  Video signal
-		//     4-6	000: Hercules
-		//			001: Hercules Plus
-		//			101: Hercules InColor
-		//			111: Unknown clone
-		//       7  Vertical sync inverted
-
-		retval=0x72; // Hercules ident; from a working card (Winbond W86855AF)
-					 // Another known working card has 0x76 ("KeysoGood", full-length)
-		if (timeInFrame < vga.draw.delay.vrstart ||
-			timeInFrame > vga.draw.delay.vrend) retval |= 0x80;
-
 		double timeInLine=fmod(timeInFrame,vga.draw.delay.htotal);
-		if (timeInLine >= vga.draw.delay.hrstart &&
-			timeInLine <= vga.draw.delay.hrend) retval |= 0x1;
-
-		// 688 Attack sub checks bit 3 - as a workaround have the bit enabled
-		// if no sync active (corresponds to a completely white screen)
-		if ((retval&0x81)==0x80) retval |= 0x8;
+		if (timeInLine >= vga.draw.delay.hblkstart && 
+			timeInLine <= vga.draw.delay.hblkend) {
+			retval |= 1;
+		}
 	}
 	return retval;
 }
@@ -178,7 +151,5 @@ void VGA_SetupMisc(void) {
 		}
 	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
 		IO_RegisterReadHandler(0x3da,vga_read_p3da,IO_MB);
-	} else if (machine==MCH_HERC) {
-		IO_RegisterReadHandler(0x3ba,vga_read_p3da,IO_MB);
 	}
 }

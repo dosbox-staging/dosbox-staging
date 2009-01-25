@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.53 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: int10.cpp,v 1.54 2009-01-25 12:00:52 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -442,7 +442,7 @@ graphics_chars:
 					for (ct=0; ct<entries; ct++) {
 						Bit16u dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+ct*2);
 						if ((dccentry==reg_bx) || (dccentry==swpidx)) {
-							newidx=ct;
+							newidx=(Bit8u)ct;
 							break;
 						}
 					}
@@ -473,7 +473,7 @@ graphics_chars:
 				Bitu ret=INT10_VideoState_GetSize(reg_cx);
 				if (ret) {
 					reg_al=0x1c;
-					reg_bx=ret;
+					reg_bx=(Bit16u)ret;
 				} else reg_al=0;
 				}
 				break;
@@ -517,7 +517,7 @@ graphics_chars:
 					Bitu ret=INT10_VideoState_GetSize(reg_cx);
 					if (ret) {
 						reg_ah=0;
-						reg_bx=ret;
+						reg_bx=(Bit16u)ret;
 					} else reg_ah=1;
 					}
 					break;
@@ -707,7 +707,7 @@ static void SetupTandyBios(void) {
 	}
 }
 
-void INT10_Init(Section* sec) {
+void INT10_Init(Section* /*sec*/) {
 	INT10_InitVGA();
 	if (IS_TANDY_ARCH) SetupTandyBios();
 	/* Setup the INT 10 vector */
@@ -719,5 +719,5 @@ void INT10_Init(Section* sec) {
 	INT10_Seg40Init();
 	INT10_SetupVESA();
 	INT10_SetupRomMemoryChecksum();//SetupVesa modifies the rom as well.
-	INT10_SetVideoMode(machine==MCH_HERC ? 0x7 : 0x3);
+	INT10_SetVideoMode(0x3);
 }
