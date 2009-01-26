@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.105 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.106 2009-01-26 20:23:44 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -609,7 +609,7 @@ static void VGA_ProcessSplit() {
 	} else {
 		// In text mode only the characters are shifted by panning, not the address;
 		// this is done in the text line draw function.
-		vga.draw.address = vga.draw.byte_panning_shift*vga.config.bytes_skip;
+		vga.draw.address = vga.draw.byte_panning_shift*vga.draw.bytes_skip;
 		if (!(vga.mode==M_TEXT)) vga.draw.address += vga.draw.panning;
 	}
 	vga.draw.address_line=0;
@@ -717,6 +717,7 @@ static void VGA_VertInterrupt(Bitu /*val*/) {
 
 static void VGA_DisplayStartLatch(Bitu /*val*/) {
 	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
+	vga.draw.bytes_skip = vga.config.bytes_skip;
 }
  
 static void VGA_PanningLatch(Bitu /*val*/) {
@@ -780,7 +781,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 	case M_EGA:
 	case M_LIN4:
 		vga.draw.byte_panning_shift = 8;
-		vga.draw.address += vga.config.bytes_skip;
+		vga.draw.address += vga.draw.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
 		vga.draw.address += vga.draw.panning;
 #ifdef VGA_KEEP_CHANGES
@@ -800,7 +801,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 	case M_LIN16:
 	case M_LIN32:
 		vga.draw.byte_panning_shift = 4;
-		vga.draw.address += vga.config.bytes_skip;
+		vga.draw.address += vga.draw.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
 		vga.draw.address += vga.draw.panning;
 #ifdef VGA_KEEP_CHANGES
@@ -812,7 +813,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 		else vga.draw.byte_panning_shift = 0;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.address = vga.config.real_start * 2;
 		else vga.draw.address = vga.config.display_start * 2;
-		vga.draw.address += vga.config.bytes_skip*vga.draw.byte_panning_shift;
+		vga.draw.address += vga.draw.bytes_skip*vga.draw.byte_panning_shift;
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
 		vga.draw.cursor.address=vga.config.cursor_start*2;
