@@ -438,7 +438,8 @@ case "$target" in
        dnl directserial detection should be rewritten to test for the needed
        dnl functions and headers. I currently do not know 
        dnl which ones are needed for BSD
-       dnl       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
+       AC_DEFINE(BSD, 1, [Compiling on BSD])
+       AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-os2-emx*)
        AC_DEFINE(OS2, 1, [Compiling on OS/2 EMX])
