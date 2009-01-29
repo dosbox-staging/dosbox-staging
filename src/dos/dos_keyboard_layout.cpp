@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.17 2009-01-23 19:27:53 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.18 2009-01-29 23:17:59 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -1078,14 +1078,9 @@ public:
 			char layoutID_string[KL_NAMELENGTH];
 			if (GetKeyboardLayoutName(layoutID_string)) {
 				if (strlen(layoutID_string) == 8) {
-					int cur_kb_layout_by_name = ((layoutID_string[4]-'0')<<12) +
-												((layoutID_string[5]-'0')<<8) +
-												((layoutID_string[6]-'0')<<4) +
-												((layoutID_string[7]-'0'));
-					int subID = ((layoutID_string[0]-'0')<<12) +
-								((layoutID_string[1]-'0')<<8) +
-								((layoutID_string[2]-'0')<<4) +
-								((layoutID_string[3]-'0'));
+					int cur_kb_layout_by_name = ConvHexWord((char*)&layoutID_string[4]);
+					layoutID_string[4] = 0;
+					int subID = ConvHexWord((char*)&layoutID_string[0]);
 					if ((cur_kb_layout_by_name>0) && (cur_kb_layout_by_name<65536)) {
 						// use layout ID extracted from the layout string
 						cur_kb_layout = (WORD)cur_kb_layout_by_name;
@@ -1112,6 +1107,9 @@ public:
 					layoutname = "gr";
 					wants_dos_codepage = 437;
 					break;
+				case 1033:
+					// US
+					return;
 				case 1032:
 					layoutname = "gk";
 					break;
