@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.143 2009-02-01 11:07:11 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.144 2009-02-01 14:22:22 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -35,6 +35,7 @@
 #include "timer.h"
 #include "dos_inc.h"
 #include "setup.h"
+#include "control.h"
 #include "cross.h"
 #include "programs.h"
 #include "support.h"
@@ -267,11 +268,6 @@ static void DOSBOX_RealInit(Section * sec) {
 	ticksLocked = false;
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
-	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configurationfile for DOSBox %s.\n"
-	        "# Lines starting with a # are commentlines.\n"
-	        "# They are used to (briefly) document the effect of each option.\n");
-	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
 	std::string cmd_machine;
@@ -331,14 +327,14 @@ void DOSBOX_Init(void) {
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
 		 "svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
-	Pstring = secprop->Add_string("language",Property::Changeable::Always,"");
+	Pstring = secprop->Add_path("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
 
 	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"svga_s3");
 	Pstring->Set_values(machines);
 	Pstring->Set_help("The type of machine tries to emulate.");
 
-	Pstring = secprop->Add_string("captures",Property::Changeable::Always,"capture");
+	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
 
 #if C_DEBUG	
@@ -465,11 +461,11 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(mputypes);
 	Pstring->Set_help("Type of MPU-401 to emulate.");
 
-	Pstring = secprop->Add_string("device",Property::Changeable::WhenIdle,"default");
+	Pstring = secprop->Add_string("mididevice",Property::Changeable::WhenIdle,"default");
 	Pstring->Set_values(devices);
 	Pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
 
-	Pstring = secprop->Add_string("config",Property::Changeable::WhenIdle,"");
+	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
 	Pstring->Set_help("Special configuration options for the device driver. This is usually the id of the device you want to use. See README for details.");
 
 #if C_DEBUG
@@ -666,5 +662,11 @@ void DOSBOX_Init(void) {
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
 	);
+	MSG_Add("CONFIGFILE_INTRO",
+	        "# This is the configurationfile for DOSBox %s.\n"
+	        "# Lines starting with a # are commentlines.\n"
+	        "# They are used to (briefly) document the effect of each option.\n");
+	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
+
 	control->SetStartUp(&SHELL_Init);
 }
