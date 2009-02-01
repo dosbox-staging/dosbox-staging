@@ -162,8 +162,8 @@ class MIDI:public Module_base{
 public:
 	MIDI(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		const char * dev=section->Get_string("device");
-		const char * conf=section->Get_string("config");
+		const char * dev=section->Get_string("mididevice");
+		const char * conf=section->Get_string("midiconfig");
 		/* If device = "default" go for first handler that works */
 		MidiHandler * handler;
 //		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
