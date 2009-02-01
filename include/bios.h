@@ -105,66 +105,9 @@
 #define MAX_SCAN_CODE 0x58
 
 /* The Section handling Bios Disk Access */
-#define BIOS_MAX_DISK 10
+//#define BIOS_MAX_DISK 10
 
-#define MAX_SWAPPABLE_DISKS 20
-
-struct diskGeo {
-	Bit32u ksize;  /* Size in kilobytes */
-	Bit16u secttrack; /* Sectors per track */
-	Bit16u headscyl;  /* Heads per cylinder */
-	Bit16u cylcount;  /* Cylinders per side */
-	Bit16u biosval;   /* Type to return from BIOS */
-};
-
-extern diskGeo DiskGeometryList[];
-
-#include <stdio.h>
-#ifndef DOSBOX_MEM_H
-#include "mem.h"
-#endif
-#ifndef DOSBOX_DOS_INC_H
-#include "dos_inc.h"
-#endif
-
-class imageDisk  {
-public:
-	Bit8u Read_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Read_AbsoluteSector(Bit32u sectnum, void * data);
-	Bit8u Write_AbsoluteSector(Bit32u sectnum, void * data);
-
-	void Set_Geometry(Bit32u setHeads, Bit32u setCyl, Bit32u setSect, Bit32u setSectSize);
-	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
-	Bit8u GetBiosType(void);
-	Bit32u getSectSize(void);
-	imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk);
-	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
-
-	bool hardDrive;
-	bool active;
-	FILE *diskimg;
-	Bit8u diskname[512];
-	Bit8u floppytype;
-
-	Bit32u sector_size;
-	Bit32u heads,cylinders,sectors;
-};
-
-void updateDPT(void);
-
-#define MAX_HDD_IMAGES 2
-
-extern imageDisk *imageDiskList[2 + MAX_HDD_IMAGES];
-extern imageDisk *diskSwap[20];
-extern Bits swapPosition;
-extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
-extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */
-extern DOS_DTA *imgDTA;
-
-void swapInDisks(void);
-void swapInNextDisk(void);
-bool getSwapRequest(void);
+//#define MAX_SWAPPABLE_DISKS 20
 
 void BIOS_ZeroExtendedSize(bool in);
 void char_out(Bit8u chr,Bit32u att,Bit8u page);

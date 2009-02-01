@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.38 2008-08-06 18:31:10 c2woody Exp $ */
+/* $Id: setup.h,v 1.39 2009-02-01 14:11:45 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -26,12 +26,6 @@
 #pragma warning ( disable : 4290 )
 #endif
 
-#ifndef DOSBOX_CROSS_H
-#include "cross.h"
-#endif
-#ifndef DOSBOX_PROGRAMS_H
-#include "programs.h"
-#endif
 
 #ifndef CH_LIST
 #define CH_LIST
@@ -199,6 +193,17 @@ public:
 	void SetValue(std::string const& in);
 	~Prop_string(){ }
 };
+class Prop_path:public Prop_string{
+public:
+	std::string realpath;
+	Prop_path(std::string const& _propname, Changeable::Value when, char const * const _value)
+		:Prop_string(_propname,when,_value) { 
+		default_value = value = _value;
+		realpath = _value;
+	}
+	void SetValue(std::string const& in);
+	~Prop_path(){ }
+};
 
 class Prop_hex:public Property {
 public:
@@ -254,6 +259,7 @@ public:
 	Section_prop(std::string const&  _sectionname):Section(_sectionname){}
 	Prop_int* Add_int(std::string const& _propname, Property::Changeable::Value when, int _value=0);
 	Prop_string* Add_string(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
+	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
 //	void Add_double(char const * const _propname, double _value=0.0);   
@@ -266,6 +272,7 @@ public:
 	bool Get_bool(std::string const& _propname) const;
 	Hex Get_hex(std::string const& _propname) const;
 	double Get_double(std::string const& _propname) const;
+	Prop_path* Get_path(std::string const& _propname) const;
 	Prop_multival* Get_multival(std::string const& _propname) const;
 	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
 	void HandleInputline(std::string const& gegevens);
@@ -307,39 +314,6 @@ public:
 	void PrintData(FILE* outfile) const;
 	virtual std::string GetPropValue(std::string const& _property) const;
 	std::string data;
-};
-
-class Config{
-public:
-	CommandLine * cmdline;
-private:
-	std::list<Section*> sectionlist;
-	typedef std::list<Section*>::iterator it;
-	typedef std::list<Section*>::reverse_iterator reverse_it;
-	typedef std::list<Section*>::const_iterator const_it;
-	typedef std::list<Section*>::const_reverse_iterator const_reverse_it;
-	void (* _start_function)(void);
-	bool secure_mode; //Sandbox mode
-public:
-	Config(CommandLine * cmd):cmdline(cmd),secure_mode(false){}
-	~Config();
-
-	Section_line * AddSection_line(char const * const _name,void (*_initfunction)(Section*));
-	Section_prop * AddSection_prop(char const * const _name,void (*_initfunction)(Section*),bool canchange=false);
-	
-	Section* GetSection(int index);
-	Section* GetSection(std::string const&_sectionname) const;
-	Section* GetSectionFromProperty(char const * const prop) const;
-
-	void SetStartUp(void (*_function)(void));
-	void Init();
-	void ShutDown();
-	void StartUp();
-	void PrintConfig(char const * const configfilename) const;
-	bool ParseConfigFile(char const * const configfilename);
-	void ParseEnv(char ** envp);
-	bool SecureMode() const { return secure_mode; }
-	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
 };
 
 class Module_base {

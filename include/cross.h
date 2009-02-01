@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2008  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.18 2007-01-08 19:45:37 qbix79 Exp $ */
+/* $Id: cross.h,v 1.19 2009-02-01 14:11:45 qbix79 Exp $ */
 
 #ifndef DOSBOX_CROSS_H
 #define DOSBOX_CROSS_H
@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <string>
 
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #include <direct.h>
@@ -65,5 +66,15 @@
 #include <math.h>
 static inline float powf (float x, float y) { return (float) pow (x,y); }
 #endif
+
+class Cross {
+public:
+	static void GetPlatformConfigDir(std::string& in);
+	static void GetPlatformConfigName(std::string& in);
+	static void CreatePlatformConfigDir(std::string& in);
+	static void ResolveHomedir(std::string & temp_line);
+	static void CreateDir(std::string const& temp);
+};
+
 
 #endif
