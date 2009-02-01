@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.55 2009-01-22 21:44:14 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.56 2009-02-01 16:05:28 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -1234,7 +1234,7 @@ static struct CMapper {
 		Bitu num_groups,num;
 		CStickBindGroup * stick[MAXSTICKS];
 	} sticks;
-	const char * filename;
+	std::string filename;
 } mapper;
 
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
@@ -2083,9 +2083,9 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const
 }
 
 static void MAPPER_SaveBinds(void) {
-	FILE * savefile=fopen(mapper.filename,"wb+");
+	FILE * savefile=fopen(mapper.filename.c_str(),"wb+");
 	if (!savefile) {
-		LOG_MSG("Can't open %s for saving the mappings",mapper.filename);
+		LOG_MSG("Can't open %s for saving the mappings",mapper.filename.c_str());
 		return;
 	}
 	char buf[128];
@@ -2105,14 +2105,14 @@ static void MAPPER_SaveBinds(void) {
 }
 
 static bool MAPPER_LoadBinds(void) {
-	FILE * loadfile=fopen(mapper.filename,"rb");
+	FILE * loadfile=fopen(mapper.filename.c_str(),"rb");
 	if (!loadfile) return false;
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
 		CreateStringBind(linein);
 	}
 	fclose(loadfile);
-	LOG_MSG("MAPPER: Loading mapper settings from %s", mapper.filename);
+	LOG_MSG("MAPPER: Loading mapper settings from %s", mapper.filename.c_str());
 	return true;
 }
 
@@ -2464,6 +2464,8 @@ void MAPPER_StartUp(Section * sec) {
 		}
 	}
 
-	mapper.filename=section->Get_string("mapperfile");
+	Prop_path* pp = section->Get_path("mapperfile");
+	mapper.filename = pp->realpath;
+	MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
 }
 
