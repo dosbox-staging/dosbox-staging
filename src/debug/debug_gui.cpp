@@ -16,12 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug_gui.cpp,v 1.36 2008-06-02 17:26:59 qbix79 Exp $ */
+/* $Id: debug_gui.cpp,v 1.37 2009-02-01 19:28:58 qbix79 Exp $ */
 
 #include "dosbox.h"
 
 #if C_DEBUG
-#include "setup.h"
+#include "control.h"
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
