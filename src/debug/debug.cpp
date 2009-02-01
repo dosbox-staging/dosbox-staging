@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.94 2008-06-02 17:26:59 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.95 2009-02-01 20:25:38 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -2117,7 +2117,7 @@ static void OutputVecTable(char* filename) {
 
 #define DEBUG_VAR_BUF_LEN 16
 static void DrawVariables(void) {
-	if (CDebugVar::varList.size()==0) return;
+	if (CDebugVar::varList.empty()) return;
 
 	std::list<CDebugVar*>::iterator i;
 	CDebugVar *dv;
