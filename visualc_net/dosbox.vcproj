@@ -732,6 +732,9 @@
 				Name="misc"
 				Filter="">
 				<File
+					RelativePath="..\src\misc\cross.cpp">
+				</File>
+				<File
 					RelativePath="..\src\misc\messages.cpp">
 				</File>
 				<File
@@ -781,7 +784,13 @@
 				RelativePath="..\include\bios.h">
 			</File>
 			<File
+				RelativePath="..\include\bios_disk.h">
+			</File>
+			<File
 				RelativePath="..\include\callback.h">
+			</File>
+			<File
+				RelativePath="..\include\control.h">
 			</File>
 			<File
 				RelativePath="..\include\cpu.h">
