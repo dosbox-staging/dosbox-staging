@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.70 2008-09-13 20:04:28 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.71 2009-02-01 11:07:11 qbix79 Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -163,7 +163,8 @@ static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LT
 // number of bytes in input for commands (sb/sbpro)
 static Bit8u DSP_cmd_len_sb[256] = {
   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
-  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
+//  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
+  1,0,0,0, 2,2,2,2, 0,0,0,0, 0,0,0,0,  // 0x10 Wari hack
   0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
   0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
 
@@ -186,7 +187,8 @@ static Bit8u DSP_cmd_len_sb[256] = {
 // number of bytes in input for commands (sb16)
 static Bit8u DSP_cmd_len_sb16[256] = {
   0,0,0,0, 1,2,0,0, 1,0,0,0, 0,0,2,1,  // 0x00
-  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
+//  1,0,0,0, 2,0,2,2, 0,0,0,0, 0,0,0,0,  // 0x10
+  1,0,0,0, 2,2,2,2, 0,0,0,0, 0,0,0,0,  // 0x10 Wari hack
   0,0,0,0, 2,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
   0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0,  // 0x30
 
@@ -800,6 +802,7 @@ static void DSP_DoCommand(void) {
 		GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_ADC_CallBack);
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
+	case 0x15:	/* Wari hack. Waru uses this one instead of 0x14, but some weird stuff going on there anyway */
 	case 0x91:	/* Singe Cycle 8-Bit DMA High speed DAC */
 		/* Note: 0x91 is documented only for DSP ver.2.x and 3.x, not 4.x */
 		DSP_PrepareDMA_Old(DSP_DMA_8,false,false);
@@ -1460,7 +1463,7 @@ public:
 		sb.hw.irq=section->Get_int("irq");
 		sb.hw.dma8=section->Get_int("dma");
 		sb.hw.dma16=section->Get_int("hdma");
-		sb.mixer.enabled=section->Get_bool("mixer");
+		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
 		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,opl_mode);

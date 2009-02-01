@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.142 2009-01-23 19:27:54 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.143 2009-02-01 11:07:11 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -499,7 +499,7 @@ void DOSBOX_Init(void) {
 	Pint->Set_values(dmassb);
 	Pint->Set_help("The High DMA number of the soundblaster.");
 
-	Pbool = secprop->Add_bool("mixer",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("sbmixer",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Allow the soundblaster mixer to modify the DOSBox mixer.");
 
 	const char* opltypes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "none", 0};
