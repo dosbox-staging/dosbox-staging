@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.19 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: hardware.cpp,v 1.20 2009-02-01 14:21:19 qbix79 Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -30,13 +30,14 @@
 #include "mapper.h"
 #include "pic.h"
 #include "render.h"
+#include "cross.h"
 
 #if (C_SSHOT)
 #include <png.h>
 #include "../libs/zmbv/zmbv.cpp"
 #endif
 
-static char * capturedir;
+static std::string capturedir;
 extern const char* RunningProgram;
 Bitu CaptureState;
 
@@ -87,10 +88,16 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	char file_start[16];
 	DIR * dir;struct dirent * dir_ent;
 	/* Find a filename to open */
-	dir=opendir(capturedir);
+	dir=opendir(capturedir.c_str());
 	if (!dir) {
-		LOG_MSG("Can't open dir %s for capturing %s",capturedir,type);
-		return 0;
+		//Try creating it first
+		Cross::CreateDir(capturedir);
+		dir=opendir(capturedir.c_str());
+		if(!dir) {
+		
+			LOG_MSG("Can't open dir %s for capturing %s",capturedir.c_str(),type);
+			return 0;
+		}
 	}
 	strcpy(file_start,RunningProgram);
 	lowcase(file_start);
@@ -106,7 +113,7 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 		if (num>=last) last=num+1;
 	}
 	closedir(dir);
-	sprintf(file_name,"%s%c%s%03d%s",capturedir,CROSS_FILESPLIT,file_start,last,ext);
+	sprintf(file_name,"%s%c%s%03d%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
 	if (handle) {
@@ -719,7 +726,8 @@ class HARDWARE:public Module_base{
 public:
 	HARDWARE(Section* configuration):Module_base(configuration){
 		Section_prop * section = static_cast<Section_prop *>(configuration);
-		capturedir = (char *)section->Get_string("captures");
+		Prop_path* proppath= section->Get_path("captures");
+		capturedir = proppath->realpath;
 		CaptureState = 0;
 		MAPPER_AddHandler(CAPTURE_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 		MAPPER_AddHandler(CAPTURE_MidiEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
