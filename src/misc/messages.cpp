@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: messages.cpp,v 1.20 2008-02-10 11:14:03 qbix79 Exp $ */
+/* $Id: messages.cpp,v 1.21 2009-02-01 14:18:12 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +25,7 @@
 #include "cross.h"
 #include "support.h"
 #include "setup.h"
+#include "control.h"
 #include <list>
 #include <string>
 using namespace std;
@@ -47,7 +48,7 @@ void MSG_Add(const char * _name, const char* _val) {
 	/* Find the message */
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++) {
 		if((*tel).name==_name) { 
-			LOG_MSG("double entry for %s",_name);
+//			LOG_MSG("double entry for %s",_name); //Message file might be loaded before default text messages
 			return;
 		}
 	}
@@ -133,5 +134,8 @@ void MSG_Init(Section_prop * section) {
 	std::string file_name;
 	if (control->cmdline->FindString("-lang",file_name,true)) {
 		LoadMessageFile(file_name.c_str());
-	} else LoadMessageFile(section->Get_string("language"));
+	} else {
+		Prop_path* pathprop = section->Get_path("language");
+		if(pathprop) LoadMessageFile(pathprop->realpath.c_str());
+	}
 }
