@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.20 2009-02-01 14:21:19 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.21 2009-02-01 15:52:53 qbix79 Exp $ */
 
 #include <dirent.h>
 #include <string.h>
@@ -83,6 +83,11 @@ static struct {
 } capture;
 
 FILE * OpenCaptureFile(const char * type,const char * ext) {
+	if(capturedir.empty()) {
+		LOG_MSG("Please specify a capture directory");
+		return 0;
+	}
+
 	Bitu last=0;
 	char file_name[CROSS_LEN];
 	char file_start[16];
