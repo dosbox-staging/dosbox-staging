@@ -16,8 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.8 2009-02-01 14:24:36 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.9 2009-02-01 16:06:26 qbix79 Exp $ */
 
+#if 0
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
 
@@ -628,3 +629,4 @@ void UI_Run(bool pressed) {
 	UI_Shutdown(screen);
 	delete screen;
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 /*
  *  gui_tk - framework-agnostic GUI toolkit
  *  Copyright (C) 2005-2007 Jörg Walter
@@ -19,7 +20,7 @@
 /* TODO:
   - make menu a bufferedwindow with shadow
 */
-/* $Id: gui_tk.cpp,v 1.4 2008-09-07 10:55:15 c2woody Exp $ */
+/* $Id: gui_tk.cpp,v 1.5 2009-02-01 16:06:26 qbix79 Exp $ */
 
 /** \file
  *  \brief Implementation file for gui_tk.
@@ -1703,3 +1704,4 @@ int main(int argc, char *argv[])
 }
 #endif
 
+#endif

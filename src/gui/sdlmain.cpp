@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.146 2009-02-01 14:24:12 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.147 2009-02-01 16:06:26 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -242,6 +242,35 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 
 	if(paused) strcat(title," PAUSED");
 	SDL_WM_SetCaption(title,VERSION);
+}
+
+static void PauseDOSBox(bool pressed) {
+	if (!pressed)
+		return;
+	GFX_SetTitle(-1,-1,true);
+	bool paused = true;
+	KEYBOARD_ClrBuffer();
+	SDL_Delay(500);
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		// flush event queue.
+	}
+   
+	while (paused) {
+		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+		switch (event.type) {
+	     
+			case SDL_QUIT: throw(0); break;
+			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
+			case SDL_KEYUP:
+			if(event.key.keysym.sym==SDLK_PAUSE) {
+		  
+				paused=false;
+				GFX_SetTitle(-1,-1,false);
+				break;
+			}
+		}
+	}
 }
 
 #if defined (WIN32)
@@ -936,7 +965,7 @@ static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
 
-extern void UI_Run(bool);
+//extern void UI_Run(bool);
 static void GUI_StartUp(Section * sec) {
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -1111,7 +1140,7 @@ static void GUI_StartUp(Section * sec) {
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(&UI_Run, MK_pause, MMOD2, "ui", "UI");
+	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
@@ -1386,7 +1415,7 @@ void Config_Add_SDL() {
 	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
 	Pstring->Set_values(inactt);
 
-	Pstring = sdl_sec->Add_string("mapperfile",Property::Changeable::Always,"mapper.txt");
+	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,"mapper.txt");
 	Pstring->Set_help("File used to load/save the key/event mappings from.");
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
@@ -1431,7 +1460,7 @@ static void printconfiglocation() {
 }
    
 
-extern void UI_Init(void);
+//extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	try {
 		CommandLine com_line(argc,argv);
@@ -1584,8 +1613,8 @@ int main(int argc, char* argv[]) {
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
 #endif
-		UI_Init();
-		if (control->cmdline->FindExist("-startui")) UI_Run(false);
+//		UI_Init();
+//		if (control->cmdline->FindExist("-startui")) UI_Run(false);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
@@ -1599,6 +1628,7 @@ int main(int argc, char* argv[]) {
 
 		/* Init the keyMapper */
 		MAPPER_Init();
+		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run(true);
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
