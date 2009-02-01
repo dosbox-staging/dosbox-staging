@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.cpp,v 1.34 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: programs.cpp,v 1.35 2009-02-01 14:19:20 qbix79 Exp $ */
 
 #include <vector>
 #include <ctype.h>
@@ -29,7 +29,7 @@
 #include "regs.h"
 #include "support.h"
 #include "cross.h"
-#include "setup.h"
+#include "control.h"
 #include "shell.h"
 
 Bitu call_program;

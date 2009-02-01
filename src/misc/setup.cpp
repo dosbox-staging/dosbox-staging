@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.51 2008-09-07 10:55:15 c2woody Exp $ */
+/* $Id: setup.cpp,v 1.52 2009-02-01 14:19:20 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
 #include "setup.h"
+#include "control.h"
 #include "support.h"
 #include <fstream>
 #include <string>
@@ -30,7 +31,7 @@
 #include <stdio.h>
 
 using namespace std;
-
+static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath
 void Value::destroy() throw(){
 	if (type == V_STRING) delete _string;
 }
@@ -263,6 +264,25 @@ void Prop_string::SetValue(std::string const& input){
 	Value val(temp,Value::V_STRING);
 	SetVal(val,false,true);
 }
+
+void Prop_path::SetValue(std::string const& input){
+	//Special version to merge realpath with it
+
+	Value val(input,Value::V_STRING);
+	SetVal(val,false,true);
+
+	std::string workcopy(input);
+	Cross::ResolveHomedir(workcopy); //Parse ~ and friends
+	//Prepend config directory in it exists. Check for absolute paths later
+	if( current_config_dir.empty()) realpath = workcopy;
+	else realpath = current_config_dir + CROSS_FILESPLIT + workcopy;
+	//Absolute paths
+#if defined (WIN32) || defined(OS2)
+	if( workcopy.size() > 2 && workcopy[1] == ':' ) realpath = workcopy;
+#else
+	if( workcopy.size() > 1 && workcopy[0] == '/' ) realpath = workcopy;
+#endif
+}
 	
 void Prop_bool::SetValue(std::string const& input){
 	value.SetValue(input,Value::V_BOOL);
@@ -409,6 +429,12 @@ Prop_string* Section_prop::Add_string(string const& _propname, Property::Changea
 	return test;
 }
 
+Prop_path* Section_prop::Add_path(string const& _propname, Property::Changeable::Value when, char const * const _value) {
+	Prop_path* test=new Prop_path(_propname,when,_value);
+	properties.push_back(test);
+	return test;
+}
+
 Prop_bool* Section_prop::Add_bool(string const& _propname, Property::Changeable::Value when, bool _value) {
 	Prop_bool* test=new Prop_bool(_propname,when,_value);
 	properties.push_back(test);
@@ -455,6 +481,17 @@ double Section_prop::Get_double(string const& _propname) const {
 	}
 	return 0.0;
 }
+
+Prop_path* Section_prop::Get_path(string const& _propname) const {
+	for(const_it tel=properties.begin();tel!=properties.end();tel++){
+		if((*tel)->propname==_propname){
+			Prop_path* val = dynamic_cast<Prop_path*>((*tel));
+			if(val) return val; else return NULL;
+		}
+	}
+	return NULL;
+}
+
 Prop_multival* Section_prop::Get_multival(string const& _propname) const {
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if((*tel)->propname==_propname){
@@ -552,10 +589,10 @@ string Section_line::GetPropValue(string const& /* _property*/) const {
 	return NO_SUCH_PROPERTY;
 }
 
-void Config::PrintConfig(char const * const configfilename) const {
+bool Config::PrintConfig(char const * const configfilename) const {
 	char temp[50];char helpline[256];
 	FILE* outfile=fopen(configfilename,"w+t");
-	if(outfile==NULL) return;
+	if(outfile==NULL) return false;
 
 	/* Print start of configfile and add an return to improve readibility. */
 	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"),VERSION);
@@ -619,6 +656,7 @@ void Config::PrintConfig(char const * const configfilename) const {
 		fprintf(outfile,"\n");		/* Always an empty line between sections */
 	}
 	fclose(outfile);
+	return true;
 }
    
 
@@ -651,6 +689,7 @@ void Config::Init() {
 		(*tel)->ExecuteInit();
 	}
 }
+
 void Section::AddInitFunction(SectionFunction func,bool canchange) {
 	initfunctions.push_back(Function_wrapper(func,canchange));
 }
@@ -706,6 +745,7 @@ Section* Config::GetSectionFromProperty(char const * const prop) const{
 	return NULL;
 }
 
+
 bool Config::ParseConfigFile(char const * const configfilename){
 	static bool first_configfile = true;
 	ifstream in(configfilename);
@@ -713,6 +753,13 @@ bool Config::ParseConfigFile(char const * const configfilename){
 	const char * settings_type = first_configfile?"primary":"additional";
 	first_configfile = false;
 	LOG_MSG("CONFIG:Loading %s settings from config file %s", settings_type,configfilename);
+
+	//Get directory from configfilename, used with relative paths.
+	current_config_dir=configfilename;
+	std::string::size_type pos = current_config_dir.rfind(CROSS_FILESPLIT);
+	if(pos == std::string::npos) pos = 0; //No directory then erase string
+	current_config_dir.erase(pos);
+
 	string gegevens;
 	Section* currentsection = NULL;
 	Section* testsec = NULL;
@@ -750,6 +797,7 @@ bool Config::ParseConfigFile(char const * const configfilename){
 			break;
 		}
 	}
+	current_config_dir.clear();//So internal changes don't use the path information
 	return true;
 }
 
