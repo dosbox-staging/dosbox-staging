@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.147 2009-02-01 16:06:26 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.148 2009-02-01 16:32:33 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #ifdef WIN32
 #include <signal.h>
+#include <process.h>
 #endif
 
 #include "SDL.h"
