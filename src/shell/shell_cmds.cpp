@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.86 2009-01-25 12:00:52 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.87 2009-02-01 14:06:36 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -24,7 +24,7 @@
 #include "regs.h"
 #include "../dos/drives.h"
 #include "support.h"
-#include "setup.h"
+#include "control.h"
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
@@ -748,11 +748,11 @@ void DOS_Shell::CMD_IF(char * args) {
 	bool has_not=false;
 	char* word;
 
-	if (strncasecmp(args,"NOT ",4) ==0) {
+	while(strncasecmp(args,"NOT ",4) ==0) {
 		args += 4;	//skip text
 		//skip more spaces
 		StripSpaces(args);
-		has_not = true;
+		has_not = !has_not;
 	}
 
 	if(strncasecmp(args,"ERRORLEVEL",10) == 0) {
@@ -810,7 +810,11 @@ void DOS_Shell::CMD_IF(char * args) {
 	}
 	args += 2;
 	StripSpaces(args);
-	char* woord2 = StripWord(args);
+	char* woord2 = args;
+	// Word is until space or =
+	while(*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
+		args++;
+	*args++=0;
 	*end_word1 = 0;
 	if ((strcmp(word,woord2)==0)==(!has_not)) DoCommand(args);
 }
