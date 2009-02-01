@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.52 2009-02-01 14:19:20 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.53 2009-02-01 15:52:25 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -271,6 +271,10 @@ void Prop_path::SetValue(std::string const& input){
 	Value val(input,Value::V_STRING);
 	SetVal(val,false,true);
 
+	if(input.empty()) {
+		realpath = "";
+		return;
+	}
 	std::string workcopy(input);
 	Cross::ResolveHomedir(workcopy); //Parse ~ and friends
 	//Prepend config directory in it exists. Check for absolute paths later
