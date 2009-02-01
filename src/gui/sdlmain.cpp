@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.145 2009-01-17 21:31:21 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.146 2009-02-01 14:24:12 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -46,6 +46,8 @@
 #include "vga.h"
 #include "keyboard.h"
 #include "cpu.h"
+#include "cross.h"
+#include "control.h"
 
 //#define DISABLE_JOYSTICK
 
@@ -1326,15 +1328,121 @@ void GFX_ShowMsg(char const* format,...) {
         strcat(buf,"\n");
 	va_end(msg);
 	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
-};
+}
+
+
+void Config_Add_SDL() {
+	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
+	sdl_sec->AddInitFunction(&MAPPER_StartUp);
+	Prop_bool* Pbool;
+	Prop_string* Pstring;
+	Prop_int* Pint;
+	Prop_multival* Pmulti;
+
+	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
+	Pbool->Set_help("Start dosbox directly in fullscreen.");
+
+	Pbool = sdl_sec->Add_bool("fulldouble",Property::Changeable::Always,false);
+	Pbool->Set_help("Use double buffering in fullscreen.");
+
+	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
+	Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).");
+
+	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
+	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.");
+
+	const char* outputs[] = {
+		"surface", "overlay", 
+#if C_OPENGL
+		"opengl", "openglnb",
+#endif
+#if (HAVE_DDRAW_H) && defined(WIN32)
+		"ddraw",
+#endif
+		0 };
+	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"surface");
+	Pstring->Set_help("What video system to use for output.");
+	Pstring->Set_values(outputs);
+
+	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
+	Pbool->Set_help("Mouse will automatically lock, if you click on the screen.");
+
+	Pint = sdl_sec->Add_int("sensitivity",Property::Changeable::Always,100);
+	Pint->SetMinMax(1,1000);
+	Pint->Set_help("Mouse sensitivity.");
+
+	Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
+	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
+
+	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
+	Pmulti->SetValue("higher,normal");
+	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
+
+	const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
+	Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
+	Pstring->Set_values(actt);
+
+	const char* inactt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
+	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
+	Pstring->Set_values(inactt);
+
+	Pstring = sdl_sec->Add_string("mapperfile",Property::Changeable::Always,"mapper.txt");
+	Pstring->Set_help("File used to load/save the key/event mappings from.");
+
+	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
+	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
+}
+
+static void launcheditor(std::string const& edit) {
+	std::string path,file;
+	Cross::CreatePlatformConfigDir(path);
+	Cross::GetPlatformConfigName(file);
+	path += file;
+	FILE* f = fopen(path.c_str(),"r");
+	if(!f && !control->PrintConfig(path.c_str())) {
+		printf("tried creating %s. but failed.\n",path.c_str());
+		exit(1);
+	}
+	if(f) fclose(f);
+	if(edit.empty()) {
+		printf("no editor specified.\n");
+		exit(1);
+	}
+	
+	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
+	//if you get here the launching failed!
+	printf("can't find editor %s\n",edit.c_str());
+	exit(1);
+}
+   
+static void printconfiglocation() {
+	std::string path,file;
+	Cross::CreatePlatformConfigDir(path);
+	Cross::GetPlatformConfigName(file);
+	path += file;
+	FILE* f = fopen(path.c_str(),"r");
+	if(!f && !control->PrintConfig(path.c_str())) {
+		printf("tried creating %s. but failed",path.c_str());
+		exit(1);
+	}
+	if(f) fclose(f);
+	printf("%s\n",path.c_str());
+	exit(0);
+}
+   
 
 extern void UI_Init(void);
-
 int main(int argc, char* argv[]) {
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
+		/* Init the configuration system and add default values */
+		Config_Add_SDL();
+		DOSBOX_Init();
+
+		std::string editor;
+		if(control->cmdline->FindString("-editconf",editor,true)) launcheditor(editor);
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
@@ -1367,6 +1475,7 @@ int main(int argc, char* argv[]) {
 			printf("please read the COPYING file thoroughly before doing so.\n\n");
 			return 0;
 		}
+		if(control->cmdline->FindExist("-printconf")) printconfiglocation();
 
 #if C_DEBUG
 		DEBUG_SetupConsole();
@@ -1434,84 +1543,43 @@ int main(int argc, char* argv[]) {
 			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
 		}
 #endif
-		sdl.num_joysticks=SDL_NumJoysticks();
-		Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
-		sdl_sec->AddInitFunction(&MAPPER_StartUp);
-		Prop_bool* Pbool;
-		Prop_string* Pstring;
-		Prop_int* Pint;
-		Prop_multival* Pmulti;
-		Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
-		Pbool->Set_help("Start dosbox directly in fullscreen.");
+	sdl.num_joysticks=SDL_NumJoysticks();
 
-		Pbool = sdl_sec->Add_bool("fulldouble",Property::Changeable::Always,false);
-		Pbool->Set_help("Use double buffering in fullscreen.");
-
-		Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
-		Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).");
-
-		Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
-		Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.");
-
-		const char* outputs[] = {
-			"surface", "overlay", 
-#if C_OPENGL
-			"opengl", "openglnb",
-#endif
-#if (HAVE_DDRAW_H) && defined(WIN32)
-			"ddraw",
-#endif
-			0 };
-		Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"surface");
-		Pstring->Set_help("What video system to use for output.");
-		Pstring->Set_values(outputs);
-
-		Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
-		Pbool->Set_help("Mouse will automatically lock, if you click on the screen.");
-
-		Pint = sdl_sec->Add_int("sensitivity",Property::Changeable::Always,100);
-		Pint->SetMinMax(1,1000);
-		Pint->Set_help("Mouse sensitivity.");
-
-		Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
-		Pbool->Set_help("Wait before closing the console if dosbox has an error.");
-
-		Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
-		Pmulti->SetValue("higher,normal");
-		Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
-
-		const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
-		Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
-		Pstring->Set_values(actt);
-
-		const char* inactt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
-		Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
-		Pstring->Set_values(inactt);
-
-		Pstring = sdl_sec->Add_string("mapperfile",Property::Changeable::Always,"mapper.txt");
-		Pstring->Set_help("File used to load/save the key/event mappings from.");
-
-		Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
-		Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
-
-		/* Init all the dosbox subsystems */
-		DOSBOX_Init();
-		std::string config_file;
-		bool parsed_anyconfigfile = false;
-		// First parse the configfile in the $HOME directory
-		if ((getenv("HOME") != NULL)) {
-			config_file = (std::string)getenv("HOME") + 
-				      (std::string)DEFAULT_CONFIG_FILE;
-			if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
-		}
-		// Add extra settings from dosbox.conf in the local directory if there is no configfile specified at the commandline
-		if (!control->cmdline->FindString("-conf",config_file,true)) config_file="dosbox.conf";
+	/* Parse configuration files */
+	std::string config_file,config_path;
+	bool parsed_anyconfigfile = false;
+	//First Parse -conf switches
+	while(control->cmdline->FindString("-conf",config_file,true))
 		if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
-		// Add extra settings from additional configfiles at the commandline
-		while(control->cmdline->FindString("-conf",config_file,true))
-			if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
-		// Give a message if no configfile whatsoever was found.
-		if(!parsed_anyconfigfile) LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+
+	//if none found => parse localdir conf
+	config_file = "dosbox.conf";
+	if (!parsed_anyconfigfile && control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
+
+	//if none found => parse userlevel conf
+	if(!parsed_anyconfigfile) {
+		config_file.clear();
+		Cross::GetPlatformConfigDir(config_path);
+		Cross::GetPlatformConfigName(config_file);
+		config_path += config_file;
+		if(control->ParseConfigFile(config_path.c_str())) parsed_anyconfigfile = true;
+	}
+
+	if(!parsed_anyconfigfile) {
+		//Try to create the userlevel configfile.
+		config_file.clear();
+		Cross::CreatePlatformConfigDir(config_path);
+		Cross::GetPlatformConfigName(config_file);
+		config_path += config_file;
+		if(control->PrintConfig(config_path.c_str())) {
+			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
+			//Load them as well. Makes relative paths much easier
+			control->ParseConfigFile(config_path.c_str());
+		} else {
+			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+		}
+	}
+	   
 	
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
@@ -1521,6 +1589,8 @@ int main(int argc, char* argv[]) {
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
+		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
+	   
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not allready in fullscreen
 				GFX_SwitchFullScreen();
