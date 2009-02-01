@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.87 2009-02-01 14:06:36 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.88 2009-02-01 21:22:51 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -306,22 +306,27 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT"),toupper(*reinterpret_cast<unsigned char*>(&args[0])));
 	} else 	if (!DOS_ChangeDir(args)) {
 		/* Changedir failed. Check if the filename is longer then 8 and/or contains spaces */
-		char temp[DOS_PATHLENGTH];
-		safe_strncpy(temp,args,DOS_PATHLENGTH);
-		char* dot = strrchr(temp,'.');
-		if(dot) *dot = 0;
-		dot = strrchr(temp,' ');
-		if(dot) { /* Contains spaces */
-			*dot = 0;
-			if(strlen(temp) > 6) temp[6] = 0;
-			strcat(temp,"~1");
-//			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
-			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
-		} else if(strlen(temp) >8) {
-			temp[6] = 0;
-			strcat(temp,"~1");
-//			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temp);
-			WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
+	   
+		std::string temps(args),slashpart;
+		std::string::size_type separator = temps.find_first_of("\\/");
+		if(!separator) {
+			slashpart = temps.substr(0,1);
+			temps.erase(0,1);
+		}
+		separator = temps.find_first_of("\\/");
+		if(separator != std::string::npos) temps.erase(separator);
+		separator = temps.rfind('.');
+		if(separator != std::string::npos) temps.erase(separator);
+		separator = temps.find(' ');
+		if(separator != std::string::npos) {/* Contains spaces */
+			temps.erase(separator);
+			if(temps.size() >6) temps.erase(6);
+			temps += "~1";
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temps.insert(0,slashpart).c_str());
+		} else if (temps.size()>8) {
+			temps.erase(6);
+			temps += "~1";
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temps.insert(0,slashpart).c_str());
 		} else {
 			Bit8u drive=DOS_GetDefaultDrive()+'A';
 			if (drive=='Z') {
