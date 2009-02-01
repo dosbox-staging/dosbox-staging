@@ -16,13 +16,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: nullmodem.cpp,v 1.5 2008-12-19 15:20:35 qbix79 Exp $ */
+/* $Id: nullmodem.cpp,v 1.6 2009-02-01 14:24:37 qbix79 Exp $ */
 
 #include "dosbox.h"
 
 #if C_MODEM
 
-#include "setup.h"		// CommandLine
+#include "control.h"
 #include "serialport.h"
 #include "nullmodem.h"
 

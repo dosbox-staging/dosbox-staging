@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.57 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: render.cpp,v 1.58 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -27,6 +27,7 @@
 #include "video.h"
 #include "render.h"
 #include "setup.h"
+#include "control.h"
 #include "mapper.h"
 #include "cross.h"
 #include "hardware.h"

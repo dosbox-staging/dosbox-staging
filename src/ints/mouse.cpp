@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.74 2008-08-03 15:52:06 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.75 2009-02-01 14:24:38 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -32,7 +32,7 @@
 #include "inout.h"
 #include "int10.h"
 #include "bios.h"
-
+#include "dos_inc.h"
 
 static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static Bit16u ps2cbseg,ps2cbofs;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.113 2008-08-06 18:31:26 c2woody Exp $ */
+/* $Id: cpu.cpp,v 1.114 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -26,6 +26,7 @@
 #include "debug.h"
 #include "mapper.h"
 #include "setup.h"
+#include "programs.h"
 #include "paging.h"
 #include "lazyflags.h"
 #include "support.h"

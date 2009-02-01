@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.90 2008-11-22 14:24:11 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.91 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -35,11 +35,7 @@
 #include "dos_inc.h"
 #include "bios.h"
 #include "setup.h"
-
-#if defined HAVE_SYS_TYPES_H && defined HAVE_PWD_H
-#include <sys/types.h>
-#include <pwd.h>
-#endif
+#include "control.h"
 
 
 #if defined(OS2)
@@ -53,24 +49,6 @@ Bitu DEBUG_EnableDebugger(void);
 #endif
 
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
-
-//Helper function for mount and imgmount to correctly find the path
-static void ResolveHomedir(std::string & temp_line) {
-	if(!temp_line.size() || temp_line[0] != '~') return; //No ~
-
-	if(temp_line.size() == 1 || temp_line[1] == CROSS_FILESPLIT) { //The ~ and ~/ variant
-		char * home = getenv("HOME");
-		if(home) temp_line.replace(0,1,std::string(home));
-#if defined HAVE_SYS_TYPES_H && defined HAVE_PWD_H
-	} else { // The ~username variant
-		std::string::size_type namelen = temp_line.find(CROSS_FILESPLIT);
-		if(namelen == std::string::npos) namelen = temp_line.size();
-		std::string username = temp_line.substr(1,namelen - 1);
-		struct passwd* pass = getpwnam(username.c_str());
-		if(pass) temp_line.replace(0,namelen,pass->pw_dir); //namelen -1 +1(for the ~)
-#endif // USERNAME lookup code
-	}
-}
 
 
 class MOUNT : public Program {
@@ -227,7 +205,7 @@ public:
 #else
 			if (stat(temp_line.c_str(),&test)) {
 				failed = true;
-				ResolveHomedir(temp_line);
+				Cross::ResolveHomedir(temp_line);
 				//Try again after resolving ~
 				if(!stat(temp_line.c_str(),&test)) failed = false;
 			}
@@ -480,7 +458,7 @@ private:
 		if(tmpfile) return tmpfile;
 		//File not found on mounted filesystem. Try regular filesystem
 		std::string filename_s(filename);
-		ResolveHomedir(filename_s);
+		Cross::ResolveHomedir(filename_s);
 		tmpfile = fopen(filename_s.c_str(),"rb+");
 		if(!tmpfile) {
 			if( (tmpfile = fopen(filename_s.c_str(),"rb")) ) {
@@ -1101,7 +1079,7 @@ public:
 				if (stat(temp_line.c_str(),&test)) {
 					//See if it works if the ~ are written out
 					std::string homedir(temp_line);
-					ResolveHomedir(homedir);
+					Cross::ResolveHomedir(homedir);
 					if(!stat(homedir.c_str(),&test)) {
 						temp_line = homedir;
 					} else {

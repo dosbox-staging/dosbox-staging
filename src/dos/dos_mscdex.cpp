@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.56 2008-11-06 19:31:21 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.57 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -26,7 +26,7 @@
 #include "dos_inc.h"
 #include "setup.h"
 #include "support.h"
-#include "bios.h"
+#include "bios_disk.h"
 #include "cpu.h"
 
 #include "cdrom.h"

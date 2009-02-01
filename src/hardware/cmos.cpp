@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: cmos.cpp,v 1.25 2009-02-01 14:24:37 qbix79 Exp $ */
+
 #include <time.h>
 
 #include "dosbox.h"
@@ -23,7 +25,7 @@
 #include "pic.h"
 #include "inout.h"
 #include "mem.h"
-#include "bios.h"
+#include "bios_disk.h"
 #include "setup.h"
 
 static struct {

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.7 2008-08-06 18:32:34 c2woody Exp $ */
+/* $Id: sdl_gui.cpp,v 1.8 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include "SDL.h"
 #include "../libs/gui_tk/gui_tk.h"
@@ -27,6 +27,7 @@
 #include "render.h"
 #include "mapper.h"
 #include "setup.h"
+#include "control.h"
 #include "shell.h"
 
 #include <iostream>

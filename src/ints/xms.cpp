@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: xms.cpp,v 1.53 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: xms.cpp,v 1.54 2009-02-01 14:24:38 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +24,7 @@
 #include "callback.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_system.h"
+#include "dos_inc.h"
 #include "setup.h"
 #include "inout.h"
 #include "xms.h"

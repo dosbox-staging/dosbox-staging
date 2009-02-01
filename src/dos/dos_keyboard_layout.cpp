@@ -16,10 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.18 2009-01-29 23:17:59 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.19 2009-02-01 14:24:36 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
+#include "bios_disk.h"
 #include "setup.h"
 #include "support.h"
 #include "../ints/int10.h"
