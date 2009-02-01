@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.96 2009-01-11 18:22:59 c2woody Exp $ */
+/* $Id: shell.cpp,v 1.97 2009-02-01 14:07:05 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include "dosbox.h"
 #include "regs.h"
-#include "setup.h"
+#include "control.h"
 #include "shell.h"
 #include "callback.h"
 #include "support.h"
