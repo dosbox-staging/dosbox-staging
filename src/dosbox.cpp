@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.144 2009-02-01 14:22:22 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.145 2009-02-03 19:20:30 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -498,10 +498,15 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("sbmixer",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Allow the soundblaster mixer to modify the DOSBox mixer.");
 
-	const char* opltypes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "none", 0};
+	const char* oplmodes[]={ "auto", "cms", "opl2", "dualopl2", "opl3", "none", 0};
 	Pstring = secprop->Add_string("oplmode",Property::Changeable::WhenIdle,"auto");
-	Pstring->Set_values(opltypes);
+	Pstring->Set_values(oplmodes);
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
+
+	const char* oplemus[]={ "auto", 0};
+	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"auto");
+	Pstring->Set_values(oplemus);
+	Pstring->Set_help("Provider for the OPL emulation. On 'auto' dosbox will use the best emulation.");
 
 	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,22050);
 	Pint->Set_values(rates);
