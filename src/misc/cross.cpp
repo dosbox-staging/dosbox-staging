@@ -16,11 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.1 2009-02-01 14:16:52 qbix79 Exp $ */
+/* $Id: cross.cpp,v 1.2 2009-02-03 08:27:47 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
 #include <string>
+#include <stdlib.h>
 
 #ifdef WIN32
 #define _WIN32_IE 0x0400
