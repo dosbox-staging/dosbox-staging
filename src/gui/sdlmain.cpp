@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.148 2009-02-01 16:32:33 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.149 2009-02-11 22:16:05 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -897,7 +897,7 @@ void GFX_Start() {
 	sdl.active=true;
 }
 
-static void GUI_ShutDown(Section * sec) {
+static void GUI_ShutDown(Section * /*sec*/) {
 	GFX_Stop();
 	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.mouse.locked) GFX_CaptureMouse();
@@ -1026,8 +1026,8 @@ static void GUI_StartUp(Section * sec) {
 			char* height = const_cast<char*>(strchr(fullresolution,'x'));
 			if(height && * height) {
 				*height = 0;
-				sdl.desktop.full.height = atoi(height+1);
-				sdl.desktop.full.width  = atoi(res);
+				sdl.desktop.full.height = (Bit16u)atoi(height+1);
+				sdl.desktop.full.width  = (Bit16u)atoi(res);
 			}
 		}
 	}
@@ -1043,22 +1043,22 @@ static void GUI_StartUp(Section * sec) {
 			char* height = const_cast<char*>(strchr(windowresolution,'x'));
 			if(height && *height) {
 				*height = 0;
-				sdl.desktop.window.height = atoi(height+1);
-				sdl.desktop.window.width  = atoi(res);
+				sdl.desktop.window.height = (Bit16u)atoi(height+1);
+				sdl.desktop.window.width  = (Bit16u)atoi(res);
 			}
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
 	if (!sdl.desktop.full.width) {
 #ifdef WIN32
-		sdl.desktop.full.width=GetSystemMetrics(SM_CXSCREEN);
+		sdl.desktop.full.width=(Bit16u)GetSystemMetrics(SM_CXSCREEN);
 #else	
 		sdl.desktop.full.width=1024;
 #endif
 	}
 	if (!sdl.desktop.full.height) {
 #ifdef WIN32
-		sdl.desktop.full.height=GetSystemMetrics(SM_CYSCREEN);
+		sdl.desktop.full.height=(Bit16u)GetSystemMetrics(SM_CYSCREEN);
 #else	
 		sdl.desktop.full.height=768;
 #endif
@@ -1629,7 +1629,7 @@ int main(int argc, char* argv[]) {
 
 		/* Init the keyMapper */
 		MAPPER_Init();
-		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run(true);
+		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run(false);
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */

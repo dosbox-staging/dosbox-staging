@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.56 2009-02-01 16:05:28 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.57 2009-02-11 22:16:05 c2woody Exp $ */
 
 #include <vector>
 #include <list>
@@ -2268,12 +2268,10 @@ void MAPPER_LosingFocus(void) {
 }
 
 void MAPPER_Run(bool pressed) {
-	if (!pressed)
+	if (pressed)
 		return;
-	/* Deactive all running binds */
-	for (CEventVector_it evit=events.begin();evit!=events.end();evit++) {
-		(*evit)->DeActivateAll();
-	}
+	KEYBOARD_ClrBuffer();	//Clear buffer
+	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
 
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.9 2009-02-01 16:06:26 qbix79 Exp $ */
+/* $Id: sdl_gui.cpp,v 1.10 2009-02-11 22:16:05 c2woody Exp $ */
 
 #if 0
 #include "SDL.h"
@@ -561,7 +561,7 @@ public:
 			running = false;
 		} else if (arg == "Keyboard") {
 			UI_Shutdown(dynamic_cast<GUI::ScreenSDL*>(getScreen()));
-			MAPPER_Run(true);
+			MAPPER_Run(false);
 			UI_Startup(dynamic_cast<GUI::ScreenSDL*>(getScreen()));
 		} else if (sname == "autoexec") {
 			Section_line *section = static_cast<Section_line *>(control->GetSection((const char *)sname));
