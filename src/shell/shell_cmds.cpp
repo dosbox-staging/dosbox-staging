@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.88 2009-02-01 21:22:51 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.89 2009-02-15 10:45:01 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -266,7 +266,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 	if (!*args) {
 		if (echo) { WriteOut(MSG_Get("SHELL_CMD_ECHO_ON"));}
 		else { WriteOut(MSG_Get("SHELL_CMD_ECHO_OFF"));}
-	return;
+		return;
 	}
 	char buffer[512];
 	char* pbuffer = buffer;
@@ -749,14 +749,14 @@ void DOS_Shell::CMD_SET(char * args) {
 
 void DOS_Shell::CMD_IF(char * args) {
 	HELP("IF");
-	StripSpaces(args);
+	StripSpaces(args,'=');
 	bool has_not=false;
-	char* word;
 
-	while(strncasecmp(args,"NOT ",4) ==0) {
-		args += 4;	//skip text
+	while (strncasecmp(args,"NOT",3) == 0) {
+		if (!isspace(*reinterpret_cast<unsigned char*>(&args[3])) && (args[3] != '=')) break;
+		args += 3;	//skip text
 		//skip more spaces
-		StripSpaces(args);
+		StripSpaces(args,'=');
 		has_not = !has_not;
 	}
 
@@ -764,7 +764,7 @@ void DOS_Shell::CMD_IF(char * args) {
 		args += 10;	//skip text
 		//Strip spaces and ==
 		StripSpaces(args,'=');
-		word = StripWord(args);
+		char* word = StripWord(args);
 		if(!isdigit(*word)) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER"));
 			return;
@@ -785,11 +785,11 @@ void DOS_Shell::CMD_IF(char * args) {
 	if(strncasecmp(args,"EXIST ",6) == 0) {
 		args += 6; //Skip text
 		StripSpaces(args);
-		word = StripWord(args);
+		char* word = StripWord(args);
 		if (!*word) {
 			WriteOut(MSG_Get("SHELL_CMD_IF_EXIST_MISSING_FILENAME"));
 			return;
-		};
+		}
 
 		{	/* DOS_FindFirst uses dta so set it to our internal dta */
 			RealPt save_dta=dos.dta();
@@ -802,26 +802,36 @@ void DOS_Shell::CMD_IF(char * args) {
 	}
 
 	/* Normal if string compare */
-	word = args;
-	// Word is until space or =
-	while(*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
+
+	char* word1 = args;
+	// first word is until space or =
+	while (*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
 		args++;
 	char* end_word1 = args;
-	StripSpaces(args);
-	//Check for 2 ==
-	if(strlen(args)<2 || args[0] != '=' || args[1] != '=') { 
+
+	// scan for =
+	while (*args && (*args != '='))
+		args++;
+	// check for ==
+	if ((*args==0) || (args[1] != '=')) {
 		SyntaxError();
 		return;
 	}
 	args += 2;
-	StripSpaces(args);
-	char* woord2 = args;
-	// Word is until space or =
-	while(*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
+	StripSpaces(args,'=');
+
+	char* word2 = args;
+	// second word is until space or =
+	while (*args && !isspace(*reinterpret_cast<unsigned char*>(args)) && (*args != '='))
 		args++;
-	*args++=0;
-	*end_word1 = 0;
-	if ((strcmp(word,woord2)==0)==(!has_not)) DoCommand(args);
+
+	if (*args) {
+		*end_word1 = 0;		// mark end of first word
+		*args++ = 0;		// mark end of second word
+		StripSpaces(args,'=');
+
+		if ((strcmp(word1,word2)==0)==(!has_not)) DoCommand(args);
+	}
 }
 
 void DOS_Shell::CMD_GOTO(char * args) {
