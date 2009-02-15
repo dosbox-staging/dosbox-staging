@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.53 2009-02-01 15:52:25 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.54 2009-02-15 20:01:08 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -263,6 +263,22 @@ void Prop_string::SetValue(std::string const& input){
 	if(!suggested_values.empty()) lowcase(temp);
 	Value val(temp,Value::V_STRING);
 	SetVal(val,false,true);
+}
+bool Prop_string::CheckValue(Value const& in, bool warn){
+	if(suggested_values.empty()) return true;
+	for(iter it = suggested_values.begin();it != suggested_values.end();it++) {
+		if ( (*it) == in) { //Match!
+			return true;
+		}
+		if((*it).ToString() == "%u") {
+			Bitu value;
+			if(sscanf(in.ToString().c_str(),"%u",&value) == 1) {
+				return true;
+			}
+		}
+	}
+	if(warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset it to default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	return false;
 }
 
 void Prop_path::SetValue(std::string const& input){
@@ -632,10 +648,13 @@ bool Config::PrintConfig(char const * const configfilename) const {
 					fprintf(outfile, "%s%s:", prefix, MSG_Get("CONFIG_SUGGESTED_VALUES"));
 					std::vector<Value>::iterator it = values.begin();
 					while (it != values.end()) {
-						if (it != values.begin()) fputs(",", outfile);
-						fprintf(outfile, " %s", (*it).ToString().c_str());
+						if((*it).ToString() != "%u") { //Hack hack hack. else we need to modify GetValues, but that one is const...
+							if (it != values.begin()) fputs(",", outfile);
+							fprintf(outfile, " %s", (*it).ToString().c_str());
+						}
 						++it;
 					}
+					fprintf(outfile,".");
 				}
 			fprintf(outfile, "\n");
 			}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.114 2009-02-01 14:24:36 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.115 2009-02-15 20:01:08 qbix79 Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -2281,6 +2281,11 @@ public:
 				std::istringstream stream(str);
 				stream >> rmdval;
 				CPU_CycleMax=(Bit32s)rmdval;
+			} else {
+				std::istringstream stream(type);
+				int rmdval=0;
+				stream >> rmdval;
+				if(rmdval) CPU_CycleMax=(Bit32s)rmdval;
 			}
 			CPU_CycleAutoAdjust=false;
 		}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.h,v 1.39 2009-02-01 14:11:45 qbix79 Exp $ */
+/* $Id: setup.h,v 1.40 2009-02-15 20:01:08 qbix79 Exp $ */
 
 #ifndef DOSBOX_SETUP_H
 #define DOSBOX_SETUP_H
@@ -191,6 +191,7 @@ public:
 		default_value = value = _value;
 	}
 	void SetValue(std::string const& in);
+	virtual bool CheckValue(Value const& in, bool warn);
 	~Prop_string(){ }
 };
 class Prop_path:public Prop_string{
