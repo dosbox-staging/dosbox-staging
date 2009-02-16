@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.75 2009-02-01 14:24:38 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.76 2009-02-16 20:33:11 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -37,7 +37,7 @@
 static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static Bit16u ps2cbseg,ps2cbofs;
 static bool useps2callback,ps2callbackinit;
-static Bit16u call_ps2;
+static Bitu call_ps2;
 static RealPt ps2_callback;
 static Bit16s oldmouseX, oldmouseY;
 // forward
@@ -88,7 +88,7 @@ static struct {
 	Bit16u last_pressed_y[MOUSE_BUTTONS];
 	Bit16u hidden;
 	float add_x,add_y;
-	Bit16u min_x,max_x,min_y,max_y;
+	Bit16s min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
 	float x,y;
 	button_event event_queue[QUEUE_SIZE];
@@ -260,7 +260,7 @@ static Bit8u gfxReg3CE[9];
 static Bit8u index3C4,gfxReg3C5;
 void SaveVgaRegisters() {
 	if (IS_VGA_ARCH) {
-		for (int i=0; i<9; i++) {
+		for (Bit8u i=0; i<9; i++) {
 			IO_Write	(0x3CE,i);
 			gfxReg3CE[i] = IO_Read(0x3CF);
 		}
@@ -280,7 +280,7 @@ void SaveVgaRegisters() {
 
 void RestoreVgaRegisters() {
 	if (IS_VGA_ARCH) {
-		for (int i=0; i<9; i++) {
+		for (Bit8u i=0; i<9; i++) {
 			IO_Write(0x3CE,i);
 			IO_Write(0x3CF,gfxReg3CE[i]);
 		}
@@ -370,8 +370,8 @@ void DrawCursor() {
 	// Get Clipping ranges
 
 
-	mouse.clipx = CurMode->swidth-1;	/* Get from bios ? */
-	mouse.clipy = CurMode->sheight-1;
+	mouse.clipx = (Bit16s)((Bits)CurMode->swidth-1);	/* Get from bios ? */
+	mouse.clipy = (Bit16s)((Bits)CurMode->sheight-1);
 
 	/* might be vidmode == 0x13?2:1 */
 	Bit16s xratio = 640;
@@ -445,7 +445,7 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		if (CurMode->type == M_TEXT) {
 			mouse.x = x*CurMode->swidth;
 			mouse.y = y*CurMode->sheight * 8 / CurMode->cheight;
-		} else if (mouse.max_x < 2048 || mouse.max_y < 2048 || mouse.max_x != mouse.max_y) {
+		} else if (abs(mouse.max_x) < 2048 || abs(mouse.max_y) < 2048 || mouse.max_x != mouse.max_y) {
 			mouse.x = x*mouse.max_x;
 			mouse.y = y*mouse.max_y;
 		} else { // Games faking relative movement through absolute coordinates. Quite surprising that this actually works..
@@ -659,13 +659,13 @@ static Bitu INT33_Handler(void) {
 		/* If position isn't different from current position
 		 * don't change it then. (as position is rounded so numbers get
 		 * lost when the rounded number is set) (arena/simulation Wolf) */
-		if(reg_cx >= mouse.max_x) mouse.x = static_cast<float>(mouse.max_x);
-		else if (mouse.min_x >= reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
-		else if (reg_cx != POS_X) mouse.x = static_cast<float>(reg_cx);
+		if ((Bit16s)reg_cx >= mouse.max_x) mouse.x = static_cast<float>(mouse.max_x);
+		else if (mouse.min_x >= (Bit16s)reg_cx) mouse.x = static_cast<float>(mouse.min_x); 
+		else if ((Bit16s)reg_cx != POS_X) mouse.x = static_cast<float>(reg_cx);
 
-		if(reg_dx >= mouse.max_y) mouse.y = static_cast<float>(mouse.max_y);
-		else if (mouse.min_y >= reg_dx) mouse.y = static_cast<float>(mouse.min_y); 
-		else if (reg_dx != POS_Y) mouse.y = static_cast<float>(reg_dx);
+		if ((Bit16s)reg_dx >= mouse.max_y) mouse.y = static_cast<float>(mouse.max_y);
+		else if (mouse.min_y >= (Bit16s)reg_dx) mouse.y = static_cast<float>(mouse.min_y); 
+		else if ((Bit16s)reg_dx != POS_Y) mouse.y = static_cast<float>(reg_dx);
 		DrawCursor();
 		break;
 	case 0x05:	/* Return Button Press Data */
@@ -696,7 +696,7 @@ static Bitu INT33_Handler(void) {
 		{	//lemmings set 1-640 and wants that. iron seeds set 0-640 but doesn't like 640
 			//Iron seed works if newvideo mode with mode 13 sets 0-639
 			//Larry 6 actually wants newvideo mode with mode 13 to set it to 0-319
-			Bits max,min;
+			Bit16s max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
 			mouse.min_x=min;
@@ -713,7 +713,7 @@ static Bitu INT33_Handler(void) {
 		{	// not sure what to take instead of the CurMode (see case 0x07 as well)
 			// especially the cases where sheight= 400 and we set it with the mouse_reset to 200
 			//disabled it at the moment. Seems to break syndicate who want 400 in mode 13
-			Bits max,min;
+			Bit16s max,min;
 			if ((Bit16s)reg_cx<(Bit16s)reg_dx) { min=(Bit16s)reg_cx;max=(Bit16s)reg_dx;}
 			else { min=(Bit16s)reg_dx;max=(Bit16s)reg_cx;}
 			mouse.min_y=min;
@@ -865,11 +865,12 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x26: /* Get Maximum virtual coordinates */
 		reg_bx=(mouse.enabled ? 0x0000 : 0xffff);
-		reg_cx=mouse.max_x;
-		reg_dx=mouse.max_y;
+		reg_cx=(Bit16u)mouse.max_x;
+		reg_dx=(Bit16u)mouse.max_y;
 		break;
 	default:
 		LOG(LOG_MOUSE,LOG_ERROR)("Mouse Function %04X not implemented!",reg_ax);
+		break;
 	}
 	return CBRET_NONE;
 }
@@ -970,7 +971,7 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 	return CBRET_NONE;
 }
 
-void MOUSE_Init(Section* sec) {
+void MOUSE_Init(Section* /*sec*/) {
 	// Callback for mouse interrupt 0x33
 	call_int33=CALLBACK_Allocate();
 //	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
