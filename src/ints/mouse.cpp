@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.76 2009-02-16 20:33:11 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.77 2009-02-19 10:52:53 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -445,9 +445,14 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		if (CurMode->type == M_TEXT) {
 			mouse.x = x*CurMode->swidth;
 			mouse.y = y*CurMode->sheight * 8 / CurMode->cheight;
-		} else if (abs(mouse.max_x) < 2048 || abs(mouse.max_y) < 2048 || mouse.max_x != mouse.max_y) {
-			mouse.x = x*mouse.max_x;
-			mouse.y = y*mouse.max_y;
+		} else if ((mouse.max_x < 2048) || (mouse.max_y < 2048) || (mouse.max_x != mouse.max_y)) {
+			if ((mouse.max_x > 0) && (mouse.max_y > 0)) {
+				mouse.x = x*mouse.max_x;
+				mouse.y = y*mouse.max_y;
+			} else {
+				mouse.x += xrel;
+				mouse.y += yrel;
+			}
 		} else { // Games faking relative movement through absolute coordinates. Quite surprising that this actually works..
 			mouse.x += xrel;
 			mouse.y += yrel;
