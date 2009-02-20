@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.43 2008-08-06 18:31:10 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.44 2009-02-20 14:19:43 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -179,9 +179,9 @@ private:
 	bool		RemoveTrailingDot	(char* shortname);
 	Bits		GetLongName		(CFileInfo* info, char* shortname);
 	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
-	Bit16u		CreateShortNameID	(CFileInfo* dir, const char* name);
+	Bitu		CreateShortNameID	(CFileInfo* dir, const char* name);
 	int		CompareShortname	(const char* compareName, const char* shortName);
-	bool		SetResult		(CFileInfo* dir, char * &result, Bit16u entryNr);
+	bool		SetResult		(CFileInfo* dir, char * &result, Bitu entryNr);
 	bool		IsCachedIn		(CFileInfo* dir);
 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
