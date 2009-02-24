@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.44 2009-02-20 14:19:43 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.45 2009-02-24 17:56:55 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -105,12 +105,12 @@ public:
 		open=true;
 		return *this;
 	}
-	DOS_Device():DOS_File(),devnum(0){};   
+	DOS_Device():DOS_File(),devnum(0){};
 	virtual bool	Read(Bit8u * data,Bit16u * size);
 	virtual bool	Write(Bit8u * data,Bit16u * size);
 	virtual bool	Seek(Bit32u * pos,Bit32u type);
 	virtual bool	Close();
-	virtual Bit16u	GetInformation(void);   
+	virtual Bit16u	GetInformation(void);
 	virtual bool	ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 	virtual bool	WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 	void SetDeviceNumber(Bitu num) { devnum=num;}
@@ -118,7 +118,7 @@ private:
 	Bitu devnum;
 };
 
-/* The following variable can be lowered to free up some memory. 
+/* The following variable can be lowered to free up some memory.
  * The negative side effect: The stored searches will be turned over faster.
  * Should not have impact on systems with few directory entries. */
 #define MAX_OPENDIRS 2048
@@ -140,7 +140,7 @@ public:
 	void		ExpandName			(char* path);
 	char*		GetExpandName		(const char* path);
 	bool		GetShortName		(const char* fullname, char* shortname);
-	
+
 	bool		FindFirst			(char* path, Bitu& id);
 	bool		FindNext			(Bitu id, char* &result);
 
@@ -153,7 +153,7 @@ public:
 	char*		GetLabel			(void) { return label; };
 
 	class CFileInfo {
-	public:	
+	public:
 		CFileInfo(void) {
 			orgname[0] = shortname[0] = 0;
 			nextEntry = shortNr = 0;
@@ -186,7 +186,7 @@ private:
 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
 	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
-	void		CreateEntry		(CFileInfo* dir, const char* name);
+	void		CreateEntry		(CFileInfo* dir, const char* name, Bitu query_directory);
 	Bit16u		GetFreeID		(CFileInfo* dir);
 	void		Clear			(void);
 
@@ -241,7 +241,7 @@ public:
 	virtual char const * GetLabel(){return dirCache.GetLabel();};
 
 	DOS_Drive_Cache dirCache;
-	
+
 	// disk cycling functionality (request resources)
 	virtual void Activate(void) {};
 };
@@ -251,8 +251,8 @@ enum { DOS_SEEK_SET=0,DOS_SEEK_CUR=1,DOS_SEEK_END=2};
 
 
 /*
- A multiplex handler should read the registers to check what function is being called 
- If the handler returns false dos will stop checking other handlers 
+ A multiplex handler should read the registers to check what function is being called
+ If the handler returns false dos will stop checking other handlers
 */
 
 typedef bool (MultiplexHandler)(void);

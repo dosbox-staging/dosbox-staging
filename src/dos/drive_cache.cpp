@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.55 2009-02-20 14:19:47 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.56 2009-02-24 17:56:55 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -220,7 +220,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 			if (GetLongName(dir,file)>=0) return;
 		}
 
-		CreateEntry(dir,file);
+		CreateEntry(dir,file,0);
 
 		Bits index = GetLongName(dir,file);
 		if (index>=0) {
@@ -627,7 +627,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
 	return false;
 };
 
-void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name) {
+void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, Bitu is_directory) {
 	struct stat status;
 	CFileInfo* info = new CFileInfo;
 	strcpy(info->orgname ,name);				
@@ -636,8 +636,13 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name) {
 	char buffer[CROSS_LEN];
 	strcpy(buffer,dirPath);
 	strcat(buffer,info->orgname);
-	if (stat(buffer,&status)==0)	info->isDir	= (S_ISDIR(status.st_mode)>0);
-	else							info->isDir = false;
+	switch (is_directory) {
+		case 0: info->isDir = false; break;
+		case 1: info->isDir = true; break;
+		case 2:
+			if (stat(buffer,&status)==0)	info->isDir	= (S_ISDIR(status.st_mode)>0);
+			else							info->isDir = false;
+	}
 	// Check for long filenames...
 	CreateShortName(dir, info);		
 
@@ -682,7 +687,9 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
 		// Read complete directory
 		struct dirent* tmpres;
 		while ((tmpres = readdir(dirp))!=NULL) {			
-			CreateEntry(dirSearch[id],tmpres->d_name);
+			// is_dir from readdir??
+			CreateEntry(dirSearch[id],tmpres->d_name,2);
+//			CreateEntry(dirSearch[id],tmpres->d_name,(tmpres->d_type==DT_DIR)?1:0);
 		}
 		// close dir
 		closedir(dirp);
@@ -743,7 +750,8 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
 
 	// Copy entries to use with FindNext
 	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {
-		CreateEntry(dirFindFirst[dirFindFirstID],dirSearch[dirID]->fileList[i]->orgname);
+		CreateEntry(dirFindFirst[dirFindFirstID],dirSearch[dirID]->fileList[i]->orgname,
+					dirSearch[dirID]->fileList[i]->isDir?1:0);
 	}
 	// Now re-sort the fileList accordingly to output
 	switch (sortDirType) {
