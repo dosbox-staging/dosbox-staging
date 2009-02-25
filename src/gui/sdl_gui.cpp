@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_gui.cpp,v 1.10 2009-02-11 22:16:05 c2woody Exp $ */
+/* $Id: sdl_gui.cpp,v 1.11 2009-02-25 19:58:11 c2woody Exp $ */
 
 #if 0
 #include "SDL.h"
@@ -39,7 +39,7 @@
 #include <assert.h>
 
 extern Bit8u int10_font_14[256 * 14];
-extern Program * first_shell; 
+extern Program * first_shell;
 extern void MSG_Write(const char *);
 extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, bool paused);
 
@@ -570,7 +570,7 @@ public:
 			Section_prop *section = static_cast<Section_prop *>(sec);
 			new SectionEditor(getScreen(), 50, 30, section);
 		} else if (arg == "About") {
-			new GUI::MessageBox(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox 0.72\nAn emulator for old DOS Games\n\nCopyright 2002-2007\nThe DOSBox Team");
+			new GUI::MessageBox(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox 0.72\nAn emulator for old DOS Games\n\nCopyright 2002-2009\nThe DOSBox Team");
 		} else if (arg == "Introduction") {
 			new GUI::MessageBox(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO"));
 		} else if (arg == "Getting Started") {
