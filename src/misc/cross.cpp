@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.2 2009-02-03 08:27:47 qbix79 Exp $ */
+/* $Id: cross.cpp,v 1.3 2009-02-28 14:28:10 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -41,7 +41,7 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 	in = result;
 	in += "\\DOSBox";
 #elif defined(MACOSX)
-	in = "/Library/Preferences";
+	in = "~/Library/Preferences";
 	ResolveHomedir(in);
 #else
 	in = "~/.dosbox";
