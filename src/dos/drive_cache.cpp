@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.56 2009-02-24 17:56:55 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.57 2009-02-28 11:34:10 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -350,7 +350,7 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 
 Bitu DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name) {
 	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
-	if (GCC_UNLIKELY(filelist_size<=0)) return 0;
+	if (GCC_UNLIKELY(filelist_size<=0)) return 1;	// shortener IDs start with 1
 
 	Bitu foundNr	= 0;	
 	Bits low		= 0;
@@ -672,8 +672,18 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, Bitu is_dire
 	}
 }
 
-bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
-{
+void DOS_Drive_Cache::CopyEntry(CFileInfo* dir, CFileInfo* from) {
+	CFileInfo* info = new CFileInfo;
+	// just copy things into new fileinfo
+	strcpy(info->orgname, from->orgname);				
+	strcpy(info->shortname, from->shortname);				
+	info->shortNr = from->shortNr;
+	info->isDir = from->isDir;
+
+	dir->fileList.push_back(info);
+}
+
+bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 	// shouldnt happen...
 	if (id>MAX_OPENDIRS) return false;
 
@@ -687,12 +697,11 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
 		// Read complete directory
 		struct dirent* tmpres;
 		while ((tmpres = readdir(dirp))!=NULL) {			
-			// is_dir from readdir??
 			CreateEntry(dirSearch[id],tmpres->d_name,2);
-//			CreateEntry(dirSearch[id],tmpres->d_name,(tmpres->d_type==DT_DIR)?1:0);
 		}
 		// close dir
 		closedir(dirp);
+
 		// Info
 /*		if (!dirp) {
 			LOG_DEBUG("DIR: Error Caching in %s",dirPath);			
@@ -701,15 +710,14 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result)
 			char buffer[128];
 			sprintf(buffer,"DIR: Caching in %s (%d Files)",dirPath,dirSearch[srchNr]->fileList.size());
 			LOG_DEBUG(buffer);
-		};*/
-	};
+		}*/
+	}
 	if (SetResult(dirSearch[id], result, dirSearch[id]->nextEntry)) return true;
 	free[id] = true;
 	return false;
-};
+}
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr)
-{
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr) {
 	static char res[CROSS_LEN] = { 0 };
 
 	result = res;
@@ -720,7 +728,7 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr)
 	// Set to next Entry
 	dir->nextEntry = entryNr+1;
 	return true;
-};
+}
 
 // FindFirst / FindNext
 bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
@@ -750,8 +758,7 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
 
 	// Copy entries to use with FindNext
 	for (Bitu i=0; i<dirSearch[dirID]->fileList.size(); i++) {
-		CreateEntry(dirFindFirst[dirFindFirstID],dirSearch[dirID]->fileList[i]->orgname,
-					dirSearch[dirID]->fileList[i]->isDir?1:0);
+		CopyEntry(dirFindFirst[dirFindFirstID],dirSearch[dirID]->fileList[i]);
 	}
 	// Now re-sort the fileList accordingly to output
 	switch (sortDirType) {
@@ -766,10 +773,9 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
 //	LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst : %s (ID:%02X)",path,dirFindFirstID);
 	id = dirFindFirstID;
 	return true;
-};
+}
 
-bool DOS_Drive_Cache::FindNext(Bitu id, char* &result)
-{
+bool DOS_Drive_Cache::FindNext(Bitu id, char* &result) {
 	// out of range ?
 	if ((id>=MAX_OPENDIRS) || !dirFindFirst[id]) {
 		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : ID out of range: %04X",id);
@@ -781,4 +787,4 @@ bool DOS_Drive_Cache::FindNext(Bitu id, char* &result)
 		return false;
 	}
 	return true;
-};
+}
