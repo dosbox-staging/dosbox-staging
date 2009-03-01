@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.57 2009-02-01 14:24:36 qbix79 Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.58 2009-03-01 15:40:30 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -1097,6 +1097,7 @@ static bool MSCDEX_Handler(void) {
 		case 0x1500:	/* Install check */
 						reg_bx = mscdex->GetNumDrives();
 						if (reg_bx>0) reg_cx = mscdex->GetFirstDrive();
+						reg_al = 0xff;
 						return true;
 		case 0x1501:	/* Get cdrom driver info */
 						mscdex->GetDriverInfo(data);
