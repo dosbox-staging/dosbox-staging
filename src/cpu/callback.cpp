@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.39 2009-01-18 13:57:45 c2woody Exp $ */
+/* $Id: callback.cpp,v 1.40 2009-03-03 18:30:41 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -268,11 +268,12 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x00,(Bit8u)0x1e);		// push ds
 		phys_writeb(physAddress+0x01,(Bit8u)0x06);		// push es
 		phys_writew(physAddress+0x02,(Bit16u)0x6066);	// pushad
-		phys_writeb(physAddress+0x04,(Bit8u)0xfb);		// sti
-		phys_writeb(physAddress+0x05,(Bit8u)0xFE);		//GRP 4
-		phys_writeb(physAddress+0x06,(Bit8u)0x38);		//Extra Callback instruction
-		phys_writew(physAddress+0x07,callback);			//The immediate word
-		return 0x09;
+		phys_writeb(physAddress+0x04,(Bit8u)0xfc);		// cld
+		phys_writeb(physAddress+0x05,(Bit8u)0xfb);		// sti
+		phys_writeb(physAddress+0x06,(Bit8u)0xFE);		//GRP 4
+		phys_writeb(physAddress+0x07,(Bit8u)0x38);		//Extra Callback instruction
+		phys_writew(physAddress+0x08,callback);			//The immediate word
+		return 0x0a;
 	case CB_IRQ12_RET:	// ps2 mouse int74 return
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
