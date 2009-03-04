@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.19 2009-02-01 14:11:45 qbix79 Exp $ */
+/* $Id: cross.h,v 1.20 2009-03-04 19:34:42 c2woody Exp $ */
 
 #ifndef DOSBOX_CROSS_H
 #define DOSBOX_CROSS_H
@@ -76,5 +76,31 @@ public:
 	static void CreateDir(std::string const& temp);
 };
 
+
+#if defined (WIN32)
+
+#if defined (WIN32)   /* Win 32 */
+#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
+#include <windows.h>
+#endif
+
+typedef struct dir_struct {
+    HANDLE          handle;
+    char            base_path[MAX_PATH+4];
+    WIN32_FIND_DATA search_data;
+} dir_information;
+
+#else
+
+#include <dirent.h>
+
+typedef DIR dir_information;
+
+#endif
+
+dir_information* open_directory(const char* dirname);
+bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory);
+bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
+void close_directory(dir_information* dirp);
 
 #endif

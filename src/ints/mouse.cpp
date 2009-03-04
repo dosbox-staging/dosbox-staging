@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.77 2009-02-19 10:52:53 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.78 2009-03-04 19:34:42 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -188,7 +188,7 @@ Bitu PS2_Handler(void) {
 #define X_MICKEY 8
 #define Y_MICKEY 8
 
-#define MOUSE_MOVED 1
+#define MOUSE_HAS_MOVED 1
 #define MOUSE_LEFT_PRESSED 2
 #define MOUSE_LEFT_RELEASED 4
 #define MOUSE_RIGHT_PRESSED 8
@@ -200,7 +200,7 @@ INLINE void Mouse_AddEvent(Bit8u type) {
 	if (mouse.events<QUEUE_SIZE) {
 		if (mouse.events>0) {
 			/* Skip duplicate events */
-			if ((type==MOUSE_MOVED) && (mouse.buttons==0)) return;
+			if ((type==MOUSE_HAS_MOVED) && (mouse.buttons==0)) return;
 			/* Always put the newest element in the front as that the events are 
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
@@ -467,7 +467,7 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
 		if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
 	}
-	Mouse_AddEvent(MOUSE_MOVED);
+	Mouse_AddEvent(MOUSE_HAS_MOVED);
 	DrawCursor();
 }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,15 +16,18 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.3 2009-02-28 14:28:10 qbix79 Exp $ */
+/* $Id: cross.cpp,v 1.4 2009-03-04 19:34:42 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
+#include "support.h"
 #include <string>
 #include <stdlib.h>
 
 #ifdef WIN32
+#ifndef _WIN32_IE
 #define _WIN32_IE 0x0400
+#endif
 #include <shlobj.h>
 #endif
 
@@ -104,3 +107,107 @@ void Cross::CreateDir(std::string const& in) {
 	mkdir(in.c_str(),0700);
 #endif
 }
+
+#if defined (WIN32)
+
+dir_information* open_directory(const char* dirname) {
+	if (dirname == NULL) return NULL;
+
+	size_t len = strlen(dirname);
+	if (len == 0) return NULL;
+
+	static dir_information dir;
+
+	safe_strncpy(dir.base_path,dirname,MAX_PATH);
+
+	if (dirname[len-1]=='\\')	strcat(dir.base_path,"*.*");
+	else						strcat(dir.base_path,"\\*.*");
+
+	dir.handle = INVALID_HANDLE_VALUE;
+
+	return (access(dirname,0) ? NULL : &dir);
+}
+
+bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
+	if (INVALID_HANDLE_VALUE == dirp->handle) {
+		return false;
+	}
+
+	safe_strncpy(entry_name,dirp->search_data.cFileName,(MAX_PATH<CROSS_LEN)?MAX_PATH:CROSS_LEN);
+
+	if (dirp->search_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) is_directory = true;
+	else is_directory = false;
+
+	return true;
+}
+
+bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+	int result = FindNextFile(dirp->handle, &dirp->search_data);
+	if (result==0) return false;
+
+	safe_strncpy(entry_name,dirp->search_data.cFileName,(MAX_PATH<CROSS_LEN)?MAX_PATH:CROSS_LEN);
+
+	if (dirp->search_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) is_directory = true;
+	else is_directory = false;
+
+	return true;
+}
+
+void close_directory(dir_information* dirp) {
+	if (dirp->handle != INVALID_HANDLE_VALUE) {
+		FindClose(dirp->handle);
+		dirp->handle = INVALID_HANDLE_VALUE;
+	}
+}
+
+#else
+
+#include "dirent.h"
+//#include "stdio.h"
+
+typedef DIR dir_information;
+
+dir_information* open_directory(const char* dirname) {
+	return opendir(dirname);
+}
+
+bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+	struct dirent* dentry = readdir(dirp);
+	if (dentry==NULL) {
+		return false;
+	}
+
+//	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
+	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
+
+	// probably use d_type here instead of a full stat()
+	struct stat status;
+	if (stat(entry_name,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
+	else is_directory = false;
+
+	return true;
+}
+
+bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+	struct dirent* dentry = readdir(dirp);
+	if (dentry==NULL) {
+		return false;
+	}
+
+//	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
+	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
+
+	// probably use d_type here instead of a full stat()
+	struct stat status;
+	if (stat(entry_name,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
+	else is_directory = false;
+
+	return true;
+}
+
+void close_directory(dir_information* dirp) {
+	closedir(dirp);
+}
+
+#endif
