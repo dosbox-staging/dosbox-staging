@@ -16,12 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.57 2009-02-28 11:34:10 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.58 2009-03-04 21:08:22 c2woody Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
-#include "dirent.h"
 #include "support.h"
+#include "cross.h"
 
 // STL stuff
 #include <vector>
@@ -220,7 +220,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 			if (GetLongName(dir,file)>=0) return;
 		}
 
-		CreateEntry(dir,file,0);
+		CreateEntry(dir,file,false);
 
 		Bits index = GetLongName(dir,file);
 		if (index>=0) {
@@ -615,10 +615,10 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
 	// open dir
 	if (dirSearch[id]) {
 		// open dir
-		DIR* dirp = opendir(expandcopy);
+		dir_information* dirp = open_directory(expandcopy);
 		if (dirp) { 
 			// Reset it..
-			closedir(dirp);
+			close_directory(dirp);
 			strcpy(dirPath,expandcopy);
 			free[id] = false;
 			return true;
@@ -627,22 +627,12 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
 	return false;
 };
 
-void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, Bitu is_directory) {
-	struct stat status;
+void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_directory) {
 	CFileInfo* info = new CFileInfo;
-	strcpy(info->orgname ,name);				
+	strcpy(info->orgname, name);				
 	info->shortNr = 0;
-	// Read and copy file stats
-	char buffer[CROSS_LEN];
-	strcpy(buffer,dirPath);
-	strcat(buffer,info->orgname);
-	switch (is_directory) {
-		case 0: info->isDir = false; break;
-		case 1: info->isDir = true; break;
-		case 2:
-			if (stat(buffer,&status)==0)	info->isDir	= (S_ISDIR(status.st_mode)>0);
-			else							info->isDir = false;
-	}
+	info->isDir = is_directory;
+
 	// Check for long filenames...
 	CreateShortName(dir, info);		
 
@@ -689,18 +679,23 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 
 	if (!IsCachedIn(dirSearch[id])) {
 		// Try to open directory
-		DIR* dirp = opendir(dirPath);
+		dir_information* dirp = open_directory(dirPath);
 		if (!dirp) {
 			free[id] = true;
 			return false;
 		}
 		// Read complete directory
-		struct dirent* tmpres;
-		while ((tmpres = readdir(dirp))!=NULL) {			
-			CreateEntry(dirSearch[id],tmpres->d_name,2);
+		char dir_name[CROSS_LEN];
+		bool is_directory;
+		if (read_directory_first(dirp, dir_name, is_directory)) {
+			CreateEntry(dirSearch[id], dir_name, is_directory);
+			while (read_directory_next(dirp, dir_name, is_directory)) {
+				CreateEntry(dirSearch[id], dir_name, is_directory);
+			}
 		}
+
 		// close dir
-		closedir(dirp);
+		close_directory(dirp);
 
 		// Info
 /*		if (!dirp) {
@@ -710,14 +705,15 @@ bool DOS_Drive_Cache::ReadDir(Bit16u id, char* &result) {
 			char buffer[128];
 			sprintf(buffer,"DIR: Caching in %s (%d Files)",dirPath,dirSearch[srchNr]->fileList.size());
 			LOG_DEBUG(buffer);
-		}*/
-	}
+		};*/
+	};
 	if (SetResult(dirSearch[id], result, dirSearch[id]->nextEntry)) return true;
 	free[id] = true;
 	return false;
 }
 
-bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr) {
+bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr)
+{
 	static char res[CROSS_LEN] = { 0 };
 
 	result = res;

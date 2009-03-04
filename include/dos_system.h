@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_system.h,v 1.46 2009-02-28 11:34:04 c2woody Exp $ */
+/* $Id: dos_system.h,v 1.47 2009-03-04 21:08:22 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #define DOSBOX_DOS_SYSTEM_H
@@ -186,7 +186,7 @@ private:
 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
 	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
-	void		CreateEntry		(CFileInfo* dir, const char* name, Bitu query_directory);
+	void		CreateEntry		(CFileInfo* dir, const char* name, bool query_directory);
 	void		CopyEntry		(CFileInfo* dir, CFileInfo* from);
 	Bit16u		GetFreeID		(CFileInfo* dir);
 	void		Clear			(void);
