@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: setup.cpp,v 1.54 2009-02-15 20:01:08 qbix79 Exp $ */
+/* $Id: setup.cpp,v 1.55 2009-03-11 20:18:37 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -556,9 +556,9 @@ Hex Section_prop::Get_hex(string const& _propname) const {
 }
 
 void trim(string& in) {
-	string::size_type loc = in.find_first_not_of(' ');
+	string::size_type loc = in.find_first_not_of(" \r\t\f\n");
 	if(loc != string::npos) in.erase(0,loc);
-	loc = in.find_last_not_of(' ');
+	loc = in.find_last_not_of(" \r\t\f\n");
 	if(loc != string::npos) in.erase(loc+1);
 }
 
@@ -955,6 +955,13 @@ CommandLine::CommandLine(int argc,char const * const argv[]) {
 		cmds.push_back(argv[i]);
 		i++;
 	}
+}
+Bit16u CommandLine::Get_arglength() {
+	if(cmds.empty()) return 0;
+	Bit16u i=1;
+	for(cmd_it it=cmds.begin();it != cmds.end();it++) 
+		i+=(*it).size() + 1;
+	return --i;
 }
 
 

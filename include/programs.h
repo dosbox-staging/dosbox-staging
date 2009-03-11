@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: programs.h,v 1.17 2008-07-26 19:06:26 qbix79 Exp $ */
+/* $Id: programs.h,v 1.18 2009-03-11 20:18:37 qbix79 Exp $ */
 
 #ifndef DOSBOX_PROGRAMS_H
 #define DOSBOX_PROGRAMS_H
@@ -54,6 +54,8 @@ public:
 	bool GetStringRemain(std::string & value);
 	unsigned int GetCount(void);
 	void Shift(unsigned int amount=1);
+	Bit16u Get_arglength();
+
 private:
 	typedef std::list<std::string>::iterator cmd_it;
 	std::list<std::string> cmds;
