@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.4 2009-03-04 19:34:42 c2woody Exp $ */
+/* $Id: cross.cpp,v 1.5 2009-03-14 18:02:34 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -163,17 +163,15 @@ void close_directory(dir_information* dirp) {
 
 #else
 
-#include "dirent.h"
-//#include "stdio.h"
-
-typedef DIR dir_information;
-
 dir_information* open_directory(const char* dirname) {
-	return opendir(dirname);
+	static dir_information dir;
+	dir.dir=opendir(dirname);
+	safe_strncpy(dir.base_path,dirname,CROSS_LEN);
+	return dir.dir?&dir:NULL;
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
-	struct dirent* dentry = readdir(dirp);
+	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==NULL) {
 		return false;
 	}
@@ -181,16 +179,30 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 //	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
 	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
 
+#ifdef DIRENT_HAS_D_TYPE
+	if(dentry->d_type == DT_DIR) {
+		is_directory = true;
+		return true;
+	} else if(dentry->d_type == DT_REG) {
+		is_directory = false;
+		return true;
+	}
+#endif
+
 	// probably use d_type here instead of a full stat()
+	static char buffer[2*CROSS_LEN] = { 0 };
+	buffer[0] = 0;
+	strcpy(buffer,dirp->base_path);
+	strcat(buffer,entry_name);
 	struct stat status;
-	if (stat(entry_name,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
+	if (stat(buffer,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
 	else is_directory = false;
 
 	return true;
 }
 
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
-	struct dirent* dentry = readdir(dirp);
+	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==NULL) {
 		return false;
 	}
@@ -198,16 +210,31 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 //	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
 	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
 
+#ifdef DIRENT_HAS_D_TYPE
+	if(dentry->d_type == DT_DIR) {
+		is_directory = true;
+		return true;
+	} else if(dentry->d_type == DT_REG) {
+		is_directory = false;
+		return true;
+	}
+#endif
+
 	// probably use d_type here instead of a full stat()
+	static char buffer[2*CROSS_LEN] = { 0 };
+	buffer[0] = 0;
+	strcpy(buffer,dirp->base_path);
+	strcat(buffer,entry_name);
 	struct stat status;
-	if (stat(entry_name,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
+
+	if (stat(buffer,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
 	else is_directory = false;
 
 	return true;
 }
 
 void close_directory(dir_information* dirp) {
-	closedir(dirp);
+	closedir(dirp->dir);
 }
 
 #endif

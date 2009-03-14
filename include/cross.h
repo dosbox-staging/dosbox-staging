@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.h,v 1.20 2009-03-04 19:34:42 c2woody Exp $ */
+/* $Id: cross.h,v 1.21 2009-03-14 18:02:34 qbix79 Exp $ */
 
 #ifndef DOSBOX_CROSS_H
 #define DOSBOX_CROSS_H
@@ -79,22 +79,24 @@ public:
 
 #if defined (WIN32)
 
-#if defined (WIN32)   /* Win 32 */
 #define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from 
 #include <windows.h>
-#endif
 
 typedef struct dir_struct {
-    HANDLE          handle;
-    char            base_path[MAX_PATH+4];
-    WIN32_FIND_DATA search_data;
+	HANDLE          handle;
+	char            base_path[MAX_PATH+4];
+	WIN32_FIND_DATA search_data;
 } dir_information;
 
 #else
 
+//#include <sys/types.h> //Included above
 #include <dirent.h>
 
-typedef DIR dir_information;
+typedef struct dir_struct { 
+	DIR*  dir;
+	char base_path[CROSS_LEN];
+} dir_information;
 
 #endif
 
