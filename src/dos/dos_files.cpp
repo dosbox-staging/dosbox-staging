@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.105 2009-01-24 16:22:55 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.106 2009-03-14 16:10:00 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -698,19 +698,21 @@ bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry) {
 }
 
 
-
 bool DOS_CreateTempFile(char * const name,Bit16u * entry) {
-	/* First add random crap to the end of the name and try to open */
 	size_t namelen=strlen(name);
 	char * tempname=name+namelen;
-	if (namelen==0) E_Exit("DOS:Invalid call to CreateTempFile");
-	else {
+	if (namelen==0) {
+		// temp file created in root directory
+		tempname[0]='\\';
+		tempname++;
+	} else {
 		if ((name[namelen-1]!='\\') && (name[namelen-1]!='/')) {
 			tempname[0]='\\';
 			tempname++;
 		}
 	}
 	dos.errorcode=0;
+	/* add random crap to the end of the name and try to open */
 	do {
 		Bit32u i;
 		for (i=0;i<8;i++) {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.115 2009-01-14 22:16:00 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.116 2009-03-14 16:10:00 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -67,8 +67,8 @@ static Bitu DOS_21Handler(void) {
 		psp.SetStack(RealMake(SegValue(ss),reg_sp-18));
 	}
 
-	char name1[DOSNAMEBUF+1];
-	char name2[DOSNAMEBUF+1];
+	char name1[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
+	char name2[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
 	switch (reg_ah) {
 	case 0x01:		/* Read character from STDIN, with echo */
 		{	
