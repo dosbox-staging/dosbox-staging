@@ -2,13 +2,10 @@ Some notes about porting DOSBox to systems with certain restrictions,
 like handheld devices.
 
 If memory is a constraint:
-  - in paging.h reduce the size of the TLB:
-      #define TLB_SIZE (64*1024)
-    the 64 gives access to the first 256mb of linear memory
-    drawback: some protected mode games won't work then
+  - in paging.h out-comment the USE_FULL_TLB define to enable special
+    TLB linking code that uses less memory
+    drawback: none (the code is not heavily tested though)
     gain: reduces memory requirements about ~15mb
-    TODO: limit vmemory access to the size of the TLB,
-          otherwise games which use >256mb vaddresses will crash badly
   - in render.h lower the scaler integration:
       #define RENDER_USE_ADVANCED_SCALERS 1
     or
@@ -22,18 +19,17 @@ If memory is a constraint:
           ~5mb with RENDER_USE_ADVANCED_SCALERS==0
   - in dos_system.h reduce the drive cache entries:
       #define MAX_OPENDIRS 256
-    drawback: some apps might not work whith large directory trees
+    drawback: some apps might not work with large directory trees
     gain: ~1mb per mounted drive
   - remove the GUS emulation (gus.cpp, especially GUSRam[1024*1024] )
     drawback: no gravis ultrasound
     gain: reduces memory requirements about 1mb
-  - in vga.h reduce the size of the emulated graphics memory:
-      #define VGA_MEMORY (1*1024*1024)
+  - reduce the size of the emulated graphics memory:
+    see the memory sizing in SVGA_Setup_*, especially the defaults
+    in vga_s3.cpp's SVGA_Setup_S3Trio
     drawback: some graphics modes won't work then
-              [EDIT: many modes won't work due to pixel caches]
-    gain: reduces memory requirements about 1mb
-    TODO: get this to actually work;
-          remove the respective svga modes, adapt some svga registers
+    gain: reduces memory requirements
+    TODO: fully check this, introduce hard limits
 
 If speed is a constraint:
   - see if the simple core is faster, possibly remove the normal core
