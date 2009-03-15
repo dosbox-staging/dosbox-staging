@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_s3.cpp,v 1.17 2008-12-28 20:22:12 c2woody Exp $ */
+/* $Id: vga_s3.cpp,v 1.18 2009-03-15 11:28:35 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -532,7 +532,7 @@ void SVGA_Setup_S3Trio(void) {
 	svga.accepts_mode = &SVGA_S3_AcceptsMode;
 
 	if (vga.vmemsize == 0)
-		vga.vmemsize = VGA_MEMORY; // the most common S3 configuration
+		vga.vmemsize = 2*1024*1024; // the most common S3 configuration
 
 	// Set CRTC 36 to specify amount of VRAM and PCI
 	if (vga.vmemsize < 1024*1024) {

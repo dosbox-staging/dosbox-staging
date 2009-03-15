@@ -1,5 +1,5 @@
  /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.45 2009-01-26 20:23:44 qbix79 Exp $ */
+/* $Id: vga.h,v 1.46 2009-03-15 11:28:34 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -28,7 +28,6 @@
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
 //#define VGA_KEEP_CHANGES
-#define VGA_MEMORY (2*1024*1024)
 #define VGA_CHANGE_SHIFT	9
 
 class PageHandler;
