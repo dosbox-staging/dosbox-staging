@@ -50,16 +50,19 @@ public:
 	void SetFreq(Bitu _freq);
 	void Mix(Bitu _needed);
 	void AddSilence(void);			//Fill up until needed
-	template<bool _8bit,bool stereo,bool signeddata>
-	void AddSamples(Bitu len,void * data);
-	void AddSamples_m8(Bitu len,Bit8u * data);
-	void AddSamples_s8(Bitu len,Bit8u * data);
-	void AddSamples_m8s(Bitu len,Bit8s * data);
-	void AddSamples_s8s(Bitu len,Bit8s * data);
-	void AddSamples_m16(Bitu len,Bit16s * data);
-	void AddSamples_s16(Bitu len,Bit16s * data);
-	void AddSamples_m16u(Bitu len,Bit16u * data);
-	void AddSamples_s16u(Bitu len,Bit16u * data);
+	template<class Type,bool stereo,bool signeddata>
+	void AddSamples(Bitu len, const Type* data);
+	void AddSamples_m8(Bitu len, const Bit8u * data);
+	void AddSamples_s8(Bitu len, const Bit8u * data);
+	void AddSamples_m8s(Bitu len, const Bit8s * data);
+	void AddSamples_s8s(Bitu len, const Bit8s * data);
+	void AddSamples_m16(Bitu len, const Bit16s * data);
+	void AddSamples_s16(Bitu len, const Bit16s * data);
+	void AddSamples_m16u(Bitu len, const Bit16u * data);
+	void AddSamples_s16u(Bitu len, const Bit16u * data);
+	void AddSamples_m32(Bitu len, const Bit32s * data);
+	void AddSamples_s32(Bitu len, const Bit32s * data);
+
 	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
 	void FillUp(void);
 	void Enable(bool _yesno);
