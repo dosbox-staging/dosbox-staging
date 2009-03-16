@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cpu.cpp,v 1.115 2009-02-15 20:01:08 qbix79 Exp $ */
+/* $Id: cpu.cpp,v 1.116 2009-03-16 18:10:08 c2woody Exp $ */
 
 #include <assert.h>
 #include <sstream>
@@ -599,14 +599,15 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 			return;
 		}
 
-		CPU_CHECK_COND(!gate.saved.seg.p,
-			"INT:Gate segment not present",
-			EXCEPTION_NP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1)
 
 		switch (gate.Type()) {
 		case DESC_286_INT_GATE:		case DESC_386_INT_GATE:
 		case DESC_286_TRAP_GATE:	case DESC_386_TRAP_GATE:
 			{
+				CPU_CHECK_COND(!gate.saved.seg.p,
+					"INT:Gate segment not present",
+					EXCEPTION_NP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1)
+
 				Descriptor cs_desc;
 				Bitu gate_sel=gate.GetSelector();
 				Bitu gate_off=gate.GetOffset();
@@ -738,6 +739,10 @@ do_interrupt:
 				return;
 			}
 		case DESC_TASK_GATE:
+			CPU_CHECK_COND(!gate.saved.seg.p,
+				"INT:Gate segment not present",
+				EXCEPTION_NP,num*8+2+(type&CPU_INT_SOFTWARE)?0:1)
+
 			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT,oldeip);
 			if (type & CPU_INT_HAS_ERROR) {
 				//TODO Be sure about this, seems somewhat unclear
@@ -1143,15 +1148,17 @@ call_code:
 				CPU_CHECK_COND(n_cs_dpl>cpu.cpl,
 					"CALL:Gate:CS DPL>CPL",
 					EXCEPTION_GP,n_cs_sel & 0xfffc)
+
+				CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
+					"CALL:Gate:CS not present",
+					EXCEPTION_NP,n_cs_sel & 0xfffc)
+
 				Bitu n_eip		= call.GetOffset();
 				switch (n_cs_desc.Type()) {
 				case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
 				case DESC_CODE_R_NC_A:case DESC_CODE_R_NC_NA:
 					/* Check if we goto inner priviledge */
 					if (n_cs_dpl < cpu.cpl) {
-						CPU_CHECK_COND(!n_cs_desc.saved.seg.p,
-							"CALL:Gate:CS not present",
-							EXCEPTION_NP,n_cs_sel & 0xfffc)
 						/* Get new SS:ESP out of TSS */
 						Bitu n_ss_sel,n_esp;
 						Descriptor n_ss_desc;
@@ -1267,10 +1274,15 @@ call_code:
 		case DESC_386_TSS_A:
 			CPU_CHECK_COND(call.DPL()<cpu.cpl,
 				"CALL:TSS:dpl<cpl",
-				EXCEPTION_TS,selector & 0xfffc)
+				EXCEPTION_GP,selector & 0xfffc)
 			CPU_CHECK_COND(call.DPL()<rpl,
 				"CALL:TSS:dpl<rpl",
 				EXCEPTION_GP,selector & 0xfffc)
+
+			CPU_CHECK_COND(!call.saved.seg.p,
+				"CALL:TSS:Segment not present",
+				EXCEPTION_NP,selector & 0xfffc)
+
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
 			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
 			break;
