@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_crtc.cpp,v 1.33 2008-06-03 18:35:32 c2woody Exp $ */
+/* $Id: vga_crtc.cpp,v 1.34 2009-03-18 18:08:16 c2woody Exp $ */
 
 #include <stdlib.h>
 #include "dosbox.h"
@@ -141,19 +141,22 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		if (IS_VGA_ARCH)
 			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
 
-		if(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
+		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
 			// in vgaonly mode we take special care of line repeats (excluding CGA modes)
 			if ((vga.crtc.maximum_scan_line ^ val) & 0x20) {
 				crtc(maximum_scan_line)=val;
 				VGA_StartResize();
+			} else {
+				crtc(maximum_scan_line)=val;
 			}
-			crtc(maximum_scan_line)=val;
 			vga.draw.address_line_total = (val &0x1F) + 1;
-			if(val&0x80) vga.draw.address_line_total*=2;
+			if (val&0x80) vga.draw.address_line_total*=2;
 		} else {
 			if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
 				crtc(maximum_scan_line)=val;
 				VGA_StartResize();
+			} else {
+				crtc(maximum_scan_line)=val;
 			}
 		}
 		/*
