@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/* $Id: mixer.h,v 1.17 2009-03-19 20:45:42 c2woody Exp $ */
 
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
@@ -50,7 +52,7 @@ public:
 	void SetFreq(Bitu _freq);
 	void Mix(Bitu _needed);
 	void AddSilence(void);			//Fill up until needed
-	template<class Type,bool stereo,bool signeddata>
+	template<class Type,bool stereo,bool signeddata,bool nativeorder>
 	void AddSamples(Bitu len, const Type* data);
 	void AddSamples_m8(Bitu len, const Bit8u * data);
 	void AddSamples_s8(Bitu len, const Bit8u * data);
@@ -62,6 +64,12 @@ public:
 	void AddSamples_s16u(Bitu len, const Bit16u * data);
 	void AddSamples_m32(Bitu len, const Bit32s * data);
 	void AddSamples_s32(Bitu len, const Bit32s * data);
+	void AddSamples_m16_nonnative(Bitu len, const Bit16s * data);
+	void AddSamples_s16_nonnative(Bitu len, const Bit16s * data);
+	void AddSamples_m16u_nonnative(Bitu len, const Bit16u * data);
+	void AddSamples_s16u_nonnative(Bitu len, const Bit16u * data);
+	void AddSamples_m32_nonnative(Bitu len, const Bit32s * data);
+	void AddSamples_s32_nonnative(Bitu len, const Bit32s * data);
 
 	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
 	void FillUp(void);
