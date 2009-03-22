@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.51 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.52 2009-03-22 21:04:41 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -717,11 +717,11 @@ public:
 	VGA_Empty_Handler() {
 		flags=PFLAG_NOCODE;
 	}
-	Bitu readb(PhysPt addr) {
+	Bitu readb(PhysPt /*addr*/) {
 //		LOG(LOG_VGA, LOG_NORMAL ) ( "Read from empty memory space at %x", addr );
 		return 0xff;
 	} 
-	void writeb(PhysPt addr,Bitu val) {
+	void writeb(PhysPt /*addr*/,Bitu /*val*/) {
 //		LOG(LOG_VGA, LOG_NORMAL ) ( "Write %x to empty memory space at %x", val, addr );
 	}
 };
@@ -900,7 +900,7 @@ void VGA_StartUpdateLFB(void) {
 	MEM_SetLFB(vga.s3.la_window << 4 ,vga.vmemsize/4096, vga.lfb.handler, &vgaph.mmio);
 }
 
-static void VGA_Memory_ShutDown(Section * sec) {
+static void VGA_Memory_ShutDown(Section * /*sec*/) {
 	delete[] vga.mem.linear_orgptr;
 	delete[] vga.fastmem_orgptr;
 #ifdef VGA_KEEP_CHANGES
@@ -916,8 +916,8 @@ void VGA_SetupMemory(Section* sec) {
 	// Keep lower limit at 512k
 	if (vga_allocsize<512*1024) vga_allocsize=512*1024;
 	// We reserve extra 2K for one scan line
-	vga_allocsize+=2048+16;
-	vga.mem.linear_orgptr = new Bit8u[vga_allocsize];
+	vga_allocsize+=2048;
+	vga.mem.linear_orgptr = new Bit8u[vga_allocsize+16];
 	vga.mem.linear=(Bit8u*)(((Bitu)vga.mem.linear_orgptr + 16-1) & ~(16-1));
 	memset(vga.mem.linear,0,vga_allocsize);
 
