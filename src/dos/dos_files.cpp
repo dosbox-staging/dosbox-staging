@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.106 2009-03-14 16:10:00 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.107 2009-03-23 21:58:05 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -961,8 +961,7 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	return FCB_READ_PARTIAL;
 }
 
-Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
-{
+Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno) {
 	DOS_FCB fcb(seg,offset);
 	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
@@ -988,6 +987,34 @@ Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno)
 	Files[temp]->date=date;
 	fcb.SetSizeDateTime(size,date,time);
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }	
+	fcb.SetRecord(cur_block,cur_rec);
+	return FCB_SUCCESS;
+}
+
+Bit8u DOS_FCBIncreaseSize(Bit16u seg,Bit16u offset) {
+	DOS_FCB fcb(seg,offset);
+	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
+	fcb.GetSeqData(fhandle,rec_size);
+	fcb.GetRecord(cur_block,cur_rec);
+	Bit32u pos=((cur_block*128)+cur_rec)*rec_size;
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET)) return FCB_ERR_WRITE; 
+	Bit16u towrite=0;
+	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite)) return FCB_ERR_WRITE;
+	Bit32u size;Bit16u date,time;
+	fcb.GetSizeDateTime(size,date,time);
+	if (pos+towrite>size) size=pos+towrite;
+	//time doesn't keep track of endofday
+	date = DOS_PackDate(dos.date.year,dos.date.month,dos.date.day);
+	Bit32u ticks = mem_readd(BIOS_TIMER);
+	Bit32u seconds = (ticks*10)/182;
+	Bit16u hour = (Bit16u)(seconds/3600);
+	Bit16u min = (Bit16u)((seconds % 3600)/60);
+	Bit16u sec = (Bit16u)(seconds % 60);
+	time = DOS_PackTime(hour,min,sec);
+	Bit8u temp=RealHandle(fhandle);
+	Files[temp]->time=time;
+	Files[temp]->date=date;
+	fcb.SetSizeDateTime(size,date,time);
 	fcb.SetRecord(cur_block,cur_rec);
 	return FCB_SUCCESS;
 }
@@ -1034,10 +1061,14 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	fcb.GetRandom(random);
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	if (restore) fcb.GetRecord(old_block,old_rec);
-	/* Write records */
-	for (int i=0; i<numRec; i++) {
-		error = DOS_FCBWrite(seg,offset,(Bit16u)i);// dos_fcbwrite return 0 false when true...
-		if (error!=0x00) break;
+	if (numRec>0) {
+		/* Write records */
+		for (int i=0; i<numRec; i++) {
+			error = DOS_FCBWrite(seg,offset,(Bit16u)i);// dos_fcbwrite return 0 false when true...
+			if (error!=0x00) break;
+		}
+	} else {
+		DOS_FCBIncreaseSize(seg,offset);
 	}
 	Bit16u new_block;Bit8u new_rec;
 	fcb.GetRecord(new_block,new_rec);
