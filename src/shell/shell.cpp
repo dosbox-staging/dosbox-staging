@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.97 2009-02-01 14:07:05 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.98 2009-03-23 10:55:36 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -278,22 +278,15 @@ void DOS_Shell::RunInternal(void)
 	return;
 }
 
-bool command_slashc = false;
-
 void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
 	if (cmd->FindStringRemain("/C",line)) {
-		//command_slashc indicates that the following commands are run with command /c. Forbid parameters to mount.
-		//command_allready_set prevents against command /c "command /c command"
-		bool command_allready_set = command_slashc;
-		command_slashc = true;
 		strcpy(input_line,line.c_str());
 		DOS_Shell temp;
 		temp.echo = echo;
 		temp.ParseLine(input_line);		//for *.exe *.com  |*.bat creates the bf needed by runinternal;
 		temp.RunInternal();				// exits when no bf is found.
-		if(!command_allready_set) command_slashc = false;
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
