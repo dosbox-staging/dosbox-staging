@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.33 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.34 2009-03-24 17:07:30 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -27,8 +27,8 @@
 
 bool DOS_IOCTL(void) {
 	Bitu handle=0;Bit8u drive=0;
-	/* calls 0-7,10,12,16 use a file handle */
-	if ((reg_al<8) || (reg_al==0x0a) || (reg_al==0x0c) || (reg_al==0x10)) {
+	/* calls 0-4,6,7,10,12,16 use a file handle */
+	if ((reg_al<4) || (reg_al==0x06) || (reg_al==0x07) || (reg_al==0x0a) || (reg_al==0x0c) || (reg_al==0x10)) {
 		handle=RealHandle(reg_bx);
 		if (handle>=DOS_FILES) {
 			DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -38,12 +38,18 @@ bool DOS_IOCTL(void) {
 			DOS_SetError(DOSERR_INVALID_HANDLE);
 			return false;
 		}
-	} else  { 				/* the others use a diskdrive */
-		drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
-		if( !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
-			DOS_SetError(DOSERR_INVALID_DRIVE);
-			return false;
+	} else if (reg_al<0x12) { 				/* those use a diskdrive except 0x0b */
+		if (reg_al!=0x0b) {
+			drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+			if( !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
+				DOS_SetError(DOSERR_INVALID_DRIVE);
+				return false;
+			}
 		}
+	} else {
+		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		return false;
 	}
 	switch(reg_al) {
 	case 0x00:		/* Get Device Information */
@@ -59,6 +65,19 @@ bool DOS_IOCTL(void) {
 			reg_dx=(Files[handle]->GetInformation()&0xffe0)|hdrive;
 		}
 		reg_ax=reg_dx; //Destroyed officially
+		return true;
+	case 0x01:		/* Set Device Information */
+		if (reg_dh != 0) {
+			DOS_SetError(DOSERR_DATA_INVALID);
+			return false;
+		} else {
+			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
+				reg_al=(Bit8u)(Files[handle]->GetInformation() & 0xff);
+			} else {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+				return false;
+			}
+		}
 		return true;
 	case 0x02:		/* Read from Device Control Channel */
 		if (Files[handle]->GetInformation() & 0xc000) {
@@ -125,6 +144,12 @@ bool DOS_IOCTL(void) {
 		}
 		reg_ax=0x300;
 		return true;
+	case 0x0B:		/* Set sharing retry count */
+		if (reg_dx==0) {
+			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			return false;
+		}
+		return true;
 	case 0x0D:		/* Generic block device request */
 		{
 			if (Drives[drive]->isRemovable()) {
@@ -187,10 +212,10 @@ bool DOS_IOCTL(void) {
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
 		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
-		return false;
-	};
+		break;
+	}
 	return false;
-};
+}
 
 
 bool DOS_GetSTDINStatus(void) {
@@ -198,4 +223,4 @@ bool DOS_GetSTDINStatus(void) {
 	if (handle==0xFF) return false;
 	if (Files[handle] && (Files[handle]->GetInformation() & 64)) return false;
 	return true;
-};
+}
