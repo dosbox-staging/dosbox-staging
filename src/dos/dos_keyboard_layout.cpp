@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.19 2009-02-01 14:24:36 qbix79 Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.20 2009-03-25 21:12:23 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -172,8 +172,11 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 		Bit8u data_len=rbuf[2];
 
 		char lng_codes[258];
+		fseek(tempfile, -2, SEEK_CUR);
 		// get all language codes for this layout
 		for (Bitu i=0; i<data_len;) {
+			fread(rbuf, sizeof(Bit8u), 2, tempfile);
+			Bit16u lcnum=host_readw(&rbuf[0]);
 			i+=2;
 			Bitu lcpos=0;
 			for (;i<data_len;) {
@@ -189,6 +192,13 @@ static Bit32u read_kcl_file(const char* kcl_file_name, const char* layout_id, bo
 				return cur_pos;
 			}
 			if (first_id_only) break;
+			if (lcnum) {
+				sprintf(&lng_codes[lcpos],"%d",lcnum);
+				if (strcasecmp(lng_codes, layout_id)==0) {
+					// language ID found in file, return file position
+					return cur_pos;
+				}
+			}
 		}
 		fseek(tempfile, cur_pos+3+len, SEEK_SET);
 	}
@@ -232,10 +242,12 @@ static Bit32u read_kcl_data(Bit8u * kcl_data, Bit32u kcl_data_size, const char* 
 				return cur_pos;
 			}
 			if (first_id_only) break;
-			sprintf(&lng_codes[lcpos],"%d",lcnum);
-			if (strcasecmp(lng_codes, layout_id)==0) {
-				// language ID found, return position
-				return cur_pos;
+			if (lcnum) {
+				sprintf(&lng_codes[lcpos],"%d",lcnum);
+				if (strcasecmp(lng_codes, layout_id)==0) {
+					// language ID found, return position
+					return cur_pos;
+				}
 			}
 			dpos+=2;
 		}
@@ -1095,9 +1107,9 @@ public:
 			// try to match emulated keyboard layout with host-keyboardlayout
 			// codepage 437 (standard) is preferred
 			switch (cur_kb_layout) {
-				case 1026:
+/*				case 1026:
 					layoutname = "bg241";
-					break;
+					break; */
 				case 1029:
 					layoutname = "cz243";
 					break;
@@ -1145,15 +1157,15 @@ public:
 					layoutname = "no";
 					break;
 				case 1045:
-					layoutname = "pl214";
+					layoutname = "pl";
 					break;
 				case 1046:
 					layoutname = "br";
 					wants_dos_codepage = 437;
 					break;
-				case 1048:
+/*				case 1048:
 					layoutname = "ro446";
-					break;
+					break; */
 				case 1049:
 					layoutname = "ru";
 					wants_dos_codepage = 437;
@@ -1164,9 +1176,9 @@ public:
 				case 1051:
 					layoutname = "sk";
 					break;
-				case 1052:
+/*				case 1052:
 					layoutname = "sq448";
-					break;
+					break; */
 				case 1053:
 					layoutname = "sv";
 					wants_dos_codepage = 437;
@@ -1190,9 +1202,9 @@ public:
 /*				case 1062:
 					layoutname = "lv";
 					break; */
-				case 1063:
+/*				case 1063:
 					layoutname = "lt221";
-					break;
+					break; */
 /*				case 1064:
 					layoutname = "tj";
 					break;
