@@ -161,6 +161,9 @@ A: Be sure that the sound is correctly configured in the game. This might be
    If you still don't get any sound set the core to normal and use some lower
    fixed cycles value (like cycles=2000). Also assure that your host operating
    sound does provide sound.
+   In certain cases it might be useful to use a different emulated sound device
+   like a soundblaster pro (sbtype=sbpro1 in the DOSBox configuration file) or
+   the gravis ultrasound (gus=true).
 
 
 Q: The sound stutters or sounds stretched/weird.
@@ -173,24 +176,27 @@ A: You're using too much CPU power to keep DOSBox running at the current speed.
 
 
 Q: I can't type \ or : in DOSBox.
-A: This is a known problem. It only occurs if your keyboard layout isn't US.
+A: This can happen in various cases, like your host keyboard layout does not
+   have a matching DOS layout representation (or it was not correctly detected),
+   or the key mapping is wrong.
    Some possible fixes:
-     1. Switch the keyboard layout of your operating system.
-     2. Use / instead.
-     3. Open the DOSBox configuration file and change usescancodes=false
-        to usescancodes=true.
-     4. Add the commands you want to execute to the [autoexec]-section
+     1. Use / instead, or ALT-58 for : and ALT-92 for \.
+     2. Change the DOS keyboard layout (see Section 7: Keyboard Layout).
+     3. Add the commands you want to execute to the [autoexec]-section
         of the DOSBox configuration file.
-     5. Change the DOS keyboard layout (see Section 7: Keyboard Layout).
-     6. Use ALT-58 for : and ALT-92 for \.
-     7. For \ try the keys around "enter". For ":" try shift and the keys 
-        between "enter" and "l" (US keyboard layout).
+     4. Open the DOSBox configuration file and change the usescancodes entry.
+     5. Switch the keyboard layout of your operating system.
+   
+   Note that if the host layout can not be identified, or keyboardlayout is set
+   to none in the DOSBox configuration file, the standard US layout is used.
+   In this configuration try the keys around "enter" for the key \ (backslash),
+   and for the key : (colon) use shift and the keys between "enter" and "l".
 
 
 Q: The keyboard lags.
-A: Lower the priority setting in the DOSBox configuration file
-   like set "priority=normal,normal". You might also want to
-   try lowering the cycles.
+A: Lower the priority setting in the DOSBox configuration file, for example
+   set "priority=normal,normal". You might also want to try lowering the cycles
+   (use a fixed cycle count to start with, like cycles=10000).
 
 
 Q: The cursor always moves into one direction!
@@ -292,6 +298,7 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
        [-lang languagefile] [-machine machinetype] [-noconsole]
        [-startmapper] [-noautoexec] [-securemode] 
        [-scaler scaler | -forcescaler scaler]
+       [-version]
        
 dosbox -version
 
@@ -322,9 +329,13 @@ dosbox -version
 
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
-        hercules, cga, pcjr, tandy, vga (default) as well as the svga chipsets
-        listed in the help of the DOSBox configuration file. The machinetype
-        affects both the videocard and the available soundcards.
+        hercules, cga, pcjr, tandy, svga_s3 (default) as well as the additional
+        svga chipsets listed in the help of the DOSBox configuration file.
+        svga_s3 enables vesa emulation as well.
+        For some special vga effects the machinetype vgaonly can be used,
+        note that this disables svga capabilites and might be (considerably)
+        slower due to the much higher emulation precision.
+        The machinetype affects both the videocard and the available soundcards.
 
   -noconsole (Windows Only)
         Start DOSBox without showing the console window. Output will
@@ -838,7 +849,7 @@ For more information use the /? command line switch with the programs.
 ================
 
 ALT-ENTER     Switch to full screen and back.
-ALT-PAUSE     Pause emulation.
+ALT-PAUSE     Pause emulation (hit ALT-PAUSE again to continue).
 CTRL-F1       Start the keymapper.
 CTRL-F4       Change between mounted disk-images. Update directory cache for all drives!
 CTRL-ALT-F5   Start/Stop creating a movie of the screen. (avi video capturing)
