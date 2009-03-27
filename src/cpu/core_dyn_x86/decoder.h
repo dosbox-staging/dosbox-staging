@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder.h,v 1.55 2008-05-18 13:11:14 c2woody Exp $ */
+/* $Id: decoder.h,v 1.56 2009-03-27 18:10:35 c2woody Exp $ */
 
 #define X86_DYNFPU_DH_ENABLED
 #define X86_INLINED_MEMACCESS
@@ -2258,6 +2258,7 @@ restart_prefix:
 			dyn_check_bool_exception(DREG(TMPB));
 			dyn_flags_host_to_gen();
 			gen_releasereg(DREG(TMPB));
+			dyn_check_irqrequest();
 			break;
 		/* MOV AL,direct addresses */
 		case 0xa0:
