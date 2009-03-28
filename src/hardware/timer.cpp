@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.47 2008-07-14 19:30:29 qbix79 Exp $ */
+/* $Id: timer.cpp,v 1.48 2009-03-28 12:20:52 c2woody Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -55,6 +55,7 @@ struct PIT_Block {
 	bool new_mode;
 	bool counterstatus_set;
 	bool counting;
+	bool update_count;
 };
 
 static PIT_Block pit[3];
@@ -69,6 +70,12 @@ static void PIT0_Event(Bitu /*val*/) {
 	PIC_ActivateIRQ(0);
 	if (pit[0].mode != 0) {
 		pit[0].start += pit[0].delay;
+
+		if (GCC_UNLIKELY(pit[0].update_count)) {
+			pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
+			pit[0].update_count=false;
+		}
+
 		double error = 	pit[0].start - PIC_FullIndex();
 		PIC_AddEvent(PIT0_Event,(float)(pit[0].delay + error));
 	}
@@ -212,8 +219,17 @@ static void write_latch(Bitu port,Bitu val,Bitu /*iolen*/) {
 			if (p->bcd == false) p->cntr = 0x10000;
 			else p->cntr=9999;
 		} else p->cntr = p->write_latch;
+
+		if ((!p->new_mode) && (p->mode == 2) && (counter == 0)) {
+			// In mode 2 writing another value has no direct effect on the count
+			// until the old one has run out. This might apply to other modes too.
+			// This is not fixed for PIT2 yet!!
+			p->update_count=true;
+			return;
+		}
 		p->start=PIC_FullIndex();
 		p->delay=(1000.0f/((float)PIT_TICK_RATE/(float)p->cntr));
+
 		switch (counter) {
 		case 0x00:			/* Timer hooked to IRQ 0 */
 			if (p->new_mode || p->mode == 0 ) {
@@ -297,6 +313,7 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 				pit[latch].counterstatus_set=false;
 				latched_timerstatus_locked=false;
 			}
+			pit[latch].update_count = false;
 			pit[latch].counting = false;
 			pit[latch].read_state  = (val >> 4) & 0x03;
 			pit[latch].write_state = (val >> 4) & 0x03;
@@ -404,6 +421,7 @@ public:
 		pit[0].bcd = false;
 		pit[0].go_read_latch = true;
 		pit[0].counterstatus_set = false;
+		pit[0].update_count = false;
 	
 		pit[1].bcd = false;
 		pit[1].write_state = 1;
