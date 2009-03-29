@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.91 2009-02-01 14:24:36 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.92 2009-03-29 09:34:18 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -253,7 +253,7 @@ public:
 					MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 				} else {
 #if defined (WIN32)
-/*					// Check OS
+					// Check OS
 					OSVERSIONINFO osi;
 					osi.dwOSVersionInfoSize = sizeof(osi);
 					GetVersionEx(&osi);
@@ -262,8 +262,7 @@ public:
 						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
 					} else {
 						MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
-					} */
-					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
+					}
 #else
 					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
 #endif
