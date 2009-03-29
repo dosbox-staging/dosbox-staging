@@ -46,7 +46,7 @@ enum {
 	D_CPUID,
 	D_HLT,D_CLTS,
 	D_LOCK,D_ICEBP,
-	L_ERROR,
+	L_ERROR
 };
 
 
@@ -95,7 +95,7 @@ enum {
 	O_BSFw,O_BSRw,O_BSFd,O_BSRd,
 
 	O_BSWAP,O_CMPXCHG,
-	O_FPU,
+	O_FPU
 
 
 };
@@ -117,7 +117,7 @@ enum {
 	S_AIPw,S_C_AIPw,
 	S_AIPd,S_C_AIPd,
 
-	S_IP,S_IPIw,
+	S_IP,S_IPIw
 };
 
 enum {
@@ -127,7 +127,7 @@ enum {
 	R_LODSB,R_LODSW,R_LODSD,
 	R_STOSB,R_STOSW,R_STOSD,
 	R_SCASB,R_SCASW,R_SCASD,
-	R_CMPSB,R_CMPSW,R_CMPSD,
+	R_CMPSB,R_CMPSW,R_CMPSD
 };
 
 enum {
@@ -149,7 +149,7 @@ enum {
 	M_GRP,
 	M_GRP_Ib,M_GRP_CL,M_GRP_1,
 
-	M_POPw,M_POPd,
+	M_POPw,M_POPd
 };
 
 struct OpCode {

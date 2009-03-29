@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder_basic.h,v 1.13 2008-09-19 16:48:02 c2woody Exp $ */
+/* $Id: decoder_basic.h,v 1.14 2009-03-29 17:32:20 qbix79 Exp $ */
 
 
 /*
@@ -31,7 +31,7 @@
 // instructions that use one operand
 enum SingleOps {
 	SOP_INC,SOP_DEC,
-	SOP_NOT,SOP_NEG,
+	SOP_NOT,SOP_NEG
 };
 
 // instructions that use two operand
@@ -42,7 +42,7 @@ enum DualOps {
 	DOP_AND,DOP_OR,
 	DOP_TEST,
 	DOP_MOV,
-	DOP_XCHG,
+	DOP_XCHG
 };
 
 // shift and rotate functions
@@ -50,7 +50,7 @@ enum ShiftOps {
 	SHIFT_ROL,SHIFT_ROR,
 	SHIFT_RCL,SHIFT_RCR,
 	SHIFT_SHL,SHIFT_SHR,
-	SHIFT_SAL,SHIFT_SAR,
+	SHIFT_SAL,SHIFT_SAR
 };
 
 // branch conditions
@@ -69,7 +69,7 @@ enum StringOps {
 	STR_LODSB=12,STR_LODSW,STR_LODSD,
 	STR_STOSB=16,STR_STOSW,STR_STOSD,
 	STR_SCASB=20,STR_SCASW,STR_SCASD,
-	STR_CMPSB=24,STR_CMPSW,STR_CMPSD,
+	STR_CMPSB=24,STR_CMPSW,STR_CMPSD
 };
 
 // repeat prefix type (for string operations)
@@ -84,7 +84,7 @@ enum LoopTypes {
 
 // rotate operand type
 enum grp2_types {
-	grp2_1,grp2_imm,grp2_cl,
+	grp2_1,grp2_imm,grp2_cl
 };
 
 // opcode mapping for group1 instructions
@@ -569,7 +569,7 @@ static DRC_PTR_SIZE_IM INLINE gen_call_function_mm(void * func,Bitu op1,Bitu op2
 
 
 
-enum save_info_type {exception, cycle_check, string_break};
+enum save_info_type {db_exception, cycle_check, string_break};
 
 
 // function that is called on exceptions
@@ -613,7 +613,7 @@ static void dyn_fill_blocks(void) {
 	for (Bitu sct=0; sct<used_save_info_dynrec; sct++) {
 		gen_fill_branch_long(save_info_dynrec[sct].branch_pos);
 		switch (save_info_dynrec[sct].type) {
-			case exception:
+			case db_exception:
 				// code for exception handling, load cycles and call DynRunException
 				decode.cycles=save_info_dynrec[sct].cycles;
 				if (cpu.code.big) gen_call_function_II((void *)&DynRunException,save_info_dynrec[sct].eip_change,save_info_dynrec[sct].cycles);
@@ -652,7 +652,7 @@ static void dyn_check_exception(HostReg reg) {
 	// in case of an exception eip will point to the start of the current instruction
 	save_info_dynrec[used_save_info_dynrec].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info_dynrec[used_save_info_dynrec].eip_change&=0xffff;
-	save_info_dynrec[used_save_info_dynrec].type=exception;
+	save_info_dynrec[used_save_info_dynrec].type=db_exception;
 	used_save_info_dynrec++;
 }
 

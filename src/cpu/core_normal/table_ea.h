@@ -76,7 +76,7 @@ static INLINE PhysPt Sib(Bitu mode) {
 	}
 	base+=*SIBIndex[(sib >> 3) &7] << (sib >> 6);
 	return base;
-};
+}
 
 static PhysPt EA_32_00_n(void) { return BaseDS+reg_eax; }
 static PhysPt EA_32_01_n(void) { return BaseDS+reg_ecx; }
