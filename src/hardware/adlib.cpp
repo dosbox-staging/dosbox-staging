@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.32 2009-02-03 19:20:30 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.33 2009-03-31 18:15:10 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -416,12 +416,17 @@ bool Chip::Write( Bit32u reg, Bit8u val ) {
 				timer[0].Stop( );
 			}
 			timer[0].masked = (val & 0x40) > 0;
+			if ( timer[0].masked )
+				timer[0].overflow = false;
 			if ( val & 0x2 ) {
 				timer[1].Start( time, 320 );
 			} else {
 				timer[1].Stop( );
 			}
 			timer[1].masked = (val & 0x20) > 0;
+			if ( timer[1].masked )
+				timer[1].overflow = false;
+
 		}
 		return true;
 	}
@@ -474,7 +479,7 @@ void Module::DualWrite( Bit8u index, Bit8u reg, Bit8u val ) {
 		val &= 7;
 		val |= index ? 0xA0 : 0x50;
 	}
-	Bit32u fullReg = reg + index ? 0x100 : 0;
+	Bit32u fullReg = reg + (index ? 0x100 : 0);
 	handler->WriteReg( fullReg, val );
 	CacheWrite( fullReg, val );
 }
