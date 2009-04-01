@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.20 2009-03-25 21:12:23 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.21 2009-04-01 18:30:41 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -83,6 +83,7 @@ public:
 	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout);
 	void switch_foreign_layout();
 	const char* get_layout_name();
+	const char* main_language_code();
 
 
 private:
@@ -1017,6 +1018,13 @@ const char* keyboard_layout::get_layout_name() {
 	return NULL;
 }
 
+const char* keyboard_layout::main_language_code() {
+	if (language_codes) {
+		return language_codes[0];
+	}
+	return NULL;
+}
+
 
 static keyboard_layout* loaded_layout=NULL;
 
@@ -1244,9 +1252,17 @@ public:
 			loaded_layout->read_codepage_file("auto", req_codepage);
 		}
 
+/*		if (strncmp(layoutname,"auto",4) && strncmp(layoutname,"none",4)) {
+			LOG_MSG("Loading DOS keyboard layout %s ...",layoutname);
+		} */
 		if (loaded_layout->read_keyboard_file(layoutname, dos.loaded_codepage)) {
 			if (strncmp(layoutname,"auto",4)) {
 				LOG_MSG("Error loading keyboard layout %s",layoutname);
+			}
+		} else {
+			const char* lcode = loaded_layout->main_language_code();
+			if (lcode) {
+				LOG_MSG("DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
 			}
 		}
 	}
