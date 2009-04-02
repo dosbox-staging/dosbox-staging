@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.95 2009-02-01 20:25:38 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.96 2009-04-02 19:10:44 qbix79 Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -1867,8 +1867,14 @@ public:
 
 	void Run(void)
 	{
+		if(cmd->FindExist("/NOMOUSE",false)) {
+	        	real_writed(0,0x33<<2,0);
+			return;
+		}
+	   
 		char filename[128];
 		char args[256];
+	
 		cmd->FindCommand(1,temp_line);
 		safe_strncpy(filename,temp_line.c_str(),128);
 		// Read commandline
