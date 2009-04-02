@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.89 2009-02-15 10:45:01 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.90 2009-04-02 19:08:26 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -487,8 +487,8 @@ void DOS_Shell::CMD_DIR(char * args) {
 			if (optW) {
 				WriteOut("[%s]",name);
 				size_t namelen = strlen(name);
-				if ((namelen>=0) && (namelen<=14)) {
-					for (Bitu i=14-(Bitu)namelen;i>0;i--) WriteOut(" ");
+				if (namelen <= 14) {
+					for (size_t i=14-namelen;i>0;i--) WriteOut(" ");
 				}
 			} else {
 				WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);

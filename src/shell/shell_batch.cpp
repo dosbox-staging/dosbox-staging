@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.32 2009-01-19 19:55:03 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.33 2009-04-02 19:08:26 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -145,7 +145,6 @@ bool BatchFile::Goto(char * where) {
 		E_Exit("SHELL:Goto Can't open BatchFile %s",cmd->GetFileName());
 	}
 
-	Bit32u pos=0;
 	char cmd_buffer[CMD_MAXLINE];
 	char * cmd_write;
 
@@ -180,7 +179,7 @@ again:
 			this->location = 0;
 			DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_CUR);
 			DOS_CloseFile(file_handle);
-		   return true;
+			return true;
 		}
 	   
 	}
