@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: timer.cpp,v 1.48 2009-03-28 12:20:52 c2woody Exp $ */
+/* $Id: timer.cpp,v 1.49 2009-04-10 09:53:04 c2woody Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -432,7 +432,7 @@ public:
 		pit[1].write_state = 3;
 		pit[1].counterstatus_set = false;
 	
-		pit[2].read_latch=0;	/* MadTv1 */
+		pit[2].read_latch=1320;	/* MadTv1 */
 		pit[2].write_state = 3; /* Chuck Yeager */
 		pit[2].read_state = 3;
 		pit[2].mode=3;
