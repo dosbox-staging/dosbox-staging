@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.cpp,v 1.54 2009-01-25 12:00:52 c2woody Exp $ */
+/* $Id: int10.cpp,v 1.55 2009-04-11 07:58:39 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -635,10 +635,10 @@ graphics_chars:
 		INT10_EGA_RIL_WriteRegister(reg_bl, reg_bh, reg_dx);
 		break;
 	case 0xf2:
-		INT10_EGA_RIL_ReadRegisterRange(reg_bl, reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
+		INT10_EGA_RIL_ReadRegisterRange(reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
 		break;
 	case 0xf3:
-		INT10_EGA_RIL_WriteRegisterRange(reg_bl, reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
+		INT10_EGA_RIL_WriteRegisterRange(reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
 		break;
 	case 0xf4:
 		INT10_EGA_RIL_ReadRegisterSet(reg_cx, SegPhys(es)+reg_bx);

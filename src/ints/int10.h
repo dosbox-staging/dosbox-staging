@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.h,v 1.36 2008-05-10 17:33:28 c2woody Exp $ */
+/* $Id: int10.h,v 1.37 2009-04-11 07:58:39 qbix79 Exp $ */
 
 #include "vga.h"
 
@@ -219,8 +219,8 @@ void INT10_SetupVESA(void);
 RealPt INT10_EGA_RIL_GetVersionPt(void);
 void INT10_EGA_RIL_ReadRegister(Bit8u & bl, Bit16u dx);
 void INT10_EGA_RIL_WriteRegister(Bit8u & bl, Bit8u bh, Bit16u dx);
-void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst);
-void INT10_EGA_RIL_WriteRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst);
+void INT10_EGA_RIL_ReadRegisterRange(Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst);
+void INT10_EGA_RIL_WriteRegisterRange(Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst);
 void INT10_EGA_RIL_ReadRegisterSet(Bit16u cx, PhysPt tbl);
 void INT10_EGA_RIL_WriteRegisterSet(Bit16u cx, PhysPt tbl);
 

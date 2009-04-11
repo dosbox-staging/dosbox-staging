@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_misc.cpp,v 1.19 2008-08-01 19:52:02 c2woody Exp $ */
+/* $Id: int10_misc.cpp,v 1.20 2009-04-11 07:58:39 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -228,7 +228,7 @@ void INT10_EGA_RIL_WriteRegister(Bit8u & bl, Bit8u bh, Bit16u dx) {
 	}
 }
 
-void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst) {
+void INT10_EGA_RIL_ReadRegisterRange(Bit8u ch, Bit8u cl, Bit16u dx, PhysPt dst) {
 	Bitu port = 0;
 	Bitu regs = 0;
 	EGA_RIL(dx,port,regs);
@@ -247,7 +247,7 @@ void INT10_EGA_RIL_ReadRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, 
 	}
 }
 
-void INT10_EGA_RIL_WriteRegisterRange(Bit8u & bl, Bit8u ch, Bit8u cl, Bit16u dx, PhysPt src) {
+void INT10_EGA_RIL_WriteRegisterRange(Bit8u ch, Bit8u cl, Bit16u dx, PhysPt src) {
 	Bitu port = 0;
 	Bitu regs = 0;
 	EGA_RIL(dx,port,regs);
