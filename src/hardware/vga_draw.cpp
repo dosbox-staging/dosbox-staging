@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.106 2009-01-26 20:23:44 qbix79 Exp $ */
+/* $Id: vga_draw.cpp,v 1.107 2009-04-11 08:02:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -1368,7 +1368,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		PIC_AddEvent( VGA_VerticalTimer , (float)vga.draw.delay.vtotal );
 		vga.draw.lines_done = 0;
 	}
-};
+}
 
 void VGA_KillDrawing(void) {
 	PIC_RemoveEvents(VGA_DrawPart);

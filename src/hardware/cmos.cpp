@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cmos.cpp,v 1.25 2009-02-01 14:24:37 qbix79 Exp $ */
+/* $Id: cmos.cpp,v 1.26 2009-04-11 08:02:23 qbix79 Exp $ */
 
 #include <time.h>
 
@@ -280,7 +280,7 @@ static Bitu cmos_readreg(Bitu port,Bitu iolen) {
 
 void CMOS_SetRegister(Bitu regNr, Bit8u val) {
 	cmos.regs[regNr] = val;
-};
+}
 
 
 class CMOS:public Module_base{

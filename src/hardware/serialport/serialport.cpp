@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.10 2008-08-06 18:33:30 c2woody Exp $ */
+/* $Id: serialport.cpp,v 1.11 2009-04-11 08:02:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -82,7 +82,7 @@ bool device_COM::Close() {
 
 Bit16u device_COM::GetInformation(void) {
 	return 0x80A0;
-};
+}
 
 device_COM::device_COM(class CSerial* sc) {
 	sclass = sc;
@@ -1068,7 +1068,7 @@ CSerial::CSerial(Bitu id, CommandLine* cmd) {
 	if(debugfp) fprintf(debugfp,"COM%d: BASE %3x, IRQ %d\r\n\r\n",
 		COMNUMBER,base,irq);
 #endif
-};
+}
 
 bool CSerial::getBituSubstring(const char* name,Bitu* data, CommandLine* cmd) {
 	std::string tmpstring;
@@ -1082,7 +1082,7 @@ CSerial::~CSerial(void) {
 	DOS_DelDevice(mydosdevice);
 	for(Bitu i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
-};
+}
 bool CSerial::Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout) {
 	
 	double starttime=PIC_FullIndex();

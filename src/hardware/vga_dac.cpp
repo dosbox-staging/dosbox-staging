@@ -240,4 +240,4 @@ void VGA_SetupDAC(void) {
 			if ((i&8)>0) vga.dac.rgb[i].blue+=0x15;
 		}
 	}
-};
+}

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.8 2007-07-19 18:58:39 c2woody Exp $ */
+/* $Id: softmodem.h,v 1.9 2009-04-11 08:02:23 qbix79 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -45,7 +45,7 @@ enum ResTypes {
 	ResNONE,
 	ResOK,ResERROR,
 	ResCONNECT,ResRING,
-	ResBUSY,ResNODIALTONE,ResNOCARRIER,
+	ResBUSY,ResNODIALTONE,ResNOCARRIER
 };
 
 #define TEL_CLIENT 0

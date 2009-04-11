@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: gus.cpp,v 1.33 2009-01-14 20:50:23 c2woody Exp $ */
+/* $Id: gus.cpp,v 1.34 2009-04-11 08:02:23 qbix79 Exp $ */
 
 #include <string.h>
 #include <iomanip>
@@ -454,7 +454,7 @@ static void GUS_TimerEvent(Bitu val) {
 	}
 	if (myGUS.timers[val].running) 
 		PIC_AddEvent(GUS_TimerEvent,myGUS.timers[val].delay,val);
-};
+}
 
  
 static void ExecuteGlobRegister(void) {
