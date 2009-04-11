@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: debug.cpp,v 1.96 2009-04-02 19:10:44 qbix79 Exp $ */
+/* $Id: debug.cpp,v 1.97 2009-04-11 19:49:52 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_DEBUG
@@ -77,17 +77,17 @@ Bit32u GetHexValue(char* str, char*& hex);
 
 class DebugPageHandler : public PageHandler {
 public:
-	Bitu readb(PhysPt addr) {
+	Bitu readb(PhysPt /*addr*/) {
 	}
-	Bitu readw(PhysPt addr) {
+	Bitu readw(PhysPt /*addr*/) {
 	}
-	Bitu readd(PhysPt addr) {
+	Bitu readd(PhysPt /*addr*/) {
 	}
-	void writeb(PhysPt addr,Bitu val) {
+	void writeb(PhysPt /*addr*/,Bitu /*val*/) {
 	}
-	void writew(PhysPt addr,Bitu val) {
+	void writew(PhysPt /*addr*/,Bitu /*val*/) {
 	}
-	void writed(PhysPt addr,Bitu val) {
+	void writed(PhysPt /*addr*/,Bitu /*val*/) {
 	}
 
 
@@ -1938,8 +1938,7 @@ static void DEBUG_ProgramStart(Program * * make) {
 
 // INIT 
 
-void DEBUG_SetupConsole(void)
-{
+void DEBUG_SetupConsole(void) {
 	#ifdef WIN32
 	WIN32_Console();
 	#else
@@ -1953,10 +1952,9 @@ void DEBUG_SetupConsole(void)
 	input_count=0;
 	/* Start the Debug Gui */
 	DBGUI_StartUp();
-};
+}
 
-static void DEBUG_ShutDown(Section * sec) 
-{
+static void DEBUG_ShutDown(Section * /*sec*/) {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
 	curs_set(old_cursor_state);
@@ -1966,7 +1964,7 @@ static void DEBUG_ShutDown(Section * sec)
 	printf("\ec");
 	fflush(NULL);
 	#endif
-};
+}
 
 Bitu debugCallback;
 
@@ -2020,9 +2018,10 @@ bool CDebugVar::SaveVars(char* name)
 {
 	FILE* f = fopen(name,"wb+");
 	if (!f) return false;
+	if (varList.size()>65535) return false;
 
 	// write number of vars
-	Bit16u num = varList.size();
+	Bit16u num = (Bit16u)varList.size();
 	fwrite(&num,1,sizeof(num),f);
 
 	std::list<CDebugVar*>::iterator i;
@@ -2072,22 +2071,32 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num) {
 	char buffer[128];
 	char temp[16];
 
-	while(num>0) {
+	while (num>16) {
 		sprintf(buffer,"%04X:%04X   ",seg,ofs1);
 		for (Bit16u x=0; x<16; x++) {
 			Bit8u value;
 			if (mem_readb_checked(GetAddress(seg,ofs1+x),&value)) sprintf(temp,"?? ",value);
 			else sprintf(temp,"%02X ",value);
 			strcat(buffer,temp);
-		};
+		}
 		ofs1+=16;
 		num-=16;
 
 		fprintf(f,"%s\n",buffer);
-	};
+	}
+	if (num>0) {
+		sprintf(buffer,"%04X:%04X   ",seg,ofs1);
+		for (Bit16u x=0; x<num; x++) {
+			Bit8u value;
+			if (mem_readb_checked(GetAddress(seg,ofs1+x),&value)) sprintf(temp,"?? ",value);
+			else sprintf(temp,"%02X ",value);
+			strcat(buffer,temp);
+		}
+		fprintf(f,"%s\n",buffer);
+	}
 	fclose(f);
 	DEBUG_ShowMsg("DEBUG: Memory dump success.\n");
-};
+}
 
 static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
 	FILE* f = fopen("MEMDUMP.BIN","wb");
@@ -2096,15 +2105,15 @@ static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
 		return;
 	}
 
-	for(Bitu x = 0; x < num;x++) {
+	for (Bitu x = 0; x < num;x++) {
 		Bit8u val;
 		if (mem_readb_checked(GetAddress(seg,ofs1+x),&val)) val=0;
 		fwrite(&val,1,1,f);
-	};
+	}
 
 	fclose(f);
 	DEBUG_ShowMsg("DEBUG: Memory dump binary success.\n");
-};
+}
 
 static void OutputVecTable(char* filename) {
 	FILE* f = fopen(filename, "wt");
@@ -2310,12 +2319,12 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 		skipFirstInstruction = false;
 		return false;
 	}
-	PhysPt where = SegPhys(cs)+reg_eip;
 	if (CBreakpoint::CheckBreakpoint(SegValue(cs),reg_eip)) {
 		return true;	
 	}
 	return false;
-};
+}
+
 #endif // HEAVY DEBUG
 
 
