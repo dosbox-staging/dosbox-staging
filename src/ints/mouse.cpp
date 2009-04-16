@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.78 2009-03-04 19:34:42 c2woody Exp $ */
+/* $Id: mouse.cpp,v 1.79 2009-04-16 12:11:45 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -123,6 +123,9 @@ static struct {
 	Bit8u  page;
 	bool enabled;
 	bool inhibit_draw;
+	bool timer_in_progress;
+	bool in_UIR;
+	Bit8u mode;
 } mouse;
 
 bool Mouse_SetPS2State(bool use) {
@@ -195,12 +198,22 @@ Bitu PS2_Handler(void) {
 #define MOUSE_RIGHT_RELEASED 16
 #define MOUSE_MIDDLE_PRESSED 32
 #define MOUSE_MIDDLE_RELEASED 64
+#define MOUSE_DELAY 5.0
+
+void MOUSE_Limit_Events(Bitu /*val*/) {
+	mouse.timer_in_progress = false;
+	if (mouse.events) {
+		mouse.timer_in_progress = true;
+		PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
+		PIC_ActivateIRQ(MOUSE_IRQ);
+	}
+}
 
 INLINE void Mouse_AddEvent(Bit8u type) {
 	if (mouse.events<QUEUE_SIZE) {
 		if (mouse.events>0) {
 			/* Skip duplicate events */
-			if ((type==MOUSE_HAS_MOVED) && (mouse.buttons==0)) return;
+			if (type==MOUSE_HAS_MOVED) return;
 			/* Always put the newest element in the front as that the events are 
 			 * handled backwards (prevents doubleclicks while moving)
 			 */
@@ -211,7 +224,11 @@ INLINE void Mouse_AddEvent(Bit8u type) {
 		mouse.event_queue[0].buttons=mouse.buttons;
 		mouse.events++;
 	}
-	PIC_ActivateIRQ(MOUSE_IRQ);
+	if (!mouse.timer_in_progress) {
+		mouse.timer_in_progress = true;
+		PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
+		PIC_ActivateIRQ(MOUSE_IRQ);
+	}
 }
 
 // ***************************************************************************
@@ -228,7 +245,7 @@ void RestoreCursorBackgroundText() {
 		WriteChar(mouse.backposx,mouse.backposy,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE),mouse.backData[0],mouse.backData[1],true);
 		mouse.background = false;
 	}
-};
+}
 
 void DrawCursorText() {	
 	// Restore Background
@@ -250,7 +267,7 @@ void DrawCursorText() {
 	// Write Cursor
 	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
 	WriteChar(mouse.backposx,mouse.backposy,page,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
-};
+}
 
 // ***************************************************************************
 // Mouse cursor - graphic mode
@@ -313,7 +330,7 @@ void ClipCursorArea(Bit16s& x1, Bit16s& x2, Bit16s& y1, Bit16s& y2,
 		addx2 = x2 - mouse.clipx;
 		x2 = mouse.clipx;
 	};
-};
+}
 
 void RestoreCursorBackground() {
 	if (mouse.hidden || mouse.inhibit_draw) return;
@@ -342,7 +359,7 @@ void RestoreCursorBackground() {
 		mouse.background = false;
 	};
 	RestoreVgaRegisters();
-};
+}
 
 void DrawCursor() {
 	if (mouse.hidden || mouse.inhibit_draw) return;
@@ -524,7 +541,8 @@ static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
 		mouse.pixelPerMickey_x	 = X_MICKEY/(float)px;
 		mouse.pixelPerMickey_y 	 = Y_MICKEY/(float)py;	
 	}
-};
+}
+
 static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed){
 	if(px>100) px=100;
 	if(py>100) py=100;
@@ -539,18 +557,19 @@ static void Mouse_SetSensitivity(Bit16u px, Bit16u py, Bit16u dspeed){
 		mouse.senv_x=(static_cast<float>(px)*px)/3600.0f +1.0f/3.0f;
 		mouse.senv_y=(static_cast<float>(py)*py)/3600.0f +1.0f/3.0f;
      }
-};
+}
 
 
 static void Mouse_ResetHardware(void){
 	PIC_SetIRQMask(MOUSE_IRQ,false);
-};
+}
 
 //Does way to much. Many things should be moved to mouse reset one day
 void Mouse_NewVideoMode(void) {
 	mouse.inhibit_draw=false;
 	/* Get the correct resolution from the current video mode */
-	Bitu mode=mem_readb(BIOS_VIDEO_MODE);
+	Bit8u mode=mem_readb(BIOS_VIDEO_MODE);
+	if(mode == mouse.mode) {LOG(LOG_MOUSE,LOG_NORMAL)("New video is the same as the old"); /*return;*/}
 	switch (mode) {
 	case 0x00:
 	case 0x01:
@@ -586,16 +605,15 @@ void Mouse_NewVideoMode(void) {
 		mouse.inhibit_draw=true;
 		return;
 	}
+	mouse.mode = mode;
 	mouse.hidden = 1;
 	mouse.max_x = 639;
 	mouse.min_x = 0;
 	mouse.min_y = 0;
-	// Dont set max coordinates here. it is done by SetResolution!
-	mouse.x = static_cast<float>((mouse.max_x + 1)/ 2);
-	mouse.y = static_cast<float>((mouse.max_y + 1)/ 2);
+
 	mouse.events = 0;
-	mouse.mickey_x = 0;
-	mouse.mickey_y = 0;
+	mouse.timer_in_progress = false;
+	PIC_RemoveEvents(MOUSE_Limit_Events);
 
 	mouse.hotx		 = 0;
 	mouse.hoty		 = 0;
@@ -617,6 +635,8 @@ void Mouse_NewVideoMode(void) {
 
 	oldmouseX = static_cast<Bit16s>(mouse.x);
 	oldmouseY = static_cast<Bit16s>(mouse.y);
+
+
 }
 
 //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
@@ -629,7 +649,14 @@ static void Mouse_Reset(void) {
 	Mouse_NewVideoMode();
 	Mouse_SetMickeyPixelRate(8,16);
 
-   	mouse.sub_mask=0;
+	mouse.mickey_x = 0;
+	mouse.mickey_y = 0;
+
+	// Dont set max coordinates here. it is done by SetResolution!
+	mouse.x = static_cast<float>((mouse.max_x + 1)/ 2);
+	mouse.y = static_cast<float>((mouse.max_y + 1)/ 2);
+	mouse.sub_mask = 0;
+	mouse.in_UIR = false;
 }
 
 static Bitu INT33_Handler(void) {
@@ -677,8 +704,7 @@ static Bitu INT33_Handler(void) {
 		{
 			Bit16u but=reg_bx;
 			reg_ax=mouse.buttons;
-			reg_bx++;
-			if (but>=MOUSE_BUTTONS) break;
+			if (but>=MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
 			reg_cx=mouse.last_pressed_x[but];
 			reg_dx=mouse.last_pressed_y[but];
 			reg_bx=mouse.times_pressed[but];
@@ -689,8 +715,7 @@ static Bitu INT33_Handler(void) {
 		{
 			Bit16u but=reg_bx;
 			reg_ax=mouse.buttons;
-			reg_bx++;
-			if (but>=MOUSE_BUTTONS) break;
+			if (but>=MOUSE_BUTTONS) but = MOUSE_BUTTONS - 1;
 			reg_cx=mouse.last_released_x[but];
 			reg_dx=mouse.last_released_y[but];
 			reg_bx=mouse.times_released[but];
@@ -954,6 +979,8 @@ static Bitu INT74_Handler(void) {
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
 			SegSet16(cs, mouse.sub_seg);
 			reg_ip = mouse.sub_ofs;
+			if(mouse.in_UIR) LOG(LOG_MOUSE,LOG_ERROR)("Already in UIR!");
+			mouse.in_UIR = true;
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
@@ -970,8 +997,12 @@ static Bitu INT74_Handler(void) {
 }
 
 Bitu MOUSE_UserInt_CB_Handler(void) {
+	mouse.in_UIR = false;
 	if (mouse.events) {
-		PIC_ActivateIRQ(MOUSE_IRQ);
+		if (!mouse.timer_in_progress) {
+			mouse.timer_in_progress = true;
+			PIC_AddEvent(MOUSE_Limit_Events,MOUSE_DELAY);
+		}
 	}
 	return CBRET_NONE;
 }
@@ -1033,6 +1064,8 @@ void MOUSE_Init(Section* /*sec*/) {
 
 	memset(&mouse,0,sizeof(mouse));
 	mouse.hidden = 1; //Hide mouse on startup
+	mouse.timer_in_progress = false;
+	mouse.mode = 0xFF; //Non existing mode
 
    	mouse.sub_mask=0;
 	mouse.sub_seg=0x6362;	// magic value
