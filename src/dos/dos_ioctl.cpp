@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_ioctl.cpp,v 1.34 2009-03-24 17:07:30 c2woody Exp $ */
+/* $Id: dos_ioctl.cpp,v 1.35 2009-04-16 12:16:52 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -40,7 +40,7 @@ bool DOS_IOCTL(void) {
 		}
 	} else if (reg_al<0x12) { 				/* those use a diskdrive except 0x0b */
 		if (reg_al!=0x0b) {
-			drive=reg_bl;if (!drive) drive=dos.current_drive;else drive--;
+			drive=reg_bl;if (!drive) drive = DOS_GetDefaultDrive();else drive--;
 			if( !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
 				DOS_SetError(DOSERR_INVALID_DRIVE);
 				return false;

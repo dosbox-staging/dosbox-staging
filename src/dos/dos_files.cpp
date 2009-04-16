@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.107 2009-03-23 21:58:05 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.108 2009-04-16 12:16:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -45,11 +45,15 @@ DOS_File * Files[DOS_FILES];
 DOS_Drive * Drives[DOS_DRIVES];
 
 Bit8u DOS_GetDefaultDrive(void) {
+//	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
+	Bit8u d = DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
+	if( d != dos.current_drive ) LOG(LOG_DOSMISC,LOG_ERROR)("SDA drive %d not the same as dos.current_drive %d",d,dos.current_drive);
 	return dos.current_drive;
 }
 
 void DOS_SetDefaultDrive(Bit8u drive) {
-	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) dos.current_drive = drive;
+//	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);
+	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
 }
 
 bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
@@ -63,7 +67,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
 	Bitu r,w;
-	*drive=dos.current_drive;
+	*drive = DOS_GetDefaultDrive();
 	/* First get the drive */
 	if (name_int[1]==':') {
 		*drive=(name_int[0] | 0x20)-'a';
@@ -256,8 +260,31 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 	Bit8u drivenew;char fullnew[DOS_PATHLENGTH];
 	if (!DOS_MakeName(oldname,fullold,&driveold)) return false;
 	if (!DOS_MakeName(newname,fullnew,&drivenew)) return false;
-	//TODO Test for different drives maybe
+	/* No tricks with devices */
+	if ( (DOS_FindDevice(oldname) != DOS_DEVICES) ||
+	     (DOS_FindDevice(newname) != DOS_DEVICES) ) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+	/* Must be on the same drive */
+	if(driveold != drivenew) {
+		DOS_SetError(DOSERR_NOT_SAME_DEVICE);
+		return false;
+	}
+	/*Test if target exists => no access */
+	if(Drives[drivenew]->FileExists(fullnew)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+	/* Source must exist, check for path ? */
+	if(!Drives[driveold]->FileExists(fullold)) {
+		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+
 	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
+	/* If it still fails. which error should we give ? PATH NOT FOUND or EACCESS */
+	LOG(LOG_FILES,LOG_NORMAL)("Rename fails on %c from %s to %s, no proper errorcode returned.",driveold+'A',oldname,newname);
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
 }
@@ -1139,7 +1166,7 @@ bool DOS_FileExists(char const * const name) {
 }
 
 bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters) {
-	if (!drive) drive=dos.current_drive;
+	if (!drive) drive =  DOS_GetDefaultDrive();
 	else drive--;
 	if (drive >= DOS_DRIVES || !Drives[drive]) return false;
 	Bit16u _free_clusters;

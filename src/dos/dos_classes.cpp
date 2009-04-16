@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.55 2008-09-07 10:55:14 c2woody Exp $ */
+/* $Id: dos_classes.cpp,v 1.56 2009-04-16 12:16:52 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -210,41 +210,36 @@ void DOS_PSP::MakeNew(Bit16u mem_size) {
 	if (rootpsp==0) rootpsp = seg;
 }
 
-Bit8u DOS_PSP::GetFileHandle(Bit16u index) 
-{
+Bit8u DOS_PSP::GetFileHandle(Bit16u index) {
 	if (index>=sGet(sPSP,max_files)) return 0xff;
 	PhysPt files=Real2Phys(sGet(sPSP,file_table));
 	return mem_readb(files+index);
-};
+}
 
-void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) 
-{
+void DOS_PSP::SetFileHandle(Bit16u index, Bit8u handle) {
 	if (index<sGet(sPSP,max_files)) {
 		PhysPt files=Real2Phys(sGet(sPSP,file_table));
 		mem_writeb(files+index,handle);
 	}
-};
+}
 
-Bit16u DOS_PSP::FindFreeFileEntry(void)
-{
+Bit16u DOS_PSP::FindFreeFileEntry(void) {
 	PhysPt files=Real2Phys(sGet(sPSP,file_table));
 	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
 		if (mem_readb(files+i)==0xff) return i;
 	}	
 	return 0xff;
-};
+}
 
-Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle)
-{
+Bit16u DOS_PSP::FindEntryByHandle(Bit8u handle) {
 	PhysPt files=Real2Phys(sGet(sPSP,file_table));
 	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
 		if (mem_readb(files+i)==handle) return i;
 	}	
 	return 0xFF;
-};
+}
 
-void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
-{
+void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp) {
 	/* Copy file table from calling process */
 	for (Bit16u i=0;i<20;i++) {
 		Bit8u handle = srcpsp->GetFileHandle(i);
@@ -266,53 +261,46 @@ void DOS_PSP::CopyFileTable(DOS_PSP* srcpsp,bool createchildpsp)
 			SetFileHandle(i,handle);
 		}
 	}
-};
+}
 
-void DOS_PSP::CloseFiles(void)
-{
+void DOS_PSP::CloseFiles(void) {
 	for (Bit16u i=0;i<sGet(sPSP,max_files);i++) {
 		DOS_CloseFile(i);
 	}
 }
 
-void DOS_PSP::SaveVectors(void)
-{
+void DOS_PSP::SaveVectors(void) {
 	/* Save interrupt 22,23,24 */
 	sSave(sPSP,int_22,RealGetVec(0x22));
 	sSave(sPSP,int_23,RealGetVec(0x23));
 	sSave(sPSP,int_24,RealGetVec(0x24));
-};
+}
 
-void DOS_PSP::RestoreVectors(void)
-{
+void DOS_PSP::RestoreVectors(void) {
 	/* Restore interrupt 22,23,24 */
 	RealSetVec(0x22,sGet(sPSP,int_22));
 	RealSetVec(0x23,sGet(sPSP,int_23));
 	RealSetVec(0x24,sGet(sPSP,int_24));
-};
+}
 
-void DOS_PSP::SetCommandTail(RealPt src)
-{
+void DOS_PSP::SetCommandTail(RealPt src) {
 	if (src) {	// valid source
 		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),Real2Phys(src),128);
 	} else {	// empty
 		sSave(sPSP,cmdtail.count,0x00);
 		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer),0x0d);
 	};
-};
+}
 
-void DOS_PSP::SetFCB1(RealPt src)
-{
+void DOS_PSP::SetFCB1(RealPt src) {
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb1)),Real2Phys(src),16);
-};
+}
 
-void DOS_PSP::SetFCB2(RealPt src)
-{
+void DOS_PSP::SetFCB2(RealPt src) {
 	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
-};
+}
 
-bool DOS_PSP::SetNumFiles(Bit16u fileNum)
-{
+bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
 	if (fileNum>20) {
 		// Allocate needed paragraphs
 		fileNum+=2;	// Add a few more files for safety
@@ -327,7 +315,7 @@ bool DOS_PSP::SetNumFiles(Bit16u fileNum)
 		sSave(sPSP,max_files,fileNum);
 	};
 	return true;
-};
+}
 
 
 void DOS_DTA::SetupSearch(Bit8u _sdrive,Bit8u _sattr,char * pattern) {
@@ -480,7 +468,7 @@ void DOS_FCB::FileClose(Bit8u & _fhandle) {
 
 Bit8u DOS_FCB::GetDrive(void) {
 	Bit8u drive=sGet(sFCB,drive);
-	if (!drive) return dos.current_drive;
+	if (!drive) return  DOS_GetDefaultDrive();
 	else return drive-1;
 }
 
