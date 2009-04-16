@@ -30,22 +30,19 @@
 #include "support.h"
 #include "cdrom.h"
 
-CDROM_Interface_SDL::CDROM_Interface_SDL(void) 
-{
+CDROM_Interface_SDL::CDROM_Interface_SDL(void) {
 	driveID		= 0;
 	oldLeadOut	= 0;
 	cd			= 0;
-};
+}
 
-CDROM_Interface_SDL::~CDROM_Interface_SDL(void) 
-{
+CDROM_Interface_SDL::~CDROM_Interface_SDL(void) {
 	StopAudio();
 	SDL_CDClose(cd);
 	cd		= 0;
-};
+}
 
-bool CDROM_Interface_SDL::SetDevice (char* path, int forceCD) 
-{ 
+bool CDROM_Interface_SDL::SetDevice(char* path, int forceCD) { 
 	char buffer[512];
 	strcpy(buffer,path);
 	upcase(buffer);
@@ -69,10 +66,9 @@ bool CDROM_Interface_SDL::SetDevice (char* path, int forceCD)
 		};
 	};
 	return false; 
-};
+}
 
-bool CDROM_Interface_SDL::GetAudioTracks	(int& stTrack, int& end, TMSF& leadOut)
-{
+bool CDROM_Interface_SDL::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
 
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		stTrack		= 1;
@@ -80,19 +76,17 @@ bool CDROM_Interface_SDL::GetAudioTracks	(int& stTrack, int& end, TMSF& leadOut)
 		FRAMES_TO_MSF(cd->track[cd->numtracks].offset,&leadOut.min,&leadOut.sec,&leadOut.fr);
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
-};
+}
 
-bool CDROM_Interface_SDL::GetAudioTrackInfo (int track, TMSF& start, unsigned char& attr)
-{
+bool CDROM_Interface_SDL::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr) {
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		FRAMES_TO_MSF(cd->track[track-1].offset,&start.min,&start.sec,&start.fr);
 		attr	= cd->track[track-1].type<<4;//sdl uses 0 for audio and 4 for data. instead of 0x00 and 0x40
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));	
-};
+}
 
-bool CDROM_Interface_SDL::GetAudioSub (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
-{
+bool CDROM_Interface_SDL::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos) {
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		track	= cd->cur_track;
 		index	= cd->cur_track;
@@ -101,19 +95,17 @@ bool CDROM_Interface_SDL::GetAudioSub (unsigned char& attr, unsigned char& track
 		FRAMES_TO_MSF(cd->cur_frame+cd->track[track].offset,&absPos.min,&absPos.sec,&absPos.fr);
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));		
-};
+}
 
-bool CDROM_Interface_SDL::GetAudioStatus (bool& playing, bool& pause)
-{
+bool CDROM_Interface_SDL::GetAudioStatus(bool& playing, bool& pause){
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		playing = (cd->status==CD_PLAYING);
 		pause	= (cd->status==CD_PAUSED);
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
-};
+}
 	
-bool CDROM_Interface_SDL::GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen)
-{
+bool CDROM_Interface_SDL::GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged, bool& trayOpen) {
 	SDL_CDStatus(cd);
 	mediaPresent = (cd->status!=CD_TRAYEMPTY) && (cd->status!=CD_ERROR);
 	mediaChanged = (oldLeadOut!=cd->track[cd->numtracks].offset);
@@ -121,45 +113,40 @@ bool CDROM_Interface_SDL::GetMediaTrayStatus (bool& mediaPresent, bool& mediaCha
 	oldLeadOut	 = cd->track[cd->numtracks].offset;
 	if (mediaChanged) SDL_CDStatus(cd);
 	return true;
-};
+}
 
-bool CDROM_Interface_SDL::PlayAudioSector (unsigned long start,unsigned long len) 
-{ 
+bool CDROM_Interface_SDL::PlayAudioSector(unsigned long start,unsigned long len) { 
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
 	bool success = (SDL_CDPlay(cd,start+150,len)==0);
 	return success;
-};
+}
 
-bool CDROM_Interface_SDL::PauseAudio (bool resume) 
-{ 
+bool CDROM_Interface_SDL::PauseAudio(bool resume) { 
 	bool success;
 	if (resume) success = (SDL_CDResume(cd)==0);
 	else		success = (SDL_CDPause (cd)==0);
 	return success;
-};
+}
 
-bool CDROM_Interface_SDL::StopAudio	(void) 
-{
+bool CDROM_Interface_SDL::StopAudio(void) {
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
 	bool success = (SDL_CDStop(cd)==0);
 	return success;
-};
+}
 
-bool CDROM_Interface_SDL::LoadUnloadMedia(bool unload) 
-{
+bool CDROM_Interface_SDL::LoadUnloadMedia(bool unload) {
 	bool success = (SDL_CDEject(cd)==0);
 	return success;
-};	
+}
 
-int CDROM_GetMountType(char* path, int forceCD)
+int CDROM_GetMountType(char* path, int forceCD) {
 // 0 - physical CDROM
 // 1 - Iso file
 // 2 - subdirectory
-{
 	// 1. Smells like a real cdrom 
 	// if ((strlen(path)<=3) && (path[2]=='\\') && (strchr(path,'\\')==strrchr(path,'\\')) && 	(GetDriveType(path)==DRIVE_CDROM)) return 0;
 
@@ -187,31 +174,28 @@ int CDROM_GetMountType(char* path, int forceCD)
 	struct stat file_stat;
 	if ((stat(path, &file_stat) == 0) && S_ISREG(file_stat.st_mode)) return 1; 
 	return 2;
-};
+}
 
 // ******************************************************
 // Fake CDROM
 // ******************************************************
 
-bool CDROM_Interface_Fake :: GetAudioTracks	(int& stTrack, int& end, TMSF& leadOut)
-{
+bool CDROM_Interface_Fake :: GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
 	stTrack = end = 1;
 	leadOut.min	= 60;
 	leadOut.sec = leadOut.fr = 0;
 	return true;
-};
+}
 
-bool CDROM_Interface_Fake :: GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr)
-{
+bool CDROM_Interface_Fake :: GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr) {
 	if (track>1) return false;
 	start.min = start.fr = 0;
 	start.sec = 2;
 	attr	  = 0x60; // data / permitted
 	return true;
-};
+}
 
-bool CDROM_Interface_Fake :: GetAudioSub (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos)
-{
+bool CDROM_Interface_Fake :: GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos){
 	attr	= 0;
 	track	= index = 1;
 	relPos.min = relPos.fr = 0; relPos.sec = 2;
@@ -219,18 +203,16 @@ bool CDROM_Interface_Fake :: GetAudioSub (unsigned char& attr, unsigned char& tr
 	return true;
 }
 
-bool CDROM_Interface_Fake :: GetAudioStatus	(bool& playing, bool& pause) 
-{
+bool CDROM_Interface_Fake :: GetAudioStatus(bool& playing, bool& pause) {
 	playing = pause = false;
 	return true;
 }
 
-bool CDROM_Interface_Fake :: GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen)
-{
+bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged, bool& trayOpen) {
 	mediaPresent = true;
 	mediaChanged = false;
-	trayOpen	 = false;
+	trayOpen     = false;
 	return true;
-};
+}
 
 

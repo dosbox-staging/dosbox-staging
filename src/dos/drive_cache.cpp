@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_cache.cpp,v 1.58 2009-03-04 21:08:22 c2woody Exp $ */
+/* $Id: drive_cache.cpp,v 1.59 2009-04-16 12:28:30 qbix79 Exp $ */
 
 #include "drives.h"
 #include "dos_inc.h"
@@ -41,32 +41,27 @@
 
 int fileInfoCounter = 0;
 
-bool SortByName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) 
-{
+bool SortByName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
 	return strcmp(a->shortname,b->shortname)<0;
-};
+}
 
-bool SortByNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) 
-{
+bool SortByNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
 	return strcmp(a->shortname,b->shortname)>0;
-};
+}
 
-bool SortByDirName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) 
-{
+bool SortByDirName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
 	// Directories first...
 	if (a->isDir!=b->isDir) return (a->isDir>b->isDir);	
 	return strcmp(a->shortname,b->shortname)<0;
-};
+}
 
-bool SortByDirNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) 
-{
+bool SortByDirNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
 	// Directories first...
 	if (a->isDir!=b->isDir) return (a->isDir>b->isDir);	
 	return strcmp(a->shortname,b->shortname)>0;
-};
+}
 
-DOS_Drive_Cache::DOS_Drive_Cache(void)
-{
+DOS_Drive_Cache::DOS_Drive_Cache(void) {
 	dirBase			= new CFileInfo;
 	save_dir		= 0;
 	srchNr			= 0;
@@ -75,10 +70,9 @@ DOS_Drive_Cache::DOS_Drive_Cache(void)
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { dirSearch[i] = 0; free[i] = true; dirFindFirst[i] = 0; };
 	SetDirSort(DIRALPHABETICAL);
 	updatelabel = true;
-};
+}
 
-DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
-{
+DOS_Drive_Cache::DOS_Drive_Cache(const char* path) {
 	dirBase			= new CFileInfo;
 	save_dir		= 0;
 	srchNr			= 0;
@@ -88,23 +82,20 @@ DOS_Drive_Cache::DOS_Drive_Cache(const char* path)
 	SetDirSort(DIRALPHABETICAL);
 	SetBaseDir(path);
 	updatelabel = true;
-};
+}
 
-DOS_Drive_Cache::~DOS_Drive_Cache(void)
-{
+DOS_Drive_Cache::~DOS_Drive_Cache(void) {
 	Clear();
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) { delete dirFindFirst[i]; dirFindFirst[i]=0; };
-};
+}
 
-void DOS_Drive_Cache::Clear(void)
-{
+void DOS_Drive_Cache::Clear(void) {
 	delete dirBase; dirBase = 0;
 	nextFreeFindFirst	= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) dirSearch[i] = 0;
-};
+}
 
-void DOS_Drive_Cache::EmptyCache(void)
-{
+void DOS_Drive_Cache::EmptyCache(void) {
 	// Empty Cache and reinit
 	Clear();
 	dirBase		= new CFileInfo;
@@ -112,10 +103,9 @@ void DOS_Drive_Cache::EmptyCache(void)
 	srchNr		= 0;
 	for (Bit32u i=0; i<MAX_OPENDIRS; i++) free[i] = true; 
 	SetBaseDir(basePath);
-};
+}
 
-void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate)
-{
+void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate) {
 /* allowupdate defaults to true. if mount sets a label then allowupdate is 
  * false and will this function return at once after the first call.
  * The label will be set at the first call. */
@@ -124,17 +114,15 @@ void DOS_Drive_Cache::SetLabel(const char* vname,bool cdrom,bool allowupdate)
 	this->updatelabel = allowupdate;
 	Set_Label(vname,label,cdrom);
 	LOG(LOG_DOSMISC,LOG_NORMAL)("DIRCACHE: Set volume label to %s",label);
-};
+}
 
-Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir)
-{
+Bit16u DOS_Drive_Cache::GetFreeID(CFileInfo* dir) {
 	for (Bit16u i=0; i<MAX_OPENDIRS; i++) if (free[i] || (dir==dirSearch[i])) return i;
 	LOG(LOG_FILES,LOG_NORMAL)("DIRCACHE: Too many open directories!");
 	return 0;
-};
+}
 
-void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
-{
+void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
 	Bit16u id;
 	strcpy(basePath,baseDir);
 	if (OpenDir(baseDir,id)) {
@@ -165,15 +153,13 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir)
 		SetLabel(labellocal,cdrom,true);
 	}
 #endif
-};
+}
 
-void DOS_Drive_Cache::ExpandName(char* path)
-{
+void DOS_Drive_Cache::ExpandName(char* path) {
 	strcpy(path,GetExpandName(path));
-};
+}
 
-char* DOS_Drive_Cache::GetExpandName(const char* path)
-{
+char* DOS_Drive_Cache::GetExpandName(const char* path) {
 	static char work [CROSS_LEN] = { 0 };
 	char dir [CROSS_LEN]; 
 
@@ -203,7 +189,7 @@ char* DOS_Drive_Cache::GetExpandName(const char* path)
 		}
 	}
 	return work;
-};
+}
 
 void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 	// Get Last part...
@@ -237,8 +223,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 	}
 }
 
-void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir)
-{
+void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir) {
 	CacheOut(path,ignoreLastDir);
 	if (dirSearch[srchNr] && (dirSearch[srchNr]->nextEntry>0)) dirSearch[srchNr]->nextEntry--;
 
@@ -252,7 +237,7 @@ void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir)
 				dirSearch[i]->nextEntry--;
 		}	
 	}
-};
+}
 
 void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 	char expand[CROSS_LEN] = { 0 };
@@ -285,10 +270,9 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 	save_dir = 0;
 }
 
-bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir)
-{
+bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir) {
 	return (curDir->fileList.size()>0);
-};
+}
 
 
 bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
@@ -314,10 +298,9 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 		};
 	}
 	return false;
-};
+}
 
-int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* shortName)
-{
+int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* shortName) {
 	char const* cpos = strchr(shortName,'~');
 	if (cpos) {
 /* the following code is replaced as it's not safe when char* is 64 bits */
@@ -346,7 +329,7 @@ int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* short
 		return strncmp(compareName,shortName,compareCount1);
 	}
 	return strcmp(compareName,shortName);
-};
+}
 
 Bitu DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name) {
 	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
@@ -373,11 +356,10 @@ Bitu DOS_Drive_Cache::CreateShortNameID(CFileInfo* curDir, const char* name) {
 		};
 	}
 	return foundNr+1;
-};
+}
 
-bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname)
+bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname) {
 // remove trailing '.' if no extension is available (Linux compatibility)
-{
 	size_t len = strlen(shortname);
 	if (len && (shortname[len-1]=='.')) {
 		if (len==1) return false;
@@ -386,10 +368,9 @@ bool DOS_Drive_Cache::RemoveTrailingDot(char* shortname)
 		return true;
 	}	
 	return false;
-};
+}
 
-Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
-{
+Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName) {
 	std::vector<CFileInfo*>::size_type filelist_size = curDir->fileList.size();
 	if (GCC_UNLIKELY(filelist_size<=0)) return -1;
 
@@ -411,11 +392,10 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName)
 	}
 	// not available
 	return -1;
-};
+}
 
-bool DOS_Drive_Cache::RemoveSpaces(char* str)
+bool DOS_Drive_Cache::RemoveSpaces(char* str) {
 // Removes all spaces
-{
 	char*	curpos	= str;
 	char*	chkpos	= str;
 	while (*chkpos!=0) { 
@@ -423,7 +403,7 @@ bool DOS_Drive_Cache::RemoveSpaces(char* str)
 	}
 	*curpos = 0;
 	return (curpos!=chkpos);
-};
+}
 
 void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 	Bits	len			= 0;
@@ -590,10 +570,9 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 	save_dir = curDir;
 
 	return curDir;
-};
+}
 
-bool DOS_Drive_Cache::OpenDir(const char* path, Bit16u& id)
-{
+bool DOS_Drive_Cache::OpenDir(const char* path, Bit16u& id) {
 	char expand[CROSS_LEN] = {0};
 	CFileInfo* dir = FindDirInfo(path,expand);
 	if (OpenDir(dir,expand,id)) {
@@ -601,10 +580,9 @@ bool DOS_Drive_Cache::OpenDir(const char* path, Bit16u& id)
 		return true;
 	}
 	return false;
-};	
+}
 
-bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
-{
+bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
 	id = GetFreeID(dir);
 	dirSearch[id] = dir;
 	char expandcopy [CROSS_LEN];
@@ -625,7 +603,7 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id)
 		}
 	};
 	return false;
-};
+}
 
 void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_directory) {
 	CFileInfo* info = new CFileInfo;

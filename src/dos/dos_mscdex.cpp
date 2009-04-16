@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_mscdex.cpp,v 1.58 2009-03-01 15:40:30 c2woody Exp $ */
+/* $Id: dos_mscdex.cpp,v 1.59 2009-04-16 12:28:30 qbix79 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -54,8 +54,7 @@ int forceCD				= -1;
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
 
-class DOS_DeviceHeader:public MemStruct
-{
+class DOS_DeviceHeader:public MemStruct {
 public:
 	DOS_DeviceHeader(PhysPt ptr)				{ pt = ptr; };
 	
@@ -88,8 +87,7 @@ public:
 	#endif
 };
 
-class CMscdex
-{
+class CMscdex {
 public:
 	CMscdex		(void);
 	~CMscdex	(void);
@@ -170,7 +168,7 @@ CMscdex::CMscdex(void) {
 
 	memset(dinfo,0,sizeof(dinfo));
 	for (Bit32u i=0; i<MSCDEX_MAX_DRIVES; i++) cdrom[i] = 0;
-};
+}
 
 CMscdex::~CMscdex(void) {
 	defaultBufSeg = 0;
@@ -178,26 +176,26 @@ CMscdex::~CMscdex(void) {
 		delete (cdrom)[i];
 		cdrom[i] = 0;
 	};
-};
+}
 
 void CMscdex::GetDrives(PhysPt data)
 {
 	for (Bit16u i=0; i<GetNumDrives(); i++) mem_writeb(data+i,dinfo[i].drive);
-};
+}
 
 bool CMscdex::IsValidDrive(Bit16u _drive)
 {
 	_drive &= 0xff; //Only lowerpart (Ultimate domain)
 	for (Bit16u i=0; i<GetNumDrives(); i++) if (dinfo[i].drive==_drive) return true;
 	return false;
-};
+}
 
 Bit8u CMscdex::GetSubUnit(Bit16u _drive)
 {
 	_drive &= 0xff; //Only lowerpart (Ultimate domain)
 	for (Bit16u i=0; i<GetNumDrives(); i++) if (dinfo[i].drive==_drive) return (Bit8u)i;
 	return 0xff;
-};
+}
 
 int CMscdex::RemoveDrive(Bit16u _drive)
 {
@@ -391,7 +389,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 	// stop audio
 	StopAudio(subUnit);
 	return result;
-};
+}
 
 bool CMscdex::HasDrive(Bit16u drive) {
 	return (GetSubUnit(drive) != 0xff);
@@ -409,7 +407,7 @@ PhysPt CMscdex::GetDefaultBuffer(void) {
 		defaultBufSeg = DOS_GetMemory(size);
 	};
 	return PhysMake(defaultBufSeg,2352);
-};
+}
 
 PhysPt CMscdex::GetTempBuffer(void) {
 	if (defaultBufSeg==0) {
@@ -417,7 +415,7 @@ PhysPt CMscdex::GetTempBuffer(void) {
 		defaultBufSeg = DOS_GetMemory(size);
 	};
 	return PhysMake(defaultBufSeg,0);
-};
+}
 
 void CMscdex::GetDriverInfo	(PhysPt data) {
 	for (Bit16u i=0; i<GetNumDrives(); i++) {
@@ -425,7 +423,7 @@ void CMscdex::GetDriverInfo	(PhysPt data) {
 		mem_writed(data+1,RealMake(rootDriverHeaderSeg,0));
 		data+=5;
 	};
-};
+}
 
 bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut)
 {
@@ -453,7 +451,7 @@ bool CMscdex::GetTrackInfo(Bit8u subUnit, Bit8u track, Bit8u& attr, TMSF& start)
 		memset(&start,0,sizeof(start));
 	};
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
 {
@@ -472,7 +470,7 @@ bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
 		dinfo[subUnit].audioEnd		= length;
 	};
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 {
@@ -482,7 +480,7 @@ bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
-};
+}
 
 bool CMscdex::GetSubChannelData(Bit8u subUnit, Bit8u& attr, Bit8u& track, Bit8u &index, TMSF& rel, TMSF& abs)
 {
@@ -494,7 +492,7 @@ bool CMscdex::GetSubChannelData(Bit8u subUnit, Bit8u& attr, Bit8u& track, Bit8u 
 		memset(&abs,0,sizeof(abs));
 	};
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& start, TMSF& end)
 {
@@ -519,7 +517,7 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 	};
 	
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::StopAudio(Bit8u subUnit)
 {
@@ -541,13 +539,13 @@ bool CMscdex::StopAudio(Bit8u subUnit)
 		dinfo[subUnit].audioPlay = false;
 	};
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::ResumeAudio(Bit8u subUnit)
 {
 	if (subUnit>=numDrives) return false;
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,dinfo[subUnit].audioStart,dinfo[subUnit].audioEnd);
-};
+}
 
 Bit32u CMscdex::GetVolumeSize(Bit8u subUnit)
 {
@@ -557,7 +555,7 @@ Bit32u CMscdex::GetVolumeSize(Bit8u subUnit)
 	dinfo[subUnit].lastResult = GetCDInfo(subUnit,tr1,tr2,leadOut);
 	if (dinfo[subUnit].lastResult) return (leadOut.min*60*75)+(leadOut.sec*75)+leadOut.fr;
 	return 0;
-};
+}
 
 bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)	
 { 
@@ -574,7 +572,7 @@ bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error)
      Bit8u type = mem_readb(data);
      error = (type == 1) ? 1 : (type == 0xFF) ? 0xFF : 0;
      return true;
-};
+}
 
 bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) {	
 	if (subUnit>=numDrives) return false;
@@ -591,7 +589,7 @@ bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) {
 	};
 
 	return success; 
-};
+}
 
 bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) {	
 	Bit16u error;
@@ -603,7 +601,7 @@ bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) {
 		mem_writeb(data+37,0);
 	};
 	return success; 
-};
+}
 
 bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) { 
 	Bit16u error;
@@ -615,7 +613,7 @@ bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) {
 		mem_writeb(data+37,0);
 	};
 	return success; 
-};
+}
 
 bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) { 
 	Bit16u error;
@@ -627,13 +625,13 @@ bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) {
 		mem_writeb(data+37,0);
 	};
 	return success; 
-};
+}
 
 bool CMscdex::GetUPC(Bit8u subUnit, Bit8u& attr, char* upc)
 {
 	if (subUnit>=numDrives) return false;
 	return dinfo[subUnit].lastResult = cdrom[subUnit]->GetUPC(attr,&upc[0]);
-};
+}
 
 bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data) {
 	if (subUnit>=numDrives) return false;
@@ -641,7 +639,7 @@ bool CMscdex::ReadSectors(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, Ph
 	else CPU_Cycles = 5;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->ReadSectors(data,raw,sector,num);
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, PhysPt data) {
 	if (subUnit>=numDrives) return false;
@@ -650,12 +648,12 @@ bool CMscdex::ReadSectorsMSF(Bit8u subUnit, bool raw, Bit32u start, Bit16u num, 
 	Bit8u fr		= (Bit8u)(start>> 0) & 0xFF;
 	Bit32u sector	= min*60*75+sec*75+fr - 150;
 	return ReadSectors(subUnit,raw,sector,num,data);
-};
+}
 
 // Called from INT 2F
 bool CMscdex::ReadSectors(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data) {
 	return ReadSectors(GetSubUnit(drive),false,sector,num,data);
-};
+}
 
 bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error)
 {
@@ -766,7 +764,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	};
 	error = 2; // file not found
 	return false; // not found
-};
+}
 
 bool CMscdex::GetCurrentPos(Bit8u subUnit, TMSF& pos)
 {
@@ -776,14 +774,14 @@ bool CMscdex::GetCurrentPos(Bit8u subUnit, TMSF& pos)
 	dinfo[subUnit].lastResult = GetSubChannelData(subUnit, attr, track, index, rel, pos);
 	if (!dinfo[subUnit].lastResult) memset(&pos,0,sizeof(pos));
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::GetMediaStatus(Bit8u subUnit, bool& media, bool& changed, bool& trayOpen)
 {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetMediaTrayStatus(media,changed,trayOpen);
 	return dinfo[subUnit].lastResult;
-};
+}
 
 Bit32u CMscdex::GetDeviceStatus(Bit8u subUnit)
 {
@@ -798,7 +796,7 @@ Bit32u CMscdex::GetDeviceStatus(Bit8u subUnit)
 					(1<<9)							|	// Red book & HSG
 					((!media) << 11);					// Drive is empty ?
 	return status;
-};
+}
 
 bool CMscdex::GetMediaStatus(Bit8u subUnit, Bit8u& status)
 {
@@ -809,14 +807,14 @@ bool CMscdex::GetMediaStatus(Bit8u subUnit, Bit8u& status)
 	return result; */
 	status = getSwapRequest() ? 0xFF : 0x01;
 	return true;
-};
+}
 
 bool CMscdex::LoadUnloadMedia(Bit8u subUnit, bool unload)
 {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->LoadUnloadMedia(unload);
 	return dinfo[subUnit].lastResult;
-};
+}
 
 bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 {
@@ -828,7 +826,7 @@ bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 	MSCDEX_Strategy_Handler();
 	MSCDEX_Interrupt_Handler();
 	return true;
-};
+}
 
 Bit16u CMscdex::GetStatusWord(Bit8u subUnit,Bit16u status)
 {
@@ -850,14 +848,14 @@ Bit16u CMscdex::GetStatusWord(Bit8u subUnit,Bit16u status)
 	} 
 	dinfo[subUnit].lastResult	= true;
 	return status;
-};
+}
 
 void CMscdex::InitNewMedia(Bit8u subUnit) {
 	if (subUnit<numDrives) {
 		// Reopen new media
 		cdrom[subUnit]->InitNewMedia();
 	}
-};
+}
 
 static CMscdex* mscdex = 0;
 static PhysPt curReqheaderPtr = 0;
@@ -1177,7 +1175,7 @@ static bool MSCDEX_Handler(void) {
 	};
 	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
 	return true;
-};
+}
 
 class device_MSCDEX : public DOS_Device {
 public:
@@ -1216,28 +1214,28 @@ int MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit)
 {
 	int result = mscdex->AddDrive(driveLetter-'A',(char*)physicalPath,subUnit);
 	return result;
-};
+}
 
 int MSCDEX_RemoveDrive(char driveLetter)
 {
 	if(!mscdex) return 0;
 	return mscdex->RemoveDrive(driveLetter-'A');
-};
+}
 
 bool MSCDEX_HasDrive(char driveLetter)
 {
 	return mscdex->HasDrive(driveLetter-'A');
-};
+}
 
 void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit)
 {
 	mscdex->ReplaceDrive(cdrom, subUnit);
-};
+}
 
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)
 {
 	return mscdex->GetVolumeName(subUnit,name);
-};
+}
 
 bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 {
@@ -1261,20 +1259,20 @@ bool MSCDEX_HasMediaChanged(Bit8u subUnit)
 		leadOut[subUnit].fr	 = 0;
 	}
 	return true;
-};
+}
 
 void MSCDEX_SetCDInterface(int intNr, int numCD)
 {
 	useCdromInterface = intNr;
 	forceCD	= numCD;
-};
+}
 
 void MSCDEX_ShutDown(Section* sec)
 {
 	delete mscdex;
 	mscdex = 0;
 	curReqheaderPtr = 0;
-};
+}
 
 void MSCDEX_Init(Section* sec) 
 {
@@ -1288,4 +1286,4 @@ void MSCDEX_Init(Section* sec)
 	DOS_AddMultiplexHandler(MSCDEX_Handler);
 	/* Create MSCDEX */
 	mscdex = new CMscdex;
-};
+}

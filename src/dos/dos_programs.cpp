@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.92 2009-03-29 09:34:18 c2woody Exp $ */
+/* $Id: dos_programs.cpp,v 1.93 2009-04-16 12:28:30 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -889,7 +889,7 @@ void LOADFIX::Run(void)
 	} else {
 		WriteOut(MSG_Get("PROGRAM_LOADFIX_ERROR"),kb);	
 	}
-};
+}
 
 static void LOADFIX_ProgramStart(Program * * make) {
 	*make=new LOADFIX;
@@ -910,7 +910,7 @@ void RESCAN::Run(void)
 		Drives[drive]->EmptyCache();
 		WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
 	}
-};
+}
 
 static void RESCAN_ProgramStart(Program * * make) {
 	*make=new RESCAN;
@@ -1330,7 +1330,7 @@ void KEYB::Run(void) {
 			WriteOut(MSG_Get("PROGRAM_KEYB_INFO_LAYOUT"),dos.loaded_codepage,layout_name);
 		}
 	}
-};
+}
 
 static void KEYB_ProgramStart(Program * * make) {
 	*make=new KEYB;
