@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.33 2009-03-31 18:15:10 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.34 2009-04-17 17:24:47 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -59,8 +59,67 @@ struct __MALLOCPTR {
 	operator char*() const { return (char*)m_ptr; }
 };
 
+
 namespace OPL2 {
-	#define OPL2_INTERNAL_FREQ    3600000   // The OPL2 operates at 3.6MHz
+	#include "opl.cpp"
+
+	struct Handler : public Adlib::Handler {
+		virtual void WriteReg( Bit32u reg, Bit8u val ) {
+			adlib_write(reg,val);
+		}
+		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
+			return val;
+		}
+
+		virtual void Generate( MixerChannel* chan, Bitu samples ) {
+			Bit16s buf[1024];
+			while( samples > 0 ) {
+				Bitu todo = samples > 1024 ? 1024 : samples;
+				samples -= todo;
+				adlib_getsample(buf, todo);
+				chan->AddSamples_m16( todo, buf );
+			}
+		}
+		virtual void Init( Bitu rate ) {
+			adlib_init(rate);
+		}
+		~Handler() {
+		}
+	};
+}
+
+namespace OPL3 {
+	#define OPLTYPE_IS_OPL3
+	#include "opl.cpp"
+
+	struct Handler : public Adlib::Handler {
+		virtual void WriteReg( Bit32u reg, Bit8u val ) {
+			adlib_write(reg,val);
+		}
+		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
+			adlib_write_index(port, val);
+			return index;
+		}
+		virtual void Generate( MixerChannel* chan, Bitu samples ) {
+			Bit16s buf[1024*2];
+			while( samples > 0 ) {
+				Bitu todo = samples > 1024 ? 1024 : samples;
+				samples -= todo;
+				adlib_getsample(buf, todo);
+				chan->AddSamples_s16( todo, buf );
+			}
+		}
+		virtual void Init( Bitu rate ) {
+			adlib_init(rate);
+		}
+		~Handler() {
+		}
+	};
+}
+
+
+namespace old_OPL2 {
+	#define OPL2_INTERNAL_FREQ    3579545   // The OPL2 operates at ~3.6MHz
 	#define HAS_YM3812 1
 	#include "fmopl.c"
 
@@ -95,8 +154,8 @@ namespace OPL2 {
 #undef OSD_CPU_H
 #undef TL_TAB_LEN
 
-namespace OPL3 {
-	#define OPL3_INTERNAL_FREQ    14400000  // The OPL3 operates at 14.4MHz
+namespace old_OPL3 {
+	#define OPL3_INTERNAL_FREQ    14318180  // The OPL3 operates at ~14.3MHz
 	#define HAS_YMF262 1
 	#include "ymf262.c"
 
@@ -640,7 +699,13 @@ public:
 		std::string oplemu( section->Get_string( "oplemu" ) );
 
 		module.chan = MixerChan.Install(OPL_CallBack,rate,"FM");
-		if ( 1 || oplemu == "auto") {
+		if (oplemu == "old") {
+			if ( oplmode == OPL_opl2 ) {
+				module.handler = new old_OPL2::Handler();
+			} else {
+				module.handler = new old_OPL3::Handler();
+			}
+		} else {
 			if ( oplmode == OPL_opl2 ) {
 				module.handler = new OPL2::Handler();
 			} else {
@@ -676,8 +741,8 @@ public:
 	~OPL() {
 		if ( module.capture )  
 			delete module.capture;
-		OPL2::YM3812Shutdown();
-		OPL3::YMF262Shutdown();
+		old_OPL2::YM3812Shutdown();
+		old_OPL3::YMF262Shutdown();
 	}
 };
 

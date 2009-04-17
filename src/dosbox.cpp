@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.146 2009-02-15 20:01:08 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.147 2009-04-17 17:24:47 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -503,10 +503,10 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(oplmodes);
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
 
-	const char* oplemus[]={ "auto", 0};
+	const char* oplemus[]={ "default", "old", 0};
 	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"auto");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help("Provider for the OPL emulation. On 'auto' dosbox will use the best emulation.");
+	Pstring->Set_help("Provider for the OPL emulation.");
 
 	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,22050);
 	Pint->Set_values(rates);

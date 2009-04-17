@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 
 SUBDIRS = serialport
 
-EXTRA_DIST = fmopl.c fmopl.h ymf262.h ymf262.c adlib.h
+EXTRA_DIST = opl.cpp opl.h fmopl.c fmopl.h ymf262.h ymf262.c adlib.h
 
 noinst_LIBRARIES = libhardware.a
 
