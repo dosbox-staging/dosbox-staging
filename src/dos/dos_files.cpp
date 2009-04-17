@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.108 2009-04-16 12:16:52 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.109 2009-04-17 11:33:51 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -284,7 +284,7 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 
 	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
 	/* If it still fails. which error should we give ? PATH NOT FOUND or EACCESS */
-	LOG(LOG_FILES,LOG_NORMAL)("Rename fails on %c from %s to %s, no proper errorcode returned.",driveold+'A',oldname,newname);
+	LOG(LOG_FILES,LOG_NORMAL)("Rename fails for %s to %s, no proper errorcode returned.",oldname,newname);
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;
 }
