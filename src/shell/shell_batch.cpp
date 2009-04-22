@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_batch.cpp,v 1.33 2009-04-02 19:08:26 qbix79 Exp $ */
+/* $Id: shell_batch.cpp,v 1.34 2009-04-22 12:28:51 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -50,7 +50,9 @@ BatchFile::~BatchFile() {
 bool BatchFile::ReadLine(char * line) {
 	//Open the batchfile and seek to stored postion
 	if (!DOS_OpenFile(cmd->GetFileName(),128,&file_handle)) {
-		E_Exit("SHELL:ReadLine Can't open BatchFile %s",cmd->GetFileName());
+		LOG(LOG_MISC,LOG_ERROR)("ReadLine Can't open BatchFile %s",cmd->GetFileName());
+		delete this;
+		return false;
 	}
 	DOS_SeekFile(file_handle,&(this->location),DOS_SEEK_SET);
 
@@ -142,7 +144,9 @@ emptyline:
 bool BatchFile::Goto(char * where) {
 	//Open bat file and search for the where string
 	if (!DOS_OpenFile(cmd->GetFileName(),128,&file_handle)) {
-		E_Exit("SHELL:Goto Can't open BatchFile %s",cmd->GetFileName());
+		LOG(LOG_MISC,LOG_ERROR)("SHELL:Goto Can't open BatchFile %s",cmd->GetFileName());
+		delete this;
+		return false;
 	}
 
 	char cmd_buffer[CMD_MAXLINE];
