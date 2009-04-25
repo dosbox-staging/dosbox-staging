@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.22 2009-01-14 22:16:00 qbix79 Exp $ */
+/* $Id: callback.h,v 1.23 2009-04-25 16:25:03 harekiet Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -43,14 +43,14 @@ enum {
 
 extern Bit8u lastint;
 
-INLINE RealPt CALLBACK_RealPointer(Bitu callback) {
+static INLINE RealPt CALLBACK_RealPointer(Bitu callback) {
 	return RealMake(CB_SEG,(Bit16u)(callback*CB_SIZE));
 }
-INLINE PhysPt CALLBACK_PhysPointer(Bitu callback) {
+static INLINE PhysPt CALLBACK_PhysPointer(Bitu callback) {
 	return PhysMake(CB_SEG,(Bit16u)(callback*CB_SIZE));
 }
 
-INLINE PhysPt CALLBACK_GetBase(void) {
+static INLINE PhysPt CALLBACK_GetBase(void) {
 	return CB_SEG << 4;
 }
 

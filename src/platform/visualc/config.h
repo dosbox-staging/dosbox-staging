@@ -1,7 +1,4 @@
-#define INLINE __forceinline
-
 #define VERSION "0.72"
-
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
@@ -57,6 +54,9 @@
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)
+
+#define INLINE __forceinline
+#define DB_FASTCALL __fastcall
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1400) 
 #pragma warning(disable : 4996) 

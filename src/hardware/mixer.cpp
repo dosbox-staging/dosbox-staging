@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.50 2009-03-19 20:45:42 c2woody Exp $ */
+/* $Id: mixer.cpp,v 1.51 2009-04-25 16:25:03 harekiet Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -55,7 +55,7 @@
 #define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_VOLSHIFT 13
 
-static inline Bit16s MIXER_CLIP(Bits SAMP) {
+static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
 	if (SAMP < MAX_AUDIO) {
 		if (SAMP > MIN_AUDIO)
 			return SAMP;
@@ -175,7 +175,7 @@ void MixerChannel::AddSilence(void) {
 }
 
 template<class Type,bool stereo,bool signeddata,bool nativeorder>
-INLINE void MixerChannel::AddSamples(Bitu len, const Type* data) {
+inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 	Bits diff[2];
 	Bitu mixpos=mixer.pos+done;
 	freq_index&=MIXER_REMAIN;

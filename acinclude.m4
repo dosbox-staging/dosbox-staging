@@ -323,7 +323,18 @@ AH_TOP([
  */
 ])
 
-AH_BOTTOM([#define INLINE inline])
+AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
+#define INLINE __attribute__((always_inline))
+#else
+#define INLINE inline
+#endif])
+
+AH_BOTTOM([#if C_ATTRIBUTE_FASTCALL
+#define DB_FASTCALL __attribute__((fastcall))
+#else
+#define DB_FASTCALL
+#endif])
+
 
 AH_BOTTOM([#if C_HAS_ATTRIBUTE
 #define GCC_ATTRIBUTE(x) __attribute__ ((x))

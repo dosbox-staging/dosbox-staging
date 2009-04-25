@@ -218,26 +218,26 @@ static inline Bits MakeVolume( Bitu wave, Bitu volume ) {
 	return (sig >> exp);
 };
 
-static Bits FASTCALL WaveForm0( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm0( Bitu i, Bitu volume ) {
 	Bits neg = 0 - (( i >> 9) & 1);//Create ~0 or 0
 	Bitu wave = SinTable[i & 511];
 	return (MakeVolume( wave, volume ) ^ neg) - neg;
 }
-static Bits FASTCALL WaveForm1( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm1( Bitu i, Bitu volume ) {
 	Bit32u wave = SinTable[i & 511];
 	wave |= ( ( (i ^ 512 ) & 512) - 1) >> ( 32 - 12 );
 	return MakeVolume( wave, volume );
 }
-static Bits FASTCALL WaveForm2( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm2( Bitu i, Bitu volume ) {
 	Bitu wave = SinTable[i & 511];
 	return MakeVolume( wave, volume );
 }
-static Bits FASTCALL WaveForm3( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm3( Bitu i, Bitu volume ) {
 	Bitu wave = SinTable[i & 255];
 	wave |= ( ( (i ^ 256 ) & 256) - 1) >> ( 32 - 12 );
 	return MakeVolume( wave, volume );
 }
-static Bits FASTCALL WaveForm4( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm4( Bitu i, Bitu volume ) {
 	//Twice as fast
 	i <<= 1;
 	Bits neg = 0 - (( i >> 9) & 1);//Create ~0 or 0
@@ -245,18 +245,18 @@ static Bits FASTCALL WaveForm4( Bitu i, Bitu volume ) {
 	wave |= ( ( (i ^ 512 ) & 512) - 1) >> ( 32 - 12 );
 	return (MakeVolume( wave, volume ) ^ neg) - neg;
 }
-static Bits FASTCALL WaveForm5( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm5( Bitu i, Bitu volume ) {
 	//Twice as fast
 	i <<= 1;
 	Bitu wave = SinTable[i & 511];
 	wave |= ( ( (i ^ 512 ) & 512) - 1) >> ( 32 - 12 );
 	return MakeVolume( wave, volume );
 }
-static Bits FASTCALL WaveForm6( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm6( Bitu i, Bitu volume ) {
 	Bits neg = 0 - (( i >> 9) & 1);//Create ~0 or 0
 	return (MakeVolume( 0, volume ) ^ neg) - neg;
 }
-static Bits FASTCALL WaveForm7( Bitu i, Bitu volume ) {
+static Bits DB_FASTCALL WaveForm7( Bitu i, Bitu volume ) {
 	//Negative is reversed here
 	Bits neg = (( i >> 9) & 1) - 1;
 	Bitu wave = (i << 3);

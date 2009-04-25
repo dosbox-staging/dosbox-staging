@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.h,v 1.37 2009-04-11 07:58:39 qbix79 Exp $ */
+/* $Id: int10.h,v 1.38 2009-04-25 16:25:03 harekiet Exp $ */
 
 #include "vga.h"
 
@@ -146,11 +146,11 @@ typedef struct {
 
 extern Int10Data int10;
 
-INLINE Bit8u CURSOR_POS_COL(Bit8u page) {
+static Bit8u CURSOR_POS_COL(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2);
 }
 
-INLINE Bit8u CURSOR_POS_ROW(Bit8u page) {
+static Bit8u CURSOR_POS_ROW(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
 }
 

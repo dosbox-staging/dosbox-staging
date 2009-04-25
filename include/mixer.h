@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.h,v 1.17 2009-03-19 20:45:42 c2woody Exp $ */
+/* $Id: mixer.h,v 1.18 2009-04-25 16:25:03 harekiet Exp $ */
 
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
@@ -52,8 +52,10 @@ public:
 	void SetFreq(Bitu _freq);
 	void Mix(Bitu _needed);
 	void AddSilence(void);			//Fill up until needed
+
 	template<class Type,bool stereo,bool signeddata,bool nativeorder>
 	void AddSamples(Bitu len, const Type* data);
+
 	void AddSamples_m8(Bitu len, const Bit8u * data);
 	void AddSamples_s8(Bitu len, const Bit8u * data);
 	void AddSamples_m8s(Bitu len, const Bit8s * data);

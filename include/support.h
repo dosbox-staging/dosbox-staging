@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.h,v 1.16 2008-01-13 11:28:41 qbix79 Exp $ */
+/* $Id: support.h,v 1.17 2009-04-25 16:25:03 harekiet Exp $ */
 
 #ifndef DOSBOX_SUPPORT_H
 #define DOSBOX_SUPPORT_H
@@ -43,6 +43,8 @@ void strreplace(char * str,char o,char n);
 char *ltrim(char *str);
 char *rtrim(char *str);
 char *trim(char * str);
+char * upcase(char * str);
+char * lowcase(char * str);
 
 bool ScanCMDBool(char * cmd,char const * const check);
 char * ScanCMDRemain(char * cmd);
@@ -51,16 +53,6 @@ bool IsDecWord(char * word);
 bool IsHexWord(char * word);
 Bits ConvDecWord(char * word);
 Bits ConvHexWord(char * word);
-
-INLINE char * upcase(char * str) {
-    for (char* idx = str; *idx ; idx++) *idx = toupper(*reinterpret_cast<unsigned char*>(idx));
-    return str;
-}
-
-INLINE char * lowcase(char * str) {
-	for(char* idx = str; *idx ; idx++)  *idx = tolower(*reinterpret_cast<unsigned char*>(idx));
-	return str;
-}
 
 void upcase(std::string &str);
 void lowcase(std::string &str);

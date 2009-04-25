@@ -108,44 +108,44 @@ extern FPU_rec fpu;
 Bit16u FPU_GetTag(void);
 void FPU_FLDCW(PhysPt addr);
 
-INLINE void FPU_SetTag(Bit16u tag){
+static INLINE void FPU_SetTag(Bit16u tag){
 	for(Bitu i=0;i<8;i++)
 		fpu.tags[i] = static_cast<FPU_Tag>((tag >>(2*i))&3);
 }
 
-INLINE void FPU_SetCW(Bitu word){
+static INLINE void FPU_SetCW(Bitu word){
 	fpu.cw = (Bit16u)word;
 	fpu.cw_mask_all = (Bit16u)(word | 0x3f);
 	fpu.round = (FPU_Round)((word >> 10) & 3);
 }
 
 
-INLINE Bitu FPU_GET_TOP(void) {
+static INLINE Bitu FPU_GET_TOP(void) {
 	return (fpu.sw & 0x3800)>>11;
 }
 
-INLINE void FPU_SET_TOP(Bitu val){
+static INLINE void FPU_SET_TOP(Bitu val){
 	fpu.sw &= ~0x3800;
 	fpu.sw |= (val&7)<<11;
 }
 
 
-INLINE void FPU_SET_C0(Bitu C){
+static INLINE void FPU_SET_C0(Bitu C){
 	fpu.sw &= ~0x0100;
 	if(C) fpu.sw |=  0x0100;
 }
 
-INLINE void FPU_SET_C1(Bitu C){
+static INLINE void FPU_SET_C1(Bitu C){
 	fpu.sw &= ~0x0200;
 	if(C) fpu.sw |=  0x0200;
 }
 
-INLINE void FPU_SET_C2(Bitu C){
+static INLINE void FPU_SET_C2(Bitu C){
 	fpu.sw &= ~0x0400;
 	if(C) fpu.sw |=  0x0400;
 }
 
-INLINE void FPU_SET_C3(Bitu C){
+static INLINE void FPU_SET_C3(Bitu C){
 	fpu.sw &= ~0x4000;
 	if(C) fpu.sw |= 0x4000;
 }

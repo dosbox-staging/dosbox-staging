@@ -36,19 +36,19 @@ extern Bitu PIC_IRQCheck;
 extern Bitu PIC_IRQActive;
 extern Bitu PIC_Ticks;
 
-INLINE float PIC_TickIndex(void) {
+static INLINE float PIC_TickIndex(void) {
 	return (CPU_CycleMax-CPU_CycleLeft-CPU_Cycles)/(float)CPU_CycleMax;
 }
 
-INLINE Bits PIC_TickIndexND(void) {
+static INLINE Bits PIC_TickIndexND(void) {
 	return CPU_CycleMax-CPU_CycleLeft-CPU_Cycles;
 }
 
-INLINE Bits PIC_MakeCycles(double amount) {
+static INLINE Bits PIC_MakeCycles(double amount) {
 	return (Bits)(CPU_CycleMax*amount);
 }
 
-INLINE double PIC_FullIndex(void) {
+static INLINE double PIC_FullIndex(void) {
 	return PIC_Ticks+(double)PIC_TickIndex();
 }
 

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.76 2008-09-06 14:47:02 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.77 2009-04-25 16:25:03 harekiet Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -208,18 +208,18 @@ enum {
 };
 
 
-INLINE Bit16u long2para(Bit32u size) {
+static INLINE Bit16u long2para(Bit32u size) {
 	if (size>0xFFFF0) return 0xffff;
 	if (size&0xf) return (Bit16u)((size>>4)+1);
 	else return (Bit16u)(size>>4);
 }
 
 
-INLINE Bit16u DOS_PackTime(Bit16u hour,Bit16u min,Bit16u sec) {
+static INLINE Bit16u DOS_PackTime(Bit16u hour,Bit16u min,Bit16u sec) {
 	return (hour&0x1f)<<11 | (min&0x3f) << 5 | ((sec/2)&0x1f);
 }
 
-INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
+static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 	return ((year-1980)&0x7f)<<9 | (mon&0x3f) << 5 | (day&0x1f);
 }
 
@@ -254,7 +254,7 @@ INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 
 class MemStruct {
 public:
-	INLINE Bitu GetIt(Bitu size,PhysPt addr) {
+	Bitu GetIt(Bitu size,PhysPt addr) {
 		switch (size) {
 		case 1:return mem_readb(pt+addr);
 		case 2:return mem_readw(pt+addr);
@@ -262,16 +262,16 @@ public:
 		}
 		return 0;
 	}
-	INLINE void SaveIt(Bitu size,PhysPt addr,Bitu val) {
+	void SaveIt(Bitu size,PhysPt addr,Bitu val) {
 		switch (size) {
 		case 1:mem_writeb(pt+addr,(Bit8u)val);break;
 		case 2:mem_writew(pt+addr,(Bit16u)val);break;
 		case 4:mem_writed(pt+addr,(Bit32u)val);break;
 		}
 	}
-	INLINE void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
-	INLINE void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
-	INLINE void SetPt(RealPt addr) { pt=Real2Phys(addr);}
+	void SetPt(Bit16u seg) { pt=PhysMake(seg,0);}
+	void SetPt(Bit16u seg,Bit16u off) { pt=PhysMake(seg,off);}
+	void SetPt(RealPt addr) { pt=Real2Phys(addr);}
 protected:
 	PhysPt pt;
 };
@@ -635,7 +635,7 @@ struct DOS_Block {
 
 extern DOS_Block dos;
 
-INLINE Bit8u RealHandle(Bit16u handle) {
+static Bit8u RealHandle(Bit16u handle) {
 	DOS_PSP psp(dos.psp());	
 	return psp.GetFileHandle(handle);
 }

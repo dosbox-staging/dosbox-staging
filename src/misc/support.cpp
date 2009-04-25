@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: support.cpp,v 1.35 2008-08-06 18:32:35 c2woody Exp $ */
+/* $Id: support.cpp,v 1.36 2009-04-25 16:25:03 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,6 +79,17 @@ char *rtrim(char *str) {
 char *trim(char *str) {
 	return ltrim(rtrim(str));
 }
+
+char * upcase(char * str) {
+    for (char* idx = str; *idx ; idx++) *idx = toupper(*reinterpret_cast<unsigned char*>(idx));
+    return str;
+}
+
+char * lowcase(char * str) {
+	for(char* idx = str; *idx ; idx++)  *idx = tolower(*reinterpret_cast<unsigned char*>(idx));
+	return str;
+}
+
 
 
 bool ScanCMDBool(char * cmd,char const * const check) {
