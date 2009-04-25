@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.57 2009-02-11 22:16:05 c2woody Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.58 2009-04-25 06:59:54 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -53,7 +53,7 @@ enum BB_Types {
 
 enum BC_Types {
 	BC_Mod1,BC_Mod2,BC_Mod3,
-	BC_Hold,
+	BC_Hold
 };
 
 #define BMOD_Mod1 0x0001

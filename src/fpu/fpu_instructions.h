@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: fpu_instructions.h,v 1.31 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: fpu_instructions.h,v 1.32 2009-04-25 06:59:54 qbix79 Exp $ */
 
 
 static void FPU_FINIT(void) {
@@ -321,7 +321,7 @@ static void FPU_FDIVR(Bitu st, Bitu other){
 	fpu.regs[st].d= fpu.regs[other].d/fpu.regs[st].d;
 	// flags and such :)
 	return;
-};
+}
 
 static void FPU_FMUL(Bitu st, Bitu other){
 	fpu.regs[st].d*=fpu.regs[other].d;
