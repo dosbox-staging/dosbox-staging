@@ -16,14 +16,19 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.h,v 1.2 2009-04-06 11:23:21 qbix79 Exp $ */
+/* $Id: adlib.h,v 1.3 2009-04-25 09:55:50 harekiet Exp $ */
 
 #ifndef DOSBOX_ADLIB_H
 #define DOSBOX_ADLIB_H
 
 #include "dosbox.h"
 #include "mixer.h"
+#include "inout.h"
+#include "mixer.h"
+#include "setup.h"
 #include "pic.h"
+#include "hardware.h"
+
 
 namespace Adlib {
 
@@ -108,7 +113,11 @@ typedef Bit8u RegisterCache[512];
 //Internal class used for dro capturing
 class Capture;
 
-class Module {
+class Module: public Module_base {
+	IO_ReadHandleObject ReadHandler[3];
+	IO_WriteHandleObject WriteHandler[3];
+	MixerObject mixerObject;
+
 	//Mode we're running in
 	Mode mode;
 	//Last selected address in the chip for the different modes
@@ -119,7 +128,8 @@ class Module {
 	void CacheWrite( Bit32u reg, Bit8u val );
 	void DualWrite( Bit8u index, Bit8u reg, Bit8u val );
 public:
-	MixerChannel* chan;
+	static OPL_Mode oplmode;
+	MixerChannel* mixerChan;
 	Bit32u lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
 
 	Handler* handler;				//Handler that will generate the sound
@@ -132,7 +142,8 @@ public:
 	Bitu PortRead( Bitu port, Bitu iolen );
 	void Init( Mode m );
 
-	Module();
+	Module( Section* configuration); 
+	~Module();
 };
 
 

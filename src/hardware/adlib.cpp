@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.34 2009-04-17 17:24:47 c2woody Exp $ */
+/* $Id: adlib.cpp,v 1.35 2009-04-25 09:55:50 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,15 +24,12 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#include "dosbox.h"
-#include "inout.h"
-#include "mixer.h"
-#include "pic.h"
-#include "hardware.h"
+#include "adlib.h"
+
 #include "setup.h"
 #include "mapper.h"
-#include "adlib.h"
 #include "mem.h"
+#include "dbopl.h"
 
 /* 
 	Thanks to vdmsound for nice simple way to implement this
@@ -186,6 +183,7 @@ namespace old_OPL3 {
 		}
 	};
 }
+
 
 
 #define RAW_SIZE 1024
@@ -548,8 +546,8 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 	//Keep track of last write time
 	lastUsed = PIC_Ticks;
 	//Maybe only enable with a keyon?
-	if ( !chan->enabled ) {
-		chan->Enable(true);
+	if ( !mixerChan->enabled ) {
+		mixerChan->Enable(true);
 	}
 	if ( port&1 ) {
 		switch ( mode ) {
@@ -641,121 +639,165 @@ void Module::Init( Mode m ) {
 	}
 }
 
-Module::Module() {
-	reg.dual[0] = 0;
-	reg.dual[1] = 0;
-	reg.normal = 0;
-}
+}; //namespace
 
 
-};	//Adlib Namespace
 
-
-static Adlib::Module module;
-
+static Adlib::Module* module = 0;
 
 static void OPL_CallBack(Bitu len) {
-	module.handler->Generate( module.chan, len );
+	module->handler->Generate( module->mixerChan, len );
 	//Disable the sound generation after 30 seconds of silence
-	if ((PIC_Ticks-module.lastUsed) > 30000) {
-		module.chan->Enable(false);
+	if ((PIC_Ticks - module->lastUsed) > 30000) {
+		module->mixerChan->Enable(false);
 	}
 }
 
 static Bitu OPL_Read(Bitu port,Bitu iolen) {
-	return module.PortRead( port, iolen );
+	return module->PortRead( port, iolen );
 }
 
 void OPL_Write(Bitu port,Bitu val,Bitu iolen) {
-	module.PortWrite( port, val, iolen );
+	module->PortWrite( port, val, iolen );
 }
+
+/*
+	Save the current state of the operators as instruments in an reality adlib tracker file
+*/
+static void SaveRad() {
+	char b[16 * 1024];
+	int w = 0;
+
+	FILE* handle = OpenCaptureFile("RAD Capture",".rad");
+	if ( !handle )
+		return;
+	//Header
+	fwrite( "RAD by REALiTY!!", 1, 16, handle );
+	b[w++] = 0x10;		//version
+	b[w++] = 0x06;		//default speed and no description
+	//Write 18 instuments for all operators in the cache
+	for ( int i = 0; i < 18; i++ ) {
+		Bit8u* set = module->cache + ( i / 9 ) * 256;
+		Bitu offset = ((i % 9) / 3) * 8 + (i % 3);
+		Bit8u* base = set + offset;
+		b[w++] = 1 + i;		//instrument number
+		b[w++] = base[0x23];
+		b[w++] = base[0x20];
+		b[w++] = base[0x43];
+		b[w++] = base[0x40];
+		b[w++] = base[0x63];
+		b[w++] = base[0x60];
+		b[w++] = base[0x83];
+		b[w++] = base[0x80];
+		b[w++] = set[0xc0 + (i % 9)];
+		b[w++] = base[0xe3];
+		b[w++] = base[0xe0];
+	}
+	b[w++] = 0;		//instrument 0, no more instruments following
+	b[w++] = 1;		//1 pattern following
+	//Zero out the remaing part of the file a bit to make rad happy
+	for ( int i = 0; i < 64; i++ ) {
+		b[w++] = 0;
+	}
+	fwrite( b, 1, w, handle );
+	fclose( handle );
+};
+
 
 static void OPL_SaveRawEvent(bool pressed) {
 	if (!pressed)
 		return;
+//	SaveRad();return;
 	/* Check for previously opened wave file */
-	if ( module.capture ) {
-		delete module.capture;
-		module.capture = 0;
+	if ( module->capture ) {
+		delete module->capture;
+		module->capture = 0;
 		LOG_MSG("Stopped Raw OPL capturing.");
 	} else {
 		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
-		module.capture = new Adlib::Capture( &module.cache );
+		module->capture = new Adlib::Capture( &module->cache );
 	}
 }
 
-class OPL: public Module_base {
-private:
-	IO_ReadHandleObject ReadHandler[3];
-	IO_WriteHandleObject WriteHandler[3];
-	MixerObject MixerChan;
-public:
-	static OPL_Mode oplmode;
+namespace Adlib {
 
-	OPL(Section* configuration):Module_base(configuration) {
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		Bitu base = section->Get_hex("sbbase");
-		Bitu rate = section->Get_int("oplrate");
-		std::string oplemu( section->Get_string( "oplemu" ) );
+Module::Module( Section* configuration ) : Module_base(configuration) {
+	reg.dual[0] = 0;
+	reg.dual[1] = 0;
+	reg.normal = 0;
+	handler = 0;
+	capture = 0;
 
-		module.chan = MixerChan.Install(OPL_CallBack,rate,"FM");
-		if (oplemu == "old") {
-			if ( oplmode == OPL_opl2 ) {
-				module.handler = new old_OPL2::Handler();
-			} else {
-				module.handler = new old_OPL3::Handler();
-			}
+	Section_prop * section=static_cast<Section_prop *>(configuration);
+	Bitu base = section->Get_hex("sbbase");
+	Bitu rate = section->Get_int("oplrate");
+	std::string oplemu( section->Get_string( "oplemu" ) );
+
+	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
+	if (oplemu == "old") {
+		if ( oplmode == OPL_opl2 ) {
+			handler = new old_OPL2::Handler();
 		} else {
-			if ( oplmode == OPL_opl2 ) {
-				module.handler = new OPL2::Handler();
-			} else {
-				module.handler = new OPL3::Handler();
-			}
+			handler = new old_OPL3::Handler();
 		}
-		module.handler->Init( rate );
-		Bit8u portRange = 4;	//opl2 will set this to 2
-		switch ( oplmode ) {
-		case OPL_opl2:
-			portRange = 2;
-			module.Init( Adlib::MODE_OPL2 );
-			break;
-		case OPL_dualopl2:
-			module.Init( Adlib::MODE_DUALOPL2 );
-			break;
-		case OPL_opl3:
-			module.Init( Adlib::MODE_OPL3 );
-			break;
+	} else if (oplemu == "fast") {
+		handler = new DBOPL::Handler();
+	} else {
+		if ( oplmode == OPL_opl2 ) {
+			handler = new OPL2::Handler();
+		} else {
+			handler = new OPL3::Handler();
 		}
-		//0x388 range
-		WriteHandler[0].Install(0x388,OPL_Write,IO_MB, portRange );
-		ReadHandler[0].Install(0x388,OPL_Read,IO_MB, portRange - 1 );
-		//0x220 range
-		WriteHandler[1].Install(base,OPL_Write,IO_MB, portRange );
-		ReadHandler[1].Install(base,OPL_Read,IO_MB, portRange - 1 );
-		//0x228 range
-		WriteHandler[2].Install(base+8,OPL_Write,IO_MB,2);
-		ReadHandler[2].Install(base+8,OPL_Read,IO_MB,1);
-
-		MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 	}
-	~OPL() {
-		if ( module.capture )  
-			delete module.capture;
-		old_OPL2::YM3812Shutdown();
-		old_OPL3::YMF262Shutdown();
+	handler->Init( rate );
+	Bit8u portRange = 4;	//opl2 will set this to 2
+	switch ( oplmode ) {
+	case OPL_opl2:
+		portRange = 2;
+		Init( Adlib::MODE_OPL2 );
+		break;
+	case OPL_dualopl2:
+		Init( Adlib::MODE_DUALOPL2 );
+		break;
+	case OPL_opl3:
+		Init( Adlib::MODE_OPL3 );
+		break;
 	}
-};
+	//0x388 range
+	WriteHandler[0].Install(0x388,OPL_Write,IO_MB, portRange );
+	ReadHandler[0].Install(0x388,OPL_Read,IO_MB, portRange - 1 );
+	//0x220 range
+	WriteHandler[1].Install(base,OPL_Write,IO_MB, portRange );
+	ReadHandler[1].Install(base,OPL_Read,IO_MB, portRange - 1 );
+	//0x228 range
+	WriteHandler[2].Install(base+8,OPL_Write,IO_MB,2);
+	ReadHandler[2].Install(base+8,OPL_Read,IO_MB,1);
 
-static OPL* test;
+	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
+}
+
+Module::~Module() {
+	if ( capture ) {
+		delete capture;
+	}
+	if ( handler ) {
+		delete handler;
+	}
+}
 
 //Initialize static members
-OPL_Mode OPL::oplmode=OPL_none;
+OPL_Mode Module::oplmode=OPL_none;
+
+};	//Adlib Namespace
+
 
 void OPL_Init(Section* sec,OPL_Mode oplmode) {
-	OPL::oplmode = oplmode;
-	test = new OPL(sec);
+	Adlib::Module::oplmode = oplmode;
+	module = new Adlib::Module( sec );
 }
 
 void OPL_ShutDown(Section* sec){
-	delete test;
+	delete module;
+	module = 0;
+
 }
