@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.72 2009-03-19 20:45:42 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.73 2009-04-25 07:02:28 qbix79 Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -78,11 +78,11 @@ enum DSP_MODES {
 enum DMA_MODES {
 	DSP_DMA_NONE,
 	DSP_DMA_2,DSP_DMA_3,DSP_DMA_4,DSP_DMA_8,
-	DSP_DMA_16,DSP_DMA_16_ALIASED,
+	DSP_DMA_16,DSP_DMA_16_ALIASED
 };
 
 enum {
-	PLAY_MONO,PLAY_STEREO,
+	PLAY_MONO,PLAY_STEREO
 };
 
 struct SB_INFO {
