@@ -1293,7 +1293,7 @@ void InitTables( void ) {
 	//Exponential volume table, same as the real adlib
 	for ( int i = 0; i < 256; i++ ) {
 		//Save them in reverse
-		ExpTable[i] = (int)( 0.5 + ( pow(2, ( 255 - i) * ( 1.0 /256 ) )-1) * 1024 );
+		ExpTable[i] = (int)( 0.5 + ( pow(2.0, ( 255 - i) * ( 1.0 /256 ) )-1) * 1024 );
 		ExpTable[i] += 1024; //or remove the -1 oh well :)
 		//Preshift to the left once so the final volume can shift to the right
 		ExpTable[i] *= 2;
