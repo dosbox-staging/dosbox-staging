@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cmos.cpp,v 1.26 2009-04-11 08:02:23 qbix79 Exp $ */
+/* $Id: cmos.cpp,v 1.27 2009-04-26 18:26:10 qbix79 Exp $ */
 
 #include <time.h>
 
@@ -65,6 +65,8 @@ static void cmos_checktimer(void) {
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
 	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
+//	PIC_AddEvent(cmos_timerevent,(double)cmos.timer.delay-fmod(PIC_FullIndex(),(double)cmos.timer.delay)); //Should be more like a real pc. Check
+//	status reg A reading with this (and with other delays actually)
 }
 
 void cmos_selreg(Bitu port,Bitu val,Bitu iolen) {
