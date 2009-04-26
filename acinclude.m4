@@ -324,7 +324,7 @@ AH_TOP([
 ])
 
 AH_BOTTOM([#if C_ATTRIBUTE_ALWAYS_INLINE
-#define INLINE __attribute__((always_inline))
+#define INLINE inline __attribute__((always_inline))
 #else
 #define INLINE inline
 #endif])
