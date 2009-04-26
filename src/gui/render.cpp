@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: render.cpp,v 1.59 2009-04-26 18:24:36 qbix79 Exp $ */
+/* $Id: render.cpp,v 1.60 2009-04-26 19:14:50 harekiet Exp $ */
 
 #include <sys/types.h>
 #include <assert.h>
@@ -518,6 +518,12 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
 		return;	
+	}
+	if ( ratio > 1 ) {
+		double target = height * ratio + 0.1;
+		ratio = target / height;
+	} else {
+		//This would alter the width of the screen, we don't care about rounding errors here
 	}
 	render.src.width=width;
 	render.src.height=height;
