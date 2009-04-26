@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.78 2008-10-05 14:44:52 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.79 2009-04-26 18:24:36 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include <dirent.h>
+
 #include "dosbox.h"
 #include "dos_inc.h"
 #include "drives.h"
@@ -264,7 +264,7 @@ again:
 		goto again;//No symlinks and such
 	}	
 
-	if(S_ISDIR(stat_block.st_mode)) find_attr=DOS_ATTR_DIRECTORY;
+	if(stat_block.st_mode & S_IFDIR) find_attr=DOS_ATTR_DIRECTORY;
 	else find_attr=DOS_ATTR_ARCHIVE;
  	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
 	

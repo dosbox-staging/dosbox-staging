@@ -16,14 +16,12 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.36 2009-04-26 15:37:04 c2woody Exp $ */
+/* $Id: adlib.cpp,v 1.37 2009-04-26 18:24:36 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <sys/types.h>
-#include <dirent.h>
-
 #include "adlib.h"
 
 #include "setup.h"

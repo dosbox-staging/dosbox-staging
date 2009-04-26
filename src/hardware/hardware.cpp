@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,9 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.21 2009-02-01 15:52:53 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.22 2009-04-26 18:24:36 qbix79 Exp $ */
 
-#include <dirent.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -89,15 +88,14 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	}
 
 	Bitu last=0;
-	char file_name[CROSS_LEN];
 	char file_start[16];
-	DIR * dir;struct dirent * dir_ent;
+	dir_information * dir;
 	/* Find a filename to open */
-	dir=opendir(capturedir.c_str());
+	dir = open_directory(capturedir.c_str());
 	if (!dir) {
 		//Try creating it first
 		Cross::CreateDir(capturedir);
-		dir=opendir(capturedir.c_str());
+		dir=open_directory(capturedir.c_str());
 		if(!dir) {
 		
 			LOG_MSG("Can't open dir %s for capturing %s",capturedir.c_str(),type);
@@ -107,17 +105,20 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 	strcpy(file_start,RunningProgram);
 	lowcase(file_start);
 	strcat(file_start,"_");
-	while ((dir_ent=readdir(dir))) {
-		char tempname[CROSS_LEN];
-		strcpy(tempname,dir_ent->d_name);
+	bool is_directory;
+	char tempname[CROSS_LEN];
+	bool testRead = read_directory_first(dir, tempname, is_directory );
+	for ( ; testRead; testRead = read_directory_next(dir, tempname, is_directory) ) {
 		char * test=strstr(tempname,ext);
-		if (!test || strlen(test)!=strlen(ext)) continue;
+		if (!test || strlen(test)!=strlen(ext)) 
+			continue;
 		*test=0;
 		if (strncasecmp(tempname,file_start,strlen(file_start))!=0) continue;
 		Bitu num=atoi(&tempname[strlen(file_start)]);
 		if (num>=last) last=num+1;
 	}
-	closedir(dir);
+	close_directory( dir );
+	char file_name[CROSS_LEN];
 	sprintf(file_name,"%s%c%s%03d%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");

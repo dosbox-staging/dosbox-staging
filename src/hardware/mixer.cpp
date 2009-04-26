@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.51 2009-04-25 16:25:03 harekiet Exp $ */
+/* $Id: mixer.cpp,v 1.52 2009-04-26 18:24:36 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -25,7 +25,6 @@
 
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <math.h>
 
 #if defined (WIN32)

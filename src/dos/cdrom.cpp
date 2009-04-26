@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: cdrom.cpp,v 1.27 2009-04-26 18:24:36 qbix79 Exp $ */
 
 // ******************************************************
 // SDL CDROM 
@@ -24,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <dirent.h>
+
 #include "dosbox.h"
 #include "SDL.h"
 #include "support.h"
@@ -172,7 +173,7 @@ int CDROM_GetMountType(char* path, int forceCD) {
 	
 	// Detect ISO
 	struct stat file_stat;
-	if ((stat(path, &file_stat) == 0) && S_ISREG(file_stat.st_mode)) return 1; 
+	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG)) return 1; 
 	return 2;
 }
 
