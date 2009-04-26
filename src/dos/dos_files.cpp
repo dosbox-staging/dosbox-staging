@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.109 2009-04-17 11:33:51 qbix79 Exp $ */
+/* $Id: dos_files.cpp,v 1.110 2009-04-26 19:13:32 harekiet Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -272,12 +272,13 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 		return false;
 	}
 	/*Test if target exists => no access */
-	if(Drives[drivenew]->FileExists(fullnew)) {
+	Bit16u attr;
+	if(Drives[drivenew]->GetFileAttr(fullnew,&attr)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 	/* Source must exist, check for path ? */
-	if(!Drives[driveold]->FileExists(fullold)) {
+	if (!Drives[driveold]->GetFileAttr( fullold, &attr ) ) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
