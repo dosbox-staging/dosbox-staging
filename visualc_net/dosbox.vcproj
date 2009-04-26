@@ -539,6 +539,9 @@
 						RelativePath="..\src\hardware\adlib.cpp">
 					</File>
 					<File
+						RelativePath="..\src\hardware\dbopl.cpp">
+					</File>
+					<File
 						RelativePath="..\src\hardware\disney.cpp">
 					</File>
 					<File

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.35 2009-04-25 09:55:50 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.36 2009-04-26 15:37:04 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -742,12 +742,14 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 		}
 	} else if (oplemu == "fast") {
 		handler = new DBOPL::Handler();
-	} else {
+	} else if (oplemu == "compat") {
 		if ( oplmode == OPL_opl2 ) {
 			handler = new OPL2::Handler();
 		} else {
 			handler = new OPL3::Handler();
 		}
+	} else {
+		handler = new DBOPL::Handler();
 	}
 	handler->Init( rate );
 	Bit8u portRange = 4;	//opl2 will set this to 2

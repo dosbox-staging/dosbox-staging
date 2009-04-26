@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.147 2009-04-17 17:24:47 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.148 2009-04-26 15:37:04 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -312,7 +312,8 @@ void DOSBOX_Init(void) {
 	SDLNetInited = false;
 
 	// Some frequently used option sets
-	const char *rates[] = { "22050", "44100", "48000", "32000", "16000", "11025", "8000", 0 };
+	const char *rates[] = { "22050", "44100", "48000", "32000", "16000", "11025", "8000", "49716", 0 };
+	const char *oplrates[] = { "22050", "49716", "44100", "48000", "32000", "16000", "11025", "8000", 0 };
 	const char *ios[] = { "220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
 	const char *irqssb[] = { "7", "5", "3", "9", "10", "11", "12", 0 };
 	const char *dmassb[] = { "1", "5", "0", "3", "6", "7", 0 };
@@ -439,7 +440,7 @@ void DOSBOX_Init(void) {
 
 	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,22050);
 	Pint->Set_values(rates);
-	Pint->Set_help("Mixer sample rate, setting any devices higher than this will probably lower their sound quality.");
+	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
 	const char *blocksizes[] = {
 		"2048", "4096", "8192", "1024", "512", "256", 0};
@@ -503,14 +504,14 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(oplmodes);
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
 
-	const char* oplemus[]={ "default", "old", 0};
-	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"auto");
+	const char* oplemus[]={ "default", "compat", "fast", "old", 0};
+	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"default");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help("Provider for the OPL emulation.");
+	Pstring->Set_help("Provider for the OPL emulation. compat or old might provide better quality (see oplrate as well).");
 
 	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,22050);
-	Pint->Set_values(rates);
-	Pint->Set_help("Sample rate of OPL music emulation.");
+	Pint->Set_values(oplrates);
+	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for highest quality (set the mixer rate accordingly).");
 
 
 	secprop=control->AddSection_prop("gus",&GUS_Init,true); //done

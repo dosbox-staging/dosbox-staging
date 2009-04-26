@@ -48,7 +48,7 @@
 namespace DBOPL {
 
 #define MAX_SAMPLES 256
-#define OPLRATE		50000
+#define OPLRATE		((double)(14318180.0 / 288.0))
 
 //Only need 4 valid bits at the top for vibrato
 #define VIBRATO_SH	( 32 - 4 )
@@ -1183,13 +1183,13 @@ void Chip::Setup( Bit32u rate ) {
 	//10 bits of frequency counter
 	//With higher octave this gets shifted up
 	//-1 since the freqCreateTable = *2
-	double scale = ((double)OPLRATE * (double)( 1 << ( WAVE_SH - 10 - 1))) / rate;
+	double scale = (OPLRATE * (double)( 1 << ( WAVE_SH - 10 - 1))) / rate;
 	for ( int i = 0; i < 16; i++ ) {
 		//Use rounding with 0.5
 		freqMul[i] = (Bit32u)( 0.5 + scale * FreqCreateTable[ i ] );
 	}
 
-	scale = (double)OPLRATE / rate;
+	scale = OPLRATE / rate;
 	//-3 since the real envelope takes 8 steps to reach the single value we supply
 	for ( Bit8u i = 0; i < 76; i++ ) {
 		Bit8u index, shift;
@@ -1464,4 +1464,4 @@ void Handler::Init( Bitu rate ) {
 }
 
 
-};		//Namespace Kiet
+};		//Namespace DBOPL
