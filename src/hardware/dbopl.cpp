@@ -49,8 +49,6 @@ namespace DBOPL {
 
 #define MAX_SAMPLES 256
 #define OPLRATE		((double)(14318180.0 / 288.0))
-//Shift the final volume up at the end
-#define POST_VOLSHIFT (1)
 
 //Only need 4 valid bits at the top for vibrato
 #define VIBRATO_SH	( 32 - 4 )
@@ -1164,9 +1162,6 @@ void Chip::GenerateBlock2( Bitu samples  ) {
 		count++;
 		ch = (ch->*(ch->synthHandler))();
 	}
-	for ( Bitu i = 0; i < Work.samples; i++ ) {
-		Work.output[i] <<= POST_VOLSHIFT;
-	}
 }
 
 void Chip::GenerateBlock3( Bitu samples ) {
@@ -1182,11 +1177,6 @@ void Chip::GenerateBlock3( Bitu samples ) {
 		count++;
 		ch = (ch->*(ch->synthHandler))();
 	}
-	for ( Bitu i = 0; i < Work.samples; i++ ) {
-		Work.output[i*2 + 0] <<= POST_VOLSHIFT;
-		Work.output[i*2 + 1] <<= POST_VOLSHIFT;
-	}
-
 }
 
 void Chip::Setup( Bit32u rate ) {
