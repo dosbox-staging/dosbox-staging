@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: gus.cpp,v 1.35 2009-04-26 10:36:16 harekiet Exp $ */
+/* $Id: gus.cpp,v 1.36 2009-04-27 17:11:26 qbix79 Exp $ */
 
 #include <string.h>
 #include <iomanip>
@@ -89,7 +89,6 @@ struct GFGus {
 	Bit8u irq1;
 	Bit8u irq2;
 
-	std::string ultradir;
 	bool irqenabled;
 	bool ChangeIRQDMA;
 	// IRQ status register values
@@ -802,8 +801,6 @@ public:
 		myGUS.irq1 = (Bit8u)irq_val;
 		myGUS.irq2 = (Bit8u)irq_val;
 
-		myGUS.ultradir = section->Get_string("ultradir");
-	
 		// We'll leave the MIDI interface to the MPU-401 
 		// Ditto for the Joystick 
 		// GF1 Synthesizer 
@@ -857,7 +854,7 @@ public:
 		     << (Bitu)myGUS.irq1 << "," << (Bitu)myGUS.irq2 << ends;
 		// Create autoexec.bat lines
 		autoexecline[0].Install(temp.str());
-		autoexecline[1].Install(std::string("SET ULTRADIR=")+ myGUS.ultradir);
+		autoexecline[1].Install(std::string("SET ULTRADIR=") + section->Get_string("ultradir"));
 	}
 
 
