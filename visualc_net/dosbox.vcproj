@@ -159,7 +159,7 @@
 				RelativePath="..\src\dosbox.cpp">
 			</File>
 			<File
-				RelativePath="..\src\dosbox.rc">
+				RelativePath="..\src\windres.rc">
 			</File>
 			<Filter
 				Name="cpu"
