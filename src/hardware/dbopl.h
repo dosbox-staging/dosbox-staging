@@ -27,7 +27,7 @@
 #define WAVE_TABLEMUL	12
 
 //Select the type of wave generator routine
-#define DBOPL_WAVE WAVE_HANDLER
+#define DBOPL_WAVE WAVE_TABLEMUL
 //Enable vibrato in the output
 #define DBOPL_VIBRATO
 //Enable tremolo in the output
@@ -51,14 +51,14 @@ typedef enum {
 	smNone,
 	sm2AM,
 	sm2FM,
-	sm2Rhytm,
+	sm2Percussion,
 	sm3AM,
 	sm3FM,
 	sm3FMFM,
 	sm3AMFM,
 	sm3FMAM,
 	sm3AMAM,
-	sm3Rhytm,
+	sm3Percussion,
 } SynthMode;
 
 //Shifts for the values contained in chandata variable
@@ -121,14 +121,12 @@ public:
 	Bit8u vibStrength;
 	//Keep track of the calculated KSR so we can check for changes
 	Bit8u ksr;
-
 private:
 	void SetState( Bit8u s );
 	void UpdateAttack( const Chip* chip );
 	void UpdateRelease( const Chip* chip );
 	void UpdateDecay( const Chip* chip );
 public:
-	//is the operator silent?
 	void UpdateAttenuation();
 	void UpdateRates( const Chip* chip );
 	void UpdateFrequency(  );
@@ -168,7 +166,7 @@ struct Channel {
 	Bit8u feedback;			//Feedback shift
 	Bit8u regB0;			//Register values to check for changes
 	Bit8u regC0;
-	//This should correspond with reg104, bit 6 indicates a rhytm channel, bit 7 indicates a silent channel
+	//This should correspond with reg104, bit 6 indicates a Percussion channel, bit 7 indicates a silent channel
 	Bit8u fourMask;
 	Bit8s maskLeft;		//Sign extended values for both channel's panning
 	Bit8s maskRight;
@@ -184,12 +182,11 @@ struct Channel {
 
 	//call this for the first channel
 	template< bool opl3Mode >
-	void GenerateRhytm( Bit32s* output );
+	void GeneratePercussion( Bit32s* output );
 
 	//Generate blocks of data in specific modes
 	template<SynthMode mode>
 	Channel* BlockTemplate( );
-	void BlockRhytm( );
 	Channel();
 };
 

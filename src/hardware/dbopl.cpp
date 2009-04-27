@@ -26,7 +26,7 @@
 
 	//TODO Don't delay first operator 1 sample in opl3 mode
 	//TODO Maybe not use class method pointers but a regular function pointers with operator as first parameter
-	//TODO Fix panning for the rhytm channels, would any opl3 player use it and actually really change it though?
+	//TODO Fix panning for the Percussion channels, would any opl3 player use it and actually really change it though?
 	//TODO don't use variables in work structure for tremolo and vibrato but give the variables as parameters to GetSample
 	//TODO Since the vibrato takes 1024 samples it's easier to run the emulator in same vibrato chunks, vibrato would be costfree
 
@@ -49,6 +49,8 @@ namespace DBOPL {
 
 #define MAX_SAMPLES 256
 #define OPLRATE		((double)(14318180.0 / 288.0))
+//Shift the final volume up at the end
+#define POST_VOLSHIFT (1)
 
 //Only need 4 valid bits at the top for vibrato
 #define VIBRATO_SH	( 32 - 4 )
@@ -65,13 +67,12 @@ namespace DBOPL {
 
 //Maximum amount of attenuation bits
 //Envelope goes to 511, 9 bits
-//Final envelope should get shifted up 3 bits, we already do that for some generation modes
 #if (DBOPL_WAVE == WAVE_TABLEMUL )
 //Uses the value directly
 #define ENV_BITS	( 9 )
 #else
 //Add 3 bits here for more accuracy and would have to be shifted up either way
-#define ENV_BITS	( 12 )
+#define ENV_BITS	( 9 )
 #endif
 //Limits of the envelope with those bits and when the envelope goes silent
 #define ENV_MIN		0
@@ -577,7 +578,7 @@ INLINE Bits Operator::GetWave( Bitu index, Bitu vol ) {
 	return (waveBase[ index & waveMask ] * MulTable[ vol >> ENV_EXTRA ]) >> MUL_SH;
 #elif ( DBOPL_WAVE == WAVE_TABLELOG )
 	Bit32s wave = waveBase[ index & waveMask ];
-	Bit32u total = ( wave & 0x7fff ) + vol;
+	Bit32u total = ( wave & 0x7fff ) + vol << ( 3 - ENV_EXTRA );
 	Bit32s sig = ExpTable[ total & 0xff ];
 	Bit32u exp = total >> 8;
 	Bit32s neg = wave >> 16;
@@ -601,15 +602,19 @@ Bits INLINE Operator::GetSample( Bits modulation ) {
 }
 
 Operator::Operator() {
+	chanData = 0;
 	freqMul = 0;
 	waveIndex = 0;
 	waveAdd = 0;
 	keyOn = 0;
 	ksr = 0;
-	chanData = 0;
+	reg20 = 0;
+	reg40 = 0;
+	reg60 = 0;
+	reg80 = 0;
+	regE0 = 0;
 	SetState( OFF );
 	rateZero = (1 << OFF);
-
 	sustainLevel = ENV_MAX;
 	activeLevel = ENV_MAX;
 	totalLevel = ENV_MAX;
@@ -620,8 +625,9 @@ Operator::Operator() {
 */
 
 Channel::Channel() {
-	//Frequency init
+	old[0] = old[1] = 0;
 	chanData = 0;
+	regB0 = 0;
 	regC0 = 0;
 	maskLeft = -1;
 	maskRight = -1;
@@ -750,7 +756,7 @@ void Channel::WriteC0( const Chip* chip, Bit8u val ) {
 				chan0->synthHandler = &Channel::BlockTemplate< sm3AMAM >;
 				break;
 			}
-		//Disable updating rhytm channels
+		//Disable updating percussion channels
 		} else if ((fourMask & 0x40) && ( chip->regBD & 0x20) ) {
 
 		//Regular dual op, am or fm
@@ -763,7 +769,7 @@ void Channel::WriteC0( const Chip* chip, Bit8u val ) {
 		maskRight = ( val & 0x20 ) ? -1 : 0;
 	//opl2 active
 	} else { 
-		//Disable updating rhytm channels
+		//Disable updating percussion channels
 		if ( (fourMask & 0x40) && ( chip->regBD & 0x20 ) ) {
 
 		//Regular dual op, am or fm
@@ -782,7 +788,7 @@ void Channel::ResetC0( const Chip* chip ) {
 };
 
 template< bool opl3Mode>
-void Channel::GenerateRhytm( Bit32s* output ) {
+void Channel::GeneratePercussion( Bit32s* output ) {
 	Channel* chan = this;
 
 	//BassDrum
@@ -891,12 +897,12 @@ Channel* Channel::BlockTemplate( ) {
 		Work.vibrato = Work.vibTable[i];
 		Work.tremolo = Work.tremTable[i];
 	
-		//Early out for rhytm handlers
-		if ( mode == sm2Rhytm ) {
-			GenerateRhytm<false>( Work.output + i );
+		//Early out for percussion handlers
+		if ( mode == sm2Percussion ) {
+			GeneratePercussion<false>( Work.output + i );
 			continue;	//Prevent some unitialized value bitching
-		} else if ( mode == sm3Rhytm ) {
-			GenerateRhytm<false>( Work.output + i * 2 );
+		} else if ( mode == sm3Percussion ) {
+			GeneratePercussion<true>( Work.output + i * 2 );
 			continue;	//Prevent some unitialized value bitching
 		}
 
@@ -956,8 +962,8 @@ Channel* Channel::BlockTemplate( ) {
 	case sm3FMAM:
 	case sm3AMAM:
 		return( this + 2 );
-	case sm2Rhytm:
-	case sm3Rhytm:
+	case sm2Percussion:
+	case sm3Percussion:
 		return( this + 3 );
 	}
 	return 0;
@@ -968,6 +974,9 @@ Channel* Channel::BlockTemplate( ) {
 */
 
 Chip::Chip() {
+	reg08 = 0;
+	reg04 = 0;
+	regBD = 0;
 	reg104 = 0;
 	opl3Active = 0;
 }
@@ -1001,9 +1010,9 @@ void Chip::WriteBD( Bit8u val ) {
 		//Drum was just enabled, make sure channel 6 has the right synth
 		if ( change & 0x20 ) {
 			if ( opl3Active ) {
-				chan[6].synthHandler = &Channel::BlockTemplate< sm3Rhytm >; 
+				chan[6].synthHandler = &Channel::BlockTemplate< sm3Percussion >; 
 			} else {
-				chan[6].synthHandler = &Channel::BlockTemplate< sm2Rhytm >; 
+				chan[6].synthHandler = &Channel::BlockTemplate< sm2Percussion >; 
 			}
 		}
 		//Bass Drum
@@ -1038,7 +1047,7 @@ void Chip::WriteBD( Bit8u val ) {
 		} else {
 			chan[8].op[1].KeyOff( 0x2 );
 		}
-	//Toggle keyoffs when we turn off the rhytm
+	//Toggle keyoffs when we turn off the percussion
 	} else if ( change & 0x20 ) {
 		//Trigger a reset to setup the original synth handler
 		chan[6].ResetC0( this );
@@ -1155,6 +1164,9 @@ void Chip::GenerateBlock2( Bitu samples  ) {
 		count++;
 		ch = (ch->*(ch->synthHandler))();
 	}
+	for ( Bitu i = 0; i < Work.samples; i++ ) {
+		Work.output[i] <<= POST_VOLSHIFT;
+	}
 }
 
 void Chip::GenerateBlock3( Bitu samples ) {
@@ -1170,6 +1182,11 @@ void Chip::GenerateBlock3( Bitu samples ) {
 		count++;
 		ch = (ch->*(ch->synthHandler))();
 	}
+	for ( Bitu i = 0; i < Work.samples; i++ ) {
+		Work.output[i*2 + 0] <<= POST_VOLSHIFT;
+		Work.output[i*2 + 1] <<= POST_VOLSHIFT;
+	}
+
 }
 
 void Chip::Setup( Bit32u rate ) {
@@ -1263,7 +1280,7 @@ void Chip::Setup( Bit32u rate ) {
 	chan[13].fourMask = 0x00 | ( 1 << 5 );
 	chan[14].fourMask = 0x80 | ( 1 << 5 );
 
-	//mark the rhythm channels
+	//mark the percussion channels
 	chan[ 6].fourMask = 0x40;
 	chan[ 7].fourMask = 0x40;
 	chan[ 8].fourMask = 0x40;
