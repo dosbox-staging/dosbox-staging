@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.37 2009-04-26 18:24:36 qbix79 Exp $ */
+/* $Id: adlib.cpp,v 1.38 2009-04-28 21:48:24 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -732,6 +732,7 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 	std::string oplemu( section->Get_string( "oplemu" ) );
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
+	mixerChan->SetScale( 2.0 );
 	if (oplemu == "old") {
 		if ( oplmode == OPL_opl2 ) {
 			handler = new old_OPL2::Handler();

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.52 2009-04-26 18:24:36 qbix79 Exp $ */
+/* $Id: mixer.cpp,v 1.53 2009-04-28 21:48:24 harekiet Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -62,20 +62,6 @@ static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
 	} else return MAX_AUDIO;
 }
 
-struct MIXER_Channel {
-	double vol_main[2];
-	Bits vol_mul[2];
-	Bit8u mode;
-	Bitu freq;
-	char * name;
-	MIXER_MixHandler handler;
-	Bitu sample_add;
-	Bitu sample_left;
-	Bitu remain;
-	bool playing;
-	MIXER_Channel * next;
-};
-
 static struct {
 	Bit32s work[MIXER_BUFSIZE][2];
 	Bitu pos,done;
@@ -92,6 +78,7 @@ Bit8u MixTemp[MIXER_BUFSIZE];
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name) {
 	MixerChannel * chan=new MixerChannel();
+	chan->scale = 1.0;
 	chan->handler=handler;
 	chan->name=name;
 	chan->SetFreq(freq);
@@ -126,13 +113,18 @@ void MIXER_DelChannel(MixerChannel* delchan) {
 }
 
 void MixerChannel::UpdateVolume(void) {
-	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*volmain[0]*mixer.mastervol[0]);
-	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*volmain[1]*mixer.mastervol[1]);
+	volmul[0]=(Bits)((1 << MIXER_VOLSHIFT)*scale*volmain[0]*mixer.mastervol[0]);
+	volmul[1]=(Bits)((1 << MIXER_VOLSHIFT)*scale*volmain[1]*mixer.mastervol[1]);
 }
 
 void MixerChannel::SetVolume(float _left,float _right) {
 	volmain[0]=_left;
 	volmain[1]=_right;
+	UpdateVolume();
+}
+
+void MixerChannel::SetScale( float f ) {
+	scale = f;
 	UpdateVolume();
 }
 

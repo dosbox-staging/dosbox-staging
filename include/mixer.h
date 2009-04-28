@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.h,v 1.18 2009-04-25 16:25:03 harekiet Exp $ */
+/* $Id: mixer.h,v 1.19 2009-04-28 21:48:24 harekiet Exp $ */
 
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
@@ -48,6 +48,7 @@ extern Bit8u MixTemp[MIXER_BUFSIZE];
 class MixerChannel {
 public:
 	void SetVolume(float _left,float _right);
+	void SetScale( float f );
 	void UpdateVolume(void);
 	void SetFreq(Bitu _freq);
 	void Mix(Bitu _needed);
@@ -78,6 +79,7 @@ public:
 	void Enable(bool _yesno);
 	MIXER_Handler handler;
 	float volmain[2];
+	float scale;
 	Bit32s volmul[2];
 	Bitu freq_add,freq_index;
 	Bitu done,needed;
