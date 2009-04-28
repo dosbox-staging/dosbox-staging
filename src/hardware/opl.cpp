@@ -521,7 +521,7 @@ void adlib_init(Bit32u samplerate) {
 	for (i=4; i<VIBTAB_SIZE; i++) vib_table[i] = vib_table[i-4]*-1;
 
 	// vibrato at ~6.1 ?? (opl3 docs say 6.1, opl4 docs say 6.0, y8950 docs say 6.4)
-	vibtab_add = VIBTAB_SIZE*FIXEDPT_LFO/8192*INTFREQU/int_samplerate;
+	vibtab_add = static_cast<Bit32u>(VIBTAB_SIZE*FIXEDPT_LFO/8192*INTFREQU/int_samplerate);
 	vibtab_pos = 0;
 
 	for (i=0; i<BLOCKBUF_SIZE; i++) vibval_const[i] = 0;
