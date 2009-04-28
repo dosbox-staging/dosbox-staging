@@ -2073,16 +2073,14 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 			/* OPL3 mode */
 			chip->pan[ base    ] = (v & 0x10) ? 1 : 0;	/* ch.A */
 			chip->pan[ base +1 ] = (v & 0x20) ? 1 : 0;	/* ch.B */
-			if (v & 0x40) chip->pan[ base    ] += 1;	/* ch.C->ch.A */
-			if (v & 0x80) chip->pan[ base +1 ] += 1;	/* ch.D->ch.B */
 		}
 		else
 		{
 			int base = ((r&0xf) + ch_offset) * 2;
 
 			/* OPL2 mode - always enabled */
-			chip->pan[ base    ] = 2;		/* ch.A */
-			chip->pan[ base +1 ] = 2;		/* ch.B */
+			chip->pan[ base    ] = 1;		/* ch.A */
+			chip->pan[ base +1 ] = 1;		/* ch.B */
 		}
 
 		CH->SLOT[SLOT1].FB  = (v>>1)&7 ? ((v>>1)&7) + 7 : 0;

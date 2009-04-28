@@ -499,8 +499,8 @@ void adlib_init(Bit32u samplerate) {
 #if defined(OPLTYPE_IS_OPL3)
 		op[i].is_4op = false;
 		op[i].is_4op_attached = false;
-		op[i].left_pan = 2;
-		op[i].right_pan = 2;
+		op[i].left_pan = 1;
+		op[i].right_pan = 1;
 #endif
 	}
 
@@ -848,8 +848,8 @@ void adlib_write(Bitu idx, Bit8u val) {
 			change_feedback(chanbase,&op[opbase]);
 #if defined(OPLTYPE_IS_OPL3)
 			// OPL3 panning
-			op[opbase].left_pan = ((val&0x10)>>4)+((val&0x40)>>6);
-			op[opbase].right_pan = ((val&0x20)>>5)+((val&0x80)>>7);
+			op[opbase].left_pan = ((val&0x10)>>4);
+			op[opbase].right_pan = ((val&0x20)>>5);
 #endif
 		}
 		}
@@ -933,7 +933,7 @@ static void INLINE clipit16(Bit32s ival, Bit16s* outval) {
 		outbufl[i] += chanval*cptr[0].left_pan;		\
 		outbufr[i] += chanval*cptr[0].right_pan;	\
 	} else {										\
-		outbufl[i] += chanval*2;					\
+		outbufl[i] += chanval;						\
 	}
 #else
 #define CHANVAL_OUT									\

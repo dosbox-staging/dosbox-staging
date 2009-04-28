@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.h,v 1.4 2009-04-26 10:33:53 harekiet Exp $ */
+/* $Id: adlib.h,v 1.5 2009-04-28 21:45:43 c2woody Exp $ */
 
 #ifndef DOSBOX_ADLIB_H
 #define DOSBOX_ADLIB_H
@@ -24,7 +24,6 @@
 #include "dosbox.h"
 #include "mixer.h"
 #include "inout.h"
-#include "mixer.h"
 #include "setup.h"
 #include "pic.h"
 #include "hardware.h"
