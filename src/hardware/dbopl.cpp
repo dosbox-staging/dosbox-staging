@@ -332,7 +332,7 @@ inline void Operator::UpdateRelease( const Chip* chip ) {
 }
 
 inline void Operator::UpdateAttenuation( ) {
-	Bit8u kslBase = (chanData >> SHIFT_KSLBASE) & 0xff;
+	Bit8u kslBase = (Bit8u)((chanData >> SHIFT_KSLBASE) & 0xff);
 	Bit32u tl = reg40 & 0x3f;
 	Bit8u kslShift = KslShiftTable[ reg40 >> 6 ];
 	//Make sure the attenuation goes to the right bits
@@ -357,7 +357,7 @@ void Operator::UpdateFrequency(  ) {
 void Operator::UpdateRates( const Chip* chip ) {
 	//Mame seems to reverse this where enabling ksr actually lowers
 	//the rate, but pdf manuals says otherwise?
-	Bit8u newKsr = (chanData >> SHIFT_KEYCODE) & 0xff;
+	Bit8u newKsr = (Bit8u)((chanData >> SHIFT_KEYCODE) & 0xff);
 	if ( !( reg20 & MASK_KSR ) ) {
 		newKsr >>= 2;
 	}
