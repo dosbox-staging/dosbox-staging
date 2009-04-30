@@ -59,7 +59,7 @@ MemHandle MEM_NextHandleAt(MemHandle handle,Bitu where);
 
 #if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
 
-static 4/25/2009INLINE Bit8u host_readb(HostPt off) {
+static INLINE Bit8u host_readb(HostPt off) {
 	return off[0];
 }
 static INLINE Bit16u host_readw(HostPt off) {
