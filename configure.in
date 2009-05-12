@@ -121,17 +121,14 @@ d_test.d_type = 0;
 
 
 dnl Check for powf
-if test x$target = xi386-pc-os2-emx ; then
-  AC_MSG_CHECKING(for powf in libm);
-  LIBS_BACKUP=$LIBS;
-  LIBS="$LIBS -lm";
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
+AC_MSG_CHECKING(for powf in libm);
+LIBS_BACKUP=$LIBS;
+LIBS="$LIBS -lm";
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
         powf(1.0f, 1.0f);
-  ]])], [AC_MSG_RESULT(yes)], [AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
-  LIBS=$LIBS_BACKUP
-else
-AC_CHECK_LIB([m],[powf],,[AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
-fi
+]])], [AC_MSG_RESULT(yes)], [AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
+LIBS=$LIBS_BACKUP
+
 
 dnl Checks for libraries.
 
@@ -377,6 +374,18 @@ else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
+AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
+AC_CHECK_LIB(X11, main, have_x11_lib=yes, have_x11_lib=no, )
+AC_CHECK_HEADER(X11/XKBlib.h, have_x11_h=yes, have_x11_h=no, )
+AC_MSG_CHECKING(for XKBlib support)
+if test x$have_x11_lib = xyes -a x$have_x11_h = xyes ; then
+   LIBS="$LIBS -lX11"
+   AC_DEFINE(C_X11_XKB,1)
+   AC_MSG_RESULT(yes)
+else
+   AC_MSG_RESULT(no)
+fi
+
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
@@ -454,7 +463,7 @@ case "$target" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMidi -framework AudioUnit -framework AudioToolbox"
+       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)
