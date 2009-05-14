@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.38 2009-04-28 21:48:24 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.39 2009-05-14 18:28:04 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -530,8 +530,8 @@ void Module::DualWrite( Bit8u index, Bit8u reg, Bit8u val ) {
 	if ( chip[index].Write( reg, val ) ) 
 		return;
 	//Enabling panning
-	if ( reg >= 0xc0 && reg <0xc8 ) {
-		val &= 7;
+	if ( reg >= 0xc0 && reg <=0xc8 ) {
+		val &= 0x0f;
 		val |= index ? 0xA0 : 0x50;
 	}
 	Bit32u fullReg = reg + (index ? 0x100 : 0);
@@ -729,6 +729,9 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 	Section_prop * section=static_cast<Section_prop *>(configuration);
 	Bitu base = section->Get_hex("sbbase");
 	Bitu rate = section->Get_int("oplrate");
+	//Make sure we can't select lower than 8000 to prevent fixed point issues
+	if ( rate < 8000 )
+		rate = 8000;
 	std::string oplemu( section->Get_string( "oplemu" ) );
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
