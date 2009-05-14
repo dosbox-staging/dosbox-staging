@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.61 2009-05-14 17:05:58 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.62 2009-05-14 17:51:47 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -126,7 +126,7 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 				mem_writeb(GEMMIS_addr+0x0a+frnr,0x03);		// frame type: EMS frame in 64k page
 				mem_writeb(GEMMIS_addr+0x0b+frnr,0xff);		// owner: NONE
 				mem_writew(GEMMIS_addr+0x0c+frnr,0x7fff);	// no logical page number
-				mem_writeb(GEMMIS_addr+0x0e+frnr,(Bit8u)(frct&0xff));		// physical EMS page number
+				mem_writeb(GEMMIS_addr+0x0e + frnr,(Bit8u)(frct&0xff));		// physical EMS page number
 				mem_writeb(GEMMIS_addr+0x0f+frnr,0x00);		// EMS frame
 			}
 			/* build non-EMS ROM frames (0xf000-0x10000) */
