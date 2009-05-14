@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.60 2008-11-27 18:57:45 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.61 2009-05-14 17:05:58 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,16 +79,16 @@ public:
 		SetName("EMMXXXX0");
 		GEMMIS_seg=0;
 	}
-	bool Read(Bit8u * data,Bit16u * size) { return false;}
-	bool Write(Bit8u * data,Bit16u * size){ 
+	bool Read(Bit8u * /*data*/,Bit16u * /*size*/) { return false;}
+	bool Write(Bit8u * /*data*/,Bit16u * /*size*/){ 
 		LOG(LOG_IOCTL,LOG_NORMAL)("EMS:Write to device");	
 		return false;
 	}
-	bool Seek(Bit32u * pos,Bit32u type){return false;}
+	bool Seek(Bit32u * /*pos*/,Bit32u /*type*/){return false;}
 	bool Close(){return false;}
 	Bit16u GetInformation(void){return 0xc080;}
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
-	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return true;}
+	bool WriteToControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return true;}
 private:
 	Bit8u cache;
 };
@@ -126,7 +126,7 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 				mem_writeb(GEMMIS_addr+0x0a+frnr,0x03);		// frame type: EMS frame in 64k page
 				mem_writeb(GEMMIS_addr+0x0b+frnr,0xff);		// owner: NONE
 				mem_writew(GEMMIS_addr+0x0c+frnr,0x7fff);	// no logical page number
-				mem_writeb(GEMMIS_addr+0x0e + frnr,frct);		// physical EMS page number
+				mem_writeb(GEMMIS_addr+0x0e+frnr,(Bit8u)(frct&0xff));		// physical EMS page number
 				mem_writeb(GEMMIS_addr+0x0f+frnr,0x00);		// EMS frame
 			}
 			/* build non-EMS ROM frames (0xf000-0x10000) */
@@ -224,8 +224,11 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & dhandle,bool can_allocate_
 	while (emm_handles[handle].pages != NULL_HANDLE) {
 		if (++handle >= EMM_MAX_HANDLES) {return EMM_OUT_OF_HANDLES;}
 	}
-	MemHandle mem = MEM_AllocatePages(pages*4,false);
-	if (!mem) E_Exit("EMS:Memory allocation failure");
+	MemHandle mem = 0;
+	if (pages) {
+		mem = MEM_AllocatePages(pages*4,false);
+		if (!mem) E_Exit("EMS:Memory allocation failure");
+	}
 	emm_handles[handle].pages = pages;
 	emm_handles[handle].mem = mem;
 	/* Change handle only if there is no error. */
@@ -251,8 +254,14 @@ static Bit8u EMM_AllocateSystemHandle(Bit16u pages) {
 static Bit8u EMM_ReallocatePages(Bit16u handle,Bit16u & pages) {
 	/* Check for valid handle */
 	if (!ValidHandle(handle)) return EMM_INVALID_HANDLE;
-	/* Check for enough pages */
-	if (!MEM_ReAllocatePages(emm_handles[handle].mem,pages*4,false)) return EMM_OUT_OF_LOG;
+	if (emm_handles[handle].pages != 0) {
+		/* Check for enough pages */
+		if (!MEM_ReAllocatePages(emm_handles[handle].mem,pages*4,false)) return EMM_OUT_OF_LOG;
+	} else {
+		MemHandle mem = MEM_AllocatePages(pages*4,false);
+		if (!mem) E_Exit("EMS:Memory allocation failure during reallocation");
+		emm_handles[handle].mem = mem;
+	}
 	/* Update size */
 	emm_handles[handle].pages=pages;
 	return EMM_NO_ERROR;
@@ -347,9 +356,14 @@ static Bit8u EMM_MapSegment(Bitu segment,Bit16u handle,Bit16u log_page) {
 static Bit8u EMM_ReleaseMemory(Bit16u handle) {
 	/* Check for valid handle */
 	if (!ValidHandle(handle)) return EMM_INVALID_HANDLE;
+
 	// should check for saved_page_map flag here, returning an error if it's true
 	// as apps are required to restore the pagemap beforehand; to be checked
-	MEM_ReleasePages(emm_handles[handle].mem);
+//	if (emm_handles[handle].saved_page_map) return EMM_SAVEMAP_ERROR;
+
+	if (emm_handles[handle].pages != 0) {
+		MEM_ReleasePages(emm_handles[handle].mem);
+	}
 	/* Reset handle */
 	emm_handles[handle].mem=0;
 	if (handle==0) {
@@ -1370,7 +1384,7 @@ public:
 		
 static EMS* test;
 
-void EMS_ShutDown(Section* sec) {
+void EMS_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
