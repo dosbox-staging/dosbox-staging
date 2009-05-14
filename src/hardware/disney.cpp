@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: disney.cpp,v 1.16 2008-07-14 19:39:10 qbix79 Exp $ */
+/* $Id: disney.cpp,v 1.17 2009-05-14 17:04:37 qbix79 Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -56,6 +56,7 @@ static struct {
 	
 	Bitu state;
 	Bitu interface_det;
+	Bitu interface_det_ext;
 } disney;
 
 #define DS_IDLE 0
@@ -71,12 +72,13 @@ static void DISNEY_disable(Bitu) {
 		disney.chan->Enable(false);
 		delete disney.mo;
 	}
-	disney.interface_det = 0;
 	disney.leader = 0;
 	disney.last_used = 0;
 	disney.mo = 0;
 	disney.state = DS_IDLE;
 	disney.interface_det = 0;
+	disney.interface_det_ext = 0;
+	disney.stereo = false;
 }
 
 static void DISNEY_enable(Bitu freq) {
@@ -197,7 +199,6 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
 			} //else LOG_MSG("disney overflow 0");
-			
 		}
 		break;
 	}
@@ -208,6 +209,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		if((disney.control & 0x2) && !(val & 0x2)) {
 			if(disney.state != DS_RUNNING) {
 				disney.interface_det = 0;
+				disney.interface_det_ext = 0;
 				DISNEY_analyze(1);
 			}
 
@@ -221,6 +223,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 		if((disney.control & 0x1) && !(val & 0x1)) {
 			if(disney.state != DS_RUNNING) {
 				disney.interface_det = 0;
+				disney.interface_det_ext = 0;
 				DISNEY_analyze(0);
 			}
 			// stereo channel latch
@@ -228,6 +231,24 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 				disney.da[0].buffer[disney.da[0].used] = disney.data;
 				disney.da[0].used++;
 			} //else LOG_MSG("disney overflow 0");
+		}
+
+		if((disney.control & 0x8) && !(val & 0x8)) {
+			// emulate a device with 16-byte sound FIFO
+			if(disney.state != DS_RUNNING) {
+				disney.interface_det_ext++;
+				disney.interface_det = 0;
+				if(disney.interface_det_ext > 5) {
+					disney.leader = &disney.da[0];
+					DISNEY_enable(7000);
+				}
+			}
+			if(disney.interface_det_ext > 5) {
+				if(disney.da[0].used < DISNEY_SIZE) {
+					disney.da[0].buffer[disney.da[0].used] = disney.data;
+					disney.da[0].used++;
+				}
+			}
 		}
 
 //		LOG_WARN("DISNEY:Control write %x",val);
@@ -238,6 +259,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 }
 
 static Bitu disney_read(Bitu port,Bitu iolen) {
+	Bitu retval;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
 //		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
@@ -245,10 +267,15 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 		break;
 	case 1:		/* Status Port */	
 //		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
-		if (disney.leader && disney.leader->used >= 16) return 0x40;
-		/* Stereo-on-1 and (or) New-Stereo DACs present */
-		if(!(disney.data&0x80)) return 0xc4;
-		else return 0x0;
+		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
+		if(disney.interface_det_ext > 5) {
+			if (disney.leader && disney.leader->used >= 16){
+				retval |= 0x40; // ack
+				retval &= ~0x4; // interrupt
+			}
+		}
+		if(!(disney.data&0x80)) retval |= 0x80; // pin 9 is wired to pin 11
+		return retval;
 		break;
 	case 2:		/* Control Port */
 		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from control port");
