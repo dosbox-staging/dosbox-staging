@@ -1,3 +1,53 @@
+0.73
+  - Add EGA emulation.
+  - Add vgaonly machine mode. Supports more of the exotic tricks like
+    changing the palette during screen updates. 9x16 fonts etc.
+  - Fix problems with the split lines
+  - Improve vesa emulation.
+  - Improve video BIOS emulation to behave more like a real bios.
+  - Fixes to paging system
+  - various fixes and improvements for the recompiling core.
+  - Add some mscdex quirks when dealing with files that are exactly 8.3 long
+  - Small fixes to batch file handling.
+  - Small fixes to the XMS memory handling.
+  - various fixes for aligned memory on hosts that want it.
+  - Various improvements to the mouse.
+  - Fixes and small speed ups to the debugger.
+  - Fix and improve lot's of compilation problems. (curses detection,
+    GCC 3.4 and GCC 4.X fixes)
+  - Added some basic auto keyboard layout handling (windows only currently)
+  - Add basic support for evdev keyboard driver.
+  - Various fixes to the timer. (improve mode 2 timer changes,
+    implement mode 1, improve gate2 handling)
+  - Add audio extraction and mci reading. Should enable CDROM audio for Vista.
+  - Improve the directory cache speed a lot!
+  - Various fixes to the create temporary file call.
+  - Don't keep batchfiles open during execution. Allows rewriting of the
+    active batchfile (menu programs use this trick sometimes)
+  - Fix problems with filenames with 2 extensions.
+  - Fixes to hercules emulation.
+  - Fix flag handling for ROR
+  - Make the batchfile handling in regard to IF more flexible
+  - Fixes to scrolling (panning)
+  - Add prefetch queue emulation.
+  - Make the emulated cpu type selectable. This is mainly the
+    identification commands and the way paging works.
+  - Added special machine modes for the following svga cards:
+     - S3
+     - Paradise
+     - Tseng
+  - Improve support for EMS when booting a different OS.
+  - Improve cdrom speed detection by games.
+  - Improve stability of cycle guessing code, when there is background
+    activity.
+  - Fix various mscdex and cdrom detection schemes.
+  - Added Coremidi support on Mac OS X.
+  - Improve support for DOS devices when used to detect the existance
+    of directories in various ways.
+  - Add IRQ 2 emulation on VRET (ega only)
+  - Added video parameter table and video state functionality.
+  - Increase default freespace to 250 MB.
+  
 0.72
   - Fixed unitialized variable in joystick. (Fixes crashes on Vista and
     Mac OS X)
