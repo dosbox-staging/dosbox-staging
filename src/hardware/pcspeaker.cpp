@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
- /* $Id: pcspeaker.cpp,v 1.24 2007-07-15 16:36:27 c2woody Exp $ */
+ /* $Id: pcspeaker.cpp,v 1.25 2009-05-14 18:51:53 qbix79 Exp $ */
 
 #include <math.h>
 #include "dosbox.h"
@@ -305,15 +305,21 @@ static void PCSPEAKER_CallBack(Bitu len) {
 	if(spkr.chan) spkr.chan->AddSamples_m16(len,(Bit16s*)MixTemp);
 
 	//Turn off speaker after 10 seconds of idle or one second idle when in off mode
+	bool turnoff = false;
 	Bitu test_ticks = PIC_Ticks;
-	if ((spkr.last_ticks+10000)<test_ticks) {
-		spkr.last_ticks=0;
-		if(spkr.chan) spkr.chan->Enable(false);
+	if ((spkr.last_ticks + 10000) < test_ticks) turnoff = true;
+	if((spkr.mode == SPKR_OFF) && ((spkr.last_ticks + 1000) < test_ticks)) turnoff = true;
+
+	if(turnoff){
+		if(spkr.volwant == 0) { 
+			spkr.last_ticks = 0;
+			if(spkr.chan) spkr.chan->Enable(false);
+		} else {
+			if(spkr.volwant > 0) spkr.volwant--; else spkr.volwant++;
+		
+		}
 	} 
-	if((spkr.mode == SPKR_OFF) && ((spkr.last_ticks+1000) <test_ticks)) {
-		spkr.last_ticks=0;
-		if(spkr.chan) spkr.chan->Enable(false);
-	}
+
 }
 class PCSPEAKER:public Module_base {
 private:
