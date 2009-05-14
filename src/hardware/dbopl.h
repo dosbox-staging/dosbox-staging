@@ -28,10 +28,6 @@
 
 //Select the type of wave generator routine
 #define DBOPL_WAVE WAVE_TABLEMUL
-//Enable vibrato in the output
-#define DBOPL_VIBRATO
-//Enable tremolo in the output
-#define DBOPL_TREMOLO
 
 namespace DBOPL {
 
@@ -44,20 +40,21 @@ typedef Bits ( DB_FASTCALL *WaveHandler) ( Bitu i, Bitu volume );
 #endif
 
 typedef Bits ( DBOPL::Operator::*VolumeHandler) ( );
-typedef Channel* ( DBOPL::Channel::*SynthHandler) ( );
+typedef Channel* ( DBOPL::Channel::*SynthHandler) ( Chip* chip, Bit32u samples, Bit32s* output );
 
 //Different synth modes that can generate blocks of data
 typedef enum {
-	smNone,
 	sm2AM,
 	sm2FM,
-	sm2Percussion,
 	sm3AM,
 	sm3FM,
+	sm4Start,
 	sm3FMFM,
 	sm3AMFM,
 	sm3FMAM,
 	sm3AMAM,
+	sm6Start,
+	sm2Percussion,
 	sm3Percussion,
 } SynthMode;
 
@@ -95,14 +92,16 @@ public:
 	Bit32u waveStart;
 #endif
 	Bit32u waveIndex;			//WAVE_BITS shifted counter of the frequency index
-	Bit32u waveAdd;
+	Bit32u waveAdd;				//The base frequency without vibrato
+	Bit32u waveCurrent;			//waveAdd + vibratao
 
 	Bit32u chanData;			//Frequency/octave and derived data coming from whatever channel controls this
 	Bit32u freqMul;				//Scale channel frequency with this, TODO maybe remove?
 	Bit32u vibrato;				//Scaled up vibrato strength
 	Bit32s sustainLevel;		//When stopping at sustain level stop here
-	Bit32s totalLevel;			//totalLeve is added to every generated volume
-	Bit32s activeLevel;			//The currently active volume
+	Bit32s totalLevel;			//totalLevel is added to every generated volume
+	Bit32u currentLevel;		//totalLevel + tremolo
+	Bit32s volume;				//The currently active volume
 	
 	Bit32u attackAdd;			//Timers for the different states of the envelope
 	Bit32u decayAdd;
@@ -129,7 +128,7 @@ private:
 public:
 	void UpdateAttenuation();
 	void UpdateRates( const Chip* chip );
-	void UpdateFrequency(  );
+	void UpdateFrequency( );
 
 	void Write20( const Chip* chip, Bit8u val );
 	void Write40( const Chip* chip, Bit8u val );
@@ -138,6 +137,8 @@ public:
 	void WriteE0( const Chip* chip, Bit8u val );
 
 	bool Silent() const;
+	void Prepare( const Chip* chip );
+
 	void KeyOn( Bit8u mask);
 	void KeyOff( Bit8u mask);
 
@@ -182,20 +183,23 @@ struct Channel {
 
 	//call this for the first channel
 	template< bool opl3Mode >
-	void GeneratePercussion( Bit32s* output );
+	void GeneratePercussion( Chip* chip, Bit32s* output );
 
 	//Generate blocks of data in specific modes
 	template<SynthMode mode>
-	Channel* BlockTemplate( );
+	Channel* BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output );
 	Channel();
 };
 
 struct Chip {
 	//This is used as the base counter for vibrato and tremolo
-	Bit32u tremoloCounter;
-	Bit32u tremoloAdd;
-	Bit32u vibratoCounter;
-	Bit32u vibratoAdd;
+	Bit32u lfoCounter;
+	Bit32u lfoAdd;
+	
+
+	Bit32u noiseCounter;
+	Bit32u noiseAdd;
+	Bit32u noiseValue;
 
 	//Frequency scales for the different multiplications
 	Bit32u freqMul[16];
@@ -211,23 +215,29 @@ struct Chip {
 	Bit8u reg08;
 	Bit8u reg04;
 	Bit8u regBD;
+	Bit8u vibratoIndex;
+	Bit8u tremoloIndex;
+	Bit8s vibratoSign;
 	Bit8u vibratoShift;
-	Bit8u tremoloShift;
+	Bit8u tremoloValue;
+	Bit8u vibratoStrength;
+	Bit8u tremoloStrength;
 	//Mask for allowed wave forms
 	Bit8u waveFormMask;
 	//0 or -1 when enabled
 	Bit8s opl3Active;
 
-	Bit8u ForwardTremolo();
-	Bit8s ForwardVibrato();
+	//Return the maximum amount of samples before and LFO change
+	Bit32u ForwardLFO( Bit32u samples );
+	Bit32u ForwardNoise();
 
 	void WriteBD( Bit8u val );
 	void WriteReg(Bit32u reg, Bit8u val );
 
 	Bit32u WriteAddr( Bit32u port, Bit8u val );
 
-	void GenerateBlock2( Bitu samples );
-	void GenerateBlock3( Bitu samples );
+	void GenerateBlock2( Bitu samples, Bit32s* output );
+	void GenerateBlock3( Bitu samples, Bit32s* output );
 
 	void Generate( Bit32u samples );
 	void Setup( Bit32u r );
