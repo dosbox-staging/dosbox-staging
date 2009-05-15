@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.39 2009-05-14 18:28:04 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.40 2009-05-15 21:07:13 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -93,7 +93,7 @@ namespace OPL3 {
 		}
 		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
 			adlib_write_index(port, val);
-			return index;
+			return opl_index;
 		}
 		virtual void Generate( MixerChannel* chan, Bitu samples ) {
 			Bit16s buf[1024*2];

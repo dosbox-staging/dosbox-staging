@@ -26,7 +26,7 @@
 
 
 #include <math.h>
-#include <string.h>
+#include <stdlib.h> // rand()
 #include "dosbox.h"
 #include "opl.h"
 
@@ -44,8 +44,8 @@ static Bit32s tremval_const[BLOCKBUF_SIZE];
 // vibrato value tables (used per-operator)
 static Bit32s vibval_var1[BLOCKBUF_SIZE];
 static Bit32s vibval_var2[BLOCKBUF_SIZE];
-static Bit32s vibval_var3[BLOCKBUF_SIZE];
-static Bit32s vibval_var4[BLOCKBUF_SIZE];
+//static Bit32s vibval_var3[BLOCKBUF_SIZE];
+//static Bit32s vibval_var4[BLOCKBUF_SIZE];
 
 // vibrato/trmolo value table pointers
 static Bit32s *vibval1, *vibval2, *vibval3, *vibval4;
@@ -131,8 +131,18 @@ static Bit32u wavestart[8] = {
 };
 
 // envelope generator function constants
-static fltype attackconst[4] = {1/2.82624,1/2.25280,1/1.88416,1/1.59744};
-static fltype decrelconst[4] = {1/39.28064,1/31.41608,1/26.17344,1/22.44608};
+static fltype attackconst[4] = {
+	(fltype)(1/2.82624),
+	(fltype)(1/2.25280),
+	(fltype)(1/1.88416),
+	(fltype)(1/1.59744)
+};
+static fltype decrelconst[4] = {
+	(fltype)(1/39.28064),
+	(fltype)(1/31.41608),
+	(fltype)(1/26.17344),
+	(fltype)(1/22.44608)
+};
 
 
 void operator_advance(op_type* op_pt, Bit32s vib) {
@@ -280,9 +290,9 @@ void operator_attack(op_type* op_pt) {
 				op_pt->amp = 1.0;
 				op_pt->step_amp = 1.0;
 			}
-			op_pt->step_skip_pos <<= 1;
-			if (op_pt->step_skip_pos==0) op_pt->step_skip_pos = 1;
-			if (op_pt->step_skip_pos & op_pt->env_step_skip_a) {	// check if required to skip next step
+			op_pt->step_skip_pos_a <<= 1;
+			if (op_pt->step_skip_pos_a==0) op_pt->step_skip_pos_a = 1;
+			if (op_pt->step_skip_pos_a & op_pt->env_step_skip_a) {	// check if required to skip next step
 				op_pt->step_amp = op_pt->amp;
 			}
 		}
@@ -493,7 +503,7 @@ void adlib_init(Bit32u samplerate) {
 		op[i].env_step_a = 0;
 		op[i].env_step_d = 0;
 		op[i].env_step_r = 0;
-		op[i].step_skip_pos = 0;
+		op[i].step_skip_pos_a = 0;
 		op[i].env_step_skip_a = 0;
 
 #if defined(OPLTYPE_IS_OPL3)
@@ -510,7 +520,7 @@ void adlib_init(Bit32u samplerate) {
 	}
 
 	status = 0;
-	index = 0;
+	opl_index = 0;
 
 
 	// create vibrato table
@@ -558,9 +568,9 @@ void adlib_init(Bit32u samplerate) {
 			wavtable[(i<<1)  +WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<1)  )*PI*2/WAVEPREC));
 			wavtable[(i<<1)+1+WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<1)+1)*PI*2/WAVEPREC));
 			wavtable[i]					= wavtable[(i<<1)  +WAVEPREC];
-			// table to be verified, alternative: (zero-less)
-/*			wavtable[(i<<1)  +WAVEPREC]	= (Bit16s)(16384*sin((fltype)(((i*2+1)<<1)-1)*PI/WAVEPREC));
-			wavtable[(i<<1)+1+WAVEPREC]	= (Bit16s)(16384*sin((fltype)(((i*2+1)<<1)  )*PI/WAVEPREC));
+			// alternative: (zero-less)
+/*			wavtable[(i<<1)  +WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<2)+1)*PI/WAVEPREC));
+			wavtable[(i<<1)+1+WAVEPREC]	= (Bit16s)(16384*sin((fltype)((i<<2)+3)*PI/WAVEPREC));
 			wavtable[i]					= wavtable[(i<<1)-1+WAVEPREC]; */
 		}
 		for (i=0;i<(WAVEPREC>>3);i++) {
@@ -588,7 +598,6 @@ void adlib_init(Bit32u samplerate) {
 
 void adlib_write(Bitu idx, Bit8u val) {
 	Bit32u second_set = idx&0x100;
-	Bit8u old_val = adlibreg[idx];
 	adlibreg[idx] = val;
 
 	switch (idx&0xf0) {
@@ -900,16 +909,16 @@ Bitu adlib_reg_read(Bitu port) {
 }
 
 void adlib_write_index(Bitu port, Bit8u val) {
-	index = val;
+	opl_index = val;
 #if defined(OPLTYPE_IS_OPL3)
 	if ((port&3)!=0) {
 		// possibly second set
-		if (((adlibreg[0x105]&1)!=0) || (index==5)) index |= ARC_SECONDSET;
+		if (((adlibreg[0x105]&1)!=0) || (opl_index==5)) opl_index |= ARC_SECONDSET;
 	}
 #endif
 }
 
-static void INLINE clipit16(Bit32s ival, Bit16s* outval) {
+static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval) {
 	if (ival<32768) {
 		if (ival>-32769) {
 			*outval=(Bit16s)ival;
