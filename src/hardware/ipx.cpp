@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ipx.cpp,v 1.15 2008-07-26 14:49:38 qbix79 Exp $ */
+/* $Id: ipx.cpp,v 1.16 2009-05-15 18:16:33 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -951,7 +951,8 @@ public:
 						isIpxServer = true;
 						ConnectToServer("localhost");
 					} else {
-						WriteOut("IPX Tunneling Server failed to start\n");
+						WriteOut("IPX Tunneling Server failed to start.\n");
+						if(udpPort < 1024) WriteOut("Try a port number above 1024. See IPXNET HELP CONNECT on how to specify a port.\n");
 					}
 				} else {
 					WriteOut("IPX Tunneling Server already started\n");
