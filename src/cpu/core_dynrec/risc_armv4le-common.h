@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-common.h,v 1.2 2008-09-19 16:48:02 c2woody Exp $ */
+/* $Id: risc_armv4le-common.h,v 1.3 2009-05-16 21:52:47 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend by M-HT (common data/functions) */
@@ -89,8 +89,19 @@ typedef Bit8u HostReg;
 
 
 static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
+#if (__ARM_EABI__)
+	//flush cache - eabi
+	register unsigned long _beg __asm ("a1") = (unsigned long)(block_start);				// block start
+	register unsigned long _end __asm ("a2") = (unsigned long)(block_start+block_size);		// block end
+	register unsigned long _flg __asm ("a3") = 0;
+	register unsigned long _par __asm ("r7") = 0xf0002;										// sys_cacheflush
+	__asm __volatile ("swi 0x0"
+		: // no outputs
+		: "r" (_beg), "r" (_end), "r" (_flg), "r" (_par)
+		);
+#else
 // GP2X BEGIN
-	//flush cache
+	//flush cache - old abi
 	register unsigned long _beg __asm ("a1") = (unsigned long)(block_start);				// block start
 	register unsigned long _end __asm ("a2") = (unsigned long)(block_start+block_size);		// block end
 	register unsigned long _flg __asm ("a3") = 0;
@@ -99,4 +110,5 @@ static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
 		: "r" (_beg), "r" (_end), "r" (_flg)
 		);
 // GP2X END
+#endif
 }
