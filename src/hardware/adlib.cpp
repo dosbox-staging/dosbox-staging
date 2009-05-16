@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.40 2009-05-15 21:07:13 c2woody Exp $ */
+/* $Id: adlib.cpp,v 1.41 2009-05-16 08:29:05 harekiet Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -754,10 +754,10 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 		handler = new DBOPL::Handler();
 	}
 	handler->Init( rate );
-	Bit8u portRange = 4;	//opl2 will set this to 2
+	bool single = false;
 	switch ( oplmode ) {
 	case OPL_opl2:
-		portRange = 2;
+		single = true;
 		Init( Adlib::MODE_OPL2 );
 		break;
 	case OPL_dualopl2:
@@ -768,14 +768,16 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 		break;
 	}
 	//0x388 range
-	WriteHandler[0].Install(0x388,OPL_Write,IO_MB, portRange );
-	ReadHandler[0].Install(0x388,OPL_Read,IO_MB, portRange - 1 );
+	WriteHandler[0].Install(0x388,OPL_Write,IO_MB, 4 );
+	ReadHandler[0].Install(0x388,OPL_Read,IO_MB, 4 );
 	//0x220 range
-	WriteHandler[1].Install(base,OPL_Write,IO_MB, portRange );
-	ReadHandler[1].Install(base,OPL_Read,IO_MB, portRange - 1 );
+	if ( !single ) {
+		WriteHandler[1].Install(base,OPL_Write,IO_MB, 4 );
+		ReadHandler[1].Install(base,OPL_Read,IO_MB, 4 );
+	}
 	//0x228 range
-	WriteHandler[2].Install(base+8,OPL_Write,IO_MB,2);
-	ReadHandler[2].Install(base+8,OPL_Read,IO_MB,1);
+	WriteHandler[2].Install(base+8,OPL_Write,IO_MB, 2);
+	ReadHandler[2].Install(base+8,OPL_Read,IO_MB, 1);
 
 	MAPPER_AddHandler(OPL_SaveRawEvent,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
 }
