@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdarg.h>
+
+#ifndef min
+#define min(a,b) ((a)<(b)?(a):(b))
+#endif
 
 /* 
 	Have to remember where i ripped this code sometime ago.

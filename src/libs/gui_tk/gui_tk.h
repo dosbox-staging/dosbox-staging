@@ -102,13 +102,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.5 2008-09-07 10:55:15 c2woody Exp $ */
+/* $Id: gui_tk.h,v 1.6 2009-05-17 15:28:05 c2woody Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H
 
-#define imin(x,y) (x<y?x:y)
-#define imax(x,y) (x>y?x:y)
+#define imin(x,y) ((x)<(y)?(x):(y))
+#define imax(x,y) ((x)>(y)?(x):(y))
 #define isign(x) (((x)<0?-1:1))
 
 /** \file
@@ -1263,7 +1263,7 @@ public:
 		const SpecialChar *special = NULL);
 
 	virtual ~BitmapFont();
-	
+
 	/// Retrieve total height of font in pixels.
 	virtual int getHeight() const { return height; };
 
