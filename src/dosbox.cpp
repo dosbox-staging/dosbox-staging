@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.148 2009-04-26 15:37:04 c2woody Exp $ */
+/* $Id: dosbox.cpp,v 1.149 2009-05-20 18:07:06 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -168,6 +168,7 @@ increaseticks:
 			ticksAdded = ticksRemain;
 			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) {
 				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+					if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 					/* ratio we are aiming for is around 90% usage*/
 					Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
 					Bit32s new_cmax = CPU_CycleMax;
@@ -178,6 +179,10 @@ increaseticks:
 						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
 						if (ratioremoved < 1.0) {
 							ratio = (Bit32s)((double)ratio * (1 - ratioremoved));
+							/* Don't allow very high ratio which can cause us to lock as we don't scale down
+							 * for very low ratios. High ratio might result because of timing resolution */
+							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480) 
+								ratio = 20480;
 							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
 							if (ratio <= 1024) 
 								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
