@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.150 2009-02-25 19:58:11 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.151 2009-05-20 18:26:35 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -33,6 +33,7 @@
 #include <process.h>
 #endif
 
+#include "cross.h"
 #include "SDL.h"
 
 #include "dosbox.h"
@@ -148,6 +149,7 @@ enum PRIORITY_LEVELS {
 
 
 struct SDL_Block {
+	bool inited;
 	bool active;							//If this isn't set don't draw
 	bool updating;
 	struct {
@@ -962,9 +964,30 @@ static void SetPriority(PRIORITY_LEVELS level) {
 	}
 }
 
+extern Bit8u int10_font_14[256 * 14];
+static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u color2,SDL_Surface * output_surface) {
+	Bit32u * draw=(Bit32u*)(((Bit8u *)output_surface->pixels)+((y)*output_surface->pitch))+x;
+	while (*text) {
+		Bit8u * font=&int10_font_14[(*text)*14];
+		Bitu i,j;
+		Bit32u * draw_line=draw;
+		for (i=0;i<14;i++) {
+			Bit8u map=*font++;
+			for (j=0;j<8;j++) {
+				if (map & 0x80) *((Bit32u*)(draw_line+j))=color; else *((Bit32u*)(draw_line+j))=color2;
+				map<<=1;
+			}
+			draw_line+=output_surface->pitch/4;
+		}
+		text++;
+		draw+=8;
+	}
+}
+
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
+#include "dosbox_splash.h"
 
 //extern void UI_Run(bool);
 static void GUI_StartUp(Section * sec) {
@@ -1134,7 +1157,89 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_Stop();
-/* Get some Event handlers */
+	SDL_WM_SetCaption("DOSBox",VERSION);
+
+/* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
+//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+//    Bit32u rmask = 0xff000000;
+//    Bit32u gmask = 0x00ff0000;
+//    Bit32u bmask = 0x0000ff00;
+//#else
+    Bit32u rmask = 0x000000ff;
+    Bit32u gmask = 0x0000ff00;
+    Bit32u bmask = 0x00ff0000;
+//#endif
+
+/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
+	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+	if (splash_surf) {
+		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
+
+		Bit8u* tmpbufp = new Bit8u[640*400*3];
+		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
+		for (Bitu y=0; y<400; y++) {
+
+			Bit8u* tmpbuf = tmpbufp + y*640*3;
+/*			Bit8u * draw=((Bit8u *)splash_surf->pixels)+((399-y)*splash_surf->pitch);
+			for (Bitu x=0; x<640; x++) {
+				*draw++ = tmpbuf[x*3+2];
+				*draw++ = tmpbuf[x*3+1];
+				*draw++ = tmpbuf[x*3+0];
+				*draw++ = 0xff;
+			} */
+			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
+			for (Bitu x=0; x<640; x++) {
+//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+//				*draw++ = tmpbuf[x*3+2]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+0]*0x10000+0x00000000;
+//#else
+				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
+//#endif
+			}
+		}
+
+		bool exit_splash = false;
+
+		static Bitu max_splash_loop = 600;
+		static Bitu splash_fade = 100;
+		static bool use_fadeout = true;
+
+		for(Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
+			SDL_Event evt;
+			while (SDL_PollEvent(&evt)) {
+				if (evt.type == SDL_QUIT) {
+					exit_splash = true;
+					break;
+				}
+			}
+			if (exit_splash) break;
+
+			if (ct<1) {
+				SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+				SDL_SetAlpha(splash_surf, SDL_SRCALPHA,255);
+				SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
+				SDL_Flip(sdl.surface);
+			} else if (ct>=max_splash_loop-splash_fade) {
+				if (use_fadeout) {
+					SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+					SDL_SetAlpha(splash_surf, SDL_SRCALPHA, (max_splash_loop-1-ct)*255/(splash_fade-1));
+					SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
+					SDL_Flip(sdl.surface);
+				}
+			}
+
+//			SDL_Delay(1);
+		}
+
+		if (use_fadeout) {
+			SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+			SDL_Flip(sdl.surface);
+		}
+		SDL_FreeSurface(splash_surf);
+		delete [] tmpbufp;
+
+	}
+
+	/* Get some Event handlers */
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
 	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
@@ -1423,6 +1528,48 @@ void Config_Add_SDL() {
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
 }
 
+static void show_warning(char const * const message) {
+	bool textonly = true;
+#ifdef WIN32
+	textonly = false;
+	if ( !sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 ) textonly = true;
+	sdl.inited = true;
+#endif
+	printf(message);
+	if(textonly) return;
+	if(!sdl.surface) sdl.surface = SDL_SetVideoMode(640,400,0,0);
+	if(!sdl.surface) return;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	Bit32u rmask = 0xff000000;
+	Bit32u gmask = 0x00ff0000;
+	Bit32u bmask = 0x0000ff00;
+#else
+	Bit32u rmask = 0x000000ff;
+	Bit32u gmask = 0x0000ff00;                    
+	Bit32u bmask = 0x00ff0000;
+#endif
+	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+	if (!splash_surf) return;
+
+	int x = 120,y = 20;
+	std::string m(message),m2;
+	std::string::size_type a,b,c,d;
+   
+	while(m.size()) { //Max 50 characters. break on space before or on a newline
+		c = m.find('\n');
+		d = m.rfind(' ',50);
+		if(c>d) a=b=d; else a=b=c;
+		if( a != std::string::npos) b++; 
+		m2 = m.substr(0,a); m.erase(0,b);
+		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
+		y += 20;
+	}
+   
+	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
+	SDL_Flip(sdl.surface);
+	SDL_Delay(10000);
+}
+   
 static void launcheditor(std::string const& edit) {
 	std::string path,file;
 	Cross::CreatePlatformConfigDir(path);
@@ -1434,14 +1581,40 @@ static void launcheditor(std::string const& edit) {
 		exit(1);
 	}
 	if(f) fclose(f);
-	if(edit.empty()) {
+/*	if(edit.empty()) {
 		printf("no editor specified.\n");
 		exit(1);
-	}
+	}*/
 
 	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
 	//if you get here the launching failed!
 	printf("can't find editor %s\n",edit.c_str());
+	exit(1);
+}
+static void launchcaptures(std::string const& edit) {
+	std::string path,file;
+	Section* t = control->GetSection("dosbox");
+	if(t) file = t->GetPropValue("captures");
+	if(!t || file == NO_SUCH_PROPERTY) {
+		printf("Config system messed up.\n");
+		exit(1);
+	}
+	Cross::CreatePlatformConfigDir(path);
+	path += file;
+	Cross::CreateDir(path);
+	struct stat cstat;
+	if(stat(path.c_str(),&cstat) || (cstat.st_mode & S_IFDIR) == 0) {
+		printf("%s doesn't exists or isn't a directory.\n",path.c_str());
+		exit(1);
+	}
+/*	if(edit.empty()) {
+		printf("no editor specified.\n");
+		exit(1);
+	}*/
+
+	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
+	//if you get here the launching failed!
+	printf("can't find filemanager %s\n",edit.c_str());
 	exit(1);
 }
 
@@ -1460,6 +1633,24 @@ static void printconfiglocation() {
 	exit(0);
 }
 
+static void eraseconfigfile() {
+	FILE* f = fopen("dosbox.conf","r");
+	if(f) {
+		fclose(f);
+		show_warning("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
+	}
+	std::string path,file;
+	Cross::GetPlatformConfigDir(path);
+	Cross::GetPlatformConfigName(file);
+	path += file;
+	f = fopen(path.c_str(),"r");
+	if(!f) exit(0);
+	fclose(f);
+	unlink(path.c_str());
+	exit(0);
+}
+
+
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
@@ -1473,6 +1664,8 @@ int main(int argc, char* argv[]) {
 
 		std::string editor;
 		if(control->cmdline->FindString("-editconf",editor,true)) launcheditor(editor);
+		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
+		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
@@ -1534,6 +1727,7 @@ int main(int argc, char* argv[]) {
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+	sdl.inited = true;
 
 #ifndef DISABLE_JOYSTICK
 	//Initialise Joystick seperately. This way we can warn when it fails instead
@@ -1663,7 +1857,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 	return 0;
-};
+}
 
 void GFX_GetSize(int &width, int &height, bool &fullscreen) {
 	width = sdl.draw.width;
