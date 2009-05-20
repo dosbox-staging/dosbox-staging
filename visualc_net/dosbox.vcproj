@@ -757,12 +757,6 @@
 					RelativePath="..\src\platform\visualc\config.h">
 				</File>
 				<File
-					RelativePath="..\src\platform\visualc\dirent.c">
-				</File>
-				<File
-					RelativePath="..\src\platform\visualc\dirent.h">
-				</File>
-				<File
 					RelativePath="..\src\platform\visualc\unistd.h">
 				</File>
 			</Filter>
