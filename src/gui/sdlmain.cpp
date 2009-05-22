@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.151 2009-05-20 18:26:35 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.152 2009-05-22 20:56:35 c2woody Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1180,13 +1180,6 @@ static void GUI_StartUp(Section * sec) {
 		for (Bitu y=0; y<400; y++) {
 
 			Bit8u* tmpbuf = tmpbufp + y*640*3;
-/*			Bit8u * draw=((Bit8u *)splash_surf->pixels)+((399-y)*splash_surf->pitch);
-			for (Bitu x=0; x<640; x++) {
-				*draw++ = tmpbuf[x*3+2];
-				*draw++ = tmpbuf[x*3+1];
-				*draw++ = tmpbuf[x*3+0];
-				*draw++ = 0xff;
-			} */
 			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
 			for (Bitu x=0; x<640; x++) {
 //#if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -1203,7 +1196,7 @@ static void GUI_StartUp(Section * sec) {
 		static Bitu splash_fade = 100;
 		static bool use_fadeout = true;
 
-		for(Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
+		for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
 			SDL_Event evt;
 			while (SDL_PollEvent(&evt)) {
 				if (evt.type == SDL_QUIT) {
@@ -1221,13 +1214,12 @@ static void GUI_StartUp(Section * sec) {
 			} else if (ct>=max_splash_loop-splash_fade) {
 				if (use_fadeout) {
 					SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-					SDL_SetAlpha(splash_surf, SDL_SRCALPHA, (max_splash_loop-1-ct)*255/(splash_fade-1));
+					SDL_SetAlpha(splash_surf, SDL_SRCALPHA, (Bit8u)((max_splash_loop-1-ct)*255/(splash_fade-1)));
 					SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 					SDL_Flip(sdl.surface);
 				}
 			}
 
-//			SDL_Delay(1);
 		}
 
 		if (use_fadeout) {
