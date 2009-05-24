@@ -1,6 +1,12 @@
 Some notes about porting DOSBox to systems with certain restrictions,
 like handheld devices.
 
+General:
+  - depending on where you start off with the port, assure that the
+    config.h entries are correct/exhausting, like GCC_ATTRIBUTE is
+    required (struct packing) but is undefined if you base the port
+    on msvc sources which have a special config.h
+
 If memory is a constraint:
   - in paging.h out-comment the USE_FULL_TLB define to enable special
     TLB linking code that uses less memory
