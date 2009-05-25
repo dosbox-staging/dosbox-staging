@@ -651,8 +651,8 @@ MIXER
   /LISTMIDI
       Lists the available midi devices on your PC (Windows). To select a 
       device other than the Windows default midi-mapper, add a line 
-      'config=id' to the [midi] section in the configuration file, where
-      'id' is the number for the device as listed by LISTMIDI.
+      'midiconfig=id' to the [midi] section in the configuration file,
+      where 'id' is the number for the device as listed by LISTMIDI.
 
 
 IMGMOUNT
@@ -1182,7 +1182,12 @@ Running a certain game closes DOSBox, crashes with some message or hangs:
       fixed cycles (for example cycles=10000)
       ems=false
       xms=false
-    or combinations of the above settings
+    or combinations of the above settings,
+    similar the machine settings that control the emulated chipset and
+    functionality:
+      machine=vesa_nolfb
+    or
+      machine=vgaonly
   - use loadfix before starting the game
 
 The game exits to the DOSBox prompt with some error message:
