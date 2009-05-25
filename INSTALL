@@ -7,6 +7,8 @@ SDL
     (src/platform/sdl-win32.diff). If you want the patched sourcetree
     send us an email. (see README)
     Licensed under LGPL
+    Note that only version 1.2 and its subversions (1.2.8, 1.2.13 etc.)
+    are currently supported.
 
 Curses (optional)
     If you want to enable the debugger you need a curses library.
@@ -53,7 +55,7 @@ If you are building from the cvs run ./autogen.sh first before doing the followi
 In step 1 you could add the following switches:
 --enable-debug 
         enables the internal debugger. --enable-debug=heavy enables even more 
-        debug options. Dosbox should then be run from a xterm and when the sdl-
+        debug options. DOSBox should then be run from a xterm and when the sdl-
         window is active press alt-pause to enter the debugger.
 
 --enable-core-inline
@@ -66,7 +68,7 @@ In step 1 you could add the following switches:
 
 --disable-fpu-x86
         disables the assembly fpu core. Although relatively new the x86 fpu 
-	core has more accuracy then the regular fpu core. 
+        core has more accuracy then the regular fpu core. 
 
 --disable-dynamic-x86
         disables the dynamic x86 specific cpu core. Although it might be 
@@ -78,11 +80,15 @@ In step 1 you could add the following switches:
 
 --disable-dynrec
         disables the recompiling cpu core. Currently x86 and x86_64 only.
-	You can activate this core on x86 by disabling the dynamic-x86 core.
+        You can activate this core on x86 by disabling the dynamic-x86 core.
 
 --disable-dynamic-core
         disables all dynamic cores. (same effect as 
-	--disable-dynamic-x86 --disable-dynrec)
+        --disable-dynamic-x86 --disable-dynrec)
+
+--disable-opengl
+        disables OpenGL-support (output mode that can be selected in the
+        DOSBox configuration file).
 
 --disable-unaligned-memory
         disables unaligned memory access.
@@ -94,4 +100,5 @@ src/ints/bios_keyboard.cpp and go to line 30 and read there how to fix it.
 
 
 Build instructions for VC++6 
-Don't use VC++ 6:it creates faulty code in core_normal.cpp
+Don't use VC++ 6: it creates faulty code in core_normal.cpp
+Later Visual Studio versions work fine (vs2003/.net, vs2005, vs2008)
