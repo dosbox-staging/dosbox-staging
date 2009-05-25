@@ -68,7 +68,7 @@ SetShellVarContext all
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox.lnk" "$INSTDIR\DOSBox.exe" "" "$INSTDIR\DOSBox.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\DOSBox (noconsole).lnk" "$INSTDIR\DOSBox.exe" "-noconsole" "$INSTDIR\DOSBox.exe" 0
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\README.lnk" "$INSTDIR\README.txt"
-  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Configuration\Edit Configuration.lnk" "$INSTDIR\DOSBox.exe" "-editconf notepad.exe"
+  CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Configuration\Edit Configuration.lnk" "$INSTDIR\DOSBox.exe" "-editconf notepad.exe -editconf $\"%SystemRoot%\system32\notepad.exe$\" -editconf $\"%WINDIR%\notepad.exe$\""
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Configuration\Reset Configuration.lnk" "$INSTDIR\DOSBox.exe" "-eraseconf"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Capture folder.lnk" "$INSTDIR\DOSBox.exe" "-opencaptures explorer.exe"
   CreateShortCut "$SMPROGRAMS\DOSBox-${VER_MAYOR}.${VER_MINOR}\Video\Video instructions.lnk" "$INSTDIR\zmbv\README.txt"
