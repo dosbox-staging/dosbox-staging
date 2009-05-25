@@ -1,4 +1,4 @@
-DOSBox v0.72
+DOSBox v0.73
 
 
 =====
@@ -70,6 +70,7 @@ Q: Can DOSBox harm my computer?
 Q: I would like to change the memory size/cpu speed/ems/soundblaster IRQ.
 Q: What sound hardware does DOSBox presently emulate?
 Q: DOSBox crashes on startup and I'm running arts.
+Q: My Build game(Duke3D/Blood/Shadow Warrior) has problems.
 Q: Great README, but I still don't get it.
 
 
@@ -249,8 +250,8 @@ A: DOSBox emulates several legacy sound devices:
      be sure the soundblaster is not disabled in the DOSBox configuration
      file. The Tandy DAC is only emulated at the BIOS level.
    - Adlib
-     Borrowed from MAME, this emulation is almost perfect and includes the 
-     Adlib's ability to almost play digitized sound.
+     This emulation is almost perfect and includes the Adlib's ability to 
+     almost play digitized sound.
    - SoundBlaster 16 / SoundBlaster Pro I & II / SoundBlaster I & II
      By default DOSBox provides Soundblaster 16 level 16-bit stereo sound. 
      You can select a different SoundBlaster version in the configfile of 
@@ -269,6 +270,13 @@ A: DOSBox emulates several legacy sound devices:
 Q: DOSBox crashes on startup and I'm running arts.
 A: This isn't really a DOSBox problem, but the solution is to set the 
    environment variable SDL_AUDIODRIVER to alsa or oss.
+
+
+Q: My Build game(Duke3D/Blood/Shadow Warrior) has problems.
+A: First of all, try to find a port of the game. Those will offer a 
+   better experience. To fix the graphics problem that occurs in 
+   DOSBox on higher resolutions. Open the configuration file of 
+   DOSBox and search for machine=svga_s3. Change svga_s3 to vesa_nolfb
 
 
 Q: Great README, but I still don't get it.
@@ -301,6 +309,10 @@ dosbox [name] [-exit] [-c command] [-fullscreen] [-conf congfigfile]
        [-version]
        
 dosbox -version
+dosbox -editconf program
+dosbox -opencaptures program
+dosbox -printconf
+dosbox -eraseconf
 
   name   
         If "name" is a directory it will mount that as the C: drive.
@@ -363,6 +375,19 @@ dosbox -version
 
   -version
         output version information and exit. Useful for frontends.
+
+  -editconf program
+        calls program with as first parameter the configuration file.
+
+  -opencaptures
+        calls program with as first paramter the location of the captures 
+        folder.
+  
+  -printconf
+        prints the location of the default configuration file.
+
+  -eraseconf
+        removes the default configuration file
 
 Note: If a name/command/configfile/languagefile contains a space, put
       the whole name/command/configfile/languagefile between quotes
@@ -1189,11 +1214,13 @@ The DOSBox configuration file contains the current settings. You can
 alter them and start DOSBox with the -conf switch to load the file and
 use these settings.
 
-DOSBox will first parse the settings in ~/.dosboxrc (Linux),
-~\dosbox.conf (Win32) or "~/Library/Preferences/DOSBox Preferences"
-(MACOSX). Afterwards DOSBox will parse all configfiles specified with the 
--conf switch. If no configfile is specified with the -conf switch, DOSBox will 
-look in the current directory for the DOSBox configuration file.
+DOSBox will parse configuration files that are specified with -conf. If 
+none were specified it will try to load "dosbox.conf" from the local
+directory. If there is none, DOSBox will load the user configuration
+file. This file will be created if it doesn't exist. The file can be
+found in ~/.dosbox (Linux) or  "~/Library/Preferences" (MAC OS X).
+Windows users should use the shortcuts in the startmenu to find it.
+
 
 
 
