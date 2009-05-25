@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.152 2009-05-22 20:56:35 c2woody Exp $ */
+/* $Id: sdlmain.cpp,v 1.153 2009-05-25 16:29:36 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1446,7 +1446,6 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
-
 void GFX_ShowMsg(char const* format,...) {
 	char buf[512];
 	va_list msg;
@@ -1562,7 +1561,7 @@ static void show_warning(char const * const message) {
 	SDL_Delay(10000);
 }
    
-static void launcheditor(std::string const& edit) {
+static void launcheditor() {
 	std::string path,file;
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
@@ -1577,10 +1576,11 @@ static void launcheditor(std::string const& edit) {
 		printf("no editor specified.\n");
 		exit(1);
 	}*/
-
-	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
+	std::string edit;
+	while(control->cmdline->FindString("-editconf",edit,true)) //Loop until one succeeds
+		execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
 	//if you get here the launching failed!
-	printf("can't find editor %s\n",edit.c_str());
+	printf("can't find editor(s) specified at the command line.\n");
 	exit(1);
 }
 static void launchcaptures(std::string const& edit) {
@@ -1615,6 +1615,7 @@ static void printconfiglocation() {
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
 	path += file;
+     
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f && !control->PrintConfig(path.c_str())) {
 		printf("tried creating %s. but failed",path.c_str());
@@ -1655,7 +1656,7 @@ int main(int argc, char* argv[]) {
 		DOSBOX_Init();
 
 		std::string editor;
-		if(control->cmdline->FindString("-editconf",editor,true)) launcheditor(editor);
+		if(control->cmdline->FindString("-editconf",editor,false)) launcheditor();
 		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
 		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
 
