@@ -378,9 +378,11 @@ dosbox -eraseconf
 
   -editconf program
         calls program with as first parameter the configuration file.
+        You can specify this command more than once. In this case it will
+        move to second program if the first one fails to start.
 
   -opencaptures
-        calls program with as first paramter the location of the captures 
+        calls program with as first paramater the location of the captures 
         folder.
   
   -printconf
