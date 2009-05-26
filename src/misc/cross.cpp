@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.6 2009-05-26 17:19:15 qbix79 Exp $ */
+/* $Id: cross.cpp,v 1.7 2009-05-26 17:43:39 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -43,10 +43,10 @@ static void W32_ConfDir(std::string& in,bool create) {
 	BOOL r = SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,c);
 	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(NULL,result,CSIDL_APPDATA,c);
 	if(!r || result[0] == 0) {
-		char* windir = getenv("windir");
+		char const * windir = getenv("windir");
 		if(!windir) windir = "c:\\windows";
 		safe_strncpy(result,windir,MAX_PATH);
-		char* appdata = "\\Application Data";
+		char const* appdata = "\\Application Data";
 		size_t len = strlen(result);
 		if(len + strlen(appdata) < MAX_PATH) strcat(result,appdata);
 		if(create) mkdir(result);
