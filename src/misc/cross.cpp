@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cross.cpp,v 1.5 2009-03-14 18:02:34 qbix79 Exp $ */
+/* $Id: cross.cpp,v 1.6 2009-05-26 17:19:15 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "cross.h"
@@ -36,12 +36,28 @@
 #include <pwd.h>
 #endif
 
+#ifdef WIN32
+static void W32_ConfDir(std::string& in,bool create) {
+	int c = create?1:0;
+	char result[MAX_PATH] = { 0 };
+	BOOL r = SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,c);
+	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(NULL,result,CSIDL_APPDATA,c);
+	if(!r || result[0] == 0) {
+		char* windir = getenv("windir");
+		if(!windir) windir = "c:\\windows";
+		safe_strncpy(result,windir,MAX_PATH);
+		char* appdata = "\\Application Data";
+		size_t len = strlen(result);
+		if(len + strlen(appdata) < MAX_PATH) strcat(result,appdata);
+		if(create) mkdir(result);
+	}
+	in = result;
+}
+#endif
 
 void Cross::GetPlatformConfigDir(std::string& in) {
 #ifdef WIN32
-	char result[MAX_PATH] = { 0 };
-	SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,0);
-	in = result;
+	W32_ConfDir(in,false);
 	in += "\\DOSBox";
 #elif defined(MACOSX)
 	in = "~/Library/Preferences";
@@ -66,9 +82,7 @@ void Cross::GetPlatformConfigName(std::string& in) {
 
 void Cross::CreatePlatformConfigDir(std::string& in) {
 #ifdef WIN32
-	char result[MAX_PATH] = { 0 };
-	SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,1); //1 at end is create
-	in = result;
+	W32_ConfDir(in,true);
 	in += "\\DOSBox";
 	mkdir(in.c_str());
 #elif defined(MACOSX)
@@ -120,8 +134,8 @@ dir_information* open_directory(const char* dirname) {
 
 	safe_strncpy(dir.base_path,dirname,MAX_PATH);
 
-	if (dirname[len-1]=='\\')	strcat(dir.base_path,"*.*");
-	else						strcat(dir.base_path,"\\*.*");
+	if (dirname[len-1] == '\\') strcat(dir.base_path,"*.*");
+	else                        strcat(dir.base_path,"\\*.*");
 
 	dir.handle = INVALID_HANDLE_VALUE;
 
