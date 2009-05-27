@@ -1,11 +1,11 @@
 !define VER_MAYOR 0
-!define VER_MINOR 72
+!define VER_MINOR 73
 !define APP_NAME "DOSBox ${VER_MAYOR}.${VER_MINOR} Installer"
 !define COMP_NAME "DOSBox Team"
 !define COPYRIGHT "Copyright © 2002-2009 DOSBox Team"
 !define DESCRIPTION "DOSBox Installer"
 
-VIProductVersion "${VER_MAYOR}.73.0.0"
+VIProductVersion "${VER_MAYOR}.${VER_MINOR}.0.0"
 VIAddVersionKey  "ProductName"  "${APP_NAME}"
 VIAddVersionKey  "CompanyName"  "${COMP_NAME}"
 VIAddVersionKey  "FileDescription"  "${DESCRIPTION}"
