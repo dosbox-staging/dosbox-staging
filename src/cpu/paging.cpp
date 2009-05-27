@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: paging.cpp,v 1.35 2008-12-04 21:09:32 c2woody Exp $ */
+/* $Id: paging.cpp,v 1.36 2009-05-27 09:15:41 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <assert.h>

@@ -1,4 +1,4 @@
-#define VERSION "0.72"
+#define VERSION "0.73"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0

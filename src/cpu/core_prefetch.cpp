@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_prefetch.cpp,v 1.1 2008-05-21 21:29:32 c2woody Exp $ */
+/* $Id: core_prefetch.cpp,v 1.2 2009-05-27 09:15:41 qbix79 Exp $ */
 
 #include <stdio.h>
 

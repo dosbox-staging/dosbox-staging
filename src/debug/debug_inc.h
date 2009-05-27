@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 /* Local Debug Function */
 
-/* $Id: debug_inc.h,v 1.11 2007-01-08 19:45:39 qbix79 Exp $ */
+/* $Id: debug_inc.h,v 1.12 2009-05-27 09:15:41 qbix79 Exp $ */
 
 #include <curses.h>
 #include "mem.h"

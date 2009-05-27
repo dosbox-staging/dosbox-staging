@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.57 2009-04-25 16:25:03 harekiet Exp $ */
+/* $Id: int10_char.cpp,v 1.58 2009-05-27 09:15:42 qbix79 Exp $ */
 
 /* Character displaying moving functions */
 

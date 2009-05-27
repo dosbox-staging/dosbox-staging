@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x86.h,v 1.31 2008-08-06 18:31:26 c2woody Exp $ */
+/* $Id: risc_x86.h,v 1.32 2009-05-27 09:15:41 qbix79 Exp $ */
 
 static void gen_init(void);
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2007  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_devices.cpp,v 1.21 2008-12-11 20:45:43 qbix79 Exp $ */ 
+/* $Id: dos_devices.cpp,v 1.22 2009-05-27 09:15:41 qbix79 Exp $ */ 
 
 #include <string.h>
 #include "dosbox.h"

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2008  The DOSBox Team
+ *  Copyright (C) 2002-2009  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_mipsel32.h,v 1.4 2008-09-19 16:48:03 c2woody Exp $ */
+/* $Id: risc_mipsel32.h,v 1.5 2009-05-27 09:15:41 qbix79 Exp $ */
 
 
 /* MIPS32 (little endian) backend by crazyc */
