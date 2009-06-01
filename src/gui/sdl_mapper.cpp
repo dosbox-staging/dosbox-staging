@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdl_mapper.cpp,v 1.59 2009-05-14 18:01:25 qbix79 Exp $ */
+/* $Id: sdl_mapper.cpp,v 1.60 2009-06-01 10:25:51 qbix79 Exp $ */
 
 #include <vector>
 #include <list>
@@ -2126,7 +2126,7 @@ void BIND_MappingEvents(void) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
-		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
 			/* Check the press */
 			for (CButton_it but_it = buttons.begin();but_it!=buttons.end();but_it++) {
 				if ((*but_it)->OnTop(event.button.x,event.button.y)) {
@@ -2272,7 +2272,10 @@ void MAPPER_Run(bool pressed) {
 		return;
 	KEYBOARD_ClrBuffer();	//Clear buffer
 	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
+	MAPPER_RunInternal();
+}
 
+void MAPPER_RunInternal() {
 	int cursor = SDL_ShowCursor(SDL_QUERY);
 	SDL_ShowCursor(SDL_ENABLE);
 	bool mousetoggle=false;

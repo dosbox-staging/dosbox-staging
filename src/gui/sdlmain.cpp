@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sdlmain.cpp,v 1.153 2009-05-25 16:29:36 qbix79 Exp $ */
+/* $Id: sdlmain.cpp,v 1.154 2009-06-01 10:25:51 qbix79 Exp $ */
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -1816,7 +1816,7 @@ int main(int argc, char* argv[]) {
 
 		/* Init the keyMapper */
 		MAPPER_Init();
-		if (control->cmdline->FindExist("-startmapper")) MAPPER_Run(false);
+		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
