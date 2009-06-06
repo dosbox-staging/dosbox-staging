@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.73 2009-04-25 07:02:28 qbix79 Exp $ */
+/* $Id: sblaster.cpp,v 1.74 2009-06-06 15:45:31 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -62,7 +62,7 @@ bool MIDI_Available(void);
 #define SB_SH	14
 #define SB_SH_MASK	((1 << SB_SH)-1)
 
-enum {DSP_S_RESET,DSP_S_NORMAL,DSP_S_HIGHSPEED};
+enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
 enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6};
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
 
@@ -117,6 +117,7 @@ struct SB_INFO {
 		Bit8u cmd_in_pos;
 		Bit8u cmd_in[DSP_BUFSIZE];
 		struct {
+			Bit8u lastval;
 			Bit8u data[DSP_BUFSIZE];
 			Bitu pos,used;
 		} in,out;
@@ -145,7 +146,7 @@ struct SB_INFO {
 	struct {
 		Bitu base;
 		Bitu irq;
-		Bitu dma8,dma16;
+		Bit8u dma8,dma16;
 	} hw;
 	struct {
 		Bits value;
@@ -246,13 +247,22 @@ static void DSP_SetSpeaker(bool how) {
 
 static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	LOG(LOG_SB,LOG_NORMAL)("Raising IRQ");
-	PIC_ActivateIRQ(sb.hw.irq);
 	switch (type) {
 	case SB_IRQ_8:
+		if (sb.irq.pending_8bit) {
+			E_Exit("SB: 8bit irq pending");
+			return;
+		}
 		sb.irq.pending_8bit=true;
+		PIC_ActivateIRQ(sb.hw.irq);
 		break;
 	case SB_IRQ_16:
+		if (sb.irq.pending_16bit) {
+			E_Exit("SB: 16bit irq pending");
+			return;
+		}
 		sb.irq.pending_16bit=true;
+		PIC_ActivateIRQ(sb.hw.irq);
 		break;
 	default:
 		break;
@@ -316,7 +326,7 @@ static INLINE Bit8u decode_ADPCM_4_sample(Bit8u sample,Bit8u & reference,Bits& s
 	Bits ref = reference + scaleMap[samp];
 	if (ref > 0xff) reference = 0xff;
 	else if (ref < 0x00) reference = 0x00;
-	else reference = ref;
+	else reference = (Bit8u)(ref&0xff);
 	scale = (scale + adjustMap[samp]) & 0xff;
 	
 	return reference;
@@ -345,7 +355,7 @@ static INLINE Bit8u decode_ADPCM_2_sample(Bit8u sample,Bit8u & reference,Bits& s
 	Bits ref = reference + scaleMap[samp];
 	if (ref > 0xff) reference = 0xff;
 	else if (ref < 0x00) reference = 0x00;
-	else reference = ref;
+	else reference = (Bit8u)(ref&0xff);
 	scale = (scale + adjustMap[samp]) & 0xff;
 
 	return reference;
@@ -377,7 +387,7 @@ INLINE Bit8u decode_ADPCM_3_sample(Bit8u sample,Bit8u & reference,Bits& scale) {
 	Bits ref = reference + scaleMap[samp];
 	if (ref > 0xff) reference = 0xff;
 	else if (ref < 0x00) reference = 0x00;
-	else reference = ref;
+	else reference = (Bit8u)(ref&0xff);
 	scale = (scale + adjustMap[samp]) & 0xff;
 
 	return reference;
@@ -573,7 +583,7 @@ static void DSP_ChangeMode(DSP_MODES mode) {
 	sb.mode=mode;
 }
 
-static void DSP_RaiseIRQEvent(Bitu val) {
+static void DSP_RaiseIRQEvent(Bitu /*val*/) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
@@ -678,13 +688,23 @@ static void DSP_AddData(Bit8u val) {
 }
 
 
+static void DSP_FinishReset(Bitu /*val*/) {
+	DSP_FlushData();
+	DSP_AddData(0xaa);
+	sb.dsp.state=DSP_S_NORMAL;
+}
+
 static void DSP_Reset(void) {
 	LOG(LOG_SB,LOG_ERROR)("DSP:Reset");
 	PIC_DeActivateIRQ(sb.hw.irq);
+
 	DSP_ChangeMode(MODE_NONE);
+	DSP_FlushData();
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
 	sb.dsp.write_busy=0;
+	PIC_RemoveEvents(DSP_FinishReset);
+
 	sb.dma.left=0;
 	sb.dma.total=0;
 	sb.dma.stereo=false;
@@ -693,6 +713,7 @@ static void DSP_Reset(void) {
 	sb.dma.mode=DSP_DMA_NONE;
 	sb.dma.remain_size=0;
 	if (sb.dma.chan) sb.dma.chan->Clear_Request();
+
 	sb.freq=22050;
 	sb.time_constant=45;
 	sb.dac.used=0;
@@ -706,29 +727,28 @@ static void DSP_Reset(void) {
 	PIC_RemoveEvents(END_DMA_Event);
 }
 
-
 static void DSP_DoReset(Bit8u val) {
-	if ((val&1)!=0) {
+	if (((val&1)!=0) && (sb.dsp.state!=DSP_S_RESET)) {
 //TODO Get out of highspeed mode
 		DSP_Reset();
 		sb.dsp.state=DSP_S_RESET;
-	} else {
-		DSP_FlushData();
-		DSP_AddData(0xaa);
-		sb.dsp.state=DSP_S_NORMAL;
+	} else if (((val&1)==0) && (sb.dsp.state==DSP_S_RESET)) {	// reset off
+		sb.dsp.state=DSP_S_RESET_WAIT;
+		PIC_RemoveEvents(DSP_FinishReset);
+		PIC_AddEvent(DSP_FinishReset,20.0f/1000.0f,0);	// 20 microseconds
 	}
 }
 
-static void DSP_E2_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event==DMA_UNMASKED) {
-		Bit8u val=sb.e2.value;
+		Bit8u val=(Bit8u)(sb.e2.value&0xff);
 		DmaChannel * chan=GetDMAChannel(sb.hw.dma8);
 		chan->Register_Callback(0);
 		chan->Write(1,&val);
 	}
 }
 
-static void DSP_ADC_CallBack(DmaChannel * chan, DMAEvent event) {
+static void DSP_ADC_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
 	Bit8u val=128;
 	DmaChannel * ch=GetDMAChannel(sb.hw.dma8);
@@ -1047,14 +1067,13 @@ static void DSP_DoWrite(Bit8u val) {
 
 static Bit8u DSP_ReadData(void) {
 /* Static so it repeats the last value on succesive reads (JANGLE DEMO) */
-	static Bit8u data = 0;
 	if (sb.dsp.out.used) {
-		data=sb.dsp.out.data[sb.dsp.out.pos];
+		sb.dsp.out.lastval=sb.dsp.out.data[sb.dsp.out.pos];
 		sb.dsp.out.pos++;
 		if (sb.dsp.out.pos>=DSP_BUFSIZE) sb.dsp.out.pos-=DSP_BUFSIZE;
 		sb.dsp.out.used--;
 	}
-	return data;
+	return sb.dsp.out.lastval;
 }
 
 //The soundblaster manual says 2.0 Db steps but we'll go for a bit less
@@ -1337,7 +1356,7 @@ static Bit8u CTMIXER_Read(void) {
 }
 
 
-static Bitu read_sb(Bitu port,Bitu iolen) {
+static Bitu read_sb(Bitu port,Bitu /*iolen*/) {
 	switch (port-sb.hw.base) {
 	case MIXER_INDEX:
 		return sb.mixer.index;
@@ -1360,6 +1379,7 @@ static Bitu read_sb(Bitu port,Bitu iolen) {
 			if (sb.dsp.write_busy & 8) return 0xff;
 			return 0x7f;
 		case DSP_S_RESET:
+		case DSP_S_RESET_WAIT:
 			return 0xff;
 		}
 		return 0xff;
@@ -1372,19 +1392,20 @@ static Bitu read_sb(Bitu port,Bitu iolen) {
 	return 0xff;
 }
 
-static void write_sb(Bitu port,Bitu val,Bitu iolen) {
+static void write_sb(Bitu port,Bitu val,Bitu /*iolen*/) {
+	Bit8u val8=(Bit8u)(val&0xff);
 	switch (port-sb.hw.base) {
 	case DSP_RESET:
-		DSP_DoReset(val);
+		DSP_DoReset(val8);
 		break;
 	case DSP_WRITE_DATA:
-		DSP_DoWrite(val);
+		DSP_DoWrite(val8);
 		break;
 	case MIXER_INDEX:
-		sb.mixer.index=val;
+		sb.mixer.index=val8;
 		break;
 	case MIXER_DATA:
-		CTMIXER_Write(val);
+		CTMIXER_Write(val8);
 		break;
 	default:
 		LOG(LOG_SB,LOG_NORMAL)("Unhandled write to SB Port %4X",port);
@@ -1392,8 +1413,8 @@ static void write_sb(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static void adlib_gusforward(Bitu port,Bitu val,Bitu iolen) {
-	adlib_commandreg=val;
+static void adlib_gusforward(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+	adlib_commandreg=(Bit8u)(val&0xff);
 }
 
 static void SBLASTER_CallBack(Bitu len) {
@@ -1469,10 +1490,16 @@ public:
 	SBLASTER(Section* configuration):Module_base(configuration) {
 		Bitu i;
 		Section_prop * section=static_cast<Section_prop *>(configuration);
+
 		sb.hw.base=section->Get_hex("sbbase");
 		sb.hw.irq=section->Get_int("irq");
-		sb.hw.dma8=section->Get_int("dma");
-		sb.hw.dma16=section->Get_int("hdma");
+		Bitu dma8bit=section->Get_int("dma");
+		if (dma8bit>0xff) dma8bit=0xff;
+		sb.hw.dma8=(Bit8u)(dma8bit&0xff);
+		Bitu dma16bit=section->Get_int("hdma");
+		if (dma16bit>0xff) dma16bit=0xff;
+		sb.hw.dma16=(Bit8u)(dma16bit&0xff);
+
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
 		OPL_Mode opl_mode = OPL_none;
@@ -1493,9 +1520,12 @@ public:
 			OPL_Init(section,opl_mode);
 			break;
 		}
+
 		if (sb.type==SBT_NONE) return;
+
 		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
 		sb.dsp.state=DSP_S_NORMAL;
+		sb.dsp.out.lastval=0xaa;
 		sb.dma.chan=NULL;
 
 		for (i=4;i<=0xf;i++) {
@@ -1508,8 +1538,10 @@ public:
 		for (i=0;i<256;i++) ASP_regs[i] = 0;
 		ASP_regs[5] = 0x01;
 		ASP_regs[9] = 0xf8;
+
 		DSP_Reset();
 		CTMIXER_Reset();
+
 		// The documentation does not specify if SB gets initialized with the speaker enabled
 		// or disabled. Real SBPro2 has it disabled. 
 		sb.speaker=false;
@@ -1559,7 +1591,7 @@ public:
 
 
 static SBLASTER* test;
-void SBLASTER_ShutDown(Section* sec) {
+void SBLASTER_ShutDown(Section* /*sec*/) {
 	delete test;	
 }
 
