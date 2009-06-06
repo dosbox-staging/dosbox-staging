@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.62 2009-05-14 17:51:47 qbix79 Exp $ */
+/* $Id: ems.cpp,v 1.63 2009-06-06 21:52:09 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -43,8 +43,9 @@
 #define EMM_VERSION		0x40
 #define GEMMIS_VERSION	0x0001	// Version 1.0
 
-#define NULL_HANDLE	0xffff
-#define	NULL_PAGE	0xffff
+#define EMM_SYSTEM_HANDLE	0x0000
+#define NULL_HANDLE			0xffff
+#define	NULL_PAGE			0xffff
 
 #define ENABLE_VCPI 1
 #define ENABLE_V86_STARTUP 0
@@ -70,6 +71,25 @@
 #define EMM_MOVE_OVLAP			0x92
 #define EMM_MOVE_OVLAPI			0x97
 #define EMM_NOT_FOUND			0xa0
+
+
+struct EMM_Mapping {
+	Bit16u handle;
+	Bit16u page;
+};
+
+struct EMM_Handle {
+	Bit16u pages;
+	MemHandle mem;
+	char name[8];
+	bool saved_page_map;
+	EMM_Mapping page_map[EMM_MAX_PHYS];
+};
+
+static EMM_Handle emm_handles[EMM_MAX_HANDLES];
+static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
+static EMM_Mapping emm_segmentmappings[0x40];
+
 
 static Bit16u GEMMIS_seg; 
 
@@ -144,8 +164,13 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 			mem_writew(GEMMIS_addr+0x18d,0x0000);		// system handle
 			mem_writed(GEMMIS_addr+0x18f,0);			// handle name
 			mem_writed(GEMMIS_addr+0x193,0);			// handle name
-			mem_writew(GEMMIS_addr+0x197,0x0010);		// system handle
-			mem_writed(GEMMIS_addr+0x199,0x00110000);	// physical address
+			if (emm_handles[EMM_SYSTEM_HANDLE].pages != NULL_HANDLE) {
+				mem_writew(GEMMIS_addr+0x197,(emm_handles[EMM_SYSTEM_HANDLE].pages+3)/4);
+				mem_writed(GEMMIS_addr+0x199,emm_handles[EMM_SYSTEM_HANDLE].mem<<12);	// physical address
+			} else {
+				mem_writew(GEMMIS_addr+0x197,0x0001);		// system handle
+				mem_writed(GEMMIS_addr+0x199,0x00110000);	// physical address
+			}
 
 			/* fill buffer with import structure */
 			mem_writed(bufptr+0x00,GEMMIS_seg<<4);
@@ -162,23 +187,6 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 	}
 	return false;
 }
-
-struct EMM_Mapping {
-	Bit16u handle;
-	Bit16u page;
-};
-
-struct EMM_Handle {
-	Bit16u pages;
-	MemHandle mem;
-	char name[8];
-	bool saved_page_map;
-	EMM_Mapping page_map[EMM_MAX_PHYS];
-};
-
-static EMM_Handle emm_handles[EMM_MAX_HANDLES];
-static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
-static EMM_Mapping emm_segmentmappings[0x40];
 
 static struct {
 	bool enabled;
@@ -239,7 +247,7 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & dhandle,bool can_allocate_
 static Bit8u EMM_AllocateSystemHandle(Bit16u pages) {
 	/* Check for enough free pages */
 	if ((MEM_FreeTotal()/ 4) < pages) { return EMM_OUT_OF_LOG;}
-	Bit16u handle = 0;	// emm system handle (reserved for OS usage)
+	Bit16u handle = EMM_SYSTEM_HANDLE;	// emm system handle (reserved for OS usage)
 	/* Release memory if already allocated */
 	if (emm_handles[handle].pages != NULL_HANDLE) {
 		MEM_ReleasePages(emm_handles[handle].mem);
@@ -1093,11 +1101,11 @@ static Bitu V86_Monitor() {
 				}
 				break;
 			case 0xe4:		// IN AL,Ib
-				reg_al=IO_ReadB(mem_readb((v86_cs<<4)+v86_ip+1));
+				reg_al=(Bit8u)(IO_ReadB(mem_readb((v86_cs<<4)+v86_ip+1))&0xff);
 				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
 				break;
 			case 0xe5:		// IN AX,Ib
-				reg_ax=IO_ReadW(mem_readb((v86_cs<<4)+v86_ip+1));
+				reg_ax=(Bit16u)(IO_ReadW(mem_readb((v86_cs<<4)+v86_ip+1))&0xffff);
 				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
 				break;
 			case 0xe6:		// OUT Ib,AL
@@ -1109,11 +1117,11 @@ static Bitu V86_Monitor() {
 				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+2);
 				break;
 			case 0xec:		// IN AL,DX
-				reg_al=IO_ReadB(reg_dx);
+				reg_al=(Bit8u)(IO_ReadB(reg_dx)&0xff);
 				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
 				break;
 			case 0xed:		// IN AX,DX
-				reg_ax=IO_ReadW(reg_dx);
+				reg_ax=(Bit16u)(IO_ReadW(reg_dx)&0xffff);
 				mem_writew(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask),v86_ip+1);
 				break;
 			case 0xee:		// OUT DX,AL
@@ -1304,7 +1312,8 @@ public:
 			emm_segmentmappings[i].handle=NULL_HANDLE;
 		}
 
-		EMM_AllocateSystemHandle(4);	// allocate OS-dedicated handle (ems handle zero)
+		EMM_AllocateSystemHandle(4);	// allocate OS-dedicated handle (ems handle zero, 16kb)
+
 
 		if (!ENABLE_VCPI) return;
 
@@ -1363,6 +1372,12 @@ public:
 		char buf[32]= { 0 };
 		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,32);
 		RealSetVec(0x67,old67_pointer);
+
+		/* Release memory allocated to system handle */
+		if (emm_handles[EMM_SYSTEM_HANDLE].pages != NULL_HANDLE) {
+			MEM_ReleasePages(emm_handles[EMM_SYSTEM_HANDLE].mem);
+		}
+
 		/* Clear handle and page tables */
 		//TODO
 
