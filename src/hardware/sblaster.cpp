@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.74 2009-06-06 15:45:31 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.75 2009-06-07 10:18:13 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -1417,6 +1417,19 @@ static void adlib_gusforward(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	adlib_commandreg=(Bit8u)(val&0xff);
 }
 
+bool SB_Get_Address(Bitu& sbaddr, Bitu& sbirq, Bitu& sbdma) {
+	sbaddr=0;
+	sbirq =0;
+	sbdma =0;
+	if (sb.type == SBT_NONE) return false;
+	else {
+		sbaddr=sb.hw.base;
+		sbirq =sb.hw.irq;
+		sbdma = sb.hw.dma8;
+		return true;
+	}
+}
+
 static void SBLASTER_CallBack(Bitu len) {
 	switch (sb.mode) {
 	case MODE_NONE:
@@ -1443,6 +1456,7 @@ static void SBLASTER_CallBack(Bitu len) {
 		break;
 	}
 }
+
 class SBLASTER: public Module_base {
 private:
 	/* Data */

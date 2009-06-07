@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: hardware.h,v 1.16 2009-06-07 10:18:13 c2woody Exp $ */
+
 #ifndef DOSBOX_HARDWARE_H
 #define DOSBOX_HARDWARE_H
 
@@ -37,6 +39,8 @@ void OPL_Init(Section* sec,OPL_Mode mode);
 void CMS_Init(Section* sec);
 void OPL_ShutDown(Section* sec);
 void CMS_ShutDown(Section* sec);
+
+bool SB_Get_Address(Bitu& sbaddr, Bitu& sbirq, Bitu& sbdma);
 
 extern Bit8u adlib_commandreg;
 FILE * OpenCaptureFile(const char * type,const char * ext);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.74 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: bios.cpp,v 1.75 2009-06-07 10:18:14 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -26,6 +26,7 @@
 #include "callback.h"
 #include "inout.h"
 #include "pic.h"
+#include "hardware.h"
 #include "joystick.h"
 #include "mouse.h"
 #include "setup.h"
@@ -70,48 +71,19 @@ static struct {
 	Bit8u dma;
 } tandy_sb;
 
-static bool Tandy_ProbeSBPort(Bit16u sbport) {
-	IO_Write(sbport+0x6,1);
-	IO_Write(sbport+0x6,0);
-	while (!(IO_Read(sbport+0xe)&0x80)) ;
-	if (IO_Read(sbport+0xa)==0xaa) return true;
-	else return false;
-}
-
 static bool Tandy_InitializeSB() {
-	/* see if soundblaster module available and at what port */
-	if (Tandy_ProbeSBPort(0x220)) tandy_sb.port=0x220;
-	else if (Tandy_ProbeSBPort(0x230)) tandy_sb.port=0x230;
-	else if (Tandy_ProbeSBPort(0x210)) tandy_sb.port=0x210;
-	else if (Tandy_ProbeSBPort(0x240)) tandy_sb.port=0x240;
-	else if (Tandy_ProbeSBPort(0x250)) tandy_sb.port=0x250;
-	else if (Tandy_ProbeSBPort(0x260)) tandy_sb.port=0x260;
-	else {
+	/* see if soundblaster module available and at what port/IRQ/DMA */
+	Bitu sbport, sbirq, sbdma;
+	if (SB_Get_Address(sbport, sbirq, sbdma)) {
+		tandy_sb.port=(Bit16u)(sbport&0xffff);
+		tandy_sb.irq =(Bit8u)(sbirq&0xff);
+		tandy_sb.dma =(Bit8u)(sbdma&0xff);
+		return true;
+	} else {
 		/* no soundblaster accessible, disable Tandy DAC */
 		tandy_sb.port=0;
 		return false;
 	}
-
-	/* try to detect IRQ setting */
-	IO_Write(tandy_sb.port+0x4,0x80);
-	Bit8u rval=IO_Read(tandy_sb.port+0x5);
-	if (rval && (rval!=0xff)) {
-		if (rval&1) tandy_sb.irq=0x02;
-		else if (rval&2) tandy_sb.irq=0x05;
-		else if (rval&4) tandy_sb.irq=0x07;
-		else tandy_sb.irq=0x10;
-	} else tandy_sb.irq=0x07;	/* assume irq=7 for older soundblaster settings */
-
-	/* try to detect DMA setting */
-	IO_Write(tandy_sb.port+0x4,0x81);
-	rval=IO_Read(tandy_sb.port+0x5);
-	if (rval && (rval!=0xff)) {
-		if (rval&1) tandy_sb.dma=0x00;
-		else if (rval&2) tandy_sb.dma=0x01;
-		else tandy_sb.dma=0x03;
-	} else tandy_sb.dma=0x01;	/* assume dma=1 for older soundblaster settings */
-
-	return true;
 }
 
 /* check if Tandy DAC is still playing */
@@ -120,7 +92,7 @@ static bool Tandy_TransferInProgress(void) {
 	if (real_readb(0x40,0xd4)==0xff) return false;	/* still in init-state */
 
 	IO_Write(0x0c,0x00);
-	Bit16u datalen=IO_ReadB(tandy_sb.dma*2+1);
+	Bit16u datalen=(Bit8u)(IO_ReadB(tandy_sb.dma*2+1)&0xff);
 	datalen|=(IO_ReadB(tandy_sb.dma*2+1)<<8);
 	if (datalen==0xffff) return false;	/* no DMA transfer */
 	else if ((datalen<0x10) && (real_readb(0x40,0xd4)==0x0f) && (real_readw(0x40,0xd2)==0x1c)) {
@@ -173,7 +145,7 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	IO_Write(tandy_sb.dma*2+1,(Bit8u)((tlength>>8)&0xff));
 	IO_Write(0x0a,tandy_sb.dma);	/* enable DMA channel */
 
-	Bitu delay=real_readw(0x40,0xd2)&0xfff;
+	Bit16u delay=(Bit16u)(real_readw(0x40,0xd2)&0xfff);
 	/* set frequency */
 	IO_Write(tandy_sb.port+0xc,0x40);
 	IO_Write(tandy_sb.port+0xc,256-delay*100/358);
@@ -186,7 +158,7 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 
 	if (!isplayback) {
 		/* mark transfer as recording operation */
-		real_writew(0x40,0xd2,delay|0x1000);
+		real_writew(0x40,0xd2,(Bit16u)(delay|0x1000));
 	}
 }
 
@@ -439,8 +411,8 @@ static Bitu INT14_Handler(void)
 			IO_ReadB(port+2);
 
 			// get result
-			reg_ah=IO_ReadB(port+5);
-			reg_al=IO_ReadB(port+6);
+			reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
+			reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
 			CALLBACK_SCF(false);
 		}
 		break;
@@ -458,7 +430,7 @@ static Bitu INT14_Handler(void)
 				timeout = !serialports[reg_dx]->Putchar(reg_al,true,true,
 					mem_readb(BIOS_COM1_TIMEOUT+reg_dx)*1000);
 				// get result
-				reg_ah=IO_ReadB(port+5);
+				reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
 				if(timeout) reg_ah |= 0x80;
 			}
 			CALLBACK_SCF(false);
@@ -479,7 +451,7 @@ static Bitu INT14_Handler(void)
 				// RTS off
 				IO_WriteB(port+4,0x1);
 				// get result
-				reg_ah=IO_ReadB(port+5);
+				reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
 				if(timeout) reg_ah |= 0x80;
 				else reg_al=buffer;
 			}
@@ -488,8 +460,8 @@ static Bitu INT14_Handler(void)
 		}
 	case 0x03: // get status
 		{
-			reg_ah=IO_ReadB(port+5);
-			reg_al=IO_ReadB(port+6);
+			reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
+			reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
 			CALLBACK_SCF(false);
 		}
 		break;		
@@ -498,7 +470,7 @@ static Bitu INT14_Handler(void)
 }
 
 static Bitu INT15_Handler(void) {
-	static Bitu biosConfigSeg=0;
+	static Bit16u biosConfigSeg=0;
 	switch (reg_ah) {
 	case 0x06:
 		LOG(LOG_BIOS,LOG_NORMAL)("INT15 Unkown Function 6");
@@ -767,7 +739,7 @@ void BIOS_ZeroExtendedSize(bool in) {
 
 #define RAM_REFRESH_DELAY 16.7f
 
-static void RAMRefresh_Event(Bitu val) {
+static void RAMRefresh_Event(Bitu /*val*/) {
 	PIC_ActivateIRQ(5);
 	PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
 }
@@ -917,7 +889,7 @@ public:
 
 				RealPt current_irq=RealGetVec(tandy_sb.irq+8);
 				real_writed(0x40,0xd6,current_irq);
-				for (Bitu i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
+				for (Bit16u i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
 			} else real_writeb(0x40,0xd4,0x00);
 		}
 	
@@ -971,8 +943,8 @@ public:
 		/* Setup equipment list */
 		// look http://www.bioscentral.com/misc/bda.htm
 		
-		//Bitu config=0x4400;	//1 Floppy, 2 serial and 1 parrallel 
-		Bitu config = 0x0;
+		//Bit16u config=0x4400;	//1 Floppy, 2 serial and 1 parallel 
+		Bit16u config = 0x0;
 		
 		// set number of parallel ports
 		// if(ppindex == 0) config |= 0x8000; // looks like 0 ports are not specified
@@ -1004,7 +976,7 @@ public:
 		// Gameport
 		config |= 0x1000;
 		mem_writew(BIOS_CONFIGURATION,config);
-		CMOS_SetRegister(0x14,config); //Should be updated on changes
+		CMOS_SetRegister(0x14,(Bit8u)(config&0xff)); //Should be updated on changes
 		/* Setup extended memory size */
 		IO_Write(0x70,0x30);
 		size_extended=IO_Read(0x71);
@@ -1058,7 +1030,7 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 
 static BIOS* test;
 
-void BIOS_Destroy(Section* sec){
+void BIOS_Destroy(Section* /*sec*/){
 	delete test;
 }
 
