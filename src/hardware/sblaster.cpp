@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.75 2009-06-07 10:18:13 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.76 2009-06-10 17:44:59 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -1566,8 +1566,8 @@ public:
 		// Create set blaster line
 		ostringstream temp;
 		temp << "SET BLASTER=A" << setw(3)<< hex << sb.hw.base
-		     << " I" << dec << sb.hw.irq << " D"<< sb.hw.dma8;
-		if (sb.type==SBT_16) temp << " H" << sb.hw.dma16;
+		     << " I" << dec << (Bitu)sb.hw.irq << " D" << (Bitu)sb.hw.dma8;
+		if (sb.type==SBT_16) temp << " H" << (Bitu)sb.hw.dma16;
 		temp << " T" << static_cast<unsigned int>(sb.type) << ends;
 
 		autoexecline.Install(temp.str());
