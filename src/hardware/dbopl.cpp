@@ -32,7 +32,7 @@
 	//DUNNO Keyon in 4op, switch to 2op without keyoff.
 */
 
-/* $Id: dbopl.cpp,v 1.9 2009-06-07 19:49:39 c2woody Exp $ */
+/* $Id: dbopl.cpp,v 1.10 2009-06-10 19:54:51 harekiet Exp $ */
 
 
 #include <math.h>
@@ -805,39 +805,33 @@ INLINE void Channel::GeneratePercussion( Chip* chip, Bit32s* output ) {
 	}
 	Bit32s sample = Op(1)->GetSample( mod ); 
 
-	Operator* op2 = ( this + 1 )->Op(0);
-	Operator* op4 = ( this + 2 )->Op(0);
 
 	//Precalculate stuff used by other outputs
-	Bit32u noiseBit = (chip->ForwardNoise() & 0x1) << 1;
-	Bit32u c2 = op2->ForwardWave();
-	Bit32u c4 = op4->ForwardWave();
-	Bit32u phaseBit = (((c2 & 0x88) ^ ((c2<<5) & 0x80)) | ((c4 ^ (c4<<2)) & 0x20)) ? 0x02 : 0x00;
+	Bit32u noiseBit = chip->ForwardNoise() & 0x1;
+	Bit32u c2 = Op(2)->ForwardWave();
+	Bit32u c5 = Op(5)->ForwardWave();
+	Bit32u phaseBit = (((c2 & 0x88) ^ ((c2<<5) & 0x80)) | ((c5 ^ (c5<<2)) & 0x20)) ? 0x02 : 0x00;
 
 	//Hi-Hat
-	Bit32u hhVol = op2->ForwardVolume();
+	Bit32u hhVol = Op(2)->ForwardVolume();
 	if ( !ENV_SILENT( hhVol ) ) {
-		Bit32u hhIndex = (phaseBit<<8) | (0x34<<(phaseBit ^ noiseBit));
-		sample += op2->GetWave( hhIndex, hhVol );
+		Bit32u hhIndex = (phaseBit<<8) | (0x34 << ( phaseBit ^ (noiseBit << 1 )));
+		sample += Op(2)->GetWave( hhIndex, hhVol );
 	}
 	//Snare Drum
-	Operator* op3 = ( this + 1 )->Op(1);
-	Bit32u sdVol = op3->ForwardVolume();
+	Bit32u sdVol = Op(3)->ForwardVolume();
 	if ( !ENV_SILENT( sdVol ) ) {
-		Bit32u sdIndex = ( 0x100 + (c2 & 0x100) ) ^ ( noiseBit << 7 );
-		sample += op3->GetWave( sdIndex, sdVol );
+		Bit32u sdIndex = ( 0x100 + (c2 & 0x100) ) ^ ( noiseBit << 8 );
+		sample += Op(3)->GetWave( sdIndex, sdVol );
 	}
 	//Tom-tom
-	Bit32u ttVol = op4->ForwardVolume();
-	if ( !ENV_SILENT( ttVol ) ) {
-		sample += op4->GetWave( c4, ttVol );
-	}
+	sample += Op(4)->GetSample( 0 );
+
 	//Top-Cymbal
-	Operator* op5 = ( this + 2 )->Op(1);
-	Bit32u tcVol = op5->ForwardVolume();
+	Bit32u tcVol = Op(5)->ForwardVolume();
 	if ( !ENV_SILENT( tcVol ) ) {
 		Bit32u tcIndex = (1 + phaseBit) << 8;
-		sample += op5->GetWave( tcIndex, tcVol );
+		sample += Op(5)->GetWave( tcIndex, tcVol );
 	}
 	sample <<= 1;
 	if ( opl3Mode ) {
