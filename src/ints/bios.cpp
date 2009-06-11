@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.75 2009-06-07 10:18:14 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.76 2009-06-11 16:05:17 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -759,9 +759,11 @@ public:
 		for (Bit16u i=0;i<0x200;i++) real_writeb(0x40,i,0);
 
 		/* Setup all the interrupt handlers the bios controls */
+
 		/* INT 8 Clock IRQ Handler */
-		callback[0].Install(INT8_Handler,CB_IRQ0,"Int 8 Clock");
-		callback[0].Set_RealVec(0x8);
+		Bitu call_irq0=CALLBACK_Allocate();	
+		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,Real2Phys(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
+		RealSetVec(0x08,BIOS_DEFAULT_IRQ0_LOCATION);
 		// pseudocode for CB_IRQ0:
 		//	callback INT8_Handler
 		//	push ax,dx,ds
@@ -835,15 +837,12 @@ public:
 		phys_writew(0xFFFF3,RealSeg(rptr));	// segment
 
 		/* Irq 2 */
-		RealPt irq2pt=RealMake(0xf000,0xff55);	/* Ghost busters 2 mt32 mode */
 		Bitu call_irq2=CALLBACK_Allocate();	
-		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(irq2pt),"irq 2 bios");
-		RealSetVec(0x0a,irq2pt);
+		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
+		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
 		/* Some hardcoded vectors */
-		phys_writeb(0xfff53,0xcf);	/* bios default interrupt vector location */
-		phys_writeb(0xfe987,0xea);	/* original IRQ1 location (Defender booter) */
-		phys_writed(0xfe988,RealGetVec(0x09));
+		phys_writeb(Real2Phys(BIOS_DEFAULT_HANDLER_LOCATION),0xcf);	/* bios default interrupt vector location -> IRET */
 		phys_writew(Real2Phys(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
 
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */

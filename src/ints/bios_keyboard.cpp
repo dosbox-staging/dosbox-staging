@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: bios_keyboard.cpp,v 1.36 2009-06-11 16:05:17 c2woody Exp $ */
+
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
@@ -382,7 +384,7 @@ static Bitu IRQ1_Handler(void) {
 		}
 		if(flags1 &0x08) {
 			Bit8u token = mem_readb(BIOS_KEYBOARD_TOKEN);
-			token= token*10 + scan_to_scanascii[scancode].alt;
+			token = token*10 + (Bit8u)(scan_to_scanascii[scancode].alt&0xff);
 			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
@@ -601,12 +603,12 @@ void BIOS_SetupKeyboard(void) {
 
 	/* Allocate/setup a callback for int 0x16 and for standard IRQ 1 handler */
 	call_int16=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_int16,&INT16_Handler,CB_INT16,"keyboard");
+	CALLBACK_Setup(call_int16,&INT16_Handler,CB_INT16,"Keyboard");
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
 
 	call_irq1=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,"keyboard irq");
-	RealSetVec(0x9,CALLBACK_RealPointer(call_irq1));
+	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,Real2Phys(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
+	RealSetVec(0x09,BIOS_DEFAULT_IRQ1_LOCATION);
 	// pseudocode for CB_IRQ1:
 	//	push ax
 	//	in al, 0x60

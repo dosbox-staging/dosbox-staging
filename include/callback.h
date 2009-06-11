@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.24 2009-05-27 09:15:40 qbix79 Exp $ */
+/* $Id: callback.h,v 1.25 2009-06-11 16:05:17 c2woody Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -33,9 +33,10 @@ enum { CB_RETN,CB_RETF,CB_RETF8,CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,
 		CB_INT29,CB_INT16,CB_HOOKABLE,CB_TDE_IRET,CB_IPXESR,CB_IPXESR_RET,
 		CB_INT21 };
 
-#define CB_MAX 128
-#define CB_SIZE 32
-#define CB_SEG 0xF100
+#define CB_MAX		128
+#define CB_SIZE		32
+#define CB_SEG		0xF000
+#define CB_SOFFSET	0x1000
 
 enum {	
 	CBRET_NONE=0,CBRET_STOP=1
@@ -44,14 +45,14 @@ enum {
 extern Bit8u lastint;
 
 static INLINE RealPt CALLBACK_RealPointer(Bitu callback) {
-	return RealMake(CB_SEG,(Bit16u)(callback*CB_SIZE));
+	return RealMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
 }
 static INLINE PhysPt CALLBACK_PhysPointer(Bitu callback) {
-	return PhysMake(CB_SEG,(Bit16u)(callback*CB_SIZE));
+	return PhysMake(CB_SEG,(Bit16u)(CB_SOFFSET+callback*CB_SIZE));
 }
 
 static INLINE PhysPt CALLBACK_GetBase(void) {
-	return CB_SEG << 4;
+	return (CB_SEG << 4) + CB_SOFFSET;
 }
 
 Bitu CALLBACK_Allocate();
@@ -77,7 +78,7 @@ extern Bitu call_priv_io;
 class CALLBACK_HandlerObject{
 private:
 	bool installed;
-	Bit16u m_callback;
+	Bitu m_callback;
 	enum {NONE,SETUP,SETUPAT} m_type;
     struct {	
 		RealPt old_vector;
@@ -85,15 +86,23 @@ private:
 		bool installed;
 	} vectorhandler;
 public:
-	CALLBACK_HandlerObject():installed(false),m_type(NONE){vectorhandler.installed=false;}
+	CALLBACK_HandlerObject():installed(false),m_type(NONE) {
+		vectorhandler.installed=false;
+	}
 	~CALLBACK_HandlerObject();
+
 	//Install and allocate a callback.
 	void Install(CallBack_Handler handler,Bitu type,const char* description);
 	void Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description);
+
 	//Only allocate a callback number
 	void Allocate(CallBack_Handler handler,const char* description=0);
-	Bit16u Get_callback(){return m_callback;}
-	RealPt Get_RealPointer(){ return CALLBACK_RealPointer(m_callback);}
+	Bit16u Get_callback() {
+		return (Bit16u)m_callback;
+	}
+	RealPt Get_RealPointer() {
+		return CALLBACK_RealPointer(m_callback);
+	}
 	void Set_RealVec(Bit8u vec);
 };
 #endif
