@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_programs.cpp,v 1.93 2009-04-16 12:28:30 qbix79 Exp $ */
+/* $Id: dos_programs.cpp,v 1.94 2009-06-12 20:10:09 c2woody Exp $ */
 
 #include "dosbox.h"
 #include <stdlib.h>
@@ -238,7 +238,7 @@ public:
 			if (type=="cdrom") {
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
-				int error;
+				int error = 0;
 				if (cmd->FindExist("-aspi",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
 				} else if (cmd->FindExist("-ioctl_dio",false)) {
@@ -758,7 +758,7 @@ public:
 			SegSet16(es, 0);
 			/* set up stack at a safe place */
 			SegSet16(ss, 0x7000);
-			reg_esp = 0x400;
+			reg_esp = 0x100;
 			reg_esi = 0;
 			reg_ecx = 1;
 			reg_ebp = 0;
