@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.79 2009-04-26 18:24:36 qbix79 Exp $ */
+/* $Id: drive_local.cpp,v 1.80 2009-06-13 10:43:00 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +48,7 @@ private:
 };
 
 
-bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
+bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
 //TODO Maybe care for attributes but not likely
 	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
@@ -80,16 +80,14 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
 
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	const char* type;
-	switch (flags &3) {
+	switch (flags&0xf) {
 	case OPEN_READ:type="rb"; break;
-	case OPEN_WRITE:type="rb+"; break;
+	case OPEN_WRITE:type="wb"; break;
 	case OPEN_READWRITE:type="rb+"; break;
 	default:
-//TODO FIX IT
-		type="rb+";
-//		return false;
-
-	};
+		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
+		return false;
+	}
 	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
@@ -99,7 +97,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	FILE * hand=fopen(newname,type);
 //	Bit32u err=errno;
 	if (!hand) { 
-		if((flags&3) != OPEN_READ) {
+		if((flags&0xf) != OPEN_READ) {
 			FILE * hmm=fopen(newname,"rb");
 			if (hmm) {
 				fclose(hmm);
@@ -136,7 +134,6 @@ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
 }
 
 bool localDrive::FileUnlink(char * name) {
-
 	char newname[CROSS_LEN];
 	strcpy(newname,basedir);
 	strcat(newname,name);
@@ -175,11 +172,9 @@ bool localDrive::FileUnlink(char * name) {
 		dirCache.DeleteEntry(newname);
 		return true;
 	}
-	return false;
 }
 
 bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
-
 	char tempDir[CROSS_LEN];
 	strcpy(tempDir,basedir);
 	strcat(tempDir,_dir);
@@ -193,8 +188,7 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	if (tempDir[strlen(tempDir)-1]!=CROSS_FILESPLIT) strcat(tempDir,end);
 	
 	Bitu id;
-	if (!dirCache.FindFirst(tempDir,id))
-	{
+	if (!dirCache.FindFirst(tempDir,id)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
@@ -441,6 +435,10 @@ localDrive::localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors
 
 //TODO Maybe use fflush, but that seemed to fuck up in visual c
 bool localFile::Read(Bit8u * data,Bit16u * size) {
+	if ((this->flags & 0xf) == OPEN_WRITE) {	// check if file opened in write-only mode
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	if (last_action==WRITE) fseek(fhandle,ftell(fhandle),SEEK_SET);
 	last_action=READ;
 	*size=(Bit16u)fread(data,1,*size,fhandle);
@@ -453,6 +451,10 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
 }
 
 bool localFile::Write(Bit8u * data,Bit16u * size) {
+	if ((this->flags & 0xf) == OPEN_READ) {	// check if file opened in read-only mode
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	if (last_action==READ) fseek(fhandle,ftell(fhandle),SEEK_SET);
 	last_action=WRITE;
 	if(*size==0){  
@@ -569,9 +571,9 @@ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _byt
 }
 
 bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
-	if ((flags&3)==OPEN_READWRITE) {
+	if ((flags&0xf)==OPEN_READWRITE) {
 		flags &= ~OPEN_READWRITE;
-	} else if ((flags&3)==OPEN_WRITE) {
+	} else if ((flags&0xf)==OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -580,27 +582,27 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	return retcode;
 }
 
-bool cdromDrive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
+bool cdromDrive::FileCreate(DOS_File * * /*file*/,char * /*name*/,Bit16u /*attributes*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::FileUnlink(char * name) {
+bool cdromDrive::FileUnlink(char * /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::RemoveDir(char * dir) {
+bool cdromDrive::RemoveDir(char * /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::MakeDir(char * dir) {
+bool cdromDrive::MakeDir(char * /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::Rename(char * oldname,char * newname) {
+bool cdromDrive::Rename(char * /*oldname*/,char * /*newname*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -611,7 +613,7 @@ bool cdromDrive::GetFileAttr(char * name,Bit16u * attr) {
 	return result;
 }
 
-bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
+bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool /*fcb_findfirst*/) {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
 		dirCache.EmptyCache();
