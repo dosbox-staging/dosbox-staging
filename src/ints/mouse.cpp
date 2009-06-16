@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mouse.cpp,v 1.79 2009-04-16 12:11:45 qbix79 Exp $ */
+/* $Id: mouse.cpp,v 1.80 2009-06-16 19:00:26 qbix79 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -895,6 +895,12 @@ static Bitu INT33_Handler(void) {
 		break;
 	case 0x26: /* Get Maximum virtual coordinates */
 		reg_bx=(mouse.enabled ? 0x0000 : 0xffff);
+		reg_cx=(Bit16u)mouse.max_x;
+		reg_dx=(Bit16u)mouse.max_y;
+		break;
+	case 0x31: /* Get Current Minimum/Maximum virtual coordinates */
+		reg_ax=(Bit16u)mouse.min_x;
+		reg_bx=(Bit16u)mouse.min_y;
 		reg_cx=(Bit16u)mouse.max_x;
 		reg_dx=(Bit16u)mouse.max_y;
 		break;
