@@ -16,9 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: cmos.cpp,v 1.28 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: cmos.cpp,v 1.29 2009-06-16 18:19:18 qbix79 Exp $ */
 
 #include <time.h>
+#include <math.h>
 
 #include "dosbox.h"
 #include "timer.h"
@@ -27,6 +28,7 @@
 #include "mem.h"
 #include "bios_disk.h"
 #include "setup.h"
+#include "cross.h" //fmod on certain platforms
 
 static struct {
 	Bit8u regs[0x40];
@@ -64,8 +66,9 @@ static void cmos_checktimer(void) {
 	cmos.timer.delay=(1000.0f/(32768.0f / (1 << (cmos.timer.div - 1))));
 	if (!cmos.timer.div || !cmos.timer.enabled) return;
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
-	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
-//	PIC_AddEvent(cmos_timerevent,(double)cmos.timer.delay-fmod(PIC_FullIndex(),(double)cmos.timer.delay)); //Should be more like a real pc. Check
+//	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
+	/* A rtc is always running */
+	PIC_AddEvent(cmos_timerevent,(double)cmos.timer.delay-fmod(PIC_FullIndex(),(double)cmos.timer.delay)); //Should be more like a real pc. Check
 //	status reg A reading with this (and with other delays actually)
 }
 
