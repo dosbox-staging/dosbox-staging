@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: messages.cpp,v 1.22 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: messages.cpp,v 1.23 2009-06-17 08:52:35 qbix79 Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,8 +99,11 @@ static void LoadMessageFile(const char * fname) {
 			strcpy(name,linein+1);
 		/* End of string marker */
 		} else if (linein[0]=='.') {
-		/* Replace/Add the string to the internal langaugefile */
-		   MSG_Replace(name,string);
+			/* Replace/Add the string to the internal langaugefile */
+			/* Remove last newline (marker is \n.\n) */
+			size_t ll = strlen(string);
+			if(ll && string[ll - 1] == '\n') string[ll - 1] = 0; //Second if should not be needed, but better be safe.
+			MSG_Replace(name,string);
 		} else {
 		/* Normal string to be added */
 			strcat(string,linein);
@@ -125,7 +128,7 @@ void MSG_Write(const char * location) {
 	FILE* out=fopen(location,"w+t");
 	if(out==NULL) return;//maybe an error?
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
-		fprintf(out,":%s\n%s.\n",(*tel).name.c_str(),(*tel).val.c_str());
+		fprintf(out,":%s\n%s\n.\n",(*tel).name.c_str(),(*tel).val.c_str());
 	}
 	fclose(out);
 }
