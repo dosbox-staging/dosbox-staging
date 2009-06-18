@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.80 2009-06-13 10:43:00 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.81 2009-06-18 18:17:54 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +74,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 	if(!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
 	*file=new localFile(name,hand);
+	(*file)->flags=OPEN_READWRITE;
 
 	return true;
 }
@@ -273,8 +274,8 @@ again:
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
 	if((time=localtime(&stat_block.st_mtime))!=0){
-		find_date=DOS_PackDate(time->tm_year+1900,time->tm_mon+1,time->tm_mday);
-		find_time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
+		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
+		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
 	} else {
 		find_time=6; 
 		find_date=4;
@@ -393,8 +394,8 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	/* Convert the stat to a FileStat */
 	struct tm *time;
 	if((time=localtime(&temp_stat.st_mtime))!=0) {
-		stat_block->time=DOS_PackTime(time->tm_hour,time->tm_min,time->tm_sec);
-		stat_block->date=DOS_PackDate(time->tm_year+1900,time->tm_mon+1,time->tm_mday);
+		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
+		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
 	} else {
 
 	}
@@ -511,20 +512,13 @@ Bit16u localFile::GetInformation(void) {
 
 localFile::localFile(const char* _name, FILE * handle) {
 	fhandle=handle;
-	struct stat temp_stat;
-	fstat(fileno(handle),&temp_stat);
-	struct tm * ltime;
-	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
-		time=DOS_PackTime(ltime->tm_hour,ltime->tm_min,ltime->tm_sec);
-		date=DOS_PackDate(ltime->tm_year+1900,ltime->tm_mon+1,ltime->tm_mday);
-	} else {
-		time=1;date=1;
-	}
+	open=true;
+	UpdateDateTimeFromHost();
+
 	attr=DOS_ATTR_ARCHIVE;
 	last_action=NONE;
 	read_only_medium=false;
 
-	open=true;
 	name=0;
 	SetName(_name);
 }
@@ -539,8 +533,8 @@ bool localFile::UpdateDateTimeFromHost(void) {
 	fstat(fileno(fhandle),&temp_stat);
 	struct tm * ltime;
 	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
-		time=DOS_PackTime(ltime->tm_hour,ltime->tm_min,ltime->tm_sec);
-		date=DOS_PackDate(ltime->tm_year+1900,ltime->tm_mon+1,ltime->tm_mday);
+		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
+		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
 	} else {
 		time=1;date=1;
 	}

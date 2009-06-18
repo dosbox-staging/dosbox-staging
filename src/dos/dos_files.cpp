@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.110 2009-04-26 19:13:32 harekiet Exp $ */
+/* $Id: dos_files.cpp,v 1.111 2009-06-18 18:17:54 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -356,9 +356,8 @@ bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-//TODO maybe another code :)
 /*
-	if (!(Files[handle]->flags & OPEN_READ)) {
+	if ((Files[handle]->flags & 0x0f) == OPEN_WRITE)) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
@@ -379,9 +378,8 @@ bool DOS_WriteFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-//TODO maybe another code :)
 /*
-	if (!(Files[handle]->flags & OPEN_WRITE)) {
+	if ((Files[handle]->flags & 0x0f) == OPEN_READ)) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
@@ -1059,7 +1057,9 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
  */
 
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;Bit16u old_block;Bit8u old_rec;
+	Bit32u random;
+	Bit16u old_block=0;
+	Bit8u old_rec=0;
 	Bit8u error=0;
 
 	/* Set the correct record from the random data */
@@ -1082,7 +1082,9 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 /* see FCB_RandomRead */
 	DOS_FCB fcb(seg,offset);
-	Bit32u random;Bit16u old_block;Bit8u old_rec;
+	Bit32u random;
+	Bit16u old_block=0;
+	Bit8u old_rec=0;
 	Bit8u error=0;
 
 	/* Set the correct record from the random data */
