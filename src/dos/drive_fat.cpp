@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_fat.cpp,v 1.27 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: drive_fat.cpp,v 1.28 2009-06-19 18:28:10 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,6 +105,10 @@ fatFile::fatFile(const char* /*name*/, Bit32u startCluster, Bit32u fileLen, fatD
 }
 
 bool fatFile::Read(Bit8u * data, Bit16u *size) {
+	if ((this->flags & 0xf) == OPEN_WRITE) {	// check if file opened in write-only mode
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	Bit16u sizedec, sizecount;
 	if(seekpos >= filelength) {
 		*size = 0;
@@ -155,6 +159,11 @@ bool fatFile::Read(Bit8u * data, Bit16u *size) {
 
 bool fatFile::Write(Bit8u * data, Bit16u *size) {
 	/* TODO: Check for read-only bit */
+
+	if ((this->flags & 0xf) == OPEN_READ) {	// check if file opened in read-only mode
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 
 	direntry tmpentry;
 	Bit16u sizedec, sizecount;
@@ -767,7 +776,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	char dirName[DOS_NAMELENGTH_ASCII];
 	char pathName[11];
 
-	Bitu save_errorcode=dos.errorcode;
+	Bit16u save_errorcode=dos.errorcode;
 
 	/* Check if file already exists */
 	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
@@ -793,6 +802,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, Bit16u attributes) {
 	/* Empty file created, now lets open it */
 	/* TODO: check for read-only flag and requested write access */
 	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
+	(*file)->flags=OPEN_READWRITE;
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
 	/* Maybe modTime and date should be used ? (crt matches findnext) */
@@ -810,12 +820,13 @@ bool fatDrive::FileExists(const char *name) {
 	return true;
 }
 
-bool fatDrive::FileOpen(DOS_File **file, char *name, Bit32u /*flags*/) {
+bool fatDrive::FileOpen(DOS_File **file, char *name, Bit32u flags) {
 	direntry fileEntry;
 	Bit32u dirClust, subEntry;
 	if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
 	/* TODO: check for read-only flag and requested write access */
 	*file = new fatFile(name, fileEntry.loFirstClust, fileEntry.entrysize, this);
+	(*file)->flags = flags;
 	((fatFile *)(*file))->dirCluster = dirClust;
 	((fatFile *)(*file))->dirIndex = subEntry;
 	/* Maybe modTime and date should be used ? (crt matches findnext) */
