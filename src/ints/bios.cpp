@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.76 2009-06-11 16:05:17 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.77 2009-06-23 17:46:05 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -70,6 +70,11 @@ static struct {
 	Bit8u irq;
 	Bit8u dma;
 } tandy_sb;
+static struct {
+	Bit16u port;
+	Bit8u irq;
+	Bit8u dma;
+} tandy_dac;
 
 static bool Tandy_InitializeSB() {
 	/* see if soundblaster module available and at what port/IRQ/DMA */
@@ -86,14 +91,33 @@ static bool Tandy_InitializeSB() {
 	}
 }
 
+static bool Tandy_InitializeTS() {
+	/* see if Tandy DAC module available and at what port/IRQ/DMA */
+	Bitu tsport, tsirq, tsdma;
+	if (TS_Get_Address(tsport, tsirq, tsdma)) {
+		tandy_dac.port=(Bit16u)(tsport&0xffff);
+		tandy_dac.irq =(Bit8u)(tsirq&0xff);
+		tandy_dac.dma =(Bit8u)(tsdma&0xff);
+		return true;
+	} else {
+		/* no Tandy DAC accessible */
+		tandy_dac.port=0;
+		return false;
+	}
+}
+
 /* check if Tandy DAC is still playing */
 static bool Tandy_TransferInProgress(void) {
 	if (real_readw(0x40,0xd0)) return true;			/* not yet done */
 	if (real_readb(0x40,0xd4)==0xff) return false;	/* still in init-state */
 
+	Bit8u tandy_dma = 1;
+	if (tandy_sb.port) tandy_dma = tandy_sb.dma;
+	else if (tandy_dac.port) tandy_dma = tandy_dac.dma;
+
 	IO_Write(0x0c,0x00);
-	Bit16u datalen=(Bit8u)(IO_ReadB(tandy_sb.dma*2+1)&0xff);
-	datalen|=(IO_ReadB(tandy_sb.dma*2+1)<<8);
+	Bit16u datalen=(Bit8u)(IO_ReadB(tandy_dma*2+1)&0xff);
+	datalen|=(IO_ReadB(tandy_dma*2+1)<<8);
 	if (datalen==0xffff) return false;	/* no DMA transfer */
 	else if ((datalen<0x10) && (real_readb(0x40,0xd4)==0x0f) && (real_readw(0x40,0xd2)==0x1c)) {
 		/* stop already requested */
@@ -106,27 +130,44 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	Bitu length=real_readw(0x40,0xd0);
 	if (length==0) return;	/* nothing to do... */
 
-	if (tandy_sb.port==0) return;
+	if ((tandy_sb.port==0) && (tandy_dac.port==0)) return;
+
+	Bit8u tandy_irq = 7;
+	if (tandy_sb.port) tandy_irq = tandy_sb.irq;
+	else if (tandy_dac.port) tandy_irq = tandy_dac.irq;
+	Bit8u tandy_irq_vector = tandy_irq;
+	if (tandy_irq_vector<8) tandy_irq_vector += 8;
+	else tandy_irq_vector += (0x70-8);
 
 	/* revector IRQ-handler if necessary */
-	RealPt current_irq=RealGetVec(tandy_sb.irq+8);
+	RealPt current_irq=RealGetVec(tandy_irq_vector);
 	if (current_irq!=tandy_DAC_callback[0]->Get_RealPointer()) {
 		real_writed(0x40,0xd6,current_irq);
-		RealSetVec(tandy_sb.irq+8,tandy_DAC_callback[0]->Get_RealPointer());
+		RealSetVec(tandy_irq_vector,tandy_DAC_callback[0]->Get_RealPointer());
 	}
 
-	IO_Write(tandy_sb.port+0xc,0xd0);	/* stop DMA transfer */
-	IO_Write(0x21,IO_Read(0x21)&(~(1<<tandy_sb.irq)));		/* unmask IRQ */
-	IO_Write(tandy_sb.port+0xc,0xd1);	/* turn speaker on */
-	IO_Write(0x0a,0x04|tandy_sb.dma);	/* mask DMA channel */
-	IO_Write(0x0c,0x00);				/* clear DMA flipflop */
-	if (isplayback) IO_Write(0x0b,0x48|tandy_sb.dma);
-	else IO_Write(0x0b,0x44|tandy_sb.dma);
+	Bit8u tandy_dma = 1;
+	if (tandy_sb.port) tandy_dma = tandy_sb.dma;
+	else if (tandy_dac.port) tandy_dma = tandy_dac.dma;
+
+	if (tandy_sb.port) {
+		IO_Write(tandy_sb.port+0xc,0xd0);				/* stop DMA transfer */
+		IO_Write(0x21,IO_Read(0x21)&(~(1<<tandy_irq)));	/* unmask IRQ */
+		IO_Write(tandy_sb.port+0xc,0xd1);				/* turn speaker on */
+	} else {
+		IO_Write(tandy_dac.port,IO_Read(tandy_dac.port)&0x60);	/* disable DAC */
+		IO_Write(0x21,IO_Read(0x21)&(~(1<<tandy_irq)));			/* unmask IRQ */
+	}
+
+	IO_Write(0x0a,0x04|tandy_dma);	/* mask DMA channel */
+	IO_Write(0x0c,0x00);			/* clear DMA flipflop */
+	if (isplayback) IO_Write(0x0b,0x48|tandy_dma);
+	else IO_Write(0x0b,0x44|tandy_dma);
 	/* set physical address of buffer */
 	Bit8u bufpage=(Bit8u)((bufpt>>16)&0xff);
-	IO_Write(tandy_sb.dma*2,(Bit8u)(bufpt&0xff));
-	IO_Write(tandy_sb.dma*2,(Bit8u)((bufpt>>8)&0xff));
-	switch (tandy_sb.dma) {
+	IO_Write(tandy_dma*2,(Bit8u)(bufpt&0xff));
+	IO_Write(tandy_dma*2,(Bit8u)((bufpt>>8)&0xff));
+	switch (tandy_dma) {
 		case 0: IO_Write(0x87,bufpage); break;
 		case 1: IO_Write(0x83,bufpage); break;
 		case 2: IO_Write(0x81,bufpage); break;
@@ -141,20 +182,31 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 	tlength--;
 
 	/* set transfer size */
-	IO_Write(tandy_sb.dma*2+1,(Bit8u)(tlength&0xff));
-	IO_Write(tandy_sb.dma*2+1,(Bit8u)((tlength>>8)&0xff));
-	IO_Write(0x0a,tandy_sb.dma);	/* enable DMA channel */
+	IO_Write(tandy_dma*2+1,(Bit8u)(tlength&0xff));
+	IO_Write(tandy_dma*2+1,(Bit8u)((tlength>>8)&0xff));
 
 	Bit16u delay=(Bit16u)(real_readw(0x40,0xd2)&0xfff);
-	/* set frequency */
-	IO_Write(tandy_sb.port+0xc,0x40);
-	IO_Write(tandy_sb.port+0xc,256-delay*100/358);
-	/* set playback type to 8bit */
-	if (isplayback) IO_Write(tandy_sb.port+0xc,0x14);
-	else IO_Write(tandy_sb.port+0xc,0x24);
-	/* set transfer size */
-	IO_Write(tandy_sb.port+0xc,(Bit8u)(tlength&0xff));
-	IO_Write(tandy_sb.port+0xc,(Bit8u)((tlength>>8)&0xff));
+	Bit8u amplitude=(Bit8u)((real_readw(0x40,0xd2)>>13)&0x7);
+	if (tandy_sb.port) {
+		IO_Write(0x0a,tandy_dma);	/* enable DMA channel */
+		/* set frequency */
+		IO_Write(tandy_sb.port+0xc,0x40);
+		IO_Write(tandy_sb.port+0xc,256-delay*100/358);
+		/* set playback type to 8bit */
+		if (isplayback) IO_Write(tandy_sb.port+0xc,0x14);
+		else IO_Write(tandy_sb.port+0xc,0x24);
+		/* set transfer size */
+		IO_Write(tandy_sb.port+0xc,(Bit8u)(tlength&0xff));
+		IO_Write(tandy_sb.port+0xc,(Bit8u)((tlength>>8)&0xff));
+	} else {
+		if (isplayback) IO_Write(tandy_dac.port,(IO_Read(tandy_dac.port)&0x7c) | 0x03);
+		else IO_Write(tandy_dac.port,(IO_Read(tandy_dac.port)&0x7c) | 0x02);
+		IO_Write(tandy_dac.port+2,(Bit8u)(delay&0xff));
+		IO_Write(tandy_dac.port+3,(Bit8u)(((delay>>8)&0xf) | (amplitude<<5)));
+		if (isplayback) IO_Write(tandy_dac.port,(IO_Read(tandy_dac.port)&0x7c) | 0x1f);
+		else IO_Write(tandy_dac.port,(IO_Read(tandy_dac.port)&0x7c) | 0x1e);
+		IO_Write(0x0a,tandy_dma);	/* enable DMA channel */
+	}
 
 	if (!isplayback) {
 		/* mark transfer as recording operation */
@@ -163,10 +215,15 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 }
 
 static Bitu IRQ_TandyDAC(void) {
+	if (tandy_dac.port) {
+		IO_Read(tandy_dac.port);
+	}
 	if (real_readw(0x40,0xd0)) {	/* play/record next buffer */
 		/* acknowledge IRQ */
 		IO_Write(0x20,0x20);
-		IO_Read(tandy_sb.port+0xe);
+		if (tandy_sb.port) {
+			IO_Read(tandy_sb.port+0xe);
+		}
 
 		/* buffer starts at the next page */
 		Bit8u npage=real_readb(0x40,0xd4)+1;
@@ -182,11 +239,20 @@ static Bitu IRQ_TandyDAC(void) {
 			Tandy_SetupTransfer(npage<<16,true);
 		}
 	} else {	/* playing/recording is finished */
-		RealSetVec(tandy_sb.irq+8,real_readd(0x40,0xd6));
+		Bit8u tandy_irq = 7;
+		if (tandy_sb.port) tandy_irq = tandy_sb.irq;
+		else if (tandy_dac.port) tandy_irq = tandy_dac.irq;
+		Bit8u tandy_irq_vector = tandy_irq;
+		if (tandy_irq_vector<8) tandy_irq_vector += 8;
+		else tandy_irq_vector += (0x70-8);
+
+		RealSetVec(tandy_irq_vector,real_readd(0x40,0xd6));
 
 		/* turn off speaker and acknowledge soundblaster IRQ */
-		IO_Write(tandy_sb.port+0xc,0xd3);
-		IO_Read(tandy_sb.port+0xe);
+		if (tandy_sb.port) {
+			IO_Write(tandy_sb.port+0xc,0xd3);
+			IO_Read(tandy_sb.port+0xe);
+		}
 
 		/* issue BIOS tandy sound device busy callout */
 		SegSet16(cs, RealSeg(tandy_DAC_callback[1]->Get_RealPointer()));
@@ -196,10 +262,14 @@ static Bitu IRQ_TandyDAC(void) {
 }
 
 static void TandyDAC_Handler(Bit8u tfunction) {
-	if (!tandy_sb.port) return;
+	if ((!tandy_sb.port) && (!tandy_dac.port)) return;
 	switch (tfunction) {
 	case 0x81:	/* Tandy sound system check */
-		reg_ax=0xc4;
+		if (tandy_dac.port) {
+			reg_ax=tandy_dac.port;
+		} else {
+			reg_ax=0xc4;
+		}
 		CALLBACK_SCF(Tandy_TransferInProgress());
 		break;
 	case 0x82:	/* Tandy sound system start recording */
@@ -228,6 +298,9 @@ static void TandyDAC_Handler(Bit8u tfunction) {
 		CALLBACK_SCF(false);
 		break;
 	case 0x85:	/* Tandy sound system reset */
+		if (tandy_dac.port) {
+			IO_Write(tandy_dac.port,(Bit8u)(IO_Read(tandy_dac.port)&0xe0));
+		}
 		reg_ah=0x00;
 		CALLBACK_SCF(false);
 		break;
@@ -864,9 +937,17 @@ public:
 		for(Bitu i = 0; i < strlen(b_date); i++) phys_writeb(0xffff5+i,b_date[i]);
 		phys_writeb(0xfffff,0x55); // signature
 
+		tandy_sb.port=0;
+		tandy_dac.port=0;
 		if (use_tandyDAC) {
 			/* tandy DAC sound requested, see if soundblaster device is available */
+			Bitu tandy_dac_type = 0;
 			if (Tandy_InitializeSB()) {
+				tandy_dac_type = 1;
+			} else if (Tandy_InitializeTS()) {
+				tandy_dac_type = 2;
+			}
+			if (tandy_dac_type) {
 				real_writew(0x40,0xd0,0x0000);
 				real_writew(0x40,0xd2,0x0000);
 				real_writeb(0x40,0xd4,0xff);	/* tandy DAC init value */
@@ -886,7 +967,14 @@ public:
 				//	pop ax
 				//	iret
 
-				RealPt current_irq=RealGetVec(tandy_sb.irq+8);
+				Bit8u tandy_irq = 7;
+				if (tandy_dac_type==1) tandy_irq = tandy_sb.irq;
+				else if (tandy_dac_type==2) tandy_irq = tandy_dac.irq;
+				Bit8u tandy_irq_vector = tandy_irq;
+				if (tandy_irq_vector<8) tandy_irq_vector += 8;
+				else tandy_irq_vector += (0x70-8);
+
+				RealPt current_irq=RealGetVec(tandy_irq_vector);
 				real_writed(0x40,0xd6,current_irq);
 				for (Bit16u i=0; i<0x10; i++) phys_writeb(PhysMake(0xf000,0xa084+i),0x80);
 			} else real_writeb(0x40,0xd4,0x00);
@@ -995,7 +1083,14 @@ public:
 			Bit32u orig_vector=real_readd(0x40,0xd6);
 			if (orig_vector==tandy_DAC_callback[0]->Get_RealPointer()) {
 				/* set IRQ vector to old value */
-				RealSetVec(tandy_sb.irq+8,real_readd(0x40,0xd6));
+				Bit8u tandy_irq = 7;
+				if (tandy_sb.port) tandy_irq = tandy_sb.irq;
+				else if (tandy_dac.port) tandy_irq = tandy_dac.irq;
+				Bit8u tandy_irq_vector = tandy_irq;
+				if (tandy_irq_vector<8) tandy_irq_vector += 8;
+				else tandy_irq_vector += (0x70-8);
+
+				RealSetVec(tandy_irq_vector,real_readd(0x40,0xd6));
 				real_writed(0x40,0xd6,0x00000000);
 			}
 			delete tandy_DAC_callback[0];
