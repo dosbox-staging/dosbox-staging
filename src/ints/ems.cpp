@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.63 2009-06-06 21:52:09 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.64 2009-06-24 17:44:52 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -672,7 +672,7 @@ static Bitu INT67_Handler(void) {
 		reg_ah=EMM_NO_ERROR;
 		break;
 	case 0x42:		/* Get number of pages */
-		reg_dx=MEM_TotalPages()/4;		//Not entirely correct but okay
+		reg_dx=(Bit16u)(MEM_TotalPages()/4);		//Not entirely correct but okay
 		reg_bx=EMM_GetFreePages();
 		reg_ah=EMM_NO_ERROR;
 		break;
@@ -1175,13 +1175,16 @@ static Bitu V86_Monitor() {
 }
 
 static void SetupVCPI() {
+	vcpi.enabled=false;
+
+	/* Allocate one EMS-page for private VCPI-data in memory beyond 1MB */
+	if (EMM_AllocateMemory(1,vcpi.ems_handle,false) != EMM_NO_ERROR) return;
+
 	vcpi.enabled=true;
 
 	vcpi.pic1_remapping=0x08;	// master PIC base
 	vcpi.pic2_remapping=0x70;	// slave PIC base
 
-	/* Allocate one EMS-page for private VCPI-data in memory beyond 1MB */
-	EMM_AllocateMemory(1,vcpi.ems_handle,false);
 	vcpi.private_area=emm_handles[vcpi.ems_handle].mem<<12;
 
 	/* GDT */
@@ -1324,6 +1327,8 @@ public:
 		/* Initialize private data area and set up descriptor tables */
 		SetupVCPI();
 
+		if (!vcpi.enabled) return;
+
 		/* Install v86-callback that handles interrupts occuring
 		   in v86 mode, including protection fault exceptions */
 		call_v86mon.Install(&V86_Monitor,CB_IRET,"V86 Monitor");
@@ -1381,7 +1386,7 @@ public:
 		/* Clear handle and page tables */
 		//TODO
 
-		if (!ENABLE_VCPI) return;
+		if ((!ENABLE_VCPI) || (!vcpi.enabled)) return;
 
 		/* Free private data area in expanded memory */
 		EMM_ReleaseMemory(vcpi.ems_handle);
