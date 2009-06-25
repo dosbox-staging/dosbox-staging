@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x64.h,v 1.12 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: risc_x64.h,v 1.13 2009-06-25 19:31:43 c2woody Exp $ */
 
 
 // some configuring defines that specify the capabilities of this architecture
@@ -62,6 +62,9 @@ typedef Bit8u HostReg;
 
 // register that holds the second parameter
 #define FC_OP2 HOST_ESI
+
+// special register that holds the third parameter for _R3 calls (byte accessible)
+#define FC_OP3 HOST_EAX
 
 // register that holds byte-accessible temporary values
 #define FC_TMP_BA1 HOST_ECX
@@ -290,12 +293,11 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 		imm_size=4;	rm_base=0x80;			//Signed dword imm
 	}
 
-	// ea_reg := ea_reg+TEMP_REG_DRC*(2^scale)+imm
-	// ea_reg :=   op1 +   op2      *(2^scale)+imm
+	// ea_reg := ea_reg+scale_reg*(2^scale)+imm
 	cache_addb(0x48);
 	cache_addb(0x8d);			//LEA
 	cache_addb(0x04+(dest_reg << 3)+rm_base);	//The sib indicator
-	cache_addb(dest_reg+(TEMP_REG_DRC<<3)+(scale<<6));
+	cache_addb(dest_reg+(scale_reg<<3)+(scale<<6));
 
 	switch (imm_size) {
 	case 0:	break;

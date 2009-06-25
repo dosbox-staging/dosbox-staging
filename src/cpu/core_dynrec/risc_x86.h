@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x86.h,v 1.9 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: risc_x86.h,v 1.10 2009-06-25 19:31:43 c2woody Exp $ */
 
 
 // some configuring defines that specify the capabilities of this architecture
@@ -69,6 +69,9 @@ enum HostReg {
 
 // register that holds the second parameter
 #define FC_OP2 HOST_EDX
+
+// special register that holds the third parameter for _R3 calls (byte accessible)
+#define FC_OP3 HOST_EAX
 
 // register that holds byte-accessible temporary values
 #define FC_TMP_BA1 HOST_ECX
@@ -267,11 +270,10 @@ static INLINE void gen_lea(HostReg dest_reg,HostReg scale_reg,Bitu scale,Bits im
 		imm_size=4;	rm_base=0x80;			//Signed dword imm
 	}
 
-	// ea_reg := ea_reg+TEMP_REG_DRC*(2^scale)+imm
-	// ea_reg :=   op1 +   op2      *(2^scale)+imm
+	// ea_reg := ea_reg+scale_reg*(2^scale)+imm
 	cache_addb(0x8d);			//LEA
 	cache_addb(0x04+(dest_reg << 3)+rm_base);	//The sib indicator
-	cache_addb(dest_reg+(TEMP_REG_DRC<<3)+(scale<<6));
+	cache_addb(dest_reg+(scale_reg<<3)+(scale<<6));
 
 	switch (imm_size) {
 	case 0:	break;
@@ -425,7 +427,9 @@ static void gen_fill_branch_long(Bit32u data) {
 static void gen_run_code(void) {
 	cache_addd(0x0424448b);		// mov eax,[esp+4]
 	cache_addb(0x53);			// push ebx
+	cache_addb(0x56);			// push esi
 	cache_addw(0xd0ff);			// call eax
+	cache_addb(0x5e);			// pop  esi
 	cache_addb(0x5b);			// pop  ebx
 }
 

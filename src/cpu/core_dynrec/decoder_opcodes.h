@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: decoder_opcodes.h,v 1.9 2009-06-25 19:31:43 c2woody Exp $ */
+
 
 /*
 	The functions in this file are called almost exclusively by	decoder.h,
@@ -544,8 +546,8 @@ static void dyn_dshift_ev_gv(bool left,bool immediate) {
 		MOV_REG_WORD_TO_HOST_REG(FC_OP1,decode.modrm.rm,decode.big_op);
 	}
 	MOV_REG_WORD_TO_HOST_REG(FC_OP2,decode.modrm.reg,decode.big_op);
-	if (immediate) gen_mov_byte_to_reg_low_imm(FC_RETOP,decode_fetchb());
-	else MOV_REG_BYTE_TO_HOST_REG_LOW(FC_RETOP,DRC_REG_ECX,0);
+	if (immediate) gen_mov_byte_to_reg_low_imm(FC_OP3,decode_fetchb());
+	else MOV_REG_BYTE_TO_HOST_REG_LOW(FC_OP3,DRC_REG_ECX,0);
 	if (decode.big_op) dyn_dpshift_dword_gencall(left);
 	else dyn_dpshift_word_gencall(left);
 

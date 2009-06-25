@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-o3.h,v 1.4 2009-05-16 21:52:47 c2woody Exp $ */
+/* $Id: risc_armv4le-o3.h,v 1.5 2009-06-25 19:31:43 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend by M-HT (size-tweaked arm version) */
@@ -38,6 +38,9 @@
 
 // register that holds the second parameter
 #define FC_OP2 HOST_a2
+
+// special register that holds the third parameter for _R3 calls (byte accessible)
+#define FC_OP3 HOST_v2
 
 // register that holds byte-accessible temporary values
 #define FC_TMP_BA1 HOST_a1
