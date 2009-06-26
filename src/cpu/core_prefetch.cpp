@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_prefetch.cpp,v 1.2 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: core_prefetch.cpp,v 1.3 2009-06-26 16:43:30 c2woody Exp $ */
 
 #include <stdio.h>
 
@@ -115,7 +115,7 @@ static Bit8u prefetch_buffer[MAX_PQ_SIZE];
 static bool pq_valid=false;
 static Bitu pq_start;
 
-static INLINE Bit8u Fetchb() {
+static Bit8u Fetchb() {
 	Bit8u temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start];
@@ -140,7 +140,7 @@ static INLINE Bit8u Fetchb() {
 	return temp;
 }
 
-static INLINE Bit16u Fetchw() {
+static Bit16u Fetchw() {
 	Bit16u temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip+2<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start]|
@@ -166,7 +166,7 @@ static INLINE Bit16u Fetchw() {
 	return temp;
 }
 
-static INLINE Bit32u Fetchd() {
+static Bit32u Fetchd() {
 	Bit32u temp;
 	if (pq_valid && (core.cseip>=pq_start) && (core.cseip+4<pq_start+CPU_PrefetchQueueSize)) {
 		temp=prefetch_buffer[core.cseip-pq_start]|
@@ -274,7 +274,7 @@ restart_opcode:
 				if (len>16) len=16;
 				char tempcode[16*2+1];char * writecode=tempcode;
 				for (;len>0;len--) {
-					sprintf(writecode,"%X",mem_readb(core.cseip++));
+					sprintf(writecode,"%02X",mem_readb(core.cseip++));
 					writecode+=2;
 				}
 				LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
