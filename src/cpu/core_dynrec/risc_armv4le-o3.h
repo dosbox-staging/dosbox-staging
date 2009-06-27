@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_armv4le-o3.h,v 1.5 2009-06-25 19:31:43 c2woody Exp $ */
+/* $Id: risc_armv4le-o3.h,v 1.6 2009-06-27 12:51:10 c2woody Exp $ */
 
 
 /* ARMv4 (little endian) backend by M-HT (size-tweaked arm version) */
@@ -24,11 +24,11 @@
 
 // temporary registers
 #define temp1 HOST_ip
-#define temp2 HOST_v5
+#define temp2 HOST_v3
 #define temp3 HOST_v4
 
 // register that holds function return values
-#define FC_RETOP HOST_v3
+#define FC_RETOP HOST_a1
 
 // register used for address calculations,
 #define FC_ADDR HOST_v1			// has to be saved across calls, see DRC_PROTECT_ADDR_REG
@@ -627,7 +627,6 @@ static void INLINE gen_call_function_raw(void * func) {
 	cache_addd( ADD_IMM(HOST_lr, HOST_pc, 4, 0) );      // add lr, pc, #4
 	cache_addd( BX(temp1) );      // bx temp1
 	cache_addd((Bit32u)func);      // .int func
-	cache_addd( MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 0) );      // mov FC_RETOP, a1
 }
 
 // generate a call to a function with paramcount parameters
@@ -786,7 +785,7 @@ static void INLINE gen_fill_branch_long(Bit32u data) {
 
 static void gen_run_code(void) {
 	cache_addd(0xe92d4000);			// stmfd sp!, {lr}
-	cache_addd(0xe92d0df0);			// stmfd sp!, {v1-v5,v7,v8}
+	cache_addd(0xe92d0cf0);			// stmfd sp!, {v1-v4,v7,v8}
 
 	// adr: 8
 	cache_addd( LDR_IMM(FC_SEGS_ADDR, HOST_pc, 64 - (8 + 8)) );      // ldr FC_SEGS_ADDR, [pc, #(&Segs)]
@@ -797,7 +796,7 @@ static void gen_run_code(void) {
 	cache_addd(0xe92d4000);			// stmfd sp!, {lr}
 	cache_addd( BX(HOST_r0) );			// bx r0	
 
-	cache_addd(0xe8bd0df0);			// ldmfd sp!, {v1-v5,v7,v8}
+	cache_addd(0xe8bd0cf0);			// ldmfd sp!, {v1-v4,v7,v8}
 
 	cache_addd(0xe8bd4000);			// ldmfd sp!, {lr}
 	cache_addd( BX(HOST_lr) );			// bx lr
@@ -818,7 +817,6 @@ static void gen_run_code(void) {
 
 // return from a function
 static void gen_return_function(void) {
-	cache_addd( MOV_REG_LSL_IMM(HOST_a1, FC_RETOP, 0) );      // mov a1, FC_RETOP
 	cache_addd(0xe8bd4000);			// ldmfd sp!, {lr}
 	cache_addd( BX(HOST_lr) );			// bx lr
 }
@@ -835,31 +833,41 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_ADDw:
 		case t_ADDd:
 			*(Bit32u*)pos=ADD_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0);	// add FC_RETOP, a1, a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_ORb:
 		case t_ORw:
 		case t_ORd:
 			*(Bit32u*)pos=ORR_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0);	// orr FC_RETOP, a1, a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_ANDb:
 		case t_ANDw:
 		case t_ANDd:
 			*(Bit32u*)pos=AND_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0);	// and FC_RETOP, a1, a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_SUBb:
 		case t_SUBw:
 		case t_SUBd:
 			*(Bit32u*)pos=SUB_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0);	// sub FC_RETOP, a1, a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_XORb:
 		case t_XORw:
 		case t_XORd:
 			*(Bit32u*)pos=EOR_REG_LSL_IMM(FC_RETOP, HOST_a1, HOST_a2, 0);	// eor FC_RETOP, a1, a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_CMPb:
 		case t_CMPw:
@@ -867,106 +875,105 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 		case t_TESTb:
 		case t_TESTw:
 		case t_TESTd:
-			*(Bit32u*)pos=B_FWD(12);				// b (pc+3*4)
+			*(Bit32u*)pos=B_FWD(8);				// b (pc+2*4)
 			break;
 		case t_INCb:
 		case t_INCw:
 		case t_INCd:
 			*(Bit32u*)pos=ADD_IMM(FC_RETOP, HOST_a1, 1, 0);	// add FC_RETOP, a1, #1
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_DECb:
 		case t_DECw:
 		case t_DECd:
 			*(Bit32u*)pos=SUB_IMM(FC_RETOP, HOST_a1, 1, 0);	// sub FC_RETOP, a1, #1
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_SHLb:
 		case t_SHLw:
 		case t_SHLd:
 			*(Bit32u*)pos=MOV_REG_LSL_REG(FC_RETOP, HOST_a1, HOST_a2);	// mov FC_RETOP, a1, lsl a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_SHRb:
 			*(Bit32u*)pos=AND_IMM(FC_RETOP, HOST_a1, 0xff, 0);				// and FC_RETOP, a1, #0xff
 			*(Bit32u*)(pos+4)=MOV_REG_LSR_REG(FC_RETOP, FC_RETOP, HOST_a2);	// mov FC_RETOP, FC_RETOP, lsr a2
 			*(Bit32u*)(pos+8)=NOP;				// nop
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_SHRw:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16);			// mov FC_RETOP, a1, lsl #16
 			*(Bit32u*)(pos+4)=MOV_REG_LSR_IMM(FC_RETOP, FC_RETOP, 16);		// mov FC_RETOP, FC_RETOP, lsr #16
 			*(Bit32u*)(pos+8)=MOV_REG_LSR_REG(FC_RETOP, FC_RETOP, HOST_a2);	// mov FC_RETOP, FC_RETOP, lsr a2
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_SHRd:
 			*(Bit32u*)pos=MOV_REG_LSR_REG(FC_RETOP, HOST_a1, HOST_a2);	// mov FC_RETOP, a1, lsr a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_SARb:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 24);			// mov FC_RETOP, a1, lsl #24
 			*(Bit32u*)(pos+4)=MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP, 24);		// mov FC_RETOP, FC_RETOP, asr #24
 			*(Bit32u*)(pos+8)=MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2);	// mov FC_RETOP, FC_RETOP, asr a2
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_SARw:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16);			// mov FC_RETOP, a1, lsl #16
 			*(Bit32u*)(pos+4)=MOV_REG_ASR_IMM(FC_RETOP, FC_RETOP, 16);		// mov FC_RETOP, FC_RETOP, asr #16
 			*(Bit32u*)(pos+8)=MOV_REG_ASR_REG(FC_RETOP, FC_RETOP, HOST_a2);	// mov FC_RETOP, FC_RETOP, asr a2
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_SARd:
 			*(Bit32u*)pos=MOV_REG_ASR_REG(FC_RETOP, HOST_a1, HOST_a2);	// mov FC_RETOP, a1, asr a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_RORb:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 24);					// mov FC_RETOP, a1, lsl #24
 			*(Bit32u*)(pos+4)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 8);		// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #8
 			*(Bit32u*)(pos+8)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16);	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
 			*(Bit32u*)(pos+12)=MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2);		// mov FC_RETOP, FC_RETOP, ror a2
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_RORw:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16);					// mov FC_RETOP, a1, lsl #16
 			*(Bit32u*)(pos+4)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16);	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
 			*(Bit32u*)(pos+8)=MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2);			// mov FC_RETOP, FC_RETOP, ror a2
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_RORd:
 			*(Bit32u*)pos=MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2);	// mov FC_RETOP, a1, ror a2
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
-			break;
-		case t_ROLb:
-			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 24);					// mov FC_RETOP, a1, lsl #24
-			*(Bit32u*)(pos+4)=RSB_IMM(HOST_a2, HOST_a2, 32, 0);						// rsb a2, a2, #32
-			*(Bit32u*)(pos+8)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 8);		// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #8
-			*(Bit32u*)(pos+12)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16);	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
-			*(Bit32u*)(pos+16)=MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2);		// mov FC_RETOP, FC_RETOP, ror a2
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		case t_ROLw:
 			*(Bit32u*)pos=MOV_REG_LSL_IMM(FC_RETOP, HOST_a1, 16);					// mov FC_RETOP, a1, lsl #16
 			*(Bit32u*)(pos+4)=RSB_IMM(HOST_a2, HOST_a2, 32, 0);						// rsb a2, a2, #32
 			*(Bit32u*)(pos+8)=ORR_REG_LSR_IMM(FC_RETOP, FC_RETOP, FC_RETOP, 16);	// orr FC_RETOP, FC_RETOP, FC_RETOP, lsr #16
 			*(Bit32u*)(pos+12)=MOV_REG_ROR_REG(FC_RETOP, FC_RETOP, HOST_a2);		// mov FC_RETOP, FC_RETOP, ror a2
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_ROLd:
 			*(Bit32u*)pos=RSB_IMM(HOST_a2, HOST_a2, 32, 0);					// rsb a2, a2, #32
 			*(Bit32u*)(pos+4)=MOV_REG_ROR_REG(FC_RETOP, HOST_a1, HOST_a2);	// mov FC_RETOP, a1, ror a2
 			*(Bit32u*)(pos+8)=NOP;				// nop
 			*(Bit32u*)(pos+12)=NOP;				// nop
-			*(Bit32u*)(pos+16)=NOP;				// nop
 			break;
 		case t_NEGb:
 		case t_NEGw:
 		case t_NEGd:
 			*(Bit32u*)pos=RSB_IMM(FC_RETOP, HOST_a1, 0, 0);	// rsb FC_RETOP, a1, #0
-			*(Bit32u*)(pos+4)=B_FWD(8);			// b (pc+2*4)
+			*(Bit32u*)(pos+4)=NOP;				// nop
+			*(Bit32u*)(pos+8)=NOP;				// nop
+			*(Bit32u*)(pos+12)=NOP;				// nop
 			break;
 		default:
 			*(Bit32u*)(pos+12)=(Bit32u)fct_ptr;		// simple_func
