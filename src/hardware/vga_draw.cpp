@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.107 2009-04-11 08:02:23 qbix79 Exp $ */
+/* $Id: vga_draw.cpp,v 1.108 2009-06-28 14:56:14 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -616,7 +616,7 @@ static void VGA_ProcessSplit() {
 }
 
 static void VGA_DrawSingleLine(Bitu /*blah*/) {
-	if(vga.attr.enabled || (!(vga.mode==M_VGA || vga.mode==M_EGA))) {
+	if (vga.attr.enabled) {
         Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
 		RENDER_DrawLine(data);
 	} else {

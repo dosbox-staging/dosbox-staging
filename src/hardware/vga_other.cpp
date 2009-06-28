@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.25 2009-01-25 12:00:51 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.26 2009-06-28 14:56:14 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -28,57 +28,57 @@
 #include "render.h"
 #include "mapper.h"
 
-static void write_crtc_index_other(Bitu port,Bitu val,Bitu iolen) {
-	vga.other.index=val;
+static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
+	vga.other.index=(Bit8u)val;
 }
 
-static Bitu read_crtc_index_other(Bitu port,Bitu iolen) {
+static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
 	return vga.other.index;
 }
 
-static void write_crtc_data_other(Bitu port,Bitu val,Bitu iolen) {
+static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		if (vga.other.htotal ^ val) VGA_StartResize();
-		vga.other.htotal=val;
+		vga.other.htotal=(Bit8u)val;
 		break;
 	case 0x01:		//Horizontal displayed chars
 		if (vga.other.hdend ^ val) VGA_StartResize();
-		vga.other.hdend=val;
+		vga.other.hdend=(Bit8u)val;
 		break;
 	case 0x02:		//Horizontal sync position
-		vga.other.hsyncp=val;
+		vga.other.hsyncp=(Bit8u)val;
 		break;
 	case 0x03:		//Horizontal and vertical sync width
-		vga.other.syncw=val;
+		vga.other.syncw=(Bit8u)val;
 		break;
 	case 0x04:		//Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
-		vga.other.vtotal=val;
+		vga.other.vtotal=(Bit8u)val;
 		break;
 	case 0x05:		//Vertical display adjust
 		if (vga.other.vadjust ^ val) VGA_StartResize();
-		vga.other.vadjust=val;
+		vga.other.vadjust=(Bit8u)val;
 		break;
 	case 0x06:		//Vertical rows
 		if (vga.other.vdend ^ val) VGA_StartResize();
-		vga.other.vdend=val;
+		vga.other.vdend=(Bit8u)val;
 		break;
 	case 0x07:		//Vertical sync position
-		vga.other.vsyncp=val;
+		vga.other.vsyncp=(Bit8u)val;
 		break;
 	case 0x09:		//Max scanline
 		if (vga.other.max_scanline ^ val) VGA_StartResize();
-		vga.other.max_scanline=val;
+		vga.other.max_scanline=(Bit8u)val;
 		break;
 	case 0x0A:	/* Cursor Start Register */
-		vga.other.cursor_start = val & 0x3f;
-		vga.draw.cursor.sline = val&0x1f;
+		vga.other.cursor_start = (Bit8u)(val & 0x3f);
+		vga.draw.cursor.sline = (Bit8u)(val&0x1f);
 		vga.draw.cursor.enabled = ((val & 0x60) != 0x20);
 		break;
 	case 0x0B:	/* Cursor End Register */
-		vga.other.cursor_end = val&0x1f;
-		vga.draw.cursor.eline = val&0x1f;
+		vga.other.cursor_end = (Bit8u)(val&0x1f);
+		vga.draw.cursor.eline = (Bit8u)(val&0x1f);
 		break;
 	case 0x0C:	/* Start Address High Register */
 		vga.config.display_start=(vga.config.display_start & 0x00FF) | (val << 8);
@@ -88,23 +88,23 @@ static void write_crtc_data_other(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x0E:	/*Cursor Location High Register */
 		vga.config.cursor_start&=0x00ff;
-		vga.config.cursor_start|=val << 8;
+		vga.config.cursor_start|=(Bit8u)(val << 8);
 		break;
 	case 0x0F:	/* Cursor Location Low Register */
 		vga.config.cursor_start&=0xff00;
-		vga.config.cursor_start|=val;
+		vga.config.cursor_start|=(Bit8u)val;
 		break;
 	case 0x10:	/* Light Pen High */
-		vga.other.lpen_high = val & 0x1f;		//only 6 bits
+		vga.other.lpen_high = (Bit8u)(val & 0x1f);		//only 6 bits
 		break;
 	case 0x11:	/* Light Pen Low */
-		vga.other.lpen_low = val;
+		vga.other.lpen_low = (Bit8u)val;
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Write %X to illegal index %x",val,vga.other.index);
 	}
 }
-static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
+static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	switch (vga.other.index) {
 	case 0x00:		//Horizontal total
 		return vga.other.htotal;
@@ -143,7 +143,7 @@ static Bitu read_crtc_data_other(Bitu port,Bitu iolen) {
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Read from illegal index %x",vga.other.index);
 	}
-	return ~0;
+	return (Bitu)(~0);
 }
 
 static double hue_offset = 0.0;
@@ -206,7 +206,7 @@ static void update_cga16_color(void) {
 			G = Y - 0.272*I - 0.647*Q; if (G < 0.0) G = 0.0; if (G > 1.0) G = 1.0;
 			B = Y - 1.105*I + 1.702*Q; if (B < 0.0) B = 0.0; if (B > 1.0) B = 1.0;
 
-			RENDER_SetPal(index,static_cast<Bit8u>(R*baseR),static_cast<Bit8u>(G*baseG),static_cast<Bit8u>(B*baseB));
+			RENDER_SetPal((Bit8u)index,static_cast<Bit8u>(R*baseR),static_cast<Bit8u>(G*baseG),static_cast<Bit8u>(B*baseB));
 		}
 	}
 }
@@ -303,7 +303,7 @@ static void TandyCheckLineMask(void ) {
 		vga.tandy.line_shift = 13;
 		vga.tandy.addr_mask = (1 << 13) - 1;
 	} else {
-		vga.tandy.addr_mask = ~0;
+		vga.tandy.addr_mask = (Bitu)(~0);
 		vga.tandy.line_shift = 0;
 	}
 }
@@ -352,10 +352,10 @@ static void write_tandy_reg(Bit8u val) {
 	}
 }
 
-static void write_cga(Bitu port,Bitu val,Bitu iolen) {
+static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control=val;
+		vga.tandy.mode_control=(Bit8u)val;
 		if (vga.tandy.mode_control & 0x2) {
 			if (vga.tandy.mode_control & 0x10) {
 				if (!(val & 0x4) && machine==MCH_CGA) {
@@ -371,24 +371,24 @@ static void write_cga(Bitu port,Bitu val,Bitu iolen) {
 		VGA_SetBlinking(val & 0x20);
 		break;
 	case 0x3d9:
-		write_color_select(val);
+		write_color_select((Bit8u)val);
 		break;
 	}
 }
 
-static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
+static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control=val;
+		vga.tandy.mode_control=(Bit8u)val;
 		TandyCheckLineMask();
 		VGA_SetBlinking(val & 0x20);
 		TANDY_FindMode();
 		break;
 	case 0x3d9:
-		write_color_select(val);
+		write_color_select((Bit8u)val);
 		break;
 	case 0x3da:
-		vga.tandy.reg_index=val;
+		vga.tandy.reg_index=(Bit8u)val;
 		break;
 //	case 0x3db:	//Clear lightpen latch
 		break;
@@ -397,10 +397,10 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 //	case 0x3dd:	//Extended ram page address register:
 		break;
 	case 0x3de:
-		write_tandy_reg(val);
+		write_tandy_reg((Bit8u)val);
 		break;
 	case 0x3df:
-		vga.tandy.line_mask = val >> 6;
+		vga.tandy.line_mask = (Bit8u)(val >> 6);
 		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.mem_bank = (val >> 3) & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		TandyCheckLineMask();
@@ -409,18 +409,18 @@ static void write_tandy(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
+static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d9:
-		write_color_select(val);
+		write_color_select((Bit8u)val);
 		break;
 	case 0x3da:
-		if (vga.tandy.pcjr_flipflop) write_tandy_reg(val);
-		else vga.tandy.reg_index=val;
+		if (vga.tandy.pcjr_flipflop) write_tandy_reg((Bit8u)val);
+		else vga.tandy.reg_index=(Bit8u)val;
 		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
 		break;
 	case 0x3df:
-		vga.tandy.line_mask = val >> 6;
+		vga.tandy.line_mask = (Bit8u)(val >> 6);
 		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.mem_bank = (val >> 3) & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		vga.tandy.draw_base = &MemBase[vga.tandy.draw_bank * 16 * 1024];
@@ -431,7 +431,7 @@ static void write_pcjr(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
+static void write_hercules(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3b8: {
 		// the protected bits can always be cleared but only be set if the 
@@ -466,7 +466,7 @@ static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 		break;
 		}
 	case 0x3bf:
-		vga.herc.enable_bits=val;
+		vga.herc.enable_bits=(Bit8u)val;
 		break;
 	}
 }
@@ -476,7 +476,7 @@ static void write_hercules(Bitu port,Bitu val,Bitu iolen) {
 	return 0;
 } */
 
-Bitu read_herc_status(Bitu port,Bitu iolen) {
+Bitu read_herc_status(Bitu /*port*/,Bitu /*iolen*/) {
 	// 3BAh (R):  Status Register
 	// bit   0  Horizontal sync
 	//       1  Light pen status (only some cards)
@@ -507,6 +507,8 @@ Bitu read_herc_status(Bitu port,Bitu iolen) {
 void VGA_SetupOther(void) {
 	Bitu i;
 	memset( &vga.tandy, 0, sizeof( vga.tandy ));
+	vga.attr.enabled = true;
+
 	//Initialize values common for most machines, can be overwritten
 	vga.tandy.draw_base = vga.mem.linear;
 	vga.tandy.mem_base = vga.mem.linear;
@@ -580,4 +582,3 @@ void VGA_SetupOther(void) {
 	}
 
 }
-

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_attr.cpp,v 1.30 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: vga_attr.cpp,v 1.31 2009-06-28 14:56:13 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "inout.h"
@@ -43,12 +43,14 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 	VGA_DAC_CombineColor(index,val);
 }
 
-Bitu read_p3c0(Bitu port,Bitu iolen) {
-//Wcharts
-	return 0x0;
+Bitu read_p3c0(Bitu /*port*/,Bitu /*iolen*/) {
+	// Wcharts, Win 3.11 & 95 SVGA
+	Bitu retval = attr(index) & 0x1f;
+	if (attr(enabled)) retval |= 0x20;
+	return retval;
 }
  
-void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
+void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
@@ -67,7 +69,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 		case 0x04:		case 0x05:		case 0x06:		case 0x07:
 		case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
 		case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-			if (!attr(enabled)) VGA_ATTR_SetPalette(attr(index),val);
+			if (!attr(enabled)) VGA_ATTR_SetPalette(attr(index),(Bit8u)val);
 			/*
 				0-5	Index into the 256 color DAC table. May be modified by 3C0h index
 				10h and 14h.
@@ -77,7 +79,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			if (!IS_VGA_ARCH) val&=0x1f;	// not really correct, but should do it
 			if ((attr(mode_control) ^ val) & 0x80) {
 				attr(mode_control)^=0x80;
-				for (Bitu i=0;i<0x10;i++) {
+				for (Bit8u i=0;i<0x10;i++) {
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 				}
 			}
@@ -85,11 +87,11 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 				VGA_SetBlinking(val & 0x8);
 			}
 			if ((attr(mode_control) ^ val) & 0x04) {
-				attr(mode_control)=val;
+				attr(mode_control)=(Bit8u)val;
 				VGA_DetermineMode();
 				if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) VGA_StartResize();
 			} else {
-				attr(mode_control)=val;
+				attr(mode_control)=(Bit8u)val;
 				VGA_DetermineMode();
 			}
 
@@ -111,12 +113,12 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			*/
 			break;
 		case 0x11:	/* Overscan Color Register */
-			attr(overscan_color)=val;
+			attr(overscan_color)=(Bit8u)val;
 			/* 0-5  Color of screen border. Color is defined as in the palette registers. */
 			break;
 		case 0x12:	/* Color Plane Enable Register */
 			/* Why disable colour planes? */
-			attr(color_plane_enable)=val;
+			attr(color_plane_enable)=(Bit8u)val;
 			/* 
 				0	Bit plane 0 is enabled if set.
 				1	Bit plane 1 is enabled if set.
@@ -133,7 +135,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 			case M_TEXT:
 				if ((val==0x7) && (svgaCard==SVGA_None)) vga.config.pel_panning=7;
 				if (val>0x7) vga.config.pel_panning=0;
-				else vga.config.pel_panning=val+1;
+				else vga.config.pel_panning=(Bit8u)(val+1);
 				break;
 			case M_VGA:
 			case M_LIN8:
@@ -163,8 +165,8 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 				break;
 			}
 			if (attr(color_select) ^ val) {
-				attr(color_select)=val;
-				for (Bitu i=0;i<0x10;i++) {
+				attr(color_select)=(Bit8u)val;
+				for (Bit8u i=0;i<0x10;i++) {
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
 				}
 			}
@@ -187,7 +189,7 @@ void write_p3c0(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
-Bitu read_p3c1(Bitu port,Bitu iolen) {
+Bitu read_p3c1(Bitu /*port*/,Bitu iolen) {
 //	vga.internal.attrindex=false;
 	switch (attr(index)) {
 			/* Palette */
