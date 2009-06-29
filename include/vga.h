@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga.h,v 1.46 2009-03-15 11:28:34 c2woody Exp $ */
+/* $Id: vga.h,v 1.47 2009-06-29 18:43:33 c2woody Exp $ */
 
 #ifndef DOSBOX_VGA_H
 #define DOSBOX_VGA_H
@@ -222,7 +222,8 @@ typedef struct {
 	Bit8u vsyncp;
 	Bit8u vsyncw;
 	Bit8u max_scanline;
-	Bit8u lpen_low, lpen_high;
+	Bit16u lightpen;
+	bool lightpen_triggered;
 	Bit8u cursor_start;
 	Bit8u cursor_end;
 } VGA_OTHER;

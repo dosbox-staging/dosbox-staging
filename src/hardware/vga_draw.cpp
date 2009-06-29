@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.108 2009-06-28 14:56:14 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.109 2009-06-29 18:43:33 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -1044,6 +1044,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			clock = 14318180;
 			break;
 		}
+		vga.draw.delay.hdend = hdend*1000.0/clock; //in milliseconds
 	}
 #if C_DEBUG
 	LOG(LOG_VGA,LOG_NORMAL)("h total %d end %d blank (%d/%d) retrace (%d/%d)",

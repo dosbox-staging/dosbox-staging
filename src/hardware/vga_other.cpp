@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.26 2009-06-28 14:56:14 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.27 2009-06-29 18:43:33 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -88,17 +88,19 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x0E:	/*Cursor Location High Register */
 		vga.config.cursor_start&=0x00ff;
-		vga.config.cursor_start|=(Bit8u)(val << 8);
+		vga.config.cursor_start|=((Bit8u)val) << 8;
 		break;
 	case 0x0F:	/* Cursor Location Low Register */
 		vga.config.cursor_start&=0xff00;
 		vga.config.cursor_start|=(Bit8u)val;
 		break;
 	case 0x10:	/* Light Pen High */
-		vga.other.lpen_high = (Bit8u)(val & 0x1f);		//only 6 bits
+		vga.other.lightpen &= 0xff;
+		vga.other.lightpen |= (val & 0x3f)<<8;		// only 6 bits
 		break;
 	case 0x11:	/* Light Pen Low */
-		vga.other.lpen_low = (Bit8u)val;
+		vga.other.lightpen &= 0xff00;
+		vga.other.lightpen |= (Bit8u)val;
 		break;
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Write %X to illegal index %x",val,vga.other.index);
@@ -129,17 +131,17 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	case 0x0B:	/* Cursor End Register */
 		return vga.other.cursor_end;
 	case 0x0C:	/* Start Address High Register */
-		return vga.config.display_start >> 8;
+		return (Bit8u)(vga.config.display_start >> 8);
 	case 0x0D:	/* Start Address Low Register */
-		return vga.config.display_start;
+		return (Bit8u)(vga.config.display_start & 0xff);
 	case 0x0E:	/*Cursor Location High Register */
-		return vga.config.cursor_start>>8;
+		return (Bit8u)(vga.config.cursor_start >> 8);
 	case 0x0F:	/* Cursor Location Low Register */
-		return vga.config.cursor_start;
+		return (Bit8u)(vga.config.cursor_start & 0xff);
 	case 0x10:	/* Light Pen High */
-		return vga.other.lpen_high;
+		return (Bit8u)(vga.other.lightpen >> 8);
 	case 0x11:	/* Light Pen Low */
-		return vga.other.lpen_low;
+		return (Bit8u)(vga.other.lightpen & 0xff);
 	default:
 		LOG(LOG_VGAMISC,LOG_NORMAL)("MC6845:Read from illegal index %x",vga.other.index);
 	}
@@ -390,9 +392,21 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 	case 0x3da:
 		vga.tandy.reg_index=(Bit8u)val;
 		break;
-//	case 0x3db:	//Clear lightpen latch
+	case 0x3db:	// Clear lightpen latch
+		vga.other.lightpen_triggered = false;
 		break;
-//	case 0x3dc:	//Preset lightpen latch
+	case 0x3dc:	// Preset lightpen latch
+		if (!vga.other.lightpen_triggered) {
+			vga.other.lightpen_triggered = true; // TODO: this shows at port 3ba/3da bit 1
+			
+			double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
+			double timeInLine = fmod(timeInFrame,vga.draw.delay.htotal);
+			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
+			
+			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
+			vga.other.lightpen += (Bit16u)((timeInLine / vga.draw.delay.hdend) *
+				((float)(vga.draw.address_add/2)));
+		}
 		break;
 //	case 0x3dd:	//Extended ram page address register:
 		break;
@@ -529,6 +543,8 @@ void VGA_SetupOther(void) {
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
+		IO_RegisterWriteHandler(0x3db,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3dc,write_tandy,IO_MB);
 		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
 		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 	}
