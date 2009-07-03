@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.h,v 1.27 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: shell.h,v 1.28 2009-07-03 19:36:57 qbix79 Exp $ */
 
 #ifndef DOSBOX_SHELL_H
 #define DOSBOX_SHELL_H
@@ -55,6 +55,7 @@ public:
 	DOS_Shell * shell;
 	BatchFile * prev;
 	CommandLine * cmd;
+	std::string filename;
 };
 
 class AutoexecEditor;
