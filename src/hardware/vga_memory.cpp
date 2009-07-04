@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_memory.cpp,v 1.52 2009-03-22 21:04:41 c2woody Exp $ */
+/* $Id: vga_memory.cpp,v 1.53 2009-07-04 21:23:35 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -114,6 +114,7 @@ INLINE static Bit32u ModeOperation(Bit8u val) {
 		break;
 	case 0x03:
 		// Write Mode 3: In this mode, the data in the Set/Reset field is used as if the Enable Set/Reset field were set to 1111b. Then the host data is first rotated as per the Rotate Count field, then logical ANDed with the value of the Bit Mask field. The resulting value is used on the data obtained from the Set/Reset field in the same way that the Bit Mask field would ordinarily be used. to select which bits come from the expansion of the Set/Reset field and which come from the latch register. Finally, only the bit planes enabled by the Memory Plane Write Enable field are written to memory.
+		val=((val >> vga.config.data_rotate) | (val << (8-vga.config.data_rotate)));
 		full=RasterOp(vga.config.full_set_reset,ExpandTable[val] & vga.config.full_bit_mask);
 		break;
 	default:
