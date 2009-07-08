@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell.cpp,v 1.99 2009-05-14 18:44:54 qbix79 Exp $ */
+/* $Id: shell.cpp,v 1.100 2009-07-08 20:05:41 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -584,7 +584,7 @@ void SHELL_Init() {
 	pspmcb.SetType(0x4d);
 	DOS_MCB envmcb((Bit16u)(env_seg-1));
 	envmcb.SetPSPSeg(psp_seg);	// MCB of the command shell environment
-	envmcb.SetSize(0x28);
+	envmcb.SetSize(DOS_MEM_START-env_seg);
 	envmcb.SetType(0x4d);
 	
 	/* Setup environment */
