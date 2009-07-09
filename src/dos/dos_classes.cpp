@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_classes.cpp,v 1.57 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dos_classes.cpp,v 1.58 2009-07-09 20:06:57 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -32,14 +32,14 @@ void DOS_ParamBlock::Clear(void) {
 }
 
 void DOS_ParamBlock::LoadData(void) {
-	exec.envseg=sGet(sExec,envseg);
+	exec.envseg=(Bit16u)sGet(sExec,envseg);
 	exec.cmdtail=sGet(sExec,cmdtail);
 	exec.fcb1=sGet(sExec,fcb1);
 	exec.fcb2=sGet(sExec,fcb2);
 	exec.initsssp=sGet(sExec,initsssp);
 	exec.initcsip=sGet(sExec,initcsip);
-	overlay.loadseg=sGet(sOverlay,loadseg);
-	overlay.relocation=sGet(sOverlay,relocation);
+	overlay.loadseg=(Bit16u)sGet(sOverlay,loadseg);
+	overlay.relocation=(Bit16u)sGet(sOverlay,relocation);
 }
 
 void DOS_ParamBlock::SaveData(void) {
@@ -143,7 +143,7 @@ void DOS_InfoBlock::SetDiskBufferHeadPt(Bit32u _dbheadpt) {
 }
 
 Bit16u DOS_InfoBlock::GetStartOfUMBChain(void) {
-	return sGet(sDIB,startOfUMBChain);
+	return (Bit16u)sGet(sDIB,startOfUMBChain);
 }
 
 void DOS_InfoBlock::SetStartOfUMBChain(Bit16u _umbstartseg) {
@@ -151,7 +151,7 @@ void DOS_InfoBlock::SetStartOfUMBChain(Bit16u _umbstartseg) {
 }
 
 Bit8u DOS_InfoBlock::GetUMBChainState(void) {
-	return sGet(sDIB,chainingUMB);
+	return (Bit8u)sGet(sDIB,chainingUMB);
 }
 
 void DOS_InfoBlock::SetUMBChainState(Bit8u _umbchaining) {
@@ -202,7 +202,7 @@ void DOS_PSP::MakeNew(Bit16u mem_size) {
 	/* Init file pointer and max_files */
 	sSave(sPSP,file_table,RealMake(seg,offsetof(sPSP,files)));
 	sSave(sPSP,max_files,20);
-	for (i=0;i<20;i++) SetFileHandle(i,0xff);
+	for (Bit16u ct=0;ct<20;ct++) SetFileHandle(ct,0xff);
 
 	/* User Stack pointer */
 //	if (prevpsp.GetSegment()!=0) sSave(sPSP,stack,prevpsp.GetStack());
@@ -309,7 +309,7 @@ bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
 		sSave(sPSP,file_table,data);
 		sSave(sPSP,max_files,fileNum);
 		Bit16u i;
-		for (i=0; i<20; i++)		SetFileHandle(i,sGet(sPSP,files[i]));
+		for (i=0; i<20; i++)		SetFileHandle(i,(Bit8u)sGet(sPSP,files[i]));
 		for (i=20; i<fileNum; i++)	SetFileHandle(i,0xFF);
 	} else {
 		sSave(sPSP,max_files,fileNum);
@@ -349,17 +349,17 @@ void DOS_DTA::SetResult(const char * _name,Bit32u _size,Bit16u _date,Bit16u _tim
 void DOS_DTA::GetResult(char * _name,Bit32u & _size,Bit16u & _date,Bit16u & _time,Bit8u & _attr) {
 	MEM_BlockRead(pt+offsetof(sDTA,name),_name,DOS_NAMELENGTH_ASCII);
 	_size=sGet(sDTA,size);
-	_date=sGet(sDTA,date);
-	_time=sGet(sDTA,time);
-	_attr=sGet(sDTA,attr);
+	_date=(Bit16u)sGet(sDTA,date);
+	_time=(Bit16u)sGet(sDTA,time);
+	_attr=(Bit8u)sGet(sDTA,attr);
 }
 
 Bit8u DOS_DTA::GetSearchDrive(void) {
-	return sGet(sDTA,sdrive);
+	return (Bit8u)sGet(sDTA,sdrive);
 }
 
 void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
-	attr=sGet(sDTA,sattr);
+	attr=(Bit8u)sGet(sDTA,sattr);
 	char temp[11];
 	MEM_BlockRead(pt+offsetof(sDTA,sname),temp,11);
 	memcpy(pattern,temp,8);
@@ -369,13 +369,16 @@ void DOS_DTA::GetSearchParams(Bit8u & attr,char * pattern) {
 
 }
 
-DOS_FCB::DOS_FCB(Bit16u seg,Bit16u off) { 
+DOS_FCB::DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended) { 
 	SetPt(seg,off); 
 	real_pt=pt;
-	if (sGet(sFCB,drive)==0xff) {
-		pt+=7;
-		extended=true;
-	} else extended=false;
+	extended=false;
+	if (allow_extended) {
+		if (sGet(sFCB,drive)==0xff) {
+			pt+=7;
+			extended=true;
+		}
+	}
 }
 
 bool DOS_FCB::Extended(void) {
@@ -410,13 +413,13 @@ void DOS_FCB::SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time) {
 
 void DOS_FCB::GetSizeDateTime(Bit32u & _size,Bit16u & _date,Bit16u & _time) {
 	_size=sGet(sFCB,filesize);
-	_date=sGet(sFCB,date);
-	_time=sGet(sFCB,time);
+	_date=(Bit16u)sGet(sFCB,date);
+	_time=(Bit16u)sGet(sFCB,time);
 }
 
 void DOS_FCB::GetRecord(Bit16u & _cur_block,Bit8u & _cur_rec) {
-	_cur_block=sGet(sFCB,cur_block);
-	_cur_rec=sGet(sFCB,cur_rec);
+	_cur_block=(Bit16u)sGet(sFCB,cur_block);
+	_cur_rec=(Bit8u)sGet(sFCB,cur_rec);
 
 }
 
@@ -426,8 +429,8 @@ void DOS_FCB::SetRecord(Bit16u _cur_block,Bit8u _cur_rec) {
 }
 
 void DOS_FCB::GetSeqData(Bit8u & _fhandle,Bit16u & _rec_size) {
-	_fhandle=sGet(sFCB,file_handle);
-	_rec_size=sGet(sFCB,rec_size);
+	_fhandle=(Bit8u)sGet(sFCB,file_handle);
+	_rec_size=(Bit16u)sGet(sFCB,rec_size);
 }
 
 
@@ -462,12 +465,12 @@ bool DOS_FCB::Valid() {
 }
 
 void DOS_FCB::FileClose(Bit8u & _fhandle) {
-	_fhandle=sGet(sFCB,file_handle);
+	_fhandle=(Bit8u)sGet(sFCB,file_handle);
 	sSave(sFCB,file_handle,0xff);
 }
 
 Bit8u DOS_FCB::GetDrive(void) {
-	Bit8u drive=sGet(sFCB,drive);
+	Bit8u drive=(Bit8u)sGet(sFCB,drive);
 	if (!drive) return  DOS_GetDefaultDrive();
 	else return drive-1;
 }

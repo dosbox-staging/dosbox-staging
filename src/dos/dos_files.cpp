@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.111 2009-06-18 18:17:54 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.112 2009-07-09 20:06:57 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -768,11 +768,17 @@ static bool isvalid(const char in){
 #define PARSE_RET_BADDRIVE      0xff
 
 Bit8u FCB_Parsename(Bit16u seg,Bit16u offset,Bit8u parser ,char *string, Bit8u *change) {
-	char * string_begin=string;Bit8u ret=0;
-	DOS_FCB fcb(seg,offset);
+	char * string_begin=string;
+	Bit8u ret=0;
+	if (!(parser & PARSE_DFLT_DRIVE)) {
+		// default drive forced, this intentionally invalidates an extended FCB
+		mem_writeb(PhysMake(seg,offset),0);
+	}
+	DOS_FCB fcb(seg,offset,false);	// always a non-extended FCB
 	bool hasdrive,hasname,hasext,finished;
 	hasdrive=hasname=hasext=finished=false;
-	Bitu index=0;Bit8u fill=' ';
+	Bitu index=0;
+	Bit8u fill=' ';
 /* First get the old data from the fcb */
 #ifdef _MSC_VER
 #pragma pack (1)

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_inc.h,v 1.80 2009-07-08 20:05:41 c2woody Exp $ */
+/* $Id: dos_inc.h,v 1.81 2009-07-09 20:06:56 c2woody Exp $ */
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
@@ -489,7 +489,7 @@ private:
 
 class DOS_FCB: public MemStruct {
 public:
-	DOS_FCB(Bit16u seg,Bit16u off);
+	DOS_FCB(Bit16u seg,Bit16u off,bool allow_extended=true);
 	void Create(bool _extended);
 	void SetName(Bit8u _drive,char * _fname,char * _ext);
 	void SetSizeDateTime(Bit32u _size,Bit16u _date,Bit16u _time);
