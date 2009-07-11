@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.58 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: int10_char.cpp,v 1.59 2009-07-11 10:25:25 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -272,12 +272,19 @@ filling:
 
 void INT10_SetActivePage(Bit8u page) {
 	Bit16u mem_address;
-	
 	if (page>7) LOG(LOG_INT10,LOG_ERROR)("INT10_SetActivePage page %d",page);
+
+	if (IS_EGAVGA_ARCH && (svgaCard==SVGA_S3Trio)) page &= 7;
+
 	mem_address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	/* Write the new page start */
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURRENT_START,mem_address);
-	if (IS_EGAVGA_ARCH && CurMode->mode<0x8) mem_address>>=1;
+	if (IS_EGAVGA_ARCH) {
+		if (CurMode->mode<8) mem_address>>=1;
+		// rare alternative: if (CurMode->type==M_TEXT)  mem_address>>=1;
+	} else {
+		mem_address>>=1;
+	}
 	/* Write the new start address in vgahardware */
 	Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 	IO_Write(base,0x0c);
@@ -587,7 +594,7 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	if(cur_row==nrows) {
 		//Fill with black on non-text modes and with 0x7 on textmode
 		Bit8u fill = (CurMode->type == M_TEXT)?0x7:0;
-		INT10_ScrollWindow(0,0,nrows-1,ncols-1,-1,fill,page);
+		INT10_ScrollWindow(0,0,(Bit8u)(nrows-1),ncols-1,-1,fill,page);
 		cur_row--;
 	}
 	// Set the cursor for the page

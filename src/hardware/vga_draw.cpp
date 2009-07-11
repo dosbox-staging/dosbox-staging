@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.109 2009-06-29 18:43:33 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.110 2009-07-11 10:25:24 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -344,11 +344,24 @@ static Bit8u * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	}
 }
 
+static const Bit8u* VGA_Text_Memwrap(Bitu vidstart) {
+	vidstart &= vga.draw.linear_mask;
+	Bitu line_end = 2 * vga.draw.blocks;
+	if (GCC_UNLIKELY((vidstart + line_end) > vga.draw.linear_mask)) {
+		// wrapping in this line
+		Bitu break_pos = (vga.draw.linear_mask - vidstart) + 1;
+		// need a temporary storage - TempLine/2 is ok for a bit more than 132 columns
+		memcpy(&TempLine[sizeof(TempLine)/2], &vga.tandy.draw_base[vidstart], break_pos);
+		memcpy(&TempLine[sizeof(TempLine)/2 + break_pos],&vga.tandy.draw_base[0], line_end - break_pos);
+		return &TempLine[sizeof(TempLine)/2];
+	} else return &vga.tandy.draw_base[vidstart];
+}
+
 static Bit32u FontMask[2]={0xffffffff,0x0};
 static Bit8u * VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit32u * draw=(Bit32u *)TempLine;
-	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
 		Bitu col=vidmem[cx*2+1];
@@ -376,7 +389,7 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit32u * draw=(Bit32u *)TempLine;
-	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
@@ -425,7 +438,7 @@ skip_cursor:
 static Bit8u * VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line) {
 	Bits font_addr;
 	Bit16u * draw=(Bit16u *)TempLine;
-	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	for (Bitu cx=0;cx<vga.draw.blocks;cx++) {
 		Bitu chr=vidmem[cx*2];
 		Bitu col=vidmem[cx*2+1];
@@ -467,7 +480,7 @@ static Bit8u * VGA_TEXT_Draw_Line_9(Bitu vidstart, Bitu line) {
 	bool underline=(Bitu)(vga.crtc.underline_location&0x1f)==line;
 	Bit8u pel_pan=(Bit8u)vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
-	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	Bit8u chr=vidmem[0];
 	Bit8u col=vidmem[1];
 	Bit8u font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
@@ -526,7 +539,7 @@ static Bit8u * VGA_TEXT_Xlat16_Draw_Line_9(Bitu vidstart, Bitu line) {
 	bool underline=(Bitu)(vga.crtc.underline_location&0x1f)==line;
 	Bit8u pel_pan=(Bit8u)vga.draw.panning;
 	if ((vga.attr.mode_control&0x20) && (vga.draw.lines_done>=vga.draw.split_line)) pel_pan=0;
-	const Bit8u *vidmem = &vga.tandy.draw_base[vidstart];
+	const Bit8u* vidmem = VGA_Text_Memwrap(vidstart);
 	Bit8u chr=vidmem[0];
 	Bit8u col=vidmem[1];
 	Bit8u font=(vga.draw.font_tables[(col >> 3)&1][chr*32+line])<<pel_pan;
@@ -809,14 +822,16 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 #endif
 		break;
 	case M_TEXT:
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.byte_panning_shift = 2;
-		else vga.draw.byte_panning_shift = 0;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) vga.draw.address = vga.config.real_start * 2;
-		else vga.draw.address = vga.config.display_start * 2;
-		vga.draw.address += vga.draw.bytes_skip*vga.draw.byte_panning_shift;
+		vga.draw.byte_panning_shift = 2;
+		vga.draw.address += vga.draw.bytes_skip;
+		// fall-through
 	case M_TANDY_TEXT:
 	case M_HERC_TEXT:
+		if (machine==MCH_HERC) vga.draw.linear_mask = 0xfff; // 1 page
+		else if (IS_EGAVGA_ARCH) vga.draw.linear_mask = 0x7fff; // 8 pages
+		else vga.draw.linear_mask = 0x3fff; // CGA, Tandy 4 pages
 		vga.draw.cursor.address=vga.config.cursor_start*2;
+		vga.draw.address *= 2;
 		vga.draw.cursor.count++;
 		/* check for blinking and blinking change delay */
 		FontMask[1]=(vga.draw.blinking & (vga.draw.cursor.count >> 4)) ?

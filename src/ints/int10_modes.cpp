@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.86 2009-06-28 14:56:14 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.87 2009-07-11 10:25:25 c2woody Exp $ */
 
 #include <string.h>
 
@@ -232,7 +232,7 @@ VideoModeBlock ModeList_OTHER[]={
 };
 
 VideoModeBlock Hercules_Mode=
-{ 0x007  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,14  ,4 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
+{ 0x007  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
 
 static Bit8u text_palette[64][3]=
 {

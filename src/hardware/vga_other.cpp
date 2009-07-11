@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_other.cpp,v 1.27 2009-06-29 18:43:33 c2woody Exp $ */
+/* $Id: vga_other.cpp,v 1.28 2009-07-11 10:25:24 c2woody Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -68,7 +68,8 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		vga.other.vsyncp=(Bit8u)val;
 		break;
 	case 0x09:		//Max scanline
-		if (vga.other.max_scanline ^ val) VGA_StartResize();
+		val &= 0x1f; // VGADOC says bit 0-3 but the MC6845 datasheet says bit 0-4
+ 		if (vga.other.max_scanline ^ val) VGA_StartResize();
 		vga.other.max_scanline=(Bit8u)val;
 		break;
 	case 0x0A:	/* Cursor Start Register */
@@ -522,6 +523,7 @@ void VGA_SetupOther(void) {
 	Bitu i;
 	memset( &vga.tandy, 0, sizeof( vga.tandy ));
 	vga.attr.enabled = true;
+	vga.config.bytes_skip=0;
 
 	//Initialize values common for most machines, can be overwritten
 	vga.tandy.draw_base = vga.mem.linear;
