@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.76 2009-06-10 17:44:59 c2woody Exp $ */
+/* $Id: sblaster.cpp,v 1.77 2009-07-11 10:39:38 harekiet Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -938,7 +938,7 @@ static void DSP_DoCommand(void) {
 		DSP_FlushData();
 		switch (sb.type) {
 		case SBT_1:
-			DSP_AddData(0x1);DSP_AddData(0x1);break;
+			DSP_AddData(0x1);DSP_AddData(0x05);break;
 		case SBT_2:
 			DSP_AddData(0x2);DSP_AddData(0x1);break;
 		case SBT_PRO1:
