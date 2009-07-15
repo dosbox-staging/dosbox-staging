@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_memory.cpp,v 1.44 2009-06-08 17:20:02 c2woody Exp $ */
+/* $Id: dos_memory.cpp,v 1.45 2009-07-15 17:05:07 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -347,7 +347,7 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 	Bit16u umb_start=dos_infoblock.GetStartOfUMBChain();
 	if (umb_start!=UMB_START_SEG) {
 		if (umb_start!=0xffff) LOG(LOG_DOSMISC,LOG_ERROR)("Corrupt UMB chain: %x",umb_start);
-		return true;
+		return false;
 	}
 
 	if ((linkstate&1)==(dos_infoblock.GetUMBChainState()&1)) return true;

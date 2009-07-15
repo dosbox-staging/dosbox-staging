@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.117 2009-04-16 12:16:52 qbix79 Exp $ */
+/* $Id: dos.cpp,v 1.118 2009-07-15 17:05:07 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -397,8 +397,10 @@ static Bitu DOS_21Handler(void) {
 	case 0x1f: /* Get drive parameter block for default drive */
 	case 0x32: /* Get drive parameter block for specific drive */
 		{	/* Officially a dpb should be returned as well. The disk detection part is implemented */
-			Bitu drive=reg_dl;if(!drive || reg_ah==0x1f) drive = DOS_GetDefaultDrive();else drive--;
-			if(Drives[drive]) {
+			Bit8u drive=reg_dl;
+			if (!drive || reg_ah==0x1f) drive = DOS_GetDefaultDrive();
+			else drive--;
+			if (Drives[drive]) {
 				reg_al = 0x00;
 				SegSet16(ds,dos.tables.dpb);
 				reg_bx = drive;//Faking only the first entry (that is the driveletter)
@@ -813,6 +815,8 @@ static Bitu DOS_21Handler(void) {
 			break;
 		default:
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:58:Not Supported Set//Get memory allocation call %X",reg_al);
+			reg_ax=1;
+			CALLBACK_SCF(true);
 		}
 		break;
 	case 0x59:					/* Get Extended error information */
@@ -945,7 +949,7 @@ static Bitu DOS_21Handler(void) {
 				{
 					int in  = reg_dl;
 					int out = toupper(in);
-					reg_dl  = out;
+					reg_dl  = (Bit8u)out;
 				}
 				CALLBACK_SCF(false);
 				break;
@@ -960,8 +964,8 @@ static Bitu DOS_21Handler(void) {
 					MEM_BlockRead(data,dos_copybuf,len);
 					dos_copybuf[len] = 0;
 					//No upcase as String(0x21) might be multiple asciz strings
-					for(Bitu count = 0; count < len;count++)
-						dos_copybuf[count] = toupper(*reinterpret_cast<unsigned char*>(dos_copybuf+count));
+					for (Bitu count = 0; count < len;count++)
+						dos_copybuf[count] = (Bit8u)toupper(*reinterpret_cast<unsigned char*>(dos_copybuf+count));
 					MEM_BlockWrite(data,dos_copybuf,len);
 				}
 				CALLBACK_SCF(false);
@@ -1149,7 +1153,7 @@ public:
 
 static DOS* test;
 
-void DOS_ShutDown(Section* sec) {
+void DOS_ShutDown(Section* /*sec*/) {
 	delete test;
 }
 
