@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.81 2009-06-18 18:17:54 c2woody Exp $ */
+/* $Id: drive_local.cpp,v 1.82 2009-07-18 18:42:55 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,7 +83,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	const char* type;
 	switch (flags&0xf) {
 	case OPEN_READ:type="rb"; break;
-	case OPEN_WRITE:type="wb"; break;
+	case OPEN_WRITE:type="rb+"; break;
 	case OPEN_READWRITE:type="rb+"; break;
 	default:
 		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
