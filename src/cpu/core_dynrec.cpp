@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.12 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: core_dynrec.cpp,v 1.13 2009-07-20 17:55:52 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -233,7 +233,10 @@ run_block:
 #if C_HEAVY_DEBUG
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
-			if (!GETFLAG(TF)) break;
+			if (!GETFLAG(TF)) {
+				if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
+				break;
+			}
 			// trapflag is set, switch to the trap-aware decoder
 			cpudecoder=CPU_Core_Dynrec_Trap_Run;
 			return CBRET_NONE;

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dyn_x86.cpp,v 1.35 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: core_dyn_x86.cpp,v 1.36 2009-07-20 17:55:52 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -306,7 +306,10 @@ run_block:
 			return debugCallback;
 		}
 #endif
-		if (!GETFLAG(TF)) goto restart_core;
+		if (!GETFLAG(TF)) {
+			if (GETFLAG(IF) && PIC_IRQCheck) return CBRET_NONE;
+			goto restart_core;
+		}
 		cpudecoder=CPU_Core_Dyn_X86_Trap_Run;
 		if (!dyn_dh_fpu.state_used) return CBRET_NONE;
 		DH_FPU_SAVE_REINIT
