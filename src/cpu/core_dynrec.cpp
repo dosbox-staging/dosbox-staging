@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.13 2009-07-20 17:55:52 c2woody Exp $ */
+/* $Id: core_dynrec.cpp,v 1.14 2009-07-22 09:09:35 qbix79 Exp $ */
 
 #include "dosbox.h"
 
@@ -51,6 +51,7 @@
 #include "paging.h"
 #include "inout.h"
 #include "lazyflags.h"
+#include "pic.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
