@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dma.cpp,v 1.40 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dma.cpp,v 1.41 2009-07-24 09:56:14 c2woody Exp $ */
 
 #include <string.h>
 #include "dosbox.h"
@@ -41,28 +41,40 @@ static void UpdateEMSMapping(void) {
 }
 
 /* read a block from physical memory */
-static void DMA_BlockRead(PhysPt pt,void * data,Bitu size) {
+static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
 	Bit8u * write=(Bit8u *) data;
-	for ( ; size ; size--, pt++) {
-		Bitu page = pt >> 12;
+	Bitu highpart_addr_page = spage>>12;
+	size <<= dma16;
+	offset <<= dma16;
+	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
+	for ( ; size ; size--, offset++) {
+		if (offset>(dma_wrapping<<dma16)) E_Exit("DMA segbound wrapping (read)");
+		offset &= dma_wrap;
+		Bitu page = highpart_addr_page+(offset >> 12);
 		/* care for EMS pageframe etc. */
 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
 		else if (page < LINK_START) page = paging.firstmb[page];
-		*write++=phys_readb(page*4096 + (pt & 4095));
+		*write++=phys_readb(page*4096 + (offset & 4095));
 	}
 }
 
 /* write a block into physical memory */
-static void DMA_BlockWrite(PhysPt pt,void * data,Bitu size) {
+static void DMA_BlockWrite(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
 	Bit8u * read=(Bit8u *) data;
-	for ( ; size ; size--, pt++) {
-		Bitu page = pt >> 12;
+	Bitu highpart_addr_page = spage>>12;
+	size <<= dma16;
+	offset <<= dma16;
+	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
+	for ( ; size ; size--, offset++) {
+		if (offset>(dma_wrapping<<dma16)) E_Exit("DMA segbound wrapping (write)");
+		offset &= dma_wrap;
+		Bitu page = highpart_addr_page+(offset >> 12);
 		/* care for EMS pageframe etc. */
 		if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
 		else if (page < LINK_START) page = paging.firstmb[page];
-		phys_writeb(page*4096 + (pt & 4095), *read++);
+		phys_writeb(page*4096 + (offset & 4095), *read++);
 	}
 }
 
@@ -91,7 +103,7 @@ bool SecondDMAControllerAvailable(void) {
 	else return false;
 }
 
-static void DMA_Write_Port(Bitu port,Bitu val,Bitu iolen) {
+static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 	if (port<0x10) {
 		/* write to the first DMA controller (channels 0-3) */
 		DmaControllers[0]->WriteControllerReg(port,val,1);
@@ -102,12 +114,12 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu iolen) {
 		UpdateEMSMapping();
 		switch (port) {
 			/* write DMA page register */
-			case 0x81:GetDMAChannel(2)->SetPage(val);break;
-			case 0x82:GetDMAChannel(3)->SetPage(val);break;
-			case 0x83:GetDMAChannel(1)->SetPage(val);break;
-			case 0x89:GetDMAChannel(6)->SetPage(val);break;
-			case 0x8a:GetDMAChannel(7)->SetPage(val);break;
-			case 0x8b:GetDMAChannel(5)->SetPage(val);break;
+			case 0x81:GetDMAChannel(2)->SetPage((Bit8u)val);break;
+			case 0x82:GetDMAChannel(3)->SetPage((Bit8u)val);break;
+			case 0x83:GetDMAChannel(1)->SetPage((Bit8u)val);break;
+			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
+			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
+			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
 		}
 	}
 }
@@ -131,13 +143,13 @@ static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
 	return 0;
 }
 
-void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
-	DmaChannel * chan;Bitu i;
+void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu /*len*/) {
+	DmaChannel * chan;
 	switch (reg) {
 	/* set base address of DMA transfer (1st byte low part, 2nd byte high part) */
 	case 0x0:case 0x2:case 0x4:case 0x6:
 		UpdateEMSMapping();
-		chan=GetChannel(reg >> 1);
+		chan=GetChannel((Bit8u)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->baseaddr=(chan->baseaddr&0xff00)|val;
@@ -150,7 +162,7 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 	/* set DMA transfer count (1st byte low part, 2nd byte high part) */
 	case 0x1:case 0x3:case 0x5:case 0x7:
 		UpdateEMSMapping();
-		chan=GetChannel(reg >> 1);
+		chan=GetChannel((Bit8u)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->basecnt=(chan->basecnt&0xff00)|val;
@@ -181,8 +193,8 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 		flipflop=false;
 		break;
 	case 0xd:		/* Master Clear/Reset */
-		for (i=0;i<4;i++) {
-			chan=GetChannel(i);
+		for (Bit8u ct=0;ct<4;ct++) {
+			chan=GetChannel(ct);
 			chan->SetMask(true);
 			chan->tcount=false;
 		}
@@ -190,15 +202,15 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 		break;
 	case 0xe:		/* Clear Mask register */		
 		UpdateEMSMapping();
-		for (i=0;i<4;i++) {
-			chan=GetChannel(i);
+		for (Bit8u ct=0;ct<4;ct++) {
+			chan=GetChannel(ct);
 			chan->SetMask(false);
 		}
 		break;
 	case 0xf:		/* Multiple Mask register */
 		UpdateEMSMapping();
-		for (i=0;i<4;i++) {
-			chan=GetChannel(i);
+		for (Bit8u ct=0;ct<4;ct++) {
+			chan=GetChannel(ct);
 			chan->SetMask(val & 1);
 			val>>=1;
 		}
@@ -206,12 +218,12 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu len) {
 	}
 }
 
-Bitu DmaController::ReadControllerReg(Bitu reg,Bitu len) {
-	DmaChannel * chan;Bitu i,ret;
+Bitu DmaController::ReadControllerReg(Bitu reg,Bitu /*len*/) {
+	DmaChannel * chan;Bitu ret;
 	switch (reg) {
 	/* read base address of DMA transfer (1st byte low part, 2nd byte high part) */
 	case 0x0:case 0x2:case 0x4:case 0x6:
-		chan=GetChannel(reg >> 1);
+		chan=GetChannel((Bit8u)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			return chan->curraddr & 0xff;
@@ -220,7 +232,7 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu len) {
 		}
 	/* read DMA transfer count (1st byte low part, 2nd byte high part) */
 	case 0x1:case 0x3:case 0x5:case 0x7:
-		chan=GetChannel(reg >> 1);
+		chan=GetChannel((Bit8u)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
 			return chan->currcnt & 0xff;
@@ -229,12 +241,11 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu len) {
 		}
 	case 0x8:		/* Status Register */
 		ret=0;
-		for (i=0;i<4;i++) {
-			chan=GetChannel(i);
-			if (chan->tcount) ret|=1 << i;
+		for (Bit8u ct=0;ct<4;ct++) {
+			chan=GetChannel(ct);
+			if (chan->tcount) ret|=1 << ct;
 			chan->tcount=false;
-//			if (chan->callback) ret|=1 << (i+4);
-			if (chan->request) ret|=1 << (4+i);
+			if (chan->request) ret|=1 << (4+ct);
 		}
 		return ret;
 	default:
@@ -264,15 +275,16 @@ DmaChannel::DmaChannel(Bit8u num, bool dma16) {
 
 Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
 	Bitu done=0;
+	curraddr &= dma_wrapping;
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		DMA_BlockRead(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		DMA_BlockRead(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
@@ -295,15 +307,16 @@ again:
 
 Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
 	Bitu done=0;
+	curraddr &= dma_wrapping;
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		DMA_BlockWrite(pagebase+(curraddr << DMA16),buffer,want << DMA16);
+		DMA_BlockWrite(pagebase,curraddr,buffer,want,DMA16);
 		done+=want;
 		curraddr+=want;
 		currcnt-=want;
 	} else {
-		DMA_BlockWrite(pagebase+(curraddr << DMA16),buffer,left << DMA16);
+		DMA_BlockWrite(pagebase,curraddr,buffer,left,DMA16);
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
@@ -366,12 +379,17 @@ public:
 	}
 };
 
+void DMA_SetWrapping(Bitu wrap) {
+	dma_wrapping = wrap;
+}
+
 static DMA* test;
 
-void DMA_Destroy(Section* sec){
+void DMA_Destroy(Section* /*sec*/){
 	delete test;
 }
 void DMA_Init(Section* sec) {
+	DMA_SetWrapping(0xffff);
 	test = new DMA(sec);
 	sec->AddDestroyFunction(&DMA_Destroy);
 	Bitu i;

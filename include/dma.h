@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dma.h,v 1.19 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dma.h,v 1.20 2009-07-24 09:56:14 c2woody Exp $ */
 
 #ifndef DOSBOX_DMA_H
 #define DOSBOX_DMA_H
@@ -35,7 +35,7 @@ class DmaChannel {
 public:
 	Bit32u pagebase;
 	Bit16u baseaddr;
-	Bit16u curraddr;
+	Bit32u curraddr;
 	Bit16u basecnt;
 	Bit16u currcnt;
 	Bit8u channum;
@@ -113,5 +113,7 @@ DmaChannel * GetDMAChannel(Bit8u chan);
 
 void CloseSecondDMAController(void);
 bool SecondDMAControllerAvailable(void);
+
+static Bit32u dma_wrapping = 0xffff;
 
 #endif
