@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.90 2009-04-02 19:08:26 qbix79 Exp $ */
+/* $Id: shell_cmds.cpp,v 1.91 2009-07-25 16:25:43 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -570,11 +570,18 @@ void DOS_Shell::CMD_COPY(char * args) {
 	// Concatating files go as follows: All parts except for the last bear the concat flag.
 	// This construction allows them to be counted (only the non concat set)
 	char* source_p = NULL;
+	char source_x[DOS_PATHLENGTH+CROSS_LEN];
 	while ( (source_p = StripWord(args)) && *source_p ) {
 		do {
 			char* plus = strchr(source_p,'+');
-			if(plus) *plus++ = 0;
-			sources.push_back(copysource(source_p,(plus)?true:false));
+			if (plus) *plus++ = 0;
+			safe_strncpy(source_x,source_p,CROSS_LEN);
+			if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
+				dta.GetResult(name,size,date,time,attr);
+				if (attr & DOS_ATTR_DIRECTORY && !strstr(source_p,"*.*"))
+					strcat(source_x,"\\*.*");
+			}
+			sources.push_back(copysource(source_x,(plus)?true:false));
 			source_p = plus;
 		} while(source_p && *source_p);
 	}
