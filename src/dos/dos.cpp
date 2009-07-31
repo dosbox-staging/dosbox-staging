@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.118 2009-07-15 17:05:07 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.119 2009-07-31 16:41:37 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -83,6 +83,8 @@ static Bitu DOS_21Handler(void) {
 		{
 			Bit8u c=reg_dl;Bit16u n=1;
 			DOS_WriteFile(STDOUT,&c,&n);
+			//Not in the official specs, but happens nonetheless. (last written character)
+			reg_al = c;// reg_al=(c==9)?0x20:c; //Officially: tab to spaces
 		}
 		break;
 	case 0x03:		/* Read character from STDAUX */
@@ -115,7 +117,7 @@ static Bitu DOS_21Handler(void) {
 		switch (reg_dl) {
 		case 0xFF:	/* Input */
 			{	
-//TODO Make this better according to standards
+				//TODO Make this better according to standards
 				if (!DOS_GetSTDINStatus()) {
 					reg_al=0;
 					CALLBACK_SZF(true);
