@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_memory.cpp,v 1.28 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: int10_memory.cpp,v 1.29 2009-07-31 15:36:01 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -47,7 +47,7 @@ static Bit16u map_offset[8]={
 };
 
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
-	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+offset*32);
+	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+(Bit16u)(offset*32));
 	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0x4);	//Enable plane 2
 	IO_Write(0x3ce,0x6);Bitu old_6=IO_Read(0x3cf);
 	IO_Write(0x3cf,0x0);	//Disable odd/even and a0000 adressing
@@ -58,7 +58,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 	}
 	IO_Write(0x3c4,0x2);IO_Write(0x3c5,0x3);	//Enable textmode planes (0,1)
 	IO_Write(0x3ce,0x6);
-	if (IS_VGA_ARCH) IO_Write(0x3cf,old_6);	//odd/even and b8000 adressing
+	if (IS_VGA_ARCH) IO_Write(0x3cf,(Bit8u)old_6);	//odd/even and b8000 adressing
 	else IO_Write(0x3cf,0x0e);
 	/* Reload tables and registers with new values based on this height */
 	if (reload) {
@@ -69,7 +69,7 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		//Vertical display end bios says, but should stay the same?
 		//Rows setting in bios segment
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,height);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit8u)height);
 		//TODO Reprogram cursor size?
 	}
 }
@@ -181,6 +181,8 @@ void INT10_SetupRomMemory(void) {
 		phys_writed(rom_base+int10.rom.used,0);		int10.rom.used+=4;
 	}
 
+	INT10_SetupBasicVideoParameterTable();
+
 	if (IS_TANDY_ARCH) {
 		RealSetVec(0x44,int10.rom.font_8_first);
 	}
@@ -216,7 +218,7 @@ void INT10_SetupRomMemoryChecksum(void) {
 		Bitu last_rombyte = 32*1024 - 1;		//32 KB romsize
 		for (Bitu i = 0;i < last_rombyte;i++)
 			sum += phys_readb(rom_base + i);	//OVERFLOW IS OKAY
-		sum = 256 - sum;
+		sum = (Bit8u)((256 - (Bitu)sum)&0xff);
 		phys_writeb(rom_base + last_rombyte,sum);
 	}
 }

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.87 2009-07-11 10:25:25 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.88 2009-07-31 15:36:01 c2woody Exp $ */
 
 #include <string.h>
 
@@ -340,7 +340,7 @@ static Bit8u vga_palette[256][3]=
 };
 VideoModeBlock * CurMode;
 
-static bool SetCurMode(VideoModeBlock modeblock[],Bitu mode) {
+static bool SetCurMode(VideoModeBlock modeblock[],Bit16u mode) {
 	Bitu i=0;
 	while (modeblock[i].mode!=0xffff) {
 		if (modeblock[i].mode!=mode) i++;
@@ -418,7 +418,7 @@ static void FinishSetMode(bool clearmem) {
 	Mouse_NewVideoMode();
 }
 
-bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
+bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	switch (machine) {
 	case MCH_CGA:
 		if (mode>6) return false;
@@ -569,12 +569,42 @@ bool INT10_SetVideoMode_OTHER(Bitu mode,bool clearmem) {
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 		break;
 	}
+
+	RealPt vparams = RealGetVec(0x1d);
+	if ((vparams != RealMake(0xf000,0xf0a4)) && (mode < 8)) {
+		// load crtc parameters from video params table
+		Bit16u crtc_block_index = 0;
+		if (mode < 2) crtc_block_index = 0;
+		else if (mode < 4) crtc_block_index = 1;
+		else if (mode < 7) crtc_block_index = 2;
+		else {
+			if (IS_EGAVGA_ARCH) {
+				if (mode == 7) crtc_block_index = 3;
+			} else if (machine==MCH_PCJR) {
+				if (mode < 9) crtc_block_index = 2;
+				else crtc_block_index = 3;
+			}
+		}
+
+		// init CRTC registers
+		for (Bit16u i = 0; i < 16; i++)
+			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams), 
+				RealOff(vparams) + i + crtc_block_index*16) << 8));
+		// mode register
+		IO_WriteB(crtc_base + 4, real_readb(RealSeg(vparams),
+			RealOff(vparams) + 4*16 + 24 + mode));
+
+		if (machine!=MCH_CGA) {
+			E_Exit("INT10 modeset: video parameter table changed");
+		}
+	}
+
 	FinishSetMode(clearmem);
 	return true;
 }
 
 
-bool INT10_SetVideoMode(Bitu mode) {
+bool INT10_SetVideoMode(Bit16u mode) {
 	bool clearmem=true;Bitu i;
 	if (mode>=0x100) {
 		if ((mode & 0x4000) && int10.vesa_nolfb) return false;
