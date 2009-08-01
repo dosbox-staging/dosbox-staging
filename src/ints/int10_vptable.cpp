@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_vptable.cpp,v 1.5 2009-07-31 15:36:01 c2woody Exp $ */
+/* $Id: int10_vptable.cpp,v 1.6 2009-08-01 13:39:48 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -536,12 +536,6 @@ void INT10_SetupBasicVideoParameterTable(void) {
 	/* video parameter table at F000:F0A4 */
 	RealSetVec(0x1d,RealMake(0xF000, 0xF0A4));
 	switch (machine) {
-	case EGAVGA_ARCH_CASE:
-	case MCH_CGA:
-		for (Bit16u i = 0; i < sizeof(vparams); i++) {
-			phys_writeb(0xFF0A4+i,vparams[i]);
-		}
-		break;
 	case MCH_TANDY:
 		for (Bit16u i = 0; i < sizeof(vparams_tandy); i++) {
 			phys_writeb(0xFF0A4+i,vparams_tandy[i]);
@@ -550,6 +544,11 @@ void INT10_SetupBasicVideoParameterTable(void) {
 	case MCH_PCJR:
 		for (Bit16u i = 0; i < sizeof(vparams_pcjr); i++) {
 			phys_writeb(0xFF0A4+i,vparams_pcjr[i]);
+		}
+		break;
+	default:
+		for (Bit16u i = 0; i < sizeof(vparams); i++) {
+			phys_writeb(0xFF0A4+i,vparams[i]);
 		}
 		break;
 	}

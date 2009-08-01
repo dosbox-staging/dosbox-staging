@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.88 2009-07-31 15:36:01 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.89 2009-08-01 13:39:48 c2woody Exp $ */
 
 #include <string.h>
 
@@ -578,11 +578,11 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		else if (mode < 4) crtc_block_index = 1;
 		else if (mode < 7) crtc_block_index = 2;
 		else {
-			if (IS_EGAVGA_ARCH) {
-				if (mode == 7) crtc_block_index = 3;
-			} else if (machine==MCH_PCJR) {
+			if (machine==MCH_PCJR) {
 				if (mode < 9) crtc_block_index = 2;
 				else crtc_block_index = 3;
+			} else {
+				if (mode == 7) crtc_block_index = 3;
 			}
 		}
 
@@ -590,11 +590,13 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		for (Bit16u i = 0; i < 16; i++)
 			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams), 
 				RealOff(vparams) + i + crtc_block_index*16) << 8));
-		// mode register
-		IO_WriteB(crtc_base + 4, real_readb(RealSeg(vparams),
-			RealOff(vparams) + 4*16 + 24 + mode));
+		if (machine==MCH_CGA) {
+			// mode register
+			IO_WriteB(crtc_base + 4, real_readb(RealSeg(vparams),
+				RealOff(vparams) + 4*16 + 24 + mode));
+		}
 
-		if (machine!=MCH_CGA) {
+		if (machine==MCH_TANDY) {
 			E_Exit("INT10 modeset: video parameter table changed");
 		}
 	}
