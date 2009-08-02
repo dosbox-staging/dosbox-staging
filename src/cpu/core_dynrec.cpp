@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: core_dynrec.cpp,v 1.14 2009-07-22 09:09:35 qbix79 Exp $ */
+/* $Id: core_dynrec.cpp,v 1.15 2009-08-02 16:52:33 c2woody Exp $ */
 
 #include "dosbox.h"
 
@@ -100,9 +100,9 @@
 #define DRCD_SEG_PHYS(seg) (&Segs.phys[seg])
 
 // access to an 8bit general register
-#define DRCD_REG_BYTE(reg,idx) (&cpu_regs.regs[reg].byte[idx])
+#define DRCD_REG_BYTE(reg,idx) (&cpu_regs.regs[reg].byte[idx?BH_INDEX:BL_INDEX])
 // access to  16/32bit general registers
-#define DRCD_REG_WORD(reg,dwrd) ((dwrd)?((void*)(&cpu_regs.regs[reg].dword)):((void*)(&cpu_regs.regs[reg].word)))
+#define DRCD_REG_WORD(reg,dwrd) ((dwrd)?((void*)(&cpu_regs.regs[reg].dword[DW_INDEX])):((void*)(&cpu_regs.regs[reg].word[W_INDEX])))
 
 
 enum BlockReturn {
@@ -140,6 +140,7 @@ static struct {
 #define X86_64		0x02
 #define MIPSEL		0x03
 #define ARMV4LE		0x04
+#define POWERPC		0x04
 
 #if C_TARGETCPU == X86_64
 #include "core_dynrec/risc_x64.h"
@@ -149,6 +150,8 @@ static struct {
 #include "core_dynrec/risc_mipsel32.h"
 #elif C_TARGETCPU == ARMV4LE
 #include "core_dynrec/risc_armv4le.h"
+#elif C_TARGETCPU == POWERPC
+#include "core_dynrec/risc_ppc.h"
 #endif
 
 #include "core_dynrec/decoder.h"
