@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.38 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: bios_disk.cpp,v 1.39 2009-08-12 21:16:09 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -196,7 +196,7 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 	active = false;
 	hardDrive = isHardDisk;
 	if(!isHardDisk) {
-		Bitu i=0;
+		Bit8u i=0;
 		bool founddisk = false;
 		while (DiskGeometryList[i].ksize!=0x0) {
 			if ((DiskGeometryList[i].ksize==imgSizeK) ||
@@ -349,12 +349,15 @@ static Bitu INT13_DiskHandler(void) {
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
 		}
-		if(!any_images && (reg_dh == 0)) { // Inherit the Earth cdrom (uses it as disk test)
-			reg_ah = 0;
-			CALLBACK_SCF(false);
-			return CBRET_NONE;
+		if (!any_images) {
+			// Inherit the Earth cdrom (uses it as disk test)
+			if (((reg_dl&0x80)==0x80) && (reg_dh==0) && ((reg_cl&0x3f)==1)) {
+				reg_ah = 0;
+				CALLBACK_SCF(false);
+				return CBRET_NONE;
+			}
 		}
-		if(driveInactive(drivenum)) {
+		if (driveInactive(drivenum)) {
 			reg_ah = 0xff;
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
