@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.91 2009-07-25 16:25:43 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.92 2009-08-15 09:32:20 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -576,10 +576,17 @@ void DOS_Shell::CMD_COPY(char * args) {
 			char* plus = strchr(source_p,'+');
 			if (plus) *plus++ = 0;
 			safe_strncpy(source_x,source_p,CROSS_LEN);
-			if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
-				dta.GetResult(name,size,date,time,attr);
-				if (attr & DOS_ATTR_DIRECTORY && !strstr(source_p,"*.*"))
-					strcat(source_x,"\\*.*");
+			bool has_drive_spec = false;
+			size_t source_x_len = strlen(source_x);
+			if (source_x_len>0) {
+				if (source_x[source_x_len-1]==':') has_drive_spec = true;
+			}
+			if (!has_drive_spec) {
+				if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
+					dta.GetResult(name,size,date,time,attr);
+					if (attr & DOS_ATTR_DIRECTORY && !strstr(source_p,"*.*"))
+						strcat(source_x,"\\*.*");
+				}
 			}
 			sources.push_back(copysource(source_x,(plus)?true:false));
 			source_p = plus;
