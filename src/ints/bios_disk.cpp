@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios_disk.cpp,v 1.39 2009-08-12 21:16:09 c2woody Exp $ */
+/* $Id: bios_disk.cpp,v 1.40 2009-08-23 17:24:54 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -308,6 +308,9 @@ static Bitu INT13_DiskHandler(void) {
 	for(i = 0;i < MAX_DISK_IMAGES;i++) {
 		if(imageDiskList[i]) any_images=true;
 	}
+
+	// unconditionally enable the interrupt flag
+	CALLBACK_SIF(true);
 
 	//drivenum = 0;
 	//LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);

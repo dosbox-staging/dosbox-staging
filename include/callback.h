@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.h,v 1.25 2009-06-11 16:05:17 c2woody Exp $ */
+/* $Id: callback.h,v 1.26 2009-08-23 17:24:54 c2woody Exp $ */
 
 #ifndef DOSBOX_CALLBACK_H
 #define DOSBOX_CALLBACK_H
@@ -71,6 +71,7 @@ bool CALLBACK_Free(Bitu callback);
 
 void CALLBACK_SCF(bool val);
 void CALLBACK_SZF(bool val);
+void CALLBACK_SIF(bool val);
 
 extern Bitu call_priv_io;
 

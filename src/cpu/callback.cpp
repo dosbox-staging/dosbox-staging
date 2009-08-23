@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: callback.cpp,v 1.41 2009-06-11 16:05:17 c2woody Exp $ */
+/* $Id: callback.cpp,v 1.42 2009-08-23 17:24:54 c2woody Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -109,15 +109,24 @@ void CALLBACK_RunRealInt(Bit8u intnum) {
 }
 
 void CALLBACK_SZF(bool val) {
-	Bit16u tempf=mem_readw(SegPhys(ss)+reg_sp+4) & 0xFFBF;
-	Bit16u newZF=(val==true) << 6;
-	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newZF));
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
+	if (val) tempf |= FLAG_ZF; 
+	else tempf &= ~FLAG_ZF; 
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
 }
 
 void CALLBACK_SCF(bool val) {
-	Bit16u tempf=mem_readw(SegPhys(ss)+reg_sp+4) & 0xFFFE;
-	Bit16u newCF=(val==true);
-	mem_writew(SegPhys(ss)+reg_sp+4,(tempf | newCF));
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
+	if (val) tempf |= FLAG_CF; 
+	else tempf &= ~FLAG_CF; 
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
+}
+
+void CALLBACK_SIF(bool val) {
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
+	if (val) tempf |= FLAG_IF; 
+	else tempf &= ~FLAG_IF; 
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
 }
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
