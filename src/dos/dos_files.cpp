@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_files.cpp,v 1.112 2009-07-09 20:06:57 c2woody Exp $ */
+/* $Id: dos_files.cpp,v 1.113 2009-08-31 18:03:08 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -188,7 +188,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 bool DOS_GetCurrentDir(Bit8u drive,char * const buffer) {
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
-	if ((drive>DOS_DRIVES) || (!Drives[drive])) {
+	if ((drive>=DOS_DRIVES) || (!Drives[drive])) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
@@ -665,7 +665,7 @@ bool DOS_Canonicalize(char const * const name,char * const big) {
 bool DOS_GetFreeDiskSpace(Bit8u drive,Bit16u * bytes,Bit8u * sectors,Bit16u * clusters,Bit16u * free) {
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
-	if ((drive>DOS_DRIVES) || (!Drives[drive])) {
+	if ((drive>=DOS_DRIVES) || (!Drives[drive])) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
