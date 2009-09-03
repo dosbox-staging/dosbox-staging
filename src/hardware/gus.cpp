@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: gus.cpp,v 1.36 2009-04-27 17:11:26 qbix79 Exp $ */
+/* $Id: gus.cpp,v 1.37 2009-09-03 16:03:01 c2woody Exp $ */
 
 #include <string.h>
 #include <iomanip>
@@ -338,7 +338,9 @@ static void GUSReset(void) {
 		myGUS.timers[1].value = 0xff;
 		myGUS.timers[0].delay = 0.080f;
 		myGUS.timers[1].delay = 0.320f;
+
 		myGUS.ChangeIRQDMA = false;
+		myGUS.mixControl = 0x0b;	// latches enabled by default LINEs disabled
 		// Stop all channels
 		int i;
 		for(i=0;i<32;i++) {
@@ -633,11 +635,11 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 //	LOG_MSG("Write gus port %x val %x",port,val);
 	switch(port - GUS_BASE) {
 	case 0x200:
-		myGUS.mixControl = val;
+		myGUS.mixControl = (Bit8u)val;
 		myGUS.ChangeIRQDMA = true;
 		return;
 	case 0x208:
-		adlib_commandreg = val;
+		adlib_commandreg = (Bit8u)val;
 		break;
 	case 0x209:
 //TODO adlib_commandreg should be 4 for this to work else it should just latch the value
@@ -684,21 +686,21 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 		curchan = guschan[myGUS.gCurChannel];
 		break;
 	case 0x303:
-		myGUS.gRegSelect = val;
+		myGUS.gRegSelect = (Bit8u)val;
 		myGUS.gRegData = 0;
 		break;
 	case 0x304:
 		if (iolen==2) {
-			myGUS.gRegData=val;
+			myGUS.gRegData=(Bit16u)val;
 			ExecuteGlobRegister();
-		} else myGUS.gRegData = val;
+		} else myGUS.gRegData = (Bit16u)val;
 		break;
 	case 0x305:
-		myGUS.gRegData = (0x00ff & myGUS.gRegData) | val << 8;
+		myGUS.gRegData = (Bit16u)((0x00ff & myGUS.gRegData) | val << 8);
 		ExecuteGlobRegister();
 		break;
 	case 0x307:
-		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = val;
+		if(myGUS.gDramAddr < sizeof(GUSRam)) GUSRam[myGUS.gDramAddr] = (Bit8u)val;
 		break;
 	default:
 #if LOG_GUS
