@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: mixer.cpp,v 1.53 2009-04-28 21:48:24 harekiet Exp $ */
+/* $Id: mixer.cpp,v 1.54 2009-09-05 11:10:04 qbix79 Exp $ */
 
 /* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
@@ -147,12 +147,8 @@ void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (enabled && needed>done) {
 		Bitu todo=needed-done;
-		todo*=freq_add;
-		if (todo & MIXER_REMAIN) {
-			todo=(todo >> MIXER_SHIFT) + 1;
-		} else {
-			todo=(todo >> MIXER_SHIFT);
-		}
+		todo *= freq_add;
+		todo  = (todo >> MIXER_SHIFT) + ((todo & MIXER_REMAIN)!=0);
 		handler(todo);
 	}
 }
