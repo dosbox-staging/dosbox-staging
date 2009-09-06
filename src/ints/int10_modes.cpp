@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.89 2009-08-01 13:39:48 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.90 2009-09-06 19:25:34 c2woody Exp $ */
 
 #include <string.h>
 
@@ -122,6 +122,22 @@ VideoModeBlock ModeList_VGA[]={
 { 0x225  ,M_LIN32  ,848 ,480 ,80 ,30 ,8 ,16 ,1 ,0xA0000 ,0x10000,132 ,525 ,106 ,480 ,0  },
 
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
+};
+
+VideoModeBlock ModeList_VGA_Text_200lines[]={
+/* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
+{ 0x000  ,M_TEXT   ,320 ,200 ,40 ,25 ,8 , 8 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK | _EGA_LINE_DOUBLE},
+{ 0x001  ,M_TEXT   ,320 ,200 ,40 ,25 ,8 , 8 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,400 ,_EGA_HALF_CLOCK | _EGA_LINE_DOUBLE},
+{ 0x002  ,M_TEXT   ,640 ,200 ,80 ,25 ,8 , 8 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,_EGA_LINE_DOUBLE },
+{ 0x003  ,M_TEXT   ,640 ,200 ,80 ,25 ,8 , 8 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,400 ,_EGA_LINE_DOUBLE }
+};
+
+VideoModeBlock ModeList_VGA_Text_350lines[]={
+/* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde special flags */
+{ 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
+{ 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	}
 };
 
 VideoModeBlock ModeList_VGA_Tseng[]={
@@ -394,7 +410,6 @@ static void FinishSetMode(bool clearmem) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit16u)CurMode->cheight);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem?0:0x80)));
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
-	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x7f);
 
 	// this is an index into the dcc table:
 	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x0b);
@@ -620,7 +635,11 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	int10.vesa_setmode=0xffff;
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 	if (!IS_EGAVGA_ARCH) return INT10_SetVideoMode_OTHER(mode,clearmem);
-	Bit8u modeset_ctl,video_ctl,vga_switches;
+
+	/* First read mode setup settings from bios area */
+//	Bit8u video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
+//	Bit8u vga_switches=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES);
+	Bit8u modeset_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 
 	if (IS_VGA_ARCH) {
 		if (svga.accepts_mode) {
@@ -647,17 +666,24 @@ bool INT10_SetVideoMode(Bit16u mode) {
 				return false;
 			}
 		}
+		// check for scanline backwards compatibility (VESA text modes??)
+		if (CurMode->type==M_TEXT) {
+			if ((modeset_ctl&0x90)==0x80) { // 200 lines emulation
+				if (CurMode->mode <= 3) {
+					CurMode = &ModeList_VGA_Text_200lines[CurMode->mode];
+				}
+			} else if ((modeset_ctl&0x90)==0x00) { // 350 lines emulation
+				if (CurMode->mode <= 3) {
+					CurMode = &ModeList_VGA_Text_350lines[CurMode->mode];
+				}
+			}
+		}
 	} else {
 		if (!SetCurMode(ModeList_EGA,mode)){
 			LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);
 			return false;
 		}
 	}
-
-	/* First read mode setup settings from bios area */
-	video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
-	vga_switches=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES);
-	modeset_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 
 	/* Setup the VGA to the correct mode */
 
@@ -675,11 +701,14 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	/* Setup MISC Output Register */
 	Bit8u misc_output=0x2 | (mono_mode ? 0x0 : 0x1);
 
+	if ((CurMode->type==M_TEXT) && (CurMode->cwidth==9)) {
+		// 28MHz (16MHz EGA) clock for 9-pixel wide chars
+		misc_output|=0x4;
+	}
+
 	switch (CurMode->vdispend) {
 	case 400: 
 		misc_output|=0x60;
-		if (CurMode->type==M_TEXT) // && (CurMode->pstart==0xB8000))
-			misc_output|=0x4;
 		break;
 	case 480:
 		misc_output|=0xe0;
@@ -695,12 +724,13 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	/* Program Sequencer */
 	Bit8u seq_data[SEQ_REGS];
 	memset(seq_data,0,SEQ_REGS);
-	if (CurMode->cwidth==8) seq_data[1]|=1;	//8 dot fonts by default
+	seq_data[1]|=0x01;	//8 dot fonts by default
 	if (CurMode->special & _EGA_HALF_CLOCK) seq_data[1]|=0x08; //Check for half clock
 	if ((machine==MCH_EGA) && (CurMode->special & _EGA_HALF_CLOCK)) seq_data[1]|=0x02;
 	seq_data[4]|=0x02;	//More than 64kb
 	switch (CurMode->type) {
 	case M_TEXT:
+		if (CurMode->cwidth==9) seq_data[1] &= ~1;
 		seq_data[2]|=0x3;				//Enable plane 0 and 1
 		seq_data[4]|=0x01;				//Alpanumeric
 		if (IS_VGA_ARCH) seq_data[4]|=0x04;				//odd/even enabled
@@ -1067,12 +1097,12 @@ bool INT10_SetVideoMode(Bit16u mode) {
 		for (Bit8u ct=0;ct<16;ct++) att_data[ct]=ct;
 		break;
 	case M_TEXT:
-		if (machine==MCH_EGA) {
-			att_data[0x13]=0x00;
-			att_data[0x10]=0x08;	//8 Bit characters
-		} else {
+		if (CurMode->cwidth==9) {
 			att_data[0x13]=0x08;	//Pel panning on 8, although we don't have 9 dot text mode
-			att_data[0x10]=0x0C;	//Color Text with blinking
+			att_data[0x10]=0x0C;	//Color Text with blinking, 9 Bit characters
+		} else {
+			att_data[0x13]=0x00;
+			att_data[0x10]=0x08;	//Color Text with blinking, 8 Bit characters
 		}
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
 att_text16:
@@ -1340,8 +1370,7 @@ dac_text16:
 
 	/* Load text mode font */
 	if (CurMode->type==M_TEXT) {
-		if (IS_VGA_ARCH) INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
-		else INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
+		INT10_ReloadFont();
 	}
 	return true;
 }

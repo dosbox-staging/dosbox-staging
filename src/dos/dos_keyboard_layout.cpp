@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_keyboard_layout.cpp,v 1.21 2009-04-01 18:30:41 c2woody Exp $ */
+/* $Id: dos_keyboard_layout.cpp,v 1.22 2009-09-06 19:25:33 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "bios.h"
@@ -935,8 +935,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 
 			// update font if necessary
 			if (font_changed && (CurMode->type==M_TEXT) && (IS_EGAVGA_ARCH)) {
-				if (IS_VGA_ARCH) INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
-				else INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
+				INT10_ReloadFont();
 			}
 			INT10_SetupRomMemoryChecksum();
 

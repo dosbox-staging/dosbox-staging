@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_memory.cpp,v 1.29 2009-07-31 15:36:01 c2woody Exp $ */
+/* $Id: int10_memory.cpp,v 1.30 2009-09-06 19:25:34 c2woody Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -71,6 +71,21 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit8u)height);
 		//TODO Reprogram cursor size?
+	}
+}
+
+void INT10_ReloadFont(void) {
+	switch(CurMode->cheight) {
+	case 8:
+		INT10_LoadFont(Real2Phys(int10.rom.font_8_first),true,256,0,0,8);
+		break;
+	case 14:
+		INT10_LoadFont(Real2Phys(int10.rom.font_14),true,256,0,0,14);
+		break;
+	case 16:
+	default:
+		INT10_LoadFont(Real2Phys(int10.rom.font_16),true,256,0,0,16);
+		break;
 	}
 }
 

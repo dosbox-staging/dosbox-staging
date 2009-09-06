@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10.h,v 1.41 2009-07-31 15:36:00 c2woody Exp $ */
+/* $Id: int10.h,v 1.42 2009-09-06 19:25:34 c2woody Exp $ */
 
 #include "vga.h"
 
@@ -175,6 +175,7 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color);
 
 /* Font Stuff */
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height);
+void INT10_ReloadFont(void);
 
 /* Palette Group */
 void INT10_SetBackgroundBorder(Bit8u val);
