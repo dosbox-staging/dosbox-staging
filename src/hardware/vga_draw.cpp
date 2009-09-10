@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.110 2009-07-11 10:25:24 c2woody Exp $ */
+/* $Id: vga_draw.cpp,v 1.111 2009-09-10 17:44:57 h-a-l-9000 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -428,8 +428,16 @@ static Bit8u * VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line) {
 		if (line<vga.draw.cursor.sline) goto skip_cursor;
 		if (line>vga.draw.cursor.eline) goto skip_cursor;
 		draw=(Bit32u *)&TempLine[font_addr*8];
-		Bit32u att=TXT_FG_Table[vga.tandy.draw_base[vga.draw.cursor.address+1]&0xf];
-		*draw++=att;*draw++=att;
+		Bit8u attr = vga.tandy.draw_base[vga.draw.cursor.address+1];
+		Bit32u cg;
+		if (attr&0x8) {
+			cg = TXT_FG_Table[0xf];
+		} else if ((attr&0x77)==0x70) {
+			cg = TXT_FG_Table[0x0];
+		} else {
+			cg = TXT_FG_Table[0x7];
+		}
+		*draw++=cg;*draw++=cg;
 	}
 skip_cursor:
 	return TempLine;
