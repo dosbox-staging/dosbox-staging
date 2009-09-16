@@ -398,6 +398,7 @@ static char const *fop_52[] = { "*fsubrp %GF,st" };
 static char const *fop_53[] = { "*fsubp %GF,st" };
 static char const *fop_54[] = { "*fdivrp %GF,st" };
 static char const *fop_55[] = { "*fdivp %GF,st" };
+static char const *fop_56[] = { "*ffreep %GF" };
 static char const *fop_60[] = { "fstsw ax", 0, 0, 0, 0, 0, 0, 0 };
 
 static char const **fspecial[] = { /* 0=use st(i), 1=undefined 0 in fop_* means undefined */
@@ -408,7 +409,7 @@ static char const **fspecial[] = { /* 0=use st(i), 1=undefined 0 in fop_* means 
   fop_32, fop_33, fop_34, fop_35, fop_36, fop_37, fop_38, fop_39,
   fop_40, fop_41, fop_42, fop_43, fop_44, fop_45, f0, f0,
   fop_48, fop_49, fop_50, fop_51, fop_52, fop_53, fop_54, fop_55,
-  f0, f0, f0, f0, fop_60, f0, f0, f0,
+  fop_56, f0, f0, f0, fop_60, f0, f0, f0,
 };
 
 static const char *floatops[] = { /* assumed " %EF" at end of each.  mod != 3 only */
