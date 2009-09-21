@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: shell_cmds.cpp,v 1.92 2009-08-15 09:32:20 c2woody Exp $ */
+/* $Id: shell_cmds.cpp,v 1.93 2009-09-21 21:04:25 h-a-l-9000 Exp $ */
 
 #include "dosbox.h"
 #include "shell.h"
@@ -404,6 +404,10 @@ void DOS_Shell::CMD_DIR(char * args) {
 	bool optW=ScanCMDBool(args,"W");
 	ScanCMDBool(args,"S");
 	bool optP=ScanCMDBool(args,"P");
+	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
+		optW=optP=true;
+	}
+	bool optB=ScanCMDBool(args,"B");
 	bool optAD=ScanCMDBool(args,"AD");
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -450,7 +454,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 		return;
 	}
 	*(strrchr(path,'\\')+1)=0;
-	WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
+	if (!optB) WriteOut(MSG_Get("SHELL_CMD_DIR_INTRO"),path);
 
 	/* Command uses dta so set it to our internal dta */
 	RealPt save_dta=dos.dta();
@@ -458,7 +462,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	DOS_DTA dta(dos.dta());
 	bool ret=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
+		if (!optB) WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),args);
 		dos.dta(save_dta);
 		return;
 	}
@@ -483,53 +487,62 @@ void DOS_Shell::CMD_DIR(char * args) {
 		Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
 
 		/* output the file */
-		if (attr & DOS_ATTR_DIRECTORY) {
-			if (optW) {
-				WriteOut("[%s]",name);
-				size_t namelen = strlen(name);
-				if (namelen <= 14) {
-					for (size_t i=14-namelen;i>0;i--) WriteOut(" ");
-				}
-			} else {
-				WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);
+		if (optB) {
+			// this overrides pretty much everything
+			if (strcmp(".",name) && strcmp("..",name)) {
+				if ((attr & DOS_ATTR_DIRECTORY)||(strlen(ext)==0)) WriteOut("%s\n",name);
+				else WriteOut("%s.%s\n",name,ext);
 			}
-			dir_count++;
 		} else {
-			if (optW) {
-				WriteOut("%-16s",name);
+			if (attr & DOS_ATTR_DIRECTORY) {
+				if (optW) {
+					WriteOut("[%s]",name);
+					size_t namelen = strlen(name);
+					if (namelen <= 14) {
+						for (size_t i=14-namelen;i>0;i--) WriteOut(" ");
+					}
+				} else {
+					WriteOut("%-8s %-3s   %-16s %02d-%02d-%04d %2d:%02d\n",name,ext,"<DIR>",day,month,year,hour,minute);
+				}
+				dir_count++;
 			} else {
-				FormatNumber(size,numformat);
-				WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",name,ext,numformat,day,month,year,hour,minute);
+				if (optW) {
+					WriteOut("%-16s",name);
+				} else {
+					FormatNumber(size,numformat);
+					WriteOut("%-8s %-3s   %16s %02d-%02d-%04d %2d:%02d\n",name,ext,numformat,day,month,year,hour,minute);
+				}
+				file_count++;
+				byte_count+=size;
 			}
-			file_count++;
-			byte_count+=size;
-		}
-		if (optW) {
-			w_count++;
-		}
-		if(optP) {
-			if(!(++p_count%(22*w_size))) {
-				CMD_PAUSE(empty_string);
+			if (optW) {
+				w_count++;
+			}
+			if (optP) {
+				if (!(++p_count%(22*w_size))) {
+					CMD_PAUSE(empty_string);
+				}
 			}
 		}
 	} while ( (ret=DOS_FindNext()) );
 	if (optW) {
 		if (w_count%5)	WriteOut("\n");
 	}
-
-	/* Show the summary of results */
-	FormatNumber(byte_count,numformat);
-	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),file_count,numformat);
-	Bit8u drive=dta.GetSearchDrive();
-	//TODO Free Space
-	Bitu free_space=1024*1024*100;
-	if (Drives[drive]) {
-		Bit16u bytes_sector;Bit8u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
-		Drives[drive]->AllocationInfo(&bytes_sector,&sectors_cluster,&total_clusters,&free_clusters);
-		free_space=bytes_sector*sectors_cluster*free_clusters;
+	if (!optB) {
+		/* Show the summary of results */
+		FormatNumber(byte_count,numformat);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_USED"),file_count,numformat);
+		Bit8u drive=dta.GetSearchDrive();
+		//TODO Free Space
+		Bitu free_space=1024*1024*100;
+		if (Drives[drive]) {
+			Bit16u bytes_sector;Bit8u sectors_cluster;Bit16u total_clusters;Bit16u free_clusters;
+			Drives[drive]->AllocationInfo(&bytes_sector,&sectors_cluster,&total_clusters,&free_clusters);
+			free_space=bytes_sector*sectors_cluster*free_clusters;
+		}
+		FormatNumber(free_space,numformat);
+		WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
 	}
-	FormatNumber(free_space,numformat);
-	WriteOut(MSG_Get("SHELL_CMD_DIR_BYTES_FREE"),dir_count,numformat);
 	dos.dta(save_dta);
 }
 
