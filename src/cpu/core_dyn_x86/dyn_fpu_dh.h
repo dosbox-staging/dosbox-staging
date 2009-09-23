@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu_dh.h,v 1.6 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dyn_fpu_dh.h,v 1.7 2009-09-23 20:55:19 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -408,6 +408,10 @@ static void dh_fpu_esc7(){
 	Bitu sub=(decode.modrm.val & 7);
 	if (decode.modrm.val >= 0xc0) { 
 		switch (group){
+		case 0x00: /* FFREEP STi*/
+			cache_addb(0xdf);
+			cache_addb(decode.modrm.val);
+			break;
 		case 0x01: /* FXCH STi*/
 			cache_addb(0xdf);
 			cache_addb(decode.modrm.val);

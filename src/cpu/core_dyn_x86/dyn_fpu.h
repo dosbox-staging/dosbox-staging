@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dyn_fpu.h,v 1.4 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dyn_fpu.h,v 1.5 2009-09-23 20:55:19 c2woody Exp $ */
 
 #include "dosbox.h"
 #if C_FPU
@@ -593,6 +593,11 @@ static void dyn_fpu_esc7(){
 	Bitu sub=(decode.modrm.val & 7);
 	if (decode.modrm.val >= 0xc0) { 
 		switch (group){
+		case 0x00: /* FFREEP STi*/
+			dyn_fpu_top();
+			gen_call_function((void*)&FPU_FFREE,"%Ddr",DREG(EA));
+			gen_call_function((void*)&FPU_FPOP,"");
+			break;
 		case 0x01: /* FXCH STi*/
 			dyn_fpu_top();
 			gen_call_function((void*)&FPU_FXCH,"%Ddr%Ddr",DREG(TMPB),DREG(EA));
