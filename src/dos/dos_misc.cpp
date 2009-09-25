@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_misc.cpp,v 1.23 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dos_misc.cpp,v 1.24 2009-09-25 20:51:21 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "callback.h"
@@ -184,8 +184,7 @@ static bool DOS_MultiplexFunctions(void) {
 		else return false;
 	case 0x1680:	/*  RELEASE CURRENT VIRTUAL MACHINE TIME-SLICE */
 		//TODO Maybe do some idling but could screw up other systems :)
-		reg_al=0;	
-		return true;
+		return true; //So no warning in the debugger anymore
 	case 0x1689:	/*  Kernel IDLE CALL */
 	case 0x168f:	/*  Close awareness crap */
 	   /* Removing warning */
