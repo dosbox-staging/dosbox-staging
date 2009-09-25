@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: nullmodem.cpp,v 1.7 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: nullmodem.cpp,v 1.8 2009-09-25 23:40:47 h-a-l-9000 Exp $ */
 
 #include "dosbox.h"
 
@@ -36,7 +36,8 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	clientport = 0;
 
 	rx_retry = 0;
-	rx_retry_max = 100;
+	rx_retry_max = 20;
+	rx_state=N_RX_DISC;
 
 	tx_gather = 12;
 	
@@ -51,7 +52,7 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 	// usedtr: The nullmodem will
 	// 1) when it is client connect to the server not immediately but
 	//    as soon as a modem-aware application is started (DTR is switched on).
-	// 2) only transfer data when DTR is on.
+	// 2) only receive data when DTR is on.
 	if(getBituSubstring("usedtr:", &bool_temp, cmd)) {
 		if(bool_temp==1) {
 			dtrrespect=true;
@@ -105,6 +106,9 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 					clientsocket = new TCPClientSocket(sock);
 					if(!clientsocket->isopen) {
 						LOG_MSG("Serial%d: Connection failed.",COMNUMBER);
+#if SERIAL_DEBUG
+						log_ser(dbg_aux,"Nullmodem: Connection failed.");
+#endif
 						delete clientsocket;
 						clientsocket=0;
 						return;
@@ -115,6 +119,9 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 					if(!transparent) setRTSDTR(getRTS(), getDTR());
 
 					LOG_MSG("Serial%d: Connected to %s",COMNUMBER,peernamebuf);
+#if SERIAL_DEBUG
+					log_ser(dbg_aux,"Nullmodem: Connected to %s",peernamebuf);
+#endif
 					setEvent(SERIAL_POLLING_EVENT, 1);
 
 					CSerial::Init_Registers ();
@@ -204,7 +211,7 @@ Bits CNullModem::readChar() {
 		if(rxchar==0xff) return rxchar; // 0xff 0xff -> 0xff was meant
 		rxchar&0x1? setCTS(true) : setCTS(false);
 		rxchar&0x2? setDSR(true) : setDSR(false);
-		if(rxchar&0x4) receiveError(0x10);
+		if(rxchar&0x4) receiveByteEx(0x0,0x10);
 		return -1;	// no "payload" received
 	} else return rxchar;
 }
@@ -223,14 +230,16 @@ void CNullModem::ClientConnect(){
 	clientsocket->GetRemoteAddressString(peernamebuf);
 	// transmit the line status
 	if(!transparent) setRTSDTR(getRTS(), getDTR());
-
+	rx_state=N_RX_IDLE;
 	LOG_MSG("Serial%d: Connected to %s",idnumber+1,peernamebuf);
 	setEvent(SERIAL_POLLING_EVENT, 1);
 }
 
 void CNullModem::Disconnect() {
+	removeEvent(SERIAL_POLLING_EVENT);
+	removeEvent(SERIAL_RX_EVENT);
 	// it was disconnected; free the socket and restart the server socket
-	LOG_MSG("Serial%d: Disconnected.",idnumber+1);
+	LOG_MSG("Serial%d: Disconnected.",COMNUMBER);
 	delete clientsocket;
 	clientsocket=0;
 	setDSR(false);
@@ -249,48 +258,115 @@ void CNullModem::handleUpperEvent(Bit16u type) {
 		case SERIAL_POLLING_EVENT: {
 			// periodically check if new data arrived, disconnect
 			// if required. Add it back.
-			if(!receiveblock && clientsocket) {
-				if(((!(LSR&LSR_RX_DATA_READY_MASK)) || rx_retry>=rx_retry_max )
-					&&(!dtrrespect | (dtrrespect&& getDTR()) )) {
-					rx_retry=0;
-					Bits rxchar = readChar();
-					if(rxchar>=0) {
-						receiveblock=true;
-						setEvent(SERIAL_RX_EVENT, bytetime-0.01f);
-						receiveByte((Bit8u)rxchar);
+			setEvent(SERIAL_POLLING_EVENT, 1.0f);
+			// update Modem input line states
+			updateMSR();
+			switch(rx_state) {
+				case N_RX_IDLE:
+					if(CanReceiveByte()) {
+						if(doReceive()) {
+							// a byte was received
+							rx_state=N_RX_WAIT;
+							setEvent(SERIAL_RX_EVENT, bytetime*0.9f);
+						} // else still idle
+					} else {
+#if SERIAL_DEBUG
+						log_ser(dbg_aux,"Nullmodem: block on polling.");
+#endif
+						rx_state=N_RX_BLOCKED;
+						// have both delays (1ms + bytetime)
+						setEvent(SERIAL_RX_EVENT, bytetime*0.9f);
 					}
-					else if(rxchar==-2) Disconnect();
-					else setEvent(SERIAL_POLLING_EVENT, 1);
-				} else {
-					rx_retry++;
-					setEvent(SERIAL_POLLING_EVENT, 1);
-				}
-			} 
+					break;
+				case N_RX_BLOCKED:
+                    // one timeout tick
+					if(!CanReceiveByte()) {
+						rx_retry++;
+						if(rx_retry>=rx_retry_max) {
+							// it has timed out:
+							rx_retry=0;
+							removeEvent(SERIAL_RX_EVENT);
+							if(doReceive()) {
+								// read away everything
+								while(doReceive());
+								rx_state=N_RX_WAIT;
+								setEvent(SERIAL_RX_EVENT, bytetime*0.9f);
+							} else {
+								// much trouble about nothing
+                                rx_state=N_RX_IDLE;
+#if SERIAL_DEBUG
+								log_ser(dbg_aux,"Nullmodem: unblock due to no more data",rx_retry);
+#endif
+							}
+						} // else wait further
+					} else {
+						// good: we can receive again
+						removeEvent(SERIAL_RX_EVENT);
+						rx_retry=0;
+						if(doReceive()) {
+							rx_state=N_RX_FASTWAIT;
+							setEvent(SERIAL_RX_EVENT, bytetime*0.65f);
+						} else {
+							// much trouble about nothing
+							rx_state=N_RX_IDLE;
+						}
+					}
+					break;
+
+				case N_RX_WAIT:
+				case N_RX_FASTWAIT:
+					break;
+			}
 			break;
 		}
 		case SERIAL_RX_EVENT: {
-			// receive time is up, try to receive another byte.
-			receiveblock=false;
-			
-			if((!(LSR&LSR_RX_DATA_READY_MASK) || rx_retry>=rx_retry_max)
-				&&(!dtrrespect | (dtrrespect&& getDTR()) )
-				) {
-				rx_retry=0;
-				Bits rxchar = readChar();
-				if(rxchar>=0) {
-					receiveblock=true;
-					setEvent(SERIAL_RX_EVENT, bytetime-0.01f);
-					receiveByte((Bit8u)rxchar);
-				}
-				else if(rxchar==-2) Disconnect();
-				else setEvent(SERIAL_POLLING_EVENT, 1);
-			} else {
-				setEvent(SERIAL_POLLING_EVENT, 1);
-				rx_retry++;
+			switch(rx_state) {
+				case N_RX_IDLE:
+					LOG_MSG("internal error in nullmodem");
+					break;
+
+				case N_RX_BLOCKED: // try to receive
+				case N_RX_WAIT:
+				case N_RX_FASTWAIT:
+					if(CanReceiveByte()) {
+						// just works or unblocked
+						if(doReceive()) {
+							rx_retry=0; // not waiting anymore
+							if(rx_state==N_RX_WAIT) setEvent(SERIAL_RX_EVENT, bytetime*0.9f);
+							else {
+								// maybe unblocked
+								rx_state=N_RX_FASTWAIT;
+								setEvent(SERIAL_RX_EVENT, bytetime*0.65f);
+							}
+						} else {
+							// didn't receive anything
+							rx_retry=0;
+							rx_state=N_RX_IDLE;
+						}
+					} else {
+						// blocking now or still blocked
+#if SERIAL_DEBUG
+						if(rx_state==N_RX_BLOCKED)
+							log_ser(dbg_aux,"Nullmodem: rx still blocked (retry=%d)",rx_retry);
+						else log_ser(dbg_aux,"Nullmodem: block on continued rx (retry=%d).",rx_retry);
+#endif
+						setEvent(SERIAL_RX_EVENT, bytetime*0.65f);
+						rx_state=N_RX_BLOCKED;
+					}
+
+					break;
 			}
 			break;
 		}
 		case SERIAL_TX_EVENT: {
+			// Maybe echo cirquit works a bit better this way
+			if(rx_state==N_RX_IDLE && CanReceiveByte() && clientsocket) {
+				if(doReceive()) {
+					// a byte was received
+					rx_state=N_RX_WAIT;
+					setEvent(SERIAL_RX_EVENT, bytetime*0.9f);
+				}
+			}
 			ByteTransmitted();
 			break;
 		}
@@ -301,15 +377,18 @@ void CNullModem::handleUpperEvent(Bit16u type) {
 			break;				   
 		}
 		case SERIAL_SERVER_POLLING_EVENT: {
-			// As long as nothing is connected to out server poll the
+			// As long as nothing is connected to our server poll the
 			// connection.
 			clientsocket=serversocket->Accept();
 			if(clientsocket) {
 				Bit8u peeripbuf[16];
 				clientsocket->GetRemoteAddressString(peeripbuf);
-				LOG_MSG("Serial%d: A client (%s) has connected.",idnumber+1,peeripbuf);
-				// new socket found...
+				LOG_MSG("Serial%d: A client (%s) has connected.",COMNUMBER,peeripbuf);
+#if SERIAL_DEBUG
+				log_ser(dbg_aux,"Nullmodem: A client (%s) has connected.", peeripbuf);
+#endif// new socket found...
 				clientsocket->SetSendBufferSize(256);
+				rx_state=N_RX_IDLE;
 				setEvent(SERIAL_POLLING_EVENT, 1);
 				
 				// we don't accept further connections
@@ -350,15 +429,23 @@ void CNullModem::updateMSR () {
 	
 }
 
+bool CNullModem::doReceive () {
+		Bits rxchar = readChar();
+		if(rxchar>=0) {
+			receiveByteEx((Bit8u)rxchar,0);
+			return true;
+		}
+		else if(rxchar==-2) {
+			Disconnect();
+		}
+		return false;
+}
+ 
 void CNullModem::transmitByte (Bit8u val, bool first) {
+ 	// transmit it later in THR_Event
+	if(first) setEvent(SERIAL_THR_EVENT, bytetime/8);
+	else setEvent(SERIAL_TX_EVENT, bytetime);
 
-	// transmit it later in THR_Event
-	if(first) {
-		setEvent(SERIAL_THR_EVENT, bytetime/8);
-	} else {
-		//if(clientsocket) clientsocket->Putchar(val);
-		setEvent(SERIAL_TX_EVENT, bytetime);
-	}
 	// disable 0xff escaping when transparent mode is enabled
 	if (!transparent && (val==0xff)) WriteChar(0xff);
 	

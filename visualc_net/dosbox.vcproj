@@ -309,10 +309,10 @@
 						RelativePath="..\src\cpu\core_dynrec\operators.h">
 					</File>
 					<File
-						RelativePath="..\src\cpu\core_dynrec\risc_x86.h">
+						RelativePath="..\src\cpu\core_dynrec\risc_x64.h">
 					</File>
 					<File
-						RelativePath="..\src\cpu\core_dynrec\risc_x64.h">
+						RelativePath="..\src\cpu\core_dynrec\risc_x86.h">
 					</File>
 				</Filter>
 			</Filter>
@@ -567,28 +567,16 @@
 					Name="serialport"
 					Filter="">
 					<File
-						RelativePath="..\src\hardware\serialport\directserial_os2.cpp">
-						<FileConfiguration
-							Name="Release|Win32"
-							ExcludedFromBuild="TRUE">
-							<Tool
-								Name="VCCLCompilerTool"/>
-						</FileConfiguration>
+						RelativePath="..\src\hardware\serialport\directserial.cpp">
 					</File>
 					<File
-						RelativePath="..\src\hardware\serialport\directserial_os2.h">
+						RelativePath="..\src\hardware\serialport\directserial.h">
 					</File>
 					<File
-						RelativePath="..\src\hardware\serialport\directserial_posix.cpp">
+						RelativePath="..\src\hardware\serialport\libserial.cpp">
 					</File>
 					<File
-						RelativePath="..\src\hardware\serialport\directserial_posix.h">
-					</File>
-					<File
-						RelativePath="..\src\hardware\serialport\directserial_win32.cpp">
-					</File>
-					<File
-						RelativePath="..\src\hardware\serialport\directserial_win32.h">
+						RelativePath="..\src\hardware\serialport\libserial.h">
 					</File>
 					<File
 						RelativePath="..\src\hardware\serialport\misc_util.cpp">
@@ -623,6 +611,9 @@
 				Name="gui"
 				Filter="">
 				<File
+					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
+				</File>
+				<File
 					RelativePath="..\src\gui\midi.cpp">
 				</File>
 				<File
@@ -648,9 +639,6 @@
 				</File>
 				<File
 					RelativePath="..\src\gui\sdlmain.cpp">
-				</File>
-				<File
-					RelativePath="..\src\libs\gui_tk\gui_tk.cpp">
 				</File>
 			</Filter>
 			<Filter

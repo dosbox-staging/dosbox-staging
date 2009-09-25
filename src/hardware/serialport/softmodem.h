@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.10 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: softmodem.h,v 1.11 2009-09-25 23:40:47 h-a-l-9000 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -92,7 +92,7 @@ public:
 			static Bits lcount=0;
 			if (lcount<1000) {
 				lcount++;
-				LOG_MSG("MODEM: FIFO Overflow! (adds len %d)",_len);
+				LOG_MSG("MODEM: FIFO Overflow! (adds len %u)",_len);
 			}
 			return;
 		}

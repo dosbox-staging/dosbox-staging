@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: nullmodem.h,v 1.3 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: nullmodem.h,v 1.4 2009-09-25 23:40:47 h-a-l-9000 Exp $ */
 
 // include guard
 #ifndef DOSBOX_NULLMODEM_WIN32_H
@@ -57,6 +57,14 @@ public:
 	void setDTR(bool val);
 	void handleUpperEvent(Bit16u type);
 
+	Bitu rx_state;
+#define N_RX_IDLE		0
+#define N_RX_WAIT		1
+#define N_RX_BLOCKED	2
+#define N_RX_FASTWAIT	3
+#define N_RX_DISC		4
+
+	bool doReceive();
 	void ClientConnect();
     void Disconnect();
 	Bits readChar();

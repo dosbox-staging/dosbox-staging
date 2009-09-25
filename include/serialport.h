@@ -16,15 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.h,v 1.17 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: serialport.h,v 1.18 2009-09-25 23:40:48 h-a-l-9000 Exp $ */
 
 #ifndef DOSBOX_SERIALPORT_H
 #define DOSBOX_SERIALPORT_H
-
-#define SERIAL_DEBUG 0
-
-// Uncomment this for a lot of debug messages:
-//#define LOG_UART
 
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
@@ -42,11 +37,90 @@
 #include "programs.h"
 #endif
 
+// set this to 1 for serial debugging in release mode
+#define SERIAL_DBG_FORCED 0
+
+#if (C_DEBUG || SERIAL_DBG_FORCED)
+#define SERIAL_DEBUG 1
+#endif
+
 #if SERIAL_DEBUG
 #include "hardware.h"
 #endif
 
 // Serial port interface 
+
+class MyFifo {
+public:
+	MyFifo(Bitu maxsize_) {
+		maxsize=size=maxsize_;
+		pos=used=0;
+		data=new Bit8u[size];
+	}
+	~MyFifo() {
+		delete[] data;
+	}
+	INLINE Bitu getFree(void) {
+		return size-used;
+	}
+	bool isEmpty() {
+		return used==0;
+	}
+	bool isFull() {
+		return (size-used)==0;
+	}
+
+	INLINE Bitu getUsage(void) {
+		return used;
+	}
+	void setSize(Bitu newsize)
+	{
+		size=newsize;
+		pos=used=0;
+	}
+	void clear(void) {
+		pos=used=0;
+		data[0]=0;
+	}
+
+	bool addb(Bit8u _val) {
+		Bitu where=pos+used;
+		if (where>=size) where-=size;
+		if(used>=size) {
+			// overwrite last byte
+			if(where==0) where=size-1;
+			else where--;
+			data[where]=_val;
+			return false;
+		}
+		data[where]=_val;
+		used++;
+		return true;
+	}
+	Bit8u getb() {
+		if (!used) return data[pos];
+		Bitu where=pos;
+		if (++pos>=size) pos-=size;
+		used--;
+		return data[where];
+	}
+	Bit8u getTop() {
+		Bitu where=pos+used;
+		if (where>=size) where-=size;
+		if(used>=size) {
+			if(where==0) where=size-1;
+			else where--;
+		}
+		return data[where];
+	}
+
+	Bit8u probeByte() {
+		return data[pos];
+	}
+private:
+	Bit8u * data;
+	Bitu maxsize,size,pos,used;
+};
 
 class CSerial {
 public:
@@ -58,7 +132,7 @@ public:
 	bool dbg_register;
 	bool dbg_interrupt;
 	bool dbg_aux;
-
+	void log_ser(bool active, char const* format,...);
 #endif
 
 	static bool getBituSubstring(const char* name,Bitu* data, CommandLine* cmd);
@@ -92,8 +166,9 @@ public:
 #define SERIAL_RX_EVENT 4
 #define SERIAL_POLLING_EVENT 5
 #define SERIAL_THR_EVENT 6
+#define SERIAL_RX_TIMEOUT_EVENT 7
 
-#define	SERIAL_BASE_EVENT_COUNT 6
+#define	SERIAL_BASE_EVENT_COUNT 7
 
 #define COMNUMBER idnumber+1
 
@@ -144,6 +219,7 @@ public:
 	
 	// If a byte comes from loopback or prepherial, put it in here.
 	void receiveByte(Bit8u data);
+	void receiveByteEx(Bit8u data, Bit8u error);
 
 	// If an error was received, put it here (in LSR register format)
 	void receiveError(Bit8u errorword);
@@ -177,7 +253,7 @@ private:
 
 	DOS_Device* mydosdevice;
 
-	// I used this spec: http://www.exar.com/products/st16c450v420.pdf
+	// I used this spec: st16c450v420.pdf
 
 	void ComputeInterrupts();
 	
@@ -191,23 +267,20 @@ private:
 	#define RX_PRIORITY 1		// a byte has been received
 	#define TX_PRIORITY 2		// tx buffer has become empty
 	#define MSR_PRIORITY 8		// CRS, DSR, RI, DCD change 
+	#define TIMEOUT_PRIORITY 0x10
 	#define NONE_PRIORITY 0
 
 	Bit8u waiting_interrupts;	// these are on, but maybe not enabled
 	
-	// 16C450 (no FIFO)
+	// 16C550
 	//				read/write		name
 
 	Bit16u baud_divider;
-	Bit8u RHR;	//	r				Receive Holding Register, also LSB of Divisor Latch (r/w)
-	#define RHR_OFFSET 0
-				// Data: whole byte
-
-	Bit8u THR;	//	w				Transmit Holding Register
-	#define THR_OFFSET 0
-				// Data: whole byte
-
-	Bit8u IER;	//	r/w				Interrupt Enable Register, also MSB of Divisor Latch
+	#define RHR_OFFSET 0	// r Receive Holding Register, also LSB of Divisor Latch (r/w)
+							// Data: whole byte
+	#define THR_OFFSET 0	// w Transmit Holding Register
+							// Data: whole byte
+	Bit8u IER;	//	r/w		Interrupt Enable Register, also MSB of Divisor Latch
 	#define IER_OFFSET 1
 
 	bool irq_active;
@@ -221,6 +294,7 @@ private:
 	#define ISR_OFFSET 2
 
 	#define ISR_CLEAR_VAL 0x1
+	#define ISR_FIFOTIMEOUT_VAL 0xc
 	#define ISR_ERROR_VAL 0x6
 	#define ISR_RX_VAL 0x4
 	#define ISR_TX_VAL 0x2
@@ -292,6 +366,7 @@ private:
 	Bitu framingErrors;
 	Bitu parityErrors;
 	Bitu overrunErrors;
+	Bitu txOverrunErrors;
 	Bitu overrunIF0;
 	Bitu breakErrors;
 
@@ -329,16 +404,28 @@ private:
 	void transmitLoopbackByte(Bit8u val, bool value);
 
 	// 16C550 (FIFO)
-	// TODO
+	public: // todo remove
+	MyFifo* rxfifo;
+	private:
+	MyFifo* txfifo;
+	MyFifo* errorfifo;
+	Bitu errors_in_fifo;
+	Bitu rx_interrupt_threshold;
+	Bitu fifosize;
+	Bit8u FCR;
+	bool sync_guardtime;
+	#define FIFO_STATUS_ACTIVE 0xc0 // FIFO is active AND works ;)
+	#define FIFO_ERROR 0x80
+	#define FCR_ACTIVATE 0x01
+	#define FCR_CLEAR_RX 0x02
+	#define FCR_CLEAR_TX 0x04
 	#define FCR_OFFSET 2
-	bool fifo_warn;
-	//Bit8u FCR;	// FIFO Control Register
-	
+	#define FIFO_FLOWCONTROL 0x20
 };
 
 extern CSerial* serialports[];
-const Bit8u serial_defaultirq[4] = { 4, 3, 4, 3 };
-const Bit16u serial_baseaddr[4] = {0x3f8,0x2f8,0x3e8,0x2e8};
+const Bit8u serial_defaultirq[] = { 4, 3, 4, 3 };
+const Bit16u serial_baseaddr[] = {0x3f8,0x2f8,0x3e8,0x2e8};
 const char* const serial_comname[]={"COM1","COM2","COM3","COM4"};
 
 // the COM devices
@@ -358,4 +445,3 @@ private:
 };
 
 #endif
-
