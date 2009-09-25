@@ -356,6 +356,63 @@
 	CASE_0F_W(0xaf)												/* IMUL Gw,Ew */
 		RMGwEwOp3(DIMULW,*rmrw);
 		break;
+	CASE_0F_B(0xb0) 										/* cmpxchg Eb,Gb */
+		{
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			FillFlags();
+			GetRMrb;
+			if (rm >= 0xc0 ) {
+				GetEArb;
+				if (reg_al == *earb) {
+					*earb=*rmrb;
+					SETFLAGBIT(ZF,1);
+				} else {
+					reg_al = *earb;
+					SETFLAGBIT(ZF,0);
+				}
+			} else {
+   				GetEAa;
+				Bit8u val = LoadMb(eaa);
+				if (reg_al == val) { 
+					SaveMb(eaa,*rmrb);
+					SETFLAGBIT(ZF,1);
+				} else {
+					SaveMb(eaa,val); //NEEDED ? (val doesn't change
+					reg_al = val;
+					SETFLAGBIT(ZF,0);
+				}
+			}
+			break;
+		}
+	CASE_0F_W(0xb1) 									/* cmpxchg Ew,Gw */
+		{
+			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			FillFlags();
+			GetRMrw;
+			if (rm >= 0xc0 ) {
+				GetEArw;
+				if(reg_ax == *earw) { 
+					*earw = *rmrw;
+					SETFLAGBIT(ZF,1);
+				} else {
+					reg_ax = *earw;
+					SETFLAGBIT(ZF,0);
+				}
+			} else {
+   				GetEAa;
+				Bit16u val = LoadMw(eaa);
+				if(reg_ax == val) { 
+					SaveMw(eaa,*rmrw);
+					SETFLAGBIT(ZF,1);
+				} else {
+					SaveMw(eaa,val);
+					reg_ax = val;
+					SETFLAGBIT(ZF,0);
+				}
+			}
+			break;
+		}
+
 	CASE_0F_W(0xb2)												/* LSS Ew */
 		{	
 			GetRMrw;
