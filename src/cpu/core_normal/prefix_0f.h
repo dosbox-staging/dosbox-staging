@@ -377,7 +377,7 @@
 					SaveMb(eaa,*rmrb);
 					SETFLAGBIT(ZF,1);
 				} else {
-					SaveMb(eaa,val); //NEEDED ? (val doesn't change
+					SaveMb(eaa,val);	// cmpxchg always issues a write
 					reg_al = val;
 					SETFLAGBIT(ZF,0);
 				}
@@ -405,7 +405,7 @@
 					SaveMw(eaa,*rmrw);
 					SETFLAGBIT(ZF,1);
 				} else {
-					SaveMw(eaa,val);
+					SaveMw(eaa,val);	// cmpxchg always issues a write
 					reg_ax = val;
 					SETFLAGBIT(ZF,0);
 				}

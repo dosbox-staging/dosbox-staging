@@ -256,7 +256,7 @@
 					SaveMd(eaa,*rmrd);
 					SETFLAGBIT(ZF,1);
 				} else {
-					SaveMd(eaa,val);
+					SaveMd(eaa,val);	// cmpxchg always issues a write
 					reg_eax=val;
 					SETFLAGBIT(ZF,0);
 				}
