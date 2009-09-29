@@ -182,7 +182,7 @@ bool TCPClientSocket::GetRemoteAddressString(Bit8u* buffer) {
 bool TCPClientSocket::ReceiveArray(Bit8u* data, Bitu* size) {
 	if(SDLNet_CheckSockets(listensocketset,0))
 	{
-		Bitu retval = SDLNet_TCP_Recv(mysock, data, *size);
+		Bits retval = SDLNet_TCP_Recv(mysock, data, *size);
 		if(retval<1) {
 			isopen=false;
 			*size=0;
