@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: serialport.cpp,v 1.13 2009-09-25 23:40:47 h-a-l-9000 Exp $ */
+/* $Id: serialport.cpp,v 1.14 2009-10-01 17:25:28 h-a-l-9000 Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -368,7 +368,6 @@ bool CSerial::CanReceiveByte() {
 /* A byte was received                                                      **/
 /*****************************************************************************/
 void CSerial::receiveByteEx (Bit8u data, Bit8u error) {
-	printf("%c",data);
 #if SERIAL_DEBUG
 	log_ser(dbg_serialtraffic,data<0x10 ? "\t\t\t\trx 0x%02x (%u)":
 		"\t\t\t\trx 0x%02x (%c)", data, data);
