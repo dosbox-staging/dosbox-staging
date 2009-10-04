@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.cpp,v 1.11 2009-05-27 09:15:42 qbix79 Exp $ */
+/* $Id: softmodem.cpp,v 1.12 2009-10-04 20:57:40 h-a-l-9000 Exp $ */
 
 #include "dosbox.h"
 
@@ -77,41 +77,47 @@ CSerialModem::~CSerialModem() {
 }
 
 void CSerialModem::handleUpperEvent(Bit16u type) {
-	switch(type)
-	{
-	case SERIAL_RX_EVENT:
-		{
-			break;
-		}
-	case MODEM_TX_EVENT:
-		{
-			if(tqueue->left()) {
-				tqueue->addb(waiting_tx_character);
-				if(tqueue->left() < 2) {
-					CSerial::setCTS(false);
-				}
-			} else {
-				static Bits lcount=0;
-				if (lcount<1000) {
-					lcount++;
-					LOG_MSG("MODEM: TX Buffer overflow!");
-				}
+	switch (type) {
+	case SERIAL_RX_EVENT: {
+		// check for bytes to be sent to port
+		if(CSerial::CanReceiveByte())
+			if(rqueue->inuse() && (CSerial::getRTS()||(flowcontrol!=3))) {
+				Bit8u rbyte = rqueue->getb();
+				//LOG_MSG("Modem: sending byte %2x back to UART3",rbyte);
+				CSerial::receiveByte(rbyte);
 			}
-			ByteTransmitted();
-			
-			break;
+		if(CSerial::CanReceiveByte()) setEvent(SERIAL_RX_EVENT, bytetime*0.98f);
+		break;
+	}
+	case MODEM_TX_EVENT: {
+		if (tqueue->left()) {
+			tqueue->addb(waiting_tx_character);
+			if (tqueue->left() < 2) {
+				CSerial::setCTS(false);
+			}
+		} else {
+			static Bits lcount=0;
+			if (lcount<1000) {
+				lcount++;
+				LOG_MSG("MODEM: TX Buffer overflow!");
+			}
 		}
-	case SERIAL_POLLING_EVENT:
-		{
-			Timer2();
-			setEvent(SERIAL_POLLING_EVENT,1);
-			break;
+		ByteTransmitted();
+		break;
+	}
+	case SERIAL_POLLING_EVENT: {
+		if (rqueue->inuse()) {
+			removeEvent(SERIAL_RX_EVENT);
+			setEvent(SERIAL_RX_EVENT, (float)0.01);
 		}
+		Timer2();
+		setEvent(SERIAL_POLLING_EVENT,1);
+		break;
+	}
 
-	case MODEM_RING_EVENT:
-		{
-			break;
-		}
+	case MODEM_RING_EVENT: {
+		break;
+	}
 	}
 }
 
@@ -216,6 +222,12 @@ Bitu CSerialModem::ScanNumber(char * & scan) {
 	return ret;
 }
 
+char CSerialModem::GetChar(char * & scan) {
+	char ch = *scan;
+	scan++;
+	return ch;
+}
+
 void CSerialModem::Reset(){
 	EnterIdleState();
 	cmdpos = 0;
@@ -300,227 +312,238 @@ void CSerialModem::DoCommand() {
 	cmdpos = 0;			//Reset for next command
 	upcase(cmdbuf);
 	LOG_MSG("Command sent to modem: ->%s<-\n", cmdbuf);
-		/* Check for empty line, stops dialing and autoanswer */
-		if (!cmdbuf[0]) {
-			reg[0]=0;	// autoanswer off
-			return;
-		//	} 
-		//else {
-				//MIXER_Enable(mhd.chan,false);
-		//		dialing = false;
-		//		SendRes(ResNOCARRIER);
-		//		goto ret_none;
-		//	}
-		}
-		/* AT command set interpretation */
+	/* Check for empty line, stops dialing and autoanswer */
+	if (!cmdbuf[0]) {
+		reg[0]=0;	// autoanswer off
+		return;
+	}
+	//else {
+		//MIXER_Enable(mhd.chan,false);
+	//	dialing = false;
+	//	SendRes(ResNOCARRIER);
+	//	goto ret_none;
+	//}
+	/* AT command set interpretation */
 
-		if ((cmdbuf[0] != 'A') || (cmdbuf[1] != 'T')) {
-			SendRes(ResERROR);
-			return;
-		}
-		
-		if (strstr(cmdbuf,"NET0")) {
-			telnetmode = false;
-			SendRes(ResOK);
-			return;
-		}
-		else if (strstr(cmdbuf,"NET1")) {
-			telnetmode = true;
-			SendRes(ResOK);
-			return;
-		}
-
-		char * scanbuf;
-		scanbuf=&cmdbuf[2];
-		char chr;
-		Bitu num;
-		while (chr=*scanbuf++) {
-			switch (chr) {
-			case 'D':	// Dial
-			{
-				char * foundstr=&scanbuf[0];
-				if (*foundstr=='T' || *foundstr=='P') foundstr++;
-				// Small protection against empty line and long string
-				if ((!foundstr[0]) || (strlen(foundstr)>100)) {
-					SendRes(ResERROR);
-					return;
-				}
-				char* helper;
-				// scan for and remove spaces; weird bug: with leading spaces in the string,
-				// SDLNet_ResolveHost will return no error but not work anyway (win)
-				while(foundstr[0]==' ') foundstr++;
-				helper=foundstr;
-				helper+=strlen(foundstr);
-				while(helper[0]==' ') {
-					helper[0]=0;
-					helper--;
-				}
-				if (strlen(foundstr) >= 12) {
-						// Check if supplied parameter only consists of digits
-						bool isNum = true;
-					for (Bitu i=0; i<strlen(foundstr); i++)
-							if (foundstr[i] < '0' || foundstr[i] > '9')
-								isNum = false;
-					if (isNum) {
-						// Parameter is a number with at least 12 digits => this cannot
-						// be a valid IP/name
-						// Transform by adding dots
-						char buffer[128];
-						Bitu j = 0;
-						for (Bitu i=0; i<strlen(foundstr); i++) {
-								buffer[j++] = foundstr[i];
-								// Add a dot after the third, sixth and ninth number
-								if (i == 2 || i == 5 || i == 8)
-									buffer[j++] = '.';
-								// If the string is longer than 12 digits,
-								// interpret the rest as port
-								if (i == 11 && strlen(foundstr)>12)
-									buffer[j++] = ':';
-							}
-							buffer[j] = 0;
-							foundstr = buffer;
-						}
-					}
-				Dial(foundstr);
-				return;
-			}
-			case 'I':	//Some strings about firmware
-				switch (num=ScanNumber(scanbuf)) {
-				case 3:SendLine("DosBox Emulated Modem Firmware V1.00");break;
-				case 4:SendLine("Modem compiled for DosBox version " VERSION);break;
-				};break;
-			case 'E':	//Echo on/off
-				switch (num=ScanNumber(scanbuf)) {
-				case 0:echo = false;break;
-				case 1:echo = true;break;
-				};break;
-			case 'V':
-				switch (num=ScanNumber(scanbuf)) {
-				case 0:numericresponse = true;break;
-				case 1:numericresponse = false;break;
-				};break;
-			case 'H':	//Hang up
-				switch (num=ScanNumber(scanbuf)) {
-				case 0:
-					if (connected) {
-						SendRes(ResNOCARRIER);
-						EnterIdleState();
-						return;
-		}
-					//Else return ok
-				};break;
-			case 'O':	//Return to data mode
-				switch (num=ScanNumber(scanbuf))
-				{
-				case 0:
-					if (clientsocket) {
-						commandmode = false;
-						return;
-					} else {
-						SendRes(ResERROR);
-						return;
-					}
-				};break;
-			case 'T':	//Tone Dial
-			case 'P':	//Pulse Dial
-				break;
-			case 'M':	//Monitor
-			case 'L':	//Volume
-				ScanNumber(scanbuf);
-				break;
-			case 'A':	//Answer call
-				if (waitingclientsocket) {
-					AcceptIncomingCall();
-				} else {
-					SendRes(ResERROR);
-					return;
-				}
-				return;
-			case 'Z':	//Reset and load profiles
-			{
-				// scan the number away, if any
-				ScanNumber(scanbuf);
-				if (clientsocket/*socket*/) SendRes(ResNOCARRIER);
-				Reset();
-				break;
-			}
-			case ' ':	//Space just skip
-				break;
-			case 'Q':	// Response options
-				{			// 0 = all on, 1 = all off,
-							// 2 = no ring and no connect/carrier in answermode
-					Bitu val = ScanNumber(scanbuf);	
-					if(!(val>2)) {
-						doresponse=val;
-						break;
-					} else {
-						SendRes(ResERROR);
-						return;
-					}
-				}
-			case 'S':	//Registers	
-			{
-				Bitu index=ScanNumber(scanbuf);
-				if(index>=SREGS) {
-					SendRes(ResERROR);
-					return; //goto ret_none;
-				}
-				
-				while(scanbuf[0]==' ') scanbuf++;	// skip spaces
-				
-				if(scanbuf[0]=='=') {	// set register
-					scanbuf++;
-					while(scanbuf[0]==' ') scanbuf++;	// skip spaces
-					Bitu val = ScanNumber(scanbuf);
-					reg[index]=val;
-					break;
-				}
-				else if(scanbuf[0]=='?') {	// get register
-					SendNumber(reg[index]);
-					scanbuf++;
-					break;
-				}
-				//else LOG_MSG("print reg %d with %d",index,reg[index]);
-			}
-			break;
-			case '&':
-			{
-				if(scanbuf[0]!=0) {
-					char ch = scanbuf[0];
-					scanbuf++;
-					switch(ch) {
-						case 'K':
-						{
-							Bitu val = ScanNumber(scanbuf);
-							if(val<5) flowcontrol=val;
-							else {
-								SendRes(ResERROR);
-								return;
-							}
-							break;
-						}
-						default:
-						{
-							scanbuf++;
-							LOG_MSG("Modem: Unhandled command: &%c%d",ch,ScanNumber(scanbuf));
-							break;
-						}
-					}	
-				} else {
-					SendRes(ResERROR);
-					return;
-				}
-			}
-		break;
-
-			default:
-				LOG_MSG("Modem: Unhandled command: %c%d",chr,ScanNumber(scanbuf));
-				}
-			}
-		
+	if ((cmdbuf[0] != 'A') || (cmdbuf[1] != 'T')) {
+		SendRes(ResERROR);
+		return;
+	}
+	if (strstr(cmdbuf,"NET0")) {
+		telnetmode = false;
 		SendRes(ResOK);
 		return;
 	}
+	else if (strstr(cmdbuf,"NET1")) {
+		telnetmode = true;
+		SendRes(ResOK);
+		return;
+	}
+
+	char * scanbuf = &cmdbuf[2];
+	while (1) {
+		// LOG_MSG("loopstart ->%s<-",scanbuf);
+		char chr = GetChar(scanbuf);
+		switch (chr) {
+		case 'D': { // Dial
+			char * foundstr=&scanbuf[0];
+			if (*foundstr=='T' || *foundstr=='P') foundstr++;
+			// Small protection against empty line and long string
+			if ((!foundstr[0]) || (strlen(foundstr)>100)) {
+				SendRes(ResERROR);
+				return;
+			}
+			char* helper;
+			// scan for and remove spaces; weird bug: with leading spaces in the string,
+			// SDLNet_ResolveHost will return no error but not work anyway (win)
+			while(foundstr[0]==' ') foundstr++;
+			helper=foundstr;
+			helper+=strlen(foundstr);
+			while(helper[0]==' ') {
+				helper[0]=0;
+				helper--;
+			}
+			if (strlen(foundstr) >= 12) {
+				// Check if supplied parameter only consists of digits
+				bool isNum = true;
+				for (Bitu i=0; i<strlen(foundstr); i++)
+					if (foundstr[i] < '0' || foundstr[i] > '9') isNum = false;
+				if (isNum) {
+					// Parameter is a number with at least 12 digits => this cannot
+					// be a valid IP/name
+					// Transform by adding dots
+					char buffer[128];
+					Bitu j = 0;
+					for (Bitu i=0; i<strlen(foundstr); i++) {
+						buffer[j++] = foundstr[i];
+						// Add a dot after the third, sixth and ninth number
+						if (i == 2 || i == 5 || i == 8)
+							buffer[j++] = '.';
+						// If the string is longer than 12 digits,
+						// interpret the rest as port
+						if (i == 11 && strlen(foundstr)>12)
+							buffer[j++] = ':';
+					}
+					buffer[j] = 0;
+					foundstr = buffer;
+				}
+			}
+			Dial(foundstr);
+			return;
+		}
+		case 'I': // Some strings about firmware
+			switch (ScanNumber(scanbuf)) {
+			case 3: SendLine("DosBox Emulated Modem Firmware V1.00"); break;
+			case 4: SendLine("Modem compiled for DosBox version " VERSION); break;
+			}
+			break;
+		case 'E': // Echo on/off
+			switch (ScanNumber(scanbuf)) {
+			case 0: echo = false; break;
+			case 1: echo = true; break;
+			}
+			break;
+		case 'V':
+			switch (ScanNumber(scanbuf)) {
+			case 0: numericresponse = true; break;
+			case 1: numericresponse = false; break;
+			}
+			break;
+		case 'H': // Hang up
+			switch (ScanNumber(scanbuf)) {
+			case 0:
+				if (connected) {
+					SendRes(ResNOCARRIER);
+					EnterIdleState();
+					return;
+				}
+				// else return ok
+			}
+			break;
+		case 'O': // Return to data mode
+			switch (ScanNumber(scanbuf)) {
+			case 0:
+				if (clientsocket) {
+					commandmode = false;
+					return;
+				} else {
+					SendRes(ResERROR);
+					return;
+				}
+			}
+			break;
+		case 'T': // Tone Dial
+		case 'P': // Pulse Dial
+			break;
+		case 'M': // Monitor
+		case 'L': // Volume
+			ScanNumber(scanbuf);
+			break;
+		case 'A': // Answer call
+			if (waitingclientsocket) {
+				AcceptIncomingCall();
+			} else {
+				SendRes(ResERROR);
+				return;
+			}
+			return;
+		case 'Z': { // Reset and load profiles
+			// scan the number away, if any
+			ScanNumber(scanbuf);
+			if (clientsocket) SendRes(ResNOCARRIER);
+			Reset();
+			break;
+		}
+		case ' ': // skip space
+			break;
+		case 'Q': {
+			// Response options
+			// 0 = all on, 1 = all off,
+			// 2 = no ring and no connect/carrier in answermode
+			Bitu val = ScanNumber(scanbuf);	
+			if(!(val>2)) {
+				doresponse=val;
+				break;
+			} else {
+				SendRes(ResERROR);
+				return;
+			}
+		}
+		case 'S': { // Registers	
+			Bitu index=ScanNumber(scanbuf);
+			if(index>=SREGS) {
+				SendRes(ResERROR);
+				return; //goto ret_none;
+			}
+			
+			while(scanbuf[0]==' ') scanbuf++;	// skip spaces
+			
+			if(scanbuf[0]=='=') {	// set register
+				scanbuf++;
+				while(scanbuf[0]==' ') scanbuf++;	// skip spaces
+				Bitu val = ScanNumber(scanbuf);
+				reg[index]=val;
+				break;
+			}
+			else if(scanbuf[0]=='?') {	// get register
+				SendNumber(reg[index]);
+				scanbuf++;
+				break;
+			}
+			//else LOG_MSG("print reg %d with %d",index,reg[index]);
+		}
+		break;
+		case '&': { // & escaped commands
+			char cmdchar = GetChar(scanbuf);
+			switch(cmdchar) {
+				case 'K': {
+					Bitu val = ScanNumber(scanbuf);
+					if(val<5) flowcontrol=val;
+					else {
+						SendRes(ResERROR);
+						return;
+					}
+					break;
+				}
+				case '\0':
+					// end of string
+					SendRes(ResERROR);
+					return;
+				default:
+					LOG_MSG("Modem: Unhandled command: &%c%d",cmdchar,ScanNumber(scanbuf));
+					break;
+			}
+			break;
+		}
+		case '\\': { // \ escaped commands
+			char cmdchar = GetChar(scanbuf);
+			switch(cmdchar) {
+				case 'N':
+					// error correction stuff - not emulated
+					if (ScanNumber(scanbuf) > 5) {
+						SendRes(ResERROR);
+						return;
+					}
+					break;
+				case '\0':
+					// end of string
+					SendRes(ResERROR);
+					return;
+				default:
+					LOG_MSG("Modem: Unhandled command: \\%c%d",cmdchar, ScanNumber(scanbuf));
+					break;
+			}
+			break;
+		}
+		case '\0':
+			SendRes(ResOK);
+			return;
+		default:
+			LOG_MSG("Modem: Unhandled command: %c%d",chr,ScanNumber(scanbuf));
+			break;
+		}
+	}
+}
 
 void CSerialModem::TelnetEmulation(Bit8u * data, Bitu size) {
 	Bitu i;
@@ -631,13 +654,6 @@ void CSerialModem::Timer2(void) {
 	Bit8u txval;
 	Bitu txbuffersize =0;
 
-	// check for bytes to be sent to port
-	if(CSerial::CanReceiveByte())
-		if(rqueue->inuse() && (CSerial::getRTS()||(flowcontrol!=3))) {
-			Bit8u rbyte = rqueue->getb();
-			//LOG_MSG("Modem: sending byte %2x back to UART3",rbyte);
-			CSerial::receiveByte(rbyte);
-		}
 	// Check for eventual break command
 	if (!commandmode) cmdpause++;
 	// Handle incoming data from serial port, read as much as available
@@ -684,8 +700,10 @@ void CSerialModem::Timer2(void) {
 	
 	if (clientsocket && sendbyte && txbuffersize) {
 		// down here it saves a lot of network traffic
-		clientsocket->SendArray(tmpbuf,txbuffersize);
-		//TODO error testing
+		if(!clientsocket->SendArray(tmpbuf,txbuffersize)) {
+			SendRes(ResNOCARRIER);
+			EnterIdleState();
+		}
 	}
 	// Handle incoming to the serial port
 	if(!commandmode && clientsocket && rqueue->left()) {
@@ -695,7 +713,6 @@ void CSerialModem::Timer2(void) {
 			SendRes(ResNOCARRIER);
 			EnterIdleState();
 		} else if(usesize) {
-			// LOG_MSG("rcv:%d", result);
 			// Filter telnet commands 
 			if(telnetmode) TelnetEmulation(tmpbuf, usesize);
 			else rqueue->adds(tmpbuf,usesize);

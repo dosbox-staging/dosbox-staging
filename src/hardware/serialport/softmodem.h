@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: softmodem.h,v 1.11 2009-09-25 23:40:47 h-a-l-9000 Exp $ */
+/* $Id: softmodem.h,v 1.12 2009-10-04 20:57:40 h-a-l-9000 Exp $ */
 
 #ifndef DOSBOX_SERIALMODEM_H
 #define DOSBOX_SERIALMODEM_H
@@ -102,7 +102,7 @@ public:
 		used+=_len;
 		while (_len--) {
 			if (where>=size) where-=size;
-			//LOG_MSG("+%x",*_str);
+			//LOG_MSG("+'%x'",*_str);
 			data[where++]=*_str++;
 		}
 	}
@@ -172,6 +172,7 @@ public:
 	bool Dial(char * host);
 	void AcceptIncomingCall(void);
 	Bitu ScanNumber(char * & scan);
+	char GetChar(char * & scan);
 
 	void DoCommand();
 	
