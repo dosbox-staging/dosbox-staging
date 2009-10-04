@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_execute.cpp,v 1.67 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dos_execute.cpp,v 1.68 2009-10-04 14:28:07 c2woody Exp $ */
 
 #include <string.h>
 #include <ctype.h>
@@ -104,15 +104,13 @@ void DOS_UpdatePSPName(void) {
 	GFX_SetTitle(-1,-1,false);
 }
 
-bool DOS_Terminate(bool tsr,Bit8u exitcode) {
+void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
 
 	dos.return_code=exitcode;
-	dos.return_mode=RETURN_EXIT;
+	dos.return_mode=(tsr)?RETURN_TSR:RETURN_EXIT;
 	
-	Bit16u mempsp = dos.psp();
-
-	DOS_PSP curpsp(mempsp);
-	if (mempsp==curpsp.GetParent()) return true;
+	DOS_PSP curpsp(pspseg);
+	if (pspseg==curpsp.GetParent()) return;
 	/* Free Files owned by process */
 	if (!tsr) curpsp.CloseFiles();
 	
@@ -136,10 +134,10 @@ bool DOS_Terminate(bool tsr,Bit8u exitcode) {
 	   interrupts enabled, test flags cleared */
 	mem_writew(SegPhys(ss)+reg_sp+4,0x7202);
 	// Free memory owned by process
-	if (!tsr) DOS_FreeProcessMemory(mempsp);
+	if (!tsr) DOS_FreeProcessMemory(pspseg);
 	DOS_UpdatePSPName();
 
-	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return true;
+	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
 
 	CPU_AutoDetermineMode>>=CPU_AUTODETERMINE_SHIFT;
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
@@ -159,7 +157,7 @@ bool DOS_Terminate(bool tsr,Bit8u exitcode) {
 	}
 #endif
 
-	return true;
+	return;
 }
 
 static bool MakeEnv(char * name,Bit16u * segment) {
