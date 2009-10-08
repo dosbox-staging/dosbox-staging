@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder_basic.h,v 1.15 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: decoder_basic.h,v 1.16 2009-10-08 20:01:31 c2woody Exp $ */
 
 
 /*
@@ -290,16 +290,24 @@ static bool decode_fetchb_imm(Bitu & val) {
 	if (GCC_UNLIKELY(decode.page.index>=4096)) {
 		decode_advancepage();
 	}
-	HostPt tlb_addr=get_tlb_read(decode.code);
 	// see if position is directly accessible
-	if (tlb_addr) {
-		val=(Bitu)(tlb_addr+decode.code);
-		decode_increase_wmapmask(1);
-		decode.code++;
-		decode.page.index++;
-		return true;
+	if (decode.page.invmap != NULL) {
+		if (decode.page.invmap[decode.page.index] == 0) {
+			// position not yet modified
+			val=(Bit32u)decode_fetchb();
+			return false;
+		}
+
+		HostPt tlb_addr=get_tlb_read(decode.code);
+		if (tlb_addr) {
+			val=(Bitu)(tlb_addr+decode.code);
+			decode_increase_wmapmask(1);
+			decode.code++;
+			decode.page.index++;
+			return true;
+		}
 	}
-	// not directly accessible, just fetch the value
+	// first time decoding or not directly accessible, just fetch the value
 	val=(Bit32u)decode_fetchb();
 	return false;
 }
@@ -308,17 +316,26 @@ static bool decode_fetchb_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchw_imm(Bitu & val) {
 	if (decode.page.index<4095) {
-		HostPt tlb_addr=get_tlb_read(decode.code);
-		// see if position is directly accessible
-		if (tlb_addr) {
-			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(2);
-			decode.code+=2;
-			decode.page.index+=2;
-			return true;
+		if (decode.page.invmap != NULL) {
+			if ((decode.page.invmap[decode.page.index] == 0) &&
+				(decode.page.invmap[decode.page.index + 1] == 0)) {
+				// position not yet modified
+				val=decode_fetchw();
+				return false;
+			}
+
+			HostPt tlb_addr=get_tlb_read(decode.code);
+			// see if position is directly accessible
+			if (tlb_addr) {
+				val=(Bitu)(tlb_addr+decode.code);
+				decode_increase_wmapmask(2);
+				decode.code+=2;
+				decode.page.index+=2;
+				return true;
+			}
 		}
 	}
-	// not directly accessible, just fetch the value
+	// first time decoding or not directly accessible, just fetch the value
 	val=decode_fetchw();
 	return false;
 }
@@ -327,17 +344,28 @@ static bool decode_fetchw_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchd_imm(Bitu & val) {
 	if (decode.page.index<4093) {
-		HostPt tlb_addr=get_tlb_read(decode.code);
-		// see if position is directly accessible
-		if (tlb_addr) {
-			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(4);
-			decode.code+=4;
-			decode.page.index+=4;
-			return true;
+		if (decode.page.invmap != NULL) {
+			if ((decode.page.invmap[decode.page.index] == 0) &&
+				(decode.page.invmap[decode.page.index + 1] == 0) &&
+				(decode.page.invmap[decode.page.index + 2] == 0) &&
+				(decode.page.invmap[decode.page.index + 3] == 0)) {
+				// position not yet modified
+				val=decode_fetchd();
+				return false;
+			}
+
+			HostPt tlb_addr=get_tlb_read(decode.code);
+			// see if position is directly accessible
+			if (tlb_addr) {
+				val=(Bitu)(tlb_addr+decode.code);
+				decode_increase_wmapmask(4);
+				decode.code+=4;
+				decode.page.index+=4;
+				return true;
+			}
 		}
 	}
-	// not directly accessible, just fetch the value
+	// first time decoding or not directly accessible, just fetch the value
 	val=decode_fetchd();
 	return false;
 }

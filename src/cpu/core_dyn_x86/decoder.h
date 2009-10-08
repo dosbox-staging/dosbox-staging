@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder.h,v 1.57 2009-03-29 17:32:20 qbix79 Exp $ */
+/* $Id: decoder.h,v 1.58 2009-10-08 20:01:31 c2woody Exp $ */
 
 #define X86_DYNFPU_DH_ENABLED
 #define X86_INLINED_MEMACCESS
@@ -187,13 +187,19 @@ static INLINE void decode_increase_wmapmask(Bitu size) {
 
 static bool decode_fetchb_imm(Bitu & val) {
 	if (decode.page.index<4096) {
-		HostPt tlb_addr=get_tlb_read(decode.code);
-		if (tlb_addr) {
-			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(1);
-			decode.code++;
-			decode.page.index++;
-			return true;
+		if (decode.page.invmap != NULL) {
+			if (decode.page.invmap[decode.page.index] == 0) {
+				val=(Bit32u)decode_fetchb();
+				return false;
+			}
+			HostPt tlb_addr=get_tlb_read(decode.code);
+			if (tlb_addr) {
+				val=(Bitu)(tlb_addr+decode.code);
+				decode_increase_wmapmask(1);
+				decode.code++;
+				decode.page.index++;
+				return true;
+			}
 		}
 	}
 	val=(Bit32u)decode_fetchb();
@@ -201,13 +207,21 @@ static bool decode_fetchb_imm(Bitu & val) {
 }
 static bool decode_fetchw_imm(Bitu & val) {
 	if (decode.page.index<4095) {
-		HostPt tlb_addr=get_tlb_read(decode.code);
-		if (tlb_addr) {
-			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(2);
-			decode.code+=2;
-			decode.page.index+=2;
-			return true;
+        if (decode.page.invmap != NULL) {
+            if ((decode.page.invmap[decode.page.index] == 0) &&
+                (decode.page.invmap[decode.page.index + 1] == 0)
+            ) {
+				val=decode_fetchw();
+				return false;
+			}
+			HostPt tlb_addr=get_tlb_read(decode.code);
+			if (tlb_addr) {
+				val=(Bitu)(tlb_addr+decode.code);
+				decode_increase_wmapmask(2);
+				decode.code+=2;
+				decode.page.index+=2;
+				return true;
+			}
 		}
 	}
 	val=decode_fetchw();
@@ -215,13 +229,23 @@ static bool decode_fetchw_imm(Bitu & val) {
 }
 static bool decode_fetchd_imm(Bitu & val) {
 	if (decode.page.index<4093) {
-		HostPt tlb_addr=get_tlb_read(decode.code);
-		if (tlb_addr) {
-			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(4);
-			decode.code+=4;
-			decode.page.index+=4;
-			return true;
+        if (decode.page.invmap != NULL) {
+            if ((decode.page.invmap[decode.page.index] == 0) &&
+                (decode.page.invmap[decode.page.index + 1] == 0) &&
+                (decode.page.invmap[decode.page.index + 2] == 0) &&
+                (decode.page.invmap[decode.page.index + 3] == 0)
+            ) {
+				val=decode_fetchd();
+				return false;
+			}
+			HostPt tlb_addr=get_tlb_read(decode.code);
+			if (tlb_addr) {
+				val=(Bitu)(tlb_addr+decode.code);
+				decode_increase_wmapmask(4);
+				decode.code+=4;
+				decode.page.index+=4;
+				return true;
+			}
 		}
 	}
 	val=decode_fetchd();
@@ -2649,8 +2673,13 @@ restart_prefix:
 			goto illegalopcode;
 		}
 	}
-	/* Normal exit because of max opcodes reached */
+	// link to next block because the maximal number of opcodes has been reached
 	dyn_set_eip_end();
+	dyn_reduce_cycles();
+	dyn_save_critical_regs();
+	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+	dyn_closeblock();
+	goto finish_block;
 core_close_block:
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();
