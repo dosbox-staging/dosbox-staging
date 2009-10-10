@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.77 2009-06-23 17:46:05 c2woody Exp $ */
+/* $Id: bios.cpp,v 1.78 2009-10-10 13:26:46 h-a-l-9000 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -434,110 +434,126 @@ static Bitu INT17_Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bitu INT14_Handler(void)
-{
-	if(reg_ah > 0x3 || reg_dx > 0x3) {	// 0-3 serial port functions
+static Bit8u INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout) {
+	double starttime = PIC_FullIndex();
+	double timeout_f = timeout * 1000.0;
+	Bit8u retval;
+	while (((retval = IO_ReadB(port)) & mask) != mask) {
+		if (starttime < (PIC_FullIndex() - timeout_f)) {
+			retval |= 0x80;
+			break;
+		}
+		CALLBACK_Idle();
+	}
+	return retval;
+}
+
+static Bitu INT14_Handler(void) {
+	if (reg_ah > 0x3 || reg_dx > 0x3) {	// 0-3 serial port functions
 										// and no more than 4 serial ports
 		LOG_MSG("BIOS INT14: Unhandled call AH=%2X DX=%4x",reg_ah,reg_dx);
 		return CBRET_NONE;
 	}
 	
 	Bit16u port = real_readw(0x40,reg_dx*2); // DX is always port number
-	if(port==0)	{
+	Bit8u timeout = mem_readb(BIOS_COM1_TIMEOUT + reg_dx);
+	if (port==0)	{
 		LOG(LOG_BIOS,LOG_NORMAL)("BIOS INT14: port %d does not exist.",reg_dx);
 		return CBRET_NONE;
 	}
-	switch (reg_ah)
-	{
-	case 0x00:	/* Init port */
-		// Parameters:
-		// AL: port parameters
-		// Return: 
-		// AH: line status
-		// AL: modem status
-		{
-			// set baud rate
-			Bitu baudrate = 9600;
-			Bit16u baudresult;
-			Bitu rawbaud=reg_al>>5;
-			
-			if(rawbaud==0){ baudrate=110;}
-			else if (rawbaud==1){ baudrate=150;}
-			else if (rawbaud==2){ baudrate=300;}
-			else if (rawbaud==3){ baudrate=600;}
-			else if (rawbaud==4){ baudrate=1200;}
-			else if (rawbaud==5){ baudrate=2400;}
-			else if (rawbaud==6){ baudrate=4800;}
-			else if (rawbaud==7){ baudrate=9600;}
+	switch (reg_ah)	{
+	case 0x00:	{
+		// Initialize port
+		// Parameters:				Return:
+		// AL: port parameters		AL: modem status
+		//							AH: line status
 
-			baudresult = (Bit16u)(115200 / baudrate);
+		// set baud rate
+		Bitu baudrate = 9600;
+		Bit16u baudresult;
+		Bitu rawbaud=reg_al>>5;
+		
+		if (rawbaud==0){ baudrate=110;}
+		else if (rawbaud==1){ baudrate=150;}
+		else if (rawbaud==2){ baudrate=300;}
+		else if (rawbaud==3){ baudrate=600;}
+		else if (rawbaud==4){ baudrate=1200;}
+		else if (rawbaud==5){ baudrate=2400;}
+		else if (rawbaud==6){ baudrate=4800;}
+		else if (rawbaud==7){ baudrate=9600;}
 
-			IO_WriteB(port+3, 0x80);	// enable divider access
-			IO_WriteB(port,(Bit8u)baudresult&0xff);
-			IO_WriteB(port+1,(Bit8u)(baudresult>>8));
+		baudresult = (Bit16u)(115200 / baudrate);
 
-			// set line parameters, disable divider access
-			IO_WriteB(port+3, reg_al&0x1F);//LCR
-			
-			// disable interrupts
-			IO_WriteB(port+1, 0);
-			IO_ReadB(port+2);
+		IO_WriteB(port+3, 0x80);	// enable divider access
+		IO_WriteB(port, (Bit8u)baudresult&0xff);
+		IO_WriteB(port+1, (Bit8u)(baudresult>>8));
 
-			// get result
-			reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
-			reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
-			CALLBACK_SCF(false);
-		}
+		// set line parameters, disable divider access
+		IO_WriteB(port+3, reg_al&0x1F); // LCR
+		
+		// disable interrupts
+		IO_WriteB(port+1, 0); // IER
+
+		// get result
+		reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
+		reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
+		CALLBACK_SCF(false);
 		break;
-	case 0x01:	/* Write character */
-		// Parameters:
-		// AL: character
-		// Return: 
-		// AH: line status
-		// AL: modem status
-		{
-			if(serialports[reg_dx]) {
-				bool timeout;
-				// switch modem lines on
-				IO_WriteB(port+4,0x3);
-				timeout = !serialports[reg_dx]->Putchar(reg_al,true,true,
-					mem_readb(BIOS_COM1_TIMEOUT+reg_dx)*1000);
-				// get result
-				reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
-				if(timeout) reg_ah |= 0x80;
-			}
-			CALLBACK_SCF(false);
-		}
-		break;
-	
-	case 0x02:	/* Read character */
-		{
-			if(serialports[reg_dx]) {
-				bool timeout;
-				Bit8u buffer;
-				// switch modem lines on
-				IO_WriteB(port+4,0x3);
-				// wait for something
-				timeout = !serialports[reg_dx]->Getchar(&buffer,&reg_ah,true, 
-					mem_readb(BIOS_COM1_TIMEOUT+reg_dx)*1000);
+	}
+	case 0x01: { // Transmit character
+		// Parameters:				Return:
+		// AL: character			AL: unchanged
+		// AH: 0x01					AH: line status from just before the char was sent
+		//								(0x80 | unpredicted) in case of timeout
+		//						[undoc]	(0x80 | line status) in case of tx timeout
+		//						[undoc]	(0x80 | modem status) in case of dsr/cts timeout
 
-				// RTS off
-				IO_WriteB(port+4,0x1);
-				// get result
-				reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
-				if(timeout) reg_ah |= 0x80;
-				else reg_al=buffer;
+		// set DTR & RTS on
+		IO_WriteB(port+4,0x3);
+
+		// wait for DSR & CTS
+		reg_ah = INT14_Wait(port+6, 0x30, timeout);
+		if (!(reg_ah & 0x80)) {
+			// wait for TX buffer empty
+			reg_ah = INT14_Wait(port+5, 0x20, timeout);
+			if (!(reg_ah & 0x80)) {
+				// fianlly send the character
+				IO_WriteB(port,reg_al);
 			}
-			CALLBACK_SCF(false);
-			break;
+		} // else timed out
+		CALLBACK_SCF(false);
+		break;
+	}
+	case 0x02: // Read character
+		// Parameters:				Return:
+		// AH: 0x02					AL: received character
+		//						[undoc]	will be trashed in case of timeout
+		//							AH: (line status & 0x1E) in case of success
+		//								(0x80 | unpredicted) in case of timeout
+		//						[undoc]	(0x80 | line status) in case of rx timeout
+		//						[undoc]	(0x80 | modem status) in case of dsr timeout
+
+		// set DTR on
+		IO_WriteB(port+4,0x1);
+
+		// wait for DSR
+		reg_ah = INT14_Wait(port+6, 0x20, timeout);
+		if (!(reg_ah & 0x80)) {
+			// wait for character to arrive
+			reg_ah = INT14_Wait(port+5, 0x01, timeout);
+			if (!(reg_ah & 0x80)) {
+				reg_ah &= 0x1E;
+				reg_al = IO_ReadB(port);
+			}
 		}
+		CALLBACK_SCF(false);
+		break;
 	case 0x03: // get status
-		{
-			reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
-			reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
-			CALLBACK_SCF(false);
-		}
-		break;		
+		reg_ah=(Bit8u)(IO_ReadB(port+5)&0xff);
+		reg_al=(Bit8u)(IO_ReadB(port+6)&0xff);
+		CALLBACK_SCF(false);
+		break;
+
 	}
 	return CBRET_NONE;
 }
