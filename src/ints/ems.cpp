@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: ems.cpp,v 1.64 2009-06-24 17:44:52 c2woody Exp $ */
+/* $Id: ems.cpp,v 1.65 2009-10-11 17:11:52 c2woody Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -40,8 +40,10 @@
 #define EMM_MAX_PAGES	(32 * 1024 / 16 )
 #define EMM_MAX_PHYS	4				/* 4 16kb pages in pageframe */
 
-#define EMM_VERSION		0x40
-#define GEMMIS_VERSION	0x0001	// Version 1.0
+#define EMM_VERSION			0x40
+#define EMM_MINOR_VERSION	0x00
+//#define EMM_MINOR_VERSION	0x30	// emm386 4.48
+#define GEMMIS_VERSION		0x0001	// Version 1.0
 
 #define EMM_SYSTEM_HANDLE	0x0000
 #define NULL_HANDLE			0xffff
@@ -180,8 +182,15 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 			}
 		case 0x02:
 			if (size!=2) return false;
-			mem_writeb(bufptr+0x00,EMM_VERSION>>4);		// version 4.0
-			mem_writew(bufptr+0x01,EMM_VERSION&0x0f);
+			mem_writeb(bufptr+0x00,EMM_VERSION>>4);		// version 4
+			mem_writeb(bufptr+0x01,EMM_MINOR_VERSION);
+			*retcode=2;
+			return true;
+		case 0x03:
+			if (EMM_MINOR_VERSION < 0x2d) return false;
+			if (size!=4) return false;
+			mem_writew(bufptr+0x00,(Bit16u)(MEM_TotalPages()*4));	// max size (kb)
+			mem_writew(bufptr+0x02,0x80);							// min size (kb)
 			*retcode=2;
 			return true;
 	}
@@ -1177,8 +1186,7 @@ static Bitu V86_Monitor() {
 static void SetupVCPI() {
 	vcpi.enabled=false;
 
-	/* Allocate one EMS-page for private VCPI-data in memory beyond 1MB */
-	if (EMM_AllocateMemory(1,vcpi.ems_handle,false) != EMM_NO_ERROR) return;
+	vcpi.ems_handle=0;	// use EMM system handle for VCPI data
 
 	vcpi.enabled=true;
 
@@ -1259,9 +1267,10 @@ class EMS: public Module_base {
 private:
 	/* location in protected unfreeable memory where the ems name and callback are
 	 * stored  32 bytes.*/
-	static Bit16u emsnameseg;
+	static Bit16u ems_baseseg;
 	RealPt old4b_pointer,old67_pointer;
-	CALLBACK_HandlerObject call_vdma,int67,call_vcpi,call_v86mon;
+	CALLBACK_HandlerObject call_vdma,call_vcpi,call_v86mon;
+	Bitu call_int67;
 
 public:
 	EMS(Section* configuration):Module_base(configuration){
@@ -1280,24 +1289,21 @@ public:
 			return;
 		}
 		BIOS_ZeroExtendedSize(true);
-		int67.Install(&INT67_Handler,CB_IRET,"Int 67 ems");
-		Bit16u call_int67=int67.Get_callback();
+
+		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2);	//We have 32 bytes
+
+		/* Add a little hack so it appears that there is an actual ems device installed */
+		char const* emsname="EMMXXXX0";
+		MEM_BlockWrite(PhysMake(ems_baseseg,0xa),emsname,(Bitu)(strlen(emsname)+1));
+
+		call_int67=CALLBACK_Allocate();
+		CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,PhysMake(ems_baseseg,4),"Int 67 ems");
+		RealSetVec(0x67,RealMake(ems_baseseg,4),old67_pointer);
 
 		/* Register the ems device */
 		//TODO MAYBE put it in the class.
 		DOS_Device * newdev = new device_EMM();
 		DOS_AddDevice(newdev);
-	
-		/* Add a little hack so it appears that there is an actual ems device installed */
-		char const* emsname="EMMXXXX0";
-		if(!emsnameseg) emsnameseg=DOS_GetMemory(2);	//We have 32 bytes
-		MEM_BlockWrite(PhysMake(emsnameseg,0xa),emsname,(Bitu)(strlen(emsname)+1));
-
-		/* Copy the callback piece into the beginning, and set the interrupt vector to it*/
-		char buf[16];
-		MEM_BlockRead(CALLBACK_PhysPointer(call_int67),buf,0xa);
-		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,0xa);
-		RealSetVec(0x67,RealMake(emsnameseg,0),old67_pointer);
 
 		/* Clear handle and page tables */
 		Bitu i;
@@ -1315,7 +1321,7 @@ public:
 			emm_segmentmappings[i].handle=NULL_HANDLE;
 		}
 
-		EMM_AllocateSystemHandle(4);	// allocate OS-dedicated handle (ems handle zero, 16kb)
+		EMM_AllocateSystemHandle(8);	// allocate OS-dedicated handle (ems handle zero, 128kb)
 
 
 		if (!ENABLE_VCPI) return;
@@ -1365,6 +1371,7 @@ public:
 	~EMS() {
 		Section_prop * section=static_cast<Section_prop *>(m_configuration);
 		if (!section->Get_bool("ems")) return;
+
 		/* Undo Biosclearing */
 		BIOS_ZeroExtendedSize(false);
  
@@ -1375,7 +1382,7 @@ public:
 
 		/* Remove the emsname and callback hack */
 		char buf[32]= { 0 };
-		MEM_BlockWrite(PhysMake(emsnameseg,0),buf,32);
+		MEM_BlockWrite(PhysMake(ems_baseseg,0),buf,32);
 		RealSetVec(0x67,old67_pointer);
 
 		/* Release memory allocated to system handle */
@@ -1387,9 +1394,6 @@ public:
 		//TODO
 
 		if ((!ENABLE_VCPI) || (!vcpi.enabled)) return;
-
-		/* Free private data area in expanded memory */
-		EMM_ReleaseMemory(vcpi.ems_handle);
 
 		if (cpu.pmode && GETFLAG(VM)) {
 			/* Switch back to real mode if in v86-mode */
@@ -1414,4 +1418,4 @@ void EMS_Init(Section* sec) {
 }
 
 //Initialize static members
-Bit16u EMS::emsnameseg = 0;
+Bit16u EMS::ems_baseseg = 0;
