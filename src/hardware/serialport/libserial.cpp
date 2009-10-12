@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: libserial.cpp,v 1.2 2009-09-26 09:15:19 h-a-l-9000 Exp $ */
+/* $Id: libserial.cpp,v 1.3 2009-10-12 12:55:20 h-a-l-9000 Exp $ */
 
 #include "libserial.h"
 
@@ -256,8 +256,8 @@ bool SERIAL_setCommParameters(COMPORT port,
 
 #if defined (LINUX) || defined (MACOSX)
 
-#include <memory.h> // strlen
-#include <malloc.h>
+#include <string.h> // strlen
+#include <stdlib.h>
 
 #include <termios.h>
 #include <unistd.h>
