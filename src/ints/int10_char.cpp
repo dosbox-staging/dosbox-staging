@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_char.cpp,v 1.59 2009-07-11 10:25:25 c2woody Exp $ */
+/* $Id: int10_char.cpp,v 1.60 2009-10-15 20:36:56 c2woody Exp $ */
 
 /* Character displaying moving functions */
 
@@ -26,18 +26,18 @@
 #include "inout.h"
 #include "int10.h"
 
-static void CGA2_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) { 
-	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT); 
-	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/2)+cleft); 
-	PhysPt src=base+((CurMode->twidth*rold)*(cheight/2)+cleft); 
-	Bitu copy=(cright-cleft); 
-	Bitu nextline=CurMode->twidth; 
-	for (Bitu i=0;i<cheight;i++) { 
-		MEM_BlockCopy(dest,src,copy); 
-		MEM_BlockCopy(dest+8*1024,src+8*1024,copy); 
-		dest+=nextline;src+=nextline; 
-	} 
-} 
+static void CGA2_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/2)+cleft);
+	PhysPt src=base+((CurMode->twidth*rold)*(cheight/2)+cleft);
+	Bitu copy=(cright-cleft);
+	Bitu nextline=CurMode->twidth;
+	for (Bitu i=0;i<cheight/2U;i++) {
+		MEM_BlockCopy(dest,src,copy);
+		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
+		dest+=nextline;src+=nextline;
+	}
+}
 
 static void CGA4_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
@@ -56,7 +56,7 @@ static void TANDY16_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysP
 	PhysPt dest=base+((CurMode->twidth*rnew)*(cheight/4)+cleft)*4;
 	PhysPt src=base+((CurMode->twidth*rold)*(cheight/4)+cleft)*4;	
 	Bitu copy=(cright-cleft)*4;Bitu nextline=CurMode->twidth*4;
-	for (Bitu i=0;i<cheight/2U;i++) {
+	for (Bitu i=0;i<cheight/4U;i++) {
 		MEM_BlockCopy(dest,src,copy);
 		MEM_BlockCopy(dest+8*1024,src+8*1024,copy);
 		MEM_BlockCopy(dest+16*1024,src+16*1024,copy);
@@ -106,21 +106,20 @@ static void TEXT_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt b
 	MEM_BlockCopy(dest,src,(cright-cleft)*2);
 }
 
-static void CGA2_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) { 
-	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT); 
-	PhysPt dest=base+((CurMode->twidth*row)*(cheight/2)+cleft); 
-	Bitu copy=(cright-cleft); 
-	Bitu nextline=CurMode->twidth; 
-	attr=(attr & 0x3) | ((attr & 0x3) << 2) | ((attr & 0x3) << 4) | ((attr & 0x3) << 6); 
-	for (Bitu i=0;i<cheight;i++) { 
-		for (Bitu x=0;x<copy;x++) { 
-			mem_writeb(dest+x,attr); 
-			mem_writeb(dest+8*1024+x,attr); 
-		} 
-		dest+=nextline; 
-	} 
+static void CGA2_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
+	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt dest=base+((CurMode->twidth*row)*(cheight/2)+cleft);
+	Bitu copy=(cright-cleft);
+	Bitu nextline=CurMode->twidth;
+	attr=(attr & 0x3) | ((attr & 0x3) << 2) | ((attr & 0x3) << 4) | ((attr & 0x3) << 6);
+	for (Bitu i=0;i<cheight/2U;i++) {
+		for (Bitu x=0;x<copy;x++) {
+			mem_writeb(dest+x,attr);
+			mem_writeb(dest+8*1024+x,attr);
+		}
+		dest+=nextline;
+	}
 }
-
 
 static void CGA4_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u attr) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
@@ -411,10 +410,10 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 				Bit8u bitline=mem_readb(fontdata++);
 				Bit8u res=0;
 				Bit8u vidline=0;
-				Bit16u tx=x;
+				Bit16u tx=(Bit16u)x;
 				while (bitsel) {
 					//Construct bitline in memory
-					INT10_GetPixel(tx,y,page,&res);
+					INT10_GetPixel(tx,(Bit16u)y,page,&res);
 					if(res) vidline|=bitsel;
 					tx++;
 					bitsel>>=1;
@@ -517,10 +516,10 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		Bit8u bitsel=128;
 		Bit8u bitline = mem_readb(Real2Phys( fontdata ));
 		fontdata = RealMake( RealSeg( fontdata ), RealOff( fontdata ) + 1);
-		Bit16u tx=x;
+		Bit16u tx=(Bit16u)x;
 		while (bitsel) {
-			if (bitline&bitsel) INT10_PutPixel(tx,y,page,attr);
-			else INT10_PutPixel(tx,y,page,attr & xor_mask);
+			if (bitline&bitsel) INT10_PutPixel(tx,(Bit16u)y,page,attr);
+			else INT10_PutPixel(tx,(Bit16u)y,page,attr & xor_mask);
 			tx++;
 			bitsel>>=1;
 		}
@@ -594,7 +593,7 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	if(cur_row==nrows) {
 		//Fill with black on non-text modes and with 0x7 on textmode
 		Bit8u fill = (CurMode->type == M_TEXT)?0x7:0;
-		INT10_ScrollWindow(0,0,(Bit8u)(nrows-1),ncols-1,-1,fill,page);
+		INT10_ScrollWindow(0,0,(Bit8u)(nrows-1),(Bit8u)(ncols-1),-1,fill,page);
 		cur_row--;
 	}
 	// Set the cursor for the page
