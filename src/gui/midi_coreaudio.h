@@ -16,7 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* $Id: midi_coreaudio.h,v 1.12 2009-10-18 18:06:28 qbix79 Exp $ */
+
 #include <AudioToolbox/AUGraph.h>
+#include <CoreServices/CoreServices.h>
 
 // A macro to simplify error handling a bit.
 #define RequireNoErr(error)                                         \
