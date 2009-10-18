@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder.h,v 1.7 2009-10-08 20:01:31 c2woody Exp $ */
+/* $Id: decoder.h,v 1.8 2009-10-18 17:52:10 c2woody Exp $ */
 
 
 #include "decoder_basic.h"
@@ -566,7 +566,16 @@ restart_prefix:
 			if (dyn_grp4_eb()) goto finish_block;
 			break;
 		case 0xff:
-			if (dyn_grp4_ev()) goto core_close_block;
+			switch (dyn_grp4_ev()) {
+			case 0:
+				break;
+			case 1:
+				goto core_close_block;
+			case 2:
+				goto illegalopcode;
+			default:
+				break;
+			}
 			break;
 
 		default:

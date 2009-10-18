@@ -1165,8 +1165,8 @@
 				else {GetEAa;Push_16(LoadMw(eaa));}
 				break;
 			default:
-				E_Exit("CPU:GRP5:Illegal Call %2X",which);
-				break;
+				LOG(LOG_CPU,LOG_ERROR)("CPU:GRP5:Illegal Call %2X",which);
+				goto illegal_opcode;
 			}
 			break;
 		}

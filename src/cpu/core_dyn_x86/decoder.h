@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: decoder.h,v 1.58 2009-10-08 20:01:31 c2woody Exp $ */
+/* $Id: decoder.h,v 1.59 2009-10-18 17:52:09 c2woody Exp $ */
 
 #define X86_DYNFPU_DH_ENABLED
 #define X86_INLINED_MEMACCESS
@@ -2665,7 +2665,8 @@ restart_prefix:
 				dyn_push(src);
 				break;
 			default:
-				IllegalOption("opcode 0xff");
+				LOG(LOG_CPU,LOG_ERROR)("CPU:GRP5:Illegal opcode 0xff");
+				goto illegalopcode;
 			}}
 			break;
 		default:
