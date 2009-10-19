@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: int10_modes.cpp,v 1.90 2009-09-06 19:25:34 c2woody Exp $ */
+/* $Id: int10_modes.cpp,v 1.91 2009-10-19 16:00:22 h-a-l-9000 Exp $ */
 
 #include <string.h>
 
@@ -607,8 +607,9 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 				RealOff(vparams) + i + crtc_block_index*16) << 8));
 		if (machine==MCH_CGA) {
 			// mode register
-			IO_WriteB(crtc_base + 4, real_readb(RealSeg(vparams),
-				RealOff(vparams) + 4*16 + 24 + mode));
+			Bit8u mode_control = real_readb(RealSeg(vparams), RealOff(vparams) + 80 + mode);
+			IO_WriteB(crtc_base + 4, mode_control);
+			real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR, mode_control);
 		}
 
 		if (machine==MCH_TANDY) {
