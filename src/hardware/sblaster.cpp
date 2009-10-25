@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.77 2009-07-11 10:39:38 harekiet Exp $ */
+/* $Id: sblaster.cpp,v 1.78 2009-10-25 16:22:22 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>
@@ -250,7 +250,7 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 	switch (type) {
 	case SB_IRQ_8:
 		if (sb.irq.pending_8bit) {
-			E_Exit("SB: 8bit irq pending");
+//			LOG_MSG("SB: 8bit irq pending");
 			return;
 		}
 		sb.irq.pending_8bit=true;
@@ -258,7 +258,7 @@ static INLINE void SB_RaiseIRQ(SB_IRQS type) {
 		break;
 	case SB_IRQ_16:
 		if (sb.irq.pending_16bit) {
-			E_Exit("SB: 16bit irq pending");
+//			LOG_MSG("SB: 16bit irq pending");
 			return;
 		}
 		sb.irq.pending_16bit=true;
