@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos.cpp,v 1.120 2009-10-04 14:28:07 c2woody Exp $ */
+/* $Id: dos.cpp,v 1.121 2009-10-28 21:45:12 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +69,7 @@ static Bitu DOS_21Handler(void) {
 
 	char name1[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
 	char name2[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
+
 	switch (reg_ah) {
 	case 0x00:		/* Terminate Program */
 		DOS_Terminate(mem_readw(SegPhys(ss)+reg_sp+2),false,0);
@@ -924,13 +925,18 @@ static Bitu DOS_21Handler(void) {
 				reg_cx = 5;
 				CALLBACK_SCF(false);
 				break;
+			case 0x02: // Get pointer to uppercase table
+				mem_writeb(data + 0x00, reg_al);
+				mem_writed(data + 0x01, dos.tables.upcase);
+				reg_cx = 5;
+				CALLBACK_SCF(false);
+				break;
 			case 0x06: // Get pointer to collating sequence table
 				mem_writeb(data + 0x00, reg_al);
 				mem_writed(data + 0x01, dos.tables.collatingseq);
 				reg_cx = 5;
 				CALLBACK_SCF(false);
 				break;
-			case 0x02: // Get pointer to uppercase table
 			case 0x03: // Get pointer to lowercase table
 			case 0x04: // Get pointer to filename uppercase table
 			case 0x07: // Get pointer to double byte char set table

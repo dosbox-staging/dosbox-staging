@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dos_tables.cpp,v 1.31 2009-05-27 09:15:41 qbix79 Exp $ */
+/* $Id: dos_tables.cpp,v 1.32 2009-10-28 21:45:12 qbix79 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
@@ -134,10 +134,15 @@ void DOS_SetupTables(void) {
 	mem_writeb(Real2Phys(dos.tables.filenamechar)+0x15,0x3d);
 	mem_writeb(Real2Phys(dos.tables.filenamechar)+0x16,0x3b);
 	mem_writeb(Real2Phys(dos.tables.filenamechar)+0x17,0x2c);
-	/* COLLATING SEQUENCE TABLE */
-	dos.tables.collatingseq=RealMake(DOS_GetMemory(17),0);
+	/* COLLATING SEQUENCE TABLE + UPCASE TABLE*/
+	// 256 bytes for col table, 128 for upcase, 4 for number of entries
+	dos.tables.collatingseq=RealMake(DOS_GetMemory(25),0);
 	mem_writew(Real2Phys(dos.tables.collatingseq),0x100);
 	for (i=0; i<256; i++) mem_writeb(Real2Phys(dos.tables.collatingseq)+i+2,i);
+	dos.tables.upcase=RealMake(dos.tables.collatingseq,258);
+	mem_writew(Real2Phys(dos.tables.upcase),0x80);
+	for (i=0; i<128; i++) mem_writeb(Real2Phys(dos.tables.upcase)+i+2,0x80+i);
+ 
 
 	/* Create a fake FCB SFT */
 	seg=DOS_GetMemory(4);
