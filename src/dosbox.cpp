@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: dosbox.cpp,v 1.149 2009-05-20 18:07:06 qbix79 Exp $ */
+/* $Id: dosbox.cpp,v 1.150 2009-11-03 20:17:42 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -130,10 +130,10 @@ static Bitu Normal_Loop(void) {
 	while (1) {
 		if (PIC_RunQueue()) {
 			ret=(*cpudecoder)();
-			if (ret<0) return 1;
+			if (GCC_UNLIKELY(ret<0)) return 1;
 			if (ret>0) {
 				Bitu blah=(*CallBack_Handlers[ret])();
-				if (blah) return blah;
+				if (GCC_UNLIKELY(blah)) return blah;
 			}
 #if C_DEBUG
 			if (DEBUG_ExitLoop()) return 0;
@@ -509,10 +509,10 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(oplmodes);
 	Pstring->Set_help("Type of OPL emulation. On 'auto' the mode is determined by sblaster type. All OPL modes are Adlib-compatible, except for 'cms'.");
 
-	const char* oplemus[]={ "default", "compat", "fast", "old", 0};
+	const char* oplemus[]={ "default", "compat", "fast", 0};
 	Pstring = secprop->Add_string("oplemu",Property::Changeable::WhenIdle,"default");
 	Pstring->Set_values(oplemus);
-	Pstring->Set_help("Provider for the OPL emulation. compat or old might provide better quality (see oplrate as well).");
+	Pstring->Set_help("Provider for the OPL emulation. compat might provide better quality (see oplrate as well).");
 
 	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,22050);
 	Pint->Set_values(oplrates);

@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: adlib.cpp,v 1.41 2009-05-16 08:29:05 harekiet Exp $ */
+/* $Id: adlib.cpp,v 1.42 2009-11-03 20:17:42 qbix79 Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,32 +28,6 @@
 #include "mapper.h"
 #include "mem.h"
 #include "dbopl.h"
-
-/* 
-	Thanks to vdmsound for nice simple way to implement this
-*/
-
-#ifdef _MSC_VER
-  /* Disable recurring warnings */
-# pragma warning ( disable : 4018 )
-# pragma warning ( disable : 4244 )
-#endif
-
-
-#define logerror
-
-
-struct __MALLOCPTR {
-	void* m_ptr;
-
-	__MALLOCPTR(void) : m_ptr(NULL) { }
-	__MALLOCPTR(void* src) : m_ptr(src) { }
-	void* operator=(void* rhs) { return (m_ptr = rhs); }
-	operator int*() const { return (int*)m_ptr; }
-	operator int**() const { return (int**)m_ptr; }
-	operator char*() const { return (char*)m_ptr; }
-};
-
 
 namespace OPL2 {
 	#include "opl.cpp"
@@ -111,78 +85,6 @@ namespace OPL3 {
 		}
 	};
 }
-
-
-namespace old_OPL2 {
-	#define OPL2_INTERNAL_FREQ    3579545   // The OPL2 operates at ~3.6MHz
-	#define HAS_YM3812 1
-	#include "fmopl.c"
-
-	struct Handler : public Adlib::Handler {
-		virtual void WriteReg( Bit32u reg, Bit8u val ) {
-			OPLWriteReg( OPL_YM3812[ 0 ], reg, val );
-		}
-		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
-			OPL_YM3812[ 0 ]->address = val;
-			return val;
-		}
-
-		virtual void Generate( MixerChannel* chan, Bitu samples ) {
-			Bit16s buf[1024];
-			while( samples > 0 ) {
-				Bitu todo = samples > 1024 ? 1024 : samples;
-				samples -= todo;
-				YM3812UpdateOne( 0, buf, todo );
-				chan->AddSamples_m16( todo, buf );
-			}
-		}
-		virtual void Init( Bitu rate ) {
-			if ( YM3812Init( 1, OPL2_INTERNAL_FREQ, rate )) {
-				E_Exit("Can't create OPL2 Emulator");	
-			};
-		}
-		~Handler() {
-			YM3812Shutdown();
-		}
-	};
-}
-#undef OSD_CPU_H
-#undef TL_TAB_LEN
-
-namespace old_OPL3 {
-	#define OPL3_INTERNAL_FREQ    14318180  // The OPL3 operates at ~14.3MHz
-	#define HAS_YMF262 1
-	#include "ymf262.c"
-
-	struct Handler : public Adlib::Handler {
-		virtual void WriteReg( Bit32u reg, Bit8u val ) {
-			OPL3WriteReg( YMF262[0], reg, val );
-		}
-		virtual Bit32u WriteAddr( Bit32u port, Bit8u val ) {
-			OPL3Write( YMF262[0], port, val );
-			return YMF262[0]->address;
-		}
-		virtual void Generate( MixerChannel* chan, Bitu samples ) {
-			Bit16s buf[2][1024];
-			while( samples > 0 ) {
-				Bitu todo = samples > 1024 ? 1024 : samples;
-				samples -= todo;
-				YMF262UpdateOne( 0, buf[0], todo );
-				chan->AddSamples_s16( todo, buf[0] );
-			}
-		}
-		virtual void Init( Bitu rate ) {
-			if ( YMF262Init( 1, OPL3_INTERNAL_FREQ, rate )) {
-				E_Exit("Can't create OPL3 Emulator");	
-			};
-		}
-		~Handler() {
-			YMF262Shutdown();
-		}
-	};
-}
-
-
 
 #define RAW_SIZE 1024
 
@@ -736,13 +638,7 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
 	mixerChan->SetScale( 2.0 );
-	if (oplemu == "old") {
-		if ( oplmode == OPL_opl2 ) {
-			handler = new old_OPL2::Handler();
-		} else {
-			handler = new old_OPL3::Handler();
-		}
-	} else if (oplemu == "fast") {
+	if (oplemu == "fast") {
 		handler = new DBOPL::Handler();
 	} else if (oplemu == "compat") {
 		if ( oplmode == OPL_opl2 ) {
