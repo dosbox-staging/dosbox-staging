@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: vga_draw.cpp,v 1.111 2009-09-10 17:44:57 h-a-l-9000 Exp $ */
+/* $Id: vga_draw.cpp,v 1.112 2009-11-03 21:06:59 h-a-l-9000 Exp $ */
 
 #include <string.h>
 #include <math.h>
@@ -787,6 +787,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 	if (IS_EGAVGA_ARCH) {
 		vga.draw.split_line = (Bitu)((vga.config.line_compare+1)/vga.draw.lines_scaled);
 		if ((svgaCard==SVGA_S3Trio) && (vga.config.line_compare==0)) vga.draw.split_line=0;
+		vga.draw.split_line -= vga.draw.vblank_skip;
 	} else {
 		vga.draw.split_line = 0x10000;	// don't care
 	}
@@ -861,9 +862,14 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 #ifdef VGA_KEEP_CHANGES
 	if (startaddr_changed) VGA_ChangesStart();
 #endif
+	float draw_skip = 0.0;
+	if (GCC_UNLIKELY(vga.draw.vblank_skip)) {
+		draw_skip = (float)(vga.draw.delay.htotal * vga.draw.vblank_skip);
+		vga.draw.address += vga.draw.address_add * (vga.draw.vblank_skip/(vga.draw.address_line_total));
+	}
 
-	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0));
-	else PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
+	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
+	else PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts + draw_skip,vga.draw.parts_lines);
 	//VGA_DrawPart( vga.draw.parts_lines );
 	//PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
 	//PIC_AddEvent(VGA_DrawPart,(float)(vga.draw.delay.parts/2),vga.draw.parts_lines); //Else tearline in Tyrian and second reality
@@ -947,6 +953,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	float fps; Bitu clock;
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
+	Bitu vblank_skip;
 	if (IS_EGAVGA_ARCH) {
 		htotal = vga.crtc.horizontal_total;
 		hdend = vga.crtc.horizontal_display_end;
@@ -976,14 +983,15 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			vbstart |= (vga.s3.ex_ver_overflow & 0x4) << 8;
 			vrstart |= ((vga.crtc.overflow & 0x80) << 2);
 			vrstart |= (vga.s3.ex_ver_overflow & 0x10) << 6;
-			vbend = vga.crtc.end_vertical_blanking & 0x3f;
-		} else {
-			vbend = vga.crtc.end_vertical_blanking & 0xf;
+			vbend = vga.crtc.end_vertical_blanking & 0x7f;
+		} else { // EGA
+			vbend = vga.crtc.end_vertical_blanking & 0x1f;
 		}
 		htotal += 2;
 		vtotal += 2;
 		hdend += 1;
 		vdend += 1;
+		vbstart += 1;
 
 		hbend = hbstart + ((hbend - hbstart) & 0x3F);
 		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
@@ -998,9 +1006,11 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		if ( !vrend) vrend = vrstart + 0xf + 1;
 		else vrend = vrstart + vrend;
 
-		vbend = (vbend - vbstart) & 0x3f;
-		if ( !vbend) vbend = vbstart + 0x3f + 1;
+		vbend = (vbend - vbstart) & 0x7f;
+		if ( !vbend) vbend = vbstart + 0x7f + 1;
 		else vbend = vbstart + vbend;
+
+		vbend++;
 			
 		if (svga.get_clock) {
 			clock = svga.get_clock();
@@ -1094,6 +1104,38 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	// Start and End of vertical retrace pulse
 	vga.draw.delay.vrstart = vrstart * vga.draw.delay.htotal;
 	vga.draw.delay.vrend = vrend * vga.draw.delay.htotal;
+
+	// Vertical blanking tricks
+	vblank_skip = 0;
+	if (IS_VGA_ARCH) { // others need more investigation
+		if (vbend > vtotal) {
+			// blanking wraps to the start of the screen
+			vblank_skip = vbend&0x7f;
+			
+			// on blanking wrap to 0, the first line is not blanked
+			// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
+			if((vbend&0x7f)==1) vblank_skip = 0;
+			
+			// it might also cut some lines off the bottom
+			if(vbstart < vdend) {
+				vdend = vbstart;
+			}
+			LOG(LOG_VGA,LOG_WARN)("Blanking wrap to line %d", vblank_skip);
+		} else if (vbstart==1) {
+			// blanking is used to cut lines at the start of the screen
+			vblank_skip = vbend;
+			LOG(LOG_VGA,LOG_WARN)("Upper %d lines of the screen blanked", vblank_skip);
+		} else if (vbstart < vdend) {
+			if(vbend < vdend) {
+				// the game wants a black bar somewhere on the screen
+				LOG(LOG_VGA,LOG_WARN)("Unsupported blanking: line %d-%d",vbstart,vbend);
+			} else {
+				// blanking is used to cut off some lines from the bottom
+				vdend = vbstart;
+			}
+		}
+		vdend -= vblank_skip;
+	}
 	// Display end
 	vga.draw.delay.vdend = vdend * vga.draw.delay.htotal;
 
@@ -1155,9 +1197,8 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 
 	//Check to prevent useless black areas
 	if (hbstart<hdend) hdend=hbstart;
-	//if (vbstart<vdend) vdend=vbstart;
-	// magic.exe demo by European Technology uses blanking from line 0 - 63
-	if (vbstart!=0 && vbstart<vdend) vdend=vbstart;
+	if ((!IS_VGA_ARCH) && (vbstart<vdend)) vdend=vbstart;
+
 
 	Bitu width=hdend;
 	Bitu height=vdend;
@@ -1337,7 +1378,10 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	}
 	VGA_CheckScanLength();
 	if (vga.draw.double_scan) {
-		if (IS_VGA_ARCH) height/=2;
+		if (IS_VGA_ARCH) { 
+			vga.draw.vblank_skip /= 2;
+			height/=2;
+		}
 		doubleheight=true;
 	}
 		
@@ -1380,6 +1424,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		vga.draw.doublewidth = doublewidth;
 		vga.draw.doubleheight = doubleheight;
 		vga.draw.aspect_ratio = aspect_ratio;
+		vga.draw.vblank_skip = vblank_skip;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
 #if C_DEBUG
