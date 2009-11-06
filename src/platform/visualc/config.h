@@ -54,6 +54,7 @@
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #define GCC_UNLIKELY(x) (x)
+#define GCC_LIKELY(x) (x)
 
 #define INLINE __forceinline
 #define DB_FASTCALL __fastcall
