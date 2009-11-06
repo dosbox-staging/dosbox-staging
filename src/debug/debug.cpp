@@ -64,6 +64,7 @@ static void DrawCode(void);
 static void DEBUG_RaiseTimerIrq(void);
 static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num);
 static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num);
+static void LogMCBS(void);
 static void LogGDT(void);
 static void LogLDT(void);
 static void LogIDT(void);
@@ -145,6 +146,7 @@ struct SCodeViewData {
 	Bit32u	cursorOfs;
 	bool	inputMode;
 	char	inputStr[255];
+	char	prevInputStr[255];
 
 } codeViewData;
 
@@ -1195,6 +1197,12 @@ bool ParseCommand(char* str) {
 		return true;
 	};
 
+	if (command == "DOS") {
+		stream >> command;
+		if (command == "MCBS") LogMCBS();
+		return true;
+	}
+
 	if (command == "GDT") {LogGDT(); return true;}
 	
 	if (command == "LDT") {LogLDT(); return true;}
@@ -1251,6 +1259,7 @@ bool ParseCommand(char* str) {
 	if (command == "HELP" || command == "?") {
 		DEBUG_ShowMsg("Debugger commands (enter all values in hex or as register):\n");
 		DEBUG_ShowMsg("--------------------------------------------------------------------------\n");
+		DEBUG_ShowMsg("F3/F6                     - Re-enter previous command.\n");
 		DEBUG_ShowMsg("F5                        - Run.\n");
 		DEBUG_ShowMsg("F9                        - Set/Remove breakpoint.\n");
 		DEBUG_ShowMsg("F10/F11                   - Step over / trace into instruction.\n");
@@ -1270,6 +1279,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("BPLIST                    - List breakpoints.\n");		
 		DEBUG_ShowMsg("BPDEL  [bpNr] / *         - Delete breakpoint nr / all.\n");
 		DEBUG_ShowMsg("C / D  [segment]:[offset] - Set code / data view address.\n");
+		DEBUG_ShowMsg("DOS MCBS                  - Show Memory Control Block chain.\n");
 		DEBUG_ShowMsg("INT [nr] / INTT [nr]      - Execute / Trace into interrupt.\n");
 #if C_HEAVY_DEBUG
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
@@ -1574,7 +1584,12 @@ Bit32u DEBUG_CheckKeys(void) {
 		case KEY_END:	// End: scroll log page down
 				DEBUG_RefreshPage(1);
 				break;
-		case KEY_F(5):	// Run Programm
+		case KEY_F(6):  // Re-enter previous command (f1-f4 generate rubbish at my place)
+		case KEY_F(3):  // Re-enter previous command
+				// copy prevInputStr back into inputStr
+				safe_strncpy(codeViewData.inputStr, codeViewData.prevInputStr, sizeof(codeViewData.inputStr));
+				break;
+		case KEY_F(5):	// Run Program
 				debugging=false;
 				CBreakpoint::ActivateBreakpoints(SegPhys(cs)+reg_eip,true);						
 				ignoreAddressOnce = SegPhys(cs)+reg_eip;
@@ -1607,7 +1622,12 @@ Bit32u DEBUG_CheckKeys(void) {
 				break;
 		case 0x0A: //Parse typed Command
 				codeViewData.inputMode = true;
-				if(ParseCommand(codeViewData.inputStr)) codeViewData.inputStr[0] = 0;
+				if(ParseCommand(codeViewData.inputStr)) {
+					// copy inputStr to prevInputStr so we can restore it if the user hits F3
+					safe_strncpy(codeViewData.prevInputStr, codeViewData.inputStr, sizeof(codeViewData.prevInputStr));
+					// clear input line ready for next command
+					codeViewData.inputStr[0] = 0;
+				}
 				break;
 		case 0x107:     //backspace (linux)
 		case 0x7f:	//backspace in some terminal emulators (linux)
@@ -1679,6 +1699,65 @@ void DEBUG_DrawScreen(void) {
 
 static void DEBUG_RaiseTimerIrq(void) {
 	PIC_ActivateIRQ(0);
+}
+
+// Display the content of the MCB chain starting with the MCB at the specified segment.
+static void LogMCBChain(Bit16u mcb_segment) {
+	DOS_MCB mcb(mcb_segment);
+	char filename[9]; // 8 characters plus a terminating NUL
+	const char *psp_seg_note;
+	PhysPt dataAddr = PhysMake(dataSeg,dataOfs);// location being viewed in the "Data Overview"
+
+	// loop forever, breaking out of the loop once we've processed the last MCB
+	while (true) {
+		// verify that the type field is valid
+		if (mcb.GetType()!=0x4d && mcb.GetType()!=0x5a) {
+			LOG(LOG_MISC,LOG_ERROR)("MCB chain broken at %04X:0000!",mcb_segment);
+			return;
+		}
+
+		mcb.GetFileName(filename);
+
+		// some PSP segment values have special meanings
+		switch (mcb.GetPSPSeg()) {
+			case MCB_FREE:
+				psp_seg_note = "(free)";
+				break;
+			case MCB_DOS:
+				psp_seg_note = "(DOS)";
+				break;
+			default:
+				psp_seg_note = "";
+		}
+
+		LOG(LOG_MISC,LOG_ERROR)("   %04X  %12u     %04X %-7s  %s",mcb_segment,mcb.GetSize() << 4,mcb.GetPSPSeg(), psp_seg_note, filename);
+
+		// print a message if dataAddr is within this MCB's memory range
+		PhysPt mcbStartAddr = PhysMake(mcb_segment+1,0);
+		PhysPt mcbEndAddr = PhysMake(mcb_segment+1+mcb.GetSize(),0);
+		if (dataAddr >= mcbStartAddr && dataAddr < mcbEndAddr) {
+			LOG(LOG_MISC,LOG_ERROR)("   (data addr %04hX:%04X is %u bytes past this MCB)",dataSeg,dataOfs,dataAddr - mcbStartAddr);
+		}
+
+		// if we've just processed the last MCB in the chain, break out of the loop
+		if (mcb.GetType()==0x5a) {
+			break;
+		}
+		// else, move to the next MCB in the chain
+		mcb_segment+=mcb.GetSize()+1;
+		mcb.SetPt(mcb_segment);
+	}
+}
+
+// Display the content of all Memory Control Blocks.
+static void LogMCBS(void)
+{
+	LOG(LOG_MISC,LOG_ERROR)("MCB Seg  Size (bytes)  PSP Seg (notes)  Filename");
+	LOG(LOG_MISC,LOG_ERROR)("Conventional memory:");
+	LogMCBChain(dos.firstMCB);
+
+	LOG(LOG_MISC,LOG_ERROR)("Upper memory:");
+	LogMCBChain(dos_infoblock.GetStartOfUMBChain());
 }
 
 static void LogGDT(void)
