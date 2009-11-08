@@ -139,7 +139,7 @@ void DOS_SetupTables(void) {
 	dos.tables.collatingseq=RealMake(DOS_GetMemory(25),0);
 	mem_writew(Real2Phys(dos.tables.collatingseq),0x100);
 	for (i=0; i<256; i++) mem_writeb(Real2Phys(dos.tables.collatingseq)+i+2,i);
-	dos.tables.upcase=RealMake(dos.tables.collatingseq,258);
+	dos.tables.upcase=dos.tables.collatingseq+258;
 	mem_writew(Real2Phys(dos.tables.upcase),0x80);
 	for (i=0; i<128; i++) mem_writeb(Real2Phys(dos.tables.upcase)+i+2,0x80+i);
  
