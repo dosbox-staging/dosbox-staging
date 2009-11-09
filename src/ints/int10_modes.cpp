@@ -445,6 +445,8 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		}
 		break;
 	case MCH_HERC:
+		// Only init the adapter if the equipment word is set to monochrome (Testdrive)
+		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30) return false;
 		CurMode=&Hercules_Mode;
 		break;
 	}
