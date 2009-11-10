@@ -321,10 +321,10 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x1c8 - 0x1cf */
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_AX},{L_REGd	,O_BSWAP	,S_REGd	,REGI_CX},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_DX},{L_REGd	,O_BSWAP	,S_REGd	,REGI_BX},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_SP},{L_REGd	,O_BSWAP	,S_REGd	,REGI_BP},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_SI},{L_REGd	,O_BSWAP	,S_REGd	,REGI_DI},
+{L_REGw		,O_BSWAPw	,S_REGw	,REGI_AX},{L_REGw	,O_BSWAPw	,S_REGw	,REGI_CX},
+{L_REGw		,O_BSWAPw	,S_REGw	,REGI_DX},{L_REGw	,O_BSWAPw	,S_REGw	,REGI_BX},
+{L_REGw		,O_BSWAPw	,S_REGw	,REGI_SP},{L_REGw	,O_BSWAPw	,S_REGw	,REGI_BP},
+{L_REGw		,O_BSWAPw	,S_REGw	,REGI_SI},{L_REGw	,O_BSWAPw	,S_REGw	,REGI_DI},
 
 /* 0x1d0 - 0x1d7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},
@@ -677,10 +677,10 @@ static OpCode OpCodeTable[1024]={
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 {0			,0			,0		,0		},{0		,0			,0		,0		},
 /* 0x3c8 - 0x3cf */
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_AX},{L_REGd	,O_BSWAP	,S_REGd	,REGI_CX},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_DX},{L_REGd	,O_BSWAP	,S_REGd	,REGI_BX},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_SP},{L_REGd	,O_BSWAP	,S_REGd	,REGI_BP},
-{L_REGd		,O_BSWAP	,S_REGd	,REGI_SI},{L_REGd	,O_BSWAP	,S_REGd	,REGI_DI},
+{L_REGd		,O_BSWAPd	,S_REGd	,REGI_AX},{L_REGd	,O_BSWAPd	,S_REGd	,REGI_CX},
+{L_REGd		,O_BSWAPd	,S_REGd	,REGI_DX},{L_REGd	,O_BSWAPd	,S_REGd	,REGI_BX},
+{L_REGd		,O_BSWAPd	,S_REGd	,REGI_SP},{L_REGd	,O_BSWAPd	,S_REGd	,REGI_BP},
+{L_REGd		,O_BSWAPd	,S_REGd	,REGI_SI},{L_REGd	,O_BSWAPd	,S_REGd	,REGI_DI},
 
 /* 0x3d0 - 0x3d7 */
 {0			,0			,0		,0		},{0		,0			,0		,0		},

@@ -588,28 +588,28 @@
 			else {GetEAa;*rmrw=LoadMw(eaa);SaveMw(eaa,LoadMw(eaa)+oldrmrw);}
 			break;
 		}
-	CASE_0F_B(0xc8)												/* BSWAP EAX */
+	CASE_0F_W(0xc8)												/* BSWAP AX */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_eax);break;
-	CASE_0F_B(0xc9)												/* BSWAP ECX */
+		BSWAPW(reg_ax);break;
+	CASE_0F_W(0xc9)												/* BSWAP CX */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_ecx);break;
-	CASE_0F_B(0xca)												/* BSWAP EDX */
+		BSWAPW(reg_cx);break;
+	CASE_0F_W(0xca)												/* BSWAP DX */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_edx);break;
-	CASE_0F_B(0xcb)												/* BSWAP EBX */
+		BSWAPW(reg_dx);break;
+	CASE_0F_W(0xcb)												/* BSWAP BX */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_ebx);break;
-	CASE_0F_B(0xcc)												/* BSWAP ESP */
+		BSWAPW(reg_bx);break;
+	CASE_0F_W(0xcc)												/* BSWAP SP */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_esp);break;
-	CASE_0F_B(0xcd)												/* BSWAP EBP */
+		BSWAPW(reg_sp);break;
+	CASE_0F_W(0xcd)												/* BSWAP BP */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_ebp);break;
-	CASE_0F_B(0xce)												/* BSWAP ESI */
+		BSWAPW(reg_bp);break;
+	CASE_0F_W(0xce)												/* BSWAP SI */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_esi);break;
-	CASE_0F_B(0xcf)												/* BSWAP EDI */
+		BSWAPW(reg_si);break;
+	CASE_0F_W(0xcf)												/* BSWAP DI */
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
-		BSWAP(reg_edi);break;
+		BSWAPW(reg_di);break;
 		

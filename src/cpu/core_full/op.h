@@ -584,9 +584,13 @@ switch (inst.code.op) {
 		SETFLAGBIT(CF,(inst_op1_d & (1 << (inst_op2_d & 31))));
 		inst_op1_d&=~(1 << (inst_op2_d & 31));
 		break;
-	case O_BSWAP:
+	case O_BSWAPw:
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
-		BSWAP(inst_op1_d);
+		BSWAPW(inst_op1_w);
+		break;
+	case O_BSWAPd:
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
+		BSWAPD(inst_op1_d);
 		break;
 	case O_CMPXCHG:
 		if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEWSLOW) goto illegalopcode;

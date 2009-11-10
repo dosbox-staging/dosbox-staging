@@ -956,5 +956,8 @@
 	save(op1,lf_resd);											\
 	lflags.type=t_DSHRd;
 
-#define BSWAP(op1)														\
+#define BSWAPW(op1)														\
+	op1 = 0;
+
+#define BSWAPD(op1)														\
 	op1 = (op1>>24)|((op1>>8)&0xFF00)|((op1<<8)&0xFF0000)|((op1<<24)&0xFF000000);
