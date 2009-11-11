@@ -1065,6 +1065,7 @@ void CSerial::Init_Registers () {
 	Write_LCR (lcrresult);
 	updateMSR();
 	Read_MSR();
+	PIC_DeActivateIRQ(irq);
 }
 
 CSerial::CSerial(Bitu id, CommandLine* cmd) {
