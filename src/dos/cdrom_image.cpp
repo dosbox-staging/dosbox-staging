@@ -227,11 +227,19 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 
 bool CDROM_Interface_Image::PlayAudioSector(unsigned long start,unsigned long len)
 {
+	// We might want to do some more checks. E.g valid start and length
 	SDL_mutexP(player.mutex);
 	player.cd = this;
 	player.currFrame = start;
 	player.targetFrame = start + len;
-	player.isPlaying = true;
+	int track = GetTrack(start) - 1;
+	if(track >= 0 && tracks[track].attr == 0x40) {
+		LOG(LOG_MISC,LOG_WARN)("Game tries to play the data track. Not doing this");
+		player.isPlaying = false;
+		//Unclear wether return false should be here. 
+		//specs say that this function returns at once and games should check the status wether the audio is actually playing
+		//Real drives either fail or succeed as well
+	} else player.isPlaying = true;
 	player.isPaused = false;
 	SDL_mutexV(player.mutex);
 	return true;
@@ -239,6 +247,7 @@ bool CDROM_Interface_Image::PlayAudioSector(unsigned long start,unsigned long le
 
 bool CDROM_Interface_Image::PauseAudio(bool resume)
 {
+	if (!player.isPlaying) return false;
 	player.isPaused = !resume;
 	return true;
 }
