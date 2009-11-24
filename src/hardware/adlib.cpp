@@ -549,7 +549,10 @@ static void OPL_CallBack(Bitu len) {
 	module->handler->Generate( module->mixerChan, len );
 	//Disable the sound generation after 30 seconds of silence
 	if ((PIC_Ticks - module->lastUsed) > 30000) {
-		module->mixerChan->Enable(false);
+		Bitu i;
+		for (i=0xb0;i<0xb9;i++) if (module->cache[i]&0x20||module->cache[i+0x100]&0x20) break;
+		if (i==0xb9) module->mixerChan->Enable(false);
+		else module->lastUsed = PIC_Ticks;
 	}
 }
 
