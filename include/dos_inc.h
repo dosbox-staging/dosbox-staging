@@ -86,7 +86,7 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_SDA_OFS 0
 #define DOS_CDS_SEG 0x108
 #define DOS_FIRST_SHELL 0x118
-#define DOS_MEM_START 0x170		//First Segment that DOS can use
+#define DOS_MEM_START 0x16f		//First Segment that DOS can use
 
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
