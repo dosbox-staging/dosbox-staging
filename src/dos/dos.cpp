@@ -816,7 +816,11 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x59:					/* Get Extended error information */
 		reg_ax=dos.errorcode;
-		reg_bh=0;	//Unkown error class
+		if (dos.errorcode==DOSERR_FILE_NOT_FOUND || dos.errorcode==DOSERR_PATH_NOT_FOUND) {
+			reg_bh=8;	//Not Found error class (Road Hog)
+		} else {
+			reg_bh=0;	//Unspecified error class
+		}
 		reg_bl=1;	//Retry retry retry
 		reg_ch=0;	//Unkown error locus
 		break;
