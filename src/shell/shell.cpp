@@ -283,6 +283,8 @@ void DOS_Shell::Run(void) {
 	std::string line;
 	if (cmd->FindStringRemain("/C",line)) {
 		strcpy(input_line,line.c_str());
+		char* sep = strpbrk(input_line,"\r\n"); //GTA installer
+		if (sep) *sep = 0;
 		DOS_Shell temp;
 		temp.echo = echo;
 		temp.ParseLine(input_line);		//for *.exe *.com  |*.bat creates the bf needed by runinternal;
