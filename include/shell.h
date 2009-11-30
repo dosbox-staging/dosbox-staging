@@ -44,7 +44,7 @@ class DOS_Shell;
 
 class BatchFile {
 public:
-	BatchFile(DOS_Shell * host,char const* const name, char const * const cmd_line);
+	BatchFile(DOS_Shell * host,char const* const resolved_name,char const* const entered_name, char const * const cmd_line);
 	virtual ~BatchFile();
 	virtual bool ReadLine(char * line);
 	bool Goto(char * where);
