@@ -344,7 +344,7 @@ AH_BOTTOM([#if C_HAS_ATTRIBUTE
 
 AH_BOTTOM([#if C_HAS_BUILTIN_EXPECT
 #define GCC_UNLIKELY(x) __builtin_expect((x),0)
-#define GCC_LIKELY(X) __builtin_expect((x),1)
+#define GCC_LIKELY(x) __builtin_expect((x),1)
 #else
 #define GCC_UNLIKELY(x) (x)
 #define GCC_LIKELY(x) (x)
