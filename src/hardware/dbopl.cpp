@@ -401,9 +401,9 @@ Bits Operator::TemplateVolume(  ) {
 		break;
 	case DECAY:
 		vol += RateForward( decayAdd );
-		if ( vol >= sustainLevel ) {
+		if ( GCC_UNLIKELY(vol >= sustainLevel) ) {
 			//Check if we didn't overshoot max attenuation, then just go off
-			if ( vol >= ENV_MAX ) {
+			if ( GCC_UNLIKELY(vol >= ENV_MAX) ) {
 				volume = ENV_MAX;
 				SetState( OFF );
 				return ENV_MAX;
@@ -420,7 +420,7 @@ Bits Operator::TemplateVolume(  ) {
 		//In sustain phase, but not sustaining, do regular release
 	case RELEASE: 
 		vol += RateForward( releaseAdd );;
-		if ( vol >= ENV_MAX ) {
+		if ( GCC_UNLIKELY(vol >= ENV_MAX) ) {
 			volume = ENV_MAX;
 			SetState( OFF );
 			return ENV_MAX;
@@ -1260,7 +1260,7 @@ void Chip::Setup( Bit32u rate ) {
 				count += guessAdd;
 				Bit32s change = count >> RATE_SH;
 				count &= RATE_MASK;
-				if ( change ) { 
+				if ( GCC_UNLIKELY(change) ) { // less than 1 % 
 					volume += ( ~volume * change ) >> 3;
 				}
 				samples++;
@@ -1496,7 +1496,7 @@ void Handler::WriteReg( Bit32u addr, Bit8u val ) {
 
 void Handler::Generate( MixerChannel* chan, Bitu samples ) {
 	Bit32s buffer[ 512 * 2 ];
-	if ( samples > 512 )
+	if ( GCC_UNLIKELY(samples > 512) )
 		samples = 512;
 	if ( !chip.opl3Active ) {
 		chip.GenerateBlock2( samples, buffer );
