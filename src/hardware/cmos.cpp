@@ -68,7 +68,8 @@ static void cmos_checktimer(void) {
 	LOG(LOG_PIT,LOG_NORMAL)("RTC Timer at %.2f hz",1000.0/cmos.timer.delay);
 //	PIC_AddEvent(cmos_timerevent,cmos.timer.delay);
 	/* A rtc is always running */
-	PIC_AddEvent(cmos_timerevent,(double)cmos.timer.delay-fmod(PIC_FullIndex(),(double)cmos.timer.delay)); //Should be more like a real pc. Check
+	double remd=fmod(PIC_FullIndex(),(double)cmos.timer.delay);
+	PIC_AddEvent(cmos_timerevent,(float)((double)cmos.timer.delay-remd)); //Should be more like a real pc. Check
 //	status reg A reading with this (and with other delays actually)
 }
 

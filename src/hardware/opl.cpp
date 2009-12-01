@@ -62,7 +62,7 @@ static const fltype frqmul_tab[16] = {
 	0.5,1,2,3,4,5,6,7,8,9,10,10,12,12,15,15
 };
 // calculated frequency multiplication values (depend on sampling rate)
-static float frqmul[16];
+static fltype frqmul[16];
 
 // key scale levels
 static Bit8u kslev[8][16];
