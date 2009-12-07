@@ -473,27 +473,26 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 		/* Skip non-directories if option AD is present */
 		if(optAD && !(attr&DOS_ATTR_DIRECTORY) ) continue;
-
-		char * ext = empty_string;
-		if (!optW && (name[0] != '.')) {
-			ext = strrchr(name, '.');
-			if (!ext) ext = empty_string;
-			else *ext++ = 0;
-		}
-		Bit8u day	= (Bit8u)(date & 0x001f);
-		Bit8u month	= (Bit8u)((date >> 5) & 0x000f);
-		Bit16u year = (Bit16u)((date >> 9) + 1980);
-		Bit8u hour	= (Bit8u)((time >> 5 ) >> 6);
-		Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
-
+		
 		/* output the file */
 		if (optB) {
 			// this overrides pretty much everything
 			if (strcmp(".",name) && strcmp("..",name)) {
-				if ((attr & DOS_ATTR_DIRECTORY)||(strlen(ext)==0)) WriteOut("%s\n",name);
-				else WriteOut("%s.%s\n",name,ext);
+				WriteOut("%s\n",name);
 			}
 		} else {
+			char * ext = empty_string;
+			if (!optW && (name[0] != '.')) {
+				ext = strrchr(name, '.');
+				if (!ext) ext = empty_string;
+				else *ext++ = 0;
+			}
+			Bit8u day	= (Bit8u)(date & 0x001f);
+			Bit8u month	= (Bit8u)((date >> 5) & 0x000f);
+			Bit16u year = (Bit16u)((date >> 9) + 1980);
+			Bit8u hour	= (Bit8u)((time >> 5 ) >> 6);
+			Bit8u minute = (Bit8u)((time >> 5) & 0x003f);
+
 			if (attr & DOS_ATTR_DIRECTORY) {
 				if (optW) {
 					WriteOut("[%s]",name);
@@ -518,11 +517,9 @@ void DOS_Shell::CMD_DIR(char * args) {
 			if (optW) {
 				w_count++;
 			}
-			if (optP) {
-				if (!(++p_count%(22*w_size))) {
-					CMD_PAUSE(empty_string);
-				}
-			}
+		}
+		if (optP && !(++p_count%(22*w_size))) {
+			CMD_PAUSE(empty_string);
 		}
 	} while ( (ret=DOS_FindNext()) );
 	if (optW) {
