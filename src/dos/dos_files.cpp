@@ -93,7 +93,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
 		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
 		case '\'':	case '+':	case '^':	case 246:	case 255:	case 0xa0:
-		case 0xe5:
+		case 0xe5:	case 0xbd:
 			upname[w++]=c;
 			break;
 		default:
@@ -175,6 +175,11 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 				ext[4] = 0;
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
+
+			if (strlen(fullname)+strlen(tempdir)>=DOS_PATHLENGTH) {
+				DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
+			}
+		   
 			strcat(fullname,tempdir);
 			tempdir[0]=0;
 			w=0;r++;
