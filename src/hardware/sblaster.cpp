@@ -995,6 +995,8 @@ static void DSP_DoCommand(void) {
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented auto-init DMA ADPCM command %2X",sb.dsp.cmd);
 		break;
 	case 0x20:
+		DSP_AddData(0x7f);   // fake silent input for Creative parrot
+		break;
 	case 0x2c:
 	case 0x98: case 0x99: /* Documented only for DSP 2.x and 3.x */
 	case 0xa0: case 0xa8: /* Documented only for DSP 3.x */
