@@ -439,6 +439,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		if (mode>6) return false;
 	case TANDY_ARCH_CASE:
 		if (mode>0xa) return false;
+		if (mode==7) mode=0; // PCJR defaults to 0 on illegal mode 7
 		if (!SetCurMode(ModeList_OTHER,mode)) {
 			LOG(LOG_INT10,LOG_ERROR)("Trying to set illegal mode %X",mode);
 			return false;
@@ -448,6 +449,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		// Only init the adapter if the equipment word is set to monochrome (Testdrive)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30) return false;
 		CurMode=&Hercules_Mode;
+		mode=7; // in case the video parameter table is modified
 		break;
 	}
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
@@ -594,31 +596,15 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		if (mode < 2) crtc_block_index = 0;
 		else if (mode < 4) crtc_block_index = 1;
 		else if (mode < 7) crtc_block_index = 2;
-		else {
-			if (machine==MCH_PCJR) {
-				if (mode < 9) crtc_block_index = 2;
-				else crtc_block_index = 3;
-			} else {
-				if (mode == 7) crtc_block_index = 3;
-			}
-		}
+		else if (mode == 7) crtc_block_index = 3; // MDA mono mode; invalid for others
+		else if (mode < 9) crtc_block_index = 2;
+		else crtc_block_index = 3; // Tandy/PCjr modes
 
 		// init CRTC registers
 		for (Bit16u i = 0; i < 16; i++)
 			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams), 
 				RealOff(vparams) + i + crtc_block_index*16) << 8));
-		if (machine==MCH_CGA) {
-			// mode register
-			Bit8u mode_control = real_readb(RealSeg(vparams), RealOff(vparams) + 80 + mode);
-			IO_WriteB(crtc_base + 4, mode_control);
-			real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR, mode_control);
-		}
-
-		if (machine==MCH_TANDY) {
-			E_Exit("INT10 modeset: video parameter table changed");
-		}
 	}
-
 	FinishSetMode(clearmem);
 	return true;
 }
