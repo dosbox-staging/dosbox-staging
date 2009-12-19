@@ -373,6 +373,7 @@ public:
 
 		/* Check for first command being a directory or file */
 		char buffer[CROSS_LEN];
+		char orig[CROSS_LEN];
 		char cross_filesplit[2] = {CROSS_FILESPLIT , 0};
 		/* Combining -securemode and no parameter leaves you with a lovely Z:\. */ 
 		if ( !control->cmdline->FindCommand(1,line) ) { 
@@ -405,21 +406,29 @@ public:
 				if (access(buffer,F_OK)) goto nomount;
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
+				/* Save the non modified filename (so boot and imgmount can use it (long filenames, case sensivitive)*/
+				strcpy(orig,name);
 				upcase(name);
 				if(strstr(name,".BAT") != 0) {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					/* BATch files are called else exit will not work */
 					autoexec[15].Install(std::string("CALL ") + name);
-				} else if((strstr(name,".IMG") != 0) || (strstr(name,".IMA") !=0)) {
+					if(addexit) autoexec[16].Install("exit");
+				} else if((strstr(name,".IMG") != 0) || (strstr(name,".IMA") !=0 )) {
 					//No secure mode here as boot is destructive and enabling securemode disables boot
 					/* Boot image files */
-					autoexec[15].Install(std::string("BOOT ") + name);
+					autoexec[15].Install(std::string("BOOT ") + orig);
+				} else if((strstr(name,".ISO") != 0) || (strstr(name,".CUE") !=0 )) {
+					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					/* imgmount CD image files */
+					autoexec[15].Install(std::string("IMGMOUNT D \"") + orig + std::string("\" -t iso"));
+					//autoexec[16].Install("D:");
+					/* Makes no sense to exit here */
 				} else {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					autoexec[15].Install(name);
+					if(addexit) autoexec[16].Install("exit");
 				}
-
-				if(addexit) autoexec[16].Install("exit");
 			}
 		}
 nomount:
