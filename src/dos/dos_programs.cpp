@@ -1105,12 +1105,11 @@ public:
 							WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 							return;
 						}
-
-						if ((test.st_mode & S_IFDIR)) {
-							WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
-							return;
-						}
 					}
+				}
+				if ((test.st_mode & S_IFDIR)) {
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
+					return;
 				}
 				paths.push_back(temp_line);
 			}
