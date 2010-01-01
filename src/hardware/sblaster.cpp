@@ -1368,7 +1368,10 @@ static Bitu read_sb(Bitu port,Bitu /*iolen*/) {
 		return DSP_ReadData();
 	case DSP_READ_STATUS:
 		//TODO See for high speed dma :)
-		sb.irq.pending_8bit=false;
+		if (sb.irq.pending_8bit)  {
+			sb.irq.pending_8bit=false;
+			PIC_DeActivateIRQ(sb.hw.irq);
+		}
 		if (sb.dsp.out.used) return 0xff;
 		else return 0x7f;
 	case DSP_ACK_16BIT:
