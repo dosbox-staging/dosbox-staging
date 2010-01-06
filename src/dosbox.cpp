@@ -480,10 +480,10 @@ void DOSBOX_Init(void) {
 
 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
 	
-	const char* sbtypes[] = { "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none", 0 };
+	const char* sbtypes[] = { "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0 };
 	Pstring = secprop->Add_string("sbtype",Property::Changeable::WhenIdle,"sb16");
 	Pstring->Set_values(sbtypes);
-	Pstring->Set_help("Type of sblaster to emulate.");
+	Pstring->Set_help("Type of Soundblaster to emulate. gb is Gameblaster.");
 
 	Phex = secprop->Add_hex("sbbase",Property::Changeable::WhenIdle,0x220);
 	Phex->Set_values(ios);

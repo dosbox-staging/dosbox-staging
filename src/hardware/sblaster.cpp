@@ -63,7 +63,7 @@ bool MIDI_Available(void);
 #define SB_SH_MASK	((1 << SB_SH)-1)
 
 enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
-enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6};
+enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6,SBT_GB=7};
 enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
 
 enum DSP_MODES {
@@ -1478,6 +1478,7 @@ private:
 		else if (!strcasecmp(sbtype,"sbpro1")) type=SBT_PRO1;
 		else if (!strcasecmp(sbtype,"sbpro2")) type=SBT_PRO2;
 		else if (!strcasecmp(sbtype,"sb16")) type=SBT_16;
+		else if (!strcasecmp(sbtype,"gb")) type=SBT_GB;
 		else if (!strcasecmp(sbtype,"none")) type=SBT_NONE;
 		else type=SBT_16;
 
@@ -1495,7 +1496,9 @@ private:
 		/* Else assume auto */
 		else {
 			switch (type) {
-			case SBT_NONE:opl_mode=OPL_none;break;
+			case SBT_NONE:
+			case SBT_GB:
+				opl_mode=OPL_none;break;
 			case SBT_1:opl_mode=OPL_opl2;break;
 			case SBT_2:opl_mode=OPL_opl2;break;
 			case SBT_PRO1:opl_mode=OPL_dualopl2;break;
@@ -1524,23 +1527,25 @@ public:
 		OPL_Mode opl_mode = OPL_none;
 		Find_Type_And_Opl(section,sb.type,opl_mode);
 	
+		bool do_cms = (sb.type==SBT_GB)? true:false;
+
 		switch (opl_mode) {
 		case OPL_none:
 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
 			break;
 		case OPL_cms:
 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
-			CMS_Init(section);
+			do_cms = true;
 			break;
 		case OPL_opl2:
-			CMS_Init(section);
+			do_cms = true;
 		case OPL_dualopl2:
 		case OPL_opl3:
 			OPL_Init(section,opl_mode);
 			break;
 		}
-
-		if (sb.type==SBT_NONE) return;
+		if (do_cms) CMS_Init(section);
+		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
 		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
 		sb.dsp.state=DSP_S_NORMAL;
@@ -1603,7 +1608,7 @@ public:
 			break;
 		}
 
-		if (sb.type==SBT_NONE) return;
+		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 		DSP_Reset();//Stop everything	
 	}	
 }; //End of SBLASTER class

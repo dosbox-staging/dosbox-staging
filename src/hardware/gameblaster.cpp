@@ -22,6 +22,7 @@
 #include "mem.h"
 #include "hardware.h"
 #include "setup.h"
+#include "support.h"
 #include "pic.h"
 #include <cstring>
 #include <math.h>
@@ -139,6 +140,7 @@ static Bit16s * cms_buf_point[4] = {
 	cms_buffer[0][0],cms_buffer[0][1],cms_buffer[1][0],cms_buffer[1][1] };
 
 static Bitu last_command;
+static Bitu base_port;
 
 
 static void saa1099_envelope(int chip, int ch)
@@ -286,6 +288,16 @@ static void saa1099_update(int chip, INT16 **buffer, int length)
 static void saa1099_write_port_w( int chip, int offset, int data )
 {
 	struct SAA1099 *saa = &saa1099[chip];
+	if(offset == 1) {
+		// address port
+		saa->selected_reg = data & 0x1f;
+		if (saa->selected_reg == 0x18 || saa->selected_reg == 0x19) {
+			/* clock the envelope channels */
+			if (saa->env_clock[0]) saa1099_envelope(chip,0);
+			if (saa->env_clock[1]) saa1099_envelope(chip,1);
+		}
+		return;
+	}
 	int reg = saa->selected_reg;
 	int ch;
 
@@ -364,37 +376,26 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 	}
 }
 
-
-static void write_cms(Bitu port,Bitu val,Bitu iolen) {
-	if (last_command + 1000 < PIC_Ticks) if(cms_chan) cms_chan->Enable(true); 
+static void write_cms(Bitu port, Bitu val, Bitu /* iolen */) {
+	if(cms_chan && (!cms_chan->enabled)) cms_chan->Enable(true);
 	last_command = PIC_Ticks;
-	switch (port) {
-	case 0x0220:
+	switch (port-base_port) {
+	case 0:
+		saa1099_write_port_w(0,0,val);
+		break;
+	case 1:
 		saa1099_write_port_w(0,1,val);
 		break;
-	case 0x221:
-		saa1099[0].selected_reg = val & 0x1f;
-		if (saa1099[0].selected_reg == 0x18 || saa1099[0].selected_reg == 0x19) {
-			/* clock the envelope channels */
-			if (saa1099[0].env_clock[0]) saa1099_envelope(0,0);
-			if (saa1099[0].env_clock[1]) saa1099_envelope(0,1);
-		}
+	case 2:
+		saa1099_write_port_w(1,0,val);
 		break;
-	case 0x0222:
+	case 3:
 		saa1099_write_port_w(1,1,val);
-		break;
-	case 0x223:
-		saa1099[1].selected_reg = val & 0x1f;
-		if (saa1099[1].selected_reg == 0x18 || saa1099[1].selected_reg == 0x19) {
-			/* clock the envelope channels */
-			if (saa1099[1].env_clock[0]) saa1099_envelope(1,0);
-			if (saa1099[1].env_clock[1]) saa1099_envelope(1,1);
-		}
 		break;
 	}
 }
 
- static void CMS_CallBack(Bitu len) {
+static void CMS_CallBack(Bitu len) {
 	if (len > CMS_BUFFER_SIZE) return;
 
 	saa1099_update(0, &cms_buf_point[0], (int)len);
@@ -421,10 +422,38 @@ static void write_cms(Bitu port,Bitu val,Bitu iolen) {
 	if (last_command + 10000 < PIC_Ticks) if(cms_chan) cms_chan->Enable(false);
 }
 
+// The Gameblaster detection
+static Bit8u cms_detect_register = 0xff;
+
+static void write_cms_detect(Bitu port, Bitu val, Bitu /* iolen */) {
+	switch(port-base_port) {
+	case 0x6:
+	case 0x7:
+		cms_detect_register = val;
+		break;
+	}
+}
+
+static Bitu read_cms_detect(Bitu port, Bitu /* iolen */) {
+	Bit8u retval = 0xff;
+	switch(port-base_port) {
+	case 0x4:
+		retval = 0x7f;
+		break;
+	case 0xa:
+	case 0xb:
+		retval = cms_detect_register;
+		break;
+	}
+	return retval;
+}
+
 
 class CMS:public Module_base {
 private:
 	IO_WriteHandleObject WriteHandler;
+	IO_WriteHandleObject DetWriteHandler;
+	IO_ReadHandleObject DetReadHandler;
 	MixerObject MixerChan;
 
 public:
@@ -432,8 +461,16 @@ public:
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		Bitu sample_rate_temp = section->Get_int("oplrate");
 		sample_rate = static_cast<double>(sample_rate_temp);
-		Bitu base = section->Get_hex("sbbase");
-		WriteHandler.Install(base,write_cms,IO_MB,4);
+		base_port = section->Get_hex("sbbase");
+		WriteHandler.Install(base_port, write_cms, IO_MB,4);
+
+		// A standalone Gameblaster has a magic chip on it which is
+		// sometimes used for detection.
+		const char * sbtype=section->Get_string("sbtype");
+		if (!strcasecmp(sbtype,"gb")) {
+			DetWriteHandler.Install(base_port+4,write_cms_detect,IO_MB,12);
+			DetReadHandler.Install(base_port,read_cms_detect,IO_MB,16);
+		}
 
 		/* Register the Mixer CallBack */
 		cms_chan = MixerChan.Install(CMS_CallBack,sample_rate_temp,"CMS");
