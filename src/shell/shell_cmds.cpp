@@ -262,7 +262,6 @@ void DOS_Shell::CMD_RENAME(char * args){
 }
 
 void DOS_Shell::CMD_ECHO(char * args){
-	HELP("ECHO");
 	if (!*args) {
 		if (echo) { WriteOut(MSG_Get("SHELL_CMD_ECHO_ON"));}
 		else { WriteOut(MSG_Get("SHELL_CMD_ECHO_OFF"));}
@@ -280,6 +279,8 @@ void DOS_Shell::CMD_ECHO(char * args){
 		echo=true;		
 		return;
 	}
+	if(strcasecmp(pbuffer,"/?")==0) { HELP("ECHO"); }
+
 	args++;//skip first character. either a slash or dot or space
 	size_t len = strlen(args); //TODO check input of else ook nodig is.
 	if(len && args[len - 1] == '\r') {
