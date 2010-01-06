@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2009  The DOSBox Team
+ *  Copyright (C) 2002-2010  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -57,11 +57,6 @@ struct EXE_Header {
 #define MAGIC2 0x4d5a
 #define MAXENV 32768u
 #define ENV_KEEPFREE 83				 /* keep unallocated by environment variables */
-	/* The '65' added to nEnvSize does not cover the additional stuff:
-	   + 2 bytes: number of strings
-	   + 80 bytes: maximum absolute filename
-	   + 1 byte: '\0'
-	   -- 1999/04/21 ska */
 #define LOADNGO 0
 #define LOAD    1
 #define OVERLAY 3
@@ -107,7 +102,7 @@ void DOS_UpdatePSPName(void) {
 void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
 
 	dos.return_code=exitcode;
-	dos.return_mode=(tsr)?RETURN_TSR:RETURN_EXIT;
+	dos.return_mode=(tsr)?(Bit8u)RETURN_TSR:(Bit8u)RETURN_EXIT;
 	
 	DOS_PSP curpsp(pspseg);
 	if (pspseg==curpsp.GetParent()) return;
@@ -361,7 +356,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		if (!iscom) {
 			/* Check if requested to load program into upper part of allocated memory */
 			if ((head.minmemory == 0) && (head.maxmemory == 0))
-				loadseg = ((pspseg+memsize)*0x10-imagesize)/0x10;
+				loadseg = (Bit16u)(((pspseg+memsize)*0x10-imagesize)/0x10);
 		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
@@ -416,6 +411,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	} else {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
+		if (head.initSP<4) E_Exit("stack underflow/wrap at EXEC");
 	}
 
 	if (flags==LOAD) {
@@ -437,6 +433,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 
 	if (flags==LOADNGO) {
+		if ((reg_sp>0xfffe) || (reg_sp<18)) E_Exit("stack underflow/wrap at EXEC");
 		/* Get Caller's program CS:IP of the stack and set termination address to that */
 		RealSetVec(0x22,RealMake(mem_readw(SegPhys(ss)+reg_sp+2),mem_readw(SegPhys(ss)+reg_sp)));
 		SaveRegisters();
@@ -455,12 +452,10 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* Set the stack for new program */
 		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
-		reg_sp-=4;
-		mem_writew(SegPhys(ss)+reg_sp+0,RealOff(csip));
-		mem_writew(SegPhys(ss)+reg_sp+2,RealSeg(csip));
-		/* Old info, we now jump to a RETF:
-		 * DOS starts programs with a RETF, so our IRET
-		 * should not modify critical flags (IOPL in v86 mode);
+		CPU_Push16(RealSeg(csip));
+		CPU_Push16(RealOff(csip));
+		/* DOS starts programs with a RETF, so critical flags
+		 * should not be modified (IOPL in v86 mode);
 		 * interrupt flag is set explicitly, test flags cleared */
 		reg_flags=(reg_flags&(~FMASK_TEST))|FLAG_IF;
 		//Jump to retf so that we only need to store cs:ip on the stack
@@ -481,7 +476,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		while (char chr=*name++) {
 			switch (chr) {
 			case ':':case '\\':case '/':index=0;break;
-			default:if (index<8) stripname[index++]=toupper(chr);
+			default:if (index<8) stripname[index++]=(char)toupper(chr);
 			}
 		}
 		index=0;
