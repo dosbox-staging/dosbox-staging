@@ -26,6 +26,8 @@
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
 
+//#define ENABLE_PORTLOG
+
 IO_WriteHandler * io_writehandlers[3][IO_MAX];
 IO_ReadHandler * io_readhandlers[3][IO_MAX];
 
@@ -209,8 +211,74 @@ inline void IO_USEC_write_delay() {
 	CPU_IODelayRemoved += delaycyc;
 }
 
+#ifdef ENABLE_PORTLOG
+static Bit8u crtc_index = 0;
+const char* const len_type[] = {" 8","16","32"};
+void log_io(Bitu width, bool write, Bitu port, Bitu val) {
+	switch(width) {
+	case 0:
+		val&=0xff;
+		break;
+	case 1:
+		val&=0xffff;
+		break;
+	}
+	if (write) {
+		// skip the video cursor position spam
+		if (port==0x3d4) {
+			if (width==0) crtc_index = (Bit8u)val;
+			else if(width==1) crtc_index = (Bit8u)(val>>8);
+		}
+		if (crtc_index==0xe || crtc_index==0xf) {
+			if((width==0 && (port==0x3d4 || port==0x3d5))||(width==1 && port==0x3d4))
+				return;
+		}
+
+		switch(port) {
+		//case 0x020: // interrupt command
+		//case 0x040: // timer 0
+		//case 0x042: // timer 2
+		//case 0x043: // timer control
+		//case 0x061: // speaker control
+		case 0x3c8: // VGA palette
+		case 0x3c9: // VGA palette
+		// case 0x3d4: // VGA crtc
+		// case 0x3d5: // VGA crtc
+		// case 0x3c4: // VGA seq
+		// case 0x3c5: // VGA seq
+			break;
+		default:
+			LOG_MSG("iow%s % 4x % 4x, cs:ip %04x:%04x", len_type[width],
+				port, val, SegValue(cs),reg_eip);
+			break;
+		}
+	} else {
+		switch(port) {
+		//case 0x021: // interrupt status
+		//case 0x040: // timer 0
+		//case 0x042: // timer 2
+		//case 0x061: // speaker control
+		case 0x201: // joystick status
+		case 0x3c9: // VGA palette
+		// case 0x3d4: // VGA crtc index
+		// case 0x3d5: // VGA crtc
+		case 0x3da: // display status - a real spammer
+			// don't log for the above cases
+			break;
+		default:
+			LOG_MSG("ior%s % 4x % 4x,\t\tcs:ip %04x:%04x", len_type[width],
+				port, val, SegValue(cs),reg_eip);
+			break;
+		}
+	}
+}
+#else
+#define log_io(W, X, Y, Z)
+#endif
+
 
 void IO_WriteB(Bitu port,Bitu val) {
+	log_io(0, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -246,6 +314,7 @@ void IO_WriteB(Bitu port,Bitu val) {
 }
 
 void IO_WriteW(Bitu port,Bitu val) {
+	log_io(1, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -281,6 +350,7 @@ void IO_WriteW(Bitu port,Bitu val) {
 }
 
 void IO_WriteD(Bitu port,Bitu val) {
+	log_io(2, true, port, val);
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -313,6 +383,7 @@ void IO_WriteD(Bitu port,Bitu val) {
 }
 
 Bitu IO_ReadB(Bitu port) {
+	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,1)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -334,8 +405,7 @@ Bitu IO_ReadB(Bitu port) {
 		DOSBOX_RunMachine();
 		iof_queue.used--;
 
-		Bitu retval = reg_al;
-
+		retval = reg_al;
 		reg_dx = old_dx;		
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
@@ -343,11 +413,14 @@ Bitu IO_ReadB(Bitu port) {
 	}
 	else {
 		IO_USEC_read_delay();
-		return io_readhandlers[0][port](port,1);
+		retval = io_readhandlers[0][port](port,1);
 	}
+	log_io(0, false, port, retval);
+	return retval;
 }
 
 Bitu IO_ReadW(Bitu port) {
+	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,2)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -369,20 +442,21 @@ Bitu IO_ReadW(Bitu port) {
 		DOSBOX_RunMachine();
 		iof_queue.used--;
 
-		Bitu retval = reg_ax;
-
+		retval = reg_ax;
 		reg_dx = old_dx;		
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
-		return retval;
 	}
 	else {
 		IO_USEC_read_delay();
-		return io_readhandlers[1][port](port,2);
+		retval = io_readhandlers[1][port](port,2);
 	}
+	log_io(1, false, port, retval);
+	return retval;
 }
 
 Bitu IO_ReadD(Bitu port) {
+	Bitu retval;
 	if (GCC_UNLIKELY(GETFLAG(VM) && (CPU_IO_Exception(port,4)))) {
 		LazyFlags old_lflags;
 		memcpy(&old_lflags,&lflags,sizeof(LazyFlags));
@@ -404,14 +478,15 @@ Bitu IO_ReadD(Bitu port) {
 		DOSBOX_RunMachine();
 		iof_queue.used--;
 
-		Bitu retval = reg_eax;
-
+		retval = reg_eax;
 		reg_dx = old_dx;		
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
-		return retval;
+	} else {
+		retval = io_readhandlers[2][port](port,4);
 	}
-	else return io_readhandlers[2][port](port,4);
+	log_io(2, false, port, retval);
+	return retval;
 }
 
 class IO :public Module_base {
