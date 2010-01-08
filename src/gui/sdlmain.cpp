@@ -1513,7 +1513,7 @@ void Config_Add_SDL() {
 	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
 	Pstring->Set_values(inactt);
 
-	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,"mapper.txt");
+	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,"mapper-" VERSION ".conf");
 	Pstring->Set_help("File used to load/save the key/event mappings from.");
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
