@@ -496,18 +496,26 @@ void Mouse_CursorSet(float x,float y) {
 
 void Mouse_ButtonPressed(Bit8u button) {
 	switch (button) {
+#if (MOUSE_BUTTONS >= 1)
 	case 0:
 		mouse.buttons|=1;
 		Mouse_AddEvent(MOUSE_LEFT_PRESSED);
 		break;
+#endif
+#if (MOUSE_BUTTONS >= 2)
 	case 1:
 		mouse.buttons|=2;
 		Mouse_AddEvent(MOUSE_RIGHT_PRESSED);
 		break;
+#endif
+#if (MOUSE_BUTTONS >= 3)
 	case 2:
 		mouse.buttons|=4;
 		Mouse_AddEvent(MOUSE_MIDDLE_PRESSED);
 		break;
+#endif
+	default:
+		return;
 	}
 	mouse.times_pressed[button]++;
 	mouse.last_pressed_x[button]=POS_X;
@@ -516,18 +524,26 @@ void Mouse_ButtonPressed(Bit8u button) {
 
 void Mouse_ButtonReleased(Bit8u button) {
 	switch (button) {
+#if (MOUSE_BUTTONS >= 1)
 	case 0:
 		mouse.buttons&=~1;
 		Mouse_AddEvent(MOUSE_LEFT_RELEASED);
 		break;
+#endif
+#if (MOUSE_BUTTONS >= 2)
 	case 1:
 		mouse.buttons&=~2;
 		Mouse_AddEvent(MOUSE_RIGHT_RELEASED);
 		break;
+#endif
+#if (MOUSE_BUTTONS >= 3)
 	case 2:
 		mouse.buttons&=~4;
 		Mouse_AddEvent(MOUSE_MIDDLE_RELEASED);
 		break;
+#endif
+	default:
+		return;
 	}
 	mouse.times_released[button]++;	
 	mouse.last_released_x[button]=POS_X;
