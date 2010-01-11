@@ -96,17 +96,17 @@ Output version information and exit. Useful for frontends.
 .TP
 .BI \-editconf " program"
 .RI calls " program" " with as first parameter the configuration file."
-.R You can specify this command more than once. In this case it will
+You can specify this command more than once. In this case it will
 .RI " move to second " program " if the first one fails to start."
 .TP
 .BI \-opencaptures " program"
 .RI "calls " program " with as  first paramater the location of the captures folder."
 .TP
 .B \-printconf
-.R prints the location of the default configuration file.
+prints the location of the default configuration file.
 .TP
 .B \-eraseconf
-.R removes the default configuration file.
+removes the default configuration file.
 .SH "INTERNAL COMMANDS"
 .B dosbox
 supports most of the DOS commands found in command.com. In addition, the
@@ -183,11 +183,12 @@ Display the amount of free memory
 .TP
 .B CONFIG [\-writeconf] [\-writelang] file
 .LP
-.B CONFIG -securemode
+.B CONFIG \-securemode
 .LP
 .RB "Write the current configuration or language settings to " file ,
 which is located on the local filesystem. Not a mounted drive in 
 .BR dosbox .
+.RS
 .TP
 .B \-securemode
 .RB Switches dosbox " to a more secure mode. In this mode the"
@@ -196,6 +197,7 @@ It\'s not possible
 either to create a new configfile or languagefile in this mode.
 (Warning you can only undo this mode by restarting
 .BR dosbox .)
+.RE
 .LP 
 The configuration file controls various settings of 
 .BR dosbox ": The amount of emulated memory,"
@@ -220,7 +222,7 @@ The name of the program which is executed after loadfix eats up its memory.
 .RB "Parameters given to the " programname " executable."
 .TP
 .B \-size
-The amount of memory to eat up (in kb). Example -32, -64 or -128 
+The amount of memory to eat up (in kb). Example \-32, \-64 or \-128 
 .TP
 .B \-f
 Frees all memory eaten up by loadfix.
@@ -234,7 +236,7 @@ this as well!)
 .TP
 .B IMGMOUNT
 .LP
-.RB "A utility to mount disk images and CD-ROM images in " dosbox .
+.RB "A utility to mount disk images and CD\(hyROM images in " dosbox .
 .TP
 .RB "Read the " README " of " dosbox " for the full and correct syntax."
 .RE
@@ -283,7 +285,7 @@ Start the keymapper.
 .IP CTRL\-ALT\-F5
 Start/Stop creating a movie of the screen.
 .IP CTRL\-F4
-Swap mounted disk-image (Only used with imgmount). Update directory cache
+Swap mounted disk\(hyimage (Only used with imgmount). Update directory cache
 for all drives!
 .IP CTRL\-F5
 Save a screenshot.(png)
