@@ -628,7 +628,7 @@ bool fatDrive::allocateCluster(Bit32u useCluster, Bit32u prevCluster) {
 }
 
 fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector) {
-	created_succesfully = true;
+	created_successfully = true;
 	FILE *diskfile;
 	Bit32u filesize;
 	struct partTable mbrData;
@@ -640,14 +640,14 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 	}
 
 	diskfile = fopen(sysFilename, "rb+");
-	if(!diskfile) {created_succesfully = false;return;}
+	if(!diskfile) {created_successfully = false;return;}
 	fseek(diskfile, 0L, SEEK_END);
 	filesize = (Bit32u)ftell(diskfile) / 1024L;
 
 	/* Load disk image */
 	loadedDisk = new imageDisk(diskfile, (Bit8u *)sysFilename, filesize, (filesize > 2880));
 	if(!loadedDisk) {
-		created_succesfully = false;
+		created_successfully = false;
 		return;
 	}
 
@@ -686,7 +686,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 
 	if(!bootbuffer.sectorsperfat) {
 		/* FAT32 not implemented yet */
-		created_succesfully = false;
+		created_successfully = false;
 		return;
 	}
 

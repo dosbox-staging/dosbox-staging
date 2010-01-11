@@ -90,7 +90,7 @@ public:
 						Drives[i_drive] = 0;
 						if(i_drive == DOS_GetDefaultDrive()) 
 							DOS_SetDrive(toupper('Z') - 'A');
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
 						break;
 					case 1:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
@@ -990,7 +990,7 @@ public:
 						Drives[i_drive] = 0;
 						if (i_drive == DOS_GetDefaultDrive()) 
 							DOS_SetDrive(toupper('Z') - 'A');
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCES"),umount[0]);
+						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
 						break;
 					case 1:
 						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
@@ -1155,7 +1155,7 @@ public:
 				}
 
 				newdrive=new fatDrive(temp_line.c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
-				if(!(dynamic_cast<fatDrive*>(newdrive))->created_succesfully) {
+				if(!(dynamic_cast<fatDrive*>(newdrive))->created_successfully) {
 					delete newdrive;
 					newdrive = 0;
 				}
@@ -1348,7 +1348,7 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
-	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCES","Drive %c has succesfully been removed.\n");
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","\033[31;1mMounting c:\\ is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","\033[31;1mMounting / is NOT recommended. Please mount a (sub)directory next time.\033[0m\n");
@@ -1416,7 +1416,7 @@ void DOS_SetupPrograms(void) {
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 		);
 	MSG_Add("PROGRAM_INTRO_MOUNT_END",
-		"When the mount has succesfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
+		"When the mount has successfully completed you can type \033[34;1mc:\033[0m to go to your freshly\n"
 		"mounted C-drive. Typing \033[34;1mdir\033[0m there will show its contents."
 		" \033[34;1mcd\033[0m will allow you to\n"
 		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"

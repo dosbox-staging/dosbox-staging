@@ -175,7 +175,7 @@ public:
 	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	imageDisk *loadedDisk;
-	bool created_succesfully;
+	bool created_successfully;
 private:
 	Bit32u getClusterValue(Bit32u clustNum);
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);

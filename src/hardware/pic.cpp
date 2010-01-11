@@ -315,7 +315,7 @@ void PIC_runIRQs(void) {
 				if (!irqs[i].masked && irqs[i].active) {
 					/* the irq line is active. it's not masked and
 					 * the irq is allowed priority wise. So let's start it */
-					/* If started succesfully return, else go for the next */
+					/* If started successfully return, else go for the next */
 					if(PIC_startIRQ(i)) return;
 				}
 			}

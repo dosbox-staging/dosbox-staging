@@ -192,7 +192,7 @@ static bool DOS_MultiplexFunctions(void) {
 	case 0x4a01:	/* Query free hma space */
 	case 0x4a02:	/* ALLOCATE HMA SPACE */
 		LOG(LOG_DOSMISC,LOG_WARN)("INT 2f:4a HMA. DOSBox reports none available.");
-		reg_bx=0;	//number of bytes available in HMA or amount succesfully allocated
+		reg_bx=0;	//number of bytes available in HMA or amount successfully allocated
 		//ESDI=ffff:ffff Location of HMA/Allocated memory
 		SegSet16(es,0xffff);
 		reg_di=0xffff;
