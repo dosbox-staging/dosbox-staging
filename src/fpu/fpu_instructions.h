@@ -106,7 +106,7 @@ static Real64 FPU_FLD80(PhysPt addr) {
 	Bit64s sign = (test.begin&0x8000)?1:0;
 	FPU_Reg result;
 	result.ll = (sign <<63)|(exp64final << 52)| mant64;
-	return result.d;   
+	return result.d;
 
 	//mant64= test.mant80/2***64    * 2 **53 
 }
@@ -239,7 +239,7 @@ static void FPU_FST_I64(PhysPt addr) {
 static void FPU_FBST(PhysPt addr) {
 	FPU_Reg val = fpu.regs[TOP];
 	bool sign = false;
-	if(val.d<0.0){ //sign
+	if(fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000)) { //sign
 		sign=true;
 		val.d=-val.d;
 	}
@@ -519,7 +519,7 @@ static void FPU_FXTRACT(void) {
 	Bit64s exp80final = (exp80>>52) - BIAS64;
 	Real64 mant = test.d / (pow(2.0,static_cast<Real64>(exp80final)));
 	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
-	FPU_PUSH(mant); 
+	FPU_PUSH(mant);
 }
 
 static void FPU_FCHS(void){
