@@ -75,9 +75,7 @@ static void PIT0_Event(Bitu /*val*/) {
 			pit[0].delay=(1000.0f/((float)PIT_TICK_RATE/(float)pit[0].cntr));
 			pit[0].update_count=false;
 		}
-
-		double error = 	pit[0].start - PIC_FullIndex();
-		PIC_AddEvent(PIT0_Event,(float)(pit[0].delay + error));
+		PIC_AddEvent(PIT0_Event,pit[0].delay);
 	}
 }
 
@@ -271,9 +269,7 @@ static Bitu read_latch(Bitu port,Bitu /*iolen*/) {
 			break;
 		case 3: /* read LSB followed by MSB */
 			ret = pit[counter].read_latch & 0xff;
-
-			if (pit[counter].mode & 0x80) pit[counter].mode &= 7;
-			else pit[counter].read_state = 0;
+			pit[counter].read_state = 0;
 			break;
 		case 1: /* read LSB */
 			ret = pit[counter].read_latch & 0xff;

@@ -123,7 +123,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 					irqs[PIC_IRQActive].inservice=false;
 					PIC_IRQActive=PIC_NOIRQ;
 					for (i=0; i<=15; i++){
-						if(irqs[IRQ_priority_table[i]].inservice) {
+						if(GCC_UNLIKELY(irqs[IRQ_priority_table[i]].inservice)) {
 							PIC_IRQActive=IRQ_priority_table[i];
 							break;
 						}
@@ -276,7 +276,7 @@ static inline bool PIC_startIRQ(Bitu i) {
 	if (!pics[pic].auto_eoi) { //irq 0-7 => pic 0 else pic 1 
 		PIC_IRQActive = i;
 		irqs[i].inservice = true;
-	} else if (pics[pic].rotate_on_auto_eoi) {
+	} else if (GCC_UNLIKELY(pics[pic].rotate_on_auto_eoi)) {
 		E_Exit("rotate on auto EOI not handled");
 	}
 	return true;
@@ -284,8 +284,8 @@ static inline bool PIC_startIRQ(Bitu i) {
 
 void PIC_runIRQs(void) {
 	if (!GETFLAG(IF)) return;
-	if (!PIC_IRQCheck) return;
-	if (cpudecoder==CPU_Core_Normal_Trap_Run) return;
+	if (GCC_UNLIKELY(!PIC_IRQCheck)) return;
+	if (GCC_UNLIKELY(cpudecoder==CPU_Core_Normal_Trap_Run)) return;
 
 	static Bitu IRQ_priority_order[16] = 
 		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
@@ -305,7 +305,7 @@ void PIC_runIRQs(void) {
 		for (j = 0; j < Priority_Active_IRQ; j++) {
 			i = IRQ_priority_order[j];
 			if (!irqs[i].masked && irqs[i].active) {
-				if(PIC_startIRQ(i)) return;
+				if(GCC_LIKELY(PIC_startIRQ(i))) return;
 			}
 		}
 	} else {	/* Special mode variant */
@@ -355,7 +355,7 @@ void PIC_SetIRQMask(Bitu irq, bool masked) {
 
 static void AddEntry(PICEntry * entry) {
 	PICEntry * find_entry=pic_queue.next_entry;
-	if (!find_entry) {
+	if (GCC_UNLIKELY(find_entry ==0)) {
 		entry->next=0;
 		pic_queue.next_entry=entry;
 	} else if (find_entry->index>entry->index) {
@@ -383,14 +383,18 @@ static void AddEntry(PICEntry * entry) {
 		CPU_Cycles=0;
 	}
 }
+static bool InEventService = false;
+static float srv_lag = 0;
 
 void PIC_AddEvent(PIC_EventHandler handler,float delay,Bitu val) {
-	if (!pic_queue.free_entry) {
+	if (GCC_UNLIKELY(!pic_queue.free_entry)) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
 	PICEntry * entry=pic_queue.free_entry;
-	entry->index=delay+PIC_TickIndex();
+	if(InEventService) entry->index = delay + srv_lag;
+	else entry->index = delay + PIC_TickIndex();
+
 	entry->pic_event=handler;
 	entry->value=val;
 	pic_queue.free_entry=pic_queue.free_entry->next;
@@ -402,7 +406,7 @@ void PIC_RemoveSpecificEvents(PIC_EventHandler handler, Bitu val) {
 	PICEntry * prev_entry;
 	prev_entry = 0;
 	while (entry) {
-		if ((entry->pic_event == handler) && (entry->value == val)) {
+		if (GCC_UNLIKELY((entry->pic_event == handler)) && (entry->value == val)) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
 				entry->next=pic_queue.free_entry;
@@ -427,7 +431,7 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 	PICEntry * prev_entry;
 	prev_entry=0;
 	while (entry) {
-		if (entry->pic_event==handler) {
+		if (GCC_UNLIKELY(entry->pic_event==handler)) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
 				entry->next=pic_queue.free_entry;
@@ -457,18 +461,24 @@ bool PIC_RunQueue(void) {
 	}
 	/* Check the queue for an entry */
 	Bits index_nd=PIC_TickIndexND();
+	InEventService = true;
 	while (pic_queue.next_entry && (pic_queue.next_entry->index*CPU_CycleMax<=index_nd)) {
 		PICEntry * entry=pic_queue.next_entry;
 		pic_queue.next_entry=entry->next;
-		(entry->pic_event)(entry->value);
+
+		srv_lag = entry->index;
+		(entry->pic_event)(entry->value); // call the event handler
+
 		/* Put the entry in the free list */
 		entry->next=pic_queue.free_entry;
 		pic_queue.free_entry=entry;
 	}
+	InEventService = false;
+
 	/* Check when to set the new cycle end */
 	if (pic_queue.next_entry) {
 		Bits cycles=(Bits)(pic_queue.next_entry->index*CPU_CycleMax-index_nd);
-		if (!cycles) cycles=1;
+		if (GCC_UNLIKELY(!cycles)) cycles=1;
 		if (cycles<CPU_CycleLeft) {
 			CPU_Cycles=cycles;
 		} else {
@@ -518,8 +528,7 @@ void TIMER_AddTick(void) {
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic_queue.next_entry;
 	while (entry) {
-		if (entry->index>=1) entry->index-=1;
-		else entry->index=0;
+		entry->index -= 1.0;
 		entry=entry->next;
 	}
 	/* Call our list of ticker handlers */
