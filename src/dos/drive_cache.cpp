@@ -705,16 +705,24 @@ bool DOS_Drive_Cache::SetResult(CFileInfo* dir, char* &result, Bitu entryNr)
 }
 
 // FindFirst / FindNext
-bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
+bool DOS_Drive_Cache::FindFirst(char* path, Bit16u& id) {
 	Bit16u	dirID;
-	Bitu	dirFindFirstID = this->nextFreeFindFirst;
-
 	// Cache directory in 
 	if (!OpenDir(path,dirID)) return false;
 
-	this->nextFreeFindFirst++; //increase it for the next search
+	//Find a free slot.
+	//If the next one isn't free, move on to the next, if none is free => reset and assume the worst
+	Bit16u local_findcounter = 0;
+	while ( local_findcounter < MAX_OPENDIRS ) {
+		if (dirFindFirst[this->nextFreeFindFirst] == 0) break;
+		if (++this->nextFreeFindFirst >= MAX_OPENDIRS) this->nextFreeFindFirst = 0; //Wrap around
+		local_findcounter++;
+	}
 
-	if (dirFindFirstID == MAX_OPENDIRS) {
+	Bit16u	dirFindFirstID = this->nextFreeFindFirst++;
+	if (this->nextFreeFindFirst >= MAX_OPENDIRS) this->nextFreeFindFirst = 0; //Increase and wrap around for the next search.
+
+	if (local_findcounter == MAX_OPENDIRS) { //Here is the reset from above.
 		// no free slot found...
 		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next: All slots full. Resetting");
 		// Clear the internal list then.
@@ -749,7 +757,7 @@ bool DOS_Drive_Cache::FindFirst(char* path, Bitu& id) {
 	return true;
 }
 
-bool DOS_Drive_Cache::FindNext(Bitu id, char* &result) {
+bool DOS_Drive_Cache::FindNext(Bit16u id, char* &result) {
 	// out of range ?
 	if ((id>=MAX_OPENDIRS) || !dirFindFirst[id]) {
 		LOG(LOG_MISC,LOG_ERROR)("DIRCACHE: FindFirst/Next failure : ID out of range: %04X",id);
