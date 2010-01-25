@@ -321,7 +321,11 @@ public:
 		}
 		return;
 showusage:
-		WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"));
+#if defined (WIN32) || defined(OS2)
+	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"d:\\dosprogs","d:\\dosprogs");
+#else
+	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"~/dosprogs","~/dosprogs");		   
+#endif
 		return;
 	}
 };
@@ -1346,7 +1350,11 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
-	MSG_Add("PROGRAM_MOUNT_USAGE","Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\nSo a MOUNT c c:\\windows mounts windows directory as the c: drive in DOSBox\n");
+	MSG_Add("PROGRAM_MOUNT_USAGE",
+		"Usage \033[34;1mMOUNT Drive-Letter Local-Directory\033[0m\n"
+		"For example: MOUNT c %s\n"
+		"This makes the directory %s act as the C: drive inside DOSBox.\n"
+		"The directory has to exist.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
