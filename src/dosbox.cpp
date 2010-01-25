@@ -610,7 +610,7 @@ void DOSBOX_Init(void) {
 		"set type of device connected to com port.\n"
 		"Can be disabled, dummy, modem, nullmodem, directserial.\n"
 		"Additional parameters must be in the same line in the form of\n"
-		"parameter:value. Parameter for all types is irq.\n"
+		"parameter:value. Parameter for all types is irq (optional).\n"
 		"for directserial: realport (required), rxdelay (optional).\n"
 		"                 (realport:COM1 realport:ttyS0).\n"
 		"for modem: listenport (optional).\n"
