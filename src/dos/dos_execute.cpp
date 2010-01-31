@@ -331,6 +331,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 				if (dataread<0xf800) minsize=((dataread+0x10)>>4)+0x20;
 			}
 			if (maxfree<minsize) {
+				DOS_CloseFile(fhandle);
 				DOS_SetError(DOSERR_INSUFFICIENT_MEMORY);
 				DOS_FreeMemory(envseg);
 				return false;
