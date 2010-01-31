@@ -51,7 +51,7 @@ struct button_event {
 #define QUEUE_SIZE 32
 #define MOUSE_BUTTONS 3
 #define MOUSE_IRQ 12
-#define POS_X (Bit16s)(mouse.x)
+#define POS_X ((Bit16s)(mouse.x) & mouse.granMask)
 #define POS_Y (Bit16s)(mouse.y)
 
 #define CURSORX 16
@@ -126,6 +126,7 @@ static struct {
 	bool timer_in_progress;
 	bool in_UIR;
 	Bit8u mode;
+	Bit16s granMask;
 } mouse;
 
 bool Mouse_SetPS2State(bool use) {
@@ -626,6 +627,7 @@ void Mouse_NewVideoMode(void) {
 	mouse.max_x = 639;
 	mouse.min_x = 0;
 	mouse.min_y = 0;
+	mouse.granMask = (mode == 0x0d || mode == 0x13) ? 0xfffe : 0xffff;
 
 	mouse.events = 0;
 	mouse.timer_in_progress = false;
