@@ -1270,7 +1270,7 @@ void IMGMOUNT_ProgramStart(Program * * make) {
 }
 
 
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout);
+Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
 Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
 const char* DOS_GetLoadedLayout(void);
 
@@ -1287,9 +1287,10 @@ void KEYB::Run(void) {
 			/* first parameter is layout ID */
 			Bitu keyb_error=0;
 			std::string cp_string;
+			Bit32s tried_cp = -1;
 			if (cmd->FindCommand(2,cp_string)) {
 				/* second parameter is codepage number */
-				Bit32s par_cp=atoi(cp_string.c_str());
+				tried_cp=atoi(cp_string.c_str());
 				char cp_file_name[256];
 				if (cmd->FindCommand(3,cp_string)) {
 					/* third parameter is codepage file */
@@ -1299,8 +1300,10 @@ void KEYB::Run(void) {
 					strcpy(cp_file_name, "auto");
 				}
 
-				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), par_cp, cp_file_name);
-			} else keyb_error=DOS_SwitchKeyboardLayout(temp_line.c_str());
+				keyb_error=DOS_LoadKeyboardLayout(temp_line.c_str(), tried_cp, cp_file_name);
+			} else {
+				keyb_error=DOS_SwitchKeyboardLayout(temp_line.c_str(), tried_cp);
+			}
 			switch (keyb_error) {
 				case KEYB_NOERROR:
 					WriteOut(MSG_Get("PROGRAM_KEYB_NOERROR"),temp_line.c_str(),dos.loaded_codepage);
@@ -1313,7 +1316,7 @@ void KEYB::Run(void) {
 					WriteOut(MSG_Get("PROGRAM_KEYB_INVALIDFILE"),temp_line.c_str());
 					break;
 				case KEYB_LAYOUTNOTFOUND:
-					WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"),temp_line.c_str(),dos.loaded_codepage);
+					WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUTNOTFOUND"),temp_line.c_str(),tried_cp);
 					break;
 				case KEYB_INVALIDCPFILE:
 					WriteOut(MSG_Get("PROGRAM_KEYB_INVCPFILE"),temp_line.c_str());

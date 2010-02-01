@@ -80,7 +80,7 @@ public:
 	// call layout_key to apply the current language layout
 	bool layout_key(Bitu key, Bit8u flags1, Bit8u flags2, Bit8u flags3);
 
-	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout);
+	Bitu switch_keyboard_layout(const char* new_layout, keyboard_layout* &created_layout, Bit32s& tried_cp);
 	void switch_foreign_layout();
 	const char* get_layout_name();
 	const char* main_language_code();
@@ -951,7 +951,7 @@ Bitu keyboard_layout::read_codepage_file(const char* codepage_file_name, Bit32s 
 	return KEYB_INVALIDCPFILE;
 }
 
-Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_layout*& created_layout) {
+Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_layout*& created_layout, Bit32s& tried_cp) {
 	if (strncasecmp(new_layout,"US",2)) {
 		// switch to a foreign layout
 		char tbuf[256];
@@ -977,6 +977,7 @@ Bitu keyboard_layout::switch_keyboard_layout(const char* new_layout, keyboard_la
 		} else {
 			keyboard_layout * temp_layout=new keyboard_layout();
 			Bitu req_codepage=temp_layout->extract_codepage(new_layout);
+			tried_cp = req_codepage;
 			Bitu kerrcode=temp_layout->read_keyboard_file(new_layout, req_codepage);
 			if (kerrcode) {
 				delete temp_layout;
@@ -1059,10 +1060,10 @@ Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char
 	return KEYB_NOERROR;
 }
 
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout) {
+Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp) {
 	if (loaded_layout) {
 		keyboard_layout* changed_layout=NULL;
-		Bitu ret_code=loaded_layout->switch_keyboard_layout(new_layout, changed_layout);
+		Bitu ret_code=loaded_layout->switch_keyboard_layout(new_layout, changed_layout, tried_cp);
 		if (changed_layout) {
 			// Remove old layout, activate new layout
 			delete loaded_layout;
