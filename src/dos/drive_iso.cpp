@@ -246,7 +246,10 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	}
 	
 	// get a directory iterator and save its id in the dta
-	dta.SetDirID((Bit16u)GetDirIterator(&de));
+	int dirIterator = GetDirIterator(&de);
+	bool isRoot = (*dir == 0);
+	dirIterators[dirIterator].root = isRoot;
+	dta.SetDirID((Bit16u)dirIterator);
 
 	Bit8u attr;
 	char pattern[ISO_MAXPATHNAME];
@@ -260,7 +263,7 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 			DOS_SetError(DOSERR_NO_MORE_FILES);		
 			return false;
 		}
-	} else if ((attr & DOS_ATTR_VOLUME) && (*dir == 0) && !fcb_findfirst) {
+	} else if ((attr & DOS_ATTR_VOLUME) && isRoot && !fcb_findfirst) {
 		if (WildFileCmp(discLabel,pattern)) {
 			// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir and if it matches the searchstring
 			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
@@ -277,6 +280,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 	dta.GetSearchParams(attr, pattern);
 	
 	int dirIterator = dta.GetDirID();
+	bool isRoot = dirIterators[dirIterator].root;
 	
 	isoDirEntry de;
 	while (GetNextDirEntry(dirIterator, &de)) {
@@ -285,7 +289,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 		else findAttr |= DOS_ATTR_ARCHIVE;
 		if (IS_HIDDEN(de.fileFlags)) findAttr |= DOS_ATTR_HIDDEN;
 
-		if (WildFileCmp((char*)de.ident, pattern)
+		if (!(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
 			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
 			
 			/* file is okay, setup everything to be copied in DTA Block */

@@ -345,6 +345,7 @@ private:
 	
 	struct DirIterator {
 		bool valid;
+		bool root;
 		Bit32u currentSector;
 		Bit32u endSector;
 		Bit32u pos;
