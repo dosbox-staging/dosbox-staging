@@ -143,6 +143,7 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 	char ch;
 	Bitu num=0;
 	bool quote = false;
+	char* t;
 
 	while ( (ch=*lr++) ) {
 		if(quote && ch != '"') { /* don't parse redirection within quotes. Not perfect yet. Escaped quotes will mess the count up */
@@ -160,26 +161,30 @@ Bitu DOS_Shell::GetRedirection(char *s, char **ifn, char **ofn,bool * append) {
 			lr=ltrim(lr);
 			if (*ofn) free(*ofn);
 			*ofn=lr;
-			while (*lr && *lr!=' ') lr++;
+			while (*lr && *lr!=' ' && *lr!='<' && *lr!='|') lr++;
 			//if it ends on a : => remove it.
 			if((*ofn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-			if(*lr && *(lr+1)) 
-				*lr++=0; 
-			else 
-				*lr=0;
-			*ofn=strdup(*ofn);
+//			if(*lr && *(lr+1)) 
+//				*lr++=0; 
+//			else 
+//				*lr=0;
+			t = (char*)malloc(lr-*ofn+1);
+			safe_strncpy(t,*ofn,lr-*ofn+1);
+			*ofn=t;
 			continue;
 		case '<':
 			if (*ifn) free(*ifn);
 			lr=ltrim(lr);
 			*ifn=lr;
-			while (*lr && *lr!=' ') lr++;
+			while (*lr && *lr!=' ' && *lr!='>' && *lr != '|') lr++;
 			if((*ifn != lr) && (lr[-1] == ':')) lr[-1] = 0;
-			if(*lr && *(lr+1)) 
-				*lr++=0; 
-			else 
-				*lr=0;
-			*ifn=strdup(*ifn);
+//			if(*lr && *(lr+1)) 
+//				*lr++=0; 
+//			else 
+//				*lr=0;
+			t = (char*)malloc(lr-*ifn+1);
+			safe_strncpy(t,*ifn,lr-*ifn+1);
+			*ifn=t;
 			continue;
 		case '|':
 			ch=0;
