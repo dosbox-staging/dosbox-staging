@@ -248,8 +248,9 @@ void DOS_Shell::CMD_RENAME(char * args){
 		if((strlen(dir_source) == 2) && (dir_source[1] == ':')) 
 			strcat(dir_source,"\\"); //X: add slash
 
-		char dir_current[DOS_PATHLENGTH];
-		DOS_GetCurrentDir(0,dir_current);
+		char dir_current[DOS_PATHLENGTH + 1];
+		dir_current[0] = '\\'; //Absolute addressing so we can return properly
+		DOS_GetCurrentDir(0,dir_current + 1);
 		if(!DOS_ChangeDir(dir_source)) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 			return;
