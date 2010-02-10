@@ -100,8 +100,9 @@ public:
 	Bit8u getb() {
 		if (!used) return data[pos];
 		Bitu where=pos;
-		if (++pos>=size) pos-=size;
 		used--;
+		if(used) pos++;
+		if (pos>=size) pos-=size;
 		return data[where];
 	}
 	Bit8u getTop() {
