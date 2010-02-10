@@ -26,11 +26,14 @@
 #include "regs.h"
 #include "inout.h"
 #include "dos_inc.h"
+#include "SDL.h"
 
 /* SDL by default treats numlock and scrolllock different from all other keys.
- * Some linux distros disable this bad behaviour. (for example debian) 
+ * In recent versions this can disabled by a environment variable which we set in sdlmain.cpp
  * Define the following if this is the case */
-//#define CAN_USE_LOCK 1
+#if SDL_VERSION_ATLEAST(1, 2, 14)
+#define CAN_USE_LOCK 1
+#endif
 
 static Bitu call_int16,call_irq1,call_irq6;
 
@@ -243,6 +246,7 @@ static Bitu IRQ1_Handler(void) {
 	flags2&=~(0x40+0x20);//remove numlock/capslock pressed (hack for sdl only reporting states)
 #endif
 	if (DOS_LayoutKey(scancode,flags1,flags2,flags3)) return CBRET_NONE;
+LOG_MSG("key input %d %d %d %d",scancode,flags1,flags2,flags3);
 	switch (scancode) {
 	/* First the hard ones  */
 	case 0xfa:	/* ack. Do nothing for now */
@@ -588,8 +592,9 @@ static void InitBiosSegment(void) {
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,0x1e);
 	Bit8u flag1 = 0;
 	Bit8u leds = 16; /* Ack recieved */
-	if(startup_state_capslock) { flag1|=0x40; leds|=0x04;}
-	if(startup_state_numlock){ flag1|=0x20; leds|=0x02;}
+//MAPPER_Init takes care of this now ?
+//	if(startup_state_capslock) { flag1|=0x40; leds|=0x04;}
+//	if(startup_state_numlock){ flag1|=0x20; leds|=0x02;}
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
