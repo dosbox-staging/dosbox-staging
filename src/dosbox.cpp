@@ -317,8 +317,8 @@ void DOSBOX_Init(void) {
 	SDLNetInited = false;
 
 	// Some frequently used option sets
-	const char *rates[] = { "22050", "44100", "48000", "32000", "16000", "11025", "8000", "49716", 0 };
-	const char *oplrates[] = { "22050", "49716", "44100", "48000", "32000", "16000", "11025", "8000", 0 };
+	const char *rates[] = {  "44100", "48000", "32000","22050", "16000", "11025", "8000", "49716", 0 };
+	const char *oplrates[] = {   "44100", "49716", "48000", "32000","22050", "16000", "11025", "8000", 0 };
 	const char *ios[] = { "220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0 };
 	const char *irqssb[] = { "7", "5", "3", "9", "10", "11", "12", 0 };
 	const char *dmassb[] = { "1", "5", "0", "3", "6", "7", 0 };
@@ -415,7 +415,7 @@ void DOSBOX_Init(void) {
 		"                  It usually works, but can fail for certain games.\n"
 		"  'fixed #number' will set a fixed amount of cycles. This is what you usually need if 'auto' fails.\n"
 		"                  (Example: fixed 4000)\n"
-		"  'max'           will allocate as much cycles as your computer is able to handle\n");
+		"  'max'           will allocate as much cycles as your computer is able to handle.\n");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
 	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
@@ -443,7 +443,7 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
 	Pbool->Set_help("Enable silent mode, sound is still emulated though.");
 
-	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,22050);
+	Pint = secprop->Add_int("rate",Property::Changeable::OnlyAtStart,44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
@@ -514,7 +514,7 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(oplemus);
 	Pstring->Set_help("Provider for the OPL emulation. compat might provide better quality (see oplrate as well).");
 
-	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,22050);
+	Pint = secprop->Add_int("oplrate",Property::Changeable::WhenIdle,44100);
 	Pint->Set_values(oplrates);
 	Pint->Set_help("Sample rate of OPL music emulation. Use 49716 for highest quality (set the mixer rate accordingly).");
 
@@ -523,7 +523,7 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("gus",Property::Changeable::WhenIdle,false); 	
 	Pbool->Set_help("Enable the Gravis Ultrasound emulation.");
 
-	Pint = secprop->Add_int("gusrate",Property::Changeable::WhenIdle,22050);
+	Pint = secprop->Add_int("gusrate",Property::Changeable::WhenIdle,44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of Ultrasound emulation.");
 
@@ -550,7 +550,7 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable PC-Speaker emulation.");
 
-	Pint = secprop->Add_int("pcrate",Property::Changeable::WhenIdle,22050);
+	Pint = secprop->Add_int("pcrate",Property::Changeable::WhenIdle,44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the PC-Speaker sound generation.");
 
@@ -560,7 +560,7 @@ void DOSBOX_Init(void) {
 	Pstring->Set_values(tandys);
 	Pstring->Set_help("Enable Tandy Sound System emulation. For 'auto', emulation is present only if machine is set to 'tandy'.");
 	
-	Pint = secprop->Add_int("tandyrate",Property::Changeable::WhenIdle,22050);
+	Pint = secprop->Add_int("tandyrate",Property::Changeable::WhenIdle,44100);
 	Pint->Set_values(rates);
 	Pint->Set_help("Sample rate of the Tandy 3-Voice generation.");
 
@@ -594,7 +594,7 @@ void DOSBOX_Init(void) {
 	Pbool = secprop->Add_bool("swap34",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("swap the 3rd and the 4th axis. can be useful for certain joysticks.");
 
-	Pbool = secprop->Add_bool("buttonwrap",Property::Changeable::WhenIdle,true);
+	Pbool = secprop->Add_bool("buttonwrap",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
 
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
