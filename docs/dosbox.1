@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "May 27, 2009"
+.TH DOSBOX 1 "Feb 26, 2010"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -27,6 +27,8 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B dosbox \-printconf
 .LP
 .B dosbox \-eraseconf
+.LP
+.B dosbox \-erasemapper
 .SH DESCRIPTION
 This manual page briefly documents
 .BR "dosbox" ", an x86/DOS emulator."
@@ -107,6 +109,9 @@ prints the location of the default configuration file.
 .TP
 .B \-eraseconf
 removes the default configuration file.
+.TP
+.B \-erasemapper
+removes the mapperfile configured in the clean default configuration file.
 .SH "INTERNAL COMMANDS"
 .B dosbox
 supports most of the DOS commands found in command.com. In addition, the

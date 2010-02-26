@@ -313,8 +313,9 @@ dosbox -editconf program
 dosbox -opencaptures program
 dosbox -printconf
 dosbox -eraseconf
+dosbox -erasemapper
 
-  name   
+  name
         If "name" is a directory it will mount that as the C: drive.
         If "name" is an executable it will mount the directory of "name" 
         as the C: drive and execute "name".
@@ -390,6 +391,9 @@ dosbox -eraseconf
 
   -eraseconf
         removes the default configuration file.
+
+  -erasemapper
+        removes the mapperfile used by the default clean configuration file.
 
 Note: If a name/command/configfile/languagefile contains a space, put
       the whole name/command/configfile/languagefile between quotes

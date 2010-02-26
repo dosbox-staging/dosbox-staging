@@ -51,6 +51,7 @@
 #include "cross.h"
 #include "control.h"
 
+#define MAPPERFILE "mapper-" VERSION ".conf"
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
@@ -1513,7 +1514,7 @@ void Config_Add_SDL() {
 	Pstring = Pmulti->GetSection()->Add_string("inactive",Property::Changeable::Always,"normal");
 	Pstring->Set_values(inactt);
 
-	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,"mapper-" VERSION ".conf");
+	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,MAPPERFILE);
 	Pstring->Set_help("File used to load/save the key/event mappings from.");
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
@@ -1644,6 +1645,17 @@ static void eraseconfigfile() {
 	exit(0);
 }
 
+static void erasemapperfile() {
+	std::string path,file=MAPPERFILE;
+	Cross::GetPlatformConfigDir(path);
+	path += file;
+	FILE* f = fopen(path.c_str(),"r");
+	if(!f) exit(0);
+	fclose(f);
+	unlink(path.c_str());
+	exit(0);
+}
+
 
 
 //extern void UI_Init(void);
@@ -1660,6 +1672,7 @@ int main(int argc, char* argv[]) {
 		if(control->cmdline->FindString("-editconf",editor,false)) launcheditor();
 		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
 		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
+		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
