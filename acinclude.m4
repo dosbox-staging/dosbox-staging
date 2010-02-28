@@ -390,9 +390,9 @@ typedef         double     Real64;
 #if SIZEOF_INT_P == 4
   typedef Bit32u Bitu;
   typedef Bit32s Bits;
- #else
+#else
   typedef Bit64u Bitu;
   typedef Bit64s Bits;
- #endif
+#endif
 
 ])
