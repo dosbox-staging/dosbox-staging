@@ -652,6 +652,8 @@ void MIXER_Init(Section* sec) {
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
+		if((mixer.freq != obtained.freq) || (mixer.blocksize != obtained.samples))
+			LOG_MSG("MIXER:Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
 		mixer.tick_add=(mixer.freq << MIXER_SHIFT)/1000;
