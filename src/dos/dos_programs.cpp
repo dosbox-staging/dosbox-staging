@@ -1071,7 +1071,7 @@ public:
 					return;
 				}
 			} else {
-				WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"));
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED"),fstype.c_str());
 				return;
 			}
 			
