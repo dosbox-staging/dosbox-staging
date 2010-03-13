@@ -1098,8 +1098,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	// Start and End of horizontal blanking
 	vga.draw.delay.hblkstart = hbstart*1000.0/clock; //in milliseconds
 	vga.draw.delay.hblkend = hbend*1000.0/clock; 
-	vga.draw.delay.hrstart = 0;
-	
+	// Start and End of horizontal retrace
+	vga.draw.delay.hrstart = hrstart*1000.0/clock;
+	vga.draw.delay.hrend = hrend*1000.0/clock;
 	// Start and End of vertical blanking
 	vga.draw.delay.vblkstart = vbstart * vga.draw.delay.htotal;
 	vga.draw.delay.vblkend = vbend * vga.draw.delay.htotal;
