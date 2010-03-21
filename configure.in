@@ -21,7 +21,7 @@ AC_PROG_RANLIB
 
 dnl Some needed libaries for OS2
 dnl perharps join this with the other target depended checks. move them upwards
-if test x$build = xi386-pc-os2-emx ; then
+if test x$host = xi386-pc-os2-emx ; then
     CXXFLAGS="$CXXFLAGS -Zmt"
     LDFLAGS="$LDFLAGS -Zomf -Zmt"
     LIBS="$LIBS -los2me"
@@ -231,7 +231,7 @@ AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--enable-core-inline],[Enable inlined 
 dnl The target cpu checks for dynamic cores
 AH_TEMPLATE(C_TARGETCPU,[The type of cpu this target has])
 AC_MSG_CHECKING(for target cpu type) 
-case "$build_cpu" in
+case "$host_cpu" in
   x86_64 | amd64)
     AC_DEFINE(C_TARGETCPU,X86_64)
     AC_MSG_RESULT(x86-64 bit compatible)
@@ -355,7 +355,7 @@ AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
 
-if test x$build = xi386-pc-os2-emx ; then
+if test x$host = xi386-pc-os2-emx ; then
   AC_MSG_CHECKING(for SDLNet_Init in SDL_net);
   LIBS_BACKUP=$LIBS;
   LIBS="$LIBS -lSDL_Net";
@@ -393,7 +393,7 @@ AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
 AC_MSG_CHECKING(whether opengl display output will be enabled) 
 if test x$enable_opengl = xyes; then
-case "$build" in
+case "$host" in
     *-*-darwin*)
        AC_MSG_RESULT(yes)
        LIBS="$LIBS -framework OpenGL"
@@ -448,7 +448,7 @@ int main(int argc,char * argv[]) {
 
 
 dnl Some target detection and actions for them
-case "$build" in
+case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
        AC_CHECK_HEADERS(ddraw.h)
@@ -486,7 +486,7 @@ case "$build" in
 esac
 
 dnl Some stuff for the icon.
-case "$build" in
+case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        dnl Some stuff for the ico
        AC_CHECK_TOOL(WINDRES, windres, :)
