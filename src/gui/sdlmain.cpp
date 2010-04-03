@@ -51,7 +51,7 @@
 #include "cross.h"
 #include "control.h"
 
-#define MAPPERFILE "mapper-" VERSION ".conf"
+#define MAPPERFILE "mapper-" VERSION ".map"
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
