@@ -2326,11 +2326,17 @@ void MAPPER_Init(void) {
 	if (SDL_GetModState()&KMOD_CAPS) {
 		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
 			(*bit)->ActivateBind(32767,true,true);
+#if SDL_VERSION_ATLEAST(1, 2, 14)
+			(*bit)->DeActivateBind(false);
+#endif
 		}
 	}
 	if (SDL_GetModState()&KMOD_NUM) {
 		for (CBindList_it bit=num_lock_event->bindlist.begin();bit!=num_lock_event->bindlist.end();bit++) {
 			(*bit)->ActivateBind(32767,true,true);
+#if SDL_VERSION_ATLEAST(1, 2, 14)
+			(*bit)->DeActivateBind(false);
+#endif
 		}
 	}
 }
