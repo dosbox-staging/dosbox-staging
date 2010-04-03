@@ -124,8 +124,9 @@ bool getSwapRequest(void) {
 void swapInNextDisk(bool pressed) {
 	if (!pressed)
 		return;
-	/* Hack/feature: rescan all disks as well */
 	DriveManager::CycleAllDisks();
+	/* Hack/feature: rescan all disks as well */
+	LOG_MSG("Diskcaching reset for normal mounted drives.");
 	for(Bitu i=0;i<DOS_DRIVES;i++) {
 		if (Drives[i]) Drives[i]->EmptyCache();
 	}
