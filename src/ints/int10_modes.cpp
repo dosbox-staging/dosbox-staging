@@ -475,7 +475,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	//Vertical displayed
 	IO_WriteW(crtc_base,0x06 | (CurMode->vdispend) << 8);
 	//Vertical sync position
-	IO_WriteW(crtc_base,0x07 | (CurMode->vdispend+1) << 8);
+	IO_WriteW(crtc_base,0x07 | (CurMode->vdispend + ((CurMode->vtotal - CurMode->vdispend)/2)-1) << 8);
 	//Maximum scanline
 	Bit8u scanline,crtpage;
 	scanline=8;
@@ -504,7 +504,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	//Setup the special registers for each machine type
 	Bit8u mode_control_list[0xa+1]={
 		0x2c,0x28,0x2d,0x29,	//0-3
-		0x2a,0x2e,0x16,0x29,	//4-7		
+		0x2a,0x2e,0x1e,0x29,	//4-7
 		0x2a,0x2b,0x3b			//8-a
 	};
 	Bit8u mode_control_list_pcjr[0xa+1]={
