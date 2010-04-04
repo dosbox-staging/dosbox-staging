@@ -826,13 +826,6 @@ void BIOS_ZeroExtendedSize(bool in) {
 	if(other_memsystems < 0) other_memsystems=0;
 }
 
-#define RAM_REFRESH_DELAY 16.7f
-
-static void RAMRefresh_Event(Bitu /*val*/) {
-	PIC_ActivateIRQ(5);
-	PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
-}
-
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
@@ -1085,8 +1078,6 @@ public:
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		size_extended|=(IO_Read(0x71) << 8);
-
-		if (machine==MCH_PCJR) PIC_AddEvent(RAMRefresh_Event,RAM_REFRESH_DELAY);
 	}
 	~BIOS(){
 		/* abort DAC playing */

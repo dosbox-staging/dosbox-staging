@@ -734,6 +734,11 @@ static void VGA_VertInterrupt(Bitu /*val*/) {
 	}
 }
 
+static void VGA_Other_VertInterrupt(Bitu val) {
+	if (val) PIC_ActivateIRQ(5);
+	else PIC_DeActivateIRQ(5);
+}
+
 static void VGA_DisplayStartLatch(Bitu /*val*/) {
 	vga.config.real_start=vga.config.display_start & (vga.vmemwrap-1);
 	vga.draw.bytes_skip = vga.config.bytes_skip;
@@ -744,43 +749,40 @@ static void VGA_PanningLatch(Bitu /*val*/) {
 }
 
 static void VGA_VerticalTimer(Bitu /*val*/) {
-	double error = vga.draw.delay.framestart;
 	vga.draw.delay.framestart = PIC_FullIndex();
-	error = vga.draw.delay.framestart - error - vga.draw.delay.vtotal;
 	PIC_AddEvent( VGA_VerticalTimer, (float)vga.draw.delay.vtotal );
-	//PIC_AddEvent( VGA_VerticalDisplayEnd, (float)vga.draw.delay.vrstart );
-	double flip_offset = vga.screenflip/1000.0 + vga.draw.delay.vrstart;
-	if(flip_offset > vga.draw.delay.vtotal) {
+	
+	switch(machine) {
+	case MCH_PCJR:
+	case MCH_TANDY:
+		// PCJr: Vsync is directly connected to the IRQ controller
+		// Some earlier Tandy models are said to have a vsync interrupt too
+		PIC_AddEvent(VGA_Other_VertInterrupt, (float)vga.draw.delay.vrstart, 1);
+		PIC_AddEvent(VGA_Other_VertInterrupt, (float)vga.draw.delay.vrend, 0);
+		// fall-through
+	case MCH_CGA:
+	case MCH_HERC:
+		// MC6845-powered graphics: Loading the display start latch happens somewhere
+		// after vsync off and before first visible scanline, so probably here
 		VGA_DisplayStartLatch(0);
-	} else PIC_AddEvent( VGA_DisplayStartLatch,(float)flip_offset);
-	PIC_AddEvent(VGA_PanningLatch,(float)vga.draw.delay.vrend);
-
-	// EGA: 82c435 datasheet: interrupt happens at display end
-	// VGA: checked with scope
-	// add a little amount of time to make sure the last drawpart has already fired
-	if (IS_EGAVGA_ARCH) PIC_AddEvent(VGA_VertInterrupt,(float)(vga.draw.delay.vdend + 0.005));
-
-	if ( GCC_UNLIKELY( vga.draw.parts_left)) {
-		if (!IS_VGA_ARCH || (svgaCard!=SVGA_None)) {
-			LOG(LOG_VGAMISC,LOG_NORMAL)( "Parts left: %d", vga.draw.parts_left );
-			PIC_RemoveEvents( &VGA_DrawPart );
-			RENDER_EndUpdate();
-			vga.draw.parts_left = 0;
-		}
+		break;
+	case MCH_VGA:
+	case MCH_EGA:
+		PIC_AddEvent(VGA_DisplayStartLatch, (float)vga.draw.delay.vrstart);
+		PIC_AddEvent(VGA_PanningLatch, (float)vga.draw.delay.vrend);
+		// EGA: 82c435 datasheet: interrupt happens at display end
+		// VGA: checked with scope; however disabled by default by jumper on VGA boards
+		// add a little amount of time to make sure the last drawpart has already fired
+		PIC_AddEvent(VGA_VertInterrupt,(float)(vga.draw.delay.vdend + 0.005));
+		break;
+	default:
+		E_Exit("This new machine needs implementation in VGA_VerticalTimer too.");
+		break;
 	}
-	//Check if we can actually render, else skip the rest
+	//Check if we can actually render, else skip the rest (frameskip)
 	if (!RENDER_StartUpdate())
 		return;
-	if ( GCC_UNLIKELY( vga.draw.lines_done < vga.draw.lines_total)) {
-		if (IS_VGA_ARCH && (svgaCard==SVGA_None)) {
-			while(vga.draw.lines_done < vga.draw.lines_total)
-				VGA_DrawSingleLine(0);
-			PIC_RemoveEvents(VGA_DrawSingleLine);
-		}
-	}
-	//TODO Maybe check for an active frame on parts_left and clear that first?
-	vga.draw.parts_left = vga.draw.parts_total;
-	vga.draw.lines_done = 0;
+
 	vga.draw.address_line = vga.config.hlines_skip;
 	if (IS_EGAVGA_ARCH) {
 		vga.draw.split_line = (Bitu)((vga.config.line_compare+1)/vga.draw.lines_scaled);
@@ -862,17 +864,38 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 #ifdef VGA_KEEP_CHANGES
 	if (startaddr_changed) VGA_ChangesStart();
 #endif
+
+	// check if some lines at the top off the screen are blanked
 	float draw_skip = 0.0;
 	if (GCC_UNLIKELY(vga.draw.vblank_skip)) {
 		draw_skip = (float)(vga.draw.delay.htotal * vga.draw.vblank_skip);
 		vga.draw.address += vga.draw.address_add * (vga.draw.vblank_skip/(vga.draw.address_line_total));
 	}
 
-	if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
-	else PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts + draw_skip,vga.draw.parts_lines);
-	//VGA_DrawPart( vga.draw.parts_lines );
-	//PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts,vga.draw.parts_lines);
-	//PIC_AddEvent(VGA_DrawPart,(float)(vga.draw.delay.parts/2),vga.draw.parts_lines); //Else tearline in Tyrian and second reality
+	// add the draw event
+	switch (vga.draw.mode) {
+	case PART:
+		if (GCC_UNLIKELY(vga.draw.parts_left)) {
+			LOG(LOG_VGAMISC,LOG_NORMAL)( "Parts left: %d", vga.draw.parts_left );
+			PIC_RemoveEvents(VGA_DrawPart);
+			RENDER_EndUpdate();
+		}
+		vga.draw.lines_done = 0;
+		vga.draw.parts_left = vga.draw.parts_total;
+		PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts + draw_skip,vga.draw.parts_lines);
+		break;
+	case LINE:
+		if (GCC_UNLIKELY(vga.draw.lines_done < vga.draw.lines_total)) {
+			LOG(LOG_VGAMISC,LOG_NORMAL)( "Lines left: %d", 
+				vga.draw.lines_total-vga.draw.lines_done);
+			PIC_RemoveEvents(VGA_DrawSingleLine);
+			RENDER_EndUpdate();
+		}
+		vga.draw.lines_done = 0;
+		PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
+		break;
+	//case EGALINE:
+	}
 }
 
 void VGA_CheckScanLength(void) {
@@ -949,8 +972,25 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
 		return;
 	}
+	// set the drawing mode
+	switch (machine) {
+	case MCH_CGA:
+	case MCH_PCJR:
+		vga.draw.mode = LINE;
+		break;
+	case MCH_VGA:
+		if (svgaCard==SVGA_None) {
+			vga.draw.mode = LINE;
+			break;
+		}
+		// fall-through
+	default:
+		vga.draw.mode = PART;
+		break;
+	}
+	
 	/* Calculate the FPS for this screen */
-	float fps; Bitu clock;
+	double fps; Bitu clock;
 	Bitu htotal, hdend, hbstart, hbend, hrstart, hrend;
 	Bitu vtotal, vdend, vbstart, vbend, vrstart, vrend;
 	Bitu vblank_skip;
@@ -1050,17 +1090,13 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		hbstart = hdend;
 		hbend = htotal;
 		hrstart = vga.other.hsyncp;
-		hrend = hrstart + (vga.other.syncw & 0xf) ;
+		hrend = hrstart + vga.other.hsyncw;
 
 		vga.draw.address_line_total = vga.other.max_scanline + 1;
 		vtotal = vga.draw.address_line_total * (vga.other.vtotal+1)+vga.other.vadjust;
 		vdend = vga.draw.address_line_total * vga.other.vdend;
 		vrstart = vga.draw.address_line_total * vga.other.vsyncp;
-		vrend = (vga.other.syncw >> 4);
-		if (!vrend)
-			vrend = vrstart + 0xf + 1;
-		else 
-			vrend = vrstart + vrend;
+		vrend = vrstart + 16; // vsync width is fixed to 16 lines on the MC6845 TODO Tandy
 		vbstart = vdend;
 		vbend = vtotal;
 		vga.draw.double_scan=false;
@@ -1088,9 +1124,8 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	if (!htotal) return;
 	if (!vtotal) return;
 	
-	fps=(float)clock/(vtotal*htotal);
-	// The time a complete video frame takes
-	vga.draw.delay.vtotal = (1000.0 * (double)(vtotal*htotal)) / (double)clock; 
+	// The screen refresh frequency
+	fps=(double)clock/(vtotal*htotal);
 	// Horizontal total (that's how long a line takes with whistles and bells)
 	vga.draw.delay.htotal = htotal*1000.0/clock; //in milliseconds
 	// Start and End of horizontal blanking
@@ -1411,21 +1446,34 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	}
 //	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
 
-	if (( width != vga.draw.width) || (height != vga.draw.height) ||
-		(aspect_ratio != vga.draw.aspect_ratio) || 
-		(vga.mode != vga.lastmode)) {
-		vga.lastmode = vga.mode;
+	// need to change the vertical timing?
+	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
+		vga.draw.delay.vtotal = 1000.0 / fps;
+		VGA_KillDrawing();
+		PIC_RemoveEvents(VGA_Other_VertInterrupt);
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
-		PIC_RemoveEvents(VGA_DrawPart);
-		PIC_RemoveEvents(VGA_DrawSingleLine);
+		VGA_VerticalTimer(0);
+	}
+
+	// need to resize the output window?
+	if ((width != vga.draw.width) ||
+		(height != vga.draw.height) ||
+		(vga.draw.doublewidth != doublewidth) ||
+		(vga.draw.doubleheight != doubleheight) ||
+		(abs(aspect_ratio - vga.draw.aspect_ratio) > 0.0001) || 
+		(vga.draw.bpp != bpp)) {
+
+		VGA_KillDrawing();
+
 		vga.draw.width = width;
 		vga.draw.height = height;
 		vga.draw.doublewidth = doublewidth;
 		vga.draw.doubleheight = doubleheight;
 		vga.draw.aspect_ratio = aspect_ratio;
 		vga.draw.vblank_skip = vblank_skip;
+		vga.draw.bpp = bpp;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
 #if C_DEBUG
@@ -1433,14 +1481,14 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		LOG(LOG_VGA,LOG_NORMAL)("%s width, %s height aspect %f",
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
 #endif
-		RENDER_SetSize(width,height,bpp,fps,aspect_ratio,doublewidth,doubleheight);
-		vga.draw.delay.framestart = PIC_FullIndex();
-		PIC_AddEvent( VGA_VerticalTimer , (float)vga.draw.delay.vtotal );
-		vga.draw.lines_done = 0;
+		RENDER_SetSize(width,height,bpp,(float)fps,aspect_ratio,doublewidth,doubleheight);
 	}
 }
 
 void VGA_KillDrawing(void) {
 	PIC_RemoveEvents(VGA_DrawPart);
 	PIC_RemoveEvents(VGA_DrawSingleLine);
+	vga.draw.parts_left = 0;
+	vga.draw.lines_done = ~0;
+	RENDER_EndUpdate();
 }

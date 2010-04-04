@@ -49,8 +49,10 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	case 0x02:		//Horizontal sync position
 		vga.other.hsyncp=(Bit8u)val;
 		break;
-	case 0x03:		//Horizontal and vertical sync width
-		vga.other.syncw=(Bit8u)val;
+	case 0x03:		//Horizontal sync width
+		if (machine==MCH_TANDY) vga.other.vsyncw=(Bit8u)(val >> 4);
+		else vga.other.vsyncw = 16; // The MC6845 has a fixed v-sync width of 16 lines
+		vga.other.hsyncw=(Bit8u)(val & 0xf);
 		break;
 	case 0x04:		//Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
@@ -116,7 +118,9 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	case 0x02:		//Horizontal sync position
 		return vga.other.hsyncp;
 	case 0x03:		//Horizontal and vertical sync width
-		return vga.other.syncw;
+		if (machine==MCH_TANDY)
+			return vga.other.hsyncw | (vga.other.vsyncw << 4);
+		else return vga.other.hsyncw;
 	case 0x04:		//Vertical total
 		return vga.other.vtotal;
 	case 0x05:		//Vertical display adjust
@@ -278,17 +282,21 @@ static void TANDY_FindMode(void) {
 	}
 }
 
+void VGA_SetModeNow(VGAModes mode);
+
 static void PCJr_FindMode(void) {
 	if (vga.tandy.mode_control & 0x2) {
 		if (vga.tandy.mode_control & 0x10) {
 			/* bit4 of mode control 1 signals 16 colour graphics mode */
-			VGA_SetMode(M_TANDY16);
+			if (vga.mode==M_TANDY4) VGA_SetModeNow(M_TANDY16); // TODO lowres mode only
+			else VGA_SetMode(M_TANDY16);
 		} else if (vga.tandy.gfx_control & 0x08) {
 			/* bit3 of mode control 2 signals 2 colour graphics mode */
 			VGA_SetMode(M_TANDY2);
 		} else {
 			/* otherwise some 4-colour graphics mode */
-			VGA_SetMode(M_TANDY4);
+			if (vga.mode==M_TANDY16) VGA_SetModeNow(M_TANDY4);
+			else VGA_SetMode(M_TANDY4);
 		}
 		write_color_select(vga.tandy.color_select);
 	} else {
@@ -318,6 +326,7 @@ static void write_tandy_reg(Bit8u val) {
 			vga.tandy.mode_control=val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
+			vga.attr.disabled = (val&0x8)? 0: 1;
 		} else {
 			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
 		}
@@ -359,6 +368,7 @@ static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=(Bit8u)val;
+		vga.attr.disabled = (val&0x8)? 0: 1; 
 		if (vga.tandy.mode_control & 0x2) {
 			if (vga.tandy.mode_control & 0x10) {
 				if (!(val & 0x4) && machine==MCH_CGA) {
