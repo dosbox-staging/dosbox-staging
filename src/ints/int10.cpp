@@ -419,18 +419,24 @@ graphics_chars:
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			reg_al=0x12;
 			break;
-		case 0x36:							/* VGA Refresh control */
+		case 0x36: {						/* VGA Refresh control */
 			if (!IS_VGA_ARCH) break;
 			if ((svgaCard==SVGA_S3Trio) && (reg_al>1)) {
 				reg_al=0;
 				break;
 			}
-			/* 
-				Call disables/enables the vga from outputting video,
-				don't support it, but fake a success return 
-			*/
-			reg_al=0x12;
+			IO_Write(0x3c4,0x1);
+			Bit8u clocking = IO_Read(0x3c5);
+			
+			if (reg_al==0) clocking &= ~0x20;
+			else clocking |= 0x20;
+			
+			IO_Write(0x3c4,0x1);
+			IO_Write(0x3c5,clocking);
+
+			reg_al=0x12; // success
 			break;
+		}
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			if (machine!=MCH_EGA) reg_al=0;
