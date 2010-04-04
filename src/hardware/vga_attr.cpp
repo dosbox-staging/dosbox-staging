@@ -46,7 +46,7 @@ void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
 Bitu read_p3c0(Bitu /*port*/,Bitu /*iolen*/) {
 	// Wcharts, Win 3.11 & 95 SVGA
 	Bitu retval = attr(index) & 0x1f;
-	if (attr(enabled)) retval |= 0x20;
+	if (!(attr(disabled) & 0x1)) retval |= 0x20;
 	return retval;
 }
  
@@ -54,7 +54,8 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 	if (!vga.internal.attrindex) {
 		attr(index)=val & 0x1F;
 		vga.internal.attrindex=true;
-		attr(enabled)=val & 0x20;
+		if (val & 0x20) attr(disabled) &= ~1;
+		else attr(disabled) |= 1;
 		/* 
 			0-4	Address of data register to write to port 3C0h or read from port 3C1h
 			5	If set screen output is enabled and the palette can not be modified,
@@ -69,7 +70,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 		case 0x04:		case 0x05:		case 0x06:		case 0x07:
 		case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
 		case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-			if (!attr(enabled)) VGA_ATTR_SetPalette(attr(index),(Bit8u)val);
+			if (attr(disabled) & 0x1) VGA_ATTR_SetPalette(attr(index),(Bit8u)val);
 			/*
 				0-5	Index into the 256 color DAC table. May be modified by 3C0h index
 				10h and 14h.

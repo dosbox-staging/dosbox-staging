@@ -522,7 +522,7 @@ Bitu read_herc_status(Bitu /*port*/,Bitu /*iolen*/) {
 void VGA_SetupOther(void) {
 	Bitu i;
 	memset( &vga.tandy, 0, sizeof( vga.tandy ));
-	vga.attr.enabled = true;
+	vga.attr.disabled = 0;
 	vga.config.bytes_skip=0;
 
 	//Initialize values common for most machines, can be overwritten

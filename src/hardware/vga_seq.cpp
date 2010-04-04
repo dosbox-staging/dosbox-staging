@@ -47,6 +47,8 @@ void write_p3c5(Bitu /*port*/,Bitu val,Bitu iolen) {
 			} else {
 				seq(clocking_mode)=val;
 			}
+			if (val & 0x20) vga.attr.disabled |= 0x2;
+			else vga.attr.disabled &= ~0x2;
 		}
 		/* TODO Figure this out :)
 			0	If set character clocks are 8 dots wide, else 9.

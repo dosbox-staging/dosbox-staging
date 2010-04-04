@@ -637,15 +637,13 @@ static void VGA_ProcessSplit() {
 }
 
 static void VGA_DrawSingleLine(Bitu /*blah*/) {
-	if (vga.attr.enabled) {
-        Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
-		RENDER_DrawLine(data);
-	} else {
-		// else draw overscan color line
-		// TODO: black line should be good enough for now
-		// (DoWhackaDo)
+	if (GCC_UNLIKELY(vga.attr.disabled)) {
+		// draw blanked line (DoWhackaDo, Alien Carnage, TV sports Football)
 		memset(TempLine, 0, sizeof(TempLine));
 		RENDER_DrawLine(TempLine);
+	} else {
+		Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
+		RENDER_DrawLine(data);
 	}
 
 	vga.draw.address_line++;
