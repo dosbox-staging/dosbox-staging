@@ -1469,6 +1469,7 @@ private:
 	IO_WriteHandleObject WriteHandler[0x10];
 	AutoexecObject autoexecline;
 	MixerObject MixerChan;
+	OPL_Mode oplmode;
 
 	/* Support Functions */
 	void Find_Type_And_Opl(Section_prop* config,SB_TYPES& type, OPL_Mode& opl_mode){
@@ -1497,14 +1498,22 @@ private:
 		else {
 			switch (type) {
 			case SBT_NONE:
+				opl_mode=OPL_none;
+				break;
 			case SBT_GB:
-				opl_mode=OPL_none;break;
-			case SBT_1:opl_mode=OPL_opl2;break;
-			case SBT_2:opl_mode=OPL_opl2;break;
-			case SBT_PRO1:opl_mode=OPL_dualopl2;break;
+				opl_mode=OPL_cms;
+				break;
+			case SBT_1:
+			case SBT_2:
+				opl_mode=OPL_opl2;
+				break;
+			case SBT_PRO1:
+				opl_mode=OPL_dualopl2;
+				break;
 			case SBT_PRO2:
 			case SBT_16:
-				opl_mode=OPL_opl3;break;
+				opl_mode=OPL_opl3;
+				break;
 			}
 		}	
 	}
@@ -1524,27 +1533,25 @@ public:
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
-		OPL_Mode opl_mode = OPL_none;
-		Find_Type_And_Opl(section,sb.type,opl_mode);
-	
-		bool do_cms = (sb.type==SBT_GB)? true:false;
 
-		switch (opl_mode) {
+		Find_Type_And_Opl(section,sb.type,oplmode);
+	
+		switch (oplmode) {
 		case OPL_none:
 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
 			break;
 		case OPL_cms:
 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
-			do_cms = true;
+			CMS_Init(section);
 			break;
 		case OPL_opl2:
-			do_cms = true;
+			CMS_Init(section);
+			// fall-through
 		case OPL_dualopl2:
 		case OPL_opl3:
-			OPL_Init(section,opl_mode);
+			OPL_Init(section,oplmode);
 			break;
 		}
-		if (do_cms) CMS_Init(section);
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
 
 		sb.chan=MixerChan.Install(&SBLASTER_CallBack,22050,"SB");
@@ -1588,28 +1595,22 @@ public:
 	}	
 	
 	~SBLASTER() {
-	Section_prop * section=static_cast<Section_prop *>(m_configuration);
-		OPL_Mode opl_mode = OPL_none;
-		Find_Type_And_Opl(section,sb.type,opl_mode);
-	
-		switch (opl_mode) {
+		switch (oplmode) {
 		case OPL_none:
-
 			break;
 		case OPL_cms:
-
-		CMS_ShutDown(m_configuration);
+			CMS_ShutDown(m_configuration);
 			break;
 		case OPL_opl2:
-		CMS_ShutDown(m_configuration);
+			CMS_ShutDown(m_configuration);
+			// fall-through
 		case OPL_dualopl2:
 		case OPL_opl3:
-		OPL_ShutDown(m_configuration);
+			OPL_ShutDown(m_configuration);
 			break;
 		}
-
 		if (sb.type==SBT_NONE || sb.type==SBT_GB) return;
-		DSP_Reset();//Stop everything	
+		DSP_Reset(); // Stop everything	
 	}	
 }; //End of SBLASTER class
 
