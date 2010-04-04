@@ -236,6 +236,13 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 			EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
 		case M_VGA:		
 			VGA_CopyRow(cul,clr,start,start+nlines,base);break;
+		case M_LIN4:
+			if ((machine==MCH_VGA) && (svgaCard==SVGA_TsengET4K) &&
+					(CurMode->swidth<=800)) {
+				// the ET4000 BIOS supports text output in 800x600 SVGA
+				EGA16_CopyRow(cul,clr,start,start+nlines,base);break;
+			}
+			// fall-through
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
@@ -262,6 +269,12 @@ filling:
 			EGA16_FillRow(cul,clr,start,base,attr);break;
 		case M_VGA:		
 			VGA_FillRow(cul,clr,start,base,attr);break;
+		case M_LIN4:
+			if ((machine==MCH_VGA) && (svgaCard==SVGA_TsengET4K) &&
+					(CurMode->swidth<=800)) {
+				EGA16_FillRow(cul,clr,start,base,attr);break;
+			}
+			// fall-through
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Unhandled mode %d for scroll",CurMode->type);
 		}	
