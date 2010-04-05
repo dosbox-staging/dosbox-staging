@@ -213,8 +213,12 @@ bool DOS_NewPSP(Bit16u segment, Bit16u size) {
 bool DOS_ChildPSP(Bit16u segment, Bit16u size) {
 	DOS_PSP psp(segment);
 	psp.MakeNew(size);
-	DOS_PSP psp_parent(psp.GetParent());
+	Bit16u parent_psp_seg = psp.GetParent();
+	DOS_PSP psp_parent(parent_psp_seg);
 	psp.CopyFileTable(&psp_parent,true);
+	psp.SetCommandTail(RealMake(parent_psp_seg,0x80));
+	psp.SetFCB1(RealMake(parent_psp_seg,0x5c));
+	psp.SetFCB2(RealMake(parent_psp_seg,0x6c));
 	psp.SetEnvironment(psp_parent.GetEnvironment());
 	psp.SetSize(size);
 	return true;
@@ -412,7 +416,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	} else {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
-		if (head.initSP<4) E_Exit("stack underflow/wrap at EXEC");
+		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 	}
 
 	if (flags==LOAD) {
@@ -434,7 +438,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	}
 
 	if (flags==LOADNGO) {
-		if ((reg_sp>0xfffe) || (reg_sp<18)) E_Exit("stack underflow/wrap at EXEC");
+		if ((reg_sp>0xfffe) || (reg_sp<18)) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 		/* Get Caller's program CS:IP of the stack and set termination address to that */
 		RealSetVec(0x22,RealMake(mem_readw(SegPhys(ss)+reg_sp+2),mem_readw(SegPhys(ss)+reg_sp)));
 		SaveRegisters();
