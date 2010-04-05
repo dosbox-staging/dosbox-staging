@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <math.h>
+#include <cstdlib>
 #include "dosbox.h"
 #include "video.h"
 #include "render.h"
