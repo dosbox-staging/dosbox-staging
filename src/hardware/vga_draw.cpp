@@ -28,6 +28,10 @@
 #include "vga.h"
 #include "pic.h"
 
+//#undef C_DEBUG
+//#define C_DEBUG 1
+//#define LOG(X,Y) LOG_MSG
+
 #define VGA_PARTS 4
 
 typedef Bit8u * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
@@ -1176,17 +1180,6 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	// Display end
 	vga.draw.delay.vdend = vdend * vga.draw.delay.htotal;
 
-#if C_DEBUG
-	LOG(LOG_VGA,LOG_NORMAL)("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-		vga.draw.delay.htotal,(1.0/vga.draw.delay.htotal),
-		vga.draw.delay.hblkstart,vga.draw.delay.hblkend,
-		vga.draw.delay.hrstart,vga.draw.delay.hrend);
-	LOG(LOG_VGA,LOG_NORMAL)("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-		vga.draw.delay.vtotal,(1000.0/vga.draw.delay.vtotal),
-		vga.draw.delay.vblkstart,vga.draw.delay.vblkend,
-		vga.draw.delay.vrstart,vga.draw.delay.vrend);
-#endif
-
 	vga.draw.parts_total=VGA_PARTS;
 	/*
       6  Horizontal Sync Polarity. Negative if set
@@ -1457,6 +1450,17 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
 		VGA_VerticalTimer(0);
 	}
+
+#if C_DEBUG
+	LOG(LOG_VGA,LOG_NORMAL)("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+		vga.draw.delay.htotal,(1.0/vga.draw.delay.htotal),
+		vga.draw.delay.hblkstart,vga.draw.delay.hblkend,
+		vga.draw.delay.hrstart,vga.draw.delay.hrend);
+	LOG(LOG_VGA,LOG_NORMAL)("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+		vga.draw.delay.vtotal,(1000.0/vga.draw.delay.vtotal),
+		vga.draw.delay.vblkstart,vga.draw.delay.vblkend,
+		vga.draw.delay.vrstart,vga.draw.delay.vrend);
+#endif
 
 	// need to resize the output window?
 	if ((width != vga.draw.width) ||
