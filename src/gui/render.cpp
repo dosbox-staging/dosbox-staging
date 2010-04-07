@@ -201,7 +201,7 @@ static void RENDER_Halt( void ) {
 }
 
 extern Bitu PIC_Ticks;
-void RENDER_EndUpdate( void ) {
+void RENDER_EndUpdate( bool abort ) {
 	if (GCC_UNLIKELY(!render.updating))
 		return;
 	RENDER_DrawLine = RENDER_EmptyLineHandler;
@@ -220,7 +220,7 @@ void RENDER_EndUpdate( void ) {
 			flags, fps, (Bit8u *)&scalerSourceCache, (Bit8u*)&render.pal.rgb );
 	}
 	if ( render.scale.outWrite ) {
-		GFX_EndUpdate( Scaler_ChangedLines );
+		GFX_EndUpdate( abort? NULL : Scaler_ChangedLines );
 		render.frameskip.hadSkip[render.frameskip.index] = 0;
 	} else {
 #if 0

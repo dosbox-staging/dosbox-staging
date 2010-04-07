@@ -660,7 +660,7 @@ static void VGA_DrawSingleLine(Bitu /*blah*/) {
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
 		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
-	} else RENDER_EndUpdate();
+	} else RENDER_EndUpdate(false);
 }
 
 static void VGA_DrawPart(Bitu lines) {
@@ -690,7 +690,7 @@ static void VGA_DrawPart(Bitu lines) {
 #ifdef VGA_KEEP_CHANGES
 		VGA_ChangesEnd();
 #endif
-		RENDER_EndUpdate();
+		RENDER_EndUpdate(false);
 	}
 }
 
@@ -883,7 +883,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 		if (GCC_UNLIKELY(vga.draw.parts_left)) {
 			LOG(LOG_VGAMISC,LOG_NORMAL)( "Parts left: %d", vga.draw.parts_left );
 			PIC_RemoveEvents(VGA_DrawPart);
-			RENDER_EndUpdate();
+			RENDER_EndUpdate(true);
 		}
 		vga.draw.lines_done = 0;
 		vga.draw.parts_left = vga.draw.parts_total;
@@ -894,7 +894,7 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 			LOG(LOG_VGAMISC,LOG_NORMAL)( "Lines left: %d", 
 				vga.draw.lines_total-vga.draw.lines_done);
 			PIC_RemoveEvents(VGA_DrawSingleLine);
-			RENDER_EndUpdate();
+			RENDER_EndUpdate(true);
 		}
 		vga.draw.lines_done = 0;
 		PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
@@ -1495,5 +1495,5 @@ void VGA_KillDrawing(void) {
 	PIC_RemoveEvents(VGA_DrawSingleLine);
 	vga.draw.parts_left = 0;
 	vga.draw.lines_done = ~0;
-	RENDER_EndUpdate();
+	RENDER_EndUpdate(true);
 }
