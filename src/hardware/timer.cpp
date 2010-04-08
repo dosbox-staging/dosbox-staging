@@ -139,7 +139,6 @@ static void counter_latch(Bitu counter) {
 
 	//If gate2 is disabled don't update the read_latch
 	if(counter == 2 && !gate2 && p->mode !=1) return;
-	if(p->new_mode) return;
 
 	double index=PIC_FullIndex()-p->start;
 	switch (p->mode) {
@@ -310,7 +309,6 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 				pit[latch].counterstatus_set=false;
 				latched_timerstatus_locked=false;
 			}
-			pit[latch].go_read_latch = true;
 			pit[latch].update_count = false;
 			pit[latch].counting = false;
 			pit[latch].read_state  = (val >> 4) & 0x03;
