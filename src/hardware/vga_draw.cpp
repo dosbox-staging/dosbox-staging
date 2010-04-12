@@ -20,7 +20,6 @@
 
 #include <string.h>
 #include <math.h>
-#include <cstdlib>
 #include "dosbox.h"
 #include "video.h"
 #include "render.h"
@@ -1467,7 +1466,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		(height != vga.draw.height) ||
 		(vga.draw.doublewidth != doublewidth) ||
 		(vga.draw.doubleheight != doubleheight) ||
-		(abs(aspect_ratio - vga.draw.aspect_ratio) > 0.0001) || 
+		(fabs(aspect_ratio - vga.draw.aspect_ratio) > 0.0001) ||
 		(vga.draw.bpp != bpp)) {
 
 		VGA_KillDrawing();
