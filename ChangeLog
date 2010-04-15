@@ -22,6 +22,7 @@
     you exit dosbox without stopping the movie.
   - Change RGB3x scaler to look more pretty.
   - Improve initial register values compatility of the GUS.
+  - Added autodetection for Gameblaster. (games can find it now)
   - Change render preferences a bit to be more compatible with windows 7.
   - Add DOS fixes to terminate program. (Fixes fortune teller) 
   - Add FFREEP. (Fixes trucks)
@@ -32,6 +33,15 @@
   - Modify game specific hacks a bit so that Kick off 3 works again.
   - Lots of fixes to the INT10 video parameter table. (Seven spirits 
     of ra and others)
+  - Add vga blanking in machine=vgaonly. (Used by Alien Carnage)
+  - CGA, PCJr, Tandy: Add video blanking, change display start latch 
+    timing, sync pulse width correction,
+  - PCJr, Tandy: implement vertical retrace interrupt,
+  - PCJr, CGA: do line-by-line video emulation,
+  - PCJr: support on-screen change of color modes 4medium to 16low (used
+    by Ghostbusters booter),
+  - All machines: only update the video timing when needed (Jungle Hunt,
+    others that synchronize to the video screen might profit).
   - Several small DOS fixes.
   - Some UMB related fixes. ( The Legacy without umb)
   - Fix version number of DSP for SB 1.5. (fixes a few games)
@@ -57,8 +67,8 @@
   - Fix compilation with new MAC os X version.
   - Add 16C550A FIFO support to the serial port emulation.
   - Improve modem emulation to get higher speeds.
-  - Change default samplerates to 44100, so that hopefully certain 
-    soundcards produce more fluent sound playback.
+  - Change default samplerates to 44100, blocksize to 1024 and prebuffer to 20,
+    so that hopefully certain soundcards produce more fluent sound playback.
   - Add some rarely used, but for some games critical flags to 
     the internal commands.
   - Improve internal timing with repeatings timers (especially with 
