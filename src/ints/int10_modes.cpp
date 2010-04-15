@@ -517,6 +517,7 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 	case MCH_HERC:
 		IO_WriteB(0x3b8,0x28);	// TEXT mode and blinking characters
 
+		Herc_Palette();
 		VGA_DAC_CombineColor(0,0);
 		VGA_DAC_CombineColor(1,7);
 

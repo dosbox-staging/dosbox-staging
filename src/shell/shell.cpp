@@ -302,6 +302,7 @@ void DOS_Shell::Run(void) {
 	WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
 	if (machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+	if (machine == MCH_HERC) WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
 	WriteOut(MSG_Get("SHELL_STARTUP_END"));
 
 	if (cmd->FindString("/INIT",line,true)) {
@@ -506,6 +507,9 @@ void SHELL_Init() {
 	);
 	MSG_Add("SHELL_STARTUP_CGA","\xBA DOSBox supports Composite CGA mode.                                \xBA\n"
 	        "\xBA Use \033[31m(alt-)F11\033[37m to change the colours when in this mode.             \xBA\n"
+	        "\xBA                                                                    \xBA\n"
+	);
+	MSG_Add("SHELL_STARTUP_HERC","\xBA Use \033[31mF11\033[37m to cycle through white, amber, and green monochrome color. \xBA\n"
 	        "\xBA                                                                    \xBA\n"
 	);
 	MSG_Add("SHELL_STARTUP_DEBUG",
