@@ -500,7 +500,7 @@ void SHELL_Init() {
 		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
 		"\xBA For supported shell commands type: \033[33mHELP\033[37m                            \xBA\n"
 		"\xBA                                                                    \xBA\n"
-		"\xBA If you want more speed, try \033[31mctrl-F8\033[37m and \033[31mctrl-F12\033[37m.                  \xBA\n"
+		"\xBA To adjust the emulated CPU speed, use \033[31mctrl-F11\033[37m and \033[31mctrl-F12\033[37m.       \xBA\n"
 		"\xBA To activate the keymapper \033[31mctrl-F1\033[37m.                                 \xBA\n"
 		"\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
