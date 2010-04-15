@@ -1,4 +1,4 @@
-DOSBox v0.73
+DOSBox v0.74
 
 
 =====
@@ -894,7 +894,7 @@ CTRL-F9       Kill DOSBox.
 CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles).
-ALT-F12       Unlock speed (turbo button).
+ALT-F12       Unlock speed (turbo button/fast forward).
 
 (NOTE: Once you increase your DOSBox cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
