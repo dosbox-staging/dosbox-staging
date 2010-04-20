@@ -1413,6 +1413,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		}
 		doubleheight=true;
 	}
+	vga.draw.vblank_skip = vblank_skip;
 		
 	if(!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
 		//Only check for extra double height in vga modes
@@ -1476,7 +1477,6 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		vga.draw.doublewidth = doublewidth;
 		vga.draw.doubleheight = doubleheight;
 		vga.draw.aspect_ratio = aspect_ratio;
-		vga.draw.vblank_skip = vblank_skip;
 		vga.draw.bpp = bpp;
 		if (doubleheight) vga.draw.lines_scaled=2;
 		else vga.draw.lines_scaled=1;
