@@ -17,7 +17,7 @@
   - Some hercules fixes (Testdrive)
   - Improve support for blanked parts that wrap around to the start of
     the screen. (Fixes Magic Circle demo and Sid&Al)
-  - Remove old opl cores as the new ones seem work very nice.
+  - Remove old opl cores as the new ones seem to work very nicely.
   - Modify movie recording code so that the movies aren't corrupt when
     you exit dosbox without stopping the movie.
   - Change RGB3x scaler to look more pretty.
