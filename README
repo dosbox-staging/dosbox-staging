@@ -112,7 +112,7 @@ A: To mount your CD-ROM in DOSBox you have to specify some additional options
      To enable SDL-support (does not include low-level CD access!):
        - mount d f:\ -t cdrom -usecd 0 -noioctl
      To enable ioctl access using digital audio extraction for CD audio
-     (windows-only, useful for Vista):
+     (windows-only, useful for Vista and above):
        - mount d f:\ -t cdrom -ioctl_dx
      To enable ioctl access using MCI for CD audio (windows-only):
        - mount d f:\ -t cdrom -ioctl_mci
@@ -246,9 +246,7 @@ A: DOSBox emulates several legacy sound devices:
      the noise channel. The noise channel is not very well documented and as 
      such is only a best guess as to the sound's accuracy.
    - Tandy DAC
-     Emulation of the Tandy DAC utilizes the soundblaster emulation, thus
-     be sure the soundblaster is not disabled in the DOSBox configuration
-     file. The Tandy DAC is only emulated at the BIOS level.
+     The Tandy DAC BIOS interface as well as low level access are emulated.
    - Adlib
      This emulation is almost perfect and includes the Adlib's ability to 
      almost play digitized sound.
@@ -470,8 +468,8 @@ MOUNT -u "Emulated Drive letter"
         is mounted. It will not be updated !!
 
   -aspi
-        Forces use of the aspi layer. Only valid if mounting a CD-ROM under 
-        Windows systems with an ASPI-Layer.
+        Forces use of the aspi layer (obsolete). Only valid if mounting a
+        CD-ROM under Windows systems with an ASPI-Layer.
 
   -ioctl (automatic selection of the CD audio interface)
   -ioctl_dx (digital audio extraction used for CD audio)
