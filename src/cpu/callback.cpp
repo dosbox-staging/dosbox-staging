@@ -423,7 +423,13 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		}
 		phys_writeb(physAddress+0x01,(Bit8u)0xCF);		//An IRET Instruction
 		phys_writeb(physAddress+0x02,(Bit8u)0xCB);		//A RETF Instruction
-		return (use_cb?7:3);
+		phys_writeb(physAddress+0x03,(Bit8u)0x51);		// push cx
+		phys_writeb(physAddress+0x04,(Bit8u)0xB9);		// mov cx,
+		phys_writew(physAddress+0x05,(Bit16u)0x0140);		// 0x140
+		phys_writew(physAddress+0x07,(Bit16u)0xFEE2);		// loop $-2
+		phys_writeb(physAddress+0x09,(Bit8u)0x59);		// pop cx
+		phys_writeb(physAddress+0x0A,(Bit8u)0xCF);		//An IRET Instruction
+		return (use_cb?15:11);
 
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);

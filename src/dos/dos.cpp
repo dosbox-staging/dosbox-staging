@@ -44,7 +44,10 @@ void DOS_SetError(Bit16u code) {
 
 #define DATA_TRANSFERS_TAKE_CYCLES 1
 #ifdef DATA_TRANSFERS_TAKE_CYCLES
+
+#ifndef DOSBOX_CPU_H
 #include "cpu.h"
+#endif
 static inline void modify_cycles(Bits value) {
 	if((4*value+5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
@@ -56,6 +59,20 @@ static inline void modify_cycles(Bits value) {
 }
 #else
 static inline void modify_cycles(Bits /* value */) {
+	return;
+}
+#endif
+#define DOS_OVERHEAD 1
+#ifdef DOS_OVERHEAD
+#ifndef DOSBOX_CPU_H
+#include "cpu.h"
+#endif
+
+static inline void overhead() {
+	reg_ip += 2;
+}
+#else
+static inline void overhead() {
 	return;
 }
 #endif
@@ -121,6 +138,9 @@ static Bitu DOS_21Handler(void) {
 		switch (reg_dl) {
 		case 0xFF:	/* Input */
 			{	
+				//Simulate DOS overhead for timing sensitive games
+				//MM1
+				overhead();
 				//TODO Make this better according to standards
 				if (!DOS_GetSTDINStatus()) {
 					reg_al=0;
@@ -201,6 +221,9 @@ static Bitu DOS_21Handler(void) {
 	case 0x0b:		/* Get STDIN Status */
 		if (!DOS_GetSTDINStatus()) {reg_al=0x00;}
 		else {reg_al=0xFF;}
+		//Simulate some overhead for timing issues
+		//Tankwar menu (needs maybe even more)
+		overhead();
 		break;
 	case 0x0c:		/* Flush Buffer and read STDIN call */
 		{
@@ -369,6 +392,9 @@ static Bitu DOS_21Handler(void) {
 			reg_dh=(Bit8u)(seconds % 60);
 			reg_dl=(Bit8u)(ticks % 100);
 		}
+		//Simulate DOS overhead for timing-sensitive games
+        	//Robomaze 2
+		overhead();
 		break;
 	case 0x2d:		/* Set System Time */
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
@@ -1061,7 +1087,7 @@ static Bitu DOS_20Handler(void) {
 static Bitu DOS_27Handler(void) {
 	// Terminate & stay resident
 	Bit16u para = (reg_dx/16)+((reg_dx % 16)>0);
-	Bit16u psp = mem_readw(SegPhys(ss)+reg_sp+2);
+	Bit16u psp = dos.psp(); //mem_readw(SegPhys(ss)+reg_sp+2);
 	if (DOS_ResizeMemory(psp,&para)) DOS_Terminate(psp,true,0);
 	return CBRET_NONE;
 }
