@@ -374,7 +374,8 @@ void DOSBOX_Init(void) {
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
 	Pmulti->SetValue("normal2x");
-	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,the scaler will be used even if the result might not be desired.");
+	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
+	                 "  If 'forced' is appended, then the scaler will be used even if the result might not be desired.");
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = { 
@@ -410,11 +411,13 @@ void DOSBOX_Init(void) {
 
 	Pmulti_remain = secprop->Add_multiremain("cycles",Property::Changeable::Always," ");
 	Pmulti_remain->Set_help(
-		"Amount of instructions DOSBox tries to emulate each millisecond. Setting this value too high results in sound dropouts and lags. Cycles can be set in 3 ways:\n"
+		"Amount of instructions DOSBox tries to emulate each millisecond.\n"
+		"Setting this value too high results in sound dropouts and lags.\n"
+		"Cycles can be set in 3 ways:\n"
 		"  'auto'          tries to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
 		"  'fixed #number' will set a fixed amount of cycles. This is what you usually need if 'auto' fails.\n"
-		"                  (Example: fixed 4000)\n"
+		"                  (Example: fixed 4000).\n"
 		"  'max'           will allocate as much cycles as your computer is able to handle.\n");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
@@ -424,9 +427,9 @@ void DOSBOX_Init(void) {
 
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
 	
-	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,500);
+	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,10);
 	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Amount of cycles to increase/decrease with keycombo.");
+	Pint->Set_help("Amount of cycles to decrease/increase with keycombo.(CTRL-F11/CTRL-F12)");
 
 	Pint = secprop->Add_int("cycledown",Property::Changeable::Always,20);
 	Pint->SetMinMax(1,1000000);
@@ -448,15 +451,15 @@ void DOSBOX_Init(void) {
 	Pint->Set_help("Mixer sample rate, setting any device's rate higher than this will probably lower their sound quality.");
 
 	const char *blocksizes[] = {
-		"2048", "4096", "8192", "1024", "512", "256", 0};
-	Pint = secprop->Add_int("blocksize",Property::Changeable::OnlyAtStart,2048);
+		 "1024", "2048", "4096", "8192", "512", "256", 0};
+	Pint = secprop->Add_int("blocksize",Property::Changeable::OnlyAtStart,1024);
 	Pint->Set_values(blocksizes);
 	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
 
-	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,10);
+	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,20);
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
-	
+
 	secprop=control->AddSection_prop("midi",&MIDI_Init,true);//done
 	secprop->AddInitFunction(&MPU401_Init,true);//done
 	
@@ -472,7 +475,8 @@ void DOSBOX_Init(void) {
 	Pstring->Set_help("Device that will receive the MIDI data from MPU-401.");
 
 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
-	Pstring->Set_help("Special configuration options for the device driver. This is usually the id of the device you want to use. See README for details.");
+	Pstring->Set_help("Special configuration options for the device driver. This is usually the id of the device you want to use.\n"
+	                  "  See the README/Manual for more details.");
 
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
@@ -583,10 +587,11 @@ void DOSBOX_Init(void) {
 		"4axis_2 (supports one joystick, second joystick used),\n"
 		"fcs (Thrustmaster), ch (CH Flightstick).\n"
 		"none disables joystick emulation.\n"
-		"auto chooses emulation depending on real joystick(s).");
+		"auto chooses emulation depending on real joystick(s).\n"
+		"(Remember to reset dosbox's mapperfile if you saved it earlier)");
 
 	Pbool = secprop->Add_bool("timed",Property::Changeable::WhenIdle,true);
-	Pbool->Set_help("enable timed intervals for axis. (false is old style behaviour).");
+	Pbool->Set_help("enable timed intervals for axis. Experiment with this option, if your joystick drifts (away).");
 
 	Pbool = secprop->Add_bool("autofire",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("continuously fires as long as you keep the button pressed.");
@@ -672,9 +677,10 @@ void DOSBOX_Init(void) {
 	secline=control->AddSection_line("autoexec",&AUTOEXEC_Init);
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
+		"You can put your MOUNT lines here.\n"
 	);
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configurationfile for DOSBox %s.\n"
+	        "# This is the configurationfile for DOSBox %s. (Please use the latest version of DOSBox)\n"
 	        "# Lines starting with a # are commentlines and are ignored by DOSBox.\n"
 	        "# They are used to (briefly) document the effect of each option.\n");
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
