@@ -28,7 +28,11 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .LP
 .B dosbox \-eraseconf
 .LP
+.B dosbox \-resetconf
+.LP
 .B dosbox \-erasemapper
+.LP
+.B dosbox \-resetmapper
 .SH DESCRIPTION
 This manual page briefly documents
 .BR "dosbox" ", an x86/DOS emulator."
@@ -107,10 +111,10 @@ You can specify this command more than once. In this case it will
 .B \-printconf
 prints the location of the default configuration file.
 .TP
-.B \-eraseconf
+.B \-eraseconf, \-resetconf
 removes the default configuration file.
 .TP
-.B \-erasemapper
+.B \-erasemapper, \-resetmapper
 removes the mapperfile configured in the clean default configuration file.
 .SH "INTERNAL COMMANDS"
 .B dosbox

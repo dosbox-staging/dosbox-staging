@@ -236,12 +236,9 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
-		if (internal_cycles>=100)
-			sprintf(title,"DOSBox %s, Cpu Cycles:      max, Frameskip %2d, Program: %8s",VERSION,internal_frameskip,RunningProgram);
-		else
-			sprintf(title,"DOSBox %s, Cpu Cycles:   [%3d%%], Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
-		sprintf(title,"DOSBox %s, Cpu Cycles: %8d, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	}
 
 	if(paused) strcat(title," PAUSED");
@@ -1468,16 +1465,19 @@ void Config_Add_SDL() {
 	Prop_multival* Pmulti;
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
-	Pbool->Set_help("Start dosbox directly in fullscreen.");
-
+	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
+     
 	Pbool = sdl_sec->Add_bool("fulldouble",Property::Changeable::Always,false);
-	Pbool->Set_help("Use double buffering in fullscreen.");
+	Pbool->Set_help("Use double buffering in fullscreen. It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
-	Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).");
+	Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).\n"
+	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
+			  "  If you end up with small window on a large screen, try an output different from surface.");
 
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
-	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.");
+	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
+	                  "  output=surface does not!)");
 
 	const char* outputs[] = {
 		"surface", "overlay",
@@ -1493,7 +1493,7 @@ void Config_Add_SDL() {
 	Pstring->Set_values(outputs);
 
 	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
-	Pbool->Set_help("Mouse will automatically lock, if you click on the screen.");
+	Pbool->Set_help("Mouse will automatically lock, if you click on the screen. (Press CTRL-F10 to unlock)");
 
 	Pint = sdl_sec->Add_int("sensitivity",Property::Changeable::Always,100);
 	Pint->SetMinMax(1,1000);
@@ -1504,7 +1504,8 @@ void Config_Add_SDL() {
 
 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
 	Pmulti->SetValue("higher,normal");
-	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized. (pause is only valid for the second entry)");
+	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
+	                 "  pause is only valid for the second entry.");
 
 	const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
 	Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
@@ -1672,7 +1673,9 @@ int main(int argc, char* argv[]) {
 		if(control->cmdline->FindString("-editconf",editor,false)) launcheditor();
 		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
 		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
+		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
 		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
+		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
