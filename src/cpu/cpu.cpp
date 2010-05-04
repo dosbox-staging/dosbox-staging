@@ -1563,6 +1563,7 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					CPU_Cycles=0;
 					CPU_OldCycleMax=CPU_CycleMax;
 					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
+					LOG_MSG("DOSBox switched to max cycles, because of the setting: cycles=auto. If the game runs too fast try a fixed cycles amount in DOSBox's options.");
 				} else {
 					GFX_SetTitle(-1,-1,false);
 				}
@@ -2095,8 +2096,8 @@ static void CPU_CycleIncrease(bool pressed) {
 	if (!pressed) return;
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed+=5;
-		if (CPU_CyclePercUsed>100) CPU_CyclePercUsed=100;
-		LOG_MSG("CPU:%d percent",CPU_CyclePercUsed);
+		if (CPU_CyclePercUsed>105) CPU_CyclePercUsed=105;
+		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		Bit32s old_cycles=CPU_CycleMax;
@@ -2108,7 +2109,7 @@ static void CPU_CycleIncrease(bool pressed) {
 	    
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
-		LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+		LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
 }
@@ -2118,7 +2119,7 @@ static void CPU_CycleDecrease(bool pressed) {
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed-=5;
 		if (CPU_CyclePercUsed<=0) CPU_CyclePercUsed=1;
-		LOG_MSG("CPU:%d percent",CPU_CyclePercUsed);
+		LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed,-1,false);
 	} else {
 		if (CPU_CycleDown < 100) {
@@ -2128,7 +2129,7 @@ static void CPU_CycleDecrease(bool pressed) {
 		}
 		CPU_CycleLeft=0;CPU_Cycles=0;
 		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
-		LOG_MSG("CPU:%d cycles",CPU_CycleMax);
+		LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
 		GFX_SetTitle(CPU_CycleMax,-1,false);
 	}
 }
@@ -2242,7 +2243,7 @@ public:
 						int percval=0;
 						std::istringstream stream(str);
 						stream >> percval;
-						if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
+						if ((percval>0) && (percval<=105)) CPU_CyclePercUsed=(Bit32s)percval;
 					} else if (str=="limit") {
 						cmdnum++;
 						if (cmd.FindCommand(cmdnum,str)) {
@@ -2267,7 +2268,7 @@ public:
 							int percval=0;
 							std::istringstream stream(str);
 							stream >> percval;
-							if ((percval>0) && (percval<=100)) CPU_CyclePercUsed=(Bit32s)percval;
+							if ((percval>0) && (percval<=105)) CPU_CyclePercUsed=(Bit32s)percval;
 						} else if (str=="limit") {
 							cmdnum++;
 							if (cmd.FindCommand(cmdnum,str)) {
