@@ -1649,7 +1649,7 @@ static void SetActiveEvent(CEvent * event) {
 	mapper.aevent=event;
 	mapper.redraw=true;
 	mapper.addbind=false;
-	bind_but.event_title->Change("EVENT:%s",event ? event->GetName(): "none");
+	bind_but.event_title->Change("Event:%s",event ? event->GetName(): "none");
 	if (!event) {
 		change_action_text("Select an event to change.",CLR_WHITE);
 		bind_but.add->Enable(false);
@@ -1776,7 +1776,7 @@ static void CreateLayout(void) {
 #define BH 20
 #define DX 5
 #define PX(_X_) ((_X_)*BW + DX)
-#define PY(_Y_) (30+(_Y_)*BH)
+#define PY(_Y_) (10+(_Y_)*BH)
 	AddKeyButtonEvent(PX(0),PY(0),BW,BH,"ESC","esc",KBD_esc);
 	for (i=0;i<12;i++) AddKeyButtonEvent(PX(2+i),PY(0),BW,BH,combo_f[i].title,combo_f[i].entry,combo_f[i].key);
 	for (i=0;i<14;i++) AddKeyButtonEvent(PX(  i),PY(1),BW,BH,combo_1[i].title,combo_1[i].entry,combo_1[i].key);
@@ -1801,62 +1801,71 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(14),PY(5),BW*2,BH,"CTRL","rctrl",KBD_rightctrl);
 
 	/* Arrow Keys */
-	AddKeyButtonEvent(PX(0),PY(7),BW,BH,"PRT","printscreen",KBD_printscreen);
-	AddKeyButtonEvent(PX(1),PY(7),BW,BH,"SCL","scrolllock",KBD_scrolllock);
-	AddKeyButtonEvent(PX(2),PY(7),BW,BH,"PAU","pause",KBD_pause);
-	AddKeyButtonEvent(PX(0),PY(8),BW,BH,"INS","insert",KBD_insert);
-	AddKeyButtonEvent(PX(1),PY(8),BW,BH,"HOM","home",KBD_home);
-	AddKeyButtonEvent(PX(2),PY(8),BW,BH,"PUP","pageup",KBD_pageup);
-	AddKeyButtonEvent(PX(0),PY(9),BW,BH,"DEL","delete",KBD_delete);
-	AddKeyButtonEvent(PX(1),PY(9),BW,BH,"END","end",KBD_end);
-	AddKeyButtonEvent(PX(2),PY(9),BW,BH,"PDN","pagedown",KBD_pagedown);
-	AddKeyButtonEvent(PX(1),PY(10),BW,BH,"\x18","up",KBD_up);
-	AddKeyButtonEvent(PX(0),PY(11),BW,BH,"\x1B","left",KBD_left);
-	AddKeyButtonEvent(PX(1),PY(11),BW,BH,"\x19","down",KBD_down);
-	AddKeyButtonEvent(PX(2),PY(11),BW,BH,"\x1A","right",KBD_right);
+#define XO 17
+#define YO 0
 
+	AddKeyButtonEvent(PX(XO+0),PY(YO),BW,BH,"PRT","printscreen",KBD_printscreen);
+	AddKeyButtonEvent(PX(XO+1),PY(YO),BW,BH,"SCL","scrolllock",KBD_scrolllock);
+	AddKeyButtonEvent(PX(XO+2),PY(YO),BW,BH,"PAU","pause",KBD_pause);
+	AddKeyButtonEvent(PX(XO+0),PY(YO+1),BW,BH,"INS","insert",KBD_insert);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+1),BW,BH,"HOM","home",KBD_home);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+1),BW,BH,"PUP","pageup",KBD_pageup);
+	AddKeyButtonEvent(PX(XO+0),PY(YO+2),BW,BH,"DEL","delete",KBD_delete);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+2),BW,BH,"END","end",KBD_end);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+2),BW,BH,"PDN","pagedown",KBD_pagedown);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+4),BW,BH,"\x18","up",KBD_up);
+	AddKeyButtonEvent(PX(XO+0),PY(YO+5),BW,BH,"\x1B","left",KBD_left);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+5),BW,BH,"\x19","down",KBD_down);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+5),BW,BH,"\x1A","right",KBD_right);
+#undef XO
+#undef YO
+#define XO 0
+#define YO 7
 	/* Numeric KeyPad */
-	num_lock_event=AddKeyButtonEvent(PX(4),PY(7),BW,BH,"NUM","numlock",KBD_numlock);
-	AddKeyButtonEvent(PX(5),PY(7),BW,BH,"/","kp_divide",KBD_kpdivide);
-	AddKeyButtonEvent(PX(6),PY(7),BW,BH,"*","kp_multiply",KBD_kpmultiply);
-	AddKeyButtonEvent(PX(7),PY(7),BW,BH,"-","kp_minus",KBD_kpminus);
-	AddKeyButtonEvent(PX(4),PY(8),BW,BH,"7","kp_7",KBD_kp7);
-	AddKeyButtonEvent(PX(5),PY(8),BW,BH,"8","kp_8",KBD_kp8);
-	AddKeyButtonEvent(PX(6),PY(8),BW,BH,"9","kp_9",KBD_kp9);
-	AddKeyButtonEvent(PX(7),PY(8),BW,BH*2,"+","kp_plus",KBD_kpplus);
-	AddKeyButtonEvent(PX(4),PY(9),BW,BH,"4","kp_4",KBD_kp4);
-	AddKeyButtonEvent(PX(5),PY(9),BW,BH,"5","kp_5",KBD_kp5);
-	AddKeyButtonEvent(PX(6),PY(9),BW,BH,"6","kp_6",KBD_kp6);
-	AddKeyButtonEvent(PX(4),PY(10),BW,BH,"1","kp_1",KBD_kp1);
-	AddKeyButtonEvent(PX(5),PY(10),BW,BH,"2","kp_2",KBD_kp2);
-	AddKeyButtonEvent(PX(6),PY(10),BW,BH,"3","kp_3",KBD_kp3);
-	AddKeyButtonEvent(PX(7),PY(10),BW,BH*2,"ENT","kp_enter",KBD_kpenter);
-	AddKeyButtonEvent(PX(4),PY(11),BW*2,BH,"0","kp_0",KBD_kp0);
-	AddKeyButtonEvent(PX(6),PY(11),BW,BH,".","kp_period",KBD_kpperiod);
-
+	num_lock_event=AddKeyButtonEvent(PX(XO),PY(YO),BW,BH,"NUM","numlock",KBD_numlock);
+	AddKeyButtonEvent(PX(XO+1),PY(YO),BW,BH,"/","kp_divide",KBD_kpdivide);
+	AddKeyButtonEvent(PX(XO+2),PY(YO),BW,BH,"*","kp_multiply",KBD_kpmultiply);
+	AddKeyButtonEvent(PX(XO+3),PY(YO),BW,BH,"-","kp_minus",KBD_kpminus);
+	AddKeyButtonEvent(PX(XO+0),PY(YO+1),BW,BH,"7","kp_7",KBD_kp7);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+1),BW,BH,"8","kp_8",KBD_kp8);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+1),BW,BH,"9","kp_9",KBD_kp9);
+	AddKeyButtonEvent(PX(XO+3),PY(YO+1),BW,BH*2,"+","kp_plus",KBD_kpplus);
+	AddKeyButtonEvent(PX(XO),PY(YO+2),BW,BH,"4","kp_4",KBD_kp4);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+2),BW,BH,"5","kp_5",KBD_kp5);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+2),BW,BH,"6","kp_6",KBD_kp6);
+	AddKeyButtonEvent(PX(XO+0),PY(YO+3),BW,BH,"1","kp_1",KBD_kp1);
+	AddKeyButtonEvent(PX(XO+1),PY(YO+3),BW,BH,"2","kp_2",KBD_kp2);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+3),BW,BH,"3","kp_3",KBD_kp3);
+	AddKeyButtonEvent(PX(XO+3),PY(YO+3),BW,BH*2,"ENT","kp_enter",KBD_kpenter);
+	AddKeyButtonEvent(PX(XO),PY(YO+4),BW*2,BH,"0","kp_0",KBD_kp0);
+	AddKeyButtonEvent(PX(XO+2),PY(YO+4),BW,BH,".","kp_period",KBD_kpperiod);
+#undef XO
+#undef YO
+#define XO 10
+#define YO 8
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
-	AddJButtonButton(PX(18),PY(0),BW,BH,"1" ,0,0);
-	AddJButtonButton(PX(20),PY(0),BW,BH,"2" ,0,1);
+	AddJButtonButton(PX(XO),PY(YO),BW,BH,"1" ,0,0);
+	AddJButtonButton(PX(XO+2),PY(YO),BW,BH,"2" ,0,1);
 	/* Axes 1+2 (X+Y) of 1st Joystick */
-	CJAxisEvent * cjaxis=AddJAxisButton(PX(19),PY(0),BW,BH,"Y-",0,1,false,NULL);
-	AddJAxisButton  (PX(19),PY(1),BW,BH,"Y+",0,1,true,cjaxis);
-	cjaxis=AddJAxisButton  (PX(18),PY(1),BW,BH,"X-",0,0,false,NULL);
-	AddJAxisButton  (PX(20),PY(1),BW,BH,"X+",0,0,true,cjaxis);
+	CJAxisEvent * cjaxis=AddJAxisButton(PX(XO+1),PY(YO),BW,BH,"Y-",0,1,false,NULL);
+	AddJAxisButton  (PX(XO+1),PY(YO+1),BW,BH,"Y+",0,1,true,cjaxis);
+	cjaxis=AddJAxisButton  (PX(XO),PY(YO+1),BW,BH,"X-",0,0,false,NULL);
+	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
 	if (joytype==JOY_2AXIS) {
 		/* Buttons 1+2 of 2nd Joystick */
-		AddJButtonButton(PX(18),PY(3),BW,BH,"1" ,1,0);
-		AddJButtonButton(PX(20),PY(3),BW,BH,"2" ,1,1);
+		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"1" ,1,0);
+		AddJButtonButton(PX(XO+4+2),PY(YO),BW,BH,"2" ,1,1);
 		/* Buttons 3+4 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0,2);
 		AddJButtonButton_hidden(0,3);
 
 		/* Axes 1+2 (X+Y) of 2nd Joystick */
-		cjaxis=	AddJAxisButton(PX(18),PY(4),BW,BH,"X-",1,0,false,NULL);
-				AddJAxisButton(PX(20),PY(4),BW,BH,"X+",1,0,true,cjaxis);
-		cjaxis=	AddJAxisButton(PX(19),PY(3),BW,BH,"Y-",1,1,false,NULL);
-				AddJAxisButton(PX(19),PY(4),BW,BH,"Y+",1,1,true,cjaxis);
+		cjaxis=	AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",1,0,false,NULL);
+				AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",1,0,true,cjaxis);
+		cjaxis=	AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",1,1,false,NULL);
+				AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",1,1,true,cjaxis);
 		/* Axes 3+4 (X+Y) of 1st Joystick, not accessible */
 		cjaxis=	AddJAxisButton_hidden(0,2,false,NULL);
 				AddJAxisButton_hidden(0,2,true,cjaxis);
@@ -1864,17 +1873,17 @@ static void CreateLayout(void) {
 				AddJAxisButton_hidden(0,3,true,cjaxis);
 	} else {
 		/* Buttons 3+4 of 1st Joystick */
-		AddJButtonButton(PX(18),PY(3),BW,BH,"3" ,0,2);
-		AddJButtonButton(PX(20),PY(3),BW,BH,"4" ,0,3);
+		AddJButtonButton(PX(XO+4),PY(YO),BW,BH,"3" ,0,2);
+		AddJButtonButton(PX(XO+4+2),PY(YO),BW,BH,"4" ,0,3);
 		/* Buttons 1+2 of 2nd Joystick, not accessible */
 		AddJButtonButton_hidden(1,0);
 		AddJButtonButton_hidden(1,1);
 
 		/* Axes 3+4 (X+Y) of 1st Joystick */
-		cjaxis=	AddJAxisButton(PX(18),PY(4),BW,BH,"X-",0,2,false,NULL);
-				AddJAxisButton(PX(20),PY(4),BW,BH,"X+",0,2,true,cjaxis);
-		cjaxis=	AddJAxisButton(PX(19),PY(3),BW,BH,"Y-",0,3,false,NULL);
-				AddJAxisButton(PX(19),PY(4),BW,BH,"Y+",0,3,true,cjaxis);
+		cjaxis=	AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",0,2,false,NULL);
+				AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",0,2,true,cjaxis);
+		cjaxis=	AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",0,3,false,NULL);
+				AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",0,3,true,cjaxis);
 		/* Axes 1+2 (X+Y) of 2nd Joystick , not accessible*/
 		cjaxis=	AddJAxisButton_hidden(1,0,false,NULL);
 				AddJAxisButton_hidden(1,0,true,cjaxis);
@@ -1884,8 +1893,8 @@ static void CreateLayout(void) {
 
 	if (joytype==JOY_CH) {
 		/* Buttons 5+6 of 1st Joystick */
-		AddJButtonButton(PX(18),PY(6),BW,BH,"5" ,0,4);
-		AddJButtonButton(PX(20),PY(6),BW,BH,"6" ,0,5);
+		AddJButtonButton(PX(XO+8),PY(YO),BW,BH,"5" ,0,4);
+		AddJButtonButton(PX(XO+8+2),PY(YO),BW,BH,"6" ,0,5);
 	} else {
 		/* Buttons 5+6 of 1st Joystick, not accessible */
 		AddJButtonButton_hidden(0,4);
@@ -1893,17 +1902,42 @@ static void CreateLayout(void) {
 	}
 
 	/* Hat directions up, left, down, right */
-	AddJHatButton(PX(19),PY(6),BW,BH,"UP",0,0,0);
-	AddJHatButton(PX(18),PY(7),BW,BH,"LFT",0,0,3);
-	AddJHatButton(PX(19),PY(7),BW,BH,"DWN",0,0,2);
-	AddJHatButton(PX(20),PY(7),BW,BH,"RGT",0,0,1);
+	AddJHatButton(PX(XO+8+1),PY(YO),BW,BH,"UP",0,0,0);
+	AddJHatButton(PX(XO+8+0),PY(YO+1),BW,BH,"LFT",0,0,3);
+	AddJHatButton(PX(XO+8+1),PY(YO+1),BW,BH,"DWN",0,0,2);
+	AddJHatButton(PX(XO+8+2),PY(YO+1),BW,BH,"RGT",0,0,1);
 
+	/* Labels for the joystick */
+	if (joytype ==JOY_2AXIS) {
+		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Joystick 1");
+		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Joystick 2");
+		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
+	} else if(joytype ==JOY_4AXIS || joytype == JOY_4AXIS_2) {
+		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
+		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3/4");
+		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
+	} else if(joytype == JOY_CH) {
+		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
+		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3/4");
+		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
+	} else if ( joytype==JOY_FCS) {
+		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Axis 1/2");
+		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Axis 3");
+		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Hat/D-pad");
+	} else if(joytype == JOY_NONE) {
+		new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Disabled");
+		new CTextButton(PX(XO+4),PY(YO-1),3*BW,20,"Disabled");
+		new CTextButton(PX(XO+8),PY(YO-1),3*BW,20,"Disabled");
+	}
+   
+   
+   
 	/* The modifier buttons */
-	AddModButton(PX(0),PY(13),50,20,"Mod1",1);
-	AddModButton(PX(2),PY(13),50,20,"Mod2",2);
-	AddModButton(PX(4),PY(13),50,20,"Mod3",3);
+	AddModButton(PX(0),PY(14),50,20,"Mod1",1);
+	AddModButton(PX(2),PY(14),50,20,"Mod2",2);
+	AddModButton(PX(4),PY(14),50,20,"Mod3",3);
 	/* Create Handler buttons */
-	Bitu xpos=3;Bitu ypos=10;
+	Bitu xpos=3;Bitu ypos=11;
 	for (CHandlerEventVector_it hit=handlergroup.begin();hit!=handlergroup.end();hit++) {
 		new CEventButton(PX(xpos*3),PY(ypos),BW*3,BH,(*hit)->ButtonName(),(*hit));
 		xpos++;
@@ -1912,8 +1946,8 @@ static void CreateLayout(void) {
 		}
 	}
 	/* Create some text buttons */
-	new CTextButton(PX(6),0,124,20,"Keyboard Layout");
-	new CTextButton(PX(17),0,124,20,"Joystick Layout");
+//	new CTextButton(PX(6),0,124,20,"Keyboard Layout");
+//	new CTextButton(PX(17),0,124,20,"Joystick Layout");
 
 	bind_but.action=new CCaptionButton(180,330,0,0);
 
