@@ -1516,7 +1516,7 @@ void Config_Add_SDL() {
 	Pstring->Set_values(inactt);
 
 	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,MAPPERFILE);
-	Pstring->Set_help("File used to load/save the key/event mappings from.");
+	Pstring->Set_help("File used to load/save the key/event mappings from. Resetmapper only works with the defaul value.");
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
@@ -1561,7 +1561,7 @@ static void show_warning(char const * const message) {
    
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_Flip(sdl.surface);
-	SDL_Delay(10000);
+	SDL_Delay(12000);
 }
    
 static void launcheditor() {
@@ -1647,6 +1647,13 @@ static void eraseconfigfile() {
 }
 
 static void erasemapperfile() {
+	FILE* g = fopen("dosbox.conf","r");
+	if(g) {
+		fclose(g);
+		show_warning("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
+		             "Please reset configuration as well and delete the dosbox.conf.\n");
+	}
+
 	std::string path,file=MAPPERFILE;
 	Cross::GetPlatformConfigDir(path);
 	path += file;
