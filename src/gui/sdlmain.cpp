@@ -1477,7 +1477,7 @@ void Config_Add_SDL() {
 
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
-	                  "  output=surface does not!)");
+	                  "  (output=surface does not!)");
 
 	const char* outputs[] = {
 		"surface", "overlay",
