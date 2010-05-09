@@ -9,6 +9,7 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .B [\-startmapper]
 .B [\-noautoexec]
 .B [\-securemode]
+.B [\-userconf]
 .BI "[\-scaler " scaler ] 
 .BI "[\-forcescaler " scaler ]
 .BI "[\-conf " configfile ]
@@ -62,6 +63,10 @@ at the end of
 .I AUTOEXEC.BAT 
 (which in turn disables any changes to how the drives are mounted 
 .RB "inside " dosbox )
+.TP
+.B \-userconf
+Load the configuration file located in ~/.dosbox. Can be combined with
+.RB "the " \-conf " option." 
 .TP
 .BI \-scaler " scaler"
 .RI "Uses the graphical scaler specified by " scaler ". See the configuration"
