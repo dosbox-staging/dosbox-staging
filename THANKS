@@ -7,7 +7,7 @@ Jarek Burczynski for the new OPL3 emulator.
 Ken Silverman for his work on an OPL2 emulator.
 
 The Bochs and DOSemu projects which I used for information.
-Freedos for ideas in making my shell.
+FreeDOS for ideas in making my shell.
 
 Pierre-Yves Gérardy for hosting the old Beta Board.
 Colin Snover for hosting our forum.
@@ -22,6 +22,7 @@ Jantien for the version management.
 Shawn, Johannes and Marcus for creating the MAC OS X version.
 Jochen for creating the OS/2 version.
 Ido Beeri for the icon.
+ripsaw8080 for his hard debugging work.
 GOG Team for the splash screen.
 All the people who submitted a bug.
 The Beta Testers.
