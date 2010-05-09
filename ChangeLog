@@ -40,6 +40,7 @@
   - PCJr, CGA: line-by-line video emulation.
   - PCJr: support on-screen change of color modes 4medium to 16low. (used
     by Ghostbusters booter)
+  - Hercules: Add green and amber monochrome support.
   - All machines: only update the video timing when needed. (Jungle Hunt,
     others that synchronize to the video screen might profit)
   - Several small DOS fixes.
@@ -71,6 +72,8 @@
     so that hopefully certain soundcards produce more fluent sound playback.
   - Add some rarely used, but for some games critical flags to 
     the internal commands.
+  - Add -userconf flag, so that the userspecific configuration can
+    easily be used together with -conf configfile.
   - Improve internal timing with repeating timers (especially with 
     the dynamic core).
 

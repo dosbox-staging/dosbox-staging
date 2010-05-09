@@ -1,3 +1,82 @@
+0.74
+  - Several small game specific fixes/hacks/support. (Offensive,
+    Roadhog, GTA installer, Kingdom O' Magic soundcard detection, 
+    Pirate booter, Armored Fist installer)
+  - Add the S3-specific 640x480 256 color mode. (fixes regression in "Wooden 
+    Ships and Iron Men" and "I Have No Mouth  And I Must Scream")
+  - Fix a stack overflow that could crash DOSBox.
+  - Add fake microphone input. (fixes Talking Parrot)
+  - Modify adlib turn off code, so that it doesn't turn off in 
+    cases where the same sound is repeated over and over again.
+  - Several small fixes to the CDROM audio code. (HOMM2, Redneck 
+    Rampage and others)
+  - Several improvements to the CDROM emulation code. (fixes Alpha
+    Storm and  GT Racing 97)
+  - Some small CPU fixes that might fix something.
+  - Handle opcode 0xff subcode 7 as invalid instruction. (fixes dif-2 & others)
+  - Some hercules fixes. (Testdrive)
+  - Improve support for blanked parts that wrap around to the start of
+    the screen. (fixes Magic Circle demo and Sid&Al)
+  - Remove old OPL cores as the new ones seem to work very nicely.
+  - Modify movie recording code so that the movies aren't corrupt when
+    you exit dosbox without stopping the movie.
+  - Change RGB3x scaler to look more pretty.
+  - Improve initial register values compatility of the GUS.
+  - Added autodetection for Gameblaster. (games can find it now)
+  - Change render preferences a bit to be more compatible with Windows 7.
+  - Add DOS fixes to terminate program. (fixes Fortune Teller) 
+  - Add FFREEP. (fixes Trucks)
+  - Improve FPU ST80 in C mode when writing zero. (fixes Antigok)
+  - Add special int10 scanline function. (fixes mz700 and probably lots
+    of games that mess with them)
+  - Fix scrolling in rarely used video modes. (fixes Orphee)
+  - Modify game specific hacks a bit so that Kick off 3 works again.
+  - Lots of fixes to the INT10 video parameter table. (Seven spirits 
+    of ra and others)
+  - Add VGA blanking in machine=vgaonly. (used by Alien Carnage)
+  - CGA, PCJr, Tandy: Add video blanking, change display start latch 
+    timing, sync pulse width correction.
+  - PCJr, Tandy: implement vertical retrace interrupt.
+  - PCJr, CGA: line-by-line video emulation.
+  - PCJr: support on-screen change of color modes 4medium to 16low. (used
+    by Ghostbusters booter)
+  - Hercules: Add green and amber monochrome support.
+  - All machines: only update the video timing when needed. (Jungle Hunt,
+    others that synchronize to the video screen might profit)
+  - Several small DOS fixes.
+  - Some UMB related fixes. (The Legacy without UMB)
+  - Fix version number of DSP for SB 1.5. (fixes a few games)
+  - Several VGA emulation improvements. (Allertone football manager)
+  - Some Tandy fixes. (Mech Warrior)
+  - Small improvements and fixes to the OPL emulation.
+  - Add low level Tandy DAC emulation.
+  - Some EMS fixes. (fixes Mortal Kombat and others)
+  - Change SoundBlaster DSP reset mechanism, add sb irq acknowledge logic.
+    (fixes stmik-based applications)
+  - Some interrupt pointer location modifications. (fixes Tinker Tales)
+  - Some fixes to the BOOT code. (fixes Last Mission)
+  - Respect write-only file information. (fixes Champions of Zulala)
+  - Some RTC fix. (fixes Tully Bodine and others)
+  - Improve mouse emulation to work better with Water World.
+  - Hopefully fix the translation of the configuration file.
+  - Speed up and fixes for the recompiler core. (pitfall2 pcjr)
+  - Change memory start location. (fixes 7th Guest installer)
+  - Several fixes to the batch file handling. (Shift and 
+    use the typed first %0 instead of the parsed %0)
+  - Improve file redirection and redirected line ends. (fixes 
+    Phantasmagoria 2 DOS installer)
+  - Fix compilation with new MAC os X version.
+  - Add 16C550A FIFO support to the serial port emulation.
+  - Improve modem emulation to get higher speeds.
+  - Change default samplerates to 44100, blocksize to 1024 and prebuffer to 20,
+    so that hopefully certain soundcards produce more fluent sound playback.
+  - Add some rarely used, but for some games critical flags to 
+    the internal commands.
+  - Add -userconf flag, so that the userspecific configuration can
+    easily be used together with -conf configfile.
+  - Improve internal timing with repeating timers (especially with 
+    the dynamic core).
+
 0.73
   - Add two new opl2+opl3 emulators. (better speed, different implementation
     approach)
