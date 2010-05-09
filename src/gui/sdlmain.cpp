@@ -1791,7 +1791,28 @@ int main(int argc, char* argv[]) {
 	/* Parse configuration files */
 	std::string config_file,config_path;
 	bool parsed_anyconfigfile = false;
-	//First Parse -conf switches
+	//First Parse -userconf
+	if(control->cmdline->FindExist("-userconf",true)){
+		config_file.clear();
+		Cross::GetPlatformConfigDir(config_path);
+		Cross::GetPlatformConfigName(config_file);
+		config_path += config_file;
+		if(control->ParseConfigFile(config_path.c_str())) parsed_anyconfigfile = true;
+		if(!parsed_anyconfigfile) {
+			//Try to create the userlevel configfile.
+			config_file.clear();
+			Cross::CreatePlatformConfigDir(config_path);
+			Cross::GetPlatformConfigName(config_file);
+			config_path += config_file;
+			if(control->PrintConfig(config_path.c_str())) {
+				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
+				//Load them as well. Makes relative paths much easier
+				if(control->ParseConfigFile(config_path.c_str())) parsed_anyconfigfile = true;
+			}
+		}
+	}
+
+	//Second parse -conf entries
 	while(control->cmdline->FindString("-conf",config_file,true))
 		if (control->ParseConfigFile(config_file.c_str())) parsed_anyconfigfile = true;
 
