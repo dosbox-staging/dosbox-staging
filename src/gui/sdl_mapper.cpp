@@ -1649,7 +1649,7 @@ static void SetActiveEvent(CEvent * event) {
 	mapper.aevent=event;
 	mapper.redraw=true;
 	mapper.addbind=false;
-	bind_but.event_title->Change("Event:%s",event ? event->GetName(): "none");
+	bind_but.event_title->Change("EVENT:%s",event ? event->GetName(): "none");
 	if (!event) {
 		change_action_text("Select an event to change.",CLR_WHITE);
 		bind_but.add->Enable(false);
