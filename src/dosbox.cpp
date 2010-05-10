@@ -248,6 +248,7 @@ void DOSBOX_RunMachine(void){
 static void DOSBOX_UnlockSpeed( bool pressed ) {
 	static bool autoadjust = false;
 	if (pressed) {
+		LOG_MSG("Fast Forward ON");
 		ticksLocked = true;
 		if (CPU_CycleAutoAdjust) {
 			autoadjust = true;
@@ -255,7 +256,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 			CPU_CycleMax /= 3;
 			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
 		}
-	} else { 
+	} else {
+		LOG_MSG("Fast Forward OFF");
 		ticksLocked = false;
 		if (autoadjust) {
 			autoadjust = false;
