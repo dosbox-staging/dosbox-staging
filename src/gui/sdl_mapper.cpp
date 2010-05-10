@@ -2117,7 +2117,7 @@ void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const
 }
 
 static void MAPPER_SaveBinds(void) {
-	FILE * savefile=fopen(mapper.filename.c_str(),"wb+");
+	FILE * savefile=fopen(mapper.filename.c_str(),"wt+");
 	if (!savefile) {
 		LOG_MSG("Can't open %s for saving the mappings",mapper.filename.c_str());
 		return;
@@ -2139,7 +2139,7 @@ static void MAPPER_SaveBinds(void) {
 }
 
 static bool MAPPER_LoadBinds(void) {
-	FILE * loadfile=fopen(mapper.filename.c_str(),"rb");
+	FILE * loadfile=fopen(mapper.filename.c_str(),"rt");
 	if (!loadfile) return false;
 	char linein[512];
 	while (fgets(linein,512,loadfile)) {
