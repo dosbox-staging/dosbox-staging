@@ -1542,7 +1542,7 @@ Bitu CPU_SIDT_limit(void) {
 	return cpu.idt.GetLimit();
 }
 
-
+static bool printed_cycles_auto_info = false;
 void CPU_SET_CRX(Bitu cr,Bitu value) {
 	switch (cr) {
 	case 0:
@@ -1563,7 +1563,10 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 					CPU_Cycles=0;
 					CPU_OldCycleMax=CPU_CycleMax;
 					GFX_SetTitle(CPU_CyclePercUsed,-1,false);
-					LOG_MSG("DOSBox switched to max cycles, because of the setting: cycles=auto. If the game runs too fast try a fixed cycles amount in DOSBox's options.");
+					if(!printed_cycles_auto_info) {
+						printed_cycles_auto_info = true;
+						LOG_MSG("DOSBox switched to max cycles, because of the setting: cycles=auto. If the game runs too fast try a fixed cycles amount in DOSBox's options.");
+					}
 				} else {
 					GFX_SetTitle(-1,-1,false);
 				}
