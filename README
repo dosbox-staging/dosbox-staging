@@ -143,7 +143,7 @@ CD-ROM: The game/application can't find its CD-ROM.
     Under Windows you can specify -ioctl, -aspi or -noioctl. Look at the
     description of the mount command in Section 4: "Internal programs"
     for their meaning and the
-    additional audio-CD related options -ioctl_dx, ioctl_mci, ioctl_dio.
+    additional audio-CD related options -ioctl_dx, -ioctl_mci, -ioctl_dio.
 
     Try creating a CD-ROM image (preferably CUE/BIN pair) and use the
     DOSBox's internal IMGMOUNT tool to mount the image (the CUE sheet).
@@ -1040,14 +1040,9 @@ ch    - supports only first controller, emulates CH Flightstick,
         than one button at the same time.
 
 You also have to configure controller properly inside the game.
-
 It is important to remember that if you saved the mapperfile without joystick
-
-connected, or with a different joystick setting, your new setting will 
-not work
-properly, 
-or not work at all, until you reset DOSBox's mapperfile.
-
+connected, or with a different joystick setting, your new setting will not work
+properly, or not work at all, until you reset DOSBox's mapperfile.
 
 If controller is working properly outside DOSBox, but doesn't calibrate properly
 inside DOSBox, try different 'timed' setting in DOSBox's configuration file.
