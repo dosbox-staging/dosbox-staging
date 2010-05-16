@@ -1148,33 +1148,35 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	// Vertical blanking tricks
 	vblank_skip = 0;
 	if (IS_VGA_ARCH) { // others need more investigation
-		if (vbend > vtotal) {
-			// blanking wraps to the start of the screen
-			vblank_skip = vbend&0x7f;
-			
-			// on blanking wrap to 0, the first line is not blanked
-			// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
-			if((vbend&0x7f)==1) vblank_skip = 0;
-			
-			// it might also cut some lines off the bottom
-			if(vbstart < vdend) {
-				vdend = vbstart;
+		if (vbstart < vtotal) { // There will be no blanking at all otherwise
+			if (vbend > vtotal) {
+				// blanking wraps to the start of the screen
+				vblank_skip = vbend&0x7f;
+				
+				// on blanking wrap to 0, the first line is not blanked
+				// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
+				if((vbend&0x7f)==1) vblank_skip = 0;
+				
+				// it might also cut some lines off the bottom
+				if(vbstart < vdend) {
+					vdend = vbstart;
+				}
+				LOG(LOG_VGA,LOG_WARN)("Blanking wrap to line %d", vblank_skip);
+			} else if (vbstart==1) {
+				// blanking is used to cut lines at the start of the screen
+				vblank_skip = vbend;
+				LOG(LOG_VGA,LOG_WARN)("Upper %d lines of the screen blanked", vblank_skip);
+			} else if (vbstart < vdend) {
+				if(vbend < vdend) {
+					// the game wants a black bar somewhere on the screen
+					LOG(LOG_VGA,LOG_WARN)("Unsupported blanking: line %d-%d",vbstart,vbend);
+				} else {
+					// blanking is used to cut off some lines from the bottom
+					vdend = vbstart;
+				}
 			}
-			LOG(LOG_VGA,LOG_WARN)("Blanking wrap to line %d", vblank_skip);
-		} else if (vbstart==1) {
-			// blanking is used to cut lines at the start of the screen
-			vblank_skip = vbend;
-			LOG(LOG_VGA,LOG_WARN)("Upper %d lines of the screen blanked", vblank_skip);
-		} else if (vbstart < vdend) {
-			if(vbend < vdend) {
-				// the game wants a black bar somewhere on the screen
-				LOG(LOG_VGA,LOG_WARN)("Unsupported blanking: line %d-%d",vbstart,vbend);
-			} else {
-				// blanking is used to cut off some lines from the bottom
-				vdend = vbstart;
-			}
+			vdend -= vblank_skip;
 		}
-		vdend -= vblank_skip;
 	}
 	// Display end
 	vga.draw.delay.vdend = vdend * vga.draw.delay.htotal;
