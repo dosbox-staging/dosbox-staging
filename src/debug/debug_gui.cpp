@@ -154,7 +154,7 @@ static void DrawBars(void) {
 	/* Show the Variable Overview bar */
 	mvaddstr(dbg.win_var->_begy-1,0, "---(Variable Overview                   )---");
 	/* Show the Output OverView */
-	mvaddstr(dbg.win_out->_begy-1,0, "---(OutPut/Input    Scroll: home/end    )---");
+	mvaddstr(dbg.win_out->_begy-1,0, "---(Output          Scroll: home/end    )---");
 	attrset(0);
 }
 
@@ -178,8 +178,8 @@ static void MakeSubWindows(void) {
 	dbg.win_var=subwin(dbg.win_main,4,win_main_maxx,outy,0);
 	outy+=5;
 	/* The Output Window */	
-	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy-1,win_main_maxx,outy,0);
-	dbg.input_y=win_main_maxy-1;
+	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy,win_main_maxx,outy,0);
+//	dbg.input_y=win_main_maxy-1;
 	scrollok(dbg.win_out,TRUE);
 	DrawBars();
 	Draw_RegisterLayout();
@@ -257,7 +257,7 @@ void LOG_StartUp(void) {
 		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
 		Pbool->Set_help("Enable/Disable logging of this type.");
 	}
-	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
+//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
 
 
