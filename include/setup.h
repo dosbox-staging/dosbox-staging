@@ -42,6 +42,11 @@
 #include <string>
 #endif
 
+#ifndef CH_CSTDIO
+#define CH_CSTDIO
+#include <cstdio>
+#endif
+
 
 class Hex {
 private:
