@@ -203,6 +203,13 @@ bool DOS_GetCurrentDir(Bit8u drive,char * const buffer) {
 
 bool DOS_ChangeDir(char const * const dir) {
 	Bit8u drive;char fulldir[DOS_PATHLENGTH];
+	const char * testdir=dir;
+	if (strlen(testdir) && testdir[1]==':') testdir+=2;
+	size_t len=strlen(testdir);
+	if (!len || (len>1 && testdir[len-1]=='\\')) {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 	
 	if (Drives[drive]->TestDir(fulldir)) {
