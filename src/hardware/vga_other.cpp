@@ -516,7 +516,12 @@ static void write_hercules(Bitu port,Bitu val,Bitu /*iolen*/) {
 		break;
 		}
 	case 0x3bf:
-		vga.herc.enable_bits=(Bit8u)val;
+		if ( vga.herc.enable_bits ^ val) {
+			vga.herc.enable_bits=val;
+			// Bit 1 enables the upper 32k of video memory,
+			// so update the handlers
+			VGA_SetupHandlers();
+		}
 		break;
 	}
 }
