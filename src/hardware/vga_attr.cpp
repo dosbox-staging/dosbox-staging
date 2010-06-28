@@ -76,26 +76,33 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 				10h and 14h.
 			*/
 			break;
-		case 0x10: /* Mode Control Register */
+		case 0x10: { /* Mode Control Register */
 			if (!IS_VGA_ARCH) val&=0x1f;	// not really correct, but should do it
-			if ((attr(mode_control) ^ val) & 0x80) {
-				attr(mode_control)^=0x80;
-				for (Bit8u i=0;i<0x10;i++) {
+			Bitu difference = attr(mode_control)^val;
+			attr(mode_control)=(Bit8u)val;
+
+			if (difference & 0x80) {
+				for (Bit8u i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+			}
+			if (difference & 0x08)
+				VGA_SetBlinking(val & 0x8);
+			
+			if (difference & 0x41)
+				VGA_DetermineMode();
+
+			if (difference & 0x04) {
+				// recompute the panning value
+				if(vga.mode==M_TEXT) {
+					Bit8u pan_reg = attr(horizontal_pel_panning);
+					if (pan_reg > 7)
+						vga.config.pel_panning=0;
+					else if (val&0x4) // 9-dot wide characters
+						vga.config.pel_panning=(Bit8u)(pan_reg+1);
+					else // 8-dot characters
+						vga.config.pel_panning=(Bit8u)pan_reg;
 				}
 			}
-			if ((attr(mode_control) ^ val) & 0x08) {
-				VGA_SetBlinking(val & 0x8);
-			}
-			if ((attr(mode_control) ^ val) & 0x04) {
-				attr(mode_control)=(Bit8u)val;
-				VGA_DetermineMode();
-				if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) VGA_StartResize();
-			} else {
-				attr(mode_control)=(Bit8u)val;
-				VGA_DetermineMode();
-			}
-
 			/*
 				0	Graphics mode if set, Alphanumeric mode else.
 				1	Monochrome mode if set, color mode else.
@@ -113,6 +120,7 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 					used.
 			*/
 			break;
+		}
 		case 0x11:	/* Overscan Color Register */
 			attr(overscan_color)=(Bit8u)val;
 			/* 0-5  Color of screen border. Color is defined as in the palette registers. */
@@ -134,9 +142,12 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			attr(horizontal_pel_panning)=val & 0xF;
 			switch (vga.mode) {
 			case M_TEXT:
-				if ((val==0x7) && (svgaCard==SVGA_None)) vga.config.pel_panning=7;
-				if (val>0x7) vga.config.pel_panning=0;
-				else vga.config.pel_panning=(Bit8u)(val+1);
+				if (val > 7)
+					vga.config.pel_panning=0;
+				else if (vga.attr.mode_control&0x4) // 9-dot wide characters
+					vga.config.pel_panning=(Bit8u)(val+1);
+				else // 8-dot characters
+					vga.config.pel_panning=(Bit8u)val;
 				break;
 			case M_VGA:
 			case M_LIN8:
