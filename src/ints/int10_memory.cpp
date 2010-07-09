@@ -66,9 +66,21 @@ void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu
 		Bit16u base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 		IO_Write(base,0x9);
 		IO_Write(base+1,(IO_Read(base+1) & 0xe0)|(height-1));
-		//Vertical display end bios says, but should stay the same?
+		// Vertical display end bios says, but should stay the same?
+		// Not on EGA.
+        Bitu rows = CurMode->sheight/height;
+		if (machine==MCH_EGA) {
+			Bitu displayend = rows*height - 1;
+			IO_Write(base,0x12);
+			IO_Write(base+1,(Bit8u)(displayend & 0xff));
+			IO_Write(base,0x7);
+			// Note: IBM EGA registers can't be read
+			Bitu v_overflow = IO_Read(base+1) & ~0x2;
+			if (displayend & 0x100) v_overflow |= 0x2;
+			IO_Write(base+1,(Bit8u)v_overflow);
+		}
 		//Rows setting in bios segment
-		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(CurMode->sheight/height)-1);
+		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,rows-1);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(Bit8u)height);
 		//TODO Reprogram cursor size?
 	}

@@ -96,25 +96,42 @@ void INT10_SetAllPaletteRegisters(PhysPt data) {
 }
 
 void INT10_ToggleBlinkingBit(Bit8u state) {
-	Bit8u value;
-//	state&=0x01;
-	if ((state>1) && (svgaCard==SVGA_S3Trio)) return;
-	ResetACTL();
-	
-	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
-	value=IO_Read(VGAREG_ACTL_READ_DATA);
-	if (state<=1) {
-		value&=0xf7;
-		value|=state<<3;
-	}
+	if(IS_VGA_ARCH) {
+		Bit8u value;
+	//	state&=0x01;
+		if ((state>1) && (svgaCard==SVGA_S3Trio)) return;
+		ResetACTL();
+		
+		IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+		value=IO_Read(VGAREG_ACTL_READ_DATA);
+		if (state<=1) {
+			value&=0xf7;
+			value|=state<<3;
+		}
 
-	ResetACTL();
-	IO_Write(VGAREG_ACTL_ADDRESS,0x10);
-	IO_Write(VGAREG_ACTL_WRITE_DATA,value);
-	IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
+		ResetACTL();
+		IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,value);
+		IO_Write(VGAREG_ACTL_ADDRESS,32);		//Enable output and protect palette
 
-	if (state<=1) {
-		Bit8u msrval=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR)&0xdf;
+		if (state<=1) {
+			Bit8u msrval=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR)&0xdf;
+			if (state) msrval|=0x20;
+			real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,msrval);
+		}
+	} else { // EGA
+		// Usually it reads this from the mode list in ROM
+		if (CurMode->type!=M_TEXT) return;
+
+		Bit8u value = (CurMode->cwidth==9)? 0x4:0x0;
+		if (state) value |= 0x8;
+		
+		ResetACTL();
+		IO_Write(VGAREG_ACTL_ADDRESS,0x10);
+		IO_Write(VGAREG_ACTL_WRITE_DATA,value);
+		IO_Write(VGAREG_ACTL_ADDRESS,0x20);
+
+		Bit8u msrval=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR)& ~0x20;
 		if (state) msrval|=0x20;
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,msrval);
 	}

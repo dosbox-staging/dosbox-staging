@@ -138,8 +138,7 @@ static Bitu INT10_Handler(void) {
 		reg_ah=(Bit8u)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 		break;					
 	case 0x10:								/* Palette functions */
-		if ((machine==MCH_CGA) || ((!IS_VGA_ARCH) && (reg_al>0x02))) break;
-		//TODO: subfunction 0x03 for ega
+		if ((machine==MCH_CGA) || ((!IS_VGA_ARCH) && (reg_al>0x03))) break;
 		switch (reg_al) {
 		case 0x00:							/* SET SINGLE PALETTE REGISTER */
 			INT10_SetSinglePaletteRegister(reg_bl,reg_bh);
@@ -302,13 +301,8 @@ graphics_chars:
 				break;
 			}
 			if ((reg_bh<=7) || (svgaCard==SVGA_TsengET4K)) {
-				if (machine==MCH_EGA) {
-					reg_cx=0x0e;
-					reg_dl=0x18;
-				} else {
-					reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
-					reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
-				}
+				reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+				reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 			}
 			break;
 		default:
