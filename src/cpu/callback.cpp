@@ -351,12 +351,16 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			phys_writew(physAddress+0x02,(Bit16u)callback);		//The immediate word
 			physAddress+=4;
 		}
-		phys_writeb(physAddress+0x00,(Bit8u)0x50);		// push ax
-		phys_writew(physAddress+0x01,(Bit16u)0x0eb4);	// mov ah, 0x0e
-		phys_writew(physAddress+0x03,(Bit16u)0x10cd);	// int 10
-		phys_writeb(physAddress+0x05,(Bit8u)0x58);		// pop ax
-		phys_writeb(physAddress+0x06,(Bit8u)0xcf);		//An IRET Instruction
-		return (use_cb?0x0b:0x07);
+		phys_writeb(physAddress+0x00,(Bit8u)0x50);	// push ax
+		phys_writeb(physAddress+0x01,(Bit8u)0x53);	// push bx
+		phys_writew(physAddress+0x02,(Bit16u)0x0eb4);	// mov ah, 0x0e
+		phys_writeb(physAddress+0x04,(Bit8u)0xbb);	// mov bx,
+		phys_writew(physAddress+0x05,(Bit16u)0x0007);	// 0x0007
+		phys_writew(physAddress+0x07,(Bit16u)0x10cd);	// int 10
+		phys_writeb(physAddress+0x09,(Bit8u)0x5b);	// pop bx
+		phys_writeb(physAddress+0x0a,(Bit8u)0x58);	// pop ax
+		phys_writeb(physAddress+0x0b,(Bit8u)0xcf);	//An IRET Instruction
+		return (use_cb?0x10:0x0c);
 	case CB_HOOKABLE:
 		phys_writeb(physAddress+0x00,(Bit8u)0xEB);		//jump near
 		phys_writeb(physAddress+0x01,(Bit8u)0x03);		//offset
@@ -456,7 +460,7 @@ Bitu CALLBACK_Setup(Bitu callback,CallBack_Handler handler,Bitu type,PhysPt addr
 }
 
 void CALLBACK_RemoveSetup(Bitu callback) {
-	for (Bitu i = 0;i < 16;i++) {
+	for (Bitu i = 0;i < CB_SIZE;i++) {
 		phys_writeb(CALLBACK_PhysPointer(callback)+i ,(Bit8u) 0x00);
 	}
 }
