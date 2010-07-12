@@ -155,7 +155,7 @@ static Bit8u * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 	for (; start <= end;start++) {
 		if ( map[start] & checkMask ) {
 			Bitu offset = vidstart & vga.draw.linear_mask;
-			if(vga.draw.linear_mask-offset < vga.draw.line_length)
+			if (vga.draw.linear_mask-offset < vga.draw.line_length)
 				memcpy(vga.draw.linear_base+vga.draw.linear_mask+1, vga.draw.linear_base, vga.draw.line_length);
 			Bit8u *ret = &vga.draw.linear_base[ offset ];
 #if !defined(C_UNALIGNED_MEMORY)
@@ -574,8 +574,7 @@ static INLINE void VGA_ChangesEnd(void ) {
 
 
 static void VGA_ProcessSplit() {
-	// On the EGA the address is always reset to 0.
-	if ((vga.attr.mode_control&0x20) || (machine==MCH_EGA)) {
+	if (vga.attr.mode_control&0x20) {
 		vga.draw.address=0;
 		// reset panning to 0 here so we don't have to check for 
 		// it in the character draw functions. It will be set back
@@ -585,7 +584,7 @@ static void VGA_ProcessSplit() {
 		// In text mode only the characters are shifted by panning, not the address;
 		// this is done in the text line draw function.
 		vga.draw.address = vga.draw.byte_panning_shift*vga.draw.bytes_skip;
-		if (!(vga.mode==M_TEXT)) vga.draw.address += vga.draw.panning;
+		if ((vga.mode!=M_TEXT)&&(machine!=MCH_EGA)) vga.draw.address += vga.draw.panning;
 	}
 	vga.draw.address_line=0;
 }
@@ -609,6 +608,29 @@ static void VGA_DrawSingleLine(Bitu /*blah*/) {
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
 		PIC_AddEvent(VGA_DrawSingleLine,(float)vga.draw.delay.htotal);
+	} else RENDER_EndUpdate(false);
+}
+
+static void VGA_DrawEGASingleLine(Bitu /*blah*/) {
+	if (GCC_UNLIKELY(vga.attr.disabled)) {
+		memset(TempLine, 0, sizeof(TempLine));
+		RENDER_DrawLine(TempLine);
+	} else {
+		Bitu address = vga.draw.address;
+		if (vga.mode!=M_TEXT) address += vga.draw.panning;
+		Bit8u * data=VGA_DrawLine(address, vga.draw.address_line );	
+		RENDER_DrawLine(data);
+	}
+
+	vga.draw.address_line++;
+	if (vga.draw.address_line>=vga.draw.address_line_total) {
+		vga.draw.address_line=0;
+		vga.draw.address+=vga.draw.address_add;
+	}
+	vga.draw.lines_done++;
+	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
+	if (vga.draw.lines_done < vga.draw.lines_total) {
+		PIC_AddEvent(VGA_DrawEGASingleLine,(float)vga.draw.delay.htotal);
 	} else RENDER_EndUpdate(false);
 }
 
@@ -721,12 +743,15 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 		VGA_DisplayStartLatch(0);
 		break;
 	case MCH_VGA:
-	case MCH_EGA:
 		PIC_AddEvent(VGA_DisplayStartLatch, (float)vga.draw.delay.vrstart);
 		PIC_AddEvent(VGA_PanningLatch, (float)vga.draw.delay.vrend);
 		// EGA: 82c435 datasheet: interrupt happens at display end
 		// VGA: checked with scope; however disabled by default by jumper on VGA boards
 		// add a little amount of time to make sure the last drawpart has already fired
+		PIC_AddEvent(VGA_VertInterrupt,(float)(vga.draw.delay.vdend + 0.005));
+		break;
+	case MCH_EGA:
+		PIC_AddEvent(VGA_DisplayStartLatch, (float)vga.draw.delay.vrend);
 		PIC_AddEvent(VGA_VertInterrupt,(float)(vga.draw.delay.vdend + 0.005));
 		break;
 	default:
@@ -748,7 +773,11 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 	vga.draw.address = vga.config.real_start;
 	vga.draw.byte_panning_shift = 0;
 	// go figure...
-	if (machine==MCH_EGA) vga.draw.split_line*=2;
+	if (machine==MCH_EGA) {
+		if (vga.draw.doubleheight) // Spacepigs EGA Megademo
+			vga.draw.split_line*=2;
+		vga.draw.split_line++; // EGA adds one buggy scanline
+	}
 //	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 #ifdef VGA_KEEP_CHANGES
 	bool startaddr_changed=false;
@@ -761,13 +790,13 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 		vga.draw.byte_panning_shift = 8;
 		vga.draw.address += vga.draw.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
-		vga.draw.address += vga.draw.panning;
+		if (machine!=MCH_EGA) vga.draw.address += vga.draw.panning;
 #ifdef VGA_KEEP_CHANGES
 		startaddr_changed=true;
 #endif
 		break;
 	case M_VGA:
-		if(vga.config.compatible_chain4 && (vga.crtc.underline_location & 0x40)) {
+		if (vga.config.compatible_chain4 && (vga.crtc.underline_location & 0x40)) {
 			vga.draw.linear_base = vga.fastmem;
 			vga.draw.linear_mask = 0xffff;
 		} else {
@@ -843,16 +872,19 @@ static void VGA_VerticalTimer(Bitu /*val*/) {
 		PIC_AddEvent(VGA_DrawPart,(float)vga.draw.delay.parts + draw_skip,vga.draw.parts_lines);
 		break;
 	case LINE:
+	case EGALINE:
 		if (GCC_UNLIKELY(vga.draw.lines_done < vga.draw.lines_total)) {
 			LOG(LOG_VGAMISC,LOG_NORMAL)( "Lines left: %d", 
 				vga.draw.lines_total-vga.draw.lines_done);
-			PIC_RemoveEvents(VGA_DrawSingleLine);
+			if (vga.draw.mode==EGALINE) PIC_RemoveEvents(VGA_DrawEGASingleLine);
+			else PIC_RemoveEvents(VGA_DrawSingleLine);
 			RENDER_EndUpdate(true);
 		}
 		vga.draw.lines_done = 0;
-		PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
+		if (vga.draw.mode==EGALINE)
+			PIC_AddEvent(VGA_DrawEGASingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
+		else PIC_AddEvent(VGA_DrawSingleLine,(float)(vga.draw.delay.htotal/4.0 + draw_skip));
 		break;
-	//case EGALINE:
 	}
 }
 
@@ -935,6 +967,10 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	case MCH_CGA:
 	case MCH_PCJR:
 		vga.draw.mode = LINE;
+		break;
+	case MCH_EGA:
+		// Note: The Paradise SVGA uses the same panning mechanism as EGA
+		vga.draw.mode = EGALINE;
 		break;
 	case MCH_VGA:
 		if (svgaCard==SVGA_None) {
@@ -1031,13 +1067,13 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			htotal*=2;
 		}
 		vga.draw.address_line_total=(vga.crtc.maximum_scan_line&0x1f)+1;
-		if(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
+		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
 			// vgaonly; can't use with CGA because these use address_line for their
 			// own purposes.
 			// Set the low resolution modes to have as many lines as are scanned - 
 			// Quite a few demos change the max_scanline register at display time
 			// to get SFX: Majic12 show, Magic circle, Copper, GBU, Party91
-			if( vga.crtc.maximum_scan_line&0x80) vga.draw.address_line_total*=2;
+			if ( vga.crtc.maximum_scan_line&0x80) vga.draw.address_line_total*=2;
 			vga.draw.double_scan=false;
 		}
 		else if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
@@ -1109,10 +1145,10 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 				
 				// on blanking wrap to 0, the first line is not blanked
 				// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
-				if((vbend&0x7f)==1) vblank_skip = 0;
+				if ((vbend&0x7f)==1) vblank_skip = 0;
 				
 				// it might also cut some lines off the bottom
-				if(vbstart < vdend) {
+				if (vbstart < vdend) {
 					vdend = vbstart;
 				}
 				LOG(LOG_VGA,LOG_WARN)("Blanking wrap to line %d", vblank_skip);
@@ -1121,7 +1157,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 				vblank_skip = vbend;
 				LOG(LOG_VGA,LOG_WARN)("Upper %d lines of the screen blanked", vblank_skip);
 			} else if (vbstart < vdend) {
-				if(vbend < vdend) {
+				if (vbend < vdend) {
 					// the game wants a black bar somewhere on the screen
 					LOG(LOG_VGA,LOG_WARN)("Unsupported blanking: line %d-%d",vbstart,vbend);
 				} else {
@@ -1220,7 +1256,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	case M_LIN8:
 		if (vga.crtc.mode_control & 0x8)
 			width >>=1;
-		else if(svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a&0x10)) {
+		else if (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a&0x10)) {
 			doublewidth=true;
 			width >>=1;
 		}
@@ -1254,6 +1290,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		vga.draw.blocks = width;
 		width<<=3;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
+			// This would also be required for EGA in Spacepigs Megademo
 			bpp=16;
 			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
 		} else VGA_DrawLine=VGA_Draw_Linear_Line;
@@ -1285,7 +1322,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
 			// vgaonly: allow 9-pixel wide fonts
-			if(vga.seq.clocking_mode&0x01) {
+			if (vga.seq.clocking_mode&0x01) {
 				vga.draw.char9dot = false;
 				width*=8;
 			} else {
@@ -1376,7 +1413,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	}
 	vga.draw.vblank_skip = vblank_skip;
 		
-	if(!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
+	if (!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
 		//Only check for extra double height in vga modes
 		//(line multiplying by address_line_total)
 		if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
@@ -1453,6 +1490,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 void VGA_KillDrawing(void) {
 	PIC_RemoveEvents(VGA_DrawPart);
 	PIC_RemoveEvents(VGA_DrawSingleLine);
+	PIC_RemoveEvents(VGA_DrawEGASingleLine);
 	vga.draw.parts_left = 0;
 	vga.draw.lines_done = ~0;
 	RENDER_EndUpdate(true);

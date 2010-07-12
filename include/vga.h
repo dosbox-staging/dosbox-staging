@@ -114,7 +114,7 @@ typedef struct {
 typedef enum {
 	PART,
 	LINE,
-	//EGALINE
+	EGALINE
 } Drawmode;
 
 typedef struct {
