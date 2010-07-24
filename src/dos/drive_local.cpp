@@ -41,6 +41,7 @@ public:
 	Bit16u GetInformation(void);
 	bool UpdateDateTimeFromHost(void);   
 	void FlagReadOnlyMedium(void);
+	void Flush(void);
 private:
 	FILE * fhandle;
 	bool read_only_medium;
@@ -94,6 +95,22 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
+
+	//Flush the buffer of handles for the same file. (Betrayal in Antara)
+	Bit8u i,drive=DOS_DRIVES;
+	localFile *lfp;
+	for (i=0;i<DOS_DRIVES;i++) {
+		if (Drives[i]==this) {
+			drive=i;
+			break;
+		}
+	}
+	for (i=0;i<DOS_FILES;i++) {
+		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
+			lfp=dynamic_cast<localFile*>(Files[i]);
+			if (lfp) lfp->Flush();
+		}
+	}
 
 	FILE * hand=fopen(newname,type);
 //	Bit32u err=errno;
@@ -539,6 +556,13 @@ bool localFile::UpdateDateTimeFromHost(void) {
 		time=1;date=1;
 	}
 	return true;
+}
+
+void localFile::Flush(void) {
+	if (last_action==WRITE) {
+		fseek(fhandle,ftell(fhandle),SEEK_SET);
+		last_action=NONE;
+	}
 }
 
 
