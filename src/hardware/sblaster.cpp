@@ -504,6 +504,8 @@ static void GenerateDMASound(Bitu size) {
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(END_DMA_Event);
+		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
+		else SB_RaiseIRQ(SB_IRQ_8);
 		if (!sb.dma.autoinit) {
 			LOG(LOG_SB,LOG_NORMAL)("Single cycle transfer ended");
 			sb.mode=MODE_NONE;
@@ -515,8 +517,6 @@ static void GenerateDMASound(Bitu size) {
 				sb.mode=MODE_NONE;
 			}
 		}
-		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
-		else SB_RaiseIRQ(SB_IRQ_8);
 	}
 }
 
@@ -1345,7 +1345,8 @@ static Bit8u CTMIXER_Read(void) {
 		return ret;
 	case 0x82:		/* IRQ Status */
 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
-				(sb.irq.pending_16bit ? 0x2 : 0);
+				(sb.irq.pending_16bit ? 0x2 : 0) |
+				((sb.type == SBT_16) ? 0x20 : 0);
 	default:
 		if (	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
 			(sb.type == SBT_16 && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
