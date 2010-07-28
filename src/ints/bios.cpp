@@ -869,7 +869,7 @@ public:
 		if (IS_TANDY_ARCH) {
 			/* reduce reported memory size for the Tandy (32k graphics memory
 			   at the end of the conventional 640k) */
-			if (machine==MCH_TANDY) mem_writew(BIOS_MEMORY_SIZE,608);
+			if (machine==MCH_TANDY) mem_writew(BIOS_MEMORY_SIZE,624);
 			else mem_writew(BIOS_MEMORY_SIZE,640);
 			mem_writew(BIOS_TRUE_MEMORY_SIZE,640);
 		} else mem_writew(BIOS_MEMORY_SIZE,640);

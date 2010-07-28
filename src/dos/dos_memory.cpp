@@ -436,7 +436,7 @@ void DOS_SetupMemory(void) {
 	if (machine==MCH_TANDY) {
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
-		mcb.SetSize(0x97FF - DOS_MEM_START - mcb_sizes);
+		mcb.SetSize(0x9BFF - DOS_MEM_START - mcb_sizes);
 	} else if (machine==MCH_PCJR) {
 		/* memory from 128k to 640k is available */
 		mcb_devicedummy.SetPt((Bit16u)0x2000);
