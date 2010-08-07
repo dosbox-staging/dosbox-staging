@@ -678,6 +678,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	char	entryName[256];
 	bool	foundComplete = false;
 	bool	foundName;
+	bool	nextPart = true;
 	char*	useName = 0;
 	Bitu	entryLength,nameLength;
 	// clear error
@@ -708,13 +709,14 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 		if (!ReadSectors(GetSubUnit(drive),false,dirEntrySector,1,defBuffer)) return false;
 		// Get string part
 		foundName	= false;
-		if (searchPos) { 
-			useName = searchPos; 
-			searchPos = strchr(searchPos,'\\'); 
+		if (nextPart) {
+			if (searchPos) { 
+				useName = searchPos; 
+				searchPos = strchr(searchPos,'\\'); 
+			}
+			if (searchPos) { *searchPos = 0; searchPos++; }
+			else foundComplete = true;
 		}
-
-	   	if (searchPos) { *searchPos = 0; searchPos++; }
-		else foundComplete = true;
 
 		do {
 			entryLength = mem_readb(defBuffer+index);
@@ -772,10 +774,12 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 			// change directory
 			dirEntrySector = mem_readd(defBuffer+index+2);
 			dirSize	= mem_readd(defBuffer+index+10);
+			nextPart = true;
 		} else {
 			// continue search in next sector
 			dirSize -= 2048;
 			dirEntrySector++;
+			nextPart = false;
 		}
 	};
 	error = 2; // file not found
