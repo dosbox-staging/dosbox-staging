@@ -298,11 +298,13 @@ struct isoDirEntry {
 #endif
 
 #define ISO_FRAMESIZE		2048
+#define ISO_ASSOCIATED		4
 #define ISO_DIRECTORY		2
 #define ISO_HIDDEN		1
 #define ISO_MAX_FILENAME_LENGTH 37
 #define ISO_MAXPATHNAME		256
 #define ISO_FIRST_VD		16
+#define IS_ASSOC(fileFlags)	(fileFlags & ISO_ASSOCIATED)
 #define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
 #define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
 #define ISO_MAX_HASH_TABLE_SIZE 	100

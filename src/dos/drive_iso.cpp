@@ -289,7 +289,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 		else findAttr |= DOS_ATTR_ARCHIVE;
 		if (IS_HIDDEN(de.fileFlags)) findAttr |= DOS_ATTR_HIDDEN;
 
-		if (!(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
+		if (!IS_ASSOC(de.fileFlags) && !(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
 			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
 			
 			/* file is okay, setup everything to be copied in DTA Block */
@@ -541,7 +541,7 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path) {
 			// look for the current path element
 			int dirIterator = GetDirIterator(de);
 			while (!found && GetNextDirEntry(dirIterator, de)) {
-				if (0 == strncasecmp((char*) de->ident, name, ISO_MAX_FILENAME_LENGTH)) {
+				if (!IS_ASSOC(de->fileFlags) && (0 == strncasecmp((char*) de->ident, name, ISO_MAX_FILENAME_LENGTH))) {
 					found = true;
 				}
 			}
