@@ -945,17 +945,22 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		CommandLine command(0,args);
 
 		if (command.GetCount() != 2) throw 0 ;
-		command.FindCommand(2,arg);
-		if((arg=="/D" ) || (arg=="/d")) throw 1; //No removal (one day)
   
 		command.FindCommand(1,arg);
 		if( (arg.size()>1) && arg[1] !=':')  throw(0);
 		temp_str[0]=(char)toupper(args[0]);
+		command.FindCommand(2,arg);
+		if((arg=="/D") || (arg=="/d")) {
+			if(!Drives[temp_str[0]-'A'] ) throw 1; //targetdrive not in use
+			strcat(mountstring,"-u ");
+			strcat(mountstring,temp_str);
+			this->ParseLine(mountstring);
+			return;
+		}
 		if(Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
 		strcat(mountstring,temp_str);
 		strcat(mountstring," ");
 
-		command.FindCommand(2,arg);
    		Bit8u drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
 	
