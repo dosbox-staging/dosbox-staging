@@ -227,10 +227,13 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x0c:		/* Flush Buffer and read STDIN call */
 		{
-			/* flush STDIN-buffer */
-			Bit8u c;Bit16u n;
-			while (DOS_GetSTDINStatus()) {
-				n=1;	DOS_ReadFile(STDIN,&c,&n);
+			/* flush buffer if STDIN is CON */
+			Bit8u handle=RealHandle(STDIN);
+			if (handle!=0xFF && Files[handle] && Files[handle]->IsName("CON")) {
+				Bit8u c;Bit16u n;
+				while (DOS_GetSTDINStatus()) {
+					n=1;	DOS_ReadFile(STDIN,&c,&n);
+				}
 			}
 			switch (reg_al) {
 			case 0x1:
