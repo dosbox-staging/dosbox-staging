@@ -131,7 +131,7 @@ int CDROM_Interface_Image::AudioFile::getLength()
 int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26];
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
-	NULL, NULL, NULL, {0}, 0, 0, 0, false, false };
+	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, {0} };
 
 	
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
@@ -259,6 +259,12 @@ bool CDROM_Interface_Image::StopAudio(void)
 	return true;
 }
 
+void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
+{
+	player.ctrlUsed = (ctrl.out[0]!=0 || ctrl.out[1]!=1 || ctrl.vol[0]<0xfe || ctrl.vol[1]<0xfe);
+	player.ctrlData = ctrl;
+}
+
 bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long sector, unsigned long num)
 {
 	int sectorSize = raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE;
@@ -336,6 +342,16 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 		}
 	}
 	SDL_mutexV(player.mutex);
+	if (player.ctrlUsed) {
+		Bit16s sample0,sample1;
+		Bit16s * samples=(Bit16s *)&player.buffer;
+		for (Bitu pos=0;pos<len/4;pos++) {
+			sample0=samples[pos*2+player.ctrlData.out[0]];
+			sample1=samples[pos*2+player.ctrlData.out[1]];
+			samples[pos*2+0]=(Bit16s)(sample0*player.ctrlData.vol[0]/255.0);
+			samples[pos*2+1]=(Bit16s)(sample1*player.ctrlData.vol[1]/255.0);
+		}
+	}
 #if defined(WORDS_BIGENDIAN)
 	player.channel->AddSamples_s16_nonnative(len/4,(Bit16s *)player.buffer);
 #else

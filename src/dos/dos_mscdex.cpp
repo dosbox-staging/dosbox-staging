@@ -152,6 +152,7 @@ private:
 		bool	locked;			// drive locked ?
 		bool	lastResult;		// last operation success ?
 		Bit32u	volumeSize;		// for media change
+		TCtrl	audioCtrl;		// audio channel control
 	} TDriveInfo;
 
 	Bit16u				defaultBufSeg;
@@ -160,6 +161,9 @@ private:
 	
 public:
 	Bit16u		rootDriverHeaderSeg;
+
+	bool		ChannelControl		(Bit8u subUnit, TCtrl ctrl);
+	bool		GetChannelControl	(Bit8u subUnit, TCtrl& ctrl);
 };
 
 CMscdex::CMscdex(void) {
@@ -391,6 +395,11 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		subUnit = (Bit8u)numDrives;
 	}
 	numDrives++;
+	// init channel control
+	for (Bit8u chan=0;chan<4;chan++) {
+		dinfo[subUnit].audioCtrl.out[chan]=chan;
+		dinfo[subUnit].audioCtrl.vol[chan]=0xff;
+	}
 	// stop audio
 	StopAudio(subUnit);
 	return result;
@@ -463,7 +472,7 @@ bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
 	if (subUnit>=numDrives) return false;
 	// If value from last stop is used, this is meant as a resume
 	// better start using resume command
-	if (dinfo[subUnit].audioPaused && (sector==dinfo[subUnit].audioStart)) {
+	if (dinfo[subUnit].audioPaused && (sector==dinfo[subUnit].audioStart) && (dinfo[subUnit].audioEnd!=0)) {
 		dinfo[subUnit].lastResult = cdrom[subUnit]->PauseAudio(true);
 	} else 
 		dinfo[subUnit].lastResult = cdrom[subUnit]->PlayAudioSector(sector,length);
@@ -800,6 +809,7 @@ Bit32u CMscdex::GetDeviceStatus(Bit8u subUnit)
 					(dinfo[subUnit].locked	<< 1)	|	// Drive is locked ?
 					(1<<2)							|	// raw + cooked sectors
 					(1<<4)							|	// Can read sudio
+					(1<<8)							|	// Can control audio
 					(1<<9)							|	// Red book & HSG
 					((!media) << 11);					// Drive is empty ?
 	return status;
@@ -864,6 +874,22 @@ void CMscdex::InitNewMedia(Bit8u subUnit) {
 	}
 }
 
+bool CMscdex::ChannelControl(Bit8u subUnit, TCtrl ctrl) {
+	if (subUnit>=numDrives) return false;
+	// adjust strange channel mapping
+	if (ctrl.out[0]>1) ctrl.out[0]=0;
+	if (ctrl.out[1]>1) ctrl.out[1]=1;
+	dinfo[subUnit].audioCtrl=ctrl;
+	cdrom[subUnit]->ChannelControl(ctrl);
+	return true;
+}
+
+bool CMscdex::GetChannelControl(Bit8u subUnit, TCtrl& ctrl) {
+	if (subUnit>=numDrives) return false;
+	ctrl=dinfo[subUnit].audioCtrl;
+	return true;
+}
+
 static CMscdex* mscdex = 0;
 static PhysPt curReqheaderPtr = 0;
 
@@ -893,6 +919,14 @@ static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 						return 0x03;		// invalid function
 					}
 				   }break;
+		case 0x04 : /* Audio Channel control */
+					TCtrl ctrl;
+					if (!mscdex->GetChannelControl(drive_unit,ctrl)) return 0x01;
+					for (Bit8u chan=0;chan<4;chan++) {
+						mem_writeb(buffer+chan*2+1,ctrl.out[chan]);
+						mem_writeb(buffer+chan*2+2,ctrl.vol[chan]);
+					}
+					break;
 		case 0x06 : /* Get Device status */
 					mem_writed(buffer+1,mscdex->GetDeviceStatus(drive_unit)); 
 					break;
@@ -984,7 +1018,13 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 					if (!mscdex->LoadUnloadMedia(drive_unit,true)) return 0x02;
 					break;
 		case 0x03: //Audio Channel control
-					MSCDEX_LOG("MSCDEX: Audio Channel Control used. Not handled. Faking succes!");
+					TCtrl ctrl;
+					for (Bit8u chan=0;chan<4;chan++) {
+						ctrl.out[chan]=mem_readb(buffer+chan*2+1);
+						ctrl.vol[chan]=mem_readb(buffer+chan*2+2);
+					}
+					if (!mscdex->ChannelControl(drive_unit,ctrl)) return 0x01;
+					break;
 		case 0x01 : // (un)Lock door 
 					// do nothing -> report as success
 					break;
