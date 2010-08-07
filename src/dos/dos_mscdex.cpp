@@ -368,23 +368,27 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		devHeader.SetInterrupt(off+5);
 	}
 
-	subUnit = (Bit8u)numDrives;
 	// Set drive
 	DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
 	devHeader.SetNumSubUnits(devHeader.GetNumSubUnits()+1);
 
 	if (dinfo[0].drive-1==_drive) {
 		CDROM_Interface *_cdrom = cdrom[numDrives];
+		CDROM_Interface_Image *_cdimg = CDROM_Interface_Image::images[numDrives];
 		for (Bit16u i=GetNumDrives(); i>0; i--) {
 			dinfo[i] = dinfo[i-1];
 			cdrom[i] = cdrom[i-1];
+			CDROM_Interface_Image::images[i] = CDROM_Interface_Image::images[i-1];
 		}
 		cdrom[0] = _cdrom;
+		CDROM_Interface_Image::images[0] = _cdimg;
 		dinfo[0].drive		= (Bit8u)_drive;
 		dinfo[0].physDrive	= (Bit8u)toupper(physicalPath[0]);
+		subUnit = 0;
 	} else {
 		dinfo[numDrives].drive		= (Bit8u)_drive;
 		dinfo[numDrives].physDrive	= (Bit8u)toupper(physicalPath[0]);
+		subUnit = (Bit8u)numDrives;
 	}
 	numDrives++;
 	// stop audio
