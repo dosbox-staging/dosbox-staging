@@ -156,8 +156,9 @@ public:
 	public:
 		CFileInfo(void) {
 			orgname[0] = shortname[0] = 0;
-			nextEntry = shortNr = 0;
 			isDir = false;
+			id = MAX_OPENDIRS;
+			nextEntry = shortNr = 0;
 		}
 		~CFileInfo(void) {
 			for (Bit32u i=0; i<fileList.size(); i++) delete fileList[i];
@@ -167,6 +168,7 @@ public:
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
 		bool		isDir;
+		Bit16u		id;
 		Bitu		nextEntry;
 		Bitu		shortNr;
 		// contents
@@ -175,6 +177,8 @@ public:
 	};
 
 private:
+	void ClearFileInfo(CFileInfo *dir);
+	void DeleteFileInfo(CFileInfo *dir);
 
 	bool		RemoveTrailingDot	(char* shortname);
 	Bits		GetLongName		(CFileInfo* info, char* shortname);
@@ -203,7 +207,6 @@ private:
 	Bit16u		srchNr;
 	CFileInfo*	dirSearch			[MAX_OPENDIRS];
 	char		dirSearchName		[MAX_OPENDIRS];
-	bool		free				[MAX_OPENDIRS];
 	CFileInfo*	dirFindFirst		[MAX_OPENDIRS];
 	Bit16u		nextFreeFindFirst;
 
