@@ -434,18 +434,16 @@ static Bitu INT17_Handler(void) {
 	return CBRET_NONE;
 }
 
-static Bit8u INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout) {
+static bool INT14_Wait(Bit16u port, Bit8u mask, Bit8u timeout, Bit8u* retval) {
 	double starttime = PIC_FullIndex();
 	double timeout_f = timeout * 1000.0;
-	Bit8u retval;
-	while (((retval = IO_ReadB(port)) & mask) != mask) {
+	while (((*retval = IO_ReadB(port)) & mask) != mask) {
 		if (starttime < (PIC_FullIndex() - timeout_f)) {
-			retval |= 0x80;
-			break;
+			return false;
 		}
 		CALLBACK_Idle();
 	}
-	return retval;
+	return true;
 }
 
 static Bitu INT14_Handler(void) {
@@ -500,7 +498,7 @@ static Bitu INT14_Handler(void) {
 		CALLBACK_SCF(false);
 		break;
 	}
-	case 0x01: { // Transmit character
+	case 0x01: // Transmit character
 		// Parameters:				Return:
 		// AL: character			AL: unchanged
 		// AH: 0x01					AH: line status from just before the char was sent
@@ -510,20 +508,19 @@ static Bitu INT14_Handler(void) {
 
 		// set DTR & RTS on
 		IO_WriteB(port+4,0x3);
-
 		// wait for DSR & CTS
-		reg_ah = INT14_Wait(port+6, 0x30, timeout);
-		if (!(reg_ah & 0x80)) {
+		if (INT14_Wait(port+6, 0x30, timeout, &reg_ah)) {
 			// wait for TX buffer empty
-			reg_ah = INT14_Wait(port+5, 0x20, timeout);
-			if (!(reg_ah & 0x80)) {
+			if (INT14_Wait(port+5, 0x20, timeout, &reg_ah)) {
 				// fianlly send the character
 				IO_WriteB(port,reg_al);
-			}
-		} // else timed out
+			} else
+				reg_ah |= 0x80;
+		} else // timed out
+			reg_ah |= 0x80;
+
 		CALLBACK_SCF(false);
 		break;
-	}
 	case 0x02: // Read character
 		// Parameters:				Return:
 		// AH: 0x02					AL: received character
@@ -537,15 +534,16 @@ static Bitu INT14_Handler(void) {
 		IO_WriteB(port+4,0x1);
 
 		// wait for DSR
-		reg_ah = INT14_Wait(port+6, 0x20, timeout);
-		if (!(reg_ah & 0x80)) {
+		if (INT14_Wait(port+6, 0x20, timeout, &reg_ah)) {
 			// wait for character to arrive
-			reg_ah = INT14_Wait(port+5, 0x01, timeout);
-			if (!(reg_ah & 0x80)) {
+			if (INT14_Wait(port+5, 0x01, timeout, &reg_ah)) {
 				reg_ah &= 0x1E;
 				reg_al = IO_ReadB(port);
-			}
-		}
+			} else
+				reg_ah |= 0x80;
+		} else
+			reg_ah |= 0x80;
+
 		CALLBACK_SCF(false);
 		break;
 	case 0x03: // get status
