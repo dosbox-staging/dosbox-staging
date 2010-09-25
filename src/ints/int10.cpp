@@ -107,7 +107,9 @@ static Bitu INT10_Handler(void) {
 		INT10_ReadCharAttr(&reg_ax,reg_bh);
 		break;						
 	case 0x09:								/* Write Character & Attribute at cursor CX times */
-		INT10_WriteChar(reg_al,reg_bl,reg_bh,reg_cx,true);
+		if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE)==0x11)
+			INT10_WriteChar(reg_al,(reg_bl&0x80)|0x3f,reg_bh,reg_cx,true);
+		else INT10_WriteChar(reg_al,reg_bl,reg_bh,reg_cx,true);
 		break;
 	case 0x0A:								/* Write Character at cursor CX times */
 		INT10_WriteChar(reg_al,reg_bl,reg_bh,reg_cx,false);
