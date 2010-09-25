@@ -162,7 +162,7 @@ static Bitu INT10_Handler(void) {
 			INT10_GetAllPaletteRegisters(SegPhys(es)+reg_dx);
 			break;
 		case 0x10:							/* SET INDIVIDUAL DAC REGISTER */
-			INT10_SetSingleDacRegister(reg_bl,reg_dh,reg_ch,reg_cl);
+			INT10_SetSingleDACRegister(reg_bl,reg_dh,reg_ch,reg_cl);
 			break;
 		case 0x12:							/* SET BLOCK OF DAC REGISTERS */
 			INT10_SetDACBlock(reg_bx,reg_cx,SegPhys(es)+reg_dx);
@@ -171,7 +171,7 @@ static Bitu INT10_Handler(void) {
 			INT10_SelectDACPage(reg_bl,reg_bh);
 			break;
 		case 0x15:							/* GET INDIVIDUAL DAC REGISTER */
-			INT10_GetSingleDacRegister(reg_bl,&reg_dh,&reg_ch,&reg_cl);
+			INT10_GetSingleDACRegister(reg_bl,&reg_dh,&reg_ch,&reg_cl);
 			break;
 		case 0x17:							/* GET BLOCK OF DAC REGISTER */
 			INT10_GetDACBlock(reg_bx,reg_cx,SegPhys(es)+reg_dx);

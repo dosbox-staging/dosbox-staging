@@ -168,14 +168,23 @@ void INT10_GetAllPaletteRegisters(PhysPt data) {
 	ResetACTL();
 }
 
-void INT10_SetSingleDacRegister(Bit8u index,Bit8u red,Bit8u green,Bit8u blue) {
+void INT10_SetSingleDACRegister(Bit8u index,Bit8u red,Bit8u green,Bit8u blue) {
 	IO_Write(VGAREG_DAC_WRITE_ADDRESS,(Bit8u)index);
-	IO_Write(VGAREG_DAC_DATA,red);
-	IO_Write(VGAREG_DAC_DATA,green);
-	IO_Write(VGAREG_DAC_DATA,blue);
+	if ((real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x06)==0) {
+		IO_Write(VGAREG_DAC_DATA,red);
+		IO_Write(VGAREG_DAC_DATA,green);
+		IO_Write(VGAREG_DAC_DATA,blue);
+	} else {
+		/* calculate clamped intensity, taken from VGABIOS */
+		Bit32u i=(( 77*red + 151*green + 28*blue ) + 0x80) >> 8;
+		Bit8u ic=(i>0x3f) ? 0x3f : ((Bit8u)(i & 0xff));
+		IO_Write(VGAREG_DAC_DATA,ic);
+		IO_Write(VGAREG_DAC_DATA,ic);
+		IO_Write(VGAREG_DAC_DATA,ic);
+	}
 }
 
-void INT10_GetSingleDacRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * blue) {
+void INT10_GetSingleDACRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * blue) {
 	IO_Write(VGAREG_DAC_READ_ADDRESS,index);
 	*red=IO_Read(VGAREG_DAC_DATA);
 	*green=IO_Read(VGAREG_DAC_DATA);
@@ -184,10 +193,25 @@ void INT10_GetSingleDacRegister(Bit8u index,Bit8u * red,Bit8u * green,Bit8u * bl
 
 void INT10_SetDACBlock(Bit16u index,Bit16u count,PhysPt data) {
  	IO_Write(VGAREG_DAC_WRITE_ADDRESS,(Bit8u)index);
-	for (;count>0;count--) {
-		IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
-		IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
-		IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
+	if ((real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x06)==0) {
+		for (;count>0;count--) {
+			IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
+			IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
+			IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
+		}
+	} else {
+		for (;count>0;count--) {
+			Bit8u red=mem_readb(data++);
+			Bit8u green=mem_readb(data++);
+			Bit8u blue=mem_readb(data++);
+
+			/* calculate clamped intensity, taken from VGABIOS */
+			Bit32u i=(( 77*red + 151*green + 28*blue ) + 0x80) >> 8;
+			Bit8u ic=(i>0x3f) ? 0x3f : ((Bit8u)(i & 0xff));
+			IO_Write(VGAREG_DAC_DATA,ic);
+			IO_Write(VGAREG_DAC_DATA,ic);
+			IO_Write(VGAREG_DAC_DATA,ic);
+		}
 	}
 }
 
@@ -296,6 +320,6 @@ void INT10_PerformGrayScaleSumming(Bit16u start_reg,Bit16u count) {
 		/* calculate clamped intensity, taken from VGABIOS */
 		Bit32u i=(( 77*red + 151*green + 28*blue ) + 0x80) >> 8;
 		Bit8u ic=(i>0x3f) ? 0x3f : ((Bit8u)(i & 0xff));
-		INT10_SetSingleDacRegister(start_reg+ct,ic,ic,ic);
+		INT10_SetSingleDACRegister(start_reg+ct,ic,ic,ic);
 	}
 }
