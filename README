@@ -46,7 +46,7 @@ Type INTRO in DOSBox for a quick tour.
 It is essential that you get familiar with the idea of mounting, DOSBox does not
 automatically make any drive (or a part of it) accessible to the emulation. See
 the FAQ entry "How to start?" as well as the description of the MOUNT command
-(section 4: "Internal Programs"). If you have your game on a cdrom you may try
+(Section 4: "Internal Programs"). If you have your game on a cdrom you may try
 this guide: http://vogons.zetafleet.com/viewtopic.php?t=8933
 
 
@@ -92,7 +92,7 @@ START: How to start?
 AUTOMATION: Do I always have to type these commands?
     In the DOSBox configuration file is an [autoexec] section. The commands
     present there are run when DOSBox starts, so you can use this section
-    for the mounting. Look at Section 13: The configuration (options) file
+    for the mounting. Look at Section 13: "The configuration (options) file".
 
 
 FULLSCREEN: How do I change to fullscreen?
@@ -220,11 +220,12 @@ SOUND: What sound hardware does DOSBox presently emulate?
 SOUND: The sound stutters or sounds stretched/weird.
     You may be using too much CPU power to keep DOSBox running at the current
     speed. You can lower the cycles, skip frames, reduce the sampling rate of
-    the respective sound device, increase the prebuffer. See section 13: "The
-    configuration (options) file"
-    If you are using cycles=max or =auto, then make sure that there is no
-    background processes interfering! (especially if they access the harddisk)
-    Also look at Section 10. "How to speed up/slow down DOSBox"
+    the respective sound device, increase the prebuffer. See Section 13: "The
+    configuration (options) file".
+    If you are using 'cycles=max' or 'cycles=auto', then make sure that there is
+    no background processes interfering! (especially if they access the harddisk)
+    Also look at Section 10: "How to speed up/slow down DOSBox" as well as
+    Section 11: "Troubleshooting".
 
 
 KEYBOARD: I can't type \ or : in DOSBox.
@@ -233,7 +234,7 @@ KEYBOARD: I can't type \ or : in DOSBox.
     detected), or the key mapping is wrong.
     Some possible fixes:
       1. Use / instead, or ALT-58 for : and ALT-92 for \.
-      2. Change the DOS keyboard layout (see Section 8: Keyboard Layout).
+      2. Change the DOS keyboard layout (see Section 8: "Keyboard Layout").
       3. Add the commands you want to execute to the [autoexec] section
          of the DOSBox configuration file.
       4. Open the DOSBox configuration file and change the usescancodes entry.
@@ -274,16 +275,16 @@ CONTROL: The character/cursor/mouse pointer always moves into one direction!
 
 
 SPEED: The game/application runs much too slow/too fast!
-    Look at the section 10: "How to speed up/slow down DOSBox" for more
+    Look at Section 10: "How to speed up/slow down DOSBox" for more
     information.
 
 
 CRASH: The game/application does not run at all/crashes!
-    Look at Section 11: Troubleshooting
+    Look at Section 11: "Troubleshooting".
 
 
 CRASH: DOSBox crashes on startup!.
-    Look at Section 11: Troubleshooting
+    Look at Section 11: "Troubleshooting".
 
 
 GAME: My Build game(Duke3D/Blood/Shadow Warrior) has problems.
@@ -302,7 +303,7 @@ SAFETY: Can DOSBox harm my computer?
 
 
 OPTIONS: I would like to change DOSBox's options.
-    Look at Section 13. "The configuration (options) file"
+    Look at Section 13: "The configuration (options) file".
 
 
 HELP: Great Manual, but I still don't get it.
@@ -319,7 +320,7 @@ HELP: Great Manual, but I still don't get it.
 
 An overview of the command line options you can give to DOSBox. Although
 in most cases it is easier to use DOSBox's configuration file instead.
-See: Section 13. "The configuration (options) file"
+See Section 13: "The configuration (options) file".
 
 To be able to use Command Line Parameters:
 (Windows)  open cmd.exe or command.com or edit the shortcut to dosbox.exe
@@ -368,11 +369,11 @@ dosbox -erasemapper
   -conf configfilelocation
         Start DOSBox with the options specified in "configfilelocation".
         Multiple -conf options may be present.
-        See Section 13 for more details.
+        See Section 13: "The configuration (options) file" for more details.
 
   -lang languagefilelocation
         Start DOSBox using the language specified in "languagefilelocation".
-        See Section 14 for more details.
+        See Section 14: "The Language File" for more details.
 
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
@@ -670,8 +671,8 @@ CONFIG -get "section property"
         config -writeconf c:\dosgames\dosbox.conf
     2. To set the cpu cycles to 10000:
         config -set "cpu cycles=10000"
-    3. To turn ems memory emulation off:
-        config -set "dos ems=off"
+    3. To turn EMS memory emulation off:
+        config -set "dos ems=false"
     4. To check which cpu core is being used.
         config -get "cpu core"
 
@@ -922,7 +923,7 @@ IPX
 KEYB [keyboardlayoutcode [codepage [codepagefile]]]
 
   Change the keyboard layout. For detailed information about keyboard layouts
-  please see Section 8: "Keyboard Layout"
+  please see Section 8: "Keyboard Layout".
 
   [keyboardlayoutcode] is a string consisting of five or less characters,
      examples are PL214 (Polish typists) or PL457 (Polish programmers).
@@ -999,7 +1000,7 @@ F11           (machine=hercules) cycle through amber, green, white colouring***
          a different machine type. So either reassign them or reset the mapper.
 
 These are the default keybindings. They can be changed in the keymapper
-(see Section 7: KeyMapper). 
+(see Section 7: "KeyMapper"). 
 
 In MAC OS you can try using cmd(applekey) together with Ctrl if the key doesn't
 work eg. cmd-ctrl-F1, but some keys may still need remapping (in Linux too).
@@ -1053,8 +1054,8 @@ inside DOSBox, try different 'timed' setting in DOSBox's configuration file.
 7. KeyMapper:
 =============
 
-You start the DOSBox mapper either with CTRL-F1 (see section 5. Special Keys)
-or -startmapper (see Section 3. Command Line Parameters). 
+You start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys")
+or -startmapper (see Section 3: "Command Line Parameters"). 
 You are presented with a virtual keyboard and a virtual joystick.
 
 These virtual devices correspond to the keys and events DOSBox will
@@ -1148,9 +1149,9 @@ your mapperfile, if it is present in the DOSBox configuration file.
 
 To switch to a different keyboard layout, either the entry "keyboardlayout"
 in the [dos] section of the DOSBox configuration file can be used, or the
-internal DOSBox program keyb.com (Section 4: Internal Programs)
-Both accept DOS conforming language codes (see below),
-but only by using keyb.com a custom codepage can be specified.
+internal DOSBox program keyb.com (Section 4: "Internal Programs"). Both accept
+DOS conforming language codes (see below), but only by using keyb.com a
+custom codepage can be specified.
 
 The default keyboardlayout=auto currently works under windows only. The language
 is chosen according to the OS language, but the keyboard layout is not detected.
@@ -1331,7 +1332,7 @@ Example:
 ====================
 
 General tip:
-  Check messages in DOSBox Status Window. See section 12. "DOSBox Status Window"
+  Check messages in DOSBox Status Window. See Section 12: "DOSBox Status Window".
 
 DOSBox crashes right after starting it:
   - use different values for the output= entry in your DOSBox
