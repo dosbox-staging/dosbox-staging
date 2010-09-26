@@ -412,6 +412,8 @@ Bitu XMS_Handler(void) {
 	return CBRET_NONE;
 }
 
+Bitu GetEMSType(Section_prop * section);
+
 class XMS: public Module_base {
 private:
 	CALLBACK_HandlerObject callbackhandler;
@@ -445,7 +447,8 @@ public:
 
 		/* Set up UMB chain */
 		umb_available=section->Get_bool("umb");
-		DOS_BuildUMBChain(section->Get_bool("umb"),section->Get_bool("ems"));
+		bool ems_available = GetEMSType(section)>0;
+		DOS_BuildUMBChain(section->Get_bool("umb"),ems_available);
 	}
 
 	~XMS(){

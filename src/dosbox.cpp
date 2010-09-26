@@ -333,7 +333,7 @@ void DOSBOX_Init(void) {
 	const char* machines[] = {
 		"hercules", "cga", "tandy", "pcjr", "ega",
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
-		 "svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
+		"svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
 	Pstring = secprop->Add_path("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
@@ -654,8 +654,13 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Enable XMS support.");
 
 	secprop->AddInitFunction(&EMS_Init,true);//done
-	Pbool = secprop->Add_bool("ems",Property::Changeable::WhenIdle,true);
-	Pbool->Set_help("Enable EMS support.");
+	const char* ems_settings[] = { "true", "emsboard", "emm386", "false", 0};
+	Pstring = secprop->Add_string("ems",Property::Changeable::WhenIdle,"true");
+	Pstring->Set_values(ems_settings);
+	Pstring->Set_help("Enable EMS support. The default (=true) provides the best\n"
+		"compatibility but certain applications may run better with\n"
+		"other choices, or require EMS support to be disabled (=false)\n"
+		"to work at all.");
 
 	Pbool = secprop->Add_bool("umb",Property::Changeable::WhenIdle,true);
 	Pbool->Set_help("Enable UMB support.");

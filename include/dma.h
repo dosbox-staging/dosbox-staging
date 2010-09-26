@@ -114,6 +114,8 @@ DmaChannel * GetDMAChannel(Bit8u chan);
 void CloseSecondDMAController(void);
 bool SecondDMAControllerAvailable(void);
 
+void DMA_SetWrapping(Bitu wrap);
+
 static Bit32u dma_wrapping = 0xffff;
 
 #endif
