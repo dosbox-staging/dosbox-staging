@@ -89,6 +89,8 @@ struct EMM_Handle {
 	EMM_Mapping page_map[EMM_MAX_PHYS];
 };
 
+static Bitu ems_type;
+
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
 static EMM_Mapping emm_segmentmappings[0x40];
@@ -329,7 +331,23 @@ static Bit8u EMM_MapPage(Bitu phys_page,Bit16u handle,Bit16u log_page) {
 static Bit8u EMM_MapSegment(Bitu segment,Bit16u handle,Bit16u log_page) {
 //	LOG_MSG("EMS MapSegment handle %d segment %d log %d",handle,segment,log_page);
 
-	if (((segment>=0xa000) && (segment<0xb000)) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME+0x1000))) {
+	bool valid_segment=false;
+
+	if ((ems_type==1) || (ems_type==3)) {
+		if (segment<0xf000+0x1000) valid_segment=true;
+	} else {
+		if ((segment>=0xa000) && (segment<0xb000)) {
+			valid_segment=true;		// allow mapping of graphics memory
+		}
+		if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
+			valid_segment=true;		// allow mapping of EMS page frame
+		}
+/*		if ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) {
+			valid_segment=true;
+		} */
+	}
+
+	if (valid_segment) {
 		Bit32s tphysPage = ((Bit32s)segment-EMM_PAGEFRAME)/(0x1000/EMM_MAX_PHYS);
 
 		/* unmapping doesn't need valid handle (as handle isn't used) */
@@ -1293,7 +1311,6 @@ private:
 	RealPt old4b_pointer,old67_pointer;
 	CALLBACK_HandlerObject call_vdma,call_vcpi,call_v86mon;
 	Bitu call_int67;
-	Bitu ems_type;
 
 public:
 	EMS(Section* configuration):Module_base(configuration) {
