@@ -1265,8 +1265,8 @@ CPU Cycles (speed up/slow down)
   a different setting in the DOSBox's configuration file.
 
   You can force the slow or fast behavior by setting a fixed amount of cycles
-  in the DOSBox's configuration file. If you for example set cycles=10000, then
-  DOSBox window will display a line "Cpu Speed: fixed 10000 cycles" at the top.
+  in the DOSBox's configuration file. If you set for example cycles=10000, the
+  DOSBox window will display a line "CPU speed: fixed 10000 cycles" at the top.
   In this mode you can reduce the amount of cycles even more by hitting CTRL-F11
   (you can go as low as you want) or raise it by hitting CTRL-F12 as much as you
   want, but you will be limited by the power of one core of your computer's CPU.
@@ -1281,8 +1281,8 @@ CPU Cycles (speed up/slow down)
 
   You can also force the fast behavior by setting cycles=max in the DOSBox
   configuration file. The DOSBox window will display a line
-  "Cpu Speed: max 100% cycles" at the top then. This time you won't have to care
-  how much free time your real CPU's cores have, because DOSBox will always use
+  "CPU speed: max 100% cycles" at the top then. This time you won't have to care
+  how much free time your real CPU cores have, because DOSBox will always use
   100% of your real CPU's one core. In this mode you can reduce the amount
   of your real CPU's core usage by CTRL-F11 or raise it with CTRL-F12.
 
