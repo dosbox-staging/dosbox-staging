@@ -118,30 +118,30 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line) {
 
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit32u * draw=(Bit32u *)TempLine;
-	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1 = base[vidstart & vga.tandy.addr_mask];
-		++vidstart;
-		Bitu val2 = base[vidstart & vga.tandy.addr_mask];
-		++vidstart;
-		*draw++=(val1 & 0x0f) << 8  |
-				(val1 & 0xf0) >> 4  |
-				(val2 & 0x0f) << 24 |
-				(val2 & 0xf0) << 12;
+	Bit8u* draw=TempLine;
+	Bitu end = vga.draw.blocks*2;
+	while(end) {
+		Bit8u byte = base[vidstart & vga.tandy.addr_mask];
+		*draw++=vga.attr.palette[byte >> 4];
+		*draw++=vga.attr.palette[byte & 0x0f];
+		vidstart++;
+		end--;
 	}
 	return TempLine;
 }
 
 static Bit8u * VGA_Draw_4BPP_Line_Double(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	Bit32u * draw=(Bit32u *)TempLine;
-	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val = base[vidstart & vga.tandy.addr_mask];
-		++vidstart;
-		*draw++=(val & 0xf0) >> 4  |
-				(val & 0xf0) << 4  |
-				(val & 0x0f) << 16 |
-				(val & 0x0f) << 24;
+	Bit8u* draw=TempLine;
+	Bitu end = vga.draw.blocks;
+	while(end) {
+		Bit8u byte = base[vidstart & vga.tandy.addr_mask];
+		Bit8u data = vga.attr.palette[byte >> 4];
+		*draw++ = data; *draw++ = data;
+		data = vga.attr.palette[byte & 0x0f];
+		*draw++ = data; *draw++ = data;
+		vidstart++;
+		end--;
 	}
 	return TempLine;
 }
@@ -589,10 +589,60 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
+static Bit8u bg_color_index = 0; // screen-off black index
 static void VGA_DrawSingleLine(Bitu /*blah*/) {
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
-		// draw blanked line (DoWhackaDo, Alien Carnage, TV sports Football)
-		memset(TempLine, 0, sizeof(TempLine));
+		switch(machine) {
+		case MCH_PCJR:
+			// Displays the border color when screen is disabled
+			bg_color_index = vga.tandy.border_color;
+			break;
+		case MCH_TANDY:
+			// Either the PCJr way or the CGA way
+			if (vga.tandy.gfx_control& 0x4) { 
+				bg_color_index = vga.tandy.border_color;
+			} else if (vga.mode==M_TANDY4) 
+				bg_color_index = vga.attr.palette[0];
+			else bg_color_index = 0;
+			break;
+		case MCH_CGA:
+			// the background color
+			bg_color_index = vga.attr.overscan_color;
+			break;
+		case MCH_EGA:
+		case MCH_VGA:
+			// DoWhackaDo, Alien Carnage, TV sports Football
+			// when disabled by attribute index bit 5:
+			//  ET3000, ET4000, Paradise display the border color
+			//  S3 displays the content of the currently selected attribute register
+			// when disabled by sequencer the screen is black "257th color"
+			
+			// the DAC table may not match the bits of the overscan register
+			// so use black for this case too...
+			//if (vga.attr.disabled& 2) {
+			if (vga.dac.xlat16[bg_color_index] != 0) {
+				for(Bitu i = 0; i < 256; i++)
+					if (vga.dac.xlat16[i] == 0) {
+						bg_color_index = i;
+						break;
+					}
+			}
+			//} else 
+            //    bg_color_index = vga.attr.overscan_color;
+			break;
+		default:
+			bg_color_index = 0;
+			break;
+		}
+		if (vga.draw.bpp==8) {
+			memset(TempLine, bg_color_index, sizeof(TempLine));
+		} else if (vga.draw.bpp==16) {
+			Bit16u* wptr = (Bit16u*) TempLine;
+			Bit16u value = vga.dac.xlat16[bg_color_index];
+			for (Bitu i = 0; i < sizeof(TempLine)/2; i++) {
+				wptr[i] = value;
+			}
+		}
 		RENDER_DrawLine(TempLine);
 	} else {
 		Bit8u * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
@@ -966,6 +1016,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	switch (machine) {
 	case MCH_CGA:
 	case MCH_PCJR:
+	case MCH_TANDY:
 		vga.draw.mode = LINE;
 		break;
 	case MCH_EGA:

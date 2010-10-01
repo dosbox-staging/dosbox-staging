@@ -246,6 +246,7 @@ VideoModeBlock ModeList_OTHER[]={
 { 0x008  ,M_TANDY16,160 ,200 ,20 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,56  ,127 ,40 ,100 ,0   },
 { 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
 { 0x00A  ,M_CGA4   ,640 ,200 ,80 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
+//{ 0x00E  ,M_TANDY16,640 ,200 ,80 ,25 ,8 ,8  ,8 ,0xA0000 ,0x10000 ,113 ,256 ,80 ,200 ,0   },
 {0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
 };
 
@@ -547,6 +548,11 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		default:
 			IO_WriteB(0x3de,0x0);break;
 		}
+		// write palette
+		for(Bitu i = 0; i < 16; i++) {
+			IO_WriteB(0x3da,i+0x10);
+			IO_WriteB(0x3de,i);
+		}
 		//Clear extended mapping
 		IO_WriteB(0x3da,0x5);
 		IO_WriteB(0x3de,0x0);
@@ -587,8 +593,9 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 
 		if (CurMode->mode == 0x6 || CurMode->mode==0xa) color_select=0x3f;
 		else color_select=0x30;
-		IO_WriteB(0x3d9,color_select);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
+		INT10_SetColorSelect(1);
+		INT10_SetBackgroundBorder(0);
 		break;
 	}
 

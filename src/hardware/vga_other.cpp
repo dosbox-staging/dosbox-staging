@@ -153,6 +153,27 @@ static Bitu read_crtc_data_other(Bitu /*port*/,Bitu /*iolen*/) {
 	return (Bitu)(~0);
 }
 
+static void write_lightpen(Bitu port,Bitu val,Bitu) {
+	switch (port) {
+	case 0x3db:	// Clear lightpen latch
+		vga.other.lightpen_triggered = false;
+		break;
+	case 0x3dc:	// Preset lightpen latch
+		if (!vga.other.lightpen_triggered) {
+			vga.other.lightpen_triggered = true; // TODO: this shows at port 3ba/3da bit 1
+			
+			double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
+			double timeInLine = fmod(timeInFrame,vga.draw.delay.htotal);
+			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
+			
+			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
+			vga.other.lightpen += (Bit16u)((timeInLine / vga.draw.delay.hdend) *
+				((float)(vga.draw.address_add/2)));
+		}
+		break;
+	}
+}
+
 static double hue_offset = 0.0;
 static Bit8u cga16_val = 0;
 static void update_cga16_color(void);
@@ -235,55 +256,138 @@ static void DecreaseHue(bool pressed) {
 	LOG_MSG("Hue at %f",hue_offset); 
 }
 
-static void write_color_select(Bit8u val) {
+static void write_cga_color_select(Bitu val) {
 	vga.tandy.color_select=val;
-	switch (vga.mode) {
+	switch(vga.mode) {
+	case  M_TANDY4: {
+		Bit8u base = (val & 0x10) ? 0x08 : 0;
+		Bit8u bg = val & 0xf;
+		if (vga.tandy.mode_control & 0x4)	// cyan red white
+			VGA_SetCGA4Table(bg, 3+base, 4+base, 7+base);
+		else if (val & 0x20)				// cyan magenta white
+			VGA_SetCGA4Table(bg, 3+base, 5+base, 7+base);
+		else								// green red brown
+			VGA_SetCGA4Table(bg, 2+base, 4+base, 6+base);
+		vga.tandy.border_color = bg;
+		vga.attr.overscan_color = bg;
+		break;
+	}
 	case M_TANDY2:
 		VGA_SetCGA2Table(0,val & 0xf);
-		break;
-	case M_TANDY4:
-		{
-			if ((machine==MCH_TANDY && (vga.tandy.gfx_control & 0x8)) ||
-				(machine==MCH_PCJR && (vga.tandy.mode_control==0x0b))) {
-				VGA_SetCGA4Table(0,1,2,3);
-				return;
-			}
-			Bit8u base=(val & 0x10) ? 0x08 : 0;
-			/* Check for BW Mode */
-			if (vga.tandy.mode_control & 0x4) {
-				VGA_SetCGA4Table(val & 0xf,3+base,4+base,7+base);
-			} else {
-				if (val & 0x20) VGA_SetCGA4Table(val & 0xf,3+base,5+base,7+base);
-				else VGA_SetCGA4Table(val & 0xf,2+base,4+base,6+base);
-			}
-		}
+		vga.attr.overscan_color = 0;
 		break;
 	case M_CGA16:
 		cga16_color_select(val);
 		break;
 	case M_TEXT:
-	case M_TANDY16:
+		vga.tandy.border_color = val & 0xf;
+		vga.attr.overscan_color = 0;
 		break;
 	}
 }
 
-static void TANDY_FindMode(void) {
-	if (vga.tandy.mode_control & 0x2) {
-		if (vga.tandy.gfx_control & 0x10) 
-			VGA_SetMode(M_TANDY16);
-		else if (vga.tandy.gfx_control & 0x08) 
-			VGA_SetMode(M_TANDY4);
-		else if (vga.tandy.mode_control & 0x10)
-			VGA_SetMode(M_TANDY2);
-		else
-			VGA_SetMode(M_TANDY4);
-		write_color_select(vga.tandy.color_select);
+static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
+	switch (port) {
+	case 0x3d8:
+		vga.tandy.mode_control=(Bit8u)val;
+		vga.attr.disabled = (val&0x8)? 0: 1; 
+		if (vga.tandy.mode_control & 0x2) {		// graphics mode
+			if (vga.tandy.mode_control & 0x10) {// highres mode
+				if (!(val & 0x4)) {				// burst on
+					VGA_SetMode(M_CGA16);		// composite ntsc 160x200 16 color mode
+				} else {
+					VGA_SetMode(M_TANDY2);
+				}
+			} else VGA_SetMode(M_TANDY4);		// lowres mode
+
+			write_cga_color_select(vga.tandy.color_select);
+		} else {
+			VGA_SetMode(M_TANDY_TEXT);
+		}
+		VGA_SetBlinking(val & 0x20);
+		break;
+	case 0x3d9: // color select
+		write_cga_color_select(val);
+		break;
+	}
+}
+
+static void tandy_update_palette() {
+	// TODO mask off bits if needed
+	if (machine == MCH_TANDY) {
+		switch (vga.mode) {
+		case M_TANDY2:
+			VGA_SetCGA2Table(vga.attr.palette[0],
+				//vga.attr.palette[vga.tandy.color_select&0xf]);
+				vga.attr.palette[0xf]);
+			//VGA_SetCGA2Table(vga.attr.palette[0xf],vga.attr.palette[0]);
+			break;
+		case M_TANDY4:
+			if (vga.tandy.gfx_control & 0x8) {
+				// 4-color high resolution - might be an idea to introduce M_TANDY4H
+				VGA_SetCGA4Table( // function sets both medium and highres 4color tables
+					vga.attr.palette[0], vga.attr.palette[1],
+					vga.attr.palette[2], vga.attr.palette[3]);
+			} else {
+				Bit8u color_set = 0;
+				Bit8u r_mask = 0xf;
+				if (vga.tandy.color_select & 0x10) color_set |= 8; // intensity
+				if (vga.tandy.color_select & 0x20) color_set |= 1; // Cyan Mag. White
+				if (vga.tandy.mode_control & 0x04) {			// Cyan Red White
+					color_set |= 1; 
+					r_mask &= ~1;
+				}
+				VGA_SetCGA4Table(
+					vga.attr.palette[0],
+					vga.attr.palette[(2|color_set)& vga.tandy.palette_mask],
+					vga.attr.palette[(4|(color_set& r_mask))& vga.tandy.palette_mask],
+					vga.attr.palette[(6|color_set)& vga.tandy.palette_mask]);
+			}
+			break;
+		default:
+			break;
+		}
 	} else {
-		VGA_SetMode(M_TANDY_TEXT);
+		// PCJr
+		switch (vga.mode) {
+		case M_TANDY2:
+			VGA_SetCGA2Table(vga.attr.palette[0],vga.attr.palette[1]);
+			break;
+		case M_TANDY4:
+			VGA_SetCGA4Table(
+				vga.attr.palette[0], vga.attr.palette[1],
+				vga.attr.palette[2], vga.attr.palette[3]);
+			break;
+		default:
+			break;
+		}
 	}
 }
 
 void VGA_SetModeNow(VGAModes mode);
+
+static void TANDY_FindMode(void) {
+	if (vga.tandy.mode_control & 0x2) {
+		if (vga.tandy.gfx_control & 0x10) {
+			if (vga.mode==M_TANDY4) {
+				VGA_SetModeNow(M_TANDY16);
+			} else VGA_SetMode(M_TANDY16);
+		}
+		else if (vga.tandy.gfx_control & 0x08) {
+			VGA_SetMode(M_TANDY4);
+		}
+		else if (vga.tandy.mode_control & 0x10)
+			VGA_SetMode(M_TANDY2);
+		else {
+			if (vga.mode==M_TANDY16) {
+				VGA_SetModeNow(M_TANDY4);
+			} else VGA_SetMode(M_TANDY4);
+		}
+		tandy_update_palette();
+	} else {
+		VGA_SetMode(M_TANDY_TEXT);
+	}
+}
 
 static void PCJr_FindMode(void) {
 	if (vga.tandy.mode_control & 0x2) {
@@ -299,7 +403,6 @@ static void PCJr_FindMode(void) {
 			if (vga.mode==M_TANDY16) VGA_SetModeNow(M_TANDY4);
 			else VGA_SetMode(M_TANDY4);
 		}
-		write_color_select(vga.tandy.color_select);
 	} else {
 		VGA_SetMode(M_TANDY_TEXT);
 	}
@@ -327,10 +430,15 @@ static void write_tandy_reg(Bit8u val) {
 			vga.tandy.mode_control=val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
-			vga.attr.disabled = (val&0x8)? 0: 1;
+			if (val&0x8) vga.attr.disabled &= ~1;
+			else vga.attr.disabled |= 1;
 		} else {
 			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
 		}
+		break;
+	case 0x1:	/* Palette mask */
+		vga.tandy.palette_mask = val;
+		tandy_update_palette();
 		break;
 	case 0x2:	/* Border color */
 		vga.tandy.border_color=val;
@@ -348,45 +456,12 @@ static void write_tandy_reg(Bit8u val) {
 		TandyCheckLineMask();
 		VGA_SetupHandlers();
 		break;
-	case 0x8:	/* Monitor mode seletion */
-		//Bit 1 select mode e, for 640x200x16, some double clocking thing?
-		//Bit 4 select 350 line mode for hercules emulation
-		LOG(LOG_VGAMISC,LOG_NORMAL)("Write %2X to tandy monitor mode",val );
-		break;
-	/* palette colors */
-	case 0x10: case 0x11: case 0x12: case 0x13:
-	case 0x14: case 0x15: case 0x16: case 0x17:
-	case 0x18: case 0x19: case 0x1a: case 0x1b:
-	case 0x1c: case 0x1d: case 0x1e: case 0x1f:
-		VGA_ATTR_SetPalette(vga.tandy.reg_index-0x10,val & 0xf);
-		break;
-	default:		
-		LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
-	}
-}
-
-static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
-	switch (port) {
-	case 0x3d8:
-		vga.tandy.mode_control=(Bit8u)val;
-		vga.attr.disabled = (val&0x8)? 0: 1; 
-		if (vga.tandy.mode_control & 0x2) {
-			if (vga.tandy.mode_control & 0x10) {
-				if (!(val & 0x4) && machine==MCH_CGA) {
-					VGA_SetMode(M_CGA16);		//Video burst 16 160x200 color mode
-				} else {
-					VGA_SetMode(M_TANDY2);
-				}
-			} else VGA_SetMode(M_TANDY4);
-			write_color_select(vga.tandy.color_select);
-		} else {
-			VGA_SetMode(M_TANDY_TEXT);
-		}
-		VGA_SetBlinking(val & 0x20);
-		break;
-	case 0x3d9:
-		write_color_select((Bit8u)val);
-		break;
+	default:
+		if ((vga.tandy.reg_index & 0xf0) == 0x10) { // color palette
+			vga.attr.palette[vga.tandy.reg_index-0x10] = val&0xf;
+			tandy_update_palette();
+		} else
+			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
 	}
 }
 
@@ -394,40 +469,32 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
 		vga.tandy.mode_control=(Bit8u)val;
+		if (val&0x8) vga.attr.disabled &= ~1;
+		else vga.attr.disabled |= 1;
 		TandyCheckLineMask();
 		VGA_SetBlinking(val & 0x20);
 		TANDY_FindMode();
 		break;
 	case 0x3d9:
-		write_color_select((Bit8u)val);
+		vga.tandy.color_select=val;
+		if (vga.mode==M_TANDY2) vga.attr.palette[0xf] = vga.tandy.color_select&0xf;
+		else vga.attr.palette[0] = vga.tandy.color_select&0xf; // Pirates!
+		tandy_update_palette();
 		break;
 	case 0x3da:
 		vga.tandy.reg_index=(Bit8u)val;
-		break;
-	case 0x3db:	// Clear lightpen latch
-		vga.other.lightpen_triggered = false;
-		break;
-	case 0x3dc:	// Preset lightpen latch
-		if (!vga.other.lightpen_triggered) {
-			vga.other.lightpen_triggered = true; // TODO: this shows at port 3ba/3da bit 1
-			
-			double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
-			double timeInLine = fmod(timeInFrame,vga.draw.delay.htotal);
-			Bitu current_scanline = (Bitu)(timeInFrame / vga.draw.delay.htotal);
-			
-			vga.other.lightpen = (Bit16u)((vga.draw.address_add/2) * (current_scanline/2));
-			vga.other.lightpen += (Bit16u)((timeInLine / vga.draw.delay.hdend) *
-				((float)(vga.draw.address_add/2)));
-		}
+		//if (val&0x10) vga.attr.disabled |= 2;
+		//else vga.attr.disabled &= ~2;
 		break;
 //	case 0x3dd:	//Extended ram page address register:
-		break;
+//		break;
 	case 0x3de:
 		write_tandy_reg((Bit8u)val);
 		break;
 	case 0x3df:
 		vga.tandy.line_mask = (Bit8u)(val >> 6);
 		vga.tandy.draw_bank = val & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
+		if(vga.tandy.line_mask==3) vga.tandy.draw_bank &= ~1; // LSB unused in 32k modes
 		vga.tandy.mem_bank = (val >> 3) & ((vga.tandy.line_mask&2) ? 0x6 : 0x7);
 		TandyCheckLineMask();
 		VGA_SetupHandlers();
@@ -437,12 +504,14 @@ static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 
 static void write_pcjr(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
-	case 0x3d9:
-		write_color_select((Bit8u)val);
-		break;
 	case 0x3da:
 		if (vga.tandy.pcjr_flipflop) write_tandy_reg((Bit8u)val);
-		else vga.tandy.reg_index=(Bit8u)val;
+		else {
+			vga.tandy.reg_index=(Bit8u)val;
+			if (vga.tandy.reg_index & 0x10)
+				vga.attr.disabled |= 2;
+			else vga.attr.disabled &= ~2;
+		}
 		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
 		break;
 	case 0x3df:
@@ -577,6 +646,10 @@ void VGA_SetupOther(void) {
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_08[i*8],8);
 		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
 	}
+	if (machine==MCH_CGA || IS_TANDY_ARCH || machine==MCH_HERC) {
+		IO_RegisterWriteHandler(0x3db,write_lightpen,IO_MB);
+		IO_RegisterWriteHandler(0x3dc,write_lightpen,IO_MB);
+	}
 	if (machine==MCH_HERC) {
 		extern Bit8u int10_font_14[256 * 14];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_14[i*14],14);
@@ -586,8 +659,6 @@ void VGA_SetupOther(void) {
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
-		IO_RegisterWriteHandler(0x3db,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3dc,write_tandy,IO_MB);
 		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
 		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 	}
@@ -595,14 +666,13 @@ void VGA_SetupOther(void) {
 		write_tandy( 0x3df, 0x0, 0 );
 		IO_RegisterWriteHandler(0x3d8,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_tandy,IO_MB);
+		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3de,write_tandy,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_tandy,IO_MB);
-		IO_RegisterWriteHandler(0x3da,write_tandy,IO_MB);
 	}
 	if (machine==MCH_PCJR) {
 		//write_pcjr will setup base address
 		write_pcjr( 0x3df, 0x7 | (0x7 << 3), 0 );
-		IO_RegisterWriteHandler(0x3d9,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3da,write_pcjr,IO_MB);
 		IO_RegisterWriteHandler(0x3df,write_pcjr,IO_MB);
 	}
