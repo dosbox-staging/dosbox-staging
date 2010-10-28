@@ -122,6 +122,19 @@ void Cross::CreateDir(std::string const& in) {
 #endif
 }
 
+bool Cross::IsPathAbsolute(std::string const& in) {
+	// Absolute paths
+#if defined (WIN32) || defined(OS2)
+	// drive letter
+	if (in.size() > 2 && in[1] == ':' ) return true;
+	// UNC path
+	else if (in.size() > 2 && in[0]=='\\' && in[1]=='\\') return true;
+#else
+	if (in.size() > 1 && in[0] == '/' ) return true;
+#endif
+	return false;
+}
+
 #if defined (WIN32)
 
 dir_information* open_directory(const char* dirname) {

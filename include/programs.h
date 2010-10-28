@@ -52,6 +52,8 @@ public:
 	bool FindStringBegin(char const * const begin,std::string & value, bool remove=false);
 	bool FindStringRemain(char const * const name,std::string & value);
 	bool GetStringRemain(std::string & value);
+	int GetParameterFromList(const char* const params[], std::vector<std::string> & output);
+	void FillVector(std::vector<std::string> & vector);
 	unsigned int GetCount(void);
 	void Shift(unsigned int amount=1);
 	Bit16u Get_arglength();

@@ -124,13 +124,14 @@ const char * MSG_Get(char const * msg) {
 }
 
 
-void MSG_Write(const char * location) {
+bool MSG_Write(const char * location) {
 	FILE* out=fopen(location,"w+t");
-	if(out==NULL) return;//maybe an error?
+	if(out==NULL) return false;//maybe an error?
 	for(itmb tel=Lang.begin();tel!=Lang.end();tel++){
 		fprintf(out,":%s\n%s\n.\n",(*tel).name.c_str(),(*tel).val.c_str());
 	}
 	fclose(out);
+	return true;
 }
 
 void MSG_Init(Section_prop * section) {

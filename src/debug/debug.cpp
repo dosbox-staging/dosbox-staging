@@ -2113,7 +2113,7 @@ void DEBUG_SetupConsole(void) {
 	DBGUI_StartUp();
 }
 
-static void DEBUG_ShutDown(Section * /*sec*/) {
+void DEBUG_ShutDown(Section * /*sec*/) {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
 	curs_set(old_cursor_state);

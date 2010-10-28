@@ -340,7 +340,7 @@ void DOSBOX_Init(void) {
 
 	Pstring = secprop->Add_string("machine",Property::Changeable::OnlyAtStart,"svga_s3");
 	Pstring->Set_values(machines);
-	Pstring->Set_help("The type of machine tries to emulate.");
+	Pstring->Set_help("The type of machine DOSBox tries to emulate.");
 
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
@@ -376,8 +376,8 @@ void DOSBOX_Init(void) {
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
 	Pmulti->SetValue("normal2x");
-	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
-	                 "  If 'forced' is appended, then the scaler will be used even if the result might not be desired.");
+	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,\n"
+	                 "then the scaler will be used even if the result might not be desired.");
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = { 
@@ -403,7 +403,8 @@ void DOSBOX_Init(void) {
 		"normal", "simple",0 };
 	Pstring = secprop->Add_string("core",Property::Changeable::WhenIdle,"auto");
 	Pstring->Set_values(cores);
-	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and appropriate.");
+	Pstring->Set_help("CPU Core used in emulation. auto will switch to dynamic if available and\n"
+		"appropriate.");
 
 	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", 0};
 	Pstring = secprop->Add_string("cputype",Property::Changeable::Always,"auto");
@@ -418,9 +419,10 @@ void DOSBOX_Init(void) {
 		"Cycles can be set in 3 ways:\n"
 		"  'auto'          tries to guess what a game needs.\n"
 		"                  It usually works, but can fail for certain games.\n"
-		"  'fixed #number' will set a fixed amount of cycles. This is what you usually need if 'auto' fails.\n"
-		"                  (Example: fixed 4000).\n"
-		"  'max'           will allocate as much cycles as your computer is able to handle.\n");
+		"  'fixed #number' will set a fixed amount of cycles. This is what you usually\n"
+		"                  need if 'auto' fails (Example: fixed 4000).\n"
+		"  'max'           will allocate as much cycles as your computer is able to\n"
+		"                  handle.");
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
 	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
@@ -431,7 +433,7 @@ void DOSBOX_Init(void) {
 	
 	Pint = secprop->Add_int("cycleup",Property::Changeable::Always,10);
 	Pint->SetMinMax(1,1000000);
-	Pint->Set_help("Amount of cycles to decrease/increase with keycombo.(CTRL-F11/CTRL-F12)");
+	Pint->Set_help("Amount of cycles to decrease/increase with keycombos.(CTRL-F11/CTRL-F12)");
 
 	Pint = secprop->Add_int("cycledown",Property::Changeable::Always,20);
 	Pint->SetMinMax(1,1000000);

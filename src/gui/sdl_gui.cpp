@@ -40,7 +40,7 @@
 
 extern Bit8u int10_font_14[256 * 14];
 extern Program * first_shell;
-extern void MSG_Write(const char *);
+extern bool MSG_Write(const char *);
 extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, bool paused);
 
 static int cursor, saved_bpp;

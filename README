@@ -622,7 +622,19 @@ VER set major_version [minor_version]
 
 
 CONFIG -writeconf filelocation
+CONFIG -writeconf
+CONFIG -wcp filelocation
+CONFIG -wcd
 CONFIG -writelang filelocation
+CONFIG -axadd
+CONFIG -axclear
+CONFIG -axtype
+CONFIG -r [parameters]
+CONFIG -l
+CONFIG -help
+CONFIG -help sections
+CONFIG -help section
+CONFIG -help section property
 CONFIG -securemode
 CONFIG -set "section property=value"
 CONFIG -get "section property"
@@ -633,20 +645,74 @@ CONFIG -get "section property"
   be found in Section 13: "The configuration (options) file".
 
   -writeconf filelocation
-     Write the current configuration settings to a file in a specified location.
-    "filelocation" is located on the local drive, not a mounted drive in DOSBox.
+     (or -wc filelocation)
+     Write the current configuration settings to a file in a specified location
+     relative to the DOSBox config directory. Relative and absolute paths are 
+     possible. "filelocation" is located on the local drive, not a mounted 
+     drive in DOSBox.
+     
      The configuration file controls various settings of DOSBox:
      the amount of emulated memory, the emulated sound cards and many more
      things. It allows access to AUTOEXEC.BAT as well.
      See Section 13: "The configuration (options) file" for more information.
 
+  -writeconf
+     (or -wc)
+     Write the configuration to the primary loaded config file.
+
+  -wcp filelocation
+     Write the current configuration settings to the specified file in or 
+     relative to the DOSBox program start directory. Realtive and absolute 
+     paths are possible. This is located on a drive on the host, not a mounted
+     drive in DOSBox. It is useful if you keep DOSBox on a removable media.
+     If file is omitted, the configuration will be written to dosbox.conf.
+     
+  -wcd
+     Write the current configuration to the default config file.
+        
+     
   -writelang filelocation
+     (or -wl filelocation)
      Write the current language settings to a file in a specified location.
      "filelocation" is located on the local drive, not a mounted drive
      in DOSBox. The language file controls all visible output of the internal
      commands and the internal DOS.
      See Section 14: "The Language File" for more information.
 
+  -axadd "line1" "line2" ...
+     Adds a command line to the autoexec section.
+
+  -axclear
+     Clears the autoexec section.
+     
+  -axtype
+     Prints the content of the autoexec section.
+
+  -r [parameters]
+     Restart DOSBox, either with the parameters that were used to start the
+     current instance or any that are appended.
+
+  -l 
+     lists DOSBox parameters:
+     - the configuration directory
+     - the config files that were used when starting this session
+     - the command line parameters DOSBox was started with
+
+  -h, -help, -?
+     Displays an overvie of the config commands.
+
+  -h, -help, -? sections
+     Displays the list of sections in the config file.
+  
+  -h, -help, -? section
+     Displays the list of properties contained in the specified section.
+     
+  -h, -help, -? section property
+     Shows information about the specified property in the specified section:
+     - purpose of the property
+     - possible values, current value, default value
+     - wether it can definitely not be changed at runtime
+       
   -securemode
      Switches DOSBox to a more secure mode. In this mode the internal
      commands MOUNT, IMGMOUNT and BOOT won't work. It's not possible either
@@ -655,7 +721,6 @@ CONFIG -get "section property"
 
   -set "section property=value"
      CONFIG will attempt to set the property to new value.
-     Currently CONFIG can not report whether the command succeeded or not.
 
   -get "section property"
      The current value of the property is reported and stored in the
@@ -675,7 +740,22 @@ CONFIG -get "section property"
         config -set "dos ems=false"
     4. To check which cpu core is being used.
         config -get "cpu core"
-
+    5. To view the list of possible cpu cores:
+        config -help cpu core
+    6. To change the machine type and restart:
+        config -set "machine cga"
+        config -wc -r
+    7. To configure the autoexec section to auto-mount a directory at start:
+        config -axadd "mount c c:\dosgames" "c:"
+        config -wc
+    8. To create a specific config file in the config directory:
+        config -set "dos ems=false"
+        config -set "cpu cycles=10000"
+        config -set "core dynamic"
+        config -axadd "mount c c:\dosgames" "c:" "cd my_game" "my_game"
+        config -wc my_config.conf
+    9. To restart DOSBox from a specific config file in the config directory:
+        config -r -conf my_config.conf
 
 LOADFIX [-size] [program] [program-parameters]
 LOADFIX -f
@@ -985,6 +1065,7 @@ CTRL-F10      Capture/Release the mouse.
 CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
 ALT-F12       Unlock speed (turbo button/fast forward)**.
+CTRL-ALT-HOME Restart DOSBox.
 F11, ALT-F11  (machine=cga) change tint in NTSC output modes***
 F11           (machine=hercules) cycle through amber, green, white colouring***
 
