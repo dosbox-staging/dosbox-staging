@@ -459,10 +459,10 @@ void CONFIG::Run(void) {
 						std::string propvalues;
 						std::vector<Value> pv = p->GetValues();
 						
-						if (p->Get_type()==Value::Etype::V_BOOL) {
+						if (p->Get_type()==Value::V_BOOL) {
 							// possible values for boolean are true, false
 							propvalues += "true, false";
-						} else if (p->Get_type()==Value::Etype::V_INT) {
+						} else if (p->Get_type()==Value::V_INT) {
 							// print min, max for integer values if used
 							Prop_int* pint = dynamic_cast <Prop_int*>(p);
 							if (pint==NULL) E_Exit("Int property dynamic cast failed.");

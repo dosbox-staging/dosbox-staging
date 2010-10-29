@@ -995,7 +995,7 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	cmd_it it = cmds.begin();
 	while(it!=cmds.end()) {
 		bool found = false;
-		for(Bitu i = 0; params[i]!=""; i++) {
+		for(Bitu i = 0; *params[i]!=0; i++) {
 			if (!strcasecmp((*it).c_str(),params[i])) {
 				// found a parameter
 				found = true;
