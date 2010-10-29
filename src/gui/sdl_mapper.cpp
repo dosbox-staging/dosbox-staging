@@ -1584,8 +1584,8 @@ public:
 		case MK_printscreen:
 			key=SDLK_PRINT;
 			break;
-		case MK_home:
-			key=SDLK_HOME;
+		case MK_home: 
+			key=SDLK_HOME; 
 			break;
 		}
 		sprintf(buf,"%s \"key %d%s%s%s\"",

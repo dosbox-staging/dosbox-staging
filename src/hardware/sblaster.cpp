@@ -1345,7 +1345,7 @@ static Bit8u CTMIXER_Read(void) {
 		return ret;
 	case 0x82:		/* IRQ Status */
 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
-				(sb.irq.pending_16bit ? 0x2 : 0) |
+				(sb.irq.pending_16bit ? 0x2 : 0) | 
 				((sb.type == SBT_16) ? 0x20 : 0);
 	default:
 		if (	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
