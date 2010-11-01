@@ -295,6 +295,7 @@ void CONFIG::Run(void) {
 	
 	bool first = true;
 	std::vector<std::string> pvars;
+	// Loop through the passed parameters
 	while(presult != P_NOPARAMS) {
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
 		switch(presult) {
@@ -375,6 +376,10 @@ void CONFIG::Run(void) {
 
 		case P_NOPARAMS:
 			if (!first) break;
+
+		case P_NOMATCH:
+			WriteOut(MSG_Get("PROGRAM_CONFIG_USAGE"));
+			return;
 
 		case P_HELP: case P_HELP2: case P_HELP3: {
 			switch(pvars.size()) {
@@ -524,6 +529,7 @@ void CONFIG::Run(void) {
 		case P_GETPROP: {
 			// "section property"
 			// "property"
+			// "section"
 			// "section" "property"
 			if (pvars.size()==0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
@@ -537,14 +543,39 @@ void CONFIG::Run(void) {
 			}
 			switch(pvars.size()) {
 			case 1: {
-				// property only
-				Section* sec = control->GetSectionFromProperty(pvars[0].c_str());
-				if (!sec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
-					return;
+				// property/section only
+				// is it a section?
+				Section* sec = control->GetSection(pvars[0].c_str());
+				if (sec) {
+					// list properties in section
+					Bitu i = 0;
+					Section_prop* psec = dynamic_cast <Section_prop*>(sec);
+					if (psec==NULL) {
+						// autoexec section
+						Section_line* pline = dynamic_cast <Section_line*>(sec);
+						if (pline==NULL) E_Exit("Section dynamic cast failed.");
+
+						WriteOut("%s",pline->data.c_str());
+						break;
+					}
+					while(true) {
+						// list the properties
+						Property* p = psec->Get_prop(i++);
+						if (p==NULL) break;
+						WriteOut("%s=%s\n", p->propname.c_str(),
+							p->GetValue().ToString().c_str());
+					}
+				} else {
+					// no: maybe it's a property?
+					sec = control->GetSectionFromProperty(pvars[0].c_str());
+					if (!sec) {
+						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"));
+						return;
+					}
+					// it's a property name
+					std::string val = sec->GetPropValue(pvars[0].c_str());
+					WriteOut("%s",val.c_str());
 				}
-				std::string val = sec->GetPropValue(pvars[0].c_str());
-				WriteOut("%s",val.c_str());
 				break;
 			}
 			case 2: {
@@ -556,16 +587,20 @@ void CONFIG::Run(void) {
 				}
 				std::string val = sec->GetPropValue(pvars[1].c_str());
 				if (val == NO_SUCH_PROPERTY) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),pvars[1].c_str(),pvars[0].c_str());   
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+						pvars[1].c_str(),pvars[0].c_str());   
 					return;
 				}
 				WriteOut("%s",val.c_str());
 				break;
 			}
+			default:
+				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
+				return;
 			}
 			return;
 		}
-		case P_SETPROP:	case P_NOMATCH: {
+		case P_SETPROP:	{
 			// Code for the configuration changes
 			// Official format: config -set "section property=value"
 			// Accepted: with or without -set, 
@@ -654,7 +689,18 @@ void CONFIG::Run(void) {
 					}
 				}
 			}
-			// Input has been parsed (pvar[0]=section, [1]=property, [2]=value
+			if(pvars.size() < 3) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				return;
+			}
+			// check if the property actually exists in the section
+			Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+			if (!sec2) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+					pvars[1].c_str(),pvars[0].c_str());
+				return;
+			}
+			// Input has been parsed (pvar[0]=section, [1]=property, [2]=value)
 			// now execute
 			Section* tsec = control->GetSection(pvars[0]);
 			std::string value;
@@ -751,6 +797,7 @@ void PROGRAMS_Init(Section* /*sec*/) {
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR","\"%s\" is not a valid value for property %s.\n");
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR","No such section or property.\n");
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY","There is no property %s in section %s.\n");
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX","Correct syntax: config -set \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX","Correct syntax: config -get \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP","\nDOSBox was started with the following command line parameters:\n%s");
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM","Missing parameter.");
