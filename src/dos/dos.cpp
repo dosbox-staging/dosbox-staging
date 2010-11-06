@@ -362,6 +362,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x26:		/* Create new PSP */
 		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp()).GetSize());
+		reg_al=0xf0;	/* al destroyed */		
 		break;
 	case 0x2a:		/* Get System Date */
 		{
@@ -523,6 +524,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x39:		/* MKDIR Create directory */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_MakeDir(name1)) {
+			reg_ax=0x05;	/* ax destroyed */
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -532,6 +534,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3a:		/* RMDIR Remove directory */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if  (DOS_RemoveDir(name1)) {
+			reg_ax=0x05;	/* ax destroyed */
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -542,6 +545,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3b:		/* CHDIR Set current directory */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if  (DOS_ChangeDir(name1)) {
+			reg_ax=0x00;	/* ax destroyed */
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -568,6 +572,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x3e:		/* CLOSE Close file */
 		if (DOS_CloseFile(reg_bx)) {
+//			reg_al=0x01;	/* al destroyed. Refcount */
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -789,6 +794,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x55:					/* Create Child PSP*/
 		DOS_ChildPSP(reg_dx,reg_si);
 		dos.psp(reg_dx);
+		reg_al=0xf0;	/* al destroyed */
 		break;
 	case 0x56:					/* RENAME Rename file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
