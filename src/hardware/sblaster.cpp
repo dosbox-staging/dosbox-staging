@@ -1090,11 +1090,16 @@ static void CTMIXER_UpdateVolumes(void) {
 	chan=MIXER_FindChannel("FM");
 	if (chan) chan->SetVolume(float(sb.mixer.master[0])/31.0f*CALCVOL(sb.mixer.fm[0]),
 							  float(sb.mixer.master[1])/31.0f*CALCVOL(sb.mixer.fm[1]));
+	chan=MIXER_FindChannel("CDAUDIO");
+	if (chan) chan->SetVolume(float(sb.mixer.master[0])/31.0f*CALCVOL(sb.mixer.cda[0]),
+							  float(sb.mixer.master[1])/31.0f*CALCVOL(sb.mixer.cda[1]));
 }
 
 static void CTMIXER_Reset(void) {
 	sb.mixer.fm[0]=
 	sb.mixer.fm[1]=
+	sb.mixer.cda[0]=
+	sb.mixer.cda[1]=
 	sb.mixer.dac[0]=
 	sb.mixer.dac[1]=31;
 	sb.mixer.master[0]=
@@ -1211,10 +1216,16 @@ static void CTMIXER_Write(Bit8u val) {
 		}
 		break;
 	case 0x36:		/* CD Volume Left (SB16) */
-		if (sb.type==SBT_16) sb.mixer.cda[0]=val>>3;
+		if (sb.type==SBT_16) {
+			sb.mixer.cda[0]=val>>3;
+			CTMIXER_UpdateVolumes();
+		}
 		break;
 	case 0x37:		/* CD Volume Right (SB16) */
-		if (sb.type==SBT_16) sb.mixer.cda[1]=val>>3;
+		if (sb.type==SBT_16) {
+			sb.mixer.cda[1]=val>>3;
+			CTMIXER_UpdateVolumes();
+		}
 		break;
 	case 0x38:		/* Line-in Volume Left (SB16) */
 		if (sb.type==SBT_16) sb.mixer.lin[0]=val>>3;
