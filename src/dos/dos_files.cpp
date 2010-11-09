@@ -206,11 +206,15 @@ bool DOS_ChangeDir(char const * const dir) {
 	const char * testdir=dir;
 	if (strlen(testdir) && testdir[1]==':') testdir+=2;
 	size_t len=strlen(testdir);
-	if (!len || (len>1 && testdir[len-1]=='\\')) {
+	if (!len) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
+	if (strlen(fulldir) && testdir[len-1]=='\\') {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
 	
 	if (Drives[drive]->TestDir(fulldir)) {
 		strcpy(Drives[drive]->curdir,fulldir);
