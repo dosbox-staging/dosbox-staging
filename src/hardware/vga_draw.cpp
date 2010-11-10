@@ -1092,7 +1092,6 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		vtotal += 2;
 		hdend += 1;
 		vdend += 1;
-		vbstart += 1;
 
 		hbend = hbstart + ((hbend - hbstart) & 0x3F);
 		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
@@ -1107,10 +1106,16 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		if ( !vrend) vrend = vrstart + 0xf + 1;
 		else vrend = vrstart + vrend;
 
-		vbend = (vbend - vbstart) & 0x7f;
-		if ( !vbend) vbend = vbstart + 0x7f + 1;
-		else vbend = vbstart + vbend;
-
+		// Special case vbstart==0:
+		// Most graphics cards agree that lines zero to vbend are
+		// blanked. ET4000 doesn't blank at all if vbstart==vbend.
+		// ET3000 blanks lines 1 to vbend (255/6 lines).
+		if (vbstart != 0) {
+			vbstart += 1;
+			vbend = (vbend - vbstart) & 0x7f;
+			if ( !vbend) vbend = vbstart + 0x7f + 1;
+			else vbend = vbstart + vbend;
+		}
 		vbend++;
 			
 		if (svga.get_clock) {
@@ -1219,7 +1224,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 					vdend = vbstart;
 				}
 				LOG(LOG_VGA,LOG_WARN)("Blanking wrap to line %d", vblank_skip);
-			} else if (vbstart==1) {
+			} else if (vbstart<=1) {
 				// blanking is used to cut lines at the start of the screen
 				vblank_skip = vbend;
 				LOG(LOG_VGA,LOG_WARN)("Upper %d lines of the screen blanked", vblank_skip);
