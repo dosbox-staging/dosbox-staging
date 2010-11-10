@@ -108,7 +108,7 @@ bool DOS_Shell::CheckConfig(char* cmd_in,char*line) {
 		if(val != NO_SUCH_PROPERTY) WriteOut("%s\n",val.c_str());
 		return true;
 	}
-	char newcom[1024]; newcom[0] = 0; strcpy(newcom,"z:\\config ");
+	char newcom[1024]; newcom[0] = 0; strcpy(newcom,"z:\\config -set ");
 	strcat(newcom,test->GetName());	strcat(newcom," ");
 	strcat(newcom,cmd_in);strcat(newcom,line);
 	DoCommand(newcom);
