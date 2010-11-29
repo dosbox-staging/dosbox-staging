@@ -302,10 +302,14 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		*/
 		break;
 	case 0x16:	/*  End Vertical Blank Register */
-		crtc(end_vertical_blanking)=val;
-		 /*
+		if (val!=crtc(end_vertical_blanking)) {
+			crtc(end_vertical_blanking)=val;
+			VGA_StartResize();
+		}
+		/*
 			0-6	Vertical blanking stops when the lower 7 bits of the line counter
 				equals this field. Some SVGA chips uses all 8 bits!
+				IBM actually says bits 0-7.
 		*/
 		break;
 	case 0x17:	/* Mode Control Register */
