@@ -394,9 +394,9 @@ bool localDrive::FileExists(const char* name) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
-	FILE* Temp=fopen(newname,"rb");
-	if(Temp==NULL) return false;
-	fclose(Temp);
+	struct stat temp_stat;
+	if(stat(newname,&temp_stat)!=0) return false;
+	if(temp_stat.st_mode & S_IFDIR) return false;
 	return true;
 }
 
