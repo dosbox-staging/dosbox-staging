@@ -777,7 +777,7 @@ void PROGRAMS_Init(Section* /*sec*/) {
 		"-l lists configuration parameters.\n"\
 		"-h, -help, -? sections / sectionname / propertyname\n"\
 		" Without parameters, displays this help screen. Add \"sections\" for a list of\n sections."\
-		" For info about a specific section or property add it's name behind.\n"\
+		" For info about a specific section or property add its name behind.\n"\
 		"-axclear clears the autoexec section.\n"\
 		"-axadd [line] adds a line to the autoexec section.\n"\
 		"-axtype prints the content of the autoexec section.\n"\
