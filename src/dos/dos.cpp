@@ -319,11 +319,17 @@ static Bitu DOS_21Handler(void) {
 		if (!DOS_GetAllocationInfo(reg_dl,&reg_cx,&reg_al,&reg_dx)) reg_al=0xff;
 		break;
 	case 0x21:		/* Read random record from FCB */
-		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,1,true);
+		{
+			Bit16u toread=1;
+			reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,&toread,true);
+		}
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x21 FCB-Random read used, result:al=%d",reg_al);
 		break;
 	case 0x22:		/* Write random record to FCB */
-		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,1,true);
+		{
+			Bit16u towrite=1;
+			reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,&towrite,true);
+		}
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x22 FCB-Random write used, result:al=%d",reg_al);
 		break;
 	case 0x23:		/* Get file size for FCB */
@@ -334,11 +340,11 @@ static Bitu DOS_21Handler(void) {
 		DOS_FCBSetRandomRecord(SegValue(ds),reg_dx);
 		break;
 	case 0x27:		/* Random block read from FCB */
-		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,reg_cx,false);
+		reg_al = DOS_FCBRandomRead(SegValue(ds),reg_dx,&reg_cx,false);
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x27 FCB-Random(block) read used, result:al=%d",reg_al);
 		break;
 	case 0x28:		/* Random Block write to FCB */
-		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,reg_cx,false);
+		reg_al=DOS_FCBRandomWrite(SegValue(ds),reg_dx,&reg_cx,false);
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x28 FCB-Random(block) write used, result:al=%d",reg_al);
 		break;
 	case 0x29:		/* Parse filename into FCB */
@@ -462,7 +468,9 @@ static Bitu DOS_21Handler(void) {
 				reg_dh=0x10;								/* Dos in HMA */
 				break;
 			default:
-				E_Exit("DOS:Illegal 0x33 Call %2X",reg_al);					
+				LOG(LOG_DOSMISC,LOG_ERROR)("Weird 0x33 call %2X",reg_al);
+				reg_al =0xff;
+				break;
 		}
 		break;
 	case 0x34:		/* Get INDos Flag */

@@ -1067,32 +1067,30 @@ Bit8u DOS_FCBIncreaseSize(Bit16u seg,Bit16u offset) {
 	return FCB_SUCCESS;
 }
 
-Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) {
 /* if restore is true :random read else random blok read. 
  * random read updates old block and old record to reflect the random data
  * before the read!!!!!!!!! and the random data is not updated! (user must do this)
  * Random block read updates these fields to reflect the state after the read!
  */
-
-/* BUG: numRec should return the amount of records read! 
- * Not implemented yet as I'm unsure how to count on error states (partial/failed) 
- */
-
 	DOS_FCB fcb(seg,offset);
 	Bit32u random;
 	Bit16u old_block=0;
 	Bit8u old_rec=0;
 	Bit8u error=0;
+	Bit16u count;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	if (restore) fcb.GetRecord(old_block,old_rec);//store this for after the read.
 	// Read records
-	for (int i=0; i<numRec; i++) {
-		error = DOS_FCBRead(seg,offset,(Bit16u)i);
-		if (error!=0x00) break;
+	for (count=0; count<*numRec; count++) {
+		error = DOS_FCBRead(seg,offset,count);
+		if (error!=FCB_SUCCESS) break;
 	}
+	if (error==FCB_READ_PARTIAL) count++;	//partial read counts
+	*numRec=count;
 	Bit16u new_block;Bit8u new_rec;
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
@@ -1101,13 +1099,14 @@ Bit8u DOS_FCBRandomRead(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	return error;
 }
 
-Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
+Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) {
 /* see FCB_RandomRead */
 	DOS_FCB fcb(seg,offset);
 	Bit32u random;
 	Bit16u old_block=0;
 	Bit8u old_rec=0;
 	Bit8u error=0;
+	Bit16u count;
 
 	/* Set the correct record from the random data */
 	fcb.GetRandom(random);
@@ -1115,10 +1114,11 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u numRec,bool restore) {
 	if (restore) fcb.GetRecord(old_block,old_rec);
 	if (numRec>0) {
 		/* Write records */
-		for (int i=0; i<numRec; i++) {
-			error = DOS_FCBWrite(seg,offset,(Bit16u)i);// dos_fcbwrite return 0 false when true...
-			if (error!=0x00) break;
+		for (count=0; count<*numRec; count++) {
+			error = DOS_FCBWrite(seg,offset,count);// dos_fcbwrite return 0 false when true...
+			if (error!=FCB_SUCCESS) break;
 		}
+		*numRec=count;
 	} else {
 		DOS_FCBIncreaseSize(seg,offset);
 	}
