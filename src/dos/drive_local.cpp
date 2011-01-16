@@ -83,9 +83,10 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	const char* type;
 	switch (flags&0xf) {
-	case OPEN_READ:type="rb"; break;
-	case OPEN_WRITE:type="rb+"; break;
-	case OPEN_READWRITE:type="rb+"; break;
+	case OPEN_READ:        type = "rb" ; break;
+	case OPEN_WRITE:       type = "rb+"; break;
+	case OPEN_READWRITE:   type = "rb+"; break;
+	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
 	default:
 		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
 		return false;
