@@ -466,12 +466,29 @@ public:
 	}
 	Bitu readb(PhysPt addr) {
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
-		return vga.draw.font[addr];
+		switch(vga.gfx.read_map_select) {
+		case 0: // character index
+			return vga.mem.linear[CHECKED3(vga.svga.bank_read_full+addr)];
+		case 1: // character attribute
+			return vga.mem.linear[CHECKED3(vga.svga.bank_read_full+addr+1)];
+		case 2: // font map
+			return vga.draw.font[addr];
+		default: // 3=unused, but still RAM that could save values
+			return 0;
+		}
 	}
 	void writeb(PhysPt addr,Bitu val){
 		addr = PAGING_GetPhysicalAddress(addr) & vgapages.mask;
-		if (vga.seq.map_mask & 0x4) {
+		
+		if (GCC_LIKELY(vga.seq.map_mask == 0x4)) {
 			vga.draw.font[addr]=(Bit8u)val;
+		} else {
+			if (vga.seq.map_mask & 0x4) // font map
+				vga.draw.font[addr]=(Bit8u)val;
+			if (vga.seq.map_mask & 0x2) // character attribute
+				vga.mem.linear[CHECKED3(vga.svga.bank_read_full+addr+1)]=(Bit8u)val;
+			if (vga.seq.map_mask & 0x1) // character index
+				vga.mem.linear[CHECKED3(vga.svga.bank_read_full+addr)]=(Bit8u)val;
 		}
 	}
 };
