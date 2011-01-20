@@ -138,11 +138,13 @@ CNullModem::CNullModem(Bitu id, CommandLine* cmd):CSerial (id, cmd) {
 				}
 			}
 		} else {
-#endif
 			LOG_MSG("Serial%d: socket inheritance not supported on this platform.",
 				COMNUMBER);
 			return;
 		}
+#else
+		LOG_MSG("Serial%d: socket inheritance not available.", COMNUMBER);
+#endif
 	}
 	std::string tmpstring;
 	if(cmd->FindStringBegin("server:",tmpstring,false)) {
