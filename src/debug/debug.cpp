@@ -2174,11 +2174,11 @@ CDebugVar* CDebugVar::FindVar(PhysPt pt)
 	return 0;
 };
 
-bool CDebugVar::SaveVars(char* name)
-{
+bool CDebugVar::SaveVars(char* name) {
+	if (varList.size()>65535) return false;
+
 	FILE* f = fopen(name,"wb+");
 	if (!f) return false;
-	if (varList.size()>65535) return false;
 
 	// write number of vars
 	Bit16u num = (Bit16u)varList.size();

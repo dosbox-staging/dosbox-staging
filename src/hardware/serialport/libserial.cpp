@@ -45,6 +45,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
 	int len = strlen(portname);
 	if(len > 240) {
 		SetLastError(ERROR_BUFFER_OVERFLOW);
+		free(cp);
 		return false;
 	}
 	char extended_portname[256] = "\\\\.\\";
