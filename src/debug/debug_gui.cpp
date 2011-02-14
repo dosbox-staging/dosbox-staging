@@ -146,16 +146,17 @@ static void DrawBars(void) {
 		attrset(COLOR_PAIR(PAIR_BLACK_BLUE));
 	}
 	/* Show the Register bar */
-	mvaddstr(dbg.win_reg->_begy-1,0, "---(Register Overview                   )---");
+	mvaddstr(1-1,0, "---(Register Overview                   )---");
 	/* Show the Data Overview bar perhaps with more special stuff in the end */
-	mvaddstr(dbg.win_data->_begy-1,0,"---(Data Overview   Scroll: page up/down)---");
+	mvaddstr(6-1,0,"---(Data Overview   Scroll: page up/down)---");
 	/* Show the Code Overview perhaps with special stuff in bar too */
-	mvaddstr(dbg.win_code->_begy-1,0,"---(Code Overview   Scroll: up/down     )---");
+	mvaddstr(17-1,0,"---(Code Overview   Scroll: up/down     )---");
 	/* Show the Variable Overview bar */
-	mvaddstr(dbg.win_var->_begy-1,0, "---(Variable Overview                   )---");
+	mvaddstr(29-1,0, "---(Variable Overview                   )---");
 	/* Show the Output OverView */
-	mvaddstr(dbg.win_out->_begy-1,0, "---(Output          Scroll: home/end    )---");
+	mvaddstr(34-1,0, "---(Output          Scroll: home/end    )---");
 	attrset(0);
+	//Match values with below. So we don't need to touch the internal window structures
 }
 
 
@@ -164,19 +165,19 @@ static void MakeSubWindows(void) {
 	/* The Std output win should go in bottem */
 	/* Make all the subwindows */
 	int win_main_maxy, win_main_maxx; getmaxyx(dbg.win_main,win_main_maxy,win_main_maxx);
-	int outy=1;
+	int outy=1; //Match values with above
 	/* The Register window  */
 	dbg.win_reg=subwin(dbg.win_main,4,win_main_maxx,outy,0);
-	outy+=5;
+	outy+=5; // 6
 	/* The Data Window */
 	dbg.win_data=subwin(dbg.win_main,10,win_main_maxx,outy,0);
-	outy+=11;
+	outy+=11; // 17
 	/* The Code Window */
 	dbg.win_code=subwin(dbg.win_main,11,win_main_maxx,outy,0);
-	outy+=12;
+	outy+=12; // 29
 	/* The Variable Window */
 	dbg.win_var=subwin(dbg.win_main,4,win_main_maxx,outy,0);
-	outy+=5;
+	outy+=5; // 34
 	/* The Output Window */	
 	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy,win_main_maxx,outy,0);
 //	dbg.input_y=win_main_maxy-1;
