@@ -80,6 +80,8 @@ enum BC_Types {
 // Use 36 for Android (KEYCODE_BUTTON_1..16 are mapped to SDL buttons 20..35)
 #define MAXBUTTON 36
 #define MAXBUTTON_CAP 16
+#define MAXAXIS       10
+#define MAXHAT        2
 
 class CEvent;
 class CHandlerEvent;
@@ -548,19 +550,21 @@ public:
 			return;
 
 		// initialize binding lists and position data
-		pos_axis_lists=new CBindList[4];
-		neg_axis_lists=new CBindList[4];
+		pos_axis_lists = new CBindList[MAXAXIS];
+		neg_axis_lists = new CBindList[MAXAXIS];
 		button_lists=new CBindList[MAXBUTTON];
 		hat_lists=new CBindList[4];
-		Bitu i;
-		for (i=0; i<MAXBUTTON; i++) {
+
+		for (int i = 0; i < MAXBUTTON; i++) {
 			button_autofire[i]=0;
 			old_button_state[i]=0;
 		}
-		for(i=0;i<16;i++) old_hat_state[i]=0;
-		for (i=0; i<4; i++) {
-			old_pos_axis_state[i]=false;
-			old_neg_axis_state[i]=false;
+		for (int i = 0; i < 16; i++)
+			old_hat_state[i] = 0;
+
+		for (int i = 0; i < MAXAXIS; i++) {
+			old_pos_axis_state[i] = false;
+			old_neg_axis_state[i] = false;
 		}
 
 		// initialize emulated joystick state
@@ -577,9 +581,22 @@ public:
 
 		// FIXME: when errors from SDL won't be treated as big numbers,
 		// perhaps we won't need to set those ''max_caps''
+
 		axes = SDL_JoystickNumAxes(sdl_joystick); // TODO returns -1 on error
-		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
+		if (axes > MAXAXIS)
+			axes = MAXAXIS;
+		axes_cap = emulated_axes;
+		if (axes_cap > axes)
+			axes_cap = axes;
+
 		hats = SDL_JoystickNumHats(sdl_joystick); // TODO returns -1 on error
+		if (hats > MAXHAT)
+			hats = MAXHAT;
+		hats_cap = emulated_hats;
+		if (hats_cap > hats)
+			hats_cap=hats;
+
+		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
 		button_wrap = buttons;
 		button_cap = buttons;
 		if (button_wrapping_enabled) {
@@ -588,12 +605,7 @@ public:
 		}
 		if (button_wrap > MAXBUTTON)
 			button_wrap = MAXBUTTON;
-		axes_cap = emulated_axes;
-		if (axes_cap > axes)
-			axes_cap = axes;
-		hats_cap = emulated_hats;
-		if (hats_cap > hats)
-			hats_cap=hats;
+
 		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
@@ -646,7 +658,8 @@ public:
 		if (event->type==SDL_JOYAXISMOTION) {
 			if (event->jaxis.which!=stick) return 0;
 #if defined (REDUCE_JOYSTICK_POLLING)
-			if (event->jaxis.axis>=emulated_axes) return 0;
+			if (event->jaxis.axis >= axes)
+				return nullptr;
 #endif
 			if (abs(event->jaxis.value) < 25000)
 				return 0;
@@ -736,7 +749,7 @@ public:
 				old_button_state[i]=button_pressed[i];
 			}
 		}
-		for (int i = 0; i < axes_cap; i++) {
+		for (int i = 0; i < axes; i++) {
 			Sint16 caxis_pos = SDL_JoystickGetAxis(sdl_joystick, i);
 			/* activate bindings for joystick position */
 			if (caxis_pos>1) {
@@ -767,7 +780,7 @@ public:
 				}
 			}
 		}
-		for (int i = 0; i < hats_cap; i++) {
+		for (int i = 0; i < hats; i++) {
 			Uint8 chat_state = SDL_JoystickGetHat(sdl_joystick, i);
 
 			/* activate binding if hat state has changed */
@@ -794,7 +807,7 @@ public:
 private:
 	CBind * CreateAxisBind(int axis, bool positive)
 	{
-		if (axis < 0 || axis >= emulated_axes)
+		if (axis < 0 || axis >= axes)
 			return nullptr;
 		if (positive)
 			return new CJAxisBind(&pos_axis_lists[axis],
@@ -864,8 +877,8 @@ protected:
 	char configname[10];
 	Bitu button_autofire[MAXBUTTON];
 	bool old_button_state[MAXBUTTON];
-	bool old_pos_axis_state[16];
-	bool old_neg_axis_state[16];
+	bool old_pos_axis_state[MAXAXIS];
+	bool old_neg_axis_state[MAXAXIS];
 	Uint8 old_hat_state[16];
 	bool is_dummy;
 };
