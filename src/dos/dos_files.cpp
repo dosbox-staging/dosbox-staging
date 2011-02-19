@@ -991,6 +991,11 @@ Bit8u DOS_FCBRead(Bit16u seg,Bit16u offset,Bit16u recno) {
 	DOS_FCB fcb(seg,offset);
 	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
+	if (fhandle==0xff && rec_size!=0) {
+		if (!DOS_FCBOpen(seg,offset)) return FCB_READ_NODATA;
+		LOG(LOG_FCB,LOG_WARN)("Reopened closed FCB");
+		fcb.GetSeqData(fhandle,rec_size);
+	}
 	fcb.GetRecord(cur_block,cur_rec);
 	Bit32u pos=((cur_block*128)+cur_rec)*rec_size;
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET)) return FCB_READ_NODATA; 
@@ -1013,6 +1018,11 @@ Bit8u DOS_FCBWrite(Bit16u seg,Bit16u offset,Bit16u recno) {
 	DOS_FCB fcb(seg,offset);
 	Bit8u fhandle,cur_rec;Bit16u cur_block,rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
+	if (fhandle==0xff && rec_size!=0) {
+		if (!DOS_FCBOpen(seg,offset)) return FCB_READ_NODATA;
+		LOG(LOG_FCB,LOG_WARN)("Reopened closed FCB");
+		fcb.GetSeqData(fhandle,rec_size);
+	}
 	fcb.GetRecord(cur_block,cur_rec);
 	Bit32u pos=((cur_block*128)+cur_rec)*rec_size;
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET)) return FCB_ERR_WRITE; 
