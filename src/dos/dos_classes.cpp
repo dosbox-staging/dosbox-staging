@@ -492,6 +492,10 @@ void DOS_FCB::SetAttr(Bit8u attr) {
 	if(extended) mem_writeb(pt - 1,attr);
 }
 
+void DOS_FCB::SetResultAttr(Bit8u attr) {
+	mem_writeb(pt + 12,attr);
+}
+
 void DOS_SDA::Init() {
 	/* Clear */
 	for(Bitu i=0;i<sizeof(sSDA);i++) mem_writeb(pt+i,0x00);

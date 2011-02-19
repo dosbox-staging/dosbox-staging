@@ -891,7 +891,7 @@ savefcb:
 
 static void DTAExtendName(char * const name,char * const filename,char * const ext) {
 	char * find=strchr(name,'.');
-	if (find) {
+	if (find && find!=name) {
 		strcpy(ext,find+1);
 		*find=0;
 	} else ext[0]=0;
@@ -909,12 +909,15 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	char file_name[9];char ext[4];
 	find_dta.GetResult(name,size,date,time,attr);
 	drive=find_fcb.GetDrive()+1;
+	Bit8u find_attr = DOS_ATTR_ARCHIVE;
+	find_fcb.GetAttr(find_attr); /* Gets search attributes if extended */
 	/* Create a correct file and extention */
 	DTAExtendName(name,file_name,ext);	
 	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));//TODO
 	fcb.Create(find_fcb.Extended());
 	fcb.SetName(drive,file_name,ext);
-	fcb.SetAttr(attr);      /* Only adds attribute if fcb is extended */
+	fcb.SetAttr(find_attr);      /* Only adds attribute if fcb is extended */
+	fcb.SetResultAttr(attr);
 	fcb.SetSizeDateTime(size,date,time);
 }
 

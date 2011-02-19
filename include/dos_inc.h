@@ -506,6 +506,7 @@ public:
 	bool Extended(void);
 	void GetAttr(Bit8u & attr);
 	void SetAttr(Bit8u attr);
+	void SetResultAttr(Bit8u attr);
 	bool Valid(void);
 private:
 	bool extended;
