@@ -86,6 +86,8 @@ static Bitu DOS_21Handler(void) {
 
 	char name1[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
 	char name2[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
+	
+	static Bitu time_start = 0; //For emulating temporary time changes.
 
 	switch (reg_ah) {
 	case 0x00:		/* Terminate Program */
@@ -394,7 +396,7 @@ static Bitu DOS_21Handler(void) {
 //TODO Get time through bios calls date is fixed
 		{
 /*	Calculate how many miliseconds have passed */
-			Bitu ticks=5*mem_readd(BIOS_TIMER);
+			Bitu ticks=5*(mem_readd(BIOS_TIMER) - time_start);
 			ticks = ((ticks / 59659u) << 16) + ((ticks % 59659u) << 16) / 59659u;
 			Bitu seconds=(ticks/100);
 			reg_ch=(Bit8u)(seconds/3600);
@@ -411,7 +413,11 @@ static Bitu DOS_21Handler(void) {
 		//Check input parameters nonetheless
 		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
 			reg_al = 0xff; 
-		else reg_al = 0;
+		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
+			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
+			else time_start = 0;
+			reg_al = 0;
+		}
 		break;
 	case 0x2e:		/* Set Verify flag */
 		dos.verify=(reg_al==1);
