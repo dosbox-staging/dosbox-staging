@@ -879,7 +879,7 @@
 		{	
 			Bitu port=Fetchb();
 			if (CPU_IO_Exception(port,2)) RUNEXCEPTION();
-			reg_al=IO_ReadW(port);
+			reg_ax=IO_ReadW(port);
 			break;
 		}
 	CASE_B(0xe6)												/* OUT Ib,AL */
