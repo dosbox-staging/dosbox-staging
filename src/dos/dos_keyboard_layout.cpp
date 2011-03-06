@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2010  The DOSBox Team
+ *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -443,7 +443,14 @@ Bitu keyboard_layout::read_keyboard_file(const char* keyboard_file_name, Bit32s 
 					}
 				}
 
-				current_layout[scan*layout_pages+layout_pages-1]=read_buf[read_buf_pos-2];	// flags
+				// calculate max length of entries, taking into account old number of entries
+				Bit8u new_flags=current_layout[scan*layout_pages+layout_pages-1]&0x7;
+				if ((read_buf[read_buf_pos-2]&0x7) > new_flags) new_flags = read_buf[read_buf_pos-2]&0x7;
+
+				// merge flag bits in as well
+				new_flags |= (read_buf[read_buf_pos-2] | current_layout[scan*layout_pages+layout_pages-1]) & 0xf0;
+
+				current_layout[scan*layout_pages+layout_pages-1]=new_flags;
 				if (read_buf[read_buf_pos-2]&0x80) scan_length*=2;		// granularity flag (S)
 			}
 			i+=scan_length;		// advance pointer
