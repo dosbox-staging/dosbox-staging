@@ -2048,6 +2048,7 @@ static Bits HLT_Decode(void) {
 	if (reg_eip!=cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
 		cpudecoder=cpu.hlt.old_decoder;
 	} else {
+		CPU_IODelayRemoved += CPU_Cycles;
 		CPU_Cycles=0;
 	}
 	return 0;
