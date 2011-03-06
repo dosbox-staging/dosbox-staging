@@ -494,13 +494,13 @@ int isoDrive :: readDirEntry(isoDirEntry *de, Bit8u *data) {
 			if (de->ident[tmp - 1] == '.') de->ident[tmp - 1] = 0;
 		}
 	}
-	const char* dotpos = strchr((char*)de->ident, '.');
+	char* dotpos = strchr((char*)de->ident, '.');
 	if (dotpos!=NULL) {
+		if (strlen(dotpos)>4) dotpos[4]=0;
 		if (dotpos-(char*)de->ident>8) {
 			strcpy((char*)(&de->ident[8]),dotpos);
 		}
-	}
-	if (strlen((char*)de->ident)>12) de->ident[12]=0;
+	} else if (strlen((char*)de->ident)>8) de->ident[8]=0;
 	return de->length;
 }
 
