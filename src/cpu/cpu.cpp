@@ -2056,6 +2056,7 @@ static Bits HLT_Decode(void) {
 
 void CPU_HLT(Bitu oldeip) {
 	reg_eip=oldeip;
+	CPU_IODelayRemoved += CPU_Cycles;
 	CPU_Cycles=0;
 	cpu.hlt.cs=SegValue(cs);
 	cpu.hlt.eip=reg_eip;
