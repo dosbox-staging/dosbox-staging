@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2010  The DOSBox Team
+ *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -126,9 +126,9 @@ public:
 				str_size="512,1,2880,2880";/* All space free */
 				mediaid=0xF0;		/* Floppy 1.44 media */
 			} else if (type=="dir") {
-				// 512*127*16383==~1GB total size
-				// 512*127*4031==~250MB total free size
-				str_size="512,127,16383,4031";
+				// 512*32*65535==~1GB total size
+				// 512*32*16000==~250MB total free size
+				str_size="512,32,65535,16000";
 				mediaid=0xF8;		/* Hard Disk */
 			} else if (type=="cdrom") {
 				str_size="2048,1,65535,0";
@@ -141,11 +141,13 @@ public:
 			std::string mb_size;
 			if(cmd->FindString("-freesize",mb_size,true)) {
 				char teststr[1024];
-				Bit16u sizemb = static_cast<Bit16u>(atoi(mb_size.c_str()));
+				Bit16u freesize = static_cast<Bit16u>(atoi(mb_size.c_str()));
 				if (type=="floppy") {
-					sprintf(teststr,"512,1,2880,%d",sizemb*1024/(512*1));
+					// freesize in kb
+					sprintf(teststr,"512,1,2880,%d",freesize*1024/(512*1));
 				} else {
-					sprintf(teststr,"512,127,16513,%d",sizemb*1024*1024/(512*127));
+					// freesize in mb
+					sprintf(teststr,"512,32,65535,%d",freesize*1024*1024/(512*32));
 				}
 				str_size=teststr;
 			}
@@ -1026,7 +1028,7 @@ public:
 			if (type=="floppy") {
 				mediaid=0xF0;		
 			} else if (type=="iso") {
-				str_size="650,127,16513,1700";
+				str_size=="2048,1,60000,0";	// ignored, see drive_iso.cpp (AllocationInfo)
 				mediaid=0xF8;		
 				fstype = "iso";
 			} 

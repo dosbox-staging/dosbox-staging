@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2010  The DOSBox Team
+ *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -248,12 +248,10 @@ bool Virtual_Drive::Rename(char * oldname,char * newname) {
 }
 
 bool Virtual_Drive::AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters) {
-	/* Always report 100 mb free should be enough */
-	/* Total size is always 1 gb */
 	*_bytes_sector=512;
-	*_sectors_cluster=127;
-	*_total_clusters=16513;
-	*_free_clusters=00;
+	*_sectors_cluster=32;
+	*_total_clusters=65535;	// total size is always 1 gb
+	*_free_clusters=0;		// nothing free here
 	return true;
 }
 
