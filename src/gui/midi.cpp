@@ -19,6 +19,8 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <timer.h>
+#include "SDL.h"
 
 #include "dosbox.h"
 #include "cross.h"
@@ -107,12 +109,19 @@ static struct {
 	struct {
 		Bit8u buf[SYSEX_SIZE];
 		Bitu used;
+		Bitu delay;
+		Bit32u start;
 	} sysex;
 	bool available;
 	MidiHandler * handler;
 } midi;
 
 void MIDI_RawOutByte(Bit8u data) {
+	if (midi.sysex.start) {
+		Bit32u passed_ticks = GetTicks() - midi.sysex.start;
+		if (passed_ticks < midi.sysex.delay) SDL_Delay(midi.sysex.delay - passed_ticks);
+	}
+
 	/* Test for a realtime MIDI message */
 	if (data>=0xf8) {
 		midi.rt_buf[0]=data;
@@ -122,11 +131,28 @@ void MIDI_RawOutByte(Bit8u data) {
 	/* Test for a active sysex tranfer */
 	if (midi.status==0xf0) {
 		if (!(data&0x80)) { 
-			if (midi.sysex.used<(SYSEX_SIZE-1)) midi.sysex.buf[midi.sysex.used++]=data;
+			if (midi.sysex.used<(SYSEX_SIZE-1)) midi.sysex.buf[midi.sysex.used++] = data;
 			return;
 		} else {
-			midi.sysex.buf[midi.sysex.used++]=0xf7;
-			midi.handler->PlaySysex(midi.sysex.buf,midi.sysex.used);
+			midi.sysex.buf[midi.sysex.used++] = 0xf7;
+
+			if ((midi.sysex.start) && (midi.sysex.used >= 4) && (midi.sysex.used <= 9) && (midi.sysex.buf[1] == 0x41) && (midi.sysex.buf[3] == 0x16)) {
+				LOG(LOG_ALL,LOG_ERROR)("MIDI:Skipping invalid MT-32 SysEx midi message (too short to contain a checksum)");
+			} else {
+//				LOG(LOG_ALL,LOG_NORMAL)("Play sysex; address:%02X %02X %02X, length:%4d, delay:%3d", midi.sysex.buf[5], midi.sysex.buf[6], midi.sysex.buf[7], midi.sysex.used, midi.sysex.delay);
+				midi.handler->PlaySysex(midi.sysex.buf, midi.sysex.used);
+				if (midi.sysex.start) {
+					if (midi.sysex.buf[5] == 0x7F) {
+						midi.sysex.delay = 290; // All Parameters reset
+					} else if (midi.sysex.buf[5] == 0x10 && midi.sysex.buf[6] == 0x00 && midi.sysex.buf[7] == 0x04) {
+						midi.sysex.delay = 145; // Viking Child
+					} else if (midi.sysex.buf[5] == 0x10 && midi.sysex.buf[6] == 0x00 && midi.sysex.buf[7] == 0x01) {
+						midi.sysex.delay = 30; // Dark Sun 1
+					} else midi.sysex.delay = (Bitu)(((float)(midi.sysex.used) * 1.25f) * 1000.0f / 3125.0f) + 2;
+					midi.sysex.start = GetTicks();
+				}
+			}
+
 			LOG(LOG_ALL,LOG_NORMAL)("Sysex message size %d",midi.sysex.used);
 			if (CaptureState & CAPTURE_MIDI) {
 				CAPTURE_AddMidi( true, midi.sysex.used-1, &midi.sysex.buf[1]);
@@ -163,10 +189,19 @@ public:
 	MIDI(Section* configuration):Module_base(configuration){
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		const char * dev=section->Get_string("mididevice");
-		const char * conf=section->Get_string("midiconfig");
+		std::string fullconf=section->Get_string("midiconfig");
 		/* If device = "default" go for first handler that works */
 		MidiHandler * handler;
 //		MAPPER_AddHandler(MIDI_SaveRawEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+		midi.sysex.delay = 0;
+		midi.sysex.start = 0;
+		if (fullconf.find("delaysysex") != std::string::npos) {
+			midi.sysex.start = GetTicks();
+			fullconf.erase(fullconf.find("delaysysex"));
+			LOG_MSG("MIDI:Using delayed SysEx processing");
+		}
+		remove(fullconf.begin(), fullconf.end(), ' ');
+		const char * conf = fullconf.c_str();
 		midi.status=0x00;
 		midi.cmd_pos=0;
 		midi.cmd_len=0;
