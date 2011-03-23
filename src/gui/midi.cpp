@@ -19,7 +19,9 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <timer.h>
+#include <string>
+#include <algorithm>
+
 #include "SDL.h"
 
 #include "dosbox.h"
@@ -29,6 +31,7 @@
 #include "mapper.h"
 #include "pic.h"
 #include "hardware.h"
+#include "timer.h"
 
 #define SYSEX_SIZE 1024
 #define RAWBUF	1024
@@ -200,7 +203,7 @@ public:
 			fullconf.erase(fullconf.find("delaysysex"));
 			LOG_MSG("MIDI:Using delayed SysEx processing");
 		}
-		remove(fullconf.begin(), fullconf.end(), ' ');
+		std::remove(fullconf.begin(), fullconf.end(), ' ');
 		const char * conf = fullconf.c_str();
 		midi.status=0x00;
 		midi.cmd_pos=0;
