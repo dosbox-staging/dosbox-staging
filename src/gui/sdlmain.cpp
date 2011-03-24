@@ -1770,6 +1770,10 @@ int main(int argc, char* argv[]) {
 
 	/* Init SDL */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
+	/* Or debian/ubuntu with older libsdl version as they have done this themselves, but then differently.
+	 * with this variable they will work correctly. I've only tested the 1.2.14 behaviour against the windows version
+	 * of libsdl
+	 */
 	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
 	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
