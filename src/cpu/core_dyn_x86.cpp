@@ -61,11 +61,8 @@
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
 
-#if 0
-#define DYN_LOG	LOG_MSG
-#else 
-#define DYN_LOG
-#endif
+//#define DYN_LOG 1 //Turn logging on
+
 
 #if C_FPU
 #define CPU_FPU 1                                               //Enable FPU escape instructions
