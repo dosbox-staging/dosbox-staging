@@ -586,6 +586,14 @@ void DOS_Shell::CMD_COPY(char * args) {
 	while ( (source_p = StripWord(args)) && *source_p ) {
 		do {
 			char* plus = strchr(source_p,'+');
+			// If StripWord() previously cut at a space before a plus then
+			// set concatenate flag on last source and remove leading plus.
+			if (plus == source_p && sources.size()) {
+				sources[sources.size()-1].concat = true;
+				// If spaces also followed plus then item is only a plus.
+				if (strlen(++source_p)==0) break;
+				plus = strchr(source_p,'+');
+			}
 			if (plus) *plus++ = 0;
 			safe_strncpy(source_x,source_p,CROSS_LEN);
 			bool has_drive_spec = false;
