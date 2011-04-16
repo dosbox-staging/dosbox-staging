@@ -328,7 +328,7 @@ void IO_WriteW(Bitu port,Bitu val) {
 		CPU_Push16(reg_ip);
 		Bit16u old_ax = reg_ax;
 		Bit16u old_dx = reg_dx;
-		reg_al = val;
+		reg_ax = val;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
@@ -364,7 +364,7 @@ void IO_WriteD(Bitu port,Bitu val) {
 		CPU_Push16(reg_ip);
 		Bit32u old_eax = reg_eax;
 		Bit16u old_dx = reg_dx;
-		reg_al = val;
+		reg_eax = val;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
 		SegSet16(cs,RealSeg(icb));
