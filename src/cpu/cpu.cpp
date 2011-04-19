@@ -64,7 +64,7 @@ Bitu CPU_AutoDetermineMode = 0;
 
 Bitu CPU_ArchitectureType = CPU_ARCHTYPE_MIXED;
 
-Bitu CPU_flag_id_toggle=0;
+Bitu CPU_extflags_toggle=0;	// ID and AC flags may be toggled depending on emulated CPU architecture
 
 Bitu CPU_PrefetchQueueSize=0;
 
@@ -170,7 +170,7 @@ PhysPt SelBase(Bitu sel) {
 
 
 void CPU_SetFlags(Bitu word,Bitu mask) {
-	mask|=CPU_flag_id_toggle;	// ID-flag can be toggled on cpuid-supporting CPUs
+	mask|=CPU_extflags_toggle;	// ID-flag and AC-flag can be toggled on CPUID-supporting CPUs
 	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
 	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
 }
@@ -2389,8 +2389,9 @@ public:
 			CPU_ArchitectureType = CPU_ARCHTYPE_PENTIUMSLOW;
 		}
 
-		if (CPU_ArchitectureType>=CPU_ARCHTYPE_486NEWSLOW) CPU_flag_id_toggle=FLAG_ID;
-		else CPU_flag_id_toggle=0;
+		if (CPU_ArchitectureType>=CPU_ARCHTYPE_486NEWSLOW) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);
+		else if (CPU_ArchitectureType>=CPU_ARCHTYPE_486OLDSLOW) CPU_extflags_toggle=(FLAG_AC);
+		else CPU_extflags_toggle=0;
 
 
 		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
