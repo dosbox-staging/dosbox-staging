@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2010  The DOSBox Team
+ *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -900,6 +900,9 @@ static void DSP_DoCommand(void) {
 	case 0xd0:	/* Halt 8-bit DMA */
 //		DSP_ChangeMode(MODE_NONE);
 //		Games sometimes already program a new dma before stopping, gives noise
+		if (sb.mode==MODE_NONE) {
+			// possibly different code here that does not switch to MODE_DMA_PAUSE
+		}
 		sb.mode=MODE_DMA_PAUSE;
 		PIC_RemoveEvents(END_DMA_Event);
 		break;
@@ -920,7 +923,7 @@ static void DSP_DoCommand(void) {
 	case 0xd4:	/* Continue DMA 8-bit*/
 		if (sb.mode==MODE_DMA_PAUSE) {
 			sb.mode=MODE_DMA_MASKED;
-			sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+			if (sb.dma.chan!=NULL) sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
 		}
 		break;
 	case 0xd9:  /* Exit Autoinitialize 16-bit */
