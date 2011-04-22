@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2010  The DOSBox Team
+ *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -911,10 +911,14 @@ public:
 		callback[10].Set_RealVec(0x18);
 		RealPt rptr = callback[10].Get_RealPointer();
 		RealSetVec(0x19,rptr);
-		// set system BIOS entry point too
-		phys_writeb(0xFFFF0,0xEA);	// FARJMP
-		phys_writew(0xFFFF1,RealOff(rptr));	// offset
-		phys_writew(0xFFFF3,RealSeg(rptr));	// segment
+		// power on selftest routine location
+		phys_writeb(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+0,0xEA);				// FARJMP
+		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+1,RealOff(rptr));	// offset
+		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
+		// reset jump (directed to POST)
+		phys_writeb(0xFFFF0,0xEA);		// FARJMP
+		phys_writew(0xFFFF1,RealOff(BIOS_DEFAULT_RESET_LOCATION));	// offset
+		phys_writew(0xFFFF3,RealSeg(BIOS_DEFAULT_RESET_LOCATION));	// segment
 
 		/* Irq 2 */
 		Bitu call_irq2=CALLBACK_Allocate();	
