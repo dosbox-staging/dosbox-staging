@@ -982,6 +982,10 @@ static void DSP_DoCommand(void) {
 	case 0xf2:	/* Trigger 8bit IRQ */
 		SB_RaiseIRQ(SB_IRQ_8);
 		break;
+	case 0xf3:   /* Trigger 16bit IRQ */
+		DSP_SB16_ONLY; 
+		SB_RaiseIRQ(SB_IRQ_16);
+		break;
 	case 0xf8:  /* Undocumented, pre-SB16 only */
 		DSP_FlushData();
 		DSP_AddData(0);
