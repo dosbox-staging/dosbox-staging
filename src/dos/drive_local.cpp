@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: drive_local.cpp,v 1.82 2009-07-18 18:42:55 c2woody Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: risc_x64.h,v 1.13 2009-06-25 19:31:43 c2woody Exp $ */
 
 
 // some configuring defines that specify the capabilities of this architecture

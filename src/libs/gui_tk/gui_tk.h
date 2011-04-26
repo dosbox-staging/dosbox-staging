@@ -102,7 +102,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-/* $Id: gui_tk.h,v 1.6 2009-05-17 15:28:05 c2woody Exp $ */
 
 #ifndef GUI__TOOLKIT_H
 #define GUI__TOOLKIT_H

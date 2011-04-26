@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: sblaster.cpp,v 1.78 2009-10-25 16:22:22 c2woody Exp $ */
 
 #include <iomanip>
 #include <sstream>

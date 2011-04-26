@@ -16,7 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: bios.cpp,v 1.78 2009-10-10 13:26:46 h-a-l-9000 Exp $ */
 
 #include "dosbox.h"
 #include "mem.h"
