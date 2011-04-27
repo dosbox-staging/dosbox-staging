@@ -429,7 +429,6 @@ bool CDROM_Interface_Ioctl::PauseAudio(bool resume) {
 		return false;
 	}
 	if (use_dxplay) {
-		if (!player.isPlaying) return false;
 		player.isPaused = !resume;
 		return true;
 	}

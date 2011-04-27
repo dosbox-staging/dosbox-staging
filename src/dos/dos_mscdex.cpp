@@ -438,8 +438,7 @@ void CMscdex::GetDriverInfo	(PhysPt data) {
 	};
 }
 
-bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut)
-{
+bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut) {
 	if (subUnit>=numDrives) return false;
 	int tr1i,tr2i;
 	// Assume Media change
@@ -455,19 +454,17 @@ bool CMscdex::GetCDInfo(Bit8u subUnit, Bit8u& tr1, Bit8u& tr2, TMSF& leadOut)
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::GetTrackInfo(Bit8u subUnit, Bit8u track, Bit8u& attr, TMSF& start)
-{
+bool CMscdex::GetTrackInfo(Bit8u subUnit, Bit8u track, Bit8u& attr, TMSF& start) {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioTrackInfo(track,start,attr);	
 	if (!dinfo[subUnit].lastResult) {
 		attr = 0;
 		memset(&start,0,sizeof(start));
-	};
+	}
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
-{
+bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length) {
 	if (subUnit>=numDrives) return false;
 	// If value from last stop is used, this is meant as a resume
 	// better start using resume command
@@ -481,12 +478,11 @@ bool CMscdex::PlayAudioSector(Bit8u subUnit, Bit32u sector, Bit32u length)
 		dinfo[subUnit].audioPaused	= false;
 		dinfo[subUnit].audioStart	= sector;
 		dinfo[subUnit].audioEnd		= length;
-	};
+	}
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
-{
+bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length) {
 	if (subUnit>=numDrives) return false;
 	Bit8u min		= (Bit8u)(start>>16) & 0xFF;
 	Bit8u sec		= (Bit8u)(start>> 8) & 0xFF;
@@ -495,20 +491,18 @@ bool CMscdex::PlayAudioMSF(Bit8u subUnit, Bit32u start, Bit32u length)
 	return dinfo[subUnit].lastResult = PlayAudioSector(subUnit,sector,length);
 }
 
-bool CMscdex::GetSubChannelData(Bit8u subUnit, Bit8u& attr, Bit8u& track, Bit8u &index, TMSF& rel, TMSF& abs)
-{
+bool CMscdex::GetSubChannelData(Bit8u subUnit, Bit8u& attr, Bit8u& track, Bit8u &index, TMSF& rel, TMSF& abs) {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioSub(attr,track,index,rel,abs);
 	if (!dinfo[subUnit].lastResult) {
 		attr = track = index = 0;
 		memset(&rel,0,sizeof(rel));
 		memset(&abs,0,sizeof(abs));
-	};
+	}
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& start, TMSF& end)
-{
+bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& start, TMSF& end) {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioStatus(playing,pause);
 	if (dinfo[subUnit].lastResult) {
@@ -527,16 +521,26 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 		pause		= false;
 		memset(&start,0,sizeof(start));
 		memset(&end,0,sizeof(end));
-	};
+	}
 	
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::StopAudio(Bit8u subUnit)
-{
+bool CMscdex::StopAudio(Bit8u subUnit) {
 	if (subUnit>=numDrives) return false;
-	if (dinfo[subUnit].audioPlay)	dinfo[subUnit].lastResult = cdrom[subUnit]->PauseAudio(false);
-	else							dinfo[subUnit].lastResult = cdrom[subUnit]->StopAudio();
+	if (dinfo[subUnit].audioPlay) {
+		// Check if audio is still playing....
+		TMSF start,end;
+		bool playing,pause;
+		if (GetAudioStatus(subUnit,playing,pause,start,end))
+			dinfo[subUnit].audioPlay = playing;
+		else
+			dinfo[subUnit].audioPlay = false;
+	}
+	if (dinfo[subUnit].audioPlay)
+		dinfo[subUnit].lastResult = cdrom[subUnit]->PauseAudio(false);
+	else
+		dinfo[subUnit].lastResult = cdrom[subUnit]->StopAudio();
 	
 	if (dinfo[subUnit].lastResult) {
 		if (dinfo[subUnit].audioPlay) {
@@ -548,9 +552,9 @@ bool CMscdex::StopAudio(Bit8u subUnit)
 			dinfo[subUnit].audioPaused  = false;
 			dinfo[subUnit].audioStart	= 0;
 			dinfo[subUnit].audioEnd		= 0;
-		};
+		}
 		dinfo[subUnit].audioPlay = false;
-	};
+	}
 	return dinfo[subUnit].lastResult;
 }
 
