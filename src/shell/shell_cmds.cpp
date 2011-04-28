@@ -600,10 +600,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if (source_x_len>0) {
 				if (source_x[source_x_len-1]==':') has_drive_spec = true;
 			}
-			if (!has_drive_spec) {
+			if (!has_drive_spec  && !strpbrk(source_p,"*?") ) { //doubt that fu*\*.* is valid
 				if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
 					dta.GetResult(name,size,date,time,attr);
-					if (attr & DOS_ATTR_DIRECTORY && !strpbrk(source_p,"*?") )
+					if (attr & DOS_ATTR_DIRECTORY)
 						strcat(source_x,"\\*.*");
 				}
 			}
