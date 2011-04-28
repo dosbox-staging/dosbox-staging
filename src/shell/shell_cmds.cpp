@@ -603,7 +603,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			if (!has_drive_spec) {
 				if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
 					dta.GetResult(name,size,date,time,attr);
-					if (attr & DOS_ATTR_DIRECTORY && !strstr(source_p,"*.*"))
+					if (attr & DOS_ATTR_DIRECTORY && !strpbrk(source_p,"*?") )
 						strcat(source_x,"\\*.*");
 				}
 			}
