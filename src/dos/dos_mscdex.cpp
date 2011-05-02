@@ -1041,6 +1041,7 @@ static Bit16u MSCDEX_IOCTL_Optput(PhysPt buffer,Bit8u drive_unit) {
 					break;
 		case 0x05 :	// load media
 					if (!mscdex->LoadUnloadMedia(drive_unit,false)) return 0x02;
+					break;
 		default	:	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unsupported IOCTL OUTPUT Subfunction %02X",ioctl_fct);
 					return 0x03;	// invalid function
 	}
