@@ -674,8 +674,7 @@ bool CMscdex::ReadSectors(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data) 
 	return ReadSectors(GetSubUnit(drive),false,sector,num,data);
 }
 
-bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error)
-{
+bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error) {
 	char	volumeID[6] = {0};
 	char	searchName[256];
 	char	entryName[256];
@@ -784,13 +783,12 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 			dirEntrySector++;
 			nextPart = false;
 		}
-	};
+	}
 	error = 2; // file not found
 	return false; // not found
 }
 
-bool CMscdex::GetCurrentPos(Bit8u subUnit, TMSF& pos)
-{
+bool CMscdex::GetCurrentPos(Bit8u subUnit, TMSF& pos) {
 	if (subUnit>=numDrives) return false;
 	TMSF rel;
 	Bit8u attr,track,index;
@@ -799,31 +797,39 @@ bool CMscdex::GetCurrentPos(Bit8u subUnit, TMSF& pos)
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::GetMediaStatus(Bit8u subUnit, bool& media, bool& changed, bool& trayOpen)
-{
+bool CMscdex::GetMediaStatus(Bit8u subUnit, bool& media, bool& changed, bool& trayOpen) {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetMediaTrayStatus(media,changed,trayOpen);
 	return dinfo[subUnit].lastResult;
 }
 
-Bit32u CMscdex::GetDeviceStatus(Bit8u subUnit)
-{
+Bit32u CMscdex::GetDeviceStatus(Bit8u subUnit) {
 	if (subUnit>=numDrives) return false;
 	bool media,changed,trayOpen;
 
 	dinfo[subUnit].lastResult = GetMediaStatus(subUnit,media,changed,trayOpen);
-	Bit32u status = (trayOpen << 0)					|	// Drive is open ?
-					(dinfo[subUnit].locked	<< 1)	|	// Drive is locked ?
-					(1<<2)							|	// raw + cooked sectors
-					(1<<4)							|	// Can read sudio
-					(1<<8)							|	// Can control audio
-					(1<<9)							|	// Red book & HSG
-					((!media) << 11);					// Drive is empty ?
+	if (dinfo[subUnit].audioPlay) {
+		// Check if audio is still playing....
+		TMSF start,end;
+		bool playing,pause;
+		if (GetAudioStatus(subUnit,playing,pause,start,end))
+			dinfo[subUnit].audioPlay = playing;
+		else
+			dinfo[subUnit].audioPlay = false;
+	}
+
+	Bit32u status = ((trayOpen?1:0) << 0)					|	// Drive is open ?
+					((dinfo[subUnit].locked?1:0) << 1)		|	// Drive is locked ?
+					(1<<2)									|	// raw + cooked sectors
+					(1<<4)									|	// Can read sudio
+					(1<<8)									|	// Can control audio
+					(1<<9)									|	// Red book & HSG
+					((dinfo[subUnit].audioPlay?1:0) << 10)	|	// Audio is playing ?
+					((media?0:1) << 11);						// Drive is empty ?
 	return status;
 }
 
-bool CMscdex::GetMediaStatus(Bit8u subUnit, Bit8u& status)
-{
+bool CMscdex::GetMediaStatus(Bit8u subUnit, Bit8u& status) {
 	if (subUnit>=numDrives) return false;
 /*	bool media,changed,open,result;
 	result = GetMediaStatus(subUnit,media,changed,open);
@@ -833,15 +839,13 @@ bool CMscdex::GetMediaStatus(Bit8u subUnit, Bit8u& status)
 	return true;
 }
 
-bool CMscdex::LoadUnloadMedia(Bit8u subUnit, bool unload)
-{
+bool CMscdex::LoadUnloadMedia(Bit8u subUnit, bool unload) {
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->LoadUnloadMedia(unload);
 	return dinfo[subUnit].lastResult;
 }
 
-bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
-{
+bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data) {
 	Bit8u subUnit = GetSubUnit(drive);
 	if (subUnit>=numDrives) return false;
 	// Get SubUnit
@@ -852,8 +856,7 @@ bool CMscdex::SendDriverRequest(Bit16u drive, PhysPt data)
 	return true;
 }
 
-Bit16u CMscdex::GetStatusWord(Bit8u subUnit,Bit16u status)
-{
+Bit16u CMscdex::GetStatusWord(Bit8u subUnit,Bit16u status) {
 	if (subUnit>=numDrives) return REQUEST_STATUS_ERROR | 0x02; // error : Drive not ready
 
 	if (dinfo[subUnit].lastResult)	status |= REQUEST_STATUS_DONE;				// ok
