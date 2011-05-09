@@ -500,6 +500,13 @@ l_M_Ed:
 	case D_ICEBP:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
+	case D_RDTSC: {
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegalopcode;
+		Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)CPU_CycleMax);
+		reg_edx=(Bit32u)(tsc>>32);
+		reg_eax=(Bit32u)(tsc&0xffffffff);
+		break;
+		}
 	default:
 		LOG(LOG_CPU,LOG_ERROR)("LOAD:Unhandled code %d opcode %X",inst.code.load,inst.entry);
 		goto illegalopcode;

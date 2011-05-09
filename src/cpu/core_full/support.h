@@ -64,6 +64,7 @@ enum {
 	D_CPUID,
 	D_HLT,D_CLTS,
 	D_LOCK,D_ICEBP,
+	D_RDTSC,
 	L_ERROR
 };
 
