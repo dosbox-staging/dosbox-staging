@@ -1546,6 +1546,7 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 	switch (cr) {
 	case 0:
 		{
+			value|=CR0_FPUPRESENT;
 			Bitu changed=cpu.cr0 ^ value;
 			if (!changed) return;
 			cpu.cr0=value;
