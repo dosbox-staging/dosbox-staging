@@ -565,8 +565,10 @@ static Bitu INT16_Handler(void) {
 		else reg_al=1;
 		break;
 	case 0x12: /* GET EXTENDED SHIFT STATES */
-		reg_al=mem_readb(BIOS_KEYBOARD_FLAGS1);
-		reg_ah=mem_readb(BIOS_KEYBOARD_FLAGS2);		
+		reg_al = mem_readb(BIOS_KEYBOARD_FLAGS1);
+		reg_ah = (mem_readb(BIOS_KEYBOARD_FLAGS2)&0x73)   |
+		         ((mem_readb(BIOS_KEYBOARD_FLAGS2)&4)<<5) | // SysReq pressed, bit 7
+		         (mem_readb(BIOS_KEYBOARD_FLAGS3)&0x0c);    // Right Ctrl/Alt pressed, bits 2,3
 		break;
 	case 0x55:
 		/* Weird call used by some dos apps */
