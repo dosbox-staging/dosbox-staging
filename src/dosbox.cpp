@@ -128,10 +128,11 @@ static Bitu Normal_Loop(void) {
 	Bits ret;
 	while (1) {
 		if (PIC_RunQueue()) {
-			ret=(*cpudecoder)();
+			ret = (*cpudecoder)();
 			if (GCC_UNLIKELY(ret<0)) return 1;
 			if (ret>0) {
-				Bitu blah=(*CallBack_Handlers[ret])();
+				if (GCC_UNLIKELY(ret >= CB_MAX)) return 0;
+				Bitu blah = (*CallBack_Handlers[ret])();
 				if (GCC_UNLIKELY(blah)) return blah;
 			}
 #if C_DEBUG

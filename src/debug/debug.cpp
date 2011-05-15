@@ -1725,7 +1725,10 @@ Bit32u DEBUG_CheckKeys(void) {
 		}
 		if (ret<0) return ret;
 		if (ret>0) {
-			ret=(*CallBack_Handlers[ret])();
+			if (GCC_UNLIKELY(ret >= CB_MAX)) 
+				ret = 0;
+			else
+				ret = (*CallBack_Handlers[ret])();
 			if (ret) {
 				exitLoop=true;
 				CPU_Cycles=CPU_CycleLeft=0;
