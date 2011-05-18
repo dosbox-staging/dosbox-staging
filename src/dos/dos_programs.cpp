@@ -125,12 +125,12 @@ public:
 				str_size="512,1,2880,2880";/* All space free */
 				mediaid=0xF0;		/* Floppy 1.44 media */
 			} else if (type=="dir") {
-				// 512*32*65535==~1GB total size
+				// 512*32*32765==~500MB total size
 				// 512*32*16000==~250MB total free size
-				str_size="512,32,65535,16000";
+				str_size="512,32,32765,16000";
 				mediaid=0xF8;		/* Hard Disk */
 			} else if (type=="cdrom") {
-				str_size="2048,1,65535,0";
+				str_size="2048,1,32765,0";
 				mediaid=0xF8;		/* Hard Disk */
 			} else {
 				WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
@@ -145,8 +145,12 @@ public:
 					// freesize in kb
 					sprintf(teststr,"512,1,2880,%d",freesize*1024/(512*1));
 				} else {
-					// freesize in mb
-					sprintf(teststr,"512,32,65535,%d",freesize*1024*1024/(512*32));
+					Bit32u total_size_cyl=32765;
+					Bit32u free_size_cyl=(Bit32u)freesize*1024*1024/(512*32);
+					if (free_size_cyl>65534) free_size_cyl=65534;
+					if (total_size_cyl<free_size_cyl) total_size_cyl=free_size_cyl+10;
+					if (total_size_cyl>65534) total_size_cyl=65534;
+					sprintf(teststr,"512,32,%d,%d",total_size_cyl,free_size_cyl);
 				}
 				str_size=teststr;
 			}
