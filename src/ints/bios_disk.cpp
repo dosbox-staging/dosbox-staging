@@ -149,8 +149,9 @@ Bit8u imageDisk::Read_AbsoluteSector(Bit32u sectnum, void * data) {
 
 	bytenum = sectnum * sector_size;
 
-	fseek(diskimg,bytenum,SEEK_SET);
-	fread(data, 1, sector_size, diskimg);
+	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
+	size_t ret=fread(data, 1, sector_size, diskimg);
+	current_fpos=bytenum+ret;
 
 	return 0x00;
 }
@@ -161,7 +162,6 @@ Bit8u imageDisk::Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * d
 	sectnum = ( (cylinder * heads + head) * sectors ) + sector - 1L;
 
 	return Write_AbsoluteSector(sectnum, data);
-
 }
 
 
@@ -172,8 +172,9 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 
-	fseek(diskimg,bytenum,SEEK_SET);
+	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
 	size_t ret=fwrite(data, sector_size, 1, diskimg);
+	current_fpos=bytenum+ret;
 
 	return ((ret>0)?0x00:0x05);
 
@@ -184,7 +185,9 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 	cylinders = 0;
 	sectors = 0;
 	sector_size = 512;
+	current_fpos = 0;
 	diskimg = imgFile;
+	fseek(diskimg,0,SEEK_SET);
 	
 	memset(diskname,0,512);
 	if(strlen((const char *)imgName) > 511) {

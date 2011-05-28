@@ -65,6 +65,7 @@ public:
 
 	Bit32u sector_size;
 	Bit32u heads,cylinders,sectors;
+	Bit32u current_fpos;
 };
 
 void updateDPT(void);

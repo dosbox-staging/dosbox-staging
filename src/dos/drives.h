@@ -171,7 +171,7 @@ public:
 	Bit32u appendCluster(Bit32u startCluster);
 	void deleteClustChain(Bit32u startCluster);
 	Bit32u getFirstFreeClust(void);
-	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
+	bool directoryBrowse(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum, Bit32s start=0);
 	bool directoryChange(Bit32u dirClustNumber, direntry *useEntry, Bit32s entNum);
 	imageDisk *loadedDisk;
 	bool created_successfully;
