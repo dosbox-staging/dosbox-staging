@@ -464,6 +464,23 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHDIR_HINT","To change to different drive type \033[31m%c:\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
+	MSG_Add("SHELL_CMD_DATE_HELP","Displays or changes the internal date.\n");
+	MSG_Add("SHELL_CMD_DATE_ERROR","The specified date is not correct.\n");
+	MSG_Add("SHELL_CMD_DATE_DAYS","3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
+	MSG_Add("SHELL_CMD_DATE_NOW","Current date: ");
+	MSG_Add("SHELL_CMD_DATE_SETHLP","Type 'date MM-DD-YYYY' to change.\n");
+	MSG_Add("SHELL_CMD_DATE_FORMAT","M/D/Y");
+	MSG_Add("SHELL_CMD_DATE_HELP_LONG","DATE [[/T] [/H] [/S] | MM-DD-YYYY]\n"\
+									"  MM-DD-YYYY: new date to set\n"\
+									"  /S:         Permanently use host time and date as DOS time\n"\
+                                    "  /F:         Switch back to DOSBox internal time (opposite of /S)\n"\
+									"  /T:         Only display date\n"\
+									"  /H:         Synchronize with host\n");
+	MSG_Add("SHELL_CMD_TIME_HELP","Displays the internal time.\n");
+	MSG_Add("SHELL_CMD_TIME_NOW","Current time: ");
+	MSG_Add("SHELL_CMD_TIME_HELP_LONG","TIME [/T] [/H]\n"\
+									"  /T:         Display simple time\n"\
+									"  /H:         Synchronize with host\n");
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");

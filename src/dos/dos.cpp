@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <time.h>
 #include "dosbox.h"
 #include "bios.h"
 #include "mem.h"
@@ -39,6 +38,34 @@ Bit8u dos_copybuf[DOS_COPYBUFSIZE];
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
+}
+
+const Bit8u DOS_DATE_months[] = {
+	0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+};
+
+static void DOS_AddDays(Bitu days) {
+	dos.date.day += days;
+	Bit8u monthlimit = DOS_DATE_months[dos.date.month];
+
+	if(dos.date.day > monthlimit) {
+		if((dos.date.year %4 == 0) && (dos.date.month==2)) {
+			// leap year
+			if(dos.date.day > 29) {
+				dos.date.month++;
+				dos.date.day -= 29;
+			}
+		} else {
+			//not leap year
+			dos.date.month++;
+			dos.date.day -= monthlimit;
+		}
+		if(dos.date.month > 12) {
+			// year over
+			dos.date.month = 1;
+			dos.date.year++;
+		}
+	}
 }
 
 #define DATA_TRANSFERS_TAKE_CYCLES 1
@@ -373,6 +400,9 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x2a:		/* Get System Date */
 		{
+			reg_ax=0; // get time
+			CALLBACK_RunRealInt(0x1a);
+			if(reg_al) DOS_AddDays(reg_al);
 			int a = (14 - dos.date.month)/12;
 			int y = dos.date.year - a;
 			int m = dos.date.month + 12*a - 2;
@@ -385,28 +415,37 @@ static Bitu DOS_21Handler(void) {
 	case 0x2b:		/* Set System Date */
 		if (reg_cx<1980) { reg_al=0xff;break;}
 		if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
-		if ((reg_dl>31) || (reg_dl==0))	{ reg_al=0xff;break;}
+		if (reg_dl==0) { reg_al=0xff;break;}
+ 		if (reg_dl>DOS_DATE_months[reg_dh]) {
+			if(!((reg_dh==2)&&(reg_cx%4 == 0)&&(reg_dl==29))) // february pass
+			{ reg_al=0xff;break; }
+		}
 		dos.date.year=reg_cx;
 		dos.date.month=reg_dh;
 		dos.date.day=reg_dl;
 		reg_al=0;
 		break;
-	case 0x2c:		/* Get System Time */
-//TODO Get time through bios calls date is fixed
-		{
-/*	Calculate how many miliseconds have passed */
-			Bitu ticks=5*(mem_readd(BIOS_TIMER) - time_start);
-			ticks = ((ticks / 59659u) << 16) + ((ticks % 59659u) << 16) / 59659u;
-			Bitu seconds=(ticks/100);
-			reg_ch=(Bit8u)(seconds/3600);
-			reg_cl=(Bit8u)((seconds % 3600)/60);
-			reg_dh=(Bit8u)(seconds % 60);
-			reg_dl=(Bit8u)(ticks % 100);
-		}
+	case 0x2c: {	/* Get System Time */
+		reg_ax=0; // get time
+		CALLBACK_RunRealInt(0x1a);
+		if(reg_al) DOS_AddDays(reg_al);
+
+		Bitu time=((Bitu)reg_cx<<16)|reg_dx;
+		Bitu ticks=(Bitu)(5.49254945 * (double)time);
+
+		reg_dl=(Bit8u)((Bitu)ticks % 100); // 1/100 seconds
+		ticks/=100;
+		reg_dh=(Bit8u)((Bitu)ticks % 60); // seconds
+		ticks/=60;
+		reg_cl=(Bit8u)((Bitu)ticks % 60); // minutes
+		ticks/=60;
+		reg_ch=(Bit8u)((Bitu)ticks % 24); // hours
+
 		//Simulate DOS overhead for timing-sensitive games
-        	//Robomaze 2
+        //Robomaze 2
 		overhead();
 		break;
+	}
 	case 0x2d:		/* Set System Time */
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
 		//Check input parameters nonetheless
@@ -1188,16 +1227,6 @@ public:
 	
 		dos.version.major=5;
 		dos.version.minor=0;
-	
-		/* Setup time and date */
-		time_t curtime;struct tm *loctime;
-		curtime = time (NULL);loctime = localtime (&curtime);
-	
-		dos.date.day=(Bit8u)loctime->tm_mday;
-		dos.date.month=(Bit8u)loctime->tm_mon+1;
-		dos.date.year=(Bit16u)loctime->tm_year+1900;
-		Bit32u ticks=(Bit32u)((loctime->tm_hour*3600+loctime->tm_min*60+loctime->tm_sec)*(float)PIT_TICK_RATE/65536.0);
-		mem_writed(BIOS_TIMER,ticks);
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];

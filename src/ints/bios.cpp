@@ -30,6 +30,8 @@
 #include "mouse.h"
 #include "setup.h"
 #include "serialport.h"
+#include <time.h>
+#include <sys/timeb.h>
 
 
 /* if mem_systems 0 then size_extended is reported as the real size else 
@@ -311,7 +313,8 @@ static Bitu INT1A_Handler(void) {
 	case 0x00:	/* Get System time */
 		{
 			Bit32u ticks=mem_readd(BIOS_TIMER);
-			reg_al=0;		/* Midnight never passes :) */
+			reg_al=mem_readb(BIOS_24_HOURS_FLAG);
+			mem_writeb(BIOS_24_HOURS_FLAG,0); // reset the "flag"
 			reg_cx=(Bit16u)(ticks >> 16);
 			reg_dx=(Bit16u)(ticks & 0xffff);
 			break;
@@ -371,9 +374,45 @@ static Bitu INT11_Handler(void) {
 #ifndef DOSBOX_CLOCKSYNC
 #define DOSBOX_CLOCKSYNC 0
 #endif
+
+static void BIOS_HostTimeSync() {
+	/* Setup time and date */
+	struct timeb timebuffer;
+	ftime(&timebuffer);
+	
+	struct tm *loctime;
+	loctime = localtime (&timebuffer.time);
+
+	/*
+	loctime->tm_hour = 23;
+	loctime->tm_min = 59;
+	loctime->tm_sec = 45;
+	loctime->tm_mday = 28;
+	loctime->tm_mon = 2-1;
+	loctime->tm_year = 2007 - 1900;
+	*/
+
+	dos.date.day=(Bit8u)loctime->tm_mday;
+	dos.date.month=(Bit8u)loctime->tm_mon+1;
+	dos.date.year=(Bit16u)loctime->tm_year+1900;
+
+	Bit32u ticks=(Bit32u)(((double)(
+		loctime->tm_hour*3600*1000+
+		loctime->tm_min*60*1000+
+		loctime->tm_sec*1000+
+		timebuffer.millitm))*(((double)PIT_TICK_RATE/65536.0)/1000.0));
+	mem_writed(BIOS_TIMER,ticks);
+}
+
 static Bitu INT8_Handler(void) {
 	/* Increase the bios tick counter */
 	Bit32u value = mem_readd(BIOS_TIMER) + 1;
+	if(value >= 0x1800B0) {
+		// time wrap at midnight
+		mem_writeb(BIOS_24_HOURS_FLAG,mem_readb(BIOS_24_HOURS_FLAG)+1);
+		value=0;
+	}
+
 #if DOSBOX_CLOCKSYNC
 	static bool check = false;
 	if((value %50)==0) {
@@ -1079,6 +1118,7 @@ public:
 		size_extended=IO_Read(0x71);
 		IO_Write(0x70,0x31);
 		size_extended|=(IO_Read(0x71) << 8);
+		BIOS_HostTimeSync();
 	}
 	~BIOS(){
 		/* abort DAC playing */

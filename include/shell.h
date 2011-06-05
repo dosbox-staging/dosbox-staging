@@ -87,6 +87,8 @@ public:
 	void CMD_HELP(char * args);
 	void CMD_CLS(char * args);
 	void CMD_COPY(char * args);
+	void CMD_DATE(char * args);
+	void CMD_TIME(char * args);
 	void CMD_DIR(char * args);
 	void CMD_DELETE(char * args);
 	void CMD_ECHO(char * args);
