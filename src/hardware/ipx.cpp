@@ -935,7 +935,7 @@ public:
 			if(strcasecmp("startserver", temp_line.c_str()) == 0) {
 				if(!isIpxServer) {
 					if(incomingPacket.connected) {
-						WriteOut("IPX Tunneling Client alreadu connected to another server.  Disconnect first.\n");
+						WriteOut("IPX Tunneling Client already connected to another server.  Disconnect first.\n");
 						return;
 					}
 					bool startsuccess;
