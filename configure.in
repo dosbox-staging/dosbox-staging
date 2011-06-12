@@ -367,7 +367,7 @@ else
 AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 fi
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-   LIBS="$LIBS -lSDL_net"
+LIBS="$LIBS -lSDL_net /home/pveenstra/qbix/cross3/usr/lib/libvorbisfile.a /home/pveenstra/qbix/cross3/usr/lib/libvorbis.a  /home/pveenstra/qbix/cross3/usr/lib/libogg.a"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
@@ -499,7 +499,8 @@ esac
        AC_SUBST(WINDRES)
 
 
-AC_CONFIG_FILES([ 
+
+AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/cpu/Makefile
