@@ -429,17 +429,19 @@ static Bitu DOS_21Handler(void) {
 		reg_ax=0; // get time
 		CALLBACK_RunRealInt(0x1a);
 		if(reg_al) DOS_AddDays(reg_al);
+		reg_ah=0x2c;
 
-		Bitu time=((Bitu)reg_cx<<16)|reg_dx;
-		Bitu ticks=(Bitu)(5.49254945 * (double)time);
+		Bitu ticks=((Bitu)reg_cx<<16)|reg_dx;
+		if(time_start<=ticks) ticks-=time_start;
+		Bitu time=(Bitu)((100.0/((double)PIT_TICK_RATE/65536.0)) * (double)ticks);
 
-		reg_dl=(Bit8u)((Bitu)ticks % 100); // 1/100 seconds
-		ticks/=100;
-		reg_dh=(Bit8u)((Bitu)ticks % 60); // seconds
-		ticks/=60;
-		reg_cl=(Bit8u)((Bitu)ticks % 60); // minutes
-		ticks/=60;
-		reg_ch=(Bit8u)((Bitu)ticks % 24); // hours
+		reg_dl=(Bit8u)((Bitu)time % 100); // 1/100 seconds
+		time/=100;
+		reg_dh=(Bit8u)((Bitu)time % 60); // seconds
+		time/=60;
+		reg_cl=(Bit8u)((Bitu)time % 60); // minutes
+		time/=60;
+		reg_ch=(Bit8u)((Bitu)time % 24); // hours
 
 		//Simulate DOS overhead for timing-sensitive games
         //Robomaze 2
