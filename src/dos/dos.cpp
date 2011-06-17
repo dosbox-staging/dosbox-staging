@@ -1119,7 +1119,7 @@ static Bitu DOS_21Handler(void) {
 
 	case 0x71:					/* Unknown probably 4dos detection */
 		reg_ax=0x7100;
-		CALLBACK_SCF(true);
+		CALLBACK_SCF(true); //Check this! What needs this ? See default case
 		LOG(LOG_DOSMISC,LOG_NORMAL)("DOS:Windows long file name support call %2X",reg_al);
 		break;
 
@@ -1133,7 +1133,7 @@ static Bitu DOS_21Handler(void) {
 	case 0xEF:                  /* Used in Ancient Art Of War CGA */
 	case 0x5e:					/* More Network Functions */
 	default:
-		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al);
+		if (reg_ah < 0x6d) LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Unhandled call %02X al=%02X. Set al to default of 0",reg_ah,reg_al); //Less errors. above 0x6c the functions are simply always skipped, only al is zeroed, all other registers untouched
 		reg_al=0x00; /* default value */
 		break;
 	};
