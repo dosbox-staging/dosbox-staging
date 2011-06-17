@@ -95,6 +95,8 @@ public:
 	void Install(CallBack_Handler handler,Bitu type,const char* description);
 	void Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description);
 
+	void Uninstall();
+
 	//Only allocate a callback number
 	void Allocate(CallBack_Handler handler,const char* description=0);
 	Bit16u Get_callback() {

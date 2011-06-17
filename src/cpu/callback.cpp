@@ -464,7 +464,7 @@ void CALLBACK_RemoveSetup(Bitu callback) {
 	}
 }
 
-CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
+void CALLBACK_HandlerObject::Uninstall(){
 	if(!installed) return;
 	if(m_type == CALLBACK_HandlerObject::SETUP) {
 		if(vectorhandler.installed){
@@ -483,6 +483,10 @@ CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
 	if(CallBack_Description[m_callback]) delete [] CallBack_Description[m_callback];
 	CallBack_Description[m_callback] = 0;
 	CALLBACK_DeAllocate(m_callback);
+}
+
+CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
+	Uninstall();
 }
 
 void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const char* description){

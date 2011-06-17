@@ -59,11 +59,13 @@ public:
 class IO_ReadHandleObject: private IO_Base{
 public:
 	void Install(Bitu port,IO_ReadHandler * handler,Bitu mask,Bitu range=1);
+	void Uninstall();
 	~IO_ReadHandleObject();
 };
 class IO_WriteHandleObject: private IO_Base{
 public:
 	void Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range=1);
+	void Uninstall();
 	~IO_WriteHandleObject();
 };
 

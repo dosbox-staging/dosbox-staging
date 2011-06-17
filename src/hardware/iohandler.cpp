@@ -118,9 +118,13 @@ void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,B
 	} else E_Exit("IO_readHandler allready installed port %x",port);
 }
 
-IO_ReadHandleObject::~IO_ReadHandleObject(){
+void IO_ReadHandleObject::Uninstall(){
 	if(!installed) return;
 	IO_FreeReadHandler(m_port,m_mask,m_range);
+}
+
+IO_ReadHandleObject::~IO_ReadHandleObject(){
+	Uninstall();
 }
 
 void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask,Bitu range) {
@@ -133,9 +137,13 @@ void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask
 	} else E_Exit("IO_writeHandler allready installed port %x",port);
 }
 
-IO_WriteHandleObject::~IO_WriteHandleObject(){
+void IO_WriteHandleObject::Uninstall() {
 	if(!installed) return;
 	IO_FreeWriteHandler(m_port,m_mask,m_range);
+}
+
+IO_WriteHandleObject::~IO_WriteHandleObject(){
+	Uninstall();
 	//LOG_MSG("FreeWritehandler called with port %X",m_port);
 }
 
