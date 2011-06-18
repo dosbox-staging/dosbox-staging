@@ -835,7 +835,7 @@
 				RelativePath="..\include\paging.h">
 			</File>
 			<File
-				RelativePath="..\include\pci_bus.h">
+				RelativePath="..\include\pci_bus.h">
 			</File>
 			<File
 				RelativePath="..\include\pic.h">
