@@ -27,6 +27,7 @@ enum LOG_TYPES {
 	LOG_PIT,LOG_KEYBOARD,LOG_PIC,
 	LOG_MOUSE,LOG_BIOS,LOG_GUI,LOG_MISC,
 	LOG_IO,
+	LOG_PCI,
 	LOG_MAX
 };
 
@@ -65,6 +66,10 @@ struct LOG
 	void operator()(char const* , double , double , double )					{ }
 	void operator()(char const* , double , double , double , double )					{ }
 	void operator()(char const* , double , double , double , double , double )					{ }
+	void operator()(char const* , double , double , double , double , double , double )					{ }
+	void operator()(char const* , double , double , double , double , double , double , double)					{ }
+
+
 
 	void operator()(char const* , char const* )									{ }
 	void operator()(char const* , char const* , double )							{ }
@@ -73,7 +78,7 @@ struct LOG
 	void operator()(char const* , double , double, char const* )						{ }
 	void operator()(char const* , char const*, char const*)				{ }
 
-
+	void operator()(char const* , double , double , double , char const* )					{ }
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));

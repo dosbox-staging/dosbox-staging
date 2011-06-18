@@ -481,6 +481,9 @@
 					RelativePath="..\src\hardware\mixer.cpp">
 				</File>
 				<File
+					RelativePath="..\src\hardware\pci_bus.cpp">
+				</File>
+				<File
 					RelativePath="..\src\hardware\pic.cpp">
 				</File>
 				<File
@@ -830,6 +833,9 @@
 			</File>
 			<File
 				RelativePath="..\include\paging.h">
+			</File>
+			<File
+				RelativePath="..\include\pci_bus.h">
 			</File>
 			<File
 				RelativePath="..\include\pic.h">

@@ -41,6 +41,7 @@
 #include "mapper.h"
 #include "ints/int10.h"
 #include "render.h"
+#include "pci_bus.h"
 
 Config * control;
 MachineType machine;
@@ -72,6 +73,10 @@ void DMA_Init(Section*);
 void MIXER_Init(Section*);
 void MIDI_Init(Section*);
 void HARDWARE_Init(Section*);
+
+#if defined(PCI_FUNCTIONALITY_ENABLED)
+void PCI_Init(Section*);
+#endif
 
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
@@ -445,6 +450,12 @@ void DOSBOX_Init(void) {
 	secprop->AddInitFunction(&DMA_Init);//done
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
+
+
+#if defined(PCI_FUNCTIONALITY_ENABLED)
+	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
+#endif
+
 
 	secprop=control->AddSection_prop("mixer",&MIXER_Init);
 	Pbool = secprop->Add_bool("nosound",Property::Changeable::OnlyAtStart,false);
