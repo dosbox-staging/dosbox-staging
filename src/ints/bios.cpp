@@ -1058,18 +1058,29 @@ public:
 		callback[9].Set_RealVec(0x71);
 
 		/* Reboot */
+		// This handler is an exit for more than only reboots, since we
+		// don't handle these cases
 		callback[10].Install(&Reboot_Handler,CB_IRET,"reboot");
+		
+		// INT 18h: Enter BASIC
+		// Non-IBM BIOS would display "NO ROM BASIC" here
 		callback[10].Set_RealVec(0x18);
 		RealPt rptr = callback[10].Get_RealPointer();
+
+		// INT 19h: Boot function
+		// This is not a complete reboot as it happens after the POST
+		// We don't handle it, so use the reboot function as exit.
 		RealSetVec(0x19,rptr);
-		// power on selftest routine location
-		phys_writeb(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+0,0xEA);				// FARJMP
-		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+1,RealOff(rptr));	// offset
-		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
-		// reset jump (directed to POST)
+
+		// The farjump at the processor reset entry point (jumps to POST routine)
 		phys_writeb(0xFFFF0,0xEA);		// FARJMP
 		phys_writew(0xFFFF1,RealOff(BIOS_DEFAULT_RESET_LOCATION));	// offset
 		phys_writew(0xFFFF3,RealSeg(BIOS_DEFAULT_RESET_LOCATION));	// segment
+
+		// Compatible POST routine location: jump to the callback
+		phys_writeb(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+0,0xEA);				// FARJMP
+		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+1,RealOff(rptr));	// offset
+		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
 
 		/* Irq 2 */
 		Bitu call_irq2=CALLBACK_Allocate();	
