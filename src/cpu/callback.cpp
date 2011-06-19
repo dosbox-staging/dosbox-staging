@@ -45,7 +45,7 @@ Bitu CALLBACK_Allocate(void) {
 	for (Bitu i=1;(i<CB_MAX);i++) {
 		if (CallBack_Handlers[i]==&illegal_handler) {
 			CallBack_Handlers[i]=0;
-			return i;	
+			return i;
 		}
 	}
 	E_Exit("CALLBACK:Can't allocate handler.");
@@ -56,7 +56,7 @@ void CALLBACK_DeAllocate(Bitu in) {
 	CallBack_Handlers[in]=&illegal_handler;
 }
 
-	
+
 void CALLBACK_Idle(void) {
 /* this makes the cpu execute instructions to handle irq's and then come back */
 	Bitu oldIF=GETFLAG(IF);
@@ -69,7 +69,7 @@ void CALLBACK_Idle(void) {
 	reg_eip=oldeip;
 	SegSet16(cs,oldcs);
 	SETFLAGBIT(IF,oldIF);
-	if (!CPU_CycleAutoAdjust && CPU_Cycles>0) 
+	if (!CPU_CycleAutoAdjust && CPU_Cycles>0)
 		CPU_Cycles=0;
 }
 
@@ -108,24 +108,24 @@ void CALLBACK_RunRealInt(Bit8u intnum) {
 }
 
 void CALLBACK_SZF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
-	if (val) tempf |= FLAG_ZF; 
-	else tempf &= ~FLAG_ZF; 
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	if (val) tempf |= FLAG_ZF;
+	else tempf &= ~FLAG_ZF;
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
 }
 
 void CALLBACK_SCF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
-	if (val) tempf |= FLAG_CF; 
-	else tempf &= ~FLAG_CF; 
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	if (val) tempf |= FLAG_CF;
+	else tempf &= ~FLAG_CF;
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
 }
 
 void CALLBACK_SIF(bool val) {
-	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4); 
-	if (val) tempf |= FLAG_IF; 
-	else tempf &= ~FLAG_IF; 
-	mem_writew(SegPhys(ss)+reg_sp+4,tempf); 
+	Bit16u tempf = mem_readw(SegPhys(ss)+reg_sp+4);
+	if (val) tempf |= FLAG_IF;
+	else tempf &= ~FLAG_IF;
+	mem_writew(SegPhys(ss)+reg_sp+4,tempf);
 }
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
@@ -142,7 +142,7 @@ const char* CALLBACK_GetDescription(Bitu nr) {
 }
 
 Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_cb=true) {
-	if (callback>=CB_MAX) 
+	if (callback>=CB_MAX)
 		return 0;
 	switch (type) {
 	case CB_RETN:
@@ -471,7 +471,7 @@ void CALLBACK_HandlerObject::Uninstall(){
 			//See if we are the current handler. if so restore the old one
 			if(RealGetVec(vectorhandler.interrupt) == Get_RealPointer()) {
 				RealSetVec(vectorhandler.interrupt,vectorhandler.old_vector);
-			} else 
+			} else
 				LOG(LOG_MISC,LOG_WARN)("Interrupt vector changed on %X %s",vectorhandler.interrupt,CALLBACK_GetDescription(m_callback));
 		}
 		CALLBACK_RemoveSetup(m_callback);
@@ -483,6 +483,7 @@ void CALLBACK_HandlerObject::Uninstall(){
 	if(CallBack_Description[m_callback]) delete [] CallBack_Description[m_callback];
 	CallBack_Description[m_callback] = 0;
 	CALLBACK_DeAllocate(m_callback);
+	installed=false;
 }
 
 CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
@@ -495,7 +496,7 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const ch
 		m_type=SETUP;
 		m_callback=CALLBACK_Allocate();
 		CALLBACK_Setup(m_callback,handler,type,description);
-	} else E_Exit("Allready installed");
+	} else E_Exit("Callback handler object already installed");
 }
 void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description){
 	if(!installed) {
@@ -503,7 +504,7 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt a
 		m_type=SETUP;
 		m_callback=CALLBACK_Allocate();
 		CALLBACK_Setup(m_callback,handler,type,addr,description);
-	} else E_Exit("Allready installed");
+	} else E_Exit("Callback handler object already installed");
 }
 
 void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* description) {
@@ -513,7 +514,7 @@ void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* descr
 		m_callback=CALLBACK_Allocate();
 		CALLBACK_SetDescription(m_callback,description);
 		CallBack_Handlers[m_callback]=handler;
-	} else E_Exit("Allready installed");
+	} else E_Exit("Callback handler object already installed");
 }
 
 void CALLBACK_HandlerObject::Set_RealVec(Bit8u vec){
@@ -552,7 +553,7 @@ void CALLBACK_Init(Section* /*sec*/) {
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET,"default");
 	call_default2=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default2,&default_handler,CB_IRET,"default");
-   
+
 	/* Only setup default handler for first part of interrupt table */
 	for (Bit16u ct=0;ct<0x60;ct++) {
 		real_writed(0,ct*4,CALLBACK_RealPointer(call_default));

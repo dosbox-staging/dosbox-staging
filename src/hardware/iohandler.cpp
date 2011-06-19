@@ -44,7 +44,7 @@ static Bitu IO_ReadDefault(Bitu port,Bitu iolen) {
 		io_readhandlers[0][port]=IO_ReadBlocked;
 		return 0xff;
 	case 2:
-		return 
+		return
 			(io_readhandlers[0][port+0](port+0,1) << 0) |
 			(io_readhandlers[0][port+1](port+1,1) << 8);
 	case 4:
@@ -58,7 +58,7 @@ static Bitu IO_ReadDefault(Bitu port,Bitu iolen) {
 void IO_WriteDefault(Bitu port,Bitu val,Bitu iolen) {
 	switch (iolen) {
 	case 1:
-		LOG(LOG_IO,LOG_WARN)("Writing %02X to port %04X",val,port);		
+		LOG(LOG_IO,LOG_WARN)("Writing %02X to port %04X",val,port);
 		io_writehandlers[0][port]=IO_WriteBlocked;
 		break;
 	case 2:
@@ -115,12 +115,13 @@ void IO_ReadHandleObject::Install(Bitu port,IO_ReadHandler * handler,Bitu mask,B
 		m_mask=mask;
 		m_range=range;
 		IO_RegisterReadHandler(port,handler,mask,range);
-	} else E_Exit("IO_readHandler allready installed port %x",port);
+	} else E_Exit("IO_readHandler already installed port %x",port);
 }
 
 void IO_ReadHandleObject::Uninstall(){
 	if(!installed) return;
 	IO_FreeReadHandler(m_port,m_mask,m_range);
+	installed=false;
 }
 
 IO_ReadHandleObject::~IO_ReadHandleObject(){
@@ -134,12 +135,13 @@ void IO_WriteHandleObject::Install(Bitu port,IO_WriteHandler * handler,Bitu mask
 		m_mask=mask;
 		m_range=range;
 		IO_RegisterWriteHandler(port,handler,mask,range);
-	} else E_Exit("IO_writeHandler allready installed port %x",port);
+	} else E_Exit("IO_writeHandler already installed port %x",port);
 }
 
 void IO_WriteHandleObject::Uninstall() {
 	if(!installed) return;
 	IO_FreeWriteHandler(m_port,m_mask,m_range);
+	installed=false;
 }
 
 IO_WriteHandleObject::~IO_WriteHandleObject(){
@@ -164,7 +166,7 @@ static Bits IOFaultCore(void) {
 	Bits ret=CPU_Core_Full_Run();
 	CPU_CycleLeft+=CPU_Cycles;
 	if (ret<0) E_Exit("Got a dosbox close machine in IO-fault core?");
-	if (ret) 
+	if (ret)
 		return ret;
 	if (!iof_queue.used) E_Exit("IO-faul Core without IO-faul");
 	IOF_Entry * entry=&iof_queue.entries[iof_queue.used-1];
@@ -194,7 +196,7 @@ inline void IO_USEC_read_delay_old() {
 inline void IO_USEC_write_delay_old() {
 	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
 		// this could be calculated whenever CPU_CycleMax changes
-		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS); 
+		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS);
 		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
 		else CPU_Cycles = 0;
 	}
@@ -212,7 +214,7 @@ inline void IO_USEC_read_delay() {
 }
 
 inline void IO_USEC_write_delay() {
-	Bits delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk; 
+	Bits delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk;
 	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc=0;
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
@@ -413,7 +415,7 @@ Bitu IO_ReadB(Bitu port) {
 		iof_queue.used--;
 
 		retval = reg_al;
-		reg_dx = old_dx;		
+		reg_dx = old_dx;
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 		return retval;
@@ -450,7 +452,7 @@ Bitu IO_ReadW(Bitu port) {
 		iof_queue.used--;
 
 		retval = reg_ax;
-		reg_dx = old_dx;		
+		reg_dx = old_dx;
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	}
@@ -486,7 +488,7 @@ Bitu IO_ReadD(Bitu port) {
 		iof_queue.used--;
 
 		retval = reg_eax;
-		reg_dx = old_dx;		
+		reg_dx = old_dx;
 		memcpy(&lflags,&old_lflags,sizeof(LazyFlags));
 		cpudecoder=old_cpudecoder;
 	} else {
