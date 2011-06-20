@@ -769,7 +769,7 @@ static void MakeTables(void) {
 		vol16bit[i]=(Bit16s)out;
 		out/=1.002709201;		/* 0.0235 dB Steps */
 	}
-	pantable[0]=0;
+	pantable[0] = 4095 << RAMP_FRACT;
 	for (i=1;i<16;i++) {
 		pantable[i]=(Bit32u)(-128.0*(log((double)i/15.0)/log(2.0))*(double)(1 << RAMP_FRACT));
 	}
