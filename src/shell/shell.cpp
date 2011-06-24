@@ -285,7 +285,7 @@ void DOS_Shell::RunInternal(void)
 void DOS_Shell::Run(void) {
 	char input_line[CMD_MAXLINE] = {0};
 	std::string line;
-	if (cmd->FindStringRemain("/C",line)) {
+	if (cmd->FindStringRemainBegin("/C",line)) {
 		strcpy(input_line,line.c_str());
 		char* sep = strpbrk(input_line,"\r\n"); //GTA installer
 		if (sep) *sep = 0;

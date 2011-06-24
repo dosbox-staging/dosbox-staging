@@ -955,6 +955,39 @@ bool CommandLine::FindStringRemain(char const * const name,std::string & value) 
 	return true;
 }
 
+/* Only used for parsing command.com /C 
+ * Allowing /C dir and /Cdir
+ * Restoring quotes back into the commands so command /C mount d "/tmp/a b" works as intended
+ */
+bool CommandLine::FindStringRemainBegin(char const * const name,std::string & value) {
+	cmd_it it;value="";
+	if (!FindEntry(name,it)) {
+		size_t len = strlen(name);
+			for (it=cmds.begin();it!=cmds.end();it++) {
+				if (strncasecmp(name,(*it).c_str(),len)==0) {
+					std::string temp = ((*it).c_str() + len);
+					//Restore quotes for correct parsing in later stages
+					if(temp.find(" ") != std::string::npos)
+						value = std::string("\"") + temp + std::string("\"");
+					else
+						value = temp;
+					break;
+				}
+			}
+		if( it == cmds.end()) return false;
+	}
+	it++;
+	for (;it!=cmds.end();it++) {
+		value += " ";
+		std::string temp = (*it);
+		if(temp.find(" ") != std::string::npos)
+			value += std::string("\"") + temp + std::string("\"");
+		else
+			value += temp;
+	}
+	return true;
+}
+
 bool CommandLine::GetStringRemain(std::string & value) {
 	if(!cmds.size()) return false;
 		
