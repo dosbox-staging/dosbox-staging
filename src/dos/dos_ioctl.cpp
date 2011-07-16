@@ -40,7 +40,7 @@ bool DOS_IOCTL(void) {
 	} else if (reg_al<0x12) { 				/* those use a diskdrive except 0x0b */
 		if (reg_al!=0x0b) {
 			drive=reg_bl;if (!drive) drive = DOS_GetDefaultDrive();else drive--;
-			if( !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
+			if( (drive >= 2) && !(( drive < DOS_DRIVES ) && Drives[drive]) ) {
 				DOS_SetError(DOSERR_INVALID_DRIVE);
 				return false;
 			}
@@ -133,7 +133,7 @@ bool DOS_IOCTL(void) {
 		}
 		return true;
 	case 0x09:		/* Check if block device remote */
-		if (Drives[drive]->isRemote()) {
+		if ((drive >= 2) && Drives[drive]->isRemote()) {
 			reg_dx=0x1000;	// device is remote
 			// undocumented bits always clear
 		} else {
@@ -151,7 +151,7 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x0D:		/* Generic block device request */
 		{
-			if (Drives[drive]->isRemovable()) {
+			if ((drive < 2) || Drives[drive]->isRemovable()) {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
 			}
@@ -202,11 +202,14 @@ bool DOS_IOCTL(void) {
 			return true;
 		}
 	case 0x0E:			/* Get Logical Drive Map */
-		if (Drives[drive]->isRemovable()) {
+		if (drive < 2) {
+			if (Drives[drive]) reg_al=drive+1;
+			else reg_al=1;
+		} else if (Drives[drive]->isRemovable()) {
 			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 			return false;
-		}
-		reg_al = 0;		/* Only 1 logical drive assigned */
+		} else reg_al=0;	/* Only 1 logical drive assigned */
+		reg_ah=0x07;
 		return true;
 	default:
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:IOCTL Call %2X unhandled",reg_al);
