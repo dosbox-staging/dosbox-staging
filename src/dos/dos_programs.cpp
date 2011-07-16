@@ -324,6 +324,7 @@ public:
 			label = drive; label += "_FLOPPY";
 			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,true);
 		}
+		if(type == "floppy") incrementFDD();
 		return;
 showusage:
 #if defined (WIN32) || defined(OS2)

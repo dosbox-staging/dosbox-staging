@@ -85,6 +85,19 @@ void updateDPT(void) {
 	}
 }
 
+void incrementFDD(void) {
+	Bit16u equipment=mem_readw(BIOS_CONFIGURATION);
+	if(equipment&1) {
+		Bitu numofdisks = (equipment>>6)&3;
+		numofdisks++;
+		if(numofdisks > 1) numofdisks=1;//max 2 floppies at the moment
+		equipment&=~0x00C0;
+		equipment|=(numofdisks<<6);
+	} else equipment|=1;
+	mem_writew(BIOS_CONFIGURATION,equipment);
+	CMOS_SetRegister(0x14, (Bit8u)(equipment&0xff));
+}
+
 void swapInDisks(void) {
 	bool allNull = true;
 	Bits diskcount = 0;
@@ -219,16 +232,7 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 		if(!founddisk) {
 			active = false;
 		} else {
-			Bit16u equipment=mem_readw(BIOS_CONFIGURATION);
-			if(equipment&1) {
-				Bitu numofdisks = (equipment>>6)&3;
-				numofdisks++;
-				if(numofdisks > 1) numofdisks=1;//max 2 floppies at the moment
-				equipment&=~0x00C0;
-				equipment|=(numofdisks<<6);
-			} else equipment|=1;
-			mem_writew(BIOS_CONFIGURATION,equipment);
-			CMOS_SetRegister(0x14, (Bit8u)(equipment&0xff));
+			incrementFDD();
 		}
 	}
 }

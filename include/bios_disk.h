@@ -69,6 +69,7 @@ public:
 };
 
 void updateDPT(void);
+void incrementFDD(void);
 
 #define MAX_HDD_IMAGES 2
 
