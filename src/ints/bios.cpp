@@ -827,6 +827,7 @@ static Bitu INT15_Handler(void) {
 				CALLBACK_Idle();
 			}
 			CALLBACK_SCF(false);
+			break;
 		}
 	case 0x87:	/* Copy extended memory */
 		{
