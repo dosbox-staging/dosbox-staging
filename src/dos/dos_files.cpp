@@ -924,7 +924,9 @@ bool DOS_FCBCreate(Bit16u seg,Bit16u offset) {
 	DOS_FCB fcb(seg,offset);
 	char shortname[DOS_FCBNAME];Bit16u handle;
 	fcb.GetName(shortname);
-	if (!DOS_CreateFile(shortname,DOS_ATTR_ARCHIVE,&handle)) return false;
+	Bit8u attr = DOS_ATTR_ARCHIVE;
+	fcb.GetAttr(attr);
+	if (!DOS_CreateFile(shortname,attr,&handle)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
 }
@@ -1164,10 +1166,11 @@ bool DOS_FCBDeleteFile(Bit16u seg,Bit16u offset){
  * stored. This can not be the tempdta as that one is used by fcbfindfirst
  */
 	RealPt old_dta=dos.dta();dos.dta(dos.tables.tempdta_fcbdelete);
-	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));
+	RealPt new_dta=dos.dta();
 	bool nextfile = false;
 	bool return_value = false;
 	nextfile = DOS_FCBFindFirst(seg,offset);
+	DOS_FCB fcb(RealSeg(new_dta),RealOff(new_dta));
 	while(nextfile) {
 		char shortname[DOS_FCBNAME] = { 0 };
 		fcb.GetName(shortname);
