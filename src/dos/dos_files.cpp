@@ -926,6 +926,7 @@ bool DOS_FCBCreate(Bit16u seg,Bit16u offset) {
 	fcb.GetName(shortname);
 	Bit8u attr = DOS_ATTR_ARCHIVE;
 	fcb.GetAttr(attr);
+	if (!attr) attr = DOS_ATTR_ARCHIVE; //Better safe than sorry 
 	if (!DOS_CreateFile(shortname,attr,&handle)) return false;
 	fcb.FileOpen((Bit8u)handle);
 	return true;
