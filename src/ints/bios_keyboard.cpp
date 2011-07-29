@@ -382,7 +382,7 @@ static Bitu IRQ1_Handler(void) {
 				add_key(scan_to_scanascii[scancode].normal+0x5000);
 			} else if (flags1 &0x04) {
 				add_key((scan_to_scanascii[scancode].control&0xff00)|0xe0);
-			} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) {
+			} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) { //Due to |0xe0 results are identical. 
 				add_key((scan_to_scanascii[scancode].shift&0xff00)|0xe0);
 			} else add_key((scan_to_scanascii[scancode].normal&0xff00)|0xe0);
 			break;
@@ -393,7 +393,7 @@ static Bitu IRQ1_Handler(void) {
 			mem_writeb(BIOS_KEYBOARD_TOKEN,token);
 		} else if (flags1 &0x04) {
 			add_key(scan_to_scanascii[scancode].control);
-		} else if( ((flags1 &0x3) != 0) || ((flags1 &0x20) != 0) ) {
+		} else if( ((flags1 &0x3) != 0) ^ ((flags1 &0x20) != 0) ) { //Xor shift and numlock (both means off)
 			add_key(scan_to_scanascii[scancode].shift);
 		} else add_key(scan_to_scanascii[scancode].normal);
 		break;
