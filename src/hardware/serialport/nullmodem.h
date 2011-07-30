@@ -35,16 +35,8 @@
 
 class CNullModem : public CSerial {
 public:
-	TCPServerSocket* serversocket;
-	TCPClientSocket* clientsocket;
-
 	CNullModem(Bitu id, CommandLine* cmd);
 	~CNullModem();
-	bool receiveblock;		// It's not a block of data it rather blocks
-	Bit16u serverport;		// we are a server if this is nonzero
-	Bit16u clientport;
-
-	Bit8u hostnamebuffer[128]; // the name passed to us by the user
 
 	void updatePortConfig(Bit16u divider, Bit8u lcr);
 	void updateMSR();
@@ -56,6 +48,16 @@ public:
 	void setDTR(bool val);
 	void handleUpperEvent(Bit16u type);
 
+private:
+	TCPServerSocket* serversocket;
+	TCPClientSocket* clientsocket;
+
+	bool receiveblock;		// It's not a block of data it rather blocks
+	Bit16u serverport;		// we are a server if this is nonzero
+	Bit16u clientport;
+
+	Bit8u hostnamebuffer[128]; // the name passed to us by the user
+
 	Bitu rx_state;
 #define N_RX_IDLE		0
 #define N_RX_WAIT		1
@@ -64,10 +66,16 @@ public:
 #define N_RX_DISC		4
 
 	bool doReceive();
-	void ClientConnect();
+	bool ClientConnect(TCPClientSocket* newsocket);
+	bool ServerListen();
+	bool ServerConnect();
     void Disconnect();
 	Bits readChar();
 	void WriteChar(Bit8u data);
+
+	bool DTR_delta;		// with dtrrespect, we try to establish a connection
+						// whenever DTR switches to 1. This variable is
+						// used to remember the old state.
 
 	bool tx_block;		// true while the SERIAL_TX_REDUCTION event
 						// is pending
