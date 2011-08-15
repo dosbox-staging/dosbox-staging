@@ -56,7 +56,7 @@ void DOS_Shell::InputCommand(char * line) {
 			Bit16u dummy;
 			DOS_CloseFile(input_handle);
 			DOS_OpenFile("con",2,&dummy);
-			LOG(LOG_MISC,LOG_ERROR)("Reopening the input handle.This is a bug!");
+			LOG(LOG_MISC,LOG_ERROR)("Reopening the input handle. This is a bug!");
 		}
 		if (!n) {
 			size=0;			//Kill the while loop
@@ -174,6 +174,24 @@ void DOS_Shell::InputCommand(char * line) {
 						size++;
 					}
 					break;
+				case 15:		/* Shift-Tab */
+					if (l_completion.size()) {
+						if (it_completion == l_completion.begin()) it_completion = l_completion.end (); 
+						it_completion--;
+		
+						if (it_completion->length()) {
+							for (;str_index > completion_index; str_index--) {
+								// removes all characters
+								outc(8); outc(' '); outc(8);
+							}
+
+							strcpy(&line[completion_index], it_completion->c_str());
+							len = (Bit16u)it_completion->length();
+							str_len = str_index = completion_index + len;
+							size = CMD_MAXLINE - str_index - 2;
+							DOS_WriteFile(STDOUT, (Bit8u *)it_completion->c_str(), &len);
+						}
+					}
 				default:
 					break;
 				}
