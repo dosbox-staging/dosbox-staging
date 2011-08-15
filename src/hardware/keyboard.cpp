@@ -384,7 +384,7 @@ void KEYBOARD_Init(Section* sec) {
 	keyb.command=CMD_NONE;
 	keyb.p60changed=false;
 	keyb.repeat.key=KBD_NONE;
-	keyb.repeat.pause=200;
+	keyb.repeat.pause=500;
 	keyb.repeat.rate=33;
 	keyb.repeat.wait=0;
 	KEYBOARD_ClrBuffer();
