@@ -980,11 +980,29 @@ public:
 
 void RESCAN::Run(void) 
 {
-	// Get current drive
+	bool all = false;
+	
 	Bit8u drive = DOS_GetDefaultDrive();
-	if (Drives[drive]) {
-		Drives[drive]->EmptyCache();
+	
+	if(cmd->FindCommand(1,temp_line)) {
+		//-A -All /A /All 
+		if(temp_line.size() >= 2 && (temp_line[0] == '-' ||temp_line[0] =='/')&& (temp_line[1] == 'a' || temp_line[1] =='A') ) all = true;
+		else if(temp_line.size() == 2 && temp_line[1] == ':') {
+			lowcase(temp_line);
+			drive  = temp_line[0] - 'a';
+		}
+	}
+	// Get current drive
+	if (all) {
+		for(Bitu i =0; i<DOS_DRIVES;i++) {
+			if (Drives[i]) Drives[i]->EmptyCache();
+		}
 		WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
+	} else {
+		if (drive < DOS_DRIVES && Drives[drive]) {
+			Drives[drive]->EmptyCache();
+			WriteOut(MSG_Get("PROGRAM_RESCAN_SUCCESS"));
+		}
 	}
 }
 

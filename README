@@ -778,10 +778,19 @@ LOADFIX -f
        loadfix -f
 
 
-RESCAN
+RESCAN [Drive:] [-All]
   Make DOSBox reread the directory structure. Useful if you changed something
   on a mounted drive outside of DOSBox. (CTRL - F4 does this as well!)
+  
+  Drive: 
+        Drive to refresh.
 
+  -All
+        Refresh all drives.
+
+  if both a Drive: and -All are missing, then the current drive will be 
+  refreshed.
+  
 
 MIXER
   Makes DOSBox display its current volume settings.

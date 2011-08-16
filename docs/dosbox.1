@@ -205,7 +205,7 @@ which is located on the local filesystem. Not a mounted drive in
 .RS
 .TP
 .B \-securemode
-.RB Switches dosbox " to a more secure mode. In this mode the"
+.RB "Switches " dosbox " to a more secure mode. In this mode the"
 .RI "internal commands " MOUNT ", " IMGMOUNT " and " BOOT " won\'t work."
 It\'s not possible
 either to create a new configfile or languagefile in this mode.
@@ -242,11 +242,21 @@ The amount of memory to eat up (in kb). Example \-32, \-64 or \-128
 Frees all memory eaten up by loadfix.
 .RE
 .TP
-.B RESCAN
+.B RESCAN [\-All] [Drive:]
 .LP
 .RB "Make " dosbox " reread the directory structure. Useful if you changed
 .RB "something on a mounted drive outside " dosbox ".(CTRL\-F4 does"
 this as well!)
+.RS
+.TP
+.B \-All
+.R Reread directory structure for all drives.
+.TP
+.B Drive:
+.RB "Reread directory structure for drive " Drive:
+.RE
+.LP
+.RB "If both " \-All " and " Drive: " are missing, then the current drive is used.
 .TP
 .B IMGMOUNT
 .LP
