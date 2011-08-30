@@ -77,20 +77,20 @@ static Bitu temp[643]={0};
 
 static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
-	const Bit8u *reader = base + vidstart;
+#define CGA16_READER(OFF) (base[(vidstart +(OFF))& (8*1024 -1)])
 	Bit32u * draw=(Bit32u *)TempLine;
 	//Generate a temporary bitline to calculate the avarage
 	//over bit-2  bit-1  bit  bit+1.
 	//Combine this number with the current colour to get 
-	//an unigue index in the pallete. Or it with bit 7 as they are stored 
+	//an unique index in the pallete. Or it with bit 7 as they are stored
 	//in the upperpart to keep them from interfering the regular cga stuff
 
 	for(Bitu x = 0; x < 640; x++)
-		temp[x+2] = (( reader[(x>>3)] >> (7-(x&7)) )&1) << 4;
+		temp[x+2] = (( CGA16_READER(x>>3)>> (7-(x&7)) )&1) << 4;
 		//shift 4 as that is for the index.
 	Bitu i = 0,temp1,temp2,temp3,temp4;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1 = *reader++;
+		Bitu val1 = CGA16_READER(x);
 		Bitu val2 = val1&0xf;
 		val1 >>= 4;
 
@@ -113,6 +113,7 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line) {
 		          ((temp4|val2) <<24);
 	}
 	return TempLine;
+#undef CGA16_READER
 }
 
 static Bit8u * VGA_Draw_4BPP_Line(Bitu vidstart, Bitu line) {
