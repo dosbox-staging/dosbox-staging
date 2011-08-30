@@ -1158,10 +1158,15 @@ static void CTMIXER_Write(Bit8u val) {
 		break;
 	case 0x08:		/* CDA Volume (SB2 Only) */
 		SETPROVOL(sb.mixer.cda,(val&0xf)|(val<<4));
+		CTMIXER_UpdateVolumes();
 		break;
 	case 0x0a:		/* Mic Level (SBPRO) or DAC Volume (SB2): 2-bit, 3-bit on SB16 */
-		if (sb.type==SBT_2) sb.mixer.dac[0]=sb.mixer.dac[1]=((val & 0x6) << 2)|3;
-		else sb.mixer.mic=((val & 0x7) << 2)|(sb.type==SBT_16?1:3);
+		if (sb.type==SBT_2) {
+			sb.mixer.dac[0]=sb.mixer.dac[1]=((val & 0x6) << 2)|3;
+			CTMIXER_UpdateVolumes();
+		} else {
+			sb.mixer.mic=((val & 0x7) << 2)|(sb.type==SBT_16?1:3);
+		}
 		break;
 	case 0x0e:		/* Output/Stereo Select */
 		sb.mixer.stereo=(val & 0x2) > 0;
@@ -1179,6 +1184,7 @@ static void CTMIXER_Write(Bit8u val) {
 		break;
 	case 0x28:		/* CD Audio Volume (SBPRO) */
 		SETPROVOL(sb.mixer.cda,val);
+		CTMIXER_UpdateVolumes();
 		break;
 	case 0x2e:		/* Line-in Volume (SBPRO) */
 		SETPROVOL(sb.mixer.lin,val);
