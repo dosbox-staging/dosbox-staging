@@ -573,6 +573,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	while(ScanCMDBool(args,"A")) ;
 	ScanCMDBool(args,"Y");
 	ScanCMDBool(args,"-Y");
+	ScanCMDBool(args,"V");
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
