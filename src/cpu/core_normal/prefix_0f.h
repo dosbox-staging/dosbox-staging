@@ -228,7 +228,8 @@
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
 			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegal_opcode;
-			Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)CPU_CycleMax);
+			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
+			Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double) (CPU_CycleAutoAdjust?70000:CPU_CycleMax));
 			reg_edx=(Bit32u)(tsc>>32);
 			reg_eax=(Bit32u)(tsc&0xffffffff);
 		}
