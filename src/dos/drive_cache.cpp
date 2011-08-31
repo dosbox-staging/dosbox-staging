@@ -457,11 +457,12 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName) {
 	char buff[CROSS_LEN];
 	for (Bits i = 0; i < filelist_size; i++) {
 		res = wine_hash_short_file_name(curDir->fileList[i]->orgname,buff);
-		if (!strncmp(shortName,buff,res))
-		{	// Found
+		buff[res] = 0;
+		if (!strcmp(shortName,buff)) {	
+			// Found
 			strcpy(shortName,curDir->fileList[i]->orgname);
 			return i;
-		};
+		}
 	}
 #endif
 	// not available
