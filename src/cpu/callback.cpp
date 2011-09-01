@@ -433,7 +433,18 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x09,(Bit8u)0x59);		// pop cx
 		phys_writeb(physAddress+0x0A,(Bit8u)0xCF);		//An IRET Instruction
 		return (use_cb?15:11);
-
+	case CB_INT13:
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
+		if (use_cb) {
+			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x03,(Bit16u)callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x01,(Bit8u)0xCF);		//An IRET Instruction
+		phys_writew(physAddress+0x02,(Bit16u)0x0ECD);		// int 0e
+		phys_writeb(physAddress+0x04,(Bit8u)0xCF);		//An IRET Instruction
+		return (use_cb?9:5);
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}
