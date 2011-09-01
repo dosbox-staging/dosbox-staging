@@ -128,6 +128,7 @@ void Program::ChangeToLongCmd() {
 	full_arguments.assign(""); //Clear so it gets even more save
 }
 
+static char last_written_character = 0;//For 0xA to OxD 0xA expansion
 void Program::WriteOut(const char * format,...) {
 	char buf[2048];
 	va_list msg;
@@ -139,10 +140,10 @@ void Program::WriteOut(const char * format,...) {
 	Bit16u size = (Bit16u)strlen(buf);
 	for(Bit16u i = 0; i < size;i++) {
 		Bit8u out;Bit16u s=1;
-		if (buf[i] == 0xA && i > 0 && buf[i-1] !=0xD) {
+		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
 		}
-		out = buf[i];
+		last_written_character = out = buf[i];
 		DOS_WriteFile(STDOUT,&out,&s);
 	}
 	
@@ -154,10 +155,10 @@ void Program::WriteOut_NoParsing(const char * format) {
 	char const* buf = format;
 	for(Bit16u i = 0; i < size;i++) {
 		Bit8u out;Bit16u s=1;
-		if (buf[i] == 0xA && i > 0 && buf[i-1] !=0xD) {
+		if (buf[i] == 0xA && last_written_character != 0xD) {
 			out = 0xD;DOS_WriteFile(STDOUT,&out,&s);
 		}
-		out = buf[i];
+		last_written_character = out = buf[i];
 		DOS_WriteFile(STDOUT,&out,&s);
 	}
 
