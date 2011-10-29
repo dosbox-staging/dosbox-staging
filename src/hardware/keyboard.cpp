@@ -183,7 +183,9 @@ extern void TIMER_SetGate2(bool);
 static void write_p61(Bitu port,Bitu val,Bitu iolen) {
 	if ((port_61_data ^ val) & 3) {
 		if((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
-		PCSPEAKER_SetType(val & 3);
+		bool pit_clock_gate_enabled = val & 1;
+		bool pit_output_enabled = val & 2;
+		PCSPEAKER_SetType(pit_clock_gate_enabled, pit_output_enabled);
 	}
 	port_61_data = val;
 }

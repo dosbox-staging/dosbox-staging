@@ -349,6 +349,10 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 				PCSPEAKER_SetCounter(0,3);
 			}
 			pit[latch].new_mode = true;
+			if (latch == 2) {
+				// notify pc speaker code that the control word was written
+				PCSPEAKER_SetPITControl(mode);
+			}
 		}
 		break;
     case 3:

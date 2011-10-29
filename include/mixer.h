@@ -117,6 +117,7 @@ public:
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-void PCSPEAKER_SetType(Bitu mode);
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetPITControl(Bitu mode);
 
 #endif
