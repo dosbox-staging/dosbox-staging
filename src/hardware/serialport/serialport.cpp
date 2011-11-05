@@ -223,7 +223,8 @@ void CSerial::changeLineProperties() {
 	else bitlen = (1000.0f/115200.0f)*(float)baud_divider;
 	bytetime=bitlen*(float)(1+5+1);		// startbit + minimum length + stopbit
 	bytetime+= bitlen*(float)(LCR&0x3); // databits
-	if(LCR&0x4) bytetime+=bitlen;		// stopbit
+	if(LCR&0x4) bytetime+=bitlen;		// 2nd stopbit
+	if(LCR&0x8) bytetime+=bitlen;		// parity
 
 #if SERIAL_DEBUG
 	const char* const dbgtext[]={"none","odd","none","even","none","mark","none","space"};
