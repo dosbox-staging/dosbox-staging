@@ -50,8 +50,8 @@ struct button_event {
 #define QUEUE_SIZE 32
 #define MOUSE_BUTTONS 3
 #define MOUSE_IRQ 12
-#define POS_X ((Bit16s)(mouse.x) & mouse.granMask)
-#define POS_Y (Bit16s)(mouse.y)
+#define POS_X ((Bit16s)(mouse.x) & mouse.gran_x)
+#define POS_Y ((Bit16s)(mouse.y) & mouse.gran_y)
 
 #define CURSORX 16
 #define CURSORY 16
@@ -125,7 +125,7 @@ static struct {
 	bool timer_in_progress;
 	bool in_UIR;
 	Bit8u mode;
-	Bit16s granMask;
+	Bit16s gran_x,gran_y;
 } mouse;
 
 bool Mouse_SetPS2State(bool use) {
@@ -255,6 +255,7 @@ void DrawCursorText() {
 	// Save Background
 	mouse.backposx		= POS_X>>3;
 	mouse.backposy		= POS_Y>>3;
+	if (mouse.mode < 2) mouse.backposx >>= 1; 
 
 	//use current page (CV program)
 	Bit8u page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
@@ -582,43 +583,47 @@ static void Mouse_ResetHardware(void){
 
 //Does way to much. Many things should be moved to mouse reset one day
 void Mouse_NewVideoMode(void) {
-	mouse.inhibit_draw=false;
+	mouse.inhibit_draw = false;
 	/* Get the correct resolution from the current video mode */
-	Bit8u mode=mem_readb(BIOS_VIDEO_MODE);
+	Bit8u mode = mem_readb(BIOS_VIDEO_MODE);
 	if(mode == mouse.mode) {LOG(LOG_MOUSE,LOG_NORMAL)("New video is the same as the old"); /*return;*/}
+	mouse.gran_x = mouse.gran_y = 0xffff;
 	switch (mode) {
 	case 0x00:
 	case 0x01:
 	case 0x02:
-	case 0x03: {
-		Bitu rows=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
-		if ((rows==0) || (rows>250)) rows=25-1;
-		mouse.max_y=8*(rows+1)-1;
+	case 0x03:
+	case 0x07: {
+		mouse.gran_x = (mode<2)?0xfff0:0xfff8;
+		mouse.gran_y = 0xfff8;
+		Bitu rows = real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
+		if ((rows == 0) || (rows > 250)) rows = 25 - 1;
+		mouse.max_y = 8*(rows+1) - 1;
 		break;
 	}
 	case 0x04:
 	case 0x05:
 	case 0x06:
-	case 0x07:
 	case 0x08:
 	case 0x09:
 	case 0x0a:
 	case 0x0d:
 	case 0x0e:
 	case 0x13:
-		mouse.max_y=199;
+		if (mode == 0x0d || mode == 0x13) mouse.gran_x = 0xfffe;
+		mouse.max_y = 199;
 		break;
 	case 0x0f:
 	case 0x10:
-		mouse.max_y=349;
+		mouse.max_y = 349;
 		break;
 	case 0x11:
 	case 0x12:
-		mouse.max_y=479;
+		mouse.max_y = 479;
 		break;
 	default:
 		LOG(LOG_MOUSE,LOG_ERROR)("Unhandled videomode %X on reset",mode);
-		mouse.inhibit_draw=true;
+		mouse.inhibit_draw = true;
 		return;
 	}
 	mouse.mode = mode;
@@ -626,7 +631,6 @@ void Mouse_NewVideoMode(void) {
 	mouse.max_x = 639;
 	mouse.min_x = 0;
 	mouse.min_y = 0;
-	mouse.granMask = (mode == 0x0d || mode == 0x13) ? 0xfffe : 0xffff;
 
 	mouse.events = 0;
 	mouse.timer_in_progress = false;
