@@ -587,7 +587,8 @@ void Mouse_NewVideoMode(void) {
 	/* Get the correct resolution from the current video mode */
 	Bit8u mode = mem_readb(BIOS_VIDEO_MODE);
 	if(mode == mouse.mode) {LOG(LOG_MOUSE,LOG_NORMAL)("New video is the same as the old"); /*return;*/}
-	mouse.gran_x = mouse.gran_y = 0xffff;
+	mouse.gran_x = (Bit16s)0xffff;
+	mouse.gran_y = (Bit16s)0xffff;
 	switch (mode) {
 	case 0x00:
 	case 0x01:
@@ -595,7 +596,7 @@ void Mouse_NewVideoMode(void) {
 	case 0x03:
 	case 0x07: {
 		mouse.gran_x = (mode<2)?0xfff0:0xfff8;
-		mouse.gran_y = 0xfff8;
+		mouse.gran_y = (Bit16s)0xfff8;
 		Bitu rows = real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 		if ((rows == 0) || (rows > 250)) rows = 25 - 1;
 		mouse.max_y = 8*(rows+1) - 1;
@@ -610,7 +611,7 @@ void Mouse_NewVideoMode(void) {
 	case 0x0d:
 	case 0x0e:
 	case 0x13:
-		if (mode == 0x0d || mode == 0x13) mouse.gran_x = 0xfffe;
+		if (mode == 0x0d || mode == 0x13) mouse.gran_x = (Bit16s)0xfffe;
 		mouse.max_y = 199;
 		break;
 	case 0x0f:

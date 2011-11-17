@@ -455,13 +455,13 @@ Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName) {
 	// else it's most likely a Wine style short name ABCD~###, # = not dot  (length at least 8) 
 	// The above test is rather strict as the following loop can be really slow if filelist_size is large.
 	char buff[CROSS_LEN];
-	for (Bits i = 0; i < filelist_size; i++) {
+	for (Bitu i = 0; i < filelist_size; i++) {
 		res = wine_hash_short_file_name(curDir->fileList[i]->orgname,buff);
 		buff[res] = 0;
 		if (!strcmp(shortName,buff)) {	
 			// Found
 			strcpy(shortName,curDir->fileList[i]->orgname);
-			return i;
+			return (Bits)i;
 		}
 	}
 #endif
