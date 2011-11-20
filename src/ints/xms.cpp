@@ -19,6 +19,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include "dosbox.h"
 #include "callback.h"
 #include "mem.h"
