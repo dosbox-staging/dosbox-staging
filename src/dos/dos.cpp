@@ -220,6 +220,7 @@ static Bitu DOS_21Handler(void) {
 			Bit8u free=mem_readb(data);
 			Bit8u read=0;Bit8u c;Bit16u n=1;
 			if (!free) break;
+			free--;
 			for(;;) {
 				DOS_ReadFile(STDIN,&c,&n);
 				if (c == 8) {			// Backspace
@@ -232,7 +233,7 @@ static Bitu DOS_21Handler(void) {
 					}
 					continue;
 				}
-				if (read >= free) {		// Keyboard buffer full
+				if (read == free && c != 13) {		// Keyboard buffer full
 					Bit8u bell = 7;
 					DOS_WriteFile(STDOUT, &bell, &n);
 					continue;
