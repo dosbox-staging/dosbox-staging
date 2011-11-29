@@ -299,7 +299,7 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 	}
 
 	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
-	/* If it still fails. which error should we give ? PATH NOT FOUND or EACCESS */
+	/* If it still fails, which error should we give ? PATH NOT FOUND or EACCESS */
 	LOG(LOG_FILES,LOG_NORMAL)("Rename fails for %s to %s, no proper errorcode returned.",oldname,newname);
 	DOS_SetError(DOSERR_FILE_NOT_FOUND);
 	return false;

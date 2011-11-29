@@ -37,7 +37,7 @@ public:
 private:
 	Bit8u readcache;
 	Bit8u lastwrite;
-	struct ansi { /* should create a constructor which fills them with the appriorate values */
+	struct ansi { /* should create a constructor, which would fill them with the appropriate values */
 		bool esc;
 		bool sci;
 		bool enabled;
@@ -128,7 +128,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				count++;
 				continue;
 			} else { 
-				/* Some sort of "hack" now that \n doesn't set col to 0 (int10_char.cpp old chessgame) */
+				/* Some sort of "hack" now that '\n' doesn't set col to 0 (int10_char.cpp old chessgame) */
 				if((data[count] == '\n') && (lastwrite != '\r')) INT10_TeletypeOutputAttr('\r',ansi.attr,ansi.enabled);
 				/* pass attribute only if ansi is enabled */
 				INT10_TeletypeOutputAttr(data[count],ansi.attr,ansi.enabled);

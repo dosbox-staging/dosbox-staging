@@ -101,7 +101,7 @@ bool Virtual_File::Read(Bit8u * data,Bit16u * size) {
 }
 
 bool Virtual_File::Write(Bit8u * data,Bit16u * size){
-/* Not really writeable */
+	/* Not really writable */
 	return false;
 }
 

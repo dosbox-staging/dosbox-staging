@@ -849,7 +849,7 @@ void PAGING_SetDirBase(Bitu cr3) {
 }
 
 void PAGING_Enable(bool enabled) {
-	/* If paging is disable we work from a default paging table */
+	/* If paging is disabled, we work from a default paging table */
 	if (paging.enabled==enabled) return;
 	paging.enabled=enabled;
 	if (enabled) {

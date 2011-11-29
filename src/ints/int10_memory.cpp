@@ -154,7 +154,7 @@ void INT10_SetupRomMemory(void) {
 			int10.rom.video_dcc_table=RealMake(0xC000,int10.rom.used);
 			phys_writeb(rom_base+int10.rom.used++,0x10);	// number of entries
 			phys_writeb(rom_base+int10.rom.used++,1);		// version number
-			phys_writeb(rom_base+int10.rom.used++,8);		// maximal display code
+			phys_writeb(rom_base+int10.rom.used++,8);		// maximum display code
 			phys_writeb(rom_base+int10.rom.used++,0);		// reserved
 			// display combination codes
 			phys_writew(rom_base+int10.rom.used,0x0000);	int10.rom.used+=2;

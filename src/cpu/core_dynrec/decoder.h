@@ -26,7 +26,7 @@
 
 /*
 	The function CreateCacheBlock translates the instruction stream
-	until either an unhandled instruction is found, the maximal
+	until either an unhandled instruction is found, the maximum
 	number of translated instructions is reached or some critical
 	instruction is encountered.
 */
@@ -586,7 +586,7 @@ restart_prefix:
 			goto illegalopcode;
 		}
 	}
-	// link to next block because the maximal number of opcodes has been reached
+	// link to next block because the maximum number of opcodes has been reached
 	dyn_set_eip_end();
 	dyn_reduce_cycles();
 	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));

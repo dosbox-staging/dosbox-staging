@@ -2677,7 +2677,7 @@ restart_prefix:
 			goto illegalopcode;
 		}
 	}
-	// link to next block because the maximal number of opcodes has been reached
+	// link to next block because the maximum number of opcodes has been reached
 	dyn_set_eip_end();
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();

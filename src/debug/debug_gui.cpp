@@ -161,7 +161,7 @@ static void DrawBars(void) {
 
 
 static void MakeSubWindows(void) {
-	/* The Std output win should go in bottem */
+	/* The Std output win should go at the bottom */
 	/* Make all the subwindows */
 	int win_main_maxy, win_main_maxx; getmaxyx(dbg.win_main,win_main_maxy,win_main_maxx);
 	int outy=1; //Match values with above

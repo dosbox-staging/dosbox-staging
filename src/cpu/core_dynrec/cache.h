@@ -53,7 +53,7 @@ public:
 		CacheBlockDynRec * to;		// this block can transfer control to the to-block
 		CacheBlockDynRec * next;
 		CacheBlockDynRec * from;	// the from-block can transfer control to this block
-	} link[2];	// maximal two links (conditional jumps)
+	} link[2];	// maximum two links (conditional jumps)
 	CacheBlockDynRec * crossblock;
 };
 

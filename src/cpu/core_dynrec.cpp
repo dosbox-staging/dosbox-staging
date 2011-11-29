@@ -246,7 +246,7 @@ run_block:
 			// the block was exited due to a non-predictable control flow
 			// modifying instruction (like ret) or some nontrivial cpu state
 			// changing instruction (for example switch to/from pmode),
-			// or the maximal number of instructions to translate was reached
+			// or the maximum number of instructions to translate was reached
 #if C_HEAVY_DEBUG
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif

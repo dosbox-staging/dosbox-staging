@@ -412,7 +412,7 @@ void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 };
 
 bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
-// Checks if breakpoint is valid an should stop execution
+// Checks if breakpoint is valid and should stop execution
 {
 	if ((ignoreAddressOnce!=0) && (GetAddress(seg,off)==ignoreAddressOnce)) {
 		ignoreAddressOnce = 0;
@@ -476,7 +476,7 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 };
 
 bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
-// Checks if interrupt breakpoint is valid an should stop execution
+// Checks if interrupt breakpoint is valid and should stop execution
 {
 	if ((ignoreAddressOnce!=0) && (adr==ignoreAddressOnce)) {
 		ignoreAddressOnce = 0;
@@ -491,7 +491,7 @@ bool CBreakpoint::CheckIntBreakpoint(PhysPt adr, Bit8u intNr, Bit16u ahValue)
 		bp = (*i);
 		if ((bp->GetType()==BKPNT_INTERRUPT) && bp->IsActive() && (bp->GetIntNr()==intNr)) {
 			if ((bp->GetValue()==BPINT_ALL) || (bp->GetValue()==ahValue)) {
-				// Ignoie it once ?
+				// Ignore it once ?
 				if (ignoreOnce==bp) {
 					ignoreOnce=0;
 					bp->Activate(true);
@@ -1402,7 +1402,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 		// Variable found ?
 		CDebugVar* var = CDebugVar::FindVar(address);
 		if (var) {
-			// Replace occurance
+			// Replace occurence
 			char* pos1 = strchr(inst,'[');
 			char* pos2 = strchr(inst,']');
 			if (pos1 && pos2) {
