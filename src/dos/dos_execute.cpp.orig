@@ -476,7 +476,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		reg_di=RealOff(sssp);
 		reg_bp=0x91c;	/* DOS internal stack begin relict */
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
-#if C_DEBUG
+#if C_DEBUG		
 		/* Started from debug.com, then set breakpoint at start */
 		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
 #endif

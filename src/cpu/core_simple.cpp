@@ -27,7 +27,7 @@
 #include "pic.h"
 #include "fpu.h"
 
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 #include "debug.h"
 #endif
 
@@ -41,7 +41,7 @@
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
 
-extern Bitu cycle_count;
+extern Bitu DEBUG_cycle_count;
 
 #if C_FPU
 #define CPU_FPU	1						//Enable FPU escape instructions
@@ -141,14 +141,14 @@ Bits CPU_Core_Simple_Run(void) {
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
 		core.base_val_ds=ds;
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUG || C_GDBSERVER
+#if C_HEAVY_DEBUG || C_GDBSERVER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
-			return debugCallback;
+			return DEBUG_debugCallback;
 		};
 #endif
-		cycle_count++;
+		DEBUG_cycle_count++;
 #endif
 restart_opcode:
 		switch (core.opcode_index+Fetchb()) {
@@ -159,7 +159,7 @@ restart_opcode:
 		#include "core_normal/prefix_66_0f.h"
 		default:
 		illegal_opcode:
-#if C_DEBUG	
+#if C_DEBUG
 			{
 				Bitu len=(GETIP-reg_eip);
 				LOADIP;

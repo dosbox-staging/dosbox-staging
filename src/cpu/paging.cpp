@@ -130,7 +130,7 @@ static Bits PageFaultCore(void) {
 	}
 	return 0;
 }
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 Bitu DEBUG_EnableDebugger(void);
 #endif
 
@@ -155,7 +155,7 @@ void PAGING_PageFault(PhysPt lin_addr,Bitu page_addr,Bitu faultcode) {
 	cpu.mpl=3;
 
 	CPU_Exception(EXCEPTION_PF,faultcode);
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 //	DEBUG_EnableDebugger();
 #endif
 	DOSBOX_RunMachine();

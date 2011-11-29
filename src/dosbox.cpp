@@ -140,7 +140,7 @@ static Bitu Normal_Loop(void) {
 				Bitu blah = (*CallBack_Handlers[ret])();
 				if (GCC_UNLIKELY(blah)) return blah;
 			}
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 			if (DEBUG_ExitLoop()) return 0;
 #endif
 		} else {
@@ -350,7 +350,7 @@ void DOSBOX_Init(void) {
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
 
-#if C_DEBUG	
+#if C_DEBUG || C_GDBSERVER	
 	LOG_StartUp();
 #endif
 	
@@ -496,7 +496,7 @@ void DOSBOX_Init(void) {
 	                  "  In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "  See the README/Manual for more details.");
 
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
 #endif
 

@@ -29,7 +29,7 @@
 #include "fpu.h"
 #include "paging.h"
 
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 #include "debug.h"
 #endif
 
@@ -50,7 +50,7 @@
 #define SaveMd(off,val)	mem_writed_inline(off,val)
 #endif
 
-extern Bitu cycle_count;
+extern Bitu DEBUG_cycle_count;
 
 #if C_FPU
 #define CPU_FPU	1						//Enable FPU escape instructions
@@ -220,14 +220,14 @@ Bits CPU_Core_Prefetch_Run(void) {
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
 		core.base_val_ds=ds;
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+#if C_DEBUG || C_GDBSERVER
+#if C_HEAVY_DEBUG || C_GDBSERVER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
-			return debugCallback;
+			return DEBUG_debugCallback;
 		};
 #endif
-		cycle_count++;
+		DEBUG_cycle_count++;
 #endif
 restart_opcode:
 		Bit8u next_opcode=Fetchb();
