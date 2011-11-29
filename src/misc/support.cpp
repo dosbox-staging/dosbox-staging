@@ -171,7 +171,7 @@ double ConvDblWord(char * word) {
 
 static char buf[1024];           //greater scope as else it doesn't always gets thrown right (linux/gcc2.95)
 void E_Exit(const char * format,...) {
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_HEAVY_DEBUG || C_GDBSERVER
  	DEBUG_HeavyWriteLogInstruction();
 #endif
 	va_list msg;

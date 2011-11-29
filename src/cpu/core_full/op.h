@@ -356,12 +356,12 @@ switch (inst.code.op) {
 		CPU_JMP(true,inst_op2_d,inst_op1_d,GetIP());
 		continue;
 	case O_INT:
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 		FillFlags();
 		if (((inst.entry & 0xFF)==0xcc) && DEBUG_Breakpoint()) 
-			return debugCallback;
+			return DEBUG_debugCallback;
 		else if (DEBUG_IntBreakpoint(inst_op1_b)) 
-			return debugCallback;
+			return DEBUG_debugCallback;
 #endif
 		CPU_SW_Interrupt(inst_op1_b,GetIP());
 		continue;

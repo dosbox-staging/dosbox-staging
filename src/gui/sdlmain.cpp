@@ -1334,7 +1334,7 @@ static void GUI_StartUp(Section * sec) {
 	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
 	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 	/* Pause binds with activate-debugger */
 #else
 	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause");
@@ -1698,7 +1698,7 @@ static void launcheditor() {
 	printf("can't find editor(s) specified at the command line.\n");
 	exit(1);
 }
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
@@ -1712,7 +1712,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	SDL_CloseAudio();
 	SDL_Delay(50);
 	SDL_Quit();
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 	// shutdown curses
 	DEBUG_ShutDown(NULL);
 #endif

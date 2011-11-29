@@ -741,10 +741,10 @@
 		CPU_RET(false,0,GETIP);
 		continue;
 	CASE_B(0xcc)												/* INT3 */
-#if C_DEBUG	
+#if C_DEBUG || C_GDBSERVER	
 		FillFlags();
 		if (DEBUG_Breakpoint())
-			return debugCallback;
+			return DEBUG_debugCallback;
 #endif			
 		CPU_SW_Interrupt_NoIOPLCheck(3,GETIP);
 #if CPU_TRAP_CHECK
@@ -754,10 +754,10 @@
 	CASE_B(0xcd)												/* INT Ib */	
 		{
 			Bit8u num=Fetchb();
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 			FillFlags();
 			if (DEBUG_IntBreakpoint(num)) {
-				return debugCallback;
+				return DEBUG_debugCallback;
 			}
 #endif
 			CPU_SW_Interrupt(num,GETIP);

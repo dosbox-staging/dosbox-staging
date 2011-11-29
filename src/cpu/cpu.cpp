@@ -90,7 +90,7 @@ void CPU_Core_Dynrec_Cache_Close(void);
  * In non-debug mode dosbox doesn't do detection (and hence doesn't crash at
  * that point). (game might crash later due to the unhandled exception) */
 
-#if C_DEBUG
+#if C_DEBUG || C_GDBSERVER
 // #define CPU_CHECK_EXCEPT 1
 // #define CPU_CHECK_IGNORE 1
  /* Use CHECK_EXCEPT when something doesn't work to see if a exception is 
@@ -546,6 +546,10 @@ Bit8u lastint;
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	lastint=num;
 	FillFlags();
+#if C_GDBSERVER
+	if (type == 0)
+		DEBUG_IrqBreakpoint(num);
+#endif
 #if C_DEBUG
 	switch (num) {
 	case 0xcd:

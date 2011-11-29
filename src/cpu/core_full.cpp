@@ -64,12 +64,12 @@ typedef PhysPt EAPoint;
 Bits CPU_Core_Full_Run(void) {
 	FullData inst;	
 	while (CPU_Cycles-->0) {
-#if C_DEBUG
-		cycle_count++;
-#if C_HEAVY_DEBUG
+#if C_DEBUG || C_GDBSERVER
+		DEBUG_cycle_count++;
+#if C_HEAVY_DEBUG || C_GDBSERVER
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
-			return debugCallback;
+			return DEBUG_debugCallback;
 		};
 #endif
 #endif

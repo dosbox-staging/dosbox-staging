@@ -27,6 +27,8 @@
 #include "mem.h"
 #endif
 
+#include "debug.h"
+
 // disable this to reduce the size of the TLB
 // NOTE: does not work with the dynamic core (dynrec is fine)
 #define USE_FULL_TLB
@@ -261,12 +263,18 @@ static INLINE PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 /* Special inlined memory reading/writing */
 
 static INLINE Bit8u mem_readb_inline(PhysPt address) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemReadHook(address, 1);
+#endif
 	HostPt tlb_addr=get_tlb_read(address);
 	if (tlb_addr) return host_readb(tlb_addr+address);
 	else return (Bit8u)(get_tlb_readhandler(address))->readb(address);
 }
 
 static INLINE Bit16u mem_readw_inline(PhysPt address) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemReadHook(address, 1);
+#endif
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) return host_readw(tlb_addr+address);
@@ -275,6 +283,9 @@ static INLINE Bit16u mem_readw_inline(PhysPt address) {
 }
 
 static INLINE Bit32u mem_readd_inline(PhysPt address) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemReadHook(address, 1);
+#endif
 	if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_read(address);
 		if (tlb_addr) return host_readd(tlb_addr+address);
@@ -283,12 +294,18 @@ static INLINE Bit32u mem_readd_inline(PhysPt address) {
 }
 
 static INLINE void mem_writeb_inline(PhysPt address,Bit8u val) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemWriteHook(address, 1, val);
+#endif
 	HostPt tlb_addr=get_tlb_write(address);
 	if (tlb_addr) host_writeb(tlb_addr+address,val);
 	else (get_tlb_writehandler(address))->writeb(address,val);
 }
 
 static INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemWriteHook(address, 2, val);
+#endif
 	if ((address & 0xfff)<0xfff) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) host_writew(tlb_addr+address,val);
@@ -297,6 +314,9 @@ static INLINE void mem_writew_inline(PhysPt address,Bit16u val) {
 }
 
 static INLINE void mem_writed_inline(PhysPt address,Bit32u val) {
+#ifdef C_GDBSERVER
+	DEBUG_GdbMemWriteHook(address, 4, val);
+#endif
 	if ((address & 0xfff)<0xffd) {
 		HostPt tlb_addr=get_tlb_write(address);
 		if (tlb_addr) host_writed(tlb_addr+address,val);
