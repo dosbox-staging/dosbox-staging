@@ -871,6 +871,11 @@ static void DSP_DoCommand(void) {
 	case 0x76:  /* 074h : Single Cycle 3-bit(2.6bit) ADPCM */
 		DSP_PrepareDMA_Old(DSP_DMA_3,false,false);
 		break;
+	case 0x7d:	/* Auto Init 4-bit ADPCM Reference */
+		DSP_SB2_ABOVE;
+		sb.adpcm.haveref=true;
+		DSP_PrepareDMA_Old(DSP_DMA_4,true,false);
+		break;
 	case 0x17:	/* 017h : Single Cycle 2-bit ADPCM Reference*/
 		sb.adpcm.haveref=true;
 	case 0x16:  /* 074h : Single Cycle 2-bit ADPCM */
@@ -996,7 +1001,7 @@ static void DSP_DoCommand(void) {
 		DSP_SB2_ABOVE;
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented MIDI UART command %2X",sb.dsp.cmd);
 		break;
-	case 0x7d: case 0x7f: case 0x1f:
+	case 0x7f: case 0x1f:
 		DSP_SB2_ABOVE;
 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented auto-init DMA ADPCM command %2X",sb.dsp.cmd);
 		break;
