@@ -375,7 +375,7 @@ graphics_chars:
 				reg_al=0x12;
 				break;	
 			}		
-		case 0x32:							/* Video adressing */
+		case 0x32:							/* Video addressing */
 			if (!IS_VGA_ARCH) break;
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			if (svgaCard==SVGA_TsengET4K) reg_al&=1;

@@ -98,7 +98,7 @@ static void LoadMessageFile(const char * fname) {
 			strcpy(name,linein+1);
 		/* End of string marker */
 		} else if (linein[0]=='.') {
-			/* Replace/Add the string to the internal langaugefile */
+			/* Replace/Add the string to the internal languagefile */
 			/* Remove last newline (marker is \n.\n) */
 			size_t ll = strlen(string);
 			if(ll && string[ll - 1] == '\n') string[ll - 1] = 0; //Second if should not be needed, but better be safe.

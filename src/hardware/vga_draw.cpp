@@ -82,7 +82,7 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line) {
 	//Generate a temporary bitline to calculate the avarage
 	//over bit-2  bit-1  bit  bit+1.
 	//Combine this number with the current colour to get 
-	//an unique index in the pallete. Or it with bit 7 as they are stored
+	//an unique index in the pallette. Or it with bit 7 as they are stored
 	//in the upperpart to keep them from interfering the regular cga stuff
 
 	for(Bitu x = 0; x < 640; x++)

@@ -323,7 +323,7 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 		/* Open the actual file */
 		FILE * fp=OpenCaptureFile("Screenshot",".png");
 		if (!fp) goto skip_shot;
-		/* First try to alloacte the png structures */
+		/* First try to allocate the png structures */
 		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
 		if (!png_ptr) goto skip_shot;
 		info_ptr = png_create_info_struct(png_ptr);

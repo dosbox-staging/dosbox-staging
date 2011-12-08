@@ -1079,7 +1079,7 @@ static Bitu V86_Monitor() {
 
 		reg_esp+=6;		// skip ip of CALL and error code of EXCEPTION 0x0d
 
-		/* Get adress of faulting instruction */
+		/* Get address of faulting instruction */
 		Bit16u v86_cs=mem_readw(SegPhys(ss)+((reg_esp+4) & cpu.stack.mask));
 		Bit16u v86_ip=mem_readw(SegPhys(ss)+((reg_esp+0) & cpu.stack.mask));
 		Bit8u v86_opcode=mem_readb((v86_cs<<4)+v86_ip);

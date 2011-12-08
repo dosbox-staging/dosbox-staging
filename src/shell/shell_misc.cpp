@@ -299,7 +299,7 @@ void DOS_Shell::InputCommand(char * line) {
 						}
 						res=DOS_FindNext();
 					}
-					/* Add excutable list to front of completion list. */
+					/* Add executable list to front of completion list. */
 					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
 					it_completion = l_completion.begin();
 					dos.dta(save_dta);

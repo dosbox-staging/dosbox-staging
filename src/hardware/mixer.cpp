@@ -601,7 +601,7 @@ MixerChannel* MixerObject::Install(MIXER_Handler handler,Bitu freq,const char * 
 		installed = true;
 		return MIXER_AddChannel(handler,freq,name);
 	} else {
-		E_Exit("allready added mixer channel.");
+		E_Exit("already added mixer channel.");
 		return 0; //Compiler happy
 	}
 }

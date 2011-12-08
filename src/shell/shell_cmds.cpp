@@ -287,7 +287,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 	args++;//skip first character. either a slash or dot or space
 	size_t len = strlen(args); //TODO check input of else ook nodig is.
 	if(len && args[len - 1] == '\r') {
-		LOG(LOG_MISC,LOG_WARN)("Hu ? carriage return allready present. Is this possible?");
+		LOG(LOG_MISC,LOG_WARN)("Hu ? carriage return already present. Is this possible?");
 		WriteOut("%s\n",args);
 	} else WriteOut("%s\r\n",args);
 }

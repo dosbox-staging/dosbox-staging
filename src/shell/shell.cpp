@@ -49,14 +49,14 @@ typedef std::list<std::string>::iterator auto_it;
 void VFILE_Remove(const char *name);
 
 void AutoexecObject::Install(const std::string &in) {
-	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf.c_str());
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: already created %s",buf.c_str());
 	installed = true;
 	buf = in;
 	autoexec_strings.push_back(buf);
 	this->CreateAutoexec();
 
 	//autoexec.bat is normally created AUTOEXEC_Init.
-	//But if we are allready running (first_shell)
+	//But if we are already running (first_shell)
 	//we have to update the envirionment to display changes
 
 	if(first_shell)	{
@@ -77,7 +77,7 @@ void AutoexecObject::Install(const std::string &in) {
 }
 
 void AutoexecObject::InstallBefore(const std::string &in) {
-	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: allready created %s",buf.c_str());
+	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: already created %s",buf.c_str());
 	installed = true;
 	buf = in;
 	autoexec_strings.push_front(buf);

@@ -402,7 +402,7 @@ void CBreakpoint::ActivateBreakpoints(PhysPt adr, bool activate)
 	CBreakpoint* bp;
 	for(i=BPoints.begin(); i != BPoints.end(); i++) {
 		bp = (*i);
-		// Do not activate, when bp is an actual adress
+		// Do not activate, when bp is an actual address
 		if (activate && (bp->GetType()==BKPNT_PHYSICAL) && (bp->GetLocation()==adr)) {
 			// Do not activate :)
 			continue;
@@ -681,7 +681,7 @@ static void DrawData(void) {
 	Bit32u address;
 	/* Data win */	
 	for (int y=0; y<8; y++) {
-		// Adress
+		// Address
 		if (add<0x10000) mvwprintw (dbg.win_data,1+y,0,"%04X:%04X     ",dataSeg,add);
 		else mvwprintw (dbg.win_data,1+y,0,"%04X:%08X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
@@ -2424,7 +2424,7 @@ void DEBUG_HeavyWriteLogInstruction(void) {
 	out << hex << noshowbase << setfill('0') << uppercase;
 	Bit32u startLog = logCount;
 	do {
-		// Write Intructions
+		// Write Instructions
 		TLogInst & inst = logInst[startLog];
 		out << setw(4) << inst.s_cs << ":" << setw(8) << inst.eip << "  " 
 		    << inst.dline << "  " << inst.res << " EAX:" << setw(8)<< inst.eax

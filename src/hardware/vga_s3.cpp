@@ -341,7 +341,7 @@ void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 		vga.svga.bank_write = vga.svga.bank_read;
 		VGA_SetupHandlers();
 		break;
-	case 0x6b:	// BIOS scratchpad: LFB adress
+	case 0x6b:	// BIOS scratchpad: LFB address
 		vga.s3.reg_6b=(Bit8u)val;
 		break;
 	default:

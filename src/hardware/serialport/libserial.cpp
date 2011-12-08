@@ -197,7 +197,7 @@ int SERIAL_getextchar(COMPORT port) {
 	char chRead;
 
 	int retval = 0;
-	// receive a byte; TODO communicate faliure
+	// receive a byte; TODO communicate failure
 	if (ReadFile (port->porthandle, &chRead, 1, &dwRead, NULL)) {
 		if (dwRead) {
 			// check for errors
@@ -580,7 +580,7 @@ int SERIAL_getextchar(COMPORT port) {
 	char chRead;
 
 	int retval = 0;
-	// receive a byte; TODO communicate faliure
+	// receive a byte; TODO communicate failure
 	if (DosRead(port->porthandle, &chRead, 1, &dwRead) == NO_ERROR) {
 		if (dwRead) {
 			// check for errors; will OS/2 clear the error on reading its data?

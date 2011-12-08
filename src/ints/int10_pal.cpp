@@ -321,7 +321,7 @@ void INT10_SetBackgroundBorder(Bit8u val) {
 	}
 	else if (IS_EGAVGA_ARCH) {
 		val = ((val << 1) & 0x10) | (val & 0x7);
-		/* Aways set the overscan color */
+		/* Always set the overscan color */
 		INT10_SetSinglePaletteRegister( 0x11, val );
 		/* Don't set any extra colors when in text mode */
 		if (CurMode->mode <= 3)

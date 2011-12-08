@@ -2107,7 +2107,7 @@ static void CreateDefaultBinds(void) {
 }
 
 void MAPPER_AddHandler(MAPPER_Handler * handler,MapKeys key,Bitu mods,char const * const eventname,char const * const buttonname) {
-	//Check if it allready exists=> if so return.
+	//Check if it already exists=> if so return.
 	for(CHandlerEventVector_it it=handlergroup.begin();it!=handlergroup.end();it++)
 		if(strcmp((*it)->buttonname,buttonname) == 0) return;
 

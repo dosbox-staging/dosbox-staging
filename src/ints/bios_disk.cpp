@@ -104,7 +104,7 @@ void swapInDisks(void) {
 	Bits swapPos = swapPosition;
 	int i;
 
-	/* Check to make sure there's atleast one setup image */
+	/* Check to make sure that  there is at least one setup image */
 	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
 		if(diskSwap[i]!=NULL) {
 			allNull = false;
