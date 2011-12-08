@@ -489,7 +489,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 				mem_writew(data,segment);data+=2;
 				MEM_BlockWrite(data,&emm_mappings[page],sizeof(EMM_Mapping));
 				data+=sizeof(EMM_Mapping);
-			} else if (((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
+			} else if ((ems_type==1) || (ems_type==3) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
 				mem_writew(data,segment);data+=2;
 				MEM_BlockWrite(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
 				data+=sizeof(EMM_Mapping);
@@ -506,7 +506,7 @@ static Bit8u EMM_PartialPageMapping(void) {
 			if ((segment>=EMM_PAGEFRAME) && (segment<EMM_PAGEFRAME+0x1000)) {
 				Bit16u page = (segment-EMM_PAGEFRAME) / (EMM_PAGE_SIZE>>4);
 				MEM_BlockRead(data,&emm_mappings[page],sizeof(EMM_Mapping));
-			} else if (((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
+			} else if ((ems_type==1) || (ems_type==3) || ((segment>=EMM_PAGEFRAME-0x1000) && (segment<EMM_PAGEFRAME)) || ((segment>=0xa000) && (segment<0xb000))) {
 				MEM_BlockRead(data,&emm_segmentmappings[segment>>10],sizeof(EMM_Mapping));
 			} else {
 				return EMM_ILL_PHYS;
