@@ -50,8 +50,8 @@ struct button_event {
 #define QUEUE_SIZE 32
 #define MOUSE_BUTTONS 3
 #define MOUSE_IRQ 12
-#define POS_X ((Bit16s)(mouse.x) & mouse.gran_x)
-#define POS_Y ((Bit16s)(mouse.y) & mouse.gran_y)
+#define POS_X (static_cast<Bit16s>(mouse.x) & mouse.gran_x)
+#define POS_Y (static_cast<Bit16s>(mouse.y) & mouse.gran_y)
 
 #define CURSORX 16
 #define CURSORY 16
@@ -1012,7 +1012,7 @@ static Bitu INT74_Handler(void) {
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
-			DoPS2Callback(mouse.event_queue[mouse.events].buttons, POS_X, POS_Y);
+			DoPS2Callback(mouse.event_queue[mouse.events].buttons, static_cast<Bit16s>(mouse.x), static_cast<Bit16s>(mouse.y));
 		} else {
 			SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
