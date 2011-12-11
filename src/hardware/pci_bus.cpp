@@ -131,6 +131,12 @@ static Bit8u read_pci_register(PCI_Device* dev,Bit8u regnum) {
 	if ((parsed_regnum>=0) && (parsed_regnum<256))
 		return pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][parsed_regnum];
 
+	Bit8u newval, mask;
+	if (dev->OverrideReadRegister(regnum, &newval, &mask)) {
+		Bit8u oldval=pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][regnum] & (~mask);
+		return oldval | (newval & mask);
+	}
+
 	return 0xff;
 }
 
