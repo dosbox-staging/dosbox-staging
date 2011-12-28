@@ -949,7 +949,9 @@ static void percent(char type, char subtype)
        break;
 
   case '2':                            /* old [pop cs]! now indexes */
-       ua_str(second[getbyte()]);      /* instructions in 386/486   */
+       c = getbyte();
+       wordop = c & 1;
+       ua_str(second[c]);              /* instructions in 386/486   */
        break;
 
   case 'g':                            /* modrm group `subtype' (0--7) */
