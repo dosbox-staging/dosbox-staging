@@ -371,9 +371,11 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 		text[0].key  = software;
 		text[0].text = ptext_s;
 		png_set_text(png_ptr, info_ptr, text, fields);
-		delete [] ptext_s;
 #endif
 		png_write_info(png_ptr, info_ptr);
+#ifdef PNG_TEXT_SUPPORTED
+		delete [] ptext_s;
+#endif
 		for (i=0;i<height;i++) {
 			void *rowPointer;
 			void *srcLine;
