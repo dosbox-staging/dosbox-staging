@@ -359,6 +359,20 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 				8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
 				PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 		}
+#ifdef PNG_TEXT_SUPPORTED
+		int fields = 1;
+		png_text text[1];
+		const char* text_s = "DOSBox " VERSION;
+		size_t strl = strlen(text_s);
+		char* ptext_s = new char[strl + 1];
+		strcpy(ptext_s, text_s);
+		char software[9] = { 'S','o','f','t','w','a','r','e',0};
+		text[0].compression = PNG_TEXT_COMPRESSION_NONE;
+		text[0].key  = software;
+		text[0].text = ptext_s;
+		png_set_text(png_ptr, info_ptr, text, fields);
+		delete [] ptext_s;
+#endif
 		png_write_info(png_ptr, info_ptr);
 		for (i=0;i<height;i++) {
 			void *rowPointer;
