@@ -97,6 +97,7 @@ DOS_File::DOS_File(const DOS_File& orig) {
 	attr=orig.attr;
 	refCtr=orig.refCtr;
 	open=orig.open;
+	hdrive=orig.hdrive;
 	name=0;
 	if(orig.name) {
 		name=new char [strlen(orig.name) + 1];strcpy(name,orig.name);
@@ -110,6 +111,7 @@ DOS_File & DOS_File::operator= (const DOS_File & orig) {
 	attr=orig.attr;
 	refCtr=orig.refCtr;
 	open=orig.open;
+	hdrive=orig.hdrive;
 	if(name) {
 		delete [] name; name=0;
 	}
