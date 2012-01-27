@@ -246,6 +246,12 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	SDL_WM_SetCaption(title,VERSION);
 }
 
+static void KillSwitch(bool pressed) {
+	if (!pressed)
+		return;
+	throw 1;
+}
+
 static void PauseDOSBox(bool pressed) {
 	if (!pressed)
 		return;
@@ -262,15 +268,22 @@ static void PauseDOSBox(bool pressed) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
 
-			case SDL_QUIT: throw(0); break;
+			case SDL_QUIT: KillSwitch(true); break;
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
-			if(event.key.keysym.sym==SDLK_PAUSE) {
+			if(event.key.keysym.sym == SDLK_PAUSE) {
 
-				paused=false;
+				paused = false;
 				GFX_SetTitle(-1,-1,false);
 				break;
 			}
+#if defined (MACOSX)
+			if (event.key.keysym.sym == SDLK_q && (event.key.keysym.mod == KMOD_RMETA || event.key.keysym.mod == KMOD_LMETA) ) {
+				/* On macs, all aps exit when pressing cmd-q */
+				KillSwitch(true);
+				break;
+			} 
+#endif
 		}
 	}
 }
@@ -991,11 +1004,6 @@ static void GUI_ShutDown(Section * /*sec*/) {
 	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
 }
 
-static void KillSwitch(bool pressed) {
-	if (!pressed)
-		return;
-	throw 1;
-}
 
 static void SetPriority(PRIORITY_LEVELS level) {
 
@@ -1512,6 +1520,15 @@ void GFX_Events() {
 			if (event.key.keysym.sym==SDLK_RALT) sdl.raltstate = event.key.type;
 			if (((event.key.keysym.sym==SDLK_TAB)) &&
 				((sdl.laltstate==SDL_KEYDOWN) || (sdl.raltstate==SDL_KEYDOWN))) break;
+#endif
+#if defined (MACOSX)			
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			/* On macs CMD-Q is the default key to close an application */
+			if (event.key.keysym.sym == SDLK_q && (event.key.keysym.mod == KMOD_RMETA || event.key.keysym.mod == KMOD_LMETA) ) {
+				KillSwitch(true);
+				break;
+			} 
 #endif
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
