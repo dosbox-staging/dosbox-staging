@@ -116,11 +116,11 @@ CD-ROM: My CD-ROM doesn't work.
       To enable SDL-support (does not include low-level CD access!):
         - mount d f:\ -t cdrom -usecd 0 -noioctl
       To enable ioctl access using digital audio extraction for CD audio
-      (windows-only, useful for Vista):
+      (Windows-only, useful for Vista):
         - mount d f:\ -t cdrom -ioctl_dx
-      To enable ioctl access using MCI for CD audio (windows-only):
+      To enable ioctl access using MCI for CD audio (Windows-only):
         - mount d f:\ -t cdrom -ioctl_mci
-      To force ioctl-only access (windows-only):
+      To force ioctl-only access (Windows-only):
         - mount d f:\ -t cdrom -ioctl_dio
       To enable low-level aspi-support (win98 with aspi-layer installed):
         - mount d f:\ -t cdrom -aspi
@@ -161,7 +161,7 @@ SOUND: There is no sound.
     Be sure that the sound is correctly configured in the game. This might be
     done during the installation or with a setup/setsound utility that
     accompanies the game. First see if an autodetection option is provided. If
-    there is none try selecting Soundblaster or Soundblaster 16 with the default
+    there is none try selecting SoundBlaster or SoundBlaster 16 with the default
     settings being "address=220 irq=7 dma=1" (sometimes highdma=5). You might
     also want to select Sound Canvas/SCC/MPU-401/General MIDI/Wave Blaster
     at "address=330 IRQ=2" as music device.
@@ -171,8 +171,8 @@ SOUND: There is no sound.
     configuration and use some lower fixed cycles value (like cycles=2000). Also
     assure that your host operating sound does provide sound.
     In certain cases it might be useful to use a different emulated sound device
-    like a soundblaster pro (sbtype=sbpro1 in the DOSBox configuration file) or
-    the gravis ultrasound (gus=true).
+    like a SoundBlaster Pro (sbtype=sbpro1 in the DOSBox configuration file) or
+    the Gravis Ultrasound (gus=true).
 
 
 SOUND: What sound hardware does DOSBox presently emulate?
@@ -182,21 +182,21 @@ SOUND: What sound hardware does DOSBox presently emulate?
       digital sound output through the internal speaker.
     - Creative CMS/Gameblaster
       The is the first card released by Creative Labs(R).  The default
-      configuration places it on address 220. It is disabled as default.
+      configuration places it on address 220. It is disabled by default.
     - Tandy 3 voice
       The emulation of this sound hardware is complete with the exception of
       the noise channel. The noise channel is not very well documented and as
       such is only a best guess as to the sound's accuracy. It is disabled as
       default.
     - Tandy DAC
-      Some games may require turning off sound blaster emulation (sbtype=none)
-      for better tandy DAC sound support. Don't forget to set the sbtype back to
-      sb16 if you don't use tandy sound.
+      Some games may require turning off SoundBlaster emulation (sbtype=none)
+      for better Tandy DAC sound support. Don't forget to set the sbtype back to
+      sb16 if you don't use Tandy sound.
     - Adlib
       This emulation is almost perfect and includes the Adlib's ability to
       almost play digitized sound. Placed at address 220 (also on 388).
     - SoundBlaster 16 / SoundBlaster Pro I & II / SoundBlaster I & II
-      By default DOSBox provides Soundblaster 16 level 16-bit stereo sound.
+      By default DOSBox provides SoundBlaster 16 level 16-bit stereo sound.
       You can select a different SoundBlaster version in the configuration of
       DOSBox. AWE32 music is not emulated as you can use MPU-401 instead
       (see below).
@@ -207,14 +207,14 @@ SOUND: What sound hardware does DOSBox presently emulate?
       The emulation of this hardware is nearly complete, though the MIDI
       capabilities have been left out, since an MPU-401 has been emulated
       in other code. For Gravis music you also have to install Gravis drivers
-      inside DOSBox. It is disabled as default.
+      inside DOSBox. It is disabled by default.
     - MPU-401
       A MIDI passthrough interface is also emulated. This method of sound
       output will only work when used with external device/emulator.
-      Every Windows XP/Vista/7 and MAC OS has got a default emulator compatible
-      with: Sound Canvas/SCC/General Standard/General MIDI/Wave Blaster.
-      A different device/emulator is needed for Roland LAPC/CM-32L/MT-32
-      compatibility.
+      Every Windows XP/Vista/7 and Mac OS X has got a default emulator 
+      compatible with: Sound Canvas/SCC/General Standard/General MIDI/Wave 
+      Blaster. A different device/emulator is needed for 
+      Roland LAPC/CM-32L/MT-32 compatibility.
 
 
 SOUND: The sound stutters or sounds stretched/weird.
@@ -283,7 +283,7 @@ CRASH: The game/application does not run at all/crashes!
     Look at Section 11: "Troubleshooting".
 
 
-CRASH: DOSBox crashes on startup!.
+CRASH: DOSBox crashes on startup!
     Look at Section 11: "Troubleshooting".
 
 
@@ -325,7 +325,7 @@ See Section 13: "The configuration (options) file".
 To be able to use Command Line Parameters:
 (Windows)  open cmd.exe or command.com or edit the shortcut to dosbox.exe
 (Linux)    use console
-(MAC OS X) start terminal.app and navigate to:
+(Mac OS X) start terminal.app and navigate to:
            /applications/dosbox.app/contents/macos/dosbox
 
 The options are valid for all operating systems unless noted in the option
@@ -378,15 +378,15 @@ dosbox -erasemapper
   -machine machinetype
         Setup DOSBox to emulate a specific type of machine. Valid choices are:
         hercules, cga, ega, pcjr, tandy, svga_s3 (default) as well as
-        the additional svga chipsets listed in the DOSBox configuration file.
-        svga_s3 enables vesa emulation as well.
-        For some special vga effects the machinetype vgaonly can be used,
-        note that this disables svga capabilities and might be slower due to the
+        the additional SVGA chipsets listed in the DOSBox configuration file.
+        svga_s3 enables VESA emulation as well.
+        For some special VGA effects the machinetype vgaonly can be used,
+        note that this disables SVGA capabilities and might be slower due to the
         higher emulation precision.
         The machinetype affects the video card and the available sound cards.
 
   -noconsole (Windows Only)
-        Start DOSBox without showing DOSBox Status Window (console).
+        Start DOSBox without showing the DOSBox status window (console).
         Output will be redirected to stdout.txt and stderr.txt
 
   -startmapper
@@ -526,7 +526,7 @@ MOUNT -u "Emulated Drive letter"
         Forces use of the SDL CD-ROM layer. Valid on all systems.
 
   -usecd number
-        Valid on all systems, under windows the -noioctl switch has to be
+        Valid on all systems, under Windows the -noioctl switch has to be
         present to make use of the -usecd switch.
         Enables to select the drive that should be used by SDL. Use this if
         the wrong or no CD-ROM drive is mounted while using the SDL CD-ROM
@@ -1075,8 +1075,8 @@ CTRL-F11      Slow down emulation (Decrease DOSBox Cycles).
 CTRL-F12      Speed up emulation (Increase DOSBox Cycles)*.
 ALT-F12       Unlock speed (turbo button/fast forward)**.
 CTRL-ALT-HOME Restart DOSBox.
-F11, ALT-F11  (machine=cga) change tint in NTSC output modes***
-F11           (machine=hercules) cycle through amber, green, white colouring***
+F11, ALT-F11  (machine=cga) change tint in NTSC output modes***.
+F11           (machine=hercules) cycle through amber, green, white colouring***.
 
 *NOTE: Once you increase your DOSBox cycles beyond your computer CPU resources,
        it will produce the same effect as slowing down the emulation.
@@ -1092,13 +1092,14 @@ F11           (machine=hercules) cycle through amber, green, white colouring***
 These are the default keybindings. They can be changed in the keymapper
 (see Section 7: "KeyMapper"). 
 
-In MAC OS you can try using cmd(applekey) together with Ctrl if the key doesn't
-work eg. cmd-ctrl-F1, but some keys may still need remapping (in Linux too).
+In Mac OS X you can try using cmd(applekey) together with Ctrl (and/or ) Fn, 
+if the key doesn't work i.e. fn-cmd-ctrl-F1, but some keys may still need 
+remapping (in Linux too).
 
 Saved/recorded files can be found in:
    (Windows)    "Start/WinLogo Menu"->"All Programs"->DOSBox-0.74->Extras
    (Linux)      ~/.dosbox/capture
-   (MAC OS X)   "~/Library/Preferences/capture"
+   (Mac OS X)   "~/Library/Preferences/capture"
 This can be changed in the DOSBox configuration file.
 
 
@@ -1136,7 +1137,7 @@ connected, or with a different joystick setting, your new setting will not work
 properly, or not work at all, until you reset DOSBox's mapperfile.
 
 If controller is working properly outside DOSBox, but doesn't calibrate properly
-inside DOSBox, try different 'timed' setting in DOSBox's configuration file.
+inside DOSBox, try a different 'timed' setting in DOSBox's configuration file.
 
 
 
@@ -1144,8 +1145,8 @@ inside DOSBox, try different 'timed' setting in DOSBox's configuration file.
 7. KeyMapper:
 =============
 
-You start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys")
-or -startmapper (see Section 3: "Command Line Parameters"). 
+Start the DOSBox mapper either with CTRL-F1 (see Section 5: "Special Keys") or
+-startmapper (see Section 3: "Command Line Parameters"). 
 You are presented with a virtual keyboard and a virtual joystick.
 
 These virtual devices correspond to the keys and events DOSBox will
@@ -1201,7 +1202,7 @@ Q3. If you try it out in DOSBox, you will notice that pressing X makes ZX
         mapped key X. Click "Del".
 
 
-Examples about remapping the joystick:
+Examples of remapping the joystick:
   You have a joystick attached, it is working fine under DOSBox and you
   want to play some keyboard-only game with the joystick (it is assumed
   that the game is controlled by the arrows on the keyboard):
@@ -1223,7 +1224,7 @@ Examples about remapping the joystick:
 
   If you want to remap anything to your d-pad/hat you will have to change
   'joysticktype=auto' to 'joysticktype=fcs' in configuration file. Maybe this
-  will be improved in the next dosbox version.
+  will be improved in the next DOSBox version.
 
 
 If you change the default mapping, you can save your changes by clicking on
@@ -1238,12 +1239,12 @@ your mapperfile, if it is present in the DOSBox configuration file.
 ===================
 
 To switch to a different keyboard layout, either the entry "keyboardlayout"
-in the [dos] section of the DOSBox configuration file can be used, or the
-internal DOSBox program keyb.com (Section 4: "Internal Programs"). Both accept
+in the [dos] section of the DOSBox configuration file or the internal DOSBox
+program keyb.com (Section 4: "Internal Programs") can be used. Both accept
 DOS conforming language codes (see below), but only by using keyb.com a
 custom codepage can be specified.
 
-The default keyboardlayout=auto currently works under windows only. The language
+The default keyboardlayout=auto currently works under Windows only. The language
 is chosen according to the OS language, but the keyboard layout is not detected.
 
 Layout switching
@@ -1316,7 +1317,7 @@ of the nullmodem connection. These are all parameters:
  * port:         - TCP port number. Default: 23
  * rxdelay:      - how long (milliseconds) to delay received data if the
                    interface is not ready. Increase this value if you encounter
-                   overrun errors in the DOSBox Status Window. Default: 100
+                   overrun errors in the DOSBox status window. Default: 100
  * txdelay:      - how long to gather data before sending a packet. Default: 12
                    (reduces Network overhead)
  * server:       - This nullmodem will be a client connecting to the specified
@@ -1422,7 +1423,7 @@ Example:
 ====================
 
 General tip:
-  Check messages in DOSBox Status Window. See Section 12: "DOSBox Status Window".
+  Check messages in the DOSBox status window. See Section 12: "DOSBox Status Window".
 
 DOSBox crashes right after starting it:
   - use different values for the output= entry in your DOSBox
@@ -1468,14 +1469,14 @@ The game exits to the DOSBox prompt with some error message:
 12. DOSBox Status Window:
 =========================
 
-DOSBox's Staus window contains many useful information about your currant
-configuration, your actions in DOSBox, errors that happened and more.
-Whenever you have any problem with DOSBox check these messages.
+DOSBox's status window contains useful information about your current
+configuration, your actions in DOSBox, errors which occurred and more.
+Check these messages in case you encounter any problems with DOSBox.
 
-To start DOSBox Status Window:
-  (Windows)  Status Window is being started together with main DOSBox window.
-  (Linux)    You may have to start DOSBox from a console to see Status Window.
-  (MAC OS X) Right click on DOSBox.app, choose "Show Package Contents"->
+To display the DOSBox status window:
+  (Windows)  The status window is being started together with main DOSBox window.
+  (Linux)    You may have to start DOSBox from a console to see the status window.
+  (Mac OS X) Right click on DOSBox.app, choose "Show Package Contents"->
              ->enter "Contents"->enter "MacOS"->run "DOSBox"
 
 
@@ -1488,7 +1489,7 @@ The configuration file is automatically created the first time you run DOSBox.
 The file can be found in:
    (Windows)  "Start/WinLogo Menu"->"All Programs"->DOSBox-0.74->Options
    (Linux)    ~/.dosbox/dosbox-0.74.conf
-   (MAC OS X) "~/Library/Preferences/DOSBox 0.74 Preferences"
+   (Mac OS X) "~/Library/Preferences/DOSBox 0.74 Preferences"
 The file is divided into several sections. Each section starts with a
 [section name] line. The settings are the property=value lines where value can
 be altered to customize DOSBox.
