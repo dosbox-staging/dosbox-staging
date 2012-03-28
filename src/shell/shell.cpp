@@ -411,7 +411,7 @@ public:
 				if (access(buffer,F_OK)) goto nomount;
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
-				/* Save the non modified filename (so boot and imgmount can use it (long filenames, case sensivitive)*/
+				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
 				strcpy(orig,name);
 				upcase(name);
 				if(strstr(name,".BAT") != 0) {
@@ -424,10 +424,11 @@ public:
 					/* Boot image files */
 					autoexec[15].Install(std::string("BOOT ") + orig);
 				} else if((strstr(name,".ISO") != 0) || (strstr(name,".CUE") !=0 )) {
-					if(secure) autoexec[14].Install("z:\\config.com -securemode");
 					/* imgmount CD image files */
-					autoexec[15].Install(std::string("IMGMOUNT D \"") + orig + std::string("\" -t iso"));
+					/* securemode gets a different number from the previous branches! */
+					autoexec[14].Install(std::string("IMGMOUNT D \"") + orig + std::string("\" -t iso"));
 					//autoexec[16].Install("D:");
+					if(secure) autoexec[15].Install("z:\\config.com -securemode");
 					/* Makes no sense to exit here */
 				} else {
 					if(secure) autoexec[14].Install("z:\\config.com -securemode");
