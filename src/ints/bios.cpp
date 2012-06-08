@@ -997,14 +997,14 @@ public:
 		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,Real2Phys(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
 		RealSetVec(0x08,BIOS_DEFAULT_IRQ0_LOCATION);
 		// pseudocode for CB_IRQ0:
+		//	sti
 		//	callback INT8_Handler
-		//	push ax,dx,ds
+		//	push ds,ax,dx
 		//	int 0x1c
 		//	cli
-		//	pop ds,dx
 		//	mov al, 0x20
 		//	out 0x20, al
-		//	pop ax
+		//	pop dx,ax,ds
 		//	iret
 
 		mem_writed(BIOS_TIMER,0);			//Calculate the correct time
