@@ -454,8 +454,12 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	if((fabs(yrel) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
 	if (useps2callback) dy *= 2;	
 
-	mouse.mickey_x += dx;
-	mouse.mickey_y += dy;
+	mouse.mickey_x += (dx * mouse.mickeysPerPixel_x);
+	mouse.mickey_y += (dy * mouse.mickeysPerPixel_y);
+	if (mouse.mickey_x >= 32768.0) mouse.mickey_x -= 65536.0;
+	else if (mouse.mickey_x <= -32769.0) mouse.mickey_x += 65536.0;
+	if (mouse.mickey_y >= 32768.0) mouse.mickey_y -= 65536.0;
+	else if (mouse.mickey_y <= -32769.0) mouse.mickey_y += 65536.0;
 	if (emulate) {
 		mouse.x += dx;
 		mouse.y += dy;
@@ -484,6 +488,11 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		if (mouse.x < mouse.min_x) mouse.x = mouse.min_x;
 		if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
 		if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
+	} else {
+		if (mouse.x >= 32768.0) mouse.x -= 65536.0;
+		else if (mouse.x <= -32769.0) mouse.x += 65536.0;
+		if (mouse.y >= 32768.0) mouse.y -= 65536.0;
+		else if (mouse.y <= -32769.0) mouse.y += 65536.0;
 	}
 	Mouse_AddEvent(MOUSE_HAS_MOVED);
 	DrawCursor();
@@ -797,8 +806,8 @@ static Bitu INT33_Handler(void) {
 		mouse.textXorMask = reg_dx;
 		break;
 	case 0x0b:	/* Read Motion Data */
-		reg_cx=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
-		reg_dx=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
+		reg_cx=static_cast<Bit16s>(mouse.mickey_x);
+		reg_dx=static_cast<Bit16s>(mouse.mickey_y);
 		mouse.mickey_x=0;
 		mouse.mickey_y=0;
 		break;
@@ -1001,8 +1010,8 @@ static Bitu INT74_Handler(void) {
 			reg_bx=mouse.event_queue[mouse.events].buttons;
 			reg_cx=POS_X;
 			reg_dx=POS_Y;
-			reg_si=(Bit16s)(mouse.mickey_x*mouse.mickeysPerPixel_x);
-			reg_di=(Bit16s)(mouse.mickey_y*mouse.mickeysPerPixel_y);
+			reg_si=static_cast<Bit16s>(mouse.mickey_x);
+			reg_di=static_cast<Bit16s>(mouse.mickey_y);
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
 			SegSet16(cs, mouse.sub_seg);
