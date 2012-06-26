@@ -230,6 +230,7 @@ extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
+
 void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	char title[200]={0};
 	static Bit32s internal_cycles=0;
@@ -245,6 +246,24 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	if(paused) strcat(title," PAUSED");
 	SDL_WM_SetCaption(title,VERSION);
 }
+
+static unsigned char logo[32*32*4]= {
+#include "dosbox_logo.h"
+};
+static void GFX_SetIcon() {
+#if !defined(MACOSX)
+	/* Set Icon (must be done before any sdl_setvideomode call) */
+	/* But don't set it on OS X, as we use a nicer external icon there. */
+	/* Made into a separate call, so it can be called again when we restart the graphics output on win32 */
+#if WORDS_BIGENDIAN
+	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
+#else
+	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
+#endif
+	SDL_WM_SetIcon(logos,NULL);
+#endif
+}
+
 
 static void KillSwitch(bool pressed) {
 	if (!pressed)
@@ -499,7 +518,9 @@ dosurface:
 					sdl.using_windib=false;
 				}
 				SDL_InitSubSystem(SDL_INIT_VIDEO);
+				GFX_SetIcon(); //Set Icon again
 				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+				if(sdl.surface) GFX_SetTitle(-1,-1,false); //refresh title.
 			}
 #endif
 			if (sdl.surface == NULL)
@@ -1077,9 +1098,6 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 	}
 }
 
-static unsigned char logo[32*32*4]= {
-#include "dosbox_logo.h"
-};
 #include "dosbox_splash.h"
 
 //extern void UI_Run(bool);
@@ -1091,16 +1109,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.active=false;
 	sdl.updating=false;
 
-#if !defined(MACOSX)
-	/* Set Icon (must be done before any sdl_setvideomode call) */
-	/* But don't set it on OS X, as we use a nicer external icon there. */
-#if WORDS_BIGENDIAN
-	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
-#else
-	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
-#endif
-	SDL_WM_SetIcon(logos,NULL);
-#endif
+	GFX_SetIcon();
 
 	sdl.desktop.lazy_fullscreen=false;
 	sdl.desktop.lazy_fullscreen_req=false;
