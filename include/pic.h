@@ -33,7 +33,6 @@ typedef void (* PIC_EventHandler)(Bitu val);
 #define PIC_NOIRQ 0xFF
 
 extern Bitu PIC_IRQCheck;
-extern Bitu PIC_IRQActive;
 extern Bitu PIC_Ticks;
 
 static INLINE float PIC_TickIndex(void) {
