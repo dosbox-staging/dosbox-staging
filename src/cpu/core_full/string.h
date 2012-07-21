@@ -88,6 +88,13 @@
 			di_index=(di_index+add_index) & add_mask;
 		}
 		break;
+	case R_INSD:
+		add_index<<=2;
+		for (;count>0;count--) {
+			SaveMd(di_base+di_index,IO_ReadD(reg_dx));
+			di_index=(di_index+add_index) & add_mask;
+		}
+		break;
 	case R_STOSB:
 		for (;count>0;count--) {
 			SaveMb(di_base+di_index,reg_al);
