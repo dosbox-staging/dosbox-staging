@@ -69,11 +69,9 @@ static void DISNEY_disable(Bitu) {
 	if(disney.mo) {
 		disney.chan->AddSilence();
 		disney.chan->Enable(false);
-		delete disney.mo;
 	}
 	disney.leader = 0;
 	disney.last_used = 0;
-	disney.mo = 0;
 	disney.state = DS_IDLE;
 	disney.interface_det = 0;
 	disney.interface_det_ext = 0;
@@ -90,8 +88,7 @@ static void DISNEY_enable(Bitu freq) {
 		if(disney.stereo) LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, stereo",freq);
 		else LOG(LOG_MISC,LOG_NORMAL)("disney enable %d Hz, mono",freq);
 #endif
-		disney.mo = new MixerObject();
-		disney.chan=disney.mo->Install(&DISNEY_CallBack,freq,"DISNEY");
+		disney.chan->SetFreq(freq);
 		disney.chan->Enable(true);
 		disney.state = DS_RUNNING;
 	}
@@ -377,11 +374,16 @@ public:
 		disney.control=0;
 		disney.last_used=0;
 
-		disney.mo=0;
+		disney.mo = new MixerObject();
+		disney.chan=disney.mo->Install(&DISNEY_CallBack,10000,"DISNEY");
 		DISNEY_disable(0);
+
+
 	}
 	~DISNEY(){
 		DISNEY_disable(0);
+		if (disney.mo)
+			delete disney.mo;
 	}
 };
 
