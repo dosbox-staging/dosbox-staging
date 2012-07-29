@@ -343,6 +343,7 @@ void INT10_SetColorSelect(Bit8u val) {
 	if (machine == MCH_CGA || machine==MCH_TANDY)
 		IO_Write(0x3d9,temp);
 	else if (machine == MCH_PCJR) {
+		IO_Read(VGAREG_TDY_RESET); // reset the flipflop
 		switch(vga.mode) {
 		case M_TANDY2:
 			IO_Write(VGAREG_TDY_ADDRESS, 0x11);
