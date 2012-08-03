@@ -300,6 +300,9 @@ void DOS_PSP::SetFCB2(RealPt src) {
 }
 
 bool DOS_PSP::SetNumFiles(Bit16u fileNum) {
+	//20 minimum. clipper program.
+	if (fileNum < 20) fileNum = 20;
+	 
 	if (fileNum>20) {
 		// Allocate needed paragraphs
 		fileNum+=2;	// Add a few more files for safety
