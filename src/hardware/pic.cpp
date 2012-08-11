@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2011  The DOSBox Team
+ *  Copyright (C) 2002-2012  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,9 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-#include <list>
-
 #include "dosbox.h"
 #include "inout.h"
 #include "cpu.h"
@@ -29,35 +26,144 @@
 
 #define PIC_QUEUESIZE 512
 
-struct IRQ_Block {
-	bool masked;
-	bool active;
-	bool inservice;
-	Bitu vector;
-};
-
 struct PIC_Controller {
 	Bitu icw_words;
 	Bitu icw_index;
-	Bitu masked;
-
 	bool special;
 	bool auto_eoi;
 	bool rotate_on_auto_eoi;
 	bool single;
 	bool request_issr;
 	Bit8u vector_base;
+
+	Bit8u irr;        // request register
+	Bit8u imr;        // mask register
+	Bit8u imrr;       // mask register reversed (makes bit tests simpler)
+	Bit8u isr;        // in service register
+	Bit8u isrr;       // in service register reversed (makes bit tests simpler)
+	Bit8u active_irq; //currently active irq
+
+
+	void set_imr(Bit8u val);
+
+	void check_after_EOI(){
+		//Update the active_irq as an EOI is likely to change that.
+		update_active_irq();
+		if((irr&imrr)&isrr) check_for_irq();
+	}
+
+	void update_active_irq() {
+		if(isr == 0) {active_irq = 8; return;}
+		for(Bit8u i = 0, s = 1; i < 8;i++, s<<=1){
+			if( isr & s){
+				active_irq = i;
+				return;
+			}
+		}
+	}
+
+	void check_for_irq(){
+		const Bit8u possible_irq = (irr&imrr)&isrr;
+		if (possible_irq) {
+			const Bit8u a_irq = special?8:active_irq;
+			for(Bit8u i = 0, s = 1; i < a_irq;i++, s<<=1){
+				if ( possible_irq & s ) {
+					//There is an irq ready to be served => signal master and/or cpu
+					activate();
+					return;
+				}
+			}
+		}
+		deactivate(); //No irq, remove signal to master and/or cpu
+	}
+
+	//Signals master/cpu that there is an irq ready.
+	void activate();
+
+	//Removes signal to master/cpu that there is an irq ready.
+	void deactivate();
+
+	void raise_irq(Bit8u val){
+		Bit8u bit = 1 << (val);
+		if((irr & bit)==0) { //value changed (as it is currently not active)
+			irr|=bit;
+			if((bit&imrr)&isrr) { //not masked and not in service
+				if(special || val < active_irq) activate();
+			}
+		}
+	}
+
+	void lower_irq(Bit8u val){
+		Bit8u bit = 1 << ( val);
+		if(irr & bit) { //value will change (as it is currently active)
+			irr&=~bit;
+			if((bit&imrr)&isrr) { //not masked and not in service
+				//This irq might have toggled PIC_IRQCheck/caused irq 2 on master, when it was raised.
+				//If it is active, then recheck it, we can't just deactivate as there might be more IRQS raised.
+				if(special || val < active_irq) check_for_irq();
+			}
+		}
+	}
+
+	//handles all bits and logic related to starting this IRQ, it does NOT start the interrupt on the CPU.
+	void start_irq(Bit8u val);
 };
 
-Bitu PIC_Ticks=0;
-Bitu PIC_IRQCheck;
-Bitu PIC_IRQOnSecondPicActive;
-Bitu PIC_IRQActive;
-
-
-static IRQ_Block irqs[16];
 static PIC_Controller pics[2];
-static bool PIC_Special_Mode = false; //Saves one compare in the pic_run_irqloop
+static PIC_Controller& master = pics[0];
+static PIC_Controller& slave  = pics[1];
+Bitu PIC_Ticks = 0;
+Bitu PIC_IRQCheck = 0; //Maybe make it a bool and/or ensure 32bit size (x86 dynamic core seems to assume 32 bit variable size)
+
+
+void PIC_Controller::set_imr(Bit8u val) {
+	if (GCC_UNLIKELY(machine==MCH_PCJR)) {
+		//irq 6 is a NMI on the PCJR
+		if (this == &master) val &= ~(1 <<(6));
+	}
+	Bit8u change = (imr) ^ (val); //Bits that have changed become 1.
+	imr  =  val;
+	imrr = ~val;
+
+	//Test if changed bits are set in irr and are not being served at the moment
+	//Those bits have impact on whether the cpu emulation should be paused or not.
+	if((irr & change)&isrr) check_for_irq();
+}
+
+void PIC_Controller::activate() { 
+	//Stops CPU if master, signals master if slave
+	if(this == &master) {
+		PIC_IRQCheck = 1;
+		//cycles 0, take care of the port IO stuff added in raise_irq base caller.
+		CPU_CycleLeft += CPU_Cycles;
+		CPU_Cycles = 0;
+		//maybe when coming from a EOI, give a tiny delay. (for the cpu to pick it up) (see PIC_Activate_IRQ)
+	} else {
+		master.raise_irq(2);
+	}
+}
+
+void PIC_Controller::deactivate() { 
+	//removes irq check value  if master, signals master if slave
+	if(this == &master) {
+		PIC_IRQCheck = 0;
+	} else {
+		master.lower_irq(2);
+	}
+}
+
+void PIC_Controller::start_irq(Bit8u val){
+	irr&=~(1<<(val));
+	if (!auto_eoi) {
+		active_irq = val;
+		isr |= 1<<(val);
+		isrr = ~isr;
+	} else if (GCC_UNLIKELY(rotate_on_auto_eoi)) {
+		E_Exit("rotate on auto EOI not handled");
+	}
+}
+
+
 struct PICEntry {
 	float index;
 	Bitu value;
@@ -73,10 +179,7 @@ static struct {
 
 static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
-	Bitu irq_base=port==0x20 ? 0 : 8;
-	Bitu i;
-	static Bit16u IRQ_priority_table[16] = 
-		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
+
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
@@ -93,40 +196,24 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		if (val&0x40) {		// special mask select
 			if (val&0x20) pic->special = true;
 			else pic->special = false;
-			if (pics[0].special || pics[1].special) 
-				PIC_Special_Mode = true; else 
-				PIC_Special_Mode = false;
-			if (PIC_IRQCheck) { //Recheck irqs
-				CPU_CycleLeft += CPU_Cycles;
-				CPU_Cycles = 0;
-			}
+			//Check if there are irqs ready to run, as the priority system has possibly been changed.
+			pic->check_for_irq();
 			LOG(LOG_PIC,LOG_NORMAL)("port %X : special mask %s",port,(pic->special)?"ON":"OFF");
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
 			if (GCC_UNLIKELY(val&0x80)) E_Exit("rotate mode not supported");
 			if (val&0x40) {		// specific EOI
-				if (PIC_IRQActive==(irq_base+val-0x60U)) {
-					irqs[PIC_IRQActive].inservice=false;
-					PIC_IRQActive=PIC_NOIRQ;
-					for (i=0; i<=15; i++) {
-						if (irqs[IRQ_priority_table[i]].inservice) {
-							PIC_IRQActive=IRQ_priority_table[i];
-							break;
-						}
-					}
-				}
+				pic->isr &= ~(1<< ((val-0x60)));
+				pic->isrr = ~pic->isr;
+				pic->check_after_EOI();
 //				if (val&0x80);	// perform rotation
 			} else {		// nonspecific EOI
-				if (PIC_IRQActive<(irq_base+8)) {
-					irqs[PIC_IRQActive].inservice=false;
-					PIC_IRQActive=PIC_NOIRQ;
-					for (i=0; i<=15; i++){
-						if(GCC_UNLIKELY(irqs[IRQ_priority_table[i]].inservice)) {
-							PIC_IRQActive=IRQ_priority_table[i];
-							break;
-						}
-					}
+				if (pic->active_irq != 8) { 
+					//If there is no irq in service, ignore the call, some games send an eoi to both pics when a sound irq happens (regardless of the irq).
+					pic->isr &= ~(1 << (pic->active_irq));
+					pic->isrr = ~pic->isr;
+					pic->check_after_EOI();
 				}
 //				if (val&0x80);	// perform rotation
 			}
@@ -143,43 +230,13 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 
 static void write_data(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
-	Bitu irq_base=(port==0x21) ? 0 : 8;
-	Bitu i;
-	bool old_irq2_mask = irqs[2].masked;
 	switch(pic->icw_index) {
 	case 0:                        /* mask register */
-		LOG(LOG_PIC,LOG_NORMAL)("%d mask %X",port==0x21 ? 0 : 1,val);
-		for (i=0;i<=7;i++) {
-			irqs[i+irq_base].masked=(val&(1<<i))>0;
-			if(port==0x21) {
-				if (irqs[i+irq_base].active && !irqs[i+irq_base].masked) PIC_IRQCheck|=(1 << (i+irq_base));
-				else PIC_IRQCheck&=~(1 << (i+irq_base));
-			} else {
-				if (irqs[i+irq_base].active && !irqs[i+irq_base].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i+irq_base));
-				else PIC_IRQCheck&=~(1 << (i+irq_base));
-			}
-		}
-		if (machine==MCH_PCJR) {
-			/* irq6 cannot be disabled as it serves as pseudo-NMI */
-			irqs[6].masked=false;
-		}
-		if(irqs[2].masked != old_irq2_mask) {
-		/* Irq 2 mask has changed recheck second pic */
-			for(i=8;i<=15;i++) {
-				if (irqs[i].active && !irqs[i].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i));
-				else PIC_IRQCheck&=~(1 << (i));
-			}
-		}
-		if (PIC_IRQCheck) {
-			CPU_CycleLeft+=CPU_Cycles;
-			CPU_Cycles=0;
-		}
+		pic->set_imr(val);
 		break;
 	case 1:                        /* icw2          */
 		LOG(LOG_PIC,LOG_NORMAL)("%d:Base vector %X",port==0x21 ? 0 : 1,val);
-		for (i=0;i<=7;i++) {
-			irqs[i+irq_base].vector=(val&0xf8)+i;
-		};
+		pic->vector_base = val&0xf8;
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		else if(pic->single) pic->icw_index=3;		/* skip ICW3 in single mode */
 		break;
@@ -214,82 +271,70 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 
 static Bitu read_command(Bitu port,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
-	Bitu irq_base=(port==0x20) ? 0 : 8;
-	Bitu i;Bit8u ret=0;Bit8u b=1;
-	if (pic->request_issr) {
-		for (i=irq_base;i<irq_base+8;i++) {
-			if (irqs[i].inservice) ret|=b;
-			b <<= 1;
-		}
-	} else {
-		for (i=irq_base;i<irq_base+8;i++) {
-			if (irqs[i].active)	ret|=b;
-			b <<= 1;
-		}
-		if (irq_base==0 && (PIC_IRQCheck&0xff00)) ret |=4;
+	if (pic->request_issr){
+		return pic->isr;
+	} else { 
+		return pic->irr;
 	}
-	return ret;
 }
+
 
 static Bitu read_data(Bitu port,Bitu iolen) {
-	Bitu irq_base=(port==0x21) ? 0 : 8;
-	Bitu i;Bit8u ret=0;Bit8u b=1;
-	for (i=irq_base;i<=irq_base+7;i++) {
-		if (irqs[i].masked)	ret|=b;
-		b <<= 1;
-	}
-	return ret;
+	PIC_Controller * pic=&pics[port==0x21 ? 0 : 1];
+	return pic->imr;
 }
 
-
 void PIC_ActivateIRQ(Bitu irq) {
-	if (GCC_UNLIKELY(CPU_Cycles)) {
-		// CPU_Cycles nonzero means the interrupt was triggered by an I/O
+	Bitu t = irq>7 ? (irq - 8): irq;
+	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+
+	Bit32s OldCycles = CPU_Cycles;
+	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
+
+	if (GCC_UNLIKELY(OldCycles != CPU_Cycles)) {
+		// if CPU_Cycles have changed, this means that the interrupt was triggered by an I/O
 		// register write rather than an event.
 		// Real hardware executes 0 to ~13 NOPs or comparable instructions
 		// before the processor picks up the interrupt. Let's try with 2
 		// cycles here.
 		// Required by Panic demo (irq0), It came from the desert (MPU401)
 		// Does it matter if CPU_CycleLeft becomes negative?
-		CPU_CycleLeft += (CPU_Cycles-2);
-		CPU_Cycles=2;
-	}
-	if( irq < 8 ) {
-		irqs[irq].active = true;
-		if (!irqs[irq].masked) {
-			PIC_IRQCheck|=(1 << irq);
-		}
-	} else 	if (irq < 16) {
-		irqs[irq].active = true;
-		PIC_IRQOnSecondPicActive|=(1 << irq);
-		if (!irqs[irq].masked && !irqs[2].masked) {
-			PIC_IRQCheck|=(1 << irq);
-		}
+
+		// It might be an idea to do this always in order to simulate this
+		// So on write mask and EOI as well. (so inside the activate function)
+//		CPU_CycleLeft += (CPU_Cycles-2);
+		CPU_CycleLeft -= 2;
+		CPU_Cycles = 2;
 	}
 }
 
 void PIC_DeActivateIRQ(Bitu irq) {
-	if (irq<16) {
-		irqs[irq].active=false;
-		PIC_IRQCheck&=~(1 << irq);
-		PIC_IRQOnSecondPicActive&=~(1 << irq);
-	}
+	Bitu t = irq>7 ? (irq - 8): irq;
+	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+	pic->lower_irq(t);
 }
-static inline bool PIC_startIRQ(Bitu i) {
-	/* irqs on second pic only if irq 2 isn't masked */
-	if( i > 7 && irqs[2].masked) return false;
-	irqs[i].active = false;
-	PIC_IRQCheck&= ~(1 << i);
-	PIC_IRQOnSecondPicActive&= ~(1 << i);
-	CPU_HW_Interrupt(irqs[i].vector);
-	Bitu pic=(i&8)>>3;
-	if (!pics[pic].auto_eoi) { //irq 0-7 => pic 0 else pic 1 
-		PIC_IRQActive = i;
-		irqs[i].inservice = true;
-	} else if (GCC_UNLIKELY(pics[pic].rotate_on_auto_eoi)) {
-		E_Exit("rotate on auto EOI not handled");
+
+static void slave_startIRQ(){
+	Bit8u pic1_irq = 8;
+	const Bit8u p = (slave.irr & slave.imrr)&slave.isrr;
+	const Bit8u max = slave.special?8:slave.active_irq;
+	for(Bit8u i = 0,s = 1;i < max;i++, s<<=1){
+		if (p&s){
+			pic1_irq = i;
+			break;
+		}
 	}
-	return true;
+	// Maybe change the E_Exit to a return
+	if (GCC_UNLIKELY(pic1_irq == 8)) E_Exit("irq 2 is active, but no irq active on the slave PIC.");
+
+	slave.start_irq(pic1_irq);
+	master.start_irq(2);
+	CPU_HW_Interrupt(slave.vector_base + pic1_irq);
+}
+
+static void inline master_startIRQ(Bitu i){
+	master.start_irq(i);
+	CPU_HW_Interrupt(master.vector_base + i);
 }
 
 void PIC_runIRQs(void) {
@@ -297,70 +342,31 @@ void PIC_runIRQs(void) {
 	if (GCC_UNLIKELY(!PIC_IRQCheck)) return;
 	if (GCC_UNLIKELY(cpudecoder==CPU_Core_Normal_Trap_Run)) return;
 
-	static Bitu IRQ_priority_order[16] = 
-		{ 0,1,2,8,9,10,11,12,13,14,15,3,4,5,6,7 };
-	static Bit16u IRQ_priority_lookup[17] =
-		{ 0,1,2,11,12,13,14,15,3,4,5,6,7,8,9,10,16 };
-	Bit16u activeIRQ = PIC_IRQActive;
-	if (activeIRQ == PIC_NOIRQ) activeIRQ = 16;
-	/* Get the priority of the active irq */
-	Bit16u Priority_Active_IRQ = IRQ_priority_lookup[activeIRQ];
-
-	Bitu i,j;
-	/* j is the priority (walker)
-	 * i is the irq at the current priority */
-
-	/* If one of the pics is in special mode use a check that cares for that. */
-	if(!PIC_Special_Mode) {
-		for (j = 0; j < Priority_Active_IRQ; j++) {
-			i = IRQ_priority_order[j];
-			if (!irqs[i].masked && irqs[i].active) {
-				if(GCC_LIKELY(PIC_startIRQ(i))) return;
+	const Bit8u p = (master.irr & master.imrr)&master.isrr;
+	const Bit8u max = master.special?8:master.active_irq;
+	for(Bit8u i = 0,s = 1;i < max;i++, s<<=1){
+		if (p&s){
+			if (i==2) { //second pic
+				slave_startIRQ();
+			} else {
+				master_startIRQ(i);
 			}
-		}
-	} else {	/* Special mode variant */
-		for (j = 0; j<= 15; j++) {
-			i = IRQ_priority_order[j];
-			if ( (j < Priority_Active_IRQ) || (pics[ ((i&8)>>3) ].special) ) {
-				if (!irqs[i].masked && irqs[i].active) {
-					/* the irq line is active. it's not masked and
-					 * the irq is allowed priority wise. So let's start it */
-					/* If started successfully return, else go for the next */
-					if(PIC_startIRQ(i)) return;
-				}
-			}
+			break;
 		}
 	}
+	//Disable check variable.
+	PIC_IRQCheck = 0;
 }
 
 void PIC_SetIRQMask(Bitu irq, bool masked) {
-	if(irqs[irq].masked == masked) return;	/* Do nothing if mask doesn't change */
-	bool old_irq2_mask = irqs[2].masked;
-	irqs[irq].masked=masked;
-	if(irq < 8) {
-		if (irqs[irq].active && !irqs[irq].masked) { 
-			PIC_IRQCheck|=(1 << (irq));
-		} else { 
-			PIC_IRQCheck&=~(1 << (irq));
-		}
-	} else {
-		if (irqs[irq].active && !irqs[irq].masked && !irqs[2].masked) {
-			PIC_IRQCheck|=(1 << (irq));
-		} else { 
-			PIC_IRQCheck&=~(1 << (irq));
-		}
-	}
-	if(irqs[2].masked != old_irq2_mask) {
-	/* Irq 2 mask has changed recheck second pic */
-		for(Bitu i=8;i<=15;i++) {
-			if (irqs[i].active && !irqs[i].masked && !irqs[2].masked) PIC_IRQCheck|=(1 << (i));
-			else PIC_IRQCheck&=~(1 << (i));
-		}
-	}
-	if (PIC_IRQCheck) {
-		CPU_CycleLeft+=CPU_Cycles;
-		CPU_Cycles=0;
-	}
+	Bitu t = irq>7 ? (irq - 8): irq;
+	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
+	//clear bit
+	Bit8u bit = 1 <<(t);
+	Bit8u newmask = pic->imr;
+	newmask &= ~bit;
+	if (masked) newmask |= bit;
+	pic->set_imr(newmask);
 }
 
 static void AddEntry(PICEntry * entry) {
@@ -463,7 +469,7 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 
 
 bool PIC_RunQueue(void) {
-	/* Check to see if a new milisecond needs to be started */
+	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=0;
 	if (CPU_CycleLeft<=0) {
@@ -559,11 +565,9 @@ public:
 	PIC_8259A(Section* configuration):Module_base(configuration){
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck=0;
-		PIC_IRQActive=PIC_NOIRQ;
 		PIC_Ticks=0;
 		Bitu i;
 		for (i=0;i<2;i++) {
-			pics[i].masked=0xff;
 			pics[i].auto_eoi=false;
 			pics[i].rotate_on_auto_eoi=false;
 			pics[i].request_issr=false;
@@ -571,24 +575,21 @@ public:
 			pics[i].single=false;
 			pics[i].icw_index=0;
 			pics[i].icw_words=0;
+			pics[i].irr = pics[i].isr = pics[i].imrr = 0;
+			pics[i].isrr = pics[i].imr = 0xff;
+			pics[i].active_irq = 8;
 		}
-		for (i=0;i<=7;i++) {
-			irqs[i].active=false;
-			irqs[i].masked=true;
-			irqs[i].inservice=false;
-			irqs[i+8].active=false;
-			irqs[i+8].masked=true;
-			irqs[i+8].inservice=false;
-			irqs[i].vector=0x8+i;
-			irqs[i+8].vector=0x70+i;	
-		}
-		irqs[0].masked=false;					/* Enable system timer */
-		irqs[1].masked=false;					/* Enable Keyboard IRQ */
-		irqs[2].masked=false;					/* Enable second pic */
-		irqs[8].masked=false;					/* Enable RTC IRQ */
+		master.vector_base = 0x08;
+		slave.vector_base = 0x70;
+
+		PIC_SetIRQMask(0,false);					/* Enable system timer */
+		PIC_SetIRQMask(1,false);					/* Enable system timer */
+		PIC_SetIRQMask(2,false);					/* Enable second pic */
+		PIC_SetIRQMask(8,false);					/* Enable RTC IRQ */
+
 		if (machine==MCH_PCJR) {
 			/* Enable IRQ6 (replacement for the NMI for PCJr) */
-			irqs[6].masked=false;
+			PIC_SetIRQMask(6,false);
 		}
 		ReadHandler[0].Install(0x20,read_command,IO_MB);
 		ReadHandler[1].Install(0x21,read_data,IO_MB);
@@ -606,6 +607,7 @@ public:
 		pic_queue.free_entry=&pic_queue.entries[0];
 		pic_queue.next_entry=0;
 	}
+
 	~PIC_8259A(){
 	}
 };
