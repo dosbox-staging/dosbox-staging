@@ -29,9 +29,6 @@ typedef void (PIC_EOIHandler) (void);
 typedef void (* PIC_EventHandler)(Bitu val);
 
 
-#define PIC_MAXIRQ 15
-#define PIC_NOIRQ 0xFF
-
 extern Bitu PIC_IRQCheck;
 extern Bitu PIC_Ticks;
 
