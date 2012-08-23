@@ -255,13 +255,8 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	dta.GetSearchParams(attr, pattern);
    
 	if (attr == DOS_ATTR_VOLUME) {
-		if (strlen(discLabel) != 0) {
-			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
-			return true;
-		} else {
-			DOS_SetError(DOSERR_NO_MORE_FILES);		
-			return false;
-		}
+		dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+		return true;
 	} else if ((attr & DOS_ATTR_VOLUME) && isRoot && !fcb_findfirst) {
 		if (WildFileCmp(discLabel,pattern)) {
 			// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir and if it matches the searchstring
