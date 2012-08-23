@@ -616,8 +616,13 @@ bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) {
 	PhysPt ptoc = GetTempBuffer();
 	success = ReadVTOC(drive,0x00,ptoc,error);
 	if (success) {
-		MEM_BlockCopy(data,ptoc+702,37);
-		mem_writeb(data+37,0);
+		Bitu len;
+		for (len=0;len<37;len++) {
+			Bit8u c=mem_readb(ptoc+702+len);
+			if (c==0 || c==0x20) break;
+		}
+		MEM_BlockCopy(data,ptoc+702,len);
+		mem_writeb(data+len,0);
 	};
 	return success; 
 }
@@ -628,8 +633,13 @@ bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) {
 	PhysPt ptoc = GetTempBuffer();
 	success = ReadVTOC(drive,0x00,ptoc,error);
 	if (success) {
-		MEM_BlockCopy(data,ptoc+739,37);
-		mem_writeb(data+37,0);
+		Bitu len;
+		for (len=0;len<37;len++) {
+			Bit8u c=mem_readb(ptoc+739+len);
+			if (c==0 || c==0x20) break;
+		}
+		MEM_BlockCopy(data,ptoc+739,len);
+		mem_writeb(data+len,0);
 	};
 	return success; 
 }
@@ -640,8 +650,13 @@ bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) {
 	PhysPt ptoc = GetTempBuffer();
 	success = ReadVTOC(drive,0x00,ptoc,error);
 	if (success) {
-		MEM_BlockCopy(data,ptoc+776,37);
-		mem_writeb(data+37,0);
+		Bitu len;
+		for (len=0;len<37;len++) {
+			Bit8u c=mem_readb(ptoc+776+len);
+			if (c==0 || c==0x20) break;
+		}
+		MEM_BlockCopy(data,ptoc+776,len);
+		mem_writeb(data+len,0);
 	};
 	return success; 
 }
