@@ -1127,7 +1127,7 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) 
 	fcb.GetRandom(random);
 	fcb.SetRecord((Bit16u)(random / 128),(Bit8u)(random & 127));
 	if (restore) fcb.GetRecord(old_block,old_rec);
-	if (numRec>0) {
+	if (*numRec > 0) {
 		/* Write records */
 		for (count=0; count<*numRec; count++) {
 			error = DOS_FCBWrite(seg,offset,count);// dos_fcbwrite return 0 false when true...
@@ -1141,7 +1141,7 @@ Bit8u DOS_FCBRandomWrite(Bit16u seg,Bit16u offset,Bit16u * numRec,bool restore) 
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position only when restore is false */
-	if(!restore) fcb.SetRandom(new_block*128+new_rec); 
+	if (!restore) fcb.SetRandom(new_block*128+new_rec); 
 	return error;
 }
 
