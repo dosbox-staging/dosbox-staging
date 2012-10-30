@@ -660,9 +660,9 @@
 			"fstpt		(%2, %%eax)		\n"	\
 			"movw		%0, %%ax		\n"	\
 			"sahf						\n"	\
-			"jp			argument_too_large1		\n"	\
+			"jp			1f				\n"	\
 			"fstpt		(%2, %1)		\n"	\
-			"argument_too_large1:		"	\
+			"1:							"	\
 			:	"=m" (new_sw)				\
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"eax", "cc", "memory"		\
@@ -686,9 +686,9 @@
 			"fstpt		(%2, %%eax)		\n"	\
 			"movw		%0, %%ax		\n"	\
 			"sahf						\n"	\
-			"jp			argument_too_large2		\n"	\
+			"jp			1f				\n"	\
 			"fstpt		(%2, %1)		\n"	\
-			"argument_too_large2:		"	\
+			"1:							"	\
 			:	"=m" (new_sw)				\
 			:	"r" (TOP), "r" (fpu.p_regs)	\
 			:	"eax", "cc", "memory"		\
