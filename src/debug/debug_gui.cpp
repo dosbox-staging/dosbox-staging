@@ -86,6 +86,7 @@ void DEBUG_RefreshPage(char scroll) {
 	list<string>::iterator i = logBuffPos;
 	int maxy, maxx; getmaxyx(dbg.win_out,maxy,maxx);
 	int rem_lines = maxy;
+	if(rem_lines == -1) return;
 
 	wclear(dbg.win_out);
 
@@ -109,7 +110,7 @@ void LOG::operator() (char const* format, ...){
 
 	if (d_type>=LOG_MAX) return;
 	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
-	DEBUG_ShowMsg("%10u: %s:%s\n",cycle_count,loggrp[d_type].front,buf);
+	DEBUG_ShowMsg("%10u: %s:%s\n",static_cast<Bit32u>(cycle_count),loggrp[d_type].front,buf);
 }
 
 
@@ -179,6 +180,7 @@ static void MakeSubWindows(void) {
 	outy+=5; // 34
 	/* The Output Window */	
 	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy,win_main_maxx,outy,0);
+	if(!dbg.win_reg ||!dbg.win_data || !dbg.win_code || !dbg.win_var || !dbg.win_out) E_Exit("Setting up windows failed");
 //	dbg.input_y=win_main_maxy-1;
 	scrollok(dbg.win_out,TRUE);
 	DrawBars();
