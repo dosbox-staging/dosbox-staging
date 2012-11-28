@@ -79,38 +79,28 @@ static Bit8u * VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line) {
 	const Bit8u *base = vga.tandy.draw_base + ((line & vga.tandy.line_mask) << vga.tandy.line_shift);
 #define CGA16_READER(OFF) (base[(vidstart +(OFF))& (8*1024 -1)])
 	Bit32u * draw=(Bit32u *)TempLine;
-	//Generate a temporary bitline to calculate the avarage
-	//over bit-2  bit-1  bit  bit+1.
-	//Combine this number with the current colour to get 
-	//an unique index in the pallette. Or it with bit 7 as they are stored
-	//in the upperpart to keep them from interfering the regular cga stuff
+	//There are 640 hdots in each line of the screen.
+	//The color of an even hdot always depends on only 4 bits of video RAM.
+	//The color of an odd hdot depends on 4 bits of video RAM in
+	//1-hdot-per-pixel modes and 6 bits of video RAM in 2-hdot-per-pixel
+	//modes. We always assume 6 and use duplicate palette entries in
+	//1-hdot-per-pixel modes so that we can use the same routine for all
+	//composite modes.
+  temp[1] = (CGA16_READER(0) >> 6) & 3;
+	for(Bitu x = 2; x < 640; x+=2) {
+		temp[x] = (temp[x-1] & 0xf);
+		temp[x+1] = (temp[x] << 2) | ((( CGA16_READER(x>>3)) >> (6-(x&6)) )&3);
+	}
+	temp[640] = temp[639] & 0xf;
+	temp[641] = temp[640] << 2;
+	temp[642] = temp[641] & 0xf;
 
-	for(Bitu x = 0; x < 640; x++)
-		temp[x+2] = (( CGA16_READER(x>>3)>> (7-(x&7)) )&1) << 4;
-		//shift 4 as that is for the index.
-	Bitu i = 0,temp1,temp2,temp3,temp4;
+	Bitu i = 2;
 	for (Bitu x=0;x<vga.draw.blocks;x++) {
-		Bitu val1 = CGA16_READER(x);
-		Bitu val2 = val1&0xf;
-		val1 >>= 4;
-
-		temp1 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp2 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp3 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp4 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-
-		*draw++ = 0x80808080|(temp1|val1) |
-		          ((temp2|val1) << 8) |
-		          ((temp3|val1) <<16) |
-		          ((temp4|val1) <<24);
-		temp1 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp2 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp3 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		temp4 = temp[i] + temp[i+1] + temp[i+2] + temp[i+3]; i++;
-		*draw++ = 0x80808080|(temp1|val2) |
-		          ((temp2|val2) << 8) |
-		          ((temp3|val2) <<16) |
-		          ((temp4|val2) <<24);
+		*draw++ = 0xc0708030 | temp[i] | (temp[i+1] << 8) | (temp[i+2] << 16) | (temp[i+3] << 24);
+		i += 4;
+		*draw++ = 0xc0708030 | temp[i] | (temp[i+1] << 8) | (temp[i+2] << 16) | (temp[i+3] << 24);
+		i += 4;
 	}
 	return TempLine;
 #undef CGA16_READER
