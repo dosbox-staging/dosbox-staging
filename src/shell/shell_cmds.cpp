@@ -962,9 +962,9 @@ void DOS_Shell::CMD_DATE(char * args) {
 	// check if a date was passed in command line
 	Bit32u newday,newmonth,newyear;
 	if(sscanf(args,"%u-%u-%u",&newmonth,&newday,&newyear)==3) {
-		reg_cx = newyear;
-		reg_dh = newmonth;
-		reg_dl = newday;
+		reg_cx = static_cast<Bit16u>(newyear);
+		reg_dh = static_cast<Bit8u>(newmonth);
+		reg_dl = static_cast<Bit8u>(newday);
 
 		reg_ah=0x2b; // set system date
 		CALLBACK_RunRealInt(0x21);
@@ -980,7 +980,7 @@ void DOS_Shell::CMD_DATE(char * args) {
 	char day[6] = {0};
 	if(sscanf(datestring,"%u",&length) && (length<5) && (strlen(datestring)==(length*7+1))) {
 		// date string appears valid
-		for(int i = 0; i < length; i++) day[i] = datestring[reg_al*length+1+i];
+		for(Bit32u i = 0; i < length; i++) day[i] = datestring[reg_al*length+1+i];
 	}
 	bool dateonly = ScanCMDBool(args,"t");
 	if(!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
