@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "callback.h"
 #include "bios.h"
+#include "bios_disk.h"
 #include "regs.h"
 #include "mem.h"
 #include "dos_inc.h" /* for Drives[] */

@@ -27,6 +27,7 @@
 #include "support.h"
 #include "cross.h"
 #include "bios.h"
+#include "bios_disk.h"
 
 #define IMGTYPE_FLOPPY 0
 #define IMGTYPE_ISO    1
@@ -35,9 +36,6 @@
 #define FAT12		   0
 #define FAT16		   1
 #define FAT32		   2
-
-Bit8u fatSectBuffer[1024];
-Bit32u curFatSect;
 
 class fatFile : public DOS_File {
 public:

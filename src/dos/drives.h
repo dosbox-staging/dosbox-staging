@@ -24,7 +24,6 @@
 #include <sys/types.h>
 #include "dos_system.h"
 #include "shell.h" /* for DOS_Shell */
-#include "bios_disk.h"  /* for fatDrive */
 
 bool WildFileCmp(const char * file, const char * wild);
 void Set_Label(char const * const input, char * const output, bool cdrom);
@@ -142,7 +141,8 @@ struct partTable {
 #ifdef _MSC_VER
 #pragma pack ()
 #endif
-
+//Forward
+class imageDisk;
 class fatDrive : public DOS_Drive {
 public:
 	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
@@ -207,6 +207,9 @@ private:
 
 	Bit32u cwdDirCluster;
 	Bit32u dirPosition; /* Position in directory search */
+
+	Bit8u fatSectBuffer[1024];
+	Bit32u curFatSect;
 };
 
 

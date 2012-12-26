@@ -33,6 +33,7 @@
 #include "dos_system.h"
 #include "dos_inc.h"
 #include "bios.h"
+#include "bios_disk.h" 
 #include "setup.h"
 #include "control.h"
 
