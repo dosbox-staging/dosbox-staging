@@ -526,6 +526,10 @@ Bit32u fatDrive::getAbsoluteSectFromChain(Bit32u startClustNum, Bit32u logicalSe
 		}
 		if((isEOF) && (skipClust>=1)) {
 			//LOG_MSG("End of cluster chain reached before end of logical sector seek!");
+			if (skipClust == 1 && fattype == FAT12) {
+				//break;
+				LOG(LOG_DOSMISC,LOG_ERROR)("End of cluster chain reached, but maybe good afterall ?");
+			}
 			return 0;
 		}
 		currentClust = testvalue;
@@ -722,6 +726,9 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 
 	memset(fatSectBuffer,0,1024);
 	curFatSect = 0xffffffff;
+
+	strcpy(info, "fatDrive ");
+	strcat(info, sysFilename);
 }
 
 bool fatDrive::AllocationInfo(Bit16u *_bytes_sector, Bit8u *_sectors_cluster, Bit16u *_total_clusters, Bit16u *_free_clusters) {
@@ -853,6 +860,7 @@ bool fatDrive::FileUnlink(char * name) {
 
 bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	direntry dummyClust;
+#if 0
 	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
 	if(attr==DOS_ATTR_VOLUME) {
@@ -865,6 +873,7 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	}
 	if(attr & DOS_ATTR_VOLUME) //check for root dir or fcb_findfirst
 		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled!!!!!");
+#endif
 	if(!getDirClustNum(_dir, &cwdDirCluster, false)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
@@ -932,23 +941,31 @@ nextfile:
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-
 	memset(find_name,0,DOS_NAMELENGTH_ASCII);
 	memset(extension,0,4);
 	memcpy(find_name,&sectbuf[entryoffset].entryname[0],8);
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
 	trimString(&find_name[0]);
 	trimString(&extension[0]);
-	if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY) || extension[0]!=0) { 
+	
+	//if(!(sectbuf[entryoffset].attrib & DOS_ATTR_DIRECTORY))
+	if (extension[0]!=0) {
 		strcat(find_name, ".");
 		strcat(find_name, extension);
 	}
 
-	/* Ignore files with volume label. FindFirst should search for those. (return the first one found) */
-	if(sectbuf[entryoffset].attrib & 0x8) goto nextfile;
-   
-	/* Always find ARCHIVES even if bit is not set  Perhaps test is not the best test */
-	if(~attrs & sectbuf[entryoffset].attrib & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM) )  goto nextfile;
+	/* Compare attributes to search attributes */
+
+	//TODO What about attrs = DOS_ATTR_VOLUME|DOS_ATTR_DIRECTORY ?
+	if (attrs == DOS_ATTR_VOLUME) {
+		if (!(sectbuf[entryoffset].attrib & DOS_ATTR_VOLUME)) goto nextfile;
+		dirCache.SetLabel(find_name, false, true);
+	} else {
+		if (~attrs & sectbuf[entryoffset].attrib & (DOS_ATTR_DIRECTORY | DOS_ATTR_VOLUME | DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN) ) goto nextfile;
+	}
+
+
+	/* Compare name to search pattern */
 	if(!WildFileCmp(find_name,srch_pattern)) goto nextfile;
 
 	dta.SetResult(find_name, sectbuf[entryoffset].entrysize, sectbuf[entryoffset].crtDate, sectbuf[entryoffset].crtTime, sectbuf[entryoffset].attrib);
