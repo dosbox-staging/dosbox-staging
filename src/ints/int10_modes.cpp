@@ -1046,6 +1046,8 @@ bool INT10_SetVideoMode(Bit16u mode) {
 		break;
 	case M_LIN4:
 	case M_EGA:
+		if (CurMode->mode == 0x0f)
+			gfx_data[0x7]=0x05;		// only planes 0 and 2 are used
 		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
 		break;
 	case M_CGA4:
@@ -1075,12 +1077,14 @@ bool INT10_SetVideoMode(Bit16u mode) {
 		att_data[0x10]=0x01;		//Color Graphics
 		switch (CurMode->mode) {
 		case 0x0f:
-			att_data[0x10]|=0x0a;	//Monochrome
-			att_data[0x01]=0x08;
-			att_data[0x04]=0x18;
-			att_data[0x05]=0x18;
-			att_data[0x09]=0x08;
-			att_data[0x0d]=0x18;
+			att_data[0x12]=0x05;	// planes 0 and 2 enabled
+			att_data[0x10]|=0x0a;	// monochrome and blinking
+	
+			att_data[0x01]=0x08; // low-intensity
+			att_data[0x04]=0x18; // blink-on case
+			att_data[0x05]=0x18; // high-intensity
+			att_data[0x09]=0x08; // low-intensity in blink-off case
+			att_data[0x0d]=0x18; // high-intensity in blink-off
 			break;
 		case 0x11:
 			for (i=1;i<16;i++) att_data[i]=0x3f;

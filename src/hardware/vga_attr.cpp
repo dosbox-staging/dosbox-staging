@@ -23,22 +23,70 @@
 
 #define attr(blah) vga.attr.blah
 
-void VGA_ATTR_SetPalette(Bit8u index,Bit8u val) {
-	vga.attr.palette[index] = val;
-	if (vga.attr.mode_control & 0x80) val = (val&0xf) | (vga.attr.color_select << 4);
-	val &= 63;
-	val |= (vga.attr.color_select & 0xc) << 4;
-	if (GCC_UNLIKELY(machine==MCH_EGA)) {
-		if ((vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8)) == 260) {
-			// check for intensity bit
-			if (val&0x10) val|=0x38;
-			else {
-				val&=0x7;
-				// check for special brown
-				if (val==6) val=0x14;
+void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m) {
+	// palette bit assignment:
+	// bit | pin | EGA        | CGA       | monochrome
+	// ----+-----+------------+-----------+------------
+	// 0   | 5   | blue       | blue      | nc
+	// 1   | 4   | green      | green*    | nc
+	// 2   | 3   | red        | red*      | nc
+	// 3   | 7   | blue sec.  | nc        | video
+	// 4   | 6   | green sec. | intensity | intensity
+	// 5   | 2   | red sec.   | nc        | nc
+    // 6-7 | not used
+	// * additive color brown instead of yellow
+	switch(m) {
+		case CGA:
+			//LOG_MSG("Monitor CGA");
+			for (Bitu i=0;i<64;i++) {
+				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x10)? 0x15:0);
+				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x10)? 0x15:0);
+				
+				// replace yellow with brown
+				if ((i & 0x17) == 0x6) vga.dac.rgb[i].green = 0x15;
+				else vga.dac.rgb[i].green =
+					((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
 			}
-		}
+			break;
+		case EGA:
+			//LOG_MSG("Monitor EGA");
+			for (Bitu i=0;i<64;i++) {
+				vga.dac.rgb[i].red=((i & 0x4)? 0x2a:0) + ((i & 0x20)? 0x15:0);
+				vga.dac.rgb[i].green=((i & 0x2)? 0x2a:0) + ((i & 0x10)? 0x15:0);
+				vga.dac.rgb[i].blue=((i & 0x1)? 0x2a:0) + ((i & 0x8)? 0x15:0);
+			}
+			break;
+		case MONO:
+			//LOG_MSG("Monitor MONO");
+			for (Bitu i=0;i<64;i++) {
+				Bit8u value = ((i & 0x8)? 0x2a:0) + ((i & 0x10)? 0x15:0);
+				vga.dac.rgb[i].red = vga.dac.rgb[i].green =
+					vga.dac.rgb[i].blue = value;
+			}
+			break;
 	}
+
+	// update the mappings
+	for (Bit8u i=0;i<0x10;i++)
+		VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+}
+
+void VGA_ATTR_SetPalette(Bit8u index, Bit8u val) {
+	// the attribute table stores only 6 bits
+	val &= 63; 
+	vga.attr.palette[index] = val;
+
+	// apply the plane mask
+	val = vga.attr.palette[index & vga.attr.color_plane_enable];
+
+	// replace bits 4-5 if configured
+	if (vga.attr.mode_control & 0x80)
+		val = (val&0xf) | (vga.attr.color_select << 4);
+
+	// set bits 6 and 7 (not relevant for EGA)
+	val |= (vga.attr.color_select & 0xc) << 4;
+
+	// apply
 	VGA_DAC_CombineColor(index,val);
 }
 
@@ -126,7 +174,14 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			break;
 		case 0x12:	/* Color Plane Enable Register */
 			/* Why disable colour planes? */
-			attr(color_plane_enable)=(Bit8u)val;
+			/* To support weird modes. */
+			if ((attr(color_plane_enable)^val) & 0xf) {
+				// in case the plane enable bits change...
+				attr(color_plane_enable)=(Bit8u)val;
+				for (Bit8u i=0;i<0x10;i++)
+					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
+			} else
+				attr(color_plane_enable)=(Bit8u)val;
 			/* 
 				0	Bit plane 0 is enabled if set.
 				1	Bit plane 1 is enabled if set.
@@ -180,9 +235,8 @@ void write_p3c0(Bitu /*port*/,Bitu val,Bitu iolen) {
 			}
 			if (attr(color_select) ^ val) {
 				attr(color_select)=(Bit8u)val;
-				for (Bit8u i=0;i<0x10;i++) {
+				for (Bit8u i=0;i<0x10;i++)
 					VGA_ATTR_SetPalette(i,vga.attr.palette[i]);
-				}
 			}
 			/*
 				0-1	If 3C0h index 10h bit 7 is set these 2 bits are used as bits 4-5 of

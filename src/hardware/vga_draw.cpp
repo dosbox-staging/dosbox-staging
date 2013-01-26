@@ -1233,6 +1233,29 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 	// Display end
 	vga.draw.delay.vdend = vdend * vga.draw.delay.htotal;
 
+	// EGA frequency dependent monitor palette
+	if (machine == MCH_EGA) {
+		if (vga.misc_output & 1) {
+			// EGA card is in color mode
+			if ((1.0f/vga.draw.delay.htotal) > 19.0f) {
+				// 64 color EGA mode
+				VGA_ATTR_SetEGAMonitorPalette(EGA);
+			} else {
+				// 16 color CGA mode compatibility
+				VGA_ATTR_SetEGAMonitorPalette(CGA);
+			}
+		} else {
+			// EGA card in monochrome mode
+			// It is not meant to be autodetected that way, you either
+			// have a monochrome or color monitor connected and
+			// the EGA switches configured appropriately.
+			// But this would only be a problem if a program sets 
+			// the adapter to monochrome mode and still expects color output.
+			// Such a program should be shot to the moon...
+			VGA_ATTR_SetEGAMonitorPalette(MONO);
+		}
+	}
+
 	vga.draw.parts_total=VGA_PARTS;
 	/*
       6  Horizontal Sync Polarity. Negative if set
