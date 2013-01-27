@@ -201,9 +201,11 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 	if(clr>=ncols) clr=(Bit8u)ncols-1;
 	clr++;
 
-	/* Get the correct page */
-	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-	PhysPt base=CurMode->pstart+page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+	/* Get the correct page: current start address for current page (0xFF),
+	   otherwise calculate from page number and page size */
+	PhysPt base=CurMode->pstart;
+	if (page==0xff) base+=real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START);
+	else base+=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 	
 	if (GCC_UNLIKELY(machine==MCH_PCJR)) {
 		if (real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE) >= 9) {
