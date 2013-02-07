@@ -179,7 +179,7 @@ increaseticks:
 					Bit32s new_cmax = CPU_CycleMax;
 					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
 					if (cproc > 0) {
-						/* ignore the cycles added due to the io delay code in order
+						/* ignore the cycles added due to the IO delay code in order
 						   to have smoother auto cycle adjustments */
 						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
 						if (ratioremoved < 1.0) {
@@ -189,10 +189,13 @@ increaseticks:
 							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480) 
 								ratio = 20480;
 							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
+							/* The auto cycle code seems reliable enough to disable the fast cut back code.
+							 * This should improve the fluency of complex games.
 							if (ratio <= 1024) 
 								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
 							else 
-								new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
+							 */
+							new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
 						}
 					}
 
