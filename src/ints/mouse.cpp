@@ -929,6 +929,12 @@ static Bitu INT33_Handler(void) {
 		reg_cx=(Bit16u)mouse.max_x;
 		reg_dx=(Bit16u)mouse.max_y;
 		break;
+	case 0x2a:	/* Get cursor hot spot */
+		reg_al=(Bit8u)-mouse.hidden;	// Microsoft uses a negative byte counter for cursor visibility
+		reg_bx=(Bit16u)mouse.hotx;
+		reg_cx=(Bit16u)mouse.hoty;
+		reg_dx=0x04;	// PS/2 mouse type
+		break;
 	case 0x31: /* Get Current Minimum/Maximum virtual coordinates */
 		reg_ax=(Bit16u)mouse.min_x;
 		reg_bx=(Bit16u)mouse.min_y;
