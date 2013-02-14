@@ -115,6 +115,4 @@ bool SecondDMAControllerAvailable(void);
 
 void DMA_SetWrapping(Bitu wrap);
 
-static Bit32u dma_wrapping = 0xffff;
-
 #endif
