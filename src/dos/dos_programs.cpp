@@ -197,7 +197,7 @@ public:
 				str_size="512,32,32765,16000";
 				mediaid=0xF8;		/* Hard Disk */
 			} else if (type=="cdrom") {
-				str_size="2048,1,32765,0";
+				str_size="2048,1,65535,0";
 				mediaid=0xF8;		/* Hard Disk */
 			} else {
 				WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
