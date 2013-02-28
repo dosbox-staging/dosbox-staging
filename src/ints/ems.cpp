@@ -1365,7 +1365,7 @@ public:
 			emm_segmentmappings[i].handle=NULL_HANDLE;
 		}
 
-		EMM_AllocateSystemHandle(8);	// allocate OS-dedicated handle (ems handle zero, 128kb)
+		EMM_AllocateSystemHandle(24);	// allocate OS-dedicated handle (ems handle zero, 384kb)
 
 		if (ems_type==3) {
 			DMA_SetWrapping(0xffffffff);	// emm386-bug that disables dma wrapping
