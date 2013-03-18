@@ -1157,27 +1157,29 @@ static Bitu DOS_27Handler(void) {
 }
 
 static Bitu DOS_25Handler(void) {
-	if(Drives[reg_al]==0){
-		reg_ax=0x8002;
+	if (Drives[reg_al] == 0){
+		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	}else{
+	} else {
 		SETFLAGBIT(CF,false);
-		if((reg_cx != 1) ||(reg_dx != 1))
+		if ((reg_cx != 1) ||(reg_dx != 1))
 			LOG(LOG_DOSMISC,LOG_NORMAL)("int 25 called but not as diskdetection drive %X",reg_al);
 
-	   reg_ax=0;
+	   reg_ax = 0;
 	}
+	SETFLAGBIT(IF,true);
     return CBRET_NONE;
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC,LOG_NORMAL)("int 26 called: hope for the best!");
-	if(Drives[reg_al]==0){
-		reg_ax=0x8002;
+	if (Drives[reg_al] == 0){
+		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
-	}else{
+	} else {
 		SETFLAGBIT(CF,false);
-		reg_ax=0;
+		reg_ax = 0;
 	}
+	SETFLAGBIT(IF,true);
     return CBRET_NONE;
 }
 
