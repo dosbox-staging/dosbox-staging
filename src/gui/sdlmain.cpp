@@ -63,34 +63,30 @@
 #define APIENTRYP APIENTRY *
 #endif
 
-#ifdef __WIN32__
-#define NVIDIA_PixelDataRange 1
-
-#ifndef WGL_NV_allocate_memory
-#define WGL_NV_allocate_memory 1
-typedef void * (APIENTRY * PFNWGLALLOCATEMEMORYNVPROC) (int size, float readfreq, float writefreq, float priority);
-typedef void (APIENTRY * PFNWGLFREEMEMORYNVPROC) (void *pointer);
+#ifndef GL_ARB_pixel_buffer_object
+#define GL_ARB_pixel_buffer_object 1
+#define GL_PIXEL_PACK_BUFFER_ARB           0x88EB
+#define GL_PIXEL_UNPACK_BUFFER_ARB         0x88EC
+#define GL_PIXEL_PACK_BUFFER_BINDING_ARB   0x88ED
+#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
 #endif
 
-PFNWGLALLOCATEMEMORYNVPROC db_glAllocateMemoryNV = NULL;
-PFNWGLFREEMEMORYNVPROC db_glFreeMemoryNV = NULL;
-
-#else
-
+#ifndef GL_ARB_vertex_buffer_object
+#define GL_ARB_vertex_buffer_object 1
+typedef void (APIENTRYP PFNGLGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
+typedef void (APIENTRYP PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint buffer);
+typedef void (APIENTRYP PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
+typedef void (APIENTRYP PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
+typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 #endif
 
-#if defined(NVIDIA_PixelDataRange)
-
-#ifndef GL_NV_pixel_data_range
-#define GL_NV_pixel_data_range 1
-#define GL_WRITE_PIXEL_DATA_RANGE_NV      0x8878
-typedef void (APIENTRYP PFNGLPIXELDATARANGENVPROC) (GLenum target, GLsizei length, GLvoid *pointer);
-typedef void (APIENTRYP PFNGLFLUSHPIXELDATARANGENVPROC) (GLenum target);
-#endif
-
-PFNGLPIXELDATARANGENVPROC glPixelDataRangeNV = NULL;
-
-#endif
+PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
+PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
+PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
+PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
+PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
 
 #endif //C_OPENGL
 
@@ -181,15 +177,14 @@ struct SDL_Block {
 	struct {
 		Bitu pitch;
 		void * framebuf;
+		GLuint buffer;
 		GLuint texture;
 		GLuint displaylist;
 		GLint max_texsize;
 		bool bilinear;
 		bool packed_pixel;
 		bool paletted_texture;
-#if defined(NVIDIA_PixelDataRange)
-		bool pixel_data_range;
-#endif
+		bool pixel_buffer_object;
 	} opengl;
 #endif
 	struct {
@@ -611,11 +606,10 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-		if (sdl.opengl.framebuf) {
-#if defined(NVIDIA_PixelDataRange)
-			if (sdl.opengl.pixel_data_range) db_glFreeMemoryNV(sdl.opengl.framebuf);
-			else
-#endif
+		if (sdl.opengl.pixel_buffer_object) {
+			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
+		} else if (sdl.opengl.framebuf) {
 			free(sdl.opengl.framebuf);
 		}
 		sdl.opengl.framebuf=0;
@@ -635,15 +629,12 @@ dosurface:
 			goto dosurface;
 		}
 		/* Create the texture and display list */
-#if defined(NVIDIA_PixelDataRange)
-		if (sdl.opengl.pixel_data_range) {
-			sdl.opengl.framebuf=db_glAllocateMemoryNV(width*height*4,0.0,1.0,1.0);
-			glPixelDataRangeNV(GL_WRITE_PIXEL_DATA_RANGE_NV,width*height*4,sdl.opengl.framebuf);
-			glEnableClientState(GL_WRITE_PIXEL_DATA_RANGE_NV);
+		if (sdl.opengl.pixel_buffer_object) {
+			glGenBuffersARB(1, &sdl.opengl.buffer);
+			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
+			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else {
-#else
-		{
-#endif
 			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		}
 		sdl.opengl.pitch=width*4;
@@ -697,10 +688,8 @@ dosurface:
 		glEndList();
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
-#if defined(NVIDIA_PixelDataRange)
-		if (sdl.opengl.pixel_data_range)
+		if (sdl.opengl.pixel_buffer_object)
 			retFlags |= GFX_HARDWARE;
-#endif
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
@@ -854,7 +843,11 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		return true;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		pixels=(Bit8u *)sdl.opengl.framebuf;
+		if(sdl.opengl.pixel_buffer_object) {
+		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
+		} else
+		    pixels=(Bit8u *)sdl.opengl.framebuf;
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -934,19 +927,18 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#if defined(NVIDIA_PixelDataRange)
-		if (sdl.opengl.pixel_data_range) {
-            glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+		if (sdl.opengl.pixel_buffer_object) {
+			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
-					GL_UNSIGNED_INT_8_8_8_8_REV, sdl.opengl.framebuf);
+					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 			glCallList(sdl.opengl.displaylist);
 			SDL_GL_SwapBuffers();
-		} else
-#endif
-		if (changedLines) {
+		} else if (changedLines) {
 			Bitu y = 0, index = 0;
-            glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
@@ -1231,24 +1223,24 @@ static void GUI_StartUp(Section * sec) {
 		LOG_MSG("Could not initialize OpenGL, switching back to surface");
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	} else {
+	sdl.opengl.buffer=0;
 	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
 	sdl.opengl.displaylist=0;
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-#if defined(__WIN32__) && defined(NVIDIA_PixelDataRange)
-	glPixelDataRangeNV = (PFNGLPIXELDATARANGENVPROC) wglGetProcAddress("glPixelDataRangeNV");
-	db_glAllocateMemoryNV = (PFNWGLALLOCATEMEMORYNVPROC) wglGetProcAddress("wglAllocateMemoryNV");
-	db_glFreeMemoryNV = (PFNWGLFREEMEMORYNVPROC) wglGetProcAddress("wglFreeMemoryNV");
-#endif
+	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
+	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
+	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
+	glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
+	glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
+	glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 	if(gl_ext && *gl_ext){
 		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
 		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
-#if defined(NVIDIA_PixelDataRange)
-		sdl.opengl.pixel_data_range=(strstr(gl_ext,"GL_NV_pixel_data_range") >0 ) &&
-			glPixelDataRangeNV && db_glAllocateMemoryNV && db_glFreeMemoryNV;
-		sdl.opengl.pixel_data_range = 0;
-#endif
+		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
+		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
+		    glMapBufferARB && glUnmapBufferARB;
     	} else {
 		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
 	}
