@@ -294,7 +294,7 @@ bool Prop_string::CheckValue(Value const& in, bool warn){
 			}
 		}
 	}
-	if(warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset it to default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if(warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
 	return false;
 }
 
