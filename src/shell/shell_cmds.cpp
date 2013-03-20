@@ -742,6 +742,8 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 void DOS_Shell::CMD_SET(char * args) {
 	HELP("SET");
+	if (ScanCMDBool(args,"P")) 
+		E_Exit("Set /P is not supported. Use Choice!");
 	StripSpaces(args);
 	std::string line;
 	if (!*args) {
@@ -945,7 +947,7 @@ void DOS_Shell::CMD_CALL(char * args){
 
 void DOS_Shell::CMD_DATE(char * args) {
 	HELP("DATE");	
-	if(ScanCMDBool(args,"h")) {
+	if(ScanCMDBool(args,"H")) {
 		// synchronize date with host parameter
 		time_t curtime;
 		struct tm *loctime;
@@ -983,7 +985,7 @@ void DOS_Shell::CMD_DATE(char * args) {
 		// date string appears valid
 		for(Bit32u i = 0; i < length; i++) day[i] = datestring[reg_al*length+1+i];
 	}
-	bool dateonly = ScanCMDBool(args,"t");
+	bool dateonly = ScanCMDBool(args,"T");
 	if(!dateonly) WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
 
 	const char* formatstring = MSG_Get("SHELL_CMD_DATE_FORMAT");
@@ -1006,7 +1008,7 @@ void DOS_Shell::CMD_DATE(char * args) {
 
 void DOS_Shell::CMD_TIME(char * args) {
 	HELP("TIME");
-	if(ScanCMDBool(args,"h")) {
+	if(ScanCMDBool(args,"H")) {
 		// synchronize time with host parameter
 		time_t curtime;
 		struct tm *loctime;
@@ -1026,7 +1028,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		mem_writed(BIOS_TIMER,ticks);
 		return;
 	}
-	bool timeonly = ScanCMDBool(args,"t");
+	bool timeonly = ScanCMDBool(args,"T");
 
 	reg_ah=0x2c; // get system time
 	CALLBACK_RunRealInt(0x21);
