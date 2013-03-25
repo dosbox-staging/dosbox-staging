@@ -1143,13 +1143,15 @@ static void GUI_StartUp(Section * sec) {
 		char res[100];
 		strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
-		if(strcmp(fullresolution,"original")) {
+		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
-			char* height = const_cast<char*>(strchr(fullresolution,'x'));
-			if(height && * height) {
-				*height = 0;
-				sdl.desktop.full.height = (Bit16u)atoi(height+1);
-				sdl.desktop.full.width  = (Bit16u)atoi(res);
+			if (strcmp(fullresolution,"desktop")) { //desktop = 0x0
+				char* height = const_cast<char*>(strchr(fullresolution,'x'));
+				if (height && * height) {
+					*height = 0;
+					sdl.desktop.full.height = (Bit16u)atoi(height+1);
+					sdl.desktop.full.width  = (Bit16u)atoi(res);
+				}
 			}
 		}
 	}
@@ -1171,10 +1173,22 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
+#if SDL_VERSION_ATLEAST(1, 2, 10)
+	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
+		//Can only be done on the very first call! Not restartable.
+		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
+		if (vidinfo) {
+			sdl.desktop.full.width = vidinfo->current_w;
+			sdl.desktop.full.height = vidinfo->current_h;
+		}
+	}
+#endif
+
 	if (!sdl.desktop.full.width) {
 #ifdef WIN32
 		sdl.desktop.full.width=(Bit16u)GetSystemMetrics(SM_CXSCREEN);
 #else
+		LOG_MSG("Your fullscreen resolution can NOT be determined, it's assumed to be 1024x768.\nPlease edit the configuration file if this value is wrong.");
 		sdl.desktop.full.width=1024;
 #endif
 	}
@@ -1584,7 +1598,7 @@ void Config_Add_SDL() {
 	Pbool->Set_help("Use double buffering in fullscreen. It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
-	Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).\n"
+	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or a fixed size (e.g. 1024x768).\n"
 	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
 			  "  If you end up with small window on a large screen, try an output different from surface.");
 
@@ -1629,7 +1643,7 @@ void Config_Add_SDL() {
 	Pstring->Set_values(inactt);
 
 	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,MAPPERFILE);
-	Pstring->Set_help("File used to load/save the key/event mappings from. Resetmapper only works with the defaul value.");
+	Pstring->Set_help("File used to load/save the key/event mappings from. Resetmapper only works with the default value.");
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
