@@ -61,8 +61,8 @@ int old_cursor_state;
 // Forwards
 static void DrawCode(void);
 static void DEBUG_RaiseTimerIrq(void);
-static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num);
-static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num);
+static void SaveMemory(Bit16u seg, Bit32u ofs1, Bit32u num);
+static void SaveMemoryBin(Bit16u seg, Bit32u ofs1, Bit32u num);
 static void LogMCBS(void);
 static void LogGDT(void);
 static void LogLDT(void);
@@ -1856,9 +1856,9 @@ static void LogGDT(void)
 	while (address<max) {
 		desc.Load(address);
 		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3),desc.GetBase(),desc.saved.seg.type);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	};
 };
@@ -1876,9 +1876,9 @@ static void LogLDT(void) {
 	while (address<max) {
 		desc.Load(address);
 		sprintf(out1,"%04X: b:%08X type: %02X parbg",(i<<3)|4,desc.GetBase(),desc.saved.seg.type);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		sprintf(out1,"      l:%08X dpl : %01X  %1X%1X%1X%1X%1X",desc.GetLimit(),desc.saved.seg.dpl,desc.saved.seg.p,desc.saved.seg.avl,desc.saved.seg.r,desc.saved.seg.big,desc.saved.seg.g);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		address+=8; i++;
 	};
 };
@@ -1890,7 +1890,7 @@ static void LogIDT(void) {
 	while (address<256*8) {
 		if (cpu.idt.GetDescriptor(address,desc)) {
 			sprintf(out1,"%04X: sel:%04X off:%02X",address/8,desc.GetSelector(),desc.GetOffset());
-			LOG(LOG_MISC,LOG_ERROR)(out1);
+			LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 		}
 		address+=8;
 	};
@@ -1913,7 +1913,7 @@ void LogPages(char* selname) {
 						sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x [d=%x|a=%x]",
 							i,entry.block.base,entry.block.us,table.block.us,
 							entry.block.wr,table.block.wr,entry.block.d,entry.block.a);
-						LOG(LOG_MISC,LOG_ERROR)(out1);
+						LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 					}
 				}
 			}
@@ -1926,10 +1926,10 @@ void LogPages(char* selname) {
 				Bitu entry_addr=(table.block.base<<12)+(sel & 0x3ff)*4;
 				entry.load=phys_readd(entry_addr);
 				sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",sel,entry.block.base,entry.block.p,table.block.p,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
-				LOG(LOG_MISC,LOG_ERROR)(out1);
+				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 			} else {
 				sprintf(out1,"pagetable %03X not present, flags [puw] %x::%x::%x",(sel >> 10),table.block.p,table.block.us,table.block.wr);
-				LOG(LOG_MISC,LOG_ERROR)(out1);
+				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 			}
 		}
 	}
@@ -1938,24 +1938,24 @@ void LogPages(char* selname) {
 static void LogCPUInfo(void) {
 	char out1[512];
 	sprintf(out1,"cr0:%08X cr2:%08X cr3:%08X  cpl=%x",cpu.cr0,paging.cr2,paging.cr3,cpu.cpl);
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	sprintf(out1,"eflags:%08X [vm=%x iopl=%x nt=%x]",reg_flags,GETFLAG(VM)>>17,GETFLAG(IOPL)>>12,GETFLAG(NT)>>14);
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	sprintf(out1,"GDT base=%08X limit=%08X",cpu.gdt.GetBase(),cpu.gdt.GetLimit());
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	sprintf(out1,"IDT base=%08X limit=%08X",cpu.idt.GetBase(),cpu.idt.GetLimit());
-	LOG(LOG_MISC,LOG_ERROR)(out1);
+	LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 
 	Bitu sel=CPU_STR();
 	Descriptor desc;
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		sprintf(out1,"TR selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 	sel=CPU_SLDT();
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
 		sprintf(out1,"LDT selector=%04X, base=%08X limit=%08X*%X",sel,desc.GetBase(),desc.GetLimit(),desc.saved.seg.g?0x4000:1);
-		LOG(LOG_MISC,LOG_ERROR)(out1);
+		LOG(LOG_MISC,LOG_ERROR)("%s",out1);
 	}
 };
 
@@ -2036,7 +2036,7 @@ public:
 		}
 	   
 		char filename[128];
-		char args[256];
+		char args[256+1];
 	
 		cmd->FindCommand(1,temp_line);
 		safe_strncpy(filename,temp_line.c_str(),128);
@@ -2208,15 +2208,15 @@ bool CDebugVar::LoadVars(char* name)
 
 	// read number of vars
 	Bit16u num;
-	fread(&num,1,sizeof(num),f);
+	if (fread(&num,sizeof(num),1,f) != 1) return false;
 
 	for (Bit16u i=0; i<num; i++) {
 		char name[16];
 		// name
-		fread(name,1,16,f);
+		if (fread(name,16,1,f) != 1) break;
 		// adr
 		PhysPt adr;
-		fread(&adr,1,sizeof(adr),f);
+		if (fread(&adr,sizeof(adr),1,f) != 1) break;
 		// insert
 		InsertVariable(name,adr);
 	};
@@ -2224,7 +2224,7 @@ bool CDebugVar::LoadVars(char* name)
 	return true;
 };
 
-static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num) {
+static void SaveMemory(Bit16u seg, Bit32u ofs1, Bit32u num) {
 	FILE* f = fopen("MEMDUMP.TXT","wt");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory dump failed.\n");
@@ -2261,7 +2261,7 @@ static void SaveMemory(Bitu seg, Bitu ofs1, Bit32u num) {
 	DEBUG_ShowMsg("DEBUG: Memory dump success.\n");
 }
 
-static void SaveMemoryBin(Bitu seg, Bitu ofs1, Bit32u num) {
+static void SaveMemoryBin(Bit16u seg, Bit32u ofs1, Bit32u num) {
 	FILE* f = fopen("MEMDUMP.BIN","wb");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory binary dump failed.\n");
