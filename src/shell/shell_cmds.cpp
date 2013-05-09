@@ -742,8 +742,6 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 void DOS_Shell::CMD_SET(char * args) {
 	HELP("SET");
-	if (ScanCMDBool(args,"P")) 
-		E_Exit("Set /P is not supported. Use Choice!");
 	StripSpaces(args);
 	std::string line;
 	if (!*args) {
@@ -754,6 +752,11 @@ void DOS_Shell::CMD_SET(char * args) {
 		}
 		return;
 	}
+	//There are args:
+	char * pcheck = args;
+	while ( *pcheck && (*pcheck == ' ' || *pcheck == '\t')) pcheck++;
+	if (*pcheck && strlen(pcheck) >3 && (strncasecmp(pcheck,"/p ",3) == 0)) E_Exit("Set /P is not supported. Use Choice!");
+
 	char * p=strpbrk(args, "=");
 	if (!p) {
 		if (!GetEnvStr(args,line)) WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"),args);
