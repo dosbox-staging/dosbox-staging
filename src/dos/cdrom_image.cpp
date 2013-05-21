@@ -658,7 +658,30 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 			return true;
 		}
 	}
-	
+#if defined (WIN32) || defined(OS2)
+	//Nothing
+#else
+	//Consider the possibility that the filename has a windows directory seperator (inside the CUE file) 
+	//which is common for some commercial rereleases of DOS games using DOSBox
+
+	string copy = filename;
+	size_t l = copy.size();
+	for (size_t i = 0; i < l;i++) {
+		if(copy[i] == '\\') copy[i] = '/';
+	}
+
+	if (stat(copy.c_str(), &test) == 0) {
+		filename = copy;
+		return true;
+	}
+
+	tmpstr = pathname + "/" + copy;
+	if (stat(tmpstr.c_str(), &test) == 0) {
+		filename = tmpstr;
+		return true;
+	}
+
+#endif
 	return false;
 }
 
