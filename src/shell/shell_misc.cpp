@@ -473,7 +473,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		/* Fill the command line */
 		CommandTail cmdtail;
 		cmdtail.count = 0;
-		memset(&cmdtail.buffer,0,126); //Else some part of the string is unitialized (valgrind)
+		memset(&cmdtail.buffer,0,127); //Else some part of the string is unitialized (valgrind)
 		if (strlen(line)>126) line[126]=0;
 		cmdtail.count=(Bit8u)strlen(line);
 		memcpy(cmdtail.buffer,line,strlen(line));
