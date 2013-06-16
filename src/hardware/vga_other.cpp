@@ -438,9 +438,7 @@ static void tandy_update_palette() {
 		switch (vga.mode) {
 		case M_TANDY2:
 			VGA_SetCGA2Table(vga.attr.palette[0],
-				//vga.attr.palette[vga.tandy.color_select&0xf]);
-				vga.attr.palette[0xf]);
-			//VGA_SetCGA2Table(vga.attr.palette[0xf],vga.attr.palette[0]);
+				vga.attr.palette[vga.tandy.color_select&0xf]);
 			break;
 		case M_TANDY4:
 			if (vga.tandy.gfx_control & 0x8) {
@@ -458,7 +456,7 @@ static void tandy_update_palette() {
 					r_mask &= ~1;
 				}
 				VGA_SetCGA4Table(
-					vga.attr.palette[0],
+					vga.attr.palette[vga.tandy.color_select&0xf],
 					vga.attr.palette[(2|color_set)& vga.tandy.palette_mask],
 					vga.attr.palette[(4|(color_set& r_mask))& vga.tandy.palette_mask],
 					vga.attr.palette[(6|color_set)& vga.tandy.palette_mask]);
@@ -523,6 +521,7 @@ static void PCJr_FindMode(void) {
 			if (vga.mode==M_TANDY16) VGA_SetModeNow(M_TANDY4);
 			else VGA_SetMode(M_TANDY4);
 		}
+		tandy_update_palette();
 	} else {
 		VGA_SetMode(M_TANDY_TEXT);
 	}
@@ -588,17 +587,19 @@ static void write_tandy_reg(Bit8u val) {
 static void write_tandy(Bitu port,Bitu val,Bitu /*iolen*/) {
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control=(Bit8u)val;
-		if (val&0x8) vga.attr.disabled &= ~1;
-		else vga.attr.disabled |= 1;
-		TandyCheckLineMask();
-		VGA_SetBlinking(val & 0x20);
-		TANDY_FindMode();
+		val &= 0x3f; // only bits 0-6 are used
+		if (vga.tandy.mode_control ^ val) {
+			vga.tandy.mode_control=(Bit8u)val;
+			if (val&0x8) vga.attr.disabled &= ~1;
+			else vga.attr.disabled |= 1;
+			TandyCheckLineMask();
+			VGA_SetBlinking(val & 0x20);
+			TANDY_FindMode();
+			VGA_StartResize();
+		}
 		break;
 	case 0x3d9:
 		vga.tandy.color_select=val;
-		if (vga.mode==M_TANDY2) vga.attr.palette[0xf] = vga.tandy.color_select&0xf;
-		else vga.attr.palette[0] = vga.tandy.color_select&0xf; // Pirates!
 		tandy_update_palette();
 		break;
 	case 0x3da:
