@@ -823,6 +823,9 @@
 				RelativePath="..\include\mem.h">
 			</File>
 			<File
+				RelativePath="..\include\midi.h">
+			</File>
+			<File
 				RelativePath="..\include\mixer.h">
 			</File>
 			<File
