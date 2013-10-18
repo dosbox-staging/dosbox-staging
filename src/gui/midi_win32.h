@@ -87,6 +87,14 @@ public:
 			return;
 		}
 	}
+	void ListAll(Program* base) {
+		unsigned int total = midiOutGetNumDevs();	
+		for(unsigned int i = 0;i < total;i++) {
+			MIDIOUTCAPS mididev;
+			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+			base->WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
+		}
+	}
 };
 
 MidiHandler_win32 Midi_win32; 

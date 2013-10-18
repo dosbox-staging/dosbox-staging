@@ -47,6 +47,7 @@
 #include "mapper.h"
 #include "hardware.h"
 #include "programs.h"
+#include "midi.h"
 
 #define MIXER_SSIZE 4
 #define MIXER_SHIFT 14
@@ -577,15 +578,7 @@ private:
 	}
 
 	void ListMidi(){
-#if defined (WIN32)
-		unsigned int total = midiOutGetNumDevs();	
-		for(unsigned int i=0;i<total;i++) {
-			MIDIOUTCAPS mididev;
-			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-			WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
-		}
-#endif
-	return;
+		if(midi.handler) midi.handler->ListAll(this);
 	};
 
 };
