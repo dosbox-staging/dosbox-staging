@@ -1037,6 +1037,11 @@ bool ParseCommand(char* str) {
 		return true;
 	};
 
+	if (command == "ADDLOG") {
+		if(found && *found)	DEBUG_ShowMsg("NOTICE: %s\n",found);
+		return true;
+	};
+
 	if (command == "SR") { // Set register value
 		DEBUG_ShowMsg("DEBUG: Set Register %s.\n",(ChangeRegister(found)?"success":"failure"));
 		return true;
@@ -1304,7 +1309,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("LOG [num]                 - Write cpu log file.\n");
 		DEBUG_ShowMsg("LOGS/LOGL [num]           - Write short/long cpu log file.\n");
 		DEBUG_ShowMsg("HEAVYLOG                  - Enable/Disable automatic cpu log when dosbox exits.\n");
-		DEBUG_ShowMsg("ZEROPROTECT               - Enable/Disable zero code execution detecion.\n");
+		DEBUG_ShowMsg("ZEROPROTECT               - Enable/Disable zero code execution detection.\n");
 #endif
 		DEBUG_ShowMsg("SR [reg] [value]          - Set register value.\n");
 		DEBUG_ShowMsg("SM [seg]:[off] [val] [.]..- Set memory with following values.\n");	
@@ -1312,6 +1317,8 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("IV [seg]:[off] [name]     - Create var name for memory address.\n");
 		DEBUG_ShowMsg("SV [filename]             - Save var list in file.\n");
 		DEBUG_ShowMsg("LV [filename]             - Load var list from file.\n");
+
+		DEBUG_ShowMsg("ADDLOG [message]          - Add message to the log file.\n");
 
 		DEBUG_ShowMsg("MEMDUMP [seg]:[off] [len] - Write memory to file memdump.txt.\n");
 		DEBUG_ShowMsg("MEMDUMPBIN [s]:[o] [len]  - Write memory to file memdump.bin.\n");
