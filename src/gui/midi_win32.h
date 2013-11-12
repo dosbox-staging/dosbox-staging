@@ -47,10 +47,10 @@ public:
 				MIDIOUTCAPS mididev;
 				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
 				LOG_MSG("MIDI:win32 selected %s",mididev.szPname);
-				res = midiOutOpen(&m_out, nummer, (DWORD)m_event, 0, CALLBACK_EVENT);
+				res = midiOutOpen(&m_out, nummer, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
 			}
 		} else {
-			res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD)m_event, 0, CALLBACK_EVENT);
+			res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
 		}
 		if (res != MMSYSERR_NOERROR) return false;
 		isOpen=true;
