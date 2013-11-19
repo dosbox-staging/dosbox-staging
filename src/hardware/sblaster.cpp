@@ -274,7 +274,7 @@ static INLINE void DSP_FlushData(void) {
 }
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
-	if (event==DMA_REACHED_TC) return;
+	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
 			GenerateDMASound(sb.dma.min);
@@ -1123,8 +1123,9 @@ static void CTMIXER_Reset(void) {
 	_WHICH_[0]=   ((((_VAL_) & 0xf0) >> 3)|(sb.type==SBT_16 ? 1:3));	\
 	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(sb.type==SBT_16 ? 1:3));	\
 
-#define MAKEPROVOL(_WHICH_)			\
-	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) & (sb.type==SBT_16 ? 0xff:0xee))
+#define MAKEPROVOL(_WHICH_)											\
+	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) |	\
+		((sb.type==SBT_PRO1 || sb.type==SBT_PRO2) ? 0x11:0))
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
