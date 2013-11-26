@@ -256,6 +256,125 @@ ScalerSimpleBlock_t ScaleNormal3x = {
 {	Normal3x_8_8_R,		Normal3x_9_15_R ,	Normal3x_9_16_R ,	Normal3x_9_32_R }
 }};
 
+ScalerSimpleBlock_t ScaleNormal4x = {
+	"Normal4x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	4,4,{
+{	 Normal4x_8_8_L,		Normal4x_8_15_L	,	 Normal4x_8_16_L ,	Normal4x_8_32_L	},
+{								0,		Normal4x_15_15_L,	 Normal4x_15_16_L,	Normal4x_15_32_L},
+{								0,		Normal4x_16_15_L,	 Normal4x_16_16_L,	Normal4x_16_32_L},
+{								0,		Normal4x_32_15_L,	 Normal4x_32_16_L,	Normal4x_32_32_L},
+{	 Normal4x_8_8_L,		Normal4x_9_15_L	,	 Normal4x_9_16_L ,	Normal4x_9_32_L	}
+},{
+{	 Normal4x_8_8_R,		Normal4x_8_15_R	,	 Normal4x_8_16_R ,	Normal4x_8_32_R	},
+{								0,		Normal4x_15_15_R,	 Normal4x_15_16_R,	Normal4x_15_32_R},
+{								0,		Normal4x_16_15_R,	 Normal4x_16_16_R,	Normal4x_16_32_R},
+{								0,		Normal4x_32_15_R,	 Normal4x_32_16_R,	Normal4x_32_32_R},
+{	 Normal4x_8_8_R,		Normal4x_9_15_R	,	 Normal4x_9_16_R ,	Normal4x_9_32_R	}
+}};
+
+ScalerSimpleBlock_t	ScaleNormal5x	=	{
+	"Normal5x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	5,5,{
+{	 Normal5x_8_8_L,		Normal5x_8_15_L	,	 Normal5x_8_16_L ,	Normal5x_8_32_L	},
+{								0,		Normal5x_15_15_L,	 Normal5x_15_16_L,	Normal5x_15_32_L},
+{								0,		Normal5x_16_15_L,	 Normal5x_16_16_L,	Normal5x_16_32_L},
+{								0,		Normal5x_32_15_L,	 Normal5x_32_16_L,	Normal5x_32_32_L},
+{	 Normal5x_8_8_L,		Normal5x_9_15_L	,	 Normal5x_9_16_L ,	Normal5x_9_32_L	}
+},{
+{	 Normal5x_8_8_R,		Normal5x_8_15_R	,	 Normal5x_8_16_R ,	Normal5x_8_32_R	},
+{								0,		Normal5x_15_15_R,	 Normal5x_15_16_R,	Normal5x_15_32_R},
+{								0,		Normal5x_16_15_R,	 Normal5x_16_16_R,	Normal5x_16_32_R},
+{								0,		Normal5x_32_15_R,	 Normal5x_32_16_R,	Normal5x_32_32_R},
+{	 Normal5x_8_8_R,		Normal5x_9_15_R	,	 Normal5x_9_16_R ,	Normal5x_9_32_R	}
+}};
+
+ScalerSimpleBlock_t	ScaleNormal6x	=	{
+	"Normal6x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	6,6,{
+{	 Normal6x_8_8_L,		Normal6x_8_15_L	,	 Normal6x_8_16_L ,	Normal6x_8_32_L	},
+{								0,		Normal6x_15_15_L,	 Normal6x_15_16_L,	Normal6x_15_32_L},
+{								0,		Normal6x_16_15_L,	 Normal6x_16_16_L,	Normal6x_16_32_L},
+{								0,		Normal6x_32_15_L,	 Normal6x_32_16_L,	Normal6x_32_32_L},
+{	 Normal6x_8_8_L,		Normal6x_9_15_L	,	 Normal6x_9_16_L ,	Normal6x_9_32_L	}
+},{
+{	 Normal6x_8_8_R,		Normal6x_8_15_R	,	 Normal6x_8_16_R ,	Normal6x_8_32_R	},
+{								0,		Normal6x_15_15_R,	 Normal6x_15_16_R,	Normal6x_15_32_R},
+{								0,		Normal6x_16_15_R,	 Normal6x_16_16_R,	Normal6x_16_32_R},
+{								0,		Normal6x_32_15_R,	 Normal6x_32_16_R,	Normal6x_32_32_R},
+{	 Normal6x_8_8_R,		Normal6x_9_15_R	,	 Normal6x_9_16_R ,	Normal6x_9_32_R	}
+}};
+
+ScalerSimpleBlock_t ScaleNormalDw2x = {
+	"Normal2x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	4,2,{
+{	NormalDw2x_8_8_L,		NormalDw2x_8_15_L ,	NormalDw2x_8_16_L ,	NormalDw2x_8_32_L },
+{	               0,		NormalDw2x_15_15_L,	NormalDw2x_15_16_L,	NormalDw2x_15_32_L},
+{	               0,		NormalDw2x_16_15_L,	NormalDw2x_16_16_L,	NormalDw2x_16_32_L},
+{	               0,		NormalDw2x_32_15_L,	NormalDw2x_32_16_L,	NormalDw2x_32_32_L},
+{	NormalDw2x_8_8_L,		NormalDw2x_9_15_L ,	NormalDw2x_9_16_L ,	NormalDw2x_9_32_L }
+},{
+{	NormalDw2x_8_8_R,		NormalDw2x_8_15_R ,	NormalDw2x_8_16_R ,	NormalDw2x_8_32_R },
+{	               0,		NormalDw2x_15_15_R,	NormalDw2x_15_16_R,	NormalDw2x_15_32_R},
+{	               0,		NormalDw2x_16_15_R,	NormalDw2x_16_16_R,	NormalDw2x_16_32_R},
+{	               0,		NormalDw2x_32_15_R,	NormalDw2x_32_16_R,	NormalDw2x_32_32_R},
+{	NormalDw2x_8_8_R,		NormalDw2x_9_15_R ,	NormalDw2x_9_16_R ,	NormalDw2x_9_32_R }
+}};
+
+ScalerSimpleBlock_t ScaleNormalDh2x = {
+	"Normal2x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	2,4,{
+{	NormalDh2x_8_8_L,		NormalDh2x_8_15_L ,	NormalDh2x_8_16_L ,	NormalDh2x_8_32_L },
+{	               0,		NormalDh2x_15_15_L,	NormalDh2x_15_16_L,	NormalDh2x_15_32_L},
+{	               0,		NormalDh2x_16_15_L,	NormalDh2x_16_16_L,	NormalDh2x_16_32_L},
+{	               0,		NormalDh2x_32_15_L,	NormalDh2x_32_16_L,	NormalDh2x_32_32_L},
+{	NormalDh2x_8_8_L,		NormalDh2x_9_15_L ,	NormalDh2x_9_16_L ,	NormalDh2x_9_32_L }
+},{
+{	NormalDh2x_8_8_R,		NormalDh2x_8_15_R ,	NormalDh2x_8_16_R ,	NormalDh2x_8_32_R },
+{	               0,		NormalDh2x_15_15_R,	NormalDh2x_15_16_R,	NormalDh2x_15_32_R},
+{	               0,		NormalDh2x_16_15_R,	NormalDh2x_16_16_R,	NormalDh2x_16_32_R},
+{	               0,		NormalDh2x_32_15_R,	NormalDh2x_32_16_R,	NormalDh2x_32_32_R},
+{	NormalDh2x_8_8_R,		NormalDh2x_9_15_R ,	NormalDh2x_9_16_R ,	NormalDh2x_9_32_R }
+}};
+
+ScalerSimpleBlock_t ScaleNormalDw3x = {
+	"Normal3x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	6,3,{
+{	NormalDw3x_8_8_L,		NormalDw3x_8_15_L ,	NormalDw3x_8_16_L ,	NormalDw3x_8_32_L },
+{	               0,		NormalDw3x_15_15_L,	NormalDw3x_15_16_L,	NormalDw3x_15_32_L},
+{	               0,		NormalDw3x_16_15_L,	NormalDw3x_16_16_L,	NormalDw3x_16_32_L},
+{	               0,		NormalDw3x_32_15_L,	NormalDw3x_32_16_L,	NormalDw3x_32_32_L},
+{	NormalDw3x_8_8_L,		NormalDw3x_9_15_L ,	NormalDw3x_9_16_L ,	NormalDw3x_9_32_L }
+},{
+{	NormalDw3x_8_8_R,		NormalDw3x_8_15_R ,	NormalDw3x_8_16_R ,	NormalDw3x_8_32_R },
+{	               0,		NormalDw3x_15_15_R,	NormalDw3x_15_16_R,	NormalDw3x_15_32_R},
+{	               0,		NormalDw3x_16_15_R,	NormalDw3x_16_16_R,	NormalDw3x_16_32_R},
+{	               0,		NormalDw3x_32_15_R,	NormalDw3x_32_16_R,	NormalDw3x_32_32_R},
+{	NormalDw3x_8_8_R,		NormalDw3x_9_15_R ,	NormalDw3x_9_16_R ,	NormalDw3x_9_32_R }
+}};
+
+ScalerSimpleBlock_t ScaleNormalDh3x = {
+	"Normal3x",
+	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
+	3,6,{
+{	NormalDh3x_8_8_L,		NormalDh3x_8_15_L ,	NormalDh3x_8_16_L ,	NormalDh3x_8_32_L },
+{	               0,		NormalDh3x_15_15_L,	NormalDh3x_15_16_L,	NormalDh3x_15_32_L},
+{	               0,		NormalDh3x_16_15_L,	NormalDh3x_16_16_L,	NormalDh3x_16_32_L},
+{	               0,		NormalDh3x_32_15_L,	NormalDh3x_32_16_L,	NormalDh3x_32_32_L},
+{	NormalDh3x_8_8_L,		NormalDh3x_9_15_L ,	NormalDh3x_9_16_L ,	NormalDh3x_9_32_L }
+},{
+{	NormalDh3x_8_8_R,		NormalDh3x_8_15_R ,	NormalDh3x_8_16_R ,	NormalDh3x_8_32_R },
+{	               0,		NormalDh3x_15_15_R,	NormalDh3x_15_16_R,	NormalDh3x_15_32_R},
+{	               0,		NormalDh3x_16_15_R,	NormalDh3x_16_16_R,	NormalDh3x_16_32_R},
+{	               0,		NormalDh3x_32_15_R,	NormalDh3x_32_16_R,	NormalDh3x_32_32_R},
+{	NormalDh3x_8_8_R,		NormalDh3x_9_15_R ,	NormalDh3x_9_16_R ,	NormalDh3x_9_32_R }
+}};
+
 #if RENDER_USE_ADVANCED_SCALERS>0
 ScalerSimpleBlock_t ScaleTV2x = {
 	"TV2x",

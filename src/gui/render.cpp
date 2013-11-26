@@ -287,6 +287,12 @@ static void RENDER_Reset( void ) {
 			simpleBlock = &ScaleNormal2x;
 		else if (render.scale.size == 3)
 			simpleBlock = &ScaleNormal3x;
+		else if (render.scale.size == 4)
+			simpleBlock = &ScaleNormal4x;
+		else if (render.scale.size == 5)
+			simpleBlock = &ScaleNormal5x;
+		else if (render.scale.size == 6)
+			simpleBlock = &ScaleNormal6x;
 		else
 			simpleBlock = &ScaleNormal1x;
 		/* Maybe override them */
@@ -347,8 +353,18 @@ static void RENDER_Reset( void ) {
 		}
 #endif
 	} else if (dblw) {
+		if ((render.scale.size == 2) && (render.scale.forced))
+			simpleBlock = &ScaleNormalDw2x;
+		else if ((render.scale.size == 3) && (render.scale.forced))
+			simpleBlock = &ScaleNormalDw3x;
+		else
 		simpleBlock = &ScaleNormalDw;
 	} else if (dblh) {
+		if ((render.scale.size == 2) && (render.scale.forced))
+			simpleBlock = &ScaleNormalDh2x;
+		else if ((render.scale.size == 3) && (render.scale.forced))
+			simpleBlock = &ScaleNormalDh3x;
+		else
 		simpleBlock = &ScaleNormalDh;
 	} else  {
 forcenormal:
@@ -596,6 +612,9 @@ void RENDER_Init(Section * sec) {
 	if (scaler == "none") { render.scale.op = scalerOpNormal;render.scale.size = 1; }
 	else if (scaler == "normal2x") { render.scale.op = scalerOpNormal;render.scale.size = 2; }
 	else if (scaler == "normal3x") { render.scale.op = scalerOpNormal;render.scale.size = 3; }
+	else if (scaler == "normal4x") { render.scale.op = scalerOpNormal;render.scale.size = 4; }
+	else if (scaler == "normal5x") { render.scale.op = scalerOpNormal;render.scale.size = 5; }
+	else if (scaler == "normal6x") { render.scale.op = scalerOpNormal;render.scale.size = 6; }
 #if RENDER_USE_ADVANCED_SCALERS>2
 	else if (scaler == "advmame2x") { render.scale.op = scalerOpAdvMame;render.scale.size = 2; }
 	else if (scaler == "advmame3x") { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }

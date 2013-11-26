@@ -461,7 +461,7 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = {
-		"none", "normal2x", "normal3x",
+		"none", "normal2x", "normal3x", "normal4x", "normal5x", "normal6x",
 #if RENDER_USE_ADVANCED_SCALERS>2
 		"advmame2x", "advmame3x", "advinterp2x", "advinterp3x", "hq2x", "hq3x", "2xsai", "super2xsai", "supereagle",
 #endif
