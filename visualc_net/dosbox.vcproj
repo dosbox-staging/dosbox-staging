@@ -557,6 +557,9 @@
 						RelativePath="..\src\hardware\mpu401.cpp">
 					</File>
 					<File
+						RelativePath="..\src\hardware\nukedopl.cpp">
+					</File>
+					<File
 						RelativePath="..\src\hardware\pcspeaker.cpp">
 					</File>
 					<File
