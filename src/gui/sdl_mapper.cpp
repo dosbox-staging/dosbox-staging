@@ -520,11 +520,12 @@ protected:
 };
 
 #define MAX_VJOY_BUTTONS 8
-
+#define MAX_VJOY_HAT 16
+#define MAX_VJOY_AXIS 8
 static struct {
 	bool button_pressed[MAX_VJOY_BUTTONS];
-	Bit16s axis_pos[8];
-	bool hat_pressed[16];
+	Bit16s axis_pos[MAX_VJOY_AXIS];
+	bool hat_pressed[MAX_VJOY_HAT];
 } virtual_joysticks[2];
 
 
@@ -2390,15 +2391,17 @@ void MAPPER_StartUp(Section * sec) {
 	mapper.sticks.num=0;
 	mapper.sticks.num_groups=0;
 	Bitu i;
-	for (i=0; i<16; i++) {
+	for (i=0; i<MAX_VJOY_BUTTONS; i++) {
 		virtual_joysticks[0].button_pressed[i]=false;
 		virtual_joysticks[1].button_pressed[i]=false;
+	}
+	for (i=0; i<MAX_VJOY_HAT; i++) {
 		virtual_joysticks[0].hat_pressed[i]=false;
 		virtual_joysticks[1].hat_pressed[i]=false;
 	}
-	for (i=0; i<8; i++) {
+	for (i=0; i<MAX_VJOY_AXIS; i++) {
 		virtual_joysticks[0].axis_pos[i]=0;
-		virtual_joysticks[0].axis_pos[i]=0;
+		virtual_joysticks[1].axis_pos[i]=0;
 	}
 
 	usescancodes = false;
