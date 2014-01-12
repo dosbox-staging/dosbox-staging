@@ -229,7 +229,7 @@ bool startup_state_capslock=false;
 void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	char title[200]={0};
 	static Bit32s internal_cycles=0;
-	static Bits internal_frameskip=0;
+	static Bit32s internal_frameskip=0;
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
@@ -464,7 +464,7 @@ Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,G
 	sdl.draw.scalex=scalex;
 	sdl.draw.scaley=scaley;
 
-	Bitu bpp=0;
+	int bpp=0;
 	Bitu retFlags = 0;
 
 	if (sdl.blit.surface) {
@@ -495,7 +495,7 @@ dosurface:
 					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
 					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
 				if (sdl.surface == NULL)
-					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
+					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",(int)width,(int)height,bpp,SDL_GetError());
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
@@ -519,7 +519,7 @@ dosurface:
 			}
 #endif
 			if (sdl.surface == NULL)
-				E_Exit("Could not set windowed video mode %ix%i-%i: %s",width,height,bpp,SDL_GetError());
+				E_Exit("Could not set windowed video mode %ix%i-%i: %s",(int)width,(int)height,bpp,SDL_GetError());
 		}
 		if (sdl.surface) {
 			switch (sdl.surface->format->BitsPerPixel) {
@@ -1656,7 +1656,7 @@ static void show_warning(char const * const message) {
 	if ( !sdl.inited && SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 ) textonly = true;
 	sdl.inited = true;
 #endif
-	printf(message);
+	printf("%s",message);
 	if(textonly) return;
 	if(!sdl.surface) sdl.surface = SDL_SetVideoMode(640,400,0,0);
 	if(!sdl.surface) return;
@@ -2043,16 +2043,10 @@ int main(int argc, char* argv[]) {
 
 	}
 	catch (int){
-		;//nothing pressed killswitch
+		; //nothing, pressed killswitch
 	}
 	catch(...){
-#if defined (WIN32)
-		sticky_keys(true);
-#endif
-		//Force visible mouse to end user. Somehow this sometimes doesn't happen
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
-		SDL_ShowCursor(SDL_ENABLE);
-		throw;//dunno what happened. rethrow for sdl to catch
+		; // Unknown error, let's just exit.
 	}
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
