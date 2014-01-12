@@ -490,7 +490,8 @@ static INLINE void dyn_set_eip_end(void) {
 
 // set reg_eip to the start of the next instruction plus an offset (imm)
 static INLINE void dyn_set_eip_end(HostReg reg,Bit32u imm=0) {
-	gen_mov_word_to_reg(reg,&reg_eip,decode.big_op);
+	gen_mov_word_to_reg(reg,&reg_eip,true); //get_extend_word will mask off the upper bits
+	//gen_mov_word_to_reg(reg,&reg_eip,decode.big_op);
 	gen_add_imm(reg,(Bit32u)(decode.code-decode.code_start+imm));
 	if (!decode.big_op) gen_extend_word(false,reg);
 }
