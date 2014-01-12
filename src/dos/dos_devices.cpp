@@ -60,6 +60,10 @@ class device_LPT1 : public device_NUL {
 public:
    	device_LPT1() { SetName("LPT1");}
 	Bit16u GetInformation(void) { return 0x80A0; }
+	bool Read(Bit8u* data,Bit16u * size){
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}	
 };
 
 bool DOS_Device::Read(Bit8u * data,Bit16u * size) {

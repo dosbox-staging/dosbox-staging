@@ -651,7 +651,7 @@ void SHELL_Init() {
 	DOS_ForceDuplicateEntry(1,0);				/* "new" STDIN */
 	DOS_ForceDuplicateEntry(1,2);				/* STDERR */
 	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDAUX */
-	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDPRN */
+	DOS_OpenFile("PRN",OPEN_READWRITE,&dummy);	/* STDPRN */
 
 	psp.SetParent(psp_seg);
 	/* Set the environment */
