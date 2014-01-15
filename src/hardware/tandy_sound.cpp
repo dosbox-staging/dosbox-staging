@@ -92,6 +92,9 @@ static struct {
 			DmaChannel * chan;
 			bool transfer_done;
 		} dma;
+		Bit16s direct_buf[TDAC_DMA_BUFSIZE];
+		Bit16u direct_bytes;
+		Bitu sample_rate;
 		Bit8u mode,control;
 		Bit16u frequency;
 		Bit8u amplitude;
@@ -124,7 +127,7 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 			case 2:	/* tone 1 : frequency */
 			case 4:	/* tone 2 : frequency */
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
+				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep * 0x400;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
@@ -165,7 +168,7 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 			case 4:	/* tone 2 : frequency */
 				R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
+				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep * 0x400;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
@@ -348,20 +351,25 @@ static void TandyDACModeChanged(void) {
 	case 3:
 		// playback
 		tandy.dac.chan->FillUp();
-		if (tandy.dac.frequency!=0) {
-			float freq=3579545.0f/((float)tandy.dac.frequency);
-			tandy.dac.chan->SetFreq((Bitu)freq);
+		if ((tandy.dac.mode&0x0c)==0x0c) {
+			if (tandy.dac.frequency != 0) {
+				float freq=3579545.0f/((float)tandy.dac.frequency);
+				tandy.dac.chan->SetFreq((Bitu)freq);
+			}
 			float vol=((float)tandy.dac.amplitude)/7.0f;
 			tandy.dac.chan->SetVolume(vol,vol);
-			if ((tandy.dac.mode&0x0c)==0x0c) {
-				tandy.dac.dma.transfer_done=false;
-				tandy.dac.dma.chan=GetDMAChannel(tandy.dac.hw.dma);
-				if (tandy.dac.dma.chan) {
-					tandy.dac.dma.chan->Register_Callback(TandyDAC_DMA_CallBack);
-					tandy.dac.chan->Enable(true);
-//					LOG_MSG("Tandy DAC: playback started with freqency %f, volume %f",freq,vol);
-				}
+
+			tandy.dac.dma.transfer_done=false;
+			tandy.dac.dma.chan=GetDMAChannel(tandy.dac.hw.dma);
+			if (tandy.dac.dma.chan) {
+				tandy.dac.dma.chan->Register_Callback(TandyDAC_DMA_CallBack);
+				tandy.dac.chan->Enable(true);
+//				LOG_MSG("Tandy DAC: playback started with freqency %f, volume %f",freq,vol);
+
 			}
+		} else {
+			tandy.dac.chan->SetFreq(tandy.dac.sample_rate);
+			tandy.dac.chan->Enable(true);
 		}
 		break;
 	}
@@ -401,6 +409,7 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 			break;
 		case 3:
 			// direct output
+			if (tandy.dac.direct_bytes < TDAC_DMA_BUFSIZE) tandy.dac.direct_buf[tandy.dac.direct_bytes++] = (data^0x80)<<8;
 			break;
 		}
 		break;
@@ -413,7 +422,10 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		case 1:
 		case 2:
 		case 3:
-			TandyDACModeChanged();
+			if (tandy.dac.frequency != 0 && (tandy.dac.mode&0x0c)==0x0c) {
+				float freq=3579545.0f/((float)tandy.dac.frequency);
+				tandy.dac.chan->SetFreq((Bitu)freq);
+			}
 			break;
 		}
 		break;
@@ -427,7 +439,14 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		case 1:
 		case 2:
 		case 3:
-			TandyDACModeChanged();
+			float vol=((float)tandy.dac.amplitude)/7.0f;
+			tandy.dac.chan->SetVolume(vol,vol);
+			if ((tandy.dac.mode&0x0c)==0x0c) {
+				if (tandy.dac.frequency != 0) {
+					float freq=3579545.0f/((float)tandy.dac.frequency);
+					tandy.dac.chan->SetFreq((Bitu)freq);
+				}
+			}
 			break;
 		}
 		break;
@@ -461,7 +480,11 @@ static void TandyDACGenerateDMASound(Bitu length) {
 }
 
 static void TandyDACUpdate(Bitu length) {
-	if (tandy.dac.enabled && ((tandy.dac.mode&0x0c)==0x0c)) {
+	if (!tandy.dac.enabled) {
+		tandy.dac.chan->AddSilence();
+		return;
+	} else
+	if ((tandy.dac.mode&0x0c)==0x0c) {
 		if (!tandy.dac.dma.transfer_done) {
 			Bitu len = length;
 			TandyDACGenerateDMASound(len);
@@ -471,7 +494,8 @@ static void TandyDACUpdate(Bitu length) {
 			}
 		}
 	} else {
-		tandy.dac.chan->AddSilence();
+		tandy.dac.chan->AddStretched(tandy.dac.direct_bytes,tandy.dac.direct_buf);
+		tandy.dac.direct_bytes = 0;		
 	}
 }
 
@@ -489,7 +513,10 @@ public:
 		bool enable_hw_tandy_dac=true;
 		Bitu sbport, sbirq, sbdma;
 		if (SB_Get_Address(sbport, sbirq, sbdma)) {
-			enable_hw_tandy_dac=false;
+			if (sbport == 0xC4 || sbirq==7 || sbdma==7) {
+				enable_hw_tandy_dac=false;
+				LOG_MSG("Sound Blaster and Tandy DAC occupy the same port, IRQ or DMA:\n=> Direct hardware access to Tandy DAC disabled!\nBIOS-driven Tandy DAC output will be directed to the Sound Blaster.");
+			}
 		}
 
 		real_writeb(0x40,0xd4,0x00);
@@ -526,7 +553,7 @@ public:
 
 			tandy.dac.enabled=true;
 			tandy.dac.chan=MixerChanDAC.Install(&TandyDACUpdate,sample_rate,"TANDYDAC");
-
+			tandy.dac.sample_rate=sample_rate;
 			tandy.dac.hw.base=0xc4;
 			tandy.dac.hw.irq =7;
 			tandy.dac.hw.dma =1;
@@ -543,6 +570,7 @@ public:
 		tandy.dac.frequency=0;
 		tandy.dac.amplitude=0;
 		tandy.dac.dma.last_sample=0;
+		tandy.dac.direct_bytes=0;
 
 
 		tandy.enabled=false;
