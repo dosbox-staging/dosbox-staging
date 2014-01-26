@@ -58,6 +58,10 @@ static Bitu INT2A_Handler(void) {
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
+	/* ert, 20100711: Locking extensions */
+	case 0x1000:	/* SHARE.EXE installation check */
+		reg_ax=0xffff; /* Pretend that share.exe is installed.. Of course it's a bloody LIE! */
+		break;
 	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
 		// reg_bx is a system file table entry, should coincide with
 		// the file handle so just use that

@@ -29,6 +29,7 @@
 #include "cpu.h"
 
 #include "cdrom.h"
+#include "../save_state.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG
@@ -134,10 +135,11 @@ public:
 	bool		ResumeAudio			(Bit8u subUnit);
 	bool		GetMediaStatus		(Bit8u subUnit, bool& media, bool& changed, bool& trayOpen);
 
-private:
-
 	PhysPt		GetDefaultBuffer	(void);
 	PhysPt		GetTempBuffer		(void);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
 
 	Bit16u		numDrives;
 
@@ -322,7 +324,7 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		Bit16u driverSize = sizeof(DOS_DeviceHeader::sDeviceHeader) + 10; // 10 = Bytes for 3 callbacks
 		
 		// Create Device Header
-		Bit16u seg = DOS_GetMemory(driverSize/16+((driverSize%16)>0));
+		Bit16u seg = DOS_GetMemory(driverSize/16+((driverSize%16)>0),"MSCDEX device header");
 		DOS_DeviceHeader devHeader(PhysMake(seg,0));
 		devHeader.SetNextDeviceHeader	(0xFFFFFFFF);
 		devHeader.SetAttribute(0xc800);
@@ -417,7 +419,7 @@ void CMscdex::ReplaceDrive(CDROM_Interface* newCdrom, Bit8u subUnit) {
 PhysPt CMscdex::GetDefaultBuffer(void) {
 	if (defaultBufSeg==0) {
 		Bit16u size = (2352*2+15)/16;
-		defaultBufSeg = DOS_GetMemory(size);
+		defaultBufSeg = DOS_GetMemory(size,"MSCDEX default buffer");
 	};
 	return PhysMake(defaultBufSeg,2352);
 }
@@ -425,7 +427,7 @@ PhysPt CMscdex::GetDefaultBuffer(void) {
 PhysPt CMscdex::GetTempBuffer(void) {
 	if (defaultBufSeg==0) {
 		Bit16u size = (2352*2+15)/16;
-		defaultBufSeg = DOS_GetMemory(size);
+		defaultBufSeg = DOS_GetMemory(size,"MSCDEX temp buffer");
 	};
 	return PhysMake(defaultBufSeg,0);
 }
@@ -923,6 +925,20 @@ bool CMscdex::GetChannelControl(Bit8u subUnit, TCtrl& ctrl) {
 static CMscdex* mscdex = 0;
 static PhysPt curReqheaderPtr = 0;
 
+bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom) {
+	Bitu i;
+
+	for (i=0;i < MSCDEX_MAX_DRIVES;i++) {
+		if (mscdex->cdrom[i] == NULL) continue;
+		if (mscdex->dinfo[i].drive == drive_letter) {
+			if (_cdrom) *_cdrom = mscdex->cdrom[i];
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static Bit16u MSCDEX_IOCTL_Input(PhysPt buffer,Bit8u drive_unit) {
 	Bitu ioctl_fct = mem_readb(buffer);
 	MSCDEX_LOG("MSCDEX: IOCTL INPUT Subfunction %02X",ioctl_fct);
@@ -1388,4 +1404,79 @@ void MSCDEX_Init(Section* sec) {
 	DOS_AddMultiplexHandler(MSCDEX_Handler);
 	/* Create MSCDEX */
 	mscdex = new CMscdex;
+}
+
+
+
+//save state support
+void CMscdex::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &defaultBufSeg, defaultBufSeg );
+	WRITE_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void CMscdex::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &defaultBufSeg, defaultBufSeg );
+	READ_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void POD_Save_DOS_Mscdex( std::ostream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		bool playing, pause;
+
+		mscdex->GetAudioStatus(drive_unit, playing, pause, start, end);
+		mscdex->GetCurrentPos(drive_unit,pos);
+
+
+		WRITE_POD( &playing, playing );
+		WRITE_POD( &pause, pause );
+		WRITE_POD( &pos, pos );
+		WRITE_POD( &start, start );
+		WRITE_POD( &end, end );
+	}
+
+
+	mscdex->SaveState(stream);
+}
+
+
+void POD_Load_DOS_Mscdex( std::istream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		Bit32u msf_time, play_len;
+		bool playing, pause;
+				
+
+		READ_POD( &playing, playing );
+		READ_POD( &pause, pause );
+		READ_POD( &pos, pos );
+		READ_POD( &start, start );
+		READ_POD( &end, end );
+
+
+		// end = total play time (GetAudioStatus adds +150)
+		// pos = current play cursor
+		// start = start play cursor
+		play_len = end.min * 75 * 60 + ( end.sec * 75 ) + end.fr - 150;
+		play_len -= ( pos.min - start.min ) * 75 * 60 + ( pos.sec - start.sec ) * 75 + ( pos.fr - start.fr );
+		msf_time = ( pos.min << 16 ) + ( pos.sec << 8 ) + ( pos.fr );
+
+
+		// first play, then simulate pause
+		mscdex->StopAudio(drive_unit);
+
+		if( playing ) mscdex->PlayAudioMSF(drive_unit, msf_time, play_len);
+		if( pause ) mscdex->PlayAudioMSF(drive_unit, msf_time, 0);
+	}
+
+
+	mscdex->LoadState(stream);
 }

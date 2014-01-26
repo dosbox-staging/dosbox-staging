@@ -41,11 +41,11 @@
 
 
 #define CPU_ARCHTYPE_MIXED			0xff
-#define CPU_ARCHTYPE_386SLOW		0x30
-#define CPU_ARCHTYPE_386FAST		0x35
-#define CPU_ARCHTYPE_486OLDSLOW		0x40
-#define CPU_ARCHTYPE_486NEWSLOW		0x45
-#define CPU_ARCHTYPE_PENTIUMSLOW	0x50
+#define CPU_ARCHTYPE_386			0x35
+#define CPU_ARCHTYPE_486OLD			0x40
+#define CPU_ARCHTYPE_486NEW			0x45
+#define CPU_ARCHTYPE_PENTIUM		0x50
+#define CPU_ARCHTYPE_P55CSLOW		0x55
 
 /* CPU Cycle Timing */
 extern Bit32s CPU_Cycles;
@@ -58,6 +58,9 @@ extern Bit64s CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
+extern Bitu CPU_CyclesCur;
+extern Bit32s CPU_CyclesSet;
+extern char core_mode[16];
 
 extern Bitu CPU_ArchitectureType;
 
@@ -88,6 +91,7 @@ void CPU_Reset_AutoAdjust(void);
 
 extern Bit16u parity_lookup[256];
 
+void CPU_SetCPL(Bitu newcpl);
 bool CPU_LLDT(Bitu selector);
 bool CPU_LTR(Bitu selector);
 void CPU_LIDT(Bitu limit,Bitu base);
@@ -136,6 +140,7 @@ bool CPU_IO_Exception(Bitu port,Bitu size);
 void CPU_RunException(void);
 
 void CPU_ENTER(bool use32,Bitu bytes,Bitu level);
+void init_vm86_fake_io();
 
 #define CPU_INT_SOFTWARE		0x1
 #define CPU_INT_EXCEPTION		0x2
@@ -180,6 +185,7 @@ void CPU_SetFlags(Bitu word,Bitu mask);
 #define CR0_FPUEMULATION		0x00000004
 #define CR0_TASKSWITCH			0x00000008
 #define CR0_FPUPRESENT			0x00000010
+#define CR0_WRITEPROTECT		0x00010000
 #define CR0_PAGING				0x80000000
 
 
@@ -377,6 +383,9 @@ public:
 		desc.Load(table_base+(selector));
 		return true;
 	}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
 protected:
 	PhysPt table_base;
 	Bitu table_limit;
@@ -427,6 +436,9 @@ public:
 		ldt_value=value;
 		return true;
 	}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
 private:
 	PhysPt ldt_base;
 	Bitu ldt_limit;
@@ -455,6 +467,11 @@ struct CPUBlock {
 	bool pmode;							/* Is Protected mode enabled */
 	GDTDescriptorTable gdt;
 	DescriptorTable idt;
+	struct {
+		Bitu cr0_and;
+		Bitu cr0_or;
+		Bitu eflags;
+	} masks;
 	struct {
 		Bitu mask,notmask;
 		bool big;
@@ -487,5 +504,7 @@ static INLINE void CPU_SetFlagsw(Bitu word) {
 	CPU_SetFlags(word,mask);
 }
 
+Bitu CPU_ForceV86FakeIO_In(Bitu port,Bitu len);
+void CPU_ForceV86FakeIO_Out(Bitu port,Bitu val,Bitu len);
 
 #endif

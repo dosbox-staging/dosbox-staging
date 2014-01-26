@@ -1,7 +1,6 @@
-#if 0
 /*
  *  gui_tk - framework-agnostic GUI toolkit
- *  Copyright (C) 2005-2007 Jörg Walter
+ *  Copyright (C) 2005-2013 Jörg Walter
  *
  *  gui_tk is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1701,6 +1700,4 @@ int main(int argc, char *argv[])
 		SDL_Delay(40);
 	}
 }
-#endif
-
 #endif

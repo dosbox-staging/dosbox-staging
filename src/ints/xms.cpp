@@ -29,6 +29,9 @@
 #include "inout.h"
 #include "xms.h"
 #include "bios.h"
+#include "../save_state.h"
+
+#include <algorithm>
 
 #define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
 #define XMS_VERSION    						0x0300	/* version 3.00 */
@@ -115,7 +118,8 @@ Bitu XMS_GetEnabledA20(void) {
 }
 
 static RealPt xms_callback;
-static bool umb_available;
+static bool umb_available = false;
+static bool umb_init = false;
 
 static XMS_Block xms_handles[XMS_HANDLES];
 
@@ -123,10 +127,10 @@ static INLINE bool InvalidHandle(Bitu handle) {
 	return (!handle || (handle>=XMS_HANDLES) || xms_handles[handle].free);
 }
 
-Bitu XMS_QueryFreeMemory(Bit16u& largestFree, Bit16u& totalFree) {
+Bitu XMS_QueryFreeMemory(Bit32u& largestFree, Bit32u& totalFree) {
 	/* Scan the tree for free memory and find largest free block */
-	totalFree=(Bit16u)(MEM_FreeTotal()*4);
-	largestFree=(Bit16u)(MEM_FreeLargest()*4);
+	totalFree=(Bit32u)(MEM_FreeTotal()*4);
+	largestFree=(Bit32u)(MEM_FreeLargest()*4);
 	if (!totalFree) return XMS_OUT_OF_SPACE;
 	return 0;
 }
@@ -224,7 +228,7 @@ Bitu XMS_UnlockMemory(Bitu handle) {
 	return XMS_BLOCK_NOT_LOCKED;
 }
 
-Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit16u& size) {
+Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit32u& size) {
 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
 	lockCount = xms_handles[handle].locked;
 	/* Find available blocks */
@@ -232,7 +236,7 @@ Bitu XMS_GetHandleInformation(Bitu handle, Bit8u& lockCount, Bit8u& numFree, Bit
 	for (Bitu i=1;i<XMS_HANDLES;i++) {
 		if (xms_handles[i].free) numFree++;
 	}
-	size=(Bit16u)(xms_handles[handle].size);
+	size=(Bit32u)(xms_handles[handle].size);
 	return 0;
 }
 
@@ -296,11 +300,18 @@ Bitu XMS_Handler(void) {
 		reg_bl = 0;
 		break;
 	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
-		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
+		reg_bl = XMS_QueryFreeMemory(reg_eax,reg_edx);
+		if (reg_eax > 65535) reg_eax = 65535; /* cap sizes for older DOS programs. newer ones use function 0x88 */
+		if (reg_edx > 65535) reg_edx = 65535;
 		break;
 	case XMS_ALLOCATE_ANY_MEMORY:								/* 89 */
-		reg_edx &= 0xffff;
-		// fall through
+		{ /* Chopping off bits 16-31 to fall through to ALLOCATE_EXTENDED_MEMORY is inaccurate.
+		     The Extended Memory Specification states you use all of EDX, so programs can request
+		     64MB or more. Even if DOSBox does not (yet) support >= 64MB of RAM. */
+		Bit16u handle = 0;
+		SET_RESULT(XMS_AllocateMemory(reg_edx,handle));
+		reg_dx = handle;
+		}; break;
 	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
 		{
 		Bit16u handle = 0;
@@ -327,11 +338,12 @@ Bitu XMS_Handler(void) {
 		SET_RESULT(XMS_UnlockMemory(reg_dx));
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION:  						/* 0e */
-		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx),false);
+		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_edx),false);
+		reg_edx &= 0xFFFF;
 		break;
 	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
-		if(reg_ebx > reg_bx) LOG_MSG("64MB memory limit!");
-		//fall through
+		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_ebx));
+		break;
 	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
 		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
 		break;
@@ -388,19 +400,14 @@ Bitu XMS_Handler(void) {
 		reg_bl=UMB_NO_BLOCKS_AVAILABLE;
 		break;
 	case XMS_QUERY_ANY_FREE_MEMORY:								/* 88 */
-		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
-		reg_eax &= 0xffff;
-		reg_edx &= 0xffff;
+		reg_bl = XMS_QueryFreeMemory(reg_eax,reg_edx);
 		reg_ecx = (MEM_TotalPages()*MEM_PAGESIZE)-1;			// highest known physical memory address
 		break;
 	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
 		Bit8u free_handles;
-		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_dx);
+		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_edx);
 		if (result != 0) reg_bl = result;
-		else {
-			reg_edx &= 0xffff;
-			reg_cx = free_handles;
-		}
+		else reg_cx = free_handles;
 		reg_ax = (result==0);
 		} break;
 	default:
@@ -412,7 +419,27 @@ Bitu XMS_Handler(void) {
 	return CBRET_NONE;
 }
 
+bool keep_umb_on_boot;
+
+extern Bitu VGA_BIOS_SEG;
+extern Bitu VGA_BIOS_SEG_END;
+extern Bitu VGA_BIOS_Size;
+
+extern bool mainline_compatible_mapping;
+
 Bitu GetEMSType(Section_prop * section);
+void DOS_GetMemory_Choose();
+
+bool MEM_unmap_physmem(Bitu start,Bitu end);
+
+void RemoveUMBBlock() {
+	/* FIXME: Um... why is umb_available == false even when set to true below? */
+	if (umb_init) {
+		fprintf(stderr,"Removing UMB block 0x%04x-0x%04x\n",first_umb_seg,first_umb_seg+first_umb_size-1);
+		MEM_unmap_physmem(first_umb_seg<<4,((first_umb_seg+first_umb_size)<<4)-1);
+		umb_init = false;
+	}
+}
 
 class XMS: public Module_base {
 private:
@@ -427,7 +454,7 @@ public:
 		DOS_AddMultiplexHandler(multiplex_xms);
 
 		/* place hookable callback in writable memory area */
-		xms_callback=RealMake(DOS_GetMemory(0x1)-1,0x10);
+		xms_callback=RealMake(DOS_GetMemory(0x1,"xms_callback")-1,0x10);
 		callbackhandler.Install(&XMS_Handler,CB_HOOKABLE,Real2Phys(xms_callback),"XMS Handler");
 		// pseudocode for CB_HOOKABLE:
 		//	jump near skip
@@ -446,9 +473,56 @@ public:
 		xms_handles[0].free	= false;
 
 		/* Set up UMB chain */
+		keep_umb_on_boot=section->Get_bool("keep umb on boot");
 		umb_available=section->Get_bool("umb");
+		first_umb_seg=section->Get_hex("umb start");
+		first_umb_size=section->Get_hex("umb end");
+
+		DOS_GetMemory_Choose();
+
+		if (first_umb_seg == 0) {
+			first_umb_seg = DOS_PRIVATE_SEGMENT_END;
+			if (mainline_compatible_mapping && first_umb_seg < 0xD000)
+				first_umb_seg = 0xD000; /* Mainline DOSBox assumes a 128KB UMB region starting at 0xD000 */
+			else if (first_umb_seg < VGA_BIOS_SEG_END)
+				first_umb_seg = VGA_BIOS_SEG_END;
+		}
+		if (first_umb_size == 0) first_umb_size = 0xEFFF;
+
+		if (first_umb_seg < 0xC000 || first_umb_seg < DOS_PRIVATE_SEGMENT_END) {
+			fprintf(stderr,"UMB warning: UMB blocks before 0xD000 conflict with VGA (0xA000-0xBFFF), VGA BIOS (0xC000-0xC7FF) and DOSBox private area (0x%04x-0x%04x)\n",
+				DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+			first_umb_seg = 0xC000;
+			if (first_umb_seg < (Bitu)DOS_PRIVATE_SEGMENT_END) first_umb_seg = (Bitu)DOS_PRIVATE_SEGMENT_END;
+		}
+		if (first_umb_seg >= 0xF000) {
+			fprintf(stderr,"UMB starting segment conflict with BIOS at 0xF000. Disabling UMBs\n");
+			umb_available = false;
+		}
+		if (first_umb_size >= 0xF000) {
+			fprintf(stderr,"UMB ending segment conflicts with BIOS at 0xF000, truncating region\n");
+			first_umb_size = 0xEFFF;
+		}
+		if (first_umb_size < first_umb_seg) {
+			fprintf(stderr,"UMB end segment below UMB start. I'll just assume you mean to disable UMBs then.\n");
+			first_umb_size = first_umb_seg - 1;
+			umb_available = false;
+		}
+		first_umb_size = (first_umb_size + 1 - first_umb_seg);
+		if (umb_available) {
+			//fprintf(stderr,"UMB assigned region is 0x%04x-0x%04x\n",first_umb_seg,first_umb_seg+first_umb_size-1);
+			if (MEM_map_RAM_physmem(first_umb_seg<<4,((first_umb_seg+first_umb_size)<<4)-1)) {
+				memset(GetMemBase()+(first_umb_seg<<4),0x00,first_umb_size<<4);
+			}
+			else {
+				fprintf(stderr,"Unable to claim UMB region (perhaps adapter ROM is in the way). Disabling UMB\n");
+				umb_available = false;
+			}
+		}
+
 		bool ems_available = GetEMSType(section)>0;
-		DOS_BuildUMBChain(section->Get_bool("umb"),ems_available);
+		DOS_BuildUMBChain(umb_available,ems_available);
+		umb_init = true;
 	}
 
 	~XMS(){
@@ -483,3 +557,18 @@ void XMS_Init(Section* sec) {
 	test = new XMS(sec);
 	sec->AddDestroyFunction(&XMS_ShutDown,true);
 }
+
+
+//save state support
+		namespace
+{
+class SerializeXMS : public SerializeGlobalPOD
+{
+public:
+    SerializeXMS() : SerializeGlobalPOD("XMS")
+    {
+        registerPOD(xms_handles);
+    }
+} dummy;
+}
+

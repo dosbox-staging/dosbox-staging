@@ -24,6 +24,7 @@ midi.h \
 mixer.h \
 modules.h \
 mouse.h \
+parport.h \
 paging.h \
 pci_bus.h \
 pic.h \
@@ -37,5 +38,18 @@ shell.h \
 support.h \
 timer.h \
 vga.h \
-video.h
+video.h \
+ne2000.h \
+mmx.h \
+menu.h \
+menudef.h \
+resource.h \
+voodoo.h \
+ioapi.h \
+iowin32.h \
+unzip.h \
+zip.h \
+crypt.h \
+mztools.h
+
 

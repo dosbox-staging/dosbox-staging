@@ -29,6 +29,7 @@
 #include "callback.h"				// CALLBACK_Idle
 
 #include "serialport.h"
+#include "serialmouse.h"
 #include "directserial.h"
 #include "serialdummy.h"
 #include "softmodem.h"
@@ -1213,6 +1214,9 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 	return true;
 }
 
+/* ints/bios.cpp */
+void BIOS_PnP_ComPortRegister(Bitu port,Bitu irq);
+
 class SERIALPORTS:public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
@@ -1230,6 +1234,9 @@ public:
 			// detect the type
 			if (type=="dummy") {
 				serialports[i] = new CSerialDummy (i, &cmd);
+			}
+			else if (type=="serialmouse") {
+				serialports[i] = new CSerialMouse (i, &cmd);
 			}
 #ifdef DIRECTSERIAL_AVAILIBLE
 			else if (type=="directserial") {
@@ -1263,7 +1270,10 @@ public:
 				serialports[i] = NULL;
 				LOG_MSG("Invalid type for serial%d",i+1);
 			}
-			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
+			if(serialports[i]) {
+				biosParameter[i] = serial_baseaddr[i];
+				BIOS_PnP_ComPortRegister(serial_baseaddr[i],serialports[i]->irq);
+			}
 		} // for 1-4
 		BIOS_SetComPorts (biosParameter);
 	}
@@ -1290,3 +1300,7 @@ void SERIAL_Init (Section * sec) {
 	testSerialPortsBaseclass = new SERIALPORTS (sec);
 	sec->AddDestroyFunction (&SERIAL_Destroy, true);
 }
+
+
+// save state support
+void *Serial_EventHandler_PIC_Event = (void*)Serial_EventHandler;

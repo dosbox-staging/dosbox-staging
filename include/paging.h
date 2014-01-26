@@ -21,6 +21,7 @@
 #define DOSBOX_PAGING_H
 
 #ifndef DOSBOX_DOSBOX_H
+#include <iostream>
 #include "dosbox.h"
 #endif
 #ifndef DOSBOX_MEM_H
@@ -59,6 +60,7 @@ class PageDirectory;
 
 class PageHandler {
 public:
+	PageHandler(Bitu flg) : flags(flg) {}
 	virtual ~PageHandler(void) { }
 	virtual Bitu readb(PhysPt addr);
 	virtual Bitu readw(PhysPt addr);
@@ -74,12 +76,26 @@ public:
 	virtual bool writeb_checked(PhysPt addr,Bitu val);
 	virtual bool writew_checked(PhysPt addr,Bitu val);
 	virtual bool writed_checked(PhysPt addr,Bitu val);
-	Bitu flags;
+   PageHandler (void) { }
+	Bitu flags; 
+	const Bitu getFlags() const {
+		return flags;
+	}
+	void setFlags(Bitu flagsNew) {
+		flags = flagsNew;
+	}
+
+private:
+	PageHandler(const PageHandler&);
+	PageHandler& operator=(const PageHandler&);
+
 };
 
 /* Some other functions */
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled(void);
+void PAGING_SetWP(bool wp);
+void PAGING_SwitchCPL(bool isUser);
 
 Bitu PAGING_GetDirBase(void);
 void PAGING_SetDirBase(Bitu cr3);
@@ -152,6 +168,7 @@ typedef struct {
 struct PagingBlock {
 	Bitu			cr3;
 	Bitu			cr2;
+	bool wp;
 	struct {
 		Bitu page;
 		PhysPt addr;
@@ -172,6 +189,18 @@ struct PagingBlock {
 		Bitu used;
 		Bit32u entries[PAGING_LINKS];
 	} links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} ur_links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} krw_links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} kr_links; // WP-only
 	Bit32u		firstmb[LINK_START];
 	bool		enabled;
 };

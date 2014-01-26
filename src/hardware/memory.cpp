@@ -17,21 +17,41 @@
  */
 
 
+#include <stdint.h>
+#include <assert.h>
 #include "dosbox.h"
+#include "dos_inc.h"
 #include "mem.h"
 #include "inout.h"
 #include "setup.h"
 #include "paging.h"
 #include "regs.h"
+#ifndef WIN32
+# include <stdlib.h>
+# include <unistd.h>
+# include <stdio.h>
+#endif
+#include "glidedef.h"
+#include "../save_state.h"
+
+#include "voodoo.h"
 
 #include <string.h>
 
 #define PAGES_IN_BLOCK	((1024*1024)/MEM_PAGE_SIZE)
 #define SAFE_MEMORY	32
-#define MAX_MEMORY	64
+#define MAX_MEMORY	512
 #define MAX_PAGE_ENTRIES (MAX_MEMORY*1024*1024/4096)
 #define LFB_PAGES	512
 #define MAX_LINKS	((MAX_MEMORY*1024/4)+4096)		//Hopefully enough
+
+/* if set: mainline DOSBox behavior where adapter ROM (0xA0000-0xFFFFF) except for
+ * areas explicitly mapped to the ROM handler, are mapped the same as system RAM.
+ *
+ * if clear: associate any adapter ROM region not used by the BIOS, VGA BIOS, or
+ * VGA, with the Illegal handler (not mapped). Actual RAM behind the storage does
+ * not show up and reads return 0xFF, just like real hardware. */
+bool adapter_rom_is_ram = false;
 
 struct LinkBlock {
 	Bitu used;
@@ -40,6 +60,7 @@ struct LinkBlock {
 
 static struct MemoryBlock {
 	Bitu pages;
+	Bitu reported_pages;
 	PageHandler * * phandlers;
 	MemHandle * mhandles;
 	LinkBlock links;
@@ -54,35 +75,49 @@ static struct MemoryBlock {
 		bool enabled;
 		Bit8u controlport;
 	} a20;
+	Bit32u mem_alias_pagemask;
 } memory;
 
 HostPt MemBase;
 
+namespace
+{
+size_t memorySize;
+}
+
+class UnmappedPageHandler : public PageHandler {
+public:
+	UnmappedPageHandler() : PageHandler(PFLAG_INIT|PFLAG_NOCODE) {}
+	Bitu readb(PhysPt addr) {
+		return 0xFF; /* Real hardware returns 0xFF not 0x00 */
+	} 
+	void writeb(PhysPt addr,Bitu val) {
+	}
+};
+
 class IllegalPageHandler : public PageHandler {
 public:
-	IllegalPageHandler() {
-		flags=PFLAG_INIT|PFLAG_NOCODE;
-	}
+	IllegalPageHandler() : PageHandler(PFLAG_INIT|PFLAG_NOCODE) {}
 	Bitu readb(PhysPt addr) {
 #if C_DEBUG
-		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+		LOG_MSG("Warning: Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;
 		if (lcount<1000) {
 			lcount++;
-			LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+			//LOG_MSG("Warning: Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 		}
 #endif
-		return 0;
+		return 0xFF; /* Real hardware returns 0xFF not 0x00 */
 	} 
 	void writeb(PhysPt addr,Bitu val) {
 #if C_DEBUG
-		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+		LOG_MSG("Warning: Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 #else
 		static Bits lcount=0;
 		if (lcount<1000) {
 			lcount++;
-			LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
+			//LOG_MSG("Warning: Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 		}
 #endif
 	}
@@ -90,9 +125,8 @@ public:
 
 class RAMPageHandler : public PageHandler {
 public:
-	RAMPageHandler() {
-		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
-	}
+	RAMPageHandler() : PageHandler(PFLAG_READABLE|PFLAG_WRITEABLE) {}
+	RAMPageHandler(Bitu flags) : PageHandler(flags) {}
 	HostPt GetHostReadPt(Bitu phys_page) {
 		return MemBase+phys_page*MEM_PAGESIZE;
 	}
@@ -101,7 +135,20 @@ public:
 	}
 };
 
-class ROMPageHandler : public RAMPageHandler {
+class RAMAliasPageHandler : public PageHandler {
+public:
+	RAMAliasPageHandler() {
+		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
+	}
+	HostPt GetHostReadPt(Bitu phys_page) {
+		return MemBase+(phys_page&memory.mem_alias_pagemask)*MEM_PAGESIZE;
+	}
+	HostPt GetHostWritePt(Bitu phys_page) {
+		return MemBase+(phys_page&memory.mem_alias_pagemask)*MEM_PAGESIZE;
+	}
+};
+
+class ROMPageHandler : public RAMAliasPageHandler {
 public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
@@ -119,7 +166,9 @@ public:
 
 
 
+static UnmappedPageHandler unmapped_page_handler;
 static IllegalPageHandler illegal_page_handler;
+static RAMAliasPageHandler ram_alias_page_handler;
 static RAMPageHandler ram_page_handler;
 static ROMPageHandler rom_page_handler;
 
@@ -133,6 +182,7 @@ void MEM_SetLFB(Bitu page, Bitu pages, PageHandler *handler, PageHandler *mmioha
 }
 
 PageHandler * MEM_GetPageHandler(Bitu phys_page) {
+	phys_page &= memory.mem_alias_pagemask;
 	if (phys_page<memory.pages) {
 		return memory.phandlers[phys_page];
 	} else if ((phys_page>=memory.lfb.start_page) && (phys_page<memory.lfb.end_page)) {
@@ -140,6 +190,10 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
 				(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
 		return memory.lfb.mmiohandler;
+	} else if (glide.enabled && (phys_page>=(GLIDE_LFB>>12)) && (phys_page<(GLIDE_LFB>>12)+GLIDE_PAGES)) {
+		return (PageHandler*)glide.lfb_pagehandler;
+	} else if (!glide.enabled && VOODOO_PCI_CheckLFBPage(phys_page)) {
+		return VOODOO_GetPageHandler();
 	}
 	return &illegal_page_handler;
 }
@@ -152,8 +206,12 @@ void MEM_SetPageHandler(Bitu phys_page,Bitu pages,PageHandler * handler) {
 }
 
 void MEM_ResetPageHandler(Bitu phys_page, Bitu pages) {
+	PageHandler *ram_ptr =
+		memory.mem_alias_pagemask == (Bit32u)(~0UL)
+		? (PageHandler*)(&ram_page_handler) /* no aliasing */
+		: (PageHandler*)(&ram_alias_page_handler); /* aliasing */
 	for (;pages>0;pages--) {
-		memory.phandlers[phys_page]=&ram_page_handler;
+		memory.phandlers[phys_page]=ram_ptr;
 		phys_page++;
 	}
 }
@@ -186,8 +244,50 @@ void MEM_BlockRead(PhysPt pt,void * data,Bitu size) {
 
 void MEM_BlockWrite(PhysPt pt,void const * const data,Bitu size) {
 	Bit8u const * read = reinterpret_cast<Bit8u const * const>(data);
+	if (size==0)
+		return;
+
+	if ((pt >> 12) == ((pt+size-1)>>12)) { // Always same TLB entry
+		HostPt tlb_addr=get_tlb_write(pt);
+		if (!tlb_addr) {
+			Bit8u val = *read++;
+			get_tlb_writehandler(pt)->writeb(pt,val);
+			tlb_addr=get_tlb_write(pt);
+			pt++; size--;
+			if (!tlb_addr) {
+				// Slow path
+				while (size--) {
+					mem_writeb_inline(pt++,*read++);
+				}
+				return;
+			}
+		}
+		// Fast path
+		memcpy(tlb_addr+pt, read, size);
+	}
+	else {
+		const Bitu current = (((pt>>12)+1)<<12) - pt;
+		Bitu remainder = size - current;
+		MEM_BlockWrite(pt, data, current);
+		MEM_BlockWrite(pt+current, reinterpret_cast<Bit8u const * const>(data)+current, remainder);
+	}
+}
+
+void MEM_BlockRead32(PhysPt pt,void * data,Bitu size) {
+	Bit32u * write=(Bit32u *) data;
+	size>>=2;
 	while (size--) {
-		mem_writeb_inline(pt++,*read++);
+		*write++=mem_readd_inline(pt);
+		pt+=4;
+	}
+}
+
+void MEM_BlockWrite32(PhysPt pt,void * data,Bitu size) {
+	Bit32u * read=(Bit32u *) data;
+	size>>=2;
+	while (size--) {
+		mem_writed_inline(pt,*read++);
+		pt+=4;
 	}
 }
 
@@ -205,13 +305,13 @@ void MEM_StrCopy(PhysPt pt,char * data,Bitu size) {
 }
 
 Bitu MEM_TotalPages(void) {
-	return memory.pages;
+	return memory.reported_pages;
 }
 
 Bitu MEM_FreeLargest(void) {
 	Bitu size=0;Bitu largest=0;
 	Bitu index=XMS_START;	
-	while (index<memory.pages) {
+	while (index<memory.reported_pages) {
 		if (!memory.mhandles[index]) {
 			size++;
 		} else {
@@ -227,7 +327,7 @@ Bitu MEM_FreeLargest(void) {
 Bitu MEM_FreeTotal(void) {
 	Bitu free=0;
 	Bitu index=XMS_START;	
-	while (index<memory.pages) {
+	while (index<memory.reported_pages) {
 		if (!memory.mhandles[index]) free++;
 		index++;
 	}
@@ -251,7 +351,7 @@ INLINE Bitu BestMatch(Bitu size) {
 	Bitu first=0;
 	Bitu best=0xfffffff;
 	Bitu best_first=0;
-	while (index<memory.pages) {
+	while (index<memory.reported_pages) {
 		/* Check if we are searching for first free page */
 		if (!first) {
 			/* Check if this is a free page */
@@ -366,7 +466,7 @@ bool MEM_ReAllocatePages(MemHandle & handle,Bitu pages,bool sequence) {
 		if (sequence) {
 			index=last+1;
 			Bitu free=0;
-			while ((index<(MemHandle)memory.pages) && !memory.mhandles[index]) {
+			while ((index<(MemHandle)memory.reported_pages) && !memory.mhandles[index]) {
 				index++;free++;
 			}
 			if (free>=need) {
@@ -510,6 +610,10 @@ void mem_writed(PhysPt address,Bit32u val) {
 	mem_writed_inline(address,val);
 }
 
+void phys_writes(PhysPt addr, const char* string, Bitu length) {
+	for(Bitu i = 0; i < length; i++) host_writeb(MemBase+addr+i,string[i]);
+}
+
 static void write_p92(Bitu port,Bitu val,Bitu iolen) {	
 	// Bit 0 = system reset (switch back to real mode)
 	if (val&1) E_Exit("XMS: CPU reset via port 0x92 not supported.");
@@ -535,7 +639,77 @@ void PreparePCJRCartRom(void) {
 	}
 }
 
+/* how to use: unmap_physmem(0xA0000,0xBFFFF) to unmap 0xA0000 to 0xBFFFF */
+bool MEM_unmap_physmem(Bitu start,Bitu end) {
+	Bitu p;
+
+	if (start & 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() start not page aligned.\n");
+	if ((end & 0xFFF) != 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() end not page aligned.\n");
+	start >>= 12; end >>= 12;
+
+	for (p=start;p <= end;p++)
+		memory.phandlers[p] = &unmapped_page_handler;
+
+	PAGING_ClearTLB();
+	return true;
+}
+
+bool MEM_map_RAM_physmem(Bitu start,Bitu end) {
+	Bitu p;
+	PageHandler *ram_ptr =
+		memory.mem_alias_pagemask == (Bit32u)(~0UL)
+		? (PageHandler*)(&ram_page_handler) /* no aliasing */
+		: (PageHandler*)(&ram_alias_page_handler); /* aliasing */
+
+	if (start & 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() start not page aligned.\n");
+	if ((end & 0xFFF) != 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() end not page aligned.\n");
+	start >>= 12; end >>= 12;
+
+	for (p=start;p <= end;p++) {
+		if (memory.phandlers[p] != &illegal_page_handler && memory.phandlers[p] != &unmapped_page_handler)
+			return false;
+	}
+
+	for (p=start;p <= end;p++)
+		memory.phandlers[p] = ram_ptr;
+
+	PAGING_ClearTLB();
+	return true;
+}
+
+bool MEM_map_ROM_physmem(Bitu start,Bitu end) {
+	Bitu p;
+
+	if (start & 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() start not page aligned.\n");
+	if ((end & 0xFFF) != 0xFFF)
+		fprintf(stderr,"WARNING: unmap_physmem() end not page aligned.\n");
+	start >>= 12; end >>= 12;
+
+	for (p=start;p <= end;p++) {
+		if (memory.phandlers[p] != &illegal_page_handler && memory.phandlers[p] != &unmapped_page_handler)
+			return false;
+	}
+
+	for (p=start;p <= end;p++)
+		memory.phandlers[p] = &rom_page_handler;
+
+	PAGING_ClearTLB();
+	return true;
+}
+
 HostPt GetMemBase(void) { return MemBase; }
+
+Bitu VGA_BIOS_SEG = 0xC000;
+Bitu VGA_BIOS_SEG_END = 0xC800;
+Bitu VGA_BIOS_Size = 0x8000;
+
+extern Bitu VGA_BIOS_Size_override;
+extern bool mainline_compatible_mapping;
 
 class MEMORY:public Module_base{
 private:
@@ -548,33 +722,114 @@ public:
 	
 		/* Setup the Physical Page Links */
 		Bitu memsize=section->Get_int("memsize");
+		Bitu memsizekb=section->Get_int("memsizekb");
+		Bitu address_bits=section->Get_int("memalias");
+
+		adapter_rom_is_ram = section->Get_bool("adapter rom is ram");
 	
-		if (memsize < 1) memsize = 1;
+		/* FIXME: This belongs elsewhere! */
+		if (VGA_BIOS_Size_override >= 512 && VGA_BIOS_Size_override <= 65536)
+			VGA_BIOS_Size = (VGA_BIOS_Size_override + 0x7FF) & (~0xFFF);
+		else
+			VGA_BIOS_Size = mainline_compatible_mapping ? 0x8000 : 0x3000; /* <- Experimentation shows the S3 emulation can fit in 12KB, doesn't need all 32KB */
+		VGA_BIOS_SEG = 0xC000;
+		VGA_BIOS_SEG_END = (VGA_BIOS_SEG + (VGA_BIOS_Size >> 4));
+		/* END FIXME */
+
+		if (address_bits == 0)
+			address_bits = 32;
+		else if (address_bits < 20)
+			address_bits = 20;
+		else if (address_bits > 32)
+			address_bits = 32;
+
+		/* WARNING: Binary arithmetic done with 64-bit integers because under Microsoft C++
+		            ((1UL << 32UL) - 1UL) == 0, which is WRONG.
+					But I'll never get back the 4 days I wasted chasing it down, trying to
+					figure out why DOSBox was getting stuck reopening it's own CON file handle. */
+		memory.mem_alias_pagemask = (uint32_t)
+			(((((uint64_t)1) << (uint64_t)address_bits) - (uint64_t)1) >> (uint64_t)12);
+
+		/* If the page mask affects below the 1MB boundary then abort. There is a LOT in
+		   DOSBox that relies on reading and maintaining DOS structures and wrapping in
+		   that way is a good way to cause a crash. Note 0xFF << 12 == 0xFFFFF */
+		if ((memory.mem_alias_pagemask & 0xFF) != 0xFF) {
+			//fprintf(stderr,"BUG: invalid alias pagemask 0x%08lX\n",
+			//	(unsigned long)memory.mem_alias_pagemask);
+			abort();
+		}
+
+		/* we can't have more memory than the memory aliasing allows */
+		if (address_bits < 32 && ((memsize*256)+(memsizekb/4)) > (memory.mem_alias_pagemask+1)) {
+			LOG_MSG("%u-bit memory aliasing limits you to %uMB",
+				address_bits,(memory.mem_alias_pagemask+1)/256);
+			memsize = (memory.mem_alias_pagemask+1)/256;
+			memsizekb = 0;
+		}
+
+		if (memsizekb > 524288) memsizekb = 524288;
+		if (memsizekb == 0 && memsize < 1) memsize = 1;
+		else if (memsizekb != 0 && memsize < 0) memsize = 0;
 		/* max 63 to solve problems with certain xms handlers */
-		if (memsize > MAX_MEMORY-1) {
+		if ((memsize+(memsizekb/1024)) > MAX_MEMORY-1) {
 			LOG_MSG("Maximum memory size is %d MB",MAX_MEMORY - 1);
 			memsize = MAX_MEMORY-1;
+			memsizekb = 0;
 		}
-		if (memsize > SAFE_MEMORY-1) {
+		if ((memsize+(memsizekb/1024)) > SAFE_MEMORY-1) {
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
+			if ((memsize+(memsizekb/1024)) > 200) LOG_MSG("Memory sizes above 200 MB are too big for saving/loading states.");
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new Bit8u[memsize*1024*1024];
+		memory.reported_pages = memory.pages =
+			((memsize*1024*1024) + (memsizekb*1024))/4096;
+
+		/* if the config file asks for less than 1MB of memory
+		 * then say so to the DOS program. but way too much code
+		 * here assumes memsize >= 1MB */
+		if (memory.pages < ((1024*1024)/4096))
+			memory.pages = ((1024*1024)/4096);
+
+		MemBase = new Bit8u[memory.pages*4096];
+		memorySize = sizeof(Bit8u) * memsize*1024*1024;
 		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
 		/* Clear the memory, as new doesn't always give zeroed memory
 		 * (Visual C debug mode). We want zeroed memory though. */
-		memset((void*)MemBase,0,memsize*1024*1024);
-		memory.pages = (memsize*1024*1024)/4096;
-		/* Allocate the data for the different page information blocks */
+		memset((void*)MemBase,0,memory.reported_pages*4096);
+		/* the rest of "ROM" is for unmapped devices so we need to fill it appropriately */
+		if (memory.reported_pages < memory.pages)
+			memset((char*)MemBase+(memory.reported_pages*4096),0xFF,
+				(memory.pages - memory.reported_pages)*4096);
+		/* adapter ROM */
+		memset((char*)MemBase+0xA0000,0xFF,0x60000);
+		/* except for 0xF0000-0xFFFFF */
+		memset((char*)MemBase+0xF0000,0x00,0x10000);
+		/* VGA BIOS (FIXME: Why does Project Angel like our BIOS when we memset() here, but don't like it if we memset() in the INT 10 ROM setup routine?) */
+		memset((char*)MemBase+0xC0000,0x00,VGA_BIOS_Size);
+
+		PageHandler *ram_ptr =
+			memory.mem_alias_pagemask == (Bit32u)(~0UL)
+			? (PageHandler*)(&ram_page_handler) /* no aliasing */
+			: (PageHandler*)(&ram_alias_page_handler); /* aliasing */
+
 		memory.phandlers=new  PageHandler * [memory.pages];
 		memory.mhandles=new MemHandle [memory.pages];
-		for (i = 0;i < memory.pages;i++) {
-			memory.phandlers[i] = &ram_page_handler;
+		for (i = 0;i < memory.reported_pages;i++) {
+			memory.phandlers[i] = ram_ptr;
 			memory.mhandles[i] = 0;				//Set to 0 for memory allocation
 		}
-		/* Setup rom at 0xc0000-0xc8000 */
-		for (i=0xc0;i<0xc8;i++) {
-			memory.phandlers[i] = &rom_page_handler;
+		for (;i < memory.pages;i++) {
+			memory.phandlers[i] = &illegal_page_handler;
+			memory.mhandles[i] = 0;				//Set to 0 for memory allocation
+		}
+		if (!adapter_rom_is_ram) {
+			/* FIXME: VGA emulation will selectively respond to 0xA0000-0xBFFFF according to the video mode,
+			 *        what we want however is for the VGA emulation to assign illegal_page_handler for
+			 *        address ranges it is not responding to when mapping changes. */
+			for (i=0xa0;i<0x100;i++) { /* we want to make sure adapter ROM is unmapped entirely! */
+				memory.phandlers[i] = &unmapped_page_handler;
+				memory.mhandles[i] = 0;
+			}
 		}
 		/* Setup rom at 0xf0000-0x100000 */
 		for (i=0xf0;i<0x100;i++) {
@@ -612,3 +867,180 @@ void MEM_Init(Section * sec) {
 	test = new MEMORY(sec);
 	sec->AddDestroyFunction(&MEM_ShutDown);
 }
+
+
+
+//save state support
+extern void* VGA_PageHandler_Func[16];
+
+Bit32u Memory_PageHandler_table[] = 
+{
+	(Bit32u) NULL,
+	(Bit32u) &ram_page_handler,
+	(Bit32u) &rom_page_handler,
+
+	(Bit32u) VGA_PageHandler_Func[0],
+	(Bit32u) VGA_PageHandler_Func[1],
+	(Bit32u) VGA_PageHandler_Func[2],
+	(Bit32u) VGA_PageHandler_Func[3],
+	(Bit32u) VGA_PageHandler_Func[4],
+	(Bit32u) VGA_PageHandler_Func[5],
+	(Bit32u) VGA_PageHandler_Func[6],
+	(Bit32u) VGA_PageHandler_Func[7],
+	(Bit32u) VGA_PageHandler_Func[8],
+	(Bit32u) VGA_PageHandler_Func[9],
+	(Bit32u) VGA_PageHandler_Func[10],
+	(Bit32u) VGA_PageHandler_Func[11],
+	(Bit32u) VGA_PageHandler_Func[12],
+	(Bit32u) VGA_PageHandler_Func[13],
+	(Bit32u) VGA_PageHandler_Func[14],
+	(Bit32u) VGA_PageHandler_Func[15],
+};
+
+
+namespace
+{
+class SerializeMemory : public SerializeGlobalPOD
+{
+public:
+	SerializeMemory() : SerializeGlobalPOD("Memory") 
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		Bit8u pagehandler_idx[0x10000];
+		int size_table;
+
+
+		// assume 256MB max memory
+		size_table = sizeof(Memory_PageHandler_table) / sizeof(Bit32u);
+		for( int lcv=0; lcv<memory.pages; lcv++ ) {
+			pagehandler_idx[lcv] = 0xff;
+
+			for( int lcv2=0; lcv2<size_table; lcv2++ ) {
+				if( (Bit32u) memory.phandlers[lcv] == Memory_PageHandler_table[lcv2] ) {
+					pagehandler_idx[lcv] = lcv2;
+					break;
+				}
+			}
+		}
+		
+		//*******************************************
+		//*******************************************
+
+		SerializeGlobalPOD::getBytes(stream);
+
+		// - near-pure data
+		WRITE_POD( &memory, memory );
+
+		// - static 'new' ptr
+		WRITE_POD_SIZE( MemBase, memory.pages*4096 );
+
+		//***********************************************
+		//***********************************************
+
+		WRITE_POD_SIZE( memory.mhandles, sizeof(MemHandle) * memory.pages );
+		WRITE_POD( &pagehandler_idx, pagehandler_idx );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		Bit8u pagehandler_idx[0x10000];
+		void *old_ptrs[4];
+
+		old_ptrs[0] = (void *) memory.phandlers;
+		old_ptrs[1] = (void *) memory.mhandles;
+		old_ptrs[2] = (void *) memory.lfb.handler;
+		old_ptrs[3] = (void *) memory.lfb.mmiohandler;
+
+		//***********************************************
+		//***********************************************
+
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		// - near-pure data
+		READ_POD( &memory, memory );
+
+		// - static 'new' ptr
+		READ_POD_SIZE( MemBase, memory.pages*4096 );
+
+		//***********************************************
+		//***********************************************
+
+		memory.phandlers = (PageHandler **) old_ptrs[0];
+		memory.mhandles = (MemHandle *) old_ptrs[1];
+		memory.lfb.handler = (PageHandler *) old_ptrs[2];
+		memory.lfb.mmiohandler = (PageHandler *) old_ptrs[3];
+
+
+		READ_POD_SIZE( memory.mhandles, sizeof(MemHandle) * memory.pages );
+		READ_POD( &pagehandler_idx, pagehandler_idx );
+
+
+		for( int lcv=0; lcv<memory.pages; lcv++ ) {
+			if( pagehandler_idx[lcv] == 0xff ) continue;
+
+			memory.phandlers[lcv] = (PageHandler *) Memory_PageHandler_table[ pagehandler_idx[lcv] ];
+		}
+	}
+} dummy;
+}
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static struct MemoryBlock memory:
+	// - pure data
+	Bitu pages;
+
+
+	// - static 'new' ptr
+	PageHandler * * phandlers;
+	MemHandle * mhandles;
+
+
+	LinkBlock links;
+		// - pure data
+		Bitu used;
+		Bit32u pages[MAX_LINKS];
+
+
+	struct lfb:
+		// - pure data
+		Bitu		start_page;
+		Bitu		end_page;
+		Bitu		pages;
+
+		// - static ptr (const values to date)
+		PageHandler *handler;
+		PageHandler *mmiohandler;
+
+	struct a20:
+		// - pure data
+		bool enabled;
+		Bit8u controlport;
+
+
+
+// - static 'new' ptr
+HostPt MemBase;
+
+
+// - static data
+static IllegalPageHandler illegal_page_handler;
+static RAMPageHandler ram_page_handler;
+static ROMPageHandler rom_page_handler;
+
+
+// - static 'new' ptr
+static MEMORY* test;	
+
+	// - static data
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+*/

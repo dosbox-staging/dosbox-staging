@@ -121,7 +121,7 @@ static char curSelectorName[3] = { 0,0,0 };
 static Segment oldsegs[6];
 static Bitu oldflags,oldcpucpl;
 DBGBlock dbg;
-Bitu cycle_count;
+extern Bitu cycle_count;
 static bool debugging;
 
 
@@ -175,11 +175,11 @@ Bit32u PhysMakeProt(Bit16u selector, Bit32u offset)
 
 Bit32u GetAddress(Bit16u seg, Bit32u offset)
 {
-	if (seg==SegValue(cs)) return SegPhys(cs)+offset;
 	if (cpu.pmode && !(reg_flags & FLAG_VM)) {
 		Descriptor desc;
 		if (cpu.gdt.GetDescriptor(seg,desc)) return PhysMakeProt(seg,offset);
 	}
+	if (seg==SegValue(cs)) return SegPhys(cs)+offset;
 	return (seg<<4)+offset;
 }
 

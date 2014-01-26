@@ -28,13 +28,36 @@
 #include "dos_inc.h"
 #include "setup.h"
 #include "support.h"
+#include "parport.h"
 #include "serialport.h"
+#include "dos_network.h"
+#include "../save_state.h"
+
+bool enable_dbcs_tables = true;
+bool enable_filenamechar = true;
+
+Bit16u DOS_INFOBLOCK_SEG=0x80;	// sysvars (list of lists)
+Bit16u DOS_CONDRV_SEG=0xa0;
+Bit16u DOS_CONSTRING_SEG=0xa8;
+Bit16u DOS_SDA_SEG=0xb2;		// dos swappable area
+Bit16u DOS_SDA_OFS=0;
+Bit16u DOS_CDS_SEG=0x108;
+Bit16u DOS_FIRST_SHELL=0x118;
+Bit16u DOS_MEM_START=0x158;	 // regression to r3437 fixes nascar 2 colors
+
+Bit16u DOS_PRIVATE_SEGMENT=0;//0xc800;
+Bit16u DOS_PRIVATE_SEGMENT_END=0;//0xd000;
+
+Bitu DOS_PRIVATE_SEGMENT_Size=0x800;	// 32KB (0x800 pages), mainline DOSBox behavior
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
 #define DOS_COPYBUFSIZE 0x10000
 Bit8u dos_copybuf[DOS_COPYBUFSIZE];
+#ifdef WIN32
+Bit16u	NetworkHandleList[127];Bit8u dos_copybuf_second[DOS_COPYBUFSIZE];
+#endif
 
 void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
@@ -103,6 +126,10 @@ static inline void overhead() {
 }
 #endif
 
+#define BCD2BIN(x)	((((x) >> 4) * 10) + ((x) & 0x0f))
+#define BIN2BCD(x)	((((x) / 10) << 4) + (x) % 10)
+extern bool date_host_forced;
+
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
 	if (((reg_ah != 0x50) && (reg_ah != 0x51) && (reg_ah != 0x62) && (reg_ah != 0x64)) && (reg_ah<0x6c)) {
@@ -160,8 +187,16 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x05:		/* Write Character to PRINTER */
-		E_Exit("DOS:Unhandled call %02X",reg_ah);
+	{
+		for(int i = 0; i < 3; i++) {
+			// look up a parallel port
+			if(parallelPortObjects[i] != NULL) {
+				parallelPortObjects[i]->Putchar(reg_dl);
 		break;
+			}
+		}
+		break;
+	}
 	case 0x06:		/* Direct Console Output / Input */
 		switch (reg_dl) {
 		case 0xFF:	/* Input */
@@ -401,19 +436,76 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x2a:		/* Get System Date */
 		{
-			reg_ax=0; // get time
-			CALLBACK_RunRealInt(0x1a);
-			if(reg_al) DOS_AddDays(reg_al);
-			int a = (14 - dos.date.month)/12;
-			int y = dos.date.year - a;
-			int m = dos.date.month + 12*a - 2;
-			reg_al=(dos.date.day+y+(y/4)-(y/100)+(y/400)+(31*m)/12) % 7;
-			reg_cx=dos.date.year;
-			reg_dh=dos.date.month;
-			reg_dl=dos.date.day;
+			if(date_host_forced) {
+				// use BIOS to get system date
+				CPU_Push16(reg_ax);
+				reg_ah = 4;		// get RTC date
+				CALLBACK_RunRealInt(0x1a);
+				reg_ax = CPU_Pop16();
+
+				reg_ch = BCD2BIN(reg_ch);		// century
+				reg_cl = BCD2BIN(reg_cl);		// year
+				reg_cx = reg_ch * 100 + reg_cl;	// compose century + year
+				reg_dh = BCD2BIN(reg_dh);		// month
+				reg_dl = BCD2BIN(reg_dl);		// day
+
+				// calculate day of week (we could of course read it from CMOS, but never mind)
+				int a = (14 - reg_dh) / 12;
+				int y = reg_cl - a;
+				int m = reg_dh + 12 * a - 2;
+				reg_al = (reg_dl + y + (y / 4) - (y / 100) + (y / 400) + (31 * m) / 12) % 7;
+			} else {
+				reg_ax=0; // get time
+				CALLBACK_RunRealInt(0x1a);
+				if(reg_al) DOS_AddDays(reg_al);
+				int a = (14 - dos.date.month)/12;
+				int y = dos.date.year - a;
+				int m = dos.date.month + 12*a - 2;
+				reg_al=(dos.date.day+y+(y/4)-(y/100)+(y/400)+(31*m)/12) % 7;
+				reg_cx=dos.date.year;
+				reg_dh=dos.date.month;
+				reg_dl=dos.date.day;
+			}
 		}
 		break;
 	case 0x2b:		/* Set System Date */
+		if(date_host_forced) {
+			// unfortunately, BIOS does not return whether succeeded
+			// or not, so do a sanity check first
+
+			int maxday[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+			if (reg_cx % 4 == 0 && (reg_cx % 100 != 0 || reg_cx % 400 == 0))
+				maxday[1]++;
+
+			if (reg_cx < 1980 || reg_cx > 9999 || reg_dh < 1 || reg_dh > 12 ||
+				reg_dl < 1 || reg_dl > maxday[reg_dh])
+			{
+				reg_al = 0xff;				// error!
+				break;						// done
+			}
+
+			Bit16u cx = reg_cx;
+
+			CPU_Push16(reg_ax);
+			CPU_Push16(reg_cx);
+			CPU_Push16(reg_dx);
+
+			reg_al = 5;
+			reg_ch = BIN2BCD(cx / 100);		// century
+			reg_cl = BIN2BCD(cx % 100);		// year
+			reg_dh = BIN2BCD(reg_dh);		// month
+			reg_dl = BIN2BCD(reg_dl);		// day
+
+			CALLBACK_RunRealInt(0x1a);
+
+			reg_dx = CPU_Pop16();
+			reg_cx = CPU_Pop16();
+			reg_ax = CPU_Pop16();
+
+			reg_al = 0;						// OK
+			break;
+		}
 		if (reg_cx<1980) { reg_al=0xff;break;}
 		if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
 		if (reg_dl==0) { reg_al=0xff;break;}
@@ -427,6 +519,24 @@ static Bitu DOS_21Handler(void) {
 		reg_al=0;
 		break;
 	case 0x2c: {	/* Get System Time */
+		if(date_host_forced) {
+			// use BIOS to get RTC time
+			CPU_Push16(reg_ax);
+		
+			reg_ah = 2;		// get RTC time
+			CALLBACK_RunRealInt(0x1a);
+		
+			reg_ax = CPU_Pop16();
+
+			reg_ch = BCD2BIN(reg_ch);		// hours
+			reg_cl = BCD2BIN(reg_cl);		// minutes
+			reg_dh = BCD2BIN(reg_dh);		// seconds
+
+			// calculate milliseconds (% 20 to prevent overflow, .55ms has period of 20)
+			// direcly read BIOS_TIMER, don't want to destroy regs by calling int 1a
+			reg_dl = (Bit8u)((mem_readd(BIOS_TIMER) % 20) * 55 % 100);
+			break;
+		}
 		reg_ax=0; // get time
 		CALLBACK_RunRealInt(0x1a);
 		if(reg_al) DOS_AddDays(reg_al);
@@ -450,6 +560,46 @@ static Bitu DOS_21Handler(void) {
 		break;
 	}
 	case 0x2d:		/* Set System Time */
+		if(date_host_forced) {
+			// unfortunately, BIOS does not return whether succeeded
+			// or not, so do a sanity check first
+			if (reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99)
+			{
+				reg_al = 0xff;		// error!
+				break;				// done
+			}
+
+			// timer ticks every 55ms
+			Bit32u ticks = ((((reg_ch * 60 + reg_cl) * 60 + reg_dh) * 100) + reg_dl) * 10 / 55;
+
+			CPU_Push16(reg_ax);
+			CPU_Push16(reg_cx);
+			CPU_Push16(reg_dx);
+
+			// use BIOS to set RTC time
+			reg_ah = 3;		// set RTC time
+			reg_ch = BIN2BCD(reg_ch);		// hours
+			reg_cl = BIN2BCD(reg_cl);		// minutes
+			reg_dh = BIN2BCD(reg_dh);		// seconds
+			reg_dl = 0;						// no DST
+
+			CALLBACK_RunRealInt(0x1a);
+
+			// use BIOS to update clock ticks to sync time
+			// could set directly, but setting is safer to do via dedicated call (at least in theory)
+			reg_ah = 1;		// set system time
+			reg_cx = (Bit16u)(ticks >> 16);
+			reg_dx = (Bit16u)(ticks & 0xffff);
+
+			CALLBACK_RunRealInt(0x1a);
+
+			reg_dx = CPU_Pop16();
+			reg_cx = CPU_Pop16();
+			reg_ax = CPU_Pop16();
+
+			reg_al = 0;						// OK
+			break;
+		}
 		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
 		//Check input parameters nonetheless
 		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
@@ -513,6 +663,8 @@ static Bitu DOS_21Handler(void) {
 				reg_bh=dos.version.minor;
 				reg_dl=dos.version.revision;
 				reg_dh=0x10;								/* Dos in HMA */
+				break;
+			case 7:
 				break;
 			default:
 				LOG(LOG_DOSMISC,LOG_ERROR)("Weird 0x33 call %2X",reg_al);
@@ -869,8 +1021,11 @@ static Bitu DOS_21Handler(void) {
 				CALLBACK_SCF(true);
 			}
 		} else if (reg_al==0x01) {
-			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Set File Date Time Faked");
-			CALLBACK_SCF(false);		
+			if (DOS_SetFileDate(reg_bx,reg_cx,reg_dx)) {
+				CALLBACK_SCF(false);
+			} else {
+				CALLBACK_SCF(true);
+			}
 		} else {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subtion %X",reg_al);
 		}
@@ -948,11 +1103,25 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
-	case 0x5c:			/* FLOCK File region locking */
+	case 0x5c:	{		/* FLOCK File region locking */
+		/* ert, 20100711: Locking extensions */
+		Bit32u pos=(reg_cx<<16) + reg_dx;
+		Bit32u size=(reg_si<<16) + reg_di;
+		//LOG_MSG("LockFile: BX=%d, AL=%d, POS=%d, size=%d", reg_bx, reg_al, pos, size);
+		if (DOS_LockFile(reg_bx,reg_al,pos, size)) {
+			reg_ax=0;
+			CALLBACK_SCF(false);
+		} else {
+			reg_ax=dos.errorcode;
+			CALLBACK_SCF(true);
+		}
+		break; }
+		/*
 		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 		reg_ax = dos.errorcode;
 		CALLBACK_SCF(true);
 		break;
+		*/
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
@@ -963,8 +1132,52 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x5f:					/* Network redirection */
-		reg_ax=0x0001;		//Failing it
+#ifdef WIN32
+		switch(reg_al)
+		{
+		case	0x34:	//Set pipe state
+			if(Network_SetNamedPipeState(reg_bx,reg_cx,reg_ax))
+					CALLBACK_SCF(false);
+			else	CALLBACK_SCF(true);
+			break;
+		case	0x35:	//Peek pipe
+			{
+			Bit16u	uTmpSI=reg_si;
+			if(Network_PeekNamedPipe(reg_bx,
+							  dos_copybuf,reg_cx,
+							  reg_cx,reg_si,reg_dx,
+							  reg_di,reg_ax))
+				{
+					MEM_BlockWrite(SegPhys(ds)+uTmpSI,dos_copybuf,reg_cx);
+					CALLBACK_SCF(false);
+				}
+			else	CALLBACK_SCF(true);
+			}
+			break;
+		case	0x36:	//Transcate pipe
+			//Inbuffer:the buffer to be written to pipe
+			MEM_BlockRead(SegPhys(ds)+reg_si,dos_copybuf_second,reg_cx);
+			
+			if(Network_TranscateNamedPipe(reg_bx,
+									dos_copybuf_second,reg_cx,
+									dos_copybuf,reg_dx,
+									reg_cx,reg_ax))
+				{
+					//Outbuffer:the buffer to receive data from pipe
+					MEM_BlockWrite(SegPhys(es)+reg_di,dos_copybuf,reg_cx);
+					CALLBACK_SCF(false);
+				}
+			else	CALLBACK_SCF(true);
+			break;
+		default:
+			reg_ax=0x0001;			//Failing it
+			CALLBACK_SCF(true);
+			break;
+		}
+#else
+		reg_ax=0x0001;			//Failing it
 		CALLBACK_SCF(true);
+#endif
 		break; 
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
@@ -980,7 +1193,7 @@ static Bitu DOS_21Handler(void) {
 		reg_bx=dos.psp();
 		break;
 	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
-		if(reg_al == 0) {
+		if(reg_al == 0 && dos.tables.dbcs != 0) {
 			SegSet16(ds,RealSeg(dos.tables.dbcs));
 			reg_si=RealOff(dos.tables.dbcs);		
 			reg_al = 0;
@@ -1183,12 +1396,96 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
+extern bool mainline_compatible_mapping;
+bool enable_collating_uppercase = true;
+bool keep_private_area_on_boot = false;
+bool dynamic_dos_kernel_alloc = false;
+bool private_segment_in_umb = true;
+Bit16u DOS_IHSEG = 0;
+
+void DOS_GetMemory_reset();
+
+#include <assert.h>
 
 class DOS:public Module_base{
 private:
 	CALLBACK_HandlerObject callback[7];
 public:
 	DOS(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+
+		enable_dbcs_tables = section->Get_bool("dbcs");
+		enable_filenamechar = section->Get_bool("filenamechar");
+		private_segment_in_umb = section->Get_bool("private area in umb");
+		enable_collating_uppercase = section->Get_bool("collating and uppercase");
+		dynamic_dos_kernel_alloc = section->Get_bool("dynamic kernel allocation");
+
+		if (dynamic_dos_kernel_alloc) {
+			/* we make use of the DOS_GetMemory() function for the dynamic allocation */
+			if (mainline_compatible_mapping) {
+				DOS_IHSEG = 0x70;
+				DOS_PRIVATE_SEGMENT = 0x80;
+			}
+			else {
+				DOS_PRIVATE_SEGMENT = 0x50; /* NTS: The first paragraph overlaps the PRINT SCREEN BYTE but DOSBox's kernel does not use that byte anyway */
+			}
+
+			if (MEM_TotalPages() > 0x9C)
+				DOS_PRIVATE_SEGMENT_END = 0x9C00;
+			else
+				DOS_PRIVATE_SEGMENT_END = MEM_TotalPages() << (12 - 4);
+
+			fprintf(stderr,"Dynamic DOS kernel mode, structures will be allocated from pool 0x%04x-0x%04x\n",
+				DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+
+			if (!mainline_compatible_mapping) DOS_IHSEG = DOS_GetMemory(1,"DOS_IHSEG");
+			DOS_INFOBLOCK_SEG = DOS_GetMemory(0x20,"DOS_INFOBLOCK_SEG");	// was 0x80
+			DOS_CONDRV_SEG = DOS_GetMemory(0x08,"DOS_CONDRV_SEG");		// was 0xA0
+			DOS_CONSTRING_SEG = DOS_GetMemory(0x0A,"DOS_CONSTRING_SEG");	// was 0xA8
+			DOS_SDA_SEG = DOS_GetMemory(0x56,"DOS_SDA_SEG");		// was 0xB2  (0xB2 + 0x56 = 0x108)
+			DOS_SDA_OFS = 0;
+			DOS_CDS_SEG = DOS_GetMemory(0x10,"DOS_CDA_SEG");		// was 0x108
+			DOS_FIRST_SHELL = DOS_GetMemory(0x40,"DOS_FIRST_SHELL");	// was 0x118
+			/* defer DOS_MEM_START until right before SetupMemory */
+		}
+		else {
+			DOS_IHSEG = 0x70;
+			DOS_INFOBLOCK_SEG = 0x80;	// sysvars (list of lists)
+			DOS_CONDRV_SEG = 0xa0;
+			DOS_CONSTRING_SEG = 0xa8;
+			DOS_SDA_SEG = 0xb2;		// dos swappable area
+			DOS_SDA_OFS = 0;
+			DOS_CDS_SEG = 0x108;
+			DOS_FIRST_SHELL = 0x118;
+			DOS_MEM_START = 0x158;	 // regression to r3437 fixes nascar 2 colors
+
+			if (!private_segment_in_umb) {
+				/* If private segment is not being placed in UMB, then it must follow the DOS kernel. */
+				unsigned int seg;
+				unsigned int segend;
+
+				seg = DOS_MEM_START;
+				DOS_MEM_START += DOS_PRIVATE_SEGMENT_Size;
+				segend = DOS_MEM_START;
+
+				DOS_PRIVATE_SEGMENT = seg;
+				DOS_PRIVATE_SEGMENT_END = segend;
+				DOS_MEM_START = DOS_PRIVATE_SEGMENT_END;
+				DOS_GetMemory_reset();
+				fprintf(stderr,"Private area, not stored in UMB on request, occupies 0x%04x-0x%04x\n",
+					DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+			}
+		}
+
+		//fprintf(stderr,"DOS kernel alloc:\n");
+		//fprintf(stderr,"   IHSEG:        seg 0x%04x\n",DOS_IHSEG);
+		//fprintf(stderr,"   infoblock:    seg 0x%04x\n",DOS_INFOBLOCK_SEG);
+		//fprintf(stderr,"   condrv:       seg 0x%04x\n",DOS_CONDRV_SEG);
+		//fprintf(stderr,"   constring:    seg 0x%04x\n",DOS_CONSTRING_SEG);
+		//fprintf(stderr,"   SDA:          seg 0x%04x:0x%04x\n",DOS_SDA_SEG,DOS_SDA_OFS);
+		//fprintf(stderr,"   CDS:          seg 0x%04x\n",DOS_CDS_SEG);
+		//fprintf(stderr,"   first shell:  seg 0x%04x\n",DOS_FIRST_SHELL);
+
 		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 
@@ -1209,7 +1506,7 @@ public:
 		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");
 		callback[4].Set_RealVec(0x27);
 
-		callback[5].Install(NULL,CB_IRET,"DOS Int 28");
+		callback[5].Install(NULL,CB_IRET/*CB_INT28*/,"DOS idle");
 		callback[5].Set_RealVec(0x28);
 
 		callback[6].Install(NULL,CB_INT29,"CON Output Int 29");
@@ -1221,20 +1518,59 @@ public:
 		//	pop ax
 		//	iret
 
+		DOS_FILES = section->Get_int("files");
 		DOS_SetupFiles();								/* Setup system File tables */
 		DOS_SetupDevices();							/* Setup dos devices */
 		DOS_SetupTables();
+
+		/* having allowed the setup functions so far to alloc private space, set the pointer as the base
+		 * of memory. the DOS_SetupMemory() function will finalize it into the first MCB. Having done that,
+		 * we then need to move the DOS private segment somewere else so that additional allocations do not
+		 * corrupt the MCB chain */
+		if (dynamic_dos_kernel_alloc)
+			DOS_MEM_START = DOS_GetMemory(0,"DOS_MEM_START");		// was 0x158 (pass 0 to alloc nothing, get the pointer)
+
+		/* move the private segment elsewhere to avoid conflict with the MCB structure.
+		 * either set to 0 to cause the decision making to choose an upper memory address,
+		 * or allocate an additional private area and start the MCB just after that */
+		if (dynamic_dos_kernel_alloc) {
+			DOS_GetMemory_reset();
+			DOS_PRIVATE_SEGMENT = 0;
+			DOS_PRIVATE_SEGMENT_END = 0;
+			if (!private_segment_in_umb) {
+				/* If private segment is not being placed in UMB, then it must follow the DOS kernel. */
+				unsigned int seg;
+				unsigned int segend;
+
+				seg = DOS_MEM_START;
+				DOS_MEM_START += DOS_PRIVATE_SEGMENT_Size;
+				segend = DOS_MEM_START;
+
+				DOS_PRIVATE_SEGMENT = seg;
+				DOS_PRIVATE_SEGMENT_END = segend;
+				DOS_MEM_START = DOS_PRIVATE_SEGMENT_END;
+				DOS_GetMemory_reset();
+				fprintf(stderr,"Private area, not stored in UMB on request, occupies 0x%04x-0x%04x [dynamic]\n",
+					DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+			}
+		}
+		//fprintf(stderr,"   mem start:    seg 0x%04x\n",DOS_MEM_START);
+
+		/* carry on setup */
 		DOS_SetupMemory();								/* Setup first MCB */
 		DOS_SetupPrograms();
 		DOS_SetupMisc();							/* Some additional dos interrupts */
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
+
+		keep_private_area_on_boot = section->Get_bool("keep private area on boot");
 	
 		dos.version.major=5;
 		dos.version.minor=0;
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
+		delete [] Files;
 	}
 };
 
@@ -1249,3 +1585,145 @@ void DOS_Init(Section* sec) {
 	/* shutdown function */
 	sec->AddDestroyFunction(&DOS_ShutDown,false);
 }
+
+
+extern void POD_Save_DOS_Devices( std::ostream& stream );
+extern void POD_Save_DOS_DriveManager( std::ostream& stream );
+extern void POD_Save_DOS_Files( std::ostream& stream );
+extern void POD_Save_DOS_Memory( std::ostream& stream );
+extern void POD_Save_DOS_Mscdex( std::ostream& stream );
+extern void POD_Save_DOS_Tables( std::ostream& stream );
+extern void POD_Load_DOS_Devices( std::istream& stream );
+extern void POD_Load_DOS_DriveManager( std::istream& stream );
+extern void POD_Load_DOS_Files( std::istream& stream );
+extern void POD_Load_DOS_Memory( std::istream& stream );
+extern void POD_Load_DOS_Mscdex( std::istream& stream );
+extern void POD_Load_DOS_Tables( std::istream& stream );
+
+//save state support
+namespace
+{
+class SerializeDos : public SerializeGlobalPOD
+{
+public:
+	SerializeDos() : SerializeGlobalPOD("Dos") 
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		SerializeGlobalPOD::getBytes(stream);
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
+		// - pure data
+		WRITE_POD( &dos_copybuf, dos_copybuf );
+
+
+		WRITE_POD( &dos.firstMCB, dos.firstMCB );
+		WRITE_POD( &dos.errorcode, dos.errorcode );
+		WRITE_POD( &dos.env, dos.env );
+		WRITE_POD( &dos.cpmentry, dos.cpmentry );
+		WRITE_POD( &dos.return_code, dos.return_code );
+		WRITE_POD( &dos.return_mode, dos.return_mode );
+
+		WRITE_POD( &dos.current_drive, dos.current_drive );
+		WRITE_POD( &dos.verify, dos.verify );
+		WRITE_POD( &dos.breakcheck, dos.breakcheck );
+		WRITE_POD( &dos.echo, dos.echo );
+
+		WRITE_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Save_DOS_Devices(stream);
+		POD_Save_DOS_DriveManager(stream);
+		POD_Save_DOS_Files(stream);
+		POD_Save_DOS_Memory(stream);
+		POD_Save_DOS_Mscdex(stream);
+		POD_Save_DOS_Tables(stream);
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		SerializeGlobalPOD::setBytes(stream);
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
+		// - pure data
+		READ_POD( &dos_copybuf, dos_copybuf );
+
+
+		READ_POD( &dos.firstMCB, dos.firstMCB );
+		READ_POD( &dos.errorcode, dos.errorcode );
+		READ_POD( &dos.env, dos.env );
+		READ_POD( &dos.cpmentry, dos.cpmentry );
+		READ_POD( &dos.return_code, dos.return_code );
+		READ_POD( &dos.return_mode, dos.return_mode );
+
+		READ_POD( &dos.current_drive, dos.current_drive );
+		READ_POD( &dos.verify, dos.verify );
+		READ_POD( &dos.breakcheck, dos.breakcheck );
+		READ_POD( &dos.echo, dos.echo );
+	
+		READ_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Load_DOS_Devices(stream);
+		POD_Load_DOS_DriveManager(stream);
+		POD_Load_DOS_Files(stream);
+		POD_Load_DOS_Memory(stream);
+		POD_Load_DOS_Mscdex(stream);
+		POD_Load_DOS_Tables(stream);
+	}
+} dummy;
+}
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+Bit8u dos_copybuf[DOS_COPYBUFSIZE];
+
+struct DOS_Block
+	// - system data
+	DOS_Date date;
+	bool hostdate;
+	DOS_Version version;
+
+	// - pure data
+	Bit16u firstMCB;
+	Bit16u errorcode;
+	Bit16u env;
+	RealPt cpmentry;
+	Bit8u return_code,return_mode;
+	
+	Bit8u current_drive;
+	bool verify;
+	bool breakcheck;
+	bool echo;          // if set to true dev_con::read will echo input 
+
+	// - system data
+	struct  {
+		RealPt mediaid;
+		RealPt tempdta;
+		RealPt tempdta_fcbdelete;
+		RealPt dbcs;
+		RealPt filenamechar;
+		RealPt collatingseq;
+		RealPt upcase;
+		Bit8u* country;//Will be copied to dos memory. resides in real mem
+		Bit16u dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
+	} tables;
+
+	Bit16u loaded_codepage;
+*/

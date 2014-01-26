@@ -67,12 +67,30 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if (SCALERHEIGHT > 2) 
 			PTYPE *line2 = WC[1];
 #endif
+#if (SCALERHEIGHT > 3) 
+			PTYPE *line3 = WC[2];
+#endif
+#if (SCALERHEIGHT > 4) 
+			PTYPE *line4 = WC[3];
+#endif
+#if (SCALERHEIGHT > 5) 
+			PTYPE *line5 = WC[4];
+#endif
 #else
 #if (SCALERHEIGHT > 1) 
 		PTYPE *line1 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch);
 #endif
 #if (SCALERHEIGHT > 2) 
 		PTYPE *line2 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 2);
+#endif
+#if (SCALERHEIGHT > 3) 
+		PTYPE *line3 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 3);
+#endif
+#if (SCALERHEIGHT > 4) 
+		PTYPE *line4 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 4);
+#endif
+#if (SCALERHEIGHT > 5) 
+		PTYPE *line5 = (PTYPE *)(((Bit8u*)line0)+ render.scale.outPitch * 5);
 #endif
 #endif //defined(SCALERLINEAR)
 			hadChange = 1;
@@ -89,6 +107,15 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #if (SCALERHEIGHT > 2) 
 				line2 += SCALERWIDTH;
 #endif
+#if (SCALERHEIGHT > 3) 
+				line3 += SCALERWIDTH;
+#endif
+#if (SCALERHEIGHT > 4) 
+				line4 += SCALERWIDTH;
+#endif
+#if (SCALERHEIGHT > 5) 
+				line5 += SCALERWIDTH;
+#endif
 			}
 #if defined(SCALERLINEAR)
 #if (SCALERHEIGHT > 1)
@@ -97,6 +124,15 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
 #if (SCALERHEIGHT > 2) 
 			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*2,WC[1], copyLen );
+#endif
+#if (SCALERHEIGHT > 3) 
+			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*3,WC[2], copyLen );
+#endif
+#if (SCALERHEIGHT > 4) 
+			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*4,WC[3], copyLen );
+#endif
+#if (SCALERHEIGHT > 5) 
+			BituMove(((Bit8u*)line0)-copyLen+render.scale.outPitch*5,WC[4], copyLen );
 #endif
 #endif //defined(SCALERLINEAR)
 		}

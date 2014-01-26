@@ -257,6 +257,20 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0d,(Bit8u)0x58);			// pop ax
 		phys_writeb(physAddress+0x0e,(Bit8u)0xcf);			//An IRET Instruction
 		return (use_cb?0x15:0x0f);
+	case CB_IRQ1_BREAK:	// return from int9, when Ctrl-Break is detected; invokes int 1b
+		phys_writew(physAddress+0x00,(Bit16u)0x1bcd);		// int 1b
+		phys_writeb(physAddress+0x02,(Bit8u)0xfa);		// cli
+		if (use_cb) {
+			phys_writeb(physAddress+0x03,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x04,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x05,(Bit16u)callback);		//The immediate word
+			physAddress+=4;
+		}
+		phys_writew(physAddress+0x03,(Bit16u)0x20b0);		// mov al, 0x20
+		phys_writew(physAddress+0x05,(Bit16u)0x20e6);		// out 0x20, al
+		phys_writeb(physAddress+0x07,(Bit8u)0x58);			// pop ax
+		phys_writeb(physAddress+0x08,(Bit8u)0xcf);			//An IRET Instruction
+		return (use_cb?0x0d:0x09);
 	case CB_IRQ9:	// pic cascade interrupt
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -344,6 +358,11 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		for (Bitu i=0;i<=0x0b;i++) phys_writeb(physAddress+0x02+i,0x90);
 		phys_writew(physAddress+0x0e,(Bit16u)0xedeb);	//jmp callback
 		return (use_cb?0x10:0x0c);
+	/*case CB_INT28:	// DOS idle
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		// STI
+		phys_writeb(physAddress+0x01,(Bit8u)0xF4);		// HLT
+		phys_writeb(physAddress+0x02,(Bit8u)0xcf);		// An IRET Instruction
+		return (0x04);*/
 	case CB_INT29:	// fast console output
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -417,6 +436,27 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0d,(Bit8u)0x1f);		// pop ds
 		phys_writeb(physAddress+0x0e,(Bit8u)0xcf);		//An IRET Instruction
 		return 0x0f; */
+	case CB_VESA_START: {
+		// pseudocode: if(reg_bl==0x80) while(!(inportb(0x3da)&0x8));
+		phys_writes(physAddress,
+			"\xFE\x38\x90\x90"	// GRP4 CB	####
+			"\x80\xFB\x80"		// cmp		bl,80h
+			"\x75\x11"			// jne		NOVRET
+			"\x66\x50"			// push		ax
+			"\x66\x52"			// push		dx
+			"\x66\xBA\xDA\x03"	// mov		dx,3DAh 
+								// AGAIN:
+			"\xEC"				// in		al,dx
+			"\x24\x08"			// and		al,8
+			"\x74\xFB"			// je		AGAIN
+			"\x66\x5A"			// pop		dx
+			"\x66\x58"			// pop		ax
+								// NOVRET:
+			"\xC3"				// retn
+			,27);
+		phys_writew(physAddress+2, callback); // callback number
+		return 27;
+	}
 	case CB_INT21:
 		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
 		if (use_cb) {

@@ -25,9 +25,11 @@
 #include "bios.h"
 #include "dos_inc.h"
 #include "support.h"
+#include "parport.h"
 #include "drives.h" //Wildcmp
 /* Include all the devices */
 
+#include "../save_state.h"
 #include "dev_con.h"
 
 
@@ -56,10 +58,39 @@ public:
 	virtual bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 };
 
-class device_LPT1 : public device_NUL {
+class device_PRN : public DOS_Device {
 public:
-   	device_LPT1() { SetName("LPT1");}
-	Bit16u GetInformation(void) { return 0x80A0; }
+	device_PRN() {
+		SetName("PRN");
+	}
+	bool Read(Bit8u * data,Bit16u * size) {
+		*size=0;
+		LOG(LOG_DOSMISC,LOG_NORMAL)("PRNDEVICE:Read called");
+		return true;
+	}
+	bool Write(Bit8u * data,Bit16u * size) {
+		for(int i = 0; i < 3; i++) {
+			// look up a parallel port
+			if(parallelPortObjects[i] != NULL) {
+				// send the data
+				for (Bit16u j=0; j<*size; j++) {
+					if(!parallelPortObjects[i]->Putchar(data[j])) return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	bool Seek(Bit32u * pos,Bit32u type) {
+		*pos = 0;
+		return true;
+	}
+	Bit16u GetInformation(void) {
+		return 0x80A0;
+	}
+	bool Close() {
+		return false;
+	}
 };
 
 bool DOS_Device::Read(Bit8u * data,Bit16u * size) {
@@ -188,6 +219,22 @@ void DOS_SetupDevices(void) {
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
 	DOS_Device * newdev3;
-	newdev3=new device_LPT1();
+	newdev3=new device_PRN();
 	DOS_AddDevice(newdev3);
+}
+
+
+
+// save state support
+void POD_Save_DOS_Devices( std::ostream& stream )
+{
+	if( strcmp( Devices[2]->GetName(), "CON" ) == 0 )
+		Devices[2]->SaveState(stream);
+}
+
+
+void POD_Load_DOS_Devices( std::istream& stream )
+{
+	if( strcmp( Devices[2]->GetName(), "CON" ) == 0 )
+		Devices[2]->LoadState(stream);
 }

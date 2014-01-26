@@ -24,6 +24,7 @@
 #include "cpu.h"
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
+#include "../save_state.h"
 
 //#define ENABLE_PORTLOG
 
@@ -160,7 +161,7 @@ static struct {
 	IOF_Entry entries[IOF_QUEUESIZE];
 } iof_queue;
 
-static Bits IOFaultCore(void) {
+Bits IOFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
 	Bits ret=CPU_Core_Full_Run();
@@ -520,4 +521,21 @@ void IO_Destroy(Section*) {
 void IO_Init(Section * sect) {
 	test = new IO(sect);
 	sect->AddDestroyFunction(&IO_Destroy);
+}
+
+
+//save state support
+namespace
+{
+class SerializeIO : public SerializeGlobalPOD
+{
+public:
+    SerializeIO() : SerializeGlobalPOD("IO handler")
+    {
+        //io_writehandlers -> quasi constant
+        //io_readhandlers  -> quasi constant
+
+        registerPOD(iof_queue.used); registerPOD(iof_queue.entries);
+    }
+} dummy;
 }

@@ -761,4 +761,9 @@ bool CDROM_Interface_Aspi::ReadSectors(PhysPt buffer, bool raw, unsigned long se
 	return (s.execscsicmd.SRB_Status==SS_COMP);
 };
 
+bool CDROM_Interface_Aspi::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
+
 #endif

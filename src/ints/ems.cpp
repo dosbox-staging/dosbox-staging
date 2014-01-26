@@ -31,6 +31,7 @@
 #include "setup.h"
 #include "support.h"
 #include "cpu.h"
+#include "../save_state.h"
 #include "dma.h"
 
 #define EMM_PAGEFRAME	0xE000
@@ -131,7 +132,7 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 		case 0x01: {
 			if (!is_emm386) return false;
 			if (size!=6) return false;
-			if (GEMMIS_seg==0) GEMMIS_seg=DOS_GetMemory(0x20);
+			if (GEMMIS_seg==0) GEMMIS_seg=DOS_GetMemory(0x20,"GEMMIS_seg");
 			PhysPt GEMMIS_addr=PhysMake(GEMMIS_seg,0);
 
 			mem_writew(GEMMIS_addr+0x00,0x0004);			// flags
@@ -951,7 +952,7 @@ static Bitu INT67_Handler(void) {
 				break;
 			case 0x0c: {	/* VCPI Switch from V86 to Protected Mode */
 				reg_flags&=(~FLAG_IF);
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 
 				/* Read data from ESI (linear address) */
 				Bit32u new_cr3=mem_readd(reg_esi);
@@ -1334,7 +1335,7 @@ public:
 		}
 		BIOS_ZeroExtendedSize(true);
 
-		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2);	//We have 32 bytes
+		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2,"ems_baseseg");	//We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
 		char const* emsname="EMMXXXX0";
@@ -1411,7 +1412,7 @@ public:
 				CPU_Push32(SegValue(cs));
 				CPU_Push32(reg_eip&0xffff);
 				/* Switch to V86-mode */
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 				CPU_IRET(true,0);
 			}
 		}
@@ -1451,7 +1452,7 @@ public:
 			CPU_SET_CRX(3, 0);
 			reg_flags&=(~(FLAG_IOPL|FLAG_VM));
 			CPU_LIDT(0x3ff, 0);
-			cpu.cpl=0;
+			CPU_SetCPL(0);
 		}
 	}
 };
@@ -1469,3 +1470,27 @@ void EMS_Init(Section* sec) {
 
 //Initialize static members
 Bit16u EMS::ems_baseseg = 0;
+
+
+
+//save state support
+namespace
+{
+class SerializeEMS : public SerializeGlobalPOD
+{
+public:
+    SerializeEMS() : SerializeGlobalPOD("EMS")
+    {
+        registerPOD(emm_handles);
+        registerPOD(emm_mappings);
+        registerPOD(emm_segmentmappings);
+        registerPOD(GEMMIS_seg);
+        registerPOD(vcpi.enabled);
+        registerPOD(vcpi.ems_handle);
+        registerPOD(vcpi.pm_interface);
+        registerPOD(vcpi.private_area);
+        registerPOD(vcpi.pic1_remapping);
+        registerPOD(vcpi.pic2_remapping);
+    }
+} dummy;
+}

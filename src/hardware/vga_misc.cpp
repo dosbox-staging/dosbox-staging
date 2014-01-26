@@ -28,6 +28,10 @@ void vga_write_p3d4(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d4(Bitu port,Bitu iolen);
 void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen);
+#if defined(WIN32) && !(C_DEBUG)
+void DISP2_RegisterPorts(void);
+bool DISP2_Active(void);
+#endif
 
 Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 	Bit8u retval=0;
@@ -56,6 +60,7 @@ Bitu vga_read_p3da(Bitu port,Bitu iolen) {
 }
 
 static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
+	if((machine==MCH_EGA) && ((vga.misc_output^val)&0xc)) VGA_StartResize();
 	vga.misc_output=val;
 	if (val & 0x1) {
 		IO_RegisterWriteHandler(0x3d4,vga_write_p3d4,IO_MB);
@@ -65,6 +70,23 @@ static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
 		IO_RegisterWriteHandler(0x3d5,vga_write_p3d5,IO_MB);
 		IO_RegisterReadHandler(0x3d5,vga_read_p3d5,IO_MB);
 
+#if defined(WIN32) && !(C_DEBUG)
+		if (!DISP2_Active()) {
+			IO_FreeWriteHandler(0x3b4,IO_MB);
+			IO_FreeReadHandler(0x3b4,IO_MB);
+			IO_FreeWriteHandler(0x3b5,IO_MB);
+			IO_FreeReadHandler(0x3b5,IO_MB);
+			IO_FreeReadHandler(0x3ba,IO_MB);
+		}
+	} else {
+		if (!DISP2_Active()) {
+			IO_RegisterWriteHandler(0x3b4,vga_write_p3d4,IO_MB);
+			IO_RegisterReadHandler(0x3b4,vga_read_p3d4,IO_MB);
+			IO_RegisterWriteHandler(0x3b5,vga_write_p3d5,IO_MB);
+			IO_RegisterReadHandler(0x3b5,vga_read_p3d5,IO_MB);
+			IO_RegisterReadHandler(0x3ba,vga_read_p3da,IO_MB);
+		}
+#else
 		IO_FreeWriteHandler(0x3b4,IO_MB);
 		IO_FreeReadHandler(0x3b4,IO_MB);
 		IO_FreeWriteHandler(0x3b5,IO_MB);
@@ -77,6 +99,7 @@ static void write_p3c2(Bitu port,Bitu val,Bitu iolen) {
 
 		IO_RegisterWriteHandler(0x3b5,vga_write_p3d5,IO_MB);
 		IO_RegisterReadHandler(0x3b5,vga_read_p3d5,IO_MB);
+#endif
 
 
 		IO_FreeWriteHandler(0x3d4,IO_MB);
@@ -117,8 +140,16 @@ static Bitu read_p3c2(Bitu port,Bitu iolen) {
 
 	if (machine==MCH_EGA) retval = 0x0F;
 	else if (IS_VGA_ARCH) retval = 0x60;
-	if ((machine==MCH_VGA) || (((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) {
-		retval |= 0x10;
+
+	if(IS_EGAVGA_ARCH) {
+		switch((vga.misc_output>>2)&3) {
+			case 0:
+			case 3:
+				retval |= 0x10; // 0110 switch positions
+				break;
+			default:
+				break;
+		}
 	}
 
 	if (vga.draw.vret_triggered) retval |= 0x80;
@@ -148,7 +179,18 @@ void VGA_SetupMisc(void) {
 		} else {
 			IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
 		}
-	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
+	} else if (machine==MCH_CGA || machine==MCH_AMSTRAD || IS_TANDY_ARCH) {
 		IO_RegisterReadHandler(0x3da,vga_read_p3da,IO_MB);
 	}
+#if defined(WIN32) && !(C_DEBUG)
+	DISP2_RegisterPorts();
+#endif
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals: none
+*/

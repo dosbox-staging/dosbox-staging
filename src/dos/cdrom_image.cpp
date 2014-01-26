@@ -23,7 +23,6 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <limits.h> //GCC 2.95
 #include <sstream>
 #include <vector>
 #include <sys/stat.h>
@@ -108,21 +107,8 @@ bool CDROM_Interface_Image::AudioFile::read(Bit8u *buffer, int seek, int count)
 
 int CDROM_Interface_Image::AudioFile::getLength()
 {
-	int time = 1;
-	int shift = 0;
-	if (!(sample->flags & SOUND_SAMPLEFLAG_CANSEEK)) return -1;
-	
-	while (true) {
-		int success = Sound_Seek(sample, (unsigned int)(shift + time));
-		if (!success) {
-			if (time == 1) return lround((double)shift * 176.4f);
-			shift += time >> 1;
-			time = 1;
-		} else {
-			if (time > ((numeric_limits<int>::max() - shift) / 2)) return -1;
-			time = time << 1;
-		}
-	}
+	int length = Sound_GetDuration(sample);
+	return (int)floor((length * 176.4) + 0.5);
 }
 #endif
 
@@ -167,10 +153,13 @@ bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
 	if (LoadIsoFile(path)) return true;
 	
 	// print error message on dosbox console
+	/*
 	char buf[MAX_LINE_LENGTH];
 	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\n", path);
 	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
+	*/
+	LOG_MSG("Could not load image file: %s", path);
 	return false;
 }
 
@@ -281,6 +270,20 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	return success;
 }
 
+bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	int sectorSize = raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE;
+	Bitu buflen = num * sectorSize;
+	
+	bool success = true; //Gobliiins reads 0 sectors
+	for(unsigned long i = 0; i < num; i++) {
+		success = ReadSector((Bit8u*)buffer + (i * sectorSize), raw, sector + i);
+		if (!success) break;
+	}
+
+	return success;
+}
+
 bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
 {
 	return true;
@@ -304,10 +307,28 @@ bool CDROM_Interface_Image::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 {
 	int track = GetTrack(sector) - 1;
 	if (track < 0) return false;
-	
-	int seek = tracks[track].skip + (sector - tracks[track].start) * tracks[track].sectorSize;
-	int length = (raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE);
+
 	if (tracks[track].sectorSize != RAW_SECTOR_SIZE && raw) return false;
+
+	/* we must reject non-raw reads against CD audio sectors.
+	 * not just for correctness, but also to avoid a weird bug in MSCDEX.EXE
+	 * that reads the non-data sectors one-by-one looking for a volume label
+	 * that doesn't exist on pure CD audio emulated images */
+	if (tracks[track].sectorSize == RAW_SECTOR_SIZE && !raw) {
+		if ((tracks[track].attr&0x40) == 0x00) {
+			fprintf(stderr,"Rejecting cooked read from raw audio CD sector\n");
+			return false;
+		}
+	}
+
+	int length = (raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE);
+
+	if (sector >= (unsigned long)(tracks[track].start + tracks[track].length)) {
+		memset(buffer, 0, length);
+		return true;
+	}
+
+	int seek = tracks[track].skip + (sector - tracks[track].start) * tracks[track].sectorSize;
 	if (tracks[track].sectorSize == RAW_SECTOR_SIZE && !tracks[track].mode2 && !raw) seek += 16;
 	if (tracks[track].mode2 && !raw) seek += 24;
 

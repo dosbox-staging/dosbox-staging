@@ -2151,13 +2151,13 @@ public:
 };
 
 /// A message box with a single "Close" button.
-class MessageBox : public GUI::ToplevelWindow {
+class MessageBox2 : public GUI::ToplevelWindow {
 protected:
 	Label *message;
 	Button *close;
 public:
 	/// Create a new message box
-	template <typename STR> MessageBox(Screen *parent, int x, int y, int width, const STR title, const STR text) :
+	template <typename STR> MessageBox2(Screen *parent, int x, int y, int width, const STR title, const STR text) :
 		ToplevelWindow(parent, x, y, width, 1, title) {
 		message = new Label(this, 5, 5, text, width-10);
 		close = new GUI::Button(this, width/2-40, 10, "Close", 70);

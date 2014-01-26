@@ -32,6 +32,20 @@
 #include "int10.h"
 #include "bios.h"
 #include "dos_inc.h"
+#include "../save_state.h"
+#include "support.h"
+#include "setup.h"
+ 
+/* ints/bios.cpp */
+void bios_enable_ps2();
+
+/* hardware/keyboard.cpp */
+void AUX_INT33_Takeover();
+int KEYBOARD_AUX_Active();
+void KEYBOARD_AUX_Event(float x,float y,Bitu buttons);
+
+bool en_int33=false;
+bool en_bios_ps2mouse=false;
 
 static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static Bit16u ps2cbseg,ps2cbofs;
@@ -41,6 +55,9 @@ static RealPt ps2_callback;
 static Bit16s oldmouseX, oldmouseY;
 // forward
 void WriteMouseIntVector(void);
+
+// serial mouse emulation
+void on_mouse_event_for_serial(int delta_x,int delta_y,Bit8u buttonstate);
 
 struct button_event {
 	Bit8u type;
@@ -447,8 +464,15 @@ void DrawCursor() {
 }
 
 void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
+	INT10_SetCurMode();
+	extern bool Mouse_Vertical;
 	float dx = xrel * mouse.pixelPerMickey_x;
-	float dy = yrel * mouse.pixelPerMickey_y;
+	float dy = (Mouse_Vertical?-yrel:yrel) * mouse.pixelPerMickey_y;
+
+	if (KEYBOARD_AUX_Active()) {
+		KEYBOARD_AUX_Event(xrel,yrel,mouse.buttons);
+		return;
+	}
 
 	if((fabs(xrel) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
 	if((fabs(yrel) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
@@ -481,6 +505,9 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		}
 	}
 
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial((int)(dx),(int)(dy),mouse.buttons);
+
 	/* ignore constraints if using PS2 mouse callback in the bios */
 
 	if (!useps2callback) {		
@@ -505,6 +532,25 @@ void Mouse_CursorSet(float x,float y) {
 }
 
 void Mouse_ButtonPressed(Bit8u button) {
+	if (KEYBOARD_AUX_Active()) {
+		switch (button) {
+			case 0:
+				mouse.buttons|=1;
+				break;
+			case 1:
+				mouse.buttons|=2;
+				break;
+			case 2:
+				mouse.buttons|=4;
+				break;
+			default:
+				return;
+		}
+
+		KEYBOARD_AUX_Event(0,0,mouse.buttons);
+		return;
+	}
+
 	switch (button) {
 #if (MOUSE_BUTTONS >= 1)
 	case 0:
@@ -530,9 +576,31 @@ void Mouse_ButtonPressed(Bit8u button) {
 	mouse.times_pressed[button]++;
 	mouse.last_pressed_x[button]=POS_X;
 	mouse.last_pressed_y[button]=POS_Y;
+
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial(0,0,mouse.buttons);
 }
 
 void Mouse_ButtonReleased(Bit8u button) {
+	if (KEYBOARD_AUX_Active()) {
+		switch (button) {
+			case 0:
+				mouse.buttons&=~1;
+				break;
+			case 1:
+				mouse.buttons&=~2;
+				break;
+			case 2:
+				mouse.buttons&=~4;
+				break;
+			default:
+				return;
+		}
+
+		KEYBOARD_AUX_Event(0,0,mouse.buttons);
+		return;
+	}
+
 	switch (button) {
 #if (MOUSE_BUTTONS >= 1)
 	case 0:
@@ -558,6 +626,9 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.times_released[button]++;	
 	mouse.last_released_x[button]=POS_X;
 	mouse.last_released_y[button]=POS_Y;
+
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial(0,0,mouse.buttons);
 }
 
 static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
@@ -692,14 +763,20 @@ static void Mouse_Reset(void) {
 
 static Bitu INT33_Handler(void) {
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
+	INT10_SetCurMode();
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		Mouse_ResetHardware(); /* fallthrough */
 	case 0x21:	/* Software Reset */
-		reg_ax=0xffff;
-		reg_bx=MOUSE_BUTTONS;
-		Mouse_Reset();
-		Mouse_AutoLock(true);
+		extern bool Mouse_Drv;
+		if (Mouse_Drv) {
+			reg_ax=0xffff;
+			reg_bx=MOUSE_BUTTONS;
+			Mouse_Reset();
+			Mouse_AutoLock(true);
+			AUX_INT33_Takeover();
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 33h reset");
+		}
 		break;
 	case 0x01:	/* Show Mouse */
 		if(mouse.hidden) mouse.hidden--;
@@ -1050,14 +1127,31 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 	return CBRET_NONE;
 }
 
-void MOUSE_Init(Section* /*sec*/) {
+void MOUSE_Init(Section* sec) {
+	Section_prop *section=static_cast<Section_prop *>(sec);
+	RealPt i33loc=0;
+
+	if (en_int33=section->Get_bool("int33")) {
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 33H emulation enabled");
+	}
+
+	if (en_bios_ps2mouse=section->Get_bool("biosps2")) {
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 15H PS/2 emulation enabled");
+		bios_enable_ps2();
+	}
+
+	if (en_int33) {
 	// Callback for mouse interrupt 0x33
 	call_int33=CALLBACK_Allocate();
-//	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
-	RealPt i33loc=RealMake(DOS_GetMemory(0x1)-1,0x10);
+		// i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
+		i33loc=RealMake(DOS_GetMemory(0x1,"i33loc")-1,0x10);
 	CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0,0x33<<2,i33loc);
+	}
+	else {
+		call_int33=0;
+	}
 
 	call_mouse_bd=CALLBACK_Allocate();
 	CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
@@ -1118,3 +1212,226 @@ void MOUSE_Init(Section* /*sec*/) {
 	Mouse_Reset();
 	Mouse_SetSensitivity(50,50,50);
 }
+
+
+
+//save state support
+void *MOUSE_Limit_Events_PIC_Event = (void*)MOUSE_Limit_Events;
+
+
+namespace
+{
+class SerializeMouse : public SerializeGlobalPOD
+{
+public:
+	SerializeMouse() : SerializeGlobalPOD("Mouse")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		Bit8u screenMask_idx, cursorMask_idx;
+
+
+		if( mouse.screenMask == defaultScreenMask ) screenMask_idx = 0x00;
+		else if( mouse.screenMask == userdefScreenMask ) screenMask_idx = 0x01;
+
+		if( mouse.cursorMask == defaultCursorMask ) cursorMask_idx = 0x00;
+		else if( mouse.cursorMask == userdefCursorMask ) cursorMask_idx = 0x01;
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		SerializeGlobalPOD::getBytes(stream);
+
+
+		// - pure data
+		WRITE_POD( &ps2cbseg, ps2cbseg );
+		WRITE_POD( &ps2cbofs, ps2cbofs );
+		WRITE_POD( &useps2callback, useps2callback );
+		WRITE_POD( &ps2callbackinit, ps2callbackinit );
+		
+		WRITE_POD( &userdefScreenMask, userdefScreenMask );
+		WRITE_POD( &userdefCursorMask, userdefCursorMask );
+
+
+		// - near-pure data
+		WRITE_POD( &mouse, mouse );
+
+
+		// - pure data
+		WRITE_POD( &gfxReg3CE, gfxReg3CE );
+		WRITE_POD( &index3C4, index3C4 );
+		WRITE_POD( &gfxReg3C5, gfxReg3C5 );
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		// - reloc ptr
+		WRITE_POD( &screenMask_idx, screenMask_idx );
+		WRITE_POD( &cursorMask_idx, cursorMask_idx );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		Bit8u screenMask_idx, cursorMask_idx;
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		// - pure data
+		READ_POD( &ps2cbseg, ps2cbseg );
+		READ_POD( &ps2cbofs, ps2cbofs );
+		READ_POD( &useps2callback, useps2callback );
+		READ_POD( &ps2callbackinit, ps2callbackinit );
+		
+		READ_POD( &userdefScreenMask, userdefScreenMask );
+		READ_POD( &userdefCursorMask, userdefCursorMask );
+
+
+		// - near-pure data
+		READ_POD( &mouse, mouse );
+
+
+		// - pure data
+		READ_POD( &gfxReg3CE, gfxReg3CE );
+		READ_POD( &index3C4, index3C4 );
+		READ_POD( &gfxReg3C5, gfxReg3C5 );
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		// - reloc ptr
+		READ_POD( &screenMask_idx, screenMask_idx );
+		READ_POD( &cursorMask_idx, cursorMask_idx );
+
+
+		if( screenMask_idx == 0x00 ) mouse.screenMask = defaultScreenMask;
+		else if( screenMask_idx == 0x01 ) mouse.screenMask = userdefScreenMask;
+
+		if( cursorMask_idx == 0x00 ) mouse.cursorMask = defaultCursorMask;
+		else if( cursorMask_idx == 0x01 ) mouse.cursorMask = userdefCursorMask;
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		// reset
+		oldmouseX = static_cast<Bit16s>(mouse.x);
+		oldmouseY = static_cast<Bit16s>(mouse.y);
+	}
+} dummy;
+}
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+// - system data
+static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
+
+// - pure data
+static Bit16u ps2cbseg,ps2cbofs;
+static bool useps2callback,ps2callbackinit;
+
+// - system data
+static Bitu call_ps2;
+static RealPt ps2_callback;
+
+// - system data
+static Bit16s oldmouseX, oldmouseY;
+static Bit16u defaultTextAndMask = 0x77FF;
+static Bit16u defaultTextXorMask = 0x7700;
+static Bit16u defaultScreenMask[CURSORY] = {
+		0x3FFF, 0x1FFF, 0x0FFF, 0x07FF,
+		0x03FF, 0x01FF, 0x00FF, 0x007F,
+		0x003F, 0x001F, 0x01FF, 0x00FF,
+		0x30FF, 0xF87F, 0xF87F, 0xFCFF
+};
+static Bit16u defaultCursorMask[CURSORY] = {
+		0x0000, 0x4000, 0x6000, 0x7000,
+		0x7800, 0x7C00, 0x7E00, 0x7F00,
+		0x7F80, 0x7C00, 0x6C00, 0x4600,
+		0x0600, 0x0300, 0x0300, 0x0000
+};
+
+
+// - pure data
+static Bit16u userdefScreenMask[CURSORY];
+static Bit16u userdefCursorMask[CURSORY];
+
+
+// - near-pure data
+static struct mouse
+	// - pure data
+	Bit8u buttons;
+	Bit16u times_pressed[MOUSE_BUTTONS];
+	Bit16u times_released[MOUSE_BUTTONS];
+	Bit16u last_released_x[MOUSE_BUTTONS];
+	Bit16u last_released_y[MOUSE_BUTTONS];
+	Bit16u last_pressed_x[MOUSE_BUTTONS];
+	Bit16u last_pressed_y[MOUSE_BUTTONS];
+	Bit16u hidden;
+	float add_x,add_y;
+	Bit16s min_x,max_x,min_y,max_y;
+	float mickey_x,mickey_y;
+	float x,y;
+	button_event event_queue[QUEUE_SIZE];
+		Bit8u type;
+		Bit8u buttons;
+
+	Bit8u events;
+	Bit16u sub_seg,sub_ofs;
+	Bit16u sub_mask;
+
+	bool	background;
+	Bit16s	backposx, backposy;
+	Bit8u	backData[CURSORX*CURSORY];
+
+
+	// - reloc ptr (!!!)
+	Bit16u*	screenMask;
+	Bit16u* cursorMask;
+
+
+	// - pure data
+	Bit16s	clipx,clipy;
+	Bit16s  hotx,hoty;
+	Bit16u  textAndMask, textXorMask;
+
+	float	mickeysPerPixel_x;
+	float	mickeysPerPixel_y;
+	float	pixelPerMickey_x;
+	float	pixelPerMickey_y;
+	Bit16u	senv_x_val;
+	Bit16u	senv_y_val;
+	Bit16u	dspeed_val;
+	float	senv_x;
+	float	senv_y;
+	Bit16u  updateRegion_x[2];
+	Bit16u  updateRegion_y[2];
+	Bit16u  doubleSpeedThreshold;
+	Bit16u  language;
+	Bit16u  cursorType;
+	Bit16u	oldhidden;
+	Bit8u  page;
+	bool enabled;
+	bool inhibit_draw;
+	bool timer_in_progress;
+	bool in_UIR;
+	Bit8u mode;
+	Bit16s gran_x,gran_y;
+
+
+// - pure data
+static Bit8u gfxReg3CE[9];
+static Bit8u index3C4,gfxReg3C5;
+*/

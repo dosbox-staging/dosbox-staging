@@ -67,7 +67,7 @@ void MSG_Replace(const char * _name, const char* _val) {
 	Lang.push_back(MessageBlock(_name,_val));
 }
 
-static void LoadMessageFile(const char * fname) {
+void LoadMessageFile(const char * fname) {
 	if (!fname) return;
 	if(*fname=='\0') return;//empty string=no languagefile
 	FILE * mfile=fopen(fname,"rt");

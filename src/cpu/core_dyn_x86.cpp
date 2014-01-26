@@ -292,8 +292,10 @@ restart_core:
 		}
 	}
 run_block:
+	Bitu CPU_CyclesOld = CPU_Cycles;
 	cache.block.running=0;
 	BlockReturn ret=gen_runcode(block->cache.start);
+	cycle_count += CPU_CyclesOld - CPU_Cycles;
 	switch (ret) {
 	case BR_Iret:
 #if C_HEAVY_DEBUG
@@ -351,7 +353,7 @@ run_block:
 		{
 			Bitu temp_ip=SegPhys(cs)+reg_eip;
 			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
-			if (temp_handler->flags & PFLAG_HASCODE) {
+			if (temp_handler->getFlags() & PFLAG_HASCODE) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block) goto restart_core;
 				cache.block.running->LinkTo(ret==BR_Link2,block);

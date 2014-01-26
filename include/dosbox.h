@@ -37,6 +37,11 @@ void DOSBOX_SetNormalLoop();
 
 void DOSBOX_Init(void);
 
+#ifdef __SSE__
+extern bool sse1_available;
+extern bool sse2_available;
+#endif
+
 class Config;
 extern Config * control;
 
@@ -46,7 +51,8 @@ enum MachineType {
 	MCH_TANDY,
 	MCH_PCJR,
 	MCH_EGA,
-	MCH_VGA
+	MCH_VGA,
+	MCH_AMSTRAD
 };
 
 enum SVGACards {
@@ -60,6 +66,7 @@ enum SVGACards {
 extern SVGACards svgaCard;
 extern MachineType machine;
 extern bool SDLNetInited;
+extern bool mono_cga;
 
 #define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
 #define IS_EGAVGA_ARCH ((machine==MCH_EGA) || (machine==MCH_VGA))

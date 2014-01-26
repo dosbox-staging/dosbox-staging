@@ -231,16 +231,30 @@ bool Property::CheckValue(Value const& in, bool warn){
 	return false;
 }
 
+/* There are too many reasons I can think of to have similar property names per section
+ * without tying them together by name. Sticking them in MSG_Add as CONFIG_ + propname
+ * for help strings is just plain dumb. But... in the event that is still useful, I at
+ * least left the code conditionally enabled if any part of the code still wants to do
+ * that. --J.C */
 void Property::Set_help(string const& in) {
+	if (use_global_config_str) {
 	string result = string("CONFIG_") + propname;
 	upcase(result);
 	MSG_Add(result.c_str(),in.c_str());
 }
+	else {
+		help_string = in;
+	}
+}
 
 char const* Property::Get_help() {
+	if (use_global_config_str) {
 	string result = string("CONFIG_") + propname;
 	upcase(result);
 	return MSG_Get(result.c_str());
+}
+
+	return help_string.c_str();
 }
 
 
@@ -659,9 +673,11 @@ bool Config::PrintConfig(char const * const configfilename) const {
 					help.replace(pos, 1, prefix);
 				}
 		     
+				std::vector<Value> values = p->GetValues();
+
+				if (help != "" || !values.empty()) {
 				fprintf(outfile, "# %*s: %s", (int)maxwidth, p->propname.c_str(), help.c_str());
 
-				std::vector<Value> values = p->GetValues();
 				if (!values.empty()) {
 					fprintf(outfile, "%s%s:", prefix, MSG_Get("CONFIG_SUGGESTED_VALUES"));
 					std::vector<Value>::iterator it = values.begin();
@@ -675,6 +691,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
 					fprintf(outfile,".");
 				}
 			fprintf(outfile, "\n");
+			}
 			}
 		} else {
 			upcase(temp);
@@ -692,7 +709,6 @@ bool Config::PrintConfig(char const * const configfilename) const {
 			}
 		}
 	   
-		fprintf(outfile,"\n");
 		(*tel)->PrintData(outfile);
 		fprintf(outfile,"\n");		/* Always an empty line between sections */
 	}

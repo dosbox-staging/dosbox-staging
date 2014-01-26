@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
+#include "../save_state.h"
 
 #define seq(blah) vga.seq.blah
 
@@ -31,14 +32,19 @@ void write_p3c4(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	seq(index)=val;
 }
 
+void VGA_SequReset(bool reset);
+void VGA_Screenstate(bool enabled);
+
 void write_p3c5(Bitu /*port*/,Bitu val,Bitu iolen) {
 //	LOG_MSG("SEQ WRITE reg %X val %X",seq(index),val);
 	switch(seq(index)) {
 	case 0:		/* Reset */
+		if((seq(reset)^val)&0x3) VGA_SequReset((val&0x3)!=0x3);
 		seq(reset)=val;
 		break;
 	case 1:		/* Clocking Mode */
 		if (val!=seq(clocking_mode)) {
+			if((seq(clocking_mode)^val)&0x20) VGA_Screenstate((val&0x20)==0);
 			// don't resize if only the screen off bit was changed
 			if ((val&(~0x20))!=(seq(clocking_mode)&(~0x20))) {
 				seq(clocking_mode)=val;
@@ -158,3 +164,43 @@ void VGA_SetupSEQ(void) {
 	}
 }
 
+
+
+// save state support
+
+void POD_Save_VGA_Seq( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.seq, vga.seq );
+
+
+	// no static globals found
+}
+
+
+void POD_Load_VGA_Seq( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.seq, vga.seq );
+
+
+	// no static globals found
+}
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals: none
+
+
+struct VGA_Seq:
+
+// - pure data
+	Bit8u index;
+	Bit8u reset;
+	Bit8u clocking_mode;
+	Bit8u map_mask;
+	Bit8u character_map_select;
+	Bit8u memory_mode;
+*/
