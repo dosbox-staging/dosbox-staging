@@ -717,6 +717,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 								failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
 								failed |= DOS_WriteFile(targetHandle,buffer,&toread);
 							} while (toread==0x8000);
+							if (!oldsource.concat) {
+								DOS_GetFileDate(sourceHandle,&time,&date);
+								DOS_SetFileDate(targetHandle,time,date);
+							}
 							failed |= DOS_CloseFile(sourceHandle);
 							failed |= DOS_CloseFile(targetHandle);
 							WriteOut(" %s\n",name);

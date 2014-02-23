@@ -22,6 +22,8 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/utime.h>
 
 #include "dosbox.h"
 #include "dos_inc.h"
@@ -32,7 +34,7 @@
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, FILE * handle);
+	localFile(const char* name, FILE * handle, const char* basedir);
 	bool Read(Bit8u * data,Bit16u * size);
 	bool Write(Bit8u * data,Bit16u * size);
 	bool Seek(Bit32u * pos,Bit32u type);
@@ -43,6 +45,7 @@ public:
 	void Flush(void);
 private:
 	FILE * fhandle;
+	const char * basedir;
 	bool read_only_medium;
 	enum { NONE,READ,WRITE } last_action;
 };
@@ -73,7 +76,7 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
    
 	if(!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
-	*file=new localFile(name,hand);
+	*file=new localFile(name,hand,basedir);
 	(*file)->flags=OPEN_READWRITE;
 
 	return true;
@@ -125,7 +128,7 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 		return false;
 	}
 
-	*file=new localFile(name,hand);
+	*file=new localFile(name,hand,basedir);
 	(*file)->flags=flags;  //for the inheritance flag and maybe check for others.
 //	(*file)->SetFileName(newname);
 	return true;
@@ -517,6 +520,36 @@ bool localFile::Close() {
 		fhandle = 0;
 		open = false;
 	};
+
+	if (newtime) {
+		// backport from DOS_PackDate() and DOS_PackTime()
+		struct tm tim = { 0 };
+		tim.tm_sec  = (time&0x1f)*2;
+		tim.tm_min  = (time>>5)&0x3f;
+		tim.tm_hour = (time>>11)&0x1f;
+		tim.tm_mday = date&0x1f;
+		tim.tm_mon  = ((date>>5)&0x0f)-1;
+		tim.tm_year = (date>>9)+1980-1900;
+		//  have the C run-time library code compute whether standard time or daylight saving time is in effect.
+		tim.tm_isdst = -1;
+		// serialize time
+		mktime(&tim);
+
+		struct utimbuf ftim;
+		ftim.actime = ftim.modtime = mktime(&tim);
+
+		char fullname[DOS_PATHLENGTH];
+		strcpy(fullname, basedir);
+		strcat(fullname, name);
+//		Dos_SpecoalChar(fullname, true);
+		CROSS_FILENAME(fullname);
+		if (utime(fullname, &ftim)) {
+//			extern int errno;
+//			LOG_MSG("Set time failed for %s (%s)", fullname, strerror(errno));
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -525,7 +558,7 @@ Bit16u localFile::GetInformation(void) {
 }
 	
 
-localFile::localFile(const char* _name, FILE * handle) {
+localFile::localFile(const char* _name, FILE * handle, const char* _basedir) {
 	fhandle=handle;
 	open=true;
 	UpdateDateTimeFromHost();
@@ -536,6 +569,7 @@ localFile::localFile(const char* _name, FILE * handle) {
 
 	name=0;
 	SetName(_name);
+	basedir=_basedir;
 }
 
 void localFile::FlagReadOnlyMedium(void) {

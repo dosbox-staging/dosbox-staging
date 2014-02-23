@@ -62,7 +62,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; };
+	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; newtime=false;};
 	DOS_File(const DOS_File& orig);
 	DOS_File & operator= (const DOS_File & orig);
 	virtual	~DOS_File(){if(name) delete [] name;};
@@ -87,6 +87,7 @@ public:
 	Bits refCtr;
 	bool open;
 	char* name;
+	bool newtime;
 /* Some Device Specific Stuff */
 private:
 	Bit8u hdrive;

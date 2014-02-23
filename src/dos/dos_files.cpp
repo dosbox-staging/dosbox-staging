@@ -1268,6 +1268,23 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate) {
 	return true;
 }
 
+bool DOS_SetFileDate(Bit16u entry, Bit16u ntime, Bit16u ndate) {
+	Bit32u handle=RealHandle(entry);
+	if (handle>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	Files[handle]->time = ntime;
+	Files[handle]->date = ndate;
+	Files[handle]->newtime = true;
+
+	return true;
+}
+
 void DOS_SetupFiles (void) {
 	/* Setup the File Handles */
 	Bit32u i;
