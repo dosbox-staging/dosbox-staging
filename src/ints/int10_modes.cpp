@@ -385,9 +385,18 @@ static void FinishSetMode(bool clearmem) {
 	/* Clear video memory if needs be */
 	if (clearmem) {
 		switch (CurMode->type) {
+		case M_TANDY16:
+			if ((machine==MCH_PCJR) && (CurMode->mode >= 9)) {
+				// PCJR cannot access the full 32k at 0xb800
+				for (Bit16u ct=0;ct<16*1024;ct++) {
+					// 0x1800 is the last 32k block in 128k, as set in the CRTCPU_PAGE register 
+					real_writew(0x1800,ct*2,0x0000);
+				}
+				break;
+			}
+			// fall-through
 		case M_CGA4:
 		case M_CGA2:
-		case M_TANDY16:
 			for (Bit16u ct=0;ct<16*1024;ct++) {
 				real_writew( 0xb800,ct*2,0x0000);
 			}

@@ -215,7 +215,8 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 				(real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
 
 			base = cpupage << 14;
-			base += page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+			if (page!=0xff)
+				base += page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 		}
 	}
 
