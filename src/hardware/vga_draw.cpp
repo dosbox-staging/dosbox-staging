@@ -1421,7 +1421,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
-		aspect_ratio=1.0;
+		aspect_ratio=1.2;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
@@ -1432,6 +1432,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 			} else {
 				vga.draw.char9dot = true;
 				width*=9;
+				aspect_ratio*=1.125;
 			}
 			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
 			bpp=16;
@@ -1491,14 +1492,14 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		break;
 	case M_TANDY_TEXT:
 		doublewidth=(vga.tandy.mode_control & 0x1)==0;
-		aspect_ratio=1;
+		aspect_ratio=1.2;
 		doubleheight=true;
 		vga.draw.blocks=width;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Draw_Line;
 		break;
 	case M_HERC_TEXT:
-		aspect_ratio=1;
+		aspect_ratio=((double)480)/((double)350);
 		vga.draw.blocks=width;
 		width<<=3;
 		VGA_DrawLine=VGA_TEXT_Herc_Draw_Line;
