@@ -258,7 +258,7 @@ VideoModeBlock ModeList_OTHER[]={
 };
 
 VideoModeBlock Hercules_Mode=
-{ 0x007  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
+{ 0x007  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
 
 static Bit8u text_palette[64][3]=
 {
