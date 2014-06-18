@@ -519,7 +519,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 		return;	
 	}
 	if ( ratio > 1 ) {
-		double target = height * ratio + 0.1;
+		double target = height * ratio + 0.025;
 		ratio = target / height;
 	} else {
 		//This would alter the width of the screen, we don't care about rounding errors here
