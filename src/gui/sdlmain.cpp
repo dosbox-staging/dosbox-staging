@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2013  The DOSBox Team
+ *  Copyright (C) 2002-2014  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -220,6 +220,41 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
+#define SETMODE_SAVES 1  //Don't set Video Mode if nothing changes.
+#define SETMODE_SAVES_CLEAR 0 //Clear the screen, when the Video Mode is reused
+SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
+#if SETMODE_SAVES
+	static int i_height = 0;
+	static int i_width = 0;
+	static int i_bpp = 0;
+	static Bit32u i_flags = 0;
+	if (sdl.surface != NULL && height == i_height && width == i_width && bpp == i_bpp && flags == i_flags) {
+		// I don't see a difference, so disabled for now, as the code isn't finished either
+#if SETMODE_SAVES_CLEAR
+		//TODO clear it.
+		if ((flags & SDL_OPENGL)==0) 
+			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
+		else {
+			glClearColor (0.0, 0.0, 0.0, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT);
+			SDL_GL_SwapBuffers();
+		}
+#endif 
+		return sdl.surface;
+	}
+
+#endif
+	SDL_Surface* s = SDL_SetVideoMode(width,height,bpp,flags);
+#if SETMODE_SAVES
+	if (s == NULL) return s; //Only store when successful
+	i_height = height;
+	i_width = width;
+	i_bpp = bpp;
+	i_flags = flags;
+#endif
+	return s;
+}
+
 extern const char* RunningProgram;
 extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
@@ -418,15 +453,19 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 		double ratio_h=(double)fixedHeight/(sdl.draw.height*sdl.draw.scaley);
 		if ( ratio_w < ratio_h) {
 			sdl.clip.w=fixedWidth;
-			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w);
-		} else {
-			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h);
-			sdl.clip.h=(Bit16u)fixedHeight;
+			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
+		} else { 
+			/* 
+			 * The 0.4 is there to correct for rounding issues.
+			 * (partly caused by the rounding issues fix in RENDER_SetSize) 
+			 */ 
+			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
+			sdl.clip.h=(Bit16u)fixedHeight;			
 		}
 		if (sdl.desktop.fullscreen)
-			sdl.surface = SDL_SetVideoMode(fixedWidth,fixedHeight,bpp,sdl_flags);
+			sdl.surface = SDL_SetVideoMode_Wrap(fixedWidth,fixedHeight,bpp,sdl_flags);
 		else
-			sdl.surface = SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
+			sdl.surface = SDL_SetVideoMode_Wrap(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
 		if (sdl.surface && sdl.surface->flags & SDL_FULLSCREEN) {
 			sdl.clip.x=(Sint16)((sdl.surface->w-sdl.clip.w)/2);
 			sdl.clip.y=(Sint16)((sdl.surface->h-sdl.clip.h)/2);
@@ -439,7 +478,7 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp) {
 		sdl.clip.x=0;sdl.clip.y=0;
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
-		sdl.surface=SDL_SetVideoMode(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
+		sdl.surface=SDL_SetVideoMode_Wrap(sdl.clip.w,sdl.clip.h,bpp,sdl_flags);
 		return sdl.surface;
 	}
 }
@@ -485,13 +524,13 @@ dosurface:
 			if (sdl.desktop.full.fixed) {
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
 				sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
-				sdl.surface=SDL_SetVideoMode(sdl.desktop.full.width,sdl.desktop.full.height,bpp,
+				sdl.surface=SDL_SetVideoMode_Wrap(sdl.desktop.full.width,sdl.desktop.full.height,bpp,
 					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
 					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT : 0) | SDL_HWPALETTE);
 				if (sdl.surface == NULL) E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",sdl.desktop.full.width,sdl.desktop.full.height,bpp,SDL_GetError());
 			} else {
 				sdl.clip.x=0;sdl.clip.y=0;
-				sdl.surface=SDL_SetVideoMode(width,height,bpp,
+				sdl.surface=SDL_SetVideoMode_Wrap(width,height,bpp,
 					SDL_FULLSCREEN | ((flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE) |
 					(sdl.desktop.doublebuf ? SDL_DOUBLEBUF|SDL_ASYNCBLIT  : 0)|SDL_HWPALETTE);
 				if (sdl.surface == NULL)
@@ -499,7 +538,7 @@ dosurface:
 			}
 		} else {
 			sdl.clip.x=0;sdl.clip.y=0;
-			sdl.surface=SDL_SetVideoMode(width,height,bpp,(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
+			sdl.surface=SDL_SetVideoMode_Wrap(width,height,bpp,(flags & GFX_CAN_RANDOM) ? SDL_SWSURFACE : SDL_HWSURFACE);
 #ifdef WIN32
 			if (sdl.surface == NULL) {
 				SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -514,7 +553,7 @@ dosurface:
 				}
 				SDL_InitSubSystem(SDL_INIT_VIDEO);
 				GFX_SetIcon(); //Set Icon again
-				sdl.surface = SDL_SetVideoMode(width,height,bpp,SDL_HWSURFACE);
+				sdl.surface = SDL_SetVideoMode_Wrap(width,height,bpp,SDL_HWSURFACE);
 				if(sdl.surface) GFX_SetTitle(-1,-1,false); //refresh title.
 			}
 #endif
@@ -1232,7 +1271,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.overlay=0;
 #if C_OPENGL
    if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
-	sdl.surface=SDL_SetVideoMode(640,400,0,SDL_OPENGL);
+	sdl.surface=SDL_SetVideoMode_Wrap(640,400,0,SDL_OPENGL);
 	if (sdl.surface == NULL) {
 		LOG_MSG("Could not initialize OpenGL, switching back to surface");
 		sdl.desktop.want_type=SCREEN_SURFACE;
@@ -1263,7 +1302,7 @@ static void GUI_StartUp(Section * sec) {
 
 #endif	//OPENGL
 	/* Initialize screen for first time */
-	sdl.surface=SDL_SetVideoMode(640,400,0,0);
+	sdl.surface=SDL_SetVideoMode_Wrap(640,400,0,0);
 	if (sdl.surface == NULL) E_Exit("Could not initialize video: %s",SDL_GetError());
 	sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
 	if (sdl.desktop.bpp==24) {
@@ -1658,7 +1697,7 @@ static void show_warning(char const * const message) {
 #endif
 	printf("%s",message);
 	if(textonly) return;
-	if(!sdl.surface) sdl.surface = SDL_SetVideoMode(640,400,0,0);
+	if(!sdl.surface) sdl.surface = SDL_SetVideoMode_Wrap(640,400,0,0);
 	if(!sdl.surface) return;
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	Bit32u rmask = 0xff000000;
