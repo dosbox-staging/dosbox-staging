@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2013  The DOSBox Team
+ *  Copyright (C) 2002-2014  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -957,11 +957,13 @@ static void FPU_FNOP(void){
 
 static void FPU_PREP_PUSH(void){
 	TOP = (TOP - 1) &7;
-	fpu.tags[TOP]=TAG_Valid;
+	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) E_Exit("FPU stack overflow");
+	fpu.tags[TOP] = TAG_Valid;
 }
 
 static void FPU_FPOP(void){
-	fpu.tags[TOP]=TAG_Empty;
+	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) E_Exit("FPU stack underflow");
+	fpu.tags[TOP] = TAG_Empty;
 	TOP = ((TOP+1)&7);
 }
 
