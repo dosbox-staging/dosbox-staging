@@ -73,7 +73,7 @@ public:
 			LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 		}
 #endif
-		return 0;
+		return 0xff;
 	} 
 	void writeb(PhysPt addr,Bitu val) {
 #if C_DEBUG
