@@ -169,6 +169,21 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 #switch language back
 AC_LANG_POP(C++)
 
+dnl test if compiler supports -mno-ms-bitfields as it is bugged 
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52991
+BACKUP_CFLAGS="$CFLAGS"
+CFLAGS="-mno-ms-bitfields"
+AC_MSG_CHECKING(if compiler supports -mno-ms-bitfields)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+void blah(){
+;
+}
+])],[
+AC_MSG_RESULT([yes])
+CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
+],[AC_MSG_RESULT([no])])
+CFLAGS="$BACKUP_CFLAGS"
+
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
 AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
