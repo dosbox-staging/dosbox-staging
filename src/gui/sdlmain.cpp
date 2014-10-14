@@ -244,6 +244,23 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 	}
 
 #endif
+#ifdef WIN32
+	//SDL seems to crash if we are in OpenGL mode currently and change to exactly the same size without OpenGL.
+	//This happens when DOSBox is in textmode with aspect=true and output=opengl and the mapper is started.
+	//The easiest solution is to change the size. The mapper doesn't care. (PART PXX)
+
+	//Also we have to switch back to windowed mode first, as else it may crash as well.
+	//Bug: we end up with a locked mouse cursor, but at least that beats crashing. (output=opengl,aspect=true,fullscreen=true)
+	if((i_flags&SDL_OPENGL) && !(flags&SDL_OPENGL) && (i_flags&SDL_FULLSCREEN) && !(flags&SDL_FULLSCREEN)){
+		GFX_SwitchFullScreen();
+		return SDL_SetVideoMode_Wrap(width,height,bpp,flags);
+	}
+
+	//PXX
+	if ((i_flags&SDL_OPENGL) && !(flags&SDL_OPENGL) && height==i_height && width==i_width && height==480) {
+		height++;
+	}
+#endif
 	SDL_Surface* s = SDL_SetVideoMode(width,height,bpp,flags);
 #if SETMODE_SAVES
 	if (s == NULL) return s; //Only store when successful
@@ -1944,7 +1961,7 @@ int main(int argc, char* argv[]) {
 	sdl.inited = true;
 
 #ifndef DISABLE_JOYSTICK
-	//Initialise Joystick seperately. This way we can warn when it fails instead
+	//Initialise Joystick separately. This way we can warn when it fails instead
 	//of exiting the application
 	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
 #endif
