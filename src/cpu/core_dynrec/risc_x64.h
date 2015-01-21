@@ -85,7 +85,8 @@ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src) {
 
 static INLINE void gen_reg_memaddr(HostReg reg,void* data) {
 	Bit64s diff = (Bit64s)data-((Bit64s)cache.pos+5);
-	if ((diff<0x80000000LL) && (diff>-0x80000000LL)) {
+//	if ((diff<0x80000000LL) && (diff>-0x80000000LL)) { //clang messes itself up on this...
+	if ( (diff>>63) == (diff>>31) ) { //signed bit extend, test to see if value fits in a Bit32s
 		cache_addb(0x05+(reg<<3));
 		// RIP-relative addressing is offset after the instruction 
 		cache_addd((Bit32u)(((Bit64u)diff)&0xffffffffLL)); 
@@ -100,7 +101,8 @@ static INLINE void gen_reg_memaddr(HostReg reg,void* data) {
 static INLINE void gen_memaddr(Bitu op,void* data,Bitu off) {
 	Bit64s diff;
 	diff = (Bit64s)data-((Bit64s)cache.pos+off+5);
-	if ((diff<0x80000000LL) && (diff>-0x80000000LL)) {
+//	if ((diff<0x80000000LL) && (diff>-0x80000000LL)) {
+	if ( (diff>>63) == (diff>>31) ) {
 		// RIP-relative addressing is offset after the instruction 
 		cache_addb(op+1);
 		cache_addd((Bit32u)(((Bit64u)diff)&0xffffffffLL)); 
