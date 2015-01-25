@@ -118,6 +118,9 @@
 		off=reg_bx+Fetchws();
 		seg_base=SegBase(ds);
 		break;
+	default:
+		off=seg_base=0;
+		break;
 	}
 	inst.rm_off=off;
 	if (inst.prefix & PREFIX_SEG) {
@@ -244,6 +247,9 @@
 	case 0x17:
 		off=reg_edi+Fetchds();
 		seg_base=SegBase(ds);
+		break;
+	default:
+		off=seg_base=0;
 		break;
 	}
 	inst.rm_off=off;

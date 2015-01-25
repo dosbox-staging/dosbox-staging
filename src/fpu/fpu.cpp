@@ -26,6 +26,7 @@
 #include "mem.h"
 #include "fpu.h"
 #include "cpu.h"
+#include "../save_state.h"
 
 FPU_rec fpu;
 
@@ -627,4 +628,20 @@ void FPU_Init(Section*) {
 	FPU_FINIT();
 }
 
+#endif
+
+
+//save state support
+#if C_FPU
+namespace
+{
+class SerializeFpu : public SerializeGlobalPOD
+{
+public:
+    SerializeFpu() : SerializeGlobalPOD("FPU")
+    {
+        registerPOD(fpu);
+    }
+} dummy;
+}
 #endif

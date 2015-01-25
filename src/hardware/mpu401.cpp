@@ -24,6 +24,7 @@
 #include "setup.h"
 #include "cpu.h"
 #include "support.h"
+#include "../save_state.h"
 
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
@@ -122,7 +123,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 }
 
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
-	if (mpu.state.reset) {mpu.state.cmd_pending=val+1;return;}
+	//if (mpu.state.reset) {mpu.state.cmd_pending=val+1;return;}
 	if (val<=0x2f) {
 		switch (val&3) { /* MIDI stop, start, continue */
 			case 1: {MIDI_RawOutByte(0xfc);break;}
@@ -612,6 +613,15 @@ static void MPU401_Reset(void) {
 	for (Bitu i=0;i<8;i++) {mpu.playbuf[i].type=T_OVERFLOW;mpu.playbuf[i].counter=0;}
 }
 
+static void IMF_Write(Bitu port,Bitu val,Bitu iolen) {
+	LOG(LOG_MISC,LOG_NORMAL)("IMF:Wr %4X,%X",port,val);
+}
+
+static Bitu IMF_Read(Bitu port,Bitu iolen) {
+	LOG(LOG_MISC,LOG_NORMAL)("IMF:Rd %4X",port);
+	return 0x00;
+}
+
 class MPU401:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
@@ -633,7 +643,42 @@ public:
 		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
 		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
 		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
-	
+/*
+		IO_RegisterWriteHandler(0x280,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x281,&IMF_Write,IO_MB);
+		IO_RegisterReadHandler(0x280,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x281,&IMF_Read,IO_MB);
+*/
+/*
+		IO_RegisterWriteHandler(0x200,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x201,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x202,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x203,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x204,&IMF_Write,IO_MB);
+
+		IO_RegisterReadHandler(0x200,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x201,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x202,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x203,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x204,&IMF_Read,IO_MB);
+*/
+		IO_RegisterWriteHandler(0x2A20,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A21,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A22,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A23,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A24,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A25,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A26,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A27,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A28,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A29,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2A,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2B,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2C,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2D,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2E,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2F,&IMF_Write,IO_MB);
+
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
 		mpu.mode=M_UART;
@@ -664,3 +709,114 @@ void MPU401_Init(Section* sec) {
 	test = new MPU401(sec);
 	sec->AddDestroyFunction(&MPU401_Destroy,true);
 }
+
+
+
+// save state support
+void *MPU401_Event_PIC_Event = (void*)MPU401_Event;
+
+
+void POD_Save_MPU401( std::ostream& stream )
+{
+	const char pod_name[32] = "MPU401";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - pure data
+	WRITE_POD( &mpu, mpu );
+}
+
+
+void POD_Load_MPU401( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "MPU401" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
+	// - pure data
+	READ_POD( &mpu, mpu );
+}
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+static struct mpu
+
+	// - pure data
+	bool intelligent;
+	MpuMode mode;
+	Bitu irq;
+	Bit8u queue[MPU401_QUEUE];
+	Bitu queue_pos,queue_used;
+
+	// - pure data
+	struct track {
+		Bits counter;
+		Bit8u value[8],sys_val;
+		Bit8u vlength,length;
+		MpuDataType type;
+	} playbuf[8],condbuf;
+
+	// - pure data
+	struct {
+		bool conductor,cond_req,cond_set, block_ack;
+		bool playing,reset;
+		bool wsd,wsm,wsd_start;
+		bool run_irq,irq_pending;
+		bool send_now;
+		Bits data_onoff;
+		Bitu command_byte;
+		Bit8u tmask,cmask,amask;
+		Bit16u midi_mask;
+		Bit16u req_mask;
+		Bit8u channel,old_chan;
+	} state;
+
+	// - pure data
+	struct {
+		Bit8u timebase,old_timebase;
+		Bit8u tempo,old_tempo;
+		Bit8u tempo_rel,old_tempo_rel;
+		Bit8u tempo_grad;
+		Bit8u cth_rate,cth_counter;
+		bool clock_to_host,cth_active;
+	} clock;
+
+
+
+// - static 'new' ptr
+static MPU401* test;
+
+	// - static data
+	IO_ReadHandleObject ReadHandler[2];
+	IO_WriteHandleObject WriteHandler[2];
+
+	// - system data
+	bool installed;
+*/

@@ -79,7 +79,7 @@ static void dyn_string(STRING_OP op) {
 	DynState rep_state;
 	dyn_savestate(&rep_state);
 	Bit8u * rep_start=cache.pos;
-	Bit8u * rep_ecx_jmp;
+	Bit8u * rep_ecx_jmp=NULL;
 	/* Check if ECX!=zero */
 	if (decode.rep) {
 		gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
@@ -104,6 +104,8 @@ static void dyn_string(STRING_OP op) {
 			gen_call_function((void*)&IO_WriteW,"%Id%Dw",DREG(EDX),tmp_reg);break;
 		case STR_OUTSD:
 			gen_call_function((void*)&IO_WriteD,"%Id%Dd",DREG(EDX),tmp_reg);break;
+			default:
+				break;
 		}
 	}
 	if (usedi) {

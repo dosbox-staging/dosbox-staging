@@ -149,4 +149,9 @@ bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD) {
     return success;
 }
 
+bool CDROM_Interface_Ioctl::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
+
 #endif

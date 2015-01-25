@@ -56,27 +56,18 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
-	if (handler->flags & PFLAG_HASCODE) {
+	if (handler->getFlags() & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
 		return false;
 	}
-	if (handler->flags & PFLAG_NOCODE) {
-		if (PAGING_ForcePageInit(lin_addr)) {
-			handler=get_tlb_readhandler(lin_addr);
-			if (handler->flags & PFLAG_HASCODE) {
-				cph=( CodePageHandler *)handler;
-				return false;
-			}
-		}
-		if (handler->flags & PFLAG_NOCODE) {
+	if (handler->getFlags() & PFLAG_NOCODE) {
 			LOG_MSG("DYNX86:Can't run code in this page!");
 			cph=0;		return false;
 		}
-	} 
 	Bitu lin_page=lin_addr >> 12;
 	Bitu phys_page=lin_page;
 	if (!PAGING_MakePhysPage(phys_page)) {
-		LOG_MSG("DYNX86:Can't find physpage");
+		LOG_MSG("DYNX86:Can't find physpage for lin addr %x", lin_addr);
 		cph=0;		return false;
 	}
 	/* Find a free CodePage */
@@ -964,9 +955,9 @@ static void dyn_fill_ea(bool addseg=true, DynReg * reg_ea=DREG(EA)) {
 	if (!decode.big_addr) {
 		Bits imm;
 		switch (decode.modrm.mod) {
-		case 0:imm=0;break;
-		case 1:imm=(Bit8s)decode_fetchb();break;
-		case 2:imm=(Bit16s)decode_fetchw();break;
+			case 1:imm=(Bit8s)decode_fetchb();break;
+			case 2:imm=(Bit16s)decode_fetchw();break;
+			default:imm=0;break;
 		}
 		DynReg * extend_src=reg_ea;
 		switch (decode.modrm.rm) {
@@ -1835,29 +1826,33 @@ static void dyn_loop(LoopTypes type) {
 	Bit8u * branch1=0;Bit8u * branch2=0;
 	dyn_save_critical_regs();
 	switch (type) {
-	case LOOP_E:
-		gen_needflags();
-		branch1=gen_create_branch(BR_NZ);
-		break;
-	case LOOP_NE:
-		gen_needflags();
-		branch1=gen_create_branch(BR_Z);
-		break;
+		case LOOP_E:
+			gen_needflags();
+			branch1=gen_create_branch(BR_NZ);
+			break;
+		case LOOP_NE:
+			gen_needflags();
+			branch1=gen_create_branch(BR_Z);
+			break;
+		default:
+			break;
 	}
 	gen_protectflags();
 	switch (type) {
-	case LOOP_E:
-	case LOOP_NE:
-	case LOOP_NONE:
-		gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
-		gen_releasereg(DREG(ECX));
-		branch2=gen_create_branch(BR_Z);
-		break;
-	case LOOP_JCXZ:
-		gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
-		gen_releasereg(DREG(ECX));
-		branch2=gen_create_branch(BR_NZ);
-		break;
+		case LOOP_E:
+		case LOOP_NE:
+		case LOOP_NONE:
+			gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
+			gen_releasereg(DREG(ECX));
+			branch2=gen_create_branch(BR_Z);
+			break;
+		case LOOP_JCXZ:
+			gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
+			gen_releasereg(DREG(ECX));
+			branch2=gen_create_branch(BR_NZ);
+			break;
+		default:
+			break;
 	}
 	gen_lea(DREG(EIP),DREG(EIP),0,0,eip_base+eip_add);
 	gen_releasereg(DREG(EIP));

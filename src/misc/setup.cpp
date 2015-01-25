@@ -35,6 +35,7 @@ using namespace std;
 static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath
 void Value::destroy() throw(){
 	if (type == V_STRING) delete _string;
+	_string = NULL;
 }
 
 Value& Value::copy(Value const& in) throw(WrongType) {
@@ -231,22 +232,35 @@ bool Property::CheckValue(Value const& in, bool warn){
 	return false;
 }
 
+/* There are too many reasons I can think of to have similar property names per section
+ * without tying them together by name. Sticking them in MSG_Add as CONFIG_ + propname
+ * for help strings is just plain dumb. But... in the event that is still useful, I at
+ * least left the code conditionally enabled if any part of the code still wants to do
+ * that. --J.C */
 void Property::Set_help(string const& in) {
+	if (use_global_config_str) {
 	string result = string("CONFIG_") + propname;
 	upcase(result);
 	MSG_Add(result.c_str(),in.c_str());
 }
+	else {
+		help_string = in;
+	}
+}
 
 char const* Property::Get_help() {
+	if (use_global_config_str) {
 	string result = string("CONFIG_") + propname;
 	upcase(result);
 	return MSG_Get(result.c_str());
 }
 
+	return help_string.c_str();
+}
+
 
 bool Prop_int::CheckValue(Value const& in, bool warn) {
-//	if(!suggested_values.empty() && Property::CheckValue(in,warn)) return true;
-	if(!suggested_values.empty()) return Property::CheckValue(in,warn);
+	if(suggested_values.empty() && Property::CheckValue(in,warn)) return true;
 
 	//No >= and <= in Value type and == is ambigious
 	int mi = min;
@@ -440,12 +454,6 @@ const std::vector<Value>& Prop_multival::GetValues() const
 	return suggested_values;
 }
 
-/*
-void Section_prop::Add_double(char const * const _propname, double _value) {
-	Property* test=new Prop_double(_propname,_value);
-	properties.push_back(test);
-}*/
-
 void Property::Set_values(const char * const *in) {
 	Value::Etype type = default_value.type;
 	int i = 0;
@@ -454,6 +462,12 @@ void Property::Set_values(const char * const *in) {
 		suggested_values.push_back(val);
 		i++;
 	}
+}
+
+Prop_double* Section_prop::Add_double(string const& _propname, Property::Changeable::Value when, double _value) {
+	Prop_double* test=new Prop_double(_propname,when,_value);
+	properties.push_back(test);
+	return test;
 }
 
 Prop_int* Section_prop::Add_int(string const& _propname, Property::Changeable::Value when, int _value) {
@@ -598,7 +612,7 @@ bool Section_prop::HandleInputline(string const& gegevens){
 	return false;
 }
 
-void Section_prop::PrintData(FILE* outfile) const {
+void Section_prop::PrintData(FILE* outfile) {
 	/* Now print out the individual section entries */
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),(*tel)->GetValue().ToString().c_str());
@@ -615,13 +629,18 @@ string Section_prop::GetPropValue(string const& _property) const{
 	return NO_SUCH_PROPERTY;
 }
 
+/* NTS: For whatever reason, this string concatenation is reported by Valgrind as a memory
+ *      leak because std::string's destructor is never given a chance to clear it, or something...
+ *      I can't quite pinpoint why. Not enough information is provided so far in stack traces.
+ *      It SHOULD be freed, because Section_line is derived from Section, the constructors are
+ *      virtual, and therefore std::string should get a chance to free it's memory. */
 bool Section_line::HandleInputline(string const& line){ 
 	data+=line;
 	data+="\n";
 	return true;
 }
 
-void Section_line::PrintData(FILE* outfile) const {
+void Section_line::PrintData(FILE* outfile) {
 	fprintf(outfile,"%s",data.c_str());
 }
 
@@ -661,9 +680,11 @@ bool Config::PrintConfig(char const * const configfilename) const {
 					help.replace(pos, 1, prefix);
 				}
 		     
+				std::vector<Value> values = p->GetValues();
+
+				if (help != "" || !values.empty()) {
 				fprintf(outfile, "# %*s: %s", (int)maxwidth, p->propname.c_str(), help.c_str());
 
-				std::vector<Value> values = p->GetValues();
 				if (!values.empty()) {
 					fprintf(outfile, "%s%s:", prefix, MSG_Get("CONFIG_SUGGESTED_VALUES"));
 					std::vector<Value>::iterator it = values.begin();
@@ -677,6 +698,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
 					fprintf(outfile,".");
 				}
 			fprintf(outfile, "\n");
+			}
 			}
 		} else {
 			upcase(temp);
@@ -694,7 +716,6 @@ bool Config::PrintConfig(char const * const configfilename) const {
 			}
 		}
 	   
-		fprintf(outfile,"\n");
 		(*tel)->PrintData(outfile);
 		fprintf(outfile,"\n");		/* Always an empty line between sections */
 	}
@@ -714,8 +735,8 @@ Section_prop::~Section_prop() {
 //ExecuteDestroy should be here else the destroy functions use destroyed properties
 	ExecuteDestroy(true);
 	/* Delete properties themself (properties stores the pointer of a prop */
-	for(it prop = properties.begin(); prop != properties.end(); prop++)
-		delete (*prop);
+	for(it prop = properties.begin(); prop != properties.end(); prop++) delete (*prop);
+	properties.clear();
 }
 
 
@@ -760,10 +781,12 @@ void Section::ExecuteDestroy(bool destroyall) {
 }
 
 Config::~Config() {
-	reverse_it cnt=sectionlist.rbegin();
-	while (cnt!=sectionlist.rend()) {
-		delete (*cnt);
-		cnt++;
+	std::list<Section*>::iterator it;
+
+	while ((it=sectionlist.end()) != sectionlist.begin()) {
+		it--;
+		delete (*it);
+		sectionlist.erase(it);
 	}
 }
 
@@ -828,7 +851,7 @@ bool Config::ParseConfigFile(char const * const configfilename){
 			if(loc == string::npos) continue;
 			gegevens.erase(loc);
 			testsec = GetSection(gegevens.substr(1));
-			if(testsec != NULL ) currentsection = testsec;
+			currentsection = testsec; /* NTS: If we don't recognize the section we WANT currentsection == NULL so it has no effect */
 			testsec = NULL;
 		}
 			break;
@@ -877,7 +900,6 @@ void Config::SetStartUp(void (*_function)(void)) {
 
 void Config::StartUp(void) {
 	initialised=true;
-	(*_start_function)();
 }
 
 bool CommandLine::FindExist(char const * const name,bool remove) {
@@ -925,7 +947,13 @@ bool CommandLine::FindCommand(unsigned int which,std::string & value) {
 
 bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
 	for (it=cmds.begin();it!=cmds.end();it++) {
-		if (!strcasecmp((*it).c_str(),name)) {
+		const char *d = (*it).c_str();
+
+		/* HACK: If the search string starts with -, it's a switch,
+		 *       so adjust pointers so that it matches --switch or -switch */
+		if (*name == '-' && d[0] == '-' && d[1] == '-') d++;
+
+		if (!strcasecmp(d,name)) {
 			cmd_it itnext=it;itnext++;
 			if (neednext && (itnext==cmds.end())) return false;
 			return true;
@@ -1029,7 +1057,12 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	cmd_it it = cmds.begin();
 	while(it!=cmds.end()) {
 		bool found = false;
-		for(Bitu i = 0; *params[i]!=0; i++) {
+		for(Bitu i = 0; params[i] != NULL; i++) {
+			if (*params[i] == 0) {
+				LOG_MSG("FIXME: GetParameterFromList: terminating params[] with \"\" is deprecated. Please terminate the param list with NULL");
+				break;
+			}
+
 			if (!strcasecmp((*it).c_str(),params[i])) {
 				// found a parameter
 				found = true;

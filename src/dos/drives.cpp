@@ -20,8 +20,10 @@
 #include "dosbox.h"
 #include "dos_system.h"
 #include "drives.h"
+#include "setup.h"
 #include "mapper.h"
 #include "support.h"
+#include "../save_state.h"
 
 bool WildFileCmp(const char * file, const char * wild) 
 {
@@ -113,7 +115,7 @@ DOS_Drive::DOS_Drive() {
 	info[0]=0;
 }
 
-char * DOS_Drive::GetInfo(void) {
+const char * DOS_Drive::GetInfo(void) {
 	return info;
 }
 
@@ -170,7 +172,27 @@ void DriveManager::CycleDisk(bool pressed) {
 */
 
 void DriveManager::CycleAllDisks(void) {
-	for (int idrive=0; idrive<DOS_DRIVES; idrive++) {
+	for (int idrive=0; idrive<2; idrive++) { /* Cycle all DISKS meaning A: and B: */
+		int numDisks = (int)driveInfos[idrive].disks.size();
+		if (numDisks > 1) {
+			// cycle disk
+			int currentDisk = driveInfos[idrive].currentDisk;
+			DOS_Drive* oldDisk = driveInfos[idrive].disks[currentDisk];
+			currentDisk = (currentDisk + 1) % numDisks;		
+			DOS_Drive* newDisk = driveInfos[idrive].disks[currentDisk];
+			driveInfos[idrive].currentDisk = currentDisk;
+			
+			// copy working directory, acquire system resources and finally switch to next drive		
+			strcpy(newDisk->curdir, oldDisk->curdir);
+			newDisk->Activate();
+			Drives[idrive] = newDisk;
+			LOG_MSG("Drive %c: disk %d of %d now active", 'A'+idrive, currentDisk+1, numDisks);
+		}
+	}
+}
+
+void DriveManager::CycleAllCDs(void) {
+	for (int idrive=2; idrive<DOS_DRIVES; idrive++) { /* Cycle all CDs in C: D: ... Z: */
 		int numDisks = (int)driveInfos[idrive].disks.size();
 		if (numDisks > 1) {
 			// cycle disk
@@ -211,7 +233,12 @@ int DriveManager::UnmountDrive(int drive) {
 	return result;
 }
 
-void DriveManager::Init(Section* /* sec */) {
+bool int13_extensions_enable = true;
+
+void DriveManager::Init(Section* s) {
+	Section_prop * section=static_cast<Section_prop *>(s);
+
+	int13_extensions_enable = section->Get_bool("int 13 extensions");
 	
 	// setup driveInfos structure
 	currentDrive = 0;
@@ -226,3 +253,75 @@ void DriveManager::Init(Section* /* sec */) {
 void DRIVES_Init(Section* sec) {
 	DriveManager::Init(sec);
 }
+
+char * DOS_Drive::GetBaseDir(void) {
+	return info + 16;
+}
+
+
+
+// save state support
+void DOS_Drive::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &curdir, curdir );
+	WRITE_POD( &info, info );
+}
+
+
+void DOS_Drive::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &curdir, curdir );
+	READ_POD( &info, info );
+}
+
+
+void DriveManager::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &currentDrive, currentDrive );
+}
+
+
+void DriveManager::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &currentDrive, currentDrive );
+}
+
+
+void POD_Save_DOS_DriveManager( std::ostream& stream )
+{
+	DriveManager::SaveState(stream);
+}
+
+
+void POD_Load_DOS_DriveManager( std::istream& stream )
+{
+	DriveManager::LoadState(stream);
+}
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class DriveManager
+	// - pure data
+	int currentDrive;
+
+	// - system data
+	static struct DriveInfo {
+		std::vector<DOS_Drive*> disks;
+		Bit32u currentDisk;
+	} driveInfos[DOS_DRIVES];
+
+
+
+class DOS_Drive
+	// - pure data
+	char curdir[DOS_PATHLENGTH];
+	char info[256];
+*/

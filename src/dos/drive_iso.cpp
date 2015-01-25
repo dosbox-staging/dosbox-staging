@@ -38,6 +38,7 @@ public:
 	bool Seek(Bit32u *pos, Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
+	Bit32u GetSeekPos(void);
 private:
 	isoDrive *drive;
 	Bit8u buffer[ISO_FRAMESIZE];
@@ -133,6 +134,11 @@ Bit16u isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
 }
 
+Bit32u isoFile::GetSeekPos() {
+	return filePos - fileBegin;
+}
+
+
 int  MSCDEX_RemoveDrive(char driveLetter);
 int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
 void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit);
@@ -140,6 +146,12 @@ bool MSCDEX_HasDrive(char driveLetter);
 bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error) {
+	size_t i;
+
+	for (i=0;i < 26;i++)
+		CDROM_Interface_Image::images[i] = NULL;
+
+	subUnit = 0;
 	nextFreeDirIterator = 0;
 	memset(dirIterators, 0, sizeof(dirIterators));
 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
@@ -194,7 +206,7 @@ void isoDrive::Activate(void) {
 	UpdateMscdex(driveLetter, fileName, subUnit);
 }
 
-bool isoDrive::FileOpen(DOS_File **file, char *name, Bit32u flags) {
+bool isoDrive::FileOpen(DOS_File **file, const char *name, Bit32u flags) {
 	if ((flags & 0x0f) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -215,32 +227,32 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, Bit32u flags) {
 	return success;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/, Bit16u /*attributes*/) {
+bool isoDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/, Bit16u /*attributes*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::FileUnlink(char* /*name*/) {
+bool isoDrive::FileUnlink(const char* /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::RemoveDir(char* /*dir*/) {
+bool isoDrive::RemoveDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::MakeDir(char* /*dir*/) {
+bool isoDrive::MakeDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::TestDir(char *dir) {
+bool isoDrive::TestDir(const char *dir) {
 	isoDirEntry de;	
 	return (lookup(&de, dir) && IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
+bool isoDrive::FindFirst(const char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	isoDirEntry de;
 	if (!lookup(&de, dir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -310,12 +322,12 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 	return false;
 }
 
-bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
+bool isoDrive::Rename(const char* /*oldname*/, const char* /*newname*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char *name, Bit16u *attr) {
+bool isoDrive::GetFileAttr(const char *name, Bit16u *attr) {
 	*attr = 0;
 	isoDirEntry de;
 	bool success = lookup(&de, name);
@@ -551,3 +563,10 @@ bool isoDrive :: lookup(isoDirEntry *de, const char *path) {
 	}
 	return true;
 }
+
+void IDE_ATAPI_MediaChangeNotify(unsigned char drive_index);
+
+void isoDrive :: MediaChange() {
+	IDE_ATAPI_MediaChangeNotify(toupper(driveLetter) - 'A'); /* ewwww */
+}
+

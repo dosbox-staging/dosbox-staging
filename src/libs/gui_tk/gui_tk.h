@@ -787,6 +787,7 @@ protected:
 public:
 	/// Advance time and check for expired timers.
 	static void check(Ticks ticks);
+	static void check_to(Ticks ticks);
 
 	/// Add a timed callback. \p ticks is a value relative to now().
 	/** \p cb is not copied. */
@@ -846,12 +847,13 @@ protected:
 
 	/// The SDL surface being drawn to.
 	SDL_Surface *surface;
+	Uint32 start_abs_time,current_abs_time,current_time;
 
 	/// Position of last mouse down.
 	int downx, downy;
 
 	/// time of last click for double-click detection.
-	Ticks lastclick;
+	Ticks lastclick,lastdown;
 
 public:
 
@@ -882,6 +884,8 @@ public:
 	/// Process an SDL event. Returns \c true if event was handled.
 	bool event(const SDL_Event *ev) { return event(*ev); }
 
+	void watchTime();
+	Uint32 getTime() { return current_time; }
 
 	/// Process an SDL event. Returns \c true if event was handled.
 	bool event(const SDL_Event& ev);
@@ -1145,6 +1149,16 @@ public:
 		std::map<const char *,Font *,ltstr>::iterator i = registry.find(name);
 		if (i == registry.end()) return(strcmp(name,"default")?getFont("default"):NULL);
 		return (*i).second;
+	}
+
+	static void registry_freeall() {
+		std::map<const char *,Font *,ltstr>::iterator it;
+
+		while ((it=registry.begin()) != registry.end()) {
+			delete it->second;
+			it->second = NULL;
+			registry.erase(it);
+		}
 	}
 
 	/// Add a font with a given name.
@@ -1598,14 +1612,7 @@ public:
 
 	virtual void paint(Drawable &d) const;
 	virtual bool mouseDown(int x, int y, MouseButton button);
-	virtual bool mouseDoubleClicked(int x, int y, MouseButton button) {
-		if (button == Left && x < 32 && x > 6 && y > 4 && y < 31) {
-			close();
-			return true;
-		}
-		BorderedWindow::mouseClicked(x,y,button);
-		return true;
-	}
+	virtual bool mouseDoubleClicked(int x, int y, MouseButton button);
 	virtual bool mouseUp(int x, int y, MouseButton button) {
 		if (button == Left && dragx >= 0 && dragy >= 0) {
 			dragx = dragy = -1;
@@ -1916,15 +1923,19 @@ public:
 
 	/// Press button.
 	virtual bool mouseDown(int x, int y, MouseButton button) {
-		border_left = 7; border_right = 5; border_top = 7; border_bottom = 3;
-		pressed = true;
+		if (button == Left) {
+			border_left = 7; border_right = 5; border_top = 7; border_bottom = 3;
+			pressed = true;
+		}
 		return true;
 	}
 
 	/// Release button.
 	virtual bool mouseUp(int x, int y, MouseButton button)  {
-		border_left = 6; border_right = 6; border_top = 5; border_bottom = 5;
-		pressed = false;
+		if (button == Left) {
+			border_left = 6; border_right = 6; border_top = 5; border_bottom = 5;
+			pressed = false;
+		}
 		return true;
 	}
 
@@ -2151,13 +2162,13 @@ public:
 };
 
 /// A message box with a single "Close" button.
-class MessageBox : public GUI::ToplevelWindow {
+class MessageBox2 : public GUI::ToplevelWindow {
 protected:
 	Label *message;
 	Button *close;
 public:
 	/// Create a new message box
-	template <typename STR> MessageBox(Screen *parent, int x, int y, int width, const STR title, const STR text) :
+	template <typename STR> MessageBox2(Screen *parent, int x, int y, int width, const STR title, const STR text) :
 		ToplevelWindow(parent, x, y, width, 1, title) {
 		message = new Label(this, 5, 5, text, width-10);
 		close = new GUI::Button(this, width/2-40, 10, "Close", 70);
@@ -2176,6 +2187,8 @@ public:
 template <typename STR> ToplevelWindow::ToplevelWindow(Screen *parent, int x, int y, int w, int h, const STR title) :
 	BorderedWindow(parent, x, y, w, h, 6, 33, 6, 3), title(title),
 	dragx(-1), dragy(-1), closehandlers(), systemMenu(new Menu(this,-1,-2,"System Menu")) {
+/* If these commands don't do anything, then why have them there?? --J.C. */
+#if 0 /* TODO: Allow selective enabling these if the Window object wants us to */
 	systemMenu->addItem("Move");
 	systemMenu->addItem("Resize");
 	systemMenu->addItem("");
@@ -2183,6 +2196,7 @@ template <typename STR> ToplevelWindow::ToplevelWindow(Screen *parent, int x, in
 	systemMenu->addItem("Maximize");
 	systemMenu->addItem("Restore");
 	systemMenu->addItem("");
+#endif
 	systemMenu->addItem("Close");
 	systemMenu->addActionHandler(this);
 }

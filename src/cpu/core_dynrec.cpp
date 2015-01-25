@@ -226,9 +226,11 @@ Bits CPU_Core_Dynrec_Run(void) {
 
 run_block:
 		cache.block.running=0;
+		Bitu CPU_CyclesOld = CPU_Cycles;
 		// now we're ready to run the dynamic code block
 //		BlockReturn ret=((BlockReturn (*)(void))(block->cache.start))();
 		BlockReturn ret=core_dynrec.runcode(block->cache.start);
+		cycle_count += CPU_CyclesOld - CPU_Cycles;
 
 		switch (ret) {
 		case BR_Iret:

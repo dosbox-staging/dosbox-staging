@@ -20,6 +20,8 @@
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
 
+#include <sstream>
+
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
@@ -74,8 +76,13 @@ public:
 	void AddSamples_s32_nonnative(Bitu len, const Bit32s * data);
 
 	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
+	void AddStretchedStereo(Bitu len,Bit16s * data);		//Strech block up into needed data
 	void FillUp(void);
 	void Enable(bool _yesno);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
+
 	MIXER_Handler handler;
 	float volmain[2];
 	float scale;
@@ -108,6 +115,7 @@ public:
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-void PCSPEAKER_SetType(Bitu mode);
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetPITControl(Bitu mode);
 
 #endif

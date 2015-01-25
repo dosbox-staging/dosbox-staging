@@ -68,6 +68,11 @@ bool CDROM_Interface_SDL::SetDevice(char* path, int forceCD) {
 	return false; 
 }
 
+bool CDROM_Interface_SDL::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
+
 bool CDROM_Interface_SDL::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
 
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
@@ -214,5 +219,10 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 	trayOpen     = false;
 	return true;
 }
+
+bool CDROM_Interface_Fake::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
 
 

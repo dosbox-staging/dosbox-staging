@@ -35,6 +35,8 @@
 #define LONGTYPE(a) a##i64
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#define alloca _alloca
+#define putenv _putenv
 #else										/* LINUX / GCC */
 #include <dirent.h>
 #include <unistd.h>
