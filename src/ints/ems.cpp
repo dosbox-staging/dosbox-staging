@@ -437,15 +437,15 @@ static Bit8u EMM_SavePageMap(Bit16u handle) {
 }
 
 static Bit8u EMM_RestoreMappingTable(void) {
-	Bit8u result;
 	/* Move through the mappings table and setup mapping accordingly */
 	for (Bitu i=0;i<0x40;i++) {
 		/* Skip the pageframe */
 		if ((i>=EMM_PAGEFRAME/0x400) && (i<(EMM_PAGEFRAME/0x400)+EMM_MAX_PHYS)) continue;
-		result=EMM_MapSegment(i<<10,emm_segmentmappings[i].handle,emm_segmentmappings[i].page);
+		EMM_MapSegment(i << 10, emm_segmentmappings[i].handle,
+		               emm_segmentmappings[i].page);
 	}
 	for (Bitu i=0;i<EMM_MAX_PHYS;i++) {
-		result=EMM_MapPage(i,emm_mappings[i].handle,emm_mappings[i].page);
+		EMM_MapPage(i, emm_mappings[i].handle, emm_mappings[i].page);
 	}
 	return EMM_NO_ERROR;
 }
@@ -1364,12 +1364,8 @@ Bitu GetEMSType(Section_prop * section) {
 
 class EMS : public Module_base {
 private:
+	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;
-
-	/* location in protected unfreeable memory where the ems name and callback are
-	 * stored  32 bytes.*/
-	static Bit16u ems_baseseg;
-
 	RealPt old67_pointer = 0;
 	CALLBACK_HandlerObject call_vdma;
 	CALLBACK_HandlerObject call_vcpi;
@@ -1403,7 +1399,7 @@ public:
 		}
 		BIOS_ZeroExtendedSize(true);
 
-		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2);	//We have 32 bytes
+		ems_baseseg = DOS_GetMemory(2); // We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
 		char const *emsname = "EMMXXXX0";
@@ -1539,6 +1535,3 @@ void EMS_Init(Section* sec) {
 	test = new EMS(sec);
 	sec->AddDestroyFunction(&EMS_ShutDown,true);
 }
-
-//Initialize static members
-Bit16u EMS::ems_baseseg = 0;
