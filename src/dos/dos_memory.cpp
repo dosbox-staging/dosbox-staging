@@ -227,12 +227,12 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		return false;
 	}
 
+	DOS_CompressMemory();
 	Bit16u total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
 		if (GCC_UNLIKELY(*blocks==total)) {
 			/* Nothing to do */
-			DOS_CompressMemory();
 			return true;
 		}
 		/* Shrinking MCB */
@@ -268,7 +268,6 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_next.SetPSPSeg(MCB_FREE);
 		mcb.SetType(0x4d);
 		mcb.SetPSPSeg(dos.psp());
-		DOS_CompressMemory();
 		return true;
 	}
 
@@ -281,7 +280,6 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	}
 	mcb.SetSize(total);
 	mcb.SetPSPSeg(dos.psp());
-	DOS_CompressMemory();
 	if (*blocks==total) return true;	/* block fit exactly */
 
 	*blocks=total;	/* return maximum */
