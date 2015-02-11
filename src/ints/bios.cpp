@@ -32,8 +32,11 @@
 #include "setup.h"
 #include "serialport.h"
 #include <time.h>
+#ifdef DB_HAVE_CLOCK_GETTIME
+//time.h is already included
+#else
 #include <sys/timeb.h>
-
+#endif
 
 /* if mem_systems 0 then size_extended is reported as the real size else 
  * zero is reported. ems and xms can increase or decrease the other_memsystems
@@ -489,13 +492,23 @@ static Bitu INT11_Handler(void) {
 #endif
 
 static void BIOS_HostTimeSync() {
+	Bit32u milli = 0;
+#ifdef DB_HAVE_CLOCK_GETTIME
+	struct timespec tp;
+	clock_gettime(CLOCK_REALTIME,&tp);
+	
+	struct tm *loctime;
+	loctime = localtime(&tp.tv_sec);
+	milli = (Bit32u) (tp.tv_nsec / 1000000);
+#else
 	/* Setup time and date */
 	struct timeb timebuffer;
 	ftime(&timebuffer);
 	
 	struct tm *loctime;
 	loctime = localtime (&timebuffer.time);
-
+	milli = (Bit32u) timebuffer.millitm;
+#endif
 	/*
 	loctime->tm_hour = 23;
 	loctime->tm_min = 59;
@@ -513,7 +526,7 @@ static void BIOS_HostTimeSync() {
 		loctime->tm_hour*3600*1000+
 		loctime->tm_min*60*1000+
 		loctime->tm_sec*1000+
-		timebuffer.millitm))*(((double)PIT_TICK_RATE/65536.0)/1000.0));
+		milli))*(((double)PIT_TICK_RATE/65536.0)/1000.0));
 	mem_writed(BIOS_TIMER,ticks);
 }
 
