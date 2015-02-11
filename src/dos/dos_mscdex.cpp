@@ -1158,12 +1158,14 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 static bool MSCDEX_Handler(void) {
 	if(reg_ah == 0x11) {
 		if(reg_al == 0x00) { 
-			PhysPt check = PhysMake(SegValue(ss),reg_sp);
-			if(mem_readw(check+6) == 0xDADA) {
-				//MSCDEX sets word on stack to ADAD if it DADA on entry.
-				mem_writew(check+6,0xADAD);
+			if (mscdex->GetNumDrives()>0) {
+				PhysPt check = PhysMake(SegValue(ss),reg_sp);
+				if(mem_readw(check+6) == 0xDADA) {
+					//MSCDEX sets word on stack to ADAD if it DADA on entry.
+					mem_writew(check+6,0xADAD);
+				}
+				reg_al = 0xff;
 			}
-			reg_al = 0xff;
 			return true;
 		} else {
 			LOG(LOG_MISC,LOG_ERROR)("NETWORK REDIRECTOR USED!!!");
@@ -1174,6 +1176,7 @@ static bool MSCDEX_Handler(void) {
 	}
 
 	if (reg_ah!=0x15) return false;		// not handled here, continue chain
+	if (mscdex->GetNumDrives()==0) return true;		// do nothing if MSCDEX not active
 
 	PhysPt data = PhysMake(SegValue(es),reg_bx);
 	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_cx);
@@ -1181,7 +1184,7 @@ static bool MSCDEX_Handler(void) {
 	
 		case 0x1500:	/* Install check */
 						reg_bx = mscdex->GetNumDrives();
-						if (reg_bx>0) reg_cx = mscdex->GetFirstDrive();
+						reg_cx = mscdex->GetFirstDrive();
 						reg_al = 0xff;
 						return true;
 		case 0x1501:	/* Get cdrom driver info */
@@ -1287,7 +1290,7 @@ static bool MSCDEX_Handler(void) {
 						}
 						return true;
 	};
-	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknwon call : %04X",reg_ax);
+	LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Unknown call : %04X",reg_ax);
 	return true;
 }
 
