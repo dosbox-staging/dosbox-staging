@@ -579,7 +579,7 @@ int main(int argc,char * argv[]) {
 dnl Some target detection and actions for them
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
-       LIBS="$LIBS -lwinmm"
+       LIBS="$LIBS -lwinmm -lshlwapi"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"

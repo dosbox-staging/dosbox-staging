@@ -76,11 +76,13 @@ void HARDWARE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 void PCI_Init(Section*);
+void VOODOO_Init(Section*);
 #endif
 
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
+void GLIDE_Init(Section*);
 void MOUSE_Init(Section*);
 void SBLASTER_Init(Section*);
 void GUS_Init(Section*);
@@ -527,6 +529,31 @@ void DOSBOX_Init(void) {
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
+
+	secprop->AddInitFunction(&VOODOO_Init,true);
+	const char* voodoo_settings[] = {
+		"false",
+		"software",
+#if C_OPENGL
+		"opengl",
+#endif
+		"auto",
+		0
+	};
+	Pstring = secprop->Add_string("voodoo",Property::Changeable::WhenIdle,"auto");
+	Pstring->Set_values(voodoo_settings);
+	Pstring->Set_help("Enable VOODOO support.");
+
+	const char* voodoo_memory[] = {
+		"standard",
+		"max",
+		0
+	};
+	Pstring = secprop->Add_string("voodoomem",Property::Changeable::OnlyAtStart,"standard");
+	Pstring->Set_values(voodoo_memory);
+	Pstring->Set_help("Specify VOODOO card memory size.\n"
+		              "  'standard'      4MB card (2MB front buffer + 1x2MB texture unit)\n"
+					  "  'max'           12MB card (4MB front buffer + 2x4MB texture units)");
 #endif
 
 
@@ -743,6 +770,17 @@ void DOSBOX_Init(void) {
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::WhenIdle,"");
 	Pmulti_remain->Set_help("see serial1");
 
+
+	secprop=control->AddSection_prop("glide",&GLIDE_Init,true);
+	Pbool = secprop->Add_bool("glide",Property::Changeable::WhenIdle,false);
+	Pbool->Set_help("Enable glide emulation: true,false.");
+	//Phex = secprop->Add_hex("grport",Property::Changeable::WhenIdle,0x600);
+	//Phex->Set_help("I/O port to use for host communication.");
+	Pstring = secprop->Add_string("lfb",Property::Changeable::WhenIdle,"full_noaux");
+	Pstring->Set_help("LFB access: full,full_noaux,read,read_noaux,write,write_noaux,none.\n"
+		"OpenGlide does not support locking aux buffer, please use _noaux modes.");
+	Pbool = secprop->Add_bool("splash",Property::Changeable::WhenIdle,true);
+	Pbool->Set_help("Show 3dfx splash screen (requires 3dfxSpl2.dll).");
 
 	/* All the DOS Related stuff, which will eventually start up in the shell */
 	secprop=control->AddSection_prop("dos",&DOS_Init,false);//done

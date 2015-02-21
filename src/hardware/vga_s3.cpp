@@ -21,6 +21,7 @@
 #include "inout.h"
 #include "vga.h"
 #include "mem.h"
+#include "pci_bus.h"
 
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	switch (reg) {
@@ -562,4 +563,6 @@ void SVGA_Setup_S3Trio(void) {
 	phys_writeb(rom_base+0x0045,'7');
 	phys_writeb(rom_base+0x0046,'6');
 	phys_writeb(rom_base+0x0047,'4');
+
+	PCI_AddSVGAS3_Device();
 }

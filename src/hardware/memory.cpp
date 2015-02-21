@@ -23,6 +23,8 @@
 #include "setup.h"
 #include "paging.h"
 #include "regs.h"
+#include "glidedef.h"
+#include "voodoo.h"
 
 #include <string.h>
 
@@ -140,6 +142,10 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
 				(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
 		return memory.lfb.mmiohandler;
+	} else if (VOODOO_PCI_CheckLFBPage(phys_page)) {
+		return VOODOO_GetPageHandler();
+	} else if (glide.enabled && (phys_page>=(GLIDE_LFB>>12)) && (phys_page<(GLIDE_LFB>>12)+GLIDE_PAGES)) {
+		return (PageHandler*)glide.lfb_pagehandler;
 	}
 	return &illegal_page_handler;
 }
@@ -188,6 +194,24 @@ void MEM_BlockWrite(PhysPt pt,void const * const data,Bitu size) {
 	Bit8u const * read = reinterpret_cast<Bit8u const * const>(data);
 	while (size--) {
 		mem_writeb_inline(pt++,*read++);
+	}
+}
+
+void MEM_BlockRead32(PhysPt pt,void * data,Bitu size) {
+	Bit32u * write=(Bit32u *) data;
+	size>>=2;
+	while (size--) {
+		*write++=mem_readd_inline(pt);
+		pt+=4;
+	}
+}
+
+void MEM_BlockWrite32(PhysPt pt,void * data,Bitu size) {
+	Bit32u * read=(Bit32u *) data;
+	size>>=2;
+	while (size--) {
+		mem_writed_inline(pt,*read++);
+		pt+=4;
 	}
 }
 
