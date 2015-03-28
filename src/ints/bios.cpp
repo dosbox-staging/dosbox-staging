@@ -32,7 +32,8 @@
 #include "setup.h"
 #include "serialport.h"
 #include <time.h>
-#ifdef DB_HAVE_CLOCK_GETTIME
+
+#if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
 //time.h is already included
 #else
 #include <sys/timeb.h>
@@ -493,7 +494,7 @@ static Bitu INT11_Handler(void) {
 
 static void BIOS_HostTimeSync() {
 	Bit32u milli = 0;
-#ifdef DB_HAVE_CLOCK_GETTIME
+#if defined(DB_HAVE_CLOCK_GETTIME) && ! defined(WIN32)
 	struct timespec tp;
 	clock_gettime(CLOCK_REALTIME,&tp);
 	
