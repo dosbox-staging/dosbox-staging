@@ -109,6 +109,8 @@ public:
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
 			return;
 		}
+		bool path_relative_to_last_config = false;
+		if (cmd->FindExist("-pr",true)) path_relative_to_last_config = true;
 
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
@@ -245,10 +247,17 @@ public:
 
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
+			if(path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
+				std::string lastconfigdir(control->configfiles[control->configfiles.size()-1]);
+				std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
+				if(pos == std::string::npos) pos = 0; //No directory then erase string
+				lastconfigdir.erase(pos);
+				if (lastconfigdir.length())	temp_line = lastconfigdir + CROSS_FILESPLIT + temp_line;
+			}
 			struct stat test;
 			//Win32 : strip tailing backslashes
 			//os2: some special drive check
-			//rest: substiture ~ for home
+			//rest: substitute ~ for home
 			bool failed = false;
 #if defined (WIN32) || defined(OS2)
 			/* Removing trailing backslash if not root dir so stat will succeed */
