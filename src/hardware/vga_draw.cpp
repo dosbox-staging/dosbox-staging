@@ -1310,7 +1310,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		break;
 	case 3:		//480 line mode, filled with 525 total
 	default:
-		pheight = (480.0 / 480.0) * ( 525.0 / vtotal );
+		//Allow 527 total ModeX to have exact 1:1 aspect
+		target_total = (vga.mode==M_VGA && vtotal==527) ? 527.0 : 525.0;
+		pheight = (480.0 / 480.0) * ( target_total / vtotal );
 		break;
 	}
 
@@ -1403,6 +1405,7 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		vga.draw.linear_mask = (vga.vmemwrap<<1) - 1;
 		break;
 	case M_CGA16:
+		aspect_ratio=1.2;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		width<<=4;
@@ -1421,7 +1424,6 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
-		aspect_ratio=1.2;
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
@@ -1444,9 +1446,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		}
 		break;
 	case M_HERC_GFX:
-		aspect_ratio=1.5;
 		vga.draw.blocks=width*2;
 		width*=16;
+		aspect_ratio=((double)width/(double)height)*(3.0/4.0);
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TANDY2:
