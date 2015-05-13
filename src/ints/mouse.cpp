@@ -465,8 +465,8 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 		mouse.y += dy;
 	} else {
 		if (CurMode->type == M_TEXT) {
-			mouse.x = x*CurMode->swidth;
-			mouse.y = y*CurMode->sheight * 8 / CurMode->cheight;
+			mouse.x = x*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8;
+			mouse.y = y*(real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1)*8;
 		} else if ((mouse.max_x < 2048) || (mouse.max_y < 2048) || (mouse.max_x != mouse.max_y)) {
 			if ((mouse.max_x > 0) && (mouse.max_y > 0)) {
 				mouse.x = x*mouse.max_x;
@@ -590,12 +590,20 @@ static void Mouse_ResetHardware(void){
 	PIC_SetIRQMask(MOUSE_IRQ,false);
 }
 
+void Mouse_BeforeNewVideoMode(bool setmode) {
+	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
+	else RestoreCursorBackgroundText();
+	mouse.hidden = 1;
+	mouse.oldhidden = 1;
+	mouse.background = false;
+}
+
 //Does way to much. Many things should be moved to mouse reset one day
-void Mouse_NewVideoMode(void) {
+void Mouse_AfterNewVideoMode(bool setmode) {
 	mouse.inhibit_draw = false;
 	/* Get the correct resolution from the current video mode */
 	Bit8u mode = mem_readb(BIOS_VIDEO_MODE);
-	if(mode == mouse.mode) {LOG(LOG_MOUSE,LOG_NORMAL)("New video is the same as the old"); /*return;*/}
+	if (setmode && mode == mouse.mode) LOG(LOG_MOUSE,LOG_NORMAL)("New video mode is the same as the old");
 	mouse.gran_x = (Bit16s)0xffff;
 	mouse.gran_y = (Bit16s)0xffff;
 	switch (mode) {
@@ -637,7 +645,6 @@ void Mouse_NewVideoMode(void) {
 		return;
 	}
 	mouse.mode = mode;
-	mouse.hidden = 1;
 	mouse.max_x = 639;
 	mouse.min_x = 0;
 	mouse.min_y = 0;
@@ -648,7 +655,6 @@ void Mouse_NewVideoMode(void) {
 
 	mouse.hotx		 = 0;
 	mouse.hoty		 = 0;
-	mouse.background = false;
 	mouse.screenMask = defaultScreenMask;
 	mouse.cursorMask = defaultCursorMask;
 	mouse.textAndMask= defaultTextAndMask;
@@ -662,7 +668,6 @@ void Mouse_NewVideoMode(void) {
 	mouse.updateRegion_y[1] = 1;
 	mouse.cursorType = 0;
 	mouse.enabled=true;
-	mouse.oldhidden=1;
 
 	oldmouseX = static_cast<Bit16s>(mouse.x);
 	oldmouseY = static_cast<Bit16s>(mouse.y);
@@ -672,12 +677,8 @@ void Mouse_NewVideoMode(void) {
 
 //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
 static void Mouse_Reset(void) {
-	/* Remove drawn mouse Legends of Valor */
-	if (CurMode->type!=M_TEXT) RestoreCursorBackground();
-	else RestoreCursorBackgroundText();
-	mouse.hidden = 1;
-
-	Mouse_NewVideoMode();
+	Mouse_BeforeNewVideoMode(false);
+	Mouse_AfterNewVideoMode(false);
 	Mouse_SetMickeyPixelRate(8,16);
 
 	mouse.mickey_x = 0;

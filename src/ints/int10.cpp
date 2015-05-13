@@ -23,6 +23,7 @@
 #include "regs.h"
 #include "inout.h"
 #include "int10.h"
+#include "mouse.h"
 #include "setup.h"
 
 Int10Data int10;
@@ -50,7 +51,9 @@ static Bitu INT10_Handler(void) {
 
 	switch (reg_ah) {
 	case 0x00:								/* Set VideoMode */
-		INT10_SetVideoMode(reg_al);
+		Mouse_BeforeNewVideoMode(true);
+ 		INT10_SetVideoMode(reg_al);
+		Mouse_AfterNewVideoMode(true);
 		break;
 	case 0x01:								/* Set TextMode Cursor Shape */
 		INT10_SetCursorShape(reg_ch,reg_cl);
@@ -202,6 +205,7 @@ static Bitu INT10_Handler(void) {
 	case 0x11:								/* Character generator functions */
 		if (!IS_EGAVGA_ARCH) 
 			break;
+		if ((reg_al&0xf0)==0x10) Mouse_BeforeNewVideoMode(false);
 		switch (reg_al) {
 /* Textmode calls */
 		case 0x00:			/* Load user font */
@@ -311,6 +315,7 @@ graphics_chars:
 			LOG(LOG_INT10,LOG_ERROR)("Function 11:Unsupported character generator call %2X",reg_al);
 			break;
 		}
+		if ((reg_al&0xf0)==0x10) Mouse_AfterNewVideoMode(false);
 		break;
 	case 0x12:								/* alternate function select */
 		if (!IS_EGAVGA_ARCH) 
@@ -536,8 +541,10 @@ graphics_chars:
 			reg_ah=VESA_GetSVGAModeInformation(reg_cx,SegValue(es),reg_di);
 			break;
 		case 0x02:							/* Set videomode */
-			reg_al=0x4f;
-			reg_ah=VESA_SetSVGAMode(reg_bx);
+			Mouse_BeforeNewVideoMode(true);
+ 			reg_al=0x4f;
+ 			reg_ah=VESA_SetSVGAMode(reg_bx);
+			Mouse_AfterNewVideoMode(true);
 			break;
 		case 0x03:							/* Get videomode */
 			reg_al=0x4f;

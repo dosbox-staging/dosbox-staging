@@ -23,7 +23,6 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
-#include "mouse.h"
 #include "vga.h"
 
 #define _EGA_HALF_CLOCK		0x0001
@@ -447,8 +446,6 @@ static void FinishSetMode(bool clearmem) {
 	case 14:RealSetVec(0x43,int10.rom.font_14);break;
 	case 16:RealSetVec(0x43,int10.rom.font_16);break;
 	}
-	/* Tell mouse resolution change */
-	Mouse_NewVideoMode();
 }
 
 bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
