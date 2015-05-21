@@ -1704,7 +1704,21 @@ public:
 
 	KBD_KEYS key;
 };
-
+/*
+class CMouseButtonEvent : public CTriggeredEvent {
+public:
+	CMouseButtonEvent(char const * const _entry,Bit8u _button) : CTriggeredEvent(_entry) {
+		button=_button;
+	}
+	void Active(bool yesno) {
+		if (yesno)
+			Mouse_ButtonPressed(button);
+		else
+			Mouse_ButtonReleased(button);
+	}
+	Bit8u button;
+};
+*/
 class CJAxisEvent final : public CContinuousEvent {
 public:
 	CJAxisEvent(const char* const entry, Bitu s, Bitu a, bool p,
@@ -2019,7 +2033,16 @@ static CKeyEvent* AddKeyButtonEvent(int32_t x, int32_t y, int32_t dx,
 	new CEventButton(x,y,dx,dy,title,event);
 	return event;
 }
-
+/*
+static CMouseButtonEvent * AddMouseButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,Bit8u button) {
+	char buf[64];
+	strcpy(buf,"mouse_");
+	strcat(buf,entry);
+	CMouseButtonEvent * event=new CMouseButtonEvent(buf,button);
+	new CEventButton(x,y,dx,dy,title,event);
+	return event;
+}
+*/
 static CJAxisEvent* AddJAxisButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                                    const char* const title, Bitu stick, Bitu axis,
                                    bool positive, CJAxisEvent* opposite_axis)
@@ -2245,6 +2268,18 @@ static void CreateLayout() {
 
 #undef XO
 #undef YO
+
+#if 0
+#define XO 5
+#define YO 8
+	/* Mouse Buttons */
+	new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Mouse");
+	AddMouseButtonEvent(PX(XO+0),PY(YO),BW,BH,"L","left",0);
+	AddMouseButtonEvent(PX(XO+1),PY(YO),BW,BH,"M","middle",2);
+	AddMouseButtonEvent(PX(XO+2),PY(YO),BW,BH,"R","right",1);
+#undef XO
+#undef YO
+#endif
 
 #define XO 10
 #define YO 8
