@@ -32,6 +32,7 @@
 #include "dosbox.h"
 #include "video.h"
 #include "keyboard.h"
+#include "mouse.h"
 #include "joystick.h"
 #include "support.h"
 #include "mapper.h"
@@ -1504,6 +1505,20 @@ public:
 	KBD_KEYS key;
 };
 
+class CMouseButtonEvent : public CTriggeredEvent {
+public:
+	CMouseButtonEvent(char const * const _entry,Bit8u _button) : CTriggeredEvent(_entry) {
+		button=_button;
+	}
+	void Active(bool yesno) {
+		if (yesno)
+			Mouse_ButtonPressed(button);
+		else
+			Mouse_ButtonReleased(button);
+	}
+	Bit8u button;
+};
+
 class CJAxisEvent : public CContinuousEvent {
 public:
 	CJAxisEvent(char const * const _entry,Bitu _stick,Bitu _axis,bool _positive,CJAxisEvent * _opposite_axis) : CContinuousEvent(_entry) {
@@ -1715,6 +1730,15 @@ static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * 
 	return event;
 }
 
+static CMouseButtonEvent * AddMouseButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,Bit8u button) {
+	char buf[64];
+	strcpy(buf,"mouse_");
+	strcat(buf,entry);
+	CMouseButtonEvent * event=new CMouseButtonEvent(buf,button);
+	new CEventButton(x,y,dx,dy,title,event);
+	return event;
+}
+
 static CJAxisEvent * AddJAxisButton(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
 	char buf[64];
 	sprintf(buf,"jaxis_%d_%d%s",stick,axis,positive ? "+" : "-");
@@ -1871,6 +1895,15 @@ static void CreateLayout(void) {
 	AddKeyButtonEvent(PX(XO+3),PY(YO+3),BW,BH*2,"ENT","kp_enter",KBD_kpenter);
 	AddKeyButtonEvent(PX(XO),PY(YO+4),BW*2,BH,"0","kp_0",KBD_kp0);
 	AddKeyButtonEvent(PX(XO+2),PY(YO+4),BW,BH,".","kp_period",KBD_kpperiod);
+#undef XO
+#undef YO
+#define XO 5
+#define YO 8
+	/* Mouse Buttons */
+	new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Mouse");
+	AddMouseButtonEvent(PX(XO+0),PY(YO),BW,BH,"L","left",0);
+	AddMouseButtonEvent(PX(XO+1),PY(YO),BW,BH,"M","middle",2);
+	AddMouseButtonEvent(PX(XO+2),PY(YO),BW,BH,"R","right",1);
 #undef XO
 #undef YO
 #define XO 10
