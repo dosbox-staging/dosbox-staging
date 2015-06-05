@@ -1131,7 +1131,7 @@ public:
 			if (type=="floppy") {
 				mediaid=0xF0;		
 			} else if (type=="iso") {
-				str_size=="2048,1,60000,0";	// ignored, see drive_iso.cpp (AllocationInfo)
+				//str_size="2048,1,65535,0";	// ignored, see drive_iso.cpp (AllocationInfo)
 				mediaid=0xF8;		
 				fstype = "iso";
 			} 
