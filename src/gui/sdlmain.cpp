@@ -221,7 +221,7 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 #define SETMODE_SAVES 1  //Don't set Video Mode if nothing changes.
-#define SETMODE_SAVES_CLEAR 0 //Clear the screen, when the Video Mode is reused
+#define SETMODE_SAVES_CLEAR 1 //Clear the screen, when the Video Mode is reused
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 #if SETMODE_SAVES
 	static int i_height = 0;
@@ -243,7 +243,7 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		return sdl.surface;
 	}
 
-#endif
+
 #ifdef WIN32
 	//SDL seems to crash if we are in OpenGL mode currently and change to exactly the same size without OpenGL.
 	//This happens when DOSBox is in textmode with aspect=true and output=opengl and the mapper is started.
@@ -260,7 +260,8 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 	if ((i_flags&SDL_OPENGL) && !(flags&SDL_OPENGL) && height==i_height && width==i_width && height==480) {
 		height++;
 	}
-#endif
+#endif //WIN32
+#endif //SETMODE_SAVES
 	SDL_Surface* s = SDL_SetVideoMode(width,height,bpp,flags);
 #if SETMODE_SAVES
 	if (s == NULL) return s; //Only store when successful
@@ -1197,7 +1198,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.full.height = 0;
 	if(fullresolution && *fullresolution) {
 		char res[100];
-		strncpy( res, fullresolution, sizeof( res ));
+		safe_strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
 		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
@@ -1217,7 +1218,7 @@ static void GUI_StartUp(Section * sec) {
 	const char* windowresolution=section->Get_string("windowresolution");
 	if(windowresolution && *windowresolution) {
 		char res[100];
-		strncpy( res,windowresolution, sizeof( res ));
+		safe_strncpy( res,windowresolution, sizeof( res ));
 		windowresolution = lowcase (res);//so x and X are allowed
 		if(strcmp(windowresolution,"original")) {
 			char* height = const_cast<char*>(strchr(windowresolution,'x'));
