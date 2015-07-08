@@ -410,8 +410,11 @@ static void MIXER_Mix_NoSound(void) {
 	mixer.tick_remain&=MIXER_REMAIN;
 	mixer.done=0;
 }
-
+#ifdef OS2
+static void SDL_CALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+#else
 static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+#endif
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
 	Bitu reduce;
