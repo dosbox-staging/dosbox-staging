@@ -232,6 +232,7 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		// I don't see a difference, so disabled for now, as the code isn't finished either
 #if SETMODE_SAVES_CLEAR
 		//TODO clear it.
+#ifdef C_OPENGL
 		if ((flags & SDL_OPENGL)==0) 
 			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
 		else {
@@ -239,7 +240,10 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 			glClear(GL_COLOR_BUFFER_BIT);
 			SDL_GL_SwapBuffers();
 		}
-#endif 
+#else //C_OPENGL
+		SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
+#endif //C_OPENGL
+#endif //SETMODE_SAVES_CLEAR
 		return sdl.surface;
 	}
 
