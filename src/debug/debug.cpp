@@ -686,14 +686,14 @@ static void DrawData(void) {
 	/* Data win */	
 	for (int y=0; y<8; y++) {
 		// Address
-		if (add<0x10000) mvwprintw (dbg.win_data,1+y,0,"%04X:%04X     ",dataSeg,add);
-		else mvwprintw (dbg.win_data,1+y,0,"%04X:%08X ",dataSeg,add);
+		if (add<0x10000) mvwprintw (dbg.win_data,y,0,"%04X:%04X     ",dataSeg,add);
+		else mvwprintw (dbg.win_data,y,0,"%04X:%08X ",dataSeg,add);
 		for (int x=0; x<16; x++) {
 			address = GetAddress(dataSeg,add);
 			if (mem_readb_checked(address,&ch)) ch=0;
-			mvwprintw (dbg.win_data,1+y,14+3*x,"%02X",ch);
+			mvwprintw (dbg.win_data,y,14+3*x,"%02X",ch);
 			if (ch<32 || !isprint(*reinterpret_cast<unsigned char*>(&ch))) ch='.';
-			mvwprintw (dbg.win_data,1+y,63+x,"%c",ch);
+			mvwprintw (dbg.win_data,y,63+x,"%c",ch);
 			add++;
 		};
 	}	
@@ -849,8 +849,9 @@ static void DrawCode(void) {
 
 	codeViewData.useEIPlast = disEIP;
 	
-	wattrset(dbg.win_code,0);			
+	wattrset(dbg.win_code,0);
 	if (!debugging) {
+		if (has_colors()) wattrset(dbg.win_code,COLOR_PAIR(PAIR_GREEN_BLACK));
 		mvwprintw(dbg.win_code,10,0,"%s","(Running)");
 		wclrtoeol(dbg.win_code);
 	} else {
@@ -860,11 +861,13 @@ static void DrawCode(void) {
 		mvwprintw(dbg.win_code,10,0,"%c-> %s%c",
 			(codeViewData.ovrMode?'O':'I'),dispPtr,(*curPtr?' ':'_'));
 		wclrtoeol(dbg.win_code); // not correct in pdcurses if full line
+		mvwchgat(dbg.win_code,10,0,3,0,(PAIR_BLACK_GREY),NULL);
 		if (*curPtr) {
 			mvwchgat(dbg.win_code,10,(curPtr-dispPtr+4),1,0,(PAIR_BLACK_GREY),NULL);
  		} 
 	}
 
+	wattrset(dbg.win_code,0);
 	wrefresh(dbg.win_code);
 }
 
