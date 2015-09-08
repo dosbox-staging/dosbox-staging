@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Feb 26, 2010"
+.TH DOSBOX 1 "Sep 08, 2015"
 .\" Please adjust this date whenever revising the manpage.
 .SH NAME
 dosbox \- an x86/DOS emulator with sound/graphics
@@ -14,10 +14,11 @@ dosbox \- an x86/DOS emulator with sound/graphics
 .BI "[\-forcescaler " scaler ]
 .BI "[\-conf " configfile ]
 .BI "[\-lang " langfile ]
-.B [file]
+.BI "[\-machine " machinetype ]
+.BI "[\-socket " socketnumber ]
 .BI "[\-c " command ]
 .B [\-exit]
-.BI "[\-machine " machinetype ]
+.B [file]
 .LP
 .B dosbox \-version
 .LP
@@ -76,6 +77,25 @@ file for the available scalers
 .RB "Similar to the " \-scaler " parameter, but tries to force usage of"
 the specified scaler even if it might not fit.
 .TP
+.BI \-conf " configfile"
+.RB "Start " dosbox " with the options specified in "
+.IR configfile ". This file has a section in which you can put commands you "
+wish to execute on startup. Multiple 
+.IR configfiles " can be present at the commandline."
+.TP
+.BI \-lang " langfile"
+.RB "Start " dosbox " with the language specified in "
+.IR langfile .
+.TP
+.BI \-machine " machinetype"
+.RB "Setup " dosbox " to emulate a specific type of machine." 
+.RI "Valid choices are: " "hercules, cga, tandy, pcjr, ega, vgaonly, svga_s3(default), svga_et3000, svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe".
+The machinetype has influence on both the videocard and the available
+soundcards.
+.TP
+.BI \-socket " socketnumber"
+.RI "Passes the socket number " socketnumber " to the nullmodem emulation. See README for details."
+.TP
 .BI \-c  " command" 
 .RI "Runs the specified " command " before running " 
 .BR file . 
@@ -83,24 +103,8 @@ the specified scaler even if it might not fit.
 .BR \-c " though. A command can be:"
 an Internal Program, a DOS command or an executable on a mounted drive.
 .TP
-.BI \-conf " configfile
-.RB "Start " dosbox " with the options specified in "
-.IR configfile ". This file has a section in which you can put commands you "
-wish to execute on startup. Multiple 
-.IR configfiles " can be present at the commandline."
-.TP
-.BI \-lang " langfile
-.RB "Start " dosbox " with the language specified in "
-.IR langfile .
-.TP
 .B "\-exit "
 .BR "dosbox" " will close itself when the DOS program specified by "file " ends."
-.TP
-.BI \-machine " machinetype
-.RB "Setup " dosbox " to emulate a specific type of machine." 
-.RI "Valid choices are: " "hercules, cga, tandy, pcjr, ega, vgaonly, svga_s3(default), svga_et3000, svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe".
-The machinetype has influence on both the videocard and the available
-soundcards.
 .TP
 .B \-version
 Output version information and exit. Useful for frontends.
