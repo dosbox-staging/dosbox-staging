@@ -259,15 +259,26 @@ void DrawCursorText() {
 
 	//use current page (CV program)
 	Bit8u page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
-	Bit16u result;
-
-	ReadCharAttr(mouse.backposx,mouse.backposy,page,&result);
-	mouse.backData[0]	= (Bit8u)(result & 0xFF);
-	mouse.backData[1]	= (Bit8u)(result>>8);
-	mouse.background	= true;
-	// Write Cursor
-	result = (result & mouse.textAndMask) ^ mouse.textXorMask;
-	WriteChar(mouse.backposx,mouse.backposy,page,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
+	
+	if (mouse.cursorType == 0) {
+		Bit16u result;
+		ReadCharAttr(mouse.backposx,mouse.backposy,page,&result);
+		mouse.backData[0]	= (Bit8u)(result & 0xFF);
+		mouse.backData[1]	= (Bit8u)(result>>8);
+		mouse.background	= true;
+		// Write Cursor
+		result = (result & mouse.textAndMask) ^ mouse.textXorMask;
+		WriteChar(mouse.backposx,mouse.backposy,page,(Bit8u)(result&0xFF),(Bit8u)(result>>8),true);
+	} else {
+		Bit16u address=page * real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+		address += (mouse.backposy * real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS) + mouse.backposx) * 2;
+		address /= 2;
+		Bit16u cr = real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
+		IO_Write(cr    , 0xe);
+		IO_Write(cr + 1, (address>>8) & 0xff);
+		IO_Write(cr    , 0xf);
+		IO_Write(cr + 1, address & 0xff);
+	}
 }
 
 // ***************************************************************************
@@ -666,7 +677,7 @@ void Mouse_AfterNewVideoMode(bool setmode) {
 	mouse.updateRegion_y[0] = 1;
 	mouse.updateRegion_x[1] = 1;
 	mouse.updateRegion_y[1] = 1;
-	mouse.cursorType = 0;
+	mouse.cursorType = 0; //Test
 	mouse.enabled=true;
 
 	oldmouseX = static_cast<Bit16s>(mouse.x);
@@ -802,9 +813,14 @@ static Bitu INT33_Handler(void) {
 		}
 		break;
 	case 0x0a:	/* Define Text Cursor */
-		mouse.cursorType = reg_bx;
+		mouse.cursorType = (reg_bx?1:0);
 		mouse.textAndMask = reg_cx;
 		mouse.textXorMask = reg_dx;
+		if (reg_bx) {
+			INT10_SetCursorShape(reg_cl,reg_dl);
+			LOG(LOG_MOUSE,LOG_NORMAL)("Hardware Text cursor selected");
+		}
+		DrawCursor();
 		break;
 	case 0x0b:	/* Read Motion Data */
 		reg_cx=static_cast<Bit16s>(mouse.mickey_x);
@@ -1025,6 +1041,7 @@ static Bitu INT74_Handler(void) {
 			reg_ip = mouse.sub_ofs;
 			if(mouse.in_UIR) LOG(LOG_MOUSE,LOG_ERROR)("Already in UIR!");
 			mouse.in_UIR = true;
+			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",mouse.event_queue[mouse.events].type );
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
@@ -1032,10 +1049,12 @@ static Bitu INT74_Handler(void) {
 		} else {
 			SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
+			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 not interested"); 
 		}
 	} else {
 		SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 		reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
+		//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 no events");
 	}
 	return CBRET_NONE;
 }
