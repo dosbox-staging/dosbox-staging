@@ -25,6 +25,7 @@
 #include "dos_inc.h"
 
 bool DOS_IOCTL(void) {
+//	LOG(LOG_IOCTL,LOG_WARN)("%X %X %X %X",reg_ax,reg_bx,reg_cx,reg_dx);
 	Bitu handle=0;Bit8u drive=0;
 	/* calls 0-4,6,7,10,12,16 use a file handle */
 	if ((reg_al<4) || (reg_al==0x06) || (reg_al==0x07) || (reg_al==0x0a) || (reg_al==0x0c) || (reg_al==0x10)) {
