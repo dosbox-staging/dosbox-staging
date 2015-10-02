@@ -462,6 +462,16 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* copy fcbs */
 		newpsp.SetFCB1(block.exec.fcb1);
 		newpsp.SetFCB2(block.exec.fcb2);
+
+		/* Setup ax and bx, they contain a 0xff in al and ah if the drive in the fcb is not valid */
+		DOS_FCB fcb1(RealSeg(block.exec.fcb1),RealOff(block.exec.fcb1));
+		DOS_FCB fcb2(RealSeg(block.exec.fcb2),RealOff(block.exec.fcb2));
+		Bit8u d1 = fcb1.GetDrive(); //depends on 0 giving the dos.default drive
+		if ( (d1>=DOS_DRIVES) || !Drives[d1] ) reg_bl = 0xFF; else reg_bl = 0;
+		Bit8u d2 = fcb2.GetDrive();
+		if ( (d2>=DOS_DRIVES) || !Drives[d2] ) reg_bh = 0xFF; else reg_bh = 0;
+		reg_ax = reg_bx;
+
 		/* Set the stack for new program */
 		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
@@ -474,7 +484,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		//Jump to retf so that we only need to store cs:ip on the stack
 		reg_ip++;
 		/* Setup the rest of the registers */
-		reg_ax=reg_bx=0;reg_cx=0xff;
+		reg_cx=0xff;
 		reg_dx=pspseg;
 		reg_si=RealOff(csip);
 		reg_di=RealOff(sssp);
