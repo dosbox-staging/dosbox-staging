@@ -1237,7 +1237,7 @@ void Chip::Setup( Bit32u rate ) {
 		EnvelopeSelect( i, index, shift );
 		linearRates[i] = (Bit32u)( scale * (EnvelopeIncreaseTable[ index ] << ( RATE_SH + ENV_EXTRA - shift - 3 )));
 	}
-	Bit32s attackDiffs[62];
+//	Bit32s attackDiffs[62];
 	//Generate the best matching attack rate
 	for ( Bit8u i = 0; i < 62; i++ ) {
 		Bit8u index, shift;
@@ -1279,12 +1279,11 @@ void Chip::Setup( Bit32u rate ) {
 			if ( diff < 0 ) {
 				//Always add one here for rounding, an overshoot will get corrected by another pass decreasing
 				guessAdd++;
-			} else if ( diff > 0 ) {
 			}
 		}
 		attackRates[i] = bestAdd;
 		//Keep track of the diffs for some debugging
-		attackDiffs[i] = bestDiff;
+//		attackDiffs[i] = bestDiff;
 	}
 	for ( Bit8u i = 62; i < 76; i++ ) {
 		//This should provide instant volume maximizing
