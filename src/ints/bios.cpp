@@ -1254,10 +1254,6 @@ public:
 		config |= 0x1000;
 		mem_writew(BIOS_CONFIGURATION,config);
 		CMOS_SetRegister(0x14,(Bit8u)(config&0xff)); //Should be updated on changes
-		/* Setup PC speaker initial state - real BIOS does this for POST beeps */
-		IO_Write(0x43,0xb6); // PIT 2 mode 3
-		IO_Write(0x42,0x28); // counter 1320
-		IO_Write(0x42,0x05);
 		/* Setup extended memory size */
 		IO_Write(0x70,0x30);
 		size_extended=IO_Read(0x71);

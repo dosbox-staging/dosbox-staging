@@ -332,7 +332,8 @@ public:
 		spkr.last_ticks=0;
 		spkr.last_index=0;
 		spkr.rate=section->Get_int("pcrate");
-		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*65535;
+		spkr.pit_mode=3;
+		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*1320;
 		spkr.pit_half=spkr.pit_max/2;
 		spkr.pit_new_max=spkr.pit_max;
 		spkr.pit_new_half=spkr.pit_half;
