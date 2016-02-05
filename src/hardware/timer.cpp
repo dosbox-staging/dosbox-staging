@@ -345,6 +345,8 @@ static void write_p43(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 				} else {
 					PIC_DeActivateIRQ(0);
 				}
+			} else if (latch == 2) {
+				PCSPEAKER_SetCounter(0,3);
 			}
 			pit[latch].new_mode = true;
 		}
