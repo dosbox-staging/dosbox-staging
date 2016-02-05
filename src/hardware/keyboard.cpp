@@ -339,7 +339,10 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 		KEYBOARD_AddBuffer(69|(pressed?0:0x80));
 		return;
 	case KBD_printscreen:
-		/* Not handled yet. But usuable in mapper for special events */
+		KEYBOARD_AddBuffer(0xe0);
+		KEYBOARD_AddBuffer(42|(pressed?0:0x80));
+		KEYBOARD_AddBuffer(0xe0);
+		KEYBOARD_AddBuffer(55|(pressed?0:0x80));
 		return;
 	default:
 		E_Exit("Unsupported key press");
