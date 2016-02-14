@@ -192,7 +192,7 @@ void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
 		spkr.pit_max=(1000.0f/PIT_TICK_RATE)*cntr;
 		break;
 	case 3:		/* Square wave generator */
-		if (cntr<spkr.min_tr) {
+		if (cntr==0 || cntr<spkr.min_tr) {
 			/* skip frequencies that can't be represented */
 			spkr.pit_last=0;
 			spkr.pit_mode=0;
