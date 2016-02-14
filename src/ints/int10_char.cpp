@@ -24,6 +24,8 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
+#include "pic.h"
+#include "callback.h"
 
 static void CGA2_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
