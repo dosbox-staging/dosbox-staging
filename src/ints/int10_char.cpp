@@ -405,7 +405,7 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 	/* Externally used by the mouse routine */
 	PhysPt fontdata;
-	Bitu x,y;
+	Bitu x,y,pos = row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col;
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	bool split_chr = false;
 	switch (CurMode->type) {
@@ -413,7 +413,7 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 		{	
 			// Compute the address  
 			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-			address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
+			address+=pos*2;
 			// read the char 
 			PhysPt where = CurMode->pstart+address;
 			*result=mem_readw(where);
@@ -423,45 +423,62 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 	case M_CGA2:
 	case M_TANDY16:
 		split_chr = true;
-		/* Fallthrough */
-	default:		/* EGA/VGA don't have a split font-table */
-		for(Bit16u chr=0;chr <= 255 ;chr++) {
-			if (!split_chr || (chr<128)) fontdata = Real2Phys(RealGetVec(0x43))+chr*cheight;
-			else fontdata = Real2Phys(RealGetVec(0x1F))+(chr-128)*cheight;
-
-			x=8*col;
-			y=cheight*row;
-			bool error=false;
-			for (Bit8u h=0;h<cheight;h++) {
-				Bit8u bitsel=128;
-				Bit8u bitline=mem_readb(fontdata++);
-				Bit8u res=0;
-				Bit8u vidline=0;
-				Bit16u tx=(Bit16u)x;
-				while (bitsel) {
-					//Construct bitline in memory
-					INT10_GetPixel(tx,(Bit16u)y,page,&res);
-					if(res) vidline|=bitsel;
-					tx++;
-					bitsel>>=1;
-				}
-				y++;
-				if(bitline != vidline){
-					/* It's not character 'chr', move on to the next */
-					error = true;
-					break;
-				}
-			}
-			if(!error){
-				/* We found it */
-				*result = chr;
-				return;
-			}
+		switch (machine) {
+		case MCH_CGA:
+		case MCH_HERC:
+			fontdata=PhysMake(0xf000,0xfa6e);
+			break;
+		case TANDY_ARCH_CASE:
+			fontdata=Real2Phys(RealGetVec(0x44));
+			break;
+		default:
+			fontdata=Real2Phys(RealGetVec(0x43));
+			break;
 		}
-		LOG(LOG_INT10,LOG_ERROR)("ReadChar didn't find character");
-		*result = 0;
+		break;
+	default:
+		fontdata=Real2Phys(RealGetVec(0x43));
 		break;
 	}
+
+	x=(pos%CurMode->twidth)*8;
+	y=(pos/CurMode->twidth)*cheight;
+
+	for (Bit16u chr=0;chr<256;chr++) {
+
+		if (chr==128 && split_chr) fontdata=Real2Phys(RealGetVec(0x1f));
+
+		bool error=false;
+		Bit16u ty=(Bit16u)y;
+		for (Bit8u h=0;h<cheight;h++) {
+			Bit8u bitsel=128;
+			Bit8u bitline=mem_readb(fontdata++);
+			Bit8u res=0;
+			Bit8u vidline=0;
+			Bit16u tx=(Bit16u)x;
+			while (bitsel) {
+				//Construct bitline in memory
+				INT10_GetPixel(tx,ty,page,&res);
+				if(res) vidline|=bitsel;
+				tx++;
+				bitsel>>=1;
+			}
+			ty++;
+			if(bitline != vidline){
+				/* It's not character 'chr', move on to the next */
+				fontdata+=(cheight-h-1);
+				error = true;
+				break;
+			}
+		}
+		if(!error){
+			/* We found it */
+			*result = chr;
+			return;
+		}
+	}
+	LOG(LOG_INT10,LOG_ERROR)("ReadChar didn't find character");
+	*result = 0;
 }
 void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 	if(page==0xFF) page=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
@@ -471,39 +488,47 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 }
 void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	/* Externally used by the mouse routine */
-	RealPt fontdata;
-	Bitu x,y;
-	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
+	PhysPt fontdata;
+	Bitu x,y,pos = row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col;
+	Bit8u back,cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
 	case M_TEXT:
 		{	
 			// Compute the address  
 			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-			address+=(row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col)*2;
+			address+=pos*2;
 			// Write the char 
 			PhysPt where = CurMode->pstart+address;
 			mem_writeb(where,chr);
-			if (useattr) {
-				mem_writeb(where+1,attr);
-			}
+			if (useattr) mem_writeb(where+1,attr);
 		}
 		return;
 	case M_CGA4:
 	case M_CGA2:
 	case M_TANDY16:
-		if (chr<128) 
-			fontdata=RealGetVec(0x43);
-		else {
+		if (chr>=128) {
 			chr-=128;
-			fontdata=RealGetVec(0x1f);
+			fontdata=Real2Phys(RealGetVec(0x1f));
+			break;
 		}
-		fontdata=RealMake(RealSeg(fontdata), RealOff(fontdata) + chr*cheight);
+		switch (machine) {
+		case MCH_CGA:
+		case MCH_HERC:
+			fontdata=PhysMake(0xf000,0xfa6e);
+			break;
+		case TANDY_ARCH_CASE:
+			fontdata=Real2Phys(RealGetVec(0x44));
+			break;
+		default:
+			fontdata=Real2Phys(RealGetVec(0x43));
+			break;
+		}
 		break;
 	default:
-		fontdata=RealGetVec(0x43);
-		fontdata=RealMake(RealSeg(fontdata), RealOff(fontdata) + chr*cheight);
+		fontdata=Real2Phys(RealGetVec(0x43));
 		break;
 	}
+	fontdata+=chr*cheight;
 
 	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
 		static bool warned_use = false;
@@ -526,50 +551,72 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		}
 	}
 
-	//Some weird behavior of mode 6 (and 11) 
-	if ((CurMode->mode == 0x6)/* || (CurMode->mode==0x11)*/) attr = (attr&0x80)|1;
-	//(same fix for 11 fixes vgatest2, but it's not entirely correct according to wd)
+	//Attribute behavior of mode 6; mode 11 does something similar but
+	//it is in INT 10h handler because it only applies to function 09h
+	if (CurMode->mode==0x06) attr=(attr&0x80)|1;
 
-	x=8*col;
-	y=cheight*row;Bit8u xor_mask=(CurMode->type == M_VGA) ? 0x0 : 0x80;
-	//TODO Check for out of bounds
-	if (CurMode->type==M_EGA) {
+	switch (CurMode->type) {
+	case M_VGA:
+	case M_LIN8:
+		// 256-color modes have background color instead of page
+		back=page;
+		page=0;
+		break;
+	case M_EGA:
 		/* enable all planes for EGA modes (Ultima 1 colour bug) */
 		/* might be put into INT10_PutPixel but different vga bios
 		   implementations have different opinions about this */
 		IO_Write(0x3c4,0x2);IO_Write(0x3c5,0xf);
+		// fall-through
+	default:
+		back=attr&0x80;
+		break;
 	}
+
+	x=(pos%CurMode->twidth)*8;
+	y=(pos/CurMode->twidth)*cheight;
+
+	Bit16u ty=(Bit16u)y;
 	for (Bit8u h=0;h<cheight;h++) {
 		Bit8u bitsel=128;
-		Bit8u bitline = mem_readb(Real2Phys( fontdata ));
-		fontdata = RealMake( RealSeg( fontdata ), RealOff( fontdata ) + 1);
+		Bit8u bitline=mem_readb(fontdata++);
 		Bit16u tx=(Bit16u)x;
 		while (bitsel) {
-			if (bitline&bitsel) INT10_PutPixel(tx,(Bit16u)y,page,attr);
-			else INT10_PutPixel(tx,(Bit16u)y,page,attr & xor_mask);
+			INT10_PutPixel(tx,ty,page,(bitline&bitsel)?attr:back);
 			tx++;
 			bitsel>>=1;
 		}
-		y++;
+		ty++;
 	}
 }
 
 void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr) {
+	Bit8u pospage=page;
 	if (CurMode->type!=M_TEXT) {
 		showattr=true; //Use attr in graphics mode always
 		switch (machine) {
 			case EGAVGA_ARCH_CASE:
-				page%=CurMode->ptotal;
+				switch (CurMode->type) {
+				case M_VGA:
+				case M_LIN8:
+					pospage=0;
+					break;
+				default:
+					page%=CurMode->ptotal;
+					pospage=page;
+					break;
+				}
 				break;
 			case MCH_CGA:
 			case MCH_PCJR:
 				page=0;
+				pospage=0;
 				break;
 		}
 	}
 
-	Bit8u cur_row=CURSOR_POS_ROW(page);
-	Bit8u cur_col=CURSOR_POS_COL(page);
+	Bit8u cur_row=CURSOR_POS_ROW(pospage);
+	Bit8u cur_col=CURSOR_POS_COL(pospage);
 	BIOS_NCOLS;
 	while (count>0) {
 		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
@@ -630,8 +677,13 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	}
 	// Do we need to scroll ?
 	if(cur_row==nrows) {
-		//Fill with black on non-text modes and with 0x7 on textmode
-		Bit8u fill = (CurMode->type == M_TEXT)?0x7:0;
+		//Fill with black on non-text modes and with attribute at cursor on textmode
+		Bit8u fill=0;
+		if (CurMode->type==M_TEXT) {
+			Bit16u chat;
+			INT10_ReadCharAttr(&chat,page);
+			fill=(Bit8u)(chat>>8);
+		}
 		INT10_ScrollWindow(0,0,(Bit8u)(nrows-1),(Bit8u)(ncols-1),-1,fill,page);
 		cur_row--;
 	}
