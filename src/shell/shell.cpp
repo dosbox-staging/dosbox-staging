@@ -459,6 +459,41 @@ void AUTOEXEC_Init(Section * sec) {
 	test = new AUTOEXEC(sec);
 }
 
+static Bitu INT2E_Handler(void) {
+	/* Save return address and current process */
+	RealPt save_ret=real_readd(SegValue(ss),reg_sp);
+	Bit16u save_psp=dos.psp();
+
+	/* Set first shell as process and copy command */
+	dos.psp(DOS_FIRST_SHELL);
+	DOS_PSP psp(DOS_FIRST_SHELL);
+	psp.SetCommandTail(RealMakeSeg(ds,reg_si));
+	SegSet16(ss,RealSeg(psp.GetStack()));
+	reg_sp=2046;
+
+	/* Read and fix up command string */
+	CommandTail tail;
+	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
+	if (tail.count<127) tail.buffer[tail.count]=0;
+	else tail.buffer[126]=0;
+	char* crlf=strpbrk(tail.buffer,"\r\n");
+	if (crlf) *crlf=0;
+
+	/* Execute command */
+	if (strlen(tail.buffer)) {
+		DOS_Shell temp;
+		temp.ParseLine(tail.buffer);
+		temp.RunInternal();
+	}
+
+	/* Restore process and "return" to caller */
+	dos.psp(save_psp);
+	SegSet16(cs,RealSeg(save_ret));
+	reg_ip=RealOff(save_ret);
+	reg_ax=0;
+	return CBRET_NONE;
+}
+
 static char const * const path_string="PATH=Z:\\";
 static char const * const comspec_string="COMSPEC=Z:\\COMMAND.COM";
 static char const * const full_name="Z:\\COMMAND.COM";
@@ -627,6 +662,12 @@ void SHELL_Init() {
 	/* Set up int 23 to "int 20" in the psp. Fixes what.exe */
 	real_writed(0,0x23*4,((Bit32u)psp_seg<<16));
 
+	/* Set up int 2e handler */
+	Bitu call_int2e=CALLBACK_Allocate();
+	RealPt addr_int2e=RealMake(psp_seg+16+1,8);
+	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,Real2Phys(addr_int2e),"Shell Int 2e");
+	RealSetVec(0x2e,addr_int2e);
+
 	/* Setup MCBs */
 	DOS_MCB pspmcb((Bit16u)(psp_seg-1));
 	pspmcb.SetPSPSeg(psp_seg);	// MCB of the command shell psp
@@ -671,6 +712,7 @@ void SHELL_Init() {
 	/* Set the command line for the shell start up */
 	CommandTail tail;
 	tail.count=(Bit8u)strlen(init_line);
+	memset(&tail.buffer,0,127);
 	strcpy(tail.buffer,init_line);
 	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
 	
