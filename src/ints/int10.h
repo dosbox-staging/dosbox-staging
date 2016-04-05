@@ -156,6 +156,7 @@ static Bit8u CURSOR_POS_ROW(Bit8u page) {
 }
 
 bool INT10_SetVideoMode(Bit16u mode);
+void INT10_SetCurMode(void);
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page);
 

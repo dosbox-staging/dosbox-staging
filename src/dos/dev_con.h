@@ -53,6 +53,7 @@ private:
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
 	Bit16u count=0;
+	INT10_SetCurMode();
 	if ((readcache) && (*size)) {
 		data[count++]=readcache;
 		if(dos.echo) INT10_TeletypeOutput(readcache,7);
@@ -117,6 +118,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	Bit8u col,row;
 	Bit16u ncols,nrows;
 	Bit8u tempdata;
+	INT10_SetCurMode();
 	while (*size>count) {
 		if (!ansi.esc){
 			if(data[count]=='\033') {

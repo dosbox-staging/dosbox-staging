@@ -48,6 +48,7 @@ static Bitu INT10_Handler(void) {
 		break;
 	}
 #endif
+	INT10_SetCurMode();
 
 	switch (reg_ah) {
 	case 0x00:								/* Set VideoMode */

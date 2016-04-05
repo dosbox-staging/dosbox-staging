@@ -380,6 +380,66 @@ static bool SetCurMode(VideoModeBlock modeblock[],Bit16u mode) {
 	return false;
 }
 
+static void SetTextLines(void) {
+	// check for scanline backwards compatibility (VESA text modes??)
+	switch (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x90) {
+	case 0x80: // 200 lines emulation
+		if (CurMode->mode <= 3) {
+			CurMode = &ModeList_VGA_Text_200lines[CurMode->mode];
+		} else if (CurMode->mode == 7) {
+			CurMode = &ModeList_VGA_Text_350lines[4];
+		}
+		break;
+	case 0x00: // 350 lines emulation
+		if (CurMode->mode <= 3) {
+			CurMode = &ModeList_VGA_Text_350lines[CurMode->mode];
+		} else if (CurMode->mode == 7) {
+			CurMode = &ModeList_VGA_Text_350lines[4];
+		}
+		break;
+	}
+}
+
+void INT10_SetCurMode(void) {
+	Bit16u bios_mode=(Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
+	if (GCC_UNLIKELY(CurMode->mode!=bios_mode)) {
+		bool mode_changed=false;
+		switch (machine) {
+		case MCH_CGA:
+			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			break;
+		case TANDY_ARCH_CASE:
+			if (bios_mode!=7 && bios_mode<=0xa) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			break;
+		case MCH_HERC:
+			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			else if (bios_mode==7) {mode_changed=true;CurMode=&Hercules_Mode;}
+			break;
+		case MCH_EGA:
+			mode_changed=SetCurMode(ModeList_EGA,bios_mode);
+			break;
+		case VGA_ARCH_CASE:
+			switch (svgaCard) {
+			case SVGA_TsengET4K:
+			case SVGA_TsengET3K:
+				mode_changed=SetCurMode(ModeList_VGA_Tseng,bios_mode);
+				break;
+			case SVGA_ParadisePVGA1A:
+				mode_changed=SetCurMode(ModeList_VGA_Paradise,bios_mode);
+				break;
+			case SVGA_S3Trio:
+				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
+				// fall-through
+			default:
+				mode_changed=SetCurMode(ModeList_VGA,bios_mode);
+				break;
+			}
+			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
+			break;
+		}
+		if (mode_changed) LOG(LOG_INT10,LOG_WARN)("BIOS video mode changed to %X",bios_mode);
+	}
+}
 
 static void FinishSetMode(bool clearmem) {
 	/* Clear video memory if needs be */
@@ -466,8 +526,12 @@ bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
 		}
 		break;
 	case MCH_HERC:
-		// Only init the adapter if the equipment word is set to monochrome (Testdrive)
-		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30) return false;
+		// Allow standard color modes if equipment word is not set to mono (Victory Road)
+		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
+			SetCurMode(ModeList_OTHER,mode);
+			FinishSetMode(clearmem);
+			return true;
+		}
 		CurMode=&Hercules_Mode;
 		mode=7; // in case the video parameter table is modified
 		break;
@@ -682,22 +746,7 @@ bool INT10_SetVideoMode(Bit16u mode) {
 				return false;
 			}
 		}
-		// check for scanline backwards compatibility (VESA text modes??)
-		if (CurMode->type==M_TEXT) {
-			if ((modeset_ctl&0x90)==0x80) { // 200 lines emulation
-				if (CurMode->mode <= 3) {
-					CurMode = &ModeList_VGA_Text_200lines[CurMode->mode];
-				} else if (CurMode->mode == 7) {
-					CurMode = &ModeList_VGA_Text_350lines[4];
-				}
-			} else if ((modeset_ctl&0x90)==0x00) { // 350 lines emulation
-				if (CurMode->mode <= 3) {
-					CurMode = &ModeList_VGA_Text_350lines[CurMode->mode];
-				} else if (CurMode->mode == 7) {
-					CurMode = &ModeList_VGA_Text_350lines[4];
-				}
-			}
-		}
+		if (CurMode->type==M_TEXT) SetTextLines();
 	} else {
 		if (!SetCurMode(ModeList_EGA,mode)){
 			LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);

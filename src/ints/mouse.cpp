@@ -375,6 +375,7 @@ void RestoreCursorBackground() {
 
 void DrawCursor() {
 	if (mouse.hidden || mouse.inhibit_draw) return;
+	INT10_SetCurMode();
 	// In Textmode ?
 	if (CurMode->type==M_TEXT) {
 		DrawCursorText();
