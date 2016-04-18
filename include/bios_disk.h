@@ -65,7 +65,9 @@ public:
 
 	Bit32u sector_size;
 	Bit32u heads,cylinders,sectors;
+private:
 	Bit32u current_fpos;
+	enum { NONE,READ,WRITE } last_action;
 };
 
 void updateDPT(void);

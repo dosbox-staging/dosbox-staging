@@ -163,9 +163,10 @@ Bit8u imageDisk::Read_AbsoluteSector(Bit32u sectnum, void * data) {
 
 	bytenum = sectnum * sector_size;
 
-	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
+	if (last_action==WRITE || bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
 	size_t ret=fread(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
+	last_action=READ;
 
 	return 0x00;
 }
@@ -186,9 +187,10 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 
-	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
-	size_t ret=fwrite(data, sector_size, 1, diskimg);
+	if (last_action==READ || bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
+	size_t ret=fwrite(data, 1, sector_size, diskimg);
 	current_fpos=bytenum+ret;
+	last_action=WRITE;
 
 	return ((ret>0)?0x00:0x05);
 
@@ -200,6 +202,7 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 	sectors = 0;
 	sector_size = 512;
 	current_fpos = 0;
+	last_action = NONE;
 	diskimg = imgFile;
 	fseek(diskimg,0,SEEK_SET);
 	
@@ -450,6 +453,15 @@ static Bitu INT13_DiskHandler(void) {
 		//reg_al = 0x00; /* CRC verify succeeded */
 		CALLBACK_SCF(false);
           
+		break;
+	case 0x05: /* Format track */
+		if (driveInactive(drivenum)) {
+			reg_ah = 0xff;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+		reg_ah = 0x00;
+		CALLBACK_SCF(false);
 		break;
 	case 0x08: /* Get drive parameters */
 		if(driveInactive(drivenum)) {
