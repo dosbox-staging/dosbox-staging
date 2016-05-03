@@ -1802,7 +1802,18 @@ void restart_program(std::vector<std::string> & parameters) {
 	DEBUG_ShutDown(NULL);
 #endif
 
-	execvp(newargs[0], newargs);
+	if(execvp(newargs[0], newargs) == -1) {
+#ifdef WIN32
+		if(newargs[0][0] == '\"') {
+			//everything specifies quotes around it if it contains a space, however my system disagrees
+			std::string edit = parameters[0];
+			edit.erase(0,1);edit.erase(edit.length() - 1,1);
+			//However keep the first argument of the passed argv (newargs) with quotes, as else repeated restarts go wrong.
+			if(execvp(edit.c_str(), newargs) == -1) E_Exit("Restarting failed");
+		}
+#endif
+		E_Exit("Restarting failed");
+	}
 	free(newargs);
 }
 void Restart(bool pressed) { // mapper handler
