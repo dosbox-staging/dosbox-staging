@@ -715,6 +715,8 @@ static void INT10_Seg40Init(void) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,0x51);
 	// Set the  default MSR
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x09);
+	// Set the pointer to video save pointer table
+	real_writed(BIOSMEM_SEG,BIOSMEM_VS_POINTER,int10.rom.video_save_pointers);
 }
 
 
