@@ -419,8 +419,11 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	RealPt csip,sssp;
 	if (iscom) {
 		csip=RealMake(pspseg,0x100);
-		sssp=RealMake(pspseg,0xfffe);
-		mem_writew(PhysMake(pspseg,0xfffe),0);
+		if (memsize<0x1000) {
+			LOG(LOG_EXEC,LOG_WARN)("COM format with only %X paragraphs available",memsize);
+			sssp=RealMake(pspseg,(memsize<<4)-2);
+		} else sssp=RealMake(pspseg,0xfffe);
+		mem_writew(Real2Phys(sssp),0);
 	} else {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
