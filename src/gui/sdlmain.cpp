@@ -1415,7 +1415,7 @@ static void GUI_StartUp(Section * sec) {
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
-	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause");
+	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause DBox");
 #endif
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
