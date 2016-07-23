@@ -173,15 +173,15 @@ static INLINE void gen_memaddr(Bitu modreg,void* data,Bitu off,Bitu imm,Bit8u op
 // move a 32bit (dword==true) or 16bit (dword==false) value from memory into dest_reg
 // 16bit moves may destroy the upper 16bit of the destination register
 static void gen_mov_word_to_reg(HostReg dest_reg,void* data,bool dword,Bit8u prefix=0) {
-	gen_reg_memaddr(dest_reg,data,0x8b,(dword?prefix:0x66));	// mov reg,[data]
+	if (!dword) gen_reg_memaddr(dest_reg,data,0xb7,0x0f);	// movzx reg,[data] - zero extend data, fixes LLVM compile where the called function does not extend the parameters
+	else gen_reg_memaddr(dest_reg,data,0x8b,prefix);	// mov reg,[data]
 } 
 
 // move a 16bit constant value into dest_reg
 // the upper 16bit of the destination register may be destroyed
 static void gen_mov_word_to_reg_imm(HostReg dest_reg,Bit16u imm) {
-	cache_addb(0x66);
 	cache_addb(0xb8+dest_reg);			// mov reg,imm
-	cache_addw(imm);
+	cache_addd((Bit32u)imm);
 }
 
 // move a 32bit constant value into dest_reg
@@ -200,7 +200,7 @@ static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword,Bit8u pr
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data) {
-	gen_reg_memaddr(dest_reg,data,0x8a);	// mov reg, byte [data]
+	gen_reg_memaddr(dest_reg,data,0xb6,0x0f);	// movzx reg,[data]
 }
 
 // move an 8bit value from memory into dest_reg
@@ -208,7 +208,7 @@ static void gen_mov_byte_to_reg_low(HostReg dest_reg,void* data) {
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
-	gen_reg_memaddr(dest_reg,data,0x8b,0x66);	// mov reg, word [data]
+	gen_reg_memaddr(dest_reg,data,0xb6,0x0f);	// movzx reg,[data]
 }
 
 // move an 8bit constant value into dest_reg
@@ -216,8 +216,8 @@ static void gen_mov_byte_to_reg_low_canuseword(HostReg dest_reg,void* data) {
 // this function does not use FC_OP1/FC_OP2 as dest_reg as these
 // registers might not be directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
-	cache_addb(0xb0+dest_reg);			// mov reg,imm
-	cache_addb(imm);
+	cache_addb(0xb8+dest_reg);			// mov reg,imm
+	cache_addd((Bit32u)imm);
 }
 
 // move an 8bit constant value into dest_reg
@@ -225,9 +225,8 @@ static void gen_mov_byte_to_reg_low_imm(HostReg dest_reg,Bit8u imm) {
 // this function can use FC_OP1/FC_OP2 as dest_reg which are
 // not directly byte-accessible on some architectures
 static void gen_mov_byte_to_reg_low_imm_canuseword(HostReg dest_reg,Bit8u imm) {
-	cache_addb(0x66);
 	cache_addb(0xb8+dest_reg);			// mov reg,imm
-	cache_addw(imm);
+	cache_addd((Bit32u)imm);
 }
 
 // move the lowest 8bit of a register into memory
