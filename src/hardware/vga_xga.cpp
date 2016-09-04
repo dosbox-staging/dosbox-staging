@@ -352,11 +352,11 @@ void XGA_DrawLineBresenham(Bitu val) {
 	// Probably a lot easier way to do this, but this works.
 
 	dminor = (Bits)((Bit16s)xga.desty);
-	if(xga.desty&0x2000) dminor |= 0xffffe000;
+	if(xga.desty&0x2000) dminor |= ~0x1fff;
 	dminor >>= 1;
 
 	destxtmp=(Bits)((Bit16s)xga.destx);
-	if(xga.destx&0x2000) destxtmp |= 0xffffe000;
+	if(xga.destx&0x2000) destxtmp |= ~0x1fff;
 
 
 	dmajor = -(destxtmp - (dminor << 1)) >> 1;
@@ -374,7 +374,7 @@ void XGA_DrawLineBresenham(Bitu val) {
 		sy = -1;
 	}
 	e = (Bits)((Bit16s)xga.ErrTerm);
-	if(xga.ErrTerm&0x2000) e |= 0xffffe000;
+	if(xga.ErrTerm&0x2000) e |= ~0x1fff;
 	xat = xga.curx;
 	yat = xga.cury;
 
