@@ -1700,6 +1700,7 @@ Bit32u DEBUG_CheckKeys(void) {
 				break; 
 		case KEY_F(5):	// Run Program
 				debugging=false;
+				DrawCode(); // update code window to show "running" status
 				CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs)+reg_eip);
 
 				skipFirstInstruction = true; // for heavy debugger
