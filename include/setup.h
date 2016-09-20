@@ -129,19 +129,26 @@ public:
 	virtual	bool SetValue(std::string const& str)=0;
 	Value const& GetValue() const { return value;}
 	Value const& Get_Default_Value() const { return default_value; }
-	//CheckValue returns true  if value is in suggested_values;
+	//CheckValue returns true, if value is in suggested_values;
 	//Type specific properties are encouraged to override this and check for type
 	//specific features.
 	virtual bool CheckValue(Value const& in, bool warn);
-	//Set interval value to in or default if in is invalid. force always sets the value.
-	bool SetVal(Value const& in, bool forced,bool warn=true) {
-		if(forced || CheckValue(in,warn)) {value = in; return true;} else { value = default_value; return false;}}
+public:
 	virtual ~Property(){ } 
 	virtual const std::vector<Value>& GetValues() const;
 	Value::Etype Get_type(){return default_value.type;}
 	Changeable::Value getChange() {return change;}
 
 protected:
+	//Set interval value to in or default if in is invalid. force always sets the value.
+	//Can be overriden to set a different value if invalid.
+	virtual bool SetVal(Value const& in, bool forced,bool warn=true) {
+		if(forced || CheckValue(in,warn)) { 
+			value = in; return true;
+		} else { 
+			value = default_value; return false;
+		}
+	}
 	Value value;
 	std::vector<Value> suggested_values;
 	typedef std::vector<Value>::iterator iter;
@@ -168,6 +175,9 @@ public:
 	bool SetValue(std::string const& in);
 	~Prop_int(){ }
 	virtual bool CheckValue(Value const& in, bool warn);
+	// Override SetVal, so it takes min,max in account when there are no suggested values
+	virtual bool SetVal(Value const& in, bool forced,bool warn=true);
+	
 private:
 	Value min,max;
 };

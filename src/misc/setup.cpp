@@ -227,7 +227,7 @@ bool Property::CheckValue(Value const& in, bool warn){
 			return true;
 		}
 	}
-	if(warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	if (warn) LOG_MSG("\"%s\" is not a valid value for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
 	return false;
 }
 
@@ -243,18 +243,51 @@ char const* Property::Get_help() {
 	return MSG_Get(result.c_str());
 }
 
+bool Prop_int::SetVal(Value const& in, bool forced, bool warn) {
+	if (forced) {
+		value = in;
+		return true;
+	} else if (!suggested_values.empty()){
+		if ( CheckValue(in,warn) ) {
+			value = in;
+			return true;
+		} else {
+			value = default_value;
+			return false;
+		}
+	} else {
+		//Handle ranges if specified
+		int mi = min;
+		int ma = max;
+		int va = static_cast<int>(Value(in));
+		
+		//No ranges
+		if (mi == -1 && ma == -1) { value = in; return true;}
 
+		//Inside range
+		if (va >= mi && va <= ma) { value = in; return true;}
+
+		//Outside range, set it to the closest boundary
+		if (va > ma ) va = ma; else va = mi;
+
+		if (warn) LOG_MSG("%s is outside the allowed range %s-%s for variable: %s.\nIt has been set to the closest boundary: %d.",in.ToString().c_str(),min.ToString().c_str(),max.ToString().c_str(),propname.c_str(),va);
+	
+		value = va; 
+		return true;
+		}
+}
 bool Prop_int::CheckValue(Value const& in, bool warn) {
 //	if(!suggested_values.empty() && Property::CheckValue(in,warn)) return true;
 	if(!suggested_values.empty()) return Property::CheckValue(in,warn);
-
+	LOG_MSG("still used ?");
 	//No >= and <= in Value type and == is ambigious
 	int mi = min;
 	int ma = max;
 	int va = static_cast<int>(Value(in));
-	if(mi == -1 && ma == -1) return true;
+	if (mi == -1 && ma == -1) return true;
 	if (va >= mi && va <= ma) return true;
-	if(warn) LOG_MSG("%s lies outside the range %s-%s for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),min.ToString().c_str(),max.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
+	
+	if (warn) LOG_MSG("%s lies outside the range %s-%s for variable: %s.\nIt might now be reset to the default value: %s",in.ToString().c_str(),min.ToString().c_str(),max.ToString().c_str(),propname.c_str(),default_value.ToString().c_str());
 	return false;
 }
 
@@ -581,7 +614,6 @@ void trim(string& in) {
 	if(loc != string::npos) in.erase(loc+1);
 }
 
-//TODO double c_str
 bool Section_prop::HandleInputline(string const& gegevens){
 	string str1 = gegevens;
 	string::size_type loc = str1.find('=');
@@ -613,7 +645,6 @@ void Section_prop::PrintData(FILE* outfile) const {
 	}
 }
 
-//TODO geen noodzaak voor 2 keer c_str
 string Section_prop::GetPropValue(string const& _property) const{
 	for(const_it tel=properties.begin();tel!=properties.end();tel++){
 		if(!strcasecmp((*tel)->propname.c_str(),_property.c_str())){
@@ -642,16 +673,16 @@ bool Config::PrintConfig(char const * const configfilename) const {
 	FILE* outfile=fopen(configfilename,"w+t");
 	if(outfile==NULL) return false;
 
-	/* Print start of configfile and add an return to improve readibility. */
+	/* Print start of configfile and add a return to improve readibility. */
 	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"),VERSION);
 	fprintf(outfile,"\n");
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */
-		Section_prop *sec = dynamic_cast<Section_prop *>(*tel);
 		strcpy(temp,(*tel)->GetName());
 		lowcase(temp);
 		fprintf(outfile,"[%s]\n",temp);
 
+		Section_prop *sec = dynamic_cast<Section_prop *>(*tel);
 		if (sec) {
 			Property *p;
 			size_t i = 0, maxwidth = 0;
@@ -719,7 +750,7 @@ Section_prop* Config::AddSection_prop(char const * const _name,void (*_initfunct
 }
 
 Section_prop::~Section_prop() {
-//ExecuteDestroy should be here else the destroy functions use destroyed properties
+	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	ExecuteDestroy(true);
 	/* Delete properties themself (properties stores the pointer of a prop */
 	for(it prop = properties.begin(); prop != properties.end(); prop++)
@@ -781,7 +812,7 @@ Section* Config::GetSection(int index){
 	}
 	return NULL;
 }
-//c_str() 2x
+
 Section* Config::GetSection(string const& _sectionname) const{
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		if (!strcasecmp((*tel)->GetName(),_sectionname.c_str())) return (*tel);
