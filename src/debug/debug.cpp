@@ -669,7 +669,6 @@ static bool StepOver()
 		// Don't add a temporary breakpoint if there's already one here
 		if (!CBreakpoint::FindPhysBreakpoint(SegValue(cs), reg_eip+size, true))
 			CBreakpoint::AddBreakpoint(SegValue(cs),reg_eip+size, true);
-		CBreakpoint::ActivateBreakpointsExceptAt(start);
 		debugging=false;
 		DrawCode();
 		return true;
@@ -1701,7 +1700,6 @@ Bit32u DEBUG_CheckKeys(void) {
 		case KEY_F(5):	// Run Program
 				debugging=false;
 				DrawCode(); // update code window to show "running" status
-				CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs)+reg_eip);
 
 				skipFirstInstruction = true; // for heavy debugger
 				CPU_Cycles = 1;
@@ -1738,14 +1736,9 @@ Bit32u DEBUG_CheckKeys(void) {
 					CBreakpoint::ActivateBreakpoints();
 
 					return 0;
-				} else {
-					exitLoop = false;
-					skipFirstInstruction = true; // for heavy debugger
-					CPU_Cycles = 1;
-					ret=(*cpudecoder)();
-					SetCodeWinStart();
 				}
-				break;
+				// If we aren't stepping over something, do a normal step.
+				// NB: Fall-through
 		case KEY_F(11):	// trace into
 				exitLoop = false;
 				skipFirstInstruction = true; // for heavy debugger
