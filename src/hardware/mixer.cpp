@@ -17,7 +17,7 @@
  */
 
 
-/* 
+/*
 	Remove the sdl code from here and have it handeld in the sdlmain.
 	That should call the mixer start from there or something.
 */
@@ -261,7 +261,7 @@ thestart:
 
 void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 	if (done>=needed) {
-		LOG_MSG("Can't add, buffer full");	
+		LOG_MSG("Can't add, buffer full");
 		return;
 	}
 	Bitu outlen=needed-done;Bits diff;
@@ -349,7 +349,7 @@ void MixerChannel::FillUp(void) {
 
 extern bool ticksLocked;
 static inline bool Mixer_irq_important(void) {
-	/* In some states correct timing of the irqs is more important then 
+	/* In some states correct timing of the irqs is more important then
 	 * non stuttering audo */
 	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
 }
@@ -364,7 +364,7 @@ static void MIXER_MixData(Bitu needed) {
 	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
 		Bit16s convert[1024][2];
 		Bitu added=needed-mixer.done;
-		if (added>1024) 
+		if (added>1024)
 			added=1024;
 		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
 		for (Bitu i=0;i<added;i++) {
@@ -465,7 +465,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 //		LOG_MSG("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
 		if (mixer.done > MIXER_BUFSIZE)
 			index_add = MIXER_BUFSIZE - 2*mixer.min_needed;
-		else 
+		else
 			index_add = mixer.done - 2*mixer.min_needed;
 		index_add = (index_add << MIXER_SHIFT) / need;
 		reduce = mixer.done - 2* mixer.min_needed;
@@ -476,7 +476,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 		if (chan->done>reduce) chan->done-=reduce;
 		else chan->done=0;
 	}
-   
+
 	// Reset mixer.tick_add when irqs are important
 	if( Mixer_irq_important() )
 		mixer.tick_add=(mixer.freq<< MIXER_SHIFT)/1000;
@@ -566,7 +566,7 @@ public:
 		chan=mixer.channels;
 		WriteOut("Channel  Main    Main(dB)\n");
 		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
-		for (chan=mixer.channels;chan;chan=chan->next) 
+		for (chan=mixer.channels;chan;chan=chan->next)
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
 private:
@@ -635,17 +635,17 @@ void MIXER_Init(Section* sec) {
 
 	mixer.tick_remain=0;
 	if (mixer.nosound) {
-		LOG_MSG("MIXER:No Sound Mode Selected.");
+		LOG_MSG("MIXER: No Sound Mode Selected.");
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
 		mixer.nosound = true;
-		LOG_MSG("MIXER:Can't open audio: %s , running in nosound mode.",SDL_GetError());
+		LOG_MSG("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
 		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		if((mixer.freq != obtained.freq) || (mixer.blocksize != obtained.samples))
-			LOG_MSG("MIXER:Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
+			LOG_MSG("MIXER: Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
 		mixer.tick_add=(mixer.freq << MIXER_SHIFT)/1000;
