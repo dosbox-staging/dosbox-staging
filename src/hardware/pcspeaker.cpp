@@ -23,7 +23,7 @@
 #include "timer.h"
 #include "setup.h"
 #include "pic.h"
-
+#include "vgmcapture.h"
 
 #ifndef PI
 #define PI 3.14159265358979323846
@@ -162,6 +162,7 @@ static void ForwardPIT(float newindex) {
 }
 
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode) {
+	if (vgmCapture.get()) vgmCapture->SPK_setPeriod(cntr, mode);
 	if (!spkr.last_ticks) {
 		if(spkr.chan) spkr.chan->Enable(true);
 		spkr.last_index=0;

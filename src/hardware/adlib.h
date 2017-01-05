@@ -111,9 +111,6 @@ public:
 //The cache for 2 chips or an opl3
 typedef Bit8u RegisterCache[512];
 
-//Internal class used for dro capturing
-class Capture;
-
 class Module: public Module_base {
 	IO_ReadHandleObject ReadHandler[3];
 	IO_WriteHandleObject WriteHandler[3];
@@ -144,7 +141,6 @@ public:
 
 	Handler* handler;				//Handler that will generate the sound
 	RegisterCache cache;
-	Capture* capture;
 	Chip	chip[2];
 
 	//Handle port writes

@@ -42,6 +42,7 @@
 #include "ints/int10.h"
 #include "render.h"
 #include "pci_bus.h"
+#include "vgmcapture.h"
 
 Config * control;
 MachineType machine;
@@ -128,6 +129,28 @@ static Bit32u ticksAdded;
 Bit32s ticksDone;
 Bit32u ticksScheduled;
 bool ticksLocked;
+
+PVGMCapture vgmCapture;
+bool capturePCM = false;
+bool captureSPK = false;
+
+static void KeyVGMCapture(bool pressed) {
+	if (pressed) {
+		if (vgmCapture.get()) {
+			vgmCapture.reset(nullptr);
+			LOG_MSG("Stopped VGM capturing.");
+		} else {
+			FILE *theHandle = OpenCaptureFile("Video Game Music",".VGM");
+			if (theHandle) {
+				vgmCapture = std::make_unique<VGMCapture>(theHandle);
+			} else {
+				LOG_MSG("Cannot open capture file.");
+			}
+			vgmCapture->DAC_allowed = capturePCM;
+			vgmCapture->SPK_allowed = captureSPK;
+		}
+	}
+}
 
 static Bitu Normal_Loop(void) {
 	Bits ret;
@@ -299,6 +322,8 @@ static void DOSBOX_RealInit(Section * sec) {
 		section->HandleInputline(std::string("machine=") + cmd_machine);
 	}
 
+	capturePCM = section->Get_bool("capturepcm");
+	captureSPK = section->Get_bool("capturespeaker");
 	std::string mtype(section->Get_string("machine"));
 	svgaCard = SVGA_None; 
 	machine = MCH_VGA;
@@ -360,6 +385,15 @@ void DOSBOX_Init(void) {
 
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
+
+	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
+	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
+
+	Pbool = secprop->Add_bool("capturepcm",Property::Changeable::Always,false);
+	Pbool->Set_help("When capturing raw Yamaha FM/Tandy PSG/Game Blaster sound, capture PCM data as well.");
+
+	Pbool = secprop->Add_bool("capturespeaker",Property::Changeable::Always,false);
+	Pbool->Set_help("When capturing raw Yamaha FM/Tandy PSG/Game Blaster sound, capture PC speaker data as well.");
 
 #if C_DEBUG	
 	LOG_StartUp();
@@ -719,5 +753,7 @@ void DOSBOX_Init(void) {
 	        "# They are used to (briefly) document the effect of each option.\n");
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
 
+	MAPPER_AddHandler(KeyVGMCapture,MK_f7,MMOD1|MMOD2,"caprawopl","Cap OPL");
+	
 	control->SetStartUp(&SHELL_Init);
 }

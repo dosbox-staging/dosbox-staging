@@ -24,6 +24,7 @@
 #include "mem.h"
 #include "mixer.h"
 #include "timer.h"
+#include "vgmcapture.h"
 
 #define KEYBUFSIZE 32
 #define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
@@ -182,6 +183,7 @@ static void write_p61(Bitu port,Bitu val,Bitu iolen) {
 	if ((port_61_data ^ val) & 3) {
 		if((port_61_data ^ val) & 1) TIMER_SetGate2(val&0x1);
 		PCSPEAKER_SetType(val & 3);
+		if (vgmCapture.get()) vgmCapture->SPK_setType(val & 1, val & 2);
 	}
 	port_61_data = val;
 }

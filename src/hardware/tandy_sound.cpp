@@ -30,31 +30,10 @@
 #include "hardware.h"
 #include <cstring>
 #include <math.h>
+#include "vgmcapture.h"
 
 #define MAX_OUTPUT 0x7fff
 #define STEP 0x10000
-
-/* Formulas for noise generator */
-/* bit0 = output */
-
-/* noise feedback for white noise mode (verified on real SN76489 by John Kortink) */
-#define FB_WNOISE 0x14002	/* (16bits) bit16 = bit0(out) ^ bit2 ^ bit15 */
-
-/* noise feedback for periodic noise mode */
-//#define FB_PNOISE 0x10000 /* 16bit rorate */
-#define FB_PNOISE 0x08000   /* JH 981127 - fixes Do Run Run */
-
-/*
-0x08000 is definitely wrong. The Master System conversion of Marble Madness
-uses periodic noise as a baseline. With a 15-bit rotate, the bassline is
-out of tune.
-The 16-bit rotate has been confirmed against a real PAL Sega Master System 2.
-Hope that helps the System E stuff, more news on the PSG as and when!
-*/
-
-/* noise generator start preset (for periodic noise) */
-#define NG_PRESET 0x0f35
-
 
 struct SN76496 {
 	int SampleRate;
@@ -63,8 +42,9 @@ struct SN76496 {
 	int Register[8];	/* registers */
 	int LastRegister;	/* last register written */
 	int Volume[4];		/* volume of voice 0-2 and noise */
-	unsigned int RNG;		/* noise generator      */
-	int NoiseFB;		/* noise feedback mask */
+	int shiftRegister;
+	int shiftRegisterWidth;
+	int whiteNoiseFeedback;
 	int Period[4];
 	int Count[4];
 	int Output[4];
@@ -92,6 +72,9 @@ static struct {
 			DmaChannel * chan;
 			bool transfer_done;
 		} dma;
+		Bit16s direct_buf[TDAC_DMA_BUFSIZE];
+		Bit16u direct_bytes;
+		Bitu sample_rate;
 		Bit8u mode,control;
 		Bit16u frequency;
 		Bit8u amplitude;
@@ -103,6 +86,8 @@ static struct {
 static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 	struct SN76496 *R = &sn;
 
+	if (vgmCapture.get()) vgmCapture->ioWrite_SN(data, R->Register);
+	
 	tandy.last_write=PIC_Ticks;
 	if (!tandy.enabled) {
 		tandy.chan->Enable(true);
@@ -124,7 +109,7 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 			case 2:	/* tone 1 : frequency */
 			case 4:	/* tone 2 : frequency */
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
+				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep * 0x400;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
@@ -141,14 +126,9 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 			case 6:	/* noise  : frequency, mode */
 				{
 					int n = R->Register[6];
-					R->NoiseFB = (n & 4) ? FB_WNOISE : FB_PNOISE;
 					n &= 3;
 					/* N/512,N/1024,N/2048,Tone #3 output */
 					R->Period[3] = (n == 3) ? 2 * R->Period[2] : (R->UpdateStep << (5+n));
-
-					/* reset noise shifter */
-//					R->RNG = NG_PRESET;
-//					R->Output[3] = R->RNG & 1;
 				}
 				break;
 		}
@@ -165,7 +145,7 @@ static void SN76496Write(Bitu /*port*/,Bitu data,Bitu /*iolen*/) {
 			case 4:	/* tone 2 : frequency */
 				R->Register[r] = (R->Register[r] & 0x0f) | ((data & 0x3f) << 4);
 				R->Period[c] = R->UpdateStep * R->Register[r];
-				if (R->Period[c] == 0) R->Period[c] = 0x3fe;
+				if (R->Period[c] == 0) R->Period[c] = R->UpdateStep * 0x400;
 				if (r == 4)
 				{
 					/* update noise shift frequency */
@@ -235,14 +215,12 @@ static void SN76496Update(Bitu length) {
 				vol[i] += R->Period[i];
 			}
 			if (R->Output[i]) vol[i] -= R->Count[i];
-		}
+		}		
 
 		left = STEP;
 		do
 		{
 			int nextevent;
-
-
 			if (R->Count[3] < left) nextevent = R->Count[3];
 			else nextevent = left;
 
@@ -250,9 +228,19 @@ static void SN76496Update(Bitu length) {
 			R->Count[3] -= nextevent;
 			if (R->Count[3] <= 0)
 			{
-				if (R->RNG & 1) R->RNG ^= R->NoiseFB;
-				R->RNG >>= 1;
-				R->Output[3] = R->RNG & 1;
+				R->Output[3] = R->shiftRegister & 1;
+				int feedback;
+				if (R->Register[6] & 4) {
+					feedback = R->shiftRegister & R->whiteNoiseFeedback;
+					feedback ^= feedback >> 8;
+					feedback ^= feedback >> 4;
+					feedback ^= feedback >> 2;
+					feedback ^= feedback >> 1;
+					feedback &= 1;
+				} else {
+					feedback = R->shiftRegister & 1;
+				}
+				R->shiftRegister = (R->shiftRegister >>1) | (feedback << (R->shiftRegisterWidth -1));
 				R->Count[3] += R->Period[3];
 				if (R->Output[3]) vol[3] += R->Period[3];
 			}
@@ -332,6 +320,7 @@ static void TandyDAC_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event == DMA_REACHED_TC) {
 		tandy.dac.dma.transfer_done=true;
 		PIC_ActivateIRQ(tandy.dac.hw.irq);
+		if (vgmCapture.get()) vgmCapture->DAC_stopDMA();
 	}
 }
 
@@ -348,20 +337,27 @@ static void TandyDACModeChanged(void) {
 	case 3:
 		// playback
 		tandy.dac.chan->FillUp();
-		if (tandy.dac.frequency!=0) {
-			float freq=3579545.0f/((float)tandy.dac.frequency);
-			tandy.dac.chan->SetFreq((Bitu)freq);
+		if ((tandy.dac.mode&0x0c)==0x0c) {
+			float freq = 11025;
+			if (tandy.dac.frequency != 0) {
+				freq=3579545.0f/((float)tandy.dac.frequency);
+				tandy.dac.chan->SetFreq((Bitu)freq);
+			}
 			float vol=((float)tandy.dac.amplitude)/7.0f;
 			tandy.dac.chan->SetVolume(vol,vol);
-			if ((tandy.dac.mode&0x0c)==0x0c) {
-				tandy.dac.dma.transfer_done=false;
-				tandy.dac.dma.chan=GetDMAChannel(tandy.dac.hw.dma);
-				if (tandy.dac.dma.chan) {
-					tandy.dac.dma.chan->Register_Callback(TandyDAC_DMA_CallBack);
-					tandy.dac.chan->Enable(true);
-//					LOG_MSG("Tandy DAC: playback started with freqency %f, volume %f",freq,vol);
-				}
+
+			tandy.dac.dma.transfer_done=false;
+			tandy.dac.dma.chan=GetDMAChannel(tandy.dac.hw.dma);
+			if (tandy.dac.dma.chan) {
+				tandy.dac.dma.chan->Register_Callback(TandyDAC_DMA_CallBack);
+				tandy.dac.chan->Enable(true);
+//				LOG_MSG("Tandy DAC: playback started with freqency %f, volume %f",freq,vol);
+				if (vgmCapture.get()) vgmCapture->DAC_startDMA(freq, tandy.dac.dma.chan->basecnt +1, MemBase +tandy.dac.dma.chan->pagebase +tandy.dac.dma.chan->baseaddr);
+
 			}
+		} else {
+			tandy.dac.chan->SetFreq(tandy.dac.sample_rate);
+			tandy.dac.chan->Enable(true);
 		}
 		break;
 	}
@@ -401,6 +397,8 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 			break;
 		case 3:
 			// direct output
+			if (tandy.dac.direct_bytes < TDAC_DMA_BUFSIZE) tandy.dac.direct_buf[tandy.dac.direct_bytes++] = (data^0x80)<<8;
+			if (vgmCapture.get()) vgmCapture->ioWrite_DAC(data);
 			break;
 		}
 		break;
@@ -413,7 +411,10 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		case 1:
 		case 2:
 		case 3:
-			TandyDACModeChanged();
+			if (tandy.dac.frequency != 0 && (tandy.dac.mode&0x0c)==0x0c) {
+				float freq=3579545.0f/((float)tandy.dac.frequency);
+				tandy.dac.chan->SetFreq((Bitu)freq);
+			}
 			break;
 		}
 		break;
@@ -427,7 +428,14 @@ static void TandyDACWrite(Bitu port,Bitu data,Bitu /*iolen*/) {
 		case 1:
 		case 2:
 		case 3:
-			TandyDACModeChanged();
+			float vol=((float)tandy.dac.amplitude)/7.0f;
+			tandy.dac.chan->SetVolume(vol,vol);
+			if ((tandy.dac.mode&0x0c)==0x0c) {
+				if (tandy.dac.frequency != 0) {
+					float freq=3579545.0f/((float)tandy.dac.frequency);
+					tandy.dac.chan->SetFreq((Bitu)freq);
+				}
+			}
 			break;
 		}
 		break;
@@ -461,7 +469,11 @@ static void TandyDACGenerateDMASound(Bitu length) {
 }
 
 static void TandyDACUpdate(Bitu length) {
-	if (tandy.dac.enabled && ((tandy.dac.mode&0x0c)==0x0c)) {
+	if (!tandy.dac.enabled) {
+		tandy.dac.chan->AddSilence();
+		return;
+	} else
+	if ((tandy.dac.mode&0x0c)==0x0c) {
 		if (!tandy.dac.dma.transfer_done) {
 			Bitu len = length;
 			TandyDACGenerateDMASound(len);
@@ -471,7 +483,8 @@ static void TandyDACUpdate(Bitu length) {
 			}
 		}
 	} else {
-		tandy.dac.chan->AddSilence();
+		tandy.dac.chan->AddStretched(tandy.dac.direct_bytes,tandy.dac.direct_buf);
+		tandy.dac.direct_bytes = 0;		
 	}
 }
 
@@ -489,7 +502,10 @@ public:
 		bool enable_hw_tandy_dac=true;
 		Bitu sbport, sbirq, sbdma;
 		if (SB_Get_Address(sbport, sbirq, sbdma)) {
-			enable_hw_tandy_dac=false;
+			if (sbport == 0xC4 || sbirq==7 || sbdma==7) {
+				enable_hw_tandy_dac=false;
+				LOG_MSG("Sound Blaster and Tandy DAC occupy the same port, IRQ or DMA:\n=> Direct hardware access to Tandy DAC disabled!\nBIOS-driven Tandy DAC output will be directed to the Sound Blaster.");
+			}
 		}
 
 		real_writeb(0x40,0xd4,0x00);
@@ -526,7 +542,7 @@ public:
 
 			tandy.dac.enabled=true;
 			tandy.dac.chan=MixerChanDAC.Install(&TandyDACUpdate,sample_rate,"TANDYDAC");
-
+			tandy.dac.sample_rate=sample_rate;
 			tandy.dac.hw.base=0xc4;
 			tandy.dac.hw.irq =7;
 			tandy.dac.hw.dma =1;
@@ -543,6 +559,7 @@ public:
 		tandy.dac.frequency=0;
 		tandy.dac.amplitude=0;
 		tandy.dac.dma.last_sample=0;
+		tandy.dac.direct_bytes=0;
 
 
 		tandy.enabled=false;
@@ -565,8 +582,10 @@ public:
 			R->Output[i] = 0;
 			R->Period[i] = R->Count[i] = R->UpdateStep;
 		}
-		R->RNG = NG_PRESET;
-		R->Output[3] = R->RNG & 1;
+		R->shiftRegister = 0x8000;
+		R->shiftRegisterWidth = 16;
+		R->whiteNoiseFeedback = (machine == MCH_PCJR)? 0x06: 0x22;
+		R->Output[3] = 1;
 		SN76496_set_gain(0x1);
 	}
 	~TANDYSOUND(){ }

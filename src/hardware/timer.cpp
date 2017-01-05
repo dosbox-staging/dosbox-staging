@@ -60,6 +60,10 @@ struct PIT_Block {
 static PIT_Block pit[3];
 static bool gate2;
 
+Bitu getTimerRate(void) {
+	return pit[0].cntr;
+}
+
 static Bit8u latched_timerstatus;
 // the timer status can not be overwritten until it is read or the timer was 
 // reprogrammed.

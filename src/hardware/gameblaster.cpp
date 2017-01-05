@@ -26,13 +26,13 @@
 #include "pic.h"
 #include <cstring>
 #include <math.h>
-
+#include "vgmcapture.h"
 
 #define LEFT	0x00
 #define RIGHT	0x01
 #define CMS_BUFFER_SIZE 128
 #define CMS_RATE 22050
-
+#define MASTER_CLOCK 7159090
 
 typedef Bit8u UINT8;
 typedef Bit16s INT16;
@@ -78,7 +78,11 @@ struct SAA1099
 	int selected_reg;				/* selected register */
 	struct saa1099_channel channels[6];    /* channels */
 	struct saa1099_noise noise[2];	/* noise generators */
+
 };
+
+/* Register cache for capturing */
+static uint8_t cache[2][32];
 
 static const UINT8 envelope[8][64] = {
 	/* zero amplitude */
@@ -205,9 +209,9 @@ static void saa1099_update(int chip, INT16 **buffer, int length)
     {
 		switch (saa->noise_params[ch])
 		{
-		case 0: saa->noise[ch].freq = 31250.0 * 2; break;
-		case 1: saa->noise[ch].freq = 15625.0 * 2; break;
-		case 2: saa->noise[ch].freq =  7812.5 * 2; break;
+		case 0: saa->noise[ch].freq = MASTER_CLOCK/256 * 2; break;
+		case 1: saa->noise[ch].freq = MASTER_CLOCK/512 * 2; break;
+		case 2: saa->noise[ch].freq = MASTER_CLOCK/1024* 2; break;
 		case 3: saa->noise[ch].freq = saa->channels[ch * 3].freq; break;
 		}
 	}
@@ -221,7 +225,7 @@ static void saa1099_update(int chip, INT16 **buffer, int length)
 		for (ch = 0; ch < 6; ch++)
 		{
             if (saa->channels[ch].freq == 0.0)
-                saa->channels[ch].freq = (double)((2 * 15625) << saa->channels[ch].octave) /
+                saa->channels[ch].freq = (double)((2 * MASTER_CLOCK/512) << saa->channels[ch].octave) /
                     (511.0 - (double)saa->channels[ch].frequency);
 
             /* check the actual position in the square wave */
@@ -229,7 +233,7 @@ static void saa1099_update(int chip, INT16 **buffer, int length)
 			while (saa->channels[ch].counter < 0)
 			{
 				/* calculate new frequency now after the half wave is updated */
-				saa->channels[ch].freq = (double)((2 * 15625) << saa->channels[ch].octave) /
+				saa->channels[ch].freq = (double)((2 * MASTER_CLOCK/512) << saa->channels[ch].octave) /
 					(511.0 - (double)saa->channels[ch].frequency);
 
 				saa->channels[ch].counter += sample_rate;
@@ -300,6 +304,9 @@ static void saa1099_write_port_w( int chip, int offset, int data )
 	}
 	int reg = saa->selected_reg;
 	int ch;
+
+	cache[chip][reg] = data;
+	if (vgmCapture.get()) vgmCapture->ioWrite_SAA(chip, reg, data, cache);
 
 	switch (reg)
 	{

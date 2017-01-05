@@ -30,6 +30,7 @@
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
+#include "vgmcapture.h"
 using namespace std;
 
 void MIDI_RawOutByte(Bit8u data);
@@ -502,6 +503,7 @@ static void GenerateDMASound(Bitu size) {
 	}
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
+		if (vgmCapture.get()) vgmCapture->DAC_stopDMA();
 		PIC_RemoveEvents(END_DMA_Event);
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
 		else SB_RaiseIRQ(SB_IRQ_8);
@@ -514,6 +516,8 @@ static void GenerateDMASound(Bitu size) {
 			if (!sb.dma.left) {
 				LOG(LOG_SB,LOG_NORMAL)("Auto-init transfer with 0 size");
 				sb.mode=MODE_NONE;
+			} else {
+				if (vgmCapture.get()) vgmCapture->DAC_startDMA(sb.dma.rate, sb.dma.total, MemBase +sb.dma.chan->pagebase +sb.dma.chan->baseaddr);
 			}
 		}
 	}
@@ -631,6 +635,7 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool stereo) {
 	sb.dma.mode=mode;
 	PIC_RemoveEvents(END_DMA_Event);
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+	if (mode==DSP_DMA_8 && !stereo && vgmCapture.get()) vgmCapture->DAC_startDMA(sb.dma.rate, sb.dma.total, MemBase +sb.dma.chan->pagebase +sb.dma.chan->baseaddr);
 #if (C_DEBUG)
 	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
 		type,
@@ -725,6 +730,7 @@ static void DSP_Reset(void) {
 	sb.chan->SetFreq(22050);
 //	DSP_SetSpeaker(false);
 	PIC_RemoveEvents(END_DMA_Event);
+	if (vgmCapture.get()) vgmCapture->DAC_stopDMA();
 }
 
 static void DSP_DoReset(Bit8u val) {
@@ -834,6 +840,7 @@ static void DSP_DoCommand(void) {
 			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
 			sb.dac.data[sb.dac.used++]=(Bit8s(sb.dsp.in.data[0] ^ 0x80)) << 8;
 		}
+		if (vgmCapture.get()) vgmCapture->ioWrite_DAC(sb.dsp.in.data[0]);
 		break;
 	case 0x24:	/* Singe Cycle 8-Bit DMA ADC */
 		sb.dma.left=sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
@@ -917,6 +924,7 @@ static void DSP_DoCommand(void) {
 		}
 		sb.mode=MODE_DMA_PAUSE;
 		PIC_RemoveEvents(END_DMA_Event);
+		if (vgmCapture.get()) vgmCapture->DAC_stopDMA();
 		break;
 	case 0xd1:	/* Enable Speaker */
 		DSP_SetSpeaker(true);
