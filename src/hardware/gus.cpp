@@ -179,9 +179,10 @@ public:
 	}
 
 	INLINE Bit32s GetSample16() const {
+		Bit32u useAddr = WaveAddr >> WAVE_FRACT;
 		// Formula used to convert addresses for use with 16-bit samples
-		Bit32u holdAddr = WaveAddr & 0xc0000L;
-		Bit32u useAddr = WaveAddr & 0x1ffffL;
+		Bit32u holdAddr = useAddr & 0xc0000L;
+		useAddr = useAddr & 0x1ffffL;
 		useAddr = useAddr << 1;
 		useAddr = (holdAddr | useAddr);
 		if (WaveAdd >= (1 << WAVE_FRACT)) {
