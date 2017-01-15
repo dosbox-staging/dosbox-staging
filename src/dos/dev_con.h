@@ -132,8 +132,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				/* expand tab if not direct output */
 				page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 				do {
-					if(ansi.enabled) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
-					else INT10_TeletypeOutput(' ',7);
+					INT10_TeletypeOutputAttr(' ',ansi.enabled?ansi.attr:7,true);
 					col=CURSOR_POS_COL(page);
 				} while(col%8);
 				lastwrite = data[count++];
@@ -141,12 +140,10 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 			} else { 
 				/* Some sort of "hack" now that '\n' doesn't set col to 0 (int10_char.cpp old chessgame) */
 				if((data[count] == '\n') && (lastwrite != '\r')) {
-					if(ansi.enabled) INT10_TeletypeOutputAttr('\r',ansi.attr,true);
-					else INT10_TeletypeOutput('\r',7);
+					INT10_TeletypeOutputAttr('\r',ansi.enabled?ansi.attr:7,true);
 				}
 				/* use ansi attribute if ansi is enabled, otherwise use DOS default attribute*/
-				if(ansi.enabled) INT10_TeletypeOutputAttr(data[count],ansi.attr,true);
-				else INT10_TeletypeOutput(data[count],7);
+				INT10_TeletypeOutputAttr(data[count],ansi.enabled?ansi.attr:7,true);
 				lastwrite = data[count++];
 				continue;
 		}
