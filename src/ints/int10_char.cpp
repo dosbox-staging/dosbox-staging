@@ -405,7 +405,7 @@ void INT10_SetCursorPos(Bit8u row,Bit8u col,Bit8u page) {
 void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 	/* Externally used by the mouse routine */
 	PhysPt fontdata;
-	Bitu x,y,pos = row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col;
+	Bit16u cols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	bool split_chr = false;
 	switch (CurMode->type) {
@@ -413,7 +413,7 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 		{	
 			// Compute the address  
 			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-			address+=pos*2;
+			address+=(row*cols+col)*2;
 			// read the char 
 			PhysPt where = CurMode->pstart+address;
 			*result=mem_readw(where);
@@ -441,8 +441,7 @@ void ReadCharAttr(Bit16u col,Bit16u row,Bit8u page,Bit16u * result) {
 		break;
 	}
 
-	x=(pos%CurMode->twidth)*8;
-	y=(pos/CurMode->twidth)*cheight;
+	Bitu x=col*8,y=row*cheight*(cols/CurMode->twidth);
 
 	for (Bit16u chr=0;chr<256;chr++) {
 
@@ -489,14 +488,14 @@ void INT10_ReadCharAttr(Bit16u * result,Bit8u page) {
 void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useattr) {
 	/* Externally used by the mouse routine */
 	PhysPt fontdata;
-	Bitu x,y,pos = row*real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)+col;
+	Bit16u cols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 	Bit8u back,cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	switch (CurMode->type) {
 	case M_TEXT:
 		{	
 			// Compute the address  
 			Bit16u address=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-			address+=pos*2;
+			address+=(row*cols+col)*2;
 			// Write the char 
 			PhysPt where = CurMode->pstart+address;
 			mem_writeb(where,chr);
@@ -573,8 +572,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		break;
 	}
 
-	x=(pos%CurMode->twidth)*8;
-	y=(pos/CurMode->twidth)*cheight;
+	Bitu x=col*8,y=row*cheight*(cols/CurMode->twidth);
 
 	Bit16u ty=(Bit16u)y;
 	for (Bit8u h=0;h<cheight;h++) {
