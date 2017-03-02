@@ -1583,7 +1583,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (sdl.opengl.pixel_buffer_object) {
 			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
 			                sdl.draw.height, GL_BGRA_EXT,
 			                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
@@ -1591,7 +1590,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		} else if (changedLines) {
 			int y = 0;
 			size_t index = 0;
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 			while (y < sdl.draw.height) {
 				if (!(index & 1)) {
 					y += changedLines[index];
