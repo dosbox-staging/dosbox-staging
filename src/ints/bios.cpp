@@ -724,9 +724,6 @@ static Bitu INT14_Handler(void) {
 static Bitu INT15_Handler(void) {
 	static Bit16u biosConfigSeg=0;
 	switch (reg_ah) {
-	case 0x06:
-		LOG(LOG_BIOS,LOG_NORMAL)("INT15 Unkown Function 6");
-		break;
 	case 0xC0:	/* Get Configuration*/
 		{
 			if (biosConfigSeg==0) biosConfigSeg = DOS_GetMemory(1); //We have 16 bytes
