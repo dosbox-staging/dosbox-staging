@@ -33,7 +33,7 @@
 CallBack_Handler CallBack_Handlers[CB_MAX];
 char* CallBack_Description[CB_MAX];
 
-static Bitu call_stop,call_idle,call_default,call_default2;
+static Bitu call_stop,call_idle,call_default;
 Bitu call_priv_io;
 
 static Bitu illegal_handler(void) {
@@ -575,8 +575,6 @@ void CALLBACK_Init(Section* /*sec*/) {
 	/* Default handlers for unhandled interrupts that have to be non-null */
 	call_default=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET,"default");
-	call_default2=CALLBACK_Allocate();
-	CALLBACK_Setup(call_default2,&default_handler,CB_IRET,"default");
 
 	/* Only setup default handler for first part of interrupt table */
 	for (Bit16u ct=0;ct<0x60;ct++) {
@@ -597,7 +595,6 @@ void CALLBACK_Init(Section* /*sec*/) {
 
 	}
 	// setup a few interrupt handlers that point to bios IRETs by default
-	real_writed(0,0x0e*4,CALLBACK_RealPointer(call_default2));	//design your own railroad
 	real_writed(0,0x66*4,CALLBACK_RealPointer(call_default));	//war2d
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
 	real_writed(0,0x68*4,CALLBACK_RealPointer(call_default));

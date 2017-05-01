@@ -963,6 +963,28 @@ static Bitu INT15_Handler(void) {
 	return CBRET_NONE;
 }
 
+static Bitu Default_IRQ_Handler(void) {
+	IO_WriteB(0x20,0x0b);
+	Bit8u master_isr=IO_ReadB(0x20);
+	if (master_isr) {
+		IO_WriteB(0xa0,0x0b);
+		Bit8u slave_isr=IO_ReadB(0xa0);
+		if (slave_isr) {
+			IO_WriteB(0xa1,IO_ReadB(0xa1)|slave_isr);
+			IO_WriteB(0xa0,0x20);
+		} else IO_WriteB(0x21,IO_ReadB(0x21)|(master_isr&~4));
+		IO_WriteB(0x20,0x20);
+#if C_DEBUG
+		Bit16u irq=0,isr=master_isr;
+		if (slave_isr) isr=slave_isr<<8;
+		while (isr>>=1) irq++;
+		LOG(LOG_BIOS,LOG_WARN)("Unexpected IRQ %u",irq);
+#endif
+	} else master_isr=0xff;
+	mem_writeb(BIOS_LAST_UNEXPECTED_IRQ,master_isr);
+	return CBRET_NONE;
+}
+
 static Bitu Reboot_Handler(void) {
 	// switch to text mode, notify user (let's hope INT10 still works)
 	const char* const text = "\n\n   Reboot requested, quitting now.";
@@ -1098,6 +1120,16 @@ public:
 		Bitu call_irq2=CALLBACK_Allocate();	
 		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
+
+		/* Default IRQ handler */
+		Bitu call_irq_default=CALLBACK_Allocate();
+		CALLBACK_Setup(call_irq_default,&Default_IRQ_Handler,CB_IRET,"irq default");
+		RealSetVec(0x0b,CALLBACK_RealPointer(call_irq_default)); // IRQ 3
+		RealSetVec(0x0c,CALLBACK_RealPointer(call_irq_default)); // IRQ 4
+		RealSetVec(0x0d,CALLBACK_RealPointer(call_irq_default)); // IRQ 5
+		RealSetVec(0x0f,CALLBACK_RealPointer(call_irq_default)); // IRQ 7
+		RealSetVec(0x72,CALLBACK_RealPointer(call_irq_default)); // IRQ 10
+		RealSetVec(0x73,CALLBACK_RealPointer(call_irq_default)); // IRQ 11
 
 		// INT 05h: Print Screen
 		// IRQ1 handler calls it when PrtSc key is pressed; does nothing unless hooked
