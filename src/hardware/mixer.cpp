@@ -299,21 +299,22 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 }
 
 void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
-	if (done>=needed) {
+	if (done >= needed) {
 		LOG_MSG("Can't add, buffer full");
 		return;
 	}
 	//Target samples this inputs gets stretched into
-	Bitu outlen=needed-done;
+	Bitu outlen = needed - done;
 	Bitu index = 0;
 	Bitu index_add = (len << FREQ_SHIFT)/outlen;
-	Bitu mixpos=mixer.pos+done;
-	done=needed;
-	Bitu pos=0;
+	Bitu mixpos = mixer.pos + done;
+	done = needed;
+	Bitu pos = 0;
 
 	while (outlen--) {
 		Bitu new_pos = index >> FREQ_SHIFT;
 		if (pos != new_pos) {
+			pos = new_pos;
 			//Forward the previous sample
 			prevSample[0] = data[0];
 			data++;
@@ -322,9 +323,9 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		Bits diff_mul = index & FREQ_MASK;
 		index += index_add;
 		mixpos &= MIXER_BUFMASK;
-		Bits sample = prevSample[0]+((diff*diff_mul) >> FREQ_SHIFT);
-		mixer.work[mixpos][0]+=sample*volmul[0];
-		mixer.work[mixpos][1]+=sample*volmul[1];
+		Bits sample = prevSample[0] + ((diff * diff_mul) >> FREQ_SHIFT);
+		mixer.work[mixpos][0] += sample * volmul[0];
+		mixer.work[mixpos][1] += sample * volmul[1];
 		mixpos++;
 	}
 }
