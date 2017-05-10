@@ -43,7 +43,7 @@ using namespace std;
 
 #define GUS_BASE myGUS.portbase
 #define GUS_RATE myGUS.rate
-#define LOG_GUS 1
+#define LOG_GUS 0
 
 #define VOL_SHIFT 14
 
