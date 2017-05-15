@@ -169,6 +169,8 @@ void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (enabled && needed>done) {
 		Bitu left = (needed - done);
+		left *= freq_add;
+		left  = (left >> FREQ_SHIFT) + ((left & FREQ_MASK)!=0);
 		handler(left);
 	}
 }
