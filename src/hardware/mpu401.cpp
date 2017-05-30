@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2012  The DOSBox Team
+ *  Copyright (C) 2002-2017  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -200,7 +200,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			mpu.clock.timebase=192;
 			break;
 		/* Commands with data byte */
-		case 0xe0: case 0xe1: case 0xe2: case 0xe4: case 0xe6: 
+		case 0xe0: case 0xe1: case 0xe2: case 0xe4: case 0xe6:
 		case 0xe7: case 0xec: case 0xed: case 0xee: case 0xef:
 			mpu.state.command_byte=val;
 			break;
@@ -451,7 +451,7 @@ static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
 						mpu.playbuf[mpu.state.channel].type=T_MIDI_NORM;
 						length=mpu.playbuf[mpu.state.channel].length=2;
 						break;
-					case 0x80: case 0x90: case 0xa0:  case 0xb0: case 0xe0: 
+					case 0x80: case 0x90: case 0xa0:  case 0xb0: case 0xe0:
 						mpu.playbuf[mpu.state.channel].type=T_MIDI_NORM;
 						length=mpu.playbuf[mpu.state.channel].length=3;
 						break;
@@ -523,7 +523,7 @@ static void MPU401_Event(Bitu val) {
 			mpu.playbuf[i].counter--;
 			if (mpu.playbuf[i].counter<=0) UpdateTrack(i);
 		}
-	}		
+	}
 	if (mpu.state.conductor) {
 		mpu.condbuf.counter--;
 		if (mpu.condbuf.counter<=0) UpdateConductor();
@@ -628,12 +628,12 @@ public:
 		if (!MIDI_Available()) return;
 		/*Enabled and there is a Midi */
 		installed = true;
-		
+
 		WriteHandler[0].Install(0x330,&MPU401_WriteData,IO_MB);
 		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
 		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
 		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
-	
+
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
 		mpu.mode=M_UART;
