@@ -71,6 +71,9 @@ MidiHandler Midi_none;
 /* Include different midi drivers, lowest ones get checked first for default.
    Each header provides an independent midi interface. */
 
+#include "midi_mt32.h"
+static MidiHandler_mt32 &Midi_mt32 = MidiHandler_mt32::GetInstance();
+
 #if defined(MACOSX)
 
 #if defined(C_SUPPORTS_COREMIDI)
