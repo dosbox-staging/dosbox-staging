@@ -37,7 +37,7 @@ public:
 
 	DECLARE_WRITE8_MEMBER( write );
 
-protected:
+//protected:
 	// device-level overrides
 	virtual void device_start() override;
 

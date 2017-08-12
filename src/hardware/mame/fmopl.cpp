@@ -379,7 +379,7 @@ struct FM_OPL
 	uint32_t clock;                   /* master clock  (Hz)           */
 	uint32_t rate;                    /* sampling rate (Hz)           */
 	double freqbase;                /* frequency base               */
-	attotime TimerBase;         /* Timer base time (==sampling time)*/
+	//attotime TimerBase;         /* Timer base time (==sampling time)*/
 	device_t *device;
 
 	signed int phase_modulation;    /* phase modulation input (SLOT 2) */
@@ -1434,7 +1434,7 @@ void FM_OPL::initialize()
 	/*logerror("freqbase=%f\n", freqbase);*/
 
 	/* Timer base time */
-	TimerBase = attotime::from_hz(clock) * 72;
+	//TimerBase = attotime::from_hz(clock) * 72;
 
 	/* make fnumber -> increment counter table */
 	for( i=0 ; i < 1024 ; i++ )
@@ -1514,6 +1514,7 @@ void FM_OPL::WriteReg(int r, int v)
 		case 0x03:  /* Timer 2 */
 			T[1] = (256-v)*16;
 			break;
+#if 0
 		case 0x04:  /* IRQ clear / mask and Timer enable */
 			if(v&0x80)
 			{   /* IRQ flag clear */
@@ -1544,6 +1545,7 @@ void FM_OPL::WriteReg(int r, int v)
 				}
 			}
 			break;
+#endif
 #if BUILD_Y8950
 		case 0x06:      /* Key Board OUT */
 			if(type&OPL_TYPE_KEYBOARD)
@@ -1846,6 +1848,7 @@ void FM_OPL::postload()
 } // anonymous namespace
 
 
+#if  0
 static void OPLsave_state_channel(device_t *device, OPL_CH *CH)
 {
 	int slot, ch;
@@ -1886,7 +1889,6 @@ static void OPLsave_state_channel(device_t *device, OPL_CH *CH)
 		}
 	}
 }
-
 
 /* Register savestate for a virtual YM3812/YM3526Y8950 */
 
@@ -1935,6 +1937,8 @@ static void OPL_save_state(FM_OPL *OPL, device_t *device)
 
 	device->machine().save().register_postload(save_prepost_delegate(FUNC(FM_OPL::postload), OPL));
 }
+
+#endif
 
 static void OPL_clock_changed(FM_OPL *OPL, uint32_t clock, uint32_t rate)
 {
@@ -2103,7 +2107,6 @@ static inline void CSMKeyControll(OPL_CH *CH)
 	CH->SLOT[SLOT2].KEYOFF(~4);
 }
 
-
 static int OPLTimerOver(FM_OPL *OPL,int c)
 {
 	if( c )
@@ -2123,15 +2126,14 @@ static int OPLTimerOver(FM_OPL *OPL,int c)
 		}
 	}
 	/* reload timer */
-	if (OPL->timer_handler) (OPL->timer_handler)(OPL->TimerParam,c,OPL->TimerBase * OPL->T[c]);
+	//if (OPL->timer_handler) (OPL->timer_handler)(OPL->TimerParam,c,OPL->TimerBase * OPL->T[c]);
 	return OPL->status>>7;
 }
-
 
 #define MAX_OPL_CHIPS 2
 
 
-#if (BUILD_YM3812)
+#if BUILD_YM3812
 
 void ym3812_clock_changed(void *chip, uint32_t clock, uint32_t rate)
 {
@@ -2144,7 +2146,7 @@ void * ym3812_init(device_t *device, uint32_t clock, uint32_t rate)
 	FM_OPL *YM3812 = OPLCreate(device,clock,rate,OPL_TYPE_YM3812);
 	if (YM3812)
 	{
-		OPL_save_state(YM3812, device);
+		//OPL_save_state(YM3812, device);
 		ym3812_reset_chip(YM3812);
 	}
 	return YM3812;
@@ -2196,7 +2198,6 @@ void ym3812_set_update_handler(void *chip,OPL_UPDATEHANDLER UpdateHandler,device
 	FM_OPL *YM3812 = (FM_OPL *)chip;
 	OPLSetUpdateHandler(YM3812, UpdateHandler, device);
 }
-
 
 /*
 ** Generate samples for one of the YM3812's
@@ -2277,7 +2278,7 @@ void *ym3526_init(device_t *device, uint32_t clock, uint32_t rate)
 	FM_OPL *YM3526 = OPLCreate(device,clock,rate,OPL_TYPE_YM3526);
 	if (YM3526)
 	{
-		OPL_save_state(YM3526, device);
+		//OPL_save_state(YM3526, device);
 		ym3526_reset_chip(YM3526);
 	}
 	return YM3526;
@@ -2425,7 +2426,7 @@ void *y8950_init(device_t *device, uint32_t clock, uint32_t rate)
 		/*Y8950->deltat->write_time = 10.0 / clock;*/       /* a single byte write takes 10 cycles of main clock */
 		/*Y8950->deltat->read_time  = 8.0 / clock;*/        /* a single byte read takes 8 cycles of main clock */
 		/* reset */
-		OPL_save_state(Y8950, device);
+		//OPL_save_state(Y8950, device);
 		y8950_reset_chip(Y8950);
 	}
 
@@ -2568,5 +2569,6 @@ void y8950_set_keyboard_handler(void *chip,OPL_PORTHANDLER_W KeyboardHandler_w,O
 	OPL->keyboardhandler_r = KeyboardHandler_r;
 	OPL->keyboard_param = device;
 }
+
 
 #endif

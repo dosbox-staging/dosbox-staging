@@ -128,7 +128,8 @@
 #include "sn76496.h"
 
 #define MAX_OUTPUT 0x7fff
-
+//When you go over this create sample
+#define RATE_MAX ( 1 << 30)
 
 sn76496_base_device::sn76496_base_device(
 		const machine_config &mconfig,
@@ -145,7 +146,7 @@ sn76496_base_device::sn76496_base_device(
 		uint32_t clock)
 	: device_t(mconfig, type, tag, owner, clock)
 	, device_sound_interface(mconfig, *this)
-	, m_ready_handler(*this)
+//	, m_ready_handler(*this)
 	, m_feedback_mask(feedbackmask)
 	, m_whitenoise_tap1(noisetap1)
 	, m_whitenoise_tap2(noisetap2)
@@ -155,6 +156,7 @@ sn76496_base_device::sn76496_base_device(
 	, m_sega_style_psg(sega)
 {
 }
+
 
 sn76496_device::sn76496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: sn76496_base_device(mconfig, SN76496, tag, 0x10000, 0x04, 0x08, false, false, 8, true, owner, clock)
@@ -206,17 +208,19 @@ segapsg_device::segapsg_device(const machine_config &mconfig, const char *tag, d
 {
 }
 
-
 void sn76496_base_device::device_start()
 {
-	int sample_rate = clock()/2;
+	sample_rate = clock()/2;
+	rate_add = RATE_MAX;
+	rate_counter = 0;
+
 	int i;
 	double out;
 	int gain;
 
-	m_ready_handler.resolve_safe();
+	//m_ready_handler.resolve_safe();
 
-	m_sound = machine().sound().stream_alloc(*this, 0, (m_stereo? 2:1), sample_rate);
+	//m_sound = machine().sound().stream_alloc(*this, 0, (m_stereo? 2:1), sample_rate);
 
 	for (i = 0; i < 4; i++) m_volume[i] = 0;
 
@@ -264,14 +268,14 @@ void sn76496_base_device::device_start()
 
 	m_ready_state = true;
 
-	register_for_save_states();
+	//register_for_save_states();
 }
 
 WRITE8_MEMBER( sn76496_base_device::stereo_w )
 {
-	m_sound->update();
-	if (m_stereo) m_stereo_mask = data;
-	else fatalerror("sn76496_base_device: Call to stereo write with mono chip!\n");
+//	m_sound->update();
+//	if (m_stereo) m_stereo_mask = data;
+//	else fatalerror("sn76496_base_device: Call to stereo write with mono chip!\n");
 }
 
 void sn76496_base_device::write(uint8_t data)
@@ -279,7 +283,7 @@ void sn76496_base_device::write(uint8_t data)
 	int n, r, c;
 
 	// update the output buffer before changing the registers
-	m_sound->update();
+//	m_sound->update();
 
 	// set number of cycles until READY is active; this is always one
 	// 'sample', i.e. it equals the clock divider exactly
@@ -347,12 +351,12 @@ void sn76496_base_device::countdown_cycles()
 	if (m_cycles_to_ready > 0)
 	{
 		m_cycles_to_ready--;
-		if (m_ready_state==true) m_ready_handler(CLEAR_LINE);
+		//if (m_ready_state==true) m_ready_handler(CLEAR_LINE);
 		m_ready_state = false;
 	}
 	else
 	{
-		if (m_ready_state==false) m_ready_handler(ASSERT_LINE);
+		//if (m_ready_state==false) m_ready_handler(ASSERT_LINE);
 		m_ready_state = true;
 	}
 }
@@ -412,6 +416,12 @@ void sn76496_base_device::sound_stream_update(sound_stream &stream, stream_sampl
 			}
 		}
 
+		//Skip final generation if you don't need an actual sample
+		rate_counter += rate_add;
+		if (rate_counter < RATE_MAX)
+			continue;
+		rate_counter -= RATE_MAX;
+
 		if (m_stereo)
 		{
 			out = ((((m_stereo_mask & 0x10)!=0) && (m_output[0]!=0))? m_volume[0] : 0)
@@ -433,11 +443,17 @@ void sn76496_base_device::sound_stream_update(sound_stream &stream, stream_sampl
 		}
 
 		if (m_negate) { out = -out; out2 = -out2; }
-
 		*(lbuffer++) = out;
 		if (m_stereo) *(rbuffer++) = out2;
 		samples--;
 	}
+}
+
+
+void sn76496_base_device::convert_samplerate(int32_t target_rate) {
+	//Simple 10 bit shift for samplerate conversion
+	rate_add = (int32_t)( RATE_MAX * (target_rate / (double)sample_rate) );
+	rate_counter = 0;
 }
 
 void sn76496_base_device::register_for_save_states()
@@ -472,3 +488,4 @@ DEFINE_DEVICE_TYPE(SN94624,  sn94624_device,   "sn94624",      "SN94624")
 DEFINE_DEVICE_TYPE(NCR7496,  ncr7496_device,   "ncr7496",      "NCR7496")
 DEFINE_DEVICE_TYPE(GAMEGEAR, gamegear_device,  "gamegear_psg", "Game Gear PSG")
 DEFINE_DEVICE_TYPE(SEGAPSG,  segapsg_device,   "segapsg",      "Sega VDP PSG")
+

@@ -17,21 +17,26 @@ DECLARE_DEVICE_TYPE(NCR7496,  ncr7496_device)
 DECLARE_DEVICE_TYPE(GAMEGEAR, gamegear_device)
 DECLARE_DEVICE_TYPE(SEGAPSG,  segapsg_device)
 
+#if 0
+
 
 #define MCFG_SN76496_READY_HANDLER(cb) \
 		devcb = &sn76496_base_device::set_ready_handler(*device, (DEVCB_##cb));
+
+#endif
 
 class sn76496_base_device : public device_t, public device_sound_interface
 {
 public:
 	// static configuration helpers
-	template <class Object> static devcb_base &set_ready_handler(device_t &device, Object &&cb) { return downcast<sn76496_base_device &>(device).m_ready_handler.set_callback(std::forward<Object>(cb)); }
+//	template <class Object> static devcb_base &set_ready_handler(device_t &device, Object &&cb) { return downcast<sn76496_base_device &>(device).m_ready_handler.set_callback(std::forward<Object>(cb)); }
 
 	DECLARE_WRITE8_MEMBER( stereo_w );
 	void write(uint8_t data);
 	DECLARE_WRITE8_MEMBER( write );
-	DECLARE_READ_LINE_MEMBER( ready_r ) { return m_ready_state ? 1 : 0; }
+//	DECLARE_READ_LINE_MEMBER( ready_r ) { return m_ready_state ? 1 : 0; }
 
+	void			convert_samplerate(int32_t target_rate);
 protected:
 	sn76496_base_device(
 			const machine_config &mconfig,
@@ -55,11 +60,13 @@ private:
 	void            register_for_save_states();
 	void            countdown_cycles();
 
+
+
 	bool            m_ready_state;
 
-	devcb_write_line m_ready_handler;
+	//devcb_write_line m_ready_handler;
 
-	sound_stream*   m_sound;
+	//sound_stream*   m_sound;
 
 	const int32_t     m_feedback_mask;    // mask for feedback
 	const int32_t     m_whitenoise_tap1;  // mask for white noise tap 1 (higher one, usually bit 14)
@@ -80,6 +87,11 @@ private:
 	int32_t           m_count[4];         // Position within the waveform
 	int32_t           m_output[4];        // 1-bit output of each channel, pre-volume
 	int32_t           m_cycles_to_ready;  // number of cycles until the READY line goes active
+	//Modifications for easier sample conversion
+	int32_t			  sample_rate;
+	//Sample rate conversion
+	int32_t			  rate_add;
+	int32_t			  rate_counter;
 };
 
 // SN76496: Whitenoise verified, phase verified, periodic verified (by Michael Zapf)

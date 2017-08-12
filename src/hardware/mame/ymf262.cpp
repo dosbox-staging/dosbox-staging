@@ -279,7 +279,7 @@ struct OPL3
 	int clock;                      /* master clock  (Hz)           */
 	int rate;                       /* sampling rate (Hz)           */
 	double freqbase;                /* frequency base               */
-	attotime TimerBase;         /* Timer base time (==sampling time)*/
+	//attotime TimerBase;         /* Timer base time (==sampling time)*/
 	device_t *device;
 
 	/* Optional handlers */
@@ -1351,7 +1351,7 @@ static void OPL3_initalize(OPL3 *chip)
 	/* logerror("YMF262: freqbase=%f\n", chip->freqbase); */
 
 	/* Timer base time */
-	chip->TimerBase = attotime::from_hz(chip->clock) * (8*36);
+	//chip->TimerBase = attotime::from_hz(chip->clock) * (8*36);
 
 	/* make fnumber -> increment counter table */
 	for( i=0 ; i < 1024 ; i++ )
@@ -1745,6 +1745,7 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 		case 0x03:  /* Timer 2 */
 			chip->T[1] = (256-v)*16;
 		break;
+#if 0
 		case 0x04:  /* IRQ clear / mask and Timer enable */
 			if(v&0x80)
 			{   /* IRQ flags clear */
@@ -1774,6 +1775,7 @@ static void OPL3WriteReg(OPL3 *chip, int r, int v)
 					if (chip->timer_handler) (chip->timer_handler)(chip->TimerParam,0,period);
 				}
 			}
+#endif
 		break;
 		case 0x08:  /* x,NTS,x,x, x,x,x,x */
 			chip->nts = v;
@@ -2356,7 +2358,7 @@ static OPL3 *OPL3Create(device_t *device, int clock, int rate, int type)
 	if (OPL3_LockTable(device) == -1) return nullptr;
 
 	/* allocate memory block */
-	chip = auto_alloc_clear(device->machine(), <OPL3>());
+	chip = auto_alloc_clear(device->machine(), OPL3 );
 
 	chip->device = device;
 	chip->type  = type;
@@ -2452,11 +2454,12 @@ static int OPL3TimerOver(OPL3 *chip,int c)
 		OPL3_STATUS_SET(chip,0x40);
 	}
 	/* reload timer */
-	if (chip->timer_handler) (chip->timer_handler)(chip->TimerParam,c,chip->TimerBase * chip->T[c]);
+//	if (chip->timer_handler) (chip->timer_handler)(chip->TimerParam,c,chip->TimerBase * chip->T[c]);
 	return chip->status>>7;
 }
 
 static void OPL3_save_state(OPL3 *chip, device_t *device) {
+#if 0 
 	for (int ch=0; ch<18; ch++) {
 		OPL3_CH *channel = &chip->P_CH[ch];
 		device->save_item(NAME(channel->block_fnum), ch);
@@ -2521,6 +2524,7 @@ static void OPL3_save_state(OPL3 *chip, device_t *device) {
 	device->save_item(NAME(chip->address));
 	device->save_item(NAME(chip->status));
 	device->save_item(NAME(chip->statusmask));
+#endif
 }
 
 void * ymf262_init(device_t *device, int clock, int rate)

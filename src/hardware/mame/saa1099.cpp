@@ -125,7 +125,8 @@ static constexpr uint8_t envelope[8][64] = {
 
 
 // device type definition
-DEFINE_DEVICE_TYPE(SAA1099, saa1099_device, "saa1099", "Philips SAA1099")
+//DEFINE_DEVICE_TYPE(SAA1099, saa1099_device, "saa1099", "Philips SAA1099")
+#define SAA1099 1
 
 //**************************************************************************
 //  LIVE DEVICE
