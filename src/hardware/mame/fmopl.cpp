@@ -106,8 +106,20 @@ Revision History:
 #define SIN_BITS        10
 #define SIN_LEN         (1<<SIN_BITS)
 #define SIN_MASK        (SIN_LEN-1)
+#define DV				(0.1875 / 2.0 )
 
 #define TL_RES_LEN      (256)   /* 8 bits addressing (real chip) */
+#define TL_TAB_LEN		(12 * 2 * TL_RES_LEN)
+
+/*  TL_TAB_LEN is calculated as:
+*   12 - sinus amplitude bits     (Y axis)
+*   2  - sinus sign bit           (Y axis)
+*   TL_RES_LEN - sinus resolution (X axis)
+*/
+
+
+#define ENV_QUIET      ( TL_TAB_LEN >> 4 )
+#define LFO_AM_TAB_ELEMENTS 210
 
 
 
@@ -227,7 +239,7 @@ struct OPL_SLOT
 	uint32_t  TL;         /* total level: TL << 2         */
 	int32_t   TLL;        /* adjusted now TL              */
 	int32_t   volume;     /* envelope counter             */
-	uint32_t  sl;         /* sustain level: sl_tab[SL]    */
+	int32_t   sl;         /* sustain level: sl_tab[SL]    */
 	uint8_t   eg_sh_ar;   /* (attack state)               */
 	uint8_t   eg_sel_ar;  /* (attack state)               */
 	uint8_t   eg_sh_dr;   /* (decay state)                */
@@ -970,26 +982,9 @@ private:
 #endif
 	}
 
-
-	static constexpr uint32_t SC(uint32_t db) { return uint32_t(db * (2.0 / ENV_STEP)); }
-
-
-	static constexpr double DV = 0.1875 / 2.0;
-
-
-	/*  TL_TAB_LEN is calculated as:
-	*   12 - sinus amplitude bits     (Y axis)
-	*   2  - sinus sign bit           (Y axis)
-	*   TL_RES_LEN - sinus resolution (X axis)
-	*/
-	static constexpr unsigned TL_TAB_LEN = 12 * 2 * TL_RES_LEN;
-	static constexpr unsigned ENV_QUIET = TL_TAB_LEN >> 4;
-
-	static constexpr unsigned LFO_AM_TAB_ELEMENTS = 210;
-
 	static const double ksl_tab[8*16];
 	static const uint32_t ksl_shift[4];
-	static const uint32_t sl_tab[16];
+	static const int32_t sl_tab[16];
 	static const unsigned char eg_inc[15 * RATE_STEPS];
 
 	static const uint8_t mul_tab[16];
@@ -1066,7 +1061,8 @@ const uint32_t FM_OPL::ksl_shift[4] = { 31, 1, 2, 0 };
 
 /* sustain level table (3dB per step) */
 /* 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)*/
-const uint32_t FM_OPL::sl_tab[16]={
+#define SC(db)			int32_t(db * (2.0 / ENV_STEP))
+const int32_t FM_OPL::sl_tab[16]={
 	SC( 0),SC( 1),SC( 2),SC( 3),SC( 4),SC( 5),SC( 6),SC( 7),
 	SC( 8),SC( 9),SC(10),SC(11),SC(12),SC(13),SC(14),SC(31)
 };
