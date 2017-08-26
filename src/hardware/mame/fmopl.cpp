@@ -1766,10 +1766,15 @@ void FM_OPL::ResetChip()
 	for(int i = 0xff ; i >= 0x20 ; i-- ) WriteReg(i,0);
 
 	/* reset operator parameters */
-	for(OPL_CH &CH : P_CH)
+//	for(OPL_CH &CH : P_CH)
+	for(int ch = 0; ch < sizeof( P_CH )/ sizeof(P_CH[0]); ch++)
 	{
-		for(OPL_SLOT &SLOT : CH.SLOT)
+		OPL_CH &CH = P_CH[ch];
+//		for(OPL_SLOT &SLOT : CH.SLOT)
+		for(int slot = 0; slot < sizeof( CH.SLOT ) / sizeof( CH.SLOT[0]); slot++)
 		{
+		    
+			OPL_SLOT &SLOT = CH.SLOT[slot];
 			/* wave table */
 			SLOT.wavetable = 0;
 			SLOT.state     = EG_OFF;
@@ -1793,15 +1798,17 @@ void FM_OPL::ResetChip()
 
 void FM_OPL::postload()
 {
-	for(OPL_CH &CH : P_CH)
+	for(int ch = 0; ch < sizeof( P_CH )/ sizeof(P_CH[0]); ch++)
 	{
+		OPL_CH &CH = P_CH[ch];
 		/* Look up key scale level */
 		uint32_t const block_fnum = CH.block_fnum;
 		CH.ksl_base = static_cast<uint32_t>(ksl_tab[block_fnum >> 6]);
 		CH.fc       = fn_tab[block_fnum & 0x03ff] >> (7 - (block_fnum >> 10));
 
-		for(OPL_SLOT &SLOT : CH.SLOT)
+		for(int slot = 0; slot < sizeof( CH.SLOT ) / sizeof( CH.SLOT[0]); slot++)
 		{
+			OPL_SLOT &SLOT = CH.SLOT[slot];
 			/* Calculate key scale rate */
 			SLOT.ksr = CH.kcode >> SLOT.KSR;
 
@@ -1955,7 +1962,7 @@ static FM_OPL *OPLCreate(device_t *device, uint32_t clock, uint32_t rate, int ty
 	FM_OPL *OPL;
 	int state_size;
 
-	if (FM_OPL::LockTable(device) == -1) return nullptr;
+	if (FM_OPL::LockTable(device) == -1) return 0;
 
 	/* calculate OPL state size */
 	state_size  = sizeof(FM_OPL);

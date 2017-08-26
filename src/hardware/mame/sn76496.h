@@ -52,8 +52,8 @@ protected:
 			device_t *owner,
 			uint32_t clock);
 
-	virtual void    device_start() override;
-	virtual void    sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples) override;
+	virtual void    device_start();
+	virtual void    sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples);
 
 private:
 	inline bool     in_noise_mode();

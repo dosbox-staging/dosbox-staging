@@ -23,6 +23,22 @@
 //  TYPE DEFINITIONS
 //**************************************************************************
 
+//Container class for int that just initalizes to 0
+class NullInt {
+    int value;
+public:
+    operator int& () {
+	return value;
+    }
+    
+    int& operator= ( int set ) {
+	value = set;
+	return value;
+    }
+    
+    NullInt( int set = 0 ) : value( set ) {
+    }
+};
 
 // ======================> saa1099_device
 
@@ -39,37 +55,45 @@ public:
 
 //protected:
 	// device-level overrides
-	virtual void device_start() override;
+	virtual void device_start();
 
 	// sound stream update overrides
-	virtual void sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples) override;
+	virtual void sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples);
 
 private:
 	struct saa1099_channel
 	{
-		saa1099_channel() : amplitude{ 0, 0 }, envelope{ 0, 0 } { }
+		saa1099_channel() {
+		    //Quite hacky, but let's see how it goes
+		    memset( this, 0, sizeof( *this ) );
+		}
 
-		int frequency    = 0;   /* frequency (0x00..0xff) */
-		int freq_enable  = 0;   /* frequency enable */
-		int noise_enable = 0;   /* noise enable */
-		int octave       = 0;   /* octave (0x00..0x07) */
+		int frequency    ;   /* frequency (0x00..0xff) */
+		int freq_enable  ;   /* frequency enable */
+		int noise_enable ;   /* noise enable */
+		int octave       ;   /* octave (0x00..0x07) */
 		int amplitude[2];       /* amplitude (0x00..0x0f) */
 		int envelope[2];        /* envelope (0x00..0x0f or 0x10 == off) */
 
 		/* vars to simulate the square wave */
-		double counter = 0.0;
-		double freq = 0.0;
-		int level = 0;
+		double counter ;
+		double freq ;
+		int level ;
+		
 	};
 
 	struct saa1099_noise
 	{
-		saa1099_noise() { }
+		saa1099_noise() { 
+		    counter = 0;
+		    freq = 0;
+		    level = 0xFFFFFFFF;
+		}
 
 		/* vars to simulate the noise generator output */
-		double counter = 0.0;
-		double freq = 0.0;
-		uint32_t level = 0xFFFFFFFF;         /* noise polynomial shifter */
+		double counter;
+		double freq;
+		uint32_t level;         /* noise polynomial shifter */
 	};
 
 	void envelope_w(int ch);

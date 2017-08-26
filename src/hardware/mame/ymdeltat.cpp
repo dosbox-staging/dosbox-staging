@@ -80,13 +80,13 @@
 
 /* Forecast to next Forecast (rate = *8) */
 /* 1/8 , 3/8 , 5/8 , 7/8 , 9/8 , 11/8 , 13/8 , 15/8 */
-static constexpr int32_t ym_deltat_decode_tableB1[16] = {
+static const int32_t ym_deltat_decode_tableB1[16] = {
 	1,   3,   5,   7,   9,  11,  13,  15,
 	-1,  -3,  -5,  -7,  -9, -11, -13, -15,
 };
 /* delta to next delta (rate= *64) */
 /* 0.9 , 0.9 , 0.9 , 0.9 , 1.2 , 1.6 , 2.0 , 2.4 */
-static constexpr int32_t ym_deltat_decode_tableB2[16] = {
+static const int32_t ym_deltat_decode_tableB2[16] = {
 	57,  57,  57,  57, 77, 102, 128, 153,
 	57,  57,  57,  57, 77, 102, 128, 153
 };
@@ -152,7 +152,7 @@ uint8_t YM_DELTAT::ADPCM_Read()
 
 
 /* 0-DRAM x1, 1-ROM, 2-DRAM x8, 3-ROM (3 is bad setting - not allowed by the manual) */
-static constexpr uint8_t dram_rightshift[4]={3,0,0,0};
+static const uint8_t dram_rightshift[4]={3,0,0,0};
 
 /* DELTA-T ADPCM write register */
 void YM_DELTAT::ADPCM_Write(int r, int v)

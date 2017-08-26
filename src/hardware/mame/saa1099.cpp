@@ -73,14 +73,14 @@
 #define LEFT    0x00
 #define RIGHT   0x01
 
-static constexpr int amplitude_lookup[16] = {
+static const int amplitude_lookup[16] = {
 		0*32767/16,  1*32767/16,  2*32767/16,   3*32767/16,
 		4*32767/16,  5*32767/16,  6*32767/16,   7*32767/16,
 		8*32767/16,  9*32767/16, 10*32767/16, 11*32767/16,
 	12*32767/16, 13*32767/16, 14*32767/16, 15*32767/16
 };
 
-static constexpr uint8_t envelope[8][64] = {
+static const uint8_t envelope[8][64] = {
 	/* zero amplitude */
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -136,10 +136,13 @@ static constexpr uint8_t envelope[8][64] = {
 //  saa1099_device - constructor
 //-------------------------------------------------
 
+#define FILL_ARRAY( _FILL_ ) memset( _FILL_, 0, sizeof( _FILL_ ) )
+
 saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
 	: device_t(mconfig, SAA1099, tag, owner, clock)
 	, device_sound_interface(mconfig, *this)
-	, m_stream(nullptr)
+	, m_stream(0)
+#if 0
 	, m_noise_params{ 0, 0 }
 	, m_env_enable{ 0, 0 }
 	, m_env_reverse_right{ 0, 0 }
@@ -147,11 +150,20 @@ saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, d
 	, m_env_bits{ 0, 0 }
 	, m_env_clock{ 0, 0 }
 	, m_env_step{ 0, 0 }
+#endif
 	, m_all_ch_enable(0)
 	, m_sync_state(0)
 	, m_selected_reg(0)
 	, m_sample_rate(0.0)
 {
+	FILL_ARRAY( m_noise_params );
+	FILL_ARRAY( m_env_enable );
+	FILL_ARRAY( m_env_reverse_right );
+	FILL_ARRAY( m_env_mode );
+	FILL_ARRAY( m_env_bits );
+	FILL_ARRAY( m_env_clock );
+	FILL_ARRAY( m_env_step );
+	
 }
 
 
