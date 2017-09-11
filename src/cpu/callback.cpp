@@ -639,7 +639,7 @@ void CALLBACK_Init(Section* /*sec*/) {
 	// setup a few interrupt handlers that point to bios IRETs by default
 	real_writed(0,0x66*4,CALLBACK_RealPointer(call_default));	//war2d
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
-	real_writed(0,0x68*4,CALLBACK_RealPointer(call_default));
+	if (machine==MCH_CGA) real_writed(0,0x68*4,0);				//Popcorn
 	real_writed(0,0x5c*4,CALLBACK_RealPointer(call_default));	//Network stuff
 	//real_writed(0,0xf*4,0); some games don't like it
 
