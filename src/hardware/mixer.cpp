@@ -451,7 +451,7 @@ static void MIXER_Mix_NoSound(void) {
 	}
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
-	mixer.needed += (mixer.tick_counter >> TICK_SHIFT);
+	mixer.needed = (mixer.tick_counter >> TICK_SHIFT);
 	mixer.tick_counter &= TICK_MASK;
 	mixer.done=0;
 }
