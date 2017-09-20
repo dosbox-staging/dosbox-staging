@@ -354,7 +354,7 @@ static SDLKey sdlkey_map[]={
 	/* 4 extra keys that don't really exist, but are needed for
 	 * round-trip mapping (dosbox uses RMETA only for hotkeys, it's
 	 * not really mapped to an emulated key) */
-	SDLK_RMETA, SDLK_RSHIFT, SDLK_RALT, SDLK_RCTRL,
+	SDLK_RMETA, SDLK_RSHIFT, SDLK_RALT, SDLK_RCTRL
 };
 #define MAX_SCANCODES (0x80+4)
 /* Make sure that the table above has the expected size.  This
