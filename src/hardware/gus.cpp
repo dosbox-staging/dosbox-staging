@@ -742,7 +742,15 @@ static void write_gus(Bitu port,Bitu val,Bitu iolen) {
 
 static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
-	Bitu dmaaddr = myGUS.dmaAddr << 4;
+	Bitu dmaaddr;
+	//Calculate the dma address
+	//DMA transfers can't cross 256k boundaries, so you should be safe to just determine the start once and go from there
+	//Bit 2 - 0 = if DMA channel is an 8 bit channel(0 - 3).
+	if (myGUS.DMAControl & 0x4)
+		dmaaddr = (((myGUS.dmaAddr & 0x1fff) << 1) | (myGUS.dmaAddr & 0xc000)) << 4;
+	else
+		dmaaddr = myGUS.dmaAddr << 4;
+	//Reading from dma?
 	if((myGUS.DMAControl & 0x2) == 0) {
 		Bitu read=chan->Read(chan->currcnt+1,&GUSRam[dmaaddr]);
 		//Check for 16 or 8bit channel
@@ -758,8 +766,8 @@ static void GUS_DMA_Callback(DmaChannel * chan,DMAEvent event) {
 				for(i=dmaaddr+1;i<(dmaaddr+read);i+=2) GUSRam[i] ^= 0x80;
 			}
 		}
+	//Writing to dma
 	} else {
-		//Read data out of UltraSound
 		chan->Write(chan->currcnt+1,&GUSRam[dmaaddr]);
 	}
 	/* Raise the TC irq if needed */
