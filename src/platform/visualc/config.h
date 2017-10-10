@@ -3,6 +3,9 @@
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
 
+/* Define to 1 to enable output=ddraw */
+#define C_DDRAW 1 
+
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1
 
@@ -46,10 +49,7 @@
 /* environ can be linked */
 #define ENVIRON_LINKED 1
 
-/* Define to 1 if you have the <ddraw.h> header file. */
-#define HAVE_DDRAW_H 1
-
-/* Define to 1 if you want serial passthrough support (Win32 only). */
+/* Define to 1 if you want serial passthrough support. */
 #define C_DIRECTSERIAL 1
 
 #define GCC_ATTRIBUTE(x) /* attribute not supported */

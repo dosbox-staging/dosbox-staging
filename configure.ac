@@ -138,7 +138,7 @@ fi
 dnl Checks for libraries.
 
 #Check if the compiler support attributes
-AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
+AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compiler supports attributes for structures.])
 AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 typedef struct { } __attribute__((packed)) junk;]],
@@ -149,12 +149,12 @@ typedef struct { } __attribute__((packed)) junk;]],
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
 
-AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compilers supports always_inline attribute.])
+AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compiler supports always_inline attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
-AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compilers supports fastcall attribute.])
+AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compiler supports fastcall attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((fastcall)) )
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([ void __attribute__((fastcall)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_FASTCALL)],AC_MSG_RESULT(no))
@@ -436,6 +436,26 @@ case "$host" in
 esac
 fi
 
+AH_TEMPLATE(C_DDRAW,[Define to 1 to enable output=ddraw (Win32)])
+AC_ARG_ENABLE(ddraw,AC_HELP_STRING([--disable-ddraw],[Disable ddraw support]),enable_ddraw=yes)
+AC_CHECK_HEADER(ddraw.h, have_ddraw_h=yes , have_ddraw_h=no , )
+AC_MSG_CHECKING(whether ddraw display output will be enabled)
+if test x$enable_opengl = xyes; then
+case "$host" in
+    *-*-cygwin* | *-*-mingw32*)
+       if test x$have_ddraw_h = xyes ; then
+         AC_MSG_RESULT(yes)
+         AC_DEFINE(C_DDRAW,1)
+       else
+         AC_MSG_RESULT(no)
+       fi
+       ;;
+    *)
+       AC_MSG_RESULT(no)
+       ;;
+esac
+fi
+
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
 AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
 AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
@@ -472,7 +492,6 @@ dnl Some target detection and actions for them
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
-       AC_CHECK_HEADERS(ddraw.h)
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
