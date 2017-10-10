@@ -437,10 +437,10 @@ esac
 fi
 
 AH_TEMPLATE(C_DDRAW,[Define to 1 to enable output=ddraw (Win32)])
-AC_ARG_ENABLE(ddraw,AC_HELP_STRING([--disable-ddraw],[Disable ddraw support]),enable_ddraw=yes)
+AC_ARG_ENABLE(ddraw,AC_HELP_STRING([--disable-ddraw],[Disable ddraw support]),,enable_ddraw=yes)
 AC_CHECK_HEADER(ddraw.h, have_ddraw_h=yes , have_ddraw_h=no , )
 AC_MSG_CHECKING(whether ddraw display output will be enabled)
-if test x$enable_opengl = xyes; then
+if test x$enable_ddraw = xyes; then
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        if test x$have_ddraw_h = xyes ; then
