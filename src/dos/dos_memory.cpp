@@ -20,7 +20,6 @@
 #include "dosbox.h"
 #include "mem.h"
 #include "dos_inc.h"
-#include "callback.h"
 
 #define UMB_START_SEG 0x9fff
 
@@ -387,17 +386,10 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 }
 
 
-static Bitu DOS_default_handler(void) {
-	LOG(LOG_CPU,LOG_ERROR)("DOS rerouted Interrupt Called %X",lastint);
-	return CBRET_NONE;
-}
-
-static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {
 	/* Let dos claim a few bios interrupts. Makes DOSBox more compatible with 
 	 * buggy games, which compare against the interrupt table. (probably a 
 	 * broken linked list implementation) */
-	callbackhandler.Allocate(&DOS_default_handler,"DOS default int");
 	Bit16u ihseg = 0x70;
 	Bit16u ihofs = 0x08;
 	real_writeb(ihseg,ihofs,(Bit8u)0xCF);		//An IRET Instruction
