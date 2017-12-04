@@ -18,12 +18,19 @@
 
 
 #include <string.h>
+#include <math.h>
 #include "dosbox.h"
 #include "inout.h"
 #include "setup.h"
 #include "joystick.h"
 #include "pic.h"
 #include "support.h"
+
+
+//TODO: higher axis can't be mapped. Find out why again
+
+//Set to true, to enable automated switching back to square on circle mode if the inputs are outside the cirle.
+#define SUPPORT_MAP_AUTO 0
 
 #define RANGE 64
 #define TIMEOUT 10
@@ -33,17 +40,104 @@
 #define S_PER_OHM 0.000000011
 
 struct JoyStick {
+	enum {JOYMAP_SQUARE,JOYMAP_CIRCLE,JOYMAP_INBETWEEN} mapstate;
 	bool enabled;
-	float xpos,ypos;
-	double xtick,ytick;
-	Bitu xcount,ycount;
+	float xpos, ypos; //position as set by SDL.
+	double xtick, ytick;
+	Bitu xcount, ycount;
 	bool button[2];
+	int deadzone; //Deadzone (value between 0 and 100) interpreted as percentage.
+	bool transformed; //Whether xpos,ypos have been converted to xfinal and yfinal. Cleared when new xpos orypos have been set
+	float xfinal, yfinal; //position returned to the game for stick 0. 
+
+	void clip() {
+		if (xfinal > 1.0) xfinal = 1.0;
+		else if (xfinal < -1.0) xfinal = -1.0;
+		if (yfinal > 1.0) yfinal = 1.0;
+		else if (yfinal < -1.0) yfinal = -1.0;
+	}
+
+	void fake_digital() {
+		if (xpos > 0.5f) xfinal = 1.0f;
+		else if (xpos < -0.5f) xfinal = -1.0f;
+		else xfinal = 0.0f;
+		if (ypos > 0.5f) yfinal = 1.0f;
+		else if (ypos < -0.5f) yfinal = -1.0f;
+		else yfinal = 0.0f;
+	}
+
+	void transform_circular(){
+		float r = sqrt(xpos * xpos + ypos * ypos);
+		if (r == 0.0) {xfinal = xpos; yfinal = ypos; return;}
+		float deadzone_f = deadzone / 100.0f;
+		float s = 1.0f - deadzone_f;
+		if (r < deadzone_f) {
+			xfinal = yfinal = 0.0f;
+			return;
+		}
+
+		float deadzonescale = (r - deadzone_f) / s; //r if deadzone=0;
+		float xa = fabs(xpos);
+		float ya = fabs(ypos);
+		float maxpos = (ya>xa?ya:xa);
+		xfinal = xpos * deadzonescale/maxpos;
+		yfinal = ypos * deadzonescale/maxpos;
+	}
+
+	void transform_square() {
+		float deadzone_f = deadzone / 100.0f;
+		float s = 1.0f - deadzone_f;
+
+		if (xpos > deadzone_f) {
+			xfinal = (xpos - deadzone_f)/ s;
+		} else if ( xpos < -deadzone_f) {
+			xfinal = (xpos + deadzone_f) / s;
+		} else xfinal = 0.0f;
+		if (ypos > deadzone_f) {
+			yfinal = (ypos - deadzone_f)/ s;
+		} else if ( ypos < - deadzone_f) {
+			yfinal = (ypos + deadzone_f) / s;
+		} else yfinal = 0.0f;
+	}
+
+#if SUPPORT_MAP_AUTO
+	void transform_inbetween(){
+		//First transform to a circle and crop the values to -1.0 -> 1.0
+		//then keep on doing this in future calls until it is safe to switch square mapping
+		// safe = 0.95 as ratio  for both axis, or in deadzone
+		transform_circular();
+		clip();
+
+
+		float xrate = xpos / xfinal;
+		float yrate = ypos / yfinal;
+		if (xrate > 0.95 && yrate > 0.95) {
+			mapstate = JOYMAP_SQUARE; //TODO misschien xfinal=xpos...
+			//LOG_MSG("switched to square %f %f",xrate,yrate);
+		}
+	}
+#endif
+	void transform_input(){
+		if (transformed) return;
+		transformed = true;
+		if (deadzone == 100) fake_digital();
+		else {
+			if (mapstate == JOYMAP_SQUARE) transform_square();
+			else if (mapstate == JOYMAP_CIRCLE) transform_circular();
+#if SUPPORT_MAP_AUTO
+			if (mapstate ==  JOYMAP_INBETWEEN) transform_inbetween(); //No else here
+#endif
+			clip();
+		}
+	}
+
+
 };
 
 JoystickType joytype;
 static JoyStick stick[2];
 
-static Bit32u last_write = 0;
+static Bitu last_write = 0;
 static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;
@@ -114,8 +208,9 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 	write_active = true;
 	last_write = PIC_Ticks;
 	if (stick[0].enabled) {
-		stick[0].xcount=(Bitu)((stick[0].xpos*RANGE)+RANGE);
-		stick[0].ycount=(Bitu)((stick[0].ypos*RANGE)+RANGE);
+		stick[0].transform_input();
+		stick[0].xcount=(Bitu)((stick[0].xfinal*RANGE)+RANGE);
+		stick[0].ycount=(Bitu)((stick[0].yfinal*RANGE)+RANGE);
 	}
 	if (stick[1].enabled) {
 		stick[1].xcount=(Bitu)(((swap34? stick[1].ypos : stick[1].xpos)*RANGE)+RANGE);
@@ -124,16 +219,16 @@ static void write_p201(Bitu port,Bitu val,Bitu iolen) {
 
 }
 static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
-	// Store writetime index
 	// Axes take time = 24.2 microseconds + ( 0.011 microsecons/ohm * resistance )
 	// to reset to 0
-	// Precalculate the time at which each axis hits 0 here
+	// Pre-calculate the time at which each axis hits 0 here
 	double currentTick = PIC_FullIndex();
 	if (stick[0].enabled) {
+		stick[0].transform_input();
 		stick[0].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-	                         (double)(((stick[0].xpos+1.0)* OHMS)) );
+		                 (double)(((stick[0].xfinal+1.0)* OHMS)) );
 		stick[0].ytick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
-		                 (double)(((stick[0].ypos+1.0)* OHMS)) );
+		                 (double)(((stick[0].yfinal+1.0)* OHMS)) );
 	}
 	if (stick[1].enabled) {
 		stick[1].xtick = currentTick + 1000.0*( JOY_S_CONSTANT + S_PER_OHM *
@@ -144,23 +239,27 @@ static void write_p201_timed(Bitu port,Bitu val,Bitu iolen) {
 }
 
 void JOYSTICK_Enable(Bitu which,bool enabled) {
-	if (which<2) stick[which].enabled=enabled;
+	if (which<2) stick[which].enabled = enabled;
 }
 
 void JOYSTICK_Button(Bitu which,Bitu num,bool pressed) {
-	if ((which<2) && (num<2)) stick[which].button[num]=pressed;
+	if ((which<2) && (num<2)) stick[which].button[num] = pressed;
 }
 
 void JOYSTICK_Move_X(Bitu which,float x) {
-	if (which<2) {
-		stick[which].xpos=x;
-	}
+	if(which > 2) return;
+	if (stick[which].xpos == x) return;
+	stick[which].xpos = x;
+	stick[which].transformed = false;
+//	if( which == 0 || joytype != JOY_FCS)  
+//		stick[which].applied_conversion; //todo 
 }
 
 void JOYSTICK_Move_Y(Bitu which,float y) {
-	if (which<2) {
-		stick[which].ypos=y;
-	}
+	if(which > 2) return;
+	if (stick[which].ypos == y) return;
+	stick[which].ypos = y;
+	stick[which].transformed = false;
 }
 
 bool JOYSTICK_IsEnabled(Bitu which) {
@@ -174,13 +273,15 @@ bool JOYSTICK_GetButton(Bitu which, Bitu num) {
 }
 
 float JOYSTICK_GetMove_X(Bitu which) {
-	if (which<2) return stick[which].xpos;
-	return 0.0f;
+	if (which > 1) return 0.0f;
+	if (which == 0) { stick[0].transform_input(); return stick[0].xfinal;}
+	return stick[1].xpos;
 }
 
 float JOYSTICK_GetMove_Y(Bitu which) {
-	if (which<2) return stick[which].ypos;
-	return 0.0f;
+	if (which > 1) return 0.0f;
+	if (which == 0) { stick[0].transform_input(); return stick[0].yfinal;}
+	return stick[1].ypos;
 }
 
 class JOYSTICK:public Module_base{
@@ -189,20 +290,20 @@ private:
 	IO_WriteHandleObject WriteHandler;
 public:
 	JOYSTICK(Section* configuration):Module_base(configuration){
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		const char * type=section->Get_string("joysticktype");
-		if (!strcasecmp(type,"none"))       joytype = JOY_NONE;
-		else if (!strcasecmp(type,"false")) joytype = JOY_NONE;
-		else if (!strcasecmp(type,"auto"))  joytype = JOY_AUTO;
-		else if (!strcasecmp(type,"2axis")) joytype = JOY_2AXIS;
-		else if (!strcasecmp(type,"4axis")) joytype = JOY_4AXIS;
+		Section_prop * section = static_cast<Section_prop *>(configuration);
+		const char * type = section->Get_string("joysticktype");
+		if (!strcasecmp(type,"none"))         joytype = JOY_NONE;
+		else if (!strcasecmp(type,"false"))   joytype = JOY_NONE;
+		else if (!strcasecmp(type,"auto"))    joytype = JOY_AUTO;
+		else if (!strcasecmp(type,"2axis"))   joytype = JOY_2AXIS;
+		else if (!strcasecmp(type,"4axis"))   joytype = JOY_4AXIS;
 		else if (!strcasecmp(type,"4axis_2")) joytype = JOY_4AXIS_2;
-		else if (!strcasecmp(type,"fcs"))   joytype = JOY_FCS;
-		else if (!strcasecmp(type,"ch"))    joytype = JOY_CH;
+		else if (!strcasecmp(type,"fcs"))     joytype = JOY_FCS;
+		else if (!strcasecmp(type,"ch"))      joytype = JOY_CH;
 		else joytype = JOY_AUTO;
 
 		bool timed = section->Get_bool("timed");
-		if(timed) {
+		if (timed) {
 			ReadHandler.Install(0x201,read_p201_timed,IO_MB);
 			WriteHandler.Install(0x201,write_p201_timed,IO_MB);
 		} else {
@@ -212,10 +313,16 @@ public:
 		autofire = section->Get_bool("autofire");
 		swap34 = section->Get_bool("swap34");
 		button_wrapping_enabled = section->Get_bool("buttonwrap");
-		stick[0].enabled = false;
-		stick[1].enabled = false;
 		stick[0].xtick = stick[0].ytick = stick[1].xtick =
 		                 stick[1].ytick = PIC_FullIndex();
+		stick[0].xpos = stick[0].ypos = stick[1].xpos = stick[1].ypos = 0.0f;
+		stick[0].transformed = false;
+
+
+		stick[0].mapstate = JoyStick::JOYMAP_SQUARE;
+		bool circ = section->Get_bool("circularinput");
+		if (circ) stick[0].mapstate = JoyStick::JOYMAP_CIRCLE;
+		stick[0].deadzone = section->Get_int("deadzone");
 	}
 };
 static JOYSTICK* test;

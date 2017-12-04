@@ -686,10 +686,18 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("continuously fires as long as you keep the button pressed.");
 
 	Pbool = secprop->Add_bool("swap34",Property::Changeable::WhenIdle,false);
-	Pbool->Set_help("swap the 3rd and the 4th axis. can be useful for certain joysticks.");
+	Pbool->Set_help("swap the 3rd and the 4th axis. Can be useful for certain joysticks.");
 
 	Pbool = secprop->Add_bool("buttonwrap",Property::Changeable::WhenIdle,false);
 	Pbool->Set_help("enable button wrapping at the number of emulated buttons.");
+	
+	Pbool = secprop->Add_bool("circularinput",Property::Changeable::WhenIdle,false);
+	Pbool->Set_help("enable translation of circular input to square output.\n"
+	                "Try enabling this if your left analog stick can only move in a circle.");
+
+	Pint = secprop->Add_int("deadzone",Property::Changeable::WhenIdle,10);
+	Pint->SetMinMax(0,100);
+	Pint->Set_help("the percentage of motion to ignore. 100 turns the stick into a digital one.");
 
 	secprop=control->AddSection_prop("serial",&SERIAL_Init,true);
 	const char* serials[] = { "dummy", "disabled", "modem", "nullmodem",
