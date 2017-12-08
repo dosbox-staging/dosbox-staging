@@ -396,8 +396,10 @@ static void GenerateDMASound(Bitu size) {
 	Bitu read=0;Bitu done=0;Bitu i=0;
 
 	if(sb.dma.autoinit) {
-		if (sb.dma.left <= size) size = sb.dma.left;
-	} else if (sb.dma.left <= sb.dma.min) size = sb.dma.left;
+		if (sb.dma.left <= size) 
+			size = sb.dma.left;
+	} else if (sb.dma.left <= sb.dma.min) 
+		size = sb.dma.left;
 
 	switch (sb.dma.mode) {
 	case DSP_DMA_2:
@@ -503,14 +505,22 @@ static void GenerateDMASound(Bitu size) {
 	sb.dma.left-=read;
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(END_DMA_Event);
-		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
-		else SB_RaiseIRQ(SB_IRQ_8);
+		if (sb.dma.mode >= DSP_DMA_16) 
+			SB_RaiseIRQ(SB_IRQ_16);
+		else 
+			SB_RaiseIRQ(SB_IRQ_8);
+		//Copy the new size
+		sb.dma.left = sb.dma.total;
 		if (!sb.dma.autoinit) {
-			LOG(LOG_SB,LOG_NORMAL)("Single cycle transfer ended");
-			sb.mode=MODE_NONE;
-			sb.dma.mode=DSP_DMA_NONE;
+			if (!sb.dma.left) {
+				LOG(LOG_SB, LOG_NORMAL)("Single cycle transfer ended");
+				sb.mode = MODE_NONE;
+				sb.dma.mode = DSP_DMA_NONE;
+			}
+			else {
+				LOG(LOG_SB, LOG_NORMAL)("Switch to Single cycle transfer begun");
+			}
 		} else {
-			sb.dma.left=sb.dma.total;
 			if (!sb.dma.left) {
 				LOG(LOG_SB,LOG_NORMAL)("Auto-init transfer with 0 size");
 				sb.mode=MODE_NONE;
@@ -544,7 +554,8 @@ static void DMA_Silent_Event(Bitu val) {
 	if (!sb.dma.left) {
 		if (sb.dma.mode >= DSP_DMA_16) SB_RaiseIRQ(SB_IRQ_16);
 		else SB_RaiseIRQ(SB_IRQ_8);
-		if (sb.dma.autoinit) sb.dma.left=sb.dma.total;
+		if (sb.dma.autoinit) 
+			sb.dma.left=sb.dma.total;
 		else {
 			sb.mode=MODE_NONE;
 			sb.dma.mode=DSP_DMA_NONE;
@@ -586,15 +597,26 @@ static void DSP_RaiseIRQEvent(Bitu /*val*/) {
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool stereo) {
+static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stereo) {
 	char const * type;
-	sb.mode=MODE_DMA_MASKED;
+	//Fill up before changing state?
 	sb.chan->FillUp();
-	sb.dma.left=sb.dma.total;
+	//No active autoinit transfer then just assume it's a completely new one
+	if (sb.mode != MODE_DMA || !sb.dma.autoinit) {
+		sb.dma.left = sb.dma.total;
+		//The new transfer won't be autoinit so can clear the total now
+		if (!autoinit) {
+			sb.dma.total = 0;
+		}
+		//Starting a new transfer might as well clear the irq's
+		sb.irq.pending_8bit = false;
+		sb.irq.pending_16bit = false;
+	}
+	sb.mode = MODE_DMA_MASKED;
 	sb.dma.mode=mode;
 	sb.dma.stereo=stereo;
-	sb.irq.pending_8bit=false;
-	sb.irq.pending_16bit=false;
+	sb.dma.autoinit = autoinit;
+
 	switch (mode) {
 	case DSP_DMA_2:
 		type="2-bits ADPCM";
@@ -642,18 +664,16 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool stereo) {
 }
 
 static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit,bool sign) {
-	sb.dma.autoinit=autoinit;
 	sb.dma.sign=sign;
 	if (!autoinit) sb.dma.total=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
 	sb.dma.chan=GetDMAChannel(sb.hw.dma8);
-	DSP_DoDMATransfer(mode,sb.freq / (sb.mixer.stereo ? 2 : 1),sb.mixer.stereo);
+	DSP_DoDMATransfer(mode,sb.freq / (sb.mixer.stereo ? 2 : 1), autoinit, sb.mixer.stereo);
 }
 
 static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool stereo) {
 	Bitu freq=sb.freq;
 	//equal length if data format and dma channel are both 16-bit or 8-bit
 	sb.dma.total=length;
-	sb.dma.autoinit=autoinit;
 	if (mode==DSP_DMA_16) {
 		if (sb.hw.dma16!=0xff) {
 			sb.dma.chan=GetDMAChannel(sb.hw.dma16);
@@ -671,7 +691,7 @@ static void DSP_PrepareDMA_New(DMA_MODES mode,Bitu length,bool autoinit,bool ste
 			sb.dma.total<<=1;
 		}
 	} else sb.dma.chan=GetDMAChannel(sb.hw.dma8);
-	DSP_DoDMATransfer(mode,freq,stereo);
+	DSP_DoDMATransfer(mode,freq,autoinit,stereo);
 }
 
 
