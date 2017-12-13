@@ -434,6 +434,8 @@ case "$host" in
        fi
        ;;
 esac
+else
+   AC_MSG_RESULT(no)
 fi
 
 AH_TEMPLATE(C_DDRAW,[Define to 1 to enable output=ddraw (Win32)])
