@@ -796,7 +796,8 @@ void DOS_Shell::CMD_SET(char * args) {
 				*p_parsed++ = '%'; p += 2; //%% => % 
 			} else {
 				char * second = strchr(++p,'%');
-				if(!second) continue; *second++ = 0;
+				if (!second) continue;
+				*second++ = 0;
 				std::string temp;
 				if (GetEnvStr(p,temp)) {
 					std::string::size_type equals = temp.find('=');
