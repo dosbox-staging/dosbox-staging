@@ -73,7 +73,7 @@ enum DSP_MODES {
 	MODE_DMA_MASKED
 
 };
-
+ 
 enum DMA_MODES {
 	DSP_DMA_NONE,
 	DSP_DMA_2,DSP_DMA_3,DSP_DMA_4,DSP_DMA_8,
@@ -601,21 +601,11 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 	char const * type;
 	//Fill up before changing state?
 	sb.chan->FillUp();
-	//No active autoinit transfer then just assume it's a completely new one
-	if (sb.mode != MODE_DMA || !sb.dma.autoinit) {
-		sb.dma.left = sb.dma.total;
-		//The new transfer won't be autoinit so can clear the total now
-		if (!autoinit) {
-			sb.dma.total = 0;
-		}
-		//Starting a new transfer might as well clear the irq's
-		sb.irq.pending_8bit = false;
-		sb.irq.pending_16bit = false;
-	}
-	sb.mode = MODE_DMA_MASKED;
-	sb.dma.mode=mode;
-	sb.dma.stereo=stereo;
-	sb.dma.autoinit = autoinit;
+
+	//Starting a new transfer will clear any active irqs?
+	sb.irq.pending_8bit = false;
+	sb.irq.pending_16bit = false;
+	PIC_DeActivateIRQ(sb.hw.irq);
 
 	switch (mode) {
 	case DSP_DMA_2:
@@ -646,21 +636,42 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 		LOG(LOG_SB,LOG_ERROR)("DSP:Illegal transfer mode %d",mode);
 		return;
 	}
-	if (sb.dma.stereo) sb.dma.mul*=2;
+
+#if (C_DEBUG)
+	LOG(LOG_SB, LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
+		type,
+		stereo ? "Stereo" : "Mono",
+		autoinit ? "Auto-Init" : "Single-Cycle",
+		freq, sb.dma.rate, sb.dma.total
+		);
+#endif
+	//Going from an active autoinit into a single cycle
+	if (sb.mode >= MODE_DMA && sb.dma.autoinit && !autoinit) {
+		//Don't do anything, the total will flip over on the next transfer
+	}
+	//Just a normal single cycle transfer
+	else if (!autoinit) {
+		sb.dma.left = sb.dma.total;
+		sb.dma.total = 0;
+	}
+	//Going into an autoinit transfer
+	else {
+		//Transfer full cycle again
+		sb.dma.left = sb.dma.total;
+	}
+	//Double the reading speed for stereo mode
+	if (sb.dma.stereo) 
+		sb.dma.mul*=2;
 	sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 	sb.dma.min=(sb.dma.rate*3)/1000;
 	sb.chan->SetFreq(freq);
-	sb.dma.mode=mode;
+	sb.dma.mode = mode;
+	sb.dma.stereo = stereo;
+	sb.dma.autoinit = autoinit;
 	PIC_RemoveEvents(END_DMA_Event);
+	//Set to be masked, the dma call can change this again.
+	sb.mode = MODE_DMA_MASKED;
 	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
-#if (C_DEBUG)
-	LOG(LOG_SB,LOG_NORMAL)("DMA Transfer:%s %s %s freq %d rate %d size %d",
-		type,
-		sb.dma.stereo ? "Stereo" : "Mono",
-		sb.dma.autoinit ? "Auto-Init" : "Single-Cycle",
-		freq,sb.dma.rate,sb.dma.total
-	);
-#endif
 }
 
 static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit,bool sign) {
