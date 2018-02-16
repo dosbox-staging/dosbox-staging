@@ -240,13 +240,14 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
 ],)
 
 AH_TEMPLATE(C_CORE_INLINE,[Define to 1 to use inlined memory functions in cpu core])
-AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--enable-core-inline],[Enable inlined memory handling in CPU Core]),[
-  if test x$enable_core_inline = xyes ; then 
-    AC_MSG_RESULT([enabling inlined memory handling in CPU Core])
+AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--disable-core-inline],[Disable inlined memory handling in CPU Core]),,enable_core_inline=yes)
+AC_MSG_CHECKING(whether memory handling in the CPU Core will be inlined)
+if test x$enable_core_inline = xyes ; then
+    AC_MSG_RESULT(yes)
     AC_DEFINE(C_CORE_INLINE,1)
-  fi
-],)
-
+else
+    AC_MSG_RESULT(no)
+fi
 
 dnl The target cpu checks for dynamic cores
 AH_TEMPLATE(C_TARGETCPU,[The type of cpu this target has])
