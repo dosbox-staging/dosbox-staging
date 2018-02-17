@@ -55,7 +55,6 @@ public:
 	Hex():_hex(0) { };
 	bool operator==(Hex const& other) {return _hex == other._hex;}
 	operator int () const { return _hex; }
-   
 };
 
 class Value {
@@ -75,7 +74,7 @@ private:
 public:
 	class WrongType { }; // Conversion error class
 	enum Etype { V_NONE, V_HEX, V_BOOL, V_INT, V_STRING, V_DOUBLE,V_CURRENT} type;
-	
+
 	/* Constructors */
 	Value()                      :_string(0),   type(V_NONE)                  { };
 	Value(Hex in)                :_hex(in),     type(V_HEX)                   { };
@@ -87,28 +86,28 @@ public:
 	Value(Value const& in):_string(0) {plaincopy(in);}
 	~Value() { destroy();};
 	Value(std::string const& in,Etype _t) :_hex(0),_bool(false),_int(0),_string(0),_double(0),type(V_NONE) {SetValue(in,_t);}
-	
+
 	/* Assigment operators */
-	Value& operator= (Hex in) throw(WrongType)                { return copy(Value(in));}
-	Value& operator= (int in) throw(WrongType)                { return copy(Value(in));}
-	Value& operator= (bool in) throw(WrongType)               { return copy(Value(in));}
-	Value& operator= (double in) throw(WrongType)             { return copy(Value(in));}
-	Value& operator= (std::string const& in) throw(WrongType) { return copy(Value(in));}
-	Value& operator= (char const * const in) throw(WrongType) { return copy(Value(in));}
-	Value& operator= (Value const& in) throw(WrongType)       { return copy(Value(in));}
+	Value& operator= (Hex in)                 { return copy(Value(in));}
+	Value& operator= (int in)                 { return copy(Value(in));}
+	Value& operator= (bool in)                { return copy(Value(in));}
+	Value& operator= (double in)              { return copy(Value(in));}
+	Value& operator= (std::string const& in)  { return copy(Value(in));}
+	Value& operator= (char const * const in)  { return copy(Value(in));}
+	Value& operator= (Value const& in)        { return copy(Value(in));}
 
 	bool operator== (Value const & other);
-	operator bool () const throw(WrongType);
-	operator Hex () const throw(WrongType);
-	operator int () const throw(WrongType);
-	operator double () const throw(WrongType);
-	operator char const* () const throw(WrongType);
-	bool SetValue(std::string const& in,Etype _type = V_CURRENT) throw(WrongType);
+	operator bool () const;
+	operator Hex () const;
+	operator int () const;
+	operator double () const;
+	operator char const* () const;
+	bool SetValue(std::string const& in,Etype _type = V_CURRENT);
 	std::string ToString() const;
 
 private:
 	void destroy() throw();
-	Value& copy(Value const& in) throw(WrongType);
+	Value& copy(Value const& in);
 	void plaincopy(Value const& in) throw();
 	bool set_hex(std::string const& in);
 	bool set_int(std::string const&in);
@@ -134,7 +133,7 @@ public:
 	//specific features.
 	virtual bool CheckValue(Value const& in, bool warn);
 public:
-	virtual ~Property(){ } 
+	virtual ~Property(){ }
 	virtual const std::vector<Value>& GetValues() const;
 	Value::Etype Get_type(){return default_value.type;}
 	Changeable::Value getChange() {return change;}
@@ -143,9 +142,9 @@ protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
 	//Can be overriden to set a different value if invalid.
 	virtual bool SetVal(Value const& in, bool forced,bool warn=true) {
-		if(forced || CheckValue(in,warn)) { 
+		if(forced || CheckValue(in,warn)) {
 			value = in; return true;
-		} else { 
+		} else {
 			value = default_value; return false;
 		}
 	}
@@ -159,12 +158,12 @@ protected:
 class Prop_int:public Property {
 public:
 	Prop_int(std::string const& _propname,Changeable::Value when, int _value)
-		:Property(_propname,when) { 
+		:Property(_propname,when) {
 		default_value = value = _value;
 		min = max = -1;
 	}
 	Prop_int(std::string const&  _propname,Changeable::Value when, int _min,int _max,int _value)
-		:Property(_propname,when) { 
+		:Property(_propname,when) {
 		default_value = value = _value;
 		min = _min;
 		max = _max;
@@ -177,7 +176,7 @@ public:
 	virtual bool CheckValue(Value const& in, bool warn);
 	// Override SetVal, so it takes min,max in account when there are no suggested values
 	virtual bool SetVal(Value const& in, bool forced,bool warn=true);
-	
+
 private:
 	Value min,max;
 };
@@ -195,7 +194,7 @@ public:
 class Prop_bool:public Property {
 public:
 	Prop_bool(std::string const& _propname, Changeable::Value when, bool _value)
-		:Property(_propname,when) { 
+		:Property(_propname,when) {
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
@@ -205,7 +204,7 @@ public:
 class Prop_string:public Property{
 public:
 	Prop_string(std::string const& _propname, Changeable::Value when, char const * const _value)
-		:Property(_propname,when) { 
+		:Property(_propname,when) {
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
@@ -216,7 +215,7 @@ class Prop_path:public Prop_string{
 public:
 	std::string realpath;
 	Prop_path(std::string const& _propname, Changeable::Value when, char const * const _value)
-		:Prop_string(_propname,when,_value) { 
+		:Prop_string(_propname,when,_value) {
 		default_value = value = _value;
 		realpath = _value;
 	}
@@ -227,7 +226,7 @@ public:
 class Prop_hex:public Property {
 public:
 	Prop_hex(std::string const& _propname, Changeable::Value when, Hex _value)
-		:Property(_propname,when) { 
+		:Property(_propname,when) {
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
@@ -281,7 +280,7 @@ public:
 	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
-//	void Add_double(char const * const _propname, double _value=0.0);   
+//	void Add_double(char const * const _propname, double _value=0.0);
 	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 
@@ -324,7 +323,7 @@ public:
 	virtual bool SetValue(std::string const& input);
 };
 
-   
+
 class Section_line: public Section{
 public:
 	Section_line(std::string const& _sectionname):Section(_sectionname){}
