@@ -1130,7 +1130,7 @@ CSerial::CSerial(Bitu id, CommandLine* cmd) {
 	txOverrunErrors=0;
 	overrunIF0=0;
 	breakErrors=0;
-	
+
 	for (Bitu i = 0; i <= 7; i++) {
 		WriteHandler[i].Install (i + base, SERIAL_Write, IO_MB);
 		ReadHandler[i].Install (i + base, SERIAL_Read, IO_MB);
@@ -1140,8 +1140,10 @@ CSerial::CSerial(Bitu id, CommandLine* cmd) {
 bool CSerial::getBituSubstring(const char* name,Bitu* data, CommandLine* cmd) {
 	std::string tmpstring;
 	if(!(cmd->FindStringBegin(name,tmpstring,false))) return false;
-	const char* tmpchar=tmpstring.c_str();
-	if(sscanf(tmpchar,"%u",data)!=1) return false;
+	const char* tmpchar = tmpstring.c_str();
+	unsigned int d = 0;
+	if(sscanf(tmpchar,"%u",&d) != 1) return false;
+	*data = static_cast<Bitu>(d);
 	return true;
 }
 
