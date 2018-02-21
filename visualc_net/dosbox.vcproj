@@ -565,6 +565,40 @@
 					<File
 						RelativePath="..\src\hardware\tandy_sound.cpp">
 					</File>
+					<Filter
+						Name="mame"
+						Filter="">
+						<File
+							RelativePath="..\src\hardware\mame\fmopl.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\fmopl.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\saa1099.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\saa1099.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\sn76496.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\sn76496.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\ymdeltat.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\ymdeltat.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\ymf262.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\ymf262.h">
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="serialport"
