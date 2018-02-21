@@ -5,7 +5,11 @@
 
 #pragma once
 
+#if defined(_MSC_VER) && (_MSC_VER  <= 1500) 
+#include <SDL.h>
+#else
 #include <stdint.h>
+#endif
 
 
 /* --- select emulation chips --- */
