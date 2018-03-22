@@ -277,6 +277,18 @@ case "$host_cpu" in
     c_targetcpu="m68k"
     c_unalignedmemory=yes
     ;;
+   armv7l)
+    AC_DEFINE(C_TARGETCPU,ARMV7LE)
+    AC_MSG_RESULT(ARMv7 Little Endian)
+    c_targetcpu="arm"
+    c_unalignedmemory=yes
+    ;;
+   armv6l)
+    AC_DEFINE(C_TARGETCPU,ARMV4LE)
+    AC_MSG_RESULT(ARMv6 Little Endian)
+    c_targetcpu="arm"
+    dnl c_unalignedmemory=yes
+    ;;
    *)
     AC_DEFINE(C_TARGETCPU,UNKNOWN)
     AC_MSG_RESULT(unknown)
@@ -318,8 +330,13 @@ dnl x86 only enable it if dynamic-x86 is disabled.
     if test x$c_targetcpu = xx86_64 ; then
         AC_DEFINE(C_DYNREC,1)
         AC_MSG_RESULT(yes)
-    else      
-      AC_MSG_RESULT(no)
+    else
+      if test x$c_targetcpu = xarm ; then
+        AC_DEFINE(C_DYNREC,1)
+	AC_MSG_RESULT(yes)
+      else 
+        AC_MSG_RESULT(no)
+      fi
     fi
   fi
 fi
