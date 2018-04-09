@@ -659,15 +659,17 @@ static void DSP_DoDMATransfer(DMA_MODES mode,Bitu freq,bool autoinit, bool stere
 		//Transfer full cycle again
 		sb.dma.left = sb.dma.total;
 	}
+	
+	sb.dma.autoinit = autoinit;
+	sb.dma.mode = mode;
+	sb.dma.stereo = stereo;
 	//Double the reading speed for stereo mode
 	if (sb.dma.stereo) 
 		sb.dma.mul*=2;
 	sb.dma.rate=(sb.freq*sb.dma.mul) >> SB_SH;
 	sb.dma.min=(sb.dma.rate*3)/1000;
 	sb.chan->SetFreq(freq);
-	sb.dma.mode = mode;
-	sb.dma.stereo = stereo;
-	sb.dma.autoinit = autoinit;
+
 	PIC_RemoveEvents(END_DMA_Event);
 	//Set to be masked, the dma call can change this again.
 	sb.mode = MODE_DMA_MASKED;
