@@ -399,6 +399,17 @@ static inline bool Mixer_irq_important(void) {
 	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
 }
 
+static Bit32u calc_tickadd(Bit32u freq) {
+#if TICK_SHIFT >16
+	Bit64u freq64 = static_cast<Bit64u>(freq);
+	freq64 = (freq64<<TICK_SHIFT)/1000;
+	Bit32u r = static_cast<Bit32u>(freq64);
+	return r;
+#else
+	return (freq<<TICK_SHIFT)/1000;
+#endif
+}
+
 /* Mix a certain amount of new samples */
 static void MIXER_MixData(Bitu needed) {
 	MixerChannel * chan=mixer.channels;
@@ -423,7 +434,7 @@ static void MIXER_MixData(Bitu needed) {
 	}
 	//Reset the the tick_add for constant speed
 	if( Mixer_irq_important() )
-		mixer.tick_add = ((mixer.freq) << TICK_SHIFT)/1000;
+		mixer.tick_add = calc_tickadd(mixer.freq);
 	mixer.done = needed;
 }
 
@@ -471,14 +482,14 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 			return;
 		reduce = mixer.done;
 		index_add = (reduce << TICK_SHIFT) / need;
-		mixer.tick_add = ((mixer.freq+mixer.min_needed) << TICK_SHIFT)/1000;
+		mixer.tick_add = calc_tickadd(mixer.freq+mixer.min_needed);
 	} else if (mixer.done < mixer.max_needed) {
 		Bitu left = mixer.done - need;
 		if (left < mixer.min_needed) {
 			if( !Mixer_irq_important() ) {
 				Bitu needed = mixer.needed - need;
 				Bitu diff = (mixer.min_needed>needed?mixer.min_needed:needed) - left;
-				mixer.tick_add = ((mixer.freq+(diff*3)) << TICK_SHIFT)/1000;
+				mixer.tick_add = calc_tickadd(mixer.freq+(diff*3));
 				left = 0; //No stretching as we compensate with the tick_add value
 			} else {
 				left = (mixer.min_needed - left);
@@ -501,11 +512,11 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 			Bitu diff = left - mixer.min_needed;
 			if(diff > (mixer.min_needed<<1)) diff = mixer.min_needed<<1;
 			if(diff > (mixer.min_needed>>1))
-				mixer.tick_add = ((mixer.freq-(diff/5)) << TICK_SHIFT)/1000;
+				mixer.tick_add = calc_tickadd(mixer.freq-(diff/5));
 			else if (diff > (mixer.min_needed>>2))
-				mixer.tick_add = ((mixer.freq-(diff>>3)) << TICK_SHIFT)/1000;
+				mixer.tick_add = calc_tickadd(mixer.freq-(diff>>3));
 			else
-				mixer.tick_add = (mixer.freq<< TICK_SHIFT)/1000;
+				mixer.tick_add = calc_tickadd(mixer.freq);
 		}
 	} else {
 		/* There is way too much data in the buffer */
@@ -516,7 +527,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 			index_add = mixer.done - 2*mixer.min_needed;
 		index_add = (index_add << TICK_SHIFT) / need;
 		reduce = mixer.done - 2* mixer.min_needed;
-		mixer.tick_add = ((mixer.freq-(mixer.min_needed/5)) << TICK_SHIFT)/1000;
+		mixer.tick_add = calc_tickadd(mixer.freq-(mixer.min_needed/5));
 	}
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
@@ -526,7 +537,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 
 	// Reset mixer.tick_add when irqs are important
 	if( Mixer_irq_important() )
-		mixer.tick_add=(mixer.freq<< TICK_SHIFT)/1000;
+		mixer.tick_add = calc_tickadd(mixer.freq);
 
 	mixer.done -= reduce;
 	mixer.needed -= reduce;
@@ -683,19 +694,19 @@ void MIXER_Init(Section* sec) {
 	mixer.tick_counter=0;
 	if (mixer.nosound) {
 		LOG_MSG("MIXER: No Sound Mode Selected.");
-		mixer.tick_add=((mixer.freq) << TICK_SHIFT)/1000;
+		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
 		mixer.nosound = true;
 		LOG_MSG("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
-		mixer.tick_add=((mixer.freq) << TICK_SHIFT)/1000;
+		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		if((mixer.freq != obtained.freq) || (mixer.blocksize != obtained.samples))
 			LOG_MSG("MIXER: Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
-		mixer.tick_add=(mixer.freq << TICK_SHIFT)/1000;
+		mixer.tick_add=calc_tickadd(mixer.freq);
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudio(0);
 	}
