@@ -1240,6 +1240,7 @@ public:
 		dos.version.major=5;
 		dos.version.minor=0;
 		dos.direct_output=false;
+		dos.internal_output=false;
 	}
 	~DOS(){
 		for (Bit16u i=0;i<DOS_DRIVES;i++) delete Drives[i];
