@@ -177,7 +177,7 @@ public:
 			fullconf.erase(fullconf.find("delaysysex"));
 			LOG_MSG("MIDI: Using delayed SysEx processing");
 		}
-		std::remove(fullconf.begin(), fullconf.end(), ' ');
+		trim(fullconf);
 		const char * conf = fullconf.c_str();
 		midi.status=0x00;
 		midi.cmd_pos=0;
