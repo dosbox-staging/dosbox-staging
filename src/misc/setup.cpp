@@ -649,8 +649,8 @@ string Section_prop::GetPropValue(string const& _property) const {
 }
 
 bool Section_line::HandleInputline(string const& line) {
-	data+=line;
-	data+="\n";
+	if (!data.empty()) data += "\n"; //Add return to previous line in buffer
+	data += line;
 	return true;
 }
 
