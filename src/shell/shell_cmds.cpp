@@ -83,21 +83,21 @@ static void StripSpaces(char*&args,char also) {
 		args++;
 }
 
-static char* ExpandDot(char*args, char* buffer) {
+static char* ExpandDot(char*args, char* buffer , size_t bufsize) {
 	if(*args == '.') {
 		if(*(args+1) == 0){
-			strcpy(buffer,"*.*");
+			safe_strncpy(buffer, "*.*", bufsize);
 			return buffer;
 		}
 		if( (*(args+1) != '.') && (*(args+1) != '\\') ) {
 			buffer[0] = '*';
 			buffer[1] = 0;
-			strcat(buffer,args);
+			if (bufsize > 2) strncat(buffer,args,bufsize - 1 /*used buffer portion*/ - 1 /*trailing zero*/  );
 			return buffer;
 		} else
-			strcpy (buffer, args);
+			safe_strncpy (buffer, args, bufsize);
 	}
-	else strcpy(buffer,args);
+	else safe_strncpy(buffer,args, bufsize);
 	return buffer;
 }
 
@@ -190,7 +190,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 
 	char full[DOS_PATHLENGTH];
 	char buffer[CROSS_LEN];
-	args = ExpandDot(args,buffer);
+	args = ExpandDot(args,buffer, CROSS_LEN);
 	StripSpaces(args);
 	if (!DOS_Canonicalize(args,full)) { WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));return; }
 //TODO Maybe support confirmation for *.* like dos does.	
@@ -457,7 +457,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 			break;
 		}
 	}
-	args = ExpandDot(args,buffer);
+	args = ExpandDot(args,buffer,CROSS_LEN);
 
 	if (!strrchr(args,'*') && !strrchr(args,'?')) {
 		Bit16u attribute=0;
