@@ -270,7 +270,7 @@ void CSerialModem::EnterIdleState(void){
 	}
 	// get rid of everything
 	if(serversocket) {
-		while(waitingclientsocket=serversocket->Accept())
+		while( (waitingclientsocket=serversocket->Accept()) )
 			delete waitingclientsocket;
 	} else if (listenport) {
 		

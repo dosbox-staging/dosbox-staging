@@ -151,10 +151,13 @@ void SERIAL_getErrorString(char* buffer, int length) {
 		sysmsg_offset = strlen(err2text);
 		memcpy(buffer,err2text,sysmsg_offset);
 	}
-
-	if((length - sysmsg_offset - strlen((const char*)sysmessagebuffer)) >= 0)
+	
+	// Go for length > so there will be bytes left afterwards.
+	// (which are 0 due to memset, thus the buffer is 0 terminated
+	if ( length > (sysmsg_offset + strlen((const char*)sysmessagebuffer)) ) {
 		memcpy(buffer + sysmsg_offset, sysmessagebuffer,
-		strlen((const char*)sysmessagebuffer));
+		       strlen((const char*)sysmessagebuffer));
+	}
 		
 	LocalFree(sysmessagebuffer);
 }
