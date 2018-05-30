@@ -197,34 +197,7 @@ dir_information* open_directory(const char* dirname) {
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
-	struct dirent* dentry = readdir(dirp->dir);
-	if (dentry==NULL) {
-		return false;
-	}
-
-//	safe_strncpy(entry_name,dentry->d_name,(FILENAME_MAX<MAX_PATH)?FILENAME_MAX:MAX_PATH);	// [include stdio.h], maybe pathconf()
-	safe_strncpy(entry_name,dentry->d_name,CROSS_LEN);
-
-#ifdef DIRENT_HAS_D_TYPE
-	if(dentry->d_type == DT_DIR) {
-		is_directory = true;
-		return true;
-	} else if(dentry->d_type == DT_REG) {
-		is_directory = false;
-		return true;
-	}
-#endif
-
-	// probably use d_type here instead of a full stat()
-	static char buffer[2*CROSS_LEN] = { 0 };
-	buffer[0] = 0;
-	strcpy(buffer,dirp->base_path);
-	strcat(buffer,entry_name);
-	struct stat status;
-	if (stat(buffer,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
-	else is_directory = false;
-
-	return true;
+	return read_directory_next(dirp,entry_name,is_directory);
 }
 
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
@@ -246,14 +219,17 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 	}
 #endif
 
-	// probably use d_type here instead of a full stat()
-	static char buffer[2*CROSS_LEN] = { 0 };
+	//Maybe only for DT_UNKNOWN if DIRENT_HAD_D_TYPE..
+	static char buffer[2 * CROSS_LEN + 1] = { 0 };
+	static char split[2] = { CROSS_FILESPLIT , 0 };
 	buffer[0] = 0;
 	strcpy(buffer,dirp->base_path);
+	size_t buflen = strlen(buffer);
+	if (buflen && buffer[buflen - 1] != CROSS_FILESPLIT ) strcat(buffer, split);
 	strcat(buffer,entry_name);
 	struct stat status;
 
-	if (stat(buffer,&status)==0) is_directory = (S_ISDIR(status.st_mode)>0);
+	if (stat(buffer,&status) == 0) is_directory = (S_ISDIR(status.st_mode)>0);
 	else is_directory = false;
 
 	return true;
