@@ -223,6 +223,7 @@ void DOS_Shell::InputCommand(char * line) {
 			/* Don't care */
 			break;
 		case 0x0d:				/* Return */
+			outc('\r');
 			outc('\n');
 			size=0;			//Kill the while loop
 			break;
@@ -322,6 +323,7 @@ void DOS_Shell::InputCommand(char * line) {
 		case 0x1b:   /* ESC */
 			//write a backslash and return to the next line
 			outc('\\');
+			outc('\r');
 			outc('\n');
 			*line = 0;      // reset the line.
 			if (l_completion.size()) l_completion.clear(); //reset the completion list.
