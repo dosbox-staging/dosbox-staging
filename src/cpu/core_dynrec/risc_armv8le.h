@@ -1081,6 +1081,7 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 			*(Bit32u*)(pos+8)=SUB_REG_LSL_IMM(HOST_w2, HOST_w2, HOST_w1, 0);	// sub w2, w2, w1
 			*(Bit32u*)(pos+12)=BFI(HOST_w0, HOST_w0, 16, 16);					// bfi w0, w0, 16, 16
 			*(Bit32u*)(pos+16)=RORV(FC_RETOP, HOST_w0, HOST_w2);				// rorv FC_RETOP, w0, w2
+			break;
 		case t_ROLw:
 			*(Bit32u*)pos=MOVZ(HOST_w2, 32, 0);									// movz w2, #32
 			*(Bit32u*)(pos+4)=BFI(HOST_w0, HOST_w0, 16, 16);					// bfi w0, w0, 16, 16
