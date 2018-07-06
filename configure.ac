@@ -9,7 +9,7 @@ AC_CANONICAL_BUILD
 
 dnl Setup for automake
 AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(config.h)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -38,7 +38,7 @@ CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
 
 dnl Check if SDL is 1.2.x (1.3 not supported)
 AC_MSG_CHECKING([SDL version only being 1.2.X])
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include "SDL.h"
 void blah(){
 #if SDL_MINOR_VERSION != 2
@@ -46,7 +46,7 @@ void blah(){
 #endif
 ;
 }
-],AC_MSG_RESULT([yes]),[
+])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
  AC_MSG_ERROR([Only libSDL 1.2.X supported])])
 
@@ -82,7 +82,7 @@ AC_CHECK_HEADERS([sys/socket.h  netinet/in.h pwd.h], [], [],
 ])
 
 dnl check for the socklen_t (darwin doesn't always have it)
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <stdio.h>
 #ifdef STDC_HEADERS
 # include <stdlib.h>
@@ -98,7 +98,7 @@ AC_COMPILE_IFELSE([
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
-],[],[AC_DEFINE([socklen_t],[int],[Define to `int` if you don't have socklen_t])])
+])],[],[AC_DEFINE([socklen_t],[int],[Define to `int` if you don't have socklen_t])])
 
 AC_MSG_CHECKING(if environ can be included)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
@@ -111,13 +111,13 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char ** environ;]],[[*environ;]])],
 [AC_MSG_RESULT(yes);AC_DEFINE(ENVIRON_LINKED,1,[environ can be linked])],AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING([if dirent includes d_type])
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <sys/types.h>
 #include <dirent.h>
 void blah(){
 struct dirent d_test;
 d_test.d_type = 0;
-}],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
+}])],[AC_MSG_RESULT(yes);AC_DEFINE(DIRENT_HAS_D_TYPE,1,[struct dirent has d_type])],AC_MSG_RESULT(no))
 
 
 dnl Check for powf
@@ -146,13 +146,13 @@ CFLAGS="-Werror"
 
 AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compilers supports always_inline attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
-AC_COMPILE_IFELSE([ void __attribute__((always_inline)) test(){}
-],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
+])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
 AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compilers supports fastcall attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((fastcall)) )
-AC_COMPILE_IFELSE([ void __attribute__((fastcall)) test(){}
-],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_FASTCALL)],AC_MSG_RESULT(no))
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([ void __attribute__((fastcall)) test(){}
+])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_FASTCALL)],AC_MSG_RESULT(no))
 
 
 CFLAGS="$OLDCFLAGS"
@@ -168,6 +168,21 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 ]])], [ AC_MSG_RESULT(yes);AC_DEFINE(C_HAS_BUILTIN_EXPECT)],AC_MSG_RESULT(no))
 #switch language back
 AC_LANG_POP(C++)
+
+dnl test if compiler supports -mno-ms-bitfields as it is bugged 
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52991
+BACKUP_CFLAGS="$CFLAGS"
+CFLAGS="-mno-ms-bitfields"
+AC_MSG_CHECKING(if compiler supports -mno-ms-bitfields)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+void blah(){
+;
+}
+])],[
+AC_MSG_RESULT([yes])
+CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
+],[AC_MSG_RESULT([no])])
+CFLAGS="$BACKUP_CFLAGS"
 
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
@@ -413,6 +428,8 @@ case "$host" in
        fi
        ;;
 esac
+else
+   AC_MSG_RESULT(no)
 fi
 
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
@@ -439,12 +456,12 @@ AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
 dnl Setpriority
 AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
 AC_MSG_CHECKING(for setpriority support)
-AC_LINK_IFELSE([
+AC_LINK_IFELSE([AC_LANG_SOURCE([
 #include <sys/resource.h>
 int main(int argc,char * argv[]) {
 	return setpriority (PRIO_PROCESS, 0,PRIO_MIN+PRIO_MAX);
 };
-],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
+])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
 
 
 dnl Some target detection and actions for them
