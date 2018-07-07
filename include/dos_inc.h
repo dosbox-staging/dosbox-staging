@@ -28,6 +28,8 @@
 #include "mem.h"
 #endif
 
+#include <stddef.h> //for offsetof
+
 #ifdef _MSC_VER
 #pragma pack (1)
 #endif
