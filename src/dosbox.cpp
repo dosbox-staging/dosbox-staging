@@ -124,15 +124,17 @@ static Bit32u ticksAdded;
 Bit32s ticksDone;
 Bit32u ticksScheduled;
 bool ticksLocked;
+void increaseticks();
 
 static Bitu Normal_Loop(void) {
 	Bits ret;
 	while (1) {
 		if (PIC_RunQueue()) {
-			ret=(*cpudecoder)();
+			ret = (*cpudecoder)();
 			if (GCC_UNLIKELY(ret<0)) return 1;
 			if (ret>0) {
-				Bitu blah=(*CallBack_Handlers[ret])();
+				if (GCC_UNLIKELY(ret >= CB_MAX)) return 0;
+				Bitu blah = (*CallBack_Handlers[ret])();
 				if (GCC_UNLIKELY(blah)) return blah;
 			}
 #if C_DEBUG
@@ -143,91 +145,161 @@ static Bitu Normal_Loop(void) {
 			if (ticksRemain>0) {
 				TIMER_AddTick();
 				ticksRemain--;
-			} else goto increaseticks;
+			} else {increaseticks();return 0;}
 		}
 	}
-increaseticks:
-	if (GCC_UNLIKELY(ticksLocked)) {
+}
+
+//For trying other delays
+#define wrap_delay(a) SDL_Delay(a)
+
+void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
+	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
 		ticksRemain=5;
 		/* Reset any auto cycle guessing for this frame */
 		ticksLast = GetTicks();
 		ticksAdded = 0;
 		ticksDone = 0;
 		ticksScheduled = 0;
-	} else {
-		Bit32u ticksNew;
-		ticksNew=GetTicks();
-		ticksScheduled += ticksAdded;
-		if (ticksNew > ticksLast) {
-			ticksRemain = ticksNew-ticksLast;
-			ticksLast = ticksNew;
-			ticksDone += ticksRemain;
-			if ( ticksRemain > 20 ) {
-				ticksRemain = 20;
-			}
-			ticksAdded = ticksRemain;
-			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) {
-				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
-					if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
-					/* ratio we are aiming for is around 90% usage*/
-					Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
-					Bit32s new_cmax = CPU_CycleMax;
-					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
-					if (cproc > 0) {
-						/* ignore the cycles added due to the io delay code in order
-						   to have smoother auto cycle adjustments */
-						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
-						if (ratioremoved < 1.0) {
-							ratio = (Bit32s)((double)ratio * (1 - ratioremoved));
-							/* Don't allow very high ratio which can cause us to lock as we don't scale down
-							 * for very low ratios. High ratio might result because of timing resolution */
-							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480) 
-								ratio = 20480;
-							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
-							if (ratio <= 1024) 
-								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
-							else 
-								new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
-						}
-					}
+		return;
+	}
+	
+	static Bit32s lastsleepDone = -1;
+	static Bitu sleep1count = 0;
 
-					if (new_cmax<CPU_CYCLES_LOWER_LIMIT)
-						new_cmax=CPU_CYCLES_LOWER_LIMIT;
+	Bit32u ticksNew;
+	ticksNew = GetTicks();
+	ticksScheduled += ticksAdded;
+	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
+		ticksAdded = 0;
 
-					/* ratios below 1% are considered to be dropouts due to
-					   temporary load imbalance, the cycles adjusting is skipped */
-					if (ratio>10) {
-						/* ratios below 12% along with a large time since the last update
-						   has taken place are most likely caused by heavy load through a
-						   different application, the cycles adjusting is skipped as well */
-						if ((ratio>120) || (ticksDone<700)) {
-							CPU_CycleMax = new_cmax;
-							if (CPU_CycleLimit > 0) {
-								if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
-							}
-						}
-					}
-					CPU_IODelayRemoved = 0;
-					ticksDone = 0;
-					ticksScheduled = 0;
-				} else if (ticksAdded > 15) {
-					/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
-					   but do not reset the scheduled/done ticks to take them into
-					   account during the next auto cycle adjustment */
-					CPU_CycleMax /= 3;
-					if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
-						CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
+		if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust || sleep1count < 3) {
+			wrap_delay(1);
+		} else {
+			/* Certain configurations always give an exact sleepingtime of 1, this causes problems due to the fact that
+			   dosbox keeps track of full blocks.
+			   This code introduces some randomness to the time slept, which improves stability on those configurations
+			 */
+			static const Bit32u sleeppattern[] = { 2, 2, 3, 2, 2, 4, 2};
+			static Bit32u sleepindex = 0;
+			if (ticksDone != lastsleepDone) sleepindex = 0;
+			wrap_delay(sleeppattern[sleepindex++]);
+			sleepindex %= sizeof(sleeppattern) / sizeof(sleeppattern[0]);
+		}
+		Bit32s timeslept = GetTicks() - ticksNew;
+		// Count how many times in the current block (of 250 ms) the time slept was 1 ms
+		if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust && timeslept == 1) sleep1count++;
+		lastsleepDone = ticksDone;
+
+		// Update ticksDone with the time spent sleeping
+		ticksDone -= timeslept;
+		if (ticksDone < 0)
+			ticksDone = 0;
+		return; //0
+
+		// If we do work this tick and sleep till the next tick, then ticksDone is decreased, 
+		// despite the fact that work was done as well in this tick. Maybe make it depend on an extra parameter.
+		// What do we know: ticksRemain = 0 (condition to enter this function)
+		// ticksNew = time before sleeping
+		
+		// maybe keep track of sleeped time in this frame, and use sleeped and done as indicators. (and take care of the fact there
+		// are frames that have both.
+	}
+
+	//TicksNew > ticksLast
+	ticksRemain = ticksNew-ticksLast;
+	ticksLast = ticksNew;
+	ticksDone += ticksRemain;
+	if ( ticksRemain > 20 ) {
+//		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
+		ticksRemain = 20;
+	}
+	ticksAdded = ticksRemain;
+
+	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
+	if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust) return;
+	
+	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+		/* ratio we are aiming for is around 90% usage*/
+		Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+		Bit32s new_cmax = CPU_CycleMax;
+		Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
+		double ratioremoved = 0.0; //increase scope for logging
+		if (cproc > 0) {
+			/* ignore the cycles added due to the IO delay code in order
+			   to have smoother auto cycle adjustments */
+			ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
+			if (ratioremoved < 1.0) {
+				double ratio_not_removed = 1 - ratioremoved;
+				ratio = (Bit32s)((double)ratio * ratio_not_removed);
+
+				/* Don't allow very high ratio which can cause us to lock as we don't scale down
+				 * for very low ratios. High ratio might result because of timing resolution */
+				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 16384)
+					ratio = 16384;
+
+				// Limit the ratio even more when the cycles are already way above the realmode default.
+				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+					ratio = 5120;
+
+				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
+				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
+					ratio = 800;
+
+				if (ratio <= 1024) {
+					// ratio_not_removed = 1.0; //enabling this restores the old formula
+					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + 1024.0/(static_cast<double>(ratio)));
+					new_cmax = 1 + static_cast<Bit32s>(CPU_CycleMax * r);
+				} else {
+					Bit64s ratio_with_removed = (Bit64s) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
+					Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * ratio_with_removed;
+					new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
 				}
 			}
-		} else {
-			ticksAdded = 0;
-			SDL_Delay(1);
-			ticksDone -= GetTicks() - ticksNew;
-			if (ticksDone < 0)
-				ticksDone = 0;
 		}
-	}
-	return 0;
+
+		if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
+			new_cmax = CPU_CYCLES_LOWER_LIMIT;
+		/*
+		LOG(LOG_MISC,LOG_ERROR)("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
+			CPU_CycleMax,
+			new_cmax,
+			ratio,
+			ticksDone,
+			ticksScheduled,
+			ticksAdded,
+			ratioremoved);
+		*/
+
+		/* ratios below 1% are considered to be dropouts due to
+		   temporary load imbalance, the cycles adjusting is skipped */
+		if (ratio > 10) {
+			/* ratios below 12% along with a large time since the last update
+			   has taken place are most likely caused by heavy load through a
+			   different application, the cycles adjusting is skipped as well */
+			if ((ratio > 120) || (ticksDone < 700)) {
+				CPU_CycleMax = new_cmax;
+				if (CPU_CycleLimit > 0) {
+					if (CPU_CycleMax > CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
+				} else if (CPU_CycleMax > 2000000) CPU_CycleMax = 2000000; //Hardcoded limit, if no limit was specified.
+			}
+		}
+
+		//Reset cycleguessing parameters.
+		CPU_IODelayRemoved = 0;
+		ticksDone = 0;
+		ticksScheduled = 0;
+		lastsleepDone = -1;
+		sleep1count = 0;
+	} else if (ticksAdded > 15) {
+		/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
+		   but do not reset the scheduled/done ticks to take them into
+		   account during the next auto cycle adjustment */
+		CPU_CycleMax /= 3;
+		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
+			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
+	} //if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
 }
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
