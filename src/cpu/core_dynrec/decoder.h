@@ -242,7 +242,9 @@ restart_prefix:
 				case 0xbf:dyn_movx_ev_gw(true);break;
 
 				default:
-//					DYN_LOG("Unhandled dual opcode 0F%02X",dual_code);
+#if DYN_LOG
+//					LOG_MSG("Unhandled dual opcode 0F%02X",dual_code);
+#endif
 					goto illegalopcode;
 			}
 			break;
@@ -579,7 +581,9 @@ restart_prefix:
 			break;
 
 		default:
-//			DYN_LOG("Dynrec unhandled opcode %X",opcode);
+#if DYN_LOG
+//			LOG_MSG("Dynrec unhandled opcode %X",opcode);
+#endif
 			goto illegalopcode;
 		}
 	}

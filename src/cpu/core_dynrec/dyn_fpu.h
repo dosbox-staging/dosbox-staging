@@ -535,7 +535,7 @@ static void dyn_fpu_esc5(){
 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
 			gen_call_function_R((void*)&FPU_SET_TOP,FC_OP1);
 			dyn_fill_ea(FC_OP1); 
-			gen_mov_word_to_reg(FC_OP2,(void*)(&fpu.sw),true);
+			gen_mov_word_to_reg(FC_OP2,(void*)(&fpu.sw),false);
 			gen_call_function_RR((void*)&mem_writew,FC_OP1,FC_OP2);
 			break;
 		default:
