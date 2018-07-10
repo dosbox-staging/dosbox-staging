@@ -1322,7 +1322,7 @@ public:
 				dos.dta(dos.tables.tempdta);
 
 				for(ct = 0; ct < imgDisks.size(); ct++) {
-					DriveManager::CycleAllDisks();
+					DriveManager::CycleDisks(drive - 'A', (ct == (imgDisks.size() - 1)));
 
 					char root[7] = {drive,':','\\','*','.','*',0};
 					DOS_FindFirst(root, DOS_ATTR_VOLUME); // force obtaining the label and saving it in dirCache
@@ -1337,20 +1337,22 @@ public:
 
 				if (paths.size() == 1) {
 					newdrive = imgDisks[0];
-					if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						if(imageDiskList[2] == NULL) {
-							imageDiskList[2] = ((fatDrive *)newdrive)->loadedDisk;
-							updateDPT();
-							return;
+					switch (drive - 'A') {
+					case 0:
+					case 1:
+						if(!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
+							if(imageDiskList[drive - 'A'] != NULL) delete imageDiskList[drive - 'A'];
+							imageDiskList[drive - 'A'] = ((fatDrive *)newdrive)->loadedDisk;
 						}
-						if(imageDiskList[3] == NULL) {
-							imageDiskList[3] = ((fatDrive *)newdrive)->loadedDisk;
+						break;
+					case 2:
+					case 3:
+						if(((fatDrive *)newdrive)->loadedDisk->hardDrive) {
+							if(imageDiskList[drive - 'A'] != NULL) delete imageDiskList[drive - 'A'];
+							imageDiskList[drive - 'A'] = ((fatDrive *)newdrive)->loadedDisk;
 							updateDPT();
-							return;
 						}
-					}
-					if(!((fatDrive *)newdrive)->loadedDisk->hardDrive) {
-						imageDiskList[0] = ((fatDrive *)newdrive)->loadedDisk;
+						break;
 					}
 				}
 			} else if (fstype=="iso") {

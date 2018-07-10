@@ -169,24 +169,26 @@ void DriveManager::CycleDisk(bool pressed) {
 }
 */
 
-void DriveManager::CycleAllDisks(void) {
-	for (int idrive=0; idrive<DOS_DRIVES; idrive++) {
-		int numDisks = (int)driveInfos[idrive].disks.size();
-		if (numDisks > 1) {
-			// cycle disk
-			int currentDisk = driveInfos[idrive].currentDisk;
-			DOS_Drive* oldDisk = driveInfos[idrive].disks[currentDisk];
-			currentDisk = (currentDisk + 1) % numDisks;		
-			DOS_Drive* newDisk = driveInfos[idrive].disks[currentDisk];
-			driveInfos[idrive].currentDisk = currentDisk;
-			
-			// copy working directory, acquire system resources and finally switch to next drive		
-			strcpy(newDisk->curdir, oldDisk->curdir);
-			newDisk->Activate();
-			Drives[idrive] = newDisk;
-			LOG_MSG("Drive %c: disk %d of %d now active", 'A'+idrive, currentDisk+1, numDisks);
-		}
+void DriveManager::CycleDisks(int drive, bool notify) {
+	int numDisks = (int)driveInfos[drive].disks.size();
+	if (numDisks > 1) {
+		// cycle disk
+		int currentDisk = driveInfos[drive].currentDisk;
+		DOS_Drive* oldDisk = driveInfos[drive].disks[currentDisk];
+		currentDisk = (currentDisk + 1) % numDisks;		
+		DOS_Drive* newDisk = driveInfos[drive].disks[currentDisk];
+		driveInfos[drive].currentDisk = currentDisk;
+		
+		// copy working directory, acquire system resources and finally switch to next drive		
+		strcpy(newDisk->curdir, oldDisk->curdir);
+		newDisk->Activate();
+		Drives[drive] = newDisk;
+		if (notify) LOG_MSG("Drive %c: disk %d of %d now active", 'A'+drive, currentDisk+1, numDisks);
 	}
+}
+
+void DriveManager::CycleAllDisks(void) {
+	for (int idrive=0; idrive<DOS_DRIVES; idrive++) CycleDisks(idrive, true);
 }
 
 int DriveManager::UnmountDrive(int drive) {
