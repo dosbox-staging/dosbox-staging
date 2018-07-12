@@ -1,5 +1,5 @@
 
-#include "afxres.h"
+#include "winresrc.h"
 
 // icon resource
 dosbox_ico ICON "dosbox.ico"

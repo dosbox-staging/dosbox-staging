@@ -428,15 +428,17 @@ void MEM_A20_Enable(bool enabled) {
 
 /* Memory access functions */
 Bit16u mem_unalignedreadw(PhysPt address) {
-	return mem_readb_inline(address) |
-		mem_readb_inline(address+1) << 8;
+	Bit16u ret = mem_readb_inline(address);
+	ret       |= mem_readb_inline(address+1) << 8;
+	return ret;
 }
 
 Bit32u mem_unalignedreadd(PhysPt address) {
-	return mem_readb_inline(address) |
-		(mem_readb_inline(address+1) << 8) |
-		(mem_readb_inline(address+2) << 16) |
-		(mem_readb_inline(address+3) << 24);
+	Bit32u ret = mem_readb_inline(address);
+	ret       |= mem_readb_inline(address+1) << 8;
+	ret       |= mem_readb_inline(address+2) << 16;
+	ret       |= mem_readb_inline(address+3) << 24;
+	return ret;
 }
 
 

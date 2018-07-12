@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/* $Id: hardware.cpp,v 1.23 2009-10-11 18:09:22 qbix79 Exp $ */
+/* $Id: hardware.cpp,v 1.22 2009-04-26 18:24:36 qbix79 Exp $ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -161,13 +161,17 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 #endif
 
 #if (C_SSHOT)
+static void CAPTURE_VideoEvent(bool pressed) {
+	if (!pressed)
+		return;
+	if (CaptureState & CAPTURE_VIDEO) {
+		/* Close the video */
+		CaptureState &= ~CAPTURE_VIDEO;
+		LOG_MSG("Stopped capturing video.");	
 
-static void CAPTURE_VideoHeader() {
 		Bit8u avi_header[AVI_HEADER_SIZE];
 		Bitu main_list;
 		Bitu header_pos=0;
-		Bitu save_pos=ftell(capture.video.handle);
-
 #define AVIOUT4(_S_) memcpy(&avi_header[header_pos],_S_,4);header_pos+=4;
 #define AVIOUTw(_S_) host_writew(&avi_header[header_pos], _S_);header_pos+=2;
 #define AVIOUTd(_S_) host_writed(&avi_header[header_pos], _S_);header_pos+=4;
@@ -284,20 +288,6 @@ static void CAPTURE_VideoHeader() {
 		fwrite( capture.video.index, 1, capture.video.indexused, capture.video.handle);
 		fseek(capture.video.handle, 0, SEEK_SET);
 		fwrite(&avi_header, 1, AVI_HEADER_SIZE, capture.video.handle);
-		fseek(capture.video.handle, save_pos, SEEK_SET);
-}
-
-static void CAPTURE_VideoEvent(bool pressed) {
-	if (!pressed)
-		return;
-	if (CaptureState & CAPTURE_VIDEO) {
-		/* Close the video */
-		CaptureState &= ~CAPTURE_VIDEO;
-		LOG_MSG("Stopped capturing video.");	
-
-		/* Adds AVI header to the file */
-		CAPTURE_VideoHeader();
-
 		fclose( capture.video.handle );
 		free( capture.video.index );
 		free( capture.video.buf );
@@ -557,9 +547,6 @@ skip_shot:
 			capture.video.audioused = 0;
 		}
 
-		/* Adds AVI header to the file */
-		CAPTURE_VideoHeader();
-
 		/* Everything went okay, set flag again for next frame */
 		CaptureState |= CAPTURE_VIDEO;
 	}
@@ -756,6 +743,9 @@ public:
 #endif
 	}
 	~HARDWARE(){
+#if (C_SSHOT)
+		if (capture.video.handle) CAPTURE_VideoEvent(true);
+#endif
 		if (capture.wave.handle) CAPTURE_WaveEvent(true);
 		if (capture.midi.handle) CAPTURE_MidiEvent(true);
 	}

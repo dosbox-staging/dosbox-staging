@@ -92,9 +92,9 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 			else pic->request_issr=false;			/* select read interrupt request register */
 		}
 		if (val&0x40) {		// special mask select
-			if (val&0x20) pic->special=true;
-			else pic->special=false;
-			if(pic[0].special || pics[1].special) 
+			if (val&0x20) pic->special = true;
+			else pic->special = false;
+			if (pics[0].special || pics[1].special) 
 				PIC_Special_Mode = true; else 
 				PIC_Special_Mode = false;
 			if (PIC_IRQCheck) { //Recheck irqs

@@ -727,7 +727,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		return true;
 #endif
 	case SCREEN_OVERLAY:
-		SDL_LockYUVOverlay(sdl.overlay);
+		if (SDL_LockYUVOverlay(sdl.overlay)) return false;
 		pixels=(Bit8u *)*(sdl.overlay->pixels);
 		pitch=*(sdl.overlay->pitches);
 		sdl.updating=true;

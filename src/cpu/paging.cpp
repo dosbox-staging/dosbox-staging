@@ -44,16 +44,16 @@ Bitu PageHandler::readb(PhysPt addr) {
 	return 0;
 }
 Bitu PageHandler::readw(PhysPt addr) {
-	return 
-		(readb(addr+0) << 0) |
-		(readb(addr+1) << 8);
+	Bitu ret = (readb(addr+0) << 0);
+	ret     |= (readb(addr+1) << 8);
+	return ret;
 }
 Bitu PageHandler::readd(PhysPt addr) {
-	return 
-		(readb(addr+0) << 0)  |
-		(readb(addr+1) << 8)  |
-		(readb(addr+2) << 16) |
-		(readb(addr+3) << 24);
+	Bitu ret = (readb(addr+0) << 0);
+	ret     |= (readb(addr+1) << 8);
+	ret     |= (readb(addr+2) << 16);
+	ret     |= (readb(addr+3) << 24);
+	return ret;
 }
 
 void PageHandler::writeb(PhysPt addr,Bitu /*val*/) {
