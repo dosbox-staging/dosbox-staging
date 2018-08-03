@@ -36,7 +36,7 @@ void Value::destroy() throw(){
 	if (type == V_STRING) delete _string;
 }
 
-Value& Value::copy(Value const& in) throw(WrongType) {
+Value& Value::copy(Value const& in) {
 	if (this != &in) { //Selfassigment!
 		if(type != V_NONE && type != in.type) throw WrongType();
 		destroy();
@@ -54,27 +54,27 @@ void Value::plaincopy(Value const& in) throw(){
 	if(type == V_STRING) _string = new string(*in._string);
 }
 
-Value::operator bool () const throw(WrongType) {
+Value::operator bool () const {
 	if(type != V_BOOL) throw WrongType();
 	return _bool;
 }
 
-Value::operator Hex () const throw(WrongType) {
+Value::operator Hex () const {
 	if(type != V_HEX) throw WrongType();
 	return _hex;
 }
 
-Value::operator int () const throw(WrongType) {
+Value::operator int () const {
 	if(type != V_INT) throw WrongType();
 	return _int;
 }
 
-Value::operator double () const throw(WrongType) {
+Value::operator double () const {
 	if(type != V_DOUBLE) throw WrongType();
 	return _double;
 }
 
-Value::operator char const* () const throw(WrongType) {
+Value::operator char const* () const {
 	if(type != V_STRING) throw WrongType();
 	return _string->c_str();
 }
@@ -104,7 +104,7 @@ bool Value::operator==(Value const& other) {
 	}
 	return false;
 }
-void Value::SetValue(string const& in,Etype _type) throw(WrongType) {
+void Value::SetValue(string const& in,Etype _type) {
 	/* Throw exception if the current type isn't the wanted type 
 	 * Unless the wanted type is current.
 	 */

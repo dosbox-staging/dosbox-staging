@@ -90,26 +90,26 @@ public:
 	Value(std::string const& in,Etype _t) :_string(0),type(V_NONE) {SetValue(in,_t);}
 	
 	/* Assigment operators */
-	Value& operator= (Hex in) throw(WrongType)                { return copy(Value(in));}
-	Value& operator= (int in) throw(WrongType)                { return copy(Value(in));}
-	Value& operator= (bool in) throw(WrongType)               { return copy(Value(in));}
-	Value& operator= (double in) throw(WrongType)             { return copy(Value(in));}
-	Value& operator= (std::string const& in) throw(WrongType) { return copy(Value(in));}
-	Value& operator= (char const * const in) throw(WrongType) { return copy(Value(in));}
-	Value& operator= (Value const& in) throw(WrongType)       { return copy(Value(in));}
+	Value& operator= (Hex in)                 { return copy(Value(in));}
+	Value& operator= (int in)                 { return copy(Value(in));}
+	Value& operator= (bool in)                { return copy(Value(in));}
+	Value& operator= (double in)              { return copy(Value(in));}
+	Value& operator= (std::string const& in)  { return copy(Value(in));}
+	Value& operator= (char const * const in)  { return copy(Value(in));}
+	Value& operator= (Value const& in)        { return copy(Value(in));}
 
 	bool operator== (Value const & other);
-	operator bool () const throw(WrongType);
-	operator Hex () const throw(WrongType);
-	operator int () const throw(WrongType);
-	operator double () const throw(WrongType);
-	operator char const* () const throw(WrongType);
-	void SetValue(std::string const& in,Etype _type = V_CURRENT) throw(WrongType);
+	operator bool () const;
+	operator Hex () const;
+	operator int () const;
+	operator double () const;
+	operator char const* () const;
+	void SetValue(std::string const& in,Etype _type = V_CURRENT);
 	std::string ToString() const;
 
 private:
 	void destroy() throw();
-	Value& copy(Value const& in) throw(WrongType);
+	Value& copy(Value const& in);
 	void plaincopy(Value const& in) throw();
 	void set_hex(std::string const& in);
 	void set_int(std::string const&in);

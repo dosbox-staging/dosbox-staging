@@ -17,7 +17,7 @@
  */
 
 #if !defined __LAZYFLAGS_H
-#define __LAZYFLAG_H
+#define __LAZYFLAGS_H
 
 //Flag Handling
 Bit32u get_CF(void);

@@ -638,7 +638,7 @@ struct DOS_Block {
 
 extern DOS_Block dos;
 
-static Bit8u RealHandle(Bit16u handle) {
+static INLINE Bit8u RealHandle(Bit16u handle) {
 	DOS_PSP psp(dos.psp());	
 	return psp.GetFileHandle(handle);
 }
