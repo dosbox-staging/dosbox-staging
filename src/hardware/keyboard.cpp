@@ -348,15 +348,18 @@ void KEYBOARD_AddKey(KBD_KEYS keytype,bool pressed) {
 	}
 	/* Add the actual key in the keyboard queue */
 	if (pressed) {
-		if (keyb.repeat.key==keytype) keyb.repeat.wait=keyb.repeat.rate;		
-		else keyb.repeat.wait=keyb.repeat.pause;
-		keyb.repeat.key=keytype;
+		if (keyb.repeat.key == keytype) keyb.repeat.wait = keyb.repeat.rate;		
+		else keyb.repeat.wait = keyb.repeat.pause;
+		keyb.repeat.key = keytype;
 	} else {
-		keyb.repeat.key=KBD_NONE;
-		keyb.repeat.wait=0;
-		ret+=128;
+		if (keyb.repeat.key == keytype) {
+			/* repeated key being released */
+			keyb.repeat.key  = KBD_NONE;
+			keyb.repeat.wait = 0;
+		}
+		ret += 128;
 	}
-	if (extend) KEYBOARD_AddBuffer(0xe0); 
+	if (extend) KEYBOARD_AddBuffer(0xe0);
 	KEYBOARD_AddBuffer(ret);
 }
 

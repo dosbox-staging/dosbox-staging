@@ -94,8 +94,13 @@ void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
 	mcb.GetFileName(name);
+	name[8] = 0;
 	if (!strlen(name)) strcpy(name,"DOSBOX");
-	RunningProgram=name;
+	for(Bitu i = 0;i < 8;i++) { //Don't put garbage in the title bar. Mac OS X doesn't like it
+		if (name[i] == 0) break;
+		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
+	}
+	RunningProgram = name;
 	GFX_SetTitle(-1,-1,false);
 }
 

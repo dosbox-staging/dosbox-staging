@@ -171,8 +171,8 @@ typedef struct {
 	Bit8u curmode;
 	Bit16u originx, originy;
 	Bit8u fstackpos, bstackpos;
-	Bit8u forestack[3];
-	Bit8u backstack[3];
+	Bit8u forestack[4];
+	Bit8u backstack[4];
 	Bit16u startaddr;
 	Bit8u posx, posy;
 	Bit8u mc[64][64];

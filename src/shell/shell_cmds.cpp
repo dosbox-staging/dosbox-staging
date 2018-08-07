@@ -906,6 +906,7 @@ nextfile:
 	do {
 		n=1;
 		DOS_ReadFile(handle,&c,&n);
+		if (c==0x1a) break; // stop at EOF
 		DOS_WriteFile(STDOUT,&c,&n);
 	} while (n);
 	DOS_CloseFile(handle);
@@ -920,7 +921,8 @@ void DOS_Shell::CMD_PAUSE(char * args){
 	HELP("PAUSE");
 	WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
 	Bit8u c;Bit16u n=1;
-	DOS_ReadFile (STDIN,&c,&n);
+	DOS_ReadFile(STDIN,&c,&n);
+	if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
 }
 
 void DOS_Shell::CMD_CALL(char * args){

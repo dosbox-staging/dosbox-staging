@@ -1116,13 +1116,15 @@ static void GUI_StartUp(Section * sec) {
 		char res[100];
 		safe_strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
-		if(strcmp(fullresolution,"original")) {
+		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
-			char* height = const_cast<char*>(strchr(fullresolution,'x'));
-			if(height && * height) {
-				*height = 0;
-				sdl.desktop.full.height = (Bit16u)atoi(height+1);
-				sdl.desktop.full.width  = (Bit16u)atoi(res);
+			if (strcmp(fullresolution,"desktop")) { //desktop = 0x0
+				char* height = const_cast<char*>(strchr(fullresolution,'x'));
+				if (height && * height) {
+					*height = 0;
+					sdl.desktop.full.height = (Bit16u)atoi(height+1);
+					sdl.desktop.full.width  = (Bit16u)atoi(res);
+				}
 			}
 		}
 	}
@@ -1144,10 +1146,22 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
+#if SDL_VERSION_ATLEAST(1, 2, 10)
+	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
+		//Can only be done on the very first call! Not restartable.
+		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
+		if (vidinfo) {
+			sdl.desktop.full.width = vidinfo->current_w;
+			sdl.desktop.full.height = vidinfo->current_h;
+		}
+	}
+#endif
+
 	if (!sdl.desktop.full.width) {
 #ifdef WIN32
 		sdl.desktop.full.width=(Bit16u)GetSystemMetrics(SM_CXSCREEN);
 #else
+		LOG_MSG("Your fullscreen resolution can NOT be determined, it's assumed to be 1024x768.\nPlease edit the configuration file if this value is wrong.");
 		sdl.desktop.full.width=1024;
 #endif
 	}
@@ -1382,14 +1396,32 @@ void GFX_LosingFocus(void) {
 	MAPPER_LosingFocus();
 }
 
+#if defined(MACOSX)
+#define DB_POLLSKIP 3
+#else
+//Not used yet, see comment below
+#define DB_POLLSKIP 1
+#endif
+
 void GFX_Events() {
+	//Don't poll too often. This can be heavy on the OS, especially Macs.
+	//In idle mode 3000-4000 polls are done per second without this check.
+	//Macs, with this code,  max 250 polls per second. (non-macs unused default max 500)
+	//Currently not implemented for all platforms, given the ALT-TAB stuff for WIN32.
+#if defined (MACOSX)
+	static int last_check = 0;
+	int current_check = GetTicks();
+	if (current_check - last_check <=  DB_POLLSKIP) return;
+	last_check = current_check;
+#endif
+
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	static int poll_delay=0;
-	int time=GetTicks();
-	if (time-poll_delay>20) {
-		poll_delay=time;
-		if (sdl.num_joysticks>0) SDL_JoystickUpdate();
+	static int poll_delay = 0;
+	int time = GetTicks();
+	if (time - poll_delay > 20) {
+		poll_delay = time;
+		if (sdl.num_joysticks > 0) SDL_JoystickUpdate();
 		MAPPER_UpdateJoysticks();
 	}
 #endif
@@ -1825,7 +1857,9 @@ int main(int argc, char* argv[]) {
 #if SDL_VERSION_ATLEAST(1, 2, 14)
 	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
-	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
+	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again) 
+	// Please report problems with audio and other things.
+	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO | /*SDL_INIT_TIMER |*/ SDL_INIT_CDROM
 		|SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
 	sdl.inited = true;
