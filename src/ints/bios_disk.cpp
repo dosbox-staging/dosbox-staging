@@ -325,6 +325,8 @@ static Bitu INT13_DiskHandler(void) {
 
 	//drivenum = 0;
 	//LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
+
+	// NOTE: the 0xff error code returned in some cases is questionable; 0x01 seems more correct
 	switch(reg_ah) {
 	case 0x0: /* Reset disk */
 		{
@@ -440,7 +442,10 @@ static Bitu INT13_DiskHandler(void) {
 			CALLBACK_SCF(true);
 			return CBRET_NONE;
 		}
-		if(driveInactive(drivenum)) return CBRET_NONE;
+		if(driveInactive(drivenum)) {
+			reg_ah = last_status;
+			return CBRET_NONE;
+		}
 
 		/* TODO: Finish coding this section */
 		/*
