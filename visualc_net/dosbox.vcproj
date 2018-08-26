@@ -569,6 +569,9 @@
 						Name="mame"
 						Filter="">
 						<File
+							RelativePath="..\src\hardware\mame\emu.h">
+						</File>
+						<File
 							RelativePath="..\src\hardware\mame\fmopl.cpp">
 						</File>
 						<File
