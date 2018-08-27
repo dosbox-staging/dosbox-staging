@@ -1223,9 +1223,9 @@ static void GUI_StartUp(Section * sec) {
 	glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 	if(gl_ext && *gl_ext){
-		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != 0);
-		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != 0);
-		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != 0 ) &&
+		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
+		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
+		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
 		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
 		    glMapBufferARB && glUnmapBufferARB;
     	} else {
@@ -1822,7 +1822,7 @@ int main(int argc, char* argv[]) {
 #endif  //defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, copyright 2002-2010 DOSBox Team.\n\n",VERSION);
+			printf("\nDOSBox version %s, copyright 2002-2018 DOSBox Team.\n\n",VERSION);
 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
 			printf("and you are welcome to redistribute it under certain conditions;\n");
@@ -1850,11 +1850,15 @@ int main(int argc, char* argv[]) {
 
 	/* Display Welcometext in the console */
 	LOG_MSG("DOSBox version %s",VERSION);
-	LOG_MSG("Copyright 2002-2010 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Copyright 2002-2018 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
 
 	/* Init SDL */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
+	/* Or debian/ubuntu with older libsdl version as they have done this themselves, but then differently.
+	 * with this variable they will work correctly. I've only tested the 1.2.14 behaviour against the windows version
+	 * of libsdl
+	 */
 	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
 	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again) 

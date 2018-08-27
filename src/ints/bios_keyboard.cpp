@@ -33,6 +33,8 @@
  * Define the following if this is the case */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
 #define CAN_USE_LOCK 1
+/* For lower versions of SDL we also use a slight hack to get the startup states of numclock and capslock right.
+ * The proper way is in the mapper, but the repeating key is an unwanted side effect for lower versions of SDL */
 #endif
 
 static Bitu call_int16,call_irq1,call_irq6;
@@ -592,9 +594,14 @@ static void InitBiosSegment(void) {
 	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL,0x1e);
 	Bit8u flag1 = 0;
 	Bit8u leds = 16; /* Ack recieved */
-//MAPPER_Init takes care of this now ?
-//	if(startup_state_capslock) { flag1|=0x40; leds|=0x04;}
-//	if(startup_state_numlock){ flag1|=0x20; leds|=0x02;}
+
+#if SDL_VERSION_ATLEAST(1, 2, 14)
+//Nothing, mapper handles all.
+#else
+	if (startup_state_capslock) { flag1|=0x40; leds|=0x04;}
+	if (startup_state_numlock)  { flag1|=0x20; leds|=0x02;}
+#endif
+
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
