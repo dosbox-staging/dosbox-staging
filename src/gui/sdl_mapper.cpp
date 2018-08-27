@@ -2359,6 +2359,7 @@ void MAPPER_Init(void) {
 	CreateLayout();
 	CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
+#if !defined(WIN32)
 	if (SDL_GetModState()&KMOD_CAPS) {
 		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
 #if SDL_VERSION_ATLEAST(1, 2, 14)
@@ -2379,6 +2380,7 @@ void MAPPER_Init(void) {
 #endif
 		}
 	}
+#endif
 }
 //Somehow including them at the top conflicts with something in setup.h
 #ifdef C_X11_XKB
