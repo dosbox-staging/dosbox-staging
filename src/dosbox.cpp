@@ -448,12 +448,14 @@ void DOSBOX_Init(void) {
 	Pint->Set_help("How many frames DOSBox skips before drawing one.");
 
 	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,false);
-	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!.");
+	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
 	Pmulti->SetValue("normal2x");
 	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes. If 'forced' is appended,\n"
-	                 "then the scaler will be used even if the result might not be desired.");
+	                 "then the scaler will be used even if the result might not be desired.\n"
+					 "To fit a scaler in the resolution used at full screen may require a border or side bars,\n"
+					 "to fill the screen entirely, depending on your hardware, a different scaler/fullresolution might work.");
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
 
 	const char *scalers[] = {
