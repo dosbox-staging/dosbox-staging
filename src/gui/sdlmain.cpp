@@ -1269,6 +1269,7 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 #endif
+#endif
 
 	if (!sdl.desktop.full.width) {
 #ifdef WIN32
