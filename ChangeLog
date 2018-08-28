@@ -1,3 +1,56 @@
+0.74-2
+  - Rewrite auto/max cycles algorithm to work better with windows 7, other 
+    OSes might benefit as well.
+  - Update 64bit recompiler to work on OSX and Linux.
+  - Several improvements to make the recompilers work with newer compilers and
+    add some workarounds about clang confusing itself.
+  - Fix several variables being the wrong size in the recompiler.
+  - Support absolute 64 bit addressing. (DRC:64 bit error messages)
+  - Zero extend data in dynrec core for LLVM compilation/
+  - Reduce overhead of the Mac version with a lot. Results in a speed increase.
+  - Replace NV_PixelDataRange with the more common ARB_PixelBufferObject 
+    extension. Should help with output=opengl.
+  - Reuse graphics window if possible instead of always creating a new one!
+  - Add patches to work better when called by WINE:
+    - support WINE style namemangling.
+    - allow Z:\ to be moved to a different drive. 
+  - Try to fix stuttering audio with opengl output on Linux. (or at least improve it. Linux users might need to increase the prebuffer option a bit)
+  - Fix automake and autoconf problems.
+  - Fix problems related to packed struct layouts.
+  - Fix compilation on gcc 4.4 and gcc 4.6.1.
+  - Fix compilation with -DPIC.
+  - Hopefully fix crash on shutdown, when unknown condition is encountered.
+  - Fix -lto with gcc.
+  - Fix clang compliation with asm fpu core.
+  - Fix mapper crash on startup and when changing the mapper key.
+  - Fix compilation in VS2015.
+  - Fix compilation on mingw64.
+  - Fix compilation on Frisbee and newer clang.
+  - Fix compilation machines that have X11 libraries installed, but use a SDL 
+    without X11.
+  - Fix a few problems relating to video capturing:
+    - Writing out the index too often. (slowdown with longer captures)
+    - Not being aware of when only the refresh rate changed.
+  - Fix call order when bitshifting the return order (VS C /O2 builds).
+  - Fix sign-extension error in S3 draw funcion, i.e. win3.1 analog clock.
+  - Fix expanddot not caring about the size of the inputbuffer.
+  - Some fixes for the debugger related to starting a program through debug.com.
+  - Bring OS/2 port code up to date.
+  - Reduce the amount of warning when compiling with quite a bit.
+  - Allow 15/26/32 bits input to the opengl output.
+  - Add cmd-q as exit key for macs.
+  - Fix icon and titlebar on very old setups.
+  - Fix off by one display size calculation errors with very large displays.
+  - Fix out of bounds access the unused byte in the 32 bit colour value of the 
+    hardware mouse cursor pixel was affected.
+  - Fix depreciated warnings on Mac, allow soundfont loading for coreaudio.
+  - Keep repeating a pressed key if another key was unpressed.
+  - Fix crash on OS X related to putting junk in the titlebar.
+  - Extend fullresolution=0x0 to work on Linux and Mac.
+  - Change gameblaster and tandy sound core to latest mame version.
+  - Improve numlock and capslock support on Linux and Macs. Still not perfect
+    on Windows.
+
 0.74
   - Several small game specific fixes/hacks/support. (Offensive,
     Roadhog, GTA installer, Kingdom O' Magic soundcard detection, 
