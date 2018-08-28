@@ -1246,9 +1246,22 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
-#if SDL_VERSION_ATLEAST(1, 2, 10) && !defined(WIN32)
+#if SDL_VERSION_ATLEAST(1, 2, 10)
+#ifdef WIN32
+	const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
+	if (vidinfo) {
+		int sdl_w = vidinfo->current_w;
+		int sdl_h = vidinfo->current_h;
+		int win_w = GetSystemMetrics(SM_CXSCREEN);
+		int win_h = GetSystemMetrics(SM_CYSCREEN);
+		if (sdl_w != win_w && sdl_h != win_h) 
+			LOG_MSG("Windows dpi/blurry apps scaling detected! The screen might be too large or not show properly,\n"
+		        "please see the DOSBox Manual/README for details.\n");
+		}
+#else
 	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
 		//Can only be done on the very first call! Not restartable.
+		//On windows don't use it as SDL returns the values without taking in account the dpi scaling
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
 		if (vidinfo) {
 			sdl.desktop.full.width = vidinfo->current_w;
