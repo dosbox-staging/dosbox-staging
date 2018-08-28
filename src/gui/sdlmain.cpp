@@ -704,7 +704,14 @@ dosurface:
 			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		}
 		sdl.opengl.pitch=width*4;
-		glViewport(sdl.clip.x,sdl.clip.y,sdl.clip.w,sdl.clip.h);
+
+		if(sdl.clip.x ==0 && sdl.clip.y ==0 && sdl.desktop.fullscreen && !sdl.desktop.full.fixed && (sdl.clip.w != sdl.surface->w || sdl.clip.h != sdl.surface->h)) { 
+//			LOG_MSG("attempting to fix the centering to %d %d %d %d",(sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
+			glViewport((sdl.surface->w-sdl.clip.w)/2,(sdl.surface->h-sdl.clip.h)/2,sdl.clip.w,sdl.clip.h);
+		} else {
+			glViewport(sdl.clip.x,sdl.clip.y,sdl.clip.w,sdl.clip.h);
+		}		
+
 		glMatrixMode (GL_PROJECTION);
 		glDeleteTextures(1,&sdl.opengl.texture);
  		glGenTextures(1,&sdl.opengl.texture);
@@ -1239,7 +1246,7 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	sdl.desktop.doublebuf=section->Get_bool("fulldouble");
-#if SDL_VERSION_ATLEAST(1, 2, 10)
+#if SDL_VERSION_ATLEAST(1, 2, 10) && !defined(WIN32)
 	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
 		//Can only be done on the very first call! Not restartable.
 		const SDL_VideoInfo* vidinfo = SDL_GetVideoInfo();
