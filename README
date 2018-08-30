@@ -47,7 +47,7 @@ It is essential that you get familiar with the idea of mounting, DOSBox does not
 automatically make any drive (or a part of it) accessible to the emulation. See
 the FAQ entry "How to start?" as well as the description of the MOUNT command
 (section 4: "Internal Programs"). If you have your game on a cdrom you may try
-this guide: http://vogons.zetafleet.com/viewtopic.php?t=8933
+this guide: https://www.vogons.org/viewtopic.php?t=8933
 
 
 
@@ -58,6 +58,7 @@ this guide: http://vogons.zetafleet.com/viewtopic.php?t=8933
 START:      How to start?
 AUTOMATION: Do I always have to type these "mount" commands?
 FULLSCREEN: How do I change to fullscreen?
+FULLSCREEN: My fullscreen is too large.
 CD-ROM:     My CD-ROM doesn't work.
 CD-ROM:     The game/application can't find its CD-ROM.
 MOUSE:      The mouse doesn't work.
@@ -102,6 +103,26 @@ FULLSCREEN: How do I change to fullscreen?
     aspect in the configuration file of DOSBox. To get back from fullscreen
     mode: Press alt-enter again.
 
+
+FULLSCREEN: My fullscreen is too large.
+    This is can be a problem on Windows 10, if you have display scaling
+    set to a value above 100%. Windows in that case will resize the screen
+    on top of dosbox resizing the screen, which can happen for the output:
+    ddraw, opengl, openglnb, overlay. You can disable this Windows behaviour
+    by enabling a specific compatibility setting:
+ 
+    - Right-click the DOSBox icon and select "Properties".
+    - Go to the "Compatibility" tab.
+    - Click on "Change high DPI settings".
+    - Tick "Override high DPI scaling behaviour" and set it to "Application".
+    - Apply the changes by clicking on "OK".
+
+    Unfortunately, this compatibility option causes some side effects in
+    windowed mode, and in this case you will need to change the resolution
+    in the config/Options file for windowresolution (e.g. 1024x768).
+
+    Alternatively, you can disable the display scaling and or use a lower
+    fullresolution value.
 
 CD-ROM: My CD-ROM doesn't work.
     To mount your CD-ROM in DOSBox you have to specify some additional options
@@ -255,7 +276,7 @@ KEYBOARD: Right Shift and "\" doesn't work in DOSBox. (Windows only)
     dosbox.exe
     check whether keyboard started to work properly. As windib is slower it is
     best to use one of the two solutions provided here:
-    http://vogons.zetafleet.com/viewtopic.php?t=24072
+    https://www.vogons.org/viewtopic.php?t=24072
 
 
 KEYBOARD: The keyboard lags.
@@ -307,9 +328,9 @@ OPTIONS: I would like to change DOSBox's options.
 
 HELP: Great Manual, but I still don't get it.
     For more questions read the rest of this Manual. You may also look at:
-    guides located at http://vogons.zetafleet.com/viewforum.php?f=39
-    the wiki of DOSBox http://www.dosbox.com/wiki/
-    the site/forum: http://www.dosbox.com
+    guides located at https://www.vogons.org/viewforum.php?f=53
+    the wiki of DOSBox https://www.dosbox.com/wiki/
+    the site/forum: https://www.dosbox.com
 
 
 
@@ -928,7 +949,7 @@ KEYB [keyboardlayoutcode [codepage [codepagefile]]]
      examples are PL214 (Polish typists) or PL457 (Polish programmers).
      It specifies the keyboard layout to be used.
      The list of all layouts built into DOSBox is here:
-     http://vogons.zetafleet.com/viewtopic.php?t=21824
+     https://www.vogons.org/viewtopic.php?t=21824
 
   [codepage] is the number of the codepage to be used. The keyboard layout
      has to provide support for the specified codepage, otherwise the layout
@@ -1165,7 +1186,7 @@ Layout switching
   in this case just the layout identifier needs to be specified (like
   keyboardlayout=PL214 in the DOSBox configuration file, or using "keyb PL214"
   at the DOSBox command prompt). The list of all layouts built into DOSBox is
-  here: http://vogons.zetafleet.com/viewtopic.php?t=21824
+  here: https://www.vogons.org/viewtopic.php?t=21824
 
   Some keyboard layouts (for example layout GK319 codepage 869 and layout RU441
   codepage 808) have support for dual layouts that can be accessed by pressing
@@ -1463,7 +1484,7 @@ See the THANKS file.
 ============
 
 See the site: 
-http://www.dosbox.com
+https://www.dosbox.com
 for an email address (The Crew-page).
 
 
