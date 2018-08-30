@@ -1,4 +1,4 @@
-DOSBox v0.74 Manual (always use the latest version from www.dosbox.com)
+DOSBox v0.74-2 Manual (always use the latest version from www.dosbox.com)
 
 
 
@@ -1005,7 +1005,7 @@ In MAC OS you can try using cmd(applekey) together with Ctrl if the key doesn't
 work eg. cmd-ctrl-F1, but some keys may still need remapping (in Linux too).
 
 Saved/recorded files can be found in:
-   (Windows)    "Start/WinLogo Menu"->"All Programs"->DOSBox-0.74->Extras
+   (Windows)    "Start/WinLogo Menu"->"All Programs"->"DOSBox-0.74-2"->Extras
    (Linux)      ~/.dosbox/capture
    (MAC OS X)   "~/Library/Preferences/capture"
 This can be changed in the DOSBox configuration file.
@@ -1400,9 +1400,9 @@ To start DOSBox Status Window:
 
 The configuration file is automatically created the first time you run DOSBox.
 The file can be found in:
-   (Windows)  "Start/WinLogo Menu"->"All Programs"->DOSBox-0.74->Options
-   (Linux)    ~/.dosbox/dosbox-0.74.conf
-   (MAC OS X) "~/Library/Preferences/DOSBox 0.74 Preferences"
+   (Windows)  "Start/WinLogo Menu"->"All Programs"->"DOSBox-0.74-2"->Options
+   (Linux)    ~/.dosbox/dosbox-0.74-2.conf
+   (MAC OS X) "~/Library/Preferences/DOSBox 0.74-2 Preferences"
 The file is divided into several sections. Each section starts with a
 [section name] line. The settings are the property=value lines where value can
 be altered to customize DOSBox.

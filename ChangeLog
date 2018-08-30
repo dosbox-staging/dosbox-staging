@@ -14,7 +14,8 @@
   - Add patches to work better when called by WINE:
     - support WINE style namemangling.
     - allow Z:\ to be moved to a different drive. 
-  - Try to fix stuttering audio with opengl output on Linux. (or at least improve it. Linux users might need to increase the prebuffer option a bit)
+  - Try to fix stuttering audio with opengl output on Linux. (or at least 
+    improve it. Linux users might need to increase the prebuffer option a bit)
   - Fix automake and autoconf problems.
   - Fix problems related to packed struct layouts.
   - Fix compilation on gcc 4.4 and gcc 4.6.1.
@@ -50,6 +51,7 @@
   - Change gameblaster and tandy sound core to latest mame version.
   - Improve numlock and capslock support on Linux and Macs. Still not perfect
     on Windows.
+  - Added even more code to workaround Windows behaving weirdly with alt-tab.
 
 0.74
   - Several small game specific fixes/hacks/support. (Offensive,

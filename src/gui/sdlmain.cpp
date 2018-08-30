@@ -211,6 +211,8 @@ struct SDL_Block {
 	Bitu num_joysticks;
 #if defined (WIN32)
 	bool using_windib;
+	// Time when sdl regains focus (alt-tab) in windowed mode
+	Bit32u focus_ticks;
 #endif
 	// state of alt-keys for certain special handlings
 	Bit8u laltstate;
@@ -1162,8 +1164,8 @@ static void GUI_StartUp(Section * sec) {
 		int win_w = GetSystemMetrics(SM_CXSCREEN);
 		int win_h = GetSystemMetrics(SM_CYSCREEN);
 		if (sdl_w != win_w && sdl_h != win_h) 
-			LOG_MSG("Windows dpi/blurry apps scaling detected! The screen might be too large or not show properly,\n"
-		        "please see the DOSBox Manual/README for details.\n");
+			LOG_MSG("\nWindows dpi/blurry apps scaling detected! The screen might be too large or not\n"
+			        "show properly, please see the DOSBox options file (fullresolution) for details.\n");
 		}
 #else
 	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
@@ -1451,6 +1453,9 @@ void GFX_Events() {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
+#ifdef WIN32
+					if (!sdl.desktop.fullscreen) sdl.focus_ticks = GetTicks();
+#endif
 					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
 						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
@@ -1543,6 +1548,10 @@ void GFX_Events() {
 			if (event.key.keysym.sym==SDLK_RALT) sdl.raltstate = event.key.type;
 			if (((event.key.keysym.sym==SDLK_TAB)) &&
 				((sdl.laltstate==SDL_KEYDOWN) || (sdl.raltstate==SDL_KEYDOWN))) break;
+			// This can happen as well.
+			if (((event.key.keysym.sym == SDLK_TAB )) && (event.key.keysym.mod & KMOD_ALT)) break;
+			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
+			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
 #if defined (MACOSX)			
 		case SDL_KEYDOWN:
@@ -1606,10 +1615,11 @@ void Config_Add_SDL() {
 	Pbool->Set_help("Use double buffering in fullscreen. It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
-	Pstring->Set_help("What resolution to use for fullscreen: original or fixed size (e.g. 1024x768).\n"
-	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
-			  "  If you end up with small window on a large screen, try an output different from surface.");
-
+	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or fixed size (e.g. 1024x768).\n"
+	                  "  Using your monitor's native resolution (desktop) with aspect=true might give the best results.\n"
+			  "  If you end up with small window on a large screen, try an output different from surface.\n"
+	                  "  On Windows 10 with display scaling (Scale and layout) set to a value above 100%, it is recommended\n"
+	                  "  to use a lower full/windowresolution, in order to avoid window size problems.");
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
 	                  "  (output=surface does not!)");
