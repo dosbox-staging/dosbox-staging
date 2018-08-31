@@ -1255,8 +1255,8 @@ static void GUI_StartUp(Section * sec) {
 		int win_w = GetSystemMetrics(SM_CXSCREEN);
 		int win_h = GetSystemMetrics(SM_CYSCREEN);
 		if (sdl_w != win_w && sdl_h != win_h) 
-			LOG_MSG("Windows dpi/blurry apps scaling detected! The screen might be too large or not show properly,\n"
-		        "please see the DOSBox Manual/README for details.\n");
+			LOG_MSG("Windows dpi/blurry apps scaling detected! The screen might be too large or not\n"
+			        "show properly, please see the DOSBox options file (fullresolution) for details.\n");
 		}
 #else
 	if (!sdl.desktop.full.width || !sdl.desktop.full.height){
@@ -1712,7 +1712,9 @@ void Config_Add_SDL() {
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or a fixed size (e.g. 1024x768).\n"
 	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
-			  "  If you end up with small window on a large screen, try an output different from surface.");
+			  "  If you end up with small window on a large screen, try an output different from surface."
+	                  "  On Windows 10 with display scaling (Scale and layout) set to a value above 100%, it is recommended\n"
+	                  "  to use a lower full/windowresolution, in order to avoid window size problems.");
 
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
