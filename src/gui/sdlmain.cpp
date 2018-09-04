@@ -1711,14 +1711,14 @@ void Config_Add_SDL() {
 
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or a fixed size (e.g. 1024x768).\n"
-	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
-			  "  If you end up with small window on a large screen, try an output different from surface."
-	                  "  On Windows 10 with display scaling (Scale and layout) set to a value above 100%, it is recommended\n"
-	                  "  to use a lower full/windowresolution, in order to avoid window size problems.");
+	                  "Using your monitor's native resolution with aspect=true might give the best results.\n"
+			  "If you end up with small window on a large screen, try an output different from surface."
+	                  "On Windows 10 with display scaling (Scale and layout) set to a value above 100%, it is recommended\n"
+	                  "to use a lower full/windowresolution, in order to avoid window size problems.");
 
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
-	                  "  (output=surface does not!)");
+	                  "(output=surface does not!)");
 
 	const char* outputs[] = {
 		"surface", "overlay",
@@ -1746,7 +1746,7 @@ void Config_Add_SDL() {
 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
 	Pmulti->SetValue("higher,normal");
 	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
-	                 "  pause is only valid for the second entry.");
+	                 "pause is only valid for the second entry.");
 
 	const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
 	Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
