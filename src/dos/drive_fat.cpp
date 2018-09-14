@@ -737,7 +737,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 			}
 		}
 
-		if(m==4) LOG_MSG("No good partiton found in image.");
+		if(m==4) LOG_MSG("No good partition found in image.");
 
 		partSectOff = startSector;
 	} else {
