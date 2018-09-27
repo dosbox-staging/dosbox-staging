@@ -441,9 +441,7 @@ public:
 
 		Bit16u seg,blocks;blocks=0xffff;
 		DOS_AllocateMemory(&seg,&blocks);
-		if ((machine==MCH_PCJR) && (real_readb(0x2000,0)==0x5a) && (real_readw(0x2000,1)==0) && (real_readw(0x2000,3)==0x7ffe)) {
-			WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),0x7ffe*16/1024);
-		} else WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
+		WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
 
 		if (umb_start!=0xffff) {
 			DOS_LinkUMBsToMemChain(1);
