@@ -109,6 +109,7 @@ bool SecondDMAControllerAvailable(void) {
 }
 
 static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
+	//LOG(LOG_DMACONTROL,LOG_ERROR)("Write %X %X",port,val);
 	if (port<0x10) {
 		/* write to the first DMA controller (channels 0-3) */
 		DmaControllers[0]->WriteControllerReg(port,val,1);
@@ -122,6 +123,7 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 			case 0x81:GetDMAChannel(2)->SetPage((Bit8u)val);break;
 			case 0x82:GetDMAChannel(3)->SetPage((Bit8u)val);break;
 			case 0x83:GetDMAChannel(1)->SetPage((Bit8u)val);break;
+			case 0x87:GetDMAChannel(0)->SetPage((Bit8u)val);break;
 			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
 			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
 			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
@@ -130,6 +132,7 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 }
 
 static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
+	//LOG(LOG_DMACONTROL,LOG_ERROR)("Read %X",port);
 	if (port<0x10) {
 		/* read from the first DMA controller (channels 0-3) */
 		return DmaControllers[0]->ReadControllerReg(port,iolen);
@@ -141,6 +144,7 @@ static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
 		case 0x81:return GetDMAChannel(2)->pagenum;
 		case 0x82:return GetDMAChannel(3)->pagenum;
 		case 0x83:return GetDMAChannel(1)->pagenum;
+		case 0x87:return GetDMAChannel(0)->pagenum;
 		case 0x89:return GetDMAChannel(6)->pagenum;
 		case 0x8a:return GetDMAChannel(7)->pagenum;
 		case 0x8b:return GetDMAChannel(5)->pagenum;
@@ -365,9 +369,11 @@ public:
 		/* install handlers for ports 0x81-0x83 (on the first DMA controller) */
 		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81,DMA_Write_Port,IO_MB,3);
 		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81,DMA_Read_Port,IO_MB,3);
+		DmaControllers[0]->DMA_WriteHandler[0x11].Install(0x87,DMA_Write_Port,IO_MB,1);
+		DmaControllers[0]->DMA_ReadHandler[0x11].Install(0x87,DMA_Read_Port,IO_MB,1);
 
 		if (IS_EGAVGA_ARCH) {
-			/* install handlers for ports 0x81-0x83 (on the second DMA controller) */
+			/* install handlers for ports 0x89-0x8B (on the second DMA controller) */
 			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89,DMA_Write_Port,IO_MB,3);
 			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89,DMA_Read_Port,IO_MB,3);
 		}
