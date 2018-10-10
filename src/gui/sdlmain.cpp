@@ -2098,9 +2098,11 @@ int main(int argc, char* argv[]) {
 
 	//Second parse -conf switches
 	while(control->cmdline->FindString("-conf",config_file,true)) {
-		if(!control->ParseConfigFile(config_file.c_str())) {
+		if (!control->ParseConfigFile(config_file.c_str())) {
 			// try to load it from the user directory
-			control->ParseConfigFile((config_path + config_file).c_str());
+			if (!control->ParseConfigFile((config_path + config_file).c_str())) {
+				LOG_MSG("CONFIG: Can't open specified config file: %s",config_file.c_str());
+			}
 		}
 	}
 	// if none found => parse localdir conf

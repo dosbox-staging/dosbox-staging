@@ -836,7 +836,7 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	settings_type = (configfiles.size() == 0)? "primary":"additional";
 	configfiles.push_back(configfilename);
 
-	LOG_MSG("CONFIG:Loading %s settings from config file %s", settings_type,configfilename);
+	LOG_MSG("CONFIG: Loading %s settings from config file %s", settings_type,configfilename);
 
 	//Get directory from configfilename, used with relative paths.
 	current_config_dir=configfilename;
