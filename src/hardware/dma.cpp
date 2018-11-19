@@ -308,7 +308,7 @@ again:
 			currcnt=0xffff;
 			masked=true;
 			UpdateEMSMapping();
-			DoCallBack(DMA_TRANSFEREND);
+			DoCallBack(DMA_MASKED);
 		}
 	}
 	return done;
@@ -340,7 +340,7 @@ again:
 			currcnt=0xffff;
 			masked=true;
 			UpdateEMSMapping();
-			DoCallBack(DMA_TRANSFEREND);
+			DoCallBack(DMA_MASKED);
 		}
 	}
 	return done;
