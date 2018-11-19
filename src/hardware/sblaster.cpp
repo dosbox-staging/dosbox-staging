@@ -537,6 +537,8 @@ static void GenerateDMASound(Bitu size) {
 				sb.dma.mode = DSP_DMA_NONE;
 			}
 			else {
+				//Copied this value as the count for the final single cycle
+				sb.dma.total = 0;
 				LOG(LOG_SB, LOG_NORMAL)("Switch to Single cycle transfer begun");
 			}
 		} else {
@@ -996,6 +998,8 @@ static void DSP_DoCommand(void) {
 		DSP_SB2_ABOVE;
 		/* Set mode to single transfer so it ends with current block */
 		sb.dma.autoinit=false;		//Should stop itself
+		sb.dma.total = 0;			//This will cancel the switch to single cycle mode
+		//Should really have some sb.dma.autoexit variable since we don't support continue autoinit dsp commands
 		break;
 	case 0xe0:	/* DSP Identification - SB2.0+ */
 		DSP_FlushData();
