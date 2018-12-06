@@ -22,6 +22,9 @@
 #define M_PI           3.14159265358979323846
 #endif
 
+#include "../../save_state.h"
+#include <sstream>
+
 typedef Bit16s stream_sample_t;
 
 typedef Bit8u u8;
@@ -123,6 +126,12 @@ public:
 	device_t(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, u32 _clock) : clockRate( _clock ) {
 	}
 
+	void SaveState( std::ostream& stream ) {
+	    WRITE_POD( &clockRate, clockRate );
+	}
+	void LoadState( std::istream& stream ) {
+	    READ_POD( &clockRate, clockRate );
+	}
 };
 
 

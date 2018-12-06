@@ -22,6 +22,8 @@
 #include "vga.h"
 #include "mem.h"
 
+#include "../save_state.h"
+
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	switch (reg) {
 	case 0x31:	/* CR31 Memory Configuration */
@@ -562,4 +564,29 @@ void SVGA_Setup_S3Trio(void) {
 	phys_writeb(rom_base+0x0045,'7');
 	phys_writeb(rom_base+0x0046,'6');
 	phys_writeb(rom_base+0x0047,'4');
+}
+
+// save state support
+
+void POD_Save_VGA_S3( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.s3, vga.s3 );
+
+	//*****************************************
+	//*****************************************
+
+	// static globals
+}
+
+
+void POD_Load_VGA_S3( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.s3, vga.s3 );
+
+	//*****************************************
+	//*****************************************
+
+	// static globals
 }

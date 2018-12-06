@@ -1296,3 +1296,6 @@ void SERIAL_Init (Section * sec) {
 	testSerialPortsBaseclass = new SERIALPORTS (sec);
 	sec->AddDestroyFunction (&SERIAL_Destroy, true);
 }
+
+// save state support
+void *Serial_EventHandler_PIC_Event = (void*)Serial_EventHandler;

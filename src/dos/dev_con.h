@@ -33,6 +33,9 @@ public:
 	Bit16u GetInformation(void);
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+
+	// virtual void SaveState( std::ostream& stream );
+	// virtual void LoadState( std::istream& stream );
 private:
 	void ClearAnsi(void);
 	void Output(Bit8u chr);
@@ -438,3 +441,21 @@ void device_CON::Output(Bit8u chr) {
 		INT10_TeletypeOutputAttr(chr,ansi.attr,true);
 	} else INT10_TeletypeOutput(chr,7);
  }
+
+/*// save state support
+void device_CON::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &readcache, readcache );
+
+	WRITE_POD( &ansi, ansi );
+}
+
+
+void device_CON::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &readcache, readcache );
+
+	READ_POD( &ansi, ansi );
+}*/

@@ -25,6 +25,8 @@
 #include "cpu.h"
 #include "support.h"
 
+#include "../save_state.h"
+
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
 
@@ -673,4 +675,50 @@ void MPU401_Destroy(Section* sec){
 void MPU401_Init(Section* sec) {
 	test = new MPU401(sec);
 	sec->AddDestroyFunction(&MPU401_Destroy,true);
+}
+
+// save state support
+void *MPU401_Event_PIC_Event = (void*)MPU401_Event;
+
+
+void POD_Save_MPU401( std::ostream& stream )
+{
+	const char pod_name[32] = "MPU401";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - pure data
+	WRITE_POD( &mpu, mpu );
+}
+
+
+void POD_Load_MPU401( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "MPU401" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
+	// - pure data
+	READ_POD( &mpu, mpu );
 }

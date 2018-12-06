@@ -29,6 +29,9 @@
 #include "hardware.h"
 #include "setup.h"
 #include "support.h"
+
+#include "../save_state.h"
+
 #include "shell.h"
 using namespace std;
 
@@ -1735,4 +1738,126 @@ void SBLASTER_ShutDown(Section* /*sec*/) {
 void SBLASTER_Init(Section* sec) {
 	test = new SBLASTER(sec);
 	sec->AddDestroyFunction(&SBLASTER_ShutDown,true);
+}
+
+// save state support
+void *DMA_Silent_Event_PIC_Event = (void*)DMA_Silent_Event;
+void *DSP_FinishReset_PIC_Event = (void*)DSP_FinishReset;
+void *DSP_RaiseIRQEvent_PIC_Event = (void*)DSP_RaiseIRQEvent;
+void *END_DMA_Event_PIC_Event = (void*)END_DMA_Event;
+
+void *SB_DSP_DMA_CallBack_Func = (void*)DSP_DMA_CallBack;
+void *SB_DSP_ADC_CallBack_Func = (void*)DSP_ADC_CallBack;
+void *SB_DSP_E2_DMA_CallBack_Func = (void*)DSP_E2_DMA_CallBack;
+
+
+void POD_Save_Sblaster( std::ostream& stream )
+{
+	const char pod_name[32] = "SBlaster";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !sb.chan ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+	
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	Bit8u dma_idx;
+
+
+	dma_idx = 0xff;
+	for( int lcv=0; lcv<8; lcv++ ) {
+		if( sb.dma.chan == GetDMAChannel(lcv) ) { dma_idx = lcv; break; }
+	}
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
+	// - near-pure data
+	WRITE_POD( &sb, sb );
+
+	// - pure data
+	WRITE_POD( &ASP_regs, ASP_regs );
+	WRITE_POD( &ASP_init_in_progress, ASP_init_in_progress );
+        WRITE_POD( &last_dma_callback, last_dma_callback );
+
+
+
+	// - reloc ptr
+	WRITE_POD( &dma_idx, dma_idx );
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
+	sb.chan->SaveState(stream);
+}
+
+
+void POD_Load_Sblaster( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !sb.chan ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "SBlaster" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
+	Bit8u dma_idx;
+	MixerChannel *mixer_old;
+
+	
+	// save static ptr
+	mixer_old = sb.chan;
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// - near-pure data
+	READ_POD( &sb, sb );
+
+	// - pure data
+	READ_POD( &ASP_regs, ASP_regs );
+	READ_POD( &ASP_init_in_progress, ASP_init_in_progress );
+        READ_POD( &last_dma_callback, last_dma_callback );
+
+
+
+	// - reloc ptr
+	READ_POD( &dma_idx, dma_idx );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	sb.dma.chan = NULL;
+	if( dma_idx != 0xff ) sb.dma.chan = GetDMAChannel(dma_idx);
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
+	// restore static ptr
+	sb.chan = mixer_old;
+
+
+	sb.chan->LoadState(stream);
 }

@@ -27,6 +27,8 @@
 #include "fpu.h"
 #include "cpu.h"
 
+#include "../save_state.h"
+
 FPU_rec fpu;
 
 void FPU_FLDCW(PhysPt addr){
@@ -628,3 +630,16 @@ void FPU_Init(Section*) {
 }
 
 #endif
+
+//save state support
+namespace
+{
+class SerializeFpu : public SerializeGlobalPOD
+{
+public:
+    SerializeFpu() : SerializeGlobalPOD("FPU")
+    {
+        registerPOD(fpu);
+    }
+} dummy;
+}

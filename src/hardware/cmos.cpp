@@ -29,6 +29,8 @@
 #include "setup.h"
 #include "cross.h" //fmod on certain platforms
 
+#include "../save_state.h"
+
 static struct {
 	Bit8u regs[0x40];
 	bool nmi;
@@ -327,4 +329,29 @@ void CMOS_Destroy(Section* sec){
 void CMOS_Init(Section* sec) {
 	test = new CMOS(sec);
 	sec->AddDestroyFunction(&CMOS_Destroy,true);
+}
+
+// save state support
+void *cmos_timerevent_PIC_Event = (void*)cmos_timerevent;
+
+namespace
+{
+class SerializeCmos : public SerializeGlobalPOD
+{
+public:
+    SerializeCmos() : SerializeGlobalPOD("CMOS")
+    {
+        registerPOD(cmos.regs);
+        registerPOD(cmos.nmi);
+        registerPOD(cmos.reg);
+        registerPOD(cmos.timer.enabled);
+        registerPOD(cmos.timer.div);
+        registerPOD(cmos.timer.delay);
+        registerPOD(cmos.timer.acknowledged);
+        registerPOD(cmos.last.timer);
+        registerPOD(cmos.last.ended);
+        registerPOD(cmos.last.alarm);
+        registerPOD(cmos.update_ended);
+    }
+} dummy;
 }

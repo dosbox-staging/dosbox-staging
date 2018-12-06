@@ -20,6 +20,8 @@
 #ifndef DOSBOX_CPU_H
 #define DOSBOX_CPU_H
 
+#include <sstream>
+
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h" 
 #endif
@@ -377,6 +379,10 @@ public:
 		desc.Load(table_base+(selector));
 		return true;
 	}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
+
 protected:
 	PhysPt table_base;
 	Bitu table_limit;
@@ -427,6 +433,10 @@ public:
 		ldt_value=value;
 		return true;
 	}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
+
 private:
 	PhysPt ldt_base;
 	Bitu ldt_limit;

@@ -26,6 +26,7 @@
 #include "pic.h"
 #include "support.h"
 
+#include "../save_state.h"
 
 //TODO: higher axis can't be mapped. Find out why again
 
@@ -334,4 +335,23 @@ void JOYSTICK_Destroy(Section* sec) {
 void JOYSTICK_Init(Section* sec) {
 	test = new JOYSTICK(sec);
 	sec->AddDestroyFunction(&JOYSTICK_Destroy,true); 
+}
+
+//save state support
+namespace
+{
+class SerializeStick : public SerializeGlobalPOD
+{
+public:
+    SerializeStick() : SerializeGlobalPOD("Joystick")
+    {
+        registerPOD(joytype);
+        registerPOD(stick);
+        registerPOD(last_write);
+        registerPOD(write_active);
+        registerPOD(swap34);
+        registerPOD(button_wrapping_enabled);
+        registerPOD(autofire);
+    }
+} dummy;
 }

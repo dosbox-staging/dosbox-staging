@@ -22,6 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <ctime>
+
 #include "dosbox.h"
 #include "debug.h"
 #include "cpu.h"
@@ -42,6 +45,8 @@
 #include "ints/int10.h"
 #include "render.h"
 #include "pci_bus.h"
+
+#include "save_state.h"
 
 Config * control;
 MachineType machine;
@@ -342,6 +347,125 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	}
 }
 
+static void DOSBOX_UnlockSpeed2( bool pressed ) {
+	if (pressed) {
+		ticksLocked =! ticksLocked;
+		DOSBOX_UnlockSpeed(ticksLocked?true:false);
+	}
+}
+
+namespace
+{
+std::string getTime()
+{
+    const time_t current = time(NULL);
+    tm* timeinfo;
+    timeinfo = localtime(&current); //convert to local time
+    char buffer[50];
+    ::strftime(buffer, 50, "%H:%M:%S", timeinfo);
+    return buffer;
+}
+
+class SlotPos
+{
+public:
+    SlotPos() : slot(0) {}
+
+    void next()
+    {
+        ++slot;
+        slot %= SaveState::SLOT_COUNT;
+    }
+
+    void previous()
+    {
+        slot += SaveState::SLOT_COUNT - 1;
+        slot %= SaveState::SLOT_COUNT;
+    }
+
+    void set(int value)
+    {
+        slot = value;
+    }
+
+    operator size_t() const
+    {
+        return slot;
+    }
+private:
+    size_t slot;
+} currentSlot;
+
+void notifyError(const std::string& message)
+{
+#ifdef WIN32
+    ::MessageBox(0, message.c_str(), "Error", 0);
+#endif
+    LOG_MSG(message.c_str());
+}
+
+void SetGameState(int value) {
+    currentSlot.set(value);
+}
+
+void SaveGameState(bool pressed) {
+    if (!pressed) return;
+
+    try
+    {
+        SaveState::instance().save(currentSlot);
+        LOG_MSG("[%s]: State %d saved!", getTime().c_str(), currentSlot + 1);
+    }
+    catch (const SaveState::Error& err)
+    {
+        notifyError(err);
+    }
+}
+
+void LoadGameState(bool pressed) {
+    if (!pressed) return;
+
+//    if (SaveState::instance().isEmpty(currentSlot))
+//    {
+//        LOG_MSG("[%s]: State %d is empty!", getTime().c_str(), currentSlot + 1);
+//        return;
+//    }
+    try
+    {
+        SaveState::instance().load(currentSlot);
+        LOG_MSG("[%s]: State %d loaded!", getTime().c_str(), currentSlot + 1);
+    }
+    catch (const SaveState::Error& err)
+    {
+        notifyError(err);
+    }
+}
+
+void NextSaveSlot(bool pressed) {
+    if (!pressed) return;
+
+    currentSlot.next();
+
+    const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
+    LOG_MSG("Active save slot: %d %s", currentSlot + 1,  emptySlot ? "[Empty]" : "");
+}
+
+
+void PreviousSaveSlot(bool pressed) {
+    if (!pressed) return;
+
+    currentSlot.previous();
+
+    const bool emptySlot = SaveState::instance().isEmpty(currentSlot);
+    LOG_MSG("Active save slot: %d %s", currentSlot + 1, emptySlot ? "[Empty]" : "");
+}
+}
+void SetGameState_Run(int value) { SetGameState(value); }
+void SaveGameState_Run(void) { SaveGameState(true); }
+void LoadGameState_Run(void) { LoadGameState(true); }
+void NextSaveSlot_Run(void) { NextSaveSlot(true); }
+void PreviousSaveSlot_Run(void) { PreviousSaveSlot(true); }
+
 static void DOSBOX_RealInit(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	/* Initialize some dosbox internals */
@@ -353,13 +477,22 @@ static void DOSBOX_RealInit(Section * sec) {
 	MSG_Init(section);
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, MK_f12, MMOD2,"speedlock","Speedlock");
+
+	MAPPER_AddHandler(DOSBOX_UnlockSpeed2, MK_f12, MMOD1|MMOD2,"speedlock2","Speedlock2");
+
 	std::string cmd_machine;
 	if (control->cmdline->FindString("-machine",cmd_machine,true)){
 		//update value in config (else no matching against suggested values
 		section->HandleInputline(std::string("machine=") + cmd_machine);
 	}
 
-	std::string mtype(section->Get_string("machine"));
+  //add support for loading/saving game states
+  MAPPER_AddHandler(SaveGameState, MK_f5, MMOD2,"savestate","Save State");
+  MAPPER_AddHandler(LoadGameState, MK_f9, MMOD2,"loadstate","Load State");
+  MAPPER_AddHandler(PreviousSaveSlot, MK_f6, MMOD2,"prevslot","Prev. Slot");
+  MAPPER_AddHandler(NextSaveSlot, MK_f7, MMOD2,"nextslot","Next Slot");
+	
+  std::string mtype(section->Get_string("machine"));
 	svgaCard = SVGA_None;
 	machine = MCH_VGA;
 	int10.vesa_nolfb = false;
@@ -790,4 +923,63 @@ void DOSBOX_Init(void) {
 	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
 
 	control->SetStartUp(&SHELL_Init);
+}
+
+extern void POD_Save_Sdlmain( std::ostream& stream );
+extern void POD_Load_Sdlmain( std::istream& stream );
+
+// save state support
+
+namespace
+{
+class SerializeDosbox : public SerializeGlobalPOD
+{
+public:
+	SerializeDosbox() : SerializeGlobalPOD("Dosbox")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+
+		//******************************************
+		//******************************************
+		//******************************************
+
+		SerializeGlobalPOD::getBytes(stream);
+
+		//******************************************
+		//******************************************
+		//******************************************
+
+		POD_Save_Sdlmain(stream);
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+
+		//******************************************
+		//******************************************
+		//******************************************
+
+		SerializeGlobalPOD::setBytes(stream);
+
+		//******************************************
+		//******************************************
+		//******************************************
+
+		POD_Load_Sdlmain(stream);
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
+		// Reset any auto cycle guessing for this frame
+		ticksRemain=5;
+		ticksLast = GetTicks();
+		ticksAdded = 0;
+		ticksDone = 0;
+		ticksScheduled = 0;
+	}
+} dummy;
 }

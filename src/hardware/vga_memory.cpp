@@ -27,6 +27,8 @@
 #include "inout.h"
 #include "setup.h"
 
+#include "../save_state.h"
+
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1
@@ -985,4 +987,70 @@ void VGA_SetupMemory(Section* sec) {
 		   conventional memory below 128k */
 		//TODO map?	
 	} 
+}
+
+// save state support
+void *VGA_PageHandler_Func[16] =
+{
+	(void *) &vgaph.map,
+	(void *) &vgaph.changes,
+	(void *) &vgaph.text,
+	(void *) &vgaph.tandy,
+	(void *) &vgaph.cega,
+	(void *) &vgaph.cvga,
+	(void *) &vgaph.uega,
+	(void *) &vgaph.uvga,
+	(void *) &vgaph.pcjr,
+	(void *) &vgaph.herc,
+	(void *) &vgaph.lin4,
+	(void *) &vgaph.lfb,
+	(void *) &vgaph.lfbchanges,
+	(void *) &vgaph.mmio,
+	(void *) &vgaph.empty,
+};
+
+
+void POD_Save_VGA_Memory( std::ostream& stream )
+{
+	// - static ptrs
+	//Bit8u* linear;
+	//Bit8u* linear_orgptr;
+
+
+	// - pure data
+	WRITE_POD_SIZE( vga.mem.linear_orgptr, sizeof(Bit8u) * (std::max<Bit32u>(vga.vmemsize, 512 * 1024U) + 2048 + 16) );
+
+	//***************************************************
+	//***************************************************
+
+	// static globals
+
+	// - pure struct data
+	WRITE_POD( &vgapages, vgapages );
+
+	// - static classes
+	//WRITE_POD( &vgaph, vgaph );
+}
+
+
+void POD_Load_VGA_Memory( std::istream& stream )
+{
+	// - static ptrs
+	//Bit8u* linear;
+	//Bit8u* linear_orgptr;
+
+
+	// - pure data
+	READ_POD_SIZE( vga.mem.linear_orgptr, sizeof(Bit8u) * (std::max<Bit32u>(vga.vmemsize, 512 * 1024U) + 2048 + 16) );
+
+	//***************************************************
+	//***************************************************
+
+	// static globals
+
+	// - pure struct data
+	READ_POD( &vgapages, vgapages );
+
+	// - static classes
+	//READ_POD( &vgaph, vgaph );
 }

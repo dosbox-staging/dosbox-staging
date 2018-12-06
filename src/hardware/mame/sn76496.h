@@ -26,6 +26,9 @@ DECLARE_DEVICE_TYPE(SEGAPSG,  segapsg_device)
 
 #endif
 
+#include "../../save_state.h"
+#include <sstream>
+
 class sn76496_base_device : public device_t, public device_sound_interface
 {
 public:
@@ -39,6 +42,9 @@ public:
 //	auto ready_cb() { return m_ready_handler.bind(); }
 
 	void convert_samplerate(int32_t target_rate);
+
+	void SaveState( std::ostream& stream );
+    void LoadState( std::istream& stream );
 protected:
 	sn76496_base_device(
 			const machine_config &mconfig,

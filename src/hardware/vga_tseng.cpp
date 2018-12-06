@@ -24,6 +24,9 @@
 #include "inout.h"
 #include "mem.h"
 #include <cstdlib>
+
+#include "../save_state.h"
+
 // Tseng ET4K data
 typedef struct {
 	Bit8u extensionsEnabled;
@@ -804,4 +807,27 @@ void SVGA_Setup_TsengET3K(void) {
 	phys_writeb(rom_base+0x0079,'n');
 	phys_writeb(rom_base+0x007a,'g');
 	phys_writeb(rom_base+0x007b,' ');
+}
+
+// save state support
+
+void POD_Save_VGA_Tseng( std::ostream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	WRITE_POD( &et4k, et4k );
+	WRITE_POD( &et3k, et3k );
+}
+
+
+void POD_Load_VGA_Tseng( std::istream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	READ_POD( &et4k, et4k );
+	READ_POD( &et3k, et3k );
 }

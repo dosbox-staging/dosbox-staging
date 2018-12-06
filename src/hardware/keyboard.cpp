@@ -25,6 +25,8 @@
 #include "mixer.h"
 #include "timer.h"
 
+#include "../save_state.h"
+
 #define KEYBUFSIZE 32
 #define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
 
@@ -391,4 +393,33 @@ void KEYBOARD_Init(Section* sec) {
 	keyb.repeat.rate=33;
 	keyb.repeat.wait=0;
 	KEYBOARD_ClrBuffer();
+}
+
+//save state support
+void *KEYBOARD_TransferBuffer_PIC_Event = (void*)KEYBOARD_TransferBuffer;
+void *KEYBOARD_TickHandler_PIC_Timer = (void*)KEYBOARD_TickHandler;
+
+namespace
+{
+class SerializeKeyboard : public SerializeGlobalPOD
+{
+public:
+    SerializeKeyboard() : SerializeGlobalPOD("Keyboard")
+    {
+        registerPOD(keyb.buffer);
+        registerPOD(keyb.used); 
+        registerPOD(keyb.pos); 
+        registerPOD(keyb.repeat.key); 
+        registerPOD(keyb.repeat.wait); 
+        registerPOD(keyb.repeat.pause); 
+        registerPOD(keyb.repeat.rate); 
+        registerPOD(keyb.command); 
+        registerPOD(keyb.p60data); 
+        registerPOD(keyb.p60changed); 
+        registerPOD(keyb.active); 
+        registerPOD(keyb.scanning); 
+        registerPOD(keyb.scheduled);
+        registerPOD(port_61_data);
+    }
+} dummy;
 }

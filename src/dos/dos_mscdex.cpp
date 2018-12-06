@@ -30,6 +30,8 @@
 
 #include "cdrom.h"
 
+#include "../save_state.h"
+
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG
 
@@ -131,6 +133,9 @@ public:
 	bool		LoadUnloadMedia		(Bit8u subUnit, bool unload);
 	bool		ResumeAudio			(Bit8u subUnit);
 	bool		GetMediaStatus		(Bit8u subUnit, bool& media, bool& changed, bool& trayOpen);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
 
 private:
 
@@ -1349,4 +1354,152 @@ void MSCDEX_Init(Section* sec) {
 	DOS_AddMultiplexHandler(MSCDEX_Handler);
 	/* Create MSCDEX */
 	mscdex = new CMscdex;
+}
+/**
+//save state support
+namespace
+{
+class SerializeCdrom : public SerializeGlobalPOD
+{
+public:
+    SerializeCdrom() : SerializeGlobalPOD("Cdrom") 
+    {
+    }
+
+private:
+    virtual void getBytes(std::ostream& stream)
+    {
+		//writePOD(stream, xms_callback);
+
+			SerializeGlobalPOD::getBytes(stream);
+
+
+			for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+				TMSF pos, start, end;
+				bool playing, pause;
+
+				mscdex->GetAudioStatus(drive_unit, playing, pause, start, end);
+				mscdex->GetCurrentPos(drive_unit,pos);
+
+				stream.write(reinterpret_cast<const char*>( &playing ), sizeof(playing) );
+				stream.write(reinterpret_cast<const char*>( &pause ), sizeof(pause) );
+				stream.write(reinterpret_cast<const char*>( &pos ), sizeof(pos) );
+				stream.write(reinterpret_cast<const char*>( &start ), sizeof(start) );
+				stream.write(reinterpret_cast<const char*>( &end ), sizeof(end) );
+			}
+    }
+
+
+    virtual void setBytes(std::istream& stream)
+    {
+		//readPOD(stream, xms_callback);
+
+
+			SerializeGlobalPOD::setBytes(stream);
+
+
+			for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+				TMSF pos, start, end;
+				Bit32u msf_time, play_len;
+				bool playing, pause;
+				
+
+
+				mscdex->StopAudio(drive_unit);
+
+
+				stream.read(reinterpret_cast<char*>( &playing ), sizeof(playing) );
+				stream.read(reinterpret_cast<char*>( &pause ), sizeof(pause) );
+				stream.read(reinterpret_cast<char*>( &pos ), sizeof(pos) );
+				stream.read(reinterpret_cast<char*>( &start ), sizeof(start) );
+				stream.read(reinterpret_cast<char*>( &end ), sizeof(end) );
+
+
+				msf_time = ( pos.min << 16 ) + ( pos.sec << 8 ) + ( pos.fr );
+
+				// end = total play time (GetAudioStatus adds +150)
+				// pos = current play cursor
+				// start = start play cursor
+				play_len = end.min * 75 * 60 + ( end.sec * 75 ) + end.fr - 150;
+				play_len -= ( pos.min - start.min ) * 75 * 60 + ( pos.sec - start.sec ) * 75 + ( pos.fr - start.fr );
+
+
+				// first play, then simulate pause
+				if( playing ) mscdex->PlayAudioMSF(drive_unit, msf_time, play_len);
+				if( pause ) mscdex->PlayAudioMSF(drive_unit, msf_time, 0);
+			}
+		}
+} dummy;
+}*/
+//save state support
+void CMscdex::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &defaultBufSeg, defaultBufSeg );
+	WRITE_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void CMscdex::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &defaultBufSeg, defaultBufSeg );
+	READ_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void POD_Save_DOS_Mscdex( std::ostream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		bool playing, pause;
+
+		mscdex->GetAudioStatus(drive_unit, playing, pause, start, end);
+		mscdex->GetCurrentPos(drive_unit,pos);
+
+
+		WRITE_POD( &playing, playing );
+		WRITE_POD( &pause, pause );
+		WRITE_POD( &pos, pos );
+		WRITE_POD( &start, start );
+		WRITE_POD( &end, end );
+	}
+
+
+	mscdex->SaveState(stream);
+}
+
+
+void POD_Load_DOS_Mscdex( std::istream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		Bit32u msf_time, play_len;
+		bool playing, pause;
+
+
+		READ_POD( &playing, playing );
+		READ_POD( &pause, pause );
+		READ_POD( &pos, pos );
+		READ_POD( &start, start );
+		READ_POD( &end, end );
+
+
+		// end = total play time (GetAudioStatus adds +150)
+		// pos = current play cursor
+		// start = start play cursor
+		play_len = end.min * 75 * 60 + ( end.sec * 75 ) + end.fr - 150;
+		play_len -= ( pos.min - start.min ) * 75 * 60 + ( pos.sec - start.sec ) * 75 + ( pos.fr - start.fr );
+		msf_time = ( pos.min << 16 ) + ( pos.sec << 8 ) + ( pos.fr );
+
+
+		// first play, then simulate pause
+		mscdex->StopAudio(drive_unit);
+
+		if( playing ) mscdex->PlayAudioMSF(drive_unit, msf_time, play_len);
+		if( pause ) mscdex->PlayAudioMSF(drive_unit, msf_time, 0);
+	}
+
+
+	mscdex->LoadState(stream);
 }

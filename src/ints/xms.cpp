@@ -30,6 +30,8 @@
 #include "xms.h"
 #include "bios.h"
 
+#include "../save_state.h"
+
 #define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
 #define XMS_VERSION    						0x0300	/* version 3.00 */
 #define XMS_DRIVER_VERSION					0x0301	/* my driver version 3.01 */
@@ -482,4 +484,17 @@ void XMS_ShutDown(Section* /*sec*/) {
 void XMS_Init(Section* sec) {
 	test = new XMS(sec);
 	sec->AddDestroyFunction(&XMS_ShutDown,true);
+}
+
+//save state support
+		namespace
+{
+class SerializeXMS : public SerializeGlobalPOD
+{
+public:
+    SerializeXMS() : SerializeGlobalPOD("XMS")
+    {
+        registerPOD(xms_handles);
+    }
+} dummy;
 }

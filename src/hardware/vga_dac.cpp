@@ -21,6 +21,8 @@
 #include "render.h"
 #include "vga.h"
 
+#include "../save_state.h"
+
 /*
 3C6h (R/W):  PEL Mask
 bit 0-7  This register is anded with the palette index sent for each dot.
@@ -215,4 +217,25 @@ void VGA_SetupDAC(void) {
 		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
 		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
 	}
+}
+
+// save state support
+
+void POD_Save_VGA_Dac( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.dac, vga.dac );
+
+
+	// no static globals found
+}
+
+
+void POD_Load_VGA_Dac( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.dac, vga.dac );
+
+
+	// no static globals found
 }

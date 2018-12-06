@@ -23,6 +23,8 @@
 #include "mapper.h"
 #include "support.h"
 
+#include "../save_state.h"
+
 bool WildFileCmp(const char * file, const char * wild) 
 {
 	char file_name[9];
@@ -227,4 +229,46 @@ void DriveManager::Init(Section* /* sec */) {
 
 void DRIVES_Init(Section* sec) {
 	DriveManager::Init(sec);
+}
+
+// save state support
+void DOS_Drive::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &curdir, curdir );
+	WRITE_POD( &info, info );
+}
+
+
+void DOS_Drive::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &curdir, curdir );
+	READ_POD( &info, info );
+}
+
+
+void DriveManager::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &currentDrive, currentDrive );
+}
+
+
+void DriveManager::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &currentDrive, currentDrive );
+}
+
+
+void POD_Save_DOS_DriveManager( std::ostream& stream )
+{
+	DriveManager::SaveState(stream);
+}
+
+
+void POD_Load_DOS_DriveManager( std::istream& stream )
+{
+	DriveManager::LoadState(stream);
 }
