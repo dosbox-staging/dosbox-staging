@@ -1,0 +1,4 @@
+Modifications to SDLActivity.java:
+1. stlport_shared and SDL2_net are loaded.
+2. Non-gamepad/dpad keycodes that don't have any source are still assumed to
+come from a keyboard (a workaround for full input from soft keyboard).

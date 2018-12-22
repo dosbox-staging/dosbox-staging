@@ -27,27 +27,94 @@ if test x$host = xi386-pc-os2-emx ; then
 fi
 
 dnl Check for SDL
-SDL_VERSION=1.2.0
-AM_PATH_SDL($SDL_VERSION,
-            :,
-	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
-)
+EXULT_CHECK_SDL(:,AC_MSG_ERROR([[*** SDL not found!]]))
 LIBS="$LIBS $SDL_LIBS"
 CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
 
-dnl Check if SDL is 1.2.x (1.3 not supported)
-AC_MSG_CHECKING([SDL version only being 1.2.X])
+dnl Check if SDL is 1.2.x, 2.0.x
+AC_MSG_CHECKING([for SDL version being 1.2.x or 2.0.x])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include "SDL.h"
 void blah(){
-#if SDL_MINOR_VERSION != 2
-#error "Only SDL 1.2 supported"
+#if !((SDL_MAJOR_VERSION == 1) && (SDL_MINOR_VERSION == 2)) && !((SDL_MAJOR_VERSION == 2) && (SDL_MINOR_VERSION == 0))
+#error "Only SDL 1.2 and 2.0 supported"
 #endif
 ;
 }
 ])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
- AC_MSG_ERROR([Only libSDL 1.2.X supported])])
+ AC_MSG_ERROR([Only libSDL 1.2.x or 2.0.x supported])])
+
+dnl Check for SDL_cdrom compatibility layer platform (used with SDL 2.0 only)
+AC_MSG_CHECKING(for SDL_cdrom compatibility layer platform)
+COMPAT_SDL_CDROM_GET_PLATFORM(:)
+AH_TEMPLATE(C_COMPAT_SDL_CDROM_PLATFORM,[Platform for SDL_cdrom compatibility layer (SDL 2.0 only)])
+
+physical_cdrom_mount=1
+
+case $compat_sdl_cdrom_arch in
+    linux|solaris)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_LINUX])
+        AC_MSG_RESULT([linux])
+        ;;
+    *freebsd*)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_FREEBSD])
+        AC_MSG_RESULT([freebsd])
+        ;;
+    *openbsd*|*netbsd*)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_OPENBSD])
+        AC_MSG_RESULT([openbsd])
+        ;;
+    bsdi)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_BSDI])
+        AC_MSG_RESULT([bsdi])
+        ;;
+    aix)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_AIX])
+        AC_MSG_RESULT([aix])
+        ;;
+    osf)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_OSF])
+        AC_MSG_RESULT([osf])
+        ;;
+    qnx)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_QNX])
+        AC_MSG_RESULT([qnx])
+        ;;
+    win32)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_WIN32])
+        AC_MSG_RESULT([win32])
+        ;;
+    beos)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_BEOS])
+        AC_MSG_RESULT([beos])
+        ;;
+    macosx)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_MACOSX])
+        AC_MSG_RESULT([macosx])
+        ;;
+    mint)
+        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_MINT])
+        AC_MSG_RESULT([mint])
+        ;;
+    *)
+        physical_cdrom_mount=0
+        AC_MSG_RESULT([disabled])
+esac
+
+if test x"$sdl_ver" = xsdl12 ; then
+    physical_cdrom_mount=1
+fi
+
+AC_MSG_CHECKING(for physical cdrom mounting support)
+AH_TEMPLATE(C_PHYSICAL_CDROM_MOUNT,[Physical CD-ROM mounting support])
+if test x"$physical_cdrom_mount" = x1 ; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(C_PHYSICAL_CDROM_MOUNT,[1])
+else
+    AC_MSG_RESULT(no)
+fi
+
 
 dnl Checks for header files.
 
@@ -437,23 +504,29 @@ AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
 
+if test x"$sdl_ver" = xsdl2 ; then 
+  LIBSDL_HEADER="SDL2"
+else
+  LIBSDL_HEADER="SDL"
+fi
+
 if test x$host = xi386-pc-os2-emx ; then
-  AC_MSG_CHECKING(for SDLNet_Init in SDL_net);
+  AC_MSG_CHECKING(for SDLNet_Init in ${LIBSDL_HEADER}_net);
   LIBS_BACKUP=$LIBS;
-  LIBS="$LIBS -lSDL_Net";
+  LIBS="$LIBS -l${LIBSDL_HEADER}_Net";
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Net.h>]],[[
 	SDLNet_Init ();
   ]])], [AC_MSG_RESULT(yes); have_sdl_net_lib=yes], AC_MSG_RESULT(no))
   LIBS=$LIBS_BACKUP
 else
-AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
+AC_CHECK_LIB(${LIBSDL_HEADER}_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 fi
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-   LIBS="$LIBS -lSDL_net"
+   LIBS="$LIBS -l${LIBSDL_HEADER}_net"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
-   AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
+   AC_MSG_WARN([Can't find ${LIBSDL_HEADER}_net, internal modem and ipx disabled])
 fi
 
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
@@ -625,6 +698,9 @@ src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
 src/platform/visualc/Makefile
+src/sdl_cdrom/Makefile
+src/sdl_cdrom/macos/Makefile
+src/sdl_cdrom/macosx/Makefile
 visualc_net/Makefile
 include/Makefile
 docs/Makefile

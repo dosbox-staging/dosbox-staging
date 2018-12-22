@@ -17,6 +17,10 @@
  */
 
 
+#include "cdrom.h"
+
+#if C_PHYSICAL_CDROM_MOUNT
+
 #if defined (WIN32)
 
 // *****************************************************************
@@ -27,15 +31,13 @@
 #include <io.h>
 
 #if (defined (_MSC_VER)) || (defined __MINGW64_VERSION_MAJOR)
-#include <ntddcdrm.h>			// Ioctl stuff
 #include <winioctl.h>			// Ioctl stuff
+#include <ntddcdrm.h>			// Ioctl stuff
 #else 
 #include "ddk/ntddcdrm.h"		// Ioctl stuff
 #endif
 
 #include <mmsystem.h>
-
-#include "cdrom.h"
 
 // for a more sophisticated implementation of the mci cdda functionality
 // see the SDL sources, which the mci_ functions are based on
@@ -621,3 +623,4 @@ void CDROM_Interface_Ioctl::Close(void) {
 }
 
 #endif
+#endif /* C_PHYSICAL_CDROM_MOUNT */

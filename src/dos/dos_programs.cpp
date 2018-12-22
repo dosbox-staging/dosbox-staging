@@ -56,7 +56,12 @@
 Bitu DEBUG_EnableDebugger(void);
 #endif
 
+#if C_PHYSICAL_CDROM_MOUNT
+#define PROGRAM_INTRO_CDROM_SUFFIX "PROGRAM_INTRO_CDROM_PHYS"
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
+#else
+#define PROGRAM_INTRO_CDROM_SUFFIX "PROGRAM_INTRO_CDROM_NOPHYS"
+#endif
 static Bitu ZDRIVE_NUM = 25;
 
 class MOUNT : public Program {
@@ -184,11 +189,15 @@ public:
 		}
 		/* Show list of cdroms */
 		if (cmd->FindExist("-cd",false)) {
+#if C_PHYSICAL_CDROM_MOUNT
 			int num = SDL_CDNumDrives();
    			WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"),num);
 			for (int i=0; i<num; i++) {
 				WriteOut("%2d. %s\n",i,SDL_CDName(i));
 			};
+#else
+			WriteOut(MSG_Get("PROGRAM_MOUNT_PHYS_CDROMS_NOT_SUPPORTED"));
+#endif
 			return;
 		}
 
@@ -326,9 +335,10 @@ public:
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
 			Bit8u bit8size=(Bit8u) sizes[1];
 			if (type=="cdrom") {
+				int error = 0;
+#if C_PHYSICAL_CDROM_MOUNT
 				int num = -1;
 				cmd->FindInt("-usecd",num,true);
-				int error = 0;
 				if (cmd->FindExist("-aspi",false)) {
 					MSCDEX_SetCDInterface(CDROM_USE_ASPI, num);
 				} else if (cmd->FindExist("-ioctl_dio",false)) {
@@ -357,6 +367,20 @@ public:
 					MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, num);
 #endif
 				}
+#else /* C_PHYSICAL_CDROM_MOUNT */
+				if (cmd->FindExist("-usecd",false)
+				    || cmd->FindExist("-aspi",false)
+				    || cmd->FindExist("-ioctl_dio",false)
+				    || cmd->FindExist("-ioctl_dx",false)
+#if defined (WIN32)
+				    || cmd->FindExist("-ioctl_mci",false)
+#endif
+				    || cmd->FindExist("-noioctl",false)
+				) {
+					WriteOut(MSG_Get("PROGRAM_MOUNT_PHYS_CDROMS_NOT_SUPPORTED"));
+					/* Just ignore, mount anyway */
+				}
+#endif /* C_PHYSICAL_CDROM_MOUNT */
 				newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				// Check Mscdex, if it worked out...
 				switch (error) {
@@ -1069,7 +1093,8 @@ public:
 		/* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
 		if(DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
 		if(cmd->FindExist("cdrom",false)) {
-			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+			WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_PREFIX"));
+			WriteOut(MSG_Get(PROGRAM_INTRO_CDROM_SUFFIX));
 			return;
 		}
 		if(cmd->FindExist("mount",false)) {
@@ -1087,7 +1112,8 @@ public:
 		DOS_ReadFile (STDIN,&c,&n);
 		DisplayMount();
 		DOS_ReadFile (STDIN,&c,&n);
-		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_PREFIX"));
+		WriteOut(MSG_Get(PROGRAM_INTRO_CDROM_SUFFIX));
 		DOS_ReadFile (STDIN,&c,&n);
 		WriteOut(MSG_Get("PROGRAM_INTRO_SPECIAL"));
 	}
@@ -1359,7 +1385,9 @@ public:
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 					return;
 				}
+#if C_PHYSICAL_CDROM_MOUNT
 				MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
+#endif
 				// create new drives for all images
 				std::vector<DOS_Drive*> isoDisks;
 				std::vector<std::string>::size_type i;
@@ -1514,7 +1542,8 @@ static void KEYB_ProgramStart(Program * * make) {
 void DOS_SetupPrograms(void) {
 	/*Add Messages */
 
-	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
+	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n"); // C_PHYSICAL_CDROM_MOUNT
+	MSG_Add("PROGRAM_MOUNT_PHYS_CDROMS_NOT_SUPPORTED","Physical CDROMs aren't fully supported. IMGMOUNT may be more useful.\n"); // !C_PHYSICAL_CDROM_MOUNT
 	MSG_Add("PROGRAM_MOUNT_STATUS_FORMAT","%-5s  %-58s %-12s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2","Drive %c is mounted as %s\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1","The currently mounted drives are:\n");
@@ -1603,7 +1632,7 @@ void DOS_SetupPrograms(void) {
 		"enter a directory (recognised by the \033[33;1m[]\033[0m in a directory listing).\n"
 		"You can run programs/files which end with \033[31m.exe .bat\033[0m and \033[31m.com\033[0m.\n"
 		);
-	MSG_Add("PROGRAM_INTRO_CDROM",
+	MSG_Add("PROGRAM_INTRO_CDROM_PREFIX",
 		"\033[2J\033[32;1mHow to mount a Real/Virtual CD-ROM Drive in DOSBox:\033[0m\n"
 		"DOSBox provides CD-ROM emulation on several levels.\n"
 		"\n"
@@ -1614,6 +1643,8 @@ void DOS_SetupPrograms(void) {
 		"If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
 		"\033[34;1mmount d C:\\example -t cdrom -label CDLABEL\033[0m\n"
 		"\n"
+		);
+	MSG_Add("PROGRAM_INTRO_CDROM_PHYS", // C_PHYSICAL_CDROM_MOUNT
 		"The \033[33mnext\033[0m level adds some low-level support.\n"
 		"Therefore only works on CD-ROM drives:\n"
 		"\033[34;1mmount d \033[0;31mD:\\\033[34;1m -t cdrom -usecd \033[33m0\033[0m\n"
@@ -1627,6 +1658,14 @@ void DOS_SetupPrograms(void) {
 		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
 		"Replace the \033[33;1m0\033[0m in \033[34;1m-usecd \033[33m0\033[0m with the number reported for your CD-ROM if you type:\n"
 		"\033[34;1mmount -cd\033[0m\n"
+		);
+	MSG_Add("PROGRAM_INTRO_CDROM_NOPHYS", // !C_PHYSICAL_CDROM_MOUNT
+		"The \033[33mhigher\033[0m level adds CD-ROM image mounting support.\n"
+		"Therefore only works on supported CD-ROM images:\n"
+		"\033[34;1mimgmount d \033[0;31mD:\\example.img\033[34;1m -t cdrom\033[0m\n"
+		"\n"
+		"Replace \033[0;31mD:\\\033[0m with the location of your CD-ROM.\n"
+		"Replace \033[0;31mD:\\example.img\033[0m with the location of your CD-ROM image.\n"
 		);
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
 		"\033[2J\033[32;1mSpecial keys:\033[0m\n"

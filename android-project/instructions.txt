@@ -1,0 +1,90 @@
+NOTE: Chances are the (unofficially modified) DOSBox app *will* crash sooner or
+later, although one may still build a proper package.
+A default for DOSBox settings have been selected to make this (somewhat)
+more stable on Android and perform better: output=texture.
+Furthermore, cycles=max is the default on Android with this patch, so DOSBox
+is (again somewhat) faster out-of-the-box. Do *not* expect great performance,
+though.
+
+Instructions for building DOSBox (unofficial modification) for Android
+(originally done on a GNU/Linux desktop, may work on other platforms):
+
+1. Move/symlink SDL2 into the jni subdirectory. The directory name should be
+"SDL" (yeah, without the '2'). The SDL2 library itself can be obtained from
+the SDL website: http://www.libsdl.org/download-2.0.php
+
+2. Also move/symlink SDL2_net into the jni directory. The dir name should be
+"SDL_net" (again with no '2'). It can be obtained from the SDL_net webpage:
+http://www.libsdl.org/projects/SDL_net/
+
+In case of issues you can (probably) disable the usage of SDL_net in config.h,
+by disabling the various networking features.
+
+3. In general, you may want to play with the config.h file.
+Note that right now, SDL_sound is not used.
+
+4. Ensure that the "res" subdirectory has ready icons, as these are *not*
+bundled with the patch itself (which is textual). For instance, you should have
+a file given by the relative path android-project/res/drawable-ldpi/icon.png.
+
+5. With the exception of the first three steps (copying the android-project
+directory, moving/symlinking SDL and adding source files to Android.mk),
+follow all steps from the file docs/README-android.md bundled with SDL 2.0.
+
+6. Assuming it has actually been built successfully, there are great chances
+that the app is going to crash at some point. Maybe the splash screen can be
+seen for a little while before the crash. If the app has survived so far, you
+should find a dosbox-SVN.conf file on the (internal) SD card that you may like
+to edit. On many single-user devices it should be located at the relative path
+Android/data/com.dosbox.emu/files/ (relatively to the SD card's root).
+Playing with settings like "output", "machine" and "nosound" can help here. In
+fact, playing with any DOSBox setting you can think of can help. There are very
+great chances that a crash will occur at some later point, though.
+
+7. Considering this revision of the patch, an on-screen keyboard can be toggled
+using the Back button. Furthermore, physical keyboards can also be used
+(e.g. via Bluetooth or USB-OTG). For testing only the following "WiFi Keyboard"
+app can partially be used like a physical keyboard is connected directly:
+https://play.google.com/store/apps/details?id=com.volosyukivan
+
+Please note that in earlier revisions of this patch, the on-screen keyboard
+could be toggled using the Menu button, while the Back button simulated a
+client Escape key press by default. However, some newer Android-powered devices
+may come with built-in system buttons, but not such a Menu button, implying
+that a (relatively) large portion of the screen may be wasted simply for
+displaying an on-screen Menu button (and no more). So, the Back button is used
+for toggling the on-screen keyboard now. If you are interested in Escape key
+emulation, see the last point (and rough sketch) regarding mouse emulation.
+
+8. Assuming you do get a working command prompt within DOSBox, you may also
+type the following command in order to find the location of the dosbox-SVN.conf
+file (and save the currently set settings):
+
+config -writeconf
+
+9. Be warned that, at least on newer Android setups, the configuration file
+(along with the whole directory in which it resides) gets DELETED once you
+uninstall DOSBox. In fact, this is the behavior with Android apps in general
+(on such setups).
+
+10. A few very-basic changes have been applied to the mapper UI, but it is
+wrong to say it is fully ready. In particular, an accelerometer sensor
+(currently identified as an SDL joystick) may interfere with remaps. In such a
+case you may wish to manually edit your own customized mapper file or disable
+the (host) accelerometer/joystick subsystem.
+
+11. As for mouse emulation, mouse motion and button presses/releases are
+currently emulated by tapping on specific "invisible" portions of the screen.
+Yeah, it may not be the best way, but this is what you have for now.
+Note that mouse motion is emulated by using the touchscreen the way one uses a
+laptop's trackpad, i.e. in a "relative" fashion. For instance, to move a mouse
+cursor in some DOS game to the left, tap with a finger on an arbitrary location
+on the relevant part of the screen and then drag the finger to the left.
+
+Here are parts of the touch screen (the whole display) and what each of them
+emulates. These are all client mouse events, with the exception of the Escape
+key, which is a *host* key event and can be mapped to various things.
+
+/-----------------------------------------------------------------------\
+|    Left   | (H)Escape |   Motion  |  Motion   |   Middle  |   Right   |
+\-----------------------------------------------------------------------/

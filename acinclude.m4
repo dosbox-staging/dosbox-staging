@@ -1,164 +1,147 @@
-dnl AM_PATH_SDL([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
-dnl Test for SDL, and define SDL_CFLAGS and SDL_LIBS
-dnl
-AC_DEFUN([AM_PATH_SDL],
-[dnl 
-dnl Get the cflags and libraries from the sdl-config script
-dnl
-AC_ARG_WITH(sdl-prefix,[  --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)],
-            sdl_prefix="$withval", sdl_prefix="")
-AC_ARG_WITH(sdl-exec-prefix,[  --with-sdl-exec-prefix=PFX Exec prefix where SDL is installed (optional)],
-            sdl_exec_prefix="$withval", sdl_exec_prefix="")
-AC_ARG_ENABLE(sdltest, [  --disable-sdltest       Do not try to compile and run a test SDL program],
-		    , enable_sdltest=yes)
+dnl Check if we have SDL (sdl-config, header and library) version >= 1.2.0
+dnl Extra options: --with-sdl-prefix=PATH and --with-sdl={sdl12,sdl2}
+dnl Output:
+dnl SDL_CFLAGS and SDL_LIBS are set and AC_SUBST-ed
+dnl HAVE_SDL_H is AC_DEFINE-d
 
+AC_DEFUN([EXULT_CHECK_SDL],[
+  exult_backupcppflags="$CPPFLAGS"
+  exult_backupldflags="$LDFLAGS"
+  exult_backuplibs="$LIBS"
+
+  exult_sdlok=yes
+
+  AC_ARG_WITH(sdl-prefix,[  --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)], sdl_prefix="$withval", sdl_prefix="")
+  AC_ARG_WITH(sdl-exec-prefix,[  --with-sdl-exec-prefix=PFX Exec prefix where SDL is installed (optional)], sdl_exec_prefix="$withval", sdl_exec_prefix="")
+  AC_ARG_WITH(sdl,       [  --with-sdl=sdl12,sdl2   Select a specific version of SDL to use (optional)], sdl_ver="$withval", sdl_ver="")
+
+  dnl First: find sdl-config or sdl2-config
+  exult_extra_path=$prefix/bin:$prefix/usr/bin
+  sdl_args=""
   if test x$sdl_exec_prefix != x ; then
      sdl_args="$sdl_args --exec-prefix=$sdl_exec_prefix"
-     if test x${SDL_CONFIG+set} != xset ; then
-        SDL_CONFIG=$sdl_exec_prefix/bin/sdl-config
-     fi
+     exult_extra_path=$sdl_exec_prefix/bin
   fi
   if test x$sdl_prefix != x ; then
      sdl_args="$sdl_args --prefix=$sdl_prefix"
-     if test x${SDL_CONFIG+set} != xset ; then
-        SDL_CONFIG=$sdl_prefix/bin/sdl-config
-     fi
+     exult_extra_path=$sdl_prefix/bin
   fi
-
-  AC_PATH_PROG(SDL_CONFIG, sdl-config, no)
-  min_sdl_version=ifelse([$1], ,0.11.0,$1)
-  AC_MSG_CHECKING(for SDL - version >= $min_sdl_version)
-  no_sdl=""
-  if test "$SDL_CONFIG" = "no" ; then
-    no_sdl=yes
+  if test x"$sdl_ver" = xsdl12 ; then
+    exult_sdl_progs=sdl-config
+  elif test x"$sdl_ver" = xsdl2 ; then
+    exult_sdl_progs=sdl2-config
   else
-    SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
-    SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
+    dnl NB: This line implies we prefer SDL 1.2 to SDL 2.0
+    exult_sdl_progs="sdl-config sdl2-config"
+  fi
+  AC_PATH_PROGS(SDL_CONFIG, $exult_sdl_progs, no, [$exult_extra_path:$PATH])
+  if test "$SDL_CONFIG" = "no" ; then
+    exult_sdlok=no
+  else
+    SDL_CFLAGS=`$SDL_CONFIG $sdl_args --cflags`
+    SDL_LIBS=`$SDL_CONFIG $sdl_args --libs`
 
     sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
     sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-    sdl_micro_version=`$SDL_CONFIG $sdl_config_args --version | \
+    sdl_patchlevel=`$SDL_CONFIG $sdl_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
-    if test "x$enable_sdltest" = "xyes" ; then
-      ac_save_CFLAGS="$CFLAGS"
-      ac_save_LIBS="$LIBS"
-      CFLAGS="$CFLAGS $SDL_CFLAGS"
-      LIBS="$LIBS $SDL_LIBS"
-dnl
-dnl Now check if the installed SDL is sufficiently new. (Also sanity
-dnl checks the results of sdl-config to some extent
-dnl
-      rm -f conf.sdltest
-      AC_TRY_RUN([
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "SDL.h"
+    if test $sdl_major_version -eq 1 ; then
+      sdl_ver=sdl12
+    else
+      sdl_ver=sdl2
+    fi
+  fi
 
-char*
-my_strdup (char *str)
-{
-  char *new_str;
-  
-  if (str)
-    {
-      new_str = (char *)malloc ((strlen (str) + 1) * sizeof(char));
-      strcpy (new_str, str);
-    }
+  if test x"$sdl_ver" = xsdl2 ; then
+    REQ_MAJOR=2
+    REQ_MINOR=0
+    REQ_PATCHLEVEL=0
   else
-    new_str = NULL;
-  
-  return new_str;
-}
+    REQ_MAJOR=1
+    REQ_MINOR=2
+    REQ_PATCHLEVEL=0
+  fi
+  REQ_VERSION=$REQ_MAJOR.$REQ_MINOR.$REQ_PATCHLEVEL
 
-int main (int argc, char *argv[])
-{
-  int major, minor, micro;
-  char *tmp_version;
+  AC_MSG_CHECKING([for SDL - version >= $REQ_VERSION])
 
-  /* This hangs on some systems (?)
-  system ("touch conf.sdltest");
-  */
-  { FILE *fp = fopen("conf.sdltest", "a"); if ( fp ) fclose(fp); }
 
-  /* HP/UX 9 (%@#!) writes to sscanf strings */
-  tmp_version = my_strdup("$min_sdl_version");
-  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
-     printf("%s, bad version string\n", "$min_sdl_version");
-     exit(1);
-   }
+  dnl Second: include "SDL.h"
 
-   if (($sdl_major_version > major) ||
-      (($sdl_major_version == major) && ($sdl_minor_version > minor)) ||
-      (($sdl_major_version == major) && ($sdl_minor_version == minor) && ($sdl_micro_version >= micro)))
+  if test x$exult_sdlok = xyes ; then
+    CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+    #include "SDL.h"
+
+    int main(int argc, char *argv[])
     {
       return 0;
     }
-  else
-    {
-      printf("\n*** 'sdl-config --version' returned %d.%d.%d, but the minimum version\n", $sdl_major_version, $sdl_minor_version, $sdl_micro_version);
-      printf("*** of SDL required is %d.%d.%d. If sdl-config is correct, then it is\n", major, minor, micro);
-      printf("*** best to upgrade to the required version.\n");
-      printf("*** If sdl-config was wrong, set the environment variable SDL_CONFIG\n");
-      printf("*** to point to the correct copy of sdl-config, and remove the file\n");
-      printf("*** config.cache before re-running configure\n");
-      return 1;
-    }
-}
+    ]],)],sdlh_found=yes,sdlh_found=no)
 
-],, no_sdl=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
-       CFLAGS="$ac_save_CFLAGS"
-       LIBS="$ac_save_LIBS"
-     fi
+    if test x$sdlh_found = xno; then
+      exult_sdlok=no
+    else
+      AC_DEFINE(HAVE_SDL_H, 1, [Define to 1 if you have the "SDL.h" header file])
+    fi
   fi
-  if test "x$no_sdl" = x ; then
-     AC_MSG_RESULT(yes)
-     ifelse([$2], , :, [$2])     
+
+  dnl Next: version check (cross-compile-friendly idea borrowed from autoconf)
+  dnl (First check version reported by sdl-config, then confirm
+  dnl  the version in SDL.h matches it)
+
+  if test x$exult_sdlok = xyes ; then
+
+    if test ! \( \( $sdl_major_version -gt $REQ_MAJOR \) -o \( \( $sdl_major_version -eq $REQ_MAJOR \) -a \( \( $sdl_minor_version -gt $REQ_MINOR \) -o \( \( $sdl_minor_version -eq $REQ_MINOR \) -a \( $sdl_patchlevel -gt $REQ_PATCHLEVEL \) \) \) \) \); then
+      exult_sdlok="no, version < $REQ_VERSION found"
+    else
+      AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+      #include "SDL.h"
+
+      int main(int argc, char *argv[])
+      {
+        static int test_array[1-2*!(SDL_MAJOR_VERSION==$sdl_major_version&&SDL_MINOR_VERSION==$sdl_minor_version&&SDL_PATCHLEVEL==$sdl_patchlevel)];
+        test_array[0] = 0;
+        return 0;
+      }
+      ]])],,[[exult_sdlok="no, version of SDL.h doesn't match that of sdl-config"]])
+    fi
+  fi
+
+  dnl Next: try linking
+
+  if test "x$exult_sdlok" = xyes; then
+    LIBS="$LIBS $SDL_LIBS"
+
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[
+    #include "SDL.h"
+
+    int main(int argc, char* argv[]) {
+      SDL_Init(0);
+      return 0;
+    }
+    ]])],sdllinkok=yes,sdllinkok=no)
+    if test x$sdllinkok = xno; then
+      exult_sdlok=no
+    fi
+  fi
+
+  AC_MSG_RESULT($exult_sdlok)
+
+  LDFLAGS="$exult_backupldflags"
+  CPPFLAGS="$exult_backupcppflags"
+  LIBS="$exult_backuplibs"
+
+  if test "x$exult_sdlok" = xyes; then
+    AC_SUBST(SDL_CFLAGS)
+    AC_SUBST(SDL_LIBS)
+    ifelse([$1], , :, [$1])
   else
-     AC_MSG_RESULT(no)
-     if test "$SDL_CONFIG" = "no" ; then
-       echo "*** The sdl-config script installed by SDL could not be found"
-       echo "*** If SDL was installed in PREFIX, make sure PREFIX/bin is in"
-       echo "*** your path, or set the SDL_CONFIG environment variable to the"
-       echo "*** full path to sdl-config."
-     else
-       if test -f conf.sdltest ; then
-        :
-       else
-          echo "*** Could not run SDL test program, checking why..."
-          CFLAGS="$CFLAGS $SDL_CFLAGS"
-          LIBS="$LIBS $SDL_LIBS"
-          AC_TRY_LINK([
-#include <stdio.h>
-#include "SDL.h"
-],      [ return 0; ],
-        [ echo "*** The test program compiled, but did not run. This usually means"
-          echo "*** that the run-time linker is not finding SDL or finding the wrong"
-          echo "*** version of SDL. If it is not finding SDL, you'll need to set your"
-          echo "*** LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf to point"
-          echo "*** to the installed location  Also, make sure you have run ldconfig if that"
-          echo "*** is required on your system"
-	  echo "***"
-          echo "*** If you have an old version installed, it is best to remove it, although"
-          echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"],
-        [ echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occurred. This usually means SDL was incorrectly installed"
-          echo "*** or that you have moved SDL since it was installed. In the latter case, you"
-          echo "*** may want to edit the sdl-config script: $SDL_CONFIG" ])
-          CFLAGS="$ac_save_CFLAGS"
-          LIBS="$ac_save_LIBS"
-       fi
-     fi
-     SDL_CFLAGS=""
-     SDL_LIBS=""
-     ifelse([$3], , :, [$3])
+    ifelse([$2], , :, [$2])
   fi
-  AC_SUBST(SDL_CFLAGS)
-  AC_SUBST(SDL_LIBS)
-  rm -f conf.sdltest
-])
+]);
 
 dnl Configure Paths for Alsa
 dnl Some modifications by Richard Boulton <richard-alsa@tartarus.org>
@@ -302,6 +285,73 @@ dnl That should be it.  Now just export out symbols:
 AC_SUBST(ALSA_CFLAGS)
 AC_SUBST(ALSA_LIBS)
 ])
+
+dnl Configure platform for SDL_cdrom compatibility layer.
+dnl MUST be called after SDL version check (defined only for SDL 2.0).
+dnl Taken off configure.in from SDL 1.2 and then modified
+AC_DEFUN([COMPAT_SDL_CDROM_GET_PLATFORM],[
+
+if test x"$sdl_ver" = xsdl12 ; then
+    compat_sdl_cdrom_arch=undefined
+elif test x"$sdl_ver" = xsdl2 ; then
+    case "$host" in
+        arm-*-elf*) # FIXME: Can we get more specific for iPodLinux?
+            compat_sdl_cdrom_arch=linux
+            ;;
+        *-*-linux*|*-*-uclinux*|*-*-gnu*|*-*-k*bsd*-gnu|*-*-bsdi*|*-*-freebsd*|*-*-dragonfly*|*-*-netbsd*|*-*-openbsd*|*-*-sysv5*|*-*-solaris*|*-*-hpux*|*-*-irix*|*-*-aix*|*-*-osf*)
+            case "$host" in
+                *-*-linux*)         compat_sdl_cdrom_arch=linux ;;
+                *-*-uclinux*)       compat_sdl_cdrom_arch=linux ;;
+                *-*-kfreebsd*-gnu)  compat_sdl_cdrom_arch=COMPAT_SDL_CDROM_PLATFORM_KFREEBSD_GNU ;;
+                *-*-knetbsd*-gnu)   compat_sdl_cdrom_arch=knetbsd-gnu ;;
+                *-*-kopenbsd*-gnu)  compat_sdl_cdrom_arch=kopenbsd-gnu ;;
+                *-*-gnu*)           compat_sdl_cdrom_arch=gnu ;; # must be last of the gnu variants
+                *-*-bsdi*)          compat_sdl_cdrom_arch=bsdi ;;
+                *-*-freebsd*)       compat_sdl_cdrom_arch=freebsd ;;
+                *-*-dragonfly*)     compat_sdl_cdrom_arch=freebsd ;;
+                *-*-netbsd*)        compat_sdl_cdrom_arch=netbsd ;;
+                *-*-openbsd*)       compat_sdl_cdrom_arch=openbsd ;;
+                *-*-sysv5*)         compat_sdl_cdrom_arch=sysv5 ;;
+                *-*-solaris*)       compat_sdl_cdrom_arch=solaris ;;
+                *-*-hpux*)          compat_sdl_cdrom_arch=hpux ;;
+                *-*-irix*)          compat_sdl_cdrom_arch=irix ;;
+                *-*-aix*)           compat_sdl_cdrom_arch=aix ;;
+                *-*-osf*)           compat_sdl_cdrom_arch=osf ;;
+            esac
+            ;;
+        *-*-qnx*)
+            compat_sdl_cdrom_arch=qnx
+            ;;
+        *-*-cygwin* | *-*-mingw32*)
+            compat_sdl_cdrom_arch=win32
+            ;;
+        *-wince*)
+            compat_sdl_cdrom_arch=win32
+            ;;
+        *-*-beos* | *-*-haiku*)
+            compat_sdl_cdrom_arch=beos
+            ;;
+        *-*-darwin* )
+            # This could be either full "Mac OS X", or plain "Darwin" which is
+            # just the OS X kernel sans upper layers like Carbon and Cocoa.
+            # Next line is broken
+            compat_sdl_cdrom_arch=macosx
+            ;;
+        *-*-mint*)
+            compat_sdl_cdrom_arch=mint
+            ;;
+        *-riscos)
+            compat_sdl_cdrom_arch=riscos
+            ;;
+        *)
+            compat_sdl_cdrom_arch=undefined
+            ;;
+    esac
+else
+    AC_MSG_ERROR([Compatible SDL version not found])
+fi
+
+]);
 
 AH_TOP([
 /*

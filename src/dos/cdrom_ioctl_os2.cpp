@@ -17,8 +17,11 @@
  */
 
 
-#include <string.h>
 #include "dosbox.h"
+
+#if C_PHYSICAL_CDROM_MOUNT
+
+#include <string.h>
 #include "cdrom.h"
 
 #if defined (OS2)
@@ -150,3 +153,4 @@ bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD) {
 }
 
 #endif
+#endif /* C_PHYSICAL_CDROM_MOUNT */

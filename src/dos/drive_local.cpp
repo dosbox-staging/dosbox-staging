@@ -273,7 +273,12 @@ again:
 
 	find_size=(Bit32u) stat_block.st_size;
 	struct tm *time;
+#ifdef __ANDROID__ // temp_stat.st_mtime is of type unsigned long, not time_t
+	time_t rawtime=stat_block.st_mtime;
+	if((time=localtime(&rawtime))!=0){
+#else
 	if((time=localtime(&stat_block.st_mtime))!=0){
+#endif
 		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
 		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
 	} else {
@@ -391,7 +396,12 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	if(stat(newname,&temp_stat)!=0) return false;
 	/* Convert the stat to a FileStat */
 	struct tm *time;
+#ifdef __ANDROID__ // temp_stat.st_mtime is of type unsigned long, not time_t
+	time_t rawtime=temp_stat.st_mtime;
+	if((time=localtime(&rawtime))!=0) {
+#else
 	if((time=localtime(&temp_stat.st_mtime))!=0) {
+#endif
 		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
 		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
 	} else {
@@ -530,7 +540,12 @@ bool localFile::UpdateDateTimeFromHost(void) {
 	struct stat temp_stat;
 	fstat(fileno(fhandle),&temp_stat);
 	struct tm * ltime;
+#ifdef __ANDROID__ // temp_stat.st_mtime is of type unsigned long, not time_t
+	time_t rawtime=temp_stat.st_mtime;
+	if((ltime=localtime(&rawtime))!=0) {
+#else
 	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
+#endif
 		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);
 		date=DOS_PackDate((Bit16u)(ltime->tm_year+1900),(Bit16u)(ltime->tm_mon+1),(Bit16u)ltime->tm_mday);
 	} else {

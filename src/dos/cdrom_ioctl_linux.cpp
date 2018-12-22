@@ -17,8 +17,11 @@
  */
  
 
-#include <string.h>
 #include "cdrom.h"
+
+#if C_PHYSICAL_CDROM_MOUNT
+
+#include <string.h>
 #include "support.h"
 
 #if defined (LINUX)
@@ -95,3 +98,4 @@ bool CDROM_Interface_Ioctl::SetDevice(char* path, int forceCD)
 }
 
 #endif
+#endif /* C_PHYSICAL_CDROM_MOUNT */
