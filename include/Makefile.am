@@ -22,7 +22,6 @@ mapper.h \
 mem.h \
 midi.h \
 mixer.h \
-modules.h \
 mouse.h \
 paging.h \
 pci_bus.h \
