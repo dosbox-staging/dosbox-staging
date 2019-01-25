@@ -866,9 +866,6 @@
 				RelativePath="..\include\mixer.h">
 			</File>
 			<File
-				RelativePath="..\include\modules.h">
-			</File>
-			<File
 				RelativePath="..\include\mouse.h">
 			</File>
 			<File
