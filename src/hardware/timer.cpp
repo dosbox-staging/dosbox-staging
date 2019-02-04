@@ -402,6 +402,10 @@ void TIMER_SetGate2(bool in) {
 	gate2 = in; //Set it here so the counter_latch above works
 }
 
+bool TIMER_GetOutput2(void) {
+	return counter_output(2);
+}
+
 class TIMER:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[4];

@@ -170,9 +170,11 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
 	}
 }
 
+extern bool TIMER_GetOutput2(void);
 static Bit8u port_61_data = 0;
 static Bitu read_p61(Bitu port,Bitu iolen) {
-	port_61_data^=0x20;
+	if (TIMER_GetOutput2()) port_61_data|=0x20;
+	else					port_61_data&=~0x20;
 	port_61_data^=0x10;
 	return port_61_data;
 }
@@ -184,6 +186,12 @@ static void write_p61(Bitu port,Bitu val,Bitu iolen) {
 		PCSPEAKER_SetType(val & 3);
 	}
 	port_61_data = val;
+}
+
+static Bitu read_p62(Bitu port,Bitu iolen) {
+	Bit8u ret=~0x20;
+	if (TIMER_GetOutput2()) ret|=0x20;
+	return ret;
 }
 
 static void write_p64(Bitu port,Bitu val,Bitu iolen) {
@@ -377,6 +385,7 @@ void KEYBOARD_Init(Section* sec) {
 	IO_RegisterReadHandler(0x60,read_p60,IO_MB);
 	IO_RegisterWriteHandler(0x61,write_p61,IO_MB);
 	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
+	if (machine==MCH_CGA || machine==MCH_HERC) IO_RegisterReadHandler(0x62,read_p62,IO_MB);
 	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
 	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
 	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
