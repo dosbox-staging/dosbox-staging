@@ -173,6 +173,26 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x00,(Bit8u)0xCA);		//A RETF 8 Instruction
 		phys_writew(physAddress+0x01,(Bit16u)0x0008);
 		return (use_cb?7:3);
+	case CB_RETF_STI:
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
+		if (use_cb) {
+			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x03,(Bit16u)callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x01,(Bit8u)0xCB);		//A RETF Instruction
+		return (use_cb?6:2);
+	case CB_RETF_CLI:
+		phys_writeb(physAddress+0x00,(Bit8u)0xFA);		//CLI
+		if (use_cb) {
+			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x03,(Bit16u)callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writeb(physAddress+0x01,(Bit8u)0xCB);		//A RETF Instruction
+		return (use_cb?6:2);
 	case CB_IRET:
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -282,26 +302,32 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		return (use_cb?0x0e:0x0a);
 	case CB_IRQ12:	// ps2 mouse int74
 		if (!use_cb) E_Exit("int74 callback must implement a callback handler!");
-		phys_writeb(physAddress+0x00,(Bit8u)0x1e);		// push ds
-		phys_writeb(physAddress+0x01,(Bit8u)0x06);		// push es
-		phys_writew(physAddress+0x02,(Bit16u)0x6066);	// pushad
-		phys_writeb(physAddress+0x04,(Bit8u)0xfc);		// cld
-		phys_writeb(physAddress+0x05,(Bit8u)0xfb);		// sti
-		phys_writeb(physAddress+0x06,(Bit8u)0xFE);		//GRP 4
-		phys_writeb(physAddress+0x07,(Bit8u)0x38);		//Extra Callback instruction
-		phys_writew(physAddress+0x08,(Bit16u)callback);			//The immediate word
-		return 0x0a;
+		phys_writeb(physAddress+0x00,(Bit8u)0xfb);		// sti
+		phys_writeb(physAddress+0x01,(Bit8u)0x1e);		// push ds
+		phys_writeb(physAddress+0x02,(Bit8u)0x06);		// push es
+		phys_writew(physAddress+0x03,(Bit16u)0x6066);	// pushad
+		phys_writeb(physAddress+0x05,(Bit8u)0xFE);		//GRP 4
+		phys_writeb(physAddress+0x06,(Bit8u)0x38);		//Extra Callback instruction
+		phys_writew(physAddress+0x07,(Bit16u)callback);			//The immediate word
+		phys_writeb(physAddress+0x09,(Bit8u)0x50);		// push ax
+		phys_writew(physAddress+0x0a,(Bit16u)0x20b0);	// mov al, 0x20
+		phys_writew(physAddress+0x0c,(Bit16u)0xa0e6);	// out 0xa0, al
+		phys_writew(physAddress+0x0e,(Bit16u)0x20e6);	// out 0x20, al
+		phys_writeb(physAddress+0x10,(Bit8u)0x58);		// pop ax
+		phys_writeb(physAddress+0x11,(Bit8u)0xfc);		// cld
+		phys_writeb(physAddress+0x12,(Bit8u)0xCB);		//A RETF Instruction
+		return 0x13;
 	case CB_IRQ12_RET:	// ps2 mouse int74 return
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(Bit8u)0x38);	//Extra Callback instruction
-			phys_writew(physAddress+0x02,(Bit16u)callback);		//The immediate word
-			physAddress+=4;
-		}
 		phys_writeb(physAddress+0x00,(Bit8u)0xfa);		// cli
 		phys_writew(physAddress+0x01,(Bit16u)0x20b0);	// mov al, 0x20
 		phys_writew(physAddress+0x03,(Bit16u)0xa0e6);	// out 0xa0, al
 		phys_writew(physAddress+0x05,(Bit16u)0x20e6);	// out 0x20, al
+		if (use_cb) {
+			phys_writeb(physAddress+0x07,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x08,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x09,(Bit16u)callback);		//The immediate word
+			physAddress+=4;
+		}
 		phys_writew(physAddress+0x07,(Bit16u)0x6166);	// popad
 		phys_writeb(physAddress+0x09,(Bit8u)0x07);		// pop es
 		phys_writeb(physAddress+0x0a,(Bit8u)0x1f);		// pop ds
