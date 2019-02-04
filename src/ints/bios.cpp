@@ -1283,6 +1283,7 @@ public:
 		// Gameport
 		config |= 0x1000;
 		mem_writew(BIOS_CONFIGURATION,config);
+		if (IS_EGAVGA_ARCH) config &= ~0x30; //EGA/VGA startup display mode differs in CMOS
 		CMOS_SetRegister(0x14,(Bit8u)(config&0xff)); //Should be updated on changes
 		/* Setup extended memory size */
 		IO_Write(0x70,0x30);
@@ -1337,6 +1338,7 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
 	equipmentword &= (~0x0E00);
 	equipmentword |= (portcount << 9);
 	mem_writew(BIOS_CONFIGURATION,equipmentword);
+	if (IS_EGAVGA_ARCH) equipmentword &= ~0x30; //EGA/VGA startup display mode differs in CMOS
 	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
 }
 
