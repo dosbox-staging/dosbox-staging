@@ -905,6 +905,12 @@ static Bitu INT15_Handler(void) {
 			reg_bx=0x00aa;	// mouse
 			// fall through
 		case 0x05:		// initialize
+			if ((reg_al==0x05) && (reg_bh!=0x03)) {
+				// non-standard data packet sizes not supported
+				CALLBACK_SCF(true);
+				reg_ah=2;
+				break;
+			}
 			Mouse_SetPS2State(false);
 			CALLBACK_SCF(false);
 			reg_ah=0;
