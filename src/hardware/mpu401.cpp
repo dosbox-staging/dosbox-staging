@@ -38,7 +38,7 @@ static void MPU401_EOIHandlerDispatch(void);
 #define MPU401_REVISION	0x01
 #define MPU401_QUEUE 32
 #define MPU401_TIMECONSTANT (60000000/1000.0f)
-#define MPU401_RESETBUSY 27.0f
+#define MPU401_RESETBUSY 14.0f
 
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
@@ -124,7 +124,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	if (mpu.mode==M_UART && val!=0xff) return;
 	if (mpu.state.reset) {
-		if (mpu.state.cmd_pending || (val!=0x3f && val!=0xff)) {
+		if (mpu.state.cmd_pending || val!=0xff) {
 			mpu.state.cmd_pending=val+1;
 			return;
 		}
