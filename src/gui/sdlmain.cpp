@@ -2091,7 +2091,7 @@ int main(int argc, char* argv[]) {
 	sdl.num_joysticks=SDL_NumJoysticks();
 
 	/* Parse configuration files */
-	std::string config_file,config_path;
+	std::string config_file, config_path, config_combined;
 	Cross::GetPlatformConfigDir(config_path);
 
 	//First parse -userconf
@@ -2099,18 +2099,18 @@ int main(int argc, char* argv[]) {
 		config_file.clear();
 		Cross::GetPlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
-		config_path += config_file;
-		control->ParseConfigFile(config_path.c_str());
+		config_combined = config_path + config_file;
+		control->ParseConfigFile(config_combined.c_str());
 		if(!control->configfiles.size()) {
 			//Try to create the userlevel configfile.
 			config_file.clear();
 			Cross::CreatePlatformConfigDir(config_path);
 			Cross::GetPlatformConfigName(config_file);
-			config_path += config_file;
-			if(control->PrintConfig(config_path.c_str())) {
-				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
+			config_combined = config_path + config_file;
+			if(control->PrintConfig(config_combined.c_str())) {
+				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
 				//Load them as well. Makes relative paths much easier
-				control->ParseConfigFile(config_path.c_str());
+				control->ParseConfigFile(config_combined.c_str());
 			}
 		}
 	}
@@ -2139,11 +2139,11 @@ int main(int argc, char* argv[]) {
 		config_file.clear();
 		Cross::CreatePlatformConfigDir(config_path);
 		Cross::GetPlatformConfigName(config_file);
-		config_path += config_file;
-		if(control->PrintConfig(config_path.c_str())) {
-			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
+		config_combined = config_path + config_file;
+		if(control->PrintConfig(config_combined.c_str())) {
+			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
 			//Load them as well. Makes relative paths much easier
-			control->ParseConfigFile(config_path.c_str());
+			control->ParseConfigFile(config_combined.c_str());
 		} else {
 			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
 		}
