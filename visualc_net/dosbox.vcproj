@@ -437,6 +437,9 @@
 						RelativePath="..\src\dos\drive_local.cpp">
 					</File>
 					<File
+						RelativePath="..\src\dos\drive_overlay.cpp">
+					</File>
+					<File
 						RelativePath="..\src\dos\drive_virtual.cpp">
 					</File>
 					<File

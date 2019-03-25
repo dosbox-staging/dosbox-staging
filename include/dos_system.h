@@ -128,8 +128,8 @@ public:
 	bool UpdateDateTimeFromHost(void);   
 	void FlagReadOnlyMedium(void);
 	void Flush(void);
+	FILE * fhandle; //todo handle this properly
 private:
-	FILE * fhandle;
 	bool read_only_medium;
 	enum { NONE,READ,WRITE } last_action;
 };
