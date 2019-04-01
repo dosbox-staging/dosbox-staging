@@ -19,6 +19,11 @@
 #ifndef DOSBOX_FPU_H
 #define DOSBOX_FPU_H
 
+#ifndef DOSBOX_DOSBOX_H
+//So the right config.h gets included for C_DEBUG
+#include "dosbox.h"
+#endif
+
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
@@ -150,5 +155,22 @@ static INLINE void FPU_SET_C3(Bitu C){
 	if(C) fpu.sw |= 0x4000;
 }
 
+#define DB_FPU_STACK_CHECK_NONE 0
+#define DB_FPU_STACK_CHECK_LOG  1
+#define DB_FPU_STACK_CHECK_EXIT 2
+//NONE is 0.74 behavior: not care about stack overflow/underflow
+//Overflow is always logged/exited on.
+//Underflow can be controlled with by this. 
+//LOG is giving a message when encountered
+//EXIT is to hard exit.
+//Currently pop is ignored in release mode and overflow is exit.
+//in debug mode: pop will log and overflow is exit. 
+#if C_DEBUG
+#define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_LOG
+#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
+#else
+#define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_NONE
+#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
+#endif
 
 #endif

@@ -16,7 +16,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
+#ifndef DOSBOX_FPU_H
+#include "fpu.h"
+#endif
 
 // #define WEAK_EXCEPTIONS
 
@@ -957,12 +959,44 @@ static void FPU_FNOP(void){
 
 static void FPU_PREP_PUSH(void){
 	TOP = (TOP - 1) &7;
-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) E_Exit("FPU stack overflow");
+#if DB_FPU_STACK_CHECK_PUSH > DB_FPU_STACK_CHECK_NONE
+	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
+#if DB_FPU_STACK_CHECK_PUSH == DB_FPU_STACK_CHECK_EXIT
+		E_Exit("FPU stack overflow");
+#else
+		if (fpu.cw&1) { // Masked ?
+			fpu.sw &= 0x1; //Invalid Operation
+			fpu.sw &= 0x40; //Stack Fault
+			FPU_SET_C1(1); //Register is used.
+			//No need to set 0x80 as the exception is masked.
+			LOG(LOG_FPU,LOG_ERROR)("Masked stack overflow encountered!");
+		} else {
+			E_Exit("FPU stack overflow"); //Exit as this is bad
+		}
+#endif
+	}
+#endif
 	fpu.tags[TOP] = TAG_Valid;
 }
 
 static void FPU_FPOP(void){
-	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) E_Exit("FPU stack underflow");
+#if DB_FPU_STACK_CHECK_POP > DB_FPU_STACK_CHECK_NONE
+	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) {
+#if DB_FPU_STACK_CHECK_POP == DB_FPU_STACK_CHECK_EXIT
+		E_Exit("FPU stack underflow");
+#else
+		if (fpu.cw&1) { // Masked ?
+			fpu.sw &= 0x1; //Invalid Operation
+			fpu.sw &= 0x40; //Stack Fault
+			FPU_SET_C1(0); //Register is free.
+			//No need to set 0x80 as the exception is masked.
+			LOG(LOG_FPU,LOG_ERROR)("Masked stack underflow encountered!");
+		} else {
+			LOG_MSG("Unmasked Stack underflow!");
+		}
+#endif
+	}
+#endif
 	fpu.tags[TOP] = TAG_Empty;
 	TOP = ((TOP+1)&7);
 }
