@@ -58,6 +58,8 @@ extern Bitu cycle_count;
 #define CPU_PIC_CHECK 1
 #define CPU_TRAP_CHECK 1
 
+#define CPU_TRAP_DECODER	CPU_Core_Normal_Trap_Run
+
 #define OPCODE_NONE			0x000
 #define OPCODE_0F			0x100
 #define OPCODE_SIZE			0x200

@@ -564,7 +564,7 @@
 			CPU_CALL(false,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
-				cpudecoder=CPU_Core_Normal_Trap_Run;
+				cpudecoder=CPU_TRAP_DECODER;
 				return CBRET_NONE;
 			}
 #endif
@@ -579,7 +579,7 @@
 		if (CPU_POPF(false)) RUNEXCEPTION();
 #if CPU_TRAP_CHECK
 		if (GETFLAG(TF)) {	
-			cpudecoder=CPU_Core_Normal_Trap_Run;
+			cpudecoder=CPU_TRAP_DECODER;
 			goto decode_end;
 		}
 #endif
@@ -780,7 +780,7 @@
 			CPU_IRET(false,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
-				cpudecoder=CPU_Core_Normal_Trap_Run;
+				cpudecoder=CPU_TRAP_DECODER;
 				return CBRET_NONE;
 			}
 #endif
@@ -919,7 +919,7 @@
 			CPU_JMP(false,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
 			if (GETFLAG(TF)) {	
-				cpudecoder=CPU_Core_Normal_Trap_Run;
+				cpudecoder=CPU_TRAP_DECODER;
 				return CBRET_NONE;
 			}
 #endif
@@ -1132,7 +1132,7 @@
 					CPU_CALL(false,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
 					if (GETFLAG(TF)) {	
-						cpudecoder=CPU_Core_Normal_Trap_Run;
+						cpudecoder=CPU_TRAP_DECODER;
 						return CBRET_NONE;
 					}
 #endif
@@ -1153,7 +1153,7 @@
 					CPU_JMP(false,newcs,newip,GETIP);
 #if CPU_TRAP_CHECK
 					if (GETFLAG(TF)) {	
-						cpudecoder=CPU_Core_Normal_Trap_Run;
+						cpudecoder=CPU_TRAP_DECODER;
 						return CBRET_NONE;
 					}
 #endif
