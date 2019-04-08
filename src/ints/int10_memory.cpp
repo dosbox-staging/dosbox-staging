@@ -133,12 +133,10 @@ void INT10_SetupRomMemory(void) {
 		// set up the start of the ROM
 		phys_writew(rom_base+0,0xaa55);
 		phys_writeb(rom_base+2,0x40);		// Size of ROM: 64 512-blocks = 32KB
-		if (IS_VGA_ARCH) {
-			phys_writeb(rom_base+0x1e,0x49);	// IBM string
-			phys_writeb(rom_base+0x1f,0x42);
-			phys_writeb(rom_base+0x20,0x4d);
-			phys_writeb(rom_base+0x21,0x00);
-		}
+		phys_writeb(rom_base+0x1e,0x49);	// IBM string
+		phys_writeb(rom_base+0x1f,0x42);
+		phys_writeb(rom_base+0x20,0x4d);
+		phys_writeb(rom_base+0x21,0x20);
 		int10.rom.used=0x100;
 	}
 
