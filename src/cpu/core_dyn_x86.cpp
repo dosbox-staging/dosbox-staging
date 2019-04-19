@@ -362,7 +362,7 @@ run_block:
 		{
 			Bitu temp_ip=SegPhys(cs)+reg_eip;
 			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
-			if (temp_handler->flags & PFLAG_HASCODE) {
+			if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block) goto restart_core;
 				cache.block.running->LinkTo(ret==BR_Link2,block);

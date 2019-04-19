@@ -53,19 +53,26 @@ static struct DynDecode {
 
 static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	Bit8u rdval;
+	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
-		return false;
+		if (handler->flags & cflag) return false;
+		cph->ClearRelease();
+		cph=0;
+		handler=get_tlb_readhandler(lin_addr);
 	}
 	if (handler->flags & PFLAG_NOCODE) {
 		if (PAGING_ForcePageInit(lin_addr)) {
 			handler=get_tlb_readhandler(lin_addr);
 			if (handler->flags & PFLAG_HASCODE) {
 				cph=( CodePageHandler *)handler;
-				return false;
+				if (handler->flags & cflag) return false;
+				cph->ClearRelease();
+				cph=0;
+				handler=get_tlb_readhandler(lin_addr);
 			}
 		}
 		if (handler->flags & PFLAG_NOCODE) {

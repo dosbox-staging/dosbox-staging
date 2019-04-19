@@ -73,7 +73,7 @@ public:
 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
 		phys_page=_phys_page;
 		old_pagehandler=_old_pagehandler;
-		flags=old_pagehandler->flags|PFLAG_HASCODE;
+		flags=old_pagehandler->flags|(cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16);
 		flags&=~PFLAG_WRITEABLE;
 		active_blocks=0;
 		active_count=16;
