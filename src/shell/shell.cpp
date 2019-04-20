@@ -31,13 +31,18 @@
 Bitu call_shellstop;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
-Program * first_shell = 0;
+DOS_Shell * first_shell = 0;
 
 static Bitu shellstop_handler(void) {
 	return CBRET_STOP;
 }
 
 static void SHELL_ProgramStart(Program * * make) {
+	*make = new DOS_Shell;
+}
+//Repeat it with the correct type, could do it in the function below, but this way it should be 
+//clear that if the above function is changed, this function might need a change as well.
+static void SHELL_ProgramStart_First_shell(DOS_Shell * * make) {
 	*make = new DOS_Shell;
 }
 
@@ -746,7 +751,7 @@ void SHELL_Init() {
 	dos.psp(psp_seg);
 
 
-	SHELL_ProgramStart(&first_shell);
+	SHELL_ProgramStart_First_shell(&first_shell);
 	first_shell->Run();
 	delete first_shell;
 	first_shell = 0;//Make clear that it shouldn't be used anymore
