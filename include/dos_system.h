@@ -162,6 +162,8 @@ public:
 
 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
 	void		AddEntry			(const char* path, bool checkExist = false);
+	void		AddEntryDirOverlay			(const char* path, bool checkExist = false);
+
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	void		EmptyCache			(void);
@@ -172,7 +174,7 @@ public:
 	public:
 		CFileInfo(void) {
 			orgname[0] = shortname[0] = 0;
-			isDir = false;
+			isOverlayDir = isDir = false;
 			id = MAX_OPENDIRS;
 			nextEntry = shortNr = 0;
 		}
@@ -183,6 +185,7 @@ public:
 		};
 		char		orgname		[CROSS_LEN];
 		char		shortname	[DOS_NAMELENGTH_ASCII];
+		bool		isOverlayDir;
 		bool		isDir;
 		Bit16u		id;
 		Bitu		nextEntry;
@@ -206,7 +209,7 @@ private:
 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
 	bool		RemoveSpaces		(char* str);
 	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
-	void		CreateEntry		(CFileInfo* dir, const char* name, bool query_directory);
+	void		CreateEntry		(CFileInfo* dir, const char* name, bool is_directory);
 	void		CopyEntry		(CFileInfo* dir, CFileInfo* from);
 	Bit16u		GetFreeID		(CFileInfo* dir);
 	void		Clear			(void);
