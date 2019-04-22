@@ -437,24 +437,30 @@ private:
 	bool optimize_cache_v1;
 	void add_DOSname_to_cache(const char* name);
 	void remove_DOSname_from_cache(const char* name);
+	void add_DOSdir_to_cache(const char* name);
+	void remove_DOSdir_from_cache(const char* name);
 	void update_cache(bool read_directory_contents = false);
 	
 	std::vector<std::string> deleted_files_in_base; //Set is probably better, or some other solution (involving the disk).
-	std::vector<std::string> deleted_paths_in_base; //Currently used to hide the overlay folder.
+	std::vector<std::string> deleted_paths_in_base; //Currently only used to hide the overlay folder.
 	std::string overlap_folder;
-	void add_deleted_file(const char* name, bool create_on_disk=true);
-	void remove_deleted_file(const char* name, bool create_on_disk=true);
+	void add_deleted_file(const char* name, bool create_on_disk);
+	void remove_deleted_file(const char* name, bool create_on_disk);
 	bool is_deleted_file(const char* name);
-	void add_deleted_path(const char* name);
-	void remove_deleted_path(const char* name);
+	void add_deleted_path(const char* name, bool create_on_disk);
+	void remove_deleted_path(const char* name, bool create_on_disk);
 	bool is_deleted_path(const char* name);
 
-	void remove_deleted_file_from_disk(const char* dosname);
-	void add_deleted_file_to_disk(const char* dosname);
+	bool is_dir_only_in_overlay(const char* name); //cached
+
+
+	void remove_special_file_from_disk(const char* dosname, const char* operation);
+	void add_special_file_to_disk(const char* dosname, const char* operation);
 	std::string create_filename_of_special_operation(const char* dosname, const char* operation);
 	void convert_overlay_to_DOSname_in_base(char* dirname );
 	//For caching the update_cache routine.
 	std::vector<std::string> DOSnames_cache; //Also set is probably better.
+	std::vector<std::string> DOSdirs_cache; //Can not blindly change its type. it is important that subdirs come after the parent directory.
 	const std::string special_prefix;
 };
 
