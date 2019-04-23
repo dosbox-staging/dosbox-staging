@@ -384,7 +384,7 @@ void DOS_SetupMemory(void) {
 	 * buggy games, which compare against the interrupt table. (probably a 
 	 * broken linked list implementation) */
 	Bit16u ihseg = 0x70;
-	Bit16u ihofs = 0x08;
+	Bit16u ihofs = 0xF4;
 	real_writeb(ihseg,ihofs,(Bit8u)0xCF);		//An IRET Instruction
 	RealSetVec(0x01,RealMake(ihseg,ihofs));		//BioMenace (offset!=4)
 	RealSetVec(0x02,RealMake(ihseg,ihofs));		//BioMenace (segment<0x8000)
