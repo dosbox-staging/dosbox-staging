@@ -88,6 +88,25 @@ static struct {
 	Bit32u blocksize;
 } mixer;
 
+#ifdef _ANDROID_
+int GetMixerMasterVol()
+{
+	if (mixer.mastervol[0]>=mixer.mastervol[1])
+		return mixer.mastervol[0]*100;
+	else
+		return mixer.mastervol[1]*100;
+}
+void SetMixerMasterVol(int vol)
+{
+	mixer.mastervol[0]= mixer.mastervol[1]= (vol/100.0f);
+	MixerChannel * chan=mixer.channels;
+	while (chan) {
+		chan->UpdateVolume();
+		chan=chan->next;
+	}
+}
+#endif
+
 Bit8u MixTemp[MIXER_BUFSIZE];
 
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name) {

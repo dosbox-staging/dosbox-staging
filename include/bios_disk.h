@@ -54,7 +54,8 @@ public:
 	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
 	Bit8u GetBiosType(void);
 	Bit32u getSectSize(void);
-	imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk);
+	//LB
+	imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk, bool readOnly=false);
 	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
 
 	bool hardDrive;
@@ -65,6 +66,8 @@ public:
 
 	Bit32u sector_size;
 	Bit32u heads,cylinders,sectors;
+	//LB
+	bool readOnly;
 private:
 	Bit32u current_fpos;
 	enum { NONE,READ,WRITE } last_action;

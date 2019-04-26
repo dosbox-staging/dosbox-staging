@@ -24,6 +24,12 @@
 #include "mem.h"
 #include "mixer.h"
 #include "timer.h"
+#ifdef _ANDROID_
+#include "mousepad.h"
+bool capLock;
+bool numLock;
+bool scrLock;
+#endif
 
 #define KEYBUFSIZE 32
 #define KEYDELAY 0.300f			//Considering 20-30 khz serial clock and 11 bits/char
@@ -55,6 +61,16 @@ static struct {
 static void KEYBOARD_SetPort60(Bit8u val) {
 	keyb.p60changed=true;
 	keyb.p60data=val;
+#ifdef _ANDROID_
+	if (val==69) {
+		numLock= !numLock;
+		MousePadSetKeypadNumlock(numLock);
+	}
+	if (val==70)
+		scrLock= !scrLock;
+	if (val==58)
+		capLock= !capLock;
+#endif
 	if (machine==MCH_PCJR) PIC_ActivateIRQ(6);
 	else PIC_ActivateIRQ(1);
 }

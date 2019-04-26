@@ -35,6 +35,10 @@
 #include "../libs/zmbv/zmbv.cpp"
 #endif
 
+#ifdef _ANDROID_
+char lastScreenshotPath[CROSS_LEN];
+#endif
+
 static std::string capturedir;
 extern const char* RunningProgram;
 Bitu CaptureState;
@@ -117,7 +121,11 @@ FILE * OpenCaptureFile(const char * type,const char * ext) {
 		if (num>=last) last=num+1;
 	}
 	close_directory( dir );
+#ifdef _ANDROID_
+	char *file_name= lastScreenshotPath;
+#else
 	char file_name[CROSS_LEN];
+#endif
 	sprintf(file_name,"%s%c%s%03d%s",capturedir.c_str(),CROSS_FILESPLIT,file_start,last,ext);
 	/* Open the actual file */
 	FILE * handle=fopen(file_name,"wb");
@@ -454,6 +462,9 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		/*close file*/
 		fclose(fp);
+#ifdef _ANDROID_
+		Android_JNI_SendMessage(ANDROID_MSG_SCREENSHOT, 0);
+#endif
 	}
 skip_shot:
 	if (CaptureState & CAPTURE_VIDEO) {
@@ -748,13 +759,21 @@ public:
 	HARDWARE(Section* configuration):Module_base(configuration){
 		Section_prop * section = static_cast<Section_prop *>(configuration);
 		Prop_path* proppath= section->Get_path("captures");
+#ifdef _ANDROID_
+		capturedir = getAndroidStoragePathPictures();
+#else
 		capturedir = proppath->realpath;
+#endif
 		CaptureState = 0;
+#ifndef _ANDROID_
 		MAPPER_AddHandler(CAPTURE_WaveEvent,MK_f6,MMOD1,"recwave","Rec Wave");
 		MAPPER_AddHandler(CAPTURE_MidiEvent,MK_f8,MMOD1|MMOD2,"caprawmidi","Cap MIDI");
+#endif
 #if (C_SSHOT)
 		MAPPER_AddHandler(CAPTURE_ScreenShotEvent,MK_f5,MMOD1,"scrshot","Screenshot");
+#ifndef _ANDROID_
 		MAPPER_AddHandler(CAPTURE_VideoEvent,MK_f5,MMOD1|MMOD2,"video","Video");
+#endif
 #endif
 	}
 	~HARDWARE(){

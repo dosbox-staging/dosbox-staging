@@ -37,6 +37,10 @@
 #include "mapper.h"
 #include "setup.h"
 #include "pic.h"
+#ifdef _ANDROID_
+#include <mousepad.h>
+extern "C" void JavaSetPointerIconVisible(bool flag);
+#endif
 
 enum {
 	CLR_BLACK=0,
@@ -435,7 +439,9 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 		} 
 #if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
 		/* Linux adds 8 to all scancodes */
+#ifndef _ANDROID_
 		else key-=8;
+#endif
 #endif
 #if defined (WIN32)
 		switch (key) {
@@ -516,14 +522,25 @@ public:
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
 		Bitu key=GetKeyCode(event->key.keysym);
 //		LOG_MSG("key type %i is %x [%x %x]",event->type,key,event->key.keysym.sym,event->key.keysym.scancode);
+#ifndef _ANDROID_
 		assert(Bitu(event->key.keysym.sym)<keys);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
 		else DeactivateBindList(&lists[key],true);
+#else
+		SDL_Scancode scode= SDL_GetScancodeFromKey(key);
+		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[scode],0x7fff,true);
+		else DeactivateBindList(&lists[scode],true);
+#endif
 		return 0;
 	}
 	CBind * CreateKeyBind(SDLKey _key) {
+#ifndef _ANDROID_
 		if (!usescancodes) assert((Bitu)_key<keys);
 		return new CKeyBind(&lists[(Bitu)_key],_key);
+#else
+		SDL_Scancode scode= SDL_GetScancodeFromKey(_key);
+		return new CKeyBind(&lists[scode],_key);
+#endif
 	}
 private:
 	const char * ConfigStart(void) {
@@ -675,7 +692,7 @@ public:
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
 		if (hats_cap>hats) hats_cap=hats;
-		LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",SDL_JoystickName(stick),axes,buttons,hats);
+		// LOG_MSG("Using joystick %s with %d axes, %d buttons and %d hat(s)",SDL_JoystickName(stick),axes,buttons,hats);
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -703,6 +720,7 @@ public:
 		}
 		return bind;
 	}
+#ifndef _ANDROID_
 	CBind * CreateEventBind(SDL_Event * event) {
 		if (event->type==SDL_JOYAXISMOTION) {
 			if (event->jaxis.which!=stick) return 0;
@@ -725,6 +743,7 @@ public:
 			return CreateHatBind(event->jhat.hat,event->jhat.value);
 		} else return 0;
 	}
+#endif
 
 	virtual bool CheckEvent(SDL_Event * event) {
 		SDL_JoyAxisEvent * jaxis = NULL;
@@ -881,8 +900,12 @@ private:
 		return configname;
 	}
 	const char * BindStart(void) {
-		if (sdl_joystick!=NULL) return SDL_JoystickName(stick);
-		else return "[missing joystick]";
+#ifndef _ANDROID_
+		if (sdl_joystick!=NULL)
+			return SDL_JoystickName(stick);
+		else
+#endif
+			return "[missing joystick]";
 	}
 
 protected:
@@ -2191,6 +2214,9 @@ void MAPPER_CheckEvent(SDL_Event * event) {
 void BIND_MappingEvents(void) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
+#ifdef _ANDROID_
+		SDL_ANDROID_CHECK_EVENT(&event)
+#endif
 		switch (event.type) {
 		case SDL_MOUSEBUTTONUP:
 			/* Check the press */
@@ -2275,7 +2301,12 @@ static void InitializeJoysticks(void) {
 
 static void CreateBindGroups(void) {
 	bindgroups.clear();
+#ifndef _ANDROID_
 	new CKeyBindGroup(SDLK_LAST);
+#else
+	new CKeyBindGroup(SDL_NUM_SCANCODES);
+#endif
+#ifndef _ANDROID_
 	if (joytype != JOY_NONE) {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
@@ -2316,6 +2347,7 @@ static void CreateBindGroups(void) {
 			break;
 		}
 	}
+#endif
 }
 
 #if defined (REDUCE_JOYSTICK_POLLING)
@@ -2374,6 +2406,11 @@ void MAPPER_RunInternal() {
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_ENABLE);
 #endif
+#ifdef _ANDROID_
+    int mpe= MousePadIsEnabled();
+	MousePadEnable(false);
+	JavaSetPointerIconVisible(true);
+#endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
 			mapper.redraw=false;		
@@ -2382,6 +2419,12 @@ void MAPPER_RunInternal() {
 		BIND_MappingEvents();
 		SDL_Delay(1);
 	}
+#ifdef _ANDROID_
+	KEYBOARD_AddKey(KBD_leftctrl, false);
+	KEYBOARD_AddKey(KBD_rightctrl, false);
+	MousePadEnable(mpe);
+	JavaSetPointerIconVisible(false);
+#endif
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_DISABLE);
 #endif

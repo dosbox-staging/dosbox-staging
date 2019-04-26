@@ -111,7 +111,8 @@ return_address:
 		pop		ebx
 		mov		[retval],eax
 	}
-#elif defined (MACOSX)
+//LB
+#elif defined (MACOSX) || defined(_ANDROID_)
 	register Bit32u tempflags=reg_flags & FMASK_TEST;
 	__asm__ volatile (
 		"pushl %%ebx						\n"

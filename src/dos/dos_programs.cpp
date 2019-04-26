@@ -193,6 +193,7 @@ public:
 			}
 			return;
 		}
+#ifndef _ANDROID_
 		/* Show list of cdroms */
 		if (cmd->FindExist("-cd",false)) {
 			int num = SDL_CDNumDrives();
@@ -202,6 +203,7 @@ public:
 			};
 			return;
 		}
+#endif
 
 		std::string type="dir";
 		cmd->FindString("-t",type,true);
@@ -1282,7 +1284,8 @@ public:
 
 			if(fstype=="fat") {
 				if (imgsizedetect) {
-					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
+					//LB open read only
+					FILE * diskfile = fopen(temp_line.c_str(), "rb");
 					if (!diskfile) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 						return;
@@ -1321,6 +1324,11 @@ public:
 				
 				for (i = 0; i < paths.size(); i++) {
 					DOS_Drive* newDrive = new fatDrive(paths[i].c_str(),sizes[0],sizes[1],sizes[2],sizes[3],0);
+#ifdef _ANDROID_
+					if ((dynamic_cast<fatDrive*>(newDrive))->isReadOnly()) {
+						Android_JNI_SendMessage(ANDROID_MSG_DRIVE_RO, (int)(drive-'A'));
+					}
+#endif
 					imgDisks.push_back(newDrive);
 					if(!(dynamic_cast<fatDrive*>(newDrive))->created_successfully) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
@@ -1752,3 +1760,25 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 }
+
+#ifdef _ANDROID_
+extern bool isJavaMessage;
+void executeImgmount(const char* cmdLine)
+{
+	IMGMOUNT cmd;
+	delete cmd.cmd;
+	cmd.cmd= new CommandLine("IMGMOUNT", cmdLine);
+	isJavaMessage= true;
+	cmd.Run();
+	isJavaMessage= false;
+}
+void executeMount(const char* cmdLine)
+{
+	MOUNT cmd;
+	delete cmd.cmd;
+	cmd.cmd= new CommandLine("MOUNT", cmdLine);
+	isJavaMessage= true;
+	cmd.Run();
+	isJavaMessage= false;
+}
+#endif

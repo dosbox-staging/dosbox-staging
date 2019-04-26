@@ -49,9 +49,16 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+#ifdef _ANDROID_
+#include <mousepad.h>
+#include <validity.h>
+bool execCmd;
+#endif
 
 #define MAPPERFILE "mapper-" VERSION ".map"
-//#define DISABLE_JOYSTICK
+#ifdef _ANDROID_
+#define DISABLE_JOYSTICK
+#endif
 
 #if C_OPENGL
 #include "SDL_opengl.h"
@@ -280,6 +287,18 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 	return s;
 }
 
+#ifdef _ANDROID_
+int GetMouseSensitivity()
+{
+	return sdl.mouse.xsensitivity;
+}
+void SetMouseSensitivity(int sensitivity)
+{
+	sdl.mouse.xsensitivity= sensitivity;
+	sdl.mouse.ysensitivity= sensitivity;
+}
+#endif
+
 extern const char* RunningProgram;
 extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
@@ -336,10 +355,16 @@ static void PauseDOSBox(bool pressed) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		// flush event queue.
+#ifdef _ANDROID_
+		SDL_ANDROID_CHECK_EVENT(&event)
+#endif
 	}
 
 	while (paused) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+#ifdef _ANDROID_
+		SDL_ANDROID_CHECK_EVENT(&event)
+#endif
 		switch (event.type) {
 
 			case SDL_QUIT: KillSwitch(true); break;
@@ -838,7 +863,9 @@ void GFX_SwitchFullScreen(void) {
 		sticky_keys(false); //disable sticky keys in fullscreen mode
 #endif
 	} else {
+#ifndef _ANDROID_
 		if (sdl.mouse.locked) GFX_CaptureMouse();
+#endif
 #if defined (WIN32)
 		sticky_keys(true); //restore sticky keys to default state in windowed mode.
 #endif
@@ -997,6 +1024,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #endif
 	case SCREEN_OVERLAY:
 		SDL_UnlockYUVOverlay(sdl.overlay);
+#ifdef _ANDROID_
+		sdl.clip.y= 0;
+#endif
 		SDL_DisplayYUVOverlay(sdl.overlay,&sdl.clip);
 		break;
 #if C_OPENGL
@@ -1088,7 +1118,9 @@ static void GUI_ShutDown(Section * /*sec*/) {
 	GFX_Stop();
 	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.mouse.locked) GFX_CaptureMouse();
+#ifndef _ANDROID_
 	if (sdl.desktop.fullscreen) GFX_SwitchFullScreen();
+#endif
 }
 
 
@@ -1297,7 +1329,10 @@ static void GUI_StartUp(Section * sec) {
 	std::string output=section->Get_string("output");
 
 	/* Setup Mouse correctly if fullscreen */
-	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
+#ifndef _ANDROID_
+	if(sdl.desktop.fullscreen)
+#endif
+		GFX_CaptureMouse();
 
 	if (output == "surface") {
 		sdl.desktop.want_type=SCREEN_SURFACE;
@@ -1376,7 +1411,11 @@ static void GUI_StartUp(Section * sec) {
 
 /* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
 	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+#ifdef _ANDROID_
+	if (splash_surf && !execCmd) {
+#else
 	if (splash_surf) {
+#endif
 		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
 
 		Bit8u* tmpbufp = new Bit8u[640*400*3];
@@ -1403,6 +1442,9 @@ static void GUI_StartUp(Section * sec) {
 		for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
 			SDL_Event evt;
 			while (SDL_PollEvent(&evt)) {
+#ifdef _ANDROID_
+				SDL_ANDROID_CHECK_EVENT(&evt)
+#endif
 				if (evt.type == SDL_QUIT) {
 					exit_splash = true;
 					break;
@@ -1449,6 +1491,9 @@ static void GUI_StartUp(Section * sec) {
 	SDLMod keystate = SDL_GetModState();
 	if(keystate&KMOD_NUM) startup_state_numlock = true;
 	if(keystate&KMOD_CAPS) startup_state_capslock = true;
+#ifdef _ANDROID_
+	AndroidCheck();
+#endif
 }
 
 void Mouse_AutoLock(bool enable) {
@@ -1555,7 +1600,10 @@ void GFX_Events() {
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
-#if SDL_XORG_FIX
+#ifdef _ANDROID_
+		SDL_ANDROID_CHECK_EVENT(&event)
+#endif
+#if SDL_XORG_FIX && !_ANDROID_
 		// Special code for broken SDL with Xorg 1.20.1, where pairs of inputfocus gain and loss events are generated
 		// when locking the mouse in windowed mode.
 		if (event.type == SDL_ACTIVEEVENT && event.active.state == SDL_APPINPUTFOCUS && event.active.gain == 0) {
@@ -1569,6 +1617,7 @@ void GFX_Events() {
 #endif
 
 		switch (event.type) {
+#ifndef _ANDROID_
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
@@ -1642,6 +1691,7 @@ void GFX_Events() {
 				}
 			}
 			break;
+#endif
 		case SDL_MOUSEMOTION:
 			HandleMouseMotion(&event.motion);
 			break;
@@ -1714,7 +1764,11 @@ void GFX_ShowMsg(char const* format,...) {
 	vsprintf(buf,format,msg);
         strcat(buf,"\n");
 	va_end(msg);
+#ifndef _ANDROID_
 	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
+#else
+	myLog(buf);
+#endif
 }
 
 
@@ -1786,8 +1840,13 @@ void Config_Add_SDL() {
 	Pstring = sdl_sec->Add_path("mapperfile",Property::Changeable::Always,MAPPERFILE);
 	Pstring->Set_help("File used to load/save the key/event mappings from. Resetmapper only works with the default value.");
 
+#ifdef _ANDROID_
+	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,false);
+	Pbool->Set_help("usescancodes=true not working on this Android porting.");
+#else
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
+#endif
 }
 
 static void show_warning(char const * const message) {
@@ -2053,9 +2112,16 @@ int main(int argc, char* argv[]) {
 #endif
 	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again) 
 	// Please report problems with audio and other things.
-	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO | /*SDL_INIT_TIMER |*/ SDL_INIT_CDROM
-		|SDL_INIT_NOPARACHUTE
+#ifdef _ANDROID_
+	if ( SDL_Init( SDL_INIT_VIDEO | /*SDL_INIT_TIMER |*/
+#else
+	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO | /*SDL_INIT_TIMER |*/ SDL_INIT_CDROM |
+#endif
+		SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+#ifdef _ANDROID_
+	SDL_Init( SDL_INIT_AUDIO);
+#endif
 	sdl.inited = true;
 
 #ifndef DISABLE_JOYSTICK
@@ -2133,7 +2199,9 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	// if none found => parse localdir conf
+#ifndef _ANDROID_
 	if(!control->configfiles.size()) control->ParseConfigFile("dosbox.conf");
+#endif
 
 	// if none found => parse userlevel conf
 	if(!control->configfiles.size()) {
@@ -2142,6 +2210,7 @@ int main(int argc, char* argv[]) {
 		control->ParseConfigFile((config_path + config_file).c_str());
 	}
 
+#ifndef _ANDROID_
 	if(!control->configfiles.size()) {
 		//Try to create the userlevel configfile.
 		config_file.clear();
@@ -2156,6 +2225,7 @@ int main(int argc, char* argv[]) {
 			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
 		}
 	}
+#endif
 
 
 #if (ENVIRON_LINKED)
@@ -2177,10 +2247,15 @@ int main(int argc, char* argv[]) {
 		/* Init the keyMapper */
 		MAPPER_Init();
 		if (control->cmdline->FindExist("-startmapper")) MAPPER_RunInternal();
+#ifdef _ANDROID_
+		Android_JNI_SendMessage(ANDROID_MSG_STARTED, -1);
+#endif
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
 	} catch (char * error) {
+#ifndef _ANDROID_
+		myLog(error);
 #if defined (WIN32)
 		sticky_keys(true);
 #endif
@@ -2196,6 +2271,9 @@ int main(int argc, char* argv[]) {
 			Sleep(5000);
 #endif
 		}
+#else
+		JavaDialogMessage(error);
+#endif
 
 	}
 	catch (int){
@@ -2212,7 +2290,11 @@ int main(int argc, char* argv[]) {
 	SDL_ShowCursor(SDL_ENABLE);
 
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
+#ifdef _ANDROID_
+	exit(0);
+#else
 	return 0;
+#endif
 }
 
 void GFX_GetSize(int &width, int &height, bool &fullscreen) {

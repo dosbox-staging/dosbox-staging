@@ -25,6 +25,8 @@
 #include "debug.h"
 #include "callback.h"
 #include "regs.h"
+//LB
+#include "cpu.h"
 
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
@@ -436,7 +438,15 @@ void PCI_ShutDown(Section* sec){
 	pci_interface=NULL;
 }
 
+//LB
 void PCI_Init(Section* sec) {
+	if (CPU_ArchitectureType!=CPU_ARCHTYPE_PENTIUMSLOW)
+		return;
+	//LB
+	Section_prop *section=static_cast<Section_prop *>(sec);
+	if (!section->Get_bool("enabled"))
+		return;
+	rqueued_devices[num_rqueued_devices++] = new PCI_S3Trio3264;
 	pci_interface = new PCI(sec);
 	sec->AddDestroyFunction(&PCI_ShutDown,false);
 }

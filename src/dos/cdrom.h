@@ -33,6 +33,9 @@
 #include "mixer.h"
 #include "SDL.h"
 #include "SDL_thread.h"
+#ifdef _ANDROID_
+#include "SDL_cdrom.h"
+#endif
 
 #if defined(C_SDL_SOUND)
 #include "SDL_sound.h"

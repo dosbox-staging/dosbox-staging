@@ -28,6 +28,8 @@
 #include "cpu.h"
 
 const char * RunningProgram="DOSBOX";
+//LB
+const char * RunningFullProgram="DOSBOX";
 
 #ifdef _MSC_VER
 #pragma pack(1)
@@ -100,6 +102,14 @@ void DOS_UpdatePSPName(void) {
 		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
 	}
 	RunningProgram = name;
+	//LB
+    if (strcmp(RunningProgram,"DOSBOX")) {
+	    static char name[13];
+	    mcb.GetFullFileName(name);
+	    name[12] = 0;
+	    RunningFullProgram = name;
+    } else
+	    RunningFullProgram = name;
 	GFX_SetTitle(-1,-1,false);
 }
 
@@ -449,14 +459,23 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		Bit8u d2 = fcb2.GetDrive();
 		if ( (d2>=DOS_DRIVES) || !Drives[d2] ) reg_bh = 0xFF; else reg_bh = 0;
 
+        //LB
 		/* Write filename in new program MCB */
 		char stripname[8]= { 0 };Bitu index=0;
+		char fullname[12]= { 0 };
 		while (char chr=*name++) {
 			switch (chr) {
 			case ':':case '\\':case '/':index=0;break;
-			default:if (index<8) stripname[index++]=(char)toupper(chr);
+			default:
+			    if (index<8) {
+			        stripname[index]=(char)toupper(chr);
+			        fullname[index++]=(char)toupper(chr);
+			    } else
+			        if (index<12) fullname[index++]=chr;
 			}
 		}
+		//LB
+		memset(&fullname[index],0,12-index);
 		index=0;
 		while (index<8) {
 			if (stripname[index]=='.') break;
@@ -466,6 +485,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		memset(&stripname[index],0,8-index);
 		DOS_MCB pspmcb(dos.psp()-1);
 		pspmcb.SetFileName(stripname);
+		//LB
+		pspmcb.SetExt(&fullname[index+1]);
 		DOS_UpdatePSPName();
 	}
 
