@@ -43,6 +43,26 @@
 #include "render.h"
 #include "pci_bus.h"
 
+//LB
+#ifndef _ANDROID_
+extern "C" void myLog(const char *msg, ...) {
+    va_list valist;
+    va_start(valist, msg);
+	static int nLines= 0;
+	FILE *f;
+	if (nLines%10000==0)
+		f= fopen("mylog.txt", "w");
+	else
+		f= fopen("mylog.txt", "a");
+	fprintf(f, "%d - ", nLines);
+	vfprintf(f, msg, valist);
+	fprintf(f, "\n");
+	va_end(valist);
+	fclose(f);
+	++nLines;
+}
+#endif
+
 Config * control;
 MachineType machine;
 SVGACards svgaCard;
@@ -527,6 +547,9 @@ void DOSBOX_Init(void) {
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 	secprop=control->AddSection_prop("pci",&PCI_Init,false); //PCI bus
+	//LB
+	Pbool = secprop->Add_bool("enabled",Property::Changeable::OnlyAtStart,false);
+	Pbool->Set_help("PCI devices initialization enabled true/false");
 #endif
 
 

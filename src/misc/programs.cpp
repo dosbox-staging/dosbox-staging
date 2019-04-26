@@ -32,6 +32,10 @@
 #include "control.h"
 #include "shell.h"
 
+#ifdef _ANDROID_
+bool isJavaMessage;
+#endif
+
 Bitu call_program;
 
 /* This registers a file on the virtual drive and creates the correct structure for it*/
@@ -136,6 +140,12 @@ void Program::WriteOut(const char * format,...) {
 	va_start(msg,format);
 	vsnprintf(buf,2047,format,msg);
 	va_end(msg);
+#ifdef _ANDROID_
+	if (isJavaMessage) {
+		JavaToastMessage(buf);
+		return;
+	}
+#endif
 
 	Bit16u size = (Bit16u)strlen(buf);
 	dos.internal_output=true;
@@ -156,6 +166,12 @@ void Program::WriteOut_NoParsing(const char * format) {
 	Bit16u size = (Bit16u)strlen(format);
 	char const* buf = format;
 	dos.internal_output=true;
+#ifdef _ANDROID_
+	if (isJavaMessage) {
+		JavaToastMessage(buf);
+		return;
+	}
+#endif
 	for(Bit16u i = 0; i < size;i++) {
 		Bit8u out;Bit16u s=1;
 		if (buf[i] == 0xA && last_written_character != 0xD) {

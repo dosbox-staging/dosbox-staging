@@ -861,10 +861,14 @@ bool Config::ParseConfigFile(char const * const configfilename) {
 	LOG_MSG("CONFIG: Loading %s settings from config file %s", settings_type,configfilename);
 
 	//Get directory from configfilename, used with relative paths.
+#ifdef _ANDROID_
+	current_config_dir= getAndroidAppWorkDir();
+#else
 	current_config_dir=configfilename;
 	std::string::size_type pos = current_config_dir.rfind(CROSS_FILESPLIT);
 	if(pos == std::string::npos) pos = 0; //No directory then erase string
 	current_config_dir.erase(pos);
+#endif
 
 	string gegevens;
 	Section* currentsection = NULL;

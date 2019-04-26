@@ -15,6 +15,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+//LB
+#include <stdio.h>
+#include <stdarg.h>
 
 #ifndef DOSBOX_LOGGING_H
 #define DOSBOX_LOGGING_H
@@ -53,13 +56,20 @@ public:
 };
 
 void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+#ifndef _ANDROID_
 #define LOG_MSG DEBUG_ShowMsg
+#else
+#define LOG_MSG
+#endif
 
 #else  //C_DEBUG
 
 struct LOG
 {
 	LOG(LOG_TYPES , LOG_SEVERITIES )										{ }
+//LB
+	void operator() (char const* buf, ...) GCC_ATTRIBUTE(__format__(__printf__, 2, 3));  //../src/debug/debug_gui.cpp
+#if 0
 	void operator()(char const* )													{ }
 	void operator()(char const* , double )											{ }
 	void operator()(char const* , double , double )								{ }
@@ -79,10 +89,21 @@ struct LOG
 	void operator()(char const* , char const*, char const*)				{ }
 
 	void operator()(char const* , double , double , double , char const* )					{ }
+#endif
 }; //add missing operators to here
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 #define LOG_MSG GFX_ShowMsg
+//LB
+inline void LOG::operator() (char const* format, ...)
+{
+	char buf[512];
+	va_list msg;
+	va_start(msg,format);
+	vsprintf(buf,format,msg);
+	va_end(msg);
+	GFX_ShowMsg("%s\n",buf);
+}
 
 #endif //C_DEBUG
 

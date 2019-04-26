@@ -36,8 +36,22 @@ using namespace std;
 struct MessageBlock {
 	string name;
 	string val;
-	MessageBlock(const char* _name, const char* _val):
-	name(_name),val(_val){}
+//LB
+//	MessageBlock(const char* _name, const char* _val):
+//	name(_name),val(_val){}
+	MessageBlock(const char* _name, const char* _val) {
+		name= _name;
+		char str[2048];
+		const char *src= _val;
+		int i;
+		for (i=0; i<strlen(src); ++i)
+			if (src[i]=='\xC9' || src[i]=='\xCD' || src[i]=='\xBB' || src[i]=='\xBA' || src[i]=='\xC8' || src[i]=='\xBC')
+				str[i]= ' ';
+			else
+				str[i]= src[i];
+		str[i]= '\0';
+		val= str;
+	}
 };
 
 static list<MessageBlock> Lang;

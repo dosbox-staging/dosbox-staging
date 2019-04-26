@@ -26,6 +26,9 @@
 #include "shell.h"
 #include "callback.h"
 #include "support.h"
+#ifdef _ANDROID_
+extern bool execCmd;
+#endif
 
 
 Bitu call_shellstop;
@@ -591,6 +594,9 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE","Unable to remove, drive not in use.\n");
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives");
 
+#ifdef _ANDROID_
+	if (!execCmd)
+#endif
 	MSG_Add("SHELL_STARTUP_BEGIN",
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
@@ -606,6 +612,10 @@ void SHELL_Init() {
 		"\xBA For more information read the \033[36mREADME\033[37m file in the DOSBox directory. \xBA\n"
 		"\xBA                                                                    \xBA\n"
 	);
+#ifdef _ANDROID_
+	else
+		MSG_Add("SHELL_STARTUP_BEGIN", "");
+#endif
 	MSG_Add("SHELL_STARTUP_CGA","\xBA DOSBox supports Composite CGA mode.                                \xBA\n"
 	        "\xBA Use \033[31mF12\033[37m to set composite output ON, OFF, or AUTO (default).        \xBA\n"
 	        "\xBA \033[31m(Alt-)F11\033[37m changes hue; \033[31mctrl-alt-F11\033[37m selects early/late CGA model.  \xBA\n"
@@ -618,6 +628,9 @@ void SHELL_Init() {
 	        "\xBA Press \033[31malt-Pause\033[37m to enter the debugger or start the exe with \033[33mDEBUG\033[37m. \xBA\n"
 	        "\xBA                                                                    \xBA\n"
 	);
+#ifdef _ANDROID_
+	if (!execCmd)
+#endif
 	MSG_Add("SHELL_STARTUP_END",
 	        "\xBA \033[32mHAVE FUN!\033[37m                                                          \xBA\n"
 	        "\xBA \033[32mThe DOSBox Team \033[33mhttp://www.dosbox.com\033[37m                              \xBA\n"
@@ -626,6 +639,10 @@ void SHELL_Init() {
 	        "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
 	        //"\n" //Breaks the startup message if you type a mount and a drive change.
 	);
+#ifdef _ANDROID_
+	else
+		MSG_Add("SHELL_STARTUP_END", "");
+#endif
 	MSG_Add("SHELL_STARTUP_SUB","\n\n\033[32;1mDOSBox %s Command Shell\033[0m\n\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP","Displays/changes the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG","CHDIR [drive:][path]\n"

@@ -549,6 +549,22 @@ public:
 	DOS_MCB(Bit16u seg) { SetPt(seg); }
 	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
+	//LB
+	void SetExt(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,unused), _name,3); }
+	void GetFullFileName(char * const _name) {
+	    char name[9];
+	    memset(name, 0, 9);
+	    char ext[4];
+	    memset(ext, 0, 4);
+	    MEM_BlockRead(pt+offsetof(sMCB,filename),name,8);
+	    MEM_BlockRead(pt+offsetof(sMCB,unused),ext,3);
+	    _name[0]= 0;
+	    strcat(_name, name);
+	    if (ext[0] != 0) {
+	        strcat(_name, ".");
+	        strcat(_name, ext);
+	    }
+    }
 	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
 	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
 	void SetPSPSeg(Bit16u _pspseg) { sSave(sMCB,psp_segment,_pspseg);}

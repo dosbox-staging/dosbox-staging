@@ -54,6 +54,10 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
+#ifdef _ANDROID_
+extern "C" const char *getAndroidFilesPathSD();
+#endif
+
 void Cross::GetPlatformConfigDir(std::string& in) {
 #ifdef WIN32
 	W32_ConfDir(in,false);
@@ -62,8 +66,12 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 	in = "~/Library/Preferences";
 	ResolveHomedir(in);
 #else
+#ifdef _ANDROID_
+	in= getAndroidFilesPathSD();
+#else
 	in = "~/.dosbox";
 	ResolveHomedir(in);
+#endif
 #endif
 	in += CROSS_FILESPLIT;
 }
@@ -74,7 +82,11 @@ void Cross::GetPlatformConfigName(std::string& in) {
 #elif defined(MACOSX)
 #define DEFAULT_CONFIG_FILE "DOSBox " VERSION " Preferences"
 #else /*linux freebsd*/
+#ifdef _ANDROID_
+#define DEFAULT_CONFIG_FILE "ldosbox.conf"
+#else
 #define DEFAULT_CONFIG_FILE "dosbox-" VERSION ".conf"
+#endif
 #endif
 	in = DEFAULT_CONFIG_FILE;
 }
@@ -89,9 +101,13 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
 	ResolveHomedir(in);
 	//Don't create it. Assume it exists
 #else
+#ifdef _ANDROID_
+	in= getAndroidFilesPathSD();
+#else
 	in = "~/.dosbox";
 	ResolveHomedir(in);
 	mkdir(in.c_str(),0700);
+#endif
 #endif
 	in += CROSS_FILESPLIT;
 }

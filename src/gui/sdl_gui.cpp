@@ -605,6 +605,9 @@ static void UI_Execute(GUI::ScreenSDL *screen) {
 	SDL_Event event;
 	while (running) {
 		while (SDL_PollEvent(&event)) {
+#ifdef _ANDROID_
+			SDL_ANDROID_CHECK_EVENT(&event)
+#endif
 			if (!screen->event(event)) {
 				if (event.type == SDL_QUIT) running = false;
 			}
