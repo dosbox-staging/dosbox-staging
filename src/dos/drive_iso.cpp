@@ -144,11 +144,11 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &e
          :iso(false),
           dataCD(false),
           mediaid(0),
-          fileName{'\0'},
           subUnit(0),
-          driveLetter('\0'),
-          discLabel{'\0'}
+          driveLetter('\0')
  {
+	this->fileName[0]  = '\0';
+	this->discLabel[0] = '\0';
 	nextFreeDirIterator = 0;
 	memset(dirIterators, 0, sizeof(dirIterators));
 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
