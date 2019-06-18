@@ -225,7 +225,7 @@ void PAGING_InitTLBBank(tlb_entry **bank);
 
 static INLINE tlb_entry *get_tlb_entry(PhysPt address) {
 	Bitu index=(address>>12);
-	if (TLB_BANKS && (index > TLB_SIZE)) {
+	if (TLB_BANKS && (index >= TLB_SIZE)) {
 		Bitu bank=(address>>BANK_SHIFT) - 1;
 		if (!paging.tlbh_banks[bank])
 			PAGING_InitTLBBank(&paging.tlbh_banks[bank]);

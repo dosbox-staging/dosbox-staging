@@ -562,6 +562,25 @@
 					<File
 						RelativePath="..\src\hardware\tandy_sound.cpp">
 					</File>
+					<Filter
+						Name="mame"
+						Filter="">
+						<File
+							RelativePath="..\src\hardware\mame\emu.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\saa1099.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\saa1099.h">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\sn76496.cpp">
+						</File>
+						<File
+							RelativePath="..\src\hardware\mame\sn76496.h">
+						</File>
+					</Filter>
 				</Filter>
 				<Filter
 					Name="serialport"
