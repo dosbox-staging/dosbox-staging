@@ -254,7 +254,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 		env_write += (PhysPt)(strlen(env_string)+1);
 	}
 	/* Clear out the final piece of the environment */
-	mem_writed(env_write,0);
+	mem_writeb(env_write,0);
 	return true;
 }
 
