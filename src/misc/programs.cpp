@@ -78,7 +78,7 @@ static Bitu PROGRAMS_Handler(void) {
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
-	if(index > internal_progs.size()) E_Exit("something is messing with the memory");
+	if(index >= internal_progs.size()) E_Exit("something is messing with the memory");
 	PROGRAMS_Main * handler = internal_progs[index];
 	(*handler)(&new_program);
 	new_program->Run();
@@ -215,9 +215,16 @@ Bitu Program::GetEnvCount(void) {
 }
 
 bool Program::SetEnv(const char * entry,const char * new_string) {
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	PhysPt env_write=env_read;
-	char env_string[1024+1];
+	PhysPt env_read = PhysMake(psp->GetEnvironment(),0);
+	
+	//Get size of environment.
+	DOS_MCB mcb(psp->GetEnvironment()-1);
+	Bit16u envsize = mcb.GetSize()*16;
+
+
+	PhysPt env_write = env_read;
+	PhysPt env_write_start = env_read;
+	char env_string[1024+1] = { 0 };
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
@@ -230,11 +237,14 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	} while (1);
 /* TODO Maybe save the program name sometime. not really needed though */
 	/* Save the new entry */
+
+	//ensure room (0.74-3 5 because of the writed)
+	if (envsize <= (env_write-env_write_start) + strlen(entry) + 1 + strlen(new_string) + 5) return false;
+
 	if (new_string[0]) {
 		std::string bigentry(entry);
 		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
-		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
-//		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
+		snprintf(env_string,1024+1,"%s=%s",bigentry.c_str(),new_string);
 		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
 		env_write += (PhysPt)(strlen(env_string)+1);
 	}
