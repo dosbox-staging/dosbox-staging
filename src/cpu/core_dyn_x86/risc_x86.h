@@ -770,6 +770,7 @@ static void gen_call_function(void * func,char const* ops,...) {
 			}
 			ops++;
 		}
+		va_end(params);
 
 #if defined (MACOSX)
 		/* align stack */
