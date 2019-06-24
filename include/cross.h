@@ -105,4 +105,5 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
 void close_directory(dir_information* dirp);
 
+FILE *fopen_wrap(const char *path, const char *mode);
 #endif
