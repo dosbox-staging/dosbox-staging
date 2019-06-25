@@ -30,10 +30,10 @@
 #include <crtdbg.h>
 #include <string.h>
 
-TCHAR szDescription[] = TEXT("Zipped Motion Block Video v0.1");
+TCHAR szDescription[] = TEXT("Zipped Motion Block Video v0.1a");
 TCHAR szName[]        = TEXT(CODEC_4CC);
 
-#define VERSION         0x00000001      // 0.1
+#define VERSION         0x00000002      // newer version
 
 /********************************************************************
 ********************************************************************/
@@ -90,7 +90,7 @@ DWORD Close(CodecInst* pinst) {
 
 BOOL CodecInst::QueryAbout() { return TRUE; }
 
-static BOOL CALLBACK AboutDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK AboutDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
   if (uMsg == WM_COMMAND) {
     switch (LOWORD(wParam)) {
     case IDOK:
@@ -111,7 +111,7 @@ DWORD CodecInst::About(HWND hwnd) {
   return ICERR_OK;
 }
 
-static BOOL CALLBACK ConfigureDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK ConfigureDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
   if (uMsg == WM_INITDIALOG) {
 
@@ -175,6 +175,7 @@ DWORD CodecInst::GetInfo(ICINFO* icinfo, DWORD dwSize) {
 ****************************************************************/
 
 static int GetInputBitDepth(const BITMAPINFOHEADER *lpbiIn) {
+	//Msg( "Get input depth compression %d bitcount %d\n", lpbiIn->biCompression, lpbiIn->biBitCount );
 	if (lpbiIn->biCompression == BI_RGB) {
 		if (lpbiIn->biPlanes != 1)
 			return -1;
@@ -214,11 +215,14 @@ static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut, b
 	if (lpbiIn) {
 		if (GetInputBitDepth(lpbiIn) < 0)
 			return false;
-	} else return false;
+	} else 
+		return false;
 	if (lpbiOut) {
+		//Needs to match our 4cc format
 		if (memcmp(&lpbiOut->biCompression,CODEC_4CC, 4))
 			return false;
-	} else return !requireOutput;
+	} else
+		return !requireOutput;
 	return true;
 }
 
@@ -226,7 +230,8 @@ static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut, b
 ****************************************************************/
 
 DWORD CodecInst::CompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
-	if (CanCompress(lpbiIn,lpbiOut,false)) return ICERR_OK;
+	if (CanCompress(lpbiIn,lpbiOut,false)) 
+		return ICERR_OK;
 	return ICERR_BADFORMAT;
 }
 
@@ -373,7 +378,8 @@ DWORD CodecInst::DecompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER l
 DWORD CodecInst::DecompressGetFormat(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
 	if (memcmp(&lpbiIn->biCompression,CODEC_4CC,4))
 		 return ICERR_BADFORMAT;
-	if (!lpbiOut) return sizeof(BITMAPINFOHEADER);
+	if (!lpbiOut)
+		return sizeof(BITMAPINFOHEADER);
 	*lpbiOut = *lpbiIn;
 	lpbiOut->biPlanes		= 1;
 	lpbiOut->biSize			= sizeof(BITMAPINFOHEADER);

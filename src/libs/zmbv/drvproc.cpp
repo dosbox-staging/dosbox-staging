@@ -68,7 +68,7 @@
  *   Defined separately for each message.
  *
  ***************************************************************************/
-LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
+extern "C" LRESULT PASCAL __declspec(dllexport) DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
   CodecInst* pi = (CodecInst*)dwDriverID;
 
   switch (uiMessage) {
