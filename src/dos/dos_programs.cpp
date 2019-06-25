@@ -607,9 +607,9 @@ private:
 		//File not found on mounted filesystem. Try regular filesystem
 		std::string filename_s(filename);
 		Cross::ResolveHomedir(filename_s);
-		tmpfile = fopen(filename_s.c_str(),"rb+");
+		tmpfile = fopen_wrap(filename_s.c_str(),"rb+");
 		if(!tmpfile) {
-			if( (tmpfile = fopen(filename_s.c_str(),"rb")) ) {
+			if( (tmpfile = fopen_wrap(filename_s.c_str(),"rb")) ) {
 				//File exists; So can't be opened in correct mode => error 2
 //				fclose(tmpfile);
 //				if(tryload) error = 2;
@@ -1301,7 +1301,7 @@ public:
 
 			if(fstype=="fat") {
 				if (imgsizedetect) {
-					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
+					FILE * diskfile = fopen_wrap(temp_line.c_str(), "rb+");
 					if (!diskfile) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 						return;
@@ -1448,7 +1448,7 @@ public:
 				WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
 
 			} else {
-				FILE *newDisk = fopen(temp_line.c_str(), "rb+");
+				FILE *newDisk = fopen_wrap(temp_line.c_str(), "rb+");
 				if (!newDisk) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 					return;
