@@ -51,6 +51,43 @@ Bitu DEBUG_EnableDebugger(void);
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
 static Bitu ZDRIVE_NUM = 25;
 
+static const char* UnmountHelper(char umount) {
+	int i_drive;
+	if (umount < '0' || umount > 3+'0')
+		i_drive = toupper(umount) - 'A';
+	else
+		i_drive = umount - '0';
+
+	if (i_drive >= DOS_DRIVES || i_drive < 0)
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+
+	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && imageDiskList[i_drive] == NULL)
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+
+	if (i_drive >= MAX_DISK_IMAGES && Drives[i_drive] == NULL)
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+
+	if (Drives[i_drive]) {
+		switch (DriveManager::UnmountDrive(i_drive)) {
+			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
+			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
+		}
+		Drives[i_drive] = 0;
+		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*2,0); //0_74_3 use 2 instead of 9.
+		if (i_drive == DOS_GetDefaultDrive()) {
+			DOS_SetDrive(ZDRIVE_NUM);
+		}
+
+	}
+
+	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
+		delete imageDiskList[i_drive];
+		imageDiskList[i_drive] = NULL;
+	}
+
+	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
+}
+
 class MOUNT : public Program {
 public:
 	void ListMounts(void) {
@@ -110,26 +147,7 @@ public:
 
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
-			umount[0] = toupper(umount[0]);
-			int i_drive = umount[0]-'A';
-				if (i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
-					switch (DriveManager::UnmountDrive(i_drive)) {
-					case 0:
-						Drives[i_drive] = 0;
-						if(i_drive == DOS_GetDefaultDrive()) 
-							DOS_SetDrive(ZDRIVE_NUM);
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
-						break;
-					case 1:
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
-						break;
-					case 2:
-						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
-						break;
-					}
-				} else {
-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
-				}
+			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 			return;
 		}
 		
@@ -217,23 +235,29 @@ public:
 			}
 		   
 			cmd->FindString("-size",str_size,true);
-			char number[20];const char * scan=str_size.c_str();
-			Bitu index=0;Bitu count=0;
+			char number[21] = { 0 };const char * scan = str_size.c_str();
+			Bitu index = 0;Bitu count = 0;
 			/* Parse the str_size string */
-			while (*scan) {
+			while (*scan && index < 20 && count < 4) {
 				if (*scan==',') {
-					number[index]=0;sizes[count++]=atoi(number);
-					index=0;
-				} else number[index++]=*scan;
+					number[index] = 0;
+					sizes[count++] = atoi(number);
+					index = 0;
+				} else number[index++] = *scan;
 				scan++;
 			}
-			number[index]=0;sizes[count++]=atoi(number);
+			if (count < 4) {
+				number[index] = 0; //always goes correct as index is max 20 at this point.
+				sizes[count] = atoi(number);
+			}
 		
 			// get the drive letter
 			cmd->FindCommand(1,temp_line);
 			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
-			drive=toupper(temp_line[0]);
-			if (!isalpha(drive)) goto showusage;
+			int i_drive = toupper(temp_line[0]);
+			if (!isalpha(i_drive)) goto showusage;
+			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive-'A') < 0 ) goto showusage;
+			drive = static_cast<char>(i_drive);
 
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
@@ -626,7 +650,10 @@ public:
 					i++;
 					continue;
 				}
-
+				
+				if ( i >= MAX_SWAPPABLE_DISKS ) {
+					return; //TODO give a warning.
+				}
 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"), temp_line.c_str());
 				Bit32u rombytesize;
 				FILE *usefile = getFSFile(temp_line.c_str(), &floppysize, &rombytesize);
@@ -1052,26 +1079,7 @@ public:
 		std::string umount;
 		/* Check for unmounting */
 		if (cmd->FindString("-u",umount,false)) {
-			umount[0] = toupper(umount[0]);
-			int i_drive = umount[0]-'A';
-				if (i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
-					switch (DriveManager::UnmountDrive(i_drive)) {
-					case 0:
-						Drives[i_drive] = 0;
-						if (i_drive == DOS_GetDefaultDrive()) 
-							DOS_SetDrive(toupper('Z') - 'A');
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
-						break;
-					case 1:
-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
-						break;
-					case 2:
-						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
-						break;
-					}
-				} else {
-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
-				}
+			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 			return;
 		}
 
@@ -1100,18 +1108,21 @@ public:
 			if ((type=="hdd") && (str_size.size()==0)) {
 				imgsizedetect=true;
 			} else {
-				char number[20];
-				const char * scan=str_size.c_str();
-				Bitu index=0;Bitu count=0;
-				
-				while (*scan) {
+				char number[21] = { 0 };const char * scan = str_size.c_str();
+				Bitu index = 0;Bitu count = 0;
+				/* Parse the str_size string */
+				while (*scan && index < 20 && count < 4) {
 					if (*scan==',') {
-						number[index]=0;sizes[count++]=atoi(number);
-						index=0;
-					} else number[index++]=*scan;
+						number[index] = 0;
+						sizes[count++] = atoi(number);
+						index = 0;
+					} else number[index++] = *scan;
 					scan++;
 				}
-				number[index]=0;sizes[count++]=atoi(number);
+				if (count < 4) {
+					number[index] = 0; //always goes correct as index is max 20 at this point.
+					sizes[count] = atoi(number);
+				}
 			}
 		
 			if(fstype=="fat" || fstype=="iso") {
@@ -1120,11 +1131,12 @@ public:
 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
-				drive=toupper(temp_line[0]);
-				if (!isalpha(drive)) {
+				int i_drive = toupper(temp_line[0]);
+				if (!isalpha(drive) || (i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') <0) {
 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
+				drive = static_cast<char>(i_drive);
 			} else if (fstype=="none") {
 				cmd->FindCommand(1,temp_line);
 				if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
@@ -1132,7 +1144,7 @@ public:
 					return;
 				}
 				drive=temp_line[0];
-				if ((drive<'0') || (drive>3+'0')) {
+				if ((drive<'0') || (drive>=(MAX_DISK_IMAGES+'0'))) {
 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 					return;
 				}
@@ -1325,7 +1337,7 @@ public:
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive-'0',temp_line.c_str());
 		}
 
-		// check if volume label is given. becareful for cdrom
+		// check if volume label is given. be careful for cdrom
 		//if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
 		return;
 	}

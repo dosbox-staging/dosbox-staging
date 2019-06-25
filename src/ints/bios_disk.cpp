@@ -27,7 +27,7 @@
 #include "../dos/drives.h"
 #include "mapper.h"
 
-#define MAX_DISK_IMAGES 4
+
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},

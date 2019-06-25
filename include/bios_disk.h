@@ -70,9 +70,11 @@ public:
 void updateDPT(void);
 
 #define MAX_HDD_IMAGES 2
+#define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-extern imageDisk *imageDiskList[2 + MAX_HDD_IMAGES];
-extern imageDisk *diskSwap[20];
+extern imageDisk *imageDiskList[MAX_DISK_IMAGES];
+extern imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
+
 extern Bits swapPosition;
 extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */
