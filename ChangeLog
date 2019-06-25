@@ -1,3 +1,28 @@
+  - Unify unmounting code and add some protections against out of bound access
+    when DOS_DRIVES is not 26.
+  - Use correct type for return value of strlen.
+  - Change scan3x to a bit brighter.
+  - Fix unitialized access to some isoDrive fields and improve stability 
+    when switching CD images.
+  - Small fix to hq3x.
+  - Fix 256 colour mode encoding in zmbv.dll
+  - Some small aliassing fix.
+  - Change SET to check the size of the MCB when adding variables. Fixes
+    hangs with Norton Commander.
+  - Check buffer length before doing tab completion.
+  - Correct buffer overflow with very long lines in bat files.
+  - Correct the boundary check for the internal programs array.
+  - Increase stability in max cycles mode by increasing the lower bound.
+  - Fix command prompt in windows 3.11 with dynrec core.
+  - Fix win64 dynrec core.  
+  - Always clear buffers before drawing in OpenGL mode. Fixes artifacts with 
+    drivers that have more than 2 buffers and overlays. 
+  - Fix red border that appeared when scaling the image in OpenGL 
+    mode with nvidia on Linux and Mac.
+  - Add workaround for the mouse unlocking problem with X.org 1.20.1
+  - Fix table access when USE_FULL_TLB is undefined (non-default configuration).
+  - Several fixes to prevent compilation errors.
+  - Update Visual studio file to fix missing files from 0.74-2.
 0.74-2
   - Rewrite auto/max cycles algorithm to work better with windows 7, other 
     OSes might benefit as well.

@@ -1132,7 +1132,7 @@ public:
 					return;
 				}
 				int i_drive = toupper(temp_line[0]);
-				if (!isalpha(drive) || (i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') <0) {
+				if (!isalpha(i_drive) || (i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') <0) {
 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
 					return;
 				}
