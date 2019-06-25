@@ -18,11 +18,13 @@
 
 /* $Id: libserial.h,v 1.2 2009-09-26 09:15:19 h-a-l-9000 Exp $ */
 
+#include <string.h>
+
 typedef struct _COMPORT *COMPORT;
 
 bool SERIAL_open(const char* portname, COMPORT* port);
 void SERIAL_close(COMPORT port);
-void SERIAL_getErrorString(char* buffer, int length);
+void SERIAL_getErrorString(char* buffer, size_t length);
 
 #define SERIAL_1STOP 1
 #define SERIAL_2STOP 2
