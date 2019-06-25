@@ -56,16 +56,16 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
 	CROSS_FILENAME(newname);
 	char* temp_name = dirCache.GetExpandName(newname); //Can only be used in till a new drive_cache action is preformed */
 	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
-	bool existing_file=false;
+	bool existing_file = false;
 	
-	FILE * test=fopen(temp_name,"rb+");
+	FILE * test = fopen_wrap(temp_name,"rb+");
 	if(test) {
 		fclose(test);
 		existing_file=true;
 
 	}
 	
-	FILE * hand=fopen(temp_name,"wb+");
+	FILE * hand = fopen_wrap(temp_name,"wb+");
 	if (!hand){
 		LOG_MSG("Warning: file creation failed: %s",newname);
 		return false;
@@ -95,11 +95,11 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
-	FILE * hand=fopen(newname,type);
+	FILE * hand = fopen_wrap(newname,type);
 //	Bit32u err=errno;
 	if (!hand) { 
 		if((flags&0xf) != OPEN_READ) {
-			FILE * hmm=fopen(newname,"rb");
+			FILE * hmm = fopen_wrap(newname,"rb");
 			if (hmm) {
 				fclose(hmm);
 				LOG_MSG("Warning: file %s exists and failed to open in write mode.\nPlease Remove write-protection",newname);
@@ -122,7 +122,7 @@ FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const 
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
-	return fopen(newname,type);
+	return fopen_wrap(newname,type);
 }
 
 bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
@@ -145,7 +145,7 @@ bool localDrive::FileUnlink(char * name) {
 		struct stat buffer;
 		if(stat(fullname,&buffer)) return false; // File not found.
 
-		FILE* file_writable = fopen(fullname,"rb+");
+		FILE* file_writable = fopen_wrap(fullname,"rb+");
 		if(!file_writable) return false; //No acces ? ERROR MESSAGE NOT SET. FIXME ?
 		fclose(file_writable);
 
