@@ -73,7 +73,7 @@ static const char* UnmountHelper(char umount) {
 			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
 		}
 		Drives[i_drive] = 0;
-		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*2,0); //0_74_3 use 2 instead of 9.
+//		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*2,0); //0_74_3 0_74 series doesn't do this.
 		if (i_drive == DOS_GetDefaultDrive()) {
 			DOS_SetDrive(ZDRIVE_NUM);
 		}

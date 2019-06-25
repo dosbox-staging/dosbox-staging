@@ -139,8 +139,7 @@ bool  MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
 Bit8u MSCDEX_GetSubUnit(char driveLetter);
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
-         :iso(false),
-          dataCD(false),
+         :dataCD(false),
           mediaid(0),
           subUnit(0),
           driveLetter('\0')
