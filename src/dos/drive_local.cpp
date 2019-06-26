@@ -377,7 +377,7 @@ bool localDrive::FileExists(const char* name) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
-	FILE* Temp=fopen(newname,"rb");
+	FILE* Temp=fopen(newname,"rb"); //No reading done, so no wrapping for 0.74-3 (later code uses different calls)
 	if(Temp==NULL) return false;
 	fclose(Temp);
 	return true;

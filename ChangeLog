@@ -1,3 +1,6 @@
+0.74-3
+  - Implement basic file access control for files available from within
+    the emulation.
   - Unify unmounting code and add some protections against out of bound access
     when DOS_DRIVES is not 26.
   - Use correct type for return value of strlen.
