@@ -1659,7 +1659,11 @@ void Config_Add_SDL() {
 		"ddraw",
 #endif
 		0 };
+#if C_OPENGL && defined(MACOSX)
+	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"opengl");
+#else
 	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"surface");
+#endif
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
