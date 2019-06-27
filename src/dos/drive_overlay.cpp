@@ -235,7 +235,7 @@ FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode
 	strcat(newname,dos_filename); //HERE we need to convert it to Linux TODO
 	CROSS_FILENAME(newname);
 
-	FILE* f = fopen(newname,mode);
+	FILE* f = fopen_wrap(newname,mode);
 	//Check if a directories are part of the name:
 	char* dir = strrchr(dos_filename,'\\');
 	if (!f && dir && *dir) {
@@ -243,7 +243,7 @@ FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode
 		//ensure they exist, else make them in the overlay if they exist in the original....
 		Sync_leading_dirs(dos_filename);
 		//try again
-		f = fopen(newname,mode);
+		f = fopen_wrap(newname,mode);
 	}
 
 	return f;
@@ -421,7 +421,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 
-	FILE * hand = fopen(newname,type);
+	FILE * hand = fopen_wrap(newname,type);
 	bool fileopened = false;
 	if (hand) {
 		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
@@ -847,7 +847,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 			return true;
 //			E_Exit("trying to remove existing non-overlay file %s",name);
 		}
-		FILE* file_writable = fopen(overlayname,"rb+");
+		FILE* file_writable = fopen_wrap(overlayname,"rb+");
 		if(!file_writable) return false; //No access ? ERROR MESSAGE NOT SET. FIXME ?
 		fclose(file_writable);
 
@@ -931,10 +931,10 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 	strcpy(overlayname,overlaydir);
 	strcat(overlayname,name.c_str());
 	CROSS_FILENAME(overlayname);
-	FILE* f = fopen(overlayname,"wb+");
+	FILE* f = fopen_wrap(overlayname,"wb+");
 	if (!f) {
 		Sync_leading_dirs(dosname);
-		f = fopen(overlayname,"wb+");
+		f = fopen_wrap(overlayname,"wb+");
 	}
 	if (!f) E_Exit("Failed creation of %s",overlayname);
 	char buf[5] = {'e','m','p','t','y'};
@@ -1107,7 +1107,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		strcat(newold,oldname);
 		CROSS_FILENAME(newold);
 		dirCache.ExpandName(newold);
-		FILE* o = fopen(newold,"rb");
+		FILE* o = fopen_wrap(newold,"rb");
 		if (!o) return false;
 		FILE* n = create_file_in_overlay(newname,"wb+");
 		if (!n) {fclose(o); return false;}
