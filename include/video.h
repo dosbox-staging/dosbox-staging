@@ -37,28 +37,32 @@ struct GFX_PalEntry {
 	Bit8u unused;
 };
 
-#define GFX_CAN_8		0x0001
-#define GFX_CAN_15		0x0002
-#define GFX_CAN_16		0x0004
-#define GFX_CAN_32		0x0008
+#define GFX_CAN_8    0x0001
+#define GFX_CAN_15   0x0002
+#define GFX_CAN_16   0x0004
+#define GFX_CAN_32   0x0008
 
-#define GFX_LOVE_8		0x0010
-#define GFX_LOVE_15		0x0020
-#define GFX_LOVE_16		0x0040
-#define GFX_LOVE_32		0x0080
+#define GFX_LOVE_8   0x0010
+#define GFX_LOVE_15  0x0020
+#define GFX_LOVE_16  0x0040
+#define GFX_LOVE_32  0x0080
 
-#define GFX_RGBONLY		0x0100
+#define GFX_RGBONLY  0x0100
+#define GFX_DBL_H    0x0200
+#define GFX_DBL_W    0x0400
 
-#define GFX_SCALING		0x1000
-#define GFX_HARDWARE	0x2000
+#define GFX_SCALING  0x1000
+#define GFX_HARDWARE 0x2000
 
 #define GFX_CAN_RANDOM	0x4000		//If the interface can also do random access surface
+#define GFX_UNITY_SCALE 0x8000      //Signifies that no scaling need be performed in render.cpp
+                                    //because it will be handled in sdlmain.cpp.
 
 void GFX_Events(void);
 void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries);
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue);
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb);
+Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t cb, double aspect);
 void GFX_TearDown(void);
 
 void GFX_ResetScreen(void);
