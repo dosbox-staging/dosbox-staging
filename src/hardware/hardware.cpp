@@ -490,7 +490,7 @@ skip_shot:
 			if (!capture.video.buf)
 				goto skip_video;
 			capture.video.index = (Bit8u*)malloc( 16*4096 );
-			if (!capture.video.buf)
+			if (!capture.video.index)
 				goto skip_video;
 			capture.video.indexsize = 16*4096;
 			capture.video.indexused = 8;
