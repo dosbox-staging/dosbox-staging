@@ -1925,17 +1925,17 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 		if (seg==ss) {
 			// Stack needs to be non-zero
 			if ((value & 0xfffc)==0) {
-				E_Exit("CPU_SetSegGeneral: Stack segment zero");
-//				return CPU_PrepareException(EXCEPTION_GP,0);
+//				E_Exit("CPU_SetSegGeneral: Stack segment zero");
+				return CPU_PrepareException(EXCEPTION_GP,0);
 			}
 			Descriptor desc;
 			if (!cpu.gdt.GetDescriptor(value,desc)) {
-				E_Exit("CPU_SetSegGeneral: Stack segment beyond limits");
-//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+//				E_Exit("CPU_SetSegGeneral: Stack segment beyond limits");
+				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
 			}
 			if (((value & 3)!=cpu.cpl) || (desc.DPL()!=cpu.cpl)) {
-				E_Exit("CPU_SetSegGeneral: Stack segment with invalid privileges");
-//				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
+//				E_Exit("CPU_SetSegGeneral: Stack segment with invalid privileges");
+				return CPU_PrepareException(EXCEPTION_GP,value & 0xfffc);
 			}
 
 			switch (desc.Type()) {
@@ -2006,9 +2006,11 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value) {
 
 bool CPU_PopSeg(SegNames seg,bool use32) {
 	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
+	Bitu addsp = use32 ? 0x04 : 0x02;
+	//Calcullate this beforehande since the stack mask might change
+	Bit32u new_esp  = (reg_esp&cpu.stack.notmask) | ((reg_esp + addsp)&cpu.stack.mask);
 	if (CPU_SetSegGeneral(seg,val)) return true;
-	Bitu addsp=use32?0x04:0x02;
-	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+addsp)&cpu.stack.mask);
+	reg_esp = new_esp;
 	return false;
 }
 
