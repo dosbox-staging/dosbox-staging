@@ -1005,7 +1005,8 @@ static void LOADROM_ProgramStart(Program * * make) {
 	*make=new LOADROM;
 }
 
-class BIOS : public Program {
+#if C_DEBUG
+class BIOSTEST : public Program {
 public:
 	void Run(void) {
 		if (!(cmd->FindCommand(1, temp_line))) {
@@ -1057,9 +1058,11 @@ public:
 	}
 };
 
-static void BIOS_ProgramStart(Program * * make) {
-	*make = new BIOS;
+static void BIOSTEST_ProgramStart(Program * * make) {
+	*make = new BIOSTEST;
 }
+
+#endif
 
 // LOADFIX
 
@@ -1822,7 +1825,9 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("RESCAN.COM",RESCAN_ProgramStart);
 	PROGRAMS_MakeFile("INTRO.COM",INTRO_ProgramStart);
 	PROGRAMS_MakeFile("BOOT.COM",BOOT_ProgramStart);
-	PROGRAMS_MakeFile("BIOS.COM", BIOS_ProgramStart);
+#if C_DEBUG
+	PROGRAMS_MakeFile("BIOSTEST.COM", BIOSTEST_ProgramStart);
+#endif
 	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
