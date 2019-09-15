@@ -1,0 +1,11 @@
+# svn:ignore
+Release
+Debug
+.deps
+Makefile
+Makefile.in
+*.ncb
+*.suo
+*.conf
+.vs
+
