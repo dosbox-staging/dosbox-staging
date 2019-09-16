@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,SVN)
+AC_INIT(dosbox,git)
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
