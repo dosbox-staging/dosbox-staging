@@ -1,0 +1,29 @@
+name: Static code analysis
+
+on: [push]
+
+jobs:
+
+  build_clang_static_analyser:
+    name: "Clang static analyzer"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev python3-setuptools
+      - name: "Install scan-build (Python version)"
+        run: sudo pip3 install scan-build
+      - name: Build
+        run: |
+          # build steps
+          set -x
+          g++ --version
+          ./autogen.sh
+          ./configure
+          intercept-build make -j "$(nproc)"
+      - name: Analyze
+        run: analyze-build -v -o report --html-title="dosbox-staging (${GITHUB_SHA:0:8})"
+      - uses: actions/upload-artifact@master
+        with:
+          name: report
+          path: report
