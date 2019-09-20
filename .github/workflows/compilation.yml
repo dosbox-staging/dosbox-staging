@@ -1,0 +1,97 @@
+name: Compilation
+
+on: [push]
+
+jobs:
+
+  build_gcc9:
+    name: "GCC 9 (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: sudo apt-get install g++-9 libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev
+      - name: Build
+        env:
+          CC: gcc-9
+          CXX: g++-9
+        run: |
+          # build steps
+          set -x
+          $CXX --version
+          ./autogen.sh
+          ./configure
+          make -j "$(nproc)"
+
+  build_gcc8:
+    name: "GCC 8 (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: sudo apt-get install g++-8 libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev
+      - name: Build
+        env:
+          CC: gcc-8
+          CXX: g++-8
+        run: |
+          # build steps
+          set -x
+          $CXX --version
+          ./autogen.sh
+          ./configure
+          make -j "$(nproc)"
+
+  build_ubuntu:
+    name: "GCC"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04]
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev
+      - name: Build
+        run: |
+          # build steps
+          set -x
+          g++ --version
+          ./autogen.sh
+          ./configure
+          make -j "$(nproc)"
+
+  build_clang:
+    name: "Clang 6 (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev
+      - name: Build
+        env:
+          CC: clang
+          CXX: clang++
+        run: |
+          # build steps
+          set -x
+          $CXX --version
+          ./autogen.sh
+          ./configure
+          make -j "$(nproc)"
+
+  build_macos:
+    name: "Clang (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Install packages"
+        run: brew install automake libpng sdl sdl_net sdl_sound
+      - name: Build
+        run: |
+          # build steps
+          set -x
+          clang++ --version
+          ./autogen.sh
+          ./configure
+          make -j "$(sysctl -n hw.physicalcpu)"
