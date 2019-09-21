@@ -20,8 +20,10 @@ jobs:
           set -x
           $CXX --version
           ./autogen.sh
-          ./configure
-          make -j "$(nproc)"
+          ./configure CXXFLAGS="-Wall -fdiagnostics-color=always"
+          make -j "$(nproc)" |& tee build.log
+      - name: Summarize warnings
+        run: python3 ./scripts/count-warnings.py build.log
 
   build_gcc8:
     name: "GCC 8 (ubuntu-18.04)"
@@ -39,8 +41,10 @@ jobs:
           set -x
           $CXX --version
           ./autogen.sh
-          ./configure
-          make -j "$(nproc)"
+          ./configure CXXFLAGS="-Wall -fdiagnostics-color=always"
+          make -j "$(nproc)" |& tee build.log
+      - name: Summarize warnings
+        run: python3 ./scripts/count-warnings.py build.log
 
   build_ubuntu:
     name: "GCC"
@@ -58,8 +62,10 @@ jobs:
           set -x
           g++ --version
           ./autogen.sh
-          ./configure
-          make -j "$(nproc)"
+          ./configure CXXFLAGS="-Wall -fdiagnostics-color=always"
+          make -j "$(nproc)" |& tee build.log
+      - name: Summarize warnings
+        run: python3 ./scripts/count-warnings.py build.log
 
   build_clang:
     name: "Clang 6 (ubuntu-18.04)"
@@ -77,8 +83,10 @@ jobs:
           set -x
           $CXX --version
           ./autogen.sh
-          ./configure
-          make -j "$(nproc)"
+          ./configure CXXFLAGS="-Wall"
+          make -j "$(nproc)" |& tee build.log
+      - name: Summarize warnings
+        run: python3 ./scripts/count-warnings.py build.log
 
   build_macos:
     name: "Clang (macOS-10.14)"
@@ -93,5 +101,7 @@ jobs:
           set -x
           clang++ --version
           ./autogen.sh
-          ./configure
-          make -j "$(sysctl -n hw.physicalcpu)"
+          ./configure CXXFLAGS="-Wall"
+          make -j "$(sysctl -n hw.physicalcpu)" 2>&1 | tee build.log
+      - name: Summarize warnings
+        run: python3 ./scripts/count-warnings.py build.log
