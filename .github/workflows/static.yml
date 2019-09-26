@@ -12,7 +12,7 @@ jobs:
       - name: "Install packages"
         run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev python3-setuptools
       - name: "Install scan-build (Python version)"
-        run: sudo pip3 install scan-build
+        run: sudo pip3 install scan-build beautifulsoup4 html5lib
       - name: Build
         run: |
           # build steps
@@ -27,3 +27,9 @@ jobs:
         with:
           name: report
           path: report
+      - name: Summarize report
+        run: |
+          # summary
+          echo "Full report is included in build Artifacts"
+          echo
+          ./scripts/count-bugs.py report/*/index.html
