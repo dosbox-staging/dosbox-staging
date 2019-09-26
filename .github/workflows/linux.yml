@@ -1,0 +1,51 @@
+name: "Linux builds"
+on: push
+jobs:
+
+  build_ubuntu_gcc9_debug:
+    name: "GCC 9 debug (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo ./scripts/build.sh --install-deps --compiler-version 9 --release debug
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_ubuntu_gcc9_lto:
+    name: "GCC 9 small LTO (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo ./scripts/build.sh --install-deps --compiler-version 9 --release small --lto
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_ubuntu_gcc_defaults:
+    name: "GCC"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04]
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo ./scripts/build.sh --install-deps
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_ubuntu_clang_8_debug:
+    name: "Clang 8 debug (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo ./scripts/build.sh --install-deps --compiler clang --compiler-version 8 --release debug
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_ubuntu_clang_8_lto:
+    name: "Clang 8 small LTO (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - run: sudo ./scripts/build.sh --install-deps --compiler clang --compiler-version 8 --release small --lto
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log

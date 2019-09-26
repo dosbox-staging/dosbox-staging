@@ -32,13 +32,18 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+// #include <ctype.h>
 
-#include "SDL.h"
-#include "SDL_thread.h"
+#ifdef _MSC_VER
+// Avoid warning about use of strncpy
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#include <SDL.h>
+#include <SDL_thread.h>
 #include "SDL_sound.h"
 
 #define __SDL_SOUND_INTERNAL__
@@ -48,21 +53,11 @@
 /* The various decoder drivers... */
 
 /* All these externs may be missing; we check SOUND_SUPPORTS_xxx before use. */
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MPG123;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MIKMOD;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MODPLUG;
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_WAV;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_AIFF;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_AU;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OGG;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_VOC;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_RAW;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_SHN;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MIDI;
+extern const Sound_DecoderFunctions __Sound_DecoderFunctions_VORBIS;
+extern const Sound_DecoderFunctions __Sound_DecoderFunctions_OPUS;
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_FLAC;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_QuickTime;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_SPEEX;
-extern const Sound_DecoderFunctions __Sound_DecoderFunctions_CoreAudio;
+extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MP3;
 
 typedef struct
 {
@@ -72,66 +67,11 @@ typedef struct
 
 static decoder_element decoders[] =
 {
-#if (defined SOUND_SUPPORTS_MPG123)
-    { 0, &__Sound_DecoderFunctions_MPG123 },
-#endif
-
-#if (defined SOUND_SUPPORTS_MODPLUG)
-    { 0, &__Sound_DecoderFunctions_MODPLUG },
-#endif
-
-#if (defined SOUND_SUPPORTS_MIKMOD)
-    { 0, &__Sound_DecoderFunctions_MIKMOD },
-#endif
-
-#if (defined SOUND_SUPPORTS_WAV)
     { 0, &__Sound_DecoderFunctions_WAV },
-#endif
-
-#if (defined SOUND_SUPPORTS_AIFF)
-    { 0, &__Sound_DecoderFunctions_AIFF },
-#endif
-
-#if (defined SOUND_SUPPORTS_AU)
-    { 0, &__Sound_DecoderFunctions_AU },
-#endif
-
-#if (defined SOUND_SUPPORTS_OGG)
-    { 0, &__Sound_DecoderFunctions_OGG },
-#endif
-
-#if (defined SOUND_SUPPORTS_VOC)
-    { 0, &__Sound_DecoderFunctions_VOC },
-#endif
-
-#if (defined SOUND_SUPPORTS_RAW)
-    { 0, &__Sound_DecoderFunctions_RAW },
-#endif
-
-#if (defined SOUND_SUPPORTS_SHN)
-    { 0, &__Sound_DecoderFunctions_SHN },
-#endif
-
-#if (defined SOUND_SUPPORTS_FLAC)
+    { 0, &__Sound_DecoderFunctions_VORBIS },
+    { 0, &__Sound_DecoderFunctions_OPUS },
     { 0, &__Sound_DecoderFunctions_FLAC },
-#endif
-
-#if (defined SOUND_SUPPORTS_MIDI)
-    { 0, &__Sound_DecoderFunctions_MIDI },
-#endif
-
-#if (defined SOUND_SUPPORTS_QUICKTIME)
-    { 0, &__Sound_DecoderFunctions_QuickTime },
-#endif
-
-#if (defined SOUND_SUPPORTS_SPEEX)
-    { 0, &__Sound_DecoderFunctions_SPEEX },
-#endif
-
-#if (defined SOUND_SUPPORTS_COREAUDIO)
-    { 0, &__Sound_DecoderFunctions_CoreAudio },
-#endif
-
+    { 0, &__Sound_DecoderFunctions_MP3 },
     { 0, NULL }
 };
 
@@ -653,6 +593,10 @@ Sound_Sample *Sound_NewSampleFromFile(const char *filename,
     BAIL_IF_MACRO(filename == NULL, ERR_INVALID_ARGUMENT, NULL);
 
     ext = strrchr(filename, '.');
+
+
+    SNDDBG(("Sound_NewSampleFromFile ext = `%s`", ext));
+
     rw = SDL_RWFromFile(filename, "rb");
     /* !!! FIXME: rw = RWops_FromFile(filename, "rb");*/
     BAIL_IF_MACRO(rw == NULL, SDL_GetError(), NULL);
@@ -676,7 +620,7 @@ Sound_Sample *Sound_NewSampleFromMem(const Uint8 *data,
     BAIL_IF_MACRO(data == NULL, ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF_MACRO(size == 0, ERR_INVALID_ARGUMENT, NULL);
 
-    rw = SDL_RWFromMem(data, size);
+    rw = SDL_RWFromMem( (void*)data, size);
     /* !!! FIXME: rw = RWops_FromMem(data, size);*/
     BAIL_IF_MACRO(rw == NULL, SDL_GetError(), NULL);
 

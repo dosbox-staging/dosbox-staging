@@ -1,0 +1,38 @@
+name: "macOS builds"
+on: push
+jobs:
+  build_macos_clang_debug:
+    name: "Clang debug (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - run: ./scripts/build.sh --install-deps --compiler clang --release debug
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_clang_debug_lto:
+    name: "Clang debug LTO (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - run: ./scripts/build.sh --install-deps --compiler clang --release small --lto
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc_debug:
+    name: "GCC debug (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - run: ./scripts/build.sh --install-deps --compiler gcc --release debug
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc_lto:
+    name: "GCC small LTO (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - run:  ./scripts/build.sh --install-deps --compiler gcc --release small --lto
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log

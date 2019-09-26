@@ -1,0 +1,172 @@
+
+#  Copyright (c) 2019 Kevin R Croft <krcroft@gmail.com>
+#  SPDX-License-Identifier: GPL-2.0-or-later
+
+#  GitHub workflow building 64 and 32 bit binaries under Windows, MSYS2, and MinGW
+#  ===============================================================================
+#  It starts with an empty Windows 2019 Virtual Machine (VM) and proceeds to install
+#  the build environment, dependencies, and finally compile both architectures of DOSBox.
+#
+#  It makes use of GitHub's builtin Chocolatey commandline tool `choco` to first install
+#  `msys2`, after which msys2's `pacman` manager  is used to pull in the development tools
+#  and DOSBox's dependencies such as libz, libpng, SDL, and SDL_net.
+#
+#  Note about SDL_Sound:
+#    SDL_Sound is not provided under msys2's package manager, so the resulting binary is not
+#    capable of mounting CDROM's comprised of audio-files such as .wav or .ogg.
+#    Alternatively, the Opus, FLAC, and MP3 patch can be used to regain this functionality
+#    without the need for SDL_Sound and related libraries.
+#
+#  Note about software versions:
+#    This workflow instructs pacman to upgrade all installed libraries and build tools to
+#    their latest patched versions.  Because this is a moving target, the binaries generated
+#    by this build chain will likely differ in time versus previous build.
+#
+#  Guiding principles:
+#    Although this is merely a YAML preparation, the choice and commands used are meant to be
+#    as transparent and portable as possible both for humans and for machines.  For example,
+#    someone new to github should be comfortable reading and providing feedback on the run:
+#    commands.  Likewise, the commands should be readily copy-and-pastable such
+#    that Windows user at home can similarly install Chocolatey and drop the commands in their
+#    terminal and step through the same process. 
+#    It also ensures portability to other CI chains such as GitLab, Travis, or a personal
+#    build script.
+#  
+#    Other GitHub-idiomatic solutions exist to achieve a workable msys2 environment such as
+#    https://github.com/1138-4EB/setup-msys2, however this single-line elegance comes at
+#    the cost of requiring GitHub's CI backend and obfuscating the actual steps from start to
+#    finish, making it unportable and less reviewable.
+#  
+
+msys2_install_step: &install_msys2
+  run: choco install msys2 --no-progress
+
+common_tools_install_step: &install_common_tools
+  name: Install common dependencies
+  run: >
+    C:\tools\msys64\usr\bin\bash -lc "
+    pacman -S --noconfirm
+    autogen
+    autoconf
+    base-devel
+    automake-wrapper"
+
+64bit_packages_step: &install_64bit_packages
+  name: Install 64-bit tools and dependencies
+  run: >
+    C:\tools\msys64\usr\bin\bash -lc "
+    mingw-w64-x86_64-pkg-config
+    mingw-w64-x86_64-gcc
+    mingw-w64-x86_64-clang
+    mingw-w64-x86_64-libtool
+    mingw-w64-x86_64-libpng
+    mingw-w64-x86_64-zlib
+    mingw-w64-x86_64-SDL
+    mingw-w64-x86_64-SDL_net
+    mingw-w64-x86_64-opusfile
+    mingw-w64-x86_64-speexdsp"
+
+32bit_packages_step: &install_32bit_packages
+  name: Install 64-bit tools and dependencies
+  run: >
+    C:\tools\msys64\usr\bin\bash -lc "
+    mingw-w64-i686-pkg-config
+    mingw-w64-i686-gcc
+    mingw-w64-i686-libtool
+    mingw-w64-i686-libpng
+    mingw-w64-i686-zlib
+    mingw-w64-i686-SDL
+    mingw-w64-i686-SDL_net
+    mingw-w64-i686-opusfile
+    mingw-w64-i686-speexdsp"
+
+env_64bit_path: &set_64bit_path
+  PATH: 'C:\tools\msys2\mingw64\bin;${env:PATH}'
+
+env_32bit_path: &set_32bit_path
+  PATH: 'C:\tools\msys2\mingw32\bin;${env:PATH}'
+
+env_gcc_variables: &set_gcc_variables
+  CFLAGS: -fstack-protector -Wall -O2 -pipe
+  CXXFLAGS: -fstack-protector -Wall -O2 -pipe
+
+env_clang_variables: &set_clang_variables
+  CC: clang
+  CXX: clang++
+  CFLAGS: -DWIN32 -std=gnu89 -Wall --optimize -pipe
+  CXXFLAGS: -DWIN32 -std=c++98 -Wall --optimize -pipe
+
+configure_and_make_step: &configure_and_make >
+  C:\tools\msys64\usr\bin\bash -lc "
+  cd /d/a/dosbox-staging/dosbox-staging
+  && ./autogen.sh
+  && ( ./configure || cat config.log )
+  && make -j$(nproc) 2>&1 | tee build.log"
+
+summarize_warnings_step: &summarize_warnings
+  - name: Summarize warnings
+    run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
+
+name: Build
+on: push
+jobs:
+
+  build_msys2_gcc_64_release:
+    name: MSYS2 GCC-9.2 x86_64
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - *install_msys2
+      - *install_common_tools
+      - *install_64bit_packages
+      - name: Configure and make
+        env:
+          <<: *set_64bit_path
+          <<: *set_gcc_variables
+        run: *configure_and_make
+      - *summarize_warnings
+
+  build_msys2_gcc_32_release:
+    name: MSYS2 GCC-9.2 i686
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - *install_msys2
+      - *install_common_tools
+      - *install_32bit_packages
+      - name: Configure and make
+        env:
+          <<: *set_32bit_path
+          <<: *set_gcc_variables
+        run: *configure_and_make
+      - *summarize_warnings
+
+  build_msys2_clang_64_release:
+    name: MSYS2 Clang-8.0.1 x86_64
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - *install_msys2
+      - *install_common_tools
+      - *install_64bit_packages
+      - name: Configure and make
+        env:
+          <<: *set_64bit_path
+          <<: *set_clang_variables
+        run: *configure_and_make
+      - *summarize_warnings
+
+  build_msys2_clang_32_release:
+    name: MSYS2 Clang-8.0.1 i686
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - *install_msys2
+      - *install_common_tools
+      - *install_32bit_packages
+      - name: Configure and make
+        env:
+          <<: *set_32bit_path
+          <<: *set_clang_variables
+        run: *configure_and_make
+      - *summarize_warnings

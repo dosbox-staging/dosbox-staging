@@ -1,0 +1,8 @@
+# Ignore downloaded and derived content
+internal/*.gz
+internal/include
+internal/ogg
+internal/opus
+internal/opusfile
+internal/pkg.m4
+internal/speexdsp

@@ -13,14 +13,17 @@ jobs:
         run: ./scripts/log-env.sh
       - run: sudo apt update
       - name: "Install packages"
-        run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev python3-setuptools
+        run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
       - name: "Install scan-build (Python version)"
         run: sudo pip3 install scan-build beautifulsoup4 html5lib
       - name: Build
         run: |
+          # system information
+          lsb_release -dc
+          uname -a
+          g++ --version
           # build steps
           set -x
-          g++ --version
           ./autogen.sh
           ./configure
           intercept-build make -j "$(nproc)"

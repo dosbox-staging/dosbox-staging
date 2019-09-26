@@ -451,6 +451,15 @@ else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
+# Check for required Opus decoding libraries
+PKG_CHECK_MODULES([OPUSFILE], [opusfile],
+  [ LIBS="$LIBS ${OPUSFILE_LIBS}"
+    CPPFLAGS="$CPPFLAGS ${OPUSFILE_CFLAGS}" ], [])
+
+PKG_CHECK_MODULES([SPEEXDSP], [speexdsp],
+  [ LIBS="$LIBS ${SPEEXDSP_LIBS}"
+    CPPFLAGS="$CPPFLAGS ${SPEEXDSP_CFLAGS}" ], [])
+
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
 AC_CHECK_LIB(X11, main, have_x11_lib=yes, have_x11_lib=no, )
 AC_CHECK_HEADER(X11/XKBlib.h, have_x11_h=yes, have_x11_h=no, )
@@ -514,22 +523,7 @@ case "$host" in
 esac
 fi
 
-AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
-AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
-AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
-AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
-if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
-  if test x$have_SDL_sound_seek = xyes ; then
-    LIBS="-lSDL_sound $LIBS"
-    AC_DEFINE(C_SDL_SOUND,1)
-   else 
-     AC_MSG_WARN([Can't find SoundSeek in libSDL_Sound, libSDL_sound support disabled])
-   fi
-else
-  AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
-fi
-
-dnl Check for mprotect. Needed for 64 bits linux 
+dnl Check for mprotect. Needed for 64 bits linux
 AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
 AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
@@ -619,6 +613,7 @@ src/ints/Makefile
 src/libs/Makefile
 src/libs/zmbv/Makefile
 src/libs/gui_tk/Makefile
+src/libs/decoders/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
