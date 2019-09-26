@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libdecoders.a
 
-libdecoders_a_SOURCES = \
+libdecoders_a_SOURCES =  \
 	SDL_sound.c          \
 	SDL_sound.h          \
 	SDL_sound_internal.h \
@@ -27,6 +27,7 @@ libdecoders_a_CPPFLAGS = \
 libdecoders_a_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
 	$(CXXFLAGS) \
+	-fno-unsafe-math-optimizations \
 	-std=c++11 \
 	-Wpedantic \
 	-Wall
@@ -34,5 +35,6 @@ libdecoders_a_CXXFLAGS = \
 libdecoders_a_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(CFLAGS) \
+	-fno-unsafe-math-optimizations \
 	-Wpedantic \
 	-Wall

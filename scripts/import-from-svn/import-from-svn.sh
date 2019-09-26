@@ -43,7 +43,7 @@ git_svn_clone_dosbox () {
 	local -r authors_prog=$PWD/svn-authors-prog.sh
 	git -C "$repo_name" svn fetch \
 		--use-log-author \
-		--authors-prog="$authors_prog"
+		--authors-file="$authors_file"
 }
 
 # Remove UUID of SVN server to avoid issues in case SourceForge will change

@@ -6,13 +6,19 @@
 #  SPDX-License-Identifier: GPL-2.0-or-later
 #
 #  This script builds DOSBox within supported environments including
-#  MacOS, Ubuntu Linux, and MSYS2 using specified compilers and release types.
+#  MacOS, Ubuntu Linux, and MSYS2. It will install dependencies
+#  followed by setting desired build flags and compiling the binary.
+#
+#  If installation of packages is requested (--install), then under Linux
+#  this script needs to be launched with sudo and with administrator rights
+#  on Windows.  MacOS does not require administrator rights because brew installs
+#  every local to your user account.
 #
 #  For automation without prompts, Windows should have User Account Control (UAC)
 #  disabled, which matches the configuration of GitHub'Windows VMs, described here:
 #  https://help.github.com/en/articles/virtual-environments-for-github-actions
 #
-#  See the usage block below for details or run it with the -h or --help arguments.
+#  See the usage block below for details or run it with ./build -h
 #
 #  In general, this script adheres to Google's shell scripting style guide
 #  (https://google.github.io/styleguide/shell.xml), however some deviations (such as
@@ -28,7 +34,7 @@ function usage() {
 		errcho "${1}"
 	fi
     local script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l] \\"
+	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-i] [-l] \\"
 	echo "                [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
 	echo ""
 	echo "  FLAG                     Description                                            Default"
@@ -36,12 +42,12 @@ function usage() {
 	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
 	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
 	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -d, --fdo                Used feedback-Directed Optimization data               [$(print_var ${FDO})]"
-	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var ${LTO})]"
+	echo "  -i, --install-deps       Install build tools and dependencies if needed         [$(print_var ${INSTALL_DEPS})]"
+	echo "  -l, --lto                Perform additional link-time-optimization              [$(print_var ${LTO})]"
 	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
 	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var ${RELEASE})]"
-	echo "  -s, --src-path           Use a different source directory to build              [$(print_var ${SRC_PATH})]"
+	echo "  -s, --src-path           Specify the source directory in which to build         [$(print_var ${SRC_PATH})]"
 	echo "  -t, --threads #          Override auto-detection of number of logical CPUs      [$(print_var ${THREADS})]"
 	echo "  -v, --version            Print the version of this script                       [$(print_var ${SCRIPT_VERSION})]"
 	echo "  -x, --clean              Clean old object and build file before making          [$(print_var ${CLEAN})]"
@@ -59,8 +65,8 @@ function parse_args() {
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
-		-d|--fdo)               FDO="true";             shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
+		-i|--install-deps)      INSTALL_DEPS="true";    shift;;
 		-l|--lto)               LTO="true";             shift;;
 		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
 		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
@@ -76,15 +82,15 @@ function parse_args() {
 
 function defaults() {
 	# variables that are directly set via user arguments
+	COMPILER_VERSION="unset"
 	BITS="64"
 	CLEAN="false"
 	COMPILER="gcc"
-	COMPILER_VERSION="unset"
-	FDO="false"
 	LTO="false"
+	INSTALL_DEPS="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
-	SRC_PATH="$(dirname "$(dirname "$(realpath -s "$0")")")"
+	SRC_PATH="./"
 	SYSTEM="auto"
 	THREADS="auto"
 
@@ -176,6 +182,137 @@ function uses() {
 function print_version() {
 	echo "${SCRIPT_VERSION}"
 	exit 0
+}
+
+function dependencies() {
+	# only proceed if the user wants to install packages
+	if [[ "${INSTALL_DEPS}" == "true" ]]; then
+		uses system
+		dependencies-${SYSTEM}
+	fi
+}
+
+function dependencies-macos() {
+
+	uses bin_path
+	if ! which brew &> /dev/null; then
+		usage "Please install brew before running this script. See https://docs.brew.sh/Installation"
+	fi
+
+	uses compiler_type
+	uses compiler_version
+	local compiler_package="" # for brew, the clang package doesn't exist, so stay empty in this case (?)
+	if [[ "${COMPILER}" == "gcc" ]]; then
+		compiler_package="gcc"
+		if "${COMPILER_VERSION}" != "unset" ]]; then
+			compiler_package+="@${COMPILER_VERSION}"
+		fi
+	fi
+
+	brew update
+
+	# Note: package is deliberable unquoted because brew with fail on an empty string
+	brew install         \
+	 ${compiler_package} \
+	 coreutils           \
+	 autogen             \
+	 autoconf            \
+	 automake            \
+	 pkg-config          \
+	 libpng              \
+	 sdl                 \
+	 sdl_net             \
+	 opusfile            \
+	 speexdsp
+}
+
+function dependencies-msys2() {
+
+	uses bin_path
+	if ! which pacman &> /dev/null; then
+		usage "pacman not found. Please install Chocolatey and use it to install the latest MSYS2: 'choco install msys2 --no-progress'"
+	fi
+
+	uses bits
+	local pkg_type=""
+	if [[ "${BITS}" == 64 ]]; then
+		pkg_type="x86_64"
+	else
+		pkg_type="i686"
+	fi
+
+	uses compiler_type
+	uses compiler_version
+	local compiler_package="${COMPILER}"
+	compiler_package+="${VERSION_POSTFIX}"
+
+	pacman -S --noconfirm                        \
+	 autogen                                     \
+	 autoconf                                    \
+	 base-devel                                  \
+	 automake-wrapper                            \
+	 "mingw-w64-${pkg_type}-pkg-config"          \
+	 "mingw-w64-${pkg_type}-${compiler_package}" \
+	 "mingw-w64-${pkg_type}-libtool"             \
+	 "mingw-w64-${pkg_type}-libpng"              \
+	 "mingw-w64-${pkg_type}-zlib"                \
+	 "mingw-w64-${pkg_type}-SDL"                 \
+	 "mingw-w64-${pkg_type}-SDL_net"             \
+	 "mingw-w64-${pkg_type}-opusfile"            \
+	 "mingw-w64-${pkg_type}-speexdsp"
+}
+
+function dependencies-linux() {
+	uses bin_path
+	if ! which apt &> /dev/null; then
+		error "Ubuntu's apt not found"
+	fi
+
+	uses compiler_type
+	local compiler_package=""
+	if [[ "${COMPILER}" == "gcc" ]]; then
+		compiler_package="g++"
+	else
+		compiler_package="clang"
+	fi
+
+	uses compiler_version
+	compiler_package+="${VERSION_POSTFIX}"
+
+	uses privileges
+	apt update -y
+	apt install -y         \
+	 "${compiler_package}" \
+	 libtool               \
+	 build-essential       \
+	 libsdl1.2-dev         \
+	 libsdl-net1.2-dev     \
+	 libopusfile-dev       \
+	 libspeexdsp-dev
+}
+
+function privileges() {
+	uses system
+	if [[ "${SYSTEM}" == "linux" ]]; then
+		local uid="$(id -u)"
+		if [[ "${uid}" != "0" ]]; then
+			usage "The script needs to be launched as sudo when --install is set and running under Linux"
+		fi
+	fi
+}
+
+function user_execution() {
+	uses system
+	if [[ "${SYSTEM}" != "linux" || -z "${SUDO_USER:-}" ]]; then
+		function drop_privileges() { "${@}"; }
+	else
+		function drop_privileges() {
+			echo ""
+			echo "Dropping privileges"
+			echo "Launching ${@} as ${SUDO_USER}"
+			sudo -E -u "${SUDO_USER}" "${@}"
+		}
+	fi
 }
 
 function system() {
@@ -273,10 +410,12 @@ function tools_and_flags() {
 }
 
 function src_path() {
-	if [[ ! -d "${SRC_PATH}" ]]; then
-		usage "The requested source directory (${SRC_PATH}) does not exist, is not a directory, or is not accessible"
+	if [[ "${SRC_PATH}" != "./" ]]; then
+		if [[ ! -d "${SRC_PATH}" ]]; then
+			usage "The requested source directory (${SRC_PATH}) does not exist, is not a directory, or is not accessible"
+		fi
+		cd "${SRC_PATH}"
 	fi
-	cd "${SRC_PATH}"
 }
 
 function bin_path() {
@@ -347,31 +486,6 @@ function threads() {
 	fi
 }
 
-function fdo_flags() {
-	if [[ "${FDO}" != "true" ]]; then
-		return
-	fi
-
-	uses compiler_type
-	local fdo_file="${SRC_PATH}/scripts/profile-data/${COMPILER}.profile"
-	if [[ ! -f "${fdo_file}" ]]; then
-		error "The Feedback-Directed Optimization file provided (${fdo_file}) does not exist or could not be accessed"
-	fi
-
-	if [[ "${COMPILER}" == "gcc" ]]; then
-
-		# Catch a broken corner-case involving GCC 5.x + LTO + FDO
-		uses compiler_version
-		if ( [[  "${COMPILER_VERSION}" == "unset" && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" == '5' ]] \
-		     || [[ "${COMPILER_VERSION}" == "5"* ]] ) && [[ "${LTO}" == "true" ]]; then
-			error "GCC-5 has a bug when building with both FDO and LTO are enabled; please change one or more these."
-		fi
-		CFLAGS_ARRAY+=(-fauto-profile="${fdo_file}")
-	elif [[ "${COMPILER}" == "clang" ]]; then
-		CFLAGS_ARRAY+=(-fprofile-sample-use="${fdo_file}")
-	fi
-}
-
 function lto_flags() {
 	if [[ "${LTO}" != "true" ]]; then
 		return
@@ -425,17 +539,20 @@ function do_autogen() {
 
 	# Only autogen if needed ..
 	if [[ ! -f configure ]]; then
+		uses dependencies
 		uses bin_path
-		./autogen.sh
+		uses user_execution
+		drop_privileges ./autogen.sh
 	fi
 }
 
 function do_configure() {
+	uses dependencies
 	uses bin_path
 	uses src_path
+	uses user_execution
 	uses tools_and_flags
 	uses release_flags
-	uses fdo_flags
 	uses lto_flags
 	uses check_build_tools
 	uses configure_options
@@ -449,11 +566,6 @@ function do_configure() {
 	local lto_string=""
 	if [[ "${LTO}" == "true" ]]; then
 		lto_string="-LTO"
-	fi
-
-	local fdo_string=""
-	if [[ "${FDO}" == "true" ]]; then
-		fdo_string="-FDO"
 	fi
 
 	echo ""
@@ -470,7 +582,7 @@ function do_configure() {
 	echo "    LDFLAGS  = ${LDFLAGS}"
 	echo "    THREADS  = ${THREADS}"
 	echo ""
-	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${RELEASE}${lto_string}${fdo_string}"
+	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${RELEASE}${lto_string}"
 	echo ""
 	"${CC}" --version
 	sleep 5
@@ -478,7 +590,7 @@ function do_configure() {
 	if [[ ! -f configure ]]; then
 		error "configure script doesn't exist in $PWD. If the source is somewhere else, set it with --src-path"
 
-	elif ! ./configure "${CONFIGURE_OPTIONS[@]}"; then
+	elif ! drop_privileges ./configure "${CONFIGURE_OPTIONS[@]}"; then
 		>&2 cat "config.log"
 		error "configure failed, see config.log output above"
 	fi
@@ -499,39 +611,44 @@ function executable() {
 }
 
 function build() {
+	uses dependencies
 	uses src_path
 	uses bin_path
 	uses threads
+	uses user_execution
 
 	if [[ "${CLEAN}" == "true" && -f "Makefile" ]]; then
-		make clean 2>&1 | tee -a build.log
+		drop_privileges make clean 2>&1 | drop_privileges tee -a build.log
 	fi
 	do_autogen
 	do_configure
-	make -j "${THREADS}" 2>&1 | tee -a build.log
+	drop_privileges make -j "${THREADS}" 2>&1 | drop_privileges tee -a build.log
 }
 
 function strip_binary() {
 	if [[ "${RELEASE}" == "debug" ]]; then
 		echo "[skipping strip] Debug symbols will be left in the binary because it's a debug release"
 	else
+		uses dependencies
 		uses bin_path
+		uses user_execution
 		uses executable
-		strip "${EXECUTABLE}"
+		drop_privileges strip "${EXECUTABLE}"
 	fi
 }
 
 function show_binary() {
 	uses bin_path
 	uses system
+	uses user_execution
 	uses executable
 
 	if [[ "$SYSTEM" == "macos" ]]; then
 		otool -L "${EXECUTABLE}"
 	else
-		ldd "${EXECUTABLE}"
+		drop_privileges ldd "${EXECUTABLE}"
 	fi
-	ls -1lh "${EXECUTABLE}"
+	drop_privileges ls -1lh "${EXECUTABLE}"
 }
 
 
