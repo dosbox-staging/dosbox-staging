@@ -187,14 +187,14 @@ bool CDROM_Interface_Image::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut
 {
 	stTrack = 1;
 	end = (int)(tracks.size() - 1);
-	FRAMES_TO_MSF(tracks[tracks.size() - 1].start + 150, &leadOut.min, &leadOut.sec, &leadOut.fr);
+	frames_to_msf(tracks[tracks.size() - 1].start + 150, &leadOut.min, &leadOut.sec, &leadOut.fr);
 	return true;
 }
 
 bool CDROM_Interface_Image::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr)
 {
 	if (track < 1 || track > (int)tracks.size()) return false;
-	FRAMES_TO_MSF(tracks[track - 1].start + 150, &start.min, &start.sec, &start.fr);
+	frames_to_msf(tracks[track - 1].start + 150, &start.min, &start.sec, &start.fr);
 	attr = tracks[track - 1].attr;
 	return true;
 }
@@ -206,8 +206,8 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr, unsigned char& trac
 	track = (unsigned char)cur_track;
 	attr = tracks[track - 1].attr;
 	index = 1;
-	FRAMES_TO_MSF(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
-	FRAMES_TO_MSF(player.currFrame - tracks[track - 1].start, &relPos.min, &relPos.sec, &relPos.fr);
+	frames_to_msf(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
+	frames_to_msf(player.currFrame - tracks[track - 1].start, &relPos.min, &relPos.sec, &relPos.fr);
 	return true;
 }
 
@@ -704,8 +704,7 @@ bool CDROM_Interface_Image::GetCueFrame(int &frames, istream &in)
 	in >> msf;
 	int min, sec, fr;
 	bool success = sscanf(msf.c_str(), "%d:%d:%d", &min, &sec, &fr) == 3;
-	frames = MSF_TO_FRAMES(min, sec, fr);
-	
+	frames = msf_to_frames(min, sec, fr);
 	return success;
 }
 

@@ -73,14 +73,14 @@ bool CDROM_Interface_SDL::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) 
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		stTrack		= 1;
 		end			= cd->numtracks;
-		FRAMES_TO_MSF(cd->track[cd->numtracks].offset,&leadOut.min,&leadOut.sec,&leadOut.fr);
+		frames_to_msf(cd->track[cd->numtracks].offset, &leadOut.min, &leadOut.sec, &leadOut.fr);
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
 }
 
 bool CDROM_Interface_SDL::GetAudioTrackInfo(int track, TMSF& start, unsigned char& attr) {
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
-		FRAMES_TO_MSF(cd->track[track-1].offset,&start.min,&start.sec,&start.fr);
+		frames_to_msf(cd->track[track-1].offset, &start.min, &start.sec, &start.fr);
 		attr	= cd->track[track-1].type<<4;//sdl uses 0 for audio and 4 for data. instead of 0x00 and 0x40
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));	
@@ -91,8 +91,8 @@ bool CDROM_Interface_SDL::GetAudioSub(unsigned char& attr, unsigned char& track,
 		track	= cd->cur_track;
 		index	= cd->cur_track;
 		attr	= cd->track[track].type<<4;
-		FRAMES_TO_MSF(cd->cur_frame,&relPos.min,&relPos.sec,&relPos.fr);
-		FRAMES_TO_MSF(cd->cur_frame+cd->track[track].offset,&absPos.min,&absPos.sec,&absPos.fr);
+		frames_to_msf(cd->cur_frame, &relPos.min, &relPos.sec, &relPos.fr);
+		frames_to_msf(cd->cur_frame+cd->track[track].offset, &absPos.min, &absPos.sec, &absPos.fr);
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));		
 }
