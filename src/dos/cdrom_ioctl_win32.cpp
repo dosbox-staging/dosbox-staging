@@ -90,10 +90,10 @@ bool CDROM_Interface_Ioctl::mci_CDPlay(int start, int length) {
 	mci_play.dwCallback = 0;
 
 	int m, s, f;
-	FRAMES_TO_MSF(start, &m, &s, &f);
+	frames_to_msf(start, &m, &s, &f);
 	mci_play.dwFrom = MCI_MAKE_MSF(m, s, f);
 
-	FRAMES_TO_MSF(start+length, &m, &s, &f);
+	frames_to_msf(start+length, &m, &s, &f);
 	mci_play.dwTo = MCI_MAKE_MSF(m, s, f);
 
 	return mci_CDioctl(MCI_PLAY, flags, &mci_play);
@@ -160,7 +160,7 @@ bool CDROM_Interface_Ioctl::mci_CDPosition(int *position) {
 		case MCI_MODE_PAUSE:
 			mci_status.dwItem = MCI_STATUS_POSITION;
 			if (!mci_CDioctl(MCI_STATUS, flags, &mci_status)) {
-				*position = MSF_TO_FRAMES(
+				*position = msf_to_frames(
 					MCI_MSF_MINUTE(mci_status.dwReturn),
 					MCI_MSF_SECOND(mci_status.dwReturn),
 					MCI_MSF_FRAME(mci_status.dwReturn));
@@ -213,8 +213,10 @@ bool CDROM_Interface_Ioctl::GetAudioTracks(int& stTrack, int& endTrack, TMSF& le
 		// get track start address of all tracks
 		for (Bits i=toc.FirstTrack; i<=toc.LastTrack+1; i++) {
 			if (((toc.TrackData[i].Control&1)==0) || (i==toc.LastTrack+1)) {
-				track_start[track_num] = MSF_TO_FRAMES(toc.TrackData[track_num].Address[1],toc.TrackData[track_num].Address[2],toc.TrackData[track_num].Address[3])-150;
-				track_start[track_num] += 150;
+				track_start[track_num] = msf_to_frames(
+					toc.TrackData[track_num].Address[1],
+					toc.TrackData[track_num].Address[2],
+					toc.TrackData[track_num].Address[3]);
 				track_num++;
 			}
 		}
@@ -253,8 +255,10 @@ bool CDROM_Interface_Ioctl::GetAudioTracksAll(void) {
 	// get track start address of all tracks
 	for (Bits i=toc.FirstTrack; i<=toc.LastTrack+1; i++) {
 		if (((toc.TrackData[i].Control&1)==0) || (i==toc.LastTrack+1)) {
-			track_start[track_num] = MSF_TO_FRAMES(toc.TrackData[track_num].Address[1],toc.TrackData[track_num].Address[2],toc.TrackData[track_num].Address[3])-150;
-			track_start[track_num] += 150;
+			track_start[track_num] = msf_to_frames(
+				toc.TrackData[track_num].Address[1],
+				toc.TrackData[track_num].Address[2],
+				toc.TrackData[track_num].Address[3]);
 			track_num++;
 		}
 	}
@@ -267,8 +271,8 @@ bool CDROM_Interface_Ioctl::GetAudioTracksAll(void) {
 bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos) {
 	if (use_dxplay) {
 		track = 1;
-		FRAMES_TO_MSF(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
-		FRAMES_TO_MSF(player.currFrame + 150, &relPos.min, &relPos.sec, &relPos.fr);
+		frames_to_msf(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
+		frames_to_msf(player.currFrame + 150, &relPos.min, &relPos.sec, &relPos.fr);
 
 		if (GetAudioTracksAll()) {
 			// get track number from current frame
@@ -276,7 +280,11 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 				if ((player.currFrame + 150<track_start[i+1]) && (player.currFrame + 150>=track_start[i])) {
 					// track found, calculate relative position
 					track = i;
-					FRAMES_TO_MSF(player.currFrame + 150-track_start[i],&relPos.min,&relPos.sec,&relPos.fr);
+					frames_to_msf(
+						player.currFrame + 150 - track_start[i],
+						&relPos.min,
+						&relPos.sec,
+						&relPos.fr);
 					break;
 				}
 			}
@@ -313,12 +321,12 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 				for (int i=track_start_first; i<=track_start_last; i++) {
 					if ((cur_pos<track_start[i+1]) && (cur_pos>=track_start[i])) {
 						// track found, calculate relative position
-						FRAMES_TO_MSF(cur_pos-track_start[i],&relPos.min,&relPos.sec,&relPos.fr);
+						frames_to_msf(cur_pos-track_start[i], &relPos.min, &relPos.sec, &relPos.fr);
 						break;
 					}
 				}
 			}
-			FRAMES_TO_MSF(cur_pos,&absPos.min,&absPos.sec,&absPos.fr);
+			frames_to_msf(cur_pos, &absPos.min, &absPos.sec, &absPos.fr);
 		}
 	}
 
