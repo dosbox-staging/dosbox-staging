@@ -35,6 +35,7 @@ git_svn_clone_dosbox () {
 
 	local -r authors_file=$PWD/svn-dosbox-authors
 	git -C "$repo_name" svn fetch \
+		--use-log-author \
 		--authors-file="$authors_file"
 }
 
