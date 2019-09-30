@@ -733,7 +733,7 @@ dosurface:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, (const GLvoid*)emptytex);
 		delete [] emptytex;
 
-		glClearColor (0.0, 0.0, 0.0, 1.0);
+		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		SDL_GL_SwapBuffers();
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -1006,7 +1006,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_OPENGL:
 		// Clear drawing area. Some drivers (on Linux) have more than 2 buffers and the screen might
 		// be dirty because of other programs.
-		glClearColor (0.0, 0.0, 0.0, 1.0);
+		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (sdl.opengl.pixel_buffer_object) {
 			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
