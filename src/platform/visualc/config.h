@@ -1,10 +1,10 @@
-#define VERSION "SVN"
+#define VERSION "staging"
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
 
 /* Define to 1 to enable output=ddraw */
-#define C_DDRAW 1 
+#define C_DDRAW 1
 
 /* Define to 1 to enable screenshots, requires libpng */
 #define C_SSHOT 1

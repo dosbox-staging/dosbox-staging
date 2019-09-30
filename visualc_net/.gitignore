@@ -1,11 +1,16 @@
-# svn:ignore
-Release
+# Visual Studio
+.vs
 Debug
+Release
+*.vcxproj.filters
+*.vcxproj.user
+*.ncb
+*.suo
+
+# DOSBox
+*.conf
+
+# autoconf
 .deps
 Makefile
 Makefile.in
-*.ncb
-*.suo
-*.conf
-.vs
-

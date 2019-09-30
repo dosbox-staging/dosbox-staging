@@ -100,6 +100,21 @@ NOTE: If capslock and numlock appear to be broken. open
 src/ints/bios_keyboard.cpp and go to line 30 and read there how to fix it.
 
 
-Build instructions for VC++6 
-Don't use VC++ 6: it creates faulty code in core_normal.cpp
-Later Visual Studio versions work fine (vs2003/.net up to vs2010)
+Build instructions for Visual Studio
+
+Solution files included with the project are compatible with Visual Studio 2019.
+They were tested using Community Edition and Enterprise Edition.
+
+First, you need to install vcpkg to install build dependencies.
+See https://github.com/microsoft/vcpkg for details.
+
+Once vcpkg is installed and bootstrapped, open PowerShell, and run:
+
+    PS> .\vcpkg integrate install
+    PS> .\vcpkg install libpng sdl1 sdl1-net
+
+These two steps will ensure, that MSVC will be able to find and link
+dependency libraries.
+
+Start Visual Studio, open file: visualc_net\dosbox.sln
+and build all projects (Ctrl + Shift + B).
