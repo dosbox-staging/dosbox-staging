@@ -1,1 +1,1 @@
-EXTRA_DIST = dosbox.sln dosbox.vcproj
+EXTRA_DIST = dosbox.sln dosbox.vcxproj
