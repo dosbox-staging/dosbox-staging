@@ -40,8 +40,8 @@ static bool dyn_helper_idivb(Bit8s val) {
 
 static bool dyn_helper_divw(Bit16u val) {
 	if (!val) return CPU_PrepareException(0,0);
-	Bitu num=(reg_dx<<16)|reg_ax;
-	Bitu quo=num/val;
+	Bit32u num=(((Bit32u)reg_dx)<<16)|reg_ax;
+	Bit32u quo=num/val;
 	Bit16u rem=(Bit16u)(num % val);
 	Bit16u quo16=(Bit16u)(quo&0xffff);
 	if (quo!=(Bit32u)quo16) return CPU_PrepareException(0,0);
@@ -52,8 +52,8 @@ static bool dyn_helper_divw(Bit16u val) {
 
 static bool dyn_helper_idivw(Bit16s val) {
 	if (!val) return CPU_PrepareException(0,0);
-	Bits num=(reg_dx<<16)|reg_ax;
-	Bits quo=num/val;
+	Bit32s num=(((Bit32u)reg_dx)<<16)|reg_ax;
+	Bit32s quo=num/val;
 	Bit16s rem=(Bit16s)(num % val);
 	Bit16s quo16s=(Bit16s)quo;
 	if (quo!=(Bit32s)quo16s) return CPU_PrepareException(0,0);
