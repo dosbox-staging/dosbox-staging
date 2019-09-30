@@ -1069,4 +1069,28 @@ static void gen_init(void) {
 	x86gen.regs[X86_REG_EDI]=new GenReg(7);
 }
 
-
+#if defined(X86_DYNFPU_DH_ENABLED)
+static void gen_dh_fpu_save(void)
+#if defined (_MSC_VER)
+{
+	__asm {
+	__asm	fnsave	dyn_dh_fpu.state
+	__asm	fldcw	dyn_dh_fpu.host_cw
+	}
+	dyn_dh_fpu.state_used=false;
+	dyn_dh_fpu.state.cw|=0x3f;
+}
+#else
+{
+	__asm__ volatile (
+		"fnsave		%0			\n"
+		"fldcw		%1			\n"
+		:	"=m" (dyn_dh_fpu.state)
+		:	"m" (dyn_dh_fpu.host_cw)
+		:	"memory"
+	);
+	dyn_dh_fpu.state_used=false;
+	dyn_dh_fpu.state.cw|=0x3f;
+}
+#endif
+#endif

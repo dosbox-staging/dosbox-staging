@@ -82,7 +82,7 @@ static void dyn_string(STRING_OP op) {
 	Bit8u * rep_ecx_jmp;
 	/* Check if ECX!=zero */
 	if (decode.rep) {
-		gen_dop_word(DOP_OR,decode.big_addr,DREG(ECX),DREG(ECX));
+		gen_dop_word(DOP_TEST,decode.big_addr,DREG(ECX),DREG(ECX));
 		rep_ecx_jmp=gen_create_branch_long(BR_Z);
 	}
 	if (usesi) {
@@ -99,11 +99,11 @@ static void dyn_string(STRING_OP op) {
 		}
 		switch (op) {
 		case STR_OUTSB:
-			gen_call_function((void*)&IO_WriteB,"%Id%Dl",DREG(EDX),tmp_reg);break;
+			gen_call_function((void*)&IO_WriteB,"%Dw%Dl",DREG(EDX),tmp_reg);break;
 		case STR_OUTSW:
-			gen_call_function((void*)&IO_WriteW,"%Id%Dw",DREG(EDX),tmp_reg);break;
+			gen_call_function((void*)&IO_WriteW,"%Dw%Dw",DREG(EDX),tmp_reg);break;
 		case STR_OUTSD:
-			gen_call_function((void*)&IO_WriteD,"%Id%Dd",DREG(EDX),tmp_reg);break;
+			gen_call_function((void*)&IO_WriteD,"%Dw%Dd",DREG(EDX),tmp_reg);break;
 		}
 	}
 	if (usedi) {
