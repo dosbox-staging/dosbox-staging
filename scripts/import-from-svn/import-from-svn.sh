@@ -26,7 +26,8 @@ svn_get_copied_from () {
 # Full import takes ~40 minutes
 #
 git_svn_clone_dosbox () {
-	local -r repo_name=$1
+	local -r svn_rev_range=$1
+	local -r repo_name=$2
 
 	git svn init \
 		--stdlayout \
@@ -34,8 +35,17 @@ git_svn_clone_dosbox () {
 		"$repo_name"
 
 	local -r authors_file=$PWD/svn-dosbox-authors
+	#
+	# TODO:
+	# warning: do not use --use-log-author
+	#
+	# removing From: lines from message might (will?) mess up preserving info for
+	# fast imports, as I am rebasing commits, and overwriting committer
+	#
+	# TODO: implement our own authorship filtering
+	#
 	git -C "$repo_name" svn fetch \
-		--use-log-author \
+		--revision="$svn_rev_range" \
 		--authors-file="$authors_file"
 }
 
@@ -47,6 +57,17 @@ git_rewrite_import_links () {
 	git -C "$repo_name" filter-branch \
 		--msg-filter 'sed "s|git-svn-id: \([^ ]*\) .*|Imported-from: \1|"' \
 		-- --all
+}
+
+git_rewrite_committers () {
+	local -r repo_name=$1
+	local -r rev_list=$2
+	git -C "$repo_name" filter-branch \
+		-f --env-filter '
+			GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
+			GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
+		' \
+		-- "$rev_list"
 }
 
 list_svn_branch_paths () {
@@ -105,19 +126,65 @@ cleanup () {
 	git -C "$1" branch -D master
 }
 
-# main
+# Perform import of the whole SVN history
 #
-main () {
-	readonly repo=dosbox-git-svn-$(svn_get_repo_revision)
-	if [ -e "$repo" ] ; then
-		echo_err "Repository '$repo' exists already."
-		exit 1
-	fi
-	git_svn_clone_dosbox "$repo"
+full_import () {
+	local -r repo=$1
+	git_svn_clone_dosbox "1:HEAD" "$repo"
 	git_rewrite_import_links "$repo"
 	name_active_branches "$repo"
 	import_svn_tagpaths_as_git_tags "$repo"
 	cleanup "$repo"
+}
+
+# TODO: Fast import
+#
+fast_import () {
+	local -r repo=$1
+	local -r svn_base_rev=4260
+	local -r git_new_base_commit=fe177b413603793a3342cfe22f1fc9e050cbea76
+	local -r git_old_base_commit=6d0dd9871c53a9c0b2a2ff98d24d1aebc10c0ad4
+
+	git_svn_clone_dosbox "$svn_base_rev:HEAD" "$repo"
+	git_rewrite_import_links "$repo"
+	name_active_branches "$repo"
+	cleanup "$repo"
+
+	git -C "$repo" remote add dosbox-staging git@github.com:dreamer/dosbox-staging.git
+	git -C "$repo" fetch dosbox-staging
+	git -C "$repo" rebase \
+		--committer-date-is-author-date \
+		--onto="$git_new_base_commit" \
+		"$git_old_base_commit"
+
+	git_rewrite_committers "$repo" "$git_new_base_commit..HEAD"
+
+	echo
+	echo "New commits in $repo:"
+	echo
+
+	git -C "$repo" log --oneline dosbox-staging/svn/trunk..svn/trunk
+
+	echo
+	echo "Inspect new commits in $repo in detail."
+	echo "If the import looks good, invoke:"
+	echo
+	echo "    $ git push dosbox-staging svn/trunk:svn/trunk"
+	echo
+}
+
+# main
+#
+main () {
+	local -r repo=dosbox-git-svn-$(svn_get_repo_revision)
+	if [ -e "$repo" ] ; then
+		echo_err "Repository '$repo' exists already."
+		exit 1
+	fi
+
+	# full_import "$repo"
+
+	fast_import "$repo"
 }
 
 main "$@"
