@@ -315,6 +315,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		envseg=block.exec.envseg;
 		if (!MakeEnv(name,&envseg)) {
 			DOS_CloseFile(fhandle);
+			delete [] loadbuf;
 			return false;
 		}
 		/* Get Memory */		
