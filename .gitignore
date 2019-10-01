@@ -51,3 +51,6 @@ stamp-h1
 
 # Other
 compile
+
+# Visual Studio
+.vs
