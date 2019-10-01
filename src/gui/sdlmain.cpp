@@ -239,7 +239,7 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		if ((flags & SDL_OPENGL)==0)
 			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
 		else {
-			glClearColor (0.0, 0.0, 0.0, 1.0);
+			glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			SDL_GL_SwapBuffers();
 		}
