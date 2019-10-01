@@ -1866,11 +1866,11 @@ extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
 void restart_program(std::vector<std::string> & parameters) {
-	char** newargs = new char* [parameters.size()+1];
+	char** newargs = new char* [parameters.size() + 1];
 	// parameter 0 is the executable path
 	// contents of the vector follow
 	// last one is NULL
-	for(Bitu i = 0; i < parameters.size(); i++) newargs[i]=(char*)parameters[i].c_str();
+	for(Bitu i = 0; i < parameters.size(); i++) newargs[i] = (char*)parameters[i].c_str();
 	newargs[parameters.size()] = NULL;
 	SDL_CloseAudio();
 	SDL_Delay(50);
@@ -1892,7 +1892,7 @@ void restart_program(std::vector<std::string> & parameters) {
 #endif
 		E_Exit("Restarting failed");
 	}
-	free(newargs);
+	delete [] newargs;
 }
 void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
