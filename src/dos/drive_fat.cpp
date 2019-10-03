@@ -712,7 +712,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 	is_hdd = (filesize > 2880);
 
 	/* Load disk image */
-	loadedDisk = new imageDisk(diskfile, (Bit8u *)sysFilename, filesize, is_hdd);
+	loadedDisk = new imageDisk(diskfile, sysFilename, filesize, is_hdd);
 	if(!loadedDisk) {
 		created_successfully = false;
 		return;

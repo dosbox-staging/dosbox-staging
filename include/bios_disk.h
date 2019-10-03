@@ -54,13 +54,13 @@ public:
 	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
 	Bit8u GetBiosType(void);
 	Bit32u getSectSize(void);
-	imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk);
+	imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk);
 	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
 
 	bool hardDrive;
 	bool active;
 	FILE *diskimg;
-	Bit8u diskname[512];
+	char diskname[512];
 	Bit8u floppytype;
 
 	Bit32u sector_size;

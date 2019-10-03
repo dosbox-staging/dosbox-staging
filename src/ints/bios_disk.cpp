@@ -196,7 +196,7 @@ Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
 
 }
 
-imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk) {
+imageDisk::imageDisk(FILE *imgFile, const char *imgName, Bit32u imgSizeK, bool isHardDisk) {
 	heads = 0;
 	cylinders = 0;
 	sectors = 0;
@@ -205,14 +205,8 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 	last_action = NONE;
 	diskimg = imgFile;
 	fseek(diskimg,0,SEEK_SET);
-	
 	memset(diskname,0,512);
-	if(strlen((const char *)imgName) > 511) {
-		memcpy(diskname, imgName, 511);
-	} else {
-		strcpy((char *)diskname, (const char *)imgName);
-	}
-
+	safe_strncpy(diskname, imgName, sizeof(diskname));
 	active = false;
 	hardDrive = isHardDisk;
 	if(!isHardDisk) {

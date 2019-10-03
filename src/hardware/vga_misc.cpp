@@ -30,7 +30,7 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen);
 Bitu vga_read_p3d5(Bitu port,Bitu iolen);
 
 Bitu vga_read_p3da(Bitu port,Bitu iolen) {
-	Bit8u retval=0;
+	Bit8u retval=4;	// bit 2 set, needed by Blues Brothers
 	double timeInFrame = PIC_FullIndex()-vga.draw.delay.framestart;
 
 	vga.internal.attrindex=false;
