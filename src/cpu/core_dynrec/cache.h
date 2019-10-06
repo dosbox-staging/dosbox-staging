@@ -145,7 +145,7 @@ public:
 		if (host_readb(hostmem+addr)==(Bit8u)val) return;
 		host_writeb(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!host_readb(&write_map[addr])) {
+		if (!write_map[addr]) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
@@ -162,7 +162,7 @@ public:
 		if (host_readw(hostmem+addr)==(Bit16u)val) return;
 		host_writew(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!host_readw(&write_map[addr])) {
+		if (!*(Bit16u*)&write_map[addr]) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
@@ -171,7 +171,7 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+#if !defined(C_UNALIGNED_MEMORY)
 		host_writew(&invalidation_map[addr],
 			host_readw(&invalidation_map[addr])+0x101);
 #else
@@ -184,7 +184,7 @@ public:
 		if (host_readd(hostmem+addr)==(Bit32u)val) return;
 		host_writed(hostmem+addr,val);
 		// see if there's code where we are writing to
-		if (!host_readd(&write_map[addr])) {
+		if (!*(Bit32u*)&write_map[addr]) {
 			if (active_blocks) return;		// still some blocks in this page
 			active_count--;
 			if (!active_count) Release();	// delay page releasing until active_count is zero
@@ -193,7 +193,7 @@ public:
 			invalidation_map=(Bit8u*)malloc(4096);
 			memset(invalidation_map,0,4096);
 		}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+#if !defined(C_UNALIGNED_MEMORY)
 		host_writed(&invalidation_map[addr],
 			host_readd(&invalidation_map[addr])+0x1010101);
 #else
@@ -229,7 +229,7 @@ public:
 		addr&=4095;
 		if (host_readw(hostmem+addr)==(Bit16u)val) return false;
 		// see if there's code where we are writing to
-		if (!host_readw(&write_map[addr])) {
+		if (!*(Bit16u*)&write_map[addr]) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
@@ -240,7 +240,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+#if !defined(C_UNALIGNED_MEMORY)
 			host_writew(&invalidation_map[addr],
 				host_readw(&invalidation_map[addr])+0x101);
 #else
@@ -258,7 +258,7 @@ public:
 		addr&=4095;
 		if (host_readd(hostmem+addr)==(Bit32u)val) return false;
 		// see if there's code where we are writing to
-		if (!host_readd(&write_map[addr])) {
+		if (!*(Bit32u*)&write_map[addr]) {
 			if (!active_blocks) {
 				// no blocks left in this page, still delay the page releasing a bit
 				active_count--;
@@ -269,7 +269,7 @@ public:
 				invalidation_map=(Bit8u*)malloc(4096);
 				memset(invalidation_map,0,4096);
 			}
-#if defined(WORDS_BIGENDIAN) || !defined(C_UNALIGNED_MEMORY)
+#if !defined(C_UNALIGNED_MEMORY)
 			host_writed(&invalidation_map[addr],
 				host_readd(&invalidation_map[addr])+0x1010101);
 #else
@@ -372,11 +372,11 @@ public:
 		return 0;	// none found
 	}
 
-	HostPt GetHostReadPt(Bitu phys_page) { 
+	HostPt GetHostReadPt(Bitu phys_page) {
 		hostmem=old_pagehandler->GetHostReadPt(phys_page);
 		return hostmem;
 	}
-	HostPt GetHostWritePt(Bitu phys_page) { 
+	HostPt GetHostWritePt(Bitu phys_page) {
 		return GetHostReadPt( phys_page );
 	}
 public:
@@ -392,7 +392,7 @@ private:
 
 	Bitu active_blocks;		// the number of cache blocks in this page
 	Bitu active_count;		// delaying parameter to not immediately release a page
-	HostPt hostmem;	
+	HostPt hostmem;
 	Bitu phys_page;
 };
 
@@ -433,13 +433,13 @@ void CacheBlockDynRec::Clear(void) {
 				wherelink = &(*wherelink)->link[ind].next;
 			}
 			// now remove the link
-			if(*wherelink) 
+			if(*wherelink)
 				*wherelink = (*wherelink)->link[ind].next;
 			else {
 				LOG(LOG_CPU,LOG_ERROR)("Cache anomaly. please investigate");
 			}
 		}
-	} else 
+	} else
 		cache_addunusedblock(this);
 	if (crossblock) {
 		// clear out the crossblock (in the page before) as well
@@ -464,7 +464,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 	// check for enough space in this block
 	Bitu size=block->cache.size;
 	CacheBlockDynRec * nextblock=block->cache.next;
-	if (block->page.handler) 
+	if (block->page.handler)
 		block->Clear();
 	// block size must be at least CACHE_MAXSIZE
 	while (size<CACHE_MAXSIZE) {
@@ -473,7 +473,7 @@ static CacheBlockDynRec * cache_openblock(void) {
 		// merge blocks
 		size+=nextblock->cache.size;
 		CacheBlockDynRec * tempblock=nextblock->cache.next;
-		if (nextblock->page.handler) 
+		if (nextblock->page.handler)
 			nextblock->Clear();
 		// block is free now
 		cache_addunusedblock(nextblock);
@@ -500,8 +500,8 @@ static void cache_closeblock(void) {
 	Bitu written=(Bitu)(cache.pos-block->cache.start);
 	if (written>block->cache.size) {
 		if (!block->cache.next) {
-			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun 1 %d",written-block->cache.size);	
-		} else E_Exit("CacheBlock overrun 2 written %d size %d",written,block->cache.size);	
+			if (written>block->cache.size+CACHE_MAXSIZE) E_Exit("CacheBlock overrun 1 %d",written-block->cache.size);
+		} else E_Exit("CacheBlock overrun 2 written %d size %d",written,block->cache.size);
 	} else {
 		Bitu new_size;
 		Bitu left=block->cache.size-written;
@@ -553,12 +553,14 @@ static INLINE void cache_addq(Bit64u val) {
 
 static void dyn_return(BlockReturn retcode,bool ret_exception);
 static void dyn_run_code(void);
+static void cache_block_before_close(void);
+static void cache_block_closing(Bit8u* block_start,Bitu block_size);
 
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE
-#else 
+#else
 #define PAGESIZE_TEMP 4096
 #endif
 
@@ -614,18 +616,27 @@ static void cache_init(bool enable) {
 		}
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
+		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
+		// can use op to PAGESIZE_TEMP-64 bytes
+		dyn_run_code();
+		cache_block_before_close();
+		cache_block_closing(cache_code_link_blocks, cache.pos-cache_code_link_blocks);
+
+		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-64];
 		link_blocks[0].cache.start=cache.pos;
 		// link code that returns with a special return code
+		// must be less than 32 bytes
 		dyn_return(BR_Link1,false);
-		cache.pos=&cache_code_link_blocks[32];
+		cache_block_before_close();
+		cache_block_closing(link_blocks[0].cache.start, cache.pos-link_blocks[0].cache.start);
+
+		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-32];
 		link_blocks[1].cache.start=cache.pos;
 		// link code that returns with a special return code
+		// must be less than 32 bytes
 		dyn_return(BR_Link2,false);
-
-		cache.pos=&cache_code_link_blocks[64];
-		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
-//		link_blocks[1].cache.start=cache.pos;
-		dyn_run_code();
+		cache_block_before_close();
+		cache_block_closing(link_blocks[1].cache.start, cache.pos-link_blocks[1].cache.start);
 
 		cache.free_pages=0;
 		cache.last_page=0;

@@ -85,7 +85,7 @@ enum FPU_Round {
 	ROUND_Chop    = 3
 };
 
-typedef struct {
+typedef struct FPU_rec {
 	FPU_Reg		regs[9];
 	FPU_P_Reg	p_regs[9];
 	FPU_Tag		tags[9];
