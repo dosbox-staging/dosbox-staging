@@ -250,12 +250,12 @@ static void dyn_prep_word_imm(Bit8u reg) {
 	Bitu val;
 	if (decode.big_op) {
 		if (decode_fetchd_imm(val)) {
-			gen_mov_word_to_reg(FC_OP2,(void*)val,true);
+			gen_mov_LE_word_to_reg(FC_OP2,(void*)val,true);
 			return;
 		}
 	} else {
 		if (decode_fetchw_imm(val)) {
-			gen_mov_word_to_reg(FC_OP2,(void*)val,false);
+			gen_mov_LE_word_to_reg(FC_OP2,(void*)val,false);
 			return;
 		}
 	}
@@ -287,13 +287,13 @@ static void dyn_mov_word_imm(Bit8u reg) {
 	Bitu val;
 	if (decode.big_op) {
 		if (decode_fetchd_imm(val)) {
-			gen_mov_word_to_reg(FC_OP1,(void*)val,true);
+			gen_mov_LE_word_to_reg(FC_OP1,(void*)val,true);
 			MOV_REG_WORD32_FROM_HOST_REG(FC_OP1,reg);
 			return;
 		}
 	} else {
 		if (decode_fetchw_imm(val)) {
-			gen_mov_word_to_reg(FC_OP1,(void*)val,false);
+			gen_mov_LE_word_to_reg(FC_OP1,(void*)val,false);
 			MOV_REG_WORD16_FROM_HOST_REG(FC_OP1,reg);
 			return;
 		}
@@ -330,7 +330,7 @@ static void dyn_mov_byte_direct_al() {
 	if (decode.big_addr) {
 		Bitu val;
 		if (decode_fetchd_imm(val)) {
-			gen_add(FC_ADDR,(void*)val);
+			gen_add_LE(FC_ADDR,(void*)val);
 		} else {
 			gen_add_imm(FC_ADDR,(Bit32u)val);
 		}
@@ -1184,11 +1184,8 @@ static void dyn_ret_near(Bitu bytes) {
 	dyn_reduce_cycles();
 
 	if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
-	else {
-		gen_call_function_raw((void*)&dynrec_pop_word);
-		gen_extend_word(false,FC_RETOP);
-	}
-	gen_mov_word_from_reg(FC_RETOP,decode.big_op?(void*)(&reg_eip):(void*)(&reg_ip),true);
+	else gen_call_function_raw((void*)&dynrec_pop_word);
+	gen_mov_word_from_reg(FC_RETOP,decode.big_op?(void*)(&reg_eip):(void*)(&reg_ip),decode.big_op);
 
 	if (bytes) gen_add_direct_word(&reg_esp,bytes,true);
 	dyn_return(BR_Normal);
