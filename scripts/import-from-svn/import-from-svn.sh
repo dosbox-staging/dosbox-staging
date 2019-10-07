@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Copyright (c) 2019 Patryk Obara <patryk.obara@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Import script suitable for SVN repositories using standard layout.
+# Uses git-svn to download whole history, converts svn tag paths to git tags,
+# filters repo and removes temporary git refs.
+
 readonly svn_url=https://svn.code.sf.net/p/dosbox/code-0/dosbox
 
 echo_err () {
@@ -33,10 +40,10 @@ git_svn_clone_dosbox () {
 		"$svn_url" \
 		"$repo_name"
 
-	local -r authors_file=$PWD/svn-dosbox-authors
+	local -r authors_prog=$PWD/svn-authors-prog.sh
 	git -C "$repo_name" svn fetch \
 		--use-log-author \
-		--authors-file="$authors_file"
+		--authors-prog="$authors_prog"
 }
 
 # Remove UUID of SVN server to avoid issues in case SourceForge will change
@@ -105,6 +112,13 @@ cleanup () {
 	git -C "$1" branch -D master
 }
 
+# Set up remote repo to prepare for push
+#
+setup_remote () {
+	git -C "$1" remote add dosbox-staging git@github.com:dreamer/dosbox-staging.git
+	git -C "$1" fetch dosbox-staging
+}
+
 # main
 #
 main () {
@@ -118,6 +132,7 @@ main () {
 	name_active_branches "$repo"
 	import_svn_tagpaths_as_git_tags "$repo"
 	cleanup "$repo"
+	setup_remote "$repo"
 }
 
 main "$@"
