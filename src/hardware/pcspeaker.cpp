@@ -278,7 +278,7 @@ static void PCSPEAKER_CallBack(Bitu len) {
 				index+=vol_len;
 			} else {
 				/* Check how long it will take to goto new level */
-				float vol_time=fabs(vol_diff)/SPKR_SPEED;
+				float vol_time=fabsf(vol_diff)/SPKR_SPEED;
 				if (vol_time<=vol_len) {
 					/* Volume reaches endpoint in this block, calc until that point */
 					value+=vol_time*spkr.volcur;
