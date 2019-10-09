@@ -752,16 +752,16 @@ dosurface:
 		sdl.opengl.displaylist = glGenLists(1);
 		glNewList(sdl.opengl.displaylist, GL_COMPILE);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-		glBegin(GL_QUADS);
-		// lower left
-		glTexCoord2f(0,tex_height); glVertex2f(-1.0f,-1.0f);
-		// lower right
-		glTexCoord2f(tex_width,tex_height); glVertex2f(1.0f, -1.0f);
-		// upper right
-		glTexCoord2f(tex_width,0); glVertex2f(1.0f, 1.0f);
+
+		glBegin(GL_TRIANGLES);
 		// upper left
 		glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
+		// lower left
+		glTexCoord2f(0,tex_height*2); glVertex2f(-1.0f,-3.0f);
+		// upper right
+		glTexCoord2f(tex_width*2,0); glVertex2f(3.0f, 1.0f);
 		glEnd();
+
 		glEndList();
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;

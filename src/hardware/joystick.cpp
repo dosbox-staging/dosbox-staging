@@ -67,7 +67,7 @@ struct JoyStick {
 	}
 
 	void transform_circular(){
-		float r = sqrt(xpos * xpos + ypos * ypos);
+		float r = sqrtf(xpos * xpos + ypos * ypos);
 		if (r == 0.0) {xfinal = xpos; yfinal = ypos; return;}
 		float deadzone_f = deadzone / 100.0f;
 		float s = 1.0f - deadzone_f;
@@ -77,8 +77,8 @@ struct JoyStick {
 		}
 
 		float deadzonescale = (r - deadzone_f) / s; //r if deadzone=0;
-		float xa = fabs(xpos);
-		float ya = fabs(ypos);
+		float xa = fabsf(xpos);
+		float ya = fabsf(ypos);
 		float maxpos = (ya>xa?ya:xa);
 		xfinal = xpos * deadzonescale/maxpos;
 		yfinal = ypos * deadzonescale/maxpos;
