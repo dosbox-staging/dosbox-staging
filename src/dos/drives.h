@@ -426,7 +426,6 @@ public:
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
 	virtual void EmptyCache(void);
 
-	bool Sync_leading_dirs(const char* dos_filename);
 	FILE* create_file_in_overlay(char* dos_filename, char const* mode);
 	virtual Bits UnMount(void);
 	virtual bool TestDir(char * dir);
@@ -435,6 +434,7 @@ public:
 private:
 	char overlaydir[CROSS_LEN];
 	bool optimize_cache_v1;
+	bool Sync_leading_dirs(const char* dos_filename);
 	void add_DOSname_to_cache(const char* name);
 	void remove_DOSname_from_cache(const char* name);
 	void add_DOSdir_to_cache(const char* name);
@@ -450,6 +450,7 @@ private:
 	void add_deleted_path(const char* name, bool create_on_disk);
 	void remove_deleted_path(const char* name, bool create_on_disk);
 	bool is_deleted_path(const char* name);
+	bool check_if_leading_is_deleted(const char* name);
 
 	bool is_dir_only_in_overlay(const char* name); //cached
 

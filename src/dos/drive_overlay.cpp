@@ -144,6 +144,10 @@ bool Overlay_Drive::MakeDir(char * dir) {
 #endif
 	/* Overlay: Create in Overlay only and add it to drive_cache + some entries else the drive_cache will try to access it. Needs an AddEntry for directories. */ 
 
+	//Check if leading dir is marked as deleted.
+	if (check_if_leading_is_deleted(dir)) return false;
+
+	//Check if directory itself is marked as deleted
 	if (is_deleted_path(dir) && localDrive::TestDir(dir)) {
 		//Was deleted before and exists (last one is safety check)
 		remove_deleted_path(dir,true);
@@ -453,10 +457,12 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 
 
 bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
-
 	//TODO Check if it exists in the dirCache ? // fix addentry ?  or just double check (ld and overlay)
 	//AddEntry looks sound to me.. 
 	
+	//check if leading part of filename is a deleted directory
+	if (check_if_leading_is_deleted(name)) return false;
+
 	FILE* f = create_file_in_overlay(name,"wb+");
 	if(!f) {
 		if (logoverlay) LOG_MSG("File creation in overlay system failed %s",name);
@@ -752,9 +758,8 @@ again:
 	char relativename[CROSS_LEN];
 	strcpy(relativename,srchInfo[id].srch_dir);
 	//strip off basedir: //TODO cleanup
-	char* prel = relativename+strlen(basedir);
 	strcpy(ovname,overlaydir);
-	prel =full_name+strlen(basedir);
+	char* prel = full_name + strlen(basedir);
 
 	
 
@@ -767,7 +772,7 @@ again:
 	}
 #endif
 
-	strcat(ovname,full_name+strlen(basedir));
+	strcat(ovname,prel);
 	bool statok = ( stat(ovname,&stat_block)==0);
 
 	if (logoverlay) LOG_MSG("listing %s",dir_entcopy);
@@ -940,8 +945,8 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 	char buf[5] = {'e','m','p','t','y'};
 	fwrite(buf,5,1,f);
 	fclose(f);
-
 }
+
 void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const char* operation) {
 	std::string name = create_filename_of_special_operation(dosname,operation);
 	char overlayname[CROSS_LEN];
@@ -952,15 +957,12 @@ void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const cha
 }
 
 std::string Overlay_Drive::create_filename_of_special_operation(const char* dosname, const char* operation) {
-
 	std::string res(dosname);
 	std::string::size_type s = res.rfind("\\"); //CHECK DOS or host endings.... on update_cache
 	if (s == std::string::npos) s = 0; else s++;
 	std::string oper = special_prefix +"_" +operation +"_";
 	res.insert(s,oper);
 	return res;
-
-
 }
 
 
@@ -1029,7 +1031,7 @@ bool Overlay_Drive::is_deleted_path(const char* name) {
 		if (namelen < blockedlen) continue;
 		//See if input starts with name. 
 		std::string::size_type n = sname.find(*it);
-		if (n == 0 && (namelen == blockedlen) || *(name+blockedlen) =='\\' ) return true;
+		if (n == 0 && ((namelen == blockedlen) || *(name+blockedlen) =='\\' )) return true;
 	}
 	return false;
 }
@@ -1043,6 +1045,16 @@ void Overlay_Drive::remove_deleted_path(const char* name, bool create_on_disk) {
 			break;
 		}
 	}
+}
+bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
+	const char* dname = strrchr(name,'\\');
+	if (dname != NULL) {
+		char dirname[CROSS_LEN];
+		strncpy(dirname,name,dname - name);
+		dirname[dname - name] = 0;
+		if (is_deleted_path(dirname)) return true;
+	}
+	return false;
 }
 
 bool Overlay_Drive::FileExists(const char* name) {
