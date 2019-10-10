@@ -170,7 +170,7 @@ static struct {
 } core_dyn;
 
 #if defined(X86_DYNFPU_DH_ENABLED)
-static struct {
+static struct dyn_dh_fpu {
 	Bit16u		cw,host_cw;
 	bool		state_used;
 	// some fields expanded here for alignment purposes

@@ -18,10 +18,10 @@
 
 #if defined(_WIN64)
 enum {
-	X64_REG_RAX,
 	X64_REG_RBX,
-	X64_REG_RCX,
 	X64_REG_RDX,
+	X64_REG_RCX,
+	X64_REG_RAX,
 	// volatiles
 	X64_REG_R8,
 	X64_REG_R9,
@@ -305,11 +305,9 @@ static BlockReturn gen_runcodeInit(Bit8u *code) {
 
 	*(Bit32u*)diff = (Bit32u)(cache.pos - diff - 4);
 	// eax = return value, ecx = flags
-	opcode(2).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x8B); // mov edx, [reg_flags(rbp)]
-	opcode(4).setrm(1).setimm(FMASK_TEST,4).Emit8(0x81);  // and ecx,FMASK_TEST
-	opcode(4).setrm(2).setimm(~FMASK_TEST,4).Emit8(0x81); // and edx,~FMASK_TEST
-	opcode(1).setrm(2).Emit8(0x0B);                       // or ecx,edx
-	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x89);     // mov [reg_flags(rbp)],ecx
+	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x33); // xor ecx, reg_flags
+	opcode(4).setrm(1).setimm(FMASK_TEST,4).Emit8(0x81);          // and ecx,FMASK_TEST
+	opcode(1).setea(5,-1,0,offsetof(CPU_Regs,flags)).Emit8(0x31); // xor reg_flags, ecx
 
 	opcode(4).set64().setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov rsp, [rsp+8/40]
 #if defined(_WIN64)
@@ -1201,7 +1199,7 @@ static void gen_return(BlockReturn retcode) {
 	gen_protectflags();
 	opcode(1).setea(4,-1,0,CALLSTACK+8).Emit8(0x8B); // mov ecx, [rsp+8/40]
 	opcode(0).set64().setrm(4).setimm(CALLSTACK+16,1).Emit8(0x83); // add rsp,16/48
-	if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
+	if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 	else {
 		cache_addb(0xb8);		//MOV EAX, retcode
 		cache_addd(retcode);
@@ -1214,7 +1212,7 @@ static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
 	opcode(1).setabsaddr(&reg_flags).Emit8(0x8B); // mov ECX, [cpu_regs.flags]
 	if (!ret_exception) {
 		opcode(0).set64().setrm(4).setimm(CALLSTACK+16,1).Emit8(0x83); // add rsp,16/48
-		if (retcode==0) cache_addw(0xc033);		//MOV EAX, 0
+		if (retcode==0) cache_addw(0xc033);		// xor eax,eax
 		else {
 			cache_addb(0xb8);		//MOV EAX, retcode
 			cache_addd(retcode);
@@ -1250,19 +1248,19 @@ static void gen_dh_fpu_saveInit(void) {
 	cache.pos = &cache_code_link_blocks[64];
 	gen_dh_fpu_save = (void(*)(void))cache.pos;
 
-	Bits addr = (Bits)&dyn_dh_fpu;
+	Bitu addr = (Bitu)&dyn_dh_fpu;
 	// mov RAX, &dyn_dh_fpu
 	if ((Bit32u)addr == addr) opcode(0).setimm(addr,4).Emit8Reg(0xB8);
 	else opcode(0).set64().setimm(addr,8).Emit8Reg(0xB8);
 
-	// fnsave [RAX+offs8]
-	cache_addw(0x70DD);cache_addb((Bits)&dyn_dh_fpu.state-addr);
-	// fldcw [RAX+offs8]
-	cache_addw(0x68D9);cache_addb((Bits)&dyn_dh_fpu.host_cw-addr);
-	// mov byte [RAX+offs8], 0
-	cache_addw(0x40C6);cache_addw((Bit8u)((Bits)&dyn_dh_fpu.state_used-addr));
-	// or byte [RAX+offs8], 0x3F
-	cache_addw(0x4880);cache_addb((Bits)&dyn_dh_fpu.state.cw-addr);cache_addb(0x3F);
+	// fnsave [dyn_dh_fpu.state]
+	opcode(6).setea(0,-1,0,offsetof(struct dyn_dh_fpu,state)).Emit8(0xdd);
+	// fldcw [dyn_dh_fpu.host_cw]
+	opcode(5).setea(0,-1,0,offsetof(struct dyn_dh_fpu,host_cw)).Emit8(0xd9);
+	// mov byte [dyn_dh_fpu.state_used], 0
+	opcode(0).setimm(0,1).setea(0,-1,0,offsetof(struct dyn_dh_fpu,state_used)).Emit8(0xc6);
+	// or byte [dyn_dh_fpu.state.cw], 0x3F
+	opcode(1).setimm(0x3F,1).setea(0,-1,0,offsetof(struct dyn_dh_fpu,state.cw)).Emit8(0x80);
 	cache_addb(0xC3); // RET
 
 	cache.pos = oldpos;
