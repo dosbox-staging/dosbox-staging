@@ -32,7 +32,7 @@
 #include "support.h"
 
 Bitu DEBUG_EnableDebugger(void);
-extern void GFX_SetTitle(Bit32s cycles ,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles ,int frameskip,bool paused);
 
 #if 1
 #undef LOG

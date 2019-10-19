@@ -39,7 +39,7 @@
 
 extern Bit8u int10_font_14[256 * 14];
 extern bool MSG_Write(const char *);
-extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, bool paused);
+extern void GFX_SetTitle(Bit32s cycles, int frameskip, bool paused);
 
 static int cursor, saved_bpp;
 static int old_unicode;
