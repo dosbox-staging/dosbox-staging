@@ -58,8 +58,8 @@ typedef struct {
 		float fps;
 	} src;
 	struct {
-		Bitu count;
-		Bitu max;
+		int count;
+		int max;
 		Bitu index;
 		Bit8u hadSkip[RENDER_SKIP_CACHE];
 	} frameskip;
