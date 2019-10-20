@@ -88,7 +88,7 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
-extern void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles,int frameskip,bool paused);
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
