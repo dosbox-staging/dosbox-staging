@@ -22,7 +22,11 @@
 #define C_HEAVY_DEBUG 0
 
 /* The type of cpu this host has */
+#ifdef _M_X64
+#define C_TARGETCPU X86_64
+#else // _M_IX86
 #define C_TARGETCPU X86
+#endif
 //#define C_TARGETCPU X86_64
 
 /* Define to 1 to use x86 dynamic cpu core */
@@ -32,13 +36,19 @@
 #define C_DYNREC 0
 
 /* Enable memory function inlining in */
-#define C_CORE_INLINE 0
+#define C_CORE_INLINE 1
 
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
 /* Define to 1 to use a x86 assembly fpu core */
+#ifdef _M_X64
+//No support for inline asm with visual studio in x64 bit mode.
+//This means that non-dynamic cores can't use the better fpu emulation.
+#define C_FPU_X86 0
+#else // _M_IX86
 #define C_FPU_X86 1
+#endif
 
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
@@ -63,16 +73,21 @@
 #pragma warning(disable : 4996) 
 #endif
 
-typedef         double		Real64;
+typedef           double        Real64;
 /* The internal types */
-typedef  unsigned char		Bit8u;
-typedef    signed char		Bit8s;
-typedef unsigned short		Bit16u;
-typedef   signed short		Bit16s;
-typedef  unsigned long		Bit32u;
-typedef    signed long		Bit32s;
-typedef unsigned __int64	Bit64u;
-typedef   signed __int64	Bit64s;
-typedef unsigned int		Bitu;
-typedef signed int			Bits;
+typedef    unsigned char        Bit8u;
+typedef      signed char        Bit8s;
+typedef   unsigned short        Bit16u;
+typedef     signed short        Bit16s;
+typedef    unsigned long        Bit32u;
+typedef      signed long        Bit32s;
+typedef unsigned __int64        Bit64u;
+typedef   signed __int64        Bit64s;
+#ifdef _M_X64
+typedef unsigned __int64        Bitu;
+typedef   signed __int64        Bits;
+#else // _M_IX86
+typedef     unsigned int        Bitu;
+typedef       signed int        Bits;
+#endif
 
