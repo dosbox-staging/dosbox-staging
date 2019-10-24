@@ -1,8 +1,9 @@
 # DOSBox build script
 
 A helper-script that builds DOSBox with varying compilers, release types, and versions
-on MacOS, Linux, and Windows. The script can optionally install the necessary build
-tools and depedencies.
+on MacOS, Linux, and Windows. The script can optionally list dependent packages
+and libraries used to build and link DOSBox, for your given environment and selected
+compiler.
 
 ## Requirements
 
@@ -48,11 +49,18 @@ tools and depedencies.
    * list the available branches: `git branch --all`
    * switch to a specific branch: `git checkout NAME_OF_BRANCH`
 
+1. [optional] Install the build tools and package dependencies, if not yet done so:
+   ``` shell
+   cd dosbox-staging
+   SET CWD=%cd%
+   pacman -S --noconfirm $($CWD/scripts/build.sh --list-packages --bin-path /mingw64/bin"
+   ```
+
 1. Launch the build script with default settings:
    ``` shell
    cd dosbox-staging
    SET CWD=%cd%
-   bash -lc "$CWD/scripts/build.sh --install-deps --bin-path /mingw64/bin --src-path $CWD"
+   bash -lc "$CWD/scripts/build.sh --bin-path /mingw64/bin --src-path $CWD"
    ```
 
 ## MacOS Installation and Usage
@@ -61,21 +69,26 @@ tools and depedencies.
 1. Install git: `brew install git`
 1. Clone the repository: `git clone https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
-1. Build DOSbox: `./scripts/build.sh --install-deps`
+1. [optional] Install the build tools and package dependencies, if not yet done so:
+   ``` shell
+   brew update
+   brew install $(./scripts/build.sh --list-packages)
+   ```
+1. Build DOSBox: `./scripts/build.sh`
 
 ## Linux (Ubuntu/Debian-based) Installation and Usage
 
 1. Install git: `sudo apt install -y git`
 1. Clone the repository: `git clone https://github.com/dreamer/dosbox-staging.git`
 1. Change directories into the repo: `cd dosbox-staging`
-1. Build DOSbox: `sudo ./scripts/build.sh --install-deps`
-   * Note: sudo is only needed with the --install-deps flags. If you are more
-     comfortable installing packages yourself, you can see the list of packages
-     with: `grep -A28 dependencies-linux scripts/build.sh`
+1. [optional] Install the build tools and package dependencies, if not yet done so:
+   ``` shell
+   sudo apt update -y
+   sudo apt install -y $(./scripts/build.sh --list-packages)
+   ```
+1. Build DOSBox: `./scripts/build.sh`
 
 ## Additional Tips
-
-You can omit the `--install-deps` flags on subsequent runs now that all build tools and library dependencies have been installed on your system.
 
 After building, your binary will reside inside the src/ directory.
 
@@ -90,5 +103,3 @@ The above flags are othogonal and thus can be mixed-and-matched as desired.
 
 If you want to run multiple back-to-back builds from the same directory with different settings,
 add the `--clean` flag to ensure previous objects and binaries are removed.
-
-
