@@ -51,6 +51,7 @@ stamp-h1
 
 # Other
 compile
+build.log
 
 # Visual Studio
 .vs
