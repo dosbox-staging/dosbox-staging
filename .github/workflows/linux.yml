@@ -3,26 +3,14 @@ on: push
 jobs:
 
   build_ubuntu_gcc9_debug:
-    name: "GCC 9 debug (ubuntu-18.04)"
+    name: "GCC 9 (ubuntu-18.04)"
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
       - name: Build
-        run: sudo ./scripts/build.sh --compiler-version 9 --release debug
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_ubuntu_gcc9_lto:
-    name: "GCC 9 small LTO (ubuntu-18.04)"
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
-      - name: Build
-        run: sudo ./scripts/build.sh --compiler-version 9 --release small --lto
+        run: sudo ./scripts/build.sh --compiler-version 9
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -41,26 +29,14 @@ jobs:
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
-  build_ubuntu_clang_8_debug:
-    name: "Clang 8 debug (ubuntu-18.04)"
+  build_ubuntu_clang_8:
+    name: "Clang 8 (ubuntu-18.04)"
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
       - name: Build
-        run: sudo ./scripts/build.sh --compiler clang --compiler-version 8 --release debug
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_ubuntu_clang_8_lto:
-    name: "Clang 8 small LTO (ubuntu-18.04)"
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
-      - name: Build
-        run: sudo ./scripts/build.sh --compiler clang --compiler-version 8 --release small --lto
+        run: sudo ./scripts/build.sh --compiler clang --compiler-version 8
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
