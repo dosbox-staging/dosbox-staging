@@ -43,57 +43,57 @@ jobs:
           MSBuild -m dosbox.sln -p:Configuration=Release
 
   build_msys2_gcc_64:
-    name: MSYS2 GCC-9.2 x86_64
+    name: MSYS2 GCC-9 x86_64
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm `$GITHUB_WORKSPACE/scripts/build.sh --list-packages --bin-path /mingw64/bin`"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libtool mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-SDL mingw-w64-x86_64-SDL_net mingw-w64-x86_64-opusfile mingw-w64-x86_64-speexdsp"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
-  build_msys2_gcc_32_small:
-    name: MSYS2 GCC-9.2 small i686
+  build_msys2_gcc_32:
+    name: MSYS2 GCC-9 i686
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm `$GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --bin-path /mingw32/bin`"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-i686-gcc mingw-w64-i686-pkg-config mingw-w64-i686-libtool mingw-w64-i686-libpng mingw-w64-i686-zlib mingw-w64-i686-SDL mingw-w64-i686-SDL_net mingw-w64-i686-opusfile mingw-w64-i686-speexdsp"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE --release small"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
-  build_msys2_clang_64_debug:
-    name: MSYS2 Clang-8.0.1 debug x86_64
+  build_msys2_clang_64:
+    name: MSYS2 Clang-8 x86_64
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm `$GITHUB_WORKSPACE/scripts/build.sh --list-packages --compiler clang --bin-path /mingw64/bin`"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-clang mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libtool mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-SDL mingw-w64-x86_64-SDL_net mingw-w64-x86_64-opusfile mingw-w64-x86_64-speexdsp"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE --release debug"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
-  build_msys2_clang_32_small:
-    name: MSYS2 Clang-8.0.1 small i686
+  build_msys2_clang_32:
+    name: MSYS2 Clang-8 i686
     runs-on: windows-2019
     steps:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm `$GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --compiler clang --bin-path /mingw32/bin`"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-i686-clang mingw-w64-i686-pkg-config mingw-w64-i686-libtool mingw-w64-i686-libpng mingw-w64-i686-zlib mingw-w64-i686-SDL mingw-w64-i686-SDL_net mingw-w64-i686-opusfile mingw-w64-i686-speexdsp"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --compiler clang --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE --release small"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --compiler clang --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
