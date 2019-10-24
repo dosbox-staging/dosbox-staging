@@ -7,7 +7,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
       - name: Build
         run: sudo ./scripts/build.sh --compiler-version 9 --release debug
       - name: "Summarize warnings"
@@ -18,7 +19,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
       - name: Build
         run: sudo ./scripts/build.sh --compiler-version 9 --release small --lto
       - name: "Summarize warnings"
@@ -32,7 +34,8 @@ jobs:
         os: [ubuntu-18.04, ubuntu-16.04]
     steps:
       - uses: actions/checkout@v1
-      - run: sudo apt install -y $(./scripts/build.sh --list-packages)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages)
       - name: Build
         run: sudo ./scripts/build.sh
       - name: "Summarize warnings"
@@ -43,7 +46,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
       - name: Build
         run: sudo ./scripts/build.sh --compiler clang --compiler-version 8 --release debug
       - name: "Summarize warnings"
@@ -54,7 +58,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
-      - run: sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
       - name: Build
         run: sudo ./scripts/build.sh --compiler clang --compiler-version 8 --release small --lto
       - name: "Summarize warnings"
