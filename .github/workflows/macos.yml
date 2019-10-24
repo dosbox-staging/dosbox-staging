@@ -1,46 +1,24 @@
 name: "macOS builds"
 on: push
 jobs:
-  build_macos_clang_debug:
-    name: "Clang debug (macOS-10.14)"
+  build_macos_clang:
+    name: "Clang (macOS-10.14)"
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
       - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
       - name: Build
-        run: ./scripts/build.sh --compiler clang --release debug
+        run: ./scripts/build.sh --compiler clang
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
-  build_macos_clang_debug_lto:
-    name: "Clang debug LTO (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
-      - name: Build
-        run: ./scripts/build.sh --compiler clang --release small --lto
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc_debug:
-    name: "GCC debug (macOS-10.14)"
+  build_macos_gcc:
+    name: "GCC (macOS-10.14)"
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
       - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --release debug
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc_lto:
-    name: "GCC small LTO (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
-      - name: Build
-        run:  ./scripts/build.sh --compiler gcc --release small --lto
+        run: ./scripts/build.sh --compiler gcc
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
