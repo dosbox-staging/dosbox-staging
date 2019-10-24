@@ -17,7 +17,6 @@ SUBDIRS = src include docs visualc_net
 
 distclean-local:
 	-rm aclocal.m4
-	-rm autom4te.cache
 	-rm build.log
 	-rm compile
 	-rm config.guess
@@ -31,20 +30,6 @@ distclean-local:
 	-rm install-sh
 	-rm Makefile.in
 	-rm missing
-	-rm -rf autom4te.cache
-	-rm -rf src/cpu/.deps
-	-rm -rf src/debug/.deps
-	-rm -rf src/.deps
-	-rm -rf src/dos/.deps
-	-rm -rf src/fpu/.deps
-	-rm -rf src/gui/.deps
-	-rm -rf src/hardware/.deps
-	-rm -rf src/hardware/mame/.deps
-	-rm -rf src/hardware/serialport/.deps
-	-rm -rf src/ints/.deps
-	-rm -rf src/libs/gui_tk/.deps
-	-rm -rf src/misc/.deps
-	-rm -rf src/shell/.deps
 	-rm src/cpu/core_dynrec/Makefile.in
 	-rm src/cpu/core_dyn_x86/Makefile.in
 	-rm src/cpu/core_full/Makefile.in
@@ -67,3 +52,17 @@ distclean-local:
 	-rm src/platform/visualc/Makefile.in
 	-rm src/shell/Makefile.in
 	-rm visualc_net/Makefile.in
+	-rm -rf autom4te.cache
+	-rm -rf src/cpu/.deps
+	-rm -rf src/debug/.deps
+	-rm -rf src/.deps
+	-rm -rf src/dos/.deps
+	-rm -rf src/fpu/.deps
+	-rm -rf src/gui/.deps
+	-rm -rf src/hardware/.deps
+	-rm -rf src/hardware/mame/.deps
+	-rm -rf src/hardware/serialport/.deps
+	-rm -rf src/ints/.deps
+	-rm -rf src/libs/gui_tk/.deps
+	-rm -rf src/misc/.deps
+	-rm -rf src/shell/.deps
