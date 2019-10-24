@@ -6,7 +6,9 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: ./scripts/build.sh --install-deps --compiler clang --release debug
+      - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
+      - name: Build
+        run: ./scripts/build.sh --compiler clang --release debug
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -15,7 +17,9 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: ./scripts/build.sh --install-deps --compiler clang --release small --lto
+      - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
+      - name: Build
+        run: ./scripts/build.sh --install-deps --compiler clang --release small --lto
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -24,7 +28,9 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: ./scripts/build.sh --install-deps --compiler gcc --release debug
+      - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
+      - name: Build
+        run: ./scripts/build.sh --install-deps --compiler gcc --release debug
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -33,6 +39,8 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run:  ./scripts/build.sh --install-deps --compiler gcc --release small --lto
+      - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
+      - name: Build
+        run:  ./scripts/build.sh --install-deps --compiler gcc --release small --lto
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log

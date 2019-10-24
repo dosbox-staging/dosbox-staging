@@ -6,13 +6,9 @@
 #  SPDX-License-Identifier: GPL-2.0-or-later
 #
 #  This script builds DOSBox within supported environments including
-#  MacOS, Ubuntu Linux, and MSYS2. It will install dependencies
-#  followed by setting desired build flags and compiling the binary.
-#
-#  If installation of packages is requested (--install), then under Linux
-#  this script needs to be launched with sudo and with administrator rights
-#  on Windows.  MacOS does not require administrator rights because brew installs
-#  every local to your user account.
+#  MacOS, Ubuntu Linux, and MSYS2 using specified compilers and release types.
+#  It can optionally list package dependencies specific to the runtime
+#  environment and compiler type and version.
 #
 #  For automation without prompts, Windows should have User Account Control (UAC)
 #  disabled, which matches the configuration of GitHub'Windows VMs, described here:
@@ -42,8 +38,8 @@ function usage() {
 	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
 	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
 	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -i, --install-deps       Install build tools and dependencies if needed         [$(print_var ${INSTALL_DEPS})]"
 	echo "  -l, --lto                Perform additional link-time-optimization              [$(print_var ${LTO})]"
+	echo "  -k, --list-packages      List dependent packages for your system and compiler   [$(print_var ${LIST_PACKAGES})]"
 	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
 	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var ${RELEASE})]"
@@ -66,8 +62,8 @@ function parse_args() {
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
-		-i|--install-deps)      INSTALL_DEPS="true";    shift;;
 		-l|--lto)               LTO="true";             shift;;
+		-k|--list-packages)     LIST_PACKAGES="true";   shift;;
 		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
 		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
 		-r|--release)           RELEASE="${2}";         shift;shift;;
@@ -87,7 +83,7 @@ function defaults() {
 	CLEAN="false"
 	COMPILER="gcc"
 	LTO="false"
-	INSTALL_DEPS="false"
+	LIST_PACKAGES="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
 	SRC_PATH="./"
@@ -184,15 +180,16 @@ function print_version() {
 	exit 0
 }
 
-function dependencies() {
+function packages() {
 	# only proceed if the user wants to install packages
-	if [[ "${INSTALL_DEPS}" == "true" ]]; then
+	if [[ "${LIST_PACKAGES}" == "true" ]]; then
 		uses system
-		dependencies-${SYSTEM}
+		"packages_for_${SYSTEM}"
+		exit 0
 	fi
 }
 
-function dependencies-macos() {
+function packages_for_macos() {
 
 	uses bin_path
 	if ! which brew &> /dev/null; then
@@ -209,24 +206,26 @@ function dependencies-macos() {
 		fi
 	fi
 
-	brew update
+	# Typical installation:
+	#  - brew update
+	#  - brew install <list of packages>
 
-	# Note: package is deliberable unquoted because brew with fail on an empty string
-	brew install         \
-	 ${compiler_package} \
-	 coreutils           \
-	 autogen             \
-	 autoconf            \
-	 automake            \
-	 pkg-config          \
-	 libpng              \
-	 sdl                 \
-	 sdl_net             \
-	 opusfile            \
-	 speexdsp
+	local packages=(
+	   "${compiler_package}"
+	   coreutils
+	   autogen
+	   autoconf
+	   automake
+	   pkg-config
+	   libpng
+	   sdl
+	   sdl_net
+	   opusfile
+	   speexdsp )
+	echo "${packages[@]}"
 }
 
-function dependencies-msys2() {
+function packages_for_msys2() {
 
 	uses bin_path
 	if ! which pacman &> /dev/null; then
@@ -246,23 +245,36 @@ function dependencies-msys2() {
 	local compiler_package="${COMPILER}"
 	compiler_package+="${VERSION_POSTFIX}"
 
-	pacman -S --noconfirm                        \
-	 autogen                                     \
-	 autoconf                                    \
-	 base-devel                                  \
-	 automake-wrapper                            \
-	 "mingw-w64-${pkg_type}-pkg-config"          \
-	 "mingw-w64-${pkg_type}-${compiler_package}" \
-	 "mingw-w64-${pkg_type}-libtool"             \
-	 "mingw-w64-${pkg_type}-libpng"              \
-	 "mingw-w64-${pkg_type}-zlib"                \
-	 "mingw-w64-${pkg_type}-SDL"                 \
-	 "mingw-w64-${pkg_type}-SDL_net"             \
-	 "mingw-w64-${pkg_type}-opusfile"            \
-	 "mingw-w64-${pkg_type}-speexdsp"
+	# Typical installation step:
+	# pacman -S --noconfirm <list of packages>
+	local packages=(
+	   autogen
+	   autoconf
+	   base-devel
+	   automake-wrapper
+	   "mingw-w64-${pkg_type}-pkg-config"
+	   "mingw-w64-${pkg_type}-${compiler_package}"
+	   "mingw-w64-${pkg_type}-libtool"
+	   "mingw-w64-${pkg_type}-libpng"
+	   "mingw-w64-${pkg_type}-zlib"
+	   "mingw-w64-${pkg_type}-SDL"
+	   "mingw-w64-${pkg_type}-SDL_net"
+	   "mingw-w64-${pkg_type}-opusfile"
+	   "mingw-w64-${pkg_type}-speexdsp" )
+	echo "${packages[@]}"
 }
 
-function dependencies-linux() {
+function packages_for_linux() {
+
+	# TODO:
+	#  Convert this into an associative map between package
+	#  managers and the list of respective package names. We
+	#  should have coverage for the major distribution types,
+	#  such as:
+	#     - RPM-based (RHEL/CentOS, Fedora, and openSUSE)
+	#     - Debian-based (Debian, Ubuntu, and Raspbian)
+	#     - pacman-based (Arch and Manjero)
+	#
 	uses bin_path
 	if ! which apt &> /dev/null; then
 		error "Ubuntu's apt not found"
@@ -279,40 +291,18 @@ function dependencies-linux() {
 	uses compiler_version
 	compiler_package+="${VERSION_POSTFIX}"
 
-	uses privileges
-	apt update -y
-	apt install -y         \
-	 "${compiler_package}" \
-	 libtool               \
-	 build-essential       \
-	 libsdl1.2-dev         \
-	 libsdl-net1.2-dev     \
-	 libopusfile-dev       \
-	 libspeexdsp-dev
-}
-
-function privileges() {
-	uses system
-	if [[ "${SYSTEM}" == "linux" ]]; then
-		local uid="$(id -u)"
-		if [[ "${uid}" != "0" ]]; then
-			usage "The script needs to be launched as sudo when --install is set and running under Linux"
-		fi
-	fi
-}
-
-function user_execution() {
-	uses system
-	if [[ "${SYSTEM}" != "linux" || -z "${SUDO_USER:-}" ]]; then
-		function drop_privileges() { "${@}"; }
-	else
-		function drop_privileges() {
-			echo ""
-			echo "Dropping privileges"
-			echo "Launching ${@} as ${SUDO_USER}"
-			sudo -E -u "${SUDO_USER}" "${@}"
-		}
-	fi
+	# Typically install step
+	# sudo apt update -y
+	# sudo apt install -y <list of packages>
+	local packages=(
+	   "${compiler_package}"
+	   libtool
+	   build-essential
+	   libsdl1.2-dev
+	   libsdl-net1.2-dev
+	   libopusfile-dev
+	   libspeexdsp-dev )
+	echo "${packages[@]}"
 }
 
 function system() {
@@ -539,18 +529,14 @@ function do_autogen() {
 
 	# Only autogen if needed ..
 	if [[ ! -f configure ]]; then
-		uses dependencies
 		uses bin_path
-		uses user_execution
-		drop_privileges ./autogen.sh
+		./autogen.sh
 	fi
 }
 
 function do_configure() {
-	uses dependencies
 	uses bin_path
 	uses src_path
-	uses user_execution
 	uses tools_and_flags
 	uses release_flags
 	uses lto_flags
@@ -590,7 +576,7 @@ function do_configure() {
 	if [[ ! -f configure ]]; then
 		error "configure script doesn't exist in $PWD. If the source is somewhere else, set it with --src-path"
 
-	elif ! drop_privileges ./configure "${CONFIGURE_OPTIONS[@]}"; then
+	elif ! ./configure "${CONFIGURE_OPTIONS[@]}"; then
 		>&2 cat "config.log"
 		error "configure failed, see config.log output above"
 	fi
@@ -611,49 +597,45 @@ function executable() {
 }
 
 function build() {
-	uses dependencies
 	uses src_path
 	uses bin_path
 	uses threads
-	uses user_execution
 
 	if [[ "${CLEAN}" == "true" && -f "Makefile" ]]; then
-		drop_privileges make clean 2>&1 | drop_privileges tee -a build.log
+		make clean 2>&1 | tee -a build.log
 	fi
 	do_autogen
 	do_configure
-	drop_privileges make -j "${THREADS}" 2>&1 | drop_privileges tee -a build.log
+	make -j "${THREADS}" 2>&1 | tee -a build.log
 }
 
 function strip_binary() {
 	if [[ "${RELEASE}" == "debug" ]]; then
 		echo "[skipping strip] Debug symbols will be left in the binary because it's a debug release"
 	else
-		uses dependencies
 		uses bin_path
-		uses user_execution
 		uses executable
-		drop_privileges strip "${EXECUTABLE}"
+		strip "${EXECUTABLE}"
 	fi
 }
 
 function show_binary() {
 	uses bin_path
 	uses system
-	uses user_execution
 	uses executable
 
 	if [[ "$SYSTEM" == "macos" ]]; then
 		otool -L "${EXECUTABLE}"
 	else
-		drop_privileges ldd "${EXECUTABLE}"
+		ldd "${EXECUTABLE}"
 	fi
-	drop_privileges ls -1lh "${EXECUTABLE}"
+	ls -1lh "${EXECUTABLE}"
 }
 
 
 function main() {
 	parse_args "$@"
+	packages
 	build
 	strip_binary
 	show_binary
