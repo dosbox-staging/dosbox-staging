@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v1
       - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
       - name: Build
-        run: ./scripts/build.sh --install-deps --compiler clang --release small --lto
+        run: ./scripts/build.sh --compiler clang --release small --lto
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v1
       - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
       - name: Build
-        run: ./scripts/build.sh --install-deps --compiler gcc --release debug
+        run: ./scripts/build.sh --compiler gcc --release debug
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -41,6 +41,6 @@ jobs:
       - uses: actions/checkout@v1
       - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
       - name: Build
-        run:  ./scripts/build.sh --install-deps --compiler gcc --release small --lto
+        run:  ./scripts/build.sh --compiler gcc --release small --lto
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
