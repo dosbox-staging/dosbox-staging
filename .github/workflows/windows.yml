@@ -50,7 +50,7 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-      - run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bin-path /mingw64/bin)"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bin-path /mingw64/bin)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
@@ -64,7 +64,7 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-      - run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --bin-path /mingw32/bin)"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --bin-path /mingw32/bin)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE --release small"
       - name: Summarize warnings
@@ -78,7 +78,7 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-      - run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --compiler clang --bin-path /mingw64/bin)"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --compiler clang --bin-path /mingw64/bin)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE --release debug"
       - name: Summarize warnings
@@ -92,7 +92,7 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-      - run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --compiler clang --bin-path /mingw32/bin)"
+        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/build.sh --list-packages --bit-depth 32 --compiler clang --bin-path /mingw32/bin)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --compiler clang --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE --release small"
       - name: Summarize warnings
