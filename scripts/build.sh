@@ -201,7 +201,7 @@ function packages_for_macos() {
 	local compiler_package="" # for brew, the clang package doesn't exist, so stay empty in this case (?)
 	if [[ "${COMPILER}" == "gcc" ]]; then
 		compiler_package="gcc"
-		if "${COMPILER_VERSION}" != "unset" ]]; then
+		if [[ "${COMPILER_VERSION}" != "unset" ]]; then
 			compiler_package+="@${COMPILER_VERSION}"
 		fi
 	fi
