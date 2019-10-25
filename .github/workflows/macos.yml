@@ -9,7 +9,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler clang)
       - name: Build
-        run: ./scripts/build.sh --compiler clang
+        run: ./scripts/build.sh --compiler clang --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -21,6 +21,6 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc
+        run: ./scripts/build.sh --compiler gcc --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log

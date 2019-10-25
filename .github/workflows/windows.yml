@@ -56,7 +56,7 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
 
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --bin-path /mingw64/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --fdo --bin-path /mingw64/bin"
 
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
@@ -75,7 +75,7 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
 
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --bit-depth 32 --fdo --bin-path /mingw32/bin"
 
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
@@ -94,7 +94,7 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
 
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --compiler clang --bin-path /mingw64/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --compiler clang --fdo --bin-path /mingw64/bin"
 
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
@@ -113,7 +113,7 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
 
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging && bash ./scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging && bash ./scripts/build.sh --compiler clang --fdo --bit-depth 32 --bin-path /mingw32/bin"
 
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
