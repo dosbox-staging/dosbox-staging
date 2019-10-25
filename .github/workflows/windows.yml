@@ -49,12 +49,15 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
+
       - name: Install dependencies
         run: |
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --output-file packages"
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
+
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -l ./scripts/build.sh --bin-path /mingw64/bin
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --bin-path /mingw64/bin"
+
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -65,11 +68,15 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
+
       - name: Install dependencies
-#        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --bit-depth 32 | xargs pacman -S --noconfirm"
-        run: C:\tools\msys64\usr\bin\bash -lc "set"
+        run: |
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --bit-depth 32 --output-file packages"
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
+
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
+
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -80,10 +87,18 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
+
+      - name: Install dependencies
+        run: |
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --compiler clang --output-file packages"
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
+
       - name: Install dependencies
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang | xargs pacman -S --noconfirm"
+
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --compiler clang --bin-path /mingw64/bin"
+
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -94,9 +109,14 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
+
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang --bit-depth 32 | xargs pacman -S --noconfirm"
+        run: |
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --compiler clang --bit-depth 32 --output-file packages"
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
+
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin"
+        run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging && bash ./scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin"
+
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
