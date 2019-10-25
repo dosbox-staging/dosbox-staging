@@ -13,20 +13,8 @@ jobs:
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
-  build_macos_gcc_opt:
-    name: "GCC-9 opt (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --bin-path /usr/local/bin --lto --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
   build_macos_gcc:
-    name: "GCC-9 default (macOS-10.14)"
+    name: "GCC-9 (macOS-10.14)"
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
@@ -34,5 +22,53 @@ jobs:
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
       - name: Build
         run: ./scripts/build.sh --compiler gcc --compiler-version 9 --bin-path /usr/local/bin
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc8:
+    name: "GCC-8 (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 8)
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 8 --bin-path /usr/local/bin
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc7:
+    name: "GCC-7 (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 7)
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 7 --bin-path /usr/local/bin
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc6:
+    name: "GCC-6 (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 6)
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --bin-path /usr/local/bin
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc5:
+    name: "GCC-5 (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 5)
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 5 --bin-path /usr/local/bin
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
