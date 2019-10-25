@@ -6,7 +6,7 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: brew install $(./scripts/build.sh --list-packages --compiler clang)
+      - run: brew install $(./scripts/list-build-dependencies.sh --compiler clang)
       - name: Build
         run: ./scripts/build.sh --compiler clang
       - name: "Summarize warnings"
@@ -17,7 +17,7 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: brew install $(./scripts/build.sh --list-packages --compiler gcc)
+      - run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
       - name: Build
         run: ./scripts/build.sh --compiler gcc
       - name: "Summarize warnings"

@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler-version 9)
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh --compiler-version 9)
       - name: Build
         run: sudo ./scripts/build.sh --compiler-version 9
       - name: "Summarize warnings"
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages)
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh)
       - name: Build
         run: sudo ./scripts/build.sh
       - name: "Summarize warnings"
@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt install -y $(./scripts/build.sh --list-packages --compiler clang --compiler-version 8)
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh --compiler clang --compiler-version 8)
       - name: Build
         run: sudo ./scripts/build.sh --compiler clang --compiler-version 8
       - name: "Summarize warnings"

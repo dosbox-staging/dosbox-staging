@@ -50,7 +50,8 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libtool mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-SDL mingw-w64-x86_64-SDL_net mingw-w64-x86_64-opusfile mingw-w64-x86_64-speexdsp"
+        shell: bash
+        run: C:\tools\msys64\usr\bin\pacman -S --noconfirm "$(./scripts/list-build-dependencies.sh)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
@@ -64,7 +65,8 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-i686-gcc mingw-w64-i686-pkg-config mingw-w64-i686-libtool mingw-w64-i686-libpng mingw-w64-i686-zlib mingw-w64-i686-SDL mingw-w64-i686-SDL_net mingw-w64-i686-opusfile mingw-w64-i686-speexdsp"
+        shell: bash
+        run: C:\tools\msys32\usr\bin\pacman -S --noconfirm "$(./scripts/list-build-dependencies.sh --bit-depth 32)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
@@ -78,7 +80,8 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-clang mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libtool mingw-w64-x86_64-libpng mingw-w64-x86_64-zlib mingw-w64-x86_64-SDL mingw-w64-x86_64-SDL_net mingw-w64-x86_64-opusfile mingw-w64-x86_64-speexdsp"
+        shell: bash
+        run: C:\tools\msys64\usr\bin\pacman -S --noconfirm "$(./scripts/list-build-dependencies.sh --compiler clang)"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
@@ -92,8 +95,9 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "pacman -S --noconfirm mingw-w64-i686-clang mingw-w64-i686-pkg-config mingw-w64-i686-libtool mingw-w64-i686-libpng mingw-w64-i686-zlib mingw-w64-i686-SDL mingw-w64-i686-SDL_net mingw-w64-i686-opusfile mingw-w64-i686-speexdsp"
+        shell: bash
+        run: C:\tools\msys32\usr\bin\pacman -S --noconfirm "$(./scripts/list-build-dependencies.sh --compiler clang --bit-depth 32)"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --compiler clang --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
