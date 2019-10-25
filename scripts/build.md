@@ -1,9 +1,12 @@
 # DOSBox build script
 
 A helper-script that builds DOSBox with varying compilers, release types, and versions
-on MacOS, Linux, and Windows. The script can optionally list dependent packages
-and libraries used to build and link DOSBox, for your given environment and selected
-compiler.
+on MacOS, Linux, and Windows.
+
+A second script, **list-build-dependencies.sh** prints a list of package and library
+dependencies used to build and link DOSBox, customized for your hardware, operating system,
+and selected compiler and its version.  You can use this script's output to install
+those necessary packages.
 
 ## Requirements
 
@@ -17,6 +20,9 @@ compiler.
 - **Ubuntu** 16.04 or newer
 	- **apt**, as the package manager
 	- **sudo**, to permit installation of depedencies (optional) 
+
+- **Build dependencies (all operating systems)**
+    - Per those listed by the accompanying list-build-dependencies.sh script
 
 ## Windows Installation and Usage
 
@@ -53,7 +59,7 @@ compiler.
    ``` shell
    cd dosbox-staging
    SET CWD=%cd%
-   pacman -S --noconfirm $($CWD/scripts/build.sh --list-packages --bin-path /mingw64/bin"
+   bash -lc "pacman -S --noconfirm $($CWD/scripts/list-build-dependencies.sh)"
    ```
 
 1. Launch the build script with default settings:
@@ -72,7 +78,7 @@ compiler.
 1. [optional] Install the build tools and package dependencies, if not yet done so:
    ``` shell
    brew update
-   brew install $(./scripts/build.sh --list-packages)
+   brew install $(./scripts/list-build-dependencies.sh)
    ```
 1. Build DOSBox: `./scripts/build.sh`
 
@@ -84,22 +90,26 @@ compiler.
 1. [optional] Install the build tools and package dependencies, if not yet done so:
    ``` shell
    sudo apt update -y
-   sudo apt install -y $(./scripts/build.sh --list-packages)
+   sudo apt install -y $(./scripts/list-build-dependencies.sh)
    ```
 1. Build DOSBox: `./scripts/build.sh`
 
 ## Additional Tips
 
+The compiler, version, and bit-depth can be selected by passing the following common
+options to the **list-build-dependencies.sh** and **build.sh** scripts:
+* `--compiler clang`, to use CLang instead of GCC
+* `--compiler-version 8`, to use a specific version of compiler (if available in your package manager)
+* `--bit-depth 32`, to build a 32-bit binary instead of 64-bit
+
 After building, your binary will reside inside the src/ directory.
 
-You can see addition build options by running the script with the -h or --help options. Flags you might be interested in:
-* `--compiler clang`, to use CLang instead of GCC
-* `--bit-depth 32`, to build a 32-bit binary instead of 64-bit
-* `--release debug`, to build a binary containing debug symbols (instead of optimized)
+Build flags you might be interested in:
+* `--release debug`, to build a binary containing debug symbols (instead of **fast** or **small**)
 * `--lto`, perform optimizations across the entire object space instead of per-file (Only available on Mac and Linux)
-* `--clean`, purge the previous build. Very important if running multiple builds`
 
 The above flags are othogonal and thus can be mixed-and-matched as desired.
 
-If you want to run multiple back-to-back builds from the same directory with different settings,
+If you want to run multiple back-to-back builds from the same directory with different settings then
 add the `--clean` flag to ensure previous objects and binaries are removed.
+

@@ -8,7 +8,7 @@
 #  This script lists DOSBox package dependencies as determined by the runtime
 #  architecture, operating system, and selected compiler type and and its version.
 #
-#  See the usage block below for details or run it with the -h or --help arguments.
+#  See the usage block below for details or run it with ./build -h
 #
 #  In general, this script adheres to Google's shell scripting style guide
 #  (https://google.github.io/styleguide/shell.xml), however some deviations (such as
@@ -24,14 +24,13 @@ function usage() {
 		errcho "${1}"
 	fi
     local script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-o FILE] [-u #]"
+	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-u #]"
 	echo ""
 	echo "  FLAG                     Description                                            Default"
 	echo "  -----------------------  -----------------------------------------------------  -------"
 	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
 	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
 	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -o, --output-file <file> Write the packages to a text file instead of stdout    [$(print_var ${OUTPUT_FILE})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
 	echo "  -v, --version            Print the version of this script                       [$(print_var ${SCRIPT_VERSION})]"
 	echo "  -h, --help               Print this usage text"
@@ -49,7 +48,6 @@ function parse_args() {
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
-		-o|--output-file)       OUTPUT_FILE="${2}";     shift;shift;;
 		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
 		-v|--version)           print_version;          shift;;
 		-h|--help)              usage "Show usage";     shift;;
@@ -59,10 +57,9 @@ function parse_args() {
 
 function defaults() {
 	# variables that are directly set via user arguments
+	COMPILER_VERSION="unset"
 	BITS="64"
 	COMPILER="gcc"
-	COMPILER_VERSION="unset"
-	OUTPUT_FILE="unset"
 	SYSTEM="auto"
 
 	# derived variables with initial values
@@ -139,11 +136,7 @@ function print_version() {
 function packages() {
 	# only proceed if the user wants to install packages
 	uses system
-	if [[ "${OUTPUT_FILE}" != "unset" ]]; then
-		"packages_for_${SYSTEM}" > "${OUTPUT_FILE}"
-	else
-		"packages_for_${SYSTEM}"
-	fi
+	"packages_for_${SYSTEM}"
 }
 
 function packages_for_macos() {
@@ -259,8 +252,7 @@ function system() {
 		SYSTEM="macos"
 
 	elif [[   "${SYSTEM}" == "MSYS"* \
-	       || "${SYSTEM}" == "msys2" \
-	       || "${SYSTEM}" == "MINGW"* ]]; then
+	       || "${SYSTEM}" == "msys2" ]]; then
 		SYSTEM="msys2"
 
 	elif [[   "${SYSTEM}" == "Linux" \
