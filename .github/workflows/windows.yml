@@ -50,10 +50,9 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        shell: bash
-        run: c:/tools/msys64/usr/bin/bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/list-build-dependencies.sh)"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh | xargs pacman -S --noconfirm"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bin-path /mingw64/bin"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -66,9 +65,9 @@ jobs:
         run: choco install msys2 --no-progress
       - name: Install dependencies
         shell: bash
-        run: c:/tools/msys64/usr/bin/bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --bit-depth 32)"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --bit-depth 32 | xargs pacman -S --noconfirm"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -80,10 +79,9 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        shell: bash
-        run: c:/tools/msys64/usr/bin/bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang)"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang | xargs pacman -S --noconfirm"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin --src-path $GITHUB_WORKSPACE"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bin-path /mingw64/bin"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
 
@@ -95,9 +93,8 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        shell: bash
-        run: c:/tools/msys64/usr/bin/bash -lc "pacman -S --noconfirm $($GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang --bit-depth 32)"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang --bit-depth 32 | xargs pacman -S --noconfirm"
       - name: Build
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin --src-path $GITHUB_WORKSPACE"
+        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin"
       - name: Summarize warnings
         run: C:\tools\msys64\usr\bin\python3 ./scripts/count-warnings.py build.log
