@@ -93,9 +93,6 @@ jobs:
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --compiler clang --output-file packages"
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
 
-      - name: Install dependencies
-        run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --compiler clang | xargs pacman -S --noconfirm"
-
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/build.sh --compiler clang --bin-path /mingw64/bin"
 
