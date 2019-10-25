@@ -51,7 +51,7 @@ jobs:
         run: choco install msys2 --no-progress
       - name: Install dependencies
         run: |
-		  C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --output-file packages"
+          C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; bash ./scripts/list-build-dependencies.sh --output-file packages"
           C:\tools\msys64\usr\bin\bash -lc "cd d:/a/dosbox-staging/dosbox-staging; xargs --arg-file=packages pacman -S --noconfirm"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -l ./scripts/build.sh --bin-path /mingw64/bin
