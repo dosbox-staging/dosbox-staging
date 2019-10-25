@@ -611,7 +611,6 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 		while (true) {
 
 			// 1. Consume
-			// ==========
 			if (player.bufferPos - player.bufferConsumed >= requested) {
 				if (player.ctrlUsed) {
 					for (Bit8u i=0; i < channels; i++) {
@@ -645,7 +644,6 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 			}
 
 			// 2. Wrap
-			// =======
 			else {
 				memcpy(player.buffer,
 					   player.buffer + player.bufferConsumed,
@@ -656,7 +654,6 @@ void CDROM_Interface_Image::CDAudioCallBack(Bitu len)
 			}
 
 			// 3. Fill
-			// =======
 			const Bit16u chunkSize = player.trackFile->chunkSize;
 			while(AUDIO_DECODE_BUFFER_SIZE - player.bufferPos >= chunkSize &&
 			      (player.bufferPos - player.bufferConsumed < player.playbackRemaining ||
