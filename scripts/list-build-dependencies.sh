@@ -8,7 +8,7 @@
 #  This script lists DOSBox package dependencies as determined by the runtime
 #  architecture, operating system, and selected compiler type and and its version.
 #
-#  See the usage block below for details or run it with ./build -h
+#  See the usage block below for details or run it with the -h or --help arguments.
 #
 #  In general, this script adheres to Google's shell scripting style guide
 #  (https://google.github.io/styleguide/shell.xml), however some deviations (such as
