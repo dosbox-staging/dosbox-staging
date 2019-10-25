@@ -134,18 +134,25 @@ CDROM_Interface_Image::AudioFile::~AudioFile()
 
 bool CDROM_Interface_Image::AudioFile::seek(Bit32u offset)
 {
+/*
+// The following code requires C++11 otherwise creating an ANSI sub-second timer
+// that's portable across Windows, Linux, and macOS requires a very lengthly solution:
+// https://stackoverflow.com/questions/361363/how-to-measure-time-in-milliseconds-using-ansi-c
+// Leave this in place (but commented out) for development and debugging purposes.
+//
 #ifdef DEBUG
 	const auto begin = std::chrono::steady_clock::now();
 #endif
-
+*/
 	// Convert the byte-offset to a time offset (milliseconds)
 	const bool result = Sound_Seek(sample, lround(offset/176.4f));
 
+/*
 #ifdef DEBUG
 	const auto end = std::chrono::steady_clock::now();
 	LOG_MSG("%s CDROM: seek(%u) took %f ms", get_time(), offset, chrono::duration <double, milli> (end - begin).count());
 #endif
-
+*/
 	return result;
 }
 
