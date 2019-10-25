@@ -348,7 +348,7 @@ function threads() {
 }
 
 function fdo_flags() {
-	if [[ "${FDO}" == "true" ]]; then
+	if [[ "${FDO}" != "true" ]]; then
 		return
 	fi
 
@@ -445,7 +445,7 @@ function do_configure() {
 	fi
 
 	local fdo_string=""
-	if [[ "${FDO_FILE}" != "unset" ]]; then
+	if [[ "${FDO}" == "true" ]]; then
 		fdo_string="-FDO"
 	fi
 
