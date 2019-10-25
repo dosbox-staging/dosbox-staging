@@ -40,7 +40,7 @@ function usage() {
 	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
 	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var ${RELEASE})]"
-	echo "  -s, --src-path           Specify the source directory in which to build         [$(print_var ${SRC_PATH})]"
+	echo "  -s, --src-path           Use a different source directory to build              [$(print_var ${SRC_PATH})]"
 	echo "  -t, --threads #          Override auto-detection of number of logical CPUs      [$(print_var ${THREADS})]"
 	echo "  -v, --version            Print the version of this script                       [$(print_var ${SCRIPT_VERSION})]"
 	echo "  -x, --clean              Clean old object and build file before making          [$(print_var ${CLEAN})]"
@@ -81,7 +81,7 @@ function defaults() {
 	LTO="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
-	SRC_PATH="./"
+	SRC_PATH="$(dirname "$(dirname "$(realpath -s "$0")")")"
 	SYSTEM="auto"
 	THREADS="auto"
 
@@ -270,12 +270,10 @@ function tools_and_flags() {
 }
 
 function src_path() {
-	if [[ "${SRC_PATH}" != "./" ]]; then
-		if [[ ! -d "${SRC_PATH}" ]]; then
-			usage "The requested source directory (${SRC_PATH}) does not exist, is not a directory, or is not accessible"
-		fi
-		cd "${SRC_PATH}"
+	if [[ ! -d "${SRC_PATH}" ]]; then
+		usage "The requested source directory (${SRC_PATH}) does not exist, is not a directory, or is not accessible"
 	fi
+	cd "${SRC_PATH}"
 }
 
 function bin_path() {
