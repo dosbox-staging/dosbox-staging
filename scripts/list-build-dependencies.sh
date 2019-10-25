@@ -252,7 +252,8 @@ function system() {
 		SYSTEM="macos"
 
 	elif [[   "${SYSTEM}" == "MSYS"* \
-	       || "${SYSTEM}" == "msys2" ]]; then
+	       || "${SYSTEM}" == "msys2" \
+	       || "${SYSTEM}" == "MINGW"* ]]; then
 		SYSTEM="msys2"
 
 	elif [[   "${SYSTEM}" == "Linux" \
