@@ -28,7 +28,7 @@ function usage() {
 		errcho "${1}"
 	fi
     local script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d FILE] [-l] \\"
+	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l] \\"
 	echo "                [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
 	echo ""
 	echo "  FLAG                     Description                                            Default"
@@ -36,7 +36,7 @@ function usage() {
 	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
 	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
 	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -d, --fdo FILE           Provide feedback-Directed Optimization data            [$(print_var ${FDO_FILE})]"
+	echo "  -d, --fdo                Used feedback-Directed Optimization data               [$(print_var ${FDO})]"
 	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var ${LTO})]"
 	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
@@ -59,7 +59,7 @@ function parse_args() {
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
-		-d|--fdo)               FDO_FILE="${2}";        shift;shift;;
+		-d|--fdo)               FDO="true";             shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
 		-l|--lto)               LTO="true";             shift;;
 		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
@@ -80,7 +80,7 @@ function defaults() {
 	CLEAN="false"
 	COMPILER="gcc"
 	COMPILER_VERSION="unset"
-	FDO_FILE="unset"
+	FDO="false"
 	LTO="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
@@ -348,19 +348,20 @@ function threads() {
 }
 
 function fdo_flags() {
-	if [[ "${FDO_FILE}" == "unset" ]]; then
+	if [[ "${FDO}" == "true" ]]; then
 		return
 	fi
 
-	if [[ ! -f "${FDO_FILE}" ]]; then
-		error "The Feedback-Directed Optimization file provided (${FDO_FILE}) does not exist or could not be accessed"
+	uses compiler_type
+	local fdo_file="${SRC_PATH}/scripts/profile-data/${COMPILER}.profile"
+	if [[ ! -f "${fdo_file}" ]]; then
+		error "The Feedback-Directed Optimization file provided (${fdo_file}) does not exist or could not be accessed"
 	fi
 
-	uses compiler_type
 	if [[ "${COMPILER}" == "gcc" ]]; then
-		CFLAGS_ARRAY+=(-fauto-profile="${FDO_FILE}")
+		CFLAGS_ARRAY+=(-fauto-profile="${fdo_file}")
 	elif [[ "${COMPILER}" == "clang" ]]; then
-		CFLAGS_ARRAY+=(-fprofile-sample-use="${FDO_FILE}")
+		CFLAGS_ARRAY+=(-fprofile-sample-use="${fdo_file}")
 	fi
 }
 
