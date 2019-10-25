@@ -36,10 +36,8 @@
 #include "SDL_sound_internal.h"
 
 #define DR_FLAC_IMPLEMENTATION
-// #define DR_FLAC_NO_SIMD 1 /* temporary work-around for https://github.com/mackron/dr_libs/issues/63 */
 #define DR_FLAC_NO_STDIO 1
 #define DR_FLAC_NO_WIN32_IO 1
-#define DR_FLAC_NO_CRC 1
 #define DRFLAC_MALLOC(sz) SDL_malloc((sz))
 #define DRFLAC_REALLOC(p, sz) SDL_realloc((p), (sz))
 #define DRFLAC_FREE(p) SDL_free((p))
