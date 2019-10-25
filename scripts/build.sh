@@ -12,7 +12,7 @@
 #  disabled, which matches the configuration of GitHub'Windows VMs, described here:
 #  https://help.github.com/en/articles/virtual-environments-for-github-actions
 #
-#  See the usage block below for details or run it with ./build -h
+#  See the usage block below for details or run it with the -h or --help arguments.
 #
 #  In general, this script adheres to Google's shell scripting style guide
 #  (https://google.github.io/styleguide/shell.xml), however some deviations (such as

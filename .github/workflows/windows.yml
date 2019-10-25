@@ -64,7 +64,6 @@ jobs:
       - name: Install msys2 environment
         run: choco install msys2 --no-progress
       - name: Install dependencies
-        shell: bash
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/list-build-dependencies.sh --bit-depth 32 | xargs pacman -S --noconfirm"
       - name: Build
         run: C:\tools\msys64\usr\bin\bash -lc "$GITHUB_WORKSPACE/scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
