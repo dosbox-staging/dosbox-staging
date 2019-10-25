@@ -273,13 +273,13 @@ const Uint64 load_existing_seek_points(const char* filename,
     infile.close();
 
     // Sentinal 4: does the seek_points table have our stream's hash?
-    const map<Uint64, vector<drmp3_seek_point_serial> >::iterator p_seek_points = seek_points_table.find(stream_hash);
+    const auto p_seek_points = seek_points_table.find(stream_hash);
     if (p_seek_points == seek_points_table.end()) {
         return 0;
     }
 
     // Sentinal 5: does the pcm_frame_count table have our stream's hash?
-    const map<Uint64, drmp3_uint64>::iterator p_pcm_frame_count = pcm_frame_count_table.find(stream_hash);
+    const auto p_pcm_frame_count = pcm_frame_count_table.find(stream_hash);
     if (p_pcm_frame_count == pcm_frame_count_table.end()) {
         return 0;
     }
