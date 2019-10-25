@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v1
+      - name: "Log environment"
+        run: ./scripts/log-env.sh
       - run: sudo apt update
       - name: "Install packages"
         run: sudo apt-get install libsdl1.2-dev libsdl-net1.2-dev libsdl-sound1.2-dev python3-setuptools
