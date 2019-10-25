@@ -13,14 +13,26 @@ jobs:
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
-  build_macos_gcc:
-    name: "GCC (macOS-10.14)"
+  build_macos_gcc_opt:
+    name: "GCC-9 opt (macOS-10.14)"
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --lto --fdo
+        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --bin-path /usr/local/bin --lto --fdo
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_gcc:
+    name: "GCC-9 default (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --bin-path /usr/local/bin
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
