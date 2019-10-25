@@ -27,11 +27,13 @@ libdecoders_a_CPPFLAGS = \
 libdecoders_a_CXXFLAGS = \
 	$(AM_CXXFLAGS) \
 	$(CXXFLAGS) \
+	-std=c++11 \
 	-Wpedantic \
 	-Wall
 
 libdecoders_a_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(CFLAGS) \
+	-std=c++11 \
 	-Wpedantic \
 	-Wall
