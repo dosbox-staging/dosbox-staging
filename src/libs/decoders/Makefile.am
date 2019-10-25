@@ -34,6 +34,5 @@ libdecoders_a_CXXFLAGS = \
 libdecoders_a_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(CFLAGS) \
-	-std=c++11 \
 	-Wpedantic \
 	-Wall
