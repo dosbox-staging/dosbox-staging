@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh)
       - name: Build
-        run: sudo ./scripts/build.sh --lto --fdo
+        run: sudo ./scripts/build.sh --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
