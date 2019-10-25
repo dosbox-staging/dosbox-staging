@@ -28,7 +28,7 @@ function usage() {
 		errcho "${1}"
 	fi
     local script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-l] \\"
+	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d FILE] [-l] \\"
 	echo "                [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
 	echo ""
 	echo "  FLAG                     Description                                            Default"
@@ -36,7 +36,8 @@ function usage() {
 	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
 	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
 	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -l, --lto                Perform additional link-time-optimization              [$(print_var ${LTO})]"
+	echo "  -d, --fdo FILE           Provide feedback-Directed Optimization data            [$(print_var ${FDO_FILE})]"
+	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var ${LTO})]"
 	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
 	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
 	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var ${RELEASE})]"
@@ -58,6 +59,7 @@ function parse_args() {
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
+		-d|--fdo)               FDO_FILE="${2}";        shift;shift;;
 		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
 		-l|--lto)               LTO="true";             shift;;
 		-p|--bin-path)          BIN_PATH="${2}";        shift;shift;;
@@ -74,10 +76,11 @@ function parse_args() {
 
 function defaults() {
 	# variables that are directly set via user arguments
-	COMPILER_VERSION="unset"
 	BITS="64"
 	CLEAN="false"
 	COMPILER="gcc"
+	COMPILER_VERSION="unset"
+	FDO_FILE="unset"
 	LTO="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
@@ -344,6 +347,23 @@ function threads() {
 	fi
 }
 
+function fdo_flags() {
+	if [[ "${FDO_FILE}" == "unset" ]]; then
+		return
+	fi
+
+	if [[ ! -f "${FDO_FILE}" ]]; then
+		error "The Feedback-Directed Optimization file provided (${FDO_FILE}) does not exist or could not be accessed"
+	fi
+
+	uses compiler_type
+	if [[ "${COMPILER}" == "gcc" ]]; then
+		CFLAGS_ARRAY+=(-fauto-profile="${FDO_FILE}")
+	elif [[ "${COMPILER}" == "clang" ]]; then
+		CFLAGS_ARRAY+=(-fprofile-sample-use="${FDO_FILE}")
+	fi
+}
+
 function lto_flags() {
 	if [[ "${LTO}" != "true" ]]; then
 		return
@@ -407,6 +427,7 @@ function do_configure() {
 	uses src_path
 	uses tools_and_flags
 	uses release_flags
+	uses fdo_flags
 	uses lto_flags
 	uses check_build_tools
 	uses configure_options
@@ -420,6 +441,11 @@ function do_configure() {
 	local lto_string=""
 	if [[ "${LTO}" == "true" ]]; then
 		lto_string="-LTO"
+	fi
+
+	local fdo_string=""
+	if [[ "${FDO_FILE}" != "unset" ]]; then
+		fdo_string="-FDO"
 	fi
 
 	echo ""
@@ -436,7 +462,7 @@ function do_configure() {
 	echo "    LDFLAGS  = ${LDFLAGS}"
 	echo "    THREADS  = ${THREADS}"
 	echo ""
-	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${RELEASE}${lto_string}"
+	echo "Build type: ${SYSTEM}-${MACHINE}-${BITS}bit-${COMPILER}-${RELEASE}${lto_string}${fdo_string}"
 	echo ""
 	"${CC}" --version
 	sleep 5
