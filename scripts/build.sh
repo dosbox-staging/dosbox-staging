@@ -424,7 +424,6 @@ function configure_options() {
 	if [[ "${MACHINE}" != *"86"* ]]; then
 		CONFIGURE_OPTIONS+=("--disable-dynamic-x86" "--disable-fpu-x86" "--disable-fpu-x64")
 	fi
-	CONFIGURE_OPTIONS+=("--disable-dynamic-x86" "--disable-fpu-x86" "--disable-fpu-x64")
 }
 
 function do_autogen() {
