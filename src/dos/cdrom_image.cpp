@@ -205,9 +205,6 @@ int CDROM_Interface_Image::AudioFile::getLength()
 	return length;
 }
 
-	return length;
-}
-
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
 CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
