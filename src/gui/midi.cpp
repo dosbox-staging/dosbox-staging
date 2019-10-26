@@ -68,16 +68,7 @@ MidiHandler::MidiHandler(){
 
 MidiHandler Midi_none;
 
-/* Include different midi drivers, lowest ones get checked first for default */
-
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif
-#ifndef __has_extension
-#define __has_extension __has_feature // Compatibility with pre-3.0 compilers.
-#endif
-
-#if defined(MACOSX) && __has_extension(blocks)
+#if defined(MACOSX) && defined(C_SUPPORTS_APPLE_BLOCKS)
 
 #include "midi_coremidi.h"
 #include "midi_coreaudio.h"

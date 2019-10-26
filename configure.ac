@@ -189,6 +189,16 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
+AC_MSG_CHECKING(if compiler suports Apple's __has_extension(blocks) required by CoreMIDI)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+#ifndef __has_extension
+#define __has_extension __has_feature /* Compatibility with pre-3.0 compilers. */
+#endif
+#if __has_extension(blocks)
+#endif
+]])], [AC_MSG_RESULT(yes);AC_DEFINE([C_SUPPORTS_APPLE_BLOCKS], [],
+[compiler suports Apple's __has_extension(blocks)])], AC_MSG_RESULT(no))
+
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
 AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
