@@ -1,0 +1,67 @@
+ ----------------------
+ | SDL_sound credits. |
+ ----------------------
+
+Initial API interface and implementation,
+RAW driver,
+VOC driver,
+MPG123 driver,
+WAV driver,
+OGG driver,
+SHN driver,
+Unix support,
+BeOS support:
+    Ryan C. Gordon
+
+Bug fixes,
+FreeBSD testing:
+    Tsuyoshi Iguchi
+
+Code cleanups and fixes,
+AIFF driver,
+MikMod driver,
+MIDI driver,
+ModPlug driver,
+FLAC driver:
+    Torbjörn Andersson
+
+autoconf,
+MacOS X support:
+    Max Horn
+
+win32 support,
+PocketPC support,
+other fixes:
+    Tyler Montbriand
+
+AU driver,
+    Mattias Engdegård
+
+MacOS Classic support,
+quicktime decoder,
+OS X fixes:
+    Darrell Walisser
+
+Alternate audio conversion code:
+    Frank Ranostaj
+
+Initial Borland C++ project files:
+    Dominique Louis
+
+Bugfixes and stuff:
+    Eric Wing
+
+FLAC 1.1.3 updates:
+    Josh Coalson
+
+Fixes:
+    Chris Nelson
+
+Fixes:
+    Ozkan Sezer
+
+Other stuff:
+    Your name here! Patches go to icculus@icculus.org ...
+
+/* end of CREDITS ... */
+
