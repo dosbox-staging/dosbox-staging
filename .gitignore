@@ -36,6 +36,7 @@ aclocal.m4
 autom4te.cache
 config.h
 config.h.in
+config.h.in~
 config.log
 config.status
 config.guess
