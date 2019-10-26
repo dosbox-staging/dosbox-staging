@@ -25,7 +25,6 @@ from bs4 import BeautifulSoup
 #
 MAX_ISSUES = 99
 
-
 def summary_values(summary_table):
     if not summary_table:
         return

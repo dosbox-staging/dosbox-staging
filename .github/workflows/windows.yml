@@ -1,0 +1,142 @@
+#  SPDX-License-Identifier: GPL-2.0-or-later
+
+name: "Windows builds"
+on: push
+jobs:
+
+  build_msvc_debug:
+    name: "MSVC 14 Debug (win-2019)"
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        shell: pwsh
+        run: .\scripts\log-env.ps1
+      - name: "Install packages"
+        shell: pwsh
+        run: |
+          vcpkg install libpng sdl1 sdl1-net
+          vcpkg integrate install
+      - name: "Build"
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          # build steps
+          cd visualc_net
+          MSBuild -m dosbox.sln -p:Configuration=Debug
+
+
+  build_msvc_release:
+    name: "MSVC 14 Release (win-2019)"
+    runs-on: windows-2019
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        shell: pwsh
+        run: .\scripts\log-env.ps1
+      - name: "Install packages"
+        shell: pwsh
+        run: |
+          vcpkg install libpng sdl1 sdl1-net
+          vcpkg integrate install
+      - name: "Build"
+        shell: pwsh
+        env:
+          PATH: '${env:PATH};C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\amd64'
+        run: |
+          # build steps
+          cd visualc_net
+          MSBuild -m dosbox.sln -p:Configuration=Release
+
+
+  build_msys2_gcc_64:
+    name: MSYS2 GCC-9 x86_64
+    runs-on: windows-2019
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install msys2 environment
+        run:  choco install msys2 --no-progress
+
+      - name: "Log environment"
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/log-env.sh"
+
+      - name: Install dependencies
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/list-build-dependencies.sh | xargs pacman -S --noconfirm"
+
+      - name: Build
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/build.sh --bin-path /mingw64/bin"
+
+      - name: Summarize warnings
+        run:  .\scripts\count-warnings.py build.log
+
+
+  build_msys2_gcc_32:
+    name: MSYS2 GCC-9 i686
+    runs-on: windows-2019
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install msys2 environment
+        run:  choco install msys2 --no-progress
+
+      - name: "Log environment"
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/log-env.sh"
+
+      - name: Install dependencies
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/list-build-dependencies.sh --bit-depth 32 | xargs pacman -S --noconfirm"
+
+      - name: Build
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/build.sh --bit-depth 32 --bin-path /mingw32/bin"
+
+      - name: Summarize warnings
+        run:  .\scripts\count-warnings.py build.log
+
+
+  build_msys2_clang_64:
+    name: MSYS2 Clang-8 x86_64
+    runs-on: windows-2019
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install msys2 environment
+        run:  choco install msys2 --no-progress
+
+      - name: "Log environment"
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/log-env.sh"
+
+      - name: Install dependencies
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/list-build-dependencies.sh --compiler clang | xargs pacman -S --noconfirm"
+
+      - name: Build
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/build.sh --compiler clang --bin-path /mingw64/bin"
+
+      - name: Summarize warnings
+        run:  .\scripts\count-warnings.py build.log
+
+
+  build_msys2_clang_32:
+    name: MSYS2 Clang-8 i686
+    runs-on: windows-2019
+    env:
+      CHERE_INVOKING: yes
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install msys2 environment
+        run:  choco install msys2 --no-progress
+
+      - name: "Log environment"
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/log-env.sh"
+
+      - name: Install dependencies
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/list-build-dependencies.sh --compiler clang --bit-depth 32 | xargs pacman -S --noconfirm"
+
+      - name: Build
+        run:  C:\tools\msys64\usr\bin\bash -lc "./scripts/build.sh --compiler clang --bit-depth 32 --bin-path /mingw32/bin"
+
+      - name: Summarize warnings
+        run:  .\scripts\count-warnings.py build.log

@@ -1,0 +1,48 @@
+name: "Linux builds"
+on: push
+jobs:
+
+  build_ubuntu_gcc9:
+    name: "GCC 9 (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        run: ./scripts/log-env.sh
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh --compiler-version 9)
+      - name: Build
+        run: ./scripts/build.sh --compiler-version 9 --lto
+      - name: "Summarize warnings"
+        run: ./scripts/count-warnings.py build.log
+
+  build_ubuntu_gcc_defaults:
+    name: "GCC"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-16.04]
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        run: ./scripts/log-env.sh
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh)
+      - name: Build
+        run: ./scripts/build.sh
+      - name: "Summarize warnings"
+        run: ./scripts/count-warnings.py build.log
+
+  build_ubuntu_clang_8:
+    name: "Clang 8 (ubuntu-18.04)"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        run: ./scripts/log-env.sh
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh --compiler clang --compiler-version 8)
+      - name: Build
+        run: ./scripts/build.sh --compiler clang --compiler-version 8 --lto
+      - name: "Summarize warnings"
+        run: ./scripts/count-warnings.py build.log

@@ -1,0 +1,16 @@
+name: "macOS builds"
+on: push
+jobs:
+  build_macos_clang:
+    name: "Clang (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: "Log environment"
+        run: ./scripts/log-env.sh
+      - name: Install dependencies
+        run: brew install $(./scripts/list-build-dependencies.sh --compiler clang)
+      - name: Build
+        run: ./scripts/build.sh --compiler clang --lto
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
