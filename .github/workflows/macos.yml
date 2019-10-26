@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --bin-path /usr/local/bin
+        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 8)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 8 --bin-path /usr/local/bin
+        run: ./scripts/build.sh --compiler gcc --compiler-version 8 --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 7)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 7 --bin-path /usr/local/bin
+        run: ./scripts/build.sh --compiler gcc --compiler-version 7 --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
@@ -57,7 +57,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 6)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --bin-path /usr/local/bin
+        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --lto --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 

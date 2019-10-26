@@ -280,6 +280,16 @@ function src_path() {
 }
 
 function bin_path() {
+	uses system
+	uses compiler_type
+
+	# By default, if we're on macOS and using GCC then always include /usr/local/bin, because
+	# that's where brew installs all the binaries.  If the user adds their own --bin-path,
+	# that will be prefixed ahead of /usr/local/bin and take precedent.
+	if [[ "${SYSTEM}" == "macos" && "${COMPILER}" == "gcc" ]]; then
+		PATH="/usr/local/bin:${PATH}"
+	fi
+
 	if [[ "${BIN_PATH}" != "unset" ]]; then
 		if [[ ! -d "${BIN_PATH}" ]]; then
 			usage "The requested PATH (${BIN_PATH}) does not exist, is not a directory, or is not accessible"
