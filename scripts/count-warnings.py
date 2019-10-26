@@ -23,7 +23,7 @@ import sys
 # then script will return with status 1. Simply change this line if you
 # want to set a different limit.
 #
-MAX_ISSUES = 424
+MAX_ISSUES = 676
 
 # For recognizing warnings in GCC format in stderr:
 #
