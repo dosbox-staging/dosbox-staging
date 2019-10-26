@@ -61,14 +61,3 @@ jobs:
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 
-  build_macos_gcc5:
-    name: "GCC-5 (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 5)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 5 --bin-path /usr/local/bin
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
