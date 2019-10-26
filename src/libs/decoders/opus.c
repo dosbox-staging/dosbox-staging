@@ -30,7 +30,14 @@
 #endif
 
 #include <stdlib.h> // getenv()
+
+// On macOS with GCC, pkg-config only include the opus/ subdirectory
+// itself instead of the parent, so we take this into account:
+#if defined(MACOSX) && ! defined(__clang__) && defined(__GNUC__)
+#include <opusfile.h>
+#else
 #include <opus/opusfile.h>
+#endif
 #include <speex/speex_resampler.h>
 
 #include "SDL_sound.h"
