@@ -57,7 +57,7 @@ jobs:
       - name: Install dependencies
         run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 6)
       - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --lto --fdo
+        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
 

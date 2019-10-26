@@ -370,11 +370,11 @@ function fdo_flags() {
 
 	if [[ "${COMPILER}" == "gcc" ]]; then
 
-		# Catch a broken corner-case involving GCC 5.x + LTO + FDO
+		# Don't let GCC 6.x and under use both FDO and LTO
 		uses compiler_version
-		if ( [[  "${COMPILER_VERSION}" == "unset" && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" == '5' ]] \
-		     || [[ "${COMPILER_VERSION}" == "5"* ]] ) && [[ "${LTO}" == "true" ]]; then
-			error "GCC-5 has a bug when building with both FDO and LTO are enabled; please change one or more these."
+		if ( [[  "${COMPILER_VERSION}" == "unset" && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7" ]] \
+		     || [[ "${COMPILER_VERSION}" -lt "7" ]] ) && [[ "${LTO}" == "true" ]]; then
+			error "GCC versions 6 and under cannot handle FDO and LTO simultaneously; please change one or more these."
 		fi
 		CFLAGS_ARRAY+=(-fauto-profile="${fdo_file}")
 	elif [[ "${COMPILER}" == "clang" ]]; then
