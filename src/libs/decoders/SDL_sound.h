@@ -45,7 +45,8 @@
  *   - .MP3  (MPEG-1 Layer 3 support, via libmpg123.)
  *   - .MID  (MIDI music converted to Waveform data, internal.)
  *   - .MOD  (MOD files, via MikMod and ModPlug.)
- *   - .OGG  (Ogg files, via Ogg Vorbis libraries.)
+ *   - .OGG  (Ogg Vorbis files, via the Vorbis libraries.)
+ *   - .OPUS (Ogg Opus files, via the Opus libraries.)
  *   - .SPX  (Speex files, via libspeex.)
  *   - .SHN  (Shorten files, internal.)
  *   - .RAW  (Raw sound data in any format, internal.)
@@ -64,8 +65,8 @@
 #ifndef _INCLUDE_SDL_SOUND_H_
 #define _INCLUDE_SDL_SOUND_H_
 
-#include "SDL.h"
-#include "SDL_endian.h"
+#include <SDL.h>
+#include <SDL_endian.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -108,17 +109,16 @@ extern "C" {
  */
 typedef enum
 {
-    SOUND_SAMPLEFLAG_NONE    = 0,       /**< No special attributes. */
+    SOUND_SAMPLEFLAG_NONE    = 0x0, /**< No special attributes. */
 
-        /* these are set at sample creation time... */
-    SOUND_SAMPLEFLAG_CANSEEK = 1,       /**< Sample can seek to arbitrary points. */
+    /* these are set at sample creation time... */
+    SOUND_SAMPLEFLAG_CANSEEK = 0x1, /**< Sample can seek to arbitrary points. */
 
-        /* these are set during decoding... */
-    SOUND_SAMPLEFLAG_EOF     = 1 << 29, /**< End of input stream. */
-    SOUND_SAMPLEFLAG_ERROR   = 1 << 30, /**< Unrecoverable error. */
-    SOUND_SAMPLEFLAG_EAGAIN  = 1 << 31  /**< Function would block, or temp error. */
+    /* these are set during decoding... */
+    SOUND_SAMPLEFLAG_EOF     = 0x2, /**< End of input stream. */
+    SOUND_SAMPLEFLAG_ERROR   = 0x4, /**< Unrecoverable error. */
+    SOUND_SAMPLEFLAG_EAGAIN  = 0x8  /**< Function would block, or temp error. */
 } Sound_SampleFlags;
-
 
 /**
  * \struct Sound_AudioInfo
@@ -729,6 +729,18 @@ SNDDECLSPEC int SDLCALL Sound_Seek(Sound_Sample *sample, Uint32 ms);
 
 #ifdef __cplusplus
 }
+
+inline Sound_SampleFlags operator|(Sound_SampleFlags a, Sound_SampleFlags b)
+{return static_cast<Sound_SampleFlags>(static_cast<int>(a) | static_cast<int>(b));}
+
+inline Sound_SampleFlags& operator|= (Sound_SampleFlags& a, Sound_SampleFlags b)
+{ return (Sound_SampleFlags&)((int&)a |= static_cast<int>(b)); }
+
+inline Sound_SampleFlags operator& (Sound_SampleFlags a, Sound_SampleFlags b)
+{ return (Sound_SampleFlags)((int)a & (int)b); }
+
+inline Sound_SampleFlags& operator&= (Sound_SampleFlags& a, Sound_SampleFlags b)
+{ return (Sound_SampleFlags&)((int&)a &= (int)b); }
 #endif
 
 #endif  /* !defined _INCLUDE_SDL_SOUND_H_ */
