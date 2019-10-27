@@ -29,7 +29,8 @@ jobs:
           echo '-selfupdate-'
           sudo port -q selfupdate
           echo '-installing deps-'
-          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl libsdl_net opusfile speexDSP
+          sudo port -q install libsdl +x11
+          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP
           echo '-listing bin*/ -'
           ls bin*/
           echo '-listing lib*/ -'
