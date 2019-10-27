@@ -7,8 +7,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: |
-          xcode-select --install || true
-          sudo xcodebuild -license || true
+          set +e
+          xcode-select --install
+          sudo xcodebuild -license
           ls /usr/bin/gcc*
           /usr/bin/gcc -v
           echo $PWD
@@ -18,7 +19,7 @@ jobs:
           cd src
           ./configure --prefix="$(dirname "$PWD")"
           make -j"$(sysctl -n hw.physicalcpu || echo 4)"
-          make install || true
+          sudo make install
           cd ..
           PATH="${PWD}/sbin:${PWD}/bin:${PATH"
           echo '-listing ${PWD} -'
@@ -26,13 +27,17 @@ jobs:
           echo '---'
           ls bin*/
           echo '-selfupdate-'
-          port selfupdate || true
+          sudo port -q selfupdate
           echo '-installing deps-'
-          echo coreutils autogen automake autoconf pkgconfig libpng libsdl libsdl_net opusfile speexDSP | xargs -n1 port install || true
+          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl libsdl_net opusfile speexDSP
           echo '-listing bin*/ -'
           ls bin*/
           echo '-listing lib*/ -'
           ls lib*/
           echo '-installing gcc9-'
-          port install gcc9 || true          
+          sudo port -q install gcc9
+          automake --version
+          pkg-config --version
+          gcc -v
+          gcc-9 -v
 
