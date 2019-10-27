@@ -68,7 +68,7 @@ MidiHandler::MidiHandler(){
 
 MidiHandler Midi_none;
 
-#if defined(MACOSX) && defined(C_SUPPORTS_APPLE_BLOCKS)
+#if defined(MACOSX) && defined(C_SUPPORTS_COREMIDI)
 
 #include "midi_coremidi.h"
 #include "midi_coreaudio.h"
