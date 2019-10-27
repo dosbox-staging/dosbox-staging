@@ -8,13 +8,14 @@ jobs:
       - uses: actions/checkout@v1
       - run: |
           xcode-select --install || true
-          xcodebuild -license || true
+          sudo xcodebuild -license || true
+          ls /usr/bin/gcc*
           echo $PWD
-          mdkir ports
+          mkdir ports
           cd ports
           git clone --depth=1 https://github.com/macports/macports-base.git src
           cd src
-          ./configure --prefix=$(dirname $PWD)
+          ./configure --prefix="$(dirname "$PWD")"
           make
           cd ..
           ls

@@ -372,7 +372,7 @@ function fdo_flags() {
 
 		# Don't let GCC 6.x and under use both FDO and LTO
 		uses compiler_version
-		if ( [[  "${COMPILER_VERSION}" == "unset" && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7" ]] \
+		if ( [[  "${COMPILER_VERSION}" == "unset" ]] && [[ "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7" ]] \
 		     || [[ "${COMPILER_VERSION}" -lt "7" ]] ) && [[ "${LTO}" == "true" ]]; then
 			error "GCC versions 6 and under cannot handle FDO and LTO simultaneously; please change one or more these."
 		fi
