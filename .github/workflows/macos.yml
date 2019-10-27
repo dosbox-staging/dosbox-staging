@@ -1,62 +1,21 @@
 name: "macOS builds"
 on: push
 jobs:
-  build_macos_clang:
-    name: "Clang (macOS-10.14)"
+  xcode_ports:
+    name: Xcode & MacPorts
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler clang)
-      - name: Build
-        run: ./scripts/build.sh --compiler clang --lto --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc:
-    name: "GCC-9 (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 9 --lto --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc8:
-    name: "GCC-8 (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 8)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 8 --lto --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc7:
-    name: "GCC-7 (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 7)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 7 --lto --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
-
-  build_macos_gcc6:
-    name: "GCC-6 (macOS-10.14)"
-    runs-on: macOS-10.14
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install dependencies
-        run: brew install $(./scripts/list-build-dependencies.sh --compiler gcc --compiler-version 6)
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version 6 --fdo
-      - name: "Summarize warnings"
-        run: python3 ./scripts/count-warnings.py build.log
+      - run: |
+          xcode-select --install || true
+          xcodebuild -license || true
+          echo $PWD
+          mdkir ports
+          cd ports
+          git clone --depth=1 https://github.com/macports/macports-base.git src
+          cd src
+          ./configure --prefix=$(dirname $PWD)
+          make
+          cd ..
+          ls
+          ls */
