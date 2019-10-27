@@ -7,7 +7,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: |
-          set +e
           xcode-select --install
           sudo xcodebuild -license
           ls /usr/bin/gcc*
@@ -15,11 +14,11 @@ jobs:
           echo $PWD
           mkdir ports
           cd ports
-          git clone --depth=1 https://github.com/macports/macports-base.git src
+          git clone --quiet --depth=1 https://github.com/macports/macports-base.git src
           cd src
-          ./configure --prefix="$(dirname "$PWD")"
-          make -j"$(sysctl -n hw.physicalcpu || echo 4)"
-          sudo make install
+          ./configure --prefix="$(dirname "$PWD")" &> log || cat log
+          make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
+          sudo make install || true
           cd ..
           PATH="${PWD}/sbin:${PWD}/bin:${PATH"
           echo '-listing ${PWD} -'
@@ -27,16 +26,16 @@ jobs:
           echo '---'
           ls bin*/
           echo '-selfupdate-'
-          sudo port -q selfupdate
+          sudo port -q selfupdate || true
           echo '-installing deps-'
-          sudo port -q install libsdl +x11
-          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP
+          sudo port -q install libsdl +x11 || true
+          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP || true
           echo '-listing bin*/ -'
           ls bin*/
           echo '-listing lib*/ -'
           ls lib*/
           echo '-installing gcc9-'
-          sudo port -q install gcc9
+          sudo port -q install gcc9 || true
           automake --version
           pkg-config --version
           gcc -v
