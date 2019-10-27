@@ -60,3 +60,16 @@ jobs:
         run: ./scripts/build.sh --compiler gcc --compiler-version 6 --fdo
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
+
+  build_macos_apple-gcc42:
+    name: "Apple-gcc42 (macOS-10.14)"
+    runs-on: macOS-10.14
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: brew install apple-gcc42 coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile speexdsp
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version 4.2 --release small
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
