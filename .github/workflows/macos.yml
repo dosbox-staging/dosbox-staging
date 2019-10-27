@@ -7,9 +7,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: |
-          xcode-select --install
-          sudo xcodebuild -license
-          ls /usr/bin/gcc*
+          set +e
+          xcode-select --install || true
+          sudo xcodebuild -license || true
+          ls /usr/bin/gcc* || true
           /usr/bin/gcc -v
           echo $PWD
           mkdir ports
@@ -20,7 +21,7 @@ jobs:
           make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
           sudo make install || true
           cd ..
-          PATH="${PWD}/sbin:${PWD}/bin:${PATH"
+          PATH="${PWD}/sbin:${PWD}/bin:${PATH}"
           echo '-listing ${PWD} -'
           ls
           echo '---'
