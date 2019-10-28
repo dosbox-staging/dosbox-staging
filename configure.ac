@@ -189,6 +189,7 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
+dnl When on macOS, enable support for Apple's Core MIDI if our compiler can successfully #include its header
 AC_MSG_CHECKING(if compiler supports CoreMIDI headers)
 case "$host" in
   *-*-darwin*)
