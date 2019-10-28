@@ -27,24 +27,25 @@ function usage() {
 	if [ -n "${1}" ]; then
 		errcho "${1}"
 	fi
-    local script=$(basename "${0}")
+	local script
+	script=$(basename "${0}")
 	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l] \\"
 	echo "                [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
 	echo ""
 	echo "  FLAG                     Description                                            Default"
 	echo "  -----------------------  -----------------------------------------------------  -------"
-	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var ${BITS})]"
-	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var ${COMPILER})]"
-	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var ${SYSTEM})]"
-	echo "  -d, --fdo                Used feedback-Directed Optimization data               [$(print_var ${FDO})]"
-	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var ${LTO})]"
-	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var ${BIN_PATH})]"
-	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var ${COMPILER_VERSION})]"
-	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var ${RELEASE})]"
-	echo "  -s, --src-path           Use a different source directory to build              [$(print_var ${SRC_PATH})]"
-	echo "  -t, --threads #          Override auto-detection of number of logical CPUs      [$(print_var ${THREADS})]"
-	echo "  -v, --version            Print the version of this script                       [$(print_var ${SCRIPT_VERSION})]"
-	echo "  -x, --clean              Clean old object and build file before making          [$(print_var ${CLEAN})]"
+	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var "${BITS}")]"
+	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var "${COMPILER}")]"
+	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
+	echo "  -d, --fdo                Used feedback-Directed Optimization data               [$(print_var "${FDO}")]"
+	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var "${LTO}")]"
+	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var "${BIN_PATH}")]"
+	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var "${COMPILER_VERSION}")]"
+	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var "${RELEASE}")]"
+	echo "  -s, --src-path           Use a different source directory to build              [$(print_var "${SRC_PATH}")]"
+	echo "  -t, --threads #          Override auto-detection of number of logical CPUs      [$(print_var "${THREADS}")]"
+	echo "  -v, --version            Print the version of this script                       [$(print_var "${SCRIPT_VERSION}")]"
+	echo "  -x, --clean              Clean old object and build file before making          [$(print_var "${CLEAN}")]"
 	echo "  -h, --help               Print this usage text"
 	echo ""
 	echo "Example: ${script} -b 32 --compiler clang -u 8 --bin-path /mingw64/bin -r small --lto"
@@ -121,7 +122,7 @@ function errcho() {
 	local CLEAR='\033[0m'
 	local RED='\033[0;91m'
 	>&2 echo ""
-	>&2 echo -e " ${RED}👉  ${@}${CLEAR}\n"
+	>&2 echo -e " ${RED}👉  ${*}${CLEAR}" "\\n"
 }
 function bug() {
 	local CLEAR='\033[0m'
@@ -134,6 +135,10 @@ function bug() {
 function error() {
 	errcho "${@}"
 	exit 1
+}
+
+function exists() {
+	command -v "${1}" &> /dev/null
 }
 
 function print_var() {
@@ -152,7 +157,7 @@ function uses() {
 
 	# only handles function calls, so filter everything else
 	func="${1}"
-	if [[ "$(type -t ${func})" != "function" ]]; then
+	if [[ "$(type -t "${func}")" != "function" ]]; then
 		bug "The 'uses' function was passed ${func}, which isn't a function"
 	fi
 
@@ -227,14 +232,14 @@ function tools_and_flags() {
 		CXX="g++${VERSION_POSTFIX}"
 		CFLAGS_ARRAY+=("-fstack-protector" "-fdiagnostics-color=always")
 
-		# GCC & Linux
-		if [[ "${SYSTEM}" == "linux" ]]; then
-			AR="gcc-ar${VERSION_POSTFIX}"
-			RANLIB="gcc-ranlib${VERSION_POSTFIX}"
-
-		# GCC & MSYS2
-		elif [[ "${SYSTEM}" == "msys2" ]]; then
+		# Prioritize versioned lib-tools over generics
+		AR="gcc-ar${VERSION_POSTFIX}"
+		if ! exists "${AR}"; then
 			AR="ar"
+		fi
+
+		RANLIB="gcc-ranlib${VERSION_POSTFIX}"
+		if ! exists "${RANLIB}"; then
 			RANLIB="ranlib"
 		fi
 
@@ -261,13 +266,8 @@ function tools_and_flags() {
 		fi
 	fi
 
-	# MacOS universal
-	if [[ "${SYSTEM}" == "macos" ]]; then
-		AR="ar"
-		RANLIB="ranlib"
-
 	# MSYS universal
-	elif [[ "${SYSTEM}" == "msys2" ]]; then
+	if [[ "${SYSTEM}" == "msys2" ]]; then
 		LIBS_ARRAY+=("-lwinmm" "-lws2_32")
 	fi
 }
@@ -301,7 +301,7 @@ function bin_path() {
 
 function check_build_tools() {
 	for tool in "${CC}" "${CXX}" "${LD}" "${AR}" "${RANLIB}"; do
-		if ! which "${tool}" &> /dev/null; then
+		if ! exists "${tool}"; then
 			error "${tool} was not found in your PATH or is not executable. If it's in a custom path, use --bin-path"
 		fi
 	done
@@ -348,7 +348,7 @@ function threads() {
 			THREADS="${NUMBER_OF_PROCESSORS}"
 		elif [[ "${SYSTEM}" == "macos" ]]; then
 			THREADS="$(sysctl -n hw.physicalcpu || echo 4)"
-		elif which nproc &> /dev/null; then
+		elif exists nproc; then
 			THREADS="$(nproc)"
 		else
 			THREADS=4 # if auto-detection fails fallback to a reasonable
@@ -372,13 +372,15 @@ function fdo_flags() {
 
 		# Don't let GCC 6.x and under use both FDO and LTO
 		uses compiler_version
-		if ( [[  "${COMPILER_VERSION}" == "unset" ]] && [[ "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7" ]] \
-		     || [[ "${COMPILER_VERSION}" -lt "7" ]] ) && [[ "${LTO}" == "true" ]]; then
+		if [[ ( "${COMPILER_VERSION}" == "unset"
+		        && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7"
+		        || "${COMPILER_VERSION}" -lt "7" )
+		      && "${LTO}" == "true" ]]; then
 			error "GCC versions 6 and under cannot handle FDO and LTO simultaneously; please change one or more these."
 		fi
-		CFLAGS_ARRAY+=(-fauto-profile="${fdo_file}")
+		CFLAGS_ARRAY+=("-fauto-profile=${fdo_file}")
 	elif [[ "${COMPILER}" == "clang" ]]; then
-		CFLAGS_ARRAY+=(-fprofile-sample-use="${fdo_file}")
+		CFLAGS_ARRAY+=("-fprofile-sample-use=${fdo_file}")
 	fi
 }
 
