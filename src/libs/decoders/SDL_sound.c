@@ -609,7 +609,7 @@ Sound_Sample *Sound_NewSampleFromMem(const Uint8 *data,
     BAIL_IF_MACRO(data == NULL, ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF_MACRO(size == 0, ERR_INVALID_ARGUMENT, NULL);
 
-    rw = SDL_RWFromMem( (void*)data, size);
+    rw = SDL_RWFromConstMem(data, size);
     /* !!! FIXME: rw = RWops_FromMem(data, size);*/
     BAIL_IF_MACRO(rw == NULL, SDL_GetError(), NULL);
 
