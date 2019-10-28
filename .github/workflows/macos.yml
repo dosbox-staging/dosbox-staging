@@ -29,16 +29,15 @@ jobs:
           echo '-selfupdate-'
           sudo port -q selfupdate || true
           echo '-installing deps-'
-          sudo port -q install libsdl +x11 || true
-          sudo port -q install coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP || true
+          sudo port -f deactivate libunwind-headers || true
+          deps=(apple-gcc42 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
+          for dep in "${deps[@]}"; do sudo port install "${dep}" || true; done
           echo '-listing bin*/ -'
           ls bin*/
           echo '-listing lib*/ -'
           ls lib*/
-          echo '-installing gcc9-'
-          sudo port -q install gcc9 || true
           automake --version
           pkg-config --version
-          gcc -v
-          gcc-9 -v
+          gcc -v || true
+          gcc-42 -v || true
 
