@@ -6,30 +6,27 @@ jobs:
     runs-on: macOS-10.14
     steps:
       - uses: actions/checkout@v1
-      - run: |
-          set +e
-          xcode-select --install || true
-          sudo xcodebuild -license || true
-          ls /usr/bin/gcc* || true
-          /usr/bin/gcc -v
-          BASE=$PWD
-          cd 
+      - name: Install MacPorts
+        run: |
+          # xcode-select --install || true
+          # sudo xcodebuild -license || true
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git
           cd macports-base
+          ./configure
+          make -j"$(sysctl -n hw.physicalcpu || echo 4)"
+          sudo make install
+
+      - name: Install dependencies
+        run: |
           PREFIX="/opt/local"
-          ./configure --prefix "${PREFIX}" &> log || cat log
-          make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
-          sudo make install || true
           PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           sudo port -q selfupdate || true
-          echo '-installing deps-'
-          sudo port -f deactivate libunwind-headers || true
           deps=(gcc9 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
           for dep in "${deps[@]}"; do sudo port -q install "${dep}" || true; done
-          sudo port select --set gcc gcc9 || true
-          find "${PREFIX}" -type f
-          automake --version
-          pkg-config --version
-          gcc -v || true
-          gcc-9 -v || true
+
+      - name: Build
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-9 --bin-path=/opt/local/bin
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
 
