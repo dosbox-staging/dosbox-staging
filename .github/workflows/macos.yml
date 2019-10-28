@@ -23,7 +23,7 @@ jobs:
           make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
           sudo make install || true
           cd ..
-          PATH="${PWD}/sbin:${PWD}/bin:${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
+          PATH="${PWD}/sbin:${PWD}/bin:${PATH}"
           echo '-listing ${PWD} -'
           ls
           echo '---'
@@ -32,12 +32,13 @@ jobs:
           sudo port -q selfupdate || true
           echo '-installing deps-'
           sudo port -f deactivate libunwind-headers || true
-          deps=(apple-gcc42 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
-          for dep in "${deps[@]}"; do sudo port install "${dep}" || true; done
-          echo '-listing bin*/ -'
-          ls "${PREFIX}/*"
+          deps=(gcc9 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
+          for dep in "${deps[@]}"; do sudo port -q install "${dep}" || true; done
+          sudo port select --set gcc gcc9 || true
+          find "${PREFIX}" -type f
+          PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           automake --version
           pkg-config --version
           gcc -v || true
-          gcc-42 -v || true
+          gcc-9 -v || true
 
