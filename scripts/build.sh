@@ -266,11 +266,10 @@ function tools_and_flags() {
 		fi
 	fi
 
-	# MSYS universal
-	elif [[ "${SYSTEM}" == "macos" ]]; then
+	# macOS universal
+	if [[ "${SYSTEM}" == "macos" ]]; then
 		AR="ar"
 		RANLIB="ranlib"
-	fi
 
 	# MSYS universal
 	elif [[ "${SYSTEM}" == "msys2" ]]; then
