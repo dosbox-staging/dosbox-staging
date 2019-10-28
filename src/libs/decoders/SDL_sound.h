@@ -39,22 +39,12 @@
  *  which is a powerful, free, and cross-platform multimedia library. It can
  *  be found at http://www.libsdl.org/
  *
- * Support is in place or planned for the following sound formats:
- *   - .WAV  (Microsoft WAVfile RIFF data, internal.)
- *   - .VOC  (Creative Labs' Voice format, internal.)
- *   - .MP3  (MPEG-1 Layer 3 support, via libmpg123.)
- *   - .MID  (MIDI music converted to Waveform data, internal.)
- *   - .MOD  (MOD files, via MikMod and ModPlug.)
- *   - .OGG  (Ogg Vorbis files, via the Vorbis libraries.)
- *   - .OPUS (Ogg Opus files, via the Opus libraries.)
- *   - .SPX  (Speex files, via libspeex.)
- *   - .SHN  (Shorten files, internal.)
- *   - .RAW  (Raw sound data in any format, internal.)
- *   - .AU   (Sun's Audio format, internal.)
- *   - .AIFF (Audio Interchange format, internal.)
- *   - .FLAC (Lossless audio compression, via libFLAC.)
- *
- *   (...and more to come...)
+ * Support is in place for the following sound formats:
+ *   - .WAV/.W64 (Microsoft WAVfile RIFF and Sony Wave64 data, via the dr_wav single-header codec)
+ *   - .MP3  (MPEG-1 Layer 3 support via the dr_mp3 single-header decoder)
+ *   - .OGG  (Ogg Vorbis support via the std_vorbis single-header decoder)
+ *   - .OPUS (Ogg Opus support via the Opusfile and SpeexDSP libraries)
+ *   - .FLAC (Free Lossless Audio Codec support via the dr_flac single-header decoder)
  *
  * Please see the file LICENSE.txt in the source's root directory.
  *
