@@ -12,16 +12,18 @@ jobs:
           sudo xcodebuild -license || true
           ls /usr/bin/gcc* || true
           /usr/bin/gcc -v
-          echo $PWD
+          BASE=$PWD
+          cd 
           mkdir ports
           cd ports
           git clone --quiet --depth=1 https://github.com/macports/macports-base.git src
           cd src
-          ./configure --prefix="$(dirname "$PWD")" &> log || cat log
+          PREFIX="/opt/local"
+          ./configure --prefix "${PREFIX}" &> log || cat log
           make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
           sudo make install || true
           cd ..
-          PATH="${PWD}/sbin:${PWD}/bin:${PATH}"
+          PATH="${PWD}/sbin:${PWD}/bin:${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           echo '-listing ${PWD} -'
           ls
           echo '---'
@@ -33,9 +35,7 @@ jobs:
           deps=(apple-gcc42 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
           for dep in "${deps[@]}"; do sudo port install "${dep}" || true; done
           echo '-listing bin*/ -'
-          ls bin*/
-          echo '-listing lib*/ -'
-          ls lib*/
+          ls "${PREFIX}/*"
           automake --version
           pkg-config --version
           gcc -v || true
