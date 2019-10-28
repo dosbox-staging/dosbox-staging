@@ -14,21 +14,13 @@ jobs:
           /usr/bin/gcc -v
           BASE=$PWD
           cd 
-          mkdir ports
-          cd ports
-          git clone --quiet --depth=1 https://github.com/macports/macports-base.git src
-          cd src
+          git clone --quiet --depth=1 https://github.com/macports/macports-base.git
+          cd macports-base
           PREFIX="/opt/local"
           ./configure --prefix "${PREFIX}" &> log || cat log
           make -j"$(sysctl -n hw.physicalcpu || echo 4)" &> log || cat log
           sudo make install || true
-          cd ..
-          PATH="${PWD}/sbin:${PWD}/bin:${PATH}"
-          echo '-listing ${PWD} -'
-          ls
-          echo '---'
-          ls bin*/
-          echo '-selfupdate-'
+          PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           sudo port -q selfupdate || true
           echo '-installing deps-'
           sudo port -f deactivate libunwind-headers || true
@@ -36,7 +28,6 @@ jobs:
           for dep in "${deps[@]}"; do sudo port -q install "${dep}" || true; done
           sudo port select --set gcc gcc9 || true
           find "${PREFIX}" -type f
-          PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           automake --version
           pkg-config --version
           gcc -v || true
