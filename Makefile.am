@@ -21,6 +21,7 @@ distclean-local:
 	-rm compile
 	-rm config.guess
 	-rm config.h.in
+	-rm config.h.in~
 	-rm config.log
 	-rm config.sub
 	-rm configure

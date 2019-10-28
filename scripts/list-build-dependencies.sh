@@ -4,15 +4,15 @@
 #  Copyright (c) 2019 Kevin R. Croft
 #  SPDX-License-Identifier: GPL-2.0-or-later
 #
-#  This script lists DOSBox package dependencies as determined by the runtime
-#  architecture, operating system, and selected compiler type and and its version.
+#  This script lists development packages and DOSBox dependencies needed to build DOSBox.
+#  This package names provided are tailor based on the provided package manager,
+#  choice of compiler, and optionally its bit-depth.
 #
-#  See the usage block below for details or run it with the -h or --help arguments.
+#  See the usage arguments below for details or run it with the -h or --help.
 #
 #  In general, this script adheres to Google's shell scripting style guide
 #  (https://google.github.io/styleguide/shell.xml), however some deviations (such as
-#  tab indents instead of two-spaces) are used to fit with DOSBox's in-practice"
-#  coding style.
+#  tab indents instead of two-spaces) are used to fit DOSBox's in-practice coding style.
 #
 
 set -euo pipefail
@@ -24,55 +24,59 @@ function usage() {
 	fi
 	local script
 	script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-o FILE] [-u #]"
+	echo "Usage: ${script} -p apt|xcode|brew|macports|msys2|vcpkg [-b 32|64] [-c gcc|clang] [-o FILE] [-u #]"
 	echo ""
-	echo "  FLAG                     Description                                            Default"
-	echo "  -----------------------  -----------------------------------------------------  -------"
-	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var "${BITS}")]"
-	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var "${COMPILER}")]"
-	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
-	echo "  -o, --output-file <file> Write the packages to a text file instead of stdout    [$(print_var "${OUTPUT_FILE}")]"
-	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var "${COMPILER_VERSION}")]"
-	echo "  -v, --version            Print the version of this script                       [$(print_var "${SCRIPT_VERSION}")]"
-	echo "  -h, --help               Print this usage text"
+	echo "  FLAG                       Description                                          Default"
+	echo "  -----------------------    ---------------------------------------------------  -------"
+	echo "  -b, --bit-depth            Choose either a 64 or 32 bit compiler                [$(print_var "${BITS}")]"
+	echo "  -c, --compiler             Choose either gcc or clang                           [$(print_var "${COMPILER}")]"
+	echo "  -u, --compiler-version <#> Customize the compiler version (if available)        [$(print_var "${COMPILER_VERSION}")]"
+	echo "  -v, --version              Print the version of this script                     [$(print_var "${SCRIPT_VERSION}")]"
+	echo "  -h, --help                 Print this usage text"
+	echo "  -p, --package-manager      Choose one of the following:"
+	echo "                               - apt      (Linux: Debian, Ubuntu, Raspbian)"
+	echo "                               - dnf      (Linux: Fedora, RedHat, CentOS)"
+	echo "                               - pacman   (Linux: Arch, Manjaro)"
+	echo "                               - zypper   (Linux: SuSE, OpenSUSE)"
+	echo "                               - xcode    (OS X: Apple-supported)"
+	echo "                               - brew     (OS X: Homebrew community-supported)"
+	echo "                               - macports (OS X: MacPorts community-supported)"
+	echo "                               - msys2    (Windows: Cygwin-based, community-support)"
+	echo "                               - vcpkg    (Windows: Visual Studio builds)"
+	echo "  -----------------------    ---------------------------------------------------  -------"
 	echo ""
-	echo "Example: ${script} --bit-depth 32 --compiler clang --compiler-version 8"
+	echo "Example: ${script} --package-manager apt --compiler clang --compiler-version 8"
 	echo ""
 	echo "Note: the last value will take precendent if duplicate flags are provided."
 	exit 1
+}
+
+function defaults() {
+	BITS="64"
+	COMPILER="gcc"
+	COMPILER_VERSION=""
+	PACKAGE_MANAGER="unset"
+	readonly SCRIPT_VERSION="0.2"
+	readonly REPO_URL="https://github.com/dreamer/dosbox-staging"
 }
 
 # parse params
 function parse_args() {
 	defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
-		-b|--bit-depth)         BITS="${2}";            shift;shift;;
-		-c|--compiler)          COMPILER="${2}";        shift;shift;;
-		-f|--force-system)      SYSTEM="${2}";          shift;shift;;
-		-o|--output-file)       OUTPUT_FILE="${2}";     shift;shift;;
-		-u|--compiler-version)  COMPILER_VERSION="${2}";shift;shift;;
-		-v|--version)           print_version;          shift;;
-		-h|--help)              usage "Show usage";     shift;;
+		-b|--bit-depth)        BITS="${2}";             shift;shift;;
+		-c|--compiler)         COMPILER="${2}";         shift;shift;;
+		-p|--package-manager)  PACKAGE_MANAGER="${2}";  shift;shift;;
+		-u|--compiler-version) COMPILER_VERSION="${2}"; shift;shift;;
+		-v|--version)          print_version;           shift;;
+		-h|--help)             usage "Show usage";      shift;;
 		*) usage "Unknown parameter: ${1}";             shift;shift;;
 	esac; done
-}
 
-function defaults() {
-	# variables that are directly set via user arguments
-	BITS="64"
-	COMPILER="gcc"
-	COMPILER_VERSION="unset"
-	OUTPUT_FILE="unset"
-	SYSTEM="auto"
-
-	# derived variables with initial values
-	VERSION_POSTFIX=""
-	MACHINE="unset"
-	CALL_CACHE=("")
-
-	# read-only strings
-	readonly SCRIPT_VERSION="0.1"
-	readonly REPO_URL="https://github.com/dreamer/dosbox-staging"
+	# Check mandatory arguments
+	if [[ "${PACKAGE_MANAGER}" == "unset" ]]; then
+		usage "A choice of package manager must be provided; use '-p <choice>' or '--package-manager <choice>'"
+	fi
 }
 
 function errcho() {
@@ -80,18 +84,6 @@ function errcho() {
 	local RED='\033[0;91m'
 	>&2 echo ""
 	>&2 echo -e " ${RED}👉  ${*}${CLEAR}" "\\n"
-}
-function bug() {
-	local CLEAR='\033[0m'
-	local YELLOW='\033[0;33m'
-	>&2 echo -e " ${YELLOW}Please report the following at ${REPO_URL}${CLEAR}"
-	errcho "${@}"
-	exit 1
-}
-
-function error() {
-	errcho "${@}"
-	exit 1
 }
 
 function print_var() {
@@ -102,197 +94,104 @@ function print_var() {
 	fi
 }
 
-function uses() {
-	# assert
-	if [[ "${#}" != 1 ]]; then
-		bug "The 'uses' function was called without an argument"
+function list_packages() {
+	VERSION_DELIM=""
+	case "$1" in
+
+		apt)
+			# Apt separates GCC into the gcc and g++ pacakges, the latter which depends on the prior.
+			# Therefore, we provide g++ in-place of gcc.
+			VERSION_DELIM="-"
+			if [[ "${COMPILER}" == "gcc" ]]; then
+				COMPILER="g++"
+			fi
+			PACKAGES=(libtool build-essential libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev)
+			;;
+
+		dnf)
+			VERSION_DELIM="-"
+			PACKAGES=(libtool SDL SDL_net-devel opusfile-devel speexdsp-devel)
+			;;
+
+		pacman)
+			# Arch offers 32-bit versions of SDL and speexDSP (but not others)
+			PACKAGES=(libtool sdl_net opusfile)
+			if [[ "${BITS}" == 32 ]]; then
+				PACKAGES+=(lib32-sdl lib32-speexdsp)
+			else
+				PACKAGES+=(sdl speexdsp)
+			fi
+			;;
+
+		zypper)
+			# OpenSUSE offers 32-bit versions of SDL, SDL_net, and speexDSP (but not others)
+			PACKAGES=(devel_basis libtool opusfile)
+			if [[ "${BITS}" == 32 ]]; then
+				PACKAGES+=(libSDL-devel-32bit libSDL_net-devel-32bit libspeexdsp1-32bit)
+			else
+				PACKAGES+=(SDL SDL_net speexdsp)
+			fi
+			;;
+
+		xcode)
+			# If the user doesn't want to use Homebrew or MacPorts, then they are limited to
+			# Apple's Clang plus the provided command line development tools provided by Xcode.
+			COMPILER=""
+			echo "Execute the following:"
+			echo "   xcode-select --install    # to install command line development tools"
+			echo "   sudo xcodebuild -license  # to accept Apple's license agreement"
+			echo ""
+			echo "Now download, build, and install the following manually to avoid using Homebrew or MacPorts:"
+			echo " - coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile speexdsp"
+			;;
+
+		brew)
+			# If the user wants Clang, we knock it out because it's provided provided out-of-the-box
+			VERSION_DELIM="@"
+			if [[ "${COMPILER}" == "clang" ]]; then
+				COMPILER=""
+			fi
+			PACKAGES=(coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile speexdsp)
+			;;
+
+		macports)
+			PACKAGES=(coreutils autogen automake autoconf pkgconfig libpng libsdl libsdl_net opusfile speexDSP)
+			;;
+
+		msys2)
+			# MSYS2 only supports the current latest releases of Clang and GCC, so we disable version customization
+			COMPILER_VERSION=""
+			local pkg_type
+			pkg_type="x86_64"
+			if [[ "${BITS}" == 32 ]]; then
+				pkg_type="i686"
+			fi
+			PACKAGES=(autogen autoconf base-devel automake-wrapper)
+			for pkg in pkg-config libtool libpng zlib SDL SDL_net opusfile speexdsp; do
+				PACKAGES+=("mingw-w64-${pkg_type}-${pkg}")
+			done
+			COMPILER="mingw-w64-${pkg_type}-${COMPILER}"
+			;;
+
+		vcpkg)
+			# VCPKG doesn't provide Clang or GCC, so we knock out the compiler and just give packages
+			COMPILER=""
+			PACKAGES=(libpng sdl1 sdl1-net opusfile speexdsp)
+			;;
+		*)
+			usage "Unknown package manager ${1}"
+			;;
+	esac
+
+	if [[ -n "${COMPILER_VERSION}" && -n "${COMPILER}" ]]; then
+		COMPILER+="${VERSION_DELIM}${COMPILER_VERSION}"
 	fi
-
-	# only handles function calls, so filter everything else
-	func="${1}"
-	if [[ "$(type -t "${func}")" != "function" ]]; then
-		bug "The 'uses' function was passed ${func}, which isn't a function"
-	fi
-
-	local found_in_previous="false"
-	# has our function already been called?
-	for previous_func in "${CALL_CACHE[@]}"; do
-		if [[ "${previous_func}" == "${func}" ]]; then
-			found_in_previous="true"
-			break
-		fi
-	done
-
-	# if it hasn't, record it and run it
-	if [[ "${found_in_previous}" == "false" ]]; then
-		CALL_CACHE+=("${func}")
-		"${func}"
-	fi
-}
-
-
-function print_version() {
-	echo "${SCRIPT_VERSION}"
-	exit 0
-}
-
-function packages() {
-	# only proceed if the user wants to install packages
-	uses system
-	if [[ "${OUTPUT_FILE}" != "unset" ]]; then
-		"packages_for_${SYSTEM}" > "${OUTPUT_FILE}"
-	else
-		"packages_for_${SYSTEM}"
-	fi
-}
-
-function packages_for_macos() {
-
-	uses compiler_type
-	uses compiler_version
-	local compiler_package="" # for brew, the clang package doesn't exist, so stay empty in this case (?)
-	if [[ "${COMPILER}" == "gcc" ]]; then
-		compiler_package="gcc"
-		if [[ "${COMPILER_VERSION}" != "unset" ]]; then
-			compiler_package+="@${COMPILER_VERSION}"
-		fi
-	fi
-
-	# Typical installation:
-	#  - brew update
-	#  - brew install <list of packages>
-
-	local packages=(
-	   "${compiler_package}"
-	   coreutils
-	   autogen
-	   autoconf
-	   automake
-	   pkg-config
-	   libpng
-	   sdl
-	   sdl_net
-	   opusfile
-	   speexdsp )
-	echo "${packages[@]}"
-}
-
-function packages_for_msys2() {
-	uses bits
-	local pkg_type=""
-	if [[ "${BITS}" == 64 ]]; then
-		pkg_type="x86_64"
-	else
-		pkg_type="i686"
-	fi
-
-	uses compiler_type
-	uses compiler_version
-	local compiler_package="${COMPILER}"
-	compiler_package+="${VERSION_POSTFIX}"
-
-	# Typical installation step:
-	# pacman -S --noconfirm <list of packages>
-	local packages=(
-	   autogen
-	   autoconf
-	   base-devel
-	   automake-wrapper
-	   "mingw-w64-${pkg_type}-pkg-config"
-	   "mingw-w64-${pkg_type}-${compiler_package}"
-	   "mingw-w64-${pkg_type}-libtool"
-	   "mingw-w64-${pkg_type}-libpng"
-	   "mingw-w64-${pkg_type}-zlib"
-	   "mingw-w64-${pkg_type}-SDL"
-	   "mingw-w64-${pkg_type}-SDL_net"
-	   "mingw-w64-${pkg_type}-opusfile"
-	   "mingw-w64-${pkg_type}-speexdsp" )
-	echo "${packages[@]}"
-}
-
-function packages_for_linux() {
-
-	# TODO:
-	#  Convert this into an associative map between package
-	#  managers and the list of respective package names. We
-	#  should have coverage for the major distribution types,
-	#  such as:
-	#     - RPM-based (RHEL/CentOS, Fedora, and openSUSE)
-	#     - Debian-based (Debian, Ubuntu, and Raspbian)
-	#     - pacman-based (Arch and Manjero)
-	#
-	uses compiler_type
-	local compiler_package=""
-	if [[ "${COMPILER}" == "gcc" ]]; then
-		compiler_package="g++"
-	else
-		compiler_package="clang"
-	fi
-
-	uses compiler_version
-	compiler_package+="${VERSION_POSTFIX}"
-
-	# Typically install step
-	# sudo apt update -y
-	# sudo apt install -y <list of packages>
-	local packages=(
-	   "${compiler_package}"
-	   libtool
-	   build-essential
-	   libsdl1.2-dev
-	   libsdl-net1.2-dev
-	   libopusfile-dev
-	   libspeexdsp-dev )
-	echo "${packages[@]}"
-}
-
-function system() {
-	if [[ "${MACHINE}" == "unset" ]]; then
-		MACHINE="$(uname -m)"
-	fi
-
-	if [[ "${SYSTEM}" == "auto" ]]; then
-		SYSTEM="$(uname -s)"
-	fi
-	if [[     "${SYSTEM}" == "Darwin" \
-	       || "${SYSTEM}" == "macos" ]]; then
-		SYSTEM="macos"
-
-	elif [[   "${SYSTEM}" == "MSYS"* \
-	       || "${SYSTEM}" == "msys2" \
-	       || "${SYSTEM}" == "MINGW"* ]]; then
-		SYSTEM="msys2"
-
-	elif [[   "${SYSTEM}" == "Linux" \
-	       || "${SYSTEM}" == "linux" ]]; then
-		SYSTEM="linux"
-
-	else
-		error "Your system, ${SYSTEM}, is not currently supported"
-	fi
-}
-
-function bits() {
-	if [[ "${BITS}" != 64 && "${BITS}" != 32 ]]; then
-		usage "A bit-depth of ${BITS} is not allowed; choose 64 or 32"
-	fi
-}
-
-function compiler_type() {
-	if [[ "${COMPILER}" != "gcc" && "${COMPILER}" != "clang" ]]; then
-		usage "The choice of compiler (${COMPILER}) is not valid; choose gcc or clang"
-	fi
-}
-
-function compiler_version() {
-	if [[ "${COMPILER_VERSION}" != "unset" ]]; then
-		VERSION_POSTFIX="-${COMPILER_VERSION}"
-	fi
+	echo "${COMPILER} ${PACKAGES[*]}"
 }
 
 function main() {
 	parse_args "$@"
-	packages
+	list_packages "${PACKAGE_MANAGER}"
 }
 
 main "$@"

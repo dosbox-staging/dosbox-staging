@@ -21,32 +21,33 @@
 #
 
 set -euo pipefail
-IFS=$'\n\t'
+readonly INVOCATION="${0}"
+readonly IFS=$'\n\t'
 
 function usage() {
 	if [ -n "${1}" ]; then
 		errcho "${1}"
 	fi
 	local script
-	script=$(basename "${0}")
-	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l] \\"
-	echo "                [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
+	script=$(basename "${INVOCATION}")
+	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l]"
+	echo "                 [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
 	echo ""
-	echo "  FLAG                     Description                                            Default"
-	echo "  -----------------------  -----------------------------------------------------  -------"
-	echo "  -b, --bit-depth          Build a 64 or 32 bit binary                            [$(print_var "${BITS}")]"
-	echo "  -c, --compiler           Choose either gcc or clang                             [$(print_var "${COMPILER}")]"
-	echo "  -f, --force-system       Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
-	echo "  -d, --fdo                Used feedback-Directed Optimization data               [$(print_var "${FDO}")]"
-	echo "  -l, --lto                Perform link-time-optimization                         [$(print_var "${LTO}")]"
-	echo "  -p, --bin-path           Prepend PATH with the one provided to find executables [$(print_var "${BIN_PATH}")]"
-	echo "  -u, --compiler-version # Use a specific compiler version (ie: 9 -> gcc-9)       [$(print_var "${COMPILER_VERSION}")]"
-	echo "  -r, --release            Build a fast, small, or debug release                  [$(print_var "${RELEASE}")]"
-	echo "  -s, --src-path           Use a different source directory to build              [$(print_var "${SRC_PATH}")]"
-	echo "  -t, --threads #          Override auto-detection of number of logical CPUs      [$(print_var "${THREADS}")]"
-	echo "  -v, --version            Print the version of this script                       [$(print_var "${SCRIPT_VERSION}")]"
-	echo "  -x, --clean              Clean old object and build file before making          [$(print_var "${CLEAN}")]"
-	echo "  -h, --help               Print this usage text"
+	echo "  FLAG                     Description                                           Default"
+	echo "  -----------------------  ----------------------------------------------------- -------"
+	echo "  -b, --bit-depth         Build a 64 or 32 bit binary                            [$(print_var "${BITS}")]"
+	echo "  -c, --compiler          Choose either gcc or clang                             [$(print_var "${COMPILER}")]"
+	echo "  -f, --force-system      Force the system to be linux, macos, or msys2          [$(print_var "${SYSTEM}")]"
+	echo "  -d, --fdo               Use Feedback-Directed Optimization (FDO) data          [$(print_var "${FDO}")]"
+	echo "  -l, --lto               Perform Link-Time-Optimizations (LTO)                  [$(print_var "${LTO}")]"
+	echo "  -p, --bin-path          Prepend PATH with the one provided to find executables [$(print_var "${BIN_PATH}")]"
+	echo "  -u, --compiler-version  Customize the compiler postfix (ie: 9 -> gcc-9)        [$(print_var "${COMPILER_VERSION}")]"
+	echo "  -r, --release           Build a fast, small, or debug release                  [$(print_var "${RELEASE}")]"
+	echo "  -s, --src-path          Enter a different source directory before building     [$(print_var "${SRC_PATH}")]"
+	echo "  -t, --threads           Override the number of threads with which to compile   [$(print_var "${THREADS}")]"
+	echo "  -v, --version           Print the version of this script                       [$(print_var "${SCRIPT_VERSION}")]"
+	echo "  -x, --clean             Clean old objects prior to building                    [$(print_var "${CLEAN}")]"
+	echo "  -h, --help              Print this usage text"
 	echo ""
 	echo "Example: ${script} -b 32 --compiler clang -u 8 --bin-path /mingw64/bin -r small --lto"
 	echo ""
@@ -54,9 +55,8 @@ function usage() {
 	exit 1
 }
 
-# parse params
 function parse_args() {
-	defaults
+	set_defaults
 	while [[ "${#}" -gt 0 ]]; do case ${1} in
 		-b|--bit-depth)         BITS="${2}";            shift;shift;;
 		-c|--compiler)          COMPILER="${2}";        shift;shift;;
@@ -75,7 +75,7 @@ function parse_args() {
 	esac; done
 }
 
-function defaults() {
+function set_defaults() {
 	# variables that are directly set via user arguments
 	BITS="64"
 	CLEAN="false"
@@ -85,7 +85,7 @@ function defaults() {
 	LTO="false"
 	BIN_PATH="unset"
 	RELEASE="fast"
-	SRC_PATH="$(dirname "$(dirname "$(realpath -s "$0")")")"
+	SRC_PATH="unset"
 	SYSTEM="auto"
 	THREADS="auto"
 
@@ -100,7 +100,7 @@ function defaults() {
 	CALL_CACHE=("")
 
 	# read-only strings
-	readonly SCRIPT_VERSION="0.9"
+	readonly SCRIPT_VERSION="1.0"
 	readonly REPO_URL="https://github.com/dreamer/dosbox-staging"
 
 	# environment variables passed onto the build
@@ -149,20 +149,32 @@ function print_var() {
 	fi
 }
 
+##
+#  Uses
+#  ----
+#  Alows function to indicate which other functions they depend on.
+#  For example: "uses system" indicates a function needs the system
+#  to be defined prior to running.
+#  This uses function acts like a call cache, ensuring each used function
+#  is only actually called once.  This allows all functions to thoroughly
+#  employ the 'uses' mechanism without the performance-hit of repeatedly
+#  executing the same function.  Likely, functions that are 'used' are
+#  atomic in that they will only be called once per script invocation.
+#
 function uses() {
 	# assert
 	if [[ "${#}" != 1 ]]; then
 		bug "The 'uses' function was called without an argument"
 	fi
 
-	# only handles function calls, so filter everything else
+	# only operate on functions in our call-scope, otherwise fail hard
 	func="${1}"
 	if [[ "$(type -t "${func}")" != "function" ]]; then
 		bug "The 'uses' function was passed ${func}, which isn't a function"
 	fi
 
+	# Check the call cache to see if the function has already been called
 	local found_in_previous="false"
-	# has our function already been called?
 	for previous_func in "${CALL_CACHE[@]}"; do
 		if [[ "${previous_func}" == "${func}" ]]; then
 			found_in_previous="true"
@@ -170,7 +182,7 @@ function uses() {
 		fi
 	done
 
-	# if it hasn't, record it and run it
+	# if it hasn't been called then record it and run it
 	if [[ "${found_in_previous}" == "false" ]]; then
 		CALL_CACHE+=("${func}")
 		"${func}"
@@ -184,28 +196,14 @@ function print_version() {
 }
 
 function system() {
-	if [[ "${MACHINE}" == "unset" ]]; then
-		MACHINE="$(uname -m)"
-	fi
-
-	if [[ "${SYSTEM}" == "auto" ]]; then
-		SYSTEM="$(uname -s)"
-	fi
-	if [[     "${SYSTEM}" == "Darwin" \
-	       || "${SYSTEM}" == "macos" ]]; then
-		SYSTEM="macos"
-
-	elif [[   "${SYSTEM}" == "MSYS"* \
-	       || "${SYSTEM}" == "msys2" ]]; then
-		SYSTEM="msys2"
-
-	elif [[   "${SYSTEM}" == "Linux" \
-	       || "${SYSTEM}" == "linux" ]]; then
-		SYSTEM="linux"
-
-	else
-		error "Your system, ${SYSTEM}, is not currently supported"
-	fi
+	if   [[ "${MACHINE}" == "unset" ]]; then MACHINE="$(uname -m)"; fi
+	if   [[ "${SYSTEM}" == "auto" ]]; then SYSTEM="$(uname -s)"; fi
+	case "$SYSTEM" in
+		Darwin|macos) SYSTEM="macos" ;;
+		MSYS*|msys2)  SYSTEM="msys2" ;;
+		Linux|linux)  SYSTEM="linux" ;;
+		*)            error "Your system, $SYSTEM, is not currently supported" ;;
+	esac
 }
 
 function bits() {
@@ -234,14 +232,9 @@ function tools_and_flags() {
 
 		# Prioritize versioned lib-tools over generics
 		AR="gcc-ar${VERSION_POSTFIX}"
-		if ! exists "${AR}"; then
-			AR="ar"
-		fi
-
 		RANLIB="gcc-ranlib${VERSION_POSTFIX}"
-		if ! exists "${RANLIB}"; then
-			RANLIB="ranlib"
-		fi
+		if ! exists "${AR}"; then AR="ar"; fi
+		if ! exists "${RANLIB}"; then RANLIB="ranlib"; fi
 
 	# CLANG universal
 	elif [[ "${COMPILER}" == "clang" ]]; then
@@ -256,14 +249,10 @@ function tools_and_flags() {
 			RANLIB="llvm-ranlib${VERSION_POSTFIX}"
 
 		# CLANG on MacOS
-		elif [[ "${SYSTEM}" == "macos" ]]; then
-			LD="ld"
-		fi
+		elif [[ "${SYSTEM}" == "macos" ]]; then LD="ld"; fi
 
 		# CLANG and MSYS2
-		if [[ "${SYSTEM}" == "msys2" ]]; then
-			CFLAGS_ARRAY+=("-DWIN32")
-		fi
+		if [[ "${SYSTEM}" == "msys2" ]]; then CFLAGS_ARRAY+=("-DWIN32"); fi
 	fi
 
 	# macOS universal
@@ -278,7 +267,9 @@ function tools_and_flags() {
 }
 
 function src_path() {
-	if [[ ! -d "${SRC_PATH}" ]]; then
+	if [[ "${SRC_PATH}" == "unset" ]]; then
+		SRC_PATH="$(cd "$(dirname "${INVOCATION}")" && cd .. && pwd -P)"
+	elif [[ ! -d "${SRC_PATH}" ]]; then
 		usage "The requested source directory (${SRC_PATH}) does not exist, is not a directory, or is not accessible"
 	fi
 	cd "${SRC_PATH}"
@@ -321,8 +312,7 @@ function compiler_version() {
 function release_flags() {
 	uses compiler_type
 
-	if [[ "${RELEASE}" == "fast" ]]; then
-		CFLAGS_ARRAY+=("-Ofast")
+	if [[ "${RELEASE}" == "fast" ]]; then CFLAGS_ARRAY+=("-Ofast")
 	elif [[ "${RELEASE}" == "small" ]]; then
 		CFLAGS_ARRAY+=("-Os")
 		if [[ "${COMPILER}" == "gcc" ]]; then
@@ -330,36 +320,20 @@ function release_flags() {
 
 			# ld on MacOS doesn't understand --as-needed, so exclude it
 			uses system
-			if [[ "${SYSTEM}" != "macos" ]]; then
-				LDFLAGS_ARRAY+=("-Wl,--as-needed")
-			fi
+			if [[ "${SYSTEM}" != "macos" ]]; then LDFLAGS_ARRAY+=("-Wl,--as-needed"); fi
 		fi
-	elif [[ "${RELEASE}" == "debug" ]]; then
-		CFLAGS_ARRAY+=("-g" "-O1")
-	else
-		usage "The release type of ${RELEASE} is not allowed. Choose fast, small, or debug"
+	elif [[ "${RELEASE}" == "debug" ]]; then CFLAGS_ARRAY+=("-g" "-O1")
+	else usage "The release type of ${RELEASE} is not allowed. Choose fast, small, or debug"
 	fi
 }
 
 function threads() {
-	uses system
-
-	if [[ "${THREADS}" != "auto" ]]; then
-		if [[ "${THREADS}" -lt 1 || "${THREADS}" -gt 256 ]]; then
-			usage "The number of threads, ${THREADS}, needs to be between 1 and 256, or don't set it at all"
-		fi
-	else
-		if [[ -n "${NUMBER_OF_PROCESSORS:-}" && "${NUMBER_OF_PROCESSORS}" -gt 0 ]]; then
-			THREADS="${NUMBER_OF_PROCESSORS}"
-		elif [[ "${SYSTEM}" == "macos" ]]; then
-			THREADS="$(sysctl -n hw.physicalcpu || echo 4)"
-		elif exists nproc; then
-			THREADS="$(nproc)"
-		else
-			THREADS=4 # if auto-detection fails fallback to a reasonable
-			          # number of logical CPUs for 2019
-		fi
+	if [[ "${THREADS}" == "auto" ]]; then
+		if exists nproc; then THREADS="$(nproc)"
+		else THREADS="$(sysctl -n hw.physicalcpu || echo 4)"; fi
 	fi
+	# make presents a descriptive error message in the scenario where the user overrides
+	# THREADS with an illegal value: the '-j' option requires a positive integer argument.
 }
 
 function fdo_flags() {
@@ -368,13 +342,13 @@ function fdo_flags() {
 	fi
 
 	uses compiler_type
+	uses src_path
 	local fdo_file="${SRC_PATH}/scripts/profile-data/${COMPILER}.profile"
 	if [[ ! -f "${fdo_file}" ]]; then
 		error "The Feedback-Directed Optimization file provided (${fdo_file}) does not exist or could not be accessed"
 	fi
 
 	if [[ "${COMPILER}" == "gcc" ]]; then
-
 		# Don't let GCC 6.x and under use both FDO and LTO
 		uses compiler_version
 		if [[ ( "${COMPILER_VERSION}" == "unset"
@@ -384,6 +358,7 @@ function fdo_flags() {
 			error "GCC versions 6 and under cannot handle FDO and LTO simultaneously; please change one or more these."
 		fi
 		CFLAGS_ARRAY+=("-fauto-profile=${fdo_file}")
+
 	elif [[ "${COMPILER}" == "clang" ]]; then
 		CFLAGS_ARRAY+=("-fprofile-sample-use=${fdo_file}")
 	fi
@@ -463,14 +438,9 @@ function do_configure() {
 	LDFLAGS=$( printf "%s " "${LDFLAGS_ARRAY[@]}")
 
 	local lto_string=""
-	if [[ "${LTO}" == "true" ]]; then
-		lto_string="-LTO"
-	fi
-
 	local fdo_string=""
-	if [[ "${FDO}" == "true" ]]; then
-		fdo_string="-FDO"
-	fi
+	if [[ "${LTO}" == "true" ]]; then lto_string="-LTO"; fi
+	if [[ "${FDO}" == "true" ]]; then fdo_string="-FDO"; fi
 
 	echo ""
 	echo "Launching with:"
@@ -503,10 +473,8 @@ function do_configure() {
 function executable() {
 	uses src_path
 	EXECUTABLE="src/"
-	if [[ "${SYSTEM}" == "msys2" ]]; then
-		EXECUTABLE+="dosbox.exe"
-	else
-		EXECUTABLE+="dosbox"
+	if [[ "${SYSTEM}" == "msys2" ]]; then EXECUTABLE+="dosbox.exe"
+	else EXECUTABLE+="dosbox"
 	fi
 
 	if [[ ! -f "${EXECUTABLE}" ]]; then
@@ -542,14 +510,10 @@ function show_binary() {
 	uses system
 	uses executable
 
-	if [[ "$SYSTEM" == "macos" ]]; then
-		otool -L "${EXECUTABLE}"
-	else
-		ldd "${EXECUTABLE}"
-	fi
+	if [[ "$SYSTEM" == "macos" ]]; then otool -L "${EXECUTABLE}"
+	else ldd "${EXECUTABLE}"; fi
 	ls -1lh "${EXECUTABLE}"
 }
-
 
 function main() {
 	parse_args "$@"
