@@ -176,7 +176,7 @@ typedef struct
     Sound_AudioInfo actual;  /**< Actual audio format of sample. */
     void *buffer;  /**< Decoded sound data lands in here. */
     Uint32 buffer_size;  /**< Current size of (buffer), in bytes (Uint8). */
-    Sound_SampleFlags flags;  /**< Flags relating to this sample. */
+    Uint32 flags;  /**< Flags relating to this sample. */
 } Sound_Sample;
 
 
@@ -717,9 +717,12 @@ SNDDECLSPEC int SDLCALL Sound_Rewind(Sound_Sample *sample);
  */
 SNDDECLSPEC int SDLCALL Sound_Seek(Sound_Sample *sample, Uint32 ms);
 
+
 #ifdef __cplusplus
 }
+#endif
 
+/*
 inline Sound_SampleFlags operator|(Sound_SampleFlags a, Sound_SampleFlags b)
 {return static_cast<Sound_SampleFlags>(static_cast<int>(a) | static_cast<int>(b));}
 
@@ -732,6 +735,7 @@ inline Sound_SampleFlags operator& (Sound_SampleFlags a, Sound_SampleFlags b)
 inline Sound_SampleFlags& operator&= (Sound_SampleFlags& a, Sound_SampleFlags b)
 { return (Sound_SampleFlags&)((int&)a &= (int)b); }
 #endif
+*/
 
 #endif  /* !defined _INCLUDE_SDL_SOUND_H_ */
 
