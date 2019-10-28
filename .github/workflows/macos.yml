@@ -21,11 +21,42 @@ jobs:
           PREFIX="/opt/local"
           PATH="${PREFIX}/sbin:${PREFIX}/bin:${PATH}"
           sudo port -q selfupdate || true
-          deps=(gcc9 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
-          for dep in "${deps[@]}"; do sudo port -q install "${dep}" || true; done
+          # deps=(gcc9 coreutils autogen automake autoconf pkgconfig libpng libsdl_net opusfile speexDSP "libsdl +x11")
+          # for dep in "${deps[@]}"; do sudo port -q install "${dep}" || true; done
+          sudo port -q install gcc10 gcc9 gcc8 gcc7 gcc6 gcc5 coreutils autogen automake autoconf pkgconfig libpng opusfile speexDSP libsdl_net libsdl
 
-      - name: Build
-        run: ./scripts/build.sh --compiler gcc --compiler-version mp-9 --bin-path /opt/local/bin
+      - name: Build 10
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-10 --bin-path /opt/local/bin
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+      - name: Build 9
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-9 --bin-path /opt/local/bin --clean
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+      - name: Build 8
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-8 --bin-path /opt/local/bin --clean
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+      - name: Build 7
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-7 --bin-path /opt/local/bin --clean
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+      - name: Build 6
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-6 --bin-path /opt/local/bin --clean
+
+      - name: "Summarize warnings"
+        run: python3 ./scripts/count-warnings.py build.log
+
+      - name: Build 5
+        run: ./scripts/build.sh --compiler gcc --compiler-version mp-5 --bin-path /opt/local/bin --clean
 
       - name: "Summarize warnings"
         run: python3 ./scripts/count-warnings.py build.log
