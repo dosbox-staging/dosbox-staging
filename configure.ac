@@ -190,11 +190,18 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 CFLAGS="$BACKUP_CFLAGS"
 
 AC_MSG_CHECKING(if compiler supports CoreMIDI headers)
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-#include <CoreMIDI/MIDIServices.h>
-int main(int argc, char** argv) { return 0; }
-]])], [AC_MSG_RESULT(yes);AC_DEFINE([C_SUPPORTS_COREMIDI], [],
-[compiler supports CoreMIDI headers])], AC_MSG_RESULT(no))
+case "$host" in
+  *-*-darwin*)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <CoreMIDI/MIDIServices.h>
+   int main(int argc, char** argv) { return 0; }
+   ]])], [AC_MSG_RESULT(yes);AC_DEFINE([C_SUPPORTS_COREMIDI], [],
+   [compiler supports CoreMIDI headers])], AC_MSG_RESULT(no))
+   ;;
+  *)
+   AC_MSG_RESULT([no, not on Apple])
+   ;;
+esac
 
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
