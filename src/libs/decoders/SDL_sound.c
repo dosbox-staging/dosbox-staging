@@ -32,16 +32,6 @@
 #  include <config.h>
 #endif
 
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <ctype.h>
-
-#ifdef _MSC_VER
-// Avoid warning about use of strncpy
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <SDL.h>
 #include <SDL_thread.h>
 #include "SDL_sound.h"
@@ -288,8 +278,7 @@ void __Sound_SetError(const char *str)
     } /* if */
 
     err->error_available = 1;
-    strncpy(err->error_string, str, sizeof (err->error_string));
-    err->error_string[sizeof (err->error_string) - 1] = '\0';
+    snprintf(err->error_string, sizeof (err->error_string), "%s", str);
 } /* __Sound_SetError */
 
 
@@ -620,7 +609,7 @@ Sound_Sample *Sound_NewSampleFromMem(const Uint8 *data,
     BAIL_IF_MACRO(data == NULL, ERR_INVALID_ARGUMENT, NULL);
     BAIL_IF_MACRO(size == 0, ERR_INVALID_ARGUMENT, NULL);
 
-    rw = SDL_RWFromMem( (void*)data, size);
+    rw = SDL_RWFromConstMem(data, size);
     /* !!! FIXME: rw = RWops_FromMem(data, size);*/
     BAIL_IF_MACRO(rw == NULL, SDL_GetError(), NULL);
 
