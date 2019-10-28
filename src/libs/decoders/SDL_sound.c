@@ -32,11 +32,6 @@
 #  include <config.h>
 #endif
 
-#ifdef _MSC_VER
-// Avoid warning about use of strncpy
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include <SDL.h>
 #include <SDL_thread.h>
 #include "SDL_sound.h"
@@ -283,8 +278,7 @@ void __Sound_SetError(const char *str)
     } /* if */
 
     err->error_available = 1;
-    strncpy(err->error_string, str, sizeof (err->error_string));
-    err->error_string[sizeof (err->error_string) - 1] = '\0';
+    snprintf(err->error_string, sizeof (err->error_string), "%s", str);
 } /* __Sound_SetError */
 
 
