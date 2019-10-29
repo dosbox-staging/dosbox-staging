@@ -1351,6 +1351,8 @@ dac_text16:
 		case 7:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29);break;
 		}
 		break;
+	default:
+		break;
 	}
 
 	if (svgaCard == SVGA_S3Trio) {
