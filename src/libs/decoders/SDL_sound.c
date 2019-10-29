@@ -23,7 +23,7 @@
  *
  * Documentation is in SDL_sound.h ... It's verbose, honest.  :)
  *
- * Please see the file LICENSE.txt in the source's root directory.
+ * Please see the file src/libs/decoders/docs/LICENSE.txt.
  *
  *  This file written by Ryan C. Gordon. (icculus@icculus.org)
  */

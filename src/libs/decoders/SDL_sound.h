@@ -46,7 +46,7 @@
  *   - .OPUS (Ogg Opus support via the Opusfile and SpeexDSP libraries)
  *   - .FLAC (Free Lossless Audio Codec support via the dr_flac single-header decoder)
  *
- * Please see the file LICENSE.txt in the source's root directory.
+ * Please see the file src/libs/decoders/docs/LICENSE.txt.
  *
  * \author Ryan C. Gordon (icculus@icculus.org)
  * \author many others, please see CREDITS in the source's root directory.
@@ -721,21 +721,6 @@ SNDDECLSPEC int SDLCALL Sound_Seek(Sound_Sample *sample, Uint32 ms);
 #ifdef __cplusplus
 }
 #endif
-
-/*
-inline Sound_SampleFlags operator|(Sound_SampleFlags a, Sound_SampleFlags b)
-{return static_cast<Sound_SampleFlags>(static_cast<int>(a) | static_cast<int>(b));}
-
-inline Sound_SampleFlags& operator|= (Sound_SampleFlags& a, Sound_SampleFlags b)
-{ return (Sound_SampleFlags&)((int&)a |= static_cast<int>(b)); }
-
-inline Sound_SampleFlags operator& (Sound_SampleFlags a, Sound_SampleFlags b)
-{ return (Sound_SampleFlags)((int)a & (int)b); }
-
-inline Sound_SampleFlags& operator&= (Sound_SampleFlags& a, Sound_SampleFlags b)
-{ return (Sound_SampleFlags&)((int&)a &= (int)b); }
-#endif
-*/
 
 #endif  /* !defined _INCLUDE_SDL_SOUND_H_ */
 
