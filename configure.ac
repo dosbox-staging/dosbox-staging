@@ -201,8 +201,8 @@ case "$host" in
 
    AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-   #include <AudioToolbox/AUGraph.h>
-   #include <CoreServices/CoreServices.h>
+   #include <AudioToolbox/AUGraph.h>x
+   #include <CoreServices/CoreServices.h>x
    int main(int argc, char** argv) { return 0; }
    ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
    [compiler supports Core Audio headers])], AC_MSG_RESULT(no))
