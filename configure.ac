@@ -194,7 +194,7 @@ case "$host" in
   *-*-darwin*)
    AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-   #include <CoreMIDI/MIDIServices.h>x
+   #include <CoreMIDI/MIDIServicesx.h>
    int main(int argc, char** argv) { return 0; }
    ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
    [compiler supports Core MIDI headers])], AC_MSG_RESULT(no))
