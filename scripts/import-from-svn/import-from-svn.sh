@@ -130,7 +130,12 @@ cleanup () {
 #
 full_import () {
 	local -r repo=$1
-	git_svn_clone_dosbox "1:HEAD" "$repo"
+
+	if ! git_svn_clone_dosbox "1:HEAD" "$repo" ; then
+		echo_err "TODO" # TODO
+		exit 1
+	fi
+
 	git_rewrite_import_links "$repo"
 	name_active_branches "$repo"
 	import_svn_tagpaths_as_git_tags "$repo"
@@ -145,7 +150,11 @@ fast_import () {
 	local -r git_new_base_commit=fe177b413603793a3342cfe22f1fc9e050cbea76
 	local -r git_old_base_commit=6d0dd9871c53a9c0b2a2ff98d24d1aebc10c0ad4
 
-	git_svn_clone_dosbox "$svn_base_rev:HEAD" "$repo"
+	if ! git_svn_clone_dosbox "$svn_base_rev:HEAD" "$repo" ; then
+		echo_err "TODO!!!" # TODO
+		exit 1
+	fi
+
 	git_rewrite_import_links "$repo"
 	name_active_branches "$repo"
 	cleanup "$repo"
