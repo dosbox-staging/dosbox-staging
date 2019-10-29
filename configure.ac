@@ -189,7 +189,7 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
-dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their header
+dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their headers
 case "$host" in
   *-*-darwin*)
    AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
@@ -201,8 +201,8 @@ case "$host" in
 
    AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-   #include <AudioToolbox/AUGraphx.h>
-   #include <CoreServices/CoreServicesx.h>
+   #include <AudioToolbox/AUGraph.h>
+   #include <CoreServices/CoreServices.h>
    int main(int argc, char** argv) { return 0; }
    ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
    [compiler supports Core Audio headers])], AC_MSG_RESULT(no))
