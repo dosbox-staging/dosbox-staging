@@ -189,17 +189,27 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
-dnl When on macOS, enable support for Apple's Core MIDI if our compiler can successfully #include its header
-AC_MSG_CHECKING(if compiler supports CoreMIDI headers)
+dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their header
 case "$host" in
   *-*-darwin*)
+   AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
    #include <CoreMIDI/MIDIServices.h>
    int main(int argc, char** argv) { return 0; }
-   ]])], [AC_MSG_RESULT(yes);AC_DEFINE([C_SUPPORTS_COREMIDI], [],
-   [compiler supports CoreMIDI headers])], AC_MSG_RESULT(no))
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
+   [compiler supports Core MIDI headers])], AC_MSG_RESULT(no))
+
+   AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <AudioToolbox/AUGraph.h>
+   #include <CoreServices/CoreServices.h>
+   int main(int argc, char** argv) { return 0; }
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
+   [compiler supports Core Audio headers])], AC_MSG_RESULT(no))
    ;;
+
   *)
+   AC_MSG_CHECKING(if compiler supports Apple's MIDI headers)
    AC_MSG_RESULT([no, not on Apple])
    ;;
 esac
@@ -573,7 +583,6 @@ case "$host" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)
