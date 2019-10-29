@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 # then script will return with status 1. Simply change this line if you
 # want to set a different limit.
 #
-MAX_ISSUES = 99
+MAX_ISSUES = 94
 
 def summary_values(summary_table):
     if not summary_table:
