@@ -1342,8 +1342,6 @@ dac_text16:
 		else if (CurMode->mode==5) real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2e);
 		else real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2);
 		break;
-	case M_TANDY16:
-		break;
 	case M_TEXT:
 		switch (CurMode->mode) {
 		case 0:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2c);break;
@@ -1352,10 +1350,6 @@ dac_text16:
 		case 3:
 		case 7:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29);break;
 		}
-		break;
-	case M_LIN4:
-	case M_EGA:	
-	case M_VGA:
 		break;
 	}
 
