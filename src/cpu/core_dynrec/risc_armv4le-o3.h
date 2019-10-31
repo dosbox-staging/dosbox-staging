@@ -935,7 +935,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 
 	*(Bit32u*)pos1 = LDR_IMM(FC_SEGS_ADDR, HOST_pc, cache.pos - (pos1 + 8));      // ldr FC_SEGS_ADDR, [pc, #(&Segs)]
@@ -949,7 +949,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 #endif
 }

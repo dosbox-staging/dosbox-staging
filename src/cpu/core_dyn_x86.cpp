@@ -28,20 +28,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#if defined (WIN32)
-#include <windows.h>
-#include <winbase.h>
-#endif
-
-#if (C_HAVE_MPROTECT)
-#include <sys/mman.h>
-
-#include <limits.h>
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-#endif /* C_HAVE_MPROTECT */
-
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"
@@ -133,13 +119,13 @@ enum BlockReturn {
 #define DYNFLG_ACTIVE		0x20	//Register has an active value
 
 class GenReg;
-class CodePageHandler;
+class CodePageHandlerDynRec;
 
 struct DynReg {
 	Bitu flags;
 	GenReg * genreg;
 	void * data;
-}; 
+};
 
 enum DynAccess {
 	DA_d,DA_w,
@@ -160,7 +146,7 @@ static struct {
 
 #define IllegalOption(msg) E_Exit("DYNX86: illegal option in " msg)
 
-#include "core_dyn_x86/cache.h" 
+#include "cache.h"
 
 static struct {
 	Bitu callback;
@@ -273,7 +259,7 @@ restart_core:
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
-	CodePageHandler * chandler=0;
+	CodePageHandlerDynRec * chandler=0;
 	if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 		goto restart_core;
@@ -282,7 +268,7 @@ restart_core:
 		return CPU_Core_Normal_Run();
 	}
 	/* Find correct Dynamic Block to run */
-	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
+	CacheBlockDynRec * block=chandler->FindCacheBlock(ip_point&4095);
 	if (!block) {
 		if (!chandler->invalidation_map || (chandler->invalidation_map[ip_point&4095]<4)) {
 			block=CreateCacheBlock(chandler,ip_point,32);
@@ -297,7 +283,7 @@ restart_core:
 				goto restart_core;
 			}
 			CPU_CycleLeft+=old_cycles;
-			return nc_retcode; 
+			return nc_retcode;
 		}
 	}
 run_block:
@@ -333,7 +319,7 @@ run_block:
 		goto restart_core;
 	case BR_Cycles:
 #if C_DEBUG
-#if C_HEAVY_DEBUG			
+#if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
@@ -358,7 +344,7 @@ run_block:
 	case BR_Link2:
 		{
 			Bit32u temp_ip=SegPhys(cs)+reg_eip;
-			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
+			CodePageHandlerDynRec * temp_handler=(CodePageHandlerDynRec *)get_tlb_readhandler(temp_ip);
 			if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block) goto restart_core;
@@ -460,8 +446,16 @@ void CPU_Core_Dyn_X86_Init(void) {
 }
 
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache) {
-	/* Initialize code cache and dynamic blocks */
-	cache_init(enable_cache);
+	/* Initialize code cache */
+	const Bit8u *pos = cache_init(enable_cache);
+	if (pos) {
+		cache.pos = pos;
+		/* Setup the default blocks for block linkage returns */
+		link_blocks[0].cache.start=cache.pos;
+		gen_return(BR_Link1);
+		link_blocks[1].cache.start=cache.pos;
+		gen_return(BR_Link2);
+	}
 }
 
 void CPU_Core_Dyn_X86_Cache_Close(void) {

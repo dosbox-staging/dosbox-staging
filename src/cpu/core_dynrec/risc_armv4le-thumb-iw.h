@@ -194,14 +194,14 @@ static void INLINE gen_create_branch_short(void * func);
 static void cache_checkinstr(Bit32u size) {
 	if (cache_datasize == 0) {
 		if (cache_datapos != NULL) {
-			if (cache.pos + size + CACHE_DATA_JUMP >= cache_datapos) {
+			if ((Bit8u*)cache.pos + size + CACHE_DATA_JUMP >= cache_datapos) {
 				cache_datapos = NULL;
 			}
 		}
 		return;
 	}
 
-	if (cache.pos + size + CACHE_DATA_JUMP <= cache_datapos) return;
+	if ((Bit8u*)cache.pos + size + CACHE_DATA_JUMP <= cache_datapos) return;
 
 	{
 		register Bit8u * newcachepos;
@@ -211,10 +211,10 @@ static void cache_checkinstr(Bit32u size) {
 		cache.pos = newcachepos;
 	}
 
-	if (cache.pos + CACHE_DATA_MAX + CACHE_DATA_ALIGN >= cache.block.active->cache.start + cache.block.active->cache.size &&
-		cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN + (CACHE_DATA_ALIGN - CACHE_ALIGN) < cache.block.active->cache.start + cache.block.active->cache.size)
+	if ((const Bit8u*)cache.pos + CACHE_DATA_MAX + CACHE_DATA_ALIGN >= cache.block.active->cache.start + cache.block.active->cache.size &&
+		(const Bit8u*)cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN + (CACHE_DATA_ALIGN - CACHE_ALIGN) < cache.block.active->cache.start + cache.block.active->cache.size)
 	{
-		cache_datapos = (Bit8u *) (((Bitu)cache.block.active->cache.start + cache.block.active->cache.size - CACHE_DATA_ALIGN) & ~(CACHE_DATA_ALIGN - 1));
+		cache_datapos = (Bit8u *) (((Bitu)cache_pos(cache.block.active->cache.start) + cache.block.active->cache.size - CACHE_DATA_ALIGN) & ~(CACHE_DATA_ALIGN - 1));
 	} else {
 		register Bit32u cachemodsize;
 
@@ -238,8 +238,8 @@ static void cache_checkinstr(Bit32u size) {
 static Bit8u * cache_reservedata(void) {
 	// if data pool not yet initialized, then initialize data pool
 	if (GCC_UNLIKELY(cache_datapos == NULL)) {
-		if (cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN < cache.block.active->cache.start + CACHE_DATA_MAX) {
-			cache_datapos = (Bit8u *) (((Bitu)cache.block.active->cache.start + CACHE_DATA_MAX) & ~(CACHE_DATA_ALIGN - 1));
+		if ((const Bit8u*)cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN < cache.block.active->cache.start + CACHE_DATA_MAX) {
+			cache_datapos = (Bit8u *) (((Bitu)cache_pos(cache.block.active->cache.start) + CACHE_DATA_MAX) & ~(CACHE_DATA_ALIGN - 1));
 		}
 	}
 
@@ -247,10 +247,10 @@ static Bit8u * cache_reservedata(void) {
 	if (cache_datasize == 0) {
 		// set data pool address is too close (or behind)  cache.pos then set new data pool size
 		if (cache.pos + CACHE_DATA_MIN + CACHE_DATA_JUMP /*+ CACHE_DATA_ALIGN*/ > cache_datapos) {
-			if (cache.pos + CACHE_DATA_MAX + CACHE_DATA_ALIGN >= cache.block.active->cache.start + cache.block.active->cache.size &&
-				cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN + (CACHE_DATA_ALIGN - CACHE_ALIGN) < cache.block.active->cache.start + cache.block.active->cache.size)
+			if ((const Bit8u*)cache.pos + CACHE_DATA_MAX + CACHE_DATA_ALIGN >= cache.block.active->cache.start + cache.block.active->cache.size &&
+				(const Bit8u*)cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN + (CACHE_DATA_ALIGN - CACHE_ALIGN) < cache.block.active->cache.start + cache.block.active->cache.size)
 			{
-				cache_datapos = (Bit8u *) (((Bitu)cache.block.active->cache.start + cache.block.active->cache.size - CACHE_DATA_ALIGN) & ~(CACHE_DATA_ALIGN - 1));
+				cache_datapos = (Bit8u *) (((Bitu)cache_pos(cache.block.active->cache.start) + cache.block.active->cache.size - CACHE_DATA_ALIGN) & ~(CACHE_DATA_ALIGN - 1));
 			} else {
 				register Bit32u cachemodsize;
 
@@ -340,7 +340,7 @@ static void gen_mov_dword_to_reg_imm(HostReg dest_reg,Bit32u imm) {
 
 		cache_checkinstr(4);
 
-		diff = imm - ((Bit32u)cache.pos+4);
+		diff = imm - ((Bit32u)(Bits)cache.pos+4);
 
 		if ((diff < 1024) && ((imm & 0x03) == 0)) {
 			if (((Bit32u)cache.pos & 0x03) == 0) {
@@ -1051,7 +1051,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 
 	*(Bit32u*)pos1 = ARM_LDR_IMM(FC_SEGS_ADDR, HOST_pc, cache.pos - (pos1 + 8));      // ldr FC_SEGS_ADDR, [pc, #(&Segs)]
@@ -1065,7 +1065,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 }
 

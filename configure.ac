@@ -488,11 +488,17 @@ else
    AC_MSG_RESULT(no)
 fi
 
-dnl Check for mprotect. Needed for 64 bits linux
-AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
-AC_CHECK_HEADER([sys/mman.h], [
-AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
-])
+dnl Check for mmap. Needed for dynamic cores
+AH_TEMPLATE(C_HAVE_MMAP,[Define to 1 if you have the mmap function])
+AC_CHECK_HEADER([sys/mman.h],have_mman_h=yes,)
+AC_CHECK_LIB(rt,shm_open,have_shmem=yes,,)
+if test x$have_mman_h = xyes ; then
+    AC_DEFINE(C_HAVE_MMAP,1)
+    if test x$have_shmem = xyes ; then
+        LIBS="-lrt $LIBS"
+        AC_DEFINE(C_HAVE_SHMEM,1,[Define to 1 if you have shared memory support])
+    fi
+fi
 
 dnl Check for realpath. Used on Linux
 AC_CHECK_FUNCS([realpath])

@@ -650,14 +650,15 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 }
 #endif
 
-static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
+static void cache_block_closing(const Bit8u* block_start,Bitu block_size) {
 #ifdef PSP
 // writeback dcache and invalidate icache
+	Bit32u exec_offset = cache_pos(0);
 	Bit32u inval_start = ((Bit32u)block_start) & ~63;
 	Bit32u inval_end = (((Bit32u)block_start) + block_size + 64) & ~63;
 	for (;inval_start < inval_end; inval_start+=64) {
 		__builtin_allegrex_cache(0x1a, inval_start);
-		__builtin_allegrex_cache(0x08, inval_start);
+		__builtin_allegrex_cache(0x08, inval_start+exec_offset);
 	}
 #endif
 }

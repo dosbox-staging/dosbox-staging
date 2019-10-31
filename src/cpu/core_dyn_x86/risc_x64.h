@@ -124,7 +124,7 @@ private:
 					else { // try 32-bit absolute address
 						if ((Bit32s)offset != offset) IllegalOption("opcode::Emit: bad RIP address");
 						// change emitted modrm base from 5 to 4 (use sib)
-						cache.pos[-1] -= 1; 
+						((Bit8u*)cache.pos)[-1] -= 1;
 						cache_addb(0x25); // sib: [none+1*none+simm32]
 					}
 				} else if ((modrm&7)!=4 || (sib&7)!=5)
@@ -269,13 +269,13 @@ public:
 	}
 };
 
-static BlockReturn gen_runcodeInit(Bit8u *code);
-static BlockReturn (*gen_runcode)(Bit8u *code) = gen_runcodeInit;
+static BlockReturn gen_runcodeInit(const Bit8u *code);
+static BlockReturn (*gen_runcode)(const Bit8u *code) = gen_runcodeInit;
 
-static BlockReturn gen_runcodeInit(Bit8u *code) {
+static BlockReturn gen_runcodeInit(const Bit8u *code) {
 	Bit8u* oldpos = cache.pos;
 	cache.pos = &cache_code_link_blocks[128];
-	gen_runcode = (BlockReturn(*)(Bit8u*))cache.pos;
+	gen_runcode = (BlockReturn(*)(const Bit8u*))(const Bit8u*)cache.pos;
 
 	opcode(5).Emit8Reg(0x50);  // push rbp
 	opcode(15).Emit8Reg(0x50); // push r15
@@ -1259,7 +1259,7 @@ static void (*gen_dh_fpu_save)(void)  = gen_dh_fpu_saveInit;
 static void gen_dh_fpu_saveInit(void) {
 	Bit8u* oldpos = cache.pos;
 	cache.pos = &cache_code_link_blocks[64];
-	gen_dh_fpu_save = (void(*)(void))cache.pos;
+	gen_dh_fpu_save = (void(*)(void))(const Bit8u*)cache.pos;
 
 	Bitu addr = (Bitu)&dyn_dh_fpu;
 	// mov RAX, &dyn_dh_fpu

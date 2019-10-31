@@ -32,10 +32,10 @@ static struct DynDecode {
 	bool big_addr;
 	REP_Type rep;
 	Bitu cycles;
-	CacheBlock * block;
-	CacheBlock * active_block;
+	CacheBlockDynRec * block;
+	CacheBlockDynRec * active_block;
 	struct {
-		CodePageHandler * code;	
+		CodePageHandlerDynRec * code;	
 		Bitu index;
 		Bit8u * wmap;
 		Bit8u * invmap;
@@ -50,14 +50,14 @@ static struct DynDecode {
 	DynReg * segprefix;
 } decode;
 
-static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
+static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
 	Bit8u rdval;
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
-		cph=( CodePageHandler *)handler;
+		cph=( CodePageHandlerDynRec *)handler;
 		if (handler->flags & cflag) return false;
 		cph->ClearRelease();
 		cph=0;
@@ -67,7 +67,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 		if (PAGING_ForcePageInit(lin_addr)) {
 			handler=get_tlb_readhandler(lin_addr);
 			if (handler->flags & PFLAG_HASCODE) {
-				cph=( CodePageHandler *)handler;
+				cph=( CodePageHandlerDynRec *)handler;
 				if (handler->flags & cflag) return false;
 				cph->ClearRelease();
 				cph=0;
@@ -97,7 +97,7 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 			}
 		}
 	}
-	CodePageHandler * cpagehandler=cache.free_pages;
+	CodePageHandlerDynRec * cpagehandler=cache.free_pages;
 	cache.free_pages=cache.free_pages->next;
 	cpagehandler->prev=cache.last_page;
 	cpagehandler->next=0;
@@ -120,7 +120,7 @@ static Bit8u decode_fetchb(void) {
 		Bitu fetchaddr=decode.page.first << 12;
 		mem_readb(fetchaddr);
 		MakeCodePage(fetchaddr,decode.page.code);
-		CacheBlock * newblock=cache_getblock();
+		CacheBlockDynRec * newblock=cache_getblock();
 		decode.active_block->crossblock=newblock;
 		newblock->crossblock=decode.active_block;
 		decode.active_block=newblock;
@@ -163,7 +163,7 @@ static Bit32u decode_fetchd(void) {
 
 static INLINE void decode_increase_wmapmask(Bitu size) {
 	Bitu mapidx;
-	CacheBlock* activecb=decode.active_block; 
+	CacheBlockDynRec* activecb=decode.active_block; 
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
 		activecb->cache.wmapmask=(Bit8u*)malloc(START_WMMEM);
 		memset(activecb->cache.wmapmask,0,START_WMMEM);
@@ -535,7 +535,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	gen_fill_branch(je_loc);
 	cache_addb(0x51);		// push ecx
 	cache_addb(0xe8);
-	cache_addd(((Bit32u)&mem_readb_checked_dcx86) - (Bit32u)cache.pos-4);
+	cache_addd(((Bits)&mem_readb_checked_dcx86) - (Bits)cache.pos-4);
 	cache_addw(0xc483);		// add esp,4
 	cache_addb(0x04);
 	cache_addw(0x012c);		// sub al,1
@@ -618,8 +618,8 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	}
 	cache_addb(0x51);		// push ecx
 	cache_addb(0xe8);
-	if (dword) cache_addd(((Bit32u)&mem_readd_checked_dcx86) - (Bit32u)cache.pos-4);
-	else cache_addd(((Bit32u)&mem_readw_checked_dcx86) - (Bit32u)cache.pos-4);
+	if (dword) cache_addd(((Bits)&mem_readd_checked_dcx86) - (Bits)cache.pos-4);
+	else cache_addd(((Bits)&mem_readw_checked_dcx86) - (Bits)cache.pos-4);
 	cache_addw(0xc483);		// add esp,4
 	cache_addb(0x04);
 	cache_addw(0x012c);		// sub al,1
@@ -687,7 +687,7 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	cache_addb(0x50);	// push eax
 	if (GCC_UNLIKELY(high)) cache_addw(0xe086+((genreg->index+(genreg->index<<3))<<8));
 	cache_addb(0xe8);
-	cache_addd(((Bit32u)&mem_writeb_checked) - (Bit32u)cache.pos-4);
+	cache_addd(((Bits)&mem_writeb_checked) - (Bits)cache.pos-4);
 	cache_addw(0xc483);		// add esp,8
 	cache_addb(0x08);
 	cache_addw(0x012c);		// sub al,1
@@ -731,8 +731,8 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	cache_addb(0x50+genreg->index);
 	cache_addb(0x50);	// push eax
 	cache_addb(0xe8);
-	if (dword) cache_addd(((Bit32u)&mem_writed_checked) - (Bit32u)cache.pos-4);
-	else cache_addd(((Bit32u)&mem_writew_checked) - (Bit32u)cache.pos-4);
+	if (dword) cache_addd(((Bits)&mem_writed_checked) - (Bits)cache.pos-4);
+	else cache_addd(((Bits)&mem_writew_checked) - (Bits)cache.pos-4);
 	cache_addw(0xc483);		// add esp,8
 	cache_addb(0x08);
 	cache_addw(0x012c);		// sub al,1
@@ -1849,7 +1849,7 @@ static void dyn_exit_link(Bits eip_change) {
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),(decode.code-decode.code_start)+eip_change);
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();
-	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
 	dyn_closeblock();
 }
 
@@ -1873,7 +1873,7 @@ static void dyn_branched_exit(BranchTypes btype,Bit32s eip_add) {
  	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),eip_base);
 	gen_releasereg(DREG(CYCLES));
  	gen_releasereg(DREG(EIP));
- 	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+ 	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
  	gen_fill_branch(data);
 
  	/* Branch taken */
@@ -1883,7 +1883,7 @@ static void dyn_branched_exit(BranchTypes btype,Bit32s eip_add) {
  	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),eip_base+eip_add);
 	gen_releasereg(DREG(CYCLES));
  	gen_releasereg(DREG(EIP));
- 	gen_jmp_ptr(&decode.block->link[1].to,offsetof(CacheBlock,cache.start));
+ 	gen_jmp_ptr(&decode.block->link[1].to,offsetof(CacheBlockDynRec,cache.start));
  	dyn_closeblock();
 }
 
@@ -1927,7 +1927,7 @@ static void dyn_loop(LoopTypes type) {
 	}
 	gen_lea(DREG(EIP),DREG(EIP),0,0,eip_base+eip_add);
 	gen_releasereg(DREG(EIP));
-	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
 	if (branch1) {
 		gen_fill_branch(branch1);
 		gen_sop_word(SOP_DEC,decode.big_addr,DREG(ECX));
@@ -1937,7 +1937,7 @@ static void dyn_loop(LoopTypes type) {
 	gen_fill_branch(branch2);
 	gen_lea(DREG(EIP),DREG(EIP),0,0,eip_base);
 	gen_releasereg(DREG(EIP));
-	gen_jmp_ptr(&decode.block->link[1].to,offsetof(CacheBlock,cache.start));
+	gen_jmp_ptr(&decode.block->link[1].to,offsetof(CacheBlockDynRec,cache.start));
 	dyn_closeblock();
 }
 
@@ -1962,7 +1962,7 @@ static void dyn_call_near_imm(void) {
 	else gen_extend_word(false,DREG(EIP),DREG(TMPW));
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();
-	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
 	dyn_closeblock();
 }
 
@@ -2053,7 +2053,7 @@ static void dyn_add_iocheck_var(Bit8u accessed_port,Bitu access_size) {
 #endif
 #include "dyn_fpu.h"
 
-static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bitu max_opcodes) {
+static CacheBlockDynRec * CreateCacheBlock(CodePageHandlerDynRec * codepage,PhysPt start,Bitu max_opcodes) {
 	Bits i;
 /* Init a load of variables */
 	decode.code_start=start;
@@ -2750,7 +2750,7 @@ restart_prefix:
 	dyn_set_eip_end();
 	dyn_reduce_cycles();
 	dyn_save_critical_regs();
-	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlock,cache.start));
+	gen_jmp_ptr(&decode.block->link[0].to,offsetof(CacheBlockDynRec,cache.start));
 	dyn_closeblock();
 	goto finish_block;
 core_close_block:

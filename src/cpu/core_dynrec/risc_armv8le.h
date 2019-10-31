@@ -894,7 +894,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 
 	*(Bit32u *)pos1 = LDR64_PC(FC_SEGS_ADDR, cache.pos - pos1);   // ldr FC_SEGS_ADDR, [pc, #(&Segs)]
@@ -908,7 +908,7 @@ static void gen_run_code(void) {
 
 	// align cache.pos to 32 bytes
 	if ((((Bitu)cache.pos) & 0x1f) != 0) {
-		cache.pos = cache.pos + (32 - (((Bitu)cache.pos) & 0x1f));
+		cache.pos += (32 - (((Bitu)cache.pos) & 0x1f));
 	}
 }
 
@@ -1136,7 +1136,7 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 }
 #endif
 
-static void cache_block_closing(Bit8u* block_start,Bitu block_size) {
+static void cache_block_closing(const Bit8u* block_start,Bitu block_size) {
 	//flush cache - GCC/LLVM builtin
 	__builtin___clear_cache((char *)block_start, (char *)(block_start+block_size));
 }

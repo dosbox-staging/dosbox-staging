@@ -299,7 +299,7 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
 // generate a call to a parameterless function
 static void INLINE gen_call_function_raw(void * func) {
 	cache_addb(0xe8);
-	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
+	cache_addd((Bits)func - (Bits)cache.pos-4);
 }
 
 // generate a call to a function with paramcount parameters
@@ -309,7 +309,7 @@ static Bit32u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fa
 	Bit32u proc_addr=(Bit32u)cache.pos;
 	// Do the actual call to the procedure
 	cache_addb(0xe8);
-	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
+	cache_addd((Bits)func - (Bits)cache.pos-4);
 
 	// Restore the params of the stack
 	if (paramcount) {
@@ -440,7 +440,8 @@ static void gen_return_function(void) {
 #ifdef DRC_FLAGS_INVALIDATION
 // called when a call to a function can be replaced by a
 // call to a simpler function
-static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+static void gen_fill_function_ptr(Bit8u * pos,void* _fct_ptr,Bitu flags_type) {
+	cache_pos fct_ptr((const Bit8u*)_fct_ptr);
 #ifdef DRC_FLAGS_INVALIDATION_DCODE
 	// try to avoid function calls but rather directly fill in code
 	switch (flags_type) {
@@ -511,6 +512,6 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
 }
 #endif
 
-static void cache_block_closing(Bit8u* block_start,Bitu block_size) { }
+static void cache_block_closing(const Bit8u* block_start,Bitu block_size) { }
 
 static void cache_block_before_close(void) { }

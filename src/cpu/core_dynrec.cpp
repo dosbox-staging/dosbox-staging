@@ -28,20 +28,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#if defined (WIN32)
-#include <windows.h>
-#include <winbase.h>
-#endif
-
-#if (C_HAVE_MPROTECT)
-#include <sys/mman.h>
-
-#include <limits.h>
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif
-#endif /* C_HAVE_MPROTECT */
-
 #include "callback.h"
 #include "regs.h"
 #include "mem.h"
@@ -124,14 +110,14 @@ static void IllegalOptionDynrec(const char* msg) {
 }
 
 static struct {
-	BlockReturn (*runcode)(Bit8u*);		// points to code that can start a block
+	BlockReturn (*runcode)(const Bit8u*);		// points to code that can start a block
 	Bitu callback;				// the occurred callback
 	Bitu readdata;				// spare space used when reading from memory
 	Bit32u protected_regs[8];	// space to save/restore register values
 } core_dynrec;
 
 
-#include "core_dynrec/cache.h"
+#include "cache.h"
 
 #define X86			0x01
 #define X86_64		0x02
@@ -325,8 +311,19 @@ void CPU_Core_Dynrec_Init(void) {
 }
 
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache) {
-	// Initialize code cache and dynamic blocks
-	cache_init(enable_cache);
+	// Initialize code cache
+	const Bit8u* p = cache_init(enable_cache);
+	if (p) {
+		cache.pos = p;
+		// setup prologue/epilogue code
+		core_dynrec.runcode=(BlockReturn (*)(const Bit8u*))(const Bit8u*)cache.pos;
+		dyn_run_code();
+		// setup the default blocks for block linkage returns
+		link_blocks[0].cache.start=cache.pos;
+		dyn_return(BR_Link1,false);
+		link_blocks[1].cache.start=cache.pos;
+		dyn_return(BR_Link2,false);
+	}
 }
 
 void CPU_Core_Dynrec_Cache_Close(void) {

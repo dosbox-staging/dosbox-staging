@@ -84,7 +84,7 @@ public:
 	}
 };
 
-static BlockReturn gen_runcode(Bit8u * code) {
+static BlockReturn gen_runcode(const Bit8u * code) {
 	BlockReturn retval;
 #if defined (_MSC_VER)
 	__asm {
@@ -872,7 +872,7 @@ static void gen_call_function(void * func,char const* ops,...) {
 	x86gen.regs[X86_REG_EDX]->Clear();
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
-	cache_addd((Bit32u)func - (Bit32u)cache.pos-4);
+	cache_addd((Bits)func - (Bits)cache.pos-4);
 	/* Restore the params of the stack */
 	if (paramcount) {
 		cache_addw(0xc483);				//add ESP,imm byte
@@ -944,9 +944,9 @@ static void gen_call_write(DynReg * dr,Bit32u val,Bitu write_size) {
 	/* Do the actual call to the procedure */
 	cache_addb(0xe8);
 	switch (write_size) {
-		case 1: cache_addd((Bit32u)mem_writeb_checked - (Bit32u)cache.pos-4); break;
-		case 2: cache_addd((Bit32u)mem_writew_checked - (Bit32u)cache.pos-4); break;
-		case 4: cache_addd((Bit32u)mem_writed_checked - (Bit32u)cache.pos-4); break;
+		case 1: cache_addd((Bits)mem_writeb_checked - (Bits)cache.pos-4); break;
+		case 2: cache_addd((Bits)mem_writew_checked - (Bits)cache.pos-4); break;
+		case 4: cache_addd((Bits)mem_writed_checked - (Bits)cache.pos-4); break;
 		default: IllegalOption("gen_call_write");
 	}
 
