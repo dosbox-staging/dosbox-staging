@@ -439,7 +439,8 @@ static void gen_synchreg(DynReg * dnew,DynReg * dsynch) {
 	if ((dnew->flags ^ dsynch->flags) & DYNFLG_CHANGED) {
 		/* Ensure the changed value gets saved */	
 		if (dnew->flags & DYNFLG_CHANGED) {
-			dnew->genreg->Save();
+			if (GCC_LIKELY(dnew->genreg != NULL))
+				dnew->genreg->Save();
 		} else dnew->flags|=DYNFLG_CHANGED;
 	}
 }
