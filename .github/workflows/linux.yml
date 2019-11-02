@@ -13,7 +13,7 @@ jobs:
         run:  sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
       - name: Build
         run:  ./scripts/build.sh --compiler clang --compiler-version 8 --lto
-      - name: Summarize warnings"
+      - name: Summarize warnings
         run:  ./scripts/count-warnings.py build.log
 
   build_ubuntu_matrix_gcc:
