@@ -472,17 +472,21 @@ bool mem_unalignedreadd_checked(PhysPt address, Bit32u * val) {
 	return false;
 }
 
-bool mem_unalignedwritew_checked(PhysPt address,Bit16u val) {
-	if (mem_writeb_checked(address,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked(address+1,(Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwritew_checked(PhysPt address, Bit16u val) {
+	if (mem_writeb_checked(address+0, (Bit8u)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address+1, (Bit8u)(val & 0xff))) return true;
 	return false;
 }
 
-bool mem_unalignedwrited_checked(PhysPt address,Bit32u val) {
-	if (mem_writeb_checked(address,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked(address+1,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked(address+2,(Bit8u)(val & 0xff))) return true;val>>=8;
-	if (mem_writeb_checked(address+3,(Bit8u)(val & 0xff))) return true;
+bool mem_unalignedwrited_checked(PhysPt address, Bit32u val) {
+	if (mem_writeb_checked(address+0, (Bit8u)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address+1, (Bit8u)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address+2, (Bit8u)(val & 0xff))) return true;
+	val >>= 8;
+	if (mem_writeb_checked(address+3, (Bit8u)(val & 0xff))) return true;
 	return false;
 }
 
