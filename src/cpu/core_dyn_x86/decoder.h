@@ -1954,6 +1954,9 @@ static void dyn_loop(LoopTypes type) {
 		gen_needflags();
 		branch1=gen_create_branch(BR_Z);
 		break;
+	case LOOP_NONE:
+	case LOOP_JCXZ:
+		break;
 	}
 	gen_protectflags();
 	switch (type) {
