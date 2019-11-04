@@ -1885,15 +1885,6 @@ static void dyn_closeblock(void) {
 	cache_closeblock();
 }
 
-static void dyn_normal_exit(BlockReturn code) {
-	gen_protectflags();
-	dyn_reduce_cycles();
-	dyn_set_eip_last();
-	dyn_save_critical_regs();
-	gen_return(code);
-	dyn_closeblock();
-}
-
 static void dyn_exit_link(Bits eip_change) {
 	gen_protectflags();
 	gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),(decode.code-decode.code_start)+eip_change);
