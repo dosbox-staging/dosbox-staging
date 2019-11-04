@@ -1484,20 +1484,22 @@ Bitu VideoModeMemSize(Bitu mode) {
 		i++;
 	}
 	if (!vmodeBlock)
-        return 0;
+		return 0;
 
 	switch(vmodeBlock->type) {
 	case M_LIN4:
 		return vmodeBlock->swidth*vmodeBlock->sheight/2;
 	case M_LIN8:
 		return vmodeBlock->swidth*vmodeBlock->sheight;
-	case M_LIN15: case M_LIN16:
+	case M_LIN15:
+	case M_LIN16:
 		return vmodeBlock->swidth*vmodeBlock->sheight*2;
 	case M_LIN32:
 		return vmodeBlock->swidth*vmodeBlock->sheight*4;
 	case M_TEXT:
 		return vmodeBlock->twidth*vmodeBlock->theight*2;
+	default:
+		// Return 0 for all other types, those always fit in memory
+		return 0;
 	}
-	// Return 0 for all other types, those always fit in memory
-	return 0;
 }
