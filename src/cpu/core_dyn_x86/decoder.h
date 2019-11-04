@@ -2099,7 +2099,6 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 /* Init a load of variables */
 	decode.code_start=start;
 	decode.code=start;
-	Bitu cycles=0;
 	decode.page.code=codepage;
 	decode.page.index=start&4095;
 	decode.page.wmap=codepage->write_map;
