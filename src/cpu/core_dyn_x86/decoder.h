@@ -370,17 +370,6 @@ static void dyn_check_irqrequest(void) {
 	used_save_info++;
 }
 
-static void dyn_check_bool_exception_ne(void) {
-	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_Z);
-	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
-	save_info[used_save_info].cycles=decode.cycles;
-	save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
-	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
-	save_info[used_save_info].type=db_exception;
-	used_save_info++;
-}
-
 static void dyn_fill_blocks(void) {
 	for (Bitu sct=0; sct<used_save_info; sct++) {
 		gen_fill_branch_long(save_info[sct].branch_pos);
@@ -485,6 +474,19 @@ static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
 
 #else
 #if C_TARGETCPU == X86
+
+static void dyn_check_bool_exception_ne(void) {
+	save_info[used_save_info].branch_pos = gen_create_branch_long(BR_Z);
+	dyn_savestate(&save_info[used_save_info].state);
+	if (!decode.cycles)
+		decode.cycles++;
+	save_info[used_save_info].cycles = decode.cycles;
+	save_info[used_save_info].eip_change = decode.op_start - decode.code_start;
+	if (!cpu.code.big)
+		save_info[used_save_info].eip_change &= 0xffff;
+	save_info[used_save_info].type = db_exception;
+	used_save_info++;
+}
 
 static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
 	gen_protectflags();
