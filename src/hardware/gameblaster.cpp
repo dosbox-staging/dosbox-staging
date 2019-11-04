@@ -142,14 +142,14 @@ public:
 
 		/* Register the Mixer CallBack */
 		cms_chan = MixerChan.Install(CMS_CallBack,sampleRate,"CMS");
-	
+
 		lastWriteTicks = PIC_Ticks;
 
-		Bit32u freq = 7159000;		//14318180 isa clock / 2
+		const uint32_t clock = 7159090; // 14318180 isa clock / 2
 
 		machine_config config;
-		device[0] = new saa1099_device(config, "", 0, 7159090);
-		device[1] = new saa1099_device(config, "", 0, 7159090);
+		device[0] = new saa1099_device(config, "", 0, clock);
+		device[1] = new saa1099_device(config, "", 0, clock);
 
 		device[0]->device_start();
 		device[1]->device_start();
