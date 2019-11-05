@@ -59,8 +59,6 @@ public:
 
 	bool loadedSector;
 	fatDrive *myDrive;
-private:
-	Bit16u info;
 };
 
 
