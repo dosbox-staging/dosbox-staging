@@ -239,7 +239,7 @@ static void dh_fpu_esc3(){
 			switch (sub) {
 			case 0x00:				//FNENI
 			case 0x01:				//FNDIS
-				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfuntion :%d",sub);
+				LOG(LOG_FPU,LOG_ERROR)("8087 only fpu code used esc 3: group 4: subfunction: %lu", sub);
 				break;
 			case 0x02:				//FNCLEX FCLEX
 				cache_addb(0xdb);
@@ -255,11 +255,11 @@ static void dh_fpu_esc3(){
 //				LOG(LOG_FPU,LOG_ERROR)("80267 protected mode (un)set. Nothing done");
 				break;
 			default:
-				E_Exit("ESC 3:ILLEGAL OPCODE group %d subfunction %d",group,sub);
+				E_Exit("ESC 3:ILLEGAL OPCODE group %lu subfunction %lu", group, sub);
 			}
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %d subfunction %d",group,sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3:Unhandled group %lu subfunction %lu", group, sub);
 			break;
 		}
 	} else {
@@ -272,7 +272,7 @@ static void dh_fpu_esc3(){
 			dh_fpu_mem(0xdb);
 			break;
 		case 0x01:	/* FISTTP */
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %d subfunction %d",group,sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %lu subfunction %lu", group, sub);
 			break;
 		case 0x02:	/* FIST */
 			dh_fpu_mem(0xdb);
@@ -291,7 +291,7 @@ static void dh_fpu_esc3(){
 			gen_call_function((void*)&FPU_FST_80,"%Drd",DREG(EA));
 			break;
 		default:
-			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %d subfunction %d",group,sub);
+			LOG(LOG_FPU,LOG_WARN)("ESC 3 EA:Unhandled group %lu subfunction %lu", group, sub);
 		}
 	}
 }
