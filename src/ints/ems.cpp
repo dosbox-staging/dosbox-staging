@@ -115,7 +115,6 @@ public:
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode);
 	bool WriteToControlChannel(PhysPt /*bufptr*/,Bit16u /*size*/,Bit16u * /*retcode*/){return true;}
 private:
-	Bit8u cache;
 	bool is_emm386;
 };
 
