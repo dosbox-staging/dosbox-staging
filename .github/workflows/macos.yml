@@ -16,7 +16,6 @@ jobs:
       - name: Summarize warnings
         run:  python3 ./scripts/count-warnings.py build.log
 
-
 #  build_macos_brew_gcc9:
 #    name: GCC 9 (Homebrew)
 #    runs-on: macos-latest

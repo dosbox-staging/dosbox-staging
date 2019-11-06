@@ -131,10 +131,15 @@ options to the **list-build-dependencies.sh** and **build.sh** scripts:
 After building, your `dosbox` or `dosbox.exe` binary will reside inside `./dosbox-staging/src/`.
 
 Build flags you might be interested in:
-* `--release debug`, to build a binary containing debug symbols (instead of **fast** or **small**)
 * `--lto`, perform optimizations across the entire object space instead of per-file (Only available on Mac and Linux)
-
-The above flags are othogonal and thus can be mixed-and-matched as desired.
+* `--release debug`, to build a binary containing debug symbols
+    * You can run the resulting binary in the GNU debugger: `gdb /path/to/dosbox`, followed by `start mygame.bat`
+* `--release profile`, to generate performance statistics
+    * Instructions are provided after the build completes, which describe how to generate and process the profiling data
+* `--release <sanitizer-type>`, to build a binary that performs dynamic code-analysis at runtime (Linux and macOS)
+    * see `./scripts/build.sh --help` for a list of sanitizer-types that are available
+    * Run your binary like normal and it will generate output describing problematic behavior
+    * Some sanitizers accept runtime options via an environment variables, such as `ASAN_OPTIONS`, described here: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
 
 If you want to run multiple back-to-back builds from the same directory with different settings then
 add the `--clean` flag to ensure previous objects and binaries are removed.

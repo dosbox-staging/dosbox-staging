@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
       - name: Build
-        run:  ./scripts/build.sh
+        run: ./scripts/build.sh --release small --lto
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py build.log
 

@@ -31,7 +31,8 @@ function usage() {
 	local script
 	script=$(basename "${INVOCATION}")
 	echo "Usage: ${script} [-b 32|64] [-c gcc|clang] [-f linux|macos|msys2] [-d] [-l]"
-	echo "                 [-p /custom/bin] [-u #] [-r fast|small|debug] [-s /your/src] [-t #]"
+	echo "                 [-p /custom/bin] [-u #] [-r fast|small|debug|profile|<sanitizer-type>]"
+	echo "                 [-s /your/src] [-t #]"
 	echo ""
 	echo "  FLAG                     Description                                           Default"
 	echo "  -----------------------  ----------------------------------------------------- -------"
@@ -42,7 +43,14 @@ function usage() {
 	echo "  -l, --lto               Perform Link-Time-Optimizations (LTO)                  [$(print_var "${LTO}")]"
 	echo "  -p, --bin-path          Prepend PATH with the one provided to find executables [$(print_var "${BIN_PATH}")]"
 	echo "  -u, --compiler-version  Customize the compiler postfix (ie: 9 -> gcc-9)        [$(print_var "${COMPILER_VERSION}")]"
-	echo "  -r, --release           Build a fast, small, or debug release                  [$(print_var "${RELEASE}")]"
+	echo ""
+	echo "  -r, --release           One of: fast, small, debug, profile, or a sanitizer:   [$(print_var "${RELEASE}")]"
+	echo "                            usan:  detect undefined behavior and integer overflows"
+	echo "                            asan:  detect out of bounds use, double free, and leaks (broken-on-clang and gcc)"
+	echo "                            msan:  detect unitialized reads and use-after-destruction (clang-only)"
+	echo "                            uasan: detect both undefined (usan) and address (asan) issues (broken-on-clang)"
+	echo "                            tsan:  detect data-race threading bugs (gcc-only)"
+	echo ""
 	echo "  -s, --src-path          Enter a different source directory before building     [$(print_var "${SRC_PATH}")]"
 	echo "  -t, --threads           Override the number of threads with which to compile   [$(print_var "${THREADS}")]"
 	echo "  -v, --version           Print the version of this script                       [$(print_var "${SCRIPT_VERSION}")]"
@@ -307,19 +315,100 @@ function compiler_version() {
 
 function release_flags() {
 	uses compiler_type
+    uses system
 
-	if [[ "${RELEASE}" == "fast" ]]; then CFLAGS_ARRAY+=("-Ofast")
+	##
+	#  Speed-optimization flags
+	#
+	if [[ "${RELEASE}" == "fast" ]]; then
+		CFLAGS_ARRAY+=("-Ofast")
+
+	##
+	#  Size-optimization flags
+	#
 	elif [[ "${RELEASE}" == "small" ]]; then
 		CFLAGS_ARRAY+=("-Os")
 		if [[ "${COMPILER}" == "gcc" ]]; then
 			CFLAGS_ARRAY+=("-ffunction-sections" "-fdata-sections")
-
 			# ld on MacOS doesn't understand --as-needed, so exclude it
 			uses system
 			if [[ "${SYSTEM}" != "macos" ]]; then LDFLAGS_ARRAY+=("-Wl,--as-needed"); fi
 		fi
-	elif [[ "${RELEASE}" == "debug" ]]; then CFLAGS_ARRAY+=("-g" "-O1")
-	else usage "The release type of ${RELEASE} is not allowed. Choose fast, small, or debug"
+
+	##
+	#  Debug flags
+	#
+	elif [[ "${RELEASE}" == "debug" ]]; then
+		CFLAGS_ARRAY+=("-g" "-O1" "-fno-omit-frame-pointer")
+
+	##
+	#  Profile flags
+	#
+	elif [[ "${RELEASE}" == "profile" ]]; then
+		CFLAGS_ARRAY+=("-g" "-O0" )
+		if   [[ "${COMPILER}" == "gcc"   ]]; then
+			CFLAGS_ARRAY+=("-pg")
+		elif [[ "${COMPILER}" == "clang" ]]; then
+			CFLAGS_ARRAY+=("-fprofile-instr-generate" "-fcoverage-mapping")
+			LDFLAGS_ARRAY+=("-fprofile-instr-generate")
+		fi
+	##
+	# Sanitizer flags
+	#
+	elif [[ "${RELEASE}" == *"san" && ("${SYSTEM}" == "linux" || "${SYSTEM}" == "macos") ]]; then
+        CFLAGS_ARRAY+=("-g" "-O1")
+		SAN_ARRAY=("")
+
+		if [[ "${COMPILER}" == "clang" ]]; then case "${RELEASE}" in
+
+			# working!
+			msan) SAN_ARRAY+=("-fsanitize-recover=all" "-fsanitize=memory" "-fno-omit-frame-pointer");;
+			usan) SAN_ARRAY+=("-fsanitize-recover=all" "-fsanitize=undefined");;
+
+			# broken, but leaving active for fixing
+			asan) SAN_ARRAY+=("-fsanitize=address");;
+			# ./configure fails...
+			# Direct leak of 6 byte(s) in 1 object(s) allocated from:
+			#  0 0x4c6cb3 in __interceptor_malloc /build/llvm-toolchain-8-F3l7P1/llvm-toolchain-8-8/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:146:3
+			#  1 0x4f6159 in my_strdup /ssd_backup/src/dosbox-staging/conftest.c:24:25
+			#  2 0x7f89450c8b6a in __libc_start_main /build/glibc-KRRWSm/glibc-2.29/csu/../csu/libc-start.c:308:16
+
+			# broken, but leaving active for fixing
+			uasan) SAN_ARRAY+=("-fsanitize-recover=all" "-fsanitize=address,undefined");;
+			# ./configure fails...
+			# Direct leak of 6 byte(s) in 1 object(s) allocated from:
+			# 0 0x4c6cb3 in __interceptor_malloc /build/llvm-toolchain-8-F3l7P1/llvm-toolchain-8-8/projects/compiler-rt/lib/asan/asan_malloc_linux.cc:146:3
+			# 1 0x4f6159 in my_strdup /ssd_backup/src/dosbox-staging/conftest.c:24:25
+			# 2 0x7f77dc057b6a in __libc_start_main /build/glibc-KRRWSm/glibc-2.29/csu/../csu/libc-start.c:308:16
+
+			tsan) usage "tsan is currently unavailable for clang";;
+	        *) usage "Unknown sanitizer: ${RELEASE}";;
+		    esac
+
+		elif [[ "${COMPILER}" == "gcc" ]]; then case "${RELEASE}" in
+
+			# Working!
+			usan)  SAN_ARRAY+=("-fsanitize-recover=signed-integer-overflow" "-fsanitize=undefined");;
+			uasan) SAN_ARRAY+=("-fsanitize-recover=signed-integer-overflow" "-fsanitize=address,undefined");;
+			tsan)  SAN_ARRAY+=("-fsanitize=thread");;
+
+			# broken, but leaving active for fixing
+			asan)  SAN_ARRAY+=("-fsanitize=address");;
+			# ./configure fails...
+			# Direct leak of 6 byte(s) in 1 object(s) allocated from:
+			#  0 0x7efc7f759448 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.5+0x10c448)
+			#  1 0x401230 in my_strdup /ssd_backup/src/dosbox-staging/conftest.c:24
+
+			msan) usage "msan is currently unavailable for gcc";;
+	        *) usage "Unknown sanitizer: ${RELEASE}";;
+		esac; fi
+		CFLAGS_ARRAY+=("${SAN_ARRAY[@]}")
+		LDFLAGS_ARRAY+=("${SAN_ARRAY[@]}")
+
+	##
+	#  Unknown release-type
+	#
+	else usage "The release type of ${RELEASE} is not valid; see the --release options below:"
 	fi
 }
 
@@ -330,6 +419,18 @@ function threads() {
 	fi
 	# make presents a descriptive error message in the scenario where the user overrides
 	# THREADS with an illegal value: the '-j' option requires a positive integer argument.
+}
+
+function query_compiler_version() {
+	uses compiler_type
+	uses compiler_version
+	if [[ "${COMPILER_VERSION}" == "unset" ]]; then
+		if   [[ "${COMPILER}" == "gcc"   ]]; then 2>&1 gcc -v
+		elif [[ "${COMPILER}" == "clang" ]]; then clang --version
+		fi | grep -Po '(?<=version )[^.]+'
+	else
+		echo "${COMPILER_VERSION:0:1}"
+	fi
 }
 
 function fdo_flags() {
@@ -346,11 +447,7 @@ function fdo_flags() {
 
 	if [[ "${COMPILER}" == "gcc" ]]; then
 		# Don't let GCC 6.x and under use both FDO and LTO
-		uses compiler_version
-		if [[ ( "${COMPILER_VERSION}" == "unset"
-		        && "$(2>&1 gcc -v | grep -Po '(?<=version )[^.]+')" -lt "7"
-		        || "${COMPILER_VERSION}" -lt "7" )
-		      && "${LTO}" == "true" ]]; then
+		if [[ "${LTO}" == "true" && "$(query_compiler_version)" -lt "7" ]]; then
 			error "GCC versions 6 and under cannot handle FDO and LTO simultaneously; please change one or more these."
 		fi
 		CFLAGS_ARRAY+=("-fauto-profile=${fdo_file}")
@@ -492,12 +589,12 @@ function build() {
 }
 
 function strip_binary() {
-	if [[ "${RELEASE}" == "debug" ]]; then
-		echo "[skipping strip] Debug symbols will be left in the binary because it's a debug release"
-	else
+	if [[ "${RELEASE}" == "fast" || "${RELEASE}" == "small" ]]; then
 		uses bin_path
 		uses executable
 		strip "${EXECUTABLE}"
+	else
+		echo "[skipping strip] symbols will be left in the binary"
 	fi
 }
 
@@ -506,9 +603,38 @@ function show_binary() {
 	uses system
 	uses executable
 
+	echo ""
+	echo "Dependencies"
+	echo "------------"
 	if [[ "$SYSTEM" == "macos" ]]; then otool -L "${EXECUTABLE}"
 	else ldd "${EXECUTABLE}"; fi
+
+	echo ""
+	echo "Binary"
+	echo "------"
 	ls -1lh "${EXECUTABLE}"
+}
+
+function show_tips() {
+	if [[ "${RELEASE}" == "profile" ]]; then
+		uses compiler_type
+		uses executable
+		echo ""
+		echo "Profiling Instructions"
+		echo "----------------------"
+		if [[ "${COMPILER}" == "gcc" ]]; then
+			echo "  1. Run DOSBox like normal; it will write gmon.out in the current directory"
+			echo "  2. Print the call statistics: gprof ${EXECUTABLE} gmon.out"
+
+		elif [[ "${COMPILER}" == "clang" ]]; then
+			local ver="$(query_compiler_version)"
+			echo "  1. export LLVM_PROFILE_FILE=./llvm.prof"
+			echo "  2. Run DOSBox like like normal; it will write llvm.prof in the current directory"
+			echo "  3. Convert the prof file to a merge file: llvm-profdata-${ver} merge -output=llvm.merge -instr llvm.prof"
+			echo "  4. Print the call statistics: llvm-profdata-${ver} show -all-functions -counts -ic-targets  llvm.merge"
+		fi
+		echo ""
+	fi
 }
 
 function main() {
@@ -516,6 +642,7 @@ function main() {
 	build
 	strip_binary
 	show_binary
+	show_tips
 }
 
 main "$@"

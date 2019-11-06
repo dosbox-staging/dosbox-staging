@@ -99,23 +99,26 @@ function list_packages() {
 	case "$1" in
 
 		apt)
+			# Package repo: https://packages.ubuntu.com/
 			# Apt separates GCC into the gcc and g++ pacakges, the latter which depends on the prior.
 			# Therefore, we provide g++ in-place of gcc.
 			VERSION_DELIM="-"
 			if [[ "${COMPILER}" == "gcc" ]]; then
 				COMPILER="g++"
 			fi
-			PACKAGES=(libtool build-essential autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev)
+			PACKAGES=(xvfb libtool build-essential autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev)
 			;;
 
 		dnf)
+			# Package repo: https://apps.fedoraproject.org/packages/
 			VERSION_DELIM="-"
-			PACKAGES=(libtool autoconf-archive SDL SDL_net-devel opusfile-devel)
+			PACKAGES=(xvfb libtool autoconf-archive SDL SDL_net-devel opusfile-devel)
 			;;
 
 		pacman)
+			# Package repo: https://www.archlinux.org/packages/
 			# Arch offers 32-bit versions of SDL (but not others)
-			PACKAGES=(libtool autoconf-archive sdl_net opusfile)
+			PACKAGES=(xvfb libtool autoconf-archive sdl_net opusfile)
 			if [[ "${BITS}" == 32 ]]; then
 				PACKAGES+=(lib32-sdl)
 			else
@@ -124,8 +127,9 @@ function list_packages() {
 			;;
 
 		zypper)
-			# OpenSUSE offers 32-bit versions of SDL and SDL_net (but not others)
-			PACKAGES=(devel_basis libtool autoconf-archive opusfile)
+			# Package repo: https://pkgs.org/
+			# openSUSE offers 32-bit versions of SDL and SDL_net (but not others)
+			PACKAGES=(devel_basis xvfb libtool autoconf-archive opusfile)
 			if [[ "${BITS}" == 32 ]]; then
 				PACKAGES+=(libSDL-devel-32bit libSDL_net-devel-32bit)
 			else
@@ -146,6 +150,7 @@ function list_packages() {
 			;;
 
 		brew)
+			# Package repo: https://formulae.brew.sh/
 			# If the user wants Clang, we knock it out because it's provided provided out-of-the-box
 			VERSION_DELIM="@"
 			if [[ "${COMPILER}" == "clang" ]]; then
@@ -155,10 +160,12 @@ function list_packages() {
 			;;
 
 		macports)
-			PACKAGES=(coreutils autogen automake autoconf autoconf-archive pkgconfig libpng libsdl libsdl_net opusfile)
+			# Package repo: https://www.macports.org/ports.php?by=name
+			PACKAGES=(coreutils autogen autoconf autoconf-archive automake pkgconfig libpng libsdl libsdl_net opusfile)
 			;;
 
 		msys2)
+			# Package repo: https://packages.msys2.org/base
 			# MSYS2 only supports the current latest releases of Clang and GCC, so we disable version customization
 			COMPILER_VERSION=""
 			local pkg_type
@@ -174,6 +181,7 @@ function list_packages() {
 			;;
 
 		vcpkg)
+			# Package repo: https://repology.org/projects/?inrepo=vcpkg
 			# VCPKG doesn't provide Clang or GCC, so we knock out the compiler and just give packages
 			COMPILER=""
 			PACKAGES=(libpng sdl1 sdl1-net opusfile)
