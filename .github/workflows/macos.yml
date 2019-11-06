@@ -1,6 +1,7 @@
 name: macOS builds
 on: push
 jobs:
+
   build_macos_xcode_clang:
     name: Clang 10 (Xcode)
     runs-on: macOS-10.14

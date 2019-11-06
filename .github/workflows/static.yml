@@ -1,8 +1,7 @@
 name: Static code analysis
-
-on: [push]
-
+on: push
 jobs:
+
   build_clang_static_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-18.04
@@ -10,9 +9,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
-      - run:  sudo apt update
-      - name: Install packages
-        run:  sudo apt-get install autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
+      - run:  sudo apt-get update
+      - name: Install dependencies
+        run:  sudo apt-get install python3-setuptools $(./scripts/list-build-dependencies.sh -p apt)
       - name: Install scan-build (Python version)
         run:  sudo pip3 install scan-build beautifulsoup4 html5lib
       - name: Build

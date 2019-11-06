@@ -9,8 +9,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - run:  sudo apt-get update
       - name: Install dependencies
-        run:  sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler clang --compiler-version 8)
       - name: Build
         run:  ./scripts/build.sh --compiler clang --compiler-version 8 --lto
       - name: Summarize warnings
@@ -26,8 +27,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - run:  sudo apt-get update
       - name: Install dependencies
-        run:  sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh -p apt)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt)
       - name: Build
         run:  ./scripts/build.sh
       - name: Summarize warnings
@@ -40,8 +42,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: Log environment
         run:  ./scripts/log-env.sh
+      - run:  sudo apt-get update
       - name: Install dependencies
-        run:  sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
+        run:  sudo apt-get install -y $(./scripts/list-build-dependencies.sh -p apt --compiler-version 9)
       - name: Build
         run:  ./scripts/build.sh --compiler-version 9 --lto
       - name: Summarize warnings
