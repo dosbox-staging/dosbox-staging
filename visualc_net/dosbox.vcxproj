@@ -69,7 +69,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;sdl_net.lib;winmm.lib;libpng16d.lib;sdlmaind.lib;sdl.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;sdl_net.lib;winmm.lib;libpng16d.lib;sdlmaind.lib;sdl.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;libspeexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Debug\dosbox.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,7 +115,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;sdl_net.lib;sdl.lib;sdlmain.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;sdl_net.lib;sdl.lib;sdlmain.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;opusfile.lib;opus.lib;ogg.lib;libspeexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/dosbox.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -246,6 +246,15 @@
     <ClCompile Include="..\src\ints\mouse.cpp" />
     <ClCompile Include="..\src\ints\xms.cpp" />
     <ClCompile Include="..\src\libs\gui_tk\gui_tk.cpp" />
+    <ClCompile Include="..\src\libs\decoders\audio_convert.c" />
+    <ClCompile Include="..\src\libs\decoders\flac.c" />
+    <ClCompile Include="..\src\libs\decoders\mp3.cpp" />
+    <ClCompile Include="..\src\libs\decoders\mp3_seek_table.cpp" />
+    <ClCompile Include="..\src\libs\decoders\opus.c" />
+    <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
+    <ClCompile Include="..\src\libs\decoders\vorbis.c" />
+    <ClCompile Include="..\src\libs\decoders\wav.c" />
+    <ClCompile Include="..\src\libs\decoders\xxhash.c" />
     <ClCompile Include="..\src\misc\cross.cpp" />
     <ClCompile Include="..\src\misc\messages.cpp" />
     <ClCompile Include="..\src\misc\programs.cpp" />
@@ -358,6 +367,17 @@
     <ClInclude Include="..\src\hardware\serialport\softmodem.h" />
     <ClInclude Include="..\src\ints\int10.h" />
     <ClInclude Include="..\src\ints\xms.h" />
+    <ClInclude Include="..\src\libs\decoders\archive.h" />
+    <ClInclude Include="..\src\libs\decoders\dr_flac.h" />
+    <ClInclude Include="..\src\libs\decoders\dr_mp3.h" />
+    <ClInclude Include="..\src\libs\decoders\dr_wav.h" />
+    <ClInclude Include="..\src\libs\decoders\mp3_seek_table.h" />
+    <ClInclude Include="..\src\libs\decoders\SDL_sound.h" />
+    <ClInclude Include="..\src\libs\decoders\SDL_sound_internal.h" />
+    <ClInclude Include="..\src\libs\decoders\stb.h" />
+    <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
+    <ClInclude Include="..\src\libs\decoders\xxh3.h" />
+    <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\platform\visualc\config.h" />
     <ClInclude Include="..\src\platform\visualc\unistd.h" />
   </ItemGroup>
