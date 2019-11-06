@@ -63,6 +63,21 @@ AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
+dnl check and use C++ circa-2003 language constructs.
+AX_CXX_COMPILE_STDCXX_0X(noext, mandatory)
+if test "$ax_cv_cxx_compile_cxx0x_native" = no; then
+  if test "$ax_cv_cxx_compile_cxx0x_cxx" = yes; then
+    CXXFLAGS="$CXXFLAGS -std=c++0x"
+  else
+    AC_MSG_ERROR([A C++ compiler that supports the C++03 standard is required])
+  fi
+fi
+# Note that the above macro is deprecated in favor of AX_CXX_COMPILE_STDCXX_11:
+# https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx_0x.html
+# However we use it anyway because it is suggested that C++03 should
+# be the limit for now: https://sourceforge.net/p/dosbox/patches/283/#cb9a
+
+
 dnl some semi complex check for sys/socket so it works on darwin as well
 AC_CHECK_HEADERS([stdlib.h sys/types.h])
 AC_CHECK_HEADERS([sys/socket.h  netinet/in.h pwd.h], [], [],
@@ -451,6 +466,15 @@ else
    AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
+# Check for required Opus decoding libraries
+PKG_CHECK_MODULES([OPUSFILE], [opusfile],
+  [ LIBS="$LIBS ${OPUSFILE_LIBS}"
+    CPPFLAGS="$CPPFLAGS ${OPUSFILE_CFLAGS}" ], [])
+
+PKG_CHECK_MODULES([SPEEXDSP], [speexdsp],
+  [ LIBS="$LIBS ${SPEEXDSP_LIBS}"
+    CPPFLAGS="$CPPFLAGS ${SPEEXDSP_CFLAGS}" ], [])
+
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
 AC_CHECK_LIB(X11, main, have_x11_lib=yes, have_x11_lib=no, )
 AC_CHECK_HEADER(X11/XKBlib.h, have_x11_h=yes, have_x11_h=no, )
@@ -514,22 +538,7 @@ case "$host" in
 esac
 fi
 
-AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
-AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
-AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
-AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
-if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
-  if test x$have_SDL_sound_seek = xyes ; then
-    LIBS="-lSDL_sound $LIBS"
-    AC_DEFINE(C_SDL_SOUND,1)
-   else 
-     AC_MSG_WARN([Can't find SoundSeek in libSDL_Sound, libSDL_sound support disabled])
-   fi
-else
-  AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
-fi
-
-dnl Check for mprotect. Needed for 64 bits linux 
+dnl Check for mprotect. Needed for 64 bits linux
 AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
 AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
@@ -551,8 +560,9 @@ int main(int argc,char * argv[]) {
 
 dnl Some target detection and actions for them
 case "$host" in
-    *-*-cygwin* | *-*-mingw32*)
+    *-*-cygwin* | *-*-mingw* | *-*-msys*)
        LIBS="$LIBS -lwinmm"
+       AC_DEFINE(WIN32, 1, [Compiling on Windows])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
@@ -619,6 +629,7 @@ src/ints/Makefile
 src/libs/Makefile
 src/libs/zmbv/Makefile
 src/libs/gui_tk/Makefile
+src/libs/decoders/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
