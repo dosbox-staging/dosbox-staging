@@ -17,7 +17,7 @@
  *  published by the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  This  SDL_sound Ogg Opus decoder backend is distributed in the hope that it
+ *  This SDL_sound FLAC decoder backend is distributed in the hope that it
  *  will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
  *  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
