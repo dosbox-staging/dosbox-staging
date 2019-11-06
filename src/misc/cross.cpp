@@ -124,7 +124,7 @@ void Cross::CreateDir(std::string const& in) {
 
 bool Cross::IsPathAbsolute(std::string const& in) {
 	// Absolute paths
-#if defined (WIN32) || defined(OS2)
+#if defined (WIN32)
 	// drive letter
 	if (in.size() > 2 && in[1] == ':' ) return true;
 	// UNC path
@@ -247,7 +247,7 @@ void close_directory(dir_information* dirp) {
 #endif
 
 FILE *fopen_wrap(const char *path, const char *mode) {
-#if defined(WIN32) || defined(OS2)
+#if defined(WIN32)
 	;
 #elif defined (MACOSX)
 	;

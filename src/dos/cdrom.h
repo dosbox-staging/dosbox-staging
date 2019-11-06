@@ -415,7 +415,7 @@ private:
 
 #endif /* WIN 32 */
 
-#if defined (LINUX) || defined(OS2)
+#if defined (LINUX)
 
 class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
 {

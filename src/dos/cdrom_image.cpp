@@ -1159,9 +1159,8 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 			return true;
 		}
 	}
-#if defined (WIN32) || defined(OS2)
-	//Nothing
-#else
+
+#if !defined (WIN32)
 	//Consider the possibility that the filename has a windows directory seperator (inside the CUE file)
 	//which is common for some commercial rereleases of DOS games using DOSBox
 
@@ -1181,7 +1180,6 @@ bool CDROM_Interface_Image::GetRealFileName(string &filename, string &pathname)
 		filename = tmpstr;
 		return true;
 	}
-
 #endif
 	return false;
 }

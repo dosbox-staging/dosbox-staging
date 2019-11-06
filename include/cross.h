@@ -44,7 +44,7 @@
 #define CROSS_LEN 512						/* Maximum filename size */
 
 
-#if defined (WIN32) || defined (OS2)				/* Win 32 & OS/2*/
+#if defined (WIN32)
 #define CROSS_FILENAME(blah) 
 #define CROSS_FILESPLIT '\\'
 #define F_OK 0

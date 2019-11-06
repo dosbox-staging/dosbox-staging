@@ -40,7 +40,7 @@
  #include <ws2tcpip.h> //for socklen_t
  //typedef int  socklen_t;
 
-//Tests for BSD/OS2/LINUX
+//Tests for BSD/LINUX
 #elif defined HAVE_STDLIB_H && defined HAVE_SYS_TYPES_H && defined HAVE_SYS_SOCKET_H && defined HAVE_NETINET_IN_H
  #define NATIVESOCKETS
  #define SOCKET int
