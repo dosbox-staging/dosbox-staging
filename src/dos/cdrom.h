@@ -28,18 +28,21 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <SDL.h>
+#include <SDL_thread.h>
+
 #include "dosbox.h"
 #include "mem.h"
 #include "mixer.h"
-#include "SDL.h"
-#include "SDL_thread.h"
-
-#if defined(C_SDL_SOUND)
-#include "SDL_sound.h"
-#endif
+#include "../libs/decoders/SDL_sound.h"
 
 #define RAW_SECTOR_SIZE		2352
 #define COOKED_SECTOR_SIZE	2048
+#define AUDIO_DECODE_BUFFER_SIZE 16512
+// 16512 is 16384 + 128, which enough for four 4KB decode audio chunks plus 128 bytes extra,
+// which accomodate the leftovers from typically callbacks, which also helps minimize
+// most of the time. This size is also an even multiple of 8-bytes, allowing the compiler to
+// use "large-D" SIMD instructions on it.
 
 enum { CDROM_USE_SDL, CDROM_USE_ASPI, CDROM_USE_IOCTL_DIO, CDROM_USE_IOCTL_DX, CDROM_USE_IOCTL_MCI };
 
@@ -78,7 +81,6 @@ extern int CDROM_GetMountType(char* path, int force);
 class CDROM_Interface
 {
 public:
-//	CDROM_Interface						(void);
 	virtual ~CDROM_Interface			(void) {};
 
 	virtual bool	SetDevice			(char* path, int forceCD) = 0;
@@ -148,74 +150,88 @@ public:
 	void	ChannelControl		(TCtrl ctrl) { return; };
 	bool	ReadSectors			(PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return true; };
 	bool	LoadUnloadMedia		(bool /*unload*/) { return true; };
-};	
+};
 
 class CDROM_Interface_Image : public CDROM_Interface
 {
 private:
 	class TrackFile {
+	protected:
+		TrackFile(Bit16u chunkSize) : chunkSize(chunkSize) {}
 	public:
-		virtual bool read(Bit8u *buffer, int seek, int count) = 0;
-		virtual int getLength() = 0;
-		virtual ~TrackFile() { };
+		virtual bool    read(Bit8u *buffer, int seek, int count) = 0;
+		virtual bool    seek(Bit32u offset) = 0;
+		virtual Bit16u  decode(Bit8u *buffer) = 0;
+		virtual Bit16u  getEndian() = 0;
+		virtual Bit32u  getRate() = 0;
+		virtual Bit8u   getChannels() = 0;
+		virtual int     getLength() = 0;
+		const Bit16u    chunkSize;
+		virtual         ~TrackFile() {}
 	};
 	
 	class BinaryFile : public TrackFile {
 	public:
-		BinaryFile(const char *filename, bool &error);
+		BinaryFile      (const char *filename, bool &error);
+		bool            read(Bit8u *buffer, int seek, int count);
+		bool            seek(Bit32u offset);
+		Bit16u          decode(Bit8u *buffer);
+		Bit16u          getEndian();
+		Bit32u          getRate() { return 44100; }
+		Bit8u           getChannels() { return 2; }
+		int             getLength();
 		~BinaryFile();
-		bool read(Bit8u *buffer, int seek, int count);
-		int getLength();
 	private:
+		std::ifstream   *file;
 		BinaryFile();
-		std::ifstream *file;
 	};
 	
-	#if defined(C_SDL_SOUND)
 	class AudioFile : public TrackFile {
 	public:
-		AudioFile(const char *filename, bool &error);
+		AudioFile       (const char *filename, bool &error);
+		bool            read(Bit8u *buffer, int seek, int count) { return false; }
+		bool            seek(Bit32u offset);
+		Bit16u          decode(Bit8u *buffer);
+		Bit16u          getEndian();
+		Bit32u          getRate();
+		Bit8u           getChannels();
+		int             getLength();
 		~AudioFile();
-		bool read(Bit8u *buffer, int seek, int count);
-		int getLength();
 	private:
+		Sound_Sample    *sample;
 		AudioFile();
-		Sound_Sample *sample;
-		int lastCount;
-		int lastSeek;
 	};
-	#endif
 	
 	struct Track {
-		int number;
-		int attr;
-		int start;
-		int length;
-		int skip;
-		int sectorSize;
-		bool mode2;
 		TrackFile *file;
+		int       number;
+		int       attr;
+		int       start;
+		int       length;
+		int       skip;
+		int       sectorSize;
+		bool      mode2;
 	};
 	
 public:
-	CDROM_Interface_Image		(Bit8u subUnit);
-	virtual ~CDROM_Interface_Image	(void);
-	void	InitNewMedia		(void);
-	bool	SetDevice		(char* path, int forceCD);
-	bool	GetUPC			(unsigned char& attr, char* upc);
-	bool	GetAudioTracks		(int& stTrack, int& end, TMSF& leadOut);
-	bool	GetAudioTrackInfo	(int track, TMSF& start, unsigned char& attr);
-	bool	GetAudioSub		(unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool	GetAudioStatus		(bool& playing, bool& pause);
-	bool	GetMediaTrayStatus	(bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector		(unsigned long start,unsigned long len);
-	bool	PauseAudio		(bool resume);
-	bool	StopAudio		(void);
-	void	ChannelControl		(TCtrl ctrl);
-	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
-	bool	LoadUnloadMedia		(bool unload);
-	bool	ReadSector		(Bit8u *buffer, bool raw, unsigned long sector);
-	bool	HasDataTrack		(void);
+	CDROM_Interface_Image           (Bit8u subUnit);
+	virtual ~CDROM_Interface_Image  (void);
+	void	InitNewMedia            (void);
+	bool	SetDevice               (char* path, int forceCD);
+	bool	GetUPC                  (unsigned char& attr, char* upc);
+	bool	GetAudioTracks          (int& stTrack, int& end, TMSF& leadOut);
+	bool	GetAudioTrackInfo       (int track, TMSF& start, unsigned char& attr);
+	bool	GetAudioSub             (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
+	bool	GetAudioStatus          (bool& playing, bool& pause);
+	bool	GetMediaTrayStatus      (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
+	bool	PlayAudioSector         (unsigned long start,unsigned long len);
+	bool	PauseAudio              (bool resume);
+	bool	StopAudio               (void);
+	void	ChannelControl          (TCtrl ctrl);
+	bool	ReadSectors             (PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
+	bool	LoadUnloadMedia         (bool unload);
+	bool	ReadSector              (Bit8u *buffer, bool raw, unsigned long sector);
+	bool	HasDataTrack            (void);
 	
 static	CDROM_Interface_Image* images[26];
 
@@ -225,35 +241,42 @@ static	void	CDAudioCallBack(Bitu len);
 	int	GetTrack(int sector);
 
 static  struct imagePlayer {
+		Bit8u                 buffer[AUDIO_DECODE_BUFFER_SIZE];
+		TCtrl                 ctrlData;
+		TrackFile             *trackFile;
+		MixerChannel          *channel;
 		CDROM_Interface_Image *cd;
-		MixerChannel   *channel;
-		SDL_mutex 	*mutex;
-		Bit8u   buffer[8192];
-		int     bufLen;
-		int     currFrame;	
-		int     targetFrame;
-		bool    isPlaying;
-		bool    isPaused;
-		bool    ctrlUsed;
-		TCtrl   ctrlData;
+		void                  (MixerChannel::*addSamples) (Bitu, const Bit16s*);
+		Bit32u                startFrame;
+		Bit32u                currFrame;
+		Bit32u                numFrames;
+		Bit32u                playbackTotal;
+		Bit32s                playbackRemaining;
+		Bit16u                bufferPos;
+		Bit16u                bufferConsumed;
+		bool                  isPlaying;
+		bool                  isPaused;
+		bool                  ctrlUsed;
 	} player;
 	
-	void 	ClearTracks();
-	bool	LoadIsoFile(char *filename);
-	bool	CanReadPVD(TrackFile *file, int sectorSize, bool mode2);
-	// cue sheet processing
-	bool	LoadCueSheet(char *cuefile);
-	bool	GetRealFileName(std::string& filename, std::string& pathname);
-	bool	GetCueKeyword(std::string &keyword, std::istream &in);
-	bool	GetCueFrame(int &frames, std::istream &in);
-	bool	GetCueString(std::string &str, std::istream &in);
-	bool	AddTrack(Track &curr, int &shift, int prestart, int &totalPregap, int currPregap);
+	void  ClearTracks();
+	bool  LoadIsoFile(char *filename);
+	bool  CanReadPVD(TrackFile *file, int sectorSize, bool mode2);
 
-static	int	refCount;
-	std::vector<Track>	tracks;
-typedef	std::vector<Track>::iterator	track_it;
-	std::string	mcn;
-	Bit8u	subUnit;
+	// cue sheet processing
+	bool  LoadCueSheet(char *cuefile);
+	bool  GetRealFileName(std::string& filename, std::string& pathname);
+	bool  GetCueKeyword(std::string &keyword, std::istream &in);
+	bool  GetCueFrame(int &frames, std::istream &in);
+	bool  GetCueString(std::string &str, std::istream &in);
+	bool  AddTrack(Track &curr, int &shift, int prestart, int &totalPregap, int currPregap);
+
+	// member variables
+	std::vector<Track>                   tracks;
+	typedef	std::vector<Track>::iterator track_it;
+	std::string                          mcn;
+	static int                           refCount;
+	Bit8u                                subUnit;
 };
 
 #if defined (WIN32)	/* Win 32 */
@@ -317,7 +340,7 @@ public:
 	enum cdioctl_cdatype { CDIOCTL_CDA_DIO, CDIOCTL_CDA_MCI, CDIOCTL_CDA_DX };
 	cdioctl_cdatype cdioctl_cda_selected;
 
-	CDROM_Interface_Ioctl		(cdioctl_cdatype ioctl_cda);
+	CDROM_Interface_Ioctl		(CDROM_Interface_Ioctl::cdioctl_cdatype ioctl_cda);
 	virtual ~CDROM_Interface_Ioctl(void);
 
 	bool	SetDevice			(char* path, int forceCD);
