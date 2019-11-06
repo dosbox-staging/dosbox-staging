@@ -88,7 +88,7 @@ jobs:
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl1 sdl1-net
+          vcpkg install libpng sdl1 sdl1-net opusfile speexdsp
           vcpkg integrate install
       - name:  Build
         shell: pwsh
@@ -110,7 +110,7 @@ jobs:
       - name:  Install packages
         shell: pwsh
         run: |
-          vcpkg install libpng sdl1 sdl1-net
+          vcpkg install libpng sdl1 sdl1-net opusfile speexdsp
           vcpkg integrate install
       - name:  Build
         shell: pwsh

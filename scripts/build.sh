@@ -259,10 +259,6 @@ function tools_and_flags() {
 	if [[ "${SYSTEM}" == "macos" ]]; then
 		AR="ar"
 		RANLIB="ranlib"
-
-	# MSYS universal
-	elif [[ "${SYSTEM}" == "msys2" ]]; then
-		LIBS_ARRAY+=("-lwinmm" "-lws2_32")
 	fi
 }
 

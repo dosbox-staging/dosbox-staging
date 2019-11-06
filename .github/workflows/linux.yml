@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run:  sudo apt-get update && sudo apt install -y $(./scripts/list-build-dependencies.sh -p apt)
       - name: Build
-        run: ./scripts/build.sh
+        run:  ./scripts/build.sh
       - name: Summarize warnings
         run:  ./scripts/count-warnings.py build.log
 

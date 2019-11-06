@@ -105,17 +105,17 @@ function list_packages() {
 			if [[ "${COMPILER}" == "gcc" ]]; then
 				COMPILER="g++"
 			fi
-			PACKAGES=(libtool build-essential libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev)
+			PACKAGES=(libtool build-essential autoconf-archive libsdl1.2-dev libsdl-net1.2-dev libopusfile-dev libspeexdsp-dev)
 			;;
 
 		dnf)
 			VERSION_DELIM="-"
-			PACKAGES=(libtool SDL SDL_net-devel opusfile-devel speexdsp-devel)
+			PACKAGES=(libtool autoconf-archive SDL SDL_net-devel opusfile-devel speexdsp-devel)
 			;;
 
 		pacman)
 			# Arch offers 32-bit versions of SDL and speexDSP (but not others)
-			PACKAGES=(libtool sdl_net opusfile)
+			PACKAGES=(libtool autoconf-archive sdl_net opusfile)
 			if [[ "${BITS}" == 32 ]]; then
 				PACKAGES+=(lib32-sdl lib32-speexdsp)
 			else
@@ -125,7 +125,7 @@ function list_packages() {
 
 		zypper)
 			# OpenSUSE offers 32-bit versions of SDL, SDL_net, and speexDSP (but not others)
-			PACKAGES=(devel_basis libtool opusfile)
+			PACKAGES=(devel_basis libtool autoconf-archive opusfile)
 			if [[ "${BITS}" == 32 ]]; then
 				PACKAGES+=(libSDL-devel-32bit libSDL_net-devel-32bit libspeexdsp1-32bit)
 			else
@@ -151,11 +151,11 @@ function list_packages() {
 			if [[ "${COMPILER}" == "clang" ]]; then
 				COMPILER=""
 			fi
-			PACKAGES=(coreutils autogen autoconf automake pkg-config libpng sdl sdl_net opusfile speexdsp)
+			PACKAGES=(coreutils autogen autoconf autoconf-archive automake pkg-config libpng sdl sdl_net opusfile speexdsp)
 			;;
 
 		macports)
-			PACKAGES=(coreutils autogen automake autoconf pkgconfig libpng libsdl libsdl_net opusfile speexDSP)
+			PACKAGES=(coreutils autogen automake autoconf autoconf-archive pkgconfig libpng libsdl libsdl_net opusfile speexDSP)
 			;;
 
 		msys2)
@@ -166,7 +166,7 @@ function list_packages() {
 			if [[ "${BITS}" == 32 ]]; then
 				pkg_type="i686"
 			fi
-			PACKAGES=(autogen autoconf base-devel automake-wrapper)
+			PACKAGES=(autogen autoconf autoconf-archive base-devel automake-wrapper)
 			for pkg in pkg-config libtool libpng zlib SDL SDL_net opusfile speexdsp; do
 				PACKAGES+=("mingw-w64-${pkg_type}-${pkg}")
 			done
