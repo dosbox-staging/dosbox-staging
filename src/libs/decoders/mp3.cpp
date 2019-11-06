@@ -90,14 +90,14 @@ static void MP3_close(Sound_Sample* const sample)
 {
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal* const>(sample->opaque);
     mp3_t* p_mp3 = static_cast<mp3_t*>(internal->decoder_private);
-    if (p_mp3 != NULL) {
-        if (p_mp3->p_dr != NULL) {
+    if (p_mp3 != nullptr) {
+        if (p_mp3->p_dr != nullptr) {
             drmp3_uninit(p_mp3->p_dr);
             SDL_free(p_mp3->p_dr);
         }
         // maps and vector destructors free their memory
         SDL_free(p_mp3);
-        internal->decoder_private = NULL;
+        internal->decoder_private = nullptr;
     }
 } /* MP3_close */
 
@@ -147,10 +147,10 @@ static Sint32 MP3_open(Sound_Sample* const sample, const char* const ext)
     Sound_SampleInternal* const internal = static_cast<Sound_SampleInternal*>(sample->opaque);
     Sint32 result(0); // assume failure until proven otherwise
     mp3_t* p_mp3 = (mp3_t*) SDL_calloc(1, sizeof (mp3_t));
-    if (p_mp3 != NULL) {
+    if (p_mp3 != nullptr) {
         p_mp3->p_dr = (drmp3*) SDL_calloc(1, sizeof (drmp3));
-        if (p_mp3->p_dr != NULL) {
-            result = drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, NULL, NULL);
+        if (p_mp3->p_dr != nullptr) {
+            result = drmp3_init(p_mp3->p_dr, mp3_read, mp3_seek, sample, nullptr, nullptr);
             if (result == DRMP3_TRUE) {
                 SNDDBG(("MP3: Accepting data stream.\n"));
                 sample->flags = SOUND_SAMPLEFLAG_CANSEEK;
@@ -199,7 +199,7 @@ static Sint32 MP3_seek(Sound_Sample* const sample, const Uint32 ms)
 } /* MP3_seek */
 
 /* dr_mp3 will play layer 1 and 2 files, too */
-static const char* extensions_mp3[] = { "MP3", "MP2", "MP1", NULL };
+static const char* extensions_mp3[] = { "MP3", "MP2", "MP1", nullptr };
 
 extern const Sound_DecoderFunctions __Sound_DecoderFunctions_MP3 = {
     {
