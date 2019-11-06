@@ -37,10 +37,10 @@
 bool logoverlay = false;
 using namespace std;
 
-#if defined (WIN32) || defined (OS2)				/* Win 32 & OS/2*/
-#define CROSS_DOSFILENAME(blah) 
+#if defined (WIN32)
+#define CROSS_DOSFILENAME(blah)
 #else
-//Convert back to DOS PATH 
+//Convert back to DOS PATH
 #define	CROSS_DOSFILENAME(blah) strreplace(blah,'/','\\')
 #endif
 
@@ -345,7 +345,6 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	if (strlen(overlaydir) >= strlen(basedir) ) {
 		//Needs to be longer at least.
 #if defined (WIN32)
-//OS2 ?	
 		if (strncasecmp(overlaydir,basedir,strlen(basedir)) == 0) {
 #else
 		if (strncmp(overlaydir,basedir,strlen(basedir)) == 0) {

@@ -40,11 +40,6 @@
 #include "dma.h"
 
 
-#if defined(OS2)
-#define INCL DOSFILEMGR
-#define INCL_DOSERRORS
-#include "os2.h"
-#endif
 
 #if defined(WIN32)
 #ifndef S_ISDIR
@@ -302,35 +297,12 @@ public:
 			}
 			struct stat test;
 			//Win32 : strip tailing backslashes
-			//os2: some special drive check
 			//rest: substitute ~ for home
 			bool failed = false;
-#if defined (WIN32) || defined(OS2)
+#if defined (WIN32)
 			/* Removing trailing backslash if not root dir so stat will succeed */
 			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
 			if (stat(temp_line.c_str(),&test)) {
-#endif
-#if defined(WIN32)
-// Nothing to do here.
-#elif defined (OS2)
-				if (temp_line.size() <= 2) // Seems to be a drive.
-				{
-					failed = true;
-					HFILE cdrom_fd = 0;
-					ULONG ulAction = 0;
-
-					APIRET rc = DosOpen((unsigned char*)temp_line.c_str(), &cdrom_fd, &ulAction, 0L, FILE_NORMAL, OPEN_ACTION_OPEN_IF_EXISTS,
-						OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
-					DosClose(cdrom_fd);
-					if (rc != NO_ERROR && rc != ERROR_NOT_READY)
-					{
-						failed = true;
-					} else {
-						failed = false;
-					}
-				}
-			}
-			if (failed) {
 #else
 			if (stat(temp_line.c_str(),&test)) {
 				failed = true;
@@ -345,21 +317,8 @@ public:
 			}
 			/* Not a switch so a normal directory/file */
 			if (!S_ISDIR(test.st_mode)) {
-#ifdef OS2
-				HFILE cdrom_fd = 0;
-				ULONG ulAction = 0;
-
-				APIRET rc = DosOpen((unsigned char*)temp_line.c_str(), &cdrom_fd, &ulAction, 0L, FILE_NORMAL, OPEN_ACTION_OPEN_IF_EXISTS,
-					OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
-				DosClose(cdrom_fd);
-				if (rc != NO_ERROR && rc != ERROR_NOT_READY) {
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 				return;
-			}
-#else
-				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
-				return;
-#endif
 			}
 
 			if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
@@ -413,7 +372,7 @@ public:
 				}
 			} else {
 				/* Give a warning when mount c:\ or the / */
-#if defined (WIN32) || defined(OS2)
+#if defined (WIN32)
 				if( (temp_line == "c:\\") || (temp_line == "C:\\") || 
 				    (temp_line == "c:/") || (temp_line == "C:/")    )	
 					WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_WIN"));
@@ -484,7 +443,7 @@ public:
 		if(type == "floppy") incrementFDD();
 		return;
 showusage:
-#if defined (WIN32) || defined(OS2)
+#if defined (WIN32)
 	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"d:\\dosprogs","d:\\dosprogs");
 #else
 	   WriteOut(MSG_Get("PROGRAM_MOUNT_USAGE"),"~/dosprogs","~/dosprogs");		   

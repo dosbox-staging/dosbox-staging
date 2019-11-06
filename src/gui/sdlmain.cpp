@@ -121,11 +121,6 @@ struct private_hwdata {
 #define PRIO_TOTAL (PRIO_MAX-PRIO_MIN)
 #endif
 
-#ifdef OS2
-#define INCL_DOS
-#define INCL_WIN
-#include <os2.h>
-#endif
 
 enum SCREEN_TYPES	{
 	SCREEN_SURFACE,
@@ -2038,14 +2033,6 @@ int main(int argc, char* argv[]) {
 	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
 #endif
 
-#ifdef OS2
-        PPIB pib;
-        PTIB tib;
-        DosGetInfoBlocks(&tib, &pib);
-        if (pib->pib_ultype == 2) pib->pib_ultype = 3;
-        setbuf(stdout, NULL);
-        setbuf(stderr, NULL);
-#endif
 
 	/* Display Welcometext in the console */
 	LOG_MSG("DOSBox version %s",VERSION);

@@ -33,11 +33,6 @@
 #include <windows.h>
 #endif
 
-#if defined (OS2)
-#define INCL_DOSERRORS
-#define INCL_DOSFILEMGR
-#include <os2.h>
-#endif
 
 int fileInfoCounter = 0;
 
@@ -159,25 +154,14 @@ void DOS_Drive_Cache::SetBaseDir(const char* baseDir) {
 		ReadDir(id,result);
 	};
 	// Get Volume Label
-#if defined (WIN32) || defined (OS2)
+#if defined (WIN32)
 	bool cdrom = false;
 	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
-#if defined (WIN32)
 	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
 	UINT test = GetDriveType(drive);
 	if(test == DRIVE_CDROM) cdrom = true;
-#else // OS2
-	//TODO determine wether cdrom or not!
-	FSINFO fsinfo;
-	ULONG drivenumber = drive[0];
-	if (drivenumber > 26) { // drive letter was lowercase
-		drivenumber = drive[0] - 'a' + 1;
-	}
-	APIRET rc = DosQueryFSInfo(drivenumber, FSIL_VOLSER, &fsinfo, sizeof(FSINFO));
-	if (rc == NO_ERROR) {
-#endif
 		/* Set label and allow being updated */
 		SetLabel(labellocal,cdrom,true);
 	}
@@ -209,12 +193,11 @@ char* DOS_Drive_Cache::GetExpandName(const char* path) {
 
 	if (*work) {
 		size_t len = strlen(work);
-#if defined (WIN32) 
-		//What about OS/2 
+#if defined (WIN32)
 		if((work[len-1] == CROSS_FILESPLIT ) && (len >= 2) && (work[len-2] != ':')) {
 #else
 		if((len > 1) && (work[len-1] == CROSS_FILESPLIT )) {
-#endif       
+#endif
 			work[len-1] = 0; // Remove trailing slashes except when in root
 		}
 	}
@@ -263,8 +246,7 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 	char* post = strrchr(dironly,CROSS_FILESPLIT);
 
 	if (post) {
-#if defined (WIN32) 
-		//OS2 ?
+#if defined (WIN32)
 		if (post > dironly && *(post - 1) == ':' && (post - dironly) == 2) 
 			post++; //move away from X: as need to end up with x:\ .  
 #else
@@ -392,7 +374,7 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 
 	// The orgname part of the list is not sorted (shortname is)! So we can only walk through it.
 	for(Bitu i = 0; i < filelist_size; i++) {
-#if defined (WIN32) || defined (OS2)                        /* Win 32 & OS/2*/
+#if defined (WIN32)
 		if (strcasecmp(pos,curDir->longNameList[i]->orgname) == 0) {
 #else
 		if (strcmp(pos,curDir->longNameList[i]->orgname) == 0) {

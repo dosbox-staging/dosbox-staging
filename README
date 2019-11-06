@@ -459,7 +459,7 @@ Note: If a name/command/configfilelocation/languagefilelocation contains
      a space, put the whole name/command/configfilelocation/languagefilelocation
      between quotes ("command or file name"). If you need to use quotes within
      quotes (most likely with -c and mount):
-     Windows and OS/2 users can use single quotes inside the double quotes.
+     Windows users can use single quotes inside the double quotes.
      Other people should be able to use escaped double quotes inside the
      double quotes.
      Windows: -c "mount c 'c:\My folder with DOS games\'"

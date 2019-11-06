@@ -409,7 +409,7 @@ public:
 		/* Maximum of extra commands: 10 */
 		Bitu i = 1;
 		while (control->cmdline->FindString("-c",line,true) && (i <= 11)) {
-#if defined (WIN32) || defined (OS2)
+#if defined (WIN32)
 			//replace single with double quotes so that mount commands can contain spaces
 			for(Bitu temp = 0;temp < line.size();++temp) if(line[temp] == '\'') line[temp]='\"';
 #endif //Linux users can simply use \" in their shell

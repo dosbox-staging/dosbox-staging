@@ -433,7 +433,7 @@ Bitu GetKeyCode(SDL_keysym keysym) {
 			/* try to retrieve key from symbolic key as scancode is zero */
 			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
 		} 
-#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
+#if !defined (WIN32) && !defined (MACOSX)
 		/* Linux adds 8 to all scancodes */
 		else key-=8;
 #endif
@@ -2438,25 +2438,6 @@ void MAPPER_StartUp(Section * sec) {
 		/* Note: table has to be tested/updated for various OSs */
 #if defined (MACOSX)
 		/* nothing */
-#elif defined(OS2)
-		sdlkey_map[0x61]=SDLK_UP;
-		sdlkey_map[0x66]=SDLK_DOWN;
-		sdlkey_map[0x63]=SDLK_LEFT;
-		sdlkey_map[0x64]=SDLK_RIGHT;
-		sdlkey_map[0x60]=SDLK_HOME;
-		sdlkey_map[0x65]=SDLK_END;
-		sdlkey_map[0x62]=SDLK_PAGEUP;
-		sdlkey_map[0x67]=SDLK_PAGEDOWN;
-		sdlkey_map[0x68]=SDLK_INSERT;
-		sdlkey_map[0x69]=SDLK_DELETE;
-		sdlkey_map[0x5C]=SDLK_KP_DIVIDE;
-		sdlkey_map[0x5A]=SDLK_KP_ENTER;
-		sdlkey_map[0x5B]=SDLK_RCTRL;
-		sdlkey_map[0x5F]=SDLK_PAUSE;
-//		sdlkey_map[0x00]=SDLK_PRINT;
-		sdlkey_map[0x5E]=SDLK_RALT;
-		sdlkey_map[0x40]=SDLK_KP5;
-		sdlkey_map[0x41]=SDLK_KP6;
 #elif !defined (WIN32) /* => Linux & BSDs */
 		bool evdev_input = false;
 #ifdef SDL_VIDEO_DRIVER_X11
