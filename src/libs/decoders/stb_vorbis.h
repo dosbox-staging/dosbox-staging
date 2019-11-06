@@ -270,6 +270,11 @@ extern stb_vorbis * stb_vorbis_open_file_section(FILE *f, int close_handle_on_cl
 // confused.
 #endif
 
+#ifdef __SDL_SOUND_INTERNAL__
+extern stb_vorbis * stb_vorbis_open_rwops_section(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length);
+extern stb_vorbis * stb_vorbis_open_rwops(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc);
+#endif
+
 extern int stb_vorbis_seek_frame(stb_vorbis *f, unsigned int sample_number);
 extern int stb_vorbis_seek(stb_vorbis *f, unsigned int sample_number);
 // these functions seek in the Vorbis file to (approximately) 'sample_number'.
@@ -567,10 +572,21 @@ enum STBVorbisError
       #include <alloca.h>
    #endif
 #else // STB_VORBIS_NO_CRT
+   #ifndef NULL
    #define NULL 0
+   #endif
+
+   #ifndef malloc
    #define malloc(s)   0
+   #endif
+
+   #ifndef free
    #define free(s)     ((void) 0)
+   #endif
+
+   #ifndef realloc
    #define realloc(s)  0
+   #endif
 #endif // STB_VORBIS_NO_CRT
 
 #include <limits.h>
@@ -614,12 +630,21 @@ enum STBVorbisError
 #define MAX_BLOCKSIZE      (1 << MAX_BLOCKSIZE_LOG)
 
 
+#ifdef __SDL_SOUND_INTERNAL__
+typedef Uint8 uint8;
+typedef Sint8 int8;
+typedef Uint16 uint16;
+typedef Sint16 int16;
+typedef Uint32 uint32;
+typedef Sint32 int32;
+#else
 typedef unsigned char  uint8;
 typedef   signed char   int8;
 typedef unsigned short uint16;
 typedef   signed short  int16;
 typedef unsigned int   uint32;
 typedef   signed int    int32;
+#endif
 
 #ifndef TRUE
 #define TRUE 1
@@ -766,6 +791,12 @@ struct stb_vorbis
    int close_on_free;
 #endif
 
+   #ifdef __SDL_SOUND_INTERNAL__
+   SDL_RWops *rwops;
+   uint32 rwops_start;
+   int close_on_free;
+   #endif
+
    uint8 *stream;
    uint8 *stream_start;
    uint8 *stream_end;
@@ -888,7 +919,7 @@ static int error(vorb *f, enum STBVorbisError e)
 #define array_size_required(count,size)  (count*(sizeof(void *)+(size)))
 
 #define temp_alloc(f,size)              (f->alloc.alloc_buffer ? setup_temp_malloc(f,size) : alloca(size))
-#define temp_free(f,p)                  0
+// #define temp_free(f,p)                  0
 #define temp_alloc_save(f)              ((f)->temp_offset)
 #define temp_alloc_restore(f,p)         ((f)->temp_offset = (p))
 
@@ -1287,8 +1318,9 @@ static int STBV_CDECL point_compare(const void *p, const void *q)
 //
 /////////////////////// END LEAF SETUP FUNCTIONS //////////////////////////
 
-
-#if defined(STB_VORBIS_NO_STDIO)
+#ifdef __SDL_SOUND_INTERNAL__
+   #define USE_MEMORY(z)    FALSE
+#elif defined(STB_VORBIS_NO_STDIO)
    #define USE_MEMORY(z)    TRUE
 #else
    #define USE_MEMORY(z)    ((z)->stream)
@@ -1300,6 +1332,15 @@ static uint8 get8(vorb *z)
       if (z->stream >= z->stream_end) { z->eof = TRUE; return 0; }
       return *z->stream++;
    }
+
+   #ifdef __SDL_SOUND_INTERNAL__
+   {
+      uint8 c;
+      if (SDL_RWread(z->rwops, &c, 1, 1) != 1) { z->eof = TRUE; return 0; }
+      return c;
+   }
+   #endif
+
 
    #ifndef STB_VORBIS_NO_STDIO
    {
@@ -1329,6 +1370,14 @@ static int getn(vorb *z, uint8 *data, int n)
       return 1;
    }
 
+   #ifdef __SDL_SOUND_INTERNAL__
+   {
+      if (SDL_RWread(z->rwops, data, n, 1) == 1) { return 1; }
+      z->eof = 1;
+      return 0;
+   }
+   #endif
+
    #ifndef STB_VORBIS_NO_STDIO   
    if (fread(data, n, 1, z->f) == 1)
       return 1;
@@ -1346,6 +1395,13 @@ static void skip(vorb *z, int n)
       if (z->stream >= z->stream_end) z->eof = 1;
       return;
    }
+
+   #ifdef __SDL_SOUND_INTERNAL__
+   {
+      SDL_RWseek(z->rwops, n, RW_SEEK_CUR);
+   }
+   #endif
+
    #ifndef STB_VORBIS_NO_STDIO
    {
       long x = ftell(z->f);
@@ -1370,6 +1426,23 @@ static int set_file_offset(stb_vorbis *f, unsigned int loc)
          return 1;
       }
    }
+
+   #ifdef __SDL_SOUND_INTERNAL__
+   {
+   if (loc + f->rwops_start < loc || loc >= 0x80000000) {
+      loc = 0x7fffffff;
+      f->eof = 1;
+   } else {
+      loc += f->rwops_start;
+   }
+   if (SDL_RWseek(f->rwops, loc, RW_SEEK_SET) != -1)
+      return 1;
+   f->eof = 1;
+   SDL_RWseek(f->rwops, f->rwops_start, RW_SEEK_END);
+   return 0;
+   }
+   #endif
+
    #ifndef STB_VORBIS_NO_STDIO
    if (loc + f->f_start < loc || loc >= 0x80000000) {
       loc = 0x7fffffff;
@@ -2265,9 +2338,9 @@ static void decode_residue(vorb *f, float *residue_buffers[], int ch, int n, int
   done:
    CHECK(f);
    #ifndef STB_VORBIS_DIVIDES_IN_RESIDUE
-   temp_free(f,part_classdata);
+   // temp_free(f,part_classdata);
    #else
-   temp_free(f,classifications);
+   // temp_free(f,classifications);
    #endif
    temp_alloc_restore(f,temp_alloc_point);
 }
@@ -2914,7 +2987,7 @@ static void inverse_mdct(float *buffer, int n, vorb *f, int blocktype)
       }
    }
 
-   temp_free(f,buf2);
+   // temp_free(f,buf2);
    temp_alloc_restore(f,save_point);
 }
 
@@ -3834,8 +3907,8 @@ static int start_decoder(vorb *f)
                unsigned int div=1;
                for (k=0; k < c->dimensions; ++k) {
                   int off = (z / div) % c->lookup_values;
-                  float val = mults[off];
-                  val = mults[off]*c->delta_value + c->minimum_value + last;
+                  // float val = mults[off]; // under review at https://github.com/nothings/stb/issues/816
+                  float val = mults[off]*c->delta_value + c->minimum_value + last;
                   c->multiplicands[j*c->dimensions + k] = val;
                   if (c->sequence_p)
                      last = val;
@@ -3947,7 +4020,8 @@ static int start_decoder(vorb *f)
             g->sorted_order[j] = (uint8) p[j].id;
          // precompute the neighbors
          for (j=2; j < g->values; ++j) {
-            int low,hi;
+            int low = 0;
+            int hi = 0;
             neighbors(g->Xlist, j, &low,&hi);
             g->neighbors[j][0] = low;
             g->neighbors[j][1] = hi;
@@ -4197,6 +4271,9 @@ static void vorbis_deinit(stb_vorbis *p)
       setup_free(p, p->window[i]);
       setup_free(p, p->bit_reverse[i]);
    }
+   #ifdef __SDL_SOUND_INTERNAL__
+   if (p->close_on_free) SDL_RWclose(p->rwops);
+   #endif
    #ifndef STB_VORBIS_NO_STDIO
    if (p->close_on_free) fclose(p->f);
    #endif
@@ -4222,6 +4299,10 @@ static void vorbis_init(stb_vorbis *p, const stb_vorbis_alloc *z)
    p->stream = NULL;
    p->codebooks = NULL;
    p->page_crc_tests = -1;
+   #ifdef __SDL_SOUND_INTERNAL__
+   p->close_on_free = FALSE;
+   p->rwops = NULL;
+   #endif
    #ifndef STB_VORBIS_NO_STDIO
    p->close_on_free = FALSE;
    p->f = NULL;
@@ -4472,6 +4553,9 @@ unsigned int stb_vorbis_get_file_offset(stb_vorbis *f)
    if (f->push_mode) return 0;
    #endif
    if (USE_MEMORY(f)) return (unsigned int) (f->stream - f->stream_start);
+   #ifdef __SDL_SOUND_INTERNAL__
+   return (unsigned int) (SDL_RWtell(f->rwops) - f->rwops_start);
+   #endif
    #ifndef STB_VORBIS_NO_STDIO
    return (unsigned int) (ftell(f->f) - f->f_start);
    #endif
@@ -4626,7 +4710,8 @@ static int seek_to_sample_coarse(stb_vorbis *f, uint32 sample_number)
    ProbedPage left, right, mid;
    int i, start_seg_with_known_loc, end_pos, page_start;
    uint32 delta, stream_length, padding;
-   double offset, bytes_per_sample;
+   double offset = 0;
+   double bytes_per_sample = 0;
    int probe = 0;
 
    // find the last page and validate the target sample
@@ -4907,7 +4992,7 @@ unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
             // set. whoops!
             break;
          }
-         previous_safe = last_page_loc+1;
+         // previous_safe = last_page_loc+1; -- value is never read
          last_page_loc = stb_vorbis_get_file_offset(f);
       }
 
@@ -5014,6 +5099,37 @@ stb_vorbis * stb_vorbis_open_filename(const char *filename, int *error, const st
    return NULL;
 }
 #endif // STB_VORBIS_NO_STDIO
+
+#ifdef __SDL_SOUND_INTERNAL__
+stb_vorbis * stb_vorbis_open_rwops_section(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length)
+{
+   stb_vorbis *f, p;
+   vorbis_init(&p, alloc);
+   p.rwops = rwops;
+   p.rwops_start = (uint32) SDL_RWtell(rwops);
+   p.stream_len   = length;
+   p.close_on_free = close_on_free;
+   if (start_decoder(&p)) {
+      f = vorbis_alloc(&p);
+      if (f) {
+         memcpy(f, &p, sizeof (stb_vorbis));
+         vorbis_pump_first_frame(f);
+         return f;
+      }
+   }
+   if (error) *error = p.error;
+   vorbis_deinit(&p);
+   return NULL;
+}
+
+stb_vorbis * stb_vorbis_open_rwops(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc)
+{
+   const unsigned int start = (unsigned int) SDL_RWtell(rwops);
+   const unsigned int len = (unsigned int) (SDL_RWseek(rwops, 0, RW_SEEK_END) - start);
+   SDL_RWseek(rwops, start, RW_SEEK_SET);
+   return stb_vorbis_open_rwops_section(rwops, close_on_free, error, alloc, len);
+}
+#endif
 
 stb_vorbis * stb_vorbis_open_memory(const unsigned char *data, int len, int *error, const stb_vorbis_alloc *alloc)
 {
@@ -5173,7 +5289,7 @@ static void convert_samples_short(int buf_c, short **buffer, int b_offset, int d
 
 int stb_vorbis_get_frame_short(stb_vorbis *f, int num_c, short **buffer, int num_samples)
 {
-   float **output;
+   float **output = NULL;
    int len = stb_vorbis_get_frame_float(f, NULL, &output);
    if (len > num_samples) len = num_samples;
    if (len)
@@ -5225,8 +5341,8 @@ int stb_vorbis_get_samples_short_interleaved(stb_vorbis *f, int channels, short 
    float **outputs;
    int len = num_shorts / channels;
    int n=0;
-   int z = f->channels;
-   if (z > channels) z = channels;
+   // int z = f->channels;
+   // if (z > channels) z = channels;  dead code
    while (n < len) {
       int k = f->channel_buffer_end - f->channel_buffer_start;
       if (n+k >= len) k = len - n;
@@ -5245,8 +5361,8 @@ int stb_vorbis_get_samples_short(stb_vorbis *f, int channels, short **buffer, in
 {
    float **outputs;
    int n=0;
-   int z = f->channels;
-   if (z > channels) z = channels;
+   // int z = f->channels;  dead code
+   // if (z > channels) z = channels;
    while (n < len) {
       int k = f->channel_buffer_end - f->channel_buffer_start;
       if (n+k >= len) k = len - n;
