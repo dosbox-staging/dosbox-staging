@@ -63,20 +63,8 @@ AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(int *)
 
-dnl check and use C++ circa-2003 language constructs.
-AX_CXX_COMPILE_STDCXX_0X(noext, mandatory)
-if test "$ax_cv_cxx_compile_cxx0x_native" = no; then
-  if test "$ax_cv_cxx_compile_cxx0x_cxx" = yes; then
-    CXXFLAGS="$CXXFLAGS -std=c++0x"
-  else
-    AC_MSG_ERROR([A C++ compiler that supports the C++03 standard is required])
-  fi
-fi
-# Note that the above macro is deprecated in favor of AX_CXX_COMPILE_STDCXX_11:
-# https://www.gnu.org/software/autoconf-archive/ax_cxx_compile_stdcxx_0x.html
-# However we use it anyway because it is suggested that C++03 should
-# be the limit for now: https://sourceforge.net/p/dosbox/patches/283/#cb9a
-
+dnl Require compiler with C++11 support, do not use GNU extensions.
+AX_CXX_COMPILE_STDCXX_11(noext, mandatory)
 
 dnl some semi complex check for sys/socket so it works on darwin as well
 AC_CHECK_HEADERS([stdlib.h sys/types.h])
