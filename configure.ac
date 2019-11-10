@@ -189,6 +189,33 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
+dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their headers
+case "$host" in
+  *-*-darwin*)
+   AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <CoreMIDI/MIDIServices.h>
+   int blah() { return 0; }
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
+   [Compiler supports Core MIDI headers])],
+   AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreMIDI functionality disabled. Please use the Apple compiler!]))
+
+   AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <AudioToolbox/AUGraph.h>
+   #include <CoreServices/CoreServices.h>
+   int blah() { return 0; }
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
+   [Compiler supports Core Audio headers])], 
+   AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
+   ;;
+
+  *)
+   AC_MSG_CHECKING(if compiler supports Apple's MIDI headers)
+   AC_MSG_RESULT([no, not on Apple])
+   ;;
+esac
+
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
 AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
@@ -564,7 +591,6 @@ case "$host" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)
